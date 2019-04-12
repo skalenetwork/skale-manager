@@ -1,0 +1,31 @@
+### General ###
+.idea
+.cache
+
+### Solidity ###
+build/
+tmp.sol
+data/*.json
+
+### Node ###
+# Logs
+*.log
+npm-debug.log*
+
+# Dependency directories
+node_modules
+
+### Geth ###
+# geth secrets
+docker/geth/shared/eth_datadir/geth
+docker/geth/shared/eth_datadir/geth.ipc
+docker/geth/shared/eth_datadir/password
+docker/geth/shared/eth_datadir/history
+
+### Terraform ###
+# Local .terraform directories
+**/.terraform/*
+
+# .tfstate files
+*.tfstate
+*.tfstate.*

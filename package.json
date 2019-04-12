@@ -1,0 +1,21 @@
+{
+  "name": "@skale-labs/skale-manager",
+  "dependencies": {
+    "solc": "^0.4.25",
+    "truffle-privatekey-provider": "1.0.0",
+    "web3": "1.0.0-beta.36"
+  },
+  "license": "GPL-3.0",
+  "devDependencies": {
+    "ethlint": "^1.2.2",
+    "solidity-coverage": "^0.5.11",
+    "truffle": "^4.1.13",
+    "ganache-cli": "6.1.8",
+    "solc": "^0.4.25",
+    "truffle-privatekey-provider": "1.0.0",
+    "web3": "1.0.0-beta.36"
+  },
+  "scripts": {
+    "lint": "npx solium --dir contracts"
+  }
+}
