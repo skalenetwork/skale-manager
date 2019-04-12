@@ -1,5 +1,5 @@
 {
-  "name": "@skale-labs/skale-manager",
+  "name": "@skalenetwork/skale-manager",
   "dependencies": {
     "solc": "^0.4.25",
     "truffle-privatekey-provider": "1.0.0",
