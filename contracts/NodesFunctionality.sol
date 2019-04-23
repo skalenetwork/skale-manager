@@ -2,6 +2,10 @@ pragma solidity ^0.4.24;
 
 import './Permissions.sol';
 
+/**
+ * @title Constants - interface of Constants contract
+ * Contains only needed functions for current contract
+ */
 interface Constants {
     function NODE_DEPOSIT() external view returns (uint);
     function FRACTIONAL_FACTOR() external view returns (uint);
@@ -12,6 +16,10 @@ interface Constants {
     function setLastTimeUnderloaded() external;
 }
 
+/**
+ * @title NodesData - interface of NodesData contract
+ * Contains only needed functions for current contract
+ */
 interface NodesData {
     function nodesIPCheck(bytes4 ip) external view returns (bool);
     function nodesNameCheck(bytes32 name) external view returns (bool);
@@ -33,13 +41,21 @@ interface NodesData {
     function numberOfLeavingNodes() external view returns (uint);
 }
 
+/**
+ * @title SchainsData - interface of SchainsData contract
+ * Contains only needed functions for current contract
+ */
 interface SchainsData {
     function sumOfSchainsResources() external view returns (uint);
 }
 
 
+/**
+ * @title NodesFunctionality - contract contains all functionality logic to manage Nodes
+ */
 contract NodesFunctionality is Permissions {
 
+    // informs that Node is created
     event NodeCreated(
         uint nodeIndex,
         address owner,
@@ -52,6 +68,7 @@ contract NodesFunctionality is Permissions {
         uint gasSpend
     );
 
+    // informs that owner withdrawn the Node's deposit
     event WithdrawDepositFromNodeComplete(
         uint nodeIndex,
         address owner,
@@ -60,6 +77,7 @@ contract NodesFunctionality is Permissions {
         uint gasSpend
     );
 
+    // informs that owner starts the procedure of quiting the Node from the system
     event WithdrawDepositFromNodeInit(
         uint nodeIndex,
         address owner,
@@ -68,10 +86,22 @@ contract NodesFunctionality is Permissions {
         uint gasSpend
     );
 
+    /**
+     * @dev constructor in Permissions approach
+     * @param newContractsAddress needed in Permissions constructor
+    */
     constructor(address newContractsAddress) Permissions(newContractsAddress) public {
     
     }
 
+    /**
+     * @dev createNode - creates new Node and add it to the NodesData contract
+     * function could be only run by SkaleManager
+     * @param from - owner of Node
+     * @param value - received amount of SKL
+     * @param data - Node's data
+     * @return nodeIndex - index of Node
+     */
     function createNode(address from, uint value, bytes data) public allow("SkaleManager") returns (uint nodeIndex) {
         address constantsAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("Constants")));
         require(value >= Constants(constantsAddress).NODE_DEPOSIT(), "Not enough money to create Node");
@@ -81,23 +111,41 @@ contract NodesFunctionality is Permissions {
         uint16 port;
         string memory name;
         bytes memory publicKey;
+
+        // decode data from the bytes
         (port, nonce, ip, publicIP) = fallbackDataConverter(data);
         (publicKey, name) = fallbackDataConverterPublicKeyAndName(data);
+
         address nodesDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
+
+        // checks that Node has correct data
         require(ip != 0x0 && !NodesData(nodesDataAddress).nodesIPCheck(ip), "IP address is zero or is not available");
         require(!NodesData(nodesDataAddress).nodesNameCheck(keccak256(abi.encodePacked(name))), "Name has already registered");
         require(port > 0, "Port is zero");
+
+        // adds Node to NodesData contract
         nodeIndex = NodesData(nodesDataAddress).addNode(from, name, ip, publicIP, port, publicKey);
+        // adds Node to Fractional Nodes or to Full Nodes
         setNodeType(nodesDataAddress, constantsAddress, nodeIndex);
-        //setSystemStatus(constantsAddress);
+
         emit NodeCreated(nodeIndex, from, name, ip, publicIP, port, nonce, uint32(block.timestamp), gasleft());
     }
 
+    /**
+     * @dev removeNode - delete Node
+     * function could be only run by SkaleManager
+     * @param from - owner of Node
+     * @param nodeIndex - index of Node
+     */
     function removeNode(address from, uint nodeIndex) public allow("SkaleManager") {
         address nodesDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
+
         require(NodesData(nodesDataAddress).isNodeExist(from, nodeIndex), "Node does not exist for message sender");
         require(NodesData(nodesDataAddress).isNodeActive(nodeIndex), "Node is not Active");
+
         NodesData(nodesDataAddress).setNodeLeft(nodeIndex);
+
+        // removes Node from Fractional Nodes or from Full Nodes
         bool isNodeFull;
         uint subarrayLink;
         (subarrayLink, isNodeFull) = NodesData(nodesDataAddress).nodesLink(nodeIndex);
@@ -108,21 +156,42 @@ contract NodesFunctionality is Permissions {
         }
     }
 
+    /**
+     * @dev initWithdrawdeposit - initiate a procedure of quiting the system
+     * function could be only run by SkaleManager
+     * @param from - owner of Node
+     * @param nodeIndex - index of Node
+     * @return true - if everything OK
+     */
     function initWithdrawDeposit(address from, uint nodeIndex) public allow("SkaleManager") returns (bool) {
         address nodesDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
+
         require(NodesData(nodesDataAddress).isNodeExist(from, nodeIndex), "Node does not exist for message sender");
         require(NodesData(nodesDataAddress).isNodeActive(nodeIndex), "Node is not Active");
+
         NodesData(nodesDataAddress).setNodeLeaving(nodeIndex);
+
         emit WithdrawDepositFromNodeInit(nodeIndex, from, uint32(block.timestamp), uint32(block.timestamp), gasleft());
         return true;
     }
 
+    /**
+     * @dev completeWithdrawDeposit - finish a procedure of quiting the system
+     * function could be run only by SkaleMManager
+     * @param from - owner of Node
+     * @param nodeIndex - index of Node
+     * @return amount of SKL which be returned
+     */
     function completeWithdrawDeposit(address from, uint nodeIndex) public allow("SkaleManager") returns (uint) {
         address nodesDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
+
         require(NodesData(nodesDataAddress).isNodeExist(from, nodeIndex), "Node does not exist for message sender");
         require(NodesData(nodesDataAddress).isNodeLeaving(nodeIndex), "Node is no Leaving");
         require(NodesData(nodesDataAddress).isLeavingPeriodExpired(nodeIndex), "Leaving period is not expired");
+
         NodesData(nodesDataAddress).setNodeLeft(nodeIndex);
+
+        // removes Node from Fractional Nodes or from Full Nodes
         bool isNodeFull;
         uint subarrayLink;
         (subarrayLink, isNodeFull) = NodesData(nodesDataAddress).nodesLink(nodeIndex);
@@ -131,11 +200,16 @@ contract NodesFunctionality is Permissions {
         } else {
             NodesData(nodesDataAddress).removeFractionalNode(subarrayLink);
         }
+
         address constantsAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("Constants")));
         emit WithdrawDepositFromNodeComplete(nodeIndex, from, Constants(constantsAddress).NODE_DEPOSIT(), uint32(block.timestamp), gasleft());
         return Constants(constantsAddress).NODE_DEPOSIT();
     }
 
+    /**
+     * @dev getNodePrice - returns current price for Node
+     * @return current price for Node
+     */
     /*function getNodePrice() public view returns (uint) {
         address constantsAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("Constants")));
         uint nodeDeposit = Constants(constantsAddress).NODE_DEPOSIT();
@@ -145,8 +219,15 @@ contract NodesFunctionality is Permissions {
         return (nodeDeposit * up) / down;
     }*/
 
+    /**
+     * @dev setNodeType - sets Node to Fractional Nodes or to Full Nodes
+     * @param nodesDataAddress - address of NodesData contract
+     * @param constantsAddress - address of Constants contract
+     * @param nodeIndex - index of Node
+     */
     function setNodeType(address nodesDataAddress, address constantsAddress, uint nodeIndex) internal {
         bool isNodeFull = (NodesData(nodesDataAddress).getNumberOfFractionalNodes() * Constants(constantsAddress).FRACTIONAL_FACTOR() > NodesData(nodesDataAddress).getNumberOfFullNodes() * Constants(constantsAddress).FULL_FACTOR());
+
         if (NodesData(nodesDataAddress).getNumberOfFullNodes() == 0 || isNodeFull) {
             NodesData(nodesDataAddress).addFullNode(nodeIndex);
         } else {
@@ -154,6 +235,10 @@ contract NodesFunctionality is Permissions {
         }
     }
 
+    /**
+     * @dev setSystemStatus - sets current system status overload, normal or underload
+     * @param constantsAddress - address of Constants contract
+     */
     /*function setSystemStatus(address constantsAddress) internal {
         address dataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
         address schainsDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("SchainsData")));
@@ -164,6 +249,13 @@ contract NodesFunctionality is Permissions {
         }
     }*/
 
+    /**
+     * @dev coefficientForPrice - calculates current coefficient for Price
+     * coefficient calculates based on system status duration
+     * @param constantsAddress - address of Constants contract
+     * @return up - dividend
+     * @return down - divider
+     */
     /*function coefficientForPrice(address constantsAddress) internal view returns (uint up, uint down) {
         address dataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
         address schainsDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("SchainsData")));
@@ -184,6 +276,13 @@ contract NodesFunctionality is Permissions {
         }
     }*/
 
+    /**
+     * @dev binstep - exponentiation by squaring by modulo (a^step) 
+     * @param a - number which should be exponentiated
+     * @param step - exponent
+     * @param div - divider of a
+     * @return x - result (a^step)
+     */
     /*function binstep(uint a, uint step, uint div) internal pure returns (uint x) {
         x = div;
         while (step > 0) {
@@ -199,12 +298,21 @@ contract NodesFunctionality is Permissions {
         return (a * b) / div;
     }*/
 
+    /**
+     * @dev fallbackDataConverter - converts data from bytes to normal parameters
+     * @param data - concatenated parameters
+     * @return port
+     * @return nonce
+     * @return ip address
+     * @return public ip address
+     */
     function fallbackDataConverter(bytes data) 
         private 
         pure
         returns (uint16, uint16, bytes4, bytes4 /*address secondAddress,*/)
     {
         require(data.length > 77, "Incorrect bytes data config");
+
         bytes4 ip;
         bytes4 publicIP;
         bytes2 portInBytes;
@@ -215,24 +323,35 @@ contract NodesFunctionality is Permissions {
             ip := mload(add(data, 37)) // 0x29
             publicIP := mload(add(data, 41))
         }
+
         return (uint16(portInBytes), uint16(nonceInBytes), ip, publicIP);
     }
 
+    /**
+     * @dev fallbackDataConverterPublicKeyAndName - converts data from bytes to public key and name
+     * @param data - concatenated public key and name
+     * @return public key
+     * @return name of Node
+     */
     function fallbackDataConverterPublicKeyAndName(bytes data) private pure returns (bytes, string) {
         require(data.length > 77, "Incorrect bytes data config");
         bytes32 firstPartPublicKey;
         bytes32 secondPartPublicKey;
         bytes memory publicKey = new bytes(64);
+
+        // convert public key
         assembly {
             firstPartPublicKey := mload(add(data, 45))
             secondPartPublicKey := mload(add(data, 77))
         }
         for (uint i = 0; i < 32; i++) {
             publicKey[i] = firstPartPublicKey[i];
-            }
+        }
         for (i = 0; i < 32; i++) {
             publicKey[i + 32] = secondPartPublicKey[i];
-            }
+        }
+
+        // convert name
         string memory name = new string(data.length - 77);
         for (i = 0; i < bytes(name).length; ++i) {
             bytes(name)[i] = data[77 + i];                                                       

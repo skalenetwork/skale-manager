@@ -29,3 +29,7 @@ docker/geth/shared/eth_datadir/history
 # .tfstate files
 *.tfstate
 *.tfstate.*
+
+# dotenv environment variables file
+.env
+.env.test

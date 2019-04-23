@@ -1,5 +1,6 @@
+require('dotenv').config();
 const networkName = process.env.NETWORK;
-const privateKey =  process.env.ETH_PRIVATE_KEY;
+const privateKey = process.env.ETH_PRIVATE_KEY;
 
 let networks = require("../truffle.js");
 let currentNetwork = networks['networks'][networkName];
@@ -15,7 +16,7 @@ const web3 = new Web3(provider);
 const mainAccount = web3['_provider']['address'];
 
 const jsonData = require(`../data/${networkName}.json`);
-const updatedData = require("../data/updated.json");
+//const updatedData = require("../data/updated.json");
 
 const SkaleManager = new web3.eth.Contract(jsonData['skale_manager_abi'], jsonData['skale_manager_address']);
 module.exports.SkaleManager = SkaleManager;//new web3.eth.Contract(jsonData['skale_manager_abi'], jsonData['skale_manager_address']);

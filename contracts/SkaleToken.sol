@@ -3,9 +3,11 @@ pragma solidity ^0.4.22;
 
 import './StandardToken.sol';
 import './Permissions.sol';
-//import './Authorizable.sol'; 
 
-
+/**
+ * @title SkaleToken is ERC223 Token implementation, also this contract in skale
+ * manager system
+ */
 contract SkaleToken is StandardToken, Permissions {
 
     string public constant name = "SKALE";
@@ -26,29 +28,39 @@ contract SkaleToken is StandardToken, Permissions {
         // TODO remove after testing
     }
 
-    function mint(address _to, uint256 _amount)
+    /**
+     * @dev mint - create some amount of token to specify address
+     * @param to - address where some amount of token would be created
+     * @param amount - current amount of token
+     */
+    function mint(address to, uint256 amount)
         public
         allow("SkaleManager")
         //onlyAuthorized
         returns (bool)
     {
-        require(_amount <= cap - totalSupply);
-        totalSupply = totalSupply + _amount;
-        balances[_to] = balances[_to] + _amount;
-        emit Mint(_to, _amount, uint32(block.timestamp), gasleft());
+        require(amount <= cap - totalSupply);
+        totalSupply = totalSupply + amount;
+        balances[to] = balances[to] + amount;
+        emit Mint(to, amount, uint32(block.timestamp), gasleft());
         return true;
     }
 
-    function burn(address _from, uint256 _amount)
+    /**
+     * @dev burn - burn some amount of token at specify address
+     * @param from - address where some amount of token would be burned
+     * @param amount - current amount of token
+     */
+    function burn(address from, uint256 amount)
         public
         allow("SkaleManager")
         //onlyAuthorized
         returns (bool)
     {
-        require(balances[_from] >= _amount);
-        balances[_from] = balances[_from] - _amount;
-        totalSupply = totalSupply - _amount;
-        emit Burn(_from, _amount, uint32(block.timestamp), gasleft());
+        require(balances[from] >= amount);
+        balances[from] = balances[from] - amount;
+        totalSupply = totalSupply - amount;
+        emit Burn(from, amount, uint32(block.timestamp), gasleft());
         return true;
     }
 }

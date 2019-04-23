@@ -55,8 +55,12 @@ interface Constants {
 }
 
 
+/**
+ * @title SchainsFunctionality - contract contains all functionality logic to manage Schains 
+ */
 contract SchainsFunctionality is GroupsFunctionality {
     
+    // informs that Schain is created
     event SchainCreated(
         string name,
         address owner,
@@ -70,6 +74,7 @@ contract SchainsFunctionality is GroupsFunctionality {
         uint gasSpend
     );
 
+    // informs that Schain based on some Nodes
     event SchainNodes(
         string name,
         bytes32 groupIndex,
@@ -78,6 +83,8 @@ contract SchainsFunctionality is GroupsFunctionality {
         uint gasSpend
     );
 
+    // informs that owner withdrawn deposit
+    // Need to delete - deprecated Event
     event WithdrawFromSchain(
         string name,
         address owner,
@@ -91,6 +98,13 @@ contract SchainsFunctionality is GroupsFunctionality {
         
     }
 
+    /**
+     * @dev addSchain - create Schain in the system
+     * function could be run only by executor
+     * @param from - owner of Schain
+     * @param deposit - received amoung of SKL
+     * @param data - Schain's data
+     */
     function addSchain(address from, uint deposit, bytes data) public allow(executorName) {
         uint lifetime;
         uint numberOfNodes;
@@ -98,19 +112,33 @@ contract SchainsFunctionality is GroupsFunctionality {
         uint16 nonce;
         string memory name;
         uint partOfNode;
+
         (lifetime, typeOfSchain, nonce, name) = fallbackSchainParametersDataConverter(data);
+
         require(getSchainPrice(typeOfSchain, lifetime) <= deposit, "Not enough money to create Schain");
+
         address dataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked(dataName)));
+
         require(SchainsData(dataAddress).isSchainNameAvailable(name), "Schain name is not available");
         require(typeOfSchain <= 4, "Invalid type of Schain");
+
+        // initialize Schain
         SchainsData(dataAddress).initializeSchain(name, from, lifetime, deposit);
-        //bytes32 schainId = keccak256(abi.encodePacked(name));
         SchainsData(dataAddress).setSchainIndex(keccak256(abi.encodePacked(name)), from);
+
+        // create a group for Schain
         (numberOfNodes, partOfNode) = getNodesDataFromTypeOfSchain(typeOfSchain);
         createGroupForSchain(name, keccak256(abi.encodePacked(name)), numberOfNodes, partOfNode, dataAddress);
+
         emit SchainCreated(name, from, partOfNode, lifetime, numberOfNodes, deposit, nonce, keccak256(abi.encodePacked(name)), uint32(block.timestamp), gasleft());
     }
 
+    /**
+     * @dev getSchainPrice - returns current price for given Schain
+     * @param typeOfSchain - type of Schain
+     * @param lifetime - lifetime of Schain
+     * @return current price for given Schain
+     */
     function getSchainPrice(uint typeOfSchain, uint lifetime) public view returns (uint) {
         address constantsAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("Constants")));
         uint nodeDeposit = Constants(constantsAddress).NODE_DEPOSIT();
@@ -127,6 +155,11 @@ contract SchainsFunctionality is GroupsFunctionality {
         }
     }
 
+    /**
+     * @dev getSchainNodes - returns Nodes which contained in given Schain
+     * @param schainName - name of Schain
+     * @return array of concatenated parameters: nodeIndex, ip, port which contained in Schain
+     */
     /*function getSchainNodes(string schainName) public view returns (bytes16[] memory schainNodes) {
         address dataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked(dataName)));
         bytes32 schainId = keccak256(abi.encodePacked(schainName));
@@ -137,22 +170,35 @@ contract SchainsFunctionality is GroupsFunctionality {
         }
     }*/
 
+    /**
+     * @dev deleteSchain - removes Schain from the system
+     * function could be run only by executor
+     * @param from - owner of Schain
+     * @param schainId - hash by Schain name
+     */
     function deleteSchain(address from, bytes32 schainId) public allow(executorName) {
         address dataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked(dataName)));
         //require(SchainsData(dataAddress).isTimeExpired(schainId), "Schain lifetime did not end");
         require(SchainsData(dataAddress).isOwnerAddress(from, schainId), "Message sender is not an owner of Schain");
+
+        // removes Schain from Nodes
         uint[] memory nodesInGroup = GroupsData(dataAddress).getNodesInGroup(schainId);
         uint partOfNode = SchainsData(dataAddress).getSchainsPartOfNode(schainId);
         for (uint i = 0; i < nodesInGroup.length; i++) {
-            uint schainIndex = find(nodesInGroup[i], schainId);
+            uint schainIndex = findSchainAtSchainsForNode(nodesInGroup[i], schainId);
             require(schainIndex < SchainsData(dataAddress).getLengthOfSchainsForNode(nodesInGroup[i]), "Some Node does not contain given Schain");
             SchainsData(dataAddress).removeSchainForNode(nodesInGroup[i], schainIndex);
             addSpace(nodesInGroup[i], partOfNode);
         }
+
         deleteGroup(schainId);
         SchainsData(dataAddress).removeSchain(schainId, from);
     }
 
+    /**
+     * @dev generateGroup - generates Group for Schain
+     * @param groupIndex - index of Group
+     */
     function generateGroup(bytes32 groupIndex) internal returns (uint[] nodesInGroup) {
         address dataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked(dataName)));
         require(GroupsData(dataAddress).isGroupActive(groupIndex), "Group is not active");
@@ -160,17 +206,25 @@ contract SchainsFunctionality is GroupsFunctionality {
         uint hash = uint(keccak256(abi.encodePacked(uint(blockhash(block.number)), groupIndex)));
         uint numberOfNodes;
         uint space;
-        //uint recommendedNumberOfNodes = GroupsData(dataAddress).getRecommendedNumberOfNodes(groupIndex);
+
         (numberOfNodes, space) = setNumberOfNodesInGroup(groupIndex, uint(groupData), dataAddress);
         uint indexOfNode;
         uint nodeIndex;
         uint8 iterations;
         uint index;
         nodesInGroup = new uint[](GroupsData(dataAddress).getRecommendedNumberOfNodes(groupIndex));
+
+        // generate random group algorithm
         while (index < GroupsData(dataAddress).getRecommendedNumberOfNodes(groupIndex) && iterations < 200) {
+            // new random index of Node
             indexOfNode = hash % numberOfNodes;
             nodeIndex = returnValidNodeIndex(uint(groupData), indexOfNode);
+
+            // checks that this not is available, enough space to allocate resources 
+            // and have not chosen to this group
             if (comparator(indexOfNode, uint(groupData), space) && !GroupsData(dataAddress).isExceptionNode(groupIndex, nodeIndex)) {
+
+                // adds Node to the Group
                 GroupsData(dataAddress).setException(groupIndex, nodeIndex);
                 nodesInGroup[index] = nodeIndex;
                 SchainsData(dataAddress).addSchainForNode(nodeIndex, groupIndex);
@@ -180,19 +234,30 @@ contract SchainsFunctionality is GroupsFunctionality {
             hash = uint(keccak256(abi.encodePacked(hash, indexOfNode)));
             iterations++;
         }
+        // checks that this algorithm took less than 200 iterations
         require(iterations < 200, "Schain is not created? try it later");
+        // remove Nodes from exception array
         for (uint i = 0; i < nodesInGroup.length; i++) {
             GroupsData(dataAddress).removeExceptionNode(groupIndex, nodesInGroup[i]);
         }
+        // set generated group
         GroupsData(dataAddress).setNodesInGroup(groupIndex, nodesInGroup);
         emit GroupGenerated(groupIndex, nodesInGroup, uint32(block.timestamp), gasleft());
     }
 
+    /**
+     * @dev comparator - checks that Node is fitted to be a part of Schain
+     * @param indexOfNode - index of Node at the Full Nodes or Fractional Nodes array
+     * @param partOfNode - divisor of given type of Schain 
+     * @param space - needed space to occupy
+     * @return if fitted - true, else - false
+     */
     function comparator(uint indexOfNode, uint partOfNode, uint space) internal view returns (bool) {
         address nodesDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
         address constantsAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("Constants")));
         uint freeSpace;
         uint nodeIndex;
+        // get nodeIndex and free space of this Node
         if (partOfNode == Constants(constantsAddress).MEDIUM_DIVISOR()) {
             (nodeIndex, freeSpace) = NodesData(nodesDataAddress).fullNodes(indexOfNode);
         } else if (partOfNode == Constants(constantsAddress).TINY_DIVISOR() || partOfNode == Constants(constantsAddress).SMALL_DIVISOR()) {
@@ -203,6 +268,13 @@ contract SchainsFunctionality is GroupsFunctionality {
         return NodesData(nodesDataAddress).isNodeActive(nodeIndex) && (freeSpace >= space);
     }
 
+    /**
+     * @dev returnValidNodeIndex - returns nodeIndex from indexOfNode at Full Nodes 
+     * and Fractional Nodes array
+     * @param partOfNode - divisor of given type of Schain
+     * @param indexOfNode - index of Node at the Full Nodes or Fractional Nodes array
+     * @return nodeIndex - index of Node at common array of Nodes
+     */
     function returnValidNodeIndex(uint partOfNode, uint indexOfNode) internal view returns (uint nodeIndex) {
         address nodesDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
         address constantsAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("Constants")));
@@ -216,6 +288,12 @@ contract SchainsFunctionality is GroupsFunctionality {
         }
     }
 
+    /**
+     * @dev removeSpace - occupy space of given Node
+     * @param nodeIndex - index of Node at common array of Nodes
+     * @param space - needed space to occupy
+     * @return if ouccupied - true, else - false
+     */
     function removeSpace(uint nodeIndex, uint space) internal returns (bool) {
         address nodesDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
         uint subarrayLink;
@@ -228,12 +306,18 @@ contract SchainsFunctionality is GroupsFunctionality {
         }
     }
 
+    /**
+     * @dev addSpace - return occupied space to Node
+     * @param nodeIndex - index of Node at common array of Nodes
+     * @param partOfNode - divisor of given type of Schain
+     */
     function addSpace(uint nodeIndex, uint partOfNode) internal {
         address nodesDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
         address constantsAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("Constants")));
         uint subarrayLink;
         bool isNodeFull;
         (subarrayLink, isNodeFull) = NodesData(nodesDataAddress).nodesLink(nodeIndex);
+        // adds space
         if (isNodeFull) {
             if (partOfNode != 0) {
                 NodesData(nodesDataAddress).addSpaceToFullNode(subarrayLink, Constants(constantsAddress).MEDIUM_DIVISOR() / partOfNode);
@@ -249,6 +333,16 @@ contract SchainsFunctionality is GroupsFunctionality {
         }
     }
     
+    /**
+     * @dev setNumberOfNodesInGroup - checks is Nodes enough to create Schain 
+     * and returns number of Nodes in group 
+     * and how much space would be occupied on its, based on given type of Schain
+     * @param groupIndex - Groups identifier
+     * @param partOfNode - divisor of given type of Schain
+     * @param dataAddress - address of Data contract
+     * @return numberOfNodes - number of Nodes in Group
+     * @return space - needed space to occupy
+     */
     function setNumberOfNodesInGroup(bytes32 groupIndex, uint partOfNode, address dataAddress) internal view returns (uint numberOfNodes, uint space) {
         address nodesDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
         address constantsAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("Constants")));
@@ -269,6 +363,14 @@ contract SchainsFunctionality is GroupsFunctionality {
         require(GroupsData(dataAddress).getRecommendedNumberOfNodes(groupIndex) <= numberOfAvailableNodes, "Not enough nodes to create Schain");
     }
 
+    /**
+     * @dev createGroupForSchain - creates Group for Schain
+     * @param schainName - name of Schain
+     * @param schainId - hash by name of Schain
+     * @param numberOfNodes - number of Nodes needed for this Schain
+     * @param partOfNode - divisor of given type of Schain
+     * @param dataAddress - address of Data contract
+     */
     function createGroupForSchain(string schainName, bytes32 schainId, uint numberOfNodes, uint partOfNode, address dataAddress) internal {
         addGroup(schainId, numberOfNodes, bytes32(partOfNode));
         uint[] memory numberOfNodesInGroup = generateGroup(schainId);
@@ -276,6 +378,13 @@ contract SchainsFunctionality is GroupsFunctionality {
         emit SchainNodes(schainName, schainId, numberOfNodesInGroup, uint32(block.timestamp), gasleft());
     }
 
+    /**
+     * @dev getNodesDataFromTypeOfSchain - returns number if Nodes 
+     * and part of Node which needed to this Schain
+     * @param typeOfSchain - type of Schain
+     * @return numberOfNodes - number of Nodes needed to this Schain
+     * @return partOfNode - divisor of given type of Schain
+     */
     function getNodesDataFromTypeOfSchain(uint typeOfSchain) internal view returns (uint numberOfNodes, uint partOfNode) {
         address constantsAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("Constants")));
         numberOfNodes = Constants(constantsAddress).NUMBER_OF_NODES_FOR_SCHAIN();
@@ -291,6 +400,10 @@ contract SchainsFunctionality is GroupsFunctionality {
         }
     }
 
+    /**
+     * @dev setSystemStatus - sets system status
+     * @param constantsAddress - address of Constants contract
+     */
     /*function setSystemStatus(address constantsAddress) internal {
         address dataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked(dataName)));
         address nodesDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
@@ -301,6 +414,10 @@ contract SchainsFunctionality is GroupsFunctionality {
         }
     }*/
 
+    /**
+     * @dev coefficientForPrice - calculates a ratio for standart price
+     * @param constantsAddress - address of Constants contract
+     */
     /*function coefficientForPrice(address constantsAddress) internal view returns (uint up, uint down) {
         address dataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked(dataName)));
         address nodesDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
@@ -321,7 +438,13 @@ contract SchainsFunctionality is GroupsFunctionality {
         }
     }*/
 
-    function find(uint nodeIndex, bytes32 schainId) internal view returns (uint) {
+    /**
+     * @dev findSchainAtSchainsForNode - finds index of Schain at schainsForNode array
+     * @param nodeIndex - index of Node at common array of Nodes
+     * @param schainId - hash of name of Schain
+     * @return index of Schain at schainsForNode array
+     */
+    function findSchainAtSchainsForNode(uint nodeIndex, bytes32 schainId) internal view returns (uint) {
         address dataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked(dataName)));
         uint length = SchainsData(dataAddress).getLengthOfSchainsForNode(nodeIndex);
         for (uint i = 0; i < length; i++) {
@@ -332,6 +455,13 @@ contract SchainsFunctionality is GroupsFunctionality {
         return length;
     }
 
+    /**
+     * @dev binstep - exponentiation by squaring by modulo (a^step) 
+     * @param a - number which should be exponentiated
+     * @param step - exponent
+     * @param div - divider of a
+     * @return x - result (a^step)
+    */
     /*function binstep(uint a, uint step, uint div) internal pure returns (uint x) {
         x = a;
         step -= 1;
@@ -363,6 +493,14 @@ contract SchainsFunctionality is GroupsFunctionality {
         }
     }*/
 
+    /**
+     * @dev fallbackSchainParameterDataConverter - converts data from bytes to normal parameters
+     * @param data - concatenated parameters
+     * @return lifetime
+     * @return typeOfSchain
+     * @return nonce
+     * @return name
+     */
     function fallbackSchainParametersDataConverter(bytes data) internal pure returns (uint lifetime, uint typeOfSchain, uint16 nonce, string name) {
         require(data.length > 36, "Incorrect bytes data config");
         bytes32 lifetimeInBytes;
