@@ -19,6 +19,7 @@
   "scripts": {
     "lint": "npx solium --dir contracts",
     "compile": "./node_modules/.bin/truffle compile",
-    "deploy": "./scripts/build.sh"
+    "deploy": "./scripts/build.sh",
+    "test": "node test/Main.js"
   }
 }
