@@ -26,7 +26,7 @@ ganache_running() {
 start_ganache() {
   # We define 10 accounts with balance 1M ether, needed for high-value tests.
   local accounts=(
-    
+    --account="$ETH_PRIVATE_KEY,1000000000000000000000" 
   )
 
   if [ "$SOLIDITY_COVERAGE" = true ]; then

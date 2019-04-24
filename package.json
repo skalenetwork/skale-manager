@@ -1,25 +1,36 @@
 {
   "name": "@skalenetwork/skale-manager",
-  "dependencies": {
-    "solc": "^0.4.25",
-    "truffle-privatekey-provider": "1.0.0",
-    "web3": "1.0.0-beta.36"
-  },
-  "license": "GPL-3.0",
-  "devDependencies": {
-    "dotenv": "^7.0.0",
-    "ethlint": "^1.2.2",
-    "ganache-cli": "6.1.8",
-    "solc": "^0.4.25",
-    "solidity-coverage": "^0.5.11",
-    "truffle": "^4.1.13",
-    "truffle-privatekey-provider": "1.0.0",
-    "web3": "1.0.0-beta.36"
-  },
+  "version": "0.1.0",
+  "description": "SKALE Manager system, Decentralized task manager",
   "scripts": {
     "lint": "npx solium --dir contracts",
     "compile": "./node_modules/.bin/truffle compile",
     "deploy": "./scripts/build.sh",
     "test": "node test/Main.js"
+  },
+  "dependencies": {
+    "solc": "^0.4.25",
+    "truffle": "^4.1.13",
+    "truffle-privatekey-provider": "1.1.0",
+    "web3": "1.0.0-beta.37"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/skalenetwork/skale-manager.git"
+  },
+  "author": "SKALE Labs",
+  "contributors": [
+    "Artem Payvin <artem.payvin@skalelabs.com>"
+  ],
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/skalenetwork/skale-manager/issues"
+  },
+  "homepage": "https://github.com/skalenetwork/skale-manager#readme",
+  "devDependencies": {
+    "dotenv": "^7.0.0",
+    "ethlint": "^1.2.4",
+    "ganache-cli": "6.1.8",
+    "solidity-coverage": "^0.5.11"
   }
 }
