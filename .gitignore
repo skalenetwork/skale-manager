@@ -15,6 +15,9 @@ npm-debug.log*
 # Dependency directories
 node_modules
 
+package-lock.json
+data/*.json
+
 ### Geth ###
 # geth secrets
 docker/geth/shared/eth_datadir/geth
@@ -33,3 +36,6 @@ docker/geth/shared/eth_datadir/history
 # dotenv environment variables file
 .env
 .env.test
+
+# coverage
+coverageEnv
