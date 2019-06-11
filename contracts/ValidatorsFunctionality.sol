@@ -132,7 +132,7 @@ contract ValidatorsFunctionality is GroupsFunctionality {
             quickSort(downtimeArray, 0, lengthOfArray - 1);
             quickSort(latencyArray, 0, lengthOfArray - 1);
             uint start = 0;
-            uint finish = lengthOfArray;
+            uint finish = lengthOfArray - 1;
             uint numberOfNodes = GroupsData(dataAddress).getNumberOfNodesInGroup(validatorIndex);
             if (lengthOfArray > ((numberOfNodes * 2) / 3) && lengthOfArray > 2) {
                 start = ((lengthOfArray - (numberOfNodes * 2) / 3) + (lengthOfArray - (numberOfNodes * 2) / 3) % 2) / 2;
@@ -140,7 +140,7 @@ contract ValidatorsFunctionality is GroupsFunctionality {
             }
             uint32 divisor = uint32(finish - start + 1);
 
-            while (start < finish) {
+            while (start <= finish) {
                 averageDowntime += downtimeArray[start];
                 averageLatency += latencyArray[start];
                 start++;
