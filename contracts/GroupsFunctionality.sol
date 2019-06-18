@@ -5,7 +5,7 @@ import './Permissions.sol';
 /**
  * @title GroupsData - interface of GroupsData
  */
-interface GroupsData {
+interface IGroupsData {
     function addGroup(bytes32 groupIndex, uint amountOfNodes, bytes32 data) external;
     function removeAllNodesInGroup(bytes32 groupIndex) external;
     function setNewAmountOfNodes(bytes32 groupIndex, uint amountOfNodes) external;
@@ -27,7 +27,7 @@ interface GroupsData {
 /**
  * @title SkaleVerifier - interface of SkaleVerifier
  */
-interface SkaleVerifier {
+interface ISkaleVerifier {
     function verify(uint sigx, uint sigy, uint hashx, uint hashy, uint pkx1, uint pky1, uint pkx2, uint pky2) external view returns (bool);
 }
 
@@ -102,7 +102,7 @@ contract GroupsFunctionality is Permissions {
      */
     function addGroup(bytes32 groupIndex, uint newRecommendedNumberOfNodes, bytes32 data) public allow(executorName) {
         address groupsDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked(dataName)));
-        GroupsData(groupsDataAddress).addGroup(groupIndex, newRecommendedNumberOfNodes, data);
+        IGroupsData(groupsDataAddress).addGroup(groupIndex, newRecommendedNumberOfNodes, data);
         emit GroupAdded(groupIndex, data, uint32(block.timestamp), gasleft());
     }
 
@@ -113,9 +113,9 @@ contract GroupsFunctionality is Permissions {
      */
     function deleteGroup(bytes32 groupIndex) public allow(executorName) {
         address groupsDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked(dataName)));
-        require(GroupsData(groupsDataAddress).isGroupActive(groupIndex), "Group is not active");
-        GroupsData(groupsDataAddress).removeGroup(groupIndex);
-        GroupsData(groupsDataAddress).removeAllNodesInGroup(groupIndex);
+        require(IGroupsData(groupsDataAddress).isGroupActive(groupIndex), "Group is not active");
+        IGroupsData(groupsDataAddress).removeGroup(groupIndex);
+        IGroupsData(groupsDataAddress).removeAllNodesInGroup(groupIndex);
         emit GroupDeleted(groupIndex, uint32(block.timestamp), gasleft());
     }
 
@@ -128,10 +128,10 @@ contract GroupsFunctionality is Permissions {
      */
     function upgradeGroup(bytes32 groupIndex, uint newRecommendedNumberOfNodes, bytes32 data) public allow(executorName) {
         address groupsDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked(dataName)));
-        require(GroupsData(groupsDataAddress).isGroupActive(groupIndex), "Group is not active");
-        GroupsData(groupsDataAddress).setNewGroupData(groupIndex, data);
-        GroupsData(groupsDataAddress).setNewAmountOfNodes(groupIndex, newRecommendedNumberOfNodes);
-        GroupsData(groupsDataAddress).removeAllNodesInGroup(groupIndex);
+        require(IGroupsData(groupsDataAddress).isGroupActive(groupIndex), "Group is not active");
+        IGroupsData(groupsDataAddress).setNewGroupData(groupIndex, data);
+        IGroupsData(groupsDataAddress).setNewAmountOfNodes(groupIndex, newRecommendedNumberOfNodes);
+        IGroupsData(groupsDataAddress).removeAllNodesInGroup(groupIndex);
         emit GroupUpgraded(groupIndex, data, uint32(block.timestamp), gasleft());
     }
 
@@ -150,9 +150,9 @@ contract GroupsFunctionality is Permissions {
         uint publicKeyy1;
         uint publicKeyx2;
         uint publicKeyy2;
-        (publicKeyx1, publicKeyy1, publicKeyx2, publicKeyy2) = GroupsData(groupsDataAddress).getGroupsPublicKey(groupIndex);
+        (publicKeyx1, publicKeyy1, publicKeyx2, publicKeyy2) = IGroupsData(groupsDataAddress).getGroupsPublicKey(groupIndex);
         address skaleVerifierAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("SkaleVerifier")));
-        return SkaleVerifier(skaleVerifierAddress).verify(signatureX, signatureY, hashX, hashY, publicKeyx1, publicKeyy1, publicKeyx2, publicKeyy2);
+        return ISkaleVerifier(skaleVerifierAddress).verify(signatureX, signatureY, hashX, hashY, publicKeyx1, publicKeyy1, publicKeyx2, publicKeyy2);
     }
 
     /**

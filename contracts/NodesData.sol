@@ -5,7 +5,7 @@ import "./Permissions.sol";
 /**
  * @title Constants - interface of Constants contract
  */
-interface Constants {
+interface IConstants {
     function rewardPeriod() external view returns (uint32);
 }
 
@@ -285,7 +285,7 @@ contract NodesData is Permissions {
      */
     function isTimeForReward(uint nodeIndex) public view returns (bool) {
         address constantsAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("Constants")));
-        return nodes[nodeIndex].lastRewardDate + Constants(constantsAddress).rewardPeriod() <= block.timestamp;
+        return nodes[nodeIndex].lastRewardDate + IConstants(constantsAddress).rewardPeriod() <= block.timestamp;
     }
 
     /**
@@ -349,7 +349,7 @@ contract NodesData is Permissions {
      */
     function getNodeNextRewardDate(uint nodeIndex) public view returns (uint32) {
         address constantsAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("Constants")));
-        return nodes[nodeIndex].lastRewardDate + Constants(constantsAddress).rewardPeriod();
+        return nodes[nodeIndex].lastRewardDate + IConstants(constantsAddress).rewardPeriod();
     }
 
     /**

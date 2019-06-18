@@ -2,13 +2,13 @@ pragma solidity ^0.5.0;
 
 import './Permissions.sol';
 
-interface GroupsData {
+interface IGroupsData {
     function setPublicKey(bytes32 groupIndex, uint pubKeyx1, uint pubKeyy1, uint pubKeyx2, uint pubKeyy2) external;
     function getNodesInGroup() external view returns (uint[] memory);
     function getNumberOfNodesInGroup() external view returns (uint);
 }
 
-interface NodesData {
+interface INodesData {
     function isNodeExist(address from, uint nodeIndex) external view returns (bool);
 }
 
@@ -101,14 +101,14 @@ contract SkaleDKG is Permissions {
 
     function isBroadcast(bytes32 groupIndex, uint nodeIndex) internal {
         uint index = findNode(groupIndex, nodeIndex);
-        require(index < GroupsData(channels[groupIndex].dataAddress).getNumberOfNodesInGroup(), "Node is not in this group");
+        require(index < IGroupsData(channels[groupIndex].dataAddress).getNumberOfNodesInGroup(), "Node is not in this group");
         require(isNodeByMessageSender(nodeIndex, msg.sender), "Node does not exist for message sender");
         require(!channels[groupIndex].broadcasted[index], "This node is already broadcasted");
         channels[groupIndex].broadcasted[index] = true;
     }
 
     function findNode(bytes32 groupIndex, uint nodeIndex) internal view returns (uint index) {
-        uint[] memory nodesInGroup = GroupsData(channels[groupIndex].dataAddress).getNodesInGroup();
+        uint[] memory nodesInGroup = IGroupsData(channels[groupIndex].dataAddress).getNodesInGroup();
         for (index = 0; index < nodesInGroup.length; index++) {
             if (nodesInGroup[index] == nodeIndex) {
                 return index;
@@ -119,7 +119,7 @@ contract SkaleDKG is Permissions {
 
     function isNodeByMessageSender(uint nodeIndex, address from) internal view returns (bool) {
         address nodesDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
-        NodesData(nodesDataAddress).isNodeExist(from, nodeIndex);
+        INodesData(nodesDataAddress).isNodeExist(from, nodeIndex);
     }
 
     function addFp2(Fp2 memory a, Fp2 memory b) internal view returns (Fp2 memory) {

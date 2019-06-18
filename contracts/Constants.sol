@@ -31,7 +31,7 @@ contract Constants is Permissions {
     uint public NUMBER_OF_NODES_FOR_TEST_SCHAIN = 2;
 
     // number of Nodes for Test Skale-chain (4 Nodes)
-    uint public NUMBER_OF_NODES_FOR_MEDIUM_TEST_SCHAIN = 4;
+    //uint public NUMBER_OF_NODES_FOR_MEDIUM_TEST_SCHAIN = 4;
 
     // 'Fractional' Part of ratio for create Fractional or Full Node
     uint public FRACTIONAL_FACTOR = 128;
