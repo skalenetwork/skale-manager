@@ -1,4 +1,4 @@
-pragma solidity ^0.4.24;
+pragma solidity ^0.5.0;
 
 import './GroupsData.sol';
 
@@ -21,7 +21,7 @@ contract ValidatorsData is GroupsData {
     //mapping (bytes32 => Metrics[]) public verdicts;
     mapping (bytes32 => uint32[][]) public verdicts;
 
-    constructor(string newExecutorName, address newContractsAddress) GroupsData(newExecutorName, newContractsAddress) public {
+    constructor(string memory newExecutorName, address newContractsAddress) GroupsData(newExecutorName, newContractsAddress) public {
     
     }
 
@@ -45,7 +45,7 @@ contract ValidatorsData is GroupsData {
         verdicts[validatorIndex].length = 0;
     }
 
-    function getValidatedArray(bytes32 validatorIndex) public view returns (bytes32[]) {
+    function getValidatedArray(bytes32 validatorIndex) public view returns (bytes32[] memory) {
         return validatedNodes[validatorIndex];
     }
 

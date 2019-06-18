@@ -1,4 +1,4 @@
-pragma solidity ^0.4.24;
+pragma solidity ^0.5.0;
 
 import './GroupsFunctionality.sol';
 
@@ -25,7 +25,7 @@ interface NodesData {
 }
 
 interface SchainsData {
-    function initializeSchain(string name, address from, uint lifetime, uint deposit) external;
+    function initializeSchain(string calldata name, address from, uint lifetime, uint deposit) external;
     function setSchainIndex(bytes32 schainId, address from) external;
     function addSchainForNode(uint nodeIndex, bytes32 schainId) external;
     function setSchainPartOfNode(bytes32 schainId, uint partOfNode) external;
@@ -33,7 +33,7 @@ interface SchainsData {
     function removeSchainForNode(uint nodeIndex, uint schainIndex) external;
     function isTimeExpired(bytes32 schainId) external view returns (bool);
     function isOwnerAddress(address from, bytes32 schainId) external view returns (bool);
-    function isSchainNameAvailable(string name) external view returns (bool);
+    function isSchainNameAvailable(string calldata name) external view returns (bool);
     function getSchainsPartOfNode(bytes32 schainId) external view returns (uint);
     function getLengthOfSchainsForNode(uint nodeIndex) external view returns (uint);
     function schainsForNodes(uint nodeIndex, uint indexOfSchain) external view returns (bytes32);
@@ -47,8 +47,10 @@ interface Constants {
     function MEDIUM_DIVISOR() external view returns (uint);
     function TINY_DIVISOR() external view returns (uint);
     function SMALL_DIVISOR() external view returns (uint);
+    function MEDIUM_TEST_DIVISOR() external view returns (uint);
     function NUMBER_OF_NODES_FOR_SCHAIN() external view returns (uint);
     function NUMBER_OF_NODES_FOR_TEST_SCHAIN() external view returns (uint);
+    function NUMBER_OF_NODES_FOR_MEDIUM_TEST_SCHAIN() external view returns (uint);
     function lastTimeUnderloaded() external view returns (uint);
     function lastTimeOverloaded() external view returns (uint);
     function setLastTimeOverloaded() external;
@@ -56,7 +58,7 @@ interface Constants {
 
 
 /**
- * @title SchainsFunctionality - contract contains all functionality logic to manage Schains 
+ * @title SchainsFunctionality - contract contains all functionality logic to manage Schains
  */
 contract SchainsFunctionality is GroupsFunctionality {
     
@@ -94,7 +96,7 @@ contract SchainsFunctionality is GroupsFunctionality {
         uint gasSpend
     );
 
-    constructor(string newExecutorName, string newDataName, address newContractsAddress) GroupsFunctionality(newExecutorName, newDataName, newContractsAddress) public {
+    constructor(string memory newExecutorName, string memory newDataName, address newContractsAddress) GroupsFunctionality(newExecutorName, newDataName, newContractsAddress) public {
         
     }
 
@@ -105,7 +107,7 @@ contract SchainsFunctionality is GroupsFunctionality {
      * @param deposit - received amoung of SKL
      * @param data - Schain's data
      */
-    function addSchain(address from, uint deposit, bytes data) public allow(executorName) {
+    function addSchain(address from, uint deposit, bytes memory data) public allow(executorName) {
         uint lifetime;
         uint numberOfNodes;
         uint typeOfSchain;
@@ -120,7 +122,7 @@ contract SchainsFunctionality is GroupsFunctionality {
         address dataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked(dataName)));
 
         require(SchainsData(dataAddress).isSchainNameAvailable(name), "Schain name is not available");
-        require(typeOfSchain <= 4, "Invalid type of Schain");
+        require(typeOfSchain <= 5, "Invalid type of Schain");
 
         // initialize Schain
         SchainsData(dataAddress).initializeSchain(name, from, lifetime, deposit);
@@ -199,7 +201,7 @@ contract SchainsFunctionality is GroupsFunctionality {
      * @dev generateGroup - generates Group for Schain
      * @param groupIndex - index of Group
      */
-    function generateGroup(bytes32 groupIndex) internal returns (uint[] nodesInGroup) {
+    function generateGroup(bytes32 groupIndex) internal returns (uint[] memory nodesInGroup) {
         address dataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked(dataName)));
         require(GroupsData(dataAddress).isGroupActive(groupIndex), "Group is not active");
         bytes32 groupData = GroupsData(dataAddress).getGroupData(groupIndex);
@@ -220,7 +222,7 @@ contract SchainsFunctionality is GroupsFunctionality {
             indexOfNode = hash % numberOfNodes;
             nodeIndex = returnValidNodeIndex(uint(groupData), indexOfNode);
 
-            // checks that this not is available, enough space to allocate resources 
+            // checks that this not is available, enough space to allocate resources
             // and have not chosen to this group
             if (comparator(indexOfNode, uint(groupData), space) && !GroupsData(dataAddress).isExceptionNode(groupIndex, nodeIndex)) {
 
@@ -248,7 +250,7 @@ contract SchainsFunctionality is GroupsFunctionality {
     /**
      * @dev comparator - checks that Node is fitted to be a part of Schain
      * @param indexOfNode - index of Node at the Full Nodes or Fractional Nodes array
-     * @param partOfNode - divisor of given type of Schain 
+     * @param partOfNode - divisor of given type of Schain
      * @param space - needed space to occupy
      * @return if fitted - true, else - false
      */
@@ -269,7 +271,7 @@ contract SchainsFunctionality is GroupsFunctionality {
     }
 
     /**
-     * @dev returnValidNodeIndex - returns nodeIndex from indexOfNode at Full Nodes 
+     * @dev returnValidNodeIndex - returns nodeIndex from indexOfNode at Full Nodes
      * and Fractional Nodes array
      * @param partOfNode - divisor of given type of Schain
      * @param indexOfNode - index of Node at the Full Nodes or Fractional Nodes array
@@ -334,8 +336,8 @@ contract SchainsFunctionality is GroupsFunctionality {
     }
     
     /**
-     * @dev setNumberOfNodesInGroup - checks is Nodes enough to create Schain 
-     * and returns number of Nodes in group 
+     * @dev setNumberOfNodesInGroup - checks is Nodes enough to create Schain
+     * and returns number of Nodes in group
      * and how much space would be occupied on its, based on given type of Schain
      * @param groupIndex - Groups identifier
      * @param partOfNode - divisor of given type of Schain
@@ -355,6 +357,10 @@ contract SchainsFunctionality is GroupsFunctionality {
             space = Constants(constantsAddress).TINY_DIVISOR() / partOfNode;
             numberOfNodes = NodesData(nodesDataAddress).getNumberOfFractionalNodes();
             numberOfAvailableNodes = NodesData(nodesDataAddress).getNumberOfFreeFractionalNodes(space);
+        } else if (partOfNode == Constants(constantsAddress).MEDIUM_TEST_DIVISOR()) {
+            space = Constants(constantsAddress).TINY_DIVISOR() / partOfNode;
+            numberOfNodes = NodesData(nodesDataAddress).getNumberOfNodes();
+            numberOfAvailableNodes = NodesData(nodesDataAddress).numberOfActiveNodes();
         } else if (partOfNode == 0) {
             space = partOfNode;
             numberOfNodes = NodesData(nodesDataAddress).getNumberOfNodes();
@@ -371,7 +377,7 @@ contract SchainsFunctionality is GroupsFunctionality {
      * @param partOfNode - divisor of given type of Schain
      * @param dataAddress - address of Data contract
      */
-    function createGroupForSchain(string schainName, bytes32 schainId, uint numberOfNodes, uint partOfNode, address dataAddress) internal {
+    function createGroupForSchain(string memory schainName, bytes32 schainId, uint numberOfNodes, uint partOfNode, address dataAddress) internal {
         addGroup(schainId, numberOfNodes, bytes32(partOfNode));
         uint[] memory numberOfNodesInGroup = generateGroup(schainId);
         SchainsData(dataAddress).setSchainPartOfNode(schainId, partOfNode);
@@ -379,7 +385,7 @@ contract SchainsFunctionality is GroupsFunctionality {
     }
 
     /**
-     * @dev getNodesDataFromTypeOfSchain - returns number if Nodes 
+     * @dev getNodesDataFromTypeOfSchain - returns number if Nodes
      * and part of Node which needed to this Schain
      * @param typeOfSchain - type of Schain
      * @return numberOfNodes - number of Nodes needed to this Schain
@@ -397,6 +403,9 @@ contract SchainsFunctionality is GroupsFunctionality {
         } else if (typeOfSchain == 4) {
             partOfNode = 0;
             numberOfNodes = Constants(constantsAddress).NUMBER_OF_NODES_FOR_TEST_SCHAIN();
+        } else if (typeOfSchain == 5) {
+            partOfNode = Constants(contractsAddress).MEDIUM_TEST_DIVISOR();
+            numberOfNodes = Constants(constantsAddress).NUMBER_OF_NODES_FOR_MEDIUM_TEST_SCHAIN();
         }
     }
 
@@ -456,7 +465,7 @@ contract SchainsFunctionality is GroupsFunctionality {
     }
 
     /**
-     * @dev binstep - exponentiation by squaring by modulo (a^step) 
+     * @dev binstep - exponentiation by squaring by modulo (a^step)
      * @param a - number which should be exponentiated
      * @param step - exponent
      * @param div - divider of a
@@ -501,7 +510,7 @@ contract SchainsFunctionality is GroupsFunctionality {
      * @return nonce
      * @return name
      */
-    function fallbackSchainParametersDataConverter(bytes data) internal pure returns (uint lifetime, uint typeOfSchain, uint16 nonce, string name) {
+    function fallbackSchainParametersDataConverter(bytes memory data) internal pure returns (uint lifetime, uint typeOfSchain, uint16 nonce, string memory name) {
         require(data.length > 36, "Incorrect bytes data config");
         bytes32 lifetimeInBytes;
         bytes1 typeOfSchainInBytes;
@@ -511,7 +520,7 @@ contract SchainsFunctionality is GroupsFunctionality {
             typeOfSchainInBytes := mload(add(data, 65))
             nonceInBytes := mload(add(data, 66))
         }
-        typeOfSchain = uint(typeOfSchainInBytes);
+        typeOfSchain = uint8(typeOfSchainInBytes);
         lifetime = uint(lifetimeInBytes);
         nonce = uint16(nonceInBytes);
         name = new string(data.length - 36);

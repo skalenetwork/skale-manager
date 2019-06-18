@@ -1,4 +1,4 @@
-pragma solidity ^0.4.24;
+pragma solidity ^0.5.0;
 
 import "./GroupsData.sol";
 
@@ -26,14 +26,14 @@ contract SchainsData is GroupsData {
     mapping (address => bytes32[]) public schainIndexes;
     // mapping shows schains which Node composed in
     mapping (uint => bytes32[]) public schainsForNodes;
-    // array which contain all schains 
+    // array which contain all schains
     bytes32[] private schainsAtSystem;
 
     uint64 public numberOfSchains = 0;
     // total resources that schains occupied
     uint public sumOfSchainsResources = 0;
 
-    constructor(string newExecutorName, address newContractsAddress) GroupsData(newExecutorName, newContractsAddress) public {
+    constructor(string memory newExecutorName, address newContractsAddress) GroupsData(newExecutorName, newContractsAddress) public {
     
     }
 
@@ -45,7 +45,7 @@ contract SchainsData is GroupsData {
      * @param lifetime - initial lifetime of Schain
      * @param deposit - given amount of SKL
      */
-    function initializeSchain(string name, address from, uint lifetime, uint deposit) public allow(executorName) {
+    function initializeSchain(string memory name, address from, uint lifetime, uint deposit) public allow(executorName) {
         bytes32 schainId = keccak256(abi.encodePacked(name));
         schains[schainId].name = name;
         schains[schainId].owner = from;
@@ -80,7 +80,7 @@ contract SchainsData is GroupsData {
 
     /**
      * @dev setSchainPartOfNode - sets how much Schain would be occupy of Node
-     * function could be run onlye by executor 
+     * function could be run onlye by executor
      * @param schainId - hash by Schain name
      * @param partOfNode - occupied space
      */
@@ -168,7 +168,7 @@ contract SchainsData is GroupsData {
      * @param from - owner of some Schains
      * @return array of hashes by Schain names
      */
-    function getSchainIdsByAddress(address from) public view returns (bytes32[]) {
+    function getSchainIdsByAddress(address from) public view returns (bytes32[] memory) {
         return schainIndexes[from];
     }
 
@@ -178,7 +178,7 @@ contract SchainsData is GroupsData {
      * @param nodeIndex - index of Node
      * @return array of hashes by Schain names
      */
-    function getSchainIdsForNode(uint nodeIndex) public view returns (bytes32[]) {
+    function getSchainIdsForNode(uint nodeIndex) public view returns (bytes32[] memory) {
         return schainsForNodes[nodeIndex];
     }
 
@@ -196,7 +196,7 @@ contract SchainsData is GroupsData {
      * @param schainName - name of Schain
      * @return hash
      */
-    function getSchainIdFromSchainName(string schainName) public pure returns (bytes32) {
+    function getSchainIdFromSchainName(string memory schainName) public pure returns (bytes32) {
         return keccak256(abi.encodePacked(schainName));
     }
 
@@ -206,7 +206,7 @@ contract SchainsData is GroupsData {
      * @param name - possible new name of Schain
      * @return if available - true, else - false
      */
-    function isSchainNameAvailable(string name) public view returns (bool) {
+    function isSchainNameAvailable(string memory name) public view returns (bool) {
         bytes32 schainId = keccak256(abi.encodePacked(name));
         return schains[schainId].owner == address(0);
     }

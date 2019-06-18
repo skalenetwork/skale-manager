@@ -1,4 +1,4 @@
-pragma solidity ^0.4.24;
+pragma solidity ^0.5.0;
 
 import './Permissions.sol';
 
@@ -30,7 +30,7 @@ interface NodesData {
     function isNodeActive(uint nodeIndex) external view returns (bool);
     function isNodeLeaving(uint nodeIndex) external view returns (bool);
     function isLeavingPeriodExpired(uint nodeIndex) external view returns (bool);
-    function addNode(address from, string name, bytes4 ip, bytes4 publicIP, uint16 port, bytes publicKey) external returns (uint);
+    function addNode(address from, string calldata name, bytes4 ip, bytes4 publicIP, uint16 port, bytes calldata publicKey) external returns (uint);
     function addFractionalNode(uint nodeIndex) external;
     function addFullNode(uint nodeIndex) external;
     function setNodeLeaving(uint nodeIndex) external;
@@ -102,7 +102,7 @@ contract NodesFunctionality is Permissions {
      * @param data - Node's data
      * @return nodeIndex - index of Node
      */
-    function createNode(address from, uint value, bytes data) public allow("SkaleManager") returns (uint nodeIndex) {
+    function createNode(address from, uint value, bytes memory data) public allow("SkaleManager") returns (uint nodeIndex) {
         address constantsAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("Constants")));
         require(value >= Constants(constantsAddress).NODE_DEPOSIT(), "Not enough money to create Node");
         uint16 nonce;
@@ -306,8 +306,8 @@ contract NodesFunctionality is Permissions {
      * @return ip address
      * @return public ip address
      */
-    function fallbackDataConverter(bytes data) 
-        private 
+    function fallbackDataConverter(bytes memory data)
+        private
         pure
         returns (uint16, uint16, bytes4, bytes4 /*address secondAddress,*/)
     {
@@ -318,7 +318,7 @@ contract NodesFunctionality is Permissions {
         bytes2 portInBytes;
         bytes2 nonceInBytes;
         assembly {
-            portInBytes := mload(add(data, 33)) // 0x21                  
+            portInBytes := mload(add(data, 33)) // 0x21
             nonceInBytes := mload(add(data, 35)) // 0x25
             ip := mload(add(data, 37)) // 0x29
             publicIP := mload(add(data, 41))
@@ -333,7 +333,7 @@ contract NodesFunctionality is Permissions {
      * @return public key
      * @return name of Node
      */
-    function fallbackDataConverterPublicKeyAndName(bytes data) private pure returns (bytes, string) {
+    function fallbackDataConverterPublicKeyAndName(bytes memory data) private pure returns (bytes memory, string memory) {
         require(data.length > 77, "Incorrect bytes data config");
         bytes32 firstPartPublicKey;
         bytes32 secondPartPublicKey;
@@ -344,16 +344,16 @@ contract NodesFunctionality is Permissions {
             firstPartPublicKey := mload(add(data, 45))
             secondPartPublicKey := mload(add(data, 77))
         }
-        for (uint i = 0; i < 32; i++) {
+        for (uint8 i = 0; i < 32; i++) {
             publicKey[i] = firstPartPublicKey[i];
         }
-        for (i = 0; i < 32; i++) {
+        for (uint8 i = 0; i < 32; i++) {
             publicKey[i + 32] = secondPartPublicKey[i];
         }
 
         // convert name
         string memory name = new string(data.length - 77);
-        for (i = 0; i < bytes(name).length; ++i) {
+        for (uint i = 0; i < bytes(name).length; ++i) {
             bytes(name)[i] = data[77 + i];                                                       
         }
         return (publicKey, name);
