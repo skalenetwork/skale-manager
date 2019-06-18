@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "solc": "0.5.7",
+    "truffle": "5.0.12",
     "truffle-hdwallet-provider": "^1.0.8",
     "web3": "1.0.0-beta.35"
   },
