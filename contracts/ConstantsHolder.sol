@@ -2,11 +2,12 @@ pragma solidity ^0.4.24;
 
 import './Permissions.sol';
 
+
 /**
  * @title Contains constants and common variables for Skale Manager system
  * @author Artem Payvin
  */
-contract Constants is Permissions {
+contract ConstantsHolder is Permissions {
 
     // initial price for creating Node (100 SKL)
     uint public NODE_DEPOSIT = 100000000000000000000;

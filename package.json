@@ -9,6 +9,9 @@
     "test": "node test/Main.js"
   },
   "dependencies": {
+    "chai": "^4.2.0",
+    "chai-as-promised": "^7.1.1",
+    "scrypt": "^6.0.3",
     "solc": "^0.4.25",
     "truffle": "^4.1.13",
     "truffle-privatekey-provider": "1.1.0",
