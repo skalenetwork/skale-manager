@@ -3,7 +3,7 @@
  * https://github.com/ethereum/EIPs/issues/20
  * https://github.com/ethereum/EIPs/issues/223
  */
-pragma solidity ^0.4.8;
+pragma solidity ^0.5.0;
 
 
 contract Token {
@@ -42,7 +42,7 @@ contract Token {
      * @param data Data to be sent to `tokenFallback.
      * @return Returns success of function call.
      */
-    function transfer(address to, uint256 value, bytes data) public returns (bool success);
+    function transfer(address to, uint256 value, bytes memory data) public returns (bool success);
 
     /**
      * @notice send `value` token to `to` from `msg.sender`.

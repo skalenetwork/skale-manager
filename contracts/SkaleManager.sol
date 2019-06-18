@@ -1,4 +1,4 @@
-pragma solidity ^0.4.24;
+pragma solidity ^0.5.0;
 
 import './Permissions.sol';
 //import './ValidatorsFunctionality.sol';
@@ -31,7 +31,7 @@ interface NodesData {
 }
 
 interface NodesFunctionality {
-    function createNode(address from, uint value, bytes data) external returns (uint);
+    function createNode(address from, uint value, bytes calldata data) external returns (uint);
     function initWithdrawDeposit(address from, uint nodeIndex) external;
     function completeWithdrawDeposit(address from, uint nodeIndex) external returns (uint);
     function removeNode(address from, uint nodeIndex) external;
@@ -45,7 +45,7 @@ interface ValidatorsFunctionality {
 }
 
 interface SchainsFunctionality {
-    function addSchain(address from, uint value, bytes data) external;
+    function addSchain(address from, uint value, bytes calldata data) external;
     function deleteSchain(address from, bytes32 schainId) external;
 }
 
@@ -77,7 +77,7 @@ contract SkaleManager is Permissions {
         
     }
 
-    function tokenFallback(address from, uint value, bytes data) public allow("SkaleToken") {
+    function tokenFallback(address from, uint value, bytes memory data) public allow("SkaleToken") {
         TransactionOperation operationType = fallbackOperationTypeConvert(data);
         if (operationType == TransactionOperation.CreateNode) {
             address nodesFunctionalityAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesFunctionality")));
@@ -166,20 +166,20 @@ contract SkaleManager is Permissions {
         return uint(bountyForMiner);
     }
 
-    function deleteSchain(string name) public {
+    function deleteSchain(string memory name) public {
         address schainsFunctionalityAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("SchainsFunctionality")));
         SchainsFunctionality(schainsFunctionalityAddress).deleteSchain(msg.sender, keccak256(abi.encodePacked(name)));
     }
 
-    function fallbackOperationTypeConvert(bytes data) internal pure returns (TransactionOperation) {
+    function fallbackOperationTypeConvert(bytes memory data) internal pure returns (TransactionOperation) {
         bytes1 operationType;
         assembly {
             operationType := mload(add(data, 0x20))
         }
-        require(operationType == 0x1 || operationType == 0x10 || operationType == 0x11, "Operation type is not identified");
-        if (operationType == 0x1) {
+        require(operationType == bytes1(uint8(1)) || operationType == bytes1(uint8(16)) || operationType == bytes1(uint8(17)), "Operation type is not identified");
+        if (operationType == bytes1(uint8(1))) {
             return TransactionOperation.CreateNode;
-        } else if (operationType == 0x10) {
+        } else if (operationType == bytes1(uint8(16))) {
             return TransactionOperation.CreateSchain;
         }
     }

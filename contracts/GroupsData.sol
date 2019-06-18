@@ -1,6 +1,7 @@
-pragma solidity ^0.4.24;
+pragma solidity ^0.5.0;
 
 import './Permissions.sol';
+
 
 /**
  * @title GroupsData - contract with some Groups data, will be inherited by
@@ -35,14 +36,14 @@ contract GroupsData is Permissions {
      * @param newExecutorName - name of executor contract
      * @param newContractsAddress needed in Permissions constructor
      */
-    constructor(string newExecutorName, address newContractsAddress) public Permissions(newContractsAddress) {
+    constructor(string memory newExecutorName, address newContractsAddress) public Permissions(newContractsAddress) {
         executorName = newExecutorName;
     }
 
     /**
      * @dev addGroup - creates and adds new Group to mapping
-     * function could be run only by executor 
-     * @param groupIndex - Groups identifier 
+     * function could be run only by executor
+     * @param groupIndex - Groups identifier
      * @param amountOfNodes - recommended number of Nodes in this Group
      * @param data - some extra data
      */
@@ -104,7 +105,7 @@ contract GroupsData is Permissions {
      * @param groupIndex - Groups identifier
      * @param nodesInGroup - array of indexes of Nodes which would be added to the Group
     */
-    function setNodesInGroup(bytes32 groupIndex, uint[] nodesInGroup) public allow(executorName) {
+    function setNodesInGroup(bytes32 groupIndex, uint[] memory nodesInGroup) public allow(executorName) {
         groups[groupIndex].nodesInGroup = nodesInGroup;
     }
 
@@ -181,7 +182,7 @@ contract GroupsData is Permissions {
      * @param groupIndex - Groups identifier
      * @return array of indexes of Nodes in Group
      */
-    function getNodesInGroup(bytes32 groupIndex) public view returns (uint[]) {
+    function getNodesInGroup(bytes32 groupIndex) public view returns (uint[] memory) {
         return groups[groupIndex].nodesInGroup;
     }
 

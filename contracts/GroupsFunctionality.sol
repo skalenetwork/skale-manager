@@ -1,4 +1,4 @@
-pragma solidity ^0.4.24;
+pragma solidity ^0.5.0;
 
 import './Permissions.sol';
 
@@ -11,7 +11,7 @@ interface GroupsData {
     function setNewAmountOfNodes(bytes32 groupIndex, uint amountOfNodes) external;
     function setNewGroupData(bytes32 groupIndex, bytes32 data) external;
     function setNodeInGroup(bytes32 groupIndex, uint nodeIndex) external;
-    function setNodesInGroup(bytes32 groupIndex, uint[] nodesInGroup) external;
+    function setNodesInGroup(bytes32 groupIndex, uint[] calldata nodesInGroup) external;
     function removeExceptionNode(bytes32 groupIndex, uint nodeIndex) external;
     function removeGroup(bytes32 groupIndex) external;
     function setException(bytes32 groupIndex, uint nodeIndex) external;
@@ -33,7 +33,7 @@ interface SkaleVerifier {
 
 
 /**
- * @title GroupsFunctionality - contract with some Groups functionality, will be inherited by 
+ * @title GroupsFunctionality - contract with some Groups functionality, will be inherited by
  * ValidatorsFunctionality and SchainsFunctionality
  */
 contract GroupsFunctionality is Permissions {
@@ -88,7 +88,7 @@ contract GroupsFunctionality is Permissions {
      * @param newDataName - name of data contract
      * @param newContractsAddress needed in Permissions constructor
      */
-    constructor(string newExecutorName, string newDataName, address newContractsAddress) Permissions(newContractsAddress) public {
+    constructor(string memory newExecutorName, string memory newDataName, address newContractsAddress) Permissions(newContractsAddress) public {
         executorName = newExecutorName;
         dataName = newDataName;
     }
@@ -161,5 +161,5 @@ contract GroupsFunctionality is Permissions {
      * @param groupIndex - Groups identifier
      * return array of indexes of Nodes in Group
      */
-    function generateGroup(bytes32 groupIndex) internal returns (uint[]);
+    function generateGroup(bytes32 groupIndex) internal returns (uint[] memory);
 }

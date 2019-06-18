@@ -9,10 +9,10 @@
     "test": "node test/Main.js"
   },
   "dependencies": {
-    "solc": "^0.4.25",
-    "truffle": "^4.1.13",
-    "truffle-privatekey-provider": "1.1.0",
-    "web3": "1.0.0-beta.37"
+    "solc": "0.5.7",
+    "truffle": "5.0.12",
+    "truffle-hdwallet-provider": "^1.0.8",
+    "web3": "1.0.0-beta.35"
   },
   "repository": {
     "type": "git",

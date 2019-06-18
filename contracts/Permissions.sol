@@ -1,4 +1,4 @@
-pragma solidity ^0.4.24;
+pragma solidity ^0.5.0;
 
 import "./ContractManager.sol";
 
@@ -17,7 +17,7 @@ contract Permissions is Ownable {
      * or `contractName` contract
      * @param contractName - human readable name of contract
      */
-    modifier allow(string contractName) {
+    modifier allow(string memory contractName) {
         require(ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked(contractName))) == msg.sender || owner == msg.sender, "Message sender is invalid");
         _;
     }

@@ -1,4 +1,4 @@
-pragma solidity ^0.4.24;
+pragma solidity ^0.5.0;
 
 import "./Permissions.sol";
 
@@ -90,7 +90,7 @@ contract NodesData is Permissions {
      * @param publicKey - Ethereum public key
      * @return index of Node
      */
-    function addNode(address from, string name, bytes4 ip, bytes4 publicIP, uint16 port, bytes publicKey) public allow("NodesFunctionality") returns (uint) {
+    function addNode(address from, string memory name, bytes4 ip, bytes4 publicIP, uint16 port, bytes memory publicKey) public allow("NodesFunctionality") returns (uint) {
         nodes.push(Node({
             name: name,
             ip: ip,
@@ -375,7 +375,7 @@ contract NodesData is Permissions {
     function getNumberOfFullNodes() public view returns (uint) {
         return fullNodes.length;
     }
-
+    
     /**
      * @dev getNumberOfFreefractionalNodes - get number of free Fractional Nodes
      * @return numberOfFreeFractionalNodes - number of free Fractional Nodes
@@ -405,7 +405,7 @@ contract NodesData is Permissions {
      * @dev getActiveNodeIPs - get array of ips of Active Nodes
      * @return activeNodeIPs - array of ips of Active Nodes
      */
-    function getActiveNodeIPs() public view returns (bytes4[] memory activeNodeIPs) {        
+    function getActiveNodeIPs() public view returns (bytes4[] memory activeNodeIPs) {
         activeNodeIPs = new bytes4[](numberOfActiveNodes);
         uint indexOfActiveNodeIPs = 0;
         for (uint indexOfNodes = 0; indexOfNodes < nodes.length; indexOfNodes++) {
@@ -413,7 +413,7 @@ contract NodesData is Permissions {
                 activeNodeIPs[indexOfActiveNodeIPs] = nodes[indexOfNodes].ip;
                 indexOfActiveNodeIPs++;
             }
-        }             
+        }
     }
 
     /**

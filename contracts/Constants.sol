@@ -1,6 +1,7 @@
-pragma solidity ^0.4.24;
+pragma solidity ^0.5.0;
 
 import './Permissions.sol';
+
 
 /**
  * @title Contains constants and common variables for Skale Manager system
@@ -20,11 +21,17 @@ contract Constants is Permissions {
     // part of Node for Medium Skale-chain (full Node)
     uint public MEDIUM_DIVISOR = 1;
 
+    // part of Node for Medium Test Skale-chain (1/4 of Node)
+    uint public MEDIUM_TEST_DIVISOR = 4;
+
     // typically number of Nodes for Skale-chain (16 Nodes)
     uint public NUMBER_OF_NODES_FOR_SCHAIN = 16;
 
     // number of Nodes for Test Skale-chain (2 Nodes)
     uint public NUMBER_OF_NODES_FOR_TEST_SCHAIN = 2;
+
+    // number of Nodes for Test Skale-chain (4 Nodes)
+    uint public NUMBER_OF_NODES_FOR_MEDIUM_TEST_SCHAIN = 4;
 
     // 'Fractional' Part of ratio for create Fractional or Full Node
     uint public FRACTIONAL_FACTOR = 128;

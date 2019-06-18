@@ -44,5 +44,13 @@ module.exports = {
             gasPrice: 0x01,
             network_id: "*"
         }
+    },
+    mocha: {
+
+    },
+    compilers: {
+        solc: {
+            version: "0.5.9"
+        }
     }
 };

@@ -1,10 +1,10 @@
-pragma solidity ^0.4.11;
+pragma solidity ^0.5.0;
+
 
  /**
   * Contract that is working with ERC223 tokens
   * @title ContractReceiver - Standard contract implementation for compatibility with ERC 223 tokens.
   */
-
 contract ContractReceiver {
 
     /**
@@ -13,5 +13,5 @@ contract ContractReceiver {
      * @param _value Number of tokens to transfer.
      * @param _data Data containig a function signature and/or parameters
      */
-    function tokenFallback(address _from, uint256 _value, bytes _data) external;
+    function tokenFallback(address _from, uint256 _value, bytes calldata _data) external;
 }

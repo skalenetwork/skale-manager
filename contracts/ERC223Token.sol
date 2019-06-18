@@ -9,7 +9,7 @@ Machine-based, rapid creation of many tokens would not necessarily need these ex
 2) In the absence of a token registry: Optional Decimal, Symbol & Name.
 
 .*/
-pragma solidity ^0.4.22;
+pragma solidity ^0.5.0;
 
 import "./StandardToken.sol";
 import "./ContractReceiver.sol";
@@ -35,9 +35,9 @@ contract ERC223Token is StandardToken {
 
     constructor(
         uint256 _initialAmount,
-        string _tokenName,
+        string memory _tokenName,
         uint8 _decimalUnits,
-        string _tokenSymbol
+        string memory _tokenSymbol
     )
 		public
     {

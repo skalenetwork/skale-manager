@@ -1,4 +1,4 @@
-pragma solidity ^0.4.24;
+pragma solidity ^0.5.0;
 
 import './GroupsFunctionality.sol';
 //import './ValidatorsData.sol';
@@ -14,7 +14,7 @@ interface ValidatorsData {
     function addVerdict(bytes32 validatorIndex, uint32 downtime, uint32 latency) external;
     function removeValidatedNode(bytes32 validatorIndex, uint indexOfValidatedNode) external;
     function removeAllVerdicts(bytes32 validatorIndex) external;
-    function getValidatedArray(bytes32 validatorIndex) external view returns (bytes32[]);
+    function getValidatedArray(bytes32 validatorIndex) external view returns (bytes32[] memory);
     function getLengthOfMetrics(bytes32 validatorIndex) external view returns (uint);
     function verdicts(bytes32 validatorIndex, uint numberOfVerdict, uint layer) external view returns (uint32);
 }
@@ -36,7 +36,7 @@ contract ValidatorsFunctionality is GroupsFunctionality {
         bytes32 groupIndex,
         uint numberOfValidators,
         uint32 time,
-        uint gasSpend                    
+        uint gasSpend
     );
 
     event ValidatorUpgraded(
@@ -80,7 +80,7 @@ contract ValidatorsFunctionality is GroupsFunctionality {
         uint gasSpend
     );
 
-    constructor(string newExecutorName, string newDataName, address newContractsAddress) GroupsFunctionality(newExecutorName, newDataName, newContractsAddress) public {
+    constructor(string memory newExecutorName, string memory newDataName, address newContractsAddress) GroupsFunctionality(newExecutorName, newDataName, newContractsAddress) public {
         
     }
 
@@ -151,7 +151,7 @@ contract ValidatorsFunctionality is GroupsFunctionality {
         }
     }
 
-    function generateGroup(bytes32 groupIndex) internal allow(executorName) returns (uint[]) {
+    function generateGroup(bytes32 groupIndex) internal allow(executorName) returns (uint[] memory) {
         address dataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked(dataName)));
         require(GroupsData(dataAddress).isGroupActive(groupIndex), "Group is not active");
         bytes32 groupData = GroupsData(dataAddress).getGroupData(groupIndex);
@@ -239,9 +239,9 @@ contract ValidatorsFunctionality is GroupsFunctionality {
                 rightIndex = (rightIndex > 0 ? rightIndex - 1 : 0);
             }
         }
-        if (left < rightIndex) 
+        if (left < rightIndex)
             quickSort(array, left, rightIndex);
-        if (leftIndex < right) 
+        if (leftIndex < right)
             quickSort(array, leftIndex, right);
     }
 
@@ -254,8 +254,8 @@ contract ValidatorsFunctionality is GroupsFunctionality {
             bytesIndex := mload(add(tempBytes, 32))
             bytesTime := mload(add(tempBytes, 46))
         }
-        index = uint(bytesIndex);
-        time = uint32(bytesTime);
+        index = uint112(bytesIndex);
+        time = uint32(uint112(bytesTime));
     }
 
     function getDataToBytes(uint nodeIndex) internal view returns (bytes32 bytesParameters) {
@@ -263,9 +263,9 @@ contract ValidatorsFunctionality is GroupsFunctionality {
         address nodesDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
         //require(1 != 1, "Break");
         bytes memory tempData = new bytes(32);
-        bytes14 bytesOfIndex = bytes14(nodeIndex);
+        bytes14 bytesOfIndex = bytes14(uint112(nodeIndex));
         ////require(1 != 1, "Break");
-        bytes14 bytesOfTime = bytes14(NodesData(nodesDataAddress).getNodeNextRewardDate(nodeIndex) - Constants(constantsAddress).deltaPeriod());
+        bytes14 bytesOfTime = bytes14(uint112(NodesData(nodesDataAddress).getNodeNextRewardDate(nodeIndex) - Constants(constantsAddress).deltaPeriod()));
         //require(1 != 1, "Break");
         bytes4 ip = NodesData(nodesDataAddress).getNodeIP(nodeIndex);
         //require(1 != 1, "Break");

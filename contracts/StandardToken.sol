@@ -6,7 +6,7 @@
  *
  * Implements ERC 20 Token standard: https://github.com/ethereum/EIPs/issues/20
  */
-pragma solidity ^0.4.21;
+pragma solidity ^0.5.0;
 
 import "./Token.sol";
 import "./ContractReceiver.sol";
@@ -47,12 +47,12 @@ contract StandardToken is Token {
     function transfer(
         address _to,
         uint256 _value,
-        bytes _data
+        bytes memory _data
 	)
         public
         returns (bool)
     {
-        require(_to != 0x0);
+        require(_to != address(0));
         require(_value > 0);
         require(balances[msg.sender] >= _value);
 
@@ -96,8 +96,8 @@ contract StandardToken is Token {
         public
         returns (bool)
     {
-        require(_from != 0x0);
-        require(_to != 0x0);
+        require(_from != address(0));
+        require(_to != address(0));
         require(_value > 0);
         require(balances[_from] >= _value);
         require(allowed[_from][_to] >= _value);
@@ -134,7 +134,7 @@ contract StandardToken is Token {
         public
         returns (bool)
     {
-        require(_spender != 0x0);
+        require(_spender != address(0));
         require(_value > 0);
 
         allowed[msg.sender][_spender] = _value;
