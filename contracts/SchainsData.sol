@@ -45,7 +45,7 @@ contract SchainsData is GroupsData {
      * @param lifetime - initial lifetime of Schain
      * @param deposit - given amount of SKL
      */
-    function initializeSchain(string memory name, address from, uint lifetime, uint deposit) public allow(executorName) {
+    function initializeSchain(string memory name, address from, uint lifetime, uint deposit) public allow("SchainsFunctionality") {
         bytes32 schainId = keccak256(abi.encodePacked(name));
         schains[schainId].name = name;
         schains[schainId].owner = from;
@@ -63,7 +63,7 @@ contract SchainsData is GroupsData {
      * @param schainId - hash by Schain name
      * @param from - Schain owner
      */
-    function setSchainIndex(bytes32 schainId, address from) public allow(executorName) {
+    function setSchainIndex(bytes32 schainId, address from) public allow("SchainsFunctionality") {
         schains[schainId].indexInOwnerList = schainIndexes[from].length;
         schainIndexes[from].push(schainId);
     }
@@ -98,7 +98,7 @@ contract SchainsData is GroupsData {
      * @param lifetime - time which would be added to lifetime of Schain
      * @param deposit - amount of SKL which payed for this time
      */
-    function changeLifetime(bytes32 schainId, uint lifetime, uint deposit) public allow(executorName) {
+    function changeLifetime(bytes32 schainId, uint lifetime, uint deposit) public allow("SchainsFunctionality") {
         schains[schainId].deposit += deposit;
         schains[schainId].lifetime += lifetime;
     }
@@ -109,7 +109,7 @@ contract SchainsData is GroupsData {
      * @param schainId - hash by Schain name
      * @param from - owner of Schain
      */
-    function removeSchain(bytes32 schainId, address from) public allow(executorName) {
+    function removeSchain(bytes32 schainId, address from) public allow("SchainsFunctionality") {
         uint length = schainIndexes[from].length;
         uint index = schains[schainId].indexInOwnerList;
         if (index != length - 1) {
