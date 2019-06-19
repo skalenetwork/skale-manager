@@ -9,10 +9,11 @@ let ValidatorsData = artifacts.require('./ValidatorsData.sol');
 let ValidatorsFunctionality = artifacts.require('./ValidatorsFunctionality.sol');
 let SchainsData = artifacts.require('./SchainsData.sol');
 let SchainsFunctionality = artifacts.require('./SchainsFunctionality.sol');
+let SchainsFunctionality1 = artifacts.require('./SchainsFunctionality1.sol');
 let ContractManager = artifacts.require('./ContractManager.sol');
 let Constants = artifacts.require('./Constants.sol');
 
-async function deploy(deployer) {
+async function deploy(deployer, network) {
     await deployer.deploy(ContractManager, {gas: 8000000}).then(async function(inst) {
         await deployer.deploy(SkaleToken, inst.address, {gas: 8000000});
         await inst.setContractsAddress("SkaleToken", SkaleToken.address);
@@ -26,10 +27,12 @@ async function deploy(deployer) {
         await inst.setContractsAddress("ValidatorsData", ValidatorsData.address);
         await deployer.deploy(ValidatorsFunctionality, "SkaleManager", "ValidatorsData", inst.address, {gas: 8000000});
         await inst.setContractsAddress("ValidatorsFunctionality", ValidatorsFunctionality.address);
-        await deployer.deploy(SchainsData, "SchainsFunctionality", inst.address, {gas: 8000000});
+        await deployer.deploy(SchainsData, "SchainsFunctionality1", inst.address, {gas: 8000000});
         await inst.setContractsAddress("SchainsData", SchainsData.address);
         await deployer.deploy(SchainsFunctionality, "SkaleManager", "SchainsData", inst.address, {gas: 100000000});
         await inst.setContractsAddress("SchainsFunctionality", SchainsFunctionality.address);
+        await deployer.deploy(SchainsFunctionality1, "SchainsFunctionality", "SchainsData", inst.address, {gas: 100000000});
+        await inst.setContractsAddress("SchainsFunctionality1", SchainsFunctionality1.address);
         await deployer.deploy(ManagerData, "SkaleManager", inst.address, {gas: 8000000});
         await inst.setContractsAddress("ManagerData", ManagerData.address);
         await deployer.deploy(SkaleManager, inst.address, {gas: 8000000});
@@ -62,11 +65,11 @@ async function deploy(deployer) {
         contract_manager_abi: ContractManager.abi
     };
 
-    fs.writeFile(`data/${networkName}.json`, JSON.stringify(jsonObject), function (err) {
+    fs.writeFile(`data/${network}.json`, JSON.stringify(jsonObject), function (err) {
         if (err) {
         return console.log(err);
         }
-        console.log(`Done, check ${networkName}.json file in data folder.`);
+        console.log(`Done, check ${network}.json file in data folder.`);
         process.exit(0);
     });
 }

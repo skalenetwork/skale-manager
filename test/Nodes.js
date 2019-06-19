@@ -2,7 +2,7 @@ const init = require("./Init.js");
 const GenerateBytesData = require("./GenerateBytesData.js");
 //console.log(SkaleToken);
 
-function generateRandomIP() {
+async function generateRandomIP() {
     let ip1 = Math.floor(Math.random() * 255);
     let ip2 = Math.floor(Math.random() * 255);
     let ip3 = Math.floor(Math.random() * 255);
@@ -10,7 +10,7 @@ function generateRandomIP() {
     return "" + ip1 + "." + ip2 + "." + ip3 + "." + ip4 + "";
 }
 
-function generateRandomName() {
+async function generateRandomName() {
 	let number = Math.floor(Math.random() * 100000);
 	return "Node" + number;
 }
@@ -19,16 +19,18 @@ function generateRandomName() {
 async function createNode() {
 	//let accounts = await web3.eth.getAccounts();
     console.log("OK");
-    let name = generateRandomName();
+    let name = await generateRandomName();
+    console.log(name);
     let k = await init.NodesData.methods.nodesNameCheck(init.web3.utils.soliditySha3(name)).call();
     console.log(k);
     while (k) {
-        name = generateRandomName();
+        name = await generateRandomName();
         k = await init.NodesData.methods.nodesCheckName(init.web3.utils.soliditySha3(name)).call();
     }
-	let data = GenerateBytesData.generateBytesForNode(8545, generateRandomIP(), init.mainAccount, name);
+    let data = await GenerateBytesData.generateBytesForNode(8545, await generateRandomIP(), init.mainAccount, name);
+    console.log(data);
     let nonce = parseInt(data.slice(8, 12), 16);
-    //console.log(nonce);
+    console.log(nonce);
 	let deposit = 100000000000000000000;
     //console.log(init.SkaleToken);
 	let accountDeposit = await init.SkaleToken.methods.balanceOf(init.mainAccount).call({from: init.mainAccount});

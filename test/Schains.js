@@ -15,20 +15,22 @@ async function createSchain(typeOfSchain, lifetime) {
         schainName = generateRandomName();
         k = await init.SchainsData.methods.isSchainNameAvailable(schainName).call();
     }
-	let data  = GenerateBytesData.generateBytesForSchain(lifetime, typeOfSchain, schainName);
+    let data = await GenerateBytesData.generateBytesForSchain(lifetime, typeOfSchain, schainName);
+    console.log("Generated Data:", data);
+    console.log(init.SchainsFunctionality);
 	let res = await init.SchainsFunctionality.methods.getSchainPrice(typeOfSchain, lifetime).call();
-	//console.log(res);
+	console.log(res);
 	let deposit = res;
 	let accountDeposit = await init.SkaleToken.methods.balanceOf(account).call();
     let numberOfFullNodes = await init.NodesData.methods.getNumberOfFullNodes().call();
     let numberOfFractionalNodes = await init.NodesData.methods.getNumberOfFractionalNodes().call();
     let numberOfNodes = await init.NodesData.methods.getNumberOfNodes().call();
-	console.log("Account: ", account);
-	console.log("Data: ", data);
-	console.log("Deposit: ", deposit);
-	console.log("Account Deposit: ", accountDeposit);
-    console.log("Number of nodes: ", numberOfNodes);
-    console.log("Number of full nodes: ", numberOfFullNodes);
+	console.log("Account:                    ", account);
+	console.log("Data:                       ", data);
+	console.log("Deposit:                    ", deposit);
+	console.log("Account Deposit:            ", accountDeposit);
+    console.log("Number of nodes:            ", numberOfNodes);
+    console.log("Number of full nodes:       ", numberOfFullNodes);
     console.log("NUmber of fractional nodes: ", numberOfFractionalNodes);
 	res = await init.SkaleToken.methods.transfer(init.jsonData['skale_manager_address'], deposit, data).send({from: account, gas: 8000000});
     let blockNumber = res.blockNumber;
@@ -68,7 +70,7 @@ async function getSchainsForNode(nodeIndex) {
     return res;
 }
 
-//createSchain(4, 1000000000);
+createSchain(4, 94867200);
 
 module.exports.createSchain = createSchain;
 module.exports.deleteSchain = deleteSchain;

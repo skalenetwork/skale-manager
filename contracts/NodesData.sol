@@ -208,7 +208,7 @@ contract NodesData is Permissions {
      * @param subarrayLink - index of Node at array of Fractional Nodes
      * @param space - space which should be occupied
      */
-    function removeSpaceFromFractionalNode(uint subarrayLink, uint space) public allow("SchainsFunctionality") returns (bool) {
+    function removeSpaceFromFractionalNode(uint subarrayLink, uint space) public allow("SchainsFunctionality1") returns (bool) {
         if (fractionalNodes[subarrayLink].freeSpace < space) {
             return false;
         }
@@ -222,7 +222,7 @@ contract NodesData is Permissions {
      * @param subarrayLink - index of Node at array of Full Nodes
      * @param space - space which should be occupied
      */
-    function removeSpaceFromFullNode(uint subarrayLink, uint space) public allow("SchainsFunctionality") returns (bool) {
+    function removeSpaceFromFullNode(uint subarrayLink, uint space) public allow("SchainsFunctionality1") returns (bool) {
         if (fullNodes[subarrayLink].freeSpace < space) {
             return false;
         }
@@ -236,7 +236,7 @@ contract NodesData is Permissions {
      * @param subarrayLink - index of Node at array of Fractional Nodes
      * @param space - space which should be returned
      */
-    function addSpaceToFractionalNode(uint subarrayLink, uint space) public allow("SchainsFunctionality") {
+    function addSpaceToFractionalNode(uint subarrayLink, uint space) public allow("SchainsFunctionality1") {
         fractionalNodes[subarrayLink].freeSpace += space;
     }
 
@@ -246,7 +246,7 @@ contract NodesData is Permissions {
      * @param subarrayLink - index of Node at array of Full Nodes
      * @param space - space which should be returned
      */
-    function addSpaceToFullNode(uint subarrayLink, uint space) public allow("SchainsFunctionality") {
+    function addSpaceToFullNode(uint subarrayLink, uint space) public allow("SchainsFunctionality1") {
         fullNodes[subarrayLink].freeSpace += space;
     }
 
