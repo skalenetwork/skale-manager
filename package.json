@@ -5,7 +5,7 @@
   "scripts": {
     "lint": "npx solium --dir contracts",
     "compile": "./node_modules/.bin/truffle compile",
-    "deploy": "./scripts/build.sh",    
+    "deploy": "./scripts/build.sh",
     "generate": "truffle compile && typechain --target truffle './build/**/*.json'",
     "prepare": "yarn generate",
     "test": "truffle test && yarn tsc",
@@ -14,7 +14,6 @@
   "dependencies": {
     "bignumber.js": "^9.0.0",
     "chai": "^4.2.0",
-    "chai-as-promised": "^7.1.1",
     "scrypt": "^6.0.3",
     "solc": "^0.4.25",
     "truffle": "^4.1.13",
