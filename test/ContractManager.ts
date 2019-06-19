@@ -1,10 +1,13 @@
-const ContractManager = artifacts.require('./ContractManager')
-const ConstantsHolder = artifacts.require('./ConstantsHolder')
-const Simple = artifacts.require('./Simple')
-const web3 = require('web3');
+import {ContractManagerContract, 
+        ContractManagerInstance, 
+        ConstantsHolderContract, 
+        ConstantsHolderInstance} from '../types/truffle-contracts'
+
+const ContractManager: ContractManagerContract = artifacts.require('./ContractManager')
+const ConstantsHolder: ConstantsHolderContract = artifacts.require('./ConstantsHolder')
 
 contract('ContractManager', ([deployer, user]) => {  
-  let contractManager, constantsHolder, simple;
+  let contractManager: ContractManagerInstance, constantsHolder: ConstantsHolderInstance;
 
   beforeEach(async function() {
     contractManager = await ContractManager.new({from: deployer});        
@@ -16,10 +19,10 @@ contract('ContractManager', ([deployer, user]) => {
   });
 
   it("Should add a right contract address (ConstantsHolder) to the register", async () => {
-    let simpleContractName = "ConstantsHolder";
+    let simpleContractName: string = "ConstantsHolder";
     await contractManager.setContractsAddress(simpleContractName, constantsHolder.address);    
 
-    let hash = web3.utils.soliditySha3(simpleContractName);        
+    let hash: string = web3.utils.soliditySha3(simpleContractName);
     assert.equal(await contractManager.contracts(hash), constantsHolder.address, "Address should be equal");    
   });
 })
