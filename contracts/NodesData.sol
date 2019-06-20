@@ -136,7 +136,7 @@ contract NodesData is Permissions {
     function addFullNode(uint nodeIndex) public allow("NodesFunctionality") {
         fullNodes.push(NodeFilling({
             nodeIndex: nodeIndex,
-            freeSpace: 1
+            freeSpace: 128
         }));
         nodesLink.push(NodeLink({
             subarrayLink: fullNodes.length - 1,

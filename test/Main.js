@@ -40,7 +40,7 @@ let n = 0;
 async function main(numberOfIterations) {
 
     //let nodeIndex = await nodes.createNode();
-    let randomNumber = Math.floor(Math.random() * 10) + 2;
+    let randomNumber = Math.floor(Math.random() * 10) + 4;
     //console.log("Part of creating Nodes!");
     for (let i = 0; i < randomNumber; i++) {
         nodeIndex = await nodes.createNode();
