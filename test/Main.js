@@ -40,7 +40,7 @@ let n = 0;
 async function main(numberOfIterations) {
 
     //let nodeIndex = await nodes.createNode();
-    let randomNumber = Math.floor(Math.random() * 10) + 4;
+    let randomNumber = Math.floor(Math.random() * 10) + 20;
     //console.log("Part of creating Nodes!");
     for (let i = 0; i < randomNumber; i++) {
         nodeIndex = await nodes.createNode();
@@ -50,7 +50,7 @@ async function main(numberOfIterations) {
 
     let schainName;
     for (let i = 0; i < 5; i++) {
-        schainName = await schains.createSchain(4, 94867200);
+        schainName = await schains.createSchain(3, 94867200);
         console.log("Schain name:", schainName);
         await schains.getSchainNodes(schainName);
         //await schains.getSchainsForNode(0);

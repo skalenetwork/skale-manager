@@ -168,12 +168,16 @@ contract SchainsFunctionality1 is GroupsFunctionality {
         uint8 iterations;
         uint index;
         nodesInGroup = new uint[](IGroupsData(dataAddress).getRecommendedNumberOfNodes(groupIndex));
+        
 
         // generate random group algorithm
         while (index < IGroupsData(dataAddress).getRecommendedNumberOfNodes(groupIndex) && iterations < 200) {
+            require(1 != 1, "Break");
             // new random index of Node
             indexOfNode = hash % numberOfNodes;
             nodeIndex = returnValidNodeIndex(uint(groupData), indexOfNode);
+
+            
             // checks that this not is available, enough space to allocate resources
             // and have not chosen to this group
             if (comparator(indexOfNode, uint(groupData), space) && !IGroupsData(dataAddress).isExceptionNode(groupIndex, nodeIndex)) {
