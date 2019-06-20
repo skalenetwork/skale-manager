@@ -14,7 +14,7 @@ contract('ContractManager', ([deployer, user]) => {
     constantsHolder = await ConstantsHolder.new(contractManager.address, {from: deployer});
   });
 
-  it("Shoud deploy", async () => {
+  it("Should deploy", async () => {
     assert(true);
   });
 
