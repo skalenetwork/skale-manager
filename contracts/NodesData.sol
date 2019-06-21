@@ -395,7 +395,7 @@ contract NodesData is Permissions {
      */
     function getNumberOfFreeFullNodes() public view returns (uint numberOfFreeFullNodes) {
         for (uint indexOfNode = 0; indexOfNode < fullNodes.length; indexOfNode++) {
-            if (fullNodes[indexOfNode].freeSpace == 1 && isNodeActive(fullNodes[indexOfNode].nodeIndex)) {
+            if (fullNodes[indexOfNode].freeSpace == 128 && isNodeActive(fullNodes[indexOfNode].nodeIndex)) {
                 numberOfFreeFullNodes++;
             }
         }
