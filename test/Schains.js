@@ -16,10 +16,9 @@ async function createSchain(typeOfSchain, lifetime) {
         k = await init.SchainsData.methods.isSchainNameAvailable(schainName).call();
     }
     let data = await GenerateBytesData.generateBytesForSchain(lifetime, typeOfSchain, schainName);
-    console.log("Generated Data:", data);
-    console.log(init.SchainsFunctionality);
-	let res = await init.SchainsFunctionality.methods.getSchainPrice(typeOfSchain, lifetime).call();
-	console.log(res);
+    console.log("Generated data:", data);
+    let res = await init.SchainsFunctionality.methods.getSchainPrice(typeOfSchain, lifetime).call();
+    console.log("Schain Price:", res);
 	let deposit = res;
 	let accountDeposit = await init.SkaleToken.methods.balanceOf(account).call();
     let numberOfFullNodes = await init.NodesData.methods.getNumberOfFullNodes().call();
@@ -70,7 +69,7 @@ async function getSchainsForNode(nodeIndex) {
     return res;
 }
 
-createSchain(4, 94867200);
+//createSchain(4, 94867200);
 
 module.exports.createSchain = createSchain;
 module.exports.deleteSchain = deleteSchain;

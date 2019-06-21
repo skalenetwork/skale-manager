@@ -136,7 +136,7 @@ contract NodesData is Permissions {
     function addFullNode(uint nodeIndex) public allow("NodesFunctionality") {
         fullNodes.push(NodeFilling({
             nodeIndex: nodeIndex,
-            freeSpace: 1
+            freeSpace: 128
         }));
         nodesLink.push(NodeLink({
             subarrayLink: fullNodes.length - 1,
@@ -395,7 +395,7 @@ contract NodesData is Permissions {
      */
     function getNumberOfFreeFullNodes() public view returns (uint numberOfFreeFullNodes) {
         for (uint indexOfNode = 0; indexOfNode < fullNodes.length; indexOfNode++) {
-            if (fullNodes[indexOfNode].freeSpace == 1 && isNodeActive(fullNodes[indexOfNode].nodeIndex)) {
+            if (fullNodes[indexOfNode].freeSpace == 128 && isNodeActive(fullNodes[indexOfNode].nodeIndex)) {
                 numberOfFreeFullNodes++;
             }
         }

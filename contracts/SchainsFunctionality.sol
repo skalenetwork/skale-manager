@@ -118,7 +118,9 @@ contract SchainsFunctionality is Permissions {
         if (divisor == 0) {
             return 1000000000000000000;
         } else {
-            return (nodeDeposit * numberOfNodes * 2 * lifetime) / (divisor * uint(IConstants(constantsAddress).SECONDS_TO_YEAR()));
+            uint up = nodeDeposit * numberOfNodes * 2 * lifetime;
+            uint down = divisor * IConstants(constantsAddress).SECONDS_TO_YEAR();
+            return up / down;
         }
     }
 
