@@ -19,10 +19,12 @@ contract SkaleDKG is Permissions {
         bool active;
         address dataAddress;
         bool[] broadcasted;
+        uint numberOfBroadcasted;
         Fp2 publicKeyx;
         Fp2 publicKeyy;
         uint numberOfCompleted;
         bool[] completed;
+        uint startedBlockNumber;
     }
 
     struct Fp2 {
@@ -43,6 +45,17 @@ contract SkaleDKG is Permissions {
         bytes secretKeyContribution
     );
 
+    modifier correctGroup(bytes32 groupIndex) {
+        require(channels[groupIndex].active, "Group is not created");
+        _;
+    }
+
+    modifier correctNode(bytes32 groupIndex, uint nodeIndex) {
+        uint index = findNode(groupIndex, nodeIndex);
+        require(index < IGroupsData(channels[groupIndex].dataAddress).getNumberOfNodesInGroup(), "Node is not in this group");
+        _;
+    }
+
     constructor(address contractsAddress) Permissions(contractsAddress) public {
         
     }
@@ -55,8 +68,12 @@ contract SkaleDKG is Permissions {
         emit ChannelOpened(groupIndex);
     }
 
-    function broadcast(bytes32 groupIndex, uint nodeIndex, bytes memory verificationVector, bytes memory secretKeyContribution) public {
-        require(channels[groupIndex].active, "Chennel is not created");
+    function broadcast(bytes32 groupIndex, uint nodeIndex, bytes memory verificationVector, bytes memory secretKeyContribution)
+        public
+        correctGroup(groupIndex)
+        correctNode(groupIndex, nodeIndex)
+    {
+        require(isNodeByMessageSender(nodeIndex, msg.sender), "Node does not exist for message sender");
         isBroadcast(groupIndex, nodeIndex);
         bytes32 vector;
         bytes32 vector1;
@@ -84,9 +101,38 @@ contract SkaleDKG is Permissions {
         emit BroadcastAndKeyShare(groupIndex, nodeIndex, verificationVector, secretKeyContribution);
     }
 
-    function complaint() public;
+    function complaint(bytes32 groupIndex, uint fromNodeIndex, uint toNodeIndex) 
+        public
+        correctGroup(groupIndex)
+        correctNode(groupIndex, fromNodeIndex)
+        correctNode(groupIndex, toNodeIndex)
+    {
+        require(isNodeByMessageSender(fromNodeIndex, msg.sender), "Node does not exist for message sender");
+        if (isBroadcasted(groupIndex, toNodeIndex)) {
+            // set schain is bad
+        } else {
+            require(channels[groupIndex].startedBlockNumber + 120 <= block.number, "Complaint rejected");
+            // set schain is bad
+        }
+        
+    }
 
-    //function allright() public;
+    function allright(bytes32 groupIndex, uint fromNodeIndex)
+        public
+        correctGroup(groupIndex)
+        correctNode(groupIndex, fromNodeIndex)
+    {
+        require(isNodeByMessageSender(fromNodeIndex, msg.sender), "Node does not exist for message sender");
+        uint index = findNode(groupIndex, fromNodeIndex);
+        uint numberOfParticipant = IGroupsData(channels[groupIndex].dataAddress).getNumberOfNodesInGroup();
+        require(numberOfParticipant == channels[groupIndex].numberOfBroadcasted, "Still Broadcasting phase");
+        require(!channels[groupIndex].completed[index], "Node is already alright");
+        channels[groupIndex].completed[index] = true;
+        channels[groupIndex].numberOfCompleted++;
+        if (channels[groupIndex].numberOfCompleted == numberOfParticipant) {
+            // set schain is good
+        }
+    }
 
     function adding(bytes32 groupIndex, uint x1, uint y1, uint x2, uint y2, uint x3, uint y3) internal {
         if (channels[groupIndex].publicKeyx.x == 0 && channels[groupIndex].publicKeyx.y == 0 && channels[groupIndex].publicKeyy.x == 0 && channels[groupIndex].publicKeyy.y == 0) {
@@ -101,10 +147,17 @@ contract SkaleDKG is Permissions {
 
     function isBroadcast(bytes32 groupIndex, uint nodeIndex) internal {
         uint index = findNode(groupIndex, nodeIndex);
-        require(index < IGroupsData(channels[groupIndex].dataAddress).getNumberOfNodesInGroup(), "Node is not in this group");
-        require(isNodeByMessageSender(nodeIndex, msg.sender), "Node does not exist for message sender");
         require(!channels[groupIndex].broadcasted[index], "This node is already broadcasted");
         channels[groupIndex].broadcasted[index] = true;
+        channels[groupIndex].numberOfBroadcasted++;
+    }
+
+    function isBroadcasted(bytes32 groupIndex, uint nodeIndex) internal view returns (bool) {
+        uint index = findNode(groupIndex, nodeIndex);
+        if (channels[groupIndex].broadcasted[index]) {
+            return true;
+        }
+        return false;
     }
 
     function findNode(bytes32 groupIndex, uint nodeIndex) internal view returns (uint index) {
