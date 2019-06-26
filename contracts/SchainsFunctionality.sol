@@ -165,6 +165,13 @@ contract SchainsFunctionality is Permissions {
         ISchainsData(dataAddress).removeSchain(schainId, from);
     }
 
+    function regenerateGroup(string memory schainName) public {
+        address dataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked(dataName)));
+        bytes32 schainId = keccak256(abi.encodePacked(schainName));
+        require(ISchainsData(dataAddress).isOwnerAddress(msg.sender, schainId));
+        
+    }
+
     function initializeSchainInSchainsData(string memory name, address from, uint deposit, uint lifetime) internal {
         address dataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked(dataName)));
         require(ISchainsData(dataAddress).isSchainNameAvailable(name), "Schain name is not available");

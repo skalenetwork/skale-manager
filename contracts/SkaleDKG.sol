@@ -45,6 +45,10 @@ contract SkaleDKG is Permissions {
         bytes secretKeyContribution
     );
 
+    event AllDataReceived(bytes32 groupIndex, uint nodeIndex);
+    event SuccessfulDKG(bytes32 groupIndex);
+    event FailedDKG(bytes32 groupIndex);
+
     modifier correctGroup(bytes32 groupIndex) {
         require(channels[groupIndex].active, "Group is not created");
         _;
@@ -65,6 +69,8 @@ contract SkaleDKG is Permissions {
         require(!channels[groupIndex].active, "Channel already is created");
         channels[groupIndex].active = true;
         channels[groupIndex].dataAddress = dataAddress;
+        channels[groupIndex].broadcasted = new bool[](IGroupsData(channels[groupIndex].dataAddress).getNumberOfNodesInGroup());
+        channels[groupIndex].completed = new bool[](IGroupsData(channels[groupIndex].dataAddress).getNumberOfNodesInGroup());
         emit ChannelOpened(groupIndex);
     }
 
@@ -101,7 +107,7 @@ contract SkaleDKG is Permissions {
         emit BroadcastAndKeyShare(groupIndex, nodeIndex, verificationVector, secretKeyContribution);
     }
 
-    function complaint(bytes32 groupIndex, uint fromNodeIndex, uint toNodeIndex) 
+    function complaint(bytes32 groupIndex, uint fromNodeIndex, uint toNodeIndex)
         public
         correctGroup(groupIndex)
         correctNode(groupIndex, fromNodeIndex)
@@ -110,11 +116,12 @@ contract SkaleDKG is Permissions {
         require(isNodeByMessageSender(fromNodeIndex, msg.sender), "Node does not exist for message sender");
         if (isBroadcasted(groupIndex, toNodeIndex)) {
             // set schain is bad
+            emit FailedDKG(groupIndex);
         } else {
             require(channels[groupIndex].startedBlockNumber + 120 <= block.number, "Complaint rejected");
             // set schain is bad
+            emit FailedDKG(groupIndex);
         }
-        
     }
 
     function allright(bytes32 groupIndex, uint fromNodeIndex)
@@ -129,8 +136,18 @@ contract SkaleDKG is Permissions {
         require(!channels[groupIndex].completed[index], "Node is already alright");
         channels[groupIndex].completed[index] = true;
         channels[groupIndex].numberOfCompleted++;
+        emit AllDataReceived(groupIndex, fromNodeIndex);
         if (channels[groupIndex].numberOfCompleted == numberOfParticipant) {
             // set schain is good
+            IGroupsData(channels[groupIndex].dataAddress).setPublicKey(
+                groupIndex,
+                channels[groupIndex].publicKeyx.x,
+                channels[groupIndex].publicKeyx.y,
+                channels[groupIndex].publicKeyy.x,
+                channels[groupIndex].publicKeyy.y
+            );
+            delete channels[groupIndex];
+            emit SuccessfulDKG(groupIndex);
         }
     }
 

@@ -80,6 +80,10 @@ contract SchainsFunctionality1 is GroupsFunctionality {
         emit SchainNodes(schainName, schainId, numberOfNodesInGroup, uint32(block.timestamp), gasleft());
     }
 
+    /*function upgradeGroup(bytes32 schainId) public allow(executorName) {
+        // upgrade schain
+    }*/
+
     /**
      * @dev addSpace - return occupied space to Node
      * @param nodeIndex - index of Node at common array of Nodes
