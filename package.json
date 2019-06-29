@@ -42,6 +42,8 @@
     "dotenv": "^7.0.0",
     "ethlint": "^1.2.4",
     "ganache-cli": "6.1.8",
-    "solidity-coverage": "^0.5.11"
+    "solidity-coverage": "^0.5.11",
+    "tslint": "^5.18.0",
+    "typescript": "^3.5.2"
   }
 }
