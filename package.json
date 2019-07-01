@@ -31,7 +31,12 @@
   },
   "author": "SKALE Labs",
   "contributors": [
-    "Artem Payvin <artem.payvin@skalelabs.com>"
+    "Artem Payvin <artem.payvin@skalelabs.com>",
+    {
+      "name": "Dmytro Stebaiev",
+      "url": "https://github.com/DimaStebaev",
+      "githubUsername": "DimaStebaev"
+    }
   ],
   "license": "GPL-3.0",
   "bugs": {

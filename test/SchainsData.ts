@@ -34,7 +34,7 @@ class Schain {
     }
 }
 
-contract("ContractManager", ([owner, holder]) => {
+contract("SchainsData", ([owner, holder]) => {
     let contractManager: ContractManagerInstance;
     let schainsData: SchainsDataInstance;
 
@@ -127,14 +127,14 @@ contract("ContractManager", ([owner, holder]) => {
                 await schainsData.getSchainIdsForNode(5).should.eventually.be.deep.equal([schainNameHash]);
             });
 
-            it("shoudl return number of schains per node", async () => {
+            it("should return number of schains per node", async () => {
                 const count = new BigNumber(await schainsData.getLengthOfSchainsForNode(5));
                 assert (count.isEqualTo(1));
             });
 
         });
 
-        it("shoudl return list of schains", async () => {
+        it("should return list of schains", async () => {
             await schainsData.getSchains().should.eventually.deep.equal([schainNameHash]);
         });
 
