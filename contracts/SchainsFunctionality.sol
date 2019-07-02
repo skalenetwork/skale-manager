@@ -79,11 +79,8 @@ contract SchainsFunctionality is Permissions {
 
         (lifetime, typeOfSchain, nonce, name) = fallbackSchainParametersDataConverter(data);
 
-        require(getSchainPrice(typeOfSchain, lifetime) <= deposit, "Not enough money to create Schain");
-
         require(typeOfSchain <= 5, "Invalid type of Schain");
-
-        
+        require(getSchainPrice(typeOfSchain, lifetime) <= deposit, "Not enough money to create Schain");
 
         //initialize Schain
         initializeSchainInSchainsData(name, from, deposit, lifetime);
@@ -93,8 +90,6 @@ contract SchainsFunctionality is Permissions {
         (numberOfNodes, partOfNode) = ISchainsFunctionality1(schainsFunctionality1Address).getNodesDataFromTypeOfSchain(typeOfSchain);
 
         ISchainsFunctionality1(schainsFunctionality1Address).createGroupForSchain(name, keccak256(abi.encodePacked(name)), numberOfNodes, partOfNode);
-
-        
 
         emit SchainCreated(name, from, partOfNode, lifetime, numberOfNodes, deposit, nonce, keccak256(abi.encodePacked(name)), uint32(block.timestamp), gasleft());
     }
