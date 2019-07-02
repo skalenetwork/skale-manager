@@ -1,4 +1,4 @@
-pragma solidity ^0.4.24;
+pragma solidity ^0.5.0;
 
 import "./Ownable.sol";
 
@@ -19,7 +19,7 @@ contract ContractManager is Ownable {
      * @param contractsName - contracts name in skale manager system
      * @param newContractsAddress - contracts address in skale manager system
      */
-    function setContractsAddress(string contractsName, address newContractsAddress) public onlyOwner {
+    function setContractsAddress(string memory contractsName, address newContractsAddress) public onlyOwner {
         // check newContractsAddress is not equal zero
         require(newContractsAddress != address(0), "New address is equal zero");
         // create hash of contractsName

@@ -12,18 +12,20 @@
     "tsc": "tsc --noEmit"
   },
   "dependencies": {
+    "@types/chai": "^4.1.7",
     "@types/chai-as-promised": "^7.1.0",
     "bignumber.js": "^9.0.0",
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
     "scrypt": "^6.0.3",
-    "solc": "^0.4.25",
-    "truffle": "^4.1.13",
-    "truffle-privatekey-provider": "1.1.0",
+    "solc": "^0.5.7",
+    "solium": "^1.2.4",
+    "truffle": "^5.0.12",
+    "truffle-hdwallet-provider": "^1.0.8",
     "truffle-typings": "^1.0.8",
     "ts-node": "^8.3.0",
-    "typechain": "^0.3.16",
-    "web3": "1.0.0-beta.37"
+    "typechain": "^0.3.17",
+    "web3": "1.0.0-beta.35"
   },
   "repository": {
     "type": "git",
@@ -46,7 +48,7 @@
   "devDependencies": {
     "dotenv": "^7.0.0",
     "ethlint": "^1.2.4",
-    "ganache-cli": "6.1.8",
+    "ganache-cli": "^6.1.8",
     "solidity-coverage": "^0.5.11",
     "tslint": "^5.18.0",
     "typescript": "^3.5.2"

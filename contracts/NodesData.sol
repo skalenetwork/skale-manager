@@ -1,11 +1,11 @@
-pragma solidity ^0.4.24;
+pragma solidity ^0.5.0;
 
 import "./Permissions.sol";
 
 /**
  * @title Constants - interface of Constants contract
  */
-interface Constants {
+interface IConstants {
     function rewardPeriod() external view returns (uint32);
 }
 
@@ -90,7 +90,7 @@ contract NodesData is Permissions {
      * @param publicKey - Ethereum public key
      * @return index of Node
      */
-    function addNode(address from, string name, bytes4 ip, bytes4 publicIP, uint16 port, bytes publicKey) public allow("NodesFunctionality") returns (uint) {
+    function addNode(address from, string memory name, bytes4 ip, bytes4 publicIP, uint16 port, bytes memory publicKey) public allow("NodesFunctionality") returns (uint) {
         nodes.push(Node({
             name: name,
             ip: ip,
@@ -136,7 +136,7 @@ contract NodesData is Permissions {
     function addFullNode(uint nodeIndex) public allow("NodesFunctionality") {
         fullNodes.push(NodeFilling({
             nodeIndex: nodeIndex,
-            freeSpace: 1
+            freeSpace: 128
         }));
         nodesLink.push(NodeLink({
             subarrayLink: fullNodes.length - 1,
@@ -208,7 +208,7 @@ contract NodesData is Permissions {
      * @param subarrayLink - index of Node at array of Fractional Nodes
      * @param space - space which should be occupied
      */
-    function removeSpaceFromFractionalNode(uint subarrayLink, uint space) public allow("SchainsFunctionality") returns (bool) {
+    function removeSpaceFromFractionalNode(uint subarrayLink, uint space) public allow("SchainsFunctionality1") returns (bool) {
         if (fractionalNodes[subarrayLink].freeSpace < space) {
             return false;
         }
@@ -222,7 +222,7 @@ contract NodesData is Permissions {
      * @param subarrayLink - index of Node at array of Full Nodes
      * @param space - space which should be occupied
      */
-    function removeSpaceFromFullNode(uint subarrayLink, uint space) public allow("SchainsFunctionality") returns (bool) {
+    function removeSpaceFromFullNode(uint subarrayLink, uint space) public allow("SchainsFunctionality1") returns (bool) {
         if (fullNodes[subarrayLink].freeSpace < space) {
             return false;
         }
@@ -236,7 +236,7 @@ contract NodesData is Permissions {
      * @param subarrayLink - index of Node at array of Fractional Nodes
      * @param space - space which should be returned
      */
-    function addSpaceToFractionalNode(uint subarrayLink, uint space) public allow("SchainsFunctionality") {
+    function addSpaceToFractionalNode(uint subarrayLink, uint space) public allow("SchainsFunctionality1") {
         fractionalNodes[subarrayLink].freeSpace += space;
     }
 
@@ -246,7 +246,7 @@ contract NodesData is Permissions {
      * @param subarrayLink - index of Node at array of Full Nodes
      * @param space - space which should be returned
      */
-    function addSpaceToFullNode(uint subarrayLink, uint space) public allow("SchainsFunctionality") {
+    function addSpaceToFullNode(uint subarrayLink, uint space) public allow("SchainsFunctionality1") {
         fullNodes[subarrayLink].freeSpace += space;
     }
 
@@ -285,7 +285,7 @@ contract NodesData is Permissions {
      */
     function isTimeForReward(uint nodeIndex) public view returns (bool) {
         address constantsAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("Constants")));
-        return nodes[nodeIndex].lastRewardDate + Constants(constantsAddress).rewardPeriod() <= block.timestamp;
+        return nodes[nodeIndex].lastRewardDate + IConstants(constantsAddress).rewardPeriod() <= block.timestamp;
     }
 
     /**
@@ -349,7 +349,7 @@ contract NodesData is Permissions {
      */
     function getNodeNextRewardDate(uint nodeIndex) public view returns (uint32) {
         address constantsAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("Constants")));
-        return nodes[nodeIndex].lastRewardDate + Constants(constantsAddress).rewardPeriod();
+        return nodes[nodeIndex].lastRewardDate + IConstants(constantsAddress).rewardPeriod();
     }
 
     /**
@@ -375,7 +375,7 @@ contract NodesData is Permissions {
     function getNumberOfFullNodes() public view returns (uint) {
         return fullNodes.length;
     }
-
+    
     /**
      * @dev getNumberOfFreefractionalNodes - get number of free Fractional Nodes
      * @return numberOfFreeFractionalNodes - number of free Fractional Nodes
@@ -395,7 +395,7 @@ contract NodesData is Permissions {
      */
     function getNumberOfFreeFullNodes() public view returns (uint numberOfFreeFullNodes) {
         for (uint indexOfNode = 0; indexOfNode < fullNodes.length; indexOfNode++) {
-            if (fullNodes[indexOfNode].freeSpace == 1 && isNodeActive(fullNodes[indexOfNode].nodeIndex)) {
+            if (fullNodes[indexOfNode].freeSpace == 128 && isNodeActive(fullNodes[indexOfNode].nodeIndex)) {
                 numberOfFreeFullNodes++;
             }
         }
@@ -405,7 +405,7 @@ contract NodesData is Permissions {
      * @dev getActiveNodeIPs - get array of ips of Active Nodes
      * @return activeNodeIPs - array of ips of Active Nodes
      */
-    function getActiveNodeIPs() public view returns (bytes4[] memory activeNodeIPs) {        
+    function getActiveNodeIPs() public view returns (bytes4[] memory activeNodeIPs) {
         activeNodeIPs = new bytes4[](numberOfActiveNodes);
         uint indexOfActiveNodeIPs = 0;
         for (uint indexOfNodes = 0; indexOfNodes < nodes.length; indexOfNodes++) {
@@ -413,7 +413,7 @@ contract NodesData is Permissions {
                 activeNodeIPs[indexOfActiveNodeIPs] = nodes[indexOfNodes].ip;
                 indexOfActiveNodeIPs++;
             }
-        }             
+        }
     }
 
     /**

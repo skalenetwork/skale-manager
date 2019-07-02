@@ -2,21 +2,22 @@ require('dotenv').config();
 const networkName = process.env.NETWORK;
 const privateKey = process.env.ETH_PRIVATE_KEY;
 
-let networks = require("../truffle.js");
+let networks = require("../truffle-config.js");
 let currentNetwork = networks['networks'][networkName];
 
 const LINE = '======================================';
 
 const Web3 = require('web3');
-const PrivateKeyProvider = require("truffle-privatekey-provider");
-const provider = new PrivateKeyProvider(privateKey, `http://${currentNetwork['host']}:${currentNetwork['port']}`);
-const web3 = new Web3(provider);
-//const web3beta = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
+const PrivateKeyProvider = require("truffle-hdwallet-provider");
+//const provider = new PrivateKeyProvider(privateKey, `http://${currentNetwork['host']}:${currentNetwork['port']}`);
+//const web3 = new Web3(provider);
+const web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
 //////
-const mainAccount = web3['_provider']['address'];
+// const mainAccount = web3['_provider']['address'];
+const mainAccount = "0x61e488d02fe65eb05483c9825a6c8b24e1601d77";
 
 const jsonData = require(`../data/${networkName}.json`);
-//const updatedData = require("../data/updated.json");
+const updatedData = require("../data/updated.json");
 
 const SkaleManager = new web3.eth.Contract(jsonData['skale_manager_abi'], jsonData['skale_manager_address']);
 module.exports.SkaleManager = SkaleManager;//new web3.eth.Contract(jsonData['skale_manager_abi'], jsonData['skale_manager_address']);

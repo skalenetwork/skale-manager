@@ -1,6 +1,7 @@
-pragma solidity ^0.4.24;
+pragma solidity ^0.5.0;
 
 import './Permissions.sol';
+
 
 /**
  * @title ManagerData - Data contract for SkaleManager
@@ -24,7 +25,7 @@ contract ManagerData is Permissions {
      * @param newExecutorName - name of executor contract
      * @param newContractsAddress needed in Permissions constructor
      */
-    constructor(string newExecutorName, address newContractsAddress) Permissions(newContractsAddress) public {
+    constructor(string memory newExecutorName, address newContractsAddress) Permissions(newContractsAddress) public {
         startTime = uint32(block.timestamp);
         executorName = newExecutorName;
     }
