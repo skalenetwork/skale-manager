@@ -32,5 +32,5 @@ install:
     - yarn install
 script:
     - yarn generate
-    - ./node_modules/.bin/ganache-cli -l 8000000 &
+    - ./node_modules/.bin/ganache-cli --gasLimit 8000000 --quiet &
     - yarn test
