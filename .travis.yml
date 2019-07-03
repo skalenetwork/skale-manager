@@ -32,4 +32,5 @@ install:
     - yarn install
 script:
     - yarn generate
+    - ./node_modules/.bin/ganache-cli -l 8000000 &
     - yarn test
