@@ -137,13 +137,74 @@ contract('SchainsFunctionality', ([owner, holder, validator]) => {
             });
 
             it('successfully', async () => {
+                const deposit = 3952894150981;                
+
                 await schainsFunctionality.addSchain(                    
                     holder, 
-                    3952894150981,
-                    '0x10' + '0000000000000000000000000000000000000000000000000000000000000005' + '01' + '0000' + 'd2', 
+                    deposit,
+                    '0x10' + '0000000000000000000000000000000000000000000000000000000000000005' + '01' + '0000' + '6432',
                     {from: owner}
                 )
+
+                let schains = await schainsData.getSchains();
+                schains.length.should.be.equal(1);
+                let schainId = schains[0];
+
+                await schainsData.isOwnerAddress(holder, schainId).should.be.eventually.true;
+
+                let _schains = await schainsData.schains(schainId);                                
+                let _schainsArray = Array(8);
+                for (let index of Array.from(Array(8).keys())) {
+                    _schainsArray[index] = _schains[index];
+                }
+
+                let [_schainName, _schainOwner, _indexInOwnerList, _part, _lifetime, _startDate, _deposit, _index] = _schainsArray;
+
+                _schainName.should.be.equal('d2');      
+                _schainOwner.should.be.equal(holder);
+                expect(_part.eq(web3.utils.toBN(128))).be.true;
+                expect(_lifetime.eq(web3.utils.toBN(5))).be.true;
+                expect(_deposit.eq(web3.utils.toBN(deposit))).be.true;
             })
+
+            describe("when schain is created", async () => {
+
+                beforeEach(async () => {
+                    await schainsFunctionality.addSchain(                    
+                        holder, 
+                        3952894150981,
+                        '0x10' + '0000000000000000000000000000000000000000000000000000000000000005' + '01' + '0000' + 'd2', 
+                        {from: owner}
+                    )                    
+                })
+
+                it("should failed when create another schain with the same name", async () => {
+                    await schainsFunctionality.addSchain(                    
+                        holder, 
+                        3952894150981,
+                        '0x10' + '0000000000000000000000000000000000000000000000000000000000000005' + '01' + '0000' + 'd2', 
+                        {from: owner}
+                    ).should.be.eventually.rejectedWith("Schain name is not available")
+                });
+
+                it("should be able to delete schain", async () => {                                        
+                    await schainsFunctionality.deleteSchain(
+                        holder, 
+                        '0x9ad263ae43881ba28ed7ce1c8d76614d2b21b3756573ad348964cdde6b3ae6df',
+                        {from: owner}
+                    );                    
+                    await schainsData.getSchains().should.be.eventually.empty;
+                });
+
+                it("should fail on deleting schain if owner is wrong", async () => {
+                    await schainsFunctionality.deleteSchain(
+                        validator, 
+                        '0x9ad263ae43881ba28ed7ce1c8d76614d2b21b3756573ad348964cdde6b3ae6df',
+                        {from: owner}
+                    ).should.be.eventually.rejectedWith("Message sender is not an owner of Schain");                     
+                });
+
+            });            
 
         });        
     });    
