@@ -211,35 +211,35 @@ contract('SchainsFunctionality', ([owner, holder, validator]) => {
 
     describe('should calculate schain price', async () => {
         it('of tiny schain', async () => {        
-            let price = await schainsFunctionality.getSchainPrice(1, 5);
+            let price = web3.utils.toBN(await schainsFunctionality.getSchainPrice(1, 5));
             let correct_price = web3.utils.toBN(3952894150981);            
 
             expect(price.eq(correct_price)).to.be.true;
         });
 
         it('of small schain', async () => {        
-            let price = await schainsFunctionality.getSchainPrice(2, 5);
+            let price = web3.utils.toBN(await schainsFunctionality.getSchainPrice(2, 5));
             let correct_price = web3.utils.toBN(63246306415705);
 
             expect(price.eq(correct_price)).to.be.true;
         });
 
         it('of medium schain', async () => {        
-            let price = await schainsFunctionality.getSchainPrice(3, 5);
+            let price = web3.utils.toBN(await schainsFunctionality.getSchainPrice(3, 5));
             let correct_price = web3.utils.toBN(505970451325642);                                 
 
             expect(price.eq(correct_price)).to.be.true;
         });
 
         it('of test schain', async () => {        
-            let price = await schainsFunctionality.getSchainPrice(4, 5);
+            let price = web3.utils.toBN(await schainsFunctionality.getSchainPrice(4, 5));
             let correct_price = web3.utils.toBN(1000000000000000000);                        
 
             expect(price.eq(correct_price)).to.be.true;
         });
 
         it('of medium test schain', async () => {
-            let price = await schainsFunctionality.getSchainPrice(5, 5);
+            let price = web3.utils.toBN(await schainsFunctionality.getSchainPrice(5, 5));
             let correct_price = web3.utils.toBN(31623153207852);
 
             expect(price.eq(correct_price)).to.be.true;
