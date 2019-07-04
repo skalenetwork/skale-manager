@@ -1,6 +1,6 @@
 pragma solidity ^0.5.0;
 
-import './Permissions.sol';
+import "./Permissions.sol";
 
 /**
  * @title GroupsData - interface of GroupsData
@@ -152,7 +152,9 @@ contract GroupsFunctionality is Permissions {
         uint publicKeyy2;
         (publicKeyx1, publicKeyy1, publicKeyx2, publicKeyy2) = IGroupsData(groupsDataAddress).getGroupsPublicKey(groupIndex);
         address skaleVerifierAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("SkaleVerifier")));
-        return ISkaleVerifier(skaleVerifierAddress).verify(signatureX, signatureY, hashX, hashY, publicKeyx1, publicKeyy1, publicKeyx2, publicKeyy2);
+        return ISkaleVerifier(skaleVerifierAddress).verify(
+            signatureX, signatureY, hashX, hashY, publicKeyx1, publicKeyy1, publicKeyx2, publicKeyy2
+        );
     }
 
     /**

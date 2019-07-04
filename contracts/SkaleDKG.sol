@@ -1,6 +1,6 @@
 pragma solidity ^0.5.0;
 
-import './Permissions.sol';
+import "./Permissions.sol";
 
 interface IGroupsData {
     function setPublicKey(bytes32 groupIndex, uint pubKeyx1, uint pubKeyy1, uint pubKeyx2, uint pubKeyy2) external;
@@ -89,8 +89,12 @@ contract SkaleDKG is Permissions {
     //function allright() public;
 
     function adding(bytes32 groupIndex, uint x1, uint y1, uint x2, uint y2, uint x3, uint y3) internal {
-        if (channels[groupIndex].publicKeyx.x == 0 && channels[groupIndex].publicKeyx.y == 0 && channels[groupIndex].publicKeyy.x == 0 && channels[groupIndex].publicKeyy.y == 0) {
-            (channels[groupIndex].publicKeyx, channels[groupIndex].publicKeyy) = toAffineCoordinatesG2(Fp2({ x: x1, y: y1 }), Fp2({ x: x2, y: y2 }), Fp2({ x: x3, y: y3 }));
+        if (channels[groupIndex].publicKeyx.x == 0 &&
+            channels[groupIndex].publicKeyx.y == 0 &&
+            channels[groupIndex].publicKeyy.x == 0 &&
+            channels[groupIndex].publicKeyy.y == 0) {
+            (channels[groupIndex].publicKeyx, channels[groupIndex].publicKeyy) = toAffineCoordinatesG2(
+                Fp2({ x: x1, y: y1 }), Fp2({ x: x2, y: y2 }), Fp2({ x: x3, y: y3 }));
         } else {
             Fp2 memory a;
             Fp2 memory b;
@@ -169,7 +173,9 @@ contract SkaleDKG is Permissions {
         eightC = addFp2(eightC, eightC);
         eightC = addFp2(eightC, eightC);
         Fp2 memory y1z1 = mulFp2(y1, z1);
-        return toAffineCoordinatesG2(minusFp2(F, addFp2(D, D)), minusFp2(mulFp2(E, minusFp2(D, minusFp2(F, addFp2(D, D)))), eightC), addFp2(y1z1, y1z1));
+        return toAffineCoordinatesG2(
+            minusFp2(F, addFp2(D, D)), minusFp2(mulFp2(E, minusFp2(D, minusFp2(F, addFp2(D, D)))), eightC), addFp2(y1z1, y1z1)
+        );
     }
 
     function U1(Fp2 memory x1) internal view returns (Fp2 memory) {
@@ -200,17 +206,17 @@ contract SkaleDKG is Permissions {
 
     function yForAddingG2(Fp2 memory s2, Fp2 memory s1, Fp2 memory u2, Fp2 memory u1, Fp2 memory x) internal view returns (Fp2 memory) {
         Fp2 memory r = addFp2(minusFp2(s2, s1), minusFp2(s2, s1));
-        Fp2 memory I = squaredFp2(addFp2(minusFp2(u2, u1), minusFp2(u2, u1)));
-        Fp2 memory V = mulFp2(u1, I);
-        Fp2 memory J = mulFp2(minusFp2(u2, u1), I);
+        Fp2 memory theI = squaredFp2(addFp2(minusFp2(u2, u1), minusFp2(u2, u1)));
+        Fp2 memory V = mulFp2(u1, theI);
+        Fp2 memory J = mulFp2(minusFp2(u2, u1), theI);
         return minusFp2(mulFp2(r, minusFp2(V, x)), addFp2(mulFp2(s1, J), mulFp2(s1, J)));
     }
 
     function xForAddingG2(Fp2 memory s2, Fp2 memory s1, Fp2 memory u2, Fp2 memory u1) internal view returns (Fp2 memory) {
         Fp2 memory r = addFp2(minusFp2(s2, s1), minusFp2(s2, s1));
-        Fp2 memory I = squaredFp2(addFp2(minusFp2(u2, u1), minusFp2(u2, u1)));
-        Fp2 memory V = mulFp2(u1, I);
-        Fp2 memory J = mulFp2(minusFp2(u2, u1), I);
+        Fp2 memory theI = squaredFp2(addFp2(minusFp2(u2, u1), minusFp2(u2, u1)));
+        Fp2 memory V = mulFp2(u1, theI);
+        Fp2 memory J = mulFp2(minusFp2(u2, u1), theI);
         return minusFp2(squaredFp2(r), addFp2(J, addFp2(V, V)));
     }
 
@@ -221,11 +227,21 @@ contract SkaleDKG is Permissions {
         //x = xForAddingG2(S2(y2), S1(y1), U2(x2), U1(x1));
         //y = yForAddingG2(S2(y2), S1(y1), U2(x2), U1(x1), x);
         //Fp2 memory z = zForAddingG2(U2(x2), U1(x1));
-        (channels[groupIndex].publicKeyx, channels[groupIndex].publicKeyy) = toAffineCoordinatesG2(xForAddingG2(S2(y2), S1(y1), U2(x2), U1(x1)), yForAddingG2(S2(y2), S1(y1), U2(x2), U1(x1), xForAddingG2(S2(y2), S1(y1), U2(x2), U1(x1))), zForAddingG2(U2(x2), U1(x1)));
+        (channels[groupIndex].publicKeyx, channels[groupIndex].publicKeyy) = toAffineCoordinatesG2(
+            xForAddingG2(
+                S2(y2), S1(y1), U2(x2), U1(x1)
+            ), yForAddingG2(
+                S2(y2), S1(y1), U2(x2), U1(x1), xForAddingG2(S2(y2), S1(y1), U2(x2), U1(x1))
+            ), zForAddingG2(
+                U2(x2), U1(x1)
+            )
+        );
     }
 
-    function binstep(uint a, uint step) internal view returns (uint x) {
+    function binstep(uint _a, uint _step) internal view returns (uint x) {
         x = 1;
+        uint a = _a;
+        uint step = _step;
         while (step > 0) {
             if (step % 2 == 1) {
                 x = mulmod(x, a, p);

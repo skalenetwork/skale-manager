@@ -1,6 +1,6 @@
 pragma solidity ^0.5.0;
 
-import './Permissions.sol';
+import "./Permissions.sol";
 
 interface ISchainsData {
     function initializeSchain(string calldata name, address from, uint lifetime, uint deposit) external;
@@ -89,9 +89,12 @@ contract SchainsFunctionality is Permissions {
         // create a group for Schain
         (numberOfNodes, partOfNode) = ISchainsFunctionality1(schainsFunctionality1Address).getNodesDataFromTypeOfSchain(typeOfSchain);
 
-        ISchainsFunctionality1(schainsFunctionality1Address).createGroupForSchain(name, keccak256(abi.encodePacked(name)), numberOfNodes, partOfNode);
+        ISchainsFunctionality1(schainsFunctionality1Address).createGroupForSchain(
+            name, keccak256(abi.encodePacked(name)), numberOfNodes, partOfNode);
 
-        emit SchainCreated(name, from, partOfNode, lifetime, numberOfNodes, deposit, nonce, keccak256(abi.encodePacked(name)), uint32(block.timestamp), gasleft());
+        emit SchainCreated(
+            name, from, partOfNode, lifetime, numberOfNodes, deposit, nonce,
+            keccak256(abi.encodePacked(name)), uint32(block.timestamp), gasleft());
     }
 
     /**
@@ -151,7 +154,9 @@ contract SchainsFunctionality is Permissions {
         uint partOfNode = ISchainsData(dataAddress).getSchainsPartOfNode(schainId);
         for (uint i = 0; i < nodesInGroup.length; i++) {
             uint schainIndex = ISchainsFunctionality1(schainsFunctionality1Address).findSchainAtSchainsForNode(nodesInGroup[i], schainId);
-            require(schainIndex < ISchainsData(dataAddress).getLengthOfSchainsForNode(nodesInGroup[i]), "Some Node does not contain given Schain");
+            require(
+                schainIndex < ISchainsData(dataAddress).getLengthOfSchainsForNode(nodesInGroup[i]),
+                "Some Node does not contain given Schain");
             ISchainsData(dataAddress).removeSchainForNode(nodesInGroup[i], schainIndex);
             ISchainsFunctionality1(schainsFunctionality1Address).addSpace(nodesInGroup[i], partOfNode);
         }
@@ -177,7 +182,9 @@ contract SchainsFunctionality is Permissions {
      * @return nonce
      * @return name
      */
-    function fallbackSchainParametersDataConverter(bytes memory data) internal pure returns (uint lifetime, uint typeOfSchain, uint16 nonce, string memory name) {
+    function fallbackSchainParametersDataConverter(bytes memory data)
+    internal pure returns (uint lifetime, uint typeOfSchain, uint16 nonce, string memory name)
+    {
         require(data.length > 36, "Incorrect bytes data config");
         bytes32 lifetimeInBytes;
         bytes1 typeOfSchainInBytes;

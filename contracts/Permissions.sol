@@ -18,7 +18,9 @@ contract Permissions is Ownable {
      * @param contractName - human readable name of contract
      */
     modifier allow(string memory contractName) {
-        require(ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked(contractName))) == msg.sender || owner == msg.sender, "Message sender is invalid");
+        require(
+            ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked(contractName))) == msg.sender || owner == msg.sender,
+            "Message sender is invalid");
         _;
     }
 

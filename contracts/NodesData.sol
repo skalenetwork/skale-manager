@@ -90,7 +90,15 @@ contract NodesData is Permissions {
      * @param publicKey - Ethereum public key
      * @return index of Node
      */
-    function addNode(address from, string memory name, bytes4 ip, bytes4 publicIP, uint16 port, bytes memory publicKey) public allow("NodesFunctionality") returns (uint) {
+    function addNode(
+        address from,
+        string memory name,
+        bytes4 ip,
+        bytes4 publicIP,
+        uint16 port,
+        bytes memory publicKey)
+    public allow("NodesFunctionality") returns (uint)
+    {
         nodes.push(Node({
             name: name,
             ip: ip,

@@ -1,6 +1,6 @@
 pragma solidity ^0.5.0;
 
-import './GroupsFunctionality.sol';
+import "./GroupsFunctionality.sol";
 
 interface INodesData {
     function nodesLink(uint nodeIndex) external view returns (uint, bool);
@@ -61,7 +61,10 @@ contract SchainsFunctionality1 is GroupsFunctionality {
         uint gasSpend
     );
 
-    constructor(string memory newExecutorName, string memory newDataName, address newContractsAddress) GroupsFunctionality(newExecutorName, newDataName, newContractsAddress) public {
+    constructor(string memory newExecutorName,
+                string memory newDataName,
+                address newContractsAddress)
+                GroupsFunctionality(newExecutorName, newDataName, newContractsAddress) public {
         
     }
 
@@ -285,7 +288,9 @@ contract SchainsFunctionality1 is GroupsFunctionality {
      * @return numberOfNodes - number of Nodes in Group
      * @return space - needed space to occupy
      */
-    function setNumberOfNodesInGroup(bytes32 groupIndex, uint partOfNode, address dataAddress) internal view returns (uint numberOfNodes, uint space) {
+    function setNumberOfNodesInGroup(bytes32 groupIndex, uint partOfNode, address dataAddress)
+    internal view returns (uint numberOfNodes, uint space)
+    {
         address nodesDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
         address constantsAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("Constants")));
         uint numberOfAvailableNodes;

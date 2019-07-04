@@ -1,6 +1,6 @@
 pragma solidity ^0.5.0;
 
-import './Permissions.sol';
+import "./Permissions.sol";
 
 /**
  * @title Constants - interface of Constants contract
@@ -30,7 +30,14 @@ interface INodesData {
     function isNodeActive(uint nodeIndex) external view returns (bool);
     function isNodeLeaving(uint nodeIndex) external view returns (bool);
     function isLeavingPeriodExpired(uint nodeIndex) external view returns (bool);
-    function addNode(address from, string calldata name, bytes4 ip, bytes4 publicIP, uint16 port, bytes calldata publicKey) external returns (uint);
+    function addNode(
+        address from,
+        string calldata name,
+        bytes4 ip,
+        bytes4 publicIP,
+        uint16 port,
+        bytes calldata publicKey)
+    external returns (uint);
     function addFractionalNode(uint nodeIndex) external;
     function addFullNode(uint nodeIndex) external;
     function setNodeLeaving(uint nodeIndex) external;
@@ -226,7 +233,12 @@ contract NodesFunctionality is Permissions {
      * @param nodeIndex - index of Node
      */
     function setNodeType(address nodesDataAddress, address constantsAddress, uint nodeIndex) internal {
-        bool isNodeFull = (INodesData(nodesDataAddress).getNumberOfFractionalNodes() * IConstants(constantsAddress).FRACTIONAL_FACTOR() > INodesData(nodesDataAddress).getNumberOfFullNodes() * IConstants(constantsAddress).FULL_FACTOR());
+        bool isNodeFull = (
+            INodesData(nodesDataAddress).getNumberOfFractionalNodes() *
+            IConstants(constantsAddress).FRACTIONAL_FACTOR() >
+            INodesData(nodesDataAddress).getNumberOfFullNodes() *
+            IConstants(constantsAddress).FULL_FACTOR()
+        );
 
         if (INodesData(nodesDataAddress).getNumberOfFullNodes() == 0 || isNodeFull) {
             INodesData(nodesDataAddress).addFullNode(nodeIndex);
