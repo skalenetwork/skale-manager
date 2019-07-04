@@ -2,6 +2,7 @@ pragma solidity ^0.5.0;
 
 import "./Ownable.sol";
 
+
 /**
  * @title Main contract in upgradeable approach. This contract contain actual
  * contracts for this moment in skale manager system by human name.

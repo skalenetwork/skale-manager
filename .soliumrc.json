@@ -12,7 +12,9 @@
     "function-whitespace": "error",
     "lbrace": "error",
     "no-unused-vars": "error",
-    "max-len": "error",    
+    "max-len": "error",
+    "camelcase": "error",
+    "blank-lines": "error",
     "security/no-inline-assembly": "warning"
   }
 }

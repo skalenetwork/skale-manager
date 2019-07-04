@@ -4,6 +4,7 @@ pragma solidity ^0.5.0;
 import "./StandardToken.sol";
 import "./Permissions.sol";
 
+
 /**
  * @title SkaleToken is ERC223 Token implementation, also this contract in skale
  * manager system

@@ -383,7 +383,7 @@ contract NodesData is Permissions {
     function getNumberOfFullNodes() public view returns (uint) {
         return fullNodes.length;
     }
-    
+
     /**
      * @dev getNumberOfFreefractionalNodes - get number of free Fractional Nodes
      * @return numberOfFreeFractionalNodes - number of free Fractional Nodes
@@ -395,7 +395,6 @@ contract NodesData is Permissions {
             }
         }
     }
-
 
     /**
      * @dev getnumberOfFreeFullNodes - get number of free Full Nodes
