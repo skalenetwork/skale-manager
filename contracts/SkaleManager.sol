@@ -78,7 +78,7 @@ contract SkaleManager is Permissions {
     );
 
     constructor(address newContractsAddress) Permissions(newContractsAddress) public {
-        
+
     }
 
     function tokenFallback(address from, uint value, bytes memory data) public allow("SkaleToken") {

@@ -18,6 +18,7 @@
     "whitespace": "error",
     "pragma-on-top": "error",
     "arg-overflow": "error",
+    "no-trailing-whitespace": "error",
     "security/no-inline-assembly": "warning"
   }
 }

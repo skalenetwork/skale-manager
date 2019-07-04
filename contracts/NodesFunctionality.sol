@@ -98,7 +98,7 @@ contract NodesFunctionality is Permissions {
      * @param newContractsAddress needed in Permissions constructor
     */
     constructor(address newContractsAddress) Permissions(newContractsAddress) public {
-    
+
     }
 
     /**
@@ -314,7 +314,7 @@ contract NodesFunctionality is Permissions {
     }*/
 
     /**
-     * @dev binstep - exponentiation by squaring by modulo (a^step) 
+     * @dev binstep - exponentiation by squaring by modulo (a^step)
      * @param a - number which should be exponentiated
      * @param step - exponent
      * @param div - divider of a
@@ -391,7 +391,7 @@ contract NodesFunctionality is Permissions {
         // convert name
         string memory name = new string(data.length - 77);
         for (uint i = 0; i < bytes(name).length; ++i) {
-            bytes(name)[i] = data[77 + i];                                                       
+            bytes(name)[i] = data[77 + i];
         }
         return (publicKey, name);
     }

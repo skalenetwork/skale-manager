@@ -45,7 +45,7 @@ interface IGroupsData {
  * @title SchainsFunctionality - contract contains all functionality logic to manage Schains
  */
 contract SchainsFunctionality is Permissions {
-    
+
     // informs that Schain is created
     event SchainCreated(
         string name,

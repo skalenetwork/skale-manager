@@ -44,7 +44,7 @@ contract NodesData is Permissions {
         bool isNodeFull;
     }
 
-    // struct to note nodeIndex and remaining space 
+    // struct to note nodeIndex and remaining space
     struct NodeFilling {
         uint nodeIndex;
         uint freeSpace;
@@ -433,13 +433,13 @@ contract NodesData is Permissions {
         for (uint indexOfNodes = 0; indexOfNodes < nodes.length; indexOfNodes++) {
             if (isNodeActive(indexOfNodes)) {
                 activeNodeIds[indexOfActiveNodeIds] = indexOfNodes;
-                indexOfActiveNodeIds++;                                                               
-            }                                   
-        }            
+                indexOfActiveNodeIds++;
+            }
+        }
     }
 
     /**
-     * @dev getActiveNodesByAddress - get array of indexes of Active Nodes, which were 
+     * @dev getActiveNodesByAddress - get array of indexes of Active Nodes, which were
      * created by msg.sender
      * @return activeNodesbyAddress - array of indexes of Active Nodes, which were created
      * by msg.sender
@@ -452,6 +452,6 @@ contract NodesData is Permissions {
                 activeNodesByAddress[indexOfActiveNodesByAddress] = indexOfNodes;
                 indexOfActiveNodesByAddress++;
             }
-        }             
+        }
     }
 }

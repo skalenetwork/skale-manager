@@ -4,7 +4,7 @@ import "./GroupsData.sol";
 
 
 /**
- * @title SchainsData - Data contract for SchainsFunctionality. 
+ * @title SchainsData - Data contract for SchainsFunctionality.
  * Contain all information about SKALE-Chains.
  */
 contract SchainsData is GroupsData {
@@ -34,7 +34,7 @@ contract SchainsData is GroupsData {
     uint public sumOfSchainsResources = 0;
 
     constructor(string memory newExecutorName, address newContractsAddress) GroupsData(newExecutorName, newContractsAddress) public {
-    
+
     }
 
     /**
@@ -61,7 +61,7 @@ contract SchainsData is GroupsData {
         numberOfSchains++;
         schainsAtSystem.push(schainId);
     }
-    
+
     /**
      * @dev setSchainIndex - adds Schain's hash to owner
      * function could be run only by executor
@@ -144,7 +144,7 @@ contract SchainsData is GroupsData {
      * function could be run only by executor
      * @param nodeIndex - index of Node
      * @param schainIndex - index of Schain in schainsForNodes array by this Node
-     */    
+     */
     function removeSchainForNode(uint nodeIndex, uint schainIndex) public allow("SchainsFunctionality") {
         uint length = schainsForNodes[nodeIndex].length;
         if (schainIndex != length - 1) {
@@ -165,7 +165,7 @@ contract SchainsData is GroupsData {
     /**
      * @dev getSchainsPartOfNode - gets occupied space for given Schain
      * @param schainId - hash by Schain name
-     * @return occupied space 
+     * @return occupied space
      */
     function getSchainsPartOfNode(bytes32 schainId) public view returns (uint) {
         return schains[schainId].partOfNode;
@@ -190,7 +190,7 @@ contract SchainsData is GroupsData {
     }
 
     /**
-     * @dev getSchainIdsForNode - returns array of hashes by Schain names, 
+     * @dev getSchainIdsForNode - returns array of hashes by Schain names,
      * which given Node composed
      * @param nodeIndex - index of Node
      * @return array of hashes by Schain names

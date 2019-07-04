@@ -49,7 +49,7 @@ contract SkaleDKG is Permissions {
     );
 
     constructor(address contractsAddress) Permissions(contractsAddress) public {
-        
+
     }
 
     function openChannel(bytes32 groupIndex, address dataAddress) public {

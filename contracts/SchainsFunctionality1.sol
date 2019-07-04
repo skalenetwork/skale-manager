@@ -51,7 +51,6 @@ interface IConstants {
  * @title SchainsFunctionality - contract contains all functionality logic to manage Schains
  */
 contract SchainsFunctionality1 is GroupsFunctionality {
-    
     // informs that Schain based on some Nodes
     event SchainNodes(
         string name,
@@ -65,7 +64,7 @@ contract SchainsFunctionality1 is GroupsFunctionality {
                 string memory newDataName,
                 address newContractsAddress)
                 GroupsFunctionality(newExecutorName, newDataName, newContractsAddress) public {
-        
+
     }
 
     /**
@@ -169,7 +168,6 @@ contract SchainsFunctionality1 is GroupsFunctionality {
      * @param groupIndex - index of Group
      */
     function generateGroup(bytes32 groupIndex) internal returns (uint[] memory nodesInGroup) {
-        
         address dataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked(dataName)));
         require(IGroupsData(dataAddress).isGroupActive(groupIndex), "Group is not active");
         bytes32 groupData = IGroupsData(dataAddress).getGroupData(groupIndex);
@@ -196,7 +194,6 @@ contract SchainsFunctionality1 is GroupsFunctionality {
             // checks that this not is available, enough space to allocate resources
             // and have not chosen to this group
             if (comparator(indexOfNode, uint(groupData), space) && !IGroupsData(dataAddress).isExceptionNode(groupIndex, nodeIndex)) {
-                
                 // adds Node to the Group
                 IGroupsData(dataAddress).setException(groupIndex, nodeIndex);
                 nodesInGroup[index] = nodeIndex;
@@ -366,7 +363,7 @@ contract SchainsFunctionality1 is GroupsFunctionality {
         }
     }*/
 
-    
+
 
     /**
      * @dev binstep - exponentiation by squaring by modulo (a^step)

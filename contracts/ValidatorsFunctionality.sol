@@ -30,7 +30,7 @@ interface INodesData {
 
 
 contract ValidatorsFunctionality is GroupsFunctionality {
-    
+
     event ValidatorCreated(
         uint nodeIndex,
         bytes32 groupIndex,

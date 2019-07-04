@@ -8,12 +8,12 @@ import "./ContractManager.sol";
  * @author Artem Payvin
  */
 contract Permissions is Ownable {
-    
+
     // address of ContractManager
     address contractsAddress;
 
     /**
-     * @dev allow - throws if called by any account and contract other than the owner 
+     * @dev allow - throws if called by any account and contract other than the owner
      * or `contractName` contract
      * @param contractName - human readable name of contract
      */

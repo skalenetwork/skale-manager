@@ -7,7 +7,7 @@ import "./Permissions.sol";
  * @title ManagerData - Data contract for SkaleManager
  */
 contract ManagerData is Permissions {
-    
+
     // miners capitalization
     uint public minersCap;
     // start time
