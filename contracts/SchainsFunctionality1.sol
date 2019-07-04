@@ -129,6 +129,8 @@ contract SchainsFunctionality1 is GroupsFunctionality {
         } else if (typeOfSchain == 5) {
             partOfNode = IConstants(constantsAddress).MEDIUM_TEST_DIVISOR();
             numberOfNodes = IConstants(constantsAddress).NUMBER_OF_NODES_FOR_MEDIUM_TEST_SCHAIN();
+        } else {
+            revert("Bad schain type");
         }
     }
 
