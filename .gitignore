@@ -39,6 +39,3 @@ docker/geth/shared/eth_datadir/history
 
 # coverage
 coverageEnv
-
-# Typescript staff
-types/

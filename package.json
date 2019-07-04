@@ -6,26 +6,13 @@
     "lint": "npx solium --dir contracts",
     "compile": "./node_modules/.bin/truffle compile",
     "deploy": "./scripts/build.sh",
-    "generate": "truffle compile && typechain --target truffle './build/**/*.json'",
-    "prepare": "yarn generate",
-    "test": "truffle test && yarn tsc",
-    "tsc": "tsc --noEmit"
+    "test": "node test/Main.js"
   },
   "dependencies": {
-    "@types/chai": "^4.1.7",
-    "@types/chai-as-promised": "^7.1.0",
-    "bignumber.js": "^9.0.0",
-    "chai": "^4.2.0",
-    "chai-as-promised": "^7.1.1",
-    "scrypt": "^6.0.3",
-    "solc": "^0.5.7",
-    "solium": "^1.2.4",
-    "truffle": "^5.0.12",
+    "solc": "0.5.7",
+    "truffle": "5.0.12",
     "truffle-hdwallet-provider": "^1.0.8",
-    "truffle-typings": "^1.0.8",
-    "ts-node": "^8.3.0",
-    "typechain": "^0.3.17",
-    "web3": "1.0.0-beta.37"
+    "web3": "1.0.0-beta.35"
   },
   "repository": {
     "type": "git",
@@ -33,12 +20,7 @@
   },
   "author": "SKALE Labs",
   "contributors": [
-    "Artem Payvin <artem.payvin@skalelabs.com>",
-    {
-      "name": "Dmytro Stebaiev",
-      "url": "https://github.com/DimaStebaev",
-      "githubUsername": "DimaStebaev"
-    }
+    "Artem Payvin <artem.payvin@skalelabs.com>"
   ],
   "license": "GPL-3.0",
   "bugs": {
@@ -48,9 +30,7 @@
   "devDependencies": {
     "dotenv": "^7.0.0",
     "ethlint": "^1.2.4",
-    "ganache-cli": "^6.1.8",
-    "solidity-coverage": "^0.5.11",
-    "tslint": "^5.18.0",
-    "typescript": "^3.5.2"
+    "ganache-cli": "6.1.8",
+    "solidity-coverage": "^0.5.11"
   }
 }

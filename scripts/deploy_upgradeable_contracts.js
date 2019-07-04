@@ -16,7 +16,7 @@ let SchainsData = path.resolve(__dirname, pathToContracts, 'SchainsData.sol');
 let SchainsFunctionality = path.resolve(__dirname, pathToContracts, 'SchainsFunctionality.sol');
 let ContractManager = path.resolve(__dirname, pathToContracts, 'ContractManager.sol');
 let Ownable = path.resolve(__dirname, pathToContracts, 'Ownable.sol');
-let ConstantsHolder = path.resolve(__dirname, pathToContracts, 'ConstantsHolder.sol');
+let Constants = path.resolve(__dirname, pathToContracts, 'Constants.sol');
 let StandardToken = path.resolve(__dirname, pathToContracts, 'StandardToken.sol');
 let Token = path.resolve(__dirname, pathToContracts, 'Token.sol');
 let ContractReceiver = path.resolve(__dirname, pathToContracts, 'ContractReceiver.sol');
@@ -109,9 +109,9 @@ async function deploy() {
     'Ownable.sol': fs.readFileSync(Ownable, 'UTF-8'),
     'ContractManager.sol': fs.readFileSync(ContractManager, 'UTF-8'),
     'Permissions.sol': fs.readFileSync(Permissions, 'UTF-8'),
-    'ConstantsHolder.sol': fs.readFileSync(ConstantsHolder, 'UTF-8')
+    'Constants.sol': fs.readFileSync(Constants, 'UTF-8')
   }  
-  let constantsResult = await deployContract("ConstantsHolder.sol:ConstantsHolder", {sources: constants}, {'gas': '8000000', gasPrice: 0, 'account': account, 'arguments': [contractManagerResult.address]});
+  let constantsResult = await deployContract("Constants.sol:Constants", {sources: constants}, {'gas': '8000000', gasPrice: 0, 'account': account, 'arguments': [contractManagerResult.address]});
   await setContractsAddress(contractManagerResult, "Constants", constantsResult.address, account);
   
   let nodesData = {

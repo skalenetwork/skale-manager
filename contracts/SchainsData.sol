@@ -119,18 +119,6 @@ contract SchainsData is GroupsData {
         }
         delete schainIndexes[from][length - 1];
         schainIndexes[from].length--;
-
-        // TODO:
-        // optimize
-        for (uint i = 0; i + 1 < schainsAtSystem.length; i++) {
-            if (schainsAtSystem[i] == schainId) {
-                schainsAtSystem[i] = schainsAtSystem[schainsAtSystem.length - 1];
-                break;
-            }
-        }
-        delete schainsAtSystem[schainsAtSystem.length - 1];
-        schainsAtSystem.length--;
-
         delete schains[schainId];
     }
 
@@ -139,8 +127,8 @@ contract SchainsData is GroupsData {
      * function could be run only by executor
      * @param nodeIndex - index of Node
      * @param schainIndex - index of Schain in schainsForNodes array by this Node
-     */    
-    function removeSchainForNode(uint nodeIndex, uint schainIndex) public allow("SchainsFunctionality") {
+     */
+    function removeSchainForNode(uint nodeIndex, uint schainIndex) public allow(executorName) {
         uint length = schainsForNodes[nodeIndex].length;
         if (schainIndex != length - 1) {
             schainsForNodes[nodeIndex][schainIndex] = schainsForNodes[nodeIndex][length - 1];
