@@ -75,12 +75,22 @@ contract SchainsFunctionality1 is GroupsFunctionality {
      * @param numberOfNodes - number of Nodes needed for this Schain
      * @param partOfNode - divisor of given type of Schain
      */
-    function createGroupForSchain(string memory schainName, bytes32 schainId, uint numberOfNodes, uint partOfNode) public allow(executorName) {
+    function createGroupForSchain(
+        string memory schainName,
+        bytes32 schainId,
+        uint numberOfNodes,
+        uint partOfNode) public allow(executorName)
+    {
         address dataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked(dataName)));
         addGroup(schainId, numberOfNodes, bytes32(partOfNode));
         uint[] memory numberOfNodesInGroup = generateGroup(schainId);
         ISchainsData(dataAddress).setSchainPartOfNode(schainId, partOfNode);
-        emit SchainNodes(schainName, schainId, numberOfNodesInGroup, uint32(block.timestamp), gasleft());
+        emit SchainNodes(
+            schainName,
+            schainId,
+            numberOfNodesInGroup,
+            uint32(block.timestamp),
+            gasleft());
     }
 
     /**
@@ -205,7 +215,11 @@ contract SchainsFunctionality1 is GroupsFunctionality {
         }
         // set generated group
         IGroupsData(dataAddress).setNodesInGroup(groupIndex, nodesInGroup);
-        emit GroupGenerated(groupIndex, nodesInGroup, uint32(block.timestamp), gasleft());
+        emit GroupGenerated(
+            groupIndex,
+            nodesInGroup,
+            uint32(block.timestamp),
+            gasleft());
     }
 
     /**

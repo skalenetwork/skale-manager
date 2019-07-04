@@ -45,7 +45,12 @@ contract SchainsData is GroupsData {
      * @param lifetime - initial lifetime of Schain
      * @param deposit - given amount of SKL
      */
-    function initializeSchain(string memory name, address from, uint lifetime, uint deposit) public allow("SchainsFunctionality") {
+    function initializeSchain(
+        string memory name,
+        address from,
+        uint lifetime,
+        uint deposit) public allow("SchainsFunctionality")
+    {
         bytes32 schainId = keccak256(abi.encodePacked(name));
         schains[schainId].name = name;
         schains[schainId].owner = from;

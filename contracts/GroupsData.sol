@@ -72,7 +72,13 @@ contract GroupsData is Permissions {
      * @param publicKeyx2 }
      * @param publicKeyy2 }
      */
-    function setPublicKey(bytes32 groupIndex, uint publicKeyx1, uint publicKeyy1, uint publicKeyx2, uint publicKeyy2) public allow("SkaleDKG") {
+    function setPublicKey(
+        bytes32 groupIndex,
+        uint publicKeyx1,
+        uint publicKeyy1,
+        uint publicKeyx2,
+        uint publicKeyy2) public allow("SkaleDKG")
+    {
         groups[groupIndex].groupsPublicKey[0] = publicKeyx1;
         groups[groupIndex].groupsPublicKey[1] = publicKeyy1;
         groups[groupIndex].groupsPublicKey[2] = publicKeyx2;

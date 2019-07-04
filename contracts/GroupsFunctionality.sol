@@ -28,7 +28,15 @@ interface IGroupsData {
  * @title SkaleVerifier - interface of SkaleVerifier
  */
 interface ISkaleVerifier {
-    function verify(uint sigx, uint sigy, uint hashx, uint hashy, uint pkx1, uint pky1, uint pkx2, uint pky2) external view returns (bool);
+    function verify(
+        uint sigx,
+        uint sigy,
+        uint hashx,
+        uint hashy,
+        uint pkx1,
+        uint pky1,
+        uint pkx2,
+        uint pky2) external view returns (bool);
 }
 
 
@@ -103,7 +111,11 @@ contract GroupsFunctionality is Permissions {
     function addGroup(bytes32 groupIndex, uint newRecommendedNumberOfNodes, bytes32 data) public allow(executorName) {
         address groupsDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked(dataName)));
         IGroupsData(groupsDataAddress).addGroup(groupIndex, newRecommendedNumberOfNodes, data);
-        emit GroupAdded(groupIndex, data, uint32(block.timestamp), gasleft());
+        emit GroupAdded(
+            groupIndex,
+            data,
+            uint32(block.timestamp),
+            gasleft());
     }
 
     /**
@@ -132,7 +144,11 @@ contract GroupsFunctionality is Permissions {
         IGroupsData(groupsDataAddress).setNewGroupData(groupIndex, data);
         IGroupsData(groupsDataAddress).setNewAmountOfNodes(groupIndex, newRecommendedNumberOfNodes);
         IGroupsData(groupsDataAddress).removeAllNodesInGroup(groupIndex);
-        emit GroupUpgraded(groupIndex, data, uint32(block.timestamp), gasleft());
+        emit GroupUpgraded(
+            groupIndex,
+            data,
+            uint32(block.timestamp),
+            gasleft());
     }
 
     /**
@@ -144,7 +160,13 @@ contract GroupsFunctionality is Permissions {
      * @param hashY - second part of hashed message
      * @return true - if correct, false - if not
      */
-    function verifySignature(bytes32 groupIndex, uint signatureX, uint signatureY, uint hashX, uint hashY) public view returns (bool) {
+    function verifySignature(
+        bytes32 groupIndex,
+        uint signatureX,
+        uint signatureY,
+        uint hashX,
+        uint hashY) public view returns (bool)
+    {
         address groupsDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked(dataName)));
         uint publicKeyx1;
         uint publicKeyy1;

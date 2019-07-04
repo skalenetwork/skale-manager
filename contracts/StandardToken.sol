@@ -63,7 +63,13 @@ contract StandardToken is Token {
             ContractReceiver receiver = ContractReceiver(_to);
             receiver.tokenFallback(msg.sender, _value, _data);
         }
-        emit Transfer(msg.sender, _to, _value, _data, uint32(block.timestamp), gasleft());
+        emit Transfer(
+            msg.sender,
+            _to,
+            _value,
+            _data,
+            uint32(block.timestamp),
+            gasleft());
         return true;
     }
 
@@ -107,7 +113,13 @@ contract StandardToken is Token {
         balances[_from] -= _value;
         allowed[_from][_to] -= _value;
         bytes memory empty;
-        emit Transfer(_from, _to, _value, empty, uint32(block.timestamp), gasleft());
+        emit Transfer(
+            _from,
+            _to,
+            _value,
+            empty,
+            uint32(block.timestamp),
+            gasleft());
         return true;
     }
 
@@ -138,7 +150,12 @@ contract StandardToken is Token {
         require(_value > 0);
 
         allowed[msg.sender][_spender] = _value;
-        emit Approval(msg.sender, _spender, _value, uint32(block.timestamp), gasleft());
+        emit Approval(
+            msg.sender,
+            _spender,
+            _value,
+            uint32(block.timestamp),
+            gasleft());
         return true;
     }
 

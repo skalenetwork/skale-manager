@@ -11,7 +11,16 @@ contract SkaleVerifier {
     uint g2c = 4082367875863433681332203403145435568316851327593401208105741076214120093531;
     uint g2d = 8495653923123431417604973247489272438418190587263600148770280649306958101930;
 
-    function verify(uint signa, uint _signb, uint hasha, uint hashb, uint pkx1, uint pky1, uint pkx2, uint pky2) public view returns (bool) {
+    function verify(
+        uint signa,
+        uint _signb,
+        uint hasha,
+        uint hashb,
+        uint pkx1,
+        uint pky1,
+        uint pkx2,
+        uint pky2) public view returns (bool)
+    {
         uint signb;
         if (!(signa == 0 && _signb == 0)) {
             signb = p - (_signb % p);

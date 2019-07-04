@@ -95,7 +95,12 @@ contract ValidatorsFunctionality is GroupsFunctionality {
         addGroup(groupIndex, IConstants(constantsAddress).NUMBER_OF_VALIDATORS(), bytes32(nodeIndex));
         uint numberOfNodesInGroup = setValidators(groupIndex, nodeIndex);
         //require(1 != 1, "Break");
-        emit ValidatorCreated(nodeIndex, groupIndex, numberOfNodesInGroup, uint32(block.timestamp), gasleft());
+        emit ValidatorCreated(
+            nodeIndex,
+            groupIndex,
+            numberOfNodesInGroup,
+            uint32(block.timestamp), gasleft()
+        );
     }
 
     function upgradeValidator(uint nodeIndex) public allow(executorName) {
@@ -103,10 +108,20 @@ contract ValidatorsFunctionality is GroupsFunctionality {
         address constantsAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("Constants")));
         upgradeGroup(groupIndex, IConstants(constantsAddress).NUMBER_OF_VALIDATORS(), bytes32(nodeIndex));
         uint numberOfNodesInGroup = setValidators(groupIndex, nodeIndex);
-        emit ValidatorUpgraded(nodeIndex, groupIndex, numberOfNodesInGroup, uint32(block.timestamp), gasleft());
+        emit ValidatorUpgraded(
+            nodeIndex,
+            groupIndex,
+            numberOfNodesInGroup,
+            uint32(block.timestamp), gasleft()
+        );
     }
 
-    function sendVerdict(uint fromValidatorIndex, uint toNodeIndex, uint32 downtime, uint32 latency) public allow(executorName) {
+    function sendVerdict(
+        uint fromValidatorIndex,
+        uint toNodeIndex,
+        uint32 downtime,
+        uint32 latency) public allow(executorName)
+    {
         uint index;
         uint32 time;
         bytes32 validatorIndex = keccak256(abi.encodePacked(fromValidatorIndex));
@@ -120,7 +135,12 @@ contract ValidatorsFunctionality is GroupsFunctionality {
         if (receiveVerdict) {
             IValidatorsData(dataAddress).addVerdict(keccak256(abi.encodePacked(toNodeIndex)), downtime, latency);
         }
-        emit VerdictWasSent(fromValidatorIndex, toNodeIndex, downtime, latency, receiveVerdict, uint32(block.timestamp), gasleft());
+        emit VerdictWasSent(
+            fromValidatorIndex,
+            toNodeIndex,
+            downtime,
+            latency,
+            receiveVerdict, uint32(block.timestamp), gasleft());
     }
 
     function calculateMetrics(uint nodeIndex) public allow(executorName) returns (uint32 averageDowntime, uint32 averageLatency) {
@@ -180,7 +200,11 @@ contract ValidatorsFunctionality is GroupsFunctionality {
         for (uint i = 0; i < nodesInGroup.length; i++) {
             IGroupsData(dataAddress).removeExceptionNode(groupIndex, nodesInGroup[i]);
         }
-        emit GroupGenerated(groupIndex, nodesInGroup, uint32(block.timestamp), gasleft());
+        emit GroupGenerated(
+            groupIndex,
+            nodesInGroup,
+            uint32(block.timestamp),
+            gasleft());
         return nodesInGroup;
     }
 
@@ -210,7 +234,12 @@ contract ValidatorsFunctionality is GroupsFunctionality {
             bytes32 index = keccak256(abi.encodePacked(indexOfNodesInGroup[i]));
             IValidatorsData(dataAddress).addValidatedNode(index, bytesParametersOfNodeIndex);
         }
-        emit ValidatorsArray(nodeIndex, groupIndex, indexOfNodesInGroup, uint32(block.timestamp), gasleft());
+        emit ValidatorsArray(
+            nodeIndex,
+            groupIndex,
+            indexOfNodesInGroup,
+            uint32(block.timestamp),
+            gasleft());
         return indexOfNodesInGroup.length;
     }
 

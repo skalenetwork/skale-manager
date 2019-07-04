@@ -3,7 +3,11 @@ pragma solidity ^0.5.0;
 import "./Permissions.sol";
 
 interface ISchainsData {
-    function initializeSchain(string calldata name, address from, uint lifetime, uint deposit) external;
+    function initializeSchain(
+        string calldata name,
+        address from,
+        uint lifetime,
+        uint deposit) external;
     function setSchainIndex(bytes32 schainId, address from) external;
     function removeSchain(bytes32 schainId, address from) external;
     function removeSchainForNode(uint nodeIndex, uint schainIndex) external;
@@ -22,7 +26,11 @@ interface IConstants {
 
 interface ISchainsFunctionality1 {
     function getNodesDataFromTypeOfSchain(uint typeOfSchain) external view returns (uint, uint);
-    function createGroupForSchain(string calldata schainName, bytes32 schainId, uint numberOfNodes, uint partOfNode) external;
+    function createGroupForSchain(
+        string calldata schainName,
+        bytes32 schainId,
+        uint numberOfNodes,
+        uint partOfNode) external;
     function findSchainAtSchainsForNode(uint nodeIndex, bytes32 schainId) external view returns (uint);
     function addSpace(uint nodeIndex, uint partOfNode) external;
     function deleteGroup(bytes32 groupIndex) external;
@@ -83,8 +91,11 @@ contract SchainsFunctionality is Permissions {
         require(getSchainPrice(typeOfSchain, lifetime) <= deposit, "Not enough money to create Schain");
 
         //initialize Schain
-        initializeSchainInSchainsData(name, from, deposit, lifetime);
-
+        initializeSchainInSchainsData(
+            name,
+            from,
+            deposit,
+            lifetime);
 
         // create a group for Schain
         (numberOfNodes, partOfNode) = ISchainsFunctionality1(schainsFunctionality1Address).getNodesDataFromTypeOfSchain(typeOfSchain);
@@ -165,12 +176,21 @@ contract SchainsFunctionality is Permissions {
         ISchainsData(dataAddress).removeSchain(schainId, from);
     }
 
-    function initializeSchainInSchainsData(string memory name, address from, uint deposit, uint lifetime) internal {
+    function initializeSchainInSchainsData(
+        string memory name,
+        address from,
+        uint deposit,
+        uint lifetime) internal
+    {
         address dataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked(dataName)));
         require(ISchainsData(dataAddress).isSchainNameAvailable(name), "Schain name is not available");
 
         // initialize Schain
-        ISchainsData(dataAddress).initializeSchain(name, from, lifetime, deposit);
+        ISchainsData(dataAddress).initializeSchain(
+            name,
+            from,
+            lifetime,
+            deposit);
         ISchainsData(dataAddress).setSchainIndex(keccak256(abi.encodePacked(name)), from);
     }
 

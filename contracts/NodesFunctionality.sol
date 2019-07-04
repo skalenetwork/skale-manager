@@ -131,11 +131,26 @@ contract NodesFunctionality is Permissions {
         require(port > 0, "Port is zero");
 
         // adds Node to NodesData contract
-        nodeIndex = INodesData(nodesDataAddress).addNode(from, name, ip, publicIP, port, publicKey);
+        nodeIndex = INodesData(nodesDataAddress).addNode(
+            from,
+            name,
+            ip,
+            publicIP,
+            port,
+            publicKey);
         // adds Node to Fractional Nodes or to Full Nodes
         setNodeType(nodesDataAddress, constantsAddress, nodeIndex);
 
-        emit NodeCreated(nodeIndex, from, name, ip, publicIP, port, nonce, uint32(block.timestamp), gasleft());
+        emit NodeCreated(
+            nodeIndex,
+            from,
+            name,
+            ip,
+            publicIP,
+            port,
+            nonce,
+            uint32(block.timestamp),
+            gasleft());
     }
 
     /**
@@ -178,7 +193,12 @@ contract NodesFunctionality is Permissions {
 
         INodesData(nodesDataAddress).setNodeLeaving(nodeIndex);
 
-        emit WithdrawDepositFromNodeInit(nodeIndex, from, uint32(block.timestamp), uint32(block.timestamp), gasleft());
+        emit WithdrawDepositFromNodeInit(
+            nodeIndex,
+            from,
+            uint32(block.timestamp),
+            uint32(block.timestamp),
+            gasleft());
         return true;
     }
 
@@ -209,7 +229,12 @@ contract NodesFunctionality is Permissions {
         }
 
         address constantsAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("Constants")));
-        emit WithdrawDepositFromNodeComplete(nodeIndex, from, IConstants(constantsAddress).NODE_DEPOSIT(), uint32(block.timestamp), gasleft());
+        emit WithdrawDepositFromNodeComplete(
+            nodeIndex,
+            from,
+            IConstants(constantsAddress).NODE_DEPOSIT(),
+            uint32(block.timestamp),
+            gasleft());
         return IConstants(constantsAddress).NODE_DEPOSIT();
     }
 

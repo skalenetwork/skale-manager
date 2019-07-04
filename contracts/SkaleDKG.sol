@@ -3,7 +3,12 @@ pragma solidity ^0.5.0;
 import "./Permissions.sol";
 
 interface IGroupsData {
-    function setPublicKey(bytes32 groupIndex, uint pubKeyx1, uint pubKeyy1, uint pubKeyx2, uint pubKeyy2) external;
+    function setPublicKey(
+        bytes32 groupIndex,
+        uint pubKeyx1,
+        uint pubKeyy1,
+        uint pubKeyx2,
+        uint pubKeyy2) external;
     function getNodesInGroup() external view returns (uint[] memory);
     function getNumberOfNodesInGroup() external view returns (uint);
 }
@@ -55,7 +60,12 @@ contract SkaleDKG is Permissions {
         emit ChannelOpened(groupIndex);
     }
 
-    function broadcast(bytes32 groupIndex, uint nodeIndex, bytes memory verificationVector, bytes memory secretKeyContribution) public {
+    function broadcast(
+        bytes32 groupIndex,
+        uint nodeIndex,
+        bytes memory verificationVector,
+        bytes memory secretKeyContribution) public
+    {
         require(channels[groupIndex].active, "Chennel is not created");
         isBroadcast(groupIndex, nodeIndex);
         bytes32 vector;
@@ -80,15 +90,34 @@ contract SkaleDKG is Permissions {
             (x1, y1) = toAffineCoordinatesG2(Fp2({ x: uint(vector), y: uint(vector1) }), Fp2({ x: uint(vector2), y: uint(vector3) }), Fp2({ x: uint(vector4), y: uint(vector5) }));
             addG2(groupIndex, x1, y1, channels[groupIndex].publicKeyx, channels[groupIndex].publicKeyy);
         }*/
-        adding(groupIndex, uint(vector), uint(vector1), uint(vector2), uint(vector3), uint(vector4), uint(vector5));
-        emit BroadcastAndKeyShare(groupIndex, nodeIndex, verificationVector, secretKeyContribution);
+        adding(
+            groupIndex,
+            uint(vector),
+            uint(vector1),
+            uint(vector2),
+            uint(vector3),
+            uint(vector4),
+            uint(vector5));
+        emit BroadcastAndKeyShare(
+            groupIndex,
+            nodeIndex,
+            verificationVector,
+            secretKeyContribution);
     }
 
     function complaint() public;
 
     //function allright() public;
 
-    function adding(bytes32 groupIndex, uint x1, uint y1, uint x2, uint y2, uint x3, uint y3) internal {
+    function adding(
+        bytes32 groupIndex,
+        uint x1,
+        uint y1,
+        uint x2,
+        uint y2,
+        uint x3,
+        uint y3) internal
+    {
         if (channels[groupIndex].publicKeyx.x == 0 &&
             channels[groupIndex].publicKeyx.y == 0 &&
             channels[groupIndex].publicKeyy.x == 0 &&
@@ -99,7 +128,12 @@ contract SkaleDKG is Permissions {
             Fp2 memory a;
             Fp2 memory b;
             (a, b) = toAffineCoordinatesG2(Fp2({ x: x2, y: y1 }), Fp2({ x: x2, y: y2 }), Fp2({ x: x3, y: y3 }));
-            addG2(groupIndex, a, b, channels[groupIndex].publicKeyx, channels[groupIndex].publicKeyy);
+            addG2(
+                groupIndex,
+                a,
+                b,
+                channels[groupIndex].publicKeyx,
+                channels[groupIndex].publicKeyy);
         }
     }
 
@@ -194,7 +228,12 @@ contract SkaleDKG is Permissions {
         return mulFp2(y2, mulFp2(Fp2({ x: 1, y: 0 }), squaredFp2(Fp2({ x: 1, y: 0 }))));
     }
 
-    function isEqual(Fp2 memory u1, Fp2 memory u2, Fp2 memory s1, Fp2 memory s2) internal pure returns (bool) {
+    function isEqual(
+        Fp2 memory u1,
+        Fp2 memory u2,
+        Fp2 memory s1,
+        Fp2 memory s2) internal pure returns (bool)
+    {
         return (u1.x == u2.x && u1.y == u2.y && s1.x == s2.x && s1.y == s2.y);
     }
 
@@ -204,7 +243,13 @@ contract SkaleDKG is Permissions {
         return mulFp2(minusFp2(squaredFp2(addFp2(z, z)), addFp2(zz, zz)), minusFp2(u2, u1));
     }
 
-    function yForAddingG2(Fp2 memory s2, Fp2 memory s1, Fp2 memory u2, Fp2 memory u1, Fp2 memory x) internal view returns (Fp2 memory) {
+    function yForAddingG2(
+        Fp2 memory s2,
+        Fp2 memory s1,
+        Fp2 memory u2,
+        Fp2 memory u1,
+        Fp2 memory x) internal view returns (Fp2 memory)
+    {
         Fp2 memory r = addFp2(minusFp2(s2, s1), minusFp2(s2, s1));
         Fp2 memory theI = squaredFp2(addFp2(minusFp2(u2, u1), minusFp2(u2, u1)));
         Fp2 memory V = mulFp2(u1, theI);
@@ -212,7 +257,12 @@ contract SkaleDKG is Permissions {
         return minusFp2(mulFp2(r, minusFp2(V, x)), addFp2(mulFp2(s1, J), mulFp2(s1, J)));
     }
 
-    function xForAddingG2(Fp2 memory s2, Fp2 memory s1, Fp2 memory u2, Fp2 memory u1) internal view returns (Fp2 memory) {
+    function xForAddingG2(
+        Fp2 memory s2,
+        Fp2 memory s1,
+        Fp2 memory u2,
+        Fp2 memory u1) internal view returns (Fp2 memory)
+    {
         Fp2 memory r = addFp2(minusFp2(s2, s1), minusFp2(s2, s1));
         Fp2 memory theI = squaredFp2(addFp2(minusFp2(u2, u1), minusFp2(u2, u1)));
         Fp2 memory V = mulFp2(u1, theI);
@@ -220,8 +270,19 @@ contract SkaleDKG is Permissions {
         return minusFp2(squaredFp2(r), addFp2(J, addFp2(V, V)));
     }
 
-    function addG2(bytes32 groupIndex, Fp2 memory x1, Fp2 memory y1, Fp2 memory x2, Fp2 memory y2) internal {
-        if (isEqual(U1(x1), U2(x2), S1(y1), S2(y2))) {
+    function addG2(
+        bytes32 groupIndex,
+        Fp2 memory x1,
+        Fp2 memory y1,
+        Fp2 memory x2,
+        Fp2 memory y2) internal
+    {
+        if (isEqual(
+            U1(x1),
+            U2(x2),
+            S1(y1),
+            S2(y2)
+            )) {
             (channels[groupIndex].publicKeyx, channels[groupIndex].publicKeyy) = doubleG2(x1, y1, Fp2({ x: 1, y: 0 }));
         }
         //x = xForAddingG2(S2(y2), S1(y1), U2(x2), U1(x1));
@@ -231,7 +292,11 @@ contract SkaleDKG is Permissions {
             xForAddingG2(
                 S2(y2), S1(y1), U2(x2), U1(x1)
             ), yForAddingG2(
-                S2(y2), S1(y1), U2(x2), U1(x1), xForAddingG2(S2(y2), S1(y1), U2(x2), U1(x1))
+                S2(y2), S1(y1), U2(x2), U1(x1), xForAddingG2(
+                    S2(y2),
+                    S1(y1),
+                    U2(x2),
+                    U1(x1))
             ), zForAddingG2(
                 U2(x2), U1(x1)
             )

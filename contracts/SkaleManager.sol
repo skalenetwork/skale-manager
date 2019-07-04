@@ -40,7 +40,11 @@ interface INodesFunctionality {
 interface IValidatorsFunctionality {
     function addValidator(uint nodeIndex) external;
     function upgradeValidator(uint nodeIndex) external;
-    function sendVerdict(uint fromValidatorIndex, uint toNodeIndex, uint32 downtime, uint32 latency) external;
+    function sendVerdict(
+        uint fromValidatorIndex,
+        uint toNodeIndex,
+        uint32 downtime,
+        uint32 latency) external;
     function calculateMetrics(uint nodeIndex) external returns (uint32, uint32);
 }
 
@@ -108,12 +112,21 @@ contract SkaleManager is Permissions {
         INodesFunctionality(nodesFunctionalityAddress).removeNode(msg.sender, nodeIndex);
     }
 
-    function sendVerdict(uint fromValidatorIndex, uint toNodeIndex, uint32 downtime, uint32 latency) public {
+    function sendVerdict(
+        uint fromValidatorIndex,
+        uint toNodeIndex,
+        uint32 downtime,
+        uint32 latency) public
+    {
         address nodesDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
         require(INodesData(nodesDataAddress).isNodeExist(msg.sender, fromValidatorIndex), "Node does not exist for Message sender");
         address validatorsFunctionalityAddress = ContractManager(contractsAddress)
             .contracts(keccak256(abi.encodePacked("ValidatorsFunctionality")));
-        IValidatorsFunctionality(validatorsFunctionalityAddress).sendVerdict(fromValidatorIndex, toNodeIndex, downtime, latency);
+        IValidatorsFunctionality(validatorsFunctionalityAddress).sendVerdict(
+            fromValidatorIndex,
+            toNodeIndex,
+            downtime,
+            latency);
     }
 
     function getBounty(uint nodeIndex) public {
@@ -127,14 +140,31 @@ contract SkaleManager is Permissions {
         address validatorsFunctionalityAddress = ContractManager(contractsAddress).contracts(
             keccak256(abi.encodePacked("ValidatorsFunctionality")));
         (averageDowntime, averageLatency) = IValidatorsFunctionality(validatorsFunctionalityAddress).calculateMetrics(nodeIndex);
-        uint bounty = manageBounty(msg.sender, nodeIndex, averageDowntime, averageLatency, nodesDataAddress);
+        uint bounty = manageBounty(
+            msg.sender,
+            nodeIndex,
+            averageDowntime,
+            averageLatency,
+            nodesDataAddress);
         INodesData(nodesDataAddress).changeNodeLastRewardDate(nodeIndex);
         IValidatorsFunctionality(validatorsFunctionalityAddress).upgradeValidator(nodeIndex);
-        emit BountyGot(nodeIndex, msg.sender, averageDowntime, averageLatency, bounty, uint32(block.timestamp), gasleft());
+        emit BountyGot(
+            nodeIndex,
+            msg.sender,
+            averageDowntime,
+            averageLatency,
+            bounty,
+            uint32(block.timestamp),
+            gasleft());
     }
 
-    function manageBounty(address from, uint nodeIndex, uint32 downtime, uint32 latency, address nodesDataAddress) internal returns (uint) {
-        
+    function manageBounty(
+        address from,
+        uint nodeIndex,
+        uint32 downtime,
+        uint32 latency,
+        address nodesDataAddress) internal returns (uint)
+    {
         uint commonBounty;
         address constantsAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("Constants")));
         uint diffTime = INodesData(nodesDataAddress).getNodeLastRewardDate(nodeIndex) +

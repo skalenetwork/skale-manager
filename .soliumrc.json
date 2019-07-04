@@ -15,6 +15,9 @@
     "max-len": "error",
     "camelcase": "error",
     "blank-lines": "error",
+    "whitespace": "error",
+    "pragma-on-top": "error",
+    "arg-overflow": "error",
     "security/no-inline-assembly": "warning"
   }
 }
