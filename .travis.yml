@@ -29,7 +29,7 @@ os: linux
 dist: xenial
 
 install:
-    - yarn install
+    - yarn install --force --frozen-lockfile
     - npm install codecov
 before_script:
     - npx ganache-cli --gasLimit 8000000 --quiet &
