@@ -30,8 +30,13 @@ dist: xenial
 
 install:
     - yarn install
+    - npm install codecov
+before_script:
+    - npx ganache-cli --gasLimit 8000000 --quiet &
+    - npx testrpc-sc --port 8555 --gasLimit 0xfffffffffff --quiet &
 script:
     - yarn lint
-    - yarn generate
-    - npx ganache-cli --gasLimit 8000000 --quiet &
+    - yarn generate    
     - yarn test
+after_script:
+    - npx solidity-coverage && cat coverage/lcov.info | npx codecov
