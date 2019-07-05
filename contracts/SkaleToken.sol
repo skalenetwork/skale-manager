@@ -1,8 +1,9 @@
 pragma solidity ^0.5.0;
 
 
-import './StandardToken.sol';
-import './Permissions.sol';
+import "./StandardToken.sol";
+import "./Permissions.sol";
+
 
 /**
  * @title SkaleToken is ERC223 Token implementation, also this contract in skale
@@ -42,7 +43,11 @@ contract SkaleToken is StandardToken, Permissions {
         require(amount <= cap - totalSupply);
         totalSupply = totalSupply + amount;
         balances[to] = balances[to] + amount;
-        emit Mint(to, amount, uint32(block.timestamp), gasleft());
+        emit Mint(
+            to,
+            amount,
+            uint32(block.timestamp),
+            gasleft());
         return true;
     }
 
@@ -60,7 +65,11 @@ contract SkaleToken is StandardToken, Permissions {
         require(balances[from] >= amount);
         balances[from] = balances[from] - amount;
         totalSupply = totalSupply - amount;
-        emit Burn(from, amount, uint32(block.timestamp), gasleft());
+        emit Burn(
+            from,
+            amount,
+            uint32(block.timestamp),
+            gasleft());
         return true;
     }
 }

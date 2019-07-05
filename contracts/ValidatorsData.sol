@@ -1,6 +1,6 @@
 pragma solidity ^0.5.0;
 
-import './GroupsData.sol';
+import "./GroupsData.sol";
 
 
 contract ValidatorsData is GroupsData {
@@ -22,7 +22,7 @@ contract ValidatorsData is GroupsData {
     mapping (bytes32 => uint32[][]) public verdicts;
 
     constructor(string memory newExecutorName, address newContractsAddress) GroupsData(newExecutorName, newContractsAddress) public {
-    
+
     }
 
     function addValidatedNode(bytes32 validatorIndex, bytes32 data) public allow(executorName) {

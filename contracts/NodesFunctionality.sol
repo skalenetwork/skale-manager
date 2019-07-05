@@ -1,6 +1,6 @@
 pragma solidity ^0.5.0;
 
-import './Permissions.sol';
+import "./Permissions.sol";
 
 /**
  * @title Constants - interface of Constants contract
@@ -30,7 +30,14 @@ interface INodesData {
     function isNodeActive(uint nodeIndex) external view returns (bool);
     function isNodeLeaving(uint nodeIndex) external view returns (bool);
     function isLeavingPeriodExpired(uint nodeIndex) external view returns (bool);
-    function addNode(address from, string calldata name, bytes4 ip, bytes4 publicIP, uint16 port, bytes calldata publicKey) external returns (uint);
+    function addNode(
+        address from,
+        string calldata name,
+        bytes4 ip,
+        bytes4 publicIP,
+        uint16 port,
+        bytes calldata publicKey)
+    external returns (uint);
     function addFractionalNode(uint nodeIndex) external;
     function addFullNode(uint nodeIndex) external;
     function setNodeLeaving(uint nodeIndex) external;
@@ -91,7 +98,7 @@ contract NodesFunctionality is Permissions {
      * @param newContractsAddress needed in Permissions constructor
     */
     constructor(address newContractsAddress) Permissions(newContractsAddress) public {
-    
+
     }
 
     /**
@@ -124,11 +131,26 @@ contract NodesFunctionality is Permissions {
         require(port > 0, "Port is zero");
 
         // adds Node to NodesData contract
-        nodeIndex = INodesData(nodesDataAddress).addNode(from, name, ip, publicIP, port, publicKey);
+        nodeIndex = INodesData(nodesDataAddress).addNode(
+            from,
+            name,
+            ip,
+            publicIP,
+            port,
+            publicKey);
         // adds Node to Fractional Nodes or to Full Nodes
         setNodeType(nodesDataAddress, constantsAddress, nodeIndex);
 
-        emit NodeCreated(nodeIndex, from, name, ip, publicIP, port, nonce, uint32(block.timestamp), gasleft());
+        emit NodeCreated(
+            nodeIndex,
+            from,
+            name,
+            ip,
+            publicIP,
+            port,
+            nonce,
+            uint32(block.timestamp),
+            gasleft());
     }
 
     /**
@@ -171,7 +193,12 @@ contract NodesFunctionality is Permissions {
 
         INodesData(nodesDataAddress).setNodeLeaving(nodeIndex);
 
-        emit WithdrawDepositFromNodeInit(nodeIndex, from, uint32(block.timestamp), uint32(block.timestamp), gasleft());
+        emit WithdrawDepositFromNodeInit(
+            nodeIndex,
+            from,
+            uint32(block.timestamp),
+            uint32(block.timestamp),
+            gasleft());
         return true;
     }
 
@@ -202,7 +229,12 @@ contract NodesFunctionality is Permissions {
         }
 
         address constantsAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("Constants")));
-        emit WithdrawDepositFromNodeComplete(nodeIndex, from, IConstants(constantsAddress).NODE_DEPOSIT(), uint32(block.timestamp), gasleft());
+        emit WithdrawDepositFromNodeComplete(
+            nodeIndex,
+            from,
+            IConstants(constantsAddress).NODE_DEPOSIT(),
+            uint32(block.timestamp),
+            gasleft());
         return IConstants(constantsAddress).NODE_DEPOSIT();
     }
 
@@ -226,7 +258,12 @@ contract NodesFunctionality is Permissions {
      * @param nodeIndex - index of Node
      */
     function setNodeType(address nodesDataAddress, address constantsAddress, uint nodeIndex) internal {
-        bool isNodeFull = (INodesData(nodesDataAddress).getNumberOfFractionalNodes() * IConstants(constantsAddress).FRACTIONAL_FACTOR() > INodesData(nodesDataAddress).getNumberOfFullNodes() * IConstants(constantsAddress).FULL_FACTOR());
+        bool isNodeFull = (
+            INodesData(nodesDataAddress).getNumberOfFractionalNodes() *
+            IConstants(constantsAddress).FRACTIONAL_FACTOR() >
+            INodesData(nodesDataAddress).getNumberOfFullNodes() *
+            IConstants(constantsAddress).FULL_FACTOR()
+        );
 
         if (INodesData(nodesDataAddress).getNumberOfFullNodes() == 0 || isNodeFull) {
             INodesData(nodesDataAddress).addFullNode(nodeIndex);
@@ -277,7 +314,7 @@ contract NodesFunctionality is Permissions {
     }*/
 
     /**
-     * @dev binstep - exponentiation by squaring by modulo (a^step) 
+     * @dev binstep - exponentiation by squaring by modulo (a^step)
      * @param a - number which should be exponentiated
      * @param step - exponent
      * @param div - divider of a
@@ -354,7 +391,7 @@ contract NodesFunctionality is Permissions {
         // convert name
         string memory name = new string(data.length - 77);
         for (uint i = 0; i < bytes(name).length; ++i) {
-            bytes(name)[i] = data[77 + i];                                                       
+            bytes(name)[i] = data[77 + i];
         }
         return (publicKey, name);
     }

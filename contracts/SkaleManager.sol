@@ -1,6 +1,6 @@
 pragma solidity ^0.5.0;
 
-import './Permissions.sol';
+import "./Permissions.sol";
 //import './ValidatorsFunctionality.sol';
 //import './INodesFunctionality.sol';
 //import './SchainsFunctionality.sol';
@@ -40,7 +40,11 @@ interface INodesFunctionality {
 interface IValidatorsFunctionality {
     function addValidator(uint nodeIndex) external;
     function upgradeValidator(uint nodeIndex) external;
-    function sendVerdict(uint fromValidatorIndex, uint toNodeIndex, uint32 downtime, uint32 latency) external;
+    function sendVerdict(
+        uint fromValidatorIndex,
+        uint toNodeIndex,
+        uint32 downtime,
+        uint32 latency) external;
     function calculateMetrics(uint nodeIndex) external returns (uint32, uint32);
 }
 
@@ -74,7 +78,7 @@ contract SkaleManager is Permissions {
     );
 
     constructor(address newContractsAddress) Permissions(newContractsAddress) public {
-        
+
     }
 
     function tokenFallback(address from, uint value, bytes memory data) public allow("SkaleToken") {
@@ -108,32 +112,64 @@ contract SkaleManager is Permissions {
         INodesFunctionality(nodesFunctionalityAddress).removeNode(msg.sender, nodeIndex);
     }
 
-    function sendVerdict(uint fromValidatorIndex, uint toNodeIndex, uint32 downtime, uint32 latency) public {
+    function sendVerdict(
+        uint fromValidatorIndex,
+        uint toNodeIndex,
+        uint32 downtime,
+        uint32 latency) public
+    {
         address nodesDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
         require(INodesData(nodesDataAddress).isNodeExist(msg.sender, fromValidatorIndex), "Node does not exist for Message sender");
-        address validatorsFunctionalityAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked('ValidatorsFunctionality')));
-        IValidatorsFunctionality(validatorsFunctionalityAddress).sendVerdict(fromValidatorIndex, toNodeIndex, downtime, latency);
+        address validatorsFunctionalityAddress = ContractManager(contractsAddress)
+            .contracts(keccak256(abi.encodePacked("ValidatorsFunctionality")));
+        IValidatorsFunctionality(validatorsFunctionalityAddress).sendVerdict(
+            fromValidatorIndex,
+            toNodeIndex,
+            downtime,
+            latency);
     }
 
     function getBounty(uint nodeIndex) public {
         address nodesDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
         require(INodesData(nodesDataAddress).isNodeExist(msg.sender, nodeIndex), "Node does not exist for Message sender");
-        require(INodesData(nodesDataAddress).isNodeActive(nodeIndex) || INodesData(nodesDataAddress).isNodeLeaving(nodeIndex), "Node is not Active and is not Leaving");
+        bool nodeIsActive = INodesData(nodesDataAddress).isNodeActive(nodeIndex);
+        bool nodeIsLeaving = INodesData(nodesDataAddress).isNodeLeaving(nodeIndex);
+        require(nodeIsActive || nodeIsLeaving, "Node is not Active and is not Leaving");
         uint32 averageDowntime;
         uint32 averageLatency;
-        address validatorsFunctionalityAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("ValidatorsFunctionality")));
+        address validatorsFunctionalityAddress = ContractManager(contractsAddress).contracts(
+            keccak256(abi.encodePacked("ValidatorsFunctionality")));
         (averageDowntime, averageLatency) = IValidatorsFunctionality(validatorsFunctionalityAddress).calculateMetrics(nodeIndex);
-        uint bounty = manageBounty(msg.sender, nodeIndex, averageDowntime, averageLatency, nodesDataAddress);
+        uint bounty = manageBounty(
+            msg.sender,
+            nodeIndex,
+            averageDowntime,
+            averageLatency,
+            nodesDataAddress);
         INodesData(nodesDataAddress).changeNodeLastRewardDate(nodeIndex);
         IValidatorsFunctionality(validatorsFunctionalityAddress).upgradeValidator(nodeIndex);
-        emit BountyGot(nodeIndex, msg.sender, averageDowntime, averageLatency, bounty, uint32(block.timestamp), gasleft());
+        emit BountyGot(
+            nodeIndex,
+            msg.sender,
+            averageDowntime,
+            averageLatency,
+            bounty,
+            uint32(block.timestamp),
+            gasleft());
     }
 
-    function manageBounty(address from, uint nodeIndex, uint32 downtime, uint32 latency, address nodesDataAddress) internal returns (uint) {
-        
+    function manageBounty(
+        address from,
+        uint nodeIndex,
+        uint32 downtime,
+        uint32 latency,
+        address nodesDataAddress) internal returns (uint)
+    {
         uint commonBounty;
         address constantsAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("Constants")));
-        uint diffTime = INodesData(nodesDataAddress).getNodeLastRewardDate(nodeIndex) + IConstants(constantsAddress).rewardPeriod() + IConstants(constantsAddress).deltaPeriod();
+        uint diffTime = INodesData(nodesDataAddress).getNodeLastRewardDate(nodeIndex) +
+            IConstants(constantsAddress).rewardPeriod() +
+            IConstants(constantsAddress).deltaPeriod();
         address managerDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("ManagerData")));
         address skaleTokenAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("SkaleToken")));
         if (IManagerData(managerDataAddress).minersCap() == 0) {
@@ -143,7 +179,8 @@ contract SkaleManager is Permissions {
         if (IManagerData(managerDataAddress).stageTime() + IConstants(constantsAddress).rewardPeriod() < now) {
             IManagerData(managerDataAddress).setStageTimeAndStageNodes(INodesData(nodesDataAddress).numberOfActiveNodes() + INodesData(nodesDataAddress).numberOfLeavingNodes());
         }
-        commonBounty = IManagerData(managerDataAddress).minersCap() / ((2 ** step) * (IConstants(constantsAddress).SIX_YEARS() / IConstants(constantsAddress).rewardPeriod()) * IManagerData(managerDataAddress).stageNodes());
+        commonBounty = IManagerData(managerDataAddress).minersCap() /
+            ((2 ** step) * (IConstants(constantsAddress).SIX_YEARS() / IConstants(constantsAddress).rewardPeriod()) * IManagerData(managerDataAddress).stageNodes());
         if (now > diffTime) {
             diffTime = now - diffTime;
         } else {
@@ -176,7 +213,8 @@ contract SkaleManager is Permissions {
         assembly {
             operationType := mload(add(data, 0x20))
         }
-        require(operationType == bytes1(uint8(1)) || operationType == bytes1(uint8(16)) || operationType == bytes1(uint8(17)), "Operation type is not identified");
+        bool isIdentified = operationType == bytes1(uint8(1)) || operationType == bytes1(uint8(16)) || operationType == bytes1(uint8(17));
+        require(isIdentified, "Operation type is not identified");
         if (operationType == bytes1(uint8(1))) {
             return TransactionOperation.CreateNode;
         } else if (operationType == bytes1(uint8(16))) {

@@ -1,6 +1,6 @@
 pragma solidity ^0.5.0;
 
-import './GroupsFunctionality.sol';
+import "./GroupsFunctionality.sol";
 
 interface INodesData {
     function nodesLink(uint nodeIndex) external view returns (uint, bool);
@@ -51,7 +51,6 @@ interface IConstants {
  * @title SchainsFunctionality - contract contains all functionality logic to manage Schains
  */
 contract SchainsFunctionality1 is GroupsFunctionality {
-    
     // informs that Schain based on some Nodes
     event SchainNodes(
         string name,
@@ -61,8 +60,11 @@ contract SchainsFunctionality1 is GroupsFunctionality {
         uint gasSpend
     );
 
-    constructor(string memory newExecutorName, string memory newDataName, address newContractsAddress) GroupsFunctionality(newExecutorName, newDataName, newContractsAddress) public {
-        
+    constructor(string memory newExecutorName,
+                string memory newDataName,
+                address newContractsAddress)
+                GroupsFunctionality(newExecutorName, newDataName, newContractsAddress) public {
+
     }
 
     /**
@@ -72,12 +74,22 @@ contract SchainsFunctionality1 is GroupsFunctionality {
      * @param numberOfNodes - number of Nodes needed for this Schain
      * @param partOfNode - divisor of given type of Schain
      */
-    function createGroupForSchain(string memory schainName, bytes32 schainId, uint numberOfNodes, uint partOfNode) public allow(executorName) {
+    function createGroupForSchain(
+        string memory schainName,
+        bytes32 schainId,
+        uint numberOfNodes,
+        uint partOfNode) public allow(executorName)
+    {
         address dataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked(dataName)));
         addGroup(schainId, numberOfNodes, bytes32(partOfNode));
         uint[] memory numberOfNodesInGroup = generateGroup(schainId);
         ISchainsData(dataAddress).setSchainPartOfNode(schainId, partOfNode);
-        emit SchainNodes(schainName, schainId, numberOfNodesInGroup, uint32(block.timestamp), gasleft());
+        emit SchainNodes(
+            schainName,
+            schainId,
+            numberOfNodesInGroup,
+            uint32(block.timestamp),
+            gasleft());
     }
 
     /**
@@ -156,7 +168,6 @@ contract SchainsFunctionality1 is GroupsFunctionality {
      * @param groupIndex - index of Group
      */
     function generateGroup(bytes32 groupIndex) internal returns (uint[] memory nodesInGroup) {
-        
         address dataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked(dataName)));
         require(IGroupsData(dataAddress).isGroupActive(groupIndex), "Group is not active");
         bytes32 groupData = IGroupsData(dataAddress).getGroupData(groupIndex);
@@ -183,7 +194,6 @@ contract SchainsFunctionality1 is GroupsFunctionality {
             // checks that this not is available, enough space to allocate resources
             // and have not chosen to this group
             if (comparator(indexOfNode, uint(groupData), space) && !IGroupsData(dataAddress).isExceptionNode(groupIndex, nodeIndex)) {
-                
                 // adds Node to the Group
                 IGroupsData(dataAddress).setException(groupIndex, nodeIndex);
                 nodesInGroup[index] = nodeIndex;
@@ -202,7 +212,11 @@ contract SchainsFunctionality1 is GroupsFunctionality {
         }
         // set generated group
         IGroupsData(dataAddress).setNodesInGroup(groupIndex, nodesInGroup);
-        emit GroupGenerated(groupIndex, nodesInGroup, uint32(block.timestamp), gasleft());
+        emit GroupGenerated(
+            groupIndex,
+            nodesInGroup,
+            uint32(block.timestamp),
+            gasleft());
     }
 
     /**
@@ -285,7 +299,9 @@ contract SchainsFunctionality1 is GroupsFunctionality {
      * @return numberOfNodes - number of Nodes in Group
      * @return space - needed space to occupy
      */
-    function setNumberOfNodesInGroup(bytes32 groupIndex, uint partOfNode, address dataAddress) internal view returns (uint numberOfNodes, uint space) {
+    function setNumberOfNodesInGroup(bytes32 groupIndex, uint partOfNode, address dataAddress)
+    internal view returns (uint numberOfNodes, uint space)
+    {
         address nodesDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
         address constantsAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("Constants")));
         uint numberOfAvailableNodes;
@@ -347,7 +363,7 @@ contract SchainsFunctionality1 is GroupsFunctionality {
         }
     }*/
 
-    
+
 
     /**
      * @dev binstep - exponentiation by squaring by modulo (a^step)

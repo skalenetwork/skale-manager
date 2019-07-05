@@ -31,6 +31,7 @@ dist: xenial
 install:
     - yarn install
 script:
+    - yarn lint
     - yarn generate
-    - ./node_modules/.bin/ganache-cli --gasLimit 8000000 --quiet &
+    - npx ganache-cli --gasLimit 8000000 --quiet &
     - yarn test

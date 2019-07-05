@@ -31,7 +31,7 @@ contract ERC223Token is StandardToken {
     They allow one to customise the token contract & in no way influences the core functionality.
     Some wallets/interfaces might not even bother to look at this information.
     */
-    string public version = 'H0.1';       //human 0.1 standard. Just an arbitrary versioning scheme.
+    string public version = "H0.1";       //human 0.1 standard. Just an arbitrary versioning scheme.
 
     constructor(
         uint256 _initialAmount,

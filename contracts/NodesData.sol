@@ -44,7 +44,7 @@ contract NodesData is Permissions {
         bool isNodeFull;
     }
 
-    // struct to note nodeIndex and remaining space 
+    // struct to note nodeIndex and remaining space
     struct NodeFilling {
         uint nodeIndex;
         uint freeSpace;
@@ -90,7 +90,15 @@ contract NodesData is Permissions {
      * @param publicKey - Ethereum public key
      * @return index of Node
      */
-    function addNode(address from, string memory name, bytes4 ip, bytes4 publicIP, uint16 port, bytes memory publicKey) public allow("NodesFunctionality") returns (uint) {
+    function addNode(
+        address from,
+        string memory name,
+        bytes4 ip,
+        bytes4 publicIP,
+        uint16 port,
+        bytes memory publicKey)
+    public allow("NodesFunctionality") returns (uint)
+    {
         nodes.push(Node({
             name: name,
             ip: ip,
@@ -375,7 +383,7 @@ contract NodesData is Permissions {
     function getNumberOfFullNodes() public view returns (uint) {
         return fullNodes.length;
     }
-    
+
     /**
      * @dev getNumberOfFreefractionalNodes - get number of free Fractional Nodes
      * @return numberOfFreeFractionalNodes - number of free Fractional Nodes
@@ -387,7 +395,6 @@ contract NodesData is Permissions {
             }
         }
     }
-
 
     /**
      * @dev getnumberOfFreeFullNodes - get number of free Full Nodes
@@ -426,13 +433,13 @@ contract NodesData is Permissions {
         for (uint indexOfNodes = 0; indexOfNodes < nodes.length; indexOfNodes++) {
             if (isNodeActive(indexOfNodes)) {
                 activeNodeIds[indexOfActiveNodeIds] = indexOfNodes;
-                indexOfActiveNodeIds++;                                                               
-            }                                   
-        }            
+                indexOfActiveNodeIds++;
+            }
+        }
     }
 
     /**
-     * @dev getActiveNodesByAddress - get array of indexes of Active Nodes, which were 
+     * @dev getActiveNodesByAddress - get array of indexes of Active Nodes, which were
      * created by msg.sender
      * @return activeNodesbyAddress - array of indexes of Active Nodes, which were created
      * by msg.sender
@@ -445,6 +452,6 @@ contract NodesData is Permissions {
                 activeNodesByAddress[indexOfActiveNodesByAddress] = indexOfNodes;
                 indexOfActiveNodesByAddress++;
             }
-        }             
+        }
     }
 }

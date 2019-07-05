@@ -8,17 +8,19 @@ import "./ContractManager.sol";
  * @author Artem Payvin
  */
 contract Permissions is Ownable {
-    
+
     // address of ContractManager
     address contractsAddress;
 
     /**
-     * @dev allow - throws if called by any account and contract other than the owner 
+     * @dev allow - throws if called by any account and contract other than the owner
      * or `contractName` contract
      * @param contractName - human readable name of contract
      */
     modifier allow(string memory contractName) {
-        require(ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked(contractName))) == msg.sender || owner == msg.sender, "Message sender is invalid");
+        require(
+            ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked(contractName))) == msg.sender || owner == msg.sender,
+            "Message sender is invalid");
         _;
     }
 

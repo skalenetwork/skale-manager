@@ -1,6 +1,6 @@
 pragma solidity ^0.5.0;
 
-import './Permissions.sol';
+import "./Permissions.sol";
 
 
 /**
@@ -72,7 +72,13 @@ contract GroupsData is Permissions {
      * @param publicKeyx2 }
      * @param publicKeyy2 }
      */
-    function setPublicKey(bytes32 groupIndex, uint publicKeyx1, uint publicKeyy1, uint publicKeyx2, uint publicKeyy2) public allow("SkaleDKG") {
+    function setPublicKey(
+        bytes32 groupIndex,
+        uint publicKeyx1,
+        uint publicKeyy1,
+        uint publicKeyx2,
+        uint publicKeyy2) public allow("SkaleDKG")
+    {
         groups[groupIndex].groupsPublicKey[0] = publicKeyx1;
         groups[groupIndex].groupsPublicKey[1] = publicKeyy1;
         groups[groupIndex].groupsPublicKey[2] = publicKeyx2;
@@ -174,7 +180,12 @@ contract GroupsData is Permissions {
      * @return publicKey(x1, y1, x2, y2) - parts of BLS master public key
      */
     function getGroupsPublicKey(bytes32 groupIndex) public view returns (uint, uint, uint, uint) {
-        return (groups[groupIndex].groupsPublicKey[0], groups[groupIndex].groupsPublicKey[1], groups[groupIndex].groupsPublicKey[2], groups[groupIndex].groupsPublicKey[3]);
+        return (
+            groups[groupIndex].groupsPublicKey[0],
+            groups[groupIndex].groupsPublicKey[1],
+            groups[groupIndex].groupsPublicKey[2],
+            groups[groupIndex].groupsPublicKey[3]
+        );
     }
 
     /**
