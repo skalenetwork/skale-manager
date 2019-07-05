@@ -29,14 +29,13 @@ os: linux
 dist: xenial
 
 install:
-    - yarn install --force --frozen-lockfile
-    - npm install codecov
+    - yarn install    
 before_script:
     - npx ganache-cli --gasLimit 8000000 --quiet &
-    - npx testrpc-sc --port 8555 --gasLimit 0xfffffffffff --quiet &
+    - npx testrpc-sc --port 8555 --gasLimit 0xfffffffffff --quiet &    
 script:
-    - yarn lint
+    - yarn lint | travis_terminate 1
     - yarn generate    
-    - yarn test
+    - yarn test | travis_terminate 2
 after_script:
     - npx solidity-coverage && cat coverage/lcov.info | npx codecov
