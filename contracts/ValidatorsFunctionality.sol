@@ -6,7 +6,7 @@ import "./GroupsFunctionality.sol";
 
 interface IConstants {
     function deltaPeriod() external view returns (uint);
-    function NUMBER_OF_VALIDATORS() external view returns (uint);
+    // function NUMBER_OF_VALIDATORS() external view returns (uint);
 }
 
 interface IValidatorsData {
@@ -91,8 +91,9 @@ contract ValidatorsFunctionality is GroupsFunctionality {
 
     function addValidator(uint nodeIndex) public allow(executorName) {
         bytes32 groupIndex = keccak256(abi.encodePacked(nodeIndex));
-        address constantsAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("Constants")));
-        addGroup(groupIndex, IConstants(constantsAddress).NUMBER_OF_VALIDATORS(), bytes32(nodeIndex));
+        address nodesDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
+        uint possibleNumberOfNodes = INodesData(nodesDataAddress).getNumberOfNodes() / 4;
+        addGroup(groupIndex, possibleNumberOfNodes, bytes32(nodeIndex));
         uint numberOfNodesInGroup = setValidators(groupIndex, nodeIndex);
         //require(1 != 1, "Break");
         emit ValidatorCreated(
@@ -105,8 +106,9 @@ contract ValidatorsFunctionality is GroupsFunctionality {
 
     function upgradeValidator(uint nodeIndex) public allow(executorName) {
         bytes32 groupIndex = keccak256(abi.encodePacked(nodeIndex));
-        address constantsAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("Constants")));
-        upgradeGroup(groupIndex, IConstants(constantsAddress).NUMBER_OF_VALIDATORS(), bytes32(nodeIndex));
+        address nodesDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
+        uint possibleNumberOfNodes = INodesData(nodesDataAddress).getNumberOfNodes() / 4;
+        upgradeGroup(groupIndex, possibleNumberOfNodes, bytes32(nodeIndex));
         uint numberOfNodesInGroup = setValidators(groupIndex, nodeIndex);
         emit ValidatorUpgraded(
             nodeIndex,
