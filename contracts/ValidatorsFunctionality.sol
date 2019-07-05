@@ -1,8 +1,6 @@
 pragma solidity ^0.5.0;
 
 import "./GroupsFunctionality.sol";
-//import './ValidatorsData.sol';
-//import './NodesData.sol';
 
 interface IConstants {
     function deltaPeriod() external view returns (uint);
