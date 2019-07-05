@@ -6,6 +6,7 @@ interface IGroupsData {
     function setPublicKey(bytes32 groupIndex, uint pubKeyx1, uint pubKeyy1, uint pubKeyx2, uint pubKeyy2) external;
     function getNodesInGroup() external view returns (uint[] memory);
     function getNumberOfNodesInGroup() external view returns (uint);
+    function setGroupFailedDKG(bytes32 groupIndex) external;
 }
 
 interface INodesData {
@@ -25,6 +26,8 @@ contract SkaleDKG is Permissions {
         uint numberOfCompleted;
         bool[] completed;
         uint startedBlockNumber;
+        uint nodeToComplaint;
+        uint startComplaintBlockNumber;
     }
 
     struct Fp2 {
@@ -48,6 +51,7 @@ contract SkaleDKG is Permissions {
     event AllDataReceived(bytes32 groupIndex, uint nodeIndex);
     event SuccessfulDKG(bytes32 groupIndex);
     event FailedDKG(bytes32 groupIndex);
+    event ComplaintSent(bytes32 groupIndex, uint fromNodeIndex, uint toNodeIndex);
 
     modifier correctGroup(bytes32 groupIndex) {
         require(channels[groupIndex].active, "Group is not created");
@@ -114,14 +118,36 @@ contract SkaleDKG is Permissions {
         correctNode(groupIndex, toNodeIndex)
     {
         require(isNodeByMessageSender(fromNodeIndex, msg.sender), "Node does not exist for message sender");
-        if (isBroadcasted(groupIndex, toNodeIndex)) {
-            // set schain is bad
+        if (isBroadcasted(groupIndex, toNodeIndex) && channels[groupIndex].nodeToComplaint == 0) {
+            // need to wait a response from toNodeIndex
+            channels[groupIndex].nodeToComplaint = toNodeIndex;
+            channels[groupIndex].startComplaintBlockNumber = block.number;
+            emit ComplaintSent(groupIndex, fromNodeIndex, toNodeIndex);
+        } else if (channels[groupIndex].nodeToComplaint != toNodeIndex) {
+            revert("One complaint has already sent");
+        } else if (channels[groupIndex].nodeToComplaint == toNodeIndex) {
+            require(channels[groupIndex].startComplaintBlockNumber + 120 <= block.number, "One more complaint rejected");
+            // need to penalty Node - toNodeIndex
+            IGroupsData(channels[groupIndex].dataAddress).setGroupFailedDKG(groupIndex);
+            delete channels[groupIndex];
             emit FailedDKG(groupIndex);
         } else {
+            // if node have not broadcasted params
             require(channels[groupIndex].startedBlockNumber + 120 <= block.number, "Complaint rejected");
-            // set schain is bad
+            // need to penalty Node - toNodeIndex
+            IGroupsData(channels[groupIndex].dataAddress).setGroupFailedDKG(groupIndex);
+            delete channels[groupIndex];
             emit FailedDKG(groupIndex);
         }
+    }
+
+    function response(bytes32 groupIndex, uint fromNodeIndex /* additional data */)
+        public
+        correctGroup(groupIndex)
+        correctNode(groupIndex, fromNodeIndex)
+    {
+        require(channels[groupIndex].nodeToComplaint == fromNodeIndex, "Not this Node");
+        
     }
 
     function allright(bytes32 groupIndex, uint fromNodeIndex)
@@ -138,7 +164,6 @@ contract SkaleDKG is Permissions {
         channels[groupIndex].numberOfCompleted++;
         emit AllDataReceived(groupIndex, fromNodeIndex);
         if (channels[groupIndex].numberOfCompleted == numberOfParticipant) {
-            // set schain is good
             IGroupsData(channels[groupIndex].dataAddress).setPublicKey(
                 groupIndex,
                 channels[groupIndex].publicKeyx.x,
