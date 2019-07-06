@@ -48,8 +48,7 @@ module.exports = {
             gas: 0xfffffffffff,
             gasPrice: 0x01,
             network_id: "*"
-        }
-        ,
+        },
         test: {            
             host: "127.0.0.1",
             port: 8545,

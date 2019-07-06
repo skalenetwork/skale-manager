@@ -14,11 +14,14 @@
   "dependencies": {
     "@types/chai": "^4.1.7",
     "@types/chai-as-promised": "^7.1.0",
+    "@types/minimist": "^1.2.0",
     "bignumber.js": "^9.0.0",
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
+    "codecov": "^3.5.0",
     "scrypt": "^6.0.3",
     "solc": "^0.5.7",
+    "solidity-coverage": "leapdao/solidity-coverage",
     "solium": "^1.2.4",
     "truffle": "^5.0.12",
     "truffle-hdwallet-provider": "^1.0.8",
@@ -49,7 +52,6 @@
     "dotenv": "^7.0.0",
     "ethlint": "^1.2.4",
     "ganache-cli": "^6.1.8",
-    "solidity-coverage": "^0.5.11",
     "tslint": "^5.18.0",
     "typescript": "^3.5.2"
   }

@@ -29,9 +29,13 @@ os: linux
 dist: xenial
 
 install:
-    - yarn install
-script:
-    - yarn lint
-    - yarn generate
+    - yarn install    
+before_script:
     - npx ganache-cli --gasLimit 8000000 --quiet &
-    - yarn test
+    - npx testrpc-sc --port 8555 --gasLimit 0xfffffffffff --quiet &    
+script:
+    - yarn lint || travis_terminate 1
+    - yarn generate    
+    - yarn test || travis_terminate 2
+after_script:
+    - npx solidity-coverage && cat coverage/lcov.info | npx codecov

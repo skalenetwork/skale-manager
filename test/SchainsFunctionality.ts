@@ -25,6 +25,7 @@ import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 chai.should();
 chai.use(chaiAsPromised);
+import { gas_multiplier } from './utils/command_line';
 
 contract('SchainsFunctionality', ([owner, holder, validator]) => {
     let contractManager: ContractManagerInstance;
@@ -47,7 +48,7 @@ contract('SchainsFunctionality', ([owner, holder, validator]) => {
         nodesData = await NodesData.new(
             5260000, 
             contractManager.address, 
-            {from: owner, gas: 8000000}
+            {from: owner, gas: 8000000 * gas_multiplier}
         );
         await contractManager.setContractsAddress("NodesData", nodesData.address);
 
@@ -60,7 +61,7 @@ contract('SchainsFunctionality', ([owner, holder, validator]) => {
         schainsData = await SchainsData.new(
             "SchainsFunctionality1", 
             contractManager.address, 
-            {from: owner, gas: 8000000});
+            {from: owner, gas: 8000000 * gas_multiplier});
         await contractManager.setContractsAddress("SchainsData", schainsData.address);
 
         schainsFunctionality = await SchainsFunctionality.new(
@@ -75,7 +76,7 @@ contract('SchainsFunctionality', ([owner, holder, validator]) => {
             "SchainsFunctionality", 
             "SchainsData", 
             contractManager.address, 
-            {from: owner, gas: 7000000}
+            {from: owner, gas: 7000000 * gas_multiplier}
         );
         await contractManager.setContractsAddress("SchainsFunctionality1", schainsFunctionality1.address);
     });
@@ -249,6 +250,5 @@ contract('SchainsFunctionality', ([owner, holder, validator]) => {
             await schainsFunctionality.getSchainPrice(6, 5).should.be.eventually.rejectedWith("Bad schain type");
         });
     });
-
     
 });

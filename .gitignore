@@ -39,6 +39,8 @@ docker/geth/shared/eth_datadir/history
 
 # coverage
 coverageEnv
+coverage/
+coverage.json
 
 # Typescript staff
 types/
