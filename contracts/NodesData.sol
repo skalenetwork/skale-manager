@@ -194,6 +194,7 @@ contract NodesData is Permissions {
             nodesLink[secondNodeIndex].subarrayLink = subarrayIndex;
         }
         delete fractionalNodes[fractionalNodes.length - 1];
+        fractionalNodes.length--;
     }
 
     /**
@@ -208,6 +209,7 @@ contract NodesData is Permissions {
             nodesLink[secondNodeIndex].subarrayLink = subarrayIndex;
         }
         delete fullNodes[fullNodes.length - 1];
+        fullNodes.length--;
     }
 
     /**
