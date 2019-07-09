@@ -19,6 +19,7 @@
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
     "codecov": "^3.5.0",
+    "moment": "^2.24.0",
     "scrypt": "^6.0.3",
     "solc": "^0.5.7",
     "solidity-coverage": "leapdao/solidity-coverage",
@@ -49,6 +50,7 @@
   },
   "homepage": "https://github.com/skalenetwork/skale-manager#readme",
   "devDependencies": {
+    "@types/web3": "^1.0.19",
     "dotenv": "^7.0.0",
     "ethlint": "^1.2.4",
     "ganache-cli": "^6.1.8",
