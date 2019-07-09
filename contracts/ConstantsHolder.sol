@@ -10,49 +10,49 @@ import "./Permissions.sol";
 contract ConstantsHolder is Permissions {
 
     // initial price for creating Node (100 SKL)
-    uint public NODE_DEPOSIT = 100000000000000000000;
+    uint public constant NODE_DEPOSIT = 100000000000000000000;
 
     // part of Node for Tiny Skale-chain (1/128 of Node)
-    uint public TINY_DIVISOR = 128;
+    uint public constant TINY_DIVISOR = 128;
 
     // part of Node for Small Skale-chain (1/8 of Node)
-    uint public SMALL_DIVISOR = 8;
+    uint public constant SMALL_DIVISOR = 8;
 
     // part of Node for Medium Skale-chain (full Node)
-    uint public MEDIUM_DIVISOR = 1;
+    uint public constant MEDIUM_DIVISOR = 1;
 
     // part of Node for Medium Test Skale-chain (1/4 of Node)
-    uint public MEDIUM_TEST_DIVISOR = 4;
+    uint public constant MEDIUM_TEST_DIVISOR = 4;
 
     // typically number of Nodes for Skale-chain (16 Nodes)
-    uint public NUMBER_OF_NODES_FOR_SCHAIN = 16;
+    uint public constant NUMBER_OF_NODES_FOR_SCHAIN = 16;
 
     // number of Nodes for Test Skale-chain (2 Nodes)
-    uint public NUMBER_OF_NODES_FOR_TEST_SCHAIN = 2;
+    uint public constant NUMBER_OF_NODES_FOR_TEST_SCHAIN = 2;
 
     // number of Nodes for Test Skale-chain (4 Nodes)
-    uint public NUMBER_OF_NODES_FOR_MEDIUM_TEST_SCHAIN = 4;
+    uint public constant NUMBER_OF_NODES_FOR_MEDIUM_TEST_SCHAIN = 4;
 
     // 'Fractional' Part of ratio for create Fractional or Full Node
-    uint public FRACTIONAL_FACTOR = 128;
+    uint public constant FRACTIONAL_FACTOR = 128;
 
     // 'Full' part of ratio for create Fractional or Full Node
-    uint public FULL_FACTOR = 17;
+    uint public constant FULL_FACTOR = 17;
 
     // number of second in one day
-    uint32 public SECONDS_TO_DAY = 86400;
+    uint32 public constant SECONDS_TO_DAY = 86400;
 
     // number of seconds in one month
-    uint32 public SECONDS_TO_MONTH = 2592000;
+    uint32 public constant SECONDS_TO_MONTH = 2592000;
 
     // number of seconds in one year
-    uint32 public SECONDS_TO_YEAR = 31622400;
+    uint32 public constant SECONDS_TO_YEAR = 31622400;
 
     // number of seconds in six years
-    uint32 public SIX_YEARS = 186624000;
+    uint32 public constant SIX_YEARS = 186624000;
 
     // initial number of validators
-    uint public NUMBER_OF_VALIDATORS = 21;
+    uint public constant NUMBER_OF_VALIDATORS = 21;
 
     // Reward period - 30 days (each 30 days Node would be granted for bounty)
     uint32 public rewardPeriod = 600; // Test parameters
