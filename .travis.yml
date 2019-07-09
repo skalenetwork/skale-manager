@@ -35,7 +35,8 @@ before_script:
     - npx testrpc-sc --port 8555 --gasLimit 0xfffffffffff --quiet &    
 script:
     - yarn lint || travis_terminate 1
+    - yarn tslint || travis_terminate 2
     - yarn generate    
-    - yarn test || travis_terminate 2
+    - yarn test || travis_terminate 3
 after_script:
     - npx solidity-coverage && cat coverage/lcov.info | npx codecov

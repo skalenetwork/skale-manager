@@ -11,7 +11,7 @@ import chai = require("chai");
 import * as chaiAsPromised from "chai-as-promised";
 chai.should();
 chai.use(chaiAsPromised);
-import { skipTime } from './utils/time'
+import { skipTime } from "./utils/time";
 
 class Schain {
     public name: string;
@@ -147,7 +147,7 @@ contract("SchainsData", ([owner, holder]) => {
         it("should check if schain is expired", async () => {
             await schainsData.isTimeExpired(schainNameHash).should.be.eventually.false;
 
-            skipTime(web3, 6);            
+            skipTime(web3, 6);
 
             await schainsData.isTimeExpired(schainNameHash).should.be.eventually.true;
         });
