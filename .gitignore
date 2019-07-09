@@ -6,6 +6,7 @@
 build/
 tmp.sol
 data/*.json
+scTopics
 
 ### Node ###
 # Logs
