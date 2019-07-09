@@ -229,44 +229,44 @@ contract SkaleDKG is Permissions {
     }
 
     function isEqual(
-        Fp2 memory u1,
-        Fp2 memory u2,
-        Fp2 memory s1,
-        Fp2 memory s2) internal pure returns (bool)
+        Fp2 memory u1Value,
+        Fp2 memory u2Value,
+        Fp2 memory s1Value,
+        Fp2 memory s2Value) internal pure returns (bool)
     {
-        return (u1.x == u2.x && u1.y == u2.y && s1.x == s2.x && s1.y == s2.y);
+        return (u1Value.x == u2Value.x && u1Value.y == u2Value.y && s1Value.x == s2Value.x && s1Value.y == s2Value.y);
     }
 
-    function zForAddingG2(Fp2 memory u2, Fp2 memory u1) internal view returns (Fp2 memory) {
+    function zForAddingG2(Fp2 memory u2Value, Fp2 memory u1Value) internal view returns (Fp2 memory) {
         Fp2 memory z = Fp2({ x: 1, y: 0 });
         Fp2 memory zz = squaredFp2(z);
-        return mulFp2(minusFp2(squaredFp2(addFp2(z, z)), addFp2(zz, zz)), minusFp2(u2, u1));
+        return mulFp2(minusFp2(squaredFp2(addFp2(z, z)), addFp2(zz, zz)), minusFp2(u2Value, u1Value));
     }
 
     function yForAddingG2(
-        Fp2 memory s2,
-        Fp2 memory s1,
-        Fp2 memory u2,
-        Fp2 memory u1,
+        Fp2 memory s2Value,
+        Fp2 memory s1Value,
+        Fp2 memory u2Value,
+        Fp2 memory u1Value,
         Fp2 memory x) internal view returns (Fp2 memory)
     {
-        Fp2 memory r = addFp2(minusFp2(s2, s1), minusFp2(s2, s1));
-        Fp2 memory theI = squaredFp2(addFp2(minusFp2(u2, u1), minusFp2(u2, u1)));
-        Fp2 memory v = mulFp2(u1, theI);
-        Fp2 memory j = mulFp2(minusFp2(u2, u1), theI);
-        return minusFp2(mulFp2(r, minusFp2(v, x)), addFp2(mulFp2(s1, j), mulFp2(s1, j)));
+        Fp2 memory r = addFp2(minusFp2(s2Value, s1Value), minusFp2(s2Value, s1Value));
+        Fp2 memory theI = squaredFp2(addFp2(minusFp2(u2Value, u1Value), minusFp2(u2Value, u1Value)));
+        Fp2 memory v = mulFp2(u1Value, theI);
+        Fp2 memory j = mulFp2(minusFp2(u2Value, u1Value), theI);
+        return minusFp2(mulFp2(r, minusFp2(v, x)), addFp2(mulFp2(s1Value, j), mulFp2(s1Value, j)));
     }
 
     function xForAddingG2(
-        Fp2 memory s2,
-        Fp2 memory s1,
-        Fp2 memory u2,
-        Fp2 memory u1) internal view returns (Fp2 memory)
+        Fp2 memory s2Value,
+        Fp2 memory s1Value,
+        Fp2 memory u2Value,
+        Fp2 memory u1Value) internal view returns (Fp2 memory)
     {
-        Fp2 memory r = addFp2(minusFp2(s2, s1), minusFp2(s2, s1));
-        Fp2 memory theI = squaredFp2(addFp2(minusFp2(u2, u1), minusFp2(u2, u1)));
-        Fp2 memory v = mulFp2(u1, theI);
-        Fp2 memory j = mulFp2(minusFp2(u2, u1), theI);
+        Fp2 memory r = addFp2(minusFp2(s2Value, s1Value), minusFp2(s2Value, s1Value));
+        Fp2 memory theI = squaredFp2(addFp2(minusFp2(u2Value, u1Value), minusFp2(u2Value, u1Value)));
+        Fp2 memory v = mulFp2(u1Value, theI);
+        Fp2 memory j = mulFp2(minusFp2(u2Value, u1Value), theI);
         return minusFp2(squaredFp2(r), addFp2(j, addFp2(v, v)));
     }
 
