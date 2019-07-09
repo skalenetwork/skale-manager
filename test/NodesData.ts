@@ -173,15 +173,21 @@ contract("NodesData", ([owner, validator]) => {
             active_nodes[0].should.be.equal("0x7f000001");
         });
 
-        // it("should get array of indexes of active nodes", async () => {
-        //     let active_nodes = await nodesData.getActiveNodeIds();
+        it("should get array of indexes of active nodes", async () => {
+            let active_nodes = await nodesData.getActiveNodeIds();
 
-        //     active_nodes.length.should.be.equal(1);
-        //     let node_index = web3.utils.toBN(active_nodes[0]);
-        //     node_index.should.be.deep.equal(web3.utils.toBN(0));
-            
-        //     // web3.utils.toBN(active_nodes[0]).should.be.deep.equal();
-        // })
+            active_nodes.length.should.be.equal(1);
+            let node_index = web3.utils.toBN(active_nodes[0]);            
+            expect(node_index.eq(web3.utils.toBN(0))).to.be.true;
+        })
+
+        it("should get array of indexes of active nodes of msg.sender", async () => {
+            let active_nodes = await nodesData.getActiveNodesByAddress({from: validator});
+
+            active_nodes.length.should.be.equal(1);
+            let node_index = web3.utils.toBN(active_nodes[0]);            
+            expect(node_index.eq(web3.utils.toBN(0))).to.be.true;
+        });
 
         describe("when node is registered as fractional", async () => {
             beforeEach(async () => {
