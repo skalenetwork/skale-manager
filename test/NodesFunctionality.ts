@@ -42,7 +42,7 @@ contract("NodesFunctionality", ([owner, validator]) => {
 
         nodesFunctionality = await NodesFunctionality.new(
             contractManager.address,
-            {from: owner, gas: 8000000});
+            {from: owner, gas: 8000000 * gasMultiplier});
         await contractManager.setContractsAddress("NodesFunctionality", nodesFunctionality.address);
     });
 
