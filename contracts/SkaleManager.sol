@@ -25,6 +25,7 @@ interface INodesData {
     function isNodeExist(address from, uint nodeIndex) external view returns (bool);
     function isNodeActive(uint nodeIndex) external view returns (bool);
     function isNodeLeaving(uint nodeIndex) external view returns (bool);
+    function isTimeForReward(uint nodeIndex) external view returns (bool);
     function getNodeLastRewardDate(uint nodeIndex) external view returns (uint32);
     function numberOfActiveNodes() external view returns (uint);
     function numberOfLeavingNodes() external view returns (uint);
@@ -143,6 +144,7 @@ contract SkaleManager is Permissions {
     function getBounty(uint nodeIndex) public {
         address nodesDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
         require(INodesData(nodesDataAddress).isNodeExist(msg.sender, nodeIndex), "Node does not exist for Message sender");
+        require(INodesData(nodesDataAddress).isTimeForReward(nodeIndex), "Not time for bounty");
         bool nodeIsActive = INodesData(nodesDataAddress).isNodeActive(nodeIndex);
         bool nodeIsLeaving = INodesData(nodesDataAddress).isNodeLeaving(nodeIndex);
         require(nodeIsActive || nodeIsLeaving, "Node is not Active and is not Leaving");
