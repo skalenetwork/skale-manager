@@ -169,7 +169,7 @@ contract NodesData is Permissions {
      * function could be run only by NodesFunctionality
      * @param nodeIndex - index of Node
      */
-    function setNodeLeft(uint nodeIndex) public allow("NodesFunctionality") {        
+    function setNodeLeft(uint nodeIndex) public allow("NodesFunctionality") {
         nodesIPCheck[nodes[nodeIndex].ip] = false;
         nodesNameCheck[keccak256(abi.encodePacked(nodes[nodeIndex].name))] = false;
         delete nodesNameToIndex[keccak256(abi.encodePacked(nodes[nodeIndex].name))];
