@@ -53,6 +53,7 @@ interface IValidatorsFunctionality {
 interface ISchainsFunctionality {
     function addSchain(address from, uint value, bytes calldata data) external;
     function deleteSchain(address from, bytes32 schainId) external;
+    function deleteSchainByRoot(bytes32 schainId) external;
 }
 
 interface IManagerData {
@@ -216,6 +217,11 @@ contract SkaleManager is Permissions {
     function deleteSchain(string memory name) public {
         address schainsFunctionalityAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("SchainsFunctionality")));
         ISchainsFunctionality(schainsFunctionalityAddress).deleteSchain(msg.sender, keccak256(abi.encodePacked(name)));
+    }
+
+    function deleteSchainByRoot(string memory name) public {
+        address schainsFunctionalityAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("SchainsFunctionality")));
+        ISchainsFunctionality(schainsFunctionalityAddress).deleteSchainByRoot(keccak256(abi.encodePacked(name)));
     }
 
     function fallbackOperationTypeConvert(bytes memory data) internal pure returns (TransactionOperation) {
