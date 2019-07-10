@@ -52,9 +52,9 @@ contract StandardToken is Token {
         public
         returns (bool)
     {
-        require(_to != address(0));
-        require(_value > 0);
-        require(balances[msg.sender] >= _value);
+        require(_to != address(0), "Receiver is not set");
+        require(_value > 0, "Value is too low");
+        require(balances[msg.sender] >= _value, "Not enough money");
 
         balances[msg.sender] -= _value;
         balances[_to] += _value;
@@ -84,12 +84,12 @@ contract StandardToken is Token {
         public
         returns (bool)
     {
-        require(_from != address(0));
-        require(_to != address(0));
-        require(_value > 0);
-        require(balances[_from] >= _value);
-        require(allowed[_from][_to] >= _value);
-        require(balances[_to] + _value > balances[_to]);
+        require(_from != address(0), "Destination is not set");
+        require(_to != address(0), "Receiver is not set");
+        require(_value > 0, "Value is too low");
+        require(balances[_from] >= _value, "Not enough money");
+        require(allowed[_from][_to] >= _value, "Value is too big");
+        require(balances[_to] + _value > balances[_to], "Balance was not increased");
 
         balances[_to] += _value;
         balances[_from] -= _value;
@@ -128,8 +128,8 @@ contract StandardToken is Token {
         public
         returns (bool)
     {
-        require(_spender != address(0));
-        require(_value > 0);
+        require(_spender != address(0), "Spender is not set");
+        require(_value > 0, "Value is too low");
 
         allowed[msg.sender][_spender] = _value;
         emit Approval(

@@ -40,7 +40,7 @@ contract SkaleToken is StandardToken, Permissions {
         //onlyAuthorized
         returns (bool)
     {
-        require(amount <= CAP - totalSupply);
+        require(amount <= CAP - totalSupply, "Amount is too big");
         totalSupply = totalSupply + amount;
         balances[to] = balances[to] + amount;
         emit Mint(
@@ -62,7 +62,7 @@ contract SkaleToken is StandardToken, Permissions {
         //onlyAuthorized
         returns (bool)
     {
-        require(balances[from] >= amount);
+        require(balances[from] >= amount, "Amount is too big");
         balances[from] = balances[from] - amount;
         totalSupply = totalSupply - amount;
         emit Burn(
