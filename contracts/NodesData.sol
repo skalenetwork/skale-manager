@@ -23,7 +23,7 @@ contract NodesData is Permissions {
         bytes4 ip;
         bytes4 publicIP;
         uint16 port;
-        //address owner;
+        address owner;
         bytes publicKey;
         uint32 startDate;
         uint32 leavingDate;
@@ -104,6 +104,7 @@ contract NodesData is Permissions {
             ip: ip,
             publicIP: publicIP,
             port: port,
+            owner: from,
             publicKey: publicKey,
             startDate: uint32(block.timestamp),
             leavingDate: uint32(0),
@@ -170,9 +171,12 @@ contract NodesData is Permissions {
      * @param nodeIndex - index of Node
      */
     function setNodeLeft(uint nodeIndex) public allow("NodesFunctionality") {
-        //nodes[nodeIndex].status = NodeStatus.Left;
+        nodes[nodeIndex].status = NodeStatus.Left;
         nodesIPCheck[nodes[nodeIndex].ip] = false;
         nodesNameCheck[keccak256(abi.encodePacked(nodes[nodeIndex].name))] = false;
+        address ownerOfNode = nodes[nodeIndex].owner;
+        nodeIndexes[ownerOfNode].isNodeExist[nodeIndex] = false;
+        nodeIndexes[ownerOfNode].numberOfNodes--;
         delete nodesNameToIndex[keccak256(abi.encodePacked(nodes[nodeIndex].name))];
         if (nodes[nodeIndex].status == NodeStatus.Active) {
             numberOfActiveNodes--;

@@ -11,6 +11,7 @@ interface IValidatorsData {
     function addValidatedNode(bytes32 validatorIndex, bytes32 data) external;
     function addVerdict(bytes32 validatorIndex, uint32 downtime, uint32 latency) external;
     function removeValidatedNode(bytes32 validatorIndex, uint indexOfValidatedNode) external;
+    function removeAllValidatedNodes(bytes32 validatorIndex) external;
     function removeAllVerdicts(bytes32 validatorIndex) external;
     function getValidatedArray(bytes32 validatorIndex) external view returns (bytes32[] memory);
     function getLengthOfMetrics(bytes32 validatorIndex) external view returns (uint);
@@ -78,12 +79,18 @@ contract ValidatorsFunctionality is GroupsFunctionality {
         uint gasSpend
     );
 
-    constructor(string memory newExecutorName,
-                string memory newDataName,
-                address newContractsAddress)
-        GroupsFunctionality(newExecutorName,
-                            newDataName,
-                            newContractsAddress) public {
+    constructor(
+        string memory newExecutorName,
+        string memory newDataName,
+        address newContractsAddress
+    )
+        GroupsFunctionality(
+            newExecutorName,
+            newDataName,
+            newContractsAddress
+        )
+    public
+    {
 
     }
 
@@ -114,6 +121,14 @@ contract ValidatorsFunctionality is GroupsFunctionality {
             numberOfNodesInGroup,
             uint32(block.timestamp), gasleft()
         );
+    }
+
+    function deleteValidatorByRoot(uint nodeIndex) public allow(executorName) {
+        bytes32 groupIndex = keccak256(abi.encodePacked(nodeIndex));
+        address dataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked(dataName)));
+        IValidatorsData(dataAddress).removeAllVerdicts(groupIndex);
+        IValidatorsData(dataAddress).removeAllValidatedNodes(groupIndex);
+        deleteGroup(groupIndex);
     }
 
     function sendVerdict(

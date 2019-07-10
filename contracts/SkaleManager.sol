@@ -35,6 +35,7 @@ interface INodesFunctionality {
     function initWithdrawDeposit(address from, uint nodeIndex) external;
     function completeWithdrawDeposit(address from, uint nodeIndex) external returns (uint);
     function removeNode(address from, uint nodeIndex) external;
+    function removeNodeByRoot(uint nodeIndex) external;
 }
 
 interface IValidatorsFunctionality {
@@ -46,6 +47,7 @@ interface IValidatorsFunctionality {
         uint32 downtime,
         uint32 latency) external;
     function calculateMetrics(uint nodeIndex) external returns (uint32, uint32);
+    function deleteValidatorByRoot(uint nodeIndex) external;
 }
 
 interface ISchainsFunctionality {
@@ -110,6 +112,14 @@ contract SkaleManager is Permissions {
     function deleteNode(uint nodeIndex) public {
         address nodesFunctionalityAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesFunctionality")));
         INodesFunctionality(nodesFunctionalityAddress).removeNode(msg.sender, nodeIndex);
+    }
+
+    function deleteNodeByRoot(uint nodeIndex) public onlyOwner {
+        address nodesFunctionalityAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesFunctionality")));
+        INodesFunctionality(nodesFunctionalityAddress).removeNodeByRoot(nodeIndex);
+        address validatorsFunctionalityAddress = ContractManager(contractsAddress)
+            .contracts(keccak256(abi.encodePacked("ValidatorsFunctionality")));
+        IValidatorsFunctionality(validatorsFunctionalityAddress).deleteValidatorByRoot(nodeIndex);
     }
 
     function sendVerdict(

@@ -217,6 +217,10 @@ contract SchainsData is GroupsData {
         return keccak256(abi.encodePacked(schainName));
     }
 
+    function getSchainOwner(bytes32 schainId) public view returns (address) {
+        return schains[schainId].owner;
+    }
+
     /**
      * @dev isSchainNameAvailable - checks is given name available
      * Need to delete - copy of web3.utils.soliditySha3

@@ -18,7 +18,7 @@ interface IGroupsData {
     function isGroupActive(bytes32 groupIndex) external view returns (bool);
     function isExceptionNode(bytes32 groupIndex, uint nodeIndex) external view returns (bool);
     function getGroupsPublicKey(bytes32 groupIndex) external view returns (uint, uint, uint, uint);
-    function getNodesInGroup(bytes32 schainId) external view returns (uint[] memory);
+    function getNodesInGroup(bytes32 groupIndex) external view returns (uint[] memory);
     function getGroupData(bytes32 groupIndex) external view returns (bytes32);
     function getRecommendedNumberOfNodes(bytes32 groupIndex) external view returns (uint);
     function getNumberOfNodesInGroup(bytes32 groupIndex) external view returns (uint);
