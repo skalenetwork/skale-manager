@@ -9,7 +9,8 @@
     "generate": "truffle compile && typechain --target truffle './build/**/*.json'",
     "prepare": "yarn generate",
     "test": "truffle test && yarn tsc",
-    "tsc": "tsc --noEmit"
+    "tsc": "tsc --noEmit",
+    "tslint": "npx tslint --project ."
   },
   "dependencies": {
     "@types/chai": "^4.1.7",
@@ -55,6 +56,7 @@
     "ethlint": "^1.2.4",
     "ganache-cli": "^6.1.8",
     "tslint": "^5.18.0",
+    "tslint-no-unused-expression-chai": "^0.1.4",
     "typescript": "^3.5.2"
   }
 }

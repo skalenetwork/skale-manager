@@ -74,24 +74,6 @@ contract StandardToken is Token {
     }
 
     /**
-     * @dev Check bytecode at given address
-     * assemble the given address bytecode. If bytecode exists then the _addr is a contract.
-     * @param _addr - address of possible contract
-     */
-    function isContract(address _addr)
-        private
-		view
-        returns (bool)
-    {
-        uint length;
-        assembly {
-            // retrieve the size of the code on target address, this needs assembly
-            length := extcodesize(_addr)
-        }
-        return (length > 0);
-    }
-
-    /**
      * @dev Allows allowed third party to transfer tokens from one address to another. Returns success.
      * @param _from Address from where tokens are withdrawn.
      * @param _to Address to where tokens are sent.
@@ -171,5 +153,23 @@ contract StandardToken is Token {
         returns (uint256)
     {
         return allowed[_owner][_spender];
+    }
+
+    /**
+     * @dev Check bytecode at given address
+     * assemble the given address bytecode. If bytecode exists then the _addr is a contract.
+     * @param _addr - address of possible contract
+     */
+    function isContract(address _addr)
+        private
+		view
+        returns (bool)
+    {
+        uint length;
+        assembly {
+            // retrieve the size of the code on target address, this needs assembly
+            length := extcodesize(_addr)
+        }
+        return (length > 0);
     }
 }
