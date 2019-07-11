@@ -19,7 +19,9 @@
     "pragma-on-top": "error",
     "arg-overflow": "error",
     "no-trailing-whitespace": "error",
-    "function-order": "error",    
+    "function-order": "error",
+    "uppercase": "error",
+    "error-reason": "error",
     "security/no-inline-assembly": "warning"
   }
 }

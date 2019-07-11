@@ -11,21 +11,21 @@ import "./Permissions.sol";
  */
 contract SkaleToken is StandardToken, Permissions {
 
-    string public constant name = "SKALE";
+    string public constant NAME = "SKALE";
 
-    string public constant symbol = "SKL";
+    string public constant SYMBOL = "SKL";
 
-    uint public constant decimals = 18;
+    uint public constant DECIMALS = 18;
 
-    uint public constant cap = 5000000000 * (10 ** decimals); // the maximum amount of tokens that can ever be created
+    uint public constant CAP = 5000000000 * (10 ** DECIMALS); // the maximum amount of tokens that can ever be created
 
     event Mint(address indexed to, uint256 amount, uint32 time, uint gasSpend);
 
     event Burn(address indexed from, uint256 amount, uint32 time, uint gasSpend);
 
     constructor(address contractsAddress) Permissions(contractsAddress) public {
-        totalSupply = 1000000 * 10 ** decimals;
-        balances[msg.sender] = 1000000 * 10 ** decimals;
+        totalSupply = 1000000 * 10 ** DECIMALS;
+        balances[msg.sender] = 1000000 * 10 ** DECIMALS;
         // TODO remove after testing
     }
 
@@ -40,7 +40,7 @@ contract SkaleToken is StandardToken, Permissions {
         //onlyAuthorized
         returns (bool)
     {
-        require(amount <= cap - totalSupply);
+        require(amount <= CAP - totalSupply, "Amount is too big");
         totalSupply = totalSupply + amount;
         balances[to] = balances[to] + amount;
         emit Mint(
@@ -62,7 +62,7 @@ contract SkaleToken is StandardToken, Permissions {
         //onlyAuthorized
         returns (bool)
     {
-        require(balances[from] >= amount);
+        require(balances[from] >= amount, "Amount is too big");
         balances[from] = balances[from] - amount;
         totalSupply = totalSupply - amount;
         emit Burn(

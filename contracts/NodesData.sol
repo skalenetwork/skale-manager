@@ -170,7 +170,6 @@ contract NodesData is Permissions {
      * @param nodeIndex - index of Node
      */
     function setNodeLeft(uint nodeIndex) public allow("NodesFunctionality") {
-        //nodes[nodeIndex].status = NodeStatus.Left;
         nodesIPCheck[nodes[nodeIndex].ip] = false;
         nodesNameCheck[keccak256(abi.encodePacked(nodes[nodeIndex].name))] = false;
         delete nodesNameToIndex[keccak256(abi.encodePacked(nodes[nodeIndex].name))];
@@ -180,6 +179,7 @@ contract NodesData is Permissions {
             numberOfLeavingNodes--;
         }
         numberOfLeftNodes++;
+        nodes[nodeIndex].status = NodeStatus.Left;
     }
 
     /**

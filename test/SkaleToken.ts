@@ -29,22 +29,22 @@ contract("SkaleToken", ([owner, holder, receiver, nilAddress, accountWith99]) =>
   });
 
   it("Should have the correct name", async () => {
-    const name = await skaleToken.name();
+    const name = await skaleToken.NAME();
     expect(name).to.be.equal("SKALE");
   });
 
   it("Should have the correct symbol", async () => {
-    const symbol = await skaleToken.symbol();
+    const symbol = await skaleToken.SYMBOL();
     expect(symbol).to.be.equal("SKL");
   });
 
   it("Should have the correct decimal level", async () => {
-    const decimals = await skaleToken.decimals();
+    const decimals = await skaleToken.DECIMALS();
     expect(decimals.toNumber()).to.be.equal(18);
   });
 
   it("Should return the сapitalization of tokens for the Contract", async () => {
-    const cap = await skaleToken.cap();
+    const cap = await skaleToken.CAP();
     assert(toWei(TOKEN_CAP).isEqualTo(cap));
   });
 
@@ -54,7 +54,7 @@ contract("SkaleToken", ([owner, holder, receiver, nilAddress, accountWith99]) =>
   });
 
   it("Should check 10 SKALE tokens to mint", async () => {
-    const cap: BigNumber = new BigNumber(await skaleToken.cap());
+    const cap: BigNumber = new BigNumber(await skaleToken.CAP());
     const totalSupply = await skaleToken.totalSupply();
     assert(toWei(10).isLessThanOrEqualTo(cap.minus(totalSupply)));
   });
