@@ -213,7 +213,7 @@ contract SkaleManager is Permissions {
         assembly {
             operationType := mload(add(data, 0x20))
         }
-        bool isIdentified = operationType == bytes1(uint8(1)) || operationType == bytes1(uint8(16)) || operationType == bytes1(uint8(17));
+        bool isIdentified = operationType == bytes1(uint8(1)) || operationType == bytes1(uint8(16));
         require(isIdentified, "Operation type is not identified");
         if (operationType == bytes1(uint8(1))) {
             return TransactionOperation.CreateNode;
