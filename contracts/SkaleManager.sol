@@ -114,6 +114,9 @@ contract SkaleManager is Permissions {
     function deleteNode(uint nodeIndex) public {
         address nodesFunctionalityAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesFunctionality")));
         INodesFunctionality(nodesFunctionalityAddress).removeNode(msg.sender, nodeIndex);
+        address validatorsFunctionalityAddress = ContractManager(contractsAddress)
+            .contracts(keccak256(abi.encodePacked("ValidatorsFunctionality")));
+        IValidatorsFunctionality(validatorsFunctionalityAddress).deleteValidatorByRoot(nodeIndex);
     }
 
     function deleteNodeByRoot(uint nodeIndex) public onlyOwner {
@@ -205,8 +208,8 @@ contract SkaleManager is Permissions {
         }
 
         if (bountyForMiner > 0) {
-            if (latency > 150) {
-                bountyForMiner = (150 * bountyForMiner) / latency;
+            if (latency > 150000) {
+                bountyForMiner = (150000 * bountyForMiner) / latency;
             }
             ISkaleToken(skaleTokenAddress).mint(from, uint(bountyForMiner));
         } else {

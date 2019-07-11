@@ -97,7 +97,7 @@ contract ValidatorsFunctionality is GroupsFunctionality {
     function addValidator(uint nodeIndex) public allow(executorName) {
         bytes32 groupIndex = keccak256(abi.encodePacked(nodeIndex));
         address nodesDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
-        uint possibleNumberOfNodes = INodesData(nodesDataAddress).getNumberOfNodes() / 4;
+        uint possibleNumberOfNodes = INodesData(nodesDataAddress).getNumberOfNodes() / 4 + (INodesData(nodesDataAddress).getNumberOfNodes() % 4 == 0 ? 0 : 1);
         addGroup(groupIndex, possibleNumberOfNodes, bytes32(nodeIndex));
         uint numberOfNodesInGroup = setValidators(groupIndex, nodeIndex);
         //require(1 != 1, "Break");
@@ -112,7 +112,7 @@ contract ValidatorsFunctionality is GroupsFunctionality {
     function upgradeValidator(uint nodeIndex) public allow(executorName) {
         bytes32 groupIndex = keccak256(abi.encodePacked(nodeIndex));
         address nodesDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
-        uint possibleNumberOfNodes = INodesData(nodesDataAddress).getNumberOfNodes() / 4;
+        uint possibleNumberOfNodes = INodesData(nodesDataAddress).getNumberOfNodes() / 4 + (INodesData(nodesDataAddress).getNumberOfNodes() % 4 == 0 ? 0 : 1);
         upgradeGroup(groupIndex, possibleNumberOfNodes, bytes32(nodeIndex));
         uint numberOfNodesInGroup = setValidators(groupIndex, nodeIndex);
         emit ValidatorUpgraded(
@@ -195,7 +195,7 @@ contract ValidatorsFunctionality is GroupsFunctionality {
         address dataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked(dataName)));
         require(IGroupsData(dataAddress).isGroupActive(groupIndex), "Group is not active");
         bytes32 groupData = IGroupsData(dataAddress).getGroupData(groupIndex);
-        uint hash = uint(keccak256(abi.encodePacked(uint(blockhash(block.number)), groupIndex)));
+        uint hash = uint(keccak256(abi.encodePacked(uint(blockhash(block.number - 1)), groupIndex)));
         uint numberOfNodes;
         uint finish;
         (numberOfNodes, finish) = setNumberOfNodesInGroup(groupIndex, groupData);
