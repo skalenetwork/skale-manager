@@ -14,6 +14,7 @@ import {
         ValidatorsFunctionalityInstance,
       } from "../types/truffle-contracts";
 import { gasMultiplier } from "./utils/command_line";
+import { skipTime } from "./utils/time";
 
 import chai = require("chai");
 import * as chaiAsPromised from "chai-as-promised";
@@ -140,7 +141,7 @@ contract("ContractManager", ([owner, validator]) => {
     // for data32bytes should revert to hex indexNode1 + oneSec + 127.0.0.1
     const data32bytes = "0x" + indexNode1ToHex + add0ToHex + ipToHex;
     //
-    await validatorsFunctionality.addValidator(indexNode0, {from: owner});
+    // await validatorsFunctionality.addValidator(indexNode0, {from: owner});
     //
     await validatorsData.addValidatedNode(
       indexNode0inSha3, data32bytes, {from: owner},
@@ -165,6 +166,36 @@ contract("ContractManager", ([owner, validator]) => {
     const res2 = new BigNumber(await validatorsData.getLengthOfMetrics(validatorIndex1, {from: owner}));
     // expectation
     expect(parseInt(res2.toString(), 10)).to.equal(0);
+  });
+
+  it("should add verdict when sendVerdict invoke", async () => {
+    // preparation
+    // ip = 127.0.0.1
+    const ipToHex = "7f000001";
+    const indexNode0 = 0;
+    const indexNode0inSha3 = web3.utils.soliditySha3(indexNode0);
+    const indexNode1 = 1;
+    const validatorIndex1 = web3.utils.soliditySha3(indexNode1);
+    const indexNode1ToHex = ("0000000000000000000000000000000000" +
+        indexNode1).slice(-28);
+    // const time = parseInt((new Date().getTime() / 1000).toFixed(0), 10);
+// tslint:disable-next-line: no-bitwise
+    const time = (new Date().getTime() / 1000) >> 0;
+    const timeInHex = time.toString(16);
+    const add0ToHex = ("00000000000000000000000000000" +
+    timeInHex).slice(-28);
+    const data32bytes = "0x" + indexNode1ToHex + add0ToHex + ipToHex;
+    //
+    await validatorsData.addValidatedNode(
+      indexNode0inSha3, data32bytes, {from: owner},
+      );
+    // execution
+    // skipTime(web3, time - 200);
+    await validatorsFunctionality
+          .sendVerdict(0, 1, 0, 0, {from: owner});
+    const res = new BigNumber(await validatorsData.getLengthOfMetrics(validatorIndex1, {from: owner}));
+    // expectation
+    expect(parseInt(res.toString(), 10)).to.equal(1);
   });
 
 });
