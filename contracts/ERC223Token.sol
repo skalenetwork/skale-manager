@@ -55,7 +55,7 @@ contract ERC223Token is StandardToken {
         public
         payable
     {
-        require(msg.value >= 100 finney);
+        require(msg.value >= 100 finney, "Value is too low");
 
         uint256 num = 50 * multiplier;
 
