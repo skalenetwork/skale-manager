@@ -8,19 +8,21 @@ import {
 
 import chai = require("chai");
 import * as chaiAsPromised from "chai-as-promised";
+import { gasMultiplier } from "./utils/command_line";
 chai.should();
 chai.use((chaiAsPromised));
 
 const ContractManager: ContractManagerContract = artifacts.require("./ContractManager");
 const ManagerData: ManagerDataContract = artifacts.require("./ManagerData");
 
-contract("ContractManager", ([deployer, user]) => {
+contract("ManagerData", ([deployer, user]) => {
   let contractManager: ContractManagerInstance;
   let managerData: ManagerDataInstance;
 
   before(async () => {
     contractManager = await ContractManager.new({from: deployer});
-    managerData = await ManagerData.new("SkaleManager", contractManager.address, {from: deployer});
+    managerData = await ManagerData.new("SkaleManager", contractManager.address,
+      {from: deployer, gas: 8000000 * gasMultiplier});
   });
 
   it("minersCap should be equal 0", async () => {
