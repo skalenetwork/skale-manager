@@ -115,11 +115,11 @@ contract("NodesData", ([owner, validator]) => {
         it("should check if leaving period is expired", async () => {
             await nodesData.setNodeLeaving(0);
 
-            skipTime(web3, 4);
+            skipTime(web3, 3);
 
             await nodesData.isLeavingPeriodExpired(0).should.be.eventually.false;
 
-            skipTime(web3, 1);
+            skipTime(web3, 3);
 
             await nodesData.isLeavingPeriodExpired(0).should.be.eventually.true;
         });
