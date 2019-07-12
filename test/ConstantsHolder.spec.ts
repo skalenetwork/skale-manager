@@ -138,7 +138,7 @@ contract("ConstantsHolder", ([deployer, user]) => {
     await constantsHolder.setLastTimeUnderloaded({from: deployer});
     const btn = new BigNumber(await constantsHolder.lastTimeUnderloaded());
     // parseInt(bn.toString(), 10).should.be.equal(0)
-    expect(parseInt(btn.toString(), 10) - parseInt(bn.toString(), 10)).to.equal(sec);
+    expect(parseInt(btn.toString(), 10) - parseInt(bn.toString(), 10)).to.be.closeTo(sec, 1);
   });
 
   it("should Set time if system iverloaded", async () => {
