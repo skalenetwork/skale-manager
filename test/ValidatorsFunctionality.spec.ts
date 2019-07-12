@@ -28,7 +28,7 @@ const ValidatorsData: ValidatorsDataContract = artifacts.require("./ValidatorsDa
 const NodesData: NodesDataContract = artifacts.require("./NodesData");
 const NodesFunctionality: NodesFunctionalityContract = artifacts.require("./NodesFunctionality");
 
-contract("ContractManager", ([owner, validator]) => {
+contract("ValidatorsFunctionality", ([owner, validator]) => {
   let contractManager: ContractManagerInstance;
   let validatorsFunctionality: ValidatorsFunctionalityInstance;
   let constantsHolder: ConstantsHolderInstance;

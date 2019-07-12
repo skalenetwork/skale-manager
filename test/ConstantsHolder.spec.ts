@@ -14,7 +14,7 @@ chai.use((chaiAsPromised as any));
 const ContractManager: ContractManagerContract = artifacts.require("./ContractManager");
 const ConstantsHolder: ConstantsHolderContract = artifacts.require("./ConstantsHolder");
 
-contract("ContractManager", ([deployer, user]) => {
+contract("ConstantsHolder", ([deployer, user]) => {
   let contractManager: ContractManagerInstance;
   let constantsHolder: ConstantsHolderInstance;
 

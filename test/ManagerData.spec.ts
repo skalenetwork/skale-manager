@@ -14,7 +14,7 @@ chai.use((chaiAsPromised));
 const ContractManager: ContractManagerContract = artifacts.require("./ContractManager");
 const ManagerData: ManagerDataContract = artifacts.require("./ManagerData");
 
-contract("ContractManager", ([deployer, user]) => {
+contract("ManagerData", ([deployer, user]) => {
   let contractManager: ContractManagerInstance;
   let managerData: ManagerDataInstance;
 
