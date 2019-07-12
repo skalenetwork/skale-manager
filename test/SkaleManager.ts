@@ -120,6 +120,15 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
             should.be.eventually.rejectedWith("sender is invalid");
     });
 
+    it("should transfer ownership", async () => {
+        await skaleManager.transferOwnership(hacker, {from: hacker})
+            .should.be.eventually.rejectedWith("Sender is not owner");
+
+        await skaleManager.transferOwnership(hacker, {from: owner});
+
+        await skaleManager.owner().should.be.eventually.equal(hacker);
+    });
+
     describe("when validator has SKALE tokens", async () => {
         beforeEach(async () => {
             skaleToken.transfer(validator, "0x3635c9adc5dea00000", {from: owner});
