@@ -50,7 +50,7 @@ contract("ValidatorsFunctionality", ([owner, validator]) => {
     await contractManager.setContractsAddress("ValidatorsData", validatorsData.address);
 
     constantsHolder = await ConstantsHolder.new(
-      contractManager.address, {from: owner});
+      contractManager.address, {from: owner, gas: 8000000 * gasMultiplier});
     await contractManager.setContractsAddress("Constants", constantsHolder.address);
 
     nodesData = await NodesData.new(
@@ -61,7 +61,7 @@ contract("ValidatorsFunctionality", ([owner, validator]) => {
 
     nodesFunctionality = await NodesFunctionality.new(
       contractManager.address,
-      {from: owner, gas: 8000000});
+      {from: owner, gas: 8000000 * gasMultiplier});
     await contractManager.setContractsAddress("NodesFunctionality", nodesFunctionality.address);
 
     // create a node for validators functions tests

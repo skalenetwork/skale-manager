@@ -7,6 +7,7 @@ import { ConstantsHolderContract,
 import { skipTime } from "./utils/time";
 
 import chai = require("chai");
+import { gasMultiplier } from "./utils/command_line";
 
 chai.should();
 chai.use((chaiAsPromised as any));
@@ -20,7 +21,8 @@ contract("ConstantsHolder", ([deployer, user]) => {
 
   before(async () => {
     contractManager = await ContractManager.new({from: deployer});
-    constantsHolder = await ConstantsHolder.new(contractManager.address, {from: deployer});
+    constantsHolder = await ConstantsHolder.new(contractManager.address,
+      {from: deployer, gas: 8000000 * gasMultiplier});
   });
 
   it("NODE_DEPOSIT should be equal 100000000000000000000", async () => {
