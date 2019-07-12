@@ -31,7 +31,7 @@ async function deploy(deployer, network) {
         await contractManagerInstance.setContractsAddress("NodesData", NodesData.address).then(function(res) {
             console.log("Contract Nodes Data with address", NodesData.address, "registred in Contract Manager");
         });
-        await deployer.deploy(NodesFunctionality, contractManagerInstance.address, {gas: 8000000});
+        await deployer.deploy(NodesFunctionality, contractManagerInstance.address, {gas: 8000000 * gas_multiplier});
         await contractManagerInstance.setContractsAddress("NodesFunctionality", NodesFunctionality.address).then(function(res) {
             console.log("Contract Nodes Functionality with address", NodesFunctionality.address, "registred in Contract Manager");
         });
