@@ -138,7 +138,7 @@ contract("ValidatorsFunctionality", ([owner, validator]) => {
     const indexNode1 = 1;
     const indexNode1ToHex = ("0000000000000000000000000000000000" +
         indexNode1).slice(-28);
-    const time = parseInt((new Date().getTime() / 1000).toFixed(0) + 3600, 10);
+    const time = await currentTime(web3) + 100;
     const timeInHex = time.toString(16);
     const add0ToHex = ("00000000000000000000000000000" +
     timeInHex).slice(-28);

@@ -1,11 +1,6 @@
 pragma solidity ^0.5.0;
 
 import "./Permissions.sol";
-//import './ValidatorsFunctionality.sol';
-//import './INodesFunctionality.sol';
-//import './SchainsFunctionality.sol';
-//import './SkaleToken.sol';
-//import './ManagerData.sol';
 
 interface ISkaleToken {
     function transfer(address to, uint value) external returns (bool success);
