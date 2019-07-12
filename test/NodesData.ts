@@ -115,11 +115,11 @@ contract("NodesData", ([owner, validator]) => {
         it("should check if leaving period is expired", async () => {
             await nodesData.setNodeLeaving(0);
 
-            skipTime(web3, 4);
+            skipTime(web3, 3);
 
             await nodesData.isLeavingPeriodExpired(0).should.be.eventually.false;
 
-            skipTime(web3, 1);
+            skipTime(web3, 3);
 
             await nodesData.isLeavingPeriodExpired(0).should.be.eventually.true;
         });
@@ -127,11 +127,11 @@ contract("NodesData", ([owner, validator]) => {
         it("should check if time for reward has come", async () => {
             // TODO: change rewart period
 
-            skipTime(web3, 599);
+            skipTime(web3, 590);
 
             await nodesData.isTimeForReward(0).should.be.eventually.false;
 
-            skipTime(web3, 1);
+            skipTime(web3, 20);
 
             await nodesData.isTimeForReward(0).should.be.eventually.true;
         });

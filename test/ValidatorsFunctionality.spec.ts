@@ -14,7 +14,7 @@ import {
         ValidatorsFunctionalityInstance,
       } from "../types/truffle-contracts";
 import { gasMultiplier } from "./utils/command_line";
-import { skipTime } from "./utils/time";
+import { currentTime, skipTime } from "./utils/time";
 
 import chai = require("chai");
 import * as chaiAsPromised from "chai-as-promised";
@@ -138,7 +138,7 @@ contract("ValidatorsFunctionality", ([owner, validator]) => {
     const indexNode1 = 1;
     const indexNode1ToHex = ("0000000000000000000000000000000000" +
         indexNode1).slice(-28);
-    const time = parseInt((new Date().getTime() / 1000).toFixed(0) + 3600, 10);
+    const time = await currentTime(web3) + 100;
     const timeInHex = time.toString(16);
     const add0ToHex = ("00000000000000000000000000000" +
     timeInHex).slice(-28);
@@ -182,9 +182,7 @@ contract("ValidatorsFunctionality", ([owner, validator]) => {
     const validatorIndex1 = web3.utils.soliditySha3(indexNode1);
     const indexNode1ToHex = ("0000000000000000000000000000000000" +
         indexNode1).slice(-28);
-    // const time = parseInt((new Date().getTime() / 1000).toFixed(0), 10);
-// tslint:disable-next-line: no-bitwise
-    const time = (new Date().getTime() / 1000) >> 0;
+    const time = await currentTime(web3);
     const timeInHex = time.toString(16);
     const add0ToHex = ("00000000000000000000000000000" +
     timeInHex).slice(-28);

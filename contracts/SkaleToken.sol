@@ -72,4 +72,23 @@ contract SkaleToken is StandardToken, Permissions {
             gasleft());
         return true;
     }
+
+    /**
+     * @dev Function that is called when a user or another contract wants to transfer funds.
+     * It is alias for transfer function of StandardToken
+     * @param _to Address of token receiver.
+     * @param _value Number of tokens to transfer.
+     * @param _data Data to be sent to tokenFallback
+     * @return Returns success of function call.
+     */
+    function transferWithData(
+        address _to,
+        uint256 _value,
+        bytes memory _data
+	)
+        public
+        returns (bool)
+    {
+        transfer(_to, _value, _data);
+    }
 }

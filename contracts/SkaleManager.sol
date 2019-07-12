@@ -1,16 +1,11 @@
 pragma solidity ^0.5.0;
 
 import "./Permissions.sol";
-//import './ValidatorsFunctionality.sol';
-//import './INodesFunctionality.sol';
-//import './SchainsFunctionality.sol';
-//import './SkaleToken.sol';
-//import './ManagerData.sol';
 
 interface ISkaleToken {
     function transfer(address to, uint value) external returns (bool success);
     function mint(address to, uint value) external returns (bool success);
-    function cap() external view returns (uint);
+    function CAP() external view returns (uint);
 }
 
 interface IConstants {
@@ -178,7 +173,7 @@ contract SkaleManager is Permissions {
         address managerDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("ManagerData")));
         address skaleTokenAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("SkaleToken")));
         if (IManagerData(managerDataAddress).minersCap() == 0) {
-            IManagerData(managerDataAddress).setMinersCap(ISkaleToken(skaleTokenAddress).cap() / 3);
+            IManagerData(managerDataAddress).setMinersCap(ISkaleToken(skaleTokenAddress).CAP() / 3);
         }
         uint step = ((now - IManagerData(managerDataAddress).startTime()) / IConstants(constantsAddress).SIX_YEARS()) + 1;
         if (IManagerData(managerDataAddress).stageTime() + IConstants(constantsAddress).rewardPeriod() < now) {
@@ -213,7 +208,7 @@ contract SkaleManager is Permissions {
         assembly {
             operationType := mload(add(data, 0x20))
         }
-        bool isIdentified = operationType == bytes1(uint8(1)) || operationType == bytes1(uint8(16)) || operationType == bytes1(uint8(17));
+        bool isIdentified = operationType == bytes1(uint8(1)) || operationType == bytes1(uint8(16));
         require(isIdentified, "Operation type is not identified");
         if (operationType == bytes1(uint8(1))) {
             return TransactionOperation.CreateNode;

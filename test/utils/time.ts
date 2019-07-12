@@ -27,3 +27,7 @@ export function skipTime(web3: Web3, seconds: number) {
         },
         responseCallback);
 }
+
+export async function currentTime(web3: Web3) {
+    return (await web3.eth.getBlock("latest")).timestamp;
+}
