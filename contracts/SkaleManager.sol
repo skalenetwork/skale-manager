@@ -10,7 +10,7 @@ import "./Permissions.sol";
 interface ISkaleToken {
     function transfer(address to, uint value) external returns (bool success);
     function mint(address to, uint value) external returns (bool success);
-    function cap() external view returns (uint);
+    function CAP() external view returns (uint);
 }
 
 interface IConstants {
@@ -178,7 +178,7 @@ contract SkaleManager is Permissions {
         address managerDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("ManagerData")));
         address skaleTokenAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("SkaleToken")));
         if (IManagerData(managerDataAddress).minersCap() == 0) {
-            IManagerData(managerDataAddress).setMinersCap(ISkaleToken(skaleTokenAddress).cap() / 3);
+            IManagerData(managerDataAddress).setMinersCap(ISkaleToken(skaleTokenAddress).CAP() / 3);
         }
         uint step = ((now - IManagerData(managerDataAddress).startTime()) / IConstants(constantsAddress).SIX_YEARS()) + 1;
         if (IManagerData(managerDataAddress).stageTime() + IConstants(constantsAddress).rewardPeriod() < now) {
