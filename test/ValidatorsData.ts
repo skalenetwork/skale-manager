@@ -1,11 +1,12 @@
-import { ValidatorsDataContract, ValidatorsDataInstance, ContractManagerContract, ContractManagerInstance } from "../types/truffle-contracts";
+import BigNumber from "bignumber.js";
+import * as chai from "chai";
+import * as chaiAsPromised from "chai-as-promised";
+import { ContractManagerContract, ContractManagerInstance,
+        ValidatorsDataContract, ValidatorsDataInstance } from "../types/truffle-contracts";
 
 const ValidatorsData: ValidatorsDataContract = artifacts.require("./ValidatorsData");
-const ContractManager: ContractManagerContract = artifacts.require('./ContractManager');
+const ContractManager: ContractManagerContract = artifacts.require("./ContractManager");
 
-import * as chai from 'chai';
-import * as chaiAsPromised from "chai-as-promised";
-import BigNumber from "bignumber.js";
 chai.should();
 chai.use(chaiAsPromised);
 
@@ -15,67 +16,16 @@ contract("ValidatorsData", ([user, owner]) => {
 
     beforeEach(async () => {
         contractManager = await ContractManager.new({from: owner});
-        validatorsData = await ValidatorsData.new("ValidatorsFunctionality", contractManager.address, {from: owner})
+        validatorsData = await ValidatorsData.new("ValidatorsFunctionality", contractManager.address, {from: owner});
     });
 
-    // describe("when validator registered", async () => {
-    //     const validatorIndex = web3.utils.soliditySha3("1");
-    //     const data = web3.utils.soliditySha3("2");        
-
-    //     it("should reject his attempt to add node if he is not a validator or an owner of this node", async () => {
-    //         await validatorsData.addValidatedNode(validatorIndex, data, {from: user}).should.be.rejectedWith("Message sender is invalid");
-    //     });
-    //     describe("when validator are correct it can add validated node", async () => {
-    //         //it("should be able to add validated node", async () => {
-    //         beforeEach(async () => {    
-    //             await validatorsData.addValidatedNode(validatorIndex, data, {from: owner});
-    //         });
-    //         describe("when node is added", async () => {
-    //             it("should be able to get validated array", async () => {
-    //                 await validatorsData.getValidatedArray(validatorIndex);
-    //             });
-    //             describe("gotten array", async () => {
-    //                 it("should became longer per 1 by adding 1 node", async () => {
-    //                     const validatedArray = await validatorsData.getValidatedArray(validatorIndex);
-    //                     validatedArray.length.should.be.equal(1);
-
-    //                 })
-    //                 it("should be supplemented with the correct node", async () => {
-    //                     const validatedArray = await validatorsData.getValidatedArray(validatorIndex);
-    //                     validatedArray.should.be.deep.equal([data]);
-    //                 })
-    //             });
-    //         });
-    //     });
-    // });
-
-
-
-    // describe("When validator registered", async () => {
-    //     const validatorIndex = web3.utils.soliditySha3("1");
-    //     const data = web3.utils.soliditySha3("2");        
-
-    //     it("should reject his attempt to add node if he is not a validator or an owner of this node", async () => {
-    //         await validatorsData.addValidatedNode(validatorIndex, data, {from: user}).should.be.rejectedWith("Message sender is invalid");
-    //     });
-
-    //     it("should be able to add validated node", async () => {
-    //         await validatorsData.addValidatedNode(validatorIndex, data, {from: owner});
-
-    //         const validatedArray = await validatorsData.getValidatedArray(validatorIndex);
-    //         validatedArray.length.should.be.equal(1);
-    //         validatedArray.should.be.deep.equal([data]);
-    //     })
-    // });
-
-
-    
     it("should add validated node to validated array by valid validator", async () => {
         const validatorIndex = web3.utils.soliditySha3("1");
         const data = web3.utils.soliditySha3("2");
-        await validatorsData.addValidatedNode(validatorIndex, data, {from: user}).should.be.rejectedWith("Message sender is invalid");
+        await validatorsData.addValidatedNode(validatorIndex, data, {from: user})
+        .should.be.rejectedWith("Message sender is invalid");
         await validatorsData.addValidatedNode(validatorIndex, data, {from: owner});
-        const validatedArray = await validatorsData.getValidatedArray(validatorIndex);     
+        const validatedArray = await validatorsData.getValidatedArray(validatorIndex);
         validatedArray.length.should.be.equal(1);
         validatedArray.should.be.deep.equal([data]);
     });
@@ -84,16 +34,13 @@ contract("ValidatorsData", ([user, owner]) => {
         const validatorIndex = web3.utils.soliditySha3("1");
         const downtime = new BigNumber(200);
         const latency = new BigNumber(300);
-        await validatorsData.addVerdict(validatorIndex, downtime, latency, {from: user}).should.be.rejectedWith("Message sender is invalid");
+        await validatorsData.addVerdict(validatorIndex, downtime, latency, {from: user})
+        .should.be.rejectedWith("Message sender is invalid");
         await validatorsData.addVerdict(validatorIndex, downtime, latency, {from: owner});
         const dataLength = await validatorsData.getLengthOfMetrics(validatorIndex);
         dataLength.should.be.deep.equal(web3.utils.toBN(1));
         const savedDowntime = new BigNumber(await validatorsData.verdicts(validatorIndex, "0", "0"));
         const savedLatency = new BigNumber(await validatorsData.verdicts(validatorIndex, "0", "1"));
-        // console.log("\n" + savedDowntime);
-        // console.log("\n" + savedLatency);
-        // console.log("\n" + downtime);
-        // console.log("\n" + latency);
         savedDowntime.should.be.deep.equal(downtime);
         savedLatency.should.be.be.deep.equal(latency);
     });
@@ -105,7 +52,8 @@ contract("ValidatorsData", ([user, owner]) => {
         await validatorsData.addValidatedNode(validatorIndex, data, {from: owner});
         const validatedArray = await validatorsData.getValidatedArray(validatorIndex);
         validatedArray.length.should.be.equal(1);
-        await validatorsData.removeValidatedNode(validatorIndex, nodeIndex, {from: user}).should.be.rejectedWith("Message sender is invalid");
+        await validatorsData.removeValidatedNode(validatorIndex, nodeIndex, {from: user})
+        .should.be.rejectedWith("Message sender is invalid");
         await validatorsData.removeValidatedNode(validatorIndex, nodeIndex, {from: owner});
         const validatedArrayAfter = await validatorsData.getValidatedArray(validatorIndex);
         validatedArrayAfter.length.should.be.equal(0);
@@ -124,7 +72,8 @@ contract("ValidatorsData", ([user, owner]) => {
         await validatorsData.addVerdict(validatorIndex, downtime3, latency3, {from: owner});
         const dataLength = await validatorsData.getLengthOfMetrics(validatorIndex);
         dataLength.should.be.deep.equal(web3.utils.toBN(3));
-        await validatorsData.removeAllVerdicts(validatorIndex, {from: user}).should.be.rejectedWith("Message sender is invalid");
+        await validatorsData.removeAllVerdicts(validatorIndex, {from: user})
+        .should.be.rejectedWith("Message sender is invalid");
         await validatorsData.removeAllVerdicts(validatorIndex, {from: owner});
         const dataLengthAfter = await validatorsData.getLengthOfMetrics(validatorIndex);
         dataLengthAfter.should.be.deep.equal(web3.utils.toBN(0));
@@ -159,6 +108,5 @@ contract("ValidatorsData", ([user, owner]) => {
         await validatorsData.addVerdict(validatorIndex, downtime3, latency3, {from: owner});
         const dataLengthAfter = await validatorsData.getLengthOfMetrics(validatorIndex);
         dataLengthAfter.should.be.deep.equal(web3.utils.toBN(3));
-    })
-
+    });
 });
