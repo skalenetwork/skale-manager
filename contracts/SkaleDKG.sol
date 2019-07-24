@@ -126,14 +126,14 @@ contract SkaleDKG is Permissions {
 
     function isBroadcast(bytes32 groupIndex, uint nodeIndex) internal {
         uint index = findNode(groupIndex, nodeIndex);
-        require(index < IGroupsData(channels[groupIndex].dataAddress).getNumberOfNodesInGroup(), "Node is not in this group");
+        require(index < IGroupsData(channels[groupIndex].dataAddress).getNumberOfNodesInGroup(groupIndex), "Node is not in this group");
         require(isNodeByMessageSender(nodeIndex, msg.sender), "Node does not exist for message sender");
         require(!channels[groupIndex].broadcasted[index], "This node is already broadcasted");
         channels[groupIndex].broadcasted[index] = true;
     }
 
     function findNode(bytes32 groupIndex, uint nodeIndex) internal view returns (uint index) {
-        uint[] memory nodesInGroup = IGroupsData(channels[groupIndex].dataAddress).getNodesInGroup();
+        uint[] memory nodesInGroup = IGroupsData(channels[groupIndex].dataAddress).getNodesInGroup(groupIndex);
         for (index = 0; index < nodesInGroup.length; index++) {
             if (nodesInGroup[index] == nodeIndex) {
                 return index;

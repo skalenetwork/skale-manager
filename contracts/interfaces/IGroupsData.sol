@@ -26,19 +26,4 @@ interface IGroupsData {
         uint pubKeyy1,
         uint pubKeyx2,
         uint pubKeyy2) external;
-    function getNodesInGroup() external view returns (uint[] memory);
-    function getNumberOfNodesInGroup() external view returns (uint);
-    function initializeSchain(
-        string calldata name,
-        address from,
-        uint lifetime,
-        uint deposit) external;
-    function setSchainIndex(bytes32 schainId, address from) external;
-    function removeSchain(bytes32 schainId, address from) external;
-    function removeSchainForNode(uint nodeIndex, uint schainIndex) external;
-    function isTimeExpired(bytes32 schainId) external view returns (bool);
-    function isOwnerAddress(address from, bytes32 schainId) external view returns (bool);
-    function isSchainNameAvailable(string calldata name) external view returns (bool);
-    function getSchainsPartOfNode(bytes32 schainId) external view returns (uint);
-    function getLengthOfSchainsForNode(uint nodeIndex) external view returns (uint);
 }
