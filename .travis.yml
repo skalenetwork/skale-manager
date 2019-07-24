@@ -30,7 +30,8 @@ dist: xenial
 addons:
   apt:
     packages:
-      - python3    
+      - python3
+      - python3-pip    
 
 install:
     - yarn install    
