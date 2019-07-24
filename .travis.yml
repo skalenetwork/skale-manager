@@ -37,18 +37,15 @@ before_install:
     - sudo apt update
     - sudo apt install python3-pip python3-setuptools
 install:
-    - yarn install    
-    - python3 --version
-    - pip3 --version
+    - yarn install
     - pip3 install slither-analyzer
 before_script:
     - npx ganache-cli --gasLimit 8000000 --quiet &
     - npx testrpc-sc --port 8555 --gasLimit 0xfffffffffff --quiet &    
 script:
     - yarn lint || travis_terminate 1
-    - python3 --version
-    - pip3 --version
     - slither .
+    - slither . --detect too-many-digits || travis_terminate 5
     - yarn tslint || travis_terminate 2
     - yarn generate    
     - yarn test || travis_terminate 3
