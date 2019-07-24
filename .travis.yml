@@ -33,6 +33,8 @@ addons:
       - python3-pip
       - python3-setuptools
 
+before_install:
+    - sudo apt install python3-pip python3-setuptools
 install:
     - yarn install    
     - python3 --version
