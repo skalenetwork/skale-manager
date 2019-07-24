@@ -30,11 +30,13 @@ dist: xenial
 
 install:
     - yarn install    
+    - pip3 install slither-analyzer
 before_script:
     - npx ganache-cli --gasLimit 8000000 --quiet &
     - npx testrpc-sc --port 8555 --gasLimit 0xfffffffffff --quiet &    
 script:
     - yarn lint || travis_terminate 1
+    - slither .
     - yarn tslint || travis_terminate 2
     - yarn generate    
     - yarn test || travis_terminate 3

@@ -1,13 +1,14 @@
 pragma solidity ^0.5.0;
 
 import "./GroupsData.sol";
+import "./interfaces/ISchainsData.sol";
 
 
 /**
  * @title SchainsData - Data contract for SchainsFunctionality.
  * Contain all information about SKALE-Chains.
  */
-contract SchainsData is GroupsData {
+contract SchainsData is ISchainsData, GroupsData {
 
     struct Schain {
         string name;

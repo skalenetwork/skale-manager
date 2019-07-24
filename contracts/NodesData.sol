@@ -2,12 +2,13 @@ pragma solidity ^0.5.0;
 
 import "./Permissions.sol";
 import "./interfaces/IConstants.sol";
+import "./interfaces/INodesData.sol";
 
 
 /**
  * @title NodesData - Data contract for NodesFunctionality
  */
-contract NodesData is Permissions {
+contract NodesData is INodesData, Permissions {
 
     // All Nodes states
     enum NodeStatus {Active, Leaving, Left}
