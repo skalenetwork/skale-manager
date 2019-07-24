@@ -43,6 +43,7 @@ before_script:
 script:
     - yarn lint || travis_terminate 1
     - python3 --version
+    - pip3 --version
     - slither .
     - yarn tslint || travis_terminate 2
     - yarn generate    
