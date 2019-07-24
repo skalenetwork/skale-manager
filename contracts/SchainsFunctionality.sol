@@ -1,28 +1,10 @@
 pragma solidity ^0.5.0;
 
 import "./Permissions.sol";
+import "./interfaces/ISchainsData.sol";
+import "./interfaces/IConstants.sol";
+import "./interfaces/IGroupsData.sol";
 
-interface ISchainsData {
-    function initializeSchain(
-        string calldata name,
-        address from,
-        uint lifetime,
-        uint deposit) external;
-    function setSchainIndex(bytes32 schainId, address from) external;
-    function removeSchain(bytes32 schainId, address from) external;
-    function removeSchainForNode(uint nodeIndex, uint schainIndex) external;
-    function isTimeExpired(bytes32 schainId) external view returns (bool);
-    function isOwnerAddress(address from, bytes32 schainId) external view returns (bool);
-    function isSchainNameAvailable(string calldata name) external view returns (bool);
-    function getSchainsPartOfNode(bytes32 schainId) external view returns (uint);
-    function getLengthOfSchainsForNode(uint nodeIndex) external view returns (uint);
-}
-
-interface IConstants {
-    function NODE_DEPOSIT() external view returns (uint);
-    function SECONDS_TO_YEAR() external view returns (uint32);
-    //function NUMBER_OF_NODES_FOR_MEDIUM_TEST_SCHAIN() external view returns (uint);
-}
 
 interface ISchainsFunctionality1 {
     function getNodesDataFromTypeOfSchain(uint typeOfSchain) external view returns (uint, uint);
@@ -34,10 +16,6 @@ interface ISchainsFunctionality1 {
     function findSchainAtSchainsForNode(uint nodeIndex, bytes32 schainId) external view returns (uint);
     function addSpace(uint nodeIndex, uint partOfNode) external;
     function deleteGroup(bytes32 groupIndex) external;
-}
-
-interface IGroupsData {
-    function getNodesInGroup(bytes32 schainId) external view returns (uint[] memory);
 }
 
 

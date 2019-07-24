@@ -1,13 +1,8 @@
 pragma solidity ^0.5.0;
 
 import "./GroupsFunctionality.sol";
-//import './ValidatorsData.sol';
-//import './NodesData.sol';
-
-interface IConstants {
-    function deltaPeriod() external view returns (uint);
-    function NUMBER_OF_VALIDATORS() external view returns (uint);
-}
+import "./interfaces/IConstants.sol";
+import "./interfaces/INodesData.sol";
 
 interface IValidatorsData {
     function addValidatedNode(bytes32 validatorIndex, bytes32 data) external;
@@ -17,15 +12,6 @@ interface IValidatorsData {
     function getValidatedArray(bytes32 validatorIndex) external view returns (bytes32[] memory);
     function getLengthOfMetrics(bytes32 validatorIndex) external view returns (uint);
     function verdicts(bytes32 validatorIndex, uint numberOfVerdict, uint layer) external view returns (uint32);
-}
-
-interface INodesData {
-    function isNodeActive(uint nodeIndex) external view returns (bool);
-    function getNodeIP(uint nodeIndex) external view returns (bytes4);
-    function getNodeNextRewardDate(uint nodeIndex) external view returns (uint32);
-    function getNodeLastRewardDate(uint nodeIndex) external view returns (uint32);
-    function getNumberOfNodes() external view returns (uint);
-    function numberOfActiveNodes() external view returns (uint);
 }
 
 

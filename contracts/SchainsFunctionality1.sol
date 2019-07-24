@@ -1,50 +1,9 @@
 pragma solidity ^0.5.0;
 
 import "./GroupsFunctionality.sol";
-
-interface INodesData {
-    function nodesLink(uint nodeIndex) external view returns (uint, bool);
-    function nodesFull(uint indexOfNode) external view returns (uint, uint);
-    function nodesFractional(uint indexOfNode) external view returns (uint, uint);
-    function isNodeActive(uint nodeIndex) external view returns (bool);
-    function removeSpaceFromFractionalNode(uint subarrayLink, uint space) external returns (bool);
-    function removeSpaceFromFullNode(uint subarrayLink, uint space) external returns (bool);
-    function addSpaceToFractionalNode(uint subarrayLink, uint space) external;
-    function addSpaceToFullNode(uint subarrayLink, uint space) external;
-    function getNumberOfFractionalNodes() external view returns (uint);
-    function getNumberOfFullNodes() external view returns (uint);
-    function getNumberOfFreeFullNodes() external view returns (uint);
-    function getNumberOfFreeFractionalNodes(uint space) external view returns (uint);
-    function getNumberOfNodes() external view returns (uint);
-    function numberOfActiveNodes() external view returns (uint);
-    function numberOfLeavingNodes() external view returns (uint);
-    function fullNodes(uint indexOfNode) external view returns (uint, uint);
-    function fractionalNodes(uint indexOfNode) external view returns (uint, uint);
-    function getNodeIP(uint nodeIndex) external view returns (bytes4);
-    function getNodePort(uint nodeIndex) external view returns (uint16);
-}
-
-interface ISchainsData {
-    function addSchainForNode(uint nodeIndex, bytes32 schainId) external;
-    function setSchainPartOfNode(bytes32 schainId, uint partOfNode) external;
-    function getLengthOfSchainsForNode(uint nodeIndex) external view returns (uint);
-    function schainsForNodes(uint nodeIndex, uint indexOfSchain) external view returns (bytes32);
-    function sumOfSchainsResources() external view returns (uint);
-}
-
-interface IConstants {
-    function SECONDS_TO_DAY() external view returns (uint32);
-    function MEDIUM_DIVISOR() external view returns (uint);
-    function TINY_DIVISOR() external view returns (uint);
-    function SMALL_DIVISOR() external view returns (uint);
-    function MEDIUM_TEST_DIVISOR() external view returns (uint);
-    function NUMBER_OF_NODES_FOR_SCHAIN() external view returns (uint);
-    function NUMBER_OF_NODES_FOR_TEST_SCHAIN() external view returns (uint);
-    function NUMBER_OF_NODES_FOR_MEDIUM_TEST_SCHAIN() external view returns (uint);
-    function lastTimeUnderloaded() external view returns (uint);
-    function lastTimeOverloaded() external view returns (uint);
-    function setLastTimeOverloaded() external;
-}
+import "./interfaces/INodesData.sol";
+import "./interfaces/ISchainsData.sol";
+import "./interfaces/IConstants.sol";
 
 
 /**

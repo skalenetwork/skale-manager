@@ -1,13 +1,7 @@
 pragma solidity ^0.5.0;
 
 import "./Permissions.sol";
-
-/**
- * @title Constants - interface of Constants contract
- */
-interface IConstants {
-    function rewardPeriod() external view returns (uint32);
-}
+import "./interfaces/IConstants.sol";
 
 
 /**

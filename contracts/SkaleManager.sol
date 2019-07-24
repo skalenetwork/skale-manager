@@ -1,28 +1,13 @@
 pragma solidity ^0.5.0;
 
 import "./Permissions.sol";
+import "./interfaces/INodesData.sol";
+import "./interfaces/IConstants.sol";
 
 interface ISkaleToken {
     function transfer(address to, uint value) external returns (bool success);
     function mint(address to, uint value) external returns (bool success);
     function CAP() external view returns (uint);
-}
-
-interface IConstants {
-    function rewardPeriod() external view returns (uint);
-    function deltaPeriod() external view returns (uint);
-    function SIX_YEARS() external view returns (uint32);
-    function SECONDS_TO_DAY() external view returns (uint32);
-}
-
-interface INodesData {
-    function changeNodeLastRewardDate(uint nodeIndex) external;
-    function isNodeExist(address from, uint nodeIndex) external view returns (bool);
-    function isNodeActive(uint nodeIndex) external view returns (bool);
-    function isNodeLeaving(uint nodeIndex) external view returns (bool);
-    function getNodeLastRewardDate(uint nodeIndex) external view returns (uint32);
-    function numberOfActiveNodes() external view returns (uint);
-    function numberOfLeavingNodes() external view returns (uint);
 }
 
 interface INodesFunctionality {

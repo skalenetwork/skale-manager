@@ -1,21 +1,8 @@
 pragma solidity ^0.5.0;
 
 import "./Permissions.sol";
-
-interface IGroupsData {
-    function setPublicKey(
-        bytes32 groupIndex,
-        uint pubKeyx1,
-        uint pubKeyy1,
-        uint pubKeyx2,
-        uint pubKeyy2) external;
-    function getNodesInGroup() external view returns (uint[] memory);
-    function getNumberOfNodesInGroup() external view returns (uint);
-}
-
-interface INodesData {
-    function isNodeExist(address from, uint nodeIndex) external view returns (bool);
-}
+import "./interfaces/IGroupsData.sol";
+import "./interfaces/INodesData.sol";
 
 
 contract SkaleDKG is Permissions {
