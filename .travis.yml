@@ -36,6 +36,7 @@ addons:
 install:
     - yarn install    
     - python3 --version
+    - pip3 --version
     - pip3 install slither-analyzer
 before_script:
     - npx ganache-cli --gasLimit 8000000 --quiet &
