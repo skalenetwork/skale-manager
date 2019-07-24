@@ -103,7 +103,7 @@ contract SchainsFunctionality is Permissions {
         uint down;
         (up, down) = coefficientForPrice(constantsAddress);*/
         if (divisor == 0) {
-            return 1000000000000000000;
+            return 1e18;
         } else {
             uint up = nodeDeposit * numberOfNodes * 2 * lifetime;
             uint down = divisor * IConstants(constantsAddress).SECONDS_TO_YEAR();

@@ -24,8 +24,8 @@ contract SkaleToken is StandardToken, Permissions {
     event Burn(address indexed from, uint256 amount, uint32 time, uint gasSpend);
 
     constructor(address contractsAddress) Permissions(contractsAddress) public {
-        totalSupply = 1000000 * 10 ** DECIMALS;
-        balances[msg.sender] = 1000000 * 10 ** DECIMALS;
+        totalSupply = 1e6 * 10 ** DECIMALS;
+        balances[msg.sender] = totalSupply;
         // TODO remove after testing
     }
 
