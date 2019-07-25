@@ -137,8 +137,8 @@ contract SchainsFunctionality1 is GroupsFunctionality {
         (numberOfNodes, space) = setNumberOfNodesInGroup(groupIndex, uint(groupData), dataAddress);
         uint indexOfNode;
         uint nodeIndex;
-        uint8 iterations;
-        uint index;
+        uint8 iterations = 0;
+        uint index = 0;
         nodesInGroup = new uint[](IGroupsData(dataAddress).getRecommendedNumberOfNodes(groupIndex));
 
 
@@ -188,8 +188,8 @@ contract SchainsFunctionality1 is GroupsFunctionality {
     function comparator(uint indexOfNode, uint partOfNode, uint space) internal view returns (bool) {
         address nodesDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
         address constantsAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("Constants")));
-        uint freeSpace;
-        uint nodeIndex;
+        uint freeSpace = 0;
+        uint nodeIndex = uint(-1);
         // get nodeIndex and free space of this Node
         if (partOfNode == IConstants(constantsAddress).MEDIUM_DIVISOR()) {
             (nodeIndex, freeSpace) = INodesData(nodesDataAddress).fullNodes(indexOfNode);
@@ -205,8 +205,9 @@ contract SchainsFunctionality1 is GroupsFunctionality {
                 (nodeIndex, freeSpace) = INodesData(nodesDataAddress).fractionalNodes(subarrayLink);
             }
         } else {
-            nodeIndex = indexOfNode;
+            revert("Divisor does not match any valid schain type");
         }
+        require(nodeIndex != uint(-1), "nodeIndex is not set");
         return INodesData(nodesDataAddress).isNodeActive(nodeIndex) && (freeSpace >= space);
     }
 
@@ -263,7 +264,7 @@ contract SchainsFunctionality1 is GroupsFunctionality {
     {
         address nodesDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
         address constantsAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("Constants")));
-        uint numberOfAvailableNodes;
+        uint numberOfAvailableNodes = 0;
         if (partOfNode == IConstants(constantsAddress).MEDIUM_DIVISOR()) {
             space = IConstants(constantsAddress).MEDIUM_DIVISOR();
             numberOfNodes = INodesData(nodesDataAddress).getNumberOfFullNodes();
@@ -280,6 +281,8 @@ contract SchainsFunctionality1 is GroupsFunctionality {
             space = partOfNode;
             numberOfNodes = INodesData(nodesDataAddress).getNumberOfNodes();
             numberOfAvailableNodes = INodesData(nodesDataAddress).numberOfActiveNodes();
+        } else {
+            revert("Can't set number of nodes. Divisor does not match any valid schain type");
         }
         require(IGroupsData(dataAddress).getRecommendedNumberOfNodes(groupIndex) <= numberOfAvailableNodes, "Not enough nodes to create Schain");
     }

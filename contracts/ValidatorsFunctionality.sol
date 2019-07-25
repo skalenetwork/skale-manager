@@ -171,7 +171,7 @@ contract ValidatorsFunctionality is GroupsFunctionality {
         uint finish;
         (numberOfNodes, finish) = setNumberOfNodesInGroup(groupIndex, groupData);
         uint indexOfNode;
-        uint iterations;
+        uint iterations = 0;
         while (finish > 0 && iterations < 200) {
             indexOfNode = hash % numberOfNodes;
             if (comparator(groupIndex, indexOfNode)) {
