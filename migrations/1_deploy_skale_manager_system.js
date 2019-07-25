@@ -51,7 +51,7 @@ async function deploy(deployer, network) {
         await contractManagerInstance.setContractsAddress("SchainsFunctionality", SchainsFunctionality.address).then(function(res) {
             console.log("Contract Schains Functionality with address", SchainsFunctionality.address, "registred in Contract Manager");
         });
-        await deployer.deploy(SchainsFunctionality1, "SchainsFunctionality", "SchainsData", contractManagerInstance.address, {gas: 7000000 * gas_multiplier});
+        await deployer.deploy(SchainsFunctionality1, "SchainsFunctionality", "SchainsData", contractManagerInstance.address, {gas: 8000000 * gas_multiplier});
         await contractManagerInstance.setContractsAddress("SchainsFunctionality1", SchainsFunctionality1.address).then(function(res) {
             console.log("Contract Schains Functionality1 with address", SchainsFunctionality1.address, "registred in Contract Manager");
         });
