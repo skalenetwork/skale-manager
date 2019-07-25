@@ -44,14 +44,18 @@ contract SkaleManager is Permissions {
 
     function initWithdrawDeposit(uint nodeIndex) public {
         address nodesFunctionalityAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesFunctionality")));
-        INodesFunctionality(nodesFunctionalityAddress).initWithdrawDeposit(msg.sender, nodeIndex);
+        require(
+            INodesFunctionality(nodesFunctionalityAddress).initWithdrawDeposit(msg.sender, nodeIndex),
+            "Initialization of deposit withdrawing is failed");
     }
 
     function completeWithdrawdeposit(uint nodeIndex) public {
         address nodesFunctionalityAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesFunctionality")));
         uint amount = INodesFunctionality(nodesFunctionalityAddress).completeWithdrawDeposit(msg.sender, nodeIndex);
         address skaleTokenAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("SkaleToken")));
-        ISkaleToken(skaleTokenAddress).transfer(msg.sender, amount);
+        require(
+            ISkaleToken(skaleTokenAddress).transfer(msg.sender, amount),
+            "Token transfering is failed");
     }
 
     function deleteNode(uint nodeIndex) public {
@@ -147,7 +151,9 @@ contract SkaleManager is Permissions {
             if (latency > 150) {
                 bountyForMiner = (150 * bountyForMiner) / latency;
             }
-            ISkaleToken(skaleTokenAddress).mint(from, uint(bountyForMiner));
+            require(
+                ISkaleToken(skaleTokenAddress).mint(from, uint(bountyForMiner)),
+                "Minting of token is failed");
         } else {
             //Need to add penalty
             bountyForMiner = 0;

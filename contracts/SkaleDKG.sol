@@ -144,7 +144,7 @@ contract SkaleDKG is Permissions {
 
     function isNodeByMessageSender(uint nodeIndex, address from) internal view returns (bool) {
         address nodesDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
-        INodesData(nodesDataAddress).isNodeExist(from, nodeIndex);
+        return INodesData(nodesDataAddress).isNodeExist(from, nodeIndex);
     }
 
     function addFp2(Fp2 memory a, Fp2 memory b) internal view returns (Fp2 memory) {
