@@ -148,7 +148,7 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
                 schainIndex < ISchainsData(dataAddress).getLengthOfSchainsForNode(nodesInGroup[i]),
                 "Some Node does not contain given Schain");
             ISchainsData(dataAddress).removeSchainForNode(nodesInGroup[i], schainIndex);
-            ISchainsFunctionality1(schainsFunctionality1Address).addSpace(nodesInGroup[i], partOfNode);
+            addSpace(nodesInGroup[i], partOfNode);
         }
 
         ISchainsFunctionality1(schainsFunctionality1Address).deleteGroup(schainId);
