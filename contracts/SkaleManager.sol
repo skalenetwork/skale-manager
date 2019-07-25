@@ -3,44 +3,11 @@ pragma solidity ^0.5.0;
 import "./Permissions.sol";
 import "./interfaces/INodesData.sol";
 import "./interfaces/IConstants.sol";
-
-interface ISkaleToken {
-    function transfer(address to, uint value) external returns (bool success);
-    function mint(address to, uint value) external returns (bool success);
-    function CAP() external view returns (uint);
-}
-
-interface INodesFunctionality {
-    function createNode(address from, uint value, bytes calldata data) external returns (uint);
-    function initWithdrawDeposit(address from, uint nodeIndex) external;
-    function completeWithdrawDeposit(address from, uint nodeIndex) external returns (uint);
-    function removeNode(address from, uint nodeIndex) external;
-}
-
-interface IValidatorsFunctionality {
-    function addValidator(uint nodeIndex) external;
-    function upgradeValidator(uint nodeIndex) external;
-    function sendVerdict(
-        uint fromValidatorIndex,
-        uint toNodeIndex,
-        uint32 downtime,
-        uint32 latency) external;
-    function calculateMetrics(uint nodeIndex) external returns (uint32, uint32);
-}
-
-interface ISchainsFunctionality {
-    function addSchain(address from, uint value, bytes calldata data) external;
-    function deleteSchain(address from, bytes32 schainId) external;
-}
-
-interface IManagerData {
-    function setMinersCap(uint newMinersCap) external;
-    function setStageTimeAndStageNodes(uint newStageNodes) external;
-    function minersCap() external view returns (uint);
-    function startTime() external view returns (uint32);
-    function stageTime() external view returns (uint32);
-    function stageNodes() external view returns (uint);
-}
+import "./interfaces/ISkaleToken.sol";
+import "./interfaces/INodesFunctionality.sol";
+import "./interfaces/IValidatorsFunctionality.sol";
+import "./interfaces/ISchainsFunctionality.sol";
+import "./interfaces/IManagerData.sol";
 
 
 contract SkaleManager is Permissions {

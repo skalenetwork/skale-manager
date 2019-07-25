@@ -4,6 +4,7 @@ import "./Permissions.sol";
 import "./interfaces/ISchainsData.sol";
 import "./interfaces/IConstants.sol";
 import "./interfaces/IGroupsData.sol";
+import "./interfaces/ISchainsFunctionality.sol";
 
 
 interface ISchainsFunctionality1 {
@@ -22,7 +23,7 @@ interface ISchainsFunctionality1 {
 /**
  * @title SchainsFunctionality - contract contains all functionality logic to manage Schains
  */
-contract SchainsFunctionality is Permissions {
+contract SchainsFunctionality is Permissions, ISchainsFunctionality {
 
     // informs that Schain is created
     event SchainCreated(

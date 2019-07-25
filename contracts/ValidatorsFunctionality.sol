@@ -3,6 +3,7 @@ pragma solidity ^0.5.0;
 import "./GroupsFunctionality.sol";
 import "./interfaces/IConstants.sol";
 import "./interfaces/INodesData.sol";
+import "./interfaces/IValidatorsFunctionality.sol";
 
 interface IValidatorsData {
     function addValidatedNode(bytes32 validatorIndex, bytes32 data) external;
@@ -15,7 +16,7 @@ interface IValidatorsData {
 }
 
 
-contract ValidatorsFunctionality is GroupsFunctionality {
+contract ValidatorsFunctionality is GroupsFunctionality, IValidatorsFunctionality {
 
     event ValidatorCreated(
         uint nodeIndex,

@@ -4,12 +4,13 @@ import "./Permissions.sol";
 import "./interfaces/IConstants.sol";
 import "./interfaces/INodesData.sol";
 import "./interfaces/ISchainsData.sol";
+import "./interfaces/INodesFunctionality.sol";
 
 
 /**
  * @title NodesFunctionality - contract contains all functionality logic to manage Nodes
  */
-contract NodesFunctionality is Permissions {
+contract NodesFunctionality is Permissions, INodesFunctionality {
 
     // informs that Node is created
     event NodeCreated(

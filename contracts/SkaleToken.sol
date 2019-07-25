@@ -3,13 +3,14 @@ pragma solidity ^0.5.0;
 
 import "./StandardToken.sol";
 import "./Permissions.sol";
+import "./interfaces/ISkaleToken.sol";
 
 
 /**
  * @title SkaleToken is ERC223 Token implementation, also this contract in skale
  * manager system
  */
-contract SkaleToken is StandardToken, Permissions {
+contract SkaleToken is ISkaleToken, StandardToken, Permissions {
 
     string public constant NAME = "SKALE";
 
