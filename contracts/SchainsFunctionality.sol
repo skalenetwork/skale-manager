@@ -5,6 +5,7 @@ import "./interfaces/ISchainsData.sol";
 import "./interfaces/IConstants.sol";
 import "./interfaces/IGroupsData.sol";
 import "./interfaces/ISchainsFunctionality.sol";
+import "./interfaces/INodesData.sol";
 
 
 interface ISchainsFunctionality1 {
@@ -15,7 +16,6 @@ interface ISchainsFunctionality1 {
         uint numberOfNodes,
         uint partOfNode) external;
     function findSchainAtSchainsForNode(uint nodeIndex, bytes32 schainId) external view returns (uint);
-    function addSpace(uint nodeIndex, uint partOfNode) external;
     function deleteGroup(bytes32 groupIndex) external;
 }
 
@@ -199,6 +199,33 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
         name = new string(data.length - 36);
         for (uint i = 0; i < bytes(name).length; ++i) {
             bytes(name)[i] = data[36 + i];
+        }
+    }
+
+    /**
+     * @dev addSpace - return occupied space to Node
+     * @param nodeIndex - index of Node at common array of Nodes
+     * @param partOfNode - divisor of given type of Schain
+     */
+    function addSpace(uint nodeIndex, uint partOfNode) internal allow(executorName) {
+        address nodesDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
+        address constantsAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("Constants")));
+        uint subarrayLink;
+        bool isNodeFull;
+        (subarrayLink, isNodeFull) = INodesData(nodesDataAddress).nodesLink(nodeIndex);
+        // adds space
+        if (isNodeFull) {
+            if (partOfNode != 0) {
+                INodesData(nodesDataAddress).addSpaceToFullNode(subarrayLink, IConstants(constantsAddress).MEDIUM_DIVISOR() / partOfNode);
+            } else {
+                INodesData(nodesDataAddress).addSpaceToFullNode(subarrayLink, partOfNode);
+            }
+        } else {
+            if (partOfNode != 0) {
+                INodesData(nodesDataAddress).addSpaceToFractionalNode(subarrayLink, IConstants(constantsAddress).TINY_DIVISOR() / partOfNode);
+            } else {
+                INodesData(nodesDataAddress).addSpaceToFractionalNode(subarrayLink, partOfNode);
+            }
         }
     }
 }

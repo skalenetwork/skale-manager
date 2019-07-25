@@ -52,33 +52,6 @@ contract SchainsFunctionality1 is GroupsFunctionality {
     }
 
     /**
-     * @dev addSpace - return occupied space to Node
-     * @param nodeIndex - index of Node at common array of Nodes
-     * @param partOfNode - divisor of given type of Schain
-     */
-    function addSpace(uint nodeIndex, uint partOfNode) public allow(executorName) {
-        address nodesDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
-        address constantsAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("Constants")));
-        uint subarrayLink;
-        bool isNodeFull;
-        (subarrayLink, isNodeFull) = INodesData(nodesDataAddress).nodesLink(nodeIndex);
-        // adds space
-        if (isNodeFull) {
-            if (partOfNode != 0) {
-                INodesData(nodesDataAddress).addSpaceToFullNode(subarrayLink, IConstants(constantsAddress).MEDIUM_DIVISOR() / partOfNode);
-            } else {
-                INodesData(nodesDataAddress).addSpaceToFullNode(subarrayLink, partOfNode);
-            }
-        } else {
-            if (partOfNode != 0) {
-                INodesData(nodesDataAddress).addSpaceToFractionalNode(subarrayLink, IConstants(constantsAddress).TINY_DIVISOR() / partOfNode);
-            } else {
-                INodesData(nodesDataAddress).addSpaceToFractionalNode(subarrayLink, partOfNode);
-            }
-        }
-    }
-
-    /**
      * @dev getNodesDataFromTypeOfSchain - returns number if Nodes
      * and part of Node which needed to this Schain
      * @param typeOfSchain - type of Schain
