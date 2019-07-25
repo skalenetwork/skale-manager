@@ -3,9 +3,10 @@ pragma solidity ^0.5.0;
 import "./Permissions.sol";
 import "./interfaces/IGroupsData.sol";
 import "./interfaces/INodesData.sol";
+import "openzeppelin-solidity/contracts/utils/ReentrancyGuard.sol";
 
 
-contract SkaleDKG is Permissions {
+contract SkaleDKG is Permissions, ReentrancyGuard {
 
     struct Channel {
         bool active;
@@ -54,7 +55,7 @@ contract SkaleDKG is Permissions {
         bytes memory secretKeyContribution) public
     {
         require(channels[groupIndex].active, "Chennel is not created");
-        isBroadcast(groupIndex, nodeIndex);
+
         bytes32 vector;
         bytes32 vector1;
         bytes32 vector2;
@@ -90,6 +91,8 @@ contract SkaleDKG is Permissions {
             nodeIndex,
             verificationVector,
             secretKeyContribution);
+
+        isBroadcast(groupIndex, nodeIndex);
     }
 
     function complaint() public;
@@ -124,12 +127,15 @@ contract SkaleDKG is Permissions {
         }
     }
 
-    function isBroadcast(bytes32 groupIndex, uint nodeIndex) internal {
+    function isBroadcast(bytes32 groupIndex, uint nodeIndex) internal nonReentrant {
         uint index = findNode(groupIndex, nodeIndex);
+
+        bool broadcasted = channels[groupIndex].broadcasted[index];
+        channels[groupIndex].broadcasted[index] = true;
+
         require(index < IGroupsData(channels[groupIndex].dataAddress).getNumberOfNodesInGroup(groupIndex), "Node is not in this group");
         require(isNodeByMessageSender(nodeIndex, msg.sender), "Node does not exist for message sender");
-        require(!channels[groupIndex].broadcasted[index], "This node is already broadcasted");
-        channels[groupIndex].broadcasted[index] = true;
+        require(!broadcasted, "This node is already broadcasted");
     }
 
     function findNode(bytes32 groupIndex, uint nodeIndex) internal view returns (uint index) {

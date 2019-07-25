@@ -207,7 +207,7 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
      * @param nodeIndex - index of Node at common array of Nodes
      * @param partOfNode - divisor of given type of Schain
      */
-    function addSpace(uint nodeIndex, uint partOfNode) internal allow(executorName) {
+    function addSpace(uint nodeIndex, uint partOfNode) internal {
         address nodesDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
         address constantsAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("Constants")));
         uint subarrayLink;

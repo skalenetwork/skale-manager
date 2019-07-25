@@ -241,7 +241,7 @@ contract NodesData is INodesData, Permissions {
      * @param subarrayLink - index of Node at array of Fractional Nodes
      * @param space - space which should be returned
      */
-    function addSpaceToFractionalNode(uint subarrayLink, uint space) public allow("SchainsFunctionality1") {
+    function addSpaceToFractionalNode(uint subarrayLink, uint space) public allow("SchainsFunctionality") {
         fractionalNodes[subarrayLink].freeSpace += space;
     }
 
@@ -251,7 +251,7 @@ contract NodesData is INodesData, Permissions {
      * @param subarrayLink - index of Node at array of Full Nodes
      * @param space - space which should be returned
      */
-    function addSpaceToFullNode(uint subarrayLink, uint space) public allow("SchainsFunctionality1") {
+    function addSpaceToFullNode(uint subarrayLink, uint space) public allow("SchainsFunctionality") {
         fullNodes[subarrayLink].freeSpace += space;
     }
 

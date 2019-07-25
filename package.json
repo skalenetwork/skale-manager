@@ -21,6 +21,7 @@
     "chai-as-promised": "^7.1.1",
     "codecov": "^3.5.0",
     "moment": "^2.24.0",
+    "openzeppelin-solidity": "^2.3.0",
     "scrypt": "^6.0.3",
     "solc": "^0.5.7",
     "solidity-coverage": "leapdao/solidity-coverage",
