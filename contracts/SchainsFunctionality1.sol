@@ -1,50 +1,28 @@
+/*
+    SchainsFunctionality1.sol - SKALE Manager
+    Copyright (C) 2018-Present SKALE Labs
+    @author Artem Payvin
+
+    SKALE Manager is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as published
+    by the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    SKALE Manager is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 pragma solidity ^0.5.0;
 
 import "./GroupsFunctionality.sol";
-
-interface INodesData {
-    function nodesLink(uint nodeIndex) external view returns (uint, bool);
-    function nodesFull(uint indexOfNode) external view returns (uint, uint);
-    function nodesFractional(uint indexOfNode) external view returns (uint, uint);
-    function isNodeActive(uint nodeIndex) external view returns (bool);
-    function removeSpaceFromFractionalNode(uint subarrayLink, uint space) external returns (bool);
-    function removeSpaceFromFullNode(uint subarrayLink, uint space) external returns (bool);
-    function addSpaceToFractionalNode(uint subarrayLink, uint space) external;
-    function addSpaceToFullNode(uint subarrayLink, uint space) external;
-    function getNumberOfFractionalNodes() external view returns (uint);
-    function getNumberOfFullNodes() external view returns (uint);
-    function getNumberOfFreeFullNodes() external view returns (uint);
-    function getNumberOfFreeFractionalNodes(uint space) external view returns (uint);
-    function getNumberOfNodes() external view returns (uint);
-    function numberOfActiveNodes() external view returns (uint);
-    function numberOfLeavingNodes() external view returns (uint);
-    function fullNodes(uint indexOfNode) external view returns (uint, uint);
-    function fractionalNodes(uint indexOfNode) external view returns (uint, uint);
-    function getNodeIP(uint nodeIndex) external view returns (bytes4);
-    function getNodePort(uint nodeIndex) external view returns (uint16);
-}
-
-interface ISchainsData {
-    function addSchainForNode(uint nodeIndex, bytes32 schainId) external;
-    function setSchainPartOfNode(bytes32 schainId, uint partOfNode) external;
-    function getLengthOfSchainsForNode(uint nodeIndex) external view returns (uint);
-    function schainsForNodes(uint nodeIndex, uint indexOfSchain) external view returns (bytes32);
-    function sumOfSchainsResources() external view returns (uint);
-}
-
-interface IConstants {
-    function SECONDS_TO_DAY() external view returns (uint32);
-    function MEDIUM_DIVISOR() external view returns (uint);
-    function TINY_DIVISOR() external view returns (uint);
-    function SMALL_DIVISOR() external view returns (uint);
-    function MEDIUM_TEST_DIVISOR() external view returns (uint);
-    function NUMBER_OF_NODES_FOR_SCHAIN() external view returns (uint);
-    function NUMBER_OF_NODES_FOR_TEST_SCHAIN() external view returns (uint);
-    function NUMBER_OF_NODES_FOR_MEDIUM_TEST_SCHAIN() external view returns (uint);
-    function lastTimeUnderloaded() external view returns (uint);
-    function lastTimeOverloaded() external view returns (uint);
-    function setLastTimeOverloaded() external;
-}
+import "./interfaces/INodesData.sol";
+import "./interfaces/ISchainsData.sol";
+import "./interfaces/IConstants.sol";
 
 
 /**
@@ -90,33 +68,6 @@ contract SchainsFunctionality1 is GroupsFunctionality {
             numberOfNodesInGroup,
             uint32(block.timestamp),
             gasleft());
-    }
-
-    /**
-     * @dev addSpace - return occupied space to Node
-     * @param nodeIndex - index of Node at common array of Nodes
-     * @param partOfNode - divisor of given type of Schain
-     */
-    function addSpace(uint nodeIndex, uint partOfNode) public allow(executorName) {
-        address nodesDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
-        address constantsAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("Constants")));
-        uint subarrayLink;
-        bool isNodeFull;
-        (subarrayLink, isNodeFull) = INodesData(nodesDataAddress).nodesLink(nodeIndex);
-        // adds space
-        if (isNodeFull) {
-            if (partOfNode != 0) {
-                INodesData(nodesDataAddress).addSpaceToFullNode(subarrayLink, IConstants(constantsAddress).MEDIUM_DIVISOR() / partOfNode);
-            } else {
-                INodesData(nodesDataAddress).addSpaceToFullNode(subarrayLink, partOfNode);
-            }
-        } else {
-            if (partOfNode != 0) {
-                INodesData(nodesDataAddress).addSpaceToFractionalNode(subarrayLink, IConstants(constantsAddress).TINY_DIVISOR() / partOfNode);
-            } else {
-                INodesData(nodesDataAddress).addSpaceToFractionalNode(subarrayLink, partOfNode);
-            }
-        }
     }
 
     /**
@@ -178,8 +129,8 @@ contract SchainsFunctionality1 is GroupsFunctionality {
         (numberOfNodes, space) = setNumberOfNodesInGroup(groupIndex, uint(groupData), dataAddress);
         uint indexOfNode;
         uint nodeIndex;
-        uint8 iterations;
-        uint index;
+        uint8 iterations = 0;
+        uint index = 0;
         nodesInGroup = new uint[](IGroupsData(dataAddress).getRecommendedNumberOfNodes(groupIndex));
 
 
@@ -229,8 +180,8 @@ contract SchainsFunctionality1 is GroupsFunctionality {
     function comparator(uint indexOfNode, uint partOfNode, uint space) internal view returns (bool) {
         address nodesDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
         address constantsAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("Constants")));
-        uint freeSpace;
-        uint nodeIndex;
+        uint freeSpace = 0;
+        uint nodeIndex = uint(-1);
         // get nodeIndex and free space of this Node
         if (partOfNode == IConstants(constantsAddress).MEDIUM_DIVISOR()) {
             (nodeIndex, freeSpace) = INodesData(nodesDataAddress).fullNodes(indexOfNode);
@@ -246,8 +197,9 @@ contract SchainsFunctionality1 is GroupsFunctionality {
                 (nodeIndex, freeSpace) = INodesData(nodesDataAddress).fractionalNodes(subarrayLink);
             }
         } else {
-            nodeIndex = indexOfNode;
+            revert("Divisor does not match any valid schain type");
         }
+        require(nodeIndex != uint(-1), "nodeIndex is not set");
         return INodesData(nodesDataAddress).isNodeActive(nodeIndex) && (freeSpace >= space);
     }
 
@@ -304,7 +256,7 @@ contract SchainsFunctionality1 is GroupsFunctionality {
     {
         address nodesDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
         address constantsAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("Constants")));
-        uint numberOfAvailableNodes;
+        uint numberOfAvailableNodes = 0;
         if (partOfNode == IConstants(constantsAddress).MEDIUM_DIVISOR()) {
             space = IConstants(constantsAddress).MEDIUM_DIVISOR();
             numberOfNodes = INodesData(nodesDataAddress).getNumberOfFullNodes();
@@ -321,6 +273,8 @@ contract SchainsFunctionality1 is GroupsFunctionality {
             space = partOfNode;
             numberOfNodes = INodesData(nodesDataAddress).getNumberOfNodes();
             numberOfAvailableNodes = INodesData(nodesDataAddress).numberOfActiveNodes();
+        } else {
+            revert("Can't set number of nodes. Divisor does not match any valid schain type");
         }
         require(IGroupsData(dataAddress).getRecommendedNumberOfNodes(groupIndex) <= numberOfAvailableNodes, "Not enough nodes to create Schain");
     }

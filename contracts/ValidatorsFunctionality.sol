@@ -1,11 +1,28 @@
+/*
+    ValidatorsFunctionality.sol - SKALE Manager
+    Copyright (C) 2018-Present SKALE Labs
+    @author Artem Payvin
+
+    SKALE Manager is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as published
+    by the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    SKALE Manager is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 pragma solidity ^0.5.0;
 
 import "./GroupsFunctionality.sol";
-
-interface IConstants {
-    function deltaPeriod() external view returns (uint);
-    // function NUMBER_OF_VALIDATORS() external view returns (uint);
-}
+import "./interfaces/IConstants.sol";
+import "./interfaces/INodesData.sol";
+import "./interfaces/IValidatorsFunctionality.sol";
 
 interface IValidatorsData {
     function addValidatedNode(bytes32 validatorIndex, bytes32 data) external;
@@ -18,17 +35,8 @@ interface IValidatorsData {
     function verdicts(bytes32 validatorIndex, uint numberOfVerdict, uint layer) external view returns (uint32);
 }
 
-interface INodesData {
-    function isNodeActive(uint nodeIndex) external view returns (bool);
-    function getNodeIP(uint nodeIndex) external view returns (bytes4);
-    function getNodeNextRewardDate(uint nodeIndex) external view returns (uint32);
-    function getNodeLastRewardDate(uint nodeIndex) external view returns (uint32);
-    function getNumberOfNodes() external view returns (uint);
-    function numberOfActiveNodes() external view returns (uint);
-}
 
-
-contract ValidatorsFunctionality is GroupsFunctionality {
+contract ValidatorsFunctionality is GroupsFunctionality, IValidatorsFunctionality {
 
     event ValidatorCreated(
         uint nodeIndex,
@@ -203,7 +211,7 @@ contract ValidatorsFunctionality is GroupsFunctionality {
         uint finish;
         (numberOfNodes, finish) = setNumberOfNodesInGroup(groupIndex, groupData);
         uint indexOfNode;
-        uint iterations;
+        uint iterations = 0;
         while (finish > 0 && iterations < 200) {
             indexOfNode = hash % numberOfNodes;
             if (comparator(groupIndex, indexOfNode)) {

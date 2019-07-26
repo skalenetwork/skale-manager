@@ -6,6 +6,7 @@
 build/
 tmp.sol
 data/*.json
+scTopics
 
 ### Node ###
 # Logs
@@ -39,6 +40,8 @@ docker/geth/shared/eth_datadir/history
 
 # coverage
 coverageEnv
+coverage/
+coverage.json
 
 # Typescript staff
 types/

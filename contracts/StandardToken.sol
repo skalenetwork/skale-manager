@@ -33,7 +33,7 @@ contract StandardToken is Token {
         public
         returns (bool)
     {
-        bytes memory empty;
+        bytes memory empty = "";
         return transfer(_to, _value, empty);
     }
 
@@ -52,9 +52,9 @@ contract StandardToken is Token {
         public
         returns (bool)
     {
-        require(_to != address(0));
-        require(_value > 0);
-        require(balances[msg.sender] >= _value);
+        require(_to != address(0), "Receiver is not set");
+        require(_value > 0, "Value is too low");
+        require(balances[msg.sender] >= _value, "Not enough money");
 
         balances[msg.sender] -= _value;
         balances[_to] += _value;
@@ -74,24 +74,6 @@ contract StandardToken is Token {
     }
 
     /**
-     * @dev Check bytecode at given address
-     * assemble the given address bytecode. If bytecode exists then the _addr is a contract.
-     * @param _addr - address of possible contract
-     */
-    function isContract(address _addr)
-        private
-		view
-        returns (bool)
-    {
-        uint length;
-        assembly {
-            // retrieve the size of the code on target address, this needs assembly
-            length := extcodesize(_addr)
-        }
-        return (length > 0);
-    }
-
-    /**
      * @dev Allows allowed third party to transfer tokens from one address to another. Returns success.
      * @param _from Address from where tokens are withdrawn.
      * @param _to Address to where tokens are sent.
@@ -102,17 +84,17 @@ contract StandardToken is Token {
         public
         returns (bool)
     {
-        require(_from != address(0));
-        require(_to != address(0));
-        require(_value > 0);
-        require(balances[_from] >= _value);
-        require(allowed[_from][_to] >= _value);
-        require(balances[_to] + _value > balances[_to]);
+        require(_from != address(0), "Destination is not set");
+        require(_to != address(0), "Receiver is not set");
+        require(_value > 0, "Value is too low");
+        require(balances[_from] >= _value, "Not enough money");
+        require(allowed[_from][_to] >= _value, "Value is too big");
+        require(balances[_to] + _value > balances[_to], "Balance was not increased");
 
         balances[_to] += _value;
         balances[_from] -= _value;
         allowed[_from][_to] -= _value;
-        bytes memory empty;
+        bytes memory empty = "";
         emit Transfer(
             _from,
             _to,
@@ -146,8 +128,8 @@ contract StandardToken is Token {
         public
         returns (bool)
     {
-        require(_spender != address(0));
-        require(_value > 0);
+        require(_spender != address(0), "Spender is not set");
+        require(_value > 0, "Value is too low");
 
         allowed[msg.sender][_spender] = _value;
         emit Approval(
@@ -171,5 +153,23 @@ contract StandardToken is Token {
         returns (uint256)
     {
         return allowed[_owner][_spender];
+    }
+
+    /**
+     * @dev Check bytecode at given address
+     * assemble the given address bytecode. If bytecode exists then the _addr is a contract.
+     * @param _addr - address of possible contract
+     */
+    function isContract(address _addr)
+        private
+		view
+        returns (bool)
+    {
+        uint length;
+        assembly {
+            // retrieve the size of the code on target address, this needs assembly
+            length := extcodesize(_addr)
+        }
+        return (length > 0);
     }
 }

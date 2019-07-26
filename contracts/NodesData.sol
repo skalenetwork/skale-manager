@@ -1,19 +1,33 @@
+/*
+    NodesData.sol - SKALE Manager
+    Copyright (C) 2018-Present SKALE Labs
+    @author Artem Payvin
+
+    SKALE Manager is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as published
+    by the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    SKALE Manager is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 pragma solidity ^0.5.0;
 
 import "./Permissions.sol";
-
-/**
- * @title Constants - interface of Constants contract
- */
-interface IConstants {
-    function rewardPeriod() external view returns (uint32);
-}
+import "./interfaces/IConstants.sol";
+import "./interfaces/INodesData.sol";
 
 
 /**
  * @title NodesData - Data contract for NodesFunctionality
  */
-contract NodesData is Permissions {
+contract NodesData is INodesData, Permissions {
 
     // All Nodes states
     enum NodeStatus {Active, Leaving, Left}
@@ -198,6 +212,7 @@ contract NodesData is Permissions {
             nodesLink[secondNodeIndex].subarrayLink = subarrayIndex;
         }
         delete fractionalNodes[fractionalNodes.length - 1];
+        fractionalNodes.length--;
     }
 
     /**
@@ -212,6 +227,7 @@ contract NodesData is Permissions {
             nodesLink[secondNodeIndex].subarrayLink = subarrayIndex;
         }
         delete fullNodes[fullNodes.length - 1];
+        fullNodes.length--;
     }
 
     /**
@@ -248,7 +264,7 @@ contract NodesData is Permissions {
      * @param subarrayLink - index of Node at array of Fractional Nodes
      * @param space - space which should be returned
      */
-    function addSpaceToFractionalNode(uint subarrayLink, uint space) public allow("SchainsFunctionality1") {
+    function addSpaceToFractionalNode(uint subarrayLink, uint space) public allow("SchainsFunctionality") {
         fractionalNodes[subarrayLink].freeSpace += space;
     }
 
@@ -258,7 +274,7 @@ contract NodesData is Permissions {
      * @param subarrayLink - index of Node at array of Full Nodes
      * @param space - space which should be returned
      */
-    function addSpaceToFullNode(uint subarrayLink, uint space) public allow("SchainsFunctionality1") {
+    function addSpaceToFullNode(uint subarrayLink, uint space) public allow("SchainsFunctionality") {
         fullNodes[subarrayLink].freeSpace += space;
     }
 

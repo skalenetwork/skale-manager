@@ -1,24 +1,31 @@
+/*
+    SkaleDKG.sol - SKALE Manager
+    Copyright (C) 2018-Present SKALE Labs
+    @author Artem Payvin
+
+    SKALE Manager is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as published
+    by the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    SKALE Manager is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 pragma solidity ^0.5.0;
 
 import "./Permissions.sol";
-
-interface IGroupsData {
-    function setPublicKey(
-        bytes32 groupIndex,
-        uint pubKeyx1,
-        uint pubKeyy1,
-        uint pubKeyx2,
-        uint pubKeyy2) external;
-    function getNodesInGroup() external view returns (uint[] memory);
-    function getNumberOfNodesInGroup() external view returns (uint);
-}
-
-interface INodesData {
-    function isNodeExist(address from, uint nodeIndex) external view returns (bool);
-}
+import "./interfaces/IGroupsData.sol";
+import "./interfaces/INodesData.sol";
+import "openzeppelin-solidity/contracts/utils/ReentrancyGuard.sol";
 
 
-contract SkaleDKG is Permissions {
+contract SkaleDKG is Permissions, ReentrancyGuard {
 
     struct Channel {
         bool active;
@@ -67,7 +74,7 @@ contract SkaleDKG is Permissions {
         bytes memory secretKeyContribution) public
     {
         require(channels[groupIndex].active, "Chennel is not created");
-        isBroadcast(groupIndex, nodeIndex);
+
         bytes32 vector;
         bytes32 vector1;
         bytes32 vector2;
@@ -103,6 +110,8 @@ contract SkaleDKG is Permissions {
             nodeIndex,
             verificationVector,
             secretKeyContribution);
+
+        isBroadcast(groupIndex, nodeIndex);
     }
 
     function complaint() public;
@@ -137,16 +146,19 @@ contract SkaleDKG is Permissions {
         }
     }
 
-    function isBroadcast(bytes32 groupIndex, uint nodeIndex) internal {
+    function isBroadcast(bytes32 groupIndex, uint nodeIndex) internal nonReentrant {
         uint index = findNode(groupIndex, nodeIndex);
-        require(index < IGroupsData(channels[groupIndex].dataAddress).getNumberOfNodesInGroup(), "Node is not in this group");
-        require(isNodeByMessageSender(nodeIndex, msg.sender), "Node does not exist for message sender");
-        require(!channels[groupIndex].broadcasted[index], "This node is already broadcasted");
+
+        bool broadcasted = channels[groupIndex].broadcasted[index];
         channels[groupIndex].broadcasted[index] = true;
+
+        require(index < IGroupsData(channels[groupIndex].dataAddress).getNumberOfNodesInGroup(groupIndex), "Node is not in this group");
+        require(isNodeByMessageSender(nodeIndex, msg.sender), "Node does not exist for message sender");
+        require(!broadcasted, "This node is already broadcasted");
     }
 
     function findNode(bytes32 groupIndex, uint nodeIndex) internal view returns (uint index) {
-        uint[] memory nodesInGroup = IGroupsData(channels[groupIndex].dataAddress).getNodesInGroup();
+        uint[] memory nodesInGroup = IGroupsData(channels[groupIndex].dataAddress).getNodesInGroup(groupIndex);
         for (index = 0; index < nodesInGroup.length; index++) {
             if (nodesInGroup[index] == nodeIndex) {
                 return index;
@@ -157,7 +169,7 @@ contract SkaleDKG is Permissions {
 
     function isNodeByMessageSender(uint nodeIndex, address from) internal view returns (bool) {
         address nodesDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
-        INodesData(nodesDataAddress).isNodeExist(from, nodeIndex);
+        return INodesData(nodesDataAddress).isNodeExist(from, nodeIndex);
     }
 
     function addFp2(Fp2 memory a, Fp2 memory b) internal view returns (Fp2 memory) {
@@ -197,77 +209,77 @@ contract SkaleDKG is Permissions {
     }
 
     function doubleG2(Fp2 memory x1, Fp2 memory y1, Fp2 memory z1) internal view returns (Fp2 memory, Fp2 memory) {
-        Fp2 memory A = squaredFp2(x1);
-        Fp2 memory C = squaredFp2(squaredFp2(y1));
-        Fp2 memory D = minusFp2(squaredFp2(addFp2(x1, squaredFp2(y1))), addFp2(A, C));
-        D = addFp2(D, D);
-        Fp2 memory E = addFp2(A, addFp2(A, A));
-        Fp2 memory F = squaredFp2(E);
-        Fp2 memory eightC = addFp2(C, C);
+        Fp2 memory a = squaredFp2(x1);
+        Fp2 memory c = squaredFp2(squaredFp2(y1));
+        Fp2 memory d = minusFp2(squaredFp2(addFp2(x1, squaredFp2(y1))), addFp2(a, c));
+        d = addFp2(d, d);
+        Fp2 memory e = addFp2(a, addFp2(a, a));
+        Fp2 memory f = squaredFp2(e);
+        Fp2 memory eightC = addFp2(c, c);
         eightC = addFp2(eightC, eightC);
         eightC = addFp2(eightC, eightC);
         Fp2 memory y1z1 = mulFp2(y1, z1);
         return toAffineCoordinatesG2(
-            minusFp2(F, addFp2(D, D)), minusFp2(mulFp2(E, minusFp2(D, minusFp2(F, addFp2(D, D)))), eightC), addFp2(y1z1, y1z1)
+            minusFp2(f, addFp2(d, d)), minusFp2(mulFp2(e, minusFp2(d, minusFp2(f, addFp2(d, d)))), eightC), addFp2(y1z1, y1z1)
         );
     }
 
-    function U1(Fp2 memory x1) internal view returns (Fp2 memory) {
+    function u1(Fp2 memory x1) internal view returns (Fp2 memory) {
         return mulFp2(x1, squaredFp2(Fp2({ x: 1, y: 0 })));
     }
 
-    function U2(Fp2 memory x2) internal view returns (Fp2 memory) {
+    function u2(Fp2 memory x2) internal view returns (Fp2 memory) {
         return mulFp2(x2, squaredFp2(Fp2({ x: 1, y: 0 })));
     }
 
-    function S1(Fp2 memory y1) internal view returns (Fp2 memory) {
+    function s1(Fp2 memory y1) internal view returns (Fp2 memory) {
         return mulFp2(y1, mulFp2(Fp2({ x: 1, y: 0 }), squaredFp2(Fp2({ x: 1, y: 0 }))));
     }
 
-    function S2(Fp2 memory y2) internal view returns (Fp2 memory) {
+    function s2(Fp2 memory y2) internal view returns (Fp2 memory) {
         return mulFp2(y2, mulFp2(Fp2({ x: 1, y: 0 }), squaredFp2(Fp2({ x: 1, y: 0 }))));
     }
 
     function isEqual(
-        Fp2 memory u1,
-        Fp2 memory u2,
-        Fp2 memory s1,
-        Fp2 memory s2) internal pure returns (bool)
+        Fp2 memory u1Value,
+        Fp2 memory u2Value,
+        Fp2 memory s1Value,
+        Fp2 memory s2Value) internal pure returns (bool)
     {
-        return (u1.x == u2.x && u1.y == u2.y && s1.x == s2.x && s1.y == s2.y);
+        return (u1Value.x == u2Value.x && u1Value.y == u2Value.y && s1Value.x == s2Value.x && s1Value.y == s2Value.y);
     }
 
-    function zForAddingG2(Fp2 memory u2, Fp2 memory u1) internal view returns (Fp2 memory) {
+    function zForAddingG2(Fp2 memory u2Value, Fp2 memory u1Value) internal view returns (Fp2 memory) {
         Fp2 memory z = Fp2({ x: 1, y: 0 });
         Fp2 memory zz = squaredFp2(z);
-        return mulFp2(minusFp2(squaredFp2(addFp2(z, z)), addFp2(zz, zz)), minusFp2(u2, u1));
+        return mulFp2(minusFp2(squaredFp2(addFp2(z, z)), addFp2(zz, zz)), minusFp2(u2Value, u1Value));
     }
 
     function yForAddingG2(
-        Fp2 memory s2,
-        Fp2 memory s1,
-        Fp2 memory u2,
-        Fp2 memory u1,
+        Fp2 memory s2Value,
+        Fp2 memory s1Value,
+        Fp2 memory u2Value,
+        Fp2 memory u1Value,
         Fp2 memory x) internal view returns (Fp2 memory)
     {
-        Fp2 memory r = addFp2(minusFp2(s2, s1), minusFp2(s2, s1));
-        Fp2 memory theI = squaredFp2(addFp2(minusFp2(u2, u1), minusFp2(u2, u1)));
-        Fp2 memory V = mulFp2(u1, theI);
-        Fp2 memory J = mulFp2(minusFp2(u2, u1), theI);
-        return minusFp2(mulFp2(r, minusFp2(V, x)), addFp2(mulFp2(s1, J), mulFp2(s1, J)));
+        Fp2 memory r = addFp2(minusFp2(s2Value, s1Value), minusFp2(s2Value, s1Value));
+        Fp2 memory theI = squaredFp2(addFp2(minusFp2(u2Value, u1Value), minusFp2(u2Value, u1Value)));
+        Fp2 memory v = mulFp2(u1Value, theI);
+        Fp2 memory j = mulFp2(minusFp2(u2Value, u1Value), theI);
+        return minusFp2(mulFp2(r, minusFp2(v, x)), addFp2(mulFp2(s1Value, j), mulFp2(s1Value, j)));
     }
 
     function xForAddingG2(
-        Fp2 memory s2,
-        Fp2 memory s1,
-        Fp2 memory u2,
-        Fp2 memory u1) internal view returns (Fp2 memory)
+        Fp2 memory s2Value,
+        Fp2 memory s1Value,
+        Fp2 memory u2Value,
+        Fp2 memory u1Value) internal view returns (Fp2 memory)
     {
-        Fp2 memory r = addFp2(minusFp2(s2, s1), minusFp2(s2, s1));
-        Fp2 memory theI = squaredFp2(addFp2(minusFp2(u2, u1), minusFp2(u2, u1)));
-        Fp2 memory V = mulFp2(u1, theI);
-        Fp2 memory J = mulFp2(minusFp2(u2, u1), theI);
-        return minusFp2(squaredFp2(r), addFp2(J, addFp2(V, V)));
+        Fp2 memory r = addFp2(minusFp2(s2Value, s1Value), minusFp2(s2Value, s1Value));
+        Fp2 memory theI = squaredFp2(addFp2(minusFp2(u2Value, u1Value), minusFp2(u2Value, u1Value)));
+        Fp2 memory v = mulFp2(u1Value, theI);
+        Fp2 memory j = mulFp2(minusFp2(u2Value, u1Value), theI);
+        return minusFp2(squaredFp2(r), addFp2(j, addFp2(v, v)));
     }
 
     function addG2(
@@ -278,10 +290,10 @@ contract SkaleDKG is Permissions {
         Fp2 memory y2) internal
     {
         if (isEqual(
-            U1(x1),
-            U2(x2),
-            S1(y1),
-            S2(y2)
+            u1(x1),
+            u2(x2),
+            s1(y1),
+            s2(y2)
             )) {
             (channels[groupIndex].publicKeyx, channels[groupIndex].publicKeyy) = doubleG2(x1, y1, Fp2({ x: 1, y: 0 }));
         }
@@ -290,15 +302,15 @@ contract SkaleDKG is Permissions {
         //Fp2 memory z = zForAddingG2(U2(x2), U1(x1));
         (channels[groupIndex].publicKeyx, channels[groupIndex].publicKeyy) = toAffineCoordinatesG2(
             xForAddingG2(
-                S2(y2), S1(y1), U2(x2), U1(x1)
+                s2(y2), s1(y1), u2(x2), u1(x1)
             ), yForAddingG2(
-                S2(y2), S1(y1), U2(x2), U1(x1), xForAddingG2(
-                    S2(y2),
-                    S1(y1),
-                    U2(x2),
-                    U1(x1))
+                s2(y2), s1(y1), u2(x2), u1(x1), xForAddingG2(
+                    s2(y2),
+                    s1(y1),
+                    u2(x2),
+                    u1(x1))
             ), zForAddingG2(
-                U2(x2), U1(x1)
+                u2(x2), u1(x1)
             )
         );
     }
@@ -337,11 +349,11 @@ contract SkaleDKG is Permissions {
             y.x = 1;
             y.y = 0;
         } else {
-            Fp2 memory Z_inv = inverseFp2(z1);
-            Fp2 memory Z2_inv = squaredFp2(Z_inv);
-            Fp2 memory Z3_inv = mulFp2(Z2_inv, Z_inv);
-            x = mulFp2(x1, Z2_inv);
-            y = mulFp2(y1, Z3_inv);
+            Fp2 memory zInv = inverseFp2(z1);
+            Fp2 memory z2Inv = squaredFp2(zInv);
+            Fp2 memory z3Inv = mulFp2(z2Inv, zInv);
+            x = mulFp2(x1, z2Inv);
+            y = mulFp2(y1, z3Inv);
         }
     }
 }

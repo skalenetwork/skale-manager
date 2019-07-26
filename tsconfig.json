@@ -8,11 +8,12 @@
     "alwaysStrict": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    "forceConsistentCasingInFileNames": true,
+    "forceConsistentCasingInFileNames": true,    
     "lib": ["es2015", "esnext.asynciterable"],
     "sourceMap": true,
     "typeRoots": ["./node_modules/@types", "./types"],
-    "types": ["node", "truffle-contracts"]
+    "types": ["node", "truffle-contracts"],
+    "esModuleInterop": false
   },
   "include": ["**/*.ts"],
   "exclude": ["node_modules", "example", "build"]

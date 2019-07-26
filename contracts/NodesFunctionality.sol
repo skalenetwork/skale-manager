@@ -1,66 +1,35 @@
+/*
+    NodesFunctionality.sol - SKALE Manager
+    Copyright (C) 2018-Present SKALE Labs
+    @author Artem Payvin
+
+    SKALE Manager is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as published
+    by the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    SKALE Manager is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 pragma solidity ^0.5.0;
 
 import "./Permissions.sol";
-
-/**
- * @title Constants - interface of Constants contract
- * Contains only needed functions for current contract
- */
-interface IConstants {
-    function NODE_DEPOSIT() external view returns (uint);
-    function FRACTIONAL_FACTOR() external view returns (uint);
-    function FULL_FACTOR() external view returns (uint);
-    function SECONDS_TO_DAY() external view returns (uint32);
-    function lastTimeUnderloaded() external view returns (uint);
-    function lastTimeOverloaded() external view returns (uint);
-    function setLastTimeUnderloaded() external;
-}
-
-/**
- * @title NodesData - interface of NodesData contract
- * Contains only needed functions for current contract
- */
-interface INodesData {
-    function nodesIPCheck(bytes4 ip) external view returns (bool);
-    function nodesNameCheck(bytes32 name) external view returns (bool);
-    function nodesLink(uint nodeIndex) external view returns (uint, bool);
-    function getNumberOfFractionalNodes() external view returns (uint);
-    function getNumberOfFullNodes() external view returns (uint);
-    function isNodeExist(address from, uint nodeIndex) external view returns (bool);
-    function isNodeActive(uint nodeIndex) external view returns (bool);
-    function isNodeLeaving(uint nodeIndex) external view returns (bool);
-    function isLeavingPeriodExpired(uint nodeIndex) external view returns (bool);
-    function addNode(
-        address from,
-        string calldata name,
-        bytes4 ip,
-        bytes4 publicIP,
-        uint16 port,
-        bytes calldata publicKey)
-    external returns (uint);
-    function addFractionalNode(uint nodeIndex) external;
-    function addFullNode(uint nodeIndex) external;
-    function setNodeLeaving(uint nodeIndex) external;
-    function setNodeLeft(uint nodeIndex) external;
-    function removeFractionalNode(uint subarrayLink) external;
-    function removeFullNode(uint subarrayLink) external;
-    function numberOfActiveNodes() external view returns (uint);
-    function numberOfLeavingNodes() external view returns (uint);
-}
-
-/**
- * @title SchainsData - interface of SchainsData contract
- * Contains only needed functions for current contract
- */
-interface ISchainsData {
-    function sumOfSchainsResources() external view returns (uint);
-}
+import "./interfaces/IConstants.sol";
+import "./interfaces/INodesData.sol";
+import "./interfaces/ISchainsData.sol";
+import "./interfaces/INodesFunctionality.sol";
 
 
 /**
  * @title NodesFunctionality - contract contains all functionality logic to manage Nodes
  */
-contract NodesFunctionality is Permissions {
+contract NodesFunctionality is Permissions, INodesFunctionality {
 
     // informs that Node is created
     event NodeCreated(

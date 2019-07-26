@@ -1,13 +1,33 @@
+/*
+    ConstantsHolder.sol - SKALE Manager
+    Copyright (C) 2018-Present SKALE Labs
+    @author Artem Payvin
+
+    SKALE Manager is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as published
+    by the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    SKALE Manager is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 pragma solidity ^0.5.0;
 
 import "./Permissions.sol";
+import "./interfaces/IConstants.sol";
 
 
 /**
  * @title Contains constants and common variables for Skale Manager system
  * @author Artem Payvin
  */
-contract ConstantsHolder is Permissions {
+contract ConstantsHolder is IConstants, Permissions {
 
     // initial price for creating Node (100 SKL)
     uint public constant NODE_DEPOSIT = 100000000000000000000;
@@ -52,7 +72,7 @@ contract ConstantsHolder is Permissions {
     uint32 public constant SIX_YEARS = 186624000;
 
     // initial number of validators
-    // uint public constant NUMBER_OF_VALIDATORS = 24;
+    uint public constant NUMBER_OF_VALIDATORS = 24;
 
     // Reward period - 30 days (each 30 days Node would be granted for bounty)
     uint32 public rewardPeriod = 3600; // Test parameters

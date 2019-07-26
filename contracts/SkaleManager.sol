@@ -1,70 +1,32 @@
+/*
+    SkaleManager.sol - SKALE Manager
+    Copyright (C) 2018-Present SKALE Labs
+    @author Artem Payvin
+
+    SKALE Manager is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as published
+    by the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    SKALE Manager is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 pragma solidity ^0.5.0;
 
 import "./Permissions.sol";
-//import './ValidatorsFunctionality.sol';
-//import './INodesFunctionality.sol';
-//import './SchainsFunctionality.sol';
-//import './SkaleToken.sol';
-//import './ManagerData.sol';
-
-interface ISkaleToken {
-    function transfer(address to, uint value) external returns (bool success);
-    function mint(address to, uint value) external returns (bool success);
-    function cap() external view returns (uint);
-}
-
-interface IConstants {
-    function rewardPeriod() external view returns (uint);
-    function deltaPeriod() external view returns (uint);
-    function SIX_YEARS() external view returns (uint32);
-    function SECONDS_TO_DAY() external view returns (uint32);
-}
-
-interface INodesData {
-    function changeNodeLastRewardDate(uint nodeIndex) external;
-    function isNodeExist(address from, uint nodeIndex) external view returns (bool);
-    function isNodeActive(uint nodeIndex) external view returns (bool);
-    function isNodeLeaving(uint nodeIndex) external view returns (bool);
-    function isTimeForReward(uint nodeIndex) external view returns (bool);
-    function getNodeLastRewardDate(uint nodeIndex) external view returns (uint32);
-    function numberOfActiveNodes() external view returns (uint);
-    function numberOfLeavingNodes() external view returns (uint);
-}
-
-interface INodesFunctionality {
-    function createNode(address from, uint value, bytes calldata data) external returns (uint);
-    function initWithdrawDeposit(address from, uint nodeIndex) external;
-    function completeWithdrawDeposit(address from, uint nodeIndex) external returns (uint);
-    function removeNode(address from, uint nodeIndex) external;
-    function removeNodeByRoot(uint nodeIndex) external;
-}
-
-interface IValidatorsFunctionality {
-    function addValidator(uint nodeIndex) external;
-    function upgradeValidator(uint nodeIndex) external;
-    function sendVerdict(
-        uint fromValidatorIndex,
-        uint toNodeIndex,
-        uint32 downtime,
-        uint32 latency) external;
-    function calculateMetrics(uint nodeIndex) external returns (uint32, uint32);
-    function deleteValidatorByRoot(uint nodeIndex) external;
-}
-
-interface ISchainsFunctionality {
-    function addSchain(address from, uint value, bytes calldata data) external;
-    function deleteSchain(address from, bytes32 schainId) external;
-    function deleteSchainByRoot(bytes32 schainId) external;
-}
-
-interface IManagerData {
-    function setMinersCap(uint newMinersCap) external;
-    function setStageTimeAndStageNodes(uint newStageNodes) external;
-    function minersCap() external view returns (uint);
-    function startTime() external view returns (uint32);
-    function stageTime() external view returns (uint32);
-    function stageNodes() external view returns (uint);
-}
+import "./interfaces/INodesData.sol";
+import "./interfaces/IConstants.sol";
+import "./interfaces/ISkaleToken.sol";
+import "./interfaces/INodesFunctionality.sol";
+import "./interfaces/IValidatorsFunctionality.sol";
+import "./interfaces/ISchainsFunctionality.sol";
+import "./interfaces/IManagerData.sol";
 
 
 contract SkaleManager is Permissions {
@@ -101,14 +63,18 @@ contract SkaleManager is Permissions {
 
     function initWithdrawDeposit(uint nodeIndex) public {
         address nodesFunctionalityAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesFunctionality")));
-        INodesFunctionality(nodesFunctionalityAddress).initWithdrawDeposit(msg.sender, nodeIndex);
+        require(
+            INodesFunctionality(nodesFunctionalityAddress).initWithdrawDeposit(msg.sender, nodeIndex),
+            "Initialization of deposit withdrawing is failed");
     }
 
     function completeWithdrawdeposit(uint nodeIndex) public {
         address nodesFunctionalityAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesFunctionality")));
         uint amount = INodesFunctionality(nodesFunctionalityAddress).completeWithdrawDeposit(msg.sender, nodeIndex);
         address skaleTokenAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("SkaleToken")));
-        ISkaleToken(skaleTokenAddress).transfer(msg.sender, amount);
+        require(
+            ISkaleToken(skaleTokenAddress).transfer(msg.sender, amount),
+            "Token transfering is failed");
     }
 
     function deleteNode(uint nodeIndex) public {
@@ -189,7 +155,7 @@ contract SkaleManager is Permissions {
         address managerDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("ManagerData")));
         address skaleTokenAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("SkaleToken")));
         if (IManagerData(managerDataAddress).minersCap() == 0) {
-            IManagerData(managerDataAddress).setMinersCap(ISkaleToken(skaleTokenAddress).cap() / 3);
+            IManagerData(managerDataAddress).setMinersCap(ISkaleToken(skaleTokenAddress).CAP() / 3);
         }
         uint step = ((now - IManagerData(managerDataAddress).startTime()) / IConstants(constantsAddress).SIX_YEARS()) + 1;
         if (IManagerData(managerDataAddress).stageTime() + IConstants(constantsAddress).rewardPeriod() < now) {
@@ -211,7 +177,9 @@ contract SkaleManager is Permissions {
             if (latency > 150000) {
                 bountyForMiner = (150000 * bountyForMiner) / latency;
             }
-            ISkaleToken(skaleTokenAddress).mint(from, uint(bountyForMiner));
+            require(
+                ISkaleToken(skaleTokenAddress).mint(from, uint(bountyForMiner)),
+                "Minting of token is failed");
         } else {
             //Need to add penalty
             bountyForMiner = 0;
@@ -234,7 +202,7 @@ contract SkaleManager is Permissions {
         assembly {
             operationType := mload(add(data, 0x20))
         }
-        bool isIdentified = operationType == bytes1(uint8(1)) || operationType == bytes1(uint8(16)) || operationType == bytes1(uint8(17));
+        bool isIdentified = operationType == bytes1(uint8(1)) || operationType == bytes1(uint8(16));
         require(isIdentified, "Operation type is not identified");
         if (operationType == bytes1(uint8(1))) {
             return TransactionOperation.CreateNode;

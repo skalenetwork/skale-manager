@@ -7,6 +7,11 @@ import { ContractManagerContract,
 const ContractManager: ContractManagerContract = artifacts.require("./ContractManager");
 const SkaleToken: SkaleTokenContract = artifacts.require("./SkaleToken");
 
+import * as chai from "chai";
+import * as chaiAsPromised from "chai-as-promised";
+chai.should();
+chai.use(chaiAsPromised);
+
 contract("SkaleToken", ([owner, holder, receiver, nilAddress, accountWith99]) => {
   let skaleToken: SkaleTokenInstance;
   let contractManager: ContractManagerInstance;
@@ -24,22 +29,22 @@ contract("SkaleToken", ([owner, holder, receiver, nilAddress, accountWith99]) =>
   });
 
   it("Should have the correct name", async () => {
-    const name = await skaleToken.name();
+    const name = await skaleToken.NAME();
     expect(name).to.be.equal("SKALE");
   });
 
   it("Should have the correct symbol", async () => {
-    const symbol = await skaleToken.symbol();
+    const symbol = await skaleToken.SYMBOL();
     expect(symbol).to.be.equal("SKL");
   });
 
   it("Should have the correct decimal level", async () => {
-    const decimals = await skaleToken.decimals();
+    const decimals = await skaleToken.DECIMALS();
     expect(decimals.toNumber()).to.be.equal(18);
   });
 
   it("Should return the сapitalization of tokens for the Contract", async () => {
-    const cap = await skaleToken.cap();
+    const cap = await skaleToken.CAP();
     assert(toWei(TOKEN_CAP).isEqualTo(cap));
   });
 
@@ -49,7 +54,7 @@ contract("SkaleToken", ([owner, holder, receiver, nilAddress, accountWith99]) =>
   });
 
   it("Should check 10 SKALE tokens to mint", async () => {
-    const cap: BigNumber = new BigNumber(await skaleToken.cap());
+    const cap: BigNumber = new BigNumber(await skaleToken.CAP());
     const totalSupply = await skaleToken.totalSupply();
     assert(toWei(10).isLessThanOrEqualTo(cap.minus(totalSupply)));
   });
@@ -82,13 +87,8 @@ contract("SkaleToken", ([owner, holder, receiver, nilAddress, accountWith99]) =>
   // });
 
   it("Should not let someone transfer tokens they do not have", async () => {
-    let hasError = true;
-    try {
-      await skaleToken.transfer(holder, toWei(10), { from: owner });
-      await skaleToken.transfer(receiver, toWei(20), { from: holder });
-      hasError = false;
-    } catch (err) { }
-    assert.equal(true, hasError, "Insufficient funds");
+    await skaleToken.transfer(holder, toWei(10), { from: owner });
+    await skaleToken.transfer(receiver, toWei(20), { from: holder }).should.be.eventually.rejected;
   });
 
   it("An address that has no tokens should return a balance of zero", async () => {
@@ -158,34 +158,24 @@ contract("SkaleToken", ([owner, holder, receiver, nilAddress, accountWith99]) =>
   });
 
   it("The account funds are being transferred from should have sufficient funds", async () => {
-    let hasError = true;
-    try {
-      const balance99 = toWei(99);
-      await skaleToken.transfer(accountWith99, balance99, { from: owner });
-      const balance = await skaleToken.balanceOf(accountWith99);
-      assert(balance99.isEqualTo(balance));
-      const amount = toWei(100);
+    const balance99 = toWei(99);
+    await skaleToken.transfer(accountWith99, balance99, { from: owner });
+    const balance = await skaleToken.balanceOf(accountWith99);
+    assert(balance99.isEqualTo(balance));
+    const amount = toWei(100);
 
-      await skaleToken.approve(receiver, amount, { from: accountWith99 });
-      await skaleToken.transferFrom(accountWith99, receiver, amount, { from: receiver });
-      hasError = false;
-    } catch (err) { }
-    assert.equal(true, hasError, "Function not throwing exception for insufficient funds");
+    await skaleToken.approve(receiver, amount, { from: accountWith99 });
+    await skaleToken.transferFrom(accountWith99, receiver, amount, { from: receiver }).should.be.eventually.rejected;
   });
 
   it("Should throw exception when attempting to transferFrom unauthorized account", async () => {
-    let hasError = true;
-    try {
-      const remaining = new BigNumber(await skaleToken.allowance(owner, nilAddress));
-      assert(remaining.isEqualTo(0));
-      const holderBalance = new BigNumber(await skaleToken.balanceOf(holder));
-      assert(holderBalance.isEqualTo(0));
-      const amount = toWei(101);
+    const remaining = new BigNumber(await skaleToken.allowance(owner, nilAddress));
+    assert(remaining.isEqualTo(0));
+    const holderBalance = new BigNumber(await skaleToken.balanceOf(holder));
+    assert(holderBalance.isEqualTo(0));
+    const amount = toWei(101);
 
-      await skaleToken.transferFrom(owner, nilAddress, amount, { from: nilAddress });
-      hasError = false;
-    } catch (err) { }
-    assert.equal(true, hasError, "Unauthorized account should not be allowed transfer funds.");
+    await skaleToken.transferFrom(owner, nilAddress, amount, { from: nilAddress }).should.be.eventually.rejected;
   });
 
   it("An authorized accounts allowance should go down when transferFrom is called", async () => {
