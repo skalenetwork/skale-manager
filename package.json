@@ -39,17 +39,22 @@
   },
   "author": "SKALE Labs",
   "contributors": [
-    "Artem Payvin <artem.payvin@skalelabs.com>",
+    {
+      "name": "Artem Payvin <artem.payvin@skalelabs.com>",
+      "url": "https://github.com/payvint",
+      "githubUsername": "payvint"
+    },
     {
       "name": "Dmytro Stebaiev",
       "url": "https://github.com/DimaStebaev",
       "githubUsername": "DimaStebaev"
     }
   ],
-  "license": "GPL-3.0",
+  "license": "AGPL-3.0",
   "bugs": {
     "url": "https://github.com/skalenetwork/skale-manager/issues"
   },
+  "private": true,
   "homepage": "https://github.com/skalenetwork/skale-manager#readme",
   "devDependencies": {
     "@types/web3": "^1.0.19",
@@ -61,3 +66,4 @@
     "typescript": "^3.5.2"
   }
 }
+ 
