@@ -93,6 +93,16 @@ contract SkaleManager is Permissions {
         IValidatorsFunctionality(validatorsFunctionalityAddress).deleteValidatorByRoot(nodeIndex);
     }
 
+    function deleteSchain(string memory name) public {
+        address schainsFunctionalityAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("SchainsFunctionality")));
+        ISchainsFunctionality(schainsFunctionalityAddress).deleteSchain(msg.sender, keccak256(abi.encodePacked(name)));
+    }
+
+    function deleteSchainByRoot(string memory name) public {
+        address schainsFunctionalityAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("SchainsFunctionality")));
+        ISchainsFunctionality(schainsFunctionalityAddress).deleteSchainByRoot(keccak256(abi.encodePacked(name)));
+    }
+
     function sendVerdict(
         uint fromValidatorIndex,
         uint toNodeIndex,
@@ -185,16 +195,6 @@ contract SkaleManager is Permissions {
             bountyForMiner = 0;
         }
         return uint(bountyForMiner);
-    }
-
-    function deleteSchain(string memory name) public {
-        address schainsFunctionalityAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("SchainsFunctionality")));
-        ISchainsFunctionality(schainsFunctionalityAddress).deleteSchain(msg.sender, keccak256(abi.encodePacked(name)));
-    }
-
-    function deleteSchainByRoot(string memory name) public {
-        address schainsFunctionalityAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("SchainsFunctionality")));
-        ISchainsFunctionality(schainsFunctionalityAddress).deleteSchainByRoot(keccak256(abi.encodePacked(name)));
     }
 
     function fallbackOperationTypeConvert(bytes memory data) internal pure returns (TransactionOperation) {
