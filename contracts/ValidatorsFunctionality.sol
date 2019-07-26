@@ -97,7 +97,8 @@ contract ValidatorsFunctionality is GroupsFunctionality {
     function addValidator(uint nodeIndex) public allow(executorName) {
         bytes32 groupIndex = keccak256(abi.encodePacked(nodeIndex));
         address nodesDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
-        uint possibleNumberOfNodes = INodesData(nodesDataAddress).getNumberOfNodes() / 4 + (INodesData(nodesDataAddress).getNumberOfNodes() % 4 == 0 ? 0 : 1);
+        uint possibleNumberOfNodes = INodesData(nodesDataAddress).getNumberOfNodes() / 4 +
+            (INodesData(nodesDataAddress).getNumberOfNodes() % 4 == 0 ? 0 : 1);
         addGroup(groupIndex, possibleNumberOfNodes, bytes32(nodeIndex));
         uint numberOfNodesInGroup = setValidators(groupIndex, nodeIndex);
         //require(1 != 1, "Break");
@@ -112,7 +113,8 @@ contract ValidatorsFunctionality is GroupsFunctionality {
     function upgradeValidator(uint nodeIndex) public allow(executorName) {
         bytes32 groupIndex = keccak256(abi.encodePacked(nodeIndex));
         address nodesDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
-        uint possibleNumberOfNodes = INodesData(nodesDataAddress).getNumberOfNodes() / 4 + (INodesData(nodesDataAddress).getNumberOfNodes() % 4 == 0 ? 0 : 1);
+        uint possibleNumberOfNodes = INodesData(nodesDataAddress).getNumberOfNodes() / 4 +
+            (INodesData(nodesDataAddress).getNumberOfNodes() % 4 == 0 ? 0 : 1);
         upgradeGroup(groupIndex, possibleNumberOfNodes, bytes32(nodeIndex));
         uint numberOfNodesInGroup = setValidators(groupIndex, nodeIndex);
         emit ValidatorUpgraded(
