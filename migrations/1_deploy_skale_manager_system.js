@@ -1,4 +1,6 @@
 let fs = require("fs");
+const fsPromises = fs.promises;
+
 
 let SkaleToken = artifacts.require('./SkaleToken.sol');
 let SkaleManager = artifacts.require('./SkaleManager.sol');
@@ -88,7 +90,7 @@ async function deploy(deployer, network) {
             contract_manager_abi: ContractManager.abi
         };
 
-        await fs.writeFile(`data/${network}.json`, JSON.stringify(jsonObject));
+        await fsPromises.writeFile(`data/${network}.json`, JSON.stringify(jsonObject));
         await sleep(10000);
         console.log(`Done, check ${network}.json file in data folder.`);
     });
