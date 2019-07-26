@@ -33,7 +33,7 @@ contract StandardToken is Token {
         public
         returns (bool)
     {
-        bytes memory empty;
+        bytes memory empty = "";
         return transfer(_to, _value, empty);
     }
 
@@ -94,7 +94,7 @@ contract StandardToken is Token {
         balances[_to] += _value;
         balances[_from] -= _value;
         allowed[_from][_to] -= _value;
-        bytes memory empty;
+        bytes memory empty = "";
         emit Transfer(
             _from,
             _to,

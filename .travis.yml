@@ -20,15 +20,26 @@ language: node_js
 node_js:
   - "10"
 os: linux
-dist: xenial
+dist: bionic
+addons:
+  apt:
+    packages:
+      - python3-pip
+      - python3-setuptools
 
+before_install:
+    - sudo apt update
+    - sudo apt install python3-pip python3-setuptools
 install:
-    - yarn install    
+    - yarn install
+    - pip3 install slither-analyzer
 before_script:
     - npx ganache-cli --gasLimit 8000000 --quiet &
     - npx testrpc-sc --port 8555 --gasLimit 0xfffffffffff --quiet &    
 script:
     - yarn lint || travis_terminate 1
+    - slither . || true
+    - slither . --exclude naming-convention,solc-version,external-function,constable-states,assembly,timestamp,calls-loop,shadowing-local,reentrancy-no-eth,constant-function || travis_terminate 5
     - yarn tslint || travis_terminate 2
     - yarn generate    
     - yarn test || travis_terminate 3

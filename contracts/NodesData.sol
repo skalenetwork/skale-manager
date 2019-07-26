@@ -20,19 +20,14 @@
 pragma solidity ^0.5.0;
 
 import "./Permissions.sol";
-
-/**
- * @title Constants - interface of Constants contract
- */
-interface IConstants {
-    function rewardPeriod() external view returns (uint32);
-}
+import "./interfaces/IConstants.sol";
+import "./interfaces/INodesData.sol";
 
 
 /**
  * @title NodesData - Data contract for NodesFunctionality
  */
-contract NodesData is Permissions {
+contract NodesData is INodesData, Permissions {
 
     // All Nodes states
     enum NodeStatus {Active, Leaving, Left}
@@ -265,7 +260,7 @@ contract NodesData is Permissions {
      * @param subarrayLink - index of Node at array of Fractional Nodes
      * @param space - space which should be returned
      */
-    function addSpaceToFractionalNode(uint subarrayLink, uint space) public allow("SchainsFunctionality1") {
+    function addSpaceToFractionalNode(uint subarrayLink, uint space) public allow("SchainsFunctionality") {
         fractionalNodes[subarrayLink].freeSpace += space;
     }
 
@@ -275,7 +270,7 @@ contract NodesData is Permissions {
      * @param subarrayLink - index of Node at array of Full Nodes
      * @param space - space which should be returned
      */
-    function addSpaceToFullNode(uint subarrayLink, uint space) public allow("SchainsFunctionality1") {
+    function addSpaceToFullNode(uint subarrayLink, uint space) public allow("SchainsFunctionality") {
         fullNodes[subarrayLink].freeSpace += space;
     }
 

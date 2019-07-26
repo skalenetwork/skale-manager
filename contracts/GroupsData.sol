@@ -20,13 +20,14 @@
 pragma solidity ^0.5.0;
 
 import "./Permissions.sol";
+import "./interfaces/IGroupsData.sol";
 
 
 /**
  * @title GroupsData - contract with some Groups data, will be inherited by
  * SchainsData and ValidatorsData.
  */
-contract GroupsData is Permissions {
+contract GroupsData is IGroupsData, Permissions {
 
     // struct to note which Node has already joined to the group
     struct GroupCheck {

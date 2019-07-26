@@ -22,13 +22,14 @@ pragma solidity ^0.5.0;
 
 import "./StandardToken.sol";
 import "./Permissions.sol";
+import "./interfaces/ISkaleToken.sol";
 
 
 /**
  * @title SkaleToken is ERC223 Token implementation, also this contract in skale
  * manager system
  */
-contract SkaleToken is StandardToken, Permissions {
+contract SkaleToken is ISkaleToken, StandardToken, Permissions {
 
     string public constant NAME = "SKALE";
 
@@ -43,8 +44,8 @@ contract SkaleToken is StandardToken, Permissions {
     event Burn(address indexed from, uint256 amount, uint32 time, uint gasSpend);
 
     constructor(address contractsAddress) Permissions(contractsAddress) public {
-        totalSupply = 1000000 * 10 ** DECIMALS;
-        balances[msg.sender] = 1000000 * 10 ** DECIMALS;
+        totalSupply = 1e6 * 10 ** DECIMALS;
+        balances[msg.sender] = totalSupply;
         // TODO remove after testing
     }
 

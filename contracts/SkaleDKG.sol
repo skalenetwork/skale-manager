@@ -20,24 +20,12 @@
 pragma solidity ^0.5.0;
 
 import "./Permissions.sol";
-
-interface IGroupsData {
-    function setPublicKey(
-        bytes32 groupIndex,
-        uint pubKeyx1,
-        uint pubKeyy1,
-        uint pubKeyx2,
-        uint pubKeyy2) external;
-    function getNodesInGroup() external view returns (uint[] memory);
-    function getNumberOfNodesInGroup() external view returns (uint);
-}
-
-interface INodesData {
-    function isNodeExist(address from, uint nodeIndex) external view returns (bool);
-}
+import "./interfaces/IGroupsData.sol";
+import "./interfaces/INodesData.sol";
+import "openzeppelin-solidity/contracts/utils/ReentrancyGuard.sol";
 
 
-contract SkaleDKG is Permissions {
+contract SkaleDKG is Permissions, ReentrancyGuard {
 
     struct Channel {
         bool active;
@@ -86,7 +74,7 @@ contract SkaleDKG is Permissions {
         bytes memory secretKeyContribution) public
     {
         require(channels[groupIndex].active, "Chennel is not created");
-        isBroadcast(groupIndex, nodeIndex);
+
         bytes32 vector;
         bytes32 vector1;
         bytes32 vector2;
@@ -122,6 +110,8 @@ contract SkaleDKG is Permissions {
             nodeIndex,
             verificationVector,
             secretKeyContribution);
+
+        isBroadcast(groupIndex, nodeIndex);
     }
 
     function complaint() public;
@@ -156,16 +146,19 @@ contract SkaleDKG is Permissions {
         }
     }
 
-    function isBroadcast(bytes32 groupIndex, uint nodeIndex) internal {
+    function isBroadcast(bytes32 groupIndex, uint nodeIndex) internal nonReentrant {
         uint index = findNode(groupIndex, nodeIndex);
-        require(index < IGroupsData(channels[groupIndex].dataAddress).getNumberOfNodesInGroup(), "Node is not in this group");
-        require(isNodeByMessageSender(nodeIndex, msg.sender), "Node does not exist for message sender");
-        require(!channels[groupIndex].broadcasted[index], "This node is already broadcasted");
+
+        bool broadcasted = channels[groupIndex].broadcasted[index];
         channels[groupIndex].broadcasted[index] = true;
+
+        require(index < IGroupsData(channels[groupIndex].dataAddress).getNumberOfNodesInGroup(groupIndex), "Node is not in this group");
+        require(isNodeByMessageSender(nodeIndex, msg.sender), "Node does not exist for message sender");
+        require(!broadcasted, "This node is already broadcasted");
     }
 
     function findNode(bytes32 groupIndex, uint nodeIndex) internal view returns (uint index) {
-        uint[] memory nodesInGroup = IGroupsData(channels[groupIndex].dataAddress).getNodesInGroup();
+        uint[] memory nodesInGroup = IGroupsData(channels[groupIndex].dataAddress).getNodesInGroup(groupIndex);
         for (index = 0; index < nodesInGroup.length; index++) {
             if (nodesInGroup[index] == nodeIndex) {
                 return index;
@@ -176,7 +169,7 @@ contract SkaleDKG is Permissions {
 
     function isNodeByMessageSender(uint nodeIndex, address from) internal view returns (bool) {
         address nodesDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
-        INodesData(nodesDataAddress).isNodeExist(from, nodeIndex);
+        return INodesData(nodesDataAddress).isNodeExist(from, nodeIndex);
     }
 
     function addFp2(Fp2 memory a, Fp2 memory b) internal view returns (Fp2 memory) {

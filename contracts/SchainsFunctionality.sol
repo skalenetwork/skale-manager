@@ -20,28 +20,12 @@
 pragma solidity ^0.5.0;
 
 import "./Permissions.sol";
+import "./interfaces/ISchainsData.sol";
+import "./interfaces/IConstants.sol";
+import "./interfaces/IGroupsData.sol";
+import "./interfaces/ISchainsFunctionality.sol";
+import "./interfaces/INodesData.sol";
 
-interface ISchainsData {
-    function initializeSchain(
-        string calldata name,
-        address from,
-        uint lifetime,
-        uint deposit) external;
-    function setSchainIndex(bytes32 schainId, address from) external;
-    function removeSchain(bytes32 schainId, address from) external;
-    function removeSchainForNode(uint nodeIndex, uint schainIndex) external;
-    function isTimeExpired(bytes32 schainId) external view returns (bool);
-    function isOwnerAddress(address from, bytes32 schainId) external view returns (bool);
-    function isSchainNameAvailable(string calldata name) external view returns (bool);
-    function getSchainsPartOfNode(bytes32 schainId) external view returns (uint);
-    function getLengthOfSchainsForNode(uint nodeIndex) external view returns (uint);
-}
-
-interface IConstants {
-    function NODE_DEPOSIT() external view returns (uint);
-    function SECONDS_TO_YEAR() external view returns (uint32);
-    //function NUMBER_OF_NODES_FOR_MEDIUM_TEST_SCHAIN() external view returns (uint);
-}
 
 interface ISchainsFunctionality1 {
     function getNodesDataFromTypeOfSchain(uint typeOfSchain) external view returns (uint, uint);
@@ -51,19 +35,14 @@ interface ISchainsFunctionality1 {
         uint numberOfNodes,
         uint partOfNode) external;
     function findSchainAtSchainsForNode(uint nodeIndex, bytes32 schainId) external view returns (uint);
-    function addSpace(uint nodeIndex, uint partOfNode) external;
     function deleteGroup(bytes32 groupIndex) external;
-}
-
-interface IGroupsData {
-    function getNodesInGroup(bytes32 schainId) external view returns (uint[] memory);
 }
 
 
 /**
  * @title SchainsFunctionality - contract contains all functionality logic to manage Schains
  */
-contract SchainsFunctionality is Permissions {
+contract SchainsFunctionality is Permissions, ISchainsFunctionality {
 
     // informs that Schain is created
     event SchainCreated(
@@ -144,7 +123,7 @@ contract SchainsFunctionality is Permissions {
         uint down;
         (up, down) = coefficientForPrice(constantsAddress);*/
         if (divisor == 0) {
-            return 1000000000000000000;
+            return 1e18;
         } else {
             uint up = nodeDeposit * numberOfNodes * 2 * lifetime;
             uint down = divisor * IConstants(constantsAddress).SECONDS_TO_YEAR();
@@ -188,7 +167,7 @@ contract SchainsFunctionality is Permissions {
                 schainIndex < ISchainsData(dataAddress).getLengthOfSchainsForNode(nodesInGroup[i]),
                 "Some Node does not contain given Schain");
             ISchainsData(dataAddress).removeSchainForNode(nodesInGroup[i], schainIndex);
-            ISchainsFunctionality1(schainsFunctionality1Address).addSpace(nodesInGroup[i], partOfNode);
+            addSpace(nodesInGroup[i], partOfNode);
         }
 
         ISchainsFunctionality1(schainsFunctionality1Address).deleteGroup(schainId);
@@ -239,6 +218,33 @@ contract SchainsFunctionality is Permissions {
         name = new string(data.length - 36);
         for (uint i = 0; i < bytes(name).length; ++i) {
             bytes(name)[i] = data[36 + i];
+        }
+    }
+
+    /**
+     * @dev addSpace - return occupied space to Node
+     * @param nodeIndex - index of Node at common array of Nodes
+     * @param partOfNode - divisor of given type of Schain
+     */
+    function addSpace(uint nodeIndex, uint partOfNode) internal {
+        address nodesDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
+        address constantsAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("Constants")));
+        uint subarrayLink;
+        bool isNodeFull;
+        (subarrayLink, isNodeFull) = INodesData(nodesDataAddress).nodesLink(nodeIndex);
+        // adds space
+        if (isNodeFull) {
+            if (partOfNode != 0) {
+                INodesData(nodesDataAddress).addSpaceToFullNode(subarrayLink, IConstants(constantsAddress).MEDIUM_DIVISOR() / partOfNode);
+            } else {
+                INodesData(nodesDataAddress).addSpaceToFullNode(subarrayLink, partOfNode);
+            }
+        } else {
+            if (partOfNode != 0) {
+                INodesData(nodesDataAddress).addSpaceToFractionalNode(subarrayLink, IConstants(constantsAddress).TINY_DIVISOR() / partOfNode);
+            } else {
+                INodesData(nodesDataAddress).addSpaceToFractionalNode(subarrayLink, partOfNode);
+            }
         }
     }
 }

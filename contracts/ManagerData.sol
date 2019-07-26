@@ -20,12 +20,13 @@
 pragma solidity ^0.5.0;
 
 import "./Permissions.sol";
+import "./interfaces/IManagerData.sol";
 
 
 /**
  * @title ManagerData - Data contract for SkaleManager
  */
-contract ManagerData is Permissions {
+contract ManagerData is IManagerData, Permissions {
 
     // miners capitalization
     uint public minersCap;
