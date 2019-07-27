@@ -187,7 +187,7 @@ contract SchainsFunctionality1 is GroupsFunctionality {
             (nodeIndex, freeSpace) = INodesData(nodesDataAddress).fullNodes(indexOfNode);
         } else if (partOfNode == IConstants(constantsAddress).TINY_DIVISOR() || partOfNode == IConstants(constantsAddress).SMALL_DIVISOR()) {
             (nodeIndex, freeSpace) = INodesData(nodesDataAddress).fractionalNodes(indexOfNode);
-        } else if (partOfNode == IConstants(constantsAddress).MEDIUM_TEST_DIVISOR()) {
+        } else if (partOfNode == IConstants(constantsAddress).MEDIUM_TEST_DIVISOR() || partOfNode == 0) {
             bool isNodeFull;
             uint subarrayLink;
             (subarrayLink, isNodeFull) = INodesData(nodesDataAddress).nodesLink(indexOfNode);
