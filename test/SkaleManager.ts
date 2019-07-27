@@ -291,7 +291,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
                     await skaleManager.getBounty(1, {from: validator});
 
                     const balanceAfter = web3.utils.toBN(await skaleToken.balanceOf(validator));
-                    
+
                     expect(balanceAfter.sub(balanceBefore).eq(bounty)).to.be.true;
                 });
             });
