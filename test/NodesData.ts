@@ -276,7 +276,7 @@ contract("NodesData", ([owner, validator]) => {
                 await nodesData.removeSpaceFromFractionalNode(0, 129);
                 const nodesFillingAfter = await nodesData.fractionalNodes(0);
                 const spaceAfter = nodesFillingAfter["1"];
-                spaceBefore.should.be.eventually.deep.equal(spaceAfter);
+                parseInt(spaceBefore.toString(), 10).should.be.equal(parseInt(spaceAfter.toString(), 10));
             });
         });
 
@@ -304,7 +304,7 @@ contract("NodesData", ([owner, validator]) => {
                 await nodesData.removeSpaceFromFullNode(0, 129);
                 const nodesFillingAfter = await nodesData.fullNodes(0);
                 const spaceAfter = nodesFillingAfter["1"];
-                spaceBefore.should.be.eventually.deep.equal(spaceAfter);
+                parseInt(spaceBefore.toString(), 10).should.be.equal(parseInt(spaceAfter.toString(), 10));
             });
 
         });
