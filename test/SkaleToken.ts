@@ -16,7 +16,7 @@ contract("SkaleToken", ([owner, holder, receiver, nilAddress, accountWith99]) =>
   let skaleToken: SkaleTokenInstance;
   let contractManager: ContractManagerInstance;
   const TOKEN_CAP: number = 5000000000;
-  const TOTAL_SUPPLY = 1000000;
+  const TOTAL_SUPPLY = 10000000;
 
   console.log("Holder", holder);
   console.log("Owner", owner);
@@ -98,7 +98,7 @@ contract("SkaleToken", ([owner, holder, receiver, nilAddress, accountWith99]) =>
 
   it("An owner address should have more than 0 tokens", async () => {
     const balance = new BigNumber(await skaleToken.balanceOf(owner));
-    assert(balance.isEqualTo(toWei(1000000)));
+    assert(balance.isEqualTo(toWei(10000000)));
   });
 
   it("Should emit a Transfer Event", async () => {

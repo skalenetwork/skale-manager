@@ -336,7 +336,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
                     schain[0].should.be.equal("d2");
                 });
 
-                describe("wheт schain is created", async () => {
+                describe("when schain is created", async () => {
                     beforeEach(async () => {
                         await skaleToken.transferWithData(
                             skaleManager.address,
