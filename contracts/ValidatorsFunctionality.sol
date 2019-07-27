@@ -184,11 +184,11 @@ contract ValidatorsFunctionality is GroupsFunctionality, IValidatorsFunctionalit
             uint start = 0;
             uint finish = lengthOfArray - 1;
             uint numberOfNodes = IGroupsData(dataAddress).getNumberOfNodesInGroup(validatorIndex);
-            if (lengthOfArray > ((numberOfNodes / 3) + (numberOfNodes % 3 == 0 ? 0 : 1))) {
+            if (lengthOfArray > ((numberOfNodes / 3) + (numberOfNodes % 3 == 0 ? 0 : 1)) && numberOfNodes >= lengthOfArray) {
                 uint diff = lengthOfArray - ((numberOfNodes / 3) + (numberOfNodes % 3 == 0 ? 0 : 1));
                 start += diff / 2;
                 finish -= diff / 2 + diff % 2;
-        }
+            }
             uint32 divisor = uint32(finish - start + 1);
 
             while (start <= finish) {

@@ -159,6 +159,12 @@ contract("ValidatorsFunctionality", ([owner, validator]) => {
     // preparation
     const indexNode1 = 1;
     const validatorIndex1 = web3.utils.soliditySha3(indexNode1);
+    await validatorsData.addGroup(
+      validatorIndex1, 1, "0x0000000000000000000000000000000000000000000000000000000000000000", {from: owner},
+      );
+    await validatorsData.setNodeInGroup(
+      validatorIndex1, indexNode1, {from: owner},
+      );
     await validatorsData.addVerdict(
       validatorIndex1, 10, 0, {from: owner},
       );

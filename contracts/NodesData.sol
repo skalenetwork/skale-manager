@@ -185,7 +185,6 @@ contract NodesData is INodesData, Permissions {
      * @param nodeIndex - index of Node
      */
     function setNodeLeft(uint nodeIndex) public allow("NodesFunctionality") {
-        nodes[nodeIndex].status = NodeStatus.Left;
         nodesIPCheck[nodes[nodeIndex].ip] = false;
         nodesNameCheck[keccak256(abi.encodePacked(nodes[nodeIndex].name))] = false;
         // address ownerOfNode = nodes[nodeIndex].owner;
@@ -197,6 +196,7 @@ contract NodesData is INodesData, Permissions {
         } else {
             numberOfLeavingNodes--;
         }
+        nodes[nodeIndex].status = NodeStatus.Left;
         numberOfLeftNodes++;
     }
 
