@@ -164,6 +164,7 @@ contract GroupsData is IGroupsData, Permissions {
         groups[groupIndex].active = false;
         delete groups[groupIndex].groupData;
         delete groups[groupIndex].recommendedNumberOfNodes;
+        delete groups[groupIndex].groupsPublicKey;
     }
 
     /**

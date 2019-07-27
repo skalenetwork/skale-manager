@@ -96,19 +96,19 @@ contract("ConstantsHolder", ([deployer, user]) => {
     parseInt(bn.toString(), 10).should.be.equal(186624000);
   });
 
-  it("NUMBER_OF_VALIDATORS should be equal 21", async () => {
+  it("NUMBER_OF_VALIDATORS should be equal 24", async () => {
     const bn = new BigNumber(await constantsHolder.NUMBER_OF_VALIDATORS());
-    parseInt(bn.toString(), 10).should.be.equal(21);
+    parseInt(bn.toString(), 10).should.be.equal(24);
   });
 
-  it("rewardPeriod should be equal 600", async () => {
+  it("rewardPeriod should be equal 3600", async () => {
     const bn = new BigNumber(await constantsHolder.rewardPeriod());
-    parseInt(bn.toString(), 10).should.be.equal(600);
+    parseInt(bn.toString(), 10).should.be.equal(3600);
   });
 
-  it("deltaPeriod should be equal 240", async () => {
+  it("deltaPeriod should be equal 300", async () => {
     const bn = new BigNumber(await constantsHolder.deltaPeriod());
-    parseInt(bn.toString(), 10).should.be.equal(240);
+    parseInt(bn.toString(), 10).should.be.equal(300);
   });
 
   it("lastTimeUnderloaded should be equal 0", async () => {

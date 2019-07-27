@@ -10,6 +10,7 @@ interface ISchainsData {
     function setSchainPartOfNode(bytes32 schainId, uint partOfNode) external;
     function getLengthOfSchainsForNode(uint nodeIndex) external view returns (uint);
     function schainsForNodes(uint nodeIndex, uint indexOfSchain) external view returns (bytes32);
+    function getSchainOwner(bytes32 schainId) external view returns (address);
     function initializeSchain(
         string calldata name,
         address from,

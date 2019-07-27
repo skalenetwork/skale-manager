@@ -157,6 +157,7 @@ contract SchainsData is ISchainsData, GroupsData {
         schainsAtSystem.length--;
 
         delete schains[schainId];
+        numberOfSchains--;
     }
 
     /**
@@ -235,6 +236,10 @@ contract SchainsData is ISchainsData, GroupsData {
      */
     function getSchainIdFromSchainName(string memory schainName) public pure returns (bytes32) {
         return keccak256(abi.encodePacked(schainName));
+    }
+
+    function getSchainOwner(bytes32 schainId) public view returns (address) {
+        return schains[schainId].owner;
     }
 
     /**

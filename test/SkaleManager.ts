@@ -131,7 +131,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
 
     describe("when validator has SKALE tokens", async () => {
         beforeEach(async () => {
-            skaleToken.transfer(validator, "0x3635c9adc5dea00000", {from: owner});
+            skaleToken.transfer(validator, "0x410D586A20A4C00000", {from: owner});
         });
 
         it("should fail to process token fallback if operation type is wrong", async () => {
@@ -172,6 +172,18 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
                     "1122334455667788990011223344556677889900112233445566778899001122" + // public key
                     "6432", // name,
                     {from: validator});
+                await skaleToken.transferWithData(
+                    skaleManager.address,
+                    "0x56bc75e2d63100000",
+                    "0x01" + // create node
+                    "2161" + // port
+                    "0000" + // nonce
+                    "7f000002" + // ip
+                    "7f000002" + // public ip
+                    "1122334455667788990011223344556677889900112233445566778899001122" +
+                    "1122334455667788990011223344556677889900112233445566778899001122" + // public key
+                    "6433", // name,
+                    {from: validator});
             });
 
             it("should fail to init withdrawing of deposit of someone else's node", async () => {
@@ -190,7 +202,15 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
 
                 await nodesData.isNodeLeft(0).should.be.eventually.true;
                 await skaleToken.balanceOf(validator)
-                    .should.be.eventually.deep.equal(web3.utils.toBN("0x30ca024f987b900000"));
+                    .should.be.eventually.deep.equal(web3.utils.toBN("0x3635C9ADC5DEA00000"));
+            });
+
+            it("should remove the node by root", async () => {
+                await skaleManager.deleteNodeByRoot(1, {from: owner});
+
+                await nodesData.isNodeLeft(1).should.be.eventually.true;
+                await skaleToken.balanceOf(validator)
+                    .should.be.eventually.deep.equal(web3.utils.toBN("0x3635C9ADC5DEA00000"));
             });
 
             describe("when withdrawing of deposit is initialized", async () => {
@@ -210,7 +230,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
 
                     await nodesData.isNodeLeft(0).should.be.eventually.true;
                     await skaleToken.balanceOf(validator)
-                        .should.be.eventually.deep.equal(web3.utils.toBN("0x3635c9adc5dea00000"));
+                        .should.be.eventually.deep.equal(web3.utils.toBN("0x3ba1910bf341b00000"));
                 });
             });
         });
@@ -263,7 +283,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
             });
 
             it("should send validator verdict", async () => {
-                skipTime(web3, 400);
+                skipTime(web3, 3400);
                 await skaleManager.sendVerdict(0, 1, 0, 50, {from: validator});
 
                 await validatorsData.verdicts(web3.utils.soliditySha3(1), 0, 0)
@@ -274,7 +294,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
 
             describe("when validator verdict is received", async () => {
                 beforeEach(async () => {
-                    skipTime(web3, 400);
+                    skipTime(web3, 3400);
                     await skaleManager.sendVerdict(0, 1, 0, 50, {from: validator});
                 });
 
@@ -284,12 +304,14 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
                 });
 
                 it("should get bounty", async () => {
+                    skipTime(web3, 200);
                     const balanceBefore = web3.utils.toBN(await skaleToken.balanceOf(validator));
-                    const bounty = web3.utils.toBN("148843545191281816796");
+                    const bounty = web3.utils.toBN("893061271147690900777");
 
                     await skaleManager.getBounty(1, {from: validator});
 
                     const balanceAfter = web3.utils.toBN(await skaleToken.balanceOf(validator));
+
                     expect(balanceAfter.sub(balanceBefore).eq(bounty)).to.be.true;
                 });
             });
@@ -336,6 +358,122 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
                         await skaleManager.deleteSchain("d2", {from: developer});
 
                         await schainsData.getSchains().should.be.eventually.empty;
+                    });
+                });
+
+                describe("when another schain is created", async () => {
+                    beforeEach(async () => {
+                        await skaleToken.transferWithData(
+                            skaleManager.address,
+                            "0x1cc2d6d04a2ca",
+                            "0x10" + // create schain
+                            "0000000000000000000000000000000000000000000000000000000000000005" + // lifetime
+                            "03" + // type of schain
+                            "0000" + // nonce
+                            "6433", // name
+                            {from: developer});
+                    });
+
+                    it("should fail to delete schain if sender is not owner of it", async () => {
+                        await skaleManager.deleteSchain("d3", {from: hacker})
+                            .should.be.eventually.rejectedWith("Message sender is not an owner of Schain");
+                    });
+
+                    it("should delete schain by root", async () => {
+                        await skaleManager.deleteSchainByRoot("d3", {from: owner});
+
+                        await schainsData.getSchains().should.be.eventually.empty;
+                    });
+                });
+            });
+        });
+
+        describe("when 40 nodes are in the system", async () => {
+            beforeEach(async () => {
+                skaleToken.transfer(validator, "0xD8D726B7177A800000", {from: owner});
+
+                for (let i = 0; i < 40; ++i) {
+                    await skaleToken.transferWithData(
+                        skaleManager.address,
+                        "0x56bc75e2d63100000",
+                        "0x01" + // create node
+                        "2161" + // port
+                        "0000" + // nonce
+                        "7f0000" + ("0" + (i + 1).toString(16)).slice(-2) + // ip
+                        "7f000001" + // public ip
+                        "1122334455667788990011223344556677889900112233445566778899001122" +
+                        "1122334455667788990011223344556677889900112233445566778899001122" + // public key
+                        "64322d" + (48 + i + 1).toString(16), // name,
+                        {from: validator});
+                }
+            });
+
+            describe("when developer has SKALE tokens", async () => {
+                beforeEach(async () => {
+                    skaleToken.transfer(developer, "0xD8D726B7177A800000", {from: owner});
+                });
+
+                it("should create 2 schains", async () => {
+                    await skaleToken.transferWithData(
+                        skaleManager.address,
+                        "0x1cc2d6d04a2ca",
+                        "0x10" + // create schain
+                        "0000000000000000000000000000000000000000000000000000000000000005" + // lifetime
+                        "03" + // type of schain
+                        "0000" + // nonce
+                        "6432", // name
+                        {from: developer});
+
+                    const schain1 = await schainsData.schains(web3.utils.soliditySha3("d2"));
+                    schain1[0].should.be.equal("d2");
+
+                    await skaleToken.transferWithData(
+                        skaleManager.address,
+                        "0x1cc2d6d04a2ca",
+                        "0x10" + // create schain
+                        "0000000000000000000000000000000000000000000000000000000000000005" + // lifetime
+                        "03" + // type of schain
+                        "0000" + // nonce
+                        "6433", // name
+                        {from: developer});
+
+                    const schain2 = await schainsData.schains(web3.utils.soliditySha3("d3"));
+                    schain2[0].should.be.equal("d3");
+                });
+
+                describe("when schains are created", async () => {
+                    beforeEach(async () => {
+                        await skaleToken.transferWithData(
+                            skaleManager.address,
+                            "0x1cc2d6d04a2ca",
+                            "0x10" + // create schain
+                            "0000000000000000000000000000000000000000000000000000000000000005" + // lifetime
+                            "03" + // type of schain
+                            "0000" + // nonce
+                            "6432", // name
+                            {from: developer});
+
+                        await skaleToken.transferWithData(
+                            skaleManager.address,
+                            "0x1cc2d6d04a2ca",
+                            "0x10" + // create schain
+                            "0000000000000000000000000000000000000000000000000000000000000005" + // lifetime
+                            "03" + // type of schain
+                            "0000" + // nonce
+                            "6433", // name
+                            {from: developer});
+                    });
+
+                    it("should delete first schain", async () => {
+                        await skaleManager.deleteSchain("d2", {from: developer});
+
+                        await schainsData.numberOfSchains().should.be.eventually.deep.equal(web3.utils.toBN(1));
+                    });
+
+                    it("should delete second schain", async () => {
+                        await skaleManager.deleteSchain("d3", {from: developer});
+
+                        await schainsData.numberOfSchains().should.be.eventually.deep.equal(web3.utils.toBN(1));
                     });
                 });
             });

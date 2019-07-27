@@ -80,6 +80,27 @@ contract SkaleManager is Permissions {
     function deleteNode(uint nodeIndex) public {
         address nodesFunctionalityAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesFunctionality")));
         INodesFunctionality(nodesFunctionalityAddress).removeNode(msg.sender, nodeIndex);
+        address validatorsFunctionalityAddress = ContractManager(contractsAddress)
+            .contracts(keccak256(abi.encodePacked("ValidatorsFunctionality")));
+        IValidatorsFunctionality(validatorsFunctionalityAddress).deleteValidatorByRoot(nodeIndex);
+    }
+
+    function deleteNodeByRoot(uint nodeIndex) public onlyOwner {
+        address nodesFunctionalityAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesFunctionality")));
+        INodesFunctionality(nodesFunctionalityAddress).removeNodeByRoot(nodeIndex);
+        address validatorsFunctionalityAddress = ContractManager(contractsAddress)
+            .contracts(keccak256(abi.encodePacked("ValidatorsFunctionality")));
+        IValidatorsFunctionality(validatorsFunctionalityAddress).deleteValidatorByRoot(nodeIndex);
+    }
+
+    function deleteSchain(string memory name) public {
+        address schainsFunctionalityAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("SchainsFunctionality")));
+        ISchainsFunctionality(schainsFunctionalityAddress).deleteSchain(msg.sender, keccak256(abi.encodePacked(name)));
+    }
+
+    function deleteSchainByRoot(string memory name) public {
+        address schainsFunctionalityAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("SchainsFunctionality")));
+        ISchainsFunctionality(schainsFunctionalityAddress).deleteSchainByRoot(keccak256(abi.encodePacked(name)));
     }
 
     function sendVerdict(
@@ -102,6 +123,7 @@ contract SkaleManager is Permissions {
     function getBounty(uint nodeIndex) public {
         address nodesDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
         require(INodesData(nodesDataAddress).isNodeExist(msg.sender, nodeIndex), "Node does not exist for Message sender");
+        require(INodesData(nodesDataAddress).isTimeForReward(nodeIndex), "Not time for bounty");
         bool nodeIsActive = INodesData(nodesDataAddress).isNodeActive(nodeIndex);
         bool nodeIsLeaving = INodesData(nodesDataAddress).isNodeLeaving(nodeIndex);
         require(nodeIsActive || nodeIsLeaving, "Node is not Active and is not Leaving");
@@ -126,11 +148,6 @@ contract SkaleManager is Permissions {
             bounty,
             uint32(block.timestamp),
             gasleft());
-    }
-
-    function deleteSchain(string memory name) public {
-        address schainsFunctionalityAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("SchainsFunctionality")));
-        ISchainsFunctionality(schainsFunctionalityAddress).deleteSchain(msg.sender, keccak256(abi.encodePacked(name)));
     }
 
     function manageBounty(
@@ -167,8 +184,8 @@ contract SkaleManager is Permissions {
         }
 
         if (bountyForMiner > 0) {
-            if (latency > 150) {
-                bountyForMiner = (150 * bountyForMiner) / latency;
+            if (latency > 150000) {
+                bountyForMiner = (150000 * bountyForMiner) / latency;
             }
             require(
                 ISkaleToken(skaleTokenAddress).mint(from, uint(bountyForMiner)),

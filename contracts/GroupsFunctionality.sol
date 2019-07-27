@@ -22,6 +22,7 @@ pragma solidity ^0.5.0;
 import "./Permissions.sol";
 import "./interfaces/IGroupsData.sol";
 
+
 /**
  * @title SkaleVerifier - interface of SkaleVerifier
  */

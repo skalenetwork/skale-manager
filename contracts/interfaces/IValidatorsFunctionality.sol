@@ -9,4 +9,5 @@ interface IValidatorsFunctionality {
         uint32 downtime,
         uint32 latency) external;
     function calculateMetrics(uint nodeIndex) external returns (uint32, uint32);
+    function deleteValidatorByRoot(uint nodeIndex) external;
 }

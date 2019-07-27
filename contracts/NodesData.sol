@@ -118,6 +118,7 @@ contract NodesData is INodesData, Permissions {
             ip: ip,
             publicIP: publicIP,
             port: port,
+            //owner: from,
             publicKey: publicKey,
             startDate: uint32(block.timestamp),
             leavingDate: uint32(0),
@@ -186,14 +187,17 @@ contract NodesData is INodesData, Permissions {
     function setNodeLeft(uint nodeIndex) public allow("NodesFunctionality") {
         nodesIPCheck[nodes[nodeIndex].ip] = false;
         nodesNameCheck[keccak256(abi.encodePacked(nodes[nodeIndex].name))] = false;
+        // address ownerOfNode = nodes[nodeIndex].owner;
+        // nodeIndexes[ownerOfNode].isNodeExist[nodeIndex] = false;
+        // nodeIndexes[ownerOfNode].numberOfNodes--;
         delete nodesNameToIndex[keccak256(abi.encodePacked(nodes[nodeIndex].name))];
         if (nodes[nodeIndex].status == NodeStatus.Active) {
             numberOfActiveNodes--;
         } else {
             numberOfLeavingNodes--;
         }
-        numberOfLeftNodes++;
         nodes[nodeIndex].status = NodeStatus.Left;
+        numberOfLeftNodes++;
     }
 
     /**

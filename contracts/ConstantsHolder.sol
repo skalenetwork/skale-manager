@@ -72,17 +72,17 @@ contract ConstantsHolder is IConstants, Permissions {
     uint32 public constant SIX_YEARS = 186624000;
 
     // initial number of validators
-    uint public constant NUMBER_OF_VALIDATORS = 21;
+    uint public constant NUMBER_OF_VALIDATORS = 24;
 
     // Reward period - 30 days (each 30 days Node would be granted for bounty)
-    uint32 public rewardPeriod = 600; // Test parameters
+    uint32 public rewardPeriod = 3600; // Test parameters
 
     /**
      * Delta period - 1 hour (1 hour before Reward period became Validators need
      * to send Verdicts and 1 hour after Reward period became Node need to come
      * and get Bounty)
      */
-    uint32 public deltaPeriod = 240;  // Test parameters
+    uint32 public deltaPeriod = 300;  // Test parameters
 
     /**
      * Last time when system was underloaded

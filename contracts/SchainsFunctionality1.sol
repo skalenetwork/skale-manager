@@ -122,7 +122,7 @@ contract SchainsFunctionality1 is GroupsFunctionality {
         address dataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked(dataName)));
         require(IGroupsData(dataAddress).isGroupActive(groupIndex), "Group is not active");
         bytes32 groupData = IGroupsData(dataAddress).getGroupData(groupIndex);
-        uint hash = uint(keccak256(abi.encodePacked(uint(blockhash(block.number)), groupIndex)));
+        uint hash = uint(keccak256(abi.encodePacked(uint(blockhash(block.number - 1)), groupIndex)));
         uint numberOfNodes;
         uint space;
 

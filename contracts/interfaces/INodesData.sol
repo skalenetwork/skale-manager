@@ -14,6 +14,7 @@ interface INodesData {
     function isNodeActive(uint nodeIndex) external view returns (bool);
     function isNodeLeaving(uint nodeIndex) external view returns (bool);
     function isLeavingPeriodExpired(uint nodeIndex) external view returns (bool);
+    function isTimeForReward(uint nodeIndex) external view returns (bool);
     function addNode(
         address from,
         string calldata name,

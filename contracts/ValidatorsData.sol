@@ -60,6 +60,10 @@ contract ValidatorsData is GroupsData {
         validatedNodes[validatorIndex].length--;
     }
 
+    function removeAllValidatedNodes(bytes32 validatorIndex) public allow(executorName) {
+        delete validatedNodes[validatorIndex];
+    }
+
     function removeAllVerdicts(bytes32 validatorIndex) public allow(executorName) {
         verdicts[validatorIndex].length = 0;
     }

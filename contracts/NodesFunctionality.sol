@@ -147,6 +147,20 @@ contract NodesFunctionality is Permissions, INodesFunctionality {
         }
     }
 
+    function removeNodeByRoot(uint nodeIndex) public allow("SkaleManager") {
+        address nodesDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
+        INodesData(nodesDataAddress).setNodeLeft(nodeIndex);
+
+        bool isNodeFull;
+        uint subarrayLink;
+        (subarrayLink, isNodeFull) = INodesData(nodesDataAddress).nodesLink(nodeIndex);
+        if (isNodeFull) {
+            INodesData(nodesDataAddress).removeFullNode(subarrayLink);
+        } else {
+            INodesData(nodesDataAddress).removeFractionalNode(subarrayLink);
+        }
+    }
+
     /**
      * @dev initWithdrawdeposit - initiate a procedure of quiting the system
      * function could be only run by SkaleManager

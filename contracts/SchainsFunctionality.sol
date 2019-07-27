@@ -174,6 +174,27 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
         ISchainsData(dataAddress).removeSchain(schainId, from);
     }
 
+    function deleteSchainByRoot(bytes32 schainId) public allow(executorName) {
+        address dataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked(dataName)));
+        address schainsFunctionality1Address = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("SchainsFunctionality1")));
+
+        // removes Schain from Nodes
+        uint[] memory nodesInGroup = IGroupsData(dataAddress).getNodesInGroup(schainId);
+        uint partOfNode = ISchainsData(dataAddress).getSchainsPartOfNode(schainId);
+        for (uint i = 0; i < nodesInGroup.length; i++) {
+            uint schainIndex = ISchainsFunctionality1(schainsFunctionality1Address).findSchainAtSchainsForNode(nodesInGroup[i], schainId);
+            require(
+                schainIndex < ISchainsData(dataAddress).getLengthOfSchainsForNode(nodesInGroup[i]),
+                "Some Node does not contain given Schain");
+            ISchainsData(dataAddress).removeSchainForNode(nodesInGroup[i], schainIndex);
+            addSpace(nodesInGroup[i], partOfNode);
+        }
+
+        ISchainsFunctionality1(schainsFunctionality1Address).deleteGroup(schainId);
+        address from = ISchainsData(dataAddress).getSchainOwner(schainId);
+        ISchainsData(dataAddress).removeSchain(schainId, from);
+    }
+
     function initializeSchainInSchainsData(
         string memory name,
         address from,

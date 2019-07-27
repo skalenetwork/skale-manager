@@ -127,7 +127,7 @@ contract("NodesData", ([owner, validator]) => {
         it("should check if time for reward has come", async () => {
             // TODO: change rewart period
 
-            skipTime(web3, 590);
+            skipTime(web3, 3590);
 
             await nodesData.isTimeForReward(0).should.be.eventually.false;
 
@@ -158,7 +158,7 @@ contract("NodesData", ([owner, validator]) => {
 
         it("should calculate node next reward date", async () => {
             const currentTime = web3.utils.toBN((await web3.eth.getBlock("latest")).timestamp);
-            const rewardPeriod = web3.utils.toBN(600);
+            const rewardPeriod = web3.utils.toBN(3600);
             const nextRewardTime = currentTime.add(rewardPeriod);
             const obtainedNextRewardTime = web3.utils.toBN(await nodesData.getNodeNextRewardDate(0));
 
