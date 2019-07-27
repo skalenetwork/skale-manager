@@ -157,6 +157,7 @@ contract SchainsData is ISchainsData, GroupsData {
         schainsAtSystem.length--;
 
         delete schains[schainId];
+        numberOfSchains--;
     }
 
     /**
