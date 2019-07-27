@@ -246,4 +246,69 @@ contract("NodesData", ([owner, validator]) => {
 
     });
 
+    describe("when two nodes are added", async () => {
+        beforeEach(async () => {
+            await nodesData.addNode(validator, "d2", "0x7f000001", "0x7f000002", 8545, "0x1122334455");
+            await nodesData.addNode(validator, "d3", "0x7f000002", "0x7f000003", 8545, "0x1122334455");
+        });
+
+        describe("when nodes are registered as fractional", async () => {
+            beforeEach(async () => {
+                await nodesData.addFractionalNode(0);
+                await nodesData.addFractionalNode(1);
+            });
+
+            it("should remove first fractional node", async () => {
+                await nodesData.removeFractionalNode(0);
+
+                await nodesData.getNumberOfFractionalNodes().should.be.eventually.deep.equal(web3.utils.toBN(1));
+            });
+
+            it("should remove second fractional node", async () => {
+                await nodesData.removeFractionalNode(1);
+
+                await nodesData.getNumberOfFractionalNodes().should.be.eventually.deep.equal(web3.utils.toBN(1));
+            });
+
+            it("should not remove larger space from fractional node than its has", async () => {
+                let nodesFillingBefore = await nodesData.fractionalNodes(0);
+                let spaceBefore = nodesFillingBefore['1'];
+                await nodesData.removeSpaceFromFractionalNode(0, 129);
+                let nodesFillingAfter = await nodesData.fractionalNodes(0);
+                let spaceAfter = nodesFillingAfter['1'];
+                spaceBefore.should.be.deep.equal(spaceAfter);
+            });
+        });
+
+        describe("when nodes are registered as full", async () => {
+            beforeEach(async () => {
+                await nodesData.addFullNode(0);
+                await nodesData.addFullNode(1);
+            });
+
+            it("should remove first full node", async () => {
+                await nodesData.removeFullNode(0);
+
+                await nodesData.getNumberOfFullNodes().should.be.eventually.deep.equal(web3.utils.toBN(1));
+            });
+
+            it("should remove second full node", async () => {
+                await nodesData.removeFullNode(1);
+
+                await nodesData.getNumberOfFullNodes().should.be.eventually.deep.equal(web3.utils.toBN(1));
+            });
+
+            it("should not remove larger space from full node than its has", async () => {
+                let nodesFillingBefore = await nodesData.fullNodes(0);
+                let spaceBefore = nodesFillingBefore['1'];
+                await nodesData.removeSpaceFromFullNode(0, 129);
+                let nodesFillingAfter = await nodesData.fullNodes(0);
+                let spaceAfter = nodesFillingAfter['1'];
+                spaceBefore.should.be.deep.equal(spaceAfter);
+            });
+
+        });
+
+    });
+
 });

@@ -189,4 +189,95 @@ contract("NodesFunctionality", ([owner, validator]) => {
             node[8].should.be.deep.equal(web3.utils.toBN(2));
         });
     });
+
+    describe("when two nodes are created", async () => {
+        beforeEach(async () => {
+            await nodesFunctionality.createNode(
+                validator,
+                "0x56bc75e2d63100000",
+                "0x01" +
+                "2161" + // port
+                "0000" + // nonce
+                "7f000001" + // ip
+                "7f000001" + // public ip
+                "1122334455667788990011223344556677889900112233445566778899001122" +
+                "1122334455667788990011223344556677889900112233445566778899001122" + // public key
+                "6432"); // name
+            await nodesFunctionality.createNode(
+                validator,
+                "0x56bc75e2d63100000",
+                "0x01" +
+                "2161" + // port
+                "0000" + // nonce
+                "7f000002" + // ip
+                "7f000002" + // public ip
+                "1122334455667788990011223344556677889900112233445566778899001122" +
+                "1122334455667788990011223344556677889900112233445566778899001122" + // public key
+                "6433"); // name
+        });
+
+        it("should delete first node", async () => {
+            await nodesFunctionality.removeNode(validator, 0);
+
+            await nodesData.numberOfActiveNodes().should.be.eventually.deep.equal(web3.utils.toBN(1));
+        });
+
+        it("should delete second node", async () => {
+            await nodesFunctionality.removeNode(validator, 1);
+
+            await nodesData.numberOfActiveNodes().should.be.eventually.deep.equal(web3.utils.toBN(1));
+        });
+
+        it("should init withdrawing deposit from first node", async () => {
+            await nodesFunctionality.initWithdrawDeposit(validator, 0);
+
+            await nodesData.numberOfActiveNodes().should.be.eventually.deep.equal(web3.utils.toBN(1));
+        });
+
+        it("should init withdrawing deposit from second node", async () => {
+            await nodesFunctionality.initWithdrawDeposit(validator, 1);
+
+            await nodesData.numberOfActiveNodes().should.be.eventually.deep.equal(web3.utils.toBN(1));
+        });
+
+        it("should complete withdrawing deposit from first node", async () => {
+            await nodesFunctionality.completeWithdrawDeposit(owner, 0)
+                .should.be.eventually.rejectedWith("Node does not exist for message sender");
+
+            await nodesFunctionality.completeWithdrawDeposit(validator, 0)
+                .should.be.eventually.rejectedWith("Node is no Leaving");
+
+            await nodesFunctionality.initWithdrawDeposit(validator, 0);
+
+            await nodesFunctionality.completeWithdrawDeposit(validator, 0)
+                .should.be.eventually.rejectedWith("eaving period is not expired");
+
+            skipTime(web3, 5);
+
+            await nodesFunctionality.completeWithdrawDeposit(validator, 0);
+
+            const node = await nodesData.nodes(0);
+            node[8].should.be.deep.equal(web3.utils.toBN(2));
+        });
+
+        it("should complete withdrawing deposit from second node", async () => {
+            await nodesFunctionality.completeWithdrawDeposit(owner, 1)
+                .should.be.eventually.rejectedWith("Node does not exist for message sender");
+
+            await nodesFunctionality.completeWithdrawDeposit(validator, 1)
+                .should.be.eventually.rejectedWith("Node is no Leaving");
+
+            await nodesFunctionality.initWithdrawDeposit(validator, 1);
+
+            await nodesFunctionality.completeWithdrawDeposit(validator, 1)
+                .should.be.eventually.rejectedWith("eaving period is not expired");
+
+            skipTime(web3, 5);
+
+            await nodesFunctionality.completeWithdrawDeposit(validator, 1);
+
+            const node = await nodesData.nodes(1);
+            node[8].should.be.deep.equal(web3.utils.toBN(2));
+        });
+    });
 });
