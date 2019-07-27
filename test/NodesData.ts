@@ -271,11 +271,11 @@ contract("NodesData", ([owner, validator]) => {
             });
 
             it("should not remove larger space from fractional node than its has", async () => {
-                let nodesFillingBefore = await nodesData.fractionalNodes(0);
-                let spaceBefore = nodesFillingBefore['1'];
+                const nodesFillingBefore = await nodesData.fractionalNodes(0);
+                const spaceBefore = nodesFillingBefore['1'];
                 await nodesData.removeSpaceFromFractionalNode(0, 129);
-                let nodesFillingAfter = await nodesData.fractionalNodes(0);
-                let spaceAfter = nodesFillingAfter['1'];
+                const nodesFillingAfter = await nodesData.fractionalNodes(0);
+                const spaceAfter = nodesFillingAfter['1'];
                 spaceBefore.should.be.deep.equal(spaceAfter);
             });
         });
@@ -299,11 +299,11 @@ contract("NodesData", ([owner, validator]) => {
             });
 
             it("should not remove larger space from full node than its has", async () => {
-                let nodesFillingBefore = await nodesData.fullNodes(0);
-                let spaceBefore = nodesFillingBefore['1'];
+                const nodesFillingBefore = await nodesData.fullNodes(0);
+                const spaceBefore = nodesFillingBefore['1'];
                 await nodesData.removeSpaceFromFullNode(0, 129);
-                let nodesFillingAfter = await nodesData.fullNodes(0);
-                let spaceAfter = nodesFillingAfter['1'];
+                const nodesFillingAfter = await nodesData.fullNodes(0);
+                const spaceAfter = nodesFillingAfter['1'];
                 spaceBefore.should.be.deep.equal(spaceAfter);
             });
 
