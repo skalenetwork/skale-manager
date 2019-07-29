@@ -19,49 +19,51 @@ let SchainsFunctionality1 = artifacts.require('./SchainsFunctionality1.sol');
 let ContractManager = artifacts.require('./ContractManager.sol');
 let ConstantsHolder = artifacts.require('./ConstantsHolder.sol');
 
+let gasLimit = 6900000;
+
 async function deploy(deployer, network) {
-    await deployer.deploy(ContractManager, {gas: 8000000}).then(async function(contractManagerInstance) {
-        await deployer.deploy(SkaleToken, contractManagerInstance.address, {gas: 8000000});
+    await deployer.deploy(ContractManager, {gas: gasLimit}).then(async function(contractManagerInstance) {
+        await deployer.deploy(SkaleToken, contractManagerInstance.address, {gas: gasLimit});
         await contractManagerInstance.setContractsAddress("SkaleToken", SkaleToken.address).then(function(res) {
             console.log("Contract Skale Token with address", SkaleToken.address, "registred in Contract Manager");
         });
-        await deployer.deploy(ConstantsHolder, contractManagerInstance.address, {gas: 8000000});
+        await deployer.deploy(ConstantsHolder, contractManagerInstance.address, {gas: gasLimit});
         await contractManagerInstance.setContractsAddress("Constants", ConstantsHolder.address).then(function(res) {
             console.log("Contract Constants with address", ConstantsHolder.address, "registred in Contract Manager");
         });
-        await deployer.deploy(NodesData, 5260000, contractManagerInstance.address, {gas: 8000000 * gas_multiplier});
+        await deployer.deploy(NodesData, 5260000, contractManagerInstance.address, {gas: gasLimit * gas_multiplier});
         await contractManagerInstance.setContractsAddress("NodesData", NodesData.address).then(function(res) {
             console.log("Contract Nodes Data with address", NodesData.address, "registred in Contract Manager");
         });
-        await deployer.deploy(NodesFunctionality, contractManagerInstance.address, {gas: 8000000 * gas_multiplier});
+        await deployer.deploy(NodesFunctionality, contractManagerInstance.address, {gas: gasLimit * gas_multiplier});
         await contractManagerInstance.setContractsAddress("NodesFunctionality", NodesFunctionality.address).then(function(res) {
             console.log("Contract Nodes Functionality with address", NodesFunctionality.address, "registred in Contract Manager");
         });
-        await deployer.deploy(ValidatorsData, "ValidatorsFunctionality", contractManagerInstance.address, {gas: 8000000 * gas_multiplier});
+        await deployer.deploy(ValidatorsData, "ValidatorsFunctionality", contractManagerInstance.address, {gas: gasLimit * gas_multiplier});
         await contractManagerInstance.setContractsAddress("ValidatorsData", ValidatorsData.address).then(function(res) {
             console.log("Contract Validators Data with address", ValidatorsData.address, "registred in Contract Manager");
         });
-        await deployer.deploy(ValidatorsFunctionality, "SkaleManager", "ValidatorsData", contractManagerInstance.address, {gas: 8000000 * gas_multiplier});
+        await deployer.deploy(ValidatorsFunctionality, "SkaleManager", "ValidatorsData", contractManagerInstance.address, {gas: gasLimit * gas_multiplier});
         await contractManagerInstance.setContractsAddress("ValidatorsFunctionality", ValidatorsFunctionality.address).then(function(res) {
             console.log("Contract Validators Functionality with address", ValidatorsFunctionality.address, "registred in Contract Manager");
         });
-        await deployer.deploy(SchainsData, "SchainsFunctionality1", contractManagerInstance.address, {gas: 8000000 * gas_multiplier});
+        await deployer.deploy(SchainsData, "SchainsFunctionality1", contractManagerInstance.address, {gas: gasLimit * gas_multiplier});
         await contractManagerInstance.setContractsAddress("SchainsData", SchainsData.address).then(function(res) {
             console.log("Contract Schains Data with address", SchainsData.address, "registred in Contract Manager");
         });
-        await deployer.deploy(SchainsFunctionality, "SkaleManager", "SchainsData", contractManagerInstance.address, {gas: 4000000 * gas_multiplier});
+        await deployer.deploy(SchainsFunctionality, "SkaleManager", "SchainsData", contractManagerInstance.address, {gas: gasLimit * gas_multiplier});
         await contractManagerInstance.setContractsAddress("SchainsFunctionality", SchainsFunctionality.address).then(function(res) {
             console.log("Contract Schains Functionality with address", SchainsFunctionality.address, "registred in Contract Manager");
         });
-        await deployer.deploy(SchainsFunctionality1, "SchainsFunctionality", "SchainsData", contractManagerInstance.address, {gas: 8000000 * gas_multiplier});
+        await deployer.deploy(SchainsFunctionality1, "SchainsFunctionality", "SchainsData", contractManagerInstance.address, {gas: gasLimit * gas_multiplier});
         await contractManagerInstance.setContractsAddress("SchainsFunctionality1", SchainsFunctionality1.address).then(function(res) {
             console.log("Contract Schains Functionality1 with address", SchainsFunctionality1.address, "registred in Contract Manager");
         });
-        await deployer.deploy(ManagerData, "SkaleManager", contractManagerInstance.address, {gas: 8000000});
+        await deployer.deploy(ManagerData, "SkaleManager", contractManagerInstance.address, {gas: gasLimit});
         await contractManagerInstance.setContractsAddress("ManagerData", ManagerData.address).then(function(res) {
             console.log("Contract Manager Data with address", ManagerData.address, "registred in Contract Manager");
         });
-        await deployer.deploy(SkaleManager, contractManagerInstance.address, {gas: 8000000});
+        await deployer.deploy(SkaleManager, contractManagerInstance.address, {gas: gasLimit});
         await contractManagerInstance.setContractsAddress("SkaleManager", SkaleManager.address).then(function(res) {
             console.log("Contract Skale Manager with address", SkaleManager.address, "registred in Contract Manager");
             console.log();
