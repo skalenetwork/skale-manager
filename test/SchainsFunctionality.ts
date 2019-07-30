@@ -217,6 +217,53 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
 
             });
 
+            describe("when test schain is created", async () => {
+
+                beforeEach(async () => {
+                    await schainsFunctionality.addSchain(
+                        holder,
+                        "0xDE0B6B3A7640000",
+                        "0x10" +
+                        "0000000000000000000000000000000000000000000000000000000000000005" +
+                        "04" +
+                        "0000" +
+                        "d2",
+                        {from: owner});
+                });
+
+                it("should failed when create another schain with the same name", async () => {
+                    await schainsFunctionality.addSchain(
+                        holder,
+                        "0xDE0B6B3A7640000",
+                        "0x10" +
+                        "0000000000000000000000000000000000000000000000000000000000000005" +
+                        "04" +
+                        "0000" +
+                        "d2",
+                        {from: owner})
+                        .should.be.eventually.rejectedWith("Schain name is not available");
+                });
+
+                it("should be able to delete schain", async () => {
+
+                    await schainsFunctionality.deleteSchain(
+                        holder,
+                        "0x9ad263ae43881ba28ed7ce1c8d76614d2b21b3756573ad348964cdde6b3ae6df",
+                        {from: owner});
+                    await schainsData.getSchains().should.be.eventually.empty;
+                });
+
+                it("should fail on deleting schain if owner is wrong", async () => {
+
+                    await schainsFunctionality.deleteSchain(
+                        validator,
+                        "0x9ad263ae43881ba28ed7ce1c8d76614d2b21b3756573ad348964cdde6b3ae6df",
+                        {from: owner})
+                        .should.be.eventually.rejectedWith("Message sender is not an owner of Schain");
+                });
+
+            });
+
         });
     });
 
