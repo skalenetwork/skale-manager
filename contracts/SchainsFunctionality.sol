@@ -255,7 +255,9 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
         (subarrayLink, isNodeFull) = INodesData(nodesDataAddress).nodesLink(nodeIndex);
         // adds space
         if (isNodeFull) {
-            if (partOfNode != 0) {
+            if (partOfNode == IConstants(constantsAddress).MEDIUM_TEST_DIVISOR()) {
+                INodesData(nodesDataAddress).addSpaceToFullNode(subarrayLink, IConstants(constantsAddress).TINY_DIVISOR() / partOfNode);
+            } else if (partOfNode != 0) {
                 INodesData(nodesDataAddress).addSpaceToFullNode(subarrayLink, IConstants(constantsAddress).MEDIUM_DIVISOR() / partOfNode);
             } else {
                 INodesData(nodesDataAddress).addSpaceToFullNode(subarrayLink, partOfNode);
