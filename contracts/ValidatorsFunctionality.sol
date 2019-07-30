@@ -63,8 +63,8 @@ contract ValidatorsFunctionality is GroupsFunctionality, IValidatorsFunctionalit
     );
 
     event VerdictWasSent(
-        uint fromValidatorIndex,
-        uint toNodeIndex,
+        uint indexed fromValidatorIndex,
+        uint indexed toNodeIndex,
         uint32 downtime,
         uint32 latency,
         bool status,

@@ -34,7 +34,7 @@ contract SkaleManager is Permissions {
     enum TransactionOperation {CreateNode, CreateSchain}
 
     event BountyGot(
-        uint nodeIndex,
+        uint indexed nodeIndex,
         address owner,
         uint32 averageDowntime,
         uint32 averageLatency,
