@@ -63,7 +63,7 @@ async function deploy(deployer, network) {
         await contractManagerInstance.setContractsAddress("ManagerData", ManagerData.address).then(function(res) {
             console.log("Contract Manager Data with address", ManagerData.address, "registred in Contract Manager");
         });
-        await deployer.deploy(SkaleManager, contractManagerInstance.address, {gas: gasLimit});
+        await deployer.deploy(SkaleManager, contractManagerInstance.address, {gas: gasLimit * gas_multiplier});
         await contractManagerInstance.setContractsAddress("SkaleManager", SkaleManager.address).then(function(res) {
             console.log("Contract Skale Manager with address", SkaleManager.address, "registred in Contract Manager");
             console.log();
