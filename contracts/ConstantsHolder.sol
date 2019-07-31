@@ -85,6 +85,12 @@ contract ConstantsHolder is IConstants, Permissions {
     uint32 public deltaPeriod = 300;  // Test parameters
 
     /**
+     * Check time - 2 minutes (every 2 minutes validators should check metrics
+     * from validated nodes)
+     */
+    uint8 public checkTime = 120; // Test parameters
+
+    /**
      * Last time when system was underloaded
      * (allocations on Skale-chain / allocations on Nodes < 75%)
      */
@@ -115,6 +121,14 @@ contract ConstantsHolder is IConstants, Permissions {
     function setPeriods(uint32 newRewardPeriod, uint32 newDeltaPeriod) public onlyOwner {
         rewardPeriod = newRewardPeriod;
         deltaPeriod = newDeltaPeriod;
+    }
+
+    /**
+     * Set new check time. This function only for tests.
+     * @param newCheckTime - new check time
+     */
+    function setCheckTime(uint8 newCheckTime) public onlyOwner {
+        checkTime = newCheckTime;
     }
 
     /**

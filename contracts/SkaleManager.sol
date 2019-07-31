@@ -179,7 +179,9 @@ contract SkaleManager is Permissions {
             diffTime = 0;
         }
         int bountyForMiner = int(commonBounty);
-        if (downtime > 200) {
+        uint normalDowntime = ((IConstants(constantsAddress).rewardPeriod() - IConstants(constantsAddress).deltaPeriod()) /
+            IConstants(constantsAddress).checkTime()) / 30;
+        if (downtime > normalDowntime) {
             bountyForMiner -= int(((downtime + diffTime) * commonBounty) / (IConstants(constantsAddress).SECONDS_TO_DAY() / 4));
         }
 
