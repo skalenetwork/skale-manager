@@ -510,7 +510,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
 
             describe("when developer has SKALE tokens", async () => {
                 beforeEach(async () => {
-                    skaleToken.transfer(developer, "0x1B1AE4D6E2EF5000000", {from: owner});
+                    skaleToken.transfer(developer, "0x3635C9ADC5DEA000000", {from: owner});
                 });
 
                 it("should create 2 medium schains", async () => {
@@ -631,7 +631,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
 
                     await skaleToken.transferWithData(
                         skaleManager.address,
-                        "0x1cc2d6d04a2ca",
+                        "0xDE0B6B3A7640000",
                         "0x10" + // create schain
                         "0000000000000000000000000000000000000000000000000000000000000005" + // lifetime
                         "04" + // type of schain
