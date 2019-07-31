@@ -5,16 +5,6 @@ let hdwalletProvider = require('truffle-hdwallet-provider');
 
 let mnemonicOrPrivateKey = process.env.PRIVATE_KEY;
 
-
-/*if ((process.env.MNEMONIC == undefined || process.env.MNEMONIC == "") && (process.env.PRIVATE_KEY == undefined || process.env.PRIVATE_KEY == "")) {
-    console.log("Please set mnemonic or private key");
-    process.exit(0);
-} else if (process.env.MNEMONIC == undefined || process.env.MNEMONIC == "") {
-    mnemonicOrPrivateKey = process.env.PRIVATE_KEY;
-} else {
-    mnemonicOrPrivateKey = process.env.MNEMONIC;
-}*/
-
 let uniqueEndpoint = process.env.ENDPOINT;
 
 
@@ -58,7 +48,7 @@ module.exports = {
     },
     compilers: {
         solc: {
-            version: "0.5.7",
+            version: "0.5.10",
             settings: {
                 optimizer: {
                     enabled: true,

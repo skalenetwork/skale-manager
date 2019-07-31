@@ -4,8 +4,8 @@
   "description": "SKALE Manager system, Decentralized task manager",
   "scripts": {
     "lint": "npx solium --dir contracts",
-    "compile": "./node_modules/.bin/truffle compile",
-    "deploy": "./scripts/build.sh",
+    "compile": "rm -r ./build && ./node_modules/.bin/truffle compile",
+    "deploy": "bash ./scripts/deploy.sh",
     "generate": "truffle compile && typechain --target truffle './build/**/*.json'",
     "prepare": "yarn generate",
     "test": "truffle test && yarn tsc",
@@ -32,7 +32,7 @@
     "truffle-typings": "^1.0.8",
     "ts-node": "^8.3.0",
     "typechain": "^0.3.17",
-    "web3": "1.0.0-beta.37"
+    "web3": "^1.0.0-beta.37"
   },
   "repository": {
     "type": "git",
