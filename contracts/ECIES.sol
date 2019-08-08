@@ -1,6 +1,6 @@
 pragma solidity ^0.5.0;
 
-contract AES256 {
+contract AES {
     
         // SBOX
         // 0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x01, 0x67, 0x2b, 0xfe, 0xd7, 0xab, 0x76, 
@@ -37,6 +37,7 @@ contract AES256 {
         // 0x60, 0x51, 0x7f, 0xa9, 0x19, 0xb5, 0x4a, 0x0d, 0x2d, 0xe5, 0x7a, 0x9f, 0x93, 0xc9, 0x9c, 0xef,
         // 0xa0, 0xe0, 0x3b, 0x4d, 0xae, 0x2a, 0xf5, 0xb0, 0xc8, 0xeb, 0xbb, 0x3c, 0x83, 0x53, 0x99, 0x61,
         // 0x17, 0x2b, 0x04, 0x7e, 0xba, 0x77, 0xd6, 0x26, 0xe1, 0x69, 0x14, 0x63, 0x55, 0x21, 0x0c, 0x7d
+        
     struct Box {
         bytes32[8] lines;
     }
@@ -44,12 +45,28 @@ contract AES256 {
     Box sbox;
     Box invSbox;
     
-    uint8 Nr = 14;
-    uint8 Nk = 8;
+    uint8 Nr;
+    uint8 Nk;
     uint8 Nb = 4;
     
-    constructor() public {
-        
+    bytes10 rcon = 0x01020408102040801b36;
+    
+    address owner;
+    
+    constructor(uint16 typeOfAES) public {
+        owner = msg.sender;
+        if (typeOfAES == 128) {
+            Nr = 10;
+            Nk = 4;
+        } else if (typeOfAES == 192) {
+            Nr = 12;
+            Nk = 6;
+        } else if (typeOfAES == 256) {
+            Nr = 14;
+            Nk = 8;
+        } else {
+            revert("Incorrect type of AES");
+        }
     }
     
     function setSbox() public {
@@ -84,27 +101,54 @@ contract AES256 {
         return invSbox.lines[numberFromInput / 32][numberFromInput % 32];
     }
     
+    function KeyExpansion(bytes memory cipherKey) public view returns (bytes memory keySchedule) {
+        require(cipherKey.length == 4 * Nk, "Incorrect data");
+        keySchedule = new bytes(4 * Nk * (Nr + 1));
+        for (uint8 i = 0; i < cipherKey.length; i++) {
+            keySchedule[i] = cipherKey[i];
+        }
+        for (uint8 i = Nk; i < Nb * (Nr + 1); i++) {
+            if (i % Nk == 0) {
+                bytes memory firstTerm = new bytes(4);
+                bytes memory secondTerm = new bytes(4);
+                for (uint j = 0; j < 4; j++) {
+                    firstTerm[j] = keySchedule[i * 4 - 4 * Nk + j * Nk];
+                    secondTerm[j] = getByteFromSbox(keySchedule[i * 4 - 4 * Nk + (j * Nk + (Nk - 1) + Nk) % (4 * Nk)]);
+                }
+                keySchedule[i * 4] = firstTerm[0] ^ secondTerm[0] ^ rcon[i / Nk - 1];
+                keySchedule[i * 4 + Nk] = firstTerm[1] ^ secondTerm[1] ^ 0x00;
+                keySchedule[i * 4 + 2 * Nk] = firstTerm[2] ^ secondTerm[2] ^ 0x00;
+                keySchedule[i * 4 + 3 * Nk] = firstTerm[3] ^ secondTerm[3] ^ 0x00;
+            } else {
+                keySchedule[i * 4] = getByteFromSbox(keySchedule[i * 4 - 4 * Nk]) ^ keySchedule[i * 4 - 4 * Nk + Nk - 1];
+                keySchedule[i * 4 + Nk] = getByteFromSbox(keySchedule[i * 4 - 4 * Nk + Nk]) ^ keySchedule[i * 4 - 4 * Nk + Nk + Nk - 1];
+                keySchedule[i * 4 + 2 * Nk] = getByteFromSbox(keySchedule[i * 4 - 4 * Nk + 2 * Nk]) ^ keySchedule[i * 4 - 4 * Nk + 2 * Nk + Nk - 1];
+                keySchedule[i * 4 + 3 * Nk] = getByteFromSbox(keySchedule[i * 4 - 4 * Nk + 3 * Nk]) ^ keySchedule[i * 4 - 4 * Nk + 3 * Nk + Nk - 1];
+            }
+        }
+    }
+    
     function AddRoundKey() public {}
     
     function SubBytes(bytes memory input) public view returns (bytes memory output) {
-        require(input.length == Nb * Nb, "Incorrect data");
-        output = new bytes(Nb * Nb);
-        for (uint8 i = 0; i < Nb * Nb; i++) {
+        require(input.length == 4 * Nb, "Incorrect data");
+        output = new bytes(4 * Nb);
+        for (uint8 i = 0; i < 4 * Nb; i++) {
             output[i] = getByteFromSbox(input[i]);
         }
     }
     
     function invSubBytes(bytes memory input) public view returns (bytes memory output) {
-        require(input.length == Nb * Nb, "Incorrect data");
-        output = new bytes(Nb * Nb);
-        for (uint8 i = 0; i < Nb * Nb; i++) {
+        require(input.length == 4 * Nb, "Incorrect data");
+        output = new bytes(4 * Nb);
+        for (uint8 i = 0; i < 4 * Nb; i++) {
             output[i] = getByteFromInvSbox(input[i]);
         }
     }
     
     function ShiftRows(bytes memory input) public view returns (bytes memory output) {
-        require(input.length == Nb * Nb, "Incorrect data");
-        output = new bytes(Nb * Nb);
+        require(input.length == 4 * Nb, "Incorrect data");
+        output = new bytes(4 * Nb);
         for (uint i = 0; i < Nb; i++) {
             for (uint j = 0; j < Nb; j++) {
                 uint num = (Nb + j - i) % 4;
@@ -114,8 +158,8 @@ contract AES256 {
     }
     
     function invShiftRows(bytes memory input) public view returns (bytes memory output) {
-        require(input.length == Nb * Nb, "Incorrect data");
-        output = new bytes(Nb * Nb);
+        require(input.length == 4 * Nb, "Incorrect data");
+        output = new bytes(4 * Nb);
         for (uint i = 0; i < Nb; i++) {
             for (uint j = 0; j < Nb; j++) {
                 uint num = (Nb + j + i) % 4;
@@ -125,8 +169,8 @@ contract AES256 {
     }
     
     function MixColumns(bytes memory input) public view returns (bytes memory output) {
-        require(input.length == Nb * Nb, "Incorrect data");
-        output = new bytes(Nb * Nb);
+        require(input.length == 4 * Nb, "Incorrect data");
+        output = new bytes(4 * Nb);
         for (uint i = 0; i < Nb; i++) {
             output[i] = mul_by_02(input[i])^mul_by_03(input[Nb + i])^input[2 * Nb + i]^input[3 * Nb + i];
             output[Nb + i] = input[i]^mul_by_02(input[Nb + i])^mul_by_03(input[2 * Nb + i])^input[3 * Nb + i];
@@ -136,8 +180,8 @@ contract AES256 {
     }
     
     function invMixColumns(bytes memory input) public view returns (bytes memory output) {
-        require(input.length == Nb * Nb, "Incorrect data");
-        output = new bytes(Nb * Nb);
+        require(input.length == 4 * Nb, "Incorrect data");
+        output = new bytes(4 * Nb);
         for (uint i = 0; i < Nb; i++) {
             output[i] = mul_by_0e(input[i])^mul_by_0b(input[Nb + i])^mul_by_0d(input[2 * Nb + i])^mul_by_09(input[3 * Nb + i]);
             output[Nb + i] = mul_by_09(input[i])^mul_by_0e(input[Nb + i])^mul_by_0b(input[2 * Nb + i])^mul_by_0d(input[3 * Nb + i]);
