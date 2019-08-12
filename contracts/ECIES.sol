@@ -45,9 +45,9 @@ contract AES {
     Box sbox;
     Box invSbox;
     
-    uint8 Nr;
-    uint8 Nk;
-    uint8 Nb = 4;
+    uint8 NR;
+    uint8 NK;
+    uint8 NB = 4;
     
     bytes10 rcon = 0x01020408102040801b36;
     
@@ -56,14 +56,14 @@ contract AES {
     constructor(uint16 typeOfAES) public {
         owner = msg.sender;
         if (typeOfAES == 128) {
-            Nr = 10;
-            Nk = 4;
+            NR = 10;
+            NK = 4;
         } else if (typeOfAES == 192) {
-            Nr = 12;
-            Nk = 6;
+            NR = 12;
+            NK = 6;
         } else if (typeOfAES == 256) {
-            Nr = 14;
-            Nk = 8;
+            NR = 14;
+            NK = 8;
         } else {
             revert("Incorrect type of AES");
         }
@@ -101,7 +101,92 @@ contract AES {
         return invSbox.lines[numberFromInput / 32][numberFromInput % 32];
     }
     
+    function encrypt(bytes memory plainText, bytes memory cipherKey) public view returns (bytes memory) {
+        uint8 Nr = NR;
+        uint8 Nk = NK;
+        uint8 Nb = NB;
+        require(plainText.length == 4 * Nb && cipherKey.length == 4 * Nk, "Incorrect data");
+        bytes memory keySchedule = KeyExpansion(cipherKey);
+        bytes16 tmp;
+        assembly {
+            tmp := mload(add(keySchedule, 32))
+        }
+        bytes memory roundKey = new bytes(4 * Nb);
+        bytes memory state = new bytes(4 * Nb);
+        for (uint8 i = 0; i < 4 * Nb; i++) {
+            roundKey[i] = tmp[i];
+            state[i] = plainText[i];
+        }
+        state = AddRoundKey(state, roundKey);
+        for (uint8 i = 1; i < Nr; i++) {
+            state = SubBytes(state);
+            state = ShiftRows(state);
+            state = MixColumns(state);
+            assembly {
+                tmp := mload(add(keySchedule, add(32, mul(i, 16))))
+            }
+            for (uint8 j = 0; j < 4 * Nb; i++) {
+                roundKey[j] = tmp[j];
+            }
+            state = AddRoundKey(state, roundKey);
+        }
+        state = SubBytes(state);
+        state = ShiftRows(state);
+        assembly {
+            tmp := mload(add(keySchedule, add(32, mul(Nr, 16))))
+        }
+        for (uint8 i = 0; i < 4 * Nb; i++) {
+            roundKey[i] = tmp[i];
+        }
+        state = AddRoundKey(state, roundKey);
+        return state;
+    }
+    
+    function decrypt(bytes memory cipherText, bytes memory cipherKey) public view returns (bytes memory plainText) {
+        uint8 Nr = NR;
+        uint8 Nk = NK;
+        uint8 Nb = NB;
+        require(cipherText.length == 4 * Nb && cipherKey.length == 4 * Nk, "Incorrect data");
+        bytes memory keySchedule = KeyExpansion(cipherKey);
+        bytes16 tmp;
+        assembly {
+            tmp := mload(add(keySchedule, add(32, mul(Nr, 16))))
+        }
+        bytes memory roundKey = new bytes(4 * Nb);
+        bytes memory state = new bytes(4 * Nb);
+        for (uint8 i = 0; i < 4 * Nb; i++) {
+            roundKey[i] = tmp[i];
+            state[i] = cipherText[i];
+        }
+        state = AddRoundKey(state, roundKey);
+        for (uint8 i = Nr - 1; i >= 1; i--) {
+            state = InvShiftRows(state);
+            state = InvSubBytes(state);
+            assembly {
+                tmp := mload(add(keySchedule, add(32, mul(i, 16))))
+            }
+            for (uint8 j = 0; j < 4 * Nb; i++) {
+                roundKey[j] = tmp[j];
+            }
+            state = AddRoundKey(state, roundKey);
+            state = InvMixColumns(state);
+        }
+        state = InvShiftRows(state);
+        state = InvSubBytes(state);
+        assembly {
+            tmp := mload(add(keySchedule, 32))
+        }
+        for (uint8 i = 0; i < 4 * Nb; i++) {
+            roundKey[i] = tmp[i];
+        }
+        state = AddRoundKey(state, roundKey);
+        return state;
+    }
+    
     function KeyExpansion(bytes memory cipherKey) public view returns (bytes memory keySchedule) {
+        uint8 Nr = NR;
+        uint8 Nk = NK;
+        uint8 Nb = NB;
         require(cipherKey.length == 4 * Nk, "Incorrect data");
         keySchedule = new bytes(4 * Nk * (Nr + 1));
         for (uint8 i = 0; i < cipherKey.length; i++) {
@@ -128,9 +213,19 @@ contract AES {
         }
     }
     
-    function AddRoundKey() public {}
+    function AddRoundKey(bytes memory input, bytes memory roundKey) public view returns (bytes memory) {
+        uint8 Nb = NB;
+        require(input.length == 4 * Nb && roundKey.length == 4 * Nb, "Incorrect data");
+        for (uint8 i = 0; i < 4; i++) {
+            for (uint8 j = 0; j < Nb; j++) {
+                input[i * Nb + j] = input[i * Nb + j] ^ roundKey[i * Nb + j];
+            }
+        }
+        return input;
+    }
     
     function SubBytes(bytes memory input) public view returns (bytes memory output) {
+        uint8 Nb = NB;
         require(input.length == 4 * Nb, "Incorrect data");
         output = new bytes(4 * Nb);
         for (uint8 i = 0; i < 4 * Nb; i++) {
@@ -138,7 +233,8 @@ contract AES {
         }
     }
     
-    function invSubBytes(bytes memory input) public view returns (bytes memory output) {
+    function InvSubBytes(bytes memory input) public view returns (bytes memory output) {
+        uint8 Nb = NB;
         require(input.length == 4 * Nb, "Incorrect data");
         output = new bytes(4 * Nb);
         for (uint8 i = 0; i < 4 * Nb; i++) {
@@ -147,6 +243,7 @@ contract AES {
     }
     
     function ShiftRows(bytes memory input) public view returns (bytes memory output) {
+        uint8 Nb = NB;
         require(input.length == 4 * Nb, "Incorrect data");
         output = new bytes(4 * Nb);
         for (uint i = 0; i < Nb; i++) {
@@ -157,7 +254,8 @@ contract AES {
         }
     }
     
-    function invShiftRows(bytes memory input) public view returns (bytes memory output) {
+    function InvShiftRows(bytes memory input) public view returns (bytes memory output) {
+        uint8 Nb = NB;
         require(input.length == 4 * Nb, "Incorrect data");
         output = new bytes(4 * Nb);
         for (uint i = 0; i < Nb; i++) {
@@ -169,6 +267,7 @@ contract AES {
     }
     
     function MixColumns(bytes memory input) public view returns (bytes memory output) {
+        uint8 Nb = NB;
         require(input.length == 4 * Nb, "Incorrect data");
         output = new bytes(4 * Nb);
         for (uint i = 0; i < Nb; i++) {
@@ -179,7 +278,8 @@ contract AES {
         }
     }
     
-    function invMixColumns(bytes memory input) public view returns (bytes memory output) {
+    function InvMixColumns(bytes memory input) public view returns (bytes memory output) {
+        uint8 Nb = NB;s
         require(input.length == 4 * Nb, "Incorrect data");
         output = new bytes(4 * Nb);
         for (uint i = 0; i < Nb; i++) {
