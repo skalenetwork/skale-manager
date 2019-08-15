@@ -271,4 +271,12 @@ contract SchainsData is ISchainsData, GroupsData {
     function isOwnerAddress(address from, bytes32 schainId) public view returns (bool) {
         return schains[schainId].owner == from;
     }
+
+    function schainsForNodesArray(uint indexOfNode) public view returns (bytes32[] memory) {
+        return schainsForNodes[indexOfNode];
+    }
+
+    function getSchainPartOfNode(bytes32 schainName) public view returns (uint) {
+        schains[schainName].partOfNode;
+    }
 }
