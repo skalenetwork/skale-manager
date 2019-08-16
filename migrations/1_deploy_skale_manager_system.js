@@ -18,6 +18,7 @@ let SchainsFunctionality = artifacts.require('./SchainsFunctionality.sol');
 let SchainsFunctionality1 = artifacts.require('./SchainsFunctionality1.sol');
 let ContractManager = artifacts.require('./ContractManager.sol');
 let ConstantsHolder = artifacts.require('./ConstantsHolder.sol');
+let Pricing = artifacts.require('./Pricing.sol');
 
 let gasLimit = 6900000;
 
@@ -68,6 +69,11 @@ async function deploy(deployer, network) {
             console.log("Contract Skale Manager with address", SkaleManager.address, "registred in Contract Manager");
             console.log();
         });
+        await deployer.deploy(Pricing, contractManagerInstance.address, {gas: gasLimit * gas_multiplier});
+        await contractManagerInstance.setContractsAddress("Pricing", Pricing.address).then(function(res) {
+            console.log("Contract Pricing with address", Pricing.address, "registred in Contract Manager");
+            console.log();
+        });
     
         //
         console.log('Deploy done, writing results...');
@@ -93,7 +99,9 @@ async function deploy(deployer, network) {
             constants_address: ConstantsHolder.address,
             constants_abi: ConstantsHolder.abi,
             contract_manager_address: ContractManager.address,
-            contract_manager_abi: ContractManager.abi
+            contract_manager_abi: ContractManager.abi,
+            pricing_address: Pricing.address,
+            pricing_abi: Pricing.abi
         };
 
         await fsPromises.writeFile(`data/${network}.json`, JSON.stringify(jsonObject));

@@ -42,7 +42,7 @@ contract("SchainsData", ([owner, holder]) => {
     beforeEach(async () => {
         contractManager = await ContractManager.new({from: owner});
         schainsData = await SchainsData.new("SchainsFunctionality", contractManager.address, {from: owner});
-      });
+    });
 
     it("should initialize schain", async () => {
         schainsData.initializeSchain("TestSchain", holder, 5, 5);
@@ -61,7 +61,7 @@ contract("SchainsData", ([owner, holder]) => {
             schainsData.initializeSchain("TestSchain", holder, 5, 5);
         });
 
-        it("should register shain index for owner", async () => {
+        it("should register schain index for owner", async () => {
             await schainsData.setSchainIndex(schainNameHash, holder);
 
             const schain = new Schain(await schainsData.schains(schainNameHash));
@@ -72,6 +72,9 @@ contract("SchainsData", ([owner, holder]) => {
 
         it("should be able to add schain to node", async () => {
             await schainsData.addSchainForNode(5, schainNameHash);
+            console.log('-----------------');
+            console.log(await schainsData.getSchainIdsForNode(5));
+            console.log('-----------------');
             await schainsData.getSchainIdsForNode(5).should.eventually.deep.equal([schainNameHash]);
         });
 
