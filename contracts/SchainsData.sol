@@ -47,7 +47,7 @@ contract SchainsData is ISchainsData, GroupsData {
     // mapping shows schains which Node composed in
     mapping (uint => bytes32[]) public schainsForNodes;
     // array which contain all schains
-    bytes32[] private schainsAtSystem;
+    bytes32[] public schainsAtSystem;
 
     uint64 public numberOfSchains = 0;
     // total resources that schains occupied
@@ -276,7 +276,4 @@ contract SchainsData is ISchainsData, GroupsData {
         return schainsForNodes[indexOfNode];
     }
 
-    function getSchainPartOfNode(bytes32 schainName) public view returns (uint) {
-        schains[schainName].partOfNode;
-    }
 }

@@ -52,6 +52,8 @@ contract("Pricing", ([owner, holder]) => {
         contractManager = await ContractManager.new({from: owner});
         pricing = await Pricing.new(contractManager.address, {from: owner});
         schainsData = await SchainsData.new("SchainsFunctionality", contractManager.address, {from: owner});
+        await contractManager.setContractsAddress("SchainsData", schainsData.address);
+
     });
 
     describe("on existing schain", async () => {
@@ -81,23 +83,22 @@ contract("Pricing", ([owner, holder]) => {
             await schainsData.setNodeInGroup(bobSchainHash, 1);
             await schainsData.setNodeInGroup(davidSchainHash, 2);
             await schainsData.setNodeInGroup(jacobSchainHash, 3);
-
-            await schainsData.setSchainPartOfNode(bobSchainHash, 4);
+            console.log('------------------')
+            const res = await schainsData.setSchainPartOfNode(bobSchainHash, 4);
+            console.log(res.tx)
+            console.log('------------------')
             await schainsData.setSchainPartOfNode(davidSchainHash, 8);
             await schainsData.setSchainPartOfNode(jacobSchainHash, 128);
-            const log = await schainsData.numberOfSchains();
-            // console.log(log);
-            const log1 = await schainsData.schainsForNodesArray(0);
-            console.log(log1);
+
             expect(new Schain(await schainsData.schains(bobSchainHash)).partOfNode).to.be.equal(4);
             expect(new Schain(await schainsData.schains(davidSchainHash)).partOfNode).to.be.equal(8);
             expect(new Schain(await schainsData.schains(jacobSchainHash)).partOfNode).to.be.equal(128);
 
             const totalResources = new BigNumber(await schainsData.sumOfSchainsResources());
-            console.log(totalResources);
             assert(totalResources.isEqualTo(49));
-            const load = await pricing.getTotalLoadPercentage();
-            console.log(load);
+            await pricing.getTotalLoadPercentage();
+    
+            // console.log(res);
 
         })
 
