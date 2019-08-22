@@ -179,27 +179,18 @@ contract ValidatorsFunctionality is GroupsFunctionality, IValidatorsFunctionalit
             latencyArray[i] = IValidatorsData(dataAddress).verdicts(validatorIndex, i, 1);
         }
         if (lengthOfArray > 0) {
-            quickSort(downtimeArray, 0, lengthOfArray - 1);
-            quickSort(latencyArray, 0, lengthOfArray - 1);
-            uint start = 0;
-            uint finish = lengthOfArray - 1;
-            uint numberOfNodes = IGroupsData(dataAddress).getNumberOfNodesInGroup(validatorIndex);
-            if (lengthOfArray > ((numberOfNodes / 3) + (numberOfNodes % 3 == 0 ? 0 : 1)) && numberOfNodes >= lengthOfArray) {
-                uint diff = lengthOfArray - ((numberOfNodes / 3) + (numberOfNodes % 3 == 0 ? 0 : 1));
-                start += diff / 2;
-                finish -= diff / 2 + diff % 2;
-            }
-            uint32 divisor = uint32(finish - start + 1);
-
-            while (start <= finish) {
-                averageDowntime += downtimeArray[start];
-                averageLatency += latencyArray[start];
-                start++;
-            }
+            averageDowntime = median(downtimeArray);
+            averageLatency = median(latencyArray);
             IValidatorsData(dataAddress).removeAllVerdicts(validatorIndex);
-            averageDowntime /= divisor;
-            averageLatency /= divisor;
         }
+    }
+
+    function median(uint32[] memory values) internal pure returns (uint32) {
+        if (values.length < 1) {
+            revert("Can't calculate median of empty array");
+        }
+        quickSort(values, 0, values.length - 1);
+        return values[values.length / 2];
     }
 
     function generateGroup(bytes32 groupIndex) internal allow(executorName) returns (uint[] memory) {
@@ -283,7 +274,7 @@ contract ValidatorsFunctionality is GroupsFunctionality, IValidatorsFunctionalit
         }
     }
 
-    function quickSort(uint32[] memory array, uint left, uint right) internal view {
+    function quickSort(uint32[] memory array, uint left, uint right) internal pure {
         uint leftIndex = left;
         uint rightIndex = right;
         uint32 middle = array[(right + left) / 2];

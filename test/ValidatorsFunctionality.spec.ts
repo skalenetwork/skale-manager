@@ -165,11 +165,18 @@ contract("ValidatorsFunctionality", ([owner, validator]) => {
     await validatorsData.setNodeInGroup(
       validatorIndex1, indexNode1, {from: owner},
       );
-    await validatorsData.addVerdict(
-      validatorIndex1, 10, 0, {from: owner},
-      );
+    await validatorsData.addVerdict(validatorIndex1, 10, 0, {from: owner});
+    await validatorsData.addVerdict(validatorIndex1, 10, 50, {from: owner});
+    await validatorsData.addVerdict(validatorIndex1, 100, 40, {from: owner});
     const res = new BigNumber(await validatorsData.getLengthOfMetrics(validatorIndex1, {from: owner}));
-    expect(parseInt(res.toString(), 10)).to.equal(1);
+    expect(parseInt(res.toString(), 10)).to.equal(3);
+
+    const metrics = await await validatorsFunctionality.calculateMetrics.call(indexNode1, {from: owner});
+    const downtime = web3.utils.toBN(metrics[0]).toNumber();
+    const latency = web3.utils.toBN(metrics[1]).toNumber();
+    downtime.should.be.equal(10);
+    latency.should.be.equal(40);
+
     // execution
     await validatorsFunctionality
           .calculateMetrics(indexNode1, {from: owner});
