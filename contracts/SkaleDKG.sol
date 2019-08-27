@@ -11,6 +11,7 @@ interface IGroupsData {
 
 interface INodesData {
     function isNodeExist(address from, uint nodeIndex) external view returns (bool);
+    function getNodePublicKey(uint nodeIndex) external view returns (bytes memory);
 }
 
 
@@ -27,6 +28,7 @@ contract SkaleDKG is Permissions {
         bool[] completed;
         uint startedBlockNumber;
         uint nodeToComplaint;
+        uint fromNodeToComplaint;
         uint startComplaintBlockNumber;
     }
 
@@ -35,9 +37,15 @@ contract SkaleDKG is Permissions {
         uint y;
     }
 
+    struct BroadcastedData {
+        bytes secretKeyContribution;
+        bytes verificationVector;
+    }
+
     uint p = 21888242871839275222246405745257275088696311157297823662689037894645226208583;
 
     mapping(bytes32 => Channel) channels;
+    mapping(bytes32 => mapping(uint8 => BroadcastedData)) data;
 
     event ChannelOpened(bytes32 groupIndex);
 
@@ -76,6 +84,7 @@ contract SkaleDKG is Permissions {
         channels[groupIndex].broadcasted = new bool[](IGroupsData(channels[groupIndex].dataAddress).getNumberOfNodesInGroup());
         channels[groupIndex].completed = new bool[](IGroupsData(channels[groupIndex].dataAddress).getNumberOfNodesInGroup());
         emit ChannelOpened(groupIndex);
+        
     }
 
     function broadcast(bytes32 groupIndex, uint nodeIndex, bytes memory verificationVector, bytes memory secretKeyContribution)
@@ -84,7 +93,7 @@ contract SkaleDKG is Permissions {
         correctNode(groupIndex, nodeIndex)
     {
         require(isNodeByMessageSender(nodeIndex, msg.sender), "Node does not exist for message sender");
-        isBroadcast(groupIndex, nodeIndex);
+        isBroadcast(groupIndex, nodeIndex, secretKeyContribution, verificationVector);
         bytes32 vector;
         bytes32 vector1;
         bytes32 vector2;
@@ -99,14 +108,6 @@ contract SkaleDKG is Permissions {
             vector4 := mload(add(verificationVector, 160))
             vector5 := mload(add(verificationVector, 192))
         }
-        /*if (channels[groupIndex].publicKeyx.x == 0 && channels[groupIndex].publicKeyx.y == 0 && channels[groupIndex].publicKeyy.x == 0 && channels[groupIndex].publicKeyy.y == 0) {
-            (channels[groupIndex].publicKeyx, channels[groupIndex].publicKeyy) = toAffineCoordinatesG2(Fp2({ x: uint(vector), y: uint(vector1) }), Fp2({ x: uint(vector2), y: uint(vector3) }), Fp2({ x: uint(vector4), y: uint(vector5) }));
-        } else {
-            Fp2 memory x1;
-            Fp2 memory y1;
-            (x1, y1) = toAffineCoordinatesG2(Fp2({ x: uint(vector), y: uint(vector1) }), Fp2({ x: uint(vector2), y: uint(vector3) }), Fp2({ x: uint(vector4), y: uint(vector5) }));
-            addG2(groupIndex, x1, y1, channels[groupIndex].publicKeyx, channels[groupIndex].publicKeyy);
-        }*/
         adding(groupIndex, uint(vector), uint(vector1), uint(vector2), uint(vector3), uint(vector4), uint(vector5));
         emit BroadcastAndKeyShare(groupIndex, nodeIndex, verificationVector, secretKeyContribution);
     }
@@ -141,15 +142,22 @@ contract SkaleDKG is Permissions {
         }
     }
 
-    function response(bytes32 groupIndex, uint fromNodeIndex /* additional data */)
+    function response(bytes32 groupIndex, uint fromNodeIndex, uint secretNumber)
         public
         correctGroup(groupIndex)
         correctNode(groupIndex, fromNodeIndex)
     {
         require(channels[groupIndex].nodeToComplaint == fromNodeIndex, "Not this Node");
-        
+        require(isNodeByMessageSender(fromNodeIndex, msg.sender), "Node does not exist for message sender");
+        address nodesDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
+        bytes memory publicKey = INodesData(nodesDataAddress).getNodePublicKey(channels[groupIndex].fromNodeToComplaint);
+        // DH common secret generate
+        // Decrypt secret key contribution
+        // DKG verification(secret key contribution, verification vector)
+        // slash someone
+        // Fail DKG        
     }
-
+    
     function allright(bytes32 groupIndex, uint fromNodeIndex)
         public
         correctGroup(groupIndex)
@@ -187,11 +195,15 @@ contract SkaleDKG is Permissions {
         }
     }
 
-    function isBroadcast(bytes32 groupIndex, uint nodeIndex) internal {
+    function isBroadcast(bytes32 groupIndex, uint nodeIndex, bytes memory sc, bytes memory vv) internal {
         uint index = findNode(groupIndex, nodeIndex);
         require(!channels[groupIndex].broadcasted[index], "This node is already broadcasted");
         channels[groupIndex].broadcasted[index] = true;
         channels[groupIndex].numberOfBroadcasted++;
+        data[groupIndex][uint8(index)] = BroadcastedData({
+            secretKeyContribution: sc,
+            verificationVector: vv
+        });
     }
 
     function isBroadcasted(bytes32 groupIndex, uint nodeIndex) internal view returns (bool) {
@@ -214,7 +226,7 @@ contract SkaleDKG is Permissions {
 
     function isNodeByMessageSender(uint nodeIndex, address from) internal view returns (bool) {
         address nodesDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
-        INodesData(nodesDataAddress).isNodeExist(from, nodeIndex);
+        return INodesData(nodesDataAddress).isNodeExist(from, nodeIndex);
     }
 
     function addFp2(Fp2 memory a, Fp2 memory b) internal view returns (Fp2 memory) {
@@ -316,7 +328,11 @@ contract SkaleDKG is Permissions {
         //x = xForAddingG2(S2(y2), S1(y1), U2(x2), U1(x1));
         //y = yForAddingG2(S2(y2), S1(y1), U2(x2), U1(x1), x);
         //Fp2 memory z = zForAddingG2(U2(x2), U1(x1));
-        (channels[groupIndex].publicKeyx, channels[groupIndex].publicKeyy) = toAffineCoordinatesG2(xForAddingG2(S2(y2), S1(y1), U2(x2), U1(x1)), yForAddingG2(S2(y2), S1(y1), U2(x2), U1(x1), xForAddingG2(S2(y2), S1(y1), U2(x2), U1(x1))), zForAddingG2(U2(x2), U1(x1)));
+        (channels[groupIndex].publicKeyx, channels[groupIndex].publicKeyy) = toAffineCoordinatesG2(
+            xForAddingG2(S2(y2), S1(y1), U2(x2), U1(x1)),
+            yForAddingG2(S2(y2), S1(y1), U2(x2), U1(x1), xForAddingG2(S2(y2), S1(y1), U2(x2), U1(x1))),
+            zForAddingG2(U2(x2), U1(x1))
+        );
     }
 
     function binstep(uint a, uint step) internal view returns (uint x) {
