@@ -72,9 +72,6 @@ contract("SchainsData", ([owner, holder]) => {
 
         it("should be able to add schain to node", async () => {
             await schainsData.addSchainForNode(5, schainNameHash);
-            console.log('-----------------');
-            console.log(await schainsData.getSchainIdsForNode(5));
-            console.log('-----------------');
             await schainsData.getSchainIdsForNode(5).should.eventually.deep.equal([schainNameHash]);
         });
 
