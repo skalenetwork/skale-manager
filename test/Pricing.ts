@@ -81,25 +81,38 @@ contract("Pricing", ([owner, holder]) => {
                 await schainsData.setNodeInGroup(bobSchainHash, johnNodeIndex);
                 await schainsData.setNodeInGroup(davidSchainHash, michaelNodeIndex);
                 await schainsData.setNodeInGroup(jacobSchainHash, danielNodeIndex);
-                await schainsData.setNodeInGroup(jacobSchainHash, stevenNodeIndex);
+                // await schainsData.setNodeInGroup(jacobSchainHash, stevenNodeIndex);
 
                 await schainsData.addSchainForNode(johnNodeIndex, bobSchainHash);
                 await schainsData.addSchainForNode(michaelNodeIndex, davidSchainHash);
                 await schainsData.addSchainForNode(danielNodeIndex, jacobSchainHash);
-                await schainsData.addSchainForNode(stevenNodeIndex, jacobSchainHash);
+                // await schainsData.addSchainForNode(stevenNodeIndex, jacobSchainHash);
 
                 await schainsData.setSchainPartOfNode(bobSchainHash, 4);
                 await schainsData.setSchainPartOfNode(davidSchainHash, 8);
-                await schainsData.setSchainPartOfNode(jacobSchainHash, 128);
+                await schainsData.setSchainPartOfNode(jacobSchainHash, 1);
 
             });
 
             it("should check load percentage of network", async () => {
-
-                const totalResources = new BigNumber(await schainsData.sumOfSchainsResources());
-                assert(totalResources.isEqualTo(50));
-                const loadPercentage = new BigNumber(await pricing.getTotalLoadPercentage());
-                assert(loadPercentage.isEqualTo(9));
+                const numberOfNodes = new BigNumber(await nodesData.getNumberOfNodes()).toNumber();
+                let sumNode = 0;
+                for (let i = 0; i < numberOfNodes; i++) {
+                    let getSchainIdsForNode = await schainsData.getSchainIdsForNode(i);
+                    for (let j = 0; j < getSchainIdsForNode.length; j++) {
+                        let partOfNode = new BigNumber(
+                            await schainsData.getSchainsPartOfNode(getSchainIdsForNode[j])
+                        ).toNumber();
+                        let isNodeLeft = await nodesData.isNodeLeft(i);
+                        if (partOfNode != 0  && !isNodeLeft) {
+                            sumNode += 128/partOfNode;
+                        }
+                    }
+                }
+                let newLoadPercentage = Math.floor((sumNode*100) / (128*numberOfNodes));
+                const loadPercentage = new BigNumber(await pricing.getTotalLoadPercentage()).toNumber();
+                newLoadPercentage.should.be.equal(loadPercentage);
+                console.log(loadPercentage);
             });
 
             it("should check number of working nodes", async () => {
@@ -163,3 +176,6 @@ contract("Pricing", ([owner, holder]) => {
         });
     });
 });
+
+
+//когда создается нода .addnode(...)   считаем ли мы ее активной если она не добавлена ни в один schain и какой тогда ее loadPercentage
