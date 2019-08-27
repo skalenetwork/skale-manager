@@ -24,27 +24,6 @@ const NodesData: NodesDataContract = artifacts.require("./NodesData");
 chai.should();
 chai.use(chaiAsPromised);
 
-class Schain {
-    public name: string;
-    public owner: string;
-    public indexInOwnerList: BigNumber;
-    public partOfNode: number;
-    public lifetime: BigNumber;
-    public startDate: BigNumber;
-    public deposit: BigNumber;
-    public index: BigNumber;
-
-    constructor(arrayData: [string, string, BigNumber, BigNumber, BigNumber, BigNumber, BigNumber, BigNumber]) {
-        this.name = arrayData[0];
-        this.owner = arrayData[1];
-        this.indexInOwnerList = new BigNumber(arrayData[2]);
-        this.partOfNode = new BigNumber(arrayData[3]).toNumber();
-        this.lifetime = new BigNumber(arrayData[4]);
-        this.startDate = new BigNumber(arrayData[5]);
-        this.deposit = new BigNumber(arrayData[6]);
-        this.index = new BigNumber(arrayData[7]);
-    }
-}
 
 
 contract("Pricing", ([owner, holder]) => {
@@ -63,51 +42,55 @@ contract("Pricing", ([owner, holder]) => {
 
     });
 
-    describe("on existing schain", async () => {
+    describe("on initialized contracts", async () => {
         const bobSchainHash = web3.utils.soliditySha3("BobSchain");
         const davidSchainHash = web3.utils.soliditySha3("DavidSchain");
         const jacobSchainHash = web3.utils.soliditySha3("JacobSchain");
 
         beforeEach(async () => {
-            schainsData.initializeSchain("BobSchain", holder, 10, 2);
-            schainsData.initializeSchain("DavidSchain", holder, 10, 4);
-            schainsData.initializeSchain("JacobSchain", holder, 10, 8);
-            nodesData.addNode(holder, "John", "0x7f000001", "0x7f000002", 8545, "0x1122334455");
-            nodesData.addNode(holder, "Michael", "0x7f000003", "0x7f000004", 8545, "0x1122334455");
-            nodesData.addNode(holder, "Daniel", "0x7f000005", "0x7f000006", 8545, "0x1122334455");
-            nodesData.addNode(holder, "Steven", "0x7f000007", "0x7f000008", 8545, "0x1122334455");
+            await schainsData.initializeSchain("BobSchain", holder, 10, 2);
+            await schainsData.initializeSchain("DavidSchain", holder, 10, 4);
+            await schainsData.initializeSchain("JacobSchain", holder, 10, 8);
+            await nodesData.addNode(holder, "John", "0x7f000001", "0x7f000002", 8545, "0x1122334455");
+            await nodesData.addNode(holder, "Michael", "0x7f000003", "0x7f000004", 8545, "0x1122334455");
+            await nodesData.addNode(holder, "Daniel", "0x7f000005", "0x7f000006", 8545, "0x1122334455");
+            await nodesData.addNode(holder, "Steven", "0x7f000007", "0x7f000008", 8545, "0x1122334455");
 
         })
 
         it("should increase number of schains", async () => {
             const numberOfSchains = new BigNumber(await schainsData.numberOfSchains());
             assert(numberOfSchains.isEqualTo(3));
-
         })
 
+        it("should increase number of nodes", async () => {
+            const numberOfNodes = new BigNumber(await nodesData.getNumberOfNodes());
+            assert(numberOfNodes.isEqualTo(4));
+        })
 
         describe("on existing nodes and schains", async () => {
             beforeEach(async () => {
-                const johnIndex = new BigNumber(await nodesData.nodesNameToIndex(web3.utils.soliditySha3('John'))).toNumber();
-                const michaelIndex = new BigNumber(await nodesData.nodesNameToIndex(web3.utils.soliditySha3('Michael'))).toNumber();
-                const danielIndex = new BigNumber(await nodesData.nodesNameToIndex(web3.utils.soliditySha3('Daniel'))).toNumber();
-                const stevenIndex = new BigNumber(await nodesData.nodesNameToIndex(web3.utils.soliditySha3('Steven'))).toNumber();
-                schainsData.addSchainForNode(johnIndex, bobSchainHash);
-                schainsData.addSchainForNode(michaelIndex, davidSchainHash);
-                schainsData.addSchainForNode(danielIndex, jacobSchainHash);
-                schainsData.addSchainForNode(stevenIndex, jacobSchainHash);
+                const johnNodeIndex = new BigNumber(await nodesData.nodesNameToIndex(web3.utils.soliditySha3('John'))).toNumber();
+                const michaelNodeIndex = new BigNumber(await nodesData.nodesNameToIndex(web3.utils.soliditySha3('Michael'))).toNumber();
+                const danielNodeIndex = new BigNumber(await nodesData.nodesNameToIndex(web3.utils.soliditySha3('Daniel'))).toNumber();
+                const stevenNodeIndex = new BigNumber(await nodesData.nodesNameToIndex(web3.utils.soliditySha3('Steven'))).toNumber();
+                await schainsData.addSchainForNode(johnNodeIndex, bobSchainHash);
+                await schainsData.addSchainForNode(michaelNodeIndex, davidSchainHash);
+                await schainsData.addSchainForNode(danielNodeIndex, jacobSchainHash);
+                await schainsData.addSchainForNode(stevenNodeIndex, jacobSchainHash);
 
-                schainsData.addGroup(bobSchainHash, 1, bobSchainHash);
-                schainsData.addGroup(davidSchainHash, 1, davidSchainHash);
-                schainsData.addGroup(jacobSchainHash, 2, jacobSchainHash);
-                schainsData.setNodeInGroup(bobSchainHash, johnIndex);
-                schainsData.setNodeInGroup(davidSchainHash, michaelIndex);
-                schainsData.setNodeInGroup(jacobSchainHash, danielIndex);
-                schainsData.setNodeInGroup(jacobSchainHash, stevenIndex);
+                await schainsData.addGroup(bobSchainHash, 1, bobSchainHash);
+                await schainsData.addGroup(davidSchainHash, 1, davidSchainHash);
+                await schainsData.addGroup(jacobSchainHash, 2, jacobSchainHash);
 
-                schainsData.setSchainPartOfNode(bobSchainHash, 4);
-                schainsData.setSchainPartOfNode(davidSchainHash, 8);
-                schainsData.setSchainPartOfNode(jacobSchainHash, 128);
+                await schainsData.setNodeInGroup(bobSchainHash, johnNodeIndex);
+                await schainsData.setNodeInGroup(davidSchainHash, michaelNodeIndex);
+                await schainsData.setNodeInGroup(jacobSchainHash, danielNodeIndex);
+                await schainsData.setNodeInGroup(jacobSchainHash, stevenNodeIndex);
+
+                await schainsData.setSchainPartOfNode(bobSchainHash, 4);
+                await schainsData.setSchainPartOfNode(davidSchainHash, 8);
+                await schainsData.setSchainPartOfNode(jacobSchainHash, 128);
     
             })
 
@@ -140,40 +123,47 @@ contract("Pricing", ([owner, holder]) => {
                 await pricing.adjustPrice()
                     .should.be.eventually.rejectedWith("No any changes on nodes");
             })
+
+            it("should not change price when the price is updated more often than necessary", async () => {
+                await pricing.initNodes();
+                await pricing.adjustPrice()
+                    .should.be.eventually.rejectedWith("It's not a time to update a price");
+            })
+
+
+            describe("change the price when changing the number of nodes", async () => {
+                let oldPrice: number;
+
+                beforeEach(async () => {
+                    await pricing.initNodes();
+                    oldPrice = new BigNumber(await pricing.price()).toNumber();
+                })
+
+                afterEach(async () => {
+                    const COOLDOWN_TIME = new BigNumber(await pricing.COOLDOWN_TIME()).toNumber();
+                    const MINUTES_PASSED = 2;
+                    skipTime(web3, MINUTES_PASSED*COOLDOWN_TIME);
+                    await pricing.adjustPrice();
+                    const newPrice = new BigNumber(await pricing.price()).toNumber();
+    
+                    const OPTIMAL_LOAD_PERCENTAGE = new BigNumber(await pricing.OPTIMAL_LOAD_PERCENTAGE()).toNumber();
+                    const ADJUSTMENT_SPEED = new BigNumber(await pricing.ADJUSTMENT_SPEED()).toNumber();
+                    const loadPercentage = new BigNumber(await pricing.getTotalLoadPercentage()).toNumber();
+                    const priceChange = (ADJUSTMENT_SPEED * oldPrice) * (OPTIMAL_LOAD_PERCENTAGE - loadPercentage) / 1000000;
+                    const price = oldPrice - priceChange * MINUTES_PASSED;
+                    price.should.be.equal(newPrice);
+                })
+
+                it("should change price when new working node has been added", async () => {
+                    await nodesData.addNode(holder, "vadim", "0x7f000010", "0x7f000011", 8545, "0x1122334455");
+                })
+
+                it("should change price when working node has been removed", async () => {
+                    await nodesData.setNodeLeft(2);
+                })
+
+            })
             
-            it("should change price when new working nodes have been added", async () => {
-                await pricing.initNodes();
-                const oldPrice = new BigNumber(await pricing.price()).toNumber();
-                nodesData.addNode(holder, "vadim", "0x7f000010", "0x7f000011", 8545, "0x1122334455");
-                skipTime(web3, 120);
-                await pricing.adjustPrice();
-                const newPrice = new BigNumber(await pricing.price()).toNumber();
-
-                const OPTIMAL_LOAD_PERCENTAGE = new BigNumber(await pricing.OPTIMAL_LOAD_PERCENTAGE()).toNumber();
-                const ADJUSTMENT_SPEED = new BigNumber(await pricing.ADJUSTMENT_SPEED()).toNumber();
-                const loadPercentage = new BigNumber(await pricing.getTotalLoadPercentage()).toNumber();
-                const priceChange = (ADJUSTMENT_SPEED * oldPrice) * (OPTIMAL_LOAD_PERCENTAGE - loadPercentage) / 1000000;
-                const price = oldPrice - priceChange * 2;
-                price.should.be.equal(newPrice);
-            })
-
-
-            it("should change price when usual nodes have been added", async () => {
-                await pricing.initNodes();
-                const oldPrice = new BigNumber(await pricing.price()).toNumber();
-                nodesData.addNode(holder, "vadim", "0x7f000010", "0x7f000011", 8545, "0x1122334455");
-                skipTime(web3, 120);
-                await pricing.adjustPrice();
-                const newPrice = new BigNumber(await pricing.price()).toNumber();
-
-                const OPTIMAL_LOAD_PERCENTAGE = new BigNumber(await pricing.OPTIMAL_LOAD_PERCENTAGE()).toNumber();
-                const ADJUSTMENT_SPEED = new BigNumber(await pricing.ADJUSTMENT_SPEED()).toNumber();
-                const loadPercentage = new BigNumber(await pricing.getTotalLoadPercentage()).toNumber();
-                const priceChange = (ADJUSTMENT_SPEED * oldPrice) * (OPTIMAL_LOAD_PERCENTAGE - loadPercentage) / 1000000;
-                const price = oldPrice - priceChange * 2;
-                price.should.be.equal(newPrice);
-            })
-
         })
             
     })

@@ -17,7 +17,7 @@ contract Pricing is Permissions {
     uint public price = 5000000;
     uint constant MAX_PRICE = 2**256-1;
     uint lastUpdated = now;
-    uint constant COOLDOWN_TIME = 60;
+    uint public constant COOLDOWN_TIME = 60;
 
 
 
@@ -68,18 +68,38 @@ contract Pricing is Permissions {
         lastUpdated = now;
     }
 
-    function getTotalLoadPercentage() public view returns (uint) {
+    function getTotalLoadPercentage0() public view returns (uint) {
         address schainsDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("SchainsData")));
         uint64 numberOfSchains = ISchainsData(schainsDataAddress).numberOfSchains();
+        address nodesDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
+        uint numberOfNodes = INodesData(nodesDataAddress).getNumberOfNodes();
         uint sumLoadSchain;
         for (uint i = 0; i < numberOfSchains; i++) {
             bytes32 schain = ISchainsData(schainsDataAddress).schainsAtSystem(i);
-            uint numberOfNodes = IGroupsData(schainsDataAddress).getNumberOfNodesInGroup(schain);
+            uint numberOfNodesInGroup = IGroupsData(schainsDataAddress).getNumberOfNodesInGroup(schain);
             uint part = ISchainsData(schainsDataAddress).getSchainsPartOfNode(schain);
-            sumLoadSchain += (numberOfNodes*10**7)/part;
+            sumLoadSchain += (numberOfNodesInGroup*10**7)/part;
         }
+        return uint(sumLoadSchain/(10**5*numberOfNodes));
+    }
+
+    function getTotalLoadPercentage() public view returns (uint) {
+        address schainsDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("SchainsData")));
+        // uint64 numberOfSchains = ISchainsData(schainsDataAddress).numberOfSchains();
         address nodesDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
-        uint numberOfAllNodes = INodesData(nodesDataAddress).getNumberOfNodes();
-        return uint(sumLoadSchain/(10**5*numberOfAllNodes));
+        uint numberOfNodes = INodesData(nodesDataAddress).getNumberOfNodes();
+        uint sumNode;
+        for (uint i = 0; i < numberOfNodes; i++) {
+            bytes32[] memory getSchainIdsForNode = ISchainsData(schainsDataAddress).getSchainIdsForNode(i);
+            // uint sumLoadSchain = 0;
+            for (uint j = 0; j < getSchainIdsForNode.length; j++) {
+                uint partOfNode = ISchainsData(schainsDataAddress).getSchainsPartOfNode(getSchainIdsForNode[j]);
+                bool isNodeLeft = INodesData(nodesDataAddress).isNodeLeft(i);
+                if (partOfNode != 0 && !isNodeLeft) {
+                    sumNode += 128/partOfNode;
+                }
+            }
+        }
+        return uint(sumNode*100)/(128*numberOfNodes);
     }
 }

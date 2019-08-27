@@ -25,4 +25,5 @@ interface ISchainsData {
     function isOwnerAddress(address from, bytes32 schainId) external view returns (bool);
     function isSchainNameAvailable(string calldata name) external view returns (bool);
     function getSchainsPartOfNode(bytes32 schainId) external view returns (uint);
+    function getSchainIdsForNode(uint nodeIndex) external view returns (bytes32[] memory);
 }
