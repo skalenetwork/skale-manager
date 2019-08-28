@@ -104,9 +104,7 @@ contract ValidatorsFunctionality is GroupsFunctionality, IValidatorsFunctionalit
 
     function addValidator(uint nodeIndex) public allow(executorName) {
         bytes32 groupIndex = keccak256(abi.encodePacked(nodeIndex));
-        address nodesDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
-        uint possibleNumberOfNodes = INodesData(nodesDataAddress).getNumberOfNodes() / 4 +
-            (INodesData(nodesDataAddress).getNumberOfNodes() % 4 == 0 ? 0 : 1);
+        uint possibleNumberOfNodes = 24;
         addGroup(groupIndex, possibleNumberOfNodes, bytes32(nodeIndex));
         uint numberOfNodesInGroup = setValidators(groupIndex, nodeIndex);
         //require(1 != 1, "Break");
@@ -120,9 +118,7 @@ contract ValidatorsFunctionality is GroupsFunctionality, IValidatorsFunctionalit
 
     function upgradeValidator(uint nodeIndex) public allow(executorName) {
         bytes32 groupIndex = keccak256(abi.encodePacked(nodeIndex));
-        address nodesDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
-        uint possibleNumberOfNodes = INodesData(nodesDataAddress).getNumberOfNodes() / 4 +
-            (INodesData(nodesDataAddress).getNumberOfNodes() % 4 == 0 ? 0 : 1);
+        uint possibleNumberOfNodes = 24;
         upgradeGroup(groupIndex, possibleNumberOfNodes, bytes32(nodeIndex));
         uint numberOfNodesInGroup = setValidators(groupIndex, nodeIndex);
         emit ValidatorUpgraded(
@@ -195,27 +191,31 @@ contract ValidatorsFunctionality is GroupsFunctionality, IValidatorsFunctionalit
 
     function generateGroup(bytes32 groupIndex) internal allow(executorName) returns (uint[] memory) {
         address dataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked(dataName)));
+        address nodesDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
+
         require(IGroupsData(dataAddress).isGroupActive(groupIndex), "Group is not active");
-        bytes32 groupData = IGroupsData(dataAddress).getGroupData(groupIndex);
-        uint hash = uint(keccak256(abi.encodePacked(uint(blockhash(block.number - 1)), groupIndex)));
-        uint numberOfNodes;
-        uint finish;
-        (numberOfNodes, finish) = setNumberOfNodesInGroup(groupIndex, groupData);
-        uint indexOfNode;
-        uint iterations = 0;
-        while (finish > 0 && iterations < 200) {
-            indexOfNode = hash % numberOfNodes;
-            if (comparator(groupIndex, indexOfNode)) {
-                IGroupsData(dataAddress).setException(groupIndex, indexOfNode);
-                IGroupsData(dataAddress).setNodeInGroup(groupIndex, indexOfNode);
-                finish--;
-            }
-            hash = uint(keccak256(abi.encodePacked(hash, indexOfNode)));
-            iterations++;
+
+        uint exceptionNode = uint(IGroupsData(dataAddress).getGroupData(groupIndex));
+        uint[] memory activeNodes = INodesData(nodesDataAddress).getActiveNodeIds();
+        uint numberOfNodesInGroup = IGroupsData(dataAddress).getRecommendedNumberOfNodes(groupIndex);
+        uint availableAmount = activeNodes.length - (INodesData(nodesDataAddress).isNodeActive(exceptionNode) ? 1 : 0);
+        if (numberOfNodesInGroup > availableAmount) {
+            numberOfNodesInGroup = availableAmount;
         }
-        uint[] memory nodesInGroup = IGroupsData(dataAddress).getNodesInGroup(groupIndex);
-        for (uint i = 0; i < nodesInGroup.length; i++) {
-            IGroupsData(dataAddress).removeExceptionNode(groupIndex, nodesInGroup[i]);
+        uint[] memory nodesInGroup = new uint[](numberOfNodesInGroup);
+        uint ignoringTail = 0;
+        uint random = uint(keccak256(abi.encodePacked(uint(blockhash(block.number - 1)), groupIndex)));
+        for (uint i = 0; i < nodesInGroup.length; ++i) {
+            uint index = random % (activeNodes.length - ignoringTail);
+            if (activeNodes[index] == exceptionNode) {
+                swap(activeNodes, index, activeNodes.length - ignoringTail - 1);
+                ++ignoringTail;
+                index = random % (activeNodes.length - ignoringTail);
+            }
+            nodesInGroup[i] = activeNodes[index];
+            swap(activeNodes, index, activeNodes.length - ignoringTail - 1);
+            ++ignoringTail;
+            IGroupsData(dataAddress).setNodeInGroup(groupIndex, nodesInGroup[i]);
         }
         emit GroupGenerated(
             groupIndex,
@@ -223,6 +223,12 @@ contract ValidatorsFunctionality is GroupsFunctionality, IValidatorsFunctionalit
             uint32(block.timestamp),
             gasleft());
         return nodesInGroup;
+    }
+
+    function swap(uint[] memory array, uint index1, uint index2) internal pure {
+        uint buffer = array[index1];
+        array[index1] = array[index2];
+        array[index2] = buffer;
     }
 
     function setNumberOfNodesInGroup(bytes32 groupIndex, bytes32 groupData) internal view returns (uint numberOfNodes, uint finish) {

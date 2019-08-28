@@ -18,6 +18,7 @@ import { currentTime, skipTime } from "./utils/time";
 
 import chai = require("chai");
 import * as chaiAsPromised from "chai-as-promised";
+import { type } from "os";
 chai.should();
 chai.use((chaiAsPromised));
 
@@ -81,6 +82,15 @@ contract("ValidatorsFunctionality", ([owner, validator]) => {
     assert.equal(logs[1].event, "GroupGenerated");
     assert.equal(logs[2].event, "ValidatorsArray");
     assert.equal(logs[3].event, "ValidatorCreated");
+
+    const targetNodes = logs[2].args[2].map((value: BN) => value.toNumber());
+    targetNodes.sort();
+    targetNodes.forEach((value: number, index: number) => {
+      if (index > 0) {
+        assert.notEqual(value, targetNodes[index - 1], "Array should not contain duplicates");
+      }
+      assert(nodesData.isNodeActive(value), "Node should be active");
+    });
   });
 
   it("should upgrade Validator", async () => {
@@ -211,6 +221,47 @@ contract("ValidatorsFunctionality", ([owner, validator]) => {
     const res = new BigNumber(await validatorsData.getLengthOfMetrics(validatorIndex1, {from: owner}));
     // expectation
     expect(parseInt(res.toString(), 10)).to.equal(1);
+  });
+
+  const nodesCount = 50;
+  const activeNodesCount = 30;
+  describe("when " + nodesCount + " nodes in network", async () => {
+
+    beforeEach(async () => {
+      for (let node = (await nodesData.getNumberOfNodes()).toNumber(); node < nodesCount; ++node) {
+        const address = ("0000" + node.toString(16)).slice(-4);
+
+        await nodesData.addNode(validator,
+                                "d2_" + node,
+                                "0x7f" + address + "01",
+                                "0x7f" + address + "02",
+                                8545,
+                                "0x1122334459");
+      }
+
+      const leavingCount = nodesCount - activeNodesCount;
+      for (let i = 0; i < leavingCount; ++i) {
+        await nodesData.setNodeLeaving(Math.floor(i * nodesCount / leavingCount));
+      }
+    });
+
+    it("should add validator", async () => {
+      for (let node = 0; node < nodesCount; ++node) {
+        if (await nodesData.isNodeActive(node)) {
+          const { logs } = await validatorsFunctionality.addValidator(node);
+
+          const targetNodes = logs[2].args[2].map((value: BN) => value.toNumber());
+          targetNodes.length.should.be.equal(24);
+          targetNodes.sort();
+          targetNodes.forEach((value: number, index: number) => {
+            if (index > 0) {
+              assert.notEqual(value, targetNodes[index - 1], "Array should not contain duplicates");
+            }
+            assert(nodesData.isNodeActive(value), "Node should be active");
+          });
+        }
+      }
+    });
   });
 
 });
