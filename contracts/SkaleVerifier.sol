@@ -1,3 +1,22 @@
+/*
+    SkaleVerifier.sol - SKALE Manager
+    Copyright (C) 2018-Present SKALE Labs
+    @author Artem Payvin
+
+    SKALE Manager is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as published
+    by the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    SKALE Manager is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 pragma solidity ^0.5.0;
 
 
@@ -11,9 +30,21 @@ contract SkaleVerifier {
     uint g2c = 4082367875863433681332203403145435568316851327593401208105741076214120093531;
     uint g2d = 8495653923123431417604973247489272438418190587263600148770280649306958101930;
 
-    function verify(uint signa, uint signb, uint hasha, uint hashb, uint pkx1, uint pky1, uint pkx2, uint pky2) public view returns (bool) {
-        if (!(signa == 0 && signb == 0)) {
-            signb = p - (signb % p);
+    function verify(
+        uint signa,
+        uint _signb,
+        uint hasha,
+        uint hashb,
+        uint pkx1,
+        uint pky1,
+        uint pkx2,
+        uint pky2) public view returns (bool)
+    {
+        uint signb;
+        if (!(signa == 0 && _signb == 0)) {
+            signb = p - (_signb % p);
+        } else {
+            signb = _signb;
         }
         bool success;
         uint[12] memory inputToPairing;

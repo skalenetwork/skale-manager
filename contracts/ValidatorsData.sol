@@ -1,6 +1,25 @@
+/*
+    ValidatorsData.sol - SKALE Manager
+    Copyright (C) 2018-Present SKALE Labs
+    @author Artem Payvin
+
+    SKALE Manager is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as published
+    by the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    SKALE Manager is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 pragma solidity ^0.5.0;
 
-import './GroupsData.sol';
+import "./GroupsData.sol";
 
 
 contract ValidatorsData is GroupsData {
@@ -22,7 +41,7 @@ contract ValidatorsData is GroupsData {
     mapping (bytes32 => uint32[][]) public verdicts;
 
     constructor(string memory newExecutorName, address newContractsAddress) GroupsData(newExecutorName, newContractsAddress) public {
-    
+
     }
 
     function addValidatedNode(bytes32 validatorIndex, bytes32 data) public allow(executorName) {
@@ -39,6 +58,10 @@ contract ValidatorsData is GroupsData {
         }
         delete validatedNodes[validatorIndex][validatedNodes[validatorIndex].length - 1];
         validatedNodes[validatorIndex].length--;
+    }
+
+    function removeAllValidatedNodes(bytes32 validatorIndex) public allow(executorName) {
+        delete validatedNodes[validatorIndex];
     }
 
     function removeAllVerdicts(bytes32 validatorIndex) public allow(executorName) {

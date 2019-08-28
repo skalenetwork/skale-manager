@@ -1,13 +1,33 @@
+/*
+    SchainsData.sol - SKALE Manager
+    Copyright (C) 2018-Present SKALE Labs
+    @author Artem Payvin
+
+    SKALE Manager is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as published
+    by the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    SKALE Manager is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 pragma solidity ^0.5.0;
 
 import "./GroupsData.sol";
+import "./interfaces/ISchainsData.sol";
 
 
 /**
- * @title SchainsData - Data contract for SchainsFunctionality. 
+ * @title SchainsData - Data contract for SchainsFunctionality.
  * Contain all information about SKALE-Chains.
  */
-contract SchainsData is GroupsData {
+contract SchainsData is ISchainsData, GroupsData {
 
     struct Schain {
         string name;
@@ -34,7 +54,7 @@ contract SchainsData is GroupsData {
     uint public sumOfSchainsResources = 0;
 
     constructor(string memory newExecutorName, address newContractsAddress) GroupsData(newExecutorName, newContractsAddress) public {
-    
+
     }
 
     /**
@@ -45,7 +65,12 @@ contract SchainsData is GroupsData {
      * @param lifetime - initial lifetime of Schain
      * @param deposit - given amount of SKL
      */
-    function initializeSchain(string memory name, address from, uint lifetime, uint deposit) public allow("SchainsFunctionality") {
+    function initializeSchain(
+        string memory name,
+        address from,
+        uint lifetime,
+        uint deposit) public allow("SchainsFunctionality")
+    {
         bytes32 schainId = keccak256(abi.encodePacked(name));
         schains[schainId].name = name;
         schains[schainId].owner = from;
@@ -56,7 +81,7 @@ contract SchainsData is GroupsData {
         numberOfSchains++;
         schainsAtSystem.push(schainId);
     }
-    
+
     /**
      * @dev setSchainIndex - adds Schain's hash to owner
      * function could be run only by executor
@@ -119,7 +144,20 @@ contract SchainsData is GroupsData {
         }
         delete schainIndexes[from][length - 1];
         schainIndexes[from].length--;
+
+        // TODO:
+        // optimize
+        for (uint i = 0; i + 1 < schainsAtSystem.length; i++) {
+            if (schainsAtSystem[i] == schainId) {
+                schainsAtSystem[i] = schainsAtSystem[schainsAtSystem.length - 1];
+                break;
+            }
+        }
+        delete schainsAtSystem[schainsAtSystem.length - 1];
+        schainsAtSystem.length--;
+
         delete schains[schainId];
+        numberOfSchains--;
     }
 
     /**
@@ -128,7 +166,7 @@ contract SchainsData is GroupsData {
      * @param nodeIndex - index of Node
      * @param schainIndex - index of Schain in schainsForNodes array by this Node
      */
-    function removeSchainForNode(uint nodeIndex, uint schainIndex) public allow(executorName) {
+    function removeSchainForNode(uint nodeIndex, uint schainIndex) public allow("SchainsFunctionality") {
         uint length = schainsForNodes[nodeIndex].length;
         if (schainIndex != length - 1) {
             schainsForNodes[nodeIndex][schainIndex] = schainsForNodes[nodeIndex][length - 1];
@@ -148,7 +186,7 @@ contract SchainsData is GroupsData {
     /**
      * @dev getSchainsPartOfNode - gets occupied space for given Schain
      * @param schainId - hash by Schain name
-     * @return occupied space 
+     * @return occupied space
      */
     function getSchainsPartOfNode(bytes32 schainId) public view returns (uint) {
         return schains[schainId].partOfNode;
@@ -173,7 +211,7 @@ contract SchainsData is GroupsData {
     }
 
     /**
-     * @dev getSchainIdsForNode - returns array of hashes by Schain names, 
+     * @dev getSchainIdsForNode - returns array of hashes by Schain names,
      * which given Node composed
      * @param nodeIndex - index of Node
      * @return array of hashes by Schain names
@@ -198,6 +236,10 @@ contract SchainsData is GroupsData {
      */
     function getSchainIdFromSchainName(string memory schainName) public pure returns (bytes32) {
         return keccak256(abi.encodePacked(schainName));
+    }
+
+    function getSchainOwner(bytes32 schainId) public view returns (address) {
+        return schains[schainId].owner;
     }
 
     /**

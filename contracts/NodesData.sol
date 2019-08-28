@@ -1,19 +1,33 @@
+/*
+    NodesData.sol - SKALE Manager
+    Copyright (C) 2018-Present SKALE Labs
+    @author Artem Payvin
+
+    SKALE Manager is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as published
+    by the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    SKALE Manager is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 pragma solidity ^0.5.0;
 
 import "./Permissions.sol";
-
-/**
- * @title Constants - interface of Constants contract
- */
-interface IConstants {
-    function rewardPeriod() external view returns (uint32);
-}
+import "./interfaces/IConstants.sol";
+import "./interfaces/INodesData.sol";
 
 
 /**
  * @title NodesData - Data contract for NodesFunctionality
  */
-contract NodesData is Permissions {
+contract NodesData is INodesData, Permissions {
 
     // All Nodes states
     enum NodeStatus {Active, Leaving, Left}
@@ -44,7 +58,7 @@ contract NodesData is Permissions {
         bool isNodeFull;
     }
 
-    // struct to note nodeIndex and remaining space 
+    // struct to note nodeIndex and remaining space
     struct NodeFilling {
         uint nodeIndex;
         uint freeSpace;
@@ -90,12 +104,21 @@ contract NodesData is Permissions {
      * @param publicKey - Ethereum public key
      * @return index of Node
      */
-    function addNode(address from, string memory name, bytes4 ip, bytes4 publicIP, uint16 port, bytes memory publicKey) public allow("NodesFunctionality") returns (uint) {
+    function addNode(
+        address from,
+        string memory name,
+        bytes4 ip,
+        bytes4 publicIP,
+        uint16 port,
+        bytes memory publicKey)
+    public allow("NodesFunctionality") returns (uint)
+    {
         nodes.push(Node({
             name: name,
             ip: ip,
             publicIP: publicIP,
             port: port,
+            //owner: from,
             publicKey: publicKey,
             startDate: uint32(block.timestamp),
             leavingDate: uint32(0),
@@ -162,15 +185,18 @@ contract NodesData is Permissions {
      * @param nodeIndex - index of Node
      */
     function setNodeLeft(uint nodeIndex) public allow("NodesFunctionality") {
-        //nodes[nodeIndex].status = NodeStatus.Left;
         nodesIPCheck[nodes[nodeIndex].ip] = false;
         nodesNameCheck[keccak256(abi.encodePacked(nodes[nodeIndex].name))] = false;
+        // address ownerOfNode = nodes[nodeIndex].owner;
+        // nodeIndexes[ownerOfNode].isNodeExist[nodeIndex] = false;
+        // nodeIndexes[ownerOfNode].numberOfNodes--;
         delete nodesNameToIndex[keccak256(abi.encodePacked(nodes[nodeIndex].name))];
         if (nodes[nodeIndex].status == NodeStatus.Active) {
             numberOfActiveNodes--;
         } else {
             numberOfLeavingNodes--;
         }
+        nodes[nodeIndex].status = NodeStatus.Left;
         numberOfLeftNodes++;
     }
 
@@ -186,6 +212,7 @@ contract NodesData is Permissions {
             nodesLink[secondNodeIndex].subarrayLink = subarrayIndex;
         }
         delete fractionalNodes[fractionalNodes.length - 1];
+        fractionalNodes.length--;
     }
 
     /**
@@ -200,6 +227,7 @@ contract NodesData is Permissions {
             nodesLink[secondNodeIndex].subarrayLink = subarrayIndex;
         }
         delete fullNodes[fullNodes.length - 1];
+        fullNodes.length--;
     }
 
     /**
@@ -236,7 +264,7 @@ contract NodesData is Permissions {
      * @param subarrayLink - index of Node at array of Fractional Nodes
      * @param space - space which should be returned
      */
-    function addSpaceToFractionalNode(uint subarrayLink, uint space) public allow("SchainsFunctionality1") {
+    function addSpaceToFractionalNode(uint subarrayLink, uint space) public allow("SchainsFunctionality") {
         fractionalNodes[subarrayLink].freeSpace += space;
     }
 
@@ -246,7 +274,7 @@ contract NodesData is Permissions {
      * @param subarrayLink - index of Node at array of Full Nodes
      * @param space - space which should be returned
      */
-    function addSpaceToFullNode(uint subarrayLink, uint space) public allow("SchainsFunctionality1") {
+    function addSpaceToFullNode(uint subarrayLink, uint space) public allow("SchainsFunctionality") {
         fullNodes[subarrayLink].freeSpace += space;
     }
 
@@ -304,6 +332,10 @@ contract NodesData is Permissions {
      */
     function getNodePort(uint nodeIndex) public view returns (uint16) {
         return nodes[nodeIndex].port;
+    }
+
+    function getnodePublicKey(uint nodeIndex) public view returns (bytes memory) {
+        return nodes[nodeIndex].publicKey;
     }
 
     /**
@@ -375,7 +407,7 @@ contract NodesData is Permissions {
     function getNumberOfFullNodes() public view returns (uint) {
         return fullNodes.length;
     }
-    
+
     /**
      * @dev getNumberOfFreefractionalNodes - get number of free Fractional Nodes
      * @return numberOfFreeFractionalNodes - number of free Fractional Nodes
@@ -387,7 +419,6 @@ contract NodesData is Permissions {
             }
         }
     }
-
 
     /**
      * @dev getnumberOfFreeFullNodes - get number of free Full Nodes
@@ -426,13 +457,13 @@ contract NodesData is Permissions {
         for (uint indexOfNodes = 0; indexOfNodes < nodes.length; indexOfNodes++) {
             if (isNodeActive(indexOfNodes)) {
                 activeNodeIds[indexOfActiveNodeIds] = indexOfNodes;
-                indexOfActiveNodeIds++;                                                               
-            }                                   
-        }            
+                indexOfActiveNodeIds++;
+            }
+        }
     }
 
     /**
-     * @dev getActiveNodesByAddress - get array of indexes of Active Nodes, which were 
+     * @dev getActiveNodesByAddress - get array of indexes of Active Nodes, which were
      * created by msg.sender
      * @return activeNodesbyAddress - array of indexes of Active Nodes, which were created
      * by msg.sender
@@ -445,6 +476,6 @@ contract NodesData is Permissions {
                 activeNodesByAddress[indexOfActiveNodesByAddress] = indexOfNodes;
                 indexOfActiveNodesByAddress++;
             }
-        }             
+        }
     }
 }

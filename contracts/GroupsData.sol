@@ -1,13 +1,33 @@
+/*
+    GroupsData.sol - SKALE Manager
+    Copyright (C) 2018-Present SKALE Labs
+    @author Artem Payvin
+
+    SKALE Manager is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as published
+    by the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    SKALE Manager is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 pragma solidity ^0.5.0;
 
-import './Permissions.sol';
+import "./Permissions.sol";
+import "./interfaces/IGroupsData.sol";
 
 
 /**
  * @title GroupsData - contract with some Groups data, will be inherited by
  * SchainsData and ValidatorsData.
  */
-contract GroupsData is Permissions {
+contract GroupsData is IGroupsData, Permissions {
 
     // struct to note which Node has already joined to the group
     struct GroupCheck {
@@ -21,6 +41,7 @@ contract GroupsData is Permissions {
         uint recommendedNumberOfNodes;
         // BLS master public key
         uint[4] groupsPublicKey;
+        bool succesfulDKG;
     }
 
     // contain all groups
@@ -72,7 +93,13 @@ contract GroupsData is Permissions {
      * @param publicKeyx2 }
      * @param publicKeyy2 }
      */
-    function setPublicKey(bytes32 groupIndex, uint publicKeyx1, uint publicKeyy1, uint publicKeyx2, uint publicKeyy2) public allow("SkaleDKG") {
+    function setPublicKey(
+        bytes32 groupIndex,
+        uint publicKeyx1,
+        uint publicKeyy1,
+        uint publicKeyx2,
+        uint publicKeyy2) public allow("SkaleDKG")
+    {
         groups[groupIndex].groupsPublicKey[0] = publicKeyx1;
         groups[groupIndex].groupsPublicKey[1] = publicKeyy1;
         groups[groupIndex].groupsPublicKey[2] = publicKeyx2;
@@ -129,6 +156,10 @@ contract GroupsData is Permissions {
         groups[groupIndex].groupData = data;
     }
 
+    function setGroupFailedDKG(bytes32 groupIndex) public allow("SkaleDKG") {
+        groups[groupIndex].succesfulDKG = false;
+    }
+
     /**
      * @dev removeGroup - remove Group from storage
      * function could be run only be executor
@@ -138,6 +169,7 @@ contract GroupsData is Permissions {
         groups[groupIndex].active = false;
         delete groups[groupIndex].groupData;
         delete groups[groupIndex].recommendedNumberOfNodes;
+        delete groups[groupIndex].groupsPublicKey;
     }
 
     /**
@@ -174,7 +206,12 @@ contract GroupsData is Permissions {
      * @return publicKey(x1, y1, x2, y2) - parts of BLS master public key
      */
     function getGroupsPublicKey(bytes32 groupIndex) public view returns (uint, uint, uint, uint) {
-        return (groups[groupIndex].groupsPublicKey[0], groups[groupIndex].groupsPublicKey[1], groups[groupIndex].groupsPublicKey[2], groups[groupIndex].groupsPublicKey[3]);
+        return (
+            groups[groupIndex].groupsPublicKey[0],
+            groups[groupIndex].groupsPublicKey[1],
+            groups[groupIndex].groupsPublicKey[2],
+            groups[groupIndex].groupsPublicKey[3]
+        );
     }
 
     /**

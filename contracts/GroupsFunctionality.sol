@@ -1,34 +1,41 @@
+/*
+    GroupsFunctionality.sol - SKALE Manager
+    Copyright (C) 2018-Present SKALE Labs
+    @author Artem Payvin
+
+    SKALE Manager is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as published
+    by the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    SKALE Manager is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 pragma solidity ^0.5.0;
 
-import './Permissions.sol';
+import "./Permissions.sol";
+import "./interfaces/IGroupsData.sol";
 
-/**
- * @title GroupsData - interface of GroupsData
- */
-interface IGroupsData {
-    function addGroup(bytes32 groupIndex, uint amountOfNodes, bytes32 data) external;
-    function removeAllNodesInGroup(bytes32 groupIndex) external;
-    function setNewAmountOfNodes(bytes32 groupIndex, uint amountOfNodes) external;
-    function setNewGroupData(bytes32 groupIndex, bytes32 data) external;
-    function setNodeInGroup(bytes32 groupIndex, uint nodeIndex) external;
-    function setNodesInGroup(bytes32 groupIndex, uint[] calldata nodesInGroup) external;
-    function removeExceptionNode(bytes32 groupIndex, uint nodeIndex) external;
-    function removeGroup(bytes32 groupIndex) external;
-    function setException(bytes32 groupIndex, uint nodeIndex) external;
-    function isGroupActive(bytes32 groupIndex) external view returns (bool);
-    function isExceptionNode(bytes32 groupIndex, uint nodeIndex) external view returns (bool);
-    function getGroupsPublicKey(bytes32 groupIndex) external view returns (uint, uint, uint, uint);
-    function getNodesInGroup(bytes32 schainId) external view returns (uint[] memory);
-    function getGroupData(bytes32 groupIndex) external view returns (bytes32);
-    function getRecommendedNumberOfNodes(bytes32 groupIndex) external view returns (uint);
-    function getNumberOfNodesInGroup(bytes32 groupIndex) external view returns (uint);
-}
 
 /**
  * @title SkaleVerifier - interface of SkaleVerifier
  */
 interface ISkaleVerifier {
-    function verify(uint sigx, uint sigy, uint hashx, uint hashy, uint pkx1, uint pky1, uint pkx2, uint pky2) external view returns (bool);
+    function verify(
+        uint sigx,
+        uint sigy,
+        uint hashx,
+        uint hashy,
+        uint pkx1,
+        uint pky1,
+        uint pkx2,
+        uint pky2) external view returns (bool);
 }
 
 
@@ -103,7 +110,11 @@ contract GroupsFunctionality is Permissions {
     function addGroup(bytes32 groupIndex, uint newRecommendedNumberOfNodes, bytes32 data) public allow(executorName) {
         address groupsDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked(dataName)));
         IGroupsData(groupsDataAddress).addGroup(groupIndex, newRecommendedNumberOfNodes, data);
-        emit GroupAdded(groupIndex, data, uint32(block.timestamp), gasleft());
+        emit GroupAdded(
+            groupIndex,
+            data,
+            uint32(block.timestamp),
+            gasleft());
     }
 
     /**
@@ -132,7 +143,11 @@ contract GroupsFunctionality is Permissions {
         IGroupsData(groupsDataAddress).setNewGroupData(groupIndex, data);
         IGroupsData(groupsDataAddress).setNewAmountOfNodes(groupIndex, newRecommendedNumberOfNodes);
         IGroupsData(groupsDataAddress).removeAllNodesInGroup(groupIndex);
-        emit GroupUpgraded(groupIndex, data, uint32(block.timestamp), gasleft());
+        emit GroupUpgraded(
+            groupIndex,
+            data,
+            uint32(block.timestamp),
+            gasleft());
     }
 
     /**
@@ -144,7 +159,13 @@ contract GroupsFunctionality is Permissions {
      * @param hashY - second part of hashed message
      * @return true - if correct, false - if not
      */
-    function verifySignature(bytes32 groupIndex, uint signatureX, uint signatureY, uint hashX, uint hashY) public view returns (bool) {
+    function verifySignature(
+        bytes32 groupIndex,
+        uint signatureX,
+        uint signatureY,
+        uint hashX,
+        uint hashY) public view returns (bool)
+    {
         address groupsDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked(dataName)));
         uint publicKeyx1;
         uint publicKeyy1;
@@ -152,7 +173,9 @@ contract GroupsFunctionality is Permissions {
         uint publicKeyy2;
         (publicKeyx1, publicKeyy1, publicKeyx2, publicKeyy2) = IGroupsData(groupsDataAddress).getGroupsPublicKey(groupIndex);
         address skaleVerifierAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("SkaleVerifier")));
-        return ISkaleVerifier(skaleVerifierAddress).verify(signatureX, signatureY, hashX, hashY, publicKeyx1, publicKeyy1, publicKeyx2, publicKeyy2);
+        return ISkaleVerifier(skaleVerifierAddress).verify(
+            signatureX, signatureY, hashX, hashY, publicKeyx1, publicKeyy1, publicKeyx2, publicKeyy2
+        );
     }
 
     /**

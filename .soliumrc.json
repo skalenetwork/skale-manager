@@ -3,31 +3,25 @@
   "plugins": [
     "security"
   ],
-  "rules": {
-    "imports-on-top": "off",
-    "variable-declarations": "off",
-    "no-empty-blocks": "off",
-    "arg-overflow": "off",
-    "uppercase": "off",
-    "operator-whitespace": "off",
+  "rules": {    
     "array-declarations": "error",
     "indentation": ["error", 4],
-    "quotes": "off",
     "conditionals-whitespace": "error",
     "comma-whitespace": "error",
     "semicolon-whitespace": "error",
     "function-whitespace": "error",
     "lbrace": "error",
-    "mixedcase": "off",
-    "camelcase": "warning",
     "no-unused-vars": "error",
-    "blank-lines": "warning",
-    "max-len": "off",
-    "emit": "off",
-    "whitespace": "warning",
-    "pragma-on-top": "warning",
-    "function-order": "off",
-    "error-reason": "off",
-    "linebreak-style": "off"
+    "max-len": "error",
+    "camelcase": "error",
+    "blank-lines": "error",
+    "whitespace": "error",
+    "pragma-on-top": "error",
+    "arg-overflow": "error",
+    "no-trailing-whitespace": "error",
+    "function-order": "error",
+    "uppercase": "error",
+    "error-reason": "error",
+    "security/no-inline-assembly": "warning"
   }
 }

@@ -4,15 +4,35 @@
   "description": "SKALE Manager system, Decentralized task manager",
   "scripts": {
     "lint": "npx solium --dir contracts",
-    "compile": "./node_modules/.bin/truffle compile",
-    "deploy": "./scripts/build.sh",
-    "test": "node test/Main.js"
+    "compile": "rm -r ./build && ./node_modules/.bin/truffle compile",
+    "deploy": "bash ./scripts/deploy.sh",
+    "generate": "truffle compile && typechain --target truffle './build/**/*.json'",
+    "prepare": "yarn generate",
+    "test": "truffle test && yarn tsc",
+    "tsc": "tsc --noEmit",
+    "tslint": "npx tslint --project ."
   },
   "dependencies": {
-    "solc": "0.5.7",
-    "truffle": "5.0.12",
+    "@types/chai": "^4.1.7",
+    "@types/chai-as-promised": "^7.1.0",
+    "@types/minimist": "^1.2.0",
+    "bignumber.js": "^9.0.0",
+    "chai": "^4.2.0",
+    "chai-as-promised": "^7.1.1",
+    "ethereumjs-tx": "1.3.7",
+    "codecov": "^3.5.0",
+    "moment": "^2.24.0",
+    "openzeppelin-solidity": "^2.3.0",
+    "scrypt": "^6.0.3",
+    "solc": "^0.5.7",
+    "solidity-coverage": "leapdao/solidity-coverage",
+    "solium": "^1.2.4",
+    "truffle": "^5.0.12",
     "truffle-hdwallet-provider": "^1.0.8",
-    "web3": "1.0.0-beta.35"
+    "truffle-typings": "^1.0.8",
+    "ts-node": "^8.3.0",
+    "typechain": "^0.3.17",
+    "web3": "^1.0.0-beta.37"
   },
   "repository": {
     "type": "git",
@@ -20,17 +40,31 @@
   },
   "author": "SKALE Labs",
   "contributors": [
-    "Artem Payvin <artem.payvin@skalelabs.com>"
+    {
+      "name": "Artem Payvin <artem.payvin@skalelabs.com>",
+      "url": "https://github.com/payvint",
+      "githubUsername": "payvint"
+    },
+    {
+      "name": "Dmytro Stebaiev",
+      "url": "https://github.com/DimaStebaev",
+      "githubUsername": "DimaStebaev"
+    }
   ],
-  "license": "GPL-3.0",
+  "license": "AGPL-3.0",
   "bugs": {
     "url": "https://github.com/skalenetwork/skale-manager/issues"
   },
+  "private": true,
   "homepage": "https://github.com/skalenetwork/skale-manager#readme",
   "devDependencies": {
+    "@types/web3": "^1.0.19",
     "dotenv": "^7.0.0",
     "ethlint": "^1.2.4",
-    "ganache-cli": "6.1.8",
-    "solidity-coverage": "^0.5.11"
+    "ganache-cli": "^6.1.8",
+    "tslint": "^5.18.0",
+    "tslint-no-unused-expression-chai": "^0.1.4",
+    "typescript": "^3.5.2"
   }
 }
+ 
