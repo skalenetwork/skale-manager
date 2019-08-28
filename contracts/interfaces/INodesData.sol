@@ -32,6 +32,7 @@ interface INodesData {
     function removeFullNode(uint subarrayLink) external;
     function numberOfActiveNodes() external view returns (uint);
     function numberOfLeavingNodes() external view returns (uint);
+    function getNumberOnlineNodes() external view returns (uint);
     function changeNodeLastRewardDate(uint nodeIndex) external;
     function getNodeLastRewardDate(uint nodeIndex) external view returns (uint32);
     function addSpaceToFullNode(uint subarrayLink, uint space) external;
