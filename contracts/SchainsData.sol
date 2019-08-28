@@ -47,7 +47,7 @@ contract SchainsData is ISchainsData, GroupsData {
     // mapping shows schains which Node composed in
     mapping (uint => bytes32[]) public schainsForNodes;
     // array which contain all schains
-    bytes32[] private schainsAtSystem;
+    bytes32[] public schainsAtSystem;
 
     uint64 public numberOfSchains = 0;
     // total resources that schains occupied
@@ -271,4 +271,5 @@ contract SchainsData is ISchainsData, GroupsData {
     function isOwnerAddress(address from, bytes32 schainId) public view returns (bool) {
         return schains[schainId].owner == from;
     }
+
 }
