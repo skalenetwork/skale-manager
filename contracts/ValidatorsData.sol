@@ -45,6 +45,11 @@ contract ValidatorsData is GroupsData {
     }
 
     function addValidatedNode(bytes32 validatorIndex, bytes32 data) public allow(executorName) {
+        for (uint i = 0; i < validatedNodes[validatorIndex].length; ++i) {
+            if (validatedNodes[validatorIndex][i] == data) {
+                return;
+            }
+        }
         validatedNodes[validatorIndex].push(data);
     }
 
