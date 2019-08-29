@@ -102,6 +102,9 @@ contract ValidatorsFunctionality is GroupsFunctionality, IValidatorsFunctionalit
 
     }
 
+    /**
+     * addValidator - setup validators of node
+     */
     function addValidator(uint nodeIndex) public allow(executorName) {
         bytes32 groupIndex = keccak256(abi.encodePacked(nodeIndex));
         uint possibleNumberOfNodes = 24;

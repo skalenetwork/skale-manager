@@ -223,6 +223,30 @@ contract("ValidatorsFunctionality", ([owner, validator]) => {
     expect(parseInt(res.toString(), 10)).to.equal(1);
   });
 
+  it("should not contain duplicates after epoch ending", async () => {
+    await validatorsFunctionality.addValidator(0);
+
+    const rewardPeriod = (await constantsHolder.rewardPeriod()).toNumber();
+    skipTime(web3, rewardPeriod);
+
+    await validatorsFunctionality.sendVerdict(1, 0, 0, 0);
+
+    const node1Hash = web3.utils.soliditySha3(1);
+    const node2Hash = web3.utils.soliditySha3(2);
+    await validatorsData.getValidatedArray(node1Hash).should.be.eventually.empty;
+    (await validatorsData.getValidatedArray(node2Hash)).length.should.be.equal(1);
+
+    await validatorsFunctionality.upgradeValidator(0);
+
+    const validatedArray = await validatorsData.getValidatedArray(node2Hash);
+    validatedArray.sort();
+    validatedArray.forEach((value: string, index: number) => {
+      if (index > 0) {
+        assert.notDeepEqual(value, validatedArray[index - 1], "Should not contain duplicates");
+      }
+    });
+  });
+
   const nodesCount = 50;
   const activeNodesCount = 30;
   describe("when " + nodesCount + " nodes in network", async () => {
