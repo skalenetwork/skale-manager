@@ -202,7 +202,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                 it("should be able to delete schain", async () => {
                     await schainsFunctionality.deleteSchain(
                         holder,
-                        "0x9ad263ae43881ba28ed7ce1c8d76614d2b21b3756573ad348964cdde6b3ae6df",
+                        "d2",
                         {from: owner});
                     await schainsData.getSchains().should.be.eventually.empty;
                 });
@@ -210,7 +210,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                 it("should fail on deleting schain if owner is wrong", async () => {
                     await schainsFunctionality.deleteSchain(
                         validator,
-                        "0x9ad263ae43881ba28ed7ce1c8d76614d2b21b3756573ad348964cdde6b3ae6df",
+                        "d2",
                         {from: owner})
                         .should.be.eventually.rejectedWith("Message sender is not an owner of Schain");
                 });
@@ -248,7 +248,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
 
                     await schainsFunctionality.deleteSchain(
                         holder,
-                        "0x9ad263ae43881ba28ed7ce1c8d76614d2b21b3756573ad348964cdde6b3ae6df",
+                        "d2",
                         {from: owner});
                     await schainsData.getSchains().should.be.eventually.empty;
                 });
@@ -257,7 +257,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
 
                     await schainsFunctionality.deleteSchain(
                         validator,
-                        "0x9ad263ae43881ba28ed7ce1c8d76614d2b21b3756573ad348964cdde6b3ae6df",
+                        "d2",
                         {from: owner})
                         .should.be.eventually.rejectedWith("Message sender is not an owner of Schain");
                 });

@@ -58,6 +58,11 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
         uint gasSpend
     );
 
+    event SchainDeleted(
+        address owner,
+        string name
+    );
+
     string executorName;
     string dataName;
 
@@ -150,9 +155,10 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
      * @dev deleteSchain - removes Schain from the system
      * function could be run only by executor
      * @param from - owner of Schain
-     * @param schainId - hash by Schain name
+     * @param name - Schain name
      */
-    function deleteSchain(address from, bytes32 schainId) public allow(executorName) {
+    function deleteSchain(address from, string memory name) public allow(executorName) {
+        bytes32 schainId = keccak256(abi.encodePacked(name));
         address dataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked(dataName)));
         //require(ISchainsData(dataAddress).isTimeExpired(schainId), "Schain lifetime did not end");
         require(ISchainsData(dataAddress).isOwnerAddress(from, schainId), "Message sender is not an owner of Schain");
@@ -169,12 +175,13 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
             ISchainsData(dataAddress).removeSchainForNode(nodesInGroup[i], schainIndex);
             addSpace(nodesInGroup[i], partOfNode);
         }
-
         ISchainsFunctionality1(schainsFunctionality1Address).deleteGroup(schainId);
         ISchainsData(dataAddress).removeSchain(schainId, from);
+        emit SchainDeleted(from, name);
     }
 
-    function deleteSchainByRoot(bytes32 schainId) public allow(executorName) {
+    function deleteSchainByRoot(string memory name) public allow(executorName) {
+        bytes32 schainId = keccak256(abi.encodePacked(name));
         address dataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked(dataName)));
         address schainsFunctionality1Address = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("SchainsFunctionality1")));
 
@@ -193,6 +200,7 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
         ISchainsFunctionality1(schainsFunctionality1Address).deleteGroup(schainId);
         address from = ISchainsData(dataAddress).getSchainOwner(schainId);
         ISchainsData(dataAddress).removeSchain(schainId, from);
+        emit SchainDeleted(from, name);
     }
 
     function initializeSchainInSchainsData(
