@@ -25,7 +25,7 @@
     "openzeppelin-solidity": "^2.3.0",
     "scrypt": "^6.0.3",
     "solc": "^0.5.7",
-    "solidity-coverage": "leapdao/solidity-coverage",
+    "solidity-coverage": "^0.6.4",
     "solium": "^1.2.4",
     "truffle": "^5.0.12",
     "truffle-hdwallet-provider": "^1.0.8",
