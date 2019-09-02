@@ -182,7 +182,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                         "0000000000000000000000000000000000000000000000000000000000000005" +
                         "01" +
                         "0000" +
-                        "d2",
+                        "4432",
                         {from: owner});
                 });
 
@@ -194,7 +194,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                         "0000000000000000000000000000000000000000000000000000000000000005" +
                         "01" +
                         "0000" +
-                        "d2",
+                        "4432",
                         {from: owner})
                         .should.be.eventually.rejectedWith("Schain name is not available");
                 });
@@ -227,7 +227,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                         "0000000000000000000000000000000000000000000000000000000000000005" +
                         "04" +
                         "0000" +
-                        "d2",
+                        "4432",
                         {from: owner});
                 });
 
@@ -239,7 +239,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                         "0000000000000000000000000000000000000000000000000000000000000005" +
                         "04" +
                         "0000" +
-                        "d2",
+                        "4432",
                         {from: owner})
                         .should.be.eventually.rejectedWith("Schain name is not available");
                 });
