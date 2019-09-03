@@ -334,7 +334,7 @@ contract NodesData is INodesData, Permissions {
         return nodes[nodeIndex].port;
     }
 
-    function getnodePublicKey(uint nodeIndex) public view returns (bytes memory) {
+    function getNodePublicKey(uint nodeIndex) public view returns (bytes memory) {
         return nodes[nodeIndex].publicKey;
     }
 

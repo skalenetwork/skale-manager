@@ -1,6 +1,6 @@
 pragma solidity ^0.5.0;
 
-contract RC4 {
+contract Decryption {
     
     function encrypt(uint256 secretNumber, bytes32 key) public pure returns(bytes32 ciphertext) {
         bytes32 numberBytes = bytes32(secretNumber);

@@ -18,6 +18,9 @@ let SchainsFunctionality = artifacts.require('./SchainsFunctionality.sol');
 let SchainsFunctionality1 = artifacts.require('./SchainsFunctionality1.sol');
 let ContractManager = artifacts.require('./ContractManager.sol');
 let ConstantsHolder = artifacts.require('./ConstantsHolder.sol');
+let SkaleDKG = artifacts.require('./SkaleDKG.sol');
+let SkaleVerifier = artifacts.require('./SkaleVerifier.sol');
+let Decryption = artifacts.require('./Decryption.sol');
 
 let gasLimit = 6900000;
 
@@ -59,6 +62,18 @@ async function deploy(deployer, network) {
         await contractManagerInstance.setContractsAddress("SchainsFunctionality1", SchainsFunctionality1.address).then(function(res) {
             console.log("Contract Schains Functionality1 with address", SchainsFunctionality1.address, "registred in Contract Manager");
         });
+        await deployer.deploy(Decryption, {gas: gasLimit * gas_multiplier});
+        await contractManagerInstance.setContractsAddress("Decryption", Decryption.address).then(function(res) {
+            console.log("Contract Decryption with address", Decryption.address, "registred in Contract Manager");
+        });
+        await deployer.deploy(SkaleDKG, contractManagerInstance.address, {gas: gasLimit * gas_multiplier});
+        await contractManagerInstance.setContractsAddress("SkaleDKG", SkaleDKG.address).then(function(res) {
+            console.log("Contract SkaleDKG with address", SkaleDKG.address, "registred in Contract Manager");
+        });
+        await deployer.deploy(SkaleVerifier, {gas: gasLimit * gas_multiplier});
+        await contractManagerInstance.setContractsAddress("SkaleVerifier", SkaleVerifier.address).then(function(res) {
+            console.log("Contract SkaleVerifier with address", SkaleVerifier.address, "registred in Contract Manager");
+        });
         await deployer.deploy(ManagerData, "SkaleManager", contractManagerInstance.address, {gas: gasLimit * gas_multiplier});
         await contractManagerInstance.setContractsAddress("ManagerData", ManagerData.address).then(function(res) {
             console.log("Contract Manager Data with address", ManagerData.address, "registred in Contract Manager");
@@ -92,6 +107,12 @@ async function deploy(deployer, network) {
             skale_manager_abi: SkaleManager.abi,
             constants_address: ConstantsHolder.address,
             constants_abi: ConstantsHolder.abi,
+            decryption_address: Decryption.address,
+            decryption_abi: Decryption.abi,
+            skale_dkg_address: SkaleDKG.address,
+            skale_dkg_abi: SkaleDKG.abi,
+            skale_verifier_address: SkaleVerifier.address,
+            skale_verifier_abi: SkaleVerifier.abi,
             contract_manager_address: ContractManager.address,
             contract_manager_abi: ContractManager.abi
         };
