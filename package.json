@@ -61,7 +61,7 @@
     "dotenv": "^7.0.0",
     "ethlint": "^1.2.4",
     "ganache-cli": "^6.1.8",
-    "solidity-coverage": "github:rotcivegaf/solidity-coverage#5875f5b7bc74d447f3312c9c0e9fc7814b482477",
+    "solidity-coverage": "leapdao/solidity-coverage",
     "tslint": "^5.18.0",
     "tslint-no-unused-expression-chai": "^0.1.4",
     "typescript": "^3.5.2"
