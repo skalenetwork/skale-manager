@@ -600,7 +600,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
                     }
 
                 skaleToken.transfer(developer, "0x3635C9ADC5DEA000000", {from: owner});
-                
+
                 await skaleToken.transferWithData(
                     skaleManager.address,
                     "0x1cc2d6d04a2ca",
