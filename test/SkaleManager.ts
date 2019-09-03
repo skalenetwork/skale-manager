@@ -584,7 +584,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
 
                 skaleToken.transfer(validator, "0x32D26D12E980B600000", {from: owner});
 
-                for (let i = 0; i < 50; ++i) {
+                for (let i = 0; i < 150; ++i) {
                     await skaleToken.transferWithData(
                         skaleManager.address,
                         "0x56bc75e2d63100000",
