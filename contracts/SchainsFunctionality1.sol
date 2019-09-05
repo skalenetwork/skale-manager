@@ -114,6 +114,45 @@ contract SchainsFunctionality1 is GroupsFunctionality {
         return length;
     }
 
+
+
+
+    function rotateNode(uint _nodeIndex) public {
+        address schainsDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("SchainsData")));
+        bytes32[] memory schainIds = ISchainsData(schainsDataAddress).getSchainIdsForNode(_nodeIndex);
+        for (uint i = 0; i < schainIds.length; i++) {
+            uint partOfNode = ISchainsData(schainsDataAddress).getSchainsPartOfNode(schainIds[i]);
+            uint hash = uint(keccak256(abi.encodePacked(uint(blockhash(block.number - 1)), schainIds[i])));
+            uint numberOfNodes;
+            uint space;
+            (numberOfNodes, space) = setNumberOfNodesInGroup(schainIds[i], partOfNode, schainsDataAddress);
+            uint indexOfNode;
+            uint nodeIndex;
+            uint iterations = 0;
+            while (iterations < 200) {
+                indexOfNode = hash % numberOfNodes;
+                nodeIndex = returnValidNodeIndex(partOfNode, indexOfNode);
+                if (comparator(indexOfNode, partOfNode, space) && !IGroupsData(schainsDataAddress).isExceptionNode(schainIds[i], nodeIndex)) {
+                    // adds Node to the Group
+                    IGroupsData(schainsDataAddress).setException(schainIds[i], nodeIndex);
+                    IGroupsData(schainsDataAddress).setNodeInGroup(schainIds[i], nodeIndex);
+                    ISchainsData(schainsDataAddress).addSchainForNode(nodeIndex, schainIds[i]);
+                    require(removeSpace(nodeIndex, space), "Could not remove space from Node for rotation");
+                    break;
+                }
+                hash = uint(keccak256(abi.encodePacked(hash, indexOfNode)));
+                iterations++;
+            }
+
+            require(iterations < 200, "Old Node is not replaced? Try it later");
+            // IGroupsData(schainsDataAddress).removeExceptionNode(schainIds[i], nodeIndex);
+        }
+    }
+
+
+
+
+
     /**
      * @dev generateGroup - generates Group for Schain
      * @param groupIndex - index of Group
@@ -156,11 +195,11 @@ contract SchainsFunctionality1 is GroupsFunctionality {
             iterations++;
         }
         // checks that this algorithm took less than 200 iterations
-        require(iterations < 200, "Schain is not created? try it later");
+        require(iterations < 200, "Schain is not created? Try it later");
         // remove Nodes from exception array
-        for (uint i = 0; i < nodesInGroup.length; i++) {
-            IGroupsData(dataAddress).removeExceptionNode(groupIndex, nodesInGroup[i]);
-        }
+        // for (uint i = 0; i < nodesInGroup.length; i++) {
+        //     IGroupsData(dataAddress).removeExceptionNode(groupIndex, nodesInGroup[i]);
+        // }
         // set generated group
         IGroupsData(dataAddress).setNodesInGroup(groupIndex, nodesInGroup);
         emit GroupGenerated(
@@ -276,7 +315,11 @@ contract SchainsFunctionality1 is GroupsFunctionality {
         } else {
             revert("Can't set number of nodes. Divisor does not match any valid schain type");
         }
-        require(IGroupsData(dataAddress).getRecommendedNumberOfNodes(groupIndex) <= numberOfAvailableNodes, "Not enough nodes to create Schain");
+        address schainsDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("SchainsData")));
+        //Check that schain is not created yet
+        if (IGroupsData(schainsDataAddress).getNumberOfNodesInGroup(groupIndex) == 0) {
+            require(IGroupsData(dataAddress).getRecommendedNumberOfNodes(groupIndex) <= numberOfAvailableNodes, "Not enough nodes to create Schain");
+        }
     }
 
     /**
