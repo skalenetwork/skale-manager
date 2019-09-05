@@ -60,7 +60,8 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
 
     event SchainDeleted(
         address owner,
-        string name
+        string name,
+        bytes32 indexed schainId
     );
 
     string executorName;
@@ -177,7 +178,7 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
         }
         ISchainsFunctionality1(schainsFunctionality1Address).deleteGroup(schainId);
         ISchainsData(dataAddress).removeSchain(schainId, from);
-        emit SchainDeleted(from, name);
+        emit SchainDeleted(from, name, schainId);
     }
 
     function deleteSchainByRoot(string memory name) public allow(executorName) {
@@ -200,7 +201,7 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
         ISchainsFunctionality1(schainsFunctionality1Address).deleteGroup(schainId);
         address from = ISchainsData(dataAddress).getSchainOwner(schainId);
         ISchainsData(dataAddress).removeSchain(schainId, from);
-        emit SchainDeleted(from, name);
+        emit SchainDeleted(from, name, schainId);
     }
 
     function initializeSchainInSchainsData(

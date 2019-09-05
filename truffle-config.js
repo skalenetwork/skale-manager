@@ -44,7 +44,7 @@ module.exports = {
         }
     },
     mocha: {
-
+        enableTimeouts: false
     },
     compilers: {
         solc: {
