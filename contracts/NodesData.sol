@@ -202,7 +202,7 @@ contract NodesData is INodesData, Permissions {
 
     /**
      * @dev removeFractionalNode - removes Node from Fractional Nodes array
-     * function could be run only by NodexFunctionality
+     * function could be run only by NodesFunctionality
      * @param subarrayIndex - index of Node at array of Fractional Nodes
      */
     function removeFractionalNode(uint subarrayIndex) public allow("NodesFunctionality") {
@@ -481,5 +481,21 @@ contract NodesData is INodesData, Permissions {
                 indexOfActiveNodesByAddress++;
             }
         }
+    }
+
+    function getActiveFractionalNodes() public view returns (uint[] memory) {
+        uint[] memory activeFractionalNodes = new uint[](fractionalNodes.length);
+        for (uint index = 0; index < fractionalNodes.length; index++) {
+            activeFractionalNodes[index] = fractionalNodes[index].nodeIndex;
+        }
+        return activeFractionalNodes;
+    }
+
+    function getActiveFullNodes() public view returns (uint[] memory) {
+        uint[] memory activeFullNodes = new uint[](fullNodes.length);
+        for (uint index = 0; index < fullNodes.length; index++) {
+            activeFullNodes[index] = fullNodes[index].nodeIndex;
+        }
+        return activeFullNodes;
     }
 }
