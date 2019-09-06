@@ -38,6 +38,12 @@ contract SchainsFunctionality1 is GroupsFunctionality {
         uint gasSpend
     );
 
+    event NodeRotated(
+        bytes32 groupIndex,
+        uint oldNode,
+        uint newNode
+    );
+
     constructor(string memory newExecutorName,
                 string memory newDataName,
                 address newContractsAddress)
@@ -114,9 +120,10 @@ contract SchainsFunctionality1 is GroupsFunctionality {
         return length;
     }
 
-
-
-
+    /**
+     * @dev rotateNode - replaces the Node that left the Schain
+     * @param _nodeIndex - index of the Node that will be rotated by new Node
+     */
     function rotateNode(uint _nodeIndex) public {
         address schainsDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("SchainsData")));
         bytes32[] memory schainIds = ISchainsData(schainsDataAddress).getSchainIdsForNode(_nodeIndex);
@@ -133,11 +140,11 @@ contract SchainsFunctionality1 is GroupsFunctionality {
                 indexOfNode = hash % numberOfNodes;
                 nodeIndex = returnValidNodeIndex(partOfNode, indexOfNode);
                 if (comparator(indexOfNode, partOfNode, space) && !IGroupsData(schainsDataAddress).isExceptionNode(schainIds[i], nodeIndex)) {
-                    // adds Node to the Group
                     IGroupsData(schainsDataAddress).setException(schainIds[i], nodeIndex);
                     IGroupsData(schainsDataAddress).setNodeInGroup(schainIds[i], nodeIndex);
                     ISchainsData(schainsDataAddress).addSchainForNode(nodeIndex, schainIds[i]);
                     require(removeSpace(nodeIndex, space), "Could not remove space from Node for rotation");
+                    emit NodeRotated(schainIds[i], _nodeIndex, nodeIndex);
                     break;
                 }
                 hash = uint(keccak256(abi.encodePacked(hash, indexOfNode)));
@@ -145,13 +152,8 @@ contract SchainsFunctionality1 is GroupsFunctionality {
             }
 
             require(iterations < 200, "Old Node is not replaced? Try it later");
-            // IGroupsData(schainsDataAddress).removeExceptionNode(schainIds[i], nodeIndex);
         }
     }
-
-
-
-
 
     /**
      * @dev generateGroup - generates Group for Schain

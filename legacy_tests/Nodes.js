@@ -25,7 +25,7 @@ async function createNode() {
     console.log(k);
     while (k) {
         name = await generateRandomName();
-        k = await init.NodesData.methods.nodesCheckName(init.web3.utils.soliditySha3(name)).call();
+        k = await init.NodesData.methods.nodesNameCheck(init.web3.utils.soliditySha3(name)).call();
     }
     let data = await GenerateBytesData.generateBytesForNode(8545, await generateRandomIP(), init.mainAccount, name);
     console.log(data);

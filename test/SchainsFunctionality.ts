@@ -387,27 +387,33 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
             const bobSchain = "0x38e47a7b719dce63662aeaf43440326f551b8a7ee198cee35cb5d517f2d296a2";
             const vitalikSchain = "0xaf2caa1c2ca1d027f1ac823b529d0a67cd144264b2789fa2ea4d63a67c7103cc";
             let i = 0;
-            for (; i < 10; i++) {
+            for (; i < 6; i++) {
                 await nodesData.addNode(holder, "John", "0x7f000001", "0x7f000002", 8545, "0x1122334455");
                 await nodesData.addFullNode(i);
             }
 
-            await schainsFunctionality1.createGroupForSchain("bob", bobSchain, 5, 1);
-            await schainsFunctionality1.createGroupForSchain("vitalik", vitalikSchain, 5, 1);
-
+            await schainsFunctionality1.createGroupForSchain("bob", bobSchain, 3, 1);
+            await schainsFunctionality1.createGroupForSchain("vitalik", vitalikSchain, 3, 1);
+            
             await nodesData.addNode(holder, "John", "0x7f000001", "0x7f000002", 8545, "0x1122334455");
             await nodesData.addFullNode(i++);
-
+            
             for (; i < 15; i++) {
                 await nodesData.addNode(holder, "John", "0x7f000001", "0x7f000002", 8545, "0x1122334455");
                 await nodesData.addFractionalNode(i);
             }
-
+            
             await nodesFunctionality.removeNodeByRoot(0);
-            await schainsFunctionality1.rotateNode(0);
-
+            const {logs} = await schainsFunctionality1.rotateNode(0);
+            for (let j = 0; j < logs.length; j++) {
+                console.log(logs[j].args);
+            }
+            console.log(await nodesData.getActiveFullNodes());
+            console.log(await schainsData.getNodesInGroup(bobSchain));
+            console.log(await schainsData.getNodesInGroup(vitalikSchain));
             const rotatedNode = (await nodesData.getActiveFullNodes())[0].toNumber();
-            rotatedNode.should.be.equal(10);
+            rotatedNode.should.be.equal(6);
+
         });
     });
 });
