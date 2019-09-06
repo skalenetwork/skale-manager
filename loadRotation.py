@@ -1,5 +1,6 @@
 import json
 import random
+import codecs
 import time
 from web3 import Web3
 
@@ -14,13 +15,14 @@ web3 = Web3(Web3.HTTPProvider("http://localhost:8545"))
 web3.eth.defaultAccount = web3.eth.accounts[0]
 
 print(web3.net.version)
-with open('/home/vadim/code/skale-manager/build/contracts/NodesData.json') as f:
-	abi = json.load(f)
+with open('data/test.json') as f:
+	data = json.load(f)
 	
-contract = web3.eth.contract(address=abi['networks'][f'{web3.net.version}']['address'], abi=abi['abi'])
-c = contract.functions
+NodesData = web3.eth.contract(address=data['nodes_data_address'], abi=data['nodes_data_abi'])
+c = NodesData.functions
 tx_hash = c.addNode(web3.eth.accounts[1], "John", "0x7f000001", "0x7f000002", 8545, "0x1122334455").transact()
 web3.eth.waitForTransactionReceipt(tx_hash)
+print(codecs.encode(tx_hash, 'hex'))
 print(f'Working nodes: {c.getNumberOfNodes().call()}')
 
 
