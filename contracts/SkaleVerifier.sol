@@ -28,19 +28,6 @@ contract SkaleVerifier {
     uint g2c = 4082367875863433681332203403145435568316851327593401208105741076214120093531;
     uint g2d = 8495653923123431417604973247489272438418190587263600148770280649306958101930;
 
-    function checkHashToGroupWithHelper(bytes32 hash, uint8 counter, uint hash_a, uint hash_b) internal view returns (bool) {
-        uint x_coord = uint(hash) % p;
-        x_coord = (x_coord + counter) % p;
-
-        uint y_squared = (((((x_coord * x_coord) % p) * x_coord) % p) + 3) % p;
-
-        if (hash_b < p / 2  || (hash_b * hash_b) % p != y_squared || x_coord != hash_a) {
-            return false;
-        }
-
-        return true;
-    }
-
     function verify(
         uint signa,
         uint _signb,
@@ -53,7 +40,14 @@ contract SkaleVerifier {
         uint pkx2,
         uint pky2) public view returns (bool)
     {
-        if (!checkHashToGroupWithHelper(hash, counter, hasha, hashb)) {
+        if (!checkHashToGroupWithHelper(
+            hash,
+            counter,
+            hasha,
+            hashb
+            )
+        )
+        {
             return false;
         }
 
@@ -83,5 +77,27 @@ contract SkaleVerifier {
         }
         require(success, "Pairing check failed");
         return out[0] != 0;
+    }
+
+    function checkHashToGroupWithHelper(
+        bytes32 hash,
+        uint8 counter,
+        uint hashA,
+        uint hashB
+    )
+        internal
+        view
+        returns (bool)
+    {
+        uint xCoord = uint(hash) % p;
+        xCoord = (xCoord + counter) % p;
+
+        uint ySquared = (((((xCoord * xCoord) % p) * xCoord) % p) + 3) % p;
+
+        if (hashB < p / 2 || (hashB * hashB) % p != ySquared || xCoord != hashA) {
+            return false;
+        }
+
+        return true;
     }
 }

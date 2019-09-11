@@ -71,7 +71,7 @@ contract AES {
         invSboxSet = true;
     }
 
-    function encrypt(string memory plainText, bytes memory key) public view isInitialized returns (bytes memory){
+    function encrypt(string memory plainText, bytes memory key) public view isInitialized returns (bytes memory) {
         require(bytes(plainText).length <= 16, "Incorrect length of plainText");
         bytes memory newPlainText = new bytes(16);
         for (uint8 i = 0; i < 16; i++) {
@@ -84,7 +84,7 @@ contract AES {
         return encrypt1(newPlainText, key);
     }
 
-    function decrypt(bytes memory cipherText, bytes memory key) public view isInitialized returns (string memory){
+    function decrypt(bytes memory cipherText, bytes memory key) public view isInitialized returns (string memory) {
         bytes memory plainText = decrypt1(cipherText, key);
         string memory newPlainText;
         for (uint8 i = 0; i < plainText.length; i++) {
