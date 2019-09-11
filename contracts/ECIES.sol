@@ -84,9 +84,8 @@ contract AES {
         return encrypt1(newPlainText, key);
     }
 
-    function decrypt(bytes memory cipherText, bytes memory key) public view isInitialized returns (string memory) {
+    function decrypt(bytes memory cipherText, bytes memory key) public view isInitialized returns (string memory newPlainText) {
         bytes memory plainText = decrypt1(cipherText, key);
-        string memory newPlainText;
         for (uint8 i = 0; i < plainText.length; i++) {
             bytes(newPlainText)[i] = plainText[i];
         }
