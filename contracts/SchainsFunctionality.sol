@@ -178,7 +178,6 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
     //     address dataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked(dataName)));
     //     bytes32 schainId = keccak256(abi.encodePacked(schainName));
     //     require(ISchainsData(dataAddress).isOwnerAddress(msg.sender, schainId));
-        
     // }
 
     function deleteSchainByRoot(bytes32 schainId) public allow(executorName) {

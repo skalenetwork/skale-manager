@@ -78,6 +78,7 @@ contract SkaleDKG is Permissions {
 
     event AllDataReceived(bytes32 groupIndex, uint nodeIndex);
     event SuccessfulDKG(bytes32 groupIndex);
+    event BadGuy(uint nodeIndex);
     event FailedDKG(bytes32 groupIndex);
     event ComplaintSent(bytes32 groupIndex, uint fromNodeIndex, uint toNodeIndex);
 
@@ -198,6 +199,13 @@ contract SkaleDKG is Permissions {
         // DKG verification(secret key contribution, verification vector)
         bytes memory verVec = data[groupIndex][uint8(channels[groupIndex].nodeToComplaint)].verificationVector;
         bool verificationResult = verify(uint8(fromNodeIndex), secret, verVec);
+        if (verificationResult) {
+            //slash fromNodeToComplaint
+            emit BadGuy(channels[groupIndex].fromNodeToComplaint);
+        } else {
+            //slash nodeToComplaint
+            emit BadGuy(channels[groupIndex].nodeToComplaint);
+        }
         // slash someone
         // not in 1.0
         // Fail DKG
@@ -229,7 +237,7 @@ contract SkaleDKG is Permissions {
             emit SuccessfulDKG(groupIndex);
         }
     }
-    
+
     function verify(uint8 index, uint share, bytes memory verificationVector) public view returns (bool) {
         Fp2 memory valX;
         Fp2 memory valY;
@@ -265,7 +273,7 @@ contract SkaleDKG is Permissions {
 
     function decryptMessage(bytes32 groupIndex, uint secretNumber) internal view returns (uint) {
         address decryptionAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("Decryption")));
-        
+
         bytes32 key = getCommonPublicKey(groupIndex, secretNumber);
 
         // Decrypt secret key contribution
