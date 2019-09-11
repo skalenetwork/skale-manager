@@ -20,16 +20,16 @@
 pragma solidity ^0.5.0;
 
 import "./Permissions.sol";
-import "./IGroupsData.sol";
-import "./INodesData.sol";
-import "./ReentrancyGuard.sol";
+import "./interfaces/IGroupsData.sol";
+import "./interfaces/INodesData.sol";
+// import "./ReentrancyGuard.sol";
 //import "./interfaces/IGroupsData.sol";
 //import "./interfaces/INodesData.sol";
-//import "openzeppelin-solidity/contracts/utils/ReentrancyGuard.sol";
+import "openzeppelin-solidity/contracts/utils/ReentrancyGuard.sol";
 import "./ECDH.sol";
 import "./Decryption.sol";
 
-contract SkaleDKG is Permissions, ReentrancyGuard {
+contract SkaleDKG is Permissions {
 
     struct Channel {
         bool active;
@@ -161,19 +161,10 @@ contract SkaleDKG is Permissions, ReentrancyGuard {
         }
     }
 
-    function response(bytes32 groupIndex, uint fromNodeIndex, uint secretNumber)
-        public
-        correctGroup(groupIndex)
-        correctNode(groupIndex, fromNodeIndex)
-    {
-        require(channels[groupIndex].nodeToComplaint == fromNodeIndex, "Not this Node");
-        require(isNodeByMessageSender(fromNodeIndex, msg.sender), "Node does not exist for message sender");
+    function getCommonPublicKey(bytes32 groupIndex, uint secretNumber) public view returns (bytes32 key) {
         address nodesDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
         address ECDHAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("ECDH")));
-        address decryptionAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("Decryption")));
         bytes memory publicKey = INodesData(nodesDataAddress).getNodePublicKey(channels[groupIndex].fromNodeToComplaint);
-
-        // DH common secret generation
         uint pkX;
         uint pkY;
 
@@ -186,7 +177,26 @@ contract SkaleDKG is Permissions, ReentrancyGuard {
         assembly {
             mstore(add(pk, 32), pkX)
         }
-        bytes32 key = sha256(pk);
+        key = sha256(pk);
+    }
+
+    function decryptMessage(bytes32 groupIndex, uint secretNumber) internal view returns (uint) {
+        // address ECDHAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("ECDH")));
+        address decryptionAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("Decryption")));
+        // bytes memory publicKey = INodesData(nodesDataAddress).getNodePublicKey(channels[groupIndex].fromNodeToComplaint);
+        // uint pkX;
+        // uint pkY;
+
+        // (pkX, pkY) = bytesToPublicKey(publicKey);
+
+        // (pkX, pkY) = ECDH(ECDHAddress).deriveKey(secretNumber, pkX, pkY);
+
+        // bytes memory pk;
+        // pk = new bytes(32);
+        // assembly {
+        //     mstore(add(pk, 32), pkX)
+        // }
+        bytes32 key = getCommonPublicKey(groupIndex, secretNumber);
 
         // Decrypt secret key contribution
         bytes32 ciphertext;
@@ -196,9 +206,48 @@ contract SkaleDKG is Permissions, ReentrancyGuard {
         }
 
         uint8 secret = uint8(Decryption(decryptionAddress).decrypt(ciphertext, key));
+        return secret;
+    }
+
+    function response(bytes32 groupIndex, uint fromNodeIndex, uint secretNumber)
+        public
+        correctGroup(groupIndex)
+        correctNode(groupIndex, fromNodeIndex)
+    {
+        require(channels[groupIndex].nodeToComplaint == fromNodeIndex, "Not this Node");
+        require(isNodeByMessageSender(fromNodeIndex, msg.sender), "Node does not exist for message sender");
+        // address nodesDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
+        // address ECDHAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("ECDH")));
+        // address decryptionAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("Decryption")));
+        // bytes memory publicKey = INodesData(nodesDataAddress).getNodePublicKey(channels[groupIndex].fromNodeToComplaint);
+
+        // DH common secret generation
+        // uint pkX;
+        // uint pkY;
+
+        // (pkX, pkY) = bytesToPublicKey(publicKey);
+
+        // (pkX, pkY) = ECDH(ECDHAddress).deriveKey(secretNumber, pkX, pkY);
+
+        // bytes memory pk;
+        // pk = new bytes(32);
+        // assembly {
+        //     mstore(add(pk, 32), pkX)
+        // }
+        // bytes32 key = sha256(pk);
+
+        // // Decrypt secret key contribution
+        // bytes32 ciphertext;
+        // bytes memory sc = data[groupIndex][uint8(channels[groupIndex].nodeToComplaint)].secretKeyContribution;
+        // assembly {
+        //     ciphertext := mload(add(sc, 32))
+        // }
+
+        uint secret = decryptMessage(groupIndex, secretNumber);
 
         // DKG verification(secret key contribution, verification vector)
-        bool verificationResult = verify(uint8(fromNodeIndex), secret, data[groupIndex][uint8(channels[groupIndex].nodeToComplaint)].verificationVector);
+        bytes memory verVec = data[groupIndex][uint8(channels[groupIndex].nodeToComplaint)].verificationVector;
+        bool verificationResult = verify(uint8(fromNodeIndex), secret, verVec);
         // slash someone
         // not in 1.0
         // Fail DKG
@@ -539,7 +588,7 @@ contract SkaleDKG is Permissions, ReentrancyGuard {
         return mulG2(bigModExp(index, loop_index), Fp2(uint(vector[0]), uint(vector[1])), Fp2(uint(vector[2]), uint(vector[3])), Fp2(uint(vector[4]), uint(vector[5])));
     }
 
-    function checkVerifyAndMul(Fp2 memory val_x, Fp2 memory val_y, uint32 share) internal view returns (bool) {
+    function checkVerifyAndMul(Fp2 memory val_x, Fp2 memory val_y, uint share) internal view returns (bool) {
         Fp2 memory tmp_x = Fp2(g2a, g2b);
         Fp2 memory tmp_y = Fp2(g2c, g2d);
         Fp2 memory p_z = Fp2(1, 0);
@@ -554,7 +603,7 @@ contract SkaleDKG is Permissions, ReentrancyGuard {
          return addG2ToVerify(x1, y1, val_x, val_y);
     }
 
-    function verify(uint8 index, uint32 share, bytes memory verificationVector) public view returns (bool) {
+    function verify(uint8 index, uint share, bytes memory verificationVector) public view returns (bool) {
         Fp2 memory val_x;
         Fp2 memory val_y;
         for (uint8 i = 0; i < verificationVector.length / 1152; ++i) {
@@ -563,7 +612,7 @@ contract SkaleDKG is Permissions, ReentrancyGuard {
         return checkVerifyAndMul(val_x, val_y, share);
     }
 
-    function bytesToPublicKey(bytes memory someBytes) internal view returns(uint x, uint y) {
+    function bytesToPublicKey(bytes memory someBytes) internal pure returns(uint x, uint y) {
         bytes32 pkX;
         bytes32 pkY;
         assembly {
