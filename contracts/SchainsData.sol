@@ -22,10 +22,6 @@ pragma solidity ^0.5.0;
 import "./GroupsData.sol";
 import "./interfaces/ISchainsData.sol";
 
-interface ISkaleDKG {
-    function openChannel(bytes32 groupIndex, address dataAddress) external;
-}
-
 
 /**
  * @title SchainsData - Data contract for SchainsFunctionality.
@@ -84,9 +80,6 @@ contract SchainsData is ISchainsData, GroupsData {
         schains[schainId].index = numberOfSchains;
         numberOfSchains++;
         schainsAtSystem.push(schainId);
-        // Open channel in SkaleDKG
-        address skaleDKGAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("SkaleDKG")));
-        ISkaleDKG(skaleDKGAddress).openChannel(schainId, address(this));
     }
 
     /**

@@ -22,6 +22,9 @@ pragma solidity ^0.5.0;
 import "./Permissions.sol";
 import "./interfaces/IGroupsData.sol";
 
+interface ISkaleDKG {
+    function openChannel(bytes32 groupIndex, address dataAddress) external;
+}
 
 /**
  * @title GroupsData - contract with some Groups data, will be inherited by
@@ -72,6 +75,9 @@ contract GroupsData is IGroupsData, Permissions {
         groups[groupIndex].active = true;
         groups[groupIndex].recommendedNumberOfNodes = amountOfNodes;
         groups[groupIndex].groupData = data;
+        // Open channel in SkaleDKG
+        address skaleDKGAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("SkaleDKG")));
+        ISkaleDKG(skaleDKGAddress).openChannel(groupIndex, address(this));
     }
 
     /**

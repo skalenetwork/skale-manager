@@ -18,6 +18,7 @@
 */
 
 pragma solidity ^0.5.0;
+pragma experimental ABIEncoderV2;
 
 import "./Permissions.sol";
 import "./interfaces/IGroupsData.sol";
@@ -102,8 +103,8 @@ contract SkaleDKG is Permissions {
         require(!channels[groupIndex].active, "Channel already is created");
         channels[groupIndex].active = true;
         channels[groupIndex].dataAddress = dataAddress;
-        channels[groupIndex].broadcasted = new bool[](IGroupsData(channels[groupIndex].dataAddress).getNumberOfNodesInGroup(groupIndex));
-        channels[groupIndex].completed = new bool[](IGroupsData(channels[groupIndex].dataAddress).getNumberOfNodesInGroup(groupIndex));
+        channels[groupIndex].broadcasted = new bool[](IGroupsData(channels[groupIndex].dataAddress).getRecommendedNumberOfNodes(groupIndex));
+        channels[groupIndex].completed = new bool[](IGroupsData(channels[groupIndex].dataAddress).getRecommendedNumberOfNodes(groupIndex));
         emit ChannelOpened(groupIndex);
     }
 
@@ -237,6 +238,10 @@ contract SkaleDKG is Permissions {
         }
     }
 
+    function getChannelData(bytes32 groupIndex) public view returns (Channel memory) {
+        return channels[groupIndex];
+    }
+
     function verify(uint8 index, uint share, bytes memory verificationVector) public view returns (bool) {
         Fp2 memory valX;
         Fp2 memory valY;
@@ -323,7 +328,7 @@ contract SkaleDKG is Permissions {
         internal
     {
         uint index = findNode(groupIndex, nodeIndex);
-        require(!channels[groupIndex].broadcasted[index], "This node is already broadcasted");
+        require(channels[groupIndex].broadcasted[index] == false, "This node is already broadcasted");
         channels[groupIndex].broadcasted[index] = true;
         channels[groupIndex].numberOfBroadcasted++;
         data[groupIndex][index] = BroadcastedData({
