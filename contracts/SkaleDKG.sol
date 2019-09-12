@@ -64,8 +64,8 @@ contract SkaleDKG is Permissions {
     uint g2c = 4082367875863433681332203403145435568316851327593401208105741076214120093531;
     uint g2d = 8495653923123431417604973247489272438418190587263600148770280649306958101930;
 
-    mapping(bytes32 => Channel) channels;
-    mapping(bytes32 => mapping(uint8 => BroadcastedData)) data;
+    mapping(bytes32 => Channel) public channels;
+    mapping(bytes32 => mapping(uint => BroadcastedData)) data;
 
     event ChannelOpened(bytes32 groupIndex);
 
@@ -105,7 +105,6 @@ contract SkaleDKG is Permissions {
         channels[groupIndex].broadcasted = new bool[](IGroupsData(channels[groupIndex].dataAddress).getNumberOfNodesInGroup(groupIndex));
         channels[groupIndex].completed = new bool[](IGroupsData(channels[groupIndex].dataAddress).getNumberOfNodesInGroup(groupIndex));
         emit ChannelOpened(groupIndex);
-
     }
 
     function broadcast(
@@ -327,7 +326,7 @@ contract SkaleDKG is Permissions {
         require(!channels[groupIndex].broadcasted[index], "This node is already broadcasted");
         channels[groupIndex].broadcasted[index] = true;
         channels[groupIndex].numberOfBroadcasted++;
-        data[groupIndex][uint8(index)] = BroadcastedData({
+        data[groupIndex][index] = BroadcastedData({
             secretKeyContribution: sc,
             verificationVector: vv
         });
@@ -341,14 +340,17 @@ contract SkaleDKG is Permissions {
         return false;
     }
 
-    function findNode(bytes32 groupIndex, uint nodeIndex) internal view returns (uint index) {
+    function findNode(bytes32 groupIndex, uint nodeIndex) internal view returns (uint) {
         uint[] memory nodesInGroup = IGroupsData(channels[groupIndex].dataAddress).getNodesInGroup(groupIndex);
-        for (index = 0; index < nodesInGroup.length; index++) {
-            if (nodesInGroup[index] == nodeIndex) {
-                return index;
+        uint correctIndex = nodesInGroup.length;
+        bool set = false;
+        for (uint index = 0; index < nodesInGroup.length; index++) {
+            if (nodesInGroup[index] == nodeIndex && !set) {
+                correctIndex = index;
+                set = true;
             }
         }
-        return index;
+        return correctIndex;
     }
 
     function isNodeByMessageSender(uint nodeIndex, address from) internal view returns (bool) {
