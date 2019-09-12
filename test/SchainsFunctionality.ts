@@ -394,19 +394,19 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
 
             await schainsFunctionality1.createGroupForSchain("bob", bobSchain, 3, 1);
             await schainsFunctionality1.createGroupForSchain("vitalik", vitalikSchain, 3, 1);
-            
+
             await nodesData.addNode(holder, "John", "0x7f000001", "0x7f000002", 8545, "0x1122334455");
             await nodesData.addFullNode(i++);
-            
+
             for (; i < 15; i++) {
                 await nodesData.addNode(holder, "John", "0x7f000001", "0x7f000002", 8545, "0x1122334455");
                 await nodesData.addFractionalNode(i);
             }
-            
+
             await nodesFunctionality.removeNodeByRoot(0);
             const {logs} = await schainsFunctionality1.rotateNode(0);
-            for (let j = 0; j < logs.length; j++) {
-                console.log(logs[j].args);
+            for (const log of logs) {
+                console.log(log.args);
             }
             console.log(await nodesData.getActiveFullNodes());
             console.log(await schainsData.getNodesInGroup(bobSchain));
