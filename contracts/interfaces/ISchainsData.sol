@@ -5,6 +5,8 @@ pragma solidity ^0.5.0;
  * Contains only needed functions for current contract
  */
 interface ISchainsData {
+    function schainsAtSystem(uint index) external view returns (bytes32);
+    function numberOfSchains() external view returns (uint64);
     function sumOfSchainsResources() external view returns (uint);
     function addSchainForNode(uint nodeIndex, bytes32 schainId) external;
     function setSchainPartOfNode(bytes32 schainId, uint partOfNode) external;
@@ -23,4 +25,5 @@ interface ISchainsData {
     function isOwnerAddress(address from, bytes32 schainId) external view returns (bool);
     function isSchainNameAvailable(string calldata name) external view returns (bool);
     function getSchainsPartOfNode(bytes32 schainId) external view returns (uint);
+    function getSchainIdsForNode(uint nodeIndex) external view returns (bytes32[] memory);
 }

@@ -13,6 +13,7 @@ interface INodesData {
     function isNodeExist(address from, uint nodeIndex) external view returns (bool);
     function isNodeActive(uint nodeIndex) external view returns (bool);
     function isNodeLeaving(uint nodeIndex) external view returns (bool);
+    function isNodeLeft(uint nodeIndex) external view returns (bool);
     function isLeavingPeriodExpired(uint nodeIndex) external view returns (bool);
     function isTimeForReward(uint nodeIndex) external view returns (bool);
     function addNode(
@@ -31,6 +32,7 @@ interface INodesData {
     function removeFullNode(uint subarrayLink) external;
     function numberOfActiveNodes() external view returns (uint);
     function numberOfLeavingNodes() external view returns (uint);
+    function getNumberOnlineNodes() external view returns (uint);
     function changeNodeLastRewardDate(uint nodeIndex) external;
     function getNodeLastRewardDate(uint nodeIndex) external view returns (uint32);
     function addSpaceToFullNode(uint subarrayLink, uint space) external;

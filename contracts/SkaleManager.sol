@@ -95,12 +95,12 @@ contract SkaleManager is Permissions {
 
     function deleteSchain(string memory name) public {
         address schainsFunctionalityAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("SchainsFunctionality")));
-        ISchainsFunctionality(schainsFunctionalityAddress).deleteSchain(msg.sender, keccak256(abi.encodePacked(name)));
+        ISchainsFunctionality(schainsFunctionalityAddress).deleteSchain(msg.sender, name);
     }
 
     function deleteSchainByRoot(string memory name) public {
         address schainsFunctionalityAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("SchainsFunctionality")));
-        ISchainsFunctionality(schainsFunctionalityAddress).deleteSchainByRoot(keccak256(abi.encodePacked(name)));
+        ISchainsFunctionality(schainsFunctionalityAddress).deleteSchainByRoot(name);
     }
 
     function sendVerdict(
