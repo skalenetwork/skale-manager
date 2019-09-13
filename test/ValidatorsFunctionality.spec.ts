@@ -236,13 +236,16 @@ contract("ValidatorsFunctionality", ([owner, validator]) => {
     await validatorsData.getValidatedArray(node1Hash).should.be.eventually.empty;
     (await validatorsData.getValidatedArray(node2Hash)).length.should.be.equal(1);
 
+    await nodesData.changeNodeLastRewardDate(0);
     await validatorsFunctionality.upgradeValidator(0);
 
     const validatedArray = await validatorsData.getValidatedArray(node2Hash);
-    validatedArray.sort();
-    validatedArray.forEach((value: string, index: number) => {
+    const validatedNodeIndexes = validatedArray.map((value) => value.slice(2, 2 + 14 * 2)).map(Number);
+
+    validatedNodeIndexes.sort();
+    validatedNodeIndexes.forEach((value: number, index: number, array: number[]) => {
       if (index > 0) {
-        assert.notDeepEqual(value, validatedArray[index - 1], "Should not contain duplicates");
+        assert.notDeepEqual(value, array[index - 1], "Should not contain duplicates");
       }
     });
   });
