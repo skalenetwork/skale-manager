@@ -77,11 +77,11 @@ contract SkaleDKG is Permissions {
         bytes secretKeyContribution
     );
 
-    event AllDataReceived(bytes32 groupIndex, uint nodeIndex);
-    event SuccessfulDKG(bytes32 groupIndex);
+    event AllDataReceived(bytes32 indexed groupIndex, uint nodeIndex);
+    event SuccessfulDKG(bytes32 indexed groupIndex);
     event BadGuy(uint nodeIndex);
-    event FailedDKG(bytes32 groupIndex);
-    event ComplaintSent(bytes32 groupIndex, uint fromNodeIndex, uint toNodeIndex);
+    event FailedDKG(bytes32 indexed groupIndex);
+    event ComplaintSent(bytes32 indexed groupIndex, uint indexed fromNodeIndex, uint indexed toNodeIndex);
 
     modifier correctGroup(bytes32 groupIndex) {
         require(channels[groupIndex].active, "Group is not created");
