@@ -44,16 +44,17 @@ contract ValidatorsData is GroupsData {
 
     }
 
+    /**
+     *  Add validated node or update existing one if it is already exits
+     */
     function addValidatedNode(bytes32 validatorIndex, bytes32 data) public allow(executorName) {
+        uint indexLength = 14;
+        require(data.length >= indexLength, "data is too small");
         for (uint i = 0; i < validatedNodes[validatorIndex].length; ++i) {
-            bool equal = true;
-            uint indexLength = 14;
-            for (uint j = 0; j < indexLength && equal; ++j) {
-                if (validatedNodes[validatorIndex][i][j] != data[j]) {
-                    equal = false;
-                }
-            }
-            if (equal) {
+            require(validatedNodes[validatorIndex][i].length >= indexLength, "validated nodes data is too small");
+            uint shift = (32 - indexLength) * 8;
+            bool equalIndex = validatedNodes[validatorIndex][i] >> shift == data >> shift;
+            if (equalIndex) {
                 validatedNodes[validatorIndex][i] = data;
                 return;
             }

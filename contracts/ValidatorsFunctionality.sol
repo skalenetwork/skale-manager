@@ -106,8 +106,10 @@ contract ValidatorsFunctionality is GroupsFunctionality, IValidatorsFunctionalit
      * addValidator - setup validators of node
      */
     function addValidator(uint nodeIndex) public allow(executorName) {
+        address constantsAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("Constants")));
+        IConstants constantsHolder = IConstants(constantsAddress);
         bytes32 groupIndex = keccak256(abi.encodePacked(nodeIndex));
-        uint possibleNumberOfNodes = 24;
+        uint possibleNumberOfNodes = constantsHolder.NUMBER_OF_VALIDATORS();
         addGroup(groupIndex, possibleNumberOfNodes, bytes32(nodeIndex));
         uint numberOfNodesInGroup = setValidators(groupIndex, nodeIndex);
         //require(1 != 1, "Break");
@@ -120,8 +122,10 @@ contract ValidatorsFunctionality is GroupsFunctionality, IValidatorsFunctionalit
     }
 
     function upgradeValidator(uint nodeIndex) public allow(executorName) {
+        address constantsAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("Constants")));
+        IConstants constantsHolder = IConstants(constantsAddress);
         bytes32 groupIndex = keccak256(abi.encodePacked(nodeIndex));
-        uint possibleNumberOfNodes = 24;
+        uint possibleNumberOfNodes = constantsHolder.NUMBER_OF_VALIDATORS();
         upgradeGroup(groupIndex, possibleNumberOfNodes, bytes32(nodeIndex));
         uint numberOfNodesInGroup = setValidators(groupIndex, nodeIndex);
         emit ValidatorUpgraded(
