@@ -71,8 +71,8 @@ contract SkaleDKG is Permissions {
     event ChannelOpened(bytes32 groupIndex);
 
     event BroadcastAndKeyShare(
-        bytes32 groupIndex,
-        uint fromNode,
+        bytes32 indexed groupIndex,
+        uint indexed fromNode,
         bytes verificationVector,
         bytes secretKeyContribution
     );
