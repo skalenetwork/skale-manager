@@ -22,9 +22,11 @@ pragma solidity ^0.5.0;
 import "./Permissions.sol";
 import "./interfaces/IGroupsData.sol";
 
+
 interface ISkaleDKG {
     function openChannel(bytes32 groupIndex, address dataAddress) external;
 }
+
 
 /**
  * @title GroupsData - contract with some Groups data, will be inherited by
