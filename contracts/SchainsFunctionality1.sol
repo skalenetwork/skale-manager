@@ -38,11 +38,7 @@ contract SchainsFunctionality1 is GroupsFunctionality {
         uint gasSpend
     );
 
-    event NodeRotated(
-        bytes32 groupIndex,
-        uint oldNode,
-        uint newNode
-    );
+
 
     constructor(string memory newExecutorName,
                 string memory newDataName,
@@ -124,9 +120,11 @@ contract SchainsFunctionality1 is GroupsFunctionality {
      * @dev rotateNode - replaces the Node that left the Schain
      * @param _nodeIndex - index of the Node that will be rotated by new Node
      */
-    function rotateNode(uint _nodeIndex) public {
+    function rotateNode(uint _nodeIndex) public returns (bytes32[] memory, uint[] memory) {
         address schainsDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("SchainsData")));
         bytes32[] memory schainIds = ISchainsData(schainsDataAddress).getSchainIdsForNode(_nodeIndex);
+        bytes32[] memory schainIdsEvent = new bytes32[](schainIds.length);
+        uint[] memory newNodeIndexEvent = new uint[](schainIds.length);
         for (uint i = 0; i < schainIds.length; i++) {
             uint partOfNode = ISchainsData(schainsDataAddress).getSchainsPartOfNode(schainIds[i]);
             uint hash = uint(keccak256(abi.encodePacked(uint(blockhash(block.number - 1)), schainIds[i])));
@@ -144,15 +142,17 @@ contract SchainsFunctionality1 is GroupsFunctionality {
                     IGroupsData(schainsDataAddress).setNodeInGroup(schainIds[i], nodeIndex);
                     ISchainsData(schainsDataAddress).addSchainForNode(nodeIndex, schainIds[i]);
                     require(removeSpace(nodeIndex, space), "Could not remove space from Node for rotation");
-                    emit NodeRotated(schainIds[i], _nodeIndex, nodeIndex);
+                    schainIdsEvent[i] = schainIds[i];
+                    newNodeIndexEvent[i] = nodeIndex;
+                    // emit NodeRotated(schainIds[i], _nodeIndex, nodeIndex);
                     break;
                 }
                 hash = uint(keccak256(abi.encodePacked(hash, indexOfNode)));
                 iterations++;
             }
-
             require(iterations < 200, "Old Node is not replaced? Try it later");
         }
+        return (schainIdsEvent, newNodeIndexEvent);
     }
 
     /**

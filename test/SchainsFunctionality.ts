@@ -332,7 +332,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
             nodes = await schainsData.getNodesInGroup(bobSchain);
             for (let j = 0; j < 3; j++) {
                 await nodesFunctionality.removeNodeByRoot(j);
-                await schainsFunctionality1.rotateNode(j);
+                await schainsFunctionality.replaceNode(j);
             }
             let sum = 0;
             nodes = await schainsData.getNodesInGroup(bobSchain);
@@ -363,7 +363,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
             }
             for (let j = 0; j < 2; j++) {
                 await nodesFunctionality.removeNodeByRoot(j);
-                await schainsFunctionality1.rotateNode(j);
+                await schainsFunctionality.replaceNode(j);
             }
 
             let bobSum = 0;
@@ -404,7 +404,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
             }
             
             await nodesFunctionality.removeNodeByRoot(0);
-            const {logs} = await schainsFunctionality1.rotateNode(0);
+            const {logs} = await schainsFunctionality.replaceNode(0);
             for (let j = 0; j < logs.length; j++) {
                 console.log(logs[j].args);
             }

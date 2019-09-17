@@ -36,6 +36,7 @@ interface ISchainsFunctionality1 {
         uint partOfNode) external;
     function findSchainAtSchainsForNode(uint nodeIndex, bytes32 schainId) external view returns (uint);
     function deleteGroup(bytes32 groupIndex) external;
+    function rotateNode(uint _nodeIndex) external returns (bytes32[] memory, uint[] memory);
 }
 
 
@@ -61,6 +62,12 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
     event SchainDeleted(
         address owner,
         string name
+    );
+
+    event NodeRotated(
+        bytes32[] groupIndex,
+        uint oldNode,
+        uint[] newNode
     );
 
     string executorName;
@@ -277,5 +284,13 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
                 INodesData(nodesDataAddress).addSpaceToFractionalNode(subarrayLink, partOfNode);
             }
         }
+    }
+
+    function replaceNode(uint _nodeIndex) public {
+        address schainsFunctionality1Address = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("SchainsFunctionality1")));
+        bytes32[] memory schainIdsEvent;
+        uint[] memory newNodeIndexEvent;
+        (schainIdsEvent, newNodeIndexEvent) = ISchainsFunctionality1(schainsFunctionality1Address).rotateNode(_nodeIndex);
+        emit NodeRotated(schainIdsEvent, _nodeIndex, newNodeIndexEvent);
     }
 }

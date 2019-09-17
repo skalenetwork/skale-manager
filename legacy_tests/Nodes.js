@@ -52,6 +52,13 @@ async function createNode() {
                     }
                 }
             });
+            
+    await init.ValidatorsFunctionality.getPastEvents('Iterations', {fromBlock: blockNumber, toBlock: blockNumber}).then(
+        function(events) {
+            for (let i = 0; i < events.length; i++) {
+                console.log(events[i].returnValues);
+            }
+        });
     console.log("Node", nodeIndex, "created with", res.gasUsed, "gas consumption");
     return nodeIndex;
 }

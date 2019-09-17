@@ -36,11 +36,73 @@ async function validationForAllNodes() {
     }
     //setTimeout(function(){validationForAllNodes()}, 10000);
 }
+
+let allActiveNodes = new Array();
+async function showActiveNodes(secondRandomNumber, rotated) {
+    let schainsForNode = await init.SchainsData.methods.getSchainIdsForNode(secondRandomNumber).call();
+    let activeFullNodes = await init.NodesData.methods.getActiveFullNodes().call();
+    for (let i = 0; i < schainsForNode.length; i++) {
+        let activeNodesInGroup = new Array();
+        let nodesInGroup = await init.SchainsData.methods.getNodesInGroup(schainsForNode[i]).call();
+        for (let j = 0; j < nodesInGroup.length; j++) {
+            if (activeFullNodes.includes(nodesInGroup[j]) || nodesInGroup[j] == secondRandomNumber && !rotated) {
+                process.stdout.write(nodesInGroup[j] + ' ');
+                activeNodesInGroup.push(nodesInGroup[j]);
+            }
+        }
+        allActiveNodes.push(activeNodesInGroup);
+        console.log();
+    }
+}
+
+async function rotationNode(secondRandomNumber) {
+    console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
+
+    await showActiveNodes(secondRandomNumber, false);
+    console.log('<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<')
+    let tx_hash = await init.SchainsFunctionality.methods.replaceNode(secondRandomNumber).send({from: init.mainAccount, gas: 8000000});
+    let blockNumber = tx_hash.blockNumber;
+    let nodeRotated = new Array();
+    await init.SchainsFunctionality.getPastEvents('NodeRotated', {fromBlock: blockNumber, toBlock: blockNumber}).then(
+        function(events) {
+            for (let i = 0; i < events.length; i++) {
+                // console.log(events[i].returnValues);
+                nodeRotated.push(events[i].returnValues.newNode);
+            }
+        });
+    
+    await showActiveNodes(secondRandomNumber, true);
+
+    for (let i = 0; i < allActiveNodes.length/2; i++) {
+        if (!~allActiveNodes[i].indexOf(secondRandomNumber.toString())) {
+            throw "Old node is not in schain";
+        }
+        if (allActiveNodes[i].length != 16) {
+            throw "Schain length is not 16";
+        }
+    }
+    let j = 0;
+    nodeRotated = nodeRotated[0];
+    for (let i = allActiveNodes.length/2; i < allActiveNodes.length; i++) {
+        if (~allActiveNodes[i].indexOf(secondRandomNumber.toString())) {
+            throw "Old node is still in schain";
+        }
+        if (allActiveNodes[i][allActiveNodes[i].length - 1] != nodeRotated[j++]) {
+            throw "Node wasn't replaced by new one";
+        }
+        if (allActiveNodes[i].length != 16) {
+            throw "Schain length is not 16";
+        }
+    }
+    allActiveNodes = new Array();
+    console.log('-----------------------------------------------------------------------------------------------')
+}
+
 let n = 0;
 async function main(numberOfIterations) {
 
     //let nodeIndex = await nodes.createNode();
-    let randomNumber = Math.floor(Math.random() * 10) + 20;
+    let randomNumber = Math.floor(Math.random() * 10) + 80;
     //console.log("Part of creating Nodes!");
     for (let i = 0; i < randomNumber; i++) {
         nodeIndex = await nodes.createNode();
@@ -59,13 +121,14 @@ async function main(numberOfIterations) {
         //await schains.deleteSchain(schainName);
     }
 
-    randomNumber = Math.floor(Math.random() * 5);
+    randomNumber = Math.floor(Math.random() * 20);
 
     for (let i = 0; i < randomNumber; i++) {
         let secondRandomNumber = Math.floor(Math.random() * numberOfNodes);
-        if (await init.NodesData.methods.isNodeActive(secondRandomNumber)) {
+        if (await init.NodesData.methods.isNodeActive(secondRandomNumber).call()) {
             console.log("Delete node", secondRandomNumber);
             await nodes.deleteNode(secondRandomNumber);
+            await rotationNode(secondRandomNumber);
         }
     }
 

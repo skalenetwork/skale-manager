@@ -87,6 +87,10 @@ contract ValidatorsFunctionality is GroupsFunctionality, IValidatorsFunctionalit
         uint gasSpend
     );
 
+    event Iterations(           //remove before pull request
+        uint iterarions
+    );
+
     constructor(
         string memory newExecutorName,
         string memory newDataName,
@@ -104,12 +108,10 @@ contract ValidatorsFunctionality is GroupsFunctionality, IValidatorsFunctionalit
 
     function addValidator(uint nodeIndex) public allow(executorName) {
         bytes32 groupIndex = keccak256(abi.encodePacked(nodeIndex));
-        address nodesDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
-        uint possibleNumberOfNodes = INodesData(nodesDataAddress).getNumberOfNodes() / 4 +
-            (INodesData(nodesDataAddress).getNumberOfNodes() % 4 == 0 ? 0 : 1);
+        address constantsAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("Constants")));
+        uint possibleNumberOfNodes = IConstants(constantsAddress).NUMBER_OF_VALIDATORS();
         addGroup(groupIndex, possibleNumberOfNodes, bytes32(nodeIndex));
         uint numberOfNodesInGroup = setValidators(groupIndex, nodeIndex);
-        //require(1 != 1, "Break");
         emit ValidatorCreated(
             nodeIndex,
             groupIndex,
@@ -120,9 +122,8 @@ contract ValidatorsFunctionality is GroupsFunctionality, IValidatorsFunctionalit
 
     function upgradeValidator(uint nodeIndex) public allow(executorName) {
         bytes32 groupIndex = keccak256(abi.encodePacked(nodeIndex));
-        address nodesDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
-        uint possibleNumberOfNodes = INodesData(nodesDataAddress).getNumberOfNodes() / 4 +
-            (INodesData(nodesDataAddress).getNumberOfNodes() % 4 == 0 ? 0 : 1);
+        address constantsAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("ConstantsHolder")));
+        uint possibleNumberOfNodes = IConstants(constantsAddress).NUMBER_OF_VALIDATORS();
         upgradeGroup(groupIndex, possibleNumberOfNodes, bytes32(nodeIndex));
         uint numberOfNodesInGroup = setValidators(groupIndex, nodeIndex);
         emit ValidatorUpgraded(
@@ -217,6 +218,7 @@ contract ValidatorsFunctionality is GroupsFunctionality, IValidatorsFunctionalit
         for (uint i = 0; i < nodesInGroup.length; i++) {
             IGroupsData(dataAddress).removeExceptionNode(groupIndex, nodesInGroup[i]);
         }
+        emit Iterations(iterations); //remove before pull request
         emit GroupGenerated(
             groupIndex,
             nodesInGroup,
