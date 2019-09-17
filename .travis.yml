@@ -21,6 +21,9 @@ node_js:
   - "10"
 os: linux
 dist: bionic
+env:
+  global:
+    - NODE_OPTIONS="--max_old_space_size=4096"
 addons:
   apt:
     packages:
