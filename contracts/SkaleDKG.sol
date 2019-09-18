@@ -166,6 +166,7 @@ contract SkaleDKG is Permissions {
         if (isBroadcasted(groupIndex, toNodeIndex) && channels[groupIndex].nodeToComplaint == 0) {
             // need to wait a response from toNodeIndex
             channels[groupIndex].nodeToComplaint = toNodeIndex;
+            channels[groupIndex].fromNodeToComplaint = fromNodeIndex;
             channels[groupIndex].startComplaintBlockNumber = block.number;
             emit ComplaintSent(groupIndex, fromNodeIndex, toNodeIndex);
         } else if (channels[groupIndex].nodeToComplaint != toNodeIndex) {

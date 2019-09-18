@@ -21,6 +21,7 @@ let ConstantsHolder = artifacts.require('./ConstantsHolder.sol');
 let SkaleDKG = artifacts.require('./SkaleDKG.sol');
 let SkaleVerifier = artifacts.require('./SkaleVerifier.sol');
 let Decryption = artifacts.require('./Decryption.sol');
+let ECDH = artifacts.require('./ECDH.sol');
 
 let gasLimit = 6900000;
 
@@ -65,6 +66,10 @@ async function deploy(deployer, network) {
         await deployer.deploy(Decryption, {gas: gasLimit * gas_multiplier});
         await contractManagerInstance.setContractsAddress("Decryption", Decryption.address).then(function(res) {
             console.log("Contract Decryption with address", Decryption.address, "registred in Contract Manager");
+        });
+        await deployer.deploy(ECDH, {gas: gasLimit * gas_multiplier});
+        await contractManagerInstance.setContractsAddress("ECDH", ECDH.address).then(function(res) {
+            console.log("Contract ECDH with address", ECDH.address, "registred in Contract Manager");
         });
         await deployer.deploy(SkaleDKG, contractManagerInstance.address, {gas: gasLimit * gas_multiplier});
         await contractManagerInstance.setContractsAddress("SkaleDKG", SkaleDKG.address).then(function(res) {
