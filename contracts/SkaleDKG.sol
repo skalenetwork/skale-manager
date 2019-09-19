@@ -269,11 +269,7 @@ contract SkaleDKG is Permissions {
 
         (pkX, pkY) = ECDH(ecdhAddress).deriveKey(secretNumber, pkX, pkY);
 
-        bytes memory pk = new bytes(32);
-        assembly {
-            mstore(add(pk, 32), pkX)
-        }
-        key = sha256(pk);
+        key = sha256(abi.encodePacked(bytes32(pkX)));
     }
 
     function decryptMessage(bytes32 groupIndex, uint secretNumber) internal view returns (uint) {
@@ -283,12 +279,13 @@ contract SkaleDKG is Permissions {
 
         // Decrypt secret key contribution
         bytes32 ciphertext;
+        uint index = findNode(groupIndex, channels[groupIndex].fromNodeToComplaint);
         bytes memory sc = data[groupIndex][uint8(channels[groupIndex].nodeToComplaint)].secretKeyContribution;
         assembly {
-            ciphertext := mload(add(sc, 32))
+            ciphertext := mload(add(sc, add(32, mul(index, 97))))
         }
 
-        uint8 secret = uint8(Decryption(decryptionAddress).decrypt(ciphertext, key));
+        uint secret = Decryption(decryptionAddress).decrypt(ciphertext, key);
         return secret;
     }
 
