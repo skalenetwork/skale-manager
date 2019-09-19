@@ -64,7 +64,7 @@ async function createNode() {
 }
 
 async function deleteNode(nodeIndex) {
-    let res = await init.SkaleManager.methods.deleteNode(nodeIndex).send({from: init.mainAccount, gas: 4712388});
+    let res = await init.SkaleManager.methods.deleteNode(nodeIndex).send({from: init.mainAccount, gas: 8000000});
     console.log("Node:", nodeIndex, "deleted with", res.gasUsed, "gas consumption");
 }
 

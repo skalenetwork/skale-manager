@@ -115,6 +115,11 @@ contract GroupsData is IGroupsData, Permissions {
         groups[groupIndex].nodesInGroup.push(nodeIndex);
     }
 
+    // function removeNodeFromGroups(uint nodeIndex) public allow(executorName) {
+
+    //     delete groups[groupIndex].nodesInGroup[nodeIndex];
+    // }
+
     /**
      * @dev removeAllNodesInGroup - removes all added Nodes out the Group
      * function could be run only by executor

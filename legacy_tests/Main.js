@@ -60,17 +60,21 @@ async function rotationNode(secondRandomNumber) {
 
     await showActiveNodes(secondRandomNumber, false);
     console.log('<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<')
-    let tx_hash = await init.SchainsFunctionality.methods.replaceNode(secondRandomNumber).send({from: init.mainAccount, gas: 8000000});
-    let blockNumber = tx_hash.blockNumber;
+    let schainIds = await init.SchainsData.methods.getSchainIdsForNode(secondRandomNumber).call();
     let nodeRotated = new Array();
-    await init.SchainsFunctionality.getPastEvents('NodeRotated', {fromBlock: blockNumber, toBlock: blockNumber}).then(
-        function(events) {
-            for (let i = 0; i < events.length; i++) {
-                // console.log(events[i].returnValues);
-                nodeRotated.push(events[i].returnValues.newNode);
-            }
-        });
-    
+    for (let i = 0; i < schainIds.length; i++) {
+        // await schainsFunctionality.replaceNode(schainIds[i]);
+        let tx_hash = await init.SchainsFunctionality.methods.replaceNode(schainIds[i]).send({from: init.mainAccount, gas: 8000000});
+        let blockNumber = tx_hash.blockNumber;
+        await init.SchainsFunctionality.getPastEvents('NodeRotated', {fromBlock: blockNumber, toBlock: blockNumber}).then(
+            function(events) {
+                for (let i = 0; i < events.length; i++) {
+                    // console.log(events[i].returnValues);
+                    nodeRotated.push(events[i].returnValues.newNode);
+                }
+            });
+            
+    }
     await showActiveNodes(secondRandomNumber, true);
 
     for (let i = 0; i < allActiveNodes.length/2; i++) {
@@ -82,7 +86,7 @@ async function rotationNode(secondRandomNumber) {
         }
     }
     let j = 0;
-    nodeRotated = nodeRotated[0];
+
     for (let i = allActiveNodes.length/2; i < allActiveNodes.length; i++) {
         if (~allActiveNodes[i].indexOf(secondRandomNumber.toString())) {
             throw "Old node is still in schain";
@@ -98,11 +102,12 @@ async function rotationNode(secondRandomNumber) {
     console.log('-----------------------------------------------------------------------------------------------')
 }
 
-let n = 0;
+let n = 1;
 async function main(numberOfIterations) {
 
     //let nodeIndex = await nodes.createNode();
-    let randomNumber = Math.floor(Math.random() * 10) + 80;
+    // let randomNumber = Math.floor(Math.random() * 10) + 80;
+    let randomNumber = 100;
     //console.log("Part of creating Nodes!");
     for (let i = 0; i < randomNumber; i++) {
         nodeIndex = await nodes.createNode();
@@ -121,30 +126,36 @@ async function main(numberOfIterations) {
         //await schains.deleteSchain(schainName);
     }
 
-    randomNumber = Math.floor(Math.random() * 20);
-
-    for (let i = 0; i < randomNumber; i++) {
+    // randomNumber = Math.floor(Math.random() * 20);
+    let iter = 0;
+    while (iter < 40) {
         let secondRandomNumber = Math.floor(Math.random() * numberOfNodes);
-        if (await init.NodesData.methods.isNodeActive(secondRandomNumber).call()) {
+        let schainIds = await init.SchainsData.methods.getSchainIdsForNode(secondRandomNumber).call();
+        if (await init.NodesData.methods.isNodeActive(secondRandomNumber).call() && schainIds.length) {
             console.log("Delete node", secondRandomNumber);
             await nodes.deleteNode(secondRandomNumber);
             await rotationNode(secondRandomNumber);
+        } else {
+            continue;
         }
+        iter++;
     }
-
-    await validationForAllNodes();/*
+    numberOfIterations++;
+    main(numberOfIterations);
+    /*
+    await validationForAllNodes();
     console.log("Date of next reward", await nodes.getNodeNextRewardDate(6), "and now", Math.floor(Date.now() / 1000));
     await validators.getBounty(6);
     console.log("Validators for Node", 6);
     await validators.getValidatorsForNode(6);*/
 
-    console.log(numberOfIterations);
-    if (numberOfIterations < 20) {
-        numberOfIterations++;
-        await setTimeout(function(){main(numberOfIterations)}, 10000);
-    } else {
-        process.exit();
-    }
+    // console.log(numberOfIterations);
+    // if (numberOfIterations < 20) {
+    //     numberOfIterations++;
+    //     await setTimeout(function(){main(numberOfIterations)}, 10000);
+    // } else {
+    //     process.exit();
+    // }
 }
 
 //console.log("Start!!");

@@ -14,7 +14,7 @@ const PrivateKeyProvider = require("truffle-hdwallet-provider");
 const web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
 //////
 // const mainAccount = web3['_provider']['address'];
-const mainAccount = "0xDABF56bc2AAf61901C959C88C4b0964fD4956351";
+const mainAccount = "0x48096852284C6Acfb0400d80b35D80EEFB58c6af";
 
 const jsonData = require(`../data/${networkName}.json`);
 // const updatedData = require("../data/updated.json");

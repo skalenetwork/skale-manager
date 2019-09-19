@@ -36,7 +36,7 @@ interface ISchainsFunctionality1 {
         uint partOfNode) external;
     function findSchainAtSchainsForNode(uint nodeIndex, bytes32 schainId) external view returns (uint);
     function deleteGroup(bytes32 groupIndex) external;
-    function rotateNode(uint _nodeIndex) external returns (bytes32[] memory, uint[] memory);
+    function rotateNode(bytes32 schainId) external returns (bytes32, uint);
 }
 
 
@@ -65,9 +65,8 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
     );
 
     event NodeRotated(
-        bytes32[] groupIndex,
-        uint oldNode,
-        uint[] newNode
+        bytes32 groupIndex,
+        uint newNode
     );
 
     string executorName;
@@ -210,6 +209,14 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
         emit SchainDeleted(from, name);
     }
 
+    function replaceNode(bytes32 schainId) public {
+        address schainsFunctionality1Address = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("SchainsFunctionality1")));
+        bytes32 schainIdsEvent;
+        uint newNodeIndexEvent;
+        (schainIdsEvent, newNodeIndexEvent) = ISchainsFunctionality1(schainsFunctionality1Address).rotateNode(schainId);
+        emit NodeRotated(schainIdsEvent, newNodeIndexEvent);
+    }
+
     function initializeSchainInSchainsData(
         string memory name,
         address from,
@@ -284,13 +291,5 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
                 INodesData(nodesDataAddress).addSpaceToFractionalNode(subarrayLink, partOfNode);
             }
         }
-    }
-
-    function replaceNode(uint _nodeIndex) public {
-        address schainsFunctionality1Address = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("SchainsFunctionality1")));
-        bytes32[] memory schainIdsEvent;
-        uint[] memory newNodeIndexEvent;
-        (schainIdsEvent, newNodeIndexEvent) = ISchainsFunctionality1(schainsFunctionality1Address).rotateNode(_nodeIndex);
-        emit NodeRotated(schainIdsEvent, _nodeIndex, newNodeIndexEvent);
     }
 }
