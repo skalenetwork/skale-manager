@@ -29,10 +29,6 @@ addons:
     packages:
       - python3-pip
       - python3-setuptools
-
-before_install:
-    - sudo apt-get update
-    - sudo apt-get install python3-pip python3-setuptools
 install:
     - yarn install
     - pip3 install slither-analyzer
