@@ -144,7 +144,11 @@ contract SchainsFunctionality1 is GroupsFunctionality {
 
             // checks that this not is available, enough space to allocate resources
             // and have not chosen to this group
-            if (comparator(indexOfNode, nodeIndex, uint(groupData), space) && !IGroupsData(dataAddress).isExceptionNode(groupIndex, nodeIndex)) {
+            if (comparator(
+                indexOfNode,
+                nodeIndex,
+                uint(groupData),
+                space) && !IGroupsData(dataAddress).isExceptionNode(groupIndex, nodeIndex)) {
                 // adds Node to the Group
                 IGroupsData(dataAddress).setException(groupIndex, nodeIndex);
                 nodesInGroup[index] = nodeIndex;
@@ -177,7 +181,16 @@ contract SchainsFunctionality1 is GroupsFunctionality {
      * @param space - needed space to occupy
      * @return if fitted - true, else - false
      */
-    function comparator(uint indexOfNode, uint nodeIndex, uint partOfNode, uint space) internal view returns (bool) {
+    function comparator(
+        uint indexOfNode,
+        uint nodeIndex,
+        uint partOfNode,
+        uint space
+    )
+        internal
+        view
+        returns (bool)
+    {
         address nodesDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
         address constantsAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("Constants")));
         uint freeSpace = 0;
