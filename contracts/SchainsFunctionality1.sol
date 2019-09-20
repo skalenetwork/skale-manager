@@ -144,7 +144,7 @@ contract SchainsFunctionality1 is GroupsFunctionality {
 
             // checks that this not is available, enough space to allocate resources
             // and have not chosen to this group
-            if (comparator(indexOfNode, uint(groupData), space) && !IGroupsData(dataAddress).isExceptionNode(groupIndex, nodeIndex)) {
+            if (comparator(indexOfNode, nodeIndex, uint(groupData), space) && !IGroupsData(dataAddress).isExceptionNode(groupIndex, nodeIndex)) {
                 // adds Node to the Group
                 IGroupsData(dataAddress).setException(groupIndex, nodeIndex);
                 nodesInGroup[index] = nodeIndex;
@@ -177,30 +177,30 @@ contract SchainsFunctionality1 is GroupsFunctionality {
      * @param space - needed space to occupy
      * @return if fitted - true, else - false
      */
-    function comparator(uint indexOfNode, uint partOfNode, uint space) internal view returns (bool) {
+    function comparator(uint indexOfNode, uint nodeIndex, uint partOfNode, uint space) internal view returns (bool) {
         address nodesDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
         address constantsAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("Constants")));
         uint freeSpace = 0;
-        uint nodeIndex = uint(-1);
+        uint nodeIndexFromStruct;
         // get nodeIndex and free space of this Node
         if (partOfNode == IConstants(constantsAddress).MEDIUM_DIVISOR()) {
-            (nodeIndex, freeSpace) = INodesData(nodesDataAddress).fullNodes(indexOfNode);
+            (nodeIndexFromStruct, freeSpace) = INodesData(nodesDataAddress).fullNodes(indexOfNode);
         } else if (partOfNode == IConstants(constantsAddress).TINY_DIVISOR() || partOfNode == IConstants(constantsAddress).SMALL_DIVISOR()) {
-            (nodeIndex, freeSpace) = INodesData(nodesDataAddress).fractionalNodes(indexOfNode);
+            (nodeIndexFromStruct, freeSpace) = INodesData(nodesDataAddress).fractionalNodes(indexOfNode);
         } else if (partOfNode == IConstants(constantsAddress).MEDIUM_TEST_DIVISOR() || partOfNode == 0) {
             bool isNodeFull;
             uint subarrayLink;
             (subarrayLink, isNodeFull) = INodesData(nodesDataAddress).nodesLink(indexOfNode);
             if (isNodeFull) {
-                (nodeIndex, freeSpace) = INodesData(nodesDataAddress).fullNodes(subarrayLink);
+                (nodeIndexFromStruct, freeSpace) = INodesData(nodesDataAddress).fullNodes(subarrayLink);
             } else {
-                (nodeIndex, freeSpace) = INodesData(nodesDataAddress).fractionalNodes(subarrayLink);
+                (nodeIndexFromStruct, freeSpace) = INodesData(nodesDataAddress).fractionalNodes(subarrayLink);
             }
         } else {
             revert("Divisor does not match any valid schain type");
         }
         require(nodeIndex != uint(-1), "nodeIndex is not set");
-        return INodesData(nodesDataAddress).isNodeActive(nodeIndex) && (freeSpace >= space);
+        return (INodesData(nodesDataAddress).isNodeActive(nodeIndex) && freeSpace >= space && nodeIndexFromStruct == nodeIndex);
     }
 
     /**
