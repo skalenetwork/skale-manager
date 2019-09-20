@@ -194,7 +194,7 @@ contract SchainsFunctionality1 is GroupsFunctionality {
         address nodesDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
         address constantsAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("Constants")));
         uint freeSpace = 0;
-        uint nodeIndexFromStruct;
+        uint nodeIndexFromStruct = uint(-1);
         // get nodeIndex and free space of this Node
         if (partOfNode == IConstants(constantsAddress).MEDIUM_DIVISOR()) {
             (nodeIndexFromStruct, freeSpace) = INodesData(nodesDataAddress).fullNodes(indexOfNode);
