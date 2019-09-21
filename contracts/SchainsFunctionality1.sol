@@ -212,8 +212,16 @@ contract SchainsFunctionality1 is GroupsFunctionality {
         } else {
             revert("Divisor does not match any valid schain type");
         }
-        require(nodeIndex != uint(-1), "nodeIndex is not set");
-        return (INodesData(nodesDataAddress).isNodeActive(nodeIndex) && freeSpace >= space && nodeIndexFromStruct == nodeIndex);
+        if (nodeIndexFromStruct != nodeIndex) {
+            return false;
+        } else if (!INodesData(nodesDataAddress).isNodeActive(nodeIndex)) {
+            return false;
+        } else if (freeSpace < space) {
+            return false;
+        } else {
+            return true;
+        }
+        //return (INodesData(nodesDataAddress).isNodeActive(nodeIndex) && freeSpace >= space && nodeIndexFromStruct == nodeIndex);
     }
 
     /**
