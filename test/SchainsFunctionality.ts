@@ -173,11 +173,11 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                         "0x00" +
                         "2161" +
                         "0000" +
-                        "7f000005" + //hexIndex +
-                        "7f000005" + //hexIndex +
+                        "7f000005" +
+                        "7f000005" +
                         "1122334455667788990011223344556677889900112233445566778899001122" +
                         "1122334455667788990011223344556677889900112233445566778899001122" +
-                        "d205"); //+ hexIndex);
+                        "d205");
 
                 const deposit = await schainsFunctionality.getSchainPrice(5, 5);
 
@@ -190,13 +190,13 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                     "0000" +
                     "6432",
                     {from: owner});
-                
+
                 let nodesInGroup = await schainsData.getNodesInGroup(web3.utils.soliditySha3("d2"));
 
                 let zeroNodeInArray = false;
 
-                for (let i = 0; i < nodesInGroup.length; i++) {
-                    zeroNodeInArray = (web3.utils.toBN(nodesInGroup[i]).toString() == "0" ? true : false);
+                for (const node of nodesInGroup) {
+                    zeroNodeInArray = (web3.utils.toBN(node).toString() === "0" ? true : false);
                 }
 
                 zeroNodeInArray.should.be.equal(false);
@@ -210,17 +210,17 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                     "0000" +
                     "6433",
                     {from: owner});
-                
+
                 nodesInGroup = await schainsData.getNodesInGroup(web3.utils.soliditySha3("d2"));
 
                 zeroNodeInArray = false;
-                
-                for (let i = 0; i < nodesInGroup.length; i++) {
-                    zeroNodeInArray = (web3.utils.toBN(nodesInGroup[i]).toString() == "0" ? true : false);
+
+                for (const node of nodesInGroup) {
+                    zeroNodeInArray = (web3.utils.toBN(node).toString() === "0" ? true : false);
                 }
 
                 zeroNodeInArray.should.be.equal(false);
-                
+
                 await schainsFunctionality.addSchain(
                     holder,
                     deposit,
@@ -234,13 +234,13 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                 nodesInGroup = await schainsData.getNodesInGroup(web3.utils.soliditySha3("d2"));
 
                 zeroNodeInArray = false;
-                
-                for (let i = 0; i < nodesInGroup.length; i++) {
-                    zeroNodeInArray = (web3.utils.toBN(nodesInGroup[i]).toString() == "0" ? true : false);
+
+                for (const node of nodesInGroup) {
+                    zeroNodeInArray = (web3.utils.toBN(node).toString() === "0" ? true : false);
                 }
 
                 zeroNodeInArray.should.be.equal(false);
-                
+
                 await schainsFunctionality.addSchain(
                     holder,
                     deposit,
@@ -254,9 +254,9 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                 nodesInGroup = await schainsData.getNodesInGroup(web3.utils.soliditySha3("d2"));
 
                 zeroNodeInArray = false;
-                
-                for (let i = 0; i < nodesInGroup.length; i++) {
-                    zeroNodeInArray = (web3.utils.toBN(nodesInGroup[i]).toString() == "0" ? true : false);
+
+                for (const node of nodesInGroup) {
+                    zeroNodeInArray = (web3.utils.toBN(node).toString() === "0" ? true : false);
                 }
 
                 zeroNodeInArray.should.be.equal(false);
