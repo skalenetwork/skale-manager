@@ -113,6 +113,156 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                 .should.be.eventually.rejectedWith("Not enough nodes to create Schain");
         });
 
+        describe("when 4 nodes are registered", async () => {
+            beforeEach(async () => {
+                const nodesCount = 4;
+                for (const index of Array.from(Array(nodesCount).keys())) {
+                    const hexIndex = ("0" + index.toString(16)).slice(-2);
+                    await nodesFunctionality.createNode(validator, "100000000000000000000",
+                        "0x00" +
+                        "2161" +
+                        "0000" +
+                        "7f0000" + hexIndex +
+                        "7f0000" + hexIndex +
+                        "1122334455667788990011223344556677889900112233445566778899001122" +
+                        "1122334455667788990011223344556677889900112233445566778899001122" +
+                        "d2" + hexIndex);
+                }
+            });
+
+            it("should create 4 node schain", async () => {
+                const deposit = await schainsFunctionality.getSchainPrice(5, 5);
+
+                await schainsFunctionality.addSchain(
+                    holder,
+                    deposit,
+                    "0x10" +
+                    "0000000000000000000000000000000000000000000000000000000000000005" +
+                    "05" +
+                    "0000" +
+                    "6432",
+                    {from: owner});
+
+                const schains = await schainsData.getSchains();
+                schains.length.should.be.equal(1);
+                const schainId = schains[0];
+
+                await schainsData.isOwnerAddress(holder, schainId).should.be.eventually.true;
+            });
+
+            it("should not create 4 node schain with 1 deleted node", async () => {
+                await nodesFunctionality.removeNodeByRoot(0);
+
+                const deposit = await schainsFunctionality.getSchainPrice(5, 5);
+
+                await schainsFunctionality.addSchain(
+                    holder,
+                    deposit,
+                    "0x10" +
+                    "0000000000000000000000000000000000000000000000000000000000000005" +
+                    "05" +
+                    "0000" +
+                    "6432",
+                    {from: owner}).should.be.eventually.rejectedWith("Not enough nodes to create Schain");
+            });
+
+            it("should not create 4 node schain on deleted node", async () => {
+                await nodesFunctionality.removeNodeByRoot(0);
+
+                await nodesFunctionality.createNode(validator, "100000000000000000000",
+                        "0x00" +
+                        "2161" +
+                        "0000" +
+                        "7f000005" + //hexIndex +
+                        "7f000005" + //hexIndex +
+                        "1122334455667788990011223344556677889900112233445566778899001122" +
+                        "1122334455667788990011223344556677889900112233445566778899001122" +
+                        "d205"); //+ hexIndex);
+
+                const deposit = await schainsFunctionality.getSchainPrice(5, 5);
+
+                await schainsFunctionality.addSchain(
+                    holder,
+                    deposit,
+                    "0x10" +
+                    "0000000000000000000000000000000000000000000000000000000000000005" +
+                    "05" +
+                    "0000" +
+                    "6432",
+                    {from: owner});
+                
+                let nodesInGroup = await schainsData.getNodesInGroup(web3.utils.soliditySha3("d2"));
+
+                let zeroNodeInArray = false;
+
+                for (let i = 0; i < nodesInGroup.length; i++) {
+                    zeroNodeInArray = (web3.utils.toBN(nodesInGroup[i]).toString() == "0" ? true : false);
+                }
+
+                zeroNodeInArray.should.be.equal(false);
+
+                await schainsFunctionality.addSchain(
+                    holder,
+                    deposit,
+                    "0x10" +
+                    "0000000000000000000000000000000000000000000000000000000000000005" +
+                    "05" +
+                    "0000" +
+                    "6433",
+                    {from: owner});
+                
+                nodesInGroup = await schainsData.getNodesInGroup(web3.utils.soliditySha3("d2"));
+
+                zeroNodeInArray = false;
+                
+                for (let i = 0; i < nodesInGroup.length; i++) {
+                    zeroNodeInArray = (web3.utils.toBN(nodesInGroup[i]).toString() == "0" ? true : false);
+                }
+
+                zeroNodeInArray.should.be.equal(false);
+                
+                await schainsFunctionality.addSchain(
+                    holder,
+                    deposit,
+                    "0x10" +
+                    "0000000000000000000000000000000000000000000000000000000000000005" +
+                    "05" +
+                    "0000" +
+                    "6434",
+                    {from: owner});
+
+                nodesInGroup = await schainsData.getNodesInGroup(web3.utils.soliditySha3("d2"));
+
+                zeroNodeInArray = false;
+                
+                for (let i = 0; i < nodesInGroup.length; i++) {
+                    zeroNodeInArray = (web3.utils.toBN(nodesInGroup[i]).toString() == "0" ? true : false);
+                }
+
+                zeroNodeInArray.should.be.equal(false);
+                
+                await schainsFunctionality.addSchain(
+                    holder,
+                    deposit,
+                    "0x10" +
+                    "0000000000000000000000000000000000000000000000000000000000000005" +
+                    "05" +
+                    "0000" +
+                    "6435",
+                    {from: owner});
+
+                nodesInGroup = await schainsData.getNodesInGroup(web3.utils.soliditySha3("d2"));
+
+                zeroNodeInArray = false;
+                
+                for (let i = 0; i < nodesInGroup.length; i++) {
+                    zeroNodeInArray = (web3.utils.toBN(nodesInGroup[i]).toString() == "0" ? true : false);
+                }
+
+                zeroNodeInArray.should.be.equal(false);
+            });
+        });
+
         describe("when nodes are registered", async () => {
 
             beforeEach(async () => {
