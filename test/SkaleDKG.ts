@@ -189,7 +189,8 @@ contract("SkaleDKG", ([owner, validator, developer, hacker]) => {
 
         //     var channelOpenedEvent = truffleEvent.formTxObject('SkaleDKG', 0, res);
         //     console.log(truffleEvent);
-        //     truffleAssert.eventEmitted(channelOpenedEvent, "ChannelOpened", {groupIndex: web3.utils.soliditySha3("d2")});
+        //     truffleAssert.eventEmitted(channelOpenedEvent, "ChannelOpened", {groupIndex:
+        //     web3.utils.soliditySha3("d2")});
         // });
     });
 });
