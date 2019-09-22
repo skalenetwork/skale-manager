@@ -181,7 +181,6 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
         emit SchainDeleted(from, name, schainId);
     }
 
-
     function deleteSchainByRoot(string memory name) public allow(executorName) {
         bytes32 schainId = keccak256(abi.encodePacked(name));
         address dataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked(dataName)));
