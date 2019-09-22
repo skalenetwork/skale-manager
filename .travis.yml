@@ -38,7 +38,7 @@ before_script:
 script:
     - yarn lint || travis_terminate 1
     - slither . || true
-    - slither . --exclude naming-convention,external-function,constable-states,assembly,timestamp,calls-loop,shadowing-local,reentrancy-no-eth,constant-function || travis_terminate 5
+    - slither . --exclude naming-convention,external-function,constable-states,assembly,timestamp,calls-loop,shadowing-local,reentrancy-no-eth,constant-function,solc-version,pragma || travis_terminate 5
     - yarn tslint || travis_terminate 2
     - yarn generate    
     - yarn test || travis_terminate 3
