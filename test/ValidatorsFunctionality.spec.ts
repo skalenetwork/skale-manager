@@ -68,7 +68,7 @@ contract("ValidatorsFunctionality", ([owner, validator]) => {
       {from: owner, gas: 8000000 * gasMultiplier});
     await contractManager.setContractsAddress("NodesFunctionality", nodesFunctionality.address);
 
-    skaleDKG = await SkaleDKG.new(contractManager.address, {from: owner, gas: 8000000});
+    skaleDKG = await SkaleDKG.new(contractManager.address, {from: owner, gas: 8000000 * gasMultiplier});
     await contractManager.setContractsAddress("SkaleDKG", skaleDKG.address);
 
     // create a node for validators functions tests

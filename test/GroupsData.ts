@@ -4,6 +4,7 @@ import * as chaiAsPromised from "chai-as-promised";
 import { ContractManagerContract, ContractManagerInstance,
     GroupsDataContract, GroupsDataInstance, SkaleDKGContract,
     SkaleDKGInstance } from "../types/truffle-contracts";
+import { gasMultiplier } from "./utils/command_line";
 
 const GroupsData: GroupsDataContract = artifacts.require("./GroupsData");
 const ContractManager: ContractManagerContract = artifacts.require("./ContractManager");
@@ -20,7 +21,7 @@ contract("GroupsData", ([user, owner]) => {
     beforeEach(async () => {
         contractManager = await ContractManager.new({from: owner});
         groupsData = await GroupsData.new("GroupsFuctionality", contractManager.address, {from: owner});
-        skaleDKG = await SkaleDKG.new(contractManager.address, {from: owner, gas: 8000000});
+        skaleDKG = await SkaleDKG.new(contractManager.address, {from: owner, gas: 8000000 * gasMultiplier});
         await contractManager.setContractsAddress("SkaleDKG", skaleDKG.address, {from: owner});
     });
 

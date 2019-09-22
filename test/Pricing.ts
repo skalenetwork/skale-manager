@@ -1,6 +1,7 @@
 import BigNumber from "bignumber.js";
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
+import { gasMultiplier } from "./utils/command_line";
 
 import { ContractManagerContract,
          ContractManagerInstance,
@@ -37,7 +38,7 @@ contract("Pricing", ([owner, holder]) => {
         nodesData = await NodesData.new(5260000, contractManager.address, {from: owner});
         await contractManager.setContractsAddress("SchainsData", schainsData.address);
         await contractManager.setContractsAddress("NodesData", nodesData.address);
-        skaleDKG = await SkaleDKG.new(contractManager.address, {from: owner, gas: 8000000});
+        skaleDKG = await SkaleDKG.new(contractManager.address, {from: owner, gas: 8000000 * gasMultiplier});
         await contractManager.setContractsAddress("SkaleDKG", skaleDKG.address);
 
     });

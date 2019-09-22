@@ -23,6 +23,8 @@ import { ConstantsHolderContract,
 
 import { gasMultiplier } from "./utils/command_line";
 import { skipTime } from "./utils/time";
+// const truffleAssert = require('truffle-assertions');
+// const truffleEvent = require('truffle-events');
 
 const ContractManager: ContractManagerContract = artifacts.require("./ContractManager");
 const ConstantsHolder: ConstantsHolderContract = artifacts.require("./ConstantsHolder");
@@ -117,17 +119,17 @@ contract("SkaleDKG", ([owner, validator, developer, hacker]) => {
             {from: owner, gas: 7000000 * gasMultiplier});
         await contractManager.setContractsAddress("SchainsFunctionality1", schainsFunctionality1.address);
 
-        skaleDKG = await SkaleDKG.new(contractManager.address, {gas: 8000000});
+        skaleDKG = await SkaleDKG.new(contractManager.address, {from: owner, gas: 8000000 * gasMultiplier});
         await contractManager.setContractsAddress("SkaleDKG", skaleDKG.address);
 
-        decryption = await Decryption.new({gas: 8000000});
+        decryption = await Decryption.new({from: owner, gas: 8000000 * gasMultiplier});
         await contractManager.setContractsAddress("Decryption", decryption.address);
 
-        ecdh = await ECDH.new({gas: 8000000});
+        ecdh = await ECDH.new({from: owner, gas: 8000000 * gasMultiplier});
         await contractManager.setContractsAddress("ECDH", skaleDKG.address);
     });
 
-    describe("when 2 nodes are created and 2-node schain is created", async () => {
+    describe("when 2 nodes are created", async () => {
         beforeEach(async () => {
             const nodesCount = 2;
             for (const index of Array.from(Array(nodesCount).keys())) {
@@ -142,6 +144,20 @@ contract("SkaleDKG", ([owner, validator, developer, hacker]) => {
                     "1122334455667788990011223344556677889900112233445566778899001122" +
                     "d2" + hexIndex);
             }
+            // const deposit = await schainsFunctionality.getSchainPrice(4, 5);
+
+            // await schainsFunctionality.addSchain(
+            //     developer,
+            //     deposit,
+            //     "0x10" +
+            //     "0000000000000000000000000000000000000000000000000000000000000005" +
+            //     "04" +
+            //     "0000" +
+            //     "6432",
+            //     {from: owner});
+        });
+
+        it("should open a DKG channel", async () => {
             const deposit = await schainsFunctionality.getSchainPrice(4, 5);
 
             await schainsFunctionality.addSchain(
@@ -153,11 +169,27 @@ contract("SkaleDKG", ([owner, validator, developer, hacker]) => {
                 "0000" +
                 "6432",
                 {from: owner});
-        });
 
-        it("should open a DKG channel", async () => {
             const channel: Channel = new Channel(await skaleDKG.channels(web3.utils.soliditySha3("d2")));
             assert(channel.active.should.be.true);
         });
+
+        // it("should catch Channel opened event", async () => {
+        //     const deposit = await schainsFunctionality.getSchainPrice(4, 5);
+
+        //     const res = await schainsFunctionality.addSchain(
+        //         developer,
+        //         deposit,
+        //         "0x10" +
+        //         "0000000000000000000000000000000000000000000000000000000000000005" +
+        //         "04" +
+        //         "0000" +
+        //         "6432",
+        //         {from: owner});
+
+        //     var channelOpenedEvent = truffleEvent.formTxObject('SkaleDKG', 0, res);
+        //     console.log(truffleEvent);
+        //     truffleAssert.eventEmitted(channelOpenedEvent, "ChannelOpened", {groupIndex: web3.utils.soliditySha3("d2")});
+        // });
     });
 });

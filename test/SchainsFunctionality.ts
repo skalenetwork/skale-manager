@@ -79,7 +79,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
             {from: owner, gas: 7000000 * gasMultiplier});
         await contractManager.setContractsAddress("SchainsFunctionality1", schainsFunctionality1.address);
 
-        skaleDKG = await SkaleDKG.new(contractManager.address, {from: owner, gas: 8000000});
+        skaleDKG = await SkaleDKG.new(contractManager.address, {from: owner, gas: 8000000 * gasMultiplier});
         await contractManager.setContractsAddress("SkaleDKG", skaleDKG.address);
     });
 
@@ -218,7 +218,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                     "6433",
                     {from: owner});
 
-                nodesInGroup = await schainsData.getNodesInGroup(web3.utils.soliditySha3("d2"));
+                nodesInGroup = await schainsData.getNodesInGroup(web3.utils.soliditySha3("d3"));
 
                 zeroNodeInArray = false;
 
@@ -238,7 +238,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                     "6434",
                     {from: owner});
 
-                nodesInGroup = await schainsData.getNodesInGroup(web3.utils.soliditySha3("d2"));
+                nodesInGroup = await schainsData.getNodesInGroup(web3.utils.soliditySha3("d4"));
 
                 zeroNodeInArray = false;
 
@@ -258,7 +258,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                     "6435",
                     {from: owner});
 
-                nodesInGroup = await schainsData.getNodesInGroup(web3.utils.soliditySha3("d2"));
+                nodesInGroup = await schainsData.getNodesInGroup(web3.utils.soliditySha3("d5"));
 
                 zeroNodeInArray = false;
 
