@@ -23,7 +23,9 @@ import { ConstantsHolderContract,
          ValidatorsDataContract,
          ValidatorsDataInstance,
          ValidatorsFunctionalityContract,
-         ValidatorsFunctionalityInstance} from "../types/truffle-contracts";
+         ValidatorsFunctionalityInstance,
+         SkaleDKGContract,
+         SkaleDKGInstance} from "../types/truffle-contracts";
 
 import { gasMultiplier } from "./utils/command_line";
 import { skipTime } from "./utils/time";
@@ -40,6 +42,7 @@ const SchainsData: SchainsDataContract = artifacts.require("./SchainsData");
 const SchainsFunctionality: SchainsFunctionalityContract = artifacts.require("./SchainsFunctionality");
 const SchainsFunctionality1: SchainsFunctionality1Contract = artifacts.require("./SchainsFunctionality1");
 const ManagerData: ManagerDataContract = artifacts.require("./ManagerData");
+const SkaleDKG: SkaleDKGContract = artifacts.require("./SkaleDKG");
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -57,6 +60,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
     let schainsFunctionality: SchainsFunctionalityInstance;
     let schainsFunctionality1: SchainsFunctionality1Instance;
     let managerData: ManagerDataInstance;
+    let skaleDKG: SkaleDKGInstance;
 
     beforeEach(async () => {
         contractManager = await ContractManager.new({from: owner});
@@ -113,6 +117,9 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
 
         skaleManager = await SkaleManager.new(contractManager.address, {gas: 8000000});
         contractManager.setContractsAddress("SkaleManager", skaleManager.address);
+
+        skaleDKG = await SkaleDKG.new(contractManager.address, {from: owner, gas: 8000000});
+        await contractManager.setContractsAddress("SkaleDKG", skaleDKG.address);
     });
 
     it("should fail to process token fallback if sent not from SkaleToken", async () => {

@@ -13,7 +13,9 @@ import { ConstantsHolderContract,
          SchainsFunctionality1Contract,
          SchainsFunctionality1Instance,
          SchainsFunctionalityContract,
-         SchainsFunctionalityInstance } from "../types/truffle-contracts";
+         SchainsFunctionalityInstance,
+         SkaleDKGContract,
+         SkaleDKGInstance } from "../types/truffle-contracts";
 import { gasMultiplier } from "./utils/command_line";
 
 const SchainsFunctionality: SchainsFunctionalityContract = artifacts.require("./SchainsFunctionality");
@@ -23,6 +25,7 @@ const ConstantsHolder: ConstantsHolderContract = artifacts.require("./ConstantsH
 const SchainsData: SchainsDataContract = artifacts.require("./SchainsData");
 const NodesData: NodesDataContract = artifacts.require("./NodesData");
 const NodesFunctionality: NodesFunctionalityContract = artifacts.require("./NodesFunctionality");
+const SkaleDKG: SkaleDKGContract = artifacts.require("./SkaleDKG");
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -35,6 +38,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
     let schainsData: SchainsDataInstance;
     let nodesData: NodesDataInstance;
     let nodesFunctionality: NodesFunctionalityInstance;
+    let skaleDKG: SkaleDKGInstance;
 
     beforeEach(async () => {
         contractManager = await ContractManager.new({from: owner});
@@ -74,6 +78,9 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
             contractManager.address,
             {from: owner, gas: 7000000 * gasMultiplier});
         await contractManager.setContractsAddress("SchainsFunctionality1", schainsFunctionality1.address);
+
+        skaleDKG = await SkaleDKG.new(contractManager.address, {from: owner, gas: 8000000});
+        await contractManager.setContractsAddress("SkaleDKG", skaleDKG.address);
     });
 
     describe("should add schain", async () => {
