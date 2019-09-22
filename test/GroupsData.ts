@@ -21,7 +21,7 @@ contract("GroupsData", ([user, owner]) => {
         contractManager = await ContractManager.new({from: owner});
         groupsData = await GroupsData.new("GroupsFuctionality", contractManager.address, {from: owner});
         skaleDKG = await SkaleDKG.new(contractManager.address, {from: owner, gas: 8000000});
-        await contractManager.setContractsAddress("SkaleDKG", skaleDKG.address);
+        await contractManager.setContractsAddress("SkaleDKG", skaleDKG.address, {from: owner});
     });
 
     it("should add group from valid message sender", async () => {
