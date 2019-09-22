@@ -8,13 +8,12 @@ import {
         NodesDataInstance,
         NodesFunctionalityContract,
         NodesFunctionalityInstance,
+        SkaleDKGContract,
+        SkaleDKGInstance,
         ValidatorsDataContract,
         ValidatorsDataInstance,
         ValidatorsFunctionalityContract,
-        ValidatorsFunctionalityInstance,
-        SkaleDKGContract,
-        SkaleDKGInstance
-      } from "../types/truffle-contracts";
+        ValidatorsFunctionalityInstance} from "../types/truffle-contracts";
 import { gasMultiplier } from "./utils/command_line";
 import { currentTime, skipTime } from "./utils/time";
 

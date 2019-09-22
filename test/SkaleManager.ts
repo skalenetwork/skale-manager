@@ -16,6 +16,8 @@ import { ConstantsHolderContract,
          SchainsFunctionality1Instance,
          SchainsFunctionalityContract,
          SchainsFunctionalityInstance,
+         SkaleDKGContract,
+         SkaleDKGInstance,
          SkaleManagerContract,
          SkaleManagerInstance,
          SkaleTokenContract,
@@ -23,9 +25,7 @@ import { ConstantsHolderContract,
          ValidatorsDataContract,
          ValidatorsDataInstance,
          ValidatorsFunctionalityContract,
-         ValidatorsFunctionalityInstance,
-         SkaleDKGContract,
-         SkaleDKGInstance} from "../types/truffle-contracts";
+         ValidatorsFunctionalityInstance} from "../types/truffle-contracts";
 
 import { gasMultiplier } from "./utils/command_line";
 import { skipTime } from "./utils/time";
