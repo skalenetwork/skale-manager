@@ -1,10 +1,13 @@
 import { ContractManagerContract,
          ContractManagerInstance,
          SchainsDataContract,
-         SchainsDataInstance} from "../types/truffle-contracts";
+         SchainsDataInstance,
+         SkaleDKGContract,
+         SkaleDKGInstance } from "../types/truffle-contracts";
 
 const ContractManager: ContractManagerContract = artifacts.require("./ContractManager");
 const SchainsData: SchainsDataContract = artifacts.require("./SchainsData");
+const SkaleDKG: SkaleDKGContract = artifacts.require("./SkaleDKG");
 
 import BigNumber from "bignumber.js";
 import chai = require("chai");
@@ -38,10 +41,13 @@ class Schain {
 contract("SchainsData", ([owner, holder]) => {
     let contractManager: ContractManagerInstance;
     let schainsData: SchainsDataInstance;
+    let skaleDKG: SkaleDKGInstance;
 
     beforeEach(async () => {
         contractManager = await ContractManager.new({from: owner});
         schainsData = await SchainsData.new("SchainsFunctionality", contractManager.address, {from: owner});
+        skaleDKG = await SkaleDKG.new(contractManager.address, {from: owner, gas: 8000000});
+        await contractManager.setContractsAddress("SkaleDKG", skaleDKG.address);
     });
 
     it("should initialize schain", async () => {
