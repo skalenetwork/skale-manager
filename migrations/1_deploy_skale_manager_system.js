@@ -22,6 +22,7 @@ let SkaleDKG = artifacts.require('./SkaleDKG.sol');
 let SkaleVerifier = artifacts.require('./SkaleVerifier.sol');
 let Decryption = artifacts.require('./Decryption.sol');
 let ECDH = artifacts.require('./ECDH.sol');
+let Pricing = artifacts.require('./Pricing.sol');
 
 let gasLimit = 6900000;
 
@@ -86,6 +87,10 @@ async function deploy(deployer, network) {
         await deployer.deploy(SkaleManager, contractManagerInstance.address, {gas: gasLimit * gas_multiplier});
         await contractManagerInstance.setContractsAddress("SkaleManager", SkaleManager.address).then(function(res) {
             console.log("Contract Skale Manager with address", SkaleManager.address, "registred in Contract Manager");
+        });
+        await deployer.deploy(Pricing, contractManagerInstance.address, {gas: gasLimit * gas_multiplier});
+        await contractManagerInstance.setContractsAddress("Pricing", Pricing.address).then(function(res) {
+            console.log("Contract Pricing with address", Pricing.address, "registred in Contract Manager");
             console.log();
         });
     
@@ -119,7 +124,9 @@ async function deploy(deployer, network) {
             skale_verifier_address: SkaleVerifier.address,
             skale_verifier_abi: SkaleVerifier.abi,
             contract_manager_address: ContractManager.address,
-            contract_manager_abi: ContractManager.abi
+            contract_manager_abi: ContractManager.abi,
+            pricing_address: Pricing.address,
+            pricing_abi: Pricing.abi
         };
 
         await fsPromises.writeFile(`data/${network}.json`, JSON.stringify(jsonObject));

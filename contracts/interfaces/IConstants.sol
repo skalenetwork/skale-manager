@@ -21,6 +21,7 @@ interface IConstants {
     function lastTimeOverloaded() external view returns (uint);
     function setLastTimeOverloaded() external;
     function rewardPeriod() external view returns (uint32);
+    function allowableLatency() external view returns (uint32);
     function deltaPeriod() external view returns (uint);
     function SIX_YEARS() external view returns (uint32);
     function NUMBER_OF_VALIDATORS() external view returns (uint);

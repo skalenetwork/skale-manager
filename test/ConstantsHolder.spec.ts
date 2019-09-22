@@ -152,4 +152,13 @@ contract("ConstantsHolder", ([deployer, user]) => {
     expect(parseInt(btn.toString(), 10) - parseInt(bn.toString(), 10)).to.be.closeTo(sec, 1);
   });
 
+  it("should Set latency", async () => {
+    const miliSec = 100;
+    await constantsHolder.setLatency(miliSec, {from: deployer});
+    // expectation
+    const res = new BigNumber(await constantsHolder.allowableLatency());
+    // parseInt(bn.toString(), 10).should.be.equal(0)
+    expect(parseInt(res.toString(), 10)).to.be.equal(miliSec);
+  });
+
 });

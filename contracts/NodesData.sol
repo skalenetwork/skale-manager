@@ -409,6 +409,14 @@ contract NodesData is INodesData, Permissions {
     }
 
     /**
+     * @dev getNumberOfFullNodes - get number Online Nodes
+     * @return number of active nodes plus number of leaving nodes
+     */
+    function getNumberOnlineNodes() public view returns (uint) {
+        return numberOfActiveNodes + numberOfLeavingNodes;
+    }
+
+    /**
      * @dev getNumberOfFreefractionalNodes - get number of free Fractional Nodes
      * @return numberOfFreeFractionalNodes - number of free Fractional Nodes
      */
