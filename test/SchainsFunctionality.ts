@@ -113,6 +113,156 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                 .should.be.eventually.rejectedWith("Not enough nodes to create Schain");
         });
 
+        describe("when 4 nodes are registered", async () => {
+            beforeEach(async () => {
+                const nodesCount = 4;
+                for (const index of Array.from(Array(nodesCount).keys())) {
+                    const hexIndex = ("0" + index.toString(16)).slice(-2);
+                    await nodesFunctionality.createNode(validator, "100000000000000000000",
+                        "0x00" +
+                        "2161" +
+                        "0000" +
+                        "7f0000" + hexIndex +
+                        "7f0000" + hexIndex +
+                        "1122334455667788990011223344556677889900112233445566778899001122" +
+                        "1122334455667788990011223344556677889900112233445566778899001122" +
+                        "d2" + hexIndex);
+                }
+            });
+
+            it("should create 4 node schain", async () => {
+                const deposit = await schainsFunctionality.getSchainPrice(5, 5);
+
+                await schainsFunctionality.addSchain(
+                    holder,
+                    deposit,
+                    "0x10" +
+                    "0000000000000000000000000000000000000000000000000000000000000005" +
+                    "05" +
+                    "0000" +
+                    "6432",
+                    {from: owner});
+
+                const schains = await schainsData.getSchains();
+                schains.length.should.be.equal(1);
+                const schainId = schains[0];
+
+                await schainsData.isOwnerAddress(holder, schainId).should.be.eventually.true;
+            });
+
+            it("should not create 4 node schain with 1 deleted node", async () => {
+                await nodesFunctionality.removeNodeByRoot(0);
+
+                const deposit = await schainsFunctionality.getSchainPrice(5, 5);
+
+                await schainsFunctionality.addSchain(
+                    holder,
+                    deposit,
+                    "0x10" +
+                    "0000000000000000000000000000000000000000000000000000000000000005" +
+                    "05" +
+                    "0000" +
+                    "6432",
+                    {from: owner}).should.be.eventually.rejectedWith("Not enough nodes to create Schain");
+            });
+
+            it("should not create 4 node schain on deleted node", async () => {
+                await nodesFunctionality.removeNodeByRoot(0);
+
+                await nodesFunctionality.createNode(validator, "100000000000000000000",
+                        "0x00" +
+                        "2161" +
+                        "0000" +
+                        "7f000005" +
+                        "7f000005" +
+                        "1122334455667788990011223344556677889900112233445566778899001122" +
+                        "1122334455667788990011223344556677889900112233445566778899001122" +
+                        "d205");
+
+                const deposit = await schainsFunctionality.getSchainPrice(5, 5);
+
+                await schainsFunctionality.addSchain(
+                    holder,
+                    deposit,
+                    "0x10" +
+                    "0000000000000000000000000000000000000000000000000000000000000005" +
+                    "05" +
+                    "0000" +
+                    "6432",
+                    {from: owner});
+
+                let nodesInGroup = await schainsData.getNodesInGroup(web3.utils.soliditySha3("d2"));
+
+                let zeroNodeInArray = false;
+
+                for (const node of nodesInGroup) {
+                    zeroNodeInArray = (web3.utils.toBN(node).toString() === "0" ? true : false);
+                }
+
+                zeroNodeInArray.should.be.equal(false);
+
+                await schainsFunctionality.addSchain(
+                    holder,
+                    deposit,
+                    "0x10" +
+                    "0000000000000000000000000000000000000000000000000000000000000005" +
+                    "05" +
+                    "0000" +
+                    "6433",
+                    {from: owner});
+
+                nodesInGroup = await schainsData.getNodesInGroup(web3.utils.soliditySha3("d2"));
+
+                zeroNodeInArray = false;
+
+                for (const node of nodesInGroup) {
+                    zeroNodeInArray = (web3.utils.toBN(node).toString() === "0" ? true : false);
+                }
+
+                zeroNodeInArray.should.be.equal(false);
+
+                await schainsFunctionality.addSchain(
+                    holder,
+                    deposit,
+                    "0x10" +
+                    "0000000000000000000000000000000000000000000000000000000000000005" +
+                    "05" +
+                    "0000" +
+                    "6434",
+                    {from: owner});
+
+                nodesInGroup = await schainsData.getNodesInGroup(web3.utils.soliditySha3("d2"));
+
+                zeroNodeInArray = false;
+
+                for (const node of nodesInGroup) {
+                    zeroNodeInArray = (web3.utils.toBN(node).toString() === "0" ? true : false);
+                }
+
+                zeroNodeInArray.should.be.equal(false);
+
+                await schainsFunctionality.addSchain(
+                    holder,
+                    deposit,
+                    "0x10" +
+                    "0000000000000000000000000000000000000000000000000000000000000005" +
+                    "05" +
+                    "0000" +
+                    "6435",
+                    {from: owner});
+
+                nodesInGroup = await schainsData.getNodesInGroup(web3.utils.soliditySha3("d2"));
+
+                zeroNodeInArray = false;
+
+                for (const node of nodesInGroup) {
+                    zeroNodeInArray = (web3.utils.toBN(node).toString() === "0" ? true : false);
+                }
+
+                zeroNodeInArray.should.be.equal(false);
+            });
+        });
+
         describe("when nodes are registered", async () => {
 
             beforeEach(async () => {
@@ -182,7 +332,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                         "0000000000000000000000000000000000000000000000000000000000000005" +
                         "01" +
                         "0000" +
-                        "d2",
+                        "4432",
                         {from: owner});
                 });
 
@@ -194,7 +344,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                         "0000000000000000000000000000000000000000000000000000000000000005" +
                         "01" +
                         "0000" +
-                        "d2",
+                        "4432",
                         {from: owner})
                         .should.be.eventually.rejectedWith("Schain name is not available");
                 });
@@ -202,7 +352,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                 it("should be able to delete schain", async () => {
                     await schainsFunctionality.deleteSchain(
                         holder,
-                        "0x9ad263ae43881ba28ed7ce1c8d76614d2b21b3756573ad348964cdde6b3ae6df",
+                        "D2",
                         {from: owner});
                     await schainsData.getSchains().should.be.eventually.empty;
                 });
@@ -210,7 +360,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                 it("should fail on deleting schain if owner is wrong", async () => {
                     await schainsFunctionality.deleteSchain(
                         validator,
-                        "0x9ad263ae43881ba28ed7ce1c8d76614d2b21b3756573ad348964cdde6b3ae6df",
+                        "D2",
                         {from: owner})
                         .should.be.eventually.rejectedWith("Message sender is not an owner of Schain");
                 });
@@ -227,7 +377,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                         "0000000000000000000000000000000000000000000000000000000000000005" +
                         "04" +
                         "0000" +
-                        "d2",
+                        "4432",
                         {from: owner});
                 });
 
@@ -239,7 +389,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                         "0000000000000000000000000000000000000000000000000000000000000005" +
                         "04" +
                         "0000" +
-                        "d2",
+                        "4432",
                         {from: owner})
                         .should.be.eventually.rejectedWith("Schain name is not available");
                 });
@@ -248,7 +398,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
 
                     await schainsFunctionality.deleteSchain(
                         holder,
-                        "0x9ad263ae43881ba28ed7ce1c8d76614d2b21b3756573ad348964cdde6b3ae6df",
+                        "D2",
                         {from: owner});
                     await schainsData.getSchains().should.be.eventually.empty;
                 });
@@ -257,7 +407,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
 
                     await schainsFunctionality.deleteSchain(
                         validator,
-                        "0x9ad263ae43881ba28ed7ce1c8d76614d2b21b3756573ad348964cdde6b3ae6df",
+                        "D2",
                         {from: owner})
                         .should.be.eventually.rejectedWith("Message sender is not an owner of Schain");
                 });

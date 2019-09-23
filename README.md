@@ -6,7 +6,7 @@ Skale-manager - smart contract system, which control work of skale-network
 
 Skale-manager system controls Nodes, Validators, Schains. Also it contained SkaleToken, DKG and Verification of BLS signatures.
 This system is upgradeable, used by Separate Data and Functionality approach.
-Smart contract language - Solididty 0.4.24
+Smart contract language - Solididty 0.5.0
 
 ## Upgradeability
 
@@ -37,19 +37,20 @@ The main purpose of this system:
 
 ## Deployment
 
-Need to create your networks
+Need to create your network, see examples in `truffle-config.js`
 
 Need to create `.env` file with following data:
 
 ```
-NETWORK="your network"
+ENDPOINT="your endpoint"
 ETH_PRIVATE_KEY="your private key"
+NETWORK="your created network"
 ```
 
  - deploy:
 
 ```
-npm run deploy
+truffle migrate --network 
 ```
 
 ## Test
@@ -59,3 +60,8 @@ npm run deploy
 ```
 npm run test
 ```
+
+
+## TODO
+
+Provide ways to upgrade contracts

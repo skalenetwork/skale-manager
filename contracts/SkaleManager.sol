@@ -95,12 +95,12 @@ contract SkaleManager is Permissions {
 
     function deleteSchain(string memory name) public {
         address schainsFunctionalityAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("SchainsFunctionality")));
-        ISchainsFunctionality(schainsFunctionalityAddress).deleteSchain(msg.sender, keccak256(abi.encodePacked(name)));
+        ISchainsFunctionality(schainsFunctionalityAddress).deleteSchain(msg.sender, name);
     }
 
     function deleteSchainByRoot(string memory name) public {
         address schainsFunctionalityAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("SchainsFunctionality")));
-        ISchainsFunctionality(schainsFunctionalityAddress).deleteSchainByRoot(keccak256(abi.encodePacked(name)));
+        ISchainsFunctionality(schainsFunctionalityAddress).deleteSchainByRoot(name);
     }
 
     function sendVerdict(
@@ -187,8 +187,8 @@ contract SkaleManager is Permissions {
         }
 
         if (bountyForMiner > 0) {
-            if (latency > 150000) {
-                bountyForMiner = (150000 * bountyForMiner) / latency;
+            if (latency > IConstants(constantsAddress).allowableLatency()) {
+                bountyForMiner = (IConstants(constantsAddress).allowableLatency() * bountyForMiner) / latency;
             }
             require(
                 ISkaleToken(skaleTokenAddress).mint(from, uint(bountyForMiner)),

@@ -4,8 +4,8 @@
   "description": "SKALE Manager system, Decentralized task manager",
   "scripts": {
     "lint": "npx solium --dir contracts",
-    "compile": "./node_modules/.bin/truffle compile",
-    "deploy": "./scripts/build.sh",
+    "compile": "rm -r ./build && ./node_modules/.bin/truffle compile",
+    "deploy": "bash ./scripts/deploy.sh",
     "generate": "truffle compile && typechain --target truffle './build/**/*.json'",
     "prepare": "yarn generate",
     "test": "truffle test && yarn tsc",
@@ -25,14 +25,13 @@
     "openzeppelin-solidity": "^2.3.0",
     "scrypt": "^6.0.3",
     "solc": "^0.5.7",
-    "solidity-coverage": "leapdao/solidity-coverage",
     "solium": "^1.2.4",
     "truffle": "^5.0.12",
     "truffle-hdwallet-provider": "^1.0.8",
     "truffle-typings": "^1.0.8",
     "ts-node": "^8.3.0",
     "typechain": "^0.3.17",
-    "web3": "1.0.0-beta.37"
+    "web3": "^1.0.0-beta.37"
   },
   "repository": {
     "type": "git",
@@ -62,9 +61,9 @@
     "dotenv": "^7.0.0",
     "ethlint": "^1.2.4",
     "ganache-cli": "^6.1.8",
+    "solidity-coverage": "leapdao/solidity-coverage",
     "tslint": "^5.18.0",
     "tslint-no-unused-expression-chai": "^0.1.4",
     "typescript": "^3.5.2"
   }
 }
- 
