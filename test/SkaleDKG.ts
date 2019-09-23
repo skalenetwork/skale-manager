@@ -130,7 +130,10 @@ contract("SkaleDKG", ([validator1, validator2]) => {
     });
 
     describe("when 2 nodes are created", async () => {
-        const validatorsAccount = ["0x7E6CE355Ca303EAe3a858c172c3cD4CeB23701bc", "0xF64ADc0A4462E30381Be09E42EB7DcB816de2803"];
+        const validatorsAccount = [
+            "0x7E6CE355Ca303EAe3a858c172c3cD4CeB23701bc",
+            "0xF64ADc0A4462E30381Be09E42EB7DcB816de2803",
+        ];
         const validatorsPrivateKey = [
             "0xa15c19da241e5b1db20d8dd8ca4b5eeaee01c709b49ec57aa78c2133d3c1b3c9",
             "0xe7af72d241d4dd77bc080ce9234d742f6b22e35b3a660e8c197517b909f63ca8",
