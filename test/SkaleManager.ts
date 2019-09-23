@@ -27,7 +27,6 @@ import { ConstantsHolderContract,
 
 import { gasMultiplier } from "./utils/command_line";
 import { skipTime } from "./utils/time";
-import BigNumber from "bignumber.js";
 
 const ContractManager: ContractManagerContract = artifacts.require("./ContractManager");
 const ConstantsHolder: ConstantsHolderContract = artifacts.require("./ConstantsHolder");
