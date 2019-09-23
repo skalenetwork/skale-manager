@@ -1,20 +1,25 @@
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
+import * as elliptic from "elliptic";
 import { ECDHContract,
          ECDHInstance} from "../types/truffle-contracts";
+import "./utils/elliptic-types";
 
 import { gasMultiplier } from "./utils/command_line";
 import { skipTime } from "./utils/time";
+
+const EC = elliptic.ec;
+const ec = new EC("secp256k1");
 // const truffleAssert = require("truffle-assertions");
 // const truffleEvent = require("truffle-events");
 
 const ECDH: ECDHContract = artifacts.require("./ECDH");
+// let EC = require("elliptic").ec;
 
 import BigNumber from "bignumber.js";
 chai.should();
 chai.use(chaiAsPromised);
 
-// const EC = require("elliptic").ec;
 // const ec = new EC("secp256k1");
 
 const n = new BigNumber("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F", 16);
@@ -351,28 +356,24 @@ contract("ECDH", ([owner, validator, developer, hacker]) => {
         assert.equal(y3.toString(10), y3c.toString(10));
     });
 
-//     it("Should create a valid public key", async () => {
-//         this.timeout(20000);
-//         const key = ec.genKeyPair();
-//         const priv = key.getPrivate();
-//         const d = new BigNumber(priv.toString(16), 16);
-//         log(JSON.stringify(priv));
-//         const pub = key.getPublic();
-//         log(JSON.stringify(pub));
-//         const pub_x = new BigNumber(key.getPublic().x.toString(16), 16);
-//         const pub_y = new BigNumber(key.getPublic().y.toString(16), 16);
-//         log(d.toString(10));
-//         log(pub_x.toString(10));
-//         log(pub_y.toString(10));
-//         const result = await ecdh.publicKey(d, function(err, res) {
-//             assert.ifError(err);
-//             const pub_x_calc = res[0];
-//             const pub_y_calc = res[1];
-//             assert.equal(pub_x.toString(10), pub_x_calc.toString(10));
-//             assert.equal(pub_y.toString(10), pub_y_calc.toString(10));
-//             done();
-//         });
-//     });
+    it("Should create a valid public key", async () => {
+        const key = ec.genKeyPair();
+        const priv = key.getPrivate();
+        const d = new BigNumber(priv.toString(16), 16);
+        // log(JSON.stringify(priv));
+        const pub = key.getPublic();
+        // log(JSON.stringify(pub));
+        const pubX = new BigNumber(key.getPublic().x.toString(16), 16);
+        const pubY = new BigNumber(key.getPublic().y.toString(16), 16);
+        // log(d.toString(10));
+        // log(pub_x.toString(10));
+        // log(pub_y.toString(10));
+        const result = await ecdh.publicKey(d.toFixed());
+        const pubXCalc = result[0];
+        const pubYCalc = result[1];
+        assert.equal(pubX.toString(10), pubXCalc.toString(10));
+        assert.equal(pubY.toString(10), pubYCalc.toString(10));
+    });
 
 //     it("Should consume few gas", async () => {
 //         this.timeout(20000);
