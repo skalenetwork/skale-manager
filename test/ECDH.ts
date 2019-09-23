@@ -288,84 +288,68 @@ contract("ECDH", ([owner, validator, developer, hacker]) => {
         assert.equal(y2.toString(10), "12158399299693830322967808612713398636155367887041628176798871954788371653930");
 
     });
-//     it("Add EC", async () => {
-//         log("Start Add");
-//         const x2 = new BigNumber("89565891926547004231252920425935692360644145829622209833684329913297188986597");
-//         const y2 = new BigNumber("12158399299693830322967808612713398636155367887041628176798871954788371653930");
-//         const result = await ecdh._ecAdd(gx,gy,1,x2,y2,1, function(err, res) {
-//             const x3 = res[0];
-//             const y3 = res[1];
-//             const z3 = res[2];
-//             log("x3: " + x3.toString(10));
-//             log("y3: " + y3.toString(10));
-//             log("z3: " + z3.toString(10));
-//             const result = await ecdh._inverse(z3, function(err, inv) {
-//                 x3 = x3.mul(inv).mod(n);
-//                 y3 = y3.mul(inv).mod(n);
-//                 log("x3: " + x3.toString(10));
-//                 log("y3: " + y3.toString(10));
-//                 assert.equal(
-                    //     x3.toString(10),
-                    //     "112711660439710606056748659173929673102114977341539408544630613555209775888121",
-                    // );
-//                 assert.equal(
-                    //     y3.toString(10),
-                    //     "25583027980570883691656905877401976406448868254816295069919888960541586679410",
-                    // );
-//                 done();
-//             });
-//         });
-//     });
+    it("Add EC", async () => {
+        const x2 = new BigNumber("89565891926547004231252920425935692360644145829622209833684329913297188986597");
+        const y2 = new BigNumber("12158399299693830322967808612713398636155367887041628176798871954788371653930");
+        const result = await ecdh._ecAdd(gx.toFixed(), gy.toFixed(), 1, x2.toFixed(), y2.toFixed(), 1);
+        let x3 = new BigNumber(result[0]);
+        let y3 = new BigNumber(result[1]);
+        const z3 = new BigNumber(result[2]);
+        // log("x3: " + x3.toString(10));
+        // log("y3: " + y3.toString(10));
+        // log("z3: " + z3.toString(10));
+        const result1 = await ecdh._inverse(z3.toFixed());
+        x3 = x3.multipliedBy(result1).modulo(n);
+        y3 = y3.multipliedBy(result1).modulo(n);
+        // log("x3: " + x3.toString(10));
+        // log("y3: " + y3.toString(10));
+        assert.equal(
+            x3.toString(10),
+            "112711660439710606056748659173929673102114977341539408544630613555209775888121",
+        );
+        assert.equal(
+            y3.toString(10),
+            "25583027980570883691656905877401976406448868254816295069919888960541586679410",
+        );
+    });
 
-//     it("2G+1G = 3G", async () => {
-//         this.timeout(20000);
-//         const result = await ecdh._ecDouble(gx, gy, 1, function(err, res) {
-//             assert.ifError(err);
-//             const x2 = res[0];
-//             const y2 = res[1];
-//             const z2 = res[2];
-//             log("x2: " + x2.toString(10));
-//             log("y2: " + y2.toString(10));
-//             log("z2: " + z2.toString(10));
-//             const result = await ecdh._ecAdd(gx,gy, 1, x2,y2,z2, function(err,res) {
-//                 assert.ifError(err);
-//                 const x3 = res[0];
-//                 const y3 = res[1];
-//                 const z3 = res[2];
-//                 log("x3: " + x3.toString(10));
-//                 log("y3: " + y3.toString(10));
-//                 log("z3: " + z3.toString(10));
-//                 const result = await ecdh._ecMul(3,gx,gy,1, function(err, res) {
-//                     assert.ifError(err);
-//                     const x3c = res[0];
-//                     const y3c = res[1];
-//                     const z3c = res[2];
-//                     log("x3c: " + x3c.toString(10));
-//                     log("y3c: " + y3c.toString(10));
-//                     log("z3c: " + z3c.toString(10));
-//                     const result = await ecdh._inverse(z3, function(err, inv3) {
-//                         assert.ifError(err);
-//                         x3 = x3.mul(inv3).mod(n);
-//                         y3 = y3.mul(inv3).mod(n);
-//                         log("Inv test: "+ inv3.mul(z3).mod(n).toString(10));
-//                         log("x3n: " + x3.toString(10));
-//                         log("y3n: " + y3.toString(10));
-//                         const result = await ecdh._inverse(z3c, function(err, inv3c) {
-//                             assert.ifError(err);
-//                             x3c = x3c.mul(inv3c).mod(n);
-//                             y3c = y3c.mul(inv3c).mod(n);
-//                             log("Inv test: "+ inv3c.mul(z3c).mod(n).toString(10));
-//                             log("x3cn: " + x3c.toString(10));
-//                             log("y3cn: " + y3c.toString(10));
-//                             assert.equal(x3.toString(10), x3c.toString(10));
-//                             assert.equal(y3.toString(10), y3c.toString(10));
-//                             done();
-//                         });
-//                     });
-//                 });
-//             });
-//         });
-//     });
+    it("2G+1G = 3G", async () => {
+        const result = await ecdh._ecDouble(gx.toFixed(), gy.toFixed(), 1);
+        const x2 = new BigNumber(result[0]);
+        const y2 = new BigNumber(result[1]);
+        const z2 = new BigNumber(result[2]);
+        // log("x2: " + x2.toString(10));
+        // log("y2: " + y2.toString(10));
+        // log("z2: " + z2.toString(10));
+        const result1 = await ecdh._ecAdd(gx.toFixed(), gy.toFixed(), 1, x2.toFixed(), y2.toFixed(), z2.toFixed());
+        let x3 = new BigNumber(result1[0]);
+        let y3 = new BigNumber(result1[1]);
+        const z3 = new BigNumber(result1[2]);
+        // log("x3: " + x3.toString(10));
+        // log("y3: " + y3.toString(10));
+        // log("z3: " + z3.toString(10));
+        const result2 = await ecdh._ecMul(3, gx.toFixed(), gy.toFixed(), 1);
+        let x3c = new BigNumber(result2[0]);
+        let y3c = new BigNumber(result2[1]);
+        const z3c = new BigNumber(result2[2]);
+        // log("x3c: " + x3c.toString(10));
+        // log("y3c: " + y3c.toString(10));
+        // log("z3c: " + z3c.toString(10));
+        const result3 = new BigNumber(await ecdh._inverse(z3.toFixed()));
+        x3 = x3.multipliedBy(result3).modulo(n);
+        y3 = y3.multipliedBy(result3).modulo(n);
+        // log("Inv test: "+ inv3.mul(z3).mod(n).toString(10));
+        // log("x3n: " + x3.toString(10));
+        // log("y3n: " + y3.toString(10));
+        const result4 = await ecdh._inverse(z3c.toFixed());
+        x3c = x3c.multipliedBy(result4).modulo(n);
+        y3c = y3c.multipliedBy(result4).modulo(n);
+        // log("Inv test: "+ inv3c.mul(z3c).mod(n).toString(10));
+        // log("x3cn: " + x3c.toString(10));
+        // log("y3cn: " + y3c.toString(10));
+        assert.equal(x3.toString(10), x3c.toString(10));
+        assert.equal(y3.toString(10), y3c.toString(10));
+    });
 
 //     it("Should create a valid public key", async () => {
 //         this.timeout(20000);
