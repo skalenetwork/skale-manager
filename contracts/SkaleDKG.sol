@@ -19,13 +19,9 @@
 
 pragma solidity ^0.5.0;
 pragma experimental ABIEncoderV2;
-
 import "./Permissions.sol";
 import "./interfaces/IGroupsData.sol";
 import "./interfaces/INodesData.sol";
-// import "./ReentrancyGuard.sol";
-//import "./interfaces/IGroupsData.sol";
-//import "./interfaces/INodesData.sol";
 import "openzeppelin-solidity/contracts/utils/ReentrancyGuard.sol";
 import "./ECDH.sol";
 import "./Decryption.sol";
@@ -237,10 +233,6 @@ contract SkaleDKG is Permissions {
             delete channels[groupIndex];
             emit SuccessfulDKG(groupIndex);
         }
-    }
-
-    function getChannelData(bytes32 groupIndex) public view returns (Channel memory) {
-        return channels[groupIndex];
     }
 
     function verify(uint8 index, uint share, bytes memory verificationVector) public view returns (bool) {
