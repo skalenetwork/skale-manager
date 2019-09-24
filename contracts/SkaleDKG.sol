@@ -22,9 +22,24 @@ pragma experimental ABIEncoderV2;
 import "./Permissions.sol";
 import "./interfaces/IGroupsData.sol";
 import "./interfaces/INodesData.sol";
-import "openzeppelin-solidity/contracts/utils/ReentrancyGuard.sol";
-import "./ECDH.sol";
-import "./Decryption.sol";
+// import "openzeppelin-solidity/contracts/utils/ReentrancyGuard.sol";
+// import "./ECDH.sol";
+// import "./Decryption.sol";
+
+interface IECDH {
+    function deriveKey(
+        uint256 privKey,
+        uint256 pubX,
+        uint256 pubY
+    )
+        external
+        pure
+        returns(uint256, uint256);
+}
+
+interface IDecryption {
+    function decrypt(bytes32 ciphertext, bytes32 key) external pure returns (uint256);
+}
 
 
 contract SkaleDKG is Permissions {
@@ -101,6 +116,7 @@ contract SkaleDKG is Permissions {
         channels[groupIndex].dataAddress = dataAddress;
         channels[groupIndex].broadcasted = new bool[](IGroupsData(channels[groupIndex].dataAddress).getRecommendedNumberOfNodes(groupIndex));
         channels[groupIndex].completed = new bool[](IGroupsData(channels[groupIndex].dataAddress).getRecommendedNumberOfNodes(groupIndex));
+        channels[groupIndex].nodeToComplaint = uint(-1);
         emit ChannelOpened(groupIndex);
     }
 
@@ -159,7 +175,7 @@ contract SkaleDKG is Permissions {
         correctNode(groupIndex, toNodeIndex)
     {
         require(isNodeByMessageSender(fromNodeIndex, msg.sender), "Node does not exist for message sender");
-        if (isBroadcasted(groupIndex, toNodeIndex) && channels[groupIndex].nodeToComplaint == 0) {
+        if (isBroadcasted(groupIndex, toNodeIndex) && channels[groupIndex].nodeToComplaint == uint(-1)) {
             // need to wait a response from toNodeIndex
             channels[groupIndex].nodeToComplaint = toNodeIndex;
             channels[groupIndex].fromNodeToComplaint = fromNodeIndex;
@@ -206,7 +222,9 @@ contract SkaleDKG is Permissions {
         // slash someone
         // not in 1.0
         // Fail DKG
+        IGroupsData(channels[groupIndex].dataAddress).setGroupFailedDKG(groupIndex);
         emit FailedDKG(groupIndex);
+        delete channels[groupIndex];
     }
 
     function allright(bytes32 groupIndex, uint fromNodeIndex)
@@ -250,16 +268,16 @@ contract SkaleDKG is Permissions {
         return checkVerifyAndMul(valX, valY, share);
     }
 
-    function getCommonPublicKey(bytes32 groupIndex, uint secretNumber) internal view returns (bytes32 key) {
+    function getCommonPublicKey(bytes32 groupIndex, uint256 secretNumber) internal view returns (bytes32 key) {
         address nodesDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
         address ecdhAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("ECDH")));
         bytes memory publicKey = INodesData(nodesDataAddress).getNodePublicKey(channels[groupIndex].fromNodeToComplaint);
-        uint pkX;
-        uint pkY;
+        uint256 pkX;
+        uint256 pkY;
 
         (pkX, pkY) = bytesToPublicKey(publicKey);
 
-        (pkX, pkY) = ECDH(ecdhAddress).deriveKey(secretNumber, pkX, pkY);
+        (pkX, pkY) = IECDH(ecdhAddress).deriveKey(secretNumber, pkX, pkY);
 
         key = sha256(abi.encodePacked(bytes32(pkX)));
     }
@@ -277,7 +295,7 @@ contract SkaleDKG is Permissions {
             ciphertext := mload(add(sc, add(32, mul(index, 97))))
         }
 
-        uint secret = Decryption(decryptionAddress).decrypt(ciphertext, key);
+        uint secret = IDecryption(decryptionAddress).decrypt(ciphertext, key);
         return secret;
     }
 
