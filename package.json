@@ -59,6 +59,7 @@
   "devDependencies": {
     "@types/web3": "^1.0.19",
     "dotenv": "^7.0.0",
+    "elliptic": "^6.5.1",
     "ethlint": "^1.2.4",
     "ganache-cli": "^6.1.8",
     "solidity-coverage": "leapdao/solidity-coverage",
