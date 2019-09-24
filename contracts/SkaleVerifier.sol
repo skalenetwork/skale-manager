@@ -92,9 +92,8 @@ contract SkaleVerifier {
         uint xCoord = uint(hash) % p;
         xCoord = (xCoord + counter) % p;
 
-        uint ySquared = (((((xCoord * xCoord) % p) * xCoord) % p) + 3) % p;
-
-        if (hashB < p / 2 || (hashB * hashB) % p != ySquared || xCoord != hashA) {
+        uint ySquared = addmod(mulmod(mulmod(xCoord, xCoord, p), xCoord, p), 3, p);
+        if (hashB < p / 2 || mulmod(hashB, hashB, p) != ySquared || xCoord != hashA) {
             return false;
         }
 
