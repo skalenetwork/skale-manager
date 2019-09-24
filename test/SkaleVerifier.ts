@@ -66,7 +66,6 @@ contract("SkaleVerifier", ([owner, validator, developer, hacker]) => {
                                         "7025653765868604607777943964159633546920168690664518432704587317074821855333").should.be.eventually.rejected("Pairing check failed");
           } catch (e) {
             isExceptionCaught = true;
-            console.log(e);
           }
         });
 
@@ -115,7 +114,6 @@ contract("SkaleVerifier", ([owner, validator, developer, hacker]) => {
                                           "7025653765868604607777943964159633546920168690664518432704587317074821855333").should.be.eventually.rejected("Pairing check failed");
             } catch (e) {
               isExceptionCaught = true;
-              console.log(e);
             }
 
             assert(isExceptionCaught.should.be.true);
