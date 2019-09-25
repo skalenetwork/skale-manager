@@ -252,4 +252,3 @@ contract("SchainsData", ([owner, holder]) => {
 function newFunction(): BigNumber.Value {
     return 0;
 }
-
