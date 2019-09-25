@@ -253,10 +253,10 @@ contract SkaleDKG is Permissions {
         }
     }
 
-    function verify(uint8 index, uint share, bytes memory verificationVector) public view returns (bool) {
+    function verify(uint index, uint share, bytes memory verificationVector) public view returns (bool) {
         Fp2 memory valX;
         Fp2 memory valY;
-        for (uint8 i = 0; i < verificationVector.length / 1152; ++i) {
+        for (uint i = 0; i < verificationVector.length / 192; i++) {
             (valX, valY) = addG2WithLoop(
                 index,
                 verificationVector,
@@ -372,39 +372,43 @@ contract SkaleDKG is Permissions {
     }
 
     function addFp2(Fp2 memory a, Fp2 memory b) internal view returns (Fp2 memory) {
-        return Fp2({ x: addmod(a.x, b.x, p), y: addmod(a.y, b.y, p) });
+        uint pp = p;
+        return Fp2({ x: addmod(a.x, b.x, pp), y: addmod(a.y, b.y, pp) });
     }
 
     function minusFp2(Fp2 memory a, Fp2 memory b) internal view returns (Fp2 memory) {
         uint first;
         uint second;
+        uint pp = p;
         if (a.x >= b.x) {
-            first = addmod(a.x, p - b.x, p);
+            first = addmod(a.x, pp - b.x, pp);
         } else {
-            first = p - addmod(b.x, p - a.x, p);
+            first = pp - addmod(b.x, pp - a.x, pp);
         }
         if (a.y >= b.y) {
-            second = addmod(a.y, p - b.y, p);
+            second = addmod(a.y, pp - b.y, pp);
         } else {
-            second = p - addmod(b.y, p - a.y, p);
+            second = pp - addmod(b.y, pp - a.y, pp);
         }
         return Fp2({ x: first, y: second });
     }
 
     function mulFp2(Fp2 memory a, Fp2 memory b) internal view returns (Fp2 memory) {
-        uint aA = mulmod(a.x, b.x, p);
-        uint bB = mulmod(a.y, b.y, p);
+        uint pp = p;
+        uint aA = mulmod(a.x, b.x, pp);
+        uint bB = mulmod(a.y, b.y, pp);
         return Fp2({
-            x: addmod(aA, mulmod(p - 1, bB, p), p),
-            y: addmod(mulmod(addmod(a.x, a.y, p), addmod(b.x, b.y, p), p), p - addmod(aA, bB, p), p)
+            x: addmod(aA, mulmod(pp - 1, bB, pp), pp),
+            y: addmod(mulmod(addmod(a.x, a.y, pp), addmod(b.x, b.y, pp), pp), pp - addmod(aA, bB, pp), pp)
         });
     }
 
     function squaredFp2(Fp2 memory a) internal view returns (Fp2 memory) {
-        uint ab = mulmod(a.x, a.y, p);
-        uint mult = mulmod(addmod(a.x, a.y, p), addmod(a.x, mulmod(p - 1, a.y, p), p), p);
-        uint addition = addmod(ab, mulmod(p - 1, ab, p), p);
-        return Fp2({ x: addmod(mult, p - addition, p), y: addmod(ab, ab, p) });
+        uint pp = p;
+        uint ab = mulmod(a.x, a.y, pp);
+        uint mult = mulmod(addmod(a.x, a.y, pp), addmod(a.x, mulmod(pp - 1, a.y, pp), pp), pp);
+        uint addition = addmod(ab, mulmod(pp - 1, ab, pp), pp);
+        return Fp2({ x: addmod(mult, pp - addition, pp), y: addmod(ab, ab, pp) });
     }
 
     function doubleG2(Fp2 memory x1, Fp2 memory y1, Fp2 memory z1) internal view returns (Fp2 memory, Fp2 memory) {
@@ -532,16 +536,17 @@ contract SkaleDKG is Permissions {
         view
         returns (Fp2 memory x, Fp2 memory y)
     {
-        if (isEqual(
-            u1(x1),
-            u2(x2),
-            s1(y1),
-            s2(y2)
+        if (
+            isEqual(
+                u1(x1),
+                u2(x2),
+                s1(y1),
+                s2(y2)
             )
-        )
-        {
+        ) {
             return doubleG2(x1, y1, Fp2({ x: 1, y: 0 }));
         }
+
         Fp2 memory xForAdding = xForAddingG2(
             s2(y2),
             s1(y1),
@@ -562,30 +567,32 @@ contract SkaleDKG is Permissions {
     }
 
     function binstep(uint _a, uint _step) internal view returns (uint x) {
+        uint pp = p;
         x = 1;
         uint a = _a;
         uint step = _step;
         while (step > 0) {
             if (step % 2 == 1) {
-                x = mulmod(x, a, p);
+                x = mulmod(x, a, pp);
             }
-            a = mulmod(a, a, p);
+            a = mulmod(a, a, pp);
             step /= 2;
         }
     }
 
     function inverseFp2(Fp2 memory a) internal view returns (Fp2 memory x) {
-        uint t0 = mulmod(a.x, a.x, p);
-        uint t1 = mulmod(a.y, a.y, p);
-        uint t2 = mulmod(p - 1, t1, p);
+        uint pp = p;
+        uint t0 = mulmod(a.x, a.x, pp);
+        uint t1 = mulmod(a.y, a.y, pp);
+        uint t2 = mulmod(pp - 1, t1, pp);
         if (t0 >= t2) {
-            t2 = addmod(t0, p - t2, p);
+            t2 = addmod(t0, pp - t2, pp);
         } else {
-            t2 = p - addmod(t2, p - t0, p);
+            t2 = pp - addmod(t2, pp - t0, pp);
         }
-        uint t3 = binstep(t2, p - 2);
-        x.x = mulmod(a.x, t3, p);
-        x.y = p - mulmod(a.y, t3, p);
+        uint t3 = binstep(t2, pp - 2);
+        x.x = mulmod(a.x, t3, pp);
+        x.y = pp - mulmod(a.y, t3, pp);
     }
 
     function mulG2(
@@ -598,31 +605,29 @@ contract SkaleDKG is Permissions {
         view
         returns (Fp2 memory x, Fp2 memory y)
     {
-        if (scalar % 2 == 0) {
-            Fp2 memory tempX;
-            Fp2 memory tempY;
-            (tempX, tempY) = doubleG2(x1, y1, z1);
-            (x, y) = mulG2(
-                scalar / 2,
-                tempX,
-                tempY,
-                Fp2(1, 0)
-            );
-        } else {
-            Fp2 memory tempX;
-            Fp2 memory tempY;
-            (tempX, tempY) = mulG2(
-                scalar - 1,
-                x1,
-                y1,
-                z1
-            );
-            (x, y) = addG2ToVerify(
-                x1,
-                y1,
-                tempX,
-                tempY
-            );
+        uint step = scalar;
+        x = Fp2({x: g2a, y: g2b});
+        y = Fp2({x: g2c, y: g2d});
+        Fp2 memory tmpX;
+        Fp2 memory tmpY;
+        (tmpX, tmpY) = toAffineCoordinatesG2(x1, y1, z1);
+        while (step > 0) {
+            if (step % 2 == 1) {
+                (x, y) = addG2ToVerify(
+                    x,
+                    y,
+                    tmpX,
+                    tmpY
+                );
+            }
+            if (step > 1) {
+                (tmpX, tmpY) = addG2ToVerify(
+                    tmpX,
+                    tmpY,
+                    tmpX,
+                    tmpY);
+            }
+            step >>= 1;
         }
     }
 
@@ -641,7 +646,7 @@ contract SkaleDKG is Permissions {
         }
     }
 
-    function bigModExp(uint8 index, uint8 loopIndex) internal view returns (uint) {
+    function bigModExp(uint index, uint loopIndex) internal view returns (uint) {
         uint[6] memory inputToBigModExp;
         inputToBigModExp[0] = 8;
         inputToBigModExp[1] = 8;
@@ -658,7 +663,7 @@ contract SkaleDKG is Permissions {
         return out[0];
     }
 
-    function loop(uint8 index, bytes memory verificationVector, uint8 loopIndex) internal view returns (Fp2 memory, Fp2 memory) {
+    function loop(uint index, bytes memory verificationVector, uint loopIndex) internal view returns (Fp2 memory, Fp2 memory) {
         bytes32[6] memory vector;
         bytes32 vector1;
         assembly {
@@ -686,7 +691,7 @@ contract SkaleDKG is Permissions {
         }
         vector[5] = vector1;
         return mulG2(
-            bigModExp(index, loopIndex),
+            binstep(index + 1, loopIndex),
             Fp2(uint(vector[0]), uint(vector[1])),
             Fp2(uint(vector[2]), uint(vector[3])),
             Fp2(uint(vector[4]), uint(vector[5]))
@@ -694,9 +699,9 @@ contract SkaleDKG is Permissions {
     }
 
     function checkVerifyAndMul(Fp2 memory valX, Fp2 memory valY, uint share) internal view returns (bool) {
-        Fp2 memory tmpX = Fp2(g2a, g2b);
-        Fp2 memory tmpY = Fp2(g2c, g2d);
-        Fp2 memory pZ = Fp2(1, 0);
+        Fp2 memory tmpX = Fp2({x: g2a, y: g2b});
+        Fp2 memory tmpY = Fp2({x: g2c, y: g2d});
+        Fp2 memory pZ = Fp2({x: 1, y: 0});
         (tmpX, tmpY) = mulG2(
             share,
             tmpX,
@@ -707,9 +712,9 @@ contract SkaleDKG is Permissions {
     }
 
     function addG2WithLoop(
-        uint8 index,
+        uint index,
         bytes memory verificationVector,
-        uint8 i,
+        uint i,
         Fp2 memory valX,
         Fp2 memory valY
     )
@@ -720,12 +725,23 @@ contract SkaleDKG is Permissions {
         Fp2 memory x1;
         Fp2 memory y1;
         (x1, y1) = loop(index, verificationVector, i);
-        return addG2ToVerify(
-            x1,
-            y1,
-            valX,
-            valY
-        );
+        if (
+            isEqual(
+                valX,
+                Fp2({ x: 0, y: 0 }),
+                valY,
+                Fp2({ x: 0, y: 0 })
+            )
+        ) {
+            return (x1, y1);
+        } else {
+            return addG2ToVerify(
+                x1,
+                y1,
+                valX,
+                valY
+            );
+        }
     }
 
     function bytesToPublicKey(bytes memory someBytes) internal pure returns(uint x, uint y) {

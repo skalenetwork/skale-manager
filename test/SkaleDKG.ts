@@ -126,7 +126,7 @@ contract("SkaleDKG", ([validator1, validator2]) => {
         await contractManager.setContractsAddress("Decryption", decryption.address);
 
         ecdh = await ECDH.new({from: validator1, gas: 8000000 * gasMultiplier});
-        await contractManager.setContractsAddress("ECDH", skaleDKG.address);
+        await contractManager.setContractsAddress("ECDH", ecdh.address);
     });
 
     describe("when 2 nodes are created", async () => {
@@ -401,7 +401,21 @@ contract("SkaleDKG", ([validator1, validator2]) => {
                     });
 
                     it("accused node should send response", async () => {
-                        console.log(skaleDKG.address);
+                        // console.log(skaleDKG.address);
+                        // const result = await skaleDKG.getCommonPublicKey(
+                        //     web3.utils.soliditySha3("d2"),
+                        //     secretNumberFirst.toFixed(),
+                        // );
+                        // console.log(result);
+                        // const result1 = new BigNumber(await skaleDKG.decryptMessage(
+                        //     web3.utils.soliditySha3("d2"),
+                        //     secretNumberFirst.toFixed(),
+                        // ));
+                        // console.log(result1.toFixed());
+                        // const result2 = await skaleDKG.loop(0, verificationVectors[0], 0);
+                        // console.log(result2);
+                        // const result2 = await skaleDKG.verify(0, result1.toFixed(), verificationVectors[0]);
+                        // console.log(result2);
                         // const result = await skaleDKG.response(
                         //     web3.utils.soliditySha3("d2"),
                         //     0,
