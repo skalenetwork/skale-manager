@@ -107,7 +107,7 @@ contract SchainsData is ISchainsData, GroupsData {
         } else {
             schainsForNodes[nodeIndex][holesForNodes[nodeIndex][0]] = schainId;
             uint min = uint(-1);
-            uint index;
+            uint index = 0;
             for (uint i = 1; i < holesForNodes[nodeIndex].length; i++) {
                 if (min > holesForNodes[nodeIndex][i]) {
                     min = holesForNodes[nodeIndex][i];
