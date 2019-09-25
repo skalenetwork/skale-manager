@@ -46,6 +46,8 @@ contract SchainsData is ISchainsData, GroupsData {
     mapping (address => bytes32[]) public schainIndexes;
     // mapping shows schains which Node composed in
     mapping (uint => bytes32[]) public schainsForNodes;
+
+    mapping (uint => uint[]) public holesForNodes;
     // array which contain all schains
     bytes32[] public schainsAtSystem;
 
@@ -100,7 +102,27 @@ contract SchainsData is ISchainsData, GroupsData {
      * @param schainId - hash by Schain name
      */
     function addSchainForNode(uint nodeIndex, bytes32 schainId) public allow(executorName) {
-        schainsForNodes[nodeIndex].push(schainId);
+        if (holesForNodes[nodeIndex].length == 0) {
+            schainsForNodes[nodeIndex].push(schainId);
+        } else {
+            schainsForNodes[nodeIndex][holesForNodes[nodeIndex][0]] = schainId;
+            uint min = uint(-1);
+            uint index;
+            for (uint i = 1; i < holesForNodes[nodeIndex].length; i++) {
+                if (min > holesForNodes[nodeIndex][i]) {
+                    min = holesForNodes[nodeIndex][i];
+                    index = i;
+                }
+            }
+            if (min == uint(-1)) {
+                delete holesForNodes[nodeIndex];
+            } else {
+                holesForNodes[nodeIndex][0] = min;
+                holesForNodes[nodeIndex][index] = holesForNodes[nodeIndex][holesForNodes[nodeIndex].length - 1];
+                delete holesForNodes[nodeIndex][holesForNodes[nodeIndex].length - 1];
+                holesForNodes[nodeIndex].length--;
+            }
+        }
     }
 
     /**
@@ -168,11 +190,19 @@ contract SchainsData is ISchainsData, GroupsData {
      */
     function removeSchainForNode(uint nodeIndex, uint schainIndex) public allow("SchainsFunctionality") {
         uint length = schainsForNodes[nodeIndex].length;
-        if (schainIndex != length - 1) {
-            schainsForNodes[nodeIndex][schainIndex] = schainsForNodes[nodeIndex][length - 1];
+        if (schainIndex == length - 1) {
+            delete schainsForNodes[nodeIndex][length - 1];
+            schainsForNodes[nodeIndex].length--;
+        } else {
+            schainsForNodes[nodeIndex][schainIndex] = bytes32(0);
+            if (holesForNodes[nodeIndex].length > 0 && holesForNodes[nodeIndex][0] > schainIndex) {
+                uint hole = holesForNodes[nodeIndex][0];
+                holesForNodes[nodeIndex][0] = schainIndex;
+                holesForNodes[nodeIndex].push(hole);
+            } else {
+                holesForNodes[nodeIndex].push(schainIndex);
+            }
         }
-        delete schainsForNodes[nodeIndex][length - 1];
-        schainsForNodes[nodeIndex].length--;
     }
 
     /**
