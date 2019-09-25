@@ -108,10 +108,10 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
             {from: owner, gas: 7000000 * gasMultiplier});
         await contractManager.setContractsAddress("SchainsFunctionality1", schainsFunctionality1.address);
 
-        managerData = await ManagerData.new("SkaleManager", contractManager.address, {gas: 8000000});
+        managerData = await ManagerData.new("SkaleManager", contractManager.address, {gas: 8000000 * gasMultiplier});
         await contractManager.setContractsAddress("ManagerData", managerData.address);
 
-        skaleManager = await SkaleManager.new(contractManager.address, {gas: 8000000});
+        skaleManager = await SkaleManager.new(contractManager.address, {gas: 8000000 * gasMultiplier});
         contractManager.setContractsAddress("SkaleManager", skaleManager.address);
     });
 
