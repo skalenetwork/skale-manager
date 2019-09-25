@@ -108,10 +108,10 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
             {from: owner, gas: 7000000 * gasMultiplier});
         await contractManager.setContractsAddress("SchainsFunctionality1", schainsFunctionality1.address);
 
-        managerData = await ManagerData.new("SkaleManager", contractManager.address, {gas: 8000000});
+        managerData = await ManagerData.new("SkaleManager", contractManager.address, {gas: 8000000 * gasMultiplier});
         await contractManager.setContractsAddress("ManagerData", managerData.address);
 
-        skaleManager = await SkaleManager.new(contractManager.address, {gas: 8000000});
+        skaleManager = await SkaleManager.new(contractManager.address, {gas: 8000000 * gasMultiplier});
         contractManager.setContractsAddress("SkaleManager", skaleManager.address);
     });
 
@@ -390,6 +390,32 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
                     .should.be.eventually.deep.equal(web3.utils.toBN(0));
                 await validatorsData.verdicts(web3.utils.soliditySha3(1), 0, 1)
                     .should.be.eventually.deep.equal(web3.utils.toBN(50));
+            });
+
+            it("should send validator verdicts", async () => {
+                skipTime(web3, 3400);
+                await skaleManager.sendVerdicts(0, [1, 2], [0, 0], [50, 50], {from: validator});
+
+                await validatorsData.verdicts(web3.utils.soliditySha3(1), 0, 0)
+                    .should.be.eventually.deep.equal(web3.utils.toBN(0));
+                await validatorsData.verdicts(web3.utils.soliditySha3(1), 0, 1)
+                    .should.be.eventually.deep.equal(web3.utils.toBN(50));
+                await validatorsData.verdicts(web3.utils.soliditySha3(2), 0, 0)
+                    .should.be.eventually.deep.equal(web3.utils.toBN(0));
+                await validatorsData.verdicts(web3.utils.soliditySha3(2), 0, 1)
+                    .should.be.eventually.deep.equal(web3.utils.toBN(50));
+            });
+
+            it("should not send incorrect validator verdicts", async () => {
+                skipTime(web3, 3400);
+                await skaleManager.sendVerdicts(0, [1], [0, 0], [50, 50], {from: validator})
+                    .should.be.eventually.rejectedWith("Incorrect data");
+            });
+
+            it("should not send incorrect validator verdicts part 2", async () => {
+                skipTime(web3, 3400);
+                await skaleManager.sendVerdicts(0, [1, 2], [0, 0], [50], {from: validator})
+                    .should.be.eventually.rejectedWith("Incorrect data");
             });
 
             describe("when validator verdict is received", async () => {
