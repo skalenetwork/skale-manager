@@ -326,11 +326,17 @@ contract SchainsFunctionality1 is GroupsFunctionality {
     {
         address nodesDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
         address constantsAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("Constants")));
+        address schainsDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("SchainsData")));
         uint numberOfAvailableNodes = 0;
+        uint needNodes = 1;
+        bool nodesEnough;
+        if (IGroupsData(schainsDataAddress).getNumberOfNodesInGroup(groupIndex) == 0) {
+            needNodes = IGroupsData(dataAddress).getRecommendedNumberOfNodes(groupIndex);
+        }
         if (partOfNode == IConstants(constantsAddress).MEDIUM_DIVISOR()) {
             space = IConstants(constantsAddress).MEDIUM_DIVISOR();
             numberOfNodes = INodesData(nodesDataAddress).getNumberOfFullNodes();
-            numberOfAvailableNodes = INodesData(nodesDataAddress).getNumberOfFreeFullNodes();
+            nodesEnough = INodesData(nodesDataAddress).getNumberOfFreeFullNodes(needNodes);
         } else if (partOfNode == IConstants(constantsAddress).TINY_DIVISOR() || partOfNode == IConstants(constantsAddress).SMALL_DIVISOR()) {
             space = IConstants(constantsAddress).TINY_DIVISOR() / partOfNode;
             numberOfNodes = INodesData(nodesDataAddress).getNumberOfFractionalNodes();
@@ -346,11 +352,8 @@ contract SchainsFunctionality1 is GroupsFunctionality {
         } else {
             revert("Can't set number of nodes. Divisor does not match any valid schain type");
         }
-        address schainsDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("SchainsData")));
         //Check that schain is not created yet
-        if (IGroupsData(schainsDataAddress).getNumberOfNodesInGroup(groupIndex) == 0) {
-            require(IGroupsData(dataAddress).getRecommendedNumberOfNodes(groupIndex) <= numberOfAvailableNodes, "Not enough nodes to create Schain");
-        }
+        require(nodesEnough, "Not enough nodes to create Schain");
     }
 
     /**

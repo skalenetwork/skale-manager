@@ -428,12 +428,17 @@ contract NodesData is INodesData, Permissions {
      * @dev getnumberOfFreeFullNodes - get number of free Full Nodes
      * @return numberOfFreeFullNodes - number of free Full Nodes
      */
-    function getNumberOfFreeFullNodes() public view returns (uint numberOfFreeFullNodes) {
+    function getNumberOfFreeFullNodes(uint needNodes) public view returns (bool nodesAreEnough) {
+        uint numberOfFreeFullNodes = 0;
         for (uint indexOfNode = 0; indexOfNode < fullNodes.length; indexOfNode++) {
             if (fullNodes[indexOfNode].freeSpace == 128 && isNodeActive(fullNodes[indexOfNode].nodeIndex)) {
                 numberOfFreeFullNodes++;
+                if (numberOfFreeFullNodes == needNodes) {
+                    return true;
+                }
             }
         }
+        return false;
     }
 
     /**
