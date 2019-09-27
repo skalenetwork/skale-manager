@@ -263,6 +263,66 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
             });
         });
 
+        describe("when 20 nodes are registered", async () => {
+            beforeEach(async () => {
+                const nodesCount = 20;
+                for (const index of Array.from(Array(nodesCount).keys())) {
+                    const hexIndex = ("0" + index.toString(16)).slice(-2);
+                    await nodesFunctionality.createNode(validator, "100000000000000000000",
+                        "0x00" +
+                        "2161" +
+                        "0000" +
+                        "7f0000" + hexIndex +
+                        "7f0000" + hexIndex +
+                        "1122334455667788990011223344556677889900112233445566778899001122" +
+                        "1122334455667788990011223344556677889900112233445566778899001122" +
+                        "d2" + hexIndex);
+                }
+            });
+
+            it("should create Medium schain", async () => {
+                const deposit = await schainsFunctionality.getSchainPrice(3, 5);
+
+                await schainsFunctionality.addSchain(
+                    holder,
+                    deposit,
+                    "0x10" +
+                    "0000000000000000000000000000000000000000000000000000000000000005" +
+                    "03" +
+                    "0000" +
+                    "6432",
+                    {from: owner});
+
+                const schains = await schainsData.getSchains();
+                schains.length.should.be.equal(1);
+            });
+
+            it("should not create another Medium schain", async () => {
+                const deposit = await schainsFunctionality.getSchainPrice(3, 5);
+
+                await schainsFunctionality.addSchain(
+                    holder,
+                    deposit,
+                    "0x10" +
+                    "0000000000000000000000000000000000000000000000000000000000000005" +
+                    "03" +
+                    "0000" +
+                    "6432",
+                    {from: owner});
+
+                await schainsFunctionality.addSchain(
+                    holder,
+                    deposit,
+                    "0x10" +
+                    "0000000000000000000000000000000000000000000000000000000000000005" +
+                    "03" +
+                    "0000" +
+                    "6433",
+                    {from: owner},
+                ).should.be.eventually.rejectedWith("Not enough nodes to create Schain");
+            });
+        });
+
         describe("when nodes are registered", async () => {
 
             beforeEach(async () => {

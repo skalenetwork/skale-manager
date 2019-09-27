@@ -279,7 +279,7 @@ contract SchainsFunctionality1 is GroupsFunctionality {
         address constantsAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("Constants")));
         uint numberOfAvailableNodes = 0;
         if (partOfNode == IConstants(constantsAddress).MEDIUM_DIVISOR()) {
-            space = IConstants(constantsAddress).MEDIUM_DIVISOR();
+            space = IConstants(constantsAddress).TINY_DIVISOR() / partOfNode;
             numberOfNodes = INodesData(nodesDataAddress).getNumberOfFullNodes();
             numberOfAvailableNodes = INodesData(nodesDataAddress).getNumberOfFreeFullNodes();
         } else if (partOfNode == IConstants(constantsAddress).TINY_DIVISOR() || partOfNode == IConstants(constantsAddress).SMALL_DIVISOR()) {

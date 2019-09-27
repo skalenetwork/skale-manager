@@ -267,7 +267,7 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
             if (partOfNode == IConstants(constantsAddress).MEDIUM_TEST_DIVISOR()) {
                 INodesData(nodesDataAddress).addSpaceToFullNode(subarrayLink, IConstants(constantsAddress).TINY_DIVISOR() / partOfNode);
             } else if (partOfNode != 0) {
-                INodesData(nodesDataAddress).addSpaceToFullNode(subarrayLink, IConstants(constantsAddress).MEDIUM_DIVISOR() / partOfNode);
+                INodesData(nodesDataAddress).addSpaceToFullNode(subarrayLink, IConstants(constantsAddress).TINY_DIVISOR() / partOfNode);
             } else {
                 INodesData(nodesDataAddress).addSpaceToFullNode(subarrayLink, partOfNode);
             }
