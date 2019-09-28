@@ -21,15 +21,14 @@ node_js:
   - "10"
 os: linux
 dist: bionic
+env:
+  global:
+    - NODE_OPTIONS="--max_old_space_size=4096"
 addons:
   apt:
     packages:
       - python3-pip
       - python3-setuptools
-
-before_install:
-    - sudo apt update
-    - sudo apt install python3-pip python3-setuptools
 install:
     - yarn install
     - pip3 install slither-analyzer

@@ -77,12 +77,21 @@ contract ConstantsHolder is IConstants, Permissions {
     // Reward period - 30 days (each 30 days Node would be granted for bounty)
     uint32 public rewardPeriod = 3600; // Test parameters
 
+    // Allowable latency - 150000 ms by default
+    uint32 public allowableLatency = 150000; // Test parameters
+
     /**
      * Delta period - 1 hour (1 hour before Reward period became Validators need
      * to send Verdicts and 1 hour after Reward period became Node need to come
      * and get Bounty)
      */
     uint32 public deltaPeriod = 300;  // Test parameters
+
+    /**
+     * Check time - 2 minutes (every 2 minutes validators should check metrics
+     * from validated nodes)
+     */
+    uint8 public checkTime = 120; // Test parameters
 
     /**
      * Last time when system was underloaded
@@ -118,6 +127,14 @@ contract ConstantsHolder is IConstants, Permissions {
     }
 
     /**
+     * Set new check time. This function only for tests.
+     * @param newCheckTime - new check time
+     */
+    function setCheckTime(uint8 newCheckTime) public onlyOwner {
+        checkTime = newCheckTime;
+    }
+
+    /**
      * Set time if system underloaded, run only by NodesFunctionality contract
      */
     function setLastTimeUnderloaded() public allow("NodesFunctionality") {
@@ -129,5 +146,14 @@ contract ConstantsHolder is IConstants, Permissions {
      */
     function setLastTimeOverloaded() public allow("SchainsFunctionality") {
         lastTimeOverloaded = now;
+    }
+
+    /**
+     * Set latency new one in ms, run only by owner. This function
+     * only for tests.
+     * @param newAllowableLatency - new Allowable Latency
+     */
+    function setLatency(uint32 newAllowableLatency) public onlyOwner {
+        allowableLatency = newAllowableLatency;
     }
 }

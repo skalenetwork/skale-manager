@@ -61,7 +61,8 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
 
     event SchainDeleted(
         address owner,
-        string name
+        string name,
+        bytes32 indexed schainId
     );
 
     event NodeRotated(
@@ -196,7 +197,7 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
         }
         ISchainsFunctionalityInternal(SchainsFunctionalityInternalAddress).deleteGroup(schainId);
         ISchainsData(dataAddress).removeSchain(schainId, from);
-        emit SchainDeleted(from, name);
+        emit SchainDeleted(from, name, schainId);
     }
 
     function deleteSchainByRoot(string memory name) public allow(executorName) {
@@ -224,7 +225,7 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
         ISchainsFunctionalityInternal(SchainsFunctionalityInternalAddress).deleteGroup(schainId);
         address from = ISchainsData(dataAddress).getSchainOwner(schainId);
         ISchainsData(dataAddress).removeSchain(schainId, from);
-        emit SchainDeleted(from, name);
+        emit SchainDeleted(from, name, schainId);
     }
 
     function rotateNode(bytes32 schainId) public {
@@ -300,7 +301,7 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
             if (partOfNode == IConstants(constantsAddress).MEDIUM_TEST_DIVISOR()) {
                 INodesData(nodesDataAddress).addSpaceToFullNode(subarrayLink, IConstants(constantsAddress).TINY_DIVISOR() / partOfNode);
             } else if (partOfNode != 0) {
-                INodesData(nodesDataAddress).addSpaceToFullNode(subarrayLink, IConstants(constantsAddress).MEDIUM_DIVISOR() / partOfNode);
+                INodesData(nodesDataAddress).addSpaceToFullNode(subarrayLink, IConstants(constantsAddress).TINY_DIVISOR() / partOfNode);
             } else {
                 INodesData(nodesDataAddress).addSpaceToFullNode(subarrayLink, partOfNode);
             }

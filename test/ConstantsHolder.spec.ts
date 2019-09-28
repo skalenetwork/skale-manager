@@ -121,6 +121,11 @@ contract("ConstantsHolder", ([deployer, user]) => {
     parseInt(bn.toString(), 10).should.be.equal(0);
   });
 
+  it("checkTime should be equal 120", async () => {
+    const bn = new BigNumber(await constantsHolder.checkTime());
+    parseInt(bn.toString(), 10).should.be.equal(120);
+  });
+
   it("should invoke setPeriods function and change rewardPeriod and deltaPeriod", async () => {
     await constantsHolder.setPeriods(333, 555, {from: deployer});
     const rewardPeriod = new BigNumber(await constantsHolder.rewardPeriod());
@@ -141,7 +146,7 @@ contract("ConstantsHolder", ([deployer, user]) => {
     expect(parseInt(btn.toString(), 10) - parseInt(bn.toString(), 10)).to.be.closeTo(sec, 1);
   });
 
-  it("should Set time if system iverloaded", async () => {
+  it("should Set time if system overloaded", async () => {
     const sec = 10;
     await constantsHolder.setLastTimeOverloaded({from: deployer});
     const bn = new BigNumber(await constantsHolder.lastTimeOverloaded());
@@ -150,6 +155,24 @@ contract("ConstantsHolder", ([deployer, user]) => {
     const btn = new BigNumber(await constantsHolder.lastTimeOverloaded());
     // parseInt(bn.toString(), 10).should.be.equal(0)
     expect(parseInt(btn.toString(), 10) - parseInt(bn.toString(), 10)).to.be.closeTo(sec, 1);
+  });
+
+  it("should Set latency", async () => {
+    const miliSec = 100;
+    await constantsHolder.setLatency(miliSec, {from: deployer});
+    // expectation
+    const res = new BigNumber(await constantsHolder.allowableLatency());
+    // parseInt(bn.toString(), 10).should.be.equal(0)
+    expect(parseInt(res.toString(), 10)).to.be.equal(miliSec);
+  });
+
+  it("should Set checkTime", async () => {
+    const sec = 240;
+    await constantsHolder.setCheckTime(sec, {from: deployer});
+    // expectation
+    const res = new BigNumber(await constantsHolder.checkTime());
+    // parseInt(bn.toString(), 10).should.be.equal(0)
+    expect(parseInt(res.toString(), 10)).to.be.equal(sec);
   });
 
 });

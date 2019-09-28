@@ -48,4 +48,5 @@ interface INodesData {
     function getNodeNextRewardDate(uint nodeIndex) external view returns (uint32);
     function getActiveFractionalNodes() external view returns (uint[] memory);
     function getActiveFullNodes() external view returns (uint[] memory);
+    function getActiveNodeIds() external view returns (uint[] memory activeNodeIds);
 }

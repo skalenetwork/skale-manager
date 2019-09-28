@@ -135,7 +135,11 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
         while (iterations < 200) {
             indexOfNode = hash % numberOfNodes;
             nodeIndex = returnValidNodeIndex(partOfNode, indexOfNode);
-            if (comparator(indexOfNode, partOfNode, space) && !IGroupsData(schainsDataAddress).isExceptionNode(schainId, nodeIndex)) {
+            if (comparator(
+                indexOfNode,
+                nodeIndex,
+                partOfNode,
+                space) && !IGroupsData(schainsDataAddress).isExceptionNode(schainId, nodeIndex)) {
                 IGroupsData(schainsDataAddress).setException(schainId, nodeIndex);
                 IGroupsData(schainsDataAddress).setNodeInGroup(schainId, nodeIndex);
                 ISchainsData(schainsDataAddress).addSchainForNode(nodeIndex, schainId);
@@ -178,7 +182,11 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
 
             // checks that this not is available, enough space to allocate resources
             // and have not chosen to this group
-            if (comparator(indexOfNode, uint(groupData), space) && !IGroupsData(dataAddress).isExceptionNode(groupIndex, nodeIndex)) {
+            if (comparator(
+                indexOfNode,
+                nodeIndex,
+                uint(groupData),
+                space) && !IGroupsData(dataAddress).isExceptionNode(groupIndex, nodeIndex)) {
                 // adds Node to the Group
                 IGroupsData(dataAddress).setException(groupIndex, nodeIndex);
                 nodesInGroup[index] = nodeIndex;
@@ -207,30 +215,47 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
      * @param space - needed space to occupy
      * @return if fitted - true, else - false
      */
-    function comparator(uint indexOfNode, uint partOfNode, uint space) internal view returns (bool) {
+    function comparator(
+        uint indexOfNode,
+        uint nodeIndex,
+        uint partOfNode,
+        uint space
+    )
+        internal
+        view
+        returns (bool)
+    {
         address nodesDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
         address constantsAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("Constants")));
         uint freeSpace = 0;
-        uint nodeIndex = uint(-1);
+        uint nodeIndexFromStruct = uint(-1);
         // get nodeIndex and free space of this Node
         if (partOfNode == IConstants(constantsAddress).MEDIUM_DIVISOR()) {
-            (nodeIndex, freeSpace) = INodesData(nodesDataAddress).fullNodes(indexOfNode);
+            (nodeIndexFromStruct, freeSpace) = INodesData(nodesDataAddress).fullNodes(indexOfNode);
         } else if (partOfNode == IConstants(constantsAddress).TINY_DIVISOR() || partOfNode == IConstants(constantsAddress).SMALL_DIVISOR()) {
-            (nodeIndex, freeSpace) = INodesData(nodesDataAddress).fractionalNodes(indexOfNode);
+            (nodeIndexFromStruct, freeSpace) = INodesData(nodesDataAddress).fractionalNodes(indexOfNode);
         } else if (partOfNode == IConstants(constantsAddress).MEDIUM_TEST_DIVISOR() || partOfNode == 0) {
             bool isNodeFull;
             uint subarrayLink;
             (subarrayLink, isNodeFull) = INodesData(nodesDataAddress).nodesLink(indexOfNode);
             if (isNodeFull) {
-                (nodeIndex, freeSpace) = INodesData(nodesDataAddress).fullNodes(subarrayLink);
+                (nodeIndexFromStruct, freeSpace) = INodesData(nodesDataAddress).fullNodes(subarrayLink);
             } else {
-                (nodeIndex, freeSpace) = INodesData(nodesDataAddress).fractionalNodes(subarrayLink);
+                (nodeIndexFromStruct, freeSpace) = INodesData(nodesDataAddress).fractionalNodes(subarrayLink);
             }
         } else {
             revert("Divisor does not match any valid schain type");
         }
-        require(nodeIndex != uint(-1), "nodeIndex is not set");
-        return INodesData(nodesDataAddress).isNodeActive(nodeIndex) && (freeSpace >= space);
+        if (nodeIndexFromStruct != nodeIndex) {
+            return false;
+        } else if (!INodesData(nodesDataAddress).isNodeActive(nodeIndex)) {
+            return false;
+        } else if (freeSpace < space) {
+            return false;
+        } else {
+            return true;
+        }
+        //return (INodesData(nodesDataAddress).isNodeActive(nodeIndex) && freeSpace >= space && nodeIndexFromStruct == nodeIndex);
     }
 
     /**
@@ -289,12 +314,12 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
         address schainsDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("SchainsData")));
         uint numberOfAvailableNodes = 0;
         uint needNodes = 1;
-        bool nodesEnough;
+        bool nodesEnough = false;
         if (IGroupsData(schainsDataAddress).getNumberOfNodesInGroup(groupIndex) == 0) {
             needNodes = IGroupsData(dataAddress).getRecommendedNumberOfNodes(groupIndex);
         }
         if (partOfNode == IConstants(constantsAddress).MEDIUM_DIVISOR()) {
-            space = IConstants(constantsAddress).MEDIUM_DIVISOR();
+            space = IConstants(constantsAddress).TINY_DIVISOR() / partOfNode;
             numberOfNodes = INodesData(nodesDataAddress).getNumberOfFullNodes();
             nodesEnough = INodesData(nodesDataAddress).getNumberOfFreeFullNodes(needNodes);
         } else if (partOfNode == IConstants(constantsAddress).TINY_DIVISOR() || partOfNode == IConstants(constantsAddress).SMALL_DIVISOR()) {
