@@ -146,55 +146,69 @@ contract("SkaleDKG", ([validator1, validator2]) => {
         ];
 
         const secretNumberFirst = new BigNumber(
-            "25441240677047266640346149415019677054524097143521447791017513598832997377212",
+            "84858972125516121768648219944507512294747453724013462351671429044454800517341",
         );
 
         const secretNumberSecond = new BigNumber(
-            "14887249085030118974323797161643651263408567951982614081658503939472627769724",
+            "56620236285624794644791805919749430710840360330199251369338306793965310107331",
         );
 
         const encryptedSecretKeyContributions = [
-            "0x461d3d6b6a3af0294d2ec641b9c20190bbd2a82188a2fbf5b79e7787a89698a404ac7ef1a4b998702497ccf8392a149129fd4" +
-            "b99dbf7f05ee7768160592f3132fbfc6bc64fc3a2d83a80b2f9b11baee32b5bd56c43d0219c88857ba633befb7f0efb955237e7" +
-            "1624582d35491012c831047f6b4143fb875dffcd6a8792ee9d168804f9faf9f80de7eeebf238ee5bcfec13d92e9d9410597caa3" +
-            "f973a3f463cacb677782029c237ad2a0c98b6e4c07a4202d1701eb9ff5ec992faaa1e79a06f998bfb",
-            "0x902532622ea9e20b988582c8e2352fc0afdc3f81d81320d598494671559cfece04f52233178f302d53749fa89896875bc7d78" +
-            "bacba2825a691d62ec451b1103f749751cb16f03a8a7d8361523082af61191d7172702d20d59fb36afb363b73d5e1989dd23117" +
-            "d68439080d510fa8c0133951f8d492c22ddc9e07fc6de1bfb39d2f04a553d652638af00631ca928d7748c87f23423dfc87d5e1d" +
-            "7f6f44bdc70dd3a83694b98caea97dba8c6e9aa0642fc2c1365b30d556301546494528af10a4e4409",
+            "0x8995f55d56569606643b6e76e4861710b7863978a9f64b2b78a90476009450cb044472f5f2f0a444703beb8be660d683e9a40" +
+            "70f919b606481109996b0a93ca1326d4a8abb41b8be62151ad9741dbcf570964cf65585c6cc504983a1ba0125d6733b4d541dea" +
+            "2bda52a93d551e49ff6c9ab8ece44e978ae12c597e8c5b5905a83f0438f9d11a34d939ea6ea6ebff78393beee93753c017418ec" +
+            "7711c3297a00baa5341d1821ec7345b52eb4665c2b1f0a10eee82f7683f1ece04f57164e7ab59064f",
+            "0x7bb970a8f23f0d09869d63f7cb53e0cca49b949debb4b2c96500dcb79ac7b26a048d9919dab4496c0fad9b2fe1cb6fde9d5cb" +
+            "574c7e185773f2fe5405611b57fe3be8c7967bb2ed5863965b28cdd9dad9c9edd5a1296f5e6cf89c06eddd1729257bbaf1a2e63" +
+            "2e27f6bdf5ea27a094d524f6db71ebaf12a5bec5a9ef9ef2bb9d64046039bc469b6ba0727333922987d45ccf16591af7cd54bd4" +
+            "a639ad345feccfed7f60081fcf9388a56d87751218d6e3aea5677889fed7fd2e078c6225f460fabe1",
         ];
 
         const badEncryptedSecretKeyContributions = [
-            "0x461d3d6b6a3af0294d2ec641b9c20190bbd2a82188a2fbf5b79e7787a89698a404ac7ef1a4b998702497ccf8392a149129fd4" +
-            "b99dbf7f05ee7768160592f3132fbfc6bc64fc3a2d83a80b2f9b11baee32b5bd56c43d0219c88857ba633befb7f0efb955237e7" +
-            "1624582d35491012c831047f6b4143fb875dffcd6a8792ee9d168804f9faf9f80de7eeebf238ee5bcfec13d92e9d9410597caa3" +
-            "f973a3f463cacb677782029c237ad2a0c98b6e4c07a4202d1701eb9ff5ec992faaa1e79a06f998bfc",
-            "0x902532622ea9e20b988582c8e2352fc0afdc3f81d81320d598494671559cfece04f52233178f302d53749fa89896875bc7d78" +
-            "bacba2825a691d62ec451b1103f749751cb16f03a8a7d8361523082af61191d7172702d20d59fb36afb363b73d5e1989dd23117" +
-            "d68439080d510fa8c0133951f8d492c22ddc9e07fc6de1bfb39d2f04a553d652638af00631ca928d7748c87f23423dfc87d5e1d" +
-            "7f6f44bdc70dd3a83694b98caea97dba8c6e9aa0642fc2c1365b30d556301546494528af10a4e440a",
+            "0x8995f55d56569606643b6e76e4861710b7863978a9f64b2b78a90476009450cb044472f5f2f0a444703beb8be660d683e9a40" +
+            "70f919b606481109996b0a93ca1326d4a8abb41b8be62151ad9741dbcf570964cf65585c6cc504983a1ba0125d6733b4d541dea" +
+            "2bda52a93d551e49ff6c9ab8ece44e978ae12c597e8c5b5905a83f0438f9d11a34d939ea6ea6ebff78393beee93753c017418ec" +
+            "7711c3297a00baa5341d1821ec7345b52eb4665c2b1f0a10eee82f7683f1ece04f57164e7ab590650",
+            "0x7bb970a8f23f0d09869d63f7cb53e0cca49b949debb4b2c96500dcb79ac7b26a048d9919dab4496c0fad9b2fe1cb6fde9d5cb" +
+            "574c7e185773f2fe5405611b57fe3be8c7967bb2ed5863965b28cdd9dad9c9edd5a1296f5e6cf89c06eddd1729257bbaf1a2e63" +
+            "2e27f6bdf5ea27a094d524f6db71ebaf12a5bec5a9ef9ef2bb9d64046039bc469b6ba0727333922987d45ccf16591af7cd54bd4" +
+            "a639ad345feccfed7f60081fcf9388a56d87751218d6e3aea5677889fed7fd2e078c6225f460fabe2",
         ];
 
         const verificationVectors = [
-            "0x29ada5b9c88a59919e5d1001888ceedc1efbb1d67277cbfeff132254981f6e6020fafb2739339ff6b843040c536c330307011" +
-            "d844285e16e16235980c57d3bd1048b0361f7510070c6ebc818eeebc8787a13f9c2e7d81ad451bac1173022c00c08935372f47c" +
-            "0fd2cc06086c20f7741adb14290f528cd1fea1d7bbd112fadaf02dd2e6134c60fd7df8a20d0ab2aa2730da2faa43981ca506ed3" +
-            "b9ab713143fdc210b820205740c1270a991a655af4a6e42fcbfe9cf61d5cf442ecb22276ad6a3",
-            "0x27f5f72241ae51ef0ac733cd3edb131a32373866aa0c378254a4f82fa2a96a7522df6bbf6529438c11d8a2185c5cd2a70224b" +
-            "0977c93ba27288b9bc1d45f60ee039c1ef80fe87761d8890c1c54567386a678ca86d79755ba3f77df36d853ea5604458ce7af8d" +
-            "8eb82bb5d3a7a430c03ec4b2965144f01cd4c0bd3f3b9104eb412a7250fc8deae99b3f8a47cf3acbacceaea71f2438a3d6cf23f" +
-            "807313f924fcf303cce023126b0818f9ae1cc2e25579e133b0f8bedb95265b7771c60141c2610",
+            "0x1ab16ad362c3c108b92ea5594ec9c3825882cb0fa65f482d861f7356e35e60e620ef95a0900e0c4a1bf9f4f8ab04b34dc1b85" +
+            "d103e04978ad398fe29c51342561ef2ae24f185cd9d8c454dddbce8acaa886ff910d9cd9d15a04db1de2697f0d91a1006da8738" +
+            "29d5869f479018912eae62f20bb203094742611f697e4033719e",
+            "0x21c95684a7f1812ddcf0bb24a0fed4e1c869a17ad3a36c9c4902bfabf9f8cf0d114e3afbcad3f72876bc77676220100e50aa1" +
+            "0c0417c5e6feb22b53c2d8efa982c94910af1da7578f3972870ee815fd26a25539ed914f79b269bc0b232269e9019e923e3c5af" +
+            "c04318dc224f42623c6a1461d22f69d0d7eac4adfcc78fec22a8",
         ];
 
         const badVerificationVectors = [
-            "0x29ada5b9c88a59919e5d1001888ceedc1efbb1d67277cbfeff132254981f6e6020fafb2739339ff6b843040c536c330307011" +
-            "d844285e16e16235980c57d3bd1048b0361f7510070c6ebc818eeebc8787a13f9c2e7d81ad451bac1173022c00c08935372f47c" +
-            "0fd2cc06086c20f7741adb14290f528cd1fea1d7bbd112fadaf02dd2e6134c60fd7df8a20d0ab2aa2730da2faa43981ca506ed3" +
-            "b9ab713143fdc210b820205740c1270a991a655af4a6e42fcbfe9cf61d5cf442ecb22276ad6a4",
-            "0x27f5f72241ae51ef0ac733cd3edb131a32373866aa0c378254a4f82fa2a96a7522df6bbf6529438c11d8a2185c5cd2a70224b" +
-            "0977c93ba27288b9bc1d45f60ee039c1ef80fe87761d8890c1c54567386a678ca86d79755ba3f77df36d853ea5604458ce7af8d" +
-            "8eb82bb5d3a7a430c03ec4b2965144f01cd4c0bd3f3b9104eb412a7250fc8deae99b3f8a47cf3acbacceaea71f2438a3d6cf23f" +
-            "807313f924fcf303cce023126b0818f9ae1cc2e25579e133b0f8bedb95265b7771c60141c2611",
+            "0x1ab16ad362c3c108b92ea5594ec9c3825882cb0fa65f482d861f7356e35e60e620ef95a0900e0c4a1bf9f4f8ab04b34dc1b85" +
+            "d103e04978ad398fe29c51342561ef2ae24f185cd9d8c454dddbce8acaa886ff910d9cd9d15a04db1de2697f0d91a1006da8738" +
+            "29d5869f479018912eae62f20bb203094742611f697e4033719f",
+            "0x21c95684a7f1812ddcf0bb24a0fed4e1c869a17ad3a36c9c4902bfabf9f8cf0d114e3afbcad3f72876bc77676220100e50aa1" +
+            "0c0417c5e6feb22b53c2d8efa982c94910af1da7578f3972870ee815fd26a25539ed914f79b269bc0b232269e9019e923e3c5af" +
+            "c04318dc224f42623c6a1461d22f69d0d7eac4adfcc78fec22a9",
+        ];
+
+        const multipliedShares = [
+            "0x2c7d2dfd6fd5f49f2519a205f5bfdf0feadbe2d54f287557261246f1defd019d221c1a3e1abb24209ea59f084d3ecb938fdcd" +
+            "e3676fef6fd98999333c9d1377f2d5da875556d3ad1fec368454c551b618374456ce38e4dcd575d8ea7c22dd58a2efe61196e82" +
+            "b5508f63bfff1af15432df001dc7b11a8f97e009890b335c47c2",
+            "0x0c87bdb03d79f0af66c50a9c5bfc05205da4fe195bb1b1a38062184e238e836d25bee3b295cabe49cb1b9a06d517e8e320dd2" +
+            "4fbcfdbcbddccb2670e1f3368bc14b2d842b38921d9c11dcb815856370fff67509079a78be9b20b0d631e4d79010d7c48834da5" +
+            "b3a7f3ab852ef012b01d0a1fe7829b643de1076ab07eed44f6f6",
+        ];
+
+        const badMultipliedShares = [
+            "0x2c7d2dfd6fd5f49f2519a205f5bfdf0feadbe2d54f287557261246f1defd019d221c1a3e1abb24209ea59f084d3ecb938fdcd" +
+            "e3676fef6fd98999333c9d1377f2d5da875556d3ad1fec368454c551b618374456ce38e4dcd575d8ea7c22dd58a2efe61196e82" +
+            "b5508f63bfff1af15432df001dc7b11a8f97e009890b335c47c3",
+            "0x0c87bdb03d79f0af66c50a9c5bfc05205da4fe195bb1b1a38062184e238e836d25bee3b295cabe49cb1b9a06d517e8e320dd2" +
+            "4fbcfdbcbddccb2670e1f3368bc14b2d842b38921d9c11dcb815856370fff67509079a78be9b20b0d631e4d79010d7c48834da5" +
+            "b3a7f3ab852ef012b01d0a1fe7829b643de1076ab07eed44f6f7",
         ];
 
         beforeEach(async () => {
@@ -339,6 +353,30 @@ contract("SkaleDKG", ([validator1, validator2]) => {
                     assert.equal(result.logs[1].event, "SuccessfulDKG");
                     assert.equal(result.logs[1].args.groupIndex, web3.utils.soliditySha3("d2"));
                 });
+
+                describe("when 2 node sent incorrect complaint", async () => {
+                    beforeEach(async () => {
+                        await skaleDKG.complaint(
+                            web3.utils.soliditySha3("d2"),
+                            1,
+                            0,
+                            {from: validatorsAccount[1]},
+                        );
+                    });
+
+                    it("should send correct response", async () => {
+                        const result = await skaleDKG.response(
+                            web3.utils.soliditySha3("d2"),
+                            0,
+                            secretNumberFirst.toFixed(),
+                            multipliedShares[0],
+                            {from: validatorsAccount[0]},
+                        );
+                        assert.equal(result.logs[0].event, "BadGuy");
+                        // need to debug it!!!
+                        // assert.equal(result.logs[0].args.nodeIndex.toString(), "1");
+                    });
+                });
             });
 
             describe("when 1 node sent bad data", async () => {
@@ -400,28 +438,28 @@ contract("SkaleDKG", ([validator1, validator2]) => {
                         );
                     });
 
-                    it("accused node should send response", async () => {
-                        // console.log(skaleDKG.address);
-                        // const result = await skaleDKG.getCommonPublicKey(
-                        //     web3.utils.soliditySha3("d2"),
-                        //     secretNumberFirst.toFixed(),
-                        // );
-                        // console.log(result);
-                        // const result1 = new BigNumber(await skaleDKG.decryptMessage(
-                        //     web3.utils.soliditySha3("d2"),
-                        //     secretNumberFirst.toFixed(),
-                        // ));
-                        // console.log(result1.toFixed());
-                        // const result2 = await skaleDKG.loop(0, verificationVectors[0], 0);
-                        // console.log(result2);
-                        // const result2 = await skaleDKG.verify(0, result1.toFixed(), verificationVectors[0]);
-                        // console.log(result2);
-                        // const result = await skaleDKG.response(
-                        //     web3.utils.soliditySha3("d2"),
-                        //     0,
-                        //     secretNumberFirst.toFixed(),
-                        //     {from: validatorsAccount[0]},
-                        // );
+                    it("accused node should send correct response", async () => {
+                        const result = await skaleDKG.response(
+                            web3.utils.soliditySha3("d2"),
+                            0,
+                            secretNumberFirst.toFixed(),
+                            multipliedShares[0],
+                            {from: validatorsAccount[0]},
+                        );
+                        assert.equal(result.logs[0].event, "BadGuy");
+                        assert.equal(result.logs[0].args.nodeIndex.toString(), "0");
+                    });
+
+                    it("accused node should send incorrect response", async () => {
+                        const result = await skaleDKG.response(
+                            web3.utils.soliditySha3("d2"),
+                            0,
+                            secretNumberFirst.toFixed(),
+                            badMultipliedShares[0],
+                            {from: validatorsAccount[0]},
+                        );
+                        assert.equal(result.logs[0].event, "BadGuy");
+                        assert.equal(result.logs[0].args.nodeIndex.toString(), "0");
                     });
                 });
             });
