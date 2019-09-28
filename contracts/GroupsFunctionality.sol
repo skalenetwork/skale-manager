@@ -184,5 +184,6 @@ contract GroupsFunctionality is Permissions {
      * @param groupIndex - Groups identifier
      * return array of indexes of Nodes in Group
      */
+    function selectNodeToGroup(bytes32 groupIndex) public returns (bytes32, uint);
     function generateGroup(bytes32 groupIndex) internal returns (uint[] memory);
 }

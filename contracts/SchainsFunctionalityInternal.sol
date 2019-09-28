@@ -1,5 +1,5 @@
 /*
-    SchainsFunctionality1.sol - SKALE Manager
+    SchainsFunctionalityInternal.sol - SKALE Manager
     Copyright (C) 2018-Present SKALE Labs
     @author Artem Payvin
 
@@ -28,7 +28,7 @@ import "./interfaces/IConstants.sol";
 /**
  * @title SchainsFunctionality - contract contains all functionality logic to manage Schains
  */
-contract SchainsFunctionality1 is GroupsFunctionality {
+contract SchainsFunctionalityInternal is GroupsFunctionality {
     // informs that Schain based on some Nodes
     event SchainNodes(
         string name,
@@ -116,47 +116,13 @@ contract SchainsFunctionality1 is GroupsFunctionality {
         return length;
     }
 
-    // /**
-    //  * @dev rotateNode - replaces the Node that left the Schain
-    //  * @param _nodeIndex - index of the Node that will be rotated by new Node
-    //  */
-    // function rotateNode(uint _nodeIndex) public returns (bytes32[] memory, uint[] memory) {
-    //     address schainsDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("SchainsData")));
-    //     bytes32[] memory schainIds = ISchainsData(schainsDataAddress).getSchainIdsForNode(_nodeIndex);
-    //     bytes32[] memory schainIdsEvent = new bytes32[](schainIds.length);
-    //     uint[] memory newNodeIndexEvent = new uint[](schainIds.length);
-    //     for (uint i = 0; i < schainIds.length; i++) {
-    //         uint partOfNode = ISchainsData(schainsDataAddress).getSchainsPartOfNode(schainIds[i]);
-    //         uint hash = uint(keccak256(abi.encodePacked(uint(blockhash(block.number - 1)), schainIds[i])));
-    //         uint numberOfNodes;
-    //         uint space;
-    //         (numberOfNodes, space) = setNumberOfNodesInGroup(schainIds[i], partOfNode, schainsDataAddress);
-    //         uint indexOfNode;
-    //         uint nodeIndex;
-    //         uint iterations = 0;
-    //         while (iterations < 200) {
-    //             indexOfNode = hash % numberOfNodes;
-    //             nodeIndex = returnValidNodeIndex(partOfNode, indexOfNode);
-    //             if (comparator(indexOfNode, partOfNode, space) && !IGroupsData(schainsDataAddress).isExceptionNode(schainIds[i], nodeIndex)) {
-    //                 IGroupsData(schainsDataAddress).setException(schainIds[i], nodeIndex);
-    //                 IGroupsData(schainsDataAddress).setNodeInGroup(schainIds[i], nodeIndex);
-    //                 ISchainsData(schainsDataAddress).addSchainForNode(nodeIndex, schainIds[i]);
-    //                 require(removeSpace(nodeIndex, space), "Could not remove space from Node for rotation");
-    //                 schainIdsEvent[i] = schainIds[i];
-    //                 newNodeIndexEvent[i] = nodeIndex;
-    //                 // emit NodeRotated(schainIds[i], _nodeIndex, nodeIndex);
-    //                 break;
-    //             }
-    //             hash = uint(keccak256(abi.encodePacked(hash, indexOfNode)));
-    //             iterations++;
-    //         }
-    //         require(iterations < 200, "Old Node is not replaced? Try it later");
-    //     }
-    //     return (schainIdsEvent, newNodeIndexEvent);
-    // }
-
-
-    function rotateNode(bytes32 schainId) public returns (bytes32, uint) {
+    /**
+     * @dev selectNodeToGroup - pseudo-randomly select new Node for Schain
+     * @param schainId - hash of name of Schain
+     * @return schainId - hash of name of Schain which needed for emitting event
+     * @return nodeIndex - in
+     */
+    function selectNodeToGroup(bytes32 schainId) public returns (bytes32, uint) {
         address schainsDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("SchainsData")));
         uint partOfNode = ISchainsData(schainsDataAddress).getSchainsPartOfNode(schainId);
         uint hash = uint(keccak256(abi.encodePacked(uint(blockhash(block.number - 1)), schainId)));
@@ -179,9 +145,7 @@ contract SchainsFunctionality1 is GroupsFunctionality {
             hash = uint(keccak256(abi.encodePacked(hash, indexOfNode)));
             iterations++;
         }
-        // emit Iterations(iterations);
         require(iterations < 200, "Old Node is not replaced? Try it later");
-        // }
     }
 
     /**
@@ -227,10 +191,6 @@ contract SchainsFunctionality1 is GroupsFunctionality {
         }
         // checks that this algorithm took less than 200 iterations
         require(iterations < 200, "Schain is not created? Try it later");
-        // remove Nodes from exception array
-        // for (uint i = 0; i < nodesInGroup.length; i++) {
-        //     IGroupsData(dataAddress).removeExceptionNode(groupIndex, nodesInGroup[i]);
-        // }
         // set generated group
         IGroupsData(dataAddress).setNodesInGroup(groupIndex, nodesInGroup);
         emit GroupGenerated(
@@ -340,15 +300,17 @@ contract SchainsFunctionality1 is GroupsFunctionality {
         } else if (partOfNode == IConstants(constantsAddress).TINY_DIVISOR() || partOfNode == IConstants(constantsAddress).SMALL_DIVISOR()) {
             space = IConstants(constantsAddress).TINY_DIVISOR() / partOfNode;
             numberOfNodes = INodesData(nodesDataAddress).getNumberOfFractionalNodes();
-            numberOfAvailableNodes = INodesData(nodesDataAddress).getNumberOfFreeFractionalNodes(space);
+            nodesEnough = INodesData(nodesDataAddress).getNumberOfFreeFractionalNodes(space, needNodes);
         } else if (partOfNode == IConstants(constantsAddress).MEDIUM_TEST_DIVISOR()) {
             space = IConstants(constantsAddress).TINY_DIVISOR() / partOfNode;
             numberOfNodes = INodesData(nodesDataAddress).getNumberOfNodes();
             numberOfAvailableNodes = INodesData(nodesDataAddress).numberOfActiveNodes();
+            nodesEnough = numberOfAvailableNodes >= needNodes ? true : false;
         } else if (partOfNode == 0) {
             space = partOfNode;
             numberOfNodes = INodesData(nodesDataAddress).getNumberOfNodes();
             numberOfAvailableNodes = INodesData(nodesDataAddress).numberOfActiveNodes();
+            nodesEnough = numberOfAvailableNodes >= needNodes ? true : false;
         } else {
             revert("Can't set number of nodes. Divisor does not match any valid schain type");
         }

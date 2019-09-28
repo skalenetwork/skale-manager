@@ -57,7 +57,6 @@ async function showActiveNodes(secondRandomNumber, rotated) {
 
 async function rotationNode(secondRandomNumber) {
     console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
-
     await showActiveNodes(secondRandomNumber, false);
     console.log('<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<')
     let schainIds = await init.SchainsData.methods.getSchainIdsForNode(secondRandomNumber).call();
@@ -73,7 +72,6 @@ async function rotationNode(secondRandomNumber) {
                     nodeRotated.push(events[i].returnValues.newNode);
                 }
             });
-            
     }
     await showActiveNodes(secondRandomNumber, true);
 
@@ -102,6 +100,17 @@ async function rotationNode(secondRandomNumber) {
     console.log('-----------------------------------------------------------------------------------------------')
 }
 
+async function rotationValidator(nodeIndex) {
+    let res = await validators.getValidatedArray(nodeIndex);
+    console.log("Node", nodeIndex, "will validate:");
+    console.log(res.ids);
+    for (index of res.ids) {
+        let groupIndex = init.web3.utils.soliditySha3(index);
+        let {logs} = await init.ValidatorsFunctionality.rotateNode(groupIndex).send({from: init.mainAccount, gas: 8000000});
+        console.log(logs);
+    }  
+}
+
 let n = 1;
 async function main(numberOfIterations) {
 
@@ -119,11 +128,7 @@ async function main(numberOfIterations) {
     for (let i = 0; i < 5; i++) {
         schainName = await schains.createSchain(3, 94867200);
         console.log("Schain name:", schainName);
-        await schains.getSchainNodes(schainName);
-        //await schains.getSchainsForNode(0);
-
-        //console.log("Part of Node", await schains.getSchainPartOfNode(schainName));
-        //await schains.deleteSchain(schainName);
+        await schains.getSchainNodes(schainName); 
     }
 
     // randomNumber = Math.floor(Math.random() * 20);
@@ -133,6 +138,7 @@ async function main(numberOfIterations) {
         let schainIds = await init.SchainsData.methods.getSchainIdsForNode(secondRandomNumber).call();
         if (await init.NodesData.methods.isNodeActive(secondRandomNumber).call() && schainIds.length) {
             console.log("Delete node", secondRandomNumber);
+            await rotationValidator(secondRandomNumber);
             await nodes.deleteNode(secondRandomNumber);
             await rotationNode(secondRandomNumber);
         } else {
@@ -141,7 +147,7 @@ async function main(numberOfIterations) {
         iter++;
     }
     numberOfIterations++;
-    main(numberOfIterations);
+    await main(numberOfIterations);
     /*
     await validationForAllNodes();
     console.log("Date of next reward", await nodes.getNodeNextRewardDate(6), "and now", Math.floor(Date.now() / 1000));

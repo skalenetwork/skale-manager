@@ -236,7 +236,7 @@ contract NodesData is INodesData, Permissions {
      * @param subarrayLink - index of Node at array of Fractional Nodes
      * @param space - space which should be occupied
      */
-    function removeSpaceFromFractionalNode(uint subarrayLink, uint space) public allow("SchainsFunctionality1") returns (bool) {
+    function removeSpaceFromFractionalNode(uint subarrayLink, uint space) public allow("SchainsFunctionalityInternal") returns (bool) {
         if (fractionalNodes[subarrayLink].freeSpace < space) {
             return false;
         }
@@ -250,7 +250,7 @@ contract NodesData is INodesData, Permissions {
      * @param subarrayLink - index of Node at array of Full Nodes
      * @param space - space which should be occupied
      */
-    function removeSpaceFromFullNode(uint subarrayLink, uint space) public allow("SchainsFunctionality1") returns (bool) {
+    function removeSpaceFromFullNode(uint subarrayLink, uint space) public allow("SchainsFunctionalityInternal") returns (bool) {
         if (fullNodes[subarrayLink].freeSpace < space) {
             return false;
         }
@@ -416,12 +416,17 @@ contract NodesData is INodesData, Permissions {
      * @dev getNumberOfFreefractionalNodes - get number of free Fractional Nodes
      * @return numberOfFreeFractionalNodes - number of free Fractional Nodes
      */
-    function getNumberOfFreeFractionalNodes(uint space) public view returns (uint numberOfFreeFractionalNodes) {
+    function getNumberOfFreeFractionalNodes(uint space, uint needNodes) public view returns (bool nodesAreEnough) {
+        uint numberOfFreeFractionalNodes = 0;
         for (uint indexOfNode = 0; indexOfNode < fractionalNodes.length; indexOfNode++) {
             if (fractionalNodes[indexOfNode].freeSpace >= space && isNodeActive(fractionalNodes[indexOfNode].nodeIndex)) {
                 numberOfFreeFractionalNodes++;
+                if (numberOfFreeFractionalNodes == needNodes) {
+                    return true;
+                }
             }
         }
+        return false;
     }
 
     /**

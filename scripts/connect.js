@@ -48,7 +48,7 @@ async function setEverything() {
     // await sendTransaction(web3, accountMain, privateKeyBuf, getFunctionAbi("ValidatorsFunctionality", dataJson.validators_functionality_address), dataJson.contract_manager_address);
     // await sendTransaction(web3, accountMain, privateKeyBuf, getFunctionAbi("SchainsData", dataJson.schains_data_address), dataJson.contract_manager_address);
     // await sendTransaction(web3, accountMain, privateKeyBuf, getFunctionAbi("SchainsFunctionality", dataJson.schains_functionality_address), dataJson.contract_manager_address);
-    // await sendTransaction(web3, accountMain, privateKeyBuf, getFunctionAbi("SchainsFunctionality1", dataJson.schains_functionality1_address), dataJson.contract_manager_address);
+    // await sendTransaction(web3, accountMain, privateKeyBuf, getFunctionAbi("SchainsFunctionalityInternal", dataJson.schains_functionality1_address), dataJson.contract_manager_address);
     // await sendTransaction(web3, accountMain, privateKeyBuf, getFunctionAbi("ManagerData", dataJson.manager_data_address), dataJson.contract_manager_address);
     // await sendTransaction(web3, accountMain, privateKeyBuf, getFunctionAbi("SkaleManager", dataJson.skale_manager_address), dataJson.contract_manager_address);
     await sendTransaction(web3, accountMain, privateKeyBuf, getFunctionAbi("SkaleToken", "0xda08096b928c8e0a01457629705f83127a1babd3"), dataJson.contract_manager_address);

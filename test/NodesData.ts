@@ -212,7 +212,7 @@ contract("NodesData", ([owner, validator]) => {
             });
 
             it("should get number of free fractional nodes", async () => {
-                await nodesData.getNumberOfFreeFractionalNodes(128).should.be.eventually.deep.equal(web3.utils.toBN(1));
+                await nodesData.getNumberOfFreeFractionalNodes(128, 1).should.be.eventually.deep.equal(true);
             });
         });
 
@@ -240,7 +240,7 @@ contract("NodesData", ([owner, validator]) => {
             });
 
             it("should get number of free full nodes", async () => {
-                await nodesData.getNumberOfFreeFullNodes().should.be.eventually.deep.equal(web3.utils.toBN(1));
+                await nodesData.getNumberOfFreeFullNodes(1).should.be.eventually.deep.equal(true);
             });
         });
 

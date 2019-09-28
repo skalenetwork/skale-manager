@@ -87,8 +87,10 @@ contract ValidatorsFunctionality is GroupsFunctionality, IValidatorsFunctionalit
         uint gasSpend
     );
 
-    event Iterations(           //remove before pull request
-        uint iterarions
+
+    event ValidatorRotated(
+        bytes32 groupIndex,
+        uint newNode
     );
 
     constructor(
@@ -122,7 +124,7 @@ contract ValidatorsFunctionality is GroupsFunctionality, IValidatorsFunctionalit
 
     function upgradeValidator(uint nodeIndex) public allow(executorName) {
         bytes32 groupIndex = keccak256(abi.encodePacked(nodeIndex));
-        address constantsAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("ConstantsHolder")));
+        address constantsAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("Constants")));
         uint possibleNumberOfNodes = IConstants(constantsAddress).NUMBER_OF_VALIDATORS();
         upgradeGroup(groupIndex, possibleNumberOfNodes, bytes32(nodeIndex));
         uint numberOfNodesInGroup = setValidators(groupIndex, nodeIndex);
@@ -186,12 +188,33 @@ contract ValidatorsFunctionality is GroupsFunctionality, IValidatorsFunctionalit
         }
     }
 
-    function median(uint32[] memory values) internal pure returns (uint32) {
-        if (values.length < 1) {
-            revert("Can't calculate median of empty array");
+    function rotateNode(bytes32 schainId) public {
+        bytes32 schainIdsEvent;
+        uint newNodeIndexEvent;
+        (schainIdsEvent, newNodeIndexEvent) = selectNodeToGroup(schainId);
+        emit ValidatorRotated(schainIdsEvent, newNodeIndexEvent);
+    }
+
+    function selectNodeToGroup(bytes32 groupIndex) public returns (bytes32, uint) {
+        address dataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked(dataName)));
+        require(IGroupsData(dataAddress).isGroupActive(groupIndex), "Group is not active");
+        bytes32 groupData = IGroupsData(dataAddress).getGroupData(groupIndex);
+        uint hash = uint(keccak256(abi.encodePacked(uint(blockhash(block.number - 1)), groupIndex)));
+        uint numberOfNodes;
+        (numberOfNodes, ) = setNumberOfNodesInGroup(groupIndex, groupData);
+        uint indexOfNode;
+        uint iterations = 0;
+        while (iterations < 200) {
+            indexOfNode = hash % numberOfNodes;
+            if (comparator(groupIndex, indexOfNode)) {
+                IGroupsData(dataAddress).setException(groupIndex, indexOfNode);
+                IGroupsData(dataAddress).setNodeInGroup(groupIndex, indexOfNode);
+                return (groupIndex, indexOfNode);
+            }
+            hash = uint(keccak256(abi.encodePacked(hash, indexOfNode)));
+            iterations++;
         }
-        quickSort(values, 0, values.length - 1);
-        return values[values.length / 2];
+        require(iterations < 200, "Old Validator is not replaced? Try it later");
     }
 
     function generateGroup(bytes32 groupIndex) internal allow(executorName) returns (uint[] memory) {
@@ -215,16 +238,20 @@ contract ValidatorsFunctionality is GroupsFunctionality, IValidatorsFunctionalit
             iterations++;
         }
         uint[] memory nodesInGroup = IGroupsData(dataAddress).getNodesInGroup(groupIndex);
-        for (uint i = 0; i < nodesInGroup.length; i++) {
-            IGroupsData(dataAddress).removeExceptionNode(groupIndex, nodesInGroup[i]);
-        }
-        emit Iterations(iterations); //remove before pull request
         emit GroupGenerated(
             groupIndex,
             nodesInGroup,
             uint32(block.timestamp),
             gasleft());
         return nodesInGroup;
+    }
+
+    function median(uint32[] memory values) internal pure returns (uint32) {
+        if (values.length < 1) {
+            revert("Can't calculate median of empty array");
+        }
+        quickSort(values, 0, values.length - 1);
+        return values[values.length / 2];
     }
 
     function setNumberOfNodesInGroup(bytes32 groupIndex, bytes32 groupData) internal view returns (uint numberOfNodes, uint finish) {
@@ -315,16 +342,12 @@ contract ValidatorsFunctionality is GroupsFunctionality, IValidatorsFunctionalit
     function getDataToBytes(uint nodeIndex) internal view returns (bytes32 bytesParameters) {
         address constantsAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("Constants")));
         address nodesDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
-        //require(1 != 1, "Break");
         bytes memory tempData = new bytes(32);
         bytes14 bytesOfIndex = bytes14(uint112(nodeIndex));
-        ////require(1 != 1, "Break");
         bytes14 bytesOfTime = bytes14(
             uint112(INodesData(nodesDataAddress).getNodeNextRewardDate(nodeIndex) - IConstants(constantsAddress).deltaPeriod())
         );
-        //require(1 != 1, "Break");
         bytes4 ip = INodesData(nodesDataAddress).getNodeIP(nodeIndex);
-        //require(1 != 1, "Break");
         assembly {
             mstore(add(tempData, 32), bytesOfIndex)
             mstore(add(tempData, 46), bytesOfTime)
