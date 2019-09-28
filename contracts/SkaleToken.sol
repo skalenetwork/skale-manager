@@ -109,6 +109,6 @@ contract SkaleToken is ISkaleToken, StandardToken, Permissions {
         public
         returns (bool)
     {
-        transfer(_to, _value, _data);
+        return transfer(_to, _value, _data);
     }
 }
