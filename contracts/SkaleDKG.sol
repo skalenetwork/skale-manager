@@ -442,8 +442,7 @@ contract SkaleDKG is Permissions {
         uint pp = p;
         uint ab = mulmod(a.x, a.y, pp);
         uint mult = mulmod(addmod(a.x, a.y, pp), addmod(a.x, mulmod(pp - 1, a.y, pp), pp), pp);
-        uint addition = addmod(ab, mulmod(pp - 1, ab, pp), pp);
-        return Fp2({ x: addmod(mult, pp - addition, pp), y: addmod(ab, ab, pp) });
+        return Fp2({ x: mult, y: addmod(ab, ab, pp) });
     }
 
     function inverseFp2(Fp2 memory a) internal view returns (Fp2 memory x) {
@@ -456,7 +455,7 @@ contract SkaleDKG is Permissions {
         } else {
             t2 = pp - addmod(t2, pp - t0, pp);
         }
-        uint t3 = binstep(t2, pp - 2);
+        uint t3 = binstep(t2, pp - 2); // use bigModExp here
         x.x = mulmod(a.x, t3, pp);
         x.y = pp - mulmod(a.y, t3, pp);
     }
@@ -467,8 +466,6 @@ contract SkaleDKG is Permissions {
         Fp2 memory s = mulFp2(scalarMulFp2(3, squaredFp2(x1)), inverseFp2(scalarMulFp2(2, y1)));
         x3 = minusFp2(squaredFp2(s), scalarMulFp2(2, x1));
         y3 = addFp2(y1, mulFp2(s, minusFp2(x3, x1)));
-        uint pp = p;
-        y3.y = pp - (y3.y % pp);
     }
 
     function u1(Fp2 memory x1) internal view returns (Fp2 memory) {
@@ -556,8 +553,6 @@ contract SkaleDKG is Permissions {
         Fp2 memory s = mulFp2(minusFp2(y2, y1), inverseFp2(minusFp2(x2, x1)));
         x3 = minusFp2(squaredFp2(s), addFp2(x1, x2));
         y3 = addFp2(y1, mulFp2(s, minusFp2(x3, x1)));
-        uint pp = p;
-        y3.y = pp - (y3.y % pp);
     }
 
     // function addG2ToVerify(
@@ -624,8 +619,8 @@ contract SkaleDKG is Permissions {
         returns (Fp2 memory x, Fp2 memory y)
     {
         uint step = scalar;
-        x = Fp2({x: g2a, y: g2b});
-        y = Fp2({x: g2c, y: g2d});
+        x = Fp2({x: 0, y: 0});
+        y = Fp2({x: 1, y: 0});
         Fp2 memory tmpX = x1;
         Fp2 memory tmpY = y1;
         while (step > 0) {
@@ -806,7 +801,7 @@ contract SkaleDKG is Permissions {
             xa := mload(add(someBytes, 32))
             xb := mload(add(someBytes, 64))
             ya := mload(add(someBytes, 96))
-            yb := mload(add(someBytes, 28))
+            yb := mload(add(someBytes, 128))
         }
 
         x = Fp2({x: uint(xa), y: uint(xb)});
