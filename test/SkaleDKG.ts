@@ -38,6 +38,7 @@ const Decryption: DecryptionContract = artifacts.require("./Decryption");
 const ECDH: ECDHContract = artifacts.require("./ECDH");
 
 import BigNumber from "bignumber.js";
+// import sha256 from "js-sha256";
 chai.should();
 chai.use(chaiAsPromised);
 
@@ -146,69 +147,72 @@ contract("SkaleDKG", ([validator1, validator2]) => {
         ];
 
         const secretNumberFirst = new BigNumber(
-            "84858972125516121768648219944507512294747453724013462351671429044454800517341",
+            "53093763158439585430573669375257842641782493446827046677036188158171986127874",
         );
 
         const secretNumberSecond = new BigNumber(
-            "56620236285624794644791805919749430710840360330199251369338306793965310107331",
+            "105593860362893162081062161526412274350999897683408181670994844501435786310559",
         );
 
         const encryptedSecretKeyContributions = [
-            "0x8995f55d56569606643b6e76e4861710b7863978a9f64b2b78a90476009450cb044472f5f2f0a444703beb8be660d683e9a40" +
-            "70f919b606481109996b0a93ca1326d4a8abb41b8be62151ad9741dbcf570964cf65585c6cc504983a1ba0125d6733b4d541dea" +
-            "2bda52a93d551e49ff6c9ab8ece44e978ae12c597e8c5b5905a83f0438f9d11a34d939ea6ea6ebff78393beee93753c017418ec" +
-            "7711c3297a00baa5341d1821ec7345b52eb4665c2b1f0a10eee82f7683f1ece04f57164e7ab59064f",
-            "0x7bb970a8f23f0d09869d63f7cb53e0cca49b949debb4b2c96500dcb79ac7b26a048d9919dab4496c0fad9b2fe1cb6fde9d5cb" +
-            "574c7e185773f2fe5405611b57fe3be8c7967bb2ed5863965b28cdd9dad9c9edd5a1296f5e6cf89c06eddd1729257bbaf1a2e63" +
-            "2e27f6bdf5ea27a094d524f6db71ebaf12a5bec5a9ef9ef2bb9d64046039bc469b6ba0727333922987d45ccf16591af7cd54bd4" +
-            "a639ad345feccfed7f60081fcf9388a56d87751218d6e3aea5677889fed7fd2e078c6225f460fabe1",
+            "0xf513fab429e187757f544b2b856e7a2bb334405f8065eb5c8889f35bc7c28a4104ae1ab3bea0d2804b71ae03a662c105c2e6b" +
+            "496e1ad704a2b0747d1183f390e7d954ef5d9dd04dded46a37a741e3e60d78c61adade19d420f9703ca1ad5160ce000cb4874c0" +
+            "61e774b3e11885d2f83e8806027707f89167994128f7b9eb49cbfb045698506e457085e2143b77e47ae7dcece6e380d871b4694" +
+            "0c49dcc163362d8e1f5c72533a7e469f3024082747989bd849d28d98d51112d04e616e13e88742607",
+            "0x35e5c3d9a36dd07c30433dc6e1ba323cc4ec760e9485d60da81b6dea2806a3c704f8c760286e4b9f8fd65cfe8442957206d3f" +
+            "2ac4b2e8d268a38acff33edb0e2d37f5075b8e25dbcf8b36087713e04f287c9d2d13b4337178f0eba9296db6702edaa4715ccaa" +
+            "8d8bbffd018b8dd6e27da1cef01a9afb4133b120aef45864537577043da5cc3034806e0b8e3060cc9f689b5fd022a57cd3d1499" +
+            "7f3886c281cf8792249d6bd19b5c05ff9716265868fb26dc0b76b34e9ec19a3c44b3beced3e0e7386",
         ];
 
         const badEncryptedSecretKeyContributions = [
-            "0x8995f55d56569606643b6e76e4861710b7863978a9f64b2b78a90476009450cb044472f5f2f0a444703beb8be660d683e9a40" +
-            "70f919b606481109996b0a93ca1326d4a8abb41b8be62151ad9741dbcf570964cf65585c6cc504983a1ba0125d6733b4d541dea" +
-            "2bda52a93d551e49ff6c9ab8ece44e978ae12c597e8c5b5905a83f0438f9d11a34d939ea6ea6ebff78393beee93753c017418ec" +
-            "7711c3297a00baa5341d1821ec7345b52eb4665c2b1f0a10eee82f7683f1ece04f57164e7ab590650",
-            "0x7bb970a8f23f0d09869d63f7cb53e0cca49b949debb4b2c96500dcb79ac7b26a048d9919dab4496c0fad9b2fe1cb6fde9d5cb" +
-            "574c7e185773f2fe5405611b57fe3be8c7967bb2ed5863965b28cdd9dad9c9edd5a1296f5e6cf89c06eddd1729257bbaf1a2e63" +
-            "2e27f6bdf5ea27a094d524f6db71ebaf12a5bec5a9ef9ef2bb9d64046039bc469b6ba0727333922987d45ccf16591af7cd54bd4" +
-            "a639ad345feccfed7f60081fcf9388a56d87751218d6e3aea5677889fed7fd2e078c6225f460fabe2",
+            "0xf513fab429e187757f544b2b856e7a2bb334405f8065eb5c8889f35bc7c28a4104ae1ab3bea0d2804b71ae03a662c105c2e6b" +
+            "496e1ad704a2b0747d1183f390e7d954ef5d9dd04dded46a37a741e3e60d78c61adade19d420f9703ca1ad5160ce000cb4874c0" +
+            "61e774b3e11885d2f83e8806027707f89167994128f7b9eb49cbfb045698506e457085e2143b77e47ae7dcece6e380d871b4694" +
+            "0c49dcc163362d8e1f5c72533a7e469f3024082747989bd849d28d98d51112d04e616e13e88742608",
+            "0x35e5c3d9a36dd07c30433dc6e1ba323cc4ec760e9485d60da81b6dea2806a3c704f8c760286e4b9f8fd65cfe8442957206d3f" +
+            "2ac4b2e8d268a38acff33edb0e2d37f5075b8e25dbcf8b36087713e04f287c9d2d13b4337178f0eba9296db6702edaa4715ccaa" +
+            "8d8bbffd018b8dd6e27da1cef01a9afb4133b120aef45864537577043da5cc3034806e0b8e3060cc9f689b5fd022a57cd3d1499" +
+            "7f3886c281cf8792249d6bd19b5c05ff9716265868fb26dc0b76b34e9ec19a3c44b3beced3e0e7387",
         ];
 
+        const num = new BigNumber("1651112515773858856752057606089809662584496568468631658147138072570796411852");
+        const secretNum = new BigNumber("1");
+
         const verificationVectors = [
-            "0x1ab16ad362c3c108b92ea5594ec9c3825882cb0fa65f482d861f7356e35e60e620ef95a0900e0c4a1bf9f4f8ab04b34dc1b85" +
-            "d103e04978ad398fe29c51342561ef2ae24f185cd9d8c454dddbce8acaa886ff910d9cd9d15a04db1de2697f0d91a1006da8738" +
-            "29d5869f479018912eae62f20bb203094742611f697e4033719e",
-            "0x21c95684a7f1812ddcf0bb24a0fed4e1c869a17ad3a36c9c4902bfabf9f8cf0d114e3afbcad3f72876bc77676220100e50aa1" +
-            "0c0417c5e6feb22b53c2d8efa982c94910af1da7578f3972870ee815fd26a25539ed914f79b269bc0b232269e9019e923e3c5af" +
-            "c04318dc224f42623c6a1461d22f69d0d7eac4adfcc78fec22a8",
+            "0x0f342e2330656b9da48f80a12b51117a66964cf93f97a7a5a255cc869c1bcae72d81ac62766d122e78200b3d70f7864cc364f" +
+            "2ddde72206c86d3c08d6e1caad027d2272e01b8a714e85d7a7f1a41143437af60524700126afccbd430502e76872a1c589d40c3" +
+            "c0bb05412eecc20bb8227b9a1f3c1ed4af67c5321a0a0e0f0115",
+            "0x19545ba4b4af8d8275ab2b7b94678c9f02f9fdbdca5d36a8becf5b64712df7c00b9db5166a6a5c7ff4395ff4350cd02aa1b80" +
+            "c3ca6bb719c48a0624a9b9f8587175a1017b3cd7b4bfa4ae3b5e1537a3a5fac9ce6414a762e45419ca2110961f41dc8a2970910" +
+            "23090e14646c8181fe175dd842ad808eecc58b36ef93f3652eb4",
         ];
 
         const badVerificationVectors = [
-            "0x1ab16ad362c3c108b92ea5594ec9c3825882cb0fa65f482d861f7356e35e60e620ef95a0900e0c4a1bf9f4f8ab04b34dc1b85" +
-            "d103e04978ad398fe29c51342561ef2ae24f185cd9d8c454dddbce8acaa886ff910d9cd9d15a04db1de2697f0d91a1006da8738" +
-            "29d5869f479018912eae62f20bb203094742611f697e4033719f",
-            "0x21c95684a7f1812ddcf0bb24a0fed4e1c869a17ad3a36c9c4902bfabf9f8cf0d114e3afbcad3f72876bc77676220100e50aa1" +
-            "0c0417c5e6feb22b53c2d8efa982c94910af1da7578f3972870ee815fd26a25539ed914f79b269bc0b232269e9019e923e3c5af" +
-            "c04318dc224f42623c6a1461d22f69d0d7eac4adfcc78fec22a9",
+            "0x0f342e2330656b9da48f80a12b51117a66964cf93f97a7a5a255cc869c1bcae72d81ac62766d122e78200b3d70f7864cc364f" +
+            "2ddde72206c86d3c08d6e1caad027d2272e01b8a714e85d7a7f1a41143437af60524700126afccbd430502e76872a1c589d40c3" +
+            "c0bb05412eecc20bb8227b9a1f3c1ed4af67c5321a0a0e0f0116",
+            "0x19545ba4b4af8d8275ab2b7b94678c9f02f9fdbdca5d36a8becf5b64712df7c00b9db5166a6a5c7ff4395ff4350cd02aa1b80" +
+            "c3ca6bb719c48a0624a9b9f8587175a1017b3cd7b4bfa4ae3b5e1537a3a5fac9ce6414a762e45419ca2110961f41dc8a2970910" +
+            "23090e14646c8181fe175dd842ad808eecc58b36ef93f3652eb5",
         ];
 
         const multipliedShares = [
-            "0x2c7d2dfd6fd5f49f2519a205f5bfdf0feadbe2d54f287557261246f1defd019d221c1a3e1abb24209ea59f084d3ecb938fdcd" +
-            "e3676fef6fd98999333c9d1377f2d5da875556d3ad1fec368454c551b618374456ce38e4dcd575d8ea7c22dd58a2efe61196e82" +
-            "b5508f63bfff1af15432df001dc7b11a8f97e009890b335c47c2",
-            "0x0c87bdb03d79f0af66c50a9c5bfc05205da4fe195bb1b1a38062184e238e836d25bee3b295cabe49cb1b9a06d517e8e320dd2" +
-            "4fbcfdbcbddccb2670e1f3368bc14b2d842b38921d9c11dcb815856370fff67509079a78be9b20b0d631e4d79010d7c48834da5" +
-            "b3a7f3ab852ef012b01d0a1fe7829b643de1076ab07eed44f6f6",
+            "0x2ee1611bcf2158246b5b5e15a1c5e73d3dea8c7a5f8034998cf61a4380e015fe21794c2ba85c57b2dc311efc55f9260dff52b" +
+            "0d2fab7ecd86ba64bf85d2b51952b8645fd69f7f2b1efc39c5fcd5fcb41fac3339928a773e174e535d678c316f922ac69d55a65" +
+            "f1045f568f17e541136a2e20e6f21c3bad36ca976a9bc7f65c39",
+            "0x07bb4f0a9afaf0f1fb539e8ec531a4fb858cf614a9ee0f59e19c0739ae9b23d107413e4157f2e05ac2f5b6b364a28ca032a6f" +
+            "7c3ee0af05c834773723d2edce02415ebe8534e6d83449bf39f6dac939b0f619e2a1a4f7d1f887196292328b1402339caa6c106" +
+            "730d0f2fb76cf6b1e9295d80b0454cf73448dd13cedfb6a7e5e2",
         ];
 
         const badMultipliedShares = [
-            "0x2c7d2dfd6fd5f49f2519a205f5bfdf0feadbe2d54f287557261246f1defd019d221c1a3e1abb24209ea59f084d3ecb938fdcd" +
-            "e3676fef6fd98999333c9d1377f2d5da875556d3ad1fec368454c551b618374456ce38e4dcd575d8ea7c22dd58a2efe61196e82" +
-            "b5508f63bfff1af15432df001dc7b11a8f97e009890b335c47c3",
-            "0x0c87bdb03d79f0af66c50a9c5bfc05205da4fe195bb1b1a38062184e238e836d25bee3b295cabe49cb1b9a06d517e8e320dd2" +
-            "4fbcfdbcbddccb2670e1f3368bc14b2d842b38921d9c11dcb815856370fff67509079a78be9b20b0d631e4d79010d7c48834da5" +
-            "b3a7f3ab852ef012b01d0a1fe7829b643de1076ab07eed44f6f7",
+            "0x2ee1611bcf2158246b5b5e15a1c5e73d3dea8c7a5f8034998cf61a4380e015fe21794c2ba85c57b2dc311efc55f9260dff52b" +
+            "0d2fab7ecd86ba64bf85d2b51952b8645fd69f7f2b1efc39c5fcd5fcb41fac3339928a773e174e535d678c316f922ac69d55a65" +
+            "f1045f568f17e541136a2e20e6f21c3bad36ca976a9bc7f65c3a",
+            "0x07bb4f0a9afaf0f1fb539e8ec531a4fb858cf614a9ee0f59e19c0739ae9b23d107413e4157f2e05ac2f5b6b364a28ca032a6f" +
+            "7c3ee0af05c834773723d2edce02415ebe8534e6d83449bf39f6dac939b0f619e2a1a4f7d1f887196292328b1402339caa6c106" +
+            "730d0f2fb76cf6b1e9295d80b0454cf73448dd13cedfb6a7e5e3",
         ];
 
         beforeEach(async () => {
@@ -296,6 +300,15 @@ contract("SkaleDKG", ([validator1, validator2]) => {
 
             describe("when correct broadcasts sent", async () => {
                 beforeEach(async () => {
+                    const res = await skaleDKG.bytesToPublicKey("0x" + validatorsPublicKey[1]);
+                    const resX = new BigNumber(res[0]);
+                    const resY = new BigNumber(res[1]);
+                    const derivedKey = await ecdh.deriveKey(secretNum.toFixed(), resX.toFixed(), resY.toFixed());
+                    const number1 = new BigNumber("1651112515773858856752057606089809662584496568468631658147138072570796411852");
+                    // const key = sha256.update((new BigNumber(derivedKey[0])).toString());
+                    // console.log(key);
+                    // const encrypted = await decryption.encrypt(number1.toFixed(), key);
+                    //const inputParams = encryptedSecretKeyContributions[0].slice(0, )
                     await skaleDKG.broadcast(
                         web3.utils.soliditySha3("d2"),
                         0,
@@ -365,15 +378,22 @@ contract("SkaleDKG", ([validator1, validator2]) => {
                     });
 
                     it("should send correct response", async () => {
-                        const result = await skaleDKG.response(
+                        const result = await skaleDKG.getCommonPublicKey(
                             web3.utils.soliditySha3("d2"),
-                            0,
                             secretNumberFirst.toFixed(),
-                            multipliedShares[0],
-                            {from: validatorsAccount[0]},
                         );
-                        assert.equal(result.logs[0].event, "BadGuy");
-                        // need to debug it!!!
+                        console.log(result);
+                        const result1 = await skaleDKG.hashed("0x3233");
+                        console.log(result1);
+                        // const result = await skaleDKG.response(
+                        //     web3.utils.soliditySha3("d2"),
+                        //     0,
+                        //     secretNumberFirst.toFixed(),
+                        //     multipliedShares[0],
+                        //     {from: validatorsAccount[0]},
+                        // );
+                        // assert.equal(result.logs[0].event, "BadGuy");
+                        // // need to debug it!!!
                         // assert.equal(result.logs[0].args.nodeIndex.toString(), "1");
                     });
                 });

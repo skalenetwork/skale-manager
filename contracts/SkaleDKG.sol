@@ -144,15 +144,11 @@ contract SkaleDKG is Permissions {
         bytes32 vector1;
         bytes32 vector2;
         bytes32 vector3;
-        // bytes32 vector4;
-        // bytes32 vector5;
         assembly {
             vector := mload(add(verificationVector, 32))
             vector1 := mload(add(verificationVector, 64))
             vector2 := mload(add(verificationVector, 96))
             vector3 := mload(add(verificationVector, 128))
-            // vector4 := mload(add(verificationVector, 160))
-            // vector5 := mload(add(verificationVector, 192))
         }
         adding(
             groupIndex,
@@ -160,8 +156,6 @@ contract SkaleDKG is Permissions {
             uint(vector1),
             uint(vector2),
             uint(vector3)
-            // uint(vector4),
-            // uint(vector5)
         );
         emit BroadcastAndKeyShare(
             groupIndex,
@@ -218,9 +212,10 @@ contract SkaleDKG is Permissions {
         uint secret = decryptMessage(groupIndex, secretNumber);
 
         // DKG verification(secret key contribution, verification vector)
-        bytes memory verVec = data[groupIndex][uint8(channels[groupIndex].nodeToComplaint)].verificationVector;
+        uint indexOfNode = findNode(groupIndex, fromNodeIndex);
+        bytes memory verVec = data[groupIndex][indexOfNode].verificationVector;
         bool verificationResult = verify(
-            uint8(fromNodeIndex),
+            indexOfNode,
             secret,
             multipliedShare,
             verVec
@@ -273,16 +268,17 @@ contract SkaleDKG is Permissions {
         bytes memory verificationVector
     )
         public
-        view
         returns (bool)
     {
-        Fp2 memory valX;
-        Fp2 memory valY;
-        for (uint i = 0; i < verificationVector.length / 192; i++) {
-            (valX, valY) = addG2WithLoop(
-                index,
-                verificationVector,
-                i,
+        Fp2 memory valX = Fp2({x: 0, y: 0});
+        Fp2 memory valY = Fp2({x: 1, y: 0});
+        Fp2 memory tmpX = Fp2({x: 0, y: 0});
+        Fp2 memory tmpY = Fp2({x: 1, y: 0});
+        for (uint i = 0; i < verificationVector.length / 128; i++) {
+            (tmpX, tmpY) = loop(index, verificationVector, i);
+            addG2(
+                tmpX,
+                tmpY,
                 valX,
                 valY
             );
@@ -290,7 +286,7 @@ contract SkaleDKG is Permissions {
         return checkDKGVerification(valX, valY, multipliedShare) && checkCorrectMultipliedShare(multipliedShare, secret);
     }
 
-    function getCommonPublicKey(bytes32 groupIndex, uint256 secretNumber) internal view returns (bytes32 key) {
+    function getCommonPublicKey(bytes32 groupIndex, uint256 secretNumber) public view returns (bytes32 key) {
         address nodesDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
         address ecdhAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("ECDH")));
         bytes memory publicKey = INodesData(nodesDataAddress).getNodePublicKey(channels[groupIndex].fromNodeToComplaint);
@@ -301,7 +297,11 @@ contract SkaleDKG is Permissions {
 
         (pkX, pkY) = IECDH(ecdhAddress).deriveKey(secretNumber, pkX, pkY);
 
-        key = sha256(abi.encodePacked(bytes32(pkX)));
+        key = sha256(abi.encodePacked(pkX));
+    }
+
+    function hashed(bytes memory x) public pure returns (bytes32) {
+        return sha256(abi.encodePacked(x));
     }
 
     function decryptMessage(bytes32 groupIndex, uint secretNumber) internal view returns (uint) {
@@ -312,7 +312,8 @@ contract SkaleDKG is Permissions {
         // Decrypt secret key contribution
         bytes32 ciphertext;
         uint index = findNode(groupIndex, channels[groupIndex].fromNodeToComplaint);
-        bytes memory sc = data[groupIndex][uint8(channels[groupIndex].nodeToComplaint)].secretKeyContribution;
+        uint indexOfNode = findNode(groupIndex, channels[groupIndex].nodeToComplaint);
+        bytes memory sc = data[groupIndex][indexOfNode].secretKeyContribution;
         assembly {
             ciphertext := mload(add(sc, add(32, mul(index, 97))))
         }
@@ -327,8 +328,6 @@ contract SkaleDKG is Permissions {
         uint y1,
         uint x2,
         uint y2
-        // uint x3,
-        // uint y3
     )
         internal
     {
@@ -338,14 +337,11 @@ contract SkaleDKG is Permissions {
             channels[groupIndex].publicKeyy.x == 0 &&
             channels[groupIndex].publicKeyy.y == 0
         ) {
-            // (channels[groupIndex].publicKeyx, channels[groupIndex].publicKeyy) = toAffineCoordinatesG2(
-            //     Fp2({ x: x1, y: y1 }), Fp2({ x: x2, y: y2 }), Fp2({ x: x3, y: y3 }));
             channels[groupIndex].publicKeyx = Fp2({ x: x1, y: y1 });
             channels[groupIndex].publicKeyy = Fp2({ x: x2, y: y2 });
         } else {
-            Fp2 memory a = Fp2({ x: x2, y: y1 });
+            Fp2 memory a = Fp2({ x: x1, y: y1 });
             Fp2 memory b = Fp2({ x: x2, y: y2 });
-            // (a, b) = toAffineCoordinatesG2(Fp2({ x: x2, y: y1 }), Fp2({ x: x2, y: y2 }), Fp2({ x: x3, y: y3 }));
             (channels[groupIndex].publicKeyx, channels[groupIndex].publicKeyy) = addG2(
                 a,
                 b,
@@ -375,10 +371,7 @@ contract SkaleDKG is Permissions {
 
     function isBroadcasted(bytes32 groupIndex, uint nodeIndex) internal view returns (bool) {
         uint index = findNode(groupIndex, nodeIndex);
-        if (channels[groupIndex].broadcasted[index]) {
-            return true;
-        }
-        return false;
+        return channels[groupIndex].broadcasted[index];
     }
 
     function findNode(bytes32 groupIndex, uint nodeIndex) internal view returns (uint) {
@@ -462,10 +455,33 @@ contract SkaleDKG is Permissions {
 
     // End of Fp2 operations
 
+    function isG1(uint x, uint y) internal view returns (bool) {
+        uint pp = p;
+        return mulmod(y, y, pp) == addmod(mulmod(mulmod(x, x, pp), x, pp), 3, pp);
+    }
+
+    function isG2(Fp2 memory x, Fp2 memory y) internal view returns (bool) {
+        Fp2 memory squaredY = squaredFp2(y);
+        Fp2 memory funcX = addFp2(mulFp2(squaredFp2(x), x), scalarMulFp2(3, inverseFp2(Fp2({x: 1, y: 9}))));
+        return squaredY.x == funcX.x && squaredY.y == funcX.y;
+    }
+
+    function isG2Zero(Fp2 memory x, Fp2 memory y) internal pure returns (bool) {
+        return x.x == 0 && x.y == 0 && y.x == 1 && y.y == 0;
+    }
+
     function doubleG2(Fp2 memory x1, Fp2 memory y1) internal view returns (Fp2 memory x3, Fp2 memory y3) {
-        Fp2 memory s = mulFp2(scalarMulFp2(3, squaredFp2(x1)), inverseFp2(scalarMulFp2(2, y1)));
-        x3 = minusFp2(squaredFp2(s), scalarMulFp2(2, x1));
-        y3 = addFp2(y1, mulFp2(s, minusFp2(x3, x1)));
+        if (isG2Zero(x1, y1)) {
+            x3 = x1;
+            y3 = y1;
+        } else {
+            Fp2 memory s = mulFp2(scalarMulFp2(3, squaredFp2(x1)), inverseFp2(scalarMulFp2(2, y1)));
+            x3 = minusFp2(squaredFp2(s), scalarMulFp2(2, x1));
+            y3 = addFp2(y1, mulFp2(s, minusFp2(x3, x1)));
+            uint pp = p;
+            y3.x = pp - (y3.x % pp);
+            y3.y = pp - (y3.y % pp);
+        }
     }
 
     function u1(Fp2 memory x1) internal view returns (Fp2 memory) {
@@ -488,43 +504,14 @@ contract SkaleDKG is Permissions {
         Fp2 memory u1Value,
         Fp2 memory u2Value,
         Fp2 memory s1Value,
-        Fp2 memory s2Value) internal pure returns (bool)
+        Fp2 memory s2Value
+    )
+        internal
+        pure
+        returns (bool)
     {
         return (u1Value.x == u2Value.x && u1Value.y == u2Value.y && s1Value.x == s2Value.x && s1Value.y == s2Value.y);
     }
-
-    // function zForAddingG2(Fp2 memory u2Value, Fp2 memory u1Value) internal view returns (Fp2 memory) {
-    //     Fp2 memory z = Fp2({ x: 1, y: 0 });
-    //     Fp2 memory zz = squaredFp2(z);
-    //     return mulFp2(minusFp2(squaredFp2(addFp2(z, z)), addFp2(zz, zz)), minusFp2(u2Value, u1Value));
-    // }
-
-    // function yForAddingG2(
-    //     Fp2 memory s2Value,
-    //     Fp2 memory s1Value,
-    //     Fp2 memory u2Value,
-    //     Fp2 memory u1Value,
-    //     Fp2 memory x) internal view returns (Fp2 memory)
-    // {
-    //     Fp2 memory r = addFp2(minusFp2(s2Value, s1Value), minusFp2(s2Value, s1Value));
-    //     Fp2 memory theI = squaredFp2(addFp2(minusFp2(u2Value, u1Value), minusFp2(u2Value, u1Value)));
-    //     Fp2 memory v = mulFp2(u1Value, theI);
-    //     Fp2 memory j = mulFp2(minusFp2(u2Value, u1Value), theI);
-    //     return minusFp2(mulFp2(r, minusFp2(v, x)), addFp2(mulFp2(s1Value, j), mulFp2(s1Value, j)));
-    // }
-
-    // function xForAddingG2(
-    //     Fp2 memory s2Value,
-    //     Fp2 memory s1Value,
-    //     Fp2 memory u2Value,
-    //     Fp2 memory u1Value) internal view returns (Fp2 memory)
-    // {
-    //     Fp2 memory r = addFp2(minusFp2(s2Value, s1Value), minusFp2(s2Value, s1Value));
-    //     Fp2 memory theI = squaredFp2(addFp2(minusFp2(u2Value, u1Value), minusFp2(u2Value, u1Value)));
-    //     Fp2 memory v = mulFp2(u1Value, theI);
-    //     Fp2 memory j = mulFp2(minusFp2(u2Value, u1Value), theI);
-    //     return minusFp2(squaredFp2(r), addFp2(j, addFp2(v, v)));
-    // }
 
     function addG2(
         Fp2 memory x1,
@@ -539,6 +526,12 @@ contract SkaleDKG is Permissions {
             Fp2 memory y3
         )
     {
+        if (isG2Zero(x1, y1)) {
+            return (x2, y2);
+        }
+        if (isG2Zero(x2, y2)) {
+            return (x1, y1);
+        }
         if (
             isEqual(
                 u1(x1),
@@ -553,47 +546,10 @@ contract SkaleDKG is Permissions {
         Fp2 memory s = mulFp2(minusFp2(y2, y1), inverseFp2(minusFp2(x2, x1)));
         x3 = minusFp2(squaredFp2(s), addFp2(x1, x2));
         y3 = addFp2(y1, mulFp2(s, minusFp2(x3, x1)));
+        uint pp = p;
+        y3.x = pp - (y3.x % pp);
+        y3.y = pp - (x3.x % pp);
     }
-
-    // function addG2ToVerify(
-    //     Fp2 memory x1,
-    //     Fp2 memory y1,
-    //     Fp2 memory x2,
-    //     Fp2 memory y2
-    // )
-    //     internal
-    //     view
-    //     returns (Fp2 memory x, Fp2 memory y)
-    // {
-    //     if (
-    //         isEqual(
-    //             u1(x1),
-    //             u2(x2),
-    //             s1(y1),
-    //             s2(y2)
-    //         )
-    //     ) {
-    //         return doubleG2(x1, y1, Fp2({ x: 1, y: 0 }));
-    //     }
-
-    //     Fp2 memory xForAdding = xForAddingG2(
-    //         s2(y2),
-    //         s1(y1),
-    //         u2(x2),
-    //         u1(x1)
-    //     );
-    //     return toAffineCoordinatesG2(
-    //         xForAdding,
-    //         yForAddingG2(
-    //             s2(y2),
-    //             s1(y1),
-    //             u2(x2),
-    //             u1(x1),
-    //             xForAdding
-    //         ),
-    //         zForAddingG2(u2(x2), u1(x1))
-    //     );
-    // }
 
     function binstep(uint _a, uint _step) internal view returns (uint x) {
         uint pp = p;
@@ -632,38 +588,17 @@ contract SkaleDKG is Permissions {
                     tmpY
                 );
             }
-            if (step > 1) {
-                (tmpX, tmpY) = addG2(
-                    tmpX,
-                    tmpY,
-                    tmpX,
-                    tmpY);
-            }
+            (tmpX, tmpY) = doubleG2(tmpX, tmpY);
             step >>= 1;
         }
     }
-
-    // function toAffineCoordinatesG2(Fp2 memory x1, Fp2 memory y1, Fp2 memory z1) internal view returns (Fp2 memory x, Fp2 memory y) {
-    //     if (z1.x == 0 && z1.y == 0) {
-    //         x.x = 0;
-    //         x.y = 0;
-    //         y.x = 1;
-    //         y.y = 0;
-    //     } else {
-    //         Fp2 memory zInv = inverseFp2(z1);
-    //         Fp2 memory z2Inv = squaredFp2(zInv);
-    //         Fp2 memory z3Inv = mulFp2(z2Inv, zInv);
-    //         x = mulFp2(x1, z2Inv);
-    //         y = mulFp2(y1, z3Inv);
-    //     }
-    // }
 
     function bigModExp(uint index, uint loopIndex) internal view returns (uint) {
         uint[6] memory inputToBigModExp;
         inputToBigModExp[0] = 8;
         inputToBigModExp[1] = 8;
         inputToBigModExp[2] = 32;
-        inputToBigModExp[3] = index + 1;
+        inputToBigModExp[3] = index;
         inputToBigModExp[4] = loopIndex;
         inputToBigModExp[5] = p;
         uint[1] memory out;
@@ -695,9 +630,9 @@ contract SkaleDKG is Permissions {
         }
         vector[3] = vector1;
         return mulG2(
-            binstep(index + 1, loopIndex),
-            Fp2(uint(vector[0]), uint(vector[1])),
-            Fp2(uint(vector[2]), uint(vector[3]))
+            bigModExp(index + 1, loopIndex),
+            Fp2({x: uint(vector[0]), y: uint(vector[1])}),
+            Fp2({x: uint(vector[2]), y: uint(vector[3])})
         );
     }
 
@@ -708,7 +643,7 @@ contract SkaleDKG is Permissions {
         return valX.x == tmpX.x && valX.y == tmpX.y && valY.x == tmpY.x && valY.y == tmpY.y;
     }
 
-    function checkCorrectMultipliedShare(bytes memory multipliedShare, uint secret) internal view returns (bool) {
+    function checkCorrectMultipliedShare(bytes memory multipliedShare, uint secret) internal returns (bool) {
         Fp2 memory tmpX;
         Fp2 memory tmpY;
         (tmpX, tmpY) = bytesToG2(multipliedShare);
@@ -726,6 +661,13 @@ contract SkaleDKG is Permissions {
         if (!(mulShare[0] == 0 && mulShare[1] == 0)) {
             mulShare[1] = pp - (mulShare[1] % pp);
         }
+
+        require(isG1(g1a, g1b), "G1.one not in G1");
+        require(isG1(mulShare[0], mulShare[1]), "mulShare not in G1");
+
+        require(isG2(Fp2({x: g2a, y: g2b}), Fp2({x: g2c, y: g2d})), "G2.one not in G2");
+        require(isG2(tmpX, tmpY), "tmp not in G1");
+
         uint[12] memory inputToPairing;
         inputToPairing[0] = g1a;
         inputToPairing[1] = g2b;
@@ -747,40 +689,7 @@ contract SkaleDKG is Permissions {
         return out[0] != 0;
     }
 
-    function addG2WithLoop(
-        uint index,
-        bytes memory verificationVector,
-        uint i,
-        Fp2 memory valX,
-        Fp2 memory valY
-    )
-        internal
-        view
-        returns (Fp2 memory, Fp2 memory)
-    {
-        Fp2 memory x1;
-        Fp2 memory y1;
-        (x1, y1) = loop(index, verificationVector, i);
-        if (
-            isEqual(
-                valX,
-                Fp2({ x: 0, y: 0 }),
-                valY,
-                Fp2({ x: 0, y: 0 })
-            )
-        ) {
-            return (x1, y1);
-        } else {
-            return addG2(
-                x1,
-                y1,
-                valX,
-                valY
-            );
-        }
-    }
-
-    function bytesToPublicKey(bytes memory someBytes) internal pure returns(uint x, uint y) {
+    function bytesToPublicKey(bytes memory someBytes) public pure returns(uint x, uint y) {
         bytes32 pkX;
         bytes32 pkY;
         assembly {
