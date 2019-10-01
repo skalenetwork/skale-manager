@@ -595,6 +595,23 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
     });
 
     describe("when node removed from schain", async () => {
+        it("should decrease number of nodes in schain", async () => {
+            const bobSchain = "0x38e47a7b719dce63662aeaf43440326f551b8a7ee198cee35cb5d517f2d296a2";
+            const numberOfNodes = 5;
+            for (let i = 0; i < numberOfNodes; i++) {
+                await nodesData.addNode(holder, "John", "0x7f000001", "0x7f000002", 8545, "0x1122334455");
+                await nodesData.addFractionalNode(i);
+            }
+            await schainsFunctionalityInternal.createGroupForSchain("bob", bobSchain, numberOfNodes, 8);
+            const numberOfNodesBeforeRemovingNodeFromSchain = await schainsData.getNumberOfNodesInGroup(bobSchain);
+            await schainsFunctionalityInternal.removeNodeFromSchain(3, bobSchain);
+            const gottenNodesInGroup = await schainsData.getNodesInGroup(bobSchain);
+            const nodesAfterRemoving = [];
+            for (const node of gottenNodesInGroup) {
+                nodesAfterRemoving.push(node.toNumber());
+            }
+            nodesAfterRemoving.indexOf(3).should.be.equal(-1);
+        });
 
         it("should rotate 3 nodes on schain", async () => {
             const bobSchain = "0x38e47a7b719dce63662aeaf43440326f551b8a7ee198cee35cb5d517f2d296a2";
@@ -620,7 +637,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                 await nodesFunctionality.removeNodeByRoot(j);
                 const schainIds = await schainsData.getSchainIdsForNode(j);
                 for (const schainId of schainIds) {
-                    await schainsFunctionality.rotateNode(schainId);
+                    await schainsFunctionality.rotateNode(j, schainId);
                 }
             }
             let sum = 0;
@@ -654,19 +671,19 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                 await nodesFunctionality.removeNodeByRoot(j);
                 const schainIds = await schainsData.getSchainIdsForNode(j);
                 for (const schainId of schainIds) {
-                    await schainsFunctionality.rotateNode(schainId);
+                    await schainsFunctionality.rotateNode(j, schainId);
                 }
             }
 
             let bobSum = 0;
             nodes = await schainsData.getNodesInGroup(bobSchain);
-            for (let j = nodes.length - 1; j >= 5; j--) {
+            for (let j = 5; j < nodes.length; j++) {
                 bobSum += nodes[j].toNumber();
             }
 
             let vitalikSum = 0;
             nodes = await schainsData.getNodesInGroup(vitalikSchain);
-            for (let j = nodes.length - 1; j >= 5; j--) {
+            for (let j = 5; j < nodes.length; j++) {
                 vitalikSum += nodes[j].toNumber();
             }
 
@@ -698,7 +715,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
             await nodesFunctionality.removeNodeByRoot(0);
             const schainIds = await schainsData.getSchainIdsForNode(0);
             for (const schainId of schainIds) {
-                await schainsFunctionality.rotateNode(schainId);
+                await schainsFunctionality.rotateNode(0, schainId);
             }
 
             const rotatedNode = (await nodesData.getActiveFullNodes())[0].toNumber();

@@ -116,13 +116,32 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
         return length;
     }
 
+    function removeNodeFromSchain(uint nodeIndex, bytes32 groupHash) public {
+        address schainsDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("SchainsData")));
+        uint groupIndex = findSchainAtSchainsForNode(nodeIndex, groupHash);
+        uint indexOfNode = findNode(groupHash, nodeIndex);
+        IGroupsData(schainsDataAddress).removeNodeFromGroup(indexOfNode, groupHash);
+        ISchainsData(schainsDataAddress).removeSchainForNode(nodeIndex, groupIndex);
+    }
+
+    function replaceNode(
+        uint nodeIndex,
+        bytes32 groupHash
+    )
+        public
+        allow(executorName) returns (bytes32 schainId, uint newNodeIndex)
+    {
+        removeNodeFromSchain(nodeIndex, groupHash);
+        (schainId, newNodeIndex) = selectNodeToGroup(groupHash);
+    }
+
     /**
      * @dev selectNodeToGroup - pseudo-randomly select new Node for Schain
      * @param schainId - hash of name of Schain
      * @return schainId - hash of name of Schain which needed for emitting event
      * @return nodeIndex - in
      */
-    function selectNodeToGroup(bytes32 schainId) public returns (bytes32, uint) {
+    function selectNodeToGroup(bytes32 schainId) internal returns (bytes32, uint) {
         address schainsDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("SchainsData")));
         uint partOfNode = ISchainsData(schainsDataAddress).getSchainsPartOfNode(schainId);
         uint hash = uint(keccak256(abi.encodePacked(uint(blockhash(block.number - 1)), schainId)));

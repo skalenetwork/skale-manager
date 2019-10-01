@@ -200,7 +200,7 @@ contract ValidatorsFunctionality is GroupsFunctionality, IValidatorsFunctionalit
         emit ValidatorRotated(schainIdsEvent, newNodeIndexEvent);
     }
 
-    function selectNodeToGroup(bytes32 groupIndex) public returns (bytes32, uint) {
+    function selectNodeToGroup(bytes32 groupIndex) internal returns (bytes32, uint) {
         address dataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked(dataName)));
         require(IGroupsData(dataAddress).isGroupActive(groupIndex), "Group is not active");
         bytes32 groupData = IGroupsData(dataAddress).getGroupData(groupIndex);
