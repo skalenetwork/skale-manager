@@ -19,7 +19,7 @@ let ValidatorsData = artifacts.require('./ValidatorsData.sol');
 let ValidatorsFunctionality = artifacts.require('./ValidatorsFunctionality.sol');
 let SchainsData = artifacts.require('./SchainsData.sol');
 let SchainsFunctionality = artifacts.require('./SchainsFunctionality.sol');
-let SchainsFunctionality1 = artifacts.require('./SchainsFunctionality1.sol');
+let SchainsFunctionalityInternal = artifacts.require('./SchainsFunctionalityInternal.sol');
 //let ContractManager = artifacts.require('./ContractManager.sol');
 let ConstantsHolder = artifacts.require('./ConstantsHolder.sol');
 
@@ -52,7 +52,7 @@ async function deploy(deployer, network) {
         // await contractManagerInstance.methods.setContractsAddress("ValidatorsFunctionality", ValidatorsFunctionality.address).then(function(res) {
         //     console.log("Contract Validators Functionality with address", ValidatorsFunctionality.address, "registred in Contract Manager");
         // });
-        await deployer.deploy(SchainsData, "SchainsFunctionality1", ContractManager.address, {gas: 8000000});
+        await deployer.deploy(SchainsData, "SchainsFunctionalityInternal", ContractManager.address, {gas: 8000000});
         // await contractManagerInstance.methods.setContractsAddress("SchainsData", SchainsData.address).then(function(res) {
         //     console.log("Contract Schains Data with address", SchainsData.address, "registred in Contract Manager");
         // });
@@ -60,9 +60,9 @@ async function deploy(deployer, network) {
         // await contractManagerInstance.methods.setContractsAddress("SchainsFunctionality", SchainsFunctionality.address).then(function(res) {
         //     console.log("Contract Schains Functionality with address", SchainsFunctionality.address, "registred in Contract Manager");
         // });
-        await deployer.deploy(SchainsFunctionality1, "SchainsFunctionality", "SchainsData", ContractManager.address, {gas: 7000000});
-        // await contractManagerInstance.methods.setContractsAddress("SchainsFunctionality1", SchainsFunctionality1.address).then(function(res) {
-        //     console.log("Contract Schains Functionality1 with address", SchainsFunctionality1.address, "registred in Contract Manager");
+        await deployer.deploy(SchainsFunctionalityInternal, "SchainsFunctionality", "SchainsData", ContractManager.address, {gas: 7000000});
+        // await contractManagerInstance.methods.setContractsAddress("SchainsFunctionalityInternal", SchainsFunctionalityInternal.address).then(function(res) {
+        //     console.log("Contract Schains Functionality1 with address", SchainsFunctionalityInternal.address, "registred in Contract Manager");
         // });
         await deployer.deploy(ManagerData, "SkaleManager", ContractManager.address, {gas: 8000000});
         // await contractManagerInstance.methods.setContractsAddress("ManagerData", ManagerData.address).then(function(res) {
