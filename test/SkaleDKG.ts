@@ -14,10 +14,10 @@ import { ConstantsHolderContract,
          NodesFunctionalityInstance,
          SchainsDataContract,
          SchainsDataInstance,
-         SchainsFunctionality1Contract,
-         SchainsFunctionality1Instance,
          SchainsFunctionalityContract,
          SchainsFunctionalityInstance,
+         SchainsFunctionalityInternalContract,
+         SchainsFunctionalityInternalInstance,
          SkaleDKGContract,
          SkaleDKGInstance} from "../types/truffle-contracts";
 
@@ -32,7 +32,7 @@ const NodesData: NodesDataContract = artifacts.require("./NodesData");
 const NodesFunctionality: NodesFunctionalityContract = artifacts.require("./NodesFunctionality");
 const SchainsData: SchainsDataContract = artifacts.require("./SchainsData");
 const SchainsFunctionality: SchainsFunctionalityContract = artifacts.require("./SchainsFunctionality");
-const SchainsFunctionality1: SchainsFunctionality1Contract = artifacts.require("./SchainsFunctionality1");
+const SchainsFunctionalityInternal: SchainsFunctionalityInternalContract = artifacts.require("./SchainsFunctionalityInternal");
 const SkaleDKG: SkaleDKGContract = artifacts.require("./SkaleDKG");
 const Decryption: DecryptionContract = artifacts.require("./Decryption");
 const ECDH: ECDHContract = artifacts.require("./ECDH");
@@ -76,7 +76,7 @@ contract("SkaleDKG", ([validator1, validator2]) => {
     let nodesFunctionality: NodesFunctionalityInstance;
     let schainsData: SchainsDataInstance;
     let schainsFunctionality: SchainsFunctionalityInstance;
-    let schainsFunctionality1: SchainsFunctionality1Instance;
+    let schainsFunctionalityInternal: SchainsFunctionalityInternalInstance;
     let skaleDKG: SkaleDKGInstance;
     let decryption: DecryptionInstance;
     let ecdh: ECDHInstance;
@@ -113,12 +113,12 @@ contract("SkaleDKG", ([validator1, validator2]) => {
             {from: validator1, gas: 7900000 * gasMultiplier});
         await contractManager.setContractsAddress("SchainsFunctionality", schainsFunctionality.address);
 
-        schainsFunctionality1 = await SchainsFunctionality1.new(
+        schainsFunctionalityInternal = await SchainsFunctionalityInternal.new(
             "SchainsFunctionality",
             "SchainsData",
             contractManager.address,
             {from: validator1, gas: 7000000 * gasMultiplier});
-        await contractManager.setContractsAddress("SchainsFunctionality1", schainsFunctionality1.address);
+        await contractManager.setContractsAddress("SchainsFunctionalityInternal", schainsFunctionalityInternal.address);
 
         skaleDKG = await SkaleDKG.new(contractManager.address, {from: validator1, gas: 8000000 * gasMultiplier});
         await contractManager.setContractsAddress("SkaleDKG", skaleDKG.address);
