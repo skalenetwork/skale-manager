@@ -12,10 +12,10 @@ import { ConstantsHolderContract,
          NodesFunctionalityInstance,
          SchainsDataContract,
          SchainsDataInstance,
-         SchainsFunctionality1Contract,
-         SchainsFunctionality1Instance,
          SchainsFunctionalityContract,
          SchainsFunctionalityInstance,
+         SchainsFunctionalityInternalContract,
+         SchainsFunctionalityInternalInstance,
          SkaleDKGContract,
          SkaleDKGInstance,
          SkaleManagerContract,
@@ -40,7 +40,7 @@ const ValidatorsData: ValidatorsDataContract = artifacts.require("./ValidatorsDa
 const ValidatorsFunctionality: ValidatorsFunctionalityContract = artifacts.require("./ValidatorsFunctionality");
 const SchainsData: SchainsDataContract = artifacts.require("./SchainsData");
 const SchainsFunctionality: SchainsFunctionalityContract = artifacts.require("./SchainsFunctionality");
-const SchainsFunctionality1: SchainsFunctionality1Contract = artifacts.require("./SchainsFunctionality1");
+const SchainsFunctionalityInternal: SchainsFunctionalityInternalContract = artifacts.require("./SchainsFunctionalityInternal");
 const ManagerData: ManagerDataContract = artifacts.require("./ManagerData");
 const SkaleDKG: SkaleDKGContract = artifacts.require("./SkaleDKG");
 
@@ -58,7 +58,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
     let validatorsFunctionality: ValidatorsFunctionalityInstance;
     let schainsData: SchainsDataInstance;
     let schainsFunctionality: SchainsFunctionalityInstance;
-    let schainsFunctionality1: SchainsFunctionality1Instance;
+    let schainsFunctionalityInternal: SchainsFunctionalityInternalInstance;
     let managerData: ManagerDataInstance;
     let skaleDKG: SkaleDKGInstance;
 
@@ -93,7 +93,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
         await contractManager.setContractsAddress("ValidatorsFunctionality", validatorsFunctionality.address);
 
         schainsData = await SchainsData.new(
-            "SchainsFunctionality1",
+            "SchainsFunctionalityInternal",
             contractManager.address,
             {from: owner, gas: 8000000 * gasMultiplier});
         await contractManager.setContractsAddress("SchainsData", schainsData.address);
@@ -105,12 +105,12 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
             {from: owner, gas: 7900000 * gasMultiplier});
         await contractManager.setContractsAddress("SchainsFunctionality", schainsFunctionality.address);
 
-        schainsFunctionality1 = await SchainsFunctionality1.new(
+        schainsFunctionalityInternal = await SchainsFunctionalityInternal.new(
             "SchainsFunctionality",
             "SchainsData",
             contractManager.address,
             {from: owner, gas: 7000000 * gasMultiplier});
-        await contractManager.setContractsAddress("SchainsFunctionality1", schainsFunctionality1.address);
+        await contractManager.setContractsAddress("SchainsFunctionalityInternal", schainsFunctionalityInternal.address);
 
         managerData = await ManagerData.new("SkaleManager", contractManager.address, {gas: 8000000 * gasMultiplier});
         await contractManager.setContractsAddress("ManagerData", managerData.address);
@@ -682,9 +682,11 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
 
                 skaleToken.transfer(developer, "0x3635C9ADC5DEA000000", {from: owner});
 
+                const price = web3.utils.toBN(await schainsFunctionality.getSchainPrice(1, 5));
+
                 await skaleToken.transferWithData(
                     skaleManager.address,
-                    "0x1cc2d6d04a2ca",
+                    price.toString(),
                     "0x10" + // create schain
                     "0000000000000000000000000000000000000000000000000000000000000005" + // lifetime
                     "01" + // type of schain

@@ -109,7 +109,8 @@ contract("SchainsData", ([owner, holder]) => {
 
             it("should delete schain", async () => {
                 await schainsData.removeSchain(schainNameHash, holder);
-                await schainsData.schains(schainNameHash).should.be.empty;
+                const res = new Schain(await schainsData.schains(schainNameHash));
+                res.name.should.be.equal("");
             });
 
             it("should remove schain from node", async () => {

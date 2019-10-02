@@ -125,6 +125,20 @@ contract GroupsData is IGroupsData, Permissions {
     }
 
     /**
+     * @dev removeNodeFromGroup - removes Node out of the Group
+     * function could be run only by executor
+     * @param indexOfNode - Nodes identifier
+     * @param groupIndex - Groups identifier
+     */
+    function removeNodeFromGroup(uint indexOfNode, bytes32 groupIndex) public allow(executorName) {
+        delete groups[groupIndex].nodesInGroup[indexOfNode];
+        // (groups[groupIndex].nodesInGroup[groups[groupIndex].nodesInGroup.length-1],
+        // groups[groupIndex].nodesInGroup[indexOfNode]) = (groups[groupIndex].nodesInGroup[indexOfNode],
+        // groups[groupIndex].nodesInGroup[groups[groupIndex].nodesInGroup.length-1]);
+        // groups[groupIndex].nodesInGroup.length--;
+    }
+
+    /**
      * @dev removeAllNodesInGroup - removes all added Nodes out the Group
      * function could be run only by executor
      * @param groupIndex - Groups identifier

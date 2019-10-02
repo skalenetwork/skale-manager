@@ -188,7 +188,7 @@ contract SchainsData is ISchainsData, GroupsData {
      * @param nodeIndex - index of Node
      * @param schainIndex - index of Schain in schainsForNodes array by this Node
      */
-    function removeSchainForNode(uint nodeIndex, uint schainIndex) public allow("SchainsFunctionality") {
+    function removeSchainForNode(uint nodeIndex, uint schainIndex) public allow("SchainsFunctionalityInternal") {
         uint length = schainsForNodes[nodeIndex].length;
         if (schainIndex == length - 1) {
             delete schainsForNodes[nodeIndex][length - 1];

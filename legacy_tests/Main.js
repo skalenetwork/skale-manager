@@ -36,11 +36,87 @@ async function validationForAllNodes() {
     }
     //setTimeout(function(){validationForAllNodes()}, 10000);
 }
-let n = 0;
+
+let allActiveNodes = new Array();
+async function showActiveNodes(secondRandomNumber, rotated) {
+    let schainsForNode = await init.SchainsData.methods.getSchainIdsForNode(secondRandomNumber).call();
+    let activeFullNodes = await init.NodesData.methods.getActiveFullNodes().call();
+    for (let i = 0; i < schainsForNode.length; i++) {
+        let activeNodesInGroup = new Array();
+        let nodesInGroup = await init.SchainsData.methods.getNodesInGroup(schainsForNode[i]).call();
+        for (let j = 0; j < nodesInGroup.length; j++) {
+            if (activeFullNodes.includes(nodesInGroup[j]) || nodesInGroup[j] == secondRandomNumber && !rotated) {
+                process.stdout.write(nodesInGroup[j] + ' ');
+                activeNodesInGroup.push(nodesInGroup[j]);
+            }
+        }
+        allActiveNodes.push(activeNodesInGroup);
+        console.log();
+    }
+}
+
+async function rotationNode(secondRandomNumber) {
+    console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
+    await showActiveNodes(secondRandomNumber, false);
+    console.log('<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<')
+    let schainIds = await init.SchainsData.methods.getSchainIdsForNode(secondRandomNumber).call();
+    let nodeRotated = new Array();
+    for (let i = 0; i < schainIds.length; i++) {
+        // await schainsFunctionality.replaceNode(schainIds[i]);
+        let tx_hash = await init.SchainsFunctionality.methods.replaceNode(schainIds[i]).send({from: init.mainAccount, gas: 8000000});
+        let blockNumber = tx_hash.blockNumber;
+        await init.SchainsFunctionality.getPastEvents('NodeRotated', {fromBlock: blockNumber, toBlock: blockNumber}).then(
+            function(events) {
+                for (let i = 0; i < events.length; i++) {
+                    // console.log(events[i].returnValues);
+                    nodeRotated.push(events[i].returnValues.newNode);
+                }
+            });
+    }
+    await showActiveNodes(secondRandomNumber, true);
+
+    for (let i = 0; i < allActiveNodes.length/2; i++) {
+        if (!~allActiveNodes[i].indexOf(secondRandomNumber.toString())) {
+            throw "Old node is not in schain";
+        }
+        if (allActiveNodes[i].length != 16) {
+            throw "Schain length is not 16";
+        }
+    }
+    let j = 0;
+
+    for (let i = allActiveNodes.length/2; i < allActiveNodes.length; i++) {
+        if (~allActiveNodes[i].indexOf(secondRandomNumber.toString())) {
+            throw "Old node is still in schain";
+        }
+        if (allActiveNodes[i][allActiveNodes[i].length - 1] != nodeRotated[j++]) {
+            throw "Node wasn't replaced by new one";
+        }
+        if (allActiveNodes[i].length != 16) {
+            throw "Schain length is not 16";
+        }
+    }
+    allActiveNodes = new Array();
+    console.log('-----------------------------------------------------------------------------------------------')
+}
+
+async function rotationValidator(nodeIndex) {
+    let res = await validators.getValidatedArray(nodeIndex);
+    console.log("Node", nodeIndex, "will validate:");
+    console.log(res.ids);
+    for (index of res.ids) {
+        let groupIndex = init.web3.utils.soliditySha3(index);
+        let {logs} = await init.ValidatorsFunctionality.rotateNode(groupIndex).send({from: init.mainAccount, gas: 8000000});
+        console.log(logs);
+    }  
+}
+
+let n = 1;
 async function main(numberOfIterations) {
 
     //let nodeIndex = await nodes.createNode();
-    let randomNumber = Math.floor(Math.random() * 10) + 20;
+    // let randomNumber = Math.floor(Math.random() * 10) + 80;
+    let randomNumber = 100;
     //console.log("Part of creating Nodes!");
     for (let i = 0; i < randomNumber; i++) {
         nodeIndex = await nodes.createNode();
@@ -52,36 +128,40 @@ async function main(numberOfIterations) {
     for (let i = 0; i < 5; i++) {
         schainName = await schains.createSchain(3, 94867200);
         console.log("Schain name:", schainName);
-        await schains.getSchainNodes(schainName);
-        //await schains.getSchainsForNode(0);
-
-        //console.log("Part of Node", await schains.getSchainPartOfNode(schainName));
-        //await schains.deleteSchain(schainName);
+        await schains.getSchainNodes(schainName); 
     }
 
-    randomNumber = Math.floor(Math.random() * 5);
-
-    for (let i = 0; i < randomNumber; i++) {
+    // randomNumber = Math.floor(Math.random() * 20);
+    let iter = 0;
+    while (iter < 40) {
         let secondRandomNumber = Math.floor(Math.random() * numberOfNodes);
-        if (await init.NodesData.methods.isNodeActive(secondRandomNumber)) {
+        let schainIds = await init.SchainsData.methods.getSchainIdsForNode(secondRandomNumber).call();
+        if (await init.NodesData.methods.isNodeActive(secondRandomNumber).call() && schainIds.length) {
             console.log("Delete node", secondRandomNumber);
+            await rotationValidator(secondRandomNumber);
             await nodes.deleteNode(secondRandomNumber);
+            await rotationNode(secondRandomNumber);
+        } else {
+            continue;
         }
+        iter++;
     }
-
-    await validationForAllNodes();/*
+    numberOfIterations++;
+    await main(numberOfIterations);
+    /*
+    await validationForAllNodes();
     console.log("Date of next reward", await nodes.getNodeNextRewardDate(6), "and now", Math.floor(Date.now() / 1000));
     await validators.getBounty(6);
     console.log("Validators for Node", 6);
     await validators.getValidatorsForNode(6);*/
 
-    console.log(numberOfIterations);
-    if (numberOfIterations < 20) {
-        numberOfIterations++;
-        await setTimeout(function(){main(numberOfIterations)}, 10000);
-    } else {
-        process.exit();
-    }
+    // console.log(numberOfIterations);
+    // if (numberOfIterations < 20) {
+    //     numberOfIterations++;
+    //     await setTimeout(function(){main(numberOfIterations)}, 10000);
+    // } else {
+    //     process.exit();
+    // }
 }
 
 //console.log("Start!!");

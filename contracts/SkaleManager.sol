@@ -56,7 +56,6 @@ contract SkaleManager is Permissions {
             IValidatorsFunctionality(validatorsFunctionalityAddress).addValidator(nodeIndex);
         } else if (operationType == TransactionOperation.CreateSchain) {
             address schainsFunctionalityAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("SchainsFunctionality")));
-            //require(1 != 1, "Break");
             ISchainsFunctionality(schainsFunctionalityAddress).addSchain(from, value, data);
         }
     }

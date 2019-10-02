@@ -179,10 +179,28 @@ contract GroupsFunctionality is Permissions {
     }
 
     /**
+     * @dev findNode - find local index of Node in Schain
+     * @param groupIndex - Groups identifier
+     * @param nodeIndex - global index of Node
+     * @return local index of Node in Schain
+     */
+    function findNode(bytes32 groupIndex, uint nodeIndex) internal view returns (uint index) {
+        address groupsDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked(dataName)));
+        uint[] memory nodesInGroup = IGroupsData(groupsDataAddress).getNodesInGroup(groupIndex);
+        for (index = 0; index < nodesInGroup.length; index++) {
+            if (nodesInGroup[index] == nodeIndex) {
+                return index;
+            }
+        }
+        return index;
+    }
+
+    /**
      * @dev generateGroup - abstract method which would be implemented in inherited contracts
      * function generates group of Nodes
      * @param groupIndex - Groups identifier
      * return array of indexes of Nodes in Group
      */
     function generateGroup(bytes32 groupIndex) internal returns (uint[] memory);
+    function selectNodeToGroup(bytes32 groupIndex) internal returns (bytes32, uint);
 }

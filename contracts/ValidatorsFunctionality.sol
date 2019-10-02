@@ -87,6 +87,12 @@ contract ValidatorsFunctionality is GroupsFunctionality, IValidatorsFunctionalit
         uint gasSpend
     );
 
+
+    event ValidatorRotated(
+        bytes32 groupIndex,
+        uint newNode
+    );
+
     constructor(
         string memory newExecutorName,
         string memory newDataName,
@@ -112,7 +118,6 @@ contract ValidatorsFunctionality is GroupsFunctionality, IValidatorsFunctionalit
         uint possibleNumberOfNodes = constantsHolder.NUMBER_OF_VALIDATORS();
         addGroup(groupIndex, possibleNumberOfNodes, bytes32(nodeIndex));
         uint numberOfNodesInGroup = setValidators(groupIndex, nodeIndex);
-        //require(1 != 1, "Break");
         emit ValidatorCreated(
             nodeIndex,
             groupIndex,
@@ -188,12 +193,33 @@ contract ValidatorsFunctionality is GroupsFunctionality, IValidatorsFunctionalit
         }
     }
 
-    function median(uint32[] memory values) internal pure returns (uint32) {
-        if (values.length < 1) {
-            revert("Can't calculate median of empty array");
+    function rotateNode(bytes32 schainId) public {
+        bytes32 schainIdsEvent;
+        uint newNodeIndexEvent;
+        (schainIdsEvent, newNodeIndexEvent) = selectNodeToGroup(schainId);
+        emit ValidatorRotated(schainIdsEvent, newNodeIndexEvent);
+    }
+
+    function selectNodeToGroup(bytes32 groupIndex) internal returns (bytes32, uint) {
+        address dataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked(dataName)));
+        require(IGroupsData(dataAddress).isGroupActive(groupIndex), "Group is not active");
+        bytes32 groupData = IGroupsData(dataAddress).getGroupData(groupIndex);
+        uint hash = uint(keccak256(abi.encodePacked(uint(blockhash(block.number - 1)), groupIndex)));
+        uint numberOfNodes;
+        (numberOfNodes, ) = setNumberOfNodesInGroup(groupIndex, groupData);
+        uint indexOfNode;
+        uint iterations = 0;
+        while (iterations < 200) {
+            indexOfNode = hash % numberOfNodes;
+            if (comparator(groupIndex, indexOfNode)) {
+                IGroupsData(dataAddress).setException(groupIndex, indexOfNode);
+                IGroupsData(dataAddress).setNodeInGroup(groupIndex, indexOfNode);
+                return (groupIndex, indexOfNode);
+            }
+            hash = uint(keccak256(abi.encodePacked(hash, indexOfNode)));
+            iterations++;
         }
-        quickSort(values, 0, values.length - 1);
-        return values[values.length / 2];
+        require(iterations < 200, "Old Validator is not replaced? Try it later");
     }
 
     function generateGroup(bytes32 groupIndex) internal allow(executorName) returns (uint[] memory) {
@@ -230,6 +256,14 @@ contract ValidatorsFunctionality is GroupsFunctionality, IValidatorsFunctionalit
             uint32(block.timestamp),
             gasleft());
         return nodesInGroup;
+    }
+
+    function median(uint32[] memory values) internal pure returns (uint32) {
+        if (values.length < 1) {
+            revert("Can't calculate median of empty array");
+        }
+        quickSort(values, 0, values.length - 1);
+        return values[values.length / 2];
     }
 
     function swap(uint[] memory array, uint index1, uint index2) internal pure {
@@ -326,16 +360,12 @@ contract ValidatorsFunctionality is GroupsFunctionality, IValidatorsFunctionalit
     function getDataToBytes(uint nodeIndex) internal view returns (bytes32 bytesParameters) {
         address constantsAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("Constants")));
         address nodesDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
-        //require(1 != 1, "Break");
         bytes memory tempData = new bytes(32);
         bytes14 bytesOfIndex = bytes14(uint112(nodeIndex));
-        ////require(1 != 1, "Break");
         bytes14 bytesOfTime = bytes14(
             uint112(INodesData(nodesDataAddress).getNodeNextRewardDate(nodeIndex) - IConstants(constantsAddress).deltaPeriod())
         );
-        //require(1 != 1, "Break");
         bytes4 ip = INodesData(nodesDataAddress).getNodeIP(nodeIndex);
-        //require(1 != 1, "Break");
         assembly {
             mstore(add(tempData, 32), bytesOfIndex)
             mstore(add(tempData, 46), bytesOfTime)

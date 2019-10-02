@@ -57,5 +57,5 @@ module.exports = {
                 evmVersion: "petersburg"
             }
         }
-      }
+    }
 };

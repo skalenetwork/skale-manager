@@ -14,10 +14,10 @@ const PrivateKeyProvider = require("truffle-hdwallet-provider");
 const web3 = new Web3(new Web3.providers.HttpProvider("http://134.209.56.46:1919"));
 //////
 // const mainAccount = web3['_provider']['address'];
-const mainAccount = "0x61e488d02fe65eb05483c9825a6c8b24e1601d77";
+const mainAccount = "0x48096852284C6Acfb0400d80b35D80EEFB58c6af";
 
-const jsonData = require(`../data/data.json`);
-const updatedData = require("../data/updated.json");
+const jsonData = require(`../data/${networkName}.json`);
+// const updatedData = require("../data/updated.json");
 
 const SkaleManager = new web3.eth.Contract(jsonData['skale_manager_abi'], jsonData['skale_manager_address']);
 module.exports.SkaleManager = SkaleManager;//new web3.eth.Contract(jsonData['skale_manager_abi'], jsonData['skale_manager_address']);

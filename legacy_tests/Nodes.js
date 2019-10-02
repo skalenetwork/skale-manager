@@ -25,7 +25,7 @@ async function createNode() {
     console.log(k);
     while (k) {
         name = await generateRandomName();
-        k = await init.NodesData.methods.nodesCheckName(init.web3.utils.soliditySha3(name)).call();
+        k = await init.NodesData.methods.nodesNameCheck(init.web3.utils.soliditySha3(name)).call();
     }
     let data = await GenerateBytesData.generateBytesForNode(8545, await generateRandomIP(), init.mainAccount, name);
     console.log(data);
@@ -52,12 +52,19 @@ async function createNode() {
                     }
                 }
             });
+            
+    await init.ValidatorsFunctionality.getPastEvents('Iterations', {fromBlock: blockNumber, toBlock: blockNumber}).then(
+        function(events) {
+            for (let i = 0; i < events.length; i++) {
+                console.log(events[i].returnValues);
+            }
+        });
     console.log("Node", nodeIndex, "created with", res.gasUsed, "gas consumption");
     return nodeIndex;
 }
 
 async function deleteNode(nodeIndex) {
-    let res = await init.SkaleManager.methods.deleteNode(nodeIndex).send({from: init.mainAccount, gas: 4712388});
+    let res = await init.SkaleManager.methods.deleteNode(nodeIndex).send({from: init.mainAccount, gas: 8000000});
     console.log("Node:", nodeIndex, "deleted with", res.gasUsed, "gas consumption");
 }
 
