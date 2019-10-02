@@ -120,6 +120,27 @@ contract SkaleManager is Permissions {
             latency);
     }
 
+    function sendVerdicts(
+        uint fromValidatorIndex,
+        uint[] memory toNodeIndexes,
+        uint32[] memory downtimes,
+        uint32[] memory latencies) public
+    {
+        address nodesDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
+        require(INodesData(nodesDataAddress).isNodeExist(msg.sender, fromValidatorIndex), "Node does not exist for Message sender");
+        require(toNodeIndexes.length == downtimes.length, "Incorrect data");
+        require(latencies.length == downtimes.length, "Incorrect data");
+        address validatorsFunctionalityAddress = ContractManager(contractsAddress)
+            .contracts(keccak256(abi.encodePacked("ValidatorsFunctionality")));
+        for (uint i = 0; i < toNodeIndexes.length; i++) {
+            IValidatorsFunctionality(validatorsFunctionalityAddress).sendVerdict(
+                fromValidatorIndex,
+                toNodeIndexes[i],
+                downtimes[i],
+                latencies[i]);
+        }
+    }
+
     function getBounty(uint nodeIndex) public {
         address nodesDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
         require(INodesData(nodesDataAddress).isNodeExist(msg.sender, nodeIndex), "Node does not exist for Message sender");
@@ -178,8 +199,11 @@ contract SkaleManager is Permissions {
         } else {
             diffTime = 0;
         }
+        diffTime /= IConstants(constantsAddress).checkTime();
         int bountyForMiner = int(commonBounty);
-        if (downtime > 200) {
+        uint normalDowntime = ((IConstants(constantsAddress).rewardPeriod() - IConstants(constantsAddress).deltaPeriod()) /
+            IConstants(constantsAddress).checkTime()) / 30;
+        if (downtime + diffTime > normalDowntime) {
             bountyForMiner -= int(((downtime + diffTime) * commonBounty) / (IConstants(constantsAddress).SECONDS_TO_DAY() / 4));
         }
 

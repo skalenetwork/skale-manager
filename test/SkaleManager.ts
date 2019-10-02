@@ -399,6 +399,32 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
                     .should.be.eventually.deep.equal(web3.utils.toBN(50));
             });
 
+            it("should send validator verdicts", async () => {
+                skipTime(web3, 3400);
+                await skaleManager.sendVerdicts(0, [1, 2], [0, 0], [50, 50], {from: validator});
+
+                await validatorsData.verdicts(web3.utils.soliditySha3(1), 0, 0)
+                    .should.be.eventually.deep.equal(web3.utils.toBN(0));
+                await validatorsData.verdicts(web3.utils.soliditySha3(1), 0, 1)
+                    .should.be.eventually.deep.equal(web3.utils.toBN(50));
+                await validatorsData.verdicts(web3.utils.soliditySha3(2), 0, 0)
+                    .should.be.eventually.deep.equal(web3.utils.toBN(0));
+                await validatorsData.verdicts(web3.utils.soliditySha3(2), 0, 1)
+                    .should.be.eventually.deep.equal(web3.utils.toBN(50));
+            });
+
+            it("should not send incorrect validator verdicts", async () => {
+                skipTime(web3, 3400);
+                await skaleManager.sendVerdicts(0, [1], [0, 0], [50, 50], {from: validator})
+                    .should.be.eventually.rejectedWith("Incorrect data");
+            });
+
+            it("should not send incorrect validator verdicts part 2", async () => {
+                skipTime(web3, 3400);
+                await skaleManager.sendVerdicts(0, [1, 2], [0, 0], [50], {from: validator})
+                    .should.be.eventually.rejectedWith("Incorrect data");
+            });
+
             describe("when validator verdict is received", async () => {
                 beforeEach(async () => {
                     skipTime(web3, 3400);
@@ -414,6 +440,54 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
                     skipTime(web3, 200);
                     const balanceBefore = web3.utils.toBN(await skaleToken.balanceOf(validator));
                     const bounty = web3.utils.toBN("893061271147690900777");
+
+                    await skaleManager.getBounty(1, {from: validator});
+
+                    const balanceAfter = web3.utils.toBN(await skaleToken.balanceOf(validator));
+
+                    expect(balanceAfter.sub(balanceBefore).eq(bounty)).to.be.true;
+                });
+            });
+
+            describe("when validator verdict with downtime is received", async () => {
+                beforeEach(async () => {
+                    skipTime(web3, 3400);
+                    await skaleManager.sendVerdict(0, 1, 1, 50, {from: validator});
+                });
+
+                it("should fail to get bounty if sender is not owner of the node", async () => {
+                    await skaleManager.getBounty(1, {from: hacker})
+                        .should.be.eventually.rejectedWith("Node does not exist for Message sender");
+                });
+
+                it("should get bounty", async () => {
+                    skipTime(web3, 200);
+                    const balanceBefore = web3.utils.toBN(await skaleToken.balanceOf(validator));
+                    const bounty = web3.utils.toBN("893019925718471100273");
+
+                    await skaleManager.getBounty(1, {from: validator});
+
+                    const balanceAfter = web3.utils.toBN(await skaleToken.balanceOf(validator));
+
+                    expect(balanceAfter.sub(balanceBefore).eq(bounty)).to.be.true;
+                });
+
+                it("should get bounty after break", async () => {
+                    skipTime(web3, 600);
+                    const balanceBefore = web3.utils.toBN(await skaleToken.balanceOf(validator));
+                    const bounty = web3.utils.toBN("893019925718471100273");
+
+                    await skaleManager.getBounty(1, {from: validator});
+
+                    const balanceAfter = web3.utils.toBN(await skaleToken.balanceOf(validator));
+
+                    expect(balanceAfter.sub(balanceBefore).eq(bounty)).to.be.true;
+                });
+
+                it("should get bounty after big break", async () => {
+                    skipTime(web3, 800);
+                    const balanceBefore = web3.utils.toBN(await skaleToken.balanceOf(validator));
+                    const bounty = web3.utils.toBN("892937234860031499264");
 
                     await skaleManager.getBounty(1, {from: validator});
 

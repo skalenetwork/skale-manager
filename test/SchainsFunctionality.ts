@@ -120,6 +120,82 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                 .should.be.eventually.rejectedWith("Not enough nodes to create Schain");
         });
 
+        describe("when 2 nodes are registered (Ivan test)", async () => {
+            it("should create 2 nodes, and play with schains", async () => {
+                const nodesCount = 2;
+                for (const index of Array.from(Array(nodesCount).keys())) {
+                    const hexIndex = ("0" + index.toString(16)).slice(-2);
+                    await nodesFunctionality.createNode(validator, "100000000000000000000",
+                        "0x00" +
+                        "2161" +
+                        "0000" +
+                        "7f0000" + hexIndex +
+                        "7f0000" + hexIndex +
+                        "1122334455667788990011223344556677889900112233445566778899001122" +
+                        "1122334455667788990011223344556677889900112233445566778899001122" +
+                        "d2" + hexIndex);
+                }
+
+                const deposit = await schainsFunctionality.getSchainPrice(4, 5);
+
+                await schainsFunctionality.addSchain(
+                    owner,
+                    deposit,
+                    "0x10" +
+                    "0000000000000000000000000000000000000000000000000000000000000005" +
+                    "04" +
+                    "0000" +
+                    "6432",
+                    {from: owner});
+
+                await schainsFunctionality.addSchain(
+                    owner,
+                    deposit,
+                    "0x10" +
+                    "0000000000000000000000000000000000000000000000000000000000000005" +
+                    "04" +
+                    "0000" +
+                    "6433",
+                    {from: owner});
+
+                await schainsFunctionality.deleteSchain(
+                    owner,
+                    "d2",
+                    {from: owner});
+
+                await schainsFunctionality.deleteSchain(
+                    owner,
+                    "d3",
+                    {from: owner});
+
+                await nodesFunctionality.removeNodeByRoot(0, {from: owner});
+                await nodesFunctionality.removeNodeByRoot(1, {from: owner});
+
+                for (const index of Array.from(Array(nodesCount).keys())) {
+                    const hexIndex = ("1" + index.toString(16)).slice(-2);
+                    await nodesFunctionality.createNode(validator, "100000000000000000000",
+                        "0x00" +
+                        "2161" +
+                        "0000" +
+                        "7f0000" + hexIndex +
+                        "7f0000" + hexIndex +
+                        "1122334455667788990011223344556677889900112233445566778899001122" +
+                        "1122334455667788990011223344556677889900112233445566778899001122" +
+                        "d2" + hexIndex);
+                }
+
+                await schainsFunctionality.addSchain(
+                    holder,
+                    deposit,
+                    "0x10" +
+                    "0000000000000000000000000000000000000000000000000000000000000005" +
+                    "04" +
+                    "0000" +
+                    "6434",
+                    {from: owner});
+            });
+        });
+
         describe("when 4 nodes are registered", async () => {
             beforeEach(async () => {
                 const nodesCount = 4;
@@ -267,6 +343,66 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                 }
 
                 zeroNodeInArray.should.be.equal(false);
+            });
+        });
+
+        describe("when 20 nodes are registered", async () => {
+            beforeEach(async () => {
+                const nodesCount = 20;
+                for (const index of Array.from(Array(nodesCount).keys())) {
+                    const hexIndex = ("0" + index.toString(16)).slice(-2);
+                    await nodesFunctionality.createNode(validator, "100000000000000000000",
+                        "0x00" +
+                        "2161" +
+                        "0000" +
+                        "7f0000" + hexIndex +
+                        "7f0000" + hexIndex +
+                        "1122334455667788990011223344556677889900112233445566778899001122" +
+                        "1122334455667788990011223344556677889900112233445566778899001122" +
+                        "d2" + hexIndex);
+                }
+            });
+
+            it("should create Medium schain", async () => {
+                const deposit = await schainsFunctionality.getSchainPrice(3, 5);
+
+                await schainsFunctionality.addSchain(
+                    holder,
+                    deposit,
+                    "0x10" +
+                    "0000000000000000000000000000000000000000000000000000000000000005" +
+                    "03" +
+                    "0000" +
+                    "6432",
+                    {from: owner});
+
+                const schains = await schainsData.getSchains();
+                schains.length.should.be.equal(1);
+            });
+
+            it("should not create another Medium schain", async () => {
+                const deposit = await schainsFunctionality.getSchainPrice(3, 5);
+
+                await schainsFunctionality.addSchain(
+                    holder,
+                    deposit,
+                    "0x10" +
+                    "0000000000000000000000000000000000000000000000000000000000000005" +
+                    "03" +
+                    "0000" +
+                    "6432",
+                    {from: owner});
+
+                await schainsFunctionality.addSchain(
+                    holder,
+                    deposit,
+                    "0x10" +
+                    "0000000000000000000000000000000000000000000000000000000000000005" +
+                    "03" +
+                    "0000" +
+                    "6433",
+                    {from: owner},
+                ).should.be.eventually.rejectedWith("Not enough nodes to create Schain");
             });
         });
 
