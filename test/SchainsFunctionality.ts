@@ -79,14 +79,10 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
             "SchainsData",
             contractManager.address,
             {from: owner, gas: 7000000 * gasMultiplier});
-<<<<<<< HEAD
-        await contractManager.setContractsAddress("SchainsFunctionality1", schainsFunctionality1.address);
+        await contractManager.setContractsAddress("SchainsFunctionalityInternal", schainsFunctionalityInternal.address);
 
         skaleDKG = await SkaleDKG.new(contractManager.address, {from: owner, gas: 8000000 * gasMultiplier});
         await contractManager.setContractsAddress("SkaleDKG", skaleDKG.address);
-=======
-        await contractManager.setContractsAddress("SchainsFunctionalityInternal", schainsFunctionalityInternal.address);
->>>>>>> develop
     });
 
     describe("should add schain", async () => {
