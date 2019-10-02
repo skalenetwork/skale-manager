@@ -146,74 +146,74 @@ contract("SkaleDKG", ([validator1, validator2]) => {
             "0747e7224d2bf36e0ea3dd62c",
         ];
 
-        const secretNumberFirst = new BigNumber(
-            "53093763158439585430573669375257842641782493446827046677036188158171986127874",
-        );
+        const secretNumbers = [
+            "58625848706037406511582962295430965185674934704233043314647478422698817926283",
+            "111405529669975789441427095287571197384937932095062249739044064944770017976403",
+        ];
 
         const secretNumberSecond = new BigNumber(
-            "105593860362893162081062161526412274350999897683408181670994844501435786310559",
+            "111405529669975789441427095287571197384937932095062249739044064944770017976403",
         );
 
         const encryptedSecretKeyContributions = [
-            "0xf513fab429e187757f544b2b856e7a2bb334405f8065eb5c8889f35bc7c28a4104ae1ab3bea0d2804b71ae03a662c105c2e6b" +
-            "496e1ad704a2b0747d1183f390e7d954ef5d9dd04dded46a37a741e3e60d78c61adade19d420f9703ca1ad5160ce000cb4874c0" +
-            "61e774b3e11885d2f83e8806027707f89167994128f7b9eb49cbfb045698506e457085e2143b77e47ae7dcece6e380d871b4694" +
-            "0c49dcc163362d8e1f5c72533a7e469f3024082747989bd849d28d98d51112d04e616e13e88742607",
-            "0x35e5c3d9a36dd07c30433dc6e1ba323cc4ec760e9485d60da81b6dea2806a3c704f8c760286e4b9f8fd65cfe8442957206d3f" +
-            "2ac4b2e8d268a38acff33edb0e2d37f5075b8e25dbcf8b36087713e04f287c9d2d13b4337178f0eba9296db6702edaa4715ccaa" +
-            "8d8bbffd018b8dd6e27da1cef01a9afb4133b120aef45864537577043da5cc3034806e0b8e3060cc9f689b5fd022a57cd3d1499" +
-            "7f3886c281cf8792249d6bd19b5c05ff9716265868fb26dc0b76b34e9ec19a3c44b3beced3e0e7386",
+            "0x937c9c846a6fa7fd1984fe82e739ae37fcaa555c1dc0e8597c9f81b6a12f232f04fdf8101e91bd658fa1cea6fdd75adb85429" +
+            "51ce3d251cdaa78f43493dad730b59d32d2e872b36aa70cdce544b550ebe96994de860b6f6ebb7d0b4d4e6724b4bf7232f27fdf" +
+            "e521f3c7997dbb1c15452b7f196bd119d915ce76af3d1a008e181004086ff076abe442563ae9b8938d483ae581f4de2ee54298b" +
+            "3078289bbd85250c8df956450d32f671e4a8ec1e584119753ff171e80a61465246bfd291e8dac3d77",
+            "0xe371b8589b56d29e43ad703fa42666c02d0fb6144ec12962d2532560af3cc72e046b0a8bce07bd18f50e4c5b7ebe2f9e17a31" +
+            "7b91c64926bf2d46a8f1ff58acbeba17652e16f18345856a148a2730a83760a181eb129e0c6059091ab11aa3fc5b899b9787530" +
+            "3f76ad5dcf51d300d152958e063d4099e564bcc9e33bd6d351b1bf04e081fec066435a30e875ced147985c35ecba48407c550ba" +
+            "d42fc652366d9731c707f24d4865584868154798d727237aea2ad3c086c5f41b85d7eb697bb8fec5e",
         ];
 
         const badEncryptedSecretKeyContributions = [
-            "0xf513fab429e187757f544b2b856e7a2bb334405f8065eb5c8889f35bc7c28a4104ae1ab3bea0d2804b71ae03a662c105c2e6b" +
-            "496e1ad704a2b0747d1183f390e7d954ef5d9dd04dded46a37a741e3e60d78c61adade19d420f9703ca1ad5160ce000cb4874c0" +
-            "61e774b3e11885d2f83e8806027707f89167994128f7b9eb49cbfb045698506e457085e2143b77e47ae7dcece6e380d871b4694" +
-            "0c49dcc163362d8e1f5c72533a7e469f3024082747989bd849d28d98d51112d04e616e13e88742608",
-            "0x35e5c3d9a36dd07c30433dc6e1ba323cc4ec760e9485d60da81b6dea2806a3c704f8c760286e4b9f8fd65cfe8442957206d3f" +
-            "2ac4b2e8d268a38acff33edb0e2d37f5075b8e25dbcf8b36087713e04f287c9d2d13b4337178f0eba9296db6702edaa4715ccaa" +
-            "8d8bbffd018b8dd6e27da1cef01a9afb4133b120aef45864537577043da5cc3034806e0b8e3060cc9f689b5fd022a57cd3d1499" +
-            "7f3886c281cf8792249d6bd19b5c05ff9716265868fb26dc0b76b34e9ec19a3c44b3beced3e0e7387",
+            "0x937c9c846a6fa7fd1984fe82e739ae37fcaa555c1dc0e8597c9f81b6a12f232f04fdf8101e91bd658fa1cea6fdd75adb85429" +
+            "51ce3d251cdaa78f43493dad730b59d32d2e872b36aa70cdce544b550ebe96994de860b6f6ebb7d0b4d4e6724b4bf7232f27fdf" +
+            "e521f3c7997dbb1c15452b7f196bd119d915ce76af3d1a008e181004086ff076abe442563ae9b8938d483ae581f4de2ee54298b" +
+            "3078289bbd85250c8df956450d32f671e4a8ec1e584119753ff171e80a61465246bfd291e8dac3d78",
+            "0xe371b8589b56d29e43ad703fa42666c02d0fb6144ec12962d2532560af3cc72e046b0a8bce07bd18f50e4c5b7ebe2f9e17a31" +
+            "7b91c64926bf2d46a8f1ff58acbeba17652e16f18345856a148a2730a83760a181eb129e0c6059091ab11aa3fc5b899b9787530" +
+            "3f76ad5dcf51d300d152958e063d4099e564bcc9e33bd6d351b1bf04e081fec066435a30e875ced147985c35ecba48407c550ba" +
+            "d42fc652366d9731c707f24d4865584868154798d727237aea2ad3c086c5f41b85d7eb697bb8fec5f",
         ];
 
-        const num = new BigNumber("1651112515773858856752057606089809662584496568468631658147138072570796411852");
-        const secretNum = new BigNumber("1");
-
         const verificationVectors = [
-            "0x0f342e2330656b9da48f80a12b51117a66964cf93f97a7a5a255cc869c1bcae72d81ac62766d122e78200b3d70f7864cc364f" +
-            "2ddde72206c86d3c08d6e1caad027d2272e01b8a714e85d7a7f1a41143437af60524700126afccbd430502e76872a1c589d40c3" +
-            "c0bb05412eecc20bb8227b9a1f3c1ed4af67c5321a0a0e0f0115",
-            "0x19545ba4b4af8d8275ab2b7b94678c9f02f9fdbdca5d36a8becf5b64712df7c00b9db5166a6a5c7ff4395ff4350cd02aa1b80" +
-            "c3ca6bb719c48a0624a9b9f8587175a1017b3cd7b4bfa4ae3b5e1537a3a5fac9ce6414a762e45419ca2110961f41dc8a2970910" +
-            "23090e14646c8181fe175dd842ad808eecc58b36ef93f3652eb4",
+            "0x02c2b888a23187f22195eadadbc05847a00dc59c913d465dbc4dfac9cfab437d2695832627b9081e77da7a3fc4d574363bf05" +
+            "1700055822f3d394dc3d9ff741724727c45f9322be756fbec6514525cbbfa27ef1951d3fed10f483c23f921879d03a7a3e6f3b5" +
+            "39dad43c0eca46e3f889b2b2300815ffc4633e26e64406625a99",
+            "0x2b61d71274e46235006128f6383539fa58ccf40c832fb1e81f3554c20efecbe4019708db3cb154aed20b0dba21505fac4e065" +
+            "93f353a8339fddaa21d2a43a5d91fed922c1955704caa85cdbcc7f33d24046362c635163e0e08bda8446c46699424d9e95c8cfa" +
+            "056db786176b84f9f8657a9cc8044855d43f1f088a515ed02af7",
         ];
 
         const badVerificationVectors = [
-            "0x0f342e2330656b9da48f80a12b51117a66964cf93f97a7a5a255cc869c1bcae72d81ac62766d122e78200b3d70f7864cc364f" +
-            "2ddde72206c86d3c08d6e1caad027d2272e01b8a714e85d7a7f1a41143437af60524700126afccbd430502e76872a1c589d40c3" +
-            "c0bb05412eecc20bb8227b9a1f3c1ed4af67c5321a0a0e0f0116",
-            "0x19545ba4b4af8d8275ab2b7b94678c9f02f9fdbdca5d36a8becf5b64712df7c00b9db5166a6a5c7ff4395ff4350cd02aa1b80" +
-            "c3ca6bb719c48a0624a9b9f8587175a1017b3cd7b4bfa4ae3b5e1537a3a5fac9ce6414a762e45419ca2110961f41dc8a2970910" +
-            "23090e14646c8181fe175dd842ad808eecc58b36ef93f3652eb5",
+            "0x02c2b888a23187f22195eadadbc05847a00dc59c913d465dbc4dfac9cfab437d2695832627b9081e77da7a3fc4d574363bf05" +
+            "1700055822f3d394dc3d9ff741724727c45f9322be756fbec6514525cbbfa27ef1951d3fed10f483c23f921879d03a7a3e6f3b5" +
+            "39dad43c0eca46e3f889b2b2300815ffc4633e26e64406625a9a",
+            "0x2b61d71274e46235006128f6383539fa58ccf40c832fb1e81f3554c20efecbe4019708db3cb154aed20b0dba21505fac4e065" +
+            "93f353a8339fddaa21d2a43a5d91fed922c1955704caa85cdbcc7f33d24046362c635163e0e08bda8446c46699424d9e95c8cfa" +
+            "056db786176b84f9f8657a9cc8044855d43f1f088a515ed02af8",
         ];
 
         const multipliedShares = [
-            "0x2ee1611bcf2158246b5b5e15a1c5e73d3dea8c7a5f8034998cf61a4380e015fe21794c2ba85c57b2dc311efc55f9260dff52b" +
-            "0d2fab7ecd86ba64bf85d2b51952b8645fd69f7f2b1efc39c5fcd5fcb41fac3339928a773e174e535d678c316f922ac69d55a65" +
-            "f1045f568f17e541136a2e20e6f21c3bad36ca976a9bc7f65c39",
-            "0x07bb4f0a9afaf0f1fb539e8ec531a4fb858cf614a9ee0f59e19c0739ae9b23d107413e4157f2e05ac2f5b6b364a28ca032a6f" +
-            "7c3ee0af05c834773723d2edce02415ebe8534e6d83449bf39f6dac939b0f619e2a1a4f7d1f887196292328b1402339caa6c106" +
-            "730d0f2fb76cf6b1e9295d80b0454cf73448dd13cedfb6a7e5e2",
+            "0x02c2b888a23187f22195eadadbc05847a00dc59c913d465dbc4dfac9cfab437d2695832627b9081e77da7a3fc4d574363bf05" +
+            "1700055822f3d394dc3d9ff741724727c45f9322be756fbec6514525cbbfa27ef1951d3fed10f483c23f921879d03a7a3e6f3b5" +
+            "39dad43c0eca46e3f889b2b2300815ffc4633e26e64406625a99",
+            "0x2b61d71274e46235006128f6383539fa58ccf40c832fb1e81f3554c20efecbe4019708db3cb154aed20b0dba21505fac4e065" +
+            "93f353a8339fddaa21d2a43a5d91fed922c1955704caa85cdbcc7f33d24046362c635163e0e08bda8446c46699424d9e95c8cfa" +
+            "056db786176b84f9f8657a9cc8044855d43f1f088a515ed02af7",
         ];
 
         const badMultipliedShares = [
-            "0x2ee1611bcf2158246b5b5e15a1c5e73d3dea8c7a5f8034998cf61a4380e015fe21794c2ba85c57b2dc311efc55f9260dff52b" +
-            "0d2fab7ecd86ba64bf85d2b51952b8645fd69f7f2b1efc39c5fcd5fcb41fac3339928a773e174e535d678c316f922ac69d55a65" +
-            "f1045f568f17e541136a2e20e6f21c3bad36ca976a9bc7f65c3a",
-            "0x07bb4f0a9afaf0f1fb539e8ec531a4fb858cf614a9ee0f59e19c0739ae9b23d107413e4157f2e05ac2f5b6b364a28ca032a6f" +
-            "7c3ee0af05c834773723d2edce02415ebe8534e6d83449bf39f6dac939b0f619e2a1a4f7d1f887196292328b1402339caa6c106" +
-            "730d0f2fb76cf6b1e9295d80b0454cf73448dd13cedfb6a7e5e3",
+            "0x02c2b888a23187f22195eadadbc05847a00dc59c913d465dbc4dfac9cfab437d2695832627b9081e77da7a3fc4d574363bf05" +
+            "1700055822f3d394dc3d9ff741724727c45f9322be756fbec6514525cbbfa27ef1951d3fed10f483c23f921879d03a7a3e6f3b5" +
+            "39dad43c0eca46e3f889b2b2300815ffc4633e26e64406625a9b",
+            "0x2b61d71274e46235006128f6383539fa58ccf40c832fb1e81f3554c20efecbe4019708db3cb154aed20b0dba21505fac4e065" +
+            "93f353a8339fddaa21d2a43a5d91fed922c1955704caa85cdbcc7f33d24046362c635163e0e08bda8446c46699424d9e95c8cfa" +
+            "056db786176b84f9f8657a9cc8044855d43f1f088a515ed02af9",
         ];
+
+        const indexes = [0, 1];
 
         beforeEach(async () => {
             const nodesCount = 2;
@@ -260,14 +260,32 @@ contract("SkaleDKG", ([validator1, validator2]) => {
                     "0000" +
                     "6432",
                     {from: validator1});
+
+                let nodes = await schainsData.getNodesInGroup(web3.utils.soliditySha3("d2"));
+                while ((new BigNumber(nodes[0])).toFixed() === "1") {
+                    await schainsFunctionality.deleteSchainByRoot("d2", {from: validator1});
+                    await skaleDKG.deleteChannel(web3.utils.soliditySha3("d2"), {from: validator1});
+                    await schainsFunctionality.addSchain(
+                        validator1,
+                        deposit,
+                        "0x10" +
+                        "0000000000000000000000000000000000000000000000000000000000000005" +
+                        "04" +
+                        "0000" +
+                        "6432",
+                        {from: validator1});
+                    nodes = await schainsData.getNodesInGroup(web3.utils.soliditySha3("d2"));
+                }
+                // console.log(nodes);
+                // console.log(indexes);
             });
 
             it("should broadcast data from 1 node", async () => {
                 const result = await skaleDKG.broadcast(
                     web3.utils.soliditySha3("d2"),
                     0,
-                    verificationVectors[0],
-                    encryptedSecretKeyContributions[0],
+                    verificationVectors[indexes[0]],
+                    encryptedSecretKeyContributions[indexes[0]],
                     {from: validatorsAccount[0]},
                 );
                 assert.equal(result.logs[0].event, "BroadcastAndKeyShare");
@@ -279,8 +297,8 @@ contract("SkaleDKG", ([validator1, validator2]) => {
                 const result = await skaleDKG.broadcast(
                     web3.utils.soliditySha3("d2"),
                     1,
-                    verificationVectors[1],
-                    encryptedSecretKeyContributions[1],
+                    verificationVectors[indexes[1]],
+                    encryptedSecretKeyContributions[indexes[1]],
                     {from: validatorsAccount[1]},
                 );
                 assert.equal(result.logs[0].event, "BroadcastAndKeyShare");
@@ -292,36 +310,27 @@ contract("SkaleDKG", ([validator1, validator2]) => {
                 await skaleDKG.broadcast(
                     web3.utils.soliditySha3("d2"),
                     1,
-                    verificationVectors[1],
-                    encryptedSecretKeyContributions[1],
+                    verificationVectors[indexes[1]],
+                    encryptedSecretKeyContributions[indexes[1]],
                     {from: validatorsAccount[0]},
                 ).should.be.eventually.rejectedWith(" Node does not exist for message sender.");
             });
 
             describe("when correct broadcasts sent", async () => {
                 beforeEach(async () => {
-                    const res = await skaleDKG.bytesToPublicKey("0x" + validatorsPublicKey[1]);
-                    const resX = new BigNumber(res[0]);
-                    const resY = new BigNumber(res[1]);
-                    const derivedKey = await ecdh.deriveKey(secretNum.toFixed(), resX.toFixed(), resY.toFixed());
-                    const number1 = new BigNumber("1651112515773858856752057606089809662584496568468631658147138072570796411852");
-                    // const key = sha256.update((new BigNumber(derivedKey[0])).toString());
-                    // console.log(key);
-                    // const encrypted = await decryption.encrypt(number1.toFixed(), key);
-                    //const inputParams = encryptedSecretKeyContributions[0].slice(0, )
                     await skaleDKG.broadcast(
                         web3.utils.soliditySha3("d2"),
                         0,
-                        verificationVectors[0],
-                        encryptedSecretKeyContributions[0],
+                        verificationVectors[indexes[0]],
+                        encryptedSecretKeyContributions[indexes[0]],
                         {from: validatorsAccount[0]},
                     );
 
                     await skaleDKG.broadcast(
                         web3.utils.soliditySha3("d2"),
                         1,
-                        verificationVectors[1],
-                        encryptedSecretKeyContributions[1],
+                        verificationVectors[indexes[1]],
+                        encryptedSecretKeyContributions[indexes[1]],
                         {from: validatorsAccount[1]},
                     );
                 });
@@ -378,23 +387,16 @@ contract("SkaleDKG", ([validator1, validator2]) => {
                     });
 
                     it("should send correct response", async () => {
-                        const result = await skaleDKG.getCommonPublicKey(
+                        const result = await skaleDKG.response(
                             web3.utils.soliditySha3("d2"),
-                            secretNumberFirst.toFixed(),
+                            0,
+                            secretNumbers[indexes[0]],
+                            multipliedShares[indexes[0]],
+                            {from: validatorsAccount[0]},
                         );
-                        console.log(result);
-                        const result1 = await skaleDKG.hashed("0x3233");
-                        console.log(result1);
-                        // const result = await skaleDKG.response(
-                        //     web3.utils.soliditySha3("d2"),
-                        //     0,
-                        //     secretNumberFirst.toFixed(),
-                        //     multipliedShares[0],
-                        //     {from: validatorsAccount[0]},
-                        // );
-                        // assert.equal(result.logs[0].event, "BadGuy");
-                        // // need to debug it!!!
-                        // assert.equal(result.logs[0].args.nodeIndex.toString(), "1");
+                        assert.equal(result.logs[0].event, "BadGuy");
+                        // need to debug it!!!
+                        assert.equal(result.logs[0].args.nodeIndex.toString(), "1");
                     });
                 });
             });
@@ -405,16 +407,16 @@ contract("SkaleDKG", ([validator1, validator2]) => {
                         web3.utils.soliditySha3("d2"),
                         0,
                         // the last symbol is spoiled in parameter below
-                        badVerificationVectors[0],
-                        encryptedSecretKeyContributions[0],
+                        badVerificationVectors[indexes[0]],
+                        encryptedSecretKeyContributions[indexes[0]],
                         {from: validatorsAccount[0]},
                     );
 
                     await skaleDKG.broadcast(
                         web3.utils.soliditySha3("d2"),
                         1,
-                        verificationVectors[1],
-                        encryptedSecretKeyContributions[1],
+                        verificationVectors[indexes[1]],
+                        encryptedSecretKeyContributions[indexes[1]],
                         {from: validatorsAccount[1]},
                     );
                 });
@@ -462,8 +464,8 @@ contract("SkaleDKG", ([validator1, validator2]) => {
                         const result = await skaleDKG.response(
                             web3.utils.soliditySha3("d2"),
                             0,
-                            secretNumberFirst.toFixed(),
-                            multipliedShares[0],
+                            secretNumbers[indexes[0]],
+                            multipliedShares[indexes[0]],
                             {from: validatorsAccount[0]},
                         );
                         assert.equal(result.logs[0].event, "BadGuy");
@@ -474,8 +476,8 @@ contract("SkaleDKG", ([validator1, validator2]) => {
                         const result = await skaleDKG.response(
                             web3.utils.soliditySha3("d2"),
                             0,
-                            secretNumberFirst.toFixed(),
-                            badMultipliedShares[0],
+                            secretNumbers[indexes[0]],
+                            badMultipliedShares[indexes[0]],
                             {from: validatorsAccount[0]},
                         );
                         assert.equal(result.logs[0].event, "BadGuy");
