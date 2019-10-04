@@ -93,6 +93,17 @@ contract NodesData is INodesData, Permissions {
         leavingPeriod = newLeavingPeriod;
     }
 
+    function getNodesWithFreeSpace(uint partOfNode, uint freeSpace) external view returns (uint[] memory) {
+        if (freeSpace == 0) {
+            return getActiveNodeIds();
+        }
+        if (partOfNode > 1) {
+            return getNodesWithFreeSpace(fractionalNodes, freeSpace);
+        } else {
+            return getNodesWithFreeSpace(fullNodes, freeSpace);
+        }
+    }
+
     /**
      * @dev addNode - adds Node to array
      * function could be run only by executor
@@ -312,7 +323,7 @@ contract NodesData is INodesData, Permissions {
      * @return if time for reward has come - true, else - false
      */
     function isTimeForReward(uint nodeIndex) public view returns (bool) {
-        address constantsAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("Constants")));
+        address constantsAddress = contractManager.contracts(keccak256(abi.encodePacked("Constants")));
         return nodes[nodeIndex].lastRewardDate + IConstants(constantsAddress).rewardPeriod() <= block.timestamp;
     }
 
@@ -376,7 +387,7 @@ contract NodesData is INodesData, Permissions {
      * @return Node next reward date
      */
     function getNodeNextRewardDate(uint nodeIndex) public view returns (uint32) {
-        address constantsAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("Constants")));
+        address constantsAddress = contractManager.contracts(keccak256(abi.encodePacked("Constants")));
         return nodes[nodeIndex].lastRewardDate + IConstants(constantsAddress).rewardPeriod();
     }
 
@@ -508,4 +519,26 @@ contract NodesData is INodesData, Permissions {
         }
         return activeFullNodes;
     }
+
+    function getNodesWithFreeSpace(NodeFilling[] storage nodesFillings, uint freeSpace) internal view returns (uint[] memory) {
+        uint[] memory nodesWithFreeSpace = new uint[](countNodesWithFreeSpace(nodesFillings, freeSpace));
+        uint cursor = 0;
+        for (uint i = 0; i < nodesFillings.length; ++i) {
+            if (nodesFillings[i].freeSpace >= freeSpace) {
+                nodesWithFreeSpace[cursor] = nodesFillings[i].nodeIndex;
+                ++cursor;
+            }
+        }
+        return nodesWithFreeSpace;
+    }
+
+    function countNodesWithFreeSpace(NodeFilling[] storage nodesFillings, uint freeSpace) internal view returns (uint count) {
+        count = 0;
+        for (uint i = 0; i < nodesFillings.length; ++i) {
+            if (nodesFillings[i].freeSpace >= freeSpace) {
+                ++count;
+            }
+        }
+    }
+
 }

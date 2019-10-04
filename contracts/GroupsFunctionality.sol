@@ -108,7 +108,7 @@ contract GroupsFunctionality is Permissions {
      * @param data - some extra data
      */
     function addGroup(bytes32 groupIndex, uint newRecommendedNumberOfNodes, bytes32 data) public allow(executorName) {
-        address groupsDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked(dataName)));
+        address groupsDataAddress = contractManager.contracts(keccak256(abi.encodePacked(dataName)));
         IGroupsData(groupsDataAddress).addGroup(groupIndex, newRecommendedNumberOfNodes, data);
         emit GroupAdded(
             groupIndex,
@@ -123,7 +123,7 @@ contract GroupsFunctionality is Permissions {
      * @param groupIndex - Groups identifier
      */
     function deleteGroup(bytes32 groupIndex) public allow(executorName) {
-        address groupsDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked(dataName)));
+        address groupsDataAddress = contractManager.contracts(keccak256(abi.encodePacked(dataName)));
         require(IGroupsData(groupsDataAddress).isGroupActive(groupIndex), "Group is not active");
         IGroupsData(groupsDataAddress).removeGroup(groupIndex);
         IGroupsData(groupsDataAddress).removeAllNodesInGroup(groupIndex);
@@ -138,7 +138,7 @@ contract GroupsFunctionality is Permissions {
      * @param data - some extra data
      */
     function upgradeGroup(bytes32 groupIndex, uint newRecommendedNumberOfNodes, bytes32 data) public allow(executorName) {
-        address groupsDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked(dataName)));
+        address groupsDataAddress = contractManager.contracts(keccak256(abi.encodePacked(dataName)));
         require(IGroupsData(groupsDataAddress).isGroupActive(groupIndex), "Group is not active");
         IGroupsData(groupsDataAddress).setNewGroupData(groupIndex, data);
         IGroupsData(groupsDataAddress).setNewAmountOfNodes(groupIndex, newRecommendedNumberOfNodes);
@@ -166,13 +166,13 @@ contract GroupsFunctionality is Permissions {
         uint hashX,
         uint hashY) public view returns (bool)
     {
-        address groupsDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked(dataName)));
+        address groupsDataAddress = contractManager.contracts(keccak256(abi.encodePacked(dataName)));
         uint publicKeyx1;
         uint publicKeyy1;
         uint publicKeyx2;
         uint publicKeyy2;
         (publicKeyx1, publicKeyy1, publicKeyx2, publicKeyy2) = IGroupsData(groupsDataAddress).getGroupsPublicKey(groupIndex);
-        address skaleVerifierAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("SkaleVerifier")));
+        address skaleVerifierAddress = contractManager.contracts(keccak256(abi.encodePacked("SkaleVerifier")));
         return ISkaleVerifier(skaleVerifierAddress).verify(
             signatureX, signatureY, hashX, hashY, publicKeyx1, publicKeyy1, publicKeyx2, publicKeyy2
         );
@@ -185,7 +185,7 @@ contract GroupsFunctionality is Permissions {
      * @return local index of Node in Schain
      */
     function findNode(bytes32 groupIndex, uint nodeIndex) internal view returns (uint index) {
-        address groupsDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked(dataName)));
+        address groupsDataAddress = contractManager.contracts(keccak256(abi.encodePacked(dataName)));
         uint[] memory nodesInGroup = IGroupsData(groupsDataAddress).getNodesInGroup(groupIndex);
         for (index = 0; index < nodesInGroup.length; index++) {
             if (nodesInGroup[index] == nodeIndex) {
@@ -203,4 +203,10 @@ contract GroupsFunctionality is Permissions {
      */
     function generateGroup(bytes32 groupIndex) internal returns (uint[] memory);
     function selectNodeToGroup(bytes32 groupIndex) internal returns (bytes32, uint);
+
+    function swap(uint[] memory array, uint index1, uint index2) internal pure {
+        uint buffer = array[index1];
+        array[index1] = array[index2];
+        array[index2] = buffer;
+    }
 }

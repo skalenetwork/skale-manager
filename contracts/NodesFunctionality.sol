@@ -79,7 +79,7 @@ contract NodesFunctionality is Permissions, INodesFunctionality {
      * @return nodeIndex - index of Node
      */
     function createNode(address from, uint value, bytes memory data) public allow("SkaleManager") returns (uint nodeIndex) {
-        address constantsAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("Constants")));
+        address constantsAddress = contractManager.contracts(keccak256(abi.encodePacked("Constants")));
         require(value >= IConstants(constantsAddress).NODE_DEPOSIT(), "Not enough money to create Node");
         uint16 nonce;
         bytes4 ip;
@@ -92,7 +92,7 @@ contract NodesFunctionality is Permissions, INodesFunctionality {
         (port, nonce, ip, publicIP) = fallbackDataConverter(data);
         (publicKey, name) = fallbackDataConverterPublicKeyAndName(data);
 
-        address nodesDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
+        address nodesDataAddress = contractManager.contracts(keccak256(abi.encodePacked("NodesData")));
 
         // checks that Node has correct data
         require(ip != 0x0 && !INodesData(nodesDataAddress).nodesIPCheck(ip), "IP address is zero or is not available");
@@ -129,7 +129,7 @@ contract NodesFunctionality is Permissions, INodesFunctionality {
      * @param nodeIndex - index of Node
      */
     function removeNode(address from, uint nodeIndex) public allow("SkaleManager") {
-        address nodesDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
+        address nodesDataAddress = contractManager.contracts(keccak256(abi.encodePacked("NodesData")));
 
         require(INodesData(nodesDataAddress).isNodeExist(from, nodeIndex), "Node does not exist for message sender");
         require(INodesData(nodesDataAddress).isNodeActive(nodeIndex), "Node is not Active");
@@ -148,7 +148,7 @@ contract NodesFunctionality is Permissions, INodesFunctionality {
     }
 
     function removeNodeByRoot(uint nodeIndex) public allow("SkaleManager") {
-        address nodesDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
+        address nodesDataAddress = contractManager.contracts(keccak256(abi.encodePacked("NodesData")));
         INodesData(nodesDataAddress).setNodeLeft(nodeIndex);
 
         bool isNodeFull;
@@ -169,7 +169,7 @@ contract NodesFunctionality is Permissions, INodesFunctionality {
      * @return true - if everything OK
      */
     function initWithdrawDeposit(address from, uint nodeIndex) public allow("SkaleManager") returns (bool) {
-        address nodesDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
+        address nodesDataAddress = contractManager.contracts(keccak256(abi.encodePacked("NodesData")));
 
         require(INodesData(nodesDataAddress).isNodeExist(from, nodeIndex), "Node does not exist for message sender");
         require(INodesData(nodesDataAddress).isNodeActive(nodeIndex), "Node is not Active");
@@ -193,7 +193,7 @@ contract NodesFunctionality is Permissions, INodesFunctionality {
      * @return amount of SKL which be returned
      */
     function completeWithdrawDeposit(address from, uint nodeIndex) public allow("SkaleManager") returns (uint) {
-        address nodesDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
+        address nodesDataAddress = contractManager.contracts(keccak256(abi.encodePacked("NodesData")));
 
         require(INodesData(nodesDataAddress).isNodeExist(from, nodeIndex), "Node does not exist for message sender");
         require(INodesData(nodesDataAddress).isNodeLeaving(nodeIndex), "Node is no Leaving");
@@ -211,7 +211,7 @@ contract NodesFunctionality is Permissions, INodesFunctionality {
             INodesData(nodesDataAddress).removeFractionalNode(subarrayLink);
         }
 
-        address constantsAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("Constants")));
+        address constantsAddress = contractManager.contracts(keccak256(abi.encodePacked("Constants")));
         emit WithdrawDepositFromNodeComplete(
             nodeIndex,
             from,

@@ -23,12 +23,12 @@ contract Pricing is Permissions {
     }
 
     function initNodes() public {
-        address nodesDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
+        address nodesDataAddress = contractManager.contracts(keccak256(abi.encodePacked("NodesData")));
         totalNodes = INodesData(nodesDataAddress).getNumberOnlineNodes();
     }
 
     function checkAllNodes() public {
-        address nodesDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
+        address nodesDataAddress = contractManager.contracts(keccak256(abi.encodePacked("NodesData")));
         uint numberOfActiveNodes = INodesData(nodesDataAddress).getNumberOnlineNodes();
 
         require(totalNodes != numberOfActiveNodes, "No any changes on nodes");
@@ -61,9 +61,9 @@ contract Pricing is Permissions {
     }
 
     function getTotalLoadPercentage() public view returns (uint) {
-        address schainsDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("SchainsData")));
+        address schainsDataAddress = contractManager.contracts(keccak256(abi.encodePacked("SchainsData")));
         uint64 numberOfSchains = ISchainsData(schainsDataAddress).numberOfSchains();
-        address nodesDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
+        address nodesDataAddress = contractManager.contracts(keccak256(abi.encodePacked("NodesData")));
         uint numberOfNodes = INodesData(nodesDataAddress).getNumberOnlineNodes();
         uint sumLoadSchain = 0;
         for (uint i = 0; i < numberOfSchains; i++) {

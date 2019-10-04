@@ -168,7 +168,7 @@ contract SkaleDKG is Permissions, ReentrancyGuard {
     }
 
     function isNodeByMessageSender(uint nodeIndex, address from) internal view returns (bool) {
-        address nodesDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
+        address nodesDataAddress = contractManager.contracts(keccak256(abi.encodePacked("NodesData")));
         return INodesData(nodesDataAddress).isNodeExist(from, nodeIndex);
     }
 

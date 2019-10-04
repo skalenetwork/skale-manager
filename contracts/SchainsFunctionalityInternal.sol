@@ -60,7 +60,7 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
         uint numberOfNodes,
         uint partOfNode) public allow(executorName)
     {
-        address dataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked(dataName)));
+        address dataAddress = contractManager.contracts(keccak256(abi.encodePacked(dataName)));
         addGroup(schainId, numberOfNodes, bytes32(partOfNode));
         uint[] memory numberOfNodesInGroup = generateGroup(schainId);
         ISchainsData(dataAddress).setSchainPartOfNode(schainId, partOfNode);
@@ -80,7 +80,7 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
      * @return partOfNode - divisor of given type of Schain
      */
     function getNodesDataFromTypeOfSchain(uint typeOfSchain) public view returns (uint numberOfNodes, uint partOfNode) {
-        address constantsAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("Constants")));
+        address constantsAddress = contractManager.contracts(keccak256(abi.encodePacked("Constants")));
         numberOfNodes = IConstants(constantsAddress).NUMBER_OF_NODES_FOR_SCHAIN();
         if (typeOfSchain == 1) {
             partOfNode = IConstants(constantsAddress).TINY_DIVISOR();
@@ -106,7 +106,7 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
      * @return index of Schain at schainsForNode array
      */
     function findSchainAtSchainsForNode(uint nodeIndex, bytes32 schainId) public view returns (uint) {
-        address dataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked(dataName)));
+        address dataAddress = contractManager.contracts(keccak256(abi.encodePacked(dataName)));
         uint length = ISchainsData(dataAddress).getLengthOfSchainsForNode(nodeIndex);
         for (uint i = 0; i < length; i++) {
             if (ISchainsData(dataAddress).schainsForNodes(nodeIndex, i) == schainId) {
@@ -117,7 +117,7 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
     }
 
     function removeNodeFromSchain(uint nodeIndex, bytes32 groupHash) public {
-        address schainsDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("SchainsData")));
+        address schainsDataAddress = contractManager.contracts(keccak256(abi.encodePacked("SchainsData")));
         uint groupIndex = findSchainAtSchainsForNode(nodeIndex, groupHash);
         uint indexOfNode = findNode(groupHash, nodeIndex);
         IGroupsData(schainsDataAddress).removeNodeFromGroup(indexOfNode, groupHash);
@@ -142,7 +142,7 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
      * @return nodeIndex - in
      */
     function selectNodeToGroup(bytes32 schainId) internal returns (bytes32, uint) {
-        address schainsDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("SchainsData")));
+        address schainsDataAddress = contractManager.contracts(keccak256(abi.encodePacked("SchainsData")));
         uint partOfNode = ISchainsData(schainsDataAddress).getSchainsPartOfNode(schainId);
         uint hash = uint(keccak256(abi.encodePacked(uint(blockhash(block.number - 1)), schainId)));
         uint numberOfNodes;
@@ -176,50 +176,36 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
      * @param groupIndex - index of Group
      */
     function generateGroup(bytes32 groupIndex) internal returns (uint[] memory nodesInGroup) {
-        address dataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked(dataName)));
-        require(IGroupsData(dataAddress).isGroupActive(groupIndex), "Group is not active");
-        bytes32 groupData = IGroupsData(dataAddress).getGroupData(groupIndex);
-        uint hash = uint(keccak256(abi.encodePacked(uint(blockhash(block.number - 1)), groupIndex)));
+        IGroupsData groupsData = IGroupsData(contractManager.contracts(keccak256(abi.encodePacked(dataName))));
+        ISchainsData schainsData = ISchainsData(contractManager.contracts(keccak256(abi.encodePacked(dataName))));
+        INodesData nodesData = INodesData(contractManager.contracts(keccak256(abi.encodePacked("NodesData"))));
+        require(groupsData.isGroupActive(groupIndex), "Group is not active");
+
         uint numberOfNodes;
         uint space;
+        (numberOfNodes, space) = setNumberOfNodesInGroup(groupIndex, uint(groupsData.getGroupData(groupIndex)), address(groupsData));
 
-        (numberOfNodes, space) = setNumberOfNodesInGroup(groupIndex, uint(groupData), dataAddress);
-        uint indexOfNode;
-        uint nodeIndex;
-        uint8 iterations = 0;
-        uint index = 0;
-        nodesInGroup = new uint[](IGroupsData(dataAddress).getRecommendedNumberOfNodes(groupIndex));
+        nodesInGroup = new uint[](groupsData.getRecommendedNumberOfNodes(groupIndex));
 
+        uint[] memory possibleNodes = nodesData.getNodesWithFreeSpace(uint(groupsData.getGroupData(groupIndex)), space);
 
-        // generate random group algorithm
-        while (index < IGroupsData(dataAddress).getRecommendedNumberOfNodes(groupIndex) && iterations < 200) {
+        require(possibleNodes.length >= nodesInGroup.length, "Not enough nodes to create Schain");
+        uint ignoringTail = 0;
+        uint random = uint(keccak256(abi.encodePacked(uint(blockhash(block.number - 1)), groupIndex)));
+        for (uint i = 0; i < nodesInGroup.length; ++i) {
+            uint index = random % (possibleNodes.length - ignoringTail);
+            uint node = possibleNodes[index];
+            nodesInGroup[i] = node;
+            swap(possibleNodes, index, possibleNodes.length - ignoringTail - 1);
+            ++ignoringTail;
 
-            // new random index of Node
-            indexOfNode = hash % numberOfNodes;
-            nodeIndex = returnValidNodeIndex(uint(groupData), indexOfNode);
-
-
-            // checks that this not is available, enough space to allocate resources
-            // and have not chosen to this group
-            if (comparator(
-                indexOfNode,
-                nodeIndex,
-                uint(groupData),
-                space) && !IGroupsData(dataAddress).isExceptionNode(groupIndex, nodeIndex)) {
-                // adds Node to the Group
-                IGroupsData(dataAddress).setException(groupIndex, nodeIndex);
-                nodesInGroup[index] = nodeIndex;
-                ISchainsData(dataAddress).addSchainForNode(nodeIndex, groupIndex);
-                require(removeSpace(nodeIndex, space), "Could not remove space from Node");
-                index++;
-            }
-            hash = uint(keccak256(abi.encodePacked(hash, indexOfNode)));
-            iterations++;
+            groupsData.setException(groupIndex, node);
+            schainsData.addSchainForNode(node, groupIndex);
+            require(removeSpace(node, space), "Could not remove space from Node");
         }
-        // checks that this algorithm took less than 200 iterations
-        require(iterations < 200, "Schain is not created? Try it later");
+
         // set generated group
-        IGroupsData(dataAddress).setNodesInGroup(groupIndex, nodesInGroup);
+        groupsData.setNodesInGroup(groupIndex, nodesInGroup);
         emit GroupGenerated(
             groupIndex,
             nodesInGroup,
@@ -244,8 +230,8 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
         view
         returns (bool)
     {
-        address nodesDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
-        address constantsAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("Constants")));
+        address nodesDataAddress = contractManager.contracts(keccak256(abi.encodePacked("NodesData")));
+        address constantsAddress = contractManager.contracts(keccak256(abi.encodePacked("Constants")));
         uint freeSpace = 0;
         uint nodeIndexFromStruct = uint(-1);
         // get nodeIndex and free space of this Node
@@ -285,8 +271,8 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
      * @return nodeIndex - index of Node at common array of Nodes
      */
     function returnValidNodeIndex(uint partOfNode, uint indexOfNode) internal view returns (uint nodeIndex) {
-        address nodesDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
-        address constantsAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("Constants")));
+        address nodesDataAddress = contractManager.contracts(keccak256(abi.encodePacked("NodesData")));
+        address constantsAddress = contractManager.contracts(keccak256(abi.encodePacked("Constants")));
         uint space;
         if (partOfNode == IConstants(constantsAddress).MEDIUM_DIVISOR()) {
             (nodeIndex, space) = INodesData(nodesDataAddress).fullNodes(indexOfNode);
@@ -304,7 +290,7 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
      * @return if ouccupied - true, else - false
      */
     function removeSpace(uint nodeIndex, uint space) internal returns (bool) {
-        address nodesDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
+        address nodesDataAddress = contractManager.contracts(keccak256(abi.encodePacked("NodesData")));
         uint subarrayLink;
         bool isNodeFull;
         (subarrayLink, isNodeFull) = INodesData(nodesDataAddress).nodesLink(nodeIndex);
@@ -328,9 +314,9 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
     function setNumberOfNodesInGroup(bytes32 groupIndex, uint partOfNode, address dataAddress)
     internal view returns (uint numberOfNodes, uint space)
     {
-        address nodesDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
-        address constantsAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("Constants")));
-        address schainsDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("SchainsData")));
+        address nodesDataAddress = contractManager.contracts(keccak256(abi.encodePacked("NodesData")));
+        address constantsAddress = contractManager.contracts(keccak256(abi.encodePacked("Constants")));
+        address schainsDataAddress = contractManager.contracts(keccak256(abi.encodePacked("SchainsData")));
         uint numberOfAvailableNodes = 0;
         uint needNodes = 1;
         bool nodesEnough = false;
@@ -361,82 +347,4 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
         //Check that schain is not created yet
         require(nodesEnough, "Not enough nodes to create Schain");
     }
-
-    /**
-     * @dev setSystemStatus - sets system status
-     * @param constantsAddress - address of Constants contract
-     */
-    /*function setSystemStatus(address constantsAddress) internal {
-        address dataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked(dataName)));
-        address nodesDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
-        uint numberOfNodes = 128 * (INodesData(nodesDataAddress).numberOfActiveNodes() + INodesData(dataAddress).numberOfLeavingNodes());
-        uint numberOfSchains = ISchainsData(dataAddress).sumOfSchainsResources();
-        if (20 * numberOfSchains / 17 > numberOfNodes && !(20 * (numberOfSchains - 1) / 17 > numberOfNodes)) {
-            IConstants(constantsAddress).setLastTimeOverloaded();
-        }
-    }*/
-
-    /**
-     * @dev coefficientForPrice - calculates a ratio for standart price
-     * @param constantsAddress - address of Constants contract
-     */
-    /*function coefficientForPrice(address constantsAddress) internal view returns (uint up, uint down) {
-        address dataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked(dataName)));
-        address nodesDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
-        uint numberOfDays;
-        uint numberOfNodes = 128 * (INodesData(nodesDataAddress).numberOfActiveNodes() + INodesData(nodesDataAddress).numberOfLeavingNodes());
-        uint numberOfSchains = ISchainsData(dataAddress).sumOfSchainsResources();
-        if (20 * numberOfSchains / 17 > numberOfNodes) {
-            numberOfDays = (now - IConstants(constantsAddress).lastTimeOverloaded()) / IConstants(constantsAddress).SECONDS_TO_DAY();
-            up = binstep(101, numberOfDays, 100);
-            down = 100;
-        } else if (4 * numberOfSchains / 3 < numberOfNodes) {
-            numberOfDays = (now - IConstants(constantsAddress).lastTimeUnderloaded()) / IConstants(constantsAddress).SECONDS_TO_DAY();
-            up = binstep(99, numberOfDays, 100);
-            down = 100;
-        } else {
-            up = 1;
-            down = 1;
-        }
-    }*/
-
-
-
-    /**
-     * @dev binstep - exponentiation by squaring by modulo (a^step)
-     * @param a - number which should be exponentiated
-     * @param step - exponent
-     * @param div - divider of a
-     * @return x - result (a^step)
-    */
-    /*function binstep(uint a, uint step, uint div) internal pure returns (uint x) {
-        x = a;
-        step -= 1;
-        while (step > 0) {
-            if (step % 2 == 1) {
-                x = mult(x, a, div);
-            }
-            a = mult(a, a, div);
-            step /= 2;
-        }
-    }*/
-
-    /*function mult(uint a, uint b, uint div) internal pure returns (uint) {
-        return (a * b) / div;
-    }*/
-
-
-    /*function getBytesParameter(uint nodeIndex) public view returns (bytes16 bytesParameter) {
-        address nodesDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
-        bytes4 ip = INodesData(nodesDataAddress).getNodeIP(nodeIndex);
-        bytes memory tempData = new bytes(16);
-        bytes10 bytesOfIndex = bytes10(nodeIndex);
-        bytes2 bytesOfPort = bytes2(INodesData(nodesDataAddress).getNodePort(nodeIndex));
-        assembly {
-            mstore(add(tempData, 32), bytesOfIndex)
-            mstore(add(tempData, 42), ip)
-            mstore(add(tempData, 46), bytesOfPort)
-            bytesParameter := mload(add(tempData, 32))
-        }
-    }*/
 }

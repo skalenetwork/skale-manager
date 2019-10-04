@@ -122,11 +122,12 @@ contract GroupsData is IGroupsData, Permissions {
      * @param groupIndex - Groups identifier
      */
     function removeNodeFromGroup(uint indexOfNode, bytes32 groupIndex) public allow(executorName) {
-        delete groups[groupIndex].nodesInGroup[indexOfNode];
-        // (groups[groupIndex].nodesInGroup[groups[groupIndex].nodesInGroup.length-1],
-        // groups[groupIndex].nodesInGroup[indexOfNode]) = (groups[groupIndex].nodesInGroup[indexOfNode],
-        // groups[groupIndex].nodesInGroup[groups[groupIndex].nodesInGroup.length-1]);
-        // groups[groupIndex].nodesInGroup.length--;
+        uint size = groups[groupIndex].nodesInGroup.length;
+        if (indexOfNode < size) {
+            groups[groupIndex].nodesInGroup[indexOfNode] = groups[groupIndex].nodesInGroup[size - 1];
+        }
+        delete groups[groupIndex].nodesInGroup[size - 1];
+        groups[groupIndex].nodesInGroup.length--;
     }
 
     /**
