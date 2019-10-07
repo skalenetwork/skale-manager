@@ -74,6 +74,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
             contractManager.address,
             {from: owner, gas: 7000000 * gasMultiplier});
         await contractManager.setContractsAddress("SchainsFunctionalityInternal", schainsFunctionalityInternal.address);
+        nodesData.enableValidator(validator);
     });
 
     describe("should add schain", async () => {

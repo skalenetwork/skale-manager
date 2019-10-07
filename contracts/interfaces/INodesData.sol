@@ -49,4 +49,7 @@ interface INodesData {
     function getActiveFractionalNodes() external view returns (uint[] memory);
     function getActiveFullNodes() external view returns (uint[] memory);
     function getActiveNodeIds() external view returns (uint[] memory activeNodeIds);
+    function trustedValidators(address from) external view returns (bool);
+    function enableValidator(address validator) external;
+    function disableValidator(address validator) external;
 }

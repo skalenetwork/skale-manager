@@ -76,6 +76,8 @@ contract NodesData is INodesData, Permissions {
     mapping (bytes32 => bool) public nodesNameCheck;
     // mapping for indication from Name to Index
     mapping (bytes32 => uint) public nodesNameToIndex;
+    // mapping of trusted validators
+    mapping (address => bool) public trustedValidators;
 
     // array which contain only Fractional Nodes
     NodeFilling[] public fractionalNodes;
@@ -507,5 +509,13 @@ contract NodesData is INodesData, Permissions {
             activeFullNodes[index] = fullNodes[index].nodeIndex;
         }
         return activeFullNodes;
+    }
+
+    function enableValidator(address validator) public {
+        trustedValidators[validator] = true;
+    }
+
+    function disableValidator(address validator) public {
+        trustedValidators[validator] = false;
     }
 }

@@ -113,6 +113,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
 
         skaleManager = await SkaleManager.new(contractManager.address, {gas: 8000000 * gasMultiplier});
         contractManager.setContractsAddress("SkaleManager", skaleManager.address);
+        nodesData.enableValidator(validator);
     });
 
     it("should fail to process token fallback if sent not from SkaleToken", async () => {
