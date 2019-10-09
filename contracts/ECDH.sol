@@ -32,6 +32,44 @@ contract ECDH {
 
     }
 
+    function publicKey(uint256 privKey) external pure returns (uint256 qx, uint256 qy) {
+        uint256 x;
+        uint256 y;
+        uint256 z;
+        (x, y, z) = ecMul(
+            privKey,
+            GX,
+            GY,
+            1
+        );
+        z = inverse(z);
+        qx = mulmod(x, z, N);
+        qy = mulmod(y, z, N);
+    }
+
+    function deriveKey(
+        uint256 privKey,
+        uint256 pubX,
+        uint256 pubY
+    )
+        external
+        pure
+        returns (uint256 qx, uint256 qy)
+    {
+        uint256 x;
+        uint256 y;
+        uint256 z;
+        (x, y, z) = ecMul(
+            privKey,
+            pubX,
+            pubY,
+            1
+        );
+        z = inverse(z);
+        qx = mulmod(x, z, N);
+        qy = mulmod(y, z, N);
+    }
+
     function jAdd(
         uint256 x1,
         uint256 z1,
@@ -53,7 +91,7 @@ contract ECDH {
     )
         public
         pure
-        returns (uint256 x3,uint256 z3)
+        returns (uint256 x3, uint256 z3)
     {
         (x3, z3) = (addmod(mulmod(z2, x1, N), mulmod(N - x2, z1, N), N), mulmod(z1, z2, N));
     }
@@ -66,7 +104,7 @@ contract ECDH {
     )
         public
         pure
-        returns (uint256 x3,uint256 z3)
+        returns (uint256 x3, uint256 z3)
     {
         (x3, z3) = (mulmod(x1, x2, N), mulmod(z1, z2, N));
     }
@@ -79,7 +117,7 @@ contract ECDH {
     )
         public
         pure
-        returns (uint256 x3,uint256 z3)
+        returns (uint256 x3, uint256 z3)
     {
         (x3, z3) = (mulmod(x1, z2, N), mulmod(z1, x2, N));
     }
@@ -223,7 +261,7 @@ contract ECDH {
     )
         public
         pure
-        returns(uint256 x3,uint256 y3,uint256 z3)
+        returns (uint256 x3, uint256 y3, uint256 z3)
     {
         (x3, y3, z3) = ecAdd(
             x1,
@@ -243,7 +281,7 @@ contract ECDH {
     )
         public
         pure
-        returns(uint256 x3,uint256 y3,uint256 z3)
+        returns (uint256 x3, uint256 y3, uint256 z3)
     {
         uint256 remaining = d;
         uint256 px = x1;
@@ -273,43 +311,5 @@ contract ECDH {
         }
 
         (x3, y3, z3) = (acx, acy, acz);
-    }
-
-    function publicKey(uint256 privKey) public pure returns(uint256 qx, uint256 qy) {
-        uint256 x;
-        uint256 y;
-        uint256 z;
-        (x, y, z) = ecMul(
-            privKey,
-            GX,
-            GY,
-            1
-        );
-        z = inverse(z);
-        qx = mulmod(x, z, N);
-        qy = mulmod(y, z, N);
-    }
-
-    function deriveKey(
-        uint256 privKey,
-        uint256 pubX,
-        uint256 pubY
-    )
-        public
-        pure
-        returns(uint256 qx, uint256 qy)
-    {
-        uint256 x;
-        uint256 y;
-        uint256 z;
-        (x, y, z) = ecMul(
-            privKey,
-            pubX,
-            pubY,
-            1
-        );
-        z = inverse(z);
-        qx = mulmod(x, z, N);
-        qy = mulmod(y, z, N);
     }
 }

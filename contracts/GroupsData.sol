@@ -179,6 +179,10 @@ contract GroupsData is IGroupsData, Permissions {
         groups[groupIndex].groupData = data;
     }
 
+    function setGroupFailedDKG(bytes32 groupIndex) external allow("SkaleDKG") {
+        groups[groupIndex].succesfulDKG = false;
+    }
+
     /**
      * @dev removeGroup - remove Group from storage
      * function could be run only be executor
@@ -267,9 +271,5 @@ contract GroupsData is IGroupsData, Permissions {
      */
     function getNumberOfNodesInGroup(bytes32 groupIndex) external view returns (uint) {
         return groups[groupIndex].nodesInGroup.length;
-    }
-
-    function setGroupFailedDKG(bytes32 groupIndex) public allow("SkaleDKG") {
-        groups[groupIndex].succesfulDKG = false;
     }
 }

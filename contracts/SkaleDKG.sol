@@ -125,7 +125,7 @@ contract SkaleDKG is Permissions {
         emit ChannelOpened(groupIndex);
     }
 
-    function deleteChannel(bytes32 groupIndex) public onlyOwner {
+    function deleteChannel(bytes32 groupIndex) external onlyOwner {
         require(channels[groupIndex].active, "Channel is not created");
         delete channels[groupIndex];
     }
@@ -133,10 +133,10 @@ contract SkaleDKG is Permissions {
     function broadcast(
         bytes32 groupIndex,
         uint nodeIndex,
-        bytes memory verificationVector,
-        bytes memory secretKeyContribution
+        bytes calldata verificationVector,
+        bytes calldata secretKeyContribution
     )
-        public
+        external
         correctGroup(groupIndex)
         correctNode(groupIndex, nodeIndex)
     {
@@ -152,10 +152,14 @@ contract SkaleDKG is Permissions {
         bytes32 vector2;
         bytes32 vector3;
         assembly {
-            vector := mload(add(verificationVector, 32))
-            vector1 := mload(add(verificationVector, 64))
-            vector2 := mload(add(verificationVector, 96))
-            vector3 := mload(add(verificationVector, 128))
+            // vector := calldataload(add(verificationVector, 32))
+            calldatacopy(vector, add(4, 96), 32)
+            // vector1 := calldataload(add(verificationVector, 64))
+            calldatacopy(vector, add(4, 128), 32)
+            // vector2 := calldataload(add(verificationVector, 96))
+            calldatacopy(vector, add(4, 160), 32)
+            // vector3 := calldataload(add(verificationVector, 128))
+            calldatacopy(vector, add(4, 192), 32)
         }
         adding(
             groupIndex,
@@ -173,7 +177,7 @@ contract SkaleDKG is Permissions {
     }
 
     function complaint(bytes32 groupIndex, uint fromNodeIndex, uint toNodeIndex)
-        public
+        external
         correctGroup(groupIndex)
         correctNode(groupIndex, fromNodeIndex)
         correctNode(groupIndex, toNodeIndex)
@@ -207,9 +211,9 @@ contract SkaleDKG is Permissions {
         bytes32 groupIndex,
         uint fromNodeIndex,
         uint secretNumber,
-        bytes memory multipliedShare
+        bytes calldata multipliedShare
     )
-        public
+        external
         correctGroup(groupIndex)
         correctNode(groupIndex, fromNodeIndex)
     {
@@ -243,7 +247,7 @@ contract SkaleDKG is Permissions {
     }
 
     function allright(bytes32 groupIndex, uint fromNodeIndex)
-        public
+        external
         correctGroup(groupIndex)
         correctNode(groupIndex, fromNodeIndex)
     {

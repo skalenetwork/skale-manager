@@ -64,7 +64,7 @@ contract AES {
         }
     }
 
-    function setSbox() public {
+    function setSbox() external {
         require(!sboxSet, "Already set");
         sbox.lines[0] = 0x637c777bf26b6fc53001672bfed7ab76ca82c97dfa5947f0add4a2af9ca472c0;
         sbox.lines[1] = 0xb7fd9326363ff7cc34a5e5f171d8311504c723c31896059a071280e2eb27b275;
@@ -77,7 +77,7 @@ contract AES {
         sboxSet = true;
     }
 
-    function setInvSbox() public {
+    function setInvSbox() external {
         require(!invSboxSet, "Already set");
         invSbox.lines[0] = 0x52096ad53036a538bf40a39e81f3d7fb7ce339829b2fff87348e4344c4dee9cb;
         invSbox.lines[1] = 0x547b9432a6c2233dee4c950b42fac34e082ea16628d924b2765ba2496d8bd125;
@@ -90,7 +90,7 @@ contract AES {
         invSboxSet = true;
     }
 
-    function encrypt(string memory plainText, bytes memory key) public view isInitialized returns (bytes memory) {
+    function encrypt(string calldata plainText, bytes calldata key) external view isInitialized returns (bytes memory) {
         require(bytes(plainText).length <= 16, "Incorrect length of plainText");
         bytes memory newPlainText = new bytes(16);
         for (uint8 i = 0; i < 16; i++) {
@@ -103,7 +103,7 @@ contract AES {
         return encrypt1(newPlainText, key);
     }
 
-    function decrypt(bytes memory cipherText, bytes memory key) public view isInitialized returns (string memory newPlainText) {
+    function decrypt(bytes calldata cipherText, bytes calldata key) external view isInitialized returns (string memory newPlainText) {
         bytes memory plainText = decrypt1(cipherText, key);
         for (uint8 i = 0; i < plainText.length; i++) {
             bytes(newPlainText)[i] = plainText[i];
