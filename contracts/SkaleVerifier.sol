@@ -30,7 +30,7 @@ contract SkaleVerifier {
 
     function verify(
         uint signa,
-        uint _signb,
+        uint signb,
         bytes32 hash,
         uint8 counter,
         uint hasha,
@@ -51,11 +51,11 @@ contract SkaleVerifier {
             return false;
         }
 
-        uint signb;
-        if (!(signa == 0 && _signb == 0)) {
-            signb = P - (_signb % P);
+        uint newSignb;
+        if (!(signa == 0 && signb == 0)) {
+            newSignb = P - (signb % P);
         } else {
-            signb = _signb;
+            newSignb = signb;
         }
         bool success;
         uint[12] memory inputToPairing;
@@ -86,7 +86,7 @@ contract SkaleVerifier {
         uint hashB
     )
         internal
-        view
+        pure
         returns (bool)
     {
         uint xCoord = uint(hash) % P;
