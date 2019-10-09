@@ -52,4 +52,5 @@ interface INodesData {
     function trustedValidators(address from) external view returns (bool);
     function enableValidator(address validator) external;
     function disableValidator(address validator) external;
+    function getNodesWithFreeSpace(uint partOfNode, uint freeSpace) external view returns (uint[] memory);
 }
