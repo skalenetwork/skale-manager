@@ -55,7 +55,7 @@ contract SkaleToken is ISkaleToken, StandardToken, Permissions {
      * @param amount - current amount of token
      */
     function mint(address to, uint256 amount)
-        public
+        external
         allow("SkaleManager")
         //onlyAuthorized
         returns (bool)
@@ -77,7 +77,7 @@ contract SkaleToken is ISkaleToken, StandardToken, Permissions {
      * @param amount - current amount of token
      */
     function burn(address from, uint256 amount)
-        public
+        external
         allow("SkaleManager")
         //onlyAuthorized
         returns (bool)
@@ -104,9 +104,9 @@ contract SkaleToken is ISkaleToken, StandardToken, Permissions {
     function transferWithData(
         address _to,
         uint256 _value,
-        bytes memory _data
+        bytes calldata _data
 	)
-        public
+        external
         returns (bool)
     {
         return transfer(_to, _value, _data);

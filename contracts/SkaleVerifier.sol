@@ -38,7 +38,7 @@ contract SkaleVerifier {
         uint pkx1,
         uint pky1,
         uint pkx2,
-        uint pky2) public view returns (bool)
+        uint pky2) external view returns (bool)
     {
         uint signb;
         if (!(signa == 0 && _signb == 0)) {

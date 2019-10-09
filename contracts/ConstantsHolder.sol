@@ -121,7 +121,7 @@ contract ConstantsHolder is IConstants, Permissions {
      * @param newRewardPeriod - new Reward period
      * @param newDeltaPeriod - new Delta period
      */
-    function setPeriods(uint32 newRewardPeriod, uint32 newDeltaPeriod) public onlyOwner {
+    function setPeriods(uint32 newRewardPeriod, uint32 newDeltaPeriod) external onlyOwner {
         rewardPeriod = newRewardPeriod;
         deltaPeriod = newDeltaPeriod;
     }
@@ -130,21 +130,21 @@ contract ConstantsHolder is IConstants, Permissions {
      * Set new check time. This function only for tests.
      * @param newCheckTime - new check time
      */
-    function setCheckTime(uint8 newCheckTime) public onlyOwner {
+    function setCheckTime(uint8 newCheckTime) external onlyOwner {
         checkTime = newCheckTime;
     }
 
     /**
      * Set time if system underloaded, run only by NodesFunctionality contract
      */
-    function setLastTimeUnderloaded() public allow("NodesFunctionality") {
+    function setLastTimeUnderloaded() external allow("NodesFunctionality") {
         lastTimeUnderloaded = now;
     }
 
     /**
      * Set time if system iverloaded, run only by SchainsFunctionality contract
      */
-    function setLastTimeOverloaded() public allow("SchainsFunctionality") {
+    function setLastTimeOverloaded() external allow("SchainsFunctionality") {
         lastTimeOverloaded = now;
     }
 
@@ -153,7 +153,7 @@ contract ConstantsHolder is IConstants, Permissions {
      * only for tests.
      * @param newAllowableLatency - new Allowable Latency
      */
-    function setLatency(uint32 newAllowableLatency) public onlyOwner {
+    function setLatency(uint32 newAllowableLatency) external onlyOwner {
         allowableLatency = newAllowableLatency;
     }
 }

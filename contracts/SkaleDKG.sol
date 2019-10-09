@@ -59,7 +59,7 @@ contract SkaleDKG is Permissions, ReentrancyGuard {
 
     }
 
-    function openChannel(bytes32 groupIndex, address dataAddress) public {
+    function openChannel(bytes32 groupIndex, address dataAddress) external {
         require(dataAddress == msg.sender, "Does not allow");
         require(!channels[groupIndex].active, "Channel already is created");
         channels[groupIndex].active = true;
@@ -70,8 +70,8 @@ contract SkaleDKG is Permissions, ReentrancyGuard {
     function broadcast(
         bytes32 groupIndex,
         uint nodeIndex,
-        bytes memory verificationVector,
-        bytes memory secretKeyContribution) public
+        bytes calldata verificationVector,
+        bytes calldata secretKeyContribution) external
     {
         require(channels[groupIndex].active, "Chennel is not created");
 
@@ -81,13 +81,14 @@ contract SkaleDKG is Permissions, ReentrancyGuard {
         bytes32 vector3;
         bytes32 vector4;
         bytes32 vector5;
+        bytes memory memoryVerificationVector = verificationVector;
         assembly {
-            vector := mload(add(verificationVector, 32))
-            vector1 := mload(add(verificationVector, 64))
-            vector2 := mload(add(verificationVector, 96))
-            vector3 := mload(add(verificationVector, 128))
-            vector4 := mload(add(verificationVector, 160))
-            vector5 := mload(add(verificationVector, 192))
+            vector := mload(add(memoryVerificationVector, 32))
+            vector1 := mload(add(memoryVerificationVector, 64))
+            vector2 := mload(add(memoryVerificationVector, 96))
+            vector3 := mload(add(memoryVerificationVector, 128))
+            vector4 := mload(add(memoryVerificationVector, 160))
+            vector5 := mload(add(memoryVerificationVector, 192))
         }
         /*if (channels[groupIndex].publicKeyx.x == 0 && channels[groupIndex].publicKeyx.y == 0 && channels[groupIndex].publicKeyy.x == 0 && channels[groupIndex].publicKeyy.y == 0) {
             (channels[groupIndex].publicKeyx, channels[groupIndex].publicKeyy) = toAffineCoordinatesG2(Fp2({ x: uint(vector), y: uint(vector1) }), Fp2({ x: uint(vector2), y: uint(vector3) }), Fp2({ x: uint(vector4), y: uint(vector5) }));
@@ -114,7 +115,7 @@ contract SkaleDKG is Permissions, ReentrancyGuard {
         isBroadcast(groupIndex, nodeIndex);
     }
 
-    function complaint() public;
+    function complaint() external;
 
     //function allright() public;
 

@@ -55,10 +55,10 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
      * @param partOfNode - divisor of given type of Schain
      */
     function createGroupForSchain(
-        string memory schainName,
+        string calldata schainName,
         bytes32 schainId,
         uint numberOfNodes,
-        uint partOfNode) public allow(executorName)
+        uint partOfNode) external allow(executorName)
     {
         address dataAddress = contractManager.contracts(keccak256(abi.encodePacked(dataName)));
         addGroup(schainId, numberOfNodes, bytes32(partOfNode));
@@ -79,7 +79,7 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
      * @return numberOfNodes - number of Nodes needed to this Schain
      * @return partOfNode - divisor of given type of Schain
      */
-    function getNodesDataFromTypeOfSchain(uint typeOfSchain) public view returns (uint numberOfNodes, uint partOfNode) {
+    function getNodesDataFromTypeOfSchain(uint typeOfSchain) external view returns (uint numberOfNodes, uint partOfNode) {
         address constantsAddress = contractManager.contracts(keccak256(abi.encodePacked("Constants")));
         numberOfNodes = IConstants(constantsAddress).NUMBER_OF_NODES_FOR_SCHAIN();
         if (typeOfSchain == 1) {
@@ -97,6 +97,17 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
         } else {
             revert("Bad schain type");
         }
+    }
+
+    function replaceNode(
+        uint nodeIndex,
+        bytes32 groupHash
+    )
+        external
+        allow(executorName) returns (bytes32 schainId, uint newNodeIndex)
+    {
+        removeNodeFromSchain(nodeIndex, groupHash);
+        (schainId, newNodeIndex) = selectNodeToGroup(groupHash);
     }
 
     /**
@@ -122,17 +133,6 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
         uint indexOfNode = findNode(groupHash, nodeIndex);
         IGroupsData(schainsDataAddress).removeNodeFromGroup(indexOfNode, groupHash);
         ISchainsData(schainsDataAddress).removeSchainForNode(nodeIndex, groupIndex);
-    }
-
-    function replaceNode(
-        uint nodeIndex,
-        bytes32 groupHash
-    )
-        public
-        allow(executorName) returns (bytes32 schainId, uint newNodeIndex)
-    {
-        removeNodeFromSchain(nodeIndex, groupHash);
-        (schainId, newNodeIndex) = selectNodeToGroup(groupHash);
     }
 
     /**

@@ -47,7 +47,7 @@ contract SkaleManager is Permissions {
 
     }
 
-    function tokenFallback(address from, uint value, bytes memory data) public allow("SkaleToken") {
+    function tokenFallback(address from, uint value, bytes calldata data) external allow("SkaleToken") {
         TransactionOperation operationType = fallbackOperationTypeConvert(data);
         if (operationType == TransactionOperation.CreateNode) {
             address nodesFunctionalityAddress = contractManager.contracts(keccak256(abi.encodePacked("NodesFunctionality")));
@@ -60,14 +60,14 @@ contract SkaleManager is Permissions {
         }
     }
 
-    function initWithdrawDeposit(uint nodeIndex) public {
+    function initWithdrawDeposit(uint nodeIndex) external {
         address nodesFunctionalityAddress = contractManager.contracts(keccak256(abi.encodePacked("NodesFunctionality")));
         require(
             INodesFunctionality(nodesFunctionalityAddress).initWithdrawDeposit(msg.sender, nodeIndex),
             "Initialization of deposit withdrawing is failed");
     }
 
-    function completeWithdrawdeposit(uint nodeIndex) public {
+    function completeWithdrawdeposit(uint nodeIndex) external {
         address nodesFunctionalityAddress = contractManager.contracts(keccak256(abi.encodePacked("NodesFunctionality")));
         uint amount = INodesFunctionality(nodesFunctionalityAddress).completeWithdrawDeposit(msg.sender, nodeIndex);
         address skaleTokenAddress = contractManager.contracts(keccak256(abi.encodePacked("SkaleToken")));
@@ -76,7 +76,7 @@ contract SkaleManager is Permissions {
             "Token transfering is failed");
     }
 
-    function deleteNode(uint nodeIndex) public {
+    function deleteNode(uint nodeIndex) external {
         address nodesFunctionalityAddress = contractManager.contracts(keccak256(abi.encodePacked("NodesFunctionality")));
         INodesFunctionality(nodesFunctionalityAddress).removeNode(msg.sender, nodeIndex);
         address validatorsFunctionalityAddress = contractManager
@@ -84,7 +84,7 @@ contract SkaleManager is Permissions {
         IValidatorsFunctionality(validatorsFunctionalityAddress).deleteValidatorByRoot(nodeIndex);
     }
 
-    function deleteNodeByRoot(uint nodeIndex) public onlyOwner {
+    function deleteNodeByRoot(uint nodeIndex) external onlyOwner {
         address nodesFunctionalityAddress = contractManager.contracts(keccak256(abi.encodePacked("NodesFunctionality")));
         INodesFunctionality(nodesFunctionalityAddress).removeNodeByRoot(nodeIndex);
         address validatorsFunctionalityAddress = contractManager
@@ -92,12 +92,12 @@ contract SkaleManager is Permissions {
         IValidatorsFunctionality(validatorsFunctionalityAddress).deleteValidatorByRoot(nodeIndex);
     }
 
-    function deleteSchain(string memory name) public {
+    function deleteSchain(string calldata name) external {
         address schainsFunctionalityAddress = contractManager.contracts(keccak256(abi.encodePacked("SchainsFunctionality")));
         ISchainsFunctionality(schainsFunctionalityAddress).deleteSchain(msg.sender, name);
     }
 
-    function deleteSchainByRoot(string memory name) public {
+    function deleteSchainByRoot(string calldata name) external {
         address schainsFunctionalityAddress = contractManager.contracts(keccak256(abi.encodePacked("SchainsFunctionality")));
         ISchainsFunctionality(schainsFunctionalityAddress).deleteSchainByRoot(name);
     }
@@ -106,7 +106,7 @@ contract SkaleManager is Permissions {
         uint fromValidatorIndex,
         uint toNodeIndex,
         uint32 downtime,
-        uint32 latency) public
+        uint32 latency) external
     {
         address nodesDataAddress = contractManager.contracts(keccak256(abi.encodePacked("NodesData")));
         require(INodesData(nodesDataAddress).isNodeExist(msg.sender, fromValidatorIndex), "Node does not exist for Message sender");
@@ -121,9 +121,9 @@ contract SkaleManager is Permissions {
 
     function sendVerdicts(
         uint fromValidatorIndex,
-        uint[] memory toNodeIndexes,
-        uint32[] memory downtimes,
-        uint32[] memory latencies) public
+        uint[] calldata toNodeIndexes,
+        uint32[] calldata downtimes,
+        uint32[] calldata latencies) external
     {
         address nodesDataAddress = contractManager.contracts(keccak256(abi.encodePacked("NodesData")));
         require(INodesData(nodesDataAddress).isNodeExist(msg.sender, fromValidatorIndex), "Node does not exist for Message sender");
@@ -140,7 +140,7 @@ contract SkaleManager is Permissions {
         }
     }
 
-    function getBounty(uint nodeIndex) public {
+    function getBounty(uint nodeIndex) external {
         address nodesDataAddress = contractManager.contracts(keccak256(abi.encodePacked("NodesData")));
         require(INodesData(nodesDataAddress).isNodeExist(msg.sender, nodeIndex), "Node does not exist for Message sender");
         require(INodesData(nodesDataAddress).isTimeForReward(nodeIndex), "Not time for bounty");

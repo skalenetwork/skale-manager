@@ -22,21 +22,12 @@ contract Pricing is Permissions {
         lastUpdated = now;
     }
 
-    function initNodes() public {
+    function initNodes() external {
         address nodesDataAddress = contractManager.contracts(keccak256(abi.encodePacked("NodesData")));
         totalNodes = INodesData(nodesDataAddress).getNumberOnlineNodes();
     }
 
-    function checkAllNodes() public {
-        address nodesDataAddress = contractManager.contracts(keccak256(abi.encodePacked("NodesData")));
-        uint numberOfActiveNodes = INodesData(nodesDataAddress).getNumberOnlineNodes();
-
-        require(totalNodes != numberOfActiveNodes, "No any changes on nodes");
-        totalNodes = numberOfActiveNodes;
-
-    }
-
-    function adjustPrice() public {
+    function adjustPrice() external {
         require(now > lastUpdated + COOLDOWN_TIME, "It's not a time to update a price");
         checkAllNodes();
         uint loadPercentage = getTotalLoadPercentage();
@@ -58,6 +49,15 @@ contract Pricing is Permissions {
             price += priceChange * timeSkipped;
         }
         lastUpdated = now;
+    }
+
+    function checkAllNodes() public {
+        address nodesDataAddress = contractManager.contracts(keccak256(abi.encodePacked("NodesData")));
+        uint numberOfActiveNodes = INodesData(nodesDataAddress).getNumberOnlineNodes();
+
+        require(totalNodes != numberOfActiveNodes, "No any changes on nodes");
+        totalNodes = numberOfActiveNodes;
+
     }
 
     function getTotalLoadPercentage() public view returns (uint) {

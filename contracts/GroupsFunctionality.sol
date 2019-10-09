@@ -101,6 +101,34 @@ contract GroupsFunctionality is Permissions {
     }
 
     /**
+     * @dev verifySignature - verify signature which create Group by Groups BLS master public key
+     * @param groupIndex - Groups identifier
+     * @param signatureX - first part of BLS signature
+     * @param signatureY - second part of BLS signature
+     * @param hashX - first part of hashed message
+     * @param hashY - second part of hashed message
+     * @return true - if correct, false - if not
+     */
+    function verifySignature(
+        bytes32 groupIndex,
+        uint signatureX,
+        uint signatureY,
+        uint hashX,
+        uint hashY) external view returns (bool)
+    {
+        address groupsDataAddress = contractManager.contracts(keccak256(abi.encodePacked(dataName)));
+        uint publicKeyx1;
+        uint publicKeyy1;
+        uint publicKeyx2;
+        uint publicKeyy2;
+        (publicKeyx1, publicKeyy1, publicKeyx2, publicKeyy2) = IGroupsData(groupsDataAddress).getGroupsPublicKey(groupIndex);
+        address skaleVerifierAddress = contractManager.contracts(keccak256(abi.encodePacked("SkaleVerifier")));
+        return ISkaleVerifier(skaleVerifierAddress).verify(
+            signatureX, signatureY, hashX, hashY, publicKeyx1, publicKeyy1, publicKeyx2, publicKeyy2
+        );
+    }
+
+    /**
      * @dev addGroup - creates and adds new Group to Data contract
      * function could be run only by executor
      * @param groupIndex - Groups identifier
@@ -148,34 +176,6 @@ contract GroupsFunctionality is Permissions {
             data,
             uint32(block.timestamp),
             gasleft());
-    }
-
-    /**
-     * @dev verifySignature - verify signature which create Group by Groups BLS master public key
-     * @param groupIndex - Groups identifier
-     * @param signatureX - first part of BLS signature
-     * @param signatureY - second part of BLS signature
-     * @param hashX - first part of hashed message
-     * @param hashY - second part of hashed message
-     * @return true - if correct, false - if not
-     */
-    function verifySignature(
-        bytes32 groupIndex,
-        uint signatureX,
-        uint signatureY,
-        uint hashX,
-        uint hashY) public view returns (bool)
-    {
-        address groupsDataAddress = contractManager.contracts(keccak256(abi.encodePacked(dataName)));
-        uint publicKeyx1;
-        uint publicKeyy1;
-        uint publicKeyx2;
-        uint publicKeyy2;
-        (publicKeyx1, publicKeyy1, publicKeyx2, publicKeyy2) = IGroupsData(groupsDataAddress).getGroupsPublicKey(groupIndex);
-        address skaleVerifierAddress = contractManager.contracts(keccak256(abi.encodePacked("SkaleVerifier")));
-        return ISkaleVerifier(skaleVerifierAddress).verify(
-            signatureX, signatureY, hashX, hashY, publicKeyx1, publicKeyy1, publicKeyx2, publicKeyy2
-        );
     }
 
     /**
