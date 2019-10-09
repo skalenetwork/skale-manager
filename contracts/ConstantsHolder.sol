@@ -30,7 +30,7 @@ import "./interfaces/IConstants.sol";
 contract ConstantsHolder is IConstants, Permissions {
 
     // initial price for creating Node (100 SKL)
-    uint public constant NODE_DEPOSIT = 100000000000000000000;
+    uint public constant NODE_DEPOSIT = 100 * 1e18;
 
     // part of Node for Tiny Skale-chain (1/128 of Node)
     uint public constant TINY_DIVISOR = 128;
