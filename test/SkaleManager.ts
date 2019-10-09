@@ -40,7 +40,8 @@ const ValidatorsData: ValidatorsDataContract = artifacts.require("./ValidatorsDa
 const ValidatorsFunctionality: ValidatorsFunctionalityContract = artifacts.require("./ValidatorsFunctionality");
 const SchainsData: SchainsDataContract = artifacts.require("./SchainsData");
 const SchainsFunctionality: SchainsFunctionalityContract = artifacts.require("./SchainsFunctionality");
-const SchainsFunctionalityInternal: SchainsFunctionalityInternalContract = artifacts.require("./SchainsFunctionalityInternal");
+const SchainsFunctionalityInternal: SchainsFunctionalityInternalContract
+    = artifacts.require("./SchainsFunctionalityInternal");
 const ManagerData: ManagerDataContract = artifacts.require("./ManagerData");
 const SkaleDKG: SkaleDKGContract = artifacts.require("./SkaleDKG");
 

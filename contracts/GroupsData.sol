@@ -73,12 +73,12 @@ contract GroupsData is IGroupsData, Permissions {
      * @param amountOfNodes - recommended number of Nodes in this Group
      * @param data - some extra data
      */
-    function addGroup(bytes32 groupIndex, uint amountOfNodes, bytes32 data) public allow(executorName) {
+    function addGroup(bytes32 groupIndex, uint amountOfNodes, bytes32 data) external allow(executorName) {
         groups[groupIndex].active = true;
         groups[groupIndex].recommendedNumberOfNodes = amountOfNodes;
         groups[groupIndex].groupData = data;
         // Open channel in SkaleDKG
-        address skaleDKGAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("SkaleDKG")));
+        address skaleDKGAddress = contractManager.contracts(keccak256(abi.encodePacked("SkaleDKG")));
         ISkaleDKG(skaleDKGAddress).openChannel(groupIndex, address(this));
     }
 
@@ -88,7 +88,7 @@ contract GroupsData is IGroupsData, Permissions {
      * @param groupIndex - Groups identifier
      * @param nodeIndex - index of Node which would be notes like exception
      */
-    function setException(bytes32 groupIndex, uint nodeIndex) public allow(executorName) {
+    function setException(bytes32 groupIndex, uint nodeIndex) external allow(executorName) {
         exceptions[groupIndex].check[nodeIndex] = true;
     }
 
@@ -106,7 +106,7 @@ contract GroupsData is IGroupsData, Permissions {
         uint publicKeyx1,
         uint publicKeyy1,
         uint publicKeyx2,
-        uint publicKeyy2) public allow("SkaleDKG")
+        uint publicKeyy2) external allow("SkaleDKG")
     {
         groups[groupIndex].groupsPublicKey[0] = publicKeyx1;
         groups[groupIndex].groupsPublicKey[1] = publicKeyy1;
@@ -120,7 +120,7 @@ contract GroupsData is IGroupsData, Permissions {
      * @param groupIndex - Groups identifier
      * @param nodeIndex - index of Node which would be added to the Group
      */
-    function setNodeInGroup(bytes32 groupIndex, uint nodeIndex) public allow(executorName) {
+    function setNodeInGroup(bytes32 groupIndex, uint nodeIndex) external allow(executorName) {
         groups[groupIndex].nodesInGroup.push(nodeIndex);
     }
 
@@ -130,12 +130,13 @@ contract GroupsData is IGroupsData, Permissions {
      * @param indexOfNode - Nodes identifier
      * @param groupIndex - Groups identifier
      */
-    function removeNodeFromGroup(uint indexOfNode, bytes32 groupIndex) public allow(executorName) {
-        delete groups[groupIndex].nodesInGroup[indexOfNode];
-        // (groups[groupIndex].nodesInGroup[groups[groupIndex].nodesInGroup.length-1],
-        // groups[groupIndex].nodesInGroup[indexOfNode]) = (groups[groupIndex].nodesInGroup[indexOfNode],
-        // groups[groupIndex].nodesInGroup[groups[groupIndex].nodesInGroup.length-1]);
-        // groups[groupIndex].nodesInGroup.length--;
+    function removeNodeFromGroup(uint indexOfNode, bytes32 groupIndex) external allow(executorName) {
+        uint size = groups[groupIndex].nodesInGroup.length;
+        if (indexOfNode < size) {
+            groups[groupIndex].nodesInGroup[indexOfNode] = groups[groupIndex].nodesInGroup[size - 1];
+        }
+        delete groups[groupIndex].nodesInGroup[size - 1];
+        groups[groupIndex].nodesInGroup.length--;
     }
 
     /**
@@ -143,7 +144,7 @@ contract GroupsData is IGroupsData, Permissions {
      * function could be run only by executor
      * @param groupIndex - Groups identifier
      */
-    function removeAllNodesInGroup(bytes32 groupIndex) public allow(executorName) {
+    function removeAllNodesInGroup(bytes32 groupIndex) external allow(executorName) {
         delete groups[groupIndex].nodesInGroup;
         groups[groupIndex].nodesInGroup.length = 0;
     }
@@ -154,7 +155,7 @@ contract GroupsData is IGroupsData, Permissions {
      * @param groupIndex - Groups identifier
      * @param nodesInGroup - array of indexes of Nodes which would be added to the Group
     */
-    function setNodesInGroup(bytes32 groupIndex, uint[] memory nodesInGroup) public allow(executorName) {
+    function setNodesInGroup(bytes32 groupIndex, uint[] calldata nodesInGroup) external allow(executorName) {
         groups[groupIndex].nodesInGroup = nodesInGroup;
     }
 
@@ -164,7 +165,7 @@ contract GroupsData is IGroupsData, Permissions {
      * @param groupIndex - Groups identifier
      * @param amountOfNodes - recommended number of Nodes in this Group
     */
-    function setNewAmountOfNodes(bytes32 groupIndex, uint amountOfNodes) public allow(executorName) {
+    function setNewAmountOfNodes(bytes32 groupIndex, uint amountOfNodes) external allow(executorName) {
         groups[groupIndex].recommendedNumberOfNodes = amountOfNodes;
     }
 
@@ -174,12 +175,8 @@ contract GroupsData is IGroupsData, Permissions {
      * @param groupIndex - Groups identifier
      * @param data - new extra data
      */
-    function setNewGroupData(bytes32 groupIndex, bytes32 data) public allow(executorName) {
+    function setNewGroupData(bytes32 groupIndex, bytes32 data) external allow(executorName) {
         groups[groupIndex].groupData = data;
-    }
-
-    function setGroupFailedDKG(bytes32 groupIndex) public allow("SkaleDKG") {
-        groups[groupIndex].succesfulDKG = false;
     }
 
     /**
@@ -187,7 +184,7 @@ contract GroupsData is IGroupsData, Permissions {
      * function could be run only be executor
      * @param groupIndex - Groups identifier
      */
-    function removeGroup(bytes32 groupIndex) public allow(executorName) {
+    function removeGroup(bytes32 groupIndex) external allow(executorName) {
         groups[groupIndex].active = false;
         delete groups[groupIndex].groupData;
         delete groups[groupIndex].recommendedNumberOfNodes;
@@ -199,7 +196,7 @@ contract GroupsData is IGroupsData, Permissions {
      * function could be run only by executor
      * @param groupIndex - Groups identifier
      */
-    function removeExceptionNode(bytes32 groupIndex, uint nodeIndex) public allow(executorName) {
+    function removeExceptionNode(bytes32 groupIndex, uint nodeIndex) external allow(executorName) {
         exceptions[groupIndex].check[nodeIndex] = false;
     }
 
@@ -208,7 +205,7 @@ contract GroupsData is IGroupsData, Permissions {
      * @param groupIndex - Groups identifier
      * @return true - active, false - not active
      */
-    function isGroupActive(bytes32 groupIndex) public view returns (bool) {
+    function isGroupActive(bytes32 groupIndex) external view returns (bool) {
         return groups[groupIndex].active;
     }
 
@@ -218,7 +215,7 @@ contract GroupsData is IGroupsData, Permissions {
      * @param nodeIndex - index of Node
      * return true - exception, false - not exception
      */
-    function isExceptionNode(bytes32 groupIndex, uint nodeIndex) public view returns (bool) {
+    function isExceptionNode(bytes32 groupIndex, uint nodeIndex) external view returns (bool) {
         return exceptions[groupIndex].check[nodeIndex];
     }
 
@@ -227,7 +224,7 @@ contract GroupsData is IGroupsData, Permissions {
      * @param groupIndex - Groups identifier
      * @return publicKey(x1, y1, x2, y2) - parts of BLS master public key
      */
-    function getGroupsPublicKey(bytes32 groupIndex) public view returns (uint, uint, uint, uint) {
+    function getGroupsPublicKey(bytes32 groupIndex) external view returns (uint, uint, uint, uint) {
         return (
             groups[groupIndex].groupsPublicKey[0],
             groups[groupIndex].groupsPublicKey[1],
@@ -241,7 +238,7 @@ contract GroupsData is IGroupsData, Permissions {
      * @param groupIndex - Groups identifier
      * @return array of indexes of Nodes in Group
      */
-    function getNodesInGroup(bytes32 groupIndex) public view returns (uint[] memory) {
+    function getNodesInGroup(bytes32 groupIndex) external view returns (uint[] memory) {
         return groups[groupIndex].nodesInGroup;
     }
 
@@ -250,7 +247,7 @@ contract GroupsData is IGroupsData, Permissions {
      * @param groupIndex - Groups identifier
      * @return Groups extra data
      */
-    function getGroupData(bytes32 groupIndex) public view returns (bytes32) {
+    function getGroupData(bytes32 groupIndex) external view returns (bytes32) {
         return groups[groupIndex].groupData;
     }
 
@@ -259,7 +256,7 @@ contract GroupsData is IGroupsData, Permissions {
      * @param groupIndex - Groups identifier
      * @return recommended number of Nodes
      */
-    function getRecommendedNumberOfNodes(bytes32 groupIndex) public view returns (uint) {
+    function getRecommendedNumberOfNodes(bytes32 groupIndex) external view returns (uint) {
         return groups[groupIndex].recommendedNumberOfNodes;
     }
 
@@ -268,7 +265,11 @@ contract GroupsData is IGroupsData, Permissions {
      * @param groupIndex - Groups identifier
      * @return number of Nodes in Group
      */
-    function getNumberOfNodesInGroup(bytes32 groupIndex) public view returns (uint) {
+    function getNumberOfNodesInGroup(bytes32 groupIndex) external view returns (uint) {
         return groups[groupIndex].nodesInGroup.length;
+    }
+
+    function setGroupFailedDKG(bytes32 groupIndex) public allow("SkaleDKG") {
+        groups[groupIndex].succesfulDKG = false;
     }
 }

@@ -1,5 +1,6 @@
 pragma solidity ^0.5.0;
 
+
 /**
  * @title SchainsData - interface of SchainsData contract
  * Contains only needed functions for current contract

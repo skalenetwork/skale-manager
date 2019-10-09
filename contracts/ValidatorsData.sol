@@ -47,7 +47,7 @@ contract ValidatorsData is GroupsData {
     /**
      *  Add validated node or update existing one if it is already exits
      */
-    function addValidatedNode(bytes32 validatorIndex, bytes32 data) public allow(executorName) {
+    function addValidatedNode(bytes32 validatorIndex, bytes32 data) external allow(executorName) {
         uint indexLength = 14;
         require(data.length >= indexLength, "data is too small");
         for (uint i = 0; i < validatedNodes[validatorIndex].length; ++i) {
@@ -62,11 +62,11 @@ contract ValidatorsData is GroupsData {
         validatedNodes[validatorIndex].push(data);
     }
 
-    function addVerdict(bytes32 validatorIndex, uint32 downtime, uint32 latency) public allow(executorName) {
+    function addVerdict(bytes32 validatorIndex, uint32 downtime, uint32 latency) external allow(executorName) {
         verdicts[validatorIndex].push([downtime, latency]);
     }
 
-    function removeValidatedNode(bytes32 validatorIndex, uint indexOfValidatedNode) public allow(executorName) {
+    function removeValidatedNode(bytes32 validatorIndex, uint indexOfValidatedNode) external allow(executorName) {
         if (indexOfValidatedNode != validatedNodes[validatorIndex].length - 1) {
             validatedNodes[validatorIndex][indexOfValidatedNode] = validatedNodes[validatorIndex][validatedNodes[validatorIndex].length - 1];
         }
@@ -74,19 +74,19 @@ contract ValidatorsData is GroupsData {
         validatedNodes[validatorIndex].length--;
     }
 
-    function removeAllValidatedNodes(bytes32 validatorIndex) public allow(executorName) {
+    function removeAllValidatedNodes(bytes32 validatorIndex) external allow(executorName) {
         delete validatedNodes[validatorIndex];
     }
 
-    function removeAllVerdicts(bytes32 validatorIndex) public allow(executorName) {
+    function removeAllVerdicts(bytes32 validatorIndex) external allow(executorName) {
         verdicts[validatorIndex].length = 0;
     }
 
-    function getValidatedArray(bytes32 validatorIndex) public view returns (bytes32[] memory) {
+    function getValidatedArray(bytes32 validatorIndex) external view returns (bytes32[] memory) {
         return validatedNodes[validatorIndex];
     }
 
-    function getLengthOfMetrics(bytes32 validatorIndex) public view returns (uint) {
+    function getLengthOfMetrics(bytes32 validatorIndex) external view returns (uint) {
         return verdicts[validatorIndex].length;
     }
 }

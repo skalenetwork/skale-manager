@@ -28,8 +28,7 @@ import "./ContractManager.sol";
  */
 contract Permissions is Ownable {
 
-    // address of ContractManager
-    address contractsAddress;
+    ContractManager contractManager;
 
     /**
      * @dev allow - throws if called by any account and contract other than the owner
@@ -38,7 +37,7 @@ contract Permissions is Ownable {
      */
     modifier allow(string memory contractName) {
         require(
-            ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked(contractName))) == msg.sender || owner == msg.sender,
+            contractManager.contracts(keccak256(abi.encodePacked(contractName))) == msg.sender || owner == msg.sender,
             "Message sender is invalid");
         _;
     }
@@ -48,6 +47,6 @@ contract Permissions is Ownable {
      * @param newContractsAddress - current address of ContractManager
      */
     constructor(address newContractsAddress) public {
-        contractsAddress = newContractsAddress;
+        contractManager = ContractManager(newContractsAddress);
     }
 }

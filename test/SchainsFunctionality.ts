@@ -198,9 +198,9 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
             });
         });
 
-        describe("when 4 nodes are registered", async () => {
+        describe("when 27 nodes are registered", async () => {
             beforeEach(async () => {
-                const nodesCount = 4;
+                const nodesCount = 27;
                 for (const index of Array.from(Array(nodesCount).keys())) {
                     const hexIndex = ("0" + index.toString(16)).slice(-2);
                     await nodesFunctionality.createNode(validator, "100000000000000000000",
@@ -236,7 +236,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
             });
 
             it("should not create 4 node schain with 1 deleted node", async () => {
-                await nodesFunctionality.removeNodeByRoot(0);
+                await nodesFunctionality.removeNodeByRoot(1);
 
                 const deposit = await schainsFunctionality.getSchainPrice(5, 5);
 
@@ -252,17 +252,18 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
             });
 
             it("should not create 4 node schain on deleted node", async () => {
-                await nodesFunctionality.removeNodeByRoot(0);
+                const removedNode = 1;
+                await nodesFunctionality.removeNodeByRoot(removedNode);
 
                 await nodesFunctionality.createNode(validator, "100000000000000000000",
                         "0x00" +
                         "2161" +
                         "0000" +
-                        "7f000005" +
-                        "7f000005" +
+                        "7f000028" +
+                        "7f000028" +
                         "1122334455667788990011223344556677889900112233445566778899001122" +
                         "1122334455667788990011223344556677889900112233445566778899001122" +
-                        "d205");
+                        "d228");
 
                 const deposit = await schainsFunctionality.getSchainPrice(5, 5);
 
@@ -278,13 +279,9 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
 
                 let nodesInGroup = await schainsData.getNodesInGroup(web3.utils.soliditySha3("d2"));
 
-                let zeroNodeInArray = false;
-
                 for (const node of nodesInGroup) {
-                    zeroNodeInArray = (web3.utils.toBN(node).toString() === "0" ? true : false);
+                    expect(web3.utils.toBN(node).toNumber()).to.be.not.equal(removedNode);
                 }
-
-                zeroNodeInArray.should.be.equal(false);
 
                 await schainsFunctionality.addSchain(
                     holder,
@@ -298,13 +295,9 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
 
                 nodesInGroup = await schainsData.getNodesInGroup(web3.utils.soliditySha3("d3"));
 
-                zeroNodeInArray = false;
-
                 for (const node of nodesInGroup) {
-                    zeroNodeInArray = (web3.utils.toBN(node).toString() === "0" ? true : false);
+                    expect(web3.utils.toBN(node).toNumber()).to.be.not.equal(removedNode);
                 }
-
-                zeroNodeInArray.should.be.equal(false);
 
                 await schainsFunctionality.addSchain(
                     holder,
@@ -318,13 +311,9 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
 
                 nodesInGroup = await schainsData.getNodesInGroup(web3.utils.soliditySha3("d4"));
 
-                zeroNodeInArray = false;
-
                 for (const node of nodesInGroup) {
-                    zeroNodeInArray = (web3.utils.toBN(node).toString() === "0" ? true : false);
+                    expect(web3.utils.toBN(node).toNumber()).to.be.not.equal(removedNode);
                 }
-
-                zeroNodeInArray.should.be.equal(false);
 
                 await schainsFunctionality.addSchain(
                     holder,
@@ -338,13 +327,9 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
 
                 nodesInGroup = await schainsData.getNodesInGroup(web3.utils.soliditySha3("d5"));
 
-                zeroNodeInArray = false;
-
                 for (const node of nodesInGroup) {
-                    zeroNodeInArray = (web3.utils.toBN(node).toString() === "0" ? true : false);
+                    expect(web3.utils.toBN(node).toNumber()).to.be.not.equal(removedNode);
                 }
-
-                zeroNodeInArray.should.be.equal(false);
             });
         });
 
@@ -649,12 +634,11 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                     await schainsFunctionality.rotateNode(j, schainId);
                 }
             }
-            let sum = 0;
+
             nodes = await schainsData.getNodesInGroup(bobSchain);
-            for (let j = 5; j < nodes.length; j++) {
-                sum += nodes[j].toNumber();
-            }
-            sum.should.be.equal(fractionalSum);
+            nodes = nodes.map((value) => value.toNumber());
+            nodes.sort();
+            nodes.should.be.deep.equal([3, 4, 6, 7, 8]);
         });
 
         it("should rotate nodes on 2 schains", async () => {
@@ -670,11 +654,9 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
             await schainsFunctionalityInternal.createGroupForSchain("bob", bobSchain, 5, 8);
             await schainsFunctionalityInternal.createGroupForSchain("vitalik", vitalikSchain, 5, 8);
 
-            let fractionalSum = 0;
             for (; i < 7; i++) {
                 await nodesData.addNode(holder, "John", "0x7f000001", "0x7f000002", 8545, "0x1122334455");
                 await nodesData.addFractionalNode(i);
-                fractionalSum += i;
             }
             for (let j = 0; j < 2; j++) {
                 await nodesFunctionality.removeNodeByRoot(j);
@@ -684,21 +666,16 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                 }
             }
 
-            let bobSum = 0;
             nodes = await schainsData.getNodesInGroup(bobSchain);
-            for (let j = 5; j < nodes.length; j++) {
-                bobSum += nodes[j].toNumber();
-            }
+            nodes = nodes.map((value) => value.toNumber());
+            nodes.sort();
+            nodes.should.be.deep.equal([2, 3, 4, 5, 6]);
 
-            let vitalikSum = 0;
             nodes = await schainsData.getNodesInGroup(vitalikSchain);
-            for (let j = 5; j < nodes.length; j++) {
-                vitalikSum += nodes[j].toNumber();
-            }
+            nodes = nodes.map((value) => value.toNumber());
+            nodes.sort();
 
-            bobSum.should.be.equal(fractionalSum);
-            vitalikSum.should.be.equal(fractionalSum);
-
+            nodes.should.be.deep.equal([2, 3, 4, 5, 6]);
         });
 
         it("should rotate node on full schain", async () => {

@@ -50,4 +50,5 @@ interface INodesData {
     function getActiveFractionalNodes() external view returns (uint[] memory);
     function getActiveFullNodes() external view returns (uint[] memory);
     function getActiveNodeIds() external view returns (uint[] memory activeNodeIds);
+    function getNodesWithFreeSpace(uint partOfNode, uint freeSpace) external view returns (uint[] memory);
 }
