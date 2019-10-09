@@ -21,14 +21,6 @@ contract Token {
     // Total amount of tokens
     uint256 public totalSupply;
 
-    // fancy name: eg Simon Bucks
-    string public name;
-    // How many decimals to show. ie. There could 1000 base units with 3 decimals.
-    // Meaning 0.980 SBX = 980 base units. It's like comparing 1 wei to 1 ether.
-    uint8 public decimals;
-    // An identifier: eg SBX
-    string public symbol;
-
     /**
      * @param owner The address from which the balance will be retrieved.
      * @return The balance.
