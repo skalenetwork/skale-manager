@@ -68,10 +68,10 @@ contract SchainsData is ISchainsData, GroupsData {
      * @param deposit - given amount of SKL
      */
     function initializeSchain(
-        string memory name,
+        string calldata name,
         address from,
         uint lifetime,
-        uint deposit) public allow("SchainsFunctionality")
+        uint deposit) external allow("SchainsFunctionality")
     {
         bytes32 schainId = keccak256(abi.encodePacked(name));
         schains[schainId].name = name;
@@ -90,7 +90,7 @@ contract SchainsData is ISchainsData, GroupsData {
      * @param schainId - hash by Schain name
      * @param from - Schain owner
      */
-    function setSchainIndex(bytes32 schainId, address from) public allow("SchainsFunctionality") {
+    function setSchainIndex(bytes32 schainId, address from) external allow("SchainsFunctionality") {
         schains[schainId].indexInOwnerList = schainIndexes[from].length;
         schainIndexes[from].push(schainId);
     }
@@ -101,7 +101,7 @@ contract SchainsData is ISchainsData, GroupsData {
      * @param nodeIndex - index of Node
      * @param schainId - hash by Schain name
      */
-    function addSchainForNode(uint nodeIndex, bytes32 schainId) public allow(executorName) {
+    function addSchainForNode(uint nodeIndex, bytes32 schainId) external allow(executorName) {
         if (holesForNodes[nodeIndex].length == 0) {
             schainsForNodes[nodeIndex].push(schainId);
         } else {
@@ -131,7 +131,7 @@ contract SchainsData is ISchainsData, GroupsData {
      * @param schainId - hash by Schain name
      * @param partOfNode - occupied space
      */
-    function setSchainPartOfNode(bytes32 schainId, uint partOfNode) public allow(executorName) {
+    function setSchainPartOfNode(bytes32 schainId, uint partOfNode) external allow(executorName) {
         schains[schainId].partOfNode = partOfNode;
         if (partOfNode > 0) {
             sumOfSchainsResources += (128 / partOfNode) * groups[schainId].nodesInGroup.length;
@@ -145,7 +145,7 @@ contract SchainsData is ISchainsData, GroupsData {
      * @param lifetime - time which would be added to lifetime of Schain
      * @param deposit - amount of SKL which payed for this time
      */
-    function changeLifetime(bytes32 schainId, uint lifetime, uint deposit) public allow("SchainsFunctionality") {
+    function changeLifetime(bytes32 schainId, uint lifetime, uint deposit) external allow("SchainsFunctionality") {
         schains[schainId].deposit += deposit;
         schains[schainId].lifetime += lifetime;
     }
@@ -156,7 +156,7 @@ contract SchainsData is ISchainsData, GroupsData {
      * @param schainId - hash by Schain name
      * @param from - owner of Schain
      */
-    function removeSchain(bytes32 schainId, address from) public allow("SchainsFunctionality") {
+    function removeSchain(bytes32 schainId, address from) external allow("SchainsFunctionality") {
         uint length = schainIndexes[from].length;
         uint index = schains[schainId].indexInOwnerList;
         if (index != length - 1) {
@@ -188,7 +188,7 @@ contract SchainsData is ISchainsData, GroupsData {
      * @param nodeIndex - index of Node
      * @param schainIndex - index of Schain in schainsForNodes array by this Node
      */
-    function removeSchainForNode(uint nodeIndex, uint schainIndex) public allow("SchainsFunctionalityInternal") {
+    function removeSchainForNode(uint nodeIndex, uint schainIndex) external allow("SchainsFunctionalityInternal") {
         uint length = schainsForNodes[nodeIndex].length;
         if (schainIndex == length - 1) {
             delete schainsForNodes[nodeIndex][length - 1];
@@ -209,7 +209,7 @@ contract SchainsData is ISchainsData, GroupsData {
      * @dev getSchains - gets all Schains at the system
      * @return array of hashes by Schain names
      */
-    function getSchains() public view returns (bytes32[] memory) {
+    function getSchains() external view returns (bytes32[] memory) {
         return schainsAtSystem;
     }
 
@@ -218,7 +218,7 @@ contract SchainsData is ISchainsData, GroupsData {
      * @param schainId - hash by Schain name
      * @return occupied space
      */
-    function getSchainsPartOfNode(bytes32 schainId) public view returns (uint) {
+    function getSchainsPartOfNode(bytes32 schainId) external view returns (uint) {
         return schains[schainId].partOfNode;
     }
 
@@ -227,7 +227,7 @@ contract SchainsData is ISchainsData, GroupsData {
      * @param from - owner of Schain
      * return number of Schains
      */
-    function getSchainListSize(address from) public view returns (uint) {
+    function getSchainListSize(address from) external view returns (uint) {
         return schainIndexes[from].length;
     }
 
@@ -236,7 +236,7 @@ contract SchainsData is ISchainsData, GroupsData {
      * @param from - owner of some Schains
      * @return array of hashes by Schain names
      */
-    function getSchainIdsByAddress(address from) public view returns (bytes32[] memory) {
+    function getSchainIdsByAddress(address from) external view returns (bytes32[] memory) {
         return schainIndexes[from];
     }
 
@@ -246,7 +246,7 @@ contract SchainsData is ISchainsData, GroupsData {
      * @param nodeIndex - index of Node
      * @return array of hashes by Schain names
      */
-    function getSchainIdsForNode(uint nodeIndex) public view returns (bytes32[] memory) {
+    function getSchainIdsForNode(uint nodeIndex) external view returns (bytes32[] memory) {
         return schainsForNodes[nodeIndex];
     }
 
@@ -255,7 +255,7 @@ contract SchainsData is ISchainsData, GroupsData {
      * @param nodeIndex - index of Node
      * @return number of Schains
      */
-    function getLengthOfSchainsForNode(uint nodeIndex) public view returns (uint) {
+    function getLengthOfSchainsForNode(uint nodeIndex) external view returns (uint) {
         return schainsForNodes[nodeIndex].length;
     }
 
@@ -264,11 +264,11 @@ contract SchainsData is ISchainsData, GroupsData {
      * @param schainName - name of Schain
      * @return hash
      */
-    function getSchainIdFromSchainName(string memory schainName) public pure returns (bytes32) {
+    function getSchainIdFromSchainName(string calldata schainName) external pure returns (bytes32) {
         return keccak256(abi.encodePacked(schainName));
     }
 
-    function getSchainOwner(bytes32 schainId) public view returns (address) {
+    function getSchainOwner(bytes32 schainId) external view returns (address) {
         return schains[schainId].owner;
     }
 
@@ -278,7 +278,7 @@ contract SchainsData is ISchainsData, GroupsData {
      * @param name - possible new name of Schain
      * @return if available - true, else - false
      */
-    function isSchainNameAvailable(string memory name) public view returns (bool) {
+    function isSchainNameAvailable(string calldata name) external view returns (bool) {
         bytes32 schainId = keccak256(abi.encodePacked(name));
         return schains[schainId].owner == address(0);
     }
@@ -288,7 +288,7 @@ contract SchainsData is ISchainsData, GroupsData {
      * @param schainId - hash by Schain name
      * @return if expired - true, else - false
      */
-    function isTimeExpired(bytes32 schainId) public view returns (bool) {
+    function isTimeExpired(bytes32 schainId) external view returns (bool) {
         return schains[schainId].startDate + schains[schainId].lifetime < block.timestamp;
     }
 
@@ -298,7 +298,7 @@ contract SchainsData is ISchainsData, GroupsData {
      * @param schainId - hash by Schain name
      * @return if owner - true, else - false
      */
-    function isOwnerAddress(address from, bytes32 schainId) public view returns (bool) {
+    function isOwnerAddress(address from, bytes32 schainId) external view returns (bool) {
         return schains[schainId].owner == from;
     }
 

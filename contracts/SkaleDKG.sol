@@ -42,7 +42,7 @@ contract SkaleDKG is Permissions, ReentrancyGuard {
         uint y;
     }
 
-    uint p = 21888242871839275222246405745257275088696311157297823662689037894645226208583;
+    uint constant P = 21888242871839275222246405745257275088696311157297823662689037894645226208583;
 
     mapping(bytes32 => Channel) channels;
 
@@ -59,7 +59,7 @@ contract SkaleDKG is Permissions, ReentrancyGuard {
 
     }
 
-    function openChannel(bytes32 groupIndex, address dataAddress) public {
+    function openChannel(bytes32 groupIndex, address dataAddress) external {
         require(dataAddress == msg.sender, "Does not allow");
         require(!channels[groupIndex].active, "Channel already is created");
         channels[groupIndex].active = true;
@@ -70,8 +70,8 @@ contract SkaleDKG is Permissions, ReentrancyGuard {
     function broadcast(
         bytes32 groupIndex,
         uint nodeIndex,
-        bytes memory verificationVector,
-        bytes memory secretKeyContribution) public
+        bytes calldata verificationVector,
+        bytes calldata secretKeyContribution) external
     {
         require(channels[groupIndex].active, "Chennel is not created");
 
@@ -81,13 +81,14 @@ contract SkaleDKG is Permissions, ReentrancyGuard {
         bytes32 vector3;
         bytes32 vector4;
         bytes32 vector5;
+        bytes memory memoryVerificationVector = verificationVector;
         assembly {
-            vector := mload(add(verificationVector, 32))
-            vector1 := mload(add(verificationVector, 64))
-            vector2 := mload(add(verificationVector, 96))
-            vector3 := mload(add(verificationVector, 128))
-            vector4 := mload(add(verificationVector, 160))
-            vector5 := mload(add(verificationVector, 192))
+            vector := mload(add(memoryVerificationVector, 32))
+            vector1 := mload(add(memoryVerificationVector, 64))
+            vector2 := mload(add(memoryVerificationVector, 96))
+            vector3 := mload(add(memoryVerificationVector, 128))
+            vector4 := mload(add(memoryVerificationVector, 160))
+            vector5 := mload(add(memoryVerificationVector, 192))
         }
         /*if (channels[groupIndex].publicKeyx.x == 0 && channels[groupIndex].publicKeyx.y == 0 && channels[groupIndex].publicKeyy.x == 0 && channels[groupIndex].publicKeyy.y == 0) {
             (channels[groupIndex].publicKeyx, channels[groupIndex].publicKeyy) = toAffineCoordinatesG2(Fp2({ x: uint(vector), y: uint(vector1) }), Fp2({ x: uint(vector2), y: uint(vector3) }), Fp2({ x: uint(vector4), y: uint(vector5) }));
@@ -114,7 +115,7 @@ contract SkaleDKG is Permissions, ReentrancyGuard {
         isBroadcast(groupIndex, nodeIndex);
     }
 
-    function complaint() public;
+    function complaint() external;
 
     //function allright() public;
 
@@ -168,47 +169,47 @@ contract SkaleDKG is Permissions, ReentrancyGuard {
     }
 
     function isNodeByMessageSender(uint nodeIndex, address from) internal view returns (bool) {
-        address nodesDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
+        address nodesDataAddress = contractManager.contracts(keccak256(abi.encodePacked("NodesData")));
         return INodesData(nodesDataAddress).isNodeExist(from, nodeIndex);
     }
 
-    function addFp2(Fp2 memory a, Fp2 memory b) internal view returns (Fp2 memory) {
-        return Fp2({ x: addmod(a.x, b.x, p), y: addmod(a.y, b.y, p) });
+    function addFp2(Fp2 memory a, Fp2 memory b) internal pure returns (Fp2 memory) {
+        return Fp2({ x: addmod(a.x, b.x, P), y: addmod(a.y, b.y, P) });
     }
 
-    function minusFp2(Fp2 memory a, Fp2 memory b) internal view returns (Fp2 memory) {
+    function minusFp2(Fp2 memory a, Fp2 memory b) internal pure returns (Fp2 memory) {
         uint first;
         uint second;
         if (a.x >= b.x) {
-            first = addmod(a.x, p - b.x, p);
+            first = addmod(a.x, P - b.x, P);
         } else {
-            first = p - addmod(b.x, p - a.x, p);
+            first = P - addmod(b.x, P - a.x, P);
         }
         if (a.y >= b.y) {
-            second = addmod(a.y, p - b.y, p);
+            second = addmod(a.y, P - b.y, P);
         } else {
-            second = p - addmod(b.y, p - a.y, p);
+            second = P - addmod(b.y, P - a.y, P);
         }
         return Fp2({ x: first, y: second });
     }
 
-    function mulFp2(Fp2 memory a, Fp2 memory b) internal view returns (Fp2 memory) {
-        uint aA = mulmod(a.x, b.x, p);
-        uint bB = mulmod(a.y, b.y, p);
+    function mulFp2(Fp2 memory a, Fp2 memory b) internal pure returns (Fp2 memory) {
+        uint aA = mulmod(a.x, b.x, P);
+        uint bB = mulmod(a.y, b.y, P);
         return Fp2({
-            x: addmod(aA, mulmod(p - 1, bB, p), p),
-            y: addmod(mulmod(addmod(a.x, a.y, p), addmod(b.x, b.y, p), p), p - addmod(aA, bB, p), p)
+            x: addmod(aA, mulmod(P - 1, bB, P), P),
+            y: addmod(mulmod(addmod(a.x, a.y, P), addmod(b.x, b.y, P), P), P - addmod(aA, bB, P), P)
         });
     }
 
-    function squaredFp2(Fp2 memory a) internal view returns (Fp2 memory) {
-        uint ab = mulmod(a.x, a.y, p);
-        uint mult = mulmod(addmod(a.x, a.y, p), addmod(a.x, mulmod(p - 1, a.y, p), p), p);
-        uint addition = addmod(ab, mulmod(p - 1, ab, p), p);
-        return Fp2({ x: addmod(mult, p - addition, p), y: addmod(ab, ab, p) });
+    function squaredFp2(Fp2 memory a) internal pure returns (Fp2 memory) {
+        uint ab = mulmod(a.x, a.y, P);
+        uint mult = mulmod(addmod(a.x, a.y, P), addmod(a.x, mulmod(P - 1, a.y, P), P), P);
+        uint addition = addmod(ab, mulmod(P - 1, ab, P), P);
+        return Fp2({ x: addmod(mult, P - addition, P), y: addmod(ab, ab, P) });
     }
 
-    function doubleG2(Fp2 memory x1, Fp2 memory y1, Fp2 memory z1) internal view returns (Fp2 memory, Fp2 memory) {
+    function doubleG2(Fp2 memory x1, Fp2 memory y1, Fp2 memory z1) internal pure returns (Fp2 memory, Fp2 memory) {
         Fp2 memory a = squaredFp2(x1);
         Fp2 memory c = squaredFp2(squaredFp2(y1));
         Fp2 memory d = minusFp2(squaredFp2(addFp2(x1, squaredFp2(y1))), addFp2(a, c));
@@ -224,19 +225,19 @@ contract SkaleDKG is Permissions, ReentrancyGuard {
         );
     }
 
-    function u1(Fp2 memory x1) internal view returns (Fp2 memory) {
+    function u1(Fp2 memory x1) internal pure returns (Fp2 memory) {
         return mulFp2(x1, squaredFp2(Fp2({ x: 1, y: 0 })));
     }
 
-    function u2(Fp2 memory x2) internal view returns (Fp2 memory) {
+    function u2(Fp2 memory x2) internal pure returns (Fp2 memory) {
         return mulFp2(x2, squaredFp2(Fp2({ x: 1, y: 0 })));
     }
 
-    function s1(Fp2 memory y1) internal view returns (Fp2 memory) {
+    function s1(Fp2 memory y1) internal pure returns (Fp2 memory) {
         return mulFp2(y1, mulFp2(Fp2({ x: 1, y: 0 }), squaredFp2(Fp2({ x: 1, y: 0 }))));
     }
 
-    function s2(Fp2 memory y2) internal view returns (Fp2 memory) {
+    function s2(Fp2 memory y2) internal pure returns (Fp2 memory) {
         return mulFp2(y2, mulFp2(Fp2({ x: 1, y: 0 }), squaredFp2(Fp2({ x: 1, y: 0 }))));
     }
 
@@ -249,7 +250,7 @@ contract SkaleDKG is Permissions, ReentrancyGuard {
         return (u1Value.x == u2Value.x && u1Value.y == u2Value.y && s1Value.x == s2Value.x && s1Value.y == s2Value.y);
     }
 
-    function zForAddingG2(Fp2 memory u2Value, Fp2 memory u1Value) internal view returns (Fp2 memory) {
+    function zForAddingG2(Fp2 memory u2Value, Fp2 memory u1Value) internal pure returns (Fp2 memory) {
         Fp2 memory z = Fp2({ x: 1, y: 0 });
         Fp2 memory zz = squaredFp2(z);
         return mulFp2(minusFp2(squaredFp2(addFp2(z, z)), addFp2(zz, zz)), minusFp2(u2Value, u1Value));
@@ -260,7 +261,7 @@ contract SkaleDKG is Permissions, ReentrancyGuard {
         Fp2 memory s1Value,
         Fp2 memory u2Value,
         Fp2 memory u1Value,
-        Fp2 memory x) internal view returns (Fp2 memory)
+        Fp2 memory x) internal pure returns (Fp2 memory)
     {
         Fp2 memory r = addFp2(minusFp2(s2Value, s1Value), minusFp2(s2Value, s1Value));
         Fp2 memory theI = squaredFp2(addFp2(minusFp2(u2Value, u1Value), minusFp2(u2Value, u1Value)));
@@ -273,7 +274,7 @@ contract SkaleDKG is Permissions, ReentrancyGuard {
         Fp2 memory s2Value,
         Fp2 memory s1Value,
         Fp2 memory u2Value,
-        Fp2 memory u1Value) internal view returns (Fp2 memory)
+        Fp2 memory u1Value) internal pure returns (Fp2 memory)
     {
         Fp2 memory r = addFp2(minusFp2(s2Value, s1Value), minusFp2(s2Value, s1Value));
         Fp2 memory theI = squaredFp2(addFp2(minusFp2(u2Value, u1Value), minusFp2(u2Value, u1Value)));
@@ -315,34 +316,34 @@ contract SkaleDKG is Permissions, ReentrancyGuard {
         );
     }
 
-    function binstep(uint _a, uint _step) internal view returns (uint x) {
+    function binstep(uint _a, uint _step) internal pure returns (uint x) {
         x = 1;
         uint a = _a;
         uint step = _step;
         while (step > 0) {
             if (step % 2 == 1) {
-                x = mulmod(x, a, p);
+                x = mulmod(x, a, P);
             }
-            a = mulmod(a, a, p);
+            a = mulmod(a, a, P);
             step /= 2;
         }
     }
 
-    function inverseFp2(Fp2 memory a) internal view returns (Fp2 memory x) {
-        uint t0 = mulmod(a.x, a.x, p);
-        uint t1 = mulmod(a.y, a.y, p);
-        uint t2 = mulmod(p - 1, t1, p);
+    function inverseFp2(Fp2 memory a) internal pure returns (Fp2 memory x) {
+        uint t0 = mulmod(a.x, a.x, P);
+        uint t1 = mulmod(a.y, a.y, P);
+        uint t2 = mulmod(P - 1, t1, P);
         if (t0 >= t2) {
-            t2 = addmod(t0, p - t2, p);
+            t2 = addmod(t0, P - t2, P);
         } else {
-            t2 = p - addmod(t2, p - t0, p);
+            t2 = P - addmod(t2, P - t0, P);
         }
-        uint t3 = binstep(t2, p - 2);
-        x.x = mulmod(a.x, t3, p);
-        x.y = p - mulmod(a.y, t3, p);
+        uint t3 = binstep(t2, P - 2);
+        x.x = mulmod(a.x, t3, P);
+        x.y = P - mulmod(a.y, t3, P);
     }
 
-    function toAffineCoordinatesG2(Fp2 memory x1, Fp2 memory y1, Fp2 memory z1) internal view returns (Fp2 memory x, Fp2 memory y) {
+    function toAffineCoordinatesG2(Fp2 memory x1, Fp2 memory y1, Fp2 memory z1) internal pure returns (Fp2 memory x, Fp2 memory y) {
         if (z1.x == 0 && z1.y == 0) {
             x.x = 0;
             x.y = 0;

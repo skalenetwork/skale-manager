@@ -39,7 +39,7 @@ contract ContractManager is Ownable {
      * @param contractsName - contracts name in skale manager system
      * @param newContractsAddress - contracts address in skale manager system
      */
-    function setContractsAddress(string memory contractsName, address newContractsAddress) public onlyOwner {
+    function setContractsAddress(string calldata contractsName, address newContractsAddress) external onlyOwner {
         // check newContractsAddress is not equal zero
         require(newContractsAddress != address(0), "New address is equal zero");
         // create hash of contractsName

@@ -111,8 +111,8 @@ contract ValidatorsFunctionality is GroupsFunctionality, IValidatorsFunctionalit
     /**
      * addValidator - setup validators of node
      */
-    function addValidator(uint nodeIndex) public allow(executorName) {
-        address constantsAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("Constants")));
+    function addValidator(uint nodeIndex) external allow(executorName) {
+        address constantsAddress = contractManager.contracts(keccak256(abi.encodePacked("Constants")));
         IConstants constantsHolder = IConstants(constantsAddress);
         bytes32 groupIndex = keccak256(abi.encodePacked(nodeIndex));
         uint possibleNumberOfNodes = constantsHolder.NUMBER_OF_VALIDATORS();
@@ -126,8 +126,8 @@ contract ValidatorsFunctionality is GroupsFunctionality, IValidatorsFunctionalit
         );
     }
 
-    function upgradeValidator(uint nodeIndex) public allow(executorName) {
-        address constantsAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("Constants")));
+    function upgradeValidator(uint nodeIndex) external allow(executorName) {
+        address constantsAddress = contractManager.contracts(keccak256(abi.encodePacked("Constants")));
         IConstants constantsHolder = IConstants(constantsAddress);
         bytes32 groupIndex = keccak256(abi.encodePacked(nodeIndex));
         uint possibleNumberOfNodes = constantsHolder.NUMBER_OF_VALIDATORS();
@@ -141,9 +141,9 @@ contract ValidatorsFunctionality is GroupsFunctionality, IValidatorsFunctionalit
         );
     }
 
-    function deleteValidatorByRoot(uint nodeIndex) public allow(executorName) {
+    function deleteValidatorByRoot(uint nodeIndex) external allow(executorName) {
         bytes32 groupIndex = keccak256(abi.encodePacked(nodeIndex));
-        address dataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked(dataName)));
+        address dataAddress = contractManager.contracts(keccak256(abi.encodePacked(dataName)));
         IValidatorsData(dataAddress).removeAllVerdicts(groupIndex);
         IValidatorsData(dataAddress).removeAllValidatedNodes(groupIndex);
         deleteGroup(groupIndex);
@@ -153,7 +153,7 @@ contract ValidatorsFunctionality is GroupsFunctionality, IValidatorsFunctionalit
         uint fromValidatorIndex,
         uint toNodeIndex,
         uint32 downtime,
-        uint32 latency) public allow(executorName)
+        uint32 latency) external allow(executorName)
     {
         uint index;
         uint32 time;
@@ -161,9 +161,9 @@ contract ValidatorsFunctionality is GroupsFunctionality, IValidatorsFunctionalit
         (index, time) = find(validatorIndex, toNodeIndex);
         require(time > 0, "Validated Node does not exist in ValidatorsArray");
         require(time <= block.timestamp, "The time has not come to send verdict");
-        address dataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked(dataName)));
+        address dataAddress = contractManager.contracts(keccak256(abi.encodePacked(dataName)));
         IValidatorsData(dataAddress).removeValidatedNode(validatorIndex, index);
-        address constantsAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("Constants")));
+        address constantsAddress = contractManager.contracts(keccak256(abi.encodePacked("Constants")));
         bool receiveVerdict = time + IConstants(constantsAddress).deltaPeriod() > uint32(block.timestamp);
         if (receiveVerdict) {
             IValidatorsData(dataAddress).addVerdict(keccak256(abi.encodePacked(toNodeIndex)), downtime, latency);
@@ -176,8 +176,8 @@ contract ValidatorsFunctionality is GroupsFunctionality, IValidatorsFunctionalit
             receiveVerdict, uint32(block.timestamp), gasleft());
     }
 
-    function calculateMetrics(uint nodeIndex) public allow(executorName) returns (uint32 averageDowntime, uint32 averageLatency) {
-        address dataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked(dataName)));
+    function calculateMetrics(uint nodeIndex) external allow(executorName) returns (uint32 averageDowntime, uint32 averageLatency) {
+        address dataAddress = contractManager.contracts(keccak256(abi.encodePacked(dataName)));
         bytes32 validatorIndex = keccak256(abi.encodePacked(nodeIndex));
         uint lengthOfArray = IValidatorsData(dataAddress).getLengthOfMetrics(validatorIndex);
         uint32[] memory downtimeArray = new uint32[](lengthOfArray);
@@ -193,7 +193,7 @@ contract ValidatorsFunctionality is GroupsFunctionality, IValidatorsFunctionalit
         }
     }
 
-    function rotateNode(bytes32 schainId) public {
+    function rotateNode(bytes32 schainId) external {
         bytes32 schainIdsEvent;
         uint newNodeIndexEvent;
         (schainIdsEvent, newNodeIndexEvent) = selectNodeToGroup(schainId);
@@ -201,7 +201,7 @@ contract ValidatorsFunctionality is GroupsFunctionality, IValidatorsFunctionalit
     }
 
     function selectNodeToGroup(bytes32 groupIndex) internal returns (bytes32, uint) {
-        address dataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked(dataName)));
+        address dataAddress = contractManager.contracts(keccak256(abi.encodePacked(dataName)));
         require(IGroupsData(dataAddress).isGroupActive(groupIndex), "Group is not active");
         bytes32 groupData = IGroupsData(dataAddress).getGroupData(groupIndex);
         uint hash = uint(keccak256(abi.encodePacked(uint(blockhash(block.number - 1)), groupIndex)));
@@ -223,8 +223,8 @@ contract ValidatorsFunctionality is GroupsFunctionality, IValidatorsFunctionalit
     }
 
     function generateGroup(bytes32 groupIndex) internal allow(executorName) returns (uint[] memory) {
-        address dataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked(dataName)));
-        address nodesDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
+        address dataAddress = contractManager.contracts(keccak256(abi.encodePacked(dataName)));
+        address nodesDataAddress = contractManager.contracts(keccak256(abi.encodePacked("NodesData")));
 
         require(IGroupsData(dataAddress).isGroupActive(groupIndex), "Group is not active");
 
@@ -266,15 +266,9 @@ contract ValidatorsFunctionality is GroupsFunctionality, IValidatorsFunctionalit
         return values[values.length / 2];
     }
 
-    function swap(uint[] memory array, uint index1, uint index2) internal pure {
-        uint buffer = array[index1];
-        array[index1] = array[index2];
-        array[index2] = buffer;
-    }
-
     function setNumberOfNodesInGroup(bytes32 groupIndex, bytes32 groupData) internal view returns (uint numberOfNodes, uint finish) {
-        address nodesDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
-        address dataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked(dataName)));
+        address nodesDataAddress = contractManager.contracts(keccak256(abi.encodePacked("NodesData")));
+        address dataAddress = contractManager.contracts(keccak256(abi.encodePacked(dataName)));
         numberOfNodes = INodesData(nodesDataAddress).getNumberOfNodes();
         uint numberOfActiveNodes = INodesData(nodesDataAddress).numberOfActiveNodes();
         uint numberOfExceptionNodes = (INodesData(nodesDataAddress).isNodeActive(uint(groupData)) ? 1 : 0);
@@ -284,13 +278,13 @@ contract ValidatorsFunctionality is GroupsFunctionality, IValidatorsFunctionalit
     }
 
     function comparator(bytes32 groupIndex, uint indexOfNode) internal view returns (bool) {
-        address nodesDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
-        address dataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked(dataName)));
+        address nodesDataAddress = contractManager.contracts(keccak256(abi.encodePacked("NodesData")));
+        address dataAddress = contractManager.contracts(keccak256(abi.encodePacked(dataName)));
         return INodesData(nodesDataAddress).isNodeActive(indexOfNode) && !IGroupsData(dataAddress).isExceptionNode(groupIndex, indexOfNode);
     }
 
     function setValidators(bytes32 groupIndex, uint nodeIndex) internal returns (uint) {
-        address dataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked(dataName)));
+        address dataAddress = contractManager.contracts(keccak256(abi.encodePacked(dataName)));
         IGroupsData(dataAddress).setException(groupIndex, nodeIndex);
         uint[] memory indexOfNodesInGroup = generateGroup(groupIndex);
         bytes32 bytesParametersOfNodeIndex = getDataToBytes(nodeIndex);
@@ -308,7 +302,7 @@ contract ValidatorsFunctionality is GroupsFunctionality, IValidatorsFunctionalit
     }
 
     function find(bytes32 validatorIndex, uint nodeIndex) internal view returns (uint index, uint32 time) {
-        address dataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked(dataName)));
+        address dataAddress = contractManager.contracts(keccak256(abi.encodePacked(dataName)));
         bytes32[] memory validatedNodes = IValidatorsData(dataAddress).getValidatedArray(validatorIndex);
         uint possibleIndex;
         uint32 possibleTime;
@@ -358,8 +352,8 @@ contract ValidatorsFunctionality is GroupsFunctionality, IValidatorsFunctionalit
     }
 
     function getDataToBytes(uint nodeIndex) internal view returns (bytes32 bytesParameters) {
-        address constantsAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("Constants")));
-        address nodesDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
+        address constantsAddress = contractManager.contracts(keccak256(abi.encodePacked("Constants")));
+        address nodesDataAddress = contractManager.contracts(keccak256(abi.encodePacked("NodesData")));
         bytes memory tempData = new bytes(32);
         bytes14 bytesOfIndex = bytes14(uint112(nodeIndex));
         bytes14 bytesOfTime = bytes14(

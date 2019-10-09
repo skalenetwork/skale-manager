@@ -22,21 +22,12 @@ contract Pricing is Permissions {
         lastUpdated = now;
     }
 
-    function initNodes() public {
-        address nodesDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
+    function initNodes() external {
+        address nodesDataAddress = contractManager.contracts(keccak256(abi.encodePacked("NodesData")));
         totalNodes = INodesData(nodesDataAddress).getNumberOnlineNodes();
     }
 
-    function checkAllNodes() public {
-        address nodesDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
-        uint numberOfActiveNodes = INodesData(nodesDataAddress).getNumberOnlineNodes();
-
-        require(totalNodes != numberOfActiveNodes, "No any changes on nodes");
-        totalNodes = numberOfActiveNodes;
-
-    }
-
-    function adjustPrice() public {
+    function adjustPrice() external {
         require(now > lastUpdated + COOLDOWN_TIME, "It's not a time to update a price");
         checkAllNodes();
         uint loadPercentage = getTotalLoadPercentage();
@@ -60,10 +51,19 @@ contract Pricing is Permissions {
         lastUpdated = now;
     }
 
+    function checkAllNodes() public {
+        address nodesDataAddress = contractManager.contracts(keccak256(abi.encodePacked("NodesData")));
+        uint numberOfActiveNodes = INodesData(nodesDataAddress).getNumberOnlineNodes();
+
+        require(totalNodes != numberOfActiveNodes, "No any changes on nodes");
+        totalNodes = numberOfActiveNodes;
+
+    }
+
     function getTotalLoadPercentage() public view returns (uint) {
-        address schainsDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("SchainsData")));
+        address schainsDataAddress = contractManager.contracts(keccak256(abi.encodePacked("SchainsData")));
         uint64 numberOfSchains = ISchainsData(schainsDataAddress).numberOfSchains();
-        address nodesDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
+        address nodesDataAddress = contractManager.contracts(keccak256(abi.encodePacked("NodesData")));
         uint numberOfNodes = INodesData(nodesDataAddress).getNumberOnlineNodes();
         uint sumLoadSchain = 0;
         for (uint i = 0; i < numberOfSchains; i++) {

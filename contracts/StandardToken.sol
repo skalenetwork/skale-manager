@@ -30,11 +30,93 @@ contract StandardToken is Token {
      * @return Returns success of function call.
      */
     function transfer(address _to, uint256 _value)
-        public
+        external
         returns (bool)
     {
         bytes memory empty = "";
         return transfer(_to, _value, empty);
+    }
+
+    /**
+     * @dev Allows allowed third party to transfer tokens from one address to another. Returns success.
+     * @param _from Address from where tokens are withdrawn.
+     * @param _to Address to where tokens are sent.
+     * @param _value Number of tokens to transfer.
+     * @return Returns success of function call.
+     */
+    function transferFrom(address _from, address _to, uint256 _value)
+        external
+        returns (bool)
+    {
+        require(_from != address(0), "Destination is not set");
+        require(_to != address(0), "Receiver is not set");
+        require(_value > 0, "Value is too low");
+        require(balances[_from] >= _value, "Not enough money");
+        require(allowed[_from][_to] >= _value, "Value is too big");
+        require(balances[_to] + _value > balances[_to], "Balance was not increased");
+
+        balances[_to] += _value;
+        balances[_from] -= _value;
+        allowed[_from][_to] -= _value;
+        bytes memory empty = "";
+        emit Transfer(
+            _from,
+            _to,
+            _value,
+            empty,
+            uint32(block.timestamp),
+            gasleft());
+        return true;
+    }
+
+    /**
+     * @dev Returns number of tokens owned by given address.
+     * @param _owner Address of token owner.
+     * @return Returns balance of owner.
+     */
+    function balanceOf(address _owner)
+        external
+        view
+        returns (uint256)
+    {
+        return balances[_owner];
+    }
+
+    /**
+     * @dev Sets approved amount of tokens for spender. Returns success.
+     * @param _spender Address of allowed account.
+     * @param _value Number of approved tokens.
+     * @return Returns success of function call.
+     */
+    function approve(address _spender, uint256 _value)
+        external
+        returns (bool)
+    {
+        require(_spender != address(0), "Spender is not set");
+        require(_value > 0, "Value is too low");
+
+        allowed[msg.sender][_spender] = _value;
+        emit Approval(
+            msg.sender,
+            _spender,
+            _value,
+            uint32(block.timestamp),
+            gasleft());
+        return true;
+    }
+
+    /**
+     * @dev Returns number of allowed tokens for given address.
+     * @param _owner Address of token owner.
+     * @param _spender Address of token spender.
+     * @return Returns remaining allowance for spender.
+     */
+    function allowance(address _owner, address _spender)
+        external
+        view
+        returns (uint256)
+    {
+        return allowed[_owner][_spender];
     }
 
     /**
@@ -71,88 +153,6 @@ contract StandardToken is Token {
             uint32(block.timestamp),
             gasleft());
         return true;
-    }
-
-    /**
-     * @dev Allows allowed third party to transfer tokens from one address to another. Returns success.
-     * @param _from Address from where tokens are withdrawn.
-     * @param _to Address to where tokens are sent.
-     * @param _value Number of tokens to transfer.
-     * @return Returns success of function call.
-     */
-    function transferFrom(address _from, address _to, uint256 _value)
-        public
-        returns (bool)
-    {
-        require(_from != address(0), "Destination is not set");
-        require(_to != address(0), "Receiver is not set");
-        require(_value > 0, "Value is too low");
-        require(balances[_from] >= _value, "Not enough money");
-        require(allowed[_from][_to] >= _value, "Value is too big");
-        require(balances[_to] + _value > balances[_to], "Balance was not increased");
-
-        balances[_to] += _value;
-        balances[_from] -= _value;
-        allowed[_from][_to] -= _value;
-        bytes memory empty = "";
-        emit Transfer(
-            _from,
-            _to,
-            _value,
-            empty,
-            uint32(block.timestamp),
-            gasleft());
-        return true;
-    }
-
-    /**
-     * @dev Returns number of tokens owned by given address.
-     * @param _owner Address of token owner.
-     * @return Returns balance of owner.
-     */
-    function balanceOf(address _owner)
-        public
-        view
-        returns (uint256)
-    {
-        return balances[_owner];
-    }
-
-    /**
-     * @dev Sets approved amount of tokens for spender. Returns success.
-     * @param _spender Address of allowed account.
-     * @param _value Number of approved tokens.
-     * @return Returns success of function call.
-     */
-    function approve(address _spender, uint256 _value)
-        public
-        returns (bool)
-    {
-        require(_spender != address(0), "Spender is not set");
-        require(_value > 0, "Value is too low");
-
-        allowed[msg.sender][_spender] = _value;
-        emit Approval(
-            msg.sender,
-            _spender,
-            _value,
-            uint32(block.timestamp),
-            gasleft());
-        return true;
-    }
-
-    /**
-     * @dev Returns number of allowed tokens for given address.
-     * @param _owner Address of token owner.
-     * @param _spender Address of token spender.
-     * @return Returns remaining allowance for spender.
-     */
-    function allowance(address _owner, address _spender)
-        public
-        view
-        returns (uint256)
-    {
-        return allowed[_owner][_spender];
     }
 
     /**
