@@ -32,7 +32,7 @@ contract ECDH {
 
     }
 
-    function _jAdd(
+    function jAdd(
         uint256 x1,
         uint256 z1,
         uint256 x2,
@@ -45,7 +45,7 @@ contract ECDH {
         (x3, z3) = (addmod(mulmod(z2, x1, N), mulmod(x2, z1, N), N), mulmod(z1, z2, N));
     }
 
-    function _jSub(
+    function jSub(
         uint256 x1,
         uint256 z1,
         uint256 x2,
@@ -58,7 +58,7 @@ contract ECDH {
         (x3, z3) = (addmod(mulmod(z2, x1, N), mulmod(N - x2, z1, N), N), mulmod(z1, z2, N));
     }
 
-    function _jMul(
+    function jMul(
         uint256 x1,
         uint256 z1,
         uint256 x2,
@@ -71,7 +71,7 @@ contract ECDH {
         (x3, z3) = (mulmod(x1, x2, N), mulmod(z1, z2, N));
     }
 
-    function _jDiv(
+    function jDiv(
         uint256 x1,
         uint256 z1,
         uint256 x2,
@@ -84,7 +84,7 @@ contract ECDH {
         (x3, z3) = (mulmod(x1, z2, N), mulmod(z1, x2, N));
     }
 
-    function _inverse(uint256 a) public pure returns (uint256 invA) {
+    function inverse(uint256 a) public pure returns (uint256 invA) {
         uint256 t = 0;
         uint256 newT = 1;
         uint256 r = N;
@@ -98,7 +98,7 @@ contract ECDH {
         return t;
     }
 
-    function _ecAdd(
+    function ecAdd(
         uint256 x1,
         uint256 y1,
         uint256 z1,
@@ -124,83 +124,83 @@ contract ECDH {
         }
 
         if ((x1 == x2) && (y1 == y2)) {
-            (ln, lz) = _jMul(
+            (ln, lz) = jMul(
                 x1,
                 z1,
                 x1,
                 z1
             );
-            (ln, lz) = _jMul(
+            (ln, lz) = jMul(
                 ln,
                 lz,
                 3,
                 1
             );
-            (ln, lz) = _jAdd(
+            (ln, lz) = jAdd(
                 ln,
                 lz,
                 A,
                 1
             );
-            (da, db) = _jMul(
+            (da, db) = jMul(
                 y1,
                 z1,
                 2,
                 1
             );
         } else {
-            (ln, lz) = _jSub(
+            (ln, lz) = jSub(
                 y2,
                 z2,
                 y1,
                 z1
             );
-            (da, db) = _jSub(
+            (da, db) = jSub(
                 x2,
                 z2,
                 x1,
                 z1
             );
         }
-        (ln, lz) = _jDiv(
+        (ln, lz) = jDiv(
             ln,
             lz,
             da,
             db
         );
 
-        (x3, da) = _jMul(
+        (x3, da) = jMul(
             ln,
             lz,
             ln,
             lz
         );
-        (x3, da) = _jSub(
+        (x3, da) = jSub(
             x3,
             da,
             x1,
             z1
         );
-        (x3, da) = _jSub(
+        (x3, da) = jSub(
             x3,
             da,
             x2,
             z2
         );
 
-        (y3, db) = _jSub(
+        (y3, db) = jSub(
             x1,
             z1,
             x3,
             da
         );
-        (y3, db) = _jMul(
+        (y3, db) = jMul(
             y3,
             db,
             ln,
             lz
         );
-        (y3, db) = _jSub(
+        (y3, db) = jSub(
             y3,
             db,
             y1,
@@ -216,7 +216,7 @@ contract ECDH {
         }
     }
 
-    function _ecDouble(
+    function ecDouble(
         uint256 x1,
         uint256 y1,
         uint256 z1
@@ -225,7 +225,7 @@ contract ECDH {
         pure
         returns(uint256 x3,uint256 y3,uint256 z3)
     {
-        (x3, y3, z3) = _ecAdd(
+        (x3, y3, z3) = ecAdd(
             x1,
             y1,
             z1,
@@ -235,7 +235,7 @@ contract ECDH {
         );
     }
 
-    function _ecMul(
+    function ecMul(
         uint256 d,
         uint256 x1,
         uint256 y1,
@@ -259,7 +259,7 @@ contract ECDH {
 
         while (remaining != 0) {
             if ((remaining & 1) != 0) {
-                (acx, acy, acz) = _ecAdd(
+                (acx, acy, acz) = ecAdd(
                     acx,
                     acy,
                     acz,
@@ -269,7 +269,7 @@ contract ECDH {
                 );
             }
             remaining = remaining / 2;
-            (px, py, pz) = _ecDouble(px, py, pz);
+            (px, py, pz) = ecDouble(px, py, pz);
         }
 
         (x3, y3, z3) = (acx, acy, acz);
@@ -279,13 +279,13 @@ contract ECDH {
         uint256 x;
         uint256 y;
         uint256 z;
-        (x, y, z) = _ecMul(
+        (x, y, z) = ecMul(
             privKey,
             GX,
             GY,
             1
         );
-        z = _inverse(z);
+        z = inverse(z);
         qx = mulmod(x, z, N);
         qy = mulmod(y, z, N);
     }
@@ -302,13 +302,13 @@ contract ECDH {
         uint256 x;
         uint256 y;
         uint256 z;
-        (x, y, z) = _ecMul(
+        (x, y, z) = ecMul(
             privKey,
             pubX,
             pubY,
             1
         );
-        z = _inverse(z);
+        z = inverse(z);
         qx = mulmod(x, z, N);
         qy = mulmod(y, z, N);
     }
