@@ -152,14 +152,10 @@ contract SkaleDKG is Permissions {
         bytes32 vector2;
         bytes32 vector3;
         assembly {
-            // vector := calldataload(add(verificationVector, 32))
-            calldatacopy(vector, add(4, 96), 32)
-            // vector1 := calldataload(add(verificationVector, 64))
-            calldatacopy(vector, add(4, 128), 32)
-            // vector2 := calldataload(add(verificationVector, 96))
-            calldatacopy(vector, add(4, 160), 32)
-            // vector3 := calldataload(add(verificationVector, 128))
-            calldatacopy(vector, add(4, 192), 32)
+            vector := calldataload(add(4, 160))
+            vector1 := calldataload(add(4, 192))
+            vector2 := calldataload(add(4, 224))
+            vector3 := calldataload(add(4, 256))
         }
         adding(
             groupIndex,
