@@ -34,7 +34,7 @@ contract("ECDH", ([owner, validator, developer, hacker]) => {
         const z1 = new BigNumber(3);
         const x2 = new BigNumber(4);
         const z2 = new BigNumber(5);
-        const result = await ecdh._jAdd(x1, z1, x2, z2);
+        const result = await ecdh.jAdd(x1, z1, x2, z2);
         assert.equal(result[0].toString(10), "22");
         assert.equal(result[1].toString(10), "15");
     });
@@ -44,7 +44,7 @@ contract("ECDH", ([owner, validator, developer, hacker]) => {
         const z1 = new BigNumber(1);
         const x2 = new BigNumber(2);
         const z2 = new BigNumber(1);
-        const result = await ecdh._jAdd(x1, z1, x2, z2);
+        const result = await ecdh.jAdd(x1, z1, x2, z2);
         assert.equal(result[0].toString(10), "1");
         assert.equal(result[1].toString(10), "1");
     });
@@ -54,7 +54,7 @@ contract("ECDH", ([owner, validator, developer, hacker]) => {
         const z1 = new BigNumber(1);
         const x2 = n.minus(2).toFixed();
         const z2 = new BigNumber(1);
-        const result = await ecdh._jAdd(x1, z1, x2, z2);
+        const result = await ecdh.jAdd(x1, z1, x2, z2);
         assert.equal(result[0].toString(10), n.minus(3).toString(10));
         assert.equal(result[1].toString(10), "1");
     });
@@ -64,7 +64,7 @@ contract("ECDH", ([owner, validator, developer, hacker]) => {
         const z1 = new BigNumber(3);
         const x2 = new BigNumber(4);
         const z2 = new BigNumber(5);
-        const result = await ecdh._jSub(x1, z1, x2, z2);
+        const result = await ecdh.jSub(x1, z1, x2, z2);
         assert.equal(result[0].toString(10), n.minus(2).toString(10));
         assert.equal(result[1].toString(10), "15");
     });
@@ -74,7 +74,7 @@ contract("ECDH", ([owner, validator, developer, hacker]) => {
         const z1 = new BigNumber(1);
         const x2 = n.minus(1).toFixed();
         const z2 = new BigNumber(1);
-        const result = await ecdh._jSub(x1, z1, x2, z2);
+        const result = await ecdh.jSub(x1, z1, x2, z2);
         assert.equal(result[0].toString(10), "3");
         assert.equal(result[1].toString(10), "1");
     });
@@ -84,7 +84,7 @@ contract("ECDH", ([owner, validator, developer, hacker]) => {
         const z1 = new BigNumber(1);
         const x2 = n.minus(1).toFixed();
         const z2 = new BigNumber(1);
-        const result = await ecdh._jSub(x1, z1, x2, z2);
+        const result = await ecdh.jSub(x1, z1, x2, z2);
         assert.equal(result[0].toString(10), n.minus(1).toString(10));
         assert.equal(result[1].toString(10), "1");
     });
@@ -94,7 +94,7 @@ contract("ECDH", ([owner, validator, developer, hacker]) => {
         const z1 = new BigNumber(1);
         const x2 = n.minus(16).toFixed();
         const z2 = new BigNumber(1);
-        const result = await ecdh._jSub(x1, z1, x2, z2);
+        const result = await ecdh.jSub(x1, z1, x2, z2);
         assert.equal(result[0].toString(10), "0");
         assert.equal(result[1].toString(10), "1");
     });
@@ -104,7 +104,7 @@ contract("ECDH", ([owner, validator, developer, hacker]) => {
         const z1 = new BigNumber(3);
         const x2 = new BigNumber(4);
         const z2 = new BigNumber(5);
-        const result = await ecdh._jMul(x1, z1, x2, z2);
+        const result = await ecdh.jMul(x1, z1, x2, z2);
         assert.equal(result[0].toString(10), "8");
         assert.equal(result[1].toString(10), "15");
     });
@@ -114,7 +114,7 @@ contract("ECDH", ([owner, validator, developer, hacker]) => {
         const z1 = new BigNumber(1);
         const x2 = new BigNumber(2);
         const z2 = new BigNumber(1);
-        const result = await ecdh._jMul(x1, z1, x2, z2);
+        const result = await ecdh.jMul(x1, z1, x2, z2);
         assert.equal(result[0].toString(10), n.minus(2).toString(10));
         assert.equal(result[1].toString(10), "1");
     });
@@ -124,7 +124,7 @@ contract("ECDH", ([owner, validator, developer, hacker]) => {
         const z1 = new BigNumber(1);
         const x2 = n.minus(3).toFixed();
         const z2 = new BigNumber(1);
-        const result = await ecdh._jMul(x1, z1, x2, z2);
+        const result = await ecdh.jMul(x1, z1, x2, z2);
         assert.equal(result[0].toString(10), "6");
         assert.equal(result[1].toString(10), "1");
     });
@@ -134,7 +134,7 @@ contract("ECDH", ([owner, validator, developer, hacker]) => {
         const z1 = new BigNumber(3);
         const x2 = new BigNumber(0);
         const z2 = new BigNumber(5);
-        const result = await ecdh._jMul(x1, z1, x2, z2);
+        const result = await ecdh.jMul(x1, z1, x2, z2);
         assert.equal(result[0].toString(10), "0");
         assert.equal(result[1].toString(10), "15");
     });
@@ -144,7 +144,7 @@ contract("ECDH", ([owner, validator, developer, hacker]) => {
         const z1 = new BigNumber(3);
         const x2 = new BigNumber(4);
         const z2 = new BigNumber(5);
-        const result = await ecdh._jDiv(x1, z1, x2, z2);
+        const result = await ecdh.jDiv(x1, z1, x2, z2);
         assert.equal(result[0].toString(10), "10");
         assert.equal(result[1].toString(10), "12");
     });
@@ -154,7 +154,7 @@ contract("ECDH", ([owner, validator, developer, hacker]) => {
         const z1 = new BigNumber(1);
         const x2 = new BigNumber(2);
         const z2 = new BigNumber(1);
-        const result = await ecdh._jDiv(x1, z1, x2, z2);
+        const result = await ecdh.jDiv(x1, z1, x2, z2);
         assert.equal(result[0].toString(10), n.minus(1).toString(10));
         assert.equal(result[1].toString(10), "2");
     });
@@ -164,7 +164,7 @@ contract("ECDH", ([owner, validator, developer, hacker]) => {
         const z1 = new BigNumber(1);
         const x2 = n.minus(3).toFixed();
         const z2 = new BigNumber(1);
-        const result = await ecdh._jDiv(x1, z1, x2, z2);
+        const result = await ecdh.jDiv(x1, z1, x2, z2);
         assert.equal(result[0].toString(10), n.minus(2).toString(10));
         assert.equal(result[1].toString(10), n.minus(3).toString(10));
     });
@@ -174,43 +174,43 @@ contract("ECDH", ([owner, validator, developer, hacker]) => {
         const z1 = new BigNumber(3);
         const x2 = new BigNumber(0);
         const z2 = new BigNumber(5);
-        const result = await ecdh._jDiv(x1, z1, x2, z2);
+        const result = await ecdh.jDiv(x1, z1, x2, z2);
         assert.equal(result[0].toString(10), "10");
         assert.equal(result[1].toString(10), "0");
     });
 
     it("Should Calculate inverse", async () => {
         const d = new BigNumber(2);
-        const result = await ecdh._inverse(d);
-        const result1 = await ecdh._jMul(d, 1, result, 1);
+        const result = await ecdh.inverse(d);
+        const result1 = await ecdh.jMul(d, 1, result, 1);
         assert.equal(result1[0].toString(10), "1");
         assert.equal(result1[1].toString(10), "1");
     });
 
     it("Inverse of 0", async () => {
         const d = new BigNumber(0);
-        const result = await ecdh._inverse(d);
+        const result = await ecdh.inverse(d);
         assert.equal(result.toString(10), "0");
     });
 
     it("Inverse of 1", async () => {
         const d = new BigNumber(1);
-        const result = await ecdh._inverse(d);
+        const result = await ecdh.inverse(d);
         assert.equal(result.toString(10), "1");
     });
 
     it("Should Calculate inverse -1", async () => {
         const d = n.minus(1).toFixed();
-        const result = await ecdh._inverse(d);
-        const result1 = await ecdh._jMul(d, 1, result, 1);
+        const result = await ecdh.inverse(d);
+        const result1 = await ecdh.jMul(d, 1, result, 1);
         assert.equal(result1[0].toString(10), "1");
         assert.equal(result1[1].toString(10), "1");
     });
 
     it("Should Calculate inverse -2", async () => {
         const d = n.minus(1).toFixed();
-        const result = await ecdh._inverse(d);
-        const result1 = await ecdh._jMul(d, 1, result, 1);
+        const result = await ecdh.inverse(d);
+        const result1 = await ecdh.jMul(d, 1, result, 1);
         assert.equal(result1[0].toString(10), "1");
         assert.equal(result1[1].toString(10), "1");
 
@@ -218,8 +218,8 @@ contract("ECDH", ([owner, validator, developer, hacker]) => {
 
     it("Should Calculate inverse big number", async () => {
         const d = new BigNumber("f167a208bea79bc52668c016aff174622837f780ab60f59dfed0a8e66bb7c2ad", 16).toFixed();
-        const result = await ecdh._inverse(d);
-        const result1 = await ecdh._jMul(d, 1, result, 1);
+        const result = await ecdh.inverse(d);
+        const result1 = await ecdh.jMul(d, 1, result, 1);
         assert.equal(result1[0].toString(10), "1");
         assert.equal(result1[1].toString(10), "1");
     });
@@ -278,12 +278,12 @@ contract("ECDH", ([owner, validator, developer, hacker]) => {
             ccD = ccD.plus(n);
         }
 
-        const result = await ecdh._ecDouble(gx.toFixed(), gy.toFixed(), 1);
+        const result = await ecdh.ecDouble(gx.toFixed(), gy.toFixed(), 1);
         let x2 = new BigNumber(result[0]);
         let y2 = new BigNumber(result[1]);
         const z2 = new BigNumber(result[2]);
 
-        const result1 = new BigNumber(await ecdh._inverse(z2.toFixed()));
+        const result1 = new BigNumber(await ecdh.inverse(z2.toFixed()));
         x2 = x2.multipliedBy(result1).modulo(n);
         y2 = y2.multipliedBy(result1).modulo(n);
         assert.equal(x2.toString(10), "89565891926547004231252920425935692360644145829622209833684329913297188986597");
@@ -293,11 +293,11 @@ contract("ECDH", ([owner, validator, developer, hacker]) => {
     it("Add EC", async () => {
         const x2 = new BigNumber("89565891926547004231252920425935692360644145829622209833684329913297188986597");
         const y2 = new BigNumber("12158399299693830322967808612713398636155367887041628176798871954788371653930");
-        const result = await ecdh._ecAdd(gx.toFixed(), gy.toFixed(), 1, x2.toFixed(), y2.toFixed(), 1);
+        const result = await ecdh.ecAdd(gx.toFixed(), gy.toFixed(), 1, x2.toFixed(), y2.toFixed(), 1);
         let x3 = new BigNumber(result[0]);
         let y3 = new BigNumber(result[1]);
         const z3 = new BigNumber(result[2]);
-        const result1 = await ecdh._inverse(z3.toFixed());
+        const result1 = await ecdh.inverse(z3.toFixed());
         x3 = x3.multipliedBy(result1).modulo(n);
         y3 = y3.multipliedBy(result1).modulo(n);
         assert.equal(
@@ -311,22 +311,22 @@ contract("ECDH", ([owner, validator, developer, hacker]) => {
     });
 
     it("2G+1G = 3G", async () => {
-        const result = await ecdh._ecDouble(gx.toFixed(), gy.toFixed(), 1);
+        const result = await ecdh.ecDouble(gx.toFixed(), gy.toFixed(), 1);
         const x2 = new BigNumber(result[0]);
         const y2 = new BigNumber(result[1]);
         const z2 = new BigNumber(result[2]);
-        const result1 = await ecdh._ecAdd(gx.toFixed(), gy.toFixed(), 1, x2.toFixed(), y2.toFixed(), z2.toFixed());
+        const result1 = await ecdh.ecAdd(gx.toFixed(), gy.toFixed(), 1, x2.toFixed(), y2.toFixed(), z2.toFixed());
         let x3 = new BigNumber(result1[0]);
         let y3 = new BigNumber(result1[1]);
         const z3 = new BigNumber(result1[2]);
-        const result2 = await ecdh._ecMul(3, gx.toFixed(), gy.toFixed(), 1);
+        const result2 = await ecdh.ecMul(3, gx.toFixed(), gy.toFixed(), 1);
         let x3c = new BigNumber(result2[0]);
         let y3c = new BigNumber(result2[1]);
         const z3c = new BigNumber(result2[2]);
-        const result3 = new BigNumber(await ecdh._inverse(z3.toFixed()));
+        const result3 = new BigNumber(await ecdh.inverse(z3.toFixed()));
         x3 = x3.multipliedBy(result3).modulo(n);
         y3 = y3.multipliedBy(result3).modulo(n);
-        const result4 = await ecdh._inverse(z3c.toFixed());
+        const result4 = await ecdh.inverse(z3c.toFixed());
         x3c = x3c.multipliedBy(result4).modulo(n);
         y3c = y3c.multipliedBy(result4).modulo(n);
         assert.equal(x3.toString(10), x3c.toString(10));
@@ -393,11 +393,11 @@ contract("ECDH", ([owner, validator, developer, hacker]) => {
         const result2 = await ecdh.publicKey(d12.toFixed());
         pub12X = new BigNumber(result2[0]);
         pub12Y = new BigNumber(result2[1]);
-        const result3 = await ecdh._ecAdd(pub1X.toFixed(), pub1Y.toFixed(), 1, pub2X.toFixed(), pub2Y.toFixed(), 1);
+        const result3 = await ecdh.ecAdd(pub1X.toFixed(), pub1Y.toFixed(), 1, pub2X.toFixed(), pub2Y.toFixed(), 1);
         add12X = new BigNumber(result3[0]);
         add12Y = new BigNumber(result3[1]);
 
-        const result4 = await ecdh._inverse(result3[2]);
+        const result4 = await ecdh.inverse(result3[2]);
         add12X = add12X.multipliedBy(result4).mod(n);
         add12Y = add12Y.multipliedBy(result4).mod(n);
         assert.equal(pub12X.toString(10), add12X.toString(10));
