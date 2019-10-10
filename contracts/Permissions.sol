@@ -42,6 +42,15 @@ contract Permissions is Ownable {
         _;
     }
 
+    modifier allowMultiple(string memory contractNameFirst, string memory contractNameSecond) {
+        require(
+            contractManager.contracts(keccak256(abi.encodePacked(contractNameFirst))) == msg.sender ||
+            contractManager.contracts(keccak256(abi.encodePacked(contractNameSecond))) == msg.sender ||
+            owner == msg.sender,
+            "Message sender is invalid");
+        _;
+    }
+
     /**
      * @dev constructor - sets current address of ContractManager
      * @param newContractsAddress - current address of ContractManager

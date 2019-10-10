@@ -268,7 +268,7 @@ contract("SkaleDKG", ([validator1, validator2]) => {
                 let index = 3;
                 while ((new BigNumber(nodes[0])).toFixed() === "1") {
                     await schainsFunctionality.deleteSchainByRoot(schainName, {from: validator1});
-                    await skaleDKG.deleteChannel(web3.utils.soliditySha3(schainName), {from: validator1});
+                    // await skaleDKG.deleteChannel(web3.utils.soliditySha3(schainName), {from: validator1});
                     let schainChar = "";
                     schainName = "d" + index;
                     for (let i = 0; i < schainName.length; i++) {
