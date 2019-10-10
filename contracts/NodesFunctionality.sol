@@ -247,8 +247,8 @@ contract NodesFunctionality is Permissions, INodesFunctionality {
      * @param constantsAddress - address of Constants contract
      */
     /*function setSystemStatus(address constantsAddress) internal {
-        address dataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
-        address schainsDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("SchainsData")));
+        address dataAddress = contractManager.contracts(keccak256(abi.encodePacked("NodesData")));
+        address schainsDataAddress = contractManager.contracts(keccak256(abi.encodePacked("SchainsData")));
         uint numberOfNodes = 128 * (INodesData(dataAddress).numberOfActiveNodes() + INodesData(dataAddress).numberOfLeavingNodes());
         uint numberOfSchains = ISchainsData(schainsDataAddress).sumOfSchainsResources();
         if (4 * numberOfSchains / 3 < numberOfNodes && !(4 * numberOfSchains / 3 < (numberOfNodes - 1))) {
@@ -264,8 +264,8 @@ contract NodesFunctionality is Permissions, INodesFunctionality {
      * @return down - divider
      */
     /*function coefficientForPrice(address constantsAddress) internal view returns (uint up, uint down) {
-        address dataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
-        address schainsDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("SchainsData")));
+        address dataAddress = contractManager.contracts(keccak256(abi.encodePacked("NodesData")));
+        address schainsDataAddress = contractManager.contracts(keccak256(abi.encodePacked("SchainsData")));
         uint numberOfDays;
         uint numberOfNodes = 128 * (INodesData(dataAddress).numberOfActiveNodes() + INodesData(dataAddress).numberOfLeavingNodes());
         uint numberOfSchains = ISchainsData(schainsDataAddress).sumOfSchainsResources();

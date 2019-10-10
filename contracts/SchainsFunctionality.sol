@@ -130,7 +130,7 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
      * @return array of concatenated parameters: nodeIndex, ip, port which contained in Schain
      */
     /*function getSchainNodes(string schainName) public view returns (bytes16[] memory schainNodes) {
-        address dataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked(dataName)));
+        address dataAddress = contractManager.contracts(keccak256(abi.encodePacked(dataName)));
         bytes32 schainId = keccak256(abi.encodePacked(schainName));
         uint[] memory nodesInGroup = IGroupsData(dataAddress).getNodesInGroup(schainId);
         schainNodes = new bytes16[](nodesInGroup.length);

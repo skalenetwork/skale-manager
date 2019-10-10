@@ -121,8 +121,11 @@ contract NodesData is INodesData, Permissions {
         bytes4 ip,
         bytes4 publicIP,
         uint16 port,
-        bytes calldata publicKey)
-    external allow("NodesFunctionality") returns (uint)
+        bytes calldata publicKey
+    )
+        external
+        allow("NodesFunctionality")
+        returns (uint)
     {
         nodes.push(Node({
             name: name,
@@ -345,6 +348,10 @@ contract NodesData is INodesData, Permissions {
         return nodes[nodeIndex].port;
     }
 
+    function getNodePublicKey(uint nodeIndex) external view returns (bytes memory) {
+        return nodes[nodeIndex].publicKey;
+    }
+
     /**
      * @dev isNodeLeaving - checks if Node status Leaving
      * @param nodeIndex - index of Node
@@ -540,5 +547,4 @@ contract NodesData is INodesData, Permissions {
             }
         }
     }
-
 }
