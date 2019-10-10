@@ -266,7 +266,7 @@ contract SkaleDKG is Permissions {
             emit SuccessfulDKG(groupIndex);
         }
     }
-    
+
     function isChannelOpened(bytes32 groupIndex) external view returns (bool) {
         return channels[groupIndex].active;
     }
