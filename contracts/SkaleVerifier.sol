@@ -29,12 +29,12 @@ contract SkaleVerifier {
     uint constant G2D = 8495653923123431417604973247489272438418190587263600148770280649306958101930;
 
     function verify(
-        uint signa,
-        uint signb,
+        uint signA,
+        uint signB,
         bytes32 hash,
         uint8 counter,
-        uint hasha,
-        uint hashb,
+        uint hashA,
+        uint hashB,
         uint pkx1,
         uint pky1,
         uint pkx2,
@@ -43,30 +43,30 @@ contract SkaleVerifier {
         if (!checkHashToGroupWithHelper(
             hash,
             counter,
-            hasha,
-            hashb
+            hashA,
+            hashB
             )
         )
         {
             return false;
         }
 
-        uint newSignb;
-        if (!(signa == 0 && signb == 0)) {
-            newSignb = P - (signb % P);
+        uint newSignB;
+        if (!(signA == 0 && signB == 0)) {
+            newSignB = P - (signB % P);
         } else {
-            newSignb = signb;
+            newSignB = signB;
         }
         bool success;
         uint[12] memory inputToPairing;
-        inputToPairing[0] = signa;
-        inputToPairing[1] = signb;
+        inputToPairing[0] = signA;
+        inputToPairing[1] = newSignB;
         inputToPairing[2] = G2A;
         inputToPairing[3] = G2B;
         inputToPairing[4] = G2C;
         inputToPairing[5] = G2D;
-        inputToPairing[6] = hasha;
-        inputToPairing[7] = hashb;
+        inputToPairing[6] = hashA;
+        inputToPairing[7] = hashB;
         inputToPairing[8] = pkx1;
         inputToPairing[9] = pky1;
         inputToPairing[10] = pkx2;
