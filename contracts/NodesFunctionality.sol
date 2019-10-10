@@ -71,58 +71,6 @@ contract NodesFunctionality is Permissions, INodesFunctionality {
     }
 
     /**
-     * @dev createNode - creates new Node and add it to the NodesData contract
-     * function could be only run by SkaleManager
-     * @param from - owner of Node
-     * @param value - received amount of SKL
-     * @param data - Node's data
-     * @return nodeIndex - index of Node
-     */
-    function createNode(address from, uint value, bytes memory data) public allow("SkaleManager") returns (uint nodeIndex) {
-        address nodesDataAddress = contractManager.contracts(keccak256(abi.encodePacked("NodesData")));
-        require(INodesData(nodesDataAddress).trustedValidators(from), "The validator is not authorized to create a node");
-        address constantsAddress = contractManager.contracts(keccak256(abi.encodePacked("Constants")));
-        require(value >= IConstants(constantsAddress).NODE_DEPOSIT(), "Not enough money to create Node");
-        uint16 nonce;
-        bytes4 ip;
-        bytes4 publicIP;
-        uint16 port;
-        string memory name;
-        bytes memory publicKey;
-
-        // decode data from the bytes
-        (port, nonce, ip, publicIP) = fallbackDataConverter(data);
-        (publicKey, name) = fallbackDataConverterPublicKeyAndName(data);
-
-        // checks that Node has correct data
-        require(ip != 0x0 && !INodesData(nodesDataAddress).nodesIPCheck(ip), "IP address is zero or is not available");
-        require(!INodesData(nodesDataAddress).nodesNameCheck(keccak256(abi.encodePacked(name))), "Name has already registered");
-        require(port > 0, "Port is zero");
-
-        // adds Node to NodesData contract
-        nodeIndex = INodesData(nodesDataAddress).addNode(
-            from,
-            name,
-            ip,
-            publicIP,
-            port,
-            publicKey);
-        // adds Node to Fractional Nodes or to Full Nodes
-        setNodeType(nodesDataAddress, constantsAddress, nodeIndex);
-
-        emit NodeCreated(
-            nodeIndex,
-            from,
-            name,
-            ip,
-            publicIP,
-            port,
-            nonce,
-            uint32(block.timestamp),
-            gasleft());
-    }
-
-    /**
      * @dev removeNode - delete Node
      * function could be only run by SkaleManager
      * @param from - owner of Node
@@ -219,6 +167,50 @@ contract NodesFunctionality is Permissions, INodesFunctionality {
             uint32(block.timestamp),
             gasleft());
         return IConstants(constantsAddress).NODE_DEPOSIT();
+    }
+
+    function createNode(address from, uint value, bytes memory data) public allow("SkaleManager") returns (uint nodeIndex) {
+        address nodesDataAddress = contractManager.contracts(keccak256(abi.encodePacked("NodesData")));
+        require(INodesData(nodesDataAddress).trustedValidators(from), "The validator is not authorized to create a node");
+        address constantsAddress = contractManager.contracts(keccak256(abi.encodePacked("Constants")));
+        require(value >= IConstants(constantsAddress).NODE_DEPOSIT(), "Not enough money to create Node");
+        uint16 nonce;
+        bytes4 ip;
+        bytes4 publicIP;
+        uint16 port;
+        string memory name;
+        bytes memory publicKey;
+
+        // decode data from the bytes
+        (port, nonce, ip, publicIP) = fallbackDataConverter(data);
+        (publicKey, name) = fallbackDataConverterPublicKeyAndName(data);
+
+        // checks that Node has correct data
+        require(ip != 0x0 && !INodesData(nodesDataAddress).nodesIPCheck(ip), "IP address is zero or is not available");
+        require(!INodesData(nodesDataAddress).nodesNameCheck(keccak256(abi.encodePacked(name))), "Name has already registered");
+        require(port > 0, "Port is zero");
+
+        // adds Node to NodesData contract
+        nodeIndex = INodesData(nodesDataAddress).addNode(
+            from,
+            name,
+            ip,
+            publicIP,
+            port,
+            publicKey);
+        // adds Node to Fractional Nodes or to Full Nodes
+        setNodeType(nodesDataAddress, constantsAddress, nodeIndex);
+
+        emit NodeCreated(
+            nodeIndex,
+            from,
+            name,
+            ip,
+            publicIP,
+            port,
+            nonce,
+            uint32(block.timestamp),
+            gasleft());
     }
 
     /**

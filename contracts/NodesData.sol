@@ -505,7 +505,7 @@ contract NodesData is INodesData, Permissions {
     function disableValidator(address validator) public {
         trustedValidators[validator] = false;
     }
-    
+
     /**
      * @dev isNodeActive - checks if Node status Active
      * @param nodeIndex - index of Node
