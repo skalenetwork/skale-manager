@@ -71,6 +71,58 @@ contract NodesFunctionality is Permissions, INodesFunctionality {
     }
 
     /**
+     * @dev createNode - creates new Node and add it to the NodesData contract
+     * function could be only run by SkaleManager
+     * @param from - owner of Node
+     * @param value - received amount of SKL
+     * @param data - Node's data
+     * @return nodeIndex - index of Node
+     */
+    function createNode(address from, uint value, bytes calldata data) external allow("SkaleManager") returns (uint nodeIndex) {
+        address nodesDataAddress = contractManager.contracts(keccak256(abi.encodePacked("NodesData")));
+        require(INodesData(nodesDataAddress).trustedValidators(from), "The validator is not authorized to create a node");
+        address constantsAddress = contractManager.contracts(keccak256(abi.encodePacked("Constants")));
+        require(value >= IConstants(constantsAddress).NODE_DEPOSIT(), "Not enough money to create Node");
+        uint16 nonce;
+        bytes4 ip;
+        bytes4 publicIP;
+        uint16 port;
+        string memory name;
+        bytes memory publicKey;
+
+        // decode data from the bytes
+        (port, nonce, ip, publicIP) = fallbackDataConverter(data);
+        (publicKey, name) = fallbackDataConverterPublicKeyAndName(data);
+
+        // checks that Node has correct data
+        require(ip != 0x0 && !INodesData(nodesDataAddress).nodesIPCheck(ip), "IP address is zero or is not available");
+        require(!INodesData(nodesDataAddress).nodesNameCheck(keccak256(abi.encodePacked(name))), "Name has already registered");
+        require(port > 0, "Port is zero");
+
+        // adds Node to NodesData contract
+        nodeIndex = INodesData(nodesDataAddress).addNode(
+            from,
+            name,
+            ip,
+            publicIP,
+            port,
+            publicKey);
+        // adds Node to Fractional Nodes or to Full Nodes
+        setNodeType(nodesDataAddress, constantsAddress, nodeIndex);
+
+        emit NodeCreated(
+            nodeIndex,
+            from,
+            name,
+            ip,
+            publicIP,
+            port,
+            nonce,
+            uint32(block.timestamp),
+            gasleft());
+    }
+
+    /**
      * @dev removeNode - delete Node
      * function could be only run by SkaleManager
      * @param from - owner of Node
@@ -169,50 +221,6 @@ contract NodesFunctionality is Permissions, INodesFunctionality {
         return IConstants(constantsAddress).NODE_DEPOSIT();
     }
 
-    function createNode(address from, uint value, bytes memory data) public allow("SkaleManager") returns (uint nodeIndex) {
-        address nodesDataAddress = contractManager.contracts(keccak256(abi.encodePacked("NodesData")));
-        require(INodesData(nodesDataAddress).trustedValidators(from), "The validator is not authorized to create a node");
-        address constantsAddress = contractManager.contracts(keccak256(abi.encodePacked("Constants")));
-        require(value >= IConstants(constantsAddress).NODE_DEPOSIT(), "Not enough money to create Node");
-        uint16 nonce;
-        bytes4 ip;
-        bytes4 publicIP;
-        uint16 port;
-        string memory name;
-        bytes memory publicKey;
-
-        // decode data from the bytes
-        (port, nonce, ip, publicIP) = fallbackDataConverter(data);
-        (publicKey, name) = fallbackDataConverterPublicKeyAndName(data);
-
-        // checks that Node has correct data
-        require(ip != 0x0 && !INodesData(nodesDataAddress).nodesIPCheck(ip), "IP address is zero or is not available");
-        require(!INodesData(nodesDataAddress).nodesNameCheck(keccak256(abi.encodePacked(name))), "Name has already registered");
-        require(port > 0, "Port is zero");
-
-        // adds Node to NodesData contract
-        nodeIndex = INodesData(nodesDataAddress).addNode(
-            from,
-            name,
-            ip,
-            publicIP,
-            port,
-            publicKey);
-        // adds Node to Fractional Nodes or to Full Nodes
-        setNodeType(nodesDataAddress, constantsAddress, nodeIndex);
-
-        emit NodeCreated(
-            nodeIndex,
-            from,
-            name,
-            ip,
-            publicIP,
-            port,
-            nonce,
-            uint32(block.timestamp),
-            gasleft());
-    }
-
     /**
      * @dev setNodeType - sets Node to Fractional Nodes or to Full Nodes
      * @param nodesDataAddress - address of NodesData contract
@@ -239,8 +247,8 @@ contract NodesFunctionality is Permissions, INodesFunctionality {
      * @param constantsAddress - address of Constants contract
      */
     /*function setSystemStatus(address constantsAddress) internal {
-        address dataAddress = contractManager.contracts(keccak256(abi.encodePacked("NodesData")));
-        address schainsDataAddress = contractManager.contracts(keccak256(abi.encodePacked("SchainsData")));
+        address dataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
+        address schainsDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("SchainsData")));
         uint numberOfNodes = 128 * (INodesData(dataAddress).numberOfActiveNodes() + INodesData(dataAddress).numberOfLeavingNodes());
         uint numberOfSchains = ISchainsData(schainsDataAddress).sumOfSchainsResources();
         if (4 * numberOfSchains / 3 < numberOfNodes && !(4 * numberOfSchains / 3 < (numberOfNodes - 1))) {
@@ -256,8 +264,8 @@ contract NodesFunctionality is Permissions, INodesFunctionality {
      * @return down - divider
      */
     /*function coefficientForPrice(address constantsAddress) internal view returns (uint up, uint down) {
-        address dataAddress = contractManager.contracts(keccak256(abi.encodePacked("NodesData")));
-        address schainsDataAddress = contractManager.contracts(keccak256(abi.encodePacked("SchainsData")));
+        address dataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData")));
+        address schainsDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("SchainsData")));
         uint numberOfDays;
         uint numberOfNodes = 128 * (INodesData(dataAddress).numberOfActiveNodes() + INodesData(dataAddress).numberOfLeavingNodes());
         uint numberOfSchains = ISchainsData(schainsDataAddress).sumOfSchainsResources();

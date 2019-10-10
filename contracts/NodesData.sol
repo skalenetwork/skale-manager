@@ -505,11 +505,11 @@ contract NodesData is INodesData, Permissions {
         return activeFullNodes;
     }
 
-    function enableValidator(address validator) public {
+    function enableValidator(address validator) external {
         trustedValidators[validator] = true;
     }
 
-    function disableValidator(address validator) public {
+    function disableValidator(address validator) external {
         trustedValidators[validator] = false;
     }
 
