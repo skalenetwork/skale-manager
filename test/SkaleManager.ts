@@ -16,6 +16,8 @@ import { ConstantsHolderContract,
          SchainsFunctionalityInstance,
          SchainsFunctionalityInternalContract,
          SchainsFunctionalityInternalInstance,
+         SkaleDKGContract,
+         SkaleDKGInstance,
          SkaleManagerContract,
          SkaleManagerInstance,
          SkaleTokenContract,
@@ -41,6 +43,7 @@ const SchainsFunctionality: SchainsFunctionalityContract = artifacts.require("./
 const SchainsFunctionalityInternal: SchainsFunctionalityInternalContract
     = artifacts.require("./SchainsFunctionalityInternal");
 const ManagerData: ManagerDataContract = artifacts.require("./ManagerData");
+const SkaleDKG: SkaleDKGContract = artifacts.require("./SkaleDKG");
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -58,6 +61,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
     let schainsFunctionality: SchainsFunctionalityInstance;
     let schainsFunctionalityInternal: SchainsFunctionalityInternalInstance;
     let managerData: ManagerDataInstance;
+    let skaleDKG: SkaleDKGInstance;
 
     beforeEach(async () => {
         contractManager = await ContractManager.new({from: owner});
@@ -75,6 +79,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
             contractManager.address,
             {from: owner, gas: 8000000 * gasMultiplier});
         await contractManager.setContractsAddress("NodesData", nodesData.address);
+        nodesData.enableValidator(validator);
 
         nodesFunctionality = await NodesFunctionality.new(
             contractManager.address,
@@ -114,7 +119,9 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
 
         skaleManager = await SkaleManager.new(contractManager.address, {gas: 8000000 * gasMultiplier});
         contractManager.setContractsAddress("SkaleManager", skaleManager.address);
-        nodesData.enableValidator(validator);
+
+        skaleDKG = await SkaleDKG.new(contractManager.address, {from: owner, gas: 8000000 * gasMultiplier});
+        await contractManager.setContractsAddress("SkaleDKG", skaleDKG.address);
     });
 
     it("should fail to process token fallback if sent not from SkaleToken", async () => {

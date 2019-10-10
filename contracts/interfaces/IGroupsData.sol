@@ -27,4 +27,5 @@ interface IGroupsData {
         uint pubKeyy1,
         uint pubKeyx2,
         uint pubKeyy2) external;
+    function setGroupFailedDKG(bytes32 groupIndex) external;
 }

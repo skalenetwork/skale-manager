@@ -8,11 +8,12 @@ import {
         NodesDataInstance,
         NodesFunctionalityContract,
         NodesFunctionalityInstance,
+        SkaleDKGContract,
+        SkaleDKGInstance,
         ValidatorsDataContract,
         ValidatorsDataInstance,
         ValidatorsFunctionalityContract,
-        ValidatorsFunctionalityInstance,
-      } from "../types/truffle-contracts";
+        ValidatorsFunctionalityInstance} from "../types/truffle-contracts";
 import { gasMultiplier } from "./utils/command_line";
 import { currentTime, skipTime } from "./utils/time";
 
@@ -28,6 +29,7 @@ const ConstantsHolder: ConstantsHolderContract = artifacts.require("./ConstantsH
 const ValidatorsData: ValidatorsDataContract = artifacts.require("./ValidatorsData");
 const NodesData: NodesDataContract = artifacts.require("./NodesData");
 const NodesFunctionality: NodesFunctionalityContract = artifacts.require("./NodesFunctionality");
+const SkaleDKG: SkaleDKGContract = artifacts.require("./SkaleDKG");
 
 contract("ValidatorsFunctionality", ([owner, validator]) => {
   let contractManager: ContractManagerInstance;
@@ -36,6 +38,7 @@ contract("ValidatorsFunctionality", ([owner, validator]) => {
   let validatorsData: ValidatorsDataInstance;
   let nodesData: NodesDataInstance;
   let nodesFunctionality: NodesFunctionalityInstance;
+  let skaleDKG: SkaleDKGInstance;
 
   beforeEach(async () => {
     contractManager = await ContractManager.new({from: owner});
@@ -64,6 +67,9 @@ contract("ValidatorsFunctionality", ([owner, validator]) => {
       contractManager.address,
       {from: owner, gas: 8000000 * gasMultiplier});
     await contractManager.setContractsAddress("NodesFunctionality", nodesFunctionality.address);
+
+    skaleDKG = await SkaleDKG.new(contractManager.address, {from: owner, gas: 8000000 * gasMultiplier});
+    await contractManager.setContractsAddress("SkaleDKG", skaleDKG.address);
 
     // create a node for validators functions tests
     await nodesData.addNode(validator, "elvis1", "0x7f000001", "0x7f000002", 8545, "0x1122334455");

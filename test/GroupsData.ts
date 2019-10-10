@@ -2,10 +2,13 @@ import BigNumber from "bignumber.js";
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
 import { ContractManagerContract, ContractManagerInstance,
-    GroupsDataContract, GroupsDataInstance } from "../types/truffle-contracts";
+    GroupsDataContract, GroupsDataInstance, SkaleDKGContract,
+    SkaleDKGInstance } from "../types/truffle-contracts";
+import { gasMultiplier } from "./utils/command_line";
 
 const GroupsData: GroupsDataContract = artifacts.require("./GroupsData");
 const ContractManager: ContractManagerContract = artifacts.require("./ContractManager");
+const SkaleDKG: SkaleDKGContract = artifacts.require("./SkaleDKG");
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -13,10 +16,13 @@ chai.use(chaiAsPromised);
 contract("GroupsData", ([user, owner]) => {
     let groupsData: GroupsDataInstance;
     let contractManager: ContractManagerInstance;
+    let skaleDKG: SkaleDKGInstance;
 
     beforeEach(async () => {
         contractManager = await ContractManager.new({from: owner});
         groupsData = await GroupsData.new("GroupsFuctionality", contractManager.address, {from: owner});
+        skaleDKG = await SkaleDKG.new(contractManager.address, {from: owner, gas: 8000000 * gasMultiplier});
+        await contractManager.setContractsAddress("SkaleDKG", skaleDKG.address, {from: owner});
     });
 
     it("should add group from valid message sender", async () => {

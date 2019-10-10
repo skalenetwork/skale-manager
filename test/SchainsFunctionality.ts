@@ -13,7 +13,10 @@ import { ConstantsHolderContract,
          SchainsFunctionalityContract,
          SchainsFunctionalityInstance,
          SchainsFunctionalityInternalContract,
-         SchainsFunctionalityInternalInstance } from "../types/truffle-contracts";
+         SchainsFunctionalityInternalInstance,
+         SkaleDKGContract,
+         SkaleDKGInstance } from "../types/truffle-contracts";
+
 import { gasMultiplier } from "./utils/command_line";
 
 const SchainsFunctionality: SchainsFunctionalityContract = artifacts.require("./SchainsFunctionality");
@@ -24,6 +27,7 @@ const ConstantsHolder: ConstantsHolderContract = artifacts.require("./ConstantsH
 const SchainsData: SchainsDataContract = artifacts.require("./SchainsData");
 const NodesData: NodesDataContract = artifacts.require("./NodesData");
 const NodesFunctionality: NodesFunctionalityContract = artifacts.require("./NodesFunctionality");
+const SkaleDKG: SkaleDKGContract = artifacts.require("./SkaleDKG");
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -36,6 +40,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
     let schainsData: SchainsDataInstance;
     let nodesData: NodesDataInstance;
     let nodesFunctionality: NodesFunctionalityInstance;
+    let skaleDKG: SkaleDKGInstance;
 
     beforeEach(async () => {
         contractManager = await ContractManager.new({from: owner});
@@ -50,6 +55,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
             contractManager.address,
             {from: owner, gas: 8000000 * gasMultiplier});
         await contractManager.setContractsAddress("NodesData", nodesData.address);
+        nodesData.enableValidator(validator);
 
         nodesFunctionality = await NodesFunctionality.new(
             contractManager.address,
@@ -75,7 +81,9 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
             contractManager.address,
             {from: owner, gas: 7000000 * gasMultiplier});
         await contractManager.setContractsAddress("SchainsFunctionalityInternal", schainsFunctionalityInternal.address);
-        nodesData.enableValidator(validator);
+
+        skaleDKG = await SkaleDKG.new(contractManager.address, {from: owner, gas: 8000000 * gasMultiplier});
+        await contractManager.setContractsAddress("SkaleDKG", skaleDKG.address);
     });
 
     describe("should add schain", async () => {
@@ -286,7 +294,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                     "6433",
                     {from: owner});
 
-                nodesInGroup = await schainsData.getNodesInGroup(web3.utils.soliditySha3("d2"));
+                nodesInGroup = await schainsData.getNodesInGroup(web3.utils.soliditySha3("d3"));
 
                 for (const node of nodesInGroup) {
                     expect(web3.utils.toBN(node).toNumber()).to.be.not.equal(removedNode);
@@ -302,7 +310,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                     "6434",
                     {from: owner});
 
-                nodesInGroup = await schainsData.getNodesInGroup(web3.utils.soliditySha3("d2"));
+                nodesInGroup = await schainsData.getNodesInGroup(web3.utils.soliditySha3("d4"));
 
                 for (const node of nodesInGroup) {
                     expect(web3.utils.toBN(node).toNumber()).to.be.not.equal(removedNode);
@@ -318,7 +326,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                     "6435",
                     {from: owner});
 
-                nodesInGroup = await schainsData.getNodesInGroup(web3.utils.soliditySha3("d2"));
+                nodesInGroup = await schainsData.getNodesInGroup(web3.utils.soliditySha3("d5"));
 
                 for (const node of nodesInGroup) {
                     expect(web3.utils.toBN(node).toNumber()).to.be.not.equal(removedNode);

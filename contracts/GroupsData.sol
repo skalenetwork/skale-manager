@@ -23,6 +23,11 @@ import "./Permissions.sol";
 import "./interfaces/IGroupsData.sol";
 
 
+interface ISkaleDKG {
+    function openChannel(bytes32 groupIndex, address dataAddress) external;
+}
+
+
 /**
  * @title GroupsData - contract with some Groups data, will be inherited by
  * SchainsData and ValidatorsData.
@@ -41,6 +46,7 @@ contract GroupsData is IGroupsData, Permissions {
         uint recommendedNumberOfNodes;
         // BLS master public key
         uint[4] groupsPublicKey;
+        bool succesfulDKG;
     }
 
     // contain all groups
@@ -71,6 +77,9 @@ contract GroupsData is IGroupsData, Permissions {
         groups[groupIndex].active = true;
         groups[groupIndex].recommendedNumberOfNodes = amountOfNodes;
         groups[groupIndex].groupData = data;
+        // Open channel in SkaleDKG
+        address skaleDKGAddress = contractManager.contracts(keccak256(abi.encodePacked("SkaleDKG")));
+        ISkaleDKG(skaleDKGAddress).openChannel(groupIndex, address(this));
     }
 
     /**
@@ -168,6 +177,10 @@ contract GroupsData is IGroupsData, Permissions {
      */
     function setNewGroupData(bytes32 groupIndex, bytes32 data) external allow(executorName) {
         groups[groupIndex].groupData = data;
+    }
+
+    function setGroupFailedDKG(bytes32 groupIndex) external allow("SkaleDKG") {
+        groups[groupIndex].succesfulDKG = false;
     }
 
     /**
