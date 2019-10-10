@@ -190,7 +190,6 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
             ISchainsFunctionalityInternal(schainsFunctionalityInternalAddress).removeNodeFromSchain(nodesInGroup[i], schainId);
             addSpace(nodesInGroup[i], partOfNode);
         }
-
         ISchainsFunctionalityInternal(schainsFunctionalityInternalAddress).deleteGroup(schainId);
         address from = ISchainsData(dataAddress).getSchainOwner(schainId);
         ISchainsData(dataAddress).removeSchain(schainId, from);

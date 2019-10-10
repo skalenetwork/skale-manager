@@ -94,8 +94,6 @@ contract NodesFunctionality is Permissions, INodesFunctionality {
         (port, nonce, ip, publicIP) = fallbackDataConverter(data);
         (publicKey, name) = fallbackDataConverterPublicKeyAndName(data);
 
-        address nodesDataAddress = contractManager.contracts(keccak256(abi.encodePacked("NodesData")));
-
         // checks that Node has correct data
         require(ip != 0x0 && !INodesData(nodesDataAddress).nodesIPCheck(ip), "IP address is zero or is not available");
         require(!INodesData(nodesDataAddress).nodesNameCheck(keccak256(abi.encodePacked(name))), "Name has already registered");
