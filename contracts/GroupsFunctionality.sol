@@ -168,9 +168,9 @@ contract GroupsFunctionality is Permissions {
     function upgradeGroup(bytes32 groupIndex, uint newRecommendedNumberOfNodes, bytes32 data) public allow(executorName) {
         address groupsDataAddress = contractManager.contracts(keccak256(abi.encodePacked(dataName)));
         require(IGroupsData(groupsDataAddress).isGroupActive(groupIndex), "Group is not active");
-        IGroupsData(groupsDataAddress).setNewGroupData(groupIndex, data);
-        IGroupsData(groupsDataAddress).setNewAmountOfNodes(groupIndex, newRecommendedNumberOfNodes);
+        IGroupsData(groupsDataAddress).removeGroup(groupIndex);
         IGroupsData(groupsDataAddress).removeAllNodesInGroup(groupIndex);
+        IGroupsData(groupsDataAddress).addGroup(groupIndex, newRecommendedNumberOfNodes, data);
         emit GroupUpgraded(
             groupIndex,
             data,

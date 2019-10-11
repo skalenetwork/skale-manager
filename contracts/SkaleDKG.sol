@@ -114,18 +114,17 @@ contract SkaleDKG is Permissions {
 
     }
 
-    function openChannel(bytes32 groupIndex, address dataAddress) external {
-        require(dataAddress == msg.sender, "Does not allow");
+    function openChannel(bytes32 groupIndex) external allowMultiple("SchainsData", "ValidatorsData") {
         require(!channels[groupIndex].active, "Channel already is created");
         channels[groupIndex].active = true;
-        channels[groupIndex].dataAddress = dataAddress;
+        channels[groupIndex].dataAddress = msg.sender;
         channels[groupIndex].broadcasted = new bool[](IGroupsData(channels[groupIndex].dataAddress).getRecommendedNumberOfNodes(groupIndex));
         channels[groupIndex].completed = new bool[](IGroupsData(channels[groupIndex].dataAddress).getRecommendedNumberOfNodes(groupIndex));
         channels[groupIndex].nodeToComplaint = uint(-1);
         emit ChannelOpened(groupIndex);
     }
 
-    function deleteChannel(bytes32 groupIndex) external onlyOwner {
+    function deleteChannel(bytes32 groupIndex) external allowMultiple("SchainsData", "ValidatorsData") {
         require(channels[groupIndex].active, "Channel is not created");
         delete channels[groupIndex];
     }
@@ -266,6 +265,10 @@ contract SkaleDKG is Permissions {
             delete channels[groupIndex];
             emit SuccessfulDKG(groupIndex);
         }
+    }
+
+    function isChannelOpened(bytes32 groupIndex) external view returns (bool) {
+        return channels[groupIndex].active;
     }
 
     function verify(

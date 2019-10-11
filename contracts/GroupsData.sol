@@ -24,7 +24,9 @@ import "./interfaces/IGroupsData.sol";
 
 
 interface ISkaleDKG {
-    function openChannel(bytes32 groupIndex, address dataAddress) external;
+    function openChannel(bytes32 groupIndex) external;
+    function deleteChannel(bytes32 groupIndex) external;
+    function isChannelOpened(bytes32 groupIndex) external view returns (bool);
 }
 
 
@@ -79,7 +81,7 @@ contract GroupsData is IGroupsData, Permissions {
         groups[groupIndex].groupData = data;
         // Open channel in SkaleDKG
         address skaleDKGAddress = contractManager.contracts(keccak256(abi.encodePacked("SkaleDKG")));
-        ISkaleDKG(skaleDKGAddress).openChannel(groupIndex, address(this));
+        ISkaleDKG(skaleDKGAddress).openChannel(groupIndex);
     }
 
     /**
@@ -193,6 +195,12 @@ contract GroupsData is IGroupsData, Permissions {
         delete groups[groupIndex].groupData;
         delete groups[groupIndex].recommendedNumberOfNodes;
         delete groups[groupIndex].groupsPublicKey;
+        // delete channel
+        address skaleDKGAddress = contractManager.contracts(keccak256(abi.encodePacked("SkaleDKG")));
+
+        if (ISkaleDKG(skaleDKGAddress).isChannelOpened(groupIndex)) {
+            ISkaleDKG(skaleDKGAddress).deleteChannel(groupIndex);
+        }
     }
 
     /**
