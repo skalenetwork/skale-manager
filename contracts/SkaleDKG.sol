@@ -267,6 +267,10 @@ contract SkaleDKG is Permissions {
         }
     }
 
+    function isChannelOpened(bytes32 groupIndex) external view returns (bool) {
+        return channels[groupIndex].active;
+    }
+
     function verify(
         uint index,
         uint secret,
@@ -291,10 +295,6 @@ contract SkaleDKG is Permissions {
             );
         }
         return checkDKGVerification(valX, valY, multipliedShare) && checkCorrectMultipliedShare(multipliedShare, secret);
-    }
-
-    function isChannelOpened(bytes32 groupIndex) public view returns (bool) {
-        return channels[groupIndex].active;
     }
 
     function getCommonPublicKey(bytes32 groupIndex, uint256 secretNumber) internal view returns (bytes32 key) {
