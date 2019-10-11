@@ -47,6 +47,7 @@ contract("SchainsData", ([owner, holder]) => {
     beforeEach(async () => {
         contractManager = await ContractManager.new({from: owner});
         schainsData = await SchainsData.new("SchainsFunctionality", contractManager.address, {from: owner});
+        await contractManager.setContractsAddress("SchainsData", schainsData.address, {from: owner});
         skaleDKG = await SkaleDKG.new(contractManager.address, {from: owner, gas: 8000000 * gasMultiplier});
         await contractManager.setContractsAddress("SkaleDKG", skaleDKG.address, {from: owner});
     });
