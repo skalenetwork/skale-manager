@@ -726,12 +726,9 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
             }
 
             await nodesFunctionality.removeNodeByRoot(0);
-            const schainIds = await schainsData.getSchainIdsForNode(0);
-            for (const schainId of schainIds) {
-                await schainsFunctionality.rotateNode(0, schainId);
-            }
-
-            const rotatedNode = (await nodesData.getActiveFullNodes())[0].toNumber();
+            const schainId = (await schainsData.getSchainIdsForNode(0))[0];
+            const tx = await schainsFunctionality.rotateNode(0, schainId);
+            const rotatedNode = tx.logs[0].args.newNode.toNumber();
             rotatedNode.should.be.equal(6);
 
         });
