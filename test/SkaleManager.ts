@@ -79,7 +79,6 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
             contractManager.address,
             {from: owner, gas: 8000000 * gasMultiplier});
         await contractManager.setContractsAddress("NodesData", nodesData.address);
-        nodesData.enableValidator(validator);
 
         nodesFunctionality = await NodesFunctionality.new(
             contractManager.address,
@@ -698,7 +697,8 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
                 schain1[0].should.be.equal("d2");
 
                 await skaleManager.deleteSchain("d2", {from: developer});
-
+                await skaleDKG.deleteChannel(web3.utils.soliditySha3("d2"));
+                
                 await schainsData.numberOfSchains().should.be.eventually.deep.equal(web3.utils.toBN(0));
 
                 await skaleToken.transferWithData(
@@ -766,7 +766,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
                 schain1[0].should.be.equal("d2");
 
                 await skaleManager.deleteSchain("d2", {from: developer});
-
+                
                 await schainsData.numberOfSchains().should.be.eventually.deep.equal(web3.utils.toBN(0));
             });
         });

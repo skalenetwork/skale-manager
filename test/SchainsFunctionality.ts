@@ -55,7 +55,6 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
             contractManager.address,
             {from: owner, gas: 8000000 * gasMultiplier});
         await contractManager.setContractsAddress("NodesData", nodesData.address);
-        nodesData.enableValidator(validator);
 
         nodesFunctionality = await NodesFunctionality.new(
             contractManager.address,

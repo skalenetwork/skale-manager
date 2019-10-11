@@ -44,7 +44,6 @@ contract("NodesFunctionality", ([owner, validator]) => {
             contractManager.address,
             {from: owner, gas: 8000000 * gasMultiplier});
         await contractManager.setContractsAddress("NodesFunctionality", nodesFunctionality.address);
-        nodesData.enableValidator(validator);
     });
 
     it("should fail to create node if no money", async () => {
@@ -282,34 +281,4 @@ contract("NodesFunctionality", ([owner, validator]) => {
         });
     });
 
-    describe("when node removed from list of trusted validators", async () => {
-        beforeEach(async () => {
-            nodesData.disableValidator(validator);
-        });
-
-        it("should fail to create a node", async () => {
-            await nodesFunctionality.createNode(validator, "100000000000000000000",
-            "0x00" +
-            "2161" +
-            "0000" +
-            "7f000005" +
-            "7f000005" +
-            "1122334455667788990011223344556677889900112233445566778899001122" +
-            "1122334455667788990011223344556677889900112233445566778899001122" +
-            "d205").should.be.eventually.rejectedWith("The validator is not authorized to create a node");
-        });
-
-        it("should create a node after getting permissions", async () => {
-            nodesData.enableValidator(validator);
-            await nodesFunctionality.createNode(validator, "100000000000000000000",
-            "0x00" +
-            "2161" +
-            "0000" +
-            "7f000005" +
-            "7f000005" +
-            "1122334455667788990011223344556677889900112233445566778899001122" +
-            "1122334455667788990011223344556677889900112233445566778899001122" +
-            "d205");
-        });
-    });
 });

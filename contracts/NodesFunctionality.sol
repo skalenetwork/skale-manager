@@ -80,7 +80,6 @@ contract NodesFunctionality is Permissions, INodesFunctionality {
      */
     function createNode(address from, uint value, bytes calldata data) external allow("SkaleManager") returns (uint nodeIndex) {
         address nodesDataAddress = contractManager.contracts(keccak256(abi.encodePacked("NodesData")));
-        require(INodesData(nodesDataAddress).trustedValidators(from), "The validator is not authorized to create a node");
         address constantsAddress = contractManager.contracts(keccak256(abi.encodePacked("Constants")));
         require(value >= IConstants(constantsAddress).NODE_DEPOSIT(), "Not enough money to create Node");
         uint16 nonce;
