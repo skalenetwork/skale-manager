@@ -331,6 +331,33 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                     expect(web3.utils.toBN(node).toNumber()).to.be.not.equal(removedNode);
                 }
             });
+
+            it("should create & delete 4 node schain", async () => {
+                const deposit = await schainsFunctionality.getSchainPrice(5, 5);
+
+                await schainsFunctionality.addSchain(
+                    holder,
+                    deposit,
+                    "0x10" +
+                    "0000000000000000000000000000000000000000000000000000000000000005" +
+                    "05" +
+                    "0000" +
+                    "6432",
+                    {from: owner});
+
+                const schains = await schainsData.getSchains();
+                schains.length.should.be.equal(1);
+                const schainId = schains[0];
+
+                await schainsData.isOwnerAddress(holder, schainId).should.be.eventually.true;
+
+                await schainsFunctionality.deleteSchain(
+                    owner,
+                    "d2",
+                    {from: owner});
+
+                await schainsData.getSchains().should.be.eventually.empty;
+            });
         });
 
         describe("when 20 nodes are registered", async () => {

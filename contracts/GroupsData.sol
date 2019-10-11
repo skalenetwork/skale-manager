@@ -161,25 +161,25 @@ contract GroupsData is IGroupsData, Permissions {
         groups[groupIndex].nodesInGroup = nodesInGroup;
     }
 
-    /**
-     * @dev setNewAmountOfNodes - set new recommended number of Nodes
-     * function could be run only by executor
-     * @param groupIndex - Groups identifier
-     * @param amountOfNodes - recommended number of Nodes in this Group
-    */
-    function setNewAmountOfNodes(bytes32 groupIndex, uint amountOfNodes) external allow(executorName) {
-        groups[groupIndex].recommendedNumberOfNodes = amountOfNodes;
-    }
+    // /**
+    //  * @dev setNewAmountOfNodes - set new recommended number of Nodes
+    //  * function could be run only by executor
+    //  * @param groupIndex - Groups identifier
+    //  * @param amountOfNodes - recommended number of Nodes in this Group
+    // */
+    // function setNewAmountOfNodes(bytes32 groupIndex, uint amountOfNodes) external allow(executorName) {
+    //     groups[groupIndex].recommendedNumberOfNodes = amountOfNodes;
+    // }
 
-    /**
-     * @dev setNewGroupData - set new extra data
-     * function could be run only be executor
-     * @param groupIndex - Groups identifier
-     * @param data - new extra data
-     */
-    function setNewGroupData(bytes32 groupIndex, bytes32 data) external allow(executorName) {
-        groups[groupIndex].groupData = data;
-    }
+    // /**
+    //  * @dev setNewGroupData - set new extra data
+    //  * function could be run only be executor
+    //  * @param groupIndex - Groups identifier
+    //  * @param data - new extra data
+    //  */
+    // function setNewGroupData(bytes32 groupIndex, bytes32 data) external allow(executorName) {
+    //     groups[groupIndex].groupData = data;
+    // }
 
     function setGroupFailedDKG(bytes32 groupIndex) external allow("SkaleDKG") {
         groups[groupIndex].succesfulDKG = false;
