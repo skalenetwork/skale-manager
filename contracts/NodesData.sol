@@ -94,7 +94,9 @@ contract NodesData is INodesData, Permissions {
     }
 
     function getNodesWithFreeSpace(uint partOfNode, uint freeSpace) external view returns (uint[] memory) {
-        if (freeSpace == 0) {
+        address constantsAddress = contractManager.contracts(keccak256(abi.encodePacked("Constants")));
+        // only for testing - should be removed before release
+        if (freeSpace == 0 || partOfNode == 0 || partOfNode == IConstants(constantsAddress).MEDIUM_TEST_DIVISOR()) {
             return getActiveNodeIds();
         }
         if (partOfNode > 1) {

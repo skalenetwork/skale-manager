@@ -198,9 +198,9 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
             });
         });
 
-        describe("when 27 nodes are registered", async () => {
+        describe("when 4 nodes are registered", async () => {
             beforeEach(async () => {
-                const nodesCount = 27;
+                const nodesCount = 4;
                 for (const index of Array.from(Array(nodesCount).keys())) {
                     const hexIndex = ("0" + index.toString(16)).slice(-2);
                     await nodesFunctionality.createNode(validator, "100000000000000000000",
