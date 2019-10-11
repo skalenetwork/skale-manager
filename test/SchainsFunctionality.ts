@@ -352,7 +352,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                 await schainsData.isOwnerAddress(holder, schainId).should.be.eventually.true;
 
                 await schainsFunctionality.deleteSchain(
-                    owner,
+                    holder,
                     "d2",
                     {from: owner});
 
