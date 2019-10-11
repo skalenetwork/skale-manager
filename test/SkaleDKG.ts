@@ -286,17 +286,8 @@ contract("SkaleDKG", ([validator1, validator2]) => {
 
                 let nodes = await schainsData.getNodesInGroup(web3.utils.soliditySha3("d2"));
                 schainName = "d2";
-                let index = 3;
                 while ((new BigNumber(nodes[0])).toFixed() === "1") {
                     await schainsFunctionality.deleteSchainByRoot(schainName, {from: validator1});
-                    // await skaleDKG.deleteChannel(web3.utils.soliditySha3(schainName), {from: validator1});
-                    let schainChar = "";
-                    schainName = "d" + index;
-                    for (let i = 0; i < schainName.length; i++) {
-                        schainChar = schainChar + schainName.charCodeAt(i).toString(16);
-                        // console.log(schainName[i], schainName.charCodeAt(i).toString(16));
-                    }
-                    // console.log(schainName, schainChar);
                     await schainsFunctionality.addSchain(
                         validator1,
                         deposit,
@@ -304,13 +295,10 @@ contract("SkaleDKG", ([validator1, validator2]) => {
                         "0000000000000000000000000000000000000000000000000000000000000005" +
                         "04" +
                         "0000" +
-                        schainChar,
+                        "6432",
                         {from: validator1});
                     nodes = await schainsData.getNodesInGroup(web3.utils.soliditySha3(schainName));
-                    index++;
                 }
-                // console.log(nodes);
-                // console.log(indexes);
             });
 
             it("should broadcast data from 1 node", async () => {

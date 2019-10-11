@@ -94,7 +94,9 @@ contract NodesData is INodesData, Permissions {
     }
 
     function getNodesWithFreeSpace(uint partOfNode, uint freeSpace) external view returns (uint[] memory) {
-        if (freeSpace == 0) {
+        address constantsAddress = contractManager.contracts(keccak256(abi.encodePacked("Constants")));
+        // only for testing - should be removed before release
+        if (freeSpace == 0 || partOfNode == 0 || partOfNode == IConstants(constantsAddress).MEDIUM_TEST_DIVISOR()) {
             return getActiveNodeIds();
         }
         if (partOfNode > 1) {
@@ -487,21 +489,21 @@ contract NodesData is INodesData, Permissions {
         }
     }
 
-    function getActiveFractionalNodes() external view returns (uint[] memory) {
-        uint[] memory activeFractionalNodes = new uint[](fractionalNodes.length);
-        for (uint index = 0; index < fractionalNodes.length; index++) {
-            activeFractionalNodes[index] = fractionalNodes[index].nodeIndex;
-        }
-        return activeFractionalNodes;
-    }
+    // function getActiveFractionalNodes() external view returns (uint[] memory) {
+    //     uint[] memory activeFractionalNodes = new uint[](fractionalNodes.length);
+    //     for (uint index = 0; index < fractionalNodes.length; index++) {
+    //         activeFractionalNodes[index] = fractionalNodes[index].nodeIndex;
+    //     }
+    //     return activeFractionalNodes;
+    // }
 
-    function getActiveFullNodes() external view returns (uint[] memory) {
-        uint[] memory activeFullNodes = new uint[](fullNodes.length);
-        for (uint index = 0; index < fullNodes.length; index++) {
-            activeFullNodes[index] = fullNodes[index].nodeIndex;
-        }
-        return activeFullNodes;
-    }
+    // function getActiveFullNodes() external view returns (uint[] memory) {
+    //     uint[] memory activeFullNodes = new uint[](fullNodes.length);
+    //     for (uint index = 0; index < fullNodes.length; index++) {
+    //         activeFullNodes[index] = fullNodes[index].nodeIndex;
+    //     }
+    //     return activeFullNodes;
+    // }
 
     /**
      * @dev isNodeActive - checks if Node status Active
