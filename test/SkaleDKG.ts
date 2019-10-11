@@ -249,6 +249,27 @@ contract("SkaleDKG", ([validator1, validator2]) => {
             assert(channel.active.should.be.true);
         });
 
+        it("should create & delete schain and open & close a DKG channel", async () => {
+            const deposit = await schainsFunctionality.getSchainPrice(4, 5);
+
+            await schainsFunctionality.addSchain(
+                validator1,
+                deposit,
+                "0x10" +
+                "0000000000000000000000000000000000000000000000000000000000000005" +
+                "04" +
+                "0000" +
+                "6432",
+                {from: validator1});
+
+            let channel: Channel = new Channel(await skaleDKG.channels(web3.utils.soliditySha3("d2")));
+            assert(channel.active.should.be.true);
+
+            await schainsFunctionality.deleteSchainByRoot("d2", {from: validator1});
+            channel = new Channel(await skaleDKG.channels(web3.utils.soliditySha3("d2")));
+            assert(channel.active.should.be.false);
+        });
+
         describe("when 2-node schain is created", async () => {
             beforeEach(async () => {
                 const deposit = await schainsFunctionality.getSchainPrice(4, 5);
