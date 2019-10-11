@@ -624,7 +624,6 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                 await nodesData.addFractionalNode(i);
             }
             await schainsFunctionalityInternal.createGroupForSchain("bob", bobSchain, numberOfNodes, 8);
-            const numberOfNodesBeforeRemovingNodeFromSchain = await schainsData.getNumberOfNodesInGroup(bobSchain);
             await schainsFunctionalityInternal.removeNodeFromSchain(3, bobSchain);
             const gottenNodesInGroup = await schainsData.getNodesInGroup(bobSchain);
             const nodesAfterRemoving = [];
@@ -647,11 +646,9 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
             await nodesData.addFullNode(i++);
             await schainsFunctionalityInternal.createGroupForSchain("bob", bobSchain, 5, 8);
 
-            let fractionalSum = 0;
             for (; i < 9; i++) {
                 await nodesData.addNode(holder, "John", "0x7f000001", "0x7f000002", 8545, "0x1122334455");
                 await nodesData.addFractionalNode(i);
-                fractionalSum += i;
             }
             nodes = await schainsData.getNodesInGroup(bobSchain);
             for (let j = 0; j < 3; j++) {
@@ -730,6 +727,25 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
             const tx = await schainsFunctionality.rotateNode(0, schainId);
             const rotatedNode = tx.logs[0].args.newNode.toNumber();
             rotatedNode.should.be.equal(6);
+
+        });
+
+        it("should rotate on medium test schain", async () => {
+            const bobSchain = "0x38e47a7b719dce63662aeaf43440326f551b8a7ee198cee35cb5d517f2d296a2";
+            const indexOfNodeToRotate = 4;
+            for (let i = 0; i < 4; i++) {
+                await nodesData.addNode(holder, "John", "0x7f000001", "0x7f000002", 8545, "0x1122334455");
+                await nodesData.addFullNode(i);
+            }
+            await schainsFunctionalityInternal.createGroupForSchain("bob", bobSchain, 4, 4);
+
+            await nodesData.addNode(holder, "John", "0x7f000001", "0x7f000002", 8545, "0x1122334455");
+            await nodesData.addFullNode(indexOfNodeToRotate);
+            await nodesFunctionality.removeNodeByRoot(0);
+            const schainId = (await schainsData.getSchainIdsForNode(0))[0];
+            const tx = await schainsFunctionality.rotateNode(0, schainId);
+            const rotatedNode = tx.logs[0].args.newNode.toNumber();
+            rotatedNode.should.be.equal(indexOfNodeToRotate);
 
         });
     });
