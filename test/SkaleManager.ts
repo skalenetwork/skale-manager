@@ -16,6 +16,8 @@ import { ConstantsHolderContract,
          SchainsFunctionalityInstance,
          SchainsFunctionalityInternalContract,
          SchainsFunctionalityInternalInstance,
+         SkaleDKGContract,
+         SkaleDKGInstance,
          SkaleManagerContract,
          SkaleManagerInstance,
          SkaleTokenContract,
@@ -38,8 +40,10 @@ const ValidatorsData: ValidatorsDataContract = artifacts.require("./ValidatorsDa
 const ValidatorsFunctionality: ValidatorsFunctionalityContract = artifacts.require("./ValidatorsFunctionality");
 const SchainsData: SchainsDataContract = artifacts.require("./SchainsData");
 const SchainsFunctionality: SchainsFunctionalityContract = artifacts.require("./SchainsFunctionality");
-const SchainsFunctionalityInternal: SchainsFunctionalityInternalContract = artifacts.require("./SchainsFunctionalityInternal");
+const SchainsFunctionalityInternal: SchainsFunctionalityInternalContract
+    = artifacts.require("./SchainsFunctionalityInternal");
 const ManagerData: ManagerDataContract = artifacts.require("./ManagerData");
+const SkaleDKG: SkaleDKGContract = artifacts.require("./SkaleDKG");
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -57,6 +61,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
     let schainsFunctionality: SchainsFunctionalityInstance;
     let schainsFunctionalityInternal: SchainsFunctionalityInternalInstance;
     let managerData: ManagerDataInstance;
+    let skaleDKG: SkaleDKGInstance;
 
     beforeEach(async () => {
         contractManager = await ContractManager.new({from: owner});
@@ -113,6 +118,9 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
 
         skaleManager = await SkaleManager.new(contractManager.address, {gas: 8000000 * gasMultiplier});
         contractManager.setContractsAddress("SkaleManager", skaleManager.address);
+
+        skaleDKG = await SkaleDKG.new(contractManager.address, {from: owner, gas: 8000000 * gasMultiplier});
+        await contractManager.setContractsAddress("SkaleDKG", skaleDKG.address);
     });
 
     it("should fail to process token fallback if sent not from SkaleToken", async () => {
@@ -675,8 +683,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
 
                 skaleToken.transfer(developer, "0x3635C9ADC5DEA000000", {from: owner});
 
-                const price = web3.utils.toBN(await schainsFunctionality.getSchainPrice(1, 5));
-
+                let price = web3.utils.toBN(await schainsFunctionality.getSchainPrice(1, 5));
                 await skaleToken.transferWithData(
                     skaleManager.address,
                     price.toString(),
@@ -693,72 +700,73 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
                 await skaleManager.deleteSchain("d2", {from: developer});
 
                 await schainsData.numberOfSchains().should.be.eventually.deep.equal(web3.utils.toBN(0));
+                price = web3.utils.toBN(await schainsFunctionality.getSchainPrice(2, 5));
 
                 await skaleToken.transferWithData(
                     skaleManager.address,
-                    "0x1cc2d6d04a2ca",
+                    price.toString(),
                     "0x10" + // create schain
                     "0000000000000000000000000000000000000000000000000000000000000005" + // lifetime
                     "02" + // type of schain
                     "0000" + // nonce
-                    "6433", // name
+                    "6432", // name
                     {from: developer});
 
-                schain1 = await schainsData.schains(web3.utils.soliditySha3("d3"));
-                schain1[0].should.be.equal("d3");
+                schain1 = await schainsData.schains(web3.utils.soliditySha3("d2"));
+                schain1[0].should.be.equal("d2");
 
-                await skaleManager.deleteSchain("d3", {from: developer});
+                await skaleManager.deleteSchain("d2", {from: developer});
 
                 await schainsData.numberOfSchains().should.be.eventually.deep.equal(web3.utils.toBN(0));
-
+                price = web3.utils.toBN(await schainsFunctionality.getSchainPrice(3, 5));
                 await skaleToken.transferWithData(
                     skaleManager.address,
-                    "0x1cc2d6d04a2ca",
+                    price.toString(),
                     "0x10" + // create schain
                     "0000000000000000000000000000000000000000000000000000000000000005" + // lifetime
                     "03" + // type of schain
                     "0000" + // nonce
-                    "6434", // name
+                    "6432", // name
                     {from: developer});
 
-                schain1 = await schainsData.schains(web3.utils.soliditySha3("d4"));
-                schain1[0].should.be.equal("d4");
+                schain1 = await schainsData.schains(web3.utils.soliditySha3("d2"));
+                schain1[0].should.be.equal("d2");
 
-                await skaleManager.deleteSchain("d4", {from: developer});
+                await skaleManager.deleteSchain("d2", {from: developer});
 
                 await schainsData.numberOfSchains().should.be.eventually.deep.equal(web3.utils.toBN(0));
-
+                price = web3.utils.toBN(await schainsFunctionality.getSchainPrice(4, 5));
                 await skaleToken.transferWithData(
                     skaleManager.address,
-                    "0xDE0B6B3A7640000",
+                    price.toString(),
                     "0x10" + // create schain
                     "0000000000000000000000000000000000000000000000000000000000000005" + // lifetime
                     "04" + // type of schain
                     "0000" + // nonce
-                    "6435", // name
+                    "6432", // name
                     {from: developer});
 
-                schain1 = await schainsData.schains(web3.utils.soliditySha3("d5"));
-                schain1[0].should.be.equal("d5");
+                schain1 = await schainsData.schains(web3.utils.soliditySha3("d2"));
+                schain1[0].should.be.equal("d2");
 
-                await skaleManager.deleteSchain("d5", {from: developer});
+                await skaleManager.deleteSchain("d2", {from: developer});
 
                 await schainsData.numberOfSchains().should.be.eventually.deep.equal(web3.utils.toBN(0));
-
+                price = web3.utils.toBN(await schainsFunctionality.getSchainPrice(5, 5));
                 await skaleToken.transferWithData(
                     skaleManager.address,
-                    "0x1cc2d6d04a2ca",
+                    price.toString(),
                     "0x10" + // create schain
                     "0000000000000000000000000000000000000000000000000000000000000005" + // lifetime
                     "05" + // type of schain
                     "0000" + // nonce
-                    "6436", // name
+                    "6432", // name
                     {from: developer});
 
-                schain1 = await schainsData.schains(web3.utils.soliditySha3("d6"));
-                schain1[0].should.be.equal("d6");
+                schain1 = await schainsData.schains(web3.utils.soliditySha3("d2"));
+                schain1[0].should.be.equal("d2");
 
-                await skaleManager.deleteSchain("d6", {from: developer});
+                await skaleManager.deleteSchain("d2", {from: developer});
 
                 await schainsData.numberOfSchains().should.be.eventually.deep.equal(web3.utils.toBN(0));
             });

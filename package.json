@@ -33,7 +33,8 @@
     "prepare": "yarn generate",
     "test": "truffle test && yarn tsc",
     "tsc": "tsc --noEmit",
-    "tslint": "npx tslint --project ."
+    "tslint": "npx tslint --project .",
+    "slither": "slither . --exclude naming-convention,solc-version,assembly,timestamp,calls-loop,reentrancy-no-eth,constant-function,pragma --truffle-version truffle@latest"
   },
   "dependencies": {
     "@types/chai": "^4.1.7",
@@ -56,6 +57,7 @@
     "@types/web3": "^1.0.19",
     "codecov": "^3.6.1",
     "dotenv": "^7.0.0",
+    "elliptic": "^6.5.1",
     "ethlint": "^1.2.4",
     "ganache-cli": "^6.1.8",
     "solidity-coverage": "leapdao/solidity-coverage",

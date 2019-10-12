@@ -53,14 +53,14 @@ contract ManagerData is IManagerData, Permissions {
     /**
      * @dev setMinersCap - sets miners capitalization
      */
-    function setMinersCap(uint newMinersCap) public allow(executorName) {
+    function setMinersCap(uint newMinersCap) external allow(executorName) {
         minersCap = newMinersCap;
     }
 
     /**
      * @dev setStageTimeAndStageNodes - sets new stage time and new amount of Nodes at this stage
      */
-    function setStageTimeAndStageNodes(uint newStageNodes) public allow(executorName) {
+    function setStageTimeAndStageNodes(uint newStageNodes) external allow(executorName) {
         stageNodes = newStageNodes;
         stageTime = uint32(block.timestamp);
     }

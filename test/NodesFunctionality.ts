@@ -280,4 +280,5 @@ contract("NodesFunctionality", ([owner, validator]) => {
             node[8].should.be.deep.equal(web3.utils.toBN(2));
         });
     });
+
 });
