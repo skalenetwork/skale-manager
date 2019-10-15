@@ -37,6 +37,7 @@
     "slither": "slither . --exclude naming-convention,solc-version,assembly,timestamp,calls-loop,reentrancy-no-eth,constant-function,pragma --truffle-version truffle@latest"
   },
   "dependencies": {
+    "@openzeppelin/contracts": "^2.3.0",
     "@types/chai": "^4.1.7",
     "@types/chai-as-promised": "^7.1.0",
     "@types/minimist": "^1.2.0",
