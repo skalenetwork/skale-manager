@@ -1,11 +1,17 @@
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
-import { SkaleVerifierContract,
+import { ContractManagerContract,
+         ContractManagerInstance,
+         SchainsDataContract,
+         SchainsDataInstance,
+         SkaleVerifierContract,
          SkaleVerifierInstance} from "../types/truffle-contracts";
 
 import { gasMultiplier } from "./utils/command_line";
 import { skipTime } from "./utils/time";
 
+const ContractManager: ContractManagerContract = artifacts.require("./ContractManager");
+const SchainsData: SchainsDataContract = artifacts.require("./SchainsData");
 const SkaleVerifier: SkaleVerifierContract = artifacts.require("./SkaleVerifier");
 
 import BigNumber from "bignumber.js";
@@ -13,10 +19,16 @@ chai.should();
 chai.use(chaiAsPromised);
 
 contract("SkaleVerifier", ([owner, validator, developer, hacker]) => {
+    let contractManager: ContractManagerInstance;
+    let schainsData: SchainsDataInstance;
     let skaleVerifier: SkaleVerifierInstance;
 
     beforeEach(async () => {
-        skaleVerifier = await SkaleVerifier.new({from: owner, gas: 8000000 * gasMultiplier});
+        contractManager = await ContractManager.new({from: owner});
+        schainsData = await SchainsData.new("SchainsFunctionality", contractManager.address, {from: owner});
+        await contractManager.setContractsAddress("SchainsData", schainsData.address, {from: owner});
+        skaleVerifier = await SkaleVerifier.new(contractManager.address, {from: owner, gas: 8000000 * gasMultiplier});
+        await contractManager.setContractsAddress("SkaleVerifier", skaleVerifier.address, {from: owner});
     });
 
     describe("when skaleVerifier contract is activated", async () => {

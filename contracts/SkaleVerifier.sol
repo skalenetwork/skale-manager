@@ -39,7 +39,7 @@ contract SkaleVerifier is Permissions {
         uint signA,
         uint signB,
         bytes32 hash,
-        uint8 counter,
+        uint counter,
         uint hashA,
         uint hashB,
         string calldata schainName
@@ -85,7 +85,7 @@ contract SkaleVerifier is Permissions {
         uint signA,
         uint signB,
         bytes32 hash,
-        uint8 counter,
+        uint counter,
         uint hashA,
         uint hashB,
         uint pkx1,
@@ -134,7 +134,7 @@ contract SkaleVerifier is Permissions {
 
     function checkHashToGroupWithHelper(
         bytes32 hash,
-        uint8 counter,
+        uint counter,
         uint hashA,
         uint hashB
     )
