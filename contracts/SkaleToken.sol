@@ -57,23 +57,4 @@ contract SkaleToken is ERC777, Permissions {
 
         return true;
     }
-
-    /**
-     * @dev Function that is called when a user or another contract wants to transfer funds.
-     * It is alias for transfer function of StandardToken
-     * @param recipient Address of token receiver.
-     * @param amount Number of tokens to transfer.
-     * @param data Data to be sent to tokenFallback
-     * @return Returns success of function call.
-     */
-    function transferWithData(
-        address recipient,
-        uint256 amount,
-        bytes calldata data
-	)
-        external
-        // returns (bool)
-    {
-        ERC777(this).send(recipient, amount, data);
-    }
 }
