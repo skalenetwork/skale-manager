@@ -52,9 +52,12 @@
     "truffle-typings": "^1.0.8",
     "ts-node": "^8.3.0",
     "typechain": "^0.3.17",
-    "web3": "^1.0.0-beta.37"
+    "web3": "^1.2.1"
   },
   "devDependencies": {
+    "@nomiclabs/buidler": "^1.0.1",
+    "@nomiclabs/buidler-truffle5": "^1.0.1",
+    "@nomiclabs/buidler-web3": "^1.0.1",
     "@types/web3": "^1.0.19",
     "codecov": "^3.6.1",
     "dotenv": "^7.0.0",
