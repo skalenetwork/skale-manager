@@ -25,7 +25,7 @@ contract("SkaleToken", ([owner, holder, receiver, nilAddress, accountWith99]) =>
 
   beforeEach(async () => {
     contractManager = await ContractManager.new({from: owner});
-    skaleToken = await SkaleToken.new(contractManager.address, { from: owner });
+    skaleToken = await SkaleToken.new(contractManager.address, [], { from: owner });
   });
 
   it("Should have the correct name", async () => {
@@ -205,7 +205,7 @@ contract("SkaleToken", ([owner, holder, receiver, nilAddress, accountWith99]) =>
 
   it("Should emit a Mint Event", async () => {
     const amount = toWei(10);
-    const { logs } = await skaleToken.mint(owner, amount, {from: owner});
+    const { logs } = await skaleToken.mint(owner, owner, amount, '', '', {from: owner});
 
     assert.equal(logs.length, 1, "No Mint Event emitted");
     assert.equal(logs[0].event, "Mint");
@@ -216,7 +216,7 @@ contract("SkaleToken", ([owner, holder, receiver, nilAddress, accountWith99]) =>
 
   it("Should emit a Burn Event", async () => {
     const amount = toWei(10);
-    const { logs } = await skaleToken.burn(owner, amount, {from: owner});
+    const { logs } = await skaleToken.burn(amount, '', {from: owner});
 
     assert.equal(logs.length, 1, "No Burn Event emitted");
     assert.equal(logs[0].event, "Burn");

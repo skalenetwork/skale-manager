@@ -28,7 +28,7 @@ let gasLimit = 6900000;
 
 async function deploy(deployer, network) {
     await deployer.deploy(ContractManager, {gas: gasLimit}).then(async function(contractManagerInstance) {
-        await deployer.deploy(SkaleToken, contractManagerInstance.address, {gas: gasLimit});
+        await deployer.deploy(SkaleToken, contractManagerInstance.address, [], {gas: gasLimit});
         await contractManagerInstance.setContractsAddress("SkaleToken", SkaleToken.address).then(function(res) {
             console.log("Contract Skale Token with address", SkaleToken.address, "registred in Contract Manager");
         });

@@ -27,9 +27,15 @@ import "./interfaces/INodesFunctionality.sol";
 import "./interfaces/IValidatorsFunctionality.sol";
 import "./interfaces/ISchainsFunctionality.sol";
 import "./interfaces/IManagerData.sol";
+import "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
+import "@openzeppelin/contracts/introspection/IERC1820Registry.sol";
 
 
-contract SkaleManager is Permissions {
+contract SkaleManager is IERC777Recipient, Permissions {
+    IERC1820Registry private _erc1820 = IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
+
+    bytes32 constant private TOKENS_RECIPIENT_INTERFACE_HASH =
+        0xb281fc8c12954d22544db45de3159a39272895b169a852b314f9cc762e44c53b;
 
     enum TransactionOperation {CreateNode, CreateSchain}
 
@@ -44,19 +50,29 @@ contract SkaleManager is Permissions {
     );
 
     constructor(address newContractsAddress) Permissions(newContractsAddress) public {
-
+        _erc1820.setInterfaceImplementer(address(this), TOKENS_RECIPIENT_INTERFACE_HASH, address(this));
     }
 
-    function tokenFallback(address from, uint value, bytes calldata data) external allow("SkaleToken") {
-        TransactionOperation operationType = fallbackOperationTypeConvert(data);
+    function tokensReceived(
+        address operator,
+        address from,
+        address to,
+        uint256 value,
+        bytes calldata userData,
+        bytes calldata operatorData
+    )
+        external
+        allow("SkaleToken")
+    {
+        TransactionOperation operationType = fallbackOperationTypeConvert(userData);
         if (operationType == TransactionOperation.CreateNode) {
             address nodesFunctionalityAddress = contractManager.contracts(keccak256(abi.encodePacked("NodesFunctionality")));
             address validatorsFunctionalityAddress = contractManager.contracts(keccak256(abi.encodePacked("ValidatorsFunctionality")));
-            uint nodeIndex = INodesFunctionality(nodesFunctionalityAddress).createNode(from, value, data);
+            uint nodeIndex = INodesFunctionality(nodesFunctionalityAddress).createNode(from, value, userData);
             IValidatorsFunctionality(validatorsFunctionalityAddress).addValidator(nodeIndex);
         } else if (operationType == TransactionOperation.CreateSchain) {
             address schainsFunctionalityAddress = contractManager.contracts(keccak256(abi.encodePacked("SchainsFunctionality")));
-            ISchainsFunctionality(schainsFunctionalityAddress).addSchain(from, value, data);
+            ISchainsFunctionality(schainsFunctionalityAddress).addSchain(from, value, userData);
         }
     }
 
@@ -187,12 +203,15 @@ contract SkaleManager is Permissions {
         if (IManagerData(managerDataAddress).minersCap() == 0) {
             IManagerData(managerDataAddress).setMinersCap(ISkaleToken(skaleTokenAddress).CAP() / 3);
         }
-        uint step = ((now - IManagerData(managerDataAddress).startTime()) / IConstants(constantsAddress).SIX_YEARS()) + 1;
         if (IManagerData(managerDataAddress).stageTime() + IConstants(constantsAddress).rewardPeriod() < now) {
             IManagerData(managerDataAddress).setStageTimeAndStageNodes(INodesData(nodesDataAddress).numberOfActiveNodes() + INodesData(nodesDataAddress).numberOfLeavingNodes());
         }
         commonBounty = IManagerData(managerDataAddress).minersCap() /
-            ((2 ** step) * (IConstants(constantsAddress).SIX_YEARS() / IConstants(constantsAddress).rewardPeriod()) * IManagerData(managerDataAddress).stageNodes());
+            ((2 ** (((now - IManagerData(managerDataAddress).startTime()) /
+            IConstants(constantsAddress).SIX_YEARS()) + 1)) *
+            (IConstants(constantsAddress).SIX_YEARS() /
+            IConstants(constantsAddress).rewardPeriod()) *
+            IManagerData(managerDataAddress).stageNodes());
         if (now > diffTime) {
             diffTime = now - diffTime;
         } else {
@@ -211,8 +230,14 @@ contract SkaleManager is Permissions {
                 bountyForMiner = (IConstants(constantsAddress).allowableLatency() * bountyForMiner) / latency;
             }
             require(
-                ISkaleToken(skaleTokenAddress).mint(from, uint(bountyForMiner)),
-                "Minting of token is failed");
+                ISkaleToken(skaleTokenAddress).mint(
+                    address(0),
+                    from,
+                    uint(bountyForMiner),
+                    bytes(""),
+                    bytes("")
+                ), "Minting of token is failed"
+            );
         } else {
             //Need to add penalty
             bountyForMiner = 0;
