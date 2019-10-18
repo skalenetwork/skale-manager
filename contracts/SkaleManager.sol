@@ -34,8 +34,7 @@ import "@openzeppelin/contracts/introspection/IERC1820Registry.sol";
 contract SkaleManager is IERC777Recipient, Permissions {
     IERC1820Registry private _erc1820 = IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
 
-    bytes32 constant private TOKENS_RECIPIENT_INTERFACE_HASH =
-        0xb281fc8c12954d22544db45de3159a39272895b169a852b314f9cc762e44c53b;
+    bytes32 constant private TOKENS_RECIPIENT_INTERFACE_HASH = 0xb281fc8c12954d22544db45de3159a39272895b169a852b314f9cc762e44c53b;
 
     enum TransactionOperation {CreateNode, CreateSchain}
 

@@ -21,7 +21,12 @@ contract SkaleToken is ERC777, Permissions {
 
     constructor(address contractsAddress, address[] memory defOps) Permissions(contractsAddress) ERC777("SKALE", "SKL", defOps) public {
         uint money = 1e7 * 10 ** DECIMALS;
-        _mint(address(0), address(msg.sender), money, bytes(""), bytes(""));
+        _mint(
+            address(0),
+            address(msg.sender),
+            money, bytes(""),
+            bytes("")
+        );
         // TODO remove after testing
     }
 
