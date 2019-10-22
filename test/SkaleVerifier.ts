@@ -255,7 +255,7 @@ contract("SkaleVerifier", ([validator1, owner, developer, hacker]) => {
             assert(isVerified.should.be.false);
         });
 
-        it("should not verify signatures with invalid hash point", async () => {
+        it("should verify Schain signature with already set common public key", async () => {
             const nodesCount = 2;
             for (const index of Array.from(Array(nodesCount).keys())) {
                 const hexIndex = ("0" + index.toString(16)).slice(-2);
