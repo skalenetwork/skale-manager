@@ -17,8 +17,11 @@
 
 pragma solidity ^0.5.0;
 
+import "./Permissions.sol";
+import "./interfaces/IGroupsData.sol";
 
-contract SkaleVerifier {
+
+contract SkaleVerifier is Permissions {
 
 
     uint constant P = 21888242871839275222246405745257275088696311157297823662689037894645226208583;
@@ -28,17 +31,67 @@ contract SkaleVerifier {
     uint constant G2C = 4082367875863433681332203403145435568316851327593401208105741076214120093531;
     uint constant G2D = 8495653923123431417604973247489272438418190587263600148770280649306958101930;
 
+    constructor(address newContractsAddress) Permissions(newContractsAddress) public {
+
+    }
+
+    function verifySchainSignature(
+        uint signA,
+        uint signB,
+        bytes32 hash,
+        uint counter,
+        uint hashA,
+        uint hashB,
+        string calldata schainName
+    )
+        external
+        view
+        returns (bool)
+    {
+        if (!checkHashToGroupWithHelper(
+            hash,
+            counter,
+            hashA,
+            hashB
+            )
+        )
+        {
+            return false;
+        }
+
+        address schainsDataAddress = contractManager.contracts(keccak256(abi.encodePacked("SchainsData")));
+        uint pkx1;
+        uint pky1;
+        uint pkx2;
+        uint pky2;
+        (pkx1, pky1, pkx2, pky2) = IGroupsData(schainsDataAddress).getGroupsPublicKey(
+            keccak256(abi.encodePacked(schainName))
+        );
+        return verify(
+            signA,
+            signB,
+            hash,
+            counter,
+            hashA,
+            hashB,
+            pkx1,
+            pky1,
+            pkx2,
+            pky2
+        );
+    }
+
     function verify(
         uint signA,
         uint signB,
         bytes32 hash,
-        uint8 counter,
+        uint counter,
         uint hashA,
         uint hashB,
         uint pkx1,
         uint pky1,
         uint pkx2,
-        uint pky2) external view returns (bool)
+        uint pky2) public view returns (bool)
     {
         if (!checkHashToGroupWithHelper(
             hash,
@@ -81,7 +134,7 @@ contract SkaleVerifier {
 
     function checkHashToGroupWithHelper(
         bytes32 hash,
-        uint8 counter,
+        uint counter,
         uint hashA,
         uint hashB
     )
