@@ -4,6 +4,8 @@
 
 ### Solidity ###
 build/
+artifacts/
+cache/
 tmp.sol
 data/*.json
 scTopics
