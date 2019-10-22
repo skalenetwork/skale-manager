@@ -18,6 +18,8 @@ import { ConstantsHolderContract,
          SchainsFunctionalityInstance,
          SchainsFunctionalityInternalContract,
          SchainsFunctionalityInternalInstance,
+         SkaleDKGContract,
+         SkaleDKGInstance,
          SkaleVerifierContract,
          SkaleVerifierInstance} from "../types/truffle-contracts";
 
@@ -34,6 +36,7 @@ const SchainsFunctionalityInternal: SchainsFunctionalityInternalContract = artif
 const Decryption: DecryptionContract = artifacts.require("./Decryption");
 const ECDH: ECDHContract = artifacts.require("./ECDH");
 const SkaleVerifier: SkaleVerifierContract = artifacts.require("./SkaleVerifier");
+const SkaleDKG: SkaleDKGContract = artifacts.require("./SkaleDKG");
 
 import BigNumber from "bignumber.js";
 chai.should();
@@ -50,6 +53,7 @@ contract("SkaleVerifier", ([validator1, owner, developer, hacker]) => {
     let decryption: DecryptionInstance;
     let ecdh: ECDHInstance;
     let skaleVerifier: SkaleVerifierInstance;
+    let skaleDKG: SkaleDKGInstance;
 
     beforeEach(async () => {
         contractManager = await ContractManager.new({from: validator1});
@@ -89,6 +93,9 @@ contract("SkaleVerifier", ([validator1, owner, developer, hacker]) => {
             contractManager.address,
             {from: validator1, gas: 7000000 * gasMultiplier});
         await contractManager.setContractsAddress("SchainsFunctionalityInternal", schainsFunctionalityInternal.address);
+
+        skaleDKG = await SkaleDKG.new(contractManager.address, {from: validator1, gas: 8000000 * gasMultiplier});
+        await contractManager.setContractsAddress("SkaleDKG", skaleDKG.address);
 
         decryption = await Decryption.new({from: validator1, gas: 8000000 * gasMultiplier});
         await contractManager.setContractsAddress("Decryption", decryption.address);
@@ -265,7 +272,7 @@ contract("SkaleVerifier", ([validator1, owner, developer, hacker]) => {
             }
 
             const deposit = await schainsFunctionality.getSchainPrice(4, 5);
-            
+
             await schainsFunctionality.addSchain(
                 validator1,
                 deposit,
@@ -278,15 +285,15 @@ contract("SkaleVerifier", ([validator1, owner, developer, hacker]) => {
 
             await schainsData.setPublicKey(
                 await web3.utils.soliditySha3("Bob"),
-                "14175454883274808069161681493814261634483894346393730614200347712729091773660",
                 "8121803279407808453525231194818737640175140181756432249172777264745467034059",
-                "16178065340009269685389392150337552967996679485595319920657702232801180488250",
+                "14175454883274808069161681493814261634483894346393730614200347712729091773660",
                 "1719704957996939304583832799986884557051828342008506223854783585686652272013",
+                "16178065340009269685389392150337552967996679485595319920657702232801180488250",
             );
             const res = await skaleVerifier.verifySchainSignature(
                 "2968563502518615975252640488966295157676313493262034332470965194448741452860",
                 "16493689853238003409059452483538012733393673636730410820890208241342865935903",
-                "243b6ce34e3c772e4e01685954b027e691f67622d21d261ae0b324c78b315fc3",
+                "0x243b6ce34e3c772e4e01685954b027e691f67622d21d261ae0b324c78b315fc3",
                 "1",
                 "16388258042572094315763275220684810298941672685551867426142229042700479455172",
                 "16728155475357375553025720334221543875807222325459385994874825666479685652110",
