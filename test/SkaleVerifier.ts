@@ -1,22 +1,113 @@
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
-import { SkaleVerifierContract,
+import { ConstantsHolderContract,
+         ConstantsHolderInstance,
+         ContractManagerContract,
+         ContractManagerInstance,
+         DecryptionContract,
+         DecryptionInstance,
+         ECDHContract,
+         ECDHInstance,
+         NodesDataContract,
+         NodesDataInstance,
+         NodesFunctionalityContract,
+         NodesFunctionalityInstance,
+         SchainsDataContract,
+         SchainsDataInstance,
+         SchainsFunctionalityContract,
+         SchainsFunctionalityInstance,
+         SchainsFunctionalityInternalContract,
+         SchainsFunctionalityInternalInstance,
+         SkaleDKGContract,
+         SkaleDKGInstance,
+         SkaleVerifierContract,
          SkaleVerifierInstance} from "../types/truffle-contracts";
 
 import { gasMultiplier } from "./utils/command_line";
 import { skipTime } from "./utils/time";
 
+const ContractManager: ContractManagerContract = artifacts.require("./ContractManager");
+const ConstantsHolder: ConstantsHolderContract = artifacts.require("./ConstantsHolder");
+const NodesData: NodesDataContract = artifacts.require("./NodesData");
+const NodesFunctionality: NodesFunctionalityContract = artifacts.require("./NodesFunctionality");
+const SchainsData: SchainsDataContract = artifacts.require("./SchainsData");
+const SchainsFunctionality: SchainsFunctionalityContract = artifacts.require("./SchainsFunctionality");
+const SchainsFunctionalityInternal: SchainsFunctionalityInternalContract = artifacts.require("./SchainsFunctionalityInternal");
+const Decryption: DecryptionContract = artifacts.require("./Decryption");
+const ECDH: ECDHContract = artifacts.require("./ECDH");
 const SkaleVerifier: SkaleVerifierContract = artifacts.require("./SkaleVerifier");
+const SkaleDKG: SkaleDKGContract = artifacts.require("./SkaleDKG");
 
 import BigNumber from "bignumber.js";
 chai.should();
 chai.use(chaiAsPromised);
 
-contract("SkaleVerifier", ([owner, validator, developer, hacker]) => {
+contract("SkaleVerifier", ([validator1, owner, developer, hacker]) => {
+    let contractManager: ContractManagerInstance;
+    let constantsHolder: ConstantsHolderInstance;
+    let nodesData: NodesDataInstance;
+    let nodesFunctionality: NodesFunctionalityInstance;
+    let schainsData: SchainsDataInstance;
+    let schainsFunctionality: SchainsFunctionalityInstance;
+    let schainsFunctionalityInternal: SchainsFunctionalityInternalInstance;
+    let decryption: DecryptionInstance;
+    let ecdh: ECDHInstance;
     let skaleVerifier: SkaleVerifierInstance;
+    let skaleDKG: SkaleDKGInstance;
 
     beforeEach(async () => {
-        skaleVerifier = await SkaleVerifier.new({from: owner, gas: 8000000 * gasMultiplier});
+        contractManager = await ContractManager.new({from: validator1});
+
+        constantsHolder = await ConstantsHolder.new(
+            contractManager.address,
+            {from: validator1, gas: 8000000});
+        await contractManager.setContractsAddress("Constants", constantsHolder.address);
+
+        nodesData = await NodesData.new(
+            5,
+            contractManager.address,
+            {from: validator1, gas: 8000000 * gasMultiplier});
+        await contractManager.setContractsAddress("NodesData", nodesData.address);
+
+        nodesFunctionality = await NodesFunctionality.new(
+            contractManager.address,
+            {from: validator1, gas: 8000000 * gasMultiplier});
+        await contractManager.setContractsAddress("NodesFunctionality", nodesFunctionality.address);
+
+        schainsData = await SchainsData.new(
+            "SchainsFunctionalityInternal",
+            contractManager.address,
+            {from: validator1, gas: 8000000 * gasMultiplier});
+        await contractManager.setContractsAddress("SchainsData", schainsData.address);
+
+        schainsFunctionality = await SchainsFunctionality.new(
+            "SkaleManager",
+            "SchainsData",
+            contractManager.address,
+            {from: validator1, gas: 7900000 * gasMultiplier});
+        await contractManager.setContractsAddress("SchainsFunctionality", schainsFunctionality.address);
+
+        schainsFunctionalityInternal = await SchainsFunctionalityInternal.new(
+            "SchainsFunctionality",
+            "SchainsData",
+            contractManager.address,
+            {from: validator1, gas: 7000000 * gasMultiplier});
+        await contractManager.setContractsAddress("SchainsFunctionalityInternal", schainsFunctionalityInternal.address);
+
+        skaleDKG = await SkaleDKG.new(contractManager.address, {from: validator1, gas: 8000000 * gasMultiplier});
+        await contractManager.setContractsAddress("SkaleDKG", skaleDKG.address);
+
+        decryption = await Decryption.new({from: validator1, gas: 8000000 * gasMultiplier});
+        await contractManager.setContractsAddress("Decryption", decryption.address);
+
+        ecdh = await ECDH.new({from: validator1, gas: 8000000 * gasMultiplier});
+        await contractManager.setContractsAddress("ECDH", ecdh.address);
+
+        skaleVerifier = await SkaleVerifier.new(
+            contractManager.address,
+            {from: validator1, gas: 8000000 * gasMultiplier},
+        );
+        await contractManager.setContractsAddress("SkaleVerifier", skaleVerifier.address, {from: validator1});
     });
 
     describe("when skaleVerifier contract is activated", async () => {
@@ -162,6 +253,53 @@ contract("SkaleVerifier", ([owner, validator, developer, hacker]) => {
                 "7025653765868604607777943964159633546920168690664518432704587317074821855333",
             );
             assert(isVerified.should.be.false);
+        });
+
+        it("should verify Schain signature with already set common public key", async () => {
+            const nodesCount = 2;
+            for (const index of Array.from(Array(nodesCount).keys())) {
+                const hexIndex = ("0" + index.toString(16)).slice(-2);
+                await nodesFunctionality.createNode(validator1, "100000000000000000000",
+                    "0x00" +
+                    "2161" +
+                    "0000" +
+                    "7f0000" + hexIndex +
+                    "7f0000" + hexIndex +
+                    "1122334455667788990011223344556677889900112233445566778899001122" +
+                    "1122334455667788990011223344556677889900112233445566778899001122" +
+                    "d2" + hexIndex,
+                    {from: validator1});
+            }
+
+            const deposit = await schainsFunctionality.getSchainPrice(4, 5);
+
+            await schainsFunctionality.addSchain(
+                validator1,
+                deposit,
+                "0x10" +
+                "0000000000000000000000000000000000000000000000000000000000000005" +
+                "04" +
+                "0000" +
+                "426f62",
+                {from: validator1});
+
+            await schainsData.setPublicKey(
+                await web3.utils.soliditySha3("Bob"),
+                "8121803279407808453525231194818737640175140181756432249172777264745467034059",
+                "14175454883274808069161681493814261634483894346393730614200347712729091773660",
+                "1719704957996939304583832799986884557051828342008506223854783585686652272013",
+                "16178065340009269685389392150337552967996679485595319920657702232801180488250",
+            );
+            const res = await skaleVerifier.verifySchainSignature(
+                "2968563502518615975252640488966295157676313493262034332470965194448741452860",
+                "16493689853238003409059452483538012733393673636730410820890208241342865935903",
+                "0x243b6ce34e3c772e4e01685954b027e691f67622d21d261ae0b324c78b315fc3",
+                "1",
+                "16388258042572094315763275220684810298941672685551867426142229042700479455172",
+                "16728155475357375553025720334221543875807222325459385994874825666479685652110",
+                "Bob",
+            );
+            assert(res.should.be.true);
         });
     });
 });

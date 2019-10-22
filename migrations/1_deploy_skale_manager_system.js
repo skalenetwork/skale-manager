@@ -85,7 +85,7 @@ async function deploy(deployer, network) {
         await contractManagerInstance.setContractsAddress("SkaleDKG", SkaleDKG.address).then(function(res) {
             console.log("Contract SkaleDKG with address", SkaleDKG.address, "registred in Contract Manager");
         });
-        await deployer.deploy(SkaleVerifier, {gas: gasLimit * gas_multiplier});
+        await deployer.deploy(SkaleVerifier, contractManagerInstance.address, {gas: gasLimit * gas_multiplier});
         await contractManagerInstance.setContractsAddress("SkaleVerifier", SkaleVerifier.address).then(function(res) {
             console.log("Contract SkaleVerifier with address", SkaleVerifier.address, "registred in Contract Manager");
         });
