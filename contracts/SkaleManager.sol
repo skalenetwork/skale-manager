@@ -27,7 +27,6 @@ import "./interfaces/INodesFunctionality.sol";
 import "./interfaces/IValidatorsFunctionality.sol";
 import "./interfaces/ISchainsFunctionality.sol";
 import "./interfaces/IManagerData.sol";
-import "./interfaces/IDelegation.sol";
 import "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
 import "@openzeppelin/contracts/introspection/IERC1820Registry.sol";
 
@@ -37,7 +36,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
 
     bytes32 constant private TOKENS_RECIPIENT_INTERFACE_HASH = 0xb281fc8c12954d22544db45de3159a39272895b169a852b314f9cc762e44c53b;
 
-    enum TransactionOperation {CreateNode, CreateSchain, DelegationRequest}
+    enum TransactionOperation {CreateNode, CreateSchain}
 
     event BountyGot(
         uint indexed nodeIndex,
@@ -73,9 +72,6 @@ contract SkaleManager is IERC777Recipient, Permissions {
         } else if (operationType == TransactionOperation.CreateSchain) {
             address schainsFunctionalityAddress = contractManager.contracts(keccak256(abi.encodePacked("SchainsFunctionality")));
             ISchainsFunctionality(schainsFunctionalityAddress).addSchain(from, value, userData);
-        } else if (operationType == TransactionOperation.DelegationRequest) {
-            address delegationAddress = contractManager.contracts(keccak256(abi.encodePacked("Delegation")));
-            IDelegation(delegationAddress).delegationRequest(from, value, userData);
         }
     }
 
@@ -261,8 +257,6 @@ contract SkaleManager is IERC777Recipient, Permissions {
             return TransactionOperation.CreateNode;
         } else if (operationType == bytes1(uint8(16))) {
             return TransactionOperation.CreateSchain;
-        } else if (operationType == bytes1(uint8(2))) {
-            return TransactionOperation.DelegationRequest;
         }
     }
 
