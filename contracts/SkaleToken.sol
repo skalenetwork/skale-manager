@@ -19,13 +19,14 @@ pragma solidity ^0.5.0;
 
 import "@openzeppelin/contracts/token/ERC777/ERC777.sol";
 import "./Permissions.sol";
+import "./interfaces/delegation/IDelegatableToken.sol";
 
 
 /**
  * @title SkaleToken is ERC777 Token implementation, also this contract in skale
  * manager system
  */
-contract SkaleToken is ERC777, Permissions {
+contract SkaleToken is ERC777, Permissions, IDelegatableToken {
 
     string public constant NAME = "SKALE";
 

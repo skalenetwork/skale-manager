@@ -48,6 +48,6 @@ contract SkaleBalances is Permissions {
     function withdrawBalance(uint amountOfTokens) public {
         require(bountyBalances[msg.sender] >= amountOfTokens, "Now enough tokens on balance for withdrawing");
         bountyBalances[msg.sender] -= amountOfTokens;
-        send(msg.sender, amountOfTokens, "");
+        // send(msg.sender, amountOfTokens, "");
     }
 }

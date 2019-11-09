@@ -18,4 +18,7 @@ interface IValidatorDelegation {
     function register(string calldata name, string calldata description) external;
 
     function setMinimumDelegationAmount(uint amount) external;
+
+    /// @notice Requests return of tokens that are locked in SkaleManager
+    function returnTokens(uint amount) external;
 }
