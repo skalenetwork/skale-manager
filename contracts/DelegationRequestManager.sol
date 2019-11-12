@@ -19,9 +19,9 @@ pragma solidity ^0.5.0;
 import "./Permissions.sol";
 import "./interfaces/IDelegationPeriodManager.sol";
 
-contract DelegationRequestManager is Permissions{
+contract DelegationRequestManager is Permissions {
 
-    enum DelegationStatus {Accepted, Rejected, Undefined}
+    enum DelegationStatus {Accepted, Rejected, Undefined, Proceed, Expired}
 
     uint public delegationRequestId = 1;
 
@@ -72,6 +72,15 @@ contract DelegationRequestManager is Permissions{
 
     function getDelegationRequestStatus(uint _requestId) public view returns (DelegationStatus) {
         return delegationRequests[_requestId].status;
+    }
+
+    function setDelegationRequestStatus(uint _requestId, DelegationStatus status) public allow("DelegationManager") {
+        delegationRequests[_requestId].status = status;
+    }
+    
+
+    function getDelegationRequestTokenAddress(uint _requestId) public view returns (address) {
+        return delegationRequests[_requestId].tokenAddress;
     }
 
     function approveDelegationRequest(uint _requestId) public checkValidatorAccess(_requestId) {
