@@ -31,3 +31,5 @@ export function skipTime(web3: Web3, seconds: number) {
 export async function currentTime(web3: Web3) {
     return (await web3.eth.getBlock("latest")).timestamp;
 }
+
+export const months = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];

@@ -79,4 +79,19 @@ contract SkaleToken is ERC777, Permissions, IDelegatableToken {
 
         return true;
     }
+
+    function delegate(
+        address validator,
+        string calldata startingMonth,
+        uint delegationType,
+        string calldata info,
+        address bountyReceiver) external returns(uint requestId)
+    {
+        revert("Not implemented");
+    }
+
+    /// @notice move `amount` of tokens to SkaleManager
+    function slash(address target, uint amount) external {
+        revert("Not implemented");
+    }
 }
