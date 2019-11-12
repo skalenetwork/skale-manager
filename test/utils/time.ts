@@ -28,6 +28,21 @@ export function skipTime(web3: Web3, seconds: number) {
         responseCallback);
 }
 
+export async function skipTimeToDate(web3: Web3, day: number, month: number) {
+    const timestamp = await currentTime(web3);
+    const now = new Date(timestamp * 1000);
+    const targetTime = new Date(now);
+    targetTime.setFullYear(now.getFullYear() + 1);
+    if (day !== undefined) {
+        targetTime.setDate(day);
+    }
+    if (day !== undefined) {
+        targetTime.setMonth(month);
+    }
+    const diffInSeconds = Math.round(targetTime.getTime() / 1000) - timestamp;
+    skipTime(web3, diffInSeconds);
+}
+
 export async function currentTime(web3: Web3) {
     return (await web3.eth.getBlock("latest")).timestamp;
 }

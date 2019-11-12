@@ -15,6 +15,7 @@
 */
 
 pragma solidity ^0.5.0;
+pragma experimental ABIEncoderV2;
 
 import "./Permissions.sol";
 import "./interfaces/IDelegationRequestManager.sol";

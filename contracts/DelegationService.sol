@@ -87,4 +87,9 @@ contract DelegationService is IHolderDelegation, IValidatorDelegation, IManagerD
     function setMinimumStakingRequirement(uint amount) external {
         revert("Not implemented");
     }
+
+    /// @notice Checks if tokens of `account` is locked
+    function isLocked(address account) external returns (bool) {
+        revert("Not implemented");
+    }
 }

@@ -9,7 +9,12 @@ const ContractManager: ContractManagerContract = artifacts.require("./ContractMa
 const SkaleToken: SkaleTokenContract = artifacts.require("./SkaleToken");
 const DelegationService: DelegationServiceContract = artifacts.require("./DelegationService");
 
-import { currentTime, months, skipTime } from "./utils/time";
+import { currentTime, months, skipTime, skipTimeToDate } from "./utils/time";
+
+import * as chai from "chai";
+import * as chaiAsPromised from "chai-as-promised";
+chai.should();
+chai.use(chaiAsPromised);
 
 contract("SkaleToken", ([owner, holder1, holder1bounty, holder2, validator]) => {
     let contractManager: ContractManagerInstance;
@@ -23,13 +28,7 @@ contract("SkaleToken", ([owner, holder1, holder1bounty, holder2, validator]) => 
         delegationService = await DelegationService.new();
 
         // each test will start from Nov 10
-        const timestamp = await currentTime(web3);
-        const now = new Date(timestamp * 1000);
-        const d2birthday = new Date(1991, 10, 10, 16);
-        const zeroTime = new Date(d2birthday);
-        zeroTime.setFullYear(now.getFullYear() + 1);
-        const diffInSeconds = Math.round(zeroTime.getTime() / 1000) - timestamp;
-        await skipTime(web3, diffInSeconds);
+        await skipTimeToDate(web3, 10, 11);
     });
 
     describe("when holders have tokens", async () => {
@@ -37,13 +36,18 @@ contract("SkaleToken", ([owner, holder1, holder1bounty, holder2, validator]) => 
             await skaleToken.mint(owner, holder1, defaultAmount.toString(), "0x", "0x");
         });
 
-        months.forEach((month) => {
+        months.forEach((month, monthIndex) => {
+            let requestId: number;
+
             it("should send request for delegation starting from " + month, async () => {
-                await skaleToken.delegate(validator, month, 0, "D2 is even", holder1bounty);
+                const { logs } = await skaleToken.delegate(validator, month, 0, "D2 is even", holder1bounty);
+                assert.equal(logs.length, 1, "No Mint Event emitted");
+                assert.equal(logs[0].event, "DelegationRequestIsSent");
+                requestId = logs[0].args.id;
+                await delegationService.listDelegationRequests().should.be.eventually.deep.equal([requestId]);
             });
 
             describe("when delegation request is sent", async () => {
-                let requestId;
 
                 beforeEach(async () => {
                     const { logs } = await skaleToken.delegate(validator, month, 0, "D2 is even", holder1bounty);
@@ -63,7 +67,39 @@ contract("SkaleToken", ([owner, holder1, holder1bounty, holder2, validator]) => 
                 });
 
                 it("should accept delegation request", async () => {
+                    await delegationService.accept(requestId, {from: validator});
 
+                    await delegationService.listDelegationRequests().should.be.eventually.empty;
+                });
+
+                it("should unlock token if validator does not accept delegation request", async () => {
+                    await skipTimeToDate(web3, 1, monthIndex);
+
+                    await skaleToken.transfer(holder2, 1, {from: holder1});
+                    await skaleToken.approve(holder2, 1, {from: holder1});
+                    await skaleToken.send(holder2, 1, "", {from: holder1});
+
+                    await skaleToken.balanceOf(holder1).should.be.deep.equal(defaultAmount - 3);
+                });
+
+                describe("when delegation request is accepted", async () => {
+                    beforeEach(async () => {
+                        await delegationService.accept(requestId, {from: validator});
+                    });
+
+                    it("should not allow to create node before 26th day of a month before delegation start",
+                        async () => {
+                        for (let currentMonth = 11;
+                            currentMonth !== monthIndex;
+                            currentMonth = (currentMonth + 1) % 12) {
+                                await skipTimeToDate(web3, 25, currentMonth);
+                                await delegationService.createNode(4444, 0, "127.0.0.1", "127.0.0.1", {from: validator})
+                                    .should.be.eventually.rejectedWith("Not enough tokens");
+                        }
+                        await skipTimeToDate(web3, 25, monthIndex);
+                        await delegationService.createNode(4444, 0, "127.0.0.1", "127.0.0.1", {from: validator})
+                            .should.be.eventually.rejectedWith("Not enough tokens");
+                    });
                 });
             });
         });
