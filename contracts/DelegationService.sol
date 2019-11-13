@@ -26,7 +26,7 @@ import "./interfaces/delegation/ITokenDelegation.sol";
 
 
 contract DelegationService is IHolderDelegation, IValidatorDelegation, IManagerDelegation, ITokenDelegation {
-    function requestUndelegation(address validator, uint amount) external {
+    function requestUndelegation() external {
         revert("Not implemented");
     }
 

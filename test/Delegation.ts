@@ -21,7 +21,11 @@ chai.use(chaiAsPromised);
 
 const allowedDelegationPeriods = [3, 6, 12];
 
-contract("SkaleToken", ([owner, holder1, holder1bounty, holder2, validator]) => {
+contract("SkaleToken", ([owner,
+                         holder1, holder1bounty,
+                         holder2, holder2bounty,
+                         holder3, holder3bounty,
+                         validator]) => {
     let contractManager: ContractManagerInstance;
     let skaleToken: SkaleTokenInstance;
     let delegationService: DelegationServiceInstance;
@@ -125,6 +129,37 @@ contract("SkaleToken", ([owner, holder1, holder1bounty, holder2, validator]) => 
                                         {from: validator})
                                         .should.be.eventually.rejectedWith("Not enough tokens");
                                 });
+
+                                it("should extend delegation period for 3 months if undelegation request was not sent",
+                                    async () => {
+                                        await skipTimeToDate(web3, 1, (monthIndex + delegationPeriod) % 12);
+
+                                        await skaleToken.transfer(holder2, 1, {from: holder1})
+                                            .should.be.eventually.rejectedWith("Can't transfer tokens because delegation request is created");
+                                        await skaleToken.approve(holder2, 1, {from: holder1})
+                                            .should.be.eventually.rejectedWith("Can't approve transfer bacause delegation request is created");
+                                        await skaleToken.send(holder2, 1, "", {from: holder1})
+                                            .should.be.eventually.rejectedWith("Can't send tokens because delegation request is created");
+
+                                        await delegationService.requestUndelegation();
+
+                                        await skipTimeToDate(web3, 27, (monthIndex + delegationPeriod + 2) % 12);
+
+                                        await skaleToken.transfer(holder2, 1, {from: holder1})
+                                            .should.be.eventually.rejectedWith("Can't transfer tokens because delegation request is created");
+                                        await skaleToken.approve(holder2, 1, {from: holder1})
+                                            .should.be.eventually.rejectedWith("Can't approve transfer bacause delegation request is created");
+                                        await skaleToken.send(holder2, 1, "", {from: holder1})
+                                            .should.be.eventually.rejectedWith("Can't send tokens because delegation request is created");
+
+                                        await skipTimeToDate(web3, 1, (monthIndex + delegationPeriod + 2) % 12);
+
+                                        await skaleToken.transfer(holder2, 1, {from: holder1});
+                                        await skaleToken.approve(holder2, 1, {from: holder1});
+                                        await skaleToken.send(holder2, 1, "", {from: holder1});
+
+                                        await skaleToken.balanceOf(holder1).should.be.deep.equal(defaultAmount - 3);
+                                });
                             });
                         });
                     });
@@ -137,5 +172,52 @@ contract("SkaleToken", ([owner, holder1, holder1bounty, holder2, validator]) => 
                 });
             }
         }
+
+        it("should not allow holder to delegate to unregistered validator", async () => {
+            await skaleToken.delegate(validator, "dec", 3, "D2 is even", holder1bounty, {from: holder1})
+                .should.be.eventually.rejectedWith("Validator is not registered");
+        });
+
+        describe("when validator is registered", async () => {
+            beforeEach(async () => {
+                delegationService.register("First validator", "Super-pooper validator", {from: validator});
+            });
+
+            // MSR = $100
+
+            // Stake in time:
+            // month       |11|12| 1| 2| 3| 4| 5| 6| 7| 8| 9|10|11|12| 1|
+            // ----------------------------------------------------------
+            // holder1 $97 |  |##|##|##|##|##|##|  |  |##|##|##|  |  |  |
+            // holder2 $89 |  |  |##|##|##|##|##|##|##|##|##|##|##|##|  |
+            // holder3 $83 |  |  |  |  |##|##|##|  |  |  |  |  |  |  |  |
+
+            // month       |11|12| 1| 2| 3| 4| 5| 6| 7| 8| 9|10|11|12| 1|
+            // ----------------------------------------------------------
+            //             |  |  |  |  |##|##|##|  |  |  |  |  |  |  |  |
+            // Nodes online|  |  |##|##|##|##|##|  |  |##|##|##|  |  |  |
+
+            it("should distribute bounty proportionally to delegation share and period coefficient", async () => {
+                const holder1Balance = 97;
+                const holder2Balance = 89;
+                const holder3Balance = 83;
+
+                await skaleToken.transfer(validator, defaultAmount - holder1Balance);
+                await skaleToken.transfer(validator, defaultAmount - holder2Balance);
+                await skaleToken.transfer(validator, defaultAmount - holder3Balance);
+
+                await skaleToken.delegate(validator, "dec", 6, "First holder", holder1bounty, {from: holder1});
+                await skaleToken.delegate(validator, "jan", 12, "Second holder", holder2bounty, {from: holder2});
+
+                await skipTimeToDate(web3, 28, 11);
+
+                await delegationService.createNode(4444, 0, "127.0.0.1", "127.0.0.1", {from: validator});
+
+                await skipTimeToDate(web3, 1, 0);
+
+                // get bounty
+            });
+
+        });
     });
 });
