@@ -37,7 +37,7 @@ contract SkaleToken is ISkaleToken, StandardToken, Permissions {
 
     uint public constant DECIMALS = 18;
 
-    uint public constant CAP = 5 * 1e9 * (10 ** DECIMALS); // the maximum amount of tokens that can ever be created
+    uint public constant CAP = 7 * 1e9 * (10 ** DECIMALS); // the maximum amount of tokens that can ever be created
 
     event Mint(address indexed to, uint256 amount, uint32 time, uint gasSpend);
 
