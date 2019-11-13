@@ -45,8 +45,4 @@ contract DelegationPeriodManager is Permissions {
         // remove only if there is no guys that stacked tokens for this period
         stakeMultipliers[monthsCount] = 0;
     }
-
-    function lockForkever() public;
-
-
 }

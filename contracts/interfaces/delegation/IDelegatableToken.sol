@@ -26,10 +26,20 @@ interface IDelegatableToken {
     function delegate(
         address validator,
         string calldata startingMonth,
-        uint delegationType,
+        uint delegationPeriod,
         string calldata info,
         address bountyReceiver) external returns(uint requestId);
 
     /// @notice move `amount` of tokens to SkaleManager
     function slash(address target, uint amount) external;
+
+    /// @notice do the same as ERC777 operatorSend but received tokens are locked
+    function operatorSendAndLock(
+        address sender,
+        address recipient,
+        uint256 amount,
+        bytes calldata data,
+        bytes calldata operatorData
+    )
+    external;
 }
