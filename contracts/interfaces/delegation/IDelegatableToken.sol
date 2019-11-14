@@ -22,24 +22,12 @@ pragma solidity ^0.5.3;
 interface IDelegatableToken {
     event DelegationRequestIsSent(uint id);
 
-    /// @notice Creates request to delegate `amount` of tokens to `validator` from the begining of the next month
-    function delegate(
-        address validator,
-        string calldata startingMonth,
-        uint delegationPeriod,
-        string calldata info,
-        address bountyReceiver) external returns(uint requestId);
+    /// @notice Makes all tokens of target account unavailable to move
+    function lock(address target) external;
+
+    /// @notice Makes all tokens of target account available to move
+    function unlock(address target) external;
 
     /// @notice move `amount` of tokens to SkaleManager
     function slash(address target, uint amount) external;
-
-    /// @notice do the same as ERC777 operatorSend but received tokens are locked
-    function operatorSendAndLock(
-        address sender,
-        address recipient,
-        uint256 amount,
-        bytes calldata data,
-        bytes calldata operatorData
-    )
-    external;
 }
