@@ -34,7 +34,7 @@ interface IECDH {
     )
         external
         pure
-        returns(uint256, uint256);
+        returns (uint256, uint256);
 }
 
 interface IDecryption {
@@ -749,7 +749,7 @@ contract SkaleDKG is Permissions {
         return out[0] != 0;
     }
 
-    function bytesToPublicKey(bytes memory someBytes) internal pure returns(uint x, uint y) {
+    function bytesToPublicKey(bytes memory someBytes) internal pure returns (uint x, uint y) {
         bytes32 pkX;
         bytes32 pkY;
         assembly {
@@ -761,7 +761,7 @@ contract SkaleDKG is Permissions {
         y = uint(pkY);
     }
 
-    function bytesToG2(bytes memory someBytes) internal pure returns(Fp2 memory x, Fp2 memory y) {
+    function bytesToG2(bytes memory someBytes) internal pure returns (Fp2 memory x, Fp2 memory y) {
         bytes32 xa;
         bytes32 xb;
         bytes32 ya;

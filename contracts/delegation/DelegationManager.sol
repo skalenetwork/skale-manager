@@ -17,9 +17,9 @@
 pragma solidity ^0.5.3;
 pragma experimental ABIEncoderV2;
 
-import "./Permissions.sol";
-import "./interfaces/IDelegationRequestManager.sol";
-import "./BokkyPooBahsDateTimeLibrary.sol";
+import "../Permissions.sol";
+import "../interfaces/IDelegationRequestManager.sol";
+import "../BokkyPooBahsDateTimeLibrary.sol";
 
 contract DelegationManager is Permissions {
 
@@ -45,12 +45,12 @@ contract DelegationManager is Permissions {
             contractManager.contracts(keccak256(abi.encodePacked("DelegationPeriodManager")))
         );
         IDelegationRequestManager.DelegationRequest memory delegationRequest = delegationRequestManager.delegationRequests(_requestId);
-        // require(address(0) != delegationRequest.tokenAddress, "Request with such id doesn't exist"); 
-        // require(msg.sender == delegationRequestManager, "Message sender hasn't permissions to invoke delegation"); 
+        // require(address(0) != delegationRequest.tokenAddress, "Request with such id doesn't exist");
+        // require(msg.sender == delegationRequestManager, "Message sender hasn't permissions to invoke delegation");
         uint endTime = calculatedEndTime(delegationRequest.delegationMonths);
         uint stakeEffectiveness = delegationPeriodManager.getStakeMultiplier(delegationRequest.delegationMonths);
         //Check that validatorAddress is a registered validator
-        
+
         //Call Token.lock(lockTime)
         delegations[delegationRequest.validatorAddress] = Delegation(delegationRequest.tokenAddress, stakeEffectiveness, endTime);
         // delegationTotal[validatorAddress] =+ token.value * DelegationPeriodManager.getStakeMultipler(monthCount);

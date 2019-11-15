@@ -19,10 +19,10 @@
 
 pragma solidity ^0.5.3;
 
-import "./interfaces/delegation/IHolderDelegation.sol";
-import "./interfaces/delegation/IValidatorDelegation.sol";
-import "./interfaces/delegation/IManagerDelegation.sol";
-import "./interfaces/delegation/ITokenDelegation.sol";
+import "../interfaces/delegation/IHolderDelegation.sol";
+import "../interfaces/delegation/IValidatorDelegation.sol";
+import "../interfaces/delegation/IManagerDelegation.sol";
+import "../interfaces/delegation/ITokenDelegation.sol";
 
 
 contract DelegationService is IHolderDelegation, IValidatorDelegation, IManagerDelegation, ITokenDelegation {

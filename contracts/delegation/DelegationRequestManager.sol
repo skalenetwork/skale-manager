@@ -16,9 +16,9 @@
 
 pragma solidity ^0.5.3;
 
-import "./Permissions.sol";
-import "./interfaces/IDelegationPeriodManager.sol";
-import "./BokkyPooBahsDateTimeLibrary.sol";
+import "../Permissions.sol";
+import "../interfaces/IDelegationPeriodManager.sol";
+import "../BokkyPooBahsDateTimeLibrary.sol";
 
 interface IDelegationManager {
     function delegate(uint _requestId) external;
@@ -109,6 +109,7 @@ contract DelegationRequestManager is Permissions {
         IDelegationManager delegationManager = IDelegationManager(
             contractManager.contracts(keccak256(abi.encodePacked("DelegationManager")))
         );
+        require(delegationRequests[_requestId].status == DelegationStatus.Pending, "Validator can't approve request that isn't in Pending status");
         require(checkExpirationRequest(_requestId), "Validator can't longer accept delegation request");
         delegationRequests[_requestId].status = DelegationStatus.Proceeded;
         delegationManager.delegate(_requestId);
@@ -122,6 +123,10 @@ contract DelegationRequestManager is Permissions {
     function removePendingRequest(uint _requestId) public {
         require(msg.sender == delegationRequests[_requestId].tokenAddress,"Transaction sender doesn't have permissions to remove request");
         delegationRequests[_requestId].status = DelegationStatus.Removed;
+    }
+
+    function getAllRequests() public returns (DelegationRequest[] memory) {
+        DelegationRequest[] memory 
     }
 
 }

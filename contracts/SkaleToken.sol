@@ -85,7 +85,7 @@ contract SkaleToken is ERC777, Permissions, IDelegatableToken {
         string calldata startingMonth,
         uint delegationPeriod,
         string calldata info,
-        address bountyReceiver) external returns(uint requestId)
+        address bountyReceiver) external returns (uint requestId)
     {
         revert("Not implemented");
     }

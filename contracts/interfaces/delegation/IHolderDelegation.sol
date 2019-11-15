@@ -26,14 +26,14 @@ interface IHolderDelegation {
         string calldata startingMonth,
         uint delegationPeriod,
         string calldata info,
-        address bountyReceiver) external returns(uint requestId);
+        address bountyReceiver) external returns (uint requestId);
 
     /// @notice Allows tokens holder to request return of it's token from validator
     function requestUndelegation() external;
 
     function cancelPendingDelegation(uint requestId) external;
 
-    function getAllDelegationRequests() external returns(uint[] memory);
+    function getAllDelegationRequests() external returns (uint[] memory);
 
     function getDelegationRequestsForValidator(uint validatorId) external returns (uint[] memory);
 }

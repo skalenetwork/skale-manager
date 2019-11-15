@@ -16,7 +16,7 @@
 
 pragma solidity ^0.5.3;
 
-import "./Permissions.sol";
+import "../Permissions.sol";
 
 
 contract DelegationPeriodManager is Permissions {
