@@ -1,5 +1,5 @@
 /*
-    SkaleToken.sol - SKALE Manager
+    DelegationManager.sol - SKALE Manager
     Copyright (C) 2018-Present SKALE Labs
     @author Vadim Yavorsky
     SKALE Manager is free software: you can redistribute it and/or modify
@@ -14,16 +14,22 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity ^0.5.0;
+pragma solidity ^0.5.3;
 pragma experimental ABIEncoderV2;
 
 import "./Permissions.sol";
 import "./interfaces/IDelegationRequestManager.sol";
-
+import "./BokkyPooBahsDateTimeLibrary.sol";
 
 contract DelegationManager is Permissions {
 
-    mapping (address => address) public delegations;
+    struct Delegation {
+        address tokenAddress;
+        uint stakeEffectiveness;
+        uint expirationDate;
+    }
+
+    mapping (address => Delegation) public delegations;
     mapping (address => uint) public effectiveDelegationsTotal;
     mapping (address => uint) public delegationsTotal;
 
@@ -35,25 +41,41 @@ contract DelegationManager is Permissions {
         IDelegationRequestManager delegationRequestManager = IDelegationRequestManager(
             contractManager.contracts(keccak256(abi.encodePacked("DelegationRequestManager")))
         );
+        IDelegationPeriodManager delegationPeriodManager = IDelegationPeriodManager(
+            contractManager.contracts(keccak256(abi.encodePacked("DelegationPeriodManager")))
+        );
         IDelegationRequestManager.DelegationRequest memory delegationRequest = delegationRequestManager.delegationRequests(_requestId);
-        IDelegationRequestManager.DelegationStatus status = delegationRequest.status;
-        require(address(0) != delegationRequest.tokenAddress, "Request with such id doesn't exist"); // ???
-        require(msg.sender == delegationRequest.tokenAddress, "Message sender hasn't permissions to invoke delegation");
-        require(status != IDelegationRequestManager.DelegationStatus.Rejected, "Validator rejected request for delegation");
-        require(status != IDelegationRequestManager.DelegationStatus.Undefined, "Validator didn't accepted request for delegation");
-        require(delegations[delegationRequest.tokenAddress] == address(0), "");
+        // require(address(0) != delegationRequest.tokenAddress, "Request with such id doesn't exist"); 
+        // require(msg.sender == delegationRequestManager, "Message sender hasn't permissions to invoke delegation"); 
+        uint endTime = calculatedEndTime(delegationRequest.delegationMonths);
+        uint stakeEffectiveness = delegationPeriodManager.getStakeMultiplier(delegationRequest.delegationMonths);
         //Check that validatorAddress is a registered validator
-        //check that request is unlocked (1 week)
+        
         //Call Token.lock(lockTime)
-        delegations[delegationRequest.tokenAddress] = delegationRequest.validatorAddress;
+        delegations[delegationRequest.validatorAddress] = Delegation(delegationRequest.tokenAddress, stakeEffectiveness, endTime);
         // delegationTotal[validatorAddress] =+ token.value * DelegationPeriodManager.getStakeMultipler(monthCount);
-        delegationRequestManager.setDelegationRequestStatus(_requestId, IDelegationRequestManager.DelegationStatus.Proceed);
 
+    }
+
+    function calculateEndTime(uint months) public view returns (uint endTime) {
+        uint year;
+        uint month;
+        uint nextYear;
+        uint nextMonth;
+        (year, month, ) = BokkyPooBahsDateTimeLibrary.timestampToDate(now);
+        if (month != 12) {
+            nextMonth = month + 1;
+            nextYear = year;
+        } else {
+            nextMonth = 1;
+            nextYear = year + 1;
+        }
+        uint timestamp = BokkyPooBahsDateTimeLibrary.timestampFromDate(nextYear, nextMonth, 1);
+        endTime = BokkyPooBahsDateTimeLibrary.addMonths(timestamp, months);
     }
 
     function unDelegate(address tokenAddress) public {
         require(delegations[tokenAddress] != address(0), "Token with such address wasn't delegated");
         // Call Token.unlock(lockTime)
-        
     }
 }
