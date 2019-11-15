@@ -1,8 +1,8 @@
-pragma solidity ^0.5.0;
+pragma solidity ^0.5.3;
 pragma experimental ABIEncoderV2;
 
 interface IDelegationRequestManager {
-    enum DelegationStatus {Accepted, Rejected, Undefined, Proceed, Expired}
+    enum DelegationStatus {Accepted, Rejected, Undefined, , Expired}
     struct DelegationRequest {
         address tokenAddress;
         address validatorAddress;

@@ -1,4 +1,4 @@
-pragma solidity ^0.5.0;
+pragma solidity ^0.5.3;
 
 interface IValidatorsFunctionality {
     function addValidator(uint nodeIndex) external;
