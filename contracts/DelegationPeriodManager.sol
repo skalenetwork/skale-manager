@@ -1,5 +1,5 @@
 /*
-    SkaleToken.sol - SKALE Manager
+    DelegationPeriodManager.sol - SKALE Manager
     Copyright (C) 2018-Present SKALE Labs
     @author Vadim Yavorsky
     SKALE Manager is free software: you can redistribute it and/or modify
@@ -14,7 +14,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity ^0.5.0;
+pragma solidity ^0.5.3;
 
 import "./Permissions.sol";
 
