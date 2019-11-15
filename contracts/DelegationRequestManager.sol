@@ -1,5 +1,5 @@
 /*
-    SkaleToken.sol - SKALE Manager
+    DelegationRequestManager.sol - SKALE Manager
     Copyright (C) 2018-Present SKALE Labs
     @author Vadim Yavorsky
     SKALE Manager is free software: you can redistribute it and/or modify
@@ -14,14 +14,20 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity ^0.5.0;
+pragma solidity ^0.5.3;
 
 import "./Permissions.sol";
 import "./interfaces/IDelegationPeriodManager.sol";
+import "./BokkyPooBahsDateTimeLibrary.sol";
+
+interface IDelegationManager {
+    function delegate(uint _requestId) external;
+}
+
 
 contract DelegationRequestManager is Permissions {
 
-    enum DelegationStatus {Accepted, Rejected, Undefined, Proceed, Expired}
+    enum DelegationStatus {Pending, Rejected, Proceeded, Expired, Removed}
 
     uint public delegationRequestId = 1;
 
@@ -49,7 +55,7 @@ contract DelegationRequestManager is Permissions {
         _;
     }
 
-    function createDelegationRequest(address _tokenAddress, address _validatorAddress, uint delegationMonths) public {
+    function createRequest(address _tokenAddress, address _validatorAddress, uint delegationMonths) public {
         IDelegationPeriodManager delegationPeriodManager = IDelegationPeriodManager(
             contractManager.contracts(keccak256(abi.encodePacked("DelegationPeriodManager")))
         );
@@ -60,36 +66,62 @@ contract DelegationRequestManager is Permissions {
             delegationPeriodManager.isDelegationPeriodAllowed(delegationMonths),
             "Delegation period is not allowed"
         );
+        uint expirationRequest = calculateExpirationRequest();
         delegationRequests[delegationRequestId++] = DelegationRequest(
             _tokenAddress,
             _validatorAddress,
             delegationMonths,
-            0,
-            DelegationStatus.Undefined
+            expirationRequest,
+            DelegationStatus.Pending
         );
         delegationRequestsByTokenAddress[_tokenAddress] = delegationRequestId;
     }
 
-    function getDelegationRequestStatus(uint _requestId) public view returns (DelegationStatus) {
+    function calculateExpirationRequest() public view returns (uint timestamp) {
+        uint year;
+        uint month;
+        uint nextYear;
+        uint nextMonth;
+        (year, month, ) = BokkyPooBahsDateTimeLibrary.timestampToDate(now);
+        if (month != 12) {
+            nextMonth = month + 1;
+            nextYear = year;
+        } else {
+            nextMonth = 1;
+            nextYear = year + 1;
+        }
+        timestamp = BokkyPooBahsDateTimeLibrary.timestampFromDate(nextYear, nextMonth, 1);
+    }
+
+    function getRequestStatus(uint _requestId) public view returns (DelegationStatus) {
         return delegationRequests[_requestId].status;
     }
 
-    function setDelegationRequestStatus(uint _requestId, DelegationStatus status) public allow("DelegationManager") {
-        delegationRequests[_requestId].status = status;
+    function checkExpirationRequest(uint _requestId) public view returns (bool) {
+        return delegationRequests[_requestId].unlockedUntill > now ? true : false;
     }
-    
 
-    function getDelegationRequestTokenAddress(uint _requestId) public view returns (address) {
+    function getRequestTokenAddress(uint _requestId) public view returns (address) {
         return delegationRequests[_requestId].tokenAddress;
     }
 
-    function approveDelegationRequest(uint _requestId) public checkValidatorAccess(_requestId) {
-        delegationRequests[_requestId].status = DelegationStatus.Accepted;
-        delegationRequests[_requestId].unlockedUntill = now + 1 weeks;
+    function approveRequest(uint _requestId) public checkValidatorAccess(_requestId) {
+        IDelegationManager delegationManager = IDelegationManager(
+            contractManager.contracts(keccak256(abi.encodePacked("DelegationManager")))
+        );
+        require(checkExpirationRequest(_requestId), "Validator can't longer accept delegation request");
+        delegationRequests[_requestId].status = DelegationStatus.Proceeded;
+        delegationManager.delegate(_requestId);
+        
     }
 
-    function rejectDelegationRequest(uint _requestId) public checkValidatorAccess(_requestId) {
+    function rejectRequest(uint _requestId) public checkValidatorAccess(_requestId) {
         delegationRequests[_requestId].status = DelegationStatus.Rejected;
+    }
+
+    function removePendingRequest(uint _requestId) public {
+        require(msg.sender == delegationRequests[_requestId].tokenAddress,"Transaction sender doesn't have permissions to remove request");
+        delegationRequests[_requestId].status = DelegationStatus.Removed;
     }
 
 }
