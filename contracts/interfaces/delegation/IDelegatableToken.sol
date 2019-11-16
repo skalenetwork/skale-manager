@@ -27,7 +27,4 @@ interface IDelegatableToken {
 
     /// @notice Makes all tokens of target account available to move
     function unlock(address target) external;
-
-    /// @notice move `amount` of tokens to SkaleManager
-    function slash(address target, uint amount) external;
 }

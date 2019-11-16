@@ -40,6 +40,9 @@ interface IValidatorDelegation {
         bytes4 ip,
         bytes4 publicIp) external;
 
+    /// @notice removes node from system
+    function deleteNode(uint nodeIndex) external;
+
     /// @notice Register new as validator
     function registerValidator(string calldata name, string calldata description, uint feeRate) external returns (uint validatorId);
 

@@ -54,6 +54,5 @@ contract DelegationManager is Permissions {
     function unDelegate(address tokenAddress) public {
         require(delegations[tokenAddress] != address(0), "Token with such address wasn't delegated");
         // Call Token.unlock(lockTime)
-        
     }
 }
