@@ -25,8 +25,7 @@ interface IHolderDelegation {
         uint validatorId,
         string calldata startingMonth,
         uint delegationPeriod,
-        string calldata info,
-        address bountyReceiver) external returns (uint requestId);
+        string calldata info) external returns(uint requestId);
 
     /// @notice Allows tokens holder to request return of it's token from validator
     function requestUndelegation() external;
@@ -36,4 +35,11 @@ interface IHolderDelegation {
     function getAllDelegationRequests() external returns (uint[] memory);
 
     function getDelegationRequestsForValidator(uint validatorId) external returns (uint[] memory);
+
+    function getValidators() external returns (uint[] memory validatorIds);
+
+    function withdrawBounty(address bountyCollectionAddress, uint amount) external;
+
+    function getEarnedBountyAmount() external returns (uint);
+
 }

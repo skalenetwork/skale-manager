@@ -18,25 +18,20 @@
 */
 
 pragma solidity ^0.5.3;
+pragma experimental ABIEncoderV2;
 
 import "../interfaces/delegation/IHolderDelegation.sol";
 import "../interfaces/delegation/IValidatorDelegation.sol";
-import "../interfaces/delegation/IManagerDelegation.sol";
-import "../interfaces/delegation/ITokenDelegation.sol";
+import "../interfaces/delegation/internal/IManagerDelegationInternal.sol";
 
 
-contract DelegationService is IHolderDelegation, IValidatorDelegation, IManagerDelegation, ITokenDelegation {
+contract DelegationService is IHolderDelegation, IValidatorDelegation, IManagerDelegationInternal {
     function requestUndelegation() external {
         revert("Not implemented");
     }
 
     /// @notice Allows validator to accept tokens delegated at `requestId`
     function accept(uint requestId) external {
-        revert("Not implemented");
-    }
-
-    /// @notice Sets persent of bounty taken by validator
-    function setFee(uint fee) external {
         revert("Not implemented");
     }
 
@@ -47,11 +42,6 @@ contract DelegationService is IHolderDelegation, IValidatorDelegation, IManagerD
         bytes4 ip,
         bytes4 publicIp) external
     {
-        revert("Not implemented");
-    }
-
-    /// @notice Register address as validator
-    function register(string calldata name, string calldata description) external {
         revert("Not implemented");
     }
 
@@ -88,8 +78,73 @@ contract DelegationService is IHolderDelegation, IValidatorDelegation, IManagerD
         revert("Not implemented");
     }
 
-    /// @notice Checks if tokens of `account` is locked
-    function isLocked(address account) external returns (bool) {
+    /// @notice Creates request to delegate `amount` of tokens to `validator` from the begining of the next month
+    function delegate(
+        uint validatorId,
+        string calldata startingMonth,
+        uint delegationPeriod,
+        string calldata info)
+    external returns(uint requestId)
+    {
+        revert("Not implemented");
+    }
+
+    function cancelPendingDelegation(uint requestId) external {
+        revert("Not implemented");
+    }
+
+    function getAllDelegationRequests() external returns(uint[] memory) {
+        revert("Not implemented");
+    }
+
+    function getDelegationRequestsForValidator(uint validatorId) external returns (uint[] memory) {
+        revert("Not implemented");
+    }
+
+    /// @notice Register new as validator
+    function registerValidator(string calldata name, string calldata description, uint feeRate) external returns (uint validatorId) {
+        // revert("Not implemented");
+    }
+
+    function unregisterValidator(uint validatorId) external {
+        revert("Not implemented");
+    }
+
+    /// @notice return how many of validator funds are locked in SkaleManager
+    function getBondAmount(uint validatorId) external returns (uint amount) {
+        revert("Not implemented");
+    }
+
+    function setValidatorName(string calldata newName) external {
+        revert("Not implemented");
+    }
+
+    function setValidatorDescription(string calldata descripton) external {
+        revert("Not implemented");
+    }
+
+    function setValidatorAddress(address newAddress) external {
+        revert("Not implemented");
+    }
+
+    function getValidatorInfo(uint validatorId) external returns (Validator memory validator) {
+        revert("Not implemented");
+    }
+
+    function getValidators() external returns (uint[] memory validatorIds) {
+        revert("Not implemented");
+    }
+
+    function withdrawBounty(address bountyCollectionAddress, uint amount) external {
+        revert("Not implemented");
+    }
+
+    function getEarnedBountyAmount() external returns (uint) {
+        revert("Not implemented");
+    }
+
+    /// @notice removes node from system
+    function deleteNode(uint nodeIndex) external {
         revert("Not implemented");
     }
 }

@@ -80,31 +80,18 @@ contract SkaleToken is ERC777, Permissions, IDelegatableToken {
         return true;
     }
 
-    function delegate(
-        address validator,
-        string calldata startingMonth,
-        uint delegationPeriod,
-        string calldata info,
-        address bountyReceiver) external returns (uint requestId)
-    {
+    /// @notice Makes all tokens of target account unavailable to move
+    function lock(address target) external {
+        revert("Not implemented");
+    }
+
+    /// @notice Makes all tokens of target account available to move
+    function unlock(address target) external {
         revert("Not implemented");
     }
 
     /// @notice move `amount` of tokens to SkaleManager
     function slash(address target, uint amount) external {
-        revert("Not implemented");
-    }
-
-    /// @notice do the same as ERC777 operatorSend but received tokens are locked
-    function operatorSendAndLock(
-        address sender,
-        address recipient,
-        uint256 amount,
-        bytes calldata data,
-        bytes calldata operatorData
-    )
-    external
-    {
         revert("Not implemented");
     }
 }
