@@ -1,9 +1,23 @@
 pragma solidity ^0.5.3;
 
 interface ITokenSaleManager {
-    /// @notice Transfers `value` of tokens to `recipient` and locks them
-    function transferAndLock(address recipient, uint value) external;
 
-    /// @notice Transfers `value` of tokens to `recipient`
-    function transfer(address recipient, uint value) external;
+    /// @notice Allocates values for `walletAddresses`
+    function approve(address[] calldata walletAddress, uint[] calldata value) external;
+
+    /// @notice Transfers the entire value to sender address. Tokens are locked.
+    function retrieve() external;
+
+    /// @notice Transfers `delegationValue` of tokens to `delegationWalletAddress`
+    /// and creates delegation request for `delegationPeriod` with `description`
+    function delegateSaleToken(
+        address delegationWalletAddress,
+        uint delegationValue,
+        uint validatorId,
+        string calldata startingMonth,
+        uint delegationPeriod,
+        string calldata info) external;
+
+    /// @notice Allows seller address to approve tokens transfers
+    function registerSeller(address seller) external;
 }
