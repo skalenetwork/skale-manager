@@ -22,6 +22,7 @@ import "../interfaces/IDelegationRequestManager.sol";
 import "../interfaces/IDelegationPeriodManager.sol";
 import "../BokkyPooBahsDateTimeLibrary.sol";
 
+
 contract DelegationManager is Permissions {
 
     struct Delegation {

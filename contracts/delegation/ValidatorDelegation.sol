@@ -1,5 +1,5 @@
 /*
-    ValidatorManager.sol - SKALE Manager
+    ValidatorDelegation.sol - SKALE Manager
     Copyright (C) 2019-Present SKALE Labs
     @author Dmytro Stebaiev
 
@@ -20,7 +20,7 @@
 pragma solidity ^0.5.3;
 
 
-contract ValidatorManager {
+contract ValidatorDelegation {
     uint validatorId = 1;
     struct Validator {
         address ownerAddress;
@@ -32,7 +32,8 @@ contract ValidatorManager {
 
     }
 
-    mapping (uint => Validator) public validators;   
+    mapping (uint => Validator) public validators;
+    mapping (address => uint) public validatorAddressToId;
 
     function registerValidator(
         string memory name,
@@ -59,5 +60,9 @@ contract ValidatorManager {
 
     function getValidatorFeeAddress(uint _validatorId) public view returns (address) {
         return validators[_validatorId].validatorFeeAddress;
+    }
+
+    function checkValidatorAddressToId(address validatorAddress, uint validatorID) public view returns (bool) {
+        return validatorAddressToId[validatorAddress] == validatorID ? true : false;
     }
 }

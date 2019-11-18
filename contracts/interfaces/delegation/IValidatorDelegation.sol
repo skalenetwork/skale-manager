@@ -63,4 +63,6 @@ interface IValidatorDelegation {
 
     /// @notice Returns array of delegation requests id
     function listDelegationRequests() external returns (uint[] memory);
+
+    function checkValidatorAddressToId(address validatorAddress, uint validatorId) external view returns (bool);
 }

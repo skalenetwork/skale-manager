@@ -20,12 +20,48 @@
 pragma solidity ^0.5.3;
 pragma experimental ABIEncoderV2;
 
+import "../Permissions.sol";
 import "../interfaces/delegation/IHolderDelegation.sol";
 import "../interfaces/delegation/IValidatorDelegation.sol";
 import "../interfaces/delegation/internal/IManagerDelegationInternal.sol";
+import "../interfaces/IDelegationPeriodManager.sol";
+import "../BokkyPooBahsDateTimeLibrary.sol";
 
 
-contract DelegationService is IHolderDelegation, IValidatorDelegation, IManagerDelegationInternal {
+contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegation, IManagerDelegationInternal {
+
+    enum DelegationStatus {Pending, Canceled, Rejected, Proceeded, Expired}
+
+
+    struct DelegationRequest {
+        address tokenAddress;
+        uint validatorId;
+        uint delegationPeriod;
+        uint unlockedUntill;
+        DelegationStatus status;
+    }
+
+    DelegationRequest[] public delegationRequests;
+    mapping (address => uint[]) public delegationRequestsByTokenAddress;
+    mapping (address => uint) public delegationTokenbyValidator; //become address(0) after expiration of delegation
+
+    constructor(address newContractsAddress) Permissions(newContractsAddress) public {
+
+    }
+
+    modifier checkValidatorAccess(uint _requestId) {
+        IValidatorDelegation validatorDelegation = IValidatorDelegation(
+            contractManager.contracts(keccak256(abi.encodePacked("ValidatorDelegation")))
+        );
+        require(_requestId < delegationRequests.length, "Delegation request doesn't exist");
+        require(
+            // TODO
+            validatorDelegation.checkValidatorAddressToId(msg.sender, delegationRequests[_requestId].validatorId),
+            "Transaction sender hasn't permissions to change status of request"
+        );
+        _;
+    }
+
     function requestUndelegation() external {
         revert("Not implemented");
     }
@@ -81,12 +117,36 @@ contract DelegationService is IHolderDelegation, IValidatorDelegation, IManagerD
     /// @notice Creates request to delegate `amount` of tokens to `validator` from the begining of the next month
     function delegate(
         uint validatorId,
-        string calldata startingMonth,
         uint delegationPeriod,
-        string calldata info)
-    external returns(uint requestId)
+        string calldata info
+    )
+        external returns(uint requestId)
     {
-        revert("Not implemented");
+        IDelegationPeriodManager delegationPeriodManager = IDelegationPeriodManager(
+            contractManager.contracts(keccak256(abi.encodePacked("DelegationPeriodManager")))
+        );
+        address tokenAddress = msg.sender;
+        require(delegationTokenbyValidator[tokenAddress] != validatorId, "Delegator cannot delegate twice to the same validator");
+        // check that the token is unlocked
+        uint[] memory requestIDs = delegationRequestsByTokenAddress[tokenAddress];
+        for (uint i = 0; i < requestIDs.length; i++) {
+            uint requestID = requestIDs[i];
+            require(delegationRequests[requestID].status != DelegationStatus.Proceeded, "Token is already in the process of delegation");
+        }
+        require(
+            delegationPeriodManager.isDelegationPeriodAllowed(delegationPeriod),
+            "Delegation period is not allowed"
+        );
+        uint expirationRequest = calculateExpirationRequest();
+        delegationRequests.push(DelegationRequest(
+            tokenAddress,
+            validatorId,
+            delegationPeriod,
+            expirationRequest,
+            DelegationStatus.Pending
+        ));
+        requestId = delegationRequests.length-1;
+        delegationRequestsByTokenAddress[tokenAddress].push(requestId);
     }
 
     function cancelPendingDelegation(uint requestId) external {
@@ -146,5 +206,21 @@ contract DelegationService is IHolderDelegation, IValidatorDelegation, IManagerD
     /// @notice removes node from system
     function deleteNode(uint nodeIndex) external {
         revert("Not implemented");
+    }
+
+    function calculateExpirationRequest() private view returns (uint timestamp) {
+        uint year;
+        uint month;
+        uint nextYear;
+        uint nextMonth;
+        (year, month, ) = BokkyPooBahsDateTimeLibrary.timestampToDate(now);
+        if (month != 12) {
+            nextMonth = month + 1;
+            nextYear = year;
+        } else {
+            nextMonth = 1;
+            nextYear = year + 1;
+        }
+        timestamp = BokkyPooBahsDateTimeLibrary.timestampFromDate(nextYear, nextMonth, 1);
     }
 }
