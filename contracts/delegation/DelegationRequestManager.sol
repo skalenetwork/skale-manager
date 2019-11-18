@@ -15,6 +15,7 @@
 */
 
 pragma solidity ^0.5.3;
+pragma experimental ABIEncoderV2;
 
 import "../Permissions.sol";
 import "../interfaces/IDelegationPeriodManager.sol";
@@ -27,9 +28,8 @@ interface IDelegationManager {
 
 contract DelegationRequestManager is Permissions {
 
-    enum DelegationStatus {Pending, Rejected, Proceeded, Expired, Removed}
+    enum DelegationStatus {Pending, Canceled, Rejected, Proceeded, Expired}
 
-    uint public delegationRequestId = 1;
 
     struct DelegationRequest {
         address tokenAddress;
@@ -39,15 +39,16 @@ contract DelegationRequestManager is Permissions {
         DelegationStatus status;
     }
 
-    mapping (uint => DelegationRequest) public delegationRequests;
-    mapping (address => uint) public delegationRequestsByTokenAddress;
+    DelegationRequest[] public delegationRequests;
+    mapping (address => uint[]) public delegationRequestsByTokenAddress;
+    mapping (address => address) public delegationTokenbyValidator; //become address(0) after expiration of delegation
 
     constructor(address newContractsAddress) Permissions(newContractsAddress) public {
 
     }
 
     modifier checkValidatorAccess(uint _requestId) {
-        require(_requestId <= delegationRequestId, "Delegation request doesn't exist");
+        require(_requestId < delegationRequests.length, "Delegation request doesn't exist");
         require(
             msg.sender == delegationRequests[_requestId].validatorAddress,
             "Transaction sender hasn't permissions to change status of request"
@@ -55,29 +56,35 @@ contract DelegationRequestManager is Permissions {
         _;
     }
 
-    function createRequest(address _tokenAddress, address _validatorAddress, uint delegationMonths) public {
+    function createRequest(address _validatorAddress, uint delegationMonths) public {
         IDelegationPeriodManager delegationPeriodManager = IDelegationPeriodManager(
             contractManager.contracts(keccak256(abi.encodePacked("DelegationPeriodManager")))
         );
-        require(msg.sender == _tokenAddress, "Transaction sender is not an actual owner of token");
+        address tokenAddress = msg.sender;
+        require(_validatorAddress != address(0), "Validator's address cannot be null");
+        require(delegationTokenbyValidator[tokenAddress] != _validatorAddress, "Delegator cannot delegate twice to the same validator");
         // check that the token is unlocked
-        require(delegationRequestsByTokenAddress[_tokenAddress] != 0, "This token is already delegated");
+        uint[] memory requestIds = delegationRequestsByTokenAddress[tokenAddress];
+        for (uint i = 0; i < requestIds.length; i++) {
+            uint requestId = requestIds[i];
+            require(delegationRequests[requestId].status != DelegationStatus.Proceeded, "Token is already in the process of delegation");
+        }
         require(
             delegationPeriodManager.isDelegationPeriodAllowed(delegationMonths),
             "Delegation period is not allowed"
         );
         uint expirationRequest = calculateExpirationRequest();
-        delegationRequests[delegationRequestId++] = DelegationRequest(
-            _tokenAddress,
+        delegationRequests.push(DelegationRequest(
+            tokenAddress,
             _validatorAddress,
             delegationMonths,
             expirationRequest,
             DelegationStatus.Pending
-        );
-        delegationRequestsByTokenAddress[_tokenAddress] = delegationRequestId;
+        ));
+        delegationRequestsByTokenAddress[tokenAddress].push(delegationRequests.length-1);
     }
 
-    function calculateExpirationRequest() public view returns (uint timestamp) {
+    function calculateExpirationRequest() private view returns (uint timestamp) {
         uint year;
         uint month;
         uint nextYear;
@@ -93,40 +100,45 @@ contract DelegationRequestManager is Permissions {
         timestamp = BokkyPooBahsDateTimeLibrary.timestampFromDate(nextYear, nextMonth, 1);
     }
 
-    function getRequestStatus(uint _requestId) public view returns (DelegationStatus) {
-        return delegationRequests[_requestId].status;
-    }
-
     function checkExpirationRequest(uint _requestId) public view returns (bool) {
         return delegationRequests[_requestId].unlockedUntill > now ? true : false;
-    }
-
-    function getRequestTokenAddress(uint _requestId) public view returns (address) {
-        return delegationRequests[_requestId].tokenAddress;
     }
 
     function approveRequest(uint _requestId) public checkValidatorAccess(_requestId) {
         IDelegationManager delegationManager = IDelegationManager(
             contractManager.contracts(keccak256(abi.encodePacked("DelegationManager")))
         );
-        require(delegationRequests[_requestId].status == DelegationStatus.Pending, "Validator can't approve request that isn't in Pending status");
+        require(
+            delegationRequests[_requestId].status == DelegationStatus.Pending,
+            "Validator can't approve request that isn't in Pending status"
+        );
         require(checkExpirationRequest(_requestId), "Validator can't longer accept delegation request");
         delegationRequests[_requestId].status = DelegationStatus.Proceeded;
         delegationManager.delegate(_requestId);
         
     }
-
+ 
     function rejectRequest(uint _requestId) public checkValidatorAccess(_requestId) {
         delegationRequests[_requestId].status = DelegationStatus.Rejected;
     }
 
-    function removePendingRequest(uint _requestId) public {
-        require(msg.sender == delegationRequests[_requestId].tokenAddress,"Transaction sender doesn't have permissions to remove request");
-        delegationRequests[_requestId].status = DelegationStatus.Removed;
+
+    function cancelRequest(uint _requestId) public {
+        require(_requestId < delegationRequests.length, "Delegation request doesn't exist");
+        require(
+            msg.sender == delegationRequests[_requestId].tokenAddress,
+            "Only token holder can cancel request"
+        );
+        delegationRequests[_requestId].status = DelegationStatus.Canceled;
     }
 
-    function getAllRequests() public returns (DelegationRequest[] memory) {
-        DelegationRequest[] memory 
+
+    function getAllDelegationRequests() public view returns (DelegationRequest[] memory) {
+        return delegationRequests;
+    }
+
+    function getDelegationRequestsForValidator(uint validatorId) public returns (DelegationRequest[] memory) {
+        
     }
 
 }

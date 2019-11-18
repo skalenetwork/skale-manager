@@ -19,6 +19,7 @@ pragma experimental ABIEncoderV2;
 
 import "../Permissions.sol";
 import "../interfaces/IDelegationRequestManager.sol";
+import "../interfaces/IDelegationPeriodManager.sol";
 import "../BokkyPooBahsDateTimeLibrary.sol";
 
 contract DelegationManager is Permissions {
@@ -47,7 +48,7 @@ contract DelegationManager is Permissions {
         IDelegationRequestManager.DelegationRequest memory delegationRequest = delegationRequestManager.delegationRequests(_requestId);
         // require(address(0) != delegationRequest.tokenAddress, "Request with such id doesn't exist");
         // require(msg.sender == delegationRequestManager, "Message sender hasn't permissions to invoke delegation");
-        uint endTime = calculatedEndTime(delegationRequest.delegationMonths);
+        uint endTime = calculateEndTime(delegationRequest.delegationMonths);
         uint stakeEffectiveness = delegationPeriodManager.getStakeMultiplier(delegationRequest.delegationMonths);
         //Check that validatorAddress is a registered validator
 
@@ -74,8 +75,8 @@ contract DelegationManager is Permissions {
         endTime = BokkyPooBahsDateTimeLibrary.addMonths(timestamp, months);
     }
 
-    function unDelegate(address tokenAddress) public {
-        require(delegations[tokenAddress] != address(0), "Token with such address wasn't delegated");
+    function unDelegate(address validatorAddress, address tokenAddress) public view {
+        require(delegations[validatorAddress].tokenAddress != address(0), "Token with such address wasn't delegated");
         // Call Token.unlock(lockTime)
     }
 }
