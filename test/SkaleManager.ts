@@ -440,7 +440,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
                 it("should get bounty", async () => {
                     skipTime(web3, 200);
                     const balanceBefore = web3.utils.toBN(await skaleToken.balanceOf(validator));
-                    const bounty = web3.utils.toBN("893061271147690900777");
+                    const bounty = web3.utils.toBN("1250285779606767261088");
 
                     await skaleManager.getBounty(1, {from: validator});
 
@@ -464,7 +464,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
                 it("should get bounty", async () => {
                     skipTime(web3, 200);
                     const balanceBefore = web3.utils.toBN(await skaleToken.balanceOf(validator));
-                    const bounty = web3.utils.toBN("893019925718471100273");
+                    const bounty = web3.utils.toBN("1250227896005859540382");
 
                     await skaleManager.getBounty(1, {from: validator});
 
@@ -476,7 +476,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
                 it("should get bounty after break", async () => {
                     skipTime(web3, 600);
                     const balanceBefore = web3.utils.toBN(await skaleToken.balanceOf(validator));
-                    const bounty = web3.utils.toBN("893019925718471100273");
+                    const bounty = web3.utils.toBN("1250227896005859540382");
 
                     await skaleManager.getBounty(1, {from: validator});
 
@@ -488,7 +488,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
                 it("should get bounty after big break", async () => {
                     skipTime(web3, 800);
                     const balanceBefore = web3.utils.toBN(await skaleToken.balanceOf(validator));
-                    const bounty = web3.utils.toBN("892937234860031499264");
+                    const bounty = web3.utils.toBN("1250112128804044098969");
 
                     await skaleManager.getBounty(1, {from: validator});
 

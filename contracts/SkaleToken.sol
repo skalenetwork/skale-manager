@@ -33,7 +33,7 @@ contract SkaleToken is ERC777, Permissions {
 
     uint public constant DECIMALS = 18;
 
-    uint public constant CAP = 5 * 1e9 * (10 ** DECIMALS); // the maximum amount of tokens that can ever be created
+    uint public constant CAP = 7 * 1e9 * (10 ** DECIMALS); // the maximum amount of tokens that can ever be created
 
     constructor(address contractsAddress, address[] memory defOps) Permissions(contractsAddress) ERC777("SKALE", "SKL", defOps) public {
         uint money = 1e7 * 10 ** DECIMALS;
