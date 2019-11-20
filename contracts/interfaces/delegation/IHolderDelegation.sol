@@ -23,16 +23,14 @@ interface IHolderDelegation {
     /// @notice Creates request to delegate `amount` of tokens to `validator` from the begining of the next month
     function delegate(
         uint validatorId,
-        string calldata startingMonth,
         uint delegationPeriod,
-        string calldata info) external returns(uint requestId);
+        string calldata info
+    ) external;
 
     /// @notice Allows tokens holder to request return of it's token from validator
     function requestUndelegation() external;
 
     function cancelPendingDelegation(uint requestId) external;
-
-    function getAllDelegationRequests() external returns (uint[] memory);
 
     function getDelegationRequestsForValidator(uint validatorId) external returns (uint[] memory);
 

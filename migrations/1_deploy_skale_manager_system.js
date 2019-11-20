@@ -28,6 +28,8 @@ let Decryption = artifacts.require('./Decryption.sol');
 let ECDH = artifacts.require('./ECDH.sol');
 let Pricing = artifacts.require('./Pricing.sol');
 let SkaleBalances = artifacts.require('./SkaleBalances.sol');
+let DelegationService = artifacts.require('./DelegationService.sol');
+let DelegationRequestManager = artifacts.require('./DelegationRequestManager.sol');
 
 let gasLimit = 6900000;
 
@@ -108,9 +110,13 @@ async function deploy(deployer, network) {
         await contractManagerInstance.setContractsAddress("SkaleBalances", SkaleBalances.address).then(function(res) {
             console.log("Contract SkaleBalances with address", SkaleBalances.address, "registred in Contract Manager");
         });
-        await deployer.deploy(DelegationManager, contractManagerInstance.address, {gas: gasLimit * gas_multiplier});
-        await contractManagerInstance.setContractsAddress("DelegationManager", DelegationManager.address).then(function(res) {
-            console.log("Contract DelegationManager with address", DelegationManager.address, "registred in Contract Manager");
+        await deployer.deploy(DelegationService, contractManagerInstance.address, {gas: gasLimit * gas_multiplier});
+        await contractManagerInstance.setContractsAddress("DelegationService", DelegationService.address).then(function(res) {
+            console.log("Contract DelegationService with address", DelegationService.address, "registred in Contract Manager");
+        });
+        await deployer.deploy(DelegationRequestManager, contractManagerInstance.address, {gas: gasLimit * gas_multiplier});
+        await contractManagerInstance.setContractsAddress("DelegationRequestManager", DelegationRequestManager.address).then(function(res) {
+            console.log("Contract DelegationRequestManager with address", DelegationRequestManager.address, "registred in Contract Manager");
             console.log();
         });
 
@@ -150,8 +156,10 @@ async function deploy(deployer, network) {
             pricing_abi: Pricing.abi,
             skale_balances_address: SkaleBalances.address,
             skale_balances_abi: SkaleBalances.abi,
-            delegation_manager_address: DelegationManager.address,
-            delegation_manager_abi: DelegationManager.abi
+            delegation_service_address: DelegationService.address,
+            delegation_service_abi: DelegationService.abi,
+            delegation_request_manager_address: DelegationRequestManager.address,
+            delegation_request_manager_abi: DelegationRequestManager.abi
         };
 
         await fsPromises.writeFile(`data/${network}.json`, JSON.stringify(jsonObject));

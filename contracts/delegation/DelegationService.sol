@@ -17,7 +17,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity ^0.5.3;
+pragma solidity ^0.5.0;
 pragma experimental ABIEncoderV2;
 
 import "../Permissions.sol";
@@ -25,41 +25,14 @@ import "../interfaces/delegation/IHolderDelegation.sol";
 import "../interfaces/delegation/IValidatorDelegation.sol";
 import "../interfaces/delegation/internal/IManagerDelegationInternal.sol";
 import "../interfaces/IDelegationPeriodManager.sol";
+import "../interfaces/IDelegationRequestManager.sol";
 import "../BokkyPooBahsDateTimeLibrary.sol";
 
 
 contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegation, IManagerDelegationInternal {
 
-    enum DelegationStatus {Pending, Canceled, Rejected, Proceeded, Expired}
-
-
-    struct DelegationRequest {
-        address tokenAddress;
-        uint validatorId;
-        uint delegationPeriod;
-        uint unlockedUntill;
-        DelegationStatus status;
-    }
-
-    DelegationRequest[] public delegationRequests;
-    mapping (address => uint[]) public delegationRequestsByTokenAddress;
-    mapping (address => uint) public delegationTokenbyValidator; //become address(0) after expiration of delegation
-
     constructor(address newContractsAddress) Permissions(newContractsAddress) public {
 
-    }
-
-    modifier checkValidatorAccess(uint _requestId) {
-        IValidatorDelegation validatorDelegation = IValidatorDelegation(
-            contractManager.contracts(keccak256(abi.encodePacked("ValidatorDelegation")))
-        );
-        require(_requestId < delegationRequests.length, "Delegation request doesn't exist");
-        require(
-            // TODO
-            validatorDelegation.checkValidatorAddressToId(msg.sender, delegationRequests[_requestId].validatorId),
-            "Transaction sender hasn't permissions to change status of request"
-        );
-        _;
     }
 
     function requestUndelegation() external {
@@ -68,7 +41,10 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
 
     /// @notice Allows validator to accept tokens delegated at `requestId`
     function accept(uint requestId) external {
-        revert("Not implemented");
+        IDelegationRequestManager delegationRequestManager = IDelegationRequestManager(
+            contractManager.contracts(keccak256(abi.encodePacked("DelegationRequestManager")))
+        );
+        delegationRequestManager.acceptRequest(requestId);
     }
 
     /// @notice Adds node to SKALE network
@@ -90,10 +66,6 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
         revert("Not implemented");
     }
 
-    /// @notice Returns array of delegation requests id
-    function listDelegationRequests() external returns (uint[] memory) {
-        revert("Not implemented");
-    }
 
     /// @notice Allows service to slash `validator` by `amount` of tokens
     function slash(address validator, uint amount) external {
@@ -120,42 +92,24 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
         uint delegationPeriod,
         string calldata info
     )
-        external returns(uint requestId)
+        external
     {
-        IDelegationPeriodManager delegationPeriodManager = IDelegationPeriodManager(
-            contractManager.contracts(keccak256(abi.encodePacked("DelegationPeriodManager")))
+        IDelegationRequestManager delegationRequestManager = IDelegationRequestManager(
+            contractManager.contracts(keccak256(abi.encodePacked("DelegationRequestManager")))
         );
-        address tokenAddress = msg.sender;
-        require(delegationTokenbyValidator[tokenAddress] != validatorId, "Delegator cannot delegate twice to the same validator");
-        // check that the token is unlocked
-        uint[] memory requestIDs = delegationRequestsByTokenAddress[tokenAddress];
-        for (uint i = 0; i < requestIDs.length; i++) {
-            uint requestID = requestIDs[i];
-            require(delegationRequests[requestID].status != DelegationStatus.Proceeded, "Token is already in the process of delegation");
-        }
-        require(
-            delegationPeriodManager.isDelegationPeriodAllowed(delegationPeriod),
-            "Delegation period is not allowed"
-        );
-        uint expirationRequest = calculateExpirationRequest();
-        delegationRequests.push(DelegationRequest(
-            tokenAddress,
-            validatorId,
-            delegationPeriod,
-            expirationRequest,
-            DelegationStatus.Pending
-        ));
-        requestId = delegationRequests.length-1;
-        delegationRequestsByTokenAddress[tokenAddress].push(requestId);
+        delegationRequestManager.createRequest(validatorId, delegationPeriod, info);
     }
 
     function cancelPendingDelegation(uint requestId) external {
-        revert("Not implemented");
+        IDelegationRequestManager delegationRequestManager = IDelegationRequestManager(
+            contractManager.contracts(keccak256(abi.encodePacked("DelegationRequestManager")))
+        );
+        delegationRequestManager.cancelRequest(requestId);
     }
 
-    function getAllDelegationRequests() external returns(uint[] memory) {
-        revert("Not implemented");
-    }
+    // function getAllDelegationRequests() external returns(uint[] memory) {
+    //     revert("Not implemented");
+    // }
 
     function getDelegationRequestsForValidator(uint validatorId) external returns (uint[] memory) {
         revert("Not implemented");
@@ -208,19 +162,8 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
         revert("Not implemented");
     }
 
-    function calculateExpirationRequest() private view returns (uint timestamp) {
-        uint year;
-        uint month;
-        uint nextYear;
-        uint nextMonth;
-        (year, month, ) = BokkyPooBahsDateTimeLibrary.timestampToDate(now);
-        if (month != 12) {
-            nextMonth = month + 1;
-            nextYear = year;
-        } else {
-            nextMonth = 1;
-            nextYear = year + 1;
-        }
-        timestamp = BokkyPooBahsDateTimeLibrary.timestampFromDate(nextYear, nextMonth, 1);
+    function checkValidatorAddressToId(address validatorAddress, uint validatorId) external view returns (bool) {
+        revert("Not implemented");
     }
+
 }

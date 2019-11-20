@@ -31,7 +31,7 @@ contract DelegationManager is Permissions {
         uint expirationDate;
     }
 
-    mapping (address => Delegation) public delegations;
+    mapping (uint => Delegation) public delegations;
     mapping (address => uint) public effectiveDelegationsTotal;
     mapping (address => uint) public delegationsTotal;
 
@@ -54,7 +54,7 @@ contract DelegationManager is Permissions {
         //Check that validatorAddress is a registered validator
 
         //Call Token.lock(lockTime)
-        delegations[delegationRequest.validatorAddress] = Delegation(delegationRequest.tokenAddress, stakeEffectiveness, endTime);
+        delegations[delegationRequest.validatorId] = Delegation(delegationRequest.tokenAddress, stakeEffectiveness, endTime);
         // delegationTotal[validatorAddress] =+ token.value * DelegationPeriodManager.getStakeMultipler(monthCount);
 
     }
@@ -76,8 +76,8 @@ contract DelegationManager is Permissions {
         endTime = BokkyPooBahsDateTimeLibrary.addMonths(timestamp, months);
     }
 
-    function unDelegate(address validatorAddress, address tokenAddress) public view {
-        require(delegations[validatorAddress].tokenAddress != address(0), "Token with such address wasn't delegated");
+    function unDelegate(uint validatorId) public view {
+        require(delegations[validatorId].tokenAddress != address(0), "Token with such address wasn't delegated");
         // Call Token.unlock(lockTime)
     }
 }
