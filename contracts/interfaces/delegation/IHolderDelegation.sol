@@ -23,7 +23,6 @@ interface IHolderDelegation {
     /// @notice Creates request to delegate `amount` of tokens to `validator` from the begining of the next month
     function delegate(
         uint validatorId,
-        string calldata startingMonth,
         uint delegationPeriod,
         string calldata info) external returns(uint requestId);
 
