@@ -1,4 +1,4 @@
-pragma solidity ^0.5.0;
+pragma solidity ^0.5.3;
 
 /**
  * @dev Interface of the ERC777TokensRecipient standard as defined in the EIP.
