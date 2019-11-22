@@ -56,16 +56,16 @@ contract("TokenSaleManager", ([owner, holder, delegation, validator, seller, hac
             (await skaleToken.balanceOf(holder)).toNumber().should.be.equal(10);
         });
 
-    //     describe("when holder bought tokens", async () => {
-    //         beforeEach(async () => {
-    //             await tokenSaleManager.approve([holder], [10], {from: seller});
-    //             await tokenSaleManager.retrieve({from: holder});
-    //         });
+        describe("when holder bought tokens", async () => {
+            beforeEach(async () => {
+                await tokenSaleManager.approve([holder], [10], {from: seller});
+                await tokenSaleManager.retrieve({from: holder});
+            });
 
-    //         it("should not be able to delegate less then 50%", async () => {
-    //             await tokenSaleManager.delegateSaleToken(delegation, 4, 0, "dec", 3, "D2 is even", {from: holder})
-    //                 .should.be.eventually.rejectedWith("You should delegate at least 50%");
-    //         });
+            it("should not be able to delegate less then 50%", async () => {
+                await tokenSaleManager.delegateSaleToken(delegation, 4, 0, "dec", 3, "D2 is even", {from: holder})
+                    .should.be.eventually.rejectedWith("You should delegate at least 50%");
+            });
 
     //         it("should be able to delegate part of tokens", async () => {
     //             await tokenSaleManager.delegateSaleToken(delegation, 5, 0, "dec", 3, "D2 is even", {from: holder});
@@ -92,6 +92,6 @@ contract("TokenSaleManager", ([owner, holder, delegation, validator, seller, hac
     //             await skaleToken.transfer(hacker, 10, {from: holder});
     //             await skaleToken.balanceOf(hacker).should.be.eventually.equal("10");
     //         });
-    //     });
+        });
     });
 });

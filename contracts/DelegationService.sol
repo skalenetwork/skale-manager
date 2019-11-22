@@ -146,4 +146,14 @@ contract DelegationService is IHolderDelegation, IValidatorDelegation, IManagerD
     function deleteNode(uint nodeIndex) external {
         revert("Not implemented");
     }
+
+    /// @notice Makes all tokens of target account unavailable to move
+    function lock(address target) external {
+        revert("Not implemented");
+    }
+
+    /// @notice Makes all tokens of target account available to move
+    function unlock(address target) external {
+        revert("Not implemented");
+    }
 }
