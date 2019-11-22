@@ -1,19 +1,21 @@
-pragma solidity ^0.5.0;
+pragma solidity ^0.5.3;
 pragma experimental ABIEncoderV2;
 
 interface IDelegationRequestManager {
-    enum DelegationStatus {Accepted, Rejected, Undefined, Proceed, Expired}
     struct DelegationRequest {
         address tokenAddress;
-        address validatorAddress;
+        uint validatorId;
         uint delegationMonths;
         uint unlockedUntill;
-        DelegationStatus status;
+        string description;
     }
 
     function delegationRequests(uint requestId) external view returns (DelegationRequest memory);
-    function getDelegationRequestStatus(uint requestId) external view returns (DelegationStatus);
-    function getDelegationRequestTokenAddress(uint requestId) external view returns (address);
-    function setDelegationRequestStatus(uint requestId, DelegationStatus) external;
-
+    function createRequest(
+        uint validatorId,
+        uint delegationPeriod,
+        string calldata info
+    ) external returns(uint requestId);
+    function acceptRequest(uint _requestId) external;
+    function cancelRequest(uint _requestId) external;
 }

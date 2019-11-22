@@ -14,10 +14,10 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity ^0.5.0;
+pragma solidity ^0.5.3;
 
 
-import "@openzeppelin/contracts/token/ERC777/ERC777.sol";
+import "./ERC777/ERC777.sol";
 import "./Permissions.sol";
 import "./interfaces/delegation/IDelegatableToken.sol";
 

@@ -20,19 +20,31 @@
 pragma solidity ^0.5.3;
 pragma experimental ABIEncoderV2;
 
-import "./interfaces/delegation/IHolderDelegation.sol";
-import "./interfaces/delegation/IValidatorDelegation.sol";
-import "./interfaces/delegation/internal/IManagerDelegationInternal.sol";
+import "../Permissions.sol";
+import "../interfaces/delegation/IHolderDelegation.sol";
+import "../interfaces/delegation/IValidatorDelegation.sol";
+import "../interfaces/delegation/internal/IManagerDelegationInternal.sol";
+import "../interfaces/IDelegationPeriodManager.sol";
+import "../interfaces/IDelegationRequestManager.sol";
+import "../BokkyPooBahsDateTimeLibrary.sol";
 
 
-contract DelegationService is IHolderDelegation, IValidatorDelegation, IManagerDelegationInternal {
+contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegation, IManagerDelegationInternal {
+
+    constructor(address newContractsAddress) Permissions(newContractsAddress) public {
+
+    }
+
     function requestUndelegation() external {
         revert("Not implemented");
     }
 
     /// @notice Allows validator to accept tokens delegated at `requestId`
     function accept(uint requestId) external {
-        revert("Not implemented");
+        IDelegationRequestManager delegationRequestManager = IDelegationRequestManager(
+            contractManager.contracts(keccak256(abi.encodePacked("DelegationRequestManager")))
+        );
+        delegationRequestManager.acceptRequest(requestId);
     }
 
     /// @notice Adds node to SKALE network
@@ -82,14 +94,21 @@ contract DelegationService is IHolderDelegation, IValidatorDelegation, IManagerD
     function delegate(
         uint validatorId,
         uint delegationPeriod,
-        string calldata info)
-    external returns(uint requestId)
+        string calldata info
+    )
+        external
     {
-        revert("Not implemented");
+        IDelegationRequestManager delegationRequestManager = IDelegationRequestManager(
+            contractManager.contracts(keccak256(abi.encodePacked("DelegationRequestManager")))
+        );
+        delegationRequestManager.createRequest(validatorId, delegationPeriod, info);
     }
 
     function cancelPendingDelegation(uint requestId) external {
-        revert("Not implemented");
+        IDelegationRequestManager delegationRequestManager = IDelegationRequestManager(
+            contractManager.contracts(keccak256(abi.encodePacked("DelegationRequestManager")))
+        );
+        delegationRequestManager.cancelRequest(requestId);
     }
 
     function getAllDelegationRequests() external returns(uint[] memory) {

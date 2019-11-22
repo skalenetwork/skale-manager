@@ -60,7 +60,4 @@ interface IValidatorDelegation {
     function setMinimumDelegationAmount(uint amount) external;
 
     function getValidatorInfo(uint validatorId) external returns (Validator memory validator);
-
-    /// @notice Returns array of delegation requests id
-    function listDelegationRequests() external returns (uint[] memory);
 }

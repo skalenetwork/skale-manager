@@ -29,7 +29,7 @@ contract("TokenSaleManager", ([owner, holder, delegation, validator, seller, hac
         contractManager = await ContractManager.new();
         skaleToken = await SkaleToken.new(contractManager.address, []);
         tokenSaleManager = await TokenSaleManager.new(skaleToken.address);
-        delegationService = await DelegationService.new();
+        delegationService = await DelegationService.new(contractManager.address);
 
         // each test will start from Nov 10
         await skipTimeToDate(web3, 10, 11);
@@ -63,7 +63,7 @@ contract("TokenSaleManager", ([owner, holder, delegation, validator, seller, hac
             });
 
             it("should not be able to delegate less then 50%", async () => {
-                await tokenSaleManager.delegateSaleToken(delegation, 4, 0, "dec", 3, "D2 is even", {from: holder})
+                await tokenSaleManager.delegateSaleToken(delegation, 4, 0, 3, "D2 is even", {from: holder})
                     .should.be.eventually.rejectedWith("You should delegate at least 50%");
             });
 
