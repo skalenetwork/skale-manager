@@ -5,12 +5,15 @@ import { ContractManagerContract,
     SkaleTokenContract,
     SkaleTokenInstance,
     TokenSaleManagerContract,
-    TokenSaleManagerInstance } from "../types/truffle-contracts";
+    TokenSaleManagerInstance,
+    ValidatorDelegationContract,
+    ValidatorDelegationInstance } from "../types/truffle-contracts";
 
 const ContractManager: ContractManagerContract = artifacts.require("./ContractManager");
 const SkaleToken: SkaleTokenContract = artifacts.require("./SkaleToken");
 const TokenSaleManager: TokenSaleManagerContract = artifacts.require("./TokenSaleManager");
 const DelegationService: DelegationServiceContract = artifacts.require("./DelegationService");
+const ValidatorDelegation: ValidatorDelegationContract = artifacts.require("./ValidatorDelegation");
 
 import { skipTimeToDate } from "./utils/time";
 
@@ -24,17 +27,20 @@ contract("TokenSaleManager", ([owner, holder, delegation, validator, seller, hac
     let skaleToken: SkaleTokenInstance;
     let tokenSaleManager: TokenSaleManagerInstance;
     let delegationService: DelegationServiceInstance;
+    let validatorDelegation: ValidatorDelegationInstance;
 
     beforeEach(async () => {
         contractManager = await ContractManager.new();
         skaleToken = await SkaleToken.new(contractManager.address, []);
         tokenSaleManager = await TokenSaleManager.new(skaleToken.address);
         delegationService = await DelegationService.new(contractManager.address);
+        validatorDelegation = await ValidatorDelegation.new();
+        contractManager.setContractsAddress("ValidatorDelegation", validatorDelegation.address);
 
         // each test will start from Nov 10
         await skipTimeToDate(web3, 10, 11);
         await skaleToken.mint(owner, tokenSaleManager.address, 1000, "0x", "0x");
-        // await delegationService.registerValidator("Validator", "D2 is even", 150, {from: validator});
+        await delegationService.registerValidator("Validator", "D2 is even", 150, {from: validator});
     });
 
     it("should register seller", async () => {

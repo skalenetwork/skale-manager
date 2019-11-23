@@ -52,6 +52,7 @@ contract TokenSaleManager is ITokenSaleManager, Ownable, IERC777Recipient {
         uint delegationPeriod,
         string calldata info) external
     {
+        // require(condition); // token is locked and not delegated
         revert("Not implemented");
     }
 

@@ -26,10 +26,8 @@ contract ValidatorDelegation {
         address ownerAddress;
         string name;
         string description;
-        address validatorFeeAddress;
         uint validatorFeeShare;
         uint lastBountyCollectionMonth;
-
     }
 
     mapping (uint => Validator) public validators;
@@ -38,7 +36,6 @@ contract ValidatorDelegation {
     function registerValidator(
         string memory name,
         string memory description,
-        address validatorFeeAddress,
         uint validatorFeeShare
     )
         public returns (uint)
@@ -47,19 +44,9 @@ contract ValidatorDelegation {
             msg.sender,
             name,
             description,
-            validatorFeeAddress,
             validatorFeeShare,
             0
         );
-    }
-
-    function setValidatorFeeAddress(uint _validatorId, address _newAddress) public {
-        require(msg.sender == validators[_validatorId].ownerAddress, "Transaction sender doesn't have enough permissions");
-        validators[_validatorId].validatorFeeAddress = _newAddress;
-    }
-
-    function getValidatorFeeAddress(uint _validatorId) public view returns (address) {
-        return validators[_validatorId].validatorFeeAddress;
     }
 
     function checkValidatorAddressToId(address validatorAddress, uint validatorID) public view returns (bool) {

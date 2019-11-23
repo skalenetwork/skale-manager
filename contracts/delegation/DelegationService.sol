@@ -27,6 +27,7 @@ import "../interfaces/delegation/internal/IManagerDelegationInternal.sol";
 import "../interfaces/IDelegationPeriodManager.sol";
 import "../interfaces/IDelegationRequestManager.sol";
 import "../BokkyPooBahsDateTimeLibrary.sol";
+import "./ValidatorDelegation.sol";
 
 
 contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegation, IManagerDelegationInternal {
@@ -121,7 +122,8 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
 
     /// @notice Register new as validator
     function registerValidator(string calldata name, string calldata description, uint feeRate) external returns (uint validatorId) {
-        // revert("Not implemented");
+        ValidatorDelegation validatorDelegation = ValidatorDelegation(contractManager.getContract("ValidatorDelegation"));
+        validatorDelegation.registerValidator(name, description, feeRate);
     }
 
     function unregisterValidator(uint validatorId) external {
