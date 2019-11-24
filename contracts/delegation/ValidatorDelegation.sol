@@ -19,48 +19,60 @@
 
 pragma solidity ^0.5.3;
 
+import "../Permissions.sol";
 
-contract ValidatorDelegation {
-    uint validatorId = 1;
+
+contract ValidatorDelegation is Permissions {
+
     struct Validator {
-        address ownerAddress;
         string name;
+        address validatorAddress;
         string description;
-        address validatorFeeAddress;
-        uint validatorFeeShare;
-        uint lastBountyCollectionMonth;
-
+        uint feeRate;
+        uint registrationTime;
+        uint minimumDelegationAmount;
     }
 
-    mapping (uint => Validator) public validators;
+    Validator[] public validators;
     mapping (address => uint) public validatorAddressToId;
+    
+
+    constructor(address newContractsAddress) Permissions(newContractsAddress) public {
+
+    }
 
     function registerValidator(
         string memory name,
         string memory description,
-        address validatorFeeAddress,
-        uint validatorFeeShare
+        uint feeRate,
+        uint minimumDelegationAmount
     )
-        public returns (uint)
+        public returns (uint validatorId)
     {
-        validators[validatorId++] = Validator(
-            msg.sender,
+        validators.push(Validator(
             name,
+            msg.sender,
             description,
-            validatorFeeAddress,
-            validatorFeeShare,
-            0
-        );
+            feeRate,
+            now,
+            minimumDelegationAmount
+        ));
+        validatorId = validators.length - 1;
+        return validatorId;
     }
 
-    function setValidatorFeeAddress(uint _validatorId, address _newAddress) public {
-        require(msg.sender == validators[_validatorId].ownerAddress, "Transaction sender doesn't have enough permissions");
-        validators[_validatorId].validatorFeeAddress = _newAddress;
+    function validatorExists(uint validatorId) public view returns (bool) {
+        return validatorId < validators.length ? true : false;
     }
 
-    function getValidatorFeeAddress(uint _validatorId) public view returns (address) {
-        return validators[_validatorId].validatorFeeAddress;
-    }
+    // function setValidatorFeeAddress(uint _validatorId, address _newAddress) public {
+    //     require(msg.sender == validators[_validatorId].validatorAddress, "Transaction sender doesn't have enough permissions");
+    //     validators[_validatorId].validatorFeeAddress = _newAddress;
+    // }
+
+    // function getValidatorFeeAddress(uint _validatorId) public view returns (address) {
+    //     return validators[_validatorId].validatorFeeAddress;
+    // }
 
     function checkValidatorAddressToId(address validatorAddress, uint validatorID) public view returns (bool) {
         return validatorAddressToId[validatorAddress] == validatorID ? true : false;

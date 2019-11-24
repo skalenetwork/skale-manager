@@ -22,6 +22,7 @@ import "../interfaces/IDelegationPeriodManager.sol";
 import "../interfaces/delegation/IValidatorDelegation.sol";
 import "../BokkyPooBahsDateTimeLibrary.sol";
 import "../interfaces/IDelegationRequestManager.sol";
+import "../interfaces/delegation/IDelegatableToken.sol";
 
 
 interface IDelegationManager {
@@ -53,6 +54,7 @@ contract DelegationRequestManager is Permissions, IDelegationRequestManager {
     }
 
     function createRequest(
+        address tokenAddress,
         uint validatorId,
         uint delegationPeriod,
         string calldata info
@@ -62,13 +64,15 @@ contract DelegationRequestManager is Permissions, IDelegationRequestManager {
         IDelegationPeriodManager delegationPeriodManager = IDelegationPeriodManager(
             contractManager.contracts(keccak256(abi.encodePacked("DelegationPeriodManager")))
         );
-        address tokenAddress = msg.sender;
-        require(delegated[tokenAddress], "Token is already in the process of delegation");
-        // check that the token is unlocked
+        IValidatorDelegation validatorDelegation = IValidatorDelegation(
+            contractManager.contracts(keccak256(abi.encodePacked("ValidatorDelegation")))
+        );
+        require(!delegated[tokenAddress], "Token is already in the process of delegation");
         require(
             delegationPeriodManager.isDelegationPeriodAllowed(delegationPeriod),
-            "Delegation period is not allowed"
+            "This delegation period is not allowed"
         );
+        require(validatorDelegation.validatorExists(validatorId), "Validator is not registered");
         uint expirationRequest = calculateExpirationRequest();
         delegationRequests.push(DelegationRequest(
             tokenAddress,
@@ -90,7 +94,12 @@ contract DelegationRequestManager is Permissions, IDelegationRequestManager {
         IDelegationManager delegationManager = IDelegationManager(
             contractManager.contracts(keccak256(abi.encodePacked("DelegationManager")))
         );
+        IDelegatableToken skaleToken = IDelegatableToken(
+            contractManager.contracts(keccak256(abi.encodePacked("SkaleToken")))
+        );
+        skaleToken.lock(delegationRequests[_requestId].tokenAddress);
         delegated[delegationRequests[_requestId].tokenAddress] = true;
+
         require(checkValidityRequest(_requestId), "Validator can't longer accept delegation request");
         delegationManager.delegate(_requestId);
     }

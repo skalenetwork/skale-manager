@@ -5,13 +5,14 @@ interface IDelegationRequestManager {
     struct DelegationRequest {
         address tokenAddress;
         uint validatorId;
-        uint delegationMonths;
+        uint delegationPeriod;
         uint unlockedUntill;
         string description;
     }
 
     function delegationRequests(uint requestId) external view returns (DelegationRequest memory);
     function createRequest(
+        address tokenAddress,
         uint validatorId,
         uint delegationPeriod,
         string calldata info

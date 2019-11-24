@@ -27,4 +27,7 @@ interface IDelegatableToken {
 
     /// @notice Makes all tokens of target account available to move
     function unlock(address target) external;
+
+    /// @notice Check that token for target address in locked
+    function isLocked(address target) external returns (bool);
 }

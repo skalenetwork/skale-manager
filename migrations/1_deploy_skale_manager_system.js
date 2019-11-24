@@ -30,6 +30,8 @@ let Pricing = artifacts.require('./Pricing.sol');
 let SkaleBalances = artifacts.require('./SkaleBalances.sol');
 let DelegationService = artifacts.require('./DelegationService.sol');
 let DelegationRequestManager = artifacts.require('./DelegationRequestManager.sol');
+let DelegationPeriodManager = artifacts.require('./DelegationPeriodManager.sol');
+let ValidatorDelegation = artifacts.require('./ValidatorDelegation.sol');
 
 let gasLimit = 6900000;
 
@@ -117,10 +119,17 @@ async function deploy(deployer, network) {
         await deployer.deploy(DelegationRequestManager, contractManagerInstance.address, {gas: gasLimit * gas_multiplier});
         await contractManagerInstance.setContractsAddress("DelegationRequestManager", DelegationRequestManager.address).then(function(res) {
             console.log("Contract DelegationRequestManager with address", DelegationRequestManager.address, "registred in Contract Manager");
+        });
+        await deployer.deploy(DelegationPeriodManager, contractManagerInstance.address, {gas: gasLimit * gas_multiplier});
+        await contractManagerInstance.setContractsAddress("DelegationPeriodManager", DelegationPeriodManager.address).then(function(res) {
+            console.log("Contract DelegationPeriodManager with address", DelegationPeriodManager.address, "registred in Contract Manager");
+        });
+        await deployer.deploy(ValidatorDelegation, contractManagerInstance.address, {gas: gasLimit * gas_multiplier});
+        await contractManagerInstance.setContractsAddress("ValidatorDelegation", ValidatorDelegation.address).then(function(res) {
+            console.log("Contract ValidatorDelegation with address", ValidatorDelegation.address, "registred in Contract Manager");
             console.log();
         });
 
-    
         //
         console.log('Deploy done, writing results...');
         let jsonObject = {
@@ -159,7 +168,11 @@ async function deploy(deployer, network) {
             delegation_service_address: DelegationService.address,
             delegation_service_abi: DelegationService.abi,
             delegation_request_manager_address: DelegationRequestManager.address,
-            delegation_request_manager_abi: DelegationRequestManager.abi
+            delegation_request_manager_abi: DelegationRequestManager.abi,
+            delegation_period_manager_address: DelegationPeriodManager.address,
+            delegation_period_manager_abi: DelegationPeriodManager.abi,
+            validator_delegation_address: ValidatorDelegation.address,
+            validator_delegation_abi: ValidatorDelegation.abi
         };
 
         await fsPromises.writeFile(`data/${network}.json`, JSON.stringify(jsonObject));

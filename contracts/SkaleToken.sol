@@ -82,16 +82,20 @@ contract SkaleToken is ERC777, Permissions, IDelegatableToken {
 
     /// @notice Makes all tokens of target account unavailable to move
     function lock(address target) external {
-        revert("Not implemented");
+        _locks[target] = true;
     }
 
     /// @notice Makes all tokens of target account available to move
     function unlock(address target) external {
-        revert("Not implemented");
+        _locks[target] = false;
     }
 
     /// @notice move `amount` of tokens to SkaleManager
     function slash(address target, uint amount) external {
         revert("Not implemented");
+    }
+
+    function isLocked(address target) external returns (bool){
+        return !_locks[target];
     }
 }

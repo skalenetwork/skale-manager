@@ -26,12 +26,12 @@ import "../BokkyPooBahsDateTimeLibrary.sol";
 contract DelegationManager is Permissions {
 
     struct Delegation {
-        address tokenAddress;
         uint stakeEffectiveness;
         uint expirationDate;
     }
 
-    mapping (uint => Delegation) public delegations;
+    //      validatorId       tokenAddress
+    mapping (uint => mapping (address => Delegation[])) public delegations;
     mapping (address => uint) public effectiveDelegationsTotal;
     mapping (address => uint) public delegationsTotal;
 
@@ -49,12 +49,14 @@ contract DelegationManager is Permissions {
         IDelegationRequestManager.DelegationRequest memory delegationRequest = delegationRequestManager.delegationRequests(_requestId);
         // require(address(0) != delegationRequest.tokenAddress, "Request with such id doesn't exist");
         // require(msg.sender == delegationRequestManager, "Message sender hasn't permissions to invoke delegation");
-        uint endTime = calculateEndTime(delegationRequest.delegationMonths);
-        uint stakeEffectiveness = delegationPeriodManager.getStakeMultiplier(delegationRequest.delegationMonths);
+        uint endTime = calculateEndTime(delegationRequest.delegationPeriod);
+        uint stakeEffectiveness = delegationPeriodManager.getStakeMultiplier(delegationRequest.delegationPeriod);
         //Check that validatorAddress is a registered validator
 
         //Call Token.lock(lockTime)
-        delegations[delegationRequest.validatorId] = Delegation(delegationRequest.tokenAddress, stakeEffectiveness, endTime);
+        delegations[delegationRequest.validatorId][delegationRequest.tokenAddress].push(
+            Delegation(stakeEffectiveness, endTime)
+        );
         // delegationTotal[validatorAddress] =+ token.value * DelegationPeriodManager.getStakeMultipler(monthCount);
 
     }
@@ -77,7 +79,7 @@ contract DelegationManager is Permissions {
     }
 
     function unDelegate(uint validatorId) public view {
-        require(delegations[validatorId].tokenAddress != address(0), "Token with such address wasn't delegated");
+        // require(delegations[validatorId].tokenAddress != address(0), "Token with such address wasn't delegated");
         // Call Token.unlock(lockTime)
     }
 }

@@ -31,6 +31,14 @@ import "../BokkyPooBahsDateTimeLibrary.sol";
 
 contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegation, IManagerDelegationInternal {
 
+    event DelegationRequestIsSent(
+        uint requestId
+    );
+
+    event ValidatorRegistered(
+        uint validatorId
+    );
+
     constructor(address newContractsAddress) Permissions(newContractsAddress) public {
 
     }
@@ -97,7 +105,8 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
         IDelegationRequestManager delegationRequestManager = IDelegationRequestManager(
             contractManager.contracts(keccak256(abi.encodePacked("DelegationRequestManager")))
         );
-        delegationRequestManager.createRequest(validatorId, delegationPeriod, info);
+        uint requestId = delegationRequestManager.createRequest(msg.sender, validatorId, delegationPeriod, info);
+        emit DelegationRequestIsSent(requestId);
     }
 
     function cancelPendingDelegation(uint requestId) external {
@@ -116,8 +125,17 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
     }
 
     /// @notice Register new as validator
-    function registerValidator(string calldata name, string calldata description, uint feeRate) external returns (uint validatorId) {
-        // revert("Not implemented");
+    function registerValidator(
+        string calldata name,
+        string calldata description,
+        uint feeRate,
+        uint minimumDelegationAmount
+    ) external returns (uint validatorId) {
+        IValidatorDelegation validatorDelegation = IValidatorDelegation(
+            contractManager.contracts(keccak256(abi.encodePacked("ValidatorDelegation")))
+        );
+        validatorId = validatorDelegation.registerValidator(name, description, feeRate, minimumDelegationAmount);
+        emit ValidatorRegistered(validatorId);
     }
 
     function unregisterValidator(uint validatorId) external {
@@ -163,6 +181,10 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
     }
 
     function checkValidatorAddressToId(address validatorAddress, uint validatorId) external view returns (bool) {
+        revert("Not implemented");
+    }
+
+    function validatorExists(uint validatorId) external view returns (bool) {
         revert("Not implemented");
     }
 
