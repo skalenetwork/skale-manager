@@ -28,9 +28,11 @@ import "../interfaces/IDelegationPeriodManager.sol";
 import "../interfaces/IDelegationRequestManager.sol";
 import "../BokkyPooBahsDateTimeLibrary.sol";
 import "./ValidatorDelegation.sol";
+import "./DelegationManager.sol";
 
 
 contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegation, IManagerDelegationInternal {
+    mapping (address => bool) private _locked;
 
     constructor(address newContractsAddress) Permissions(newContractsAddress) public {
 
@@ -176,5 +178,13 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
     /// @notice Makes all tokens of target account available to move
     function unlock(address target) external {
         revert("Not implemented");
+    }
+
+    function isLocked(address wallet) external returns (bool) {
+        return isDelegated(wallet) || _locked[wallet];
+    }
+
+    function isDelegated(address wallet) public returns (bool) {
+        return DelegationManager(contractManager.getContract("DelegationManager")).isDelegated(wallet);
     }
 }

@@ -20,6 +20,7 @@ pragma solidity ^0.5.3;
 import "./ERC777/ERC777.sol";
 import "./Permissions.sol";
 import "./interfaces/delegation/IDelegatableToken.sol";
+import "./delegation/DelegationService.sol";
 
 
 /**
@@ -85,7 +86,11 @@ contract SkaleToken is ERC777, Permissions, IDelegatableToken {
         revert("Not implemented");
     }
 
-    function isLocked() external returns (bool) {
-        revert("Not implemented");
+    function isLocked(address wallet) external returns (bool) {
+        return DelegationService(contractManager.getContract("DelegationService")).isLocked(wallet);
+    }
+
+    function isDelegated(address wallet) external returns (bool) {
+        return DelegationService(contractManager.getContract("DelegationService")).isDelegated(wallet);
     }
 }

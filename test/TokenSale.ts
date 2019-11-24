@@ -1,19 +1,22 @@
 import { ContractManagerContract,
-    ContractManagerInstance,
-    DelegationServiceContract,
-    DelegationServiceInstance,
-    SkaleTokenContract,
-    SkaleTokenInstance,
-    TokenSaleManagerContract,
-    TokenSaleManagerInstance,
-    ValidatorDelegationContract,
-    ValidatorDelegationInstance } from "../types/truffle-contracts";
+         ContractManagerInstance,
+         DelegationManagerContract,
+         DelegationManagerInstance,
+         DelegationServiceContract,
+         DelegationServiceInstance,
+         SkaleTokenContract,
+         SkaleTokenInstance,
+         TokenSaleManagerContract,
+         TokenSaleManagerInstance,
+         ValidatorDelegationContract,
+         ValidatorDelegationInstance } from "../types/truffle-contracts";
 
 const ContractManager: ContractManagerContract = artifacts.require("./ContractManager");
 const SkaleToken: SkaleTokenContract = artifacts.require("./SkaleToken");
 const TokenSaleManager: TokenSaleManagerContract = artifacts.require("./TokenSaleManager");
 const DelegationService: DelegationServiceContract = artifacts.require("./DelegationService");
 const ValidatorDelegation: ValidatorDelegationContract = artifacts.require("./ValidatorDelegation");
+const DelegationManager: DelegationManagerContract = artifacts.require("./DelegationManager");
 
 import { skipTimeToDate } from "./utils/time";
 
@@ -28,14 +31,18 @@ contract("TokenSaleManager", ([owner, holder, delegation, validator, seller, hac
     let tokenSaleManager: TokenSaleManagerInstance;
     let delegationService: DelegationServiceInstance;
     let validatorDelegation: ValidatorDelegationInstance;
+    let delegationManager: DelegationManagerInstance;
 
     beforeEach(async () => {
         contractManager = await ContractManager.new();
         skaleToken = await SkaleToken.new(contractManager.address, []);
         tokenSaleManager = await TokenSaleManager.new(skaleToken.address);
         delegationService = await DelegationService.new(contractManager.address);
+        await contractManager.setContractsAddress("DelegationService", delegationService.address);
         validatorDelegation = await ValidatorDelegation.new();
-        contractManager.setContractsAddress("ValidatorDelegation", validatorDelegation.address);
+        await contractManager.setContractsAddress("ValidatorDelegation", validatorDelegation.address);
+        delegationManager = await DelegationManager.new(contractManager.address);
+        await contractManager.setContractsAddress("DelegationManager", delegationManager.address);
 
         // each test will start from Nov 10
         await skipTimeToDate(web3, 10, 11);

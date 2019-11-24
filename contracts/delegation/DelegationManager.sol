@@ -34,6 +34,7 @@ contract DelegationManager is Permissions {
     mapping (uint => Delegation) public delegations;
     mapping (address => uint) public effectiveDelegationsTotal;
     mapping (address => uint) public delegationsTotal;
+    mapping (address => bool) public isDelegated;
 
     constructor(address newContractsAddress) Permissions(newContractsAddress) public {
 
@@ -56,7 +57,7 @@ contract DelegationManager is Permissions {
         //Call Token.lock(lockTime)
         delegations[delegationRequest.validatorId] = Delegation(delegationRequest.tokenAddress, stakeEffectiveness, endTime);
         // delegationTotal[validatorAddress] =+ token.value * DelegationPeriodManager.getStakeMultipler(monthCount);
-
+        isDelegated[delegationRequest.tokenAddress] = true;
     }
 
     function calculateEndTime(uint months) public view returns (uint endTime) {
@@ -79,5 +80,6 @@ contract DelegationManager is Permissions {
     function unDelegate(uint validatorId) public view {
         require(delegations[validatorId].tokenAddress != address(0), "Token with such address wasn't delegated");
         // Call Token.unlock(lockTime)
+        // update isDelegated
     }
 }

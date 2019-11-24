@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
 import "@openzeppelin/contracts/introspection/IERC1820Registry.sol";
 
 import "./interfaces/tokenSale/ITokenSaleManager.sol";
-import "./interfaces/delegation/internal/IDelegatableTokenInternal.sol";
+import "./interfaces/delegation/IDelegatableToken.sol";
 
 
 contract TokenSaleManager is ITokenSaleManager, Ownable, IERC777Recipient {
@@ -52,6 +52,7 @@ contract TokenSaleManager is ITokenSaleManager, Ownable, IERC777Recipient {
         uint delegationPeriod,
         string calldata info) external
     {
+        require(IDelegatableToken(address(token)).isLocked(_msgSender()), "Token is not locked");
         // require(condition); // token is locked and not delegated
         revert("Not implemented");
     }
