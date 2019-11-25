@@ -171,8 +171,8 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
     }
 
     /// @notice Makes all tokens of target account unavailable to move
-    function lock(address target) external {
-        revert("Not implemented");
+    function lock(address wallet) external {
+        _locked[wallet] = true;
     }
 
     /// @notice Makes all tokens of target account available to move

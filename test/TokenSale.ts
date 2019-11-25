@@ -36,7 +36,8 @@ contract("TokenSaleManager", ([owner, holder, delegation, validator, seller, hac
     beforeEach(async () => {
         contractManager = await ContractManager.new();
         skaleToken = await SkaleToken.new(contractManager.address, []);
-        tokenSaleManager = await TokenSaleManager.new(skaleToken.address);
+        await contractManager.setContractsAddress("SkaleToken", skaleToken.address);
+        tokenSaleManager = await TokenSaleManager.new(contractManager.address);
         delegationService = await DelegationService.new(contractManager.address);
         await contractManager.setContractsAddress("DelegationService", delegationService.address);
         validatorDelegation = await ValidatorDelegation.new();
