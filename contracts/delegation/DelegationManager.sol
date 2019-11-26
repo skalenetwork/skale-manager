@@ -20,7 +20,7 @@ pragma experimental ABIEncoderV2;
 import "../Permissions.sol";
 import "../interfaces/IDelegationRequestManager.sol";
 import "../interfaces/IDelegationPeriodManager.sol";
-import "../BokkyPooBahsDateTimeLibrary.sol";
+import "../thirdparty/BokkyPooBahsDateTimeLibrary.sol";
 
 
 contract DelegationManager is Permissions {

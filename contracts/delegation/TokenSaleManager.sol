@@ -6,10 +6,10 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
 import "@openzeppelin/contracts/introspection/IERC1820Registry.sol";
 
-import "./interfaces/tokenSale/ITokenSaleManager.sol";
-import "./interfaces/delegation/IDelegatableToken.sol";
-import "./Permissions.sol";
-import "./delegation/DelegationService.sol";
+import "../interfaces/tokenSale/ITokenSaleManager.sol";
+import "../interfaces/delegation/IDelegatableToken.sol";
+import "../Permissions.sol";
+import "./DelegationService.sol";
 
 
 contract TokenSaleManager is ITokenSaleManager, Permissions, IERC777Recipient {
@@ -71,7 +71,8 @@ contract TokenSaleManager is ITokenSaleManager, Permissions, IERC777Recipient {
         uint256 amount,
         bytes calldata userData,
         bytes calldata operatorData
-    ) external {
+    ) external
+    {
 
     }
 

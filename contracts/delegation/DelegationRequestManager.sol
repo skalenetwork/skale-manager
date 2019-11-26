@@ -20,7 +20,7 @@ pragma experimental ABIEncoderV2;
 import "../Permissions.sol";
 import "../interfaces/IDelegationPeriodManager.sol";
 import "../interfaces/delegation/IValidatorDelegation.sol";
-import "../BokkyPooBahsDateTimeLibrary.sol";
+import "../thirdparty/BokkyPooBahsDateTimeLibrary.sol";
 import "../interfaces/IDelegationRequestManager.sol";
 import "./ValidatorDelegation.sol";
 
@@ -110,7 +110,7 @@ contract DelegationRequestManager is Permissions, IDelegationRequestManager {
     // }
 
     function getDelegationRequestsForValidator(uint validatorId) public returns (DelegationRequest[] memory) {
-        
+
     }
 
     function calculateExpirationRequest() private view returns (uint timestamp) {
