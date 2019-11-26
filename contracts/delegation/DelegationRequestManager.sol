@@ -26,7 +26,7 @@ import "../interfaces/delegation/IDelegatableToken.sol";
 import "./ValidatorDelegation.sol";
 
 
-interface IDelegationManager {
+interface IDelegationController {
     function delegate(uint _requestId) external;
 }
 
@@ -92,8 +92,8 @@ contract DelegationRequestManager is Permissions, IDelegationRequestManager {
     }
 
     function acceptRequest(uint _requestId) public checkValidatorAccess(_requestId) {
-        IDelegationManager delegationManager = IDelegationManager(
-            contractManager.contracts(keccak256(abi.encodePacked("DelegationManager")))
+        IDelegationController delegationController = IDelegationController(
+            contractManager.contracts(keccak256(abi.encodePacked("DelegationController")))
         );
         IDelegatableToken skaleToken = IDelegatableToken(
             contractManager.contracts(keccak256(abi.encodePacked("SkaleToken")))
@@ -102,7 +102,7 @@ contract DelegationRequestManager is Permissions, IDelegationRequestManager {
         delegated[delegationRequests[_requestId].tokenAddress] = true;
 
         require(checkValidityRequest(_requestId), "Validator can't longer accept delegation request");
-        delegationManager.delegate(_requestId);
+        delegationController.delegate(_requestId);
     }
 
     function cancelRequest(uint _requestId) public {

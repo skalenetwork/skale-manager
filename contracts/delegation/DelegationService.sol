@@ -28,7 +28,7 @@ import "../interfaces/IDelegationPeriodManager.sol";
 import "../interfaces/IDelegationRequestManager.sol";
 import "../BokkyPooBahsDateTimeLibrary.sol";
 import "./ValidatorDelegation.sol";
-import "./DelegationManager.sol";
+import "./DelegationController.sol";
 
 
 contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegation, IManagerDelegationInternal {
@@ -211,7 +211,7 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
     }
 
     function isDelegated(address wallet) public returns (bool) {
-        return DelegationManager(contractManager.getContract("DelegationManager")).isDelegated(wallet);
+        return DelegationController(contractManager.getContract("DelegationController")).isDelegated(wallet);
     }
 
     function checkValidatorAddressToId(address validatorAddress, uint validatorId) external view returns (bool) {

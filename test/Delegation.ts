@@ -1,11 +1,13 @@
 import { ContractManagerContract,
     ContractManagerInstance,
+    DelegationControllerContract,
+    DelegationControllerInstance,
     DelegationPeriodManagerContract,
     DelegationPeriodManagerInstance,
-    DelegationServiceContract,
-    DelegationServiceInstance,
     DelegationRequestManagerContract,
     DelegationRequestManagerInstance,
+    DelegationServiceContract,
+    DelegationServiceInstance,
     SkaleTokenContract,
     SkaleTokenInstance,
     ValidatorDelegationContract,
@@ -17,6 +19,7 @@ const DelegationService: DelegationServiceContract = artifacts.require("./Delega
 const DelegationPeriodManager: DelegationPeriodManagerContract = artifacts.require("./DelegationPeriodManager");
 const DelegationRequestManager: DelegationRequestManagerContract = artifacts.require("./DelegationRequestManager");
 const ValidatorDelegation: ValidatorDelegationContract = artifacts.require("./ValidatorDelegation");
+const DelegationController: DelegationControllerContract = artifacts.require("./ValidatorDelegation");
 
 import { currentTime, months, skipTime, skipTimeToDate } from "./utils/time";
 
@@ -57,6 +60,7 @@ contract("Delegation", ([owner,
     let delegationPeriodManager: DelegationPeriodManagerInstance;
     let delegationRequestManager: DelegationRequestManagerInstance;
     let validatorDelegation: ValidatorDelegationInstance;
+    let delegationController: DelegationControllerInstance;
 
     const defaultAmount = 100 * 1e18;
 
@@ -77,6 +81,9 @@ contract("Delegation", ([owner,
 
         validatorDelegation = await ValidatorDelegation.new(contractManager.address);
         await contractManager.setContractsAddress("ValidatorDelegation", validatorDelegation.address);
+        
+        delegationController = await DelegationController.new(contractManager.address);
+        await contractManager.setContractsAddress("DelegationController", delegationController.address);
 
         // each test will start from Nov 10
         await skipTimeToDate(web3, 10, 11);
@@ -195,7 +202,6 @@ contract("Delegation", ([owner,
                     //     });
                     });
                 });
-                
             } 
             // else {
             //     it("should not allow to send delegation request", async () => {
@@ -213,7 +219,7 @@ contract("Delegation", ([owner,
 
         // describe("when validator is registered", async () => {
         //     beforeEach(async () => {
-        //         delegationService.registerValidator(
+        //         await delegationService.registerValidator(
         //             "First validator", "Super-pooper validator", 150, {from: validator});
         //     });
 
@@ -256,23 +262,23 @@ contract("Delegation", ([owner,
         //         validatorIds.should.be.deep.equal([0]);
         //         const validatorId = validatorIds[0];
 
-        //         let responce = await delegationService.delegate(
-        //             validatorId, 6, "First holder", {from: holder1});
-        //         const requestId1 = responce.logs[0].args.id;
-        //         await delegationService.accept(requestId1, {from: validator});
+                // let responce = await delegationService.delegate(
+                //     validatorId, 6, "First holder", {from: holder1});
+                // const requestId1 = responce.logs[0].args.id;
+                // await delegationService.accept(requestId1, {from: validator});
 
         //         await skipTimeToDate(web3, 28, 10);
 
-        //         responce = await delegationService.delegate(
-        //             validatorId, 12, "Second holder", {from: holder2});
-        //         const requestId2 = responce.logs[0].args.id;
-        //         await delegationService.accept(requestId2, {from: validator});
+                // responce = await delegationService.delegate(
+                //     validatorId, 12, "Second holder", {from: holder2});
+                // const requestId2 = responce.logs[0].args.id;
+                // await delegationService.accept(requestId2, {from: validator});
 
-                // await skipTimeToDate(web3, 28, 11);
+        //         await skipTimeToDate(web3, 28, 11);
 
-                // await delegationService.createNode("4444", 0, "127.0.0.1", "127.0.0.1", {from: validator});
+        //         await delegationService.createNode("4444", 0, "127.0.0.1", "127.0.0.1", {from: validator});
 
-                // await skipTimeToDate(web3, 1, 0);
+        //         await skipTimeToDate(web3, 1, 0);
 
                 // await delegationService.requestUndelegation({from: holder1});
                 // await delegationService.requestUndelegation({from: holder2});
@@ -288,194 +294,194 @@ contract("Delegation", ([owner,
                 // bounty.should.be.equal(38);
                 // await delegationService.withdrawBounty(bountyAddress, bounty, {from: holder1});
 
-                // bounty = await delegationService.getEarnedBountyAmount.call({from: holder2});
-                // bounty.should.be.equal(46);
-                // await delegationService.withdrawBounty(bountyAddress, bounty, {from: holder2});
+        //         bounty = await delegationService.getEarnedBountyAmount.call({from: holder2});
+        //         bounty.should.be.equal(46);
+        //         await delegationService.withdrawBounty(bountyAddress, bounty, {from: holder2});
 
-                // bounty = await delegationService.getEarnedBountyAmount.call({from: validator});
-                // bounty.should.be.equal(15);
-                // await delegationService.withdrawBounty(bountyAddress, bounty, {from: validator});
+        //         bounty = await delegationService.getEarnedBountyAmount.call({from: validator});
+        //         bounty.should.be.equal(15);
+        //         await delegationService.withdrawBounty(bountyAddress, bounty, {from: validator});
 
-                // // spin up second node
+        //         // spin up second node
 
-                // await skipTimeToDate(web3, 27, 1);
-                // await delegationService.createNode("2222", 1, "127.0.0.2", "127.0.0.2", {from: validator});
+        //         await skipTimeToDate(web3, 27, 1);
+        //         await delegationService.createNode("2222", 1, "127.0.0.2", "127.0.0.2", {from: validator});
 
-                // // get bounty for February
+        //         // get bounty for February
 
-                // await skipTimeToDate(web3, 1, 2);
+        //         await skipTimeToDate(web3, 1, 2);
 
-                // bounty = await delegationService.getEarnedBountyAmount.call({from: holder1});
-                // bounty.should.be.equal(38);
-                // await delegationService.withdrawBounty(bountyAddress, bounty, {from: holder1});
+        //         bounty = await delegationService.getEarnedBountyAmount.call({from: holder1});
+        //         bounty.should.be.equal(38);
+        //         await delegationService.withdrawBounty(bountyAddress, bounty, {from: holder1});
 
-                // bounty = await delegationService.getEarnedBountyAmount.call({from: holder2});
-                // bounty.should.be.equal(46);
-                // await delegationService.withdrawBounty(bountyAddress, bounty, {from: holder2});
+        //         bounty = await delegationService.getEarnedBountyAmount.call({from: holder2});
+        //         bounty.should.be.equal(46);
+        //         await delegationService.withdrawBounty(bountyAddress, bounty, {from: holder2});
 
-                // bounty = await delegationService.getEarnedBountyAmount.call({from: validator});
-                // bounty.should.be.equal(15);
-                // await delegationService.withdrawBounty(bountyAddress, bounty, {from: validator});
+        //         bounty = await delegationService.getEarnedBountyAmount.call({from: validator});
+        //         bounty.should.be.equal(15);
+        //         await delegationService.withdrawBounty(bountyAddress, bounty, {from: validator});
 
-                // // get bounty for March
+        //         // get bounty for March
 
-                // await skipTimeToDate(web3, 1, 3);
+        //         await skipTimeToDate(web3, 1, 3);
 
-                // bounty = await delegationService.getEarnedBountyAmount.call({from: holder1});
-                // bounty.should.be.equal(60);
-                // await delegationService.withdrawBounty(bountyAddress, bounty, {from: holder1});
+        //         bounty = await delegationService.getEarnedBountyAmount.call({from: holder1});
+        //         bounty.should.be.equal(60);
+        //         await delegationService.withdrawBounty(bountyAddress, bounty, {from: holder1});
 
-                // bounty = await delegationService.getEarnedBountyAmount.call({from: holder2});
-                // bounty.should.be.equal(74);
-                // await delegationService.withdrawBounty(bountyAddress, bounty, {from: holder2});
+        //         bounty = await delegationService.getEarnedBountyAmount.call({from: holder2});
+        //         bounty.should.be.equal(74);
+        //         await delegationService.withdrawBounty(bountyAddress, bounty, {from: holder2});
 
-                // bounty = await delegationService.getEarnedBountyAmount.call({from: holder3});
-                // bounty.should.be.equal(34);
-                // await delegationService.withdrawBounty(bountyAddress, bounty, {from: holder3});
+        //         bounty = await delegationService.getEarnedBountyAmount.call({from: holder3});
+        //         bounty.should.be.equal(34);
+        //         await delegationService.withdrawBounty(bountyAddress, bounty, {from: holder3});
 
-                // bounty = await delegationService.getEarnedBountyAmount.call({from: validator});
-                // bounty.should.be.equal(30);
-                // await delegationService.withdrawBounty(bountyAddress, bounty, {from: validator});
+        //         bounty = await delegationService.getEarnedBountyAmount.call({from: validator});
+        //         bounty.should.be.equal(30);
+        //         await delegationService.withdrawBounty(bountyAddress, bounty, {from: validator});
 
-                // // get bounty for April
+        //         // get bounty for April
 
-                // await skipTimeToDate(web3, 1, 4);
+        //         await skipTimeToDate(web3, 1, 4);
 
-                // bounty = await delegationService.getEarnedBountyAmount.call({from: holder1});
-                // bounty.should.be.equal(60);
-                // await delegationService.withdrawBounty(bountyAddress, bounty, {from: holder1});
+        //         bounty = await delegationService.getEarnedBountyAmount.call({from: holder1});
+        //         bounty.should.be.equal(60);
+        //         await delegationService.withdrawBounty(bountyAddress, bounty, {from: holder1});
 
-                // bounty = await delegationService.getEarnedBountyAmount.call({from: holder2});
-                // bounty.should.be.equal(74);
-                // await delegationService.withdrawBounty(bountyAddress, bounty, {from: holder2});
+        //         bounty = await delegationService.getEarnedBountyAmount.call({from: holder2});
+        //         bounty.should.be.equal(74);
+        //         await delegationService.withdrawBounty(bountyAddress, bounty, {from: holder2});
 
-                // bounty = await delegationService.getEarnedBountyAmount.call({from: holder3});
-                // bounty.should.be.equal(34);
-                // await delegationService.withdrawBounty(bountyAddress, bounty, {from: holder3});
+        //         bounty = await delegationService.getEarnedBountyAmount.call({from: holder3});
+        //         bounty.should.be.equal(34);
+        //         await delegationService.withdrawBounty(bountyAddress, bounty, {from: holder3});
 
-                // bounty = await delegationService.getEarnedBountyAmount.call({from: validator});
-                // bounty.should.be.equal(30);
-                // await delegationService.withdrawBounty(bountyAddress, bounty, {from: validator});
+        //         bounty = await delegationService.getEarnedBountyAmount.call({from: validator});
+        //         bounty.should.be.equal(30);
+        //         await delegationService.withdrawBounty(bountyAddress, bounty, {from: validator});
 
-                // // get bounty for May
+        //         // get bounty for May
 
-                // await skipTimeToDate(web3, 1, 5);
+        //         await skipTimeToDate(web3, 1, 5);
 
-                // bounty = await delegationService.getEarnedBountyAmount.call({from: holder1});
-                // bounty.should.be.equal(60);
-                // await delegationService.withdrawBounty(bountyAddress, bounty, {from: holder1});
+        //         bounty = await delegationService.getEarnedBountyAmount.call({from: holder1});
+        //         bounty.should.be.equal(60);
+        //         await delegationService.withdrawBounty(bountyAddress, bounty, {from: holder1});
 
-                // bounty = await delegationService.getEarnedBountyAmount.call({from: holder2});
-                // bounty.should.be.equal(74);
-                // await delegationService.withdrawBounty(bountyAddress, bounty, {from: holder2});
+        //         bounty = await delegationService.getEarnedBountyAmount.call({from: holder2});
+        //         bounty.should.be.equal(74);
+        //         await delegationService.withdrawBounty(bountyAddress, bounty, {from: holder2});
 
-                // bounty = await delegationService.getEarnedBountyAmount.call({from: holder3});
-                // bounty.should.be.equal(34);
-                // await delegationService.withdrawBounty(bountyAddress, bounty, {from: holder3});
+        //         bounty = await delegationService.getEarnedBountyAmount.call({from: holder3});
+        //         bounty.should.be.equal(34);
+        //         await delegationService.withdrawBounty(bountyAddress, bounty, {from: holder3});
 
-                // bounty = await delegationService.getEarnedBountyAmount.call({from: validator});
-                // bounty.should.be.equal(30);
-                // await delegationService.withdrawBounty(bountyAddress, bounty, {from: validator});
+        //         bounty = await delegationService.getEarnedBountyAmount.call({from: validator});
+        //         bounty.should.be.equal(30);
+        //         await delegationService.withdrawBounty(bountyAddress, bounty, {from: validator});
 
-                // // stop one node
+        //         // stop one node
 
-                // await delegationService.deleteNode(0, {from: validator});
+        //         await delegationService.deleteNode(0, {from: validator});
 
-                // // get bounty for June
+        //         // get bounty for June
 
-                // await skipTimeToDate(web3, 1, 6);
+        //         await skipTimeToDate(web3, 1, 6);
 
-                // bounty = await delegationService.getEarnedBountyAmount.call({from: holder1});
-                // bounty.should.be.equal(0);
+        //         bounty = await delegationService.getEarnedBountyAmount.call({from: holder1});
+        //         bounty.should.be.equal(0);
 
-                // bounty = await delegationService.getEarnedBountyAmount.call({from: holder2});
-                // bounty.should.be.equal(57);
-                // await delegationService.withdrawBounty(bountyAddress, bounty, {from: holder2});
+        //         bounty = await delegationService.getEarnedBountyAmount.call({from: holder2});
+        //         bounty.should.be.equal(57);
+        //         await delegationService.withdrawBounty(bountyAddress, bounty, {from: holder2});
 
-                // bounty = await delegationService.getEarnedBountyAmount.call({from: holder3});
-                // bounty.should.be.equal(27);
-                // await delegationService.withdrawBounty(bountyAddress, bounty, {from: holder3});
+        //         bounty = await delegationService.getEarnedBountyAmount.call({from: holder3});
+        //         bounty.should.be.equal(27);
+        //         await delegationService.withdrawBounty(bountyAddress, bounty, {from: holder3});
 
-                // bounty = await delegationService.getEarnedBountyAmount.call({from: validator});
-                // bounty.should.be.equal(15);
-                // await delegationService.withdrawBounty(bountyAddress, bounty, {from: validator});
+        //         bounty = await delegationService.getEarnedBountyAmount.call({from: validator});
+        //         bounty.should.be.equal(15);
+        //         await delegationService.withdrawBounty(bountyAddress, bounty, {from: validator});
 
-                // manage delegation
+        //         // manage delegation
 
                 // responce = await delegationService.delegate(validatorId, 3, "D2 is even", {from: holder1});
                 // const requestId = responce.logs[0].args.id;
                 // await delegationService.accept(requestId, {from: validator});
 
-                // await delegationService.requestUndelegation({from: holder3});
+        //         await delegationService.requestUndelegation({from: holder3});
 
-                // spin up node
+        //         // spin up node
 
-                // await skipTimeToDate(web3, 30, 6);
-                // await delegationService.createNode("3333", 2, "127.0.0.3", "127.0.0.3", {from: validator});
+        //         await skipTimeToDate(web3, 30, 6);
+        //         await delegationService.createNode("3333", 2, "127.0.0.3", "127.0.0.3", {from: validator});
 
-                // get bounty for July
+        //         // get bounty for July
 
-                // await skipTimeToDate(web3, 1, 7);
+        //         await skipTimeToDate(web3, 1, 7);
 
-                // bounty = await delegationService.getEarnedBountyAmount.call({from: holder1});
-                // bounty.should.be.equal(0);
-                // await delegationService.withdrawBounty(bountyAddress, bounty, {from: holder1});
+        //         bounty = await delegationService.getEarnedBountyAmount.call({from: holder1});
+        //         bounty.should.be.equal(0);
+        //         await delegationService.withdrawBounty(bountyAddress, bounty, {from: holder1});
 
-                // bounty = await delegationService.getEarnedBountyAmount.call({from: holder2});
-                // bounty.should.be.equal(57);
-                // await delegationService.withdrawBounty(bountyAddress, bounty, {from: holder2});
+        //         bounty = await delegationService.getEarnedBountyAmount.call({from: holder2});
+        //         bounty.should.be.equal(57);
+        //         await delegationService.withdrawBounty(bountyAddress, bounty, {from: holder2});
 
-                // bounty = await delegationService.getEarnedBountyAmount.call({from: holder3});
-                // bounty.should.be.equal(27);
-                // await delegationService.withdrawBounty(bountyAddress, bounty, {from: holder3});
+        //         bounty = await delegationService.getEarnedBountyAmount.call({from: holder3});
+        //         bounty.should.be.equal(27);
+        //         await delegationService.withdrawBounty(bountyAddress, bounty, {from: holder3});
 
-                // bounty = await delegationService.getEarnedBountyAmount.call({from: validator});
-                // bounty.should.be.equal(15);
-                // await delegationService.withdrawBounty(bountyAddress, bounty, {from: validator});
+        //         bounty = await delegationService.getEarnedBountyAmount.call({from: validator});
+        //         bounty.should.be.equal(15);
+        //         await delegationService.withdrawBounty(bountyAddress, bounty, {from: validator});
 
-                // get bounty for August
+        //         // get bounty for August
 
-                // await skipTimeToDate(web3, 1, 8);
+        //         await skipTimeToDate(web3, 1, 8);
 
-                // bounty = await delegationService.getEarnedBountyAmount.call({from: holder1});
-                // bounty.should.be.equal(46);
-                // await delegationService.withdrawBounty(bountyAddress, bounty, {from: holder1});
+        //         bounty = await delegationService.getEarnedBountyAmount.call({from: holder1});
+        //         bounty.should.be.equal(46);
+        //         await delegationService.withdrawBounty(bountyAddress, bounty, {from: holder1});
 
-                // bounty = await delegationService.getEarnedBountyAmount.call({from: holder2});
-                // bounty.should.be.equal(84);
-                // await delegationService.withdrawBounty(bountyAddress, bounty, {from: holder2});
+        //         bounty = await delegationService.getEarnedBountyAmount.call({from: holder2});
+        //         bounty.should.be.equal(84);
+        //         await delegationService.withdrawBounty(bountyAddress, bounty, {from: holder2});
 
-                // bounty = await delegationService.getEarnedBountyAmount.call({from: holder3});
-                // bounty.should.be.equal(39);
-                // await delegationService.withdrawBounty(bountyAddress, bounty, {from: holder3});
+        //         bounty = await delegationService.getEarnedBountyAmount.call({from: holder3});
+        //         bounty.should.be.equal(39);
+        //         await delegationService.withdrawBounty(bountyAddress, bounty, {from: holder3});
 
-                // bounty = await delegationService.getEarnedBountyAmount.call({from: validator});
-                // bounty.should.be.equal(30);
-                // await delegationService.withdrawBounty(bountyAddress, bounty, {from: validator});
+        //         bounty = await delegationService.getEarnedBountyAmount.call({from: validator});
+        //         bounty.should.be.equal(30);
+        //         await delegationService.withdrawBounty(bountyAddress, bounty, {from: validator});
 
-                // await delegationService.deleteNode(1, {from: validator});
+        //         await delegationService.deleteNode(1, {from: validator});
 
-                // get bounty for September
+        //         // get bounty for September
 
-                // await skipTimeToDate(web3, 1, 9);
+        //         await skipTimeToDate(web3, 1, 9);
 
-                // bounty = await delegationService.getEarnedBountyAmount.call({from: holder1});
-                // bounty.should.be.equal(29);
-                // await delegationService.withdrawBounty(bountyAddress, bounty, {from: holder1});
+        //         bounty = await delegationService.getEarnedBountyAmount.call({from: holder1});
+        //         bounty.should.be.equal(29);
+        //         await delegationService.withdrawBounty(bountyAddress, bounty, {from: holder1});
 
-                // bounty = await delegationService.getEarnedBountyAmount.call({from: holder2});
-                // bounty.should.be.equal(55);
-                // await delegationService.withdrawBounty(bountyAddress, bounty, {from: holder2});
+        //         bounty = await delegationService.getEarnedBountyAmount.call({from: holder2});
+        //         bounty.should.be.equal(55);
+        //         await delegationService.withdrawBounty(bountyAddress, bounty, {from: holder2});
 
-                // bounty = await delegationService.getEarnedBountyAmount.call({from: holder3});
-                // bounty.should.be.equal(0);
-                // await delegationService.withdrawBounty(bountyAddress, bounty, {from: holder3});
+        //         bounty = await delegationService.getEarnedBountyAmount.call({from: holder3});
+        //         bounty.should.be.equal(0);
+        //         await delegationService.withdrawBounty(bountyAddress, bounty, {from: holder3});
 
-                // bounty = await delegationService.getEarnedBountyAmount.call({from: validator});
-                // bounty.should.be.equal(15);
-                // await delegationService.withdrawBounty(bountyAddress, bounty, {from: validator});
+        //         bounty = await delegationService.getEarnedBountyAmount.call({from: validator});
+        //         bounty.should.be.equal(15);
+        //         await delegationService.withdrawBounty(bountyAddress, bounty, {from: validator});
 
-            // });
+        //     });
         // });
     });
 });

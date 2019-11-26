@@ -1,5 +1,5 @@
 /*
-    DelegationManager.sol - SKALE Manager
+    DelegationController.sol - SKALE Manager
     Copyright (C) 2018-Present SKALE Labs
     @author Vadim Yavorsky
     SKALE Manager is free software: you can redistribute it and/or modify
@@ -23,7 +23,7 @@ import "../interfaces/IDelegationPeriodManager.sol";
 import "../BokkyPooBahsDateTimeLibrary.sol";
 
 
-contract DelegationManager is Permissions {
+contract DelegationController is Permissions {
 
     struct Delegation {
         uint stakeEffectiveness;
