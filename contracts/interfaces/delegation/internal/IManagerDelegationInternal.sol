@@ -30,4 +30,10 @@ interface IManagerDelegationInternal {
     function getDelegatedAmount(address validator) external returns (uint);
 
     function setMinimumStakingRequirement(uint amount) external;
+
+    /// @notice Makes all tokens of target account unavailable to move
+    function lock(address target) external;
+
+    /// @notice Makes all tokens of target account available to move
+    function unlock(address target) external;
 }

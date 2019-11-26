@@ -17,7 +17,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity ^0.5.0;
+pragma solidity ^0.5.3;
 pragma experimental ABIEncoderV2;
 
 import "../Permissions.sol";
@@ -27,9 +27,12 @@ import "../interfaces/delegation/internal/IManagerDelegationInternal.sol";
 import "../interfaces/IDelegationPeriodManager.sol";
 import "../interfaces/IDelegationRequestManager.sol";
 import "../BokkyPooBahsDateTimeLibrary.sol";
+import "./ValidatorDelegation.sol";
+import "./DelegationManager.sol";
 
 
 contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegation, IManagerDelegationInternal {
+    mapping (address => bool) private _locked;
 
     event DelegationRequestIsSent(
         uint requestId
@@ -74,7 +77,6 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
         revert("Not implemented");
     }
 
-
     /// @notice Allows service to slash `validator` by `amount` of tokens
     function slash(address validator, uint amount) external {
         revert("Not implemented");
@@ -105,7 +107,12 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
         IDelegationRequestManager delegationRequestManager = IDelegationRequestManager(
             contractManager.contracts(keccak256(abi.encodePacked("DelegationRequestManager")))
         );
-        uint requestId = delegationRequestManager.createRequest(msg.sender, validatorId, delegationPeriod, info);
+        uint requestId = delegationRequestManager.createRequest(
+            msg.sender,
+            validatorId,
+            delegationPeriod,
+            info
+        );
         emit DelegationRequestIsSent(requestId);
     }
 
@@ -116,9 +123,9 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
         delegationRequestManager.cancelRequest(requestId);
     }
 
-    // function getAllDelegationRequests() external returns(uint[] memory) {
-    //     revert("Not implemented");
-    // }
+    function getAllDelegationRequests() external returns(uint[] memory) {
+        revert("Not implemented");
+    }
 
     function getDelegationRequestsForValidator(uint validatorId) external returns (uint[] memory) {
         revert("Not implemented");
@@ -130,11 +137,16 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
         string calldata description,
         uint feeRate,
         uint minimumDelegationAmount
-    ) external returns (uint validatorId) {
-        IValidatorDelegation validatorDelegation = IValidatorDelegation(
-            contractManager.contracts(keccak256(abi.encodePacked("ValidatorDelegation")))
+    )
+        external returns (uint validatorId)
+    {
+        ValidatorDelegation validatorDelegation = ValidatorDelegation(contractManager.getContract("ValidatorDelegation"));
+        validatorId = validatorDelegation.registerValidator(
+            name,
+            description,
+            feeRate,
+            minimumDelegationAmount
         );
-        validatorId = validatorDelegation.registerValidator(name, description, feeRate, minimumDelegationAmount);
         emit ValidatorRegistered(validatorId);
     }
 
@@ -180,7 +192,13 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
         revert("Not implemented");
     }
 
-    function checkValidatorAddressToId(address validatorAddress, uint validatorId) external view returns (bool) {
+    /// @notice Makes all tokens of target account unavailable to move
+    function lock(address target) external {
+        revert("Not implemented");
+    }
+
+    /// @notice Makes all tokens of target account available to move
+    function unlock(address target) external {
         revert("Not implemented");
     }
 
@@ -188,4 +206,15 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
         revert("Not implemented");
     }
 
+    function isLocked(address wallet) external returns (bool) {
+        return isDelegated(wallet) || _locked[wallet];
+    }
+
+    function isDelegated(address wallet) public returns (bool) {
+        return DelegationManager(contractManager.getContract("DelegationManager")).isDelegated(wallet);
+    }
+
+    function checkValidatorAddressToId(address validatorAddress, uint validatorId) external view returns (bool) {
+        revert("Not implemented");
+    }
 }

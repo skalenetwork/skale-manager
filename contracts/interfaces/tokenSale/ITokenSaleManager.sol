@@ -14,7 +14,6 @@ interface ITokenSaleManager {
         address delegationWalletAddress,
         uint delegationValue,
         uint validatorId,
-        string calldata startingMonth,
         uint delegationPeriod,
         string calldata info) external;
 

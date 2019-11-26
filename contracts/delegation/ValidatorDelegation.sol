@@ -31,11 +31,12 @@ contract ValidatorDelegation is Permissions {
         uint feeRate;
         uint registrationTime;
         uint minimumDelegationAmount;
+        uint lastBountyCollectionMonth;
     }
 
     Validator[] public validators;
     mapping (address => uint) public validatorAddressToId;
-    
+
 
     constructor(address newContractsAddress) Permissions(newContractsAddress) public {
 
@@ -55,10 +56,10 @@ contract ValidatorDelegation is Permissions {
             description,
             feeRate,
             now,
-            minimumDelegationAmount
+            minimumDelegationAmount,
+            0
         ));
         validatorId = validators.length - 1;
-        return validatorId;
     }
 
     function validatorExists(uint validatorId) public view returns (bool) {

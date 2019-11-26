@@ -23,6 +23,7 @@ import "../interfaces/delegation/IValidatorDelegation.sol";
 import "../BokkyPooBahsDateTimeLibrary.sol";
 import "../interfaces/IDelegationRequestManager.sol";
 import "../interfaces/delegation/IDelegatableToken.sol";
+import "./ValidatorDelegation.sol";
 
 
 interface IDelegationManager {
@@ -42,7 +43,7 @@ contract DelegationRequestManager is Permissions, IDelegationRequestManager {
     }
 
     modifier checkValidatorAccess(uint _requestId) {
-        IValidatorDelegation validatorDelegation = IValidatorDelegation(
+        ValidatorDelegation validatorDelegation = ValidatorDelegation(
             contractManager.contracts(keccak256(abi.encodePacked("ValidatorDelegation")))
         );
         require(_requestId < delegationRequests.length, "Delegation request doesn't exist");
