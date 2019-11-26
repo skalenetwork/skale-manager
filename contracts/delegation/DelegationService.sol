@@ -53,7 +53,7 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
     /// @notice Allows validator to accept tokens delegated at `requestId`
     function accept(uint requestId) external {
         DelegationRequestManager delegationRequestManager = DelegationRequestManager(
-            contractManager.contracts(keccak256(abi.encodePacked("DelegationRequestManager")))
+            contractManager.getContract("DelegationRequestManager")
         );
         delegationRequestManager.acceptRequest(requestId);
     }
@@ -106,7 +106,7 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
         external
     {
         DelegationRequestManager delegationRequestManager = DelegationRequestManager(
-            contractManager.contracts(keccak256(abi.encodePacked("DelegationRequestManager")))
+            contractManager.getContract("DelegationRequestManager")
         );
         uint requestId = delegationRequestManager.createRequest(
             msg.sender,
@@ -120,7 +120,7 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
 
     function cancelPendingDelegation(uint requestId) external {
         DelegationRequestManager delegationRequestManager = DelegationRequestManager(
-            contractManager.contracts(keccak256(abi.encodePacked("DelegationRequestManager")))
+            contractManager.getContract("DelegationRequestManager")
         );
         delegationRequestManager.cancelRequest(requestId);
     }

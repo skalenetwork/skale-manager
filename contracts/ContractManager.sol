@@ -57,7 +57,7 @@ contract ContractManager is Ownable {
         emit ContractUpgraded(contractsName, newContractsAddress);
     }
 
-    function getContract(string calldata name) external returns (address contractAddress) {
+    function getContract(string calldata name) external view returns (address contractAddress) {
         contractAddress = contracts[keccak256(abi.encodePacked(name))];
         require(contractAddress != address(0), "Contract has not been found");
     }

@@ -32,7 +32,7 @@ contract SkaleBalances is Permissions {
     }
 
     function stashBalance(address recipient, uint bountyForMiner) public allow("SkaleManager") {
-        address skaleTokenAddress = contractManager.contracts(keccak256(abi.encodePacked("SkaleToken")));
+        address skaleTokenAddress = contractManager.getContract("SkaleToken");
         bountyBalances[recipient] += bountyForMiner;
         require(
             ISkaleToken(skaleTokenAddress).mint(

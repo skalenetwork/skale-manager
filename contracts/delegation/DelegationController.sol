@@ -42,10 +42,10 @@ contract DelegationController is Permissions {
 
     function delegate(uint requestId) public {
         DelegationRequestManager delegationRequestManager = DelegationRequestManager(
-            contractManager.contracts(keccak256(abi.encodePacked("DelegationRequestManager")))
+            contractManager.getContract("DelegationRequestManager")
         );
         IDelegationPeriodManager delegationPeriodManager = IDelegationPeriodManager(
-            contractManager.contracts(keccak256(abi.encodePacked("DelegationPeriodManager")))
+            contractManager.getContract("DelegationPeriodManager")
         );
         // require(address(0) != delegationRequest.tokenAddress, "Request with such id doesn't exist");
         // require(msg.sender == delegationRequestManager, "Message sender hasn't permissions to invoke delegation");

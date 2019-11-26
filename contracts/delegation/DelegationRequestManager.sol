@@ -51,7 +51,7 @@ contract DelegationRequestManager is Permissions {
 
     modifier checkValidatorAccess(uint _requestId) {
         ValidatorDelegation validatorDelegation = ValidatorDelegation(
-            contractManager.contracts(keccak256(abi.encodePacked("ValidatorDelegation")))
+            contractManager.getContract("ValidatorDelegation")
         );
         require(_requestId < delegationRequests.length, "Delegation request doesn't exist");
         require(
@@ -71,10 +71,10 @@ contract DelegationRequestManager is Permissions {
         external returns(uint requestId)
     {
         IDelegationPeriodManager delegationPeriodManager = IDelegationPeriodManager(
-            contractManager.contracts(keccak256(abi.encodePacked("DelegationPeriodManager")))
+            contractManager.getContract("DelegationPeriodManager")
         );
         IValidatorDelegation validatorDelegation = IValidatorDelegation(
-            contractManager.contracts(keccak256(abi.encodePacked("ValidatorDelegation")))
+            contractManager.getContract("ValidatorDelegation")
         );
         require(!delegated[tokenAddress], "Token is already in the process of delegation");
         require(
@@ -101,10 +101,10 @@ contract DelegationRequestManager is Permissions {
 
     function acceptRequest(uint _requestId) public checkValidatorAccess(_requestId) {
         IDelegationController delegationController = IDelegationController(
-            contractManager.contracts(keccak256(abi.encodePacked("DelegationController")))
+            contractManager.getContract("DelegationController")
         );
         IDelegatableToken skaleToken = IDelegatableToken(
-            contractManager.contracts(keccak256(abi.encodePacked("SkaleToken")))
+            contractManager.getContract("SkaleToken")
         );
         skaleToken.lock(delegationRequests[_requestId].tokenAddress);
         delegated[delegationRequests[_requestId].tokenAddress] = true;

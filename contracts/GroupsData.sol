@@ -80,7 +80,7 @@ contract GroupsData is IGroupsData, Permissions {
         groups[groupIndex].recommendedNumberOfNodes = amountOfNodes;
         groups[groupIndex].groupData = data;
         // Open channel in SkaleDKG
-        address skaleDKGAddress = contractManager.contracts(keccak256(abi.encodePacked("SkaleDKG")));
+        address skaleDKGAddress = contractManager.getContract("SkaleDKG");
         ISkaleDKG(skaleDKGAddress).openChannel(groupIndex);
     }
 
@@ -196,7 +196,7 @@ contract GroupsData is IGroupsData, Permissions {
         delete groups[groupIndex].recommendedNumberOfNodes;
         delete groups[groupIndex].groupsPublicKey;
         // delete channel
-        address skaleDKGAddress = contractManager.contracts(keccak256(abi.encodePacked("SkaleDKG")));
+        address skaleDKGAddress = contractManager.getContract("SkaleDKG");
 
         if (ISkaleDKG(skaleDKGAddress).isChannelOpened(groupIndex)) {
             ISkaleDKG(skaleDKGAddress).deleteChannel(groupIndex);

@@ -80,7 +80,7 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
      * @return partOfNode - divisor of given type of Schain
      */
     function getNodesDataFromTypeOfSchain(uint typeOfSchain) external view returns (uint numberOfNodes, uint partOfNode) {
-        address constantsAddress = contractManager.contracts(keccak256(abi.encodePacked("Constants")));
+        address constantsAddress = contractManager.getContract("Constants");
         numberOfNodes = IConstants(constantsAddress).NUMBER_OF_NODES_FOR_SCHAIN();
         if (typeOfSchain == 1) {
             partOfNode = IConstants(constantsAddress).TINY_DIVISOR();
@@ -128,7 +128,7 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
     }
 
     function removeNodeFromSchain(uint nodeIndex, bytes32 groupHash) public {
-        address schainsDataAddress = contractManager.contracts(keccak256(abi.encodePacked("SchainsData")));
+        address schainsDataAddress = contractManager.getContract("SchainsData");
         uint groupIndex = findSchainAtSchainsForNode(nodeIndex, groupHash);
         uint indexOfNode = findNode(groupHash, nodeIndex);
         IGroupsData(schainsDataAddress).removeNodeFromGroup(indexOfNode, groupHash);
@@ -145,7 +145,7 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
     function selectNodeToGroup(bytes32 groupIndex) internal returns (bytes32, uint) {
         IGroupsData groupsData = IGroupsData(contractManager.contracts(keccak256(abi.encodePacked(dataName))));
         ISchainsData schainsData = ISchainsData(contractManager.contracts(keccak256(abi.encodePacked(dataName))));
-        INodesData nodesData = INodesData(contractManager.contracts(keccak256(abi.encodePacked("NodesData"))));
+        INodesData nodesData = INodesData(contractManager.getContract("NodesData"));
         require(groupsData.isGroupActive(groupIndex), "Group is not active");
         uint space;
         (, space) = setNumberOfNodesInGroup(groupIndex, uint(groupsData.getGroupData(groupIndex)), address(groupsData));
@@ -172,7 +172,7 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
     function generateGroup(bytes32 groupIndex) internal returns (uint[] memory nodesInGroup) {
         IGroupsData groupsData = IGroupsData(contractManager.contracts(keccak256(abi.encodePacked(dataName))));
         ISchainsData schainsData = ISchainsData(contractManager.contracts(keccak256(abi.encodePacked(dataName))));
-        INodesData nodesData = INodesData(contractManager.contracts(keccak256(abi.encodePacked("NodesData"))));
+        INodesData nodesData = INodesData(contractManager.getContract("NodesData"));
         require(groupsData.isGroupActive(groupIndex), "Group is not active");
 
         uint numberOfNodes;
@@ -214,7 +214,7 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
      * @return if ouccupied - true, else - false
      */
     function removeSpace(uint nodeIndex, uint space) internal returns (bool) {
-        address nodesDataAddress = contractManager.contracts(keccak256(abi.encodePacked("NodesData")));
+        address nodesDataAddress = contractManager.getContract("NodesData");
         uint subarrayLink;
         bool isNodeFull;
         (subarrayLink, isNodeFull) = INodesData(nodesDataAddress).nodesLink(nodeIndex);
@@ -238,9 +238,9 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
     function setNumberOfNodesInGroup(bytes32 groupIndex, uint partOfNode, address dataAddress)
     internal view returns (uint numberOfNodes, uint space)
     {
-        address nodesDataAddress = contractManager.contracts(keccak256(abi.encodePacked("NodesData")));
-        address constantsAddress = contractManager.contracts(keccak256(abi.encodePacked("Constants")));
-        address schainsDataAddress = contractManager.contracts(keccak256(abi.encodePacked("SchainsData")));
+        address nodesDataAddress = contractManager.getContract("NodesData");
+        address constantsAddress = contractManager.getContract("Constants");
+        address schainsDataAddress = contractManager.getContract("SchainsData");
         uint numberOfAvailableNodes = 0;
         uint needNodes = 1;
         bool nodesEnough = false;
