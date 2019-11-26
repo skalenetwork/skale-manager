@@ -19,7 +19,7 @@ const DelegationService: DelegationServiceContract = artifacts.require("./Delega
 const DelegationPeriodManager: DelegationPeriodManagerContract = artifacts.require("./DelegationPeriodManager");
 const DelegationRequestManager: DelegationRequestManagerContract = artifacts.require("./DelegationRequestManager");
 const ValidatorDelegation: ValidatorDelegationContract = artifacts.require("./ValidatorDelegation");
-const DelegationController: DelegationControllerContract = artifacts.require("./ValidatorDelegation");
+const DelegationController: DelegationControllerContract = artifacts.require("./DelegationController");
 
 import { currentTime, months, skipTime, skipTimeToDate } from "./utils/time";
 
@@ -110,7 +110,7 @@ contract("Delegation", ([owner,
 
                     it("should send request for delegation", async () => {
                         const { logs } = await delegationService.delegate(
-                            validatorId, delegationPeriod, "D2 is even", {from: holder1});
+                            validatorId, 1, delegationPeriod, "D2 is even", {from: holder1});
                         assert.equal(logs.length, 1, "No DelegationRquestIsSent Event emitted");
                         assert.equal(logs[0].event, "DelegationRequestIsSent");
                         requestId = logs[0].args.requestId;
@@ -127,8 +127,7 @@ contract("Delegation", ([owner,
 
                         beforeEach(async () => {
                             const { logs } = await delegationService.delegate(
-                                validatorId, delegationPeriod, "D2 is even", {from: holder1});
-                            console.log(skaleToken.isLocked(holder1));
+                                validatorId, 1, delegationPeriod, "D2 is even", {from: holder1});
                             assert.equal(logs.length, 1, "No DelegationRequest Event emitted");
                             assert.equal(logs[0].event, "DelegationRequestIsSent");
                             requestId = logs[0].args.requestId;

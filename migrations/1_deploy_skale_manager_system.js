@@ -79,7 +79,7 @@ async function deploy(deployer, network) {
         });
         await deployer.deploy(SchainsFunctionalityInternal, "SchainsFunctionality", "SchainsData", contractManagerInstance.address, {gas: gasLimit * gas_multiplier});
         await contractManagerInstance.setContractsAddress("SchainsFunctionalityInternal", SchainsFunctionalityInternal.address).then(function(res) {
-            console.log("Contract Schains Functionality1 with address", SchainsFunctionalityInternal.address, "registred in Contract Manager");
+            console.log("Contract Schains Functionality Internal with address", SchainsFunctionalityInternal.address, "registred in Contract Manager");
         });
         await deployer.deploy(Decryption, {gas: gasLimit * gas_multiplier});
         await contractManagerInstance.setContractsAddress("Decryption", Decryption.address).then(function(res) {

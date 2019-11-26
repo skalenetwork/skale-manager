@@ -18,7 +18,7 @@ pragma solidity ^0.5.3;
 pragma experimental ABIEncoderV2;
 
 import "../Permissions.sol";
-import "../interfaces/IDelegationRequestManager.sol";
+import "./DelegationRequestManager.sol";
 import "../interfaces/IDelegationPeriodManager.sol";
 import "../BokkyPooBahsDateTimeLibrary.sol";
 
@@ -40,26 +40,28 @@ contract DelegationController is Permissions {
 
     }
 
-    function delegate(uint _requestId) public {
-        IDelegationRequestManager delegationRequestManager = IDelegationRequestManager(
+    function delegate(uint requestId) public {
+        DelegationRequestManager delegationRequestManager = DelegationRequestManager(
             contractManager.contracts(keccak256(abi.encodePacked("DelegationRequestManager")))
         );
         IDelegationPeriodManager delegationPeriodManager = IDelegationPeriodManager(
             contractManager.contracts(keccak256(abi.encodePacked("DelegationPeriodManager")))
         );
-        IDelegationRequestManager.DelegationRequest memory delegationRequest = delegationRequestManager.delegationRequests(_requestId);
         // require(address(0) != delegationRequest.tokenAddress, "Request with such id doesn't exist");
         // require(msg.sender == delegationRequestManager, "Message sender hasn't permissions to invoke delegation");
-        uint endTime = calculateEndTime(delegationRequest.delegationPeriod);
-        uint stakeEffectiveness = delegationPeriodManager.getStakeMultiplier(delegationRequest.delegationPeriod);
+        uint delegationPeriod = delegationRequestManager.getDelegationPeriod(requestId);
+        address tokenAddress = delegationRequestManager.getTokenAddress(requestId);
+        uint validatorId = delegationRequestManager.getValidatorId(requestId);
+        uint endTime = calculateEndTime(delegationPeriod);
+        uint stakeEffectiveness = delegationPeriodManager.getStakeMultiplier(delegationPeriod);
         //Check that validatorAddress is a registered validator
 
         //Call Token.lock(lockTime)
-        delegations[delegationRequest.validatorId][delegationRequest.tokenAddress].push(
+        delegations[validatorId][tokenAddress].push(
             Delegation(stakeEffectiveness, endTime)
         );
         // delegationTotal[validatorAddress] =+ token.value * DelegationPeriodManager.getStakeMultipler(monthCount);
-        isDelegated[delegationRequest.tokenAddress] = true;
+        // isDelegated[delegationRequest.tokenAddress] = true;
     }
 
     function calculateEndTime(uint months) public view returns (uint endTime) {

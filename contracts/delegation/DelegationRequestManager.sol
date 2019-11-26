@@ -21,7 +21,6 @@ import "../Permissions.sol";
 import "../interfaces/IDelegationPeriodManager.sol";
 import "../interfaces/delegation/IValidatorDelegation.sol";
 import "../BokkyPooBahsDateTimeLibrary.sol";
-import "../interfaces/IDelegationRequestManager.sol";
 import "../interfaces/delegation/IDelegatableToken.sol";
 import "./ValidatorDelegation.sol";
 
@@ -31,7 +30,15 @@ interface IDelegationController {
 }
 
 
-contract DelegationRequestManager is Permissions, IDelegationRequestManager {
+contract DelegationRequestManager is Permissions {
+
+    struct DelegationRequest {
+        address tokenAddress;
+        uint validatorId;
+        uint delegationPeriod;
+        uint unlockedUntill;
+        string description;
+    }
 
     DelegationRequest[] public delegationRequests;
     mapping (address => uint[]) public delegationRequestsByTokenAddress;
@@ -57,6 +64,7 @@ contract DelegationRequestManager is Permissions, IDelegationRequestManager {
     function createRequest(
         address tokenAddress,
         uint validatorId,
+        uint tokenAmount,
         uint delegationPeriod,
         string calldata info
     )
@@ -136,5 +144,17 @@ contract DelegationRequestManager is Permissions, IDelegationRequestManager {
             nextYear = year + 1;
         }
         timestamp = BokkyPooBahsDateTimeLibrary.timestampFromDate(nextYear, nextMonth, 1);
+    }
+
+    function getDelegationPeriod(uint requestId) public view returns (uint) {
+        return delegationRequests[requestId].delegationPeriod;
+    }
+
+    function getValidatorId(uint requestId) public view returns (uint) {
+        return delegationRequests[requestId].validatorId;
+    }
+
+    function getTokenAddress(uint requestId) public view returns (address) {
+        return delegationRequests[requestId].tokenAddress;
     }
 }

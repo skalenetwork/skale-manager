@@ -25,8 +25,8 @@ import "../interfaces/delegation/IHolderDelegation.sol";
 import "../interfaces/delegation/IValidatorDelegation.sol";
 import "../interfaces/delegation/internal/IManagerDelegationInternal.sol";
 import "../interfaces/IDelegationPeriodManager.sol";
-import "../interfaces/IDelegationRequestManager.sol";
 import "../BokkyPooBahsDateTimeLibrary.sol";
+import "./DelegationRequestManager.sol";
 import "./ValidatorDelegation.sol";
 import "./DelegationController.sol";
 
@@ -52,7 +52,7 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
 
     /// @notice Allows validator to accept tokens delegated at `requestId`
     function accept(uint requestId) external {
-        IDelegationRequestManager delegationRequestManager = IDelegationRequestManager(
+        DelegationRequestManager delegationRequestManager = DelegationRequestManager(
             contractManager.contracts(keccak256(abi.encodePacked("DelegationRequestManager")))
         );
         delegationRequestManager.acceptRequest(requestId);
@@ -99,17 +99,19 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
     /// @notice Creates request to delegate `amount` of tokens to `validator` from the begining of the next month
     function delegate(
         uint validatorId,
+        uint tokenAmount,
         uint delegationPeriod,
         string calldata info
     )
         external
     {
-        IDelegationRequestManager delegationRequestManager = IDelegationRequestManager(
+        DelegationRequestManager delegationRequestManager = DelegationRequestManager(
             contractManager.contracts(keccak256(abi.encodePacked("DelegationRequestManager")))
         );
         uint requestId = delegationRequestManager.createRequest(
             msg.sender,
             validatorId,
+            tokenAmount,
             delegationPeriod,
             info
         );
@@ -117,7 +119,7 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
     }
 
     function cancelPendingDelegation(uint requestId) external {
-        IDelegationRequestManager delegationRequestManager = IDelegationRequestManager(
+        DelegationRequestManager delegationRequestManager = DelegationRequestManager(
             contractManager.contracts(keccak256(abi.encodePacked("DelegationRequestManager")))
         );
         delegationRequestManager.cancelRequest(requestId);
