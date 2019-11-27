@@ -35,6 +35,7 @@ contract DelegationRequestManager is Permissions {
     struct DelegationRequest {
         address tokenAddress;
         uint validatorId;
+        uint tokenAmount;
         uint delegationPeriod;
         uint unlockedUntill;
         string description;
@@ -81,11 +82,16 @@ contract DelegationRequestManager is Permissions {
             delegationPeriodManager.isDelegationPeriodAllowed(delegationPeriod),
             "This delegation period is not allowed"
         );
+        // check that holder has enough tokens to delegate
+        uint holderBalance = SkaleToken(contractManager.getContract("SkaleToken")).balanceOf(tokenAddress);
+        uint unavailableTokens = DelegationController(contractManager.getContract("DelegationController")).delegated(tokenAddress);
+        require(holderBalance - unavailableTokens >= tokenAMount, "Delegator hasn't enough tokens to delegate");
         require(validatorDelegation.validatorExists(validatorId), "Validator is not registered");
         uint expirationRequest = calculateExpirationRequest();
         delegationRequests.push(DelegationRequest(
             tokenAddress,
             validatorId,
+            tokenAmount,
             delegationPeriod,
             expirationRequest,
             info
@@ -156,5 +162,9 @@ contract DelegationRequestManager is Permissions {
 
     function getTokenAddress(uint requestId) public view returns (address) {
         return delegationRequests[requestId].tokenAddress;
+    }
+
+    function getTokenAmount(uint requestId) public view returns (uint) {
+        return delegationRequests[requestId].tokenAmount;
     }
 }

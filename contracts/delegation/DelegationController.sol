@@ -34,7 +34,7 @@ contract DelegationController is Permissions {
     mapping (uint => mapping (address => Delegation[])) public delegations;
     mapping (address => uint) public effectiveDelegationsTotal;
     mapping (address => uint) public delegationsTotal;
-    mapping (address => bool) public isDelegated;
+    mapping (address => uint) public delegated;
 
     constructor(address newContractsAddress) Permissions(newContractsAddress) public {
 
@@ -52,6 +52,7 @@ contract DelegationController is Permissions {
         uint delegationPeriod = delegationRequestManager.getDelegationPeriod(requestId);
         address tokenAddress = delegationRequestManager.getTokenAddress(requestId);
         uint validatorId = delegationRequestManager.getValidatorId(requestId);
+        uint tokenAmount = delegationRequestManager.getTokenAmount(requestId);
         uint endTime = calculateEndTime(delegationPeriod);
         uint stakeEffectiveness = delegationPeriodManager.getStakeMultiplier(delegationPeriod);
         //Check that validatorAddress is a registered validator
@@ -61,7 +62,7 @@ contract DelegationController is Permissions {
             Delegation(stakeEffectiveness, endTime)
         );
         // delegationTotal[validatorAddress] =+ token.value * DelegationPeriodManager.getStakeMultipler(monthCount);
-        // isDelegated[delegationRequest.tokenAddress] = true;
+        delegated[tokenAddress] += tokenAmount;
     }
 
     function calculateEndTime(uint months) public view returns (uint endTime) {
