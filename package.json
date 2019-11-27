@@ -34,7 +34,7 @@
     "test": "truffle test && yarn tsc",
     "tsc": "tsc --noEmit",
     "tslint": "npx tslint --project .",
-    "slither": "slither . --exclude naming-convention,solc-version,assembly,timestamp,calls-loop,reentrancy-no-eth,constant-function,pragma --filter-path @openzeppelin/contracts/ --truffle-version truffle@latest"
+    "slither": "slither . --exclude naming-convention,solc-version,assembly,timestamp,calls-loop,reentrancy-no-eth,constant-function,pragma --filter-paths @openzeppelin/contracts/,ERC777,thirdparty --truffle-version truffle@latest"
   },
   "dependencies": {
     "@openzeppelin/contracts": "^2.4.0",

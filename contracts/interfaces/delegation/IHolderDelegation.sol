@@ -20,6 +20,8 @@
 pragma solidity ^0.5.3;
 
 interface IHolderDelegation {
+    event DelegationRequestIsSent(uint id);
+
     /// @notice Creates request to delegate `amount` of tokens to `validator` from the begining of the next month
     function delegate(
         uint validatorId,

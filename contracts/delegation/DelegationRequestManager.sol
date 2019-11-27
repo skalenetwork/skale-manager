@@ -82,12 +82,7 @@ contract DelegationRequestManager is Permissions, IDelegationRequestManager {
         delegationRequestsByTokenAddress[tokenAddress].push(requestId);
     }
 
-    function checkValidityRequest(uint _requestId) public view returns (bool) {
-        require(delegationRequests[_requestId].tokenAddress != address(0), "Token address doesn't exist");
-        return delegationRequests[_requestId].unlockedUntill > now ? true : false;
-    }
-
-    function acceptRequest(uint _requestId) public checkValidatorAccess(_requestId) {
+    function acceptRequest(uint _requestId) external checkValidatorAccess(_requestId) {
         IDelegationManager delegationManager = IDelegationManager(
             contractManager.contracts(keccak256(abi.encodePacked("DelegationManager")))
         );
@@ -96,7 +91,7 @@ contract DelegationRequestManager is Permissions, IDelegationRequestManager {
         delegationManager.delegate(_requestId);
     }
 
-    function cancelRequest(uint _requestId) public {
+    function cancelRequest(uint _requestId) external {
         require(_requestId < delegationRequests.length, "Delegation request doesn't exist");
         require(
             msg.sender == delegationRequests[_requestId].tokenAddress,
@@ -109,8 +104,13 @@ contract DelegationRequestManager is Permissions, IDelegationRequestManager {
     //     return delegationRequests;
     // }
 
-    function getDelegationRequestsForValidator(uint validatorId) public returns (DelegationRequest[] memory) {
+    function getDelegationRequestsForValidator(uint validatorId) external returns (DelegationRequest[] memory) {
 
+    }
+
+    function checkValidityRequest(uint _requestId) public view returns (bool) {
+        require(delegationRequests[_requestId].tokenAddress != address(0), "Token address doesn't exist");
+        return delegationRequests[_requestId].unlockedUntill > now ? true : false;
     }
 
     function calculateExpirationRequest() private view returns (uint timestamp) {

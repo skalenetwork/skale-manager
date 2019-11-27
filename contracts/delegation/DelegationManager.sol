@@ -40,7 +40,7 @@ contract DelegationManager is Permissions {
 
     }
 
-    function delegate(uint _requestId) public {
+    function delegate(uint _requestId) external {
         IDelegationRequestManager delegationRequestManager = IDelegationRequestManager(
             contractManager.contracts(keccak256(abi.encodePacked("DelegationRequestManager")))
         );
@@ -60,6 +60,12 @@ contract DelegationManager is Permissions {
         isDelegated[delegationRequest.tokenAddress] = true;
     }
 
+    function unDelegate(uint validatorId) external view {
+        require(delegations[validatorId].tokenAddress != address(0), "Token with such address wasn't delegated");
+        // Call Token.unlock(lockTime)
+        // update isDelegated
+    }
+
     function calculateEndTime(uint months) public view returns (uint endTime) {
         uint year;
         uint month;
@@ -75,11 +81,5 @@ contract DelegationManager is Permissions {
         }
         uint timestamp = BokkyPooBahsDateTimeLibrary.timestampFromDate(nextYear, nextMonth, 1);
         endTime = BokkyPooBahsDateTimeLibrary.addMonths(timestamp, months);
-    }
-
-    function unDelegate(uint validatorId) public view {
-        require(delegations[validatorId].tokenAddress != address(0), "Token with such address wasn't delegated");
-        // Call Token.unlock(lockTime)
-        // update isDelegated
     }
 }

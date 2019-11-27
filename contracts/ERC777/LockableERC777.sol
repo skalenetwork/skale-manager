@@ -21,10 +21,6 @@ contract LockableERC777 is IERC777, IERC20 {
 
     mapping(address => uint256) private _balances;
 
-// Property of the company SKALE Labs inc.--
-    mapping(address => bool) internal _locks;
-//------------------------------------------
-
     uint256 private _totalSupply;
 
     string private _name;
@@ -431,7 +427,8 @@ contract LockableERC777 is IERC777, IERC20 {
         private
     {
 // Property of the company SKALE Labs inc.---------------------------------
-        require(!_locks[from], "Token should be unlocked for transfering");
+        // require(!_locks[from], "Token should be unlocked for transfering");
+        revert("Lock check is not implemented");
 //-------------------------------------------------------------------------
         _balances[from] = _balances[from].sub(amount);
         _balances[to] = _balances[to].add(amount);

@@ -20,7 +20,6 @@
 pragma solidity ^0.5.3;
 
 interface IDelegatableToken {
-    event DelegationRequestIsSent(uint id);
 
     function isLocked(address wallet) external returns (bool);
 

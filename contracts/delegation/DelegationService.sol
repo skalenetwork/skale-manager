@@ -103,7 +103,8 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
         IDelegationRequestManager delegationRequestManager = IDelegationRequestManager(
             contractManager.contracts(keccak256(abi.encodePacked("DelegationRequestManager")))
         );
-        delegationRequestManager.createRequest(validatorId, delegationPeriod, info);
+        uint requestId = delegationRequestManager.createRequest(validatorId, delegationPeriod, info);
+        emit DelegationRequestIsSent(requestId);
     }
 
     function cancelPendingDelegation(uint requestId) external {
@@ -124,7 +125,7 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
     /// @notice Register new as validator
     function registerValidator(string calldata name, string calldata description, uint feeRate) external returns (uint validatorId) {
         ValidatorDelegation validatorDelegation = ValidatorDelegation(contractManager.getContract("ValidatorDelegation"));
-        validatorDelegation.registerValidator(name, description, feeRate);
+        validatorId = validatorDelegation.registerValidator(name, description, feeRate);
     }
 
     function unregisterValidator(uint validatorId) external {

@@ -34,22 +34,24 @@ contract ValidatorDelegation {
     mapping (address => uint) public validatorAddressToId;
 
     function registerValidator(
-        string memory name,
-        string memory description,
+        string calldata name,
+        string calldata description,
         uint validatorFeeShare
     )
-        public returns (uint)
+        external returns (uint newValidatorId)
     {
-        validators[validatorId++] = Validator(
+        newValidatorId = validatorId++;
+        validators[newValidatorId] = Validator(
             msg.sender,
             name,
             description,
             validatorFeeShare,
             0
         );
+        validatorAddressToId[msg.sender] = newValidatorId;
     }
 
-    function checkValidatorAddressToId(address validatorAddress, uint validatorID) public view returns (bool) {
+    function checkValidatorAddressToId(address validatorAddress, uint validatorID) external view returns (bool) {
         return validatorAddressToId[validatorAddress] == validatorID ? true : false;
     }
 }

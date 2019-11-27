@@ -20,7 +20,7 @@ contract TokenSaleManager is ITokenSaleManager, Permissions, IERC777Recipient {
     mapping (address => uint) approved;
     uint totalApproved;
 
-    constructor(address contractManager) Permissions(contractManager) public {
+    constructor(address _contractManager) Permissions(_contractManager) public {
         _erc1820.setInterfaceImplementer(address(this), keccak256("ERC777TokensRecipient"), address(this));
     }
 
@@ -40,7 +40,7 @@ contract TokenSaleManager is ITokenSaleManager, Permissions, IERC777Recipient {
         require(approved[_msgSender()] > 0, "Transfer is not approved");
         uint value = approved[_msgSender()];
         approved[_msgSender()] = 0;
-        IERC20(contractManager.getContract("SkaleToken")).transfer(_msgSender(), value);
+        require(IERC20(contractManager.getContract("SkaleToken")).transfer(_msgSender(), value), "Error of token sending");
         DelegationService(contractManager.getContract("DelegationService")).lock(_msgSender());
     }
 
