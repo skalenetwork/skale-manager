@@ -19,6 +19,7 @@
 
 pragma solidity ^0.5.3;
 
+
 interface IDelegatableTokenInternal {
 
     /// @notice move `amount` of tokens to SkaleManager

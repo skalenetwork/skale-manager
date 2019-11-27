@@ -17,9 +17,9 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity ^0.5.0;
+pragma solidity ^0.5.3;
 
-import "./Ownable.sol";
+import "@openzeppelin/contracts/ownership/Ownable.sol";
 
 
 /**
@@ -55,5 +55,10 @@ contract ContractManager is Ownable {
         // add newContractsAddress to mapping of actual contract addresses
         contracts[contractId] = newContractsAddress;
         emit ContractUpgraded(contractsName, newContractsAddress);
+    }
+
+    function getContract(string calldata name) external returns (address contractAddress) {
+        contractAddress = contracts[keccak256(abi.encodePacked(name))];
+        require(contractAddress != address(0), "Contract has not been found");
     }
 }

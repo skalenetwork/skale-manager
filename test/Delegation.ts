@@ -1,16 +1,22 @@
 import { ContractManagerContract,
-    ContractManagerInstance,
-    DelegationPeriodManagerContract,
-    DelegationPeriodManagerInstance,
-    DelegationServiceContract,
-    DelegationServiceInstance,
-    SkaleTokenContract,
-    SkaleTokenInstance } from "../types/truffle-contracts";
+         ContractManagerInstance,
+         DelegationManagerContract,
+         DelegationManagerInstance,
+         DelegationPeriodManagerContract,
+         DelegationPeriodManagerInstance,
+         DelegationServiceContract,
+         DelegationServiceInstance,
+         SkaleTokenContract,
+         SkaleTokenInstance,
+         ValidatorDelegationContract,
+         ValidatorDelegationInstance} from "../types/truffle-contracts";
 
 const ContractManager: ContractManagerContract = artifacts.require("./ContractManager");
 const SkaleToken: SkaleTokenContract = artifacts.require("./SkaleToken");
 const DelegationService: DelegationServiceContract = artifacts.require("./DelegationService");
 const DelegationPeriodManager: DelegationPeriodManagerContract = artifacts.require("./DelegationPeriodManager");
+const ValidatorDelegation: ValidatorDelegationContract = artifacts.require("./delegation/ValidatorDelegation");
+const DelegationManager: DelegationManagerContract = artifacts.require("./delegation/DelegationManager");
 
 import { currentTime, months, skipTime, skipTimeToDate } from "./utils/time";
 
@@ -31,13 +37,21 @@ contract("SkaleToken", ([owner,
     let skaleToken: SkaleTokenInstance;
     let delegationService: DelegationServiceInstance;
     let delegationPeriodManager: DelegationPeriodManagerInstance;
+    let validatorDelegation: ValidatorDelegationInstance;
+    let delegationManager: DelegationManagerInstance;
     const defaultAmount = 100 * 1e18;
 
     beforeEach(async () => {
         contractManager = await ContractManager.new();
         skaleToken = await SkaleToken.new(contractManager.address, []);
-        delegationService = await DelegationService.new();
+        await contractManager.setContractsAddress("SkaleToken", skaleToken.address);
+        delegationService = await DelegationService.new(contractManager.address);
+        await contractManager.setContractsAddress("DelegationService", delegationService.address);
         delegationPeriodManager = await DelegationPeriodManager.new(contractManager.address);
+        validatorDelegation = await ValidatorDelegation.new();
+        await contractManager.setContractsAddress("ValidatorDelegation", validatorDelegation.address);
+        delegationManager = await DelegationManager.new(contractManager.address);
+        await contractManager.setContractsAddress("DelegationManager", delegationManager.address);
 
         // each test will start from Nov 10
         await skipTimeToDate(web3, 10, 11);
@@ -156,7 +170,7 @@ contract("SkaleToken", ([owner,
         }
 
         it("should not allow holder to delegate to unregistered validator", async () => {
-            await delegationService.delegate(validator, 3, "D2 is even", {from: holder1})
+            await delegationService.delegate(13, 3, "D2 is even", {from: holder1})
                 .should.be.eventually.rejectedWith("Validator is not registered");
         });
 
@@ -203,7 +217,7 @@ contract("SkaleToken", ([owner,
 
                 const validatorIds = await delegationService.getValidators.call();
                 validatorIds.should.be.deep.equal([0]);
-                const validatorId = validatorIds[0];
+                const validatorId = validatorIds[0].toNumber();
 
                 let responce = await delegationService.delegate(
                     validatorId, 6, "First holder", {from: holder1});

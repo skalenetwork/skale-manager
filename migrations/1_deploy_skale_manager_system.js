@@ -27,6 +27,9 @@ let SkaleVerifier = artifacts.require('./SkaleVerifier.sol');
 let Decryption = artifacts.require('./Decryption.sol');
 let ECDH = artifacts.require('./ECDH.sol');
 let Pricing = artifacts.require('./Pricing.sol');
+let SkaleBalances = artifacts.require('./SkaleBalances.sol');
+let DelegationService = artifacts.require('./DelegationService.sol');
+let DelegationRequestManager = artifacts.require('./DelegationRequestManager.sol');
 
 let gasLimit = 6900000;
 
@@ -102,8 +105,21 @@ async function deploy(deployer, network) {
         await deployer.deploy(Pricing, contractManagerInstance.address, {gas: gasLimit * gas_multiplier});
         await contractManagerInstance.setContractsAddress("Pricing", Pricing.address).then(function(res) {
             console.log("Contract Pricing with address", Pricing.address, "registred in Contract Manager");
+        });
+        await deployer.deploy(SkaleBalances, contractManagerInstance.address, {gas: gasLimit * gas_multiplier});
+        await contractManagerInstance.setContractsAddress("SkaleBalances", SkaleBalances.address).then(function(res) {
+            console.log("Contract SkaleBalances with address", SkaleBalances.address, "registred in Contract Manager");
+        });
+        await deployer.deploy(DelegationService, contractManagerInstance.address, {gas: gasLimit * gas_multiplier});
+        await contractManagerInstance.setContractsAddress("DelegationService", DelegationService.address).then(function(res) {
+            console.log("Contract DelegationService with address", DelegationService.address, "registred in Contract Manager");
+        });
+        await deployer.deploy(DelegationRequestManager, contractManagerInstance.address, {gas: gasLimit * gas_multiplier});
+        await contractManagerInstance.setContractsAddress("DelegationRequestManager", DelegationRequestManager.address).then(function(res) {
+            console.log("Contract DelegationRequestManager with address", DelegationRequestManager.address, "registred in Contract Manager");
             console.log();
         });
+
     
         //
         console.log('Deploy done, writing results...');
@@ -137,7 +153,13 @@ async function deploy(deployer, network) {
             contract_manager_address: ContractManager.address,
             contract_manager_abi: ContractManager.abi,
             pricing_address: Pricing.address,
-            pricing_abi: Pricing.abi
+            pricing_abi: Pricing.abi,
+            skale_balances_address: SkaleBalances.address,
+            skale_balances_abi: SkaleBalances.abi,
+            delegation_service_address: DelegationService.address,
+            delegation_service_abi: DelegationService.abi,
+            delegation_request_manager_address: DelegationRequestManager.address,
+            delegation_request_manager_abi: DelegationRequestManager.abi
         };
 
         await fsPromises.writeFile(`data/${network}.json`, JSON.stringify(jsonObject));
@@ -150,26 +172,6 @@ async function deploy(deployer, network) {
 
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-async function sendTransaction(web3Inst, account, privateKey, receiverContract) {
-    await web3Inst.eth.getTransactionCount(account).then(nonce => {
-        const rawTx = {
-            from: account,
-            nonce: "0x" + nonce.toString(16),
-            to: receiverContract,
-            gasPrice: 1000000000,
-            gas: 8000000,
-            value: "0xDE0B6B3A7640000"
-        };
-
-        const tx = new Tx(rawTx);
-        tx.sign(privateKey);
-        const serializedTx = tx.serialize();
-        web3Inst.eth.sendSignedTransaction('0x' + serializedTx.toString('hex')).on('receipt', receipt => {
-            console.log(receipt);
-        });
-    });
 }
 
 module.exports = deploy;

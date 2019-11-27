@@ -17,7 +17,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity ^0.5.0;
+pragma solidity ^0.5.3;
 
 import "./Permissions.sol";
 import "./interfaces/INodesData.sol";
@@ -27,6 +27,7 @@ import "./interfaces/INodesFunctionality.sol";
 import "./interfaces/IValidatorsFunctionality.sol";
 import "./interfaces/ISchainsFunctionality.sol";
 import "./interfaces/IManagerData.sol";
+import "./interfaces/ISkaleBalances.sol";
 import "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
 import "@openzeppelin/contracts/introspection/IERC1820Registry.sol";
 
@@ -193,50 +194,44 @@ contract SkaleManager is IERC777Recipient, Permissions {
         address nodesDataAddress) internal returns (uint)
     {
         uint commonBounty;
-        address constantsAddress = contractManager.contracts(keccak256(abi.encodePacked("Constants")));
-        uint diffTime = INodesData(nodesDataAddress).getNodeLastRewardDate(nodeIndex) +
-            IConstants(constantsAddress).rewardPeriod() +
-            IConstants(constantsAddress).deltaPeriod();
-        address managerDataAddress = contractManager.contracts(keccak256(abi.encodePacked("ManagerData")));
-        address skaleTokenAddress = contractManager.contracts(keccak256(abi.encodePacked("SkaleToken")));
-        if (IManagerData(managerDataAddress).minersCap() == 0) {
-            IManagerData(managerDataAddress).setMinersCap(ISkaleToken(skaleTokenAddress).CAP() / 3);
+        IConstants constants = IConstants(contractManager.contracts(keccak256(abi.encodePacked("Constants"))));
+        IManagerData managerData = IManagerData(contractManager.contracts(keccak256(abi.encodePacked("ManagerData"))));
+        ISkaleBalances skaleBalances = ISkaleBalances(contractManager.contracts(keccak256(abi.encodePacked("SkaleBalances"))));
+        INodesData nodesData = INodesData(contractManager.contracts(keccak256(abi.encodePacked("NodesData"))));
+
+        uint diffTime = nodesData.getNodeLastRewardDate(nodeIndex) +
+            constants.rewardPeriod() +
+            constants.deltaPeriod();
+        if (managerData.minersCap() == 0) {
+            managerData.setMinersCap(ISkaleToken(contractManager.contracts(keccak256(abi.encodePacked("SkaleToken")))).CAP() / 3);
         }
-        if (IManagerData(managerDataAddress).stageTime() + IConstants(constantsAddress).rewardPeriod() < now) {
-            IManagerData(managerDataAddress).setStageTimeAndStageNodes(INodesData(nodesDataAddress).numberOfActiveNodes() + INodesData(nodesDataAddress).numberOfLeavingNodes());
+        if (managerData.stageTime() + constants.rewardPeriod() < now) {
+            managerData.setStageTimeAndStageNodes(nodesData.numberOfActiveNodes() + nodesData.numberOfLeavingNodes());
         }
-        commonBounty = IManagerData(managerDataAddress).minersCap() /
-            ((2 ** (((now - IManagerData(managerDataAddress).startTime()) /
-            IConstants(constantsAddress).SIX_YEARS()) + 1)) *
-            (IConstants(constantsAddress).SIX_YEARS() /
-            IConstants(constantsAddress).rewardPeriod()) *
-            IManagerData(managerDataAddress).stageNodes());
+        commonBounty = managerData.minersCap() /
+            ((2 ** (((now - managerData.startTime()) /
+            constants.SIX_YEARS()) + 1)) *
+            (constants.SIX_YEARS() /
+            constants.rewardPeriod()) *
+            managerData.stageNodes());
         if (now > diffTime) {
             diffTime = now - diffTime;
         } else {
             diffTime = 0;
         }
-        diffTime /= IConstants(constantsAddress).checkTime();
+        diffTime /= constants.checkTime();
         int bountyForMiner = int(commonBounty);
-        uint normalDowntime = ((IConstants(constantsAddress).rewardPeriod() - IConstants(constantsAddress).deltaPeriod()) /
-            IConstants(constantsAddress).checkTime()) / 30;
+        uint normalDowntime = ((constants.rewardPeriod() - constants.deltaPeriod()) /
+            constants.checkTime()) / 30;
         if (downtime + diffTime > normalDowntime) {
-            bountyForMiner -= int(((downtime + diffTime) * commonBounty) / (IConstants(constantsAddress).SECONDS_TO_DAY() / 4));
+            bountyForMiner -= int(((downtime + diffTime) * commonBounty) / (constants.SECONDS_TO_DAY() / 4));
         }
 
         if (bountyForMiner > 0) {
-            if (latency > IConstants(constantsAddress).allowableLatency()) {
-                bountyForMiner = (IConstants(constantsAddress).allowableLatency() * bountyForMiner) / latency;
+            if (latency > constants.allowableLatency()) {
+                bountyForMiner = (constants.allowableLatency() * bountyForMiner) / latency;
             }
-            require(
-                ISkaleToken(skaleTokenAddress).mint(
-                    address(0),
-                    from,
-                    uint(bountyForMiner),
-                    bytes(""),
-                    bytes("")
-                ), "Minting of token is failed"
-            );
+            skaleBalances.stashBalance(from, uint(bountyForMiner));
         } else {
             //Need to add penalty
             bountyForMiner = 0;

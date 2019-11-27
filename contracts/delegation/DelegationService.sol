@@ -20,19 +20,33 @@
 pragma solidity ^0.5.3;
 pragma experimental ABIEncoderV2;
 
-import "./interfaces/delegation/IHolderDelegation.sol";
-import "./interfaces/delegation/IValidatorDelegation.sol";
-import "./interfaces/delegation/internal/IManagerDelegationInternal.sol";
+import "../Permissions.sol";
+import "../interfaces/delegation/IHolderDelegation.sol";
+import "../interfaces/delegation/IValidatorDelegation.sol";
+import "../interfaces/delegation/internal/IManagerDelegationInternal.sol";
+import "../interfaces/IDelegationPeriodManager.sol";
+import "../interfaces/IDelegationRequestManager.sol";
+import "./ValidatorDelegation.sol";
+import "./DelegationManager.sol";
 
 
-contract DelegationService is IHolderDelegation, IValidatorDelegation, IManagerDelegationInternal {
+contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegation, IManagerDelegationInternal {
+    mapping (address => bool) private _locked;
+
+    constructor(address newContractsAddress) Permissions(newContractsAddress) public {
+
+    }
+
     function requestUndelegation() external {
         revert("Not implemented");
     }
 
     /// @notice Allows validator to accept tokens delegated at `requestId`
     function accept(uint requestId) external {
-        revert("Not implemented");
+        IDelegationRequestManager delegationRequestManager = IDelegationRequestManager(
+            contractManager.contracts(keccak256(abi.encodePacked("DelegationRequestManager")))
+        );
+        delegationRequestManager.acceptRequest(requestId);
     }
 
     /// @notice Adds node to SKALE network
@@ -82,14 +96,22 @@ contract DelegationService is IHolderDelegation, IValidatorDelegation, IManagerD
     function delegate(
         uint validatorId,
         uint delegationPeriod,
-        string calldata info)
-    external returns(uint requestId)
+        string calldata info
+    )
+        external
     {
-        revert("Not implemented");
+        IDelegationRequestManager delegationRequestManager = IDelegationRequestManager(
+            contractManager.contracts(keccak256(abi.encodePacked("DelegationRequestManager")))
+        );
+        uint requestId = delegationRequestManager.createRequest(validatorId, delegationPeriod, info);
+        emit DelegationRequestIsSent(requestId);
     }
 
     function cancelPendingDelegation(uint requestId) external {
-        revert("Not implemented");
+        IDelegationRequestManager delegationRequestManager = IDelegationRequestManager(
+            contractManager.contracts(keccak256(abi.encodePacked("DelegationRequestManager")))
+        );
+        delegationRequestManager.cancelRequest(requestId);
     }
 
     function getAllDelegationRequests() external returns(uint[] memory) {
@@ -102,7 +124,8 @@ contract DelegationService is IHolderDelegation, IValidatorDelegation, IManagerD
 
     /// @notice Register new as validator
     function registerValidator(string calldata name, string calldata description, uint feeRate) external returns (uint validatorId) {
-        // revert("Not implemented");
+        ValidatorDelegation validatorDelegation = ValidatorDelegation(contractManager.getContract("ValidatorDelegation"));
+        validatorId = validatorDelegation.registerValidator(name, description, feeRate);
     }
 
     function unregisterValidator(uint validatorId) external {
@@ -145,5 +168,23 @@ contract DelegationService is IHolderDelegation, IValidatorDelegation, IManagerD
     /// @notice removes node from system
     function deleteNode(uint nodeIndex) external {
         revert("Not implemented");
+    }
+
+    /// @notice Makes all tokens of target account unavailable to move
+    function lock(address wallet) external {
+        _locked[wallet] = true;
+    }
+
+    /// @notice Makes all tokens of target account available to move
+    function unlock(address target) external {
+        revert("Not implemented");
+    }
+
+    function isLocked(address wallet) external returns (bool) {
+        return isDelegated(wallet) || _locked[wallet];
+    }
+
+    function isDelegated(address wallet) public returns (bool) {
+        return DelegationManager(contractManager.getContract("DelegationManager")).isDelegated(wallet);
     }
 }

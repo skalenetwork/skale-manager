@@ -14,19 +14,20 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity ^0.5.0;
+pragma solidity ^0.5.3;
 
 
-import "@openzeppelin/contracts/token/ERC777/ERC777.sol";
+import "./ERC777/LockableERC777.sol";
 import "./Permissions.sol";
 import "./interfaces/delegation/IDelegatableToken.sol";
+import "./delegation/DelegationService.sol";
 
 
 /**
  * @title SkaleToken is ERC777 Token implementation, also this contract in skale
  * manager system
  */
-contract SkaleToken is ERC777, Permissions, IDelegatableToken {
+contract SkaleToken is LockableERC777, Permissions, IDelegatableToken {
 
     string public constant NAME = "SKALE";
 
@@ -36,7 +37,10 @@ contract SkaleToken is ERC777, Permissions, IDelegatableToken {
 
     uint public constant CAP = 5 * 1e9 * (10 ** DECIMALS); // the maximum amount of tokens that can ever be created
 
-    constructor(address contractsAddress, address[] memory defOps) Permissions(contractsAddress) ERC777("SKALE", "SKL", defOps) public {
+    constructor(address contractsAddress, address[] memory defOps)
+    Permissions(contractsAddress)
+    LockableERC777("SKALE", "SKL", defOps) public
+    {
         uint money = 1e7 * 10 ** DECIMALS;
         _mint(
             address(0),
@@ -80,18 +84,16 @@ contract SkaleToken is ERC777, Permissions, IDelegatableToken {
         return true;
     }
 
-    /// @notice Makes all tokens of target account unavailable to move
-    function lock(address target) external {
-        revert("Not implemented");
-    }
-
-    /// @notice Makes all tokens of target account available to move
-    function unlock(address target) external {
-        revert("Not implemented");
-    }
-
     /// @notice move `amount` of tokens to SkaleManager
     function slash(address target, uint amount) external {
         revert("Not implemented");
+    }
+
+    function isLocked(address wallet) external returns (bool) {
+        return DelegationService(contractManager.getContract("DelegationService")).isLocked(wallet);
+    }
+
+    function isDelegated(address wallet) external returns (bool) {
+        return DelegationService(contractManager.getContract("DelegationService")).isDelegated(wallet);
     }
 }

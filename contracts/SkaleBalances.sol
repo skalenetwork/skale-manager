@@ -17,7 +17,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity ^0.5.0;
+pragma solidity ^0.5.3;
 
 import "./Permissions.sol";
 import "./SkaleManager.sol";
@@ -31,7 +31,7 @@ contract SkaleBalances is Permissions {
 
     }
 
-    function rechargeBalance(address recipient, uint bountyForMiner) public allow("SkaleManager") {
+    function stashBalance(address recipient, uint bountyForMiner) external allow("SkaleManager") {
         address skaleTokenAddress = contractManager.contracts(keccak256(abi.encodePacked("SkaleToken")));
         bountyBalances[recipient] += bountyForMiner;
         require(
@@ -45,7 +45,7 @@ contract SkaleBalances is Permissions {
         );
     }
 
-    function withdrawBalance(uint amountOfTokens) public {
+    function withdrawBalance(uint amountOfTokens) external {
         require(bountyBalances[msg.sender] >= amountOfTokens, "Now enough tokens on balance for withdrawing");
         bountyBalances[msg.sender] -= amountOfTokens;
         // send(msg.sender, amountOfTokens, "");
