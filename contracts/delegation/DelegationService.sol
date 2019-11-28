@@ -185,7 +185,7 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
     }
 
     function getDelegatedOf(address wallet) public returns (bool) {
-        revert("isDelegatedOf is not implemented")
+        revert("isDelegatedOf is not implemented");
         // return DelegationManager(contractManager.getContract("DelegationManager")).isDelegated(wallet);
     }
 }
