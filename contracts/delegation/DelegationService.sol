@@ -23,14 +23,13 @@ pragma experimental ABIEncoderV2;
 import "../Permissions.sol";
 import "../interfaces/delegation/IHolderDelegation.sol";
 import "../interfaces/delegation/IValidatorDelegation.sol";
-import "../interfaces/delegation/internal/IManagerDelegationInternal.sol";
 import "../interfaces/IDelegationPeriodManager.sol";
 import "../interfaces/IDelegationRequestManager.sol";
 import "./ValidatorDelegation.sol";
 import "./DelegationManager.sol";
 
 
-contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegation, IManagerDelegationInternal {
+contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegation {
     mapping (address => bool) private _locked;
 
     constructor(address newContractsAddress) Permissions(newContractsAddress) public {
@@ -171,8 +170,8 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
     }
 
     /// @notice Makes all tokens of target account unavailable to move
-    function lock(address wallet) external {
-        _locked[wallet] = true;
+    function lock(address wallet, uint amount) external {
+        revert("Lock is not implemented");
     }
 
     /// @notice Makes all tokens of target account available to move

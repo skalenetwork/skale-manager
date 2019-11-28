@@ -8,15 +8,6 @@ interface ITokenSaleManager {
     /// @notice Transfers the entire value to sender address. Tokens are locked.
     function retrieve() external;
 
-    /// @notice Transfers `delegationValue` of tokens to `delegationWalletAddress`
-    /// and creates delegation request for `delegationPeriod` with `description`
-    function delegateSaleToken(
-        address delegationWalletAddress,
-        uint delegationValue,
-        uint validatorId,
-        uint delegationPeriod,
-        string calldata info) external;
-
     /// @notice Allows seller address to approve tokens transfers
     function registerSeller(address seller) external;
 }
