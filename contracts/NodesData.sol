@@ -550,19 +550,10 @@ contract NodesData is INodesData, Permissions {
     // }
 
     /**
-     * @dev isNodeActive - checks if Node status Active
-     * @param nodeIndex - index of Node
-     * @return if Node status Active - true, else - false
-     */
-    function isNodeActive(uint nodeIndex) public view returns (bool) {
-        return nodes[nodeIndex].status == NodeStatus.Active;
-    }
-
-    /**
      * @dev getActiveNodeIds - get array of indexes of Active Nodes
      * @return activeNodeIds - array of indexes of Active Nodes
      */
-    function getActiveNodeIds() public view returns (uint[] memory activeNodeIds) {
+    function getActiveNodeIds() external view returns (uint[] memory activeNodeIds) {
         activeNodeIds = new uint[](numberOfActiveNodes);
         uint indexOfActiveNodeIds = 0;
         for (uint indexOfNodes = 0; indexOfNodes < nodes.length; indexOfNodes++) {
@@ -571,6 +562,15 @@ contract NodesData is INodesData, Permissions {
                 indexOfActiveNodeIds++;
             }
         }
+    }
+
+    /**
+     * @dev isNodeActive - checks if Node status Active
+     * @param nodeIndex - index of Node
+     * @return if Node status Active - true, else - false
+     */
+    function isNodeActive(uint nodeIndex) public view returns (bool) {
+        return nodes[nodeIndex].status == NodeStatus.Active;
     }
 
     function moveNodeToNewSpaceMap(uint nodeIndex, uint8 newSpace) internal {
