@@ -179,11 +179,13 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
         revert("Not implemented");
     }
 
-    function isLocked(address wallet) external returns (bool) {
-        return isDelegated(wallet) || _locked[wallet];
+    function getLockedOf(address wallet) external returns (bool) {
+        revert("getLockedOf is not implemented");
+        // return isDelegated(wallet) || _locked[wallet];
     }
 
-    function isDelegated(address wallet) public returns (bool) {
-        return DelegationManager(contractManager.getContract("DelegationManager")).isDelegated(wallet);
+    function getDelegatedOf(address wallet) public returns (bool) {
+        revert("isDelegatedOf is not implemented")
+        // return DelegationManager(contractManager.getContract("DelegationManager")).isDelegated(wallet);
     }
 }
