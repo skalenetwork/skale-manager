@@ -570,11 +570,11 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
             });
         });
 
-        describe("when 50 nodes are in the system", async () => {
+        describe("when 32 nodes are in the system", async () => {
             beforeEach(async () => {
                 skaleToken.transfer(validator, "0x32D26D12E980B600000", {from: owner});
 
-                for (let i = 0; i < 50; ++i) {
+                for (let i = 0; i < 32; ++i) {
                     await skaleToken.send(
                         skaleManager.address,
                         "0x56bc75e2d63100000",
@@ -660,13 +660,13 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
                 });
             });
         });
-        describe("when 150 nodes are in the system", async () => {
+        describe("when 16 nodes are in the system", async () => {
 
-            it("should create 150 nodes & create & delete all types of schain", async () => {
+            it("should create 16 nodes & create & delete all types of schain", async () => {
 
                 skaleToken.transfer(validator, "0x32D26D12E980B600000", {from: owner});
 
-                for (let i = 0; i < 150; ++i) {
+                for (let i = 0; i < 16; ++i) {
                     await skaleToken.send(
                         skaleManager.address,
                         "0x56bc75e2d63100000",

@@ -274,6 +274,7 @@ contract("SkaleDKG", ([validator1, validator2]) => {
             beforeEach(async () => {
                 const deposit = await schainsFunctionality.getSchainPrice(4, 5);
 
+                console.log(await nodesData.getNodesWithFreeSpace(0));
                 await schainsFunctionality.addSchain(
                     validator1,
                     deposit,
@@ -286,8 +287,10 @@ contract("SkaleDKG", ([validator1, validator2]) => {
 
                 let nodes = await schainsData.getNodesInGroup(web3.utils.soliditySha3("d2"));
                 schainName = "d2";
+                console.log(nodes);
                 while ((new BigNumber(nodes[0])).toFixed() === "1") {
                     await schainsFunctionality.deleteSchainByRoot(schainName, {from: validator1});
+                    console.log(await nodesData.getNodesWithFreeSpace(0));
                     await schainsFunctionality.addSchain(
                         validator1,
                         deposit,
@@ -298,6 +301,7 @@ contract("SkaleDKG", ([validator1, validator2]) => {
                         "6432",
                         {from: validator1});
                     nodes = await schainsData.getNodesInGroup(web3.utils.soliditySha3(schainName));
+                    console.log(nodes);
                 }
             });
 

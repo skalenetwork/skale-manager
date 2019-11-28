@@ -33,7 +33,7 @@ contract SchainsData is ISchainsData, GroupsData {
         string name;
         address owner;
         uint indexInOwnerList;
-        uint partOfNode;
+        uint8 partOfNode;
         uint lifetime;
         uint32 startDate;
         uint deposit;
@@ -131,7 +131,7 @@ contract SchainsData is ISchainsData, GroupsData {
      * @param schainId - hash by Schain name
      * @param partOfNode - occupied space
      */
-    function setSchainPartOfNode(bytes32 schainId, uint partOfNode) external allow(executorName) {
+    function setSchainPartOfNode(bytes32 schainId, uint8 partOfNode) external allow(executorName) {
         schains[schainId].partOfNode = partOfNode;
         if (partOfNode > 0) {
             sumOfSchainsResources += (128 / partOfNode) * groups[schainId].nodesInGroup.length;
@@ -218,7 +218,7 @@ contract SchainsData is ISchainsData, GroupsData {
      * @param schainId - hash by Schain name
      * @return occupied space
      */
-    function getSchainsPartOfNode(bytes32 schainId) external view returns (uint) {
+    function getSchainsPartOfNode(bytes32 schainId) external view returns (uint8) {
         return schains[schainId].partOfNode;
     }
 
