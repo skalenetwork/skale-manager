@@ -140,6 +140,12 @@ contract SkaleDKG is Permissions {
         correctNode(groupIndex, nodeIndex)
     {
         require(isNodeByMessageSender(nodeIndex, msg.sender), "Node does not exist for message sender");
+        isBroadcast(
+            groupIndex,
+            nodeIndex,
+            secretKeyContribution,
+            verificationVector
+        );
         bytes32 vector;
         bytes32 vector1;
         bytes32 vector2;
