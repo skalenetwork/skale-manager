@@ -259,7 +259,7 @@ contract("Delegation", ([owner,
 
         //         const validatorIds = await delegationService.getValidators.call();
         //         validatorIds.should.be.deep.equal([0]);
-        //         const validatorId = validatorIds[0];
+        //         const validatorId = validatorIds[0].toNumber();
 
                 // let responce = await delegationService.delegate(
                 //     validatorId, 6, "First holder", {from: holder1});

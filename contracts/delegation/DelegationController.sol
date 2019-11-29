@@ -20,7 +20,7 @@ pragma experimental ABIEncoderV2;
 import "../Permissions.sol";
 import "./DelegationRequestManager.sol";
 import "../interfaces/IDelegationPeriodManager.sol";
-import "../BokkyPooBahsDateTimeLibrary.sol";
+import "../thirdparty/BokkyPooBahsDateTimeLibrary.sol";
 
 
 contract DelegationController is Permissions {
@@ -63,6 +63,12 @@ contract DelegationController is Permissions {
         );
         // delegationTotal[validatorAddress] =+ token.value * DelegationPeriodManager.getStakeMultipler(monthCount);
         delegated[tokenAddress] += tokenAmount;
+    }
+
+    function unDelegate(uint validatorId) external view {
+        require(delegations[validatorId].tokenAddress != address(0), "Token with such address wasn't delegated");
+        // Call Token.unlock(lockTime)
+        // update isDelegated
     }
 
     function calculateEndTime(uint months) public view returns (uint endTime) {

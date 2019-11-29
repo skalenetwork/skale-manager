@@ -20,8 +20,8 @@ pragma experimental ABIEncoderV2;
 import "../Permissions.sol";
 import "../interfaces/IDelegationPeriodManager.sol";
 import "../interfaces/delegation/IValidatorDelegation.sol";
-import "../BokkyPooBahsDateTimeLibrary.sol";
 import "../interfaces/delegation/IDelegatableToken.sol";
+import "../thirdparty/BokkyPooBahsDateTimeLibrary.sol";
 import "./ValidatorDelegation.sol";
 
 
@@ -119,7 +119,7 @@ contract DelegationRequestManager is Permissions {
         delegationController.delegate(_requestId);
     }
 
-    function cancelRequest(uint _requestId) public {
+    function cancelRequest(uint _requestId) external {
         require(_requestId < delegationRequests.length, "Delegation request doesn't exist");
         require(
             msg.sender == delegationRequests[_requestId].tokenAddress,
@@ -132,8 +132,8 @@ contract DelegationRequestManager is Permissions {
     //     return delegationRequests;
     // }
 
-    function getDelegationRequestsForValidator(uint validatorId) public returns (DelegationRequest[] memory) {
-        
+    function getDelegationRequestsForValidator(uint validatorId) external returns (DelegationRequest[] memory) {
+
     }
 
     function calculateExpirationRequest() private view returns (uint timestamp) {

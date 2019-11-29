@@ -6,21 +6,21 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
 import "@openzeppelin/contracts/introspection/IERC1820Registry.sol";
 
-import "./interfaces/tokenSale/ITokenSaleManager.sol";
-import "./interfaces/delegation/IDelegatableToken.sol";
+import "../interfaces/tokenSale/ITokenSaleManager.sol";
+import "../interfaces/delegation/IDelegatableToken.sol";
+import "../Permissions.sol";
+import "./DelegationService.sol";
 
 
-contract TokenSaleManager is ITokenSaleManager, Ownable, IERC777Recipient {
+contract TokenSaleManager is ITokenSaleManager, Permissions, IERC777Recipient {
     IERC1820Registry private _erc1820 = IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
 
     address seller;
-    IERC20 token;
 
     mapping (address => uint) approved;
     uint totalApproved;
 
-    constructor(address tokenAddress) public {
-        token = IERC20(tokenAddress);
+    constructor(address _contractManager) Permissions(_contractManager) public {
         _erc1820.setInterfaceImplementer(address(this), keccak256("ERC777TokensRecipient"), address(this));
     }
 
@@ -40,7 +40,8 @@ contract TokenSaleManager is ITokenSaleManager, Ownable, IERC777Recipient {
         require(approved[_msgSender()] > 0, "Transfer is not approved");
         uint value = approved[_msgSender()];
         approved[_msgSender()] = 0;
-        token.transfer(_msgSender(), value);
+        require(IERC20(contractManager.getContract("SkaleToken")).transfer(_msgSender(), value), "Error of token sending");
+        DelegationService(contractManager.getContract("DelegationService")).lock(_msgSender());
     }
 
     /// @notice Transfers `delegationValue` of tokens to `delegationWalletAddress`
@@ -52,9 +53,11 @@ contract TokenSaleManager is ITokenSaleManager, Ownable, IERC777Recipient {
         uint delegationPeriod,
         string calldata info) external
     {
-        require(IDelegatableToken(address(token)).isLocked(_msgSender()), "Token is not locked");
-        // require(condition); // token is locked and not delegated
-        revert("Not implemented");
+        IDelegatableToken token = IDelegatableToken(contractManager.getContract("SkaleToken"));
+        require(token.isLocked(_msgSender()), "Token is not locked");
+        require(!token.isDelegated(_msgSender()), "Token is delegated");
+
+        revert("delegateSaleToken is not implemented");
     }
 
     function registerSeller(address _seller) external onlyOwner {
@@ -77,7 +80,6 @@ contract TokenSaleManager is ITokenSaleManager, Ownable, IERC777Recipient {
     // internal
 
     function getBalance() internal returns(uint balance) {
-        require(address(token) != address(0), "Token address is not set");
-        return token.balanceOf(address(this));
+        return IERC20(contractManager.getContract("SkaleToken")).balanceOf(address(this));
     }
 }

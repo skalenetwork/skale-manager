@@ -25,7 +25,6 @@ import "../interfaces/delegation/IHolderDelegation.sol";
 import "../interfaces/delegation/IValidatorDelegation.sol";
 import "../interfaces/delegation/internal/IManagerDelegationInternal.sol";
 import "../interfaces/IDelegationPeriodManager.sol";
-import "../BokkyPooBahsDateTimeLibrary.sol";
 import "./DelegationRequestManager.sol";
 import "./ValidatorDelegation.sol";
 import "./DelegationController.sol";
@@ -195,8 +194,8 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
     }
 
     /// @notice Makes all tokens of target account unavailable to move
-    function lock(address target) external {
-        revert("Not implemented");
+    function lock(address wallet) external {
+        _locked[wallet] = true;
     }
 
     /// @notice Makes all tokens of target account available to move

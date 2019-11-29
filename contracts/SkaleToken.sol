@@ -17,7 +17,7 @@
 pragma solidity ^0.5.3;
 
 
-import "./ERC777/ERC777.sol";
+import "./ERC777/LockableERC777.sol";
 import "./Permissions.sol";
 import "./interfaces/delegation/IDelegatableToken.sol";
 import "./delegation/DelegationService.sol";
@@ -27,7 +27,7 @@ import "./delegation/DelegationService.sol";
  * @title SkaleToken is ERC777 Token implementation, also this contract in skale
  * manager system
  */
-contract SkaleToken is ERC777, Permissions, IDelegatableToken {
+contract SkaleToken is LockableERC777, Permissions, IDelegatableToken {
 
     string public constant NAME = "SKALE";
 
@@ -37,7 +37,10 @@ contract SkaleToken is ERC777, Permissions, IDelegatableToken {
 
     uint public constant CAP = 5 * 1e9 * (10 ** DECIMALS); // the maximum amount of tokens that can ever be created
 
-    constructor(address contractsAddress, address[] memory defOps) Permissions(contractsAddress) ERC777("SKALE", "SKL", defOps) public {
+    constructor(address contractsAddress, address[] memory defOps)
+    Permissions(contractsAddress)
+    LockableERC777("SKALE", "SKL", defOps) public
+    {
         uint money = 1e7 * 10 ** DECIMALS;
         _mint(
             address(0),
