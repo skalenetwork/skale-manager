@@ -44,7 +44,7 @@ interface INodesData {
     // function removeSpaceFromFractionalNode(uint subarrayLink, uint space) external returns (bool);
     // function getNumberOfFreeFullNodes(uint needNodes) external view returns (bool);
     function countNodesWithFreeSpace(uint8 freeSpace) external view returns (uint count);
-    function enoughNodesWithFreeSpace(uint8 space, uint needNodes) external view returns (bool);
+    // function enoughNodesWithFreeSpace(uint8 space, uint needNodes) external view returns (bool);
     function getNumberOfNodes() external view returns (uint);
     function getNodeIP(uint nodeIndex) external view returns (bytes4);
     function getNodeNextRewardDate(uint nodeIndex) external view returns (uint32);

@@ -470,20 +470,20 @@ contract NodesData is INodesData, Permissions {
         return numberOfActiveNodes + numberOfLeavingNodes;
     }
 
-    /**
-     * @dev enoughNodesWithFreeSpace - get number of free Fractional Nodes
-     * @return numberOfFreeFractionalNodes - number of free Fractional Nodes
-     */
-    function enoughNodesWithFreeSpace(uint8 space, uint needNodes) external view returns (bool nodesAreEnough) {
-        uint numberOfFreeNodes = 0;
-        for (uint8 i = space; i <= 128; i++) {
-            numberOfFreeNodes += spaceToNodes[i].length;
-            if (numberOfFreeNodes == needNodes) {
-                return true;
-            }
-        }
-        return false;
-    }
+    // /**
+    //  * @dev enoughNodesWithFreeSpace - get number of free Fractional Nodes
+    //  * @return numberOfFreeFractionalNodes - number of free Fractional Nodes
+    //  */
+    // function enoughNodesWithFreeSpace(uint8 space, uint needNodes) external view returns (bool nodesAreEnough) {
+    //     uint numberOfFreeNodes = 0;
+    //     for (uint8 i = space; i <= 128; i++) {
+    //         numberOfFreeNodes += spaceToNodes[i].length;
+    //         if (numberOfFreeNodes == needNodes) {
+    //             return true;
+    //         }
+    //     }
+    //     return false;
+    // }
 
     // /**
     //  * @dev getnumberOfFreeNodes - get number of free Full Nodes
