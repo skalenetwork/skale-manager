@@ -23,15 +23,13 @@ pragma experimental ABIEncoderV2;
 import "../Permissions.sol";
 import "../interfaces/delegation/IHolderDelegation.sol";
 import "../interfaces/delegation/IValidatorDelegation.sol";
-import "../interfaces/delegation/internal/IManagerDelegationInternal.sol";
 import "../interfaces/IDelegationPeriodManager.sol";
 import "./DelegationRequestManager.sol";
 import "./ValidatorDelegation.sol";
 import "./DelegationController.sol";
 
 
-contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegation, IManagerDelegationInternal {
-    mapping (address => bool) private _locked;
+contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegation {
 
     event DelegationRequestIsSent(
         uint requestId
@@ -45,7 +43,7 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
 
     }
 
-    function requestUndelegation() external {
+    function requestUndelegation(uint delegationId) external {
         revert("Not implemented");
     }
 
@@ -98,7 +96,7 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
     /// @notice Creates request to delegate `amount` of tokens to `validator` from the begining of the next month
     function delegate(
         uint validatorId,
-        uint tokenAmount,
+        uint amount,
         uint delegationPeriod,
         string calldata info
     )
@@ -194,8 +192,8 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
     }
 
     /// @notice Makes all tokens of target account unavailable to move
-    function lock(address wallet) external {
-        _locked[wallet] = true;
+    function lock(address wallet, uint amount) external {
+        revert("Lock is not implemented");
     }
 
     /// @notice Makes all tokens of target account available to move
@@ -203,19 +201,13 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
         revert("Not implemented");
     }
 
-    function validatorExists(uint validatorId) external view returns (bool) {
-        revert("Not implemented");
-    }
-
-    function isLocked(address wallet) external returns (bool) {
+    function getLockedOf(address wallet) external returns (bool) {
+        revert("getLockedOf is not implemented");
         // return isDelegated(wallet) || _locked[wallet];
     }
 
-    function isDelegated(address wallet) public returns (bool) {
-        // return DelegationController(contractManager.getContract("DelegationController")).isDelegated(wallet);
-    }
-
-    function checkValidatorAddressToId(address validatorAddress, uint validatorId) external view returns (bool) {
-        revert("Not implemented");
+    function getDelegatedOf(address wallet) external returns (bool) {
+        revert("isDelegatedOf is not implemented");
+        // return DelegationManager(contractManager.getContract("DelegationManager")).isDelegated(wallet);
     }
 }

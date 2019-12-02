@@ -110,7 +110,7 @@ contract("Delegation", ([owner,
 
                     it("should send request for delegation", async () => {
                         const { logs } = await delegationService.delegate(
-                            validatorId, 1, delegationPeriod, "D2 is even", {from: holder1});
+                            validatorId, defaultAmount.toString(), delegationPeriod, "D2 is even", {from: holder1});
                         assert.equal(logs.length, 1, "No DelegationRquestIsSent Event emitted");
                         assert.equal(logs[0].event, "DelegationRequestIsSent");
                         requestId = logs[0].args.requestId;
@@ -127,7 +127,7 @@ contract("Delegation", ([owner,
 
                         beforeEach(async () => {
                             const { logs } = await delegationService.delegate(
-                                validatorId, 1, delegationPeriod, "D2 is even", {from: holder1});
+                                validatorId, defaultAmount.toString(), delegationPeriod, "D2 is even", {from: holder1});
                             assert.equal(logs.length, 1, "No DelegationRequest Event emitted");
                             assert.equal(logs[0].event, "DelegationRequestIsSent");
                             requestId = logs[0].args.requestId;
@@ -179,7 +179,7 @@ contract("Delegation", ([owner,
                     //                 await skaleToken.send(holder2, 1, "", {from: holder1})
                     //                     .should.be.eventually.rejectedWith("Can't send tokens because delegation request is created");
 
-                    //                 await delegationService.requestUndelegation();
+                                    // await delegationService.requestUndelegation(requestId);
 
                     //                 await skipTimeToDate(web3, 27, (10 + delegationPeriod + 2) % 12);
 
@@ -201,18 +201,17 @@ contract("Delegation", ([owner,
                     //     });
                     });
                 });
-            } 
-            // else {
-            //     it("should not allow to send delegation request", async () => {
-            //         await delegationService.delegate(validator, delegationPeriod,
-            //             "D2 is even", {from: holder1})
-            //             .should.be.eventually.rejectedWith("This delegation period is not allowed");
-            //     });
-            // }
-        }
+        //     } else {
+        //         it("should not allow to send delegation request", async () => {
+        //             await delegationService.delegate(validator, defaultAmount.toString(), delegationPeriod,
+        //                 "D2 is even", {from: holder1})
+        //                 .should.be.eventually.rejectedWith("This delegation period is not allowed");
+        //         });
+        //     }
+        // }
 
         // it("should not allow holder to delegate to unregistered validator", async () => {
-        //     await delegationService.delegate(validator, 3, "D2 is even", {from: holder1})
+        //     await delegationService.delegate(13, 1,  3, "D2 is even", {from: holder1})
         //         .should.be.eventually.rejectedWith("Validator is not registered");
         // });
 
@@ -262,14 +261,14 @@ contract("Delegation", ([owner,
         //         const validatorId = validatorIds[0].toNumber();
 
                 // let responce = await delegationService.delegate(
-                //     validatorId, 6, "First holder", {from: holder1});
+                //     validatorId, holder1Balance, 6, "First holder", {from: holder1});
                 // const requestId1 = responce.logs[0].args.id;
                 // await delegationService.accept(requestId1, {from: validator});
 
         //         await skipTimeToDate(web3, 28, 10);
 
                 // responce = await delegationService.delegate(
-                //     validatorId, 12, "Second holder", {from: holder2});
+                //     validatorId, holder2Balance, 12, "Second holder", {from: holder2});
                 // const requestId2 = responce.logs[0].args.id;
                 // await delegationService.accept(requestId2, {from: validator});
 
@@ -279,13 +278,13 @@ contract("Delegation", ([owner,
 
         //         await skipTimeToDate(web3, 1, 0);
 
-                // await delegationService.requestUndelegation({from: holder1});
-                // await delegationService.requestUndelegation({from: holder2});
+                // await delegationService.requestUndelegation(requestId1, {from: holder1});
+                // await delegationService.requestUndelegation(requestId2, {from: holder2});
                 // // get bounty
                 // await skipTimeToDate(web3, 1, 1);
 
                 // responce = await delegationService.delegate(
-                //     validatorId, 3, "Third holder", {from: holder3});
+                //     validatorId, holder3Balance, 3, "Third holder", {from: holder3});
                 // const requestId3 = responce.logs[0].args.id;
                 // await delegationService.accept(requestId3, {from: validator});
 
@@ -407,11 +406,12 @@ contract("Delegation", ([owner,
 
         //         // manage delegation
 
-                // responce = await delegationService.delegate(validatorId, 3, "D2 is even", {from: holder1});
+                // responce = await delegationService.delegate(
+                //     validatorId, holder1Balance, 3, "D2 is even", {from: holder1});
                 // const requestId = responce.logs[0].args.id;
                 // await delegationService.accept(requestId, {from: validator});
 
-        //         await delegationService.requestUndelegation({from: holder3});
+                // await delegationService.requestUndelegation(requestId, {from: holder3});
 
         //         // spin up node
 

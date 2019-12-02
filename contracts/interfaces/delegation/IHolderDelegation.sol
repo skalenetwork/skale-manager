@@ -22,16 +22,17 @@ pragma solidity ^0.5.3;
 interface IHolderDelegation {
     event DelegationRequestIsSent(uint id);
 
-    /// @notice Creates request to delegate `amount` of tokens to `validator` from the begining of the next month
+    /// @notice Creates request to delegate `amount` of tokens to `validatorId`
+    /// from the begining of the next month
     function delegate(
         uint validatorId,
-        uint tokenAmount,
+        uint amount,
         uint delegationPeriod,
         string calldata info
     ) external;
 
     /// @notice Allows tokens holder to request return of it's token from validator
-    function requestUndelegation() external;
+    function requestUndelegation(uint delegationId) external;
 
     function cancelPendingDelegation(uint requestId) external;
 

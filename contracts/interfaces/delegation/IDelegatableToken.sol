@@ -21,12 +21,7 @@ pragma solidity ^0.5.3;
 
 interface IDelegatableToken {
 
-    function lock(address wallet) external;
+    function getLockedOf(address wallet) external returns (bool);
 
-    function isLocked(address wallet) external returns (bool);
-
-    /// @notice Makes all tokens of target account available to move
-    function unlock(address target) external;
-
-    function isDelegated(address wallet) external returns (bool);
+    function getDelegatedOf(address wallet) external returns (bool);
 }

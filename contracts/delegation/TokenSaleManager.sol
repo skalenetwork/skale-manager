@@ -41,23 +41,7 @@ contract TokenSaleManager is ITokenSaleManager, Permissions, IERC777Recipient {
         uint value = approved[_msgSender()];
         approved[_msgSender()] = 0;
         require(IERC20(contractManager.getContract("SkaleToken")).transfer(_msgSender(), value), "Error of token sending");
-        DelegationService(contractManager.getContract("DelegationService")).lock(_msgSender());
-    }
-
-    /// @notice Transfers `delegationValue` of tokens to `delegationWalletAddress`
-    /// and creates delegation request for `delegationPeriod` with `info`
-    function delegateSaleToken(
-        address delegationWalletAddress,
-        uint delegationValue,
-        uint validatorId,
-        uint delegationPeriod,
-        string calldata info) external
-    {
-        IDelegatableToken token = IDelegatableToken(contractManager.getContract("SkaleToken"));
-        require(token.isLocked(_msgSender()), "Token is not locked");
-        require(!token.isDelegated(_msgSender()), "Token is delegated");
-
-        revert("delegateSaleToken is not implemented");
+        DelegationService(contractManager.getContract("DelegationService")).lock(_msgSender(), value);
     }
 
     function registerSeller(address _seller) external onlyOwner {
