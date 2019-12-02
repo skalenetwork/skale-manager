@@ -23,21 +23,19 @@ pragma experimental ABIEncoderV2;
 import "../Permissions.sol";
 import "../interfaces/delegation/IHolderDelegation.sol";
 import "../interfaces/delegation/IValidatorDelegation.sol";
-import "../interfaces/delegation/internal/IManagerDelegationInternal.sol";
 import "../interfaces/IDelegationPeriodManager.sol";
 import "../interfaces/IDelegationRequestManager.sol";
 import "./ValidatorDelegation.sol";
 import "./DelegationManager.sol";
 
 
-contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegation, IManagerDelegationInternal {
-    mapping (address => bool) private _locked;
+contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegation {
 
     constructor(address newContractsAddress) Permissions(newContractsAddress) public {
 
     }
 
-    function requestUndelegation() external {
+    function requestUndelegation(uint delegationId) external {
         revert("Not implemented");
     }
 
@@ -95,11 +93,13 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
     /// @notice Creates request to delegate `amount` of tokens to `validator` from the begining of the next month
     function delegate(
         uint validatorId,
+        uint amount,
         uint delegationPeriod,
         string calldata info
     )
         external
     {
+        revert("delegate is not implmeneted");
         IDelegationRequestManager delegationRequestManager = IDelegationRequestManager(
             contractManager.contracts(keccak256(abi.encodePacked("DelegationRequestManager")))
         );
@@ -171,8 +171,8 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
     }
 
     /// @notice Makes all tokens of target account unavailable to move
-    function lock(address wallet) external {
-        _locked[wallet] = true;
+    function lock(address wallet, uint amount) external {
+        revert("Lock is not implemented");
     }
 
     /// @notice Makes all tokens of target account available to move
@@ -180,11 +180,13 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
         revert("Not implemented");
     }
 
-    function isLocked(address wallet) external returns (bool) {
-        return isDelegated(wallet) || _locked[wallet];
+    function getLockedOf(address wallet) external returns (bool) {
+        revert("getLockedOf is not implemented");
+        // return isDelegated(wallet) || _locked[wallet];
     }
 
-    function isDelegated(address wallet) public returns (bool) {
-        return DelegationManager(contractManager.getContract("DelegationManager")).isDelegated(wallet);
+    function getDelegatedOf(address wallet) external returns (bool) {
+        revert("isDelegatedOf is not implemented");
+        // return DelegationManager(contractManager.getContract("DelegationManager")).isDelegated(wallet);
     }
 }
