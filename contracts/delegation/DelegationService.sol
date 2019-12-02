@@ -30,7 +30,6 @@ import "./DelegationManager.sol";
 
 
 contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegation {
-    mapping (address => bool) private _locked;
 
     constructor(address newContractsAddress) Permissions(newContractsAddress) public {
 
