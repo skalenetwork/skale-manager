@@ -35,7 +35,7 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
 
     }
 
-    function requestUndelegation() external {
+    function requestUndelegation(uint delegationId) external {
         revert("Not implemented");
     }
 
@@ -93,11 +93,13 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
     /// @notice Creates request to delegate `amount` of tokens to `validator` from the begining of the next month
     function delegate(
         uint validatorId,
+        uint amount,
         uint delegationPeriod,
         string calldata info
     )
         external
     {
+        revert("delegate is not implmeneted");
         IDelegationRequestManager delegationRequestManager = IDelegationRequestManager(
             contractManager.contracts(keccak256(abi.encodePacked("DelegationRequestManager")))
         );
