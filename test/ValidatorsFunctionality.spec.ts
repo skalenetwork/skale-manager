@@ -231,7 +231,7 @@ contract("ValidatorsFunctionality", ([owner, validator]) => {
 
   it("should rotate node in validator groups", async () => {
     for (let i = 0; i < 5; i++) {
-      await nodesData.addFractionalNode(i);
+      await nodesData.addNode(validator, "d" + i, "0x7f00000" + i, "0x7f00000" + (i + 1), 8545, "0x1122334455");
     }
     const firstNode = 0;
     const secondNode = 1;
