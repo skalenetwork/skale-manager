@@ -384,24 +384,12 @@ contract SkaleDKG is Permissions {
     )
         internal
     {
-        if (
-            channels[groupIndex].publicKeyx.x == 0 &&
-            channels[groupIndex].publicKeyx.y == 0 &&
-            channels[groupIndex].publicKeyy.x == 0 &&
-            channels[groupIndex].publicKeyy.y == 0
-        ) {
-            channels[groupIndex].publicKeyx = Fp2({ x: x1, y: y1 });
-            channels[groupIndex].publicKeyy = Fp2({ x: x2, y: y2 });
-        } else {
-            Fp2 memory a = Fp2({ x: x1, y: y1 });
-            Fp2 memory b = Fp2({ x: x2, y: y2 });
-            (channels[groupIndex].publicKeyx, channels[groupIndex].publicKeyy) = addG2(
-                a,
-                b,
-                channels[groupIndex].publicKeyx,
-                channels[groupIndex].publicKeyy
-            );
-        }
+        (channels[groupIndex].publicKeyx, channels[groupIndex].publicKeyy) = addG2(
+            Fp2({ x: x1, y: y1 }),
+            Fp2({ x: x2, y: y2 }),
+            channels[groupIndex].publicKeyx,
+            channels[groupIndex].publicKeyy
+        );
     }
 
     function isBroadcast(
@@ -516,16 +504,21 @@ contract SkaleDKG is Permissions {
         return x.x == 0 && x.y == 0 && y.x == 1 && y.y == 0;
     }
 
-    function doubleG2(Fp2 memory x1, Fp2 memory y1) internal view returns (Fp2 memory x3, Fp2 memory y3) {
+    function doubleG2(Fp2 memory x1, Fp2 memory y1) internal view returns (Fp2 memory, Fp2 memory) {
         if (isG2Zero(x1, y1)) {
-            x3 = x1;
-            y3 = y1;
+            return (x1, y1);
         } else {
-            Fp2 memory s = mulFp2(scalarMulFp2(3, squaredFp2(x1)), inverseFp2(scalarMulFp2(2, y1)));
-            x3 = minusFp2(squaredFp2(s), scalarMulFp2(2, x1));
-            y3 = addFp2(y1, mulFp2(s, minusFp2(x3, x1)));
-            y3.x = P - (y3.x % P);
-            y3.y = P - (y3.y % P);
+            Fp2 memory a = squaredFp2(x1);
+            Fp2 memory c = squaredFp2(squaredFp2(y1));
+            Fp2 memory d = minusFp2(squaredFp2(addFp2(x1, squaredFp2(y1))), addFp2(a, c));
+            d = addFp2(d, d);
+            Fp2 memory e = addFp2(a, addFp2(a, a));
+            Fp2 memory f = squaredFp2(e);
+            Fp2 memory eightC = addFp2(c, c);
+            eightC = addFp2(eightC, eightC);
+            eightC = addFp2(eightC, eightC);
+            Fp2 memory y1z1 = mulFp2(y1, Fp2({ x: 1, y: 0 }));
+            return toAffineCoordinatesG2(minusFp2(f, addFp2(d, d)), minusFp2(mulFp2(e, minusFp2(d, minusFp2(f, addFp2(d, d)))), eightC), addFp2(y1z1, y1z1));
         }
     }
 
@@ -558,6 +551,59 @@ contract SkaleDKG is Permissions {
         return (u1Value.x == u2Value.x && u1Value.y == u2Value.y && s1Value.x == s2Value.x && s1Value.y == s2Value.y);
     }
 
+    function zForAddingG2(Fp2 memory u2var, Fp2 memory u1var) internal pure returns (Fp2 memory) {
+        // Fp2 memory z = Fp2({ x: 1, y: 0 });
+        Fp2 memory zz = squaredFp2(Fp2({ x: 1, y: 0 }));
+        return mulFp2(minusFp2(squaredFp2(addFp2(Fp2({ x: 1, y: 0 }), Fp2({ x: 1, y: 0 }))), addFp2(zz, zz)), minusFp2(u2var, u1var));
+    }
+
+    function yForAddingG2(
+        Fp2 memory s2var,
+        Fp2 memory s1var,
+        Fp2 memory u2var,
+        Fp2 memory u1var,
+        Fp2 memory x
+    )
+        internal
+        pure
+        returns (Fp2 memory)
+    {
+        // Fp2 memory r = addFp2(minusFp2(s2var, s1var), minusFp2(s2var, s1var));
+        Fp2 memory i = squaredFp2(addFp2(minusFp2(u2var, u1var), minusFp2(u2var, u1var)));
+        Fp2 memory v = mulFp2(u1var, i);
+        Fp2 memory j = mulFp2(minusFp2(u2var, u1var), i);
+        return minusFp2(
+            mulFp2(
+                addFp2(
+                    minusFp2(s2var, s1var),
+                    minusFp2(s2var, s1var)
+                ),
+                minusFp2(v, x)
+            ),
+            addFp2(
+                mulFp2(s1var, j),
+                mulFp2(s1var, j)
+            )
+        );
+    }
+
+    function xForAddingG2(
+        Fp2 memory s2var,
+        Fp2 memory s1var,
+        Fp2 memory u2var,
+        Fp2 memory u1var
+    )
+        internal
+        pure
+        returns (Fp2 memory)
+    {
+        // Fp2 memory r = addFp2(minusFp2(s2var, s1var), minusFp2(s2var, s1var));
+        Fp2 memory i = squaredFp2(addFp2(minusFp2(u2var, u1var), minusFp2(u2var, u1var)));
+        Fp2 memory v = mulFp2(u1var, i);
+        Fp2 memory j = mulFp2(minusFp2(u2var, u1var), i);
+        return minusFp2(squaredFp2(addFp2(minusFp2(s2var, s1var), minusFp2(s2var, s1var))), addFp2(j, addFp2(v, v)));
+    }
+
     function addG2(
         Fp2 memory x1,
         Fp2 memory y1,
@@ -567,8 +613,8 @@ contract SkaleDKG is Permissions {
         internal
         view
         returns (
-            Fp2 memory x3,
-            Fp2 memory y3
+            Fp2 memory,
+            Fp2 memory
         )
     {
         if (isG2Zero(x1, y1)) {
@@ -577,22 +623,38 @@ contract SkaleDKG is Permissions {
         if (isG2Zero(x2, y2)) {
             return (x1, y1);
         }
+        Fp2 memory u1var = u1(x1);
+        Fp2 memory u2var = u2(x2);
+        Fp2 memory s1var = s1(y1);
+        Fp2 memory s2var = s2(y2);
         if (
             isEqual(
-                u1(x1),
-                u2(x2),
+                u1var,
+                u2var,
                 s1(y1),
                 s2(y2)
             )
         ) {
-            (x3, y3) = doubleG2(x1, y1);
+            return doubleG2(x1, y1);
+        } else {
+            Fp2 memory newX = xForAddingG2(
+                s2var,
+                s1var,
+                u2var,
+                u1var
+            );
+            return toAffineCoordinatesG2(
+                newX,
+                yForAddingG2(
+                    s2var,
+                    s1var,
+                    u2var,
+                    u1var,
+                    newX
+                ),
+                zForAddingG2(u2var, u1var)
+            );
         }
-
-        Fp2 memory s = mulFp2(minusFp2(y2, y1), inverseFp2(minusFp2(x2, x1)));
-        x3 = minusFp2(squaredFp2(s), addFp2(x1, x2));
-        y3 = addFp2(y1, mulFp2(s, minusFp2(x3, x1)));
-        y3.x = P - (y3.x % P);
-        y3.y = P - (x3.x % P);
     }
 
     // function binstep(uint _a, uint _step) internal view returns (uint x) {
@@ -775,5 +837,20 @@ contract SkaleDKG is Permissions {
 
         x = Fp2({x: uint(xa), y: uint(xb)});
         y = Fp2({x: uint(ya), y: uint(yb)});
+    }
+
+    function toAffineCoordinatesG2(Fp2 memory x1, Fp2 memory y1, Fp2 memory z1) internal view returns (Fp2 memory x, Fp2 memory y) {
+        if (z1.x == 0 && z1.y == 0) {
+            x.x = 0;
+            x.y = 0;
+            y.x = 1;
+            y.y = 0;
+        } else {
+            Fp2 memory zinv = inverseFp2(z1);
+            Fp2 memory z2inv = squaredFp2(zinv);
+            Fp2 memory z3inv = mulFp2(z2inv, zinv);
+            x = mulFp2(x1, z2inv);
+            y = mulFp2(y1, z3inv);
+        }
     }
 }
