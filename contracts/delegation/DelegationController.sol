@@ -66,7 +66,7 @@ contract DelegationController is Permissions {
     }
 
     function unDelegate(uint validatorId) external view {
-        require(delegations[validatorId].tokenAddress != address(0), "Token with such address wasn't delegated");
+        // require(delegations[validatorId].tokenAddress != address(0), "Token with such address wasn't delegated");
         // Call Token.unlock(lockTime)
         // update isDelegated
     }
@@ -88,9 +88,5 @@ contract DelegationController is Permissions {
         endTime = BokkyPooBahsDateTimeLibrary.addMonths(timestamp, months);
     }
 
-    function unDelegate(uint validatorId) public view {
-        // require(delegations[validatorId].tokenAddress != address(0), "Token with such address wasn't delegated");
-        // Call Token.unlock(lockTime)
-        // update isDelegated
-    }
+
 }

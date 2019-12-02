@@ -208,11 +208,11 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
     }
 
     function isLocked(address wallet) external returns (bool) {
-        return isDelegated(wallet) || _locked[wallet];
+        // return isDelegated(wallet) || _locked[wallet];
     }
 
     function isDelegated(address wallet) public returns (bool) {
-        return DelegationController(contractManager.getContract("DelegationController")).isDelegated(wallet);
+        // return DelegationController(contractManager.getContract("DelegationController")).isDelegated(wallet);
     }
 
     function checkValidatorAddressToId(address validatorAddress, uint validatorId) external view returns (bool) {

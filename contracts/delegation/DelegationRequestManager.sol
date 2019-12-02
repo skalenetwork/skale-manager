@@ -23,6 +23,8 @@ import "../interfaces/delegation/IValidatorDelegation.sol";
 import "../interfaces/delegation/IDelegatableToken.sol";
 import "../thirdparty/BokkyPooBahsDateTimeLibrary.sol";
 import "./ValidatorDelegation.sol";
+import "./DelegationController.sol";
+import "../SkaleToken.sol";
 
 
 interface IDelegationController {
@@ -85,7 +87,7 @@ contract DelegationRequestManager is Permissions {
         // check that holder has enough tokens to delegate
         uint holderBalance = SkaleToken(contractManager.getContract("SkaleToken")).balanceOf(tokenAddress);
         uint unavailableTokens = DelegationController(contractManager.getContract("DelegationController")).delegated(tokenAddress);
-        require(holderBalance - unavailableTokens >= tokenAMount, "Delegator hasn't enough tokens to delegate");
+        require(holderBalance - unavailableTokens >= tokenAmount, "Delegator hasn't enough tokens to delegate");
         require(validatorDelegation.validatorExists(validatorId), "Validator is not registered");
         uint expirationRequest = calculateExpirationRequest();
         delegationRequests.push(DelegationRequest(
