@@ -71,10 +71,13 @@ contract SkaleDKG is Permissions {
 
     uint constant P = 21888242871839275222246405745257275088696311157297823662689037894645226208583;
 
-    uint constant G2A = 11559732032986387107991004021392285783925812861821192530917403151452391805634;
-    uint constant G2B = 10857046999023057135944570762232829481370756359578518086990519993285655852781;
-    uint constant G2C = 4082367875863433681332203403145435568316851327593401208105741076214120093531;
-    uint constant G2D = 8495653923123431417604973247489272438418190587263600148770280649306958101930;
+    uint constant G2A = 10857046999023057135944570762232829481370756359578518086990519993285655852781;
+    uint constant G2B = 11559732032986387107991004021392285783925812861821192530917403151452391805634;
+    uint constant G2C = 8495653923123431417604973247489272438418190587263600148770280649306958101930;
+    uint constant G2D = 4082367875863433681332203403145435568316851327593401208105741076214120093531;
+
+    uint constant TWISTBX = 19485874751759354771024239261021720505790618469301721065564631296452457478373;
+    uint constant TWISTBY = 266929791119991161246907387137283842545076965332900288569378510910307636690;
 
     uint constant G1A = 1;
     uint constant G1B = 2;
@@ -120,6 +123,7 @@ contract SkaleDKG is Permissions {
         channels[groupIndex].dataAddress = msg.sender;
         channels[groupIndex].broadcasted = new bool[](IGroupsData(channels[groupIndex].dataAddress).getRecommendedNumberOfNodes(groupIndex));
         channels[groupIndex].completed = new bool[](IGroupsData(channels[groupIndex].dataAddress).getRecommendedNumberOfNodes(groupIndex));
+        channels[groupIndex].publicKeyy.x = 1;
         channels[groupIndex].nodeToComplaint = uint(-1);
         emit ChannelOpened(groupIndex);
     }
@@ -184,18 +188,20 @@ contract SkaleDKG is Permissions {
             channels[groupIndex].fromNodeToComplaint = fromNodeIndex;
             channels[groupIndex].startComplaintBlockNumber = block.number;
             emit ComplaintSent(groupIndex, fromNodeIndex, toNodeIndex);
-        } else if (channels[groupIndex].nodeToComplaint != toNodeIndex) {
+        } else if (isBroadcasted(groupIndex, toNodeIndex) && channels[groupIndex].nodeToComplaint != toNodeIndex) {
             revert("One complaint has already sent");
-        } else if (channels[groupIndex].nodeToComplaint == toNodeIndex) {
+        } else if (isBroadcasted(groupIndex, toNodeIndex) && channels[groupIndex].nodeToComplaint == toNodeIndex) {
             require(channels[groupIndex].startComplaintBlockNumber + 120 <= block.number, "One more complaint rejected");
             // need to penalty Node - toNodeIndex
+            emit BadGuy(channels[groupIndex].nodeToComplaint);
             IGroupsData(channels[groupIndex].dataAddress).setGroupFailedDKG(groupIndex);
             delete channels[groupIndex];
             emit FailedDKG(groupIndex);
-        } else {
+        } else if (!isBroadcasted(groupIndex, toNodeIndex)) {
             // if node have not broadcasted params
             require(channels[groupIndex].startedBlockNumber + 120 <= block.number, "Complaint rejected");
             // need to penalty Node - toNodeIndex
+            emit BadGuy(channels[groupIndex].nodeToComplaint);
             IGroupsData(channels[groupIndex].dataAddress).setGroupFailedDKG(groupIndex);
             delete channels[groupIndex];
             emit FailedDKG(groupIndex);
@@ -384,6 +390,7 @@ contract SkaleDKG is Permissions {
     )
         internal
     {
+        require(isG2(Fp2({ x: x1, y: y1 }), Fp2({ x: x2, y: y2 })), "Incorrect G2 point");
         (channels[groupIndex].publicKeyx, channels[groupIndex].publicKeyy) = addG2(
             Fp2({ x: x1, y: y1 }),
             Fp2({ x: x2, y: y2 }),
@@ -490,35 +497,33 @@ contract SkaleDKG is Permissions {
 
     // End of Fp2 operations
 
-    // function isG1(uint x, uint y) internal view returns (bool) {
-    //     return mulmod(y, y, P) == addmod(mulmod(mulmod(x, x, P), x, P), 3, P);
-    // }
+    function isG1(uint x, uint y) internal pure returns (bool) {
+        return mulmod(y, y, P) == addmod(mulmod(mulmod(x, x, P), x, P), 3, P);
+    }
 
-    // function isG2(Fp2 memory x, Fp2 memory y) internal view returns (bool) {
-    //     Fp2 memory squaredY = squaredFp2(y);
-    //     Fp2 memory funcX = addFp2(mulFp2(squaredFp2(x), x), scalarMulFp2(3, inverseFp2(Fp2({x: 1, y: 9}))));
-    //     return squaredY.x == funcX.x && squaredY.y == funcX.y;
-    // }
+    function isG2(Fp2 memory x, Fp2 memory y) internal pure returns (bool) {
+        if (isG2Zero(x, y)) {
+            return true;
+        }
+        Fp2 memory squaredY = squaredFp2(y);
+        Fp2 memory res = minusFp2(minusFp2(squaredY, mulFp2(squaredFp2(x), x)), Fp2({x: TWISTBX, y: TWISTBY}));
+        return res.x == 0 && res.y == 0;
+    }
 
     function isG2Zero(Fp2 memory x, Fp2 memory y) internal pure returns (bool) {
         return x.x == 0 && x.y == 0 && y.x == 1 && y.y == 0;
     }
 
-    function doubleG2(Fp2 memory x1, Fp2 memory y1) internal view returns (Fp2 memory, Fp2 memory) {
+    function doubleG2(Fp2 memory x1, Fp2 memory y1) internal view returns (Fp2 memory x3, Fp2 memory y3) {
         if (isG2Zero(x1, y1)) {
-            return (x1, y1);
+            x3 = x1;
+            y3 = y1;
         } else {
-            Fp2 memory a = squaredFp2(x1);
-            Fp2 memory c = squaredFp2(squaredFp2(y1));
-            Fp2 memory d = minusFp2(squaredFp2(addFp2(x1, squaredFp2(y1))), addFp2(a, c));
-            d = addFp2(d, d);
-            Fp2 memory e = addFp2(a, addFp2(a, a));
-            Fp2 memory f = squaredFp2(e);
-            Fp2 memory eightC = addFp2(c, c);
-            eightC = addFp2(eightC, eightC);
-            eightC = addFp2(eightC, eightC);
-            Fp2 memory y1z1 = mulFp2(y1, Fp2({ x: 1, y: 0 }));
-            return toAffineCoordinatesG2(minusFp2(f, addFp2(d, d)), minusFp2(mulFp2(e, minusFp2(d, minusFp2(f, addFp2(d, d)))), eightC), addFp2(y1z1, y1z1));
+            Fp2 memory s = mulFp2(scalarMulFp2(3, squaredFp2(x1)), inverseFp2(scalarMulFp2(2, y1)));
+            x3 = minusFp2(squaredFp2(s), scalarMulFp2(2, x1));
+            y3 = addFp2(y1, mulFp2(s, minusFp2(x3, x1)));
+            y3.x = P - (y3.x % P);
+            y3.y = P - (y3.y % P);
         }
     }
 
@@ -551,59 +556,6 @@ contract SkaleDKG is Permissions {
         return (u1Value.x == u2Value.x && u1Value.y == u2Value.y && s1Value.x == s2Value.x && s1Value.y == s2Value.y);
     }
 
-    function zForAddingG2(Fp2 memory u2var, Fp2 memory u1var) internal pure returns (Fp2 memory) {
-        // Fp2 memory z = Fp2({ x: 1, y: 0 });
-        Fp2 memory zz = squaredFp2(Fp2({ x: 1, y: 0 }));
-        return mulFp2(minusFp2(squaredFp2(addFp2(Fp2({ x: 1, y: 0 }), Fp2({ x: 1, y: 0 }))), addFp2(zz, zz)), minusFp2(u2var, u1var));
-    }
-
-    function yForAddingG2(
-        Fp2 memory s2var,
-        Fp2 memory s1var,
-        Fp2 memory u2var,
-        Fp2 memory u1var,
-        Fp2 memory x
-    )
-        internal
-        pure
-        returns (Fp2 memory)
-    {
-        // Fp2 memory r = addFp2(minusFp2(s2var, s1var), minusFp2(s2var, s1var));
-        Fp2 memory i = squaredFp2(addFp2(minusFp2(u2var, u1var), minusFp2(u2var, u1var)));
-        Fp2 memory v = mulFp2(u1var, i);
-        Fp2 memory j = mulFp2(minusFp2(u2var, u1var), i);
-        return minusFp2(
-            mulFp2(
-                addFp2(
-                    minusFp2(s2var, s1var),
-                    minusFp2(s2var, s1var)
-                ),
-                minusFp2(v, x)
-            ),
-            addFp2(
-                mulFp2(s1var, j),
-                mulFp2(s1var, j)
-            )
-        );
-    }
-
-    function xForAddingG2(
-        Fp2 memory s2var,
-        Fp2 memory s1var,
-        Fp2 memory u2var,
-        Fp2 memory u1var
-    )
-        internal
-        pure
-        returns (Fp2 memory)
-    {
-        // Fp2 memory r = addFp2(minusFp2(s2var, s1var), minusFp2(s2var, s1var));
-        Fp2 memory i = squaredFp2(addFp2(minusFp2(u2var, u1var), minusFp2(u2var, u1var)));
-        Fp2 memory v = mulFp2(u1var, i);
-        Fp2 memory j = mulFp2(minusFp2(u2var, u1var), i);
-        return minusFp2(squaredFp2(addFp2(minusFp2(s2var, s1var), minusFp2(s2var, s1var))), addFp2(j, addFp2(v, v)));
-    }
-
     function addG2(
         Fp2 memory x1,
         Fp2 memory y1,
@@ -613,8 +565,8 @@ contract SkaleDKG is Permissions {
         internal
         view
         returns (
-            Fp2 memory,
-            Fp2 memory
+            Fp2 memory x3,
+            Fp2 memory y3
         )
     {
         if (isG2Zero(x1, y1)) {
@@ -623,38 +575,22 @@ contract SkaleDKG is Permissions {
         if (isG2Zero(x2, y2)) {
             return (x1, y1);
         }
-        Fp2 memory u1var = u1(x1);
-        Fp2 memory u2var = u2(x2);
-        Fp2 memory s1var = s1(y1);
-        Fp2 memory s2var = s2(y2);
         if (
             isEqual(
-                u1var,
-                u2var,
+                u1(x1),
+                u2(x2),
                 s1(y1),
                 s2(y2)
             )
         ) {
-            return doubleG2(x1, y1);
-        } else {
-            Fp2 memory newX = xForAddingG2(
-                s2var,
-                s1var,
-                u2var,
-                u1var
-            );
-            return toAffineCoordinatesG2(
-                newX,
-                yForAddingG2(
-                    s2var,
-                    s1var,
-                    u2var,
-                    u1var,
-                    newX
-                ),
-                zForAddingG2(u2var, u1var)
-            );
+            (x3, y3) = doubleG2(x1, y1);
         }
+
+        Fp2 memory s = mulFp2(minusFp2(y2, y1), inverseFp2(minusFp2(x2, x1)));
+        x3 = minusFp2(squaredFp2(s), addFp2(x1, x2));
+        y3 = addFp2(y1, mulFp2(s, minusFp2(x3, x1)));
+        y3.x = P - (y3.x % P);
+        y3.y = P - (y3.y % P);
     }
 
     // function binstep(uint _a, uint _step) internal view returns (uint x) {
@@ -784,19 +720,19 @@ contract SkaleDKG is Permissions {
             mulShare[1] = P - (mulShare[1] % P);
         }
 
-        // require(isG1(G1A, G1B), "G1.one not in G1");
-        // require(isG1(mulShare[0], mulShare[1]), "mulShare not in G1");
+        require(isG1(G1A, G1B), "G1.one not in G1");
+        require(isG1(mulShare[0], mulShare[1]), "mulShare not in G1");
 
-        // require(isG2(Fp2({x: G2A, y: G2B}), Fp2({x: G2C, y: G2D})), "G2.one not in G2");
-        // require(isG2(tmpX, tmpY), "tmp not in G2");
+        require(isG2(Fp2({x: G2A, y: G2B}), Fp2({x: G2C, y: G2D})), "G2.one not in G2");
+        require(isG2(tmpX, tmpY), "tmp not in G2");
 
         uint[12] memory inputToPairing;
         inputToPairing[0] = mulShare[0];
         inputToPairing[1] = mulShare[1];
-        inputToPairing[2] = G2A;
-        inputToPairing[3] = G2B;
-        inputToPairing[4] = G2C;
-        inputToPairing[5] = G2D;
+        inputToPairing[2] = G2B;
+        inputToPairing[3] = G2A;
+        inputToPairing[4] = G2D;
+        inputToPairing[5] = G2C;
         inputToPairing[6] = G1A;
         inputToPairing[7] = G1B;
         inputToPairing[8] = tmpX.y;
@@ -837,20 +773,5 @@ contract SkaleDKG is Permissions {
 
         x = Fp2({x: uint(xa), y: uint(xb)});
         y = Fp2({x: uint(ya), y: uint(yb)});
-    }
-
-    function toAffineCoordinatesG2(Fp2 memory x1, Fp2 memory y1, Fp2 memory z1) internal view returns (Fp2 memory x, Fp2 memory y) {
-        if (z1.x == 0 && z1.y == 0) {
-            x.x = 0;
-            x.y = 0;
-            y.x = 1;
-            y.y = 0;
-        } else {
-            Fp2 memory zinv = inverseFp2(z1);
-            Fp2 memory z2inv = squaredFp2(zinv);
-            Fp2 memory z3inv = mulFp2(z2inv, zinv);
-            x = mulFp2(x1, z2inv);
-            y = mulFp2(y1, z3inv);
-        }
     }
 }

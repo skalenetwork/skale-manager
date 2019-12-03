@@ -75,6 +75,7 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
 
     event NodeRotated(
         bytes32 groupIndex,
+        uint oldNode,
         uint newNode
     );
 
@@ -201,7 +202,7 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
         bytes32 groupIndex;
         uint newNodeIndex;
         (groupIndex, newNodeIndex) = ISchainsFunctionalityInternal(schainsFunctionalityInternalAddress).replaceNode(nodeIndex, schainId);
-        emit NodeRotated(groupIndex, newNodeIndex);
+        emit NodeRotated(groupIndex, nodeIndex, newNodeIndex);
     }
 
     /**
