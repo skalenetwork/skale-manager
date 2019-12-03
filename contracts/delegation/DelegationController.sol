@@ -19,13 +19,18 @@ pragma experimental ABIEncoderV2;
 
 import "../Permissions.sol";
 import "./DelegationRequestManager.sol";
-import "../interfaces/IDelegationPeriodManager.sol";
+import "./DelegationPeriodManager.sol";
 import "../thirdparty/BokkyPooBahsDateTimeLibrary.sol";
+
+interface IDelegationRequestManager {
+    function delegationRequests(uint requestId) external returns (DelegationRequestManager.DelegationRequest memory);
+}
 
 
 contract DelegationController is Permissions {
 
     struct Delegation {
+        uint amount;
         uint stakeEffectiveness;
         uint expirationDate;
     }
@@ -41,28 +46,27 @@ contract DelegationController is Permissions {
     }
 
     function delegate(uint requestId) public {
-        DelegationRequestManager delegationRequestManager = DelegationRequestManager(
+        IDelegationRequestManager delegationRequestManager = IDelegationRequestManager(
             contractManager.getContract("DelegationRequestManager")
         );
-        IDelegationPeriodManager delegationPeriodManager = IDelegationPeriodManager(
-            contractManager.getContract("DelegationPeriodManager")
-        );
-        // require(address(0) != delegationRequest.tokenAddress, "Request with such id doesn't exist");
-        // require(msg.sender == delegationRequestManager, "Message sender hasn't permissions to invoke delegation");
-        uint delegationPeriod = delegationRequestManager.getDelegationPeriod(requestId);
-        address tokenAddress = delegationRequestManager.getTokenAddress(requestId);
-        uint validatorId = delegationRequestManager.getValidatorId(requestId);
-        uint tokenAmount = delegationRequestManager.getTokenAmount(requestId);
+        // check that request with such id exists
+        // limit acces to call method delegate only for DelegationRequestManager
+        DelegationRequestManager.DelegationRequest memory delegationRequest = delegationRequestManager.delegationRequests(requestId);
+        uint delegationPeriod = delegationRequest.delegationPeriod;
+        address tokenAddress = delegationRequest.tokenAddress;
+        uint validatorId = delegationRequest.validatorId;
+        uint amount = delegationRequest.amount;
         uint endTime = calculateEndTime(delegationPeriod);
-        uint stakeEffectiveness = delegationPeriodManager.getStakeMultiplier(delegationPeriod);
-        //Check that validatorAddress is a registered validator
+        uint stakeEffectiveness = DelegationPeriodManager(
+            contractManager.getContract("DelegationPeriodManager")
+        ).getStakeMultiplier(delegationPeriod);
 
         //Call Token.lock(lockTime)
         delegations[validatorId][tokenAddress].push(
-            Delegation(stakeEffectiveness, endTime)
+            Delegation(amount, stakeEffectiveness, endTime)
         );
         // delegationTotal[validatorAddress] =+ token.value * DelegationPeriodManager.getStakeMultipler(monthCount);
-        delegated[tokenAddress] += tokenAmount;
+        delegated[tokenAddress] += amount;
     }
 
     function unDelegate(uint validatorId) external view {

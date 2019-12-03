@@ -23,7 +23,6 @@ pragma experimental ABIEncoderV2;
 import "../Permissions.sol";
 import "../interfaces/delegation/IHolderDelegation.sol";
 import "../interfaces/delegation/IValidatorDelegation.sol";
-import "../interfaces/IDelegationPeriodManager.sol";
 import "./DelegationRequestManager.sol";
 import "./ValidatorDelegation.sol";
 import "./DelegationController.sol";
@@ -108,7 +107,7 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
         uint requestId = delegationRequestManager.createRequest(
             msg.sender,
             validatorId,
-            tokenAmount,
+            amount,
             delegationPeriod,
             info
         );
