@@ -123,9 +123,9 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
     }
 
     /// @notice Register new as validator
-    function registerValidator(string calldata name, string calldata description, uint feeRate) external returns (uint validatorId) {
+    function registerValidator(string calldata name, string calldata description, uint feeRatePromille) external returns (uint validatorId) {
         ValidatorDelegation validatorDelegation = ValidatorDelegation(contractManager.getContract("ValidatorDelegation"));
-        validatorId = validatorDelegation.registerValidator(name, description, feeRate);
+        validatorId = validatorDelegation.registerValidator(name, description, feeRatePromille);
     }
 
     function unregisterValidator(uint validatorId) external {
@@ -141,7 +141,7 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
         revert("Not implemented");
     }
 
-    function setValidatorDescription(string calldata descripton) external {
+    function setValidatorDescription(string calldata description) external {
         revert("Not implemented");
     }
 

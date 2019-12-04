@@ -26,12 +26,14 @@ import "../thirdparty/BokkyPooBahsDateTimeLibrary.sol";
 contract DelegationManager is Permissions {
 
     struct Delegation {
-        address tokenAddress;
+        address holder;
+        uint amount;
         uint stakeEffectiveness;
-        uint expirationDate;
+        bool purchased;
     }
 
     mapping (uint => Delegation) public delegations;
+    mapping (address => uint[]) public delegationsByHolder;
     mapping (address => uint) public effectiveDelegationsTotal;
     mapping (address => uint) public delegationsTotal;
     mapping (address => bool) public isDelegated;
@@ -55,15 +57,29 @@ contract DelegationManager is Permissions {
         //Check that validatorAddress is a registered validator
 
         //Call Token.lock(lockTime)
-        delegations[delegationRequest.validatorId] = Delegation(delegationRequest.tokenAddress, stakeEffectiveness, endTime);
+        // TODO: get delegation amount
+        uint amount = 5;
+        addDelegation(
+            delegationRequest.validatorId, Delegation(
+                delegationRequest.tokenAddress, amount, stakeEffectiveness, false)
+            );
         // delegationTotal[validatorAddress] =+ token.value * DelegationPeriodManager.getStakeMultipler(monthCount);
         isDelegated[delegationRequest.tokenAddress] = true;
     }
 
     function unDelegate(uint validatorId) external view {
-        require(delegations[validatorId].tokenAddress != address(0), "Token with such address wasn't delegated");
+        require(delegations[validatorId].holder != address(0), "Token with such address wasn't delegated");
         // Call Token.unlock(lockTime)
         // update isDelegated
+    }
+
+    function getDelegationsByHolder(address holder) external view returns (uint[] memory) {
+        return delegationsByHolder[holder];
+    }
+
+    function getDelegation(uint delegationId) external view returns (Delegation memory) {
+        require(delegations[delegationId].holder != address(0), "Delegation does not exist");
+        return delegations[delegationId];
     }
 
     function calculateEndTime(uint months) public view returns (uint endTime) {
@@ -81,5 +97,10 @@ contract DelegationManager is Permissions {
         }
         uint timestamp = BokkyPooBahsDateTimeLibrary.timestampFromDate(nextYear, nextMonth, 1);
         endTime = BokkyPooBahsDateTimeLibrary.addMonths(timestamp, months);
+    }
+
+    function addDelegation(uint validatorId, Delegation memory delegation) internal {
+        delegations[validatorId] = delegation;
+        delegationsByHolder[delegation.holder].push(validatorId);
     }
 }
