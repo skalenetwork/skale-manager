@@ -31,7 +31,7 @@ let SkaleBalances = artifacts.require('./SkaleBalances.sol');
 let DelegationService = artifacts.require('./DelegationService.sol');
 let DelegationRequestManager = artifacts.require('./DelegationRequestManager.sol');
 let DelegationPeriodManager = artifacts.require('./DelegationPeriodManager.sol');
-let ValidatorDelegation = artifacts.require('./ValidatorDelegation.sol');
+let ValidatorService = artifacts.require('./ValidatorService.sol');
 let DelegationController = artifacts.require('./DelegationController.sol');
 
 let gasLimit = 6900000;
@@ -125,9 +125,9 @@ async function deploy(deployer, network) {
         await contractManagerInstance.setContractsAddress("DelegationPeriodManager", DelegationPeriodManager.address).then(function(res) {
             console.log("Contract DelegationPeriodManager with address", DelegationPeriodManager.address, "registred in Contract Manager");
         });
-        await deployer.deploy(ValidatorDelegation, contractManagerInstance.address, {gas: gasLimit * gas_multiplier});
-        await contractManagerInstance.setContractsAddress("ValidatorDelegation", ValidatorDelegation.address).then(function(res) {
-            console.log("Contract ValidatorDelegation with address", ValidatorDelegation.address, "registred in Contract Manager");
+        await deployer.deploy(ValidatorService, contractManagerInstance.address, {gas: gasLimit * gas_multiplier});
+        await contractManagerInstance.setContractsAddress("ValidatorService", ValidatorService.address).then(function(res) {
+            console.log("Contract ValidatorService with address", ValidatorService.address, "registred in Contract Manager");
         });
         await deployer.deploy(DelegationController, contractManagerInstance.address, {gas: gasLimit * gas_multiplier});
         await contractManagerInstance.setContractsAddress("DelegationController", DelegationController.address).then(function(res) {
@@ -176,8 +176,8 @@ async function deploy(deployer, network) {
             delegation_request_manager_abi: DelegationRequestManager.abi,
             delegation_period_manager_address: DelegationPeriodManager.address,
             delegation_period_manager_abi: DelegationPeriodManager.abi,
-            validator_delegation_address: ValidatorDelegation.address,
-            validator_delegation_abi: ValidatorDelegation.abi,
+            validator_service_address: ValidatorService.address,
+            validator_service_abi: ValidatorService.abi,
             delegation_controller_address: DelegationController.address,
             delegation_controller_abi: DelegationController.abi
         };
