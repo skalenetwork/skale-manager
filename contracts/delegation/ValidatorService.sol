@@ -1,5 +1,5 @@
 /*
-    ValidatorDelegation.sol - SKALE Manager
+    ValidatorService.sol - SKALE Manager
     Copyright (C) 2019-Present SKALE Labs
     @author Dmytro Stebaiev
 
@@ -22,7 +22,7 @@ pragma solidity ^0.5.3;
 import "../Permissions.sol";
 
 
-contract ValidatorDelegation is Permissions {
+contract ValidatorService is Permissions {
 
     struct Validator {
         string name;
@@ -35,7 +35,7 @@ contract ValidatorDelegation is Permissions {
     }
 
     Validator[] public validators;
-    mapping (address => uint) public validatorAddressToId;
+    mapping (uint => address) public validatorIdtoAddress;
 
 
     constructor(address newContractsAddress) Permissions(newContractsAddress) public {
@@ -43,12 +43,12 @@ contract ValidatorDelegation is Permissions {
     }
 
     function registerValidator(
-        string memory name,
-        string memory description,
+        string calldata name,
+        string calldata description,
         uint feeRate,
         uint minimumDelegationAmount
     )
-        public returns (uint validatorId)
+        external returns (uint validatorId)
     {
         validators.push(Validator(
             name,
@@ -62,7 +62,15 @@ contract ValidatorDelegation is Permissions {
         validatorId = validators.length - 1;
     }
 
-    function validatorExists(uint validatorId) public view returns (bool) {
+    function setNewValidatorAddress(uint validatorId, address newValidatorAddress) external {
+        require(
+            msg.sender == validatorIdtoAddress[validatorId],
+            "Sender Doesn't have permissions to change address for this validatorId"
+        );
+        validatorIdtoAddress[validatorId] = newValidatorAddress;
+    }
+
+    function checkValidatorExists(uint validatorId) external view returns (bool) {
         return validatorId < validators.length ? true : false;
     }
 
@@ -75,7 +83,7 @@ contract ValidatorDelegation is Permissions {
     //     return validators[_validatorId].validatorFeeAddress;
     // }
 
-    function checkValidatorAddressToId(address validatorAddress, uint validatorID) public view returns (bool) {
-        return validatorAddressToId[validatorAddress] == validatorID ? true : false;
+    function checkValidatorIdToAddress(uint validatorId, address validatorAddress) external view returns (bool) {
+        return validatorIdtoAddress[validatorId] == validatorAddress ? true : false;
     }
 }

@@ -53,4 +53,4 @@ contract TokenState {
     function setPurchased(address holder, uint amount) external {
         revert("Not implemented");
     }
-} 
+}

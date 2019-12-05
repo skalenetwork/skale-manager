@@ -24,7 +24,7 @@ import "../Permissions.sol";
 import "../interfaces/delegation/IHolderDelegation.sol";
 import "../interfaces/delegation/IValidatorDelegation.sol";
 import "./DelegationRequestManager.sol";
-import "./ValidatorDelegation.sol";
+import "./ValidatorService.sol";
 import "./DelegationController.sol";
 
 
@@ -138,8 +138,8 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
     )
         external returns (uint validatorId)
     {
-        ValidatorDelegation validatorDelegation = ValidatorDelegation(contractManager.getContract("ValidatorDelegation"));
-        validatorId = validatorDelegation.registerValidator(
+        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
+        validatorId = validatorService.registerValidator(
             name,
             description,
             feeRate,

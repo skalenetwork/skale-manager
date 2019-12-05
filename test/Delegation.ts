@@ -10,41 +10,42 @@ import { ContractManagerContract,
     DelegationServiceInstance,
     SkaleTokenContract,
     SkaleTokenInstance,
-    ValidatorDelegationContract,
-    ValidatorDelegationInstance } from "../types/truffle-contracts";
+    ValidatorServiceContract,
+    ValidatorServiceInstance } from "../types/truffle-contracts";
 
 const ContractManager: ContractManagerContract = artifacts.require("./ContractManager");
 const SkaleToken: SkaleTokenContract = artifacts.require("./SkaleToken");
 const DelegationService: DelegationServiceContract = artifacts.require("./DelegationService");
 const DelegationPeriodManager: DelegationPeriodManagerContract = artifacts.require("./DelegationPeriodManager");
 const DelegationRequestManager: DelegationRequestManagerContract = artifacts.require("./DelegationRequestManager");
-const ValidatorDelegation: ValidatorDelegationContract = artifacts.require("./ValidatorDelegation");
+const ValidatorService: ValidatorServiceContract = artifacts.require("./ValidatorService");
 const DelegationController: DelegationControllerContract = artifacts.require("./DelegationController");
 
 import { currentTime, months, skipTime, skipTimeToDate } from "./utils/time";
 
-import * as chai from "chai";
 import BigNumber from "bignumber.js";
+import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
 chai.should();
 chai.use(chaiAsPromised);
 
 const allowedDelegationPeriods = [3, 6, 12];
 
-
 class DelegationRequest {
     public tokenAddress: string;
     public validatorId: BigNumber;
+    public amount: BigNumber;
     public delegationPeriod: BigNumber;
     public unlockedUntill: BigNumber;
     public description: string;
 
-    constructor(arrayData: [string, BigNumber, BigNumber, BigNumber, string]) {
+    constructor(arrayData: [string, BigNumber, BigNumber, BigNumber, BigNumber, string]) {
         this.tokenAddress = arrayData[0];
         this.validatorId = new BigNumber(arrayData[1]);
-        this.delegationPeriod = new BigNumber(arrayData[2]);
-        this.unlockedUntill = new BigNumber(arrayData[3]);
-        this.description = arrayData[4];
+        this.amount = new BigNumber(arrayData[2]);
+        this.delegationPeriod = new BigNumber(arrayData[3]);
+        this.unlockedUntill = new BigNumber(arrayData[4]);
+        this.description = arrayData[5];
     }
 }
 
@@ -59,7 +60,7 @@ contract("Delegation", ([owner,
     let delegationService: DelegationServiceInstance;
     let delegationPeriodManager: DelegationPeriodManagerInstance;
     let delegationRequestManager: DelegationRequestManagerInstance;
-    let validatorDelegation: ValidatorDelegationInstance;
+    let validatorService: ValidatorServiceInstance;
     let delegationController: DelegationControllerInstance;
 
     const defaultAmount = 100 * 1e18;
@@ -79,9 +80,9 @@ contract("Delegation", ([owner,
         delegationRequestManager = await DelegationRequestManager.new(contractManager.address);
         await contractManager.setContractsAddress("DelegationRequestManager", delegationRequestManager.address);
 
-        validatorDelegation = await ValidatorDelegation.new(contractManager.address);
-        await contractManager.setContractsAddress("ValidatorDelegation", validatorDelegation.address);
-        
+        validatorService = await ValidatorService.new(contractManager.address);
+        await contractManager.setContractsAddress("ValidatorService", validatorService.address);
+
         delegationController = await DelegationController.new(contractManager.address);
         await contractManager.setContractsAddress("DelegationController", delegationController.address);
 
@@ -95,7 +96,7 @@ contract("Delegation", ([owner,
             await skaleToken.mint(owner, holder1, defaultAmount.toString(), "0x", "0x");
             const { logs } = await delegationService.registerValidator(
                 "First validator", "Super-pooper validator", 150, 0, {from: validator});
-            validatorId = logs[0].args.validatorId.toNumber()
+            validatorId = logs[0].args.validatorId.toNumber();
         });
 
         for (let delegationPeriod = 1; delegationPeriod <= 30; ++delegationPeriod) {
@@ -115,8 +116,7 @@ contract("Delegation", ([owner,
                         assert.equal(logs[0].event, "DelegationRequestIsSent");
                         requestId = logs[0].args.requestId;
                         const delegationRequest: DelegationRequest = new DelegationRequest(
-                            await delegationRequestManager.delegationRequests(requestId)
-                        );
+                            await delegationRequestManager.delegationRequests(requestId));
                         assert.equal(holder1, delegationRequest.tokenAddress);
                         assert.equal(validatorId, delegationRequest.validatorId.toNumber());
                         assert.equal(delegationPeriod, delegationRequest.delegationPeriod.toNumber());
@@ -134,81 +134,81 @@ contract("Delegation", ([owner,
                         });
 
                         it("should not allow holder to spend tokens", async () => {
-                            await skaleToken.transfer(holder2, 1, {from: holder1});
-                                // .should.be.eventually.rejectedWith("Can't transfer tokens because delegation request is created");
-                            // await skaleToken.approve(holder2, 1, {from: holder1})
-                                // .should.be.eventually.rejectedWith("Can't approve transfer bacause delegation request is created");
-                            // await skaleToken.send(holder2, 1, "", {from: holder1})
-                                // .should.be.eventually.rejectedWith("Can't send tokens because delegation request is created");
+                            await skaleToken.transfer(holder2, 1, {from: holder1})
+                                .should.be.eventually.rejectedWith("Can't transfer tokens because delegation request is created");
+                            await skaleToken.approve(holder2, 1, {from: holder1})
+                                .should.be.eventually.rejectedWith("Can't approve transfer bacause delegation request is created");
+                            await skaleToken.send(holder2, 1, "", {from: holder1})
+                                .should.be.eventually.rejectedWith("Can't send tokens because delegation request is created");
                         });
 
-                        // it("should not allow holder to receive tokens", async () => {
-                        //     await skaleToken.transfer(holder1, 1, {from: holder2})
-                        //         .should.be.eventually.rejectedWith("Can't transfer tokens because delegation request is created");
-                        // });
+                        it("should not allow holder to receive tokens", async () => {
+                            await skaleToken.transfer(holder1, 1, {from: holder2})
+                                .should.be.eventually.rejectedWith("Can't transfer tokens because delegation request is created");
+                        });
 
-                        // it("should accept delegation request", async () => {
-                        //     await delegationService.accept(requestId, {from: validator});
+                        it("should accept delegation request", async () => {
+                            await delegationService.accept(requestId, {from: validator});
 
-                        //     // await delegationService.listDelegationRequests().should.be.eventually.empty;
-                        // });
+                            // await delegationService.listDelegationRequests().should.be.eventually.empty;
+                        });
 
-                        // it("should unlock token if validator does not accept delegation request", async () => {
-                        //     await skipTimeToDate(web3, 1, 11);
+                        it("should unlock token if validator does not accept delegation request", async () => {
+                            await skipTimeToDate(web3, 1, 11);
 
-                        //     await skaleToken.transfer(holder2, 1, {from: holder1});
-                        //     await skaleToken.approve(holder2, 1, {from: holder1});
-                        //     await skaleToken.send(holder2, 1, "", {from: holder1});
+                            await skaleToken.transfer(holder2, 1, {from: holder1});
+                            await skaleToken.approve(holder2, 1, {from: holder1});
+                            await skaleToken.send(holder2, 1, "", {from: holder1});
 
-                        //     await skaleToken.balanceOf(holder1).should.be.deep.equal(defaultAmount - 3);
-                        // });
+                            await skaleToken.balanceOf(holder1).should.be.deep.equal(defaultAmount - 3);
+                        });
 
-                    //     describe("when delegation request is accepted", async () => {
-                    //         beforeEach(async () => {
-                    //             await delegationService.accept(requestId, {from: validator});
-                    //         });
+                        describe("when delegation request is accepted", async () => {
+                            beforeEach(async () => {
+                                await delegationService.accept(requestId, {from: validator});
+                            });
 
-                    //         it("should extend delegation period for 3 months if undelegation request was not sent",
-                    //             async () => {
-                    //                 await skipTimeToDate(web3, 1, (10 + delegationPeriod) % 12);
+                            it("should extend delegation period for 3 months if undelegation request was not sent",
+                                async () => {
+                                    await skipTimeToDate(web3, 1, (10 + delegationPeriod) % 12);
 
-                    //                 await skaleToken.transfer(holder2, 1, {from: holder1})
-                    //                     .should.be.eventually.rejectedWith("Can't transfer tokens because delegation request is created");
-                    //                 await skaleToken.approve(holder2, 1, {from: holder1})
-                    //                     .should.be.eventually.rejectedWith("Can't approve transfer bacause delegation request is created");
-                    //                 await skaleToken.send(holder2, 1, "", {from: holder1})
-                    //                     .should.be.eventually.rejectedWith("Can't send tokens because delegation request is created");
+                                    await skaleToken.transfer(holder2, 1, {from: holder1})
+                                        .should.be.eventually.rejectedWith("Can't transfer tokens because delegation request is created");
+                                    await skaleToken.approve(holder2, 1, {from: holder1})
+                                        .should.be.eventually.rejectedWith("Can't approve transfer bacause delegation request is created");
+                                    await skaleToken.send(holder2, 1, "", {from: holder1})
+                                        .should.be.eventually.rejectedWith("Can't send tokens because delegation request is created");
 
-                                    // await delegationService.requestUndelegation(requestId);
+                                    await delegationService.requestUndelegation(requestId);
 
-                    //                 await skipTimeToDate(web3, 27, (10 + delegationPeriod + 2) % 12);
+                                    await skipTimeToDate(web3, 27, (10 + delegationPeriod + 2) % 12);
 
-                    //                 await skaleToken.transfer(holder2, 1, {from: holder1})
-                    //                     .should.be.eventually.rejectedWith("Can't transfer tokens because delegation request is created");
-                    //                 await skaleToken.approve(holder2, 1, {from: holder1})
-                    //                     .should.be.eventually.rejectedWith("Can't approve transfer bacause delegation request is created");
-                    //                 await skaleToken.send(holder2, 1, "", {from: holder1})
-                    //                     .should.be.eventually.rejectedWith("Can't send tokens because delegation request is created");
+                                    await skaleToken.transfer(holder2, 1, {from: holder1})
+                                        .should.be.eventually.rejectedWith("Can't transfer tokens because delegation request is created");
+                                    await skaleToken.approve(holder2, 1, {from: holder1})
+                                        .should.be.eventually.rejectedWith("Can't approve transfer bacause delegation request is created");
+                                    await skaleToken.send(holder2, 1, "", {from: holder1})
+                                        .should.be.eventually.rejectedWith("Can't send tokens because delegation request is created");
 
-                    //                 await skipTimeToDate(web3, 1, (10 + delegationPeriod + 2) % 12);
+                                    await skipTimeToDate(web3, 1, (10 + delegationPeriod + 2) % 12);
 
-                    //                 await skaleToken.transfer(holder2, 1, {from: holder1});
-                    //                 await skaleToken.approve(holder2, 1, {from: holder1});
-                    //                 await skaleToken.send(holder2, 1, "", {from: holder1});
+                                    await skaleToken.transfer(holder2, 1, {from: holder1});
+                                    await skaleToken.approve(holder2, 1, {from: holder1});
+                                    await skaleToken.send(holder2, 1, "", {from: holder1});
 
-                    //                 await skaleToken.balanceOf(holder1).should.be.deep.equal(defaultAmount - 3);
-                    //         });
-                    //     });
+                                    await skaleToken.balanceOf(holder1).should.be.deep.equal(defaultAmount - 3);
+                            });
+                        });
                     });
                 });
-        //     } else {
-        //         it("should not allow to send delegation request", async () => {
-        //             await delegationService.delegate(validator, defaultAmount.toString(), delegationPeriod,
-        //                 "D2 is even", {from: holder1})
-        //                 .should.be.eventually.rejectedWith("This delegation period is not allowed");
-        //         });
-        //     }
-        // }
+            } else {
+                it("should not allow to send delegation request", async () => {
+                    await delegationService.delegate(validator, defaultAmount.toString(), delegationPeriod,
+                        "D2 is even", {from: holder1})
+                        .should.be.eventually.rejectedWith("This delegation period is not allowed");
+                });
+            }
+        }
 
         // it("should not allow holder to delegate to unregistered validator", async () => {
         //     await delegationService.delegate(13, 1,  3, "D2 is even", {from: holder1})

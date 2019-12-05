@@ -66,7 +66,4 @@ interface IValidatorDelegation {
 
     function getValidatorInfo(uint validatorId) external returns (Validator memory validator);
 
-    function checkValidatorAddressToId(address validatorAddress, uint validatorId) external view returns (bool);
-
-    function validatorExists(uint validatorId) external view returns (bool);
 }

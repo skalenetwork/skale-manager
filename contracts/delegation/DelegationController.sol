@@ -22,10 +22,6 @@ import "./DelegationRequestManager.sol";
 import "./DelegationPeriodManager.sol";
 import "../thirdparty/BokkyPooBahsDateTimeLibrary.sol";
 
-interface IDelegationRequestManager {
-    function delegationRequests(uint requestId) external returns (DelegationRequestManager.DelegationRequest memory);
-}
-
 
 contract DelegationController is Permissions {
 
@@ -38,34 +34,33 @@ contract DelegationController is Permissions {
     //      validatorId       tokenAddress
     mapping (uint => mapping (address => Delegation[])) public delegations;
     mapping (address => uint) public effectiveDelegationsTotal;
-    mapping (address => uint) public delegationsTotal;
+    mapping (uint => uint) public delegationsTotal;
     mapping (address => uint) public delegated;
 
     constructor(address newContractsAddress) Permissions(newContractsAddress) public {
 
     }
 
-    function delegate(uint requestId) public {
-        IDelegationRequestManager delegationRequestManager = IDelegationRequestManager(
+    function delegate(uint requestId) external {
+        DelegationRequestManager delegationRequestManager = DelegationRequestManager(
             contractManager.getContract("DelegationRequestManager")
         );
         // check that request with such id exists
         // limit acces to call method delegate only for DelegationRequestManager
-        DelegationRequestManager.DelegationRequest memory delegationRequest = delegationRequestManager.delegationRequests(requestId);
-        uint delegationPeriod = delegationRequest.delegationPeriod;
-        address tokenAddress = delegationRequest.tokenAddress;
-        uint validatorId = delegationRequest.validatorId;
-        uint amount = delegationRequest.amount;
-        uint endTime = calculateEndTime(delegationPeriod);
+        address tokenAddress;
+        uint validatorId;
+        uint amount;
+        uint delegationPeriod;
+        (tokenAddress, validatorId, amount, delegationPeriod) = delegationRequestManager.getDelegationRequest(requestId);
         uint stakeEffectiveness = DelegationPeriodManager(
             contractManager.getContract("DelegationPeriodManager")
         ).getStakeMultiplier(delegationPeriod);
-
+        uint endTime = calculateEndTime(delegationPeriod);
         //Call Token.lock(lockTime)
         delegations[validatorId][tokenAddress].push(
             Delegation(amount, stakeEffectiveness, endTime)
         );
-        // delegationTotal[validatorAddress] =+ token.value * DelegationPeriodManager.getStakeMultipler(monthCount);
+        delegationsTotal[validatorId] += amount * stakeEffectiveness;
         delegated[tokenAddress] += amount;
     }
 

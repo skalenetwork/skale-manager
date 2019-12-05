@@ -31,7 +31,13 @@ contract SkaleBalances is Permissions {
 
     }
 
-    function stashBalance(address recipient, uint bountyForMiner) public allow("SkaleManager") {
+    function withdrawBalance(uint amountOfTokens) external {
+        require(bountyBalances[msg.sender] >= amountOfTokens, "Now enough tokens on balance for withdrawing");
+        bountyBalances[msg.sender] -= amountOfTokens;
+        // send(msg.sender, amountOfTokens, "");
+    }
+
+    function stashBalance(address recipient, uint bountyForMiner) external allow("SkaleManager") {
         address skaleTokenAddress = contractManager.getContract("SkaleToken");
         bountyBalances[recipient] += bountyForMiner;
         require(
@@ -43,11 +49,5 @@ contract SkaleBalances is Permissions {
                 bytes("")
             ), "Minting of token is failed"
         );
-    }
-
-    function withdrawBalance(uint amountOfTokens) external {
-        require(bountyBalances[msg.sender] >= amountOfTokens, "Now enough tokens on balance for withdrawing");
-        bountyBalances[msg.sender] -= amountOfTokens;
-        // send(msg.sender, amountOfTokens, "");
     }
 }
