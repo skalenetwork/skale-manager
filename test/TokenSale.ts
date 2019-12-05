@@ -1,22 +1,22 @@
 import { ContractManagerContract,
          ContractManagerInstance,
-         DelegationManagerContract,
-         DelegationManagerInstance,
+         DelegationControllerContract,
+         DelegationControllerInstance,
          DelegationServiceContract,
          DelegationServiceInstance,
          SkaleTokenContract,
          SkaleTokenInstance,
          TokenSaleManagerContract,
          TokenSaleManagerInstance,
-         ValidatorDelegationContract,
-         ValidatorDelegationInstance } from "../types/truffle-contracts";
+         ValidatorServiceContract,
+         ValidatorServiceInstance } from "../types/truffle-contracts";
 
 const ContractManager: ContractManagerContract = artifacts.require("./ContractManager");
 const SkaleToken: SkaleTokenContract = artifacts.require("./SkaleToken");
 const TokenSaleManager: TokenSaleManagerContract = artifacts.require("./TokenSaleManager");
 const DelegationService: DelegationServiceContract = artifacts.require("./DelegationService");
-const ValidatorDelegation: ValidatorDelegationContract = artifacts.require("./ValidatorDelegation");
-const DelegationManager: DelegationManagerContract = artifacts.require("./DelegationManager");
+const ValidatorService: ValidatorServiceContract = artifacts.require("./ValidatorService");
+const DelegationController: DelegationControllerContract = artifacts.require("./DelegationController");
 
 import { skipTimeToDate } from "./utils/time";
 
@@ -30,8 +30,8 @@ contract("TokenSaleManager", ([owner, holder, delegation, validator, seller, hac
     let skaleToken: SkaleTokenInstance;
     let tokenSaleManager: TokenSaleManagerInstance;
     let delegationService: DelegationServiceInstance;
-    let validatorDelegation: ValidatorDelegationInstance;
-    let delegationManager: DelegationManagerInstance;
+    let validatorService: ValidatorServiceInstance;
+    let delegationManager: DelegationControllerInstance;
 
     beforeEach(async () => {
         contractManager = await ContractManager.new();
@@ -40,15 +40,15 @@ contract("TokenSaleManager", ([owner, holder, delegation, validator, seller, hac
         tokenSaleManager = await TokenSaleManager.new(contractManager.address);
         delegationService = await DelegationService.new(contractManager.address);
         await contractManager.setContractsAddress("DelegationService", delegationService.address);
-        validatorDelegation = await ValidatorDelegation.new();
-        await contractManager.setContractsAddress("ValidatorDelegation", validatorDelegation.address);
-        delegationManager = await DelegationManager.new(contractManager.address);
-        await contractManager.setContractsAddress("DelegationManager", delegationManager.address);
+        validatorService = await ValidatorService.new(contractManager.address);
+        await contractManager.setContractsAddress("ValidatorService", validatorService.address);
+        delegationManager = await DelegationController.new(contractManager.address);
+        await contractManager.setContractsAddress("DelegationController", delegationManager.address);
 
         // each test will start from Nov 10
         await skipTimeToDate(web3, 10, 11);
         await skaleToken.mint(owner, tokenSaleManager.address, 1000, "0x", "0x");
-        await delegationService.registerValidator("Validator", "D2 is even", 150, {from: validator});
+        await delegationService.registerValidator("Validator", "D2 is even", 150, 0, {from: validator});
     });
 
     it("should register seller", async () => {

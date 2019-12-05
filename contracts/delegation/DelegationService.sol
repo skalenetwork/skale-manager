@@ -23,13 +23,20 @@ pragma experimental ABIEncoderV2;
 import "../Permissions.sol";
 import "../interfaces/delegation/IHolderDelegation.sol";
 import "../interfaces/delegation/IValidatorDelegation.sol";
-import "../interfaces/IDelegationPeriodManager.sol";
-import "../interfaces/IDelegationRequestManager.sol";
-import "./ValidatorDelegation.sol";
-import "./DelegationManager.sol";
+import "./DelegationRequestManager.sol";
+import "./ValidatorService.sol";
+import "./DelegationController.sol";
 
 
 contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegation {
+
+    event DelegationRequestIsSent(
+        uint requestId
+    );
+
+    event ValidatorRegistered(
+        uint validatorId
+    );
 
     constructor(address newContractsAddress) Permissions(newContractsAddress) public {
 
@@ -41,8 +48,8 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
 
     /// @notice Allows validator to accept tokens delegated at `requestId`
     function accept(uint requestId) external {
-        IDelegationRequestManager delegationRequestManager = IDelegationRequestManager(
-            contractManager.contracts(keccak256(abi.encodePacked("DelegationRequestManager")))
+        DelegationRequestManager delegationRequestManager = DelegationRequestManager(
+            contractManager.getContract("DelegationRequestManager")
         );
         delegationRequestManager.acceptRequest(requestId);
     }
@@ -63,11 +70,6 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
 
     /// @notice Requests return of tokens that are locked in SkaleManager
     function returnTokens(uint amount) external {
-        revert("Not implemented");
-    }
-
-    /// @notice Returns array of delegation requests id
-    function listDelegationRequests() external returns (uint[] memory) {
         revert("Not implemented");
     }
 
@@ -99,17 +101,22 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
     )
         external
     {
-        revert("delegate is not implmeneted");
-        IDelegationRequestManager delegationRequestManager = IDelegationRequestManager(
-            contractManager.contracts(keccak256(abi.encodePacked("DelegationRequestManager")))
+        DelegationRequestManager delegationRequestManager = DelegationRequestManager(
+            contractManager.getContract("DelegationRequestManager")
         );
-        uint requestId = delegationRequestManager.createRequest(validatorId, delegationPeriod, info);
+        uint requestId = delegationRequestManager.createRequest(
+            msg.sender,
+            validatorId,
+            amount,
+            delegationPeriod,
+            info
+        );
         emit DelegationRequestIsSent(requestId);
     }
 
     function cancelPendingDelegation(uint requestId) external {
-        IDelegationRequestManager delegationRequestManager = IDelegationRequestManager(
-            contractManager.contracts(keccak256(abi.encodePacked("DelegationRequestManager")))
+        DelegationRequestManager delegationRequestManager = DelegationRequestManager(
+            contractManager.getContract("DelegationRequestManager")
         );
         delegationRequestManager.cancelRequest(requestId);
     }
@@ -123,9 +130,22 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
     }
 
     /// @notice Register new as validator
-    function registerValidator(string calldata name, string calldata description, uint feeRate) external returns (uint validatorId) {
-        ValidatorDelegation validatorDelegation = ValidatorDelegation(contractManager.getContract("ValidatorDelegation"));
-        validatorId = validatorDelegation.registerValidator(name, description, feeRate);
+    function registerValidator(
+        string calldata name,
+        string calldata description,
+        uint feeRate,
+        uint minimumDelegationAmount
+    )
+        external returns (uint validatorId)
+    {
+        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
+        validatorId = validatorService.registerValidator(
+            name,
+            description,
+            feeRate,
+            minimumDelegationAmount
+        );
+        emit ValidatorRegistered(validatorId);
     }
 
     function unregisterValidator(uint validatorId) external {

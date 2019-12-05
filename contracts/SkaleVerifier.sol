@@ -59,7 +59,7 @@ contract SkaleVerifier is Permissions {
             return false;
         }
 
-        address schainsDataAddress = contractManager.contracts(keccak256(abi.encodePacked("SchainsData")));
+        address schainsDataAddress = contractManager.getContract("SchainsData");
         uint pkx1;
         uint pky1;
         uint pkx2;

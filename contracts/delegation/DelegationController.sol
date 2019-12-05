@@ -1,5 +1,5 @@
 /*
-    DelegationManager.sol - SKALE Manager
+    DelegationController.sol - SKALE Manager
     Copyright (C) 2018-Present SKALE Labs
     @author Vadim Yavorsky
     SKALE Manager is free software: you can redistribute it and/or modify
@@ -18,50 +18,54 @@ pragma solidity ^0.5.3;
 pragma experimental ABIEncoderV2;
 
 import "../Permissions.sol";
-import "../interfaces/IDelegationRequestManager.sol";
-import "../interfaces/IDelegationPeriodManager.sol";
+import "./DelegationRequestManager.sol";
+import "./DelegationPeriodManager.sol";
 import "../thirdparty/BokkyPooBahsDateTimeLibrary.sol";
 
 
-contract DelegationManager is Permissions {
+contract DelegationController is Permissions {
 
     struct Delegation {
-        address tokenAddress;
+        uint amount;
         uint stakeEffectiveness;
         uint expirationDate;
     }
 
-    mapping (uint => Delegation) public delegations;
+    //      validatorId       tokenAddress
+    mapping (uint => mapping (address => Delegation[])) public delegations;
     mapping (address => uint) public effectiveDelegationsTotal;
-    mapping (address => uint) public delegationsTotal;
-    mapping (address => bool) public isDelegated;
+    mapping (uint => uint) public delegationsTotal;
+    mapping (address => uint) public delegated;
 
     constructor(address newContractsAddress) Permissions(newContractsAddress) public {
 
     }
 
-    function delegate(uint _requestId) external {
-        IDelegationRequestManager delegationRequestManager = IDelegationRequestManager(
-            contractManager.contracts(keccak256(abi.encodePacked("DelegationRequestManager")))
+    function delegate(uint requestId) external {
+        DelegationRequestManager delegationRequestManager = DelegationRequestManager(
+            contractManager.getContract("DelegationRequestManager")
         );
-        IDelegationPeriodManager delegationPeriodManager = IDelegationPeriodManager(
-            contractManager.contracts(keccak256(abi.encodePacked("DelegationPeriodManager")))
-        );
-        IDelegationRequestManager.DelegationRequest memory delegationRequest = delegationRequestManager.delegationRequests(_requestId);
-        // require(address(0) != delegationRequest.tokenAddress, "Request with such id doesn't exist");
-        // require(msg.sender == delegationRequestManager, "Message sender hasn't permissions to invoke delegation");
-        uint endTime = calculateEndTime(delegationRequest.delegationMonths);
-        uint stakeEffectiveness = delegationPeriodManager.getStakeMultiplier(delegationRequest.delegationMonths);
-        //Check that validatorAddress is a registered validator
-
+        // check that request with such id exists
+        // limit acces to call method delegate only for DelegationRequestManager
+        address tokenAddress;
+        uint validatorId;
+        uint amount;
+        uint delegationPeriod;
+        (tokenAddress, validatorId, amount, delegationPeriod) = delegationRequestManager.getDelegationRequest(requestId);
+        uint stakeEffectiveness = DelegationPeriodManager(
+            contractManager.getContract("DelegationPeriodManager")
+        ).getStakeMultiplier(delegationPeriod);
+        uint endTime = calculateEndTime(delegationPeriod);
         //Call Token.lock(lockTime)
-        delegations[delegationRequest.validatorId] = Delegation(delegationRequest.tokenAddress, stakeEffectiveness, endTime);
-        // delegationTotal[validatorAddress] =+ token.value * DelegationPeriodManager.getStakeMultipler(monthCount);
-        isDelegated[delegationRequest.tokenAddress] = true;
+        delegations[validatorId][tokenAddress].push(
+            Delegation(amount, stakeEffectiveness, endTime)
+        );
+        delegationsTotal[validatorId] += amount * stakeEffectiveness;
+        delegated[tokenAddress] += amount;
     }
 
     function unDelegate(uint validatorId) external view {
-        require(delegations[validatorId].tokenAddress != address(0), "Token with such address wasn't delegated");
+        // require(delegations[validatorId].tokenAddress != address(0), "Token with such address wasn't delegated");
         // Call Token.unlock(lockTime)
         // update isDelegated
     }
@@ -82,4 +86,6 @@ contract DelegationManager is Permissions {
         uint timestamp = BokkyPooBahsDateTimeLibrary.timestampFromDate(nextYear, nextMonth, 1);
         endTime = BokkyPooBahsDateTimeLibrary.addMonths(timestamp, months);
     }
+
+
 }

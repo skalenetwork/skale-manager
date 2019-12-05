@@ -44,7 +44,12 @@ interface IValidatorDelegation {
     function deleteNode(uint nodeIndex) external;
 
     /// @notice Register new as validator
-    function registerValidator(string calldata name, string calldata description, uint feeRate) external returns (uint validatorId);
+    function registerValidator(
+        string calldata name,
+        string calldata description,
+        uint feeRate,
+        uint minimumDelegationAmount
+    ) external returns (uint validatorId);
 
     function unregisterValidator(uint validatorId) external;
 
@@ -60,4 +65,5 @@ interface IValidatorDelegation {
     function setMinimumDelegationAmount(uint amount) external;
 
     function getValidatorInfo(uint validatorId) external returns (Validator memory validator);
+
 }
