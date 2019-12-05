@@ -18,100 +18,137 @@ pragma solidity ^0.5.3;
 pragma experimental ABIEncoderV2;
 
 import "../Permissions.sol";
-import "../interfaces/IDelegationPeriodManager.sol";
-import "../interfaces/delegation/IValidatorDelegation.sol";
+import "./DelegationPeriodManager.sol";
+import "./ValidatorService.sol";
+import "../interfaces/delegation/IDelegatableToken.sol";
 import "../thirdparty/BokkyPooBahsDateTimeLibrary.sol";
-import "../interfaces/IDelegationRequestManager.sol";
-import "./ValidatorDelegation.sol";
+import "./ValidatorService.sol";
+import "./DelegationController.sol";
+import "../SkaleToken.sol";
+import "./TokenState.sol";
 
 
-interface IDelegationManager {
-    function delegate(uint _requestId) external;
-}
+contract DelegationRequestManager is Permissions {
 
-
-contract DelegationRequestManager is Permissions, IDelegationRequestManager {
+    struct DelegationRequest {
+        address tokenAddress;
+        uint validatorId;
+        uint amount;
+        uint delegationPeriod;
+        uint unlockedUntill;
+        string description;
+    }
 
     DelegationRequest[] public delegationRequests;
     mapping (address => uint[]) public delegationRequestsByTokenAddress;
-    mapping (address => bool) public delegated;
 
 
     constructor(address newContractsAddress) Permissions(newContractsAddress) public {
 
     }
 
-    modifier checkValidatorAccess(uint _requestId) {
-        ValidatorDelegation validatorDelegation = ValidatorDelegation(
-            contractManager.contracts(keccak256(abi.encodePacked("ValidatorDelegation")))
+    modifier checkValidatorAccess(uint requestId) {
+        ValidatorService validatorService = ValidatorService(
+            contractManager.getContract("ValidatorService")
         );
-        require(_requestId < delegationRequests.length, "Delegation request doesn't exist");
+        require(requestId < delegationRequests.length, "Delegation request doesn't exist");
         require(
-            validatorDelegation.checkValidatorAddressToId(msg.sender, delegationRequests[_requestId].validatorId),
+            validatorService.checkValidatorIdToAddress(delegationRequests[requestId].validatorId, msg.sender),
             "Transaction sender hasn't permissions to change status of request"
         );
         _;
     }
+    function getDelegationRequest(uint requestId) external view returns (address, uint, uint, uint) {
+        DelegationRequest memory delegationRequest = delegationRequests[requestId];
+        return (
+            delegationRequest.tokenAddress,
+            delegationRequest.validatorId,
+            delegationRequest.amount,
+            delegationRequest.delegationPeriod
+        );
+    }
 
     function createRequest(
+        address tokenAddress,
         uint validatorId,
+        uint amount,
         uint delegationPeriod,
         string calldata info
     )
         external returns(uint requestId)
     {
-        IDelegationPeriodManager delegationPeriodManager = IDelegationPeriodManager(
-            contractManager.contracts(keccak256(abi.encodePacked("DelegationPeriodManager")))
+        ValidatorService validatorService = ValidatorService(
+            contractManager.getContract("ValidatorService")
         );
-        address tokenAddress = msg.sender;
-        require(delegated[tokenAddress], "Token is already in the process of delegation");
-        // check that the token is unlocked
+        TokenState tokenState = TokenState(contractManager.getContract("TokenState"));
+        // require(!delegated[tokenAddress], "Token is already in the process of delegation");
         require(
-            delegationPeriodManager.isDelegationPeriodAllowed(delegationPeriod),
-            "Delegation period is not allowed"
+            DelegationPeriodManager(
+                contractManager.getContract("DelegationPeriodManager")
+            ).isDelegationPeriodAllowed(delegationPeriod),
+            "This delegation period is not allowed"
         );
+        uint holderBalance = SkaleToken(contractManager.getContract("SkaleToken")).balanceOf(tokenAddress);
+        require(validatorService.checkValidatorExists(validatorId), "Validator is not registered");
         uint expirationRequest = calculateExpirationRequest();
         delegationRequests.push(DelegationRequest(
             tokenAddress,
             validatorId,
+            amount,
             delegationPeriod,
             expirationRequest,
             info
         ));
         requestId = delegationRequests.length-1;
         delegationRequestsByTokenAddress[tokenAddress].push(requestId);
+        tokenState.setState(requestId, TokenState.State.PROPOSED);
+        uint lockedTokens = tokenState.getLockedCount(tokenAddress);
+        require(holderBalance - lockedTokens >= amount, "Delegator hasn't enough tokens to delegate");
     }
 
-    function acceptRequest(uint _requestId) external checkValidatorAccess(_requestId) {
-        IDelegationManager delegationManager = IDelegationManager(
-            contractManager.contracts(keccak256(abi.encodePacked("DelegationManager")))
-        );
-        delegated[delegationRequests[_requestId].tokenAddress] = true;
-        require(checkValidityRequest(_requestId), "Validator can't longer accept delegation request");
-        delegationManager.delegate(_requestId);
-    }
-
-    function cancelRequest(uint _requestId) external {
-        require(_requestId < delegationRequests.length, "Delegation request doesn't exist");
+    function cancelRequest(uint requestId) external {
+        require(requestId < delegationRequests.length, "Delegation request doesn't exist");
         require(
-            msg.sender == delegationRequests[_requestId].tokenAddress,
+            msg.sender == delegationRequests[requestId].tokenAddress,
             "Only token holder can cancel request"
         );
-        delete delegationRequests[_requestId];
+        TokenState tokenState = TokenState(contractManager.getContract("TokenState"));
+        TokenState.State state = tokenState.getState(requestId);
+        if (state == TokenState.State.PROPOSED) {
+            tokenState.setState(requestId, TokenState.State.UNLOCKED);
+        } else if (state == TokenState.State.PURCHASED_PROPOSED) {
+            tokenState.setState(requestId, TokenState.State.PURCHASED);
+        }
+    }
+
+    function acceptRequest(uint requestId) external checkValidatorAccess(requestId) {
+        DelegationController delegationController = DelegationController(
+            contractManager.getContract("DelegationController")
+        );
+        TokenState tokenState = TokenState(contractManager.getContract("TokenState"));
+        require(
+            tokenState.getState(requestId) == TokenState.State.PROPOSED ||
+            tokenState.getState(requestId) == TokenState.State.PURCHASED_PROPOSED,
+            "Validator cannot accept request for delegation, because it's not proposed"
+        );
+        tokenState.setState(requestId, TokenState.State.ACCEPTED);
+
+        require(checkValidityRequest(requestId), "Validator can't longer accept delegation request");
+        delegationController.delegate(requestId);
+    }
+
+    function checkValidityRequest(uint requestId) public view returns (bool) {
+        require(delegationRequests[requestId].tokenAddress != address(0), "Token address doesn't exist");
+        return delegationRequests[requestId].unlockedUntill > now ? true : false;
     }
 
     // function getAllDelegationRequests() public view returns (DelegationRequest[] memory) {
     //     return delegationRequests;
     // }
 
-    function getDelegationRequestsForValidator(uint validatorId) external returns (DelegationRequest[] memory) {
+    // function getDelegationRequestsForValidator(uint validatorId) external returns (DelegationRequest[] memory) {
 
-    }
-
-    function checkValidityRequest(uint _requestId) public view returns (bool) {
-        require(delegationRequests[_requestId].tokenAddress != address(0), "Token address doesn't exist");
-        return delegationRequests[_requestId].unlockedUntill > now ? true : false;
-    }
+    // }
 
     function calculateExpirationRequest() private view returns (uint timestamp) {
         uint year;
@@ -128,4 +165,5 @@ contract DelegationRequestManager is Permissions, IDelegationRequestManager {
         }
         timestamp = BokkyPooBahsDateTimeLibrary.timestampFromDate(nextYear, nextMonth, 1);
     }
+
 }

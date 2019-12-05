@@ -21,7 +21,7 @@ pragma solidity ^0.5.3;
 pragma experimental ABIEncoderV2;
 
 import "../Permissions.sol";
-import "./DelegationManager.sol";
+import "./DelegationController.sol";
 
 
 /// @notice Store and manage tokens states
@@ -54,12 +54,12 @@ contract TokenState is Permissions {
 
     function getLockedCount(address holder) external returns (uint amount) {
         amount = 0;
-        DelegationManager delegationManager = DelegationManager(contractManager.getContract("DelegationManager"));
-        uint[] memory delegationIds = delegationManager.getDelegationsByHolder(holder);
+        DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
+        uint[] memory delegationIds = delegationController.getDelegationsByHolder(holder);
         for (uint i = 0; i < delegationIds.length; ++i) {
             uint id = delegationIds[i];
             if (isLocked(getState(id))) {
-                amount += delegationManager.getDelegation(id).amount;
+                amount += delegationController.getDelegation(id).amount;
             }
         }
         return amount + getPurchasedAmount(holder);
@@ -67,12 +67,12 @@ contract TokenState is Permissions {
 
     function getDelegatedCount(address holder) external returns (uint amount) {
         amount = 0;
-        DelegationManager delegationManager = DelegationManager(contractManager.getContract("DelegationManager"));
-        uint[] memory delegationIds = delegationManager.getDelegationsByHolder(holder);
+        DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
+        uint[] memory delegationIds = delegationController.getDelegationsByHolder(holder);
         for (uint i = 0; i < delegationIds.length; ++i) {
             uint id = delegationIds[i];
             if (isDelegated(getState(id))) {
-                amount += delegationManager.getDelegation(id).amount;
+                amount += delegationController.getDelegation(id).amount;
             }
         }
         return amount;
@@ -95,8 +95,8 @@ contract TokenState is Permissions {
     }
 
     function getState(uint delegationId) public returns (State state) {
-        DelegationManager delegationManager = DelegationManager(contractManager.getContract("DelegationManager"));
-        require(delegationManager.getDelegation(delegationId).holder != address(0), "Delegation does not exists");
+        DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
+        require(delegationController.getDelegation(delegationId).holder != address(0), "Delegation does not exists");
         require(_state[delegationId] != State.NONE, "State is unknown");
         state = _state[delegationId];
         if (state == State.PROPOSED) {
@@ -113,7 +113,7 @@ contract TokenState is Permissions {
             }
         } else if (state == State.ENDING_DELEGATED) {
             if (block.timestamp >= _timelimit[delegationId]) {
-                state = endingDelegatedToUnlocked(delegationId, delegationManager.getDelegation(delegationId));
+                state = endingDelegatedToUnlocked(delegationId, delegationController.getDelegation(delegationId));
             }
         }
     }
@@ -153,7 +153,7 @@ contract TokenState is Permissions {
         return state;
     }
 
-    function endingDelegatedToUnlocked(uint delegationId, DelegationManager.Delegation memory delegation) internal returns (State) {
+    function endingDelegatedToUnlocked(uint delegationId, DelegationController.Delegation memory delegation) internal returns (State) {
         State state = State.UNLOCKED;
         _state[delegationId] = state;
         _timelimit[delegationId] = 0;

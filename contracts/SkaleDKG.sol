@@ -298,8 +298,8 @@ contract SkaleDKG is Permissions {
     }
 
     function getCommonPublicKey(bytes32 groupIndex, uint256 secretNumber) internal view returns (bytes32 key) {
-        address nodesDataAddress = contractManager.contracts(keccak256(abi.encodePacked("NodesData")));
-        address ecdhAddress = contractManager.contracts(keccak256(abi.encodePacked("ECDH")));
+        address nodesDataAddress = contractManager.getContract("NodesData");
+        address ecdhAddress = contractManager.getContract("ECDH");
         bytes memory publicKey = INodesData(nodesDataAddress).getNodePublicKey(channels[groupIndex].fromNodeToComplaint);
         uint256 pkX;
         uint256 pkY;
@@ -358,7 +358,7 @@ contract SkaleDKG is Permissions {
     }*/
 
     function decryptMessage(bytes32 groupIndex, uint secretNumber) internal view returns (uint) {
-        address decryptionAddress = contractManager.contracts(keccak256(abi.encodePacked("Decryption")));
+        address decryptionAddress = contractManager.getContract("Decryption");
 
         bytes32 key = getCommonPublicKey(groupIndex, secretNumber);
 
@@ -441,7 +441,7 @@ contract SkaleDKG is Permissions {
     }
 
     function isNodeByMessageSender(uint nodeIndex, address from) internal view returns (bool) {
-        address nodesDataAddress = contractManager.contracts(keccak256(abi.encodePacked("NodesData")));
+        address nodesDataAddress = contractManager.getContract("NodesData");
         return INodesData(nodesDataAddress).isNodeExist(from, nodeIndex);
     }
 

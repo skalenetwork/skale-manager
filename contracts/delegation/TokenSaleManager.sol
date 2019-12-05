@@ -55,7 +55,8 @@ contract TokenSaleManager is ITokenSaleManager, Permissions, IERC777Recipient {
         uint256 amount,
         bytes calldata userData,
         bytes calldata operatorData
-    ) external
+    )
+        external
     {
 
     }

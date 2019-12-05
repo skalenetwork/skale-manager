@@ -112,7 +112,7 @@ contract ValidatorsFunctionality is GroupsFunctionality, IValidatorsFunctionalit
      * addValidator - setup validators of node
      */
     function addValidator(uint nodeIndex) external allow(executorName) {
-        address constantsAddress = contractManager.contracts(keccak256(abi.encodePacked("Constants")));
+        address constantsAddress = contractManager.getContract("Constants");
         IConstants constantsHolder = IConstants(constantsAddress);
         bytes32 groupIndex = keccak256(abi.encodePacked(nodeIndex));
         uint possibleNumberOfNodes = constantsHolder.NUMBER_OF_VALIDATORS();
@@ -127,7 +127,7 @@ contract ValidatorsFunctionality is GroupsFunctionality, IValidatorsFunctionalit
     }
 
     function upgradeValidator(uint nodeIndex) external allow(executorName) {
-        address constantsAddress = contractManager.contracts(keccak256(abi.encodePacked("Constants")));
+        address constantsAddress = contractManager.getContract("Constants");
         IConstants constantsHolder = IConstants(constantsAddress);
         bytes32 groupIndex = keccak256(abi.encodePacked(nodeIndex));
         uint possibleNumberOfNodes = constantsHolder.NUMBER_OF_VALIDATORS();
@@ -163,7 +163,7 @@ contract ValidatorsFunctionality is GroupsFunctionality, IValidatorsFunctionalit
         require(time <= block.timestamp, "The time has not come to send verdict");
         address dataAddress = contractManager.contracts(keccak256(abi.encodePacked(dataName)));
         IValidatorsData(dataAddress).removeValidatedNode(validatorIndex, index);
-        address constantsAddress = contractManager.contracts(keccak256(abi.encodePacked("Constants")));
+        address constantsAddress = contractManager.getContract("Constants");
         bool receiveVerdict = time + IConstants(constantsAddress).deltaPeriod() > uint32(block.timestamp);
         if (receiveVerdict) {
             IValidatorsData(dataAddress).addVerdict(keccak256(abi.encodePacked(toNodeIndex)), downtime, latency);
@@ -224,7 +224,7 @@ contract ValidatorsFunctionality is GroupsFunctionality, IValidatorsFunctionalit
 
     function generateGroup(bytes32 groupIndex) internal allow(executorName) returns (uint[] memory) {
         address dataAddress = contractManager.contracts(keccak256(abi.encodePacked(dataName)));
-        address nodesDataAddress = contractManager.contracts(keccak256(abi.encodePacked("NodesData")));
+        address nodesDataAddress = contractManager.getContract("NodesData");
 
         require(IGroupsData(dataAddress).isGroupActive(groupIndex), "Group is not active");
 
@@ -267,7 +267,7 @@ contract ValidatorsFunctionality is GroupsFunctionality, IValidatorsFunctionalit
     }
 
     function setNumberOfNodesInGroup(bytes32 groupIndex, bytes32 groupData) internal view returns (uint numberOfNodes, uint finish) {
-        address nodesDataAddress = contractManager.contracts(keccak256(abi.encodePacked("NodesData")));
+        address nodesDataAddress = contractManager.getContract("NodesData");
         address dataAddress = contractManager.contracts(keccak256(abi.encodePacked(dataName)));
         numberOfNodes = INodesData(nodesDataAddress).getNumberOfNodes();
         uint numberOfActiveNodes = INodesData(nodesDataAddress).numberOfActiveNodes();
@@ -278,7 +278,7 @@ contract ValidatorsFunctionality is GroupsFunctionality, IValidatorsFunctionalit
     }
 
     function comparator(bytes32 groupIndex, uint indexOfNode) internal view returns (bool) {
-        address nodesDataAddress = contractManager.contracts(keccak256(abi.encodePacked("NodesData")));
+        address nodesDataAddress = contractManager.getContract("NodesData");
         address dataAddress = contractManager.contracts(keccak256(abi.encodePacked(dataName)));
         return INodesData(nodesDataAddress).isNodeActive(indexOfNode) && !IGroupsData(dataAddress).isExceptionNode(groupIndex, indexOfNode);
     }
@@ -352,8 +352,8 @@ contract ValidatorsFunctionality is GroupsFunctionality, IValidatorsFunctionalit
     }
 
     function getDataToBytes(uint nodeIndex) internal view returns (bytes32 bytesParameters) {
-        address constantsAddress = contractManager.contracts(keccak256(abi.encodePacked("Constants")));
-        address nodesDataAddress = contractManager.contracts(keccak256(abi.encodePacked("NodesData")));
+        address constantsAddress = contractManager.getContract("Constants");
+        address nodesDataAddress = contractManager.getContract("NodesData");
         bytes memory tempData = new bytes(32);
         bytes14 bytesOfIndex = bytes14(uint112(nodeIndex));
         bytes14 bytesOfTime = bytes14(

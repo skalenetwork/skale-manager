@@ -122,7 +122,7 @@ contract GroupsFunctionality is Permissions {
         uint publicKeyx2;
         uint publicKeyy2;
         (publicKeyx1, publicKeyy1, publicKeyx2, publicKeyy2) = IGroupsData(groupsDataAddress).getGroupsPublicKey(groupIndex);
-        address skaleVerifierAddress = contractManager.contracts(keccak256(abi.encodePacked("SkaleVerifier")));
+        address skaleVerifierAddress = contractManager.getContract("SkaleVerifier");
         return ISkaleVerifier(skaleVerifierAddress).verify(
             signatureX, signatureY, hashX, hashY, publicKeyx1, publicKeyy1, publicKeyx2, publicKeyy2
         );
