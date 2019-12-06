@@ -22,6 +22,7 @@ pragma experimental ABIEncoderV2;
 
 import "../Permissions.sol";
 import "./DelegationController.sol";
+import "./TimeHelpers.sol";
 
 
 /// @notice Store and manage tokens states
@@ -79,7 +80,35 @@ contract TokenState is Permissions {
     }
 
     function setState(uint delegationId, State newState) external {
-        revert("Not implemented");
+        TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
+        DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
+
+        if (newState == State.PROPOSED || newState == State.PURCHASED_PROPOSED) {
+            revert("Use delegate function instead");
+        } else if (newState == State.PURCHASED) {
+            revert("Use setPurchased function instead");
+        } else if (newState == State.ACCEPTED) {
+            State currentState = getState(delegationId);
+            if (currentState != State.PROPOSED && currentState != State.PURCHASED_PROPOSED) {
+                revert("Can't set state to accepted");
+            }
+            _state[delegationId] = State.ACCEPTED;
+            _timelimit[delegationId] = timeHelpers.getNextMonthStart();
+        } else if (newState == State.DELEGATED) {
+            revert("Can't set state to delegated");
+        } else if (newState == State.ENDING_DELEGATED) {
+            if (getState(delegationId) != State.DELEGATED) {
+                revert("Can't set state to ending delegated");
+            }
+            DelegationController.Delegation memory delegation = delegationController.getDelegation(delegationId);
+
+            _state[delegationId] = State.ENDING_DELEGATED;
+            _timelimit[delegationId] = timeHelpers.calculateDelegationEndTime(delegation.created, delegation.delegationPeriod, 3);
+        } else if (newState == State.UNLOCKED) {
+            revert("Can't set state to unlocked");
+        } else {
+            revert("Unknown state");
+        }
     }
 
     function setPurchased(address holder, uint amount) external {
@@ -90,12 +119,9 @@ contract TokenState is Permissions {
         revert("Delegate is not implemented");
     }
 
-    function accept(uint delegationId) external {
-        revert("Accept is not implemented");
-    }
-
     function getState(uint delegationId) public returns (State state) {
         DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
+        // TODO: Modify existance check
         require(delegationController.getDelegation(delegationId).holder != address(0), "Delegation does not exists");
         require(_state[delegationId] != State.NONE, "State is unknown");
         state = _state[delegationId];

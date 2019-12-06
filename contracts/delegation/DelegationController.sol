@@ -27,10 +27,12 @@ contract DelegationController is Permissions {
 
     struct Delegation {
         uint valodatorId;
-        address holder;
+        address holder; // address of tokens owner
         uint amount;
         uint stakeEffectiveness;
-        bool purchased;
+        uint created; // time of creation
+        uint delegationPeriod;
+        bool purchased; // are these tokens purchased on token sale
     }
 
     /// @notice delegations will never be deleted to index in this array may be used like delegation id
