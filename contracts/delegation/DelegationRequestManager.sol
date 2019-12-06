@@ -113,12 +113,8 @@ contract DelegationRequestManager is Permissions {
             "Only token holder can cancel request"
         );
         TokenState tokenState = TokenState(contractManager.getContract("TokenState"));
-        TokenState.State state = tokenState.getState(requestId);
-        if (state == TokenState.State.PROPOSED) {
-            tokenState.setState(requestId, TokenState.State.UNLOCKED);
-        } else if (state == TokenState.State.PURCHASED_PROPOSED) {
-            tokenState.setState(requestId, TokenState.State.PURCHASED);
-        }
+        // tokenState.cancel(requestId);
+        revert("cancelRequest is not implemented");
     }
 
     function acceptRequest(uint requestId) external checkValidatorAccess(requestId) {
@@ -127,8 +123,7 @@ contract DelegationRequestManager is Permissions {
         );
         TokenState tokenState = TokenState(contractManager.getContract("TokenState"));
         require(
-            tokenState.getState(requestId) == TokenState.State.PROPOSED ||
-            tokenState.getState(requestId) == TokenState.State.PURCHASED_PROPOSED,
+            tokenState.getState(requestId) == TokenState.State.PROPOSED,
             "Validator cannot accept request for delegation, because it's not proposed"
         );
         tokenState.setState(requestId, TokenState.State.ACCEPTED);

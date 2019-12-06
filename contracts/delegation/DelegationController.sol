@@ -89,6 +89,11 @@ contract DelegationController is Permissions {
         return delegations[delegationId];
     }
 
+    function setPurchased(uint delegationId, bool value) external allow("TokenState") {
+        require(delegationId < delegations.length, "Delegation does not exist");
+        delegations[delegationId].purchased = value;
+    }
+
     function calculateEndTime(uint months) public view returns (uint endTime) {
         uint year;
         uint month;
