@@ -50,6 +50,9 @@ contract TokenState is Permissions {
     ///       holder => amount
     mapping (address => uint) private _totalDelegated;
 
+    ///       holder => delegationId[]
+    mapping (address => uint[]) private _endingDelegations;
+
     constructor(address _contractManager) Permissions(_contractManager) public {
     }
 
@@ -117,6 +120,7 @@ contract TokenState is Permissions {
 
             _state[delegationId] = State.ENDING_DELEGATED;
             _timelimit[delegationId] = timeHelpers.calculateDelegationEndTime(delegation.created, delegation.delegationPeriod, 3);
+            _endingDelegations[delegation.holder].push(delegationId);
         } else if (newState == State.UNLOCKED) {
             revert("Can't set state to unlocked");
         } else {
@@ -124,8 +128,8 @@ contract TokenState is Permissions {
         }
     }
 
-    function setPurchased(address holder, uint amount) external {
-        revert("Not implemented");
+    function sold(address holder, uint amount) external {
+        _purchased[holder] += amount;
     }
 
     function getState(uint delegationId) public returns (State state) {
@@ -168,7 +172,11 @@ contract TokenState is Permissions {
     }
 
     function getPurchasedAmount(address holder) internal returns (uint amount) {
-        revert("getPurchasedAmount is not implemented");
+        // check if any delegation was ended
+        for (uint i = 0; i < _endingDelegations[holder].length; ++i) {
+            getState(_endingDelegations[holder][i]);
+        }
+        return _purchased[holder];
     }
 
     function proposedToUnlocked(uint delegationId) internal returns (State state) {
@@ -194,6 +202,18 @@ contract TokenState is Permissions {
         State state = State.UNLOCKED;
         _state[delegationId] = state;
         _timelimit[delegationId] = 0;
+
+        // remove delegationId from _ending array
+        uint endingLength = _endingDelegations[delegation.holder].length;
+        for (uint i = 0; i < endingLength; ++i) {
+            if (_endingDelegations[delegation.holder][i] == delegationId) {
+                for (uint j = i; j + 1 < endingLength; ++j) {
+                    _endingDelegations[delegation.holder][j] = _endingDelegations[delegation.holder][j+1];
+                }
+                _endingDelegations[delegation.holder][endingLength - 1] = 0;
+                --_endingDelegations[delegation.holder].length;
+            }
+        }
 
         if (delegation.purchased) {
             address holder = delegation.holder;
