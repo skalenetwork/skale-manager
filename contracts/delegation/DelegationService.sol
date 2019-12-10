@@ -31,7 +31,7 @@ import "./DelegationController.sol";
 contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegation {
 
     event DelegationRequestIsSent(
-        uint requestId
+        uint delegationId
     );
 
     event ValidatorRegistered(
@@ -46,12 +46,12 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
         revert("Not implemented");
     }
 
-    /// @notice Allows validator to accept tokens delegated at `requestId`
-    function accept(uint requestId) external {
+    /// @notice Allows validator to accept tokens delegated at `delegationId`
+    function accept(uint delegationId) external {
         DelegationRequestManager delegationRequestManager = DelegationRequestManager(
             contractManager.getContract("DelegationRequestManager")
         );
-        delegationRequestManager.acceptRequest(requestId);
+        delegationRequestManager.acceptRequest(delegationId);
     }
 
     /// @notice Adds node to SKALE network
@@ -109,21 +109,21 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
         DelegationRequestManager delegationRequestManager = DelegationRequestManager(
             contractManager.getContract("DelegationRequestManager")
         );
-        uint requestId = delegationRequestManager.createRequest(
+        uint delegationId = delegationRequestManager.createRequest(
             msg.sender,
             validatorId,
             amount,
             delegationPeriod,
             info
         );
-        emit DelegationRequestIsSent(requestId);
+        emit DelegationRequestIsSent(delegationId);
     }
 
-    function cancelPendingDelegation(uint requestId) external {
+    function cancelPendingDelegation(uint delegationId) external {
         DelegationRequestManager delegationRequestManager = DelegationRequestManager(
             contractManager.getContract("DelegationRequestManager")
         );
-        delegationRequestManager.cancelRequest(requestId);
+        delegationRequestManager.cancelRequest(delegationId);
     }
 
     function getAllDelegationRequests() external returns(uint[] memory) {

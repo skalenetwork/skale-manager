@@ -26,12 +26,12 @@ import "../thirdparty/BokkyPooBahsDateTimeLibrary.sol";
 contract DelegationController is Permissions {
 
     struct Delegation {
-        uint valodatorId;
         address holder; // address of tokens owner
+        uint validatorId;
         uint amount;
-        uint stakeEffectiveness;
         uint created; // time of creation
         uint delegationPeriod;
+        string info;
         bool purchased; // are these tokens purchased on token sale
     }
 
@@ -45,37 +45,64 @@ contract DelegationController is Permissions {
     // mapping (uint => uint) public delegationsTotal;
     // mapping (address => uint) public delegated;
 
+    modifier checkDelegationExists(uint delegationId) {
+        require(delegationId < delegations.length, "Delegation does not exist");
+        _;
+    }
+
     constructor(address newContractsAddress) Permissions(newContractsAddress) public {
 
     }
 
-    function delegate(uint requestId) external {
-        DelegationRequestManager delegationRequestManager = DelegationRequestManager(
-            contractManager.getContract("DelegationRequestManager")
-        );
+    function delegate(uint delegationId) external {
+        // DelegationRequestManager delegationRequestManager = DelegationRequestManager(
+        //     contractManager.getContract("DelegationRequestManager")
+        // );
         // check that request with such id exists
         // limit acces to call method delegate only for DelegationRequestManager
-        address tokenAddress;
-        uint validatorId;
-        uint amount;
-        uint delegationPeriod;
-        (tokenAddress, validatorId, amount, delegationPeriod) = delegationRequestManager.getDelegationRequest(requestId);
+        // address holder;
+        // uint validatorId;
+        // uint amount;
+        // uint delegationPeriod;
+        // (holder, validatorId, amount, delegationPeriod) = getDelegation(delegationId);
         // uint stakeEffectiveness = DelegationPeriodManager(
         //     contractManager.getContract("DelegationPeriodManager")
         // ).getStakeMultiplier(delegationPeriod);
-        uint endTime = calculateEndTime(delegationPeriod);
+        // uint endTime = calculateEndTime(delegationPeriod);
 
-        revert("delegate is not implemented");
+        // revert("delegate is not implemented");
 
-        // addDelegation(Delegation(validatorId, tokenAddress, amount, stakeEffectiveness, true or false?));
 
         // TODO: Lock tokens
         // delegationsTotal[validatorId] += amount * stakeEffectiveness;
-        // delegated[tokenAddress] += amount;
+        // delegated[holder] += amount;
+    }
+
+    function addDelegation(
+        address holder,
+        uint validatorId,
+        uint amount,
+        uint created,
+        uint delegationPeriod,
+        string calldata info
+    )
+        external allow("DelegationRequestManager") returns (uint delegationId)
+    {
+        delegationId = delegations.length;
+        delegations.push(Delegation(
+            holder,
+            validatorId,
+            amount,
+            created,
+            delegationPeriod,
+            info,
+            false
+        ));
+        _delegationsByHolder[holder].push(delegationId);
     }
 
     function unDelegate(uint validatorId) external view {
-        // require(delegations[validatorId].tokenAddress != address(0), "Token with such address wasn't delegated");
+        // require(delegations[validatorId].holder != address(0), "Token with such address wasn't delegated");
         // Call Token.unlock(lockTime)
         // update isDelegated
     }
@@ -84,17 +111,15 @@ contract DelegationController is Permissions {
         return _delegationsByHolder[holder];
     }
 
-    function getDelegation(uint delegationId) external view returns (Delegation memory) {
-        require(delegationId < delegations.length, "Delegation does not exist");
+    function getDelegation(uint delegationId) external view checkDelegationExists(delegationId) returns (Delegation memory) {
         return delegations[delegationId];
     }
 
-    function setPurchased(uint delegationId, bool value) external allow("TokenState") {
-        require(delegationId < delegations.length, "Delegation does not exist");
+    function setPurchased(uint delegationId, bool value) external checkDelegationExists(delegationId) allow("TokenState") {
         delegations[delegationId].purchased = value;
     }
 
-    function calculateEndTime(uint months) public view returns (uint endTime) {
+    function calculateEndTime(uint months) external view returns (uint endTime) {
         uint year;
         uint month;
         uint nextYear;
@@ -111,9 +136,4 @@ contract DelegationController is Permissions {
         endTime = BokkyPooBahsDateTimeLibrary.addMonths(timestamp, months);
     }
 
-    function addDelegation(Delegation memory delegation) internal returns (uint delegationId) {
-        delegationId = delegations.length;
-        delegations.push(delegation);
-        _delegationsByHolder[delegation.holder].push(delegationId);
-    }
 }
