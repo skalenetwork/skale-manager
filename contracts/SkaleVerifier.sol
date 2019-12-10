@@ -82,10 +82,10 @@ contract SkaleVerifier is Permissions {
             counter,
             hashA,
             hashB,
-            pkx1,
             pky1,
-            pkx2,
-            pky2
+            pkx1,
+            pky2,
+            pkx2
         );
     }
 
