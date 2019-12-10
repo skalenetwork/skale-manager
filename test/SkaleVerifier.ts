@@ -185,7 +185,7 @@ contract("SkaleVerifier", ([validator1, owner, developer, hacker]) => {
                 "8276253263131369565695687329790911140957927205765534740198480597854608202714",
                 "14411459380456065006136894392078433460802915485975038137226267466736619639091",
                 "7025653765868604607777943964159633546920168690664518432704587317074821855333",
-            ).should.be.eventually.rejectedWith("Pairing check failed");
+            ).should.be.eventually.rejectedWith("Sign not in G1");
         });
 
         it("should not verify signatures with invalid counter", async () => {
@@ -235,7 +235,7 @@ contract("SkaleVerifier", ([validator1, owner, developer, hacker]) => {
                 "8276253263131369565695687329790911140957927205765534740198480597854608202714",
                 "14411459380456065006136894392078433460802915485975038137226267466736619639091",
                 "7025653765868604607777943964159633546920168690664518432704587317074821855333",
-            ).should.be.eventually.rejectedWith("Pairing check failed");
+            ).should.be.eventually.rejectedWith("Public Key not in G2");
         });
 
         it("should not verify signatures with invalid hash point", async () => {
