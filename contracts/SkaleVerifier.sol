@@ -68,11 +68,7 @@ contract SkaleVerifier is Permissions {
         }
 
         address schainsDataAddress = contractManager.contracts(keccak256(abi.encodePacked("SchainsData")));
-        uint pkx1;
-        uint pky1;
-        uint pkx2;
-        uint pky2;
-        (pkx1, pky1, pkx2, pky2) = IGroupsData(schainsDataAddress).getGroupsPublicKey(
+        (uint pkB, uint pkA, uint pkD, uint pkC) = IGroupsData(schainsDataAddress).getGroupsPublicKey(
             keccak256(abi.encodePacked(schainName))
         );
         return verify(
@@ -82,10 +78,10 @@ contract SkaleVerifier is Permissions {
             counter,
             hashA,
             hashB,
-            pky1,
-            pkx1,
-            pky2,
-            pkx2
+            pkA,
+            pkB,
+            pkC,
+            pkD
         );
     }
 
@@ -96,10 +92,10 @@ contract SkaleVerifier is Permissions {
         uint counter,
         uint hashA,
         uint hashB,
-        uint pkx1,
-        uint pky1,
-        uint pkx2,
-        uint pky2) public view returns (bool)
+        uint pkA,
+        uint pkB,
+        uint pkC,
+        uint pkD) public view returns (bool)
     {
         if (!checkHashToGroupWithHelper(
             hash,
@@ -123,7 +119,7 @@ contract SkaleVerifier is Permissions {
         require(isG1(hashA, hashB), "Hash not in G1");
 
         require(isG2(Fp2({x: G2A, y: G2B}), Fp2({x: G2C, y: G2D})), "G2.one not in G2");
-        require(isG2(Fp2({x: pky1, y: pkx1}), Fp2({x: pky2, y: pkx2})), "Public Key not in G2");
+        require(isG2(Fp2({x: pkA, y: pkB}), Fp2({x: pkC, y: pkD})), "Public Key not in G2");
 
         bool success;
         uint[12] memory inputToPairing;
@@ -135,10 +131,10 @@ contract SkaleVerifier is Permissions {
         inputToPairing[5] = G2C;
         inputToPairing[6] = hashA;
         inputToPairing[7] = hashB;
-        inputToPairing[8] = pkx1;
-        inputToPairing[9] = pky1;
-        inputToPairing[10] = pkx2;
-        inputToPairing[11] = pky2;
+        inputToPairing[8] = pkB;
+        inputToPairing[9] = pkA;
+        inputToPairing[10] = pkD;
+        inputToPairing[11] = pkC;
         uint[1] memory out;
         assembly {
             success := staticcall(not(0), 8, inputToPairing, mul(12, 0x20), out, 0x20)
