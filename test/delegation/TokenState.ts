@@ -22,7 +22,7 @@ const TimeHelpers: TimeHelpersContract = artifacts.require("./TimeHelpers");
 const TokenState: TokenStateContract = artifacts.require("./TokenState");
 const DelegationControllerMock: DelegationControllerMockContract = artifacts.require("./DelegationControllerMock");
 
-import { skipTimeToDate } from "../utils/time";
+import { skipTime } from "../utils/time";
 
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
@@ -77,5 +77,20 @@ contract("TokenSaleManager", ([owner, holder]) => {
         await tokenState.setState(0, State.PROPOSED);
         const returnedState = await tokenState.getState.call(0);
         returnedState.toNumber().should.be.equal(State.PROPOSED);
+    });
+
+    it("should automatically unlock tokens after delegation request if validator don't accept", async () => {
+        await delegationController.createDelegation("5", "100", "3", {from: holder});
+        const delegationId = 0;
+
+        await tokenState.setState(delegationId, State.PROPOSED);
+
+        const month = 60 * 60 * 24 * 31;
+        skipTime(web3, month);
+
+        const state = await tokenState.getState.call(delegationId);
+        state.toNumber().should.be.equal(State.COMPLETED);
+        const locked = await tokenState.getLockedCount.call(holder);
+        locked.toNumber().should.be.equal(0);
     });
 });

@@ -168,7 +168,7 @@ contract TokenState is Permissions {
     // private
 
     function isLocked(State state) internal returns (bool) {
-        return state != State.UNLOCKED;
+        return state != State.UNLOCKED && state != State.COMPLETED;
     }
 
     function isDelegated(State state) internal returns (bool) {
@@ -186,7 +186,7 @@ contract TokenState is Permissions {
     function proposedToUnlocked(uint delegationId) internal returns (State state) {
         _state[delegationId] = State.COMPLETED;
         _timelimit[delegationId] = 0;
-        return State.UNLOCKED;
+        return State.COMPLETED;
     }
 
     function acceptedToDelegated(uint delegationId) internal returns (State) {
@@ -199,7 +199,7 @@ contract TokenState is Permissions {
     function purchasedProposedToPurchased(uint delegationId) internal returns (State) {
         _state[delegationId] = State.COMPLETED;
         _timelimit[delegationId] = 0;
-        return State.PURCHASED;
+        return State.COMPLETED;
     }
 
     function endingDelegatedToUnlocked(uint delegationId, DelegationController.Delegation memory delegation) internal returns (State) {
