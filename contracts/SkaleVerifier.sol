@@ -68,7 +68,7 @@ contract SkaleVerifier is Permissions {
         }
 
         address schainsDataAddress = contractManager.contracts(keccak256(abi.encodePacked("SchainsData")));
-        (uint pkB, uint pkA, uint pkD, uint pkC) = IGroupsData(schainsDataAddress).getGroupsPublicKey(
+        (uint pkA, uint pkB, uint pkC, uint pkD) = IGroupsData(schainsDataAddress).getGroupsPublicKey(
             keccak256(abi.encodePacked(schainName))
         );
         return verify(
