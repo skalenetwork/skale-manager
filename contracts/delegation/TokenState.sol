@@ -87,9 +87,13 @@ contract TokenState is Permissions {
         DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
 
         if (newState == State.PROPOSED) {
-            if (getState(delegationId) != State.NONE) {
+            if (_state[delegationId] != State.NONE) {
                 revert("Only new delegations can be proposed");
             }
+
+            _state[delegationId] = State.PROPOSED;
+            _timelimit[delegationId] = timeHelpers.getNextMonthStart();
+
             DelegationController.Delegation memory delegation = delegationController.getDelegation(delegationId);
             if (_purchased[delegation.holder] > 0) {
                 delegationController.setPurchased(delegationId, true);

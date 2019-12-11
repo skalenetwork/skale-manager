@@ -26,7 +26,7 @@ import "../thirdparty/BokkyPooBahsDateTimeLibrary.sol";
 contract DelegationController is Permissions {
 
     struct Delegation {
-        uint valodatorId;
+        uint validatorId;
         address holder; // address of tokens owner
         uint amount;
         uint stakeEffectiveness;
