@@ -93,4 +93,41 @@ contract("TokenSaleManager", ([owner, holder]) => {
         const locked = await tokenState.getLockedCount.call(holder);
         locked.toNumber().should.be.equal(0);
     });
+
+    it("should allow holder to cancel delegation befor acceptance", async () => {
+        await delegationController.createDelegation("5", "100", "3", {from: holder});
+        const delegationId = 0;
+        const delegation = await delegationController.getDelegation(delegationId);
+
+        await tokenState.setState(delegationId, State.PROPOSED);
+
+        await tokenState.cancel(delegationId, delegation);
+
+        const state = await tokenState.getState.call(delegationId);
+        state.toNumber().should.be.equal(State.COMPLETED);
+        const locked = await tokenState.getLockedCount.call(holder);
+        locked.toNumber().should.be.equal(0);
+    });
+
+    it("should allow to move delegation from proposed to accepted state", async () => {
+        const amount = 100;
+        await delegationController.createDelegation("5", amount.toString(), "3", {from: holder});
+        const delegationId = 0;
+
+        await tokenState.setState(delegationId, State.PROPOSED);
+
+        for (const stateKey in State) {
+            if (isNaN(Number(stateKey))
+                && Number(State[stateKey]) !== State.ACCEPTED.valueOf()) {
+                await tokenState.setState(delegationId, State[stateKey]).should.be.eventually.rejected;
+            }
+        }
+
+        await tokenState.setState(delegationId, State.ACCEPTED);
+
+        const state = await tokenState.getState.call(delegationId);
+        state.toNumber().should.be.equal(State.ACCEPTED);
+        const locked = await tokenState.getLockedCount.call(holder);
+        locked.toNumber().should.be.equal(amount);
+    });
 });
