@@ -101,7 +101,6 @@ contract DelegationRequestManager is Permissions {
         ));
         requestId = delegationRequests.length-1;
         delegationRequestsByTokenAddress[tokenAddress].push(requestId);
-        tokenState.setState(requestId, TokenState.State.PROPOSED);
         uint lockedTokens = tokenState.getLockedCount(tokenAddress);
         require(holderBalance - lockedTokens >= amount, "Delegator hasn't enough tokens to delegate");
     }
@@ -126,7 +125,7 @@ contract DelegationRequestManager is Permissions {
             tokenState.getState(requestId) == TokenState.State.PROPOSED,
             "Validator cannot accept request for delegation, because it's not proposed"
         );
-        tokenState.setState(requestId, TokenState.State.ACCEPTED);
+        tokenState.accept(requestId);
 
         require(checkValidityRequest(requestId), "Validator can't longer accept delegation request");
         delegationController.delegate(requestId);

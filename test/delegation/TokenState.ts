@@ -30,13 +30,10 @@ chai.should();
 chai.use(chaiAsPromised);
 
 enum State {
-    NONE,
-    UNLOCKED,
     PROPOSED,
     ACCEPTED,
     DELEGATED,
     ENDING_DELEGATED,
-    PURCHASED,
     COMPLETED,
 }
 
@@ -63,18 +60,10 @@ contract("TokenSaleManager", ([owner, holder]) => {
         (await tokenState.getLockedCount.call(holder)).toNumber().should.be.equal(0);
     });
 
-    it("should allow to set only `proposed` state by default", async () => {
+    it("should be in `proposed` state by default", async () => {
         // create delegation with id "0"
         await delegationController.createDelegation("5", "100", "3", {from: holder});
 
-        for (const state in State) {
-            if (isNaN(Number(state))
-                && Number(State[state]) !== State.PROPOSED.valueOf()) {
-                await tokenState.setState(0, State[state]).should.be.eventually.rejected;
-            }
-        }
-
-        await tokenState.setState(0, State.PROPOSED);
         const returnedState = await tokenState.getState.call(0);
         returnedState.toNumber().should.be.equal(State.PROPOSED);
     });
@@ -82,8 +71,6 @@ contract("TokenSaleManager", ([owner, holder]) => {
     it("should automatically unlock tokens after delegation request if validator don't accept", async () => {
         await delegationController.createDelegation("5", "100", "3", {from: holder});
         const delegationId = 0;
-
-        await tokenState.setState(delegationId, State.PROPOSED);
 
         const month = 60 * 60 * 24 * 31;
         skipTime(web3, month);
@@ -99,8 +86,6 @@ contract("TokenSaleManager", ([owner, holder]) => {
         const delegationId = 0;
         const delegation = await delegationController.getDelegation(delegationId);
 
-        await tokenState.setState(delegationId, State.PROPOSED);
-
         await tokenState.cancel(delegationId, delegation);
 
         const state = await tokenState.getState.call(delegationId);
@@ -114,16 +99,7 @@ contract("TokenSaleManager", ([owner, holder]) => {
         await delegationController.createDelegation("5", amount.toString(), "3", {from: holder});
         const delegationId = 0;
 
-        await tokenState.setState(delegationId, State.PROPOSED);
-
-        for (const stateKey in State) {
-            if (isNaN(Number(stateKey))
-                && Number(State[stateKey]) !== State.ACCEPTED.valueOf()) {
-                await tokenState.setState(delegationId, State[stateKey]).should.be.eventually.rejected;
-            }
-        }
-
-        await tokenState.setState(delegationId, State.ACCEPTED);
+        await tokenState.accept(delegationId);
 
         const state = await tokenState.getState.call(delegationId);
         state.toNumber().should.be.equal(State.ACCEPTED);

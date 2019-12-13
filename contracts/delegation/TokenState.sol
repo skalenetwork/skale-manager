@@ -29,13 +29,10 @@ import "./TimeHelpers.sol";
 contract TokenState is Permissions {
 
     enum State {
-        NONE,
-        UNLOCKED,
         PROPOSED,
         ACCEPTED,
         DELEGATED,
         ENDING_DELEGATED,
-        PURCHASED,
         COMPLETED
     }
 
@@ -82,67 +79,24 @@ contract TokenState is Permissions {
         return amount;
     }
 
-    function setState(uint delegationId, State newState) external {
-        TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
-        DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
-
-        if (newState == State.PROPOSED) {
-            if (_state[delegationId] != State.NONE) {
-                revert("Only new delegations can be proposed");
-            }
-
-            _state[delegationId] = State.PROPOSED;
-            _timelimit[delegationId] = timeHelpers.getNextMonthStart();
-
-            DelegationController.Delegation memory delegation = delegationController.getDelegation(delegationId);
-            if (_purchased[delegation.holder] > 0) {
-                delegationController.setPurchased(delegationId, true);
-                if (_purchased[delegation.holder] > delegation.amount) {
-                    _purchased[delegation.holder] -= delegation.amount;
-                } else {
-                    _purchased[delegation.holder] = 0;
-                }
-            } else {
-                delegationController.setPurchased(delegationId, false);
-            }
-        } else if (newState == State.PURCHASED) {
-            revert("Use setPurchased function instead");
-        } else if (newState == State.ACCEPTED) {
-            State currentState = getState(delegationId);
-            if (currentState != State.PROPOSED) {
-                revert("Can't set state to accepted");
-            }
-            _state[delegationId] = State.ACCEPTED;
-            _timelimit[delegationId] = timeHelpers.getNextMonthStart();
-        } else if (newState == State.DELEGATED) {
-            revert("Can't set state to delegated");
-        } else if (newState == State.ENDING_DELEGATED) {
-            if (getState(delegationId) != State.DELEGATED) {
-                revert("Can't set state to ending delegated");
-            }
-            DelegationController.Delegation memory delegation = delegationController.getDelegation(delegationId);
-
-            _state[delegationId] = State.ENDING_DELEGATED;
-            _timelimit[delegationId] = timeHelpers.calculateDelegationEndTime(delegation.created, delegation.delegationPeriod, 3);
-            _endingDelegations[delegation.holder].push(delegationId);
-        } else if (newState == State.UNLOCKED) {
-            revert("Can't set state to unlocked");
-        } else {
-            revert("Unknown state");
-        }
-    }
-
     function sold(address holder, uint amount) external {
         _purchased[holder] += amount;
+    }
+
+    function accept(uint delegationId) external {
+        require(getState(delegationId) == State.PROPOSED, "Can't set state to accepted");
+        setState(delegationId, State.ACCEPTED);
     }
 
     function getState(uint delegationId) public returns (State state) {
         DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
         // TODO: Modify existance check
         require(delegationController.getDelegation(delegationId).holder != address(0), "Delegation does not exists");
-        require(_state[delegationId] != State.NONE, "State is unknown");
         state = _state[delegationId];
         if (state == State.PROPOSED) {
+            if (_timelimit[delegationId] == 0) {
+                initProposed(delegationId);
+            }
             if (now >= _timelimit[delegationId]) {
                 state = cancel(delegationId, delegationController.getDelegation(delegationId));
             }
@@ -167,8 +121,55 @@ contract TokenState is Permissions {
 
     // private
 
+    function setState(uint delegationId, State newState) internal {
+        TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
+        DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
+
+        require(newState != State.PROPOSED, "Can't set state to proposed");
+
+        if (newState == State.ACCEPTED) {
+            State currentState = getState(delegationId);
+            if (currentState != State.PROPOSED) {
+                revert("Can't set state to accepted");
+            }
+            _state[delegationId] = State.ACCEPTED;
+            _timelimit[delegationId] = timeHelpers.getNextMonthStart();
+        } else if (newState == State.DELEGATED) {
+            revert("Can't set state to delegated");
+        } else if (newState == State.ENDING_DELEGATED) {
+            if (getState(delegationId) != State.DELEGATED) {
+                revert("Can't set state to ending delegated");
+            }
+            DelegationController.Delegation memory delegation = delegationController.getDelegation(delegationId);
+
+            _state[delegationId] = State.ENDING_DELEGATED;
+            _timelimit[delegationId] = timeHelpers.calculateDelegationEndTime(delegation.created, delegation.delegationPeriod, 3);
+            _endingDelegations[delegation.holder].push(delegationId);
+        } else {
+            revert("Unknown state");
+        }
+    }
+
+    function initProposed(uint delegationId) internal {
+        TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
+        DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
+        DelegationController.Delegation memory delegation = delegationController.getDelegation(delegationId);
+
+        _timelimit[delegationId] = timeHelpers.getNextMonthStartFromDate(delegation.created);
+        if (_purchased[delegation.holder] > 0) {
+            delegationController.setPurchased(delegationId, true);
+            if (_purchased[delegation.holder] > delegation.amount) {
+                _purchased[delegation.holder] -= delegation.amount;
+            } else {
+                _purchased[delegation.holder] = 0;
+            }
+        } else {
+            delegationController.setPurchased(delegationId, false);
+        }
+    }
+
     function isLocked(State state) internal returns (bool) {
-        return state != State.UNLOCKED && state != State.COMPLETED;
+        return state != State.COMPLETED;
     }
 
     function isDelegated(State state) internal returns (bool) {
@@ -202,8 +203,8 @@ contract TokenState is Permissions {
         return State.COMPLETED;
     }
 
-    function endingDelegatedToUnlocked(uint delegationId, DelegationController.Delegation memory delegation) internal returns (State) {
-        State state = State.UNLOCKED;
+    function endingDelegatedToUnlocked(uint delegationId, DelegationController.Delegation memory delegation) internal returns (State state) {
+        state = State.COMPLETED;
         _state[delegationId] = state;
         _timelimit[delegationId] = 0;
 
@@ -226,8 +227,6 @@ contract TokenState is Permissions {
                 purchasedToUnlocked(holder);
             }
         }
-
-        return state;
     }
 
     function purchasedToUnlocked(address holder) internal {
