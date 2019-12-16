@@ -222,6 +222,7 @@ contract TokenState is Permissions {
                 }
                 _endingDelegations[delegation.holder][endingLength - 1] = 0;
                 --_endingDelegations[delegation.holder].length;
+                break;
             }
         }
 
