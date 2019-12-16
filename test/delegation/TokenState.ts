@@ -106,4 +106,21 @@ contract("TokenSaleManager", ([owner, holder]) => {
         const locked = await tokenState.getLockedCount.call(holder);
         locked.toNumber().should.be.equal(amount);
     });
+
+    it("should become delegated after month end if is accepted", async () => {
+        const amount = 100;
+        await delegationController.createDelegation("5", amount.toString(), "3", {from: holder});
+        const delegationId = 0;
+
+        await tokenState.accept(delegationId);
+
+        // skip month
+        const month = 60 * 60 * 24 * 31;
+        skipTime(web3, month);
+
+        const state = await tokenState.getState.call(delegationId);
+        state.toNumber().should.be.equal(State.DELEGATED);
+        const locked = await tokenState.getLockedCount.call(holder);
+        locked.toNumber().should.be.equal(amount);
+    });
 });
