@@ -123,4 +123,41 @@ contract("TokenSaleManager", ([owner, holder]) => {
         const locked = await tokenState.getLockedCount.call(holder);
         locked.toNumber().should.be.equal(amount);
     });
+
+    it("should not allow to request undelegation while is not delegated", async () => {
+        const amount = 100;
+        await delegationController.createDelegation("5", amount.toString(), "3", {from: holder});
+        const delegationId = 0;
+
+        await tokenState.accept(delegationId);
+
+        await tokenState.requestUndelegation(delegationId).should.be.eventually.rejectedWith("Can't request undelegation");
+    });
+
+    it("should allow to send undelegation request", async () => {
+        const amount = 100;
+        const period = 3;
+        await delegationController.createDelegation("5", amount.toString(), period.toString(), {from: holder});
+        const delegationId = 0;
+
+        await tokenState.accept(delegationId);
+
+        // skip month
+        const month = 60 * 60 * 24 * 31;
+        skipTime(web3, month);
+
+        await tokenState.requestUndelegation(delegationId);
+
+        let state = await tokenState.getState.call(delegationId);
+        state.toNumber().should.be.equal(State.ENDING_DELEGATED);
+        let locked = await tokenState.getLockedCount.call(holder);
+        locked.toNumber().should.be.equal(amount);
+
+        skipTime(web3, month * period);
+
+        state = await tokenState.getState.call(delegationId);
+        state.toNumber().should.be.equal(State.COMPLETED);
+        locked = await tokenState.getLockedCount.call(holder);
+        locked.toNumber().should.be.equal(0);
+    });
 });

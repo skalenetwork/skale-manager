@@ -88,6 +88,11 @@ contract TokenState is Permissions {
         setState(delegationId, State.ACCEPTED);
     }
 
+    function requestUndelegation(uint delegationId) external {
+        require(getState(delegationId) == State.DELEGATED, "Can't request undelegation");
+        setState(delegationId, State.ENDING_DELEGATED);
+    }
+
     function getState(uint delegationId) public returns (State state) {
         DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
         // TODO: Modify existance check
