@@ -27,7 +27,7 @@ enum State {
     COMPLETED,
 }
 
-contract("TokenSaleManager", ([owner, holder]) => {
+contract("TokenState", ([owner, holder]) => {
     let contractManager: ContractManagerInstance;
     let timeHelpers: TimeHelpersInstance;
     let delegationController: DelegationControllerMockInstance;
@@ -78,14 +78,13 @@ contract("TokenSaleManager", ([owner, holder]) => {
         const amount = 100;
         await delegationController.createDelegation("5", amount.toString(), "3", {from: holder});
         const delegationId = 0;
-        const delegation = await delegationController.getDelegation(delegationId);
 
         let locked = await tokenState.getLockedCount.call(holder);
         locked.toNumber().should.be.equal(amount);
         let delegated = await tokenState.getDelegatedCount.call(holder);
         delegated.toNumber().should.be.equal(0);
 
-        await tokenState.cancel(delegationId, delegation);
+        await tokenState.cancel(delegationId);
 
         const state = await tokenState.getState.call(delegationId);
         state.toNumber().should.be.equal(State.COMPLETED);
@@ -190,6 +189,10 @@ contract("TokenSaleManager", ([owner, holder]) => {
         delegated.toNumber().should.be.equal(0);
     });
 
+    it("should not allow to get state of non existing delegation", async () => {
+        await tokenState.getState.call("0xd2").should.be.eventually.rejectedWith("Delegation does not exist");
+    });
+
     describe("Token sale", async () => {
         it("should allow to mark tokens as sold", async () => {
             const totalAmount = 100;
@@ -214,8 +217,9 @@ contract("TokenSaleManager", ([owner, holder]) => {
                 await delegationController.createDelegation("5", amount.toString(), period.toString(), {from: holder});
                 const delegationId = 0;
                 const delegation = await delegationController.getDelegation(delegationId);
+                delegation.holder.should.be.deep.equal(holder);
 
-                await tokenState.cancel(delegationId, delegation);
+                await tokenState.cancel(delegationId);
 
                 const locked = await tokenState.getLockedCount.call(holder);
                 locked.toNumber().should.be.equal(totalAmount);

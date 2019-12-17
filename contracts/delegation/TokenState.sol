@@ -93,6 +93,12 @@ contract TokenState is Permissions {
         setState(delegationId, State.ENDING_DELEGATED);
     }
 
+    function cancel(uint delegationId) external returns (State state) {
+        require(getState(delegationId) == State.PROPOSED, "Can't cancel delegation request");
+        DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
+        _cancel(delegationId, delegationController.getDelegation(delegationId));
+    }
+
     function getState(uint delegationId) public returns (State state) {
         DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
         // TODO: Modify existance check
@@ -103,7 +109,7 @@ contract TokenState is Permissions {
                 initProposed(delegationId);
             }
             if (now >= _timelimit[delegationId]) {
-                state = cancel(delegationId, delegationController.getDelegation(delegationId));
+                state = _cancel(delegationId, delegationController.getDelegation(delegationId));
             }
         } else if (state == State.ACCEPTED) {
             if (now >= _timelimit[delegationId]) {
@@ -113,14 +119,6 @@ contract TokenState is Permissions {
             if (now >= _timelimit[delegationId]) {
                 state = endingDelegatedToUnlocked(delegationId, delegationController.getDelegation(delegationId));
             }
-        }
-    }
-
-    function cancel(uint delegationId, DelegationController.Delegation memory delegation) public returns (State state) {
-        if (delegation.purchased) {
-            state = purchasedProposedToPurchased(delegationId);
-        } else {
-            state = proposedToUnlocked(delegationId);
         }
     }
 
@@ -202,9 +200,10 @@ contract TokenState is Permissions {
         return state;
     }
 
-    function purchasedProposedToPurchased(uint delegationId) internal returns (State) {
+    function purchasedProposedToPurchased(uint delegationId, DelegationController.Delegation memory delegation) internal returns (State) {
         _state[delegationId] = State.COMPLETED;
         _timelimit[delegationId] = 0;
+        _purchased[delegation.holder] += delegation.amount;
         return State.COMPLETED;
     }
 
@@ -238,5 +237,13 @@ contract TokenState is Permissions {
     function purchasedToUnlocked(address holder) internal {
         _purchased[holder] = 0;
         _totalDelegated[holder] = 0;
+    }
+
+    function _cancel(uint delegationId, DelegationController.Delegation memory delegation) internal returns (State state) {
+        if (delegation.purchased) {
+            state = purchasedProposedToPurchased(delegationId, delegation);
+        } else {
+            state = proposedToUnlocked(delegationId);
+        }
     }
 }
