@@ -48,6 +48,7 @@ contract("TokenSaleManager", ([owner, holder]) => {
 
     it("should not lock tokens by default", async () => {
         (await tokenState.getLockedCount.call(holder)).toNumber().should.be.equal(0);
+        (await tokenState.getDelegatedCount.call(holder)).toNumber().should.be.equal(0);
     });
 
     it("should be in `proposed` state by default", async () => {
@@ -69,19 +70,29 @@ contract("TokenSaleManager", ([owner, holder]) => {
         state.toNumber().should.be.equal(State.COMPLETED);
         const locked = await tokenState.getLockedCount.call(holder);
         locked.toNumber().should.be.equal(0);
+        const delegated = await tokenState.getDelegatedCount.call(holder);
+        delegated.toNumber().should.be.equal(0);
     });
 
     it("should allow holder to cancel delegation befor acceptance", async () => {
-        await delegationController.createDelegation("5", "100", "3", {from: holder});
+        const amount = 100;
+        await delegationController.createDelegation("5", amount.toString(), "3", {from: holder});
         const delegationId = 0;
         const delegation = await delegationController.getDelegation(delegationId);
+
+        let locked = await tokenState.getLockedCount.call(holder);
+        locked.toNumber().should.be.equal(amount);
+        let delegated = await tokenState.getDelegatedCount.call(holder);
+        delegated.toNumber().should.be.equal(0);
 
         await tokenState.cancel(delegationId, delegation);
 
         const state = await tokenState.getState.call(delegationId);
         state.toNumber().should.be.equal(State.COMPLETED);
-        const locked = await tokenState.getLockedCount.call(holder);
+        locked = await tokenState.getLockedCount.call(holder);
         locked.toNumber().should.be.equal(0);
+        delegated = await tokenState.getDelegatedCount.call(holder);
+        delegated.toNumber().should.be.equal(0);
     });
 
     it("should allow to move delegation from proposed to accepted state", async () => {
@@ -95,6 +106,8 @@ contract("TokenSaleManager", ([owner, holder]) => {
         state.toNumber().should.be.equal(State.ACCEPTED);
         const locked = await tokenState.getLockedCount.call(holder);
         locked.toNumber().should.be.equal(amount);
+        const delegated = await tokenState.getDelegatedCount.call(holder);
+        delegated.toNumber().should.be.equal(0);
     });
 
     it("should become delegated after month end if is accepted", async () => {
@@ -112,6 +125,8 @@ contract("TokenSaleManager", ([owner, holder]) => {
         state.toNumber().should.be.equal(State.DELEGATED);
         const locked = await tokenState.getLockedCount.call(holder);
         locked.toNumber().should.be.equal(amount);
+        const delegated = await tokenState.getDelegatedCount.call(holder);
+        delegated.toNumber().should.be.equal(amount);
     });
 
     it("should not allow to request undelegation while is not delegated", async () => {
@@ -142,6 +157,8 @@ contract("TokenSaleManager", ([owner, holder]) => {
         state.toNumber().should.be.equal(State.ENDING_DELEGATED);
         let locked = await tokenState.getLockedCount.call(holder);
         locked.toNumber().should.be.equal(amount);
+        let delegated = await tokenState.getDelegatedCount.call(holder);
+        delegated.toNumber().should.be.equal(amount);
 
         skipTime(web3, month * period);
 
@@ -149,15 +166,19 @@ contract("TokenSaleManager", ([owner, holder]) => {
         state.toNumber().should.be.equal(State.COMPLETED);
         locked = await tokenState.getLockedCount.call(holder);
         locked.toNumber().should.be.equal(0);
+        delegated = await tokenState.getDelegatedCount.call(holder);
+        delegated.toNumber().should.be.equal(0);
     });
 
     describe("Token sale", async () => {
-        it("should allow to mark token as sold", async () => {
+        it("should allow to mark tokens as sold", async () => {
             const totalAmount = 100;
             await tokenState.sold(holder, totalAmount.toString());
 
             const locked = await tokenState.getLockedCount.call(holder);
             locked.toNumber().should.be.equal(totalAmount);
+            const delegated = await tokenState.getDelegatedCount.call(holder);
+            delegated.toNumber().should.be.equal(0);
         });
 
         describe("When purchased 100 tokens", async () => {
@@ -178,6 +199,8 @@ contract("TokenSaleManager", ([owner, holder]) => {
 
                 const locked = await tokenState.getLockedCount.call(holder);
                 locked.toNumber().should.be.equal(totalAmount);
+                const delegated = await tokenState.getDelegatedCount.call(holder);
+                delegated.toNumber().should.be.equal(0);
             });
 
             it("should unlock all tokens if 50% was delegated", async () => {
@@ -192,6 +215,9 @@ contract("TokenSaleManager", ([owner, holder]) => {
                 const month = 60 * 60 * 24 * 31;
                 skipTime(web3, month);
 
+                let delegated = await tokenState.getDelegatedCount.call(holder);
+                delegated.toNumber().should.be.equal(amount);
+
                 await tokenState.requestUndelegation(delegationId);
 
                 skipTime(web3, month * period);
@@ -200,6 +226,8 @@ contract("TokenSaleManager", ([owner, holder]) => {
                 state.toNumber().should.be.equal(State.COMPLETED);
                 const locked = await tokenState.getLockedCount.call(holder);
                 locked.toNumber().should.be.equal(0);
+                delegated = await tokenState.getDelegatedCount.call(holder);
+                delegated.toNumber().should.be.equal(0);
             });
 
             it("should unlock only 40% tokens if 40% was delegated", async () => {
@@ -214,7 +242,13 @@ contract("TokenSaleManager", ([owner, holder]) => {
                 const month = 60 * 60 * 24 * 31;
                 skipTime(web3, month);
 
+                let delegated = await tokenState.getDelegatedCount.call(holder);
+                delegated.toNumber().should.be.equal(amount);
+
                 await tokenState.requestUndelegation(delegationId);
+
+                delegated = await tokenState.getDelegatedCount.call(holder);
+                delegated.toNumber().should.be.equal(amount);
 
                 skipTime(web3, month * period);
 
@@ -222,6 +256,8 @@ contract("TokenSaleManager", ([owner, holder]) => {
                 state.toNumber().should.be.equal(State.COMPLETED);
                 const locked = await tokenState.getLockedCount.call(holder);
                 locked.toNumber().should.be.equal(totalAmount - amount);
+                delegated = await tokenState.getDelegatedCount.call(holder);
+                delegated.toNumber().should.be.equal(0);
             });
 
             it("should unlock all tokens if 40% was delegated and then 10% was delegated", async () => {
@@ -237,6 +273,9 @@ contract("TokenSaleManager", ([owner, holder]) => {
                 const month = 60 * 60 * 24 * 31;
                 skipTime(web3, month);
 
+                let delegated = await tokenState.getDelegatedCount.call(holder);
+                delegated.toNumber().should.be.equal(amount);
+
                 await tokenState.requestUndelegation(delegationId);
 
                 skipTime(web3, month * period);
@@ -245,6 +284,8 @@ contract("TokenSaleManager", ([owner, holder]) => {
                 state.toNumber().should.be.equal(State.COMPLETED);
                 let locked = await tokenState.getLockedCount.call(holder);
                 locked.toNumber().should.be.equal(totalAmount - amount);
+                delegated = await tokenState.getDelegatedCount.call(holder);
+                delegated.toNumber().should.be.equal(0);
 
                 // delegate 10%
                 amount = 10;
@@ -258,6 +299,8 @@ contract("TokenSaleManager", ([owner, holder]) => {
 
                 state = await tokenState.getState.call(delegationId);
                 state.toNumber().should.be.equal(State.DELEGATED);
+                delegated = await tokenState.getDelegatedCount.call(holder);
+                delegated.toNumber().should.be.equal(amount);
                 await tokenState.requestUndelegation(delegationId);
 
                 skipTime(web3, month * period);
@@ -266,6 +309,8 @@ contract("TokenSaleManager", ([owner, holder]) => {
                 state.toNumber().should.be.equal(State.COMPLETED);
                 locked = await tokenState.getLockedCount.call(holder);
                 locked.toNumber().should.be.equal(0);
+                delegated = await tokenState.getDelegatedCount.call(holder);
+                delegated.toNumber().should.be.equal(0);
             });
         });
     });
