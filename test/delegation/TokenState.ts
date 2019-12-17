@@ -170,6 +170,26 @@ contract("TokenSaleManager", ([owner, holder]) => {
         delegated.toNumber().should.be.equal(0);
     });
 
+    it("should not allow to accept request after end of the month", async () => {
+        const amount = 100;
+        const period = 3;
+        await delegationController.createDelegation("5", amount.toString(), period.toString(), {from: holder});
+        const delegationId = 0;
+
+        // skip month
+        const month = 60 * 60 * 24 * 31;
+        skipTime(web3, month);
+
+        await tokenState.accept(delegationId).should.eventually.be.rejectedWith("Can't set state to accepted");
+
+        const state = await tokenState.getState.call(delegationId);
+        state.toNumber().should.be.equal(State.COMPLETED);
+        const locked = await tokenState.getLockedCount.call(holder);
+        locked.toNumber().should.be.equal(0);
+        const delegated = await tokenState.getDelegatedCount.call(holder);
+        delegated.toNumber().should.be.equal(0);
+    });
+
     describe("Token sale", async () => {
         it("should allow to mark tokens as sold", async () => {
             const totalAmount = 100;
