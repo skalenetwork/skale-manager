@@ -28,8 +28,8 @@ contract DelegationController is Permissions {
         address holder; // address of tokens owner
         uint validatorId;
         uint amount;
-        uint created; // time of creation
         uint delegationPeriod;
+        uint created; // time of creation
         string info;
     }
 
@@ -94,8 +94,8 @@ contract DelegationController is Permissions {
         address holder,
         uint validatorId,
         uint amount,
-        uint created,
         uint delegationPeriod,
+        uint created,
         string calldata info
     )
         external
@@ -107,8 +107,8 @@ contract DelegationController is Permissions {
             holder,
             validatorId,
             amount,
-            created,
             delegationPeriod,
+            created,
             info
         ));
         _delegationsByHolder[holder].push(delegationId);

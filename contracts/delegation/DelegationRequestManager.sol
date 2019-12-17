@@ -70,10 +70,11 @@ contract DelegationRequestManager is Permissions {
             holder,
             validatorId,
             amount,
-            now,
             delegationPeriod,
+            now,
             info
         );
+        uint holderBalance = SkaleToken(contractManager.getContract("SkaleToken")).balanceOf(holder);
         uint lockedToDelegate = tokenState.getLockedCount(holder) - tokenState.getPurchasedAmount(holder);
         require(holderBalance - lockedToDelegate >= amount, "Delegator hasn't enough tokens to delegate");
     }
@@ -88,7 +89,7 @@ contract DelegationRequestManager is Permissions {
         DelegationController.Delegation memory delegation = delegationController.getDelegation(delegationId);
         require(msg.sender == delegation.holder,"No permissions to cancel request");
         require(
-            tokenState.cancel(delegationId, delegation) == TokenState.State.COMPLETED,
+            tokenState.cancel(delegationId) == TokenState.State.COMPLETED,
             "After cancellation token should be COMPLETED");
     }
 
@@ -108,7 +109,7 @@ contract DelegationRequestManager is Permissions {
             "No permissions to accept request"
         );
         delegationController.delegate(delegationId);
-        tokenState.accept(requestId);
+        tokenState.accept(delegationId);
     }
 
 }

@@ -1,7 +1,7 @@
 import { ContractManagerContract,
          ContractManagerInstance,
-         DelegationControllerMockContract,
-         DelegationControllerMockInstance,
+         DelegationControllerContract,
+         DelegationControllerInstance,
          TimeHelpersContract,
          TimeHelpersInstance,
          TokenStateContract,
@@ -10,9 +10,9 @@ import { ContractManagerContract,
 const ContractManager: ContractManagerContract = artifacts.require("./ContractManager");
 const TimeHelpers: TimeHelpersContract = artifacts.require("./TimeHelpers");
 const TokenState: TokenStateContract = artifacts.require("./TokenState");
-const DelegationControllerMock: DelegationControllerMockContract = artifacts.require("./DelegationControllerMock");
+const DelegationController: DelegationControllerContract = artifacts.require("./DelegationController");
 
-import { skipTime } from "../utils/time";
+import { currentTime, skipTime } from "../utils/time";
 
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
@@ -30,7 +30,7 @@ enum State {
 contract("TokenState", ([owner, holder]) => {
     let contractManager: ContractManagerInstance;
     let timeHelpers: TimeHelpersInstance;
-    let delegationController: DelegationControllerMockInstance;
+    let delegationController: DelegationControllerInstance;
     let tokenState: TokenStateInstance;
 
     beforeEach(async () => {
@@ -39,7 +39,7 @@ contract("TokenState", ([owner, holder]) => {
         timeHelpers = await TimeHelpers.new();
         await contractManager.setContractsAddress("TimeHelpers", timeHelpers.address);
 
-        delegationController = await DelegationControllerMock.new(contractManager.address);
+        delegationController = await DelegationController.new(contractManager.address);
         await contractManager.setContractsAddress("DelegationController", delegationController.address);
 
         tokenState = await TokenState.new(contractManager.address);
@@ -53,14 +53,19 @@ contract("TokenState", ([owner, holder]) => {
 
     it("should be in `proposed` state by default", async () => {
         // create delegation with id "0"
-        await delegationController.createDelegation("5", "100", "3", {from: holder});
+        const amount = 100;
+        const time = await currentTime(web3);
+        await delegationController.addDelegation(holder, "5", amount.toString(), "3", time, "INFO");
 
         const returnedState = await tokenState.getState.call(0);
         returnedState.toNumber().should.be.equal(State.PROPOSED);
     });
 
     it("should automatically unlock tokens after delegation request if validator don't accept", async () => {
-        await delegationController.createDelegation("5", "100", "3", {from: holder});
+        const amount = 100;
+
+        const time = await currentTime(web3);
+        await delegationController.addDelegation(holder, "5", amount.toString(), "3", time, "INFO");
         const delegationId = 0;
 
         const month = 60 * 60 * 24 * 31;
@@ -76,7 +81,8 @@ contract("TokenState", ([owner, holder]) => {
 
     it("should allow holder to cancel delegation befor acceptance", async () => {
         const amount = 100;
-        await delegationController.createDelegation("5", amount.toString(), "3", {from: holder});
+        const time = await currentTime(web3);
+        await delegationController.addDelegation(holder, "5", amount.toString(), "3", time, "INFO");
         const delegationId = 0;
 
         let locked = await tokenState.getLockedCount.call(holder);
@@ -96,7 +102,8 @@ contract("TokenState", ([owner, holder]) => {
 
     it("should allow to move delegation from proposed to accepted state", async () => {
         const amount = 100;
-        await delegationController.createDelegation("5", amount.toString(), "3", {from: holder});
+        const time = await currentTime(web3);
+        await delegationController.addDelegation(holder, "5", amount.toString(), "3", time, "INFO");
         const delegationId = 0;
 
         await tokenState.accept(delegationId);
@@ -111,7 +118,8 @@ contract("TokenState", ([owner, holder]) => {
 
     it("should become delegated after month end if is accepted", async () => {
         const amount = 100;
-        await delegationController.createDelegation("5", amount.toString(), "3", {from: holder});
+        const time = await currentTime(web3);
+        await delegationController.addDelegation(holder, "5", amount.toString(), "3", time, "INFO");
         const delegationId = 0;
 
         await tokenState.accept(delegationId);
@@ -130,7 +138,8 @@ contract("TokenState", ([owner, holder]) => {
 
     it("should not allow to request undelegation while is not delegated", async () => {
         const amount = 100;
-        await delegationController.createDelegation("5", amount.toString(), "3", {from: holder});
+        const time = await currentTime(web3);
+        await delegationController.addDelegation(holder, "5", amount.toString(), "3", time, "INFO");
         const delegationId = 0;
 
         await tokenState.accept(delegationId);
@@ -141,7 +150,8 @@ contract("TokenState", ([owner, holder]) => {
     it("should allow to send undelegation request", async () => {
         const amount = 100;
         const period = 3;
-        await delegationController.createDelegation("5", amount.toString(), period.toString(), {from: holder});
+        const time = await currentTime(web3);
+        await delegationController.addDelegation(holder, "5", amount.toString(), period.toString(), time, "INFO");
         const delegationId = 0;
 
         await tokenState.accept(delegationId);
@@ -172,7 +182,8 @@ contract("TokenState", ([owner, holder]) => {
     it("should not allow to accept request after end of the month", async () => {
         const amount = 100;
         const period = 3;
-        await delegationController.createDelegation("5", amount.toString(), period.toString(), {from: holder});
+        const time = await currentTime(web3);
+        await delegationController.addDelegation(holder, "5", amount.toString(), period.toString(), time, "INFO");
         const delegationId = 0;
 
         // skip month
@@ -192,7 +203,8 @@ contract("TokenState", ([owner, holder]) => {
     it("should not allow to cancel accepted request", async () => {
         const amount = 100;
         const period = 3;
-        await delegationController.createDelegation("5", amount.toString(), period.toString(), {from: holder});
+        const time = await currentTime(web3);
+        await delegationController.addDelegation(holder, "5", amount.toString(), period.toString(), time, "INFO");
         const delegationId = 0;
 
         await tokenState.accept(delegationId);
@@ -225,7 +237,9 @@ contract("TokenState", ([owner, holder]) => {
             it("should not unlock purchased tokens if delegation request was cancelled", async () => {
                 const amount = 100;
                 const period = 3;
-                await delegationController.createDelegation("5", amount.toString(), period.toString(), {from: holder});
+                const time = await currentTime(web3);
+                await delegationController.addDelegation(
+                    holder, "5", amount.toString(), period.toString(), time, "INFO");
                 const delegationId = 0;
                 const delegation = await delegationController.getDelegation(delegationId);
                 delegation.holder.should.be.deep.equal(holder);
@@ -241,7 +255,9 @@ contract("TokenState", ([owner, holder]) => {
             it("should unlock all tokens if 50% was delegated", async () => {
                 const amount = 50;
                 const period = 3;
-                await delegationController.createDelegation("5", amount.toString(), period.toString(), {from: holder});
+                const time = await currentTime(web3);
+                await delegationController.addDelegation(
+                    holder, "5", amount.toString(), period.toString(), time, "INFO");
                 const delegationId = 0;
 
                 await tokenState.accept(delegationId);
@@ -268,7 +284,9 @@ contract("TokenState", ([owner, holder]) => {
             it("should unlock only 40% tokens if 40% was delegated", async () => {
                 const amount = 40;
                 const period = 3;
-                await delegationController.createDelegation("5", amount.toString(), period.toString(), {from: holder});
+                const time = await currentTime(web3);
+                await delegationController.addDelegation(
+                    holder, "5", amount.toString(), period.toString(), time, "INFO");
                 const delegationId = 0;
 
                 await tokenState.accept(delegationId);
@@ -299,7 +317,9 @@ contract("TokenState", ([owner, holder]) => {
                 // delegate 40%
                 let amount = 40;
                 const period = 3;
-                await delegationController.createDelegation("5", amount.toString(), period.toString(), {from: holder});
+                const time = await currentTime(web3);
+                await delegationController.addDelegation(
+                    holder, "5", amount.toString(), period.toString(), time, "INFO");
                 let delegationId = 0;
 
                 await tokenState.accept(delegationId);
@@ -324,7 +344,8 @@ contract("TokenState", ([owner, holder]) => {
 
                 // delegate 10%
                 amount = 10;
-                await delegationController.createDelegation("5", amount.toString(), period.toString(), {from: holder});
+                await delegationController.addDelegation(
+                    holder, "5", amount.toString(), period.toString(), time, "INFO");
                 delegationId = 1;
 
                 await tokenState.accept(delegationId);

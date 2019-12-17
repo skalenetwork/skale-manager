@@ -31,7 +31,7 @@ chai.use(chaiAsPromised);
 
 const allowedDelegationPeriods = [3, 6, 12];
 
-class DelegationRequest {
+class Delegation {
     public tokenAddress: string;
     public validatorId: BigNumber;
     public amount: BigNumber;
@@ -115,12 +115,12 @@ contract("Delegation", ([owner,
                         assert.equal(logs.length, 1, "No DelegationRquestIsSent Event emitted");
                         assert.equal(logs[0].event, "DelegationRequestIsSent");
                         requestId = logs[0].args.requestId;
-                        const delegationRequest: DelegationRequest = new DelegationRequest(
-                            await delegationRequestManager.delegationRequests(requestId));
-                        assert.equal(holder1, delegationRequest.tokenAddress);
-                        assert.equal(validatorId, delegationRequest.validatorId.toNumber());
-                        assert.equal(delegationPeriod, delegationRequest.delegationPeriod.toNumber());
-                        assert.equal("D2 is even", delegationRequest.description);
+                        const delegation: Delegation = new Delegation(
+                            await delegationController.delegations(requestId));
+                        assert.equal(holder1, delegation.tokenAddress);
+                        assert.equal(validatorId, delegation.validatorId.toNumber());
+                        assert.equal(delegationPeriod, delegation.delegationPeriod.toNumber());
+                        assert.equal("D2 is even", delegation.description);
                     });
 
                     describe("when delegation request is sent", async () => {
