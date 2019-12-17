@@ -32,7 +32,6 @@ contract DelegationController is Permissions {
         uint stakeEffectiveness;
         uint created; // time of creation
         uint delegationPeriod;
-        bool purchased; // are these tokens purchased on token sale
     }
 
     /// @notice delegations will never be deleted to index in this array may be used like delegation id
@@ -87,11 +86,6 @@ contract DelegationController is Permissions {
     function getDelegation(uint delegationId) external view returns (Delegation memory) {
         require(delegationId < delegations.length, "Delegation does not exist");
         return delegations[delegationId];
-    }
-
-    function setPurchased(uint delegationId, bool value) external allow("TokenState") {
-        require(delegationId < delegations.length, "Delegation does not exist");
-        delegations[delegationId].purchased = value;
     }
 
     function calculateEndTime(uint months) public view returns (uint endTime) {

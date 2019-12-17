@@ -39,8 +39,7 @@ contract DelegationControllerMock is DelegationController {
             amount,
             0,
             now,
-            delegationPeriod,
-            false);
+            delegationPeriod);
 
         addDelegation(delegation);
     }

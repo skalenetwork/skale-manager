@@ -46,6 +46,8 @@ contract TokenState is Permissions {
     mapping (address => uint) private _purchased;
     ///       holder => amount
     mapping (address => uint) private _totalDelegated;
+    /// delegationId => purchased
+    mapping (uint => bool) private _isPurchased;
 
     ///       holder => delegationId[]
     mapping (address => uint[]) private _endingDelegations;
@@ -157,14 +159,14 @@ contract TokenState is Permissions {
 
         _timelimit[delegationId] = timeHelpers.getNextMonthStartFromDate(delegation.created);
         if (_purchased[delegation.holder] > 0) {
-            delegationController.setPurchased(delegationId, true);
+            _isPurchased[delegationId] = true;
             if (_purchased[delegation.holder] > delegation.amount) {
                 _purchased[delegation.holder] -= delegation.amount;
             } else {
                 _purchased[delegation.holder] = 0;
             }
         } else {
-            delegationController.setPurchased(delegationId, false);
+            _isPurchased[delegationId] = false;
         }
     }
 
@@ -222,7 +224,7 @@ contract TokenState is Permissions {
             }
         }
 
-        if (delegation.purchased) {
+        if (_isPurchased[delegationId]) {
             address holder = delegation.holder;
             _totalDelegated[holder] += delegation.amount;
             if (_totalDelegated[holder] >= _purchased[holder]) {
@@ -237,7 +239,7 @@ contract TokenState is Permissions {
     }
 
     function _cancel(uint delegationId, DelegationController.Delegation memory delegation) internal returns (State state) {
-        if (delegation.purchased) {
+        if (_isPurchased[delegationId]) {
             state = purchasedProposedToPurchased(delegationId, delegation);
         } else {
             state = proposedToUnlocked(delegationId);
