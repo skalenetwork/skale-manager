@@ -47,7 +47,7 @@ interface IValidatorDelegation {
     function registerValidator(
         string calldata name,
         string calldata description,
-        uint feeRate,
+        uint feeRatePromille,
         uint minimumDelegationAmount
     ) external returns (uint validatorId);
 
@@ -65,5 +65,4 @@ interface IValidatorDelegation {
     function setMinimumDelegationAmount(uint amount) external;
 
     function getValidatorInfo(uint validatorId) external returns (Validator memory validator);
-
 }

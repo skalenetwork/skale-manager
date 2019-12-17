@@ -11,7 +11,7 @@ import { ContractManagerContract,
     SkaleTokenContract,
     SkaleTokenInstance,
     ValidatorServiceContract,
-    ValidatorServiceInstance } from "../types/truffle-contracts";
+    ValidatorServiceInstance } from "../../types/truffle-contracts";
 
 const ContractManager: ContractManagerContract = artifacts.require("./ContractManager");
 const SkaleToken: SkaleTokenContract = artifacts.require("./SkaleToken");
@@ -21,7 +21,7 @@ const DelegationRequestManager: DelegationRequestManagerContract = artifacts.req
 const ValidatorService: ValidatorServiceContract = artifacts.require("./ValidatorService");
 const DelegationController: DelegationControllerContract = artifacts.require("./DelegationController");
 
-import { currentTime, months, skipTime, skipTimeToDate } from "./utils/time";
+import { currentTime, months, skipTime, skipTimeToDate } from "../utils/time";
 
 import BigNumber from "bignumber.js";
 import * as chai from "chai";
