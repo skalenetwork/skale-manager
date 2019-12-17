@@ -68,6 +68,10 @@ contract DelegationRequestManager is Permissions {
             contractManager.getContract("DelegationController")
         );
         require(
+            validatorService.checkMinimumDelegation(validatorId, amount),
+            "Amount doesn't meet minimum delegation amount"
+        );
+        require(
             delegationPeriodManager.isDelegationPeriodAllowed(delegationPeriod),
             "This delegation period is not allowed"
         );
@@ -83,8 +87,8 @@ contract DelegationRequestManager is Permissions {
 
         tokenState.setState(delegationId, TokenState.State.PROPOSED);
         uint holderBalance = SkaleToken(contractManager.getContract("SkaleToken")).balanceOf(holder);
-        uint lockedTokens = tokenState.getLockedCount(holder);
-        require(holderBalance - lockedTokens >= amount, "Not enough tokens to delegate");
+        uint delegatedTokens = tokenState.getDelegatedCount(holder);
+        require(holderBalance - delegatedTokens >= amount, "Not enough tokens to delegate");
     }
 
     function cancelRequest(uint delegationId) external {
@@ -113,7 +117,7 @@ contract DelegationRequestManager is Permissions {
         );
         DelegationController.Delegation memory delegation = delegationController.getDelegation(delegationId);
         require(
-            validatorService.checkValidatorIdToAddress(delegation.validatorId, msg.sender),
+            validatorService.checkValidatorAddressToId(msg.sender, delegation.validatorId),
             "No permissions to accept request"
         );
         delegationController.delegate(delegationId);
