@@ -189,6 +189,17 @@ contract("TokenState", ([owner, holder]) => {
         delegated.toNumber().should.be.equal(0);
     });
 
+    it("should not allow to cancel accepted request", async () => {
+        const amount = 100;
+        const period = 3;
+        await delegationController.createDelegation("5", amount.toString(), period.toString(), {from: holder});
+        const delegationId = 0;
+
+        await tokenState.accept(delegationId);
+
+        await tokenState.cancel(delegationId).should.be.eventually.rejectedWith("Can't cancel delegation request");
+    });
+
     it("should not allow to get state of non existing delegation", async () => {
         await tokenState.getState.call("0xd2").should.be.eventually.rejectedWith("Delegation does not exist");
     });
