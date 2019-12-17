@@ -22,9 +22,7 @@ pragma experimental ABIEncoderV2;
 import "./Permissions.sol";
 import "./interfaces/IGroupsData.sol";
 import "./interfaces/INodesData.sol";
-// import "openzeppelin-solidity/contracts/utils/ReentrancyGuard.sol";
-// import "./ECDH.sol";
-// import "./Decryption.sol";
+import "./interfaces/ISchainsFunctionality.sol";
 
 interface IECDH {
     function deriveKey(
@@ -39,6 +37,12 @@ interface IECDH {
 
 interface IDecryption {
     function decrypt(bytes32 ciphertext, bytes32 key) external pure returns (uint256);
+}
+
+interface ISchainsFunctionalityInternal {
+    function replaceNode(uint nodeIndex, bytes32 groupIndex) external returns (bytes32, uint);
+    function isEnoughNodes(bytes32 groupIndex) external view returns (uint[] memory);
+    function excludeNodeFromSchain(uint nodeIndex, bytes32 groupHash) external;
 }
 
 
@@ -117,7 +121,7 @@ contract SkaleDKG is Permissions {
 
     }
 
-    function openChannel(bytes32 groupIndex) external allowMultiple("SchainsData", "ValidatorsData") {
+    function openChannel(bytes32 groupIndex) external allowThree("SchainsData", "ValidatorsData", "SkaleDKG") {
         require(!channels[groupIndex].active, "Channel already is created");
         channels[groupIndex].active = true;
         channels[groupIndex].dataAddress = msg.sender;
@@ -128,7 +132,7 @@ contract SkaleDKG is Permissions {
         emit ChannelOpened(groupIndex);
     }
 
-    function deleteChannel(bytes32 groupIndex) external allowMultiple("SchainsData", "ValidatorsData") {
+    function deleteChannel(bytes32 groupIndex) external allowTwo("SchainsData", "ValidatorsData") {
         require(channels[groupIndex].active, "Channel is not created");
         delete channels[groupIndex];
     }
@@ -193,18 +197,12 @@ contract SkaleDKG is Permissions {
         } else if (isBroadcasted(groupIndex, toNodeIndex) && channels[groupIndex].nodeToComplaint == toNodeIndex) {
             require(channels[groupIndex].startComplaintBlockNumber + 120 <= block.number, "One more complaint rejected");
             // need to penalty Node - toNodeIndex
-            emit BadGuy(channels[groupIndex].nodeToComplaint);
-            IGroupsData(channels[groupIndex].dataAddress).setGroupFailedDKG(groupIndex);
-            delete channels[groupIndex];
-            emit FailedDKG(groupIndex);
+            finalizeSlashing(groupIndex, channels[groupIndex].nodeToComplaint);
         } else if (!isBroadcasted(groupIndex, toNodeIndex)) {
             // if node have not broadcasted params
             require(channels[groupIndex].startedBlockNumber + 120 <= block.number, "Complaint rejected");
             // need to penalty Node - toNodeIndex
-            emit BadGuy(channels[groupIndex].nodeToComplaint);
-            IGroupsData(channels[groupIndex].dataAddress).setGroupFailedDKG(groupIndex);
-            delete channels[groupIndex];
-            emit FailedDKG(groupIndex);
+            finalizeSlashing(groupIndex, channels[groupIndex].nodeToComplaint);
         }
     }
 
@@ -221,30 +219,19 @@ contract SkaleDKG is Permissions {
         require(channels[groupIndex].nodeToComplaint == fromNodeIndex, "Not this Node");
         require(isNodeByMessageSender(fromNodeIndex, msg.sender), "Node does not exist for message sender");
 
-        uint secret = decryptMessage(groupIndex, secretNumber);
+        // uint secret = decryptMessage(groupIndex, secretNumber);
 
         // DKG verification(secret key contribution, verification vector)
-        uint indexOfNode = findNode(groupIndex, fromNodeIndex);
-        bytes memory verVec = data[groupIndex][indexOfNode].verificationVector;
+        // uint indexOfNode = findNode(groupIndex, fromNodeIndex);
+        // bytes memory verVec = data[groupIndex][indexOfNode].verificationVector;
         bool verificationResult = verify(
-            indexOfNode,
-            secret,
-            multipliedShare,
-            verVec
+            groupIndex,
+            fromNodeIndex,
+            secretNumber,
+            multipliedShare
         );
-        if (verificationResult) {
-            //slash fromNodeToComplaint
-            emit BadGuy(channels[groupIndex].fromNodeToComplaint);
-        } else {
-            //slash nodeToComplaint
-            emit BadGuy(channels[groupIndex].nodeToComplaint);
-        }
-        // slash someone
-        // not in 1.0
-        // Fail DKG
-        IGroupsData(channels[groupIndex].dataAddress).setGroupFailedDKG(groupIndex);
-        emit FailedDKG(groupIndex);
-        delete channels[groupIndex];
+        uint badNode = (verificationResult ? channels[groupIndex].fromNodeToComplaint : channels[groupIndex].nodeToComplaint);
+        finalizeSlashing(groupIndex, badNode);
     }
 
     function allright(bytes32 groupIndex, uint fromNodeIndex)
@@ -277,16 +264,42 @@ contract SkaleDKG is Permissions {
         return channels[groupIndex].active;
     }
 
+    function finalizeSlashing(bytes32 groupIndex, uint badNode) internal {
+        address schainsFunctionalityInternalAddress = contractManager.contracts(
+            keccak256(abi.encodePacked("SchainsFunctionalityInternal"))
+        );
+        uint[] memory possibleNodes = ISchainsFunctionalityInternal(schainsFunctionalityInternalAddress).isEnoughNodes(groupIndex);
+        emit BadGuy(badNode);
+        if (possibleNodes.length > 0) {
+            ISchainsFunctionalityInternal(schainsFunctionalityInternalAddress).replaceNode(
+                badNode,
+                groupIndex
+            );
+            this.openChannel(groupIndex);
+        } else {
+            ISchainsFunctionalityInternal(schainsFunctionalityInternalAddress).excludeNodeFromSchain(
+                badNode,
+                groupIndex
+            );
+            IGroupsData(channels[groupIndex].dataAddress).setGroupFailedDKG(groupIndex);
+            emit FailedDKG(groupIndex);
+        }
+        delete channels[groupIndex];
+    }
+
     function verify(
-        uint index,
-        uint secret,
-        bytes memory multipliedShare,
-        bytes memory verificationVector
+        bytes32 groupIndex,
+        uint fromNodeIndex,
+        uint secretNumber,
+        bytes memory multipliedShare
     )
-        public
+        internal
         view
         returns (bool)
     {
+        uint index = findNode(groupIndex, fromNodeIndex);
+        uint secret = decryptMessage(groupIndex, secretNumber);
+        bytes memory verificationVector = data[groupIndex][index].verificationVector;
         Fp2 memory valX = Fp2({x: 0, y: 0});
         Fp2 memory valY = Fp2({x: 1, y: 0});
         Fp2 memory tmpX = Fp2({x: 0, y: 0});
