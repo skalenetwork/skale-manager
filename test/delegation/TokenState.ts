@@ -317,7 +317,7 @@ contract("TokenState", ([owner, holder]) => {
                 // delegate 40%
                 let amount = 40;
                 const period = 3;
-                const time = await currentTime(web3);
+                let time = await currentTime(web3);
                 await delegationController.addDelegation(
                     holder, "5", amount.toString(), period.toString(), time, "INFO");
                 let delegationId = 0;
@@ -344,6 +344,7 @@ contract("TokenState", ([owner, holder]) => {
 
                 // delegate 10%
                 amount = 10;
+                time = await currentTime(web3);
                 await delegationController.addDelegation(
                     holder, "5", amount.toString(), period.toString(), time, "INFO");
                 delegationId = 1;

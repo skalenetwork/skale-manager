@@ -187,19 +187,19 @@ contract TokenState is Permissions {
     }
 
     function proposedToUnlocked(uint delegationId) internal returns (State state) {
-        State state = State.COMPLETED;
+        state = State.COMPLETED;
         _state[delegationId] = state;
         _timelimit[delegationId] = 0;
     }
 
     function acceptedToDelegated(uint delegationId) internal returns (State state) {
-        State state = State.DELEGATED;
+        state = State.DELEGATED;
         _state[delegationId] = state;
         _timelimit[delegationId] = 0;
     }
 
     function purchasedProposedToPurchased(uint delegationId, DelegationController.Delegation memory delegation) internal returns (State state) {
-        State state = State.COMPLETED;
+        state = State.COMPLETED;
         _state[delegationId] = state;
         _timelimit[delegationId] = 0;
         _purchased[delegation.holder] += delegation.amount;
