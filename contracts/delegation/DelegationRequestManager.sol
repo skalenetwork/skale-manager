@@ -30,16 +30,6 @@ import "./TokenState.sol";
 
 contract DelegationRequestManager is Permissions {
 
-    struct DelegationRequest {
-        address holder;
-        uint validatorId;
-        uint amount;
-        uint delegationPeriod;
-        uint unlockedUntill;
-        string description;
-    }
-
-    DelegationRequest[] public delegationRequests;
 
     constructor(address newContractsAddress) Permissions(newContractsAddress) public {
 
@@ -84,11 +74,8 @@ contract DelegationRequestManager is Permissions {
             delegationPeriod,
             info
         );
-
-        tokenState.setState(delegationId, TokenState.State.PROPOSED);
-        uint holderBalance = SkaleToken(contractManager.getContract("SkaleToken")).balanceOf(holder);
-        uint delegatedTokens = tokenState.getDelegatedCount(holder);
-        require(holderBalance - delegatedTokens >= amount, "Not enough tokens to delegate");
+        uint lockedToDelegate = tokenState.getLockedCount(holder) - tokenState.getPurchasedAmount(holder);
+        require(holderBalance - lockedToDelegate >= amount, "Delegator hasn't enough tokens to delegate");
     }
 
     function cancelRequest(uint delegationId) external {
@@ -121,7 +108,7 @@ contract DelegationRequestManager is Permissions {
             "No permissions to accept request"
         );
         delegationController.delegate(delegationId);
-        tokenState.setState(delegationId, TokenState.State.ACCEPTED);
+        tokenState.accept(requestId);
     }
 
 }

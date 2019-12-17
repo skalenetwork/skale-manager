@@ -31,7 +31,6 @@ contract DelegationController is Permissions {
         uint created; // time of creation
         uint delegationPeriod;
         string info;
-        bool purchased; // are these tokens purchased on token sale
     }
 
     /// @notice delegations will never be deleted to index in this array may be used like delegation id
@@ -110,8 +109,7 @@ contract DelegationController is Permissions {
             amount,
             created,
             delegationPeriod,
-            info,
-            false
+            info
         ));
         _delegationsByHolder[holder].push(delegationId);
     }
@@ -124,10 +122,6 @@ contract DelegationController is Permissions {
 
     function getDelegationsByHolder(address holder) external view returns (uint[] memory) {
         return _delegationsByHolder[holder];
-    }
-
-    function setPurchased(uint delegationId, bool value) external checkDelegationExists(delegationId) allow("TokenState") {
-        delegations[delegationId].purchased = value;
     }
 
     function getDelegation(uint delegationId) public view checkDelegationExists(delegationId) returns (Delegation memory) {

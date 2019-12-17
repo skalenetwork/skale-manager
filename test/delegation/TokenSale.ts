@@ -9,7 +9,7 @@ import { ContractManagerContract,
          TokenSaleManagerContract,
          TokenSaleManagerInstance,
          ValidatorServiceContract,
-         ValidatorServiceInstance } from "../types/truffle-contracts";
+         ValidatorServiceInstance } from "../../types/truffle-contracts";
 
 const ContractManager: ContractManagerContract = artifacts.require("./ContractManager");
 const SkaleToken: SkaleTokenContract = artifacts.require("./SkaleToken");
@@ -18,7 +18,7 @@ const DelegationService: DelegationServiceContract = artifacts.require("./Delega
 const ValidatorService: ValidatorServiceContract = artifacts.require("./ValidatorService");
 const DelegationController: DelegationControllerContract = artifacts.require("./DelegationController");
 
-import { skipTimeToDate } from "./utils/time";
+import { skipTimeToDate } from "../utils/time";
 
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";

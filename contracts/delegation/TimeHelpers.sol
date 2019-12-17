@@ -23,15 +23,7 @@ import "../thirdparty/BokkyPooBahsDateTimeLibrary.sol";
 
 contract TimeHelpers {
     function getNextMonthStart() external view returns (uint timestamp) {
-        uint year;
-        uint month;
-        (year, month, ) = BokkyPooBahsDateTimeLibrary.timestampToDate(now);
-        month++;
-        if (month > 12) {
-            year++;
-            month = 1;
-        }
-        timestamp = BokkyPooBahsDateTimeLibrary.timestampFromDate(year, month, 1);
+        return getNextMonthStartFromDate(now);
     }
 
     function calculateDelegationEndTime(
@@ -67,5 +59,17 @@ contract TimeHelpers {
             }
             timestamp = BokkyPooBahsDateTimeLibrary.timestampFromDate(year, month, 1);
         }
+    }
+
+    function getNextMonthStartFromDate(uint dateTimestamp) public pure returns (uint timestamp) {
+        uint year;
+        uint month;
+        (year, month, ) = BokkyPooBahsDateTimeLibrary.timestampToDate(dateTimestamp);
+        month++;
+        if (month > 12) {
+            year++;
+            month = 1;
+        }
+        timestamp = BokkyPooBahsDateTimeLibrary.timestampFromDate(year, month, 1);
     }
 }

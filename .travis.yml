@@ -46,8 +46,8 @@ script:
 # Just deploy contracts instead
     - truffle deploy --network test
 #     - yarn test || travis_terminate 3
-# after_script:
-#     - npx solidity-coverage || travis_terminate 4
-#     - cat coverage/lcov.info | npx codecov
+after_script:
+    - npx solidity-coverage || travis_terminate 4
+    - cat coverage/lcov.info | npx codecov
 
 
