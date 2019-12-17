@@ -132,17 +132,14 @@ contract TokenState is Permissions {
 
         if (newState == State.ACCEPTED) {
             State currentState = getState(delegationId);
-            if (currentState != State.PROPOSED) {
-                revert("Can't set state to accepted");
-            }
+            require(currentState == State.PROPOSED, "Can't set state to accepted");
+
             _state[delegationId] = State.ACCEPTED;
             _timelimit[delegationId] = timeHelpers.getNextMonthStart();
         } else if (newState == State.DELEGATED) {
             revert("Can't set state to delegated");
         } else if (newState == State.ENDING_DELEGATED) {
-            if (getState(delegationId) != State.DELEGATED) {
-                revert("Can't set state to ending delegated");
-            }
+            require(getState(delegationId) == State.DELEGATED, "Can't set state to ending delegated");
             DelegationController.Delegation memory delegation = delegationController.getDelegation(delegationId);
 
             _state[delegationId] = State.ENDING_DELEGATED;
