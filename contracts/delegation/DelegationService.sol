@@ -21,11 +21,13 @@ pragma solidity ^0.5.3;
 pragma experimental ABIEncoderV2;
 
 import "../Permissions.sol";
+import "../SkaleToken.sol";
 import "../interfaces/delegation/IHolderDelegation.sol";
 import "../interfaces/delegation/IValidatorDelegation.sol";
 import "./DelegationRequestManager.sol";
 import "./ValidatorService.sol";
 import "./DelegationController.sol";
+import "./TokenState.sol";
 
 
 contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegation {
@@ -196,8 +198,13 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
     }
 
     /// @notice Makes all tokens of target account unavailable to move
-    function lock(address wallet, uint amount) external {
-        revert("Lock is not implemented");
+    function lock(address wallet, uint amount) external allow("TokenSaleManager") {
+        SkaleToken skaleToken = SkaleToken(contractManager.getContract("SkaleToken"));
+        TokenState tokenState = TokenState(contractManager.getContract("TokenState"));
+
+        require(skaleToken.balanceOf(wallet) >= tokenState.getPurchasedAmount(wallet) + amount, "Not enough founds");
+
+        tokenState.sold(wallet, amount);
     }
 
     /// @notice Makes all tokens of target account available to move
@@ -205,12 +212,12 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
         revert("Not implemented");
     }
 
-    function getLockedOf(address wallet) external returns (bool) {
-        revert("getLockedOf is not implemented");
-        // return isDelegated(wallet) || _locked[wallet];
+    function getLockedOf(address wallet) external returns (uint) {
+        TokenState tokenState = TokenState(contractManager.getContract("TokenState"));
+        return tokenState.getLockedCount(wallet);
     }
 
-    function getDelegatedOf(address wallet) external returns (bool) {
+    function getDelegatedOf(address wallet) external returns (uint) {
         revert("isDelegatedOf is not implemented");
         // return DelegationManager(contractManager.getContract("DelegationManager")).isDelegated(wallet);
     }

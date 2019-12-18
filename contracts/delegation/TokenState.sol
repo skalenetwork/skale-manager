@@ -124,6 +124,14 @@ contract TokenState is Permissions {
         }
     }
 
+    function getPurchasedAmount(address holder) public returns (uint amount) {
+        // check if any delegation was ended
+        for (uint i = 0; i < _endingDelegations[holder].length; ++i) {
+            getState(_endingDelegations[holder][i]);
+        }
+        return _purchased[holder];
+    }
+
     // private
 
     function setState(uint delegationId, State newState) internal {
@@ -176,14 +184,6 @@ contract TokenState is Permissions {
 
     function isDelegated(State state) internal returns (bool) {
         return state == State.DELEGATED || state == State.ENDING_DELEGATED;
-    }
-
-    function getPurchasedAmount(address holder) internal returns (uint amount) {
-        // check if any delegation was ended
-        for (uint i = 0; i < _endingDelegations[holder].length; ++i) {
-            getState(_endingDelegations[holder][i]);
-        }
-        return _purchased[holder];
     }
 
     function proposedToUnlocked(uint delegationId) internal returns (State state) {
