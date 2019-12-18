@@ -30,8 +30,8 @@ interface IValidatorDelegation {
         uint minimumDelegationAmount;
     }
 
-    /// @notice Allows validator to accept tokens delegated at `requestId`
-    function accept(uint requestId) external;
+    /// @notice Allows validator to accept tokens delegated at `delegationId`
+    function accept(uint delegationId) external;
 
     /// @notice Adds node to SKALE network
     function createNode(

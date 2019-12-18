@@ -34,7 +34,7 @@ interface IHolderDelegation {
     /// @notice Allows tokens holder to request return of it's token from validator
     function requestUndelegation(uint delegationId) external;
 
-    function cancelPendingDelegation(uint requestId) external;
+    function cancelPendingDelegation(uint delegationId) external;
 
     function getDelegationRequestsForValidator(uint validatorId) external returns (uint[] memory);
 

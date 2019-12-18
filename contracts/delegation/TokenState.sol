@@ -124,6 +124,14 @@ contract TokenState is Permissions {
         }
     }
 
+    function getPurchasedAmount(address holder) public returns (uint amount) {
+        // check if any delegation was ended
+        for (uint i = 0; i < _endingDelegations[holder].length; ++i) {
+            getState(_endingDelegations[holder][i]);
+        }
+        return _purchased[holder];
+    }
+
     // private
 
     function setState(uint delegationId, State newState) internal {
@@ -178,32 +186,23 @@ contract TokenState is Permissions {
         return state == State.DELEGATED || state == State.ENDING_DELEGATED;
     }
 
-    function getPurchasedAmount(address holder) internal returns (uint amount) {
-        // check if any delegation was ended
-        for (uint i = 0; i < _endingDelegations[holder].length; ++i) {
-            getState(_endingDelegations[holder][i]);
-        }
-        return _purchased[holder];
-    }
-
     function proposedToUnlocked(uint delegationId) internal returns (State state) {
-        _state[delegationId] = State.COMPLETED;
-        _timelimit[delegationId] = 0;
-        return State.COMPLETED;
-    }
-
-    function acceptedToDelegated(uint delegationId) internal returns (State) {
-        State state = State.DELEGATED;
+        state = State.COMPLETED;
         _state[delegationId] = state;
         _timelimit[delegationId] = 0;
-        return state;
     }
 
-    function purchasedProposedToPurchased(uint delegationId, DelegationController.Delegation memory delegation) internal returns (State) {
-        _state[delegationId] = State.COMPLETED;
+    function acceptedToDelegated(uint delegationId) internal returns (State state) {
+        state = State.DELEGATED;
+        _state[delegationId] = state;
+        _timelimit[delegationId] = 0;
+    }
+
+    function purchasedProposedToPurchased(uint delegationId, DelegationController.Delegation memory delegation) internal returns (State state) {
+        state = State.COMPLETED;
+        _state[delegationId] = state;
         _timelimit[delegationId] = 0;
         _purchased[delegation.holder] += delegation.amount;
-        return State.COMPLETED;
     }
 
     function endingDelegatedToUnlocked(uint delegationId, DelegationController.Delegation memory delegation) internal returns (State state) {
