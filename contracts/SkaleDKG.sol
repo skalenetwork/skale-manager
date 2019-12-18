@@ -22,9 +22,8 @@ pragma experimental ABIEncoderV2;
 import "./Permissions.sol";
 import "./interfaces/IGroupsData.sol";
 import "./interfaces/INodesData.sol";
-// import "openzeppelin-solidity/contracts/utils/ReentrancyGuard.sol";
-// import "./ECDH.sol";
-// import "./Decryption.sol";
+import "./interfaces/ISchainsFunctionality.sol";
+import "./interfaces/ISchainsFunctionalityInternal.sol";
 
 interface IECDH {
     function deriveKey(
@@ -71,10 +70,13 @@ contract SkaleDKG is Permissions {
 
     uint constant P = 21888242871839275222246405745257275088696311157297823662689037894645226208583;
 
-    uint constant G2A = 11559732032986387107991004021392285783925812861821192530917403151452391805634;
-    uint constant G2B = 10857046999023057135944570762232829481370756359578518086990519993285655852781;
-    uint constant G2C = 4082367875863433681332203403145435568316851327593401208105741076214120093531;
-    uint constant G2D = 8495653923123431417604973247489272438418190587263600148770280649306958101930;
+    uint constant G2A = 10857046999023057135944570762232829481370756359578518086990519993285655852781;
+    uint constant G2B = 11559732032986387107991004021392285783925812861821192530917403151452391805634;
+    uint constant G2C = 8495653923123431417604973247489272438418190587263600148770280649306958101930;
+    uint constant G2D = 4082367875863433681332203403145435568316851327593401208105741076214120093531;
+
+    uint constant TWISTBX = 19485874751759354771024239261021720505790618469301721065564631296452457478373;
+    uint constant TWISTBY = 266929791119991161246907387137283842545076965332900288569378510910307636690;
 
     uint constant G1A = 1;
     uint constant G1B = 2;
@@ -98,6 +100,7 @@ contract SkaleDKG is Permissions {
     event BadGuy(uint nodeIndex);
     event FailedDKG(bytes32 indexed groupIndex);
     event ComplaintSent(bytes32 indexed groupIndex, uint indexed fromNodeIndex, uint indexed toNodeIndex);
+    event NewGuy(uint nodeIndex);
 
     modifier correctGroup(bytes32 groupIndex) {
         require(channels[groupIndex].active, "Group is not created");
@@ -114,17 +117,18 @@ contract SkaleDKG is Permissions {
 
     }
 
-    function openChannel(bytes32 groupIndex) external allowMultiple("SchainsData", "ValidatorsData") {
+    function openChannel(bytes32 groupIndex) external allowThree("SchainsData", "ValidatorsData", "SkaleDKG") {
         require(!channels[groupIndex].active, "Channel already is created");
         channels[groupIndex].active = true;
         channels[groupIndex].dataAddress = msg.sender;
         channels[groupIndex].broadcasted = new bool[](IGroupsData(channels[groupIndex].dataAddress).getRecommendedNumberOfNodes(groupIndex));
         channels[groupIndex].completed = new bool[](IGroupsData(channels[groupIndex].dataAddress).getRecommendedNumberOfNodes(groupIndex));
+        channels[groupIndex].publicKeyy.x = 1;
         channels[groupIndex].nodeToComplaint = uint(-1);
         emit ChannelOpened(groupIndex);
     }
 
-    function deleteChannel(bytes32 groupIndex) external allowMultiple("SchainsData", "ValidatorsData") {
+    function deleteChannel(bytes32 groupIndex) external allowTwo("SchainsData", "ValidatorsData") {
         require(channels[groupIndex].active, "Channel is not created");
         delete channels[groupIndex];
     }
@@ -184,21 +188,17 @@ contract SkaleDKG is Permissions {
             channels[groupIndex].fromNodeToComplaint = fromNodeIndex;
             channels[groupIndex].startComplaintBlockNumber = block.number;
             emit ComplaintSent(groupIndex, fromNodeIndex, toNodeIndex);
-        } else if (channels[groupIndex].nodeToComplaint != toNodeIndex) {
+        } else if (isBroadcasted(groupIndex, toNodeIndex) && channels[groupIndex].nodeToComplaint != toNodeIndex) {
             revert("One complaint has already sent");
-        } else if (channels[groupIndex].nodeToComplaint == toNodeIndex) {
+        } else if (isBroadcasted(groupIndex, toNodeIndex) && channels[groupIndex].nodeToComplaint == toNodeIndex) {
             require(channels[groupIndex].startComplaintBlockNumber + 120 <= block.number, "One more complaint rejected");
             // need to penalty Node - toNodeIndex
-            IGroupsData(channels[groupIndex].dataAddress).setGroupFailedDKG(groupIndex);
-            delete channels[groupIndex];
-            emit FailedDKG(groupIndex);
-        } else {
+            finalizeSlashing(groupIndex, channels[groupIndex].nodeToComplaint);
+        } else if (!isBroadcasted(groupIndex, toNodeIndex)) {
             // if node have not broadcasted params
             require(channels[groupIndex].startedBlockNumber + 120 <= block.number, "Complaint rejected");
             // need to penalty Node - toNodeIndex
-            IGroupsData(channels[groupIndex].dataAddress).setGroupFailedDKG(groupIndex);
-            delete channels[groupIndex];
-            emit FailedDKG(groupIndex);
+            finalizeSlashing(groupIndex, channels[groupIndex].nodeToComplaint);
         }
     }
 
@@ -215,30 +215,19 @@ contract SkaleDKG is Permissions {
         require(channels[groupIndex].nodeToComplaint == fromNodeIndex, "Not this Node");
         require(isNodeByMessageSender(fromNodeIndex, msg.sender), "Node does not exist for message sender");
 
-        uint secret = decryptMessage(groupIndex, secretNumber);
+        // uint secret = decryptMessage(groupIndex, secretNumber);
 
         // DKG verification(secret key contribution, verification vector)
-        uint indexOfNode = findNode(groupIndex, fromNodeIndex);
-        bytes memory verVec = data[groupIndex][indexOfNode].verificationVector;
+        // uint indexOfNode = findNode(groupIndex, fromNodeIndex);
+        // bytes memory verVec = data[groupIndex][indexOfNode].verificationVector;
         bool verificationResult = verify(
-            indexOfNode,
-            secret,
-            multipliedShare,
-            verVec
+            groupIndex,
+            fromNodeIndex,
+            secretNumber,
+            multipliedShare
         );
-        if (verificationResult) {
-            //slash fromNodeToComplaint
-            emit BadGuy(channels[groupIndex].fromNodeToComplaint);
-        } else {
-            //slash nodeToComplaint
-            emit BadGuy(channels[groupIndex].nodeToComplaint);
-        }
-        // slash someone
-        // not in 1.0
-        // Fail DKG
-        IGroupsData(channels[groupIndex].dataAddress).setGroupFailedDKG(groupIndex);
-        emit FailedDKG(groupIndex);
-        delete channels[groupIndex];
+        uint badNode = (verificationResult ? channels[groupIndex].fromNodeToComplaint : channels[groupIndex].nodeToComplaint);
+        finalizeSlashing(groupIndex, badNode);
     }
 
     function allright(bytes32 groupIndex, uint fromNodeIndex)
@@ -271,16 +260,43 @@ contract SkaleDKG is Permissions {
         return channels[groupIndex].active;
     }
 
+    function finalizeSlashing(bytes32 groupIndex, uint badNode) internal {
+        address schainsFunctionalityInternalAddress = contractManager.contracts(
+            keccak256(abi.encodePacked("SchainsFunctionalityInternal"))
+        );
+        uint[] memory possibleNodes = ISchainsFunctionalityInternal(schainsFunctionalityInternalAddress).isEnoughNodes(groupIndex);
+        emit BadGuy(badNode);
+        if (possibleNodes.length > 0) {
+            uint newNode = ISchainsFunctionalityInternal(schainsFunctionalityInternalAddress).replaceNode(
+                badNode,
+                groupIndex
+            );
+            emit NewGuy(newNode);
+            this.openChannel(groupIndex);
+        } else {
+            ISchainsFunctionalityInternal(schainsFunctionalityInternalAddress).excludeNodeFromSchain(
+                badNode,
+                groupIndex
+            );
+            IGroupsData(channels[groupIndex].dataAddress).setGroupFailedDKG(groupIndex);
+            emit FailedDKG(groupIndex);
+        }
+        delete channels[groupIndex];
+    }
+
     function verify(
-        uint index,
-        uint secret,
-        bytes memory multipliedShare,
-        bytes memory verificationVector
+        bytes32 groupIndex,
+        uint fromNodeIndex,
+        uint secretNumber,
+        bytes memory multipliedShare
     )
-        public
+        internal
         view
         returns (bool)
     {
+        uint index = findNode(groupIndex, fromNodeIndex);
+        uint secret = decryptMessage(groupIndex, secretNumber);
+        bytes memory verificationVector = data[groupIndex][index].verificationVector;
         Fp2 memory valX = Fp2({x: 0, y: 0});
         Fp2 memory valY = Fp2({x: 1, y: 0});
         Fp2 memory tmpX = Fp2({x: 0, y: 0});
@@ -384,24 +400,13 @@ contract SkaleDKG is Permissions {
     )
         internal
     {
-        if (
-            channels[groupIndex].publicKeyx.x == 0 &&
-            channels[groupIndex].publicKeyx.y == 0 &&
-            channels[groupIndex].publicKeyy.x == 0 &&
-            channels[groupIndex].publicKeyy.y == 0
-        ) {
-            channels[groupIndex].publicKeyx = Fp2({ x: x1, y: y1 });
-            channels[groupIndex].publicKeyy = Fp2({ x: x2, y: y2 });
-        } else {
-            Fp2 memory a = Fp2({ x: x1, y: y1 });
-            Fp2 memory b = Fp2({ x: x2, y: y2 });
-            (channels[groupIndex].publicKeyx, channels[groupIndex].publicKeyy) = addG2(
-                a,
-                b,
-                channels[groupIndex].publicKeyx,
-                channels[groupIndex].publicKeyy
-            );
-        }
+        require(isG2(Fp2({ x: x1, y: y1 }), Fp2({ x: x2, y: y2 })), "Incorrect G2 point");
+        (channels[groupIndex].publicKeyx, channels[groupIndex].publicKeyy) = addG2(
+            Fp2({ x: x1, y: y1 }),
+            Fp2({ x: x2, y: y2 }),
+            channels[groupIndex].publicKeyx,
+            channels[groupIndex].publicKeyy
+        );
     }
 
     function isBroadcast(
@@ -502,15 +507,18 @@ contract SkaleDKG is Permissions {
 
     // End of Fp2 operations
 
-    // function isG1(uint x, uint y) internal view returns (bool) {
-    //     return mulmod(y, y, P) == addmod(mulmod(mulmod(x, x, P), x, P), 3, P);
-    // }
+    function isG1(uint x, uint y) internal pure returns (bool) {
+        return mulmod(y, y, P) == addmod(mulmod(mulmod(x, x, P), x, P), 3, P);
+    }
 
-    // function isG2(Fp2 memory x, Fp2 memory y) internal view returns (bool) {
-    //     Fp2 memory squaredY = squaredFp2(y);
-    //     Fp2 memory funcX = addFp2(mulFp2(squaredFp2(x), x), scalarMulFp2(3, inverseFp2(Fp2({x: 1, y: 9}))));
-    //     return squaredY.x == funcX.x && squaredY.y == funcX.y;
-    // }
+    function isG2(Fp2 memory x, Fp2 memory y) internal pure returns (bool) {
+        if (isG2Zero(x, y)) {
+            return true;
+        }
+        Fp2 memory squaredY = squaredFp2(y);
+        Fp2 memory res = minusFp2(minusFp2(squaredY, mulFp2(squaredFp2(x), x)), Fp2({x: TWISTBX, y: TWISTBY}));
+        return res.x == 0 && res.y == 0;
+    }
 
     function isG2Zero(Fp2 memory x, Fp2 memory y) internal pure returns (bool) {
         return x.x == 0 && x.y == 0 && y.x == 1 && y.y == 0;
@@ -592,7 +600,7 @@ contract SkaleDKG is Permissions {
         x3 = minusFp2(squaredFp2(s), addFp2(x1, x2));
         y3 = addFp2(y1, mulFp2(s, minusFp2(x3, x1)));
         y3.x = P - (y3.x % P);
-        y3.y = P - (x3.x % P);
+        y3.y = P - (y3.y % P);
     }
 
     // function binstep(uint _a, uint _step) internal view returns (uint x) {
@@ -722,19 +730,19 @@ contract SkaleDKG is Permissions {
             mulShare[1] = P - (mulShare[1] % P);
         }
 
-        // require(isG1(G1A, G1B), "G1.one not in G1");
-        // require(isG1(mulShare[0], mulShare[1]), "mulShare not in G1");
+        require(isG1(G1A, G1B), "G1.one not in G1");
+        require(isG1(mulShare[0], mulShare[1]), "mulShare not in G1");
 
-        // require(isG2(Fp2({x: G2A, y: G2B}), Fp2({x: G2C, y: G2D})), "G2.one not in G2");
-        // require(isG2(tmpX, tmpY), "tmp not in G2");
+        require(isG2(Fp2({x: G2A, y: G2B}), Fp2({x: G2C, y: G2D})), "G2.one not in G2");
+        require(isG2(tmpX, tmpY), "tmp not in G2");
 
         uint[12] memory inputToPairing;
         inputToPairing[0] = mulShare[0];
         inputToPairing[1] = mulShare[1];
-        inputToPairing[2] = G2A;
-        inputToPairing[3] = G2B;
-        inputToPairing[4] = G2C;
-        inputToPairing[5] = G2D;
+        inputToPairing[2] = G2B;
+        inputToPairing[3] = G2A;
+        inputToPairing[4] = G2D;
+        inputToPairing[5] = G2C;
         inputToPairing[6] = G1A;
         inputToPairing[7] = G1B;
         inputToPairing[8] = tmpX.y;

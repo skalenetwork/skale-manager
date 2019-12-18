@@ -20,6 +20,7 @@ interface IGroupsData {
     function getGroupData(bytes32 groupIndex) external view returns (bytes32);
     function getRecommendedNumberOfNodes(bytes32 groupIndex) external view returns (uint);
     function getNumberOfNodesInGroup(bytes32 groupIndex) external view returns (uint);
+    function isGroupFailedDKG(bytes32 groupIndex) external view returns (bool);
     function removeNodeFromGroup(uint nodeIndex, bytes32 groupIndex) external;
     function setPublicKey(
         bytes32 groupIndex,
