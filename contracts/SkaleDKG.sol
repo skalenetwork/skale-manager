@@ -23,6 +23,7 @@ import "./Permissions.sol";
 import "./interfaces/IGroupsData.sol";
 import "./interfaces/INodesData.sol";
 import "./interfaces/ISchainsFunctionality.sol";
+import "./interfaces/ISchainsFunctionalityInternal.sol";
 
 interface IECDH {
     function deriveKey(
@@ -37,12 +38,6 @@ interface IECDH {
 
 interface IDecryption {
     function decrypt(bytes32 ciphertext, bytes32 key) external pure returns (uint256);
-}
-
-interface ISchainsFunctionalityInternal {
-    function replaceNode(uint nodeIndex, bytes32 groupIndex) external returns (bytes32, uint);
-    function isEnoughNodes(bytes32 groupIndex) external view returns (uint[] memory);
-    function excludeNodeFromSchain(uint nodeIndex, bytes32 groupHash) external;
 }
 
 
@@ -105,6 +100,7 @@ contract SkaleDKG is Permissions {
     event BadGuy(uint nodeIndex);
     event FailedDKG(bytes32 indexed groupIndex);
     event ComplaintSent(bytes32 indexed groupIndex, uint indexed fromNodeIndex, uint indexed toNodeIndex);
+    event NewGuy(uint nodeIndex);
 
     modifier correctGroup(bytes32 groupIndex) {
         require(channels[groupIndex].active, "Group is not created");
@@ -271,10 +267,11 @@ contract SkaleDKG is Permissions {
         uint[] memory possibleNodes = ISchainsFunctionalityInternal(schainsFunctionalityInternalAddress).isEnoughNodes(groupIndex);
         emit BadGuy(badNode);
         if (possibleNodes.length > 0) {
-            ISchainsFunctionalityInternal(schainsFunctionalityInternalAddress).replaceNode(
+            uint newNode = ISchainsFunctionalityInternal(schainsFunctionalityInternalAddress).replaceNode(
                 badNode,
                 groupIndex
             );
+            emit NewGuy(newNode);
             this.openChannel(groupIndex);
         } else {
             ISchainsFunctionalityInternal(schainsFunctionalityInternalAddress).excludeNodeFromSchain(
