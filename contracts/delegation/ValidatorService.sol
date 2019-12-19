@@ -35,7 +35,6 @@ contract ValidatorService is Permissions {
     }
 
     Validator[] public validators;
-    mapping (uint => address) public validatorIdtoAddress;
 
 
     constructor(address newContractsAddress) Permissions(newContractsAddress) public {
@@ -44,6 +43,7 @@ contract ValidatorService is Permissions {
 
     function registerValidator(
         string calldata name,
+        address validatorAddress,
         string calldata description,
         uint feeRate,
         uint minimumDelegationAmount
@@ -52,7 +52,7 @@ contract ValidatorService is Permissions {
     {
         validators.push(Validator(
             name,
-            msg.sender,
+            validatorAddress,
             description,
             feeRate,
             now,
@@ -63,15 +63,12 @@ contract ValidatorService is Permissions {
     }
 
     function setNewValidatorAddress(uint validatorId, address newValidatorAddress) external {
+        require(checkValidatorExists(validatorId), "Validator does not exist");
         require(
-            msg.sender == validatorIdtoAddress[validatorId],
+            msg.sender == validators[validatorId].validatorAddress,
             "Sender Doesn't have permissions to change address for this validatorId"
         );
-        validatorIdtoAddress[validatorId] = newValidatorAddress;
-    }
-
-    function checkValidatorExists(uint validatorId) external view returns (bool) {
-        return validatorId < validators.length ? true : false;
+        validators[validatorId].validatorAddress = newValidatorAddress;
     }
 
     // function setValidatorFeeAddress(uint _validatorId, address _newAddress) public {
@@ -84,6 +81,11 @@ contract ValidatorService is Permissions {
     // }
 
     function checkValidatorIdToAddress(uint validatorId, address validatorAddress) external view returns (bool) {
-        return validatorIdtoAddress[validatorId] == validatorAddress ? true : false;
+        require(checkValidatorExists(validatorId), "Validator does not exist");
+        return validators[validatorId].validatorAddress == validatorAddress ? true : false;
+    }
+
+    function checkValidatorExists(uint validatorId) public view returns (bool) {
+        return validatorId < validators.length ? true : false;
     }
 }

@@ -53,7 +53,7 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
         DelegationRequestManager delegationRequestManager = DelegationRequestManager(
             contractManager.getContract("DelegationRequestManager")
         );
-        delegationRequestManager.acceptRequest(requestId);
+        delegationRequestManager.acceptRequest(msg.sender, requestId);
     }
 
     /// @notice Adds node to SKALE network
@@ -148,6 +148,7 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
         validatorId = validatorService.registerValidator(
             name,
+            msg.sender,
             description,
             feeRate,
             minimumDelegationAmount

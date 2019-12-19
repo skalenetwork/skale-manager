@@ -2,6 +2,10 @@ import { ContractManagerContract,
          ContractManagerInstance,
          DelegationControllerContract,
          DelegationControllerInstance,
+         DelegationPeriodManagerContract,
+         DelegationPeriodManagerInstance,
+         DelegationRequestManagerContract,
+         DelegationRequestManagerInstance,
          DelegationServiceContract,
          DelegationServiceInstance,
          SkaleTokenContract,
@@ -20,8 +24,10 @@ const DelegationService: DelegationServiceContract = artifacts.require("./Delega
 const ValidatorService: ValidatorServiceContract = artifacts.require("./ValidatorService");
 const DelegationController: DelegationControllerContract = artifacts.require("./DelegationController");
 const TokenState: TokenStateContract = artifacts.require("./TokenState");
+const DelegationRequestManager: DelegationRequestManagerContract = artifacts.require("./DelegationRequestManager");
+const DelegationPeriodManager: DelegationPeriodManagerContract = artifacts.require("./DelegationPeriodManager");
 
-import { skipTimeToDate } from "../utils/time";
+import { skipTime, skipTimeToDate } from "../utils/time";
 
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
@@ -36,6 +42,8 @@ contract("TokenSaleManager", ([owner, holder, delegation, validator, seller, hac
     let validatorService: ValidatorServiceInstance;
     let delegationManager: DelegationControllerInstance;
     let tokenState: TokenStateInstance;
+    let delegationRequestManager: DelegationRequestManagerInstance;
+    let delegationPeriodManager: DelegationPeriodManagerInstance;
 
     beforeEach(async () => {
         contractManager = await ContractManager.new();
@@ -51,6 +59,10 @@ contract("TokenSaleManager", ([owner, holder, delegation, validator, seller, hac
         await contractManager.setContractsAddress("DelegationController", delegationManager.address);
         tokenState = await TokenState.new(contractManager.address);
         await contractManager.setContractsAddress("TokenState", tokenState.address);
+        delegationRequestManager = await DelegationRequestManager.new(contractManager.address);
+        await contractManager.setContractsAddress("DelegationRequestManager", delegationRequestManager.address);
+        delegationPeriodManager = await DelegationPeriodManager.new(contractManager.address);
+        await contractManager.setContractsAddress("DelegationPeriodManager", delegationPeriodManager.address);
 
         // each test will start from Nov 10
         await skipTimeToDate(web3, 10, 11);
@@ -79,36 +91,38 @@ contract("TokenSaleManager", ([owner, holder, delegation, validator, seller, hac
         });
 
         describe("when holder bought tokens", async () => {
+            const validatorId = 0;
+            const totalAmount = 100;
+
             beforeEach(async () => {
-                await tokenSaleManager.approve([holder], [10], {from: seller});
+                await tokenSaleManager.approve([holder], [totalAmount], {from: seller});
                 await tokenSaleManager.retrieve({from: holder});
             });
 
-//         it("should be able to delegate part of tokens", async () => {
-//             await tokenSaleManager.delegateSaleToken(delegation, 5, 0, "dec", 3, "D2 is even", {from: holder});
-//             await delegationService.accept(0, {from: validator});
-//             await delegationService.requestUndelegation({from: holder});
+            it("should be able to delegate part of tokens", async () => {
+                const amount = 50;
+                const delegationPeriod = 3;
+                await delegationService.delegate(validatorId, amount, delegationPeriod, "D2 is even", {from: holder});
+                const delegationId = 0;
+                await delegationService.accept(delegationId, {from: validator});
 
-//             await skaleToken.transfer(hacker, 1, {from: holder})
-//                 .should.be.eventually.rejectedWith("Can't transfer tokens because delegation request is created");
-//             await skaleToken.approve(hacker, 1, {from: holder})
-//                 .should.be.eventually.rejectedWith("Can't approve transfer bacause delegation request is created");
-//             await skaleToken.send(hacker, 1, "", {from: holder})
-//                 .should.be.eventually.rejectedWith("Can't send tokens because delegation request is created");
+            // await skaleToken.transfer(hacker, 1, {from: holder})
+            //     .should.be.eventually.rejectedWith("Can't transfer tokens because delegation request is created");
+            // await skaleToken.approve(hacker, 1, {from: holder})
+            //     .should.be.eventually.rejectedWith("Can't approve transfer bacause delegation request is created");
+            // await skaleToken.send(hacker, 1, "", {from: holder})
+            //     .should.be.eventually.rejectedWith("Can't send tokens because delegation request is created");
 
-//             await skaleToken.transfer(hacker, 1, {from: delegation})
-//                 .should.be.eventually.rejectedWith("Can't transfer tokens because delegation request is created");
-//             await skaleToken.approve(hacker, 1, {from: delegation})
-//                 .should.be.eventually.rejectedWith("Can't approve transfer bacause delegation request is created");
-//             await skaleToken.send(hacker, 1, "", {from: delegation})
-//                 .should.be.eventually.rejectedWith("Can't send tokens because delegation request is created");
+            // const month = 60 * 60 * 24 * 31;
+            // skipTime(web3, month);
 
-//             await skipTimeToDate(web3, 14, 2);
+            // await delegationService.requestUndelegation(delegationId, {from: holder});
 
-//             await skaleToken.transfer(holder, 5, {from: delegation});
-//             await skaleToken.transfer(hacker, 10, {from: holder});
-//             await skaleToken.balanceOf(hacker).should.be.eventually.equal("10");
-//         });
+            // skipTime(web3, month * delegationPeriod);
+
+            // await skaleToken.transfer(hacker, totalAmount, {from: holder});
+            // (await skaleToken.balanceOf(hacker)).toNumber().should.be.equal(totalAmount);
+            });
         });
     });
 });

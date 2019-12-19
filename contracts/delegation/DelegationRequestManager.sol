@@ -47,13 +47,13 @@ contract DelegationRequestManager is Permissions {
 
     }
 
-    modifier checkValidatorAccess(uint requestId) {
+    modifier checkValidatorAccess(address validator, uint requestId) {
         ValidatorService validatorService = ValidatorService(
             contractManager.getContract("ValidatorService")
         );
         require(requestId < delegationRequests.length, "Delegation request doesn't exist");
         require(
-            validatorService.checkValidatorIdToAddress(delegationRequests[requestId].validatorId, msg.sender),
+            validatorService.checkValidatorIdToAddress(delegationRequests[requestId].validatorId, validator),
             "Transaction sender hasn't permissions to change status of request"
         );
         _;
@@ -102,7 +102,8 @@ contract DelegationRequestManager is Permissions {
         requestId = delegationRequests.length-1;
         delegationRequestsByTokenAddress[tokenAddress].push(requestId);
         uint lockedTokens = tokenState.getLockedCount(tokenAddress);
-        require(holderBalance - lockedTokens >= amount, "Delegator hasn't enough tokens to delegate");
+        uint lockedAfterSale = tokenState.getPurchasedAmount(tokenAddress);
+        require(holderBalance - lockedTokens + lockedAfterSale >= amount,"Delegator hasn't enough tokens to delegate");
     }
 
     function cancelRequest(uint requestId) external {
@@ -116,7 +117,7 @@ contract DelegationRequestManager is Permissions {
         revert("cancelRequest is not implemented");
     }
 
-    function acceptRequest(uint requestId) external checkValidatorAccess(requestId) {
+    function acceptRequest(address validator, uint requestId) external checkValidatorAccess(validator, requestId) {
         DelegationController delegationController = DelegationController(
             contractManager.getContract("DelegationController")
         );
