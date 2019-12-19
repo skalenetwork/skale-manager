@@ -102,9 +102,9 @@ contract("TokenSaleManager", ([owner, holder, delegation, validator, seller, hac
             it("should be able to delegate part of tokens", async () => {
                 const amount = 50;
                 const delegationPeriod = 3;
-                await delegationService.delegate(validatorId, amount, delegationPeriod, "D2 is even", {from: holder});
-                const delegationId = 0;
-                await delegationService.accept(delegationId, {from: validator});
+            // await delegationService.delegate(validatorId, amount, delegationPeriod, "D2 is even", {from: holder});
+            // const delegationId = 0;
+            // await delegationService.accept(delegationId, {from: validator});
 
             // await skaleToken.transfer(hacker, 1, {from: holder})
             //     .should.be.eventually.rejectedWith("Can't transfer tokens because delegation request is created");

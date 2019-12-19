@@ -27,8 +27,13 @@ contract TimeHelpers {
     }
 
     function calculateDelegationEndTime(
-        uint requestTime, uint delegationPeriod, uint redelegationPeriod)
-    external view returns (uint timestamp)
+        uint requestTime,
+        uint delegationPeriod,
+        uint redelegationPeriod
+    )
+        external
+        view
+        returns (uint timestamp)
     {
         uint year;
         uint month;

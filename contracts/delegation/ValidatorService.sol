@@ -32,9 +32,11 @@ contract ValidatorService is Permissions {
         uint registrationTime;
         uint minimumDelegationAmount;
         uint lastBountyCollectionMonth;
+        uint[] nodeIndexes;
     }
 
     Validator[] public validators;
+    mapping (address => uint) public validatorAddressToId;
 
 
     constructor(address newContractsAddress) Permissions(newContractsAddress) public {
@@ -43,32 +45,40 @@ contract ValidatorService is Permissions {
 
     function registerValidator(
         string calldata name,
-        address validatorAddress,
         string calldata description,
         uint feeRate,
         uint minimumDelegationAmount
     )
         external returns (uint validatorId)
     {
+        uint[] memory epmtyArray = new uint[](0);
         validators.push(Validator(
             name,
-            validatorAddress,
+            msg.sender,
             description,
             feeRate,
             now,
             minimumDelegationAmount,
-            0
+            0,
+            epmtyArray
         ));
         validatorId = validators.length - 1;
     }
 
-    function setNewValidatorAddress(uint validatorId, address newValidatorAddress) external {
-        require(checkValidatorExists(validatorId), "Validator does not exist");
+    function setNewValidatorAddress(address newValidatorAddress, uint validatorId) external {
         require(
-            msg.sender == validators[validatorId].validatorAddress,
+            validatorId == validatorAddressToId[msg.sender],
             "Sender Doesn't have permissions to change address for this validatorId"
         );
-        validators[validatorId].validatorAddress = newValidatorAddress;
+        validatorAddressToId[newValidatorAddress] = validatorId;
+    }
+
+    function checkValidatorExists(uint validatorId) external view returns (bool) {
+        return validatorId < validators.length ? true : false;
+    }
+
+    function checkMinimumDelegation(uint validatorId, uint amount) external returns (bool) {
+        return validators[validatorId].minimumDelegationAmount <= amount ? true : false;
     }
 
     // function setValidatorFeeAddress(uint _validatorId, address _newAddress) public {
@@ -80,12 +90,15 @@ contract ValidatorService is Permissions {
     //     return validators[_validatorId].validatorFeeAddress;
     // }
 
-    function checkValidatorIdToAddress(uint validatorId, address validatorAddress) external view returns (bool) {
-        require(checkValidatorExists(validatorId), "Validator does not exist");
-        return validators[validatorId].validatorAddress == validatorAddress ? true : false;
+    function checkValidatorAddressToId(address validatorAddress, uint validatorId) external view returns (bool) {
+        return validatorAddressToId[validatorAddress] == validatorId ? true : false;
     }
 
-    function checkValidatorExists(uint validatorId) public view returns (bool) {
-        return validatorId < validators.length ? true : false;
+    function createNode() external {
+        // uint validatorId = validatorAddressToId[msg.sender];
+        // require(validators[validatorId].nodeIndexes.length * MSR <= )
+        // msr
+        // bond
+
     }
 }
