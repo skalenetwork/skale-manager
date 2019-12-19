@@ -43,7 +43,14 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
     }
 
     function requestUndelegation(uint delegationId) external {
-        revert("Not implemented");
+        TokenState tokenState = TokenState(contractManager.getContract("TokenState"));
+        DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
+
+        require(
+            delegationController.getDelegation(delegationId).holder == msg.sender,
+            "Can't request undelegation because sender is not a holder");
+
+        tokenState.requestUndelegation(delegationId);
     }
 
     /// @notice Allows validator to accept tokens delegated at `delegationId`
