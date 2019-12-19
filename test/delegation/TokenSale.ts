@@ -89,6 +89,26 @@ contract("TokenSaleManager", ([owner, holder, delegation, validator, seller, hac
             await tokenSaleManager.registerSeller(seller);
         });
 
+        it("should not allow to approve transfer if sender is not seller", async () => {
+            await tokenSaleManager.approve([holder], [10], {from: hacker})
+                .should.be.eventually.rejectedWith("Not authorized");
+        });
+
+        it("should fail if parameter arrays are with different lengths", async () => {
+            await tokenSaleManager.approve([holder, hacker], [10], {from: seller})
+                .should.be.eventually.rejectedWith("Wrong input arrays length");
+        });
+
+        it("should not allow to approve transfers with more then total money amount in sum", async () => {
+            await tokenSaleManager.approve([holder, hacker], [500, 501], {from: seller})
+                .should.be.eventually.rejectedWith("Balance is too low");
+        });
+
+        it("should not allow to retrieve funds if it was not approved", async () => {
+            await tokenSaleManager.retrieve({from: hacker})
+                .should.be.eventually.rejectedWith("Transfer is not approved");
+        });
+
         it("should allow seller to approve transfer to buyer", async () => {
             await tokenSaleManager.approve([holder], [10], {from: seller});
             await tokenSaleManager.retrieve({from: holder});
