@@ -52,6 +52,7 @@ contract ValidatorService is Permissions {
         external returns (uint validatorId)
     {
         uint[] memory epmtyArray = new uint[](0);
+        validatorId = validators.length;
         validators.push(Validator(
             name,
             msg.sender,
@@ -62,7 +63,6 @@ contract ValidatorService is Permissions {
             0,
             epmtyArray
         ));
-        validatorId = validators.length - 1;
     }
 
     function setNewValidatorAddress(address newValidatorAddress, uint validatorId) external {
@@ -99,6 +99,5 @@ contract ValidatorService is Permissions {
         // require(validators[validatorId].nodeIndexes.length * MSR <= )
         // msr
         // bond
-
     }
 }

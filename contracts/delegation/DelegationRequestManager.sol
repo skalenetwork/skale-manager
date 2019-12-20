@@ -43,13 +43,11 @@ contract DelegationRequestManager is Permissions {
         string calldata info
     )
         external
+        allow("DelegationService")
         returns (uint delegationId)
     {
         ValidatorService validatorService = ValidatorService(
             contractManager.getContract("ValidatorService")
-        );
-        DelegationPeriodManager delegationPeriodManager = DelegationPeriodManager(
-            contractManager.getContract("DelegationPeriodManager")
         );
         TokenState tokenState = TokenState(
             contractManager.getContract("TokenState")
@@ -57,15 +55,20 @@ contract DelegationRequestManager is Permissions {
         DelegationController delegationController = DelegationController(
             contractManager.getContract("DelegationController")
         );
+        require(validatorService.checkValidatorExists(validatorId), "Validator is not registered");
         require(
             validatorService.checkMinimumDelegation(validatorId, amount),
             "Amount doesn't meet minimum delegation amount"
         );
         require(
-            delegationPeriodManager.isDelegationPeriodAllowed(delegationPeriod),
+            DelegationPeriodManager(
+                contractManager.getContract("DelegationPeriodManager")
+            ).isDelegationPeriodAllowed(delegationPeriod),
             "This delegation period is not allowed"
         );
-        require(validatorService.checkValidatorExists(validatorId), "Validator is not registered");
+        uint holderBalance = SkaleToken(contractManager.getContract("SkaleToken")).balanceOf(holder);
+        uint lockedToDelegate = tokenState.getLockedCount(holder) - tokenState.getPurchasedAmount(holder);
+        require(holderBalance - lockedToDelegate >= amount, "Delegator hasn't enough tokens to delegate");
         delegationId = delegationController.addDelegation(
             holder,
             validatorId,
@@ -74,9 +77,6 @@ contract DelegationRequestManager is Permissions {
             now,
             info
         );
-        uint holderBalance = SkaleToken(contractManager.getContract("SkaleToken")).balanceOf(holder);
-        uint lockedToDelegate = tokenState.getLockedCount(holder) - tokenState.getPurchasedAmount(holder);
-        require(holderBalance - lockedToDelegate >= amount, "Delegator hasn't enough tokens to delegate");
     }
 
     function cancelRequest(uint delegationId) external {
