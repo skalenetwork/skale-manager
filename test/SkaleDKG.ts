@@ -314,6 +314,26 @@ contract("SkaleDKG", ([validator1, validator2]) => {
                 assert.equal(result.logs[0].args.fromNode.toString(), "0");
             });
 
+            it("should broadcast data from 1 node & check", async () => {
+                const result = await skaleDKG.broadcast(
+                    web3.utils.soliditySha3(schainName),
+                    0,
+                    verificationVectors[indexes[0]],
+                    encryptedSecretKeyContributions[indexes[0]],
+                    {from: validatorsAccount[0]},
+                );
+                assert.equal(result.logs[0].event, "BroadcastAndKeyShare");
+                assert.equal(result.logs[0].args.groupIndex, web3.utils.soliditySha3(schainName));
+                assert.equal(result.logs[0].args.fromNode.toString(), "0");
+
+                const res = await skaleDKG.isBroadcastPossible(
+                    web3.utils.soliditySha3(schainName),
+                    0,
+                    {from: validatorsAccount[0]},
+                );
+                assert(res.should.be.false);
+            });
+
             it("should broadcast data from 2 node", async () => {
                 const result = await skaleDKG.broadcast(
                     web3.utils.soliditySha3(schainName),
@@ -367,6 +387,24 @@ contract("SkaleDKG", ([validator1, validator2]) => {
                     assert.equal(result.logs[0].args.nodeIndex.toString(), "0");
                 });
 
+                it("should send alright from 1 node", async () => {
+                    const result = await skaleDKG.allright(
+                        web3.utils.soliditySha3(schainName),
+                        0,
+                        {from: validatorsAccount[0]},
+                    );
+                    assert.equal(result.logs[0].event, "AllDataReceived");
+                    assert.equal(result.logs[0].args.groupIndex, web3.utils.soliditySha3(schainName));
+                    assert.equal(result.logs[0].args.nodeIndex.toString(), "0");
+
+                    const res = await skaleDKG.isAlrightPossible(
+                        web3.utils.soliditySha3(schainName),
+                        0,
+                        {from: validatorsAccount[0]},
+                    );
+                    assert(res.should.be.false);
+                });
+
                 it("should send alright from 2 node", async () => {
                     const result = await skaleDKG.allright(
                         web3.utils.soliditySha3(schainName),
@@ -407,7 +445,24 @@ contract("SkaleDKG", ([validator1, validator2]) => {
                         );
                     });
 
+                    it("should check is possible to send complaint", async () => {
+                        const res = await skaleDKG.isComplaintPossible(
+                            web3.utils.soliditySha3(schainName),
+                            1,
+                            0,
+                            {from: validatorsAccount[1]},
+                        );
+                        assert(res.should.be.false);
+                    });
+
                     it("should send correct response", async () => {
+                        const res = await skaleDKG.isResponsePossible(
+                            web3.utils.soliditySha3(schainName),
+                            0,
+                            {from: validatorsAccount[0]},
+                        );
+                        assert(res.should.be.true);
+
                         const result = await skaleDKG.response(
                             web3.utils.soliditySha3(schainName),
                             0,

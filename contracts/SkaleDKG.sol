@@ -260,12 +260,59 @@ contract SkaleDKG is Permissions {
         return channels[groupIndex].active;
     }
 
+    function isBroadcastPossible(bytes32 groupIndex, uint nodeIndex) external view returns (bool) {
+        uint index = findNode(groupIndex, nodeIndex);
+        return channels[groupIndex].active &&
+            index < IGroupsData(channels[groupIndex].dataAddress).getNumberOfNodesInGroup(groupIndex) &&
+            isNodeByMessageSender(nodeIndex, msg.sender) &&
+            !channels[groupIndex].broadcasted[index];
+    }
+
+    function isComplaintPossible(bytes32 groupIndex, uint fromNodeIndex, uint toNodeIndex) external view returns (bool) {
+        uint indexFrom = findNode(groupIndex, fromNodeIndex);
+        uint indexTo = findNode(groupIndex, toNodeIndex);
+        bool complaintSending = channels[groupIndex].nodeToComplaint == uint(-1) ||
+            (
+                channels[groupIndex].broadcasted[indexTo] &&
+                channels[groupIndex].startComplaintBlockNumber + 120 <= block.number &&
+                channels[groupIndex].nodeToComplaint == toNodeIndex
+            ) ||
+            (
+                !channels[groupIndex].broadcasted[indexTo] &&
+                channels[groupIndex].nodeToComplaint == toNodeIndex &&
+                channels[groupIndex].startedBlockNumber + 120 <= block.number
+            );
+        return channels[groupIndex].active &&
+            indexFrom < IGroupsData(channels[groupIndex].dataAddress).getNumberOfNodesInGroup(groupIndex) &&
+            indexTo < IGroupsData(channels[groupIndex].dataAddress).getNumberOfNodesInGroup(groupIndex) &&
+            isNodeByMessageSender(fromNodeIndex, msg.sender) &&
+            complaintSending;
+    }
+
+    function isAlrightPossible(bytes32 groupIndex, uint nodeIndex) external view returns (bool) {
+        uint index = findNode(groupIndex, nodeIndex);
+        return channels[groupIndex].active &&
+            index < IGroupsData(channels[groupIndex].dataAddress).getNumberOfNodesInGroup(groupIndex) &&
+            isNodeByMessageSender(nodeIndex, msg.sender) &&
+            IGroupsData(channels[groupIndex].dataAddress).getNumberOfNodesInGroup(groupIndex) == channels[groupIndex].numberOfBroadcasted &&
+            !channels[groupIndex].completed[index];
+    }
+
+    function isResponsePossible(bytes32 groupIndex, uint nodeIndex) external view returns (bool) {
+        uint index = findNode(groupIndex, nodeIndex);
+        return channels[groupIndex].active &&
+            index < IGroupsData(channels[groupIndex].dataAddress).getNumberOfNodesInGroup(groupIndex) &&
+            isNodeByMessageSender(nodeIndex, msg.sender) &&
+            channels[groupIndex].nodeToComplaint == nodeIndex;
+    }
+
     function finalizeSlashing(bytes32 groupIndex, uint badNode) internal {
         address schainsFunctionalityInternalAddress = contractManager.contracts(
             keccak256(abi.encodePacked("SchainsFunctionalityInternal"))
         );
         uint[] memory possibleNodes = ISchainsFunctionalityInternal(schainsFunctionalityInternalAddress).isEnoughNodes(groupIndex);
         emit BadGuy(badNode);
+        emit FailedDKG(groupIndex);
         if (possibleNodes.length > 0) {
             uint newNode = ISchainsFunctionalityInternal(schainsFunctionalityInternalAddress).replaceNode(
                 badNode,
@@ -279,7 +326,6 @@ contract SkaleDKG is Permissions {
                 groupIndex
             );
             IGroupsData(channels[groupIndex].dataAddress).setGroupFailedDKG(groupIndex);
-            emit FailedDKG(groupIndex);
         }
         delete channels[groupIndex];
     }
