@@ -346,6 +346,10 @@ contract LockableERC777 is IERC777, IERC20 {
         emit Transfer(address(0), account, amount);
     }
 
+    // Added by SKALE
+    function _getLockedOf(address wallet) internal returns (uint);
+    // --------------
+
     /**
      * @dev Send tokens
      * @param operator address operator requesting the transfer
@@ -427,8 +431,10 @@ contract LockableERC777 is IERC777, IERC20 {
         private
     {
 // Property of the company SKALE Labs inc.---------------------------------
-        // require(!_locks[from], "Token should be unlocked for transfering");
-        revert("Lock check is not implemented");
+        uint locked = _getLockedOf(from);
+        if (locked > 0) {
+            require(_balances[from] >= locked + amount, "Token should be unlocked for transfering");
+        }
 //-------------------------------------------------------------------------
         _balances[from] = _balances[from].sub(amount);
         _balances[to] = _balances[to].add(amount);
