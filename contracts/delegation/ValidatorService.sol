@@ -81,6 +81,10 @@ contract ValidatorService is Permissions {
         return validators[validatorId].minimumDelegationAmount <= amount ? true : false;
     }
 
+    function getValidatorId(address validatorAddress) external view returns (uint) {
+        return validatorAddressToId[validatorAddress];
+    }
+
     // function setValidatorFeeAddress(uint _validatorId, address _newAddress) public {
     //     require(msg.sender == validators[_validatorId].validatorAddress, "Transaction sender doesn't have enough permissions");
     //     validators[_validatorId].validatorFeeAddress = _newAddress;

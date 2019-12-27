@@ -10,6 +10,8 @@ import { ContractManagerContract,
     DelegationServiceInstance,
     SkaleTokenContract,
     SkaleTokenInstance,
+    TimeHelpersContract,
+    TimeHelpersInstance,
     TokenStateContract,
     TokenStateInstance,
     ValidatorServiceContract,
@@ -23,6 +25,7 @@ const DelegationRequestManager: DelegationRequestManagerContract = artifacts.req
 const ValidatorService: ValidatorServiceContract = artifacts.require("./ValidatorService");
 const DelegationController: DelegationControllerContract = artifacts.require("./DelegationController");
 const TokenState: TokenStateContract = artifacts.require("./TokenState");
+const TimeHelpers: TimeHelpersContract = artifacts.require("./TimeHelpers");
 
 import BigNumber from "bignumber.js";
 import * as chai from "chai";
@@ -48,7 +51,7 @@ class Delegation {
     }
 }
 
-contract("DelegationRequestManager", ([owner, holder1, validator]) => {
+contract("DelegationRequestManager", ([owner, holder1, holder2, validator]) => {
     let contractManager: ContractManagerInstance;
     let skaleToken: SkaleTokenInstance;
     let delegationService: DelegationServiceInstance;
@@ -57,6 +60,7 @@ contract("DelegationRequestManager", ([owner, holder1, validator]) => {
     let validatorService: ValidatorServiceInstance;
     let delegationController: DelegationControllerInstance;
     let tokenState: TokenStateInstance;
+    let timeHelpers: TimeHelpersInstance;
 
     const defaultAmount = 100 * 1e18;
 
@@ -87,6 +91,9 @@ contract("DelegationRequestManager", ([owner, holder1, validator]) => {
 
         tokenState = await TokenState.new(contractManager.address);
         await contractManager.setContractsAddress("TokenState", tokenState.address);
+
+        timeHelpers = await TimeHelpers.new();
+        await contractManager.setContractsAddress("TimeHelpers", timeHelpers.address);
     });
 
     describe("when arguments for delegation initialized", async () => {
@@ -106,27 +113,28 @@ contract("DelegationRequestManager", ([owner, holder1, validator]) => {
                 500,
                 100,
                 {from: validator});
-        });
+            });
 
-        it("should reject if validator doesn't exist", async () => {
+        it("should rejected if validator with such id doesn't exist", async () => {
             const nonExistedValidatorId = 1;
             await delegationService.delegate(nonExistedValidatorId, amount, delegationPeriod, info, {from: holder1})
                 .should.be.eventually.rejectedWith("Validator is not registered");
         });
 
-        it("should reject if delegation doesn't meet MDA", async () => {
+        it("should rejected if delegation doesn't meet minimum delegation amount", async () => {
             amount = 99;
             await delegationService.delegate(validatorId, amount, delegationPeriod, info, {from: holder1})
                 .should.be.eventually.rejectedWith("Amount doesn't meet minimum delegation amount");
         });
 
-        it("should reject if delegation doesn't meet allowed delegation period", async () => {
+        it("should rejected if delegation doesn't meet allowed delegation period", async () => {
             delegationPeriod = 4;
             await delegationService.delegate(validatorId, amount, delegationPeriod, info, {from: holder1})
                 .should.be.eventually.rejectedWith("This delegation period is not allowed");
         });
 
-        it("should reject if delegation hasn't enough unlocked tokens for delegation", async () => {
+        it("should rejected if delegation hasn't enough unlocked tokens for delegation", async () => {
+            amount = 101;
             await delegationService.delegate(validatorId, amount, delegationPeriod, info, {from: holder1})
                 .should.be.eventually.rejectedWith("Delegator hasn't enough tokens to delegate");
         });
@@ -145,5 +153,40 @@ contract("DelegationRequestManager", ([owner, holder1, validator]) => {
             assert.equal(delegationPeriod, delegation.delegationPeriod.toNumber());
             assert.equal("VERY NICE", delegation.description);
         });
+
+        it("should rejected delegation if she doesn't have enough tokens", async () => {
+            await skaleToken.mint(owner, holder1, 2 * amount, "0x", "0x");
+            await delegationService.delegate(validatorId, amount + 1, delegationPeriod, info, {from: holder1});
+            await delegationService.delegate(validatorId, amount, delegationPeriod, info, {from: holder1})
+                .should.be.eventually.rejectedWith("Delegator hasn't enough tokens to delegate");
+
+        });
+
+        it("should rejected canceling if delegation doesn't exist", async () => {
+            await delegationService.cancelPendingDelegation(delegationId, {from: validator})
+                .should.be.rejectedWith("Delegation does not exist");
+        });
+
+        it("should rejected canceling request if she doesn't have permissions", async () => {
+            await skaleToken.mint(owner, holder1, amount, "0x", "0x");
+            const { logs } = await delegationService.delegate(
+                validatorId, amount, delegationPeriod, info, {from: holder1});
+            delegationId = logs[0].args.delegationId;
+            await delegationService.cancelPendingDelegation(delegationId, {from: holder2})
+                .should.be.rejectedWith("No permissions to cancel request");
+        });
+
+        // it("should rejected canceling request if validator already accepted it", async () => {
+        //     await skaleToken.mint(owner, holder1, amount, "0x", "0x");
+        //     await delegationService.delegate(
+        //         validatorId, amount, delegationPeriod, info, {from: holder1});
+        //     await delegationService.cancelPendingDelegation(delegationId, {from: validator});
+        // });
+
+        // it("should change state of tokens to COMPLETED if delegation was cancelled", async () => {
+
+        // });
+
+        // it("sh")
     });
 });

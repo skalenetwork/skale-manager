@@ -123,7 +123,7 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
         DelegationRequestManager delegationRequestManager = DelegationRequestManager(
             contractManager.getContract("DelegationRequestManager")
         );
-        delegationRequestManager.cancelRequest(delegationId);
+        delegationRequestManager.cancelRequest(delegationId, msg.sender);
     }
 
     function getAllDelegationRequests() external returns(uint[] memory) {
