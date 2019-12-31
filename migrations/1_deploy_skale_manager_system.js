@@ -1,10 +1,17 @@
 let fs = require("fs");
 const fsPromises = fs.promises;
 
+let Web3 = require('web3');
+const Tx = require('ethereumjs-tx');
+
+let configFile = require('../truffle-config.js');
+let erc1820Params = require('../scripts/erc1820.json');
 
 const gasMultiplierParameter = 'gas_multiplier';
 const argv = require('minimist')(process.argv.slice(2), {string: [gasMultiplierParameter]});
-const gas_multiplier = argv[gasMultiplierParameter] === undefined ? 1 : Number(argv[gasMultiplierParameter])
+const gas_multiplier = argv[gasMultiplierParameter] === undefined ? 1 : Number(argv[gasMultiplierParameter]);
+
+let privateKey = process.env.PRIVATE_KEY;
 
 let SkaleToken = artifacts.require('./SkaleToken.sol');
 let SkaleManager = artifacts.require('./SkaleManager.sol');
@@ -26,9 +33,50 @@ let Pricing = artifacts.require('./Pricing.sol');
 
 let gasLimit = 6900000;
 
+let erc1820Contract = erc1820Params.contractAddress;
+let erc1820Sender = erc1820Params.senderAddress;
+let erc1820Bytecode = erc1820Params.bytecode;
+let erc1820Amount = "80000000000000000";
+
 async function deploy(deployer, network) {
+    if (configFile.networks[network].host !== "" && configFile.networks[network].host !== undefined && configFile.networks[network].port !== "" && configFile.networks[network].port !== undefined) {
+        let web3 = new Web3(new Web3.providers.HttpProvider("http://" + configFile.networks[network].host + ":" + configFile.networks[network].port));
+        if (await web3.eth.getCode(erc1820Contract) == "0x") {
+            console.log("Deploying ERC1820 contract!")
+            await web3.eth.sendTransaction({ from: configFile.networks[network].from, to: erc1820Sender, value: erc1820Amount});
+            console.log("Account " + erc1820Sender + " replenished with " + erc1820Amount + " wei");
+            await web3.eth.sendSignedTransaction(erc1820Bytecode);
+            console.log("ERC1820 contract deployed!");
+        } else {
+            console.log("ERC1820 contract has already deployed!");
+        }
+        console.log("Starting SkaleManager system deploying...");
+    } else if (configFile.networks[network].provider !== "" && configFile.networks[network].provider !== undefined) {
+        let web3 = new Web3(configFile.networks[network].provider());
+        if (await web3.eth.getCode(erc1820Contract) == "0x") {
+            console.log("Deploying ERC1820 contract!")
+            const addr = (await web3.eth.accounts.privateKeyToAccount("0x" + privateKey)).address;
+            console.log("Address " + addr + " !!!");
+            const nonceNumber = await web3.eth.getTransactionCount(addr);
+            const tx = {
+                nonce: nonceNumber,
+                from: addr,
+                to: erc1820Sender,
+                gas: "21000",
+                value: erc1820Amount
+            };
+            const signedTx = await web3.eth.signTransaction(tx, "0x" + privateKey);
+            await web3.eth.sendSignedTransaction(signedTx.raw || signedTx.rawTransaction);
+            console.log("Account " + erc1820Sender + " replenished with " + erc1820Amount + " wei");
+            await web3.eth.sendSignedTransaction(erc1820Bytecode);
+            console.log("ERC1820 contract deployed!");
+        } else {
+            console.log("ERC1820 contract has already deployed!");
+        }
+        console.log("Starting SkaleManager system deploying...");
+    }
     await deployer.deploy(ContractManager, {gas: gasLimit}).then(async function(contractManagerInstance) {
-        await deployer.deploy(SkaleToken, contractManagerInstance.address, {gas: gasLimit});
+        await deployer.deploy(SkaleToken, contractManagerInstance.address, [], {gas: gasLimit});
         await contractManagerInstance.setContractsAddress("SkaleToken", SkaleToken.address).then(function(res) {
             console.log("Contract Skale Token with address", SkaleToken.address, "registred in Contract Manager");
         });
@@ -62,7 +110,7 @@ async function deploy(deployer, network) {
         });
         await deployer.deploy(SchainsFunctionalityInternal, "SchainsFunctionality", "SchainsData", contractManagerInstance.address, {gas: gasLimit * gas_multiplier});
         await contractManagerInstance.setContractsAddress("SchainsFunctionalityInternal", SchainsFunctionalityInternal.address).then(function(res) {
-            console.log("Contract Schains Functionality Internal with address", SchainsFunctionalityInternal.address, "registred in Contract Manager");
+            console.log("Contract Schains FunctionalityInternal with address", SchainsFunctionalityInternal.address, "registred in Contract Manager");
         });
         await deployer.deploy(Decryption, {gas: gasLimit * gas_multiplier});
         await contractManagerInstance.setContractsAddress("Decryption", Decryption.address).then(function(res) {
@@ -76,7 +124,7 @@ async function deploy(deployer, network) {
         await contractManagerInstance.setContractsAddress("SkaleDKG", SkaleDKG.address).then(function(res) {
             console.log("Contract SkaleDKG with address", SkaleDKG.address, "registred in Contract Manager");
         });
-        await deployer.deploy(SkaleVerifier, {gas: gasLimit * gas_multiplier});
+        await deployer.deploy(SkaleVerifier, contractManagerInstance.address, {gas: gasLimit * gas_multiplier});
         await contractManagerInstance.setContractsAddress("SkaleVerifier", SkaleVerifier.address).then(function(res) {
             console.log("Contract SkaleVerifier with address", SkaleVerifier.address, "registred in Contract Manager");
         });
@@ -139,6 +187,26 @@ async function deploy(deployer, network) {
 
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function sendTransaction(web3Inst, account, privateKey, receiverContract) {
+    await web3Inst.eth.getTransactionCount(account).then(nonce => {
+        const rawTx = {
+            from: account,
+            nonce: "0x" + nonce.toString(16),
+            to: receiverContract,
+            gasPrice: 1000000000,
+            gas: 8000000,
+            value: "0xDE0B6B3A7640000"
+        };
+
+        const tx = new Tx(rawTx);
+        tx.sign(privateKey);
+        const serializedTx = tx.serialize();
+        web3Inst.eth.sendSignedTransaction('0x' + serializedTx.toString('hex')).on('receipt', receipt => {
+            console.log(receipt);
+        });
+    });
 }
 
 module.exports = deploy;

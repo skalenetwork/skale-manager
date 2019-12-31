@@ -15,7 +15,7 @@ module.exports = {
     networks: {
         SKALE_private_testnet: {
             provider: () => { 
-                return new hdwalletProvider(mnemonicOrPrivateKey, "http://134.209.56.46:1919"); 
+                return new hdwalletProvider(mnemonicOrPrivateKey, uniqueEndpoint); 
             },
             gasPrice: 1000000000,
             gas: 8000000,
@@ -48,7 +48,7 @@ module.exports = {
     },
     compilers: {
         solc: {
-            version: "0.5.11",
+            version: "0.5.15",
             settings: {
                 optimizer: {
                     enabled: true,
