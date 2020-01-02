@@ -78,6 +78,7 @@ contract ValidatorService is Permissions {
     }
 
     function checkMinimumDelegation(uint validatorId, uint amount) external returns (bool) {
+        require(validatorId < validators.length, "Validator does not exist");
         return validators[validatorId].minimumDelegationAmount <= amount ? true : false;
     }
 

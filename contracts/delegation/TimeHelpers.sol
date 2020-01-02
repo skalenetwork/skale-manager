@@ -38,14 +38,14 @@ contract TimeHelpers {
         uint year;
         uint month;
         (year, month, ) = BokkyPooBahsDateTimeLibrary.timestampToDate(requestTime);
-        // 15.05.2019
+
         month += delegationPeriod + 1;
         if (month > 12) {
             year += (month - 1) / 12;
             month = (month - 1) % 12 + 1;
         }
         timestamp = BokkyPooBahsDateTimeLibrary.timestampFromDate(year, month, 1);
-        // 12.2019
+
         if (now > timestamp) {
             uint currentYear;
             uint currentMonth;
