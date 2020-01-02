@@ -1,22 +1,23 @@
 # SKALE Manager
 
-A smart contract system, which orchestrates the SKALE network
+[![Discord](https://img.shields.io/discord/534485763354787851.svg)](https://discord.gg/vvUtWJB)
+
+A smart contract system that orchestrates and operates the SKALE Network.
 
 ## Description
 
-SKALE Manager controls Nodes, Validators, and SKALE chains. It also contains SkaleToken, DKG and Verification of BLS signatures.
-This system is upgradeable and uses the Separate Data and Functionality approach.
+SKALE Manager controls Nodes, Validators, and SKALE chains. It also contains contracts for managing SkaleToken, Distributed Key Generation (DKG), and Verification of BLS signatures.
 
 ## Upgradeability
 
-1) ContractManager
-    Main contract of Separate Data and Functionality approach. It stores all contract's addresses in Skale-manager system.
-2) Permissions
-    Connectable contract to every Skale-manager contracts, except ContractManager. It stores address of ContractManager and modifier which forbids calls only from the given contract
+This system is upgradeable and uses the Separate Data and Functionality approach.
+
+1) ContractManager: main contract of Separate Data and Functionality approach. It stores all contract's addresses in the SKALE Manager system.
+2) Permissions: connectable contract to every SKALE Manager contract except ContractManager. It stores address of ContractManager and a modifier that forbids calls only from the given contract
 
 ## Structure
 
-All interaction with this system possible only through SkaleManager. But all statuses and data you can look at Data contracts.
+All interaction with this system is possible only through SKALE Manager. For all statuses and data, see Data contracts.
 The main purpose of this system:
 
 1) Control Nodes in the system:
@@ -46,7 +47,6 @@ Create a `.env` file with following data:
 
 -   deploy:
 
-
     truffle migrate --network 
 
 ## Test
@@ -55,6 +55,8 @@ _Need to deploy the system first_
 
     yarn run test
 
-## TODO
+## License
 
-Provide ways to upgrade contracts
+[![License](https://img.shields.io/github/license/skalenetwork/skale-manager.svg)](LICENSE)
+
+Copyright (C) 2018-present SKALE Labs
