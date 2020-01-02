@@ -33,7 +33,6 @@ The main purpose of this system:
 
 1) Clone this repo
 2) run `yarn install`
-3) run `yarn run compile`
 
 ## Deployment
 
@@ -53,7 +52,7 @@ Create a `.env` file with following data:
 
 _Need to deploy the system first_
 
-    yarn run test
+    yarn test
 
 ## License
 
