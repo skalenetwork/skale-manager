@@ -29,6 +29,7 @@ import "../interfaces/delegation/IValidatorDelegation.sol";
 import "./DelegationRequestManager.sol";
 import "./ValidatorService.sol";
 import "./DelegationController.sol";
+import "./Distributor.sol";
 
 
 contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegation, IERC777Recipient {
@@ -186,10 +187,6 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
         revert("Not implemented");
     }
 
-    function getValidatorInfo(uint validatorId) external returns (Validator memory validator) {
-        revert("Not implemented");
-    }
-
     function getValidators() external returns (uint[] memory validatorIds) {
         revert("Not implemented");
     }
@@ -242,6 +239,29 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
     )
         external
     {
-        revert("Payment processing is not implemented");
+        require(userData.length == 32, "Data length is incorrect");
+        uint validatorId = abi.decode(userData, (uint));
+        distributeBounty(amount, validatorId);
+    }
+
+    // private
+
+    function distributeBounty(uint amount, uint validatorId) internal {
+        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
+        require(validatorService.checkValidatorExists(validatorId), "Validator does not exist");
+
+        SkaleToken skaleToken = SkaleToken(contractManager.getContract("SkaleToken"));
+        Distributor distributor = Distributor(contractManager.getContract("Distributor"));
+        address skaleBalancesAddress = contractManager.getContract("SkaleBalances");
+
+        Distributor.Share[] memory shares;
+        uint fee;
+        (shares, fee) = distributor.distributeWithFee(validatorId, amount, true);
+
+        address validatorAddress = validatorService.getValidator(validatorId).validatorAddress;
+        skaleToken.send(skaleBalancesAddress, fee, abi.encodePacked(validatorAddress));
+        for (uint i = 0; i < shares.length; ++i) {
+            skaleToken.send(skaleBalancesAddress, shares[i].amount, abi.encodePacked(shares[i].holder));
+        }
     }
 }

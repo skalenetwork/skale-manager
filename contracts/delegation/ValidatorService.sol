@@ -18,6 +18,7 @@
 */
 
 pragma solidity ^0.5.3;
+pragma experimental ABIEncoderV2;
 
 import "../Permissions.sol";
 
@@ -73,10 +74,6 @@ contract ValidatorService is Permissions {
         validatorAddressToId[newValidatorAddress] = validatorId;
     }
 
-    function checkValidatorExists(uint validatorId) external view returns (bool) {
-        return validatorId < validators.length ? true : false;
-    }
-
     function checkMinimumDelegation(uint validatorId, uint amount) external returns (bool) {
         require(validatorId < validators.length, "Validator does not exist");
         return validators[validatorId].minimumDelegationAmount <= amount ? true : false;
@@ -101,5 +98,14 @@ contract ValidatorService is Permissions {
         // msr
         // bond
 
+    }
+
+    function getValidator(uint validatorId) external returns (Validator memory) {
+        require(checkValidatorExists(validatorId), "Validator does not exist");
+        return validators[validatorId];
+    }
+
+    function checkValidatorExists(uint validatorId) public view returns (bool) {
+        return validatorId < validators.length ? true : false;
     }
 }

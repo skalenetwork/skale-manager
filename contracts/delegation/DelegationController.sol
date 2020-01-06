@@ -36,9 +36,6 @@ contract DelegationController is Permissions {
     /// @notice delegations will never be deleted to index in this array may be used like delegation id
     Delegation[] public delegations;
 
-    //       holder  => locked amount
-    mapping (address => uint) private _locks;
-
     ///       holder => delegationId
     mapping (address => uint[]) private _delegationsByHolder;
 
@@ -55,18 +52,6 @@ contract DelegationController is Permissions {
 
     constructor(address newContractsAddress) Permissions(newContractsAddress) public {
 
-    }
-
-    function lock(address holder, uint amount) external allow("SkaleToken") {
-        _locks[holder] += amount;
-    }
-
-    function unlock(address holder, uint amount) external allow("SkaleToken") {
-        _locks[holder] -= amount;
-    }
-
-    function getLocked(address holder) external returns (uint) {
-        return _locks[holder];
     }
 
     function delegate(uint delegationId) external allow("DelegationRequestManager") {
@@ -123,6 +108,10 @@ contract DelegationController is Permissions {
     function getDelegationsByHolder(address holder) external view returns (uint[] memory) {
         return _delegationsByHolder[holder];
     }
+
+    // function getActiveDelegationsByValidator(uint validatorId) external view returns (uint[] memory) {
+    //     return
+    // }
 
     function getDelegation(uint delegationId) public view checkDelegationExists(delegationId) returns (Delegation memory) {
         return delegations[delegationId];

@@ -21,14 +21,6 @@ pragma solidity ^0.5.3;
 pragma experimental ABIEncoderV2;
 
 interface IValidatorDelegation {
-    struct Validator {
-        string name;
-        address validatorAddress;
-        string description;
-        uint feeRate;
-        uint registrationTime;
-        uint minimumDelegationAmount;
-    }
 
     /// @notice Allows validator to accept tokens delegated at `delegationId`
     function accept(uint delegationId) external;
@@ -64,5 +56,6 @@ interface IValidatorDelegation {
 
     function setMinimumDelegationAmount(uint amount) external;
 
-    function getValidatorInfo(uint validatorId) external returns (Validator memory validator);
+    // TODO: replace with getters
+    // function getValidatorInfo(uint validatorId) external returns (Validator memory validator);
 }

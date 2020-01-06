@@ -8,6 +8,10 @@ import { ContractManagerContract,
     DelegationRequestManagerInstance,
     DelegationServiceContract,
     DelegationServiceInstance,
+    DistributorContract,
+    DistributorInstance,
+    SkaleBalancesContract,
+    SkaleBalancesInstance,
     SkaleManagerMockContract,
     SkaleManagerMockInstance,
     SkaleTokenContract,
@@ -29,6 +33,8 @@ const DelegationController: DelegationControllerContract = artifacts.require("./
 const TimeHelpers: TimeHelpersContract = artifacts.require("./TimeHelpers");
 const TokenState: TokenStateContract = artifacts.require("./TokenState");
 const SkaleManagerMock: SkaleManagerMockContract = artifacts.require("./SkaleManagerMock");
+const SkaleBalances: SkaleBalancesContract = artifacts.require("./SkaleBalances");
+const Distributor: DistributorContract = artifacts.require("./Distributor");
 
 import { currentTime, months, skipTime, skipTimeToDate } from "../utils/time";
 
@@ -74,6 +80,8 @@ contract("Delegation", ([owner,
     let timeHelpers: TimeHelpersInstance;
     let tokenState: TokenStateInstance;
     let skaleManagerMock: SkaleManagerMockInstance;
+    let skaleBalances: SkaleBalancesInstance;
+    let distributor: DistributorInstance;
 
     const defaultAmount = 100 * 1e18;
 
@@ -106,6 +114,12 @@ contract("Delegation", ([owner,
 
         skaleManagerMock = await SkaleManagerMock.new(contractManager.address);
         await contractManager.setContractsAddress("SkaleManager", skaleManagerMock.address);
+
+        skaleBalances = await SkaleBalances.new(contractManager.address);
+        await contractManager.setContractsAddress("SkaleBalances", skaleBalances.address);
+
+        distributor = await Distributor.new(contractManager.address);
+        await contractManager.setContractsAddress("Distributor", distributor.address);
 
         // each test will start from Nov 10
         await skipTimeToDate(web3, 10, 10);
