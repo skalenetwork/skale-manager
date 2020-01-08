@@ -28,15 +28,15 @@ import "../interfaces/ISkaleToken.sol";
 
 contract SkaleBalances is Permissions, IERC777Recipient {
     IERC1820Registry private _erc1820 = IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
-    mapping (address => uint) bountyBalances;
+    mapping (address => uint) private _bountyBalances;
 
     constructor(address newContractsAddress) Permissions(newContractsAddress) public {
         _erc1820.setInterfaceImplementer(address(this), keccak256("ERC777TokensRecipient"), address(this));
     }
 
-    function withdrawBalance(uint amountOfTokens) external {
-        require(bountyBalances[msg.sender] >= amountOfTokens, "Now enough tokens on balance for withdrawing");
-        bountyBalances[msg.sender] -= amountOfTokens;
+    function withdrawBalance(address wallet, uint amountOfTokens) external {
+        require(_bountyBalances[msg.sender] >= amountOfTokens, "Now enough tokens on balance for withdrawing");
+        _bountyBalances[msg.sender] -= amountOfTokens;
         // send(msg.sender, amountOfTokens, "");
     }
 
@@ -50,14 +50,17 @@ contract SkaleBalances is Permissions, IERC777Recipient {
     )
         external
     {
-        require(userData.length == 20, "Data length is incorrect");
         address recipient = abi.decode(userData, (address));
         stashBalance(recipient, amount);
+    }
+
+    function getBalance(address wallet) external returns (uint) {
+        return _bountyBalances[wallet];
     }
 
     // private
 
     function stashBalance(address recipient, uint amount) internal {
-        bountyBalances[recipient] += amount;
+        _bountyBalances[recipient] += amount;
     }
 }

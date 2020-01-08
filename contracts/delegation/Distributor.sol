@@ -30,8 +30,27 @@ contract Distributor is Permissions {
     }
 
     function distribute(uint validatorId, uint amount, bool roundFloor) public returns (Share[] memory shares) {
-        // DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
+        DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
 
-        revert("distribute is not implemented");
+        uint totalDelegated = 0;
+        uint[] memory activeDelegations = delegationController.getActiveDelegationsByValidator(validatorId);
+        shares = new Share[](activeDelegations.length);
+
+        for (uint i = 0; i < activeDelegations.length; ++i) {
+            DelegationController.Delegation memory delegation = delegationController.getDelegation(activeDelegations[i]);
+            shares[i].holder = delegation.holder;
+            shares[i].amount = amount * delegation.amount;
+            totalDelegated += delegation.amount;
+        }
+
+        for (uint i = 0; i < activeDelegations.length; ++i) {
+            uint value = shares[i].amount;
+            shares[i].amount /= totalDelegated;
+            if (!roundFloor) {
+                if (shares[i].amount * totalDelegated < value) {
+                    ++shares[i].amount;
+                }
+            }
+        }
     }
 }

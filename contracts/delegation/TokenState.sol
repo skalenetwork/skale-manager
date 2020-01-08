@@ -132,6 +132,10 @@ contract TokenState is Permissions {
         return _purchased[holder];
     }
 
+    function isDelegated(State state) public returns (bool) {
+        return state == State.DELEGATED || state == State.ENDING_DELEGATED;
+    }
+
     // private
 
     function setState(uint delegationId, State newState) internal {
@@ -180,10 +184,6 @@ contract TokenState is Permissions {
 
     function isLocked(State state) internal returns (bool) {
         return state != State.COMPLETED;
-    }
-
-    function isDelegated(State state) internal returns (bool) {
-        return state == State.DELEGATED || state == State.ENDING_DELEGATED;
     }
 
     function proposedToUnlocked(uint delegationId) internal returns (State state) {

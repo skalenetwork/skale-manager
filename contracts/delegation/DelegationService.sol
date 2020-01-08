@@ -30,6 +30,7 @@ import "./DelegationRequestManager.sol";
 import "./ValidatorService.sol";
 import "./DelegationController.sol";
 import "./Distributor.sol";
+import "./SkaleBalances.sol";
 
 
 contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegation, IERC777Recipient {
@@ -196,7 +197,8 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
     }
 
     function getEarnedBountyAmount() external returns (uint) {
-        revert("Not implemented");
+        SkaleBalances skaleBalances = SkaleBalances(contractManager.getContract("SkaleBalances"));
+        return skaleBalances.getBalance(msg.sender);
     }
 
     /// @notice removes node from system
@@ -259,9 +261,9 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
         (shares, fee) = distributor.distributeWithFee(validatorId, amount, true);
 
         address validatorAddress = validatorService.getValidator(validatorId).validatorAddress;
-        skaleToken.send(skaleBalancesAddress, fee, abi.encodePacked(validatorAddress));
+        skaleToken.send(skaleBalancesAddress, fee, abi.encode(validatorAddress));
         for (uint i = 0; i < shares.length; ++i) {
-            skaleToken.send(skaleBalancesAddress, shares[i].amount, abi.encodePacked(shares[i].holder));
+            skaleToken.send(skaleBalancesAddress, shares[i].amount, abi.encode(shares[i].holder));
         }
     }
 }
