@@ -47,11 +47,11 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
     }
 
     /// @notice Allows validator to accept tokens delegated at `delegationId`
-    function accept(uint delegationId) external {
+    function acceptPendingDelegation(uint delegationId) external {
         DelegationRequestManager delegationRequestManager = DelegationRequestManager(
             contractManager.getContract("DelegationRequestManager")
         );
-        delegationRequestManager.acceptRequest(delegationId);
+        delegationRequestManager.acceptRequest(delegationId, msg.sender);
     }
 
     /// @notice Adds node to SKALE network
@@ -146,6 +146,7 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
         validatorId = validatorService.registerValidator(
             name,
+            msg.sender,
             description,
             feeRate,
             minimumDelegationAmount

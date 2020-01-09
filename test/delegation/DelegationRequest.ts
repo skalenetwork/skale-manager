@@ -51,7 +51,7 @@ class Delegation {
     }
 }
 
-contract("DelegationRequestManager", ([owner, holder1, holder2, validator]) => {
+contract("DelegationRequestManager", ([owner, holder1, holder2, validator, validator1]) => {
     let contractManager: ContractManagerInstance;
     let skaleToken: SkaleTokenInstance;
     let delegationService: DelegationServiceInstance;
@@ -115,25 +115,25 @@ contract("DelegationRequestManager", ([owner, holder1, holder2, validator]) => {
                 {from: validator});
             });
 
-        it("should rejected if validator with such id doesn't exist", async () => {
+        it("should reject delegation if validator with such id doesn't exist", async () => {
             const nonExistedValidatorId = 1;
             await delegationService.delegate(nonExistedValidatorId, amount, delegationPeriod, info, {from: holder1})
                 .should.be.eventually.rejectedWith("Validator is not registered");
         });
 
-        it("should rejected if delegation doesn't meet minimum delegation amount", async () => {
+        it("should reject delegation if it doesn't meet minimum delegation amount", async () => {
             amount = 99;
             await delegationService.delegate(validatorId, amount, delegationPeriod, info, {from: holder1})
                 .should.be.eventually.rejectedWith("Amount doesn't meet minimum delegation amount");
         });
 
-        it("should rejected if delegation doesn't meet allowed delegation period", async () => {
+        it("should reject delegation if request doesn't meet allowed delegation period", async () => {
             delegationPeriod = 4;
             await delegationService.delegate(validatorId, amount, delegationPeriod, info, {from: holder1})
                 .should.be.eventually.rejectedWith("This delegation period is not allowed");
         });
 
-        it("should rejected if delegation hasn't enough unlocked tokens for delegation", async () => {
+        it("should reject delegation if holder hasn't enough unlocked tokens for delegation", async () => {
             amount = 101;
             await delegationService.delegate(validatorId, amount, delegationPeriod, info, {from: holder1})
                 .should.be.eventually.rejectedWith("Delegator hasn't enough tokens to delegate");
@@ -154,7 +154,7 @@ contract("DelegationRequestManager", ([owner, holder1, holder2, validator]) => {
             assert.equal("VERY NICE", delegation.description);
         });
 
-        it("should rejected delegation if she doesn't have enough tokens", async () => {
+        it("should reject delegation if it doesn't have enough tokens", async () => {
             await skaleToken.mint(owner, holder1, 2 * amount, "0x", "0x");
             await delegationService.delegate(validatorId, amount + 1, delegationPeriod, info, {from: holder1});
             await delegationService.delegate(validatorId, amount, delegationPeriod, info, {from: holder1})
@@ -162,31 +162,70 @@ contract("DelegationRequestManager", ([owner, holder1, holder2, validator]) => {
 
         });
 
-        it("should rejected canceling if delegation doesn't exist", async () => {
-            await delegationService.cancelPendingDelegation(delegationId, {from: validator})
+        it("should reject canceling if delegation doesn't exist", async () => {
+            await delegationService.cancelPendingDelegation(delegationId, {from: holder1})
                 .should.be.rejectedWith("Delegation does not exist");
         });
 
-        it("should rejected canceling request if she doesn't have permissions", async () => {
-            await skaleToken.mint(owner, holder1, amount, "0x", "0x");
-            const { logs } = await delegationService.delegate(
-                validatorId, amount, delegationPeriod, info, {from: holder1});
-            delegationId = logs[0].args.delegationId;
-            await delegationService.cancelPendingDelegation(delegationId, {from: holder2})
-                .should.be.rejectedWith("No permissions to cancel request");
+        describe("when delegation request was created", async () => {
+            beforeEach(async () => {
+                await skaleToken.mint(owner, holder1, amount, "0x", "0x");
+                const { logs } = await delegationService.delegate(
+                    validatorId, amount, delegationPeriod, info, {from: holder1});
+                delegationId = logs[0].args.delegationId;
+            });
+
+            it("should reject canceling request if it isn't actualy holder of tokens", async () => {
+                await delegationService.cancelPendingDelegation(delegationId, {from: holder2})
+                    .should.be.rejectedWith("Only holder of tokens can cancel delegation request");
+            });
+
+            it("should reject canceling request if validator already accepted it", async () => {
+                await delegationService.acceptPendingDelegation(delegationId, {from: validator});
+                await delegationService.cancelPendingDelegation(delegationId, {from: holder1})
+                    .should.be.rejectedWith("Can't cancel delegation request");
+            });
+
+            it("should reject canceling request if delegation request already rejected", async () => {
+                await delegationService.cancelPendingDelegation(delegationId, {from: holder1});
+                await delegationService.cancelPendingDelegation(delegationId, {from: holder1})
+                    .should.be.rejectedWith("Can't cancel delegation request");
+            });
+
+            it("should change state of tokens to COMPLETED if delegation was cancelled", async () => {
+                await delegationService.cancelPendingDelegation(delegationId, {from: holder1});
+                const COMPLETED = 4;
+                const status = new BigNumber(await tokenState.getState.call(delegationId)).toNumber();
+                status.should.be.equal(COMPLETED);
+            });
+
+            it("should reject accepting request if such validator doesn't exist", async () => {
+                await delegationService.acceptPendingDelegation(delegationId, {from: validator1})
+                    .should.be.rejectedWith("Validator with such address doesn't exist");
+            });
+
+            it("should reject accepting request if validator already canceled it", async () => {
+                await delegationService.cancelPendingDelegation(delegationId, {from: holder1});
+                await delegationService.acceptPendingDelegation(delegationId, {from: validator})
+                    .should.be.rejectedWith("Can't set state to accepted");
+            });
+
+            it("should reject accepting request if validator already accepted it", async () => {
+                await delegationService.acceptPendingDelegation(delegationId, {from: validator});
+                await delegationService.acceptPendingDelegation(delegationId, {from: validator})
+                    .should.be.rejectedWith("Can't set state to accepted");
+            });
+
+            it("should reject accepting request if validator tried to accept request not assigned to him", async () => {
+                delegationService.registerValidator(
+                    "ValidatorName",
+                    "Really good validator",
+                    500,
+                    100,
+                    {from: validator1});
+                await delegationService.acceptPendingDelegation(delegationId, {from: validator1})
+                        .should.be.rejectedWith("No permissions to accept request");
+            });
         });
-
-        // it("should rejected canceling request if validator already accepted it", async () => {
-        //     await skaleToken.mint(owner, holder1, amount, "0x", "0x");
-        //     await delegationService.delegate(
-        //         validatorId, amount, delegationPeriod, info, {from: holder1});
-        //     await delegationService.cancelPendingDelegation(delegationId, {from: validator});
-        // });
-
-        // it("should change state of tokens to COMPLETED if delegation was cancelled", async () => {
-
-        // });
-
-        // it("sh")
     });
 });

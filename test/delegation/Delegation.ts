@@ -134,7 +134,7 @@ contract("Delegation", ([owner,
                         // });
 
                         // it("should accept delegation request", async () => {
-                        //     await delegationService.accept(requestId, {from: validator});
+                        //     await delegationService.acceptPendingDelegation(requestId, {from: validator});
 
                         //     // await delegationService.listDelegationRequests().should.be.eventually.empty;
                         // });
@@ -151,7 +151,7 @@ contract("Delegation", ([owner,
 
                         // describe("when delegation request is accepted", async () => {
                         //     beforeEach(async () => {
-                        //         await delegationService.accept(requestId, {from: validator});
+                        //         await delegationService.acceptPendingDelegation(requestId, {from: validator});
                         //     });
 
                         //     it("should extend delegation period for 3 months if undelegation request was not sent",
@@ -261,14 +261,14 @@ contract("Delegation", ([owner,
                 let responce = await delegationService.delegate(
                     validatorId, holder1Balance, 6, "First holder", {from: holder1});
                 const requestId1 = responce.logs[0].args.id;
-                await delegationService.accept(requestId1, {from: validator});
+                await delegationService.acceptPendingDelegation(requestId1, {from: validator});
 
                 await skipTimeToDate(web3, 28, 10);
 
                 responce = await delegationService.delegate(
                     validatorId, holder2Balance, 12, "Second holder", {from: holder2});
                 const requestId2 = responce.logs[0].args.id;
-                await delegationService.accept(requestId2, {from: validator});
+                await delegationService.acceptPendingDelegation(requestId2, {from: validator});
 
                 await skipTimeToDate(web3, 28, 11);
 
@@ -284,7 +284,7 @@ contract("Delegation", ([owner,
                 responce = await delegationService.delegate(
                     validatorId, holder3Balance, 3, "Third holder", {from: holder3});
                 const requestId3 = responce.logs[0].args.id;
-                await delegationService.accept(requestId3, {from: validator});
+                await delegationService.acceptPendingDelegation(requestId3, {from: validator});
 
                 let bounty = await delegationService.getEarnedBountyAmount.call({from: holder1});
                 bounty.should.be.equal(38);
@@ -407,7 +407,7 @@ contract("Delegation", ([owner,
                 responce = await delegationService.delegate(
                     validatorId, holder1Balance, 3, "D2 is even", {from: holder1});
                 const requestId = responce.logs[0].args.id;
-                await delegationService.accept(requestId, {from: validator});
+                await delegationService.acceptPendingDelegation(requestId, {from: validator});
 
                 await delegationService.requestUndelegation(requestId, {from: holder3});
 

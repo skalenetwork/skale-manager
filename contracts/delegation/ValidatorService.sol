@@ -45,6 +45,7 @@ contract ValidatorService is Permissions {
 
     function registerValidator(
         string calldata name,
+        address validatorAddress,
         string calldata description,
         uint feeRate,
         uint minimumDelegationAmount
@@ -55,7 +56,7 @@ contract ValidatorService is Permissions {
         validatorId = validators.length;
         validators.push(Validator(
             name,
-            msg.sender,
+            validatorAddress,
             description,
             feeRate,
             now,
@@ -63,6 +64,7 @@ contract ValidatorService is Permissions {
             0,
             epmtyArray
         ));
+        validatorAddressToId[validatorAddress] = validatorId;
     }
 
     function setNewValidatorAddress(address newValidatorAddress, uint validatorId) external {
@@ -81,10 +83,6 @@ contract ValidatorService is Permissions {
         return validators[validatorId].minimumDelegationAmount <= amount ? true : false;
     }
 
-    function getValidatorId(address validatorAddress) external view returns (uint) {
-        return validatorAddressToId[validatorAddress];
-    }
-
     // function setValidatorFeeAddress(uint _validatorId, address _newAddress) public {
     //     require(msg.sender == validators[_validatorId].validatorAddress, "Transaction sender doesn't have enough permissions");
     //     validators[_validatorId].validatorFeeAddress = _newAddress;
@@ -95,7 +93,7 @@ contract ValidatorService is Permissions {
     // }
 
     function checkValidatorAddressToId(address validatorAddress, uint validatorId) external view returns (bool) {
-        return validatorAddressToId[validatorAddress] == validatorId ? true : false;
+        return getValidatorId(validatorAddress) == validatorId ? true : false;
     }
 
     function createNode() external {
@@ -103,5 +101,13 @@ contract ValidatorService is Permissions {
         // require(validators[validatorId].nodeIndexes.length * MSR <= )
         // msr
         // bond
+    }
+
+    function getValidatorId(address validatorAddress) public view returns (uint) {
+        require(
+            validatorAddress == validators[validatorAddressToId[validatorAddress]].validatorAddress,
+            "Validator with such address doesn't exist"
+        );
+        return validatorAddressToId[validatorAddress];
     }
 }
