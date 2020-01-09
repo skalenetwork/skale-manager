@@ -46,6 +46,7 @@ contract ValidatorService is Permissions {
 
     function registerValidator(
         string calldata name,
+        address validatorAddress,
         string calldata description,
         uint feeRate,
         uint minimumDelegationAmount
@@ -55,7 +56,7 @@ contract ValidatorService is Permissions {
         uint[] memory epmtyArray = new uint[](0);
         validators.push(Validator(
             name,
-            msg.sender,
+            validatorAddress,
             description,
             feeRate,
             now,

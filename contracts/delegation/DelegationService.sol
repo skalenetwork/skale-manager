@@ -160,6 +160,7 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
         validatorId = validatorService.registerValidator(
             name,
+            msg.sender,
             description,
             feeRate,
             minimumDelegationAmount
@@ -193,7 +194,7 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
     }
 
     function withdrawBounty(address bountyCollectionAddress, uint amount) external {
-        revert("Not implemented");
+        revert("WithdrawBounty is not implemented");
     }
 
     function getEarnedBountyAmount() external returns (uint) {

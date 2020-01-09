@@ -4,6 +4,7 @@ pragma experimental ABIEncoderV2;
 import "../Permissions.sol";
 import "./ValidatorService.sol";
 import "./DelegationController.sol";
+import "./DelegationPeriodManager.sol";
 
 
 contract Distributor is Permissions {
@@ -36,11 +37,13 @@ contract Distributor is Permissions {
         uint[] memory activeDelegations = delegationController.getActiveDelegationsByValidator(validatorId);
         shares = new Share[](activeDelegations.length);
 
+        DelegationPeriodManager delegationPeriodManager = DelegationPeriodManager(contractManager.getContract("DelegationPeriodManager"));
         for (uint i = 0; i < activeDelegations.length; ++i) {
             DelegationController.Delegation memory delegation = delegationController.getDelegation(activeDelegations[i]);
             shares[i].holder = delegation.holder;
-            shares[i].amount = amount * delegation.amount;
-            totalDelegated += delegation.amount;
+            uint multiplier = delegationPeriodManager.stakeMultipliers(delegation.delegationPeriod);
+            shares[i].amount = amount * delegation.amount * multiplier;
+            totalDelegated += delegation.amount * multiplier;
         }
 
         for (uint i = 0; i < activeDelegations.length; ++i) {
