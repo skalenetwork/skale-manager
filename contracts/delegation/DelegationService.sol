@@ -194,7 +194,8 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
     }
 
     function withdrawBounty(address bountyCollectionAddress, uint amount) external {
-        revert("WithdrawBounty is not implemented");
+        SkaleBalances skaleBalances = SkaleBalances(contractManager.getContract("SkaleBalances"));
+        skaleBalances.withdrawBalance(msg.sender, bountyCollectionAddress, amount);
     }
 
     function getEarnedBountyAmount() external returns (uint) {

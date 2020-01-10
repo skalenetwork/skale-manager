@@ -23,6 +23,7 @@ import "@openzeppelin/contracts/introspection/IERC1820Registry.sol";
 import "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
 
 import "../Permissions.sol";
+import "../SkaleToken.sol";
 import "../interfaces/ISkaleToken.sol";
 
 
@@ -34,10 +35,12 @@ contract SkaleBalances is Permissions, IERC777Recipient {
         _erc1820.setInterfaceImplementer(address(this), keccak256("ERC777TokensRecipient"), address(this));
     }
 
-    function withdrawBalance(address wallet, uint amountOfTokens) external {
-        require(_bountyBalances[msg.sender] >= amountOfTokens, "Now enough tokens on balance for withdrawing");
-        _bountyBalances[msg.sender] -= amountOfTokens;
-        // send(msg.sender, amountOfTokens, "");
+    function withdrawBalance(address wallet, address to, uint amountOfTokens) external {
+        require(_bountyBalances[wallet] >= amountOfTokens, "Now enough tokens on balance for withdrawing");
+        _bountyBalances[wallet] -= amountOfTokens;
+
+        SkaleToken skaleToken = SkaleToken(contractManager.getContract("SkaleToken"));
+        require(skaleToken.transfer(to, amountOfTokens), "Failed to transfer tokens");
     }
 
     function tokensReceived(
