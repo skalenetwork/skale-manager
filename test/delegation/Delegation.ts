@@ -138,7 +138,7 @@ contract("Delegation", ([owner,
         });
 
         for (let delegationPeriod = 1; delegationPeriod <= 18; ++delegationPeriod) {
-            it("should check delegation period availability", async () => {
+            it("should check " + delegationPeriod + " month" + (delegationPeriod > 1 ? "s" : "") + " delegation period availability", async () => {
                 await delegationPeriodManager.isDelegationPeriodAllowed(delegationPeriod)
                     .should.be.eventually.equal(allowedDelegationPeriods.includes(delegationPeriod));
             });
@@ -255,7 +255,8 @@ contract("Delegation", ([owner,
                     });
                 });
             } else {
-                it("should not allow to send delegation request", async () => {
+                it("should not allow to send delegation request for " + delegationPeriod +
+                    " month" + (delegationPeriod > 1 ? "s" : "" ), async () => {
                     await delegationService.delegate(validatorId, defaultAmount.toString(), delegationPeriod,
                         "D2 is even", {from: holder1})
                         .should.be.eventually.rejectedWith("This delegation period is not allowed");
