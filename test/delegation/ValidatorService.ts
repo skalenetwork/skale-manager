@@ -33,25 +33,28 @@ import * as chaiAsPromised from "chai-as-promised";
 chai.should();
 chai.use(chaiAsPromised);
 
-class Delegation {
-    public tokenAddress: string;
-    public validatorId: BigNumber;
-    public amount: BigNumber;
-    public delegationPeriod: BigNumber;
-    public unlockedUntill: BigNumber;
+class Validator {
+    public name: string;
+    public validatorAddress: string;
     public description: string;
+    public feeRate: BigNumber;
+    public registrationTime: BigNumber;
+    public minimumDelegationAmount: BigNumber;
+    public lastBountyCollectionMonth: BigNumber;
 
-    constructor(arrayData: [string, BigNumber, BigNumber, BigNumber, BigNumber, string]) {
-        this.tokenAddress = arrayData[0];
-        this.validatorId = new BigNumber(arrayData[1]);
-        this.amount = new BigNumber(arrayData[2]);
-        this.delegationPeriod = new BigNumber(arrayData[3]);
-        this.unlockedUntill = new BigNumber(arrayData[4]);
-        this.description = arrayData[5];
+    constructor(arrayData: [string, string, string, BigNumber, BigNumber, BigNumber, BigNumber]) {
+        this.name = arrayData[0];
+        this.validatorAddress = arrayData[1];
+        this.description = arrayData[2];
+        this.feeRate = new BigNumber(arrayData[3]);
+        this.registrationTime = new BigNumber(arrayData[4]);
+        this.minimumDelegationAmount = new BigNumber(arrayData[5]);
+        this.lastBountyCollectionMonth = new BigNumber(arrayData[6]);
+
     }
 }
 
-contract("DelegationRequestManager", ([owner, holder1, holder2, validator, validator1]) => {
+contract("ValidatorService", ([owner, holder1, holder2, validator1, validator2]) => {
     let contractManager: ContractManagerInstance;
     let skaleToken: SkaleTokenInstance;
     let delegationService: DelegationServiceInstance;
@@ -96,136 +99,20 @@ contract("DelegationRequestManager", ([owner, holder1, holder2, validator, valid
         await contractManager.setContractsAddress("TimeHelpers", timeHelpers.address);
     });
 
-    describe("when arguments for delegation initialized", async () => {
-        let validatorId: number;
-        let amount: number;
-        let delegationPeriod: number;
-        let info: string;
-        let delegationId: number;
-        beforeEach(async () => {
-            validatorId = 0;
-            amount = 100;
-            delegationPeriod = 3;
-            info = "VERY NICE";
-            await delegationService.registerValidator(
-                "ValidatorName",
-                "Really good validator",
-                500,
-                100,
-                {from: validator});
-            });
-
-        it("should reject delegation if validator with such id doesn't exist", async () => {
-            const nonExistedValidatorId = 1;
-            await delegationService.delegate(nonExistedValidatorId, amount, delegationPeriod, info, {from: holder1})
-                .should.be.eventually.rejectedWith("Validator does not exist");
-        });
-
-        it("should reject delegation if it doesn't meet minimum delegation amount", async () => {
-            amount = 99;
-            await delegationService.delegate(validatorId, amount, delegationPeriod, info, {from: holder1})
-                .should.be.eventually.rejectedWith("Amount doesn't meet minimum delegation amount");
-        });
-
-        it("should reject delegation if request doesn't meet allowed delegation period", async () => {
-            delegationPeriod = 4;
-            await delegationService.delegate(validatorId, amount, delegationPeriod, info, {from: holder1})
-                .should.be.eventually.rejectedWith("This delegation period is not allowed");
-        });
-
-        it("should reject delegation if holder hasn't enough unlocked tokens for delegation", async () => {
-            amount = 101;
-            await delegationService.delegate(validatorId, amount, delegationPeriod, info, {from: holder1})
-                .should.be.eventually.rejectedWith("Delegator hasn't enough tokens to delegate");
-        });
-
-        it("should send request for delegation", async () => {
-            await skaleToken.mint(owner, holder1, amount, "0x", "0x");
-            const { logs } = await delegationService.delegate(
-                validatorId, amount, delegationPeriod, info, {from: holder1});
-            assert.equal(logs.length, 1, "No DelegationRequestIsSent Event emitted");
-            assert.equal(logs[0].event, "DelegationRequestIsSent");
-            delegationId = logs[0].args.delegationId;
-            const delegation: Delegation = new Delegation(
-                await delegationController.delegations(delegationId));
-            assert.equal(holder1, delegation.tokenAddress);
-            assert.equal(validatorId, delegation.validatorId.toNumber());
-            assert.equal(delegationPeriod, delegation.delegationPeriod.toNumber());
-            assert.equal("VERY NICE", delegation.description);
-        });
-
-        it("should reject delegation if it doesn't have enough tokens", async () => {
-            await skaleToken.mint(owner, holder1, 2 * amount, "0x", "0x");
-            await delegationService.delegate(validatorId, amount + 1, delegationPeriod, info, {from: holder1});
-            await delegationService.delegate(validatorId, amount, delegationPeriod, info, {from: holder1})
-                .should.be.eventually.rejectedWith("Delegator hasn't enough tokens to delegate");
-
-        });
-
-        it("should reject canceling if delegation doesn't exist", async () => {
-            await delegationService.cancelPendingDelegation(delegationId, {from: holder1})
-                .should.be.rejectedWith("Delegation does not exist");
-        });
-
-        describe("when delegation request was created", async () => {
-            beforeEach(async () => {
-                await skaleToken.mint(owner, holder1, amount, "0x", "0x");
-                const { logs } = await delegationService.delegate(
-                    validatorId, amount, delegationPeriod, info, {from: holder1});
-                delegationId = logs[0].args.delegationId;
-            });
-
-            it("should reject canceling request if it isn't actualy holder of tokens", async () => {
-                await delegationService.cancelPendingDelegation(delegationId, {from: holder2})
-                    .should.be.rejectedWith("Only holder of tokens can cancel delegation request");
-            });
-
-            it("should reject canceling request if validator already accepted it", async () => {
-                await delegationService.acceptPendingDelegation(delegationId, {from: validator});
-                await delegationService.cancelPendingDelegation(delegationId, {from: holder1})
-                    .should.be.rejectedWith("Can't cancel delegation request");
-            });
-
-            it("should reject canceling request if delegation request already rejected", async () => {
-                await delegationService.cancelPendingDelegation(delegationId, {from: holder1});
-                await delegationService.cancelPendingDelegation(delegationId, {from: holder1})
-                    .should.be.rejectedWith("Can't cancel delegation request");
-            });
-
-            it("should change state of tokens to COMPLETED if delegation was cancelled", async () => {
-                await delegationService.cancelPendingDelegation(delegationId, {from: holder1});
-                const COMPLETED = 4;
-                const status = new BigNumber(await tokenState.getState.call(delegationId)).toNumber();
-                status.should.be.equal(COMPLETED);
-            });
-
-            it("should reject accepting request if such validator doesn't exist", async () => {
-                await delegationService.acceptPendingDelegation(delegationId, {from: validator1})
-                    .should.be.rejectedWith("Validator with such address doesn't exist");
-            });
-
-            it("should reject accepting request if validator already canceled it", async () => {
-                await delegationService.cancelPendingDelegation(delegationId, {from: holder1});
-                await delegationService.acceptPendingDelegation(delegationId, {from: validator})
-                    .should.be.rejectedWith("Can't set state to accepted");
-            });
-
-            it("should reject accepting request if validator already accepted it", async () => {
-                await delegationService.acceptPendingDelegation(delegationId, {from: validator});
-                await delegationService.acceptPendingDelegation(delegationId, {from: validator})
-                    .should.be.rejectedWith("Can't set state to accepted");
-            });
-
-            it("should reject accepting request if validator tried to accept request not assigned to him", async () => {
-                delegationService.registerValidator(
-                    "ValidatorName",
-                    "Really good validator",
-                    500,
-                    100,
-                    {from: validator1});
-                await delegationService.acceptPendingDelegation(delegationId, {from: validator1})
-                        .should.be.rejectedWith("No permissions to accept request");
-            });
-        });
+    it("should register new validator", async () => {
+        const { logs } = await delegationService.registerValidator(
+            "ValidatorName",
+            "Really good validator",
+            500,
+            100,
+            {from: validator1});
+        assert.equal(logs.length, 1, "No ValidatorRegistered Event emitted");
+        assert.equal(logs[0].event, "ValidatorRegistered");
+        const validatorId = logs[0].args.validatorId;
+        const validator: Validator = new Validator(
+            await validatorService.validators(validatorId));
+        const validatorIndexes = await validatorService.getValidatorNodeIndexes(validatorId);
+        console.log(validator);
+        console.log(validatorIndexes);
     });
 });

@@ -20,6 +20,7 @@ pragma experimental ABIEncoderV2;
 import "../Permissions.sol";
 import "./DelegationRequestManager.sol";
 import "./DelegationPeriodManager.sol";
+import "./TokenState.sol";
 
 
 contract DelegationController is Permissions {
@@ -36,11 +37,11 @@ contract DelegationController is Permissions {
     /// @notice delegations will never be deleted to index in this array may be used like delegation id
     Delegation[] public delegations;
 
-    //       holder  => locked amount
-    mapping (address => uint) private _locks;
-
     ///       holder => delegationId
     mapping (address => uint[]) private _delegationsByHolder;
+
+    /// validatorId => delegationId[]
+    mapping (uint => uint[]) private _activeByValidator;
 
 
     //validatorId => sum of tokens multiplied by stake multiplier each holder
@@ -55,18 +56,6 @@ contract DelegationController is Permissions {
 
     constructor(address newContractsAddress) Permissions(newContractsAddress) public {
 
-    }
-
-    function lock(address holder, uint amount) external allow("SkaleToken") {
-        _locks[holder] += amount;
-    }
-
-    function unlock(address holder, uint amount) external allow("SkaleToken") {
-        _locks[holder] -= amount;
-    }
-
-    function getLocked(address holder) external returns (uint) {
-        return _locks[holder];
     }
 
     function delegate(uint delegationId) external allow("DelegationRequestManager") {
@@ -112,6 +101,7 @@ contract DelegationController is Permissions {
             info
         ));
         _delegationsByHolder[holder].push(delegationId);
+        _activeByValidator[validatorId].push(delegationId);
     }
 
     function unDelegate(uint validatorId) external view {
@@ -122,6 +112,37 @@ contract DelegationController is Permissions {
 
     function getDelegationsByHolder(address holder) external view returns (uint[] memory) {
         return _delegationsByHolder[holder];
+    }
+
+    function getActiveDelegationsByValidator(uint validatorId) external returns (uint[] memory) {
+        TokenState tokenState = TokenState(contractManager.getContract("TokenState"));
+        uint activeAmount = 0;
+        for (uint i = 0; i < _activeByValidator[validatorId].length;) {
+            TokenState.State state = tokenState.getState(_activeByValidator[validatorId][i]);
+            if (state == TokenState.State.COMPLETED) {
+                // remove from list
+                _activeByValidator[validatorId][i] = _activeByValidator[validatorId][_activeByValidator[validatorId].length - 1];
+                _activeByValidator[validatorId][_activeByValidator[validatorId].length - 1] = 0;
+                --_activeByValidator[validatorId].length;
+            } else {
+                if (tokenState.isDelegated(state)) {
+                    ++activeAmount;
+                }
+                ++i;
+            }
+        }
+
+        uint[] memory active = new uint[](activeAmount);
+        uint cursor = 0;
+        for (uint i = 0; i < _activeByValidator[validatorId].length; ++i) {
+            if (tokenState.isDelegated(tokenState.getState(_activeByValidator[validatorId][i]))) {
+                require(cursor < active.length, "Out of index");
+                active[cursor] = _activeByValidator[validatorId][i];
+                ++cursor;
+            }
+        }
+
+        return active;
     }
 
     function getDelegation(uint delegationId) public view checkDelegationExists(delegationId) returns (Delegation memory) {

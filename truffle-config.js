@@ -50,11 +50,11 @@ module.exports = {
         solc: {
             version: "0.5.11",
             settings: {
-                optimizer: {
-                    enabled: true,
-                    runs: 200
-                },
-                evmVersion: "constantinople"
+                // optimizer: {
+                //     enabled: true,
+                //     runs: 200
+                // },
+                evmVersion: "petersburg"
             }
         }
     }
