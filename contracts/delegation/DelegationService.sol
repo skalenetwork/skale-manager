@@ -93,8 +93,8 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
     }
 
     /// @notice Allows service to slash `validator` by `amount` of tokens
-    function slash(address validator, uint amount) external {
-        revert("Not implemented");
+    function slash(uint validatorId, uint amount) external {
+        revert("Slash is not implemented");
     }
 
     /// @notice Allows service to pay `amount` of tokens to `validator`
