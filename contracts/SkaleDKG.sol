@@ -319,6 +319,7 @@ contract SkaleDKG is Permissions {
                 groupIndex
             );
             emit NewGuy(newNode);
+            delete channels[groupIndex];
             this.openChannel(groupIndex);
         } else {
             ISchainsFunctionalityInternal(schainsFunctionalityInternalAddress).excludeNodeFromSchain(
@@ -326,8 +327,8 @@ contract SkaleDKG is Permissions {
                 groupIndex
             );
             IGroupsData(channels[groupIndex].dataAddress).setGroupFailedDKG(groupIndex);
+            delete channels[groupIndex];
         }
-        delete channels[groupIndex];
     }
 
     function verify(
