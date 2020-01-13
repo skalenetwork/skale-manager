@@ -65,7 +65,13 @@ contract DelegationRequestManager is Permissions {
             delegationPeriodManager.isDelegationPeriodAllowed(delegationPeriod),
             "This delegation period is not allowed"
         );
-        require(validatorService.checkValidatorExists(validatorId), "Validator is not registered");
+        require(validatorService.checkValidatorExists(validatorId), "Validator does not exist");
+
+        // check that there is enough money
+        uint holderBalance = SkaleToken(contractManager.getContract("SkaleToken")).balanceOf(holder);
+        uint lockedToDelegate = tokenState.getLockedCount(holder) - tokenState.getPurchasedAmount(holder);
+        require(holderBalance >= amount + lockedToDelegate, "Delegator hasn't enough tokens to delegate");
+
         delegationId = delegationController.addDelegation(
             holder,
             validatorId,
@@ -74,9 +80,6 @@ contract DelegationRequestManager is Permissions {
             now,
             info
         );
-        uint holderBalance = SkaleToken(contractManager.getContract("SkaleToken")).balanceOf(holder);
-        uint lockedToDelegate = tokenState.getLockedCount(holder) - tokenState.getPurchasedAmount(holder);
-        require(holderBalance - lockedToDelegate >= amount, "Delegator hasn't enough tokens to delegate");
     }
 
     function cancelRequest(uint delegationId) external {
