@@ -147,7 +147,7 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
         uint[] memory nodesWithFreeSpace = nodesData.getNodesWithFreeSpace(space);
         uint counter = 0;
         for (uint i = 0; i < nodesWithFreeSpace.length; i++) {
-            if (groupsData.isExceptionNode(groupIndex, nodesWithFreeSpace[i])) {
+            if (groupsData.isExceptionNode(groupIndex, nodesWithFreeSpace[i]) || !nodesData.isNodeActive(nodesWithFreeSpace[i])) {
                 counter++;
             }
         }
@@ -155,7 +155,7 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
             result = new uint[](nodesWithFreeSpace.length - counter);
             counter = 0;
             for (uint i = 0; i < nodesWithFreeSpace.length; i++) {
-                if (!groupsData.isExceptionNode(groupIndex, nodesWithFreeSpace[i])) {
+                if (!groupsData.isExceptionNode(groupIndex, nodesWithFreeSpace[i]) && nodesData.isNodeActive(nodesWithFreeSpace[i])) {
                     result[counter] = nodesWithFreeSpace[i];
                     counter++;
                 }
