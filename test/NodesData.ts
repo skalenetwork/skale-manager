@@ -60,29 +60,29 @@ contract("NodesData", ([owner, validator]) => {
             await nodesData.addNode(validator, "d2", "0x7f000001", "0x7f000002", 8545, "0x1122334455");
         });
 
-        it("should add a fractional node", async () => {
-            await nodesData.addFractionalNode(0);
+        // it("should add a fractional node", async () => {
+        //     await nodesData.addFractionalNode(0);
 
-            const nodeFilling = await nodesData.fractionalNodes(0);
-            nodeFilling[0].should.be.deep.equal(web3.utils.toBN(0));
-            nodeFilling[1].should.be.deep.equal(web3.utils.toBN(128));
+        //     const nodeFilling = await nodesData.fractionalNodes(0);
+        //     nodeFilling[0].should.be.deep.equal(web3.utils.toBN(0));
+        //     nodeFilling[1].should.be.deep.equal(web3.utils.toBN(128));
 
-            const link = await nodesData.nodesLink(0);
-            link[0].should.be.deep.equal(web3.utils.toBN(0));
-            expect(link[1]).to.be.false;
-        });
+        //     const link = await nodesData.nodesLink(0);
+        //     link[0].should.be.deep.equal(web3.utils.toBN(0));
+        //     expect(link[1]).to.be.false;
+        // });
 
-        it("should add a full node", async () => {
-            await nodesData.addFullNode(0);
+        // it("should add a full node", async () => {
+        //     await nodesData.addFullNode(0);
 
-            const nodeFilling = await nodesData.fullNodes(0);
-            nodeFilling[0].should.be.deep.equal(web3.utils.toBN(0));
-            nodeFilling[1].should.be.deep.equal(web3.utils.toBN(128));
+        //     const nodeFilling = await nodesData.fullNodes(0);
+        //     nodeFilling[0].should.be.deep.equal(web3.utils.toBN(0));
+        //     nodeFilling[1].should.be.deep.equal(web3.utils.toBN(128));
 
-            const link = await nodesData.nodesLink(0);
-            link[0].should.be.deep.equal(web3.utils.toBN(0));
-            expect(link[1]).to.be.true;
-        });
+        //     const link = await nodesData.nodesLink(0);
+        //     link[0].should.be.deep.equal(web3.utils.toBN(0));
+        //     expect(link[1]).to.be.true;
+        // });
 
         it("should set node as leaving", async () => {
             await nodesData.setNodeLeaving(0);
@@ -188,59 +188,88 @@ contract("NodesData", ([owner, validator]) => {
             expect(nodeIndex.eq(web3.utils.toBN(0))).to.be.true;
         });
 
-        describe("when node is registered as fractional", async () => {
+        // describe("when node is registered as fractional", async () => {
+        //     beforeEach(async () => {
+        //         await nodesData.addFractionalNode(0);
+        //     });
+
+        //     it("should remove fractional node", async () => {
+        //         await nodesData.removeFractionalNode(0);
+
+        //         await nodesData.getNumberOfFractionalNodes().should.be.eventually.deep.equal(web3.utils.toBN(0));
+        //     });
+
+        //     it("should remove space from fractional node", async () => {
+        //         await nodesData.removeSpaceFromFractionalNode(0, 2);
+
+        //         (await nodesData.fractionalNodes(0))[1].should.be.deep.equal(web3.utils.toBN(126));
+        //     });
+
+        //     it("should add space to fractional node", async () => {
+        //         await nodesData.addSpaceToFractionalNode(0, 2);
+
+        //         (await nodesData.fractionalNodes(0))[1].should.be.deep.equal(web3.utils.toBN(130));
+        //     });
+
+        //     it("should get number of free fractional nodes", async () => {
+        //         await nodesData.getNumberOfFreeFractionalNodes(128, 1).should.be.eventually.deep.equal(true);
+        //     });
+        // });
+
+        // describe("when node is registered as full", async () => {
+        //     beforeEach(async () => {
+        //         await nodesData.addFullNode(0);
+        //     });
+
+        //     it("should remove fractional node", async () => {
+        //         await nodesData.removeFullNode(0);
+
+        //         await nodesData.getNumberOfFullNodes().should.be.eventually.deep.equal(web3.utils.toBN(0));
+        //     });
+
+        //     it("should remove space from full node", async () => {
+        //         await nodesData.removeSpaceFromFullNode(0, 2);
+
+        //         (await nodesData.fullNodes(0))[1].should.be.deep.equal(web3.utils.toBN(126));
+        //     });
+
+        //     it("should add space to full node", async () => {
+        //         await nodesData.addSpaceToFullNode(0, 2);
+
+        //         (await nodesData.fullNodes(0))[1].should.be.deep.equal(web3.utils.toBN(130));
+        //     });
+
+        //     it("should get number of free full nodes", async () => {
+        //         await nodesData.getNumberOfFreeFullNodes(1).should.be.eventually.deep.equal(true);
+        //     });
+        // });
+
+        describe("when node is registered", async () => {
             beforeEach(async () => {
-                await nodesData.addFractionalNode(0);
+                await nodesData.addNode(validator, "d2", "0x7f000001", "0x7f000002", 8545, "0x1122334455");
             });
 
-            it("should remove fractional node", async () => {
-                await nodesData.removeFractionalNode(0);
-
-                await nodesData.getNumberOfFractionalNodes().should.be.eventually.deep.equal(web3.utils.toBN(0));
+            it("should remove node", async () => {
+                await nodesData.getNumberOnlineNodes().should.be.eventually.deep.equal(web3.utils.toBN(2));
+                await nodesData.removeNode(0);
+                await nodesData.setNodeLeft(0);
+                await nodesData.getNumberOnlineNodes().should.be.eventually.deep.equal(web3.utils.toBN(1));
             });
 
-            it("should remove space from fractional node", async () => {
-                await nodesData.removeSpaceFromFractionalNode(0, 2);
+            it("should remove space from node", async () => {
+                await nodesData.removeSpaceFromNode(0, 2);
 
-                (await nodesData.fractionalNodes(0))[1].should.be.deep.equal(web3.utils.toBN(126));
-            });
-
-            it("should add space to fractional node", async () => {
-                await nodesData.addSpaceToFractionalNode(0, 2);
-
-                (await nodesData.fractionalNodes(0))[1].should.be.deep.equal(web3.utils.toBN(130));
-            });
-
-            it("should get number of free fractional nodes", async () => {
-                await nodesData.getNumberOfFreeFractionalNodes(128, 1).should.be.eventually.deep.equal(true);
-            });
-        });
-
-        describe("when node is registered as full", async () => {
-            beforeEach(async () => {
-                await nodesData.addFullNode(0);
-            });
-
-            it("should remove fractional node", async () => {
-                await nodesData.removeFullNode(0);
-
-                await nodesData.getNumberOfFullNodes().should.be.eventually.deep.equal(web3.utils.toBN(0));
-            });
-
-            it("should remove space from full node", async () => {
-                await nodesData.removeSpaceFromFullNode(0, 2);
-
-                (await nodesData.fullNodes(0))[1].should.be.deep.equal(web3.utils.toBN(126));
+                (await nodesData.spaceOfNodes(0))[0].should.be.deep.equal(web3.utils.toBN(126));
             });
 
             it("should add space to full node", async () => {
-                await nodesData.addSpaceToFullNode(0, 2);
+                await nodesData.addSpaceToNode(0, 2);
 
-                (await nodesData.fullNodes(0))[1].should.be.deep.equal(web3.utils.toBN(130));
+                (await nodesData.spaceOfNodes(0))[0].should.be.deep.equal(web3.utils.toBN(130));
             });
 
             it("should get number of free full nodes", async () => {
-                await nodesData.getNumberOfFreeFullNodes(1).should.be.eventually.deep.equal(true);
+                await nodesData.countNodesWithFreeSpace(1).should.be.eventually.deep.equal(web3.utils.toBN(2));
             });
         });
 
@@ -252,58 +281,58 @@ contract("NodesData", ([owner, validator]) => {
             await nodesData.addNode(validator, "d3", "0x7f000002", "0x7f000003", 8545, "0x1122334455");
         });
 
-        describe("when nodes are registered as fractional", async () => {
+        // describe("when nodes are registered as fractional", async () => {
+        //     beforeEach(async () => {
+        //         await nodesData.addFractionalNode(0);
+        //         await nodesData.addFractionalNode(1);
+        //     });
+
+        //     it("should remove first fractional node", async () => {
+        //         await nodesData.removeFractionalNode(0);
+
+        //         await nodesData.getNumberOfFractionalNodes().should.be.eventually.deep.equal(web3.utils.toBN(1));
+        //     });
+
+        //     it("should remove second fractional node", async () => {
+        //         await nodesData.removeFractionalNode(1);
+
+        //         await nodesData.getNumberOfFractionalNodes().should.be.eventually.deep.equal(web3.utils.toBN(1));
+        //     });
+
+        //     it("should not remove larger space from fractional node than its has", async () => {
+        //         const nodesFillingBefore = await nodesData.fractionalNodes(0);
+        //         const spaceBefore = nodesFillingBefore["1"];
+        //         await nodesData.removeSpaceFromFractionalNode(0, 129);
+        //         const nodesFillingAfter = await nodesData.fractionalNodes(0);
+        //         const spaceAfter = nodesFillingAfter["1"];
+        //         parseInt(spaceBefore.toString(), 10).should.be.equal(parseInt(spaceAfter.toString(), 10));
+        //     });
+        // });
+
+        describe("when nodes are registered", async () => {
             beforeEach(async () => {
-                await nodesData.addFractionalNode(0);
-                await nodesData.addFractionalNode(1);
+                await nodesData.addNode(validator, "d2", "0x7f000001", "0x7f000002", 8545, "0x1122334455");
+                await nodesData.addNode(validator, "d3", "0x7f000002", "0x7f000003", 8545, "0x1122334455");
             });
 
-            it("should remove first fractional node", async () => {
-                await nodesData.removeFractionalNode(0);
-
-                await nodesData.getNumberOfFractionalNodes().should.be.eventually.deep.equal(web3.utils.toBN(1));
+            it("should remove first node", async () => {
+                await nodesData.removeNode(0);
+                await nodesData.setNodeLeft(0);
+                await nodesData.getNumberOnlineNodes().should.be.eventually.deep.equal(web3.utils.toBN(3));
             });
 
-            it("should remove second fractional node", async () => {
-                await nodesData.removeFractionalNode(1);
-
-                await nodesData.getNumberOfFractionalNodes().should.be.eventually.deep.equal(web3.utils.toBN(1));
-            });
-
-            it("should not remove larger space from fractional node than its has", async () => {
-                const nodesFillingBefore = await nodesData.fractionalNodes(0);
-                const spaceBefore = nodesFillingBefore["1"];
-                await nodesData.removeSpaceFromFractionalNode(0, 129);
-                const nodesFillingAfter = await nodesData.fractionalNodes(0);
-                const spaceAfter = nodesFillingAfter["1"];
-                parseInt(spaceBefore.toString(), 10).should.be.equal(parseInt(spaceAfter.toString(), 10));
-            });
-        });
-
-        describe("when nodes are registered as full", async () => {
-            beforeEach(async () => {
-                await nodesData.addFullNode(0);
-                await nodesData.addFullNode(1);
-            });
-
-            it("should remove first full node", async () => {
-                await nodesData.removeFullNode(0);
-
-                await nodesData.getNumberOfFullNodes().should.be.eventually.deep.equal(web3.utils.toBN(1));
-            });
-
-            it("should remove second full node", async () => {
-                await nodesData.removeFullNode(1);
-
-                await nodesData.getNumberOfFullNodes().should.be.eventually.deep.equal(web3.utils.toBN(1));
+            it("should remove second node", async () => {
+                await nodesData.removeNode(1);
+                await nodesData.setNodeLeft(1);
+                await nodesData.getNumberOnlineNodes().should.be.eventually.deep.equal(web3.utils.toBN(3));
             });
 
             it("should not remove larger space from full node than its has", async () => {
-                const nodesFillingBefore = await nodesData.fullNodes(0);
-                const spaceBefore = nodesFillingBefore["1"];
-                await nodesData.removeSpaceFromFullNode(0, 129);
-                const nodesFillingAfter = await nodesData.fullNodes(0);
-                const spaceAfter = nodesFillingAfter["1"];
+                const nodesFillingBefore = await nodesData.spaceOfNodes(0);
+                const spaceBefore = nodesFillingBefore["0"];
+                await nodesData.removeSpaceFromNode(0, 129);
+                const nodesFillingAfter = await nodesData.spaceOfNodes(0);
+                const spaceAfter = nodesFillingAfter["0"];
                 parseInt(spaceBefore.toString(), 10).should.be.equal(parseInt(spaceAfter.toString(), 10));
             });
 

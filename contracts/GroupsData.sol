@@ -195,6 +195,7 @@ contract GroupsData is IGroupsData, Permissions {
         delete groups[groupIndex].groupData;
         delete groups[groupIndex].recommendedNumberOfNodes;
         delete groups[groupIndex].groupsPublicKey;
+        delete groups[groupIndex];
         // delete channel
         address skaleDKGAddress = contractManager.contracts(keccak256(abi.encodePacked("SkaleDKG")));
 
@@ -243,6 +244,10 @@ contract GroupsData is IGroupsData, Permissions {
             groups[groupIndex].groupsPublicKey[2],
             groups[groupIndex].groupsPublicKey[3]
         );
+    }
+
+    function isGroupFailedDKG(bytes32 groupIndex) external view returns (bool) {
+        return !groups[groupIndex].succesfulDKG;
     }
 
     /**

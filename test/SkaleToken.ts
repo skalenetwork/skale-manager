@@ -15,7 +15,7 @@ chai.use(chaiAsPromised);
 contract("SkaleToken", ([owner, holder, receiver, nilAddress, accountWith99]) => {
   let skaleToken: SkaleTokenInstance;
   let contractManager: ContractManagerInstance;
-  const TOKEN_CAP: number = 5000000000;
+  const TOKEN_CAP: number = 7000000000;
   const TOTAL_SUPPLY = 10000000;
 
   console.log("Holder", holder);
