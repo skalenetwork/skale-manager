@@ -40,7 +40,6 @@ contract Distributor is Permissions {
     }
 
     function distributeBounty(uint validatorId, uint amount) external returns (Share[] memory shares, uint fee) {
-        revert("Do not debug bounty");
         return distributeWithFee(
             validatorId,
             amount,
