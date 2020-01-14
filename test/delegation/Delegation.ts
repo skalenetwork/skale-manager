@@ -341,7 +341,6 @@ contract("Delegation", ([owner,
                     (await delegationService.getDelegatedOf.call(holder1)).toNumber().should.be.equal(1);
 
                     (await delegationService.getLockedOf.call(holder2)).toNumber().should.be.equal(3);
-                    console.log("Delegated: " + (await delegationService.getDelegatedOf.call(holder2)).toNumber());
                     (await delegationService.getDelegatedOf.call(holder2)).toNumber().should.be.equal(1);
 
                     (await delegationService.getLockedOf.call(holder3)).toNumber().should.be.equal(5);
@@ -365,12 +364,12 @@ contract("Delegation", ([owner,
                     await delegationService.slash(validatorId, 10);
 
                     (await delegationService.getLockedOf.call(holder3)).toNumber().should.be.equal(5);
-                    (await delegationService.getDelegatedOf.call(holder3)).toNumber().should.be.equal(2);
+                    (await delegationService.getDelegatedOf.call(holder3)).toNumber().should.be.equal(0);
 
                     await delegationService.forgive(holder3, 3);
 
                     (await delegationService.getLockedOf.call(holder3)).toNumber().should.be.equal(2);
-                    (await delegationService.getDelegatedOf.call(holder3)).toNumber().should.be.equal(2);
+                    (await delegationService.getDelegatedOf.call(holder3)).toNumber().should.be.equal(0);
                 });
             });
         });

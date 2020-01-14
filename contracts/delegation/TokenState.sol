@@ -115,6 +115,14 @@ contract TokenState is Permissions {
         delegationController.setDelegationAmount(delegationId, delegation.amount - slashingAmount);
     }
 
+    function forgive(address wallet, uint amount) external {
+        uint forgiveAmount = amount;
+        if (amount > _slashed[wallet]) {
+            forgiveAmount = _slashed[wallet];
+        }
+        _slashed[wallet] -= forgiveAmount;
+    }
+
     function getState(uint delegationId) public returns (State state) {
         DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
         // TODO: Modify existance check
