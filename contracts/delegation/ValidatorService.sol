@@ -54,6 +54,7 @@ contract ValidatorService is Permissions {
         external returns (uint validatorId)
     {
         uint[] memory epmtyArray = new uint[](0);
+        validatorId = validators.length;
         validators.push(Validator(
             name,
             validatorAddress,
@@ -64,7 +65,7 @@ contract ValidatorService is Permissions {
             0,
             epmtyArray
         ));
-        validatorId = validators.length - 1;
+        validatorAddressToId[validatorAddress] = validatorId;
     }
 
     function setNewValidatorAddress(address newValidatorAddress, uint validatorId) external {
@@ -80,33 +81,42 @@ contract ValidatorService is Permissions {
         return validators[validatorId].minimumDelegationAmount <= amount ? true : false;
     }
 
-    // function setValidatorFeeAddress(uint _validatorId, address _newAddress) public {
-    //     require(msg.sender == validators[_validatorId].validatorAddress, "Transaction sender doesn't have enough permissions");
-    //     validators[_validatorId].validatorFeeAddress = _newAddress;
-    // }
-
-    // function getValidatorFeeAddress(uint _validatorId) public view returns (address) {
-    //     return validators[_validatorId].validatorFeeAddress;
-    // }
-
     function checkValidatorAddressToId(address validatorAddress, uint validatorId) external view returns (bool) {
-        return validatorAddressToId[validatorAddress] == validatorId ? true : false;
+        return getValidatorId(validatorAddress) == validatorId ? true : false;
     }
 
-    function createNode() external {
-        // uint validatorId = validatorAddressToId[msg.sender];
-        // require(validators[validatorId].nodeIndexes.length * MSR <= )
-        // msr
-        // bond
-
+    function getValidatorNodeIndexes(uint validatorId) external view returns (uint[] memory) {
+        return getValidator(validatorId).nodeIndexes;
     }
 
-    function getValidator(uint validatorId) external returns (Validator memory) {
+    function pushNode(uint validatorId, uint nodeIndex) external {
+        // TODO: only validator can push node
+        validators[validatorId].nodeIndexes.push(nodeIndex);
+    }
+
+    function getValidator(uint validatorId) public view returns (Validator memory) {
         require(checkValidatorExists(validatorId), "Validator does not exist");
         return validators[validatorId];
+    }
+
+    function getValidatorId(address validatorAddress) public view returns (uint) {
+        require(
+            validatorAddress == validators[validatorAddressToId[validatorAddress]].validatorAddress,
+            "Validator with such address doesn't exist"
+        );
+        return validatorAddressToId[validatorAddress];
     }
 
     function checkValidatorExists(uint validatorId) public view returns (bool) {
         return validatorId < validators.length ? true : false;
     }
+
+    // function createNode(address validatorAddress) external {
+    //     uint validatorId = validatorAddressToId[validatorAddress];
+    //     uint[] memory validatorNodes = validators[validatorId].nodeIndexes;
+    //     for (uint i = 0; i < validato)
+    //     // require(validators[validatorId].nodeIndexes.length * MSR <= )
+    //     // msr
+    //     // bond
+    // }
 }

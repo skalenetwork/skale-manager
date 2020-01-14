@@ -23,7 +23,7 @@ pragma experimental ABIEncoderV2;
 interface IValidatorDelegation {
 
     /// @notice Allows validator to accept tokens delegated at `delegationId`
-    function accept(uint delegationId) external;
+    function acceptPendingDelegation(uint delegationId) external;
 
     /// @notice Adds node to SKALE network
     function createNode(

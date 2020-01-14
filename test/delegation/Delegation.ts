@@ -189,7 +189,7 @@ contract("Delegation", ([owner,
                         });
 
                         it("should accept delegation request", async () => {
-                            await delegationService.accept(requestId, {from: validator});
+                            await delegationService.acceptPendingDelegation(requestId, {from: validator});
 
                             // await delegationService.listDelegationRequests().should.be.eventually.empty;
                         });
@@ -210,7 +210,7 @@ contract("Delegation", ([owner,
 
                         describe("when delegation request is accepted", async () => {
                             beforeEach(async () => {
-                                await delegationService.accept(requestId, {from: validator});
+                                await delegationService.acceptPendingDelegation(requestId, {from: validator});
                             });
 
                             it("should extend delegation period for 3 months if undelegation request was not sent",
