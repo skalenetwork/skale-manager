@@ -348,7 +348,7 @@ contract("Delegation", ([owner,
                     (await delegationService.getDelegatedOf.call(holder3)).toNumber().should.be.equal(2);
                 });
 
-                it("shold not lock more tokens than were delegated", async () => {
+                it("should not lock more tokens than were delegated", async () => {
                     await delegationService.slash(validatorId, 100);
 
                     (await delegationService.getLockedOf.call(holder1)).toNumber().should.be.equal(2);
@@ -359,6 +359,18 @@ contract("Delegation", ([owner,
 
                     (await delegationService.getLockedOf.call(holder3)).toNumber().should.be.equal(5);
                     (await delegationService.getDelegatedOf.call(holder3)).toNumber().should.be.equal(0);
+                });
+
+                it("should allow to return slashed tokens back", async () => {
+                    await delegationService.slash(validatorId, 10);
+
+                    (await delegationService.getLockedOf.call(holder3)).toNumber().should.be.equal(5);
+                    (await delegationService.getDelegatedOf.call(holder3)).toNumber().should.be.equal(2);
+
+                    await delegationService.forgive(holder3, 3);
+
+                    (await delegationService.getLockedOf.call(holder3)).toNumber().should.be.equal(2);
+                    (await delegationService.getDelegatedOf.call(holder3)).toNumber().should.be.equal(2);
                 });
             });
         });

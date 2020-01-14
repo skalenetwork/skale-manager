@@ -106,9 +106,9 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
         }
     }
 
-    /// @notice Allows service to pay `amount` of tokens to `validator`
-    function pay(address validator, uint amount) external {
-        revert("Not implemented");
+    function forgive(address wallet, uint amount) external onlyOwner() {
+        TokenState tokenState = TokenState(contractManager.getContract("TokenState"));
+        revert("Forgive is not implemented");
     }
 
     /// @notice Returns amount of delegated token of the validator
