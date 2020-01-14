@@ -94,7 +94,16 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
 
     /// @notice Allows service to slash `validator` by `amount` of tokens
     function slash(uint validatorId, uint amount) external {
-        revert("Slash is not implemented");
+        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
+        require(validatorService.checkValidatorExists(validatorId), "Validator does not exist");
+
+        Distributor distributor = Distributor(contractManager.getContract("Distributor"));
+        TokenState tokenState = TokenState(contractManager.getContract("TokenState"));
+
+        Distributor.Share[] memory shares = distributor.distributePenalties(validatorId, amount);
+        for (uint i = 0; i < shares.length; ++i) {
+            tokenState.slash(shares[i].delegationId, shares[i].amount);
+        }
     }
 
     /// @notice Allows service to pay `amount` of tokens to `validator`
@@ -229,8 +238,8 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
     }
 
     function getDelegatedOf(address wallet) external returns (uint) {
-        revert("isDelegatedOf is not implemented");
-        // return DelegationManager(contractManager.getContract("DelegationManager")).isDelegated(wallet);
+        TokenState tokenState = TokenState(contractManager.getContract("TokenState"));
+        return tokenState.getDelegatedCount(wallet);
     }
 
     function tokensReceived(
@@ -260,7 +269,7 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
 
         Distributor.Share[] memory shares;
         uint fee;
-        (shares, fee) = distributor.distributeWithFee(validatorId, amount, true);
+        (shares, fee) = distributor.distributeBounty(validatorId, amount);
 
         address validatorAddress = validatorService.getValidator(validatorId).validatorAddress;
         skaleToken.send(skaleBalancesAddress, fee, abi.encode(validatorAddress));

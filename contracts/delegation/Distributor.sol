@@ -31,6 +31,7 @@ contract Distributor is Permissions {
     struct Share {
         address holder;
         uint amount;
+        uint delegationId;
     }
 
     constructor (address _contractManager) public
@@ -38,18 +39,53 @@ contract Distributor is Permissions {
 
     }
 
-    function distributeWithFee(uint validatorId, uint amount, bool roundFloor) external returns (Share[] memory shares, uint fee) {
+    function distributeBounty(uint validatorId, uint amount) external returns (Share[] memory shares, uint fee) {
+        revert("Do not debug bounty");
+        return distributeWithFee(
+            validatorId,
+            amount,
+            true,
+            true);
+    }
+
+    function distributePenalties(uint validatorId, uint amount) external returns (Share[] memory shares) {
+        return distribute(
+            validatorId,
+            amount,
+            false,
+            false);
+    }
+
+    // private
+
+    function distributeWithFee(
+        uint validatorId,
+        uint amount,
+        bool roundFloor,
+        bool applyMultipliers)
+    internal returns (Share[] memory shares, uint fee)
+    {
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
         uint feeRate = validatorService.getValidator(validatorId).feeRate;
 
-        shares = distribute(validatorId, amount - amount * feeRate / 1000, roundFloor);
+        shares = distribute(
+            validatorId,
+            amount - amount * feeRate / 1000,
+            roundFloor,
+            applyMultipliers);
         fee = amount;
         for (uint i = 0; i < shares.length; ++i) {
             fee -= shares[i].amount;
         }
     }
 
-    function distribute(uint validatorId, uint amount, bool roundFloor) public returns (Share[] memory shares) {
+    function distribute(
+        uint validatorId,
+        uint amount,
+        bool roundFloor,
+        bool applyMultipliers)
+    internal returns (Share[] memory shares)
+    {
         DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
 
         uint totalDelegated = 0;
@@ -59,10 +95,16 @@ contract Distributor is Permissions {
         DelegationPeriodManager delegationPeriodManager = DelegationPeriodManager(contractManager.getContract("DelegationPeriodManager"));
         for (uint i = 0; i < activeDelegations.length; ++i) {
             DelegationController.Delegation memory delegation = delegationController.getDelegation(activeDelegations[i]);
+            shares[i].delegationId = activeDelegations[i];
             shares[i].holder = delegation.holder;
-            uint multiplier = delegationPeriodManager.stakeMultipliers(delegation.delegationPeriod);
-            shares[i].amount = amount * delegation.amount * multiplier;
-            totalDelegated += delegation.amount * multiplier;
+            if (applyMultipliers) {
+                uint multiplier = delegationPeriodManager.stakeMultipliers(delegation.delegationPeriod);
+                shares[i].amount = amount * delegation.amount * multiplier;
+                totalDelegated += delegation.amount * multiplier;
+            } else {
+                shares[i].amount = amount * delegation.amount;
+                totalDelegated += delegation.amount;
+            }
         }
 
         for (uint i = 0; i < activeDelegations.length; ++i) {
