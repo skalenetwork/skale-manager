@@ -43,13 +43,11 @@ contract DelegationRequestManager is Permissions {
         string calldata info
     )
         external
+        allow("DelegationService")
         returns (uint delegationId)
     {
         ValidatorService validatorService = ValidatorService(
             contractManager.getContract("ValidatorService")
-        );
-        DelegationPeriodManager delegationPeriodManager = DelegationPeriodManager(
-            contractManager.getContract("DelegationPeriodManager")
         );
         TokenState tokenState = TokenState(
             contractManager.getContract("TokenState")
@@ -62,7 +60,9 @@ contract DelegationRequestManager is Permissions {
             "Amount doesn't meet minimum delegation amount"
         );
         require(
-            delegationPeriodManager.isDelegationPeriodAllowed(delegationPeriod),
+            DelegationPeriodManager(
+                contractManager.getContract("DelegationPeriodManager")
+            ).isDelegationPeriodAllowed(delegationPeriod),
             "This delegation period is not allowed"
         );
         require(validatorService.checkValidatorExists(validatorId), "Validator does not exist");
@@ -82,21 +82,24 @@ contract DelegationRequestManager is Permissions {
         );
     }
 
-    function cancelRequest(uint delegationId) external {
+    function cancelRequest(uint delegationId, address holderAddress) external {
         TokenState tokenState = TokenState(
             contractManager.getContract("TokenState")
         );
         DelegationController delegationController = DelegationController(
             contractManager.getContract("DelegationController")
         );
+        ValidatorService validatorService = ValidatorService(
+            contractManager.getContract("ValidatorService")
+        );
         DelegationController.Delegation memory delegation = delegationController.getDelegation(delegationId);
-        require(msg.sender == delegation.holder,"No permissions to cancel request");
+        require(holderAddress == delegation.holder,"Only holder of tokens can cancel delegation request");
         require(
             tokenState.cancel(delegationId) == TokenState.State.COMPLETED,
             "After cancellation token should be COMPLETED");
     }
 
-    function acceptRequest(uint delegationId) external {
+    function acceptRequest(uint delegationId, address validatorAddress) external {
         TokenState tokenState = TokenState(
             contractManager.getContract("TokenState")
         );
@@ -108,7 +111,7 @@ contract DelegationRequestManager is Permissions {
         );
         DelegationController.Delegation memory delegation = delegationController.getDelegation(delegationId);
         require(
-            validatorService.checkValidatorAddressToId(msg.sender, delegation.validatorId),
+            validatorService.checkValidatorAddressToId(validatorAddress, delegation.validatorId),
             "No permissions to accept request"
         );
         delegationController.delegate(delegationId);

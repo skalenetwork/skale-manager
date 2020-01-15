@@ -130,7 +130,7 @@ contract("TokenSaleManager", ([owner, holder, delegation, validator, seller, hac
                 const delegationPeriod = 3;
                 await delegationService.delegate(validatorId, amount, delegationPeriod, "D2 is even", {from: holder});
                 const delegationId = 0;
-                await delegationService.accept(delegationId, {from: validator});
+                await delegationService.acceptPendingDelegation(delegationId, {from: validator});
 
                 await skaleToken.transfer(hacker, 1, {from: holder})
                     .should.be.eventually.rejectedWith("Token should be unlocked for transfering");

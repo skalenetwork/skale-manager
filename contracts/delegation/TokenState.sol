@@ -100,7 +100,7 @@ contract TokenState is Permissions {
     function cancel(uint delegationId) external returns (State state) {
         require(getState(delegationId) == State.PROPOSED, "Can't cancel delegation request");
         DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
-        _cancel(delegationId, delegationController.getDelegation(delegationId));
+        return _cancel(delegationId, delegationController.getDelegation(delegationId));
     }
 
     function slash(uint delegationId, uint amount) external {
