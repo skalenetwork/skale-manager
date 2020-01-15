@@ -45,6 +45,8 @@ contract TokenState is Permissions {
     ///       holder => amount
     mapping (address => uint) private _purchased;
     ///       holder => amount
+    mapping (address => uint) private _slashed;
+    ///       holder => amount
     mapping (address => uint) private _totalDelegated;
     /// delegationId => purchased
     mapping (uint => bool) private _isPurchased;
@@ -65,7 +67,7 @@ contract TokenState is Permissions {
                 amount += delegationController.getDelegation(id).amount;
             }
         }
-        return amount + getPurchasedAmount(holder);
+        return amount + getPurchasedAmount(holder) + getSlashedAmount(holder);
     }
 
     function getDelegatedCount(address holder) external returns (uint amount) {
@@ -99,6 +101,26 @@ contract TokenState is Permissions {
         require(getState(delegationId) == State.PROPOSED, "Can't cancel delegation request");
         DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
         return _cancel(delegationId, delegationController.getDelegation(delegationId));
+    }
+
+    function slash(uint delegationId, uint amount) external {
+        DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
+        DelegationController.Delegation memory delegation = delegationController.getDelegation(delegationId);
+        uint slashingAmount = amount;
+        if (delegation.amount < amount) {
+            // Can't slash more than delegated;
+            slashingAmount = delegation.amount;
+        }
+        _slashed[delegation.holder] += slashingAmount;
+        delegationController.setDelegationAmount(delegationId, delegation.amount - slashingAmount);
+    }
+
+    function forgive(address wallet, uint amount) external {
+        uint forgiveAmount = amount;
+        if (amount > _slashed[wallet]) {
+            forgiveAmount = _slashed[wallet];
+        }
+        _slashed[wallet] -= forgiveAmount;
     }
 
     function getState(uint delegationId) public returns (State state) {
@@ -243,5 +265,9 @@ contract TokenState is Permissions {
         } else {
             state = proposedToUnlocked(delegationId);
         }
+    }
+
+    function getSlashedAmount(address holder) internal returns (uint amount) {
+        return _slashed[holder];
     }
 }

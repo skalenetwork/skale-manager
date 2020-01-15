@@ -138,7 +138,8 @@ contract("Delegation", ([owner,
         });
 
         for (let delegationPeriod = 1; delegationPeriod <= 18; ++delegationPeriod) {
-            it("should check " + delegationPeriod + " month" + (delegationPeriod > 1 ? "s" : "") + " delegation period availability", async () => {
+            it("should check " + delegationPeriod + " month" + (delegationPeriod > 1 ? "s" : "")
+                + " delegation period availability", async () => {
                 await delegationPeriodManager.isDelegationPeriodAllowed(delegationPeriod)
                     .should.be.eventually.equal(allowedDelegationPeriods.includes(delegationPeriod));
             });
@@ -326,6 +327,51 @@ contract("Delegation", ([owner,
                 balance.should.be.equal((new BigNumber(defaultAmount)).plus(5).toString());
             });
 
+            describe("Slashing", async () => {
+
+                it("should slash validator and lock delegators fund in propotion of delegation share", async () => {
+                    await delegationService.slash(validatorId, 5);
+
+                    // Stakes:
+                    // holder1: $2
+                    // holder2: $3
+                    // holder3: $5
+
+                    (await delegationService.getLockedOf.call(holder1)).toNumber().should.be.equal(2);
+                    (await delegationService.getDelegatedOf.call(holder1)).toNumber().should.be.equal(1);
+
+                    (await delegationService.getLockedOf.call(holder2)).toNumber().should.be.equal(3);
+                    (await delegationService.getDelegatedOf.call(holder2)).toNumber().should.be.equal(1);
+
+                    (await delegationService.getLockedOf.call(holder3)).toNumber().should.be.equal(5);
+                    (await delegationService.getDelegatedOf.call(holder3)).toNumber().should.be.equal(2);
+                });
+
+                it("should not lock more tokens than were delegated", async () => {
+                    await delegationService.slash(validatorId, 100);
+
+                    (await delegationService.getLockedOf.call(holder1)).toNumber().should.be.equal(2);
+                    (await delegationService.getDelegatedOf.call(holder1)).toNumber().should.be.equal(0);
+
+                    (await delegationService.getLockedOf.call(holder2)).toNumber().should.be.equal(3);
+                    (await delegationService.getDelegatedOf.call(holder2)).toNumber().should.be.equal(0);
+
+                    (await delegationService.getLockedOf.call(holder3)).toNumber().should.be.equal(5);
+                    (await delegationService.getDelegatedOf.call(holder3)).toNumber().should.be.equal(0);
+                });
+
+                it("should allow to return slashed tokens back", async () => {
+                    await delegationService.slash(validatorId, 10);
+
+                    (await delegationService.getLockedOf.call(holder3)).toNumber().should.be.equal(5);
+                    (await delegationService.getDelegatedOf.call(holder3)).toNumber().should.be.equal(0);
+
+                    await delegationService.forgive(holder3, 3);
+
+                    (await delegationService.getLockedOf.call(holder3)).toNumber().should.be.equal(2);
+                    (await delegationService.getDelegatedOf.call(holder3)).toNumber().should.be.equal(0);
+                });
+            });
         });
 
         // describe("when validator is registered", async () => {
