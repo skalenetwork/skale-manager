@@ -202,7 +202,7 @@ contract GroupsFunctionality is Permissions {
      * return array of indexes of Nodes in Group
      */
     function generateGroup(bytes32 groupIndex) internal returns (uint[] memory);
-    function selectNodeToGroup(bytes32 groupIndex) internal returns (bytes32, uint);
+    function selectNodeToGroup(bytes32 groupIndex) internal returns (uint);
 
     function swap(uint[] memory array, uint index1, uint index2) internal pure {
         uint buffer = array[index1];

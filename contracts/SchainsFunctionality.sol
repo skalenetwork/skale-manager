@@ -24,21 +24,9 @@ import "./interfaces/ISchainsData.sol";
 import "./interfaces/IConstants.sol";
 import "./interfaces/IGroupsData.sol";
 import "./interfaces/ISchainsFunctionality.sol";
+import "./interfaces/ISchainsFunctionalityInternal.sol";
 import "./interfaces/INodesData.sol";
 
-
-interface ISchainsFunctionalityInternal {
-    function getNodesDataFromTypeOfSchain(uint typeOfSchain) external view returns (uint, uint);
-    function createGroupForSchain(
-        string calldata schainName,
-        bytes32 schainId,
-        uint numberOfNodes,
-        uint partOfNode) external;
-    function findSchainAtSchainsForNode(uint nodeIndex, bytes32 schainId) external view returns (uint);
-    function deleteGroup(bytes32 groupIndex) external;
-    function replaceNode(uint nodeIndex, bytes32 groupIndex) external returns (bytes32, uint);
-    function removeNodeFromSchain(uint nodeIndex, bytes32 groupHash) external;
-}
 
 
 /**
@@ -75,6 +63,12 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
 
     event NodeRotated(
         bytes32 groupIndex,
+        uint oldNode,
+        uint newNode
+    );
+
+    event NodeAdded(
+        bytes32 groupIndex,
         uint newNode
     );
 
@@ -95,7 +89,7 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
      */
     function addSchain(address from, uint deposit, bytes calldata data) external allow(executorName) {
         uint numberOfNodes;
-        uint partOfNode;
+        uint8 partOfNode;
 
         address schainsFunctionalityInternalAddress = contractManager.getContract("SchainsFunctionalityInternal");
 
@@ -154,7 +148,7 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
 
         // removes Schain from Nodes
         uint[] memory nodesInGroup = IGroupsData(dataAddress).getNodesInGroup(schainId);
-        uint partOfNode = ISchainsData(dataAddress).getSchainsPartOfNode(schainId);
+        uint8 partOfNode = ISchainsData(dataAddress).getSchainsPartOfNode(schainId);
         for (uint i = 0; i < nodesInGroup.length; i++) {
             uint schainIndex = ISchainsFunctionalityInternal(schainsFunctionalityInternalAddress).findSchainAtSchainsForNode(
                 nodesInGroup[i],
@@ -178,7 +172,7 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
 
         // removes Schain from Nodes
         uint[] memory nodesInGroup = IGroupsData(dataAddress).getNodesInGroup(schainId);
-        uint partOfNode = ISchainsData(dataAddress).getSchainsPartOfNode(schainId);
+        uint8 partOfNode = ISchainsData(dataAddress).getSchainsPartOfNode(schainId);
         for (uint i = 0; i < nodesInGroup.length; i++) {
             uint schainIndex = ISchainsFunctionalityInternal(schainsFunctionalityInternalAddress).findSchainAtSchainsForNode(
                 nodesInGroup[i],
@@ -196,12 +190,24 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
         emit SchainDeleted(from, name, schainId);
     }
 
-    function rotateNode(uint nodeIndex, bytes32 schainId) external {
-        address schainsFunctionalityInternalAddress = contractManager.getContract("SchainsFunctionalityInternal");
-        bytes32 groupIndex;
+    function rotateNode(uint nodeIndex, bytes32 schainId) external allowTwo("SkaleDKG", executorName) {
+        address schainsFunctionalityInternalAddress = contractManager.contracts(keccak256(abi.encodePacked("SchainsFunctionalityInternal")));
         uint newNodeIndex;
-        (groupIndex, newNodeIndex) = ISchainsFunctionalityInternal(schainsFunctionalityInternalAddress).replaceNode(nodeIndex, schainId);
-        emit NodeRotated(groupIndex, newNodeIndex);
+        newNodeIndex = ISchainsFunctionalityInternal(schainsFunctionalityInternalAddress).replaceNode(nodeIndex, schainId);
+        emit NodeRotated(schainId, nodeIndex, newNodeIndex);
+    }
+
+    function restartSchainCreation(string calldata name) external allow(executorName) {
+        bytes32 schainId = keccak256(abi.encodePacked(name));
+        address dataAddress = contractManager.contracts(keccak256(abi.encodePacked(dataName)));
+        require(IGroupsData(dataAddress).isGroupFailedDKG(schainId), "DKG success");
+        address schainsFunctionalityInternalAddress = contractManager.contracts(
+            keccak256(abi.encodePacked("SchainsFunctionalityInternal"))
+        );
+        uint[] memory possibleNodes = ISchainsFunctionalityInternal(schainsFunctionalityInternalAddress).isEnoughNodes(schainId);
+        require(possibleNodes.length > 0, "No any free Nodes for rotation");
+        uint newNodeIndex = ISchainsFunctionalityInternal(schainsFunctionalityInternalAddress).selectNewNode(schainId);
+        emit NodeAdded(schainId, newNodeIndex);
     }
 
     /**
@@ -211,22 +217,22 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
      * @return current price for given Schain
      */
     function getSchainPrice(uint typeOfSchain, uint lifetime) public view returns (uint) {
-        address constantsAddress = contractManager.getContract("Constants");
-        address schainsFunctionalityInternalAddress = contractManager.getContract("SchainsFunctionalityInternal");
+        address constantsAddress = contractManager.contracts(keccak256(abi.encodePacked("Constants")));
+        address schainsFunctionalityInternalAddress = contractManager.contracts(keccak256(abi.encodePacked("SchainsFunctionalityInternal")));
         uint nodeDeposit = IConstants(constantsAddress).NODE_DEPOSIT();
         uint numberOfNodes;
-        uint divisor;
+        uint8 divisor;
         (numberOfNodes, divisor) = ISchainsFunctionalityInternal(
             schainsFunctionalityInternalAddress
         ).getNodesDataFromTypeOfSchain(typeOfSchain);
-        /*uint up;
-        uint down;
-        (up, down) = coefficientForPrice(constantsAddress);*/
+        // /*uint up;
+        // uint down;
+        // (up, down) = coefficientForPrice(constantsAddress);*/
         if (divisor == 0) {
             return 1e18;
         } else {
             uint up = nodeDeposit * numberOfNodes * 2 * lifetime;
-            uint down = divisor * IConstants(constantsAddress).SECONDS_TO_YEAR();
+            uint down = uint(uint(IConstants(constantsAddress).TINY_DIVISOR() / divisor) * uint(IConstants(constantsAddress).SECONDS_TO_YEAR()));
             return up / down;
         }
     }
@@ -283,27 +289,28 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
      * @param nodeIndex - index of Node at common array of Nodes
      * @param partOfNode - divisor of given type of Schain
      */
-    function addSpace(uint nodeIndex, uint partOfNode) internal {
-        address nodesDataAddress = contractManager.getContract("NodesData");
-        address constantsAddress = contractManager.getContract("Constants");
-        uint subarrayLink;
-        bool isNodeFull;
-        (subarrayLink, isNodeFull) = INodesData(nodesDataAddress).nodesLink(nodeIndex);
+    function addSpace(uint nodeIndex, uint8 partOfNode) internal {
+        address nodesDataAddress = contractManager.contracts(keccak256(abi.encodePacked("NodesData")));
+        // address constantsAddress = contractManager.contracts(keccak256(abi.encodePacked("Constants")));
+        // uint subarrayLink;
+        // bool isNodeFull;
+        // (subarrayLink, isNodeFull) = INodesData(nodesDataAddress).nodesLink(nodeIndex);
         // adds space
-        if (isNodeFull) {
-            if (partOfNode == IConstants(constantsAddress).MEDIUM_TEST_DIVISOR()) {
-                INodesData(nodesDataAddress).addSpaceToFullNode(subarrayLink, IConstants(constantsAddress).TINY_DIVISOR() / partOfNode);
-            } else if (partOfNode != 0) {
-                INodesData(nodesDataAddress).addSpaceToFullNode(subarrayLink, IConstants(constantsAddress).TINY_DIVISOR() / partOfNode);
-            } else {
-                INodesData(nodesDataAddress).addSpaceToFullNode(subarrayLink, partOfNode);
-            }
-        } else {
-            if (partOfNode != 0) {
-                INodesData(nodesDataAddress).addSpaceToFractionalNode(subarrayLink, IConstants(constantsAddress).TINY_DIVISOR() / partOfNode);
-            } else {
-                INodesData(nodesDataAddress).addSpaceToFractionalNode(subarrayLink, partOfNode);
-            }
-        }
+        // if (isNodeFull) {
+        //     if (partOfNode == IConstants(constantsAddress).MEDIUM_TEST_DIVISOR()) {
+        //         INodesData(nodesDataAddress).addSpaceToFullNode(subarrayLink, partOfNode);
+        //     } else if (partOfNode != 0) {
+        //         INodesData(nodesDataAddress).addSpaceToFullNode(subarrayLink, partOfNode);
+        //     } else {
+        //         INodesData(nodesDataAddress).addSpaceToFullNode(subarrayLink, partOfNode);
+        //     }
+        // } else {
+        //     if (partOfNode != 0) {
+        //         INodesData(nodesDataAddress).addSpaceToFractionalNode(subarrayLink, partOfNode);
+        //     } else {
+        //         INodesData(nodesDataAddress).addSpaceToFractionalNode(subarrayLink, partOfNode);
+        //     }
+        // }
+        INodesData(nodesDataAddress).addSpaceToNode(nodeIndex, partOfNode);
     }
 }

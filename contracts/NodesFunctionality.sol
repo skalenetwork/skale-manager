@@ -107,7 +107,7 @@ contract NodesFunctionality is Permissions, INodesFunctionality {
             port,
             publicKey);
         // adds Node to Fractional Nodes or to Full Nodes
-        setNodeType(nodesDataAddress, constantsAddress, nodeIndex);
+        // setNodeType(nodesDataAddress, constantsAddress, nodeIndex);
 
         emit NodeCreated(
             nodeIndex,
@@ -135,29 +135,14 @@ contract NodesFunctionality is Permissions, INodesFunctionality {
 
         INodesData(nodesDataAddress).setNodeLeft(nodeIndex);
 
-        // removes Node from Fractional Nodes or from Full Nodes
-        bool isNodeFull;
-        uint subarrayLink;
-        (subarrayLink, isNodeFull) = INodesData(nodesDataAddress).nodesLink(nodeIndex);
-        if (isNodeFull) {
-            INodesData(nodesDataAddress).removeFullNode(subarrayLink);
-        } else {
-            INodesData(nodesDataAddress).removeFractionalNode(subarrayLink);
-        }
+        INodesData(nodesDataAddress).removeNode(nodeIndex);
     }
 
     function removeNodeByRoot(uint nodeIndex) external allow("SkaleManager") {
         address nodesDataAddress = contractManager.getContract("NodesData");
         INodesData(nodesDataAddress).setNodeLeft(nodeIndex);
 
-        bool isNodeFull;
-        uint subarrayLink;
-        (subarrayLink, isNodeFull) = INodesData(nodesDataAddress).nodesLink(nodeIndex);
-        if (isNodeFull) {
-            INodesData(nodesDataAddress).removeFullNode(subarrayLink);
-        } else {
-            INodesData(nodesDataAddress).removeFractionalNode(subarrayLink);
-        }
+        INodesData(nodesDataAddress).removeNode(nodeIndex);
     }
 
     /**
@@ -200,15 +185,7 @@ contract NodesFunctionality is Permissions, INodesFunctionality {
 
         INodesData(nodesDataAddress).setNodeLeft(nodeIndex);
 
-        // removes Node from Fractional Nodes or from Full Nodes
-        bool isNodeFull;
-        uint subarrayLink;
-        (subarrayLink, isNodeFull) = INodesData(nodesDataAddress).nodesLink(nodeIndex);
-        if (isNodeFull) {
-            INodesData(nodesDataAddress).removeFullNode(subarrayLink);
-        } else {
-            INodesData(nodesDataAddress).removeFractionalNode(subarrayLink);
-        }
+        INodesData(nodesDataAddress).removeNode(nodeIndex);
 
         address constantsAddress = contractManager.getContract("Constants");
         emit WithdrawDepositFromNodeComplete(
@@ -220,26 +197,26 @@ contract NodesFunctionality is Permissions, INodesFunctionality {
         return IConstants(constantsAddress).NODE_DEPOSIT();
     }
 
-    /**
-     * @dev setNodeType - sets Node to Fractional Nodes or to Full Nodes
-     * @param nodesDataAddress - address of NodesData contract
-     * @param constantsAddress - address of Constants contract
-     * @param nodeIndex - index of Node
-     */
-    function setNodeType(address nodesDataAddress, address constantsAddress, uint nodeIndex) internal {
-        bool isNodeFull = (
-            INodesData(nodesDataAddress).getNumberOfFractionalNodes() *
-            IConstants(constantsAddress).FRACTIONAL_FACTOR() >
-            INodesData(nodesDataAddress).getNumberOfFullNodes() *
-            IConstants(constantsAddress).FULL_FACTOR()
-        );
+    // /**
+    //  * @dev setNodeType - sets Node to Fractional Nodes or to Full Nodes
+    //  * @param nodesDataAddress - address of NodesData contract
+    //  * @param constantsAddress - address of Constants contract
+    //  * @param nodeIndex - index of Node
+    //  */
+    // function setNodeType(address nodesDataAddress, address constantsAddress, uint nodeIndex) internal {
+    //     bool isNodeFull = (
+    //         INodesData(nodesDataAddress).getNumberOfFractionalNodes() *
+    //         IConstants(constantsAddress).FRACTIONAL_FACTOR() >
+    //         INodesData(nodesDataAddress).getNumberOfFullNodes() *
+    //         IConstants(constantsAddress).FULL_FACTOR()
+    //     );
 
-        if (INodesData(nodesDataAddress).getNumberOfFullNodes() == 0 || isNodeFull) {
-            INodesData(nodesDataAddress).addFullNode(nodeIndex);
-        } else {
-            INodesData(nodesDataAddress).addFractionalNode(nodeIndex);
-        }
-    }
+    //     if (INodesData(nodesDataAddress).getNumberOfFullNodes() == 0 || isNodeFull) {
+    //         INodesData(nodesDataAddress).addFullNode(nodeIndex);
+    //     } else {
+    //         INodesData(nodesDataAddress).addFractionalNode(nodeIndex);
+    //     }
+    // }
 
     /**
      * @dev setSystemStatus - sets current system status overload, normal or underload

@@ -10,7 +10,7 @@ interface ISchainsData {
     function numberOfSchains() external view returns (uint64);
     function sumOfSchainsResources() external view returns (uint);
     function addSchainForNode(uint nodeIndex, bytes32 schainId) external;
-    function setSchainPartOfNode(bytes32 schainId, uint partOfNode) external;
+    function setSchainPartOfNode(bytes32 schainId, uint8 partOfNode) external;
     function getLengthOfSchainsForNode(uint nodeIndex) external view returns (uint);
     function schainsForNodes(uint nodeIndex, uint indexOfSchain) external view returns (bytes32);
     function getSchainOwner(bytes32 schainId) external view returns (address);
@@ -25,6 +25,6 @@ interface ISchainsData {
     function isTimeExpired(bytes32 schainId) external view returns (bool);
     function isOwnerAddress(address from, bytes32 schainId) external view returns (bool);
     function isSchainNameAvailable(string calldata name) external view returns (bool);
-    function getSchainsPartOfNode(bytes32 schainId) external view returns (uint);
+    function getSchainsPartOfNode(bytes32 schainId) external view returns (uint8);
     function getSchainIdsForNode(uint nodeIndex) external view returns (bytes32[] memory);
 }

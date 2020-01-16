@@ -112,7 +112,5 @@ contract("ValidatorService", ([owner, holder1, holder2, validator1, validator2])
         const validator: Validator = new Validator(
             await validatorService.validators(validatorId));
         const validatorIndexes = await validatorService.getValidatorNodeIndexes(validatorId);
-        console.log(validator);
-        console.log(validatorIndexes);
     });
 });
