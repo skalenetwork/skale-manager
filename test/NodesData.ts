@@ -5,7 +5,7 @@ import { ConstantsHolderContract,
          ContractManagerInstance,
          NodesDataContract,
          NodesDataInstance } from "../types/truffle-contracts";
-import { skipTime } from "./utils/time";
+import { currentTime, skipTime } from "./utils/time";
 
 const ContractManager: ContractManagerContract = artifacts.require("./ContractManager");
 const NodesData: NodesDataContract = artifacts.require("./NodesData");
@@ -104,12 +104,12 @@ contract("NodesData", ([owner, validator]) => {
 
         it("should change node last reward date", async () => {
             skipTime(web3, 5);
-            const currentTime = (await web3.eth.getBlock("latest")).timestamp;
+            const currentTimeValue = await currentTime(web3);
 
             await nodesData.changeNodeLastRewardDate(0);
 
-            (await nodesData.nodes(0))[7].should.be.deep.equal(web3.utils.toBN(currentTime));
-            await nodesData.getNodeLastRewardDate(0).should.be.eventually.deep.equal(web3.utils.toBN(currentTime));
+            (await nodesData.nodes(0))[7].should.be.deep.equal(web3.utils.toBN(currentTimeValue));
+            await nodesData.getNodeLastRewardDate(0).should.be.eventually.deep.equal(web3.utils.toBN(currentTimeValue));
         });
 
         it("should check if leaving period is expired", async () => {
@@ -157,9 +157,9 @@ contract("NodesData", ([owner, validator]) => {
         });
 
         it("should calculate node next reward date", async () => {
-            const currentTime = web3.utils.toBN((await web3.eth.getBlock("latest")).timestamp);
+            const currentTimeValue = web3.utils.toBN(await currentTime(web3));
             const rewardPeriod = web3.utils.toBN(3600);
-            const nextRewardTime = currentTime.add(rewardPeriod);
+            const nextRewardTime = currentTimeValue.add(rewardPeriod);
             const obtainedNextRewardTime = web3.utils.toBN(await nodesData.getNodeNextRewardDate(0));
 
             obtainedNextRewardTime.should.be.deep.equal(nextRewardTime);

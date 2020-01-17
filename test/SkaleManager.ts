@@ -193,7 +193,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
 
     it("should transfer ownership", async () => {
         await skaleManager.transferOwnership(hacker, {from: hacker})
-            .should.be.eventually.rejectedWith("Sender is not owner");
+            .should.be.eventually.rejectedWith("Ownable: caller is not the owner");
 
         await skaleManager.transferOwnership(hacker, {from: owner});
 
