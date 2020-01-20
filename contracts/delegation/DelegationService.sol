@@ -31,6 +31,7 @@ import "./ValidatorService.sol";
 import "./DelegationController.sol";
 import "./Distributor.sol";
 import "./SkaleBalances.sol";
+import "./TokenState.sol";
 import "./TimeHelpers.sol";
 
 
@@ -71,16 +72,6 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
         delegationRequestManager.acceptRequest(delegationId, msg.sender);
     }
 
-    /// @notice Adds node to SKALE network
-    function createNode(
-        uint16 port,
-        uint16 nonce,
-        bytes4 ip,
-        bytes4 publicIp) external
-    {
-        revert("Not implemented");
-    }
-
     function setMinimumDelegationAmount(uint amount) external {
         revert("Not implemented");
     }
@@ -98,7 +89,7 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
     /// @notice Allows service to slash `validator` by `amount` of tokens
     function slash(uint validatorId, uint amount) external {
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
-        require(validatorService.checkValidatorExists(validatorId), "Validator does not exist");
+        validatorService.getValidator(validatorId);
 
         Distributor distributor = Distributor(contractManager.getContract("Distributor"));
         TokenState tokenState = TokenState(contractManager.getContract("TokenState"));
@@ -197,8 +188,12 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
         revert("Not implemented");
     }
 
-    function setValidatorAddress(address newAddress) external {
-        revert("Not implemented");
+    function requestForNewAddress(address newAddress) external {
+        ValidatorService(contractManager.getContract("ValidatorService")).requestForNewAddress(msg.sender, newAddress);
+    }
+
+    function confirmNewAddress(uint validatorId) external {
+        ValidatorService(contractManager.getContract("ValidatorService")).confirmNewAddress(msg.sender, validatorId);
     }
 
     function getValidators() external returns (uint[] memory validatorIds) {
@@ -268,7 +263,6 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
 
     function distributeBounty(uint amount, uint validatorId) internal {
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
-        require(validatorService.checkValidatorExists(validatorId), "Validator does not exist");
 
         SkaleToken skaleToken = SkaleToken(contractManager.getContract("SkaleToken"));
         Distributor distributor = Distributor(contractManager.getContract("Distributor"));

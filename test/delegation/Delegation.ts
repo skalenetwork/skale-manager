@@ -219,7 +219,7 @@ contract("Delegation", ([owner,
 
         it("should not allow holder to delegate to unregistered validator", async () => {
             await delegationService.delegate(13, 1,  3, "D2 is even", {from: holder1})
-                .should.be.eventually.rejectedWith("Validator does not exist");
+                .should.be.eventually.rejectedWith("Validator with such id doesn't exist");
         });
 
         describe("when 3 holders delegated", async () => {
