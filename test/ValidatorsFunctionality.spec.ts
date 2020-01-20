@@ -72,11 +72,11 @@ contract("ValidatorsFunctionality", ([owner, validator]) => {
     await contractManager.setContractsAddress("SkaleDKG", skaleDKG.address);
 
     // create a node for validators functions tests
-    await nodesData.addNode(validator, "elvis1", "0x7f000001", "0x7f000002", 8545, "0x1122334455");
-    await nodesData.addNode(validator, "elvis2", "0x7f000003", "0x7f000004", 8545, "0x1122334456");
-    await nodesData.addNode(validator, "elvis3", "0x7f000005", "0x7f000006", 8545, "0x1122334457");
-    await nodesData.addNode(validator, "elvis4", "0x7f000007", "0x7f000008", 8545, "0x1122334458");
-    await nodesData.addNode(validator, "elvis5", "0x7f000009", "0x7f000010", 8545, "0x1122334459");
+    await nodesData.addNode(validator, "elvis1", "0x7f000001", "0x7f000002", 8545, "0x1122334455", 0);
+    await nodesData.addNode(validator, "elvis2", "0x7f000003", "0x7f000004", 8545, "0x1122334456", 0);
+    await nodesData.addNode(validator, "elvis3", "0x7f000005", "0x7f000006", 8545, "0x1122334457", 0);
+    await nodesData.addNode(validator, "elvis4", "0x7f000007", "0x7f000008", 8545, "0x1122334458", 0);
+    await nodesData.addNode(validator, "elvis5", "0x7f000009", "0x7f000010", 8545, "0x1122334459", 0);
   });
   // nodeIndex = 0 because we add one node and her index in array is 0
   const nodeIndex = 0;
@@ -231,7 +231,7 @@ contract("ValidatorsFunctionality", ([owner, validator]) => {
 
   it("should rotate node in validator groups", async () => {
     for (let i = 0; i < 5; i++) {
-      await nodesData.addNode(validator, "d" + i, "0x7f00000" + i, "0x7f00000" + (i + 1), 8545, "0x1122334455");
+      await nodesData.addNode(validator, "d" + i, "0x7f00000" + i, "0x7f00000" + (i + 1), 8545, "0x1122334455", 0);
     }
     const firstNode = 0;
     const secondNode = 1;
@@ -239,7 +239,7 @@ contract("ValidatorsFunctionality", ([owner, validator]) => {
     await validatorsFunctionality.addValidator(secondNode);
     const groupIndex0 = web3.utils.soliditySha3(firstNode);
     const groupIndex1 = web3.utils.soliditySha3(secondNode);
-    await nodesData.addNode(validator, "vadim", "0x7f000009", "0x7f000010", 8545, "0x1122334459");
+    await nodesData.addNode(validator, "vadim", "0x7f000009", "0x7f000010", 8545, "0x1122334459", 0);
     await nodesFunctionality.removeNodeByRoot(3);
     {
       const activeNodes = [];
@@ -307,7 +307,8 @@ contract("ValidatorsFunctionality", ([owner, validator]) => {
                                 "0x7f" + address + "01",
                                 "0x7f" + address + "02",
                                 8545,
-                                "0x1122334459");
+                                "0x1122334459",
+                                0);
       }
 
       const leavingCount = nodesCount - activeNodesCount;

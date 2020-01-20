@@ -26,6 +26,7 @@ import "./interfaces/ISchainsFunctionality.sol";
 import "./interfaces/ISchainsFunctionalityInternal.sol";
 import "./delegation/DelegationService.sol";
 import "./NodesData.sol";
+import "./SlashingTable.sol";
 
 
 interface IECDH {
@@ -334,8 +335,9 @@ contract SkaleDKG is Permissions {
 
         DelegationService delegationService = DelegationService(contractManager.getContract("DelegationService"));
         NodesData nodesData = NodesData(contractManager.getContract("NodesData"));
+        SlashingTable slashingTable = SlashingTable(contractManager.getContract("SlashingTable"));
 
-        delegationService.slash(nodesData.getValidatorId(badNode), 5);
+        delegationService.slash(nodesData.getValidatorId(badNode), slashingTable.getPenalty("FailedDKG"));
     }
 
     function verify(

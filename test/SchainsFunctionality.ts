@@ -637,7 +637,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
             const bobSchain = "0x38e47a7b719dce63662aeaf43440326f551b8a7ee198cee35cb5d517f2d296a2";
             const numberOfNodes = 5;
             for (let i = 0; i < numberOfNodes; i++) {
-                await nodesData.addNode(holder, "John", "0x7f000001", "0x7f000002", 8545, "0x1122334455");
+                await nodesData.addNode(holder, "John", "0x7f000001", "0x7f000002", 8545, "0x1122334455", 0);
                 // await nodesData.addFractionalNode(i);
             }
             await schainsFunctionalityInternal.createGroupForSchain("bob", bobSchain, numberOfNodes, 8);
@@ -655,7 +655,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
             let nodes;
             let i = 0;
             for (; i < 5; i++) {
-                await nodesData.addNode(holder, "John", "0x7f000001", "0x7f000002", 8545, "0x1122334455");
+                await nodesData.addNode(holder, "John", "0x7f000001", "0x7f000002", 8545, "0x1122334455", 0);
                 // await nodesData.addFractionalNode(i);
             }
 
@@ -664,7 +664,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
             await schainsFunctionalityInternal.createGroupForSchain("bob", bobSchain, 5, 8);
 
             for (; i < 8; i++) {
-                await nodesData.addNode(holder, "John", "0x7f000001", "0x7f000002", 8545, "0x1122334455");
+                await nodesData.addNode(holder, "John", "0x7f000001", "0x7f000002", 8545, "0x1122334455", 0);
                 // await nodesData.addFractionalNode(i);
             }
             nodes = await schainsData.getNodesInGroup(bobSchain);
@@ -688,7 +688,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
             let i = 0;
             let nodes;
             for (; i < 5; i++) {
-                await nodesData.addNode(holder, "John", "0x7f000001", "0x7f000002", 8545, "0x1122334455");
+                await nodesData.addNode(holder, "John", "0x7f000001", "0x7f000002", 8545, "0x1122334455", 0);
                 // await nodesData.addFractionalNode(i);
             }
 
@@ -696,7 +696,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
             await schainsFunctionalityInternal.createGroupForSchain("vitalik", vitalikSchain, 5, 8);
 
             for (; i < 7; i++) {
-                await nodesData.addNode(holder, "John", "0x7f000001", "0x7f000002", 8545, "0x1122334455");
+                await nodesData.addNode(holder, "John", "0x7f000001", "0x7f000002", 8545, "0x1122334455", 0);
                 // await nodesData.addFractionalNode(i);
             }
             for (let j = 0; j < 2; j++) {
@@ -724,14 +724,14 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
             const vitalikSchain = "0xaf2caa1c2ca1d027f1ac823b529d0a67cd144264b2789fa2ea4d63a67c7103cc";
             let i = 0;
             for (; i < 6; i++) {
-                await nodesData.addNode(holder, "John", "0x7f000001", "0x7f000002", 8545, "0x1122334455");
+                await nodesData.addNode(holder, "John", "0x7f000001", "0x7f000002", 8545, "0x1122334455", 0);
                 // await nodesData.addFullNode(i);
             }
 
             await schainsFunctionalityInternal.createGroupForSchain("bob", bobSchain, 3, 128);
             await schainsFunctionalityInternal.createGroupForSchain("vitalik", vitalikSchain, 3, 128);
 
-            await nodesData.addNode(holder, "John", "0x7f000001", "0x7f000002", 8545, "0x1122334455");
+            await nodesData.addNode(holder, "John", "0x7f000001", "0x7f000002", 8545, "0x1122334455", 0);
             // await nodesData.addFullNode(i++);
 
             // for (; i < 15; i++) {
@@ -751,12 +751,12 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
             const bobSchain = "0x38e47a7b719dce63662aeaf43440326f551b8a7ee198cee35cb5d517f2d296a2";
             const indexOfNodeToRotate = 4;
             for (let i = 0; i < 4; i++) {
-                await nodesData.addNode(holder, "John", "0x7f000001", "0x7f000002", 8545, "0x1122334455");
+                await nodesData.addNode(holder, "John", "0x7f000001", "0x7f000002", 8545, "0x1122334455", 0);
                 // await nodesData.addFullNode(i);
             }
             await schainsFunctionalityInternal.createGroupForSchain("bob", bobSchain, 4, 4);
 
-            await nodesData.addNode(holder, "John", "0x7f000001", "0x7f000002", 8545, "0x1122334455");
+            await nodesData.addNode(holder, "John", "0x7f000001", "0x7f000002", 8545, "0x1122334455", 0);
             // await nodesData.addFullNode(indexOfNodeToRotate);
             await nodesFunctionality.removeNodeByRoot(0);
             const schainId = (await schainsData.getSchainIdsForNode(0))[0];
