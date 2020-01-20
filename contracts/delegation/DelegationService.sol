@@ -32,6 +32,7 @@ import "./DelegationController.sol";
 import "./Distributor.sol";
 import "./SkaleBalances.sol";
 import "./TokenState.sol";
+import "./TimeHelpers.sol";
 
 
 contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegation, IERC777Recipient {
@@ -45,8 +46,10 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
     );
 
     IERC1820Registry private _erc1820 = IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
+    uint private _launchTimestamp;
 
     constructor(address newContractsAddress) Permissions(newContractsAddress) public {
+        _launchTimestamp = now;
         _erc1820.setInterfaceImplementer(address(this), keccak256("ERC777TokensRecipient"), address(this));
     }
 
@@ -252,6 +255,10 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
         return tokenState.getDelegatedCount(wallet);
     }
 
+    function setLaunchTimestamp(uint timestamp) external onlyOwner {
+        _launchTimestamp = timestamp;
+    }
+
     function tokensReceived(
         address operator,
         address from,
@@ -274,16 +281,24 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
 
         SkaleToken skaleToken = SkaleToken(contractManager.getContract("SkaleToken"));
         Distributor distributor = Distributor(contractManager.getContract("Distributor"));
-        address skaleBalancesAddress = contractManager.getContract("SkaleBalances");
+        SkaleBalances skaleBalances = SkaleBalances(contractManager.getContract("SkaleBalances"));
+        TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
+        DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
 
         Distributor.Share[] memory shares;
         uint fee;
         (shares, fee) = distributor.distributeBounty(validatorId, amount);
 
         address validatorAddress = validatorService.getValidator(validatorId).validatorAddress;
-        skaleToken.send(skaleBalancesAddress, fee, abi.encode(validatorAddress));
+        skaleToken.send(address(skaleBalances), fee, abi.encode(validatorAddress));
+        skaleBalances.lockBounty(validatorAddress, timeHelpers.addMonths(_launchTimestamp, 3));
+
         for (uint i = 0; i < shares.length; ++i) {
-            skaleToken.send(skaleBalancesAddress, shares[i].amount, abi.encode(shares[i].holder));
+            skaleToken.send(address(skaleBalances), shares[i].amount, abi.encode(shares[i].holder));
+
+            uint created = delegationController.getDelegation(shares[i].delegationId).created;
+            uint delegationStarted = timeHelpers.getNextMonthStartFromDate(created);
+            skaleBalances.lockBounty(shares[i].holder, timeHelpers.addMonths(delegationStarted, 3));
         }
     }
 }

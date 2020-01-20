@@ -9,7 +9,7 @@ import { ContractManagerInstance,
 
 const SkaleManagerMock: SkaleManagerMockContract = artifacts.require("./SkaleManagerMock");
 
-import { skipTime, skipTimeToDate } from "../utils/time";
+import { currentTime, skipTime, skipTimeToDate } from "../utils/time";
 
 import BigNumber from "bignumber.js";
 import * as chai from "chai";
@@ -59,6 +59,7 @@ contract("Delegation", ([owner,
     let skaleManagerMock: SkaleManagerMockInstance;
 
     const defaultAmount = 100 * 1e18;
+    const month = 60 * 60 * 24 * 31;
 
     beforeEach(async () => {
         contractManager = await deployContractManager();
@@ -231,11 +232,12 @@ contract("Delegation", ([owner,
                 await tokenState.accept(1, {from: validator});
                 await tokenState.accept(2, {from: validator});
 
-                const month = 60 * 60 * 24 * 31;
                 skipTime(web3, month);
             });
 
             it("should distribute funds sent to DelegationService across delegators", async () => {
+                await delegationService.setLaunchTimestamp(await currentTime(web3));
+
                 await skaleManagerMock.payBounty(validatorId, 101);
 
                 // 15% fee to validator
@@ -259,6 +261,13 @@ contract("Delegation", ([owner,
                 (await delegationService.getEarnedBountyAmount.call({from: holder1})).toNumber().should.be.equal(25);
                 (await delegationService.getEarnedBountyAmount.call({from: holder2})).toNumber().should.be.equal(28);
                 (await delegationService.getEarnedBountyAmount.call({from: holder3})).toNumber().should.be.equal(31);
+
+                await delegationService.withdrawBounty(bountyAddress, 10, {from: validator})
+                    .should.be.eventually.rejectedWith("Bounty is locked");
+                await delegationService.withdrawBounty(bountyAddress, 20, {from: holder1})
+                    .should.be.eventually.rejectedWith("Bounty is locked");
+
+                skipTime(web3, 3 * month);
 
                 await delegationService.withdrawBounty(bountyAddress, 10, {from: validator});
                 (await delegationService.getEarnedBountyAmount.call({from: validator})).toNumber().should.be.equal(7);

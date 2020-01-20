@@ -44,6 +44,7 @@ contract SkaleToken is LockableERC777, Permissions, IDelegatableToken {
     Permissions(contractsAddress)
     LockableERC777("SKALE", "SKL", defOps) public
     {
+        // TODO remove after testing
         uint money = 1e7 * 10 ** DECIMALS;
         _mint(
             address(0),
@@ -51,7 +52,6 @@ contract SkaleToken is LockableERC777, Permissions, IDelegatableToken {
             money, bytes(""),
             bytes("")
         );
-        // TODO remove after testing
     }
 
     /**
