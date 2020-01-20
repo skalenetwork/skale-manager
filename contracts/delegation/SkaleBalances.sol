@@ -31,12 +31,20 @@ import "../interfaces/ISkaleToken.sol";
 contract SkaleBalances is Permissions, IERC777Recipient {
     IERC1820Registry private _erc1820 = IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
     mapping (address => uint) private _bountyBalances;
+    //        wallet => timestamp
+    mapping (address => uint) private _timeLimit;
+    bool private _lockBounty = true;
 
     constructor(address newContractsAddress) Permissions(newContractsAddress) public {
         _erc1820.setInterfaceImplementer(address(this), keccak256("ERC777TokensRecipient"), address(this));
     }
 
     function withdrawBalance(address wallet, address to, uint amountOfTokens) external {
+        if (_timeLimit[wallet] != 0) {
+            require(_timeLimit[wallet] <= now, "Bounty is locked");
+            _timeLimit[wallet] = 0;
+        }
+
         require(_bountyBalances[wallet] >= amountOfTokens, "Now enough tokens on balance for withdrawing");
         _bountyBalances[wallet] -= amountOfTokens;
 
@@ -80,6 +88,18 @@ contract SkaleBalances is Permissions, IERC777Recipient {
 
     function getBalance(address wallet) external view returns (uint) {
         return _bountyBalances[wallet];
+    }
+
+    function setLockBounty(bool lock) external onlyOwner {
+        _lockBounty = lock;
+    }
+
+    function lockBounty(address wallet, uint timeLimit) external {
+        if (_lockBounty) {
+            if (_timeLimit[wallet] == 0 || _timeLimit[wallet] > timeLimit) {
+                _timeLimit[wallet] = timeLimit;
+            }
+        }
     }
 
     // private

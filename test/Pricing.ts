@@ -48,10 +48,10 @@ contract("Pricing", ([owner, holder]) => {
             await schainsData.initializeSchain("BobSchain", holder, 10, 2);
             await schainsData.initializeSchain("DavidSchain", holder, 10, 4);
             await schainsData.initializeSchain("JacobSchain", holder, 10, 8);
-            await nodesData.addNode(holder, "John", "0x7f000001", "0x7f000002", 8545, "0x1122334455");
-            await nodesData.addNode(holder, "Michael", "0x7f000003", "0x7f000004", 8545, "0x1122334455");
-            await nodesData.addNode(holder, "Daniel", "0x7f000005", "0x7f000006", 8545, "0x1122334455");
-            await nodesData.addNode(holder, "Steven", "0x7f000007", "0x7f000008", 8545, "0x1122334455");
+            await nodesData.addNode(holder, "John", "0x7f000001", "0x7f000002", 8545, "0x1122334455", 0);
+            await nodesData.addNode(holder, "Michael", "0x7f000003", "0x7f000004", 8545, "0x1122334455", 0);
+            await nodesData.addNode(holder, "Daniel", "0x7f000005", "0x7f000006", 8545, "0x1122334455", 0);
+            await nodesData.addNode(holder, "Steven", "0x7f000007", "0x7f000008", 8545, "0x1122334455", 0);
 
         });
 
@@ -139,7 +139,7 @@ contract("Pricing", ([owner, holder]) => {
             });
 
             it("should rejected if price - priceChange overflowed price", async () => {
-                await nodesData.addNode(holder, "vadim", "0x7f000010", "0x7f000011", 8545, "0x1122334455");
+                await nodesData.addNode(holder, "vadim", "0x7f000010", "0x7f000011", 8545, "0x1122334455", 0);
                 skipTime(web3, 10 ** 6);
                 await pricing.adjustPrice()
                     .should.be.eventually.rejectedWith("New price should be less than old price");
@@ -178,7 +178,7 @@ contract("Pricing", ([owner, holder]) => {
                 }
 
                 it("should change price when new active node has been added", async () => {
-                    await nodesData.addNode(holder, "vadim", "0x7f000010", "0x7f000011", 8545, "0x1122334455");
+                    await nodesData.addNode(holder, "vadim", "0x7f000010", "0x7f000011", 8545, "0x1122334455", 0);
                     const MINUTES_PASSED = 2;
                     const price = await getPrice(MINUTES_PASSED);
                     const newPrice = new BigNumber(await pricing.price()).toNumber();
@@ -196,7 +196,7 @@ contract("Pricing", ([owner, holder]) => {
                 });
 
                 it("should set price to min of too many minutes passed and price is less than min", async () => {
-                    await nodesData.addNode(holder, "vadim", "0x7f000010", "0x7f000011", 8545, "0x1122334455");
+                    await nodesData.addNode(holder, "vadim", "0x7f000010", "0x7f000011", 8545, "0x1122334455", 0);
                     const MINUTES_PASSED = 30;
                     const price = await getPrice(MINUTES_PASSED);
                     const MIN_PRICE = new BigNumber(await pricing.MIN_PRICE()).toNumber();
