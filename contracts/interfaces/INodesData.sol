@@ -17,7 +17,7 @@ interface INodesData {
     function isLeavingPeriodExpired(uint nodeIndex) external view returns (bool);
     function isTimeForReward(uint nodeIndex) external view returns (bool);
     function addNode(
-        uint from,
+        address from,
         string calldata name,
         bytes4 ip,
         bytes4 publicIP,

@@ -33,7 +33,6 @@ contract NodesData is INodesData, Permissions {
     enum NodeStatus {Active, Leaving, Left}
 
     struct Node {
-        uint validatorId;
         string name;
         bytes4 ip;
         bytes4 publicIP;
@@ -137,7 +136,7 @@ contract NodesData is INodesData, Permissions {
      * @return index of Node
      */
     function addNode(
-        uint from,
+        address from,
         string calldata name,
         bytes4 ip,
         bytes4 publicIP,
@@ -150,7 +149,6 @@ contract NodesData is INodesData, Permissions {
         returns (uint nodeIndex)
     {
         nodes.push(Node({
-            validatorId: from,
             name: name,
             ip: ip,
             publicIP: publicIP,
@@ -361,7 +359,7 @@ contract NodesData is INodesData, Permissions {
      * @param nodeIndex - index of Node
      * @return if exist - true, else - false
      */
-    function isNodeExist(uint from, uint nodeIndex) external view returns (bool) {
+    function isNodeExist(address from, uint nodeIndex) external view returns (bool) {
         return nodeIndexes[from].isNodeExist[nodeIndex];
     }
 
@@ -527,11 +525,11 @@ contract NodesData is INodesData, Permissions {
      * @return activeNodesbyAddress - array of indexes of Active Nodes, which were created
      * by msg.sender
      */
-    function getActiveNodesByValidatorId(uint validatorId) external view returns (uint[] memory activeNodesByAddress) {
-        activeNodesByAddress = new uint[](nodeIndexes[validatorId].numberOfNodes);
+    function getActiveNodesByAddress(uint validatorId) external view returns (uint[] memory activeNodesByAddress) {
+        activeNodesByAddress = new uint[](nodeIndexes[msg.sender].numberOfNodes);
         uint indexOfActiveNodesByAddress = 0;
         for (uint indexOfNodes = 0; indexOfNodes < nodes.length; indexOfNodes++) {
-            if (nodeIndexes[validatorId].isNodeExist[indexOfNodes] && isNodeActive(indexOfNodes)) {
+            if (nodeIndexes[msg.sender].isNodeExist[indexOfNodes] && isNodeActive(indexOfNodes)) {
                 activeNodesByAddress[indexOfActiveNodesByAddress] = indexOfNodes;
                 indexOfActiveNodesByAddress++;
             }

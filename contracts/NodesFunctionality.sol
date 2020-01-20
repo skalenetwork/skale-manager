@@ -35,7 +35,7 @@ contract NodesFunctionality is Permissions, INodesFunctionality {
     // informs that Node is created
     event NodeCreated(
         uint nodeIndex,
-        uint validatorId,
+        address owner,
         string name,
         bytes4 ip,
         bytes4 publicIP,
@@ -133,10 +133,7 @@ contract NodesFunctionality is Permissions, INodesFunctionality {
     function removeNode(address from, uint nodeIndex) external allow("SkaleManager") {
         address nodesDataAddress = contractManager.getContract("NodesData");
 
-        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
-        uint validatorId = validatorService.getValidatorId(from);
-
-        require(INodesData(nodesDataAddress).isNodeExist(validatorId, nodeIndex), "Node does not exist for message sender");
+        require(INodesData(nodesDataAddress).isNodeExist(from, nodeIndex), "Node does not exist for message sender");
         require(INodesData(nodesDataAddress).isNodeActive(nodeIndex), "Node is not Active");
 
         INodesData(nodesDataAddress).setNodeLeft(nodeIndex);
@@ -161,10 +158,7 @@ contract NodesFunctionality is Permissions, INodesFunctionality {
     function initWithdrawDeposit(address from, uint nodeIndex) external allow("SkaleManager") returns (bool) {
         address nodesDataAddress = contractManager.getContract("NodesData");
 
-        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
-        uint validatorId = validatorService.getValidatorId(from);
-
-        require(INodesData(nodesDataAddress).isNodeExist(validatorId, nodeIndex), "Node does not exist for message sender");
+        require(INodesData(nodesDataAddress).isNodeExist(from, nodeIndex), "Node does not exist for message sender");
         require(INodesData(nodesDataAddress).isNodeActive(nodeIndex), "Node is not Active");
 
         INodesData(nodesDataAddress).setNodeLeaving(nodeIndex);
@@ -188,10 +182,7 @@ contract NodesFunctionality is Permissions, INodesFunctionality {
     function completeWithdrawDeposit(address from, uint nodeIndex) external allow("SkaleManager") returns (uint) {
         address nodesDataAddress = contractManager.getContract("NodesData");
 
-        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
-        uint validatorId = validatorService.getValidatorId(from);
-
-        require(INodesData(nodesDataAddress).isNodeExist(validatorId, nodeIndex), "Node does not exist for message sender");
+        require(INodesData(nodesDataAddress).isNodeExist(from, nodeIndex), "Node does not exist for message sender");
         require(INodesData(nodesDataAddress).isNodeLeaving(nodeIndex), "Node is no Leaving");
         require(INodesData(nodesDataAddress).isLeavingPeriodExpired(nodeIndex), "Leaving period is not expired");
 

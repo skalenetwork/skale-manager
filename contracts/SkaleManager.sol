@@ -133,9 +133,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
         uint32 latency) external
     {
         address nodesDataAddress = contractManager.getContract("NodesData");
-        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
-        uint validatorId = validatorService.getValidatorId(msg.sender);
-        require(INodesData(nodesDataAddress).isNodeExist(validatorId, fromValidatorIndex), "Node does not exist for Message sender");
+        require(INodesData(nodesDataAddress).isNodeExist(msg.sender, fromValidatorIndex), "Node does not exist for Message sender");
         address validatorsFunctionalityAddress = contractManager.getContract("ValidatorsFunctionality");
         IValidatorsFunctionality(validatorsFunctionalityAddress).sendVerdict(
             fromValidatorIndex,
@@ -151,9 +149,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
         uint32[] calldata latencies) external
     {
         address nodesDataAddress = contractManager.getContract("NodesData");
-        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
-        uint validatorId = validatorService.getValidatorId(msg.sender);
-        require(INodesData(nodesDataAddress).isNodeExist(validatorId, fromValidatorIndex), "Node does not exist for Message sender");
+        require(INodesData(nodesDataAddress).isNodeExist(msg.sender, fromValidatorIndex), "Node does not exist for Message sender");
         require(toNodeIndexes.length == downtimes.length, "Incorrect data");
         require(latencies.length == downtimes.length, "Incorrect data");
         address validatorsFunctionalityAddress = contractManager.getContract("ValidatorsFunctionality");
@@ -168,9 +164,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
 
     function getBounty(uint nodeIndex) external {
         address nodesDataAddress = contractManager.getContract("NodesData");
-        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
-        uint validatorId = validatorService.getValidatorId(msg.sender);
-        require(INodesData(nodesDataAddress).isNodeExist(validatorId, nodeIndex), "Node does not exist for Message sender");
+        require(INodesData(nodesDataAddress).isNodeExist(msg.sender, nodeIndex), "Node does not exist for Message sender");
         require(INodesData(nodesDataAddress).isTimeForReward(nodeIndex), "Not time for bounty");
         bool nodeIsActive = INodesData(nodesDataAddress).isNodeActive(nodeIndex);
         bool nodeIsLeaving = INodesData(nodesDataAddress).isNodeLeaving(nodeIndex);
