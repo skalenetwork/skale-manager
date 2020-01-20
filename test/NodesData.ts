@@ -36,22 +36,30 @@ contract("NodesData", ([owner, validator]) => {
 
         const node = await nodesData.nodes(0);
 
-        node[0].should.be.equal("d2");
-        node[1].should.be.equal("0x7f000001");
-        node[2].should.be.equal("0x7f000002");
-        node[3].should.be.deep.eq(web3.utils.toBN(8545));
-        node[4].should.be.equal("0x1122334455");
-        node[6].should.be.deep.eq(web3.utils.toBN(0));
-        node[8].should.be.deep.eq(web3.utils.toBN(0));
+        node[0].should.be.deep.eq(web3.utils.toBN(1));
+        node[1].should.be.equal("d2");
+        node[2].should.be.equal("0x7f000001");
+        node[3].should.be.equal("0x7f000002");
+        node[4].should.be.deep.eq(web3.utils.toBN(8545));
+        node[5].should.be.equal("0x1122334455");
+        node[7].should.be.deep.eq(web3.utils.toBN(0));
+        node[9].should.be.deep.eq(web3.utils.toBN(0));
 
+        console.log("Hello");
         const nodeId = web3.utils.soliditySha3("d2");
+        console.log("Hello1");
         await nodesData.nodesIPCheck("0x7f000001").should.be.eventually.true;
+        console.log("Hello2");
         await nodesData.nodesNameCheck(nodeId).should.be.eventually.true;
         const nodeByName = await nodesData.nodes(await nodesData.nodesNameToIndex(nodeId));
+        console.log("Hell3");
         node.should.be.deep.equal(nodeByName);
-        await nodesData.isNodeExist(validator, 0).should.be.eventually.true;
-        (await nodesData.getActiveNodesByAddress({from: validator})).should.be.deep.equal([web3.utils.toBN(0)]);
-        expect(await nodesData.getActiveNodesByAddress({from: owner})).to.be.empty;
+        console.log("Hell4");
+        await nodesData.isNodeExist(1, 0).should.be.eventually.true;
+        console.log("Hello");
+        console.log(await nodesData.getActiveNodesByValidatorId(1, {from: validator}));
+        (await nodesData.getActiveNodesByValidatorId(1, {from: validator})).should.be.deep.equal([web3.utils.toBN(0)]);
+        expect(await nodesData.getActiveNodesByValidatorId(2, {from: owner})).to.be.empty;
         await nodesData.numberOfActiveNodes().should.be.eventually.deep.equal(web3.utils.toBN(1));
         await nodesData.getNumberOfNodes().should.be.eventually.deep.equal(web3.utils.toBN(1));
     });
@@ -88,7 +96,7 @@ contract("NodesData", ([owner, validator]) => {
         it("should set node as leaving", async () => {
             await nodesData.setNodeLeaving(0);
 
-            (await nodesData.nodes(0))[8].should.be.deep.equal(web3.utils.toBN(1));
+            (await nodesData.nodes(0))[9].should.be.deep.equal(web3.utils.toBN(1));
             await nodesData.numberOfActiveNodes().should.be.eventually.deep.equal(web3.utils.toBN(0));
             await nodesData.numberOfLeavingNodes().should.be.eventually.deep.equal(web3.utils.toBN(1));
         });
@@ -109,7 +117,7 @@ contract("NodesData", ([owner, validator]) => {
 
             await nodesData.changeNodeLastRewardDate(0);
 
-            (await nodesData.nodes(0))[7].should.be.deep.equal(web3.utils.toBN(currentTime));
+            (await nodesData.nodes(0))[8].should.be.deep.equal(web3.utils.toBN(currentTime));
             await nodesData.getNodeLastRewardDate(0).should.be.eventually.deep.equal(web3.utils.toBN(currentTime));
         });
 
@@ -182,7 +190,7 @@ contract("NodesData", ([owner, validator]) => {
         });
 
         it("should get array of indexes of active nodes of msg.sender", async () => {
-            const activeNodes = await nodesData.getActiveNodesByAddress({from: validator});
+            const activeNodes = await nodesData.getActiveNodesByValidatorId(1, {from: validator});
 
             activeNodes.length.should.be.equal(1);
             const nodeIndex = web3.utils.toBN(activeNodes[0]);
