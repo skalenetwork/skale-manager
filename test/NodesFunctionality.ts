@@ -18,7 +18,7 @@ const ContractManager: ContractManagerContract = artifacts.require("./ContractMa
 const ConstantsHolder: ConstantsHolderContract = artifacts.require("./ConstantsHolder");
 const NodesData: NodesDataContract = artifacts.require("./NodesData");
 const NodesFunctionality: NodesFunctionalityContract = artifacts.require("./NodesFunctionality");
-const ValidatorService: ValidatorServiceContract = artifacts.require("./delegation/ValidatorService");
+const ValidatorService: ValidatorServiceContract = artifacts.require("./ValidatorService");
 
 chai.should();
 chai.use(chaiAsPromised);

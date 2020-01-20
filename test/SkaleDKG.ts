@@ -19,7 +19,9 @@ import { ConstantsHolderContract,
          SchainsFunctionalityInternalContract,
          SchainsFunctionalityInternalInstance,
          SkaleDKGContract,
-         SkaleDKGInstance} from "../types/truffle-contracts";
+         SkaleDKGInstance,
+         ValidatorServiceContract,
+         ValidatorServiceInstance } from "../types/truffle-contracts";
 
 import { gasMultiplier } from "./utils/command_line";
 import { skipTime } from "./utils/time";
@@ -36,6 +38,7 @@ const SchainsFunctionalityInternal: SchainsFunctionalityInternalContract = artif
 const SkaleDKG: SkaleDKGContract = artifacts.require("./SkaleDKG");
 const Decryption: DecryptionContract = artifacts.require("./Decryption");
 const ECDH: ECDHContract = artifacts.require("./ECDH");
+const ValidatorService: ValidatorServiceContract = artifacts.require("./ValidatorService");
 
 import BigNumber from "bignumber.js";
 // import sha256 from "js-sha256";
@@ -80,6 +83,7 @@ contract("SkaleDKG", ([validator1, validator2]) => {
     let skaleDKG: SkaleDKGInstance;
     let decryption: DecryptionInstance;
     let ecdh: ECDHInstance;
+    let validatorService: ValidatorServiceInstance;
 
     beforeEach(async () => {
         contractManager = await ContractManager.new({from: validator1});
@@ -128,6 +132,14 @@ contract("SkaleDKG", ([validator1, validator2]) => {
 
         ecdh = await ECDH.new({from: validator1, gas: 8000000 * gasMultiplier});
         await contractManager.setContractsAddress("ECDH", ecdh.address);
+
+        validatorService = await ValidatorService.new(
+            contractManager.address,
+            {from: validator1, gas: 8000000 * gasMultiplier});
+        await contractManager.setContractsAddress("ValidatorService", validatorService.address);
+
+        await validatorService.registerValidator("Validat1", "0x7E6CE355Ca303EAe3a858c172c3cD4CeB23701bc", "D2", 0, 0);
+        await validatorService.registerValidator("Validat2", "0xF64ADc0A4462E30381Be09E42EB7DcB816de2803", "D3", 0, 0);
     });
 
     describe("when 2 nodes are created", async () => {
@@ -217,19 +229,37 @@ contract("SkaleDKG", ([validator1, validator2]) => {
         let schainName = "";
 
         beforeEach(async () => {
-            const nodesCount = 2;
-            for (const index of Array.from(Array(nodesCount).keys())) {
-                const hexIndex = ("0" + index.toString(16)).slice(-2);
-                await nodesFunctionality.createNode(0,
-                    "0x00" +
-                    "2161" +
-                    "0000" +
-                    "7f0000" + hexIndex +
-                    "7f0000" + hexIndex +
-                    validatorsPublicKey[index] +
-                    "d2" + hexIndex,
-                    {from: validator1});
-            }
+            // const nodesCount = 2;
+            // for (const index of Array.from(Array(nodesCount).keys())) {
+            //     const hexIndex = ("0" + index.toString(16)).slice(-2);
+            //     await nodesFunctionality.createNode(0,
+            //         "0x00" +
+            //         "2161" +
+            //         "0000" +
+            //         "7f0000" + hexIndex +
+            //         "7f0000" + hexIndex +
+            //         validatorsPublicKey[index] +
+            //         "d2" + hexIndex,
+            //         {from: validator1});
+            // }
+            await nodesFunctionality.createNode(0,
+                "0x00" +
+                "2161" +
+                "0000" +
+                "7f000001" +
+                "7f000001" +
+                validatorsPublicKey[0] +
+                "d201",
+                {from: validator1});
+            await nodesFunctionality.createNode(1,
+                "0x00" +
+                "2161" +
+                "0000" +
+                "7f000002" +
+                "7f000002" +
+                validatorsPublicKey[1] +
+                "d202",
+                {from: validator1});
         });
 
         it("should create schain and open a DKG channel", async () => {
