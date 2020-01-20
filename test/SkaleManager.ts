@@ -46,6 +46,17 @@ import { ConstantsHolderContract,
          ValidatorsFunctionalityInstance} from "../types/truffle-contracts";
 
 import { gasMultiplier } from "./utils/command_line";
+import { deployContractManager } from "./utils/deploy/contractManager";
+import { deployDelegationController } from "./utils/deploy/delegation/delegationController";
+import { deployDelegationPeriodManager } from "./utils/deploy/delegation/delegationPeriodManager";
+import { deployDelegationRequestManager } from "./utils/deploy/delegation/delegationRequestManager";
+import { deployDelegationService } from "./utils/deploy/delegation/delegationService";
+import { deployDistributor } from "./utils/deploy/delegation/distributor";
+import { deploySkaleBalances } from "./utils/deploy/delegation/skaleBalances";
+import { deployTimeHelpers } from "./utils/deploy/delegation/timeHelpers";
+import { deployTokenState } from "./utils/deploy/delegation/tokenState";
+import { deployValidatorService } from "./utils/deploy/delegation/validatorService";
+import { deploySkaleToken } from "./utils/deploy/skaleToken";
 import { skipTime } from "./utils/time";
 
 const ContractManager: ContractManagerContract = artifacts.require("./ContractManager");
@@ -89,21 +100,11 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
     let schainsFunctionalityInternal: SchainsFunctionalityInternalInstance;
     let managerData: ManagerDataInstance;
     let skaleDKG: SkaleDKGInstance;
-    let delegationService: DelegationServiceInstance;
-    let delegationPeriodManager: DelegationPeriodManagerInstance;
-    let delegationRequestManager: DelegationRequestManagerInstance;
-    let validatorService: ValidatorServiceInstance;
-    let delegationController: DelegationControllerInstance;
-    let tokenState: TokenStateInstance;
-    let timeHelpers: TimeHelpersInstance;
-    let skaleBalances: SkaleBalancesInstance;
-    let distributor: DistributorInstance;
 
     beforeEach(async () => {
-        contractManager = await ContractManager.new({from: owner});
+        contractManager = await deployContractManager();
 
-        skaleToken = await SkaleToken.new(contractManager.address, [], { from: owner });
-        await contractManager.setContractsAddress("SkaleToken", skaleToken.address);
+        skaleToken = await deploySkaleToken(contractManager);
 
         constantsHolder = await ConstantsHolder.new(
             contractManager.address,
@@ -157,33 +158,6 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
 
         skaleDKG = await SkaleDKG.new(contractManager.address, {from: owner, gas: 8000000 * gasMultiplier});
         await contractManager.setContractsAddress("SkaleDKG", skaleDKG.address);
-
-        delegationService = await DelegationService.new(contractManager.address, {from: owner});
-        await contractManager.setContractsAddress("DelegationService", delegationService.address);
-
-        delegationPeriodManager = await DelegationPeriodManager.new(contractManager.address);
-        await contractManager.setContractsAddress("DelegationPeriodManager", delegationPeriodManager.address);
-
-        delegationRequestManager = await DelegationRequestManager.new(contractManager.address);
-        await contractManager.setContractsAddress("DelegationRequestManager", delegationRequestManager.address);
-
-        validatorService = await ValidatorService.new(contractManager.address);
-        await contractManager.setContractsAddress("ValidatorService", validatorService.address);
-
-        delegationController = await DelegationController.new(contractManager.address);
-        await contractManager.setContractsAddress("DelegationController", delegationController.address);
-
-        tokenState = await TokenState.new(contractManager.address);
-        await contractManager.setContractsAddress("TokenState", tokenState.address);
-
-        timeHelpers = await TimeHelpers.new();
-        await contractManager.setContractsAddress("TimeHelpers", timeHelpers.address);
-
-        skaleBalances = await SkaleBalances.new(contractManager.address);
-        await contractManager.setContractsAddress("SkaleBalances", skaleBalances.address);
-
-        distributor = await Distributor.new(contractManager.address);
-        await contractManager.setContractsAddress("Distributor", distributor.address);
     });
 
     it("should fail to process token fallback if sent not from SkaleToken", async () => {
