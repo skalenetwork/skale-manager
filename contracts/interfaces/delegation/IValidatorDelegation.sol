@@ -25,13 +25,6 @@ interface IValidatorDelegation {
     /// @notice Allows validator to accept tokens delegated at `delegationId`
     function acceptPendingDelegation(uint delegationId) external;
 
-    /// @notice Adds node to SKALE network
-    function createNode(
-        uint16 port,
-        uint16 nonce,
-        bytes4 ip,
-        bytes4 publicIp) external;
-
     /// @notice removes node from system
     function deleteNode(uint nodeIndex) external;
 

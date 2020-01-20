@@ -72,21 +72,6 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
         delegationRequestManager.acceptRequest(delegationId, msg.sender);
     }
 
-    /// @notice Adds node to SKALE network
-    function createNode(
-        uint16 port,
-        uint16 nonce,
-        bytes4 ip,
-        bytes4 publicIp) external
-    {
-        // SkaleManager skaleManager = SkaleManager(contractManager.getContract("SkaleManager"));
-        // ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
-        // validatorService.checkPossibilityCreatingNode(msg.sender);
-
-        // skaleManager.createNode(port, nonce, ip, publicIp);
-        revert("check SkaleManager");
-    }
-
     function setMinimumDelegationAmount(uint amount) external {
         revert("Not implemented");
     }

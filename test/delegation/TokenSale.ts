@@ -73,7 +73,7 @@ contract("TokenSaleManager", ([owner, holder, delegation, validator, seller, hac
         });
 
         describe("when holder bought tokens", async () => {
-            const validatorId = 0;
+            const validatorId = 1;
             const totalAmount = 100;
 
             beforeEach(async () => {
