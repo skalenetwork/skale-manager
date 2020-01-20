@@ -142,10 +142,10 @@ contract("SkaleDKG", ([validator1, validator2]) => {
         ecdh = await ECDH.new({from: validator1, gas: 8000000 * gasMultiplier});
         await contractManager.setContractsAddress("ECDH", ecdh.address);
 
-        validatorService = await ValidatorService.new(
-            contractManager.address,
-            {from: validator1, gas: 8000000 * gasMultiplier});
-        await contractManager.setContractsAddress("ValidatorService", validatorService.address);
+        // validatorService = await ValidatorService.new(
+        //     contractManager.address,
+        //     {from: validator1, gas: 8000000 * gasMultiplier});
+        // await contractManager.setContractsAddress("ValidatorService", validatorService.address);
 
         // await validatorService.registerValidator("Validat1", "0x7E6CE355Ca303EAe3a858c172c3cD4CeB23701bc", "D2", 0, 0);
         // await validatorService.registerValidator("Validat2", "0xF64ADc0A4462E30381Be09E42EB7DcB816de2803", "D3", 0, 0);
@@ -247,7 +247,7 @@ contract("SkaleDKG", ([validator1, validator2]) => {
         beforeEach(async () => {
             await delegationService.registerValidator("Validator1", "D2 is even", 0, 0, {from: validator1});
             await skaleToken.mint(validator1, validator1, 1000, "0x", "0x");
-            const validatorId = 0;
+            const validatorId = 1;
             await delegationService.delegate(validatorId, 100, 3, "D2 is even", {from: validator1});
             await delegationService.acceptPendingDelegation(0, {from: validator1});
 
@@ -507,7 +507,6 @@ contract("SkaleDKG", ([validator1, validator2]) => {
                             {from: validatorsAccount[0]},
                         );
                         assert.equal(result.logs[0].event, "BadGuy");
-                        // need to debug it!!!
                         assert.equal(result.logs[0].args.nodeIndex.toString(), "1");
 
                         (await skaleToken.getLockedOf.call(validator1)).toNumber().should.be.equal(100);

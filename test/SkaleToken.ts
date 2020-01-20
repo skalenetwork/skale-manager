@@ -12,7 +12,6 @@ import { ContractManagerContract,
          TokenStateContract,
          TokenStateInstance} from "../types/truffle-contracts";
 
-<<<<<<< HEAD
 const ContractManager: ContractManagerContract = artifacts.require("./ContractManager");
 const SkaleToken: SkaleTokenContract = artifacts.require("./SkaleToken");
 const TimeHelpers: TimeHelpersContract = artifacts.require("./TimeHelpers");
@@ -20,8 +19,6 @@ const TokenState: TokenStateContract = artifacts.require("./TokenState");
 const DelegationController: DelegationControllerContract = artifacts.require("./DelegationController");
 const DelegationService: DelegationServiceContract = artifacts.require("./DelegationService");
 
-=======
->>>>>>> feature/SKALE-1642-delegation
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
 import { deployContractManager } from "./utils/deploy/contractManager";
@@ -32,16 +29,12 @@ chai.use(chaiAsPromised);
 contract("SkaleToken", ([owner, holder, receiver, nilAddress, accountWith99]) => {
   let skaleToken: SkaleTokenInstance;
   let contractManager: ContractManagerInstance;
-<<<<<<< HEAD
   let timeHelpers: TimeHelpersInstance;
   let delegationController: DelegationControllerInstance;
   let tokenState: TokenStateInstance;
   let delegationService: DelegationServiceInstance;
 
-  const TOKEN_CAP: number = 5000000000;
-=======
   const TOKEN_CAP: number = 7000000000;
->>>>>>> feature/SKALE-1642-delegation
   const TOTAL_SUPPLY = 10000000;
 
   console.log("Holder", holder);
