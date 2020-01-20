@@ -259,7 +259,7 @@ contract("SkaleVerifier", ([validator1, owner, developer, hacker]) => {
             const nodesCount = 2;
             for (const index of Array.from(Array(nodesCount).keys())) {
                 const hexIndex = ("0" + index.toString(16)).slice(-2);
-                await nodesFunctionality.createNode(0,
+                await nodesFunctionality.createNode(validator1,
                     "0x00" +
                     "2161" +
                     "0000" +

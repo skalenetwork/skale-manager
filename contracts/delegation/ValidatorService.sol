@@ -21,6 +21,8 @@ pragma solidity ^0.5.3;
 pragma experimental ABIEncoderV2;
 
 import "../Permissions.sol";
+import "./DelegationController.sol";
+import "../interfaces/IConstants.sol";
 
 
 contract ValidatorService is Permissions {
@@ -28,6 +30,7 @@ contract ValidatorService is Permissions {
     struct Validator {
         string name;
         address validatorAddress;
+        address requestedAddress;
         string description;
         uint feeRate;
         uint registrationTime;
@@ -36,9 +39,14 @@ contract ValidatorService is Permissions {
         uint[] nodeIndexes;
     }
 
-    Validator[] public validators;
+    mapping (uint => Validator) public validators;
     mapping (address => uint) public validatorAddressToId;
+    uint public numberOfValidators;
 
+    modifier checkValidatorExists(uint validatorId) {
+        require(validatorId <= numberOfValidators, "Validator with such id doesn't exist");
+        _;
+    }
 
     constructor(address newContractsAddress) Permissions(newContractsAddress) public {
 
@@ -51,33 +59,53 @@ contract ValidatorService is Permissions {
         uint feeRate,
         uint minimumDelegationAmount
     )
-        external returns (uint validatorId)
+        external
+        allow("DelegationService")
+        returns (uint validatorId)
     {
+        require(validatorAddressToId[validatorAddress] == 0, "Validator with such address already exists");
         uint[] memory epmtyArray = new uint[](0);
-        validatorId = validators.length;
-        validators.push(Validator(
+        validatorId = ++numberOfValidators;
+        validators[validatorId] = Validator(
             name,
             validatorAddress,
+            address(0),
             description,
             feeRate,
             now,
             minimumDelegationAmount,
             0,
             epmtyArray
-        ));
+        );
         validatorAddressToId[validatorAddress] = validatorId;
     }
 
-    function setNewValidatorAddress(address newValidatorAddress, uint validatorId) external {
+    function requestForNewAddress(address oldValidatorAddress, address newValidatorAddress) external allow("DelegationService") {
+        require(newValidatorAddress != address(0), "New address cannot be null");
+        uint validatorId = getValidatorId(oldValidatorAddress);
+        validators[validatorId].requestedAddress = newValidatorAddress;
+    }
+
+    function confirmNewAddress(address newValidatorAddress, uint validatorId)
+        external
+        checkValidatorExists(validatorId)
+        allow("DelegationService")
+    {
         require(
-            validatorId == validatorAddressToId[msg.sender],
-            "Sender Doesn't have permissions to change address for this validatorId"
+            validators[validatorId].requestedAddress == newValidatorAddress,
+            "The validator cannot be changed because it isn't the actual owner"
         );
+        validatorAddressToId[validators[validatorId].validatorAddress] = 0;
+        validators[validatorId].validatorAddress = newValidatorAddress;
+        validators[validatorId].requestedAddress = address(0);
         validatorAddressToId[newValidatorAddress] = validatorId;
     }
 
-    function checkMinimumDelegation(uint validatorId, uint amount) external returns (bool) {
-        require(validatorId < validators.length, "Validator does not exist");
+    function checkMinimumDelegation(uint validatorId, uint amount)
+        external
+        checkValidatorExists(validatorId)
+        returns (bool)
+    {
         return validators[validatorId].minimumDelegationAmount <= amount ? true : false;
     }
 
@@ -89,34 +117,30 @@ contract ValidatorService is Permissions {
         return getValidator(validatorId).nodeIndexes;
     }
 
-    function pushNode(uint validatorId, uint nodeIndex) external {
-        // TODO: only validator can push node
+    function pushNode(address validatorAddress, uint nodeIndex) external allow("SkaleManager") {
+        uint validatorId = getValidatorId(validatorAddress);
         validators[validatorId].nodeIndexes.push(nodeIndex);
     }
 
-    function getValidator(uint validatorId) public view returns (Validator memory) {
-        require(checkValidatorExists(validatorId), "Validator does not exist");
+    function checkPossibilityCreatingNode(address validatorAddress) external allow("SkaleManager") {
+        DelegationController delegationController = DelegationController(
+            contractManager.getContract("DelegationController")
+        );
+        uint validatorId = getValidatorId(validatorAddress);
+        uint[] memory validatorNodes = validators[validatorId].nodeIndexes;
+        uint delegationsTotal = delegationController.getDelegationsTotal(validatorId);
+        uint MSR = IConstants(contractManager.getContract("Constants")).MSR();
+        require((validatorNodes.length + 1) * MSR <= delegationsTotal, "Validator has to meet Minimum Staking Requirement");
+    }
+
+    function getValidator(uint validatorId) public view checkValidatorExists(validatorId) returns (Validator memory) {
         return validators[validatorId];
     }
 
     function getValidatorId(address validatorAddress) public view returns (uint) {
-        require(
-            validatorAddress == validators[validatorAddressToId[validatorAddress]].validatorAddress,
-            "Validator with such address doesn't exist"
-        );
+        require(validatorAddressToId[validatorAddress] != 0, "Validator with such address doesn't exist");
         return validatorAddressToId[validatorAddress];
     }
 
-    function checkValidatorExists(uint validatorId) public view returns (bool) {
-        return validatorId < validators.length ? true : false;
-    }
 
-    // function createNode(address validatorAddress) external {
-    //     uint validatorId = validatorAddressToId[validatorAddress];
-    //     uint[] memory validatorNodes = validators[validatorId].nodeIndexes;
-    //     for (uint i = 0; i < validato)
-    //     // require(validators[validatorId].nodeIndexes.length * MSR <= )
-    //     // msr
-    //     // bond
-    // }
 }

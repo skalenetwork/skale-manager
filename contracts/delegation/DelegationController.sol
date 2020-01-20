@@ -37,15 +37,12 @@ contract DelegationController is Permissions {
     /// @notice delegations will never be deleted to index in this array may be used like delegation id
     Delegation[] public delegations;
 
-    ///       holder => delegationId
+    ///       holder => delegationId[]
     mapping (address => uint[]) private _delegationsByHolder;
 
     /// validatorId => delegationId[]
     mapping (uint => uint[]) private _activeByValidator;
 
-
-    //validatorId => sum of tokens multiplied by stake multiplier each holder
-    mapping (uint => uint) public effectiveDelegationsTotal;
     //validatorId => sum of tokens each holder
     mapping (uint => uint) public delegationsTotal;
 
@@ -58,25 +55,21 @@ contract DelegationController is Permissions {
 
     }
 
-    function delegate(uint delegationId) external allow("DelegationRequestManager") {
-        address holder;
-        uint validatorId;
-        uint amount;
-        uint delegationPeriod;
-        // (holder, validatorId, amount, , delegationPeriod, ,)
-        Delegation memory delegation = getDelegation(delegationId);
-        uint stakeEffectiveness = DelegationPeriodManager(
-            contractManager.getContract("DelegationPeriodManager")
-        ).getStakeMultiplier(delegation.delegationPeriod);
+    function addDelegationsTotal(uint validatorId, uint amount) external allow("TokenState") {
+        delegationsTotal[validatorId] += amount;
+    }
 
-        // revert("delegate is not implemented");
+    function subDelegationsTotal(uint validatorId, uint amount) external allow("TokenState") {
+        delegationsTotal[validatorId] -= amount;
+    }
 
-
-        delegationsTotal[delegation.validatorId] += delegation.amount;
-        effectiveDelegationsTotal[delegation.validatorId] += delegation.amount * stakeEffectiveness;
-
-
-        // TODO: Lock tokens
+    function getDelegationsTotal(uint validatorId) external returns (uint) {
+        TokenState tokenState = TokenState(contractManager.getContract("TokenState"));
+        for (uint i = 0; i < _activeByValidator[validatorId].length; i++) {
+            uint delegationId = _activeByValidator[validatorId][i];
+            TokenState.State state = tokenState.getState(delegationId);
+        }
+        return delegationsTotal[validatorId];
     }
 
     function addDelegation(
@@ -149,7 +142,7 @@ contract DelegationController is Permissions {
         delegations[delegationId].amount = amount;
     }
 
-    function getDelegation(uint delegationId) public view checkDelegationExists(delegationId) returns (Delegation memory) {
+    function getDelegation(uint delegationId) external view checkDelegationExists(delegationId) returns (Delegation memory) {
         return delegations[delegationId];
     }
 

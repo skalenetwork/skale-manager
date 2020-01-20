@@ -138,10 +138,16 @@ contract TokenState is Permissions {
         } else if (state == State.ACCEPTED) {
             if (now >= _timelimit[delegationId]) {
                 state = acceptedToDelegated(delegationId);
+                uint validatorId = delegationController.getDelegation(delegationId).validatorId;
+                uint amount = delegationController.getDelegation(delegationId).amount;
+                delegationController.addDelegationsTotal(validatorId, amount);
             }
         } else if (state == State.ENDING_DELEGATED) {
             if (now >= _timelimit[delegationId]) {
                 state = endingDelegatedToUnlocked(delegationId, delegationController.getDelegation(delegationId));
+                uint validatorId = delegationController.getDelegation(delegationId).validatorId;
+                uint amount = delegationController.getDelegation(delegationId).amount;
+                delegationController.subDelegationsTotal(validatorId, amount);
             }
         }
     }

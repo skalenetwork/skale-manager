@@ -78,9 +78,9 @@ contract NodesFunctionality is Permissions, INodesFunctionality {
      * @param data - Node's data
      * @return nodeIndex - index of Node
      */
-    function createNode(uint from, bytes calldata data) external allow("SkaleManager") returns (uint nodeIndex) {
+    function createNode(address from, bytes calldata data) external allow("SkaleManager") returns (uint nodeIndex) {
         address nodesDataAddress = contractManager.getContract("NodesData");
-        address constantsAddress = contractManager.getContract("Constants");
+        // address constantsAddress = contractManager.getContract("Constants");
         // require(value >= IConstants(constantsAddress).NODE_DEPOSIT(), "Not enough money to create Node");
         uint16 nonce;
         bytes4 ip;

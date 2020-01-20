@@ -74,6 +74,9 @@ contract ConstantsHolder is IConstants, Permissions {
     // initial number of validators
     uint public constant NUMBER_OF_VALIDATORS = 24;
 
+    // MSR - Minimum staking requirement
+    uint public constant MSR = 100;
+
     // Reward period - 30 days (each 30 days Node would be granted for bounty)
     uint32 public rewardPeriod = 3600; // Test parameters
 

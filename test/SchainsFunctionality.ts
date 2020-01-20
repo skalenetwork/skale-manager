@@ -129,7 +129,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                 const nodesCount = 2;
                 for (const index of Array.from(Array(nodesCount).keys())) {
                     const hexIndex = ("0" + index.toString(16)).slice(-2);
-                    await nodesFunctionality.createNode(0,
+                    await nodesFunctionality.createNode(validator,
                         "0x00" +
                         "2161" +
                         "0000" +
@@ -177,7 +177,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
 
                 for (const index of Array.from(Array(nodesCount).keys())) {
                     const hexIndex = ("1" + index.toString(16)).slice(-2);
-                    await nodesFunctionality.createNode(0,
+                    await nodesFunctionality.createNode(validator,
                         "0x00" +
                         "2161" +
                         "0000" +
@@ -205,7 +205,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                 const nodesCount = 4;
                 for (const index of Array.from(Array(nodesCount).keys())) {
                     const hexIndex = ("0" + index.toString(16)).slice(-2);
-                    await nodesFunctionality.createNode(0,
+                    await nodesFunctionality.createNode(validator,
                         "0x00" +
                         "2161" +
                         "0000" +
@@ -260,7 +260,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
 
                 data = await nodesData.getNodesWithFreeSpace(32);
 
-                await nodesFunctionality.createNode(validator, "100000000000000000000",
+                await nodesFunctionality.createNode(validator,
                         "0x00" +
                         "2161" +
                         "0000" +
@@ -378,7 +378,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                 const nodesCount = 20;
                 for (const index of Array.from(Array(nodesCount).keys())) {
                     const hexIndex = ("0" + index.toString(16)).slice(-2);
-                    await nodesFunctionality.createNode(0,
+                    await nodesFunctionality.createNode(validator,
                         "0x00" +
                         "2161" +
                         "0000" +
@@ -439,7 +439,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                 const nodesCount = 16;
                 for (const index of Array.from(Array(nodesCount).keys())) {
                     const hexIndex = ("0" + index.toString(16)).slice(-2);
-                    await nodesFunctionality.createNode(0,
+                    await nodesFunctionality.createNode(validator,
                         "0x00" +
                         "2161" +
                         "0000" +

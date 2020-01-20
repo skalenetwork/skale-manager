@@ -65,7 +65,6 @@ contract DelegationRequestManager is Permissions {
             ).isDelegationPeriodAllowed(delegationPeriod),
             "This delegation period is not allowed"
         );
-        require(validatorService.checkValidatorExists(validatorId), "Validator does not exist");
 
         // check that there is enough money
         uint holderBalance = SkaleToken(contractManager.getContract("SkaleToken")).balanceOf(holder);
@@ -93,10 +92,15 @@ contract DelegationRequestManager is Permissions {
             contractManager.getContract("ValidatorService")
         );
         DelegationController.Delegation memory delegation = delegationController.getDelegation(delegationId);
-        require(holderAddress == delegation.holder,"Only holder of tokens can cancel delegation request");
+        require(holderAddress == delegation.holder,"Only token holders can cancel delegation request");
+        require(
+            tokenState.getState(delegationId) == TokenState.State.PROPOSED,
+            "Token holders able to cancel only PROPOSED delegations"
+        );
         require(
             tokenState.cancel(delegationId) == TokenState.State.COMPLETED,
-            "After cancellation token should be COMPLETED");
+            "After cancellation token should be COMPLETED"
+        );
     }
 
     function acceptRequest(uint delegationId, address validatorAddress) external {
@@ -114,7 +118,6 @@ contract DelegationRequestManager is Permissions {
             validatorService.checkValidatorAddressToId(validatorAddress, delegation.validatorId),
             "No permissions to accept request"
         );
-        delegationController.delegate(delegationId);
         tokenState.accept(delegationId);
     }
 

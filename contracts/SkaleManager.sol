@@ -69,25 +69,22 @@ contract SkaleManager is IERC777Recipient, Permissions {
         if (operationType == TransactionOperation.CreateNode) {
             address nodesFunctionalityAddress = contractManager.getContract("NodesFunctionality");
             address validatorsFunctionalityAddress = contractManager.getContract("ValidatorsFunctionality");
-            ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
-            uint validatorId = validatorService.getValidatorId(from);
-            uint nodeIndex = INodesFunctionality(nodesFunctionalityAddress).createNode(validatorId, userData);
-            IValidatorsFunctionality(validatorsFunctionalityAddress).addValidator(nodeIndex);
+            // uint nodeIndex = INodesFunctionality(nodesFunctionalityAddress).createNode(from, value, userData);
+            // IValidatorsFunctionality(validatorsFunctionalityAddress).addValidator(nodeIndex);
         } else if (operationType == TransactionOperation.CreateSchain) {
             address schainsFunctionalityAddress = contractManager.getContract("SchainsFunctionality");
             ISchainsFunctionality(schainsFunctionalityAddress).addSchain(from, value, userData);
         }
     }
 
-    // function createNode(bytes calldata userData) external {
-    //     // check validator and MSR
-    //     uint from; // = get Validator Index
-    //     address nodesFunctionalityAddress = contractManager.getContract("NodesFunctionality");
-    //     address validatorsFunctionalityAddress = contractManager.getContract("ValidatorsFunctionality");
-    //     uint nodeIndex = INodesFunctionality(nodesFunctionalityAddress).createNode(from, userData);
-    //     // set nodeIndex in Validator service
-    //     IValidatorsFunctionality(validatorsFunctionalityAddress).addValidator(nodeIndex);
-    // }
+    function createNode(bytes calldata data) external {
+        INodesFunctionality nodesFunctionality = INodesFunctionality(contractManager.getContract("NodesFunctionality"));
+        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
+        validatorService.checkPossibilityCreatingNode(msg.sender);
+        uint nodeIndex = nodesFunctionality.createNode(msg.sender, data);
+        validatorService.pushNode(msg.sender, nodeIndex);
+
+    }
 
     function initWithdrawDeposit(uint nodeIndex) external {
         address nodesFunctionalityAddress = contractManager.getContract("NodesFunctionality");
