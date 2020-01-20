@@ -1,11 +1,23 @@
 import BigNumber from "bignumber.js";
 import { ContractManagerContract,
          ContractManagerInstance,
+         DelegationControllerContract,
+         DelegationControllerInstance,
+         DelegationServiceContract,
+         DelegationServiceInstance,
          SkaleTokenContract,
-         SkaleTokenInstance } from "../types/truffle-contracts";
+         SkaleTokenInstance, 
+         TimeHelpersContract,
+         TimeHelpersInstance,
+         TokenStateContract,
+         TokenStateInstance} from "../types/truffle-contracts";
 
 const ContractManager: ContractManagerContract = artifacts.require("./ContractManager");
 const SkaleToken: SkaleTokenContract = artifacts.require("./SkaleToken");
+const TimeHelpers: TimeHelpersContract = artifacts.require("./TimeHelpers");
+const TokenState: TokenStateContract = artifacts.require("./TokenState");
+const DelegationController: DelegationControllerContract = artifacts.require("./DelegationController");
+const DelegationService: DelegationServiceContract = artifacts.require("./DelegationService");
 
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
@@ -15,6 +27,11 @@ chai.use(chaiAsPromised);
 contract("SkaleToken", ([owner, holder, receiver, nilAddress, accountWith99]) => {
   let skaleToken: SkaleTokenInstance;
   let contractManager: ContractManagerInstance;
+  let timeHelpers: TimeHelpersInstance;
+  let delegationController: DelegationControllerInstance;
+  let tokenState: TokenStateInstance;
+  let delegationService: DelegationServiceInstance;
+
   const TOKEN_CAP: number = 5000000000;
   const TOTAL_SUPPLY = 10000000;
 
@@ -30,6 +47,18 @@ contract("SkaleToken", ([owner, holder, receiver, nilAddress, accountWith99]) =>
     }
     contractManager = await ContractManager.new({from: owner});
     skaleToken = await SkaleToken.new(contractManager.address, [], { from: owner });
+
+    timeHelpers = await TimeHelpers.new();
+    await contractManager.setContractsAddress("TimeHelpers", timeHelpers.address);
+
+    delegationController = await DelegationController.new(contractManager.address);
+    await contractManager.setContractsAddress("DelegationController", delegationController.address);
+
+    delegationService = await DelegationService.new(contractManager.address, {from: owner});
+    await contractManager.setContractsAddress("DelegationService", delegationService.address);
+
+    tokenState = await TokenState.new(contractManager.address);
+    await contractManager.setContractsAddress("TokenState", tokenState.address);
   });
 
   it("should have the correct name", async () => {

@@ -518,7 +518,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
 
                 it("should fail to get bounty if sender is not owner of the node", async () => {
                     await skaleManager.getBounty(1, {from: hacker})
-                        .should.be.eventually.rejectedWith("Node does not exist for Message sender");
+                        .should.be.eventually.rejectedWith("Validator with such address doesn't exist");
                 });
 
                 it("should get bounty", async () => {
