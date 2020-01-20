@@ -177,7 +177,9 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
         distributor = await Distributor.new(contractManager.address);
         await contractManager.setContractsAddress("Distributor", distributor.address);
 
-        await skaleToken.mint(owner, skaleBalances.address, "100000000000000000000000000", "0x000000000000000000000000" + skaleManager.address.slice(2), "0x")
+        const prefix = "0x000000000000000000000000";
+        const premined = "100000000000000000000000000";
+        await skaleToken.mint(owner, skaleBalances.address, premined, prefix + skaleManager.address.slice(2), "0x");
         await delegationService.registerValidator("Validator", "D2 is even", 150, 0, {from: validator});
     });
 
@@ -500,7 +502,6 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
                     const balanceBefore = web3.utils.toBN(await skaleBalances.getBalance(validator));
                     const bounty = web3.utils.toBN("893061271147690900777");
 
-                    
                     await skaleManager.getBounty(1, {from: validator});
 
                     const balanceAfter = web3.utils.toBN(await skaleBalances.getBalance(validator));

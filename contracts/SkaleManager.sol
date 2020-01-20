@@ -262,7 +262,12 @@ contract SkaleManager is IERC777Recipient, Permissions {
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
         address delegationServiceAddress = contractManager.getContract("DelegationService");
         uint validatorId = validatorService.getValidatorId(miner);
-        skaleBalances.withdrawBalanceWithData(address(this), delegationServiceAddress, uint(bountyForMiner), abi.encodePacked(validatorId));
+        skaleBalances.withdrawBalanceWithData(
+            address(this),
+            delegationServiceAddress,
+            uint(bountyForMiner),
+            abi.encodePacked(validatorId)
+        );
     }
 
     function fallbackOperationTypeConvert(bytes memory data) internal pure returns (TransactionOperation) {

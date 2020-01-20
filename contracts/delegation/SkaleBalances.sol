@@ -44,7 +44,14 @@ contract SkaleBalances is Permissions, IERC777Recipient {
         require(skaleToken.transfer(to, amountOfTokens), "Failed to transfer tokens");
     }
 
-    function withdrawBalanceWithData(address wallet, address to, uint amountOfTokens, bytes calldata data) external {
+    function withdrawBalanceWithData(
+        address wallet,
+        address to,
+        uint amountOfTokens,
+        bytes calldata data
+    )
+        external
+    {
         require(_bountyBalances[wallet] >= amountOfTokens, "Now enough tokens on balance for withdrawing");
         _bountyBalances[wallet] -= amountOfTokens;
 
