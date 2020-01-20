@@ -24,6 +24,7 @@ import "./interfaces/IConstants.sol";
 import "./interfaces/INodesData.sol";
 import "./interfaces/ISchainsData.sol";
 import "./interfaces/INodesFunctionality.sol";
+import "./delegation/ValidatorService.sol";
 
 
 /**
@@ -80,8 +81,7 @@ contract NodesFunctionality is Permissions, INodesFunctionality {
      */
     function createNode(address from, uint value, bytes calldata data) external allow("SkaleManager") returns (uint nodeIndex) {
         address nodesDataAddress = contractManager.getContract("NodesData");
-        address constantsAddress = contractManager.getContract("Constants");
-        require(value >= IConstants(constantsAddress).NODE_DEPOSIT(), "Not enough money to create Node");
+        require(value >= IConstants(contractManager.getContract("Constants")).NODE_DEPOSIT(), "Not enough money to create Node");
         uint16 nonce;
         bytes4 ip;
         bytes4 publicIP;
@@ -98,6 +98,8 @@ contract NodesFunctionality is Permissions, INodesFunctionality {
         require(!INodesData(nodesDataAddress).nodesNameCheck(keccak256(abi.encodePacked(name))), "Name has already registered");
         require(port > 0, "Port is zero");
 
+        uint validatorId = ValidatorService(contractManager.getContract("ValidatorService")).validatorAddressToId(from);
+
         // adds Node to NodesData contract
         nodeIndex = INodesData(nodesDataAddress).addNode(
             from,
@@ -105,7 +107,8 @@ contract NodesFunctionality is Permissions, INodesFunctionality {
             ip,
             publicIP,
             port,
-            publicKey);
+            publicKey,
+            validatorId);
         // adds Node to Fractional Nodes or to Full Nodes
         // setNodeType(nodesDataAddress, constantsAddress, nodeIndex);
 

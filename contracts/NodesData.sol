@@ -46,6 +46,7 @@ contract NodesData is INodesData, Permissions {
         // uint indexInSpaceMap;
         //address secondAddress;
         NodeStatus status;
+        uint validatorId;
     }
 
     // struct to note which Nodes and which number of Nodes owned by user
@@ -140,7 +141,8 @@ contract NodesData is INodesData, Permissions {
         bytes4 ip,
         bytes4 publicIP,
         uint16 port,
-        bytes calldata publicKey
+        bytes calldata publicKey,
+        uint validatorId
     )
         external
         allow("NodesFunctionality")
@@ -156,7 +158,8 @@ contract NodesData is INodesData, Permissions {
             startDate: uint32(block.timestamp),
             leavingDate: uint32(0),
             lastRewardDate: uint32(block.timestamp),
-            status: NodeStatus.Active
+            status: NodeStatus.Active,
+            validatorId: validatorId
         }));
         nodeIndex = nodes.length - 1;
         bytes32 nodeId = keccak256(abi.encodePacked(name));

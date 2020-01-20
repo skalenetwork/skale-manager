@@ -22,7 +22,8 @@ interface INodesData {
         bytes4 ip,
         bytes4 publicIP,
         uint16 port,
-        bytes calldata publicKey)
+        bytes calldata publicKey,
+        uint validatorId)
     external returns (uint);
     // function addFractionalNode(uint nodeIndex) external;
     // function addFullNode(uint nodeIndex) external;
