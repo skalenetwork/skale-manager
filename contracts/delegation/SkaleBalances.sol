@@ -44,6 +44,14 @@ contract SkaleBalances is Permissions, IERC777Recipient {
         require(skaleToken.transfer(to, amountOfTokens), "Failed to transfer tokens");
     }
 
+    function withdrawBalanceWithData(address wallet, address to, uint amountOfTokens, bytes calldata data) external {
+        require(_bountyBalances[wallet] >= amountOfTokens, "Now enough tokens on balance for withdrawing");
+        _bountyBalances[wallet] -= amountOfTokens;
+
+        SkaleToken skaleToken = SkaleToken(contractManager.getContract("SkaleToken"));
+        skaleToken.send(to, amountOfTokens, data);
+    }
+
     function tokensReceived(
         address operator,
         address from,
@@ -55,10 +63,15 @@ contract SkaleBalances is Permissions, IERC777Recipient {
         external
     {
         address recipient = abi.decode(userData, (address));
+        // bytes20 recAdr;
+        // assembly {
+        //     recAdr := calldataload(add(4, 196))
+        // }
+        // recipient = address(recAdr);
         stashBalance(recipient, amount);
     }
 
-    function getBalance(address wallet) external returns (uint) {
+    function getBalance(address wallet) external view returns (uint) {
         return _bountyBalances[wallet];
     }
 

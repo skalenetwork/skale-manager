@@ -210,8 +210,10 @@ contract SkaleManager is IERC777Recipient, Permissions {
         uint commonBounty;
         IConstants constants = IConstants(contractManager.getContract("Constants"));
         IManagerData managerData = IManagerData(contractManager.getContract("ManagerData"));
-        ISkaleBalances skaleBalances = ISkaleBalances(contractManager.getContract("SkaleBalances"));
+        // ISkaleBalances skaleBalances = ISkaleBalances(contractManager.getContract("SkaleBalances"));
         INodesData nodesData = INodesData(contractManager.getContract("NodesData"));
+        // ValidatorService validatorService = ValidatorService(contractManager.getContract("validatorService"));
+        // address delegationServiceAddress = contractManager.getContract("DelegationService");
 
         uint diffTime = nodesData.getNodeLastRewardDate(nodeIndex) +
             constants.rewardPeriod() +
@@ -245,12 +247,22 @@ contract SkaleManager is IERC777Recipient, Permissions {
             if (latency > constants.allowableLatency()) {
                 bountyForMiner = (constants.allowableLatency() * bountyForMiner) / latency;
             }
-            skaleBalances.stashBalance(from, uint(bountyForMiner));
+            payBounty(uint(bountyForMiner), from);
+            // uint validatorId = validatorService.getValidatorId(from);
+            // skaleBalances.withdrawBalanceWithData(address(this), delegationServiceAddress, uint(bountyForMiner), abi.encodePacked(validatorId));
         } else {
             //Need to add penalty
             bountyForMiner = 0;
         }
         return uint(bountyForMiner);
+    }
+
+    function payBounty(uint bountyForMiner, address miner) internal returns (bool) {
+        ISkaleBalances skaleBalances = ISkaleBalances(contractManager.getContract("SkaleBalances"));
+        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
+        address delegationServiceAddress = contractManager.getContract("DelegationService");
+        uint validatorId = validatorService.getValidatorId(miner);
+        skaleBalances.withdrawBalanceWithData(address(this), delegationServiceAddress, uint(bountyForMiner), abi.encodePacked(validatorId));
     }
 
     function fallbackOperationTypeConvert(bytes memory data) internal pure returns (TransactionOperation) {
