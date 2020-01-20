@@ -220,7 +220,7 @@ contract("SkaleDKG", ([validator1, validator2]) => {
             const nodesCount = 2;
             for (const index of Array.from(Array(nodesCount).keys())) {
                 const hexIndex = ("0" + index.toString(16)).slice(-2);
-                await nodesFunctionality.createNode(validatorsAccount[index], "100000000000000000000",
+                await nodesFunctionality.createNode(validatorsAccount[index],
                     "0x00" +
                     "2161" +
                     "0000" +

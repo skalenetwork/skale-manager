@@ -24,6 +24,7 @@ import "./interfaces/IConstants.sol";
 import "./interfaces/INodesData.sol";
 import "./interfaces/ISchainsData.sol";
 import "./interfaces/INodesFunctionality.sol";
+import "./delegation/ValidatorService.sol";
 
 
 /**
@@ -74,14 +75,13 @@ contract NodesFunctionality is Permissions, INodesFunctionality {
      * @dev createNode - creates new Node and add it to the NodesData contract
      * function could be only run by SkaleManager
      * @param from - owner of Node
-     * @param value - received amount of SKL
      * @param data - Node's data
      * @return nodeIndex - index of Node
      */
-    function createNode(address from, uint value, bytes calldata data) external allow("SkaleManager") returns (uint nodeIndex) {
+    function createNode(address from, bytes calldata data) external allow("SkaleManager") returns (uint nodeIndex) {
         address nodesDataAddress = contractManager.getContract("NodesData");
         address constantsAddress = contractManager.getContract("Constants");
-        require(value >= IConstants(constantsAddress).NODE_DEPOSIT(), "Not enough money to create Node");
+        // require(value >= IConstants(constantsAddress).NODE_DEPOSIT(), "Not enough money to create Node");
         uint16 nonce;
         bytes4 ip;
         bytes4 publicIP;

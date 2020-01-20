@@ -103,7 +103,7 @@ contract("DelegationRequestManager", ([owner, holder1, holder2, validator, valid
         let info: string;
         let delegationId: number;
         beforeEach(async () => {
-            validatorId = 0;
+            validatorId = 1;
             amount = 100;
             delegationPeriod = 3;
             info = "VERY NICE";
@@ -116,9 +116,9 @@ contract("DelegationRequestManager", ([owner, holder1, holder2, validator, valid
             });
 
         it("should reject delegation if validator with such id doesn't exist", async () => {
-            const nonExistedValidatorId = 1;
+            const nonExistedValidatorId = 2;
             await delegationService.delegate(nonExistedValidatorId, amount, delegationPeriod, info, {from: holder1})
-                .should.be.eventually.rejectedWith("Validator does not exist");
+                .should.be.eventually.rejectedWith("Validator with such id doesn't exist");
         });
 
         it("should reject delegation if it doesn't meet minimum delegation amount", async () => {
@@ -177,19 +177,19 @@ contract("DelegationRequestManager", ([owner, holder1, holder2, validator, valid
 
             it("should reject canceling request if it isn't actualy holder of tokens", async () => {
                 await delegationService.cancelPendingDelegation(delegationId, {from: holder2})
-                    .should.be.rejectedWith("Only holder of tokens can cancel delegation request");
+                    .should.be.rejectedWith("Only token holders can cancel delegation request");
             });
 
             it("should reject canceling request if validator already accepted it", async () => {
                 await delegationService.acceptPendingDelegation(delegationId, {from: validator});
                 await delegationService.cancelPendingDelegation(delegationId, {from: holder1})
-                    .should.be.rejectedWith("Can't cancel delegation request");
+                    .should.be.rejectedWith("Token holders able to cancel only PROPOSED delegations");
             });
 
             it("should reject canceling request if delegation request already rejected", async () => {
                 await delegationService.cancelPendingDelegation(delegationId, {from: holder1});
                 await delegationService.cancelPendingDelegation(delegationId, {from: holder1})
-                    .should.be.rejectedWith("Can't cancel delegation request");
+                    .should.be.rejectedWith("Token holders able to cancel only PROPOSED delegations");
             });
 
             it("should change state of tokens to COMPLETED if delegation was cancelled", async () => {

@@ -26,4 +26,5 @@ interface IConstants {
     function deltaPeriod() external view returns (uint);
     function SIX_YEARS() external view returns (uint32);
     function NUMBER_OF_VALIDATORS() external view returns (uint);
+    function MSR() external view returns (uint);
 }

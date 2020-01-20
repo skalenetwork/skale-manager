@@ -52,7 +52,9 @@ interface IValidatorDelegation {
 
     function setValidatorDescription(string calldata descripton) external;
 
-    function setValidatorAddress(address newAddress) external;
+    function requestForNewAddress(address newAddress) external;
+
+    function confirmNewAddress(uint validatorId) external;
 
     function setMinimumDelegationAmount(uint amount) external;
 

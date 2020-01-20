@@ -47,14 +47,13 @@ contract("NodesFunctionality", ([owner, validator]) => {
     });
 
     it("should fail to create node if no money", async () => {
-        await nodesFunctionality.createNode(validator, 5, "0x11")
+        await nodesFunctionality.createNode(validator, "0x11")
             .should.be.eventually.rejectedWith("Not enough money to create Node");
     });
 
     it("should fail to create node if ip is zero", async () => {
         await nodesFunctionality.createNode(
             validator,
-            "0x56bc75e2d63100000",
             "0x01" +
             "2161" + // port
             "0000" + // nonce
@@ -69,7 +68,6 @@ contract("NodesFunctionality", ([owner, validator]) => {
     it("should fail if data string is too short", async () => {
         await nodesFunctionality.createNode(
         validator,
-        "0x56bc75e2d63100000",
         "0x01" +
         "2161" + // port
         "0000" + // nonce
@@ -83,7 +81,6 @@ contract("NodesFunctionality", ([owner, validator]) => {
     it("should fail to create node if port is zero", async () => {
         await nodesFunctionality.createNode(
             validator,
-            "0x56bc75e2d63100000",
             "0x01" +
             "0000" + // port
             "0000" + // nonce
@@ -98,7 +95,6 @@ contract("NodesFunctionality", ([owner, validator]) => {
     it("should create node", async () => {
         await nodesFunctionality.createNode(
             validator,
-            "0x56bc75e2d63100000",
             "0x01" +
             "2161" + // port
             "0000" + // nonce
@@ -123,7 +119,6 @@ contract("NodesFunctionality", ([owner, validator]) => {
         beforeEach(async () => {
             await nodesFunctionality.createNode(
                 validator,
-                "0x56bc75e2d63100000",
                 "0x01" +
                 "2161" + // port
                 "0000" + // nonce
@@ -194,7 +189,6 @@ contract("NodesFunctionality", ([owner, validator]) => {
         beforeEach(async () => {
             await nodesFunctionality.createNode(
                 validator,
-                "0x56bc75e2d63100000",
                 "0x01" +
                 "2161" + // port
                 "0000" + // nonce
@@ -205,7 +199,6 @@ contract("NodesFunctionality", ([owner, validator]) => {
                 "6432"); // name
             await nodesFunctionality.createNode(
                 validator,
-                "0x56bc75e2d63100000",
                 "0x01" +
                 "2161" + // port
                 "0000" + // nonce

@@ -28,6 +28,7 @@ import "./interfaces/IValidatorsFunctionality.sol";
 import "./interfaces/ISchainsFunctionality.sol";
 import "./interfaces/IManagerData.sol";
 import "./interfaces/ISkaleBalances.sol";
+import "./delegation/ValidatorService.sol";
 import "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
 import "@openzeppelin/contracts/introspection/IERC1820Registry.sol";
 
@@ -68,12 +69,21 @@ contract SkaleManager is IERC777Recipient, Permissions {
         if (operationType == TransactionOperation.CreateNode) {
             address nodesFunctionalityAddress = contractManager.getContract("NodesFunctionality");
             address validatorsFunctionalityAddress = contractManager.getContract("ValidatorsFunctionality");
-            uint nodeIndex = INodesFunctionality(nodesFunctionalityAddress).createNode(from, value, userData);
-            IValidatorsFunctionality(validatorsFunctionalityAddress).addValidator(nodeIndex);
+            // uint nodeIndex = INodesFunctionality(nodesFunctionalityAddress).createNode(from, value, userData);
+            // IValidatorsFunctionality(validatorsFunctionalityAddress).addValidator(nodeIndex);
         } else if (operationType == TransactionOperation.CreateSchain) {
             address schainsFunctionalityAddress = contractManager.getContract("SchainsFunctionality");
             ISchainsFunctionality(schainsFunctionalityAddress).addSchain(from, value, userData);
         }
+    }
+
+    function createNode(bytes calldata data) external {
+        INodesFunctionality nodesFunctionality = INodesFunctionality(contractManager.getContract("NodesFunctionality"));
+        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
+        validatorService.checkPossibilityCreatingNode(msg.sender);
+        uint nodeIndex = nodesFunctionality.createNode(msg.sender, data);
+        validatorService.pushNode(msg.sender, nodeIndex);
+
     }
 
     function initWithdrawDeposit(uint nodeIndex) external {
