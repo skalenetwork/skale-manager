@@ -33,16 +33,16 @@ contract ConstantsHolder is IConstants, Permissions {
     uint public constant NODE_DEPOSIT = 100 * 1e18;
 
     // part of Node for Tiny Skale-chain (1/128 of Node)
-    uint public constant TINY_DIVISOR = 128;
+    uint8 public constant TINY_DIVISOR = 128;
 
     // part of Node for Small Skale-chain (1/8 of Node)
-    uint public constant SMALL_DIVISOR = 8;
+    uint8 public constant SMALL_DIVISOR = 8;
 
     // part of Node for Medium Skale-chain (full Node)
-    uint public constant MEDIUM_DIVISOR = 1;
+    uint8 public constant MEDIUM_DIVISOR = 1;
 
     // part of Node for Medium Test Skale-chain (1/4 of Node)
-    uint public constant MEDIUM_TEST_DIVISOR = 4;
+    uint8 public constant MEDIUM_TEST_DIVISOR = 4;
 
     // typically number of Nodes for Skale-chain (16 Nodes)
     uint public constant NUMBER_OF_NODES_FOR_SCHAIN = 16;

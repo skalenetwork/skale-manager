@@ -1,21 +1,14 @@
-import { ContractManagerContract,
-         ContractManagerInstance,
-         DelegationControllerContract,
+import { ContractManagerInstance,
          DelegationControllerInstance,
-         TimeHelpersContract,
-         TimeHelpersInstance,
-         TokenStateContract,
          TokenStateInstance } from "../../types/truffle-contracts";
 
-const ContractManager: ContractManagerContract = artifacts.require("./ContractManager");
-const TimeHelpers: TimeHelpersContract = artifacts.require("./TimeHelpers");
-const TokenState: TokenStateContract = artifacts.require("./TokenState");
-const DelegationController: DelegationControllerContract = artifacts.require("./DelegationController");
-
+import { deployContractManager } from "../utils/deploy/contractManager";
 import { currentTime, skipTime } from "../utils/time";
 
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
+import { deployDelegationController } from "../utils/deploy/delegation/delegationController";
+import { deployTokenState } from "../utils/deploy/delegation/tokenState";
 chai.should();
 chai.use(chaiAsPromised);
 
@@ -29,21 +22,13 @@ enum State {
 
 contract("TokenState", ([owner, holder]) => {
     let contractManager: ContractManagerInstance;
-    let timeHelpers: TimeHelpersInstance;
     let delegationController: DelegationControllerInstance;
     let tokenState: TokenStateInstance;
 
     beforeEach(async () => {
-        contractManager = await ContractManager.new();
-
-        timeHelpers = await TimeHelpers.new();
-        await contractManager.setContractsAddress("TimeHelpers", timeHelpers.address);
-
-        delegationController = await DelegationController.new(contractManager.address);
-        await contractManager.setContractsAddress("DelegationController", delegationController.address);
-
-        tokenState = await TokenState.new(contractManager.address);
-        await contractManager.setContractsAddress("TokenState", tokenState.address);
+        contractManager = await deployContractManager();
+        delegationController = await deployDelegationController(contractManager);
+        tokenState = await deployTokenState(contractManager);
     });
 
     it("should not lock tokens by default", async () => {

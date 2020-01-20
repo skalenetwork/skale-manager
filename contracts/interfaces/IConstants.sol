@@ -10,10 +10,10 @@ interface IConstants {
     function FULL_FACTOR() external view returns (uint);
     function SECONDS_TO_DAY() external view returns (uint32);
     function SECONDS_TO_YEAR() external view returns (uint32);
-    function MEDIUM_DIVISOR() external view returns (uint);
-    function TINY_DIVISOR() external view returns (uint);
-    function SMALL_DIVISOR() external view returns (uint);
-    function MEDIUM_TEST_DIVISOR() external view returns (uint);
+    function MEDIUM_DIVISOR() external view returns (uint8);
+    function TINY_DIVISOR() external view returns (uint8);
+    function SMALL_DIVISOR() external view returns (uint8);
+    function MEDIUM_TEST_DIVISOR() external view returns (uint8);
     function NUMBER_OF_NODES_FOR_SCHAIN() external view returns (uint);
     function NUMBER_OF_NODES_FOR_TEST_SCHAIN() external view returns (uint);
     function NUMBER_OF_NODES_FOR_MEDIUM_TEST_SCHAIN() external view returns (uint);

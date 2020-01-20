@@ -35,7 +35,7 @@
     "test": "truffle test && yarn tsc",
     "tsc": "tsc --noEmit",
     "tslint": "npx tslint --project .",
-    "slither": "slither . --exclude reentrancy-events,naming-convention,solc-version,assembly,timestamp,calls-loop,incorrect-equality,reentrancy-no-eth,constant-function,pragma --filter-paths @openzeppelin/contracts/,ERC777,thirdparty --truffle-version truffle@latest",
+    "slither": "slither . --exclude reentrancy-events,naming-convention,solc-version,assembly,timestamp,calls-loop,incorrect-equality,unused-return,reentrancy-no-eth,constant-function,pragma --filter-paths @openzeppelin/contracts/,ERC777,thirdparty --truffle-version truffle@latest",
     "fullcheck": "yarn lint && yarn tsc && yarn tslint && yarn slither"
   },
   "dependencies": {
@@ -48,7 +48,7 @@
     "chai-as-promised": "^7.1.1",
     "ethereumjs-tx": "1.3.7",
     "solc": "^0.5.7",
-    "truffle": "^5.0.12",
+    "truffle": "^5.1.5",
     "truffle-hdwallet-provider": "^1.0.8",
     "truffle-typings": "^1.0.8",
     "ts-node": "^8.3.0",

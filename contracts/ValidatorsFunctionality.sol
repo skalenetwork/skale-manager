@@ -194,13 +194,12 @@ contract ValidatorsFunctionality is GroupsFunctionality, IValidatorsFunctionalit
     }
 
     function rotateNode(bytes32 schainId) external {
-        bytes32 schainIdsEvent;
         uint newNodeIndexEvent;
-        (schainIdsEvent, newNodeIndexEvent) = selectNodeToGroup(schainId);
-        emit ValidatorRotated(schainIdsEvent, newNodeIndexEvent);
+        newNodeIndexEvent = selectNodeToGroup(schainId);
+        emit ValidatorRotated(schainId, newNodeIndexEvent);
     }
 
-    function selectNodeToGroup(bytes32 groupIndex) internal returns (bytes32, uint) {
+    function selectNodeToGroup(bytes32 groupIndex) internal returns (uint) {
         address dataAddress = contractManager.contracts(keccak256(abi.encodePacked(dataName)));
         require(IGroupsData(dataAddress).isGroupActive(groupIndex), "Group is not active");
         bytes32 groupData = IGroupsData(dataAddress).getGroupData(groupIndex);
@@ -214,7 +213,7 @@ contract ValidatorsFunctionality is GroupsFunctionality, IValidatorsFunctionalit
             if (comparator(groupIndex, indexOfNode)) {
                 IGroupsData(dataAddress).setException(groupIndex, indexOfNode);
                 IGroupsData(dataAddress).setNodeInGroup(groupIndex, indexOfNode);
-                return (groupIndex, indexOfNode);
+                return indexOfNode;
             }
             hash = uint(keccak256(abi.encodePacked(hash, indexOfNode)));
             iterations++;

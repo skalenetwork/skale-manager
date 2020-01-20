@@ -138,6 +138,10 @@ contract DelegationController is Permissions {
         return active;
     }
 
+    function setDelegationAmount(uint delegationId, uint amount) external checkDelegationExists(delegationId) {
+        delegations[delegationId].amount = amount;
+    }
+
     function getDelegation(uint delegationId) external view checkDelegationExists(delegationId) returns (Delegation memory) {
         return delegations[delegationId];
     }
