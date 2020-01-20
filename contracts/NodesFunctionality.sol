@@ -24,6 +24,7 @@ import "./interfaces/IConstants.sol";
 import "./interfaces/INodesData.sol";
 import "./interfaces/ISchainsData.sol";
 import "./interfaces/INodesFunctionality.sol";
+import "./delegation/ValidatorService.sol";
 
 
 /**
@@ -34,7 +35,7 @@ contract NodesFunctionality is Permissions, INodesFunctionality {
     // informs that Node is created
     event NodeCreated(
         uint nodeIndex,
-        address owner,
+        uint validatorId,
         string name,
         bytes4 ip,
         bytes4 publicIP,
@@ -74,14 +75,13 @@ contract NodesFunctionality is Permissions, INodesFunctionality {
      * @dev createNode - creates new Node and add it to the NodesData contract
      * function could be only run by SkaleManager
      * @param from - owner of Node
-     * @param value - received amount of SKL
      * @param data - Node's data
      * @return nodeIndex - index of Node
      */
-    function createNode(address from, uint value, bytes calldata data) external allow("SkaleManager") returns (uint nodeIndex) {
+    function createNode(uint from, bytes calldata data) external allow("SkaleManager") returns (uint nodeIndex) {
         address nodesDataAddress = contractManager.getContract("NodesData");
         address constantsAddress = contractManager.getContract("Constants");
-        require(value >= IConstants(constantsAddress).NODE_DEPOSIT(), "Not enough money to create Node");
+        // require(value >= IConstants(constantsAddress).NODE_DEPOSIT(), "Not enough money to create Node");
         uint16 nonce;
         bytes4 ip;
         bytes4 publicIP;
@@ -130,7 +130,10 @@ contract NodesFunctionality is Permissions, INodesFunctionality {
     function removeNode(address from, uint nodeIndex) external allow("SkaleManager") {
         address nodesDataAddress = contractManager.getContract("NodesData");
 
-        require(INodesData(nodesDataAddress).isNodeExist(from, nodeIndex), "Node does not exist for message sender");
+        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
+        uint validatorId = validatorService.getValidatorId(from);
+
+        require(INodesData(nodesDataAddress).isNodeExist(validatorId, nodeIndex), "Node does not exist for message sender");
         require(INodesData(nodesDataAddress).isNodeActive(nodeIndex), "Node is not Active");
 
         INodesData(nodesDataAddress).setNodeLeft(nodeIndex);
@@ -170,7 +173,10 @@ contract NodesFunctionality is Permissions, INodesFunctionality {
     function initWithdrawDeposit(address from, uint nodeIndex) external allow("SkaleManager") returns (bool) {
         address nodesDataAddress = contractManager.getContract("NodesData");
 
-        require(INodesData(nodesDataAddress).isNodeExist(from, nodeIndex), "Node does not exist for message sender");
+        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
+        uint validatorId = validatorService.getValidatorId(from);
+
+        require(INodesData(nodesDataAddress).isNodeExist(validatorId, nodeIndex), "Node does not exist for message sender");
         require(INodesData(nodesDataAddress).isNodeActive(nodeIndex), "Node is not Active");
 
         INodesData(nodesDataAddress).setNodeLeaving(nodeIndex);
@@ -194,7 +200,10 @@ contract NodesFunctionality is Permissions, INodesFunctionality {
     function completeWithdrawDeposit(address from, uint nodeIndex) external allow("SkaleManager") returns (uint) {
         address nodesDataAddress = contractManager.getContract("NodesData");
 
-        require(INodesData(nodesDataAddress).isNodeExist(from, nodeIndex), "Node does not exist for message sender");
+        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
+        uint validatorId = validatorService.getValidatorId(from);
+
+        require(INodesData(nodesDataAddress).isNodeExist(validatorId, nodeIndex), "Node does not exist for message sender");
         require(INodesData(nodesDataAddress).isNodeLeaving(nodeIndex), "Node is no Leaving");
         require(INodesData(nodesDataAddress).isLeavingPeriodExpired(nodeIndex), "Leaving period is not expired");
 

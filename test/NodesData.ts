@@ -31,7 +31,8 @@ contract("NodesData", ([owner, validator]) => {
     });
 
     it("should add node", async () => {
-        await nodesData.addNode(validator, "d2", "0x7f000001", "0x7f000002", 8545, "0x1122334455");
+        // console.log("Staring");
+        await nodesData.addNode(1, "d2", "0x7f000001", "0x7f000002", 8545, "0x1122334455");
 
         const node = await nodesData.nodes(0);
 
@@ -57,7 +58,7 @@ contract("NodesData", ([owner, validator]) => {
 
     describe("when a node is added", async () => {
         beforeEach(async () => {
-            await nodesData.addNode(validator, "d2", "0x7f000001", "0x7f000002", 8545, "0x1122334455");
+            await nodesData.addNode(1, "d2", "0x7f000001", "0x7f000002", 8545, "0x1122334455");
         });
 
         it("should add a fractional node", async () => {
@@ -248,8 +249,8 @@ contract("NodesData", ([owner, validator]) => {
 
     describe("when two nodes are added", async () => {
         beforeEach(async () => {
-            await nodesData.addNode(validator, "d2", "0x7f000001", "0x7f000002", 8545, "0x1122334455");
-            await nodesData.addNode(validator, "d3", "0x7f000002", "0x7f000003", 8545, "0x1122334455");
+            await nodesData.addNode(1, "d2", "0x7f000001", "0x7f000002", 8545, "0x1122334455");
+            await nodesData.addNode(1, "d3", "0x7f000002", "0x7f000003", 8545, "0x1122334455");
         });
 
         describe("when nodes are registered as fractional", async () => {

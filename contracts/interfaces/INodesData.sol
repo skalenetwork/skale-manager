@@ -10,14 +10,14 @@ interface INodesData {
     function nodesLink(uint nodeIndex) external view returns (uint, bool);
     function getNumberOfFractionalNodes() external view returns (uint);
     function getNumberOfFullNodes() external view returns (uint);
-    function isNodeExist(address from, uint nodeIndex) external view returns (bool);
+    function isNodeExist(uint from, uint nodeIndex) external view returns (bool);
     function isNodeActive(uint nodeIndex) external view returns (bool);
     function isNodeLeaving(uint nodeIndex) external view returns (bool);
     function isNodeLeft(uint nodeIndex) external view returns (bool);
     function isLeavingPeriodExpired(uint nodeIndex) external view returns (bool);
     function isTimeForReward(uint nodeIndex) external view returns (bool);
     function addNode(
-        address from,
+        uint from,
         string calldata name,
         bytes4 ip,
         bytes4 publicIP,

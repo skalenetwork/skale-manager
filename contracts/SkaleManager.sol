@@ -28,6 +28,7 @@ import "./interfaces/IValidatorsFunctionality.sol";
 import "./interfaces/ISchainsFunctionality.sol";
 import "./interfaces/IManagerData.sol";
 import "./interfaces/ISkaleBalances.sol";
+import "./delegation/ValidatorService.sol";
 import "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
 import "@openzeppelin/contracts/introspection/IERC1820Registry.sol";
 
@@ -68,13 +69,25 @@ contract SkaleManager is IERC777Recipient, Permissions {
         if (operationType == TransactionOperation.CreateNode) {
             address nodesFunctionalityAddress = contractManager.getContract("NodesFunctionality");
             address validatorsFunctionalityAddress = contractManager.getContract("ValidatorsFunctionality");
-            uint nodeIndex = INodesFunctionality(nodesFunctionalityAddress).createNode(from, value, userData);
+            ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
+            uint validatorId = validatorService.getValidatorId(from);
+            uint nodeIndex = INodesFunctionality(nodesFunctionalityAddress).createNode(validatorId, userData);
             IValidatorsFunctionality(validatorsFunctionalityAddress).addValidator(nodeIndex);
         } else if (operationType == TransactionOperation.CreateSchain) {
             address schainsFunctionalityAddress = contractManager.getContract("SchainsFunctionality");
             ISchainsFunctionality(schainsFunctionalityAddress).addSchain(from, value, userData);
         }
     }
+
+    // function createNode(bytes calldata userData) external {
+    //     // check validator and MSR
+    //     uint from; // = get Validator Index
+    //     address nodesFunctionalityAddress = contractManager.getContract("NodesFunctionality");
+    //     address validatorsFunctionalityAddress = contractManager.getContract("ValidatorsFunctionality");
+    //     uint nodeIndex = INodesFunctionality(nodesFunctionalityAddress).createNode(from, userData);
+    //     // set nodeIndex in Validator service
+    //     IValidatorsFunctionality(validatorsFunctionalityAddress).addValidator(nodeIndex);
+    // }
 
     function initWithdrawDeposit(uint nodeIndex) external {
         address nodesFunctionalityAddress = contractManager.getContract("NodesFunctionality");
@@ -123,7 +136,9 @@ contract SkaleManager is IERC777Recipient, Permissions {
         uint32 latency) external
     {
         address nodesDataAddress = contractManager.getContract("NodesData");
-        require(INodesData(nodesDataAddress).isNodeExist(msg.sender, fromValidatorIndex), "Node does not exist for Message sender");
+        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
+        uint validatorId = validatorService.getValidatorId(msg.sender);
+        require(INodesData(nodesDataAddress).isNodeExist(validatorId, fromValidatorIndex), "Node does not exist for Message sender");
         address validatorsFunctionalityAddress = contractManager.getContract("ValidatorsFunctionality");
         IValidatorsFunctionality(validatorsFunctionalityAddress).sendVerdict(
             fromValidatorIndex,
@@ -139,7 +154,9 @@ contract SkaleManager is IERC777Recipient, Permissions {
         uint32[] calldata latencies) external
     {
         address nodesDataAddress = contractManager.getContract("NodesData");
-        require(INodesData(nodesDataAddress).isNodeExist(msg.sender, fromValidatorIndex), "Node does not exist for Message sender");
+        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
+        uint validatorId = validatorService.getValidatorId(msg.sender);
+        require(INodesData(nodesDataAddress).isNodeExist(validatorId, fromValidatorIndex), "Node does not exist for Message sender");
         require(toNodeIndexes.length == downtimes.length, "Incorrect data");
         require(latencies.length == downtimes.length, "Incorrect data");
         address validatorsFunctionalityAddress = contractManager.getContract("ValidatorsFunctionality");
@@ -154,7 +171,9 @@ contract SkaleManager is IERC777Recipient, Permissions {
 
     function getBounty(uint nodeIndex) external {
         address nodesDataAddress = contractManager.getContract("NodesData");
-        require(INodesData(nodesDataAddress).isNodeExist(msg.sender, nodeIndex), "Node does not exist for Message sender");
+        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
+        uint validatorId = validatorService.getValidatorId(msg.sender);
+        require(INodesData(nodesDataAddress).isNodeExist(validatorId, nodeIndex), "Node does not exist for Message sender");
         require(INodesData(nodesDataAddress).isTimeForReward(nodeIndex), "Not time for bounty");
         bool nodeIsActive = INodesData(nodesDataAddress).isNodeActive(nodeIndex);
         bool nodeIsLeaving = INodesData(nodesDataAddress).isNodeLeaving(nodeIndex);

@@ -22,6 +22,7 @@ pragma experimental ABIEncoderV2;
 import "./Permissions.sol";
 import "./interfaces/IGroupsData.sol";
 import "./interfaces/INodesData.sol";
+import "./delegation/ValidatorService.sol";
 // import "openzeppelin-solidity/contracts/utils/ReentrancyGuard.sol";
 // import "./ECDH.sol";
 // import "./Decryption.sol";
@@ -442,7 +443,9 @@ contract SkaleDKG is Permissions {
 
     function isNodeByMessageSender(uint nodeIndex, address from) internal view returns (bool) {
         address nodesDataAddress = contractManager.getContract("NodesData");
-        return INodesData(nodesDataAddress).isNodeExist(from, nodeIndex);
+        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
+        uint validatorId = validatorService.getValidatorId(from);
+        return INodesData(nodesDataAddress).isNodeExist(validatorId, nodeIndex);
     }
 
     // Fp2 operations

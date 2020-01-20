@@ -33,6 +33,7 @@ contract NodesData is INodesData, Permissions {
     enum NodeStatus {Active, Leaving, Left}
 
     struct Node {
+        uint validatorId;
         string name;
         bytes4 ip;
         bytes4 publicIP;
@@ -68,8 +69,8 @@ contract NodesData is INodesData, Permissions {
     Node[] public nodes;
     // array which contain links to subarrays of Fractional and Full Nodes
     NodeLink[] public nodesLink;
-    // mapping for checking which Nodes and which number of Nodes owned by user
-    mapping (address => CreatedNodes) public nodeIndexes;
+    // mapping for checking which Nodes and which number of Nodes owned by Validator Index
+    mapping (uint => CreatedNodes) public nodeIndexes;
     // mapping for checking is IP address busy
     mapping (bytes4 => bool) public nodesIPCheck;
     // mapping for checking is Name busy
@@ -118,7 +119,7 @@ contract NodesData is INodesData, Permissions {
      * @return index of Node
      */
     function addNode(
-        address from,
+        uint from,
         string calldata name,
         bytes4 ip,
         bytes4 publicIP,
@@ -130,6 +131,7 @@ contract NodesData is INodesData, Permissions {
         returns (uint)
     {
         nodes.push(Node({
+            validatorId: from,
             name: name,
             ip: ip,
             publicIP: publicIP,
@@ -309,7 +311,7 @@ contract NodesData is INodesData, Permissions {
      * @param nodeIndex - index of Node
      * @return if exist - true, else - false
      */
-    function isNodeExist(address from, uint nodeIndex) external view returns (bool) {
+    function isNodeExist(uint from, uint nodeIndex) external view returns (bool) {
         return nodeIndexes[from].isNodeExist[nodeIndex];
     }
 
@@ -478,11 +480,11 @@ contract NodesData is INodesData, Permissions {
      * @return activeNodesbyAddress - array of indexes of Active Nodes, which were created
      * by msg.sender
      */
-    function getActiveNodesByAddress() external view returns (uint[] memory activeNodesByAddress) {
-        activeNodesByAddress = new uint[](nodeIndexes[msg.sender].numberOfNodes);
+    function getActiveNodesByValidatorId(uint validatorId) external view returns (uint[] memory activeNodesByAddress) {
+        activeNodesByAddress = new uint[](nodeIndexes[validatorId].numberOfNodes);
         uint indexOfActiveNodesByAddress = 0;
         for (uint indexOfNodes = 0; indexOfNodes < nodes.length; indexOfNodes++) {
-            if (nodeIndexes[msg.sender].isNodeExist[indexOfNodes] && isNodeActive(indexOfNodes)) {
+            if (nodeIndexes[validatorId].isNodeExist[indexOfNodes] && isNodeActive(indexOfNodes)) {
                 activeNodesByAddress[indexOfActiveNodesByAddress] = indexOfNodes;
                 indexOfActiveNodesByAddress++;
             }
