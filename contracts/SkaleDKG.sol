@@ -24,6 +24,9 @@ import "./interfaces/IGroupsData.sol";
 import "./interfaces/INodesData.sol";
 import "./interfaces/ISchainsFunctionality.sol";
 import "./interfaces/ISchainsFunctionalityInternal.sol";
+import "./delegation/DelegationService.sol";
+import "./NodesData.sol";
+
 
 interface IECDH {
     function deriveKey(
@@ -328,6 +331,11 @@ contract SkaleDKG is Permissions {
             );
             IGroupsData(dataAddress).setGroupFailedDKG(groupIndex);
         }
+
+        DelegationService delegationService = DelegationService(contractManager.getContract("DelegationService"));
+        NodesData nodesData = NodesData(contractManager.getContract("NodesData"));
+
+        delegationService.slash(nodesData.getValidatorId(badNode), 5);
     }
 
     function verify(
