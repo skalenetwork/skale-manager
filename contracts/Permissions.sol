@@ -42,10 +42,20 @@ contract Permissions is Ownable {
         _;
     }
 
-    modifier allowMultiple(string memory contractNameFirst, string memory contractNameSecond) {
+    modifier allowTwo(string memory contractName1, string memory contractName2) {
         require(
-            contractManager.contracts(keccak256(abi.encodePacked(contractNameFirst))) == msg.sender ||
-            contractManager.contracts(keccak256(abi.encodePacked(contractNameSecond))) == msg.sender ||
+            contractManager.contracts(keccak256(abi.encodePacked(contractName1))) == msg.sender ||
+            contractManager.contracts(keccak256(abi.encodePacked(contractName2))) == msg.sender ||
+            isOwner(),
+            "Message sender is invalid");
+        _;
+    }
+
+    modifier allowThree(string memory contractName1, string memory contractName2, string memory contractName3) {
+        require(
+            contractManager.contracts(keccak256(abi.encodePacked(contractName1))) == msg.sender ||
+            contractManager.contracts(keccak256(abi.encodePacked(contractName2))) == msg.sender ||
+            contractManager.contracts(keccak256(abi.encodePacked(contractName3))) == msg.sender ||
             isOwner(),
             "Message sender is invalid");
         _;

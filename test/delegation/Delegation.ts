@@ -1,46 +1,26 @@
-import { ContractManagerContract,
-    ContractManagerInstance,
-    DelegationControllerContract,
+import { ContractManagerInstance,
     DelegationControllerInstance,
-    DelegationPeriodManagerContract,
     DelegationPeriodManagerInstance,
-    DelegationRequestManagerContract,
-    DelegationRequestManagerInstance,
-    DelegationServiceContract,
     DelegationServiceInstance,
-    DistributorContract,
-    DistributorInstance,
-    SkaleBalancesContract,
-    SkaleBalancesInstance,
     SkaleManagerMockContract,
     SkaleManagerMockInstance,
-    SkaleTokenContract,
     SkaleTokenInstance,
-    TimeHelpersContract,
-    TimeHelpersInstance,
-    TokenStateContract,
-    TokenStateInstance,
-    ValidatorServiceContract,
-    ValidatorServiceInstance } from "../../types/truffle-contracts";
+    TokenStateInstance } from "../../types/truffle-contracts";
 
-const ContractManager: ContractManagerContract = artifacts.require("./ContractManager");
-const SkaleToken: SkaleTokenContract = artifacts.require("./SkaleToken");
-const DelegationService: DelegationServiceContract = artifacts.require("./DelegationService");
-const DelegationPeriodManager: DelegationPeriodManagerContract = artifacts.require("./DelegationPeriodManager");
-const DelegationRequestManager: DelegationRequestManagerContract = artifacts.require("./DelegationRequestManager");
-const ValidatorService: ValidatorServiceContract = artifacts.require("./ValidatorService");
-const DelegationController: DelegationControllerContract = artifacts.require("./DelegationController");
-const TimeHelpers: TimeHelpersContract = artifacts.require("./TimeHelpers");
-const TokenState: TokenStateContract = artifacts.require("./TokenState");
 const SkaleManagerMock: SkaleManagerMockContract = artifacts.require("./SkaleManagerMock");
-const SkaleBalances: SkaleBalancesContract = artifacts.require("./SkaleBalances");
-const Distributor: DistributorContract = artifacts.require("./Distributor");
 
-import { currentTime, months, skipTime, skipTimeToDate } from "../utils/time";
+import { skipTime, skipTimeToDate } from "../utils/time";
 
 import BigNumber from "bignumber.js";
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
+import { deployContractManager } from "../utils/deploy/contractManager";
+import { deployDelegationController } from "../utils/deploy/delegation/delegationController";
+import { deployDelegationPeriodManager } from "../utils/deploy/delegation/delegationPeriodManager";
+import { deployDelegationService } from "../utils/deploy/delegation/delegationService";
+import { deployTokenState } from "../utils/deploy/delegation/tokenState";
+import { deploySkaleToken } from "../utils/deploy/skaleToken";
+
 chai.should();
 chai.use(chaiAsPromised);
 
@@ -74,52 +54,23 @@ contract("Delegation", ([owner,
     let skaleToken: SkaleTokenInstance;
     let delegationService: DelegationServiceInstance;
     let delegationPeriodManager: DelegationPeriodManagerInstance;
-    let delegationRequestManager: DelegationRequestManagerInstance;
-    let validatorService: ValidatorServiceInstance;
     let delegationController: DelegationControllerInstance;
-    let timeHelpers: TimeHelpersInstance;
     let tokenState: TokenStateInstance;
     let skaleManagerMock: SkaleManagerMockInstance;
-    let skaleBalances: SkaleBalancesInstance;
-    let distributor: DistributorInstance;
 
     const defaultAmount = 100 * 1e18;
 
     beforeEach(async () => {
-        contractManager = await ContractManager.new({from: owner});
-
-        skaleToken = await SkaleToken.new(contractManager.address, []);
-        await contractManager.setContractsAddress("SkaleToken", skaleToken.address);
-
-        delegationService = await DelegationService.new(contractManager.address, {from: owner});
-        await contractManager.setContractsAddress("DelegationService", delegationService.address);
-
-        delegationPeriodManager = await DelegationPeriodManager.new(contractManager.address);
-        await contractManager.setContractsAddress("DelegationPeriodManager", delegationPeriodManager.address);
-
-        delegationRequestManager = await DelegationRequestManager.new(contractManager.address);
-        await contractManager.setContractsAddress("DelegationRequestManager", delegationRequestManager.address);
-
-        validatorService = await ValidatorService.new(contractManager.address);
-        await contractManager.setContractsAddress("ValidatorService", validatorService.address);
-
-        delegationController = await DelegationController.new(contractManager.address);
-        await contractManager.setContractsAddress("DelegationController", delegationController.address);
-
-        timeHelpers = await TimeHelpers.new();
-        await contractManager.setContractsAddress("TimeHelpers", timeHelpers.address);
-
-        tokenState = await TokenState.new(contractManager.address);
-        await contractManager.setContractsAddress("TokenState", tokenState.address);
+        contractManager = await deployContractManager();
 
         skaleManagerMock = await SkaleManagerMock.new(contractManager.address);
         await contractManager.setContractsAddress("SkaleManager", skaleManagerMock.address);
 
-        skaleBalances = await SkaleBalances.new(contractManager.address);
-        await contractManager.setContractsAddress("SkaleBalances", skaleBalances.address);
-
-        distributor = await Distributor.new(contractManager.address);
-        await contractManager.setContractsAddress("Distributor", distributor.address);
+        skaleToken = await deploySkaleToken(contractManager);
+        delegationService = await deployDelegationService(contractManager);
+        delegationPeriodManager = await deployDelegationPeriodManager(contractManager);
+        delegationController = await deployDelegationController(contractManager);
+        tokenState = await deployTokenState(contractManager);
 
         // each test will start from Nov 10
         await skipTimeToDate(web3, 10, 10);
