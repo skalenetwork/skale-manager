@@ -61,6 +61,28 @@ contract TimeHelpers {
         }
     }
 
+    function addMonths(uint fromTimestamp, uint n) external pure returns (uint) {
+        uint year;
+        uint month;
+        uint day;
+        uint hour;
+        uint minute;
+        uint second;
+        (year, month, day, hour, minute, second) = BokkyPooBahsDateTimeLibrary.timestampToDateTime(fromTimestamp);
+        month += n;
+        if (month > 12) {
+            year += (month - 1) / 12;
+            month = (month - 1) % 12 + 1;
+        }
+        return BokkyPooBahsDateTimeLibrary.timestampFromDateTime(
+            year,
+            month,
+            day,
+            hour,
+            minute,
+            second);
+    }
+
     function getNextMonthStartFromDate(uint dateTimestamp) public pure returns (uint timestamp) {
         uint year;
         uint month;
