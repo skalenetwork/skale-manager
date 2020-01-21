@@ -89,7 +89,7 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
     /// @notice Allows service to slash `validator` by `amount` of tokens
     function slash(uint validatorId, uint amount) external {
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
-        validatorService.getValidator(validatorId);
+        require(validatorService.validatorExists(validatorId), "Validator does not exist");
 
         Distributor distributor = Distributor(contractManager.getContract("Distributor"));
         TokenState tokenState = TokenState(contractManager.getContract("TokenState"));

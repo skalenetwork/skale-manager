@@ -44,7 +44,7 @@ contract ValidatorService is Permissions {
     uint public numberOfValidators;
 
     modifier checkValidatorExists(uint validatorId) {
-        require(validatorId <= numberOfValidators, "Validator with such id doesn't exist");
+        require(validatorExists(validatorId), "Validator with such id doesn't exist");
         _;
     }
 
@@ -131,6 +131,10 @@ contract ValidatorService is Permissions {
         uint delegationsTotal = delegationController.getDelegationsTotal(validatorId);
         uint MSR = IConstants(contractManager.getContract("Constants")).MSR();
         require((validatorNodes.length + 1) * MSR <= delegationsTotal, "Validator has to meet Minimum Staking Requirement");
+    }
+
+    function validatorExists(uint validatorId) public view returns (bool) {
+        return validatorId <= numberOfValidators;
     }
 
     function getValidator(uint validatorId) public view checkValidatorExists(validatorId) returns (Validator memory) {
