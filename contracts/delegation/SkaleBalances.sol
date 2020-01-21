@@ -39,32 +39,30 @@ contract SkaleBalances is Permissions, IERC777Recipient {
         _erc1820.setInterfaceImplementer(address(this), keccak256("ERC777TokensRecipient"), address(this));
     }
 
-    function withdrawBalance(address wallet, address to, uint amountOfTokens) external {
-        if (_timeLimit[wallet] != 0) {
-            require(_timeLimit[wallet] <= now, "Bounty is locked");
-            _timeLimit[wallet] = 0;
+    function withdrawBalance(address to, uint amountOfTokens) external {
+        if (_timeLimit[msg.sender] != 0) {
+            require(_timeLimit[msg.sender] <= now, "Bounty is locked");
+            _timeLimit[msg.sender] = 0;
         }
 
-        require(_bountyBalances[wallet] >= amountOfTokens, "Now enough tokens on balance for withdrawing");
-        _bountyBalances[wallet] -= amountOfTokens;
+        require(_bountyBalances[msg.sender] >= amountOfTokens, "Now enough tokens on balance for withdrawing");
+        _bountyBalances[msg.sender] -= amountOfTokens;
 
         SkaleToken skaleToken = SkaleToken(contractManager.getContract("SkaleToken"));
         require(skaleToken.transfer(to, amountOfTokens), "Failed to transfer tokens");
     }
 
-    function withdrawBalanceWithData(
-        address wallet,
-        address to,
-        uint amountOfTokens,
-        bytes calldata data
-    )
-        external
-    {
-        require(_bountyBalances[wallet] >= amountOfTokens, "Now enough tokens on balance for withdrawing");
-        _bountyBalances[wallet] -= amountOfTokens;
+    function withdrawBalance(address from, address to, uint amountOfTokens) external allow("DelegationService") {
+        if (_timeLimit[from] != 0) {
+            require(_timeLimit[from] <= now, "Bounty is locked");
+            _timeLimit[from] = 0;
+        }
+
+        require(_bountyBalances[from] >= amountOfTokens, "Now enough tokens on balance for withdrawing");
+        _bountyBalances[from] -= amountOfTokens;
 
         SkaleToken skaleToken = SkaleToken(contractManager.getContract("SkaleToken"));
-        skaleToken.send(to, amountOfTokens, data);
+        require(skaleToken.transfer(to, amountOfTokens), "Failed to transfer tokens");
     }
 
     function tokensReceived(
@@ -78,11 +76,6 @@ contract SkaleBalances is Permissions, IERC777Recipient {
         external
     {
         address recipient = abi.decode(userData, (address));
-        // bytes20 recAdr;
-        // assembly {
-        //     recAdr := calldataload(add(4, 196))
-        // }
-        // recipient = address(recAdr);
         stashBalance(recipient, amount);
     }
 

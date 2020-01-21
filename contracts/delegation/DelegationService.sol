@@ -200,10 +200,10 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
         revert("Not implemented");
     }
 
-    function withdrawBounty(address bountyCollectionAddress, uint amount) external {
-        SkaleBalances skaleBalances = SkaleBalances(contractManager.getContract("SkaleBalances"));
-        skaleBalances.withdrawBalance(msg.sender, bountyCollectionAddress, amount);
-    }
+    // function withdrawBounty(address bountyCollectionAddress, uint amount) external {
+    //     SkaleBalances skaleBalances = SkaleBalances(contractManager.getContract("SkaleBalances"));
+    //     skaleBalances.withdrawBalance(msg.sender, bountyCollectionAddress, amount);
+    // }
 
     function getEarnedBountyAmount() external returns (uint) {
         SkaleBalances skaleBalances = SkaleBalances(contractManager.getContract("SkaleBalances"));

@@ -69,8 +69,6 @@ contract SkaleManager is IERC777Recipient, Permissions {
         if (operationType == TransactionOperation.CreateNode) {
             address nodesFunctionalityAddress = contractManager.getContract("NodesFunctionality");
             address validatorsFunctionalityAddress = contractManager.getContract("ValidatorsFunctionality");
-            // uint nodeIndex = INodesFunctionality(nodesFunctionalityAddress).createNode(from, value, userData);
-            // IValidatorsFunctionality(validatorsFunctionalityAddress).addValidator(nodeIndex);
         } else if (operationType == TransactionOperation.CreateSchain) {
             address schainsFunctionalityAddress = contractManager.getContract("SchainsFunctionality");
             ISchainsFunctionality(schainsFunctionalityAddress).addSchain(from, value, userData);
@@ -201,10 +199,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
         uint commonBounty;
         IConstants constants = IConstants(contractManager.getContract("Constants"));
         IManagerData managerData = IManagerData(contractManager.getContract("ManagerData"));
-        // ISkaleBalances skaleBalances = ISkaleBalances(contractManager.getContract("SkaleBalances"));
         INodesData nodesData = INodesData(contractManager.getContract("NodesData"));
-        // ValidatorService validatorService = ValidatorService(contractManager.getContract("validatorService"));
-        // address delegationServiceAddress = contractManager.getContract("DelegationService");
 
         uint diffTime = nodesData.getNodeLastRewardDate(nodeIndex) +
             constants.rewardPeriod() +
@@ -239,8 +234,6 @@ contract SkaleManager is IERC777Recipient, Permissions {
                 bountyForMiner = (constants.allowableLatency() * bountyForMiner) / latency;
             }
             payBounty(uint(bountyForMiner), from);
-            // uint validatorId = validatorService.getValidatorId(from);
-            // skaleBalances.withdrawBalanceWithData(address(this), delegationServiceAddress, uint(bountyForMiner), abi.encodePacked(validatorId));
         } else {
             //Need to add penalty
             bountyForMiner = 0;
@@ -251,14 +244,11 @@ contract SkaleManager is IERC777Recipient, Permissions {
     function payBounty(uint bountyForMiner, address miner) internal returns (bool) {
         ISkaleBalances skaleBalances = ISkaleBalances(contractManager.getContract("SkaleBalances"));
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
+        SkaleToken skaleToken = SkaleToken(contractManager.getContract("SkaleToken"));
         address delegationServiceAddress = contractManager.getContract("DelegationService");
         uint validatorId = validatorService.getValidatorId(miner);
-        skaleBalances.withdrawBalanceWithData(
-            address(this),
-            delegationServiceAddress,
-            uint(bountyForMiner),
-            abi.encodePacked(validatorId)
-        );
+        skaleBalances.withdrawBalance(address(this), uint(bountyForMiner));
+        skaleToken.send(delegationServiceAddress, uint(bountyForMiner), abi.encode(validatorId));
     }
 
     function fallbackOperationTypeConvert(bytes memory data) internal pure returns (TransactionOperation) {
