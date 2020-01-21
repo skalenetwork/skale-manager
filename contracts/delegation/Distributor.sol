@@ -39,7 +39,7 @@ contract Distributor is Permissions {
 
     }
 
-    function distributeBounty(uint validatorId, uint amount) external returns (Share[] memory shares, uint fee) {
+    function distributeBounty(uint validatorId, uint amount) external allow("DelegationService") returns (Share[] memory shares, uint fee) {
         return distributeWithFee(
             validatorId,
             amount,
@@ -47,7 +47,7 @@ contract Distributor is Permissions {
             true);
     }
 
-    function distributePenalties(uint validatorId, uint amount) external returns (Share[] memory shares) {
+    function distributePenalties(uint validatorId, uint amount) external allow("DelegationService") returns (Share[] memory shares) {
         return distribute(
             validatorId,
             amount,
