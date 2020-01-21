@@ -125,7 +125,7 @@ contract("NodesData", ([owner, validator]) => {
         });
 
         it("should check if time for reward has come", async () => {
-            // TODO: change rewart period
+            // TODO: change reward period
 
             skipTime(web3, 3590);
 

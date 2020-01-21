@@ -1,6 +1,6 @@
 import Web3 = require("web3");
 
-let requistId = 0xd2;
+let requestId = 0xd2;
 
 function responseCallback(error: Error | null, val?: any) {
     if (error !== null) {
@@ -11,7 +11,7 @@ function responseCallback(error: Error | null, val?: any) {
 export function skipTime(web3: Web3, seconds: number) {
     web3.currentProvider.send(
         {
-            id: requistId++,
+            id: requestId++,
             jsonrpc: "2.0",
             method: "evm_increaseTime",
             params: [seconds],
@@ -20,7 +20,7 @@ export function skipTime(web3: Web3, seconds: number) {
 
     web3.currentProvider.send(
         {
-            id: requistId++,
+            id: requestId++,
             jsonrpc: "2.0",
             method: "evm_mine",
             params: [],
