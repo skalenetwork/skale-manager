@@ -39,19 +39,6 @@ contract SkaleBalances is Permissions, IERC777Recipient {
         _erc1820.setInterfaceImplementer(address(this), keccak256("ERC777TokensRecipient"), address(this));
     }
 
-    function withdrawBalance(address to, uint amountOfTokens) external {
-        if (_timeLimit[msg.sender] != 0) {
-            require(_timeLimit[msg.sender] <= now, "Bounty is locked");
-            _timeLimit[msg.sender] = 0;
-        }
-
-        require(_bountyBalances[msg.sender] >= amountOfTokens, "Now enough tokens on balance for withdrawing");
-        _bountyBalances[msg.sender] -= amountOfTokens;
-
-        SkaleToken skaleToken = SkaleToken(contractManager.getContract("SkaleToken"));
-        require(skaleToken.transfer(to, amountOfTokens), "Failed to transfer tokens");
-    }
-
     function withdrawBalance(address from, address to, uint amountOfTokens) external allow("DelegationService") {
         if (_timeLimit[from] != 0) {
             require(_timeLimit[from] <= now, "Bounty is locked");

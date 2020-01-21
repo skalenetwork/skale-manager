@@ -133,7 +133,7 @@ contract("ValidatorsFunctionality", ([owner, validator]) => {
     // execution
     const { logs } = await validatorsFunctionality
           .sendVerdict(0, indexNode1, 1, 0, {from: owner});
-    // assertation
+    // assertion
     assert.equal(logs[0].event, "VerdictWasSent");
   });
 

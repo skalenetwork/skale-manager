@@ -190,7 +190,7 @@ contract("NodesFunctionality", ([owner, validator]) => {
             await nodesFunctionality.initWithdrawDeposit(validator, 0);
 
             await nodesFunctionality.completeWithdrawDeposit(validator, 0)
-                .should.be.eventually.rejectedWith("Leaving period is not expired");
+                .should.be.eventually.rejectedWith("Leaving period has not expired");
 
             skipTime(web3, 5);
 
@@ -259,7 +259,7 @@ contract("NodesFunctionality", ([owner, validator]) => {
             await nodesFunctionality.initWithdrawDeposit(validator, 0);
 
             await nodesFunctionality.completeWithdrawDeposit(validator, 0)
-                .should.be.eventually.rejectedWith("eaving period is not expired");
+                .should.be.eventually.rejectedWith("leaving period has not expired");
 
             skipTime(web3, 5);
 
@@ -279,7 +279,7 @@ contract("NodesFunctionality", ([owner, validator]) => {
             await nodesFunctionality.initWithdrawDeposit(validator, 1);
 
             await nodesFunctionality.completeWithdrawDeposit(validator, 1)
-                .should.be.eventually.rejectedWith("eaving period is not expired");
+                .should.be.eventually.rejectedWith("leaving period has not expired");
 
             skipTime(web3, 5);
 
