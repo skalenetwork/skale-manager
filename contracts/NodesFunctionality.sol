@@ -184,7 +184,7 @@ contract NodesFunctionality is Permissions, INodesFunctionality {
 
         require(INodesData(nodesDataAddress).isNodeExist(from, nodeIndex), "Node does not exist for message sender");
         require(INodesData(nodesDataAddress).isNodeLeaving(nodeIndex), "Node is no Leaving");
-        require(INodesData(nodesDataAddress).isLeavingPeriodExpired(nodeIndex), "Leaving period is not expired");
+        require(INodesData(nodesDataAddress).isLeavingPeriodExpired(nodeIndex), "Leaving period has not expired");
 
         INodesData(nodesDataAddress).setNodeLeft(nodeIndex);
 

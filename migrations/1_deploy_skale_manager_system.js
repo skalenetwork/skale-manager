@@ -36,6 +36,11 @@ let DelegationRequestManager = artifacts.require('./DelegationRequestManager.sol
 let DelegationPeriodManager = artifacts.require('./DelegationPeriodManager.sol');
 let ValidatorService = artifacts.require('./ValidatorService.sol');
 let DelegationController = artifacts.require('./DelegationController.sol');
+let Distributor = artifacts.require('./Distributor.sol');
+let TokenSaleManager = artifacts.require('./TokenSaleManager.sol');
+let TokenState = artifacts.require('./TokenState.sol');
+let TimeHelpers = artifacts.require('./TimeHelpers.sol');
+let BokkyPooBahsDateTimeLibrary = artifacts.require('./BokkyPooBahsDateTimeLibrary.sol');
 
 let gasLimit = 6900000;
 
@@ -166,6 +171,24 @@ async function deploy(deployer, network) {
         await contractManagerInstance.setContractsAddress("ValidatorService", ValidatorService.address).then(function(res) {
             console.log("Contract ValidatorService with address", ValidatorService.address, "registred in Contract Manager");
         });
+        await deployer.deploy(Distributor, contractManagerInstance.address, {gas: gasLimit * gas_multiplier});
+        await contractManagerInstance.setContractsAddress("Distributor", Distributor.address).then(function(res) {
+            console.log("Contract Distributor with address", Distributor.address, "registred in Contract Manager");
+        });
+        await deployer.deploy(TokenSaleManager, contractManagerInstance.address, {gas: gasLimit * gas_multiplier});
+        await contractManagerInstance.setContractsAddress("TokenSaleManager", TokenSaleManager.address).then(function(res) {
+            console.log("Contract TokenSaleManager with address", TokenSaleManager.address, "registred in Contract Manager");
+        });
+        await deployer.deploy(TokenState, contractManagerInstance.address, {gas: gasLimit * gas_multiplier});
+        await contractManagerInstance.setContractsAddress("TokenState", TokenState.address).then(function(res) {
+            console.log("Contract TokenState with address", TokenState.address, "registred in Contract Manager");
+        });
+        await deployer.deploy(BokkyPooBahsDateTimeLibrary, {gas: gasLimit * gas_multiplier});
+        await deployer.link(BokkyPooBahsDateTimeLibrary, TimeHelpers);
+        await deployer.deploy(TimeHelpers, contractManagerInstance.address, {gas: gasLimit * gas_multiplier});
+        await contractManagerInstance.setContractsAddress("TimeHelpers", TimeHelpers.address).then(function(res) {
+            console.log("Contract TimeHelpers with address", TimeHelpers.address, "registred in Contract Manager");
+        });
         await deployer.deploy(DelegationController, contractManagerInstance.address, {gas: gasLimit * gas_multiplier});
         await contractManagerInstance.setContractsAddress("DelegationController", DelegationController.address).then(function(res) {
             console.log("Contract DelegationController with address", DelegationController.address, "registred in Contract Manager");
@@ -215,6 +238,14 @@ async function deploy(deployer, network) {
             delegation_period_manager_abi: DelegationPeriodManager.abi,
             validator_service_address: ValidatorService.address,
             validator_service_abi: ValidatorService.abi,
+            distributor_address: Distributor.address,
+            distributor_abi: Distributor.abi,
+            token_sale_manager_address: TokenSaleManager.address,
+            token_sale_manager_abi: TokenSaleManager.abi,
+            token_state_address: TokenState.address,
+            token_state_abi: TokenState.abi,
+            time_helpers_address: TimeHelpers.address,
+            time_helpers_abi: TimeHelpers.abi,
             delegation_controller_address: DelegationController.address,
             delegation_controller_abi: DelegationController.abi
         };
