@@ -67,7 +67,7 @@ contract TokenState is Permissions {
                 amount += delegationController.getDelegation(id).amount;
             }
         }
-        return amount + getPurchasedAmount(holder) + getSlashedAmount(holder);
+        return amount + getPurchasedAmount(holder) + this.getSlashedAmount(holder);
     }
 
     function getDelegatedCount(address holder) external returns (uint amount) {
@@ -123,6 +123,10 @@ contract TokenState is Permissions {
         _slashed[wallet] -= forgiveAmount;
     }
 
+    function getSlashedAmount(address holder) external returns (uint amount) {
+        return _slashed[holder];
+    }
+
     function getState(uint delegationId) public returns (State state) {
         DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
         // TODO: Modify existance check
@@ -164,9 +168,6 @@ contract TokenState is Permissions {
         return state == State.DELEGATED || state == State.ENDING_DELEGATED;
     }
 
-    function getSlashedAmount(address holder) public returns (uint amount) {
-        return _slashed[holder];
-    }
 
     // private
 

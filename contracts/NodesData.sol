@@ -525,7 +525,7 @@ contract NodesData is INodesData, Permissions {
      * @return activeNodesbyAddress - array of indexes of Active Nodes, which were created
      * by msg.sender
      */
-    function getActiveNodesByAddress(uint validatorId) external view returns (uint[] memory activeNodesByAddress) {
+    function getActiveNodesByAddress() external view returns (uint[] memory activeNodesByAddress) {
         activeNodesByAddress = new uint[](nodeIndexes[msg.sender].numberOfNodes);
         uint indexOfActiveNodesByAddress = 0;
         for (uint indexOfNodes = 0; indexOfNodes < nodes.length; indexOfNodes++) {
