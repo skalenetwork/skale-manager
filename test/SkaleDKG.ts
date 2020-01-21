@@ -90,7 +90,6 @@ contract("SkaleDKG", ([validator1, validator2]) => {
     let skaleDKG: SkaleDKGInstance;
     let decryption: DecryptionInstance;
     let ecdh: ECDHInstance;
-    let validatorService: ValidatorServiceInstance;
     let delegationService: DelegationServiceInstance;
     let skaleToken: SkaleTokenInstance;
 
@@ -142,13 +141,6 @@ contract("SkaleDKG", ([validator1, validator2]) => {
         ecdh = await ECDH.new({from: validator1, gas: 8000000 * gasMultiplier});
         await contractManager.setContractsAddress("ECDH", ecdh.address);
 
-        // validatorService = await ValidatorService.new(
-        //     contractManager.address,
-        //     {from: validator1, gas: 8000000 * gasMultiplier});
-        // await contractManager.setContractsAddress("ValidatorService", validatorService.address);
-
-        // await validatorService.registerValidator("Validat1", "0x7E6CE355Ca303EAe3a858c172c3cD4CeB23701bc", "D2", 0, 0);
-        // await validatorService.registerValidator("Validat2", "0xF64ADc0A4462E30381Be09E42EB7DcB816de2803", "D3", 0, 0);
         delegationService = await deployDelegationService(contractManager);
 
         skaleToken = await deploySkaleToken(contractManager);
