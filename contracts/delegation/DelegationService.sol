@@ -76,18 +76,13 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
         revert("Not implemented");
     }
 
-    /// @notice Requests return of tokens that are locked in SkaleManager
-    function returnTokens(uint amount) external {
-        revert("Not implemented");
-    }
-
     /// @notice Returns array of delegation requests id
     function listDelegationRequests() external returns (uint[] memory) {
         revert("Not implemented");
     }
 
     /// @notice Allows service to slash `validator` by `amount` of tokens
-    function slash(uint validatorId, uint amount) external {
+    function slash(uint validatorId, uint amount) external allow("SkaleDKG") {
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
         require(validatorService.validatorExists(validatorId), "Validator does not exist");
 
@@ -106,11 +101,12 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
     }
 
     /// @notice Returns amount of delegated token of the validator
-    function getDelegatedAmount(address validator) external returns (uint) {
-        revert("Not implemented");
+    function getDelegatedAmount(uint validatorId) external returns (uint) {
+        DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
+        return delegationController.getDelegationsTotal(validatorId);
     }
 
-    function setMinimumStakingRequirement(uint amount) external {
+    function setMinimumStakingRequirement(uint amount) external onlyOwner() {
         revert("Not implemented");
     }
 
@@ -225,11 +221,6 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
         tokenState.sold(wallet, amount);
     }
 
-    /// @notice Makes all tokens of target account available to move
-    function unlock(address target) external {
-        revert("Not implemented");
-    }
-
     function getLockedOf(address wallet) external returns (uint) {
         TokenState tokenState = TokenState(contractManager.getContract("TokenState"));
         return tokenState.getLockedCount(wallet);
@@ -240,7 +231,7 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
         return tokenState.getDelegatedCount(wallet);
     }
 
-    function setLaunchTimestamp(uint timestamp) external onlyOwner {
+    function setLaunchTimestamp(uint timestamp) external onlyOwner() {
         _launchTimestamp = timestamp;
     }
 
@@ -253,6 +244,7 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
         bytes calldata operatorData
     )
         external
+        allow("SkaleToken")
     {
         require(userData.length == 32, "Data length is incorrect");
         uint validatorId = abi.decode(userData, (uint));
