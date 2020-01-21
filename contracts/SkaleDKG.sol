@@ -234,7 +234,7 @@ contract SkaleDKG is Permissions {
         finalizeSlashing(groupIndex, badNode);
     }
 
-    function allright(bytes32 groupIndex, uint fromNodeIndex)
+    function alright(bytes32 groupIndex, uint fromNodeIndex)
         external
         correctGroup(groupIndex)
         correctNode(groupIndex, fromNodeIndex)

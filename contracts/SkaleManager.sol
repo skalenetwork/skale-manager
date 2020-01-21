@@ -99,7 +99,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
         address skaleTokenAddress = contractManager.getContract("SkaleToken");
         require(
             ISkaleToken(skaleTokenAddress).transfer(msg.sender, amount),
-            "Token transfering is failed");
+            "Token transferring is failed");
     }
 
     function deleteNode(uint nodeIndex) external {

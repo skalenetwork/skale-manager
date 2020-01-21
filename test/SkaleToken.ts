@@ -72,7 +72,7 @@ contract("SkaleToken", ([owner, holder, receiver, nilAddress, accountWith99]) =>
     assert(supply.isEqualTo(toWei(TOTAL_SUPPLY)));
   });
 
-  it("any account should have the tokens transfered to it", async () => {
+  it("any account should have the tokens transferred to it", async () => {
     const amount = toWei(10);
     await skaleToken.transfer(holder, amount);
     const balance = new BigNumber(await skaleToken.balanceOf(holder));

@@ -147,7 +147,7 @@ contract("NodesFunctionality", ([owner, validator]) => {
             await nodesData.numberOfActiveNodes().should.be.eventually.deep.equal(web3.utils.toBN(0));
         });
 
-        it("should fail to wethdraw deposit for non existing node", async () => {
+        it("should fail to withdraw deposit for non existing node", async () => {
             await nodesFunctionality.initWithdrawDeposit(validator, 1)
                 .should.be.eventually.rejectedWith("Node does not exist for message sender");
 
@@ -174,7 +174,7 @@ contract("NodesFunctionality", ([owner, validator]) => {
             await nodesFunctionality.initWithdrawDeposit(validator, 0);
 
             await nodesFunctionality.completeWithdrawDeposit(validator, 0)
-                .should.be.eventually.rejectedWith("eaving period is not expired");
+                .should.be.eventually.rejectedWith("leaving period has not expired");
 
             skipTime(web3, 5);
 
@@ -243,7 +243,7 @@ contract("NodesFunctionality", ([owner, validator]) => {
             await nodesFunctionality.initWithdrawDeposit(validator, 0);
 
             await nodesFunctionality.completeWithdrawDeposit(validator, 0)
-                .should.be.eventually.rejectedWith("eaving period is not expired");
+                .should.be.eventually.rejectedWith("leaving period has not expired");
 
             skipTime(web3, 5);
 
@@ -263,7 +263,7 @@ contract("NodesFunctionality", ([owner, validator]) => {
             await nodesFunctionality.initWithdrawDeposit(validator, 1);
 
             await nodesFunctionality.completeWithdrawDeposit(validator, 1)
-                .should.be.eventually.rejectedWith("eaving period is not expired");
+                .should.be.eventually.rejectedWith("leaving period has not expired");
 
             skipTime(web3, 5);
 
