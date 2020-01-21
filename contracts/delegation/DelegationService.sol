@@ -240,6 +240,11 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
         return tokenState.getDelegatedCount(wallet);
     }
 
+    function getSlashedOf(address wallet) external returns (uint) {
+        TokenState tokenState = TokenState(contractManager.getContract("TokenState"));
+        return tokenState.getSlashedAmount(wallet);
+    }
+
     function setLaunchTimestamp(uint timestamp) external onlyOwner {
         _launchTimestamp = timestamp;
     }

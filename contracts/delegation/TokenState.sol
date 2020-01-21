@@ -164,6 +164,10 @@ contract TokenState is Permissions {
         return state == State.DELEGATED || state == State.ENDING_DELEGATED;
     }
 
+    function getSlashedAmount(address holder) public returns (uint amount) {
+        return _slashed[holder];
+    }
+
     // private
 
     function setState(uint delegationId, State newState) internal {
@@ -273,7 +277,4 @@ contract TokenState is Permissions {
         }
     }
 
-    function getSlashedAmount(address holder) internal returns (uint amount) {
-        return _slashed[holder];
-    }
 }

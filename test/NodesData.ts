@@ -31,12 +31,8 @@ contract("NodesData", ([owner, validator]) => {
     });
 
     it("should add node", async () => {
-<<<<<<< HEAD
         // console.log("Staring");
-        await nodesData.addNode(1, "d2", "0x7f000001", "0x7f000002", 8545, "0x1122334455");
-=======
         await nodesData.addNode(validator, "d2", "0x7f000001", "0x7f000002", 8545, "0x1122334455", 0);
->>>>>>> feature/SKALE-1642-delegation
 
         const node = await nodesData.nodes(0);
 
@@ -59,22 +55,18 @@ contract("NodesData", ([owner, validator]) => {
         console.log("Hell3");
         node.should.be.deep.equal(nodeByName);
         console.log("Hell4");
-        await nodesData.isNodeExist(1, 0).should.be.eventually.true;
+        await nodesData.isNodeExist(validator, 0).should.be.eventually.true;
         console.log("Hello");
-        console.log(await nodesData.getActiveNodesByValidatorId(1, {from: validator}));
-        (await nodesData.getActiveNodesByValidatorId(1, {from: validator})).should.be.deep.equal([web3.utils.toBN(0)]);
-        expect(await nodesData.getActiveNodesByValidatorId(2, {from: owner})).to.be.empty;
+        console.log(await nodesData.getActiveNodesByAddress(1, {from: validator}));
+        (await nodesData.getActiveNodesByAddress(1, {from: validator})).should.be.deep.equal([web3.utils.toBN(0)]);
+        expect(await nodesData.getActiveNodesByAddress(2, {from: owner})).to.be.empty;
         await nodesData.numberOfActiveNodes().should.be.eventually.deep.equal(web3.utils.toBN(1));
         await nodesData.getNumberOfNodes().should.be.eventually.deep.equal(web3.utils.toBN(1));
     });
 
     describe("when a node is added", async () => {
         beforeEach(async () => {
-<<<<<<< HEAD
-            await nodesData.addNode(1, "d2", "0x7f000001", "0x7f000002", 8545, "0x1122334455");
-=======
             await nodesData.addNode(validator, "d2", "0x7f000001", "0x7f000002", 8545, "0x1122334455", 0);
->>>>>>> feature/SKALE-1642-delegation
         });
 
         // it("should add a fractional node", async () => {
@@ -125,13 +117,8 @@ contract("NodesData", ([owner, validator]) => {
 
             await nodesData.changeNodeLastRewardDate(0);
 
-<<<<<<< HEAD
-            (await nodesData.nodes(0))[8].should.be.deep.equal(web3.utils.toBN(currentTime));
-            await nodesData.getNodeLastRewardDate(0).should.be.eventually.deep.equal(web3.utils.toBN(currentTime));
-=======
             (await nodesData.nodes(0))[7].should.be.deep.equal(web3.utils.toBN(currentTimeValue));
             await nodesData.getNodeLastRewardDate(0).should.be.eventually.deep.equal(web3.utils.toBN(currentTimeValue));
->>>>>>> feature/SKALE-1642-delegation
         });
 
         it("should check if leaving period is expired", async () => {
@@ -203,7 +190,7 @@ contract("NodesData", ([owner, validator]) => {
         });
 
         it("should get array of indexes of active nodes of msg.sender", async () => {
-            const activeNodes = await nodesData.getActiveNodesByValidatorId(1, {from: validator});
+            const activeNodes = await nodesData.getActiveNodesByAddress(1, {from: validator});
 
             activeNodes.length.should.be.equal(1);
             const nodeIndex = web3.utils.toBN(activeNodes[0]);
@@ -299,18 +286,8 @@ contract("NodesData", ([owner, validator]) => {
 
     describe("when two nodes are added", async () => {
         beforeEach(async () => {
-<<<<<<< HEAD
-            await nodesData.addNode(1, "d2", "0x7f000001", "0x7f000002", 8545, "0x1122334455");
-            await nodesData.addNode(1, "d3", "0x7f000002", "0x7f000003", 8545, "0x1122334455");
-=======
-            await nodesData.addNode(validator, "d2", "0x7f000001", "0x7f000002", 8545, "0x1122334455", 0);
             await nodesData.addNode(validator, "d3", "0x7f000002", "0x7f000003", 8545, "0x1122334455", 0);
->>>>>>> feature/SKALE-1642-delegation
         });
-
-        // describe("when nodes are registered as fractional", async () => {
-        //     beforeEach(async () => {
-        //         await nodesData.addFractionalNode(0);
         //         await nodesData.addFractionalNode(1);
         //     });
 
