@@ -39,7 +39,7 @@ contract SkaleBalances is Permissions, IERC777Recipient {
         _erc1820.setInterfaceImplementer(address(this), keccak256("ERC777TokensRecipient"), address(this));
     }
 
-    function withdrawBalance(address wallet, address to, uint amountOfTokens) external {
+    function withdrawBalance(address wallet, address to, uint amountOfTokens) external allow("DelegationService") {
         if (_timeLimit[wallet] != 0) {
             require(_timeLimit[wallet] <= now, "Bounty is locked");
             _timeLimit[wallet] = 0;
@@ -61,20 +61,21 @@ contract SkaleBalances is Permissions, IERC777Recipient {
         bytes calldata operatorData
     )
         external
+        allow("SkaleToken")
     {
         address recipient = abi.decode(userData, (address));
         stashBalance(recipient, amount);
     }
 
-    function getBalance(address wallet) external returns (uint) {
+    function getBalance(address wallet) external allow("DelegationService") returns (uint) {
         return _bountyBalances[wallet];
     }
 
-    function setLockBounty(bool lock) external onlyOwner {
+    function setLockBounty(bool lock) external onlyOwner() {
         _lockBounty = lock;
     }
 
-    function lockBounty(address wallet, uint timeLimit) external {
+    function lockBounty(address wallet, uint timeLimit) external allow("DelegationService") {
         if (_lockBounty) {
             if (_timeLimit[wallet] == 0 || _timeLimit[wallet] > timeLimit) {
                 _timeLimit[wallet] = timeLimit;
