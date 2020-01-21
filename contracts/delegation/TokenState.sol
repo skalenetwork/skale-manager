@@ -168,7 +168,6 @@ contract TokenState is Permissions {
         return state == State.DELEGATED || state == State.ENDING_DELEGATED;
     }
 
-
     // private
 
     function setState(uint delegationId, State newState) internal {
