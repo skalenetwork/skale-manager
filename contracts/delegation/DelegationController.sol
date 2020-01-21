@@ -146,4 +146,54 @@ contract DelegationController is Permissions {
         return delegations[delegationId];
     }
 
+    function getDelegationsByHolder(address holderAddress, TokenState.State _state) external returns (uint[] memory) {
+        TokenState tokenState = TokenState(contractManager.getContract("TokenState"));
+        uint delegationsAmount = 0;
+        for (uint i = 0; i < _delegationsByHolder[holderAddress].length; i++) {
+            TokenState.State state = tokenState.getState(_delegationsByHolder[holderAddress][i]);
+            if (state == _state) {
+                ++delegationsAmount;
+            }
+        }
+
+        uint[] memory delegationsHolder = new uint[](delegationsAmount);
+        uint cursor = 0;
+        for (uint i = 0; i < _delegationsByHolder[holderAddress].length; i++) {
+            if (_state == tokenState.getState(_delegationsByHolder[holderAddress][i])) {
+                require(cursor < delegationsHolder.length, "Out of index");
+                delegationsHolder[cursor] = _delegationsByHolder[holderAddress][i];
+                ++cursor;
+            }
+        }
+
+        return delegationsHolder;
+    }
+
+    function getDelegationsByValidator(address validatorAddress, TokenState.State _state) external returns (uint[] memory) {
+        TokenState tokenState = TokenState(contractManager.getContract("TokenState"));
+        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
+        uint validatorId = validatorService.getValidatorId(validatorAddress);
+        uint delegationsAmount = 0;
+        for (uint i = 0; i < _activeByValidator[validatorId].length; i++) {
+            TokenState.State state = tokenState.getState(_activeByValidator[validatorId][i]);
+            if (state == _state) {
+                ++delegationsAmount;
+            }
+        }
+
+        uint[] memory delegationsValidator = new uint[](delegationsAmount);
+        uint cursor = 0;
+        for (uint i = 0; i < _activeByValidator[validatorId].length; i++) {
+            if (_state == tokenState.getState(_activeByValidator[validatorId][i])) {
+                require(cursor < delegationsValidator.length, "Out of index");
+                delegationsValidator[cursor] = _activeByValidator[validatorId][i];
+                ++cursor;
+            }
+        }
+
+        return delegationsValidator;
+    }
+
+
+
 }
