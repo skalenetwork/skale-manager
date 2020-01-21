@@ -23,7 +23,9 @@ import { ConstantsHolderContract,
          SkaleDKGInstance,
          SkaleTokenInstance,
          SlashingTableContract,
-         SlashingTableInstance} from "../types/truffle-contracts";
+         SlashingTableInstance,
+         ValidatorServiceContract,
+         ValidatorServiceInstance} from "../types/truffle-contracts";
 
 import { gasMultiplier } from "./utils/command_line";
 import { skipTime } from "./utils/time";
@@ -40,6 +42,7 @@ const SchainsFunctionalityInternal: SchainsFunctionalityInternalContract = artif
 const SkaleDKG: SkaleDKGContract = artifacts.require("./SkaleDKG");
 const Decryption: DecryptionContract = artifacts.require("./Decryption");
 const ECDH: ECDHContract = artifacts.require("./ECDH");
+const ValidatorService: ValidatorServiceContract = artifacts.require("./ValidatorService");
 const SlashingTable: SlashingTableContract = artifacts.require("./SlashingTable");
 
 import BigNumber from "bignumber.js";
@@ -236,7 +239,7 @@ contract("SkaleDKG", ([validator1, validator2]) => {
         beforeEach(async () => {
             await delegationService.registerValidator("Validator1", "D2 is even", 0, 0, {from: validator1});
             await skaleToken.mint(validator1, validator1, 1000, "0x", "0x");
-            const validatorId = 0;
+            const validatorId = 1;
             await delegationService.delegate(validatorId, 100, 3, "D2 is even", {from: validator1});
             await delegationService.acceptPendingDelegation(0, {from: validator1});
 
@@ -496,7 +499,6 @@ contract("SkaleDKG", ([validator1, validator2]) => {
                             {from: validatorsAccount[0]},
                         );
                         assert.equal(result.logs[0].event, "BadGuy");
-                        // need to debug it!!!
                         assert.equal(result.logs[0].args.nodeIndex.toString(), "1");
 
                         (await skaleToken.getLockedOf.call(validator1)).toNumber().should.be.equal(100);
