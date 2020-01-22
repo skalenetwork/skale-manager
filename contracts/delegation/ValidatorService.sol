@@ -133,8 +133,8 @@ contract ValidatorService is Permissions {
         uint validatorId = getValidatorId(validatorAddress);
         uint[] memory validatorNodes = validators[validatorId].nodeIndexes;
         uint delegationsTotal = delegationController.getDelegationsTotal(validatorId);
-        uint MSR = IConstants(contractManager.getContract("Constants")).MSR();
-        require((validatorNodes.length + 1) * MSR <= delegationsTotal, "Validator has to meet Minimum Staking Requirement");
+        uint msr = IConstants(contractManager.getContract("Constants")).msr();
+        require((validatorNodes.length + 1) * msr <= delegationsTotal, "Validator has to meet Minimum Staking Requirement");
     }
 
     function validatorExists(uint validatorId) public view returns (bool) {

@@ -75,7 +75,7 @@ contract ConstantsHolder is IConstants, Permissions {
     uint public constant NUMBER_OF_VALIDATORS = 24;
 
     // MSR - Minimum staking requirement
-    uint public constant MSR = 100;
+    uint public msr = 5e6;
 
     // Reward period - 30 days (each 30 days Node would be granted for bounty)
     uint32 public rewardPeriod = 3600; // Test parameters
@@ -158,5 +158,9 @@ contract ConstantsHolder is IConstants, Permissions {
      */
     function setLatency(uint32 newAllowableLatency) external onlyOwner {
         allowableLatency = newAllowableLatency;
+    }
+
+    function setMSR(uint newMSR) external onlyOwner() {
+        msr = newMSR;
     }
 }

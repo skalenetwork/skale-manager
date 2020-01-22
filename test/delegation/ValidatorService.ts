@@ -223,6 +223,21 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
                 const delegationId = 0;
                 await delegationService.acceptPendingDelegation(delegationId, {from: validator1});
                 skipTime(web3, 2592000);
+
+                await skaleManager.createNode(
+                    "0x01" + // create node
+                    "2161" + // port
+                    "0000" + // nonce
+                    "7f000001" + // ip
+                    "7f000001" + // public ip
+                    "1122334455667788990011223344556677889900112233445566778899001122" +
+                    "1122334455667788990011223344556677889900112233445566778899001122" + // public key
+                    "6432", // name,
+                    {from: validator1})
+                    .should.be.eventually.rejectedWith("Validator has to meet Minimum Staking Requirement");
+
+                await constantsHolder.setMSR(amount);
+
                 await skaleManager.createNode(
                     "0x01" + // create node
                     "2161" + // port
@@ -246,6 +261,7 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
                 await delegationService.acceptPendingDelegation(delegationId1, {from: validator1});
                 await delegationService.acceptPendingDelegation(delegationId2, {from: validator1});
                 skipTime(web3, 2592000);
+                await constantsHolder.setMSR(amount);
                 await skaleManager.createNode(
                     "0x01" + // create node
                     "2161" + // port
