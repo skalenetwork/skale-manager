@@ -126,6 +126,15 @@ contract ValidatorService is Permissions {
         validators[validatorId].nodeIndexes.push(nodeIndex);
     }
 
+    function deleteNode(uint validatorId, uint nodeIndex) external allow("SkaleManager") {
+        uint[] memory validatorNodes = validators[validatorId].nodeIndexes;
+        uint position = findNode(validatorNodes, nodeIndex);
+        if (position < validatorNodes.length) {
+            validators[validatorId].nodeIndexes[position] = validators[validatorId].nodeIndexes[validatorNodes.length - 1];
+        }
+        delete validators[validatorId].nodeIndexes[validatorNodes.length - 1];
+    }
+
     function checkPossibilityCreatingNode(address validatorAddress) external allow("SkaleManager") {
         DelegationController delegationController = DelegationController(
             contractManager.getContract("DelegationController")
@@ -135,6 +144,18 @@ contract ValidatorService is Permissions {
         uint delegationsTotal = delegationController.getDelegationsTotal(validatorId);
         uint MSR = IConstants(contractManager.getContract("Constants")).MSR();
         require((validatorNodes.length + 1) * MSR <= delegationsTotal, "Validator has to meet Minimum Staking Requirement");
+    }
+
+    function checkPossibilityToMaintainNode(uint validatorId, uint nodeIndex) external allow("SkaleManager") returns (bool) {
+        DelegationController delegationController = DelegationController(
+            contractManager.getContract("DelegationController")
+        );
+        uint[] memory validatorNodes = validators[validatorId].nodeIndexes;
+        uint position = findNode(validatorNodes, nodeIndex);
+        require(position < validatorNodes.length, "Node does not exist for this Validator");
+        uint delegationsTotal = delegationController.getDelegationsTotal(validatorId);
+        uint MSR = IConstants(contractManager.getContract("Constants")).MSR();
+        return (position + 1) * MSR <= delegationsTotal;
     }
 
     function validatorExists(uint validatorId) public view returns (bool) {
@@ -150,5 +171,14 @@ contract ValidatorService is Permissions {
         return validatorAddressToId[validatorAddress];
     }
 
+    function findNode(uint[] memory nodeIndexes, uint nodeIndex) internal pure returns (uint) {
+        uint i;
+        for (i = 0; i < nodeIndexes.length; i++) {
+            if (nodeIndexes[i] == nodeIndex) {
+                return i;
+            }
+        }
+        return i;
+    }
 
 }
