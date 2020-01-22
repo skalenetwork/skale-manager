@@ -4,6 +4,8 @@ import { ContractManagerInstance,
     SkaleTokenInstance,
     TokenStateInstance } from "../../types/truffle-contracts";
 
+import { skipTime } from "../utils/time";
+
 import BigNumber from "bignumber.js";
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
@@ -184,6 +186,73 @@ contract("DelegationRequestManager", ([owner, holder1, holder2, validator, valid
                     {from: validator1});
                 await delegationService.acceptPendingDelegation(delegationId, {from: validator1})
                         .should.be.rejectedWith("No permissions to accept request");
+            });
+
+            it("should get delegation requests by holder address", async () => {
+                let delegations = await delegationService.getDelegationsByHolder.call(0, {from: holder1});
+                let delegation = new BigNumber(delegations[0]).toNumber();
+                assert.equal(delegation, 0);
+
+                await skaleToken.mint(owner, holder2, amount, "0x", "0x");
+                await delegationService.delegate(validatorId, amount, delegationPeriod, info, {from: holder2});
+                delegations = await delegationService.getDelegationsByHolder.call(0, {from: holder2});
+                delegation = new BigNumber(delegations[0]).toNumber();
+                assert.equal(delegation, 1);
+
+                await delegationService.acceptPendingDelegation(0, {from: validator});
+                await delegationService.acceptPendingDelegation(1, {from: validator});
+
+                delegations = await delegationService.getDelegationsByHolder.call(1, {from: holder1});
+                delegation = new BigNumber(delegations[0]).toNumber();
+                assert.equal(delegation, 0);
+
+                delegations = await delegationService.getDelegationsByHolder.call(1, {from: holder2});
+                delegation = new BigNumber(delegations[0]).toNumber();
+                assert.equal(delegation, 1);
+
+                delegations = await delegationService.getDelegationsByHolder.call(0, {from: holder1});
+                assert.deepEqual(delegations, []);
+                delegations = await delegationService.getDelegationsByHolder.call(0, {from: holder2});
+                assert.deepEqual(delegations, []);
+
+                skipTime(web3, 2592000);
+
+                delegations = await delegationService.getDelegationsByHolder.call(2, {from: holder1});
+                delegation = new BigNumber(delegations[0]).toNumber();
+                assert.equal(delegation, 0);
+
+                delegations = await delegationService.getDelegationsByHolder.call(2, {from: holder2});
+                delegation = new BigNumber(delegations[0]).toNumber();
+                assert.equal(delegation, 1);
+
+                delegations = await delegationService.getDelegationsByHolder.call(1, {from: holder1});
+                assert.deepEqual(delegations, []);
+                delegations = await delegationService.getDelegationsByHolder.call(1, {from: holder2});
+                assert.deepEqual(delegations, []);
+            });
+
+            it("should get delegation requests by validatorId", async () => {
+                let delegations = await delegationService.getDelegationsByValidator.call(0, {from: validator});
+                let delegation = new BigNumber(delegations[0]).toNumber();
+                assert.equal(delegation, 0);
+
+                await delegationService.acceptPendingDelegation(0, {from: validator});
+
+                delegations = await delegationService.getDelegationsByValidator.call(1, {from: validator});
+                delegation = new BigNumber(delegations[0]).toNumber();
+                assert.equal(delegation, 0);
+
+                delegations = await delegationService.getDelegationsByValidator.call(0, {from: validator});
+                assert.deepEqual(delegations, []);
+
+                skipTime(web3, 2592000);
+
+                delegations = await delegationService.getDelegationsByValidator.call(2, {from: validator});
+                delegation = new BigNumber(delegations[0]).toNumber();
+                assert.equal(delegation, 0);
+
+                delegations = await delegationService.getDelegationsByValidator.call(1, {from: validator});
+                assert.deepEqual(delegations, []);
             });
         });
     });

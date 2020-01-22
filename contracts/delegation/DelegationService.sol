@@ -72,6 +72,16 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
         delegationRequestManager.acceptRequest(delegationId, msg.sender);
     }
 
+    function getDelegationsByHolder(TokenState.State state) external returns (uint[] memory) {
+        DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
+        return delegationController.getDelegationsByHolder(msg.sender, state);
+    }
+
+    function getDelegationsByValidator(TokenState.State state) external returns (uint[] memory) {
+        DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
+        return delegationController.getDelegationsByValidator(msg.sender, state);
+    }
+
     function setMinimumDelegationAmount(uint amount) external {
         revert("Not implemented");
     }
@@ -231,7 +241,12 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
         return tokenState.getDelegatedCount(wallet);
     }
 
-    function setLaunchTimestamp(uint timestamp) external onlyOwner() {
+    function getSlashedOf(address wallet) external returns (uint) {
+        TokenState tokenState = TokenState(contractManager.getContract("TokenState"));
+        return tokenState.getSlashedAmount(wallet);
+    }
+
+    function setLaunchTimestamp(uint timestamp) external onlyOwner {
         _launchTimestamp = timestamp;
     }
 

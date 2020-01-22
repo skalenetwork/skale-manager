@@ -61,27 +61,27 @@ import { skipTime } from "./utils/time";
 
 const ContractManager: ContractManagerContract = artifacts.require("./ContractManager");
 const ConstantsHolder: ConstantsHolderContract = artifacts.require("./ConstantsHolder");
+const DelegationController: DelegationControllerContract = artifacts.require("./DelegationController");
+const DelegationPeriodManager: DelegationPeriodManagerContract = artifacts.require("./DelegationPeriodManager");
+const DelegationRequestManager: DelegationRequestManagerContract = artifacts.require("./DelegationRequestManager");
+const DelegationService: DelegationServiceContract = artifacts.require("./DelegationService");
+const Distributor: DistributorContract = artifacts.require("./Distributor");
+const ManagerData: ManagerDataContract = artifacts.require("./ManagerData");
 const NodesData: NodesDataContract = artifacts.require("./NodesData");
 const NodesFunctionality: NodesFunctionalityContract = artifacts.require("./NodesFunctionality");
-const SkaleManager: SkaleManagerContract = artifacts.require("./SkaleManager");
-const SkaleToken: SkaleTokenContract = artifacts.require("./SkaleToken");
-const ValidatorsData: ValidatorsDataContract = artifacts.require("./ValidatorsData");
-const ValidatorsFunctionality: ValidatorsFunctionalityContract = artifacts.require("./ValidatorsFunctionality");
 const SchainsData: SchainsDataContract = artifacts.require("./SchainsData");
 const SchainsFunctionality: SchainsFunctionalityContract = artifacts.require("./SchainsFunctionality");
 const SchainsFunctionalityInternal: SchainsFunctionalityInternalContract
-    = artifacts.require("./SchainsFunctionalityInternal");
-const ManagerData: ManagerDataContract = artifacts.require("./ManagerData");
-const SkaleDKG: SkaleDKGContract = artifacts.require("./SkaleDKG");
-const DelegationService: DelegationServiceContract = artifacts.require("./DelegationService");
-const DelegationPeriodManager: DelegationPeriodManagerContract = artifacts.require("./DelegationPeriodManager");
-const DelegationRequestManager: DelegationRequestManagerContract = artifacts.require("./DelegationRequestManager");
-const ValidatorService: ValidatorServiceContract = artifacts.require("./ValidatorService");
-const DelegationController: DelegationControllerContract = artifacts.require("./DelegationController");
-const TokenState: TokenStateContract = artifacts.require("./TokenState");
-const TimeHelpers: TimeHelpersContract = artifacts.require("./TimeHelpers");
+= artifacts.require("./SchainsFunctionalityInternal");
 const SkaleBalances: SkaleBalancesContract = artifacts.require("./SkaleBalances");
-const Distributor: DistributorContract = artifacts.require("./Distributor");
+const SkaleDKG: SkaleDKGContract = artifacts.require("./SkaleDKG");
+const SkaleManager: SkaleManagerContract = artifacts.require("./SkaleManager");
+const SkaleToken: SkaleTokenContract = artifacts.require("./SkaleToken");
+const TimeHelpers: TimeHelpersContract = artifacts.require("./TimeHelpers");
+const TokenState: TokenStateContract = artifacts.require("./TokenState");
+const ValidatorService: ValidatorServiceContract = artifacts.require("./ValidatorService");
+const ValidatorsData: ValidatorsDataContract = artifacts.require("./ValidatorsData");
+const ValidatorsFunctionality: ValidatorsFunctionalityContract = artifacts.require("./ValidatorsFunctionality");
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -100,6 +100,15 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
     let schainsFunctionalityInternal: SchainsFunctionalityInternalInstance;
     let managerData: ManagerDataInstance;
     let skaleDKG: SkaleDKGInstance;
+    let delegationService: DelegationServiceInstance;
+    let validatorService: ValidatorServiceInstance;
+    let delegationController: DelegationControllerInstance;
+    let tokenState: TokenStateInstance;
+    let delegationRequestManager: DelegationRequestManagerInstance;
+    let delegationPeriodManager: DelegationPeriodManagerInstance;
+    let timeHelpers: TimeHelpersInstance;
+    let skaleBalances: SkaleBalancesInstance;
+    let distributor: DistributorInstance;
 
     beforeEach(async () => {
         contractManager = await deployContractManager();
@@ -158,6 +167,30 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
 
         skaleDKG = await SkaleDKG.new(contractManager.address, {from: owner, gas: 8000000 * gasMultiplier});
         await contractManager.setContractsAddress("SkaleDKG", skaleDKG.address);
+
+        delegationService = await DelegationService.new(contractManager.address);
+        await contractManager.setContractsAddress("DelegationService", delegationService.address);
+        validatorService = await ValidatorService.new(contractManager.address);
+        await contractManager.setContractsAddress("ValidatorService", validatorService.address);
+        delegationController = await DelegationController.new(contractManager.address);
+        await contractManager.setContractsAddress("DelegationController", delegationController.address);
+        tokenState = await TokenState.new(contractManager.address);
+        await contractManager.setContractsAddress("TokenState", tokenState.address);
+        delegationRequestManager = await DelegationRequestManager.new(contractManager.address);
+        await contractManager.setContractsAddress("DelegationRequestManager", delegationRequestManager.address);
+        delegationPeriodManager = await DelegationPeriodManager.new(contractManager.address);
+        await contractManager.setContractsAddress("DelegationPeriodManager", delegationPeriodManager.address);
+        timeHelpers = await TimeHelpers.new();
+        await contractManager.setContractsAddress("TimeHelpers", timeHelpers.address);
+        skaleBalances = await SkaleBalances.new(contractManager.address);
+        await contractManager.setContractsAddress("SkaleBalances", skaleBalances.address);
+        distributor = await Distributor.new(contractManager.address);
+        await contractManager.setContractsAddress("Distributor", distributor.address);
+
+        const prefix = "0x000000000000000000000000";
+        const premined = "100000000000000000000000000";
+        await skaleToken.mint(owner, skaleBalances.address, premined, prefix + skaleManager.address.slice(2), "0x");
+        await delegationService.registerValidator("Validator", "D2 is even", 150, 0, {from: validator});
     });
 
     it("should fail to process token fallback if sent not from SkaleToken", async () => {
@@ -221,7 +254,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
 
             it("should fail to init withdrawing of deposit of someone else's node", async () => {
                 await skaleManager.initWithdrawDeposit(0, {from: hacker})
-                    .should.be.eventually.rejectedWith("Node does not exist for message sender");
+                    .should.be.eventually.rejectedWith("Validator with such address doesn't exist");
             });
 
             it("should init withdrawing of deposit", async () => {
@@ -311,12 +344,12 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
 
             it("should fail to init withdrawing of deposit of first node from another account", async () => {
                 await skaleManager.initWithdrawDeposit(0, {from: hacker})
-                    .should.be.eventually.rejectedWith("Node does not exist for message sender");
+                    .should.be.eventually.rejectedWith("Validator with such address doesn't exist");
             });
 
             it("should fail to init withdrawing of deposit of second node from another account", async () => {
                 await skaleManager.initWithdrawDeposit(1, {from: hacker})
-                    .should.be.eventually.rejectedWith("Node does not exist for message sender");
+                    .should.be.eventually.rejectedWith("Validator with such address doesn't exist");
             });
 
             it("should init withdrawing of deposit of first node", async () => {
@@ -414,7 +447,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
 
             it("should fail to send validator verdict from not node owner", async () => {
                 await skaleManager.sendVerdict(0, 1, 0, 50, {from: hacker})
-                    .should.be.eventually.rejectedWith("Node does not exist for Message sender");
+                    .should.be.eventually.rejectedWith("Validator with such address doesn't exist");
             });
 
             it("should fail to send validator verdict if send it too early", async () => {
@@ -471,17 +504,18 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
 
                 it("should fail to get bounty if sender is not owner of the node", async () => {
                     await skaleManager.getBounty(1, {from: hacker})
-                        .should.be.eventually.rejectedWith("Node does not exist for Message sender");
+                        .should.be.eventually.rejectedWith("Validator with such address doesn't exist");
                 });
 
                 it("should get bounty", async () => {
                     skipTime(web3, 200);
-                    const balanceBefore = web3.utils.toBN(await skaleToken.balanceOf(validator));
+                    const balanceBefore = web3.utils.toBN(await skaleBalances.getBalance(validator));
+                    // const bounty = web3.utils.toBN("893061271147690900777");
                     const bounty = web3.utils.toBN("1250285779606767261088");
 
                     await skaleManager.getBounty(1, {from: validator});
 
-                    const balanceAfter = web3.utils.toBN(await skaleToken.balanceOf(validator));
+                    const balanceAfter = web3.utils.toBN(await skaleBalances.getBalance(validator));
 
                     expect(balanceAfter.sub(balanceBefore).eq(bounty)).to.be.true;
                 });
@@ -493,43 +527,47 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
                     await skaleManager.sendVerdict(0, 1, 1, 50, {from: validator});
                 });
 
-                // it("should fail to get bounty if sender is not owner of the node", async () => {
-                //     await skaleManager.getBounty(1, {from: hacker})
-                //         .should.be.eventually.rejectedWith("Node does not exist for Message sender");
-                // });
+                it("should fail to get bounty if sender is not owner of the node", async () => {
+                    await skaleManager.getBounty(1, {from: hacker})
+                        .should.be.eventually.rejectedWith("Validator with such address doesn't exist");
+                });
 
                 it("should get bounty", async () => {
                     skipTime(web3, 200);
-                    const balanceBefore = web3.utils.toBN(await skaleToken.balanceOf(validator));
+                    const balanceBefore = web3.utils.toBN(await skaleBalances.getBalance(validator));
+                    // const bounty = web3.utils.toBN("893019925718471100273");
+
                     const bounty = web3.utils.toBN("1250227896005859540382");
 
                     await skaleManager.getBounty(1, {from: validator});
 
-                    const balanceAfter = web3.utils.toBN(await skaleToken.balanceOf(validator));
+                    const balanceAfter = web3.utils.toBN(await skaleBalances.getBalance(validator));
 
                     expect(balanceAfter.sub(balanceBefore).eq(bounty)).to.be.true;
                 });
 
                 it("should get bounty after break", async () => {
                     skipTime(web3, 600);
-                    const balanceBefore = web3.utils.toBN(await skaleToken.balanceOf(validator));
+                    const balanceBefore = web3.utils.toBN(await skaleBalances.getBalance(validator));
+                    // const bounty = web3.utils.toBN("893019925718471100273");
                     const bounty = web3.utils.toBN("1250227896005859540382");
 
                     await skaleManager.getBounty(1, {from: validator});
 
-                    const balanceAfter = web3.utils.toBN(await skaleToken.balanceOf(validator));
+                    const balanceAfter = web3.utils.toBN(await skaleBalances.getBalance(validator));
 
                     expect(balanceAfter.sub(balanceBefore).eq(bounty)).to.be.true;
                 });
 
                 it("should get bounty after big break", async () => {
                     skipTime(web3, 800);
-                    const balanceBefore = web3.utils.toBN(await skaleToken.balanceOf(validator));
+                    const balanceBefore = web3.utils.toBN(await skaleBalances.getBalance(validator));
+                    // const bounty = web3.utils.toBN("892937234860031499264");
                     const bounty = web3.utils.toBN("1250112128804044098969");
 
                     await skaleManager.getBounty(1, {from: validator});
 
-                    const balanceAfter = web3.utils.toBN(await skaleToken.balanceOf(validator));
+                    const balanceAfter = web3.utils.toBN(await skaleBalances.getBalance(validator));
 
                     expect(balanceAfter.sub(balanceBefore).eq(bounty)).to.be.true;
                 });
@@ -548,36 +586,36 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
 
                 it("should get bounty", async () => {
                     skipTime(web3, 200);
-                    const balanceBefore = web3.utils.toBN(await skaleToken.balanceOf(validator));
+                    const balanceBefore = web3.utils.toBN(await skaleBalances.getBalance(validator));
                     const bounty = web3.utils.toBN("937714334705075445816");
 
                     await skaleManager.getBounty(1, {from: validator});
 
-                    const balanceAfter = web3.utils.toBN(await skaleToken.balanceOf(validator));
+                    const balanceAfter = web3.utils.toBN(await skaleBalances.getBalance(validator));
 
                     expect(balanceAfter.sub(balanceBefore).eq(bounty)).to.be.true;
                 });
 
                 it("should get bounty after break", async () => {
                     skipTime(web3, 600);
-                    const balanceBefore = web3.utils.toBN(await skaleToken.balanceOf(validator));
+                    const balanceBefore = web3.utils.toBN(await skaleBalances.getBalance(validator));
                     const bounty = web3.utils.toBN("937714334705075445816");
 
                     await skaleManager.getBounty(1, {from: validator});
 
-                    const balanceAfter = web3.utils.toBN(await skaleToken.balanceOf(validator));
+                    const balanceAfter = web3.utils.toBN(await skaleBalances.getBalance(validator));
 
                     expect(balanceAfter.sub(balanceBefore).eq(bounty)).to.be.true;
                 });
 
                 it("should get bounty after big break", async () => {
                     skipTime(web3, 800);
-                    const balanceBefore = web3.utils.toBN(await skaleToken.balanceOf(validator));
+                    const balanceBefore = web3.utils.toBN(await skaleBalances.getBalance(validator));
                     const bounty = web3.utils.toBN("937627509303713864756");
 
                     await skaleManager.getBounty(1, {from: validator});
 
-                    const balanceAfter = web3.utils.toBN(await skaleToken.balanceOf(validator));
+                    const balanceAfter = web3.utils.toBN(await skaleBalances.getBalance(validator));
 
                     expect(balanceAfter.sub(balanceBefore).eq(bounty)).to.be.true;
                 });
