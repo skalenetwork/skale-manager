@@ -28,9 +28,8 @@ contract DelegationPeriodManager is Permissions {
         stakeMultipliers[12] = 200;
     }
 
-    function getStakeMultiplier(uint monthsCount) external view returns (uint) {
-        require(isDelegationPeriodAllowed(monthsCount), "Stake multiplier didn't set for this period");
-        return stakeMultipliers[monthsCount];
+    function isDelegationPeriodAllowed(uint monthsCount) external view returns (bool) {
+        return stakeMultipliers[monthsCount] != 0 ? true : false;
     }
 
     function setDelegationPeriod(uint monthsCount, uint stakeMultiplier) external onlyOwner {
@@ -40,9 +39,5 @@ contract DelegationPeriodManager is Permissions {
     function removeDelegationPeriod(uint monthsCount) external onlyOwner {
         // remove only if there is no guys that stacked tokens for this period
         stakeMultipliers[monthsCount] = 0;
-    }
-
-    function isDelegationPeriodAllowed(uint monthsCount) public view returns (bool) {
-        return stakeMultipliers[monthsCount] != 0 ? true : false;
     }
 }

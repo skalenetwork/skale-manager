@@ -81,7 +81,7 @@ contract DelegationRequestManager is Permissions {
         );
     }
 
-    function cancelRequest(uint delegationId, address holderAddress) external {
+    function cancelRequest(uint delegationId, address holderAddress) external allow("DelegationService") {
         TokenState tokenState = TokenState(
             contractManager.getContract("TokenState")
         );
@@ -103,7 +103,7 @@ contract DelegationRequestManager is Permissions {
         );
     }
 
-    function acceptRequest(uint delegationId, address validatorAddress) external {
+    function acceptRequest(uint delegationId, address validatorAddress) external allow("DelegationService") {
         TokenState tokenState = TokenState(
             contractManager.getContract("TokenState")
         );
