@@ -12,7 +12,7 @@ contract SlashingTable is Permissions {
         _penalties[uint(keccak256(abi.encodePacked(offense)))] = penalty;
     }
 
-    function getPenalty(string calldata offense) external returns (uint) {
+    function getPenalty(string calldata offense) external view returns (uint) {
         uint penalty = _penalties[uint(keccak256(abi.encodePacked(offense)))];
         return penalty;
     }

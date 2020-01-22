@@ -44,7 +44,7 @@ contract ValidatorService is Permissions {
     uint public numberOfValidators;
 
     modifier checkValidatorExists(uint validatorId) {
-        require(validatorId <= numberOfValidators, "Validator with such id doesn't exist");
+        require(validatorExists(validatorId), "Validator with such id doesn't exist");
         _;
     }
 
@@ -104,12 +104,16 @@ contract ValidatorService is Permissions {
     function checkMinimumDelegation(uint validatorId, uint amount)
         external
         checkValidatorExists(validatorId)
+        allow("DelegationRequestManager")
         returns (bool)
     {
         return validators[validatorId].minimumDelegationAmount <= amount ? true : false;
     }
 
-    function checkValidatorAddressToId(address validatorAddress, uint validatorId) external view returns (bool) {
+    function checkValidatorAddressToId(address validatorAddress, uint validatorId)
+    external view
+    allow("DelegationRequestManager") returns (bool)
+    {
         return getValidatorId(validatorAddress) == validatorId ? true : false;
     }
 
@@ -148,9 +152,14 @@ contract ValidatorService is Permissions {
         );
         uint[] memory validatorNodes = validators[validatorId].nodeIndexes;
         uint position = findNode(validatorNodes, nodeIndex);
+        require(position < validatorNodes.length, "Node does not exist for this Validator");
         uint delegationsTotal = delegationController.getDelegationsTotal(validatorId);
         uint MSR = IConstants(contractManager.getContract("Constants")).MSR();
         return (position + 1) * MSR <= delegationsTotal;
+    }
+
+    function validatorExists(uint validatorId) public view returns (bool) {
+        return validatorId <= numberOfValidators;
     }
 
     function getValidator(uint validatorId) public view checkValidatorExists(validatorId) returns (Validator memory) {
