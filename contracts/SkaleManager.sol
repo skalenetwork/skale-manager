@@ -105,13 +105,20 @@ contract SkaleManager is IERC777Recipient, Permissions {
         INodesFunctionality(nodesFunctionalityAddress).removeNode(msg.sender, nodeIndex);
         address validatorsFunctionalityAddress = contractManager.getContract("ValidatorsFunctionality");
         IValidatorsFunctionality(validatorsFunctionalityAddress).deleteValidatorByRoot(nodeIndex);
+        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
+        uint validatorId = validatorService.getValidatorId(msg.sender);
+        validatorService.deleteNode(validatorId, nodeIndex);
     }
 
     function deleteNodeByRoot(uint nodeIndex) external onlyOwner {
         address nodesFunctionalityAddress = contractManager.getContract("NodesFunctionality");
         INodesFunctionality(nodesFunctionalityAddress).removeNodeByRoot(nodeIndex);
+        address nodesDataAddress = contractManager.getContract("NodesData");
+        uint validatorId = INodesData(nodesFunctionalityAddress).getNodeValidatorId(nodeIndex);
         address validatorsFunctionalityAddress = contractManager.getContract("ValidatorsFunctionality");
         IValidatorsFunctionality(validatorsFunctionalityAddress).deleteValidatorByRoot(nodeIndex);
+        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
+        validatorService.deleteNode(validatorId, nodeIndex);
     }
 
     function deleteSchain(string calldata name) external {
@@ -233,7 +240,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
             if (latency > constants.allowableLatency()) {
                 bountyForMiner = (constants.allowableLatency() * bountyForMiner) / latency;
             }
-            payBounty(uint(bountyForMiner), from);
+            payBounty(uint(bountyForMiner), from, nodeIndex);
         } else {
             //Need to add penalty
             bountyForMiner = 0;
@@ -241,13 +248,17 @@ contract SkaleManager is IERC777Recipient, Permissions {
         return uint(bountyForMiner);
     }
 
-    function payBounty(uint bountyForMiner, address miner) internal returns (bool) {
+    function payBounty(uint bountyForMiner, address miner, uint nodeIndex) internal returns (bool) {
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
         SkaleToken skaleToken = SkaleToken(contractManager.getContract("SkaleToken"));
         DelegationService delegationService = DelegationService(contractManager.getContract("DelegationService"));
         uint validatorId = validatorService.getValidatorId(miner);
-        delegationService.withdrawBounty(address(this), uint(bountyForMiner));
-        skaleToken.send(address(delegationService), uint(bountyForMiner), abi.encode(validatorId));
+        uint bounty = bountyForMiner;
+        if (!validatorService.checkPossibilityToMaintainNode(validatorId, nodeIndex)) {
+            bounty /= 2;
+        }
+        delegationService.withdrawBounty(address(this), bounty);
+        skaleToken.send(address(delegationService), bounty, abi.encode(validatorId));
     }
 
     function fallbackOperationTypeConvert(bytes memory data) internal pure returns (TransactionOperation) {

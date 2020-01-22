@@ -122,6 +122,15 @@ contract ValidatorService is Permissions {
         validators[validatorId].nodeIndexes.push(nodeIndex);
     }
 
+    function deleteNode(uint validatorId, uint nodeIndex) external allow("SkaleManager") {
+        uint[] memory validatorNodes = validators[validatorId].nodeIndexes;
+        uint position = findNode(validatorNodes, nodeIndex);
+        if (position < validatorNodes.length) {
+            validators[validatorId].nodeIndexes[position] = validators[validatorId].nodeIndexes[validatorNodes.length - 1];
+        }
+        delete validators[validatorId].nodeIndexes[validatorNodes.length - 1];
+    }
+
     function checkPossibilityCreatingNode(address validatorAddress) external allow("SkaleManager") {
         DelegationController delegationController = DelegationController(
             contractManager.getContract("DelegationController")
@@ -133,6 +142,17 @@ contract ValidatorService is Permissions {
         require((validatorNodes.length + 1) * MSR <= delegationsTotal, "Validator has to meet Minimum Staking Requirement");
     }
 
+    function checkPossibilityToMaintainNode(uint validatorId, uint nodeIndex) external allow("SkaleManager") returns (bool) {
+        DelegationController delegationController = DelegationController(
+            contractManager.getContract("DelegationController")
+        );
+        uint[] memory validatorNodes = validators[validatorId].nodeIndexes;
+        uint position = findNode(validatorNodes, nodeIndex);
+        uint delegationsTotal = delegationController.getDelegationsTotal(validatorId);
+        uint MSR = IConstants(contractManager.getContract("Constants")).MSR();
+        return (position + 1) * MSR <= delegationsTotal;
+    }
+
     function getValidator(uint validatorId) public view checkValidatorExists(validatorId) returns (Validator memory) {
         return validators[validatorId];
     }
@@ -142,5 +162,14 @@ contract ValidatorService is Permissions {
         return validatorAddressToId[validatorAddress];
     }
 
+    function findNode(uint[] memory nodeIndexes, uint nodeIndex) internal pure returns (uint) {
+        uint i;
+        for (i = 0; i < nodeIndexes.length; i++) {
+            if (nodeIndexes[i] == nodeIndex) {
+                return i;
+            }
+        }
+        return i;
+    }
 
 }
