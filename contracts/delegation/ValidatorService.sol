@@ -104,12 +104,16 @@ contract ValidatorService is Permissions {
     function checkMinimumDelegation(uint validatorId, uint amount)
         external
         checkValidatorExists(validatorId)
+        allow("DelegationRequestManager")
         returns (bool)
     {
         return validators[validatorId].minimumDelegationAmount <= amount ? true : false;
     }
 
-    function checkValidatorAddressToId(address validatorAddress, uint validatorId) external view returns (bool) {
+    function checkValidatorAddressToId(address validatorAddress, uint validatorId)
+    external view
+    allow("DelegationRequestManager") returns (bool)
+    {
         return getValidatorId(validatorAddress) == validatorId ? true : false;
     }
 
