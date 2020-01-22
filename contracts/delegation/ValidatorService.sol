@@ -91,10 +91,6 @@ contract ValidatorService is Permissions {
         checkValidatorExists(validatorId)
         allow("DelegationService")
     {
-        require(
-            validators[validatorId].requestedAddress == newValidatorAddress,
-            "The validator cannot be changed because it isn't the actual owner"
-        );
         validatorAddressToId[validators[validatorId].validatorAddress] = 0;
         validators[validatorId].validatorAddress = newValidatorAddress;
         validators[validatorId].requestedAddress = address(0);
