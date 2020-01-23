@@ -404,6 +404,10 @@ contract NodesData is INodesData, Permissions {
         return nodes[nodeIndex].publicKey;
     }
 
+    function getNodeValidatorId(uint nodeIndex) external view returns (uint) {
+        return nodes[nodeIndex].validatorId;
+    }
+
     /**
      * @dev isNodeLeaving - checks if Node status Leaving
      * @param nodeIndex - index of Node

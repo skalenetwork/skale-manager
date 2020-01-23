@@ -193,7 +193,7 @@ contract ValidatorsFunctionality is GroupsFunctionality, IValidatorsFunctionalit
         }
     }
 
-    function rotateNode(bytes32 schainId) external {
+    function rotateNode(bytes32 schainId) external allow("SkaleManager") {
         uint newNodeIndexEvent;
         newNodeIndexEvent = selectNodeToGroup(schainId);
         emit ValidatorRotated(schainId, newNodeIndexEvent);

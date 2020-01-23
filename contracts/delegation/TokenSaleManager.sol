@@ -76,6 +76,7 @@ contract TokenSaleManager is ITokenSaleManager, Permissions, IERC777Recipient {
         bytes calldata operatorData
     )
         external
+        allow("SkaleToken")
     {
 
     }

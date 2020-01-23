@@ -83,27 +83,27 @@ contract TokenState is Permissions {
         return amount;
     }
 
-    function sold(address holder, uint amount) external {
+    function sold(address holder, uint amount) external allow("DelegationService") {
         _purchased[holder] += amount;
     }
 
-    function accept(uint delegationId) external {
+    function accept(uint delegationId) external allow("DelegationRequestManager") {
         require(getState(delegationId) == State.PROPOSED, "Can't set state to accepted");
         setState(delegationId, State.ACCEPTED);
     }
 
-    function requestUndelegation(uint delegationId) external {
+    function requestUndelegation(uint delegationId) external allow("DelegationService") {
         require(getState(delegationId) == State.DELEGATED, "Can't request undelegation");
         setState(delegationId, State.ENDING_DELEGATED);
     }
 
-    function cancel(uint delegationId) external returns (State state) {
+    function cancel(uint delegationId) external allow("DelegationRequestManager") returns (State state) {
         require(getState(delegationId) == State.PROPOSED, "Can't cancel delegation request");
         DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
         return _cancel(delegationId, delegationController.getDelegation(delegationId));
     }
 
-    function slash(uint delegationId, uint amount) external {
+    function slash(uint delegationId, uint amount) external allow("DelegationService") {
         DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
         DelegationController.Delegation memory delegation = delegationController.getDelegation(delegationId);
         uint slashingAmount = amount;
@@ -115,7 +115,7 @@ contract TokenState is Permissions {
         delegationController.setDelegationAmount(delegationId, delegation.amount - slashingAmount);
     }
 
-    function forgive(address wallet, uint amount) external {
+    function forgive(address wallet, uint amount) external allow("DelegationService") {
         uint forgiveAmount = amount;
         if (amount > _slashed[wallet]) {
             forgiveAmount = _slashed[wallet];

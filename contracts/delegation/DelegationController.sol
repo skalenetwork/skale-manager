@@ -47,7 +47,7 @@ contract DelegationController is Permissions {
     mapping (uint => uint[]) private _activeByValidator;
 
     //validatorId => sum of tokens each holder
-    mapping (uint => uint) public delegationsTotal;
+    mapping (uint => uint) private _delegationsTotal;
 
     modifier checkDelegationExists(uint delegationId) {
         require(delegationId < delegations.length, "Delegation does not exist");
@@ -58,21 +58,25 @@ contract DelegationController is Permissions {
 
     }
 
+    function getDelegation(uint delegationId) external view checkDelegationExists(delegationId) returns (Delegation memory) {
+        return delegations[delegationId];
+    }
+
     function addDelegationsTotal(uint validatorId, uint amount) external allow("TokenState") {
-        delegationsTotal[validatorId] += amount;
+        _delegationsTotal[validatorId] += amount;
     }
 
     function subDelegationsTotal(uint validatorId, uint amount) external allow("TokenState") {
-        delegationsTotal[validatorId] -= amount;
+        _delegationsTotal[validatorId] -= amount;
     }
 
-    function getDelegationsTotal(uint validatorId) external returns (uint) {
+    function getDelegationsTotal(uint validatorId) external allow("ValidatorService") returns (uint) {
         TokenState tokenState = TokenState(contractManager.getContract("TokenState"));
         for (uint i = 0; i < _activeByValidator[validatorId].length; i++) {
             uint delegationId = _activeByValidator[validatorId][i];
             TokenState.State state = tokenState.getState(delegationId);
         }
-        return delegationsTotal[validatorId];
+        return _delegationsTotal[validatorId];
     }
 
     function addDelegation(
@@ -100,17 +104,11 @@ contract DelegationController is Permissions {
         _activeByValidator[validatorId].push(delegationId);
     }
 
-    function unDelegate(uint validatorId) external view {
-        // require(delegations[validatorId].holder != address(0), "Token with such address wasn't delegated");
-        // Call Token.unlock(lockTime)
-        // update isDelegated
-    }
-
-    function getDelegationsByHolder(address holder) external view returns (uint[] memory) {
+    function getDelegationsByHolder(address holder) external view allow("TokenState") returns (uint[] memory) {
         return _delegationsByHolder[holder];
     }
 
-    function getActiveDelegationsByValidator(uint validatorId) external returns (uint[] memory) {
+    function getActiveDelegationsByValidator(uint validatorId) external allow("Distributor") returns (uint[] memory) {
         TokenState tokenState = TokenState(contractManager.getContract("TokenState"));
         uint activeAmount = 0;
         for (uint i = 0; i < _activeByValidator[validatorId].length;) {
@@ -141,15 +139,11 @@ contract DelegationController is Permissions {
         return active;
     }
 
-    function setDelegationAmount(uint delegationId, uint amount) external checkDelegationExists(delegationId) {
+    function setDelegationAmount(uint delegationId, uint amount) external checkDelegationExists(delegationId) allow("TokenState") {
         delegations[delegationId].amount = amount;
     }
 
-    function getDelegation(uint delegationId) external view checkDelegationExists(delegationId) returns (Delegation memory) {
-        return delegations[delegationId];
-    }
-
-    function getDelegationsByHolder(address holderAddress, TokenState.State _state) external returns (uint[] memory) {
+    function getDelegationsByHolder(address holderAddress, TokenState.State _state) external allow("DelegationService") returns (uint[] memory) {
         TokenState tokenState = TokenState(contractManager.getContract("TokenState"));
         uint delegationsAmount = 0;
         for (uint i = 0; i < _delegationsByHolder[holderAddress].length; i++) {
@@ -172,7 +166,11 @@ contract DelegationController is Permissions {
         return delegationsHolder;
     }
 
-    function getDelegationsByValidator(address validatorAddress, TokenState.State _state) external returns (uint[] memory) {
+    function getDelegationsByValidator(address validatorAddress, TokenState.State _state)
+    external
+    allow("DelegationService")
+    returns (uint[] memory)
+    {
         TokenState tokenState = TokenState(contractManager.getContract("TokenState"));
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
         uint validatorId = validatorService.getValidatorId(validatorAddress);
