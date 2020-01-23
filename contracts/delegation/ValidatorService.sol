@@ -158,12 +158,16 @@ contract ValidatorService is Permissions {
         return validatorId <= numberOfValidators;
     }
 
+    function validatorAddressExists(address validatorAddress) public view returns (bool) {
+        return validatorAddressToId[validatorAddress] != 0;
+    }
+
     function getValidator(uint validatorId) public view checkValidatorExists(validatorId) returns (Validator memory) {
         return validators[validatorId];
     }
 
     function getValidatorId(address validatorAddress) public view returns (uint) {
-        require(validatorAddressToId[validatorAddress] != 0, "Validator with such address doesn't exist");
+        require(validatorAddressExists(validatorAddress), "Validator with such address doesn't exist");
         return validatorAddressToId[validatorAddress];
     }
 
