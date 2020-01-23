@@ -91,10 +91,6 @@ contract ValidatorService is Permissions {
         checkValidatorExists(validatorId)
         allow("DelegationService")
     {
-        require(
-            validators[validatorId].requestedAddress == newValidatorAddress,
-            "The validator cannot be changed because it isn't the actual owner"
-        );
         validatorAddressToId[validators[validatorId].validatorAddress] = 0;
         validators[validatorId].validatorAddress = newValidatorAddress;
         validators[validatorId].requestedAddress = address(0);
@@ -142,8 +138,8 @@ contract ValidatorService is Permissions {
         uint validatorId = getValidatorId(validatorAddress);
         uint[] memory validatorNodes = validators[validatorId].nodeIndexes;
         uint delegationsTotal = delegationController.getDelegationsTotal(validatorId);
-        uint MSR = IConstants(contractManager.getContract("Constants")).MSR();
-        require((validatorNodes.length + 1) * MSR <= delegationsTotal, "Validator has to meet Minimum Staking Requirement");
+        uint msr = IConstants(contractManager.getContract("Constants")).msr();
+        require((validatorNodes.length + 1) * msr <= delegationsTotal, "Validator has to meet Minimum Staking Requirement");
     }
 
     function checkPossibilityToMaintainNode(uint validatorId, uint nodeIndex) external allow("SkaleManager") returns (bool) {
@@ -154,7 +150,7 @@ contract ValidatorService is Permissions {
         uint position = findNode(validatorNodes, nodeIndex);
         require(position < validatorNodes.length, "Node does not exist for this Validator");
         uint delegationsTotal = delegationController.getDelegationsTotal(validatorId);
-        uint MSR = IConstants(contractManager.getContract("Constants")).MSR();
+        uint MSR = IConstants(contractManager.getContract("Constants")).msr();
         return (position + 1) * MSR <= delegationsTotal;
     }
 

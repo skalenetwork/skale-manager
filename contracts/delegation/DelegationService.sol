@@ -199,7 +199,15 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
     }
 
     function confirmNewAddress(uint validatorId) external {
-        ValidatorService(contractManager.getContract("ValidatorService")).confirmNewAddress(msg.sender, validatorId);
+        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
+        ValidatorService.Validator memory validator = validatorService.getValidator(validatorId);
+
+        require(
+            validator.requestedAddress == msg.sender,
+            "The validator cannot be changed because it isn't the actual owner"
+        );
+
+        validatorService.confirmNewAddress(msg.sender, validatorId);
     }
 
     function getValidators() external returns (uint[] memory validatorIds) {
