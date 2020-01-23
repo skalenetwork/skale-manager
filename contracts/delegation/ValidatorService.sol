@@ -40,7 +40,7 @@ contract ValidatorService is Permissions {
     }
 
     mapping (uint => Validator) public validators;
-    mapping (address => uint) public validatorAddressToId;
+    mapping (address => uint) private _validatorAddressToId;
     uint public numberOfValidators;
 
     modifier checkValidatorExists(uint validatorId) {
@@ -63,7 +63,7 @@ contract ValidatorService is Permissions {
         allow("DelegationService")
         returns (uint validatorId)
     {
-        require(validatorAddressToId[validatorAddress] == 0, "Validator with such address already exists");
+        require(_validatorAddressToId[validatorAddress] == 0, "Validator with such address already exists");
         uint[] memory epmtyArray = new uint[](0);
         validatorId = ++numberOfValidators;
         validators[validatorId] = Validator(
@@ -77,7 +77,7 @@ contract ValidatorService is Permissions {
             0,
             epmtyArray
         );
-        validatorAddressToId[validatorAddress] = validatorId;
+        _validatorAddressToId[validatorAddress] = validatorId;
     }
 
     function requestForNewAddress(address oldValidatorAddress, address newValidatorAddress) external allow("DelegationService") {
@@ -91,10 +91,10 @@ contract ValidatorService is Permissions {
         checkValidatorExists(validatorId)
         allow("DelegationService")
     {
-        validatorAddressToId[validators[validatorId].validatorAddress] = 0;
+        _validatorAddressToId[validators[validatorId].validatorAddress] = 0;
         validators[validatorId].validatorAddress = newValidatorAddress;
         validators[validatorId].requestedAddress = address(0);
-        validatorAddressToId[newValidatorAddress] = validatorId;
+        _validatorAddressToId[newValidatorAddress] = validatorId;
     }
 
     function checkMinimumDelegation(uint validatorId, uint amount)
@@ -159,7 +159,7 @@ contract ValidatorService is Permissions {
     }
 
     function validatorAddressExists(address validatorAddress) public view returns (bool) {
-        return validatorAddressToId[validatorAddress] != 0;
+        return _validatorAddressToId[validatorAddress] != 0;
     }
 
     function getValidator(uint validatorId) public view checkValidatorExists(validatorId) returns (Validator memory) {
@@ -168,7 +168,7 @@ contract ValidatorService is Permissions {
 
     function getValidatorId(address validatorAddress) public view returns (uint) {
         require(validatorAddressExists(validatorAddress), "Validator with such address doesn't exist");
-        return validatorAddressToId[validatorAddress];
+        return _validatorAddressToId[validatorAddress];
     }
 
     function findNode(uint[] memory nodeIndexes, uint nodeIndex) internal pure returns (uint) {

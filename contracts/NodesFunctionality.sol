@@ -96,7 +96,7 @@ contract NodesFunctionality is Permissions, INodesFunctionality {
         require(!INodesData(nodesDataAddress).nodesNameCheck(keccak256(abi.encodePacked(name))), "Name has already registered");
         require(port > 0, "Port is zero");
 
-        uint validatorId = ValidatorService(contractManager.getContract("ValidatorService")).validatorAddressToId(from);
+        uint validatorId = ValidatorService(contractManager.getContract("ValidatorService")).getValidatorId(from);
 
         // adds Node to NodesData contract
         nodeIndex = INodesData(nodesDataAddress).addNode(
