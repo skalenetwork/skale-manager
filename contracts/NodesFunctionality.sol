@@ -179,7 +179,7 @@ contract NodesFunctionality is Permissions, INodesFunctionality {
      * @param nodeIndex - index of Node
      * @return amount of SKL which be returned
      */
-    function completeWithdrawDeposit(address from, uint nodeIndex) external allow("SkaleManager") returns (uint) {
+    function completeWithdrawDeposit(address from, uint nodeIndex) external allow("SkaleManager") {
         INodesData nodesData = INodesData(contractManager.getContract("NodesData"));
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
 
@@ -189,17 +189,14 @@ contract NodesFunctionality is Permissions, INodesFunctionality {
         require(nodesData.isLeavingPeriodExpired(nodeIndex), "Leaving period has not expired");
 
         nodesData.setNodeLeft(nodeIndex);
-
         nodesData.removeNode(nodeIndex);
 
-        address constantsAddress = contractManager.getContract("Constants");
         emit WithdrawDepositFromNodeComplete(
             nodeIndex,
             from,
-            IConstants(constantsAddress).NODE_DEPOSIT(),
+            0,
             uint32(block.timestamp),
             gasleft());
-        return IConstants(constantsAddress).NODE_DEPOSIT();
     }
 
     // /**
