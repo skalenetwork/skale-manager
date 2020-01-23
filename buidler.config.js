@@ -101,6 +101,10 @@ module.exports = {
         {
           privateKey: "0xe8829ca5780908bb7e842eb69077410c9e89ed323c8038a634d39c0b301e32f8",
           balance: "0xd3c21bcecceda0000000"
+        },
+        {
+          privateKey: "0x9B0B6E1F047FAF814323B8CE32636F559C4B2FA3B96A8158A3CDA5779505DAFD",
+          balance: "0xd3c21bcecceda0000000"
         }
       ]
     }

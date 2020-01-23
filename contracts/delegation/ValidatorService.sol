@@ -97,6 +97,17 @@ contract ValidatorService is Permissions {
         validatorAddressToId[newValidatorAddress] = validatorId;
     }
 
+    function linkNodeAddress(address validatorAddress, address nodeAddress) external allow("DelegationService") {
+        uint validatorId = getValidatorId(validatorAddress);
+        validatorAddressToId[nodeAddress] = validatorId;
+    }
+
+    function unlinkNodeAddress(address validatorAddress, address nodeAddress) external allow("DelegationService") {
+        uint validatorId = getValidatorId(validatorAddress);
+        require(validatorAddressToId[nodeAddress] == validatorId, "Validator hasn't permissions to unlink node");
+        validatorAddressToId[nodeAddress] = 0;
+    }
+
     function checkMinimumDelegation(uint validatorId, uint amount)
         external
         checkValidatorExists(validatorId)
@@ -107,8 +118,10 @@ contract ValidatorService is Permissions {
     }
 
     function checkValidatorAddressToId(address validatorAddress, uint validatorId)
-    external view
-    allow("DelegationRequestManager") returns (bool)
+        external
+        view
+        allow("DelegationRequestManager")
+        returns (bool)
     {
         return getValidatorId(validatorAddress) == validatorId ? true : false;
     }
