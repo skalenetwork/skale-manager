@@ -228,9 +228,9 @@ contract("Delegation", ([owner,
                 delegationService.delegate(validatorId, 3, 6, "D2 is even more even", {from: holder2});
                 delegationService.delegate(validatorId, 5, 3, "D2 is the evenest", {from: holder3});
 
-                await tokenState.accept(0, {from: validator});
-                await tokenState.accept(1, {from: validator});
-                await tokenState.accept(2, {from: validator});
+                await delegationService.acceptPendingDelegation(0, {from: validator});
+                await delegationService.acceptPendingDelegation(1, {from: validator});
+                await delegationService.acceptPendingDelegation(2, {from: validator});
 
                 skipTime(web3, month);
             });
