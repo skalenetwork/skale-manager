@@ -1,5 +1,4 @@
-import { ContractManagerContract,
-    ContractManagerInstance } from "../../../types/truffle-contracts";
+import { ContractManagerContract } from "../../../types/truffle-contracts";
 
 const ContractManager: ContractManagerContract = artifacts.require("./ContractManager");
 

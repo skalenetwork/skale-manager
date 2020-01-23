@@ -1,59 +1,31 @@
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
-import { ConstantsHolderContract,
-         ConstantsHolderInstance,
-         ContractManagerContract,
-         ContractManagerInstance,
-         NodesDataContract,
+import { ContractManagerInstance,
          NodesDataInstance,
-         NodesFunctionalityContract,
          NodesFunctionalityInstance,
-         ValidatorServiceContract,
          ValidatorServiceInstance } from "../types/truffle-contracts";
 
-import { gasMultiplier } from "./utils/command_line";
+import { deployContractManager } from "./utils/deploy/contractManager";
+import { deployValidatorService } from "./utils/deploy/delegation/validatorService";
+import { deployNodesData } from "./utils/deploy/nodesData";
+import { deployNodesFunctionality } from "./utils/deploy/nodesFunctionality";
 import { skipTime } from "./utils/time";
-
-const ContractManager: ContractManagerContract = artifacts.require("./ContractManager");
-const ConstantsHolder: ConstantsHolderContract = artifacts.require("./ConstantsHolder");
-const NodesData: NodesDataContract = artifacts.require("./NodesData");
-const NodesFunctionality: NodesFunctionalityContract = artifacts.require("./NodesFunctionality");
-const ValidatorService: ValidatorServiceContract = artifacts.require("./ValidatorService");
 
 chai.should();
 chai.use(chaiAsPromised);
 
 contract("NodesFunctionality", ([owner, validator]) => {
     let contractManager: ContractManagerInstance;
-    let constantsHolder: ConstantsHolderInstance;
     let nodesData: NodesDataInstance;
     let nodesFunctionality: NodesFunctionalityInstance;
     let validatorService: ValidatorServiceInstance;
     const validatorId = 1;
 
     beforeEach(async () => {
-        contractManager = await ContractManager.new({from: owner});
-
-        constantsHolder = await ConstantsHolder.new(
-            contractManager.address,
-            {from: owner, gas: 8000000});
-        await contractManager.setContractsAddress("Constants", constantsHolder.address);
-
-        nodesData = await NodesData.new(
-            5,
-            contractManager.address,
-            {from: owner, gas: 8000000 * gasMultiplier});
-        await contractManager.setContractsAddress("NodesData", nodesData.address);
-
-        nodesFunctionality = await NodesFunctionality.new(
-            contractManager.address,
-            {from: owner, gas: 8000000 * gasMultiplier});
-        await contractManager.setContractsAddress("NodesFunctionality", nodesFunctionality.address);
-
-        validatorService = await ValidatorService.new(
-            contractManager.address,
-            {from: owner, gas: 8000000 * gasMultiplier});
-        await contractManager.setContractsAddress("ValidatorService", validatorService.address);
+        contractManager = await deployContractManager();
+        nodesData = await deployNodesData(contractManager);
+        nodesFunctionality = await deployNodesFunctionality(contractManager);
+        validatorService = await deployValidatorService(contractManager);
 
         await validatorService.registerValidator("Validator", validator, "D2", 0, 0);
     });
