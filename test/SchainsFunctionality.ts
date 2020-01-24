@@ -10,11 +10,13 @@ import { ContractManagerInstance,
          SchainsFunctionalityInternalContract,
          SchainsFunctionalityInternalInstance,
          SkaleDKGContract,
-         SkaleDKGInstance } from "../types/truffle-contracts";
+         SkaleDKGInstance,
+         ValidatorServiceInstance} from "../types/truffle-contracts";
 
 import BigNumber from "bignumber.js";
 import { gasMultiplier } from "./utils/command_line";
 import { deployContractManager } from "./utils/deploy/contractManager";
+import { deployValidatorService } from "./utils/deploy/delegation/validatorService";
 import { deployNodesData } from "./utils/deploy/nodesData";
 import { deployNodesFunctionality } from "./utils/deploy/nodesFunctionality";
 
@@ -35,6 +37,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
     let nodesData: NodesDataInstance;
     let nodesFunctionality: NodesFunctionalityInstance;
     let skaleDKG: SkaleDKGInstance;
+    let validatorService: ValidatorServiceInstance;
 
     beforeEach(async () => {
         contractManager = await deployContractManager();
@@ -64,6 +67,10 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
 
         skaleDKG = await SkaleDKG.new(contractManager.address, {from: owner, gas: 8000000 * gasMultiplier});
         await contractManager.setContractsAddress("SkaleDKG", skaleDKG.address);
+
+        validatorService = await deployValidatorService(contractManager);
+
+        validatorService.registerValidator("D2", validator, "D2 is even", 0, 0);
     });
 
     describe("should add schain", async () => {
