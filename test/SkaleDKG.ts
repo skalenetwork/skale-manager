@@ -15,7 +15,8 @@ import { ContractManagerInstance,
          SchainsFunctionalityInternalInstance,
          SkaleDKGContract,
          SkaleDKGInstance,
-         SkaleTokenInstance } from "../types/truffle-contracts";
+         SkaleTokenInstance,
+         ValidatorServiceInstance } from "../types/truffle-contracts";
 
 import { gasMultiplier } from "./utils/command_line";
 import { skipTime } from "./utils/time";
@@ -30,6 +31,7 @@ const ECDH: ECDHContract = artifacts.require("./ECDH");
 import BigNumber from "bignumber.js";
 import { deployContractManager } from "./utils/deploy/contractManager";
 import { deployDelegationService } from "./utils/deploy/delegation/delegationService";
+import { deployValidatorService } from "./utils/deploy/delegation/validatorService";
 import { deployNodesFunctionality } from "./utils/deploy/nodesFunctionality";
 import { deploySkaleToken } from "./utils/deploy/skaleToken";
 import { deploySlashingTable } from "./utils/deploy/slashingTable";
@@ -75,6 +77,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
     let ecdh: ECDHInstance;
     let delegationService: DelegationServiceInstance;
     let skaleToken: SkaleTokenInstance;
+    let validatorService: ValidatorServiceInstance;
 
     beforeEach(async () => {
         contractManager = await deployContractManager();
@@ -113,6 +116,8 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
         delegationService = await deployDelegationService(contractManager);
 
         skaleToken = await deploySkaleToken(contractManager);
+
+        validatorService = await deployValidatorService(contractManager);
 
         const slashingTable = await deploySlashingTable(contractManager);
         await slashingTable.setPenalty("FailedDKG", 5);
@@ -211,6 +216,8 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
             const validator2Id = 2;
             await skaleToken.mint(owner, validator1, 1000, "0x", "0x");
             await skaleToken.mint(owner, validator2, 1000, "0x", "0x");
+            await validatorService.enableValidator(validator1Id, {from: owner});
+            await validatorService.enableValidator(validator2Id, {from: owner});
             await delegationService.delegate(validator1Id, 100, 3, "D2 is even", {from: validator1});
             await delegationService.delegate(validator2Id, 100, 3, "D2 is even more even", {from: validator2});
             await delegationService.acceptPendingDelegation(0, {from: validator1});

@@ -5,7 +5,8 @@ import { ContractManagerInstance,
     SkaleManagerMockContract,
     SkaleManagerMockInstance,
     SkaleTokenInstance,
-    TokenStateInstance } from "../../types/truffle-contracts";
+    TokenStateInstance,
+    ValidatorServiceInstance } from "../../types/truffle-contracts";
 
 const SkaleManagerMock: SkaleManagerMockContract = artifacts.require("./SkaleManagerMock");
 
@@ -19,6 +20,7 @@ import { deployDelegationController } from "../utils/deploy/delegation/delegatio
 import { deployDelegationPeriodManager } from "../utils/deploy/delegation/delegationPeriodManager";
 import { deployDelegationService } from "../utils/deploy/delegation/delegationService";
 import { deployTokenState } from "../utils/deploy/delegation/tokenState";
+import { deployValidatorService } from "../utils/deploy/delegation/validatorService";
 import { deploySkaleToken } from "../utils/deploy/skaleToken";
 
 chai.should();
@@ -57,6 +59,7 @@ contract("Delegation", ([owner,
     let delegationController: DelegationControllerInstance;
     let tokenState: TokenStateInstance;
     let skaleManagerMock: SkaleManagerMockInstance;
+    let validatorService: ValidatorServiceInstance;
 
     const defaultAmount = 100 * 1e18;
     const month = 60 * 60 * 24 * 31;
@@ -72,6 +75,7 @@ contract("Delegation", ([owner,
         delegationPeriodManager = await deployDelegationPeriodManager(contractManager);
         delegationController = await deployDelegationController(contractManager);
         tokenState = await deployTokenState(contractManager);
+        validatorService = await deployValidatorService(contractManager);
 
         // each test will start from Nov 10
         await skipTimeToDate(web3, 10, 10);
@@ -87,6 +91,7 @@ contract("Delegation", ([owner,
             const { logs } = await delegationService.registerValidator(
                 "First validator", "Super-pooper validator", 150, 0, {from: validator});
             validatorId = logs[0].args.validatorId.toNumber();
+            await validatorService.enableValidator(validatorId, {from: owner});
         });
 
         for (let delegationPeriod = 1; delegationPeriod <= 18; ++delegationPeriod) {

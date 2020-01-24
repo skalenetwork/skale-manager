@@ -144,7 +144,11 @@ contract DelegationController is Permissions {
         delegations[delegationId].amount = amount;
     }
 
-    function getDelegationsByHolder(address holderAddress, TokenState.State _state) external allow("DelegationService") returns (uint[] memory) {
+    function getDelegationsByHolder(address holderAddress, TokenState.State _state)
+        external
+        allow("DelegationService")
+        returns (uint[] memory)
+    {
         TokenState tokenState = TokenState(contractManager.getContract("TokenState"));
         uint delegationsAmount = 0;
         for (uint i = 0; i < _delegationsByHolder[holderAddress].length; i++) {
@@ -163,14 +167,13 @@ contract DelegationController is Permissions {
                 ++cursor;
             }
         }
-
         return delegationsHolder;
     }
 
-    function getDelegationsByValidator(address validatorAddress, TokenState.State _state)
-    external
-    allow("DelegationService")
-    returns (uint[] memory)
+    function getDelegationsForValidator(address validatorAddress, TokenState.State _state)
+        external
+        allow("DelegationService")
+        returns (uint[] memory)
     {
         TokenState tokenState = TokenState(contractManager.getContract("TokenState"));
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
@@ -192,7 +195,6 @@ contract DelegationController is Permissions {
                 ++cursor;
             }
         }
-
         return delegationsValidator;
     }
 

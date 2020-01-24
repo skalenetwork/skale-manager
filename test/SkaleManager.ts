@@ -22,13 +22,15 @@ import { ConstantsHolderInstance,
          SkaleDKGInstance,
          SkaleManagerContract,
          SkaleManagerInstance,
-         SkaleTokenInstance} from "../types/truffle-contracts";
+         SkaleTokenInstance,
+         ValidatorServiceInstance } from "../types/truffle-contracts";
 
 import { gasMultiplier } from "./utils/command_line";
 import { deployConstantsHolder } from "./utils/deploy/constantsHolder";
 import { deployContractManager } from "./utils/deploy/contractManager";
 import { deployDelegationService } from "./utils/deploy/delegation/delegationService";
 import { deploySkaleBalances } from "./utils/deploy/delegation/skaleBalances";
+import { deployValidatorService } from "./utils/deploy/delegation/validatorService";
 import { deployNodesData } from "./utils/deploy/nodesData";
 import { deployNodesFunctionality } from "./utils/deploy/nodesFunctionality";
 import { deploySkaleToken } from "./utils/deploy/skaleToken";
@@ -63,6 +65,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
     let skaleDKG: SkaleDKGInstance;
     let delegationService: DelegationServiceInstance;
     let skaleBalances: SkaleBalancesInstance;
+    let validatorService: ValidatorServiceInstance;
 
     beforeEach(async () => {
         contractManager = await deployContractManager();
@@ -111,6 +114,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
 
         delegationService = await deployDelegationService(contractManager);
         skaleBalances = await deploySkaleBalances(contractManager);
+        validatorService = await deployValidatorService(contractManager);
 
         const prefix = "0x000000000000000000000000";
         const premined = "100000000000000000000000000";
@@ -140,6 +144,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
             await delegationService.registerValidator("D2", "D2 is even", 150, 0, {from: validator});
 
             await skaleToken.transfer(validator, "0x410D586A20A4C00000", {from: owner});
+            await validatorService.enableValidator(validatorId, {from: owner});
             await delegationService.delegate(validatorId, 100, 12, "Hello from D2", {from: validator});
             const delegationId = 0;
             await delegationService.acceptPendingDelegation(delegationId, {from: validator});
@@ -167,6 +172,35 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
             await nodesData.numberOfActiveNodes().should.be.eventually.deep.equal(web3.utils.toBN(1));
             (await nodesData.getNodePort(0)).toNumber().should.be.equal(8545);
             await monitorsData.isGroupActive(web3.utils.soliditySha3(0)).should.be.eventually.true;
+        });
+
+        it("should not allow to create node if validator became untrusted", async () => {
+            skipTime(web3, 2592000);
+            await constantsHolder.setMSR(100);
+
+            await validatorService.disableValidator(validatorId, {from: owner});
+            await skaleManager.createNode(
+                "0x01" + // create node
+                "2161" + // port
+                "0000" + // nonce
+                "7f000001" + // ip
+                "7f000001" + // public ip
+                "1122334455667788990011223344556677889900112233445566778899001122" +
+                "1122334455667788990011223344556677889900112233445566778899001122" + // public key
+                "6432", // name,
+                {from: validator})
+                .should.be.eventually.rejectedWith("Validator is not authorized to create a node");
+            await validatorService.enableValidator(validatorId, {from: owner});
+            await skaleManager.createNode(
+                "0x01" + // create node
+                "2161" + // port
+                "0000" + // nonce
+                "7f000001" + // ip
+                "7f000001" + // public ip
+                "1122334455667788990011223344556677889900112233445566778899001122" +
+                "1122334455667788990011223344556677889900112233445566778899001122" + // public key
+                "6432", // name,
+                {from: validator});
         });
 
         describe("when node is created", async () => {
