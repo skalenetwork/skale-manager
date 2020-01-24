@@ -22,7 +22,7 @@ class Delegation {
     public validatorId: BigNumber;
     public amount: BigNumber;
     public delegationPeriod: BigNumber;
-    public unlockedUntill: BigNumber;
+    public unlockedUntil: BigNumber;
     public description: string;
 
     constructor(arrayData: [string, BigNumber, BigNumber, BigNumber, BigNumber, string]) {
@@ -30,7 +30,7 @@ class Delegation {
         this.validatorId = new BigNumber(arrayData[1]);
         this.amount = new BigNumber(arrayData[2]);
         this.delegationPeriod = new BigNumber(arrayData[3]);
-        this.unlockedUntill = new BigNumber(arrayData[4]);
+        this.unlockedUntil = new BigNumber(arrayData[4]);
         this.description = arrayData[5];
     }
 }
@@ -136,7 +136,7 @@ contract("DelegationRequestManager", ([owner, holder1, holder2, validator, valid
                 delegationId = logs[0].args.delegationId;
             });
 
-            it("should reject canceling request if it isn't actualy holder of tokens", async () => {
+            it("should reject canceling request if it isn't actually holder of tokens", async () => {
                 await delegationService.cancelPendingDelegation(delegationId, {from: holder2})
                     .should.be.rejectedWith("Only token holders can cancel delegation request");
             });
