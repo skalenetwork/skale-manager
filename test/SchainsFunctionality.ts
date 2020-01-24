@@ -1,12 +1,7 @@
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
-import { ConstantsHolderContract,
-         ConstantsHolderInstance,
-         ContractManagerContract,
-         ContractManagerInstance,
-         NodesDataContract,
+import { ContractManagerInstance,
          NodesDataInstance,
-         NodesFunctionalityContract,
          NodesFunctionalityInstance,
          SchainsDataContract,
          SchainsDataInstance,
@@ -15,19 +10,20 @@ import { ConstantsHolderContract,
          SchainsFunctionalityInternalContract,
          SchainsFunctionalityInternalInstance,
          SkaleDKGContract,
-         SkaleDKGInstance } from "../types/truffle-contracts";
+         SkaleDKGInstance,
+         ValidatorServiceInstance} from "../types/truffle-contracts";
 
 import BigNumber from "bignumber.js";
 import { gasMultiplier } from "./utils/command_line";
+import { deployContractManager } from "./utils/deploy/contractManager";
+import { deployValidatorService } from "./utils/deploy/delegation/validatorService";
+import { deployNodesData } from "./utils/deploy/nodesData";
+import { deployNodesFunctionality } from "./utils/deploy/nodesFunctionality";
 
 const SchainsFunctionality: SchainsFunctionalityContract = artifacts.require("./SchainsFunctionality");
 const SchainsFunctionalityInternal: SchainsFunctionalityInternalContract =
     artifacts.require("./SchainsFunctionalityInternal");
-const ContractManager: ContractManagerContract = artifacts.require("./ContractManager");
-const ConstantsHolder: ConstantsHolderContract = artifacts.require("./ConstantsHolder");
 const SchainsData: SchainsDataContract = artifacts.require("./SchainsData");
-const NodesData: NodesDataContract = artifacts.require("./NodesData");
-const NodesFunctionality: NodesFunctionalityContract = artifacts.require("./NodesFunctionality");
 const SkaleDKG: SkaleDKGContract = artifacts.require("./SkaleDKG");
 
 chai.should();
@@ -35,32 +31,19 @@ chai.use(chaiAsPromised);
 
 contract("SchainsFunctionality", ([owner, holder, validator]) => {
     let contractManager: ContractManagerInstance;
-    let constantsHolder: ConstantsHolderInstance;
     let schainsFunctionality: SchainsFunctionalityInstance;
     let schainsFunctionalityInternal: SchainsFunctionalityInternalInstance;
     let schainsData: SchainsDataInstance;
     let nodesData: NodesDataInstance;
     let nodesFunctionality: NodesFunctionalityInstance;
     let skaleDKG: SkaleDKGInstance;
+    let validatorService: ValidatorServiceInstance;
 
     beforeEach(async () => {
-        contractManager = await ContractManager.new({from: owner});
+        contractManager = await deployContractManager();
 
-        constantsHolder = await ConstantsHolder.new(
-            contractManager.address,
-            {from: owner, gas: 8000000});
-        await contractManager.setContractsAddress("Constants", constantsHolder.address);
-
-        nodesData = await NodesData.new(
-            5260000,
-            contractManager.address,
-            {from: owner, gas: 8000000 * gasMultiplier});
-        await contractManager.setContractsAddress("NodesData", nodesData.address);
-
-        nodesFunctionality = await NodesFunctionality.new(
-            contractManager.address,
-            {from: owner, gas: 8000000 * gasMultiplier});
-        await contractManager.setContractsAddress("NodesFunctionality", nodesFunctionality.address);
+        nodesData = await deployNodesData(contractManager);
+        nodesFunctionality = await deployNodesFunctionality(contractManager);
 
         schainsData = await SchainsData.new(
             "SchainsFunctionalityInternal",
@@ -84,6 +67,10 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
 
         skaleDKG = await SkaleDKG.new(contractManager.address, {from: owner, gas: 8000000 * gasMultiplier});
         await contractManager.setContractsAddress("SkaleDKG", skaleDKG.address);
+
+        validatorService = await deployValidatorService(contractManager);
+
+        validatorService.registerValidator("D2", validator, "D2 is even", 0, 0);
     });
 
     describe("should add schain", async () => {

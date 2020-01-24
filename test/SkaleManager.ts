@@ -1,24 +1,11 @@
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
-import { ConstantsHolderContract,
-         ConstantsHolderInstance,
-         ContractManagerContract,
+import { ConstantsHolderInstance,
          ContractManagerInstance,
-         DelegationControllerContract,
-         DelegationControllerInstance,
-         DelegationPeriodManagerContract,
-         DelegationPeriodManagerInstance,
-         DelegationRequestManagerContract,
-         DelegationRequestManagerInstance,
-         DelegationServiceContract,
          DelegationServiceInstance,
-         DistributorContract,
-         DistributorInstance,
          ManagerDataContract,
          ManagerDataInstance,
-         NodesDataContract,
          NodesDataInstance,
-         NodesFunctionalityContract,
          NodesFunctionalityInstance,
          SchainsDataContract,
          SchainsDataInstance,
@@ -26,60 +13,36 @@ import { ConstantsHolderContract,
          SchainsFunctionalityInstance,
          SchainsFunctionalityInternalContract,
          SchainsFunctionalityInternalInstance,
-         SkaleBalancesContract,
          SkaleBalancesInstance,
          SkaleDKGContract,
          SkaleDKGInstance,
          SkaleManagerContract,
          SkaleManagerInstance,
-         SkaleTokenContract,
          SkaleTokenInstance,
-         TimeHelpersContract,
-         TimeHelpersInstance,
-         TokenStateContract,
-         TokenStateInstance,
          ValidatorsDataContract,
          ValidatorsDataInstance,
-         ValidatorServiceContract,
          ValidatorServiceInstance,
          ValidatorsFunctionalityContract,
          ValidatorsFunctionalityInstance} from "../types/truffle-contracts";
 
 import { gasMultiplier } from "./utils/command_line";
+import { deployConstantsHolder } from "./utils/deploy/constantsHolder";
 import { deployContractManager } from "./utils/deploy/contractManager";
-import { deployDelegationController } from "./utils/deploy/delegation/delegationController";
-import { deployDelegationPeriodManager } from "./utils/deploy/delegation/delegationPeriodManager";
-import { deployDelegationRequestManager } from "./utils/deploy/delegation/delegationRequestManager";
 import { deployDelegationService } from "./utils/deploy/delegation/delegationService";
-import { deployDistributor } from "./utils/deploy/delegation/distributor";
 import { deploySkaleBalances } from "./utils/deploy/delegation/skaleBalances";
-import { deployTimeHelpers } from "./utils/deploy/delegation/timeHelpers";
-import { deployTokenState } from "./utils/deploy/delegation/tokenState";
 import { deployValidatorService } from "./utils/deploy/delegation/validatorService";
+import { deployNodesData } from "./utils/deploy/nodesData";
+import { deployNodesFunctionality } from "./utils/deploy/nodesFunctionality";
 import { deploySkaleToken } from "./utils/deploy/skaleToken";
 import { skipTime } from "./utils/time";
 
-const ContractManager: ContractManagerContract = artifacts.require("./ContractManager");
-const ConstantsHolder: ConstantsHolderContract = artifacts.require("./ConstantsHolder");
-const DelegationController: DelegationControllerContract = artifacts.require("./DelegationController");
-const DelegationPeriodManager: DelegationPeriodManagerContract = artifacts.require("./DelegationPeriodManager");
-const DelegationRequestManager: DelegationRequestManagerContract = artifacts.require("./DelegationRequestManager");
-const DelegationService: DelegationServiceContract = artifacts.require("./DelegationService");
-const Distributor: DistributorContract = artifacts.require("./Distributor");
 const ManagerData: ManagerDataContract = artifacts.require("./ManagerData");
-const NodesData: NodesDataContract = artifacts.require("./NodesData");
-const NodesFunctionality: NodesFunctionalityContract = artifacts.require("./NodesFunctionality");
 const SchainsData: SchainsDataContract = artifacts.require("./SchainsData");
 const SchainsFunctionality: SchainsFunctionalityContract = artifacts.require("./SchainsFunctionality");
 const SchainsFunctionalityInternal: SchainsFunctionalityInternalContract
 = artifacts.require("./SchainsFunctionalityInternal");
-const SkaleBalances: SkaleBalancesContract = artifacts.require("./SkaleBalances");
 const SkaleDKG: SkaleDKGContract = artifacts.require("./SkaleDKG");
 const SkaleManager: SkaleManagerContract = artifacts.require("./SkaleManager");
-const SkaleToken: SkaleTokenContract = artifacts.require("./SkaleToken");
-const TimeHelpers: TimeHelpersContract = artifacts.require("./TimeHelpers");
-const TokenState: TokenStateContract = artifacts.require("./TokenState");
-const ValidatorService: ValidatorServiceContract = artifacts.require("./ValidatorService");
 const ValidatorsData: ValidatorsDataContract = artifacts.require("./ValidatorsData");
 const ValidatorsFunctionality: ValidatorsFunctionalityContract = artifacts.require("./ValidatorsFunctionality");
 
@@ -101,35 +64,16 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
     let managerData: ManagerDataInstance;
     let skaleDKG: SkaleDKGInstance;
     let delegationService: DelegationServiceInstance;
-    let validatorService: ValidatorServiceInstance;
-    let delegationController: DelegationControllerInstance;
-    let tokenState: TokenStateInstance;
-    let delegationRequestManager: DelegationRequestManagerInstance;
-    let delegationPeriodManager: DelegationPeriodManagerInstance;
-    let timeHelpers: TimeHelpersInstance;
     let skaleBalances: SkaleBalancesInstance;
-    let distributor: DistributorInstance;
+    let validatorService: ValidatorServiceInstance;
 
     beforeEach(async () => {
         contractManager = await deployContractManager();
 
         skaleToken = await deploySkaleToken(contractManager);
-
-        constantsHolder = await ConstantsHolder.new(
-            contractManager.address,
-            {from: owner, gas: 8000000});
-        await contractManager.setContractsAddress("Constants", constantsHolder.address);
-
-        nodesData = await NodesData.new(
-            5,
-            contractManager.address,
-            {from: owner, gas: 8000000 * gasMultiplier});
-        await contractManager.setContractsAddress("NodesData", nodesData.address);
-
-        nodesFunctionality = await NodesFunctionality.new(
-            contractManager.address,
-            {from: owner, gas: 8000000 * gasMultiplier});
-        await contractManager.setContractsAddress("NodesFunctionality", nodesFunctionality.address);
+        constantsHolder = await deployConstantsHolder(contractManager);
+        nodesData = await deployNodesData(contractManager);
+        nodesFunctionality = await deployNodesFunctionality(contractManager);
 
         validatorsData = await ValidatorsData.new(
             "ValidatorsFunctionality", contractManager.address, {gas: 8000000 * gasMultiplier});
@@ -168,29 +112,14 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
         skaleDKG = await SkaleDKG.new(contractManager.address, {from: owner, gas: 8000000 * gasMultiplier});
         await contractManager.setContractsAddress("SkaleDKG", skaleDKG.address);
 
-        delegationService = await DelegationService.new(contractManager.address);
-        await contractManager.setContractsAddress("DelegationService", delegationService.address);
-        validatorService = await ValidatorService.new(contractManager.address);
-        await contractManager.setContractsAddress("ValidatorService", validatorService.address);
-        delegationController = await DelegationController.new(contractManager.address);
-        await contractManager.setContractsAddress("DelegationController", delegationController.address);
-        tokenState = await TokenState.new(contractManager.address);
-        await contractManager.setContractsAddress("TokenState", tokenState.address);
-        delegationRequestManager = await DelegationRequestManager.new(contractManager.address);
-        await contractManager.setContractsAddress("DelegationRequestManager", delegationRequestManager.address);
-        delegationPeriodManager = await DelegationPeriodManager.new(contractManager.address);
-        await contractManager.setContractsAddress("DelegationPeriodManager", delegationPeriodManager.address);
-        timeHelpers = await TimeHelpers.new();
-        await contractManager.setContractsAddress("TimeHelpers", timeHelpers.address);
-        skaleBalances = await SkaleBalances.new(contractManager.address);
-        await contractManager.setContractsAddress("SkaleBalances", skaleBalances.address);
-        distributor = await Distributor.new(contractManager.address);
-        await contractManager.setContractsAddress("Distributor", distributor.address);
+        delegationService = await deployDelegationService(contractManager);
+        skaleBalances = await deploySkaleBalances(contractManager);
+        validatorService = await deployValidatorService(contractManager);
 
         const prefix = "0x000000000000000000000000";
         const premined = "100000000000000000000000000";
         await skaleToken.mint(owner, skaleBalances.address, premined, prefix + skaleManager.address.slice(2), "0x");
-        await delegationService.registerValidator("Validator", "D2 is even", 150, 0, {from: validator});
+        await constantsHolder.setMSR(5);
     });
 
     it("should fail to process token fallback if sent not from SkaleToken", async () => {
@@ -207,9 +136,20 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
         await skaleManager.owner().should.be.eventually.equal(hacker);
     });
 
-    describe("when validator has SKALE tokens", async () => {
+    describe("when validator has delegated SKALE tokens", async () => {
+        const validatorId = 1;
+        const month = 60 * 60 * 24 * 31;
+
         beforeEach(async () => {
-            skaleToken.transfer(validator, "0x410D586A20A4C00000", {from: owner});
+            await delegationService.registerValidator("D2", "D2 is even", 150, 0, {from: validator});
+
+            await skaleToken.transfer(validator, "0x410D586A20A4C00000", {from: owner});
+            await validatorService.enableValidator(validatorId, {from: owner});
+            await delegationService.delegate(validatorId, 100, 12, "Hello from D2", {from: validator});
+            const delegationId = 0;
+            await delegationService.acceptPendingDelegation(delegationId, {from: validator});
+
+            skipTime(web3, month);
         });
 
         it("should fail to process token fallback if operation type is wrong", async () => {
@@ -218,9 +158,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
         });
 
         it("should create a node", async () => {
-            await skaleToken.send(
-                skaleManager.address,
-                "0x56bc75e2d63100000",
+            await skaleManager.createNode(
                 "0x01" + // create node
                 "2161" + // port
                 "0000" + // nonce
@@ -232,15 +170,43 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
                 {from: validator});
 
             await nodesData.numberOfActiveNodes().should.be.eventually.deep.equal(web3.utils.toBN(1));
+            (await nodesData.getNodePort(0)).toNumber().should.be.equal(8545);
             await validatorsData.isGroupActive(web3.utils.soliditySha3(0)).should.be.eventually.true;
+        });
+
+        it("should not allow to create node if validator became untrusted", async () => {
+            skipTime(web3, 2592000);
+            await constantsHolder.setMSR(100);
+
+            await validatorService.disableValidator(validatorId, {from: owner});
+            await skaleManager.createNode(
+                "0x01" + // create node
+                "2161" + // port
+                "0000" + // nonce
+                "7f000001" + // ip
+                "7f000001" + // public ip
+                "1122334455667788990011223344556677889900112233445566778899001122" +
+                "1122334455667788990011223344556677889900112233445566778899001122" + // public key
+                "6432", // name,
+                {from: validator})
+                .should.be.eventually.rejectedWith("Validator is not authorized to create a node");
+            await validatorService.enableValidator(validatorId, {from: owner});
+            await skaleManager.createNode(
+                "0x01" + // create node
+                "2161" + // port
+                "0000" + // nonce
+                "7f000001" + // ip
+                "7f000001" + // public ip
+                "1122334455667788990011223344556677889900112233445566778899001122" +
+                "1122334455667788990011223344556677889900112233445566778899001122" + // public key
+                "6432", // name,
+                {from: validator});
         });
 
         describe("when node is created", async () => {
 
             beforeEach(async () => {
-                await skaleToken.send(
-                    skaleManager.address,
-                    "0x56bc75e2d63100000",
+                await skaleManager.createNode(
                     "0x01" + // create node
                     "2161" + // port
                     "0000" + // nonce
@@ -294,21 +260,14 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
 
                 it("should fail if withdrawing completes too early", async () => {
                     await skaleManager.completeWithdrawdeposit(0, {from: validator})
-                        .should.be.eventually.rejectedWith("Leaving period is not expired");
+                        .should.be.eventually.rejectedWith("Leaving period has not expired");
                 });
 
                 it("should complete deposit withdrawing process", async () => {
                     skipTime(web3, 5);
 
-                    const balanceBefore = web3.utils.toBN(await skaleToken.balanceOf(validator));
-
                     await skaleManager.completeWithdrawdeposit(0, {from: validator});
-
                     await nodesData.isNodeLeft(0).should.be.eventually.true;
-
-                    const balanceAfter = web3.utils.toBN(await skaleToken.balanceOf(validator));
-
-                    expect(balanceAfter.sub(balanceBefore).eq(web3.utils.toBN("100000000000000000000"))).to.be.true;
                 });
             });
         });
@@ -316,9 +275,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
         describe("when two nodes are created", async () => {
 
             beforeEach(async () => {
-                await skaleToken.send(
-                    skaleManager.address,
-                    "0x56bc75e2d63100000",
+                await skaleManager.createNode(
                     "0x01" + // create node
                     "2161" + // port
                     "0000" + // nonce
@@ -328,9 +285,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
                     "1122334455667788990011223344556677889900112233445566778899001122" + // public key
                     "6432", // name,
                     {from: validator});
-                await skaleToken.send(
-                    skaleManager.address,
-                    "0x56bc75e2d63100000",
+                await skaleManager.createNode(
                     "0x01" + // create node
                     "2161" + // port
                     "0000" + // nonce
@@ -415,12 +370,8 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
 
         describe("when 18 nodes are in the system", async () => {
             beforeEach(async () => {
-                skaleToken.transfer(validator, "0x3635c9adc5dea00000", {from: owner});
-
                 for (let i = 0; i < 18; ++i) {
-                    await skaleToken.send(
-                        skaleManager.address,
-                        "0x56bc75e2d63100000",
+                    await skaleManager.createNode(
                         "0x01" + // create node
                         "2161" + // port
                         "0000" + // nonce
@@ -434,15 +385,15 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
             });
 
             it("should fail to create schain if not enough SKALE tokens", async () => {
-                await skaleToken.send(
-                    skaleManager.address,
-                    "0x1cc2d6d04a2ca",
+                await constantsHolder.setMSR(6);
+
+                await skaleManager.createNode(
                     "0x10" + // create schain
                     "0000000000000000000000000000000000000000000000000000000000000005" + // lifetime
                     "01" + // type of schain
                     "0000" + // nonce
                     "6432", // name
-                    {from: developer}).should.be.eventually.rejectedWith("SafeMath: subtraction overflow.");
+                    {from: validator}).should.be.eventually.rejectedWith("Validator has to meet Minimum Staking Requirement");
             });
 
             it("should fail to send validator verdict from not node owner", async () => {
@@ -579,10 +530,10 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
                     await skaleManager.sendVerdict(0, 1, 0, 200000, {from: validator});
                 });
 
-                // it("should fail to get bounty if sender is not owner of the node", async () => {
-                //     await skaleManager.getBounty(1, {from: hacker})
-                //         .should.be.eventually.rejectedWith("Node does not exist for Message sender");
-                // });
+                it("should fail to get bounty if sender is not owner of the node", async () => {
+                    await skaleManager.getBounty(1, {from: hacker})
+                        .should.be.eventually.rejectedWith("Validator with such address doesn't exist");
+                });
 
                 it("should get bounty", async () => {
                     skipTime(web3, 200);
@@ -695,12 +646,10 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
 
         describe("when 32 nodes are in the system", async () => {
             beforeEach(async () => {
-                skaleToken.transfer(validator, "0x32D26D12E980B600000", {from: owner});
+                await constantsHolder.setMSR(3);
 
                 for (let i = 0; i < 32; ++i) {
-                    await skaleToken.send(
-                        skaleManager.address,
-                        "0x56bc75e2d63100000",
+                    await skaleManager.createNode(
                         "0x01" + // create node
                         "2161" + // port
                         "0000" + // nonce
@@ -787,12 +736,8 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
 
             it("should create 16 nodes & create & delete all types of schain", async () => {
 
-                skaleToken.transfer(validator, "0x32D26D12E980B600000", {from: owner});
-
                 for (let i = 0; i < 16; ++i) {
-                    await skaleToken.send(
-                        skaleManager.address,
-                        "0x56bc75e2d63100000",
+                    await skaleManager.createNode(
                         "0x01" + // create node
                         "2161" + // port
                         "0000" + // nonce

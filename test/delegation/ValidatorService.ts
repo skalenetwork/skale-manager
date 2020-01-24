@@ -1,52 +1,19 @@
-import { ConstantsHolderContract,
-    ConstantsHolderInstance,
-    ContractManagerContract,
+import { ConstantsHolderInstance,
     ContractManagerInstance,
-    DelegationControllerContract,
-    DelegationControllerInstance,
-    DelegationPeriodManagerContract,
-    DelegationPeriodManagerInstance,
-    DelegationRequestManagerContract,
-    DelegationRequestManagerInstance,
-    DelegationServiceContract,
     DelegationServiceInstance,
-    NodesDataContract,
-    NodesDataInstance,
-    NodesFunctionalityContract,
-    NodesFunctionalityInstance,
-    SkaleManagerContract,
-    SkaleManagerInstance,
-    SkaleTokenContract,
     SkaleTokenInstance,
-    TimeHelpersContract,
-    TimeHelpersInstance,
-    TokenStateContract,
-    TokenStateInstance,
-    ValidatorServiceContract,
     ValidatorServiceInstance } from "../../types/truffle-contracts";
-
-const ContractManager: ContractManagerContract = artifacts.require("./ContractManager");
-const SkaleToken: SkaleTokenContract = artifacts.require("./SkaleToken");
-const DelegationService: DelegationServiceContract = artifacts.require("./DelegationService");
-const DelegationPeriodManager: DelegationPeriodManagerContract = artifacts.require("./DelegationPeriodManager");
-const DelegationRequestManager: DelegationRequestManagerContract = artifacts.require("./DelegationRequestManager");
-const ValidatorService: ValidatorServiceContract = artifacts.require("./ValidatorService");
-const DelegationController: DelegationControllerContract = artifacts.require("./DelegationController");
-const TokenState: TokenStateContract = artifacts.require("./TokenState");
-const TimeHelpers: TimeHelpersContract = artifacts.require("./TimeHelpers");
-const SkaleManager: SkaleManagerContract = artifacts.require("./SkaleManager");
-const NodesFunctionality: NodesFunctionalityContract = artifacts.require("./NodesFunctionality");
-const NodesData: NodesDataContract = artifacts.require("./NodesData");
-const ConstantsHolder: ConstantsHolderContract = artifacts.require("./ConstantsHolder");
 
 import { skipTime } from "../utils/time";
 
 import BigNumber from "bignumber.js";
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
+import { deployConstantsHolder } from "../utils/deploy/constantsHolder";
 import { deployContractManager } from "../utils/deploy/contractManager";
 import { deployDelegationService } from "../utils/deploy/delegation/delegationService";
 import { deployValidatorService } from "../utils/deploy/delegation/validatorService";
+import { deploySkaleToken } from "../utils/deploy/skaleToken";
 chai.should();
 chai.use(chaiAsPromised);
 
@@ -77,10 +44,6 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
     let contractManager: ContractManagerInstance;
     let delegationService: DelegationServiceInstance;
     let validatorService: ValidatorServiceInstance;
-    let timeHelpers: TimeHelpersInstance;
-    let skaleManager: SkaleManagerInstance;
-    let nodesFunctionality: NodesFunctionalityInstance;
-    let nodesData: NodesDataInstance;
     let constantsHolder: ConstantsHolderInstance;
     let skaleToken: SkaleTokenInstance;
 
@@ -93,24 +56,8 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
         }
         contractManager = await deployContractManager();
 
-        timeHelpers = await TimeHelpers.new();
-        await contractManager.setContractsAddress("TimeHelpers", timeHelpers.address);
-
-        skaleManager = await SkaleManager.new(contractManager.address);
-        await contractManager.setContractsAddress("SkaleManager", skaleManager.address);
-
-        nodesFunctionality = await NodesFunctionality.new(contractManager.address);
-        await contractManager.setContractsAddress("NodesFunctionality", nodesFunctionality.address);
-
-        nodesData = await NodesData.new(5, contractManager.address);
-        await contractManager.setContractsAddress("NodesData", nodesData.address);
-
-        constantsHolder = await ConstantsHolder.new(contractManager.address);
-        await contractManager.setContractsAddress("Constants", constantsHolder.address);
-
-        skaleToken = await SkaleToken.new(contractManager.address, []);
-        await contractManager.setContractsAddress("SkaleToken", skaleToken.address);
-
+        constantsHolder = await deployConstantsHolder(contractManager);
+        skaleToken = await deploySkaleToken(contractManager);
         delegationService = await deployDelegationService(contractManager);
         validatorService = await deployValidatorService(contractManager);
     });
@@ -228,50 +175,9 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
                 await delegationService.delegate(validatorId, amount, delegationPeriod, info, {from: holder});
                 const delegationId = 0;
                 await delegationService.acceptPendingDelegation(delegationId, {from: validator1});
-                await skaleManager.createNode(
-                    "0x01" + // create node
-                    "2161" + // port
-                    "0000" + // nonce
-                    "7f000001" + // ip
-                    "7f000001" + // public ip
-                    "1122334455667788990011223344556677889900112233445566778899001122" +
-                    "1122334455667788990011223344556677889900112233445566778899001122" + // public key
-                    "6432", // name,
-                    {from: validator1})
+
+                await validatorService.checkPossibilityCreatingNode(validator1)
                     .should.be.eventually.rejectedWith("Validator has to meet Minimum Staking Requirement");
-            });
-
-            it("should not allow to create node if validator became untrusted", async () => {
-                await validatorService.enableValidator(validatorId, {from: owner});
-                await delegationService.delegate(validatorId, amount, delegationPeriod, info, {from: holder});
-                const delegationId = 0;
-                await delegationService.acceptPendingDelegation(delegationId, {from: validator1});
-                skipTime(web3, 2592000);
-                await constantsHolder.setMSR(amount);
-
-                await validatorService.disableValidator(validatorId, {from: owner});
-                await skaleManager.createNode(
-                    "0x01" + // create node
-                    "2161" + // port
-                    "0000" + // nonce
-                    "7f000001" + // ip
-                    "7f000001" + // public ip
-                    "1122334455667788990011223344556677889900112233445566778899001122" +
-                    "1122334455667788990011223344556677889900112233445566778899001122" + // public key
-                    "6432", // name,
-                    {from: validator1})
-                    .should.be.eventually.rejectedWith("Validator is not authorized to create a node");
-                await validatorService.enableValidator(validatorId, {from: owner});
-                await skaleManager.createNode(
-                    "0x01" + // create node
-                    "2161" + // port
-                    "0000" + // nonce
-                    "7f000001" + // ip
-                    "7f000001" + // public ip
-                    "1122334455667788990011223344556677889900112233445566778899001122" +
-                    "1122334455667788990011223344556677889900112233445566778899001122" + // public key
-                    "6432", // name,
-                    {from: validator1});
             });
 
             it("should allow to create node if new epoch is started", async () => {
@@ -281,30 +187,15 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
                 await delegationService.acceptPendingDelegation(delegationId, {from: validator1});
                 skipTime(web3, 2592000);
 
-                await skaleManager.createNode(
-                    "0x01" + // create node
-                    "2161" + // port
-                    "0000" + // nonce
-                    "7f000001" + // ip
-                    "7f000001" + // public ip
-                    "1122334455667788990011223344556677889900112233445566778899001122" +
-                    "1122334455667788990011223344556677889900112233445566778899001122" + // public key
-                    "6432", // name,
-                    {from: validator1})
+                await validatorService.checkPossibilityCreatingNode(validator1)
                     .should.be.eventually.rejectedWith("Validator has to meet Minimum Staking Requirement");
 
                 await constantsHolder.setMSR(amount);
 
-                await skaleManager.createNode(
-                    "0x01" + // create node
-                    "2161" + // port
-                    "0000" + // nonce
-                    "7f000001" + // ip
-                    "7f000001" + // public ip
-                    "1122334455667788990011223344556677889900112233445566778899001122" +
-                    "1122334455667788990011223344556677889900112233445566778899001122" + // public key
-                    "6432", // name,
-                    {from: validator1});
+                // now it should not reject
+                await validatorService.checkPossibilityCreatingNode(validator1);
+
+                await validatorService.pushNode(validator1, 0);
                 const nodeIndexBN = (await validatorService.getValidatorNodeIndexes(validatorId))[0];
                 const nodeIndex = new BigNumber(nodeIndexBN).toNumber();
                 assert.equal(nodeIndex, 0);
@@ -320,26 +211,13 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
                 await delegationService.acceptPendingDelegation(delegationId2, {from: validator1});
                 skipTime(web3, 2592000);
                 await constantsHolder.setMSR(amount);
-                await skaleManager.createNode(
-                    "0x01" + // create node
-                    "2161" + // port
-                    "0000" + // nonce
-                    "7f000001" + // ip
-                    "7f000001" + // public ip
-                    "1122334455667788990011223344556677889900112233445566778899001122" +
-                    "1122334455667788990011223344556677889900112233445566778899001122" + // public key
-                    "6432", // name,
-                    {from: validator1});
-                await skaleManager.createNode(
-                    "0x01" + // create node
-                    "2161" + // port
-                    "0000" + // nonce
-                    "7f000002" + // ip
-                    "7f000002" + // public ip
-                    "1122334455667788990011223344556677889900112233445566778899001122" +
-                    "1122334455667788990011223344556677889900112233445566778899001122" + // public key
-                    "6433", // name,
-                    {from: validator1});
+
+                await validatorService.checkPossibilityCreatingNode(validator1);
+                await validatorService.pushNode(validator1, 0);
+
+                await validatorService.checkPossibilityCreatingNode(validator1);
+                await validatorService.pushNode(validator1, 1);
+
                 const nodeIndexesBN = (await validatorService.getValidatorNodeIndexes(validatorId));
                 for (let i = 0; i < nodeIndexesBN.length; i++) {
                     const nodeIndexBN = (await validatorService.getValidatorNodeIndexes(validatorId))[i];

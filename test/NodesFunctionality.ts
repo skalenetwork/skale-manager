@@ -1,71 +1,34 @@
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
-import { ConstantsHolderContract,
-         ConstantsHolderInstance,
-         ContractManagerContract,
-         ContractManagerInstance,
-         NodesDataContract,
+import { ContractManagerInstance,
          NodesDataInstance,
-         NodesFunctionalityContract,
          NodesFunctionalityInstance,
-         ValidatorServiceContract,
          ValidatorServiceInstance } from "../types/truffle-contracts";
 
-import { gasMultiplier } from "./utils/command_line";
+import { deployContractManager } from "./utils/deploy/contractManager";
+import { deployValidatorService } from "./utils/deploy/delegation/validatorService";
+import { deployNodesData } from "./utils/deploy/nodesData";
+import { deployNodesFunctionality } from "./utils/deploy/nodesFunctionality";
 import { skipTime } from "./utils/time";
-
-const ContractManager: ContractManagerContract = artifacts.require("./ContractManager");
-const ConstantsHolder: ConstantsHolderContract = artifacts.require("./ConstantsHolder");
-const NodesData: NodesDataContract = artifacts.require("./NodesData");
-const NodesFunctionality: NodesFunctionalityContract = artifacts.require("./NodesFunctionality");
-const ValidatorService: ValidatorServiceContract = artifacts.require("./ValidatorService");
 
 chai.should();
 chai.use(chaiAsPromised);
 
 contract("NodesFunctionality", ([owner, validator]) => {
     let contractManager: ContractManagerInstance;
-    let constantsHolder: ConstantsHolderInstance;
     let nodesData: NodesDataInstance;
     let nodesFunctionality: NodesFunctionalityInstance;
     let validatorService: ValidatorServiceInstance;
+    const validatorId = 1;
 
     beforeEach(async () => {
-        contractManager = await ContractManager.new({from: owner});
-
-        constantsHolder = await ConstantsHolder.new(
-            contractManager.address,
-            {from: owner, gas: 8000000});
-        await contractManager.setContractsAddress("Constants", constantsHolder.address);
-
-        nodesData = await NodesData.new(
-            5,
-            contractManager.address,
-            {from: owner, gas: 8000000 * gasMultiplier});
-        await contractManager.setContractsAddress("NodesData", nodesData.address);
-
-        nodesFunctionality = await NodesFunctionality.new(
-            contractManager.address,
-            {from: owner, gas: 8000000 * gasMultiplier});
-        await contractManager.setContractsAddress("NodesFunctionality", nodesFunctionality.address);
-
-        validatorService = await ValidatorService.new(
-            contractManager.address,
-            {from: owner, gas: 8000000 * gasMultiplier});
-        await contractManager.setContractsAddress("ValidatorService", validatorService.address);
+        contractManager = await deployContractManager();
+        nodesData = await deployNodesData(contractManager);
+        nodesFunctionality = await deployNodesFunctionality(contractManager);
+        validatorService = await deployValidatorService(contractManager);
 
         await validatorService.registerValidator("Validator", validator, "D2", 0, 0);
     });
-
-    it("should fail to create node if no money", async () => {
-        await nodesFunctionality.createNode(validator, "0x11")
-            .should.be.eventually.rejectedWith("Not enough money to create Node");
-    });
-
-    // it("should fail to create node if no money", async () => {
-    //     await nodesFunctionality.createNode(1, "0x11")
-    //         .should.be.eventually.rejectedWith("Not enough money to create Node");
-    // });
 
     it("should fail to create node if ip is zero", async () => {
         await nodesFunctionality.createNode(
@@ -121,14 +84,15 @@ contract("NodesFunctionality", ([owner, validator]) => {
             "6432"); // name
 
         const node = await nodesData.nodes(0);
-        node[1].should.be.equal("d2");
+        node[0].should.be.equal("d2");
+        node[1].should.be.equal("0x7f000001");
         node[2].should.be.equal("0x7f000001");
-        node[3].should.be.equal("0x7f000001");
-        node[4].should.be.deep.equal(web3.utils.toBN(8545));
-        node[5].should.be.equal(
+        node[3].should.be.deep.equal(web3.utils.toBN(8545));
+        node[4].should.be.equal(
             "0x1122334455667788990011223344556677889900112233445566778899001122" +
             "1122334455667788990011223344556677889900112233445566778899001122");
-        node[9].should.be.deep.equal(web3.utils.toBN(0));
+        node[8].toNumber().should.be.equal(0);
+        node[9].should.be.deep.equal(web3.utils.toBN(validatorId));
     });
 
     describe("when node is created", async () => {
@@ -197,7 +161,7 @@ contract("NodesFunctionality", ([owner, validator]) => {
             await nodesFunctionality.completeWithdrawDeposit(validator, 0);
 
             const node = await nodesData.nodes(0);
-            node[9].should.be.deep.equal(web3.utils.toBN(2));
+            node[8].toNumber().should.be.equal(2);
         });
     });
 
@@ -259,14 +223,14 @@ contract("NodesFunctionality", ([owner, validator]) => {
             await nodesFunctionality.initWithdrawDeposit(validator, 0);
 
             await nodesFunctionality.completeWithdrawDeposit(validator, 0)
-                .should.be.eventually.rejectedWith("leaving period has not expired");
+                .should.be.eventually.rejectedWith("Leaving period has not expired");
 
             skipTime(web3, 5);
 
             await nodesFunctionality.completeWithdrawDeposit(validator, 0);
 
             const node = await nodesData.nodes(0);
-            node[9].should.be.deep.equal(web3.utils.toBN(2));
+            node[8].toNumber().should.be.equal(2);
         });
 
         it("should complete withdrawing deposit from second node", async () => {
@@ -279,14 +243,14 @@ contract("NodesFunctionality", ([owner, validator]) => {
             await nodesFunctionality.initWithdrawDeposit(validator, 1);
 
             await nodesFunctionality.completeWithdrawDeposit(validator, 1)
-                .should.be.eventually.rejectedWith("leaving period has not expired");
+                .should.be.eventually.rejectedWith("Leaving period has not expired");
 
             skipTime(web3, 5);
 
             await nodesFunctionality.completeWithdrawDeposit(validator, 1);
 
             const node = await nodesData.nodes(1);
-            node[9].should.be.deep.equal(web3.utils.toBN(2));
+            node[8].toNumber().should.be.equal(2);
         });
     });
 

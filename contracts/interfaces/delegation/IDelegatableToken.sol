@@ -24,4 +24,6 @@ interface IDelegatableToken {
     function getLockedOf(address wallet) external returns (uint);
 
     function getDelegatedOf(address wallet) external returns (uint);
+
+    function getSlashedOf(address wallet) external returns (uint);
 }
