@@ -41,7 +41,7 @@ interface ISkaleVerifier {
 
 /**
  * @title GroupsFunctionality - contract with some Groups functionality, will be inherited by
- * ValidatorsFunctionality and SchainsFunctionality
+ * MonitorsFunctionality and SchainsFunctionality
  */
 contract GroupsFunctionality is Permissions {
 

@@ -5,6 +5,10 @@ import { ConstantsHolderInstance,
          DelegationServiceInstance,
          ManagerDataContract,
          ManagerDataInstance,
+         MonitorsDataContract,
+         MonitorsDataInstance,
+         MonitorsFunctionalityContract,
+         MonitorsFunctionalityInstance,
          NodesDataInstance,
          NodesFunctionalityInstance,
          SchainsDataContract,
@@ -18,11 +22,7 @@ import { ConstantsHolderInstance,
          SkaleDKGInstance,
          SkaleManagerContract,
          SkaleManagerInstance,
-         SkaleTokenInstance,
-         ValidatorsDataContract,
-         ValidatorsDataInstance,
-         ValidatorsFunctionalityContract,
-         ValidatorsFunctionalityInstance} from "../types/truffle-contracts";
+         SkaleTokenInstance} from "../types/truffle-contracts";
 
 import { gasMultiplier } from "./utils/command_line";
 import { deployConstantsHolder } from "./utils/deploy/constantsHolder";
@@ -41,8 +41,8 @@ const SchainsFunctionalityInternal: SchainsFunctionalityInternalContract
 = artifacts.require("./SchainsFunctionalityInternal");
 const SkaleDKG: SkaleDKGContract = artifacts.require("./SkaleDKG");
 const SkaleManager: SkaleManagerContract = artifacts.require("./SkaleManager");
-const ValidatorsData: ValidatorsDataContract = artifacts.require("./ValidatorsData");
-const ValidatorsFunctionality: ValidatorsFunctionalityContract = artifacts.require("./ValidatorsFunctionality");
+const MonitorsData: MonitorsDataContract = artifacts.require("./MonitorsData");
+const MonitorsFunctionality: MonitorsFunctionalityContract = artifacts.require("./MonitorsFunctionality");
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -54,8 +54,8 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
     let nodesFunctionality: NodesFunctionalityInstance;
     let skaleManager: SkaleManagerInstance;
     let skaleToken: SkaleTokenInstance;
-    let validatorsData: ValidatorsDataInstance;
-    let validatorsFunctionality: ValidatorsFunctionalityInstance;
+    let monitorsData: MonitorsDataInstance;
+    let monitorsFunctionality: MonitorsFunctionalityInstance;
     let schainsData: SchainsDataInstance;
     let schainsFunctionality: SchainsFunctionalityInstance;
     let schainsFunctionalityInternal: SchainsFunctionalityInternalInstance;
@@ -72,13 +72,13 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
         nodesData = await deployNodesData(contractManager);
         nodesFunctionality = await deployNodesFunctionality(contractManager);
 
-        validatorsData = await ValidatorsData.new(
-            "ValidatorsFunctionality", contractManager.address, {gas: 8000000 * gasMultiplier});
-        await contractManager.setContractsAddress("ValidatorsData", validatorsData.address);
+        monitorsData = await MonitorsData.new(
+            "MonitorsFunctionality", contractManager.address, {gas: 8000000 * gasMultiplier});
+        await contractManager.setContractsAddress("MonitorsData", monitorsData.address);
 
-        validatorsFunctionality = await ValidatorsFunctionality.new(
-            "SkaleManager", "ValidatorsData", contractManager.address, {gas: 8000000 * gasMultiplier});
-        await contractManager.setContractsAddress("ValidatorsFunctionality", validatorsFunctionality.address);
+        monitorsFunctionality = await MonitorsFunctionality.new(
+            "SkaleManager", "MonitorsData", contractManager.address, {gas: 8000000 * gasMultiplier});
+        await contractManager.setContractsAddress("MonitorsFunctionality", monitorsFunctionality.address);
 
         schainsData = await SchainsData.new(
             "SchainsFunctionalityInternal",
@@ -166,7 +166,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
 
             await nodesData.numberOfActiveNodes().should.be.eventually.deep.equal(web3.utils.toBN(1));
             (await nodesData.getNodePort(0)).toNumber().should.be.equal(8545);
-            await validatorsData.isGroupActive(web3.utils.soliditySha3(0)).should.be.eventually.true;
+            await monitorsData.isGroupActive(web3.utils.soliditySha3(0)).should.be.eventually.true;
         });
 
         describe("when node is created", async () => {
@@ -362,58 +362,58 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
                     {from: validator}).should.be.eventually.rejectedWith("Validator has to meet Minimum Staking Requirement");
             });
 
-            it("should fail to send validator verdict from not node owner", async () => {
+            it("should fail to send monitor verdict from not node owner", async () => {
                 await skaleManager.sendVerdict(0, 1, 0, 50, {from: hacker})
                     .should.be.eventually.rejectedWith("Validator with such address doesn't exist");
             });
 
-            it("should fail to send validator verdict if send it too early", async () => {
+            it("should fail to send monitor verdict if send it too early", async () => {
                 await skaleManager.sendVerdict(0, 1, 0, 50, {from: validator})
                     .should.be.eventually.rejectedWith("The time has not come to send verdict");
             });
 
-            it("should fail to send validator verdict if sender node does not exist", async () => {
+            it("should fail to send monitor verdict if sender node does not exist", async () => {
                 await skaleManager.sendVerdict(18, 1, 0, 50, {from: validator})
                     .should.be.eventually.rejectedWith("Node does not exist for Message sender");
             });
 
-            it("should send validator verdict", async () => {
+            it("should send monitor verdict", async () => {
                 skipTime(web3, 3400);
                 await skaleManager.sendVerdict(0, 1, 0, 50, {from: validator});
 
-                await validatorsData.verdicts(web3.utils.soliditySha3(1), 0, 0)
+                await monitorsData.verdicts(web3.utils.soliditySha3(1), 0, 0)
                     .should.be.eventually.deep.equal(web3.utils.toBN(0));
-                await validatorsData.verdicts(web3.utils.soliditySha3(1), 0, 1)
+                await monitorsData.verdicts(web3.utils.soliditySha3(1), 0, 1)
                     .should.be.eventually.deep.equal(web3.utils.toBN(50));
             });
 
-            it("should send validator verdicts", async () => {
+            it("should send monitor verdicts", async () => {
                 skipTime(web3, 3400);
                 await skaleManager.sendVerdicts(0, [1, 2], [0, 0], [50, 50], {from: validator});
 
-                await validatorsData.verdicts(web3.utils.soliditySha3(1), 0, 0)
+                await monitorsData.verdicts(web3.utils.soliditySha3(1), 0, 0)
                     .should.be.eventually.deep.equal(web3.utils.toBN(0));
-                await validatorsData.verdicts(web3.utils.soliditySha3(1), 0, 1)
+                await monitorsData.verdicts(web3.utils.soliditySha3(1), 0, 1)
                     .should.be.eventually.deep.equal(web3.utils.toBN(50));
-                await validatorsData.verdicts(web3.utils.soliditySha3(2), 0, 0)
+                await monitorsData.verdicts(web3.utils.soliditySha3(2), 0, 0)
                     .should.be.eventually.deep.equal(web3.utils.toBN(0));
-                await validatorsData.verdicts(web3.utils.soliditySha3(2), 0, 1)
+                await monitorsData.verdicts(web3.utils.soliditySha3(2), 0, 1)
                     .should.be.eventually.deep.equal(web3.utils.toBN(50));
             });
 
-            it("should not send incorrect validator verdicts", async () => {
+            it("should not send incorrect monitor verdicts", async () => {
                 skipTime(web3, 3400);
                 await skaleManager.sendVerdicts(0, [1], [0, 0], [50, 50], {from: validator})
                     .should.be.eventually.rejectedWith("Incorrect data");
             });
 
-            it("should not send incorrect validator verdicts part 2", async () => {
+            it("should not send incorrect monitor verdicts part 2", async () => {
                 skipTime(web3, 3400);
                 await skaleManager.sendVerdicts(0, [1, 2], [0, 0], [50], {from: validator})
                     .should.be.eventually.rejectedWith("Incorrect data");
             });
 
-            describe("when validator verdict is received", async () => {
+            describe("when monitor verdict is received", async () => {
                 beforeEach(async () => {
                     skipTime(web3, 3400);
                     await skaleManager.sendVerdict(0, 1, 0, 50, {from: validator});
@@ -438,7 +438,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
                 });
             });
 
-            describe("when validator verdict with downtime is received", async () => {
+            describe("when monitor verdict with downtime is received", async () => {
                 beforeEach(async () => {
                     skipTime(web3, 3400);
                     await skaleManager.sendVerdict(0, 1, 1, 50, {from: validator});
@@ -490,7 +490,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
                 });
             });
 
-            describe("when validator verdict with latency is received", async () => {
+            describe("when monitor verdict with latency is received", async () => {
                 beforeEach(async () => {
                     skipTime(web3, 3400);
                     await skaleManager.sendVerdict(0, 1, 0, 200000, {from: validator});
