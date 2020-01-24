@@ -108,6 +108,7 @@ contract ValidatorService is Permissions {
 
     function linkNodeAddress(address validatorAddress, address nodeAddress) external allow("DelegationService") {
         uint validatorId = getValidatorId(validatorAddress);
+        require(_validatorAddressToId[nodeAddress] == 0, "Validator cannot override node address");
         _validatorAddressToId[nodeAddress] = validatorId;
     }
 
