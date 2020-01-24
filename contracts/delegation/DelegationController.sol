@@ -24,6 +24,7 @@ import "../Permissions.sol";
 import "./DelegationRequestManager.sol";
 import "./DelegationPeriodManager.sol";
 import "./TokenState.sol";
+import "./ValidatorService.sol";
 
 
 contract DelegationController is Permissions {

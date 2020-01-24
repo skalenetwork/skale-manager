@@ -80,8 +80,6 @@ contract NodesFunctionality is Permissions, INodesFunctionality {
      */
     function createNode(address from, bytes calldata data) external allow("SkaleManager") returns (uint nodeIndex) {
         address nodesDataAddress = contractManager.getContract("NodesData");
-        // address constantsAddress = contractManager.getContract("Constants");
-        // require(value >= IConstants(constantsAddress).NODE_DEPOSIT(), "Not enough money to create Node");
         uint16 nonce;
         bytes4 ip;
         bytes4 publicIP;
@@ -98,7 +96,7 @@ contract NodesFunctionality is Permissions, INodesFunctionality {
         require(!INodesData(nodesDataAddress).nodesNameCheck(keccak256(abi.encodePacked(name))), "Name has already registered");
         require(port > 0, "Port is zero");
 
-        uint validatorId = ValidatorService(contractManager.getContract("ValidatorService")).validatorAddressToId(from);
+        uint validatorId = ValidatorService(contractManager.getContract("ValidatorService")).getValidatorId(from);
 
         // adds Node to NodesData contract
         nodeIndex = INodesData(nodesDataAddress).addNode(
@@ -156,12 +154,14 @@ contract NodesFunctionality is Permissions, INodesFunctionality {
      * @return true - if everything OK
      */
     function initWithdrawDeposit(address from, uint nodeIndex) external allow("SkaleManager") returns (bool) {
-        address nodesDataAddress = contractManager.getContract("NodesData");
+        INodesData nodesData = INodesData(contractManager.getContract("NodesData"));
+        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
 
-        require(INodesData(nodesDataAddress).isNodeExist(from, nodeIndex), "Node does not exist for message sender");
-        require(INodesData(nodesDataAddress).isNodeActive(nodeIndex), "Node is not Active");
+        require(validatorService.validatorAddressExists(from), "Validator with such address doesn't exist");
+        require(nodesData.isNodeExist(from, nodeIndex), "Node does not exist for message sender");
+        require(nodesData.isNodeActive(nodeIndex), "Node is not Active");
 
-        INodesData(nodesDataAddress).setNodeLeaving(nodeIndex);
+        nodesData.setNodeLeaving(nodeIndex);
 
         emit WithdrawDepositFromNodeInit(
             nodeIndex,
@@ -179,25 +179,24 @@ contract NodesFunctionality is Permissions, INodesFunctionality {
      * @param nodeIndex - index of Node
      * @return amount of SKL which be returned
      */
-    function completeWithdrawDeposit(address from, uint nodeIndex) external allow("SkaleManager") returns (uint) {
-        address nodesDataAddress = contractManager.getContract("NodesData");
+    function completeWithdrawDeposit(address from, uint nodeIndex) external allow("SkaleManager") {
+        INodesData nodesData = INodesData(contractManager.getContract("NodesData"));
+        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
 
-        require(INodesData(nodesDataAddress).isNodeExist(from, nodeIndex), "Node does not exist for message sender");
-        require(INodesData(nodesDataAddress).isNodeLeaving(nodeIndex), "Node is no Leaving");
-        require(INodesData(nodesDataAddress).isLeavingPeriodExpired(nodeIndex), "Leaving period has not expired");
+        require(validatorService.validatorAddressExists(from), "Validator with such address doesn't exist");
+        require(nodesData.isNodeExist(from, nodeIndex), "Node does not exist for message sender");
+        require(nodesData.isNodeLeaving(nodeIndex), "Node is no Leaving");
+        require(nodesData.isLeavingPeriodExpired(nodeIndex), "Leaving period has not expired");
 
-        INodesData(nodesDataAddress).setNodeLeft(nodeIndex);
+        nodesData.setNodeLeft(nodeIndex);
+        nodesData.removeNode(nodeIndex);
 
-        INodesData(nodesDataAddress).removeNode(nodeIndex);
-
-        address constantsAddress = contractManager.getContract("Constants");
         emit WithdrawDepositFromNodeComplete(
             nodeIndex,
             from,
-            IConstants(constantsAddress).NODE_DEPOSIT(),
+            0,
             uint32(block.timestamp),
             gasleft());
-        return IConstants(constantsAddress).NODE_DEPOSIT();
     }
 
     // /**

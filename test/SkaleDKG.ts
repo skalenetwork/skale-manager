@@ -1,17 +1,11 @@
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
-import { ConstantsHolderContract,
-         ConstantsHolderInstance,
-         ContractManagerContract,
-         ContractManagerInstance,
+import { ContractManagerInstance,
          DecryptionContract,
          DecryptionInstance,
          DelegationServiceInstance,
          ECDHContract,
          ECDHInstance,
-         NodesDataContract,
-         NodesDataInstance,
-         NodesFunctionalityContract,
          NodesFunctionalityInstance,
          SchainsDataContract,
          SchainsDataInstance,
@@ -21,34 +15,25 @@ import { ConstantsHolderContract,
          SchainsFunctionalityInternalInstance,
          SkaleDKGContract,
          SkaleDKGInstance,
-         SkaleTokenInstance,
-         SlashingTableContract,
-         SlashingTableInstance,
-         ValidatorServiceContract,
-         ValidatorServiceInstance} from "../types/truffle-contracts";
+         SkaleTokenInstance } from "../types/truffle-contracts";
 
 import { gasMultiplier } from "./utils/command_line";
 import { skipTime } from "./utils/time";
-// const truffleAssert = require('truffle-assertions');
-// const truffleEvent = require('truffle-events');
 
-const ContractManager: ContractManagerContract = artifacts.require("./ContractManager");
-const ConstantsHolder: ConstantsHolderContract = artifacts.require("./ConstantsHolder");
-const NodesData: NodesDataContract = artifacts.require("./NodesData");
-const NodesFunctionality: NodesFunctionalityContract = artifacts.require("./NodesFunctionality");
 const SchainsData: SchainsDataContract = artifacts.require("./SchainsData");
 const SchainsFunctionality: SchainsFunctionalityContract = artifacts.require("./SchainsFunctionality");
 const SchainsFunctionalityInternal: SchainsFunctionalityInternalContract = artifacts.require("./SchainsFunctionalityInternal");
 const SkaleDKG: SkaleDKGContract = artifacts.require("./SkaleDKG");
 const Decryption: DecryptionContract = artifacts.require("./Decryption");
 const ECDH: ECDHContract = artifacts.require("./ECDH");
-const ValidatorService: ValidatorServiceContract = artifacts.require("./ValidatorService");
-const SlashingTable: SlashingTableContract = artifacts.require("./SlashingTable");
 
 import BigNumber from "bignumber.js";
+import { deployContractManager } from "./utils/deploy/contractManager";
 import { deployDelegationService } from "./utils/deploy/delegation/delegationService";
+import { deployNodesFunctionality } from "./utils/deploy/nodesFunctionality";
 import { deploySkaleToken } from "./utils/deploy/skaleToken";
-// import sha256 from "js-sha256";
+import { deploySlashingTable } from "./utils/deploy/slashingTable";
+
 chai.should();
 chai.use(chaiAsPromised);
 
@@ -79,10 +64,8 @@ class Channel {
     }
 }
 
-contract("SkaleDKG", ([validator1, validator2]) => {
+contract("SkaleDKG", ([owner, validator1, validator2]) => {
     let contractManager: ContractManagerInstance;
-    let constantsHolder: ConstantsHolderInstance;
-    let nodesData: NodesDataInstance;
     let nodesFunctionality: NodesFunctionalityInstance;
     let schainsData: SchainsDataInstance;
     let schainsFunctionality: SchainsFunctionalityInstance;
@@ -94,66 +77,51 @@ contract("SkaleDKG", ([validator1, validator2]) => {
     let skaleToken: SkaleTokenInstance;
 
     beforeEach(async () => {
-        contractManager = await ContractManager.new({from: validator1});
+        contractManager = await deployContractManager();
 
-        constantsHolder = await ConstantsHolder.new(
-            contractManager.address,
-            {from: validator1, gas: 8000000});
-        await contractManager.setContractsAddress("Constants", constantsHolder.address);
-
-        nodesData = await NodesData.new(
-            5,
-            contractManager.address,
-            {from: validator1, gas: 8000000 * gasMultiplier});
-        await contractManager.setContractsAddress("NodesData", nodesData.address);
-
-        nodesFunctionality = await NodesFunctionality.new(
-            contractManager.address,
-            {from: validator1, gas: 8000000 * gasMultiplier});
-        await contractManager.setContractsAddress("NodesFunctionality", nodesFunctionality.address);
+        nodesFunctionality = await deployNodesFunctionality(contractManager);
 
         schainsData = await SchainsData.new(
             "SchainsFunctionalityInternal",
             contractManager.address,
-            {from: validator1, gas: 8000000 * gasMultiplier});
+            {from: owner, gas: 8000000 * gasMultiplier});
         await contractManager.setContractsAddress("SchainsData", schainsData.address);
 
         schainsFunctionality = await SchainsFunctionality.new(
             "SkaleManager",
             "SchainsData",
             contractManager.address,
-            {from: validator1, gas: 7900000 * gasMultiplier});
+            {from: owner, gas: 7900000 * gasMultiplier});
         await contractManager.setContractsAddress("SchainsFunctionality", schainsFunctionality.address);
 
         schainsFunctionalityInternal = await SchainsFunctionalityInternal.new(
             "SchainsFunctionality",
             "SchainsData",
             contractManager.address,
-            {from: validator1, gas: 7000000 * gasMultiplier});
+            {from: owner, gas: 7000000 * gasMultiplier});
         await contractManager.setContractsAddress("SchainsFunctionalityInternal", schainsFunctionalityInternal.address);
 
-        skaleDKG = await SkaleDKG.new(contractManager.address, {from: validator1, gas: 8000000 * gasMultiplier});
+        skaleDKG = await SkaleDKG.new(contractManager.address, {from: owner, gas: 8000000 * gasMultiplier});
         await contractManager.setContractsAddress("SkaleDKG", skaleDKG.address);
 
-        decryption = await Decryption.new({from: validator1, gas: 8000000 * gasMultiplier});
+        decryption = await Decryption.new({from: owner, gas: 8000000 * gasMultiplier});
         await contractManager.setContractsAddress("Decryption", decryption.address);
 
-        ecdh = await ECDH.new({from: validator1, gas: 8000000 * gasMultiplier});
+        ecdh = await ECDH.new({from: owner, gas: 8000000 * gasMultiplier});
         await contractManager.setContractsAddress("ECDH", ecdh.address);
 
         delegationService = await deployDelegationService(contractManager);
 
         skaleToken = await deploySkaleToken(contractManager);
 
-        const slashingTable = await SlashingTable.new(contractManager.address);
-        await contractManager.setContractsAddress("SlashingTable", slashingTable.address);
+        const slashingTable = await deploySlashingTable(contractManager);
         await slashingTable.setPenalty("FailedDKG", 5);
     });
 
     describe("when 2 nodes are created", async () => {
         const validatorsAccount = [
-            "0x7E6CE355Ca303EAe3a858c172c3cD4CeB23701bc",
-            "0xF64ADc0A4462E30381Be09E42EB7DcB816de2803",
+            validator1,
+            validator2,
         ];
         const validatorsPrivateKey = [
             "0xa15c19da241e5b1db20d8dd8ca4b5eeaee01c709b49ec57aa78c2133d3c1b3c9",
@@ -238,10 +206,15 @@ contract("SkaleDKG", ([validator1, validator2]) => {
 
         beforeEach(async () => {
             await delegationService.registerValidator("Validator1", "D2 is even", 0, 0, {from: validator1});
-            await skaleToken.mint(validator1, validator1, 1000, "0x", "0x");
-            const validatorId = 1;
-            await delegationService.delegate(validatorId, 100, 3, "D2 is even", {from: validator1});
+            const validator1Id = 1;
+            await delegationService.registerValidator("Validator2", "D2 is even more even", 0, 0, {from: validator2});
+            const validator2Id = 2;
+            await skaleToken.mint(owner, validator1, 1000, "0x", "0x");
+            await skaleToken.mint(owner, validator2, 1000, "0x", "0x");
+            await delegationService.delegate(validator1Id, 100, 3, "D2 is even", {from: validator1});
+            await delegationService.delegate(validator2Id, 100, 3, "D2 is even more even", {from: validator2});
             await delegationService.acceptPendingDelegation(0, {from: validator1});
+            await delegationService.acceptPendingDelegation(1, {from: validator2});
 
             skipTime(web3, 60 * 60 * 24 * 31);
 
@@ -255,8 +228,7 @@ contract("SkaleDKG", ([validator1, validator2]) => {
                     "7f0000" + hexIndex +
                     "7f0000" + hexIndex +
                     validatorsPublicKey[index] +
-                    "d2" + hexIndex,
-                    {from: validator1});
+                    "d2" + hexIndex);
             }
         });
 
@@ -270,8 +242,7 @@ contract("SkaleDKG", ([validator1, validator2]) => {
                 "0000000000000000000000000000000000000000000000000000000000000005" +
                 "04" +
                 "0000" +
-                "6432",
-                {from: validator1});
+                "6432");
 
             const channel: Channel = new Channel(await skaleDKG.channels(web3.utils.soliditySha3("d2")));
             assert(channel.active.should.be.true);
@@ -287,13 +258,12 @@ contract("SkaleDKG", ([validator1, validator2]) => {
                 "0000000000000000000000000000000000000000000000000000000000000005" +
                 "04" +
                 "0000" +
-                "6432",
-                {from: validator1});
+                "6432");
 
             let channel: Channel = new Channel(await skaleDKG.channels(web3.utils.soliditySha3("d2")));
             assert(channel.active.should.be.true);
 
-            await schainsFunctionality.deleteSchainByRoot("d2", {from: validator1});
+            await schainsFunctionality.deleteSchainByRoot("d2");
             channel = new Channel(await skaleDKG.channels(web3.utils.soliditySha3("d2")));
             assert(channel.active.should.be.false);
         });
@@ -309,13 +279,12 @@ contract("SkaleDKG", ([validator1, validator2]) => {
                     "0000000000000000000000000000000000000000000000000000000000000005" +
                     "04" +
                     "0000" +
-                    "6432",
-                    {from: validator1});
+                    "6432");
 
                 let nodes = await schainsData.getNodesInGroup(web3.utils.soliditySha3("d2"));
                 schainName = "d2";
                 while ((new BigNumber(nodes[0])).toFixed() === "1") {
-                    await schainsFunctionality.deleteSchainByRoot(schainName, {from: validator1});
+                    await schainsFunctionality.deleteSchainByRoot(schainName);
                     await schainsFunctionality.addSchain(
                         validator1,
                         deposit,
@@ -323,8 +292,7 @@ contract("SkaleDKG", ([validator1, validator2]) => {
                         "0000000000000000000000000000000000000000000000000000000000000005" +
                         "04" +
                         "0000" +
-                        "6432",
-                        {from: validator1});
+                        "6432");
                     nodes = await schainsData.getNodesInGroup(web3.utils.soliditySha3(schainName));
                 }
             });
@@ -501,8 +469,9 @@ contract("SkaleDKG", ([validator1, validator2]) => {
                         assert.equal(result.logs[0].event, "BadGuy");
                         assert.equal(result.logs[0].args.nodeIndex.toString(), "1");
 
-                        (await skaleToken.getLockedOf.call(validator1)).toNumber().should.be.equal(100);
-                        (await skaleToken.getDelegatedOf.call(validator1)).toNumber().should.be.equal(95);
+                        (await skaleToken.getLockedOf.call(validator2)).toNumber().should.be.equal(100);
+                        (await skaleToken.getDelegatedOf.call(validator2)).toNumber().should.be.equal(95);
+                        (await skaleToken.getSlashedOf.call(validator2)).toNumber().should.be.equal(5);
                     });
                 });
             });
@@ -579,6 +548,7 @@ contract("SkaleDKG", ([validator1, validator2]) => {
 
                         (await skaleToken.getLockedOf.call(validator1)).toNumber().should.be.equal(100);
                         (await skaleToken.getDelegatedOf.call(validator1)).toNumber().should.be.equal(95);
+                        (await skaleToken.getSlashedOf.call(validator1)).toNumber().should.be.equal(5);
                     });
 
                     it("accused node should send incorrect response", async () => {
@@ -594,6 +564,7 @@ contract("SkaleDKG", ([validator1, validator2]) => {
 
                         (await skaleToken.getLockedOf.call(validator1)).toNumber().should.be.equal(100);
                         (await skaleToken.getDelegatedOf.call(validator1)).toNumber().should.be.equal(95);
+                        (await skaleToken.getSlashedOf.call(validator1)).toNumber().should.be.equal(5);
                     });
                 });
             });

@@ -38,7 +38,7 @@ interface IHolderDelegation {
 
     function getDelegationRequestsForValidator(uint validatorId) external returns (uint[] memory);
 
-    function getValidators() external returns (uint[] memory validatorIds);
+    function getValidators() external view returns (uint[] memory validatorIds);
 
     function withdrawBounty(address bountyCollectionAddress, uint amount) external;
 
