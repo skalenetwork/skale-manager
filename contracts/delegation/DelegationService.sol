@@ -210,8 +210,12 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
         validatorService.confirmNewAddress(msg.sender, validatorId);
     }
 
-    function getValidators() external returns (uint[] memory validatorIds) {
-        revert("Not implemented");
+    function getValidators() external view returns (uint[] memory validatorIds) {
+        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
+        validatorIds = new uint[](validatorService.numberOfValidators());
+        for (uint i = 0; i < validatorIds.length; ++i) {
+            validatorIds[i] = i + 1;
+        }
     }
 
     function withdrawBounty(address bountyCollectionAddress, uint amount) external {

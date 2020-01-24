@@ -37,14 +37,10 @@ contract NodesData is INodesData, Permissions {
         bytes4 ip;
         bytes4 publicIP;
         uint16 port;
-        //address owner;
         bytes publicKey;
         uint32 startDate;
         uint32 leavingDate;
         uint32 lastRewardDate;
-        // uint8 freeSpace;
-        // uint indexInSpaceMap;
-        //address secondAddress;
         NodeStatus status;
         uint validatorId;
     }
@@ -59,18 +55,6 @@ contract NodesData is INodesData, Permissions {
         uint8 freeSpace;
         uint indexInSpaceMap;
     }
-
-    // struct to note Full or Fractional Node and link to subarray
-    // struct NodeLink {
-    //     uint subarrayLink;
-    //     bool isNodeFull;
-    // }
-
-    // // struct to note nodeIndex and remaining space
-    // struct NodeFilling {
-    //     uint nodeIndex;
-    //     uint freeSpace;
-    // }
 
     // array which contain all Nodes
     Node[] public nodes;
