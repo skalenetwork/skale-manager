@@ -47,6 +47,7 @@ const SlashingTable: SlashingTableContract = artifacts.require("./SlashingTable"
 
 import BigNumber from "bignumber.js";
 import { deployDelegationService } from "./utils/deploy/delegation/delegationService";
+import { deployValidatorService } from "./utils/deploy/delegation/validatorService";
 import { deploySkaleToken } from "./utils/deploy/skaleToken";
 // import sha256 from "js-sha256";
 chai.should();
@@ -92,6 +93,7 @@ contract("SkaleDKG", ([validator1, validator2]) => {
     let ecdh: ECDHInstance;
     let delegationService: DelegationServiceInstance;
     let skaleToken: SkaleTokenInstance;
+    let validatorService: ValidatorServiceInstance;
 
     beforeEach(async () => {
         contractManager = await ContractManager.new({from: validator1});
@@ -144,6 +146,8 @@ contract("SkaleDKG", ([validator1, validator2]) => {
         delegationService = await deployDelegationService(contractManager);
 
         skaleToken = await deploySkaleToken(contractManager);
+
+        validatorService = await deployValidatorService(contractManager);
 
         const slashingTable = await SlashingTable.new(contractManager.address);
         await contractManager.setContractsAddress("SlashingTable", slashingTable.address);
@@ -240,6 +244,7 @@ contract("SkaleDKG", ([validator1, validator2]) => {
             await delegationService.registerValidator("Validator1", "D2 is even", 0, 0, {from: validator1});
             await skaleToken.mint(validator1, validator1, 1000, "0x", "0x");
             const validatorId = 1;
+            await validatorService.enableValidator(1, {from: validator1});
             await delegationService.delegate(validatorId, 100, 3, "D2 is even", {from: validator1});
             await delegationService.acceptPendingDelegation(0, {from: validator1});
 

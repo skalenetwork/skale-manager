@@ -144,7 +144,7 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
                 100,
                 {from: validator1});
         });
-        it("should crash when validator tried to register new one with the same address", async () => {
+        it("should reject when validator tried to register new one with the same address", async () => {
             await delegationService.registerValidator(
                 "ValidatorName",
                 "Really good validator",
@@ -182,7 +182,7 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
                 .should.be.eventually.rejectedWith("Validator with such address doesn't exist");
         });
 
-        it("should reject it validator tries to set new address as null", async () => {
+        it("should reject if validator tries to set new address as null", async () => {
             await delegationService.requestForNewAddress("0x0000000000000000000000000000000000000000")
             .should.be.eventually.rejectedWith("New address cannot be null");
         });
@@ -201,7 +201,30 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
                 await skaleToken.mint(owner, validator3, 200, "0x", "0x");
             });
 
-            it("should not create node if new epoch isn't started", async () => {
+            it("should allow to enable validator in whitelist", async () => {
+                await validatorService.enableValidator(validatorId, {from: validator1})
+                    .should.be.eventually.rejectedWith("Ownable: caller is not the owner");
+                await validatorService.enableValidator(validatorId, {from: owner});
+            });
+
+            it("should allow to disable validator from whitelist", async () => {
+                await validatorService.disableValidator(validatorId, {from: validator1})
+                    .should.be.eventually.rejectedWith("Ownable: caller is not the owner");
+                await validatorService.disableValidator(validatorId, {from: owner});
+            });
+
+            it("should not allow to send delegation request if validator isn't authorized", async () => {
+                await delegationService.delegate(validatorId, amount, delegationPeriod, info, {from: holder})
+                    .should.be.eventually.rejectedWith("Validator is not authorized to accept request");
+            });
+
+            it("should allow to send delegation request if validator is authorized", async () => {
+                await validatorService.enableValidator(validatorId, {from: owner});
+                await delegationService.delegate(validatorId, amount, delegationPeriod, info, {from: holder});
+            });
+
+            it("should not allow to create node if new epoch isn't started", async () => {
+                await validatorService.enableValidator(validatorId, {from: owner});
                 await delegationService.delegate(validatorId, amount, delegationPeriod, info, {from: holder});
                 const delegationId = 0;
                 await delegationService.acceptPendingDelegation(delegationId, {from: validator1});
@@ -218,7 +241,41 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
                     .should.be.eventually.rejectedWith("Validator has to meet Minimum Staking Requirement");
             });
 
+            it("should not allow to create node if validator became untrusted", async () => {
+                await validatorService.enableValidator(validatorId, {from: owner});
+                await delegationService.delegate(validatorId, amount, delegationPeriod, info, {from: holder});
+                const delegationId = 0;
+                await delegationService.acceptPendingDelegation(delegationId, {from: validator1});
+                skipTime(web3, 2592000);
+                await constantsHolder.setMSR(amount);
+
+                await validatorService.disableValidator(validatorId, {from: owner});
+                await skaleManager.createNode(
+                    "0x01" + // create node
+                    "2161" + // port
+                    "0000" + // nonce
+                    "7f000001" + // ip
+                    "7f000001" + // public ip
+                    "1122334455667788990011223344556677889900112233445566778899001122" +
+                    "1122334455667788990011223344556677889900112233445566778899001122" + // public key
+                    "6432", // name,
+                    {from: validator1})
+                    .should.be.eventually.rejectedWith("Validator is not authorized to create a node");
+                await validatorService.enableValidator(validatorId, {from: owner});
+                await skaleManager.createNode(
+                    "0x01" + // create node
+                    "2161" + // port
+                    "0000" + // nonce
+                    "7f000001" + // ip
+                    "7f000001" + // public ip
+                    "1122334455667788990011223344556677889900112233445566778899001122" +
+                    "1122334455667788990011223344556677889900112233445566778899001122" + // public key
+                    "6432", // name,
+                    {from: validator1});
+            });
+
             it("should allow to create node if new epoch is started", async () => {
+                await validatorService.enableValidator(validatorId, {from: owner});
                 await delegationService.delegate(validatorId, amount, delegationPeriod, info, {from: holder});
                 const delegationId = 0;
                 await delegationService.acceptPendingDelegation(delegationId, {from: validator1});
@@ -254,6 +311,7 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
             });
 
             it("should allow to create 2 nodes", async () => {
+                await validatorService.enableValidator(validatorId, {from: owner});
                 await delegationService.delegate(validatorId, amount, delegationPeriod, info, {from: holder});
                 await delegationService.delegate(validatorId, amount, delegationPeriod, info, {from: validator3});
                 const delegationId1 = 0;

@@ -41,6 +41,7 @@ contract ValidatorService is Permissions {
 
     mapping (uint => Validator) public validators;
     mapping (address => uint) public validatorAddressToId;
+    mapping (uint => bool) public trustedValidators;
     uint public numberOfValidators;
 
     modifier checkValidatorExists(uint validatorId) {
@@ -80,6 +81,14 @@ contract ValidatorService is Permissions {
         validatorAddressToId[validatorAddress] = validatorId;
     }
 
+    function enableValidator(uint validatorId) external checkValidatorExists(validatorId) onlyOwner {
+        trustedValidators[validatorId] = true;
+    }
+
+    function disableValidator(uint validatorId) external checkValidatorExists(validatorId) onlyOwner {
+        trustedValidators[validatorId] = false;
+    }
+
     function requestForNewAddress(address oldValidatorAddress, address newValidatorAddress) external allow("DelegationService") {
         require(newValidatorAddress != address(0), "New address cannot be null");
         uint validatorId = getValidatorId(oldValidatorAddress);
@@ -107,8 +116,10 @@ contract ValidatorService is Permissions {
     }
 
     function checkValidatorAddressToId(address validatorAddress, uint validatorId)
-    external view
-    allow("DelegationRequestManager") returns (bool)
+        external
+        view
+        allow("DelegationRequestManager")
+        returns (bool)
     {
         return getValidatorId(validatorAddress) == validatorId ? true : false;
     }
@@ -136,6 +147,7 @@ contract ValidatorService is Permissions {
             contractManager.getContract("DelegationController")
         );
         uint validatorId = getValidatorId(validatorAddress);
+        require(trustedValidators[validatorId], "Validator is not authorized to create a node");
         uint[] memory validatorNodes = validators[validatorId].nodeIndexes;
         uint delegationsTotal = delegationController.getDelegationsTotal(validatorId);
         uint msr = IConstants(contractManager.getContract("Constants")).msr();

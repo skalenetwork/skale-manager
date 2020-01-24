@@ -59,6 +59,7 @@ contract DelegationRequestManager is Permissions {
             validatorService.checkMinimumDelegation(validatorId, amount),
             "Amount doesn't meet minimum delegation amount"
         );
+        require(validatorService.trustedValidators(validatorId), "Validator is not authorized to accept request");
         require(
             DelegationPeriodManager(
                 contractManager.getContract("DelegationPeriodManager")

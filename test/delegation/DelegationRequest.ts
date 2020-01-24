@@ -2,7 +2,8 @@ import { ContractManagerInstance,
     DelegationControllerInstance,
     DelegationServiceInstance,
     SkaleTokenInstance,
-    TokenStateInstance } from "../../types/truffle-contracts";
+    TokenStateInstance,
+    ValidatorServiceInstance } from "../../types/truffle-contracts";
 
 import { skipTime } from "../utils/time";
 
@@ -13,6 +14,7 @@ import { deployContractManager } from "../utils/deploy/contractManager";
 import { deployDelegationController } from "../utils/deploy/delegation/delegationController";
 import { deployDelegationService } from "../utils/deploy/delegation/delegationService";
 import { deployTokenState } from "../utils/deploy/delegation/tokenState";
+import { deployValidatorService } from "../utils/deploy/delegation/validatorService";
 import { deploySkaleToken } from "../utils/deploy/skaleToken";
 chai.should();
 chai.use(chaiAsPromised);
@@ -41,6 +43,7 @@ contract("DelegationRequestManager", ([owner, holder1, holder2, validator, valid
     let delegationService: DelegationServiceInstance;
     let delegationController: DelegationControllerInstance;
     let tokenState: TokenStateInstance;
+    let validatorService: ValidatorServiceInstance;
 
     const defaultAmount = 100 * 1e18;
 
@@ -55,6 +58,7 @@ contract("DelegationRequestManager", ([owner, holder1, holder2, validator, valid
         delegationService = await deployDelegationService(contractManager);
         delegationController = await deployDelegationController(contractManager);
         tokenState = await deployTokenState(contractManager);
+        validatorService = await deployValidatorService(contractManager);
     });
 
     describe("when arguments for delegation initialized", async () => {
@@ -74,6 +78,7 @@ contract("DelegationRequestManager", ([owner, holder1, holder2, validator, valid
                 500,
                 100,
                 {from: validator});
+            await validatorService.enableValidator(validatorId, {from: owner});
             });
 
         it("should reject delegation if validator with such id doesn't exist", async () => {
@@ -232,26 +237,26 @@ contract("DelegationRequestManager", ([owner, holder1, holder2, validator, valid
             });
 
             it("should get delegation requests by validatorId", async () => {
-                let delegations = await delegationService.getDelegationsByValidator.call(0, {from: validator});
+                let delegations = await delegationService.getDelegationsForValidator.call(0, {from: validator});
                 let delegation = new BigNumber(delegations[0]).toNumber();
                 assert.equal(delegation, 0);
 
                 await delegationService.acceptPendingDelegation(0, {from: validator});
 
-                delegations = await delegationService.getDelegationsByValidator.call(1, {from: validator});
+                delegations = await delegationService.getDelegationsForValidator.call(1, {from: validator});
                 delegation = new BigNumber(delegations[0]).toNumber();
                 assert.equal(delegation, 0);
 
-                delegations = await delegationService.getDelegationsByValidator.call(0, {from: validator});
+                delegations = await delegationService.getDelegationsForValidator.call(0, {from: validator});
                 assert.deepEqual(delegations, []);
 
                 skipTime(web3, 2592000);
 
-                delegations = await delegationService.getDelegationsByValidator.call(2, {from: validator});
+                delegations = await delegationService.getDelegationsForValidator.call(2, {from: validator});
                 delegation = new BigNumber(delegations[0]).toNumber();
                 assert.equal(delegation, 0);
 
-                delegations = await delegationService.getDelegationsByValidator.call(1, {from: validator});
+                delegations = await delegationService.getDelegationsForValidator.call(1, {from: validator});
                 assert.deepEqual(delegations, []);
             });
         });

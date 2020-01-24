@@ -77,9 +77,9 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
         return delegationController.getDelegationsByHolder(msg.sender, state);
     }
 
-    function getDelegationsByValidator(TokenState.State state) external returns (uint[] memory) {
+    function getDelegationsForValidator(TokenState.State state) external returns (uint[] memory) {
         DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
-        return delegationController.getDelegationsByValidator(msg.sender, state);
+        return delegationController.getDelegationsForValidator(msg.sender, state);
     }
 
     function setMinimumDelegationAmount(uint amount) external {
