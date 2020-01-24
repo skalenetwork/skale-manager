@@ -177,6 +177,16 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
         emit ValidatorRegistered(validatorId);
     }
 
+    function linkNodeAddress(address nodeAddress) external {
+        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
+        validatorService.linkNodeAddress(msg.sender, nodeAddress);
+    }
+
+    function unlinkNodeAddress(address nodeAddress) external {
+        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
+        validatorService.unlinkNodeAddress(msg.sender, nodeAddress);
+    }
+
     function unregisterValidator(uint validatorId) external {
         revert("Not implemented");
     }

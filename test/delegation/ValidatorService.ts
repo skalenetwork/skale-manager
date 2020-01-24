@@ -40,7 +40,7 @@ class Validator {
     }
 }
 
-contract("ValidatorService", ([owner, holder, validator1, validator2, validator3]) => {
+contract("ValidatorService", ([owner, holder, validator1, validator2, validator3, nodeAddress]) => {
     let contractManager: ContractManagerInstance;
     let delegationService: DelegationServiceInstance;
     let validatorService: ValidatorServiceInstance;
@@ -100,6 +100,49 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
                 {from: validator1})
                 .should.be.eventually.rejectedWith("Validator with such address already exists");
 
+        });
+
+        it("should link new node address for validator", async () => {
+            const validatorId = 1;
+            await delegationService.linkNodeAddress(nodeAddress, {from: validator1});
+            const id = new BigNumber(await validatorService.getValidatorId(nodeAddress, {from: validator1})).toNumber();
+            assert.equal(id, validatorId);
+        });
+
+        it("should reject if validator tried to override node address of another validator or itself", async () => {
+            const validatorId = 1;
+            await delegationService.registerValidator(
+                "Second Validator",
+                "Bad validator",
+                500,
+                100,
+                {from: validator2});
+            await delegationService.linkNodeAddress(nodeAddress, {from: validator1});
+            await delegationService.linkNodeAddress(nodeAddress, {from: validator2})
+                .should.be.eventually.rejectedWith("Validator cannot override node address");
+            await delegationService.linkNodeAddress(nodeAddress, {from: validator1})
+                .should.be.eventually.rejectedWith("Validator cannot override node address");
+            const id = new BigNumber(await validatorService.getValidatorId(nodeAddress, {from: validator1})).toNumber();
+            assert.equal(id, validatorId);
+        });
+
+        it("should unlink node address for validator", async () => {
+            const validatorId = 1;
+            await delegationService.linkNodeAddress(nodeAddress, {from: validator1});
+            await delegationService.registerValidator(
+                "Second Validator",
+                "Not bad validator",
+                500,
+                100,
+                {from: validator2});
+            await delegationService.unlinkNodeAddress(nodeAddress, {from: validator2})
+                .should.be.eventually.rejectedWith("Validator hasn't permissions to unlink node");
+            const id = new BigNumber(await validatorService.getValidatorId(nodeAddress, {from: validator1})).toNumber();
+            assert.equal(id, validatorId);
+
+            await delegationService.unlinkNodeAddress(nodeAddress, {from: validator1});
+            await validatorService.getValidatorId(nodeAddress, {from: validator1})
+                .should.be.eventually.rejectedWith("Validator with such address doesn't exist");
         });
 
         describe("when validator requests for a new address", async () => {
