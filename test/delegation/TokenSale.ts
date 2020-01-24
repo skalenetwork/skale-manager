@@ -74,7 +74,7 @@ contract("TokenSaleManager", ([owner, holder, delegation, validator, seller, hac
             await tokenSaleManager.approve([holder], [10], {from: seller});
             await tokenSaleManager.retrieve({from: holder});
             (await skaleToken.balanceOf(holder)).toNumber().should.be.equal(10);
-            await skaleToken.transfer(hacker, "1", {from: holder}).should.be.eventually.rejectedWith("Token should be unlocked for transfering");
+            await skaleToken.transfer(hacker, "1", {from: holder}).should.be.eventually.rejectedWith("Token should be unlocked for transferring");
         });
 
         describe("when holder bought tokens", async () => {
@@ -94,12 +94,12 @@ contract("TokenSaleManager", ([owner, holder, delegation, validator, seller, hac
                 await delegationService.acceptPendingDelegation(delegationId, {from: validator});
 
                 await skaleToken.transfer(hacker, 1, {from: holder})
-                    .should.be.eventually.rejectedWith("Token should be unlocked for transfering");
+                    .should.be.eventually.rejectedWith("Token should be unlocked for transferring");
                 await skaleToken.approve(hacker, 1, {from: holder});
                 await skaleToken.transferFrom(holder, hacker, 1, {from: hacker})
-                    .should.be.eventually.rejectedWith("Token should be unlocked for transfering");
+                    .should.be.eventually.rejectedWith("Token should be unlocked for transferring");
                 await skaleToken.send(hacker, 1, "0x", {from: holder})
-                    .should.be.eventually.rejectedWith("Token should be unlocked for transfering");
+                    .should.be.eventually.rejectedWith("Token should be unlocked for transferring");
 
                 const month = 60 * 60 * 24 * 31;
                 skipTime(web3, month);

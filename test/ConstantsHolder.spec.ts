@@ -96,8 +96,8 @@ contract("ConstantsHolder", ([deployer, user]) => {
     parseInt(bn.toString(), 10).should.be.equal(186624000);
   });
 
-  it("NUMBER_OF_VALIDATORS should be equal 24", async () => {
-    const bn = new BigNumber(await constantsHolder.NUMBER_OF_VALIDATORS());
+  it("NUMBER_OF_MONITORS should be equal 24", async () => {
+    const bn = new BigNumber(await constantsHolder.NUMBER_OF_MONITORS());
     parseInt(bn.toString(), 10).should.be.equal(24);
   });
 

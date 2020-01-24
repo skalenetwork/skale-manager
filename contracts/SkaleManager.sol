@@ -24,12 +24,11 @@ import "./interfaces/INodesData.sol";
 import "./interfaces/IConstants.sol";
 import "./interfaces/ISkaleToken.sol";
 import "./interfaces/INodesFunctionality.sol";
-import "./interfaces/IValidatorsFunctionality.sol";
 import "./interfaces/ISchainsFunctionality.sol";
 import "./interfaces/IManagerData.sol";
 import "./delegation/DelegationService.sol";
 import "./delegation/ValidatorService.sol";
-import "./ValidatorsFunctionality.sol";
+import "./MonitorsFunctionality.sol";
 import "./NodesFunctionality.sol";
 import "./NodesData.sol";
 import "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
@@ -74,10 +73,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
         }
 
         TransactionOperation operationType = fallbackOperationTypeConvert(userData);
-        if (operationType == TransactionOperation.CreateNode) {
-            address nodesFunctionalityAddress = contractManager.getContract("NodesFunctionality");
-            address validatorsFunctionalityAddress = contractManager.getContract("ValidatorsFunctionality");
-        } else if (operationType == TransactionOperation.CreateSchain) {
+        if (operationType == TransactionOperation.CreateSchain) {
             address schainsFunctionalityAddress = contractManager.getContract("SchainsFunctionality");
             ISchainsFunctionality(schainsFunctionalityAddress).addSchain(from, value, userData);
         }
@@ -86,12 +82,12 @@ contract SkaleManager is IERC777Recipient, Permissions {
     function createNode(bytes calldata data) external {
         INodesFunctionality nodesFunctionality = INodesFunctionality(contractManager.getContract("NodesFunctionality"));
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
-        ValidatorsFunctionality validatorsFunctionality = ValidatorsFunctionality(contractManager.getContract("ValidatorsFunctionality"));
+        MonitorsFunctionality monitorsFunctionality = MonitorsFunctionality(contractManager.getContract("MonitorsFunctionality"));
 
         validatorService.checkPossibilityCreatingNode(msg.sender);
         uint nodeIndex = nodesFunctionality.createNode(msg.sender, data);
         validatorService.pushNode(msg.sender, nodeIndex);
-        validatorsFunctionality.addValidator(nodeIndex);
+        monitorsFunctionality.addMonitor(nodeIndex);
     }
 
     function initWithdrawDeposit(uint nodeIndex) external {
@@ -109,8 +105,8 @@ contract SkaleManager is IERC777Recipient, Permissions {
     function deleteNode(uint nodeIndex) external {
         address nodesFunctionalityAddress = contractManager.getContract("NodesFunctionality");
         INodesFunctionality(nodesFunctionalityAddress).removeNode(msg.sender, nodeIndex);
-        address validatorsFunctionalityAddress = contractManager.getContract("ValidatorsFunctionality");
-        IValidatorsFunctionality(validatorsFunctionalityAddress).deleteValidatorByRoot(nodeIndex);
+        MonitorsFunctionality monitorsFunctionality = MonitorsFunctionality(contractManager.getContract("MonitorsFunctionality"));
+        monitorsFunctionality.deleteMonitorByRoot(nodeIndex);
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
         uint validatorId = validatorService.getValidatorId(msg.sender);
         validatorService.deleteNode(validatorId, nodeIndex);
@@ -119,11 +115,11 @@ contract SkaleManager is IERC777Recipient, Permissions {
     function deleteNodeByRoot(uint nodeIndex) external onlyOwner {
         NodesFunctionality nodesFunctionality = NodesFunctionality(contractManager.getContract("NodesFunctionality"));
         NodesData nodesData = NodesData(contractManager.getContract("NodesData"));
-        ValidatorsFunctionality validatorsFunctionality = ValidatorsFunctionality(contractManager.getContract("ValidatorsFunctionality"));
+        MonitorsFunctionality monitorsFunctionality = MonitorsFunctionality(contractManager.getContract("MonitorsFunctionality"));
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
 
         nodesFunctionality.removeNodeByRoot(nodeIndex);
-        validatorsFunctionality.deleteValidatorByRoot(nodeIndex);
+        monitorsFunctionality.deleteMonitorByRoot(nodeIndex);
         uint validatorId = nodesData.getNodeValidatorId(nodeIndex);
         validatorService.deleteNode(validatorId, nodeIndex);
     }
@@ -139,39 +135,39 @@ contract SkaleManager is IERC777Recipient, Permissions {
     }
 
     function sendVerdict(
-        uint fromValidatorIndex,
+        uint fromMonitorIndex,
         uint toNodeIndex,
         uint32 downtime,
         uint32 latency) external
     {
         NodesData nodesData = NodesData(contractManager.getContract("NodesData"));
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
-        ValidatorsFunctionality validatorsFunctionality = ValidatorsFunctionality(contractManager.getContract("ValidatorsFunctionality"));
+        MonitorsFunctionality monitorsFunctionality = MonitorsFunctionality(contractManager.getContract("MonitorsFunctionality"));
 
         validatorService.checkIfValidatorAddressExists(msg.sender);
-        require(nodesData.isNodeExist(msg.sender, fromValidatorIndex), "Node does not exist for Message sender");
+        require(nodesData.isNodeExist(msg.sender, fromMonitorIndex), "Node does not exist for Message sender");
 
-        validatorsFunctionality.sendVerdict(
-            fromValidatorIndex,
+        monitorsFunctionality.sendVerdict(
+            fromMonitorIndex,
             toNodeIndex,
             downtime,
             latency);
     }
 
     function sendVerdicts(
-        uint fromValidatorIndex,
+        uint fromMonitorIndex,
         uint[] calldata toNodeIndexes,
         uint32[] calldata downtimes,
         uint32[] calldata latencies) external
     {
         address nodesDataAddress = contractManager.getContract("NodesData");
-        require(INodesData(nodesDataAddress).isNodeExist(msg.sender, fromValidatorIndex), "Node does not exist for Message sender");
+        require(INodesData(nodesDataAddress).isNodeExist(msg.sender, fromMonitorIndex), "Node does not exist for Message sender");
         require(toNodeIndexes.length == downtimes.length, "Incorrect data");
         require(latencies.length == downtimes.length, "Incorrect data");
-        address validatorsFunctionalityAddress = contractManager.getContract("ValidatorsFunctionality");
+        MonitorsFunctionality monitorsFunctionalityAddress = MonitorsFunctionality(contractManager.getContract("MonitorsFunctionality"));
         for (uint i = 0; i < toNodeIndexes.length; i++) {
-            IValidatorsFunctionality(validatorsFunctionalityAddress).sendVerdict(
-                fromValidatorIndex,
+            monitorsFunctionalityAddress.sendVerdict(
+                fromMonitorIndex,
                 toNodeIndexes[i],
                 downtimes[i],
                 latencies[i]);
@@ -190,8 +186,8 @@ contract SkaleManager is IERC777Recipient, Permissions {
         require(nodeIsActive || nodeIsLeaving, "Node is not Active and is not Leaving");
         uint32 averageDowntime;
         uint32 averageLatency;
-        address validatorsFunctionalityAddress = contractManager.getContract("ValidatorsFunctionality");
-        (averageDowntime, averageLatency) = IValidatorsFunctionality(validatorsFunctionalityAddress).calculateMetrics(nodeIndex);
+        MonitorsFunctionality monitorsFunctionality = MonitorsFunctionality(contractManager.getContract("MonitorsFunctionality"));
+        (averageDowntime, averageLatency) = monitorsFunctionality.calculateMetrics(nodeIndex);
         uint bounty = manageBounty(
             msg.sender,
             nodeIndex,
@@ -199,7 +195,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
             averageLatency,
             nodesDataAddress);
         INodesData(nodesDataAddress).changeNodeLastRewardDate(nodeIndex);
-        IValidatorsFunctionality(validatorsFunctionalityAddress).upgradeValidator(nodeIndex);
+        monitorsFunctionality.upgradeMonitor(nodeIndex);
         emit BountyGot(
             nodeIndex,
             msg.sender,
