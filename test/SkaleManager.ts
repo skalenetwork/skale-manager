@@ -186,7 +186,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
 
             it("should fail to init withdrawing of deposit of someone else's node", async () => {
                 await skaleManager.initWithdrawDeposit(0, {from: hacker})
-                    .should.be.eventually.rejectedWith("Monitor with such address doesn't exist");
+                    .should.be.eventually.rejectedWith("Validator with such address doesn't exist");
             });
 
             it("should init withdrawing of deposit", async () => {
@@ -265,12 +265,12 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
 
             it("should fail to init withdrawing of deposit of first node from another account", async () => {
                 await skaleManager.initWithdrawDeposit(0, {from: hacker})
-                    .should.be.eventually.rejectedWith("Monitor with such address doesn't exist");
+                    .should.be.eventually.rejectedWith("Validator with such address doesn't exist");
             });
 
             it("should fail to init withdrawing of deposit of second node from another account", async () => {
                 await skaleManager.initWithdrawDeposit(1, {from: hacker})
-                    .should.be.eventually.rejectedWith("Monitor with such address doesn't exist");
+                    .should.be.eventually.rejectedWith("Validator with such address doesn't exist");
             });
 
             it("should init withdrawing of deposit of first node", async () => {
