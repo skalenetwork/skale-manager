@@ -4,16 +4,16 @@ import {
         ConstantsHolderInstance,
         ContractManagerContract,
         ContractManagerInstance,
+        MonitorsDataContract,
+        MonitorsDataInstance,
+        MonitorsFunctionalityContract,
+        MonitorsFunctionalityInstance,
         NodesDataContract,
         NodesDataInstance,
         NodesFunctionalityContract,
         NodesFunctionalityInstance,
         SkaleDKGContract,
-        SkaleDKGInstance,
-        ValidatorsDataContract,
-        ValidatorsDataInstance,
-        ValidatorsFunctionalityContract,
-        ValidatorsFunctionalityInstance} from "../types/truffle-contracts";
+        SkaleDKGInstance} from "../types/truffle-contracts";
 import { gasMultiplier } from "./utils/command_line";
 import { currentTime, skipTime } from "./utils/time";
 
@@ -24,18 +24,18 @@ chai.should();
 chai.use((chaiAsPromised));
 
 const ContractManager: ContractManagerContract = artifacts.require("./ContractManager");
-const ValidatorsFunctionality: ValidatorsFunctionalityContract = artifacts.require("./ValidatorsFunctionality");
+const MonitorsFunctionality: MonitorsFunctionalityContract = artifacts.require("./MonitorsFunctionality");
 const ConstantsHolder: ConstantsHolderContract = artifacts.require("./ConstantsHolder");
-const ValidatorsData: ValidatorsDataContract = artifacts.require("./ValidatorsData");
+const MonitorsData: MonitorsDataContract = artifacts.require("./MonitorsData");
 const NodesData: NodesDataContract = artifacts.require("./NodesData");
 const NodesFunctionality: NodesFunctionalityContract = artifacts.require("./NodesFunctionality");
 const SkaleDKG: SkaleDKGContract = artifacts.require("./SkaleDKG");
 
-contract("ValidatorsFunctionality", ([owner, validator]) => {
+contract("MonitorsFunctionality", ([owner, validator]) => {
   let contractManager: ContractManagerInstance;
-  let validatorsFunctionality: ValidatorsFunctionalityInstance;
+  let monitorsFunctionality: MonitorsFunctionalityInstance;
   let constantsHolder: ConstantsHolderInstance;
-  let validatorsData: ValidatorsDataInstance;
+  let monitorsData: MonitorsDataInstance;
   let nodesData: NodesDataInstance;
   let nodesFunctionality: NodesFunctionalityInstance;
   let skaleDKG: SkaleDKGInstance;
@@ -43,15 +43,15 @@ contract("ValidatorsFunctionality", ([owner, validator]) => {
   beforeEach(async () => {
     contractManager = await ContractManager.new({from: owner});
 
-    validatorsFunctionality = await ValidatorsFunctionality.new(
-      "SkaleManager", "ValidatorsData",
+    monitorsFunctionality = await MonitorsFunctionality.new(
+      "SkaleManager", "MonitorsData",
       contractManager.address, {from: owner, gas: 8000000 * gasMultiplier});
-    await contractManager.setContractsAddress("ValidatorsFunctionality", validatorsFunctionality.address);
+    await contractManager.setContractsAddress("MonitorsFunctionality", monitorsFunctionality.address);
 
-    validatorsData = await ValidatorsData.new(
-      "ValidatorsFunctionality",
+    monitorsData = await MonitorsData.new(
+      "MonitorsFunctionality",
       contractManager.address, {from: owner, gas: 8000000 * gasMultiplier});
-    await contractManager.setContractsAddress("ValidatorsData", validatorsData.address);
+    await contractManager.setContractsAddress("MonitorsData", monitorsData.address);
 
     constantsHolder = await ConstantsHolder.new(
       contractManager.address, {from: owner, gas: 8000000 * gasMultiplier});
@@ -71,7 +71,7 @@ contract("ValidatorsFunctionality", ([owner, validator]) => {
     skaleDKG = await SkaleDKG.new(contractManager.address, {from: owner, gas: 8000000 * gasMultiplier});
     await contractManager.setContractsAddress("SkaleDKG", skaleDKG.address);
 
-    // create a node for validators functions tests
+    // create a node for monitors functions tests
     await nodesData.addNode(validator, "elvis1", "0x7f000001", "0x7f000002", 8545, "0x1122334455", 0);
     await nodesData.addNode(validator, "elvis2", "0x7f000003", "0x7f000004", 8545, "0x1122334456", 0);
     await nodesData.addNode(validator, "elvis3", "0x7f000005", "0x7f000006", 8545, "0x1122334457", 0);
@@ -81,13 +81,13 @@ contract("ValidatorsFunctionality", ([owner, validator]) => {
   // nodeIndex = 0 because we add one node and her index in array is 0
   const nodeIndex = 0;
 
-  it("should add Validator", async () => {
-    const { logs } = await validatorsFunctionality.addValidator(nodeIndex, {from: owner});
-    // check events after `.addValidator` invoke
+  it("should add Monitor", async () => {
+    const { logs } = await monitorsFunctionality.addMonitor(nodeIndex, {from: owner});
+    // check events after `.addMonitor` invoke
     assert.equal(logs[0].event, "GroupAdded");
     assert.equal(logs[1].event, "GroupGenerated");
-    assert.equal(logs[2].event, "ValidatorsArray");
-    assert.equal(logs[3].event, "ValidatorCreated");
+    assert.equal(logs[2].event, "MonitorsArray");
+    assert.equal(logs[3].event, "MonitorCreated");
 
     const targetNodes = logs[2].args[2].map((value: BN) => value.toNumber());
     targetNodes.sort();
@@ -99,16 +99,16 @@ contract("ValidatorsFunctionality", ([owner, validator]) => {
     });
   });
 
-  it("should upgrade Validator", async () => {
-    // add validator
-    await validatorsFunctionality.addValidator(nodeIndex, {from: owner});
-    // upgrade Validator
-    const { logs } = await validatorsFunctionality.upgradeValidator(nodeIndex, {from: owner});
-    // check events after `.upgradeValidator` invoke
+  it("should upgrade Monitor", async () => {
+    // add monitor
+    await monitorsFunctionality.addMonitor(nodeIndex, {from: owner});
+    // upgrade Monitor
+    const { logs } = await monitorsFunctionality.upgradeMonitor(nodeIndex, {from: owner});
+    // check events after `.upgradeMonitor` invoke
     assert.equal(logs[0].event, "GroupUpgraded");
     assert.equal(logs[1].event, "GroupGenerated");
-    assert.equal(logs[2].event, "ValidatorsArray");
-    assert.equal(logs[3].event, "ValidatorUpgraded");
+    assert.equal(logs[2].event, "MonitorsArray");
+    assert.equal(logs[3].event, "MonitorUpgraded");
   });
 
   it("should send Verdict", async () => {
@@ -125,21 +125,21 @@ contract("ValidatorsFunctionality", ([owner, validator]) => {
         timeInSec).slice(-28);
     const data32bytes = "0x" + indexNode1ToHex + timeToHex + ipToHex;
     //
-    await validatorsFunctionality.addValidator(indexNode0, {from: owner});
+    await monitorsFunctionality.addMonitor(indexNode0, {from: owner});
     //
-    await validatorsData.addValidatedNode(
+    await monitorsData.addCheckedNode(
       indexNode0inSha3, data32bytes, {from: owner},
       );
     // execution
-    const { logs } = await validatorsFunctionality
+    const { logs } = await monitorsFunctionality
           .sendVerdict(0, indexNode1, 1, 0, {from: owner});
     // assertion
     assert.equal(logs[0].event, "VerdictWasSent");
   });
 
-  it("should rejected with `Validated Node...` error when invoke sendVerdict", async () => {
-    const error = "Validated Node does not exist in ValidatorsArray";
-    await validatorsFunctionality
+  it("should rejected with `Checked Node...` error when invoke sendVerdict", async () => {
+    const error = "Checked Node does not exist in MonitorsArray";
+    await monitorsFunctionality
           .sendVerdict(0, 1, 0, 0, {from: owner})
           .should.be.eventually.rejectedWith(error);
   });
@@ -161,12 +161,12 @@ contract("ValidatorsFunctionality", ([owner, validator]) => {
     // for data32bytes should revert to hex indexNode1 + oneSec + 127.0.0.1
     const data32bytes = "0x" + indexNode1ToHex + add0ToHex + ipToHex;
     //
-    // await validatorsFunctionality.addValidator(indexNode0, {from: owner});
+    // await monitorsFunctionality.addMonitor(indexNode0, {from: owner});
     //
-    await validatorsData.addValidatedNode(
+    await monitorsData.addCheckedNode(
       indexNode0inSha3, data32bytes, {from: owner},
       );
-    await validatorsFunctionality
+    await monitorsFunctionality
           .sendVerdict(0, 1, 0, 0, {from: owner})
           .should.be.eventually.rejectedWith(error);
   });
@@ -174,29 +174,29 @@ contract("ValidatorsFunctionality", ([owner, validator]) => {
   it("should calculate Metrics", async () => {
     // preparation
     const indexNode1 = 1;
-    const validatorIndex1 = web3.utils.soliditySha3(indexNode1);
-    await validatorsData.addGroup(
-      validatorIndex1, 1, "0x0000000000000000000000000000000000000000000000000000000000000000", {from: owner},
+    const monitorIndex1 = web3.utils.soliditySha3(indexNode1);
+    await monitorsData.addGroup(
+      monitorIndex1, 1, "0x0000000000000000000000000000000000000000000000000000000000000000", {from: owner},
       );
-    await validatorsData.setNodeInGroup(
-      validatorIndex1, indexNode1, {from: owner},
+    await monitorsData.setNodeInGroup(
+      monitorIndex1, indexNode1, {from: owner},
       );
-    await validatorsData.addVerdict(validatorIndex1, 10, 0, {from: owner});
-    await validatorsData.addVerdict(validatorIndex1, 10, 50, {from: owner});
-    await validatorsData.addVerdict(validatorIndex1, 100, 40, {from: owner});
-    const res = new BigNumber(await validatorsData.getLengthOfMetrics(validatorIndex1, {from: owner}));
+    await monitorsData.addVerdict(monitorIndex1, 10, 0, {from: owner});
+    await monitorsData.addVerdict(monitorIndex1, 10, 50, {from: owner});
+    await monitorsData.addVerdict(monitorIndex1, 100, 40, {from: owner});
+    const res = new BigNumber(await monitorsData.getLengthOfMetrics(monitorIndex1, {from: owner}));
     expect(parseInt(res.toString(), 10)).to.equal(3);
 
-    const metrics = await await validatorsFunctionality.calculateMetrics.call(indexNode1, {from: owner});
+    const metrics = await await monitorsFunctionality.calculateMetrics.call(indexNode1, {from: owner});
     const downtime = web3.utils.toBN(metrics[0]).toNumber();
     const latency = web3.utils.toBN(metrics[1]).toNumber();
     downtime.should.be.equal(10);
     latency.should.be.equal(40);
 
     // execution
-    await validatorsFunctionality
+    await monitorsFunctionality
           .calculateMetrics(indexNode1, {from: owner});
-    const res2 = new BigNumber(await validatorsData.getLengthOfMetrics(validatorIndex1, {from: owner}));
+    const res2 = new BigNumber(await monitorsData.getLengthOfMetrics(monitorIndex1, {from: owner}));
     // expectation
     expect(parseInt(res2.toString(), 10)).to.equal(0);
   });
@@ -208,7 +208,7 @@ contract("ValidatorsFunctionality", ([owner, validator]) => {
     const indexNode0 = 0;
     const indexNode0inSha3 = web3.utils.soliditySha3(indexNode0);
     const indexNode1 = 1;
-    const validatorIndex1 = web3.utils.soliditySha3(indexNode1);
+    const monitorIndex1 = web3.utils.soliditySha3(indexNode1);
     const indexNode1ToHex = ("0000000000000000000000000000000000" +
         indexNode1).slice(-28);
     const time = await currentTime(web3);
@@ -217,35 +217,35 @@ contract("ValidatorsFunctionality", ([owner, validator]) => {
     timeInHex).slice(-28);
     const data32bytes = "0x" + indexNode1ToHex + add0ToHex + ipToHex;
     //
-    await validatorsData.addValidatedNode(
+    await monitorsData.addCheckedNode(
       indexNode0inSha3, data32bytes, {from: owner},
       );
     // execution
     // skipTime(web3, time - 200);
-    await validatorsFunctionality
+    await monitorsFunctionality
           .sendVerdict(0, 1, 0, 0, {from: owner});
-    const res = new BigNumber(await validatorsData.getLengthOfMetrics(validatorIndex1, {from: owner}));
+    const res = new BigNumber(await monitorsData.getLengthOfMetrics(monitorIndex1, {from: owner}));
     // expectation
     expect(parseInt(res.toString(), 10)).to.equal(1);
   });
 
-  it("should rotate node in validator groups", async () => {
+  it("should rotate node in monitor groups", async () => {
     for (let i = 0; i < 5; i++) {
       await nodesData.addNode(validator, "d" + i, "0x7f00000" + i, "0x7f00000" + (i + 1), 8545, "0x1122334455", 0);
     }
     const firstNode = 0;
     const secondNode = 1;
-    await validatorsFunctionality.addValidator(firstNode);
-    await validatorsFunctionality.addValidator(secondNode);
+    await monitorsFunctionality.addMonitor(firstNode);
+    await monitorsFunctionality.addMonitor(secondNode);
     const groupIndex0 = web3.utils.soliditySha3(firstNode);
     const groupIndex1 = web3.utils.soliditySha3(secondNode);
     await nodesData.addNode(validator, "vadim", "0x7f000009", "0x7f000010", 8545, "0x1122334459", 0);
     await nodesFunctionality.removeNodeByRoot(3);
     {
       const activeNodes = [];
-      const {logs} = await validatorsFunctionality.rotateNode(groupIndex0);
-      const validators = await validatorsData.getNodesInGroup(groupIndex0);
-      for (const node of validators) {
+      const {logs} = await monitorsFunctionality.rotateNode(groupIndex0);
+      const monitors = await monitorsData.getNodesInGroup(groupIndex0);
+      for (const node of monitors) {
         if (await nodesData.isNodeActive(node)) {
           activeNodes.push(node.toNumber());
         }
@@ -255,9 +255,9 @@ contract("ValidatorsFunctionality", ([owner, validator]) => {
     }
     {
       const activeNodes = [];
-      const {logs} = await validatorsFunctionality.rotateNode(groupIndex1);
-      const validators = await validatorsData.getNodesInGroup(groupIndex1);
-      for (const node of validators) {
+      const {logs} = await monitorsFunctionality.rotateNode(groupIndex1);
+      const monitors = await monitorsData.getNodesInGroup(groupIndex1);
+      for (const node of monitors) {
         if (await nodesData.isNodeActive(node)) {
           activeNodes.push(node.toNumber());
         }
@@ -268,22 +268,22 @@ contract("ValidatorsFunctionality", ([owner, validator]) => {
   });
 
   it("should not contain duplicates after epoch ending", async () => {
-    await validatorsFunctionality.addValidator(0);
+    await monitorsFunctionality.addMonitor(0);
 
     const rewardPeriod = (await constantsHolder.rewardPeriod()).toNumber();
     skipTime(web3, rewardPeriod);
 
-    await validatorsFunctionality.sendVerdict(1, 0, 0, 0);
+    await monitorsFunctionality.sendVerdict(1, 0, 0, 0);
 
     const node1Hash = web3.utils.soliditySha3(1);
     const node2Hash = web3.utils.soliditySha3(2);
-    await validatorsData.getValidatedArray(node1Hash).should.be.eventually.empty;
-    (await validatorsData.getValidatedArray(node2Hash)).length.should.be.equal(1);
+    await monitorsData.getCheckedArray(node1Hash).should.be.eventually.empty;
+    (await monitorsData.getCheckedArray(node2Hash)).length.should.be.equal(1);
 
     await nodesData.changeNodeLastRewardDate(0);
-    await validatorsFunctionality.upgradeValidator(0);
+    await monitorsFunctionality.upgradeMonitor(0);
 
-    const validatedArray = await validatorsData.getValidatedArray(node2Hash);
+    const validatedArray = await monitorsData.getCheckedArray(node2Hash);
     const validatedNodeIndexes = validatedArray.map((value) => value.slice(2, 2 + 14 * 2)).map(Number);
 
     validatedNodeIndexes.sort();
@@ -317,10 +317,10 @@ contract("ValidatorsFunctionality", ([owner, validator]) => {
       }
     });
 
-    it("should add validator", async () => {
+    it("should add monitor", async () => {
       for (let node = 0; node < nodesCount; ++node) {
         if (await nodesData.isNodeActive(node)) {
-          const { logs } = await validatorsFunctionality.addValidator(node);
+          const { logs } = await monitorsFunctionality.addMonitor(node);
 
           const targetNodes = logs[2].args[2].map((value: BN) => value.toNumber());
           targetNodes.length.should.be.equal(24);

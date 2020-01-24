@@ -18,8 +18,8 @@ let SkaleManager = artifacts.require('./SkaleManager.sol');
 let ManagerData = artifacts.require('./ManagerData.sol');
 let NodesData = artifacts.require('./NodesData.sol');
 let NodesFunctionality = artifacts.require('./NodesFunctionality.sol');
-let ValidatorsData = artifacts.require('./ValidatorsData.sol');
-let ValidatorsFunctionality = artifacts.require('./ValidatorsFunctionality.sol');
+let MonitorsData = artifacts.require('./MonitorsData.sol');
+let MonitorsFunctionality = artifacts.require('./MonitorsFunctionality.sol');
 let SchainsData = artifacts.require('./SchainsData.sol');
 let SchainsFunctionality = artifacts.require('./SchainsFunctionality.sol');
 let SchainsFunctionalityInternal = artifacts.require('./SchainsFunctionalityInternal.sol');
@@ -103,13 +103,13 @@ async function deploy(deployer, network) {
         await contractManagerInstance.setContractsAddress("NodesFunctionality", NodesFunctionality.address).then(function(res) {
             console.log("Contract Nodes Functionality with address", NodesFunctionality.address, "registred in Contract Manager");
         });
-        await deployer.deploy(ValidatorsData, "ValidatorsFunctionality", contractManagerInstance.address, {gas: gasLimit * gas_multiplier});
-        await contractManagerInstance.setContractsAddress("ValidatorsData", ValidatorsData.address).then(function(res) {
-            console.log("Contract Validators Data with address", ValidatorsData.address, "registred in Contract Manager");
+        await deployer.deploy(MonitorsData, "MonitorsFunctionality", contractManagerInstance.address, {gas: gasLimit * gas_multiplier});
+        await contractManagerInstance.setContractsAddress("MonitorsData", MonitorsData.address).then(function(res) {
+            console.log("Contract Monitors Data with address", MonitorsData.address, "registred in Contract Manager");
         });
-        await deployer.deploy(ValidatorsFunctionality, "SkaleManager", "ValidatorsData", contractManagerInstance.address, {gas: gasLimit * gas_multiplier});
-        await contractManagerInstance.setContractsAddress("ValidatorsFunctionality", ValidatorsFunctionality.address).then(function(res) {
-            console.log("Contract Validators Functionality with address", ValidatorsFunctionality.address, "registred in Contract Manager");
+        await deployer.deploy(MonitorsFunctionality, "SkaleManager", "MonitorsData", contractManagerInstance.address, {gas: gasLimit * gas_multiplier});
+        await contractManagerInstance.setContractsAddress("MonitorsFunctionality", MonitorsFunctionality.address).then(function(res) {
+            console.log("Contract Monitors Functionality with address", MonitorsFunctionality.address, "registred in Contract Manager");
         });
         await deployer.deploy(SchainsData, "SchainsFunctionalityInternal", contractManagerInstance.address, {gas: gasLimit * gas_multiplier});
         await contractManagerInstance.setContractsAddress("SchainsData", SchainsData.address).then(function(res) {
@@ -204,10 +204,10 @@ async function deploy(deployer, network) {
             nodes_data_abi: NodesData.abi,
             nodes_functionality_address: NodesFunctionality.address,
             nodes_functionality_abi: NodesFunctionality.abi,
-            validators_data_address: ValidatorsData.address,
-            validators_data_abi: ValidatorsData.abi,
-            validators_functionality_address: ValidatorsFunctionality.address,
-            validators_functionality_abi: ValidatorsFunctionality.abi,
+            monitors_data_address: MonitorsData.address,
+            monitors_data_abi: MonitorsData.abi,
+            monitors_functionality_address: MonitorsFunctionality.address,
+            monitors_functionality_abi: MonitorsFunctionality.abi,
             schains_data_address: SchainsData.address,
             schains_data_abi: SchainsData.abi,
             schains_functionality_address: SchainsFunctionality.address,

@@ -5,7 +5,8 @@ import { ContractManagerInstance,
     SkaleManagerMockContract,
     SkaleManagerMockInstance,
     SkaleTokenInstance,
-    TokenStateInstance } from "../../types/truffle-contracts";
+    TokenStateInstance,
+    ValidatorServiceInstance } from "../../types/truffle-contracts";
 
 const SkaleManagerMock: SkaleManagerMockContract = artifacts.require("./SkaleManagerMock");
 
@@ -19,6 +20,7 @@ import { deployDelegationController } from "../utils/deploy/delegation/delegatio
 import { deployDelegationPeriodManager } from "../utils/deploy/delegation/delegationPeriodManager";
 import { deployDelegationService } from "../utils/deploy/delegation/delegationService";
 import { deployTokenState } from "../utils/deploy/delegation/tokenState";
+import { deployValidatorService } from "../utils/deploy/delegation/validatorService";
 import { deploySkaleToken } from "../utils/deploy/skaleToken";
 
 chai.should();
@@ -57,6 +59,7 @@ contract("Delegation", ([owner,
     let delegationController: DelegationControllerInstance;
     let tokenState: TokenStateInstance;
     let skaleManagerMock: SkaleManagerMockInstance;
+    let validatorService: ValidatorServiceInstance;
 
     const defaultAmount = 100 * 1e18;
     const month = 60 * 60 * 24 * 31;
@@ -72,6 +75,7 @@ contract("Delegation", ([owner,
         delegationPeriodManager = await deployDelegationPeriodManager(contractManager);
         delegationController = await deployDelegationController(contractManager);
         tokenState = await deployTokenState(contractManager);
+        validatorService = await deployValidatorService(contractManager);
 
         // each test will start from Nov 10
         await skipTimeToDate(web3, 10, 10);
@@ -87,6 +91,7 @@ contract("Delegation", ([owner,
             const { logs } = await delegationService.registerValidator(
                 "First validator", "Super-pooper validator", 150, 0, {from: validator});
             validatorId = logs[0].args.validatorId.toNumber();
+            await validatorService.enableValidator(validatorId, {from: owner});
         });
 
         for (let delegationPeriod = 1; delegationPeriod <= 18; ++delegationPeriod) {
@@ -103,7 +108,7 @@ contract("Delegation", ([owner,
                     it("should send request for delegation", async () => {
                         const { logs } = await delegationService.delegate(
                             validatorId, defaultAmount.toString(), delegationPeriod, "D2 is even", {from: holder1});
-                        assert.equal(logs.length, 1, "No DelegationRquestIsSent Event emitted");
+                        assert.equal(logs.length, 1, "No DelegationRequestIsSent Event emitted");
                         assert.equal(logs[0].event, "DelegationRequestIsSent");
                         requestId = logs[0].args.delegationId;
 
@@ -127,12 +132,12 @@ contract("Delegation", ([owner,
 
                         it("should not allow holder to spend tokens", async () => {
                             await skaleToken.transfer(holder2, 1, {from: holder1})
-                                .should.be.eventually.rejectedWith("Token should be unlocked for transfering");
+                                .should.be.eventually.rejectedWith("Token should be unlocked for transferring");
                             await skaleToken.approve(holder2, 1, {from: holder1});
                             await skaleToken.transferFrom(holder1, holder2, 1, {from: holder2})
-                                .should.be.eventually.rejectedWith("Token should be unlocked for transfering");
+                                .should.be.eventually.rejectedWith("Token should be unlocked for transferring");
                             await skaleToken.send(holder2, 1, "0x", {from: holder1})
-                                .should.be.eventually.rejectedWith("Token should be unlocked for transfering");
+                                .should.be.eventually.rejectedWith("Token should be unlocked for transferring");
                         });
 
                         it("should allow holder to receive tokens", async () => {
@@ -156,9 +161,9 @@ contract("Delegation", ([owner,
                             await skaleToken.send(holder2, 1, "0x", {from: holder1});
 
                             const balance = new BigNumber((await skaleToken.balanceOf(holder1)).toString());
-                            const currectBalance = (new BigNumber(defaultAmount)).minus(3);
+                            const correctBalance = (new BigNumber(defaultAmount)).minus(3);
 
-                            balance.should.be.deep.equal(currectBalance);
+                            balance.should.be.deep.equal(correctBalance);
                         });
 
                         describe("when delegation request is accepted", async () => {
@@ -175,25 +180,25 @@ contract("Delegation", ([owner,
                                     await skipTimeToDate(web3, 1, (11 + delegationPeriod) % 12);
 
                                     await skaleToken.transfer(holder2, 1, {from: holder1})
-                                        .should.be.eventually.rejectedWith("Token should be unlocked for transfering");
+                                        .should.be.eventually.rejectedWith("Token should be unlocked for transferring");
                                     await skaleToken.approve(holder2, 1, {from: holder1});
                                     await skaleToken.transferFrom(holder1, holder2, 1, {from: holder2})
-                                        .should.be.eventually.rejectedWith("Token should be unlocked for transfering");
+                                        .should.be.eventually.rejectedWith("Token should be unlocked for transferring");
                                     await skaleToken.send(holder2, 1, "0x", {from: holder1})
-                                        .should.be.eventually.rejectedWith("Token should be unlocked for transfering");
+                                        .should.be.eventually.rejectedWith("Token should be unlocked for transferring");
 
                                     await delegationService.requestUndelegation(requestId, {from: holder1});
 
                                     await skipTimeToDate(web3, 27, (11 + delegationPeriod + 2) % 12);
 
                                     await skaleToken.transfer(holder2, 1, {from: holder1})
-                                        .should.be.eventually.rejectedWith("Token should be unlocked for transfering");
+                                        .should.be.eventually.rejectedWith("Token should be unlocked for transferring");
 
                                     await skaleToken.approve(holder2, 1, {from: holder1});
                                     await skaleToken.transferFrom(holder1, holder2, 1, {from: holder2})
-                                        .should.be.eventually.rejectedWith("Token should be unlocked for transfering");
+                                        .should.be.eventually.rejectedWith("Token should be unlocked for transferring");
                                     await skaleToken.send(holder2, 1, "0x", {from: holder1})
-                                        .should.be.eventually.rejectedWith("Token should be unlocked for transfering");
+                                        .should.be.eventually.rejectedWith("Token should be unlocked for transferring");
 
                                     await skipTimeToDate(web3, 1, (11 + delegationPeriod + 3) % 12);
 
@@ -289,7 +294,7 @@ contract("Delegation", ([owner,
 
             describe("Slashing", async () => {
 
-                it("should slash validator and lock delegators fund in propotion of delegation share", async () => {
+                it("should slash validator and lock delegators fund in proportion of delegation share", async () => {
                     await delegationService.slash(validatorId, 5);
 
                     // Stakes:
@@ -378,16 +383,16 @@ contract("Delegation", ([owner,
         //         const validatorIds = await delegationService.getValidators.call();
         //         validatorIds.should.be.deep.equal([0]);
 
-        //         let responce = await delegationService.delegate(
+        //         let response = await delegationService.delegate(
         //             validatorId, holder1Balance, 6, "First holder", {from: holder1});
-        //         const requestId1 = responce.logs[0].args.id;
+        //         const requestId1 = response.logs[0].args.id;
         //         await delegationService.accept(requestId1, {from: validator});
 
         //         await skipTimeToDate(web3, 28, 10);
 
-        //         responce = await delegationService.delegate(
+        //         response = await delegationService.delegate(
         //             validatorId, holder2Balance, 12, "Second holder", {from: holder2});
-        //         const requestId2 = responce.logs[0].args.id;
+        //         const requestId2 = response.logs[0].args.id;
         //         await delegationService.accept(requestId2, {from: validator});
 
         //         await skipTimeToDate(web3, 28, 11);
@@ -401,9 +406,9 @@ contract("Delegation", ([owner,
         //         // get bounty
         //         await skipTimeToDate(web3, 1, 1);
 
-        //         responce = await delegationService.delegate(
+        //         response = await delegationService.delegate(
         //             validatorId, holder3Balance, 3, "Third holder", {from: holder3});
-        //         const requestId3 = responce.logs[0].args.id;
+        //         const requestId3 = response.logs[0].args.id;
         //         await delegationService.accept(requestId3, {from: validator});
 
         //         let bounty = await delegationService.getEarnedBountyAmount.call({from: holder1});
@@ -524,9 +529,9 @@ contract("Delegation", ([owner,
 
         //         // manage delegation
 
-        //         responce = await delegationService.delegate(
+        //         response = await delegationService.delegate(
         //             validatorId, holder1Balance, 3, "D2 is even", {from: holder1});
-        //         const requestId = responce.logs[0].args.id;
+        //         const requestId = response.logs[0].args.id;
         //         await delegationService.accept(requestId, {from: validator});
 
         //         await delegationService.requestUndelegation(requestId, {from: holder3});

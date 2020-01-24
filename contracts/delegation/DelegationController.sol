@@ -2,14 +2,17 @@
     DelegationController.sol - SKALE Manager
     Copyright (C) 2018-Present SKALE Labs
     @author Vadim Yavorsky
+
     SKALE Manager is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as published
     by the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
+
     SKALE Manager is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU Affero General Public License for more details.
+
     You should have received a copy of the GNU Affero General Public License
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
@@ -21,6 +24,7 @@ import "../Permissions.sol";
 import "./DelegationRequestManager.sol";
 import "./DelegationPeriodManager.sol";
 import "./TokenState.sol";
+import "./ValidatorService.sol";
 
 
 contract DelegationController is Permissions {
@@ -140,7 +144,11 @@ contract DelegationController is Permissions {
         delegations[delegationId].amount = amount;
     }
 
-    function getDelegationsByHolder(address holderAddress, TokenState.State _state) external allow("DelegationService") returns (uint[] memory) {
+    function getDelegationsByHolder(address holderAddress, TokenState.State _state)
+        external
+        allow("DelegationService")
+        returns (uint[] memory)
+    {
         TokenState tokenState = TokenState(contractManager.getContract("TokenState"));
         uint delegationsAmount = 0;
         for (uint i = 0; i < _delegationsByHolder[holderAddress].length; i++) {
@@ -159,14 +167,13 @@ contract DelegationController is Permissions {
                 ++cursor;
             }
         }
-
         return delegationsHolder;
     }
 
-    function getDelegationsByValidator(address validatorAddress, TokenState.State _state)
-    external
-    allow("DelegationService")
-    returns (uint[] memory)
+    function getDelegationsForValidator(address validatorAddress, TokenState.State _state)
+        external
+        allow("DelegationService")
+        returns (uint[] memory)
     {
         TokenState tokenState = TokenState(contractManager.getContract("TokenState"));
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
@@ -188,7 +195,6 @@ contract DelegationController is Permissions {
                 ++cursor;
             }
         }
-
         return delegationsValidator;
     }
 

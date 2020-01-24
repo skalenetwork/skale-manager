@@ -1,7 +1,8 @@
 import { ContractManagerInstance,
          DelegationServiceInstance,
          SkaleTokenInstance,
-         TokenSaleManagerInstance } from "../../types/truffle-contracts";
+         TokenSaleManagerInstance,
+         ValidatorServiceInstance } from "../../types/truffle-contracts";
 
 import { skipTime, skipTimeToDate } from "../utils/time";
 
@@ -10,6 +11,7 @@ import * as chaiAsPromised from "chai-as-promised";
 import { deployContractManager } from "../utils/deploy/contractManager";
 import { deployDelegationService } from "../utils/deploy/delegation/delegationService";
 import { deployTokenSaleManager } from "../utils/deploy/delegation/tokenSaleManager";
+import { deployValidatorService } from "../utils/deploy/delegation/validatorService";
 import { deploySkaleToken } from "../utils/deploy/skaleToken";
 chai.should();
 chai.use(chaiAsPromised);
@@ -19,17 +21,20 @@ contract("TokenSaleManager", ([owner, holder, delegation, validator, seller, hac
     let skaleToken: SkaleTokenInstance;
     let tokenSaleManager: TokenSaleManagerInstance;
     let delegationService: DelegationServiceInstance;
+    let validatorService: ValidatorServiceInstance;
 
     beforeEach(async () => {
         contractManager = await deployContractManager();
         skaleToken = await deploySkaleToken(contractManager);
         tokenSaleManager = await deployTokenSaleManager(contractManager);
         delegationService = await deployDelegationService(contractManager);
+        validatorService = await deployValidatorService(contractManager);
 
         // each test will start from Nov 10
         await skipTimeToDate(web3, 10, 11);
         await skaleToken.mint(owner, tokenSaleManager.address, 1000, "0x", "0x");
         await delegationService.registerValidator("Validator", "D2 is even", 150, 0, {from: validator});
+        await validatorService.enableValidator(1, {from: owner});
     });
 
     it("should register seller", async () => {
@@ -69,7 +74,7 @@ contract("TokenSaleManager", ([owner, holder, delegation, validator, seller, hac
             await tokenSaleManager.approve([holder], [10], {from: seller});
             await tokenSaleManager.retrieve({from: holder});
             (await skaleToken.balanceOf(holder)).toNumber().should.be.equal(10);
-            await skaleToken.transfer(hacker, "1", {from: holder}).should.be.eventually.rejectedWith("Token should be unlocked for transfering");
+            await skaleToken.transfer(hacker, "1", {from: holder}).should.be.eventually.rejectedWith("Token should be unlocked for transferring");
         });
 
         describe("when holder bought tokens", async () => {
@@ -89,12 +94,12 @@ contract("TokenSaleManager", ([owner, holder, delegation, validator, seller, hac
                 await delegationService.acceptPendingDelegation(delegationId, {from: validator});
 
                 await skaleToken.transfer(hacker, 1, {from: holder})
-                    .should.be.eventually.rejectedWith("Token should be unlocked for transfering");
+                    .should.be.eventually.rejectedWith("Token should be unlocked for transferring");
                 await skaleToken.approve(hacker, 1, {from: holder});
                 await skaleToken.transferFrom(holder, hacker, 1, {from: hacker})
-                    .should.be.eventually.rejectedWith("Token should be unlocked for transfering");
+                    .should.be.eventually.rejectedWith("Token should be unlocked for transferring");
                 await skaleToken.send(hacker, 1, "0x", {from: holder})
-                    .should.be.eventually.rejectedWith("Token should be unlocked for transfering");
+                    .should.be.eventually.rejectedWith("Token should be unlocked for transferring");
 
                 const month = 60 * 60 * 24 * 31;
                 skipTime(web3, month);

@@ -64,7 +64,7 @@ contract("TokenState", ([owner, holder]) => {
         delegated.toNumber().should.be.equal(0);
     });
 
-    it("should allow holder to cancel delegation befor acceptance", async () => {
+    it("should allow holder to cancel delegation before acceptance", async () => {
         const amount = 100;
         const time = await currentTime(web3);
         await delegationController.addDelegation(holder, "5", amount.toString(), "3", time, "INFO");

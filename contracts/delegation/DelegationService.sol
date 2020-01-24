@@ -77,9 +77,9 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
         return delegationController.getDelegationsByHolder(msg.sender, state);
     }
 
-    function getDelegationsByValidator(TokenState.State state) external returns (uint[] memory) {
+    function getDelegationsForValidator(TokenState.State state) external returns (uint[] memory) {
         DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
-        return delegationController.getDelegationsByValidator(msg.sender, state);
+        return delegationController.getDelegationsForValidator(msg.sender, state);
     }
 
     function setMinimumDelegationAmount(uint amount) external {
@@ -220,8 +220,12 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
         validatorService.confirmNewAddress(msg.sender, validatorId);
     }
 
-    function getValidators() external returns (uint[] memory validatorIds) {
-        revert("Not implemented");
+    function getValidators() external view returns (uint[] memory validatorIds) {
+        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
+        validatorIds = new uint[](validatorService.numberOfValidators());
+        for (uint i = 0; i < validatorIds.length; ++i) {
+            validatorIds[i] = i + 1;
+        }
     }
 
     function withdrawBounty(address bountyCollectionAddress, uint amount) external {

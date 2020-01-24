@@ -71,8 +71,8 @@ contract ConstantsHolder is IConstants, Permissions {
     // number of seconds in six years
     uint32 public constant SIX_YEARS = 186624000;
 
-    // initial number of validators
-    uint public constant NUMBER_OF_VALIDATORS = 24;
+    // initial number of monitors
+    uint public constant NUMBER_OF_MONITORS = 24;
 
     // MSR - Minimum staking requirement
     uint public msr = 5e6;
@@ -84,15 +84,15 @@ contract ConstantsHolder is IConstants, Permissions {
     uint32 public allowableLatency = 150000; // Test parameters
 
     /**
-     * Delta period - 1 hour (1 hour before Reward period became Validators need
+     * Delta period - 1 hour (1 hour before Reward period became Monitors need
      * to send Verdicts and 1 hour after Reward period became Node need to come
      * and get Bounty)
      */
     uint32 public deltaPeriod = 300;  // Test parameters
 
     /**
-     * Check time - 2 minutes (every 2 minutes validators should check metrics
-     * from validated nodes)
+     * Check time - 2 minutes (every 2 minutes monitors should check metrics
+     * from checked nodes)
      */
     uint8 public checkTime = 120; // Test parameters
 
