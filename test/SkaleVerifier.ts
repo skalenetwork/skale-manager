@@ -1,16 +1,10 @@
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
-import { ConstantsHolderContract,
-         ConstantsHolderInstance,
-         ContractManagerContract,
-         ContractManagerInstance,
+import { ContractManagerInstance,
          DecryptionContract,
          DecryptionInstance,
          ECDHContract,
          ECDHInstance,
-         NodesDataContract,
-         NodesDataInstance,
-         NodesFunctionalityContract,
          NodesFunctionalityInstance,
          SchainsDataContract,
          SchainsDataInstance,
@@ -21,15 +15,11 @@ import { ConstantsHolderContract,
          SkaleDKGContract,
          SkaleDKGInstance,
          SkaleVerifierContract,
-         SkaleVerifierInstance} from "../types/truffle-contracts";
+         SkaleVerifierInstance,
+         ValidatorServiceInstance} from "../types/truffle-contracts";
 
 import { gasMultiplier } from "./utils/command_line";
-import { skipTime } from "./utils/time";
 
-const ContractManager: ContractManagerContract = artifacts.require("./ContractManager");
-const ConstantsHolder: ConstantsHolderContract = artifacts.require("./ConstantsHolder");
-const NodesData: NodesDataContract = artifacts.require("./NodesData");
-const NodesFunctionality: NodesFunctionalityContract = artifacts.require("./NodesFunctionality");
 const SchainsData: SchainsDataContract = artifacts.require("./SchainsData");
 const SchainsFunctionality: SchainsFunctionalityContract = artifacts.require("./SchainsFunctionality");
 const SchainsFunctionalityInternal: SchainsFunctionalityInternalContract = artifacts.require("./SchainsFunctionalityInternal");
@@ -38,14 +28,14 @@ const ECDH: ECDHContract = artifacts.require("./ECDH");
 const SkaleVerifier: SkaleVerifierContract = artifacts.require("./SkaleVerifier");
 const SkaleDKG: SkaleDKGContract = artifacts.require("./SkaleDKG");
 
-import BigNumber from "bignumber.js";
+import { deployContractManager } from "./utils/deploy/contractManager";
+import { deployValidatorService } from "./utils/deploy/delegation/validatorService";
+import { deployNodesFunctionality } from "./utils/deploy/nodesFunctionality";
 chai.should();
 chai.use(chaiAsPromised);
 
 contract("SkaleVerifier", ([validator1, owner, developer, hacker]) => {
     let contractManager: ContractManagerInstance;
-    let constantsHolder: ConstantsHolderInstance;
-    let nodesData: NodesDataInstance;
     let nodesFunctionality: NodesFunctionalityInstance;
     let schainsData: SchainsDataInstance;
     let schainsFunctionality: SchainsFunctionalityInstance;
@@ -54,25 +44,14 @@ contract("SkaleVerifier", ([validator1, owner, developer, hacker]) => {
     let ecdh: ECDHInstance;
     let skaleVerifier: SkaleVerifierInstance;
     let skaleDKG: SkaleDKGInstance;
+    let validatorService: ValidatorServiceInstance;
 
     beforeEach(async () => {
-        contractManager = await ContractManager.new({from: validator1});
+        contractManager = await deployContractManager();
 
-        constantsHolder = await ConstantsHolder.new(
-            contractManager.address,
-            {from: validator1, gas: 8000000});
-        await contractManager.setContractsAddress("Constants", constantsHolder.address);
-
-        nodesData = await NodesData.new(
-            5,
-            contractManager.address,
-            {from: validator1, gas: 8000000 * gasMultiplier});
-        await contractManager.setContractsAddress("NodesData", nodesData.address);
-
-        nodesFunctionality = await NodesFunctionality.new(
-            contractManager.address,
-            {from: validator1, gas: 8000000 * gasMultiplier});
-        await contractManager.setContractsAddress("NodesFunctionality", nodesFunctionality.address);
+        nodesFunctionality = await deployNodesFunctionality(contractManager);
+        validatorService = await deployValidatorService(contractManager);
+        validatorService.registerValidator("D2", validator1, "D2 is even", 0, 0);
 
         schainsData = await SchainsData.new(
             "SchainsFunctionalityInternal",
