@@ -109,7 +109,7 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
             assert.equal(id, validatorId);
         });
 
-        it("should reject if validator tried to override node address of another validator or itself", async () => {
+        it("should reject if validator tried to override node address of another validator", async () => {
             const validatorId = 1;
             await delegationService.registerValidator(
                 "Second Validator",
@@ -119,8 +119,6 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
                 {from: validator2});
             await delegationService.linkNodeAddress(nodeAddress, {from: validator1});
             await delegationService.linkNodeAddress(nodeAddress, {from: validator2})
-                .should.be.eventually.rejectedWith("Validator cannot override node address");
-            await delegationService.linkNodeAddress(nodeAddress, {from: validator1})
                 .should.be.eventually.rejectedWith("Validator cannot override node address");
             const id = new BigNumber(await validatorService.getValidatorId(nodeAddress, {from: validator1})).toNumber();
             assert.equal(id, validatorId);
