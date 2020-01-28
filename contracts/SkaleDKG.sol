@@ -314,7 +314,7 @@ contract SkaleDKG is Permissions {
         emit BadGuy(badNode);
         emit FailedDKG(groupIndex);
         if (possibleNodes.length > 0) {
-            uint newNode = ISchainsFunctionalityInternal(schainsFunctionalityInternalAddress).replaceNode(
+            uint newNode = ISchainsFunctionalityInternal(schainsFunctionalityInternalAddress).rotateNode(
                 badNode,
                 groupIndex
             );
