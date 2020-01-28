@@ -564,6 +564,15 @@ contract NodesData is INodesData, Permissions {
         }
     }
 
+    function getValidatorId(uint nodeIndex) external view returns (uint) {
+        require(nodeIndex < nodes.length, "Node does not exist");
+        return nodes[nodeIndex].validatorId;
+    }
+
+    function getNodeStatus(uint nodeIndex) external view returns (NodeStatus) {
+        return nodes[nodeIndex].status;
+    }
+
     /**
      * @dev isNodeActive - checks if Node status Active
      * @param nodeIndex - index of Node

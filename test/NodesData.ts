@@ -188,6 +188,14 @@ contract("NodesData", ([owner, validator]) => {
             expect(nodeIndex.eq(web3.utils.toBN(0))).to.be.true;
         });
 
+        it("should return Node status", async () => {
+            let status = await nodesData.getNodeStatus(0);
+            assert.equal(status.toNumber(), 0);
+            await nodesData.setNodeLeaving(0);
+            status = await nodesData.getNodeStatus(0);
+            assert.equal(status.toNumber(), 1);
+        });
+
         // describe("when node is registered as fractional", async () => {
         //     beforeEach(async () => {
         //         await nodesData.addFractionalNode(0);
