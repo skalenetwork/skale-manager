@@ -15,10 +15,17 @@ import { ConstantsHolderContract,
          SchainsFunctionalityInternalContract,
          SchainsFunctionalityInternalInstance,
          SkaleDKGContract,
-         SkaleDKGInstance } from "../types/truffle-contracts";
+         SkaleDKGInstance,
+         StringUtilsContract,
+         StringUtilsInstance,
+         ValidatorServiceInstance } from "../types/truffle-contracts";
 
 import BigNumber from "bignumber.js";
 import { gasMultiplier } from "./utils/command_line";
+import { deployContractManager } from "./utils/deploy/contractManager";
+import { deployNodesData } from "./utils/deploy/nodesData";
+import { deployNodesFunctionality } from "./utils/deploy/nodesFunctionality";
+import { skipTime } from "./utils/time";
 
 const SchainsFunctionality: SchainsFunctionalityContract = artifacts.require("./SchainsFunctionality");
 const SchainsFunctionalityInternal: SchainsFunctionalityInternalContract =
@@ -29,6 +36,7 @@ const SchainsData: SchainsDataContract = artifacts.require("./SchainsData");
 const NodesData: NodesDataContract = artifacts.require("./NodesData");
 const NodesFunctionality: NodesFunctionalityContract = artifacts.require("./NodesFunctionality");
 const SkaleDKG: SkaleDKGContract = artifacts.require("./SkaleDKG");
+const StringUtils: StringUtilsContract = artifacts.require("./StringUtils");
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -42,6 +50,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
     let nodesData: NodesDataInstance;
     let nodesFunctionality: NodesFunctionalityInstance;
     let skaleDKG: SkaleDKGInstance;
+    let stringUtils: StringUtilsInstance;
 
     beforeEach(async () => {
         contractManager = await ContractManager.new({from: owner});
@@ -84,6 +93,10 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
 
         skaleDKG = await SkaleDKG.new(contractManager.address, {from: owner, gas: 8000000 * gasMultiplier});
         await contractManager.setContractsAddress("SkaleDKG", skaleDKG.address);
+
+        stringUtils = await StringUtils.new();
+        await contractManager.setContractsAddress("StringUtils", stringUtils.address);
+
     });
 
     describe("should add schain", async () => {
@@ -680,6 +693,40 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
             nodes = nodes.map((value) => value.toNumber());
             nodes.sort();
             nodes.should.be.deep.equal([3, 4, 5, 6, 7]);
+        });
+
+        it("should rotate 2 nodes consistently", async () => {
+            const bobSchain = "0x38e47a7b719dce63662aeaf43440326f551b8a7ee198cee35cb5d517f2d296a2";
+            let nodes;
+            await nodesData.addNode(holder, "John", "0x7f000001", "0x7f000002", 8545, "0x1122334455", 0);
+            await nodesData.addNode(holder, "John", "0x7f000001", "0x7f000002", 8545, "0x1122334455", 0);
+            await schainsFunctionalityInternal.createGroupForSchain("bob", bobSchain, 2, 8);
+            await nodesData.addNode(holder, "John", "0x7f000001", "0x7f000002", 8545, "0x1122334455", 0);
+            await schainsFunctionality.exitFromSchains(0);
+            await schainsFunctionality.exitFromSchains(1)
+                .should.be.eventually.rejectedWith("You cannot rotate on Schain, occupied by Node 0");
+            await schainsFunctionality.rotateNode(1, bobSchain)
+                .should.be.eventually.rejectedWith("You should first call method exitFromSchains");
+            await schainsFunctionality.rotateNode(0, bobSchain);
+            await schainsFunctionality.exitFromSchains(1);
+            nodes = await schainsData.getNodesInGroup(bobSchain);
+            nodes = nodes.map((value) => value.toNumber());
+            nodes.sort();
+            nodes.should.be.deep.equal([1, 2]);
+            console.log(nodes);
+        });
+
+        it("should allow to rotate if occupied node didn't rotated for 12 hours", async () => {
+            const bobSchain = "0x38e47a7b719dce63662aeaf43440326f551b8a7ee198cee35cb5d517f2d296a2";
+            await nodesData.addNode(holder, "John", "0x7f000001", "0x7f000002", 8545, "0x1122334455", 0);
+            await nodesData.addNode(holder, "John", "0x7f000001", "0x7f000002", 8545, "0x1122334455", 0);
+            await schainsFunctionalityInternal.createGroupForSchain("bob", bobSchain, 2, 8);
+            await nodesData.addNode(holder, "John", "0x7f000001", "0x7f000002", 8545, "0x1122334455", 0);
+            await schainsFunctionality.exitFromSchains(0);
+            await schainsFunctionality.exitFromSchains(1)
+                .should.be.eventually.rejectedWith("You cannot rotate on Schain, occupied by Node 0");
+            skipTime(web3, 43260);
+            await schainsFunctionality.exitFromSchains(1);
         });
 
         it("should rotate nodes on 2 schains", async () => {

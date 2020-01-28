@@ -17,12 +17,14 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity ^0.5.0;
+pragma solidity ^0.5.3;
+pragma experimental ABIEncoderV2;
 
 import "./GroupsFunctionality.sol";
 import "./interfaces/INodesData.sol";
-import "./interfaces/ISchainsData.sol";
 import "./interfaces/IConstants.sol";
+import "./SchainsData.sol";
+import "./thirdparty/StringUtils.sol";
 
 
 /**
@@ -103,17 +105,20 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
         }
     }
 
-    // function replaceNode(
-    //     uint nodeIndex,
-    //     bytes32 groupHash
-    // )
-    //     external
-    //     allowThree(executorName, "SkaleDKG", "SchainsFunctionalityInternal")
-    //     returns (uint newNodeIndex)
-    // {
-    //     this.excludeNodeFromSchain(nodeIndex, groupHash);
-    //     newNodeIndex = selectNodeToGroup(groupHash);
-    // }
+    function rotateNode(
+        uint nodeIndex,
+        bytes32 groupHash
+    )
+        external
+        allowThree(executorName, "SkaleDKG", "SchainsFunctionalityInternal")
+        returns (uint newNodeIndex)
+    {
+        SchainsData schainsData = SchainsData(contractManager.getContract("SchainsData"));
+        checkAbilityRotation(groupHash, nodeIndex);
+        this.excludeNodeFromSchain(nodeIndex, groupHash);
+        newNodeIndex = selectNodeToGroup(groupHash);
+        schainsData.finishRotation(groupHash, nodeIndex);
+    }
 
     function selectNewNode(bytes32 groupHash) external allow(executorName) returns (uint newNodeIndex) {
         newNodeIndex = selectNodeToGroup(groupHash);
@@ -267,6 +272,16 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
         //     return INodesData(nodesDataAddress).removeSpaceFromFractionalNode(subarrayLink, space);
         // }
         return INodesData(nodesDataAddress).removeSpaceFromNode(nodeIndex, space);
+    }
+
+    function checkAbilityRotation(bytes32 schainIndex, uint nodeIndex) private {
+        SchainsData schainsData = SchainsData(contractManager.getContract("SchainsData"));
+        SchainsData.Rotation memory rotation = schainsData.getRotation(schainIndex);
+        require(
+            rotation.nodeIndex == nodeIndex &&
+            rotation.inRotation &&
+            rotation.finishedRotation > now,
+            "You should first call method exitFromSchains");
     }
 
     // /**

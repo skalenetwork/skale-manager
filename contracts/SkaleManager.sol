@@ -27,6 +27,10 @@ import "./interfaces/INodesFunctionality.sol";
 import "./interfaces/IValidatorsFunctionality.sol";
 import "./interfaces/ISchainsFunctionality.sol";
 import "./interfaces/IManagerData.sol";
+import "./MonitorsFunctionality.sol";
+import "./NodesFunctionality.sol";
+import "./NodesData.sol";
+import "./SchainsFunctionality.sol";
 import "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
 import "@openzeppelin/contracts/introspection/IERC1820Registry.sol";
 
@@ -112,6 +116,18 @@ contract SkaleManager is IERC777Recipient, Permissions {
     function deleteSchainByRoot(string calldata name) external {
         address schainsFunctionalityAddress = contractManager.contracts(keccak256(abi.encodePacked("SchainsFunctionality")));
         ISchainsFunctionality(schainsFunctionalityAddress).deleteSchainByRoot(name);
+    }
+
+    function rotateNode(uint nodeIndex, bytes32 schainId) external {
+        // require(msg.sender == ???);
+        SchainsFunctionality schainsFunctionality = SchainsFunctionality(contractManager.getContract("SchainsFunctionality"));
+        schainsFunctionality.rotateNode(nodeIndex, schainId);
+    }
+
+    function exitFromSchains(uint nodeIndex) external {
+        // require(msg.sender == ???);
+        SchainsFunctionality schainsFunctionality = SchainsFunctionality(contractManager.getContract("SchainsFunctionality"));
+        schainsFunctionality.exitFromSchains(nodeIndex);
     }
 
     function sendVerdict(

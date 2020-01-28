@@ -17,7 +17,8 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity ^0.5.0;
+pragma solidity ^0.5.3;
+pragma experimental ABIEncoderV2;
 
 import "./Permissions.sol";
 import "./interfaces/ISchainsData.sol";
@@ -26,6 +27,9 @@ import "./interfaces/IGroupsData.sol";
 import "./interfaces/ISchainsFunctionality.sol";
 import "./interfaces/ISchainsFunctionalityInternal.sol";
 import "./interfaces/INodesData.sol";
+import "./SchainsData.sol";
+import "./SchainsFunctionalityInternal.sol";
+import "./thirdparty/StringUtils.sol";
 
 
 
@@ -203,11 +207,27 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
     }
 
     function rotateNode(uint nodeIndex, bytes32 schainId) external allowTwo("SkaleDKG", executorName) {
-        address schainsFunctionalityInternalAddress = contractManager.contracts(keccak256(abi.encodePacked("SchainsFunctionalityInternal")));
-        uint newNodeIndex;
-        ISchainsFunctionalityInternal(schainsFunctionalityInternalAddress).removeNodeFromSchain(nodeIndex, schainId);
-        newNodeIndex = ISchainsFunctionalityInternal(schainsFunctionalityInternalAddress).selectNewNode(schainId);
+        SchainsFunctionalityInternal schainsFunctionalityInternal = SchainsFunctionalityInternal(
+            contractManager.getContract("SchainsFunctionalityInternal"));
+        uint newNodeIndex = schainsFunctionalityInternal.rotateNode(nodeIndex, schainId);
         emit NodeRotated(schainId, nodeIndex, newNodeIndex);
+    }
+
+    function exitFromSchains(uint nodeIndex) external {
+        SchainsData schainsData = SchainsData(contractManager.getContract("SchainsData"));
+        StringUtils stringUtils = StringUtils(contractManager.getContract("StringUtils"));
+        bytes32[] memory schains = schainsData.getSchainIdsForNode(nodeIndex);
+        require(schains.length > 0, "There are no running Schains on the Node");
+        for (uint i = 0; i < schains.length; i++) {
+            SchainsData.Rotation memory rotation = schainsData.getRotation(schains[i]);
+            string memory revertMessage = stringUtils.strConcat(
+                "You cannot rotate on Schain, occupied by Node ", stringUtils.uint2str(rotation.nodeIndex));
+            require(
+                !rotation.inRotation ||
+                rotation.finishedRotation < now,
+                revertMessage);
+            schainsData.startRotation(schains[i], nodeIndex);
+        }
     }
 
     function restartSchainCreation(string calldata name) external allow(executorName) {

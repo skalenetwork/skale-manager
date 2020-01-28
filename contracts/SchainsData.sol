@@ -17,7 +17,8 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity ^0.5.0;
+pragma solidity ^0.5.3;
+pragma experimental ABIEncoderV2;
 
 import "./GroupsData.sol";
 import "./interfaces/ISchainsData.sol";
@@ -40,6 +41,22 @@ contract SchainsData is ISchainsData, GroupsData {
         uint64 index;
     }
 
+    /**
+    nodeIndex - index of Node which is in process of rotation
+    startedRotation - timestamp of starting node rotation
+    inRotation - if true, only nodeIndex able to rotate
+    */
+    struct Rotation {
+        uint nodeIndex;
+        uint finishedRotation;
+        bool inRotation;
+    }
+
+    struct LeavingHistory {
+        bytes32 schainIndex;
+        uint finishedRotation;
+    }
+
     // mapping which contain all schains
     mapping (bytes32 => Schain) public schains;
     // mapping shows schains by owner's address
@@ -48,6 +65,11 @@ contract SchainsData is ISchainsData, GroupsData {
     mapping (uint => bytes32[]) public schainsForNodes;
 
     mapping (uint => uint[]) public holesForNodes;
+
+    mapping (bytes32 => Rotation) public rotations;
+
+    mapping (uint => LeavingHistory[]) public leavingHistory;
+
     // array which contain all schains
     bytes32[] public schainsAtSystem;
 
@@ -203,6 +225,25 @@ contract SchainsData is ISchainsData, GroupsData {
                 holesForNodes[nodeIndex].push(schainIndex);
             }
         }
+    }
+
+    function startRotation(bytes32 schainIndex, uint nodeIndex) external {
+        rotations[schainIndex].nodeIndex = nodeIndex;
+        rotations[schainIndex].finishedRotation = now + 12 hours;
+        rotations[schainIndex].inRotation = true;
+    }
+
+    function finishRotation(bytes32 schainIndex, uint nodeIndex) external {
+        rotations[schainIndex].inRotation = false;
+        leavingHistory[nodeIndex].push(LeavingHistory(schainIndex, rotations[schainIndex].finishedRotation));
+    }
+
+    function getRotation(bytes32 schainIndex) external view returns (Rotation memory) {
+        return rotations[schainIndex];
+    }
+
+    function getLeavingHistory(uint nodeIndex) external view returns (LeavingHistory[] memory) {
+        return leavingHistory[nodeIndex];
     }
 
     /**
