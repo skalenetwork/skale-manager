@@ -169,6 +169,7 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
         bytes32 schainId = keccak256(abi.encodePacked(name));
         address dataAddress = contractManager.contracts(keccak256(abi.encodePacked(dataName)));
         address schainsFunctionalityInternalAddress = contractManager.contracts(keccak256(abi.encodePacked("SchainsFunctionalityInternal")));
+        require(ISchainsData(dataAddress).isSchainExist(schainId), "Schain does not exist");
 
         // removes Schain from Nodes
         uint[] memory nodesInGroup = IGroupsData(dataAddress).getNodesInGroup(schainId);
@@ -190,10 +191,22 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
         emit SchainDeleted(from, name, schainId);
     }
 
+    function exitNodeFromSchains(uint nodeIndex) external allow(executorName) returns (bool) {
+        address dataAddress = contractManager.contracts(keccak256(abi.encodePacked(dataName)));
+        bytes32[] memory schainIds = ISchainsData(dataAddress).getSchainIdsForNode(nodeIndex);
+        if (schainIds.length == 0) {
+            return true;
+        } else {
+            this.rotateNode(nodeIndex, schainIds[0]);
+        }
+        return false;
+    }
+
     function rotateNode(uint nodeIndex, bytes32 schainId) external allowTwo("SkaleDKG", executorName) {
         address schainsFunctionalityInternalAddress = contractManager.contracts(keccak256(abi.encodePacked("SchainsFunctionalityInternal")));
         uint newNodeIndex;
-        newNodeIndex = ISchainsFunctionalityInternal(schainsFunctionalityInternalAddress).replaceNode(nodeIndex, schainId);
+        ISchainsFunctionalityInternal(schainsFunctionalityInternalAddress).removeNodeFromSchain(nodeIndex, schainId);
+        newNodeIndex = ISchainsFunctionalityInternal(schainsFunctionalityInternalAddress).selectNewNode(schainId);
         emit NodeRotated(schainId, nodeIndex, newNodeIndex);
     }
 
@@ -208,6 +221,17 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
         require(possibleNodes.length > 0, "No any free Nodes for rotation");
         uint newNodeIndex = ISchainsFunctionalityInternal(schainsFunctionalityInternalAddress).selectNewNode(schainId);
         emit NodeAdded(schainId, newNodeIndex);
+    }
+
+    function checkRotation(string calldata name) external view returns (bool) {
+        bytes32 schainId = keccak256(abi.encodePacked(name));
+        address dataAddress = contractManager.contracts(keccak256(abi.encodePacked(dataName)));
+        require(ISchainsData(dataAddress).isSchainExist(schainId), "Schain does not exist");
+        address schainsFunctionalityInternalAddress = contractManager.contracts(
+            keccak256(abi.encodePacked("SchainsFunctionalityInternal"))
+        );
+        uint[] memory possibleNodes = ISchainsFunctionalityInternal(schainsFunctionalityInternalAddress).isEnoughNodes(schainId);
+        return possibleNodes.length > 0;
     }
 
     /**
@@ -264,7 +288,9 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
      * @return name
      */
     function fallbackSchainParametersDataConverter(bytes memory data)
-    internal pure returns (SchainParameters memory schainParameters)
+        internal
+        pure
+        returns (SchainParameters memory schainParameters)
     {
         require(data.length > 36, "Incorrect bytes data config");
         bytes32 lifetimeInBytes;

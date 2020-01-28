@@ -302,4 +302,8 @@ contract SchainsData is ISchainsData, GroupsData {
         return schains[schainId].owner == from;
     }
 
+    function isSchainExist(bytes32 schainId) external view returns (bool) {
+        return keccak256(abi.encodePacked(schains[schainId].name)) != keccak256(abi.encodePacked(""));
+    }
+
 }

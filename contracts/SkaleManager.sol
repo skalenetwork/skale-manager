@@ -75,20 +75,17 @@ contract SkaleManager is IERC777Recipient, Permissions {
         }
     }
 
-    function initWithdrawDeposit(uint nodeIndex) external {
+    function nodeExit(uint nodeIndex) external {
         address nodesFunctionalityAddress = contractManager.contracts(keccak256(abi.encodePacked("NodesFunctionality")));
-        require(
-            INodesFunctionality(nodesFunctionalityAddress).initWithdrawDeposit(msg.sender, nodeIndex),
-            "Initialization of deposit withdrawing is failed");
-    }
-
-    function completeWithdrawdeposit(uint nodeIndex) external {
-        address nodesFunctionalityAddress = contractManager.contracts(keccak256(abi.encodePacked("NodesFunctionality")));
-        uint amount = INodesFunctionality(nodesFunctionalityAddress).completeWithdrawDeposit(msg.sender, nodeIndex);
-        address skaleTokenAddress = contractManager.contracts(keccak256(abi.encodePacked("SkaleToken")));
-        require(
-            ISkaleToken(skaleTokenAddress).transfer(msg.sender, amount),
-            "Token transfering is failed");
+        address nodesDataAddress = contractManager.contracts(keccak256(abi.encodePacked("NodesData")));
+        if (INodesData(nodesDataAddress).isNodeActive(nodeIndex)) {
+            require(INodesFunctionality(nodesFunctionalityAddress).initExit(msg.sender, nodeIndex), "Initialization of node exit is failed");
+        }
+        address schainsFunctionalityAddress = contractManager.contracts(keccak256(abi.encodePacked("SchainsFunctionality")));
+        bool completed = ISchainsFunctionality(schainsFunctionalityAddress).exitNodeFromSchains(nodeIndex);
+        if (completed) {
+            require(INodesFunctionality(nodesFunctionalityAddress).completeExit(msg.sender, nodeIndex), "Finishing of node exit is failed");
+        }
     }
 
     function deleteNode(uint nodeIndex) external {
