@@ -41,7 +41,10 @@ contract ValidatorService is Permissions {
 
     mapping (uint => Validator) public validators;
     mapping (uint => bool) public trustedValidators;
+    ///      address => validatorId
     mapping (address => uint) private _validatorAddressToId;
+    /// validatorId => address[]
+    mapping (uint => address[]) private _validatorAddresses;
     uint public numberOfValidators;
 
     modifier checkValidatorExists(uint validatorId) {
@@ -78,7 +81,7 @@ contract ValidatorService is Permissions {
             0,
             epmtyArray
         );
-        _validatorAddressToId[validatorAddress] = validatorId;
+        setValidatorAddress(validatorId, validatorAddress);
     }
 
     function enableValidator(uint validatorId) external checkValidatorExists(validatorId) onlyOwner {
@@ -100,22 +103,20 @@ contract ValidatorService is Permissions {
         checkValidatorExists(validatorId)
         allow("DelegationService")
     {
-        _validatorAddressToId[validators[validatorId].validatorAddress] = 0;
+        deleteValidatorAddress(validatorId, validators[validatorId].validatorAddress);
         validators[validatorId].validatorAddress = newValidatorAddress;
         validators[validatorId].requestedAddress = address(0);
-        _validatorAddressToId[newValidatorAddress] = validatorId;
+        setValidatorAddress(validatorId, validators[validatorId].validatorAddress);
     }
 
     function linkNodeAddress(address validatorAddress, address nodeAddress) external allow("DelegationService") {
         uint validatorId = getValidatorId(validatorAddress);
-        require(_validatorAddressToId[nodeAddress] == 0, "Validator cannot override node address");
-        _validatorAddressToId[nodeAddress] = validatorId;
+        setValidatorAddress(validatorId, nodeAddress);
     }
 
     function unlinkNodeAddress(address validatorAddress, address nodeAddress) external allow("DelegationService") {
         uint validatorId = getValidatorId(validatorAddress);
-        require(_validatorAddressToId[nodeAddress] == validatorId, "Validator hasn't permissions to unlink node");
-        _validatorAddressToId[nodeAddress] = 0;
+        deleteValidatorAddress(validatorId, nodeAddress);
     }
 
     function checkMinimumDelegation(uint validatorId, uint amount)
@@ -178,6 +179,14 @@ contract ValidatorService is Permissions {
         return (position + 1) * MSR <= delegationsTotal;
     }
 
+    function getMyAddresses() external view returns (address[] memory) {
+        return getValidatorAddresses(getValidatorId(msg.sender));
+    }
+
+    function getValidatorAddresses(uint validatorId) public view returns (address[] memory) {
+        return _validatorAddresses[validatorId];
+    }
+
     function validatorExists(uint validatorId) public view returns (bool) {
         return validatorId <= numberOfValidators;
     }
@@ -199,6 +208,8 @@ contract ValidatorService is Permissions {
         return _validatorAddressToId[validatorAddress];
     }
 
+    // private
+
     function findNode(uint[] memory nodeIndexes, uint nodeIndex) internal pure returns (uint) {
         uint i;
         for (i = 0; i < nodeIndexes.length; i++) {
@@ -209,4 +220,27 @@ contract ValidatorService is Permissions {
         return i;
     }
 
+    function setValidatorAddress(uint validatorId, address validatorAddress) internal {
+        if (_validatorAddressToId[validatorAddress] == validatorId) {
+            return;
+        }
+        require(_validatorAddressToId[validatorAddress] == 0, "Validator cannot override node address");
+        _validatorAddressToId[validatorAddress] = validatorId;
+        _validatorAddresses[validatorId].push(validatorAddress);
+    }
+
+    function deleteValidatorAddress(uint validatorId, address validatorAddress) internal {
+        require(_validatorAddressToId[validatorAddress] == validatorId, "Validator hasn't permissions to unlink node");
+        delete _validatorAddressToId[validatorAddress];
+        for (uint i = 0; i < _validatorAddresses[validatorId].length; ++i) {
+            if (_validatorAddresses[validatorId][i] == validatorAddress) {
+                if (i + 1 < _validatorAddresses[validatorId].length) {
+                    _validatorAddresses[validatorId][i] = _validatorAddresses[validatorId][_validatorAddresses[validatorId].length - 1];
+                }
+                delete _validatorAddresses[validatorId][_validatorAddresses[validatorId].length - 1];
+                --_validatorAddresses[validatorId].length;
+                break;
+            }
+        }
+    }
 }
