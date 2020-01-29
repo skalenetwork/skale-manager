@@ -175,8 +175,8 @@ contract ValidatorService is Permissions {
         uint position = findNode(validatorNodes, nodeIndex);
         require(position < validatorNodes.length, "Node does not exist for this Validator");
         uint delegationsTotal = delegationController.getDelegationsTotal(validatorId);
-        uint MSR = IConstants(contractManager.getContract("Constants")).msr();
-        return (position + 1) * MSR <= delegationsTotal;
+        uint msr = IConstants(contractManager.getContract("Constants")).msr();
+        return (position + 1) * msr <= delegationsTotal;
     }
 
     function getMyAddresses() external view returns (address[] memory) {
