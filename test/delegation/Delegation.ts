@@ -1,4 +1,5 @@
-import { ContractManagerInstance,
+import { ConstantsHolderInstance,
+    ContractManagerInstance,
     DelegationControllerInstance,
     DelegationPeriodManagerInstance,
     DelegationServiceInstance,
@@ -6,7 +7,7 @@ import { ContractManagerInstance,
     SkaleManagerMockInstance,
     SkaleTokenInstance,
     TokenStateInstance,
-    ValidatorServiceInstance } from "../../types/truffle-contracts";
+    ValidatorServiceInstance} from "../../types/truffle-contracts";
 
 const SkaleManagerMock: SkaleManagerMockContract = artifacts.require("./SkaleManagerMock");
 
@@ -15,6 +16,7 @@ import { currentTime, skipTime, skipTimeToDate } from "../utils/time";
 import BigNumber from "bignumber.js";
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
+import { deployConstantsHolder } from "../utils/deploy/constantsHolder";
 import { deployContractManager } from "../utils/deploy/contractManager";
 import { deployDelegationController } from "../utils/deploy/delegation/delegationController";
 import { deployDelegationPeriodManager } from "../utils/deploy/delegation/delegationPeriodManager";
@@ -55,11 +57,12 @@ contract("Delegation", ([owner,
     let contractManager: ContractManagerInstance;
     let skaleToken: SkaleTokenInstance;
     let delegationService: DelegationServiceInstance;
-    let delegationPeriodManager: DelegationPeriodManagerInstance;
     let delegationController: DelegationControllerInstance;
-    let tokenState: TokenStateInstance;
+    let delegationPeriodManager: DelegationPeriodManagerInstance;
     let skaleManagerMock: SkaleManagerMockInstance;
     let validatorService: ValidatorServiceInstance;
+    let constantsHolder: ConstantsHolderInstance;
+    let tokenState: TokenStateInstance;
 
     const defaultAmount = 100 * 1e18;
     const month = 60 * 60 * 24 * 31;
@@ -72,10 +75,11 @@ contract("Delegation", ([owner,
 
         skaleToken = await deploySkaleToken(contractManager);
         delegationService = await deployDelegationService(contractManager);
-        delegationPeriodManager = await deployDelegationPeriodManager(contractManager);
         delegationController = await deployDelegationController(contractManager);
-        tokenState = await deployTokenState(contractManager);
+        delegationPeriodManager = await deployDelegationPeriodManager(contractManager);
         validatorService = await deployValidatorService(contractManager);
+        constantsHolder = await deployConstantsHolder(contractManager);
+        tokenState = await deployTokenState(contractManager);
 
         // each test will start from Nov 10
         await skipTimeToDate(web3, 10, 10);
@@ -337,6 +341,21 @@ contract("Delegation", ([owner,
                     (await delegationService.getDelegatedOf.call(holder3)).toNumber().should.be.equal(0);
                 });
             });
+        });
+
+        it("Should be possible for N.O.D.E. foundation to spin up node immediately", async () => {
+            const amount = 100;
+            await delegationService.delegate(validatorId, amount, 3, "D2 is even", {from: holder1});
+            await constantsHolder.setMSR(amount);
+            const delegationId = 0;
+            await delegationService.acceptPendingDelegation(delegationId, {from: validator});
+
+            await validatorService.checkPossibilityCreatingNode(validator)
+                .should.be.eventually.rejectedWith("Validator has to meet Minimum Staking Requirement");
+
+            await tokenState.skipTransitionDelay(delegationId);
+
+            await validatorService.checkPossibilityCreatingNode(validator);
         });
 
         // describe("when validator is registered", async () => {
