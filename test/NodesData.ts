@@ -22,7 +22,7 @@ contract("NodesData", ([owner, validator]) => {
 
     beforeEach(async () => {
         contractManager = await ContractManager.new({from: owner});
-        nodesData = await NodesData.new(5, contractManager.address, {from: owner});
+        nodesData = await NodesData.new(contractManager.address, {from: owner});
 
         constantsHolder = await ConstantsHolder.new(
             contractManager.address,
@@ -41,7 +41,6 @@ contract("NodesData", ([owner, validator]) => {
         node[3].should.be.deep.eq(web3.utils.toBN(8545));
         node[4].should.be.equal("0x1122334455");
         node[6].should.be.deep.eq(web3.utils.toBN(0));
-        node[8].should.be.deep.eq(web3.utils.toBN(0));
 
         const nodeId = web3.utils.soliditySha3("d2");
         await nodesData.nodesIPCheck("0x7f000001").should.be.eventually.true;
@@ -87,7 +86,6 @@ contract("NodesData", ([owner, validator]) => {
         it("should set node as leaving", async () => {
             await nodesData.setNodeLeaving(0);
 
-            (await nodesData.nodes(0))[8].should.be.deep.equal(web3.utils.toBN(1));
             await nodesData.numberOfActiveNodes().should.be.eventually.deep.equal(web3.utils.toBN(0));
             await nodesData.numberOfLeavingNodes().should.be.eventually.deep.equal(web3.utils.toBN(1));
         });

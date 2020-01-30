@@ -35,7 +35,6 @@ contract("NodesFunctionality", ([owner, validator]) => {
         await contractManager.setContractsAddress("Constants", constantsHolder.address);
 
         nodesData = await NodesData.new(
-            5,
             contractManager.address,
             {from: owner, gas: 8000000 * gasMultiplier});
         await contractManager.setContractsAddress("NodesData", nodesData.address);
@@ -116,7 +115,6 @@ contract("NodesFunctionality", ([owner, validator]) => {
         node[4].should.be.equal(
             "0x1122334455667788990011223344556677889900112233445566778899001122" +
             "1122334455667788990011223344556677889900112233445566778899001122");
-        node[8].should.be.deep.equal(web3.utils.toBN(0));
     });
 
     describe("when node is created", async () => {
@@ -185,8 +183,6 @@ contract("NodesFunctionality", ([owner, validator]) => {
 
             await nodesFunctionality.completeExit(validator, 0);
 
-            const node = await nodesData.nodes(0);
-            node[8].should.be.deep.equal(web3.utils.toBN(2));
         });
     });
 
@@ -255,9 +251,6 @@ contract("NodesFunctionality", ([owner, validator]) => {
             skipTime(web3, 5);
 
             await nodesFunctionality.completeExit(validator, 0);
-
-            const node = await nodesData.nodes(0);
-            node[8].should.be.deep.equal(web3.utils.toBN(2));
         });
 
         it("should complete withdrawing deposit from second node", async () => {
@@ -275,9 +268,6 @@ contract("NodesFunctionality", ([owner, validator]) => {
             skipTime(web3, 5);
 
             await nodesFunctionality.completeExit(validator, 1);
-
-            const node = await nodesData.nodes(1);
-            node[8].should.be.deep.equal(web3.utils.toBN(2));
         });
     });
 

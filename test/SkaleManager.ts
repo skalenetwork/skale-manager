@@ -75,7 +75,6 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
         await contractManager.setContractsAddress("Constants", constantsHolder.address);
 
         nodesData = await NodesData.new(
-            5,
             contractManager.address,
             {from: owner, gas: 8000000 * gasMultiplier});
         await contractManager.setContractsAddress("NodesData", nodesData.address);

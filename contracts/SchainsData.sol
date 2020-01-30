@@ -360,7 +360,7 @@ contract SchainsData is ISchainsData, GroupsData {
         return bytes32(0);
     }
 
-    function getActiveSchains(uint nodeIndex) external view returns (bytes32[] memory) {
+    function getActiveSchains(uint nodeIndex) external view returns (bytes32[] memory activeSchains) {
         uint activeAmount = 0;
         for (uint i = 0; i < schainsForNodes[nodeIndex].length; i++) {
             if (schainsForNodes[nodeIndex][i] != bytes32(0)) {
@@ -369,13 +369,12 @@ contract SchainsData is ISchainsData, GroupsData {
         }
 
         uint cursor = 0;
-        bytes32[] memory activeSchains = new bytes32[](activeAmount);
+        activeSchains = new bytes32[](activeAmount);
         for (uint i = 0; i < schainsForNodes[nodeIndex].length; i++) {
             if (schainsForNodes[nodeIndex][i] != bytes32(0)) {
                 activeSchains[cursor++] = schainsForNodes[nodeIndex][i];
             }
         }
-        return activeSchains;
     }
 
 }

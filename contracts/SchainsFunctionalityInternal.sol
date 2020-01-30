@@ -105,7 +105,6 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
         }
     }
 
-
     function removeNodeFromSchain(uint nodeIndex, bytes32 groupHash) external allowTwo(executorName, "SkaleDKG") {
         address schainsDataAddress = contractManager.contracts(keccak256(abi.encodePacked("SchainsData")));
         uint groupIndex = findSchainAtSchainsForNode(nodeIndex, groupHash);
@@ -114,7 +113,6 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
         // IGroupsData(schainsDataAddress).removeExceptionNode(groupHash, nodeIndex);
         ISchainsData(schainsDataAddress).removeSchainForNode(nodeIndex, groupIndex);
     }
-
 
     function isEnoughNodes(bytes32 groupIndex) external view returns (uint[] memory result) {
         IGroupsData groupsData = IGroupsData(contractManager.contracts(keccak256(abi.encodePacked(dataName))));
@@ -145,7 +143,7 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
         uint8 space = uint8(uint(groupsData.getGroupData(groupIndex)));
         uint[] memory nodesWithFreeSpace = nodesData.getNodesWithFreeSpace(space);
         for (uint i = 0; i < nodesWithFreeSpace.length; i++) {
-            if (!isCorrespond(groupIndex, nodesWithFreeSpace[i])) {
+            if (isCorrespond(groupIndex, nodesWithFreeSpace[i])) {
                 return true;
             }
         }
