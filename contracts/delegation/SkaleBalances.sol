@@ -35,7 +35,8 @@ contract SkaleBalances is Permissions, IERC777Recipient {
     mapping (address => uint) private _timeLimit;
     bool private _lockBounty = true;
 
-    constructor(address newContractsAddress) Permissions(newContractsAddress) public {
+    constructor(address newContractsAddress) public {
+        Permissions.initialize(newContractsAddress);
         _erc1820.setInterfaceImplementer(address(this), keccak256("ERC777TokensRecipient"), address(this));
     }
 

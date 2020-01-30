@@ -54,7 +54,8 @@ contract TokenState is Permissions {
     ///       holder => delegationId[]
     mapping (address => uint[]) private _endingDelegations;
 
-    constructor(address _contractManager) Permissions(_contractManager) public {
+    constructor(address _contractManager) public {
+        Permissions.initialize(_contractManager);
     }
 
     function getLockedCount(address holder) external returns (uint amount) {

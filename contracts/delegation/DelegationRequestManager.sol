@@ -34,8 +34,8 @@ import "./TokenState.sol";
 contract DelegationRequestManager is Permissions {
 
 
-    constructor(address newContractsAddress) Permissions(newContractsAddress) public {
-
+    constructor(address newContractsAddress) public {
+        Permissions.initialize(newContractsAddress);
     }
 
     function createRequest(

@@ -117,8 +117,8 @@ contract SkaleDKG is Permissions {
         _;
     }
 
-    constructor(address contractsAddress) Permissions(contractsAddress) public {
-
+    constructor(address contractsAddress) public {
+        Permissions.initialize(contractsAddress);
     }
 
     function openChannel(bytes32 groupIndex) external allowThree("SchainsData", "MonitorsData", "SkaleDKG") {

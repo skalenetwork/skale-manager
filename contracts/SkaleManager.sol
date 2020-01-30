@@ -52,7 +52,8 @@ contract SkaleManager is IERC777Recipient, Permissions {
         uint gasSpend
     );
 
-    constructor(address newContractsAddress) Permissions(newContractsAddress) public {
+    constructor(address newContractsAddress) public {
+        Permissions.initialize(newContractsAddress);
         _erc1820.setInterfaceImplementer(address(this), TOKENS_RECIPIENT_INTERFACE_HASH, address(this));
     }
 

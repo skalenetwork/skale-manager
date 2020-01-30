@@ -95,7 +95,8 @@ contract GroupsFunctionality is Permissions {
      * @param newDataName - name of data contract
      * @param newContractsAddress needed in Permissions constructor
      */
-    constructor(string memory newExecutorName, string memory newDataName, address newContractsAddress) Permissions(newContractsAddress) public {
+    constructor(string memory newExecutorName, string memory newDataName, address newContractsAddress) public {
+        Permissions.initialize(newContractsAddress);
         executorName = newExecutorName;
         dataName = newDataName;
     }

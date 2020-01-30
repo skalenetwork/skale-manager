@@ -34,9 +34,8 @@ contract Distributor is Permissions {
         uint delegationId;
     }
 
-    constructor (address _contractManager) public
-    Permissions(_contractManager) {
-
+    constructor (address _contractManager) public {
+        Permissions.initialize(_contractManager);
     }
 
     function distributeBounty(uint validatorId, uint amount) external allow("DelegationService") returns (Share[] memory shares, uint fee) {

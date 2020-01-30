@@ -48,7 +48,8 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
     IERC1820Registry private _erc1820 = IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
     uint private _launchTimestamp;
 
-    constructor(address newContractsAddress) Permissions(newContractsAddress) public {
+    constructor(address newContractsAddress) public {
+        Permissions.initialize(newContractsAddress);
         _launchTimestamp = now;
         _erc1820.setInterfaceImplementer(address(this), keccak256("ERC777TokensRecipient"), address(this));
     }

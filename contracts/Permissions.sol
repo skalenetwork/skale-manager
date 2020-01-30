@@ -30,6 +30,11 @@ contract Permissions is Ownable {
 
     ContractManager contractManager;
 
+    function initialize(address _contractManager) public initializer {
+        Ownable.initialize(msg.sender);
+        contractManager = ContractManager(_contractManager);
+    }
+
     /**
      * @dev allow - throws if called by any account and contract other than the owner
      * or `contractName` contract
@@ -59,13 +64,5 @@ contract Permissions is Ownable {
             isOwner(),
             "Message sender is invalid");
         _;
-    }
-
-    /**
-     * @dev constructor - sets current address of ContractManager
-     * @param newContractsAddress - current address of ContractManager
-     */
-    constructor(address newContractsAddress) public {
-        contractManager = ContractManager(newContractsAddress);
     }
 }

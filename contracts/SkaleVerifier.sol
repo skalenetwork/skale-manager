@@ -41,8 +41,8 @@ contract SkaleVerifier is Permissions {
         uint y;
     }
 
-    constructor(address newContractsAddress) Permissions(newContractsAddress) public {
-
+    constructor(address newContractsAddress) public {
+        Permissions.initialize(newContractsAddress);
     }
 
     function verifySchainSignature(

@@ -64,7 +64,8 @@ contract GroupsData is IGroupsData, Permissions {
      * @param newExecutorName - name of executor contract
      * @param newContractsAddress needed in Permissions constructor
      */
-    constructor(string memory newExecutorName, address newContractsAddress) public Permissions(newContractsAddress) {
+    constructor(string memory newExecutorName, address newContractsAddress) public {
+        Permissions.initialize(newContractsAddress);
         executorName = newExecutorName;
     }
 

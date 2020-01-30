@@ -67,8 +67,8 @@ contract NodesFunctionality is Permissions, INodesFunctionality {
      * @dev constructor in Permissions approach
      * @param newContractsAddress needed in Permissions constructor
     */
-    constructor(address newContractsAddress) Permissions(newContractsAddress) public {
-
+    constructor(address newContractsAddress) public {
+        Permissions.initialize(newContractsAddress);
     }
 
     /**

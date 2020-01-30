@@ -85,7 +85,8 @@ contract NodesData is INodesData, Permissions {
     uint public numberOfLeavingNodes = 0;
     uint public numberOfLeftNodes = 0;
 
-    constructor(uint newLeavingPeriod, address newContractsAddress) Permissions(newContractsAddress) public {
+    constructor(uint newLeavingPeriod, address newContractsAddress) public {
+        Permissions.initialize(newContractsAddress);
         leavingPeriod = newLeavingPeriod;
     }
 

@@ -25,7 +25,8 @@ import "../Permissions.sol";
 contract DelegationPeriodManager is Permissions {
     mapping (uint => uint) public stakeMultipliers;
 
-    constructor(address newContractsAddress) Permissions(newContractsAddress) public {
+    constructor(address newContractsAddress) public {
+        Permissions.initialize(newContractsAddress);
         stakeMultipliers[3] = 100;
         stakeMultipliers[6] = 150;
         stakeMultipliers[12] = 200;

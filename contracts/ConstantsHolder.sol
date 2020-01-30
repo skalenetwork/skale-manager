@@ -114,8 +114,8 @@ contract ConstantsHolder is IConstants, Permissions {
      * @dev constructor in Permissions approach
      * @param contractsAddress needed in Permissions constructor
      */
-    constructor(address contractsAddress) Permissions(contractsAddress) public {
-
+    constructor(address contractsAddress) public {
+        Permissions.initialize(contractsAddress);
     }
 
     /**

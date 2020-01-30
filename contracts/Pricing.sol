@@ -37,7 +37,8 @@ contract Pricing is Permissions {
 
 
 
-    constructor(address newContractsAddress) Permissions(newContractsAddress) public {
+    constructor(address newContractsAddress) public {
+        Permissions.initialize(newContractsAddress);
         lastUpdated = now;
     }
 

@@ -52,8 +52,8 @@ contract ValidatorService is Permissions {
         _;
     }
 
-    constructor(address newContractsAddress) Permissions(newContractsAddress) public {
-
+    constructor(address newContractsAddress) public {
+        Permissions.initialize(newContractsAddress);
     }
 
     function registerValidator(

@@ -45,7 +45,8 @@ contract ManagerData is IManagerData, Permissions {
      * @param newExecutorName - name of executor contract
      * @param newContractsAddress needed in Permissions constructor
      */
-    constructor(string memory newExecutorName, address newContractsAddress) Permissions(newContractsAddress) public {
+    constructor(string memory newExecutorName, address newContractsAddress) public {
+        Permissions.initialize(newContractsAddress);
         startTime = uint32(block.timestamp);
         executorName = newExecutorName;
     }

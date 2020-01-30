@@ -75,7 +75,8 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
     string executorName;
     string dataName;
 
-    constructor(string memory newExecutorName, string memory newDataName, address newContractsAddress) Permissions(newContractsAddress) public {
+    constructor(string memory newExecutorName, string memory newDataName, address newContractsAddress) public {
+        Permissions.initialize(newContractsAddress);
         executorName = newExecutorName;
         dataName = newDataName;
     }
