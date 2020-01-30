@@ -550,7 +550,6 @@ contract NodesData is INodesData, Permissions {
         }
     }
 
-
     function getNodeStatus(uint nodeIndex) external view returns (NodeStatus) {
         return nodes[nodeIndex].status;
     }

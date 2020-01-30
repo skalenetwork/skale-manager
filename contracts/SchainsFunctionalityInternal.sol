@@ -152,7 +152,7 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
         uint[] memory nodesWithFreeSpace = nodesData.getNodesWithFreeSpace(space);
         uint counter = 0;
         for (uint i = 0; i < nodesWithFreeSpace.length; i++) {
-            if (groupsData.isExceptionNode(groupIndex, nodesWithFreeSpace[i]) || !nodesData.isNodeActive(nodesWithFreeSpace[i])) {
+            if (!isCorrespond(groupIndex, nodesWithFreeSpace[i])) {
                 counter++;
             }
         }
@@ -160,7 +160,7 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
             result = new uint[](nodesWithFreeSpace.length - counter);
             counter = 0;
             for (uint i = 0; i < nodesWithFreeSpace.length; i++) {
-                if (!groupsData.isExceptionNode(groupIndex, nodesWithFreeSpace[i]) && nodesData.isNodeActive(nodesWithFreeSpace[i])) {
+                if (isCorrespond(groupIndex, nodesWithFreeSpace[i])) {
                     result[counter] = nodesWithFreeSpace[i];
                     counter++;
                 }
@@ -271,6 +271,12 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
         //     return INodesData(nodesDataAddress).removeSpaceFromFractionalNode(subarrayLink, space);
         // }
         return INodesData(nodesDataAddress).removeSpaceFromNode(nodeIndex, space);
+    }
+
+    function isCorrespond(bytes32 groupIndex, uint nodeIndex) internal view returns (bool) {
+        IGroupsData groupsData = IGroupsData(contractManager.contracts(keccak256(abi.encodePacked(dataName))));
+        INodesData nodesData = INodesData(contractManager.contracts(keccak256(abi.encodePacked("NodesData"))));
+        return !groupsData.isExceptionNode(groupIndex, nodeIndex) && nodesData.isNodeActive(nodeIndex);
     }
 
 

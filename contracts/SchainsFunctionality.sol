@@ -207,7 +207,8 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
         SchainsData schainsData = SchainsData(contractManager.getContract(dataName));
         require(schainsData.isSchainExist(schainId), "Schain does not exist");
         SchainsFunctionalityInternal schainsFunctionalityInternal = SchainsFunctionalityInternal(
-            contractManager.getContract("SchainsFunctionalityInternal"));
+            contractManager.getContract("SchainsFunctionalityInternal")
+        );
         uint[] memory possibleNodes = schainsFunctionalityInternal.isEnoughNodes(schainId); // TODO: check at least one node
         return possibleNodes.length > 0;
     }

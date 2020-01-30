@@ -322,7 +322,7 @@ contract SkaleDKG is Permissions {
             delete channels[groupIndex];
             this.openChannel(groupIndex);
         } else {
-            ISchainsFunctionalityInternal(schainsFunctionalityInternalAddress).excludeNodeFromSchain(
+            ISchainsFunctionalityInternal(schainsFunctionalityInternalAddress).removeNodeFromSchain(
                 badNode,
                 groupIndex
             );
