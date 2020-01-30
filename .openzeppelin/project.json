@@ -1,7 +1,8 @@
 {
   "manifestVersion": "2.2",
   "contracts": {
-    "ContractManager": "ContractManager"
+    "ContractManager": "ContractManager",
+    "ValidatorService": "ValidatorService"
   },
   "dependencies": {
     "@openzeppelin/contracts-ethereum-package": "^2.4.0"

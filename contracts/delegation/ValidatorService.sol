@@ -52,10 +52,6 @@ contract ValidatorService is Permissions {
         _;
     }
 
-    constructor(address newContractsAddress) public {
-        Permissions.initialize(newContractsAddress);
-    }
-
     function registerValidator(
         string calldata name,
         address validatorAddress,
@@ -181,6 +177,10 @@ contract ValidatorService is Permissions {
 
     function getMyAddresses() external view returns (address[] memory) {
         return getValidatorAddresses(getValidatorId(msg.sender));
+    }
+
+    function initialize(address _contractManager) public initializer {
+        Permissions.initialize(_contractManager);
     }
 
     function getValidatorAddresses(uint validatorId) public view returns (address[] memory) {
