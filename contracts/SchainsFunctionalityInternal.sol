@@ -105,24 +105,24 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
         }
     }
 
-    function rotateNode(
-        uint nodeIndex,
-        bytes32 groupHash
-    )
-        external
-        allowThree(executorName, "SkaleDKG", "SchainsFunctionalityInternal")
-        returns (uint newNodeIndex)
-    {
-        SchainsData schainsData = SchainsData(contractManager.getContract("SchainsData"));
-        checkAbilityRotation(groupHash, nodeIndex);
-        this.excludeNodeFromSchain(nodeIndex, groupHash);
-        newNodeIndex = selectNodeToGroup(groupHash);
-        schainsData.finishRotation(groupHash, nodeIndex);
-    }
+    // function rotateNode(
+    //     uint nodeIndex,
+    //     bytes32 groupHash
+    // )
+    //     external
+    //     allowThree(executorName, "SkaleDKG", "SchainsFunctionalityInternal")
+    //     returns (uint newNodeIndex)
+    // {
+    //     SchainsData schainsData = SchainsData(contractManager.getContract("SchainsData"));
+    //     checkAbilityRotation(groupHash, nodeIndex);
+    //     this.excludeNodeFromSchain(nodeIndex, groupHash);
+    //     newNodeIndex = selectNodeToGroup(groupHash);
+    //     schainsData.finishRotation(groupHash, nodeIndex);
+    // }
 
-    function selectNewNode(bytes32 groupHash) external allow(executorName) returns (uint newNodeIndex) {
-        newNodeIndex = selectNodeToGroup(groupHash);
-    }
+    // function selectNewNode(bytes32 groupHash) external allow(executorName) returns (uint newNodeIndex) {
+    //     newNodeIndex = selectNodeToGroup(groupHash);
+    // }
 
     function removeNodeFromSchain(uint nodeIndex, bytes32 groupHash) external allow(executorName) {
         address schainsDataAddress = contractManager.contracts(keccak256(abi.encodePacked("SchainsData")));
@@ -169,28 +169,11 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
     }
 
     /**
-     * @dev findSchainAtSchainsForNode - finds index of Schain at schainsForNode array
-     * @param nodeIndex - index of Node at common array of Nodes
-     * @param schainId - hash of name of Schain
-     * @return index of Schain at schainsForNode array
-     */
-    function findSchainAtSchainsForNode(uint nodeIndex, bytes32 schainId) public view returns (uint) {
-        address dataAddress = contractManager.contracts(keccak256(abi.encodePacked(dataName)));
-        uint length = ISchainsData(dataAddress).getLengthOfSchainsForNode(nodeIndex);
-        for (uint i = 0; i < length; i++) {
-            if (ISchainsData(dataAddress).schainsForNodes(nodeIndex, i) == schainId) {
-                return i;
-            }
-        }
-        return length;
-    }
-
-    /**
      * @dev selectNodeToGroup - pseudo-randomly select new Node for Schain
      * @param groupIndex - hash of name of Schain
      * @return nodeIndex - global index of Node
      */
-    function selectNodeToGroup(bytes32 groupIndex) internal returns (uint) {
+    function selectNodeToGroup(bytes32 groupIndex) external allow(executorName) {
         IGroupsData groupsData = IGroupsData(contractManager.contracts(keccak256(abi.encodePacked(dataName))));
         ISchainsData schainsData = ISchainsData(contractManager.contracts(keccak256(abi.encodePacked(dataName))));
         // INodesData nodesData = INodesData(contractManager.contracts(keccak256(abi.encodePacked("NodesData"))));
@@ -290,15 +273,6 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
         return INodesData(nodesDataAddress).removeSpaceFromNode(nodeIndex, space);
     }
 
-    function checkAbilityRotation(bytes32 schainIndex, uint nodeIndex) private {
-        SchainsData schainsData = SchainsData(contractManager.getContract("SchainsData"));
-        SchainsData.Rotation memory rotation = schainsData.getRotation(schainIndex);
-        require(
-            rotation.nodeIndex == nodeIndex &&
-            rotation.inRotation &&
-            rotation.finishedRotation > now,
-            "You should first call method exitFromSchains");
-    }
 
     // /**
     //  * @dev setNumberOfNodesInGroup - checks is Nodes enough to create Schain

@@ -24,6 +24,7 @@ import "./interfaces/IConstants.sol";
 import "./interfaces/INodesData.sol";
 import "./interfaces/ISchainsData.sol";
 import "./interfaces/INodesFunctionality.sol";
+import "./NodesData.sol";
 
 
 /**
@@ -153,12 +154,12 @@ contract NodesFunctionality is Permissions, INodesFunctionality {
      * @return true - if everything OK
      */
     function initExit(address from, uint nodeIndex) external allow("SkaleManager") returns (bool) {
-        address nodesDataAddress = contractManager.contracts(keccak256(abi.encodePacked("NodesData")));
+        NodesData nodesData = NodesData(contractManager.getContract("NodesData"));
 
-        require(validatorService.validatorAddressExists(from), "Validator with such address doesn't exist");
+        // require(validatorService.validatorAddressExists(from), "Validator with such address doesn't exist");
         require(nodesData.isNodeExist(from, nodeIndex), "Node does not exist for message sender");
 
-        INodesData(nodesDataAddress).setNodeLeaving(nodeIndex);
+        nodesData.setNodeLeaving(nodeIndex);
 
         emit WithdrawDepositFromNodeInit(
             nodeIndex,
@@ -177,16 +178,15 @@ contract NodesFunctionality is Permissions, INodesFunctionality {
      * @return amount of SKL which be returned
      */
     function completeExit(address from, uint nodeIndex) external allow("SkaleManager") returns (bool) {
-        address nodesDataAddress = contractManager.contracts(keccak256(abi.encodePacked("NodesData")));
+        NodesData nodesData = NodesData(contractManager.getContract("NodesData"));
 
-        require(validatorService.validatorAddressExists(from), "Validator with such address doesn't exist");
+        // require(validatorService.validatorAddressExists(from), "Validator with such address doesn't exist");
         require(nodesData.isNodeExist(from, nodeIndex), "Node does not exist for message sender");
         require(nodesData.isNodeLeaving(nodeIndex), "Node is not Leaving");
-        require(nodesData.isLeavingPeriodExpired(nodeIndex), "Leaving period has not expired");
 
-        INodesData(nodesDataAddress).setNodeLeft(nodeIndex);
+        nodesData.setNodeLeft(nodeIndex);
 
-        INodesData(nodesDataAddress).removeNode(nodeIndex);
+        nodesData.removeNode(nodeIndex);
 
         address constantsAddress = contractManager.contracts(keccak256(abi.encodePacked("Constants")));
         emit WithdrawDepositFromNodeComplete(
