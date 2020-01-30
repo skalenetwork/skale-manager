@@ -40,7 +40,7 @@ contract("NodesData", ([owner, validator]) => {
         node[2].should.be.equal("0x7f000002");
         node[3].should.be.deep.eq(web3.utils.toBN(8545));
         node[4].should.be.equal("0x1122334455");
-        node[6].should.be.deep.eq(web3.utils.toBN(0));
+        node[7].should.be.deep.eq(web3.utils.toBN(0));
 
         const nodeId = web3.utils.soliditySha3("d2");
         await nodesData.nodesIPCheck("0x7f000001").should.be.eventually.true;
@@ -103,23 +103,10 @@ contract("NodesData", ([owner, validator]) => {
         it("should change node last reward date", async () => {
             skipTime(web3, 5);
             const currentTime = (await web3.eth.getBlock("latest")).timestamp;
-
             await nodesData.changeNodeLastRewardDate(0);
 
-            (await nodesData.nodes(0))[7].should.be.deep.equal(web3.utils.toBN(currentTime));
+            (await nodesData.nodes(0))[6].should.be.deep.equal(web3.utils.toBN(currentTime));
             await nodesData.getNodeLastRewardDate(0).should.be.eventually.deep.equal(web3.utils.toBN(currentTime));
-        });
-
-        it("should check if leaving period is expired", async () => {
-            await nodesData.setNodeLeaving(0);
-
-            skipTime(web3, 3);
-
-            await nodesData.isLeavingPeriodExpired(0).should.be.eventually.false;
-
-            skipTime(web3, 3);
-
-            await nodesData.isLeavingPeriodExpired(0).should.be.eventually.true;
         });
 
         it("should check if time for reward has come", async () => {
