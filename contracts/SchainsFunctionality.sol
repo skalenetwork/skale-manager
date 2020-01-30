@@ -71,11 +71,6 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
         uint newNode
     );
 
-    event NodeAdded(
-        bytes32 groupIndex,
-        uint newNode
-    );
-
     string executorName;
     string dataName;
 
@@ -200,6 +195,7 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
         bytes32 schainId = schainsData.getActiveSchain(nodeIndex);
         require(this.checkRotation(schainId), "No any free Nodes for rotating");
         this.rotateNode(nodeIndex, schainId);
+        schainsData.finishRotation(schainId, nodeIndex);
         return schainsData.getActiveSchain(nodeIndex) == bytes32(0) ? true : false;
     }
 
@@ -208,8 +204,7 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
         require(schainsData.isSchainExist(schainId), "Schain does not exist");
         SchainsFunctionalityInternal schainsFunctionalityInternal = SchainsFunctionalityInternal(
             contractManager.getContract("SchainsFunctionalityInternal"));
-        uint[] memory possibleNodes = schainsFunctionalityInternal.isEnoughNodes(schainId); // TODO: check at least one node
-        return possibleNodes.length > 0;
+        return schainsFunctionalityInternal.isAnyFreeNode(schainId);
     }
 
     function rotateNode(uint nodeIndex, bytes32 schainId) external allowTwo("SkaleDKG", "SchainsFunctionality") {
@@ -217,7 +212,6 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
             contractManager.getContract("SchainsFunctionalityInternal"));
         schainsFunctionalityInternal.removeNodeFromSchain(nodeIndex, schainId);
         schainsFunctionalityInternal.selectNodeToGroup(schainId);
-        SchainsData(contractManager.getContract("SchainsData")).finishRotation(schainId, nodeIndex);
     }
 
     function freezeSchains(uint nodeIndex) external allow(executorName) {
@@ -244,13 +238,10 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
         bytes32 schainId = keccak256(abi.encodePacked(name));
         address dataAddress = contractManager.contracts(keccak256(abi.encodePacked(dataName)));
         require(IGroupsData(dataAddress).isGroupFailedDKG(schainId), "DKG success");
-        address schainsFunctionalityInternalAddress = contractManager.contracts(
-            keccak256(abi.encodePacked("SchainsFunctionalityInternal"))
-        );
-        uint[] memory possibleNodes = ISchainsFunctionalityInternal(schainsFunctionalityInternalAddress).isEnoughNodes(schainId);
-        require(possibleNodes.length > 0, "No any free Nodes for rotation");
-        uint newNodeIndex = ISchainsFunctionalityInternal(schainsFunctionalityInternalAddress).selectNewNode(schainId);
-        emit NodeAdded(schainId, newNodeIndex);
+        SchainsFunctionalityInternal schainsFunctionalityInternal = SchainsFunctionalityInternal(
+            contractManager.getContract("SchainsFunctionalityInternal"));
+        require(schainsFunctionalityInternal.isAnyFreeNode(schainId), "No any free Nodes for rotation");
+        schainsFunctionalityInternal.selectNodeToGroup(schainId);
     }
 
     /**

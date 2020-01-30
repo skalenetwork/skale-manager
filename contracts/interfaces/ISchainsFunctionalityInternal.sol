@@ -9,8 +9,7 @@ interface ISchainsFunctionalityInternal {
         uint8 partOfNode) external;
     function findSchainAtSchainsForNode(uint nodeIndex, bytes32 schainId) external view returns (uint);
     function deleteGroup(bytes32 groupIndex) external;
-    function rotateNode(uint nodeIndex, bytes32 groupIndex) external returns (uint);
-    function selectNewNode(bytes32 groupHash) external returns (uint);
+    function selectNodeToGroup(bytes32 groupIndex) external;
     function removeNodeFromSchain(uint nodeIndex, bytes32 groupHash) external;
     function excludeNodeFromSchain(uint nodeIndex, bytes32 groupHash) external;
     function isEnoughNodes(bytes32 groupIndex) external view returns (uint[] memory);

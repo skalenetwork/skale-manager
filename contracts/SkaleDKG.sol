@@ -24,6 +24,8 @@ import "./interfaces/IGroupsData.sol";
 import "./interfaces/INodesData.sol";
 import "./interfaces/ISchainsFunctionality.sol";
 import "./interfaces/ISchainsFunctionalityInternal.sol";
+import "./SchainsFunctionality.sol";
+import "./SchainsFunctionalityInternal.sol";
 
 interface IECDH {
     function deriveKey(
@@ -307,22 +309,22 @@ contract SkaleDKG is Permissions {
     }
 
     function finalizeSlashing(bytes32 groupIndex, uint badNode) internal {
-        address schainsFunctionalityInternalAddress = contractManager.contracts(
-            keccak256(abi.encodePacked("SchainsFunctionalityInternal"))
-        );
-        uint[] memory possibleNodes = ISchainsFunctionalityInternal(schainsFunctionalityInternalAddress).isEnoughNodes(groupIndex);
+        SchainsFunctionalityInternal schainsFunctionalityInternal = SchainsFunctionalityInternal(
+            contractManager.getContract("SchainsFunctionalityInternal"));
+        SchainsFunctionality schainsFunctionality = SchainsFunctionality(
+            contractManager.getContract("SchainsFunctionality"));
+
         emit BadGuy(badNode);
         emit FailedDKG(groupIndex);
-        if (possibleNodes.length > 0) {
-            uint newNode = ISchainsFunctionalityInternal(schainsFunctionalityInternalAddress).rotateNode(
+        if (schainsFunctionalityInternal.isAnyFreeNode(groupIndex)) {
+            schainsFunctionality.rotateNode(
                 badNode,
                 groupIndex
             );
-            emit NewGuy(newNode);
             delete channels[groupIndex];
             this.openChannel(groupIndex);
         } else {
-            ISchainsFunctionalityInternal(schainsFunctionalityInternalAddress).excludeNodeFromSchain(
+            schainsFunctionalityInternal.removeNodeFromSchain(
                 badNode,
                 groupIndex
             );
