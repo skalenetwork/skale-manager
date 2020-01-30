@@ -46,16 +46,15 @@ contract NodesFunctionality is Permissions, INodesFunctionality {
     );
 
     // informs that owner withdrawn the Node's deposit
-    event WithdrawDepositFromNodeComplete(
+    event ExitCompleted(
         uint nodeIndex,
         address owner,
-        uint deposit,
         uint32 time,
         uint gasSpend
     );
 
     // informs that owner starts the procedure of quiting the Node from the system
-    event WithdrawDepositFromNodeInit(
+    event ExitInited(
         uint nodeIndex,
         address owner,
         uint32 startLeavingPeriod,
@@ -161,7 +160,7 @@ contract NodesFunctionality is Permissions, INodesFunctionality {
 
         nodesData.setNodeLeaving(nodeIndex);
 
-        emit WithdrawDepositFromNodeInit(
+        emit ExitInited(
             nodeIndex,
             from,
             uint32(block.timestamp),
@@ -188,11 +187,9 @@ contract NodesFunctionality is Permissions, INodesFunctionality {
 
         nodesData.removeNode(nodeIndex);
 
-        address constantsAddress = contractManager.contracts(keccak256(abi.encodePacked("Constants")));
-        emit WithdrawDepositFromNodeComplete(
+        emit ExitCompleted(
             nodeIndex,
             from,
-            IConstants(constantsAddress).NODE_DEPOSIT(),
             uint32(block.timestamp),
             gasleft());
         return true;

@@ -704,7 +704,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
             let nodeStatus;
             beforeEach(async () => {
                 const deposit = await schainsFunctionality.getSchainPrice(2, 5);
-                const nodesCount = 16;     
+                const nodesCount = 16;
                 for (const index of Array.from(Array(nodesCount).keys())) {
                     const hexIndex = ("0" + index.toString(16)).slice(-2);
                     await nodesFunctionality.createNode(validator, "100000000000000000000",
@@ -769,7 +769,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                 nodeStatus = (await nodesData.getNodeStatus(1)).toNumber();
                 assert.equal(nodeStatus, ACTIVE);
                 await skaleManager.nodeExit(1, {from: validator});
-                
+
                 nodeStatus = (await nodesData.getNodeStatus(1)).toNumber();
                 assert.equal(nodeStatus, LEAVING);
                 await skaleManager.nodeExit(1, {from: validator});
