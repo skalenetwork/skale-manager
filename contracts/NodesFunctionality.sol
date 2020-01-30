@@ -146,7 +146,7 @@ contract NodesFunctionality is Permissions, INodesFunctionality {
     }
 
     /**
-     * @dev initWithdrawdeposit - initiate a procedure of quiting the system
+     * @dev initExit - initiate a procedure of quiting the system
      * function could be only run by SkaleManager
      * @param from - owner of Node
      * @param nodeIndex - index of Node
@@ -155,8 +155,8 @@ contract NodesFunctionality is Permissions, INodesFunctionality {
     function initExit(address from, uint nodeIndex) external allow("SkaleManager") returns (bool) {
         address nodesDataAddress = contractManager.contracts(keccak256(abi.encodePacked("NodesData")));
 
-        require(INodesData(nodesDataAddress).isNodeExist(from, nodeIndex), "Node does not exist for message sender");
-        require(INodesData(nodesDataAddress).isNodeActive(nodeIndex), "Node is not Active");
+        require(validatorService.validatorAddressExists(from), "Validator with such address doesn't exist");
+        require(nodesData.isNodeExist(from, nodeIndex), "Node does not exist for message sender");
 
         INodesData(nodesDataAddress).setNodeLeaving(nodeIndex);
 
@@ -170,7 +170,7 @@ contract NodesFunctionality is Permissions, INodesFunctionality {
     }
 
     /**
-     * @dev completeWithdrawDeposit - finish a procedure of quiting the system
+     * @dev completeExit - finish a procedure of quiting the system
      * function could be run only by SkaleMManager
      * @param from - owner of Node
      * @param nodeIndex - index of Node
@@ -179,9 +179,10 @@ contract NodesFunctionality is Permissions, INodesFunctionality {
     function completeExit(address from, uint nodeIndex) external allow("SkaleManager") returns (bool) {
         address nodesDataAddress = contractManager.contracts(keccak256(abi.encodePacked("NodesData")));
 
-        require(INodesData(nodesDataAddress).isNodeExist(from, nodeIndex), "Node does not exist for message sender");
-        require(INodesData(nodesDataAddress).isNodeLeaving(nodeIndex), "Node is no Leaving");
-        require(INodesData(nodesDataAddress).isLeavingPeriodExpired(nodeIndex), "Leaving period is not expired");
+        require(validatorService.validatorAddressExists(from), "Validator with such address doesn't exist");
+        require(nodesData.isNodeExist(from, nodeIndex), "Node does not exist for message sender");
+        require(nodesData.isNodeLeaving(nodeIndex), "Node is not Leaving");
+        require(nodesData.isLeavingPeriodExpired(nodeIndex), "Leaving period has not expired");
 
         INodesData(nodesDataAddress).setNodeLeft(nodeIndex);
 

@@ -347,4 +347,35 @@ contract SchainsData is ISchainsData, GroupsData {
         return keccak256(abi.encodePacked(schains[schainId].name)) != keccak256(abi.encodePacked(""));
     }
 
+    function getSchainName(bytes32 schainId) external view returns (string memory) {
+        return schains[schainId].name;
+    }
+
+    function getActiveSchain(uint nodeIndex) external view returns (bytes32) {
+        for (uint i = 0; i < schainsForNodes[nodeIndex].length; i++) {
+            if (schainsForNodes[nodeIndex][i] != bytes32(0)) {
+                return schainsForNodes[nodeIndex][i];
+            }
+        }
+        return bytes32(0);
+    }
+
+    function getActiveSchains(uint nodeIndex) external view returns (bytes32[] memory) {
+        uint activeAmount = 0;
+        for (uint i = 0; i < schainsForNodes[nodeIndex].length; i++) {
+            if (schainsForNodes[nodeIndex][i] != bytes32(0)) {
+                activeAmount++;
+            }
+        }
+
+        uint cursor = 0;
+        bytes32[] memory activeSchains = new bytes32[](activeAmount);
+        for (uint i = 0; i < schainsForNodes[nodeIndex].length; i++) {
+            if (schainsForNodes[nodeIndex][i] != bytes32(0)) {
+                activeSchains[cursor++] = schainsForNodes[nodeIndex][i];
+            }
+        }
+        return activeSchains;
+    }
+
 }

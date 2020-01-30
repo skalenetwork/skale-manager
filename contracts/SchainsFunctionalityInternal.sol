@@ -210,7 +210,23 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
         schainsData.addSchainForNode(nodeIndex, groupIndex);
         groupsData.setException(groupIndex, nodeIndex);
         groupsData.setNodeInGroup(groupIndex, nodeIndex);
-        return nodeIndex;
+    }
+
+    /**
+     * @dev findSchainAtSchainsForNode - finds index of Schain at schainsForNode array
+     * @param nodeIndex - index of Node at common array of Nodes
+     * @param schainId - hash of name of Schain
+     * @return index of Schain at schainsForNode array
+     */
+    function findSchainAtSchainsForNode(uint nodeIndex, bytes32 schainId) public view returns (uint) {
+        address dataAddress = contractManager.contracts(keccak256(abi.encodePacked(dataName)));
+        uint length = ISchainsData(dataAddress).getLengthOfSchainsForNode(nodeIndex);
+        for (uint i = 0; i < length; i++) {
+            if (ISchainsData(dataAddress).schainsForNodes(nodeIndex, i) == schainId) {
+                return i;
+            }
+        }
+        return length;
     }
 
     /**

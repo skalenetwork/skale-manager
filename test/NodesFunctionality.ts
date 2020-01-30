@@ -152,38 +152,38 @@ contract("NodesFunctionality", ([owner, validator]) => {
             await nodesData.numberOfActiveNodes().should.be.eventually.deep.equal(web3.utils.toBN(0));
         });
 
-        it("should fail to wethdraw deposit for non existing node", async () => {
-            await nodesFunctionality.initWithdrawDeposit(validator, 1)
+        it("should fail to withdraw deposit for non existing node", async () => {
+            await nodesFunctionality.initExit(validator, 1)
                 .should.be.eventually.rejectedWith("Node does not exist for message sender");
 
-            await nodesFunctionality.initWithdrawDeposit(owner, 0)
-                .should.be.eventually.rejectedWith("Node does not exist for message sender");
+            await nodesFunctionality.initExit(owner, 0)
+                .should.be.eventually.rejectedWith("Validator with such address doesn't exist");
         });
 
         it("should init withdrawing deposit", async () => {
-            await nodesFunctionality.initWithdrawDeposit(validator, 0);
+            await nodesFunctionality.initExit(validator, 0);
 
             await nodesData.numberOfActiveNodes().should.be.eventually.deep.equal(web3.utils.toBN(0));
         });
 
         it("should complete withdrawing deposit", async () => {
-            await nodesFunctionality.completeWithdrawDeposit(owner, 0)
+            await nodesFunctionality.completeExit(owner, 0)
+                .should.be.eventually.rejectedWith("Validator with such address doesn't exist");
+
+            await nodesFunctionality.completeExit(validator, 1)
                 .should.be.eventually.rejectedWith("Node does not exist for message sender");
 
-            await nodesFunctionality.completeWithdrawDeposit(validator, 1)
-                .should.be.eventually.rejectedWith("Node does not exist for message sender");
-
-            await nodesFunctionality.completeWithdrawDeposit(validator, 0)
+            await nodesFunctionality.completeExit(validator, 0)
                 .should.be.eventually.rejectedWith("Node is no Leaving");
 
-            await nodesFunctionality.initWithdrawDeposit(validator, 0);
+            await nodesFunctionality.initExit(validator, 0);
 
-            await nodesFunctionality.completeWithdrawDeposit(validator, 0)
-                .should.be.eventually.rejectedWith("eaving period is not expired");
+            await nodesFunctionality.completeExit(validator, 0)
+                .should.be.eventually.rejectedWith("Leaving period has not expired");
 
             skipTime(web3, 5);
 
-            await nodesFunctionality.completeWithdrawDeposit(validator, 0);
+            await nodesFunctionality.completeExit(validator, 0);
 
             const node = await nodesData.nodes(0);
             node[8].should.be.deep.equal(web3.utils.toBN(2));
@@ -229,52 +229,52 @@ contract("NodesFunctionality", ([owner, validator]) => {
         });
 
         it("should init withdrawing deposit from first node", async () => {
-            await nodesFunctionality.initWithdrawDeposit(validator, 0);
+            await nodesFunctionality.initExit(validator, 0);
 
             await nodesData.numberOfActiveNodes().should.be.eventually.deep.equal(web3.utils.toBN(1));
         });
 
         it("should init withdrawing deposit from second node", async () => {
-            await nodesFunctionality.initWithdrawDeposit(validator, 1);
+            await nodesFunctionality.initExit(validator, 1);
 
             await nodesData.numberOfActiveNodes().should.be.eventually.deep.equal(web3.utils.toBN(1));
         });
 
         it("should complete withdrawing deposit from first node", async () => {
-            await nodesFunctionality.completeWithdrawDeposit(owner, 0)
-                .should.be.eventually.rejectedWith("Node does not exist for message sender");
+            await nodesFunctionality.completeExit(owner, 0)
+                .should.be.eventually.rejectedWith("Validator with such address doesn't exist");
 
-            await nodesFunctionality.completeWithdrawDeposit(validator, 0)
+            await nodesFunctionality.completeExit(validator, 0)
                 .should.be.eventually.rejectedWith("Node is no Leaving");
 
-            await nodesFunctionality.initWithdrawDeposit(validator, 0);
+            await nodesFunctionality.initExit(validator, 0);
 
-            await nodesFunctionality.completeWithdrawDeposit(validator, 0)
-                .should.be.eventually.rejectedWith("eaving period is not expired");
+            await nodesFunctionality.completeExit(validator, 0)
+                .should.be.eventually.rejectedWith("Leaving period has not expired");
 
             skipTime(web3, 5);
 
-            await nodesFunctionality.completeWithdrawDeposit(validator, 0);
+            await nodesFunctionality.completeExit(validator, 0);
 
             const node = await nodesData.nodes(0);
             node[8].should.be.deep.equal(web3.utils.toBN(2));
         });
 
         it("should complete withdrawing deposit from second node", async () => {
-            await nodesFunctionality.completeWithdrawDeposit(owner, 1)
-                .should.be.eventually.rejectedWith("Node does not exist for message sender");
+            await nodesFunctionality.completeExit(owner, 1)
+                .should.be.eventually.rejectedWith("Validator with such address doesn't exist");
 
-            await nodesFunctionality.completeWithdrawDeposit(validator, 1)
+            await nodesFunctionality.completeExit(validator, 1)
                 .should.be.eventually.rejectedWith("Node is no Leaving");
 
-            await nodesFunctionality.initWithdrawDeposit(validator, 1);
+            await nodesFunctionality.initExit(validator, 1);
 
-            await nodesFunctionality.completeWithdrawDeposit(validator, 1)
-                .should.be.eventually.rejectedWith("eaving period is not expired");
+            await nodesFunctionality.completeExit(validator, 1)
+                .should.be.eventually.rejectedWith("Leaving period has not expired");
 
             skipTime(web3, 5);
 
-            await nodesFunctionality.completeWithdrawDeposit(validator, 1);
+            await nodesFunctionality.completeExit(validator, 1);
 
             const node = await nodesData.nodes(1);
             node[8].should.be.deep.equal(web3.utils.toBN(2));

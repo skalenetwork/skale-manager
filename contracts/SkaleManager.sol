@@ -80,15 +80,16 @@ contract SkaleManager is IERC777Recipient, Permissions {
     }
 
     function nodeExit(uint nodeIndex) external {
-        address nodesFunctionalityAddress = contractManager.contracts(keccak256(abi.encodePacked("NodesFunctionality")));
-        address nodesDataAddress = contractManager.contracts(keccak256(abi.encodePacked("NodesData")));
-        if (INodesData(nodesDataAddress).isNodeActive(nodeIndex)) {
-            require(INodesFunctionality(nodesFunctionalityAddress).initExit(msg.sender, nodeIndex), "Initialization of node exit is failed");
+        NodesData nodesData = NodesData(contractManager.getContract("NodesData"));
+        NodesFunctionality nodesFunctionality = NodesFunctionality(contractManager.getContract("NodesFunctionality"));
+        SchainsFunctionality schainsFunctionality = SchainsFunctionality(contractManager.getContract("SchainsFunctionality"));
+        schainsFunctionality.freezeSchains(nodeIndex);
+        if (nodesData.isNodeActive(nodeIndex)) {
+            require(nodesFunctionality.initExit(msg.sender, nodeIndex), "Initialization of node exit is failed");
         }
-        address schainsFunctionalityAddress = contractManager.contracts(keccak256(abi.encodePacked("SchainsFunctionality")));
-        bool completed = ISchainsFunctionality(schainsFunctionalityAddress).exitNodeFromSchains(nodeIndex);
+        bool completed = schainsFunctionality.exitNodeFromSchains(nodeIndex);
         if (completed) {
-            require(INodesFunctionality(nodesFunctionalityAddress).completeExit(msg.sender, nodeIndex), "Finishing of node exit is failed");
+            require(nodesFunctionality.completeExit(msg.sender, nodeIndex), "Finishing of node exit is failed");
         }
     }
 
