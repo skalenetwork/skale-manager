@@ -45,7 +45,7 @@ contract NodesFunctionality is Permissions, INodesFunctionality {
         uint gasSpend
     );
 
-    // informs that owner withdrawn the Node's deposit
+    // informs that node is fully finished quiting from the system
     event ExitCompleted(
         uint nodeIndex,
         address owner,

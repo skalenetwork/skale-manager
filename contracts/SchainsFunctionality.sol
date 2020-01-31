@@ -218,15 +218,16 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
         SchainsData schainsData = SchainsData(contractManager.getContract("SchainsData"));
         StringUtils stringUtils = StringUtils(contractManager.getContract("StringUtils"));
         bytes32[] memory schains = schainsData.getActiveSchains(nodeIndex);
-        require(schains.length > 0, "There are no running Schains on the Node");
         for (uint i = 0; i < schains.length; i++) {
             SchainsData.Rotation memory rotation = schainsData.getRotation(schains[i]);
+            if (rotation.inRotation && rotation.nodeIndex == nodeIndex) {
+                continue;
+            }
             string memory schainName = schainsData.getSchainName(schains[i]);
             string memory revertMessage = stringUtils.strConcat("You cannot rotate on Schain ", schainName);
             revertMessage = stringUtils.strConcat(revertMessage, ", occupied by Node ");
             revertMessage = stringUtils.strConcat(revertMessage, stringUtils.uint2str(rotation.nodeIndex));
             require(
-                (rotation.inRotation && rotation.nodeIndex == nodeIndex) ||
                 !rotation.inRotation ||
                 rotation.finishedRotation < now,
                 revertMessage);

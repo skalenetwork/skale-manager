@@ -651,7 +651,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
         });
     });
 
-    describe("when 16 nodes and 2 schains and 2 additional nodes created", async () => {
+    describe("when 4 nodes, 2 schains and 2 additional nodes created", async () => {
         const ACTIVE = 0;
         const LEAVING = 1;
         const LEFT = 2;
@@ -712,13 +712,15 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
 
         it("should rotate 2 nodes consistently", async () => {
             await skaleManager.nodeExit(0, {from: validator});
+            await skaleManager.nodeExit(0, {from: holder})
+                .should.be.eventually.rejectedWith("Node does not exist for message sender");
             await skaleManager.nodeExit(1, {from: validator})
-            .should.be.eventually.rejectedWith("You cannot rotate on Schain d3, occupied by Node 0");
+                .should.be.eventually.rejectedWith("You cannot rotate on Schain d3, occupied by Node 0");
             await skaleManager.nodeExit(0, {from: validator});
             nodeStatus = (await nodesData.getNodeStatus(0)).toNumber();
             assert.equal(nodeStatus, LEFT);
             await skaleManager.nodeExit(0, {from: validator})
-                .should.be.eventually.rejectedWith("There are no running Schains on the Node");
+                .should.be.eventually.rejectedWith("Node is not Leaving");
 
             nodeStatus = (await nodesData.getNodeStatus(1)).toNumber();
             assert.equal(nodeStatus, ACTIVE);
@@ -729,7 +731,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
             nodeStatus = (await nodesData.getNodeStatus(1)).toNumber();
             assert.equal(nodeStatus, LEFT);
             await skaleManager.nodeExit(1, {from: validator})
-                .should.be.eventually.rejectedWith("There are no running Schains on the Node");
+                .should.be.eventually.rejectedWith("Node is not Leaving");
         });
 
         it("should allow to rotate if occupied node didn't rotated for 12 hours", async () => {
