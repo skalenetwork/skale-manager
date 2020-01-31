@@ -11,6 +11,7 @@ interface ISchainsFunctionalityInternal {
     function deleteGroup(bytes32 groupIndex) external;
     function selectNodeToGroup(bytes32 groupIndex) external;
     function removeNodeFromSchain(uint nodeIndex, bytes32 groupHash) external;
+    function removeNodeFromExceptions(bytes32 groupHash, uint nodeIndex) external;
     function excludeNodeFromSchain(uint nodeIndex, bytes32 groupHash) external;
     function isEnoughNodes(bytes32 groupIndex) external view returns (uint[] memory);
 }

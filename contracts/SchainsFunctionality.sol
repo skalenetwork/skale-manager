@@ -157,6 +157,7 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
                 schainIndex < ISchainsData(dataAddress).getLengthOfSchainsForNode(nodesInGroup[i]),
                 "Some Node does not contain given Schain");
             ISchainsFunctionalityInternal(schainsFunctionalityInternalAddress).removeNodeFromSchain(nodesInGroup[i], schainId);
+            ISchainsFunctionalityInternal(schainsFunctionalityInternalAddress).removeNodeFromExceptions(schainId, nodesInGroup[i]);
             addSpace(nodesInGroup[i], partOfNode);
         }
         ISchainsFunctionalityInternal(schainsFunctionalityInternalAddress).deleteGroup(schainId);
@@ -182,6 +183,7 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
                 schainIndex < ISchainsData(dataAddress).getLengthOfSchainsForNode(nodesInGroup[i]),
                 "Some Node does not contain given Schain");
             ISchainsFunctionalityInternal(schainsFunctionalityInternalAddress).removeNodeFromSchain(nodesInGroup[i], schainId);
+            ISchainsFunctionalityInternal(schainsFunctionalityInternalAddress).removeNodeFromExceptions(schainId, nodesInGroup[i]);
             addSpace(nodesInGroup[i], partOfNode);
         }
         ISchainsFunctionalityInternal(schainsFunctionalityInternalAddress).deleteGroup(schainId);
