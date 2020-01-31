@@ -198,12 +198,6 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
         return length;
     }
 
-    event Log (
-        uint a,
-        uint b
-    );
-
-
     /**
      * @dev generateGroup - generates Group for Schain
      * @param groupIndex - index of Group
@@ -221,7 +215,6 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
         nodesInGroup = new uint[](groupsData.getRecommendedNumberOfNodes(groupIndex));
 
         uint[] memory possibleNodes = this.isEnoughNodes(groupIndex);
-        emit Log(possibleNodes.length, nodesInGroup.length);
         require(possibleNodes.length >= nodesInGroup.length, "Not enough nodes to create Schain");
         uint ignoringTail = 0;
         uint random = uint(keccak256(abi.encodePacked(uint(blockhash(block.number - 1)), groupIndex)));
