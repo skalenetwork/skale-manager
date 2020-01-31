@@ -183,11 +183,6 @@ contract("NodesFunctionality", ([owner, validator]) => {
 
             await nodesFunctionality.initExit(validator, 0);
 
-            await nodesFunctionality.completeExit(validator, 0)
-                .should.be.eventually.rejectedWith("Leaving period has not expired");
-
-            skipTime(web3, 5);
-
             await nodesFunctionality.completeExit(validator, 0);
 
         });
@@ -252,11 +247,6 @@ contract("NodesFunctionality", ([owner, validator]) => {
 
             await nodesFunctionality.initExit(validator, 0);
 
-            await nodesFunctionality.completeExit(validator, 0)
-                .should.be.eventually.rejectedWith("Leaving period has not expired");
-
-            skipTime(web3, 5);
-
             await nodesFunctionality.completeExit(validator, 0);
         });
 
@@ -268,11 +258,6 @@ contract("NodesFunctionality", ([owner, validator]) => {
                 .should.be.eventually.rejectedWith("Node is not Leaving");
 
             await nodesFunctionality.initExit(validator, 1);
-
-            await nodesFunctionality.completeExit(validator, 1)
-                .should.be.eventually.rejectedWith("Leaving period has not expired");
-
-            skipTime(web3, 5);
 
             await nodesFunctionality.completeExit(validator, 1);
         });
