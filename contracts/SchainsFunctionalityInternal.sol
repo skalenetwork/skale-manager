@@ -114,6 +114,11 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
         ISchainsData(schainsDataAddress).removeSchainForNode(nodeIndex, groupIndex);
     }
 
+    function removeNodeFromExceptions(bytes32 groupHash, uint nodeIndex) external allow(executorName) {
+        address schainsDataAddress = contractManager.contracts(keccak256(abi.encodePacked("SchainsData")));
+        IGroupsData(schainsDataAddress).removeExceptionNode(groupHash, nodeIndex);
+    }
+
     function isEnoughNodes(bytes32 groupIndex) external view returns (uint[] memory result) {
         IGroupsData groupsData = IGroupsData(contractManager.contracts(keccak256(abi.encodePacked(dataName))));
         INodesData nodesData = INodesData(contractManager.contracts(keccak256(abi.encodePacked("NodesData"))));

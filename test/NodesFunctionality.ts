@@ -183,7 +183,7 @@ contract("NodesFunctionality", ([owner, validator]) => {
                 .should.be.eventually.rejectedWith("Node does not exist for message sender");
 
             await nodesFunctionality.completeExit(validator, 0)
-                .should.be.eventually.rejectedWith("Node is no Leaving");
+                .should.be.eventually.rejectedWith("Node is not Leaving");
 
             await nodesFunctionality.initExit(validator, 0);
 
@@ -252,7 +252,7 @@ contract("NodesFunctionality", ([owner, validator]) => {
             //     .should.be.eventually.rejectedWith("Validator with such address doesn't exist");
 
             await nodesFunctionality.completeExit(validator, 0)
-                .should.be.eventually.rejectedWith("Node is no Leaving");
+                .should.be.eventually.rejectedWith("Node is not Leaving");
 
             await nodesFunctionality.initExit(validator, 0);
 
@@ -269,7 +269,7 @@ contract("NodesFunctionality", ([owner, validator]) => {
             //     .should.be.eventually.rejectedWith("Validator with such address doesn't exist");
 
             await nodesFunctionality.completeExit(validator, 1)
-                .should.be.eventually.rejectedWith("Node is no Leaving");
+                .should.be.eventually.rejectedWith("Node is not Leaving");
 
             await nodesFunctionality.initExit(validator, 1);
 
