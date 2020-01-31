@@ -114,6 +114,11 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
         ISchainsData(schainsDataAddress).removeSchainForNode(nodeIndex, groupIndex);
     }
 
+    function removeNodeFromExceptions(bytes32 groupHash, uint nodeIndex) external allow(executorName) {
+        address schainsDataAddress = contractManager.contracts(keccak256(abi.encodePacked("SchainsData")));
+        IGroupsData(schainsDataAddress).removeExceptionNode(groupHash, nodeIndex);
+    }
+
     function isEnoughNodes(bytes32 groupIndex) external view returns (uint[] memory result) {
         IGroupsData groupsData = IGroupsData(contractManager.contracts(keccak256(abi.encodePacked(dataName))));
         INodesData nodesData = INodesData(contractManager.contracts(keccak256(abi.encodePacked("NodesData"))));
@@ -193,12 +198,6 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
         return length;
     }
 
-    event Log (
-        uint a,
-        uint b
-    );
-
-
     /**
      * @dev generateGroup - generates Group for Schain
      * @param groupIndex - index of Group
@@ -216,7 +215,6 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
         nodesInGroup = new uint[](groupsData.getRecommendedNumberOfNodes(groupIndex));
 
         uint[] memory possibleNodes = this.isEnoughNodes(groupIndex);
-        emit Log(possibleNodes.length, nodesInGroup.length);
         require(possibleNodes.length >= nodesInGroup.length, "Not enough nodes to create Schain");
         uint ignoringTail = 0;
         uint random = uint(keccak256(abi.encodePacked(uint(blockhash(block.number - 1)), groupIndex)));

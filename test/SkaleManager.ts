@@ -22,12 +22,12 @@ import { ConstantsHolderContract,
          SkaleManagerInstance,
          SkaleTokenContract,
          SkaleTokenInstance,
+         StringUtilsContract,
+         StringUtilsInstance,
          ValidatorsDataContract,
          ValidatorsDataInstance,
          ValidatorsFunctionalityContract,
-         ValidatorsFunctionalityInstance,
-         StringUtilsContract,
-         StringUtilsInstance } from "../types/truffle-contracts";
+         ValidatorsFunctionalityInstance } from "../types/truffle-contracts";
 
 import { gasMultiplier } from "./utils/command_line";
 import { skipTime } from "./utils/time";

@@ -45,7 +45,7 @@ contract NodesFunctionality is Permissions, INodesFunctionality {
         uint gasSpend
     );
 
-    // informs that node is fully finished quiting from the system
+    // informs that node is fully finished quitting from the system
     event ExitCompleted(
         uint nodeIndex,
         address owner,
@@ -53,7 +53,7 @@ contract NodesFunctionality is Permissions, INodesFunctionality {
         uint gasSpend
     );
 
-    // informs that owner starts the procedure of quiting the Node from the system
+    // informs that owner starts the procedure of quitting the Node from the system
     event ExitInited(
         uint nodeIndex,
         address owner,
@@ -146,7 +146,7 @@ contract NodesFunctionality is Permissions, INodesFunctionality {
     }
 
     /**
-     * @dev initExit - initiate a procedure of quiting the system
+     * @dev initExit - initiate a procedure of quitting the system
      * function could be only run by SkaleManager
      * @param from - owner of Node
      * @param nodeIndex - index of Node
@@ -170,7 +170,7 @@ contract NodesFunctionality is Permissions, INodesFunctionality {
     }
 
     /**
-     * @dev completeExit - finish a procedure of quiting the system
+     * @dev completeExit - finish a procedure of quitting the system
      * function could be run only by SkaleMManager
      * @param from - owner of Node
      * @param nodeIndex - index of Node
