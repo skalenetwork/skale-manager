@@ -317,10 +317,11 @@ contract SkaleDKG is Permissions {
         emit BadGuy(badNode);
         emit FailedDKG(groupIndex);
         if (schainsFunctionalityInternal.isAnyFreeNode(groupIndex)) {
-            schainsFunctionality.rotateNode(
+            uint newNode = schainsFunctionality.rotateNode(
                 badNode,
                 groupIndex
             );
+            emit NewGuy(newNode);
             delete channels[groupIndex];
             this.openChannel(groupIndex);
         } else {

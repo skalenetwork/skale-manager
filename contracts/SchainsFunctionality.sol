@@ -71,6 +71,11 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
         uint newNode
     );
 
+    event NodeAdded(
+        bytes32 groupIndex,
+        uint newNode
+    );
+
     string executorName;
     string dataName;
 
@@ -241,7 +246,9 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
         SchainsFunctionalityInternal schainsFunctionalityInternal = SchainsFunctionalityInternal(
             contractManager.getContract("SchainsFunctionalityInternal"));
         require(schainsFunctionalityInternal.isAnyFreeNode(schainId), "No any free Nodes for rotation");
-        schainsFunctionalityInternal.selectNodeToGroup(schainId);
+        uint newNodeIndex = schainsFunctionalityInternal.selectNodeToGroup(schainId);
+        emit NodeAdded(schainId, newNodeIndex);
+
     }
 
     /**
