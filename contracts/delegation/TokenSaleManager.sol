@@ -38,11 +38,6 @@ contract TokenSaleManager is ITokenSaleManager, Permissions, IERC777Recipient {
     mapping (address => uint) approved;
     uint totalApproved;
 
-    constructor(address _contractManager) public {
-        Permissions.initialize(_contractManager);
-        _erc1820.setInterfaceImplementer(address(this), keccak256("ERC777TokensRecipient"), address(this));
-    }
-
     /// @notice Allocates values for `walletAddresses`
     function approve(address[] calldata walletAddress, uint[] calldata value) external {
         require(isOwner() || _msgSender() == seller, "Not authorized");
@@ -81,9 +76,14 @@ contract TokenSaleManager is ITokenSaleManager, Permissions, IERC777Recipient {
 
     }
 
+    function initialize(address _contractManager) public {
+        Permissions.initialize(_contractManager);
+        _erc1820.setInterfaceImplementer(address(this), keccak256("ERC777TokensRecipient"), address(this));
+    }
+
     // internal
 
-    function getBalance() internal returns(uint balance) {
+    function getBalance() internal view returns(uint balance) {
         return IERC20(contractManager.getContract("SkaleToken")).balanceOf(address(this));
     }
 }

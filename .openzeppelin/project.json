@@ -2,7 +2,7 @@
   "manifestVersion": "2.2",
   "contracts": {
     "ContractManager": "ContractManager",
-    "ValidatorService": "ValidatorService"
+    "DelegationController": "DelegationController"
   },
   "dependencies": {
     "@openzeppelin/contracts-ethereum-package": "^2.4.0"

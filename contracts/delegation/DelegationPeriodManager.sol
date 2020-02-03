@@ -25,13 +25,6 @@ import "../Permissions.sol";
 contract DelegationPeriodManager is Permissions {
     mapping (uint => uint) public stakeMultipliers;
 
-    constructor(address newContractsAddress) public {
-        Permissions.initialize(newContractsAddress);
-        stakeMultipliers[3] = 100;
-        stakeMultipliers[6] = 150;
-        stakeMultipliers[12] = 200;
-    }
-
     function isDelegationPeriodAllowed(uint monthsCount) external view returns (bool) {
         return stakeMultipliers[monthsCount] != 0 ? true : false;
     }
@@ -43,5 +36,12 @@ contract DelegationPeriodManager is Permissions {
     function removeDelegationPeriod(uint monthsCount) external onlyOwner {
         // remove only if there is no guys that stacked tokens for this period
         stakeMultipliers[monthsCount] = 0;
+    }
+
+    function initialize(address _contractsAddress) public {
+        Permissions.initialize(_contractsAddress);
+        stakeMultipliers[3] = 100;
+        stakeMultipliers[6] = 150;
+        stakeMultipliers[12] = 200;
     }
 }

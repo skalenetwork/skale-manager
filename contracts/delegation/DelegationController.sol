@@ -55,10 +55,6 @@ contract DelegationController is Permissions {
         _;
     }
 
-    constructor(address newContractsAddress) public {
-        Permissions.initialize(newContractsAddress);
-    }
-
     function getDelegation(uint delegationId) external view checkDelegationExists(delegationId) returns (Delegation memory) {
         return delegations[delegationId];
     }
@@ -198,6 +194,7 @@ contract DelegationController is Permissions {
         return delegationsValidator;
     }
 
-
-
+    function initialize(address _contractsAddress) public {
+        Permissions.initialize(_contractsAddress);
+    }
 }

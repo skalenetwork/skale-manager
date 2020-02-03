@@ -33,11 +33,6 @@ import "./TokenState.sol";
 
 contract DelegationRequestManager is Permissions {
 
-
-    constructor(address newContractsAddress) public {
-        Permissions.initialize(newContractsAddress);
-    }
-
     function createRequest(
         address holder,
         uint validatorId,
@@ -92,9 +87,6 @@ contract DelegationRequestManager is Permissions {
         DelegationController delegationController = DelegationController(
             contractManager.getContract("DelegationController")
         );
-        ValidatorService validatorService = ValidatorService(
-            contractManager.getContract("ValidatorService")
-        );
         DelegationController.Delegation memory delegation = delegationController.getDelegation(delegationId);
         require(holderAddress == delegation.holder,"Only token holders can cancel delegation request");
         require(
@@ -125,4 +117,7 @@ contract DelegationRequestManager is Permissions {
         tokenState.accept(delegationId);
     }
 
+    function initialize(address _contractsAddress) public {
+        Permissions.initialize(_contractsAddress);
+    }
 }

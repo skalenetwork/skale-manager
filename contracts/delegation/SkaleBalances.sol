@@ -35,11 +35,6 @@ contract SkaleBalances is Permissions, IERC777Recipient {
     mapping (address => uint) private _timeLimit;
     bool private _lockBounty = true;
 
-    constructor(address newContractsAddress) public {
-        Permissions.initialize(newContractsAddress);
-        _erc1820.setInterfaceImplementer(address(this), keccak256("ERC777TokensRecipient"), address(this));
-    }
-
     function withdrawBalance(address from, address to, uint amountOfTokens) external allow("DelegationService") {
         if (_timeLimit[from] != 0) {
             require(_timeLimit[from] <= now, "Bounty is locked");
@@ -54,16 +49,17 @@ contract SkaleBalances is Permissions, IERC777Recipient {
     }
 
     function tokensReceived(
-        address operator,
-        address from,
+        address,
+        address,
         address to,
         uint256 amount,
         bytes calldata userData,
-        bytes calldata operatorData
+        bytes calldata
     )
         external
         allow("SkaleToken")
     {
+        require(to == address(this), "Incorrect receiver");
         address recipient = abi.decode(userData, (address));
         stashBalance(recipient, amount);
     }
@@ -82,6 +78,11 @@ contract SkaleBalances is Permissions, IERC777Recipient {
                 _timeLimit[wallet] = timeLimit;
             }
         }
+    }
+
+    function initialize(address _contractsAddress) public {
+        Permissions.initialize(_contractsAddress);
+        _erc1820.setInterfaceImplementer(address(this), keccak256("ERC777TokensRecipient"), address(this));
     }
 
     // private
