@@ -141,7 +141,7 @@ async function deploy(deployer, network) {
         await contractManagerInstance.setContractsAddress("Pricing", Pricing.address).then(function(res) {
             console.log("Contract Pricing with address", Pricing.address, "registred in Contract Manager");
         });
-        await deployer.deploy(StringUtils, contractManagerInstance.address, {gas: gasLimit * gas_multiplier});
+        await deployer.deploy(StringUtils, {gas: gasLimit * gas_multiplier});
         await contractManagerInstance.setContractsAddress("StringUtils", StringUtils.address).then(function(res) {
             console.log("Contract StringUtils with address", StringUtils.address, "registred in Contract Manager");
         });
