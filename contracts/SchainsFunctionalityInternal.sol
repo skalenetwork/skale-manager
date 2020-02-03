@@ -152,6 +152,7 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
                 return true;
             }
         }
+        return false;
     }
 
     /**
