@@ -159,7 +159,7 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
      * @param groupIndex - hash of name of Schain
      * @return nodeIndex - global index of Node
      */
-    function selectNodeToGroup(bytes32 groupIndex) external allow(executorName) {
+    function selectNodeToGroup(bytes32 groupIndex) external allow(executorName) returns (uint) {
         IGroupsData groupsData = IGroupsData(contractManager.getContract(dataName));
         ISchainsData schainsData = ISchainsData(contractManager.getContract(dataName));
         // INodesData nodesData = INodesData(contractManager.contracts(keccak256(abi.encodePacked("NodesData"))));
@@ -179,6 +179,7 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
         schainsData.addSchainForNode(nodeIndex, groupIndex);
         groupsData.setException(groupIndex, nodeIndex);
         groupsData.setNodeInGroup(groupIndex, nodeIndex);
+        return nodeIndex;
     }
 
     /**

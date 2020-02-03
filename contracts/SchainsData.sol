@@ -48,8 +48,8 @@ contract SchainsData is ISchainsData, GroupsData {
     */
     struct Rotation {
         uint nodeIndex;
-        uint finishedRotation;
-        bool inRotation;
+        uint newNodeIndex;
+        uint freezeUntil;
     }
 
     struct LeavingHistory {
@@ -229,13 +229,12 @@ contract SchainsData is ISchainsData, GroupsData {
 
     function startRotation(bytes32 schainIndex, uint nodeIndex) external {
         rotations[schainIndex].nodeIndex = nodeIndex;
-        rotations[schainIndex].finishedRotation = now + 12 hours;
-        rotations[schainIndex].inRotation = true;
+        rotations[schainIndex].freezeUntil = now + 12 hours;
     }
 
-    function finishRotation(bytes32 schainIndex, uint nodeIndex) external {
-        rotations[schainIndex].inRotation = false;
-        leavingHistory[nodeIndex].push(LeavingHistory(schainIndex, rotations[schainIndex].finishedRotation));
+    function finishRotation(bytes32 schainIndex, uint nodeIndex, uint newNodeIndex) external {
+        leavingHistory[nodeIndex].push(LeavingHistory(schainIndex, now + 12 hours));
+        rotations[schainIndex].newNodeIndex = newNodeIndex;
     }
 
     function getRotation(bytes32 schainIndex) external view returns (Rotation memory) {

@@ -192,12 +192,12 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
         emit SchainDeleted(from, name, schainId);
     }
 
-    function exitNodeFromSchains(uint nodeIndex) external allow(executorName) returns (bool) {
+    function exitFromSchain(uint nodeIndex) external allow(executorName) returns (bool) {
         SchainsData schainsData = SchainsData(contractManager.getContract(dataName));
         bytes32 schainId = schainsData.getActiveSchain(nodeIndex);
         require(this.checkRotation(schainId), "No any free Nodes for rotating");
-        this.rotateNode(nodeIndex, schainId);
-        schainsData.finishRotation(schainId, nodeIndex);
+        uint newNodeIndex = this.rotateNode(nodeIndex, schainId);
+        schainsData.finishRotation(schainId, nodeIndex, newNodeIndex);
         return schainsData.getActiveSchain(nodeIndex) == bytes32(0) ? true : false;
     }
 
@@ -209,11 +209,11 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
         return schainsFunctionalityInternal.isAnyFreeNode(schainId);
     }
 
-    function rotateNode(uint nodeIndex, bytes32 schainId) external allowTwo("SkaleDKG", "SchainsFunctionality") {
+    function rotateNode(uint nodeIndex, bytes32 schainId) external allowTwo("SkaleDKG", "SchainsFunctionality") returns (uint) {
         SchainsFunctionalityInternal schainsFunctionalityInternal = SchainsFunctionalityInternal(
             contractManager.getContract("SchainsFunctionalityInternal"));
         schainsFunctionalityInternal.removeNodeFromSchain(nodeIndex, schainId);
-        schainsFunctionalityInternal.selectNodeToGroup(schainId);
+        return schainsFunctionalityInternal.selectNodeToGroup(schainId);
     }
 
     function freezeSchains(uint nodeIndex) external allow(executorName) {
@@ -222,17 +222,14 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
         bytes32[] memory schains = schainsData.getActiveSchains(nodeIndex);
         for (uint i = 0; i < schains.length; i++) {
             SchainsData.Rotation memory rotation = schainsData.getRotation(schains[i]);
-            if (rotation.inRotation && rotation.nodeIndex == nodeIndex) {
+            if (rotation.nodeIndex == nodeIndex && now < rotation.freezeUntil) {
                 continue;
             }
             string memory schainName = schainsData.getSchainName(schains[i]);
             string memory revertMessage = stringUtils.strConcat("You cannot rotate on Schain ", schainName);
             revertMessage = stringUtils.strConcat(revertMessage, ", occupied by Node ");
             revertMessage = stringUtils.strConcat(revertMessage, stringUtils.uint2str(rotation.nodeIndex));
-            require(
-                !rotation.inRotation ||
-                rotation.finishedRotation < now,
-                revertMessage);
+            require(rotation.freezeUntil < now, revertMessage);
             schainsData.startRotation(schains[i], nodeIndex);
         }
     }

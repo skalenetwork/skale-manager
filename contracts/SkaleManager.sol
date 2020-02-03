@@ -90,7 +90,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
         }
         bool completed;
         if (schainsData.getActiveSchain(nodeIndex) != bytes32(0)) {
-            completed = schainsFunctionality.exitNodeFromSchains(nodeIndex);
+            completed = schainsFunctionality.exitFromSchain(nodeIndex);
         } else {
             completed = true;
         }
