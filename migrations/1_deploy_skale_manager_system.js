@@ -92,76 +92,116 @@ async function deploy(deployer, networkName, accounts) {
     
     const options = await ConfigManager.initNetworkConfiguration({ network: networkName, from: accounts[0] });
 
-    add({ contractsData: [
-        { name: 'ContractManager', alias: 'ContractManager' },
-        { name: 'DelegationController', alias: 'DelegationController' }
-        // { name: 'DelegationPeriodManager', alias: 'DelegationPeriodManager' },
-        // { name: 'DelegationRequestManager', alias: 'DelegationRequestManager' },
-        // { name: 'DelegationService', alias: 'DelegationService' },
-        // { name: 'Distributor', alias: 'Distributor' },
-        // { name: 'SkaleBalances', alias: 'SkaleBalances' },
-        // { name: 'TimeHelpers', alias: 'TimeHelpers' },
-        // { name: 'TokenSaleManager', alias: 'TokenSaleManager' },
-        // { name: 'TokenState', alias: 'TokenState' },
-        // { name: 'ValidatorService', alias: 'ValidatorService' }
-    ] });
+    const contracts = [
+        "ContractManager",
+        "DelegationController",
+        "DelegationPeriodManager",
+        "DelegationRequestManager",
+        "DelegationService",
+        "Distributor",
+        "SkaleBalances",
+        "TimeHelpers",
+        "TokenSaleManager",
+        "TokenState",
+        "ValidatorService"
+    ]
+
+    contractsData = [];
+    for (const contract of contracts) {
+        contractsData.push({name: contract, alias: contract});
+    }    
+
+    add({ contractsData: contractsData });
 
     // Push implementation contracts to the network
     await push(options);
 
     await create(Object.assign({ contractAlias: 'ContractManager', methodName: 'initialize', methodArgs: [] }, options));
     const contractManager = await ContractManager.deployed();
-    console.log("CM address: " + ContractManager.address);
+    // const contractManager = ContractManager.at(ContractManager.address);
+    // console.log("CM address: " + ContractManager.address);
+    // console.log("сM address: " + contractManager.address);
 
-    await create(Object.assign({ contractAlias: 'DelegationController', methodName: 'initialize', methodArgs: [ContractManager.address] }, options));
-    await contractManager.setContractsAddress("DelegationController", DelegationController.address).then(function(res) {
-        console.log("Contract DelegationController with address", DelegationController.address, "registred in Contract Manager");
-    });
+    // deploy upgradable contracts
+
+    for (const contract of contracts) {
+        if (contract == "ContractManager") {
+            console.log("CM address: " + ContractManager.address);
+        } else if (contract == "TimeHelpers") {
+            await create(Object.assign({ contractAlias: contract }, options));
+        } else {
+            await create(Object.assign({ contractAlias: contract, methodName: 'initialize', methodArgs: [ContractManager.address] }, options));
+        }
+    }
+
+    // await create(Object.assign({ contractAlias: 'DelegationController', methodName: 'initialize', methodArgs: [ContractManager.address] }, options));
+    // // await contractManager.setContractsAddress("DelegationController", DelegationController.address).then(function(res) {
+    // //     console.log("Contract DelegationController with address", DelegationController.address, "registred in Contract Manager");
+    // // });    
 
     // await create(Object.assign({ contractAlias: 'DelegationPeriodManager', methodName: 'initialize', methodArgs: [ContractManager.address] }, options));
-    // await contractManager.setContractsAddress("DelegationPeriodManager", DelegationPeriodManager.address).then(function(res) {
-    //     console.log("Contract DelegationPeriodManager with address", DelegationPeriodManager.address, "registred in Contract Manager");
-    // });
+    // // await contractManager.setContractsAddress("DelegationPeriodManager", DelegationPeriodManager.address).then(function(res) {
+    // //     console.log("Contract DelegationPeriodManager with address", DelegationPeriodManager.address, "registred in Contract Manager");
+    // // });
 
     // await create(Object.assign({ contractAlias: 'DelegationRequestManager', methodName: 'initialize', methodArgs: [ContractManager.address] }, options));
-    // await contractManager.setContractsAddress("DelegationRequestManager", DelegationRequestManager.address).then(function(res) {
-    //     console.log("Contract DelegationRequestManager with address", DelegationRequestManager.address, "registred in Contract Manager");
-    // });
+    // // await contractManager.setContractsAddress("DelegationRequestManager", DelegationRequestManager.address).then(function(res) {
+    // //     console.log("Contract DelegationRequestManager with address", DelegationRequestManager.address, "registred in Contract Manager");
+    // // });
 
     // await create(Object.assign({ contractAlias: 'DelegationService', methodName: 'initialize', methodArgs: [ContractManager.address] }, options));
-    // await contractManager.setContractsAddress("DelegationService", DelegationService.address).then(function(res) {
-    //     console.log("Contract DelegationService with address", DelegationService.address, "registred in Contract Manager");
-    // });
+    // // await contractManager.setContractsAddress("DelegationService", DelegationService.address).then(function(res) {
+    // //     console.log("Contract DelegationService with address", DelegationService.address, "registred in Contract Manager");
+    // // });
 
     // await create(Object.assign({ contractAlias: 'Distributor', methodName: 'initialize', methodArgs: [ContractManager.address] }, options));
-    // await contractManager.setContractsAddress("Distributor", Distributor.address).then(function(res) {
-    //     console.log("Contract Distributor with address", Distributor.address, "registred in Contract Manager");
-    // });
+    // // await contractManager.setContractsAddress("Distributor", Distributor.address).then(function(res) {
+    // //     console.log("Contract Distributor with address", Distributor.address, "registred in Contract Manager");
+    // // });
 
     // await create(Object.assign({ contractAlias: 'SkaleBalances', methodName: 'initialize', methodArgs: [ContractManager.address] }, options));
-    // await contractManager.setContractsAddress("SkaleBalances", SkaleBalances.address).then(function(res) {
-    //     console.log("Contract SkaleBalances with address", SkaleBalances.address, "registred in Contract Manager");
-    // });
+    // // await contractManager.setContractsAddress("SkaleBalances", SkaleBalances.address).then(function(res) {
+    // //     console.log("Contract SkaleBalances with address", SkaleBalances.address, "registred in Contract Manager");
+    // // });
 
     // await create(Object.assign({ contractAlias: 'TimeHelpers' }, options));
-    // await contractManager.setContractsAddress("TimeHelpers", TimeHelpers.address).then(function(res) {
-    //     console.log("Contract TimeHelpers with address", TimeHelpers.address, "registred in Contract Manager");
-    // });
+    // // await contractManager.setContractsAddress("TimeHelpers", TimeHelpers.address).then(function(res) {
+    // //     console.log("Contract TimeHelpers with address", TimeHelpers.address, "registred in Contract Manager");
+    // // });
 
     // await create(Object.assign({ contractAlias: 'TokenSaleManager', methodName: 'initialize', methodArgs: [ContractManager.address] }, options));
-    // await contractManager.setContractsAddress("TokenSaleManager", TokenSaleManager.address).then(function(res) {
-    //     console.log("Contract TokenSaleManager with address", TokenSaleManager.address, "registred in Contract Manager");
-    // });
+    // // await contractManager.setContractsAddress("TokenSaleManager", TokenSaleManager.address).then(function(res) {
+    // //     console.log("Contract TokenSaleManager with address", TokenSaleManager.address, "registred in Contract Manager");
+    // // });
 
-    // await create(Object.assign({ contractAlias: 'TokenSaleManager', methodName: 'initialize', methodArgs: [ContractManager.address] }, options));
-    // await contractManager.setContractsAddress("TokenSaleManager", TokenSaleManager.address).then(function(res) {
-    //     console.log("Contract TokenSaleManager with address", TokenSaleManager.address, "registred in Contract Manager");
-    // });
+    // await create(Object.assign({ contractAlias: 'TokenState', methodName: 'initialize', methodArgs: [ContractManager.address] }, options));
+    // // await contractManager.setContractsAddress("TokenSaleManager", TokenSaleManager.address).then(function(res) {
+    // //     console.log("Contract TokenSaleManager with address", TokenSaleManager.address, "registred in Contract Manager");
+    // // });
 
     // await create(Object.assign({ contractAlias: 'ValidatorService', methodName: 'initialize', methodArgs: [ContractManager.address] }, options));
-    // await contractManager.setContractsAddress("ValidatorService", ValidatorService.address).then(function(res) {
-    //     console.log("Contract ValidatorService with address", ValidatorService.address, "registred in Contract Manager");
-    // });
+    // // await contractManager.setContractsAddress("ValidatorService", ValidatorService.address).then(function(res) {
+    // //     console.log("Contract ValidatorService with address", ValidatorService.address, "registred in Contract Manager");
+    // // });
+
+    console.log("Register contracts");
+
+    for (const contract of contracts) {
+        for (let delay = 1000;; delay *= 1.618)
+        {
+            try {
+                await eval(contract).deployed();
+                break;
+            } catch (e) {
+                console.log(e);
+                console.log("Wait " + Math.round(delay / 1000) + "s to retry");
+                await sleep(delay);
+            }
+        }
+        await contractManager.setContractsAddress(contract, eval(contract).address).then(function(res) {
+            console.log("Contract", contract, "with address", eval(contract).address, "is registered in Contract Manager");
+        }); 
+    }
 
     console.log("OLOLO");    
 
@@ -392,3 +432,49 @@ async function sendTransaction(web3Inst, account, privateKey, receiverContract) 
 }
 
 module.exports = deploy;
+
+// ------------------------
+
+// async function deploy(options) {
+//     // // Register v0 of MyContract in the zos project
+//     // add({ contractsData: [{ name: 'MyContract_v0', alias: 'MyContract' }] });
+  
+//     // // Push implementation contracts to the network
+//     // await push(options);
+  
+//     // // Create an instance of MyContract, setting initial value to 42
+//     // await create(Object.assign({ contractAlias: 'MyContract', methodName: 'initialize', methodArgs: [42] }, options));
+
+//     add({ contractsData: [
+//         { name: 'ContractManager', alias: 'ContractManager' },
+//         { name: 'DelegationController', alias: 'DelegationController' }
+//         // { name: 'DelegationPeriodManager', alias: 'DelegationPeriodManager' },
+//         // { name: 'DelegationRequestManager', alias: 'DelegationRequestManager' },
+//         // { name: 'DelegationService', alias: 'DelegationService' },
+//         // { name: 'Distributor', alias: 'Distributor' },
+//         // { name: 'SkaleBalances', alias: 'SkaleBalances' },
+//         // { name: 'TimeHelpers', alias: 'TimeHelpers' },
+//         // { name: 'TokenSaleManager', alias: 'TokenSaleManager' },
+//         // { name: 'TokenState', alias: 'TokenState' },
+//         // { name: 'ValidatorService', alias: 'ValidatorService' }
+//     ] });
+
+//     // Push implementation contracts to the network
+//     await push(options);
+
+//     await create(Object.assign({ contractAlias: 'ContractManager', methodName: 'initialize', methodArgs: [] }, options));
+//     const contractManager = await ContractManager.deployed();
+//     console.log("CM address: " + ContractManager.address);
+
+//     await create(Object.assign({ contractAlias: 'DelegationController', methodName: 'initialize', methodArgs: [ContractManager.address] }, options));
+//     await contractManager.setContractsAddress("DelegationController", DelegationController.address).then(function(res) {
+//         console.log("Contract DelegationController with address", DelegationController.address, "registred in Contract Manager");
+//     });
+// }
+
+// module.exports = function(deployer, networkName, accounts) {
+//     deployer.then(async () => {
+//         const { network, txParams } = await ConfigManager.initNetworkConfiguration({ network: networkName, from: accounts[0] })
+//         await deploy({ network, txParams })
+//     })
+// }

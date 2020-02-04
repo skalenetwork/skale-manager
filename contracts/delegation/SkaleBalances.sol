@@ -29,11 +29,11 @@ import "../interfaces/ISkaleToken.sol";
 
 
 contract SkaleBalances is Permissions, IERC777Recipient {
-    IERC1820Registry private _erc1820 = IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
+    IERC1820Registry private _erc1820;
     mapping (address => uint) private _bountyBalances;
     //        wallet => timestamp
     mapping (address => uint) private _timeLimit;
-    bool private _lockBounty = true;
+    bool private _lockBounty;
 
     function withdrawBalance(address from, address to, uint amountOfTokens) external allow("DelegationService") {
         if (_timeLimit[from] != 0) {
@@ -82,6 +82,8 @@ contract SkaleBalances is Permissions, IERC777Recipient {
 
     function initialize(address _contractsAddress) public {
         Permissions.initialize(_contractsAddress);
+        _lockBounty = true;
+        _erc1820 = IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
         _erc1820.setInterfaceImplementer(address(this), keccak256("ERC777TokensRecipient"), address(this));
     }
 

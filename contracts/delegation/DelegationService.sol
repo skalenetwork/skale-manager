@@ -45,7 +45,7 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
         uint validatorId
     );
 
-    IERC1820Registry private _erc1820 = IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
+    IERC1820Registry private _erc1820;
     uint private _launchTimestamp;
 
     function requestUndelegation(uint delegationId) external {
@@ -283,6 +283,7 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
     function initialize(address _contractsAddress) public {
         Permissions.initialize(_contractsAddress);
         _launchTimestamp = now;
+        _erc1820 = IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
         _erc1820.setInterfaceImplementer(address(this), keccak256("ERC777TokensRecipient"), address(this));
     }
 
