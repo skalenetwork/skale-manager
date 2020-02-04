@@ -1,18 +1,15 @@
-import {ConstantsHolderContract,
-        ConstantsHolderInstance,
-        ContractManagerContract,
-        ContractManagerInstance} from "../types/truffle-contracts";
-
-const ContractManager: ContractManagerContract = artifacts.require("./ContractManager");
-const ConstantsHolder: ConstantsHolderContract = artifacts.require("./ConstantsHolder");
+import { ConstantsHolderInstance,
+         ContractManagerInstance } from "../types/truffle-contracts";
+import { deployConstantsHolder } from "./utils/deploy/constantsHolder";
+import { deployContractManager } from "./utils/deploy/contractManager";
 
 contract("ContractManager", ([deployer, user]) => {
   let contractManager: ContractManagerInstance;
   let constantsHolder: ConstantsHolderInstance;
 
   beforeEach(async () => {
-    contractManager = await ContractManager.new({from: deployer});
-    constantsHolder = await ConstantsHolder.new(contractManager.address, {from: deployer});
+    contractManager = await deployContractManager();
+    constantsHolder = await deployConstantsHolder(contractManager);
   });
 
   it("Should deploy", async () => {

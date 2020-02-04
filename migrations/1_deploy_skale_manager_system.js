@@ -187,7 +187,7 @@ async function deploy(deployer, networkName, accounts) {
     console.log("Register contracts");
 
     for (const contract of contracts) {
-        for (let delay = 1000;; delay *= 1.618)
+        for (let delay = 1000; delay < 10 * 1000; delay *= 1.618)
         {
             try {
                 await eval(contract).deployed();
@@ -198,12 +198,26 @@ async function deploy(deployer, networkName, accounts) {
                 await sleep(delay);
             }
         }
-        await contractManager.setContractsAddress(contract, eval(contract).address).then(function(res) {
-            console.log("Contract", contract, "with address", eval(contract).address, "is registered in Contract Manager");
-        }); 
-    }
+        const address = eval(contract).address;
+        let registrationIsNeeded = false;
+        try {
+            registrationIsNeeded = address != await contractManager.getContract(contract);
+        } catch (e) {
+            if (e.message == "Returned error: VM Exception while processing transaction: revert Contract has not been found") {
+                registrationIsNeeded = true;
+            } else {
+                throw e;
+            }                        
+        }   
 
-    console.log("OLOLO");    
+        if (registrationIsNeeded) {
+            await contractManager.setContractsAddress(contract, address).then(function(res) {
+                console.log("Contract", contract, "with address", address, "is registered in Contract Manager");
+            }); 
+        }
+    }  
+
+    console.log("Done");
 
     // await deployer.then(async () => {
     //     console.log("Inside");

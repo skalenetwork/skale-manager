@@ -1,34 +1,29 @@
 import { BigNumber } from "bignumber.js";
-import {
-        ConstantsHolderContract,
-        ConstantsHolderInstance,
-        ContractManagerContract,
-        ContractManagerInstance,
-        MonitorsDataContract,
-        MonitorsDataInstance,
-        MonitorsFunctionalityContract,
-        MonitorsFunctionalityInstance,
-        NodesDataContract,
-        NodesDataInstance,
-        NodesFunctionalityContract,
-        NodesFunctionalityInstance,
-        SkaleDKGContract,
-        SkaleDKGInstance} from "../types/truffle-contracts";
+import { ConstantsHolderInstance,
+         ContractManagerInstance,
+         MonitorsDataContract,
+         MonitorsDataInstance,
+         MonitorsFunctionalityContract,
+         MonitorsFunctionalityInstance,
+         NodesDataContract,
+         NodesDataInstance,
+         NodesFunctionalityInstance,
+         SkaleDKGContract,
+         SkaleDKGInstance } from "../types/truffle-contracts";
 import { gasMultiplier } from "./utils/command_line";
 import { currentTime, skipTime } from "./utils/time";
 
 import chai = require("chai");
 import * as chaiAsPromised from "chai-as-promised";
-import { type } from "os";
+import { deployConstantsHolder } from "./utils/deploy/constantsHolder";
+import { deployContractManager } from "./utils/deploy/contractManager";
+import { deployNodesFunctionality } from "./utils/deploy/nodesFunctionality";
 chai.should();
 chai.use((chaiAsPromised));
 
-const ContractManager: ContractManagerContract = artifacts.require("./ContractManager");
 const MonitorsFunctionality: MonitorsFunctionalityContract = artifacts.require("./MonitorsFunctionality");
-const ConstantsHolder: ConstantsHolderContract = artifacts.require("./ConstantsHolder");
 const MonitorsData: MonitorsDataContract = artifacts.require("./MonitorsData");
 const NodesData: NodesDataContract = artifacts.require("./NodesData");
-const NodesFunctionality: NodesFunctionalityContract = artifacts.require("./NodesFunctionality");
 const SkaleDKG: SkaleDKGContract = artifacts.require("./SkaleDKG");
 
 contract("MonitorsFunctionality", ([owner, validator]) => {
@@ -41,7 +36,7 @@ contract("MonitorsFunctionality", ([owner, validator]) => {
   let skaleDKG: SkaleDKGInstance;
 
   beforeEach(async () => {
-    contractManager = await ContractManager.new({from: owner});
+    contractManager = await deployContractManager();
 
     monitorsFunctionality = await MonitorsFunctionality.new(
       "SkaleManager", "MonitorsData",
@@ -53,20 +48,14 @@ contract("MonitorsFunctionality", ([owner, validator]) => {
       contractManager.address, {from: owner, gas: 8000000 * gasMultiplier});
     await contractManager.setContractsAddress("MonitorsData", monitorsData.address);
 
-    constantsHolder = await ConstantsHolder.new(
-      contractManager.address, {from: owner, gas: 8000000 * gasMultiplier});
-    await contractManager.setContractsAddress("Constants", constantsHolder.address);
-
     nodesData = await NodesData.new(
         5260000,
         contractManager.address,
         {from: owner, gas: 8000000 * gasMultiplier});
     await contractManager.setContractsAddress("NodesData", nodesData.address);
 
-    nodesFunctionality = await NodesFunctionality.new(
-      contractManager.address,
-      {from: owner, gas: 8000000 * gasMultiplier});
-    await contractManager.setContractsAddress("NodesFunctionality", nodesFunctionality.address);
+    constantsHolder = await deployConstantsHolder(contractManager);
+    nodesFunctionality = await deployNodesFunctionality(contractManager);
 
     skaleDKG = await SkaleDKG.new(contractManager.address, {from: owner, gas: 8000000 * gasMultiplier});
     await contractManager.setContractsAddress("SkaleDKG", skaleDKG.address);

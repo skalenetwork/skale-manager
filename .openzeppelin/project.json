@@ -1,7 +1,6 @@
 {
   "manifestVersion": "2.2",
   "contracts": {
-    "ContractManager": "ContractManager",
     "DelegationController": "DelegationController",
     "DelegationPeriodManager": "DelegationPeriodManager",
     "DelegationRequestManager": "DelegationRequestManager",
@@ -11,7 +10,8 @@
     "TimeHelpers": "TimeHelpers",
     "TokenSaleManager": "TokenSaleManager",
     "TokenState": "TokenState",
-    "ValidatorService": "ValidatorService"
+    "ValidatorService": "ValidatorService",
+    "ContractManager": "ContractManager"
   },
   "dependencies": {},
   "name": "skale-manager",
