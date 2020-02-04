@@ -1,0 +1,202 @@
+{
+  "contractName": "ISchainsFunctionalityInternal",
+  "abi": [
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "schainName",
+          "type": "string"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "schainId",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "uint256",
+          "name": "numberOfNodes",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint8",
+          "name": "partOfNode",
+          "type": "uint8"
+        }
+      ],
+      "name": "createGroupForSchain",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "groupIndex",
+          "type": "bytes32"
+        }
+      ],
+      "name": "deleteGroup",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "nodeIndex",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "groupHash",
+          "type": "bytes32"
+        }
+      ],
+      "name": "excludeNodeFromSchain",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "nodeIndex",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "schainId",
+          "type": "bytes32"
+        }
+      ],
+      "name": "findSchainAtSchainsForNode",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "typeOfSchain",
+          "type": "uint256"
+        }
+      ],
+      "name": "getNodesDataFromTypeOfSchain",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint8",
+          "name": "",
+          "type": "uint8"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "groupIndex",
+          "type": "bytes32"
+        }
+      ],
+      "name": "isEnoughNodes",
+      "outputs": [
+        {
+          "internalType": "uint256[]",
+          "name": "",
+          "type": "uint256[]"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "groupHash",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "uint256",
+          "name": "nodeIndex",
+          "type": "uint256"
+        }
+      ],
+      "name": "removeNodeFromExceptions",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "nodeIndex",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "groupHash",
+          "type": "bytes32"
+        }
+      ],
+      "name": "removeNodeFromSchain",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "groupIndex",
+          "type": "bytes32"
+        }
+      ],
+      "name": "selectNodeToGroup",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

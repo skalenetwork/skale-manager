@@ -1,0 +1,11 @@
+{
+  "solc": {
+    "version": "0.5.15",
+    "optimizer": {
+      "enabled": false,
+      "runs": 200
+    },
+    "evmVersion": "petersburg"
+  },
+  "buidlerVersion": "1.0.1"
+}

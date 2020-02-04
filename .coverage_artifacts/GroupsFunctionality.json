@@ -1,0 +1,361 @@
+{
+  "contractName": "GroupsFunctionality",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "newExecutorName",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "newDataName",
+          "type": "string"
+        },
+        {
+          "internalType": "address",
+          "name": "newContractsAddress",
+          "type": "address"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "bytes32",
+          "name": "groupIndex",
+          "type": "bytes32"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "exceptionNodeIndex",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint32",
+          "name": "time",
+          "type": "uint32"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "gasSpend",
+          "type": "uint256"
+        }
+      ],
+      "name": "ExceptionSet",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "bytes32",
+          "name": "groupIndex",
+          "type": "bytes32"
+        },
+        {
+          "indexed": false,
+          "internalType": "bytes32",
+          "name": "groupData",
+          "type": "bytes32"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint32",
+          "name": "time",
+          "type": "uint32"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "gasSpend",
+          "type": "uint256"
+        }
+      ],
+      "name": "GroupAdded",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "bytes32",
+          "name": "groupIndex",
+          "type": "bytes32"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint32",
+          "name": "time",
+          "type": "uint32"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "gasSpend",
+          "type": "uint256"
+        }
+      ],
+      "name": "GroupDeleted",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "bytes32",
+          "name": "groupIndex",
+          "type": "bytes32"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256[]",
+          "name": "nodesInGroup",
+          "type": "uint256[]"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint32",
+          "name": "time",
+          "type": "uint32"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "gasSpend",
+          "type": "uint256"
+        }
+      ],
+      "name": "GroupGenerated",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "bytes32",
+          "name": "groupIndex",
+          "type": "bytes32"
+        },
+        {
+          "indexed": false,
+          "internalType": "bytes32",
+          "name": "groupData",
+          "type": "bytes32"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint32",
+          "name": "time",
+          "type": "uint32"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "gasSpend",
+          "type": "uint256"
+        }
+      ],
+      "name": "GroupUpgraded",
+      "type": "event"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "groupIndex",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "uint256",
+          "name": "newRecommendedNumberOfNodes",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "data",
+          "type": "bytes32"
+        }
+      ],
+      "name": "addGroup",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "c__0x3c783d81",
+          "type": "bytes32"
+        }
+      ],
+      "name": "coverage_0x3c783d81",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "c__0x575eb1ae",
+          "type": "bytes32"
+        }
+      ],
+      "name": "coverage_0x575eb1ae",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "c__0xeca4dd85",
+          "type": "bytes32"
+        }
+      ],
+      "name": "coverage_0xeca4dd85",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "groupIndex",
+          "type": "bytes32"
+        }
+      ],
+      "name": "deleteGroup",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "owner",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "transferOwnership",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "groupIndex",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "uint256",
+          "name": "newRecommendedNumberOfNodes",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "data",
+          "type": "bytes32"
+        }
+      ],
+      "name": "upgradeGroup",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "groupIndex",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "uint256",
+          "name": "signatureX",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "signatureY",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "hashX",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "hashY",
+          "type": "uint256"
+        }
+      ],
+      "name": "verifySignature",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

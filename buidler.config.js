@@ -85,7 +85,8 @@ module.exports = {
           balance: "0xd3c21bcecceda0000000"
         }
       ],
-      gas: 8000000
+      gas: 17592186044415,
+      port: 8555
     },
     coverage: {
       url: 'http://localhost:8555',

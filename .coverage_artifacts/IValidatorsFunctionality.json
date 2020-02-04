@@ -1,0 +1,110 @@
+{
+  "contractName": "IValidatorsFunctionality",
+  "abi": [
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "nodeIndex",
+          "type": "uint256"
+        }
+      ],
+      "name": "addValidator",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "nodeIndex",
+          "type": "uint256"
+        }
+      ],
+      "name": "calculateMetrics",
+      "outputs": [
+        {
+          "internalType": "uint32",
+          "name": "",
+          "type": "uint32"
+        },
+        {
+          "internalType": "uint32",
+          "name": "",
+          "type": "uint32"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "nodeIndex",
+          "type": "uint256"
+        }
+      ],
+      "name": "deleteValidatorByRoot",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "fromValidatorIndex",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "toNodeIndex",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint32",
+          "name": "downtime",
+          "type": "uint32"
+        },
+        {
+          "internalType": "uint32",
+          "name": "latency",
+          "type": "uint32"
+        }
+      ],
+      "name": "sendVerdict",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "nodeIndex",
+          "type": "uint256"
+        }
+      ],
+      "name": "upgradeValidator",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

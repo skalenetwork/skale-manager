@@ -1,0 +1,177 @@
+{
+  "contractName": "IValidatorsData",
+  "abi": [
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "validatorIndex",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "data",
+          "type": "bytes32"
+        }
+      ],
+      "name": "addValidatedNode",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "validatorIndex",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "uint32",
+          "name": "downtime",
+          "type": "uint32"
+        },
+        {
+          "internalType": "uint32",
+          "name": "latency",
+          "type": "uint32"
+        }
+      ],
+      "name": "addVerdict",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "validatorIndex",
+          "type": "bytes32"
+        }
+      ],
+      "name": "getLengthOfMetrics",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "validatorIndex",
+          "type": "bytes32"
+        }
+      ],
+      "name": "getValidatedArray",
+      "outputs": [
+        {
+          "internalType": "bytes32[]",
+          "name": "",
+          "type": "bytes32[]"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "validatorIndex",
+          "type": "bytes32"
+        }
+      ],
+      "name": "removeAllValidatedNodes",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "validatorIndex",
+          "type": "bytes32"
+        }
+      ],
+      "name": "removeAllVerdicts",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "validatorIndex",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "uint256",
+          "name": "indexOfValidatedNode",
+          "type": "uint256"
+        }
+      ],
+      "name": "removeValidatedNode",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "validatorIndex",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "uint256",
+          "name": "numberOfVerdict",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "layer",
+          "type": "uint256"
+        }
+      ],
+      "name": "verdicts",
+      "outputs": [
+        {
+          "internalType": "uint32",
+          "name": "",
+          "type": "uint32"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}
