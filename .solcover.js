@@ -1,6 +1,8 @@
 require('dotenv').config();
 
 module.exports = {    
+    compileCommand: 'npx buidler compile',
+    testCommand: 'npx buidler test',
     skipFiles: ['Migrations.sol', 'thirdparty/', 'interfaces/'],
     providerOptions: {
         "accounts": [
