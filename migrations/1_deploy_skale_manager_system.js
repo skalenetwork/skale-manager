@@ -108,7 +108,8 @@ async function deploy(deployer, networkName, accounts) {
         "ValidatorService",
 
         "ConstantsHolder",
-        "NodesData"
+        "NodesData",
+        "NodesFunctionality"
     ]
 
     contractsData = [];

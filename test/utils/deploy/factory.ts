@@ -7,7 +7,9 @@ function getContract(contractName: string): Truffle.Contract<Truffle.ContractIns
 async function defaultDeploy(contractName: string,
                              contractManager: ContractManagerInstance): Promise<Truffle.ContractInstance> {
     const Contract = getContract(contractName);
-    return await Contract.new(contractManager.address);
+    const instance = await Contract.new(contractManager.address);
+    await instance.initialize(contractManager.address);
+    return instance;
 }
 
 function deployFunctionFactory(contractName: string,

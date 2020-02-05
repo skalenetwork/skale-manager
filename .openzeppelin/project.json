@@ -13,7 +13,8 @@
     "ValidatorService": "ValidatorService",
     "ContractManager": "ContractManager",
     "ConstantsHolder": "ConstantsHolder",
-    "NodesData": "NodesData"
+    "NodesData": "NodesData",
+    "NodesFunctionality": "NodesFunctionality"
   },
   "dependencies": {},
   "name": "skale-manager",
