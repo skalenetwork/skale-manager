@@ -44,6 +44,7 @@ contract NodesData is INodesData, Permissions {
         // uint8 freeSpace;
         // uint indexInSpaceMap;
         //address secondAddress;
+        uint32 finishTime;
         NodeStatus status;
     }
 
@@ -152,6 +153,7 @@ contract NodesData is INodesData, Permissions {
             publicKey: publicKey,
             startDate: uint32(block.timestamp),
             lastRewardDate: uint32(block.timestamp),
+            finishTime: 0,
             status: NodeStatus.Active
         }));
         nodeIndex = nodes.length - 1;
@@ -345,6 +347,10 @@ contract NodesData is INodesData, Permissions {
         nodes[nodeIndex].lastRewardDate = uint32(block.timestamp);
     }
 
+    function changeNodeFinishTime(uint nodeIndex, uint32 time) external {
+        nodes[nodeIndex].finishTime = time;
+    }
+
     /**
      * @dev isNodeExist - checks existence of Node at this address
      * @param from - account address
@@ -385,6 +391,10 @@ contract NodesData is INodesData, Permissions {
 
     function getNodePublicKey(uint nodeIndex) external view returns (bytes memory) {
         return nodes[nodeIndex].publicKey;
+    }
+
+    function getNodeFinishTime(uint nodeIndex) external view returns (uint32) {
+        return nodes[nodeIndex].finishTime;
     }
 
     /**
