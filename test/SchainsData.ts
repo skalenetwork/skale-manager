@@ -53,7 +53,7 @@ contract("SchainsData", ([owner, holder]) => {
     });
 
     it("should initialize schain", async () => {
-        schainsData.initializeSchain("TestSchain", holder, 5, 5);
+        await schainsData.initializeSchain("TestSchain", holder, 5, 5);
 
         const schain: Schain = new Schain(await schainsData.schains(web3.utils.soliditySha3("TestSchain")));
         schain.name.should.be.equal("TestSchain");
@@ -66,7 +66,7 @@ contract("SchainsData", ([owner, holder]) => {
         const schainNameHash = web3.utils.soliditySha3("TestSchain");
 
         beforeEach(async () => {
-            schainsData.initializeSchain("TestSchain", holder, 5, 5);
+            await schainsData.initializeSchain("TestSchain", holder, 5, 5);
         });
 
         it("should register schain index for owner", async () => {

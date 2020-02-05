@@ -102,8 +102,8 @@ contract("NodesData", ([owner, validator]) => {
 
         it("should change node last reward date", async () => {
             skipTime(web3, 5);
-            const currentTime = (await web3.eth.getBlock("latest")).timestamp;
-            await nodesData.changeNodeLastRewardDate(0);
+            const res = await nodesData.changeNodeLastRewardDate(0);
+            const currentTime = (await web3.eth.getBlock(res["receipt"]["blockNumber"])).timestamp;
 
             (await nodesData.nodes(0))[6].should.be.deep.equal(web3.utils.toBN(currentTime));
             await nodesData.getNodeLastRewardDate(0).should.be.eventually.deep.equal(web3.utils.toBN(currentTime));

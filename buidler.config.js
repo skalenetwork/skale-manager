@@ -89,7 +89,8 @@ module.exports = {
       ],
       gas: 17592186044415,
       blockGasLimit: 17592186044415,
-      port: 8555
+      port: 8555,
+      timeout: 300000
     }
   }
 };
