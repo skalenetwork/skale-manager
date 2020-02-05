@@ -51,6 +51,7 @@ contract SchainsData is ISchainsData, GroupsData {
         uint nodeIndex;
         uint newNodeIndex;
         uint freezeUntil;
+        uint rotationCounter;
     }
 
     struct LeavingHistory {
@@ -238,6 +239,7 @@ contract SchainsData is ISchainsData, GroupsData {
         IConstants constants = IConstants(contractManager.getContract("Constants"));
         leavingHistory[nodeIndex].push(LeavingHistory(schainIndex, now + constants.rotationDelay()));
         rotations[schainIndex].newNodeIndex = newNodeIndex;
+        rotations[schainIndex].rotationCounter++;
     }
 
     function getRotation(bytes32 schainIndex) external view returns (Rotation memory) {
