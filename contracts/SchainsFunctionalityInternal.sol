@@ -44,9 +44,8 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
         address newContractsAddress
     )
         public
-        GroupsFunctionality(newExecutorName, newDataName, newContractsAddress)
     {
-
+        GroupsFunctionality.initialize(newExecutorName, newDataName, newContractsAddress);
     }
 
     /**

@@ -15,7 +15,8 @@
     "ConstantsHolder": "ConstantsHolder",
     "NodesData": "NodesData",
     "NodesFunctionality": "NodesFunctionality",
-    "MonitorsData": "MonitorsData"
+    "MonitorsData": "MonitorsData",
+    "MonitorsFunctionality": "MonitorsFunctionality"
   },
   "dependencies": {},
   "name": "skale-manager",

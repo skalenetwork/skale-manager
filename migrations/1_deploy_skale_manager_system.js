@@ -110,7 +110,8 @@ async function deploy(deployer, networkName, accounts) {
         "ConstantsHolder",
         "NodesData",
         "NodesFunctionality",
-        "MonitorsData"
+        "MonitorsData",
+        "MonitorsFunctionality"
     ]
 
     contractsData = [];
@@ -139,6 +140,8 @@ async function deploy(deployer, networkName, accounts) {
             contract = await create(Object.assign({ contractAlias: contractName, methodName: 'initialize', methodArgs: [5260000, contractManager.address] }, options));
         } else if (contractName == "MonitorsData") {
             contract = await create(Object.assign({ contractAlias: contractName, methodName: 'initialize', methodArgs: ["MonitorsFunctionality", contractManager.address] }, options));
+        } else if (contractName == "MonitorsFunctionality") {
+            contract = await create(Object.assign({ contractAlias: contractName, methodName: 'initialize', methodArgs: ["SkaleManager", "MonitorsData", contractManager.address] }, options));
         } else {
             contract = await create(Object.assign({ contractAlias: contractName, methodName: 'initialize', methodArgs: [contractManager.address] }, options));
         }
@@ -160,11 +163,7 @@ async function deploy(deployer, networkName, accounts) {
     await contractManager.methods.setContractsAddress("SkaleToken", SkaleToken.address).send({from: deployAccount}).then(function(res) {
         console.log("Contract Skale Token with address", SkaleToken.address, "registred in Contract Manager");
     });
-
-    // await deployer.deploy(MonitorsFunctionality, "SkaleManager", "MonitorsData", contractManager.address, {gas: gasLimit * gas_multiplier});
-    // await contractManager.setContractsAddress("MonitorsFunctionality", MonitorsFunctionality.address).then(function(res) {
-    //     console.log("Contract Monitors Functionality with address", MonitorsFunctionality.address, "registred in Contract Manager");
-    // });
+    
     // await deployer.deploy(SchainsData, "SchainsFunctionalityInternal", contractManager.address, {gas: gasLimit * gas_multiplier});
     // await contractManager.setContractsAddress("SchainsData", SchainsData.address).then(function(res) {
     //     console.log("Contract Schains Data with address", SchainsData.address, "registred in Contract Manager");

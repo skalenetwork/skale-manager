@@ -6,18 +6,14 @@ import { ConstantsHolderInstance,
          ManagerDataContract,
          ManagerDataInstance,
          MonitorsDataInstance,
-         MonitorsFunctionalityContract,
          MonitorsFunctionalityInstance,
          NodesDataInstance,
          NodesFunctionalityInstance,
-         SchainsDataContract,
          SchainsDataInstance,
          SchainsFunctionalityContract,
          SchainsFunctionalityInstance,
-         SchainsFunctionalityInternalContract,
          SchainsFunctionalityInternalInstance,
          SkaleBalancesInstance,
-         SkaleDKGContract,
          SkaleDKGInstance,
          SkaleManagerContract,
          SkaleManagerInstance,
@@ -31,6 +27,7 @@ import { deployDelegationService } from "./utils/deploy/delegation/delegationSer
 import { deploySkaleBalances } from "./utils/deploy/delegation/skaleBalances";
 import { deployValidatorService } from "./utils/deploy/delegation/validatorService";
 import { deployMonitorsData } from "./utils/deploy/monitorsData";
+import { deployMonitorsFunctionality } from "./utils/deploy/monitorsFunctionality";
 import { deployNodesData } from "./utils/deploy/nodesData";
 import { deployNodesFunctionality } from "./utils/deploy/nodesFunctionality";
 import { deploySchainsData } from "./utils/deploy/schainsData";
@@ -42,7 +39,6 @@ import { skipTime } from "./utils/time";
 const ManagerData: ManagerDataContract = artifacts.require("./ManagerData");
 const SchainsFunctionality: SchainsFunctionalityContract = artifacts.require("./SchainsFunctionality");
 const SkaleManager: SkaleManagerContract = artifacts.require("./SkaleManager");
-const MonitorsFunctionality: MonitorsFunctionalityContract = artifacts.require("./MonitorsFunctionality");
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -73,11 +69,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
         nodesData = await deployNodesData(contractManager);
         nodesFunctionality = await deployNodesFunctionality(contractManager);
         monitorsData = await deployMonitorsData(contractManager);
-
-        monitorsFunctionality = await MonitorsFunctionality.new(
-            "SkaleManager", "MonitorsData", contractManager.address, {gas: 8000000 * gasMultiplier});
-        await contractManager.setContractsAddress("MonitorsFunctionality", monitorsFunctionality.address);
-
+        monitorsFunctionality = await deployMonitorsFunctionality(contractManager);
         schainsData = await deploySchainsData(contractManager);
 
         schainsFunctionality = await SchainsFunctionality.new(
