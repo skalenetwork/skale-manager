@@ -48,7 +48,7 @@ script:
     - export VERSION=$VERSION
     - export BRANCH=$TRAVIS_BRANCH
 after_script:
-    - npx buidler coverage || travis_terminate 4
+    - npx buidler coverage --solcoverjs .solcover.js || travis_terminate 4
     - cat coverage/lcov.info | npx codecov
 before_deploy:
   # Set up git user name and tag this commit

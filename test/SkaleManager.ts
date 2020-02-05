@@ -79,54 +79,54 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
 
         constantsHolder = await ConstantsHolder.new(
             contractManager.address,
-            {from: owner, gas: 8000000});
+            {from: owner});
         await contractManager.setContractsAddress("Constants", constantsHolder.address);
 
         nodesData = await NodesData.new(
             contractManager.address,
-            {from: owner, gas: 8000000 * gasMultiplier});
+            {from: owner});
         await contractManager.setContractsAddress("NodesData", nodesData.address);
 
         nodesFunctionality = await NodesFunctionality.new(
             contractManager.address,
-            {from: owner, gas: 8000000 * gasMultiplier});
+            {from: owner});
         await contractManager.setContractsAddress("NodesFunctionality", nodesFunctionality.address);
 
         validatorsData = await ValidatorsData.new(
-            "ValidatorsFunctionality", contractManager.address, {gas: 8000000 * gasMultiplier});
+            "ValidatorsFunctionality", contractManager.address);
         await contractManager.setContractsAddress("ValidatorsData", validatorsData.address);
 
         validatorsFunctionality = await ValidatorsFunctionality.new(
-            "SkaleManager", "ValidatorsData", contractManager.address, {gas: 8000000 * gasMultiplier});
+            "SkaleManager", "ValidatorsData", contractManager.address);
         await contractManager.setContractsAddress("ValidatorsFunctionality", validatorsFunctionality.address);
 
         schainsData = await SchainsData.new(
             "SchainsFunctionalityInternal",
             contractManager.address,
-            {from: owner, gas: 8000000 * gasMultiplier});
+            {from: owner});
         await contractManager.setContractsAddress("SchainsData", schainsData.address);
 
         schainsFunctionality = await SchainsFunctionality.new(
             "SkaleManager",
             "SchainsData",
             contractManager.address,
-            {from: owner, gas: 7900000 * gasMultiplier});
+            {from: owner});
         await contractManager.setContractsAddress("SchainsFunctionality", schainsFunctionality.address);
 
         schainsFunctionalityInternal = await SchainsFunctionalityInternal.new(
             "SchainsFunctionality",
             "SchainsData",
             contractManager.address,
-            {from: owner, gas: 7000000 * gasMultiplier});
+            {from: owner});
         await contractManager.setContractsAddress("SchainsFunctionalityInternal", schainsFunctionalityInternal.address);
 
-        managerData = await ManagerData.new("SkaleManager", contractManager.address, {gas: 8000000 * gasMultiplier});
+        managerData = await ManagerData.new("SkaleManager", contractManager.address);
         await contractManager.setContractsAddress("ManagerData", managerData.address);
 
-        skaleManager = await SkaleManager.new(contractManager.address, {gas: 8000000 * gasMultiplier});
+        skaleManager = await SkaleManager.new(contractManager.address);
         contractManager.setContractsAddress("SkaleManager", skaleManager.address);
 
-        skaleDKG = await SkaleDKG.new(contractManager.address, {from: owner, gas: 8000000 * gasMultiplier});
+        skaleDKG = await SkaleDKG.new(contractManager.address, {from: owner});
         await contractManager.setContractsAddress("SkaleDKG", skaleDKG.address);
 
         stringUtils = await StringUtils.new();

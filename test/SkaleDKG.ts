@@ -90,49 +90,49 @@ contract("SkaleDKG", ([validator1, validator2]) => {
 
         constantsHolder = await ConstantsHolder.new(
             contractManager.address,
-            {from: validator1, gas: 8000000});
+            {from: validator1});
         await contractManager.setContractsAddress("Constants", constantsHolder.address);
 
         nodesData = await NodesData.new(
             contractManager.address,
-            {from: validator1, gas: 8000000 * gasMultiplier});
+            {from: validator1});
         await contractManager.setContractsAddress("NodesData", nodesData.address);
 
         nodesFunctionality = await NodesFunctionality.new(
             contractManager.address,
-            {from: validator1, gas: 8000000 * gasMultiplier});
+            {from: validator1});
         await contractManager.setContractsAddress("NodesFunctionality", nodesFunctionality.address);
 
         schainsData = await SchainsData.new(
             "SchainsFunctionalityInternal",
             contractManager.address,
-            {from: validator1, gas: 8000000 * gasMultiplier});
+            {from: validator1});
         await contractManager.setContractsAddress("SchainsData", schainsData.address);
 
         schainsFunctionality = await SchainsFunctionality.new(
             "SkaleManager",
             "SchainsData",
             contractManager.address,
-            {from: validator1, gas: 7900000 * gasMultiplier});
+            {from: validator1});
         await contractManager.setContractsAddress("SchainsFunctionality", schainsFunctionality.address);
 
         schainsFunctionalityInternal = await SchainsFunctionalityInternal.new(
             "SchainsFunctionality",
             "SchainsData",
             contractManager.address,
-            {from: validator1, gas: 7000000 * gasMultiplier});
+            {from: validator1});
         await contractManager.setContractsAddress("SchainsFunctionalityInternal", schainsFunctionalityInternal.address);
 
-        skaleDKG = await SkaleDKG.new(contractManager.address, {from: validator1, gas: 8000000 * gasMultiplier});
+        skaleDKG = await SkaleDKG.new(contractManager.address, {from: validator1});
         await contractManager.setContractsAddress("SkaleDKG", skaleDKG.address);
 
-        decryption = await Decryption.new({from: validator1, gas: 8000000 * gasMultiplier});
+        decryption = await Decryption.new({from: validator1});
         await contractManager.setContractsAddress("Decryption", decryption.address);
 
-        ecdh = await ECDH.new({from: validator1, gas: 8000000 * gasMultiplier});
+        ecdh = await ECDH.new({from: validator1});
         await contractManager.setContractsAddress("ECDH", ecdh.address);
 
-        stringUtils = await StringUtils.new({from: validator1, gas: 8000000 * gasMultiplier});
+        stringUtils = await StringUtils.new({from: validator1});
         await contractManager.setContractsAddress("StringUtils", stringUtils.address);
     });
 
@@ -360,7 +360,7 @@ contract("SkaleDKG", ([validator1, validator2]) => {
                     verificationVectors[indexes[1]],
                     encryptedSecretKeyContributions[indexes[1]],
                     {from: validatorsAccount[0]},
-                ).should.be.eventually.rejectedWith(" Node does not exist for message sender.");
+                ).should.be.eventually.rejectedWith(" Node does not exist for message sender");
             });
 
             describe("when correct broadcasts sent", async () => {
@@ -427,7 +427,7 @@ contract("SkaleDKG", ([validator1, validator2]) => {
                         web3.utils.soliditySha3(schainName),
                         1,
                         {from: validatorsAccount[0]},
-                    ).should.be.eventually.rejectedWith(" Node does not exist for message sender.");
+                    ).should.be.eventually.rejectedWith(" Node does not exist for message sender");
                 });
 
                 it("should catch sucessfulDKG event", async () => {

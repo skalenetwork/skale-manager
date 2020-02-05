@@ -35,31 +35,33 @@ usePlugin("solidity-coverage");
 //   .addParam("from", "The account's address")
 //   .addParam("to", "The account's address")
 //   .setAction(async args => {
-
-//     let from = web3.utils.toChecksumAddress(args.from);
-//     let to = web3.utils.toChecksumAddress(args.to);
-//     let balance = await web3.eth.getBalance(from);
-
-//     console.log(web3.utils.fromWei(balance, "ether"), "ETH");
-
-//     await sendTransaction(web3, from, privateKeyMainnetBuffer, "0x", to, "100000000000000000000");
-
-//     from = web3.utils.toChecksumAddress(args.from);
-//     balance = await web3.eth.getBalance(from);
-
-//     console.log(web3.utils.fromWei(balance, "ether"), "ETH");
-
-//   });
-
   
-
+  //     let from = web3.utils.toChecksumAddress(args.from);
+  //     let to = web3.utils.toChecksumAddress(args.to);
+  //     let balance = await web3.eth.getBalance(from);
+  
+  //     console.log(web3.utils.fromWei(balance, "ether"), "ETH");
+  
+  //     await sendTransaction(web3, from, privateKeyMainnetBuffer, "0x", to, "100000000000000000000");
+  
+  //     from = web3.utils.toChecksumAddress(args.from);
+  //     balance = await web3.eth.getBalance(from);
+  
+  //     console.log(web3.utils.fromWei(balance, "ether"), "ETH");
+  
+  //   });
+  
+  
+  
 module.exports = {
   defaultNetwork: "buidlerevm",
   solc: {
-    optimizer: {
-        enabled: true,
-        runs: 200
-    },
+    version: '0.5.15',
+    evmVersion: 'petersburg',
+    optimizer:{
+      enabled: true,
+      runs: 200
+    }
   },
   networks: {
     buidlerevm: {
@@ -86,26 +88,8 @@ module.exports = {
         }
       ],
       gas: 17592186044415,
+      blockGasLimit: 17592186044415,
       port: 8555
-    },
-    coverage: {
-      url: 'http://localhost:8555',
-      gas: 17592186044415
-      // accounts: [
-      //   "0xA15C19DA241E5B1DB20D8DD8CA4B5EEAEE01C709B49EC57AA78C2133D3C1B3C9",
-      //   "0xE7AF72D241D4DD77BC080CE9234D742F6B22E35B3A660E8C197517B909F63CA8",
-      //   "0x3918F6158DEECDEAC58823E9C116200EDB025DB36C89085B0647CEC45F3F475F",
-      //   "0x4ADB17AF9BA53DAD177D1E1D93BCAC65129CAFED84704A0DA639BE30FE5C9F9C",
-      //   "0xE8829CA5780908BB7E842EB69077410C9E89ED323C8038A634D39C0B301E32F8"
-      // ]
-    }
-  },
-  solc: {
-    version: '0.5.15',
-    evmVersion: 'petersburg',
-    optimizer:{
-      enabled: true,
-      runs: 200
     }
   }
 };
