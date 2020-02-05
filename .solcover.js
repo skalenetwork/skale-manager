@@ -3,6 +3,9 @@ module.exports = {
     testCommand: '../node_modules/.bin/truffle test --network coverage --gas_multiplier 10',
     norpc: true,
     skipFiles: ['Migrations.sol'],
+    mocha: {
+        enableTimeouts: false
+    },
     providerOptions: {
         "port": 8555,
         "gasLimit": "0xfffffffffff",
