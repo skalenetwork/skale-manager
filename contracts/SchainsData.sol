@@ -55,8 +55,8 @@ contract SchainsData is ISchainsData, GroupsData {
     // total resources that schains occupied
     uint public sumOfSchainsResources = 0;
 
-    constructor(string memory newExecutorName, address newContractsAddress) GroupsData(newExecutorName, newContractsAddress) public {
-
+    constructor(string memory newExecutorName, address newContractsAddress) public {
+        GroupsData.initialize(newExecutorName, newContractsAddress);
     }
 
     /**

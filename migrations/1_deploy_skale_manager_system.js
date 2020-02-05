@@ -109,7 +109,8 @@ async function deploy(deployer, networkName, accounts) {
 
         "ConstantsHolder",
         "NodesData",
-        "NodesFunctionality"
+        "NodesFunctionality",
+        "MonitorsData"
     ]
 
     contractsData = [];
@@ -136,6 +137,8 @@ async function deploy(deployer, networkName, accounts) {
             contract = await create(Object.assign({ contractAlias: contractName }, options));
         } else if (contractName == "NodesData") {
             contract = await create(Object.assign({ contractAlias: contractName, methodName: 'initialize', methodArgs: [5260000, contractManager.address] }, options));
+        } else if (contractName == "MonitorsData") {
+            contract = await create(Object.assign({ contractAlias: contractName, methodName: 'initialize', methodArgs: ["MonitorsFunctionality", contractManager.address] }, options));
         } else {
             contract = await create(Object.assign({ contractAlias: contractName, methodName: 'initialize', methodArgs: [contractManager.address] }, options));
         }
@@ -158,14 +161,6 @@ async function deploy(deployer, networkName, accounts) {
         console.log("Contract Skale Token with address", SkaleToken.address, "registred in Contract Manager");
     });
 
-    // await deployer.deploy(NodesFunctionality, contractManager.address, {gas: gasLimit * gas_multiplier});
-    // await contractManager.setContractsAddress("NodesFunctionality", NodesFunctionality.address).then(function(res) {
-    //     console.log("Contract Nodes Functionality with address", NodesFunctionality.address, "registred in Contract Manager");
-    // });
-    // await deployer.deploy(MonitorsData, "MonitorsFunctionality", contractManager.address, {gas: gasLimit * gas_multiplier});
-    // await contractManager.setContractsAddress("MonitorsData", MonitorsData.address).then(function(res) {
-    //     console.log("Contract Monitors Data with address", MonitorsData.address, "registred in Contract Manager");
-    // });
     // await deployer.deploy(MonitorsFunctionality, "SkaleManager", "MonitorsData", contractManager.address, {gas: gasLimit * gas_multiplier});
     // await contractManager.setContractsAddress("MonitorsFunctionality", MonitorsFunctionality.address).then(function(res) {
     //     console.log("Contract Monitors Functionality with address", MonitorsFunctionality.address, "registred in Contract Manager");

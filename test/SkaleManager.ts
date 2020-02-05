@@ -5,7 +5,6 @@ import { ConstantsHolderInstance,
          DelegationServiceInstance,
          ManagerDataContract,
          ManagerDataInstance,
-         MonitorsDataContract,
          MonitorsDataInstance,
          MonitorsFunctionalityContract,
          MonitorsFunctionalityInstance,
@@ -31,19 +30,18 @@ import { deployContractManager } from "./utils/deploy/contractManager";
 import { deployDelegationService } from "./utils/deploy/delegation/delegationService";
 import { deploySkaleBalances } from "./utils/deploy/delegation/skaleBalances";
 import { deployValidatorService } from "./utils/deploy/delegation/validatorService";
+import { deployMonitorsData } from "./utils/deploy/monitorsData";
 import { deployNodesData } from "./utils/deploy/nodesData";
 import { deployNodesFunctionality } from "./utils/deploy/nodesFunctionality";
+import { deploySchainsData } from "./utils/deploy/schainsData";
+import { deploySchainsFunctionalityInternal } from "./utils/deploy/schainsFunctionalityInternal";
+import { deploySkaleDKG } from "./utils/deploy/skaleDKG";
 import { deploySkaleToken } from "./utils/deploy/skaleToken";
 import { skipTime } from "./utils/time";
 
 const ManagerData: ManagerDataContract = artifacts.require("./ManagerData");
-const SchainsData: SchainsDataContract = artifacts.require("./SchainsData");
 const SchainsFunctionality: SchainsFunctionalityContract = artifacts.require("./SchainsFunctionality");
-const SchainsFunctionalityInternal: SchainsFunctionalityInternalContract
-= artifacts.require("./SchainsFunctionalityInternal");
-const SkaleDKG: SkaleDKGContract = artifacts.require("./SkaleDKG");
 const SkaleManager: SkaleManagerContract = artifacts.require("./SkaleManager");
-const MonitorsData: MonitorsDataContract = artifacts.require("./MonitorsData");
 const MonitorsFunctionality: MonitorsFunctionalityContract = artifacts.require("./MonitorsFunctionality");
 
 chai.should();
@@ -74,20 +72,13 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
         constantsHolder = await deployConstantsHolder(contractManager);
         nodesData = await deployNodesData(contractManager);
         nodesFunctionality = await deployNodesFunctionality(contractManager);
-
-        monitorsData = await MonitorsData.new(
-            "MonitorsFunctionality", contractManager.address, {gas: 8000000 * gasMultiplier});
-        await contractManager.setContractsAddress("MonitorsData", monitorsData.address);
+        monitorsData = await deployMonitorsData(contractManager);
 
         monitorsFunctionality = await MonitorsFunctionality.new(
             "SkaleManager", "MonitorsData", contractManager.address, {gas: 8000000 * gasMultiplier});
         await contractManager.setContractsAddress("MonitorsFunctionality", monitorsFunctionality.address);
 
-        schainsData = await SchainsData.new(
-            "SchainsFunctionalityInternal",
-            contractManager.address,
-            {from: owner, gas: 8000000 * gasMultiplier});
-        await contractManager.setContractsAddress("SchainsData", schainsData.address);
+        schainsData = await deploySchainsData(contractManager);
 
         schainsFunctionality = await SchainsFunctionality.new(
             "SkaleManager",
@@ -96,12 +87,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
             {from: owner, gas: 7900000 * gasMultiplier});
         await contractManager.setContractsAddress("SchainsFunctionality", schainsFunctionality.address);
 
-        schainsFunctionalityInternal = await SchainsFunctionalityInternal.new(
-            "SchainsFunctionality",
-            "SchainsData",
-            contractManager.address,
-            {from: owner, gas: 7000000 * gasMultiplier});
-        await contractManager.setContractsAddress("SchainsFunctionalityInternal", schainsFunctionalityInternal.address);
+        schainsFunctionalityInternal = await deploySchainsFunctionalityInternal(contractManager);
 
         managerData = await ManagerData.new("SkaleManager", contractManager.address, {gas: 8000000 * gasMultiplier});
         await contractManager.setContractsAddress("ManagerData", managerData.address);
@@ -109,9 +95,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
         skaleManager = await SkaleManager.new(contractManager.address, {gas: 8000000 * gasMultiplier});
         contractManager.setContractsAddress("SkaleManager", skaleManager.address);
 
-        skaleDKG = await SkaleDKG.new(contractManager.address, {from: owner, gas: 8000000 * gasMultiplier});
-        await contractManager.setContractsAddress("SkaleDKG", skaleDKG.address);
-
+        skaleDKG = await deploySkaleDKG(contractManager);
         delegationService = await deployDelegationService(contractManager);
         skaleBalances = await deploySkaleBalances(contractManager);
         validatorService = await deployValidatorService(contractManager);

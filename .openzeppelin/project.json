@@ -14,7 +14,8 @@
     "ContractManager": "ContractManager",
     "ConstantsHolder": "ConstantsHolder",
     "NodesData": "NodesData",
-    "NodesFunctionality": "NodesFunctionality"
+    "NodesFunctionality": "NodesFunctionality",
+    "MonitorsData": "MonitorsData"
   },
   "dependencies": {},
   "name": "skale-manager",

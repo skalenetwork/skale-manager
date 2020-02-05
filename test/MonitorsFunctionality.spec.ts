@@ -1,11 +1,9 @@
 import { BigNumber } from "bignumber.js";
 import { ConstantsHolderInstance,
          ContractManagerInstance,
-         MonitorsDataContract,
          MonitorsDataInstance,
          MonitorsFunctionalityContract,
          MonitorsFunctionalityInstance,
-         NodesDataContract,
          NodesDataInstance,
          NodesFunctionalityInstance,
          SkaleDKGContract,
@@ -17,14 +15,13 @@ import chai = require("chai");
 import * as chaiAsPromised from "chai-as-promised";
 import { deployConstantsHolder } from "./utils/deploy/constantsHolder";
 import { deployContractManager } from "./utils/deploy/contractManager";
+import { deployMonitorsData } from "./utils/deploy/monitorsData";
 import { deployNodesData } from "./utils/deploy/nodesData";
 import { deployNodesFunctionality } from "./utils/deploy/nodesFunctionality";
 chai.should();
 chai.use((chaiAsPromised));
 
 const MonitorsFunctionality: MonitorsFunctionalityContract = artifacts.require("./MonitorsFunctionality");
-const MonitorsData: MonitorsDataContract = artifacts.require("./MonitorsData");
-const NodesData: NodesDataContract = artifacts.require("./NodesData");
 const SkaleDKG: SkaleDKGContract = artifacts.require("./SkaleDKG");
 
 contract("MonitorsFunctionality", ([owner, validator]) => {
@@ -44,13 +41,8 @@ contract("MonitorsFunctionality", ([owner, validator]) => {
       contractManager.address, {from: owner, gas: 8000000 * gasMultiplier});
     await contractManager.setContractsAddress("MonitorsFunctionality", monitorsFunctionality.address);
 
-    monitorsData = await MonitorsData.new(
-      "MonitorsFunctionality",
-      contractManager.address, {from: owner, gas: 8000000 * gasMultiplier});
-    await contractManager.setContractsAddress("MonitorsData", monitorsData.address);
-
+    monitorsData = await deployMonitorsData(contractManager);
     nodesData = await deployNodesData(contractManager);
-
     constantsHolder = await deployConstantsHolder(contractManager);
     nodesFunctionality = await deployNodesFunctionality(contractManager);
 
