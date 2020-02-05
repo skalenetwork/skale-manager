@@ -90,10 +90,11 @@ async function deploy(deployer, networkName, accounts) {
         console.log("Starting SkaleManager system deploying...");
     }    
     
-    const options = await ConfigManager.initNetworkConfiguration({ network: networkName, from: accounts[0] });
+    const deployAccount = accounts[0];
+    const options = await ConfigManager.initNetworkConfiguration({ network: networkName, from: deployAccount });
 
     const contracts = [
-        "ContractManager",
+        "ContractManager", // must be in first position
         "DelegationController",
         "DelegationPeriodManager",
         "DelegationRequestManager",
@@ -116,182 +117,163 @@ async function deploy(deployer, networkName, accounts) {
     // Push implementation contracts to the network
     await push(options);
 
-    await create(Object.assign({ contractAlias: 'ContractManager', methodName: 'initialize', methodArgs: [] }, options));
-    const contractManager = await ContractManager.deployed();    
-
     // deploy upgradable contracts
 
-    for (const contract of contracts) {
-        if (contract == "ContractManager") {
-            console.log("CM address: " + ContractManager.address);
-        } else if (contract == "TimeHelpers") {
-            await create(Object.assign({ contractAlias: contract }, options));
+    const deployed = new Map();
+    let contractManager;
+    for (const contractName of contracts) {
+        let contract;
+        if (contractName == "ContractManager") {
+            contract = await create(Object.assign({ contractAlias: contractName, methodName: 'initialize', methodArgs: [] }, options));
+            contractManager = contract;
+            console.log("contractManager address:", contract.address);
+        } else if (contractName == "TimeHelpers") {
+            contract = await create(Object.assign({ contractAlias: contractName }, options));
         } else {
-            await create(Object.assign({ contractAlias: contract, methodName: 'initialize', methodArgs: [ContractManager.address] }, options));
+            contract = await create(Object.assign({ contractAlias: contractName, methodName: 'initialize', methodArgs: [contractManager.address] }, options));
         }
+        deployed.set(contractName, contract);
+        console.log(deployed.get(contractName).address);
+        console.log();
     }    
 
     console.log("Register contracts");
-
+    
     for (const contract of contracts) {
-        for (let delay = 1000; delay < 10 * 1000; delay *= 1.618)
-        {
-            try {
-                await eval(contract).deployed();
-                break;
-            } catch (e) {
-                console.log(e);
-                console.log("Wait " + Math.round(delay / 1000) + "s to retry");
-                await sleep(delay);
-            }
-        }
-        const address = eval(contract).address;
-        let registrationIsNeeded = false;
-        try {
-            registrationIsNeeded = address != await contractManager.getContract(contract);
-        } catch (e) {
-            if (e.message == "Returned error: VM Exception while processing transaction: revert Contract has not been found") {
-                registrationIsNeeded = true;
-            } else {
-                throw e;
-            }                        
-        }   
-
-        if (registrationIsNeeded) {
-            await contractManager.setContractsAddress(contract, address).then(function(res) {
-                console.log("Contract", contract, "with address", address, "is registered in Contract Manager");
-            }); 
-        }
+        const address = deployed.get(contract).address;
+        await contractManager.methods.setContractsAddress(contract, address).send({from: deployAccount}).then(function(res) {
+            console.log("Contract", contract, "with address", address, "is registered in Contract Manager");
+        });
     }  
 
     console.log("Done");
     
-    await deployer.deploy(SkaleToken, contractManager.address, [], {gas: gasLimit * gas_multiplier});
-    await contractManager.setContractsAddress("SkaleToken", SkaleToken.address).then(function(res) {
-        console.log("Contract Skale Token with address", SkaleToken.address, "registred in Contract Manager");
-    });
-    await deployer.deploy(ConstantsHolder, contractManager.address, {gas: gasLimit});
-    await contractManager.setContractsAddress("Constants", ConstantsHolder.address).then(function(res) {
-        console.log("Contract Constants with address", ConstantsHolder.address, "registred in Contract Manager");
-    });
-    await deployer.deploy(NodesData, 5260000, contractManager.address, {gas: gasLimit * gas_multiplier});
-    await contractManager.setContractsAddress("NodesData", NodesData.address).then(function(res) {
-        console.log("Contract Nodes Data with address", NodesData.address, "registred in Contract Manager");
-    });
-    await deployer.deploy(NodesFunctionality, contractManager.address, {gas: gasLimit * gas_multiplier});
-    await contractManager.setContractsAddress("NodesFunctionality", NodesFunctionality.address).then(function(res) {
-        console.log("Contract Nodes Functionality with address", NodesFunctionality.address, "registred in Contract Manager");
-    });
-    await deployer.deploy(MonitorsData, "MonitorsFunctionality", contractManager.address, {gas: gasLimit * gas_multiplier});
-    await contractManager.setContractsAddress("MonitorsData", MonitorsData.address).then(function(res) {
-        console.log("Contract Monitors Data with address", MonitorsData.address, "registred in Contract Manager");
-    });
-    await deployer.deploy(MonitorsFunctionality, "SkaleManager", "MonitorsData", contractManager.address, {gas: gasLimit * gas_multiplier});
-    await contractManager.setContractsAddress("MonitorsFunctionality", MonitorsFunctionality.address).then(function(res) {
-        console.log("Contract Monitors Functionality with address", MonitorsFunctionality.address, "registred in Contract Manager");
-    });
-    await deployer.deploy(SchainsData, "SchainsFunctionalityInternal", contractManager.address, {gas: gasLimit * gas_multiplier});
-    await contractManager.setContractsAddress("SchainsData", SchainsData.address).then(function(res) {
-        console.log("Contract Schains Data with address", SchainsData.address, "registred in Contract Manager");
-    });
-    await deployer.deploy(SchainsFunctionality, "SkaleManager", "SchainsData", contractManager.address, {gas: gasLimit * gas_multiplier});
-    await contractManager.setContractsAddress("SchainsFunctionality", SchainsFunctionality.address).then(function(res) {
-        console.log("Contract Schains Functionality with address", SchainsFunctionality.address, "registred in Contract Manager");
-    });
-    await deployer.deploy(SchainsFunctionalityInternal, "SchainsFunctionality", "SchainsData", contractManager.address, {gas: gasLimit * gas_multiplier});
-    await contractManager.setContractsAddress("SchainsFunctionalityInternal", SchainsFunctionalityInternal.address).then(function(res) {
-        console.log("Contract Schains FunctionalityInternal with address", SchainsFunctionalityInternal.address, "registred in Contract Manager");
-    });
-    await deployer.deploy(Decryption, {gas: gasLimit * gas_multiplier});
-    await contractManager.setContractsAddress("Decryption", Decryption.address).then(function(res) {
-        console.log("Contract Decryption with address", Decryption.address, "registred in Contract Manager");
-    });
-    await deployer.deploy(ECDH, {gas: gasLimit * gas_multiplier});
-    await contractManager.setContractsAddress("ECDH", ECDH.address).then(function(res) {
-        console.log("Contract ECDH with address", ECDH.address, "registred in Contract Manager");
-    });
-    await deployer.deploy(SkaleDKG, contractManager.address, {gas: gasLimit * gas_multiplier});
-    await contractManager.setContractsAddress("SkaleDKG", SkaleDKG.address).then(function(res) {
-        console.log("Contract SkaleDKG with address", SkaleDKG.address, "registred in Contract Manager");
-    });
-    await deployer.deploy(SkaleVerifier, contractManager.address, {gas: gasLimit * gas_multiplier});
-    await contractManager.setContractsAddress("SkaleVerifier", SkaleVerifier.address).then(function(res) {
-        console.log("Contract SkaleVerifier with address", SkaleVerifier.address, "registred in Contract Manager");
-    });
-    await deployer.deploy(ManagerData, "SkaleManager", contractManager.address, {gas: gasLimit * gas_multiplier});
-    await contractManager.setContractsAddress("ManagerData", ManagerData.address).then(function(res) {
-        console.log("Contract Manager Data with address", ManagerData.address, "registred in Contract Manager");
-    });
-    await deployer.deploy(SkaleManager, contractManager.address, {gas: gasLimit * gas_multiplier});
-    await contractManager.setContractsAddress("SkaleManager", SkaleManager.address).then(function(res) {
-        console.log("Contract Skale Manager with address", SkaleManager.address, "registred in Contract Manager");
-    });
-    await deployer.deploy(Pricing, contractManager.address, {gas: gasLimit * gas_multiplier});
-    await contractManager.setContractsAddress("Pricing", Pricing.address).then(function(res) {
-        console.log("Contract Pricing with address", Pricing.address, "registred in Contract Manager");
-    });
+    // await deployer.deploy(SkaleToken, contractManager.address, [], {gas: gasLimit * gas_multiplier});
+    // await contractManager.setContractsAddress("SkaleToken", SkaleToken.address).then(function(res) {
+    //     console.log("Contract Skale Token with address", SkaleToken.address, "registred in Contract Manager");
+    // });
+    // await deployer.deploy(ConstantsHolder, contractManager.address, {gas: gasLimit});
+    // await contractManager.setContractsAddress("Constants", ConstantsHolder.address).then(function(res) {
+    //     console.log("Contract Constants with address", ConstantsHolder.address, "registred in Contract Manager");
+    // });
+    // await deployer.deploy(NodesData, 5260000, contractManager.address, {gas: gasLimit * gas_multiplier});
+    // await contractManager.setContractsAddress("NodesData", NodesData.address).then(function(res) {
+    //     console.log("Contract Nodes Data with address", NodesData.address, "registred in Contract Manager");
+    // });
+    // await deployer.deploy(NodesFunctionality, contractManager.address, {gas: gasLimit * gas_multiplier});
+    // await contractManager.setContractsAddress("NodesFunctionality", NodesFunctionality.address).then(function(res) {
+    //     console.log("Contract Nodes Functionality with address", NodesFunctionality.address, "registred in Contract Manager");
+    // });
+    // await deployer.deploy(MonitorsData, "MonitorsFunctionality", contractManager.address, {gas: gasLimit * gas_multiplier});
+    // await contractManager.setContractsAddress("MonitorsData", MonitorsData.address).then(function(res) {
+    //     console.log("Contract Monitors Data with address", MonitorsData.address, "registred in Contract Manager");
+    // });
+    // await deployer.deploy(MonitorsFunctionality, "SkaleManager", "MonitorsData", contractManager.address, {gas: gasLimit * gas_multiplier});
+    // await contractManager.setContractsAddress("MonitorsFunctionality", MonitorsFunctionality.address).then(function(res) {
+    //     console.log("Contract Monitors Functionality with address", MonitorsFunctionality.address, "registred in Contract Manager");
+    // });
+    // await deployer.deploy(SchainsData, "SchainsFunctionalityInternal", contractManager.address, {gas: gasLimit * gas_multiplier});
+    // await contractManager.setContractsAddress("SchainsData", SchainsData.address).then(function(res) {
+    //     console.log("Contract Schains Data with address", SchainsData.address, "registred in Contract Manager");
+    // });
+    // await deployer.deploy(SchainsFunctionality, "SkaleManager", "SchainsData", contractManager.address, {gas: gasLimit * gas_multiplier});
+    // await contractManager.setContractsAddress("SchainsFunctionality", SchainsFunctionality.address).then(function(res) {
+    //     console.log("Contract Schains Functionality with address", SchainsFunctionality.address, "registred in Contract Manager");
+    // });
+    // await deployer.deploy(SchainsFunctionalityInternal, "SchainsFunctionality", "SchainsData", contractManager.address, {gas: gasLimit * gas_multiplier});
+    // await contractManager.setContractsAddress("SchainsFunctionalityInternal", SchainsFunctionalityInternal.address).then(function(res) {
+    //     console.log("Contract Schains FunctionalityInternal with address", SchainsFunctionalityInternal.address, "registred in Contract Manager");
+    // });
+    // await deployer.deploy(Decryption, {gas: gasLimit * gas_multiplier});
+    // await contractManager.setContractsAddress("Decryption", Decryption.address).then(function(res) {
+    //     console.log("Contract Decryption with address", Decryption.address, "registred in Contract Manager");
+    // });
+    // await deployer.deploy(ECDH, {gas: gasLimit * gas_multiplier});
+    // await contractManager.setContractsAddress("ECDH", ECDH.address).then(function(res) {
+    //     console.log("Contract ECDH with address", ECDH.address, "registred in Contract Manager");
+    // });
+    // await deployer.deploy(SkaleDKG, contractManager.address, {gas: gasLimit * gas_multiplier});
+    // await contractManager.setContractsAddress("SkaleDKG", SkaleDKG.address).then(function(res) {
+    //     console.log("Contract SkaleDKG with address", SkaleDKG.address, "registred in Contract Manager");
+    // });
+    // await deployer.deploy(SkaleVerifier, contractManager.address, {gas: gasLimit * gas_multiplier});
+    // await contractManager.setContractsAddress("SkaleVerifier", SkaleVerifier.address).then(function(res) {
+    //     console.log("Contract SkaleVerifier with address", SkaleVerifier.address, "registred in Contract Manager");
+    // });
+    // await deployer.deploy(ManagerData, "SkaleManager", contractManager.address, {gas: gasLimit * gas_multiplier});
+    // await contractManager.setContractsAddress("ManagerData", ManagerData.address).then(function(res) {
+    //     console.log("Contract Manager Data with address", ManagerData.address, "registred in Contract Manager");
+    // });
+    // await deployer.deploy(SkaleManager, contractManager.address, {gas: gasLimit * gas_multiplier});
+    // await contractManager.setContractsAddress("SkaleManager", SkaleManager.address).then(function(res) {
+    //     console.log("Contract Skale Manager with address", SkaleManager.address, "registred in Contract Manager");
+    // });
+    // await deployer.deploy(Pricing, contractManager.address, {gas: gasLimit * gas_multiplier});
+    // await contractManager.setContractsAddress("Pricing", Pricing.address).then(function(res) {
+    //     console.log("Contract Pricing with address", Pricing.address, "registred in Contract Manager");
+    // });
     
-    await deployer.deploy(BokkyPooBahsDateTimeLibrary, {gas: gasLimit * gas_multiplier});
-    await deployer.link(BokkyPooBahsDateTimeLibrary, TimeHelpers);        
+    // await deployer.deploy(BokkyPooBahsDateTimeLibrary, {gas: gasLimit * gas_multiplier});
+    // await deployer.link(BokkyPooBahsDateTimeLibrary, TimeHelpers);        
 
-    //
-    console.log('Deploy done, writing results...');
-    let jsonObject = {
-        skale_token_address: SkaleToken.address,
-        skale_token_abi: SkaleToken.abi,
-        nodes_data_address: NodesData.address,
-        nodes_data_abi: NodesData.abi,
-        nodes_functionality_address: NodesFunctionality.address,
-        nodes_functionality_abi: NodesFunctionality.abi,
-        monitors_data_address: MonitorsData.address,
-        monitors_data_abi: MonitorsData.abi,
-        monitors_functionality_address: MonitorsFunctionality.address,
-        monitors_functionality_abi: MonitorsFunctionality.abi,
-        schains_data_address: SchainsData.address,
-        schains_data_abi: SchainsData.abi,
-        schains_functionality_address: SchainsFunctionality.address,
-        schains_functionality_abi: SchainsFunctionality.abi,
-        manager_data_address: ManagerData.address,
-        manager_data_abi: ManagerData.abi,
-        skale_manager_address: SkaleManager.address,
-        skale_manager_abi: SkaleManager.abi,
-        constants_address: ConstantsHolder.address,
-        constants_abi: ConstantsHolder.abi,
-        decryption_address: Decryption.address,
-        decryption_abi: Decryption.abi,
-        skale_dkg_address: SkaleDKG.address,
-        skale_dkg_abi: SkaleDKG.abi,
-        skale_verifier_address: SkaleVerifier.address,
-        skale_verifier_abi: SkaleVerifier.abi,
-        contract_manager_address: ContractManager.address,
-        contract_manager_abi: ContractManager.abi,
-        pricing_address: Pricing.address,
-        pricing_abi: Pricing.abi,
-        skale_balances_address: SkaleBalances.address,
-        skale_balances_abi: SkaleBalances.abi,
-        delegation_service_address: DelegationService.address,
-        delegation_service_abi: DelegationService.abi,
-        delegation_request_manager_address: DelegationRequestManager.address,
-        delegation_request_manager_abi: DelegationRequestManager.abi,
-        delegation_period_manager_address: DelegationPeriodManager.address,
-        delegation_period_manager_abi: DelegationPeriodManager.abi,
-        validator_service_address: ValidatorService.address,
-        validator_service_abi: ValidatorService.abi,
-        distributor_address: Distributor.address,
-        distributor_abi: Distributor.abi,
-        token_sale_manager_address: TokenSaleManager.address,
-        token_sale_manager_abi: TokenSaleManager.abi,
-        token_state_address: TokenState.address,
-        token_state_abi: TokenState.abi,
-        time_helpers_address: TimeHelpers.address,
-        time_helpers_abi: TimeHelpers.abi,
-        delegation_controller_address: DelegationController.address,
-        delegation_controller_abi: DelegationController.abi
-    };
+    // //
+    // console.log('Deploy done, writing results...');
+    // let jsonObject = {
+    //     skale_token_address: SkaleToken.address,
+    //     skale_token_abi: SkaleToken.abi,
+    //     nodes_data_address: NodesData.address,
+    //     nodes_data_abi: NodesData.abi,
+    //     nodes_functionality_address: NodesFunctionality.address,
+    //     nodes_functionality_abi: NodesFunctionality.abi,
+    //     monitors_data_address: MonitorsData.address,
+    //     monitors_data_abi: MonitorsData.abi,
+    //     monitors_functionality_address: MonitorsFunctionality.address,
+    //     monitors_functionality_abi: MonitorsFunctionality.abi,
+    //     schains_data_address: SchainsData.address,
+    //     schains_data_abi: SchainsData.abi,
+    //     schains_functionality_address: SchainsFunctionality.address,
+    //     schains_functionality_abi: SchainsFunctionality.abi,
+    //     manager_data_address: ManagerData.address,
+    //     manager_data_abi: ManagerData.abi,
+    //     skale_manager_address: SkaleManager.address,
+    //     skale_manager_abi: SkaleManager.abi,
+    //     constants_address: ConstantsHolder.address,
+    //     constants_abi: ConstantsHolder.abi,
+    //     decryption_address: Decryption.address,
+    //     decryption_abi: Decryption.abi,
+    //     skale_dkg_address: SkaleDKG.address,
+    //     skale_dkg_abi: SkaleDKG.abi,
+    //     skale_verifier_address: SkaleVerifier.address,
+    //     skale_verifier_abi: SkaleVerifier.abi,
+    //     contract_manager_address: ContractManager.address,
+    //     contract_manager_abi: ContractManager.abi,
+    //     pricing_address: Pricing.address,
+    //     pricing_abi: Pricing.abi,
+    //     skale_balances_address: SkaleBalances.address,
+    //     skale_balances_abi: SkaleBalances.abi,
+    //     delegation_service_address: DelegationService.address,
+    //     delegation_service_abi: DelegationService.abi,
+    //     delegation_request_manager_address: DelegationRequestManager.address,
+    //     delegation_request_manager_abi: DelegationRequestManager.abi,
+    //     delegation_period_manager_address: DelegationPeriodManager.address,
+    //     delegation_period_manager_abi: DelegationPeriodManager.abi,
+    //     validator_service_address: ValidatorService.address,
+    //     validator_service_abi: ValidatorService.abi,
+    //     distributor_address: Distributor.address,
+    //     distributor_abi: Distributor.abi,
+    //     token_sale_manager_address: TokenSaleManager.address,
+    //     token_sale_manager_abi: TokenSaleManager.abi,
+    //     token_state_address: TokenState.address,
+    //     token_state_abi: TokenState.abi,
+    //     time_helpers_address: TimeHelpers.address,
+    //     time_helpers_abi: TimeHelpers.abi,
+    //     delegation_controller_address: DelegationController.address,
+    //     delegation_controller_abi: DelegationController.abi
+    // };
 
-    await fsPromises.writeFile(`data/${networkName}.json`, JSON.stringify(jsonObject));
-    await sleep(10000);
-    console.log(`Done, check ${networkName}.json file in data folder.`);
+    // await fsPromises.writeFile(`data/${networkName}.json`, JSON.stringify(jsonObject));
+    // await sleep(10000);
+    // console.log(`Done, check ${networkName}.json file in data folder.`);
 }
 
 function sleep(ms) {
