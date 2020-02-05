@@ -323,11 +323,11 @@ contract("ValidatorsFunctionality", ([owner, validator]) => {
           const targetNodes = logs[2].args[2].map((value: BN) => value.toNumber());
           targetNodes.length.should.be.equal(24);
           targetNodes.sort();
-          targetNodes.forEach((value: number, index: number) => {
+          targetNodes.forEach(async (value: number, index: number) => {
             if (index > 0) {
               assert.notEqual(value, targetNodes[index - 1], "Array should not contain duplicates");
             }
-            assert(nodesData.isNodeActive(value), "Node should be active");
+            assert(await nodesData.isNodeActive(value), "Node should be active");
           });
         }
       }

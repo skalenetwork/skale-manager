@@ -149,7 +149,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
 
     describe("when validator has SKALE tokens", async () => {
         beforeEach(async () => {
-            skaleToken.transfer(validator, "0x410D586A20A4C00000", {from: owner});
+            await skaleToken.transfer(validator, "0x410D586A20A4C00000", {from: owner});
         });
 
         it("should fail to process token fallback if operation type is wrong", async () => {
@@ -332,7 +332,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
 
         describe("when 18 nodes are in the system", async () => {
             beforeEach(async () => {
-                skaleToken.transfer(validator, "0x3635c9adc5dea00000", {from: owner});
+                await skaleToken.transfer(validator, "0x3635c9adc5dea00000", {from: owner});
 
                 for (let i = 0; i < 18; ++i) {
                     await skaleToken.send(
@@ -535,7 +535,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
 
             describe("when developer has SKALE tokens", async () => {
                 beforeEach(async () => {
-                    skaleToken.transfer(developer, "0x3635c9adc5dea00000", {from: owner});
+                    await skaleToken.transfer(developer, "0x3635c9adc5dea00000", {from: owner});
                 });
 
                 it("should create schain", async () => {
@@ -607,7 +607,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
 
         describe("when 32 nodes are in the system", async () => {
             beforeEach(async () => {
-                skaleToken.transfer(validator, "0x32D26D12E980B600000", {from: owner});
+                await skaleToken.transfer(validator, "0x32D26D12E980B600000", {from: owner});
 
                 for (let i = 0; i < 32; ++i) {
                     await skaleToken.send(
@@ -627,7 +627,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
 
             describe("when developer has SKALE tokens", async () => {
                 beforeEach(async () => {
-                    skaleToken.transfer(developer, "0x3635C9ADC5DEA000000", {from: owner});
+                    await skaleToken.transfer(developer, "0x3635C9ADC5DEA000000", {from: owner});
                 });
 
                 it("should create 2 medium schains", async () => {
@@ -699,7 +699,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
 
             it("should create 16 nodes & create & delete all types of schain", async () => {
 
-                skaleToken.transfer(validator, "0x32D26D12E980B600000", {from: owner});
+                await skaleToken.transfer(validator, "0x32D26D12E980B600000", {from: owner});
 
                 for (let i = 0; i < 16; ++i) {
                     await skaleToken.send(
@@ -716,7 +716,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
                         {from: validator});
                     }
 
-                skaleToken.transfer(developer, "0x3635C9ADC5DEA000000", {from: owner});
+                await skaleToken.transfer(developer, "0x3635C9ADC5DEA000000", {from: owner});
 
                 let price = web3.utils.toBN(await schainsFunctionality.getSchainPrice(1, 5));
                 await skaleToken.send(
