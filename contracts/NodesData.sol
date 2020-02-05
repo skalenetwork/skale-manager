@@ -363,7 +363,7 @@ contract NodesData is INodesData, Permissions {
      * @return if time for reward has come - true, else - false
      */
     function isTimeForReward(uint nodeIndex) external view returns (bool) {
-        address constantsAddress = contractManager.contracts(keccak256(abi.encodePacked("Constants")));
+        address constantsAddress = contractManager.getContract("ConstantsHolder");
         return nodes[nodeIndex].lastRewardDate + IConstants(constantsAddress).rewardPeriod() <= block.timestamp;
     }
 
@@ -426,7 +426,7 @@ contract NodesData is INodesData, Permissions {
      * @return Node next reward date
      */
     function getNodeNextRewardDate(uint nodeIndex) external view returns (uint32) {
-        address constantsAddress = contractManager.contracts(keccak256(abi.encodePacked("Constants")));
+        address constantsAddress = contractManager.getContract("ConstantsHolder");
         return nodes[nodeIndex].lastRewardDate + IConstants(constantsAddress).rewardPeriod();
     }
 

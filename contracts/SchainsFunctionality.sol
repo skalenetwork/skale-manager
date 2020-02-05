@@ -218,7 +218,7 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
      * @return current price for given Schain
      */
     function getSchainPrice(uint typeOfSchain, uint lifetime) public view returns (uint) {
-        address constantsAddress = contractManager.contracts(keccak256(abi.encodePacked("Constants")));
+        address constantsAddress = contractManager.getContract("ConstantsHolder");
         address schainsFunctionalityInternalAddress = contractManager.contracts(keccak256(abi.encodePacked("SchainsFunctionalityInternal")));
         uint nodeDeposit = IConstants(constantsAddress).NODE_DEPOSIT();
         uint numberOfNodes;
@@ -291,27 +291,7 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
      * @param partOfNode - divisor of given type of Schain
      */
     function addSpace(uint nodeIndex, uint8 partOfNode) internal {
-        address nodesDataAddress = contractManager.contracts(keccak256(abi.encodePacked("NodesData")));
-        // address constantsAddress = contractManager.contracts(keccak256(abi.encodePacked("Constants")));
-        // uint subarrayLink;
-        // bool isNodeFull;
-        // (subarrayLink, isNodeFull) = INodesData(nodesDataAddress).nodesLink(nodeIndex);
-        // adds space
-        // if (isNodeFull) {
-        //     if (partOfNode == IConstants(constantsAddress).MEDIUM_TEST_DIVISOR()) {
-        //         INodesData(nodesDataAddress).addSpaceToFullNode(subarrayLink, partOfNode);
-        //     } else if (partOfNode != 0) {
-        //         INodesData(nodesDataAddress).addSpaceToFullNode(subarrayLink, partOfNode);
-        //     } else {
-        //         INodesData(nodesDataAddress).addSpaceToFullNode(subarrayLink, partOfNode);
-        //     }
-        // } else {
-        //     if (partOfNode != 0) {
-        //         INodesData(nodesDataAddress).addSpaceToFractionalNode(subarrayLink, partOfNode);
-        //     } else {
-        //         INodesData(nodesDataAddress).addSpaceToFractionalNode(subarrayLink, partOfNode);
-        //     }
-        // }
+        address nodesDataAddress = contractManager.getContract("NodesData");
         INodesData(nodesDataAddress).addSpaceToNode(nodeIndex, partOfNode);
     }
 }

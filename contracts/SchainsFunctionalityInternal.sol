@@ -84,7 +84,7 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
      * @return partOfNode - divisor of given type of Schain
      */
     function getNodesDataFromTypeOfSchain(uint typeOfSchain) external view returns (uint numberOfNodes, uint8 partOfNode) {
-        address constantsAddress = contractManager.contracts(keccak256(abi.encodePacked("Constants")));
+        address constantsAddress = contractManager.getContract("ConstantsHolder");
         numberOfNodes = IConstants(constantsAddress).NUMBER_OF_NODES_FOR_SCHAIN();
         if (typeOfSchain == 1) {
             partOfNode = IConstants(constantsAddress).TINY_DIVISOR() / IConstants(constantsAddress).TINY_DIVISOR();
@@ -268,52 +268,4 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
         // }
         return INodesData(nodesDataAddress).removeSpaceFromNode(nodeIndex, space);
     }
-
-    // /**
-    //  * @dev setNumberOfNodesInGroup - checks is Nodes enough to create Schain
-    //  * and returns number of Nodes in group
-    //  * and how much space would be occupied on its, based on given type of Schain
-    //  * @param groupIndex - Groups identifier
-    //  * @param partOfNode - divisor of given type of Schain
-    //  * @param dataAddress - address of Data contract
-    //  * @return numberOfNodes - number of Nodes in Group
-    //  * @return space - needed space to occupy
-    //  */
-    // function setNumberOfNodesInGroup(bytes32 groupIndex, uint8 partOfNode, address dataAddress)
-    // internal view returns (uint numberOfNodes)
-    // {
-    //     address nodesDataAddress = contractManager.contracts(keccak256(abi.encodePacked("NodesData")));
-    //     // address constantsAddress = contractManager.contracts(keccak256(abi.encodePacked("Constants")));
-    //     address schainsDataAddress = contractManager.contracts(keccak256(abi.encodePacked("SchainsData")));
-    //     // uint numberOfAvailableNodes = 0;
-    //     uint needNodes = 1;
-    //     bool nodesEnough = false;
-    //     if (IGroupsData(schainsDataAddress).getNumberOfNodesInGroup(groupIndex) == 0) {
-    //         needNodes = IGroupsData(dataAddress).getRecommendedNumberOfNodes(groupIndex);
-    //     }
-    //     numberOfNodes = INodesData(nodesDataAddress).getNumberOfNodes();
-    //     nodesEnough = INodesData(nodesDataAddress).enoughNodesWithFreeSpace(partOfNode, needNodes);
-    //     // if (partOfNode == IConstants(constantsAddress).MEDIUM_DIVISOR()) {
-    //     //     numberOfNodes = INodesData(nodesDataAddress).getNumberOfNodes();
-    //     //     nodesEnough = INodesData(nodesDataAddress).enoughNodesWithFreeSpace(partOfNode, needNodes);
-    //     // } else if (partOfNode == IConstants(constantsAddress).TINY_DIVISOR() || partOfNode == IConstants(constantsAddress).SMALL_DIVISOR()) {
-    //     //     space = IConstants(constantsAddress).TINY_DIVISOR() / partOfNode;
-    //     //     numberOfNodes = INodesData(nodesDataAddress).getNumberOfNodes();
-    //     //     nodesEnough = INodesData(nodesDataAddress).getNumberOfFreeodes(space, needNodes);
-    //     // } else if (partOfNode == IConstants(constantsAddress).MEDIUM_TEST_DIVISOR()) {
-    //     //     space = IConstants(constantsAddress).TINY_DIVISOR() / partOfNode;
-    //     //     numberOfNodes = INodesData(nodesDataAddress).getNumberOfNodes();
-    //     //     numberOfAvailableNodes = INodesData(nodesDataAddress).numberOfActiveNodes();
-    //     //     nodesEnough = numberOfAvailableNodes >= needNodes ? true : false;
-    //     // } else if (partOfNode == 0) {
-    //     //     space = partOfNode;
-    //     //     numberOfNodes = INodesData(nodesDataAddress).getNumberOfNodes();
-    //     //     numberOfAvailableNodes = INodesData(nodesDataAddress).numberOfActiveNodes();
-    //     //     nodesEnough = numberOfAvailableNodes >= needNodes ? true : false;
-    //     // } else {
-    //     //     revert("Can't set number of nodes. Divisor does not match any valid schain type");
-    //     // }
-    //     // Check that schain is not created yet
-    //     require(nodesEnough, "Not enough nodes to create Schain");
-    // }
 }

@@ -11,7 +11,8 @@
     "TokenSaleManager": "TokenSaleManager",
     "TokenState": "TokenState",
     "ValidatorService": "ValidatorService",
-    "ContractManager": "ContractManager"
+    "ContractManager": "ContractManager",
+    "ConstantsHolder": "ConstantsHolder"
   },
   "dependencies": {},
   "name": "skale-manager",

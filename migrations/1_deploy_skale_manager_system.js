@@ -104,7 +104,8 @@ async function deploy(deployer, networkName, accounts) {
         "TimeHelpers",
         "TokenSaleManager",
         "TokenState",
-        "ValidatorService"
+        "ValidatorService",
+        "ConstantsHolder"
     ]
 
     contractsData = [];
@@ -133,8 +134,6 @@ async function deploy(deployer, networkName, accounts) {
             contract = await create(Object.assign({ contractAlias: contractName, methodName: 'initialize', methodArgs: [contractManager.address] }, options));
         }
         deployed.set(contractName, contract);
-        console.log(deployed.get(contractName).address);
-        console.log();
     }    
 
     console.log("Register contracts");
@@ -148,14 +147,11 @@ async function deploy(deployer, networkName, accounts) {
 
     console.log("Done");
     
-    // await deployer.deploy(SkaleToken, contractManager.address, [], {gas: gasLimit * gas_multiplier});
-    // await contractManager.setContractsAddress("SkaleToken", SkaleToken.address).then(function(res) {
-    //     console.log("Contract Skale Token with address", SkaleToken.address, "registred in Contract Manager");
-    // });
-    // await deployer.deploy(ConstantsHolder, contractManager.address, {gas: gasLimit});
-    // await contractManager.setContractsAddress("Constants", ConstantsHolder.address).then(function(res) {
-    //     console.log("Contract Constants with address", ConstantsHolder.address, "registred in Contract Manager");
-    // });
+    await deployer.deploy(SkaleToken, contractManager.address, [], {gas: gasLimit * gas_multiplier});
+    await contractManager.methods.setContractsAddress("SkaleToken", SkaleToken.address).send({from: deployAccount}).then(function(res) {
+        console.log("Contract Skale Token with address", SkaleToken.address, "registred in Contract Manager");
+    });
+    
     // await deployer.deploy(NodesData, 5260000, contractManager.address, {gas: gasLimit * gas_multiplier});
     // await contractManager.setContractsAddress("NodesData", NodesData.address).then(function(res) {
     //     console.log("Contract Nodes Data with address", NodesData.address, "registred in Contract Manager");

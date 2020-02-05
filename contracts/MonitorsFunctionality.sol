@@ -101,7 +101,7 @@ contract MonitorsFunctionality is GroupsFunctionality {
      * addMonitor - setup monitors of node
      */
     function addMonitor(uint nodeIndex) external allow(executorName) {
-        address constantsAddress = contractManager.getContract("Constants");
+        address constantsAddress = contractManager.getContract("ConstantsHolder");
         IConstants constantsHolder = IConstants(constantsAddress);
         bytes32 groupIndex = keccak256(abi.encodePacked(nodeIndex));
         uint possibleNumberOfNodes = constantsHolder.NUMBER_OF_MONITORS();
@@ -116,7 +116,7 @@ contract MonitorsFunctionality is GroupsFunctionality {
     }
 
     function upgradeMonitor(uint nodeIndex) external allow(executorName) {
-        address constantsAddress = contractManager.getContract("Constants");
+        address constantsAddress = contractManager.getContract("ConstantsHolder");
         IConstants constantsHolder = IConstants(constantsAddress);
         bytes32 groupIndex = keccak256(abi.encodePacked(nodeIndex));
         uint possibleNumberOfNodes = constantsHolder.NUMBER_OF_MONITORS();
@@ -152,7 +152,7 @@ contract MonitorsFunctionality is GroupsFunctionality {
         require(time <= block.timestamp, "The time has not come to send verdict");
         MonitorsData data = MonitorsData(contractManager.getContract("MonitorsData"));
         data.removeCheckedNode(monitorIndex, index);
-        address constantsAddress = contractManager.getContract("Constants");
+        address constantsAddress = contractManager.getContract("ConstantsHolder");
         bool receiveVerdict = time + IConstants(constantsAddress).deltaPeriod() > uint32(block.timestamp);
         if (receiveVerdict) {
             data.addVerdict(keccak256(abi.encodePacked(toNodeIndex)), downtime, latency);
@@ -340,7 +340,7 @@ contract MonitorsFunctionality is GroupsFunctionality {
     }
 
     function getDataToBytes(uint nodeIndex) internal view returns (bytes32 bytesParameters) {
-        address constantsAddress = contractManager.getContract("Constants");
+        address constantsAddress = contractManager.getContract("ConstantsHolder");
         address nodesDataAddress = contractManager.getContract("NodesData");
         bytes memory tempData = new bytes(32);
         bytes14 bytesOfIndex = bytes14(uint112(nodeIndex));

@@ -215,7 +215,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
         address nodesDataAddress) internal returns (uint)
     {
         uint commonBounty;
-        IConstants constants = IConstants(contractManager.getContract("Constants"));
+        IConstants constants = IConstants(contractManager.getContract("ConstantsHolder"));
         IManagerData managerData = IManagerData(contractManager.getContract("ManagerData"));
         INodesData nodesData = INodesData(contractManager.getContract("NodesData"));
 

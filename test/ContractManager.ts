@@ -17,7 +17,7 @@ contract("ContractManager", ([deployer, user]) => {
   });
 
   it("Should add a right contract address (ConstantsHolder) to the register", async () => {
-    const simpleContractName: string = "ConstantsHolder";
+    const simpleContractName: string = "Constants";
     await contractManager.setContractsAddress(simpleContractName, constantsHolder.address);
 
     const hash: string = web3.utils.soliditySha3(simpleContractName);
