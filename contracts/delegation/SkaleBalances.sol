@@ -80,7 +80,7 @@ contract SkaleBalances is Permissions, IERC777Recipient {
         }
     }
 
-    function initialize(address _contractsAddress) public {
+    function initialize(address _contractsAddress) public initializer {
         Permissions.initialize(_contractsAddress);
         _lockBounty = true;
         _erc1820 = IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);

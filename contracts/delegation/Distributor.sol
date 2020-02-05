@@ -50,7 +50,7 @@ contract Distributor is Permissions {
             false);
     }
 
-    function initialize(address _contractManager) public {
+    function initialize(address _contractManager) public initializer {
         Permissions.initialize(_contractManager);
     }
 

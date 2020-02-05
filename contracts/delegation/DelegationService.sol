@@ -280,7 +280,7 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
         distributeBounty(amount, validatorId);
     }
 
-    function initialize(address _contractsAddress) public {
+    function initialize(address _contractsAddress) public initializer {
         Permissions.initialize(_contractsAddress);
         _launchTimestamp = now;
         _erc1820 = IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);

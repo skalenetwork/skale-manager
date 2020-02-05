@@ -194,7 +194,7 @@ contract DelegationController is Permissions {
         return delegationsValidator;
     }
 
-    function initialize(address _contractsAddress) public {
+    function initialize(address _contractsAddress) public initializer {
         Permissions.initialize(_contractsAddress);
     }
 }

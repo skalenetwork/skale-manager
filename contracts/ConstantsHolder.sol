@@ -160,7 +160,7 @@ contract ConstantsHolder is IConstants, Permissions {
      * @dev constructor in Permissions approach
      * @param contractsAddress needed in Permissions constructor
      */
-    function initialize(address contractsAddress) public {
+    function initialize(address contractsAddress) public initializer {
         Permissions.initialize(contractsAddress);
 
         msr = 5e6 * 1e18;

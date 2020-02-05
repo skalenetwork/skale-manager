@@ -10,7 +10,9 @@ const deployNodesData: (contractManager: ContractManagerInstance) => Promise<Nod
                                 await deployConstantsHolder(contractManager);
                             },
                             async (contractManager: ContractManagerInstance) => {
-                                return await NodesData.new(5, contractManager.address);
+                                const instance = await NodesData.new();
+                                await instance.initialize(5, contractManager.address);
+                                return instance;
                             });
 
 export { deployNodesData };

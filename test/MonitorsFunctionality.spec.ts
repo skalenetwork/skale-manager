@@ -17,6 +17,7 @@ import chai = require("chai");
 import * as chaiAsPromised from "chai-as-promised";
 import { deployConstantsHolder } from "./utils/deploy/constantsHolder";
 import { deployContractManager } from "./utils/deploy/contractManager";
+import { deployNodesData } from "./utils/deploy/nodesData";
 import { deployNodesFunctionality } from "./utils/deploy/nodesFunctionality";
 chai.should();
 chai.use((chaiAsPromised));
@@ -48,11 +49,7 @@ contract("MonitorsFunctionality", ([owner, validator]) => {
       contractManager.address, {from: owner, gas: 8000000 * gasMultiplier});
     await contractManager.setContractsAddress("MonitorsData", monitorsData.address);
 
-    nodesData = await NodesData.new(
-        5260000,
-        contractManager.address,
-        {from: owner, gas: 8000000 * gasMultiplier});
-    await contractManager.setContractsAddress("NodesData", nodesData.address);
+    nodesData = await deployNodesData(contractManager);
 
     constantsHolder = await deployConstantsHolder(contractManager);
     nodesFunctionality = await deployNodesFunctionality(contractManager);

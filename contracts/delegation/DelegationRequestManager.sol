@@ -117,7 +117,7 @@ contract DelegationRequestManager is Permissions {
         tokenState.accept(delegationId);
     }
 
-    function initialize(address _contractsAddress) public {
+    function initialize(address _contractsAddress) public initializer {
         Permissions.initialize(_contractsAddress);
     }
 }

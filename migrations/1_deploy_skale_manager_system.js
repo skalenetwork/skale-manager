@@ -95,6 +95,7 @@ async function deploy(deployer, networkName, accounts) {
 
     const contracts = [
         "ContractManager", // must be in first position
+
         "DelegationController",
         "DelegationPeriodManager",
         "DelegationRequestManager",
@@ -105,7 +106,9 @@ async function deploy(deployer, networkName, accounts) {
         "TokenSaleManager",
         "TokenState",
         "ValidatorService",
-        "ConstantsHolder"
+
+        "ConstantsHolder",
+        "NodesData"
     ]
 
     contractsData = [];
@@ -130,6 +133,8 @@ async function deploy(deployer, networkName, accounts) {
             console.log("contractManager address:", contract.address);
         } else if (contractName == "TimeHelpers") {
             contract = await create(Object.assign({ contractAlias: contractName }, options));
+        } else if (contractName == "NodesData") {
+            contract = await create(Object.assign({ contractAlias: contractName, methodName: 'initialize', methodArgs: [5260000, contractManager.address] }, options));
         } else {
             contract = await create(Object.assign({ contractAlias: contractName, methodName: 'initialize', methodArgs: [contractManager.address] }, options));
         }
@@ -151,11 +156,7 @@ async function deploy(deployer, networkName, accounts) {
     await contractManager.methods.setContractsAddress("SkaleToken", SkaleToken.address).send({from: deployAccount}).then(function(res) {
         console.log("Contract Skale Token with address", SkaleToken.address, "registred in Contract Manager");
     });
-    
-    // await deployer.deploy(NodesData, 5260000, contractManager.address, {gas: gasLimit * gas_multiplier});
-    // await contractManager.setContractsAddress("NodesData", NodesData.address).then(function(res) {
-    //     console.log("Contract Nodes Data with address", NodesData.address, "registred in Contract Manager");
-    // });
+
     // await deployer.deploy(NodesFunctionality, contractManager.address, {gas: gasLimit * gas_multiplier});
     // await contractManager.setContractsAddress("NodesFunctionality", NodesFunctionality.address).then(function(res) {
     //     console.log("Contract Nodes Functionality with address", NodesFunctionality.address, "registred in Contract Manager");

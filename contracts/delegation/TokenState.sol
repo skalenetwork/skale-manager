@@ -129,7 +129,7 @@ contract TokenState is Permissions {
         _timelimit[delegationId] = now;
     }
 
-    function initialize(address _contractManager) public {
+    function initialize(address _contractManager) public initializer {
         Permissions.initialize(_contractManager);
     }
 

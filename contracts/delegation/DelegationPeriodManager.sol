@@ -38,7 +38,7 @@ contract DelegationPeriodManager is Permissions {
         stakeMultipliers[monthsCount] = 0;
     }
 
-    function initialize(address _contractsAddress) public {
+    function initialize(address _contractsAddress) public initializer {
         Permissions.initialize(_contractsAddress);
         stakeMultipliers[3] = 100;
         stakeMultipliers[6] = 150;

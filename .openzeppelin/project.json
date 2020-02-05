@@ -12,7 +12,8 @@
     "TokenState": "TokenState",
     "ValidatorService": "ValidatorService",
     "ContractManager": "ContractManager",
-    "ConstantsHolder": "ConstantsHolder"
+    "ConstantsHolder": "ConstantsHolder",
+    "NodesData": "NodesData"
   },
   "dependencies": {},
   "name": "skale-manager",
