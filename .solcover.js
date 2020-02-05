@@ -1,6 +1,31 @@
+require('dotenv').config();
+
 module.exports = {    
-    compileCommand: '../node_modules/.bin/truffle compile --network coverage',
-    testCommand: '../node_modules/.bin/truffle test --network coverage --gas_multiplier 10',
-    norpc: true,
-    skipFiles: ['Migrations.sol']
+    compileCommand: 'npx buidler compile',
+    testCommand: 'npx buidler test',
+    skipFiles: ['Migrations.sol', 'thirdparty/', 'interfaces/'],
+    providerOptions: {
+        "accounts": [
+            {
+                "secretKey": process.env.PRIVATE_KEY_1,
+                "balance": "0xd3c21bcecceda1000000"
+            },
+            {
+                "secretKey": process.env.PRIVATE_KEY_2,
+                "balance": "0xd3c21bcecceda1000000"
+            },
+            {
+                "secretKey": process.env.PRIVATE_KEY_3,
+                "balance": "0xd3c21bcecceda1000000"
+            },
+            {
+                "secretKey": process.env.PRIVATE_KEY_4,
+                "balance": "0xd3c21bcecceda1000000"
+            },
+            {
+                "secretKey": process.env.PRIVATE_KEY_5,
+                "balance": "0xd3c21bcecceda0000000"
+            }
+        ]
+    }
 };

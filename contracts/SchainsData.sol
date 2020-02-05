@@ -17,10 +17,12 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity ^0.5.0;
+pragma solidity ^0.5.3;
+pragma experimental ABIEncoderV2;
 
 import "./GroupsData.sol";
 import "./interfaces/ISchainsData.sol";
+import "./interfaces/IConstants.sol";
 
 
 /**
@@ -40,6 +42,23 @@ contract SchainsData is ISchainsData, GroupsData {
         uint64 index;
     }
 
+    /**
+    nodeIndex - index of Node which is in process of rotation
+    startedRotation - timestamp of starting node rotation
+    inRotation - if true, only nodeIndex able to rotate
+    */
+    struct Rotation {
+        uint nodeIndex;
+        uint newNodeIndex;
+        uint freezeUntil;
+        uint rotationCounter;
+    }
+
+    struct LeavingHistory {
+        bytes32 schainIndex;
+        uint finishedRotation;
+    }
+
     // mapping which contain all schains
     mapping (bytes32 => Schain) public schains;
     // mapping shows schains by owner's address
@@ -48,6 +67,11 @@ contract SchainsData is ISchainsData, GroupsData {
     mapping (uint => bytes32[]) public schainsForNodes;
 
     mapping (uint => uint[]) public holesForNodes;
+
+    mapping (bytes32 => Rotation) public rotations;
+
+    mapping (uint => LeavingHistory[]) public leavingHistory;
+
     // array which contain all schains
     bytes32[] public schainsAtSystem;
 
@@ -205,6 +229,27 @@ contract SchainsData is ISchainsData, GroupsData {
         }
     }
 
+    function startRotation(bytes32 schainIndex, uint nodeIndex) external {
+        IConstants constants = IConstants(contractManager.getContract("Constants"));
+        rotations[schainIndex].nodeIndex = nodeIndex;
+        rotations[schainIndex].freezeUntil = now + constants.rotationDelay();
+    }
+
+    function finishRotation(bytes32 schainIndex, uint nodeIndex, uint newNodeIndex) external {
+        IConstants constants = IConstants(contractManager.getContract("Constants"));
+        leavingHistory[nodeIndex].push(LeavingHistory(schainIndex, now + constants.rotationDelay()));
+        rotations[schainIndex].newNodeIndex = newNodeIndex;
+        rotations[schainIndex].rotationCounter++;
+    }
+
+    function getRotation(bytes32 schainIndex) external view returns (Rotation memory) {
+        return rotations[schainIndex];
+    }
+
+    function getLeavingHistory(uint nodeIndex) external view returns (LeavingHistory[] memory) {
+        return leavingHistory[nodeIndex];
+    }
+
     /**
      * @dev getSchains - gets all Schains at the system
      * @return array of hashes by Schain names
@@ -300,6 +345,40 @@ contract SchainsData is ISchainsData, GroupsData {
      */
     function isOwnerAddress(address from, bytes32 schainId) external view returns (bool) {
         return schains[schainId].owner == from;
+    }
+
+    function isSchainExist(bytes32 schainId) external view returns (bool) {
+        return keccak256(abi.encodePacked(schains[schainId].name)) != keccak256(abi.encodePacked(""));
+    }
+
+    function getSchainName(bytes32 schainId) external view returns (string memory) {
+        return schains[schainId].name;
+    }
+
+    function getActiveSchain(uint nodeIndex) external view returns (bytes32) {
+        for (uint i = 0; i < schainsForNodes[nodeIndex].length; i++) {
+            if (schainsForNodes[nodeIndex][i] != bytes32(0)) {
+                return schainsForNodes[nodeIndex][i];
+            }
+        }
+        return bytes32(0);
+    }
+
+    function getActiveSchains(uint nodeIndex) external view returns (bytes32[] memory activeSchains) {
+        uint activeAmount = 0;
+        for (uint i = 0; i < schainsForNodes[nodeIndex].length; i++) {
+            if (schainsForNodes[nodeIndex][i] != bytes32(0)) {
+                activeAmount++;
+            }
+        }
+
+        uint cursor = 0;
+        activeSchains = new bytes32[](activeAmount);
+        for (uint i = 0; i < schainsForNodes[nodeIndex].length; i++) {
+            if (schainsForNodes[nodeIndex][i] != bytes32(0)) {
+                activeSchains[cursor++] = schainsForNodes[nodeIndex][i];
+            }
+        }
     }
 
 }

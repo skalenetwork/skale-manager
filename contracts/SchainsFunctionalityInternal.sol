@@ -17,12 +17,14 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity ^0.5.0;
+pragma solidity ^0.5.3;
+pragma experimental ABIEncoderV2;
 
 import "./GroupsFunctionality.sol";
 import "./interfaces/INodesData.sol";
-import "./interfaces/ISchainsData.sol";
 import "./interfaces/IConstants.sol";
+import "./SchainsData.sol";
+import "./thirdparty/StringUtils.sol";
 
 
 /**
@@ -103,41 +105,18 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
         }
     }
 
-    function replaceNode(
-        uint nodeIndex,
-        bytes32 groupHash
-    )
-        external
-        allowThree(executorName, "SkaleDKG", "SchainsFunctionalityInternal")
-        returns (uint newNodeIndex)
-    {
-        this.excludeNodeFromSchain(nodeIndex, groupHash);
-        newNodeIndex = selectNodeToGroup(groupHash);
-    }
-
-    function selectNewNode(bytes32 groupHash) external allow(executorName) returns (uint newNodeIndex) {
-        newNodeIndex = selectNodeToGroup(groupHash);
-    }
-
-    function removeNodeFromSchain(uint nodeIndex, bytes32 groupHash) external allow(executorName) {
-        address schainsDataAddress = contractManager.contracts(keccak256(abi.encodePacked("SchainsData")));
-        uint groupIndex = findSchainAtSchainsForNode(nodeIndex, groupHash);
-        uint indexOfNode = findNode(groupHash, nodeIndex);
-        IGroupsData(schainsDataAddress).removeNodeFromGroup(indexOfNode, groupHash);
-        IGroupsData(schainsDataAddress).removeExceptionNode(groupHash, nodeIndex);
-        ISchainsData(schainsDataAddress).removeSchainForNode(nodeIndex, groupIndex);
-    }
-
-    function excludeNodeFromSchain(uint nodeIndex, bytes32 groupHash)
-        external
-        allowThree(executorName, "SkaleDKG", "SchainsFunctionalityInternal")
-    {
+    function removeNodeFromSchain(uint nodeIndex, bytes32 groupHash) external allowTwo(executorName, "SkaleDKG") {
         address schainsDataAddress = contractManager.contracts(keccak256(abi.encodePacked("SchainsData")));
         uint groupIndex = findSchainAtSchainsForNode(nodeIndex, groupHash);
         uint indexOfNode = findNode(groupHash, nodeIndex);
         IGroupsData(schainsDataAddress).removeNodeFromGroup(indexOfNode, groupHash);
         // IGroupsData(schainsDataAddress).removeExceptionNode(groupHash, nodeIndex);
         ISchainsData(schainsDataAddress).removeSchainForNode(nodeIndex, groupIndex);
+    }
+
+    function removeNodeFromExceptions(bytes32 groupHash, uint nodeIndex) external allow(executorName) {
+        address schainsDataAddress = contractManager.contracts(keccak256(abi.encodePacked("SchainsData")));
+        IGroupsData(schainsDataAddress).removeExceptionNode(groupHash, nodeIndex);
     }
 
     function isEnoughNodes(bytes32 groupIndex) external view returns (uint[] memory result) {
@@ -147,7 +126,7 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
         uint[] memory nodesWithFreeSpace = nodesData.getNodesWithFreeSpace(space);
         uint counter = 0;
         for (uint i = 0; i < nodesWithFreeSpace.length; i++) {
-            if (groupsData.isExceptionNode(groupIndex, nodesWithFreeSpace[i]) || !nodesData.isNodeActive(nodesWithFreeSpace[i])) {
+            if (!isCorrespond(groupIndex, nodesWithFreeSpace[i])) {
                 counter++;
             }
         }
@@ -155,7 +134,7 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
             result = new uint[](nodesWithFreeSpace.length - counter);
             counter = 0;
             for (uint i = 0; i < nodesWithFreeSpace.length; i++) {
-                if (!groupsData.isExceptionNode(groupIndex, nodesWithFreeSpace[i]) && nodesData.isNodeActive(nodesWithFreeSpace[i])) {
+                if (isCorrespond(groupIndex, nodesWithFreeSpace[i])) {
                     result[counter] = nodesWithFreeSpace[i];
                     counter++;
                 }
@@ -163,21 +142,17 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
         }
     }
 
-    /**
-     * @dev findSchainAtSchainsForNode - finds index of Schain at schainsForNode array
-     * @param nodeIndex - index of Node at common array of Nodes
-     * @param schainId - hash of name of Schain
-     * @return index of Schain at schainsForNode array
-     */
-    function findSchainAtSchainsForNode(uint nodeIndex, bytes32 schainId) public view returns (uint) {
-        address dataAddress = contractManager.contracts(keccak256(abi.encodePacked(dataName)));
-        uint length = ISchainsData(dataAddress).getLengthOfSchainsForNode(nodeIndex);
-        for (uint i = 0; i < length; i++) {
-            if (ISchainsData(dataAddress).schainsForNodes(nodeIndex, i) == schainId) {
-                return i;
+    function isAnyFreeNode(bytes32 groupIndex) external view returns (bool) {
+        IGroupsData groupsData = IGroupsData(contractManager.getContract(dataName));
+        INodesData nodesData = INodesData(contractManager.getContract("NodesData"));
+        uint8 space = uint8(uint(groupsData.getGroupData(groupIndex)));
+        uint[] memory nodesWithFreeSpace = nodesData.getNodesWithFreeSpace(space);
+        for (uint i = 0; i < nodesWithFreeSpace.length; i++) {
+            if (isCorrespond(groupIndex, nodesWithFreeSpace[i])) {
+                return true;
             }
         }
-        return length;
+        return false;
     }
 
     /**
@@ -185,9 +160,9 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
      * @param groupIndex - hash of name of Schain
      * @return nodeIndex - global index of Node
      */
-    function selectNodeToGroup(bytes32 groupIndex) internal returns (uint) {
-        IGroupsData groupsData = IGroupsData(contractManager.contracts(keccak256(abi.encodePacked(dataName))));
-        ISchainsData schainsData = ISchainsData(contractManager.contracts(keccak256(abi.encodePacked(dataName))));
+    function selectNodeToGroup(bytes32 groupIndex) external allow(executorName) returns (uint) {
+        IGroupsData groupsData = IGroupsData(contractManager.getContract(dataName));
+        ISchainsData schainsData = ISchainsData(contractManager.getContract(dataName));
         // INodesData nodesData = INodesData(contractManager.contracts(keccak256(abi.encodePacked("NodesData"))));
         require(groupsData.isGroupActive(groupIndex), "Group is not active");
         uint8 space = uint8(uint(groupsData.getGroupData(groupIndex)));
@@ -209,6 +184,23 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
     }
 
     /**
+     * @dev findSchainAtSchainsForNode - finds index of Schain at schainsForNode array
+     * @param nodeIndex - index of Node at common array of Nodes
+     * @param schainId - hash of name of Schain
+     * @return index of Schain at schainsForNode array
+     */
+    function findSchainAtSchainsForNode(uint nodeIndex, bytes32 schainId) public view returns (uint) {
+        address dataAddress = contractManager.contracts(keccak256(abi.encodePacked(dataName)));
+        uint length = ISchainsData(dataAddress).getLengthOfSchainsForNode(nodeIndex);
+        for (uint i = 0; i < length; i++) {
+            if (ISchainsData(dataAddress).schainsForNodes(nodeIndex, i) == schainId) {
+                return i;
+            }
+        }
+        return length;
+    }
+
+    /**
      * @dev generateGroup - generates Group for Schain
      * @param groupIndex - index of Group
      */
@@ -225,7 +217,6 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
         nodesInGroup = new uint[](groupsData.getRecommendedNumberOfNodes(groupIndex));
 
         uint[] memory possibleNodes = this.isEnoughNodes(groupIndex);
-
         require(possibleNodes.length >= nodesInGroup.length, "Not enough nodes to create Schain");
         uint ignoringTail = 0;
         uint random = uint(keccak256(abi.encodePacked(uint(blockhash(block.number - 1)), groupIndex)));
@@ -268,6 +259,13 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
         // }
         return INodesData(nodesDataAddress).removeSpaceFromNode(nodeIndex, space);
     }
+
+    function isCorrespond(bytes32 groupIndex, uint nodeIndex) internal view returns (bool) {
+        IGroupsData groupsData = IGroupsData(contractManager.contracts(keccak256(abi.encodePacked(dataName))));
+        INodesData nodesData = INodesData(contractManager.contracts(keccak256(abi.encodePacked("NodesData"))));
+        return !groupsData.isExceptionNode(groupIndex, nodeIndex) && nodesData.isNodeActive(nodeIndex);
+    }
+
 
     // /**
     //  * @dev setNumberOfNodesInGroup - checks is Nodes enough to create Schain

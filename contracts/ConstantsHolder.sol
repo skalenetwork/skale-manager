@@ -107,6 +107,8 @@ contract ConstantsHolder is IConstants, Permissions {
 
     //Need to add minimal allowed parameters for verdicts
 
+    uint public rotationDelay = 12 hours;
+
     /**
      * @dev constructor in Permissions approach
      * @param contractsAddress needed in Permissions constructor
@@ -155,5 +157,9 @@ contract ConstantsHolder is IConstants, Permissions {
      */
     function setLatency(uint32 newAllowableLatency) external onlyOwner {
         allowableLatency = newAllowableLatency;
+    }
+
+    function setRotationDelay(uint newDelay) external onlyOwner {
+        rotationDelay = newDelay;
     }
 }

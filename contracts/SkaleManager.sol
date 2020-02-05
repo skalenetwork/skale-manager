@@ -27,6 +27,10 @@ import "./interfaces/INodesFunctionality.sol";
 import "./interfaces/IValidatorsFunctionality.sol";
 import "./interfaces/ISchainsFunctionality.sol";
 import "./interfaces/IManagerData.sol";
+import "./ValidatorsFunctionality.sol";
+import "./NodesFunctionality.sol";
+import "./NodesData.sol";
+import "./SchainsFunctionality.sol";
 import "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
 import "@openzeppelin/contracts/introspection/IERC1820Registry.sol";
 
@@ -75,20 +79,26 @@ contract SkaleManager is IERC777Recipient, Permissions {
         }
     }
 
-    function initWithdrawDeposit(uint nodeIndex) external {
-        address nodesFunctionalityAddress = contractManager.contracts(keccak256(abi.encodePacked("NodesFunctionality")));
-        require(
-            INodesFunctionality(nodesFunctionalityAddress).initWithdrawDeposit(msg.sender, nodeIndex),
-            "Initialization of deposit withdrawing is failed");
-    }
-
-    function completeWithdrawdeposit(uint nodeIndex) external {
-        address nodesFunctionalityAddress = contractManager.contracts(keccak256(abi.encodePacked("NodesFunctionality")));
-        uint amount = INodesFunctionality(nodesFunctionalityAddress).completeWithdrawDeposit(msg.sender, nodeIndex);
-        address skaleTokenAddress = contractManager.contracts(keccak256(abi.encodePacked("SkaleToken")));
-        require(
-            ISkaleToken(skaleTokenAddress).transfer(msg.sender, amount),
-            "Token transfering is failed");
+    function nodeExit(uint nodeIndex) external {
+        NodesData nodesData = NodesData(contractManager.getContract("NodesData"));
+        NodesFunctionality nodesFunctionality = NodesFunctionality(contractManager.getContract("NodesFunctionality"));
+        SchainsFunctionality schainsFunctionality = SchainsFunctionality(contractManager.getContract("SchainsFunctionality"));
+        SchainsData schainsData = SchainsData(contractManager.getContract("SchainsData"));
+        IConstants constants = IConstants(contractManager.getContract("Constants"));
+        schainsFunctionality.freezeSchains(nodeIndex);
+        if (nodesData.isNodeActive(nodeIndex)) {
+            require(nodesFunctionality.initExit(msg.sender, nodeIndex), "Initialization of node exit is failed");
+        }
+        bool completed;
+        if (schainsData.getActiveSchain(nodeIndex) != bytes32(0)) {
+            completed = schainsFunctionality.exitFromSchain(nodeIndex);
+        } else {
+            completed = true;
+        }
+        if (completed) {
+            require(nodesFunctionality.completeExit(msg.sender, nodeIndex), "Finishing of node exit is failed");
+            nodesData.changeNodeFinishTime(nodeIndex, uint32(now + constants.rotationDelay()));
+        }
     }
 
     function deleteNode(uint nodeIndex) external {

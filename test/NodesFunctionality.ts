@@ -7,7 +7,9 @@ import { ConstantsHolderContract,
          NodesDataContract,
          NodesDataInstance,
          NodesFunctionalityContract,
-         NodesFunctionalityInstance } from "../types/truffle-contracts";
+         NodesFunctionalityInstance,
+         StringUtilsContract,
+         StringUtilsInstance } from "../types/truffle-contracts";
 
 import { gasMultiplier } from "./utils/command_line";
 import { skipTime } from "./utils/time";
@@ -16,6 +18,7 @@ const ContractManager: ContractManagerContract = artifacts.require("./ContractMa
 const ConstantsHolder: ConstantsHolderContract = artifacts.require("./ConstantsHolder");
 const NodesData: NodesDataContract = artifacts.require("./NodesData");
 const NodesFunctionality: NodesFunctionalityContract = artifacts.require("./NodesFunctionality");
+const StringUtils: StringUtilsContract = artifacts.require("./StringUtils");
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -25,6 +28,7 @@ contract("NodesFunctionality", ([owner, validator]) => {
     let constantsHolder: ConstantsHolderInstance;
     let nodesData: NodesDataInstance;
     let nodesFunctionality: NodesFunctionalityInstance;
+    let stringUtils: StringUtilsInstance;
 
     beforeEach(async () => {
         contractManager = await ContractManager.new({from: owner});
@@ -35,7 +39,6 @@ contract("NodesFunctionality", ([owner, validator]) => {
         await contractManager.setContractsAddress("Constants", constantsHolder.address);
 
         nodesData = await NodesData.new(
-            5,
             contractManager.address,
             {from: owner, gas: 8000000 * gasMultiplier});
         await contractManager.setContractsAddress("NodesData", nodesData.address);
@@ -44,6 +47,9 @@ contract("NodesFunctionality", ([owner, validator]) => {
             contractManager.address,
             {from: owner, gas: 8000000 * gasMultiplier});
         await contractManager.setContractsAddress("NodesFunctionality", nodesFunctionality.address);
+
+        stringUtils = await StringUtils.new();
+        await contractManager.setContractsAddress("StringUtils", stringUtils.address);
     });
 
     it("should fail to create node if no money", async () => {
@@ -116,7 +122,6 @@ contract("NodesFunctionality", ([owner, validator]) => {
         node[4].should.be.equal(
             "0x1122334455667788990011223344556677889900112233445566778899001122" +
             "1122334455667788990011223344556677889900112233445566778899001122");
-        node[8].should.be.deep.equal(web3.utils.toBN(0));
     });
 
     describe("when node is created", async () => {
@@ -152,41 +157,34 @@ contract("NodesFunctionality", ([owner, validator]) => {
             await nodesData.numberOfActiveNodes().should.be.eventually.deep.equal(web3.utils.toBN(0));
         });
 
-        it("should fail to wethdraw deposit for non existing node", async () => {
-            await nodesFunctionality.initWithdrawDeposit(validator, 1)
+        it("should fail to initiate exiting for non existing node", async () => {
+            await nodesFunctionality.initExit(validator, 1)
                 .should.be.eventually.rejectedWith("Node does not exist for message sender");
 
-            await nodesFunctionality.initWithdrawDeposit(owner, 0)
-                .should.be.eventually.rejectedWith("Node does not exist for message sender");
+            // await nodesFunctionality.initExit(owner, 0)
+            //     .should.be.eventually.rejectedWith("Validator with such address doesn't exist");
         });
 
-        it("should init withdrawing deposit", async () => {
-            await nodesFunctionality.initWithdrawDeposit(validator, 0);
+        it("should initiate exiting", async () => {
+            await nodesFunctionality.initExit(validator, 0);
 
             await nodesData.numberOfActiveNodes().should.be.eventually.deep.equal(web3.utils.toBN(0));
         });
 
-        it("should complete withdrawing deposit", async () => {
-            await nodesFunctionality.completeWithdrawDeposit(owner, 0)
+        it("should complete exiting", async () => {
+            // await nodesFunctionality.completeExit(owner, 0)
+            //     .should.be.eventually.rejectedWith("Validator with such address doesn't exist");
+
+            await nodesFunctionality.completeExit(validator, 1)
                 .should.be.eventually.rejectedWith("Node does not exist for message sender");
 
-            await nodesFunctionality.completeWithdrawDeposit(validator, 1)
-                .should.be.eventually.rejectedWith("Node does not exist for message sender");
+            await nodesFunctionality.completeExit(validator, 0)
+                .should.be.eventually.rejectedWith("Node is not Leaving");
 
-            await nodesFunctionality.completeWithdrawDeposit(validator, 0)
-                .should.be.eventually.rejectedWith("Node is no Leaving");
+            await nodesFunctionality.initExit(validator, 0);
 
-            await nodesFunctionality.initWithdrawDeposit(validator, 0);
+            await nodesFunctionality.completeExit(validator, 0);
 
-            await nodesFunctionality.completeWithdrawDeposit(validator, 0)
-                .should.be.eventually.rejectedWith("eaving period is not expired");
-
-            skipTime(web3, 5);
-
-            await nodesFunctionality.completeWithdrawDeposit(validator, 0);
-
-            const node = await nodesData.nodes(0);
-            node[8].should.be.deep.equal(web3.utils.toBN(2));
         });
     });
 
@@ -228,56 +226,40 @@ contract("NodesFunctionality", ([owner, validator]) => {
             await nodesData.numberOfActiveNodes().should.be.eventually.deep.equal(web3.utils.toBN(1));
         });
 
-        it("should init withdrawing deposit from first node", async () => {
-            await nodesFunctionality.initWithdrawDeposit(validator, 0);
+        it("should initiate exit from first node", async () => {
+            await nodesFunctionality.initExit(validator, 0);
 
             await nodesData.numberOfActiveNodes().should.be.eventually.deep.equal(web3.utils.toBN(1));
         });
 
-        it("should init withdrawing deposit from second node", async () => {
-            await nodesFunctionality.initWithdrawDeposit(validator, 1);
+        it("should initiate exit from second node", async () => {
+            await nodesFunctionality.initExit(validator, 1);
 
             await nodesData.numberOfActiveNodes().should.be.eventually.deep.equal(web3.utils.toBN(1));
         });
 
-        it("should complete withdrawing deposit from first node", async () => {
-            await nodesFunctionality.completeWithdrawDeposit(owner, 0)
-                .should.be.eventually.rejectedWith("Node does not exist for message sender");
+        it("should complete exiting from first node", async () => {
+            // await nodesFunctionality.completeExit(owner, 0)
+            //     .should.be.eventually.rejectedWith("Validator with such address doesn't exist");
 
-            await nodesFunctionality.completeWithdrawDeposit(validator, 0)
-                .should.be.eventually.rejectedWith("Node is no Leaving");
+            await nodesFunctionality.completeExit(validator, 0)
+                .should.be.eventually.rejectedWith("Node is not Leaving");
 
-            await nodesFunctionality.initWithdrawDeposit(validator, 0);
+            await nodesFunctionality.initExit(validator, 0);
 
-            await nodesFunctionality.completeWithdrawDeposit(validator, 0)
-                .should.be.eventually.rejectedWith("eaving period is not expired");
-
-            skipTime(web3, 5);
-
-            await nodesFunctionality.completeWithdrawDeposit(validator, 0);
-
-            const node = await nodesData.nodes(0);
-            node[8].should.be.deep.equal(web3.utils.toBN(2));
+            await nodesFunctionality.completeExit(validator, 0);
         });
 
-        it("should complete withdrawing deposit from second node", async () => {
-            await nodesFunctionality.completeWithdrawDeposit(owner, 1)
-                .should.be.eventually.rejectedWith("Node does not exist for message sender");
+        it("should complete exiting from second node", async () => {
+            // await nodesFunctionality.completeExit(owner, 1)
+            //     .should.be.eventually.rejectedWith("Validator with such address doesn't exist");
 
-            await nodesFunctionality.completeWithdrawDeposit(validator, 1)
-                .should.be.eventually.rejectedWith("Node is no Leaving");
+            await nodesFunctionality.completeExit(validator, 1)
+                .should.be.eventually.rejectedWith("Node is not Leaving");
 
-            await nodesFunctionality.initWithdrawDeposit(validator, 1);
+            await nodesFunctionality.initExit(validator, 1);
 
-            await nodesFunctionality.completeWithdrawDeposit(validator, 1)
-                .should.be.eventually.rejectedWith("eaving period is not expired");
-
-            skipTime(web3, 5);
-
-            await nodesFunctionality.completeWithdrawDeposit(validator, 1);
-
-            const node = await nodesData.nodes(1);
-            node[8].should.be.deep.equal(web3.utils.toBN(2));
+            await nodesFunctionality.completeExit(validator, 1);
         });
     });
 

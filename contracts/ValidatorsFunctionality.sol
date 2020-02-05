@@ -193,33 +193,33 @@ contract ValidatorsFunctionality is GroupsFunctionality, IValidatorsFunctionalit
         }
     }
 
-    function rotateNode(bytes32 schainId) external {
-        uint newNodeIndexEvent;
-        newNodeIndexEvent = selectNodeToGroup(schainId);
-        emit ValidatorRotated(schainId, newNodeIndexEvent);
-    }
+    // function rotateNode(bytes32 schainId) external {
+    //     uint newNodeIndexEvent;
+    //     newNodeIndexEvent = selectNodeToGroup(schainId);
+    //     emit ValidatorRotated(schainId, newNodeIndexEvent);
+    // }
 
-    function selectNodeToGroup(bytes32 groupIndex) internal returns (uint) {
-        address dataAddress = contractManager.contracts(keccak256(abi.encodePacked(dataName)));
-        require(IGroupsData(dataAddress).isGroupActive(groupIndex), "Group is not active");
-        bytes32 groupData = IGroupsData(dataAddress).getGroupData(groupIndex);
-        uint hash = uint(keccak256(abi.encodePacked(uint(blockhash(block.number - 1)), groupIndex)));
-        uint numberOfNodes;
-        (numberOfNodes, ) = setNumberOfNodesInGroup(groupIndex, groupData);
-        uint indexOfNode;
-        uint iterations = 0;
-        while (iterations < 200) {
-            indexOfNode = hash % numberOfNodes;
-            if (comparator(groupIndex, indexOfNode)) {
-                IGroupsData(dataAddress).setException(groupIndex, indexOfNode);
-                IGroupsData(dataAddress).setNodeInGroup(groupIndex, indexOfNode);
-                return indexOfNode;
-            }
-            hash = uint(keccak256(abi.encodePacked(hash, indexOfNode)));
-            iterations++;
-        }
-        require(iterations < 200, "Old Validator is not replaced? Try it later");
-    }
+    // function selectNodeToGroup(bytes32 groupIndex) internal returns (uint) {
+    //     address dataAddress = contractManager.contracts(keccak256(abi.encodePacked(dataName)));
+    //     require(IGroupsData(dataAddress).isGroupActive(groupIndex), "Group is not active");
+    //     bytes32 groupData = IGroupsData(dataAddress).getGroupData(groupIndex);
+    //     uint hash = uint(keccak256(abi.encodePacked(uint(blockhash(block.number - 1)), groupIndex)));
+    //     uint numberOfNodes;
+    //     (numberOfNodes, ) = setNumberOfNodesInGroup(groupIndex, groupData);
+    //     uint indexOfNode;
+    //     uint iterations = 0;
+    //     while (iterations < 200) {
+    //         indexOfNode = hash % numberOfNodes;
+    //         if (comparator(groupIndex, indexOfNode)) {
+    //             IGroupsData(dataAddress).setException(groupIndex, indexOfNode);
+    //             IGroupsData(dataAddress).setNodeInGroup(groupIndex, indexOfNode);
+    //             return indexOfNode;
+    //         }
+    //         hash = uint(keccak256(abi.encodePacked(hash, indexOfNode)));
+    //         iterations++;
+    //     }
+    //     require(iterations < 200, "Old Validator is not replaced? Try it later");
+    // }
 
     function generateGroup(bytes32 groupIndex) internal allow(executorName) returns (uint[] memory) {
         address dataAddress = contractManager.contracts(keccak256(abi.encodePacked(dataName)));

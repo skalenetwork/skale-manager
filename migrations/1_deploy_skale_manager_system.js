@@ -30,6 +30,7 @@ let SkaleVerifier = artifacts.require('./SkaleVerifier.sol');
 let Decryption = artifacts.require('./Decryption.sol');
 let ECDH = artifacts.require('./ECDH.sol');
 let Pricing = artifacts.require('./Pricing.sol');
+let StringUtils = artifacts.require('./StringUtils.sol');
 
 let gasLimit = 6900000;
 
@@ -84,7 +85,7 @@ async function deploy(deployer, network) {
         await contractManagerInstance.setContractsAddress("Constants", ConstantsHolder.address).then(function(res) {
             console.log("Contract Constants with address", ConstantsHolder.address, "registred in Contract Manager");
         });
-        await deployer.deploy(NodesData, 5260000, contractManagerInstance.address, {gas: gasLimit * gas_multiplier});
+        await deployer.deploy(NodesData, contractManagerInstance.address, {gas: gasLimit * gas_multiplier});
         await contractManagerInstance.setContractsAddress("NodesData", NodesData.address).then(function(res) {
             console.log("Contract Nodes Data with address", NodesData.address, "registred in Contract Manager");
         });
@@ -139,7 +140,10 @@ async function deploy(deployer, network) {
         await deployer.deploy(Pricing, contractManagerInstance.address, {gas: gasLimit * gas_multiplier});
         await contractManagerInstance.setContractsAddress("Pricing", Pricing.address).then(function(res) {
             console.log("Contract Pricing with address", Pricing.address, "registred in Contract Manager");
-            console.log();
+        });
+        await deployer.deploy(StringUtils, {gas: gasLimit * gas_multiplier});
+        await contractManagerInstance.setContractsAddress("StringUtils", StringUtils.address).then(function(res) {
+            console.log("Contract StringUtils with address", StringUtils.address, "registred in Contract Manager");
         });
     
         //
@@ -174,7 +178,9 @@ async function deploy(deployer, network) {
             contract_manager_address: ContractManager.address,
             contract_manager_abi: ContractManager.abi,
             pricing_address: Pricing.address,
-            pricing_abi: Pricing.abi
+            pricing_abi: Pricing.abi,
+            string_utils_address: StringUtils.address,
+            string_utils_abi: StringUtils.abi
         };
 
         await fsPromises.writeFile(`data/${network}.json`, JSON.stringify(jsonObject));

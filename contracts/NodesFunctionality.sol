@@ -24,6 +24,7 @@ import "./interfaces/IConstants.sol";
 import "./interfaces/INodesData.sol";
 import "./interfaces/ISchainsData.sol";
 import "./interfaces/INodesFunctionality.sol";
+import "./NodesData.sol";
 
 
 /**
@@ -44,17 +45,16 @@ contract NodesFunctionality is Permissions, INodesFunctionality {
         uint gasSpend
     );
 
-    // informs that owner withdrawn the Node's deposit
-    event WithdrawDepositFromNodeComplete(
+    // informs that node is fully finished quitting from the system
+    event ExitCompleted(
         uint nodeIndex,
         address owner,
-        uint deposit,
         uint32 time,
         uint gasSpend
     );
 
-    // informs that owner starts the procedure of quiting the Node from the system
-    event WithdrawDepositFromNodeInit(
+    // informs that owner starts the procedure of quitting the Node from the system
+    event ExitInited(
         uint nodeIndex,
         address owner,
         uint32 startLeavingPeriod,
@@ -146,21 +146,21 @@ contract NodesFunctionality is Permissions, INodesFunctionality {
     }
 
     /**
-     * @dev initWithdrawdeposit - initiate a procedure of quiting the system
+     * @dev initExit - initiate a procedure of quitting the system
      * function could be only run by SkaleManager
      * @param from - owner of Node
      * @param nodeIndex - index of Node
      * @return true - if everything OK
      */
-    function initWithdrawDeposit(address from, uint nodeIndex) external allow("SkaleManager") returns (bool) {
-        address nodesDataAddress = contractManager.contracts(keccak256(abi.encodePacked("NodesData")));
+    function initExit(address from, uint nodeIndex) external allow("SkaleManager") returns (bool) {
+        NodesData nodesData = NodesData(contractManager.getContract("NodesData"));
 
-        require(INodesData(nodesDataAddress).isNodeExist(from, nodeIndex), "Node does not exist for message sender");
-        require(INodesData(nodesDataAddress).isNodeActive(nodeIndex), "Node is not Active");
+        // require(validatorService.validatorAddressExists(from), "Validator with such address doesn't exist");
+        require(nodesData.isNodeExist(from, nodeIndex), "Node does not exist for message sender");
 
-        INodesData(nodesDataAddress).setNodeLeaving(nodeIndex);
+        nodesData.setNodeLeaving(nodeIndex);
 
-        emit WithdrawDepositFromNodeInit(
+        emit ExitInited(
             nodeIndex,
             from,
             uint32(block.timestamp),
@@ -170,31 +170,29 @@ contract NodesFunctionality is Permissions, INodesFunctionality {
     }
 
     /**
-     * @dev completeWithdrawDeposit - finish a procedure of quiting the system
+     * @dev completeExit - finish a procedure of quitting the system
      * function could be run only by SkaleMManager
      * @param from - owner of Node
      * @param nodeIndex - index of Node
      * @return amount of SKL which be returned
      */
-    function completeWithdrawDeposit(address from, uint nodeIndex) external allow("SkaleManager") returns (uint) {
-        address nodesDataAddress = contractManager.contracts(keccak256(abi.encodePacked("NodesData")));
+    function completeExit(address from, uint nodeIndex) external allow("SkaleManager") returns (bool) {
+        NodesData nodesData = NodesData(contractManager.getContract("NodesData"));
 
-        require(INodesData(nodesDataAddress).isNodeExist(from, nodeIndex), "Node does not exist for message sender");
-        require(INodesData(nodesDataAddress).isNodeLeaving(nodeIndex), "Node is no Leaving");
-        require(INodesData(nodesDataAddress).isLeavingPeriodExpired(nodeIndex), "Leaving period is not expired");
+        // require(validatorService.validatorAddressExists(from), "Validator with such address doesn't exist");
+        require(nodesData.isNodeExist(from, nodeIndex), "Node does not exist for message sender");
+        require(nodesData.isNodeLeaving(nodeIndex), "Node is not Leaving");
 
-        INodesData(nodesDataAddress).setNodeLeft(nodeIndex);
+        nodesData.setNodeLeft(nodeIndex);
 
-        INodesData(nodesDataAddress).removeNode(nodeIndex);
+        nodesData.removeNode(nodeIndex);
 
-        address constantsAddress = contractManager.contracts(keccak256(abi.encodePacked("Constants")));
-        emit WithdrawDepositFromNodeComplete(
+        emit ExitCompleted(
             nodeIndex,
             from,
-            IConstants(constantsAddress).NODE_DEPOSIT(),
             uint32(block.timestamp),
             gasleft());
-        return IConstants(constantsAddress).NODE_DEPOSIT();
+        return true;
     }
 
     // /**

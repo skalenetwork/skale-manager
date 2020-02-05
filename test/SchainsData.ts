@@ -48,12 +48,12 @@ contract("SchainsData", ([owner, holder]) => {
         contractManager = await ContractManager.new({from: owner});
         schainsData = await SchainsData.new("SchainsFunctionality", contractManager.address, {from: owner});
         await contractManager.setContractsAddress("SchainsData", schainsData.address, {from: owner});
-        skaleDKG = await SkaleDKG.new(contractManager.address, {from: owner, gas: 8000000 * gasMultiplier});
+        skaleDKG = await SkaleDKG.new(contractManager.address, {from: owner});
         await contractManager.setContractsAddress("SkaleDKG", skaleDKG.address, {from: owner});
     });
 
     it("should initialize schain", async () => {
-        schainsData.initializeSchain("TestSchain", holder, 5, 5);
+        await schainsData.initializeSchain("TestSchain", holder, 5, 5);
 
         const schain: Schain = new Schain(await schainsData.schains(web3.utils.soliditySha3("TestSchain")));
         schain.name.should.be.equal("TestSchain");
@@ -66,7 +66,7 @@ contract("SchainsData", ([owner, holder]) => {
         const schainNameHash = web3.utils.soliditySha3("TestSchain");
 
         beforeEach(async () => {
-            schainsData.initializeSchain("TestSchain", holder, 5, 5);
+            await schainsData.initializeSchain("TestSchain", holder, 5, 5);
         });
 
         it("should register schain index for owner", async () => {

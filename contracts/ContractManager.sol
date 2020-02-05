@@ -20,6 +20,7 @@
 pragma solidity ^0.5.0;
 
 import "./Ownable.sol";
+import "./thirdparty/StringUtils.sol";
 
 
 /**
@@ -55,5 +56,11 @@ contract ContractManager is Ownable {
         // add newContractsAddress to mapping of actual contract addresses
         contracts[contractId] = newContractsAddress;
         emit ContractUpgraded(contractsName, newContractsAddress);
+    }
+
+    function getContract(string calldata name) external view returns (address contractAddress) {
+        StringUtils stringUtils = StringUtils(contracts[keccak256(abi.encodePacked("StringUtils"))]);
+        contractAddress = contracts[keccak256(abi.encodePacked(name))];
+        require(contractAddress != address(0), stringUtils.strConcat(name," contract has not been found"));
     }
 }

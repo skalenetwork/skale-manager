@@ -32,9 +32,6 @@ addons:
 install:
     - yarn install
     - pip3 install slither-analyzer
-before_script:
-    - npx ganache-cli --gasLimit 8000000 --quiet --account="$PRIVATE_KEY_1, 1000000000000000000000000" --account="$PRIVATE_KEY_2, 1000000000000000000000000" --account="$PRIVATE_KEY_3, 1000000000000000000000000" --account="$PRIVATE_KEY_4, 1000000000000000000000000" --account="$PRIVATE_KEY_5, 1000000000000000000000000" &
-    - npx testrpc-sc --port 8555 --gasLimit 0xfffffffffff --quiet --account="$PRIVATE_KEY_1, 1000000000000000000000000" --account="$PRIVATE_KEY_2, 1000000000000000000000000" --account="$PRIVATE_KEY_3, 1000000000000000000000000" --account="$PRIVATE_KEY_4, 1000000000000000000000000" --account="$PRIVATE_KEY_5, 1000000000000000000000000" &
 script:
     - yarn lint || travis_terminate 1
     - slither --version
@@ -48,7 +45,7 @@ script:
     - export VERSION=$VERSION
     - export BRANCH=$TRAVIS_BRANCH
 after_script:
-    - npx solidity-coverage || travis_terminate 4
+    - npx buidler coverage --solcoverjs .solcover.js || travis_terminate 4
     - cat coverage/lcov.info | npx codecov
 before_deploy:
   # Set up git user name and tag this commit
