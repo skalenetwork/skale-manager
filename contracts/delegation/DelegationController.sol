@@ -60,7 +60,7 @@ contract DelegationController is Permissions {
         return delegations[delegationId];
     }
 
-    function getDelegatedAmount(uint validatorId) external allow("ValidatorService") returns (uint delegatedAmount) {
+    function getDelegatedAmount(uint validatorId) external returns (uint delegatedAmount) {
         TokenState tokenState = TokenState(contractManager.getContract("TokenState"));
         for (uint i = 0; i < _activeByValidator[validatorId].length; i++) {
             uint delegationId = _activeByValidator[validatorId][i];
@@ -187,6 +187,23 @@ contract DelegationController is Permissions {
             }
         }
         return delegationsValidator;
+    }
+
+    function getValidatorBondAmount(address validatorAddress)
+        external
+        allow("DelegationService")
+        returns (uint delegatedAmount)
+    {
+        TokenState tokenState = TokenState(contractManager.getContract("TokenState"));
+        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
+        uint validatorId = validatorService.getValidatorId(validatorAddress);
+        for (uint i = 0; i < _activeByValidator[validatorId].length; i++) {
+            uint delegationId = _activeByValidator[validatorId][i];
+            TokenState.State state = tokenState.getState(delegationId);
+            if (delegations[delegationId].holder == validatorAddress && state == TokenState.State.DELEGATED) {
+                delegatedAmount += delegations[delegationId].amount;
+            }
+        }
     }
 
 

@@ -38,9 +38,6 @@ interface IValidatorDelegation {
 
     function unregisterValidator(uint validatorId) external;
 
-    /// @notice return how many of validator funds are locked in SkaleManager
-    function getBondAmount(uint validatorId) external returns (uint amount);
-
     function setValidatorName(string calldata newName) external;
 
     function setValidatorDescription(string calldata descripton) external;
@@ -50,6 +47,8 @@ interface IValidatorDelegation {
     function confirmNewAddress(uint validatorId) external;
 
     function setMinimumDelegationAmount(uint amount) external;
+
+    function getValidatorBondAmount(address validatorAddress) external returns (uint);
 
     // TODO: replace with getters
     // function getValidatorInfo(uint validatorId) external returns (Validator memory validator);
