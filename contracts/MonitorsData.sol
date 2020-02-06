@@ -85,7 +85,7 @@ contract MonitorsData is GroupsData {
         return verdicts[monitorIndex].length;
     }
 
-    function initialize(string memory newExecutorName, address newContractsAddress) public initializer {
-        GroupsData.initialize(newExecutorName, newContractsAddress);
+    function initialize(address newContractsAddress) public initializer {
+        GroupsData.initialize("MonitorsFunctionality", newContractsAddress);
     }
 }

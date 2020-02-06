@@ -173,15 +173,10 @@ contract MonitorsFunctionality is GroupsFunctionality {
         emit MonitorRotated(schainId, newNodeIndexEvent);
     }
 
-    function initialize(
-        string memory newExecutorName,
-        string memory newDataName,
-        address _contractManager)
-    public initializer
-    {
+    function initialize(address _contractManager) public initializer {
         GroupsFunctionality.initialize(
-            newExecutorName,
-            newDataName,
+            "SkaleManager",
+            "MonitorsData",
             _contractManager);
     }
 

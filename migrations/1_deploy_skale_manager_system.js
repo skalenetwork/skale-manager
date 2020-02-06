@@ -139,10 +139,6 @@ async function deploy(deployer, networkName, accounts) {
             contract = await create(Object.assign({ contractAlias: contractName }, options));
         } else if (contractName == "NodesData") {
             contract = await create(Object.assign({ contractAlias: contractName, methodName: 'initialize', methodArgs: [5260000, contractManager.address] }, options));
-        } else if (contractName == "MonitorsData") {
-            contract = await create(Object.assign({ contractAlias: contractName, methodName: 'initialize', methodArgs: ["MonitorsFunctionality", contractManager.address] }, options));
-        } else if (contractName == "MonitorsFunctionality") {
-            contract = await create(Object.assign({ contractAlias: contractName, methodName: 'initialize', methodArgs: ["SkaleManager", "MonitorsData", contractManager.address] }, options));
         } else {
             contract = await create(Object.assign({ contractAlias: contractName, methodName: 'initialize', methodArgs: [contractManager.address] }, options));
         }

@@ -8,11 +8,6 @@ const deployMonitorsData: (contractManager: ContractManagerInstance) => Promise<
     = deployFunctionFactory("MonitorsData",
                             async (contractManager: ContractManagerInstance) => {
                                 await deploySkaleDKG(contractManager);
-                            },
-                            async (contractManager: ContractManagerInstance) => {
-                                const instance = await MonitorsData.new();
-                                await instance.initialize("MonitorsFunctionality", contractManager.address);
-                                return instance;
                             });
 
 export { deployMonitorsData };

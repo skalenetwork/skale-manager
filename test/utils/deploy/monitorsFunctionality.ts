@@ -12,12 +12,6 @@ const deployMonitorsFunctionality: (contractManager: ContractManagerInstance) =>
                                 await deployMonitorsData(contractManager);
                                 await deployNodesData(contractManager);
                                 await deploySkaleVerifier(contractManager);
-                            },
-                            async (contractManager: ContractManagerInstance) => {
-                                const MonitorsFunctionality: MonitorsFunctionalityContract = artifacts.require("./MonitorsFunctionality");
-                                const instance = await MonitorsFunctionality.new();
-                                await instance.initialize("SkaleManager", "MonitorsData", contractManager.address);
-                                return instance;
                             });
 
 export { deployMonitorsFunctionality };
