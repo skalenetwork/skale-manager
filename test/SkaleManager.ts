@@ -31,13 +31,13 @@ import { deployMonitorsFunctionality } from "./utils/deploy/monitorsFunctionalit
 import { deployNodesData } from "./utils/deploy/nodesData";
 import { deployNodesFunctionality } from "./utils/deploy/nodesFunctionality";
 import { deploySchainsData } from "./utils/deploy/schainsData";
+import { deploySchainsFunctionality } from "./utils/deploy/schainsFunctionality";
 import { deploySchainsFunctionalityInternal } from "./utils/deploy/schainsFunctionalityInternal";
 import { deploySkaleDKG } from "./utils/deploy/skaleDKG";
 import { deploySkaleToken } from "./utils/deploy/skaleToken";
 import { skipTime } from "./utils/time";
 
 const ManagerData: ManagerDataContract = artifacts.require("./ManagerData");
-const SchainsFunctionality: SchainsFunctionalityContract = artifacts.require("./SchainsFunctionality");
 const SkaleManager: SkaleManagerContract = artifacts.require("./SkaleManager");
 
 chai.should();
@@ -71,14 +71,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
         monitorsData = await deployMonitorsData(contractManager);
         monitorsFunctionality = await deployMonitorsFunctionality(contractManager);
         schainsData = await deploySchainsData(contractManager);
-
-        schainsFunctionality = await SchainsFunctionality.new(
-            "SkaleManager",
-            "SchainsData",
-            contractManager.address,
-            {from: owner, gas: 7900000 * gasMultiplier});
-        await contractManager.setContractsAddress("SchainsFunctionality", schainsFunctionality.address);
-
+        schainsFunctionality = await deploySchainsFunctionality(contractManager);
         schainsFunctionalityInternal = await deploySchainsFunctionalityInternal(contractManager);
 
         managerData = await ManagerData.new("SkaleManager", contractManager.address, {gas: 8000000 * gasMultiplier});

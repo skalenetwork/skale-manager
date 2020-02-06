@@ -112,7 +112,8 @@ async function deploy(deployer, networkName, accounts) {
         "NodesFunctionality",
         "MonitorsData",
         "MonitorsFunctionality",
-        "SchainsData"
+        "SchainsData",
+        "SchainsFunctionality"
     ]
 
     contractsData = [];
