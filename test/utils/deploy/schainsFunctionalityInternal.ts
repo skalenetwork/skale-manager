@@ -1,4 +1,4 @@
-import { ContractManagerInstance, SchainsFunctionalityInternalContract, SchainsFunctionalityInternalInstance } from "../../../types/truffle-contracts";
+import { ContractManagerInstance, SchainsFunctionalityInternalInstance } from "../../../types/truffle-contracts";
 import { deployConstantsHolder } from "./constantsHolder";
 import { deployFunctionFactory } from "./factory";
 import { deployNodesData } from "./nodesData";
@@ -11,14 +11,6 @@ const deploySchainsFunctionalityInternal:
                                 await deployConstantsHolder(contractManager);
                                 await deploySchainsData(contractManager);
                                 await deployNodesData(contractManager);
-                            },
-                            async (contractManager: ContractManagerInstance) => {
-                                const SchainsFunctionalityInternal: SchainsFunctionalityInternalContract
-                                    = artifacts.require("./SchainsFunctionalityInternal");
-                                return await SchainsFunctionalityInternal.new(
-                                    "SchainsFunctionality",
-                                    "SchainsData",
-                                    contractManager.address);
                             });
 
 export { deploySchainsFunctionalityInternal };

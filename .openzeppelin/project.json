@@ -18,7 +18,8 @@
     "MonitorsData": "MonitorsData",
     "MonitorsFunctionality": "MonitorsFunctionality",
     "SchainsData": "SchainsData",
-    "SchainsFunctionality": "SchainsFunctionality"
+    "SchainsFunctionality": "SchainsFunctionality",
+    "SchainsFunctionalityInternal": "SchainsFunctionalityInternal"
   },
   "dependencies": {},
   "name": "skale-manager",

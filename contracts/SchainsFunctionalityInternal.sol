@@ -38,16 +38,6 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
         uint gasSpend
     );
 
-    constructor(
-        string memory newExecutorName,
-        string memory newDataName,
-        address newContractsAddress
-    )
-        public
-    {
-        GroupsFunctionality.initialize(newExecutorName, newDataName, newContractsAddress);
-    }
-
     /**
      * @dev createGroupForSchain - creates Group for Schain
      * @param schainName - name of Schain
@@ -158,6 +148,10 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
                 }
             }
         }
+    }
+
+    function initialize(address newContractsAddress) public initializer {
+        GroupsFunctionality.initialize("SchainsFunctionality", "SchainsData", newContractsAddress);
     }
 
     /**
