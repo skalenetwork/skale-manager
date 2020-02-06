@@ -111,7 +111,8 @@ async function deploy(deployer, networkName, accounts) {
         "NodesData",
         "NodesFunctionality",
         "MonitorsData",
-        "MonitorsFunctionality"
+        "MonitorsFunctionality",
+        "SchainsData"
     ]
 
     contractsData = [];
@@ -162,12 +163,8 @@ async function deploy(deployer, networkName, accounts) {
     await deployer.deploy(SkaleToken, contractManager.address, [], {gas: gasLimit * gas_multiplier});
     await contractManager.methods.setContractsAddress("SkaleToken", SkaleToken.address).send({from: deployAccount}).then(function(res) {
         console.log("Contract Skale Token with address", SkaleToken.address, "registred in Contract Manager");
-    });
+    });    
     
-    // await deployer.deploy(SchainsData, "SchainsFunctionalityInternal", contractManager.address, {gas: gasLimit * gas_multiplier});
-    // await contractManager.setContractsAddress("SchainsData", SchainsData.address).then(function(res) {
-    //     console.log("Contract Schains Data with address", SchainsData.address, "registred in Contract Manager");
-    // });
     // await deployer.deploy(SchainsFunctionality, "SkaleManager", "SchainsData", contractManager.address, {gas: gasLimit * gas_multiplier});
     // await contractManager.setContractsAddress("SchainsFunctionality", SchainsFunctionality.address).then(function(res) {
     //     console.log("Contract Schains Functionality with address", SchainsFunctionality.address, "registred in Contract Manager");

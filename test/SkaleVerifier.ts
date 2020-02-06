@@ -31,6 +31,7 @@ const SkaleDKG: SkaleDKGContract = artifacts.require("./SkaleDKG");
 import { deployContractManager } from "./utils/deploy/contractManager";
 import { deployValidatorService } from "./utils/deploy/delegation/validatorService";
 import { deployNodesFunctionality } from "./utils/deploy/nodesFunctionality";
+import { deploySchainsData } from "./utils/deploy/schainsData";
 chai.should();
 chai.use(chaiAsPromised);
 
@@ -53,11 +54,7 @@ contract("SkaleVerifier", ([validator1, owner, developer, hacker]) => {
         validatorService = await deployValidatorService(contractManager);
         validatorService.registerValidator("D2", validator1, "D2 is even", 0, 0);
 
-        schainsData = await SchainsData.new(
-            "SchainsFunctionalityInternal",
-            contractManager.address,
-            {from: validator1, gas: 8000000 * gasMultiplier});
-        await contractManager.setContractsAddress("SchainsData", schainsData.address);
+        schainsData = await deploySchainsData(contractManager);
 
         schainsFunctionality = await SchainsFunctionality.new(
             "SkaleManager",

@@ -21,7 +21,7 @@ pragma solidity ^0.5.3;
 
 import "./GroupsFunctionality.sol";
 import "./interfaces/INodesData.sol";
-import "./interfaces/ISchainsData.sol";
+import "./SchainsData.sol";
 import "./interfaces/IConstants.sol";
 
 
@@ -64,7 +64,7 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
         address dataAddress = contractManager.getContract(dataName);
         addGroup(schainId, numberOfNodes, bytes32(uint(partOfNode)));
         uint[] memory numberOfNodesInGroup = generateGroup(schainId);
-        ISchainsData(dataAddress).setSchainPartOfNode(schainId, partOfNode);
+        SchainsData(dataAddress).setSchainPartOfNode(schainId, partOfNode);
         emit SchainNodes(
             schainName,
             schainId,
@@ -122,7 +122,7 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
         uint indexOfNode = findNode(groupHash, nodeIndex);
         IGroupsData(schainsDataAddress).removeNodeFromGroup(indexOfNode, groupHash);
         IGroupsData(schainsDataAddress).removeExceptionNode(groupHash, nodeIndex);
-        ISchainsData(schainsDataAddress).removeSchainForNode(nodeIndex, groupIndex);
+        SchainsData(schainsDataAddress).removeSchainForNode(nodeIndex, groupIndex);
     }
 
     function excludeNodeFromSchain(uint nodeIndex, bytes32 groupHash)
@@ -134,7 +134,7 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
         uint indexOfNode = findNode(groupHash, nodeIndex);
         IGroupsData(schainsDataAddress).removeNodeFromGroup(indexOfNode, groupHash);
         // IGroupsData(schainsDataAddress).removeExceptionNode(groupHash, nodeIndex);
-        ISchainsData(schainsDataAddress).removeSchainForNode(nodeIndex, groupIndex);
+        SchainsData(schainsDataAddress).removeSchainForNode(nodeIndex, groupIndex);
     }
 
     function isEnoughNodes(bytes32 groupIndex) external view returns (uint[] memory result) {
@@ -168,9 +168,9 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
      */
     function findSchainAtSchainsForNode(uint nodeIndex, bytes32 schainId) public view returns (uint) {
         address dataAddress = contractManager.getContract(dataName);
-        uint length = ISchainsData(dataAddress).getLengthOfSchainsForNode(nodeIndex);
+        uint length = SchainsData(dataAddress).getLengthOfSchainsForNode(nodeIndex);
         for (uint i = 0; i < length; i++) {
-            if (ISchainsData(dataAddress).schainsForNodes(nodeIndex, i) == schainId) {
+            if (SchainsData(dataAddress).schainsForNodes(nodeIndex, i) == schainId) {
                 return i;
             }
         }
@@ -184,7 +184,7 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
      */
     function selectNodeToGroup(bytes32 groupIndex) internal returns (uint) {
         IGroupsData groupsData = IGroupsData(contractManager.getContract(dataName));
-        ISchainsData schainsData = ISchainsData(contractManager.getContract(dataName));
+        SchainsData schainsData = SchainsData(contractManager.getContract(dataName));
         require(groupsData.isGroupActive(groupIndex), "Group is not active");
         uint8 space = uint8(uint(groupsData.getGroupData(groupIndex)));
         uint[] memory possibleNodes = this.isEnoughNodes(groupIndex);
@@ -209,7 +209,7 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
      */
     function generateGroup(bytes32 groupIndex) internal returns (uint[] memory nodesInGroup) {
         IGroupsData groupsData = IGroupsData(contractManager.getContract(dataName));
-        ISchainsData schainsData = ISchainsData(contractManager.getContract(dataName));
+        SchainsData schainsData = SchainsData(contractManager.getContract(dataName));
         require(groupsData.isGroupActive(groupIndex), "Group is not active");
 
         // uint numberOfNodes = setNumberOfNodesInGroup(groupIndex, uint(groupsData.getGroupData(groupIndex)), address(groupsData));

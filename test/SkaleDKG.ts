@@ -7,7 +7,6 @@ import { ContractManagerInstance,
          ECDHContract,
          ECDHInstance,
          NodesFunctionalityInstance,
-         SchainsDataContract,
          SchainsDataInstance,
          SchainsFunctionalityContract,
          SchainsFunctionalityInstance,
@@ -21,7 +20,6 @@ import { ContractManagerInstance,
 import { gasMultiplier } from "./utils/command_line";
 import { skipTime } from "./utils/time";
 
-const SchainsData: SchainsDataContract = artifacts.require("./SchainsData");
 const SchainsFunctionality: SchainsFunctionalityContract = artifacts.require("./SchainsFunctionality");
 const SchainsFunctionalityInternal: SchainsFunctionalityInternalContract = artifacts.require("./SchainsFunctionalityInternal");
 const SkaleDKG: SkaleDKGContract = artifacts.require("./SkaleDKG");
@@ -33,6 +31,7 @@ import { deployContractManager } from "./utils/deploy/contractManager";
 import { deployDelegationService } from "./utils/deploy/delegation/delegationService";
 import { deployValidatorService } from "./utils/deploy/delegation/validatorService";
 import { deployNodesFunctionality } from "./utils/deploy/nodesFunctionality";
+import { deploySchainsData } from "./utils/deploy/schainsData";
 import { deploySkaleToken } from "./utils/deploy/skaleToken";
 import { deploySlashingTable } from "./utils/deploy/slashingTable";
 
@@ -83,12 +82,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
         contractManager = await deployContractManager();
 
         nodesFunctionality = await deployNodesFunctionality(contractManager);
-
-        schainsData = await SchainsData.new(
-            "SchainsFunctionalityInternal",
-            contractManager.address,
-            {from: owner, gas: 8000000 * gasMultiplier});
-        await contractManager.setContractsAddress("SchainsData", schainsData.address);
+        schainsData = await deploySchainsData(contractManager);
 
         schainsFunctionality = await SchainsFunctionality.new(
             "SkaleManager",

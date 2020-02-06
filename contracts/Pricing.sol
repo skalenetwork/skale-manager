@@ -21,9 +21,9 @@
 pragma solidity ^0.5.3;
 
 import "./Permissions.sol";
-import "./interfaces/ISchainsData.sol";
 import "./interfaces/IGroupsData.sol";
 import "./interfaces/INodesData.sol";
+import "./SchainsData.sol";
 
 
 contract Pricing is Permissions {
@@ -82,14 +82,14 @@ contract Pricing is Permissions {
 
     function getTotalLoadPercentage() public view returns (uint) {
         address schainsDataAddress = contractManager.getContract("SchainsData");
-        uint64 numberOfSchains = ISchainsData(schainsDataAddress).numberOfSchains();
+        uint64 numberOfSchains = SchainsData(schainsDataAddress).numberOfSchains();
         address nodesDataAddress = contractManager.getContract("NodesData");
         uint numberOfNodes = INodesData(nodesDataAddress).getNumberOnlineNodes();
         uint sumLoadSchain = 0;
         for (uint i = 0; i < numberOfSchains; i++) {
-            bytes32 schain = ISchainsData(schainsDataAddress).schainsAtSystem(i);
+            bytes32 schain = SchainsData(schainsDataAddress).schainsAtSystem(i);
             uint numberOfNodesInGroup = IGroupsData(schainsDataAddress).getNumberOfNodesInGroup(schain);
-            uint part = ISchainsData(schainsDataAddress).getSchainsPartOfNode(schain);
+            uint part = SchainsData(schainsDataAddress).getSchainsPartOfNode(schain);
             sumLoadSchain += (numberOfNodesInGroup*10**7)/part;
         }
         return uint(sumLoadSchain/(10**5*numberOfNodes));

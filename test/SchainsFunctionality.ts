@@ -19,6 +19,9 @@ import { deployContractManager } from "./utils/deploy/contractManager";
 import { deployValidatorService } from "./utils/deploy/delegation/validatorService";
 import { deployNodesData } from "./utils/deploy/nodesData";
 import { deployNodesFunctionality } from "./utils/deploy/nodesFunctionality";
+import { deploySchainsData } from "./utils/deploy/schainsData";
+import { deploySchainsFunctionalityInternal } from "./utils/deploy/schainsFunctionalityInternal";
+import { deploySkaleDKG } from "./utils/deploy/skaleDKG";
 
 const SchainsFunctionality: SchainsFunctionalityContract = artifacts.require("./SchainsFunctionality");
 const SchainsFunctionalityInternal: SchainsFunctionalityInternalContract =
@@ -44,12 +47,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
 
         nodesData = await deployNodesData(contractManager);
         nodesFunctionality = await deployNodesFunctionality(contractManager);
-
-        schainsData = await SchainsData.new(
-            "SchainsFunctionalityInternal",
-            contractManager.address,
-            {from: owner, gas: 8000000 * gasMultiplier});
-        await contractManager.setContractsAddress("SchainsData", schainsData.address);
+        schainsData = await deploySchainsData(contractManager);
 
         schainsFunctionality = await SchainsFunctionality.new(
             "SkaleManager",
@@ -58,16 +56,8 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
             {from: owner, gas: 7900000 * gasMultiplier});
         await contractManager.setContractsAddress("SchainsFunctionality", schainsFunctionality.address);
 
-        schainsFunctionalityInternal = await SchainsFunctionalityInternal.new(
-            "SchainsFunctionality",
-            "SchainsData",
-            contractManager.address,
-            {from: owner, gas: 7000000 * gasMultiplier});
-        await contractManager.setContractsAddress("SchainsFunctionalityInternal", schainsFunctionalityInternal.address);
-
-        skaleDKG = await SkaleDKG.new(contractManager.address, {from: owner, gas: 8000000 * gasMultiplier});
-        await contractManager.setContractsAddress("SkaleDKG", skaleDKG.address);
-
+        schainsFunctionalityInternal = await deploySchainsFunctionalityInternal(contractManager);
+        skaleDKG = await deploySkaleDKG(contractManager);
         validatorService = await deployValidatorService(contractManager);
 
         validatorService.registerValidator("D2", validator, "D2 is even", 0, 0);

@@ -16,7 +16,8 @@
     "NodesData": "NodesData",
     "NodesFunctionality": "NodesFunctionality",
     "MonitorsData": "MonitorsData",
-    "MonitorsFunctionality": "MonitorsFunctionality"
+    "MonitorsFunctionality": "MonitorsFunctionality",
+    "SchainsData": "SchainsData"
   },
   "dependencies": {},
   "name": "skale-manager",

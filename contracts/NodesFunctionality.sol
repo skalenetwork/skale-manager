@@ -22,7 +22,6 @@ pragma solidity ^0.5.3;
 import "./Permissions.sol";
 import "./interfaces/IConstants.sol";
 import "./interfaces/INodesData.sol";
-import "./interfaces/ISchainsData.sol";
 import "./interfaces/INodesFunctionality.sol";
 import "./delegation/ValidatorService.sol";
 
