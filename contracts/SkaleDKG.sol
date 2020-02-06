@@ -117,10 +117,6 @@ contract SkaleDKG is Permissions {
         _;
     }
 
-    constructor(address contractsAddress) public {
-        Permissions.initialize(contractsAddress);
-    }
-
     function openChannel(bytes32 groupIndex) external allowThree("SchainsData", "MonitorsData", "SkaleDKG") {
         require(!channels[groupIndex].active, "Channel already is created");
         channels[groupIndex].active = true;
@@ -308,6 +304,10 @@ contract SkaleDKG is Permissions {
             index < IGroupsData(channels[groupIndex].dataAddress).getNumberOfNodesInGroup(groupIndex) &&
             isNodeByMessageSender(nodeIndex, msg.sender) &&
             channels[groupIndex].nodeToComplaint == nodeIndex;
+    }
+
+    function initialize(address contractsAddress) public initializer {
+        Permissions.initialize(contractsAddress);
     }
 
     function finalizeSlashing(bytes32 groupIndex, uint badNode) internal {

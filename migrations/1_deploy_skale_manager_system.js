@@ -116,7 +116,8 @@ async function deploy(deployer, networkName, accounts) {
         "SchainsFunctionality",
         "SchainsFunctionalityInternal",
         "Decryption",
-        "ECDH"
+        "ECDH",
+        "SkaleDKG"
     ]
 
     contractsData = [];

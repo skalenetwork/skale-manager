@@ -16,10 +16,6 @@ const deploySkaleDKG: (contractManager: ContractManagerInstance) => Promise<Skal
                                 await deploySlashingTable(contractManager);
                                 await deployECDH(contractManager);
                                 await deployDecryption(contractManager);
-                            },
-                            async (contractManager: ContractManagerInstance) => {
-                                const SkaleDKG: SkaleDKGContract = artifacts.require("./SkaleDKG");
-                                return await SkaleDKG.new(contractManager.address);
                             });
 
 export { deploySkaleDKG };
