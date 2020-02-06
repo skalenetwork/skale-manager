@@ -4,15 +4,13 @@ import * as chaiAsPromised from "chai-as-promised";
 
 import { ContractManagerInstance,
          NodesDataInstance,
-         PricingContract,
          PricingInstance,
          SchainsDataInstance } from "../types/truffle-contracts";
 import { deployContractManager } from "./utils/deploy/contractManager";
 import { deployNodesData } from "./utils/deploy/nodesData";
+import { deployPricing } from "./utils/deploy/pricing";
 import { deploySchainsData } from "./utils/deploy/schainsData";
 import { skipTime } from "./utils/time";
-
-const Pricing: PricingContract = artifacts.require("./Pricing");
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -26,8 +24,7 @@ contract("Pricing", ([owner, holder]) => {
     beforeEach(async () => {
         contractManager = await deployContractManager();
 
-        pricing = await Pricing.new(contractManager.address, {from: owner});
-
+        pricing = await deployPricing(contractManager);
         schainsData = await deploySchainsData(contractManager);
         nodesData = await deployNodesData(contractManager);
     });

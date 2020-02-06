@@ -120,7 +120,8 @@ async function deploy(deployer, networkName, accounts) {
         "SkaleDKG",
         "SkaleVerifier",
         "ManagerData",
-        "SkaleManager"
+        "SkaleManager",
+        "Pricing"
     ]
 
     contractsData = [];
@@ -168,11 +169,6 @@ async function deploy(deployer, networkName, accounts) {
     await contractManager.methods.setContractsAddress("SkaleToken", SkaleToken.address).send({from: deployAccount}).then(function(res) {
         console.log("Contract Skale Token with address", SkaleToken.address, "registred in Contract Manager");
     });
-    
-    // await deployer.deploy(Pricing, contractManager.address, {gas: gasLimit * gas_multiplier});
-    // await contractManager.setContractsAddress("Pricing", Pricing.address).then(function(res) {
-    //     console.log("Contract Pricing with address", Pricing.address, "registred in Contract Manager");
-    // });
     
     // await deployer.deploy(BokkyPooBahsDateTimeLibrary, {gas: gasLimit * gas_multiplier});
     // await deployer.link(BokkyPooBahsDateTimeLibrary, TimeHelpers);        

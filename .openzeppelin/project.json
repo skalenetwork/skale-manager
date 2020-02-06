@@ -25,7 +25,8 @@
     "SkaleDKG": "SkaleDKG",
     "SkaleVerifier": "SkaleVerifier",
     "ManagerData": "ManagerData",
-    "SkaleManager": "SkaleManager"
+    "SkaleManager": "SkaleManager",
+    "Pricing": "Pricing"
   },
   "dependencies": {},
   "name": "skale-manager",

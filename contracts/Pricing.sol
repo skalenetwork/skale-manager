@@ -31,16 +31,9 @@ contract Pricing is Permissions {
     uint public constant ADJUSTMENT_SPEED = 1000;
     uint public constant COOLDOWN_TIME = 60;
     uint public constant MIN_PRICE = 10**6;
-    uint public price = 5*10**6;
+    uint public price;
     uint public totalNodes;
     uint lastUpdated;
-
-
-
-    constructor(address newContractsAddress) public {
-        Permissions.initialize(newContractsAddress);
-        lastUpdated = now;
-    }
 
     function initNodes() external {
         address nodesDataAddress = contractManager.getContract("NodesData");
@@ -69,6 +62,12 @@ contract Pricing is Permissions {
             price += priceChange * timeSkipped;
         }
         lastUpdated = now;
+    }
+
+    function initialize(address newContractsAddress) public initializer {
+        Permissions.initialize(newContractsAddress);
+        lastUpdated = now;
+        price = 5*10**6;
     }
 
     function checkAllNodes() public {
