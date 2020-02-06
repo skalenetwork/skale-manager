@@ -17,33 +17,6 @@ const { add, push, create } = scripts;
 let privateKey = process.env.PRIVATE_KEY;
 
 let SkaleToken = artifacts.require('./SkaleToken.sol');
-let SkaleManager = artifacts.require('./SkaleManager.sol');
-let ManagerData = artifacts.require('./ManagerData.sol');
-let NodesData = artifacts.require('./NodesData.sol');
-let NodesFunctionality = artifacts.require('./NodesFunctionality.sol');
-let MonitorsData = artifacts.require('./MonitorsData.sol');
-let MonitorsFunctionality = artifacts.require('./MonitorsFunctionality.sol');
-let SchainsData = artifacts.require('./SchainsData.sol');
-let SchainsFunctionality = artifacts.require('./SchainsFunctionality.sol');
-let SchainsFunctionalityInternal = artifacts.require('./SchainsFunctionalityInternal.sol');
-let ContractManager = artifacts.require('./ContractManager.sol');
-let ConstantsHolder = artifacts.require('./ConstantsHolder.sol');
-let SkaleDKG = artifacts.require('./SkaleDKG.sol');
-let SkaleVerifier = artifacts.require('./SkaleVerifier.sol');
-let Decryption = artifacts.require('./Decryption.sol');
-let ECDH = artifacts.require('./ECDH.sol');
-let Pricing = artifacts.require('./Pricing.sol');
-let SkaleBalances = artifacts.require('./SkaleBalances.sol');
-let DelegationService = artifacts.require('./DelegationService.sol');
-let DelegationRequestManager = artifacts.require('./DelegationRequestManager.sol');
-let DelegationPeriodManager = artifacts.require('./DelegationPeriodManager.sol');
-let ValidatorService = artifacts.require('./ValidatorService.sol');
-let DelegationController = artifacts.require('./DelegationController.sol');
-let Distributor = artifacts.require('./Distributor.sol');
-let TokenSaleManager = artifacts.require('./TokenSaleManager.sol');
-let TokenState = artifacts.require('./TokenState.sol');
-let TimeHelpers = artifacts.require('./TimeHelpers.sol');
-let BokkyPooBahsDateTimeLibrary = artifacts.require('./BokkyPooBahsDateTimeLibrary.sol');
 
 let gasLimit = 6900000;
 
@@ -170,91 +143,25 @@ async function deploy(deployer, networkName, accounts) {
         console.log("Contract Skale Token with address", SkaleToken.address, "registred in Contract Manager");
     });
     
-    // await deployer.deploy(BokkyPooBahsDateTimeLibrary, {gas: gasLimit * gas_multiplier});
-    // await deployer.link(BokkyPooBahsDateTimeLibrary, TimeHelpers);        
+    console.log('Deploy done, writing results...');
 
-    // //
-    // console.log('Deploy done, writing results...');
-    // let jsonObject = {
-    //     skale_token_address: SkaleToken.address,
-    //     skale_token_abi: SkaleToken.abi,
-    //     nodes_data_address: NodesData.address,
-    //     nodes_data_abi: NodesData.abi,
-    //     nodes_functionality_address: NodesFunctionality.address,
-    //     nodes_functionality_abi: NodesFunctionality.abi,
-    //     monitors_data_address: MonitorsData.address,
-    //     monitors_data_abi: MonitorsData.abi,
-    //     monitors_functionality_address: MonitorsFunctionality.address,
-    //     monitors_functionality_abi: MonitorsFunctionality.abi,
-    //     schains_data_address: SchainsData.address,
-    //     schains_data_abi: SchainsData.abi,
-    //     schains_functionality_address: SchainsFunctionality.address,
-    //     schains_functionality_abi: SchainsFunctionality.abi,
-    //     manager_data_address: ManagerData.address,
-    //     manager_data_abi: ManagerData.abi,
-    //     skale_manager_address: SkaleManager.address,
-    //     skale_manager_abi: SkaleManager.abi,
-    //     constants_address: ConstantsHolder.address,
-    //     constants_abi: ConstantsHolder.abi,
-    //     decryption_address: Decryption.address,
-    //     decryption_abi: Decryption.abi,
-    //     skale_dkg_address: SkaleDKG.address,
-    //     skale_dkg_abi: SkaleDKG.abi,
-    //     skale_verifier_address: SkaleVerifier.address,
-    //     skale_verifier_abi: SkaleVerifier.abi,
-    //     contract_manager_address: ContractManager.address,
-    //     contract_manager_abi: ContractManager.abi,
-    //     pricing_address: Pricing.address,
-    //     pricing_abi: Pricing.abi,
-    //     skale_balances_address: SkaleBalances.address,
-    //     skale_balances_abi: SkaleBalances.abi,
-    //     delegation_service_address: DelegationService.address,
-    //     delegation_service_abi: DelegationService.abi,
-    //     delegation_request_manager_address: DelegationRequestManager.address,
-    //     delegation_request_manager_abi: DelegationRequestManager.abi,
-    //     delegation_period_manager_address: DelegationPeriodManager.address,
-    //     delegation_period_manager_abi: DelegationPeriodManager.abi,
-    //     validator_service_address: ValidatorService.address,
-    //     validator_service_abi: ValidatorService.abi,
-    //     distributor_address: Distributor.address,
-    //     distributor_abi: Distributor.abi,
-    //     token_sale_manager_address: TokenSaleManager.address,
-    //     token_sale_manager_abi: TokenSaleManager.abi,
-    //     token_state_address: TokenState.address,
-    //     token_state_abi: TokenState.abi,
-    //     time_helpers_address: TimeHelpers.address,
-    //     time_helpers_abi: TimeHelpers.abi,
-    //     delegation_controller_address: DelegationController.address,
-    //     delegation_controller_abi: DelegationController.abi
-    // };
+    let jsonObject = {
+        skale_token_address: SkaleToken.address,
+        skale_token_abi: SkaleToken.abi
+    };
+    for (const contractName of contracts) {
+        propertyName = contractName.replace(/([a-zA-Z])(?=[A-Z])/g, '$1_').toLowerCase();
+        jsonObject[propertyName + "_address"] = deployed.get(contractName).address;
+        jsonObject[propertyName + "_abi"] = eval(contractName).abi;
+    }
 
-    // await fsPromises.writeFile(`data/${networkName}.json`, JSON.stringify(jsonObject));
-    // await sleep(10000);
-    // console.log(`Done, check ${networkName}.json file in data folder.`);
+    await fsPromises.writeFile(`data/${networkName}.json`, JSON.stringify(jsonObject));
+    await sleep(10000);
+    console.log(`Done, check ${networkName}.json file in data folder.`);
 }
 
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-async function sendTransaction(web3Inst, account, privateKey, receiverContract) {
-    await web3Inst.eth.getTransactionCount(account).then(nonce => {
-        const rawTx = {
-            from: account,
-            nonce: "0x" + nonce.toString(16),
-            to: receiverContract,
-            gasPrice: 1000000000,
-            gas: 8000000,
-            value: "0xDE0B6B3A7640000"
-        };
-
-        const tx = new Tx(rawTx);
-        tx.sign(privateKey);
-        const serializedTx = tx.serialize();
-        web3Inst.eth.sendSignedTransaction('0x' + serializedTx.toString('hex')).on('receipt', receipt => {
-            console.log(receipt);
-        });
-    });
 }
 
 module.exports = deploy;
