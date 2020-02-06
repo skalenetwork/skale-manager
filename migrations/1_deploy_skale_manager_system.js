@@ -119,7 +119,8 @@ async function deploy(deployer, networkName, accounts) {
         "ECDH",
         "SkaleDKG",
         "SkaleVerifier",
-        "ManagerData"
+        "ManagerData",
+        "SkaleManager"
     ]
 
     contractsData = [];
@@ -168,11 +169,6 @@ async function deploy(deployer, networkName, accounts) {
         console.log("Contract Skale Token with address", SkaleToken.address, "registred in Contract Manager");
     });
     
-    
-    // await deployer.deploy(SkaleManager, contractManager.address, {gas: gasLimit * gas_multiplier});
-    // await contractManager.setContractsAddress("SkaleManager", SkaleManager.address).then(function(res) {
-    //     console.log("Contract Skale Manager with address", SkaleManager.address, "registred in Contract Manager");
-    // });
     // await deployer.deploy(Pricing, contractManager.address, {gas: gasLimit * gas_multiplier});
     // await contractManager.setContractsAddress("Pricing", Pricing.address).then(function(res) {
     //     console.log("Contract Pricing with address", Pricing.address, "registred in Contract Manager");

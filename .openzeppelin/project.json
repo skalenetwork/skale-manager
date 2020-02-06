@@ -24,7 +24,8 @@
     "ECDH": "ECDH",
     "SkaleDKG": "SkaleDKG",
     "SkaleVerifier": "SkaleVerifier",
-    "ManagerData": "ManagerData"
+    "ManagerData": "ManagerData",
+    "SkaleManager": "SkaleManager"
   },
   "dependencies": {},
   "name": "skale-manager",
