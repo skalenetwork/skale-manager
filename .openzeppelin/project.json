@@ -23,7 +23,8 @@
     "Decryption": "Decryption",
     "ECDH": "ECDH",
     "SkaleDKG": "SkaleDKG",
-    "SkaleVerifier": "SkaleVerifier"
+    "SkaleVerifier": "SkaleVerifier",
+    "ManagerData": "ManagerData"
   },
   "dependencies": {},
   "name": "skale-manager",
