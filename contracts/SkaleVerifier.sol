@@ -41,10 +41,6 @@ contract SkaleVerifier is Permissions {
         uint y;
     }
 
-    constructor(address newContractsAddress) public {
-        Permissions.initialize(newContractsAddress);
-    }
-
     function verifySchainSignature(
         uint signA,
         uint signB,
@@ -85,6 +81,10 @@ contract SkaleVerifier is Permissions {
             pkC,
             pkD
         );
+    }
+
+    function initialize(address newContractsAddress) public initializer {
+        Permissions.initialize(newContractsAddress);
     }
 
     function verify(

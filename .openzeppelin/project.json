@@ -22,7 +22,8 @@
     "SchainsFunctionalityInternal": "SchainsFunctionalityInternal",
     "Decryption": "Decryption",
     "ECDH": "ECDH",
-    "SkaleDKG": "SkaleDKG"
+    "SkaleDKG": "SkaleDKG",
+    "SkaleVerifier": "SkaleVerifier"
   },
   "dependencies": {},
   "name": "skale-manager",

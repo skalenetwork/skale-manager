@@ -117,7 +117,8 @@ async function deploy(deployer, networkName, accounts) {
         "SchainsFunctionalityInternal",
         "Decryption",
         "ECDH",
-        "SkaleDKG"
+        "SkaleDKG",
+        "SkaleVerifier"
     ]
 
     contractsData = [];
@@ -166,10 +167,6 @@ async function deploy(deployer, networkName, accounts) {
         console.log("Contract Skale Token with address", SkaleToken.address, "registred in Contract Manager");
     });
     
-    // await deployer.deploy(SkaleDKG, contractManager.address, {gas: gasLimit * gas_multiplier});
-    // await contractManager.setContractsAddress("SkaleDKG", SkaleDKG.address).then(function(res) {
-    //     console.log("Contract SkaleDKG with address", SkaleDKG.address, "registred in Contract Manager");
-    // });
     // await deployer.deploy(SkaleVerifier, contractManager.address, {gas: gasLimit * gas_multiplier});
     // await contractManager.setContractsAddress("SkaleVerifier", SkaleVerifier.address).then(function(res) {
     //     console.log("Contract SkaleVerifier with address", SkaleVerifier.address, "registred in Contract Manager");
