@@ -162,7 +162,7 @@ contract ValidatorService is Permissions {
         uint validatorId = getValidatorId(validatorAddress);
         require(trustedValidators[validatorId], "Validator is not authorized to create a node");
         uint[] memory validatorNodes = validators[validatorId].nodeIndexes;
-        uint delegationsTotal = delegationController.getDelegationsTotal(validatorId);
+        uint delegationsTotal = delegationController.getDelegatedAmount(validatorId);
         uint msr = IConstants(contractManager.getContract("Constants")).msr();
         require((validatorNodes.length + 1) * msr <= delegationsTotal, "Validator has to meet Minimum Staking Requirement");
     }
@@ -174,7 +174,7 @@ contract ValidatorService is Permissions {
         uint[] memory validatorNodes = validators[validatorId].nodeIndexes;
         uint position = findNode(validatorNodes, nodeIndex);
         require(position < validatorNodes.length, "Node does not exist for this Validator");
-        uint delegationsTotal = delegationController.getDelegationsTotal(validatorId);
+        uint delegationsTotal = delegationController.getDelegatedAmount(validatorId);
         uint msr = IConstants(contractManager.getContract("Constants")).msr();
         return (position + 1) * msr <= delegationsTotal;
     }
