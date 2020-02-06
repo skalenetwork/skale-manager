@@ -152,7 +152,7 @@ async function deploy(deployer, networkName, accounts) {
     for (const contractName of contracts) {
         propertyName = contractName.replace(/([a-zA-Z])(?=[A-Z])/g, '$1_').toLowerCase();
         jsonObject[propertyName + "_address"] = deployed.get(contractName).address;
-        jsonObject[propertyName + "_abi"] = eval(contractName).abi;
+        jsonObject[propertyName + "_abi"] = artifacts.require("./" + contractName).abi;
     }
 
     await fsPromises.writeFile(`data/${networkName}.json`, JSON.stringify(jsonObject));
