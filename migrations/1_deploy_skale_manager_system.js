@@ -114,7 +114,9 @@ async function deploy(deployer, networkName, accounts) {
         "MonitorsFunctionality",
         "SchainsData",
         "SchainsFunctionality",
-        "SchainsFunctionalityInternal"
+        "SchainsFunctionalityInternal",
+        "Decryption",
+        "ECDH"
     ]
 
     contractsData = [];
@@ -137,7 +139,7 @@ async function deploy(deployer, networkName, accounts) {
             contract = await create(Object.assign({ contractAlias: contractName, methodName: 'initialize', methodArgs: [] }, options));
             contractManager = contract;
             console.log("contractManager address:", contract.address);
-        } else if (contractName == "TimeHelpers") {
+        } else if (["TimeHelpers", "Decryption", "ECDH"].includes(contractName)) {
             contract = await create(Object.assign({ contractAlias: contractName }, options));
         } else if (contractName == "NodesData") {
             contract = await create(Object.assign({ contractAlias: contractName, methodName: 'initialize', methodArgs: [5260000, contractManager.address] }, options));
@@ -163,18 +165,6 @@ async function deploy(deployer, networkName, accounts) {
         console.log("Contract Skale Token with address", SkaleToken.address, "registred in Contract Manager");
     });
     
-    // await deployer.deploy(SchainsFunctionalityInternal, "SchainsFunctionality", "SchainsData", contractManager.address, {gas: gasLimit * gas_multiplier});
-    // await contractManager.setContractsAddress("SchainsFunctionalityInternal", SchainsFunctionalityInternal.address).then(function(res) {
-    //     console.log("Contract Schains FunctionalityInternal with address", SchainsFunctionalityInternal.address, "registred in Contract Manager");
-    // });
-    // await deployer.deploy(Decryption, {gas: gasLimit * gas_multiplier});
-    // await contractManager.setContractsAddress("Decryption", Decryption.address).then(function(res) {
-    //     console.log("Contract Decryption with address", Decryption.address, "registred in Contract Manager");
-    // });
-    // await deployer.deploy(ECDH, {gas: gasLimit * gas_multiplier});
-    // await contractManager.setContractsAddress("ECDH", ECDH.address).then(function(res) {
-    //     console.log("Contract ECDH with address", ECDH.address, "registred in Contract Manager");
-    // });
     // await deployer.deploy(SkaleDKG, contractManager.address, {gas: gasLimit * gas_multiplier});
     // await contractManager.setContractsAddress("SkaleDKG", SkaleDKG.address).then(function(res) {
     //     console.log("Contract SkaleDKG with address", SkaleDKG.address, "registred in Contract Manager");

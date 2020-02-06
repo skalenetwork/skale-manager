@@ -19,7 +19,9 @@
     "MonitorsFunctionality": "MonitorsFunctionality",
     "SchainsData": "SchainsData",
     "SchainsFunctionality": "SchainsFunctionality",
-    "SchainsFunctionalityInternal": "SchainsFunctionalityInternal"
+    "SchainsFunctionalityInternal": "SchainsFunctionalityInternal",
+    "Decryption": "Decryption",
+    "ECDH": "ECDH"
   },
   "dependencies": {},
   "name": "skale-manager",
