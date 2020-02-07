@@ -363,7 +363,7 @@ contract NodesData is INodesData, Permissions {
      */
     function isTimeForReward(uint nodeIndex) external view returns (bool) {
         address constantsAddress = contractManager.contracts(keccak256(abi.encodePacked("Constants")));
-        return nodes[nodeIndex].lastRewardDate + IConstants(constantsAddress).rewardPeriod() <= block.timestamp;
+        return nodes[nodeIndex].lastRewardDate.add(IConstants(constantsAddress).rewardPeriod()) <= block.timestamp;
     }
 
     /**
@@ -458,7 +458,7 @@ contract NodesData is INodesData, Permissions {
      * @return number of active nodes plus number of leaving nodes
      */
     function getNumberOnlineNodes() external view returns (uint) {
-        return numberOfActiveNodes + numberOfLeavingNodes;
+        return numberOfActiveNodes.add(numberOfLeavingNodes);
     }
 
     // /**

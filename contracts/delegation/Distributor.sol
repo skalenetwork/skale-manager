@@ -69,7 +69,7 @@ contract Distributor is Permissions {
 
         shares = distribute(
             validatorId,
-            amount - amount * feeRate / 1000,
+            amount.sub(amount * feeRate / 1000),
             roundFloor,
             applyMultipliers);
         fee = amount;

@@ -47,24 +47,24 @@ contract Pricing is Permissions {
     }
 
     function adjustPrice() external {
-        require(now > lastUpdated + COOLDOWN_TIME, "It's not a time to update a price");
+        require(now > lastUpdated.add(COOLDOWN_TIME), "It's not a time to update a price");
         checkAllNodes();
         uint loadPercentage = getTotalLoadPercentage();
         uint priceChange;
         uint timeSkipped;
 
         if (loadPercentage < OPTIMAL_LOAD_PERCENTAGE) {
-            priceChange = (ADJUSTMENT_SPEED * price) * (OPTIMAL_LOAD_PERCENTAGE - loadPercentage) / 10**6;
-            timeSkipped = (now - lastUpdated) / COOLDOWN_TIME;
-            require(price - priceChange * timeSkipped < price, "New price should be less than old price");
+            priceChange = (ADJUSTMENT_SPEED * price) * (OPTIMAL_LOAD_PERCENTAGE.sub(loadPercentage)) / 10**6;
+            timeSkipped = (now.sub(lastUpdated)) / COOLDOWN_TIME;
+            require(price.sub(priceChange * timeSkipped) < price, "New price should be less than old price");
             price -= priceChange * timeSkipped;
             if (price < MIN_PRICE) {
                 price = MIN_PRICE;
             }
         } else {
-            priceChange = (ADJUSTMENT_SPEED * price) * (loadPercentage - OPTIMAL_LOAD_PERCENTAGE) / 10**6;
-            timeSkipped = (now - lastUpdated) / COOLDOWN_TIME;
-            require(price + priceChange * timeSkipped > price, "New price should be greater than old price");
+            priceChange = (ADJUSTMENT_SPEED * price) * (loadPercentage.sub(OPTIMAL_LOAD_PERCENTAGE)) / 10**6;
+            timeSkipped = (now.sub(lastUpdated)) / COOLDOWN_TIME;
+            require(price.add(priceChange * timeSkipped) > price, "New price should be greater than old price");
             price += priceChange * timeSkipped;
         }
         lastUpdated = now;

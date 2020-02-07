@@ -67,7 +67,7 @@ contract TokenState is Permissions {
                 amount += delegationController.getDelegation(id).amount;
             }
         }
-        return amount + getPurchasedAmount(holder) + this.getSlashedAmount(holder);
+        return amount.add(getPurchasedAmount(holder)).add(this.getSlashedAmount(holder));
     }
 
     function getDelegatedCount(address holder) external returns (uint amount) {
@@ -112,7 +112,7 @@ contract TokenState is Permissions {
             slashingAmount = delegation.amount;
         }
         _slashed[delegation.holder] += slashingAmount;
-        delegationController.setDelegationAmount(delegationId, delegation.amount - slashingAmount);
+        delegationController.setDelegationAmount(delegationId, delegation.amount.sub(slashingAmount));
     }
 
     function forgive(address wallet, uint amount) external allow("DelegationService") {
@@ -251,7 +251,7 @@ contract TokenState is Permissions {
         uint endingLength = _endingDelegations[delegation.holder].length;
         for (uint i = 0; i < endingLength; ++i) {
             if (_endingDelegations[delegation.holder][i] == delegationId) {
-                for (uint j = i; j + 1 < endingLength; ++j) {
+                for (uint j = i; j.add(1) < endingLength; ++j) {
                     _endingDelegations[delegation.holder][j] = _endingDelegations[delegation.holder][j+1];
                 }
                 _endingDelegations[delegation.holder][endingLength - 1] = 0;

@@ -227,7 +227,7 @@ contract NodesFunctionality is Permissions, INodesFunctionality {
     /*function setSystemStatus(address constantsAddress) internal {
         address dataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData");
         address schainsDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("SchainsData");
-        uint numberOfNodes = 128 * (INodesData(dataAddress).numberOfActiveNodes() + INodesData(dataAddress).numberOfLeavingNodes());
+        uint numberOfNodes = 128 * (INodesData(dataAddress).numberOfActiveNodes().add(INodesData(dataAddress).numberOfLeavingNodes()));
         uint numberOfSchains = ISchainsData(schainsDataAddress).sumOfSchainsResources();
         if (4 * numberOfSchains / 3 < numberOfNodes && !(4 * numberOfSchains / 3 < (numberOfNodes - 1))) {
             IConstants(constantsAddress).setLastTimeUnderloaded();
@@ -245,14 +245,14 @@ contract NodesFunctionality is Permissions, INodesFunctionality {
         address dataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData");
         address schainsDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("SchainsData");
         uint numberOfDays;
-        uint numberOfNodes = 128 * (INodesData(dataAddress).numberOfActiveNodes() + INodesData(dataAddress).numberOfLeavingNodes());
+        uint numberOfNodes = 128 * (INodesData(dataAddress).numberOfActiveNodes().add(INodesData(dataAddress).numberOfLeavingNodes()));
         uint numberOfSchains = ISchainsData(schainsDataAddress).sumOfSchainsResources();
         if (20 * numberOfSchains / 17 > numberOfNodes) {
-            numberOfDays = (now - IConstants(constantsAddress).lastTimeOverloaded()) / IConstants(constantsAddress).SECONDS_TO_DAY();
+            numberOfDays = (now.sub(IConstants(constantsAddress).lastTimeOverloaded())) / IConstants(constantsAddress).SECONDS_TO_DAY();
             up = binstep(99, numberOfDays, 100);
             down = 100;
         } else if (4 * numberOfSchains / 3 < numberOfNodes) {
-            numberOfDays = (now - IConstants(constantsAddress).lastTimeUnderloaded()) / IConstants(constantsAddress).SECONDS_TO_DAY();
+            numberOfDays = (now.sub(IConstants(constantsAddress).lastTimeUnderloaded())) / IConstants(constantsAddress).SECONDS_TO_DAY();
             up = binstep(101, numberOfDays, 100);
             down = 100;
         } else {

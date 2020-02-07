@@ -224,26 +224,26 @@ contract SkaleManager is IERC777Recipient, Permissions {
         if (managerData.minersCap() == 0) {
             managerData.setMinersCap(ISkaleToken(contractManager.getContract("SkaleToken")).CAP() / 3);
         }
-        if (managerData.stageTime() + constants.rewardPeriod() < now) {
-            managerData.setStageTimeAndStageNodes(nodesData.numberOfActiveNodes() + nodesData.numberOfLeavingNodes());
+        if (managerData.stageTime().add(constants.rewardPeriod()) < now) {
+            managerData.setStageTimeAndStageNodes(nodesData.numberOfActiveNodes().add(nodesData.numberOfLeavingNodes()));
         }
         commonBounty = managerData.minersCap() /
-            ((2 ** (((now - managerData.startTime()) /
+            ((2 ** (((now.sub(managerData.startTime())) /
             constants.SIX_YEARS()) + 1)) *
             (constants.SIX_YEARS() /
             constants.rewardPeriod()) *
             managerData.stageNodes());
         if (now > diffTime) {
-            diffTime = now - diffTime;
+            diffTime = now.sub(diffTime);
         } else {
             diffTime = 0;
         }
         diffTime /= constants.checkTime();
         int bountyForMiner = int(commonBounty);
-        uint normalDowntime = ((constants.rewardPeriod() - constants.deltaPeriod()) /
+        uint normalDowntime = ((constants.rewardPeriod().sub(constants.deltaPeriod())) /
             constants.checkTime()) / 30;
-        if (downtime + diffTime > normalDowntime) {
-            bountyForMiner -= int(((downtime + diffTime) * commonBounty) / (constants.SECONDS_TO_DAY() / 4));
+        if (downtime.add(diffTime) > normalDowntime) {
+            bountyForMiner -= int(((downtime.add(diffTime)) * commonBounty) / (constants.SECONDS_TO_DAY() / 4));
         }
 
         if (bountyForMiner > 0) {
