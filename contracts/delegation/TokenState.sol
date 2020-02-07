@@ -54,9 +54,6 @@ contract TokenState is Permissions {
     ///       holder => delegationId[]
     mapping (address => uint[]) private _endingDelegations;
 
-    constructor(address _contractManager) Permissions(_contractManager) public {
-    }
-
     function getLockedCount(address holder) external returns (uint amount) {
         amount = 0;
         DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
@@ -123,13 +120,17 @@ contract TokenState is Permissions {
         _slashed[wallet] -= forgiveAmount;
     }
 
-    function getSlashedAmount(address holder) external returns (uint amount) {
+    function getSlashedAmount(address holder) external view returns (uint amount) {
         return _slashed[holder];
     }
 
     function skipTransitionDelay(uint delegationId) external onlyOwner() {
         require(_timelimit[delegationId] != 0, "There is no transistion delay");
         _timelimit[delegationId] = now;
+    }
+
+    function initialize(address _contractManager) public initializer {
+        Permissions.initialize(_contractManager);
     }
 
     function getState(uint delegationId) public returns (State state) {
@@ -163,7 +164,7 @@ contract TokenState is Permissions {
         return _purchased[holder];
     }
 
-    function isDelegated(State state) public returns (bool) {
+    function isDelegated(State state) public pure returns (bool) {
         return state == State.DELEGATED || state == State.ENDING_DELEGATED;
     }
 
@@ -213,7 +214,7 @@ contract TokenState is Permissions {
         }
     }
 
-    function isLocked(State state) internal returns (bool) {
+    function isLocked(State state) internal pure returns (bool) {
         return state != State.COMPLETED;
     }
 

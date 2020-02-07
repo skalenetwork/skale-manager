@@ -1,38 +1,25 @@
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
 import { ContractManagerInstance,
-         DecryptionContract,
-         DecryptionInstance,
          DelegationServiceInstance,
-         ECDHContract,
-         ECDHInstance,
          NodesFunctionalityInstance,
-         SchainsDataContract,
          SchainsDataInstance,
-         SchainsFunctionalityContract,
          SchainsFunctionalityInstance,
-         SchainsFunctionalityInternalContract,
-         SchainsFunctionalityInternalInstance,
-         SkaleDKGContract,
          SkaleDKGInstance,
          SkaleTokenInstance,
-         ValidatorServiceInstance } from "../types/truffle-contracts";
+         SlashingTableInstance,
+         ValidatorServiceInstance} from "../types/truffle-contracts";
 
-import { gasMultiplier } from "./utils/command_line";
 import { skipTime } from "./utils/time";
-
-const SchainsData: SchainsDataContract = artifacts.require("./SchainsData");
-const SchainsFunctionality: SchainsFunctionalityContract = artifacts.require("./SchainsFunctionality");
-const SchainsFunctionalityInternal: SchainsFunctionalityInternalContract = artifacts.require("./SchainsFunctionalityInternal");
-const SkaleDKG: SkaleDKGContract = artifacts.require("./SkaleDKG");
-const Decryption: DecryptionContract = artifacts.require("./Decryption");
-const ECDH: ECDHContract = artifacts.require("./ECDH");
 
 import BigNumber from "bignumber.js";
 import { deployContractManager } from "./utils/deploy/contractManager";
 import { deployDelegationService } from "./utils/deploy/delegation/delegationService";
 import { deployValidatorService } from "./utils/deploy/delegation/validatorService";
 import { deployNodesFunctionality } from "./utils/deploy/nodesFunctionality";
+import { deploySchainsData } from "./utils/deploy/schainsData";
+import { deploySchainsFunctionality } from "./utils/deploy/schainsFunctionality";
+import { deploySkaleDKG } from "./utils/deploy/skaleDKG";
 import { deploySkaleToken } from "./utils/deploy/skaleToken";
 import { deploySlashingTable } from "./utils/deploy/slashingTable";
 
@@ -71,55 +58,24 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
     let nodesFunctionality: NodesFunctionalityInstance;
     let schainsData: SchainsDataInstance;
     let schainsFunctionality: SchainsFunctionalityInstance;
-    let schainsFunctionalityInternal: SchainsFunctionalityInternalInstance;
     let skaleDKG: SkaleDKGInstance;
-    let decryption: DecryptionInstance;
-    let ecdh: ECDHInstance;
     let delegationService: DelegationServiceInstance;
     let skaleToken: SkaleTokenInstance;
     let validatorService: ValidatorServiceInstance;
+    let slashingTable: SlashingTableInstance;
 
     beforeEach(async () => {
         contractManager = await deployContractManager();
 
         nodesFunctionality = await deployNodesFunctionality(contractManager);
-
-        schainsData = await SchainsData.new(
-            "SchainsFunctionalityInternal",
-            contractManager.address,
-            {from: owner, gas: 8000000 * gasMultiplier});
-        await contractManager.setContractsAddress("SchainsData", schainsData.address);
-
-        schainsFunctionality = await SchainsFunctionality.new(
-            "SkaleManager",
-            "SchainsData",
-            contractManager.address,
-            {from: owner, gas: 7900000 * gasMultiplier});
-        await contractManager.setContractsAddress("SchainsFunctionality", schainsFunctionality.address);
-
-        schainsFunctionalityInternal = await SchainsFunctionalityInternal.new(
-            "SchainsFunctionality",
-            "SchainsData",
-            contractManager.address,
-            {from: owner, gas: 7000000 * gasMultiplier});
-        await contractManager.setContractsAddress("SchainsFunctionalityInternal", schainsFunctionalityInternal.address);
-
-        skaleDKG = await SkaleDKG.new(contractManager.address, {from: owner, gas: 8000000 * gasMultiplier});
-        await contractManager.setContractsAddress("SkaleDKG", skaleDKG.address);
-
-        decryption = await Decryption.new({from: owner, gas: 8000000 * gasMultiplier});
-        await contractManager.setContractsAddress("Decryption", decryption.address);
-
-        ecdh = await ECDH.new({from: owner, gas: 8000000 * gasMultiplier});
-        await contractManager.setContractsAddress("ECDH", ecdh.address);
-
+        schainsData = await deploySchainsData(contractManager);
+        schainsFunctionality = await deploySchainsFunctionality(contractManager);
+        skaleDKG = await deploySkaleDKG(contractManager);
         delegationService = await deployDelegationService(contractManager);
-
         skaleToken = await deploySkaleToken(contractManager);
-
         validatorService = await deployValidatorService(contractManager);
+        slashingTable = await deploySlashingTable(contractManager);
 
-        const slashingTable = await deploySlashingTable(contractManager);
         await slashingTable.setPenalty("FailedDKG", 5);
     });
 

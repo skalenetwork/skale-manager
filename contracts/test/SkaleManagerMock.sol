@@ -12,7 +12,8 @@ contract SkaleManagerMock is Permissions, IERC777Recipient {
 
     IERC1820Registry private _erc1820 = IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
 
-    constructor (address _contractManager) Permissions(_contractManager) public {
+    constructor (address _contractManager) public {
+        Permissions.initialize(_contractManager);
         _erc1820.setInterfaceImplementer(address(this), keccak256("ERC777TokensRecipient"), address(this));
     }
 

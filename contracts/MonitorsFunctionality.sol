@@ -82,26 +82,11 @@ contract MonitorsFunctionality is GroupsFunctionality {
         uint newNode
     );
 
-    constructor(
-        string memory newExecutorName,
-        string memory newDataName,
-        address newContractsAddress
-    )
-        GroupsFunctionality(
-            newExecutorName,
-            newDataName,
-            newContractsAddress
-        )
-    public
-    {
-
-    }
-
     /**
      * addMonitor - setup monitors of node
      */
     function addMonitor(uint nodeIndex) external allow(executorName) {
-        address constantsAddress = contractManager.getContract("Constants");
+        address constantsAddress = contractManager.getContract("ConstantsHolder");
         IConstants constantsHolder = IConstants(constantsAddress);
         bytes32 groupIndex = keccak256(abi.encodePacked(nodeIndex));
         uint possibleNumberOfNodes = constantsHolder.NUMBER_OF_MONITORS();
@@ -116,7 +101,7 @@ contract MonitorsFunctionality is GroupsFunctionality {
     }
 
     function upgradeMonitor(uint nodeIndex) external allow(executorName) {
-        address constantsAddress = contractManager.getContract("Constants");
+        address constantsAddress = contractManager.getContract("ConstantsHolder");
         IConstants constantsHolder = IConstants(constantsAddress);
         bytes32 groupIndex = keccak256(abi.encodePacked(nodeIndex));
         uint possibleNumberOfNodes = constantsHolder.NUMBER_OF_MONITORS();
@@ -152,7 +137,7 @@ contract MonitorsFunctionality is GroupsFunctionality {
         require(time <= block.timestamp, "The time has not come to send verdict");
         MonitorsData data = MonitorsData(contractManager.getContract("MonitorsData"));
         data.removeCheckedNode(monitorIndex, index);
-        address constantsAddress = contractManager.getContract("Constants");
+        address constantsAddress = contractManager.getContract("ConstantsHolder");
         bool receiveVerdict = time + IConstants(constantsAddress).deltaPeriod() > uint32(block.timestamp);
         if (receiveVerdict) {
             data.addVerdict(keccak256(abi.encodePacked(toNodeIndex)), downtime, latency);
@@ -188,8 +173,15 @@ contract MonitorsFunctionality is GroupsFunctionality {
         emit MonitorRotated(schainId, newNodeIndexEvent);
     }
 
+    function initialize(address _contractManager) public initializer {
+        GroupsFunctionality.initialize(
+            "SkaleManager",
+            "MonitorsData",
+            _contractManager);
+    }
+
     function selectNodeToGroup(bytes32 groupIndex) internal returns (uint) {
-        address dataAddress = contractManager.contracts(keccak256(abi.encodePacked(dataName)));
+        address dataAddress = contractManager.getContract(dataName);
         require(IGroupsData(dataAddress).isGroupActive(groupIndex), "Group is not active");
         bytes32 groupData = IGroupsData(dataAddress).getGroupData(groupIndex);
         uint hash = uint(keccak256(abi.encodePacked(uint(blockhash(block.number - 1)), groupIndex)));
@@ -211,7 +203,7 @@ contract MonitorsFunctionality is GroupsFunctionality {
     }
 
     function generateGroup(bytes32 groupIndex) internal allow(executorName) returns (uint[] memory) {
-        address dataAddress = contractManager.contracts(keccak256(abi.encodePacked(dataName)));
+        address dataAddress = contractManager.getContract(dataName);
         address nodesDataAddress = contractManager.getContract("NodesData");
 
         require(IGroupsData(dataAddress).isGroupActive(groupIndex), "Group is not active");
@@ -256,7 +248,7 @@ contract MonitorsFunctionality is GroupsFunctionality {
 
     function setNumberOfNodesInGroup(bytes32 groupIndex, bytes32 groupData) internal view returns (uint numberOfNodes, uint finish) {
         address nodesDataAddress = contractManager.getContract("NodesData");
-        address dataAddress = contractManager.contracts(keccak256(abi.encodePacked(dataName)));
+        address dataAddress = contractManager.getContract(dataName);
         numberOfNodes = INodesData(nodesDataAddress).getNumberOfNodes();
         uint numberOfActiveNodes = INodesData(nodesDataAddress).numberOfActiveNodes();
         uint numberOfExceptionNodes = (INodesData(nodesDataAddress).isNodeActive(uint(groupData)) ? 1 : 0);
@@ -267,7 +259,7 @@ contract MonitorsFunctionality is GroupsFunctionality {
 
     function comparator(bytes32 groupIndex, uint indexOfNode) internal view returns (bool) {
         address nodesDataAddress = contractManager.getContract("NodesData");
-        address dataAddress = contractManager.contracts(keccak256(abi.encodePacked(dataName)));
+        address dataAddress = contractManager.getContract(dataName);
         return INodesData(nodesDataAddress).isNodeActive(indexOfNode) && !IGroupsData(dataAddress).isExceptionNode(groupIndex, indexOfNode);
     }
 
@@ -340,7 +332,7 @@ contract MonitorsFunctionality is GroupsFunctionality {
     }
 
     function getDataToBytes(uint nodeIndex) internal view returns (bytes32 bytesParameters) {
-        address constantsAddress = contractManager.getContract("Constants");
+        address constantsAddress = contractManager.getContract("ConstantsHolder");
         address nodesDataAddress = contractManager.getContract("NodesData");
         bytes memory tempData = new bytes(32);
         bytes14 bytesOfIndex = bytes14(uint112(nodeIndex));

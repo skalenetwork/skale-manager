@@ -20,14 +20,13 @@
 pragma solidity ^0.5.3;
 
 import "./GroupsData.sol";
-import "./interfaces/ISchainsData.sol";
 
 
 /**
  * @title SchainsData - Data contract for SchainsFunctionality.
  * Contain all information about SKALE-Chains.
  */
-contract SchainsData is ISchainsData, GroupsData {
+contract SchainsData is GroupsData {
 
     struct Schain {
         string name;
@@ -51,13 +50,9 @@ contract SchainsData is ISchainsData, GroupsData {
     // array which contain all schains
     bytes32[] public schainsAtSystem;
 
-    uint64 public numberOfSchains = 0;
+    uint64 public numberOfSchains;
     // total resources that schains occupied
-    uint public sumOfSchainsResources = 0;
-
-    constructor(string memory newExecutorName, address newContractsAddress) GroupsData(newExecutorName, newContractsAddress) public {
-
-    }
+    uint public sumOfSchainsResources;
 
     /**
      * @dev initializeSchain - initializes Schain
@@ -302,4 +297,10 @@ contract SchainsData is ISchainsData, GroupsData {
         return schains[schainId].owner == from;
     }
 
+    function initialize(address newContractsAddress) public initializer {
+        GroupsData.initialize("SchainsFunctionalityInternal", newContractsAddress);
+
+        numberOfSchains = 0;
+        sumOfSchainsResources = 0;
+    }
 }

@@ -1,35 +1,22 @@
 import { BigNumber } from "bignumber.js";
-import {
-        ConstantsHolderContract,
-        ConstantsHolderInstance,
-        ContractManagerContract,
-        ContractManagerInstance,
-        MonitorsDataContract,
-        MonitorsDataInstance,
-        MonitorsFunctionalityContract,
-        MonitorsFunctionalityInstance,
-        NodesDataContract,
-        NodesDataInstance,
-        NodesFunctionalityContract,
-        NodesFunctionalityInstance,
-        SkaleDKGContract,
-        SkaleDKGInstance} from "../types/truffle-contracts";
-import { gasMultiplier } from "./utils/command_line";
+import { ConstantsHolderInstance,
+         ContractManagerInstance,
+         MonitorsDataInstance,
+         MonitorsFunctionalityInstance,
+         NodesDataInstance,
+         NodesFunctionalityInstance } from "../types/truffle-contracts";
 import { currentTime, skipTime } from "./utils/time";
 
 import chai = require("chai");
 import * as chaiAsPromised from "chai-as-promised";
-import { type } from "os";
+import { deployConstantsHolder } from "./utils/deploy/constantsHolder";
+import { deployContractManager } from "./utils/deploy/contractManager";
+import { deployMonitorsData } from "./utils/deploy/monitorsData";
+import { deployMonitorsFunctionality } from "./utils/deploy/monitorsFunctionality";
+import { deployNodesData } from "./utils/deploy/nodesData";
+import { deployNodesFunctionality } from "./utils/deploy/nodesFunctionality";
 chai.should();
 chai.use((chaiAsPromised));
-
-const ContractManager: ContractManagerContract = artifacts.require("./ContractManager");
-const MonitorsFunctionality: MonitorsFunctionalityContract = artifacts.require("./MonitorsFunctionality");
-const ConstantsHolder: ConstantsHolderContract = artifacts.require("./ConstantsHolder");
-const MonitorsData: MonitorsDataContract = artifacts.require("./MonitorsData");
-const NodesData: NodesDataContract = artifacts.require("./NodesData");
-const NodesFunctionality: NodesFunctionalityContract = artifacts.require("./NodesFunctionality");
-const SkaleDKG: SkaleDKGContract = artifacts.require("./SkaleDKG");
 
 contract("MonitorsFunctionality", ([owner, validator]) => {
   let contractManager: ContractManagerInstance;
@@ -38,38 +25,15 @@ contract("MonitorsFunctionality", ([owner, validator]) => {
   let monitorsData: MonitorsDataInstance;
   let nodesData: NodesDataInstance;
   let nodesFunctionality: NodesFunctionalityInstance;
-  let skaleDKG: SkaleDKGInstance;
 
   beforeEach(async () => {
-    contractManager = await ContractManager.new({from: owner});
+    contractManager = await deployContractManager();
 
-    monitorsFunctionality = await MonitorsFunctionality.new(
-      "SkaleManager", "MonitorsData",
-      contractManager.address, {from: owner, gas: 8000000 * gasMultiplier});
-    await contractManager.setContractsAddress("MonitorsFunctionality", monitorsFunctionality.address);
-
-    monitorsData = await MonitorsData.new(
-      "MonitorsFunctionality",
-      contractManager.address, {from: owner, gas: 8000000 * gasMultiplier});
-    await contractManager.setContractsAddress("MonitorsData", monitorsData.address);
-
-    constantsHolder = await ConstantsHolder.new(
-      contractManager.address, {from: owner, gas: 8000000 * gasMultiplier});
-    await contractManager.setContractsAddress("Constants", constantsHolder.address);
-
-    nodesData = await NodesData.new(
-        5260000,
-        contractManager.address,
-        {from: owner, gas: 8000000 * gasMultiplier});
-    await contractManager.setContractsAddress("NodesData", nodesData.address);
-
-    nodesFunctionality = await NodesFunctionality.new(
-      contractManager.address,
-      {from: owner, gas: 8000000 * gasMultiplier});
-    await contractManager.setContractsAddress("NodesFunctionality", nodesFunctionality.address);
-
-    skaleDKG = await SkaleDKG.new(contractManager.address, {from: owner, gas: 8000000 * gasMultiplier});
-    await contractManager.setContractsAddress("SkaleDKG", skaleDKG.address);
+    monitorsFunctionality = await deployMonitorsFunctionality(contractManager);
+    monitorsData = await deployMonitorsData(contractManager);
+    nodesData = await deployNodesData(contractManager);
+    constantsHolder = await deployConstantsHolder(contractManager);
+    nodesFunctionality = await deployNodesFunctionality(contractManager);
 
     // create a node for monitors functions tests
     await nodesData.addNode(validator, "elvis1", "0x7f000001", "0x7f000002", 8545, "0x1122334455", 0);

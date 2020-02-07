@@ -19,7 +19,6 @@
 
 pragma solidity ^0.5.3;
 
-import "@openzeppelin/contracts/ownership/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC777/IERC777.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
@@ -32,16 +31,12 @@ import "./DelegationService.sol";
 
 
 contract TokenSaleManager is ITokenSaleManager, Permissions, IERC777Recipient {
-    IERC1820Registry private _erc1820 = IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
+    IERC1820Registry private _erc1820;
 
     address seller;
 
     mapping (address => uint) approved;
     uint totalApproved;
-
-    constructor(address _contractManager) Permissions(_contractManager) public {
-        _erc1820.setInterfaceImplementer(address(this), keccak256("ERC777TokensRecipient"), address(this));
-    }
 
     /// @notice Allocates values for `walletAddresses`
     function approve(address[] calldata walletAddress, uint[] calldata value) external {
@@ -81,9 +76,15 @@ contract TokenSaleManager is ITokenSaleManager, Permissions, IERC777Recipient {
 
     }
 
+    function initialize(address _contractManager) public initializer {
+        Permissions.initialize(_contractManager);
+        _erc1820 = IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
+        _erc1820.setInterfaceImplementer(address(this), keccak256("ERC777TokensRecipient"), address(this));
+    }
+
     // internal
 
-    function getBalance() internal returns(uint balance) {
+    function getBalance() internal view returns(uint balance) {
         return IERC20(contractManager.getContract("SkaleToken")).balanceOf(address(this));
     }
 }

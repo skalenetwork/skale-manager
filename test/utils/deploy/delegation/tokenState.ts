@@ -6,7 +6,8 @@ const TokenState: TokenStateContract = artifacts.require("./TokenState");
 const name = "TokenState";
 
 async function deploy(contractManager: ContractManagerInstance) {
-    const tokenState = await TokenState.new(contractManager.address);
+    const tokenState = await TokenState.new();
+    await tokenState.initialize(contractManager.address);
     await contractManager.setContractsAddress(name, tokenState.address);
     return tokenState;
 }

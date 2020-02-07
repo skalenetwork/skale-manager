@@ -41,16 +41,6 @@ contract ManagerData is IManagerData, Permissions {
     string executorName;
 
     /**
-     * @dev constuctor in Permissions approach
-     * @param newExecutorName - name of executor contract
-     * @param newContractsAddress needed in Permissions constructor
-     */
-    constructor(string memory newExecutorName, address newContractsAddress) Permissions(newContractsAddress) public {
-        startTime = uint32(block.timestamp);
-        executorName = newExecutorName;
-    }
-
-    /**
      * @dev setMinersCap - sets miners capitalization
      */
     function setMinersCap(uint newMinersCap) external allow(executorName) {
@@ -65,4 +55,13 @@ contract ManagerData is IManagerData, Permissions {
         stageTime = uint32(block.timestamp);
     }
 
+    /**
+     * @dev constuctor in Permissions approach
+     * @param newContractsAddress needed in Permissions constructor
+     */
+    function initialize(address newContractsAddress) public initializer {
+        Permissions.initialize(newContractsAddress);
+        startTime = uint32(block.timestamp);
+        executorName = "SkaleManager";
+    }
 }

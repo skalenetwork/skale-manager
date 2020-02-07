@@ -6,7 +6,8 @@ const TokenSaleManager: TokenSaleManagerContract = artifacts.require("./TokenSal
 const name = "TokenSaleManager";
 
 async function deploy(contractManager: ContractManagerInstance) {
-    const instance = await TokenSaleManager.new(contractManager.address);
+    const instance = await TokenSaleManager.new();
+    await instance.initialize(contractManager.address);
     await contractManager.setContractsAddress(name, instance.address);
     return instance;
 }

@@ -5,9 +5,10 @@ const DelegationPeriodManager: DelegationPeriodManagerContract = artifacts.requi
 const name = "DelegationPeriodManager";
 
 async function deploy(contractManager: ContractManagerInstance) {
-    const delegationPeriodManager = await DelegationPeriodManager.new(contractManager.address);
-    await contractManager.setContractsAddress("DelegationPeriodManager", delegationPeriodManager.address);
-    return delegationPeriodManager;
+    const instance = await DelegationPeriodManager.new();
+    await instance.initialize(contractManager.address);
+    await contractManager.setContractsAddress("DelegationPeriodManager", instance.address);
+    return instance;
 }
 
 export async function deployDelegationPeriodManager(contractManager: ContractManagerInstance) {
