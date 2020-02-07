@@ -5,7 +5,8 @@ const SkaleBalances: SkaleBalancesContract = artifacts.require("./SkaleBalances"
 const name = "SkaleBalances";
 
 async function deploy(contractManager: ContractManagerInstance) {
-    const instance = await SkaleBalances.new(contractManager.address);
+    const instance = await SkaleBalances.new();
+    await instance.initialize(contractManager.address);
     await contractManager.setContractsAddress(name, instance.address);
     return instance;
 }

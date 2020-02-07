@@ -37,12 +37,7 @@ contract MonitorsData is GroupsData {
     }
 
     mapping (bytes32 => bytes32[]) public checkedNodes;
-    //mapping (bytes32 => Metrics[]) public verdicts;
     mapping (bytes32 => uint32[][]) public verdicts;
-
-    constructor(string memory newExecutorName, address newContractsAddress) GroupsData(newExecutorName, newContractsAddress) public {
-
-    }
 
     /**
      *  Add checked node or update existing one if it is already exits
@@ -88,5 +83,9 @@ contract MonitorsData is GroupsData {
 
     function getLengthOfMetrics(bytes32 monitorIndex) external view returns (uint) {
         return verdicts[monitorIndex].length;
+    }
+
+    function initialize(address newContractsAddress) public initializer {
+        GroupsData.initialize("MonitorsFunctionality", newContractsAddress);
     }
 }

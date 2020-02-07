@@ -6,7 +6,8 @@ const ValidatorService: ValidatorServiceContract = artifacts.require("./Validato
 const name = "ValidatorService";
 
 async function deploy(contractManager: ContractManagerInstance) {
-    const instance = await ValidatorService.new(contractManager.address);
+    const instance = await ValidatorService.new();
+    await instance.initialize(contractManager.address);
     await contractManager.setContractsAddress(name, instance.address);
     return instance;
 }

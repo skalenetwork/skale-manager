@@ -45,13 +45,8 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
         uint validatorId
     );
 
-    IERC1820Registry private _erc1820 = IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
+    IERC1820Registry private _erc1820;
     uint private _launchTimestamp;
-
-    constructor(address newContractsAddress) Permissions(newContractsAddress) public {
-        _launchTimestamp = now;
-        _erc1820.setInterfaceImplementer(address(this), keccak256("ERC777TokensRecipient"), address(this));
-    }
 
     function requestUndelegation(uint delegationId) external {
         TokenState tokenState = TokenState(contractManager.getContract("TokenState"));
@@ -82,12 +77,12 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
         return delegationController.getDelegationsForValidator(msg.sender, state);
     }
 
-    function setMinimumDelegationAmount(uint amount) external {
+    function setMinimumDelegationAmount(uint /* amount */) external {
         revert("Not implemented");
     }
 
     /// @notice Returns array of delegation requests id
-    function listDelegationRequests() external returns (uint[] memory) {
+    function listDelegationRequests() external pure returns (uint[] memory) {
         revert("Not implemented");
     }
 
@@ -114,10 +109,6 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
     function getDelegatedAmount(uint validatorId) external returns (uint) {
         DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
         return delegationController.getDelegationsTotal(validatorId);
-    }
-
-    function setMinimumStakingRequirement(uint amount) external onlyOwner() {
-        revert("Not implemented");
     }
 
     /// @notice Creates request to delegate `amount` of tokens to `validator` from the begining of the next month
@@ -149,11 +140,11 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
         delegationRequestManager.cancelRequest(delegationId, msg.sender);
     }
 
-    function getAllDelegationRequests() external returns(uint[] memory) {
+    function getAllDelegationRequests() external pure returns(uint[] memory) {
         revert("Not implemented");
     }
 
-    function getDelegationRequestsForValidator(uint validatorId) external returns (uint[] memory) {
+    function getDelegationRequestsForValidator(uint /* validatorId */) external returns (uint[] memory) {
         revert("Not implemented");
     }
 
@@ -187,20 +178,20 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
         validatorService.unlinkNodeAddress(msg.sender, nodeAddress);
     }
 
-    function unregisterValidator(uint validatorId) external {
+    function unregisterValidator(uint /* validatorId */) external {
         revert("Not implemented");
     }
 
     /// @notice return how many of validator funds are locked in SkaleManager
-    function getBondAmount(uint validatorId) external returns (uint amount) {
+    function getBondAmount(uint /* validatorId */) external returns (uint) {
         revert("Not implemented");
     }
 
-    function setValidatorName(string calldata newName) external {
+    function setValidatorName(string calldata /* newName */) external {
         revert("Not implemented");
     }
 
-    function setValidatorDescription(string calldata description) external {
+    function setValidatorDescription(string calldata /* description */) external {
         revert("Not implemented");
     }
 
@@ -239,7 +230,7 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
     }
 
     /// @notice removes node from system
-    function deleteNode(uint nodeIndex) external {
+    function deleteNode(uint /* nodeIndex */) external {
         revert("Not implemented");
     }
 
@@ -263,7 +254,7 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
         return tokenState.getDelegatedCount(wallet);
     }
 
-    function getSlashedOf(address wallet) external returns (uint) {
+    function getSlashedOf(address wallet) external view returns (uint) {
         TokenState tokenState = TokenState(contractManager.getContract("TokenState"));
         return tokenState.getSlashedAmount(wallet);
     }
@@ -273,19 +264,27 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
     }
 
     function tokensReceived(
-        address operator,
-        address from,
+        address,
+        address,
         address to,
         uint256 amount,
         bytes calldata userData,
-        bytes calldata operatorData
+        bytes calldata
     )
         external
         allow("SkaleToken")
     {
+        require(to == address(this), "Receiver is incorrect");
         require(userData.length == 32, "Data length is incorrect");
         uint validatorId = abi.decode(userData, (uint));
         distributeBounty(amount, validatorId);
+    }
+
+    function initialize(address _contractsAddress) public initializer {
+        Permissions.initialize(_contractsAddress);
+        _launchTimestamp = now;
+        _erc1820 = IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
+        _erc1820.setInterfaceImplementer(address(this), keccak256("ERC777TokensRecipient"), address(this));
     }
 
     // private
