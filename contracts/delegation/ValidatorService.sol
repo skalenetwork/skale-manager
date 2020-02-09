@@ -118,7 +118,7 @@ contract ValidatorService is Permissions {
     function checkMinimumDelegation(uint validatorId, uint amount)
         external view
         checkValidatorExists(validatorId)
-        allow("DelegationRequestManager")
+        allow("DelegationService")
         returns (bool)
     {
         return validators[validatorId].minimumDelegationAmount <= amount ? true : false;
@@ -127,7 +127,7 @@ contract ValidatorService is Permissions {
     function checkValidatorAddressToId(address validatorAddress, uint validatorId)
         external
         view
-        allow("DelegationRequestManager")
+        allow("DelegationService")
         returns (bool)
     {
         return getValidatorId(validatorAddress) == validatorId ? true : false;
@@ -158,7 +158,7 @@ contract ValidatorService is Permissions {
         uint validatorId = getValidatorId(validatorAddress);
         require(trustedValidators[validatorId], "Validator is not authorized to create a node");
         uint[] memory validatorNodes = validators[validatorId].nodeIndexes;
-        uint delegationsTotal = delegationController.calculateTotalDelegated(validatorId);
+        uint delegationsTotal = delegationController.calculateTotalDelegatedToValidator(validatorId);
         uint msr = IConstants(contractManager.getContract("ConstantsHolder")).msr();
         require((validatorNodes.length + 1) * msr <= delegationsTotal, "Validator has to meet Minimum Staking Requirement");
     }
@@ -170,7 +170,7 @@ contract ValidatorService is Permissions {
         uint[] memory validatorNodes = validators[validatorId].nodeIndexes;
         uint position = findNode(validatorNodes, nodeIndex);
         require(position < validatorNodes.length, "Node does not exist for this Validator");
-        uint delegationsTotal = delegationController.calculateTotalDelegated(validatorId);
+        uint delegationsTotal = delegationController.calculateTotalDelegatedToValidator(validatorId);
         uint msr = IConstants(contractManager.getContract("ConstantsHolder")).msr();
         return (position + 1) * msr <= delegationsTotal;
     }

@@ -23,13 +23,11 @@ pragma experimental ABIEncoderV2;
 import "../Permissions.sol";
 import "./DelegationController.sol";
 import "./TimeHelpers.sol";
+import "../interfaces/delegation/ILocker.sol";
 
 
 /// @notice Store and manage tokens states
-contract TokenState is Permissions {
-
-    // ///delegationId => State
-    // mapping (uint => State) private _state;
+contract TokenState is Permissions, ILocker {
 
     /// delegationId => timestamp
     mapping (uint => uint) private _timelimit;
@@ -46,18 +44,24 @@ contract TokenState is Permissions {
     ///       holder => delegationId[]
     mapping (address => uint[]) private _endingDelegations;
 
-    function getLockedCount(address holder) external returns (uint amount) {
-        revert("getLockedCount is not implemented");
-        // amount = 0;
-        // DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
-        // uint[] memory delegationIds = delegationController.getDelegationsByHolder(holder);
-        // for (uint i = 0; i < delegationIds.length; ++i) {
-        //     uint id = delegationIds[i];
-        //     if (isLocked(getState(id))) {
-        //         amount += delegationController.getDelegation(id).amount;
-        //     }
-        // }
-        // return amount + getPurchasedAmount(holder) + this.getSlashedAmount(holder);
+    string[] private _lockers;
+
+    function calculateLockedAmount(address holder) external returns (uint locked) {
+        uint locked = 0;
+        for (uint i = 0; i < _lockers.length; ++i) {
+            ILocker locker = ILocker(contractManager.getContract(_lockers[i]));
+            locked += locker.calculateLockedAmount(holder);
+        }
+        return locked;
+    }
+
+    function calculateForbiddenForDelegationAmount(address holder) external returns (uint amount) {
+        uint forbidden = 0;
+        for (uint i = 0; i < _lockers.length; ++i) {
+            ILocker locker = ILocker(contractManager.getContract(_lockers[i]));
+            forbidden += locker.calculateForbiddenForDelegationAmount(holder);
+        }
+        return forbidden;
     }
 
     function getDelegatedCount(address holder) external returns (uint amount) {
@@ -120,7 +124,8 @@ contract TokenState is Permissions {
     }
 
     function getPurchasedAmount(address holder) external returns (uint amount) {
-        revert("getPurchasedAmount is not implemented");
+        // TODO: getPurchasedAmount is not implemented
+        return 0;
         // check if any delegation was ended
         // for (uint i = 0; i < _endingDelegations[holder].length; ++i) {
         //     getState(_endingDelegations[holder][i]);
@@ -128,8 +133,30 @@ contract TokenState is Permissions {
         // return _purchased[holder];
     }
 
+    function removeLocker(string calldata locker) external onlyOwner {
+        uint index;
+        bytes32 hash = keccak256(abi.encodePacked(locker));
+        for (index = 0; index < _lockers.length; ++index) {
+            if (keccak256(abi.encodePacked(_lockers[index])) == hash) {
+                break;
+            }
+        }
+        if (index < _lockers.length) {
+            if (index < _lockers.length - 1) {
+                _lockers[index] = _lockers[_lockers.length - 1];
+            }
+            delete _lockers[_lockers.length - 1];
+            --_lockers.length;
+        }
+    }
+
     function initialize(address _contractManager) public initializer {
         Permissions.initialize(_contractManager);
+        registerLocker("DelegationController");
+    }
+
+    function registerLocker(string memory locker) public onlyOwner {
+        _lockers.push(locker);
     }
 
     // function isDelegated(State state) public pure returns (bool) {

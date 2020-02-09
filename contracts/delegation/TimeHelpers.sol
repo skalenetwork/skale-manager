@@ -22,6 +22,8 @@ import "../thirdparty/BokkyPooBahsDateTimeLibrary.sol";
 
 
 contract TimeHelpers {
+    uint constant ZERO_YEAR = 2020;
+
     function getNextMonthStart() external view returns (uint timestamp) {
         return getNextMonthStartFromDate(now);
     }
@@ -83,12 +85,23 @@ contract TimeHelpers {
             second);
     }
 
-    function timestampToMonth(uint timestamp) external pure returns (uint month) {
-        revert("timestampToMonth is not implemented");
+    function timestampToMonth(uint timestamp) external pure returns (uint) {
+        uint year;
+        uint month;
+        (year, month, ) = BokkyPooBahsDateTimeLibrary.timestampToDate(timestamp);
+        require(year >= ZERO_YEAR, "Timestamp is too far in the past");
+        month = month - 1 + 12 * (year - ZERO_YEAR);
+        require(month > 0, "Timestamp is too far in the past");
+        return month;
     }
 
-    function monthToTimestamp(uint month) external pure returns (uint timestamp) {
-        revert("monthToTimestamp is not implemented");
+    function monthToTimestamp(uint _month) external pure returns (uint timestamp) {
+        uint year = ZERO_YEAR;
+        uint month = _month;
+        year += month / 12;
+        month %= 12;
+        month += 1;
+        return BokkyPooBahsDateTimeLibrary.timestampFromDate(year, month, 1);
     }
 
     function getNextMonthStartFromDate(uint dateTimestamp) public pure returns (uint timestamp) {

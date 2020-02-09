@@ -115,7 +115,7 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
     /// @notice Returns amount of delegated token of the validator
     function getDelegatedAmount(uint validatorId) external returns (uint) {
         DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
-        return delegationController.calculateTotalDelegated(validatorId);
+        return delegationController.calculateTotalDelegatedToValidator(validatorId);
     }
 
     /// @notice Creates request to delegate `amount` of tokens to `validator` from the begining of the next month
@@ -146,8 +146,8 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
 
         // check that there is enough money
         uint holderBalance = skaleToken.balanceOf(msg.sender);
-        uint lockedToDelegate = tokenState.getLockedCount(msg.sender) - tokenState.getPurchasedAmount(msg.sender);
-        require(holderBalance >= amount + lockedToDelegate, "Delegator hasn't enough tokens to delegate");
+        uint forbiddenForDelegation = tokenState.calculateForbiddenForDelegationAmount(msg.sender);
+        require(holderBalance >= amount + forbiddenForDelegation, "Delegator doesn't have enough tokens to delegate");
 
         uint delegationId = delegationController.addDelegation(
             msg.sender,
@@ -275,7 +275,7 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
 
     function getLockedOf(address wallet) external returns (uint) {
         TokenState tokenState = TokenState(contractManager.getContract("TokenState"));
-        return tokenState.getLockedCount(wallet);
+        return tokenState.calculateLockedAmount(wallet);
     }
 
     function getDelegatedOf(address wallet) external returns (uint) {

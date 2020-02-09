@@ -26,11 +26,12 @@ import "./TokenState.sol";
 import "./ValidatorService.sol";
 
 
-contract DelegationController is Permissions {
+contract DelegationController is Permissions, ILocker {
 
     enum State {
         PROPOSED,
         ACCEPTED,
+        CANCELED,
         REJECTED,
         DELEGATED,
         UNDELEGATION_REQUESTED,
@@ -51,21 +52,30 @@ contract DelegationController is Permissions {
     /// @notice delegations will never be deleted to index in this array may be used like delegation id
     Delegation[] public delegations;
 
-    ///       holder => delegationId[]
-    mapping (address => uint[]) private _activeByHolder;
+    // ///       holder => delegationId[]
+    // mapping (address => uint[]) private _activeByHolder;
 
-    /// validatorId => delegationId[]
-    mapping (uint => uint[]) private _activeByValidator;
-
-    //validatorId => sum of tokens each holder
-    mapping (uint => uint) private _delegationsTotal;
+    // /// validatorId => delegationId[]
+    // mapping (uint => uint[]) private _activeByValidator;
 
     // validatorId =>        month => diff
-    mapping (uint => mapping (uint => int)) private _totalDelegatedByValidatorDiff;
+    mapping (uint => mapping (uint => int)) private _totalDelegatedToValidatorDiff;
     // validatorId => month
-    mapping (uint => uint) private _totalDelegatedByValidatorLastProcessedMonth;
+    mapping (uint => uint) private _totalDelegatedToValidatorLastProcessedMonth;
     // validaotrId => totalDelegatedByValidator
-    mapping (uint => uint) private _totalDelegatedByValidatorLastValue;
+    mapping (uint => uint) private _totalDelegatedToValidatorLastValue;
+
+    //        holder =>         month => diff
+    mapping (address => mapping (uint => int)) private _totalDelegatedByHolderDiff;
+    //        holder => month
+    mapping (address => uint) private _totalDelegatedByHolderLastProcessedMonth;
+    //        holder => totalDelegatedByValidator
+    mapping (address => uint) private _totalDelegatedByHolderLastValue;
+
+    //        holder => tokens
+    mapping (address => uint) private _lockedInPendingRequests;
+    //        holder => month
+    mapping (address => uint) private _lastWriteTolockedInPendingRequests;
 
     modifier checkDelegationExists(uint delegationId) {
         require(delegationId < delegations.length, "Delegation does not exist");
@@ -76,15 +86,15 @@ contract DelegationController is Permissions {
         return delegations[delegationId];
     }
 
-    function calculateTotalDelegated(uint validatorId) external allow("ValidatorService") returns (uint) {
+    function calculateTotalDelegatedToValidator(uint validatorId) external allow("ValidatorService") returns (uint) {
         TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
         uint currentMonth = timeHelpers.timestampToMonth(now);
-        for (uint i = _totalDelegatedByValidatorLastProcessedMonth[validatorId] + 1; i < currentMonth; ++i) {
-            _totalDelegatedByValidatorLastValue[validatorId] = uint(
-                int(_totalDelegatedByValidatorLastValue[validatorId]) + _totalDelegatedByValidatorDiff[validatorId][i]);
+        for (uint i = _totalDelegatedToValidatorLastProcessedMonth[validatorId] + 1; i < currentMonth; ++i) {
+            _totalDelegatedToValidatorLastValue[validatorId] = uint(
+                int(_totalDelegatedToValidatorLastValue[validatorId]) + _totalDelegatedToValidatorDiff[validatorId][i]);
         }
-        _totalDelegatedByValidatorLastProcessedMonth[validatorId] = currentMonth - 1;
-        return uint(int(_totalDelegatedByValidatorLastValue[validatorId]) + _totalDelegatedByValidatorDiff[validatorId][currentMonth]);
+        _totalDelegatedToValidatorLastProcessedMonth[validatorId] = currentMonth - 1;
+        return uint(int(_totalDelegatedToValidatorLastValue[validatorId]) + _totalDelegatedToValidatorDiff[validatorId][currentMonth]);
     }
 
     function addDelegation(
@@ -95,7 +105,7 @@ contract DelegationController is Permissions {
         string calldata info
     )
         external
-        allow("DelegationRequestManager")
+        allow("DelegationService")
         returns (uint delegationId)
     {
         delegationId = delegations.length;
@@ -109,8 +119,17 @@ contract DelegationController is Permissions {
             0,
             info
         ));
-        _activeByHolder[holder].push(delegationId);
-        _activeByValidator[validatorId].push(delegationId);
+        // _activeByHolder[holder].push(delegationId);
+        // _activeByValidator[validatorId].push(delegationId);
+        addToLockedInPendingDelegations(delegations[delegationId].holder, delegations[delegationId].amount);
+    }
+
+    function calculateLockedAmount(address wallet) external returns (uint) {
+        return _calculateLockedAmount(wallet);
+    }
+
+    function calculateForbiddenForDelegationAmount(address wallet) external returns (uint) {
+        return _calculateLockedAmount(wallet);
     }
 
     // function getActiveDelegationsByHolder(address holder) external view allow("TokenState") returns (uint[] memory) {
@@ -240,12 +259,14 @@ contract DelegationController is Permissions {
         TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
         uint currentMonth = timeHelpers.timestampToMonth(now);
         delegations[delegationId].started = currentMonth + 1;
-        addDelegation(delegations[delegationId].validatorId, delegations[delegationId].amount, currentMonth + 1);
+        addToValidator(delegations[delegationId].validatorId, delegations[delegationId].amount, currentMonth + 1);
+        addToHolder(delegations[delegationId].holder, delegations[delegationId].amount, currentMonth + 1);
     }
 
     function requestUndelegation(uint delegationId) external allow("DelegationService") {
-        require(getState(delegationId) == State.DELEGATED, "Can't request undelegation");
+        require(getState(delegationId) == State.ACCEPTED, "Can't request undelegation");
         delegations[delegationId].finished = calculateDelegationEndMonth(delegationId);
+        substractFromLockedInPerdingDelegations(delegations[delegationId].holder, delegations[delegationId].amount);
     }
 
     function initialize(address _contractsAddress) public initializer {
@@ -262,7 +283,7 @@ contract DelegationController is Permissions {
                     return State.REJECTED;
                 }
             } else {
-                return State.REJECTED;
+                return State.CANCELED;
             }
         } else {
             TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
@@ -300,7 +321,55 @@ contract DelegationController is Permissions {
         revert("calculateDelegationEndMonth is not implemented");
     }
 
-    function addDelegation(uint validatorId, uint amount, uint month) internal {
-        _totalDelegatedByValidatorDiff[validatorId][month] += int(amount);
+    function addToValidator(uint validatorId, uint amount, uint month) internal {
+        _totalDelegatedToValidatorDiff[validatorId][month] += int(amount);
+    }
+
+    function addToHolder(address holder, uint amount, uint month) internal {
+        _totalDelegatedByHolderDiff[holder][month] += int(amount);
+    }
+
+    function calculateTotalDelegatedByHolder(address holder) internal returns (uint) {
+        uint currentMonth = getCurrentMonth();
+        for (uint i = _totalDelegatedByHolderLastProcessedMonth[holder] + 1; i < currentMonth; ++i) {
+            _totalDelegatedByHolderLastValue[holder] = uint(
+                int(_totalDelegatedByHolderLastValue[holder]) + _totalDelegatedByHolderDiff[holder][i]);
+        }
+        _totalDelegatedByHolderLastProcessedMonth[holder] = currentMonth - 1;
+        return uint(int(_totalDelegatedByHolderLastValue[holder]) + _totalDelegatedByHolderDiff[holder][currentMonth]);
+    }
+
+    function getLockedInPendingDelegations(address holder) internal returns (uint) {
+        uint currentMonth = getCurrentMonth();
+        if (_lastWriteTolockedInPendingRequests[holder] < currentMonth) {
+            return 0;
+        } else {
+            return _lockedInPendingRequests[holder];
+        }
+    }
+
+    function addToLockedInPendingDelegations(address holder, uint amount) internal returns (uint) {
+        uint currentMonth = getCurrentMonth();
+        if (_lastWriteTolockedInPendingRequests[holder] < currentMonth) {
+            _lockedInPendingRequests[holder] = 0;
+        }
+        _lockedInPendingRequests[holder] += amount;
+        _lastWriteTolockedInPendingRequests[holder] = currentMonth;
+    }
+
+    function substractFromLockedInPerdingDelegations(address holder, uint amount) internal returns (uint) {
+        uint currentMonth = getCurrentMonth();
+        require(_lastWriteTolockedInPendingRequests[holder] == currentMonth, "There are no delegation requests this month");
+        require(_lockedInPendingRequests[holder] >= amount, "Unlocking amount is too big");
+        _lockedInPendingRequests[holder] -= amount;
+    }
+
+    function getCurrentMonth() internal returns (uint) {
+        TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
+        return timeHelpers.timestampToMonth(now);
+    }
+
+    function _calculateLockedAmount(address wallet) internal returns (uint) {
+        return calculateTotalDelegatedByHolder(wallet) + getLockedInPendingDelegations(wallet);
     }
 }
