@@ -16,26 +16,9 @@ import { deployDelegationService } from "../utils/deploy/delegation/delegationSe
 import { deployTokenState } from "../utils/deploy/delegation/tokenState";
 import { deployValidatorService } from "../utils/deploy/delegation/validatorService";
 import { deploySkaleToken } from "../utils/deploy/skaleToken";
+import { Delegation } from "../utils/types";
 chai.should();
 chai.use(chaiAsPromised);
-
-class Delegation {
-    public tokenAddress: string;
-    public validatorId: BigNumber;
-    public amount: BigNumber;
-    public delegationPeriod: BigNumber;
-    public unlockedUntil: BigNumber;
-    public description: string;
-
-    constructor(arrayData: [string, BigNumber, BigNumber, BigNumber, BigNumber, string]) {
-        this.tokenAddress = arrayData[0];
-        this.validatorId = new BigNumber(arrayData[1]);
-        this.amount = new BigNumber(arrayData[2]);
-        this.delegationPeriod = new BigNumber(arrayData[3]);
-        this.unlockedUntil = new BigNumber(arrayData[4]);
-        this.description = arrayData[5];
-    }
-}
 
 contract("DelegationRequestManager", ([owner, holder1, holder2, validator, validator1]) => {
     let contractManager: ContractManagerInstance;
@@ -114,10 +97,10 @@ contract("DelegationRequestManager", ([owner, holder1, holder2, validator, valid
             delegationId = logs[0].args.delegationId;
             const delegation: Delegation = new Delegation(
                 await delegationController.delegations(delegationId));
-            assert.equal(holder1, delegation.tokenAddress);
+            assert.equal(holder1, delegation.holder);
             assert.equal(validatorId, delegation.validatorId.toNumber());
             assert.equal(delegationPeriod, delegation.delegationPeriod.toNumber());
-            assert.equal("VERY NICE", delegation.description);
+            assert.equal("VERY NICE", delegation.info);
         });
 
         it("should reject delegation if it doesn't have enough tokens", async () => {
@@ -161,7 +144,7 @@ contract("DelegationRequestManager", ([owner, holder1, holder2, validator, valid
             it("should change state of tokens to COMPLETED if delegation was cancelled", async () => {
                 await delegationService.cancelPendingDelegation(delegationId, {from: holder1});
                 const COMPLETED = 4;
-                const status = new BigNumber(await tokenState.getState.call(delegationId)).toNumber();
+                const status = (await delegationController.getState(delegationId)).toNumber();
                 status.should.be.equal(COMPLETED);
             });
 

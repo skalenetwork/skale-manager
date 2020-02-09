@@ -28,91 +28,91 @@ import "./DelegationPeriodManager.sol";
 
 contract Distributor is Permissions {
 
-    struct Share {
-        address holder;
-        uint amount;
-        uint delegationId;
-    }
+    // struct Share {
+    //     address holder;
+    //     uint amount;
+    //     uint delegationId;
+    // }
 
-    function distributeBounty(uint validatorId, uint amount) external allow("DelegationService") returns (Share[] memory shares, uint fee) {
-        return distributeWithFee(
-            validatorId,
-            amount,
-            true,
-            true);
-    }
+    // function distributeBounty(uint validatorId, uint amount) external allow("DelegationService") returns (Share[] memory shares, uint fee) {
+    //     return distributeWithFee(
+    //         validatorId,
+    //         amount,
+    //         true,
+    //         true);
+    // }
 
-    function distributePenalties(uint validatorId, uint amount) external allow("DelegationService") returns (Share[] memory shares) {
-        return distribute(
-            validatorId,
-            amount,
-            false,
-            false);
-    }
+    // function distributePenalties(uint validatorId, uint amount) external allow("DelegationService") returns (Share[] memory shares) {
+    //     return distribute(
+    //         validatorId,
+    //         amount,
+    //         false,
+    //         false);
+    // }
 
-    function initialize(address _contractManager) public initializer {
-        Permissions.initialize(_contractManager);
-    }
+    // function initialize(address _contractManager) public initializer {
+    //     Permissions.initialize(_contractManager);
+    // }
 
-    // private
+    // // private
 
-    function distributeWithFee(
-        uint validatorId,
-        uint amount,
-        bool roundFloor,
-        bool applyMultipliers)
-    internal returns (Share[] memory shares, uint fee)
-    {
-        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
-        uint feeRate = validatorService.getValidator(validatorId).feeRate;
+    // function distributeWithFee(
+    //     uint validatorId,
+    //     uint amount,
+    //     bool roundFloor,
+    //     bool applyMultipliers)
+    // internal returns (Share[] memory shares, uint fee)
+    // {
+    //     ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
+    //     uint feeRate = validatorService.getValidator(validatorId).feeRate;
 
-        shares = distribute(
-            validatorId,
-            amount - amount * feeRate / 1000,
-            roundFloor,
-            applyMultipliers);
-        fee = amount;
-        for (uint i = 0; i < shares.length; ++i) {
-            fee -= shares[i].amount;
-        }
-    }
+    //     shares = distribute(
+    //         validatorId,
+    //         amount - amount * feeRate / 1000,
+    //         roundFloor,
+    //         applyMultipliers);
+    //     fee = amount;
+    //     for (uint i = 0; i < shares.length; ++i) {
+    //         fee -= shares[i].amount;
+    //     }
+    // }
 
-    function distribute(
-        uint validatorId,
-        uint amount,
-        bool roundFloor,
-        bool applyMultipliers)
-    internal returns (Share[] memory shares)
-    {
-        DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
+    // function distribute(
+    //     uint validatorId,
+    //     uint amount,
+    //     bool roundFloor,
+    //     bool applyMultipliers)
+    // internal returns (Share[] memory shares)
+    // {
+    //     DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
 
-        uint totalDelegated = 0;
-        uint[] memory activeDelegations = delegationController.getActiveDelegationsByValidator(validatorId);
-        shares = new Share[](activeDelegations.length);
+    //     uint totalDelegated = 0;
+    //     uint[] memory activeDelegations = delegationController.getActiveDelegationsByValidator(validatorId);
+    //     shares = new Share[](activeDelegations.length);
 
-        DelegationPeriodManager delegationPeriodManager = DelegationPeriodManager(contractManager.getContract("DelegationPeriodManager"));
-        for (uint i = 0; i < activeDelegations.length; ++i) {
-            DelegationController.Delegation memory delegation = delegationController.getDelegation(activeDelegations[i]);
-            shares[i].delegationId = activeDelegations[i];
-            shares[i].holder = delegation.holder;
-            if (applyMultipliers) {
-                uint multiplier = delegationPeriodManager.stakeMultipliers(delegation.delegationPeriod);
-                shares[i].amount = amount * delegation.amount * multiplier;
-                totalDelegated += delegation.amount * multiplier;
-            } else {
-                shares[i].amount = amount * delegation.amount;
-                totalDelegated += delegation.amount;
-            }
-        }
+    //     DelegationPeriodManager delegationPeriodManager = DelegationPeriodManager(contractManager.getContract("DelegationPeriodManager"));
+    //     for (uint i = 0; i < activeDelegations.length; ++i) {
+    //         DelegationController.Delegation memory delegation = delegationController.getDelegation(activeDelegations[i]);
+    //         shares[i].delegationId = activeDelegations[i];
+    //         shares[i].holder = delegation.holder;
+    //         if (applyMultipliers) {
+    //             uint multiplier = delegationPeriodManager.stakeMultipliers(delegation.delegationPeriod);
+    //             shares[i].amount = amount * delegation.amount * multiplier;
+    //             totalDelegated += delegation.amount * multiplier;
+    //         } else {
+    //             shares[i].amount = amount * delegation.amount;
+    //             totalDelegated += delegation.amount;
+    //         }
+    //     }
 
-        for (uint i = 0; i < activeDelegations.length; ++i) {
-            uint value = shares[i].amount;
-            shares[i].amount /= totalDelegated;
-            if (!roundFloor) {
-                if (shares[i].amount * totalDelegated < value) {
-                    ++shares[i].amount;
-                }
-            }
-        }
-    }
+    //     for (uint i = 0; i < activeDelegations.length; ++i) {
+    //         uint value = shares[i].amount;
+    //         shares[i].amount /= totalDelegated;
+    //         if (!roundFloor) {
+    //             if (shares[i].amount * totalDelegated < value) {
+    //                 ++shares[i].amount;
+    //             }
+    //         }
+    //     }
+    // }
 }

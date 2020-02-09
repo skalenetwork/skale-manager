@@ -83,6 +83,14 @@ contract TimeHelpers {
             second);
     }
 
+    function timestampToMonth(uint timestamp) external pure returns (uint month) {
+        revert("timestampToMonth is not implemented");
+    }
+
+    function monthToTimestamp(uint month) external pure returns (uint timestamp) {
+        revert("monthToTimestamp is not implemented");
+    }
+
     function getNextMonthStartFromDate(uint dateTimestamp) public pure returns (uint timestamp) {
         uint year;
         uint month;

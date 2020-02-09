@@ -26,7 +26,6 @@ import "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
 import "../Permissions.sol";
 import "../interfaces/delegation/IHolderDelegation.sol";
 import "../interfaces/delegation/IValidatorDelegation.sol";
-import "./DelegationRequestManager.sol";
 import "./ValidatorService.sol";
 import "./DelegationController.sol";
 import "./Distributor.sol";
@@ -49,32 +48,38 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
     uint private _launchTimestamp;
 
     function requestUndelegation(uint delegationId) external {
-        TokenState tokenState = TokenState(contractManager.getContract("TokenState"));
         DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
 
         require(
             delegationController.getDelegation(delegationId).holder == msg.sender,
             "Can't request undelegation because sender is not a holder");
 
-        tokenState.requestUndelegation(delegationId);
+        delegationController.requestUndelegation(delegationId);
     }
 
     /// @notice Allows validator to accept tokens delegated at `delegationId`
     function acceptPendingDelegation(uint delegationId) external {
-        DelegationRequestManager delegationRequestManager = DelegationRequestManager(
-            contractManager.getContract("DelegationRequestManager")
+        DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
+        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
+
+        DelegationController.Delegation memory delegation = delegationController.getDelegation(delegationId);
+        require(
+            validatorService.checkValidatorAddressToId(msg.sender, delegation.validatorId),
+            "No permissions to accept request"
         );
-        delegationRequestManager.acceptRequest(delegationId, msg.sender);
+        delegationController.accept(delegationId);
     }
 
-    function getDelegationsByHolder(TokenState.State state) external returns (uint[] memory) {
-        DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
-        return delegationController.getDelegationsByHolder(msg.sender, state);
+    function getDelegationsByHolder(DelegationController.State state) external returns (uint[] memory) {
+        revert("getDelegationsByHolder is not implemented");
+        // DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
+        // return delegationController.getDelegationsByHolder(msg.sender, state);
     }
 
-    function getDelegationsForValidator(TokenState.State state) external returns (uint[] memory) {
-        DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
-        return delegationController.getDelegationsForValidator(msg.sender, state);
+    function getDelegationsForValidator(DelegationController.State state) external returns (uint[] memory) {
+        revert("getDelegationsForValidator is not implemetned");
+        // DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
+        // return delegationController.getDelegationsForValidator(msg.sender, state);
     }
 
     function setMinimumDelegationAmount(uint /* amount */) external {
@@ -88,27 +93,29 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
 
     /// @notice Allows service to slash `validator` by `amount` of tokens
     function slash(uint validatorId, uint amount) external allow("SkaleDKG") {
-        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
-        require(validatorService.validatorExists(validatorId), "Validator does not exist");
+        revert("Slash is not implemented");
+        // ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
+        // require(validatorService.validatorExists(validatorId), "Validator does not exist");
 
-        Distributor distributor = Distributor(contractManager.getContract("Distributor"));
-        TokenState tokenState = TokenState(contractManager.getContract("TokenState"));
+        // Distributor distributor = Distributor(contractManager.getContract("Distributor"));
+        // TokenState tokenState = TokenState(contractManager.getContract("TokenState"));
 
-        Distributor.Share[] memory shares = distributor.distributePenalties(validatorId, amount);
-        for (uint i = 0; i < shares.length; ++i) {
-            tokenState.slash(shares[i].delegationId, shares[i].amount);
-        }
+        // Distributor.Share[] memory shares = distributor.distributePenalties(validatorId, amount);
+        // for (uint i = 0; i < shares.length; ++i) {
+        //     tokenState.slash(shares[i].delegationId, shares[i].amount);
+        // }
     }
 
     function forgive(address wallet, uint amount) external onlyOwner() {
-        TokenState tokenState = TokenState(contractManager.getContract("TokenState"));
-        tokenState.forgive(wallet, amount);
+        revert("forgive is not implemented");
+        // TokenState tokenState = TokenState(contractManager.getContract("TokenState"));
+        // tokenState.forgive(wallet, amount);
     }
 
     /// @notice Returns amount of delegated token of the validator
     function getDelegatedAmount(uint validatorId) external returns (uint) {
         DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
-        return delegationController.getDelegationsTotal(validatorId);
+        return delegationController.calculateTotalDelegated(validatorId);
     }
 
     /// @notice Creates request to delegate `amount` of tokens to `validator` from the begining of the next month
@@ -120,24 +127,46 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
     )
         external
     {
-        DelegationRequestManager delegationRequestManager = DelegationRequestManager(
-            contractManager.getContract("DelegationRequestManager")
+
+        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
+        DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
+        DelegationPeriodManager delegationPeriodManager = DelegationPeriodManager(contractManager.getContract("DelegationPeriodManager"));
+        SkaleToken skaleToken = SkaleToken(contractManager.getContract("SkaleToken"));
+        TokenState tokenState = TokenState(contractManager.getContract("TokenState"));
+
+        require(
+            validatorService.checkMinimumDelegation(validatorId, amount),
+            "Amount doesn't meet minimum delegation amount"
         );
-        uint delegationId = delegationRequestManager.createRequest(
+        require(validatorService.trustedValidators(validatorId), "Validator is not authorized to accept request");
+        require(
+            delegationPeriodManager.isDelegationPeriodAllowed(delegationPeriod),
+            "This delegation period is not allowed"
+        );
+
+        // check that there is enough money
+        uint holderBalance = skaleToken.balanceOf(msg.sender);
+        uint lockedToDelegate = tokenState.getLockedCount(msg.sender) - tokenState.getPurchasedAmount(msg.sender);
+        require(holderBalance >= amount + lockedToDelegate, "Delegator hasn't enough tokens to delegate");
+
+        uint delegationId = delegationController.addDelegation(
             msg.sender,
             validatorId,
             amount,
             delegationPeriod,
             info
         );
+
         emit DelegationRequestIsSent(delegationId);
     }
 
     function cancelPendingDelegation(uint delegationId) external {
-        DelegationRequestManager delegationRequestManager = DelegationRequestManager(
-            contractManager.getContract("DelegationRequestManager")
-        );
-        delegationRequestManager.cancelRequest(delegationId, msg.sender);
+        DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
+
+        DelegationController.Delegation memory delegation = delegationController.getDelegation(delegationId);
+        require(msg.sender == delegation.holder, "Only token holders can cancel delegation request");
+
+        delegationController.cancel(delegationId);
     }
 
     function getAllDelegationRequests() external pure returns(uint[] memory) {
@@ -290,28 +319,29 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
     // private
 
     function distributeBounty(uint amount, uint validatorId) internal {
-        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
+        revert("distributeBounty is not implemented");
+        // ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
 
-        SkaleToken skaleToken = SkaleToken(contractManager.getContract("SkaleToken"));
-        Distributor distributor = Distributor(contractManager.getContract("Distributor"));
-        SkaleBalances skaleBalances = SkaleBalances(contractManager.getContract("SkaleBalances"));
-        TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
-        DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
+        // SkaleToken skaleToken = SkaleToken(contractManager.getContract("SkaleToken"));
+        // Distributor distributor = Distributor(contractManager.getContract("Distributor"));
+        // SkaleBalances skaleBalances = SkaleBalances(contractManager.getContract("SkaleBalances"));
+        // TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
+        // DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
 
-        Distributor.Share[] memory shares;
-        uint fee;
-        (shares, fee) = distributor.distributeBounty(validatorId, amount);
+        // Distributor.Share[] memory shares;
+        // uint fee;
+        // (shares, fee) = distributor.distributeBounty(validatorId, amount);
 
-        address validatorAddress = validatorService.getValidator(validatorId).validatorAddress;
-        skaleToken.send(address(skaleBalances), fee, abi.encode(validatorAddress));
-        skaleBalances.lockBounty(validatorAddress, timeHelpers.addMonths(_launchTimestamp, 3));
+        // address validatorAddress = validatorService.getValidator(validatorId).validatorAddress;
+        // skaleToken.send(address(skaleBalances), fee, abi.encode(validatorAddress));
+        // skaleBalances.lockBounty(validatorAddress, timeHelpers.addMonths(_launchTimestamp, 3));
 
-        for (uint i = 0; i < shares.length; ++i) {
-            skaleToken.send(address(skaleBalances), shares[i].amount, abi.encode(shares[i].holder));
+        // for (uint i = 0; i < shares.length; ++i) {
+        //     skaleToken.send(address(skaleBalances), shares[i].amount, abi.encode(shares[i].holder));
 
-            uint created = delegationController.getDelegation(shares[i].delegationId).created;
-            uint delegationStarted = timeHelpers.getNextMonthStartFromDate(created);
-            skaleBalances.lockBounty(shares[i].holder, timeHelpers.addMonths(delegationStarted, 3));
-        }
+        //     uint created = delegationController.getDelegation(shares[i].delegationId).created;
+        //     uint delegationStarted = timeHelpers.getNextMonthStartFromDate(created);
+        //     skaleBalances.lockBounty(shares[i].holder, timeHelpers.addMonths(delegationStarted, 3));
+        // }
     }
 }
