@@ -57,7 +57,7 @@ contract Pricing is Permissions {
             priceChange = (ADJUSTMENT_SPEED * price) * (OPTIMAL_LOAD_PERCENTAGE.sub(loadPercentage)) / 10**6;
             timeSkipped = (now.sub(lastUpdated)) / COOLDOWN_TIME;
             require(price.sub(priceChange * timeSkipped) < price, "New price should be less than old price");
-            price -= priceChange * timeSkipped;
+            price = price.sub(priceChange * timeSkipped);
             if (price < MIN_PRICE) {
                 price = MIN_PRICE;
             }
@@ -65,7 +65,7 @@ contract Pricing is Permissions {
             priceChange = (ADJUSTMENT_SPEED * price) * (loadPercentage.sub(OPTIMAL_LOAD_PERCENTAGE)) / 10**6;
             timeSkipped = (now.sub(lastUpdated)) / COOLDOWN_TIME;
             require(price.add(priceChange * timeSkipped) > price, "New price should be greater than old price");
-            price += priceChange * timeSkipped;
+            price = price.add(priceChange * timeSkipped);
         }
         lastUpdated = now;
     }
@@ -89,7 +89,7 @@ contract Pricing is Permissions {
             bytes32 schain = ISchainsData(schainsDataAddress).schainsAtSystem(i);
             uint numberOfNodesInGroup = IGroupsData(schainsDataAddress).getNumberOfNodesInGroup(schain);
             uint part = ISchainsData(schainsDataAddress).getSchainsPartOfNode(schain);
-            sumLoadSchain += (numberOfNodesInGroup*10**7)/part;
+            sumLoadSchain = sumLoadSchain.add((numberOfNodesInGroup*10**7)/part);
         }
         return uint(sumLoadSchain/(10**5*numberOfNodes));
     }

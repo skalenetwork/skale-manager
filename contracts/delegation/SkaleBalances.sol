@@ -46,7 +46,7 @@ contract SkaleBalances is Permissions, IERC777Recipient {
         }
 
         require(_bountyBalances[from] >= amountOfTokens, "Now enough tokens on balance for withdrawing");
-        _bountyBalances[from] -= amountOfTokens;
+        _bountyBalances[from] = _bountyBalances[from].sub(amountOfTokens);
 
         SkaleToken skaleToken = SkaleToken(contractManager.getContract("SkaleToken"));
         require(skaleToken.transfer(to, amountOfTokens), "Failed to transfer tokens");
@@ -86,6 +86,6 @@ contract SkaleBalances is Permissions, IERC777Recipient {
     // private
 
     function stashBalance(address recipient, uint amount) internal {
-        _bountyBalances[recipient] += amount;
+        _bountyBalances[recipient] = _bountyBalances[recipient].add(amount);
     }
 }

@@ -64,11 +64,11 @@ contract DelegationController is Permissions {
     }
 
     function addDelegationsTotal(uint validatorId, uint amount) external allow("TokenState") {
-        _delegationsTotal[validatorId] += amount;
+        _delegationsTotal[validatorId] = _delegationsTotal[validatorId].add(amount);
     }
 
     function subDelegationsTotal(uint validatorId, uint amount) external allow("TokenState") {
-        _delegationsTotal[validatorId] -= amount;
+        _delegationsTotal[validatorId] = _delegationsTotal[validatorId].sub(amount);
     }
 
     function getDelegationsTotal(uint validatorId) external allow("ValidatorService") returns (uint) {

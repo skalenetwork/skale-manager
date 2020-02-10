@@ -104,7 +104,7 @@ contract NodesData is INodesData, Permissions {
     function countNodesWithFreeSpace(uint8 freeSpace) external view returns (uint count) {
         count = 0;
         for (uint8 i = freeSpace; i <= 128; ++i) {
-            count += spaceToNodes[i].length;
+            count = count.add(spaceToNodes[i].length);
         }
     }
 
@@ -299,7 +299,7 @@ contract NodesData is INodesData, Permissions {
     //     if (fullNodes[subarrayLink].freeSpace < space) {
     //         return false;
     //     }
-    //     fullNodes[subarrayLink].freeSpace -= space;
+    //     fullNodes[subarrayLink].freeSpace = fullNodes[subarrayLink].freeSpace.sub(space);
     //     return true;
     // }
 
@@ -325,7 +325,7 @@ contract NodesData is INodesData, Permissions {
     //  * @param space - space which should be returned
     //  */
     // function addSpaceToFullNode(uint subarrayLink, uint space) external allow("SchainsFunctionality") {
-    //     fullNodes[subarrayLink].freeSpace += space;
+    //     fullNodes[subarrayLink].freeSpace = fullNodes[subarrayLink].freeSpace.add(space);
     // }
 
     /**
@@ -468,7 +468,7 @@ contract NodesData is INodesData, Permissions {
     // function enoughNodesWithFreeSpace(uint8 space, uint needNodes) external view returns (bool nodesAreEnough) {
     //     uint numberOfFreeNodes = 0;
     //     for (uint8 i = space; i <= 128; i++) {
-    //         numberOfFreeNodes += spaceToNodes[i].length;
+    //         numberOfFreeNodes = numberOfFreeNodes.add(spaceToNodes[i].length);
     //         if (numberOfFreeNodes == needNodes) {
     //             return true;
     //         }

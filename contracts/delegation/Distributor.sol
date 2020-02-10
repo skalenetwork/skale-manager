@@ -74,7 +74,7 @@ contract Distributor is Permissions {
             applyMultipliers);
         fee = amount;
         for (uint i = 0; i < shares.length; ++i) {
-            fee -= shares[i].amount;
+            fee = fee.sub(shares[i].amount);
         }
     }
 
@@ -99,10 +99,10 @@ contract Distributor is Permissions {
             if (applyMultipliers) {
                 uint multiplier = delegationPeriodManager.stakeMultipliers(delegation.delegationPeriod);
                 shares[i].amount = amount * delegation.amount * multiplier;
-                totalDelegated += delegation.amount * multiplier;
+                totalDelegated = totalDelegated.add(delegation.amount * multiplier);
             } else {
                 shares[i].amount = amount * delegation.amount;
-                totalDelegated += delegation.amount;
+                totalDelegated = totalDelegated.add(delegation.amount);
             }
         }
 

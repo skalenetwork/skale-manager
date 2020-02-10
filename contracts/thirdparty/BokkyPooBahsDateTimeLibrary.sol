@@ -208,7 +208,7 @@ library BokkyPooBahsDateTimeLibrary {
         uint month;
         uint day;
         (year, month, day) = _daysToDate(timestamp / SECONDS_PER_DAY);
-        year += _years;
+        year = year.add(_years);
         uint daysInMonth = _getDaysInMonth(year, month);
         if (day > daysInMonth) {
             day = daysInMonth;
@@ -221,8 +221,8 @@ library BokkyPooBahsDateTimeLibrary {
         uint month;
         uint day;
         (year, month, day) = _daysToDate(timestamp / SECONDS_PER_DAY);
-        month += _months;
-        year += (month - 1) / 12;
+        month = month.add(_months);
+        year = year.add((month - 1) / 12);
         month = (month - 1) % 12 + 1;
         uint daysInMonth = _getDaysInMonth(year, month);
         if (day > daysInMonth) {
@@ -253,7 +253,7 @@ library BokkyPooBahsDateTimeLibrary {
         uint month;
         uint day;
         (year, month, day) = _daysToDate(timestamp / SECONDS_PER_DAY);
-        year -= _years;
+        year = year.sub(_years);
         uint daysInMonth = _getDaysInMonth(year, month);
         if (day > daysInMonth) {
             day = daysInMonth;
