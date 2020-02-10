@@ -99,6 +99,10 @@ contract DelegationController is Permissions, ILocker {
     }
 
     function calculateDelegatedByHolderToValidator(address holder, uint validatorId, uint month) external allow("Distributor") returns (uint) {
+        if (_delegatedByHolderToDelegatorFirstUnprocessedMonth[holder][validatorId] == 0) {
+            return 0;
+        }
+
         uint currentMonth = getCurrentMonth();
         if (month >= _delegatedByHolderToDelegatorFirstUnprocessedMonth[holder][validatorId]) {
             uint endMonth = min(currentMonth, month + 1);
@@ -285,6 +289,11 @@ contract DelegationController is Permissions, ILocker {
         addToValidator(delegations[delegationId].validatorId, delegations[delegationId].amount, currentMonth + 1);
         addToHolder(delegations[delegationId].holder, delegations[delegationId].amount, currentMonth + 1);
         updateFirstDelegationMonth(delegations[delegationId].holder, delegations[delegationId].validatorId, currentMonth + 1);
+        addToHolderToValidator(
+            delegations[delegationId].holder,
+            delegations[delegationId].validatorId,
+            delegations[delegationId].amount,
+            currentMonth + 1);
     }
 
     function requestUndelegation(uint delegationId) external allow("DelegationService") {
@@ -377,6 +386,21 @@ contract DelegationController is Permissions, ILocker {
 
     function addToHolder(address holder, uint amount, uint month) internal {
         _totalDelegatedByHolderDiff[holder][month] += int(amount);
+    }
+
+    function addToHolderToValidator(
+        address holder,
+        uint validatorId,
+        uint amount,
+        uint month)
+        internal
+    {
+        _delegatedByHolderToDelegatorDiff[holder][validatorId][month] += int(amount);
+        if (_delegatedByHolderToDelegatorFirstUnprocessedMonth[holder][validatorId] == 0) {
+            _delegatedByHolderToDelegatorFirstUnprocessedMonth[holder][validatorId] = month;
+        } else {
+            require(_delegatedByHolderToDelegatorFirstUnprocessedMonth[holder][validatorId] <= month, "Can't change past delegations");
+        }
     }
 
     function calculateTotalDelegatedByHolder(address holder) internal returns (uint) {
