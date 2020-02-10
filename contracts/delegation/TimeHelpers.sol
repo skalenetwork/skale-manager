@@ -85,16 +85,6 @@ contract TimeHelpers {
             second);
     }
 
-    function timestampToMonth(uint timestamp) external pure returns (uint) {
-        uint year;
-        uint month;
-        (year, month, ) = BokkyPooBahsDateTimeLibrary.timestampToDate(timestamp);
-        require(year >= ZERO_YEAR, "Timestamp is too far in the past");
-        month = month - 1 + 12 * (year - ZERO_YEAR);
-        require(month > 0, "Timestamp is too far in the past");
-        return month;
-    }
-
     function monthToTimestamp(uint _month) external pure returns (uint timestamp) {
         uint year = ZERO_YEAR;
         uint month = _month;
@@ -102,6 +92,20 @@ contract TimeHelpers {
         month %= 12;
         month += 1;
         return BokkyPooBahsDateTimeLibrary.timestampFromDate(year, month, 1);
+    }
+
+    function getCurrentMonth() external view returns (uint) {
+        return timestampToMonth(now);
+    }
+
+    function timestampToMonth(uint timestamp) public pure returns (uint) {
+        uint year;
+        uint month;
+        (year, month, ) = BokkyPooBahsDateTimeLibrary.timestampToDate(timestamp);
+        require(year >= ZERO_YEAR, "Timestamp is too far in the past");
+        month = month - 1 + 12 * (year - ZERO_YEAR);
+        require(month > 0, "Timestamp is too far in the past");
+        return month;
     }
 
     function getNextMonthStartFromDate(uint dateTimestamp) public pure returns (uint timestamp) {

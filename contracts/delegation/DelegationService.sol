@@ -20,12 +20,7 @@
 pragma solidity ^0.5.3;
 pragma experimental ABIEncoderV2;
 
-import "@openzeppelin/contracts/introspection/IERC1820Registry.sol";
-import "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
-
 import "../Permissions.sol";
-import "../interfaces/delegation/IHolderDelegation.sol";
-import "../interfaces/delegation/IValidatorDelegation.sol";
 import "./ValidatorService.sol";
 import "./DelegationController.sol";
 import "./Distributor.sol";
@@ -34,7 +29,7 @@ import "./TokenState.sol";
 import "./TimeHelpers.sol";
 
 
-contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegation, IERC777Recipient {
+contract DelegationService is Permissions {
 
     event DelegationRequestIsSent(
         uint delegationId
@@ -44,7 +39,6 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
         uint validatorId
     );
 
-    IERC1820Registry private _erc1820;
     uint private _launchTimestamp;
 
     function requestUndelegation(uint delegationId) external {
@@ -115,7 +109,7 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
     /// @notice Returns amount of delegated token of the validator
     function getDelegatedAmount(uint validatorId) external returns (uint) {
         DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
-        return delegationController.calculateTotalDelegatedToValidator(validatorId);
+        return delegationController.calculateTotalDelegatedToValidatorNow(validatorId);
     }
 
     /// @notice Creates request to delegate `amount` of tokens to `validator` from the begining of the next month
@@ -248,16 +242,6 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
         }
     }
 
-    function withdrawBounty(address bountyCollectionAddress, uint amount) external {
-        SkaleBalances skaleBalances = SkaleBalances(contractManager.getContract("SkaleBalances"));
-        skaleBalances.withdrawBalance(msg.sender, bountyCollectionAddress, amount);
-    }
-
-    function getEarnedBountyAmount() external returns (uint) {
-        SkaleBalances skaleBalances = SkaleBalances(contractManager.getContract("SkaleBalances"));
-        return skaleBalances.getBalance(msg.sender);
-    }
-
     /// @notice removes node from system
     function deleteNode(uint /* nodeIndex */) external {
         revert("Not implemented");
@@ -292,56 +276,8 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
         _launchTimestamp = timestamp;
     }
 
-    function tokensReceived(
-        address,
-        address,
-        address to,
-        uint256 amount,
-        bytes calldata userData,
-        bytes calldata
-    )
-        external
-        allow("SkaleToken")
-    {
-        require(to == address(this), "Receiver is incorrect");
-        require(userData.length == 32, "Data length is incorrect");
-        uint validatorId = abi.decode(userData, (uint));
-        distributeBounty(amount, validatorId);
-    }
-
     function initialize(address _contractsAddress) public initializer {
         Permissions.initialize(_contractsAddress);
         _launchTimestamp = now;
-        _erc1820 = IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
-        _erc1820.setInterfaceImplementer(address(this), keccak256("ERC777TokensRecipient"), address(this));
-    }
-
-    // private
-
-    function distributeBounty(uint amount, uint validatorId) internal {
-        revert("distributeBounty is not implemented");
-        // ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
-
-        // SkaleToken skaleToken = SkaleToken(contractManager.getContract("SkaleToken"));
-        // Distributor distributor = Distributor(contractManager.getContract("Distributor"));
-        // SkaleBalances skaleBalances = SkaleBalances(contractManager.getContract("SkaleBalances"));
-        // TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
-        // DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
-
-        // Distributor.Share[] memory shares;
-        // uint fee;
-        // (shares, fee) = distributor.distributeBounty(validatorId, amount);
-
-        // address validatorAddress = validatorService.getValidator(validatorId).validatorAddress;
-        // skaleToken.send(address(skaleBalances), fee, abi.encode(validatorAddress));
-        // skaleBalances.lockBounty(validatorAddress, timeHelpers.addMonths(_launchTimestamp, 3));
-
-        // for (uint i = 0; i < shares.length; ++i) {
-        //     skaleToken.send(address(skaleBalances), shares[i].amount, abi.encode(shares[i].holder));
-
-        //     uint created = delegationController.getDelegation(shares[i].delegationId).created;
-        //     uint delegationStarted = timeHelpers.getNextMonthStartFromDate(created);
-        //     skaleBalances.lockBounty(shares[i].holder, timeHelpers.addMonths(delegationStarted, 3));
-        // }
     }
 }

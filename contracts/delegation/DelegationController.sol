@@ -61,9 +61,9 @@ contract DelegationController is Permissions, ILocker {
     // validatorId =>        month => diff
     mapping (uint => mapping (uint => int)) private _totalDelegatedToValidatorDiff;
     // validatorId => month
-    mapping (uint => uint) private _totalDelegatedToValidatorLastProcessedMonth;
-    // validaotrId => totalDelegatedByValidator
-    mapping (uint => uint) private _totalDelegatedToValidatorLastValue;
+    mapping (uint => uint) private _totalDelegatedToValidatorFirstUnprocessedMonth;
+    // validaotrId =>        month => tokens
+    mapping (uint => mapping (uint => uint)) private _totalDelegatedToValidator;
 
     //        holder =>         month => diff
     mapping (address => mapping (uint => int)) private _totalDelegatedByHolderDiff;
@@ -71,6 +71,14 @@ contract DelegationController is Permissions, ILocker {
     mapping (address => uint) private _totalDelegatedByHolderLastProcessedMonth;
     //        holder => totalDelegatedByValidator
     mapping (address => uint) private _totalDelegatedByHolderLastValue;
+    //        holder =>   validatorId => month
+    mapping (address => mapping (uint => uint)) private _firstDelegationMonth;
+    //        holder =>   validatorId =>         month => diff
+    mapping (address => mapping (uint => mapping (uint => int))) private _delegatedByHolderToDelegatorDiff;
+    //        holder =>   validatorId => month
+    mapping (address => mapping (uint => uint)) private _delegatedByHolderToDelegatorFirstUnprocessedMonth;
+    //        holder =>   validatorId =>         month => tokens
+    mapping (address => mapping (uint => mapping (uint => uint))) private _delegatedByHolderToDelegator;
 
     //        holder => tokens
     mapping (address => uint) private _lockedInPendingRequests;
@@ -86,15 +94,30 @@ contract DelegationController is Permissions, ILocker {
         return delegations[delegationId];
     }
 
-    function calculateTotalDelegatedToValidator(uint validatorId) external allow("ValidatorService") returns (uint) {
-        TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
-        uint currentMonth = timeHelpers.timestampToMonth(now);
-        for (uint i = _totalDelegatedToValidatorLastProcessedMonth[validatorId] + 1; i < currentMonth; ++i) {
-            _totalDelegatedToValidatorLastValue[validatorId] = uint(
-                int(_totalDelegatedToValidatorLastValue[validatorId]) + _totalDelegatedToValidatorDiff[validatorId][i]);
+    function calculateTotalDelegatedToValidatorNow(uint validatorId) external allow("ValidatorService") returns (uint) {
+        return calculateTotalDelegatedToValidator(validatorId, getCurrentMonth());
+    }
+
+    function calculateDelegatedByHolderToValidator(address holder, uint validatorId, uint month) external allow("Distributor") returns (uint) {
+        uint currentMonth = getCurrentMonth();
+        if (month >= _delegatedByHolderToDelegatorFirstUnprocessedMonth[holder][validatorId]) {
+            uint endMonth = min(currentMonth, month + 1);
+            for (uint i = _delegatedByHolderToDelegatorFirstUnprocessedMonth[holder][validatorId]; i < endMonth; ++i) {
+                _delegatedByHolderToDelegator[holder][validatorId][i] = uint(
+                    int(_delegatedByHolderToDelegator[holder][validatorId][i - 1]) + _delegatedByHolderToDelegatorDiff[holder][validatorId][i]);
+                delete _delegatedByHolderToDelegatorDiff[holder][validatorId][i];
+            }
+            _delegatedByHolderToDelegatorFirstUnprocessedMonth[holder][validatorId] = endMonth;
         }
-        _totalDelegatedToValidatorLastProcessedMonth[validatorId] = currentMonth - 1;
-        return uint(int(_totalDelegatedToValidatorLastValue[validatorId]) + _totalDelegatedToValidatorDiff[validatorId][currentMonth]);
+        if (month < currentMonth) {
+            return _delegatedByHolderToDelegator[holder][validatorId][month];
+        } else {
+            uint delegated = _delegatedByHolderToDelegator[holder][validatorId][currentMonth - 1];
+            for (uint i = currentMonth; i <= month; ++i) {
+                delegated = uint(int(delegated) + _delegatedByHolderToDelegatorDiff[holder][validatorId][i]);
+            }
+            return delegated;
+        }
     }
 
     function addDelegation(
@@ -261,6 +284,7 @@ contract DelegationController is Permissions, ILocker {
         delegations[delegationId].started = currentMonth + 1;
         addToValidator(delegations[delegationId].validatorId, delegations[delegationId].amount, currentMonth + 1);
         addToHolder(delegations[delegationId].holder, delegations[delegationId].amount, currentMonth + 1);
+        updateFirstDelegationMonth(delegations[delegationId].holder, delegations[delegationId].validatorId, currentMonth + 1);
     }
 
     function requestUndelegation(uint delegationId) external allow("DelegationService") {
@@ -269,8 +293,34 @@ contract DelegationController is Permissions, ILocker {
         substractFromLockedInPerdingDelegations(delegations[delegationId].holder, delegations[delegationId].amount);
     }
 
+    function getFirstDelegationMonth(address holder, uint validatorId) external view returns(uint) {
+        return _firstDelegationMonth[holder][validatorId];
+    }
+
     function initialize(address _contractsAddress) public initializer {
         Permissions.initialize(_contractsAddress);
+    }
+
+    function calculateTotalDelegatedToValidator(uint validatorId, uint month) public allowTwo("ValidatorService", "Distributor") returns (uint) {
+        uint currentMonth = getCurrentMonth();
+        if (month >= _totalDelegatedToValidatorFirstUnprocessedMonth[validatorId]) {
+            uint endMonth = min(currentMonth, month + 1);
+            for (uint i = _totalDelegatedToValidatorFirstUnprocessedMonth[validatorId]; i < endMonth; ++i) {
+                _totalDelegatedToValidator[validatorId][i] = uint(
+                    int(_totalDelegatedToValidator[validatorId][i - 1]) + _totalDelegatedToValidatorDiff[validatorId][i]);
+                delete _totalDelegatedToValidatorDiff[validatorId][i];
+            }
+            _totalDelegatedToValidatorFirstUnprocessedMonth[validatorId] = endMonth;
+        }
+        if (month < currentMonth) {
+            return _totalDelegatedToValidator[validatorId][month];
+        } else {
+            uint delegated = _totalDelegatedToValidator[validatorId][currentMonth - 1];
+            for (uint i = currentMonth; i <= month; ++i) {
+                delegated = uint(int(delegated) + _totalDelegatedToValidatorDiff[validatorId][i]);
+            }
+            return delegated;
+        }
     }
 
     function getState(uint delegationId) public view returns (State state) {
@@ -371,5 +421,19 @@ contract DelegationController is Permissions, ILocker {
 
     function _calculateLockedAmount(address wallet) internal returns (uint) {
         return calculateTotalDelegatedByHolder(wallet) + getLockedInPendingDelegations(wallet);
+    }
+
+    function min(uint a, uint b) internal returns (uint) {
+        if (a < b) {
+            return a;
+        } else {
+            return b;
+        }
+    }
+
+    function updateFirstDelegationMonth(address holder, uint validatorId, uint month) internal {
+        if (_firstDelegationMonth[holder][validatorId] == 0) {
+            _firstDelegationMonth[holder][validatorId] = month;
+        }
     }
 }

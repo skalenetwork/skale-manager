@@ -269,7 +269,9 @@ contract SkaleManager is IERC777Recipient, Permissions {
         if (!validatorService.checkPossibilityToMaintainNode(validatorId, nodeIndex)) {
             bounty /= 2;
         }
-        delegationService.withdrawBounty(address(this), bounty);
+        // TODO: get money to pay bounty
+        revert("Pay bounty is not implemented");
+        // delegationService.withdrawBounty(address(this), bounty);
         skaleToken.send(address(delegationService), bounty, abi.encode(validatorId));
     }
 
