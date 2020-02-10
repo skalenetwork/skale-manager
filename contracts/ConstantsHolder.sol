@@ -110,6 +110,8 @@ contract ConstantsHolder is IConstants, Permissions {
 
     //Need to add minimal allowed parameters for verdicts
 
+    uint public launchTimestamp;
+
     /**
      * Set reward and delta periods to new one, run only by owner. This function
      * only for tests.
@@ -156,6 +158,10 @@ contract ConstantsHolder is IConstants, Permissions {
         msr = newMSR;
     }
 
+    function setLaunchTimestamp(uint timestamp) external onlyOwner {
+        launchTimestamp = timestamp;
+    }
+
     /**
      * @dev constructor in Permissions approach
      * @param contractsAddress needed in Permissions constructor
@@ -170,5 +176,6 @@ contract ConstantsHolder is IConstants, Permissions {
         checkTime = 120; // Test parameters
         lastTimeUnderloaded = 0;
         lastTimeOverloaded = 0;
+        launchTimestamp = now;
     }
 }

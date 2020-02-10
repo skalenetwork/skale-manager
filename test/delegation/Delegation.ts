@@ -232,7 +232,7 @@ contract("Delegation", ([owner,
             });
 
             it("should distribute funds sent to Distributor across delegators", async () => {
-                await delegationService.setLaunchTimestamp(await currentTime(web3));
+                await constantsHolder.setLaunchTimestamp(await currentTime(web3));
 
                 await skaleManagerMock.payBounty(validatorId, 101);
 
@@ -264,10 +264,10 @@ contract("Delegation", ([owner,
                 (await distributor.calculateEarnedBountyAmount.call(
                     validatorId, {from: holder3}))[0].toNumber().should.be.equal(31);
 
-                // await delegationService.withdrawBounty(bountyAddress, 10, {from: validator})
-                //     .should.be.eventually.rejectedWith("Bounty is locked");
-                // await delegationService.withdrawBounty(bountyAddress, 20, {from: holder1})
-                //     .should.be.eventually.rejectedWith("Bounty is locked");
+                await distributor.withdrawFee(bountyAddress, {from: validator})
+                    .should.be.eventually.rejectedWith("Bounty is locked");
+                await distributor.withdrawBounty(validatorId, bountyAddress, {from: holder1})
+                    .should.be.eventually.rejectedWith("Bounty is locked");
 
                 // skipTime(web3, 3 * month);
 

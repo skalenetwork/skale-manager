@@ -25,6 +25,7 @@ import "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
 
 import "../Permissions.sol";
 import "../SkaleToken.sol";
+import "../ConstantsHolder.sol";
 import "./ValidatorService.sol";
 import "./DelegationController.sol";
 import "./DelegationPeriodManager.sol";
@@ -53,7 +54,10 @@ contract Distributor is Permissions, IERC777Recipient {
     }
 
     function withdrawBounty(uint validatorId, address to) external {
-        // TODO: Limit withdrawing
+        TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
+        ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
+
+        require(now >= timeHelpers.addMonths(constantsHolder.launchTimestamp(), 3), "Bounty is locked");
 
         uint bounty;
         uint endMonth;
@@ -63,6 +67,26 @@ contract Distributor is Permissions, IERC777Recipient {
 
         SkaleToken skaleToken = SkaleToken(contractManager.getContract("SkaleToken"));
         require(skaleToken.transfer(to, bounty), "Failed to transfer tokens");
+    }
+
+    function withdrawFee(address to) external {
+        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
+        SkaleToken skaleToken = SkaleToken(contractManager.getContract("SkaleToken"));
+        TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
+        ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
+
+        require(now >= timeHelpers.addMonths(constantsHolder.launchTimestamp(), 3), "Bounty is locked");
+
+        // TODO: Limit withdrawing
+
+        uint fee;
+        uint endMonth;
+        uint validatorId = validatorService.getValidatorId(msg.sender);
+        (fee, endMonth) = calculateEarnedFeeAmountOf(validatorId);
+
+        _firstUnwithdrawnMonthForValidator[validatorId] = endMonth;
+
+        require(skaleToken.transfer(to, fee), "Failed to transfer tokens");
     }
 
     function tokensReceived(

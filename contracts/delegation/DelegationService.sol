@@ -39,8 +39,6 @@ contract DelegationService is Permissions {
         uint validatorId
     );
 
-    uint private _launchTimestamp;
-
     function requestUndelegation(uint delegationId) external {
         DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
 
@@ -272,12 +270,7 @@ contract DelegationService is Permissions {
         return tokenState.getSlashedAmount(wallet);
     }
 
-    function setLaunchTimestamp(uint timestamp) external onlyOwner {
-        _launchTimestamp = timestamp;
-    }
-
     function initialize(address _contractsAddress) public initializer {
         Permissions.initialize(_contractsAddress);
-        _launchTimestamp = now;
     }
 }
