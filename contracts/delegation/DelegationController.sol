@@ -65,20 +65,29 @@ contract DelegationController is Permissions, ILocker {
     // validaotrId =>        month => tokens
     mapping (uint => mapping (uint => uint)) private _totalDelegatedToValidator;
 
+    // validatorId =>        month => diff
+    mapping (uint => mapping (uint => int)) private _totalEffectiveDelegatedToValidatorDiff;
+    // validatorId => month
+    mapping (uint => uint) private _totalEffectiveDelegatedToValidatorFirstUnprocessedMonth;
+    // validaotrId =>        month => tokens
+    mapping (uint => mapping (uint => uint)) private _totalEffectiveDelegatedToValidator;
+
     //        holder =>         month => diff
     mapping (address => mapping (uint => int)) private _totalDelegatedByHolderDiff;
     //        holder => month
     mapping (address => uint) private _totalDelegatedByHolderLastProcessedMonth;
     //        holder => totalDelegatedByValidator
     mapping (address => uint) private _totalDelegatedByHolderLastValue;
+
     //        holder =>   validatorId => month
     mapping (address => mapping (uint => uint)) private _firstDelegationMonth;
+
     //        holder =>   validatorId =>         month => diff
-    mapping (address => mapping (uint => mapping (uint => int))) private _delegatedByHolderToDelegatorDiff;
+    mapping (address => mapping (uint => mapping (uint => int))) private _effectiveDelegatedByHolderToDelegatorDiff;
     //        holder =>   validatorId => month
-    mapping (address => mapping (uint => uint)) private _delegatedByHolderToDelegatorFirstUnprocessedMonth;
+    mapping (address => mapping (uint => uint)) private _effectiveDelegatedByHolderToDelegatorFirstUnprocessedMonth;
     //        holder =>   validatorId =>         month => tokens
-    mapping (address => mapping (uint => mapping (uint => uint))) private _delegatedByHolderToDelegator;
+    mapping (address => mapping (uint => mapping (uint => uint))) private _effectiveDelegatedByHolderToDelegator;
 
     //        holder => tokens
     mapping (address => uint) private _lockedInPendingRequests;
@@ -98,27 +107,29 @@ contract DelegationController is Permissions, ILocker {
         return calculateTotalDelegatedToValidator(validatorId, getCurrentMonth());
     }
 
-    function calculateDelegatedByHolderToValidator(address holder, uint validatorId, uint month) external allow("Distributor") returns (uint) {
-        if (_delegatedByHolderToDelegatorFirstUnprocessedMonth[holder][validatorId] == 0) {
+    function calculateEffectiveDelegatedByHolderToValidator(address holder, uint validatorId, uint month) external
+        allow("Distributor") returns (uint)
+    {
+        if (_effectiveDelegatedByHolderToDelegatorFirstUnprocessedMonth[holder][validatorId] == 0) {
             return 0;
         }
 
         uint currentMonth = getCurrentMonth();
-        if (month >= _delegatedByHolderToDelegatorFirstUnprocessedMonth[holder][validatorId]) {
+        if (month >= _effectiveDelegatedByHolderToDelegatorFirstUnprocessedMonth[holder][validatorId]) {
             uint endMonth = min(currentMonth, month + 1);
-            for (uint i = _delegatedByHolderToDelegatorFirstUnprocessedMonth[holder][validatorId]; i < endMonth; ++i) {
-                _delegatedByHolderToDelegator[holder][validatorId][i] = uint(
-                    int(_delegatedByHolderToDelegator[holder][validatorId][i - 1]) + _delegatedByHolderToDelegatorDiff[holder][validatorId][i]);
-                delete _delegatedByHolderToDelegatorDiff[holder][validatorId][i];
+            for (uint i = _effectiveDelegatedByHolderToDelegatorFirstUnprocessedMonth[holder][validatorId]; i < endMonth; ++i) {
+                _effectiveDelegatedByHolderToDelegator[holder][validatorId][i] = uint(
+                    int(_effectiveDelegatedByHolderToDelegator[holder][validatorId][i - 1]) + _effectiveDelegatedByHolderToDelegatorDiff[holder][validatorId][i]);
+                delete _effectiveDelegatedByHolderToDelegatorDiff[holder][validatorId][i];
             }
-            _delegatedByHolderToDelegatorFirstUnprocessedMonth[holder][validatorId] = endMonth;
+            _effectiveDelegatedByHolderToDelegatorFirstUnprocessedMonth[holder][validatorId] = endMonth;
         }
         if (month < currentMonth) {
-            return _delegatedByHolderToDelegator[holder][validatorId][month];
+            return _effectiveDelegatedByHolderToDelegator[holder][validatorId][month];
         } else {
-            uint delegated = _delegatedByHolderToDelegator[holder][validatorId][currentMonth - 1];
+            uint delegated = _effectiveDelegatedByHolderToDelegator[holder][validatorId][currentMonth - 1];
             for (uint i = currentMonth; i <= month; ++i) {
-                delegated = uint(int(delegated) + _delegatedByHolderToDelegatorDiff[holder][validatorId][i]);
+                delegated = uint(int(delegated) + _effectiveDelegatedByHolderToDelegatorDiff[holder][validatorId][i]);
             }
             return delegated;
         }
@@ -283,16 +294,25 @@ contract DelegationController is Permissions, ILocker {
 
     function accept(uint delegationId) external allow("DelegationService") {
         require(getState(delegationId) == State.PROPOSED, "Can't set state to accepted");
+
         TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
+        DelegationPeriodManager delegationPeriodManager = DelegationPeriodManager(contractManager.getContract("DelegationPeriodManager"));
+
         uint currentMonth = timeHelpers.timestampToMonth(now);
         delegations[delegationId].started = currentMonth + 1;
-        addToValidator(delegations[delegationId].validatorId, delegations[delegationId].amount, currentMonth + 1);
+        addToDelegatedToValidator(delegations[delegationId].validatorId, delegations[delegationId].amount, currentMonth + 1);
         addToHolder(delegations[delegationId].holder, delegations[delegationId].amount, currentMonth + 1);
         updateFirstDelegationMonth(delegations[delegationId].holder, delegations[delegationId].validatorId, currentMonth + 1);
-        addToHolderToValidator(
+        uint effectiveAmount = delegations[delegationId].amount * delegationPeriodManager.stakeMultipliers(
+            delegations[delegationId].delegationPeriod);
+        addToEffectiveDelegatedToValidator(
+            delegations[delegationId].validatorId,
+            effectiveAmount,
+            currentMonth + 1);
+        addToEffectiveHolderToValidator(
             delegations[delegationId].holder,
             delegations[delegationId].validatorId,
-            delegations[delegationId].amount,
+            effectiveAmount,
             currentMonth + 1);
     }
 
@@ -306,11 +326,43 @@ contract DelegationController is Permissions, ILocker {
         return _firstDelegationMonth[holder][validatorId];
     }
 
+    function calculateTotalEffectiveDelegatedToValidator(uint validatorId, uint month)
+        external allow("Distributor") returns (uint)
+    {
+        if (_totalEffectiveDelegatedToValidatorFirstUnprocessedMonth[validatorId] == 0) {
+            return 0;
+        }
+
+        uint currentMonth = getCurrentMonth();
+        if (month >= _totalEffectiveDelegatedToValidatorFirstUnprocessedMonth[validatorId]) {
+            uint endMonth = min(currentMonth, month + 1);
+            for (uint i = _totalEffectiveDelegatedToValidatorFirstUnprocessedMonth[validatorId]; i < endMonth; ++i) {
+                _totalEffectiveDelegatedToValidator[validatorId][i] = uint(
+                    int(_totalEffectiveDelegatedToValidator[validatorId][i - 1]) + _totalEffectiveDelegatedToValidatorDiff[validatorId][i]);
+                delete _totalEffectiveDelegatedToValidatorDiff[validatorId][i];
+            }
+            _totalEffectiveDelegatedToValidatorFirstUnprocessedMonth[validatorId] = endMonth;
+        }
+        if (month < currentMonth) {
+            return _totalEffectiveDelegatedToValidator[validatorId][month];
+        } else {
+            uint delegated = _totalEffectiveDelegatedToValidator[validatorId][currentMonth - 1];
+            for (uint i = currentMonth; i <= month; ++i) {
+                delegated = uint(int(delegated) + _totalEffectiveDelegatedToValidatorDiff[validatorId][i]);
+            }
+            return delegated;
+        }
+    }
+
     function initialize(address _contractsAddress) public initializer {
         Permissions.initialize(_contractsAddress);
     }
 
-    function calculateTotalDelegatedToValidator(uint validatorId, uint month) public allowTwo("ValidatorService", "Distributor") returns (uint) {
+    function calculateTotalDelegatedToValidator(uint validatorId, uint month) public allow("ValidatorService") returns (uint) {
+        if (_totalDelegatedToValidatorFirstUnprocessedMonth[validatorId] == 0) {
+            return 0;
+        }
+
         uint currentMonth = getCurrentMonth();
         if (month >= _totalDelegatedToValidatorFirstUnprocessedMonth[validatorId]) {
             uint endMonth = min(currentMonth, month + 1);
@@ -380,26 +432,40 @@ contract DelegationController is Permissions, ILocker {
         revert("calculateDelegationEndMonth is not implemented");
     }
 
-    function addToValidator(uint validatorId, uint amount, uint month) internal {
+    function addToDelegatedToValidator(uint validatorId, uint amount, uint month) internal {
         _totalDelegatedToValidatorDiff[validatorId][month] += int(amount);
+        if (_totalDelegatedToValidatorFirstUnprocessedMonth[validatorId] == 0) {
+            _totalDelegatedToValidatorFirstUnprocessedMonth[validatorId] = month;
+        } else {
+            require(_totalDelegatedToValidatorFirstUnprocessedMonth[validatorId] <= month, "Can't change past delegations");
+        }
+    }
+
+    function addToEffectiveDelegatedToValidator(uint validatorId, uint amount, uint month) internal {
+        _totalEffectiveDelegatedToValidatorDiff[validatorId][month] += int(amount);
+        if (_totalEffectiveDelegatedToValidatorFirstUnprocessedMonth[validatorId] == 0) {
+            _totalEffectiveDelegatedToValidatorFirstUnprocessedMonth[validatorId] = month;
+        } else {
+            require(_totalEffectiveDelegatedToValidatorFirstUnprocessedMonth[validatorId] <= month, "Can't change past delegations");
+        }
     }
 
     function addToHolder(address holder, uint amount, uint month) internal {
         _totalDelegatedByHolderDiff[holder][month] += int(amount);
     }
 
-    function addToHolderToValidator(
+    function addToEffectiveHolderToValidator(
         address holder,
         uint validatorId,
         uint amount,
         uint month)
         internal
     {
-        _delegatedByHolderToDelegatorDiff[holder][validatorId][month] += int(amount);
-        if (_delegatedByHolderToDelegatorFirstUnprocessedMonth[holder][validatorId] == 0) {
-            _delegatedByHolderToDelegatorFirstUnprocessedMonth[holder][validatorId] = month;
+        _effectiveDelegatedByHolderToDelegatorDiff[holder][validatorId][month] += int(amount);
+        if (_effectiveDelegatedByHolderToDelegatorFirstUnprocessedMonth[holder][validatorId] == 0) {
+            _effectiveDelegatedByHolderToDelegatorFirstUnprocessedMonth[holder][validatorId] = month;
         } else {
-            require(_delegatedByHolderToDelegatorFirstUnprocessedMonth[holder][validatorId] <= month, "Can't change past delegations");
+            require(_effectiveDelegatedByHolderToDelegatorFirstUnprocessedMonth[holder][validatorId] <= month, "Can't change past delegations");
         }
     }
 

@@ -107,14 +107,10 @@ contract Distributor is Permissions, IERC777Recipient {
         if (endMonth > startMonth + 12) {
             endMonth = startMonth + 12;
         }
-        require(startMonth == 11, "Bad month");
-        require(_bountyPaid[1][11] == 86, "Bad bounty");
-        require(validatorId == 1, "Bad validaotrId");
-        require(delegationController.calculateDelegatedByHolderToValidator(wallet, 1, 11) == 2, "Bad delegated");
         for (uint i = startMonth; i < endMonth; ++i) {
             earned += _bountyPaid[validatorId][i] *
-                delegationController.calculateDelegatedByHolderToValidator(wallet, validatorId, i) /
-                delegationController.calculateTotalDelegatedToValidator(validatorId, i);
+                delegationController.calculateEffectiveDelegatedByHolderToValidator(wallet, validatorId, i) /
+                delegationController.calculateTotalEffectiveDelegatedToValidator(validatorId, i);
         }
     }
 

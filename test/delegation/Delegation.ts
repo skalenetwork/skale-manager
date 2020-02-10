@@ -259,8 +259,10 @@ contract("Delegation", ([owner,
                 (await distributor.calculateEarnedFeeAmount.call({from: validator}))[0].toNumber().should.be.equal(15);
                 (await distributor.calculateEarnedBountyAmount.call(
                     validatorId, {from: holder1}))[0].toNumber().should.be.equal(25);
-                // (await delegationService.getEarnedBountyAmount.call({from: holder2})).toNumber().should.be.equal(28);
-                // (await delegationService.getEarnedBountyAmount.call({from: holder3})).toNumber().should.be.equal(31);
+                (await distributor.calculateEarnedBountyAmount.call(
+                    validatorId, {from: holder2}))[0].toNumber().should.be.equal(28);
+                (await distributor.calculateEarnedBountyAmount.call(
+                    validatorId, {from: holder3}))[0].toNumber().should.be.equal(31);
 
                 // await delegationService.withdrawBounty(bountyAddress, 10, {from: validator})
                 //     .should.be.eventually.rejectedWith("Bounty is locked");
