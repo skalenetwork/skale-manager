@@ -18,10 +18,14 @@
 */
 
 pragma solidity ^0.5.3;
+
 import "../thirdparty/BokkyPooBahsDateTimeLibrary.sol";
+import "@openzeppelin/contracts/math/SafeMath.sol";
 
 
 contract TimeHelpers {
+    using SafeMath for uint;
+
     function getNextMonthStart() external view returns (uint timestamp) {
         return getNextMonthStartFromDate(now);
     }
@@ -50,9 +54,9 @@ contract TimeHelpers {
             uint currentYear;
             uint currentMonth;
             (currentYear, currentMonth, ) = BokkyPooBahsDateTimeLibrary.timestampToDate(now);
-            currentMonth = currentMonth.add((currentYear - year) * 12);
+            currentMonth = currentMonth.add((currentYear - year).mul(12));
 
-            month = month.add(((currentMonth - month) / redelegationPeriod + 1) * redelegationPeriod);
+            month = month.add(((currentMonth - month).div(redelegationPeriod) + 1).mul(redelegationPeriod));
             if (month > 12) {
                 year = year.add((month - 1) / 12);
                 month = (month - 1) % 12 + 1;

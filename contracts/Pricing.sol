@@ -54,18 +54,17 @@ contract Pricing is Permissions {
         uint timeSkipped;
 
         if (loadPercentage < OPTIMAL_LOAD_PERCENTAGE) {
-            priceChange = (ADJUSTMENT_SPEED * price) * (OPTIMAL_LOAD_PERCENTAGE.sub(loadPercentage)) / 10**6;
-            timeSkipped = (now.sub(lastUpdated)) / COOLDOWN_TIME;
-            require(price.sub(priceChange * timeSkipped) < price, "New price should be less than old price");
-            price = price.sub(priceChange * timeSkipped);
+            priceChange = (ADJUSTMENT_SPEED.mul(price)).mul((OPTIMAL_LOAD_PERCENTAGE.sub(loadPercentage))) / 10**6;
+            timeSkipped = (now.sub(lastUpdated)).div(COOLDOWN_TIME);
+            price = price.sub(priceChange.mul(timeSkipped));
             if (price < MIN_PRICE) {
                 price = MIN_PRICE;
             }
         } else {
-            priceChange = (ADJUSTMENT_SPEED * price) * (loadPercentage.sub(OPTIMAL_LOAD_PERCENTAGE)) / 10**6;
-            timeSkipped = (now.sub(lastUpdated)) / COOLDOWN_TIME;
-            require(price.add(priceChange * timeSkipped) > price, "New price should be greater than old price");
-            price = price.add(priceChange * timeSkipped);
+            priceChange = (ADJUSTMENT_SPEED.mul(price)).mul((loadPercentage.sub(OPTIMAL_LOAD_PERCENTAGE))) / 10**6;
+            timeSkipped = (now.sub(lastUpdated)).div(COOLDOWN_TIME);
+            require(price.add(priceChange.mul(timeSkipped)) > price, "New price should be greater than old price");
+            price = price.add(priceChange.mul(timeSkipped));
         }
         lastUpdated = now;
     }

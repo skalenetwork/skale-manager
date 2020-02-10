@@ -131,9 +131,9 @@ contract ECDH {
         uint256 newR = a;
         uint256 q;
         while (newR != 0) {
-            q = r / newR;
+            q = r.div(newR);
             (t, newT) = (newT, addmod(t, (N.sub(mulmod(q, newT, N))), N));
-            (r, newR) = (newR, r.sub(q * newR));
+            (r, newR) = (newR, r.sub(q.mul(newR)));
         }
         return t;
     }

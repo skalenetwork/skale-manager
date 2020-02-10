@@ -33,9 +33,13 @@ import "./NodesFunctionality.sol";
 import "./NodesData.sol";
 import "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
 import "@openzeppelin/contracts/introspection/IERC1820Registry.sol";
+import "@openzeppelin/contracts/math/SafeMath.sol";
 
 
 contract SkaleManager is IERC777Recipient, Permissions {
+    using SafeMath for int;
+    using SafeMath for int256;
+
     IERC1820Registry private _erc1820 = IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
 
     bytes32 constant private TOKENS_RECIPIENT_INTERFACE_HASH = 0xb281fc8c12954d22544db45de3159a39272895b169a852b314f9cc762e44c53b;
@@ -229,10 +233,10 @@ contract SkaleManager is IERC777Recipient, Permissions {
         }
         commonBounty = managerData.minersCap() /
             ((2 ** (((now.sub(managerData.startTime())) /
-            constants.SIX_YEARS()) + 1)) *
-            (constants.SIX_YEARS() /
-            constants.rewardPeriod()) *
-            managerData.stageNodes());
+            constants.SIX_YEARS()) + 1))
+            .mul((constants.SIX_YEARS() /
+            constants.rewardPeriod()))
+            .mul(managerData.stageNodes()));
         if (now > diffTime) {
             diffTime = now.sub(diffTime);
         } else {
@@ -243,12 +247,12 @@ contract SkaleManager is IERC777Recipient, Permissions {
         uint normalDowntime = ((constants.rewardPeriod().sub(constants.deltaPeriod())) /
             constants.checkTime()) / 30;
         if (downtime.add(diffTime) > normalDowntime) {
-            bountyForMiner = bountyForMiner.sub(int(((downtime.add(diffTime)) * commonBounty) / (constants.SECONDS_TO_DAY() / 4)));
+            bountyForMiner -= int(((downtime.add(diffTime)).mul(commonBounty)) / (constants.SECONDS_TO_DAY() / 4));
         }
 
         if (bountyForMiner > 0) {
             if (latency > constants.allowableLatency()) {
-                bountyForMiner = (constants.allowableLatency() * bountyForMiner) / latency;
+                bountyForMiner = int((constants.allowableLatency().mul(uint(bountyForMiner))).div(latency));
             }
             payBounty(uint(bountyForMiner), from, nodeIndex);
         } else {

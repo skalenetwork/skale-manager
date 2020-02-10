@@ -142,7 +142,7 @@ contract("Pricing", ([owner, holder]) => {
                 await nodesData.addNode(holder, "vadim", "0x7f000010", "0x7f000011", 8545, "0x1122334455", 0);
                 skipTime(web3, 10 ** 6);
                 await pricing.adjustPrice()
-                    .should.be.eventually.rejectedWith("New price should be less than old price");
+                    .should.be.eventually.rejectedWith("SafeMath: subtraction overflow");
             });
 
             describe("change price when changing the number of nodes", async () => {
