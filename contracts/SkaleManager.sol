@@ -37,9 +37,6 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 
 
 contract SkaleManager is IERC777Recipient, Permissions {
-    using SafeMath for int;
-    using SafeMath for int256;
-
     IERC1820Registry private _erc1820;
 
     bytes32 constant private TOKENS_RECIPIENT_INTERFACE_HASH = 0xb281fc8c12954d22544db45de3159a39272895b169a852b314f9cc762e44c53b;
@@ -224,30 +221,29 @@ contract SkaleManager is IERC777Recipient, Permissions {
         IManagerData managerData = IManagerData(contractManager.getContract("ManagerData"));
         INodesData nodesData = INodesData(contractManager.getContract("NodesData"));
 
-        uint diffTime = nodesData.getNodeLastRewardDate(nodeIndex) +
-            constants.rewardPeriod() +
-            constants.deltaPeriod();
+        uint diffTime = nodesData.getNodeLastRewardDate(nodeIndex)
+            .add(constants.rewardPeriod())
+            .add(constants.deltaPeriod());
         if (managerData.minersCap() == 0) {
             managerData.setMinersCap(ISkaleToken(contractManager.getContract("SkaleToken")).CAP() / 3);
         }
         if (managerData.stageTime().add(constants.rewardPeriod()) < now) {
             managerData.setStageTimeAndStageNodes(nodesData.numberOfActiveNodes().add(nodesData.numberOfLeavingNodes()));
         }
-        commonBounty = managerData.minersCap() /
-            ((2 ** (((now.sub(managerData.startTime())) /
-            constants.SIX_YEARS()) + 1))
-            .mul((constants.SIX_YEARS() /
-            constants.rewardPeriod()))
+        commonBounty = managerData.minersCap()
+            .div((2 ** (((now.sub(managerData.startTime()))
+            .div(constants.SIX_YEARS())) + 1))
+            .mul((constants.SIX_YEARS()
+            .div(constants.rewardPeriod())))
             .mul(managerData.stageNodes()));
         if (now > diffTime) {
             diffTime = now.sub(diffTime);
         } else {
             diffTime = 0;
         }
-        diffTime /= constants.checkTime();
+        diffTime = diffTime.div(constants.checkTime());
         int bountyForMiner = int(commonBounty);
-        uint normalDowntime = ((constants.rewardPeriod().sub(constants.deltaPeriod())) /
-            constants.checkTime()) / 30;
+        uint normalDowntime = ((constants.rewardPeriod().sub(constants.deltaPeriod())).div(constants.checkTime())) / 30;
         if (downtime.add(diffTime) > normalDowntime) {
             bountyForMiner -= int(((downtime.add(diffTime)).mul(commonBounty)) / (constants.SECONDS_TO_DAY() / 4));
         }
