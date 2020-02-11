@@ -269,24 +269,26 @@ contract("Delegation", ([owner,
                 await distributor.withdrawBounty(validatorId, bountyAddress, {from: holder1})
                     .should.be.eventually.rejectedWith("Bounty is locked");
 
-                // skipTime(web3, 3 * month);
+                skipTime(web3, 3 * month);
 
-                // await delegationService.withdrawBounty(bountyAddress, 10, {from: validator});
-            // (await delegationService.getEarnedBountyAmount.call({from: validator})).toNumber().should.be.equal(7);
-                // await delegationService.withdrawBounty(validator, 7, {from: validator});
-            // (await delegationService.getEarnedBountyAmount.call({from: validator})).toNumber().should.be.equal(0);
+                await distributor.withdrawFee(bountyAddress, {from: validator});
+                (await distributor.calculateEarnedFeeAmount.call({from: validator}))[0].toNumber().should.be.equal(0);
+                await distributor.withdrawFee(validator, {from: validator});
+                (await distributor.calculateEarnedFeeAmount.call({from: validator}))[0].toNumber().should.be.equal(0);
 
-                // (await skaleToken.balanceOf(bountyAddress)).toNumber().should.be.equal(10);
+                (await skaleToken.balanceOf(bountyAddress)).toNumber().should.be.equal(15);
 
-                // await delegationService.withdrawBounty(bountyAddress, 20, {from: holder1});
-                // (await delegationService.getEarnedBountyAmount.call({from: holder1})).toNumber().should.be.equal(5);
-                // await delegationService.withdrawBounty(holder1, 5, {from: holder1});
-                // (await delegationService.getEarnedBountyAmount.call({from: holder1})).toNumber().should.be.equal(0);
+                await distributor.withdrawBounty(validatorId, bountyAddress, {from: holder1});
+                (await distributor.calculateEarnedBountyAmount.call(
+                    validatorId, {from: holder1}))[0].toNumber().should.be.equal(0);
+                await distributor.withdrawBounty(validatorId, holder2, {from: holder2});
+                (await distributor.calculateEarnedBountyAmount.call(
+                    validatorId, {from: holder2}))[0].toNumber().should.be.equal(0);
 
-                // (await skaleToken.balanceOf(bountyAddress)).toNumber().should.be.equal(30);
+                (await skaleToken.balanceOf(bountyAddress)).toNumber().should.be.equal(15 + 25);
 
-                // const balance = (await skaleToken.balanceOf(holder1)).toString();
-                // balance.should.be.equal((new BigNumber(defaultAmount)).plus(5).toString());
+                const balance = (await skaleToken.balanceOf(holder2)).toString();
+                balance.should.be.equal((new BigNumber(defaultAmount)).plus(28).toString());
             });
 
             // describe("Slashing", async () => {
