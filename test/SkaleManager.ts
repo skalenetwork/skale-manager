@@ -2,6 +2,7 @@ import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
 import { ConstantsHolderInstance,
          ContractManagerInstance,
+         DelegationControllerInstance,
          DelegationServiceInstance,
          MonitorsDataInstance,
          NodesDataInstance,
@@ -10,10 +11,11 @@ import { ConstantsHolderInstance,
          SkaleBalancesInstance,
          SkaleManagerInstance,
          SkaleTokenInstance,
-         ValidatorServiceInstance } from "../types/truffle-contracts";
+         ValidatorServiceInstance} from "../types/truffle-contracts";
 
 import { deployConstantsHolder } from "./utils/deploy/constantsHolder";
 import { deployContractManager } from "./utils/deploy/contractManager";
+import { deployDelegationController } from "./utils/deploy/delegation/delegationController";
 import { deployDelegationService } from "./utils/deploy/delegation/delegationService";
 import { deploySkaleBalances } from "./utils/deploy/delegation/skaleBalances";
 import { deployValidatorService } from "./utils/deploy/delegation/validatorService";
@@ -40,6 +42,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
     let delegationService: DelegationServiceInstance;
     let skaleBalances: SkaleBalancesInstance;
     let validatorService: ValidatorServiceInstance;
+    let delegationController: DelegationControllerInstance;
 
     beforeEach(async () => {
         contractManager = await deployContractManager();
@@ -54,6 +57,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
         delegationService = await deployDelegationService(contractManager);
         skaleBalances = await deploySkaleBalances(contractManager);
         validatorService = await deployValidatorService(contractManager);
+        delegationController = await deployDelegationController(contractManager);
 
         const prefix = "0x000000000000000000000000";
         const premined = "100000000000000000000000000";
@@ -86,7 +90,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
             await validatorService.enableValidator(validatorId, {from: owner});
             await delegationService.delegate(validatorId, 100, 12, "Hello from D2", {from: validator});
             const delegationId = 0;
-            await delegationService.acceptPendingDelegation(delegationId, {from: validator});
+            await delegationController.acceptPendingDelegation(delegationId, {from: validator});
 
             skipTime(web3, month);
         });

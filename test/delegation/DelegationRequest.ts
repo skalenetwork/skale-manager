@@ -130,7 +130,7 @@ contract("DelegationService", ([owner, holder1, holder2, validator, validator1])
             });
 
             it("should reject canceling request if validator already accepted it", async () => {
-                await delegationService.acceptPendingDelegation(delegationId, {from: validator});
+                await delegationController.acceptPendingDelegation(delegationId, {from: validator});
                 await delegationService.cancelPendingDelegation(delegationId, {from: holder1})
                     .should.be.rejectedWith("Token holders able to cancel only PROPOSED delegations");
             });
@@ -149,19 +149,19 @@ contract("DelegationService", ([owner, holder1, holder2, validator, validator1])
             });
 
             it("should reject accepting request if such validator doesn't exist", async () => {
-                await delegationService.acceptPendingDelegation(delegationId, {from: validator1})
+                await delegationController.acceptPendingDelegation(delegationId, {from: validator1})
                     .should.be.rejectedWith("Validator with such address doesn't exist");
             });
 
             it("should reject accepting request if validator already canceled it", async () => {
                 await delegationService.cancelPendingDelegation(delegationId, {from: holder1});
-                await delegationService.acceptPendingDelegation(delegationId, {from: validator})
+                await delegationController.acceptPendingDelegation(delegationId, {from: validator})
                     .should.be.rejectedWith("Can't set state to accepted");
             });
 
             it("should reject accepting request if validator already accepted it", async () => {
-                await delegationService.acceptPendingDelegation(delegationId, {from: validator});
-                await delegationService.acceptPendingDelegation(delegationId, {from: validator})
+                await delegationController.acceptPendingDelegation(delegationId, {from: validator});
+                await delegationController.acceptPendingDelegation(delegationId, {from: validator})
                     .should.be.rejectedWith("Can't set state to accepted");
             });
 
@@ -172,7 +172,7 @@ contract("DelegationService", ([owner, holder1, holder2, validator, validator1])
                     500,
                     100,
                     {from: validator1});
-                await delegationService.acceptPendingDelegation(delegationId, {from: validator1})
+                await delegationController.acceptPendingDelegation(delegationId, {from: validator1})
                         .should.be.rejectedWith("No permissions to accept request");
             });
 

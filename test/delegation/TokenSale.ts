@@ -1,14 +1,16 @@
 import { ContractManagerInstance,
+         DelegationControllerInstance,
          DelegationServiceInstance,
          SkaleTokenInstance,
          TokenSaleManagerInstance,
-         ValidatorServiceInstance } from "../../types/truffle-contracts";
+         ValidatorServiceInstance} from "../../types/truffle-contracts";
 
 import { skipTime, skipTimeToDate } from "../utils/time";
 
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
 import { deployContractManager } from "../utils/deploy/contractManager";
+import { deployDelegationController } from "../utils/deploy/delegation/delegationController";
 import { deployDelegationService } from "../utils/deploy/delegation/delegationService";
 import { deployTokenSaleManager } from "../utils/deploy/delegation/tokenSaleManager";
 import { deployValidatorService } from "../utils/deploy/delegation/validatorService";
@@ -22,6 +24,7 @@ contract("TokenSaleManager", ([owner, holder, delegation, validator, seller, hac
     let tokenSaleManager: TokenSaleManagerInstance;
     let delegationService: DelegationServiceInstance;
     let validatorService: ValidatorServiceInstance;
+    let delegationController: DelegationControllerInstance;
 
     beforeEach(async () => {
         contractManager = await deployContractManager();
@@ -29,6 +32,7 @@ contract("TokenSaleManager", ([owner, holder, delegation, validator, seller, hac
         tokenSaleManager = await deployTokenSaleManager(contractManager);
         delegationService = await deployDelegationService(contractManager);
         validatorService = await deployValidatorService(contractManager);
+        delegationController = await deployDelegationController(contractManager);
 
         // each test will start from Nov 10
         await skipTimeToDate(web3, 10, 11);
@@ -91,7 +95,7 @@ contract("TokenSaleManager", ([owner, holder, delegation, validator, seller, hac
                 const delegationPeriod = 3;
                 await delegationService.delegate(validatorId, amount, delegationPeriod, "D2 is even", {from: holder});
                 const delegationId = 0;
-                await delegationService.acceptPendingDelegation(delegationId, {from: validator});
+                await delegationController.acceptPendingDelegation(delegationId, {from: validator});
 
                 await skaleToken.transfer(hacker, 1, {from: holder})
                     .should.be.eventually.rejectedWith("Token should be unlocked for transferring");

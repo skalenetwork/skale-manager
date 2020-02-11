@@ -153,6 +153,7 @@ contract TokenState is Permissions, ILocker {
     function initialize(address _contractManager) public initializer {
         Permissions.initialize(_contractManager);
         registerLocker("DelegationController");
+        registerLocker("Punisher");
     }
 
     function registerLocker(string memory locker) public onlyOwner {

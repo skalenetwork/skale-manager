@@ -292,7 +292,12 @@ contract DelegationController is Permissions, ILocker {
         delegations[delegationId].finished = currentMonth;
     }
 
-    function accept(uint delegationId) external allow("DelegationService") {
+    /// @notice Allows validator to accept tokens delegated at `delegationId`
+    function acceptPendingDelegation(uint delegationId) external {
+        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
+        require(
+            validatorService.checkValidatorAddressToId(msg.sender, delegations[delegationId].validatorId),
+            "No permissions to accept request");
         require(getState(delegationId) == State.PROPOSED, "Can't set state to accepted");
 
         TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));

@@ -1,8 +1,9 @@
 import { ConstantsHolderInstance,
     ContractManagerInstance,
+    DelegationControllerInstance,
     DelegationServiceInstance,
     SkaleTokenInstance,
-    ValidatorServiceInstance } from "../../types/truffle-contracts";
+    ValidatorServiceInstance} from "../../types/truffle-contracts";
 
 import { skipTime } from "../utils/time";
 
@@ -11,6 +12,7 @@ import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
 import { deployConstantsHolder } from "../utils/deploy/constantsHolder";
 import { deployContractManager } from "../utils/deploy/contractManager";
+import { deployDelegationController } from "../utils/deploy/delegation/delegationController";
 import { deployDelegationService } from "../utils/deploy/delegation/delegationService";
 import { deployValidatorService } from "../utils/deploy/delegation/validatorService";
 import { deploySkaleToken } from "../utils/deploy/skaleToken";
@@ -46,6 +48,7 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
     let validatorService: ValidatorServiceInstance;
     let constantsHolder: ConstantsHolderInstance;
     let skaleToken: SkaleTokenInstance;
+    let delegationController: DelegationControllerInstance;
 
     const defaultAmount = 100 * 1e18;
 
@@ -60,6 +63,7 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
         skaleToken = await deploySkaleToken(contractManager);
         delegationService = await deployDelegationService(contractManager);
         validatorService = await deployValidatorService(contractManager);
+        delegationController = await deployDelegationController(contractManager);
     });
 
     it("should register new validator", async () => {
@@ -215,7 +219,7 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
                 await validatorService.enableValidator(validatorId, {from: owner});
                 await delegationService.delegate(validatorId, amount, delegationPeriod, info, {from: holder});
                 const delegationId = 0;
-                await delegationService.acceptPendingDelegation(delegationId, {from: validator1});
+                await delegationController.acceptPendingDelegation(delegationId, {from: validator1});
 
                 await validatorService.checkPossibilityCreatingNode(validator1)
                     .should.be.eventually.rejectedWith("Validator has to meet Minimum Staking Requirement");
@@ -225,7 +229,7 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
                 await validatorService.enableValidator(validatorId, {from: owner});
                 await delegationService.delegate(validatorId, amount, delegationPeriod, info, {from: holder});
                 const delegationId = 0;
-                await delegationService.acceptPendingDelegation(delegationId, {from: validator1});
+                await delegationController.acceptPendingDelegation(delegationId, {from: validator1});
                 skipTime(web3, 2592000);
 
                 await validatorService.checkPossibilityCreatingNode(validator1)
@@ -248,8 +252,8 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
                 await delegationService.delegate(validatorId, amount, delegationPeriod, info, {from: validator3});
                 const delegationId1 = 0;
                 const delegationId2 = 1;
-                await delegationService.acceptPendingDelegation(delegationId1, {from: validator1});
-                await delegationService.acceptPendingDelegation(delegationId2, {from: validator1});
+                await delegationController.acceptPendingDelegation(delegationId1, {from: validator1});
+                await delegationController.acceptPendingDelegation(delegationId2, {from: validator1});
                 skipTime(web3, 2592000);
                 await constantsHolder.setMSR(amount);
 

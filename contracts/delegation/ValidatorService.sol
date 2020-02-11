@@ -127,7 +127,6 @@ contract ValidatorService is Permissions {
     function checkValidatorAddressToId(address validatorAddress, uint validatorId)
         external
         view
-        allow("DelegationService")
         returns (bool)
     {
         return getValidatorId(validatorAddress) == validatorId ? true : false;

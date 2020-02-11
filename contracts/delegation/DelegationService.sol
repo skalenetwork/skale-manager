@@ -49,19 +49,6 @@ contract DelegationService is Permissions {
         delegationController.requestUndelegation(delegationId);
     }
 
-    /// @notice Allows validator to accept tokens delegated at `delegationId`
-    function acceptPendingDelegation(uint delegationId) external {
-        DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
-        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
-
-        DelegationController.Delegation memory delegation = delegationController.getDelegation(delegationId);
-        require(
-            validatorService.checkValidatorAddressToId(msg.sender, delegation.validatorId),
-            "No permissions to accept request"
-        );
-        delegationController.accept(delegationId);
-    }
-
     function getDelegationsByHolder(DelegationController.State state) external returns (uint[] memory) {
         revert("getDelegationsByHolder is not implemented");
         // DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
@@ -81,21 +68,6 @@ contract DelegationService is Permissions {
     /// @notice Returns array of delegation requests id
     function listDelegationRequests() external pure returns (uint[] memory) {
         revert("Not implemented");
-    }
-
-    /// @notice Allows service to slash `validator` by `amount` of tokens
-    function slash(uint validatorId, uint amount) external allow("SkaleDKG") {
-        revert("Slash is not implemented");
-        // ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
-        // require(validatorService.validatorExists(validatorId), "Validator does not exist");
-
-        // Distributor distributor = Distributor(contractManager.getContract("Distributor"));
-        // TokenState tokenState = TokenState(contractManager.getContract("TokenState"));
-
-        // Distributor.Share[] memory shares = distributor.distributePenalties(validatorId, amount);
-        // for (uint i = 0; i < shares.length; ++i) {
-        //     tokenState.slash(shares[i].delegationId, shares[i].amount);
-        // }
     }
 
     function forgive(address wallet, uint amount) external onlyOwner() {
@@ -253,11 +225,6 @@ contract DelegationService is Permissions {
         require(skaleToken.balanceOf(wallet) >= tokenState.getPurchasedAmount(wallet) + amount, "Not enough founds");
 
         tokenState.sold(wallet, amount);
-    }
-
-    function getLockedOf(address wallet) external returns (uint) {
-        TokenState tokenState = TokenState(contractManager.getContract("TokenState"));
-        return tokenState.calculateLockedAmount(wallet);
     }
 
     function getDelegatedOf(address wallet) external returns (uint) {
