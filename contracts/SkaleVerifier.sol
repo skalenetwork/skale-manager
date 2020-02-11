@@ -41,10 +41,6 @@ contract SkaleVerifier is Permissions {
         uint y;
     }
 
-    constructor(address newContractsAddress) Permissions(newContractsAddress) public {
-
-    }
-
     function verifySchainSignature(
         uint signA,
         uint signB,
@@ -69,7 +65,7 @@ contract SkaleVerifier is Permissions {
             return false;
         }
 
-        address schainsDataAddress = contractManager.contracts(keccak256(abi.encodePacked("SchainsData")));
+        address schainsDataAddress = contractManager.getContract("SchainsData");
         (uint pkA, uint pkB, uint pkC, uint pkD) = IGroupsData(schainsDataAddress).getGroupsPublicKey(
             keccak256(abi.encodePacked(schainName))
         );
@@ -85,6 +81,10 @@ contract SkaleVerifier is Permissions {
             pkC,
             pkD
         );
+    }
+
+    function initialize(address newContractsAddress) public initializer {
+        Permissions.initialize(newContractsAddress);
     }
 
     function verify(

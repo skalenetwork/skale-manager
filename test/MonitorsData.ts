@@ -1,22 +1,20 @@
 import BigNumber from "bignumber.js";
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
-import { ContractManagerContract, ContractManagerInstance,
-        MonitorsDataContract, MonitorsDataInstance } from "../types/truffle-contracts";
-
-const MonitorsData: MonitorsDataContract = artifacts.require("./MonitorsData");
-const ContractManager: ContractManagerContract = artifacts.require("./ContractManager");
+import { ContractManagerInstance, MonitorsDataInstance } from "../types/truffle-contracts";
+import { deployContractManager } from "./utils/deploy/contractManager";
+import { deployMonitorsData } from "./utils/deploy/monitorsData";
 
 chai.should();
 chai.use(chaiAsPromised);
 
-contract("MonitorsData", ([user, owner]) => {
+contract("MonitorsData", ([owner, user]) => {
     let monitorsData: MonitorsDataInstance;
     let contractManager: ContractManagerInstance;
 
     beforeEach(async () => {
-        contractManager = await ContractManager.new({from: owner});
-        monitorsData = await MonitorsData.new("MonitorsFunctionality", contractManager.address, {from: owner});
+        contractManager = await deployContractManager();
+        monitorsData = await deployMonitorsData(contractManager);
     });
 
     it("should add validated node to validated array by valid monitor", async () => {

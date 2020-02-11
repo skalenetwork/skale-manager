@@ -75,48 +75,40 @@ contract ConstantsHolder is IConstants, Permissions {
     uint public constant NUMBER_OF_MONITORS = 24;
 
     // MSR - Minimum staking requirement
-    uint public msr = 5e6;
+    uint public msr;
 
     // Reward period - 30 days (each 30 days Node would be granted for bounty)
-    uint32 public rewardPeriod = 3600; // Test parameters
+    uint32 public rewardPeriod;
 
     // Allowable latency - 150000 ms by default
-    uint32 public allowableLatency = 150000; // Test parameters
+    uint32 public allowableLatency;
 
     /**
      * Delta period - 1 hour (1 hour before Reward period became Monitors need
      * to send Verdicts and 1 hour after Reward period became Node need to come
      * and get Bounty)
      */
-    uint32 public deltaPeriod = 300;  // Test parameters
+    uint32 public deltaPeriod;
 
     /**
      * Check time - 2 minutes (every 2 minutes monitors should check metrics
      * from checked nodes)
      */
-    uint8 public checkTime = 120; // Test parameters
+    uint8 public checkTime;
 
     /**
      * Last time when system was underloaded
      * (allocations on Skale-chain / allocations on Nodes < 75%)
      */
-    uint public lastTimeUnderloaded = 0;
+    uint public lastTimeUnderloaded;
 
     /**
      * Last time when system was overloaded
      * (allocations on Skale-chain / allocations on Nodes > 85%)
      */
-    uint public lastTimeOverloaded = 0;
+    uint public lastTimeOverloaded;
 
     //Need to add minimal allowed parameters for verdicts
-
-    /**
-     * @dev constructor in Permissions approach
-     * @param contractsAddress needed in Permissions constructor
-     */
-    constructor(address contractsAddress) Permissions(contractsAddress) public {
-
-    }
 
     /**
      * Set reward and delta periods to new one, run only by owner. This function
@@ -162,5 +154,21 @@ contract ConstantsHolder is IConstants, Permissions {
 
     function setMSR(uint newMSR) external onlyOwner() {
         msr = newMSR;
+    }
+
+    /**
+     * @dev constructor in Permissions approach
+     * @param contractsAddress needed in Permissions constructor
+     */
+    function initialize(address contractsAddress) public initializer {
+        Permissions.initialize(contractsAddress);
+
+        msr = 5e6 * 1e18;
+        rewardPeriod = 3600; // Test parameters
+        allowableLatency = 150000; // Test parameters
+        deltaPeriod = 300;  // Test parameters
+        checkTime = 120; // Test parameters
+        lastTimeUnderloaded = 0;
+        lastTimeOverloaded = 0;
     }
 }

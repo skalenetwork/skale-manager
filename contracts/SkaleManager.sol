@@ -40,7 +40,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
     using SafeMath for int;
     using SafeMath for int256;
 
-    IERC1820Registry private _erc1820 = IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
+    IERC1820Registry private _erc1820;
 
     bytes32 constant private TOKENS_RECIPIENT_INTERFACE_HASH = 0xb281fc8c12954d22544db45de3159a39272895b169a852b314f9cc762e44c53b;
 
@@ -55,10 +55,6 @@ contract SkaleManager is IERC777Recipient, Permissions {
         uint32 time,
         uint gasSpend
     );
-
-    constructor(address newContractsAddress) Permissions(newContractsAddress) public {
-        _erc1820.setInterfaceImplementer(address(this), TOKENS_RECIPIENT_INTERFACE_HASH, address(this));
-    }
 
     function tokensReceived(
         address operator,
@@ -210,6 +206,12 @@ contract SkaleManager is IERC777Recipient, Permissions {
             gasleft());
     }
 
+    function initialize(address newContractsAddress) public initializer {
+        Permissions.initialize(newContractsAddress);
+        _erc1820 = IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
+        _erc1820.setInterfaceImplementer(address(this), TOKENS_RECIPIENT_INTERFACE_HASH, address(this));
+    }
+
     function manageBounty(
         address from,
         uint nodeIndex,
@@ -218,7 +220,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
         address nodesDataAddress) internal returns (uint)
     {
         uint commonBounty;
-        IConstants constants = IConstants(contractManager.getContract("Constants"));
+        IConstants constants = IConstants(contractManager.getContract("ConstantsHolder"));
         IManagerData managerData = IManagerData(contractManager.getContract("ManagerData"));
         INodesData nodesData = INodesData(contractManager.getContract("NodesData"));
 

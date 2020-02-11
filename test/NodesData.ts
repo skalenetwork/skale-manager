@@ -1,33 +1,21 @@
 import * as chaiAsPromised from "chai-as-promised";
-import { ConstantsHolderContract,
-         ConstantsHolderInstance,
-         ContractManagerContract,
-         ContractManagerInstance,
-         NodesDataContract,
+import { ContractManagerInstance,
          NodesDataInstance } from "../types/truffle-contracts";
 import { currentTime, skipTime } from "./utils/time";
 
-const ContractManager: ContractManagerContract = artifacts.require("./ContractManager");
-const NodesData: NodesDataContract = artifacts.require("./NodesData");
-const ConstantsHolder: ConstantsHolderContract = artifacts.require("./ConstantsHolder");
-
 import chai = require("chai");
+import { deployContractManager } from "./utils/deploy/contractManager";
+import { deployNodesData } from "./utils/deploy/nodesData";
 chai.should();
 chai.use(chaiAsPromised);
 
 contract("NodesData", ([owner, validator]) => {
     let contractManager: ContractManagerInstance;
     let nodesData: NodesDataInstance;
-    let constantsHolder: ConstantsHolderInstance;
 
     beforeEach(async () => {
-        contractManager = await ContractManager.new({from: owner});
-        nodesData = await NodesData.new(5, contractManager.address, {from: owner});
-
-        constantsHolder = await ConstantsHolder.new(
-            contractManager.address,
-            {from: owner, gas: 8000000});
-        await contractManager.setContractsAddress("Constants", constantsHolder.address);
+        contractManager = await deployContractManager();
+        nodesData = await deployNodesData(contractManager);
     });
 
     it("should add node", async () => {

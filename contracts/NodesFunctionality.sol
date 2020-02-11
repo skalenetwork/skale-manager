@@ -22,7 +22,6 @@ pragma solidity ^0.5.3;
 import "./Permissions.sol";
 import "./interfaces/IConstants.sol";
 import "./interfaces/INodesData.sol";
-import "./interfaces/ISchainsData.sol";
 import "./interfaces/INodesFunctionality.sol";
 import "./delegation/ValidatorService.sol";
 
@@ -62,14 +61,6 @@ contract NodesFunctionality is Permissions, INodesFunctionality {
         uint32 time,
         uint gasSpend
     );
-
-    /**
-     * @dev constructor in Permissions approach
-     * @param newContractsAddress needed in Permissions constructor
-    */
-    constructor(address newContractsAddress) Permissions(newContractsAddress) public {
-
-    }
 
     /**
      * @dev createNode - creates new Node and add it to the NodesData contract
@@ -199,89 +190,13 @@ contract NodesFunctionality is Permissions, INodesFunctionality {
             gasleft());
     }
 
-    // /**
-    //  * @dev setNodeType - sets Node to Fractional Nodes or to Full Nodes
-    //  * @param nodesDataAddress - address of NodesData contract
-    //  * @param constantsAddress - address of Constants contract
-    //  * @param nodeIndex - index of Node
-    //  */
-    // function setNodeType(address nodesDataAddress, address constantsAddress, uint nodeIndex) internal {
-    //     bool isNodeFull = (
-    //         INodesData(nodesDataAddress).getNumberOfFractionalNodes() *
-    //         IConstants(constantsAddress).FRACTIONAL_FACTOR() >
-    //         INodesData(nodesDataAddress).getNumberOfFullNodes() *
-    //         IConstants(constantsAddress).FULL_FACTOR()
-    //     );
-
-    //     if (INodesData(nodesDataAddress).getNumberOfFullNodes() == 0 || isNodeFull) {
-    //         INodesData(nodesDataAddress).addFullNode(nodeIndex);
-    //     } else {
-    //         INodesData(nodesDataAddress).addFractionalNode(nodeIndex);
-    //     }
-    // }
-
     /**
-     * @dev setSystemStatus - sets current system status overload, normal or underload
-     * @param constantsAddress - address of Constants contract
-     */
-    /*function setSystemStatus(address constantsAddress) internal {
-        address dataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData");
-        address schainsDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("SchainsData");
-        uint numberOfNodes = 128 * (INodesData(dataAddress).numberOfActiveNodes().add(INodesData(dataAddress).numberOfLeavingNodes()));
-        uint numberOfSchains = ISchainsData(schainsDataAddress).sumOfSchainsResources();
-        if (4 * numberOfSchains / 3 < numberOfNodes && !(4 * numberOfSchains / 3 < (numberOfNodes - 1))) {
-            IConstants(constantsAddress).setLastTimeUnderloaded();
-        }
-    }*/
-
-    /**
-     * @dev coefficientForPrice - calculates current coefficient for Price
-     * coefficient calculates based on system status duration
-     * @param constantsAddress - address of Constants contract
-     * @return up - dividend
-     * @return down - divider
-     */
-    /*function coefficientForPrice(address constantsAddress) internal view returns (uint up, uint down) {
-        address dataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("NodesData");
-        address schainsDataAddress = ContractManager(contractsAddress).contracts(keccak256(abi.encodePacked("SchainsData");
-        uint numberOfDays;
-        uint numberOfNodes = 128 * (INodesData(dataAddress).numberOfActiveNodes().add(INodesData(dataAddress).numberOfLeavingNodes()));
-        uint numberOfSchains = ISchainsData(schainsDataAddress).sumOfSchainsResources();
-        if (20 * numberOfSchains / 17 > numberOfNodes) {
-            numberOfDays = (now.sub(IConstants(constantsAddress).lastTimeOverloaded())) / IConstants(constantsAddress).SECONDS_TO_DAY();
-            up = binstep(99, numberOfDays, 100);
-            down = 100;
-        } else if (4 * numberOfSchains / 3 < numberOfNodes) {
-            numberOfDays = (now.sub(IConstants(constantsAddress).lastTimeUnderloaded())) / IConstants(constantsAddress).SECONDS_TO_DAY();
-            up = binstep(101, numberOfDays, 100);
-            down = 100;
-        } else {
-            up = 1;
-            down = 1;
-        }
-    }*/
-
-    /**
-     * @dev binstep - exponentiation by squaring by modulo (a^step)
-     * @param a - number which should be exponentiated
-     * @param step - exponent
-     * @param div - divider of a
-     * @return x - result (a^step)
-     */
-    /*function binstep(uint a, uint step, uint div) internal pure returns (uint x) {
-        x = div;
-        while (step > 0) {
-            if (step % 2 == 1) {
-                x = mult(x, a, div);
-            }
-            a = mult(a, a, div);
-            step /= 2;
-        }
-    }*/
-
-    /*function mult(uint a, uint b, uint div) internal pure returns (uint) {
-        return (a * b) / div;
-    }*/
+     * @dev constructor in Permissions approach
+     * @param _contractsAddress needed in Permissions constructor
+    */
+    function initialize(address _contractsAddress) public initializer {
+        Permissions.initialize(_contractsAddress);
+    }
 
     /**
      * @dev fallbackDataConverter - converts data from bytes to normal parameters

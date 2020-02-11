@@ -1,0 +1,45 @@
+{
+  "manifestVersion": "2.2",
+  "contracts": {
+    "DelegationController": "DelegationController",
+    "DelegationPeriodManager": "DelegationPeriodManager",
+    "DelegationRequestManager": "DelegationRequestManager",
+    "DelegationService": "DelegationService",
+    "Distributor": "Distributor",
+    "SkaleBalances": "SkaleBalances",
+    "TimeHelpers": "TimeHelpers",
+    "TokenSaleManager": "TokenSaleManager",
+    "TokenState": "TokenState",
+    "ValidatorService": "ValidatorService",
+    "ContractManager": "ContractManager",
+    "ConstantsHolder": "ConstantsHolder",
+    "NodesData": "NodesData",
+    "NodesFunctionality": "NodesFunctionality",
+    "MonitorsData": "MonitorsData",
+    "MonitorsFunctionality": "MonitorsFunctionality",
+    "SchainsData": "SchainsData",
+    "SchainsFunctionality": "SchainsFunctionality",
+    "SchainsFunctionalityInternal": "SchainsFunctionalityInternal",
+    "Decryption": "Decryption",
+    "ECDH": "ECDH",
+    "SkaleDKG": "SkaleDKG",
+    "SkaleVerifier": "SkaleVerifier",
+    "ManagerData": "ManagerData",
+    "SkaleManager": "SkaleManager",
+    "Pricing": "Pricing"
+  },
+  "dependencies": {},
+  "name": "skale-manager",
+  "version": "1.0.0",
+  "compiler": {
+    "manager": "openzeppelin",
+    "compilerSettings": {
+      "optimizer": {
+        "enabled": false,
+        "runs": "200"
+      }
+    },
+    "solcVersion": "0.5.16"
+  },
+  "telemetryOptIn": true
+}

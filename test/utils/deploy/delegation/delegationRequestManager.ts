@@ -9,7 +9,8 @@ const DelegationRequestManager: DelegationRequestManagerContract = artifacts.req
 const name = "DelegationRequestManager";
 
 async function deploy(contractManager: ContractManagerInstance) {
-    const instance = await DelegationRequestManager.new(contractManager.address);
+    const instance = await DelegationRequestManager.new();
+    await instance.initialize(contractManager.address);
     await contractManager.setContractsAddress(name, instance.address);
     return instance;
 }

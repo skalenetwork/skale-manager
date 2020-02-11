@@ -28,11 +28,6 @@ contract ECDH {
     uint256 constant GY = 0x483ADA7726A3C4655DA4FBFC0E1108A8FD17B448A68554199C47D08FFB10D4B8;
     uint256 constant N = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F;
     uint256 constant A = 0;
-    // uint256 constant B = 7;
-
-    constructor () public {
-
-    }
 
     function publicKey(uint256 privKey) external pure returns (uint256 qx, uint256 qy) {
         uint256 x;

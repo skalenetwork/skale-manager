@@ -47,3 +47,7 @@ coverage.json
 
 # Typescript staff
 types/
+
+# OpenZeppelin
+.openzeppelin/dev-*.json
+.openzeppelin/.session
