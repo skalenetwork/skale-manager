@@ -81,6 +81,11 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
         revert("Not implemented");
     }
 
+    function getValidatorBondAmount(address validatorAddress) external returns (uint) {
+        DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
+        return delegationController.getValidatorBondAmount(validatorAddress);
+    }
+
     /// @notice Returns array of delegation requests id
     function listDelegationRequests() external pure returns (uint[] memory) {
         revert("Not implemented");
@@ -108,7 +113,7 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
     /// @notice Returns amount of delegated token of the validator
     function getDelegatedAmount(uint validatorId) external returns (uint) {
         DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
-        return delegationController.getDelegationsTotal(validatorId);
+        return delegationController.getDelegatedAmount(validatorId);
     }
 
     /// @notice Creates request to delegate `amount` of tokens to `validator` from the begining of the next month

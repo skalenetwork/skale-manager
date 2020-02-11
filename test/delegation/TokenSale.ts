@@ -42,7 +42,7 @@ contract("TokenSaleManager", ([owner, holder, delegation, validator, seller, hac
     });
 
     it("should not register seller if sender is not owner", async () => {
-        await tokenSaleManager.registerSeller(seller, {from: hacker}).should.be.eventually.rejectedWith("Ownable: caller is not the owner.");
+        await tokenSaleManager.registerSeller(seller, {from: hacker}).should.be.eventually.rejectedWith("Ownable: caller is not the owner");
     });
 
     describe("when seller is registered", async () => {

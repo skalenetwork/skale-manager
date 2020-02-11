@@ -47,9 +47,6 @@ contract DelegationController is Permissions {
     /// validatorId => delegationId[]
     mapping (uint => uint[]) private _activeByValidator;
 
-    //validatorId => sum of tokens each holder
-    mapping (uint => uint) private _delegationsTotal;
-
     modifier checkDelegationExists(uint delegationId) {
         require(delegationId < delegations.length, "Delegation does not exist");
         _;
@@ -59,21 +56,15 @@ contract DelegationController is Permissions {
         return delegations[delegationId];
     }
 
-    function addDelegationsTotal(uint validatorId, uint amount) external allow("TokenState") {
-        _delegationsTotal[validatorId] += amount;
-    }
-
-    function subDelegationsTotal(uint validatorId, uint amount) external allow("TokenState") {
-        _delegationsTotal[validatorId] -= amount;
-    }
-
-    function getDelegationsTotal(uint validatorId) external allow("ValidatorService") returns (uint) {
+    function getDelegatedAmount(uint validatorId) external returns (uint delegatedAmount) {
         TokenState tokenState = TokenState(contractManager.getContract("TokenState"));
         for (uint i = 0; i < _activeByValidator[validatorId].length; i++) {
             uint delegationId = _activeByValidator[validatorId][i];
             TokenState.State state = tokenState.getState(delegationId);
+            if (state == TokenState.State.DELEGATED) {
+                delegatedAmount += delegations[delegationId].amount;
+            }
         }
-        return _delegationsTotal[validatorId];
     }
 
     function addDelegation(
@@ -146,15 +137,15 @@ contract DelegationController is Permissions {
         returns (uint[] memory)
     {
         TokenState tokenState = TokenState(contractManager.getContract("TokenState"));
-        uint delegationsAmount = 0;
+        uint delegatedAmount = 0;
         for (uint i = 0; i < _delegationsByHolder[holderAddress].length; i++) {
             TokenState.State state = tokenState.getState(_delegationsByHolder[holderAddress][i]);
             if (state == _state) {
-                ++delegationsAmount;
+                ++delegatedAmount;
             }
         }
 
-        uint[] memory delegationsHolder = new uint[](delegationsAmount);
+        uint[] memory delegationsHolder = new uint[](delegatedAmount);
         uint cursor = 0;
         for (uint i = 0; i < _delegationsByHolder[holderAddress].length; i++) {
             if (_state == tokenState.getState(_delegationsByHolder[holderAddress][i])) {
@@ -174,15 +165,15 @@ contract DelegationController is Permissions {
         TokenState tokenState = TokenState(contractManager.getContract("TokenState"));
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
         uint validatorId = validatorService.getValidatorId(validatorAddress);
-        uint delegationsAmount = 0;
+        uint delegatedAmount = 0;
         for (uint i = 0; i < _activeByValidator[validatorId].length; i++) {
             TokenState.State state = tokenState.getState(_activeByValidator[validatorId][i]);
             if (state == _state) {
-                ++delegationsAmount;
+                ++delegatedAmount;
             }
         }
 
-        uint[] memory delegationsValidator = new uint[](delegationsAmount);
+        uint[] memory delegationsValidator = new uint[](delegatedAmount);
         uint cursor = 0;
         for (uint i = 0; i < _activeByValidator[validatorId].length; i++) {
             if (_state == tokenState.getState(_activeByValidator[validatorId][i])) {
@@ -192,6 +183,23 @@ contract DelegationController is Permissions {
             }
         }
         return delegationsValidator;
+    }
+
+    function getValidatorBondAmount(address validatorAddress)
+        external
+        allow("DelegationService")
+        returns (uint delegatedAmount)
+    {
+        TokenState tokenState = TokenState(contractManager.getContract("TokenState"));
+        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
+        uint validatorId = validatorService.getValidatorId(validatorAddress);
+        for (uint i = 0; i < _activeByValidator[validatorId].length; i++) {
+            uint delegationId = _activeByValidator[validatorId][i];
+            TokenState.State state = tokenState.getState(delegationId);
+            if (delegations[delegationId].holder == validatorAddress && state == TokenState.State.DELEGATED) {
+                delegatedAmount += delegations[delegationId].amount;
+            }
+        }
     }
 
     function initialize(address _contractsAddress) public initializer {
