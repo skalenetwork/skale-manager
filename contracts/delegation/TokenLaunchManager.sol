@@ -26,7 +26,7 @@ import "@openzeppelin/contracts/introspection/IERC1820Registry.sol";
 
 import "../interfaces/delegation/IDelegatableToken.sol";
 import "../Permissions.sol";
-import "./DelegationService.sol";
+import "./TokenLaunchLocker.sol";
 
 
 contract TokenLaunchManager is Permissions, IERC777Recipient {
@@ -54,7 +54,7 @@ contract TokenLaunchManager is Permissions, IERC777Recipient {
         uint value = approved[_msgSender()];
         approved[_msgSender()] = 0;
         require(IERC20(contractManager.getContract("SkaleToken")).transfer(_msgSender(), value), "Error of token sending");
-        DelegationService(contractManager.getContract("DelegationService")).lock(_msgSender(), value);
+        TokenLaunchLocker(contractManager.getContract("TokenLaunchLocker")).lock(_msgSender(), value);
     }
 
     function registerSeller(address _seller) external onlyOwner {

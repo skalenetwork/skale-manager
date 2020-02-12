@@ -1,6 +1,6 @@
 import { ContractManagerInstance, TokenLaunchManagerContract } from "../../../../types/truffle-contracts";
 import { deploySkaleToken } from "../skaleToken";
-import { deployDelegationService } from "./delegationService";
+import { deployTokenLaunchLocker } from "./tokenLaunchLocker";
 
 const TokenLaunchManager: TokenLaunchManagerContract = artifacts.require("./TokenLaunchManager");
 const name = "TokenLaunchManager";
@@ -14,7 +14,7 @@ async function deploy(contractManager: ContractManagerInstance) {
 
 async function deployDependencies(contractManager: ContractManagerInstance) {
     await deploySkaleToken(contractManager);
-    await deployDelegationService(contractManager);
+    await deployTokenLaunchLocker(contractManager);
 }
 
 export async function deployTokenLaunchManager(contractManager: ContractManagerInstance) {

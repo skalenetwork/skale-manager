@@ -24,6 +24,7 @@ import "../Permissions.sol";
 import "./DelegationPeriodManager.sol";
 import "./TokenState.sol";
 import "./ValidatorService.sol";
+import "./TokenLaunchLocker.sol";
 
 
 contract DelegationController is Permissions, ILocker {
@@ -53,6 +54,13 @@ contract DelegationController is Permissions, ILocker {
         uint validatorId;
         uint amount;
     }
+
+    // struct PartialDifferences {
+    //     mapping (uint => uint) addDiff;
+    //     mapping (uint => uint) subsructDiff;
+    //     mapping (uint => uint) value;
+    //     uint firstUnprocessedMonth;
+    // }
 
     /// @notice delegations will never be deleted to index in this array may be used like delegation id
     Delegation[] public delegations;
@@ -195,6 +203,7 @@ contract DelegationController is Permissions, ILocker {
 
         TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
         DelegationPeriodManager delegationPeriodManager = DelegationPeriodManager(contractManager.getContract("DelegationPeriodManager"));
+        TokenLaunchLocker tokenLaunchLocker = TokenLaunchLocker(contractManager.getContract("TokenLaunchLocker"));
 
         uint currentMonth = timeHelpers.timestampToMonth(now);
         delegations[delegationId].started = currentMonth + 1;
@@ -212,12 +221,24 @@ contract DelegationController is Permissions, ILocker {
             delegations[delegationId].validatorId,
             effectiveAmount,
             currentMonth + 1);
+        tokenLaunchLocker.handleDelegationAdd(
+            delegations[delegationId].holder,
+            delegationId,
+            delegations[delegationId].amount,
+            delegations[delegationId].started);
     }
 
     function requestUndelegation(uint delegationId) external allow("DelegationService") {
-        require(getState(delegationId) == State.ACCEPTED, "Can't request undelegation");
+        require(getState(delegationId) == State.DELEGATED, "Can't request undelegation");
+
+        TokenLaunchLocker tokenLaunchLocker = TokenLaunchLocker(contractManager.getContract("TokenLaunchLocker"));
+
         delegations[delegationId].finished = calculateDelegationEndMonth(delegationId);
         substractFromLockedInPerdingDelegations(delegations[delegationId].holder, delegations[delegationId].amount);
+        tokenLaunchLocker.handleDelegationRemoving(
+            delegations[delegationId].holder,
+            delegationId,
+            delegations[delegationId].finished);
     }
 
     function getFirstDelegationMonth(address holder, uint validatorId) external view returns(uint) {
@@ -319,6 +340,15 @@ contract DelegationController is Permissions, ILocker {
         }
     }
 
+    function getLockedInPendingDelegations(address holder) public view returns (uint) {
+        uint currentMonth = getCurrentMonth();
+        if (_lastWriteTolockedInPendingRequests[holder] < currentMonth) {
+            return 0;
+        } else {
+            return _lockedInPendingRequests[holder];
+        }
+    }
+
     // private
 
     function isTerminated(State state) internal pure returns (bool) {
@@ -384,15 +414,6 @@ contract DelegationController is Permissions, ILocker {
         return uint(int(_totalDelegatedByHolderLastValue[holder]) + _totalDelegatedByHolderDiff[holder][currentMonth]);
     }
 
-    function getLockedInPendingDelegations(address holder) internal returns (uint) {
-        uint currentMonth = getCurrentMonth();
-        if (_lastWriteTolockedInPendingRequests[holder] < currentMonth) {
-            return 0;
-        } else {
-            return _lockedInPendingRequests[holder];
-        }
-    }
-
     function addToLockedInPendingDelegations(address holder, uint amount) internal returns (uint) {
         uint currentMonth = getCurrentMonth();
         if (_lastWriteTolockedInPendingRequests[holder] < currentMonth) {
@@ -409,7 +430,7 @@ contract DelegationController is Permissions, ILocker {
         _lockedInPendingRequests[holder] -= amount;
     }
 
-    function getCurrentMonth() internal returns (uint) {
+    function getCurrentMonth() internal view returns (uint) {
         TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
         return timeHelpers.timestampToMonth(now);
     }
