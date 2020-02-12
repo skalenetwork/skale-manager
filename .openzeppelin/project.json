@@ -7,7 +7,7 @@
     "Distributor": "Distributor",
     "SkaleBalances": "SkaleBalances",
     "TimeHelpers": "TimeHelpers",
-    "TokenSaleManager": "TokenSaleManager",
+    "TokenLaunchManager": "TokenLaunchManager",
     "TokenState": "TokenState",
     "ValidatorService": "ValidatorService",
     "ContractManager": "ContractManager",

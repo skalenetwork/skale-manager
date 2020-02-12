@@ -218,7 +218,7 @@ contract DelegationService is Permissions {
     }
 
     /// @notice Makes all tokens of target account unavailable to move
-    function lock(address wallet, uint amount) external allow("TokenSaleManager") {
+    function lock(address wallet, uint amount) external allow("TokenLaunchManager") {
         SkaleToken skaleToken = SkaleToken(contractManager.getContract("SkaleToken"));
         TokenState tokenState = TokenState(contractManager.getContract("TokenState"));
 

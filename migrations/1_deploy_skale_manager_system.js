@@ -81,7 +81,7 @@ async function deploy(deployer, networkName, accounts) {
         "Punisher",
         "SkaleBalances",
         "TimeHelpers",
-        "TokenSaleManager",
+        "TokenLaunchManager",
         "TokenState",
         "ValidatorService",
 

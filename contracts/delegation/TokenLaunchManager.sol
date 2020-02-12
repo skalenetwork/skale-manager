@@ -1,5 +1,5 @@
 /*
-    TokenSaleManager.sol - SKALE Manager
+    TokenLaunchManager.sol - SKALE Manager
     Copyright (C) 2019-Present SKALE Labs
     @author Dmytro Stebaiev
 
@@ -24,13 +24,12 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
 import "@openzeppelin/contracts/introspection/IERC1820Registry.sol";
 
-import "../interfaces/tokenSale/ITokenSaleManager.sol";
 import "../interfaces/delegation/IDelegatableToken.sol";
 import "../Permissions.sol";
 import "./DelegationService.sol";
 
 
-contract TokenSaleManager is ITokenSaleManager, Permissions, IERC777Recipient {
+contract TokenLaunchManager is Permissions, IERC777Recipient {
     IERC1820Registry private _erc1820;
 
     address seller;
