@@ -49,6 +49,11 @@ contract DelegationController is Permissions, ILocker {
         string info;
     }
 
+    struct Cancel {
+        uint validatorId;
+        uint amount;
+    }
+
     /// @notice delegations will never be deleted to index in this array may be used like delegation id
     Delegation[] public delegations;
 
@@ -71,6 +76,9 @@ contract DelegationController is Permissions, ILocker {
     mapping (uint => uint) private _totalEffectiveDelegatedToValidatorFirstUnprocessedMonth;
     // validaotrId =>        month => tokens
     mapping (uint => mapping (uint => uint)) private _totalEffectiveDelegatedToValidator;
+
+    // validatorId => tokens
+    mapping (uint => uint) private _canceledFromValidator;
 
     //        holder =>         month => diff
     mapping (address => mapping (uint => int)) private _totalDelegatedByHolderDiff;
@@ -170,121 +178,6 @@ contract DelegationController is Permissions, ILocker {
         return _calculateLockedAmount(wallet);
     }
 
-    // function getActiveDelegationsByHolder(address holder) external view allow("TokenState") returns (uint[] memory) {
-    //     uint activeAmount = 0;
-    //     for (uint i = 0; i < _activeByHolder[holder].length;) {
-    //         TokenState.State state = getState(_activeByValidator[validatorId][i]);
-    //         if (!isActive(state)) {
-    //             // remove from list
-    //             _activeByHolder[holder][i] = _activeByHolder[holder][_activeByHolder[holder].length - 1];
-    //             delete _activeByHolder[holder][_activeByHolder[holder].length - 1];
-    //             --_activeByHolder[holder].length;
-    //         } else {
-    //             if (tokenState.isDelegated(state)) {
-    //                 ++activeAmount;
-    //             }
-    //             ++i;
-    //         }
-    //     }
-
-    //     uint[] memory active = new uint[](activeAmount);
-    //     uint cursor = 0;
-    //     for (uint i = 0; i < _activeByValidator[validatorId].length; ++i) {
-    //         if (tokenState.isDelegated(tokenState.getState(_activeByValidator[validatorId][i]))) {
-    //             require(cursor < active.length, "Out of index");
-    //             active[cursor] = _activeByValidator[validatorId][i];
-    //             ++cursor;
-    //         }
-    //     }
-
-    //     return active;
-    // }
-
-    // function getActiveDelegationsByValidator(uint validatorId) external allow("Distributor") returns (uint[] memory) {
-    //     TokenState tokenState = TokenState(contractManager.getContract("TokenState"));
-    //     uint activeAmount = 0;
-    //     for (uint i = 0; i < _activeByValidator[validatorId].length;) {
-    //         TokenState.State state = tokenState.getState(_activeByValidator[validatorId][i]);
-    //         if (state == TokenState.State.COMPLETED) {
-    //             // remove from list
-    //             _activeByValidator[validatorId][i] = _activeByValidator[validatorId][_activeByValidator[validatorId].length - 1];
-    //             _activeByValidator[validatorId][_activeByValidator[validatorId].length - 1] = 0;
-    //             --_activeByValidator[validatorId].length;
-    //         } else {
-    //             if (tokenState.isDelegated(state)) {
-    //                 ++activeAmount;
-    //             }
-    //             ++i;
-    //         }
-    //     }
-
-    //     uint[] memory active = new uint[](activeAmount);
-    //     uint cursor = 0;
-    //     for (uint i = 0; i < _activeByValidator[validatorId].length; ++i) {
-    //         if (tokenState.isDelegated(tokenState.getState(_activeByValidator[validatorId][i]))) {
-    //             require(cursor < active.length, "Out of index");
-    //             active[cursor] = _activeByValidator[validatorId][i];
-    //             ++cursor;
-    //         }
-    //     }
-
-    //     return active;
-    // }
-
-    // function getDelegationsByHolder(address holderAddress, TokenState.State _state)
-    //     external
-    //     allow("DelegationService")
-    //     returns (uint[] memory)
-    // {
-    //     TokenState tokenState = TokenState(contractManager.getContract("TokenState"));
-    //     uint delegationsAmount = 0;
-    //     for (uint i = 0; i < _activeByHolder[holderAddress].length; i++) {
-    //         TokenState.State state = tokenState.getState(_activeByHolder[holderAddress][i]);
-    //         if (state == _state) {
-    //             ++delegationsAmount;
-    //         }
-    //     }
-
-    //     uint[] memory delegationsHolder = new uint[](delegationsAmount);
-    //     uint cursor = 0;
-    //     for (uint i = 0; i < _activeByHolder[holderAddress].length; i++) {
-    //         if (_state == tokenState.getState(_activeByHolder[holderAddress][i])) {
-    //             require(cursor < delegationsHolder.length, "Out of index");
-    //             delegationsHolder[cursor] = _activeByHolder[holderAddress][i];
-    //             ++cursor;
-    //         }
-    //     }
-    //     return delegationsHolder;
-    // }
-
-    // function getDelegationsForValidator(address validatorAddress, TokenState.State _state)
-    //     external
-    //     allow("DelegationService")
-    //     returns (uint[] memory)
-    // {
-    //     TokenState tokenState = TokenState(contractManager.getContract("TokenState"));
-    //     ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
-    //     uint validatorId = validatorService.getValidatorId(validatorAddress);
-    //     uint delegationsAmount = 0;
-    //     for (uint i = 0; i < _activeByValidator[validatorId].length; i++) {
-    //         TokenState.State state = tokenState.getState(_activeByValidator[validatorId][i]);
-    //         if (state == _state) {
-    //             ++delegationsAmount;
-    //         }
-    //     }
-
-    //     uint[] memory delegationsValidator = new uint[](delegationsAmount);
-    //     uint cursor = 0;
-    //     for (uint i = 0; i < _activeByValidator[validatorId].length; i++) {
-    //         if (_state == tokenState.getState(_activeByValidator[validatorId][i])) {
-    //             require(cursor < delegationsValidator.length, "Out of index");
-    //             delegationsValidator[cursor] = _activeByValidator[validatorId][i];
-    //             ++cursor;
-    //         }
-    //     }
-    //     return delegationsValidator;
-    // }
-
     function cancel(uint delegationId) external allow("DelegationService") {
         require(getState(delegationId) == State.PROPOSED, "Token holders able to cancel only PROPOSED delegations");
         TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
@@ -331,32 +224,11 @@ contract DelegationController is Permissions, ILocker {
         return _firstDelegationMonth[holder][validatorId];
     }
 
-    function calculateTotalEffectiveDelegatedToValidator(uint validatorId, uint month)
-        external allow("Distributor") returns (uint)
-    {
-        if (_totalEffectiveDelegatedToValidatorFirstUnprocessedMonth[validatorId] == 0) {
-            return 0;
-        }
-
+    function cancel(uint validatorId, uint amount) external allow("Punisher") {
         uint currentMonth = getCurrentMonth();
-        if (month >= _totalEffectiveDelegatedToValidatorFirstUnprocessedMonth[validatorId]) {
-            uint endMonth = min(currentMonth, month + 1);
-            for (uint i = _totalEffectiveDelegatedToValidatorFirstUnprocessedMonth[validatorId]; i < endMonth; ++i) {
-                _totalEffectiveDelegatedToValidator[validatorId][i] = uint(
-                    int(_totalEffectiveDelegatedToValidator[validatorId][i - 1]) + _totalEffectiveDelegatedToValidatorDiff[validatorId][i]);
-                delete _totalEffectiveDelegatedToValidatorDiff[validatorId][i];
-            }
-            _totalEffectiveDelegatedToValidatorFirstUnprocessedMonth[validatorId] = endMonth;
-        }
-        if (month < currentMonth) {
-            return _totalEffectiveDelegatedToValidator[validatorId][month];
-        } else {
-            uint delegated = _totalEffectiveDelegatedToValidator[validatorId][currentMonth - 1];
-            for (uint i = currentMonth; i <= month; ++i) {
-                delegated = uint(int(delegated) + _totalEffectiveDelegatedToValidatorDiff[validatorId][i]);
-            }
-            return delegated;
-        }
+
+        removeFromTotalEffectiveDelegatedToValidator(validatorId, amount, currentMonth);
+        removeFromTotalDelegatedToValidator(validatorId, amount, currentMonth);
     }
 
     function initialize(address _contractsAddress) public initializer {
@@ -384,6 +256,34 @@ contract DelegationController is Permissions, ILocker {
             uint delegated = _totalDelegatedToValidator[validatorId][currentMonth - 1];
             for (uint i = currentMonth; i <= month; ++i) {
                 delegated = uint(int(delegated) + _totalDelegatedToValidatorDiff[validatorId][i]);
+            }
+            return delegated;
+        }
+    }
+
+    function calculateTotalEffectiveDelegatedToValidator(uint validatorId, uint month)
+        public allow("Distributor") returns (uint)
+    {
+        if (_totalEffectiveDelegatedToValidatorFirstUnprocessedMonth[validatorId] == 0) {
+            return 0;
+        }
+
+        uint currentMonth = getCurrentMonth();
+        if (month >= _totalEffectiveDelegatedToValidatorFirstUnprocessedMonth[validatorId]) {
+            uint endMonth = min(currentMonth, month + 1);
+            for (uint i = _totalEffectiveDelegatedToValidatorFirstUnprocessedMonth[validatorId]; i < endMonth; ++i) {
+                _totalEffectiveDelegatedToValidator[validatorId][i] = uint(
+                    int(_totalEffectiveDelegatedToValidator[validatorId][i - 1]) + _totalEffectiveDelegatedToValidatorDiff[validatorId][i]);
+                delete _totalEffectiveDelegatedToValidatorDiff[validatorId][i];
+            }
+            _totalEffectiveDelegatedToValidatorFirstUnprocessedMonth[validatorId] = endMonth;
+        }
+        if (month < currentMonth) {
+            return _totalEffectiveDelegatedToValidator[validatorId][month];
+        } else {
+            uint delegated = _totalEffectiveDelegatedToValidator[validatorId][currentMonth - 1];
+            for (uint i = currentMonth; i <= month; ++i) {
+                delegated = uint(int(delegated) + _totalEffectiveDelegatedToValidatorDiff[validatorId][i]);
             }
             return delegated;
         }
@@ -530,5 +430,17 @@ contract DelegationController is Permissions, ILocker {
         if (_firstDelegationMonth[holder][validatorId] == 0) {
             _firstDelegationMonth[holder][validatorId] = month;
         }
+    }
+
+    function removeFromTotalDelegatedToValidator(uint validatorId, uint amount, uint currentMonth) internal {
+        _totalDelegatedToValidatorDiff[validatorId][currentMonth] -= int(amount);
+    }
+
+    function removeFromTotalEffectiveDelegatedToValidator(uint validatorId, uint amount, uint currentMonth) internal {
+        uint currentEffectiveDelegated = calculateTotalEffectiveDelegatedToValidator(validatorId, currentMonth);
+        uint currentDelegated = calculateTotalDelegatedToValidator(validatorId, currentMonth);
+        uint effectiveAmount = currentEffectiveDelegated * amount / currentDelegated;
+
+        _totalEffectiveDelegatedToValidatorDiff[validatorId][currentMonth] -= int(effectiveAmount);
     }
 }

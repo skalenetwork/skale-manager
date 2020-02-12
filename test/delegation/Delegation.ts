@@ -305,7 +305,7 @@ contract("Delegation", ([owner,
                     // holder2: $3
                     // holder3: $5
 
-                    // (await tokenState.calculateLockedAmount.call(holder1)).toNumber().should.be.equal(2);
+                    (await tokenState.calculateLockedAmount.call(holder1)).toNumber().should.be.equal(2);
                     // (await delegationService.getDelegatedOf.call(holder1)).toNumber().should.be.equal(1);
 
                     // (await delegationService.getLockedOf.call(holder2)).toNumber().should.be.equal(3);
