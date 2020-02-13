@@ -22,7 +22,7 @@ contract("NodesData", ([owner, validator]) => {
 
     beforeEach(async () => {
         contractManager = await ContractManager.new({from: owner});
-        nodesData = await NodesData.new(5, contractManager.address, {from: owner});
+        nodesData = await NodesData.new(contractManager.address, {from: owner});
 
         constantsHolder = await ConstantsHolder.new(
             contractManager.address,
@@ -40,8 +40,7 @@ contract("NodesData", ([owner, validator]) => {
         node[2].should.be.equal("0x7f000002");
         node[3].should.be.deep.eq(web3.utils.toBN(8545));
         node[4].should.be.equal("0x1122334455");
-        node[6].should.be.deep.eq(web3.utils.toBN(0));
-        node[8].should.be.deep.eq(web3.utils.toBN(0));
+        node[7].should.be.deep.eq(web3.utils.toBN(0));
 
         const nodeId = web3.utils.soliditySha3("d2");
         await nodesData.nodesIPCheck("0x7f000001").should.be.eventually.true;
@@ -87,7 +86,6 @@ contract("NodesData", ([owner, validator]) => {
         it("should set node as leaving", async () => {
             await nodesData.setNodeLeaving(0);
 
-            (await nodesData.nodes(0))[8].should.be.deep.equal(web3.utils.toBN(1));
             await nodesData.numberOfActiveNodes().should.be.eventually.deep.equal(web3.utils.toBN(0));
             await nodesData.numberOfLeavingNodes().should.be.eventually.deep.equal(web3.utils.toBN(1));
         });
@@ -104,24 +102,11 @@ contract("NodesData", ([owner, validator]) => {
 
         it("should change node last reward date", async () => {
             skipTime(web3, 5);
-            const currentTimeValue = await currentTime(web3);
+            const res = await nodesData.changeNodeLastRewardDate(0);
+            const localCurrentTime = (await web3.eth.getBlock(res.receipt.blockNumber)).timestamp;
 
-            await nodesData.changeNodeLastRewardDate(0);
-
-            (await nodesData.nodes(0))[7].should.be.deep.equal(web3.utils.toBN(currentTimeValue));
-            await nodesData.getNodeLastRewardDate(0).should.be.eventually.deep.equal(web3.utils.toBN(currentTimeValue));
-        });
-
-        it("should check if leaving period is expired", async () => {
-            await nodesData.setNodeLeaving(0);
-
-            skipTime(web3, 3);
-
-            await nodesData.isLeavingPeriodExpired(0).should.be.eventually.false;
-
-            skipTime(web3, 3);
-
-            await nodesData.isLeavingPeriodExpired(0).should.be.eventually.true;
+            (await nodesData.nodes(0))[6].should.be.deep.equal(web3.utils.toBN(localCurrentTime));
+            await nodesData.getNodeLastRewardDate(0).should.be.eventually.deep.equal(web3.utils.toBN(localCurrentTime));
         });
 
         it("should check if time for reward has come", async () => {
@@ -186,6 +171,14 @@ contract("NodesData", ([owner, validator]) => {
             activeNodes.length.should.be.equal(1);
             const nodeIndex = web3.utils.toBN(activeNodes[0]);
             expect(nodeIndex.eq(web3.utils.toBN(0))).to.be.true;
+        });
+
+        it("should return Node status", async () => {
+            let status = await nodesData.getNodeStatus(0);
+            assert.equal(status.toNumber(), 0);
+            await nodesData.setNodeLeaving(0);
+            status = await nodesData.getNodeStatus(0);
+            assert.equal(status.toNumber(), 1);
         });
 
         // describe("when node is registered as fractional", async () => {

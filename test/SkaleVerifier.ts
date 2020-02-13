@@ -18,8 +18,6 @@ import { ContractManagerInstance,
          SkaleVerifierInstance,
          ValidatorServiceInstance} from "../types/truffle-contracts";
 
-import { gasMultiplier } from "./utils/command_line";
-
 const SchainsData: SchainsDataContract = artifacts.require("./SchainsData");
 const SchainsFunctionality: SchainsFunctionalityContract = artifacts.require("./SchainsFunctionality");
 const SchainsFunctionalityInternal: SchainsFunctionalityInternalContract = artifacts.require("./SchainsFunctionalityInternal");
@@ -56,35 +54,35 @@ contract("SkaleVerifier", ([validator1, owner, developer, hacker]) => {
         schainsData = await SchainsData.new(
             "SchainsFunctionalityInternal",
             contractManager.address,
-            {from: validator1, gas: 8000000 * gasMultiplier});
+            {from: validator1});
         await contractManager.setContractsAddress("SchainsData", schainsData.address);
 
         schainsFunctionality = await SchainsFunctionality.new(
             "SkaleManager",
             "SchainsData",
             contractManager.address,
-            {from: validator1, gas: 7900000 * gasMultiplier});
+            {from: validator1});
         await contractManager.setContractsAddress("SchainsFunctionality", schainsFunctionality.address);
 
         schainsFunctionalityInternal = await SchainsFunctionalityInternal.new(
             "SchainsFunctionality",
             "SchainsData",
             contractManager.address,
-            {from: validator1, gas: 7000000 * gasMultiplier});
+            {from: validator1});
         await contractManager.setContractsAddress("SchainsFunctionalityInternal", schainsFunctionalityInternal.address);
 
-        skaleDKG = await SkaleDKG.new(contractManager.address, {from: validator1, gas: 8000000 * gasMultiplier});
+        skaleDKG = await SkaleDKG.new(contractManager.address, {from: validator1});
         await contractManager.setContractsAddress("SkaleDKG", skaleDKG.address);
 
-        decryption = await Decryption.new({from: validator1, gas: 8000000 * gasMultiplier});
+        decryption = await Decryption.new({from: validator1});
         await contractManager.setContractsAddress("Decryption", decryption.address);
 
-        ecdh = await ECDH.new({from: validator1, gas: 8000000 * gasMultiplier});
+        ecdh = await ECDH.new({from: validator1});
         await contractManager.setContractsAddress("ECDH", ecdh.address);
 
         skaleVerifier = await SkaleVerifier.new(
             contractManager.address,
-            {from: validator1, gas: 8000000 * gasMultiplier},
+            {from: validator1},
         );
         await contractManager.setContractsAddress("SkaleVerifier", skaleVerifier.address, {from: validator1});
     });

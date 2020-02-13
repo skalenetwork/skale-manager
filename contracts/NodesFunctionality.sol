@@ -25,6 +25,7 @@ import "./interfaces/INodesData.sol";
 import "./interfaces/ISchainsData.sol";
 import "./interfaces/INodesFunctionality.sol";
 import "./delegation/ValidatorService.sol";
+import "./NodesData.sol";
 
 
 /**
@@ -45,17 +46,16 @@ contract NodesFunctionality is Permissions, INodesFunctionality {
         uint gasSpend
     );
 
-    // informs that owner withdrawn the Node's deposit
-    event WithdrawDepositFromNodeComplete(
+    // informs that node is fully finished quitting from the system
+    event ExitCompleted(
         uint nodeIndex,
         address owner,
-        uint deposit,
         uint32 time,
         uint gasSpend
     );
 
-    // informs that owner starts the procedure of quiting the Node from the system
-    event WithdrawDepositFromNodeInit(
+    // informs that owner starts the procedure of quitting the Node from the system
+    event ExitInited(
         uint nodeIndex,
         address owner,
         uint32 startLeavingPeriod,
@@ -147,23 +147,22 @@ contract NodesFunctionality is Permissions, INodesFunctionality {
     }
 
     /**
-     * @dev initWithdrawdeposit - initiate a procedure of quiting the system
+     * @dev initExit - initiate a procedure of quitting the system
      * function could be only run by SkaleManager
      * @param from - owner of Node
      * @param nodeIndex - index of Node
      * @return true - if everything OK
      */
-    function initWithdrawDeposit(address from, uint nodeIndex) external allow("SkaleManager") returns (bool) {
-        INodesData nodesData = INodesData(contractManager.getContract("NodesData"));
+    function initExit(address from, uint nodeIndex) external allow("SkaleManager") returns (bool) {
+        NodesData nodesData = NodesData(contractManager.getContract("NodesData"));
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
 
         require(validatorService.validatorAddressExists(from), "Validator with such address doesn't exist");
         require(nodesData.isNodeExist(from, nodeIndex), "Node does not exist for message sender");
-        require(nodesData.isNodeActive(nodeIndex), "Node is not Active");
 
         nodesData.setNodeLeaving(nodeIndex);
 
-        emit WithdrawDepositFromNodeInit(
+        emit ExitInited(
             nodeIndex,
             from,
             uint32(block.timestamp),
@@ -173,30 +172,29 @@ contract NodesFunctionality is Permissions, INodesFunctionality {
     }
 
     /**
-     * @dev completeWithdrawDeposit - finish a procedure of quiting the system
+     * @dev completeExit - finish a procedure of quitting the system
      * function could be run only by SkaleMManager
      * @param from - owner of Node
      * @param nodeIndex - index of Node
      * @return amount of SKL which be returned
      */
-    function completeWithdrawDeposit(address from, uint nodeIndex) external allow("SkaleManager") {
-        INodesData nodesData = INodesData(contractManager.getContract("NodesData"));
+    function completeExit(address from, uint nodeIndex) external allow("SkaleManager") returns (bool) {
+        NodesData nodesData = NodesData(contractManager.getContract("NodesData"));
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
 
         require(validatorService.validatorAddressExists(from), "Validator with such address doesn't exist");
         require(nodesData.isNodeExist(from, nodeIndex), "Node does not exist for message sender");
-        require(nodesData.isNodeLeaving(nodeIndex), "Node is no Leaving");
-        require(nodesData.isLeavingPeriodExpired(nodeIndex), "Leaving period has not expired");
+        require(nodesData.isNodeLeaving(nodeIndex), "Node is not Leaving");
 
         nodesData.setNodeLeft(nodeIndex);
         nodesData.removeNode(nodeIndex);
 
-        emit WithdrawDepositFromNodeComplete(
+        emit ExitCompleted(
             nodeIndex,
             from,
-            0,
             uint32(block.timestamp),
             gasleft());
+        return true;
     }
 
     // /**

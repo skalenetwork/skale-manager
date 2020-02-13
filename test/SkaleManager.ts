@@ -86,30 +86,30 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
         schainsData = await SchainsData.new(
             "SchainsFunctionalityInternal",
             contractManager.address,
-            {from: owner, gas: 8000000 * gasMultiplier});
+            {from: owner});
         await contractManager.setContractsAddress("SchainsData", schainsData.address);
 
         schainsFunctionality = await SchainsFunctionality.new(
             "SkaleManager",
             "SchainsData",
             contractManager.address,
-            {from: owner, gas: 7900000 * gasMultiplier});
+            {from: owner});
         await contractManager.setContractsAddress("SchainsFunctionality", schainsFunctionality.address);
 
         schainsFunctionalityInternal = await SchainsFunctionalityInternal.new(
             "SchainsFunctionality",
             "SchainsData",
             contractManager.address,
-            {from: owner, gas: 7000000 * gasMultiplier});
+            {from: owner});
         await contractManager.setContractsAddress("SchainsFunctionalityInternal", schainsFunctionalityInternal.address);
 
-        managerData = await ManagerData.new("SkaleManager", contractManager.address, {gas: 8000000 * gasMultiplier});
+        managerData = await ManagerData.new("SkaleManager", contractManager.address);
         await contractManager.setContractsAddress("ManagerData", managerData.address);
 
-        skaleManager = await SkaleManager.new(contractManager.address, {gas: 8000000 * gasMultiplier});
+        skaleManager = await SkaleManager.new(contractManager.address);
         contractManager.setContractsAddress("SkaleManager", skaleManager.address);
 
-        skaleDKG = await SkaleDKG.new(contractManager.address, {from: owner, gas: 8000000 * gasMultiplier});
+        skaleDKG = await SkaleDKG.new(contractManager.address, {from: owner});
         await contractManager.setContractsAddress("SkaleDKG", skaleDKG.address);
 
         delegationService = await deployDelegationService(contractManager);
@@ -218,15 +218,16 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
                     {from: validator});
             });
 
-            it("should fail to init withdrawing of deposit of someone else's node", async () => {
-                await skaleManager.initWithdrawDeposit(0, {from: hacker})
-                    .should.be.eventually.rejectedWith("Validator with such address doesn't exist");
-            });
+            // uncomment when delegation will be added to skale-manager
+            // it("should fail to init exiting of someone else's node", async () => {
+            //     await skaleManager.nodeExit(0, {from: hacker})
+            //         .should.be.eventually.rejectedWith("Validator with such address doesn't exist");
+            // });
 
-            it("should init withdrawing of deposit", async () => {
-                await skaleManager.initWithdrawDeposit(0, {from: validator});
+            it("should initiate exiting", async () => {
+                await skaleManager.nodeExit(0, {from: validator});
 
-                await nodesData.isNodeLeaving(0).should.be.eventually.true;
+                await nodesData.isNodeLeft(0).should.be.eventually.true;
             });
 
             it("should remove the node", async () => {
@@ -251,24 +252,6 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
                 const balanceAfter = web3.utils.toBN(await skaleToken.balanceOf(validator));
 
                 expect(balanceAfter.sub(balanceBefore).eq(web3.utils.toBN("0"))).to.be.true;
-            });
-
-            describe("when withdrawing of deposit is initialized", async () => {
-                beforeEach (async () => {
-                    await skaleManager.initWithdrawDeposit(0, {from: validator});
-                });
-
-                it("should fail if withdrawing completes too early", async () => {
-                    await skaleManager.completeWithdrawdeposit(0, {from: validator})
-                        .should.be.eventually.rejectedWith("Leaving period has not expired");
-                });
-
-                it("should complete deposit withdrawing process", async () => {
-                    skipTime(web3, 5);
-
-                    await skaleManager.completeWithdrawdeposit(0, {from: validator});
-                    await nodesData.isNodeLeft(0).should.be.eventually.true;
-                });
             });
         });
 
@@ -297,26 +280,27 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
                     {from: validator});
             });
 
-            it("should fail to init withdrawing of deposit of first node from another account", async () => {
-                await skaleManager.initWithdrawDeposit(0, {from: hacker})
-                    .should.be.eventually.rejectedWith("Validator with such address doesn't exist");
+            // uncomment when delegation will be added to skale-manager
+            // it("should fail to initiate exiting of first node from another account", async () => {
+            //     await skaleManager.nodeExit(0, {from: hacker})
+            //         .should.be.eventually.rejectedWith("Validator with such address doesn't exist");
+            // });
+
+            // it("should fail to initiate exiting of second node from another account", async () => {
+            //     await skaleManager.nodeExit(1, {from: hacker})
+            //         .should.be.eventually.rejectedWith("Validator with such address doesn't exist");
+            // });
+
+            it("should initiate exiting of first node", async () => {
+                await skaleManager.nodeExit(0, {from: validator});
+
+                await nodesData.isNodeLeft(0).should.be.eventually.true;
             });
 
-            it("should fail to init withdrawing of deposit of second node from another account", async () => {
-                await skaleManager.initWithdrawDeposit(1, {from: hacker})
-                    .should.be.eventually.rejectedWith("Validator with such address doesn't exist");
-            });
+            it("should initiate exiting of second node", async () => {
+                await skaleManager.nodeExit(1, {from: validator});
 
-            it("should init withdrawing of deposit of first node", async () => {
-                await skaleManager.initWithdrawDeposit(0, {from: validator});
-
-                await nodesData.isNodeLeaving(0).should.be.eventually.true;
-            });
-
-            it("should init withdrawing of deposit of second node", async () => {
-                await skaleManager.initWithdrawDeposit(1, {from: validator});
-
-                await nodesData.isNodeLeaving(1).should.be.eventually.true;
+                await nodesData.isNodeLeft(1).should.be.eventually.true;
             });
 
             it("should remove the first node", async () => {
@@ -370,6 +354,8 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
 
         describe("when 18 nodes are in the system", async () => {
             beforeEach(async () => {
+                await skaleToken.transfer(validator, "0x3635c9adc5dea00000", {from: owner});
+
                 for (let i = 0; i < 18; ++i) {
                     await skaleManager.createNode(
                         "0x01" + // create node
@@ -393,7 +379,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
                     "01" + // type of schain
                     "0000" + // nonce
                     "6432", // name
-                    {from: validator}).should.be.eventually.rejectedWith("Validator has to meet Minimum Staking Requirement");
+                    {from: developer}).should.be.eventually.rejectedWith("ERC777: transfer amount exceeds balance");
             });
 
             it("should fail to send monitor verdict from not node owner", async () => {
@@ -574,7 +560,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
 
             describe("when developer has SKALE tokens", async () => {
                 beforeEach(async () => {
-                    skaleToken.transfer(developer, "0x3635c9adc5dea00000", {from: owner});
+                    await skaleToken.transfer(developer, "0x3635c9adc5dea00000", {from: owner});
                 });
 
                 it("should create schain", async () => {
@@ -647,6 +633,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
         describe("when 32 nodes are in the system", async () => {
             beforeEach(async () => {
                 await constantsHolder.setMSR(3);
+                await skaleToken.transfer(validator, "0x32D26D12E980B600000", {from: owner});
 
                 for (let i = 0; i < 32; ++i) {
                     await skaleManager.createNode(
@@ -664,7 +651,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
 
             describe("when developer has SKALE tokens", async () => {
                 beforeEach(async () => {
-                    skaleToken.transfer(developer, "0x3635C9ADC5DEA000000", {from: owner});
+                    await skaleToken.transfer(developer, "0x3635C9ADC5DEA000000", {from: owner});
                 });
 
                 it("should create 2 medium schains", async () => {
@@ -736,6 +723,8 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
 
             it("should create 16 nodes & create & delete all types of schain", async () => {
 
+                await skaleToken.transfer(validator, "0x32D26D12E980B600000", {from: owner});
+
                 for (let i = 0; i < 16; ++i) {
                     await skaleManager.createNode(
                         "0x01" + // create node
@@ -749,7 +738,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
                         {from: validator});
                     }
 
-                skaleToken.transfer(developer, "0x3635C9ADC5DEA000000", {from: owner});
+                await skaleToken.transfer(developer, "0x3635C9ADC5DEA000000", {from: owner});
 
                 let price = web3.utils.toBN(await schainsFunctionality.getSchainPrice(1, 5));
                 await skaleToken.send(

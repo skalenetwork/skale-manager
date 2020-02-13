@@ -25,6 +25,7 @@ interface ISchainsData {
     function isTimeExpired(bytes32 schainId) external view returns (bool);
     function isOwnerAddress(address from, bytes32 schainId) external view returns (bool);
     function isSchainNameAvailable(string calldata name) external view returns (bool);
+    function isSchainExist(bytes32 schainId) external view returns (bool);
     function getSchainsPartOfNode(bytes32 schainId) external view returns (uint8);
     function getSchainIdsForNode(uint nodeIndex) external view returns (bytes32[] memory);
 }

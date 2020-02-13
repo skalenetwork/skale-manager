@@ -5,7 +5,7 @@ const NodesData: NodesDataContract = artifacts.require("./NodesData");
 const name = "NodesData";
 
 async function deploy(contractManager: ContractManagerInstance) {
-    const instance = await NodesData.new(5, contractManager.address);
+    const instance = await NodesData.new(contractManager.address);
     await contractManager.setContractsAddress(name, instance.address);
     return instance;
 }

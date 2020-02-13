@@ -31,6 +31,7 @@ import "./delegation/ValidatorService.sol";
 import "./MonitorsFunctionality.sol";
 import "./NodesFunctionality.sol";
 import "./NodesData.sol";
+import "./SchainsFunctionality.sol";
 import "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
 import "@openzeppelin/contracts/introspection/IERC1820Registry.sol";
 
@@ -90,16 +91,27 @@ contract SkaleManager is IERC777Recipient, Permissions {
         monitorsFunctionality.addMonitor(nodeIndex);
     }
 
-    function initWithdrawDeposit(uint nodeIndex) external {
-        address nodesFunctionalityAddress = contractManager.getContract("NodesFunctionality");
-        require(
-            INodesFunctionality(nodesFunctionalityAddress).initWithdrawDeposit(msg.sender, nodeIndex),
-            "Initialization of deposit withdrawing is failed");
-    }
-
-    function completeWithdrawdeposit(uint nodeIndex) external {
+    function nodeExit(uint nodeIndex) external {
+        NodesData nodesData = NodesData(contractManager.getContract("NodesData"));
         NodesFunctionality nodesFunctionality = NodesFunctionality(contractManager.getContract("NodesFunctionality"));
-        nodesFunctionality.completeWithdrawDeposit(msg.sender, nodeIndex);
+        SchainsFunctionality schainsFunctionality = SchainsFunctionality(contractManager.getContract("SchainsFunctionality"));
+        SchainsData schainsData = SchainsData(contractManager.getContract("SchainsData"));
+        IConstants constants = IConstants(contractManager.getContract("Constants"));
+        schainsFunctionality.freezeSchains(nodeIndex);
+        if (nodesData.isNodeActive(nodeIndex)) {
+            require(nodesFunctionality.initExit(msg.sender, nodeIndex), "Initialization of node exit is failed");
+        }
+        bool completed;
+        if (schainsData.getActiveSchain(nodeIndex) != bytes32(0)) {
+            completed = schainsFunctionality.exitFromSchain(nodeIndex);
+        } else {
+            completed = true;
+        }
+        if (completed) {
+            require(nodesFunctionality.completeExit(msg.sender, nodeIndex), "Finishing of node exit is failed");
+            //should changed finish only after rotation
+            nodesData.changeNodeFinishTime(nodeIndex, uint32(now + constants.rotationDelay()));
+        }
     }
 
     function deleteNode(uint nodeIndex) external {

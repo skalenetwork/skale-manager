@@ -105,7 +105,7 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
         }
     }
 
-    function forgive(address wallet, uint amount) external onlyOwner() {
+    function forgive(address wallet, uint amount) external onlyOwner {
         TokenState tokenState = TokenState(contractManager.getContract("TokenState"));
         tokenState.forgive(wallet, amount);
     }
@@ -116,7 +116,7 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
         return delegationController.getDelegationsTotal(validatorId);
     }
 
-    function setMinimumStakingRequirement(uint amount) external onlyOwner() {
+    function setMinimumStakingRequirement(uint amount) external onlyOwner {
         revert("Not implemented");
     }
 

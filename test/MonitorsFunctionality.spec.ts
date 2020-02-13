@@ -54,21 +54,20 @@ contract("MonitorsFunctionality", ([owner, validator]) => {
     await contractManager.setContractsAddress("MonitorsData", monitorsData.address);
 
     constantsHolder = await ConstantsHolder.new(
-      contractManager.address, {from: owner, gas: 8000000 * gasMultiplier});
+      contractManager.address, {from: owner});
     await contractManager.setContractsAddress("Constants", constantsHolder.address);
 
     nodesData = await NodesData.new(
-        5260000,
         contractManager.address,
-        {from: owner, gas: 8000000 * gasMultiplier});
+        {from: owner});
     await contractManager.setContractsAddress("NodesData", nodesData.address);
 
     nodesFunctionality = await NodesFunctionality.new(
       contractManager.address,
-      {from: owner, gas: 8000000 * gasMultiplier});
+      {from: owner});
     await contractManager.setContractsAddress("NodesFunctionality", nodesFunctionality.address);
 
-    skaleDKG = await SkaleDKG.new(contractManager.address, {from: owner, gas: 8000000 * gasMultiplier});
+    skaleDKG = await SkaleDKG.new(contractManager.address, {from: owner});
     await contractManager.setContractsAddress("SkaleDKG", skaleDKG.address);
 
     // create a node for monitors functions tests
@@ -229,43 +228,43 @@ contract("MonitorsFunctionality", ([owner, validator]) => {
     expect(parseInt(res.toString(), 10)).to.equal(1);
   });
 
-  it("should rotate node in monitor groups", async () => {
-    for (let i = 0; i < 5; i++) {
-      await nodesData.addNode(validator, "d" + i, "0x7f00000" + i, "0x7f00000" + (i + 1), 8545, "0x1122334455", 0);
-    }
-    const firstNode = 0;
-    const secondNode = 1;
-    await monitorsFunctionality.addMonitor(firstNode);
-    await monitorsFunctionality.addMonitor(secondNode);
-    const groupIndex0 = web3.utils.soliditySha3(firstNode);
-    const groupIndex1 = web3.utils.soliditySha3(secondNode);
-    await nodesData.addNode(validator, "vadim", "0x7f000009", "0x7f000010", 8545, "0x1122334459", 0);
-    await nodesFunctionality.removeNodeByRoot(3);
-    {
-      const activeNodes = [];
-      const {logs} = await monitorsFunctionality.rotateNode(groupIndex0);
-      const monitors = await monitorsData.getNodesInGroup(groupIndex0);
-      for (const node of monitors) {
-        if (await nodesData.isNodeActive(node)) {
-          activeNodes.push(node.toNumber());
-        }
-      }
-      activeNodes.indexOf(firstNode).should.be.equal(-1);
-      activeNodes[activeNodes.length - 1].should.be.equal(logs[0].args.newNode.toNumber());
-    }
-    {
-      const activeNodes = [];
-      const {logs} = await monitorsFunctionality.rotateNode(groupIndex1);
-      const monitors = await monitorsData.getNodesInGroup(groupIndex1);
-      for (const node of monitors) {
-        if (await nodesData.isNodeActive(node)) {
-          activeNodes.push(node.toNumber());
-        }
-      }
-      activeNodes.indexOf(secondNode).should.be.equal(-1);
-      activeNodes[activeNodes.length - 1].should.be.equal(logs[0].args.newNode.toNumber());
-    }
-  });
+  // it("should rotate node in validator groups", async () => {
+  //   for (let i = 0; i < 5; i++) {
+  //     await nodesData.addNode(validator, "d" + i, "0x7f00000" + i, "0x7f00000" + (i + 1), 8545, "0x1122334455");
+  //   }
+  //   const firstNode = 0;
+  //   const secondNode = 1;
+  //   await validatorsFunctionality.addValidator(firstNode);
+  //   await validatorsFunctionality.addValidator(secondNode);
+  //   const groupIndex0 = web3.utils.soliditySha3(firstNode);
+  //   const groupIndex1 = web3.utils.soliditySha3(secondNode);
+  //   await nodesData.addNode(validator, "vadim", "0x7f000009", "0x7f000010", 8545, "0x1122334459");
+  //   await nodesFunctionality.removeNodeByRoot(3);
+  //   {
+  //     const activeNodes = [];
+  //     const {logs} = await validatorsFunctionality.rotateNode(groupIndex0);
+  //     const validators = await validatorsData.getNodesInGroup(groupIndex0);
+  //     for (const node of validators) {
+  //       if (await nodesData.isNodeActive(node)) {
+  //         activeNodes.push(node.toNumber());
+  //       }
+  //     }
+  //     activeNodes.indexOf(firstNode).should.be.equal(-1);
+  //     activeNodes[activeNodes.length - 1].should.be.equal(logs[0].args.newNode.toNumber());
+  //   }
+  //   {
+  //     const activeNodes = [];
+  //     const {logs} = await validatorsFunctionality.rotateNode(groupIndex1);
+  //     const validators = await validatorsData.getNodesInGroup(groupIndex1);
+  //     for (const node of validators) {
+  //       if (await nodesData.isNodeActive(node)) {
+  //         activeNodes.push(node.toNumber());
+  //       }
+  //     }
+  //     activeNodes.indexOf(secondNode).should.be.equal(-1);
+  //     activeNodes[activeNodes.length - 1].should.be.equal(logs[0].args.newNode.toNumber());
+  //   }
+  // });
 
   it("should not contain duplicates after epoch ending", async () => {
     await monitorsFunctionality.addMonitor(0);
@@ -325,11 +324,11 @@ contract("MonitorsFunctionality", ([owner, validator]) => {
           const targetNodes = logs[2].args[2].map((value: BN) => value.toNumber());
           targetNodes.length.should.be.equal(24);
           targetNodes.sort();
-          targetNodes.forEach((value: number, index: number) => {
+          targetNodes.forEach(async (value: number, index: number) => {
             if (index > 0) {
               assert.notEqual(value, targetNodes[index - 1], "Array should not contain duplicates");
             }
-            assert(nodesData.isNodeActive(value), "Node should be active");
+            assert(await nodesData.isNodeActive(value), "Node should be active");
           });
         }
       }
