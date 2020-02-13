@@ -139,7 +139,7 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
             }
         }
         if (counter < nodesWithFreeSpace.length) {
-            result = new uint[](nodesWithFreeSpace.length - counter);
+            result = new uint[](nodesWithFreeSpace.length.sub(counter));
             counter = 0;
             for (uint i = 0; i < nodesWithFreeSpace.length; i++) {
                 if (!groupsData.isExceptionNode(groupIndex, nodesWithFreeSpace[i]) && nodesData.isNodeActive(nodesWithFreeSpace[i])) {
@@ -218,10 +218,10 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
         uint ignoringTail = 0;
         uint random = uint(keccak256(abi.encodePacked(uint(blockhash(block.number - 1)), groupIndex)));
         for (uint i = 0; i < nodesInGroup.length; ++i) {
-            uint index = random % (possibleNodes.length - ignoringTail);
+            uint index = random % (possibleNodes.length.sub(ignoringTail));
             uint node = possibleNodes[index];
             nodesInGroup[i] = node;
-            swap(possibleNodes, index, possibleNodes.length - ignoringTail - 1);
+            swap(possibleNodes, index, possibleNodes.length.sub(ignoringTail) - 1);
             ++ignoringTail;
 
             groupsData.setException(groupIndex, node);

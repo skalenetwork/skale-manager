@@ -18,9 +18,11 @@
 */
 
 pragma solidity ^0.5.3;
+import "@openzeppelin/contracts/math/SafeMath.sol";
 
 
 contract ECDH {
+    using SafeMath for uint256;
 
     uint256 constant GX = 0x79BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798;
     uint256 constant GY = 0x483ADA7726A3C4655DA4FBFC0E1108A8FD17B448A68554199C47D08FFB10D4B8;
@@ -88,7 +90,7 @@ contract ECDH {
         pure
         returns (uint256 x3, uint256 z3)
     {
-        (x3, z3) = (addmod(mulmod(z2, x1, N), mulmod(N - x2, z1, N), N), mulmod(z1, z2, N));
+        (x3, z3) = (addmod(mulmod(z2, x1, N), mulmod(N.sub(x2), z1, N), N), mulmod(z1, z2, N));
     }
 
     function jMul(
@@ -124,9 +126,9 @@ contract ECDH {
         uint256 newR = a;
         uint256 q;
         while (newR != 0) {
-            q = r / newR;
-            (t, newT) = (newT, addmod(t, (N - mulmod(q, newT, N)), N));
-            (r, newR) = (newR, r - q * newR);
+            q = r.div(newR);
+            (t, newT) = (newT, addmod(t, (N.sub(mulmod(q, newT, N))), N));
+            (r, newR) = (newR, r.sub(q.mul(newR)));
         }
         return t;
     }

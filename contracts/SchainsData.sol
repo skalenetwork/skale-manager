@@ -129,7 +129,7 @@ contract SchainsData is GroupsData {
     function setSchainPartOfNode(bytes32 schainId, uint8 partOfNode) external allow(executorName) {
         schains[schainId].partOfNode = partOfNode;
         if (partOfNode > 0) {
-            sumOfSchainsResources += (128 / partOfNode) * groups[schainId].nodesInGroup.length;
+            sumOfSchainsResources = sumOfSchainsResources.add((128 / partOfNode) * groups[schainId].nodesInGroup.length);
         }
     }
 
@@ -141,8 +141,8 @@ contract SchainsData is GroupsData {
      * @param deposit - amount of SKL which payed for this time
      */
     function changeLifetime(bytes32 schainId, uint lifetime, uint deposit) external allow("SchainsFunctionality") {
-        schains[schainId].deposit += deposit;
-        schains[schainId].lifetime += lifetime;
+        schains[schainId].deposit = schains[schainId].deposit.add(deposit);
+        schains[schainId].lifetime = schains[schainId].lifetime.add(lifetime);
     }
 
     /**
@@ -284,7 +284,7 @@ contract SchainsData is GroupsData {
      * @return if expired - true, else - false
      */
     function isTimeExpired(bytes32 schainId) external view returns (bool) {
-        return schains[schainId].startDate + schains[schainId].lifetime < block.timestamp;
+        return schains[schainId].startDate.add(schains[schainId].lifetime) < block.timestamp;
     }
 
     /**

@@ -1,39 +1,5 @@
 usePlugin("@nomiclabs/buidler-truffle5");
-let configFile = require('./truffle-config.js');
-
-
-
-const Web3 = require('web3');
-const Tx = require('ethereumjs-tx');
-
-
-let privateKeyMainnetBuffer = new Buffer.from("a15c19da241e5b1db20d8dd8ca4b5eeaee01c709b49ec57aa78c2133d3c1b3c9", 'hex');
-
-
-async function sendTransaction(web3Inst, account, privateKey, data, receiverContract, amount) {
-    await web3Inst.eth.getTransactionCount(account).then(nonce => {
-        const rawTx = {
-            from: account,
-            nonce: "0x" + nonce.toString(16),
-            data: data,
-            to: receiverContract,
-            gasPrice: 0,
-            gas: 8000000,
-            value: web3Inst.utils.toHex(amount)
-        };
-        const tx = new Tx(rawTx);
-        tx.sign(privateKey);
-    });
-}
-
-
-task("accounts", "Prints the list of accounts", async () => {
-  const accounts = await web3.eth.getAccounts();
-
-  for (const account of accounts) {
-    console.log(account);
-  }j
-});
+require('dotenv').config();
 
 task("erc", "Deploy erc1820", async () => {
   if (await web3.eth.getCode("0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24") === "0x") {
@@ -43,41 +9,19 @@ task("erc", "Deploy erc1820", async () => {
 });
 
 
-task("balance", "Prints an account's balance")
-  .addParam("account", "The account's address")
-  .setAction(async taskArgs => {
-    const account = web3.utils.toChecksumAddress(taskArgs.account);
-    const balance = await web3.eth.getBalance(account);
-
-    console.log(web3.utils.fromWei(balance, "ether"), "ETH");
-});
-
-
-
-task("send", "Prints an account's balance")
-  .addParam("from", "The account's address")
-  .addParam("to", "The account's address")
-  .setAction(async args => {
-
-    let from = web3.utils.toChecksumAddress(args.from);
-    let to = web3.utils.toChecksumAddress(args.to);
-    let balance = await web3.eth.getBalance(from);
-
-    console.log(web3.utils.fromWei(balance, "ether"), "ETH");
-
-    await sendTransaction(web3, from, privateKeyMainnetBuffer, "0x", to, "100000000000000000000");
-
-    from = web3.utils.toChecksumAddress(args.from);
-    balance = await web3.eth.getBalance(from);
-
-    console.log(web3.utils.fromWei(balance, "ether"), "ETH");
-
-  });
-
-  
-
 module.exports = {
   defaultNetwork: "buidlerevm",
+  solc: {
+    version: '0.5.15',
+    evmVersion: 'petersburg',
+    optimizer:{
+      enabled: true,
+      runs: 200
+    }
+  },
+  mocha: {
+    timeout: 300000
+  },
   networks: {
     buidlerevm: {
       accounts: [
@@ -105,7 +49,10 @@ module.exports = {
           privateKey: "0x9B0B6E1F047FAF814323B8CE32636F559C4B2FA3B96A8158A3CDA5779505DAFD",
           balance: "0xd3c21bcecceda0000000"
         }
-      ]
+      ],
+      gas: 0xfffffffffff,
+      blockGasLimit: 0xfffffffffff,
+      port: 8555
     }
   }
 };

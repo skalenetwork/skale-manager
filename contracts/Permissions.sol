@@ -20,6 +20,7 @@
 pragma solidity ^0.5.3;
 
 import "./ContractManager.sol";
+import "@openzeppelin/contracts/math/SafeMath.sol";
 
 
 /**
@@ -27,6 +28,8 @@ import "./ContractManager.sol";
  * @author Artem Payvin
  */
 contract Permissions is Ownable {
+    using SafeMath for uint;
+    using SafeMath for uint32;
 
     ContractManager contractManager;
 

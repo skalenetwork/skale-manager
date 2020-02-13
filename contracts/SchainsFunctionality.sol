@@ -213,9 +213,9 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
         if (divisor == 0) {
             return 1e18;
         } else {
-            uint up = nodeDeposit * numberOfNodes * 2 * lifetime;
-            uint down = uint(uint(IConstants(constantsAddress).TINY_DIVISOR() / divisor) * uint(IConstants(constantsAddress).SECONDS_TO_YEAR()));
-            return up / down;
+            uint up = nodeDeposit.mul(numberOfNodes.mul(lifetime.mul(2)));
+            uint down = uint(uint(IConstants(constantsAddress).TINY_DIVISOR()).div(divisor).mul(uint(IConstants(constantsAddress).SECONDS_TO_YEAR())));
+            return up.div(down);
         }
     }
 

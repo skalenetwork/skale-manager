@@ -43,8 +43,8 @@ contract TokenSaleManager is ITokenSaleManager, Permissions, IERC777Recipient {
         require(isOwner() || _msgSender() == seller, "Not authorized");
         require(walletAddress.length == value.length, "Wrong input arrays length");
         for (uint i = 0; i < walletAddress.length; ++i) {
-            approved[walletAddress[i]] += value[i];
-            totalApproved += value[i];
+            approved[walletAddress[i]] = approved[walletAddress[i]].add(value[i]);
+            totalApproved = totalApproved.add(value[i]);
         }
         require(totalApproved <= getBalance(), "Balance is too low");
     }

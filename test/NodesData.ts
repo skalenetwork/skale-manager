@@ -92,12 +92,11 @@ contract("NodesData", ([owner, validator]) => {
 
         it("should change node last reward date", async () => {
             skipTime(web3, 5);
-            const currentTimeValue = await currentTime(web3);
+            const res = await nodesData.changeNodeLastRewardDate(0);
+            const currentTimeLocal = (await web3.eth.getBlock(res.receipt.blockNumber)).timestamp;
 
-            await nodesData.changeNodeLastRewardDate(0);
-
-            (await nodesData.nodes(0))[7].should.be.deep.equal(web3.utils.toBN(currentTimeValue));
-            await nodesData.getNodeLastRewardDate(0).should.be.eventually.deep.equal(web3.utils.toBN(currentTimeValue));
+            (await nodesData.nodes(0))[7].should.be.deep.equal(web3.utils.toBN(currentTimeLocal));
+            await nodesData.getNodeLastRewardDate(0).should.be.eventually.deep.equal(web3.utils.toBN(currentTimeLocal));
         });
 
         it("should check if leaving period is expired", async () => {

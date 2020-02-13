@@ -138,7 +138,7 @@ contract MonitorsFunctionality is GroupsFunctionality {
         MonitorsData data = MonitorsData(contractManager.getContract("MonitorsData"));
         data.removeCheckedNode(monitorIndex, index);
         address constantsAddress = contractManager.getContract("ConstantsHolder");
-        bool receiveVerdict = time + IConstants(constantsAddress).deltaPeriod() > uint32(block.timestamp);
+        bool receiveVerdict = time.add(IConstants(constantsAddress).deltaPeriod()) > uint32(block.timestamp);
         if (receiveVerdict) {
             data.addVerdict(keccak256(abi.encodePacked(toNodeIndex)), downtime, latency);
         }
@@ -211,7 +211,7 @@ contract MonitorsFunctionality is GroupsFunctionality {
         uint exceptionNode = uint(IGroupsData(dataAddress).getGroupData(groupIndex));
         uint[] memory activeNodes = INodesData(nodesDataAddress).getActiveNodeIds();
         uint numberOfNodesInGroup = IGroupsData(dataAddress).getRecommendedNumberOfNodes(groupIndex);
-        uint availableAmount = activeNodes.length - (INodesData(nodesDataAddress).isNodeActive(exceptionNode) ? 1 : 0);
+        uint availableAmount = activeNodes.length.sub((INodesData(nodesDataAddress).isNodeActive(exceptionNode)) ? 1 : 0);
         if (numberOfNodesInGroup > availableAmount) {
             numberOfNodesInGroup = availableAmount;
         }
@@ -219,14 +219,14 @@ contract MonitorsFunctionality is GroupsFunctionality {
         uint ignoringTail = 0;
         uint random = uint(keccak256(abi.encodePacked(uint(blockhash(block.number - 1)), groupIndex)));
         for (uint i = 0; i < nodesInGroup.length; ++i) {
-            uint index = random % (activeNodes.length - ignoringTail);
+            uint index = random % (activeNodes.length.sub(ignoringTail));
             if (activeNodes[index] == exceptionNode) {
-                swap(activeNodes, index, activeNodes.length - ignoringTail - 1);
+                swap(activeNodes, index, activeNodes.length.sub(ignoringTail) - 1);
                 ++ignoringTail;
-                index = random % (activeNodes.length - ignoringTail);
+                index = random % (activeNodes.length.sub(ignoringTail));
             }
             nodesInGroup[i] = activeNodes[index];
-            swap(activeNodes, index, activeNodes.length - ignoringTail - 1);
+            swap(activeNodes, index, activeNodes.length.sub(ignoringTail) - 1);
             ++ignoringTail;
             IGroupsData(dataAddress).setNodeInGroup(groupIndex, nodesInGroup[i]);
         }
@@ -253,8 +253,8 @@ contract MonitorsFunctionality is GroupsFunctionality {
         uint numberOfActiveNodes = INodesData(nodesDataAddress).numberOfActiveNodes();
         uint numberOfExceptionNodes = (INodesData(nodesDataAddress).isNodeActive(uint(groupData)) ? 1 : 0);
         uint recommendedNumberOfNodes = IGroupsData(dataAddress).getRecommendedNumberOfNodes(groupIndex);
-        finish = (recommendedNumberOfNodes > numberOfActiveNodes - numberOfExceptionNodes ?
-            numberOfActiveNodes - numberOfExceptionNodes : recommendedNumberOfNodes);
+        finish = (recommendedNumberOfNodes > numberOfActiveNodes.sub(numberOfExceptionNodes) ?
+            numberOfActiveNodes.sub(numberOfExceptionNodes) : recommendedNumberOfNodes);
     }
 
     function comparator(bytes32 groupIndex, uint indexOfNode) internal view returns (bool) {
@@ -298,7 +298,7 @@ contract MonitorsFunctionality is GroupsFunctionality {
     function quickSort(uint32[] memory array, uint left, uint right) internal pure {
         uint leftIndex = left;
         uint rightIndex = right;
-        uint32 middle = array[(right + left) / 2];
+        uint32 middle = array[(right.add(left)) / 2];
         while (leftIndex <= rightIndex) {
             while (array[leftIndex] < middle) {
                 leftIndex++;
@@ -337,7 +337,7 @@ contract MonitorsFunctionality is GroupsFunctionality {
         bytes memory tempData = new bytes(32);
         bytes14 bytesOfIndex = bytes14(uint112(nodeIndex));
         bytes14 bytesOfTime = bytes14(
-            uint112(INodesData(nodesDataAddress).getNodeNextRewardDate(nodeIndex) - IConstants(constantsAddress).deltaPeriod())
+            uint112(INodesData(nodesDataAddress).getNodeNextRewardDate(nodeIndex).sub(IConstants(constantsAddress).deltaPeriod()))
         );
         bytes4 ip = INodesData(nodesDataAddress).getNodeIP(nodeIndex);
         assembly {

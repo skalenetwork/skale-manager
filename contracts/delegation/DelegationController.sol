@@ -62,7 +62,7 @@ contract DelegationController is Permissions {
             uint delegationId = _activeByValidator[validatorId][i];
             TokenState.State state = tokenState.getState(delegationId);
             if (state == TokenState.State.DELEGATED) {
-                delegatedAmount += delegations[delegationId].amount;
+                delegatedAmount = delegatedAmount.add(delegations[delegationId].amount);
             }
         }
     }
@@ -197,7 +197,7 @@ contract DelegationController is Permissions {
             uint delegationId = _activeByValidator[validatorId][i];
             TokenState.State state = tokenState.getState(delegationId);
             if (delegations[delegationId].holder == validatorAddress && state == TokenState.State.DELEGATED) {
-                delegatedAmount += delegations[delegationId].amount;
+                delegatedAmount = delegatedAmount.add(delegations[delegationId].amount);
             }
         }
     }

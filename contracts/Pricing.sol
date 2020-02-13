@@ -41,25 +41,24 @@ contract Pricing is Permissions {
     }
 
     function adjustPrice() external {
-        require(now > lastUpdated + COOLDOWN_TIME, "It's not a time to update a price");
+        require(now > lastUpdated.add(COOLDOWN_TIME), "It's not a time to update a price");
         checkAllNodes();
         uint loadPercentage = getTotalLoadPercentage();
         uint priceChange;
         uint timeSkipped;
 
         if (loadPercentage < OPTIMAL_LOAD_PERCENTAGE) {
-            priceChange = (ADJUSTMENT_SPEED * price) * (OPTIMAL_LOAD_PERCENTAGE - loadPercentage) / 10**6;
-            timeSkipped = (now - lastUpdated) / COOLDOWN_TIME;
-            require(price - priceChange * timeSkipped < price, "New price should be less than old price");
-            price -= priceChange * timeSkipped;
+            priceChange = (ADJUSTMENT_SPEED.mul(price)).mul((OPTIMAL_LOAD_PERCENTAGE.sub(loadPercentage))) / 10**6;
+            timeSkipped = (now.sub(lastUpdated)).div(COOLDOWN_TIME);
+            price = price.sub(priceChange.mul(timeSkipped));
             if (price < MIN_PRICE) {
                 price = MIN_PRICE;
             }
         } else {
-            priceChange = (ADJUSTMENT_SPEED * price) * (loadPercentage - OPTIMAL_LOAD_PERCENTAGE) / 10**6;
-            timeSkipped = (now - lastUpdated) / COOLDOWN_TIME;
-            require(price + priceChange * timeSkipped > price, "New price should be greater than old price");
-            price += priceChange * timeSkipped;
+            priceChange = (ADJUSTMENT_SPEED.mul(price)).mul((loadPercentage.sub(OPTIMAL_LOAD_PERCENTAGE))) / 10**6;
+            timeSkipped = (now.sub(lastUpdated)).div(COOLDOWN_TIME);
+            require(price.add(priceChange.mul(timeSkipped)) > price, "New price should be greater than old price");
+            price = price.add(priceChange.mul(timeSkipped));
         }
         lastUpdated = now;
     }
@@ -89,8 +88,8 @@ contract Pricing is Permissions {
             bytes32 schain = SchainsData(schainsDataAddress).schainsAtSystem(i);
             uint numberOfNodesInGroup = IGroupsData(schainsDataAddress).getNumberOfNodesInGroup(schain);
             uint part = SchainsData(schainsDataAddress).getSchainsPartOfNode(schain);
-            sumLoadSchain += (numberOfNodesInGroup*10**7)/part;
+            sumLoadSchain = sumLoadSchain.add((numberOfNodesInGroup*10**7).div(part));
         }
-        return uint(sumLoadSchain/(10**5*numberOfNodes));
+        return uint(sumLoadSchain.div(10**5*numberOfNodes));
     }
 }

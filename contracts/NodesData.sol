@@ -103,7 +103,7 @@ contract NodesData is INodesData, Permissions {
     function countNodesWithFreeSpace(uint8 freeSpace) external view returns (uint count) {
         count = 0;
         for (uint8 i = freeSpace; i <= 128; ++i) {
-            count += spaceToNodes[i].length;
+            count = count.add(spaceToNodes[i].length);
         }
     }
 
@@ -276,7 +276,7 @@ contract NodesData is INodesData, Permissions {
      */
     function isTimeForReward(uint nodeIndex) external view returns (bool) {
         address constantsAddress = contractManager.getContract("ConstantsHolder");
-        return nodes[nodeIndex].lastRewardDate + IConstants(constantsAddress).rewardPeriod() <= block.timestamp;
+        return nodes[nodeIndex].lastRewardDate.add(IConstants(constantsAddress).rewardPeriod()) <= block.timestamp;
     }
 
     /**
@@ -355,7 +355,7 @@ contract NodesData is INodesData, Permissions {
      * @return number of active nodes plus number of leaving nodes
      */
     function getNumberOnlineNodes() external view returns (uint) {
-        return numberOfActiveNodes + numberOfLeavingNodes;
+        return numberOfActiveNodes.add(numberOfLeavingNodes);
     }
 
     /**

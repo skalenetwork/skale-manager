@@ -160,7 +160,7 @@ contract ValidatorService is Permissions {
         uint[] memory validatorNodes = validators[validatorId].nodeIndexes;
         uint delegationsTotal = delegationController.getDelegatedAmount(validatorId);
         uint msr = IConstants(contractManager.getContract("ConstantsHolder")).msr();
-        require((validatorNodes.length + 1) * msr <= delegationsTotal, "Validator has to meet Minimum Staking Requirement");
+        require((validatorNodes.length + 1).mul(msr) <= delegationsTotal, "Validator has to meet Minimum Staking Requirement");
     }
 
     function checkPossibilityToMaintainNode(uint validatorId, uint nodeIndex) external allow("SkaleManager") returns (bool) {
@@ -172,7 +172,7 @@ contract ValidatorService is Permissions {
         require(position < validatorNodes.length, "Node does not exist for this Validator");
         uint delegationsTotal = delegationController.getDelegatedAmount(validatorId);
         uint msr = IConstants(contractManager.getContract("ConstantsHolder")).msr();
-        return (position + 1) * msr <= delegationsTotal;
+        return (position + 1).mul(msr) <= delegationsTotal;
     }
 
     function getMyAddresses() external view returns (address[] memory) {

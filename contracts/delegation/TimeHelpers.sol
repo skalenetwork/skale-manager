@@ -18,10 +18,14 @@
 */
 
 pragma solidity ^0.5.3;
+
 import "../thirdparty/BokkyPooBahsDateTimeLibrary.sol";
+import "@openzeppelin/contracts/math/SafeMath.sol";
 
 
 contract TimeHelpers {
+    using SafeMath for uint;
+
     function getNextMonthStart() external view returns (uint timestamp) {
         return getNextMonthStartFromDate(now);
     }
@@ -39,9 +43,9 @@ contract TimeHelpers {
         uint month;
         (year, month, ) = BokkyPooBahsDateTimeLibrary.timestampToDate(requestTime);
 
-        month += delegationPeriod + 1;
+        month = month.add(delegationPeriod + 1);
         if (month > 12) {
-            year += (month - 1) / 12;
+            year = year.add((month - 1) / 12);
             month = (month - 1) % 12 + 1;
         }
         timestamp = BokkyPooBahsDateTimeLibrary.timestampFromDate(year, month, 1);
@@ -50,11 +54,11 @@ contract TimeHelpers {
             uint currentYear;
             uint currentMonth;
             (currentYear, currentMonth, ) = BokkyPooBahsDateTimeLibrary.timestampToDate(now);
-            currentMonth += (currentYear - year) * 12;
+            currentMonth = currentMonth.add((currentYear - year).mul(12));
 
-            month += ((currentMonth - month) / redelegationPeriod + 1) * redelegationPeriod;
+            month = month.add(((currentMonth - month).div(redelegationPeriod) + 1).mul(redelegationPeriod));
             if (month > 12) {
-                year += (month - 1) / 12;
+                year = year.add((month - 1) / 12);
                 month = (month - 1) % 12 + 1;
             }
             timestamp = BokkyPooBahsDateTimeLibrary.timestampFromDate(year, month, 1);
@@ -69,9 +73,9 @@ contract TimeHelpers {
         uint minute;
         uint second;
         (year, month, day, hour, minute, second) = BokkyPooBahsDateTimeLibrary.timestampToDateTime(fromTimestamp);
-        month += n;
+        month = month.add(n);
         if (month > 12) {
-            year += (month - 1) / 12;
+            year = year.add((month - 1) / 12);
             month = (month - 1) % 12 + 1;
         }
         return BokkyPooBahsDateTimeLibrary.timestampFromDateTime(

@@ -50,9 +50,6 @@ contract DelegationRequestManager is Permissions {
         TokenState tokenState = TokenState(
             contractManager.getContract("TokenState")
         );
-        DelegationController delegationController = DelegationController(
-            contractManager.getContract("DelegationController")
-        );
         require(
             validatorService.checkMinimumDelegation(validatorId, amount),
             "Amount doesn't meet minimum delegation amount"
@@ -67,10 +64,12 @@ contract DelegationRequestManager is Permissions {
 
         // check that there is enough money
         uint holderBalance = SkaleToken(contractManager.getContract("SkaleToken")).balanceOf(holder);
-        uint lockedToDelegate = tokenState.getLockedCount(holder) - tokenState.getPurchasedAmount(holder);
-        require(holderBalance >= amount + lockedToDelegate, "Delegator hasn't enough tokens to delegate");
+        uint lockedToDelegate = tokenState.getLockedCount(holder).sub(tokenState.getPurchasedAmount(holder));
+        require(holderBalance >= amount.add(lockedToDelegate), "Delegator hasn't enough tokens to delegate");
 
-        delegationId = delegationController.addDelegation(
+        delegationId = DelegationController(
+            contractManager.getContract("DelegationController")
+        ).addDelegation(
             holder,
             validatorId,
             amount,

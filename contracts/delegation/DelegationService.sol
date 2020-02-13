@@ -244,7 +244,7 @@ contract DelegationService is Permissions, IHolderDelegation, IValidatorDelegati
         SkaleToken skaleToken = SkaleToken(contractManager.getContract("SkaleToken"));
         TokenState tokenState = TokenState(contractManager.getContract("TokenState"));
 
-        require(skaleToken.balanceOf(wallet) >= tokenState.getPurchasedAmount(wallet) + amount, "Not enough founds");
+        require(skaleToken.balanceOf(wallet) >= tokenState.getPurchasedAmount(wallet).add(amount), "Not enough founds");
 
         tokenState.sold(wallet, amount);
     }

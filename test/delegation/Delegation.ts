@@ -261,7 +261,6 @@ contract("Delegation", ([owner,
 
             it("should distribute funds sent to DelegationService across delegators", async () => {
                 await delegationService.setLaunchTimestamp(await currentTime(web3));
-
                 await skaleManagerMock.payBounty(validatorId, 101);
 
                 // 15% fee to validator
