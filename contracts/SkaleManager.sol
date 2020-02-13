@@ -93,7 +93,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
         NodesFunctionality nodesFunctionality = NodesFunctionality(contractManager.getContract("NodesFunctionality"));
         SchainsFunctionality schainsFunctionality = SchainsFunctionality(contractManager.getContract("SchainsFunctionality"));
         SchainsData schainsData = SchainsData(contractManager.getContract("SchainsData"));
-        IConstants constants = IConstants(contractManager.getContract("Constants"));
+        IConstants constants = IConstants(contractManager.getContract("ConstantsHolder"));
         schainsFunctionality.freezeSchains(nodeIndex);
         if (nodesData.isNodeActive(nodeIndex)) {
             require(nodesFunctionality.initExit(msg.sender, nodeIndex), "Initialization of node exit is failed");

@@ -225,13 +225,13 @@ contract SchainsData is GroupsData {
     }
 
     function startRotation(bytes32 schainIndex, uint nodeIndex) external {
-        IConstants constants = IConstants(contractManager.getContract("Constants"));
+        IConstants constants = IConstants(contractManager.getContract("ConstantsHolder"));
         rotations[schainIndex].nodeIndex = nodeIndex;
         rotations[schainIndex].freezeUntil = now + constants.rotationDelay();
     }
 
     function finishRotation(bytes32 schainIndex, uint nodeIndex, uint newNodeIndex) external {
-        IConstants constants = IConstants(contractManager.getContract("Constants"));
+        IConstants constants = IConstants(contractManager.getContract("ConstantsHolder"));
         leavingHistory[nodeIndex].push(LeavingHistory(schainIndex, now + constants.rotationDelay()));
         rotations[schainIndex].newNodeIndex = newNodeIndex;
         rotations[schainIndex].rotationCounter++;

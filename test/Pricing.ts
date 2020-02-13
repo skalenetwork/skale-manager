@@ -24,9 +24,9 @@ contract("Pricing", ([owner, holder]) => {
     beforeEach(async () => {
         contractManager = await deployContractManager();
 
-        pricing = await deployPricing(contractManager);
         schainsData = await deploySchainsData(contractManager);
         nodesData = await deployNodesData(contractManager);
+        pricing = await deployPricing(contractManager);
     });
 
     describe("on initialized contracts", async () => {

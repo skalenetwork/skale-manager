@@ -655,8 +655,6 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
 
         it("should rotate 2 nodes consistently", async () => {
             await skaleManager.nodeExit(0, {from: validator});
-            await skaleManager.nodeExit(0, {from: holder})
-                .should.be.eventually.rejectedWith("Node does not exist for message sender");
             await skaleManager.nodeExit(1, {from: validator})
                 .should.be.eventually.rejectedWith("You cannot rotate on Schain d2, occupied by Node 0");
             await skaleManager.nodeExit(0, {from: validator});

@@ -93,7 +93,7 @@ contract("NodesData", ([owner, validator]) => {
             const res = await nodesData.changeNodeLastRewardDate(0);
             const currentTimeLocal = (await web3.eth.getBlock(res.receipt.blockNumber)).timestamp;
 
-            (await nodesData.nodes(0))[7].should.be.deep.equal(web3.utils.toBN(currentTimeLocal));
+            (await nodesData.nodes(0))[6].should.be.deep.equal(web3.utils.toBN(currentTimeLocal));
             await nodesData.getNodeLastRewardDate(0).should.be.eventually.deep.equal(web3.utils.toBN(currentTimeLocal));
         });
 
