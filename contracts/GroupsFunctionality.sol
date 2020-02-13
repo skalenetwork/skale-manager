@@ -90,17 +90,6 @@ contract GroupsFunctionality is Permissions {
     string dataName;
 
     /**
-     * @dev contructor in Permissions approach
-     * @param newExecutorName - name of executor contract
-     * @param newDataName - name of data contract
-     * @param newContractsAddress needed in Permissions constructor
-     */
-    constructor(string memory newExecutorName, string memory newDataName, address newContractsAddress) Permissions(newContractsAddress) public {
-        executorName = newExecutorName;
-        dataName = newDataName;
-    }
-
-    /**
      * @dev verifySignature - verify signature which create Group by Groups BLS master public key
      * @param groupIndex - Groups identifier
      * @param signatureX - first part of BLS signature
@@ -116,7 +105,7 @@ contract GroupsFunctionality is Permissions {
         uint hashX,
         uint hashY) external view returns (bool)
     {
-        address groupsDataAddress = contractManager.contracts(keccak256(abi.encodePacked(dataName)));
+        address groupsDataAddress = contractManager.getContract(dataName);
         uint publicKeyx1;
         uint publicKeyy1;
         uint publicKeyx2;
@@ -129,6 +118,18 @@ contract GroupsFunctionality is Permissions {
     }
 
     /**
+     * @dev contructor in Permissions approach
+     * @param newExecutorName - name of executor contract
+     * @param newDataName - name of data contract
+     * @param newContractsAddress needed in Permissions constructor
+     */
+    function initialize(string memory newExecutorName, string memory newDataName, address newContractsAddress) public initializer {
+        Permissions.initialize(newContractsAddress);
+        executorName = newExecutorName;
+        dataName = newDataName;
+    }
+
+    /**
      * @dev addGroup - creates and adds new Group to Data contract
      * function could be run only by executor
      * @param groupIndex - Groups identifier
@@ -136,7 +137,7 @@ contract GroupsFunctionality is Permissions {
      * @param data - some extra data
      */
     function addGroup(bytes32 groupIndex, uint newRecommendedNumberOfNodes, bytes32 data) public allow(executorName) {
-        address groupsDataAddress = contractManager.contracts(keccak256(abi.encodePacked(dataName)));
+        address groupsDataAddress = contractManager.getContract(dataName);
         IGroupsData(groupsDataAddress).addGroup(groupIndex, newRecommendedNumberOfNodes, data);
         emit GroupAdded(
             groupIndex,
@@ -151,7 +152,7 @@ contract GroupsFunctionality is Permissions {
      * @param groupIndex - Groups identifier
      */
     function deleteGroup(bytes32 groupIndex) public allow(executorName) {
-        address groupsDataAddress = contractManager.contracts(keccak256(abi.encodePacked(dataName)));
+        address groupsDataAddress = contractManager.getContract(dataName);
         require(IGroupsData(groupsDataAddress).isGroupActive(groupIndex), "Group is not active");
         IGroupsData(groupsDataAddress).removeGroup(groupIndex);
         IGroupsData(groupsDataAddress).removeAllNodesInGroup(groupIndex);
@@ -166,7 +167,7 @@ contract GroupsFunctionality is Permissions {
      * @param data - some extra data
      */
     function upgradeGroup(bytes32 groupIndex, uint newRecommendedNumberOfNodes, bytes32 data) public allow(executorName) {
-        address groupsDataAddress = contractManager.contracts(keccak256(abi.encodePacked(dataName)));
+        address groupsDataAddress = contractManager.getContract(dataName);
         require(IGroupsData(groupsDataAddress).isGroupActive(groupIndex), "Group is not active");
         IGroupsData(groupsDataAddress).removeGroup(groupIndex);
         IGroupsData(groupsDataAddress).removeAllNodesInGroup(groupIndex);
@@ -185,7 +186,7 @@ contract GroupsFunctionality is Permissions {
      * @return local index of Node in Schain
      */
     function findNode(bytes32 groupIndex, uint nodeIndex) internal view returns (uint index) {
-        address groupsDataAddress = contractManager.contracts(keccak256(abi.encodePacked(dataName)));
+        address groupsDataAddress = contractManager.getContract(dataName);
         uint[] memory nodesInGroup = IGroupsData(groupsDataAddress).getNodesInGroup(groupIndex);
         for (index = 0; index < nodesInGroup.length; index++) {
             if (nodesInGroup[index] == nodeIndex) {

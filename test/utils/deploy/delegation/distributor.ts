@@ -7,7 +7,8 @@ const Distributor: DistributorContract = artifacts.require("./Distributor");
 const name = "Distributor";
 
 async function deploy(contractManager: ContractManagerInstance) {
-    const instance = await Distributor.new(contractManager.address);
+    const instance = await Distributor.new();
+    await instance.initialize(contractManager.address);
     await contractManager.setContractsAddress(name, instance.address);
     return instance;
 }

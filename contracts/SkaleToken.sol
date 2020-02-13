@@ -41,9 +41,10 @@ contract SkaleToken is LockableERC777, Permissions, IDelegatableToken {
     uint public constant CAP = 7 * 1e9 * (10 ** DECIMALS); // the maximum amount of tokens that can ever be created
 
     constructor(address contractsAddress, address[] memory defOps)
-    Permissions(contractsAddress)
     LockableERC777("SKALE", "SKL", defOps) public
     {
+        Permissions.initialize(contractsAddress);
+
         // TODO remove after testing
         uint money = 1e7 * 10 ** DECIMALS;
         _mint(
@@ -75,7 +76,7 @@ contract SkaleToken is LockableERC777, Permissions, IDelegatableToken {
         //onlyAuthorized
         returns (bool)
     {
-        require(amount <= CAP - totalSupply(), "Amount is too big");
+        require(amount <= CAP.sub(totalSupply()), "Amount is too big");
         _mint(
             operator,
             account,

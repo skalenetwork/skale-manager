@@ -33,11 +33,6 @@ import "./TokenState.sol";
 
 contract DelegationRequestManager is Permissions {
 
-
-    constructor(address newContractsAddress) Permissions(newContractsAddress) public {
-
-    }
-
     function createRequest(
         address holder,
         uint validatorId,
@@ -55,9 +50,6 @@ contract DelegationRequestManager is Permissions {
         TokenState tokenState = TokenState(
             contractManager.getContract("TokenState")
         );
-        DelegationController delegationController = DelegationController(
-            contractManager.getContract("DelegationController")
-        );
         require(
             validatorService.checkMinimumDelegation(validatorId, amount),
             "Amount doesn't meet minimum delegation amount"
@@ -72,10 +64,12 @@ contract DelegationRequestManager is Permissions {
 
         // check that there is enough money
         uint holderBalance = SkaleToken(contractManager.getContract("SkaleToken")).balanceOf(holder);
-        uint lockedToDelegate = tokenState.getLockedCount(holder) - tokenState.getPurchasedAmount(holder);
-        require(holderBalance >= amount + lockedToDelegate, "Delegator hasn't enough tokens to delegate");
+        uint lockedToDelegate = tokenState.getLockedCount(holder).sub(tokenState.getPurchasedAmount(holder));
+        require(holderBalance >= amount.add(lockedToDelegate), "Delegator hasn't enough tokens to delegate");
 
-        delegationId = delegationController.addDelegation(
+        delegationId = DelegationController(
+            contractManager.getContract("DelegationController")
+        ).addDelegation(
             holder,
             validatorId,
             amount,
@@ -91,9 +85,6 @@ contract DelegationRequestManager is Permissions {
         );
         DelegationController delegationController = DelegationController(
             contractManager.getContract("DelegationController")
-        );
-        ValidatorService validatorService = ValidatorService(
-            contractManager.getContract("ValidatorService")
         );
         DelegationController.Delegation memory delegation = delegationController.getDelegation(delegationId);
         require(holderAddress == delegation.holder,"Only token holders can cancel delegation request");
@@ -125,4 +116,7 @@ contract DelegationRequestManager is Permissions {
         tokenState.accept(delegationId);
     }
 
+    function initialize(address _contractsAddress) public initializer {
+        Permissions.initialize(_contractsAddress);
+    }
 }

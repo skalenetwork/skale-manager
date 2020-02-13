@@ -34,11 +34,6 @@ contract Distributor is Permissions {
         uint delegationId;
     }
 
-    constructor (address _contractManager) public
-    Permissions(_contractManager) {
-
-    }
-
     function distributeBounty(uint validatorId, uint amount) external allow("DelegationService") returns (Share[] memory shares, uint fee) {
         return distributeWithFee(
             validatorId,
@@ -55,6 +50,10 @@ contract Distributor is Permissions {
             false);
     }
 
+    function initialize(address _contractManager) public initializer {
+        Permissions.initialize(_contractManager);
+    }
+
     // private
 
     function distributeWithFee(
@@ -69,12 +68,12 @@ contract Distributor is Permissions {
 
         shares = distribute(
             validatorId,
-            amount - amount * feeRate / 1000,
+            amount.sub(amount.mul(feeRate) / 1000),
             roundFloor,
             applyMultipliers);
         fee = amount;
         for (uint i = 0; i < shares.length; ++i) {
-            fee -= shares[i].amount;
+            fee = fee.sub(shares[i].amount);
         }
     }
 
@@ -98,19 +97,19 @@ contract Distributor is Permissions {
             shares[i].holder = delegation.holder;
             if (applyMultipliers) {
                 uint multiplier = delegationPeriodManager.stakeMultipliers(delegation.delegationPeriod);
-                shares[i].amount = amount * delegation.amount * multiplier;
-                totalDelegated += delegation.amount * multiplier;
+                shares[i].amount = amount.mul(delegation.amount.mul(multiplier));
+                totalDelegated = totalDelegated.add(delegation.amount.mul(multiplier));
             } else {
-                shares[i].amount = amount * delegation.amount;
-                totalDelegated += delegation.amount;
+                shares[i].amount = amount.mul(delegation.amount);
+                totalDelegated = totalDelegated.add(delegation.amount);
             }
         }
 
         for (uint i = 0; i < activeDelegations.length; ++i) {
             uint value = shares[i].amount;
-            shares[i].amount /= totalDelegated;
+            shares[i].amount = shares[i].amount.div(totalDelegated);
             if (!roundFloor) {
-                if (shares[i].amount * totalDelegated < value) {
+                if (shares[i].amount.mul(totalDelegated) < value) {
                     ++shares[i].amount;
                 }
             }

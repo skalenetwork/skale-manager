@@ -52,10 +52,6 @@ contract ValidatorService is Permissions {
         _;
     }
 
-    constructor(address newContractsAddress) Permissions(newContractsAddress) public {
-
-    }
-
     function registerValidator(
         string calldata name,
         address validatorAddress,
@@ -120,7 +116,7 @@ contract ValidatorService is Permissions {
     }
 
     function checkMinimumDelegation(uint validatorId, uint amount)
-        external
+        external view
         checkValidatorExists(validatorId)
         allow("DelegationRequestManager")
         returns (bool)
@@ -162,9 +158,9 @@ contract ValidatorService is Permissions {
         uint validatorId = getValidatorId(validatorAddress);
         require(trustedValidators[validatorId], "Validator is not authorized to create a node");
         uint[] memory validatorNodes = validators[validatorId].nodeIndexes;
-        uint delegationsTotal = delegationController.getDelegationsTotal(validatorId);
-        uint msr = IConstants(contractManager.getContract("Constants")).msr();
-        require((validatorNodes.length + 1) * msr <= delegationsTotal, "Validator has to meet Minimum Staking Requirement");
+        uint delegationsTotal = delegationController.getDelegatedAmount(validatorId);
+        uint msr = IConstants(contractManager.getContract("ConstantsHolder")).msr();
+        require((validatorNodes.length + 1).mul(msr) <= delegationsTotal, "Validator has to meet Minimum Staking Requirement");
     }
 
     function checkPossibilityToMaintainNode(uint validatorId, uint nodeIndex) external allow("SkaleManager") returns (bool) {
@@ -174,13 +170,17 @@ contract ValidatorService is Permissions {
         uint[] memory validatorNodes = validators[validatorId].nodeIndexes;
         uint position = findNode(validatorNodes, nodeIndex);
         require(position < validatorNodes.length, "Node does not exist for this Validator");
-        uint delegationsTotal = delegationController.getDelegationsTotal(validatorId);
-        uint msr = IConstants(contractManager.getContract("Constants")).msr();
-        return (position + 1) * msr <= delegationsTotal;
+        uint delegationsTotal = delegationController.getDelegatedAmount(validatorId);
+        uint msr = IConstants(contractManager.getContract("ConstantsHolder")).msr();
+        return (position + 1).mul(msr) <= delegationsTotal;
     }
 
     function getMyAddresses() external view returns (address[] memory) {
         return getValidatorAddresses(getValidatorId(msg.sender));
+    }
+
+    function initialize(address _contractManager) public initializer {
+        Permissions.initialize(_contractManager);
     }
 
     function getValidatorAddresses(uint validatorId) public view returns (address[] memory) {

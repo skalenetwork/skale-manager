@@ -35,11 +35,13 @@
     "test": "npx buidler test && yarn tsc",
     "tsc": "tsc --noEmit",
     "tslint": "npx tslint --project .",
-    "slither": "slither . --exclude reentrancy-events,naming-convention,solc-version,assembly,timestamp,calls-loop,incorrect-equality,reentrancy-no-eth,constant-function,pragma --filter-paths @openzeppelin/contracts/,@nomiclabs/,ERC777,thirdparty --truffle-version truffle@latest",
+    "slither": "slither . --exclude reentrancy-events,naming-convention,solc-version,assembly,timestamp,calls-loop,incorrect-equality,reentrancy-no-eth,constant-function,pragma,unused-state --filter-paths @openzeppelin/upgrades/contracts/,@openzeppelin/contracts-ethereum-package/contracts/,@openzeppelin/contracts/,@nomiclabs/buidler/,ERC777,thirdparty --truffle-version truffle@latest",
     "fullcheck": "yarn lint && yarn tsc && yarn tslint && yarn slither"
   },
   "dependencies": {
+    "@openzeppelin/cli": "^2.6.0",
     "@openzeppelin/contracts": "^2.4.0",
+    "@openzeppelin/contracts-ethereum-package": "^2.4.0",
     "@types/chai": "^4.1.7",
     "@types/chai-as-promised": "^7.1.0",
     "@types/minimist": "^1.2.0",

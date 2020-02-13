@@ -41,10 +41,6 @@ contract SkaleVerifier is Permissions {
         uint y;
     }
 
-    constructor(address newContractsAddress) Permissions(newContractsAddress) public {
-
-    }
-
     function verifySchainSignature(
         uint signA,
         uint signB,
@@ -69,7 +65,7 @@ contract SkaleVerifier is Permissions {
             return false;
         }
 
-        address schainsDataAddress = contractManager.contracts(keccak256(abi.encodePacked("SchainsData")));
+        address schainsDataAddress = contractManager.getContract("SchainsData");
         (uint pkA, uint pkB, uint pkC, uint pkD) = IGroupsData(schainsDataAddress).getGroupsPublicKey(
             keccak256(abi.encodePacked(schainName))
         );
@@ -85,6 +81,10 @@ contract SkaleVerifier is Permissions {
             pkC,
             pkD
         );
+    }
+
+    function initialize(address newContractsAddress) public initializer {
+        Permissions.initialize(newContractsAddress);
     }
 
     function verify(
@@ -112,7 +112,7 @@ contract SkaleVerifier is Permissions {
 
         uint newSignB;
         if (!(signA == 0 && signB == 0)) {
-            newSignB = P - (signB % P);
+            newSignB = P.sub((signB % P));
         } else {
             newSignB = signB;
         }
@@ -156,7 +156,7 @@ contract SkaleVerifier is Permissions {
         returns (bool)
     {
         uint xCoord = uint(hash) % P;
-        xCoord = (xCoord + counter) % P;
+        xCoord = (xCoord.add(counter)) % P;
 
         uint ySquared = addmod(mulmod(mulmod(xCoord, xCoord, P), xCoord, P), 3, P);
         if (hashB < P / 2 || mulmod(hashB, hashB, P) != ySquared || xCoord != hashA) {
@@ -180,14 +180,14 @@ contract SkaleVerifier is Permissions {
         uint first;
         uint second;
         if (a.x >= b.x) {
-            first = addmod(a.x, P - b.x, P);
+            first = addmod(a.x, P.sub(b.x), P);
         } else {
-            first = P - addmod(b.x, P - a.x, P);
+            first = P.sub(addmod(b.x, P.sub(a.x), P));
         }
         if (a.y >= b.y) {
-            second = addmod(a.y, P - b.y, P);
+            second = addmod(a.y, P.sub(b.y), P);
         } else {
-            second = P - addmod(b.y, P - a.y, P);
+            second = P.sub(addmod(b.y, P.sub(a.y), P));
         }
         return Fp2({ x: first, y: second });
     }
@@ -197,7 +197,7 @@ contract SkaleVerifier is Permissions {
         uint bB = mulmod(a.y, b.y, P);
         return Fp2({
             x: addmod(aA, mulmod(P - 1, bB, P), P),
-            y: addmod(mulmod(addmod(a.x, a.y, P), addmod(b.x, b.y, P), P), P - addmod(aA, bB, P), P)
+            y: addmod(mulmod(addmod(a.x, a.y, P), addmod(b.x, b.y, P), P), P.sub(addmod(aA, bB, P)), P)
         });
     }
 
@@ -212,13 +212,13 @@ contract SkaleVerifier is Permissions {
         uint t1 = mulmod(a.y, a.y, P);
         uint t2 = mulmod(P - 1, t1, P);
         if (t0 >= t2) {
-            t2 = addmod(t0, P - t2, P);
+            t2 = addmod(t0, P.sub(t2), P);
         } else {
-            t2 = P - addmod(t2, P - t0, P);
+            t2 = P.sub(addmod(t2, P.sub(t0), P));
         }
         uint t3 = bigModExp(t2, P - 2);
         x.x = mulmod(a.x, t3, P);
-        x.y = P - mulmod(a.y, t3, P);
+        x.y = P.sub(mulmod(a.y, t3, P));
     }
 
     // End of Fp2 operations

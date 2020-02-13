@@ -1,28 +1,23 @@
 import { BigNumber } from "bignumber.js";
 import * as chaiAsPromised from "chai-as-promised";
-import { ConstantsHolderContract,
-  ConstantsHolderInstance,
-  ContractManagerContract,
-  ContractManagerInstance } from "../types/truffle-contracts";
+import { ConstantsHolderInstance,
+         ContractManagerInstance } from "../types/truffle-contracts";
 import { skipTime } from "./utils/time";
 
 import chai = require("chai");
-import { gasMultiplier } from "./utils/command_line";
+import { deployConstantsHolder } from "./utils/deploy/constantsHolder";
+import { deployContractManager } from "./utils/deploy/contractManager";
 
 chai.should();
 chai.use((chaiAsPromised as any));
-
-const ContractManager: ContractManagerContract = artifacts.require("./ContractManager");
-const ConstantsHolder: ConstantsHolderContract = artifacts.require("./ConstantsHolder");
 
 contract("ConstantsHolder", ([deployer, user]) => {
   let contractManager: ContractManagerInstance;
   let constantsHolder: ConstantsHolderInstance;
 
   before(async () => {
-    contractManager = await ContractManager.new({from: deployer});
-    constantsHolder = await ConstantsHolder.new(contractManager.address,
-      {from: deployer, gas: 8000000 * gasMultiplier});
+    contractManager = await deployContractManager();
+    constantsHolder = await deployConstantsHolder(contractManager);
   });
 
   it("NODE_DEPOSIT should be equal 100000000000000000000", async () => {

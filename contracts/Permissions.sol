@@ -21,6 +21,7 @@ pragma solidity ^0.5.3;
 
 import "./ContractManager.sol";
 import "@nomiclabs/buidler/console.sol";
+import "@openzeppelin/contracts/math/SafeMath.sol";
 
 
 /**
@@ -28,8 +29,15 @@ import "@nomiclabs/buidler/console.sol";
  * @author Artem Payvin
  */
 contract Permissions is Ownable {
+    using SafeMath for uint;
+    using SafeMath for uint32;
 
     ContractManager contractManager;
+
+    function initialize(address _contractManager) public initializer {
+        Ownable.initialize(msg.sender);
+        contractManager = ContractManager(_contractManager);
+    }
 
     /**
      * @dev allow - throws if called by any account and contract other than the owner
@@ -60,13 +68,5 @@ contract Permissions is Ownable {
             isOwner(),
             "Message sender is invalid");
         _;
-    }
-
-    /**
-     * @dev constructor - sets current address of ContractManager
-     * @param newContractsAddress - current address of ContractManager
-     */
-    constructor(address newContractsAddress) public {
-        contractManager = ContractManager(newContractsAddress);
     }
 }

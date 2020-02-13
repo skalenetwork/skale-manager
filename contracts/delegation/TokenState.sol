@@ -54,9 +54,6 @@ contract TokenState is Permissions {
     ///       holder => delegationId[]
     mapping (address => uint[]) private _endingDelegations;
 
-    constructor(address _contractManager) Permissions(_contractManager) public {
-    }
-
     function getLockedCount(address holder) external returns (uint amount) {
         amount = 0;
         DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
@@ -64,10 +61,10 @@ contract TokenState is Permissions {
         for (uint i = 0; i < delegationIds.length; ++i) {
             uint id = delegationIds[i];
             if (isLocked(getState(id))) {
-                amount += delegationController.getDelegation(id).amount;
+                amount = amount.add(delegationController.getDelegation(id).amount);
             }
         }
-        return amount + getPurchasedAmount(holder) + this.getSlashedAmount(holder);
+        return amount.add(getPurchasedAmount(holder)).add(this.getSlashedAmount(holder));
     }
 
     function getDelegatedCount(address holder) external returns (uint amount) {
@@ -77,14 +74,14 @@ contract TokenState is Permissions {
         for (uint i = 0; i < delegationIds.length; ++i) {
             uint id = delegationIds[i];
             if (isDelegated(getState(id))) {
-                amount += delegationController.getDelegation(id).amount;
+                amount = amount.add(delegationController.getDelegation(id).amount);
             }
         }
         return amount;
     }
 
     function sold(address holder, uint amount) external allow("DelegationService") {
-        _purchased[holder] += amount;
+        _purchased[holder] = _purchased[holder].add(amount);
     }
 
     function accept(uint delegationId) external allow("DelegationRequestManager") {
@@ -111,8 +108,8 @@ contract TokenState is Permissions {
             // Can't slash more than delegated;
             slashingAmount = delegation.amount;
         }
-        _slashed[delegation.holder] += slashingAmount;
-        delegationController.setDelegationAmount(delegationId, delegation.amount - slashingAmount);
+        _slashed[delegation.holder] = _slashed[delegation.holder].add(slashingAmount);
+        delegationController.setDelegationAmount(delegationId, delegation.amount.sub(slashingAmount));
     }
 
     function forgive(address wallet, uint amount) external allow("DelegationService") {
@@ -120,16 +117,20 @@ contract TokenState is Permissions {
         if (amount > _slashed[wallet]) {
             forgiveAmount = _slashed[wallet];
         }
-        _slashed[wallet] -= forgiveAmount;
+        _slashed[wallet] = _slashed[wallet].sub(forgiveAmount);
     }
 
-    function getSlashedAmount(address holder) external returns (uint amount) {
+    function getSlashedAmount(address holder) external view returns (uint amount) {
         return _slashed[holder];
     }
 
     function skipTransitionDelay(uint delegationId) external onlyOwner {
         require(_timelimit[delegationId] != 0, "There is no transistion delay");
         _timelimit[delegationId] = now;
+    }
+
+    function initialize(address _contractManager) public initializer {
+        Permissions.initialize(_contractManager);
     }
 
     function getState(uint delegationId) public returns (State state) {
@@ -147,16 +148,10 @@ contract TokenState is Permissions {
         } else if (state == State.ACCEPTED) {
             if (now >= _timelimit[delegationId]) {
                 state = acceptedToDelegated(delegationId);
-                uint validatorId = delegationController.getDelegation(delegationId).validatorId;
-                uint amount = delegationController.getDelegation(delegationId).amount;
-                delegationController.addDelegationsTotal(validatorId, amount);
             }
         } else if (state == State.ENDING_DELEGATED) {
             if (now >= _timelimit[delegationId]) {
                 state = endingDelegatedToUnlocked(delegationId, delegationController.getDelegation(delegationId));
-                uint validatorId = delegationController.getDelegation(delegationId).validatorId;
-                uint amount = delegationController.getDelegation(delegationId).amount;
-                delegationController.subDelegationsTotal(validatorId, amount);
             }
         }
     }
@@ -169,7 +164,7 @@ contract TokenState is Permissions {
         return _purchased[holder];
     }
 
-    function isDelegated(State state) public returns (bool) {
+    function isDelegated(State state) public pure returns (bool) {
         return state == State.DELEGATED || state == State.ENDING_DELEGATED;
     }
 
@@ -210,7 +205,7 @@ contract TokenState is Permissions {
         if (_purchased[delegation.holder] > 0) {
             _isPurchased[delegationId] = true;
             if (_purchased[delegation.holder] > delegation.amount) {
-                _purchased[delegation.holder] -= delegation.amount;
+                _purchased[delegation.holder] = _purchased[delegation.holder].sub(delegation.amount);
             } else {
                 _purchased[delegation.holder] = 0;
             }
@@ -219,7 +214,7 @@ contract TokenState is Permissions {
         }
     }
 
-    function isLocked(State state) internal returns (bool) {
+    function isLocked(State state) internal pure returns (bool) {
         return state != State.COMPLETED;
     }
 
@@ -239,7 +234,7 @@ contract TokenState is Permissions {
         state = State.COMPLETED;
         _state[delegationId] = state;
         _timelimit[delegationId] = 0;
-        _purchased[delegation.holder] += delegation.amount;
+        _purchased[delegation.holder] = _purchased[delegation.holder].add(delegation.amount);
     }
 
     function endingDelegatedToUnlocked(uint delegationId, DelegationController.Delegation memory delegation) internal returns (State state) {
@@ -251,7 +246,7 @@ contract TokenState is Permissions {
         uint endingLength = _endingDelegations[delegation.holder].length;
         for (uint i = 0; i < endingLength; ++i) {
             if (_endingDelegations[delegation.holder][i] == delegationId) {
-                for (uint j = i; j + 1 < endingLength; ++j) {
+                for (uint j = i; j.add(1) < endingLength; ++j) {
                     _endingDelegations[delegation.holder][j] = _endingDelegations[delegation.holder][j+1];
                 }
                 _endingDelegations[delegation.holder][endingLength - 1] = 0;
@@ -262,7 +257,7 @@ contract TokenState is Permissions {
 
         if (_isPurchased[delegationId]) {
             address holder = delegation.holder;
-            _totalDelegated[holder] += delegation.amount;
+            _totalDelegated[holder] = _totalDelegated[holder].add(delegation.amount);
             if (_totalDelegated[holder] >= _purchased[holder]) {
                 purchasedToUnlocked(holder);
             }
