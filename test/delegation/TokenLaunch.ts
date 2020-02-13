@@ -112,8 +112,10 @@ contract("TokenLaunchManager", ([owner, holder, delegation, validator, seller, h
 
                 skipTime(web3, month * delegationPeriod);
 
-                await skaleToken.transfer(hacker, totalAmount, {from: holder});
-                (await skaleToken.balanceOf(hacker)).toNumber().should.be.equal(totalAmount);
+                await skaleToken.transfer(hacker, totalAmount - amount, {from: holder});
+                (await skaleToken.balanceOf(hacker)).toNumber().should.be.equal(totalAmount - amount);
+
+                // TODO: move undelegated tokens too
             });
         });
     });

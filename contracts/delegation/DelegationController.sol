@@ -191,6 +191,7 @@ contract DelegationController is Permissions, ILocker {
         TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
         uint currentMonth = timeHelpers.timestampToMonth(now);
         delegations[delegationId].finished = currentMonth;
+        substractFromLockedInPerdingDelegations(delegations[delegationId].holder, delegations[delegationId].amount);
     }
 
     /// @notice Allows validator to accept tokens delegated at `delegationId`
@@ -234,7 +235,6 @@ contract DelegationController is Permissions, ILocker {
         TokenLaunchLocker tokenLaunchLocker = TokenLaunchLocker(contractManager.getContract("TokenLaunchLocker"));
 
         delegations[delegationId].finished = calculateDelegationEndMonth(delegationId);
-        substractFromLockedInPerdingDelegations(delegations[delegationId].holder, delegations[delegationId].amount);
         tokenLaunchLocker.handleDelegationRemoving(
             delegations[delegationId].holder,
             delegationId,
@@ -364,7 +364,15 @@ contract DelegationController is Permissions, ILocker {
     }
 
     function calculateDelegationEndMonth(uint delegationId) internal view returns (uint) {
-        revert("calculateDelegationEndMonth is not implemented");
+        uint currentMonth = getCurrentMonth();
+        uint started = delegations[delegationId].started;
+
+        if (currentMonth < started) {
+            return started + delegations[delegationId].delegationPeriod;
+        } else {
+            uint completedPeriods = (currentMonth - started) / delegations[delegationId].delegationPeriod;
+            return started + (completedPeriods + 1) * delegations[delegationId].delegationPeriod;
+        }
     }
 
     function addToDelegatedToValidator(uint validatorId, uint amount, uint month) internal {

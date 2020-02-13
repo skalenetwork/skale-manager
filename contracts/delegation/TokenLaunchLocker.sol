@@ -112,6 +112,9 @@ contract TokenLaunchLocker is Permissions, ILocker {
     // private
 
     function calculateDelegatedAmount(address holder, uint currentMonth) internal returns (uint) {
+        if (_delegatedAmount[holder].firstUnprocessedMonth == 0) {
+            return 0;
+        }
         for (uint i = _delegatedAmount[holder].firstUnprocessedMonth; i <= currentMonth; ++i) {
             _delegatedAmount[holder].value += _delegatedAmount[holder].addDiff[i] - _delegatedAmount[holder].substructDiff[i];
             delete _delegatedAmount[holder].addDiff[i];
