@@ -1,29 +1,17 @@
-import { ContractManagerInstance,
-    DelegationControllerContract } from "../../../../types/truffle-contracts";
+import { ContractManagerInstance, DelegationControllerInstance } from "../../../../types/truffle-contracts";
+import { deployFunctionFactory } from "../factory";
 import { deployDelegationPeriodManager } from "./delegationPeriodManager";
-import { deployTokenState } from "./tokenState";
+import { deployTimeHelpers } from "./timeHelpers";
+import { deployTokenLaunchLocker } from "./tokenLaunchLocker";
+import { deployValidatorService } from "./validatorService";
 
-const DelegationController: DelegationControllerContract = artifacts.require("./DelegationController");
-const name = "DelegationController";
+const deployDelegationController: (contractManager: ContractManagerInstance) => Promise<DelegationControllerInstance>
+    = deployFunctionFactory("DelegationController",
+                            async (contractManager: ContractManagerInstance) => {
+                                await deployValidatorService(contractManager);
+                                await deployTimeHelpers(contractManager);
+                                await deployDelegationPeriodManager(contractManager);
+                                await deployTokenLaunchLocker(contractManager);
+                            });
 
-async function deploy(contractManager: ContractManagerInstance) {
-    const instance = await DelegationController.new();
-    await instance.initialize(contractManager.address);
-    await contractManager.setContractsAddress(name, instance.address);
-    return instance;
-}
-
-async function deployDependencies(contractManager: ContractManagerInstance) {
-    await deployDelegationPeriodManager(contractManager);
-    await deployTokenState(contractManager);
-}
-
-export async function deployDelegationController(contractManager: ContractManagerInstance) {
-    try {
-        return DelegationController.at(await contractManager.getContract(name));
-    } catch (e) {
-        const instance = await deploy(contractManager);
-        await deployDependencies(contractManager);
-        return instance;
-    }
-}
+export { deployDelegationController };

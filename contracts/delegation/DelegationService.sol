@@ -79,7 +79,7 @@ contract DelegationService is Permissions {
     /// @notice Returns amount of delegated token of the validator
     function getDelegatedAmount(uint validatorId) external returns (uint) {
         DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
-        return delegationController.calculateTotalDelegatedToValidatorNow(validatorId);
+        return delegationController.calculateDelegatedToValidatorNow(validatorId);
     }
 
     /// @notice Creates request to delegate `amount` of tokens to `validator` from the begining of the next month
@@ -122,15 +122,6 @@ contract DelegationService is Permissions {
         );
 
         emit DelegationRequestIsSent(delegationId);
-    }
-
-    function cancelPendingDelegation(uint delegationId) external {
-        DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
-
-        DelegationController.Delegation memory delegation = delegationController.getDelegation(delegationId);
-        require(msg.sender == delegation.holder, "Only token holders can cancel delegation request");
-
-        delegationController.cancel(delegationId);
     }
 
     function getAllDelegationRequests() external pure returns(uint[] memory) {

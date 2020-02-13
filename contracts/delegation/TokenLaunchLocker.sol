@@ -12,7 +12,7 @@ contract TokenLaunchLocker is Permissions, ILocker {
              // month => diff
         mapping (uint => uint) addDiff;
              // month => diff
-        mapping (uint => uint) substructDiff;
+        mapping (uint => uint) subtractDiff;
         uint value;
 
         uint firstUnprocessedMonth;
@@ -116,9 +116,9 @@ contract TokenLaunchLocker is Permissions, ILocker {
             return 0;
         }
         for (uint i = _delegatedAmount[holder].firstUnprocessedMonth; i <= currentMonth; ++i) {
-            _delegatedAmount[holder].value += _delegatedAmount[holder].addDiff[i] - _delegatedAmount[holder].substructDiff[i];
+            _delegatedAmount[holder].value += _delegatedAmount[holder].addDiff[i] - _delegatedAmount[holder].subtractDiff[i];
             delete _delegatedAmount[holder].addDiff[i];
-            delete _delegatedAmount[holder].substructDiff[i];
+            delete _delegatedAmount[holder].subtractDiff[i];
         }
         if (_delegatedAmount[holder].firstUnprocessedMonth < currentMonth + 1) {
             _delegatedAmount[holder].firstUnprocessedMonth = currentMonth + 1;
@@ -135,7 +135,7 @@ contract TokenLaunchLocker is Permissions, ILocker {
     function removeFromDelegatedAmount(address holder, uint amount, uint month) internal {
         require(_delegatedAmount[holder].firstUnprocessedMonth <= month, "Can't remove from the past");
 
-        _delegatedAmount[holder].substructDiff[month] += amount;
+        _delegatedAmount[holder].subtractDiff[month] += amount;
     }
 
     function addToTotalDelegatedAmount(address holder, uint amount, uint month) internal {
@@ -157,7 +157,7 @@ contract TokenLaunchLocker is Permissions, ILocker {
     function deleteDelegatedAmount(address holder) internal {
         for (uint i = _delegatedAmount[holder].firstUnprocessedMonth; i <= _latestDelegatedMonth[holder]; ++i) {
             delete _delegatedAmount[holder].addDiff[i];
-            delete _delegatedAmount[holder].substructDiff[i];
+            delete _delegatedAmount[holder].subtractDiff[i];
         }
         delete _delegatedAmount[holder].value;
         delete _delegatedAmount[holder].firstUnprocessedMonth;

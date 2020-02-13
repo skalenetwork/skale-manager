@@ -89,138 +89,134 @@ contract("Delegation", ([owner,
             await validatorService.enableValidator(validatorId, {from: owner});
         });
 
-        // for (let delegationPeriod = 1; delegationPeriod <= 18; ++delegationPeriod) {
-        //     it("should check " + delegationPeriod + " month" + (delegationPeriod > 1 ? "s" : "")
-        //         + " delegation period availability", async () => {
-        //         await delegationPeriodManager.isDelegationPeriodAllowed(delegationPeriod)
-        //             .should.be.eventually.equal(allowedDelegationPeriods.includes(delegationPeriod));
-        //     });
+        for (let delegationPeriod = 1; delegationPeriod <= 18; ++delegationPeriod) {
+            it("should check " + delegationPeriod + " month" + (delegationPeriod > 1 ? "s" : "")
+                + " delegation period availability", async () => {
+                await delegationPeriodManager.isDelegationPeriodAllowed(delegationPeriod)
+                    .should.be.eventually.equal(allowedDelegationPeriods.includes(delegationPeriod));
+            });
 
-        //     if (allowedDelegationPeriods.includes(delegationPeriod)) {
-        //         describe("when delegation period is " + delegationPeriod + " months", async () => {
-        //             let requestId: number;
+            if (allowedDelegationPeriods.includes(delegationPeriod)) {
+                describe("when delegation period is " + delegationPeriod + " months", async () => {
+                    let requestId: number;
 
-        //             it("should send request for delegation", async () => {
-        //                 const { logs } = await delegationService.delegate(
-        //                     validatorId, defaultAmount.toString(), delegationPeriod, "D2 is even", {from: holder1});
-        //                 assert.equal(logs.length, 1, "No DelegationRequestIsSent Event emitted");
-        //                 assert.equal(logs[0].event, "DelegationRequestIsSent");
-        //                 requestId = logs[0].args.delegationId;
+                    it("should send request for delegation", async () => {
+                        const { logs } = await delegationService.delegate(
+                            validatorId, defaultAmount.toString(), delegationPeriod, "D2 is even", {from: holder1});
+                        assert.equal(logs.length, 1, "No DelegationRequestIsSent Event emitted");
+                        assert.equal(logs[0].event, "DelegationRequestIsSent");
+                        requestId = logs[0].args.delegationId;
 
-        //                 const delegation: Delegation = new Delegation(
-        //                     await delegationController.delegations(requestId));
-        //                 assert.equal(holder1, delegation.holder);
-        //                 assert.equal(validatorId, delegation.validatorId.toNumber());
-        //                 assert.equal(delegationPeriod, delegation.delegationPeriod.toNumber());
-        //                 assert.equal("D2 is even", delegation.info);
-        //             });
+                        const delegation: Delegation = new Delegation(
+                            await delegationController.delegations(requestId));
+                        assert.equal(holder1, delegation.holder);
+                        assert.equal(validatorId, delegation.validatorId.toNumber());
+                        assert.equal(delegationPeriod, delegation.delegationPeriod.toNumber());
+                        assert.equal("D2 is even", delegation.info);
+                    });
 
-        //             describe("when delegation request is sent", async () => {
+                    describe("when delegation request is sent", async () => {
 
-        //                 beforeEach(async () => {
-        //                     const { logs } = await delegationService.delegate(
-//                         validatorId, defaultAmount.toString(), delegationPeriod, "D2 is even", {from: holder1});
-        //                     assert.equal(logs.length, 1, "No DelegationRequest Event emitted");
-        //                     assert.equal(logs[0].event, "DelegationRequestIsSent");
-        //                     requestId = logs[0].args.delegationId;
-        //                 });
+                        beforeEach(async () => {
+                            const { logs } = await delegationService.delegate(
+                        validatorId, defaultAmount.toString(), delegationPeriod, "D2 is even", {from: holder1});
+                            assert.equal(logs.length, 1, "No DelegationRequest Event emitted");
+                            assert.equal(logs[0].event, "DelegationRequestIsSent");
+                            requestId = logs[0].args.delegationId;
+                        });
 
-        //                 it("should not allow holder to spend tokens", async () => {
-        //                     await skaleToken.transfer(holder2, 1, {from: holder1})
-        //                         .should.be.eventually.rejectedWith("Token should be unlocked for transferring");
-        //                     await skaleToken.approve(holder2, 1, {from: holder1});
-        //                     await skaleToken.transferFrom(holder1, holder2, 1, {from: holder2})
-        //                         .should.be.eventually.rejectedWith("Token should be unlocked for transferring");
-        //                     await skaleToken.send(holder2, 1, "0x", {from: holder1})
-        //                         .should.be.eventually.rejectedWith("Token should be unlocked for transferring");
-        //                 });
+                        it("should not allow holder to spend tokens", async () => {
+                            await skaleToken.transfer(holder2, 1, {from: holder1})
+                                .should.be.eventually.rejectedWith("Token should be unlocked for transferring");
+                            await skaleToken.approve(holder2, 1, {from: holder1});
+                            await skaleToken.transferFrom(holder1, holder2, 1, {from: holder2})
+                                .should.be.eventually.rejectedWith("Token should be unlocked for transferring");
+                            await skaleToken.send(holder2, 1, "0x", {from: holder1})
+                                .should.be.eventually.rejectedWith("Token should be unlocked for transferring");
+                        });
 
-        //                 it("should allow holder to receive tokens", async () => {
-        //                     await skaleToken.transfer(holder1, 1, {from: holder2});
-        //                     const balance = (await skaleToken.balanceOf(holder1)).toString();
-        //                     balance.should.be.equal("100000000000000000001");
-        //                 });
+                        it("should allow holder to receive tokens", async () => {
+                            await skaleToken.transfer(holder1, 1, {from: holder2});
+                            const balance = (await skaleToken.balanceOf(holder1)).toString();
+                            balance.should.be.equal("100000000000000000001");
+                        });
 
-        //                 it("should accept delegation request", async () => {
-        //                     await delegationService.acceptPendingDelegation(requestId, {from: validator});
+                        it("should accept delegation request", async () => {
+                            await delegationController.acceptPendingDelegation(requestId, {from: validator});
 
-        //                     // await delegationService.listDelegationRequests().should.be.eventually.empty;
-        //                 });
+                            // await delegationService.listDelegationRequests().should.be.eventually.empty;
+                        });
 
-        //                 it("should unlock token if validator does not accept delegation request", async () => {
-        //                     await skipTimeToDate(web3, 1, 11);
+                        it("should unlock token if validator does not accept delegation request", async () => {
+                            await skipTimeToDate(web3, 1, 11);
 
-        //                     await skaleToken.transfer(holder2, 1, {from: holder1});
-        //                     await skaleToken.approve(holder2, 1, {from: holder1});
-        //                     await skaleToken.transferFrom(holder1, holder2, 1, {from: holder2});
-        //                     await skaleToken.send(holder2, 1, "0x", {from: holder1});
+                            await skaleToken.transfer(holder2, 1, {from: holder1});
+                            await skaleToken.approve(holder2, 1, {from: holder1});
+                            await skaleToken.transferFrom(holder1, holder2, 1, {from: holder2});
+                            await skaleToken.send(holder2, 1, "0x", {from: holder1});
 
-        //                     const balance = new BigNumber((await skaleToken.balanceOf(holder1)).toString());
-        //                     const correctBalance = (new BigNumber(defaultAmount)).minus(3);
+                            const balance = new BigNumber((await skaleToken.balanceOf(holder1)).toString());
+                            const correctBalance = (new BigNumber(defaultAmount)).minus(3);
 
-        //                     balance.should.be.deep.equal(correctBalance);
-        //                 });
+                            balance.should.be.deep.equal(correctBalance);
+                        });
 
-        //                 describe("when delegation request is accepted", async () => {
-        //                     beforeEach(async () => {
-        //                         await delegationService.acceptPendingDelegation(requestId, {from: validator});
-        //                     });
+                        describe("when delegation request is accepted", async () => {
+                            beforeEach(async () => {
+                                await delegationController.acceptPendingDelegation(requestId, {from: validator});
+                            });
 
-        //                     it("should extend delegation period for 3 months if undelegation request was not sent",
-        //                         async () => {
+                            it("should extend delegation period if undelegation request was not sent",
+                                async () => {
+                                    await skipTimeToDate(web3, 1, (11 + delegationPeriod) % 12);
 
-        //                             if (delegationPeriod >= 12) {
-        //                                 skipTime(web3, 60 * 60 * 24 * 365 * Math.floor(delegationPeriod / 12));
-        //                             }
-        //                             await skipTimeToDate(web3, 1, (11 + delegationPeriod) % 12);
+                                    await skaleToken.transfer(holder2, 1, {from: holder1})
+                                    .should.be.eventually.rejectedWith("Token should be unlocked for transferring");
+                                    await skaleToken.approve(holder2, 1, {from: holder1});
+                                    await skaleToken.transferFrom(holder1, holder2, 1, {from: holder2})
+                                    .should.be.eventually.rejectedWith("Token should be unlocked for transferring");
+                                    await skaleToken.send(holder2, 1, "0x", {from: holder1})
+                                    .should.be.eventually.rejectedWith("Token should be unlocked for transferring");
 
-        //                             await skaleToken.transfer(holder2, 1, {from: holder1})
-    //                                 .should.be.eventually.rejectedWith("Token should be unlocked for transferring");
-        //                             await skaleToken.approve(holder2, 1, {from: holder1});
-        //                             await skaleToken.transferFrom(holder1, holder2, 1, {from: holder2})
-    //                                 .should.be.eventually.rejectedWith("Token should be unlocked for transferring");
-        //                             await skaleToken.send(holder2, 1, "0x", {from: holder1})
-    //                                 .should.be.eventually.rejectedWith("Token should be unlocked for transferring");
+                                    await delegationService.requestUndelegation(requestId, {from: holder1});
 
-        //                             await delegationService.requestUndelegation(requestId, {from: holder1});
+                                    await skipTimeToDate(web3, 27, (11 + delegationPeriod + delegationPeriod - 1) % 12);
 
-        //                             await skipTimeToDate(web3, 27, (11 + delegationPeriod + 2) % 12);
+                                    await skaleToken.transfer(holder2, 1, {from: holder1})
+                                    .should.be.eventually.rejectedWith("Token should be unlocked for transferring");
 
-        //                             await skaleToken.transfer(holder2, 1, {from: holder1})
-    //                                 .should.be.eventually.rejectedWith("Token should be unlocked for transferring");
+                                    await skaleToken.approve(holder2, 1, {from: holder1});
+                                    await skaleToken.transferFrom(holder1, holder2, 1, {from: holder2})
+                                    .should.be.eventually.rejectedWith("Token should be unlocked for transferring");
+                                    await skaleToken.send(holder2, 1, "0x", {from: holder1})
+                                    .should.be.eventually.rejectedWith("Token should be unlocked for transferring");
 
-        //                             await skaleToken.approve(holder2, 1, {from: holder1});
-        //                             await skaleToken.transferFrom(holder1, holder2, 1, {from: holder2})
-    //                                 .should.be.eventually.rejectedWith("Token should be unlocked for transferring");
-        //                             await skaleToken.send(holder2, 1, "0x", {from: holder1})
-    //                                 .should.be.eventually.rejectedWith("Token should be unlocked for transferring");
+                                    await skipTimeToDate(web3, 1, (11 + delegationPeriod + delegationPeriod) % 12);
 
-        //                             await skipTimeToDate(web3, 1, (11 + delegationPeriod + 3) % 12);
+                                    await skaleToken.transfer(holder2, 1, {from: holder1});
+                                    await skaleToken.approve(holder2, 1, {from: holder1});
+                                    await skaleToken.transferFrom(holder1, holder2, 1, {from: holder2});
+                                    await skaleToken.send(holder2, 1, "0x", {from: holder1});
 
-        //                             await skaleToken.transfer(holder2, 1, {from: holder1});
-        //                             await skaleToken.approve(holder2, 1, {from: holder1});
-        //                             await skaleToken.transferFrom(holder1, holder2, 1, {from: holder2});
-        //                             await skaleToken.send(holder2, 1, "0x", {from: holder1});
+                                    (await skaleToken.balanceOf(holder1)).toString().should.be.equal("99999999999999999997");
+                            });
+                        });
+                    });
+                });
+            } else {
+                it("should not allow to send delegation request for " + delegationPeriod +
+                    " month" + (delegationPeriod > 1 ? "s" : "" ), async () => {
+                    await delegationService.delegate(validatorId, defaultAmount.toString(), delegationPeriod,
+                        "D2 is even", {from: holder1})
+                        .should.be.eventually.rejectedWith("This delegation period is not allowed");
+                });
+            }
+        }
 
-//                             (await skaleToken.balanceOf(holder1)).toString().should.be.equal("99999999999999999997");
-        //                     });
-        //                 });
-        //             });
-        //         });
-        //     } else {
-        //         it("should not allow to send delegation request for " + delegationPeriod +
-        //             " month" + (delegationPeriod > 1 ? "s" : "" ), async () => {
-        //             await delegationService.delegate(validatorId, defaultAmount.toString(), delegationPeriod,
-        //                 "D2 is even", {from: holder1})
-        //                 .should.be.eventually.rejectedWith("This delegation period is not allowed");
-        //         });
-        //     }
-        // }
-
-        // it("should not allow holder to delegate to unregistered validator", async () => {
-        //     await delegationService.delegate(13, 1,  3, "D2 is even", {from: holder1})
-        //         .should.be.eventually.rejectedWith("Validator with such id doesn't exist");
-        // });
+        it("should not allow holder to delegate to unregistered validator", async () => {
+            await delegationService.delegate(13, 1,  3, "D2 is even", {from: holder1})
+                .should.be.eventually.rejectedWith("Validator with such id doesn't exist");
+        });
 
         describe("when 3 holders delegated", async () => {
             beforeEach(async () => {
@@ -235,85 +231,85 @@ contract("Delegation", ([owner,
                 skipTime(web3, month);
             });
 
-            // it("should distribute funds sent to Distributor across delegators", async () => {
-            //     await constantsHolder.setLaunchTimestamp(await currentTime(web3));
+            it("should distribute funds sent to Distributor across delegators", async () => {
+                await constantsHolder.setLaunchTimestamp(await currentTime(web3));
 
-            //     await skaleManagerMock.payBounty(validatorId, 101);
+                await skaleManagerMock.payBounty(validatorId, 101);
 
-            //     skipTime(web3, month);
+                skipTime(web3, month);
 
-            //     // 15% fee to validator
+                // 15% fee to validator
 
-            //     // Stakes:
-            //     // holder1: 20%
-            //     // holder2: 30%
-            //     // holder3: 50%
+                // Stakes:
+                // holder1: 20%
+                // holder2: 30%
+                // holder3: 50%
 
-            //     // Affective stakes:
-            //     // holder1: $8
-            //     // holder2: $9
-            //     // holder3: $10
+                // Affective stakes:
+                // holder1: $8
+                // holder2: $9
+                // holder3: $10
 
-            //     // Shares:
-            //     // holder1: ~29%
-            //     // holder2: ~33%
-            //     // holder3: ~37%
+                // Shares:
+                // holder1: ~29%
+                // holder2: ~33%
+                // holder3: ~37%
 
-            //     // TODO: Validator should get 17 (not 15) because of rounding errors
-        //     (await distributor.calculateEarnedFeeAmount.call({from: validator}))[0].toNumber().should.be.equal(15);
-            //     (await distributor.calculateEarnedBountyAmount.call(
-            //         validatorId, {from: holder1}))[0].toNumber().should.be.equal(25);
-            //     (await distributor.calculateEarnedBountyAmount.call(
-            //         validatorId, {from: holder2}))[0].toNumber().should.be.equal(28);
-            //     (await distributor.calculateEarnedBountyAmount.call(
-            //         validatorId, {from: holder3}))[0].toNumber().should.be.equal(31);
+                // TODO: Validator should get 17 (not 15) because of rounding errors
+                (await distributor.calculateEarnedFeeAmount.call({from: validator}))[0].toNumber().should.be.equal(15);
+                (await distributor.calculateEarnedBountyAmount.call(
+                    validatorId, {from: holder1}))[0].toNumber().should.be.equal(25);
+                (await distributor.calculateEarnedBountyAmount.call(
+                    validatorId, {from: holder2}))[0].toNumber().should.be.equal(28);
+                (await distributor.calculateEarnedBountyAmount.call(
+                    validatorId, {from: holder3}))[0].toNumber().should.be.equal(31);
 
-            //     await distributor.withdrawFee(bountyAddress, {from: validator})
-            //         .should.be.eventually.rejectedWith("Bounty is locked");
-            //     await distributor.withdrawBounty(validatorId, bountyAddress, {from: holder1})
-            //         .should.be.eventually.rejectedWith("Bounty is locked");
+                await distributor.withdrawFee(bountyAddress, {from: validator})
+                    .should.be.eventually.rejectedWith("Bounty is locked");
+                await distributor.withdrawBounty(validatorId, bountyAddress, {from: holder1})
+                    .should.be.eventually.rejectedWith("Bounty is locked");
 
-            //     skipTime(web3, 3 * month);
+                skipTime(web3, 3 * month);
 
-            //     await distributor.withdrawFee(bountyAddress, {from: validator});
-        //     (await distributor.calculateEarnedFeeAmount.call({from: validator}))[0].toNumber().should.be.equal(0);
-            //     await distributor.withdrawFee(validator, {from: validator});
-        //     (await distributor.calculateEarnedFeeAmount.call({from: validator}))[0].toNumber().should.be.equal(0);
+                await distributor.withdrawFee(bountyAddress, {from: validator});
+                (await distributor.calculateEarnedFeeAmount.call({from: validator}))[0].toNumber().should.be.equal(0);
+                await distributor.withdrawFee(validator, {from: validator});
+                (await distributor.calculateEarnedFeeAmount.call({from: validator}))[0].toNumber().should.be.equal(0);
 
-            //     (await skaleToken.balanceOf(bountyAddress)).toNumber().should.be.equal(15);
+                (await skaleToken.balanceOf(bountyAddress)).toNumber().should.be.equal(15);
 
-            //     await distributor.withdrawBounty(validatorId, bountyAddress, {from: holder1});
-            //     (await distributor.calculateEarnedBountyAmount.call(
-            //         validatorId, {from: holder1}))[0].toNumber().should.be.equal(0);
-            //     await distributor.withdrawBounty(validatorId, holder2, {from: holder2});
-            //     (await distributor.calculateEarnedBountyAmount.call(
-            //         validatorId, {from: holder2}))[0].toNumber().should.be.equal(0);
+                await distributor.withdrawBounty(validatorId, bountyAddress, {from: holder1});
+                (await distributor.calculateEarnedBountyAmount.call(
+                    validatorId, {from: holder1}))[0].toNumber().should.be.equal(0);
+                await distributor.withdrawBounty(validatorId, holder2, {from: holder2});
+                (await distributor.calculateEarnedBountyAmount.call(
+                    validatorId, {from: holder2}))[0].toNumber().should.be.equal(0);
 
-            //     (await skaleToken.balanceOf(bountyAddress)).toNumber().should.be.equal(15 + 25);
+                (await skaleToken.balanceOf(bountyAddress)).toNumber().should.be.equal(15 + 25);
 
-            //     const balance = (await skaleToken.balanceOf(holder2)).toString();
-            //     balance.should.be.equal((new BigNumber(defaultAmount)).plus(28).toString());
-            // });
+                const balance = (await skaleToken.balanceOf(holder2)).toString();
+                balance.should.be.equal((new BigNumber(defaultAmount)).plus(28).toString());
+            });
 
             describe("Slashing", async () => {
 
-                it("should slash validator and lock delegators fund in proportion of delegation share", async () => {
-                    await punisher.slash(validatorId, 5);
+                // it("should slash validator and lock delegators fund in proportion of delegation share", async () => {
+                //     await punisher.slash(validatorId, 5);
 
-                    // Stakes:
-                    // holder1: $2
-                    // holder2: $3
-                    // holder3: $5
+                //     // Stakes:
+                //     // holder1: $2
+                //     // holder2: $3
+                //     // holder3: $5
 
-                    (await tokenState.calculateLockedAmount.call(holder1)).toNumber().should.be.equal(2);
-                    // (await delegationService.getDelegatedOf.call(holder1)).toNumber().should.be.equal(1);
+                //     (await tokenState.calculateLockedAmount.call(holder1)).toNumber().should.be.equal(2);
+                //     // (await delegationService.getDelegatedOf.call(holder1)).toNumber().should.be.equal(1);
 
-                    // (await delegationService.getLockedOf.call(holder2)).toNumber().should.be.equal(3);
-                    // (await delegationService.getDelegatedOf.call(holder2)).toNumber().should.be.equal(1);
+                //     // (await delegationService.getLockedOf.call(holder2)).toNumber().should.be.equal(3);
+                //     // (await delegationService.getDelegatedOf.call(holder2)).toNumber().should.be.equal(1);
 
-                    // (await delegationService.getLockedOf.call(holder3)).toNumber().should.be.equal(5);
-                    // (await delegationService.getDelegatedOf.call(holder3)).toNumber().should.be.equal(2);
-                });
+                //     // (await delegationService.getLockedOf.call(holder3)).toNumber().should.be.equal(5);
+                //     // (await delegationService.getDelegatedOf.call(holder3)).toNumber().should.be.equal(2);
+                // });
 
                 // it("should not lock more tokens than were delegated", async () => {
                 //     await delegationService.slash(validatorId, 100);

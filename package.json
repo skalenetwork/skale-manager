@@ -35,7 +35,7 @@
     "test": "truffle test && yarn tsc",
     "tsc": "tsc --noEmit",
     "tslint": "npx tslint --project .",
-    "slither": "slither . --exclude unused-state,reentrancy-events,naming-convention,solc-version,assembly,timestamp,calls-loop,incorrect-equality,reentrancy-no-eth,constant-function,pragma --filter-paths @openzeppelin/upgrades/contracts/,@openzeppelin/contracts-ethereum-package/contracts/,@openzeppelin/contracts/,ERC777,thirdparty --truffle-version truffle@latest",
+    "slither": "slither . --exclude uninitialized-state-variables,unused-state,reentrancy-events,naming-convention,solc-version,assembly,timestamp,calls-loop,incorrect-equality,reentrancy-no-eth,constant-function,pragma --filter-paths @openzeppelin/upgrades/contracts/,@openzeppelin/contracts-ethereum-package/contracts/,@openzeppelin/contracts/,ERC777,thirdparty --truffle-version truffle@latest",
     "fullcheck": "yarn lint && yarn tsc && yarn tslint && yarn slither"
   },
   "dependencies": {

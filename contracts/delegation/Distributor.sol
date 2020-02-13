@@ -132,9 +132,12 @@ contract Distributor is Permissions, IERC777Recipient {
             endMonth = startMonth + 12;
         }
         for (uint i = startMonth; i < endMonth; ++i) {
-            earned += _bountyPaid[validatorId][i] *
-                delegationController.calculateEffectiveDelegatedByHolderToValidator(wallet, validatorId, i) /
-                delegationController.calculateTotalEffectiveDelegatedToValidator(validatorId, i);
+            uint effectiveDelegatedToValidator = delegationController.calculateEffectiveDelegatedToValidator(validatorId, i);
+            if (effectiveDelegatedToValidator > 0) {
+                earned += _bountyPaid[validatorId][i] *
+                    delegationController.calculateEffectiveDelegatedByHolderToValidator(wallet, validatorId, i) /
+                    effectiveDelegatedToValidator;
+            }
         }
     }
 
