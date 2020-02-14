@@ -27,6 +27,10 @@ module.exports = {
             {
                 "secretKey": process.env.PRIVATE_KEY_5,
                 "balance": "0xd3c21bcecceda0000000"
+            },
+            {
+                "secretKey": process.env.PRIVATE_KEY_6,
+                "balance": "0xd3c21bcecceda0000000"
             }
         ]
     }
