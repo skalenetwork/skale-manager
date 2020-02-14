@@ -157,11 +157,10 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
                     {from: validator});
             });
 
-            // uncomment when delegation will be added to skale-manager
-            // it("should fail to init exiting of someone else's node", async () => {
-            //     await skaleManager.nodeExit(0, {from: hacker})
-            //         .should.be.eventually.rejectedWith("Validator with such address doesn't exist");
-            // });
+            it("should fail to init exiting of someone else's node", async () => {
+                await skaleManager.nodeExit(0, {from: hacker})
+                    .should.be.eventually.rejectedWith("Validator with such address doesn't exist");
+            });
 
             it("should initiate exiting", async () => {
                 await skaleManager.nodeExit(0, {from: validator});
@@ -219,16 +218,15 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
                     {from: validator});
             });
 
-            // uncomment when delegation will be added to skale-manager
-            // it("should fail to initiate exiting of first node from another account", async () => {
-            //     await skaleManager.nodeExit(0, {from: hacker})
-            //         .should.be.eventually.rejectedWith("Validator with such address doesn't exist");
-            // });
+            it("should fail to initiate exiting of first node from another account", async () => {
+                await skaleManager.nodeExit(0, {from: hacker})
+                    .should.be.eventually.rejectedWith("Validator with such address doesn't exist");
+            });
 
-            // it("should fail to initiate exiting of second node from another account", async () => {
-            //     await skaleManager.nodeExit(1, {from: hacker})
-            //         .should.be.eventually.rejectedWith("Validator with such address doesn't exist");
-            // });
+            it("should fail to initiate exiting of second node from another account", async () => {
+                await skaleManager.nodeExit(1, {from: hacker})
+                    .should.be.eventually.rejectedWith("Validator with such address doesn't exist");
+            });
 
             it("should initiate exiting of first node", async () => {
                 await skaleManager.nodeExit(0, {from: validator});
@@ -307,18 +305,6 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
                         "64322d" + (48 + i + 1).toString(16), // name,
                         {from: validator});
                 }
-            });
-
-            it("should fail to create schain if not enough SKALE tokens", async () => {
-                await constantsHolder.setMSR(6);
-
-                await skaleManager.createNode(
-                    "0x10" + // create schain
-                    "0000000000000000000000000000000000000000000000000000000000000005" + // lifetime
-                    "01" + // type of schain
-                    "0000" + // nonce
-                    "6432", // name
-                    {from: developer}).should.be.eventually.rejectedWith("ERC777: transfer amount exceeds balance");
             });
 
             it("should fail to send monitor verdict from not node owner", async () => {
