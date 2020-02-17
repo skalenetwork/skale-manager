@@ -69,10 +69,35 @@ contract DelegationController is Permissions, ILocker {
 
         uint value;
         uint firstUnprocessedMonth;
+        uint lastChangedMonth;
+    }
+
+    struct Fraction {
+        uint numerator;
+        uint denominator;
+    }
+
+    struct SlashingEvent {
+        Fraction reducingCoefficient;
+        uint nextMonth;
+    }
+
+    struct SlashingLog {
+        //      month => slashing event
+        mapping (uint => SlashingEvent) slashes;
+        uint firstMonth;
+        uint lastMonth;
+    }
+
+    struct DelegationExtras {
+        uint lastSlashingMonthBeforeDelegation;
     }
 
     /// @notice delegations will never be deleted to index in this array may be used like delegation id
     Delegation[] public delegations;
+
+    // delegationId => extras
+    mapping(uint => DelegationExtras) private _delegationExtras;
 
     // ///       holder => delegationId[]
     // mapping (address => uint[]) private _activeByHolder;
@@ -81,9 +106,11 @@ contract DelegationController is Permissions, ILocker {
     // mapping (uint => uint[]) private _activeByValidator;
 
     // validatorId => sequence
-    mapping (uint => PartialDifferences) private _delegatedToValidator;
+    mapping (uint => PartialDifferencesValue) private _delegatedToValidator;
     // validatorId => sequence
     mapping (uint => PartialDifferences) private _effectiveDelegatedToValidator;
+
+    mapping (uint => SlashingLog) private _slashesOfValidator;
 
     //        holder => sequence
     mapping (address => PartialDifferencesValue) private _delegatedByHolder;
@@ -175,6 +202,7 @@ contract DelegationController is Permissions, ILocker {
 
         uint currentMonth = timeHelpers.timestampToMonth(now);
         delegations[delegationId].started = currentMonth + 1;
+        _delegationExtras[delegationId].lastSlashingMonthBeforeDelegation = _slashesOfValidator[delegations[delegationId].validatorId].lastMonth;
 
         addToDelegatedToValidator(
             delegations[delegationId].validatorId,
@@ -214,10 +242,11 @@ contract DelegationController is Permissions, ILocker {
         DelegationPeriodManager delegationPeriodManager = DelegationPeriodManager(contractManager.getContract("DelegationPeriodManager"));
 
         delegations[delegationId].finished = calculateDelegationEndMonth(delegationId);
+        uint amountAfterSlashing = calculateDelegationAmountAfterSlashing(delegationId);
 
         removeFromDelegatedToValidator(
             delegations[delegationId].validatorId,
-            delegations[delegationId].amount,
+            amountAfterSlashing,
             delegations[delegationId].finished);
         removeFromDelegatedByHolder(
             delegations[delegationId].holder,
@@ -239,6 +268,12 @@ contract DelegationController is Permissions, ILocker {
             delegations[delegationId].holder,
             delegationId,
             delegations[delegationId].finished);
+    }
+
+    function confiscate(uint validatorId, uint amount) external {
+        uint currentMonth = getCurrentMonth();
+        Fraction memory coefficient = reduce(_delegatedToValidator[validatorId], amount, currentMonth);
+        putToSlashingLog(_slashesOfValidator[validatorId], coefficient, currentMonth);
     }
 
     function getFirstDelegationMonth(address holder, uint validatorId) external view returns(uint) {
@@ -418,6 +453,24 @@ contract DelegationController is Permissions, ILocker {
         sequence.firstUnprocessedMonth = 0;
     }
 
+    function calculateDelegationAmountAfterSlashing(uint delegationId) internal returns (uint) {
+        uint startMonth = _delegationExtras[delegationId].lastSlashingMonthBeforeDelegation;
+        uint validatorId = delegations[delegationId].validatorId;
+        uint amount = delegations[delegationId].amount;
+        if (startMonth == 0) {
+            startMonth = _slashesOfValidator[validatorId].firstMonth;
+            if (startMonth == 0) {
+                return amount;
+            }
+        }
+        for (uint i = startMonth; i > 0 && i < delegations[delegationId].finished; i = _slashesOfValidator[validatorId].slashes[i].nextMonth) {
+            if (i >= delegations[delegationId].started) {
+                amount = amount * _slashesOfValidator[validatorId].slashes[i].reducingCoefficient.numerator / _slashesOfValidator[validatorId].slashes[i].reducingCoefficient.denominator;
+            }
+        }
+        return amount;
+    }
+
     function add(PartialDifferences storage sequence, uint diff, uint month) internal {
         require(sequence.firstUnprocessedMonth <= month, "Can't add to the past");
         if (sequence.firstUnprocessedMonth == 0) {
@@ -475,7 +528,12 @@ contract DelegationController is Permissions, ILocker {
         require(sequence.firstUnprocessedMonth <= month, "Can't add to the past");
         if (sequence.firstUnprocessedMonth == 0) {
             sequence.firstUnprocessedMonth = month;
+            sequence.lastChangedMonth = month;
         }
+        if (month > sequence.lastChangedMonth) {
+            sequence.lastChangedMonth = month;
+        }
+
         sequence.addDiff[month] += diff;
     }
 
@@ -483,7 +541,12 @@ contract DelegationController is Permissions, ILocker {
         require(sequence.firstUnprocessedMonth <= month, "Can't subtract from the past");
         if (sequence.firstUnprocessedMonth == 0) {
             sequence.firstUnprocessedMonth = month;
+            sequence.lastChangedMonth = month;
         }
+        if (month > sequence.lastChangedMonth) {
+            sequence.lastChangedMonth = month;
+        }
+
         sequence.subtractDiff[month] += diff;
     }
 
@@ -503,5 +566,85 @@ contract DelegationController is Permissions, ILocker {
         }
 
         return sequence.value;
+    }
+
+    function reduce(PartialDifferencesValue storage sequence, uint amount, uint month) internal returns (Fraction memory) {
+        require(month + 1 >= sequence.firstUnprocessedMonth, "Can't reduce value in the past");
+        if (sequence.firstUnprocessedMonth == 0) {
+            return createFraction(0);
+        }
+        uint value = calculateValue(sequence, month);
+        if (value == 0) {
+            return createFraction(0);
+        }
+
+        uint _amount = amount;
+        if (value < amount) {
+            _amount = value;
+        }
+
+        Fraction memory reducingCoefficient = createFraction(value - _amount, value);
+        sequence.value -= _amount;
+        for (uint i = month + 1; i <= sequence.lastChangedMonth; ++i) {
+            sequence.subtractDiff[i] = sequence.subtractDiff[i] * reducingCoefficient.numerator / reducingCoefficient.denominator;
+        }
+        return reducingCoefficient;
+    }
+
+    function createFraction(uint numerator, uint denominator) internal pure returns (Fraction memory) {
+        require(denominator > 0, "Devision by zero");
+        Fraction memory fraction = Fraction({numerator: numerator, denominator: denominator});
+        reduceFraction(fraction);
+        return fraction;
+    }
+
+    function createFraction(uint value) internal pure returns (Fraction memory) {
+        return createFraction(value, 1);
+    }
+
+    function reduceFraction(Fraction memory fraction) internal pure {
+        uint _gcd = gcd(fraction.numerator, fraction.denominator);
+        fraction.numerator /= _gcd;
+        fraction.denominator /= _gcd;
+    }
+
+    function multiplyFraction(Fraction memory a, Fraction memory b) internal pure returns (Fraction memory) {
+        return createFraction(a.numerator * b.numerator, a.denominator * b.denominator);
+    }
+
+    function gcd(uint _a, uint _b) internal pure returns (uint) {
+        uint a = _a;
+        uint b = _b;
+        if (b > a) {
+            (a, b) = swap(a, b);
+        }
+        while (b > 0) {
+            a %= b;
+            (a, b) = swap (a, b);
+        }
+        return a;
+    }
+
+    function swap(uint a, uint b) internal pure returns (uint, uint) {
+        return (b, a);
+    }
+
+    function putToSlashingLog(SlashingLog storage log, Fraction memory coefficient, uint month) internal {
+        if (log.firstMonth == 0) {
+            log.firstMonth = month;
+            log.lastMonth = month;
+            log.slashes[month].reducingCoefficient = coefficient;
+            log.slashes[month].nextMonth = 0;
+        } else {
+            require(log.lastMonth <= month, "Can't put slashing event in the past");
+            if (log.lastMonth == month) {
+                log.slashes[month].reducingCoefficient = multiplyFraction(log.slashes[month].reducingCoefficient, coefficient);
+            } else {
+                log.slashes[month].reducingCoefficient = coefficient;
+                log.slashes[month].nextMonth = 0;
+                log.slashes[log.lastMonth].nextMonth = month;
+                log.lastMonth = month;
+            }
+        }
     }
 }
