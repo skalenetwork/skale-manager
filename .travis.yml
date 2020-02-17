@@ -22,8 +22,27 @@ node_js:
 os: linux
 dist: bionic
 env:
-  global:
-    - NODE_OPTIONS="--max_old_space_size=4096"
+  # - TESTFILES=ConstantsHolder.spec.ts
+  # - TESTFILES=ContractManager.ts
+  # - TESTFILES=Decryption.ts
+  # - TESTFILES=ECDH.ts
+  # - TESTFILES=ManagerData.spec.ts
+  # - TESTFILES=MonitorsData.ts
+  # - TESTFILES=MonitorsFunctionality.spec.ts
+  # - TESTFILES=NodesData.ts
+  # - TESTFILES=NodesFunctionality.ts
+  # - TESTFILES=Pricing.ts
+  # - TESTFILES=SchainsData.ts
+  # - TESTFILES=SchainsFunctionality.ts
+  # - TESTFILES=SkaleDKG.ts
+  - TESTFILES=SkaleManager.ts
+  # - TESTFILES=SkaleToken.ts
+  # - TESTFILES=SkaleVerifier.ts
+  # - TESTFILES=delegation/Delegation.ts
+  # - TESTFILES=delegation/DelegationRequest.ts
+  # - TESTFILES=delegation/TokenSale.ts
+  # - TESTFILES=delegation/TokenState.ts
+  # - TESTFILES=delegation/ValidatorService.ts
 addons:
   apt:
     packages:
@@ -42,9 +61,10 @@ script:
 # TODO: Temporary disable tests while SKALE-1642 is not ready
 # Just deploy contracts instead
     # - truffle deploy --network test
-#     - yarn test || travis_terminate 3
+    # - yarn test || travis_terminate 3
+    - npx buidler test test/$TESTFILES && yarn tsc
 after_script:
-    - npx buidler coverage --solcoverjs .solcover.js || travis_terminate 4
+    - npx buidler coverage --testfiles test/$TESTFILES --solcoverjs .solcover.js
     - cat coverage/lcov.info | npx codecov
 before_deploy:
   # Set up git user name and tag this commit
