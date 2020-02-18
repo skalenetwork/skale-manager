@@ -77,20 +77,26 @@ contract DelegationController is Permissions, ILocker {
         uint denominator;
     }
 
-    struct SlashingEvent {
+    struct SlashingLogEvent {
         Fraction reducingCoefficient;
         uint nextMonth;
     }
 
     struct SlashingLog {
         //      month => slashing event
-        mapping (uint => SlashingEvent) slashes;
+        mapping (uint => SlashingLogEvent) slashes;
         uint firstMonth;
         uint lastMonth;
     }
 
     struct DelegationExtras {
         uint lastSlashingMonthBeforeDelegation;
+    }
+
+    struct SlashingEvent {
+        Fraction reducingCoefficient;
+        uint validatorId;
+        uint month;
     }
 
     /// @notice delegations will never be deleted to index in this array may be used like delegation id
@@ -110,16 +116,22 @@ contract DelegationController is Permissions, ILocker {
     // validatorId => sequence
     mapping (uint => PartialDifferences) private _effectiveDelegatedToValidator;
 
+    // validatorId => slashing log
     mapping (uint => SlashingLog) private _slashesOfValidator;
 
     //        holder => sequence
     mapping (address => PartialDifferencesValue) private _delegatedByHolder;
+    //        holder =>   validatorId => sequence
+    mapping (address => mapping (uint => PartialDifferencesValue)) private _delegatedByHolderToValidator;
+    //        holder =>   validatorId => sequence
+    mapping (address => mapping (uint => PartialDifferences)) private _effectiveDelegatedByHolderToValidator;
+
+    SlashingEvent[] private _slashes;
+    //        holder => index in _slashes;
+    mapping (address => uint) private _firstUnprocessedSlashByHolder;
 
     //        holder =>   validatorId => month
     mapping (address => mapping (uint => uint)) private _firstDelegationMonth;
-
-    //        holder =>   validatorId => sequence
-    mapping (address => mapping (uint => PartialDifferences)) private _effectiveDelegatedByHolderToValidator;
 
     //        holder => tokens
     mapping (address => uint) private _lockedInPendingRequests;
@@ -212,6 +224,11 @@ contract DelegationController is Permissions, ILocker {
             delegations[delegationId].holder,
             delegations[delegationId].amount,
             currentMonth + 1);
+        addToDelegatedByHolderToValidator(
+            delegations[delegationId].holder,
+            delegations[delegationId].validatorId,
+            delegations[delegationId].amount,
+            currentMonth + 1);
         updateFirstDelegationMonth(
             delegations[delegationId].holder,
             delegations[delegationId].validatorId,
@@ -250,7 +267,12 @@ contract DelegationController is Permissions, ILocker {
             delegations[delegationId].finished);
         removeFromDelegatedByHolder(
             delegations[delegationId].holder,
-            delegations[delegationId].amount,
+            amountAfterSlashing,
+            delegations[delegationId].finished);
+        removeFromDelegatedByHolderToValidator(
+            delegations[delegationId].holder,
+            delegations[delegationId].validatorId,
+            amountAfterSlashing,
             delegations[delegationId].finished);
         uint effectiveAmount = delegations[delegationId].amount * delegationPeriodManager.stakeMultipliers(
             delegations[delegationId].delegationPeriod);
@@ -335,6 +357,27 @@ contract DelegationController is Permissions, ILocker {
         }
     }
 
+    function processSlashes(address holder, uint limit) public {
+        if (_firstUnprocessedSlashByHolder[holder] < _slashes.length) {
+            uint index = _firstUnprocessedSlashByHolder[holder];
+            uint length = _slashes.length;
+            if (limit > 0 && index + limit < length) {
+                length = index + limit;
+            }
+            for (; index < length; ++index) {
+                uint validatorId = _slashes[index].validatorId;
+                if (calculateDelegatedByHolderToValidator(holder, validatorId) > 0) {
+                    uint month = _slashes[index].month;
+                    reduce(_delegatedByHolderToValidator[holder][validatorId], _slashes[index].reducingCoefficient, month);
+                }
+            }
+        }
+    }
+
+    function processSlashes(address holder) public {
+        processSlashes(holder, 0);
+    }
+
     // private
 
     function isTerminated(State state) internal pure returns (bool) {
@@ -373,8 +416,20 @@ contract DelegationController is Permissions, ILocker {
         add(_delegatedByHolder[holder], amount, month);
     }
 
+    function addToDelegatedByHolderToValidator(
+        address holder, uint validatorId, uint amount, uint month) internal
+    {
+        add(_delegatedByHolderToValidator[holder][validatorId], amount, month);
+    }
+
     function removeFromDelegatedByHolder(address holder, uint amount, uint month) internal {
         subtract(_delegatedByHolder[holder], amount, month);
+    }
+
+    function removeFromDelegatedByHolderToValidator(
+        address holder, uint validatorId, uint amount, uint month) internal
+    {
+        subtract(_delegatedByHolderToValidator[holder][validatorId], amount, month);
     }
 
     function addToEffectiveDelegatedByHolderToValidator(
@@ -399,7 +454,13 @@ contract DelegationController is Permissions, ILocker {
 
     function calculateDelegatedByHolder(address holder) internal returns (uint) {
         uint currentMonth = getCurrentMonth();
+        processSlashes(holder);
         return calculateValue(_delegatedByHolder[holder], currentMonth);
+    }
+
+    function calculateDelegatedByHolderToValidator(address holder, uint validatorId) internal returns (uint) {
+        uint currentMonth = getCurrentMonth();
+        return calculateValue(_delegatedByHolderToValidator[holder][validatorId], currentMonth);
     }
 
     function addToLockedInPendingDelegations(address holder, uint amount) internal returns (uint) {
@@ -584,11 +645,23 @@ contract DelegationController is Permissions, ILocker {
         }
 
         Fraction memory reducingCoefficient = createFraction(value - _amount, value);
-        sequence.value -= _amount;
+        reduce(sequence, reducingCoefficient, month);
+        return reducingCoefficient;
+    }
+
+    function reduce(PartialDifferencesValue storage sequence, Fraction memory reducingCoefficient, uint month) internal {
+        require(month + 1 >= sequence.firstUnprocessedMonth, "Can't reduce value in the past");
+        if (sequence.firstUnprocessedMonth == 0) {
+            return;
+        }
+        uint value = calculateValue(sequence, month);
+        if (value == 0) {
+            return;
+        }
+        sequence.value = sequence.value * reducingCoefficient.numerator / reducingCoefficient.denominator;
         for (uint i = month + 1; i <= sequence.lastChangedMonth; ++i) {
             sequence.subtractDiff[i] = sequence.subtractDiff[i] * reducingCoefficient.numerator / reducingCoefficient.denominator;
         }
-        return reducingCoefficient;
     }
 
     function createFraction(uint numerator, uint denominator) internal pure returns (Fraction memory) {
