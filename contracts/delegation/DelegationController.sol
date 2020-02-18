@@ -368,7 +368,11 @@ contract DelegationController is Permissions, ILocker {
                 uint validatorId = _slashes[index].validatorId;
                 if (calculateDelegatedByHolderToValidator(holder, validatorId) > 0) {
                     uint month = _slashes[index].month;
-                    reduce(_delegatedByHolderToValidator[holder][validatorId], _slashes[index].reducingCoefficient, month);
+                    reduce(
+                        _delegatedByHolderToValidator[holder][validatorId],
+                        _delegatedByHolder[holder],
+                        _slashes[index].reducingCoefficient,
+                        month);
                 }
             }
         }
@@ -595,11 +599,15 @@ contract DelegationController is Permissions, ILocker {
             sequence.lastChangedMonth = month;
         }
 
-        sequence.addDiff[month] += diff;
+        if (month >= sequence.firstUnprocessedMonth) {
+            sequence.addDiff[month] += diff;
+        } else {
+            sequence.value += diff;
+        }
     }
 
     function subtract(PartialDifferencesValue storage sequence, uint diff, uint month) internal {
-        require(sequence.firstUnprocessedMonth <= month, "Can't subtract from the past");
+        require(sequence.firstUnprocessedMonth <= month + 1, "Can't subtract from the past");
         if (sequence.firstUnprocessedMonth == 0) {
             sequence.firstUnprocessedMonth = month;
             sequence.lastChangedMonth = month;
@@ -608,7 +616,11 @@ contract DelegationController is Permissions, ILocker {
             sequence.lastChangedMonth = month;
         }
 
-        sequence.subtractDiff[month] += diff;
+        if (month >= sequence.firstUnprocessedMonth) {
+            sequence.subtractDiff[month] += diff;
+        } else {
+            sequence.value -= diff;
+        }
     }
 
     function calculateValue(PartialDifferencesValue storage sequence, uint month) internal returns (uint) {
@@ -650,7 +662,37 @@ contract DelegationController is Permissions, ILocker {
     }
 
     function reduce(PartialDifferencesValue storage sequence, Fraction memory reducingCoefficient, uint month) internal {
+        reduce(
+            sequence,
+            sequence,
+            reducingCoefficient,
+            month,
+            false);
+    }
+
+    function reduce(
+        PartialDifferencesValue storage sequence,
+        PartialDifferencesValue storage sumSequence,
+        Fraction memory reducingCoefficient,
+        uint month) internal
+    {
+        reduce(
+            sequence,
+            sumSequence,
+            reducingCoefficient,
+            month,
+            true);
+    }
+
+    function reduce(
+        PartialDifferencesValue storage sequence,
+        PartialDifferencesValue storage sumSequence,
+        Fraction memory reducingCoefficient,
+        uint month,
+        bool hasSumSequence) internal
+    {
         require(month + 1 >= sequence.firstUnprocessedMonth, "Can't reduce value in the past");
+        require(reducingCoefficient.numerator <= reducingCoefficient.denominator, "Increasing of values is not implemented");
         if (sequence.firstUnprocessedMonth == 0) {
             return;
         }
@@ -658,9 +700,19 @@ contract DelegationController is Permissions, ILocker {
         if (value == 0) {
             return;
         }
-        sequence.value = sequence.value * reducingCoefficient.numerator / reducingCoefficient.denominator;
+
+        uint newValue = sequence.value * reducingCoefficient.numerator / reducingCoefficient.denominator;
+        if (hasSumSequence) {
+            subtract(sumSequence, sequence.value - newValue, month);
+        }
+        sequence.value = newValue;
+
         for (uint i = month + 1; i <= sequence.lastChangedMonth; ++i) {
-            sequence.subtractDiff[i] = sequence.subtractDiff[i] * reducingCoefficient.numerator / reducingCoefficient.denominator;
+            uint newDiff = sequence.subtractDiff[i] * reducingCoefficient.numerator / reducingCoefficient.denominator;
+            if (hasSumSequence) {
+                sumSequence.subtractDiff[i] -= sequence.subtractDiff[i] - newDiff;
+            }
+            sequence.subtractDiff[i] = newDiff;
         }
     }
 
