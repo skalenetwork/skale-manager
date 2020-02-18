@@ -409,7 +409,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
                 });
 
                 it("should get bounty after break", async () => {
-                    skipTime(web3, 600);
+                    skipTime(web3, 500);
                     const balanceBefore = web3.utils.toBN(await skaleBalances.getBalance(validator));
                     // const bounty = web3.utils.toBN("893019925718471100273");
                     const bounty = web3.utils.toBN("1250227896005859540382");
@@ -459,7 +459,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
                 });
 
                 it("should get bounty after break", async () => {
-                    skipTime(web3, 600);
+                    skipTime(web3, 500);
                     const balanceBefore = web3.utils.toBN(await skaleBalances.getBalance(validator));
                     const bounty = web3.utils.toBN("937714334705075445816");
 
