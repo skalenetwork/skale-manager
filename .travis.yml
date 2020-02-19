@@ -28,7 +28,7 @@ env:
   - TESTFILES=ECDH.ts
   # - TESTFILES=ManagerData.spec.ts
   - TESTFILES=MonitorsData.ts
-  # - TESTFILES=MonitorsFunctionality.spec.ts
+  - TESTFILES=MonitorsFunctionality.spec.ts
   # - TESTFILES=NodesData.ts
   # - TESTFILES=NodesFunctionality.ts
   - TESTFILES=Pricing.ts
@@ -65,7 +65,7 @@ script:
 after_script:
     - npx buidler coverage --testfiles test/$TESTFILES --solcoverjs .solcover.js
     - cat coverage/lcov.info | npx codecov
-    - bash <(curl -s https://codecov.io/bash)
+    - bash <(curl -s https://codecov.io/bash) -cF solidity
 before_deploy:
   # Set up git user name and tag this commit
   - (
