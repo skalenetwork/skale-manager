@@ -24,7 +24,6 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
 import "@openzeppelin/contracts/introspection/IERC1820Registry.sol";
 
-import "../interfaces/delegation/IDelegatableToken.sol";
 import "../Permissions.sol";
 import "./TokenLaunchLocker.sol";
 

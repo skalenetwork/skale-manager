@@ -2,6 +2,7 @@
     DelegationController.sol - SKALE Manager
     Copyright (C) 2018-Present SKALE Labs
     @author Vadim Yavorsky
+    @author Dmytro Stebaiev
 
     SKALE Manager is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as published
@@ -25,6 +26,7 @@ import "./DelegationPeriodManager.sol";
 import "./TokenState.sol";
 import "./ValidatorService.sol";
 import "./TokenLaunchLocker.sol";
+import "./Punisher.sol";
 
 
 contract DelegationController is Permissions, ILocker {
@@ -149,6 +151,10 @@ contract DelegationController is Permissions, ILocker {
 
     function calculateDelegatedToValidatorNow(uint validatorId) external allow("ValidatorService") returns (uint) {
         return calculateDelegatedToValidator(validatorId, getCurrentMonth());
+    }
+
+    function calculateDelegatedAmount(address holder) external returns (uint) {
+        return calculateDelegatedByHolder(holder);
     }
 
     function calculateEffectiveDelegatedByHolderToValidator(address holder, uint validatorId, uint month) external
@@ -296,6 +302,7 @@ contract DelegationController is Permissions, ILocker {
         uint currentMonth = getCurrentMonth();
         Fraction memory coefficient = reduce(_delegatedToValidator[validatorId], amount, currentMonth);
         putToSlashingLog(_slashesOfValidator[validatorId], coefficient, currentMonth);
+        _slashes.push(SlashingEvent({reducingCoefficient: coefficient, validatorId: validatorId, month: currentMonth}));
     }
 
     function getFirstDelegationMonth(address holder, uint validatorId) external view returns(uint) {
@@ -357,8 +364,12 @@ contract DelegationController is Permissions, ILocker {
         }
     }
 
+    function hasUnprocessedSlashes(address holder) public view returns (bool) {
+        return _firstUnprocessedSlashByHolder[holder] < _slashes.length;
+    }
+
     function processSlashes(address holder, uint limit) public {
-        if (_firstUnprocessedSlashByHolder[holder] < _slashes.length) {
+        if (hasUnprocessedSlashes(holder)) {
             uint index = _firstUnprocessedSlashByHolder[holder];
             uint length = _slashes.length;
             if (limit > 0 && index + limit < length) {
@@ -366,19 +377,23 @@ contract DelegationController is Permissions, ILocker {
             }
             for (; index < length; ++index) {
                 uint validatorId = _slashes[index].validatorId;
-                if (calculateDelegatedByHolderToValidator(holder, validatorId) > 0) {
+                uint oldValue = calculateDelegatedByHolderToValidator(holder, validatorId);
+                if (oldValue > 0) {
+                    Punisher punisher = Punisher(contractManager.getContract("Punisher"));
                     uint month = _slashes[index].month;
                     reduce(
                         _delegatedByHolderToValidator[holder][validatorId],
                         _delegatedByHolder[holder],
                         _slashes[index].reducingCoefficient,
                         month);
+                    punisher.handleSlash(holder, oldValue - calculateDelegatedByHolderToValidator(holder, validatorId));
                 }
             }
+            _firstUnprocessedSlashByHolder[holder] = length;
         }
     }
 
-    function processSlashes(address holder) public {
+    function processAllSlashes(address holder) public {
         processSlashes(holder, 0);
     }
 
@@ -458,7 +473,7 @@ contract DelegationController is Permissions, ILocker {
 
     function calculateDelegatedByHolder(address holder) internal returns (uint) {
         uint currentMonth = getCurrentMonth();
-        processSlashes(holder);
+        processAllSlashes(holder);
         return calculateValue(_delegatedByHolder[holder], currentMonth);
     }
 

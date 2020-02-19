@@ -218,11 +218,6 @@ contract DelegationService is Permissions {
         tokenState.sold(wallet, amount);
     }
 
-    function getDelegatedOf(address wallet) external returns (uint) {
-        TokenState tokenState = TokenState(contractManager.getContract("TokenState"));
-        return tokenState.getDelegatedCount(wallet);
-    }
-
     function getSlashedOf(address wallet) external view returns (uint) {
         TokenState tokenState = TokenState(contractManager.getContract("TokenState"));
         return tokenState.getSlashedAmount(wallet);

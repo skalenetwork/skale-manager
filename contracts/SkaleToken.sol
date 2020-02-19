@@ -89,8 +89,8 @@ contract SkaleToken is LockableERC777, Permissions, IDelegatableToken {
         return true;
     }
 
-    function getDelegatedOf(address wallet) external returns (uint) {
-        return DelegationService(contractManager.getContract("DelegationService")).getDelegatedOf(wallet);
+    function calculateDelegatedAmount(address wallet) external returns (uint) {
+        return DelegationController(contractManager.getContract("DelegationController")).calculateDelegatedAmount(wallet);
     }
 
     function getSlashedOf(address wallet) external returns (uint) {

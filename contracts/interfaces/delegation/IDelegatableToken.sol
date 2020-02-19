@@ -23,7 +23,7 @@ interface IDelegatableToken {
 
     function calculateLockedAmount(address wallet) external returns (uint);
 
-    function getDelegatedOf(address wallet) external returns (uint);
+    function calculateDelegatedAmount(address wallet) external returns (uint);
 
     function getSlashedOf(address wallet) external returns (uint);
 }
