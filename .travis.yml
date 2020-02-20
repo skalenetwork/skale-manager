@@ -22,9 +22,27 @@ node_js:
 os: linux
 dist: bionic
 env:
-  - TESTFOLDERS=1
-  - TESTFOLDERS=2
-  - TESTFOLDERS=3
+  - TESTFILES=ConstantsHolder.spec.ts
+  - TESTFILES=ContractManager.ts
+  - TESTFILES=Decryption.ts
+  - TESTFILES=ECDH.ts
+  - TESTFILES=ManagerData.spec.ts
+  - TESTFILES=MonitorsData.ts
+  - TESTFILES=MonitorsFunctionality.spec.ts
+  - TESTFILES=NodesData.ts
+  - TESTFILES=NodesFunctionality.ts
+  - TESTFILES=Pricing.ts
+  - TESTFILES=SchainsData.ts
+  - TESTFILES=SchainsFunctionality.ts
+  - TESTFILES=SkaleDKG.ts
+  - TESTFILES=SkaleManager.ts
+  - TESTFILES=SkaleToken.ts
+  - TESTFILES=SkaleVerifier.ts
+  - TESTFILES=delegation/Delegation.ts
+  - TESTFILES=delegation/DelegationRequest.ts
+  - TESTFILES=delegation/TokenSale.ts
+  - TESTFILES=delegation/TokenState.ts
+  - TESTFILES=delegation/ValidatorService.ts
 addons:
   apt:
     packages:
@@ -32,22 +50,10 @@ addons:
       - python3-setuptools
 install:
     - yarn install
-    - pip3 install -r scripts/requirements.txt
 script:
-    - yarn lint || travis_terminate 1
-    - slither --version
-    - slither . || true
-    - yarn slither || travis_terminate 5
-    - yarn tslint || travis_terminate 2
     - yarn generate
-    - bash scripts/move.sh    
-# TODO: Temporary disable tests while SKALE-1642 is not ready
-# Just deploy contracts instead
-    # - truffle deploy --network test
-    # - yarn test || travis_terminate 3
-after_script:
-    - npx buidler coverage --testfiles test/$TESTFOLDERS --solcoverjs .solcover.js
-    - cat coverage/lcov.info | npx codecov
+    - bash scripts/linter.sh
+    - npx buidler coverage --testfiles test/$TESTFILES --solcoverjs .solcover.js
     - bash <(curl -s https://codecov.io/bash) -cF solidity
 before_deploy:
   # Set up git user name and tag this commit
