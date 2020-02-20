@@ -344,84 +344,84 @@ contract("Delegation", ([owner,
             await validatorService.checkPossibilityCreatingNode(validator);
         });
 
-        // it("should be possible to distribute bounty accross thousands of holders", async () => {
-        //     const holdersAmount = 1000;
-        //     const delegatedAmount = 1;
-        //     const holders = [];
-        //     for (let i = 0; i < holdersAmount; ++i) {
-        //         holders.push(web3.eth.accounts.create());
-        //     }
-        //     const etherAmount = 5 * 1e18;
+        it("should be possible to distribute bounty accross thousands of holders", async () => {
+            const holdersAmount = 1000;
+            const delegatedAmount = 1;
+            const holders = [];
+            for (let i = 0; i < holdersAmount; ++i) {
+                holders.push(web3.eth.accounts.create());
+            }
+            const etherAmount = 5 * 1e18;
 
-        //     const web3DelegationController = new web3.eth.Contract(
-        //         artifacts.require("./DelegationController").abi,
-        //         delegationController.address);
-        //     const web3Distributor = new web3.eth.Contract(
-        //         artifacts.require("./Distributor").abi,
-        //         distributor.address);
+            const web3DelegationController = new web3.eth.Contract(
+                artifacts.require("./DelegationController").abi,
+                delegationController.address);
+            const web3Distributor = new web3.eth.Contract(
+                artifacts.require("./Distributor").abi,
+                distributor.address);
 
-        //     let delegationId = 0;
-        //     for (const holder of holders) {
-        //         await web3.eth.sendTransaction({from: holder1, to: holder.address, value: etherAmount});
-        //         await skaleToken.mint(owner, holder.address, delegatedAmount, "0x", "0x");
+            let delegationId = 0;
+            for (const holder of holders) {
+                await web3.eth.sendTransaction({from: holder1, to: holder.address, value: etherAmount});
+                await skaleToken.mint(owner, holder.address, delegatedAmount, "0x", "0x");
 
-        //         const callData = web3DelegationController.methods.delegate(
-        //             validatorId, delegatedAmount, 3, "D2 is even").encodeABI();
+                const callData = web3DelegationController.methods.delegate(
+                    validatorId, delegatedAmount, 3, "D2 is even").encodeABI();
 
-        //         const delegateTx = {
-        //             data: callData,
-        //             from: holder.address,
-        //             gas: 1e6,
-        //             to: delegationController.address,
-        //         };
+                const delegateTx = {
+                    data: callData,
+                    from: holder.address,
+                    gas: 1e6,
+                    to: delegationController.address,
+                };
 
-        //         const signedDelegateTx = await holder.signTransaction(delegateTx);
-        //         await web3.eth.sendSignedTransaction(signedDelegateTx.rawTransaction);
+                const signedDelegateTx = await holder.signTransaction(delegateTx);
+                await web3.eth.sendSignedTransaction(signedDelegateTx.rawTransaction);
 
-        //         await delegationController.acceptPendingDelegation(delegationId++, {from: validator});
-        //     }
+                await delegationController.acceptPendingDelegation(delegationId++, {from: validator});
+            }
 
-        //     skipTime(web3, month);
+            skipTime(web3, month);
 
-        //     const bounty = Math.floor(holdersAmount * delegatedAmount / 0.85);
-        //     (bounty - Math.floor(bounty * 0.15)).should.be.equal(holdersAmount * delegatedAmount);
-        //     await skaleManagerMock.payBounty(validatorId, bounty);
+            const bounty = Math.floor(holdersAmount * delegatedAmount / 0.85);
+            (bounty - Math.floor(bounty * 0.15)).should.be.equal(holdersAmount * delegatedAmount);
+            await skaleManagerMock.payBounty(validatorId, bounty);
 
-        //     skipTime(web3, month);
+            skipTime(web3, month);
 
-        //     for (const holder of holders) {
-        //         const callData = web3Distributor.methods.withdrawBounty(
-        //             validatorId, holder.address).encodeABI();
+            for (const holder of holders) {
+                const callData = web3Distributor.methods.withdrawBounty(
+                    validatorId, holder.address).encodeABI();
 
-        //         const withdrawTx = {
-        //             data: callData,
-        //             from: holder.address,
-        //             gas: 1e6,
-        //             to: distributor.address,
-        //         };
+                const withdrawTx = {
+                    data: callData,
+                    from: holder.address,
+                    gas: 1e6,
+                    to: distributor.address,
+                };
 
-        //         const signedWithdrawTx = await holder.signTransaction(withdrawTx);
-        //         await web3.eth.sendSignedTransaction(signedWithdrawTx.rawTransaction);
+                const signedWithdrawTx = await holder.signTransaction(withdrawTx);
+                await web3.eth.sendSignedTransaction(signedWithdrawTx.rawTransaction);
 
-        //         (await skaleToken.balanceOf(holder.address)).toNumber().should.be.equal(delegatedAmount * 2);
-        //         (await skaleToken.calculateDelegatedAmount.call(holder.address))
-        //             .toNumber().should.be.equal(delegatedAmount);
+                (await skaleToken.balanceOf(holder.address)).toNumber().should.be.equal(delegatedAmount * 2);
+                (await skaleToken.calculateDelegatedAmount.call(holder.address))
+                    .toNumber().should.be.equal(delegatedAmount);
 
-        //         const balance = Number.parseInt(await web3.eth.getBalance(holder.address), 10);
-        //         const gas = 21 * 1e3;
-        //         const gasPrice = 20 * 1e9;
-        //         const sendTx = {
-        //             from: holder.address,
-        //             gas,
-        //             gasPrice,
-        //             to: holder1,
-        //             value: balance - gas * gasPrice,
-        //         };
-        //         const signedSendTx = await holder.signTransaction(sendTx);
-        //         await web3.eth.sendSignedTransaction(signedSendTx.rawTransaction);
-        //         await web3.eth.getBalance(holder.address).should.be.eventually.equal("0");
-        //     }
-        // });
+                const balance = Number.parseInt(await web3.eth.getBalance(holder.address), 10);
+                const gas = 21 * 1e3;
+                const gasPrice = 20 * 1e9;
+                const sendTx = {
+                    from: holder.address,
+                    gas,
+                    gasPrice,
+                    to: holder1,
+                    value: balance - gas * gasPrice,
+                };
+                const signedSendTx = await holder.signTransaction(sendTx);
+                await web3.eth.sendSignedTransaction(signedSendTx.rawTransaction);
+                await web3.eth.getBalance(holder.address).should.be.eventually.equal("0");
+            }
+        });
 
         // describe("when validator is registered", async () => {
         //     beforeEach(async () => {
