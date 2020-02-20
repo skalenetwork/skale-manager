@@ -22,11 +22,13 @@ pragma solidity ^0.5.3;
 pragma experimental ABIEncoderV2;
 
 import "../Permissions.sol";
+import "../SkaleToken.sol";
+
 import "./DelegationPeriodManager.sol";
+import "./Punisher.sol";
+import "./TokenLaunchLocker.sol";
 import "./TokenState.sol";
 import "./ValidatorService.sol";
-import "./TokenLaunchLocker.sol";
-import "./Punisher.sol";
 
 
 contract DelegationController is Permissions, ILocker {
@@ -101,6 +103,10 @@ contract DelegationController is Permissions, ILocker {
         uint month;
     }
 
+    event DelegationRequestIsSent(
+        uint delegationId
+    );
+
     /// @notice delegations will never be deleted to index in this array may be used like delegation id
     Delegation[] public delegations;
 
@@ -163,31 +169,44 @@ contract DelegationController is Permissions, ILocker {
         return calculateValue(_effectiveDelegatedByHolderToValidator[holder][validatorId], month);
     }
 
-    function addDelegation(
-        address holder,
+    /// @notice Creates request to delegate `amount` of tokens to `validator` from the begining of the next month
+    function delegate(
         uint validatorId,
         uint amount,
         uint delegationPeriod,
         string calldata info
     )
         external
-        allow("DelegationService")
-        returns (uint delegationId)
     {
-        delegationId = delegations.length;
-        delegations.push(Delegation(
-            holder,
+
+        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
+        DelegationPeriodManager delegationPeriodManager = DelegationPeriodManager(contractManager.getContract("DelegationPeriodManager"));
+        SkaleToken skaleToken = SkaleToken(contractManager.getContract("SkaleToken"));
+        TokenState tokenState = TokenState(contractManager.getContract("TokenState"));
+
+        require(
+            validatorService.checkMinimumDelegation(validatorId, amount),
+            "Amount doesn't meet minimum delegation amount");
+        require(
+            validatorService.trustedValidators(validatorId),
+            "Validator is not authorized to accept request");
+        require(
+            delegationPeriodManager.isDelegationPeriodAllowed(delegationPeriod),
+            "This delegation period is not allowed");
+
+        uint delegationId = addDelegation(
+            msg.sender,
             validatorId,
             amount,
             delegationPeriod,
-            now,
-            0,
-            0,
-            info
-        ));
-        // _activeByHolder[holder].push(delegationId);
-        // _activeByValidator[validatorId].push(delegationId);
-        addToLockedInPendingDelegations(delegations[delegationId].holder, delegations[delegationId].amount);
+            info);
+
+        // check that there is enough money
+        uint holderBalance = skaleToken.balanceOf(msg.sender);
+        uint forbiddenForDelegation = tokenState.calculateForbiddenForDelegationAmount(msg.sender);
+        require(holderBalance >= forbiddenForDelegation, "Delegator doesn't have enough tokens to delegate");
+
+        emit DelegationRequestIsSent(delegationId);
     }
 
     function calculateLockedAmount(address wallet) external returns (uint) {
@@ -398,6 +417,32 @@ contract DelegationController is Permissions, ILocker {
     }
 
     // private
+
+    function addDelegation(
+        address holder,
+        uint validatorId,
+        uint amount,
+        uint delegationPeriod,
+        string memory info
+    )
+        internal
+        returns (uint delegationId)
+    {
+        delegationId = delegations.length;
+        delegations.push(Delegation(
+            holder,
+            validatorId,
+            amount,
+            delegationPeriod,
+            now,
+            0,
+            0,
+            info
+        ));
+        // _activeByHolder[holder].push(delegationId);
+        // _activeByValidator[validatorId].push(delegationId);
+        addToLockedInPendingDelegations(delegations[delegationId].holder, delegations[delegationId].amount);
+    }
 
     function isTerminated(State state) internal pure returns (bool) {
         return state == State.COMPLETED || state == State.REJECTED;

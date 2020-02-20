@@ -93,7 +93,8 @@ contract("TokenLaunchManager", ([owner, holder, delegation, validator, seller, h
             it("should be able to delegate part of tokens", async () => {
                 const amount = 50;
                 const delegationPeriod = 3;
-                await delegationService.delegate(validatorId, amount, delegationPeriod, "D2 is even", {from: holder});
+                await delegationController.delegate(
+                    validatorId, amount, delegationPeriod, "D2 is even", {from: holder});
                 const delegationId = 0;
                 await delegationController.acceptPendingDelegation(delegationId, {from: validator});
 

@@ -118,7 +118,7 @@ contract ValidatorService is Permissions {
     function checkMinimumDelegation(uint validatorId, uint amount)
         external view
         checkValidatorExists(validatorId)
-        allow("DelegationService")
+        allow("DelegationController")
         returns (bool)
     {
         return validators[validatorId].minimumDelegationAmount <= amount ? true : false;

@@ -88,7 +88,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
 
             await skaleToken.transfer(validator, "0x410D586A20A4C00000", {from: owner});
             await validatorService.enableValidator(validatorId, {from: owner});
-            await delegationService.delegate(validatorId, 100, 12, "Hello from D2", {from: validator});
+            await delegationController.delegate(validatorId, 100, 12, "Hello from D2", {from: validator});
             const delegationId = 0;
             await delegationController.acceptPendingDelegation(delegationId, {from: validator});
 

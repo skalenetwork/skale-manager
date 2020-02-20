@@ -31,10 +31,6 @@ import "./TimeHelpers.sol";
 
 contract DelegationService is Permissions {
 
-    event DelegationRequestIsSent(
-        uint delegationId
-    );
-
     event ValidatorRegistered(
         uint validatorId
     );
@@ -80,48 +76,6 @@ contract DelegationService is Permissions {
     function getDelegatedAmount(uint validatorId) external returns (uint) {
         DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
         return delegationController.calculateDelegatedToValidatorNow(validatorId);
-    }
-
-    /// @notice Creates request to delegate `amount` of tokens to `validator` from the begining of the next month
-    function delegate(
-        uint validatorId,
-        uint amount,
-        uint delegationPeriod,
-        string calldata info
-    )
-        external
-    {
-
-        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
-        DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
-        DelegationPeriodManager delegationPeriodManager = DelegationPeriodManager(contractManager.getContract("DelegationPeriodManager"));
-        SkaleToken skaleToken = SkaleToken(contractManager.getContract("SkaleToken"));
-        TokenState tokenState = TokenState(contractManager.getContract("TokenState"));
-
-        require(
-            validatorService.checkMinimumDelegation(validatorId, amount),
-            "Amount doesn't meet minimum delegation amount"
-        );
-        require(validatorService.trustedValidators(validatorId), "Validator is not authorized to accept request");
-        require(
-            delegationPeriodManager.isDelegationPeriodAllowed(delegationPeriod),
-            "This delegation period is not allowed"
-        );
-
-        // check that there is enough money
-        uint holderBalance = skaleToken.balanceOf(msg.sender);
-        uint forbiddenForDelegation = tokenState.calculateForbiddenForDelegationAmount(msg.sender);
-        require(holderBalance >= amount + forbiddenForDelegation, "Delegator doesn't have enough tokens to delegate");
-
-        uint delegationId = delegationController.addDelegation(
-            msg.sender,
-            validatorId,
-            amount,
-            delegationPeriod,
-            info
-        );
-
-        emit DelegationRequestIsSent(delegationId);
     }
 
     function getAllDelegationRequests() external pure returns(uint[] memory) {

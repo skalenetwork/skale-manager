@@ -66,31 +66,31 @@ contract("DelegationService", ([owner, holder1, holder2, validator, validator1])
 
         it("should reject delegation if validator with such id doesn't exist", async () => {
             const nonExistedValidatorId = 2;
-            await delegationService.delegate(nonExistedValidatorId, amount, delegationPeriod, info, {from: holder1})
+            await delegationController.delegate(nonExistedValidatorId, amount, delegationPeriod, info, {from: holder1})
                 .should.be.eventually.rejectedWith("Validator with such id doesn't exist");
         });
 
         it("should reject delegation if it doesn't meet minimum delegation amount", async () => {
             amount = 99;
-            await delegationService.delegate(validatorId, amount, delegationPeriod, info, {from: holder1})
+            await delegationController.delegate(validatorId, amount, delegationPeriod, info, {from: holder1})
                 .should.be.eventually.rejectedWith("Amount doesn't meet minimum delegation amount");
         });
 
         it("should reject delegation if request doesn't meet allowed delegation period", async () => {
             delegationPeriod = 4;
-            await delegationService.delegate(validatorId, amount, delegationPeriod, info, {from: holder1})
+            await delegationController.delegate(validatorId, amount, delegationPeriod, info, {from: holder1})
                 .should.be.eventually.rejectedWith("This delegation period is not allowed");
         });
 
         it("should reject delegation if holder doesn't have enough unlocked tokens for delegation", async () => {
             amount = 101;
-            await delegationService.delegate(validatorId, amount, delegationPeriod, info, {from: holder1})
+            await delegationController.delegate(validatorId, amount, delegationPeriod, info, {from: holder1})
                 .should.be.eventually.rejectedWith("Delegator doesn't have enough tokens to delegate");
         });
 
         it("should send request for delegation", async () => {
             await skaleToken.mint(owner, holder1, amount, "0x", "0x");
-            const { logs } = await delegationService.delegate(
+            const { logs } = await delegationController.delegate(
                 validatorId, amount, delegationPeriod, info, {from: holder1});
             assert.equal(logs.length, 1, "No DelegationRequestIsSent Event emitted");
             assert.equal(logs[0].event, "DelegationRequestIsSent");
@@ -105,8 +105,8 @@ contract("DelegationService", ([owner, holder1, holder2, validator, validator1])
 
         it("should reject delegation if it doesn't have enough tokens", async () => {
             await skaleToken.mint(owner, holder1, 2 * amount, "0x", "0x");
-            await delegationService.delegate(validatorId, amount + 1, delegationPeriod, info, {from: holder1});
-            await delegationService.delegate(validatorId, amount, delegationPeriod, info, {from: holder1})
+            await delegationController.delegate(validatorId, amount + 1, delegationPeriod, info, {from: holder1});
+            await delegationController.delegate(validatorId, amount, delegationPeriod, info, {from: holder1})
                 .should.be.eventually.rejectedWith("Delegator doesn't have enough tokens to delegate");
 
         });
@@ -119,7 +119,7 @@ contract("DelegationService", ([owner, holder1, holder2, validator, validator1])
         describe("when delegation request was created", async () => {
             beforeEach(async () => {
                 await skaleToken.mint(owner, holder1, amount, "0x", "0x");
-                const { logs } = await delegationService.delegate(
+                const { logs } = await delegationController.delegate(
                     validatorId, amount, delegationPeriod, info, {from: holder1});
                 delegationId = logs[0].args.delegationId;
             });
