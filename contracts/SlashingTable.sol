@@ -6,7 +6,7 @@ import "./Permissions.sol";
 contract SlashingTable is Permissions {
     mapping (uint => uint) private _penalties;
 
-    constructor (address _contractManager) public {
+    function initialize(address _contractManager) public initializer {
         Permissions.initialize(_contractManager);
     }
 

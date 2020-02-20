@@ -79,6 +79,7 @@ async function deploy(deployer, networkName, accounts) {
         "TokenSaleManager",
         "TokenState",
         "ValidatorService",
+        "SlashingTable",
 
         "ConstantsHolder",
         "NodesData",
