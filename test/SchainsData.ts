@@ -18,18 +18,22 @@ class Schain {
     public partOfNode: number;
     public lifetime: BigNumber;
     public startDate: BigNumber;
+    public startBlock: BigNumber;
     public deposit: BigNumber;
     public index: BigNumber;
 
-    constructor(arrayData: [string, string, BigNumber, BigNumber, BigNumber, BigNumber, BigNumber, BigNumber]) {
+    constructor(
+        arrayData: [string, string, BigNumber, BigNumber, BigNumber, BigNumber, BigNumber, BigNumber, BigNumber],
+    ) {
         this.name = arrayData[0];
         this.owner = arrayData[1];
         this.indexInOwnerList = new BigNumber(arrayData[2]);
         this.partOfNode = new BigNumber(arrayData[3]).toNumber();
         this.lifetime = new BigNumber(arrayData[4]);
         this.startDate = new BigNumber(arrayData[5]);
-        this.deposit = new BigNumber(arrayData[6]);
-        this.index = new BigNumber(arrayData[7]);
+        this.startBlock = new BigNumber(arrayData[6]);
+        this.deposit = new BigNumber(arrayData[7]);
+        this.index = new BigNumber(arrayData[8]);
     }
 }
 
