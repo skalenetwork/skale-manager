@@ -41,7 +41,7 @@ script:
     - yarn generate    
 # TODO: Temporary disable tests while SKALE-1642 is not ready
 # Just deploy contracts instead
-    - truffle deploy --network test
+    # - truffle deploy --network test
 #     - yarn test || travis_terminate 3
 after_script:
     - npx buidler coverage --solcoverjs .solcover.js || travis_terminate 4
