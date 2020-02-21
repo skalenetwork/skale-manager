@@ -15,6 +15,7 @@ import { deployDelegationService } from "../utils/deploy/delegation/delegationSe
 import { deployTokenLaunchManager } from "../utils/deploy/delegation/tokenLaunchManager";
 import { deployValidatorService } from "../utils/deploy/delegation/validatorService";
 import { deploySkaleToken } from "../utils/deploy/skaleToken";
+import { State } from "../utils/types";
 chai.should();
 chai.use(chaiAsPromised);
 
@@ -84,10 +85,33 @@ contract("TokenLaunchManager", ([owner, holder, delegation, validator, seller, h
         describe("when holder bought tokens", async () => {
             const validatorId = 1;
             const totalAmount = 100;
+            const month = 60 * 60 * 24 * 31;
 
             beforeEach(async () => {
                 await TokenLaunchManager.approve([holder], [totalAmount], {from: seller});
                 await TokenLaunchManager.retrieve({from: holder});
+            });
+
+            it("should lock tokens", async () => {
+                const locked = await skaleToken.calculateLockedAmount.call(holder);
+                locked.toNumber().should.be.equal(totalAmount);
+                const delegated = await skaleToken.calculateDelegatedAmount.call(holder);
+                delegated.toNumber().should.be.equal(0);
+            });
+
+            it("should not unlock purchased tokens if delegation request was cancelled", async () => {
+                const period = 3;
+                await delegationController.delegate(validatorId, totalAmount, period, "INFO", {from: holder});
+                const delegationId = 0;
+                const createdDelegation = await delegationController.getDelegation(delegationId);
+                createdDelegation.holder.should.be.deep.equal(holder);
+
+                await delegationController.cancelPendingDelegation(delegationId, {from: holder});
+
+                const locked = await skaleToken.calculateLockedAmount.call(holder);
+                locked.toNumber().should.be.equal(totalAmount);
+                const delegated = await skaleToken.calculateDelegatedAmount.call(holder);
+                delegated.toNumber().should.be.equal(0);
             });
 
             it("should be able to delegate part of tokens", async () => {
@@ -106,7 +130,6 @@ contract("TokenLaunchManager", ([owner, holder, delegation, validator, seller, h
                 await skaleToken.send(hacker, 1, "0x", {from: holder})
                     .should.be.eventually.rejectedWith("Token should be unlocked for transferring");
 
-                const month = 60 * 60 * 24 * 31;
                 skipTime(web3, month);
 
                 await delegationService.requestUndelegation(delegationId, {from: holder});
@@ -117,6 +140,113 @@ contract("TokenLaunchManager", ([owner, holder, delegation, validator, seller, h
                 (await skaleToken.balanceOf(hacker)).toNumber().should.be.equal(totalAmount - amount);
 
                 // TODO: move undelegated tokens too
+            });
+
+            it("should unlock all tokens if 50% was delegated", async () => {
+                const amount = Math.ceil(totalAmount / 2);
+                const period = 3;
+                await delegationController.delegate(validatorId, amount, period, "INFO", {from: holder});
+                const delegationId = 0;
+
+                await delegationController.acceptPendingDelegation(delegationId, {from: validator});
+
+                // skip month
+                skipTime(web3, month);
+
+                let delegated = await skaleToken.calculateDelegatedAmount.call(holder);
+                delegated.toNumber().should.be.equal(amount);
+
+                await delegationController.requestUndelegation(delegationId, {from: holder});
+
+                skipTime(web3, month * period);
+
+                const state = await delegationController.getState(delegationId);
+                state.toNumber().should.be.equal(State.COMPLETED);
+                const locked = await skaleToken.calculateLockedAmount.call(holder);
+                locked.toNumber().should.be.equal(0);
+                delegated = await skaleToken.calculateDelegatedAmount.call(holder);
+                delegated.toNumber().should.be.equal(0);
+            });
+
+            it("should unlock no tokens if 40% was delegated", async () => {
+                const amount = Math.ceil(totalAmount * 0.4);
+                const period = 3;
+                await delegationController.delegate(validatorId, amount, period, "INFO", {from: holder});
+                const delegationId = 0;
+
+                await delegationController.acceptPendingDelegation(delegationId, {from: validator});
+
+                // skip month
+                skipTime(web3, month);
+
+                let delegated = await skaleToken.calculateDelegatedAmount.call(holder);
+                delegated.toNumber().should.be.equal(amount);
+
+                await delegationController.requestUndelegation(delegationId, {from: holder});
+
+                delegated = await skaleToken.calculateDelegatedAmount.call(holder);
+                delegated.toNumber().should.be.equal(amount);
+
+                skipTime(web3, month * period);
+
+                const state = await delegationController.getState(delegationId);
+                state.toNumber().should.be.equal(State.COMPLETED);
+                const locked = await skaleToken.calculateLockedAmount.call(holder);
+                locked.toNumber().should.be.equal(totalAmount);
+                delegated = await skaleToken.calculateDelegatedAmount.call(holder);
+                delegated.toNumber().should.be.equal(0);
+            });
+
+            it("should unlock all tokens if 40% was delegated and then 10% was delegated", async () => {
+                // delegate 40%
+                let amount = Math.ceil(totalAmount * 0.4);
+                const period = 3;
+                await delegationController.delegate(validatorId, amount, period, "INFO", {from: holder});
+                let delegationId = 0;
+
+                await delegationController.acceptPendingDelegation(delegationId, {from: validator});
+
+                // skip month
+                skipTime(web3, month);
+
+                let delegated = await skaleToken.calculateDelegatedAmount.call(holder);
+                delegated.toNumber().should.be.equal(amount);
+
+                await delegationController.requestUndelegation(delegationId, {from: holder});
+
+                skipTime(web3, month * period);
+
+                let state = await delegationController.getState(delegationId);
+                state.toNumber().should.be.equal(State.COMPLETED);
+                let locked = await skaleToken.calculateLockedAmount.call(holder);
+                locked.toNumber().should.be.equal(totalAmount);
+                delegated = await skaleToken.calculateDelegatedAmount.call(holder);
+                delegated.toNumber().should.be.equal(0);
+
+                // delegate 10%
+                amount = Math.ceil(totalAmount * 0.1);
+                await delegationController.delegate(validatorId, amount, period, "INFO", {from: holder});
+                delegationId = 1;
+
+                await delegationController.acceptPendingDelegation(delegationId, {from: validator});
+
+                // skip month
+                skipTime(web3, month);
+
+                state = await delegationController.getState(delegationId);
+                state.toNumber().should.be.equal(State.DELEGATED);
+                delegated = await skaleToken.calculateDelegatedAmount.call(holder);
+                delegated.toNumber().should.be.equal(amount);
+                await delegationController.requestUndelegation(delegationId, {from: holder});
+
+                skipTime(web3, month * period);
+
+                state = await delegationController.getState(delegationId);
+                state.toNumber().should.be.equal(State.COMPLETED);
+                locked = await skaleToken.calculateLockedAmount.call(holder);
+                locked.toNumber().should.be.equal(0);
+                delegated = await skaleToken.calculateDelegatedAmount.call(holder);
+                delegated.toNumber().should.be.equal(0);
             });
         });
     });

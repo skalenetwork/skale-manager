@@ -360,6 +360,8 @@ contract("Delegation", ([owner,
                 artifacts.require("./Distributor").abi,
                 distributor.address);
 
+            await constantsHolder.setLaunchTimestamp(0);
+
             let delegationId = 0;
             for (const holder of holders) {
                 await web3.eth.sendTransaction({from: holder1, to: holder.address, value: etherAmount});
