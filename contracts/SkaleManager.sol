@@ -139,7 +139,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
         ISchainsFunctionality(schainsFunctionalityAddress).deleteSchain(msg.sender, name);
     }
 
-    function deleteSchainByRoot(string calldata name) external {
+    function deleteSchainByRoot(string calldata name) external onlyOwner {
         address schainsFunctionalityAddress = contractManager.getContract("SchainsFunctionality");
         ISchainsFunctionality(schainsFunctionalityAddress).deleteSchainByRoot(name);
     }
