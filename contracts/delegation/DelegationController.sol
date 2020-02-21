@@ -103,6 +103,11 @@ contract DelegationController is Permissions, ILocker {
         uint month;
     }
 
+    struct LockedInPending {
+        uint amount;
+        uint month;
+    }
+
     event DelegationRequestIsSent(
         uint delegationId
     );
@@ -141,10 +146,8 @@ contract DelegationController is Permissions, ILocker {
     //        holder =>   validatorId => month
     mapping (address => mapping (uint => uint)) private _firstDelegationMonth;
 
-    //        holder => tokens
-    mapping (address => uint) private _lockedInPendingRequests;
-    //        holder => month
-    mapping (address => uint) private _lastWriteTolockedInPendingRequests;
+    //        holder => locked in pending
+    mapping (address => LockedInPending) private _lockedInPendingDelegations;
 
     modifier checkDelegationExists(uint delegationId) {
         require(delegationId < delegations.length, "Delegation does not exist");
@@ -222,7 +225,7 @@ contract DelegationController is Permissions, ILocker {
         require(getState(delegationId) == State.PROPOSED, "Token holders able to cancel only PROPOSED delegations");
 
         delegations[delegationId].finished = getCurrentMonth();
-        substractFromLockedInPerdingDelegations(delegations[delegationId].holder, delegations[delegationId].amount);
+        subtractFromLockedInPerdingDelegations(delegations[delegationId].holder, delegations[delegationId].amount);
     }
 
     /// @notice Allows validator to accept tokens delegated at `delegationId`
@@ -376,10 +379,10 @@ contract DelegationController is Permissions, ILocker {
 
     function getLockedInPendingDelegations(address holder) public view returns (uint) {
         uint currentMonth = getCurrentMonth();
-        if (_lastWriteTolockedInPendingRequests[holder] < currentMonth) {
+        if (_lockedInPendingDelegations[holder].month < currentMonth) {
             return 0;
         } else {
-            return _lockedInPendingRequests[holder];
+            return _lockedInPendingDelegations[holder].amount;
         }
     }
 
@@ -529,18 +532,20 @@ contract DelegationController is Permissions, ILocker {
 
     function addToLockedInPendingDelegations(address holder, uint amount) internal returns (uint) {
         uint currentMonth = getCurrentMonth();
-        if (_lastWriteTolockedInPendingRequests[holder] < currentMonth) {
-            _lockedInPendingRequests[holder] = 0;
+        if (_lockedInPendingDelegations[holder].month < currentMonth) {
+            _lockedInPendingDelegations[holder].amount = amount;
+            _lockedInPendingDelegations[holder].month = currentMonth;
+        } else {
+            assert(_lockedInPendingDelegations[holder].month == currentMonth);
+            _lockedInPendingDelegations[holder].amount += amount;
         }
-        _lockedInPendingRequests[holder] += amount;
-        _lastWriteTolockedInPendingRequests[holder] = currentMonth;
     }
 
-    function substractFromLockedInPerdingDelegations(address holder, uint amount) internal returns (uint) {
+    function subtractFromLockedInPerdingDelegations(address holder, uint amount) internal returns (uint) {
         uint currentMonth = getCurrentMonth();
-        require(_lastWriteTolockedInPendingRequests[holder] == currentMonth, "There are no delegation requests this month");
-        require(_lockedInPendingRequests[holder] >= amount, "Unlocking amount is too big");
-        _lockedInPendingRequests[holder] -= amount;
+        require(_lockedInPendingDelegations[holder].month == currentMonth, "There are no delegation requests this month");
+        require(_lockedInPendingDelegations[holder].amount >= amount, "Unlocking amount is too big");
+        _lockedInPendingDelegations[holder].amount -= amount;
     }
 
     function getCurrentMonth() internal view returns (uint) {

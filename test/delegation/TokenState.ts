@@ -1,6 +1,9 @@
 import { ContractManagerInstance,
          DelegationControllerInstance,
-         TokenStateInstance } from "../../types/truffle-contracts";
+         DelegationServiceInstance,
+         SkaleTokenInstance,
+         TokenStateInstance,
+         ValidatorServiceInstance} from "../../types/truffle-contracts";
 
 import { deployContractManager } from "../utils/deploy/contractManager";
 import { currentTime, skipTime } from "../utils/time";
@@ -8,82 +11,89 @@ import { currentTime, skipTime } from "../utils/time";
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
 import { deployDelegationController } from "../utils/deploy/delegation/delegationController";
+import { deployDelegationService } from "../utils/deploy/delegation/delegationService";
 import { deployTokenState } from "../utils/deploy/delegation/tokenState";
+import { deployValidatorService } from "../utils/deploy/delegation/validatorService";
+import { deploySkaleToken } from "../utils/deploy/skaleToken";
+import { State } from "../utils/types";
 chai.should();
 chai.use(chaiAsPromised);
 
-enum State {
-    PROPOSED,
-    ACCEPTED,
-    DELEGATED,
-    ENDING_DELEGATED,
-    COMPLETED,
-}
+contract("TokenState", ([owner, holder, validator]) => {
+    let contractManager: ContractManagerInstance;
+    let delegationController: DelegationControllerInstance;
+    let tokenState: TokenStateInstance;
+    let validatorService: ValidatorServiceInstance;
+    let delegationService: DelegationServiceInstance;
+    let skaleToken: SkaleTokenInstance;
 
-// contract("TokenState", ([owner, holder]) => {
-//     let contractManager: ContractManagerInstance;
-//     let delegationController: DelegationControllerInstance;
-//     let tokenState: TokenStateInstance;
+    let validatorId: number;
+    const month = 60 * 60 * 24 * 31;
 
-//     beforeEach(async () => {
-//         contractManager = await deployContractManager();
-//         delegationController = await deployDelegationController(contractManager);
-//         tokenState = await deployTokenState(contractManager);
-//     });
+    beforeEach(async () => {
+        contractManager = await deployContractManager();
+        delegationController = await deployDelegationController(contractManager);
+        tokenState = await deployTokenState(contractManager);
+        validatorService = await deployValidatorService(contractManager);
+        delegationService = await deployDelegationService(contractManager);
+        skaleToken = await deploySkaleToken(contractManager);
 
-//     it("should not lock tokens by default", async () => {
-//         (await tokenState.getLockedCount.call(holder)).toNumber().should.be.equal(0);
-//         (await tokenState.getDelegatedCount.call(holder)).toNumber().should.be.equal(0);
-//     });
+        await delegationService.registerValidator("Validator", "D2 is even", 150, 0, {from: validator});
+        validatorId = 1;
+        await validatorService.enableValidator(validatorId, {from: owner});
+        await skaleToken.mint(owner, holder, 1000, "0x", "0x");
+    });
 
-//     it("should be in `proposed` state by default", async () => {
-//         // create delegation with id "0"
-//         const amount = 100;
-//         const time = await currentTime(web3);
-//         await delegationController.addDelegation(holder, "5", amount.toString(), "3", time, "INFO");
+    it("should not lock tokens by default", async () => {
+        (await delegationController.calculateLockedAmount.call(holder)).toNumber().should.be.equal(0);
+        (await delegationController.calculateDelegatedAmount.call(holder)).toNumber().should.be.equal(0);
+    });
 
-//         const returnedState = await tokenState.getState.call(0);
-//         returnedState.toNumber().should.be.equal(State.PROPOSED);
-//     });
+    it("should be in `proposed` state after delegation request is sent", async () => {
+        // create delegation with id "0"
+        const amount = 100;
+        await delegationController.delegate(validatorId, amount, 3, "INFO", {from: holder});
+        const delegationId = 0;
 
-//     it("should automatically unlock tokens after delegation request if validator don't accept", async () => {
-//         const amount = 100;
+        const returnedState = await delegationController.getState(delegationId);
+        returnedState.toNumber().should.be.equal(State.PROPOSED);
+    });
 
-//         const time = await currentTime(web3);
-//         await delegationController.addDelegation(holder, "5", amount.toString(), "3", time, "INFO");
-//         const delegationId = 0;
+    it("should automatically unlock tokens after delegation request if validator don't accept", async () => {
+        const amount = 100;
 
-//         const month = 60 * 60 * 24 * 31;
-//         skipTime(web3, month);
+        await delegationController.delegate(validatorId, amount, 3, "INFO", {from: holder});
+        const delegationId = 0;
 
-//         const state = await tokenState.getState.call(delegationId);
-//         state.toNumber().should.be.equal(State.COMPLETED);
-//         const locked = await tokenState.getLockedCount.call(holder);
-//         locked.toNumber().should.be.equal(0);
-//         const delegated = await tokenState.getDelegatedCount.call(holder);
-//         delegated.toNumber().should.be.equal(0);
-//     });
+        skipTime(web3, month);
 
-//     it("should allow holder to cancel delegation before acceptance", async () => {
-//         const amount = 100;
-//         const time = await currentTime(web3);
-//         await delegationController.addDelegation(holder, "5", amount.toString(), "3", time, "INFO");
-//         const delegationId = 0;
+        const state = await delegationController.getState(delegationId);
+        state.toNumber().should.be.equal(State.REJECTED);
+        const locked = await delegationController.calculateLockedAmount.call(holder);
+        locked.toNumber().should.be.equal(0);
+        const delegated = await delegationController.calculateDelegatedAmount.call(holder);
+        delegated.toNumber().should.be.equal(0);
+    });
 
-//         let locked = await tokenState.getLockedCount.call(holder);
-//         locked.toNumber().should.be.equal(amount);
-//         let delegated = await tokenState.getDelegatedCount.call(holder);
-//         delegated.toNumber().should.be.equal(0);
+    it("should allow holder to cancel delegation before acceptance", async () => {
+        const amount = 100;
+        await delegationController.delegate(validatorId, amount, 3, "INFO", {from: holder});
+        const delegationId = 0;
 
-//         await tokenState.cancel(delegationId);
+        let locked = await delegationController.calculateLockedAmount.call(holder);
+        locked.toNumber().should.be.equal(amount);
+        let delegated = await delegationController.calculateDelegatedAmount.call(holder);
+        delegated.toNumber().should.be.equal(0);
 
-//         const state = await tokenState.getState.call(delegationId);
-//         state.toNumber().should.be.equal(State.COMPLETED);
-//         locked = await tokenState.getLockedCount.call(holder);
-//         locked.toNumber().should.be.equal(0);
-//         delegated = await tokenState.getDelegatedCount.call(holder);
-//         delegated.toNumber().should.be.equal(0);
-//     });
+        await delegationController.cancelPendingDelegation(delegationId, {from: holder});
+
+        const state = await delegationController.getState(delegationId);
+        state.toNumber().should.be.equal(State.CANCELED);
+        locked = await delegationController.calculateLockedAmount.call(holder);
+        locked.toNumber().should.be.equal(0);
+        delegated = await delegationController.calculateDelegatedAmount.call(holder);
+        delegated.toNumber().should.be.equal(0);
+    });
 
 //     it("should allow to move delegation from proposed to accepted state", async () => {
 //         const amount = 100;
@@ -356,4 +366,4 @@ enum State {
 //             });
 //         });
 //     });
-// });
+});
