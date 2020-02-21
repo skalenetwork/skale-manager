@@ -21,7 +21,9 @@ import { ConstantsHolderContract,
          SkaleDKGContract,
          SkaleDKGInstance,
          SkaleVerifierContract,
-         SkaleVerifierInstance} from "../types/truffle-contracts";
+         SkaleVerifierInstance,
+         StringUtilsContract,
+         StringUtilsInstance} from "../types/truffle-contracts";
 
 import { gasMultiplier } from "./utils/command_line";
 import { skipTime } from "./utils/time";
@@ -37,6 +39,7 @@ const Decryption: DecryptionContract = artifacts.require("./Decryption");
 const ECDH: ECDHContract = artifacts.require("./ECDH");
 const SkaleVerifier: SkaleVerifierContract = artifacts.require("./SkaleVerifier");
 const SkaleDKG: SkaleDKGContract = artifacts.require("./SkaleDKG");
+const StringUtils: StringUtilsContract = artifacts.require("./StringUtils");
 
 import BigNumber from "bignumber.js";
 chai.should();
@@ -54,6 +57,7 @@ contract("SkaleVerifier", ([validator1, owner, developer, hacker]) => {
     let ecdh: ECDHInstance;
     let skaleVerifier: SkaleVerifierInstance;
     let skaleDKG: SkaleDKGInstance;
+    let stringUtils: StringUtilsInstance;
 
     beforeEach(async () => {
         contractManager = await ContractManager.new({from: validator1});
@@ -107,6 +111,9 @@ contract("SkaleVerifier", ([validator1, owner, developer, hacker]) => {
             {from: validator1},
         );
         await contractManager.setContractsAddress("SkaleVerifier", skaleVerifier.address, {from: validator1});
+
+        stringUtils = await StringUtils.new();
+        await contractManager.setContractsAddress("StringUtils", stringUtils.address);
     });
 
     describe("when skaleVerifier contract is activated", async () => {

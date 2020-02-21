@@ -10,6 +10,8 @@ import {
         NodesFunctionalityInstance,
         SkaleDKGContract,
         SkaleDKGInstance,
+        StringUtilsContract,
+        StringUtilsInstance,
         ValidatorsDataContract,
         ValidatorsDataInstance,
         ValidatorsFunctionalityContract,
@@ -30,6 +32,7 @@ const ValidatorsData: ValidatorsDataContract = artifacts.require("./ValidatorsDa
 const NodesData: NodesDataContract = artifacts.require("./NodesData");
 const NodesFunctionality: NodesFunctionalityContract = artifacts.require("./NodesFunctionality");
 const SkaleDKG: SkaleDKGContract = artifacts.require("./SkaleDKG");
+const StringUtils: StringUtilsContract = artifacts.require("./StringUtils");
 
 contract("ValidatorsFunctionality", ([owner, validator]) => {
   let contractManager: ContractManagerInstance;
@@ -39,6 +42,7 @@ contract("ValidatorsFunctionality", ([owner, validator]) => {
   let nodesData: NodesDataInstance;
   let nodesFunctionality: NodesFunctionalityInstance;
   let skaleDKG: SkaleDKGInstance;
+  let stringUtils: StringUtilsInstance;
 
   beforeEach(async () => {
     contractManager = await ContractManager.new({from: owner});
@@ -69,6 +73,9 @@ contract("ValidatorsFunctionality", ([owner, validator]) => {
 
     skaleDKG = await SkaleDKG.new(contractManager.address, {from: owner});
     await contractManager.setContractsAddress("SkaleDKG", skaleDKG.address);
+
+    stringUtils = await StringUtils.new();
+    await contractManager.setContractsAddress("StringUtils", stringUtils.address);
 
     // create a node for validators functions tests
     await nodesData.addNode(validator, "elvis1", "0x7f000001", "0x7f000002", 8545, "0x1122334455");

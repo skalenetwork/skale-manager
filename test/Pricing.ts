@@ -12,7 +12,9 @@ import { ContractManagerContract,
          SchainsDataContract,
          SchainsDataInstance,
          SkaleDKGContract,
-         SkaleDKGInstance  } from "../types/truffle-contracts";
+         SkaleDKGInstance,
+         StringUtilsContract,
+         StringUtilsInstance  } from "../types/truffle-contracts";
 import { skipTime } from "./utils/time";
 
 const ContractManager: ContractManagerContract = artifacts.require("./ContractManager");
@@ -20,6 +22,7 @@ const Pricing: PricingContract = artifacts.require("./Pricing");
 const SchainsData: SchainsDataContract = artifacts.require("./SchainsData");
 const NodesData: NodesDataContract = artifacts.require("./NodesData");
 const SkaleDKG: SkaleDKGContract = artifacts.require("./SkaleDKG");
+const StringUtils: StringUtilsContract = artifacts.require("./StringUtils");
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -30,6 +33,7 @@ contract("Pricing", ([owner, holder]) => {
     let schainsData: SchainsDataInstance;
     let nodesData: NodesDataInstance;
     let skaleDKG: SkaleDKGInstance;
+    let stringUtils: StringUtilsInstance;
 
     beforeEach(async () => {
         contractManager = await ContractManager.new({from: owner});
@@ -43,6 +47,8 @@ contract("Pricing", ([owner, holder]) => {
         await contractManager.setContractsAddress("NodesData", nodesData.address);
         skaleDKG = await SkaleDKG.new(contractManager.address, {from: owner});
         await contractManager.setContractsAddress("SkaleDKG", skaleDKG.address);
+        stringUtils = await StringUtils.new();
+        await contractManager.setContractsAddress("StringUtils", stringUtils.address);
     });
 
     describe("on initialized contracts", async () => {
