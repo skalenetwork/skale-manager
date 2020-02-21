@@ -280,7 +280,7 @@ contract DelegationController is Permissions, ILocker {
             delegations[delegationId].started);
     }
 
-    function requestUndelegation(uint delegationId) external allow("DelegationService") {
+    function requestUndelegation(uint delegationId) external {
         require(getState(delegationId) == State.DELEGATED, "Can't request undelegation");
 
         TokenLaunchLocker tokenLaunchLocker = TokenLaunchLocker(contractManager.getContract("TokenLaunchLocker"));
@@ -347,7 +347,7 @@ contract DelegationController is Permissions, ILocker {
         // TODO: subtract slashed
     }
 
-    function getState(uint delegationId) public view returns (State state) {
+    function getState(uint delegationId) public view checkDelegationExists(delegationId) returns (State state) {
         if (delegations[delegationId].started == 0) {
             if (delegations[delegationId].finished == 0) {
                 TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
