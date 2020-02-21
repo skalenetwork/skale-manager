@@ -5,7 +5,6 @@
     "DelegationPeriodManager": "DelegationPeriodManager",
     "DelegationService": "DelegationService",
     "Distributor": "Distributor",
-    "SkaleBalances": "SkaleBalances",
     "TimeHelpers": "TimeHelpers",
     "TokenLaunchManager": "TokenLaunchManager",
     "TokenState": "TokenState",

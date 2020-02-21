@@ -25,5 +25,5 @@ interface IDelegatableToken {
 
     function calculateDelegatedAmount(address wallet) external returns (uint);
 
-    function getSlashedOf(address wallet) external returns (uint);
+    function calculateSlashedAmount(address wallet) external returns (uint);
 }

@@ -77,8 +77,6 @@ contract Distributor is Permissions, IERC777Recipient {
 
         require(now >= timeHelpers.addMonths(constantsHolder.launchTimestamp(), 3), "Bounty is locked");
 
-        // TODO: Limit withdrawing
-
         uint fee;
         uint endMonth;
         uint validatorId = validatorService.getValidatorId(msg.sender);

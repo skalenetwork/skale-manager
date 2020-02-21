@@ -1,5 +1,6 @@
 import { ContractManagerInstance, SkaleTokenContract } from "../../../types/truffle-contracts";
-import { deployDelegationService } from "./delegation/delegationService";
+import { deployDelegationController } from "./delegation/delegationController";
+import { deployPunisher } from "./delegation/punisher";
 import { deployTokenState } from "./delegation/tokenState";
 
 const SkaleToken: SkaleTokenContract = artifacts.require("./SkaleToken");
@@ -12,8 +13,9 @@ async function deploy(contractManager: ContractManagerInstance) {
 }
 
 async function deployDependencies(contractManager: ContractManagerInstance) {
-    await deployDelegationService(contractManager);
     await deployTokenState(contractManager);
+    await deployDelegationController(contractManager);
+    await deployPunisher(contractManager);
 }
 
 export async function deploySkaleToken(contractManager: ContractManagerInstance) {

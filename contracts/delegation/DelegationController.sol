@@ -118,12 +118,6 @@ contract DelegationController is Permissions, ILocker {
     // delegationId => extras
     mapping(uint => DelegationExtras) private _delegationExtras;
 
-    // ///       holder => delegationId[]
-    // mapping (address => uint[]) private _activeByHolder;
-
-    // /// validatorId => delegationId[]
-    // mapping (uint => uint[]) private _activeByValidator;
-
     // validatorId => sequence
     mapping (uint => PartialDifferencesValue) private _delegatedToValidator;
     // validatorId => sequence
@@ -442,8 +436,6 @@ contract DelegationController is Permissions, ILocker {
             0,
             info
         ));
-        // _activeByHolder[holder].push(delegationId);
-        // _activeByValidator[validatorId].push(delegationId);
         addToLockedInPendingDelegations(delegations[delegationId].holder, delegations[delegationId].amount);
     }
 

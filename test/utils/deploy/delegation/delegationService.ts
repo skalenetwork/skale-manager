@@ -2,7 +2,6 @@ import { ContractManagerInstance, DelegationServiceContract } from "../../../../
 import { deploySkaleToken } from "../skaleToken";
 import { deployDelegationController } from "./delegationController";
 import { deployDistributor } from "./distributor";
-import { deploySkaleBalances } from "./skaleBalances";
 import { deployTokenState } from "./tokenState";
 import { deployValidatorService } from "./validatorService";
 
@@ -21,7 +20,6 @@ async function deployDependencies(contractManager: ContractManagerInstance) {
     await deployDelegationController(contractManager);
     await deployValidatorService(contractManager);
     await deployDistributor(contractManager);
-    await deploySkaleBalances(contractManager);
     await deploySkaleToken(contractManager);
 }
 

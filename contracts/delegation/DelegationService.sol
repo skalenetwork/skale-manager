@@ -24,7 +24,6 @@ import "../Permissions.sol";
 import "./ValidatorService.sol";
 import "./DelegationController.sol";
 import "./Distributor.sol";
-import "./SkaleBalances.sol";
 import "./TokenState.sol";
 import "./TimeHelpers.sol";
 
@@ -45,18 +44,6 @@ contract DelegationService is Permissions {
         delegationController.requestUndelegation(delegationId);
     }
 
-    function getDelegationsByHolder(DelegationController.State state) external returns (uint[] memory) {
-        revert("getDelegationsByHolder is not implemented");
-        // DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
-        // return delegationController.getDelegationsByHolder(msg.sender, state);
-    }
-
-    function getDelegationsForValidator(DelegationController.State state) external returns (uint[] memory) {
-        revert("getDelegationsForValidator is not implemetned");
-        // DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
-        // return delegationController.getDelegationsForValidator(msg.sender, state);
-    }
-
     function setMinimumDelegationAmount(uint /* amount */) external {
         revert("Not implemented");
     }
@@ -64,12 +51,6 @@ contract DelegationService is Permissions {
     /// @notice Returns array of delegation requests id
     function listDelegationRequests() external pure returns (uint[] memory) {
         revert("Not implemented");
-    }
-
-    function forgive(address wallet, uint amount) external onlyOwner() {
-        revert("forgive is not implemented");
-        // TokenState tokenState = TokenState(contractManager.getContract("TokenState"));
-        // tokenState.forgive(wallet, amount);
     }
 
     /// @notice Returns amount of delegated token of the validator
@@ -160,21 +141,6 @@ contract DelegationService is Permissions {
     /// @notice removes node from system
     function deleteNode(uint /* nodeIndex */) external {
         revert("Not implemented");
-    }
-
-    /// @notice Makes all tokens of target account unavailable to move
-    function lock(address wallet, uint amount) external allow("TokenLaunchManager") {
-        SkaleToken skaleToken = SkaleToken(contractManager.getContract("SkaleToken"));
-        TokenState tokenState = TokenState(contractManager.getContract("TokenState"));
-
-        require(skaleToken.balanceOf(wallet) >= tokenState.getPurchasedAmount(wallet) + amount, "Not enough founds");
-
-        tokenState.sold(wallet, amount);
-    }
-
-    function getSlashedOf(address wallet) external view returns (uint) {
-        TokenState tokenState = TokenState(contractManager.getContract("TokenState"));
-        return tokenState.getSlashedAmount(wallet);
     }
 
     function initialize(address _contractsAddress) public initializer {

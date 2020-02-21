@@ -27,6 +27,7 @@ import "./interfaces/INodesFunctionality.sol";
 import "./interfaces/ISchainsFunctionality.sol";
 import "./interfaces/IManagerData.sol";
 import "./delegation/DelegationService.sol";
+import "./delegation/Distributor.sol";
 import "./delegation/ValidatorService.sol";
 import "./MonitorsFunctionality.sol";
 import "./NodesFunctionality.sol";
@@ -63,11 +64,6 @@ contract SkaleManager is IERC777Recipient, Permissions {
         external
         allow("SkaleToken")
     {
-        if (from == contractManager.getContract("SkaleBalances")) {
-            // skip parsing of user data
-            return;
-        }
-
         TransactionOperation operationType = fallbackOperationTypeConvert(userData);
         if (operationType == TransactionOperation.CreateSchain) {
             address schainsFunctionalityAddress = contractManager.getContract("SchainsFunctionality");
@@ -263,16 +259,14 @@ contract SkaleManager is IERC777Recipient, Permissions {
     function payBounty(uint bountyForMiner, address miner, uint nodeIndex) internal returns (bool) {
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
         SkaleToken skaleToken = SkaleToken(contractManager.getContract("SkaleToken"));
-        DelegationService delegationService = DelegationService(contractManager.getContract("DelegationService"));
+        Distributor distributor = Distributor(contractManager.getContract("Distributor"));
+
         uint validatorId = validatorService.getValidatorId(miner);
         uint bounty = bountyForMiner;
         if (!validatorService.checkPossibilityToMaintainNode(validatorId, nodeIndex)) {
             bounty /= 2;
         }
-        // TODO: get money to pay bounty
-        revert("Pay bounty is not implemented");
-        // delegationService.withdrawBounty(address(this), bounty);
-        skaleToken.send(address(delegationService), bounty, abi.encode(validatorId));
+        skaleToken.send(address(distributor), bounty, abi.encode(validatorId));
     }
 
     function fallbackOperationTypeConvert(bytes memory data) internal pure returns (TransactionOperation) {

@@ -79,7 +79,6 @@ async function deploy(deployer, networkName, accounts) {
         "DelegationService",
         "Distributor",
         "Punisher",
-        "SkaleBalances",
         "TimeHelpers",
         "TokenLaunchManager",
         "TokenState",
