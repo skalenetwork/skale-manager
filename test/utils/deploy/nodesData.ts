@@ -8,11 +8,6 @@ const deployNodesData: (contractManager: ContractManagerInstance) => Promise<Nod
     = deployFunctionFactory("NodesData",
                             async (contractManager: ContractManagerInstance) => {
                                 await deployConstantsHolder(contractManager);
-                            },
-                            async (contractManager: ContractManagerInstance) => {
-                                const instance = await NodesData.new();
-                                await instance.initialize(contractManager.address);
-                                return instance;
                             });
 
 export { deployNodesData };

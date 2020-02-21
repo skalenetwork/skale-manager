@@ -237,6 +237,10 @@ contract SchainsData is GroupsData {
         rotations[schainIndex].rotationCounter++;
     }
 
+    function skipRotationDelay(bytes32 schainIndex) external onlyOwner {
+        rotations[schainIndex].freezeUntil = now;
+    }
+
     function getRotation(bytes32 schainIndex) external view returns (Rotation memory) {
         return rotations[schainIndex];
     }

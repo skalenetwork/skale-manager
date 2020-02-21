@@ -459,33 +459,33 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                     );
                 });
 
-                // it("should send complaint from 2 node", async () => {
-                //     const result = await skaleDKG.complaint(
-                //         web3.utils.soliditySha3(schainName),
-                //         1,
-                //         0,
-                //         {from: validatorsAccount[1]},
-                //     );
-                //     assert.equal(result.logs[0].event, "ComplaintSent");
-                //     assert.equal(result.logs[0].args.groupIndex, web3.utils.soliditySha3(schainName));
-                //     assert.equal(result.logs[0].args.fromNodeIndex.toString(), "1");
-                //     assert.equal(result.logs[0].args.toNodeIndex.toString(), "0");
-                // });
+                it("should send complaint from 2 node", async () => {
+                    const result = await skaleDKG.complaint(
+                        web3.utils.soliditySha3(schainName),
+                        1,
+                        0,
+                        {from: validatorsAccount[1]},
+                    );
+                    assert.equal(result.logs[0].event, "ComplaintSent");
+                    assert.equal(result.logs[0].args.groupIndex, web3.utils.soliditySha3(schainName));
+                    assert.equal(result.logs[0].args.fromNodeIndex.toString(), "1");
+                    assert.equal(result.logs[0].args.toNodeIndex.toString(), "0");
+                });
 
-                // it("should not send 2 complaints from 2 node", async () => {
-                //     const result = await skaleDKG.complaint(
-                //         web3.utils.soliditySha3(schainName),
-                //         1,
-                //         0,
-                //         {from: validatorsAccount[1]},
-                //     );
-                //     await skaleDKG.complaint(
-                //         web3.utils.soliditySha3(schainName),
-                //         1,
-                //         0,
-                //         {from: validatorsAccount[1]},
-                //     ).should.be.eventually.rejectedWith("One more complaint rejected");
-                // });
+                it("should not send 2 complaints from 2 node", async () => {
+                    const result = await skaleDKG.complaint(
+                        web3.utils.soliditySha3(schainName),
+                        1,
+                        0,
+                        {from: validatorsAccount[1]},
+                    );
+                    await skaleDKG.complaint(
+                        web3.utils.soliditySha3(schainName),
+                        1,
+                        0,
+                        {from: validatorsAccount[1]},
+                    ).should.be.eventually.rejectedWith("One more complaint rejected");
+                });
 
                 describe("when complaint successfully sent", async () => {
 
