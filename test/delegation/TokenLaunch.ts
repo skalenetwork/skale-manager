@@ -274,8 +274,13 @@ contract("TokenLaunchManager", ([owner, holder, delegation, validator, seller, h
 
                 // 3rd month after first delegation
 
-                const locked = await skaleToken.calculateLockedAmount.call(holder);
+                let locked = await skaleToken.calculateLockedAmount.call(holder);
                 locked.toNumber().should.be.equal(totalAmount);
+
+                skipTime(web3, month);
+
+                locked = await skaleToken.calculateLockedAmount.call(holder);
+                locked.toNumber().should.be.equal(delegatedAmount);
             });
         });
     });
