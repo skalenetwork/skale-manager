@@ -248,6 +248,35 @@ contract("TokenLaunchManager", ([owner, holder, delegation, validator, seller, h
                 delegated = await skaleToken.calculateDelegatedAmount.call(holder);
                 delegated.toNumber().should.be.equal(0);
             });
+
+            it("should unlock tokens after 3 month after 50% tokens were used", async () => {
+                // delegate 50%
+                let amount = Math.ceil(totalAmount * 0.5);
+                const period = 6;
+                await delegationController.delegate(validatorId, amount, period, "INFO", {from: holder});
+                let delegationId = 0;
+
+                await delegationController.acceptPendingDelegation(delegationId, {from: validator});
+
+                // skip month
+                skipTime(web3, month);
+
+                // delegate 10%
+                let delegatedAmount = amount;
+                amount = Math.ceil(totalAmount * 0.1);
+                delegatedAmount += amount;
+                await delegationController.delegate(validatorId, amount, period, "INFO", {from: holder});
+                delegationId = 1;
+
+                await delegationController.acceptPendingDelegation(delegationId, {from: validator});
+
+                skipTime(web3, 2 * month);
+
+                // 3rd month after first delegation
+
+                const locked = await skaleToken.calculateLockedAmount.call(holder);
+                locked.toNumber().should.be.equal(totalAmount);
+            });
         });
     });
 });

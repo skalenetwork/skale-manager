@@ -27,14 +27,15 @@ import "./TimeHelpers.sol";
 
 contract TokenLaunchLocker is Permissions, ILocker {
 
-    struct PartialDifferences {
+    struct PartialDifferencesValue {
              // month => diff
         mapping (uint => uint) addDiff;
              // month => diff
         mapping (uint => uint) subtractDiff;
-        uint value;
 
+        uint value;
         uint firstUnprocessedMonth;
+        uint lastChangedMonth;
     }
 
     struct DelegatedAmountAndMonth {
@@ -46,12 +47,9 @@ contract TokenLaunchLocker is Permissions, ILocker {
     mapping (address => uint) private _locked;
 
     //        holder => tokens
-    mapping (address => PartialDifferences) private _delegatedAmount;
+    mapping (address => PartialDifferencesValue) private _delegatedAmount;
 
     mapping (address => DelegatedAmountAndMonth) private _totalDelegatedAmount;
-
-    //        holder => month
-    mapping (address => uint) private _latestDelegatedMonth;
 
     // delegationId => tokens
     mapping (uint => uint) private _delegationAmount;
@@ -78,9 +76,6 @@ contract TokenLaunchLocker is Permissions, ILocker {
                 addToDelegatedAmount(holder, fromLocked, month);
                 addToTotalDelegatedAmount(holder, fromLocked, month);
                 _delegationAmount[delegationId] = fromLocked;
-                if (month > _latestDelegatedMonth[holder]) {
-                    _latestDelegatedMonth[holder] = month;
-                }
             }
         }
     }
@@ -89,9 +84,6 @@ contract TokenLaunchLocker is Permissions, ILocker {
         if (_delegationAmount[delegationId] > 0) {
             if (_locked[holder] > 0) {
                 removeFromDelegatedAmount(holder, _delegationAmount[delegationId], month);
-                if (month > _latestDelegatedMonth[holder]) {
-                    _latestDelegatedMonth[holder] = month;
-                }
             }
             delete _delegationAmount[delegationId];
         }
@@ -131,30 +123,15 @@ contract TokenLaunchLocker is Permissions, ILocker {
     // private
 
     function calculateDelegatedAmount(address holder, uint currentMonth) internal returns (uint) {
-        if (_delegatedAmount[holder].firstUnprocessedMonth == 0) {
-            return 0;
-        }
-        for (uint i = _delegatedAmount[holder].firstUnprocessedMonth; i <= currentMonth; ++i) {
-            _delegatedAmount[holder].value += _delegatedAmount[holder].addDiff[i] - _delegatedAmount[holder].subtractDiff[i];
-            delete _delegatedAmount[holder].addDiff[i];
-            delete _delegatedAmount[holder].subtractDiff[i];
-        }
-        if (_delegatedAmount[holder].firstUnprocessedMonth < currentMonth + 1) {
-            _delegatedAmount[holder].firstUnprocessedMonth = currentMonth + 1;
-        }
-        return _delegatedAmount[holder].value;
+        return calculateValue(_delegatedAmount[holder], currentMonth);
     }
 
     function addToDelegatedAmount(address holder, uint amount, uint month) internal {
-        require(_delegatedAmount[holder].firstUnprocessedMonth <= month, "Can't add to the past");
-
-        _delegatedAmount[holder].addDiff[month] += amount;
+        add(_delegatedAmount[holder], amount, month);
     }
 
     function removeFromDelegatedAmount(address holder, uint amount, uint month) internal {
-        require(_delegatedAmount[holder].firstUnprocessedMonth <= month, "Can't remove from the past");
-
-        _delegatedAmount[holder].subtractDiff[month] += amount;
+        subtract(_delegatedAmount[holder], amount, month);
     }
 
     function addToTotalDelegatedAmount(address holder, uint amount, uint month) internal {
@@ -162,28 +139,88 @@ contract TokenLaunchLocker is Permissions, ILocker {
             _totalDelegatedAmount[holder].month == 0 || _totalDelegatedAmount[holder].month <= month,
             "Can't add to total delegated in the past");
 
-        _totalDelegatedAmount[holder].delegated += amount;
-        _totalDelegatedAmount[holder].month = month;
+        // do not update counter if it is big enough
+        // because it will override month value
+        if (_totalDelegatedAmount[holder].delegated * 2 < _locked[holder]) {
+            _totalDelegatedAmount[holder].delegated += amount;
+            _totalDelegatedAmount[holder].month = month;
+        }
     }
 
     function unlock(address holder) internal {
         delete _locked[holder];
         deleteDelegatedAmount(holder);
         deleteTotalDelegatedAmount(holder);
-        delete _latestDelegatedMonth[holder];
     }
 
     function deleteDelegatedAmount(address holder) internal {
-        for (uint i = _delegatedAmount[holder].firstUnprocessedMonth; i <= _latestDelegatedMonth[holder]; ++i) {
-            delete _delegatedAmount[holder].addDiff[i];
-            delete _delegatedAmount[holder].subtractDiff[i];
-        }
-        delete _delegatedAmount[holder].value;
-        delete _delegatedAmount[holder].firstUnprocessedMonth;
+        deletePartialDifferencesValue(_delegatedAmount[holder]);
     }
 
     function deleteTotalDelegatedAmount(address holder) internal {
         delete _totalDelegatedAmount[holder].delegated;
         delete _totalDelegatedAmount[holder].month;
+    }
+
+    function add(PartialDifferencesValue storage sequence, uint diff, uint month) internal {
+        require(sequence.firstUnprocessedMonth <= month, "Can't add to the past");
+        if (sequence.firstUnprocessedMonth == 0) {
+            sequence.firstUnprocessedMonth = month;
+            sequence.lastChangedMonth = month;
+        }
+        if (month > sequence.lastChangedMonth) {
+            sequence.lastChangedMonth = month;
+        }
+
+        if (month >= sequence.firstUnprocessedMonth) {
+            sequence.addDiff[month] += diff;
+        } else {
+            sequence.value += diff;
+        }
+    }
+
+    function subtract(PartialDifferencesValue storage sequence, uint diff, uint month) internal {
+        require(sequence.firstUnprocessedMonth <= month + 1, "Can't subtract from the past");
+        if (sequence.firstUnprocessedMonth == 0) {
+            sequence.firstUnprocessedMonth = month;
+            sequence.lastChangedMonth = month;
+        }
+        if (month > sequence.lastChangedMonth) {
+            sequence.lastChangedMonth = month;
+        }
+
+        if (month >= sequence.firstUnprocessedMonth) {
+            sequence.subtractDiff[month] += diff;
+        } else {
+            sequence.value -= diff;
+        }
+    }
+
+    function calculateValue(PartialDifferencesValue storage sequence, uint month) internal returns (uint) {
+        require(month + 1 >= sequence.firstUnprocessedMonth, "Can't calculate value in the past");
+        if (sequence.firstUnprocessedMonth == 0) {
+            return 0;
+        }
+
+        if (sequence.firstUnprocessedMonth <= month) {
+            for (uint i = sequence.firstUnprocessedMonth; i <= month; ++i) {
+                sequence.value += sequence.addDiff[i] - sequence.subtractDiff[i];
+                delete sequence.addDiff[i];
+                delete sequence.subtractDiff[i];
+            }
+            sequence.firstUnprocessedMonth = month + 1;
+        }
+
+        return sequence.value;
+    }
+
+    function deletePartialDifferencesValue(PartialDifferencesValue storage sequence) internal {
+        for (uint i = sequence.firstUnprocessedMonth; i <= sequence.lastChangedMonth; ++i) {
+            delete sequence.addDiff[i];
+            delete sequence.subtractDiff[i];
+        }
+        delete sequence.value;
+        delete sequence.firstUnprocessedMonth;
+        delete sequence.lastChangedMonth;
     }
 }
