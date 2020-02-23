@@ -161,16 +161,16 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
                     {from: validator});
             });
 
-            it("should fail to init withdrawing of deposit of someone else's node", async () => {
-                await skaleManager.initWithdrawDeposit(0, {from: hacker})
-                    .should.be.eventually.rejectedWith("Validator with such address doesn't exist");
-            });
+            // it("should fail to init withdrawing of deposit of someone else's node", async () => {
+            //     await skaleManager.initWithdrawDeposit(0, {from: hacker})
+            //         .should.be.eventually.rejectedWith("Validator with such address doesn't exist");
+            // });
 
-            it("should init withdrawing of deposit", async () => {
-                await skaleManager.initWithdrawDeposit(0, {from: validator});
+            // it("should init withdrawing of deposit", async () => {
+            //     await skaleManager.initWithdrawDeposit(0, {from: validator});
 
-                await nodesData.isNodeLeaving(0).should.be.eventually.true;
-            });
+            //     await nodesData.isNodeLeaving(0).should.be.eventually.true;
+            // });
 
             it("should remove the node", async () => {
                 const balanceBefore = web3.utils.toBN(await skaleToken.balanceOf(validator));
@@ -196,23 +196,23 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
                 expect(balanceAfter.sub(balanceBefore).eq(web3.utils.toBN("0"))).to.be.true;
             });
 
-            describe("when withdrawing of deposit is initialized", async () => {
-                beforeEach (async () => {
-                    await skaleManager.initWithdrawDeposit(0, {from: validator});
-                });
+            // describe("when withdrawing of deposit is initialized", async () => {
+            //     beforeEach (async () => {
+            //         await skaleManager.initWithdrawDeposit(0, {from: validator});
+            //     });
 
-                it("should fail if withdrawing completes too early", async () => {
-                    await skaleManager.completeWithdrawdeposit(0, {from: validator})
-                        .should.be.eventually.rejectedWith("Leaving period has not expired");
-                });
+            //     it("should fail if withdrawing completes too early", async () => {
+            //         await skaleManager.completeWithdrawdeposit(0, {from: validator})
+            //             .should.be.eventually.rejectedWith("Leaving period has not expired");
+            //     });
 
-                it("should complete deposit withdrawing process", async () => {
-                    skipTime(web3, 5);
+                // it("should complete deposit withdrawing process", async () => {
+                //     skipTime(web3, 5);
 
-                    await skaleManager.completeWithdrawdeposit(0, {from: validator});
-                    await nodesData.isNodeLeft(0).should.be.eventually.true;
-                });
-            });
+                //     await skaleManager.completeWithdrawdeposit(0, {from: validator});
+                //     await nodesData.isNodeLeft(0).should.be.eventually.true;
+                // });
+            // });
         });
 
         describe("when two nodes are created", async () => {
@@ -240,27 +240,27 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
                     {from: validator});
             });
 
-            it("should fail to init withdrawing of deposit of first node from another account", async () => {
-                await skaleManager.initWithdrawDeposit(0, {from: hacker})
-                    .should.be.eventually.rejectedWith("Validator with such address doesn't exist");
-            });
+            // it("should fail to init withdrawing of deposit of first node from another account", async () => {
+            //     await skaleManager.initWithdrawDeposit(0, {from: hacker})
+            //         .should.be.eventually.rejectedWith("Validator with such address doesn't exist");
+            // });
 
-            it("should fail to init withdrawing of deposit of second node from another account", async () => {
-                await skaleManager.initWithdrawDeposit(1, {from: hacker})
-                    .should.be.eventually.rejectedWith("Validator with such address doesn't exist");
-            });
+            // it("should fail to init withdrawing of deposit of second node from another account", async () => {
+            //     await skaleManager.initWithdrawDeposit(1, {from: hacker})
+            //         .should.be.eventually.rejectedWith("Validator with such address doesn't exist");
+            // });
 
-            it("should init withdrawing of deposit of first node", async () => {
-                await skaleManager.initWithdrawDeposit(0, {from: validator});
+            // it("should init withdrawing of deposit of first node", async () => {
+            //     await skaleManager.initWithdrawDeposit(0, {from: validator});
 
-                await nodesData.isNodeLeaving(0).should.be.eventually.true;
-            });
+            //     await nodesData.isNodeLeaving(0).should.be.eventually.true;
+            // });
 
-            it("should init withdrawing of deposit of second node", async () => {
-                await skaleManager.initWithdrawDeposit(1, {from: validator});
+            // it("should init withdrawing of deposit of second node", async () => {
+            //     await skaleManager.initWithdrawDeposit(1, {from: validator});
 
-                await nodesData.isNodeLeaving(1).should.be.eventually.true;
-            });
+            //     await nodesData.isNodeLeaving(1).should.be.eventually.true;
+            // });
 
             it("should remove the first node", async () => {
                 const balanceBefore = web3.utils.toBN(await skaleToken.balanceOf(validator));

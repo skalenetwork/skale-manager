@@ -178,6 +178,14 @@ contract ValidatorService is Permissions {
         return getValidatorAddresses(getValidatorId(msg.sender));
     }
 
+    function calculateBondAmount(uint validatorId)
+        external
+        returns (uint delegatedAmount)
+    {
+        DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
+        return delegationController.calculateDelegatedAmount(validators[validatorId].validatorAddress);
+    }
+
     function initialize(address _contractManager) public initializer {
         Permissions.initialize(_contractManager);
     }

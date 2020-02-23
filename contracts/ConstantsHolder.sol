@@ -112,6 +112,8 @@ contract ConstantsHolder is IConstants, Permissions {
 
     uint public launchTimestamp;
 
+    uint public rotationDelay;
+
     /**
      * Set reward and delta periods to new one, run only by owner. This function
      * only for tests.
@@ -154,12 +156,16 @@ contract ConstantsHolder is IConstants, Permissions {
         allowableLatency = newAllowableLatency;
     }
 
-    function setMSR(uint newMSR) external onlyOwner() {
+    function setMSR(uint newMSR) external onlyOwner {
         msr = newMSR;
     }
 
     function setLaunchTimestamp(uint timestamp) external onlyOwner {
         launchTimestamp = timestamp;
+    }
+
+    function setRotationDelay(uint newDelay) external onlyOwner {
+        rotationDelay = newDelay;
     }
 
     /**
@@ -177,5 +183,6 @@ contract ConstantsHolder is IConstants, Permissions {
         lastTimeUnderloaded = 0;
         lastTimeOverloaded = 0;
         launchTimestamp = now;
+        rotationDelay = 12 hours;
     }
 }

@@ -9,7 +9,7 @@ import { ContractManagerInstance,
          SkaleDKGInstance,
          SkaleTokenInstance,
          SlashingTableInstance,
-         ValidatorServiceInstance} from "../types/truffle-contracts";
+         ValidatorServiceInstance } from "../types/truffle-contracts";
 
 import { skipTime } from "./utils/time";
 
@@ -317,7 +317,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                     verificationVectors[indexes[1]],
                     encryptedSecretKeyContributions[indexes[1]],
                     {from: validatorsAccount[0]},
-                ).should.be.eventually.rejectedWith(" Node does not exist for message sender.");
+                ).should.be.eventually.rejectedWith(" Node does not exist for message sender");
             });
 
             describe("when correct broadcasts sent", async () => {
@@ -384,7 +384,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                         web3.utils.soliditySha3(schainName),
                         1,
                         {from: validatorsAccount[0]},
-                    ).should.be.eventually.rejectedWith(" Node does not exist for message sender.");
+                    ).should.be.eventually.rejectedWith(" Node does not exist for message sender");
                 });
 
                 it("should catch successful DKG event", async () => {
@@ -438,7 +438,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
 
                         (await skaleToken.calculateLockedAmount.call(validator2)).toNumber().should.be.equal(100);
                         (await skaleToken.calculateDelegatedAmount.call(validator2)).toNumber().should.be.equal(95);
-                        (await skaleToken.getSlashedOf.call(validator2)).toNumber().should.be.equal(5);
+                        (await skaleToken.calculateSlashedAmount.call(validator2)).toNumber().should.be.equal(5);
                     });
                 });
             });
@@ -515,7 +515,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
 
                         (await skaleToken.calculateLockedAmount.call(validator1)).toNumber().should.be.equal(100);
                         (await skaleToken.calculateDelegatedAmount.call(validator1)).toNumber().should.be.equal(95);
-                        (await skaleToken.getSlashedOf.call(validator1)).toNumber().should.be.equal(5);
+                        (await skaleToken.calculateSlashedAmount.call(validator1)).toNumber().should.be.equal(5);
                     });
 
                     it("accused node should send incorrect response", async () => {
@@ -531,7 +531,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
 
                         (await skaleToken.calculateLockedAmount.call(validator1)).toNumber().should.be.equal(100);
                         (await skaleToken.calculateDelegatedAmount.call(validator1)).toNumber().should.be.equal(95);
-                        (await skaleToken.getSlashedOf.call(validator1)).toNumber().should.be.equal(5);
+                        (await skaleToken.calculateSlashedAmount.call(validator1)).toNumber().should.be.equal(5);
                     });
                 });
             });

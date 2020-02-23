@@ -218,6 +218,19 @@ contract("Delegation", ([owner,
                 .should.be.eventually.rejectedWith("Validator with such id doesn't exist");
         });
 
+        it("should return bond amount if validator delegated to itself", async () => {
+            await skaleToken.mint(owner, validator, defaultAmount.toString(), "0x", "0x");
+            await delegationController.delegate(
+                validatorId, defaultAmount.toString(), 3, "D2 is even", {from: validator});
+            await delegationController.delegate(
+                validatorId, defaultAmount.toString(), 3, "D2 is even", {from: holder1});
+            await delegationController.acceptPendingDelegation(0, {from: validator});
+            await delegationController.acceptPendingDelegation(1, {from: validator});
+            skipTime(web3, month);
+            const bondAmount = await validatorService.calculateBondAmount.call(validatorId);
+            assert.equal(defaultAmount.toString(), bondAmount.toString());
+        });
+
         describe("when 3 holders delegated", async () => {
             beforeEach(async () => {
                 delegationController.delegate(validatorId, 2, 12, "D2 is even", {from: holder1});

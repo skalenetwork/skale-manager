@@ -77,7 +77,7 @@ contract SkaleToken is LockableERC777, Permissions, IDelegatableToken {
         //onlyAuthorized
         returns (bool)
     {
-        require(amount <= CAP - totalSupply(), "Amount is too big");
+        require(amount <= CAP.sub(totalSupply()), "Amount is too big");
         _mint(
             operator,
             account,

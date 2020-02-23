@@ -27,7 +27,8 @@ import "./interfaces/ISchainsFunctionalityInternal.sol";
 import "./delegation/Punisher.sol";
 import "./NodesData.sol";
 import "./SlashingTable.sol";
-
+import "./SchainsFunctionality.sol";
+import "./SchainsFunctionalityInternal.sol";
 
 interface IECDH {
     function deriveKey(
@@ -191,12 +192,12 @@ contract SkaleDKG is Permissions {
         } else if (isBroadcasted(groupIndex, toNodeIndex) && channels[groupIndex].nodeToComplaint != toNodeIndex) {
             revert("One complaint has already sent");
         } else if (isBroadcasted(groupIndex, toNodeIndex) && channels[groupIndex].nodeToComplaint == toNodeIndex) {
-            require(channels[groupIndex].startComplaintBlockNumber + 120 <= block.number, "One more complaint rejected");
+            require(channels[groupIndex].startComplaintBlockNumber.add(120) <= block.number, "One more complaint rejected");
             // need to penalty Node - toNodeIndex
             finalizeSlashing(groupIndex, channels[groupIndex].nodeToComplaint);
         } else if (!isBroadcasted(groupIndex, toNodeIndex)) {
             // if node have not broadcasted params
-            require(channels[groupIndex].startedBlockNumber + 120 <= block.number, "Complaint rejected");
+            require(channels[groupIndex].startedBlockNumber.add(120) <= block.number, "Complaint rejected");
             // need to penalty Node - toNodeIndex
             finalizeSlashing(groupIndex, channels[groupIndex].nodeToComplaint);
         }
@@ -274,13 +275,13 @@ contract SkaleDKG is Permissions {
         bool complaintSending = channels[groupIndex].nodeToComplaint == uint(-1) ||
             (
                 channels[groupIndex].broadcasted[indexTo] &&
-                channels[groupIndex].startComplaintBlockNumber + 120 <= block.number &&
+                channels[groupIndex].startComplaintBlockNumber.add(120) <= block.number &&
                 channels[groupIndex].nodeToComplaint == toNodeIndex
             ) ||
             (
                 !channels[groupIndex].broadcasted[indexTo] &&
                 channels[groupIndex].nodeToComplaint == toNodeIndex &&
-                channels[groupIndex].startedBlockNumber + 120 <= block.number
+                channels[groupIndex].startedBlockNumber.add(120) <= block.number
             );
         return channels[groupIndex].active &&
             indexFrom < IGroupsData(channels[groupIndex].dataAddress).getNumberOfNodesInGroup(groupIndex) &&
@@ -311,22 +312,26 @@ contract SkaleDKG is Permissions {
     }
 
     function finalizeSlashing(bytes32 groupIndex, uint badNode) internal {
-        address schainsFunctionalityInternalAddress = contractManager.getContract("SchainsFunctionalityInternal");
-        uint[] memory possibleNodes = ISchainsFunctionalityInternal(schainsFunctionalityInternalAddress).isEnoughNodes(groupIndex);
+        SchainsFunctionalityInternal schainsFunctionalityInternal = SchainsFunctionalityInternal(
+            contractManager.getContract("SchainsFunctionalityInternal")
+        );
+        SchainsFunctionality schainsFunctionality = SchainsFunctionality(
+            contractManager.getContract("SchainsFunctionality")
+        );
         emit BadGuy(badNode);
         emit FailedDKG(groupIndex);
 
         address dataAddress = channels[groupIndex].dataAddress;
         delete channels[groupIndex];
-        if (possibleNodes.length > 0) {
-            uint newNode = ISchainsFunctionalityInternal(schainsFunctionalityInternalAddress).replaceNode(
+        if (schainsFunctionalityInternal.isAnyFreeNode(groupIndex)) {
+            uint newNode = schainsFunctionality.rotateNode(
                 badNode,
                 groupIndex
             );
             emit NewGuy(newNode);
             this.openChannel(groupIndex);
         } else {
-            ISchainsFunctionalityInternal(schainsFunctionalityInternalAddress).excludeNodeFromSchain(
+            schainsFunctionalityInternal.removeNodeFromSchain(
                 badNode,
                 groupIndex
             );
@@ -406,7 +411,7 @@ contract SkaleDKG is Permissions {
         uint k = len - 1;
         uint num2 = num;
         while (num2 != 0) {
-            bstr[k--] = byte(uint8(48 + num2 % 10));
+            bstr[k--] = byte(uint8(48.add(num2 % 10)));
             num2 /= 10;
         }
         return string(bstr);
@@ -520,14 +525,14 @@ contract SkaleDKG is Permissions {
         uint first;
         uint second;
         if (a.x >= b.x) {
-            first = addmod(a.x, P - b.x, P);
+            first = addmod(a.x, P.sub(b.x), P);
         } else {
-            first = P - addmod(b.x, P - a.x, P);
+            first = P.sub(addmod(b.x, P.sub(a.x), P));
         }
         if (a.y >= b.y) {
-            second = addmod(a.y, P - b.y, P);
+            second = addmod(a.y, P.sub(b.y), P);
         } else {
-            second = P - addmod(b.y, P - a.y, P);
+            second = P.sub(addmod(b.y, P.sub(a.y), P));
         }
         return Fp2({ x: first, y: second });
     }
@@ -537,7 +542,7 @@ contract SkaleDKG is Permissions {
         uint bB = mulmod(a.y, b.y, P);
         return Fp2({
             x: addmod(aA, mulmod(P - 1, bB, P), P),
-            y: addmod(mulmod(addmod(a.x, a.y, P), addmod(b.x, b.y, P), P), P - addmod(aA, bB, P), P)
+            y: addmod(mulmod(addmod(a.x, a.y, P), addmod(b.x, b.y, P), P), P.sub(addmod(aA, bB, P)), P)
         });
     }
 
@@ -552,13 +557,13 @@ contract SkaleDKG is Permissions {
         uint t1 = mulmod(a.y, a.y, P);
         uint t2 = mulmod(P - 1, t1, P);
         if (t0 >= t2) {
-            t2 = addmod(t0, P - t2, P);
+            t2 = addmod(t0, P.sub(t2), P);
         } else {
-            t2 = P - addmod(t2, P - t0, P);
+            t2 = P.sub(addmod(t2, P.sub(t0), P));
         }
         uint t3 = bigModExp(t2, P - 2);
         x.x = mulmod(a.x, t3, P);
-        x.y = P - mulmod(a.y, t3, P);
+        x.y = P.sub(mulmod(a.y, t3, P));
     }
 
     // End of Fp2 operations
@@ -588,8 +593,8 @@ contract SkaleDKG is Permissions {
             Fp2 memory s = mulFp2(scalarMulFp2(3, squaredFp2(x1)), inverseFp2(scalarMulFp2(2, y1)));
             x3 = minusFp2(squaredFp2(s), scalarMulFp2(2, x1));
             y3 = addFp2(y1, mulFp2(s, minusFp2(x3, x1)));
-            y3.x = P - (y3.x % P);
-            y3.y = P - (y3.y % P);
+            y3.x = P.sub(y3.x % P);
+            y3.y = P.sub(y3.y % P);
         }
     }
 
@@ -655,8 +660,8 @@ contract SkaleDKG is Permissions {
         Fp2 memory s = mulFp2(minusFp2(y2, y1), inverseFp2(minusFp2(x2, x1)));
         x3 = minusFp2(squaredFp2(s), addFp2(x1, x2));
         y3 = addFp2(y1, mulFp2(s, minusFp2(x3, x1)));
-        y3.x = P - (y3.x % P);
-        y3.y = P - (y3.y % P);
+        y3.x = P.sub(y3.x % P);
+        y3.y = P.sub(y3.y % P);
     }
 
     // function binstep(uint _a, uint _step) internal view returns (uint x) {
@@ -737,7 +742,7 @@ contract SkaleDKG is Permissions {
         }
         vector[3] = vector1;
         return mulG2(
-            bigModExp(index + 1, loopIndex),
+            bigModExp(index.add(1), loopIndex),
             Fp2({x: uint(vector[1]), y: uint(vector[0])}),
             Fp2({x: uint(vector[3]), y: uint(vector[2])})
         );
@@ -783,7 +788,7 @@ contract SkaleDKG is Permissions {
         }
         require(success, "Multiplication failed");
         if (!(mulShare[0] == 0 && mulShare[1] == 0)) {
-            mulShare[1] = P - (mulShare[1] % P);
+            mulShare[1] = P.sub((mulShare[1] % P));
         }
 
         require(isG1(G1A, G1B), "G1.one not in G1");

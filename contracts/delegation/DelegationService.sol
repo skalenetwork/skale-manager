@@ -48,23 +48,10 @@ contract DelegationService is Permissions {
         revert("Not implemented");
     }
 
-    /// @notice Returns array of delegation requests id
-    function listDelegationRequests() external pure returns (uint[] memory) {
-        revert("Not implemented");
-    }
-
     /// @notice Returns amount of delegated token of the validator
     function getDelegatedAmount(uint validatorId) external returns (uint) {
         DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
         return delegationController.calculateDelegatedToValidatorNow(validatorId);
-    }
-
-    function getAllDelegationRequests() external pure returns(uint[] memory) {
-        revert("Not implemented");
-    }
-
-    function getDelegationRequestsForValidator(uint /* validatorId */) external returns (uint[] memory) {
-        revert("Not implemented");
     }
 
     /// @notice Register new as validator
@@ -128,14 +115,6 @@ contract DelegationService is Permissions {
         );
 
         validatorService.confirmNewAddress(msg.sender, validatorId);
-    }
-
-    function getValidators() external view returns (uint[] memory validatorIds) {
-        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
-        validatorIds = new uint[](validatorService.numberOfValidators());
-        for (uint i = 0; i < validatorIds.length; ++i) {
-            validatorIds[i] = i + 1;
-        }
     }
 
     /// @notice removes node from system

@@ -433,7 +433,7 @@ contract LockableERC777 is IERC777, IERC20 {
 // Property of the company SKALE Labs inc.---------------------------------
         uint locked = _calculateLockedAmount(from);
         if (locked > 0) {
-            require(_balances[from] >= locked + amount, "Token should be unlocked for transferring");
+            require(_balances[from] >= locked.add(amount), "Token should be unlocked for transferring");
         }
 //-------------------------------------------------------------------------
         _balances[from] = _balances[from].sub(amount);
