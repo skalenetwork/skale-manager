@@ -39,8 +39,11 @@ contract NodesData is INodesData, Permissions {
         uint16 port;
         bytes publicKey;
         uint32 startDate;
-        uint32 leavingDate;
         uint32 lastRewardDate;
+        // uint8 freeSpace;
+        // uint indexInSpaceMap;
+        //address secondAddress;
+        uint32 finishTime;
         NodeStatus status;
         uint validatorId;
     }
@@ -72,21 +75,11 @@ contract NodesData is INodesData, Permissions {
     // mapping for indication from space to Nodes
     mapping (uint8 => uint[]) public spaceToNodes;
 
-    // leaving Period for Node
-    uint leavingPeriod;
-
     uint public numberOfActiveNodes;
     uint public numberOfLeavingNodes;
     uint public numberOfLeftNodes;
 
-    function initialize(uint newLeavingPeriod, address newContractsAddress) external initializer {
-        Permissions.initialize(newContractsAddress);
-        leavingPeriod = newLeavingPeriod;
 
-        numberOfActiveNodes = 0;
-        numberOfLeavingNodes = 0;
-        numberOfLeftNodes = 0;
-    }
 
     function getNodesWithFreeSpace(uint8 freeSpace) external view returns (uint[] memory) {
         uint[] memory nodesWithFreeSpace = new uint[](this.countNodesWithFreeSpace(freeSpace));
@@ -139,8 +132,8 @@ contract NodesData is INodesData, Permissions {
             //owner: from,
             publicKey: publicKey,
             startDate: uint32(block.timestamp),
-            leavingDate: uint32(0),
             lastRewardDate: uint32(block.timestamp),
+            finishTime: 0,
             status: NodeStatus.Active,
             validatorId: validatorId
         }));
@@ -166,7 +159,6 @@ contract NodesData is INodesData, Permissions {
      */
     function setNodeLeaving(uint nodeIndex) external allow("NodesFunctionality") {
         nodes[nodeIndex].status = NodeStatus.Leaving;
-        nodes[nodeIndex].leavingDate = uint32(block.timestamp);
         numberOfActiveNodes--;
         numberOfLeavingNodes++;
     }
@@ -250,6 +242,10 @@ contract NodesData is INodesData, Permissions {
         nodes[nodeIndex].lastRewardDate = uint32(block.timestamp);
     }
 
+    function changeNodeFinishTime(uint nodeIndex, uint32 time) external {
+        nodes[nodeIndex].finishTime = time;
+    }
+
     /**
      * @dev isNodeExist - checks existence of Node at this address
      * @param from - account address
@@ -258,15 +254,6 @@ contract NodesData is INodesData, Permissions {
      */
     function isNodeExist(address from, uint nodeIndex) external view returns (bool) {
         return nodeIndexes[from].isNodeExist[nodeIndex];
-    }
-
-    /**
-     * @dev isLeavingPeriodExpired - checks expiration of leaving period of Node
-     * @param nodeIndex - index of Node
-     * @return if expired - true, else - false
-     */
-    function isLeavingPeriodExpired(uint nodeIndex) external view returns (bool) {
-        return block.timestamp - nodes[nodeIndex].leavingDate >= leavingPeriod;
     }
 
     /**
@@ -303,6 +290,10 @@ contract NodesData is INodesData, Permissions {
 
     function getNodeValidatorId(uint nodeIndex) external view returns (uint) {
         return nodes[nodeIndex].validatorId;
+    }
+
+    function getNodeFinishTime(uint nodeIndex) external view returns (uint32) {
+        return nodes[nodeIndex].finishTime;
     }
 
     /**
@@ -408,6 +399,18 @@ contract NodesData is INodesData, Permissions {
     function getValidatorId(uint nodeIndex) external view returns (uint) {
         require(nodeIndex < nodes.length, "Node does not exist");
         return nodes[nodeIndex].validatorId;
+    }
+
+    function getNodeStatus(uint nodeIndex) external view returns (NodeStatus) {
+        return nodes[nodeIndex].status;
+    }
+
+    function initialize(address newContractsAddress) public initializer {
+        Permissions.initialize(newContractsAddress);
+
+        numberOfActiveNodes = 0;
+        numberOfLeavingNodes = 0;
+        numberOfLeftNodes = 0;
     }
 
     /**

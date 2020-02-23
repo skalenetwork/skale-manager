@@ -1,7 +1,7 @@
 require("ts-node/register");
 require('dotenv').config();
 const Web3 = require('web3');
-let hdwalletProvider = require('truffle-hdwallet-provider');
+let hdwalletProvider = require('@truffle/hdwallet-provider');
 
 let mnemonicOrPrivateKey = process.env.PRIVATE_KEY;
 
@@ -25,9 +25,10 @@ module.exports = {
             provider: () => { 
                 return new hdwalletProvider(mnemonicOrPrivateKey, uniqueEndpoint); 
             },
-            gasPrice: 1000000000,
+            gasPrice: 10000000000,
             gas: 8000000,
-            network_id: "*"
+            network_id: "*",
+            skipDryRun: true
         },
         coverage: {
             host: "127.0.0.1",
@@ -54,8 +55,9 @@ module.exports = {
                     enabled: true,
                     runs: 200
                 },
-                evmVersion: "constantinople"
+                evmVersion: "petersburg"
             }
         }
-    }
+    },
+    plugins: ["solidity-coverage"]
 };

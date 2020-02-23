@@ -31,6 +31,7 @@ import "./delegation/ValidatorService.sol";
 import "./MonitorsFunctionality.sol";
 import "./NodesFunctionality.sol";
 import "./NodesData.sol";
+import "./SchainsFunctionality.sol";
 import "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
 import "@openzeppelin/contracts/introspection/IERC1820Registry.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
@@ -87,16 +88,28 @@ contract SkaleManager is IERC777Recipient, Permissions {
         monitorsFunctionality.addMonitor(nodeIndex);
     }
 
-    function initWithdrawDeposit(uint nodeIndex) external {
-        address nodesFunctionalityAddress = contractManager.getContract("NodesFunctionality");
-        require(
-            INodesFunctionality(nodesFunctionalityAddress).initWithdrawDeposit(msg.sender, nodeIndex),
-            "Initialization of deposit withdrawing is failed");
-    }
-
-    function completeWithdrawdeposit(uint nodeIndex) external {
+    function nodeExit(uint nodeIndex) external {
+        NodesData nodesData = NodesData(contractManager.getContract("NodesData"));
         NodesFunctionality nodesFunctionality = NodesFunctionality(contractManager.getContract("NodesFunctionality"));
-        nodesFunctionality.completeWithdrawDeposit(msg.sender, nodeIndex);
+        SchainsFunctionality schainsFunctionality = SchainsFunctionality(contractManager.getContract("SchainsFunctionality"));
+        SchainsData schainsData = SchainsData(contractManager.getContract("SchainsData"));
+        IConstants constants = IConstants(contractManager.getContract("ConstantsHolder"));
+        schainsFunctionality.freezeSchains(nodeIndex);
+        if (nodesData.isNodeActive(nodeIndex)) {
+            require(nodesFunctionality.initExit(msg.sender, nodeIndex), "Initialization of node exit is failed");
+        }
+        bool completed;
+        bool schains = false;
+        if (schainsData.getActiveSchain(nodeIndex) != bytes32(0)) {
+            completed = schainsFunctionality.exitFromSchain(nodeIndex);
+            schains = true;
+        } else {
+            completed = true;
+        }
+        if (completed) {
+            require(nodesFunctionality.completeExit(msg.sender, nodeIndex), "Finishing of node exit is failed");
+            nodesData.changeNodeFinishTime(nodeIndex, uint32(now + (schains ? constants.rotationDelay() : 0)));
+        }
     }
 
     function deleteNode(uint nodeIndex) external {
@@ -126,7 +139,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
         ISchainsFunctionality(schainsFunctionalityAddress).deleteSchain(msg.sender, name);
     }
 
-    function deleteSchainByRoot(string calldata name) external {
+    function deleteSchainByRoot(string calldata name) external onlyOwner {
         address schainsFunctionalityAddress = contractManager.getContract("SchainsFunctionality");
         ISchainsFunctionality(schainsFunctionalityAddress).deleteSchainByRoot(name);
     }

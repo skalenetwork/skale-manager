@@ -110,6 +110,8 @@ contract ConstantsHolder is IConstants, Permissions {
 
     //Need to add minimal allowed parameters for verdicts
 
+    uint public rotationDelay;
+
     /**
      * Set reward and delta periods to new one, run only by owner. This function
      * only for tests.
@@ -152,8 +154,12 @@ contract ConstantsHolder is IConstants, Permissions {
         allowableLatency = newAllowableLatency;
     }
 
-    function setMSR(uint newMSR) external onlyOwner() {
+    function setMSR(uint newMSR) external onlyOwner {
         msr = newMSR;
+    }
+
+    function setRotationDelay(uint newDelay) external onlyOwner {
+        rotationDelay = newDelay;
     }
 
     /**
@@ -170,5 +176,6 @@ contract ConstantsHolder is IConstants, Permissions {
         checkTime = 120; // Test parameters
         lastTimeUnderloaded = 0;
         lastTimeOverloaded = 0;
+        rotationDelay = 12 hours;
     }
 }
