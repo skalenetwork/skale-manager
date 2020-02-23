@@ -35,7 +35,7 @@ contract TokenState is Permissions, ILocker {
         uint locked = 0;
         for (uint i = 0; i < _lockers.length; ++i) {
             ILocker locker = ILocker(contractManager.getContract(_lockers[i]));
-            locked += locker.calculateLockedAmount(holder);
+            locked = locked.add(locker.calculateLockedAmount(holder));
         }
         return locked;
     }
@@ -44,7 +44,7 @@ contract TokenState is Permissions, ILocker {
         uint forbidden = 0;
         for (uint i = 0; i < _lockers.length; ++i) {
             ILocker locker = ILocker(contractManager.getContract(_lockers[i]));
-            forbidden += locker.calculateForbiddenForDelegationAmount(holder);
+            forbidden = forbidden.add(locker.calculateForbiddenForDelegationAmount(holder));
         }
         return forbidden;
     }

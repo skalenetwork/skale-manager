@@ -22,10 +22,12 @@ pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/introspection/IERC1820Registry.sol";
 import "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
+import "@openzeppelin/contracts/math/SafeMath.sol";
 
 import "../Permissions.sol";
 import "../SkaleToken.sol";
 import "../ConstantsHolder.sol";
+
 import "./ValidatorService.sol";
 import "./DelegationController.sol";
 import "./DelegationPeriodManager.sol";
@@ -126,15 +128,17 @@ contract Distributor is Permissions, IERC777Recipient {
 
         earned = 0;
         endMonth = currentMonth;
-        if (endMonth > startMonth + 12) {
-            endMonth = startMonth + 12;
+        if (endMonth > startMonth.add(12)) {
+            endMonth = startMonth.add(12);
         }
         for (uint i = startMonth; i < endMonth; ++i) {
             uint effectiveDelegatedToValidator = delegationController.calculateEffectiveDelegatedToValidator(validatorId, i);
             if (effectiveDelegatedToValidator > 0) {
-                earned += _bountyPaid[validatorId][i] *
-                    delegationController.calculateEffectiveDelegatedByHolderToValidator(wallet, validatorId, i) /
-                    effectiveDelegatedToValidator;
+                earned = earned.add(
+                    _bountyPaid[validatorId][i].mul(
+                        delegationController.calculateEffectiveDelegatedByHolderToValidator(wallet, validatorId, i)).div(
+                            effectiveDelegatedToValidator)
+                    );
             }
         }
     }
@@ -151,11 +155,11 @@ contract Distributor is Permissions, IERC777Recipient {
 
         earned = 0;
         endMonth = currentMonth;
-        if (endMonth > startMonth + 12) {
-            endMonth = startMonth + 12;
+        if (endMonth > startMonth.add(12)) {
+            endMonth = startMonth.add(12);
         }
         for (uint i = startMonth; i < endMonth; ++i) {
-            earned += _feePaid[validatorId][i];
+            earned = earned.add(_feePaid[validatorId][i]);
         }
     }
 
@@ -168,10 +172,10 @@ contract Distributor is Permissions, IERC777Recipient {
         uint currentMonth = timeHelpers.getCurrentMonth();
         uint feeRate = validatorService.getValidator(validatorId).feeRate;
 
-        uint fee = amount * feeRate / 1000;
+        uint fee = amount.mul(feeRate).div(1000);
         uint bounty = amount - fee;
-        _bountyPaid[validatorId][currentMonth] += bounty;
-        _feePaid[validatorId][currentMonth] += fee;
+        _bountyPaid[validatorId][currentMonth] = _bountyPaid[validatorId][currentMonth].add(bounty);
+        _feePaid[validatorId][currentMonth] = _feePaid[validatorId][currentMonth].add(fee);
 
         if (_firstUnwithdrawnMonthForValidator[validatorId] == 0) {
             _firstUnwithdrawnMonthForValidator[validatorId] = currentMonth;

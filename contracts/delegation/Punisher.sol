@@ -19,8 +19,11 @@
 
 pragma solidity ^0.5.3;
 
+import "@openzeppelin/contracts/math/SafeMath.sol";
+
 import "../Permissions.sol";
 import "../interfaces/delegation/ILocker.sol";
+
 import "./ValidatorService.sol";
 import "./DelegationController.sol";
 
@@ -48,7 +51,7 @@ contract Punisher is Permissions, ILocker {
         if (amount > _locked[holder]) {
             delete _locked[holder];
         } else {
-            _locked[holder] -= amount;
+            _locked[holder] = _locked[holder].sub(amount);
         }
     }
 
@@ -61,7 +64,7 @@ contract Punisher is Permissions, ILocker {
     }
 
     function handleSlash(address holder, uint amount) external allow("DelegationController") {
-        _locked[holder] += amount;
+        _locked[holder] = _locked[holder].add(amount);
     }
 
     function initialize(address _contractManager) public initializer {

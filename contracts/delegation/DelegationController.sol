@@ -21,6 +21,8 @@
 pragma solidity ^0.5.3;
 pragma experimental ABIEncoderV2;
 
+import "@openzeppelin/contracts/math/SafeMath.sol";
+
 import "../Permissions.sol";
 import "../SkaleToken.sol";
 
@@ -235,37 +237,37 @@ contract DelegationController is Permissions, ILocker {
         TokenLaunchLocker tokenLaunchLocker = TokenLaunchLocker(contractManager.getContract("TokenLaunchLocker"));
 
         uint currentMonth = timeHelpers.timestampToMonth(now);
-        delegations[delegationId].started = currentMonth + 1;
+        delegations[delegationId].started = currentMonth.add(1);
         _delegationExtras[delegationId].lastSlashingMonthBeforeDelegation = _slashesOfValidator[delegations[delegationId].validatorId].lastMonth;
 
         addToDelegatedToValidator(
             delegations[delegationId].validatorId,
             delegations[delegationId].amount,
-            currentMonth + 1);
+            currentMonth.add(1));
         addToDelegatedByHolder(
             delegations[delegationId].holder,
             delegations[delegationId].amount,
-            currentMonth + 1);
+            currentMonth.add(1));
         addToDelegatedByHolderToValidator(
             delegations[delegationId].holder,
             delegations[delegationId].validatorId,
             delegations[delegationId].amount,
-            currentMonth + 1);
+            currentMonth.add(1));
         updateFirstDelegationMonth(
             delegations[delegationId].holder,
             delegations[delegationId].validatorId,
-            currentMonth + 1);
-        uint effectiveAmount = delegations[delegationId].amount * delegationPeriodManager.stakeMultipliers(
-            delegations[delegationId].delegationPeriod);
+            currentMonth.add(1));
+        uint effectiveAmount = delegations[delegationId].amount.mul(delegationPeriodManager.stakeMultipliers(
+            delegations[delegationId].delegationPeriod));
         addToEffectiveDelegatedToValidator(
             delegations[delegationId].validatorId,
             effectiveAmount,
-            currentMonth + 1);
+            currentMonth.add(1));
         addToEffectiveDelegatedByHolderToValidator(
             delegations[delegationId].holder,
             delegations[delegationId].validatorId,
             effectiveAmount,
-            currentMonth + 1);
+            currentMonth.add(1));
 
         tokenLaunchLocker.handleDelegationAdd(
             delegations[delegationId].holder,
@@ -296,8 +298,8 @@ contract DelegationController is Permissions, ILocker {
             delegations[delegationId].validatorId,
             amountAfterSlashing,
             delegations[delegationId].finished);
-        uint effectiveAmount = delegations[delegationId].amount * delegationPeriodManager.stakeMultipliers(
-            delegations[delegationId].delegationPeriod);
+        uint effectiveAmount = delegations[delegationId].amount.mul(delegationPeriodManager.stakeMultipliers(
+            delegations[delegationId].delegationPeriod));
         removeFromEffectiveDelegatedToValidator(
             delegations[delegationId].validatorId,
             effectiveAmount,
@@ -388,8 +390,8 @@ contract DelegationController is Permissions, ILocker {
         if (hasUnprocessedSlashes(holder)) {
             uint index = _firstUnprocessedSlashByHolder[holder];
             uint length = _slashes.length;
-            if (limit > 0 && index + limit < length) {
-                length = index + limit;
+            if (limit > 0 && index.add(limit) < length) {
+                length = index.add(limit);
             }
             for (; index < length; ++index) {
                 uint validatorId = _slashes[index].validatorId;
@@ -402,7 +404,7 @@ contract DelegationController is Permissions, ILocker {
                         _delegatedByHolder[holder],
                         _slashes[index].reducingCoefficient,
                         month);
-                    punisher.handleSlash(holder, oldValue - calculateDelegatedByHolderToValidator(holder, validatorId));
+                    punisher.handleSlash(holder, oldValue.sub(calculateDelegatedByHolderToValidator(holder, validatorId)));
                 }
             }
             _firstUnprocessedSlashByHolder[holder] = length;
@@ -456,10 +458,10 @@ contract DelegationController is Permissions, ILocker {
         uint started = delegations[delegationId].started;
 
         if (currentMonth < started) {
-            return started + delegations[delegationId].delegationPeriod;
+            return started.add(delegations[delegationId].delegationPeriod);
         } else {
-            uint completedPeriods = (currentMonth - started) / delegations[delegationId].delegationPeriod;
-            return started + (completedPeriods + 1) * delegations[delegationId].delegationPeriod;
+            uint completedPeriods = currentMonth.sub(started).div(delegations[delegationId].delegationPeriod);
+            return started.add(completedPeriods.add(1).mul(delegations[delegationId].delegationPeriod));
         }
     }
 
@@ -529,7 +531,7 @@ contract DelegationController is Permissions, ILocker {
             _lockedInPendingDelegations[holder].month = currentMonth;
         } else {
             assert(_lockedInPendingDelegations[holder].month == currentMonth);
-            _lockedInPendingDelegations[holder].amount += amount;
+            _lockedInPendingDelegations[holder].amount = _lockedInPendingDelegations[holder].amount.add(amount);
         }
     }
 
@@ -537,7 +539,7 @@ contract DelegationController is Permissions, ILocker {
         uint currentMonth = getCurrentMonth();
         require(_lockedInPendingDelegations[holder].month == currentMonth, "There are no delegation requests this month");
         require(_lockedInPendingDelegations[holder].amount >= amount, "Unlocking amount is too big");
-        _lockedInPendingDelegations[holder].amount -= amount;
+        _lockedInPendingDelegations[holder].amount = _lockedInPendingDelegations[holder].amount.sub(amount);
     }
 
     function getCurrentMonth() internal view returns (uint) {
@@ -546,7 +548,7 @@ contract DelegationController is Permissions, ILocker {
     }
 
     function _calculateLockedAmount(address wallet) internal returns (uint) {
-        return calculateDelegatedByHolder(wallet) + getLockedInPendingDelegations(wallet);
+        return calculateDelegatedByHolder(wallet).add(getLockedInPendingDelegations(wallet));
     }
 
     function min(uint a, uint b) internal returns (uint) {
@@ -587,7 +589,7 @@ contract DelegationController is Permissions, ILocker {
         }
         for (uint i = startMonth; i > 0 && i < delegations[delegationId].finished; i = _slashesOfValidator[validatorId].slashes[i].nextMonth) {
             if (i >= delegations[delegationId].started) {
-                amount = amount * _slashesOfValidator[validatorId].slashes[i].reducingCoefficient.numerator / _slashesOfValidator[validatorId].slashes[i].reducingCoefficient.denominator;
+                amount = amount.mul(_slashesOfValidator[validatorId].slashes[i].reducingCoefficient.numerator).div(_slashesOfValidator[validatorId].slashes[i].reducingCoefficient.denominator);
             }
         }
         return amount;
@@ -598,7 +600,7 @@ contract DelegationController is Permissions, ILocker {
         if (sequence.firstUnprocessedMonth == 0) {
             sequence.firstUnprocessedMonth = month;
         }
-        sequence.addDiff[month] += diff;
+        sequence.addDiff[month] = sequence.addDiff[month].add(diff);
     }
 
     function subtract(PartialDifferences storage sequence, uint diff, uint month) internal {
@@ -606,7 +608,7 @@ contract DelegationController is Permissions, ILocker {
         if (sequence.firstUnprocessedMonth == 0) {
             sequence.firstUnprocessedMonth = month;
         }
-        sequence.subtractDiff[month] += diff;
+        sequence.subtractDiff[month] = sequence.subtractDiff[month].add(diff);
     }
 
     function calculateValue(PartialDifferences storage sequence, uint month) internal returns (uint) {
@@ -616,11 +618,11 @@ contract DelegationController is Permissions, ILocker {
 
         if (sequence.firstUnprocessedMonth <= month) {
             for (uint i = sequence.firstUnprocessedMonth; i <= month; ++i) {
-                sequence.value[i] = sequence.value[i - 1] + sequence.addDiff[i] - sequence.subtractDiff[i];
+                sequence.value[i] = sequence.value[i - 1].add(sequence.addDiff[i]).sub(sequence.subtractDiff[i]);
                 delete sequence.addDiff[i];
                 delete sequence.subtractDiff[i];
             }
-            sequence.firstUnprocessedMonth = month + 1;
+            sequence.firstUnprocessedMonth = month.add(1);
         }
 
         return sequence.value[month];
@@ -633,7 +635,7 @@ contract DelegationController is Permissions, ILocker {
         if (sequence.firstUnprocessedMonth <= month) {
             uint value = sequence.value[sequence.firstUnprocessedMonth - 1];
             for (uint i = sequence.firstUnprocessedMonth; i <= month; ++i) {
-                value += sequence.addDiff[i] - sequence.subtractDiff[i];
+                value = value.add(sequence.addDiff[i]).sub(sequence.subtractDiff[i]);
             }
             return value;
         } else {
@@ -642,7 +644,7 @@ contract DelegationController is Permissions, ILocker {
     }
 
     function calculateValueBeforeMonthAndGetAtMonth(PartialDifferences storage sequence, uint month) internal returns (uint) {
-        calculateValue(sequence, month - 1);
+        calculateValue(sequence, month.sub(1));
         return getValue(sequence, month);
     }
 
@@ -657,14 +659,14 @@ contract DelegationController is Permissions, ILocker {
         }
 
         if (month >= sequence.firstUnprocessedMonth) {
-            sequence.addDiff[month] += diff;
+            sequence.addDiff[month] = sequence.addDiff[month].add(diff);
         } else {
-            sequence.value += diff;
+            sequence.value = sequence.value.add(diff);
         }
     }
 
     function subtract(PartialDifferencesValue storage sequence, uint diff, uint month) internal {
-        require(sequence.firstUnprocessedMonth <= month + 1, "Can't subtract from the past");
+        require(sequence.firstUnprocessedMonth <= month.add(1), "Can't subtract from the past");
         if (sequence.firstUnprocessedMonth == 0) {
             sequence.firstUnprocessedMonth = month;
             sequence.lastChangedMonth = month;
@@ -674,32 +676,32 @@ contract DelegationController is Permissions, ILocker {
         }
 
         if (month >= sequence.firstUnprocessedMonth) {
-            sequence.subtractDiff[month] += diff;
+            sequence.subtractDiff[month] = sequence.subtractDiff[month].add(diff);
         } else {
-            sequence.value -= diff;
+            sequence.value = sequence.value.sub(diff);
         }
     }
 
     function calculateValue(PartialDifferencesValue storage sequence, uint month) internal returns (uint) {
-        require(month + 1 >= sequence.firstUnprocessedMonth, "Can't calculate value in the past");
+        require(month.add(1) >= sequence.firstUnprocessedMonth, "Can't calculate value in the past");
         if (sequence.firstUnprocessedMonth == 0) {
             return 0;
         }
 
         if (sequence.firstUnprocessedMonth <= month) {
             for (uint i = sequence.firstUnprocessedMonth; i <= month; ++i) {
-                sequence.value += sequence.addDiff[i] - sequence.subtractDiff[i];
+                sequence.value = sequence.value.add(sequence.addDiff[i]).sub(sequence.subtractDiff[i]);
                 delete sequence.addDiff[i];
                 delete sequence.subtractDiff[i];
             }
-            sequence.firstUnprocessedMonth = month + 1;
+            sequence.firstUnprocessedMonth = month.add(1);
         }
 
         return sequence.value;
     }
 
     function reduce(PartialDifferencesValue storage sequence, uint amount, uint month) internal returns (Fraction memory) {
-        require(month + 1 >= sequence.firstUnprocessedMonth, "Can't reduce value in the past");
+        require(month.add(1) >= sequence.firstUnprocessedMonth, "Can't reduce value in the past");
         if (sequence.firstUnprocessedMonth == 0) {
             return createFraction(0);
         }
@@ -713,7 +715,7 @@ contract DelegationController is Permissions, ILocker {
             _amount = value;
         }
 
-        Fraction memory reducingCoefficient = createFraction(value - _amount, value);
+        Fraction memory reducingCoefficient = createFraction(value.sub(_amount), value);
         reduce(sequence, reducingCoefficient, month);
         return reducingCoefficient;
     }
@@ -748,7 +750,7 @@ contract DelegationController is Permissions, ILocker {
         uint month,
         bool hasSumSequence) internal
     {
-        require(month + 1 >= sequence.firstUnprocessedMonth, "Can't reduce value in the past");
+        require(month.add(1) >= sequence.firstUnprocessedMonth, "Can't reduce value in the past");
         require(reducingCoefficient.numerator <= reducingCoefficient.denominator, "Increasing of values is not implemented");
         if (sequence.firstUnprocessedMonth == 0) {
             return;
@@ -758,16 +760,16 @@ contract DelegationController is Permissions, ILocker {
             return;
         }
 
-        uint newValue = sequence.value * reducingCoefficient.numerator / reducingCoefficient.denominator;
+        uint newValue = sequence.value.mul(reducingCoefficient.numerator).div(reducingCoefficient.denominator);
         if (hasSumSequence) {
-            subtract(sumSequence, sequence.value - newValue, month);
+            subtract(sumSequence, sequence.value.sub(newValue), month);
         }
         sequence.value = newValue;
 
-        for (uint i = month + 1; i <= sequence.lastChangedMonth; ++i) {
-            uint newDiff = sequence.subtractDiff[i] * reducingCoefficient.numerator / reducingCoefficient.denominator;
+        for (uint i = month.add(1); i <= sequence.lastChangedMonth; ++i) {
+            uint newDiff = sequence.subtractDiff[i].mul(reducingCoefficient.numerator).div(reducingCoefficient.denominator);
             if (hasSumSequence) {
-                sumSequence.subtractDiff[i] -= sequence.subtractDiff[i] - newDiff;
+                sumSequence.subtractDiff[i] = sumSequence.subtractDiff[i].sub(sequence.subtractDiff[i].sub(newDiff));
             }
             sequence.subtractDiff[i] = newDiff;
         }
@@ -786,12 +788,12 @@ contract DelegationController is Permissions, ILocker {
 
     function reduceFraction(Fraction memory fraction) internal pure {
         uint _gcd = gcd(fraction.numerator, fraction.denominator);
-        fraction.numerator /= _gcd;
-        fraction.denominator /= _gcd;
+        fraction.numerator = fraction.numerator.div(_gcd);
+        fraction.denominator = fraction.denominator.div(_gcd);
     }
 
     function multiplyFraction(Fraction memory a, Fraction memory b) internal pure returns (Fraction memory) {
-        return createFraction(a.numerator * b.numerator, a.denominator * b.denominator);
+        return createFraction(a.numerator.mul(b.numerator), a.denominator.mul(b.denominator));
     }
 
     function gcd(uint _a, uint _b) internal pure returns (uint) {
@@ -801,7 +803,7 @@ contract DelegationController is Permissions, ILocker {
             (a, b) = swap(a, b);
         }
         while (b > 0) {
-            a %= b;
+            a = a.mod(b);
             (a, b) = swap (a, b);
         }
         return a;
