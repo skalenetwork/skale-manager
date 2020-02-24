@@ -66,10 +66,12 @@ contract SkaleManager is IERC777Recipient, Permissions {
         external
         allow("SkaleToken")
     {
-        TransactionOperation operationType = fallbackOperationTypeConvert(userData);
-        if (operationType == TransactionOperation.CreateSchain) {
-            address schainsFunctionalityAddress = contractManager.getContract("SchainsFunctionality");
-            ISchainsFunctionality(schainsFunctionalityAddress).addSchain(from, value, userData);
+        if (userData.length > 0) {
+            TransactionOperation operationType = fallbackOperationTypeConvert(userData);
+            if (operationType == TransactionOperation.CreateSchain) {
+                address schainsFunctionalityAddress = contractManager.getContract("SchainsFunctionality");
+                ISchainsFunctionality(schainsFunctionalityAddress).addSchain(from, value, userData);
+            }
         }
     }
 

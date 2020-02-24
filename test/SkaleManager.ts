@@ -61,8 +61,9 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
 
         const prefix = "0x000000000000000000000000";
         const premined = "100000000000000000000000000";
-        await skaleToken.mint(owner, skaleManager.address, premined, prefix + skaleManager.address.slice(2), "0x");
+        await skaleToken.mint(owner, skaleManager.address, premined, "0x", "0x");
         await constantsHolder.setMSR(5);
+        await constantsHolder.setLaunchTimestamp(0); // to allow bounty withdrawing
     });
 
     it("should fail to process token fallback if sent not from SkaleToken", async () => {
@@ -409,6 +410,8 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
 
                     await skaleManager.getBounty(1, {from: validator});
 
+                    skipTime(web3, month); // can withdraw bounty only next month
+
                     await distributor.withdrawBounty(validatorId, validator, {from: validator});
                     await distributor.withdrawFee(validator, {from: validator});
 
@@ -438,6 +441,8 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
 
                     await skaleManager.getBounty(1, {from: validator});
 
+                    skipTime(web3, month); // can withdraw bounty only next month
+
                     await distributor.withdrawBounty(validatorId, validator, {from: validator});
                     await distributor.withdrawFee(validator, {from: validator});
 
@@ -454,6 +459,8 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
 
                     await skaleManager.getBounty(1, {from: validator});
 
+                    skipTime(web3, month); // can withdraw bounty only next month
+
                     await distributor.withdrawBounty(validatorId, validator, {from: validator});
                     await distributor.withdrawFee(validator, {from: validator});
 
@@ -469,6 +476,8 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
                     const bounty = web3.utils.toBN("1250112128804044098969");
 
                     await skaleManager.getBounty(1, {from: validator});
+
+                    skipTime(web3, month); // can withdraw bounty only next month
 
                     await distributor.withdrawBounty(validatorId, validator, {from: validator});
                     await distributor.withdrawFee(validator, {from: validator});
@@ -497,6 +506,8 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
 
                     await skaleManager.getBounty(1, {from: validator});
 
+                    skipTime(web3, month); // can withdraw bounty only next month
+
                     await distributor.withdrawBounty(validatorId, validator, {from: validator});
                     await distributor.withdrawFee(validator, {from: validator});
 
@@ -512,6 +523,8 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
 
                     await skaleManager.getBounty(1, {from: validator});
 
+                    skipTime(web3, month); // can withdraw bounty only next month
+
                     await distributor.withdrawBounty(validatorId, validator, {from: validator});
                     await distributor.withdrawFee(validator, {from: validator});
 
@@ -526,6 +539,8 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
                     const bounty = web3.utils.toBN("937627509303713864756");
 
                     await skaleManager.getBounty(1, {from: validator});
+
+                    skipTime(web3, month); // can withdraw bounty only next month
 
                     await distributor.withdrawBounty(validatorId, validator, {from: validator});
                     await distributor.withdrawFee(validator, {from: validator});
