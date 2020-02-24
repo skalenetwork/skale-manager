@@ -105,6 +105,11 @@ contract DelegationController is Permissions, ILocker {
         uint month;
     }
 
+    struct SlashingSignal {
+        address holder;
+        uint penalty;
+    }
+
     struct LockedInPending {
         uint amount;
         uint month;
@@ -193,6 +198,8 @@ contract DelegationController is Permissions, ILocker {
             delegationPeriodManager.isDelegationPeriodAllowed(delegationPeriod),
             "This delegation period is not allowed");
 
+        SlashingSignal[] memory slashingSignals = processSlashesWithoutSignals(msg.sender);
+
         uint delegationId = addDelegation(
             msg.sender,
             validatorId,
@@ -206,6 +213,8 @@ contract DelegationController is Permissions, ILocker {
         require(holderBalance >= forbiddenForDelegation, "Delegator doesn't have enough tokens to delegate");
 
         emit DelegationRequestIsSent(delegationId);
+
+        sendSlashingSignals(slashingSignals);
     }
 
     function calculateLockedAmount(address wallet) external returns (uint) {
@@ -235,6 +244,8 @@ contract DelegationController is Permissions, ILocker {
         TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
         DelegationPeriodManager delegationPeriodManager = DelegationPeriodManager(contractManager.getContract("DelegationPeriodManager"));
         TokenLaunchLocker tokenLaunchLocker = TokenLaunchLocker(contractManager.getContract("TokenLaunchLocker"));
+
+        SlashingSignal[] memory slashingSignals = processSlashesWithoutSignals(msg.sender);
 
         uint currentMonth = timeHelpers.timestampToMonth(now);
         delegations[delegationId].started = currentMonth.add(1);
@@ -274,6 +285,8 @@ contract DelegationController is Permissions, ILocker {
             delegationId,
             delegations[delegationId].amount,
             delegations[delegationId].started);
+
+        sendSlashingSignals(slashingSignals);
     }
 
     function requestUndelegation(uint delegationId) external {
@@ -282,6 +295,7 @@ contract DelegationController is Permissions, ILocker {
         TokenLaunchLocker tokenLaunchLocker = TokenLaunchLocker(contractManager.getContract("TokenLaunchLocker"));
         DelegationPeriodManager delegationPeriodManager = DelegationPeriodManager(contractManager.getContract("DelegationPeriodManager"));
 
+        processAllSlashes(msg.sender);
         delegations[delegationId].finished = calculateDelegationEndMonth(delegationId);
         uint amountAfterSlashing = calculateDelegationAmountAfterSlashing(delegationId);
 
@@ -387,28 +401,7 @@ contract DelegationController is Permissions, ILocker {
     }
 
     function processSlashes(address holder, uint limit) public {
-        if (hasUnprocessedSlashes(holder)) {
-            uint index = _firstUnprocessedSlashByHolder[holder];
-            uint length = _slashes.length;
-            if (limit > 0 && index.add(limit) < length) {
-                length = index.add(limit);
-            }
-            for (; index < length; ++index) {
-                uint validatorId = _slashes[index].validatorId;
-                uint oldValue = calculateDelegatedByHolderToValidator(holder, validatorId);
-                if (oldValue > 0) {
-                    Punisher punisher = Punisher(contractManager.getContract("Punisher"));
-                    uint month = _slashes[index].month;
-                    reduce(
-                        _delegatedByHolderToValidator[holder][validatorId],
-                        _delegatedByHolder[holder],
-                        _slashes[index].reducingCoefficient,
-                        month);
-                    punisher.handleSlash(holder, oldValue.sub(calculateDelegatedByHolderToValidator(holder, validatorId)));
-                }
-            }
-            _firstUnprocessedSlashByHolder[holder] = length;
-        }
+        sendSlashingSignals(processSlashesWithoutSignals(holder, limit));
     }
 
     function processAllSlashes(address holder) public {
@@ -751,6 +744,9 @@ contract DelegationController is Permissions, ILocker {
         bool hasSumSequence) internal
     {
         require(month.add(1) >= sequence.firstUnprocessedMonth, "Can't reduce value in the past");
+        if (hasSumSequence) {
+            require(month.add(1) >= sumSequence.firstUnprocessedMonth, "Can't reduce value in the past");
+        }
         require(reducingCoefficient.numerator <= reducingCoefficient.denominator, "Increasing of values is not implemented");
         if (sequence.firstUnprocessedMonth == 0) {
             return;
@@ -829,6 +825,44 @@ contract DelegationController is Permissions, ILocker {
                 log.slashes[log.lastMonth].nextMonth = month;
                 log.lastMonth = month;
             }
+        }
+    }
+
+    function processSlashesWithoutSignals(address holder, uint limit) internal returns (SlashingSignal[] memory slashingSignals) {
+        if (hasUnprocessedSlashes(holder)) {
+            uint index = _firstUnprocessedSlashByHolder[holder];
+            uint end = _slashes.length;
+            if (limit > 0 && index.add(limit) < end) {
+                end = index.add(limit);
+            }
+            slashingSignals = new SlashingSignal[](end.sub(index));
+            uint begin = index;
+            for (; index < end; ++index) {
+                uint validatorId = _slashes[index].validatorId;
+                uint oldValue = calculateDelegatedByHolderToValidator(holder, validatorId);
+                if (oldValue > 0) {
+                    uint month = _slashes[index].month;
+                    reduce(
+                        _delegatedByHolderToValidator[holder][validatorId],
+                        _delegatedByHolder[holder],
+                        _slashes[index].reducingCoefficient,
+                        month);
+                    slashingSignals[index.sub(begin)].holder = holder;
+                    slashingSignals[index.sub(begin)].penalty = oldValue.sub(calculateDelegatedByHolderToValidator(holder, validatorId));
+                }
+            }
+            _firstUnprocessedSlashByHolder[holder] = end;
+        }
+    }
+
+    function processSlashesWithoutSignals(address holder) internal returns (SlashingSignal[] memory slashingSignals) {
+        return processSlashesWithoutSignals(holder, 0);
+    }
+
+    function sendSlashingSignals(SlashingSignal[] memory slashingSignals) internal {
+        Punisher punisher = Punisher(contractManager.getContract("Punisher"));
+        for (uint i = 0; i < slashingSignals.length; ++i) {
+            punisher.handleSlash(slashingSignals[i].holder, slashingSignals[i].penalty);
         }
     }
 }

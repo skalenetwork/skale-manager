@@ -1,6 +1,7 @@
 import { ContractManagerInstance,
          DelegationControllerInstance,
          DelegationServiceInstance,
+         PunisherInstance,
          SkaleTokenInstance,
          TokenLaunchManagerInstance,
          ValidatorServiceInstance} from "../../types/truffle-contracts";
@@ -12,6 +13,7 @@ import * as chaiAsPromised from "chai-as-promised";
 import { deployContractManager } from "../utils/deploy/contractManager";
 import { deployDelegationController } from "../utils/deploy/delegation/delegationController";
 import { deployDelegationService } from "../utils/deploy/delegation/delegationService";
+import { deployPunisher } from "../utils/deploy/delegation/punisher";
 import { deployTokenLaunchManager } from "../utils/deploy/delegation/tokenLaunchManager";
 import { deployValidatorService } from "../utils/deploy/delegation/validatorService";
 import { deploySkaleToken } from "../utils/deploy/skaleToken";
@@ -26,6 +28,7 @@ contract("TokenLaunchManager", ([owner, holder, delegation, validator, seller, h
     let delegationService: DelegationServiceInstance;
     let validatorService: ValidatorServiceInstance;
     let delegationController: DelegationControllerInstance;
+    let punisher: PunisherInstance;
 
     beforeEach(async () => {
         contractManager = await deployContractManager();
@@ -34,6 +37,7 @@ contract("TokenLaunchManager", ([owner, holder, delegation, validator, seller, h
         delegationService = await deployDelegationService(contractManager);
         validatorService = await deployValidatorService(contractManager);
         delegationController = await deployDelegationController(contractManager);
+        punisher = await deployPunisher(contractManager);
 
         // each test will start from Nov 10
         await skipTimeToDate(web3, 10, 11);
@@ -281,6 +285,37 @@ contract("TokenLaunchManager", ([owner, holder, delegation, validator, seller, h
 
                 locked = await skaleToken.calculateLockedAmount.call(holder);
                 locked.toNumber().should.be.equal(delegatedAmount);
+            });
+
+            it("should unlock tokens if 50% was delegated and then slashed", async () => {
+                const amount = Math.ceil(totalAmount / 2);
+                const period = 6;
+                await delegationController.delegate(validatorId, amount, period, "INFO", {from: holder});
+                const delegationId = 0;
+
+                await delegationController.acceptPendingDelegation(delegationId, {from: validator});
+
+                // skip month
+                skipTime(web3, month);
+
+                let delegated = await skaleToken.calculateDelegatedAmount.call(holder);
+                delegated.toNumber().should.be.equal(amount);
+
+                await punisher.slash(validatorId, amount);
+                await delegationController.requestUndelegation(delegationId, {from: holder});
+
+                delegated = await skaleToken.calculateDelegatedAmount.call(holder);
+                delegated.toNumber().should.be.equal(0);
+                (await skaleToken.calculateSlashedAmount.call(holder)).toNumber().should.be.equal(amount);
+
+                skipTime(web3, month * 3);
+
+                const state = await delegationController.getState(delegationId);
+                state.toNumber().should.be.equal(State.UNDELEGATION_REQUESTED);
+                const locked = await skaleToken.calculateLockedAmount.call(holder);
+                locked.toNumber().should.be.equal(amount);
+                delegated = await skaleToken.calculateDelegatedAmount.call(holder);
+                delegated.toNumber().should.be.equal(0);
             });
         });
     });
