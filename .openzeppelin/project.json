@@ -24,7 +24,8 @@
     "SkaleVerifier": "SkaleVerifier",
     "ManagerData": "ManagerData",
     "SkaleManager": "SkaleManager",
-    "Pricing": "Pricing"
+    "Pricing": "Pricing",
+    "SlashingTable": "SlashingTable"
   },
   "dependencies": {},
   "name": "skale-manager",
