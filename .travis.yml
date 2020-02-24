@@ -34,7 +34,7 @@ install:
     - yarn install
 script:
     - yarn generate
-    # - bash scripts/linter.sh
+    - bash scripts/linter.sh
     - bash scripts/move.sh
     - bash scripts/coverage.sh
 before_deploy:
