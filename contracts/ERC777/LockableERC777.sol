@@ -7,7 +7,6 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/introspection/IERC1820Registry.sol";
-// import "@nomiclabs/buidler/console.sol";
 
 
 /**
@@ -406,12 +405,6 @@ contract LockableERC777 is IERC777, IERC20 {
         private
     {
         require(from != address(0), "ERC777: burn from the zero address");
-// Added by SKALE----------------------------------------------------------
-        uint locked = _getLockedOf(from);
-        if (locked > 0) {
-            require(_balances[from] >= locked + amount, "Token should be unlocked for burning");
-        }
-//-------------------------------------------------------------------------
 
         _callTokensToSend(
             operator, from, address(0), amount, data, operatorData
@@ -420,7 +413,6 @@ contract LockableERC777 is IERC777, IERC20 {
         // Update state variables
         _totalSupply = _totalSupply.sub(amount);
         _balances[from] = _balances[from].sub(amount);
-
 
         emit Burned(
             operator, from, amount, data, operatorData
@@ -438,10 +430,10 @@ contract LockableERC777 is IERC777, IERC20 {
     )
         private
     {
-// Added by SKALE----------------------------------------------------------
+// Property of the company SKALE Labs inc.---------------------------------
         uint locked = _getLockedOf(from);
         if (locked > 0) {
-            require(_balances[from] >= locked + amount, "Token should be unlocked for transferring");
+            require(_balances[from] >= locked.add(amount), "Token should be unlocked for transferring");
         }
 //-------------------------------------------------------------------------
         _balances[from] = _balances[from].sub(amount);
