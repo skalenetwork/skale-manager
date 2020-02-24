@@ -358,7 +358,11 @@ contract("Delegation", ([owner,
         });
 
         it("should be possible to distribute bounty accross thousands of holders", async () => {
-            const holdersAmount = 1000;
+            let holdersAmount = 1000;
+            if (process.env.TRAVIS) {
+                console.log("Reduce holders amount to fit Travis timelimit");
+                holdersAmount = 10;
+            }
             const delegatedAmount = 1;
             const holders = [];
             for (let i = 0; i < holdersAmount; ++i) {
