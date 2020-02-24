@@ -4,7 +4,8 @@ const SlashingTable: SlashingTableContract = artifacts.require("./SlashingTable"
 const name = "SlashingTable";
 
 async function deploy(contractManager: ContractManagerInstance) {
-    const instance = await SlashingTable.new(contractManager.address);
+    const instance = await SlashingTable.new();
+    await instance.initialize(contractManager.address);
     await contractManager.setContractsAddress(name, instance.address);
     return instance;
 }
