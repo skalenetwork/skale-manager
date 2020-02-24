@@ -1,28 +1,13 @@
-import { ContractManagerInstance, TokenLaunchManagerContract } from "../../../../types/truffle-contracts";
+import { ContractManagerInstance, TokenLaunchManagerInstance } from "../../../../types/truffle-contracts";
+import { deployFunctionFactory } from "../factory";
 import { deploySkaleToken } from "../skaleToken";
 import { deployTokenLaunchLocker } from "./tokenLaunchLocker";
 
-const TokenLaunchManager: TokenLaunchManagerContract = artifacts.require("./TokenLaunchManager");
-const name = "TokenLaunchManager";
+const deployTokenLaunchManager: (contractManager: ContractManagerInstance) => Promise<TokenLaunchManagerInstance>
+    = deployFunctionFactory("TokenLaunchManager",
+                            async (contractManager: ContractManagerInstance) => {
+                                await deploySkaleToken(contractManager);
+                                await deployTokenLaunchLocker(contractManager);
+                            });
 
-async function deploy(contractManager: ContractManagerInstance) {
-    const instance = await TokenLaunchManager.new();
-    await instance.initialize(contractManager.address);
-    await contractManager.setContractsAddress(name, instance.address);
-    return instance;
-}
-
-async function deployDependencies(contractManager: ContractManagerInstance) {
-    await deploySkaleToken(contractManager);
-    await deployTokenLaunchLocker(contractManager);
-}
-
-export async function deployTokenLaunchManager(contractManager: ContractManagerInstance) {
-    try {
-        return TokenLaunchManager.at(await contractManager.getContract(name));
-    } catch (e) {
-        const instance = await deploy(contractManager);
-        await deployDependencies(contractManager);
-        return instance;
-    }
-}
+export { deployTokenLaunchManager };
