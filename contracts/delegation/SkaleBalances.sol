@@ -68,7 +68,7 @@ contract SkaleBalances is Permissions, IERC777Recipient {
         return _bountyBalances[wallet];
     }
 
-    function setLockBounty(bool lock) external onlyOwner() {
+    function setLockBounty(bool lock) external onlyOwner {
         _lockBounty = lock;
     }
 

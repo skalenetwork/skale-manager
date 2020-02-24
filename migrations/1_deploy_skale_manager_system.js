@@ -120,8 +120,6 @@ async function deploy(deployer, networkName, accounts) {
             console.log("contractManager address:", contract.address);
         } else if (["TimeHelpers", "Decryption", "ECDH"].includes(contractName)) {
             contract = await create(Object.assign({ contractAlias: contractName }, options));
-        } else if (contractName == "NodesData") {
-            contract = await create(Object.assign({ contractAlias: contractName, methodName: 'initialize', methodArgs: [5260000, contractManager.address] }, options));
         } else {
             contract = await create(Object.assign({ contractAlias: contractName, methodName: 'initialize', methodArgs: [contractManager.address] }, options));
         }
