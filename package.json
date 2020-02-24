@@ -32,10 +32,10 @@
     "hooks": "git config core.hooksPath .githooks",
     "lint": "npx ethlint --dir contracts",
     "prepare": "yarn generate && yarn hooks",
-    "test": "truffle test && yarn tsc",
+    "test": "npx buidler test && yarn tsc",
     "tsc": "tsc --noEmit",
     "tslint": "npx tslint --project .",
-    "slither": "slither . --exclude unused-state,reentrancy-events,naming-convention,solc-version,assembly,timestamp,calls-loop,incorrect-equality,reentrancy-no-eth,constant-function,pragma --filter-paths @openzeppelin/upgrades/contracts/,@openzeppelin/contracts-ethereum-package/contracts/,@openzeppelin/contracts/,ERC777,thirdparty --truffle-version truffle@latest",
+    "slither": "slither . --exclude reentrancy-events,naming-convention,solc-version,assembly,timestamp,calls-loop,incorrect-equality,reentrancy-no-eth,constant-function,pragma,unused-state --filter-paths @openzeppelin/upgrades/contracts/,@openzeppelin/contracts-ethereum-package/contracts/,@openzeppelin/contracts/,@nomiclabs/buidler/,ERC777,thirdparty --truffle-version truffle@latest",
     "fullcheck": "yarn lint && yarn tsc && yarn tslint && yarn slither"
   },
   "dependencies": {
@@ -45,20 +45,20 @@
     "@types/chai": "^4.1.7",
     "@types/chai-as-promised": "^7.1.0",
     "@types/minimist": "^1.2.0",
+    "@truffle/hdwallet-provider": "^1.0.28",
     "bignumber.js": "^9.0.0",
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
     "ethereumjs-tx": "1.3.7",
     "solc": "^0.5.7",
-    "truffle": "^5.1.5",
-    "truffle-hdwallet-provider": "^1.0.8",
+    "truffle": "5.1.5",
     "truffle-typings": "^1.0.8",
-    "ts-node": "^8.3.0",
+    "ts-node": "8.4.1",
     "typechain": "^0.3.17",
     "web3": "^1.2.1"
   },
   "devDependencies": {
-    "@nomiclabs/buidler": "^1.0.1",
+    "@nomiclabs/buidler": "^1.1.2",
     "@nomiclabs/buidler-truffle5": "^1.0.1",
     "@nomiclabs/buidler-web3": "^1.0.1",
     "@types/web3": "^1.0.19",
@@ -67,9 +67,9 @@
     "elliptic": "^6.5.1",
     "ethlint": "^1.2.4",
     "ganache-cli": "^6.1.8",
-    "solidity-coverage": "leapdao/solidity-coverage",
+    "solidity-coverage": "0.7.0",
     "tslint": "^5.18.0",
     "tslint-no-unused-expression-chai": "^0.1.4",
-    "typescript": "^3.5.2"
+    "typescript": "3.6.4"
   }
 }

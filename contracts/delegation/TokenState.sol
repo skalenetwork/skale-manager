@@ -124,7 +124,7 @@ contract TokenState is Permissions {
         return _slashed[holder];
     }
 
-    function skipTransitionDelay(uint delegationId) external onlyOwner() {
+    function skipTransitionDelay(uint delegationId) external onlyOwner {
         require(_timelimit[delegationId] != 0, "There is no transistion delay");
         _timelimit[delegationId] = now;
     }

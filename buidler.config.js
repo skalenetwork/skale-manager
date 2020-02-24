@@ -1,4 +1,5 @@
 usePlugin("@nomiclabs/buidler-truffle5");
+usePlugin("solidity-coverage");
 require('dotenv').config();
 
 task("erc", "Deploy erc1820", async () => {
@@ -26,27 +27,27 @@ module.exports = {
     buidlerevm: {
       accounts: [
         {
-          privateKey: "0xa15c19da241e5b1db20d8dd8ca4b5eeaee01c709b49ec57aa78c2133d3c1b3c9",
+          privateKey: process.env.PRIVATE_KEY_1,
           balance: "0xd3c21bcecceda0000000"
         },
         {
-          privateKey: "0xe7af72d241d4dd77bc080ce9234d742f6b22e35b3a660e8c197517b909f63ca8",
+          privateKey: process.env.PRIVATE_KEY_2,
           balance: "0xd3c21bcecceda0000000"
         },
         {
-          privateKey: "0x3918f6158deecdeac58823e9c116200edb025db36c89085b0647cec45f3f475f",
+          privateKey: process.env.PRIVATE_KEY_3,
           balance: "0xd3c21bcecceda0000000"
         },
         {
-          privateKey: "0x4adb17af9ba53dad177d1e1d93bcac65129cafed84704a0da639be30fe5c9f9c",
+          privateKey: process.env.PRIVATE_KEY_4,
           balance: "0xd3c21bcecceda0000000"
         },
         {
-          privateKey: "0xe8829ca5780908bb7e842eb69077410c9e89ed323c8038a634d39c0b301e32f8",
+          privateKey: process.env.PRIVATE_KEY_5,
           balance: "0xd3c21bcecceda0000000"
         },
         {
-          privateKey: "0x9B0B6E1F047FAF814323B8CE32636F559C4B2FA3B96A8158A3CDA5779505DAFD",
+          privateKey: process.env.PRIVATE_KEY_6,
           balance: "0xd3c21bcecceda0000000"
         }
       ],

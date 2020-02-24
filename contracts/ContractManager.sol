@@ -21,6 +21,7 @@ pragma solidity ^0.5.3;
 
 import "@openzeppelin/contracts-ethereum-package/contracts/ownership/Ownable.sol";
 import "@openzeppelin/upgrades/contracts/Initializable.sol";
+import "./thirdparty/StringUtils.sol";
 
 
 /**
@@ -29,6 +30,7 @@ import "@openzeppelin/upgrades/contracts/Initializable.sol";
  * @author Artem Payvin
  */
 contract ContractManager is Initializable, Ownable {
+    using StringUtils for string;
 
     // mapping of actual smart contracts addresses
     mapping (bytes32 => address) public contracts;
@@ -64,6 +66,6 @@ contract ContractManager is Initializable, Ownable {
 
     function getContract(string calldata name) external view returns (address contractAddress) {
         contractAddress = contracts[keccak256(abi.encodePacked(name))];
-        require(contractAddress != address(0), "Contract has not been found");
+        require(contractAddress != address(0), name.strConcat(" contract has not been found"));
     }
 }
