@@ -22,27 +22,9 @@ node_js:
 os: linux
 dist: bionic
 env:
-  - TESTFILES=ConstantsHolder.spec.ts
-  - TESTFILES=ContractManager.ts
-  - TESTFILES=Decryption.ts
-  - TESTFILES=ECDH.ts
-  - TESTFILES=ManagerData.spec.ts
-  - TESTFILES=MonitorsData.ts
-  - TESTFILES=MonitorsFunctionality.spec.ts
-  - TESTFILES=NodesData.ts
-  - TESTFILES=NodesFunctionality.ts
-  - TESTFILES=Pricing.ts
-  - TESTFILES=SchainsData.ts
-  - TESTFILES=SchainsFunctionality.ts
-  - TESTFILES=SkaleDKG.ts
-  - TESTFILES=SkaleManager.ts
-  - TESTFILES=SkaleToken.ts
-  - TESTFILES=SkaleVerifier.ts
-  - TESTFILES=delegation/Delegation.ts
-  - TESTFILES=delegation/DelegationRequest.ts
-  - TESTFILES=delegation/TokenSale.ts
-  - TESTFILES=delegation/TokenState.ts
-  - TESTFILES=delegation/ValidatorService.ts
+  - TESTFOLDERS=1
+  - TESTFOLDERS=2
+  - TESTFOLDERS=3
 addons:
   apt:
     packages:
@@ -52,9 +34,9 @@ install:
     - yarn install
 script:
     - yarn generate
-    - bash scripts/linter.sh
-    - npx buidler coverage --testfiles test/$TESTFILES --solcoverjs .solcover.js
-    - bash <(curl -s https://codecov.io/bash) -cF solidity
+    # - bash scripts/linter.sh
+    - bash scripts/move.sh
+    - bash scripts/coverage.sh
 before_deploy:
   # Set up git user name and tag this commit
   - (
