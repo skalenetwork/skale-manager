@@ -30,6 +30,10 @@ addons:
     packages:
       - python3-pip
       - python3-setuptools
+stages:
+  - lint
+  - test
+  - deploy
 
 jobs:
   include:
@@ -43,7 +47,7 @@ jobs:
         - slither . || true
         - yarn slither || travis_terminate 5
         - yarn tslint || travis_terminate 2
-        
+
     - stage: test
       script:
         - bash scripts/move.sh
