@@ -134,13 +134,19 @@ async function deploy(deployer, networkName, accounts) {
             console.log("Contract", contract, "with address", address, "is registered in Contract Manager");
         });
     }  
-
-    console.log("Done");
     
-    await deployer.deploy(SkaleToken, contractManager.address, [], {gas: gasLimit * gas_multiplier});
+    let skaleTokenInst = await deployer.deploy(SkaleToken, contractManager.address, [], {gas: gasLimit * gas_multiplier}).then(async function(inst) {
+        return inst;
+    });
     await contractManager.methods.setContractsAddress("SkaleToken", SkaleToken.address).send({from: deployAccount}).then(function(res) {
         console.log("Contract Skale Token with address", SkaleToken.address, "registred in Contract Manager");
     });
+
+    await skaleTokenInst.send(
+        deployed.get("SkaleBalances").address,
+        "1000000000000000000000000000",
+        "0x000000000000000000000000" + deployed.get("SkaleManager").address.slice(2)
+    );
     
     console.log('Deploy done, writing results...');
 

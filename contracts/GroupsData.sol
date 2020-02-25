@@ -265,7 +265,7 @@ contract GroupsData is IGroupsData, Permissions {
     function getNumberOfNodesInGroup(bytes32 groupIndex) external view returns (uint) {
         return groups[groupIndex].nodesInGroup.length;
     }
-    
+
     /**
      * @dev constructor in Permissions approach
      * @param newExecutorName - name of executor contract
