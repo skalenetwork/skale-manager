@@ -1,21 +1,15 @@
-import { ContractManagerContract,
-         ContractManagerInstance,
-         SchainsDataContract,
-         SchainsDataInstance,
-         SkaleDKGContract,
-         SkaleDKGInstance } from "../types/truffle-contracts";
-
-const ContractManager: ContractManagerContract = artifacts.require("./ContractManager");
-const SchainsData: SchainsDataContract = artifacts.require("./SchainsData");
-const SkaleDKG: SkaleDKGContract = artifacts.require("./SkaleDKG");
+import { ContractManagerInstance,
+         SchainsDataInstance } from "../types/truffle-contracts";
 
 import BigNumber from "bignumber.js";
 import chai = require("chai");
 import * as chaiAsPromised from "chai-as-promised";
+import { deployContractManager } from "./utils/deploy/contractManager";
+import { deploySchainsData } from "./utils/deploy/schainsData";
+import { skipTime } from "./utils/time";
+
 chai.should();
 chai.use(chaiAsPromised);
-import { gasMultiplier } from "./utils/command_line";
-import { skipTime } from "./utils/time";
 
 class Schain {
     public name: string;
@@ -42,14 +36,10 @@ class Schain {
 contract("SchainsData", ([owner, holder]) => {
     let contractManager: ContractManagerInstance;
     let schainsData: SchainsDataInstance;
-    let skaleDKG: SkaleDKGInstance;
 
     beforeEach(async () => {
-        contractManager = await ContractManager.new({from: owner});
-        schainsData = await SchainsData.new("SchainsFunctionality", contractManager.address, {from: owner});
-        await contractManager.setContractsAddress("SchainsData", schainsData.address, {from: owner});
-        skaleDKG = await SkaleDKG.new(contractManager.address, {from: owner});
-        await contractManager.setContractsAddress("SkaleDKG", skaleDKG.address, {from: owner});
+        contractManager = await deployContractManager();
+        schainsData = await deploySchainsData(contractManager);
     });
 
     it("should initialize schain", async () => {

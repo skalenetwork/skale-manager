@@ -1,7 +1,7 @@
-pragma solidity ^0.5.0;
+pragma solidity ^0.5.3;
 
 interface INodesFunctionality {
-    function createNode(address from, uint value, bytes calldata data) external returns (uint);
+    function createNode(address from, bytes calldata data) external returns (uint);
     function initExit(address from, uint nodeIndex) external returns (bool);
     function completeExit(address from, uint nodeIndex) external returns (bool);
     function removeNode(address from, uint nodeIndex) external;

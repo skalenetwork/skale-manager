@@ -1,4 +1,4 @@
-pragma solidity ^0.5.0;
+pragma solidity ^0.5.3;
 
 interface ISchainsFunctionality {
     function addSchain(address from, uint value, bytes calldata data) external;

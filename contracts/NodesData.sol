@@ -17,7 +17,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity ^0.5.0;
+pragma solidity ^0.5.3;
 
 import "./Permissions.sol";
 import "./interfaces/IConstants.sol";
@@ -37,7 +37,6 @@ contract NodesData is INodesData, Permissions {
         bytes4 ip;
         bytes4 publicIP;
         uint16 port;
-        //address owner;
         bytes publicKey;
         uint32 startDate;
         uint32 lastRewardDate;
@@ -46,6 +45,7 @@ contract NodesData is INodesData, Permissions {
         //address secondAddress;
         uint32 finishTime;
         NodeStatus status;
+        uint validatorId;
     }
 
     // struct to note which Nodes and which number of Nodes owned by user
@@ -59,24 +59,11 @@ contract NodesData is INodesData, Permissions {
         uint indexInSpaceMap;
     }
 
-    // struct to note Full or Fractional Node and link to subarray
-    // struct NodeLink {
-    //     uint subarrayLink;
-    //     bool isNodeFull;
-    // }
-
-    // // struct to note nodeIndex and remaining space
-    // struct NodeFilling {
-    //     uint nodeIndex;
-    //     uint freeSpace;
-    // }
-
     // array which contain all Nodes
     Node[] public nodes;
 
     SpaceManaging[] public spaceOfNodes;
-    // array which contain links to subarrays of Fractional and Full Nodes
-    // NodeLink[] public nodesLink;
+
     // mapping for checking which Nodes and which number of Nodes owned by user
     mapping (address => CreatedNodes) public nodeIndexes;
     // mapping for checking is IP address busy
@@ -88,19 +75,11 @@ contract NodesData is INodesData, Permissions {
     // mapping for indication from space to Nodes
     mapping (uint8 => uint[]) public spaceToNodes;
 
-    // // array which contain only Fractional Nodes
-    // NodeFilling[] public fractionalNodes;
-    // // array which contain only Full Nodes
-    // NodeFilling[] public fullNodes;
+    uint public numberOfActiveNodes;
+    uint public numberOfLeavingNodes;
+    uint public numberOfLeftNodes;
 
 
-    uint public numberOfActiveNodes = 0;
-    uint public numberOfLeavingNodes = 0;
-    uint public numberOfLeftNodes = 0;
-
-    constructor(address newContractsAddress) Permissions(newContractsAddress) public {
-
-    }
 
     function getNodesWithFreeSpace(uint8 freeSpace) external view returns (uint[] memory) {
         uint[] memory nodesWithFreeSpace = new uint[](this.countNodesWithFreeSpace(freeSpace));
@@ -117,7 +96,7 @@ contract NodesData is INodesData, Permissions {
     function countNodesWithFreeSpace(uint8 freeSpace) external view returns (uint count) {
         count = 0;
         for (uint8 i = freeSpace; i <= 128; ++i) {
-            count += spaceToNodes[i].length;
+            count = count.add(spaceToNodes[i].length);
         }
     }
 
@@ -138,7 +117,8 @@ contract NodesData is INodesData, Permissions {
         bytes4 ip,
         bytes4 publicIP,
         uint16 port,
-        bytes calldata publicKey
+        bytes calldata publicKey,
+        uint validatorId
     )
         external
         allow("NodesFunctionality")
@@ -154,7 +134,8 @@ contract NodesData is INodesData, Permissions {
             startDate: uint32(block.timestamp),
             lastRewardDate: uint32(block.timestamp),
             finishTime: 0,
-            status: NodeStatus.Active
+            status: NodeStatus.Active,
+            validatorId: validatorId
         }));
         nodeIndex = nodes.length - 1;
         bytes32 nodeId = keccak256(abi.encodePacked(name));
@@ -170,38 +151,6 @@ contract NodesData is INodesData, Permissions {
         spaceToNodes[128].push(nodeIndex);
         numberOfActiveNodes++;
     }
-
-    // /**
-    //  * @dev addFractionalNode - adds Node to array of Fractional Nodes
-    //  * function could be run only by executor
-    //  * @param nodeIndex - index of Node
-    //  */
-    // function addFractionalNode(uint nodeIndex) external allow("NodesFunctionality") {
-    //     fractionalNodes.push(NodeFilling({
-    //         nodeIndex: nodeIndex,
-    //         freeSpace: 128
-    //     }));
-    //     nodesLink.push(NodeLink({
-    //         subarrayLink: fractionalNodes.length - 1,
-    //         isNodeFull: false
-    //     }));
-    // }
-
-    // /**
-    //  * @dev addFullNode - adds Node to array of Full Nodes
-    //  * function could be run only by executor
-    //  * @param nodeIndex - index of Node
-    //  */
-    // function addFullNode(uint nodeIndex) external allow("NodesFunctionality") {
-    //     fullNodes.push(NodeFilling({
-    //         nodeIndex: nodeIndex,
-    //         freeSpace: 128
-    //     }));
-    //     nodesLink.push(NodeLink({
-    //         subarrayLink: fullNodes.length - 1,
-    //         isNodeFull: true
-    //     }));
-    // }
 
     /**
      * @dev setNodeLeaving - set Node Leaving
@@ -234,36 +183,6 @@ contract NodesData is INodesData, Permissions {
         nodes[nodeIndex].status = NodeStatus.Left;
         numberOfLeftNodes++;
     }
-
-    // /**
-    //  * @dev removeFractionalNode - removes Node from Fractional Nodes array
-    //  * function could be run only by NodesFunctionality
-    //  * @param subarrayIndex - index of Node at array of Fractional Nodes
-    //  */
-    // function removeFractionalNode(uint subarrayIndex) external allow("NodesFunctionality") {
-    //     if (subarrayIndex != fractionalNodes.length - 1) {
-    //         uint secondNodeIndex = fractionalNodes[fractionalNodes.length - 1].nodeIndex;
-    //         fractionalNodes[subarrayIndex] = fractionalNodes[fractionalNodes.length - 1];
-    //         nodesLink[secondNodeIndex].subarrayLink = subarrayIndex;
-    //     }
-    //     delete fractionalNodes[fractionalNodes.length - 1];
-    //     fractionalNodes.length--;
-    // }
-
-    // /**
-    //  * @dev removeFullNode - removes Node from Full Nodes array
-    //  * function could be run only by NodesFunctionality
-    //  * @param subarrayIndex - index of Node at array of Full Nodes
-    //  */
-    // function removeFullNode(uint subarrayIndex) external allow("NodesFunctionality") {
-    //     if (subarrayIndex != fullNodes.length - 1) {
-    //         uint secondNodeIndex = fullNodes[fullNodes.length - 1].nodeIndex;
-    //         fullNodes[subarrayIndex] = fullNodes[fullNodes.length - 1];
-    //         nodesLink[secondNodeIndex].subarrayLink = subarrayIndex;
-    //     }
-    //     delete fullNodes[fullNodes.length - 1];
-    //     fullNodes.length--;
-    // }
 
     function removeNode(uint nodeIndex) external allow("NodesFunctionality") {
         uint8 space = spaceOfNodes[nodeIndex].freeSpace;
@@ -299,20 +218,6 @@ contract NodesData is INodesData, Permissions {
         return true;
     }
 
-    // /**
-    //  * @dev removeSpaceFromFullNodes - occupies space from Full Node
-    //  * function could be run only by SchainsFunctionality
-    //  * @param subarrayLink - index of Node at array of Full Nodes
-    //  * @param space - space which should be occupied
-    //  */
-    // function removeSpaceFromFullNode(uint subarrayLink, uint space) external allow("SchainsFunctionalityInternal") returns (bool) {
-    //     if (fullNodes[subarrayLink].freeSpace < space) {
-    //         return false;
-    //     }
-    //     fullNodes[subarrayLink].freeSpace -= space;
-    //     return true;
-    // }
-
     /**
      * @dev adSpaceToFractionalNode - returns space to Fractional Node
      * function could be run only be SchainsFunctionality
@@ -327,16 +232,6 @@ contract NodesData is INodesData, Permissions {
             );
         }
     }
-
-    // /**
-    //  * @dev addSpaceToFullNode - returns space to Full Node
-    //  * function could be run only by SchainsFunctionality
-    //  * @param subarrayLink - index of Node at array of Full Nodes
-    //  * @param space - space which should be returned
-    //  */
-    // function addSpaceToFullNode(uint subarrayLink, uint space) external allow("SchainsFunctionality") {
-    //     fullNodes[subarrayLink].freeSpace += space;
-    // }
 
     /**
      * @dev changeNodeLastRewardDate - changes Node's last reward date
@@ -367,8 +262,8 @@ contract NodesData is INodesData, Permissions {
      * @return if time for reward has come - true, else - false
      */
     function isTimeForReward(uint nodeIndex) external view returns (bool) {
-        address constantsAddress = contractManager.contracts(keccak256(abi.encodePacked("Constants")));
-        return nodes[nodeIndex].lastRewardDate + IConstants(constantsAddress).rewardPeriod() <= block.timestamp;
+        address constantsAddress = contractManager.getContract("ConstantsHolder");
+        return nodes[nodeIndex].lastRewardDate.add(IConstants(constantsAddress).rewardPeriod()) <= block.timestamp;
     }
 
     /**
@@ -391,6 +286,10 @@ contract NodesData is INodesData, Permissions {
 
     function getNodePublicKey(uint nodeIndex) external view returns (bytes memory) {
         return nodes[nodeIndex].publicKey;
+    }
+
+    function getNodeValidatorId(uint nodeIndex) external view returns (uint) {
+        return nodes[nodeIndex].validatorId;
     }
 
     function getNodeFinishTime(uint nodeIndex) external view returns (uint32) {
@@ -430,7 +329,7 @@ contract NodesData is INodesData, Permissions {
      * @return Node next reward date
      */
     function getNodeNextRewardDate(uint nodeIndex) external view returns (uint32) {
-        address constantsAddress = contractManager.contracts(keccak256(abi.encodePacked("Constants")));
+        address constantsAddress = contractManager.getContract("ConstantsHolder");
         return nodes[nodeIndex].lastRewardDate + IConstants(constantsAddress).rewardPeriod();
     }
 
@@ -442,60 +341,13 @@ contract NodesData is INodesData, Permissions {
         return nodes.length;
     }
 
-    // /**
-    //  * @dev getNumberOfFractionalNodes - get number of Fractional Nodes
-    //  * @return number of Fractional Nodes
-    //  */
-    // function getNumberOfFractionalNodes() external view returns (uint) {
-    //     return fractionalNodes.length;
-    // }
-
-    // /**
-    //  * @dev getNumberOfFullNodes - get number of Full Nodes
-    //  * @return number of Full Nodes
-    //  */
-    // function getNumberOfFullNodes() external view returns (uint) {
-    //     return fullNodes.length;
-    // }
-
     /**
      * @dev getNumberOfFullNodes - get number Online Nodes
      * @return number of active nodes plus number of leaving nodes
      */
     function getNumberOnlineNodes() external view returns (uint) {
-        return numberOfActiveNodes + numberOfLeavingNodes;
+        return numberOfActiveNodes.add(numberOfLeavingNodes);
     }
-
-    // /**
-    //  * @dev enoughNodesWithFreeSpace - get number of free Fractional Nodes
-    //  * @return numberOfFreeFractionalNodes - number of free Fractional Nodes
-    //  */
-    // function enoughNodesWithFreeSpace(uint8 space, uint needNodes) external view returns (bool nodesAreEnough) {
-    //     uint numberOfFreeNodes = 0;
-    //     for (uint8 i = space; i <= 128; i++) {
-    //         numberOfFreeNodes += spaceToNodes[i].length;
-    //         if (numberOfFreeNodes == needNodes) {
-    //             return true;
-    //         }
-    //     }
-    //     return false;
-    // }
-
-    // /**
-    //  * @dev getnumberOfFreeNodes - get number of free Full Nodes
-    //  * @return numberOfFreeFullNodes - number of free Full Nodes
-    //  */
-    // function enoughNodesWithFreeSpace(uint needNodes, unt ) external view returns (bool nodesAreEnough) {
-    //     for (uint indexOfNode = 0; indexOfNode < nodes.length; indexOfNode++) {
-    //         if (nodes[indexOfNode].freeSpace == 128 && isNodeActive(nodes[indexOfNode].nodeIndex)) {
-    //             numberOfFreeFullNodes++;
-    //             if (numberOfFreeFullNodes == needNodes) {
-    //                 return true;
-    //             }
-    //         }
-    //     }
-    //     return false;
-    // }
 
     /**
      * @dev getActiveNodeIPs - get array of ips of Active Nodes
@@ -529,22 +381,6 @@ contract NodesData is INodesData, Permissions {
         }
     }
 
-    // function getActiveFractionalNodes() external view returns (uint[] memory) {
-    //     uint[] memory activeFractionalNodes = new uint[](fractionalNodes.length);
-    //     for (uint index = 0; index < fractionalNodes.length; index++) {
-    //         activeFractionalNodes[index] = fractionalNodes[index].nodeIndex;
-    //     }
-    //     return activeFractionalNodes;
-    // }
-
-    // function getActiveFullNodes() external view returns (uint[] memory) {
-    //     uint[] memory activeFullNodes = new uint[](fullNodes.length);
-    //     for (uint index = 0; index < fullNodes.length; index++) {
-    //         activeFullNodes[index] = fullNodes[index].nodeIndex;
-    //     }
-    //     return activeFullNodes;
-    // }
-
     /**
      * @dev getActiveNodeIds - get array of indexes of Active Nodes
      * @return activeNodeIds - array of indexes of Active Nodes
@@ -560,8 +396,21 @@ contract NodesData is INodesData, Permissions {
         }
     }
 
+    function getValidatorId(uint nodeIndex) external view returns (uint) {
+        require(nodeIndex < nodes.length, "Node does not exist");
+        return nodes[nodeIndex].validatorId;
+    }
+
     function getNodeStatus(uint nodeIndex) external view returns (NodeStatus) {
         return nodes[nodeIndex].status;
+    }
+
+    function initialize(address newContractsAddress) public initializer {
+        Permissions.initialize(newContractsAddress);
+
+        numberOfActiveNodes = 0;
+        numberOfLeavingNodes = 0;
+        numberOfLeftNodes = 0;
     }
 
     /**

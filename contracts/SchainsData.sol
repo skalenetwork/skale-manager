@@ -21,7 +21,6 @@ pragma solidity ^0.5.3;
 pragma experimental ABIEncoderV2;
 
 import "./GroupsData.sol";
-import "./interfaces/ISchainsData.sol";
 import "./interfaces/IConstants.sol";
 
 
@@ -29,7 +28,7 @@ import "./interfaces/IConstants.sol";
  * @title SchainsData - Data contract for SchainsFunctionality.
  * Contain all information about SKALE-Chains.
  */
-contract SchainsData is ISchainsData, GroupsData {
+contract SchainsData is GroupsData {
 
     struct Schain {
         string name;
@@ -75,13 +74,9 @@ contract SchainsData is ISchainsData, GroupsData {
     // array which contain all schains
     bytes32[] public schainsAtSystem;
 
-    uint64 public numberOfSchains = 0;
+    uint64 public numberOfSchains;
     // total resources that schains occupied
-    uint public sumOfSchainsResources = 0;
-
-    constructor(string memory newExecutorName, address newContractsAddress) GroupsData(newExecutorName, newContractsAddress) public {
-
-    }
+    uint public sumOfSchainsResources;
 
     /**
      * @dev initializeSchain - initializes Schain
@@ -158,7 +153,7 @@ contract SchainsData is ISchainsData, GroupsData {
     function setSchainPartOfNode(bytes32 schainId, uint8 partOfNode) external allow(executorName) {
         schains[schainId].partOfNode = partOfNode;
         if (partOfNode > 0) {
-            sumOfSchainsResources += (128 / partOfNode) * groups[schainId].nodesInGroup.length;
+            sumOfSchainsResources = sumOfSchainsResources.add((128 / partOfNode) * groups[schainId].nodesInGroup.length);
         }
     }
 
@@ -170,8 +165,8 @@ contract SchainsData is ISchainsData, GroupsData {
      * @param deposit - amount of SKL which payed for this time
      */
     function changeLifetime(bytes32 schainId, uint lifetime, uint deposit) external allow("SchainsFunctionality") {
-        schains[schainId].deposit += deposit;
-        schains[schainId].lifetime += lifetime;
+        schains[schainId].deposit = schains[schainId].deposit.add(deposit);
+        schains[schainId].lifetime = schains[schainId].lifetime.add(lifetime);
     }
 
     /**
@@ -229,17 +224,25 @@ contract SchainsData is ISchainsData, GroupsData {
         }
     }
 
-    function startRotation(bytes32 schainIndex, uint nodeIndex) external {
-        IConstants constants = IConstants(contractManager.getContract("Constants"));
+    function startRotation(bytes32 schainIndex, uint nodeIndex) external allow("SchainsFunctionality") {
+        IConstants constants = IConstants(contractManager.getContract("ConstantsHolder"));
         rotations[schainIndex].nodeIndex = nodeIndex;
         rotations[schainIndex].freezeUntil = now + constants.rotationDelay();
     }
 
-    function finishRotation(bytes32 schainIndex, uint nodeIndex, uint newNodeIndex) external {
-        IConstants constants = IConstants(contractManager.getContract("Constants"));
+    function finishRotation(bytes32 schainIndex, uint nodeIndex, uint newNodeIndex) external allow("SchainsFunctionality") {
+        IConstants constants = IConstants(contractManager.getContract("ConstantsHolder"));
         leavingHistory[nodeIndex].push(LeavingHistory(schainIndex, now + constants.rotationDelay()));
         rotations[schainIndex].newNodeIndex = newNodeIndex;
         rotations[schainIndex].rotationCounter++;
+    }
+
+    function removeRotation(bytes32 schainIndex) external allow("SchainsFunctionality") {
+        delete rotations[schainIndex];
+    }
+
+    function skipRotationDelay(bytes32 schainIndex) external onlyOwner {
+        rotations[schainIndex].freezeUntil = now;
     }
 
     function getRotation(bytes32 schainIndex) external view returns (Rotation memory) {
@@ -334,7 +337,7 @@ contract SchainsData is ISchainsData, GroupsData {
      * @return if expired - true, else - false
      */
     function isTimeExpired(bytes32 schainId) external view returns (bool) {
-        return schains[schainId].startDate + schains[schainId].lifetime < block.timestamp;
+        return schains[schainId].startDate.add(schains[schainId].lifetime) < block.timestamp;
     }
 
     /**
@@ -381,4 +384,10 @@ contract SchainsData is ISchainsData, GroupsData {
         }
     }
 
+    function initialize(address newContractsAddress) public initializer {
+        GroupsData.initialize("SchainsFunctionalityInternal", newContractsAddress);
+
+        numberOfSchains = 0;
+        sumOfSchainsResources = 0;
+    }
 }

@@ -20,9 +20,9 @@
 pragma solidity ^0.5.3;
 
 
-contract StringUtils {
+library StringUtils {
 
-    function strConcat(string calldata _a, string calldata _b) external pure returns (string memory) {
+    function strConcat(string memory _a, string memory _b) internal pure returns (string memory) {
         bytes memory _ba = bytes(_a);
         bytes memory _bb = bytes(_b);
 
@@ -39,7 +39,7 @@ contract StringUtils {
         return string(strBytes);
     }
 
-    function uint2str(uint _i) external pure returns (string memory) {
+    function uint2str(uint _i) internal pure returns (string memory) {
         if (_i == 0) {
             return "0";
         }
@@ -58,5 +58,4 @@ contract StringUtils {
         }
         return string(bstr);
     }
-
 }
