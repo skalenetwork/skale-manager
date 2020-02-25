@@ -36,6 +36,11 @@ stages:
   - deploy
 
 jobs:
+  exclude:
+    env: 
+      - TESTFOLDERS=1
+      - TESTFOLDERS=2
+      - TESTFOLDERS=3
   include:
     - stage: lint
       env:
@@ -49,13 +54,17 @@ jobs:
         - yarn tslint || travis_terminate 2
 
     - stage: test
+      env:
+        - TESTFOLDERS=1
+        - TESTFOLDERS=2
+        - TESTFOLDERS=3
       script:
         - bash scripts/move.sh
         - bash scripts/coverage.sh
 
     - stage: deploy
       env:
-          - TESTFOLDERS=NONE
+        - TESTFOLDERS=NONE
       script:
         - VERSION=$(BRANCH=$TRAVIS_BRANCH bash ./scripts/calculate_version.sh)
         - echo "Version $VERSION"
