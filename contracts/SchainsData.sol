@@ -224,17 +224,25 @@ contract SchainsData is GroupsData {
         }
     }
 
-    function startRotation(bytes32 schainIndex, uint nodeIndex) external {
+    function startRotation(bytes32 schainIndex, uint nodeIndex) external allow("SchainsFunctionality") {
         IConstants constants = IConstants(contractManager.getContract("ConstantsHolder"));
         rotations[schainIndex].nodeIndex = nodeIndex;
         rotations[schainIndex].freezeUntil = now + constants.rotationDelay();
     }
 
-    function finishRotation(bytes32 schainIndex, uint nodeIndex, uint newNodeIndex) external {
+    function finishRotation(bytes32 schainIndex, uint nodeIndex, uint newNodeIndex) external allow("SchainsFunctionality") {
         IConstants constants = IConstants(contractManager.getContract("ConstantsHolder"));
         leavingHistory[nodeIndex].push(LeavingHistory(schainIndex, now + constants.rotationDelay()));
         rotations[schainIndex].newNodeIndex = newNodeIndex;
         rotations[schainIndex].rotationCounter++;
+    }
+
+    function removeRotation(bytes32 schainIndex) external allow("SchainsFunctionality") {
+        delete rotations[schainIndex];
+    }
+
+    function skipRotationDelay(bytes32 schainIndex) external onlyOwner {
+        rotations[schainIndex].freezeUntil = now;
     }
 
     function getRotation(bytes32 schainIndex) external view returns (Rotation memory) {

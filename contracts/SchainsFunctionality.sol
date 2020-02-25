@@ -146,6 +146,7 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
         }
         ISchainsFunctionalityInternal(schainsFunctionalityInternalAddress).deleteGroup(schainId);
         SchainsData(dataAddress).removeSchain(schainId, from);
+        SchainsData(dataAddress).removeRotation(schainId);
         emit SchainDeleted(from, name, schainId);
     }
 
@@ -173,6 +174,7 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
         ISchainsFunctionalityInternal(schainsFunctionalityInternalAddress).deleteGroup(schainId);
         address from = SchainsData(dataAddress).getSchainOwner(schainId);
         SchainsData(dataAddress).removeSchain(schainId, from);
+        SchainsData(dataAddress).removeRotation(schainId);
         emit SchainDeleted(from, name, schainId);
     }
 
@@ -209,7 +211,7 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
                 continue;
             }
             string memory schainName = schainsData.getSchainName(schains[i]);
-            string memory revertMessage = "You cannot rotate on Schain ";
+            string memory revertMessage = "Node cannot rotate on Schain ";
             revertMessage = revertMessage.strConcat(schainName);
             revertMessage = revertMessage.strConcat(", occupied by Node ");
             revertMessage = revertMessage.strConcat(rotation.nodeIndex.uint2str());

@@ -307,6 +307,21 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
                 }
             });
 
+            it("should fail to create schain if validator doesn't meet MSR", async () => {
+                await constantsHolder.setMSR(6);
+                const newValidatorId = 2;
+                await delegationService.registerValidator("D2", "D2 is even", 150, 0, {from: developer});
+                await validatorService.enableValidator(newValidatorId, {from: owner});
+
+                await skaleManager.createNode(
+                    "0x10" + // create schain
+                    "0000000000000000000000000000000000000000000000000000000000000005" + // lifetime
+                    "01" + // type of schain
+                    "0000" + // nonce
+                    "6432", // name
+                    {from: developer}).should.be.eventually.rejectedWith("Validator has to meet Minimum Staking Requirement");
+            });
+
             it("should fail to send monitor verdict from not node owner", async () => {
                 await skaleManager.sendVerdict(0, 1, 0, 50, {from: hacker})
                     .should.be.eventually.rejectedWith("Validator with such address doesn't exist");
