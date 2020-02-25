@@ -317,6 +317,29 @@ contract("TokenLaunchManager", ([owner, holder, delegation, validator, seller, h
                 delegated = await skaleToken.calculateDelegatedAmount.call(holder);
                 delegated.toNumber().should.be.equal(0);
             });
+
+            it("should not lock free tokens after delegation request cancelling", async () => {
+                const freeAmount = 100;
+                const purchasedAmount = totalAmount;
+                const period = 12;
+
+                await skaleToken.mint(owner, holder, freeAmount, "0x", "0x");
+
+                (await skaleToken.calculateLockedAmount.call(holder)).toNumber().should.be.equal(purchasedAmount);
+
+                await delegationController.delegate(
+                    validatorId, freeAmount + purchasedAmount, period, "D2 is even", {from: holder});
+                const delegationId = 0;
+
+                (await delegationController.getState(delegationId)).toNumber().should.be.equal(State.PROPOSED);
+                (await skaleToken.calculateLockedAmount.call(holder)).toNumber()
+                    .should.be.equal(freeAmount + purchasedAmount);
+
+                await delegationController.cancelPendingDelegation(delegationId, {from: holder});
+
+                (await delegationController.getState(delegationId)).toNumber().should.be.equal(State.CANCELED);
+                (await skaleToken.calculateLockedAmount.call(holder)).toNumber().should.be.equal(purchasedAmount);
+            });
         });
     });
 });
