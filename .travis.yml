@@ -22,8 +22,9 @@ node_js:
 os: linux
 dist: bionic
 env:
-  global:
-    - NODE_OPTIONS="--max_old_space_size=4096"
+  - TESTFOLDERS=1
+  - TESTFOLDERS=2
+  - TESTFOLDERS=3
 addons:
   apt:
     packages:
@@ -31,21 +32,11 @@ addons:
       - python3-setuptools
 install:
     - yarn install
-    - pip3 install -r scripts/requirements.txt
 script:
-    - yarn lint || travis_terminate 1
-    - slither --version
-    - slither . || true
-    - yarn slither || travis_terminate 5
-    - yarn tslint || travis_terminate 2
-    - yarn generate    
-# TODO: Temporary disable tests while SKALE-1642 is not ready
-# Just deploy contracts instead
-    # - truffle deploy --network test
-#     - yarn test || travis_terminate 3
-after_script:
-    - npx buidler coverage --solcoverjs .solcover.js || travis_terminate 4
-    - cat coverage/lcov.info | npx codecov
+    - yarn generate
+    - bash scripts/linter.sh
+    - bash scripts/move.sh
+    - bash scripts/coverage.sh
 before_deploy:
   # Set up git user name and tag this commit
   - (
