@@ -162,16 +162,16 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
                     {from: validator});
             });
 
-            // it("should fail to init withdrawing of deposit of someone else's node", async () => {
-            //     await skaleManager.initWithdrawDeposit(0, {from: hacker})
-            //         .should.be.eventually.rejectedWith("Validator with such address doesn't exist");
-            // });
+            it("should fail to init exiting of someone else's node", async () => {
+                await skaleManager.nodeExit(0, {from: hacker})
+                    .should.be.eventually.rejectedWith("Validator with such address doesn't exist");
+            });
 
-            // it("should init withdrawing of deposit", async () => {
-            //     await skaleManager.initWithdrawDeposit(0, {from: validator});
+            it("should initiate exiting", async () => {
+                await skaleManager.nodeExit(0, {from: validator});
 
-            //     await nodesData.isNodeLeaving(0).should.be.eventually.true;
-            // });
+                await nodesData.isNodeLeft(0).should.be.eventually.true;
+            });
 
             it("should remove the node", async () => {
                 const balanceBefore = web3.utils.toBN(await skaleToken.balanceOf(validator));
@@ -241,27 +241,27 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
                     {from: validator});
             });
 
-            // it("should fail to init withdrawing of deposit of first node from another account", async () => {
-            //     await skaleManager.initWithdrawDeposit(0, {from: hacker})
-            //         .should.be.eventually.rejectedWith("Validator with such address doesn't exist");
-            // });
+            it("should fail to initiate exiting of first node from another account", async () => {
+                await skaleManager.nodeExit(0, {from: hacker})
+                    .should.be.eventually.rejectedWith("Validator with such address doesn't exist");
+            });
 
-            // it("should fail to init withdrawing of deposit of second node from another account", async () => {
-            //     await skaleManager.initWithdrawDeposit(1, {from: hacker})
-            //         .should.be.eventually.rejectedWith("Validator with such address doesn't exist");
-            // });
+            it("should fail to initiate exiting of second node from another account", async () => {
+                await skaleManager.nodeExit(1, {from: hacker})
+                    .should.be.eventually.rejectedWith("Validator with such address doesn't exist");
+            });
 
-            // it("should init withdrawing of deposit of first node", async () => {
-            //     await skaleManager.initWithdrawDeposit(0, {from: validator});
+            it("should initiate exiting of first node", async () => {
+                await skaleManager.nodeExit(0, {from: validator});
 
-            //     await nodesData.isNodeLeaving(0).should.be.eventually.true;
-            // });
+                await nodesData.isNodeLeft(0).should.be.eventually.true;
+            });
 
-            // it("should init withdrawing of deposit of second node", async () => {
-            //     await skaleManager.initWithdrawDeposit(1, {from: validator});
+            it("should initiate exiting of second node", async () => {
+                await skaleManager.nodeExit(1, {from: validator});
 
-            //     await nodesData.isNodeLeaving(1).should.be.eventually.true;
-            // });
+                await nodesData.isNodeLeft(1).should.be.eventually.true;
+            });
 
             it("should remove the first node", async () => {
                 const balanceBefore = web3.utils.toBN(await skaleToken.balanceOf(validator));
@@ -314,6 +314,8 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
 
         describe("when 18 nodes are in the system", async () => {
             beforeEach(async () => {
+                await skaleToken.transfer(validator, "0x3635c9adc5dea00000", {from: owner});
+
                 for (let i = 0; i < 18; ++i) {
                     await skaleManager.createNode(
                         "0x01" + // create node
@@ -328,8 +330,11 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
                 }
             });
 
-            it("should fail to create schain if not enough SKALE tokens", async () => {
+            it("should fail to create schain if validator doesn't meet MSR", async () => {
                 await constantsHolder.setMSR(6);
+                const newValidatorId = 2;
+                await delegationService.registerValidator("D2", "D2 is even", 150, 0, {from: developer});
+                await validatorService.enableValidator(newValidatorId, {from: owner});
 
                 await skaleManager.createNode(
                     "0x10" + // create schain
@@ -643,7 +648,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
 
             describe("when developer has SKALE tokens", async () => {
                 beforeEach(async () => {
-                    skaleToken.transfer(developer, "0x3635C9ADC5DEA000000", {from: owner});
+                    await skaleToken.transfer(developer, "0x3635C9ADC5DEA000000", {from: owner});
                 });
 
                 it("should create 2 medium schains", async () => {
@@ -715,6 +720,8 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
 
             it("should create 16 nodes & create & delete all types of schain", async () => {
 
+                await skaleToken.transfer(validator, "0x32D26D12E980B600000", {from: owner});
+
                 for (let i = 0; i < 16; ++i) {
                     await skaleManager.createNode(
                         "0x01" + // create node
@@ -728,7 +735,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
                         {from: validator});
                     }
 
-                skaleToken.transfer(developer, "0x3635C9ADC5DEA000000", {from: owner});
+                await skaleToken.transfer(developer, "0x3635C9ADC5DEA000000", {from: owner});
 
                 let price = web3.utils.toBN(await schainsFunctionality.getSchainPrice(1, 5));
                 await skaleToken.send(
