@@ -23,7 +23,8 @@ pragma solidity ^0.5.3;
 import "./ERC777/LockableERC777.sol";
 import "./Permissions.sol";
 import "./interfaces/delegation/IDelegatableToken.sol";
-import "./delegation/DelegationService.sol";
+import "./delegation/Punisher.sol";
+import "./delegation/TokenState.sol";
 
 
 /**
@@ -88,21 +89,21 @@ contract SkaleToken is LockableERC777, Permissions, IDelegatableToken {
         return true;
     }
 
-    function getDelegatedOf(address wallet) external returns (uint) {
-        return DelegationService(contractManager.getContract("DelegationService")).getDelegatedOf(wallet);
+    function calculateDelegatedAmount(address wallet) external returns (uint) {
+        return DelegationController(contractManager.getContract("DelegationController")).calculateDelegatedAmount(wallet);
     }
 
-    function getSlashedOf(address wallet) external returns (uint) {
-        return DelegationService(contractManager.getContract("DelegationService")).getSlashedOf(wallet);
+    function calculateSlashedAmount(address wallet) external returns (uint) {
+        return Punisher(contractManager.getContract("Punisher")).calculateLockedAmount(wallet);
     }
 
-    function getLockedOf(address wallet) public returns (uint) {
-        return DelegationService(contractManager.getContract("DelegationService")).getLockedOf(wallet);
+    function calculateLockedAmount(address wallet) public returns (uint) {
+        return TokenState(contractManager.getContract("TokenState")).calculateLockedAmount(wallet);
     }
 
     // private
 
-    function _getLockedOf(address wallet) internal returns (uint) {
-        return getLockedOf(wallet);
+    function _calculateLockedAmount(address wallet) internal returns (uint) {
+        return calculateLockedAmount(wallet);
     }
 }

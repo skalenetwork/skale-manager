@@ -37,7 +37,6 @@ async function deploy(deployer, networkName, accounts) {
         } else {
             console.log("ERC1820 contract has already deployed!");
         }
-        console.log("Starting SkaleManager system deploying...");
     } else if (configFile.networks[networkName].provider !== "" && configFile.networks[networkName].provider !== undefined) {
         let web3 = new Web3(configFile.networks[networkName].provider());
         if (await web3.eth.getCode(erc1820Contract) == "0x") {
@@ -60,8 +59,14 @@ async function deploy(deployer, networkName, accounts) {
         } else {
             console.log("ERC1820 contract has already deployed!");
         }
-        console.log("Starting SkaleManager system deploying...");
     }    
+
+    if (networkName == "test") {
+        console.log("Skip deploying");
+        return;
+    } else {
+        console.log("Starting SkaleManager system deploying...");
+    }
     
     const deployAccount = accounts[0];
     const options = await ConfigManager.initNetworkConfiguration({ network: networkName, from: deployAccount });
@@ -71,12 +76,11 @@ async function deploy(deployer, networkName, accounts) {
 
         "DelegationController",
         "DelegationPeriodManager",
-        "DelegationRequestManager",
         "DelegationService",
         "Distributor",
-        "SkaleBalances",
+        "Punisher",
         "TimeHelpers",
-        "TokenSaleManager",
+        "TokenLaunchManager",
         "TokenState",
         "ValidatorService",
         "SlashingTable",

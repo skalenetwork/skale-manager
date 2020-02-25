@@ -24,7 +24,7 @@ import "./interfaces/IGroupsData.sol";
 import "./interfaces/INodesData.sol";
 import "./interfaces/ISchainsFunctionality.sol";
 import "./interfaces/ISchainsFunctionalityInternal.sol";
-import "./delegation/DelegationService.sol";
+import "./delegation/Punisher.sol";
 import "./NodesData.sol";
 import "./SlashingTable.sol";
 import "./SchainsFunctionality.sol";
@@ -338,11 +338,11 @@ contract SkaleDKG is Permissions {
             IGroupsData(dataAddress).setGroupFailedDKG(groupIndex);
         }
 
-        DelegationService delegationService = DelegationService(contractManager.getContract("DelegationService"));
+        Punisher punisher = Punisher(contractManager.getContract("Punisher"));
         NodesData nodesData = NodesData(contractManager.getContract("NodesData"));
         SlashingTable slashingTable = SlashingTable(contractManager.getContract("SlashingTable"));
 
-        delegationService.slash(nodesData.getValidatorId(badNode), slashingTable.getPenalty("FailedDKG"));
+        punisher.slash(nodesData.getValidatorId(badNode), slashingTable.getPenalty("FailedDKG"));
     }
 
     function verify(

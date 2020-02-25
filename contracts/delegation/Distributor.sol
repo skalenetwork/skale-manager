@@ -20,99 +20,165 @@
 pragma solidity ^0.5.3;
 pragma experimental ABIEncoderV2;
 
+import "@openzeppelin/contracts/introspection/IERC1820Registry.sol";
+import "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
+import "@openzeppelin/contracts/math/SafeMath.sol";
+
 import "../Permissions.sol";
+import "../SkaleToken.sol";
+import "../ConstantsHolder.sol";
+
 import "./ValidatorService.sol";
 import "./DelegationController.sol";
 import "./DelegationPeriodManager.sol";
+import "./TimeHelpers.sol";
 
 
-contract Distributor is Permissions {
+contract Distributor is Permissions, IERC777Recipient {
+    IERC1820Registry private _erc1820;
 
-    struct Share {
-        address holder;
-        uint amount;
-        uint delegationId;
+    // validatorId =>        month => token
+    mapping (uint => mapping (uint => uint)) private _bountyPaid;
+    // validatorId =>        month => token
+    mapping (uint => mapping (uint => uint)) private _feePaid;
+    //        holder =>   validatorId => month
+    mapping (address => mapping (uint => uint)) private _firstUnwithdrawnMonth;
+    // validatorId => month
+    mapping (uint => uint) private _firstUnwithdrawnMonthForValidator;
+
+    function calculateEarnedBountyAmount(uint validatorId) external returns (uint earned, uint endMonth) {
+        return calculateEarnedBountyAmountOf(msg.sender, validatorId);
     }
 
-    function distributeBounty(uint validatorId, uint amount) external allow("DelegationService") returns (Share[] memory shares, uint fee) {
-        return distributeWithFee(
-            validatorId,
-            amount,
-            true,
-            true);
+    function calculateEarnedFeeAmount() external returns (uint earned, uint endMonth) {
+        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
+        return calculateEarnedFeeAmountOf(validatorService.getValidatorId(msg.sender));
     }
 
-    function distributePenalties(uint validatorId, uint amount) external allow("DelegationService") returns (Share[] memory shares) {
-        return distribute(
-            validatorId,
-            amount,
-            false,
-            false);
+    function withdrawBounty(uint validatorId, address to) external {
+        TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
+        ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
+
+        require(now >= timeHelpers.addMonths(constantsHolder.launchTimestamp(), 3), "Bounty is locked");
+
+        uint bounty;
+        uint endMonth;
+        (bounty, endMonth) = calculateEarnedBountyAmountOf(msg.sender, validatorId);
+
+        _firstUnwithdrawnMonth[msg.sender][validatorId] = endMonth;
+
+        SkaleToken skaleToken = SkaleToken(contractManager.getContract("SkaleToken"));
+        require(skaleToken.transfer(to, bounty), "Failed to transfer tokens");
     }
 
-    function initialize(address _contractManager) public initializer {
-        Permissions.initialize(_contractManager);
+    function withdrawFee(address to) external {
+        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
+        SkaleToken skaleToken = SkaleToken(contractManager.getContract("SkaleToken"));
+        TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
+        ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
+
+        require(now >= timeHelpers.addMonths(constantsHolder.launchTimestamp(), 3), "Bounty is locked");
+
+        uint fee;
+        uint endMonth;
+        uint validatorId = validatorService.getValidatorId(msg.sender);
+        (fee, endMonth) = calculateEarnedFeeAmountOf(validatorId);
+
+        _firstUnwithdrawnMonthForValidator[validatorId] = endMonth;
+
+        require(skaleToken.transfer(to, fee), "Failed to transfer tokens");
+    }
+
+    function tokensReceived(
+        address,
+        address,
+        address to,
+        uint256 amount,
+        bytes calldata userData,
+        bytes calldata
+    )
+        external
+        allow("SkaleToken")
+    {
+        require(to == address(this), "Receiver is incorrect");
+        require(userData.length == 32, "Data length is incorrect");
+        uint validatorId = abi.decode(userData, (uint));
+        distributeBounty(amount, validatorId);
+    }
+
+    function initialize(address _contractsAddress) public initializer {
+        Permissions.initialize(_contractsAddress);
+        _erc1820 = IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
+        _erc1820.setInterfaceImplementer(address(this), keccak256("ERC777TokensRecipient"), address(this));
+    }
+
+    function calculateEarnedBountyAmountOf(address wallet, uint validatorId) public returns (uint earned, uint endMonth) {
+        DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
+        TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
+
+        uint currentMonth = timeHelpers.getCurrentMonth();
+
+        uint startMonth = _firstUnwithdrawnMonth[wallet][validatorId];
+        if (startMonth == 0) {
+            startMonth = delegationController.getFirstDelegationMonth(wallet, validatorId);
+            if (startMonth == 0) {
+                return (0, 0);
+            }
+        }
+
+        earned = 0;
+        endMonth = currentMonth;
+        if (endMonth > startMonth.add(12)) {
+            endMonth = startMonth.add(12);
+        }
+        for (uint i = startMonth; i < endMonth; ++i) {
+            uint effectiveDelegatedToValidator = delegationController.calculateEffectiveDelegatedToValidator(validatorId, i);
+            if (effectiveDelegatedToValidator > 0) {
+                earned = earned.add(
+                    _bountyPaid[validatorId][i].mul(
+                        delegationController.calculateEffectiveDelegatedByHolderToValidator(wallet, validatorId, i)).div(
+                            effectiveDelegatedToValidator)
+                    );
+            }
+        }
+    }
+
+    function calculateEarnedFeeAmountOf(uint validatorId) public returns (uint earned, uint endMonth) {
+        TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
+
+        uint currentMonth = timeHelpers.getCurrentMonth();
+
+        uint startMonth = _firstUnwithdrawnMonthForValidator[validatorId];
+        if (startMonth == 0) {
+            return (0, 0);
+        }
+
+        earned = 0;
+        endMonth = currentMonth;
+        if (endMonth > startMonth.add(12)) {
+            endMonth = startMonth.add(12);
+        }
+        for (uint i = startMonth; i < endMonth; ++i) {
+            earned = earned.add(_feePaid[validatorId][i]);
+        }
     }
 
     // private
 
-    function distributeWithFee(
-        uint validatorId,
-        uint amount,
-        bool roundFloor,
-        bool applyMultipliers)
-    internal returns (Share[] memory shares, uint fee)
-    {
+    function distributeBounty(uint amount, uint validatorId) internal {
+        TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
+
+        uint currentMonth = timeHelpers.getCurrentMonth();
         uint feeRate = validatorService.getValidator(validatorId).feeRate;
 
-        shares = distribute(
-            validatorId,
-            amount.sub(amount.mul(feeRate) / 1000),
-            roundFloor,
-            applyMultipliers);
-        fee = amount;
-        for (uint i = 0; i < shares.length; ++i) {
-            fee = fee.sub(shares[i].amount);
-        }
-    }
+        uint fee = amount.mul(feeRate).div(1000);
+        uint bounty = amount - fee;
+        _bountyPaid[validatorId][currentMonth] = _bountyPaid[validatorId][currentMonth].add(bounty);
+        _feePaid[validatorId][currentMonth] = _feePaid[validatorId][currentMonth].add(fee);
 
-    function distribute(
-        uint validatorId,
-        uint amount,
-        bool roundFloor,
-        bool applyMultipliers)
-    internal returns (Share[] memory shares)
-    {
-        DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
-
-        uint totalDelegated = 0;
-        uint[] memory activeDelegations = delegationController.getActiveDelegationsByValidator(validatorId);
-        shares = new Share[](activeDelegations.length);
-
-        DelegationPeriodManager delegationPeriodManager = DelegationPeriodManager(contractManager.getContract("DelegationPeriodManager"));
-        for (uint i = 0; i < activeDelegations.length; ++i) {
-            DelegationController.Delegation memory delegation = delegationController.getDelegation(activeDelegations[i]);
-            shares[i].delegationId = activeDelegations[i];
-            shares[i].holder = delegation.holder;
-            if (applyMultipliers) {
-                uint multiplier = delegationPeriodManager.stakeMultipliers(delegation.delegationPeriod);
-                shares[i].amount = amount.mul(delegation.amount.mul(multiplier));
-                totalDelegated = totalDelegated.add(delegation.amount.mul(multiplier));
-            } else {
-                shares[i].amount = amount.mul(delegation.amount);
-                totalDelegated = totalDelegated.add(delegation.amount);
-            }
-        }
-
-        for (uint i = 0; i < activeDelegations.length; ++i) {
-            uint value = shares[i].amount;
-            shares[i].amount = shares[i].amount.div(totalDelegated);
-            if (!roundFloor) {
-                if (shares[i].amount.mul(totalDelegated) < value) {
-                    ++shares[i].amount;
-                }
-            }
+        if (_firstUnwithdrawnMonthForValidator[validatorId] == 0) {
+            _firstUnwithdrawnMonthForValidator[validatorId] = currentMonth;
         }
     }
 }

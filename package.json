@@ -1,6 +1,6 @@
 {
   "name": "@skalenetwork/skale-manager",
-  "version": "0.1.0",
+  "version": "1.1.0",
   "private": true,
   "description": "SKALE Manager system, Decentralized task manager",
   "homepage": "https://github.com/skalenetwork/skale-manager#readme",
@@ -35,7 +35,7 @@
     "test": "npx buidler test && yarn tsc",
     "tsc": "tsc --noEmit",
     "tslint": "npx tslint --project .",
-    "slither": "slither . --exclude reentrancy-events,naming-convention,solc-version,assembly,timestamp,calls-loop,incorrect-equality,reentrancy-no-eth,constant-function,pragma,unused-state --filter-paths @openzeppelin/upgrades/contracts/,@openzeppelin/contracts-ethereum-package/contracts/,@openzeppelin/contracts/,@nomiclabs/buidler/,ERC777,thirdparty --truffle-version truffle@latest",
+    "slither": "slither . --exclude uninitialized-state-variables,unused-state,reentrancy-events,naming-convention,solc-version,assembly,timestamp,calls-loop,incorrect-equality,reentrancy-no-eth,constant-function,pragma --filter-paths @openzeppelin/upgrades/contracts/,@openzeppelin/contracts-ethereum-package/contracts/,@nomiclabs/buidler/,@openzeppelin/contracts/,ERC777,thirdparty --truffle-version truffle@latest",
     "fullcheck": "yarn lint && yarn tsc && yarn tslint && yarn slither"
   },
   "dependencies": {
