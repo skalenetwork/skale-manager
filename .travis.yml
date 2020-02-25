@@ -30,49 +30,72 @@ addons:
     packages:
       - python3-pip
       - python3-setuptools
+
+jobs:
+  include:
+    - stage: lint
+      env:
+        - TESTFOLDERS=NONE
+      script:
+        - pip3 install -r scripts/requirements.txt
+        - yarn lint || travis_terminate 1
+        - slither --version
+        - slither . || true
+        - yarn slither || travis_terminate 5
+        - yarn tslint || travis_terminate 2
+        
+    - stage: test
+      script:
+        - bash scripts/move.sh
+        - bash scripts/coverage.sh
+
+    - stage: deploy
+      env:
+          - TESTFOLDERS=NONE
+      script:
+        - VERSION=$(BRANCH=$TRAVIS_BRANCH bash ./scripts/calculate_version.sh)
+        - echo "Version $VERSION"
+        - export VERSION=$VERSION
+        - export BRANCH=$TRAVIS_BRANCH
+      before_deploy:
+        # Set up git user name and tag this commit
+        - (
+          test ! $TRAVIS_TAG &&
+          git config --local user.name "skale-travis" &&
+          git config --local user.email "$GITHUB_EMAIL" &&
+          export TRAVIS_TAG=$VERSION &&
+          git tag "$TRAVIS_TAG" &&
+          git push https://$GITHUB_OAUTH_TOKEN@github.com/$TRAVIS_REPO_SLUG.git $TRAVIS_TAG
+          ) || true
+      deploy:
+        - provider: releases
+          api_key: "$GITHUB_OAUTH_TOKEN"
+          skip_cleanup: true
+          name: $VERSION @ $(date +'%d.%m.%Y %R')
+          on:
+            repo: $TRAVIS_REPO_SLUG
+            branch: master
+        - provider: releases
+          api_key: "$GITHUB_OAUTH_TOKEN"
+          skip_cleanup: true
+          prerelease: true
+          name: $VERSION @ $(date +'%d.%m.%Y %R')
+          on:
+            repo: $TRAVIS_REPO_SLUG
+            branch:
+              - develop
+              - beta
+              - stable
+        - provider: script
+          skip_cleanup: true
+          script: bash $TRAVIS_BUILD_DIR/scripts/build_and_publish.sh
+          on:
+            repo: $TRAVIS_REPO_SLUG
+            branch:
+              - master
+              - stable
+              - develop
+              - beta
+
 install:
     - yarn install
-script:
-    - yarn generate
-    - bash scripts/linter.sh
-    - bash scripts/move.sh
-    - bash scripts/coverage.sh
-before_deploy:
-  # Set up git user name and tag this commit
-  - (
-    test ! $TRAVIS_TAG &&
-    git config --local user.name "skale-travis" &&
-    git config --local user.email "$GITHUB_EMAIL" &&
-    export TRAVIS_TAG=$VERSION &&
-    git tag "$TRAVIS_TAG" &&
-    git push https://$GITHUB_OAUTH_TOKEN@github.com/$TRAVIS_REPO_SLUG.git $TRAVIS_TAG
-    ) || true
-deploy:
-  - provider: releases
-    api_key: "$GITHUB_OAUTH_TOKEN"
-    skip_cleanup: true
-    name: $VERSION @ $(date +'%d.%m.%Y %R')
-    on:
-      repo: $TRAVIS_REPO_SLUG
-      branch: master
-  - provider: releases
-    api_key: "$GITHUB_OAUTH_TOKEN"
-    skip_cleanup: true
-    prerelease: true
-    name: $VERSION @ $(date +'%d.%m.%Y %R')
-    on:
-      repo: $TRAVIS_REPO_SLUG
-      branch:
-        - develop
-        - beta
-        - stable
-  - provider: script
-    skip_cleanup: true
-    script: bash $TRAVIS_BUILD_DIR/scripts/build_and_publish.sh
-    on:
-      repo: $TRAVIS_REPO_SLUG
-      branch:
-        - master
-        - stable
-        - develop
-        - beta
