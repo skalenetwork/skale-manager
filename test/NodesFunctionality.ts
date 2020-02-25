@@ -1,66 +1,38 @@
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
-import { ConstantsHolderContract,
-         ConstantsHolderInstance,
-         ContractManagerContract,
-         ContractManagerInstance,
-         NodesDataContract,
+import { ContractManagerInstance,
          NodesDataInstance,
-         NodesFunctionalityContract,
          NodesFunctionalityInstance,
-         StringUtilsContract,
-         StringUtilsInstance } from "../types/truffle-contracts";
+         ValidatorServiceInstance } from "../types/truffle-contracts";
 
-import { gasMultiplier } from "./utils/command_line";
+import { deployContractManager } from "./utils/deploy/contractManager";
+import { deployValidatorService } from "./utils/deploy/delegation/validatorService";
+import { deployNodesData } from "./utils/deploy/nodesData";
+import { deployNodesFunctionality } from "./utils/deploy/nodesFunctionality";
 import { skipTime } from "./utils/time";
-
-const ContractManager: ContractManagerContract = artifacts.require("./ContractManager");
-const ConstantsHolder: ConstantsHolderContract = artifacts.require("./ConstantsHolder");
-const NodesData: NodesDataContract = artifacts.require("./NodesData");
-const NodesFunctionality: NodesFunctionalityContract = artifacts.require("./NodesFunctionality");
-const StringUtils: StringUtilsContract = artifacts.require("./StringUtils");
 
 chai.should();
 chai.use(chaiAsPromised);
 
 contract("NodesFunctionality", ([owner, validator]) => {
     let contractManager: ContractManagerInstance;
-    let constantsHolder: ConstantsHolderInstance;
     let nodesData: NodesDataInstance;
     let nodesFunctionality: NodesFunctionalityInstance;
-    let stringUtils: StringUtilsInstance;
+    let validatorService: ValidatorServiceInstance;
+    const validatorId = 1;
 
     beforeEach(async () => {
-        contractManager = await ContractManager.new({from: owner});
+        contractManager = await deployContractManager();
+        nodesData = await deployNodesData(contractManager);
+        nodesFunctionality = await deployNodesFunctionality(contractManager);
+        validatorService = await deployValidatorService(contractManager);
 
-        constantsHolder = await ConstantsHolder.new(
-            contractManager.address,
-            {from: owner, gas: 8000000});
-        await contractManager.setContractsAddress("Constants", constantsHolder.address);
-
-        nodesData = await NodesData.new(
-            contractManager.address,
-            {from: owner, gas: 8000000 * gasMultiplier});
-        await contractManager.setContractsAddress("NodesData", nodesData.address);
-
-        nodesFunctionality = await NodesFunctionality.new(
-            contractManager.address,
-            {from: owner, gas: 8000000 * gasMultiplier});
-        await contractManager.setContractsAddress("NodesFunctionality", nodesFunctionality.address);
-
-        stringUtils = await StringUtils.new();
-        await contractManager.setContractsAddress("StringUtils", stringUtils.address);
-    });
-
-    it("should fail to create node if no money", async () => {
-        await nodesFunctionality.createNode(validator, 5, "0x11")
-            .should.be.eventually.rejectedWith("Not enough money to create Node");
+        await validatorService.registerValidator("Validator", validator, "D2", 0, 0);
     });
 
     it("should fail to create node if ip is zero", async () => {
         await nodesFunctionality.createNode(
             validator,
-            "0x56bc75e2d63100000",
             "0x01" +
             "2161" + // port
             "0000" + // nonce
@@ -75,7 +47,6 @@ contract("NodesFunctionality", ([owner, validator]) => {
     it("should fail if data string is too short", async () => {
         await nodesFunctionality.createNode(
         validator,
-        "0x56bc75e2d63100000",
         "0x01" +
         "2161" + // port
         "0000" + // nonce
@@ -89,7 +60,6 @@ contract("NodesFunctionality", ([owner, validator]) => {
     it("should fail to create node if port is zero", async () => {
         await nodesFunctionality.createNode(
             validator,
-            "0x56bc75e2d63100000",
             "0x01" +
             "0000" + // port
             "0000" + // nonce
@@ -104,7 +74,6 @@ contract("NodesFunctionality", ([owner, validator]) => {
     it("should create node", async () => {
         await nodesFunctionality.createNode(
             validator,
-            "0x56bc75e2d63100000",
             "0x01" +
             "2161" + // port
             "0000" + // nonce
@@ -128,7 +97,6 @@ contract("NodesFunctionality", ([owner, validator]) => {
         beforeEach(async () => {
             await nodesFunctionality.createNode(
                 validator,
-                "0x56bc75e2d63100000",
                 "0x01" +
                 "2161" + // port
                 "0000" + // nonce
@@ -184,7 +152,6 @@ contract("NodesFunctionality", ([owner, validator]) => {
             await nodesFunctionality.initExit(validator, 0);
 
             await nodesFunctionality.completeExit(validator, 0);
-
         });
     });
 
@@ -192,7 +159,6 @@ contract("NodesFunctionality", ([owner, validator]) => {
         beforeEach(async () => {
             await nodesFunctionality.createNode(
                 validator,
-                "0x56bc75e2d63100000",
                 "0x01" +
                 "2161" + // port
                 "0000" + // nonce
@@ -203,7 +169,6 @@ contract("NodesFunctionality", ([owner, validator]) => {
                 "6432"); // name
             await nodesFunctionality.createNode(
                 validator,
-                "0x56bc75e2d63100000",
                 "0x01" +
                 "2161" + // port
                 "0000" + // nonce

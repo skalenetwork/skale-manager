@@ -63,15 +63,6 @@ contract GroupsData is IGroupsData, Permissions {
     string executorName;
 
     /**
-     * @dev constructor in Permissions approach
-     * @param newExecutorName - name of executor contract
-     * @param newContractsAddress needed in Permissions constructor
-     */
-    constructor(string memory newExecutorName, address newContractsAddress) public Permissions(newContractsAddress) {
-        executorName = newExecutorName;
-    }
-
-    /**
      * @dev addGroup - creates and adds new Group to mapping
      * function could be run only by executor
      * @param groupIndex - Groups identifier
@@ -274,6 +265,16 @@ contract GroupsData is IGroupsData, Permissions {
     function getNumberOfNodesInGroup(bytes32 groupIndex) external view returns (uint) {
         return groups[groupIndex].nodesInGroup.length;
     }
+    
+    /**
+     * @dev constructor in Permissions approach
+     * @param newExecutorName - name of executor contract
+     * @param newContractsAddress needed in Permissions constructor
+     */
+    function initialize(string memory newExecutorName, address newContractsAddress) public initializer {
+        Permissions.initialize(newContractsAddress);
+        executorName = newExecutorName;
+    }
 
     function isPublicKeyZero(bytes32 groupIndex) internal view returns (bool) {
         return groups[groupIndex].groupsPublicKey[0] == 0 &&
@@ -281,4 +282,5 @@ contract GroupsData is IGroupsData, Permissions {
             groups[groupIndex].groupsPublicKey[2] == 0 &&
             groups[groupIndex].groupsPublicKey[3] == 0;
     }
+
 }

@@ -17,9 +17,10 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity ^0.5.0;
+pragma solidity ^0.5.3;
 
-import "./Ownable.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/ownership/Ownable.sol";
+import "@openzeppelin/upgrades/contracts/Initializable.sol";
 import "./thirdparty/StringUtils.sol";
 
 
@@ -28,12 +29,17 @@ import "./thirdparty/StringUtils.sol";
  * contracts for this moment in skale manager system by human name.
  * @author Artem Payvin
  */
-contract ContractManager is Ownable {
+contract ContractManager is Initializable, Ownable {
+    using StringUtils for string;
 
     // mapping of actual smart contracts addresses
     mapping (bytes32 => address) public contracts;
 
     event ContractUpgraded(string contractsName, address contractsAddress);
+
+    function initialize() external initializer {
+        Ownable.initialize(msg.sender);
+    }
 
     /**
      * Adds actual contract to mapping of actual contract addresses
@@ -59,8 +65,7 @@ contract ContractManager is Ownable {
     }
 
     function getContract(string calldata name) external view returns (address contractAddress) {
-        StringUtils stringUtils = StringUtils(contracts[keccak256(abi.encodePacked("StringUtils"))]);
         contractAddress = contracts[keccak256(abi.encodePacked(name))];
-        require(contractAddress != address(0), stringUtils.strConcat(name," contract has not been found"));
+        require(contractAddress != address(0), name.strConcat(" contract has not been found"));
     }
 }
