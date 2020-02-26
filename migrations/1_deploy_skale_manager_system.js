@@ -135,13 +135,13 @@ async function deploy(deployer, networkName, accounts) {
         });
     }  
     
-    let skaleTokenInst = await deployer.deploy(SkaleToken, contractManager.address, [], {gas: gasLimit * gas_multiplier}).then(async function(inst) {
-        return inst;
-    });
+    await deployer.deploy(SkaleToken, contractManager.address, [], {gas: gasLimit * gas_multiplier});
     await contractManager.methods.setContractsAddress("SkaleToken", SkaleToken.address).send({from: deployAccount}).then(function(res) {
         console.log("Contract Skale Token with address", SkaleToken.address, "registred in Contract Manager");
     });
 
+    // TODO: Remove after testing
+    const skaleTokenInst = await SkaleToken.deployed();
     await skaleTokenInst.send(
         deployed.get("SkaleBalances").address,
         "1000000000000000000000000000",
