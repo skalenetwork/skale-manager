@@ -1,6 +1,6 @@
 # SKALE Manager
 
-[![Discord](https://img.shields.io/discord/534485763354787851.svg)](https://discord.gg/vvUtWJB)
+[![Discord](https://img.shields.io/discord/534485763354787851.svg)](https://discord.gg/vvUtWJB) [![Build Status](https://travis-ci.com/skalenetwork/skale-manager.svg?branch=develop)](https://travis-ci.com/skalenetwork/skale-manager) [![codecov](https://codecov.io/gh/skalenetwork/skale-manager/branch/develop/graph/badge.svg)](https://codecov.io/gh/skalenetwork/skale-manager)
 
 A smart contract system that orchestrates and operates the SKALE Network.
 

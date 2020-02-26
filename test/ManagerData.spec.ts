@@ -1,28 +1,22 @@
 import { BigNumber } from "bignumber.js";
-import {
-        ContractManagerContract,
-        ContractManagerInstance,
-        ManagerDataContract,
-        ManagerDataInstance,
+import { ContractManagerInstance,
+         ManagerDataInstance,
       } from "../types/truffle-contracts";
 
 import chai = require("chai");
 import * as chaiAsPromised from "chai-as-promised";
-import { gasMultiplier } from "./utils/command_line";
+import { deployContractManager } from "./utils/deploy/contractManager";
+import { deployManagerData } from "./utils/deploy/managerData";
 chai.should();
 chai.use((chaiAsPromised));
-
-const ContractManager: ContractManagerContract = artifacts.require("./ContractManager");
-const ManagerData: ManagerDataContract = artifacts.require("./ManagerData");
 
 contract("ManagerData", ([deployer, user]) => {
   let contractManager: ContractManagerInstance;
   let managerData: ManagerDataInstance;
 
   before(async () => {
-    contractManager = await ContractManager.new({from: deployer});
-    managerData = await ManagerData.new("SkaleManager", contractManager.address,
-      {from: deployer, gas: 8000000 * gasMultiplier});
+    contractManager = await deployContractManager();
+    managerData = await deployManagerData(contractManager);
   });
 
   it("minersCap should be equal 0", async () => {

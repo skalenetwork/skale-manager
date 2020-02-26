@@ -17,7 +17,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity ^0.5.0;
+pragma solidity ^0.5.3;
 
 import "./Permissions.sol";
 import "./interfaces/IGroupsData.sol";
@@ -60,15 +60,6 @@ contract GroupsData is IGroupsData, Permissions {
     string executorName;
 
     /**
-     * @dev constructor in Permissions approach
-     * @param newExecutorName - name of executor contract
-     * @param newContractsAddress needed in Permissions constructor
-     */
-    constructor(string memory newExecutorName, address newContractsAddress) public Permissions(newContractsAddress) {
-        executorName = newExecutorName;
-    }
-
-    /**
      * @dev addGroup - creates and adds new Group to mapping
      * function could be run only by executor
      * @param groupIndex - Groups identifier
@@ -80,7 +71,7 @@ contract GroupsData is IGroupsData, Permissions {
         groups[groupIndex].recommendedNumberOfNodes = amountOfNodes;
         groups[groupIndex].groupData = data;
         // Open channel in SkaleDKG
-        address skaleDKGAddress = contractManager.contracts(keccak256(abi.encodePacked("SkaleDKG")));
+        address skaleDKGAddress = contractManager.getContract("SkaleDKG");
         ISkaleDKG(skaleDKGAddress).openChannel(groupIndex);
     }
 
@@ -161,26 +152,6 @@ contract GroupsData is IGroupsData, Permissions {
         groups[groupIndex].nodesInGroup = nodesInGroup;
     }
 
-    // /**
-    //  * @dev setNewAmountOfNodes - set new recommended number of Nodes
-    //  * function could be run only by executor
-    //  * @param groupIndex - Groups identifier
-    //  * @param amountOfNodes - recommended number of Nodes in this Group
-    // */
-    // function setNewAmountOfNodes(bytes32 groupIndex, uint amountOfNodes) external allow(executorName) {
-    //     groups[groupIndex].recommendedNumberOfNodes = amountOfNodes;
-    // }
-
-    // /**
-    //  * @dev setNewGroupData - set new extra data
-    //  * function could be run only be executor
-    //  * @param groupIndex - Groups identifier
-    //  * @param data - new extra data
-    //  */
-    // function setNewGroupData(bytes32 groupIndex, bytes32 data) external allow(executorName) {
-    //     groups[groupIndex].groupData = data;
-    // }
-
     function setGroupFailedDKG(bytes32 groupIndex) external allow("SkaleDKG") {
         groups[groupIndex].succesfulDKG = false;
     }
@@ -197,7 +168,7 @@ contract GroupsData is IGroupsData, Permissions {
         delete groups[groupIndex].groupsPublicKey;
         delete groups[groupIndex];
         // delete channel
-        address skaleDKGAddress = contractManager.contracts(keccak256(abi.encodePacked("SkaleDKG")));
+        address skaleDKGAddress = contractManager.getContract("SkaleDKG");
 
         if (ISkaleDKG(skaleDKGAddress).isChannelOpened(groupIndex)) {
             ISkaleDKG(skaleDKGAddress).deleteChannel(groupIndex);
@@ -284,5 +255,15 @@ contract GroupsData is IGroupsData, Permissions {
      */
     function getNumberOfNodesInGroup(bytes32 groupIndex) external view returns (uint) {
         return groups[groupIndex].nodesInGroup.length;
+    }
+
+    /**
+     * @dev constructor in Permissions approach
+     * @param newExecutorName - name of executor contract
+     * @param newContractsAddress needed in Permissions constructor
+     */
+    function initialize(string memory newExecutorName, address newContractsAddress) public initializer {
+        Permissions.initialize(newContractsAddress);
+        executorName = newExecutorName;
     }
 }

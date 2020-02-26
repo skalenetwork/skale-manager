@@ -22,7 +22,7 @@ pragma solidity ^0.5.0;
 
 contract Decryption {
 
-    function encrypt(uint256 secretNumber, bytes32 key) external pure returns(bytes32 ciphertext) {
+    function encrypt(uint256 secretNumber, bytes32 key) external pure returns (bytes32 ciphertext) {
         bytes32 numberBytes = bytes32(secretNumber);
         bytes memory tmp = new bytes(32);
         for (uint8 i = 0; i < 32; i++) {

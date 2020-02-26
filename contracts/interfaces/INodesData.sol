@@ -1,4 +1,4 @@
-pragma solidity ^0.5.0;
+pragma solidity ^0.5.3;
 
 /**
  * @title NodesData - interface of NodesData contract
@@ -14,7 +14,6 @@ interface INodesData {
     function isNodeActive(uint nodeIndex) external view returns (bool);
     function isNodeLeaving(uint nodeIndex) external view returns (bool);
     function isNodeLeft(uint nodeIndex) external view returns (bool);
-    function isLeavingPeriodExpired(uint nodeIndex) external view returns (bool);
     function isTimeForReward(uint nodeIndex) external view returns (bool);
     function addNode(
         address from,
@@ -22,7 +21,8 @@ interface INodesData {
         bytes4 ip,
         bytes4 publicIP,
         uint16 port,
-        bytes calldata publicKey)
+        bytes calldata publicKey,
+        uint validatorId)
     external returns (uint);
     // function addFractionalNode(uint nodeIndex) external;
     // function addFullNode(uint nodeIndex) external;
@@ -49,6 +49,7 @@ interface INodesData {
     function getNodeIP(uint nodeIndex) external view returns (bytes4);
     function getNodeNextRewardDate(uint nodeIndex) external view returns (uint32);
     function getNodePublicKey(uint nodeIndex) external view returns (bytes memory);
+    function getNodeValidatorId(uint nodeIndex) external view returns (uint);
     // function getActiveFractionalNodes() external view returns (uint[] memory);
     // function getActiveFullNodes() external view returns (uint[] memory);
     function getActiveNodeIds() external view returns (uint[] memory activeNodeIds);

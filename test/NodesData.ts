@@ -1,37 +1,25 @@
 import * as chaiAsPromised from "chai-as-promised";
-import { ConstantsHolderContract,
-         ConstantsHolderInstance,
-         ContractManagerContract,
-         ContractManagerInstance,
-         NodesDataContract,
+import { ContractManagerInstance,
          NodesDataInstance } from "../types/truffle-contracts";
-import { skipTime } from "./utils/time";
-
-const ContractManager: ContractManagerContract = artifacts.require("./ContractManager");
-const NodesData: NodesDataContract = artifacts.require("./NodesData");
-const ConstantsHolder: ConstantsHolderContract = artifacts.require("./ConstantsHolder");
+import { currentTime, skipTime } from "./utils/time";
 
 import chai = require("chai");
+import { deployContractManager } from "./utils/deploy/contractManager";
+import { deployNodesData } from "./utils/deploy/nodesData";
 chai.should();
 chai.use(chaiAsPromised);
 
 contract("NodesData", ([owner, validator]) => {
     let contractManager: ContractManagerInstance;
     let nodesData: NodesDataInstance;
-    let constantsHolder: ConstantsHolderInstance;
 
     beforeEach(async () => {
-        contractManager = await ContractManager.new({from: owner});
-        nodesData = await NodesData.new(5, contractManager.address, {from: owner});
-
-        constantsHolder = await ConstantsHolder.new(
-            contractManager.address,
-            {from: owner, gas: 8000000});
-        await contractManager.setContractsAddress("Constants", constantsHolder.address);
+        contractManager = await deployContractManager();
+        nodesData = await deployNodesData(contractManager);
     });
 
     it("should add node", async () => {
-        await nodesData.addNode(validator, "d2", "0x7f000001", "0x7f000002", 8545, "0x1122334455");
+        await nodesData.addNode(validator, "d2", "0x7f000001", "0x7f000002", 8545, "0x1122334455", 0);
 
         const node = await nodesData.nodes(0);
 
@@ -40,8 +28,7 @@ contract("NodesData", ([owner, validator]) => {
         node[2].should.be.equal("0x7f000002");
         node[3].should.be.deep.eq(web3.utils.toBN(8545));
         node[4].should.be.equal("0x1122334455");
-        node[6].should.be.deep.eq(web3.utils.toBN(0));
-        node[8].should.be.deep.eq(web3.utils.toBN(0));
+        node[7].should.be.deep.eq(web3.utils.toBN(0));
 
         const nodeId = web3.utils.soliditySha3("d2");
         await nodesData.nodesIPCheck("0x7f000001").should.be.eventually.true;
@@ -57,7 +44,7 @@ contract("NodesData", ([owner, validator]) => {
 
     describe("when a node is added", async () => {
         beforeEach(async () => {
-            await nodesData.addNode(validator, "d2", "0x7f000001", "0x7f000002", 8545, "0x1122334455");
+            await nodesData.addNode(validator, "d2", "0x7f000001", "0x7f000002", 8545, "0x1122334455", 0);
         });
 
         // it("should add a fractional node", async () => {
@@ -87,7 +74,6 @@ contract("NodesData", ([owner, validator]) => {
         it("should set node as leaving", async () => {
             await nodesData.setNodeLeaving(0);
 
-            (await nodesData.nodes(0))[8].should.be.deep.equal(web3.utils.toBN(1));
             await nodesData.numberOfActiveNodes().should.be.eventually.deep.equal(web3.utils.toBN(0));
             await nodesData.numberOfLeavingNodes().should.be.eventually.deep.equal(web3.utils.toBN(1));
         });
@@ -104,28 +90,15 @@ contract("NodesData", ([owner, validator]) => {
 
         it("should change node last reward date", async () => {
             skipTime(web3, 5);
-            const currentTime = (await web3.eth.getBlock("latest")).timestamp;
+            const res = await nodesData.changeNodeLastRewardDate(0);
+            const currentTimeLocal = (await web3.eth.getBlock(res.receipt.blockNumber)).timestamp;
 
-            await nodesData.changeNodeLastRewardDate(0);
-
-            (await nodesData.nodes(0))[7].should.be.deep.equal(web3.utils.toBN(currentTime));
-            await nodesData.getNodeLastRewardDate(0).should.be.eventually.deep.equal(web3.utils.toBN(currentTime));
-        });
-
-        it("should check if leaving period is expired", async () => {
-            await nodesData.setNodeLeaving(0);
-
-            skipTime(web3, 3);
-
-            await nodesData.isLeavingPeriodExpired(0).should.be.eventually.false;
-
-            skipTime(web3, 3);
-
-            await nodesData.isLeavingPeriodExpired(0).should.be.eventually.true;
+            (await nodesData.nodes(0))[6].should.be.deep.equal(web3.utils.toBN(currentTimeLocal));
+            await nodesData.getNodeLastRewardDate(0).should.be.eventually.deep.equal(web3.utils.toBN(currentTimeLocal));
         });
 
         it("should check if time for reward has come", async () => {
-            // TODO: change rewart period
+            // TODO: change reward period
 
             skipTime(web3, 3590);
 
@@ -157,9 +130,9 @@ contract("NodesData", ([owner, validator]) => {
         });
 
         it("should calculate node next reward date", async () => {
-            const currentTime = web3.utils.toBN((await web3.eth.getBlock("latest")).timestamp);
+            const currentTimeValue = web3.utils.toBN(await currentTime(web3));
             const rewardPeriod = web3.utils.toBN(3600);
-            const nextRewardTime = currentTime.add(rewardPeriod);
+            const nextRewardTime = currentTimeValue.add(rewardPeriod);
             const obtainedNextRewardTime = web3.utils.toBN(await nodesData.getNodeNextRewardDate(0));
 
             obtainedNextRewardTime.should.be.deep.equal(nextRewardTime);
@@ -186,6 +159,14 @@ contract("NodesData", ([owner, validator]) => {
             activeNodes.length.should.be.equal(1);
             const nodeIndex = web3.utils.toBN(activeNodes[0]);
             expect(nodeIndex.eq(web3.utils.toBN(0))).to.be.true;
+        });
+
+        it("should return Node status", async () => {
+            let status = await nodesData.getNodeStatus(0);
+            assert.equal(status.toNumber(), 0);
+            await nodesData.setNodeLeaving(0);
+            status = await nodesData.getNodeStatus(0);
+            assert.equal(status.toNumber(), 1);
         });
 
         // describe("when node is registered as fractional", async () => {
@@ -246,7 +227,7 @@ contract("NodesData", ([owner, validator]) => {
 
         describe("when node is registered", async () => {
             beforeEach(async () => {
-                await nodesData.addNode(validator, "d2", "0x7f000001", "0x7f000002", 8545, "0x1122334455");
+                await nodesData.addNode(validator, "d2", "0x7f000001", "0x7f000002", 8545, "0x1122334455", 0);
             });
 
             it("should remove node", async () => {
@@ -277,8 +258,8 @@ contract("NodesData", ([owner, validator]) => {
 
     describe("when two nodes are added", async () => {
         beforeEach(async () => {
-            await nodesData.addNode(validator, "d2", "0x7f000001", "0x7f000002", 8545, "0x1122334455");
-            await nodesData.addNode(validator, "d3", "0x7f000002", "0x7f000003", 8545, "0x1122334455");
+            await nodesData.addNode(validator, "d2", "0x7f000001", "0x7f000002", 8545, "0x1122334455", 0);
+            await nodesData.addNode(validator, "d3", "0x7f000002", "0x7f000003", 8545, "0x1122334455", 0);
         });
 
         // describe("when nodes are registered as fractional", async () => {
@@ -311,8 +292,8 @@ contract("NodesData", ([owner, validator]) => {
 
         describe("when nodes are registered", async () => {
             beforeEach(async () => {
-                await nodesData.addNode(validator, "d2", "0x7f000001", "0x7f000002", 8545, "0x1122334455");
-                await nodesData.addNode(validator, "d3", "0x7f000002", "0x7f000003", 8545, "0x1122334455");
+                await nodesData.addNode(validator, "d2", "0x7f000001", "0x7f000002", 8545, "0x1122334455", 0);
+                await nodesData.addNode(validator, "d3", "0x7f000002", "0x7f000003", 8545, "0x1122334455", 0);
             });
 
             it("should remove first node", async () => {

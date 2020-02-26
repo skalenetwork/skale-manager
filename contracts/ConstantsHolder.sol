@@ -17,7 +17,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity ^0.5.0;
+pragma solidity ^0.5.3;
 
 import "./Permissions.sol";
 import "./interfaces/IConstants.sol";
@@ -71,49 +71,46 @@ contract ConstantsHolder is IConstants, Permissions {
     // number of seconds in six years
     uint32 public constant SIX_YEARS = 186624000;
 
-    // initial number of validators
-    uint public constant NUMBER_OF_VALIDATORS = 24;
+    // initial number of monitors
+    uint public constant NUMBER_OF_MONITORS = 24;
+
+    // MSR - Minimum staking requirement
+    uint public msr;
 
     // Reward period - 30 days (each 30 days Node would be granted for bounty)
-    uint32 public rewardPeriod = 3600; // Test parameters
+    uint32 public rewardPeriod;
 
     // Allowable latency - 150000 ms by default
-    uint32 public allowableLatency = 150000; // Test parameters
+    uint32 public allowableLatency;
 
     /**
-     * Delta period - 1 hour (1 hour before Reward period became Validators need
+     * Delta period - 1 hour (1 hour before Reward period became Monitors need
      * to send Verdicts and 1 hour after Reward period became Node need to come
      * and get Bounty)
      */
-    uint32 public deltaPeriod = 300;  // Test parameters
+    uint32 public deltaPeriod;
 
     /**
-     * Check time - 2 minutes (every 2 minutes validators should check metrics
-     * from validated nodes)
+     * Check time - 2 minutes (every 2 minutes monitors should check metrics
+     * from checked nodes)
      */
-    uint8 public checkTime = 120; // Test parameters
+    uint8 public checkTime;
 
     /**
      * Last time when system was underloaded
      * (allocations on Skale-chain / allocations on Nodes < 75%)
      */
-    uint public lastTimeUnderloaded = 0;
+    uint public lastTimeUnderloaded;
 
     /**
      * Last time when system was overloaded
      * (allocations on Skale-chain / allocations on Nodes > 85%)
      */
-    uint public lastTimeOverloaded = 0;
+    uint public lastTimeOverloaded;
 
     //Need to add minimal allowed parameters for verdicts
 
-    /**
-     * @dev constructor in Permissions approach
-     * @param contractsAddress needed in Permissions constructor
-     */
-    constructor(address contractsAddress) Permissions(contractsAddress) public {
-
-    }
+    uint public rotationDelay;
 
     /**
      * Set reward and delta periods to new one, run only by owner. This function
@@ -155,5 +152,30 @@ contract ConstantsHolder is IConstants, Permissions {
      */
     function setLatency(uint32 newAllowableLatency) external onlyOwner {
         allowableLatency = newAllowableLatency;
+    }
+
+    function setMSR(uint newMSR) external onlyOwner {
+        msr = newMSR;
+    }
+
+    function setRotationDelay(uint newDelay) external onlyOwner {
+        rotationDelay = newDelay;
+    }
+
+    /**
+     * @dev constructor in Permissions approach
+     * @param contractsAddress needed in Permissions constructor
+     */
+    function initialize(address contractsAddress) public initializer {
+        Permissions.initialize(contractsAddress);
+
+        msr = 5e6 * 1e18;
+        rewardPeriod = 3600; // Test parameters
+        allowableLatency = 150000; // Test parameters
+        deltaPeriod = 300;  // Test parameters
+        checkTime = 120; // Test parameters
+        lastTimeUnderloaded = 0;
+        lastTimeOverloaded = 0;
+        rotationDelay = 12 hours;
     }
 }
