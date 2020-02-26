@@ -29,7 +29,7 @@
     "compile": "rm -r ./build && ./node_modules/.bin/truffle compile",
     "deploy": "bash ./scripts/deploy.sh",
     "generate": "truffle compile && typechain --target truffle './build/**/*.json'",
-    "hooks": "git config core.hooksPath .githooks",
+    "hooks": "git config core.hooksPath .githooks || true",
     "lint": "npx ethlint --dir contracts",
     "prepare": "yarn generate && yarn hooks",
     "test": "npx buidler test && yarn tsc",
