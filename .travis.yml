@@ -34,8 +34,6 @@ stages:
 jobs:
   include:
     - stage: lint
-      env:
-        - TESTFOLDERS=NONE
       script:
         - pip3 install -r scripts/requirements.txt
         - yarn lint || travis_terminate 1
@@ -64,8 +62,6 @@ jobs:
         - bash scripts/coverage.sh
 
     - stage: deploy
-      env:
-        - TESTFOLDERS=NONE
       script:
         - VERSION=$(BRANCH=$TRAVIS_BRANCH bash ./scripts/calculate_version.sh)
         - echo "Version $VERSION"
