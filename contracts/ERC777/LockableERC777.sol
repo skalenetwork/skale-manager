@@ -7,7 +7,6 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/introspection/IERC1820Registry.sol";
-import "@nomiclabs/buidler/console.sol";
 
 
 /**
@@ -441,7 +440,7 @@ contract LockableERC777 is IERC777, IERC20 {
 // Added by SKALE----------------------------------------------------------
         uint locked = _getLockedOf(from);
         if (locked > 0) {
-            require(_balances[from] >= locked + amount, "Token should be unlocked for transferring");
+            require(_balances[from] >= locked.add(amount), "Token should be unlocked for transferring");
         }
 //-------------------------------------------------------------------------
         _balances[from] = _balances[from].sub(amount);
