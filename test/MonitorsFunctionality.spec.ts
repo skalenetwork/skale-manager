@@ -193,44 +193,6 @@ contract("MonitorsFunctionality", ([owner, validator]) => {
     expect(parseInt(res.toString(), 10)).to.equal(1);
   });
 
-  // it("should rotate node in validator groups", async () => {
-  //   for (let i = 0; i < 5; i++) {
-  //     await nodesData.addNode(validator, "d" + i, "0x7f00000" + i, "0x7f00000" + (i + 1), 8545, "0x1122334455");
-  //   }
-  //   const firstNode = 0;
-  //   const secondNode = 1;
-  //   await validatorsFunctionality.addValidator(firstNode);
-  //   await validatorsFunctionality.addValidator(secondNode);
-  //   const groupIndex0 = web3.utils.soliditySha3(firstNode);
-  //   const groupIndex1 = web3.utils.soliditySha3(secondNode);
-  //   await nodesData.addNode(validator, "vadim", "0x7f000009", "0x7f000010", 8545, "0x1122334459");
-  //   await nodesFunctionality.removeNodeByRoot(3);
-  //   {
-  //     const activeNodes = [];
-  //     const {logs} = await validatorsFunctionality.rotateNode(groupIndex0);
-  //     const validators = await validatorsData.getNodesInGroup(groupIndex0);
-  //     for (const node of validators) {
-  //       if (await nodesData.isNodeActive(node)) {
-  //         activeNodes.push(node.toNumber());
-  //       }
-  //     }
-  //     activeNodes.indexOf(firstNode).should.be.equal(-1);
-  //     activeNodes[activeNodes.length - 1].should.be.equal(logs[0].args.newNode.toNumber());
-  //   }
-  //   {
-  //     const activeNodes = [];
-  //     const {logs} = await validatorsFunctionality.rotateNode(groupIndex1);
-  //     const validators = await validatorsData.getNodesInGroup(groupIndex1);
-  //     for (const node of validators) {
-  //       if (await nodesData.isNodeActive(node)) {
-  //         activeNodes.push(node.toNumber());
-  //       }
-  //     }
-  //     activeNodes.indexOf(secondNode).should.be.equal(-1);
-  //     activeNodes[activeNodes.length - 1].should.be.equal(logs[0].args.newNode.toNumber());
-  //   }
-  // });
-
   it("should not contain duplicates after epoch ending", async () => {
     await monitorsFunctionality.addMonitor(0);
 
@@ -256,6 +218,27 @@ contract("MonitorsFunctionality", ([owner, validator]) => {
         assert.notDeepEqual(value, array[index - 1], "Should not contain duplicates");
       }
     });
+  });
+
+  it("should delete node from checked list", async () => {
+    await monitorsFunctionality.addMonitor(0);
+
+    const node1Hash = web3.utils.soliditySha3(1);
+    const node2Hash = web3.utils.soliditySha3(2);
+    const node3Hash = web3.utils.soliditySha3(3);
+    const node4Hash = web3.utils.soliditySha3(4);
+
+    (await monitorsData.getCheckedArray(node1Hash)).length.should.be.equal(1);
+    (await monitorsData.getCheckedArray(node2Hash)).length.should.be.equal(1);
+    (await monitorsData.getCheckedArray(node3Hash)).length.should.be.equal(1);
+    (await monitorsData.getCheckedArray(node4Hash)).length.should.be.equal(1);
+
+    await monitorsFunctionality.deleteMonitor(0);
+
+    await monitorsData.getCheckedArray(node1Hash).should.be.eventually.empty;
+    await monitorsData.getCheckedArray(node2Hash).should.be.eventually.empty;
+    await monitorsData.getCheckedArray(node3Hash).should.be.eventually.empty;
+    await monitorsData.getCheckedArray(node4Hash).should.be.eventually.empty;
   });
 
   const nodesCount = 50;

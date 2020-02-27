@@ -110,7 +110,7 @@ contract ConstantsHolder is IConstants, Permissions {
 
     //Need to add minimal allowed parameters for verdicts
 
-    uint public rotationDelay = 12 hours;
+    uint public rotationDelay;
 
     /**
      * Set reward and delta periods to new one, run only by owner. This function
@@ -176,5 +176,6 @@ contract ConstantsHolder is IConstants, Permissions {
         checkTime = 120; // Test parameters
         lastTimeUnderloaded = 0;
         lastTimeOverloaded = 0;
+        rotationDelay = 12 hours;
     }
 }

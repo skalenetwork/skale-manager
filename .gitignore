@@ -44,6 +44,9 @@ docker/geth/shared/eth_datadir/history
 coverageEnv
 coverage/
 coverage.json
+.coverage_artifacts/
+.coverage_cache/
+.coverage_contracts/
 
 # Typescript staff
 types/

@@ -4,7 +4,7 @@ module.exports = {
     compileCommand: 'npx buidler compile',
     testCommand: 'npx buidler test',
     norpc: true,
-    skipFiles: ['Migrations.sol', 'thirdparty/', 'interfaces/'],
+    skipFiles: ['Migrations.sol', 'thirdparty/', 'interfaces/', 'test/', 'ERC777/'],
     copyPackages: ['@openzeppelin/contracts'],
     providerOptions: {
         "accounts": [
@@ -26,6 +26,10 @@ module.exports = {
             },
             {
                 "secretKey": process.env.PRIVATE_KEY_5,
+                "balance": "0xd3c21bcecceda0000000"
+            },
+            {
+                "secretKey": process.env.PRIVATE_KEY_6,
                 "balance": "0xd3c21bcecceda0000000"
             }
         ]

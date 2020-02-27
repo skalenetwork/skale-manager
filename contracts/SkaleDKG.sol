@@ -57,10 +57,10 @@ contract SkaleDKG is Permissions {
         Fp2 publicKeyy;
         uint numberOfCompleted;
         bool[] completed;
-        uint startedBlockNumber;
+        uint startedBlockTimestamp;
         uint nodeToComplaint;
         uint fromNodeToComplaint;
-        uint startComplaintBlockNumber;
+        uint startComplaintBlockTimestamp;
     }
 
     struct Fp2 {
@@ -187,17 +187,17 @@ contract SkaleDKG is Permissions {
             // need to wait a response from toNodeIndex
             channels[groupIndex].nodeToComplaint = toNodeIndex;
             channels[groupIndex].fromNodeToComplaint = fromNodeIndex;
-            channels[groupIndex].startComplaintBlockNumber = block.number;
+            channels[groupIndex].startComplaintBlockTimestamp = block.timestamp;
             emit ComplaintSent(groupIndex, fromNodeIndex, toNodeIndex);
         } else if (isBroadcasted(groupIndex, toNodeIndex) && channels[groupIndex].nodeToComplaint != toNodeIndex) {
             revert("One complaint has already sent");
         } else if (isBroadcasted(groupIndex, toNodeIndex) && channels[groupIndex].nodeToComplaint == toNodeIndex) {
-            require(channels[groupIndex].startComplaintBlockNumber.add(120) <= block.number, "One more complaint rejected");
+            require(channels[groupIndex].startComplaintBlockTimestamp.add(1800) <= block.timestamp, "One more complaint rejected");
             // need to penalty Node - toNodeIndex
             finalizeSlashing(groupIndex, channels[groupIndex].nodeToComplaint);
         } else if (!isBroadcasted(groupIndex, toNodeIndex)) {
             // if node have not broadcasted params
-            require(channels[groupIndex].startedBlockNumber.add(120) <= block.number, "Complaint rejected");
+            require(channels[groupIndex].startedBlockTimestamp.add(1800) <= block.timestamp, "Complaint rejected");
             // need to penalty Node - toNodeIndex
             finalizeSlashing(groupIndex, channels[groupIndex].nodeToComplaint);
         }
@@ -215,12 +215,6 @@ contract SkaleDKG is Permissions {
     {
         require(channels[groupIndex].nodeToComplaint == fromNodeIndex, "Not this Node");
         require(isNodeByMessageSender(fromNodeIndex, msg.sender), "Node does not exist for message sender");
-
-        // uint secret = decryptMessage(groupIndex, secretNumber);
-
-        // DKG verification(secret key contribution, verification vector)
-        // uint indexOfNode = findNode(groupIndex, fromNodeIndex);
-        // bytes memory verVec = data[groupIndex][indexOfNode].verificationVector;
         bool verificationResult = verify(
             groupIndex,
             fromNodeIndex,
@@ -275,13 +269,13 @@ contract SkaleDKG is Permissions {
         bool complaintSending = channels[groupIndex].nodeToComplaint == uint(-1) ||
             (
                 channels[groupIndex].broadcasted[indexTo] &&
-                channels[groupIndex].startComplaintBlockNumber.add(120) <= block.number &&
+                channels[groupIndex].startComplaintBlockTimestamp.add(1800) <= block.timestamp &&
                 channels[groupIndex].nodeToComplaint == toNodeIndex
             ) ||
             (
                 !channels[groupIndex].broadcasted[indexTo] &&
                 channels[groupIndex].nodeToComplaint == toNodeIndex &&
-                channels[groupIndex].startedBlockNumber.add(120) <= block.number
+                channels[groupIndex].startedBlockTimestamp.add(1800) <= block.timestamp
             );
         return channels[groupIndex].active &&
             indexFrom < IGroupsData(channels[groupIndex].dataAddress).getNumberOfNodesInGroup(groupIndex) &&
