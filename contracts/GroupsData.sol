@@ -226,6 +226,19 @@ contract GroupsData is IGroupsData, Permissions {
         );
     }
 
+    function getPreviousGroupsPublicKey(bytes32 groupIndex) external view returns (uint, uint, uint, uint) {
+        uint length = previousPublicKeys[groupIndex].length;
+        if (length == 0) {
+            return (0, 0, 0, 0);
+        }
+        return (
+            previousPublicKeys[groupIndex][length - 1][0],
+            previousPublicKeys[groupIndex][length - 1][1],
+            previousPublicKeys[groupIndex][length - 1][2],
+            previousPublicKeys[groupIndex][length - 1][3]
+        );
+    }
+
     function isGroupFailedDKG(bytes32 groupIndex) external view returns (bool) {
         return !groups[groupIndex].succesfulDKG;
     }
