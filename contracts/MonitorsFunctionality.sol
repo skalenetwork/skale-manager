@@ -115,11 +115,19 @@ contract MonitorsFunctionality is GroupsFunctionality {
         );
     }
 
-    function deleteMonitorByRoot(uint nodeIndex) external allow(executorName) {
+    function deleteMonitor(uint nodeIndex) external allow(executorName) {
         bytes32 groupIndex = keccak256(abi.encodePacked(nodeIndex));
         MonitorsData data = MonitorsData(contractManager.getContract("MonitorsData"));
         data.removeAllVerdicts(groupIndex);
         data.removeAllCheckedNodes(groupIndex);
+        uint[] memory nodesInGroup = data.getNodesInGroup(groupIndex);
+        uint index;
+        bytes32 monitorIndex;
+        for (uint i = 0; i < nodesInGroup.length; i++) {
+            monitorIndex = keccak256(abi.encodePacked(nodesInGroup[i]));
+            (index, ) = find(monitorIndex, nodeIndex);
+            data.removeCheckedNode(monitorIndex, index);
+        }
         deleteGroup(groupIndex);
     }
 
