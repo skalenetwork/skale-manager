@@ -18,6 +18,7 @@
 */
 
 pragma solidity ^0.5.3;
+pragma experimental ABIEncoderV2;
 
 import "./Permissions.sol";
 import "./interfaces/IGroupsData.sol";
@@ -53,6 +54,8 @@ contract GroupsData is IGroupsData, Permissions {
 
     // contain all groups
     mapping (bytes32 => Group) public groups;
+    // past groups common BLS public keys
+    mapping (bytes32 => uint[4][]) public previousPublicKeys;
     // mapping for checking Has Node already joined to the group
     mapping (bytes32 => GroupCheck) exceptions;
 
@@ -101,6 +104,10 @@ contract GroupsData is IGroupsData, Permissions {
         uint publicKeyx2,
         uint publicKeyy2) external allow("SkaleDKG")
     {
+        if (!isPublicKeyZero(groupIndex)) {
+            uint[4] memory previousKey = groups[groupIndex].groupsPublicKey;
+            previousPublicKeys[groupIndex].push(previousKey);
+        }
         groups[groupIndex].groupsPublicKey[0] = publicKeyx1;
         groups[groupIndex].groupsPublicKey[1] = publicKeyy1;
         groups[groupIndex].groupsPublicKey[2] = publicKeyx2;
@@ -165,6 +172,8 @@ contract GroupsData is IGroupsData, Permissions {
         groups[groupIndex].active = false;
         delete groups[groupIndex].groupData;
         delete groups[groupIndex].recommendedNumberOfNodes;
+        uint[4] memory previousKey = groups[groupIndex].groupsPublicKey;
+        previousPublicKeys[groupIndex].push(previousKey);
         delete groups[groupIndex].groupsPublicKey;
         delete groups[groupIndex];
         // delete channel
@@ -217,6 +226,19 @@ contract GroupsData is IGroupsData, Permissions {
         );
     }
 
+    function getPreviousGroupsPublicKey(bytes32 groupIndex) external view returns (uint, uint, uint, uint) {
+        uint length = previousPublicKeys[groupIndex].length;
+        if (length == 0) {
+            return (0, 0, 0, 0);
+        }
+        return (
+            previousPublicKeys[groupIndex][length - 1][0],
+            previousPublicKeys[groupIndex][length - 1][1],
+            previousPublicKeys[groupIndex][length - 1][2],
+            previousPublicKeys[groupIndex][length - 1][3]
+        );
+    }
+
     function isGroupFailedDKG(bytes32 groupIndex) external view returns (bool) {
         return !groups[groupIndex].succesfulDKG;
     }
@@ -266,4 +288,12 @@ contract GroupsData is IGroupsData, Permissions {
         Permissions.initialize(newContractsAddress);
         executorName = newExecutorName;
     }
+
+    function isPublicKeyZero(bytes32 groupIndex) internal view returns (bool) {
+        return groups[groupIndex].groupsPublicKey[0] == 0 &&
+            groups[groupIndex].groupsPublicKey[1] == 0 &&
+            groups[groupIndex].groupsPublicKey[2] == 0 &&
+            groups[groupIndex].groupsPublicKey[3] == 0;
+    }
+
 }
