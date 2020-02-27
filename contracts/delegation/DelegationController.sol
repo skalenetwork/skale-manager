@@ -125,6 +125,7 @@ contract DelegationController is Permissions, ILocker {
     // validatorId => delegationId[]
     mapping (uint => uint[]) public delegationsByValidator;
 
+    //        holder => delegationId[]
     mapping (address => uint[]) public delegationsByHolder;
 
     // delegationId => extras
