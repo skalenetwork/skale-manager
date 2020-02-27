@@ -444,11 +444,16 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                        obtainedPart,
                        obtainedLifetime,
                        obtainedStartDate,
+                       obtainedBlock,
                        obtainedDeposit,
                        obtainedIndex] = schainsArray;
 
                 obtainedSchainName.should.be.equal("d2");
                 obtainedSchainOwner.should.be.equal(holder);
+                console.log(obtainedPart.toString());
+                console.log(obtainedLifetime.toString());
+                console.log(obtainedDeposit.toString());
+                console.log(deposit.toString());
                 expect(obtainedPart.eq(web3.utils.toBN(1))).be.true;
                 expect(obtainedLifetime.eq(web3.utils.toBN(5))).be.true;
                 expect(obtainedDeposit.eq(web3.utils.toBN(deposit))).be.true;
@@ -656,7 +661,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
         it("should rotate 2 nodes consistently", async () => {
             await skaleManager.nodeExit(0, {from: validator});
             await skaleManager.nodeExit(1, {from: validator})
-                .should.be.eventually.rejectedWith("You cannot rotate on Schain d2, occupied by Node 0");
+                .should.be.eventually.rejectedWith("Node cannot rotate on Schain d2, occupied by Node 0");
             await skaleManager.nodeExit(0, {from: validator});
             nodeStatus = (await nodesData.getNodeStatus(0)).toNumber();
             assert.equal(nodeStatus, LEFT);
@@ -666,7 +671,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
             nodeStatus = (await nodesData.getNodeStatus(1)).toNumber();
             assert.equal(nodeStatus, ACTIVE);
             await skaleManager.nodeExit(1, {from: validator})
-                .should.be.eventually.rejectedWith("You cannot rotate on Schain d2, occupied by Node 0");
+                .should.be.eventually.rejectedWith("Node cannot rotate on Schain d2, occupied by Node 0");
             skipTime(web3, 43260);
 
             await skaleManager.nodeExit(1, {from: validator});
@@ -682,18 +687,38 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
         it("should allow to rotate if occupied node didn't rotated for 12 hours", async () => {
             await skaleManager.nodeExit(0, {from: validator});
             await skaleManager.nodeExit(1, {from: validator})
-                .should.be.eventually.rejectedWith("You cannot rotate on Schain d2, occupied by Node 0");
+                .should.be.eventually.rejectedWith("Node cannot rotate on Schain d2, occupied by Node 0");
             skipTime(web3, 43260);
             await skaleManager.nodeExit(1, {from: validator});
 
             await skaleManager.nodeExit(0, {from: validator})
-                .should.be.eventually.rejectedWith("You cannot rotate on Schain d3, occupied by Node 1");
+                .should.be.eventually.rejectedWith("Node cannot rotate on Schain d3, occupied by Node 1");
 
             nodeStatus = (await nodesData.getNodeStatus(1)).toNumber();
             assert.equal(nodeStatus, LEAVING);
             await skaleManager.nodeExit(1, {from: validator});
             nodeStatus = (await nodesData.getNodeStatus(1)).toNumber();
             assert.equal(nodeStatus, LEFT);
+        });
+
+        it("should rotate on schain that previously was deleted", async () => {
+            const deposit = await schainsFunctionality.getSchainPrice(5, 5);
+            await skaleManager.nodeExit(0, {from: validator});
+            await skaleManager.nodeExit(0, {from: validator});
+            await skaleManager.deleteSchainByRoot("d2", {from: owner});
+            await skaleManager.deleteSchainByRoot("d3", {from: owner});
+            await schainsFunctionality.addSchain(
+                holder,
+                deposit,
+                "0x10" +
+                "0000000000000000000000000000000000000000000000000000000000000005" +
+                "05" +
+                "0000" +
+                "6432",
+                {from: owner});
+            const nodesInGroupBN = await schainsData.getNodesInGroup(web3.utils.soliditySha3("d2"));
+            const nodeInGroup = nodesInGroupBN.map((value: BigNumber) => value.toNumber())[0];
+            await skaleManager.nodeExit(nodeInGroup, {from: validator});
         });
     });
 

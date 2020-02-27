@@ -99,15 +99,16 @@ contract SkaleManager is IERC777Recipient, Permissions {
             require(nodesFunctionality.initExit(msg.sender, nodeIndex), "Initialization of node exit is failed");
         }
         bool completed;
+        bool schains = false;
         if (schainsData.getActiveSchain(nodeIndex) != bytes32(0)) {
             completed = schainsFunctionality.exitFromSchain(nodeIndex);
+            schains = true;
         } else {
             completed = true;
         }
         if (completed) {
             require(nodesFunctionality.completeExit(msg.sender, nodeIndex), "Finishing of node exit is failed");
-            //should changed finish only after rotation
-            nodesData.changeNodeFinishTime(nodeIndex, uint32(now + constants.rotationDelay()));
+            nodesData.changeNodeFinishTime(nodeIndex, uint32(now + (schains ? constants.rotationDelay() : 0)));
         }
     }
 
@@ -115,7 +116,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
         address nodesFunctionalityAddress = contractManager.getContract("NodesFunctionality");
         INodesFunctionality(nodesFunctionalityAddress).removeNode(msg.sender, nodeIndex);
         MonitorsFunctionality monitorsFunctionality = MonitorsFunctionality(contractManager.getContract("MonitorsFunctionality"));
-        monitorsFunctionality.deleteMonitorByRoot(nodeIndex);
+        monitorsFunctionality.deleteMonitor(nodeIndex);
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
         uint validatorId = validatorService.getValidatorId(msg.sender);
         validatorService.deleteNode(validatorId, nodeIndex);
@@ -128,7 +129,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
 
         nodesFunctionality.removeNodeByRoot(nodeIndex);
-        monitorsFunctionality.deleteMonitorByRoot(nodeIndex);
+        monitorsFunctionality.deleteMonitor(nodeIndex);
         uint validatorId = nodesData.getNodeValidatorId(nodeIndex);
         validatorService.deleteNode(validatorId, nodeIndex);
     }
@@ -138,7 +139,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
         ISchainsFunctionality(schainsFunctionalityAddress).deleteSchain(msg.sender, name);
     }
 
-    function deleteSchainByRoot(string calldata name) external {
+    function deleteSchainByRoot(string calldata name) external onlyOwner {
         address schainsFunctionalityAddress = contractManager.getContract("SchainsFunctionality");
         ISchainsFunctionality(schainsFunctionalityAddress).deleteSchainByRoot(name);
     }

@@ -157,11 +157,10 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
                     {from: validator});
             });
 
-            // uncomment when delegation will be added to skale-manager
-            // it("should fail to init exiting of someone else's node", async () => {
-            //     await skaleManager.nodeExit(0, {from: hacker})
-            //         .should.be.eventually.rejectedWith("Validator with such address doesn't exist");
-            // });
+            it("should fail to init exiting of someone else's node", async () => {
+                await skaleManager.nodeExit(0, {from: hacker})
+                    .should.be.eventually.rejectedWith("Validator with such address doesn't exist");
+            });
 
             it("should initiate exiting", async () => {
                 await skaleManager.nodeExit(0, {from: validator});
@@ -219,16 +218,15 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
                     {from: validator});
             });
 
-            // uncomment when delegation will be added to skale-manager
-            // it("should fail to initiate exiting of first node from another account", async () => {
-            //     await skaleManager.nodeExit(0, {from: hacker})
-            //         .should.be.eventually.rejectedWith("Validator with such address doesn't exist");
-            // });
+            it("should fail to initiate exiting of first node from another account", async () => {
+                await skaleManager.nodeExit(0, {from: hacker})
+                    .should.be.eventually.rejectedWith("Validator with such address doesn't exist");
+            });
 
-            // it("should fail to initiate exiting of second node from another account", async () => {
-            //     await skaleManager.nodeExit(1, {from: hacker})
-            //         .should.be.eventually.rejectedWith("Validator with such address doesn't exist");
-            // });
+            it("should fail to initiate exiting of second node from another account", async () => {
+                await skaleManager.nodeExit(1, {from: hacker})
+                    .should.be.eventually.rejectedWith("Validator with such address doesn't exist");
+            });
 
             it("should initiate exiting of first node", async () => {
                 await skaleManager.nodeExit(0, {from: validator});
@@ -309,8 +307,11 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
                 }
             });
 
-            it("should fail to create schain if not enough SKALE tokens", async () => {
+            it("should fail to create schain if validator doesn't meet MSR", async () => {
                 await constantsHolder.setMSR(6);
+                const newValidatorId = 2;
+                await delegationService.registerValidator("D2", "D2 is even", 150, 0, {from: developer});
+                await validatorService.enableValidator(newValidatorId, {from: owner});
 
                 await skaleManager.createNode(
                     "0x10" + // create schain
@@ -318,7 +319,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
                     "01" + // type of schain
                     "0000" + // nonce
                     "6432", // name
-                    {from: developer}).should.be.eventually.rejectedWith("ERC777: transfer amount exceeds balance");
+                    {from: developer}).should.be.eventually.rejectedWith("Validator has to meet Minimum Staking Requirement");
             });
 
             it("should fail to send monitor verdict from not node owner", async () => {
@@ -423,7 +424,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
                 });
 
                 it("should get bounty after break", async () => {
-                    skipTime(web3, 600);
+                    skipTime(web3, 500);
                     const balanceBefore = web3.utils.toBN(await skaleBalances.getBalance(validator));
                     // const bounty = web3.utils.toBN("893019925718471100273");
                     const bounty = web3.utils.toBN("1250227896005859540382");
@@ -473,7 +474,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
                 });
 
                 it("should get bounty after break", async () => {
-                    skipTime(web3, 600);
+                    skipTime(web3, 500);
                     const balanceBefore = web3.utils.toBN(await skaleBalances.getBalance(validator));
                     const bounty = web3.utils.toBN("937714334705075445816");
 

@@ -115,11 +115,19 @@ contract MonitorsFunctionality is GroupsFunctionality {
         );
     }
 
-    function deleteMonitorByRoot(uint nodeIndex) external allow(executorName) {
+    function deleteMonitor(uint nodeIndex) external allow(executorName) {
         bytes32 groupIndex = keccak256(abi.encodePacked(nodeIndex));
         MonitorsData data = MonitorsData(contractManager.getContract("MonitorsData"));
         data.removeAllVerdicts(groupIndex);
         data.removeAllCheckedNodes(groupIndex);
+        uint[] memory nodesInGroup = data.getNodesInGroup(groupIndex);
+        uint index;
+        bytes32 monitorIndex;
+        for (uint i = 0; i < nodesInGroup.length; i++) {
+            monitorIndex = keccak256(abi.encodePacked(nodesInGroup[i]));
+            (index, ) = find(monitorIndex, nodeIndex);
+            data.removeCheckedNode(monitorIndex, index);
+        }
         deleteGroup(groupIndex);
     }
 
@@ -167,39 +175,11 @@ contract MonitorsFunctionality is GroupsFunctionality {
         }
     }
 
-    function rotateNode(bytes32 schainId) external allow("SkaleManager") {
-        uint newNodeIndexEvent;
-        newNodeIndexEvent = selectNodeToGroup(schainId);
-        emit MonitorRotated(schainId, newNodeIndexEvent);
-    }
-
     function initialize(address _contractManager) public initializer {
         GroupsFunctionality.initialize(
             "SkaleManager",
             "MonitorsData",
             _contractManager);
-    }
-
-    function selectNodeToGroup(bytes32 groupIndex) internal returns (uint) {
-        address dataAddress = contractManager.getContract(dataName);
-        require(IGroupsData(dataAddress).isGroupActive(groupIndex), "Group is not active");
-        bytes32 groupData = IGroupsData(dataAddress).getGroupData(groupIndex);
-        uint hash = uint(keccak256(abi.encodePacked(uint(blockhash(block.number - 1)), groupIndex)));
-        uint numberOfNodes;
-        (numberOfNodes, ) = setNumberOfNodesInGroup(groupIndex, groupData);
-        uint indexOfNode;
-        uint iterations = 0;
-        while (iterations < 200) {
-            indexOfNode = hash % numberOfNodes;
-            if (comparator(groupIndex, indexOfNode)) {
-                IGroupsData(dataAddress).setException(groupIndex, indexOfNode);
-                IGroupsData(dataAddress).setNodeInGroup(groupIndex, indexOfNode);
-                return indexOfNode;
-            }
-            hash = uint(keccak256(abi.encodePacked(hash, indexOfNode)));
-            iterations++;
-        }
-        require(iterations < 200, "Old Monitor is not replaced? Try it later");
     }
 
     function generateGroup(bytes32 groupIndex) internal allow(executorName) returns (uint[] memory) {
