@@ -122,6 +122,12 @@ contract DelegationController is Permissions, ILocker {
     /// @notice delegations will never be deleted to index in this array may be used like delegation id
     Delegation[] public delegations;
 
+    // validatorId => delegationId[]
+    mapping (uint => uint[]) public delegationsByValidator;
+
+    //        holder => delegationId[]
+    mapping (address => uint[]) public delegationsByHolder;
+
     // delegationId => extras
     mapping(uint => DelegationExtras) private _delegationExtras;
 
@@ -345,7 +351,14 @@ contract DelegationController is Permissions, ILocker {
         external allow("Distributor") returns (uint)
     {
         return calculateValue(_effectiveDelegatedToValidator[validatorId], month);
-        // TODO: subtract slashed
+    }
+
+    function getDelegationsByValidatorLength(uint validatorId) external view returns (uint) {
+        return delegationsByValidator[validatorId].length;
+    }
+
+    function getDelegationsByHolderLength(address holder) external view returns (uint) {
+        return delegationsByHolder[holder].length;
     }
 
     function initialize(address _contractsAddress) public initializer {
@@ -354,7 +367,6 @@ contract DelegationController is Permissions, ILocker {
 
     function calculateDelegatedToValidator(uint validatorId, uint month) public allow("ValidatorService") returns (uint) {
         return calculateValue(_delegatedToValidator[validatorId], month);
-        // TODO: subtract slashed
     }
 
     function getState(uint delegationId) public view checkDelegationExists(delegationId) returns (State state) {
@@ -431,6 +443,8 @@ contract DelegationController is Permissions, ILocker {
             0,
             info
         ));
+        delegationsByValidator[validatorId].push(delegationId);
+        delegationsByHolder[holder].push(delegationId);
         addToLockedInPendingDelegations(delegations[delegationId].holder, delegations[delegationId].amount);
     }
 
