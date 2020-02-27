@@ -21,10 +21,6 @@ node_js:
   - "10"
 os: linux
 dist: bionic
-env:
-  - TESTFOLDERS=1
-  - TESTFOLDERS=2
-  - TESTFOLDERS=3
 addons:
   apt:
     packages:
@@ -36,15 +32,8 @@ stages:
   - deploy
 
 jobs:
-  exclude:
-    env: 
-      - TESTFOLDERS=1
-      - TESTFOLDERS=2
-      - TESTFOLDERS=3
   include:
     - stage: lint
-      env:
-        - TESTFOLDERS=NONE
       script:
         - pip3 install -r scripts/requirements.txt
         - yarn lint || travis_terminate 1
@@ -56,15 +45,23 @@ jobs:
     - stage: test
       env:
         - TESTFOLDERS=1
+      script:
+        - bash scripts/move.sh
+        - bash scripts/coverage.sh
+    - stage: test
+      env:
         - TESTFOLDERS=2
+      script:
+        - bash scripts/move.sh
+        - bash scripts/coverage.sh
+    - stage: test
+      env:
         - TESTFOLDERS=3
       script:
         - bash scripts/move.sh
         - bash scripts/coverage.sh
 
     - stage: deploy
-      env:
-        - TESTFOLDERS=NONE
       script:
         - VERSION=$(BRANCH=$TRAVIS_BRANCH bash ./scripts/calculate_version.sh)
         - echo "Version $VERSION"
