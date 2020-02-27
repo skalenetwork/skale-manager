@@ -17,18 +17,20 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity ^0.5.0;
+pragma solidity ^0.5.3;
 
 
-import "@openzeppelin/contracts/token/ERC777/ERC777.sol";
+import "./ERC777/LockableERC777.sol";
 import "./Permissions.sol";
+import "./interfaces/delegation/IDelegatableToken.sol";
+import "./delegation/DelegationService.sol";
 
 
 /**
  * @title SkaleToken is ERC777 Token implementation, also this contract in skale
  * manager system
  */
-contract SkaleToken is ERC777, Permissions {
+contract SkaleToken is LockableERC777, Permissions, IDelegatableToken {
 
     string public constant NAME = "SKALE";
 
@@ -38,15 +40,19 @@ contract SkaleToken is ERC777, Permissions {
 
     uint public constant CAP = 7 * 1e9 * (10 ** DECIMALS); // the maximum amount of tokens that can ever be created
 
-    constructor(address contractsAddress, address[] memory defOps) Permissions(contractsAddress) ERC777("SKALE", "SKL", defOps) public {
-        uint money = 1e7 * 10 ** DECIMALS;
+    constructor(address contractsAddress, address[] memory defOps)
+    LockableERC777("SKALE", "SKL", defOps) public
+    {
+        Permissions.initialize(contractsAddress);
+
+        // TODO remove after testing
+        uint money = 5e9 * 10 ** DECIMALS;
         _mint(
             address(0),
             address(msg.sender),
             money, bytes(""),
             bytes("")
         );
-        // TODO remove after testing
     }
 
     /**
@@ -70,7 +76,7 @@ contract SkaleToken is ERC777, Permissions {
         //onlyAuthorized
         returns (bool)
     {
-        require(amount <= CAP - totalSupply(), "Amount is too big");
+        require(amount <= CAP.sub(totalSupply()), "Amount is too big");
         _mint(
             operator,
             account,
@@ -80,5 +86,23 @@ contract SkaleToken is ERC777, Permissions {
         );
 
         return true;
+    }
+
+    function getDelegatedOf(address wallet) external returns (uint) {
+        return DelegationService(contractManager.getContract("DelegationService")).getDelegatedOf(wallet);
+    }
+
+    function getSlashedOf(address wallet) external returns (uint) {
+        return DelegationService(contractManager.getContract("DelegationService")).getSlashedOf(wallet);
+    }
+
+    function getLockedOf(address wallet) public returns (uint) {
+        return DelegationService(contractManager.getContract("DelegationService")).getLockedOf(wallet);
+    }
+
+    // private
+
+    function _getLockedOf(address wallet) internal returns (uint) {
+        return getLockedOf(wallet);
     }
 }

@@ -17,7 +17,8 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity ^0.5.0;
+pragma solidity ^0.5.3;
+pragma experimental ABIEncoderV2;
 
 import "./Permissions.sol";
 import "./interfaces/IGroupsData.sol";
@@ -53,20 +54,13 @@ contract GroupsData is IGroupsData, Permissions {
 
     // contain all groups
     mapping (bytes32 => Group) public groups;
+    // past groups common BLS public keys
+    mapping (bytes32 => uint[4][]) public previousPublicKeys;
     // mapping for checking Has Node already joined to the group
     mapping (bytes32 => GroupCheck) exceptions;
 
     // name of executor contract
     string executorName;
-
-    /**
-     * @dev constructor in Permissions approach
-     * @param newExecutorName - name of executor contract
-     * @param newContractsAddress needed in Permissions constructor
-     */
-    constructor(string memory newExecutorName, address newContractsAddress) public Permissions(newContractsAddress) {
-        executorName = newExecutorName;
-    }
 
     /**
      * @dev addGroup - creates and adds new Group to mapping
@@ -80,7 +74,7 @@ contract GroupsData is IGroupsData, Permissions {
         groups[groupIndex].recommendedNumberOfNodes = amountOfNodes;
         groups[groupIndex].groupData = data;
         // Open channel in SkaleDKG
-        address skaleDKGAddress = contractManager.contracts(keccak256(abi.encodePacked("SkaleDKG")));
+        address skaleDKGAddress = contractManager.getContract("SkaleDKG");
         ISkaleDKG(skaleDKGAddress).openChannel(groupIndex);
     }
 
@@ -110,6 +104,10 @@ contract GroupsData is IGroupsData, Permissions {
         uint publicKeyx2,
         uint publicKeyy2) external allow("SkaleDKG")
     {
+        if (!isPublicKeyZero(groupIndex)) {
+            uint[4] memory previousKey = groups[groupIndex].groupsPublicKey;
+            previousPublicKeys[groupIndex].push(previousKey);
+        }
         groups[groupIndex].groupsPublicKey[0] = publicKeyx1;
         groups[groupIndex].groupsPublicKey[1] = publicKeyy1;
         groups[groupIndex].groupsPublicKey[2] = publicKeyx2;
@@ -161,26 +159,6 @@ contract GroupsData is IGroupsData, Permissions {
         groups[groupIndex].nodesInGroup = nodesInGroup;
     }
 
-    // /**
-    //  * @dev setNewAmountOfNodes - set new recommended number of Nodes
-    //  * function could be run only by executor
-    //  * @param groupIndex - Groups identifier
-    //  * @param amountOfNodes - recommended number of Nodes in this Group
-    // */
-    // function setNewAmountOfNodes(bytes32 groupIndex, uint amountOfNodes) external allow(executorName) {
-    //     groups[groupIndex].recommendedNumberOfNodes = amountOfNodes;
-    // }
-
-    // /**
-    //  * @dev setNewGroupData - set new extra data
-    //  * function could be run only be executor
-    //  * @param groupIndex - Groups identifier
-    //  * @param data - new extra data
-    //  */
-    // function setNewGroupData(bytes32 groupIndex, bytes32 data) external allow(executorName) {
-    //     groups[groupIndex].groupData = data;
-    // }
-
     function setGroupFailedDKG(bytes32 groupIndex) external allow("SkaleDKG") {
         groups[groupIndex].succesfulDKG = false;
     }
@@ -194,10 +172,12 @@ contract GroupsData is IGroupsData, Permissions {
         groups[groupIndex].active = false;
         delete groups[groupIndex].groupData;
         delete groups[groupIndex].recommendedNumberOfNodes;
+        uint[4] memory previousKey = groups[groupIndex].groupsPublicKey;
+        previousPublicKeys[groupIndex].push(previousKey);
         delete groups[groupIndex].groupsPublicKey;
         delete groups[groupIndex];
         // delete channel
-        address skaleDKGAddress = contractManager.contracts(keccak256(abi.encodePacked("SkaleDKG")));
+        address skaleDKGAddress = contractManager.getContract("SkaleDKG");
 
         if (ISkaleDKG(skaleDKGAddress).isChannelOpened(groupIndex)) {
             ISkaleDKG(skaleDKGAddress).deleteChannel(groupIndex);
@@ -246,6 +226,19 @@ contract GroupsData is IGroupsData, Permissions {
         );
     }
 
+    function getPreviousGroupsPublicKey(bytes32 groupIndex) external view returns (uint, uint, uint, uint) {
+        uint length = previousPublicKeys[groupIndex].length;
+        if (length == 0) {
+            return (0, 0, 0, 0);
+        }
+        return (
+            previousPublicKeys[groupIndex][length - 1][0],
+            previousPublicKeys[groupIndex][length - 1][1],
+            previousPublicKeys[groupIndex][length - 1][2],
+            previousPublicKeys[groupIndex][length - 1][3]
+        );
+    }
+
     function isGroupFailedDKG(bytes32 groupIndex) external view returns (bool) {
         return !groups[groupIndex].succesfulDKG;
     }
@@ -285,4 +278,22 @@ contract GroupsData is IGroupsData, Permissions {
     function getNumberOfNodesInGroup(bytes32 groupIndex) external view returns (uint) {
         return groups[groupIndex].nodesInGroup.length;
     }
+
+    /**
+     * @dev constructor in Permissions approach
+     * @param newExecutorName - name of executor contract
+     * @param newContractsAddress needed in Permissions constructor
+     */
+    function initialize(string memory newExecutorName, address newContractsAddress) public initializer {
+        Permissions.initialize(newContractsAddress);
+        executorName = newExecutorName;
+    }
+
+    function isPublicKeyZero(bytes32 groupIndex) internal view returns (bool) {
+        return groups[groupIndex].groupsPublicKey[0] == 0 &&
+            groups[groupIndex].groupsPublicKey[1] == 0 &&
+            groups[groupIndex].groupsPublicKey[2] == 0 &&
+            groups[groupIndex].groupsPublicKey[3] == 0;
+    }
+
 }

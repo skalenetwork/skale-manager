@@ -17,17 +17,18 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity ^0.5.0;
+pragma solidity ^0.5.3;
+pragma experimental ABIEncoderV2;
 
 import "./GroupsData.sol";
-import "./interfaces/ISchainsData.sol";
+import "./interfaces/IConstants.sol";
 
 
 /**
  * @title SchainsData - Data contract for SchainsFunctionality.
  * Contain all information about SKALE-Chains.
  */
-contract SchainsData is ISchainsData, GroupsData {
+contract SchainsData is GroupsData {
 
     struct Schain {
         string name;
@@ -36,8 +37,26 @@ contract SchainsData is ISchainsData, GroupsData {
         uint8 partOfNode;
         uint lifetime;
         uint32 startDate;
+        uint startBlock;
         uint deposit;
         uint64 index;
+    }
+
+    /**
+    nodeIndex - index of Node which is in process of rotation
+    startedRotation - timestamp of starting node rotation
+    inRotation - if true, only nodeIndex able to rotate
+    */
+    struct Rotation {
+        uint nodeIndex;
+        uint newNodeIndex;
+        uint freezeUntil;
+        uint rotationCounter;
+    }
+
+    struct LeavingHistory {
+        bytes32 schainIndex;
+        uint finishedRotation;
     }
 
     // mapping which contain all schains
@@ -48,16 +67,17 @@ contract SchainsData is ISchainsData, GroupsData {
     mapping (uint => bytes32[]) public schainsForNodes;
 
     mapping (uint => uint[]) public holesForNodes;
+
+    mapping (bytes32 => Rotation) public rotations;
+
+    mapping (uint => LeavingHistory[]) public leavingHistory;
+
     // array which contain all schains
     bytes32[] public schainsAtSystem;
 
-    uint64 public numberOfSchains = 0;
+    uint64 public numberOfSchains;
     // total resources that schains occupied
-    uint public sumOfSchainsResources = 0;
-
-    constructor(string memory newExecutorName, address newContractsAddress) GroupsData(newExecutorName, newContractsAddress) public {
-
-    }
+    uint public sumOfSchainsResources;
 
     /**
      * @dev initializeSchain - initializes Schain
@@ -77,6 +97,7 @@ contract SchainsData is ISchainsData, GroupsData {
         schains[schainId].name = name;
         schains[schainId].owner = from;
         schains[schainId].startDate = uint32(block.timestamp);
+        schains[schainId].startBlock = block.number;
         schains[schainId].lifetime = lifetime;
         schains[schainId].deposit = deposit;
         schains[schainId].index = numberOfSchains;
@@ -134,7 +155,7 @@ contract SchainsData is ISchainsData, GroupsData {
     function setSchainPartOfNode(bytes32 schainId, uint8 partOfNode) external allow(executorName) {
         schains[schainId].partOfNode = partOfNode;
         if (partOfNode > 0) {
-            sumOfSchainsResources += (128 / partOfNode) * groups[schainId].nodesInGroup.length;
+            sumOfSchainsResources = sumOfSchainsResources.add((128 / partOfNode) * groups[schainId].nodesInGroup.length);
         }
     }
 
@@ -146,8 +167,8 @@ contract SchainsData is ISchainsData, GroupsData {
      * @param deposit - amount of SKL which payed for this time
      */
     function changeLifetime(bytes32 schainId, uint lifetime, uint deposit) external allow("SchainsFunctionality") {
-        schains[schainId].deposit += deposit;
-        schains[schainId].lifetime += lifetime;
+        schains[schainId].deposit = schains[schainId].deposit.add(deposit);
+        schains[schainId].lifetime = schains[schainId].lifetime.add(lifetime);
     }
 
     /**
@@ -203,6 +224,35 @@ contract SchainsData is ISchainsData, GroupsData {
                 holesForNodes[nodeIndex].push(schainIndex);
             }
         }
+    }
+
+    function startRotation(bytes32 schainIndex, uint nodeIndex) external allow("SchainsFunctionality") {
+        IConstants constants = IConstants(contractManager.getContract("ConstantsHolder"));
+        rotations[schainIndex].nodeIndex = nodeIndex;
+        rotations[schainIndex].freezeUntil = now + constants.rotationDelay();
+    }
+
+    function finishRotation(bytes32 schainIndex, uint nodeIndex, uint newNodeIndex) external allow("SchainsFunctionality") {
+        IConstants constants = IConstants(contractManager.getContract("ConstantsHolder"));
+        leavingHistory[nodeIndex].push(LeavingHistory(schainIndex, now + constants.rotationDelay()));
+        rotations[schainIndex].newNodeIndex = newNodeIndex;
+        rotations[schainIndex].rotationCounter++;
+    }
+
+    function removeRotation(bytes32 schainIndex) external allow("SchainsFunctionality") {
+        delete rotations[schainIndex];
+    }
+
+    function skipRotationDelay(bytes32 schainIndex) external onlyOwner {
+        rotations[schainIndex].freezeUntil = now;
+    }
+
+    function getRotation(bytes32 schainIndex) external view returns (Rotation memory) {
+        return rotations[schainIndex];
+    }
+
+    function getLeavingHistory(uint nodeIndex) external view returns (LeavingHistory[] memory) {
+        return leavingHistory[nodeIndex];
     }
 
     /**
@@ -289,7 +339,7 @@ contract SchainsData is ISchainsData, GroupsData {
      * @return if expired - true, else - false
      */
     function isTimeExpired(bytes32 schainId) external view returns (bool) {
-        return schains[schainId].startDate + schains[schainId].lifetime < block.timestamp;
+        return schains[schainId].startDate.add(schains[schainId].lifetime) < block.timestamp;
     }
 
     /**
@@ -302,4 +352,44 @@ contract SchainsData is ISchainsData, GroupsData {
         return schains[schainId].owner == from;
     }
 
+    function isSchainExist(bytes32 schainId) external view returns (bool) {
+        return keccak256(abi.encodePacked(schains[schainId].name)) != keccak256(abi.encodePacked(""));
+    }
+
+    function getSchainName(bytes32 schainId) external view returns (string memory) {
+        return schains[schainId].name;
+    }
+
+    function getActiveSchain(uint nodeIndex) external view returns (bytes32) {
+        for (uint i = 0; i < schainsForNodes[nodeIndex].length; i++) {
+            if (schainsForNodes[nodeIndex][i] != bytes32(0)) {
+                return schainsForNodes[nodeIndex][i];
+            }
+        }
+        return bytes32(0);
+    }
+
+    function getActiveSchains(uint nodeIndex) external view returns (bytes32[] memory activeSchains) {
+        uint activeAmount = 0;
+        for (uint i = 0; i < schainsForNodes[nodeIndex].length; i++) {
+            if (schainsForNodes[nodeIndex][i] != bytes32(0)) {
+                activeAmount++;
+            }
+        }
+
+        uint cursor = 0;
+        activeSchains = new bytes32[](activeAmount);
+        for (uint i = 0; i < schainsForNodes[nodeIndex].length; i++) {
+            if (schainsForNodes[nodeIndex][i] != bytes32(0)) {
+                activeSchains[cursor++] = schainsForNodes[nodeIndex][i];
+            }
+        }
+    }
+
+    function initialize(address newContractsAddress) public initializer {
+        GroupsData.initialize("SchainsFunctionalityInternal", newContractsAddress);
+
+        numberOfSchains = 0;
+        sumOfSchainsResources = 0;
+    }
 }

@@ -17,13 +17,18 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity ^0.5.0;
+pragma solidity ^0.5.3;
 pragma experimental ABIEncoderV2;
 import "./Permissions.sol";
 import "./interfaces/IGroupsData.sol";
 import "./interfaces/INodesData.sol";
 import "./interfaces/ISchainsFunctionality.sol";
 import "./interfaces/ISchainsFunctionalityInternal.sol";
+import "./delegation/DelegationService.sol";
+import "./NodesData.sol";
+import "./SlashingTable.sol";
+import "./SchainsFunctionality.sol";
+import "./SchainsFunctionalityInternal.sol";
 
 interface IECDH {
     function deriveKey(
@@ -33,7 +38,7 @@ interface IECDH {
     )
         external
         pure
-        returns(uint256, uint256);
+        returns (uint256, uint256);
 }
 
 interface IDecryption {
@@ -52,10 +57,10 @@ contract SkaleDKG is Permissions {
         Fp2 publicKeyy;
         uint numberOfCompleted;
         bool[] completed;
-        uint startedBlockNumber;
+        uint startedBlockTimestamp;
         uint nodeToComplaint;
         uint fromNodeToComplaint;
-        uint startComplaintBlockNumber;
+        uint startComplaintBlockTimestamp;
     }
 
     struct Fp2 {
@@ -113,11 +118,7 @@ contract SkaleDKG is Permissions {
         _;
     }
 
-    constructor(address contractsAddress) Permissions(contractsAddress) public {
-
-    }
-
-    function openChannel(bytes32 groupIndex) external allowThree("SchainsData", "ValidatorsData", "SkaleDKG") {
+    function openChannel(bytes32 groupIndex) external allowThree("SchainsData", "MonitorsData", "SkaleDKG") {
         require(!channels[groupIndex].active, "Channel already is created");
         channels[groupIndex].active = true;
         channels[groupIndex].dataAddress = msg.sender;
@@ -128,7 +129,7 @@ contract SkaleDKG is Permissions {
         emit ChannelOpened(groupIndex);
     }
 
-    function deleteChannel(bytes32 groupIndex) external allowTwo("SchainsData", "ValidatorsData") {
+    function deleteChannel(bytes32 groupIndex) external allowTwo("SchainsData", "MonitorsData") {
         require(channels[groupIndex].active, "Channel is not created");
         delete channels[groupIndex];
     }
@@ -186,17 +187,17 @@ contract SkaleDKG is Permissions {
             // need to wait a response from toNodeIndex
             channels[groupIndex].nodeToComplaint = toNodeIndex;
             channels[groupIndex].fromNodeToComplaint = fromNodeIndex;
-            channels[groupIndex].startComplaintBlockNumber = block.number;
+            channels[groupIndex].startComplaintBlockTimestamp = block.timestamp;
             emit ComplaintSent(groupIndex, fromNodeIndex, toNodeIndex);
         } else if (isBroadcasted(groupIndex, toNodeIndex) && channels[groupIndex].nodeToComplaint != toNodeIndex) {
             revert("One complaint has already sent");
         } else if (isBroadcasted(groupIndex, toNodeIndex) && channels[groupIndex].nodeToComplaint == toNodeIndex) {
-            require(channels[groupIndex].startComplaintBlockNumber + 120 <= block.number, "One more complaint rejected");
+            require(channels[groupIndex].startComplaintBlockTimestamp.add(1800) <= block.timestamp, "One more complaint rejected");
             // need to penalty Node - toNodeIndex
             finalizeSlashing(groupIndex, channels[groupIndex].nodeToComplaint);
         } else if (!isBroadcasted(groupIndex, toNodeIndex)) {
             // if node have not broadcasted params
-            require(channels[groupIndex].startedBlockNumber + 120 <= block.number, "Complaint rejected");
+            require(channels[groupIndex].startedBlockTimestamp.add(1800) <= block.timestamp, "Complaint rejected");
             // need to penalty Node - toNodeIndex
             finalizeSlashing(groupIndex, channels[groupIndex].nodeToComplaint);
         }
@@ -214,12 +215,6 @@ contract SkaleDKG is Permissions {
     {
         require(channels[groupIndex].nodeToComplaint == fromNodeIndex, "Not this Node");
         require(isNodeByMessageSender(fromNodeIndex, msg.sender), "Node does not exist for message sender");
-
-        // uint secret = decryptMessage(groupIndex, secretNumber);
-
-        // DKG verification(secret key contribution, verification vector)
-        // uint indexOfNode = findNode(groupIndex, fromNodeIndex);
-        // bytes memory verVec = data[groupIndex][indexOfNode].verificationVector;
         bool verificationResult = verify(
             groupIndex,
             fromNodeIndex,
@@ -230,7 +225,7 @@ contract SkaleDKG is Permissions {
         finalizeSlashing(groupIndex, badNode);
     }
 
-    function allright(bytes32 groupIndex, uint fromNodeIndex)
+    function alright(bytes32 groupIndex, uint fromNodeIndex)
         external
         correctGroup(groupIndex)
         correctNode(groupIndex, fromNodeIndex)
@@ -274,13 +269,13 @@ contract SkaleDKG is Permissions {
         bool complaintSending = channels[groupIndex].nodeToComplaint == uint(-1) ||
             (
                 channels[groupIndex].broadcasted[indexTo] &&
-                channels[groupIndex].startComplaintBlockNumber + 120 <= block.number &&
+                channels[groupIndex].startComplaintBlockTimestamp.add(1800) <= block.timestamp &&
                 channels[groupIndex].nodeToComplaint == toNodeIndex
             ) ||
             (
                 !channels[groupIndex].broadcasted[indexTo] &&
                 channels[groupIndex].nodeToComplaint == toNodeIndex &&
-                channels[groupIndex].startedBlockNumber + 120 <= block.number
+                channels[groupIndex].startedBlockTimestamp.add(1800) <= block.timestamp
             );
         return channels[groupIndex].active &&
             indexFrom < IGroupsData(channels[groupIndex].dataAddress).getNumberOfNodesInGroup(groupIndex) &&
@@ -306,29 +301,42 @@ contract SkaleDKG is Permissions {
             channels[groupIndex].nodeToComplaint == nodeIndex;
     }
 
+    function initialize(address contractsAddress) public initializer {
+        Permissions.initialize(contractsAddress);
+    }
+
     function finalizeSlashing(bytes32 groupIndex, uint badNode) internal {
-        address schainsFunctionalityInternalAddress = contractManager.contracts(
-            keccak256(abi.encodePacked("SchainsFunctionalityInternal"))
+        SchainsFunctionalityInternal schainsFunctionalityInternal = SchainsFunctionalityInternal(
+            contractManager.getContract("SchainsFunctionalityInternal")
         );
-        uint[] memory possibleNodes = ISchainsFunctionalityInternal(schainsFunctionalityInternalAddress).isEnoughNodes(groupIndex);
+        SchainsFunctionality schainsFunctionality = SchainsFunctionality(
+            contractManager.getContract("SchainsFunctionality")
+        );
         emit BadGuy(badNode);
         emit FailedDKG(groupIndex);
-        if (possibleNodes.length > 0) {
-            uint newNode = ISchainsFunctionalityInternal(schainsFunctionalityInternalAddress).replaceNode(
+
+        address dataAddress = channels[groupIndex].dataAddress;
+        delete channels[groupIndex];
+        if (schainsFunctionalityInternal.isAnyFreeNode(groupIndex)) {
+            uint newNode = schainsFunctionality.rotateNode(
                 badNode,
                 groupIndex
             );
             emit NewGuy(newNode);
-            delete channels[groupIndex];
             this.openChannel(groupIndex);
         } else {
-            ISchainsFunctionalityInternal(schainsFunctionalityInternalAddress).excludeNodeFromSchain(
+            schainsFunctionalityInternal.removeNodeFromSchain(
                 badNode,
                 groupIndex
             );
-            IGroupsData(channels[groupIndex].dataAddress).setGroupFailedDKG(groupIndex);
-            delete channels[groupIndex];
+            IGroupsData(dataAddress).setGroupFailedDKG(groupIndex);
         }
+
+        DelegationService delegationService = DelegationService(contractManager.getContract("DelegationService"));
+        NodesData nodesData = NodesData(contractManager.getContract("NodesData"));
+        SlashingTable slashingTable = SlashingTable(contractManager.getContract("SlashingTable"));
+
+        delegationService.slash(nodesData.getValidatorId(badNode), slashingTable.getPenalty("FailedDKG"));
     }
 
     function verify(
@@ -361,8 +369,8 @@ contract SkaleDKG is Permissions {
     }
 
     function getCommonPublicKey(bytes32 groupIndex, uint256 secretNumber) internal view returns (bytes32 key) {
-        address nodesDataAddress = contractManager.contracts(keccak256(abi.encodePacked("NodesData")));
-        address ecdhAddress = contractManager.contracts(keccak256(abi.encodePacked("ECDH")));
+        address nodesDataAddress = contractManager.getContract("NodesData");
+        address ecdhAddress = contractManager.getContract("ECDH");
         bytes memory publicKey = INodesData(nodesDataAddress).getNodePublicKey(channels[groupIndex].fromNodeToComplaint);
         uint256 pkX;
         uint256 pkY;
@@ -397,7 +405,7 @@ contract SkaleDKG is Permissions {
         uint k = len - 1;
         uint num2 = num;
         while (num2 != 0) {
-            bstr[k--] = byte(uint8(48 + num2 % 10));
+            bstr[k--] = byte(uint8(48.add(num2 % 10)));
             num2 /= 10;
         }
         return string(bstr);
@@ -421,7 +429,7 @@ contract SkaleDKG is Permissions {
     }*/
 
     function decryptMessage(bytes32 groupIndex, uint secretNumber) internal view returns (uint) {
-        address decryptionAddress = contractManager.contracts(keccak256(abi.encodePacked("Decryption")));
+        address decryptionAddress = contractManager.getContract("Decryption");
 
         bytes32 key = getCommonPublicKey(groupIndex, secretNumber);
 
@@ -493,7 +501,7 @@ contract SkaleDKG is Permissions {
     }
 
     function isNodeByMessageSender(uint nodeIndex, address from) internal view returns (bool) {
-        address nodesDataAddress = contractManager.contracts(keccak256(abi.encodePacked("NodesData")));
+        address nodesDataAddress = contractManager.getContract("NodesData");
         return INodesData(nodesDataAddress).isNodeExist(from, nodeIndex);
     }
 
@@ -511,14 +519,14 @@ contract SkaleDKG is Permissions {
         uint first;
         uint second;
         if (a.x >= b.x) {
-            first = addmod(a.x, P - b.x, P);
+            first = addmod(a.x, P.sub(b.x), P);
         } else {
-            first = P - addmod(b.x, P - a.x, P);
+            first = P.sub(addmod(b.x, P.sub(a.x), P));
         }
         if (a.y >= b.y) {
-            second = addmod(a.y, P - b.y, P);
+            second = addmod(a.y, P.sub(b.y), P);
         } else {
-            second = P - addmod(b.y, P - a.y, P);
+            second = P.sub(addmod(b.y, P.sub(a.y), P));
         }
         return Fp2({ x: first, y: second });
     }
@@ -528,7 +536,7 @@ contract SkaleDKG is Permissions {
         uint bB = mulmod(a.y, b.y, P);
         return Fp2({
             x: addmod(aA, mulmod(P - 1, bB, P), P),
-            y: addmod(mulmod(addmod(a.x, a.y, P), addmod(b.x, b.y, P), P), P - addmod(aA, bB, P), P)
+            y: addmod(mulmod(addmod(a.x, a.y, P), addmod(b.x, b.y, P), P), P.sub(addmod(aA, bB, P)), P)
         });
     }
 
@@ -543,13 +551,13 @@ contract SkaleDKG is Permissions {
         uint t1 = mulmod(a.y, a.y, P);
         uint t2 = mulmod(P - 1, t1, P);
         if (t0 >= t2) {
-            t2 = addmod(t0, P - t2, P);
+            t2 = addmod(t0, P.sub(t2), P);
         } else {
-            t2 = P - addmod(t2, P - t0, P);
+            t2 = P.sub(addmod(t2, P.sub(t0), P));
         }
         uint t3 = bigModExp(t2, P - 2);
         x.x = mulmod(a.x, t3, P);
-        x.y = P - mulmod(a.y, t3, P);
+        x.y = P.sub(mulmod(a.y, t3, P));
     }
 
     // End of Fp2 operations
@@ -579,8 +587,8 @@ contract SkaleDKG is Permissions {
             Fp2 memory s = mulFp2(scalarMulFp2(3, squaredFp2(x1)), inverseFp2(scalarMulFp2(2, y1)));
             x3 = minusFp2(squaredFp2(s), scalarMulFp2(2, x1));
             y3 = addFp2(y1, mulFp2(s, minusFp2(x3, x1)));
-            y3.x = P - (y3.x % P);
-            y3.y = P - (y3.y % P);
+            y3.x = P.sub(y3.x % P);
+            y3.y = P.sub(y3.y % P);
         }
     }
 
@@ -646,8 +654,8 @@ contract SkaleDKG is Permissions {
         Fp2 memory s = mulFp2(minusFp2(y2, y1), inverseFp2(minusFp2(x2, x1)));
         x3 = minusFp2(squaredFp2(s), addFp2(x1, x2));
         y3 = addFp2(y1, mulFp2(s, minusFp2(x3, x1)));
-        y3.x = P - (y3.x % P);
-        y3.y = P - (y3.y % P);
+        y3.x = P.sub(y3.x % P);
+        y3.y = P.sub(y3.y % P);
     }
 
     // function binstep(uint _a, uint _step) internal view returns (uint x) {
@@ -728,7 +736,7 @@ contract SkaleDKG is Permissions {
         }
         vector[3] = vector1;
         return mulG2(
-            bigModExp(index + 1, loopIndex),
+            bigModExp(index.add(1), loopIndex),
             Fp2({x: uint(vector[1]), y: uint(vector[0])}),
             Fp2({x: uint(vector[3]), y: uint(vector[2])})
         );
@@ -774,7 +782,7 @@ contract SkaleDKG is Permissions {
         }
         require(success, "Multiplication failed");
         if (!(mulShare[0] == 0 && mulShare[1] == 0)) {
-            mulShare[1] = P - (mulShare[1] % P);
+            mulShare[1] = P.sub((mulShare[1] % P));
         }
 
         require(isG1(G1A, G1B), "G1.one not in G1");
@@ -804,7 +812,7 @@ contract SkaleDKG is Permissions {
         return out[0] != 0;
     }
 
-    function bytesToPublicKey(bytes memory someBytes) internal pure returns(uint x, uint y) {
+    function bytesToPublicKey(bytes memory someBytes) internal pure returns (uint x, uint y) {
         bytes32 pkX;
         bytes32 pkY;
         assembly {
@@ -816,7 +824,7 @@ contract SkaleDKG is Permissions {
         y = uint(pkY);
     }
 
-    function bytesToG2(bytes memory someBytes) internal pure returns(Fp2 memory x, Fp2 memory y) {
+    function bytesToG2(bytes memory someBytes) internal pure returns (Fp2 memory x, Fp2 memory y) {
         bytes32 xa;
         bytes32 xb;
         bytes32 ya;

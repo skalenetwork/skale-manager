@@ -59,7 +59,7 @@ contract("ECDH", ([owner, validator, developer, hacker]) => {
         assert.equal(result[1].toString(10), "1");
     });
 
-    it("Should Substract two small numbers", async () => {
+    it("Should Subtract two small numbers", async () => {
         const x1 = new BigNumber(2);
         const z1 = new BigNumber(3);
         const x2 = new BigNumber(4);
@@ -69,7 +69,7 @@ contract("ECDH", ([owner, validator, developer, hacker]) => {
         assert.equal(result[1].toString(10), "15");
     });
 
-    it("Should Substract one big numbers with one small", async () => {
+    it("Should Subtract one big numbers with one small", async () => {
         const x1 = new BigNumber(2);
         const z1 = new BigNumber(1);
         const x2 = n.minus(1).toFixed();
@@ -79,7 +79,7 @@ contract("ECDH", ([owner, validator, developer, hacker]) => {
         assert.equal(result[1].toString(10), "1");
     });
 
-    it("Should Substract two big numbers", async () => {
+    it("Should Subtract two big numbers", async () => {
         const x1 = n.minus(2).toFixed();
         const z1 = new BigNumber(1);
         const x2 = n.minus(1).toFixed();
@@ -89,7 +89,7 @@ contract("ECDH", ([owner, validator, developer, hacker]) => {
         assert.equal(result[1].toString(10), "1");
     });
 
-    it("Should Substract two same numbers", async () => {
+    it("Should Subtract two same numbers", async () => {
         const x1 = n.minus(16).toFixed();
         const z1 = new BigNumber(1);
         const x2 = n.minus(16).toFixed();

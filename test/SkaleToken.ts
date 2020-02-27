@@ -1,22 +1,21 @@
 import BigNumber from "bignumber.js";
-import { ContractManagerContract,
-         ContractManagerInstance,
-         SkaleTokenContract,
+import { ContractManagerInstance,
          SkaleTokenInstance } from "../types/truffle-contracts";
-
-const ContractManager: ContractManagerContract = artifacts.require("./ContractManager");
-const SkaleToken: SkaleTokenContract = artifacts.require("./SkaleToken");
 
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
+import { deployContractManager } from "./utils/deploy/contractManager";
+import { deploySkaleToken } from "./utils/deploy/skaleToken";
+
 chai.should();
 chai.use(chaiAsPromised);
 
 contract("SkaleToken", ([owner, holder, receiver, nilAddress, accountWith99]) => {
   let skaleToken: SkaleTokenInstance;
   let contractManager: ContractManagerInstance;
+
   const TOKEN_CAP: number = 7000000000;
-  const TOTAL_SUPPLY = 10000000;
+  const TOTAL_SUPPLY = 5000000000;
 
   console.log("Holder", holder);
   console.log("Owner", owner);
@@ -24,8 +23,10 @@ contract("SkaleToken", ([owner, holder, receiver, nilAddress, accountWith99]) =>
   console.log("Receiver", receiver);
 
   beforeEach(async () => {
-    contractManager = await ContractManager.new({from: owner});
-    skaleToken = await SkaleToken.new(contractManager.address, [], { from: owner });
+    contractManager = await deployContractManager();
+
+    contractManager = await deployContractManager();
+    skaleToken = await deploySkaleToken(contractManager);
   });
 
   it("should have the correct name", async () => {
@@ -69,7 +70,7 @@ contract("SkaleToken", ([owner, holder, receiver, nilAddress, accountWith99]) =>
     assert(supply.isEqualTo(toWei(TOTAL_SUPPLY)));
   });
 
-  it("any account should have the tokens transfered to it", async () => {
+  it("any account should have the tokens transferred to it", async () => {
     const amount = toWei(10);
     await skaleToken.transfer(holder, amount);
     const balance = new BigNumber(await skaleToken.balanceOf(holder));
@@ -98,7 +99,7 @@ contract("SkaleToken", ([owner, holder, receiver, nilAddress, accountWith99]) =>
 
   it("an owner address should have more than 0 tokens", async () => {
     const balance = new BigNumber(await skaleToken.balanceOf(owner));
-    assert(balance.isEqualTo(toWei(10000000)));
+    expect(balance.isEqualTo(toWei(5000000000)));
   });
 
   it("should emit a Transfer Event", async () => {

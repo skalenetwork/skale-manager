@@ -1,21 +1,15 @@
-import { ContractManagerContract,
-         ContractManagerInstance,
-         SchainsDataContract,
-         SchainsDataInstance,
-         SkaleDKGContract,
-         SkaleDKGInstance } from "../types/truffle-contracts";
-
-const ContractManager: ContractManagerContract = artifacts.require("./ContractManager");
-const SchainsData: SchainsDataContract = artifacts.require("./SchainsData");
-const SkaleDKG: SkaleDKGContract = artifacts.require("./SkaleDKG");
+import { ContractManagerInstance,
+         SchainsDataInstance } from "../types/truffle-contracts";
 
 import BigNumber from "bignumber.js";
 import chai = require("chai");
 import * as chaiAsPromised from "chai-as-promised";
+import { deployContractManager } from "./utils/deploy/contractManager";
+import { deploySchainsData } from "./utils/deploy/schainsData";
+import { skipTime } from "./utils/time";
+
 chai.should();
 chai.use(chaiAsPromised);
-import { gasMultiplier } from "./utils/command_line";
-import { skipTime } from "./utils/time";
 
 class Schain {
     public name: string;
@@ -24,36 +18,36 @@ class Schain {
     public partOfNode: number;
     public lifetime: BigNumber;
     public startDate: BigNumber;
+    public startBlock: BigNumber;
     public deposit: BigNumber;
     public index: BigNumber;
 
-    constructor(arrayData: [string, string, BigNumber, BigNumber, BigNumber, BigNumber, BigNumber, BigNumber]) {
+    constructor(
+        arrayData: [string, string, BigNumber, BigNumber, BigNumber, BigNumber, BigNumber, BigNumber, BigNumber],
+    ) {
         this.name = arrayData[0];
         this.owner = arrayData[1];
         this.indexInOwnerList = new BigNumber(arrayData[2]);
         this.partOfNode = new BigNumber(arrayData[3]).toNumber();
         this.lifetime = new BigNumber(arrayData[4]);
         this.startDate = new BigNumber(arrayData[5]);
-        this.deposit = new BigNumber(arrayData[6]);
-        this.index = new BigNumber(arrayData[7]);
+        this.startBlock = new BigNumber(arrayData[6]);
+        this.deposit = new BigNumber(arrayData[7]);
+        this.index = new BigNumber(arrayData[8]);
     }
 }
 
 contract("SchainsData", ([owner, holder]) => {
     let contractManager: ContractManagerInstance;
     let schainsData: SchainsDataInstance;
-    let skaleDKG: SkaleDKGInstance;
 
     beforeEach(async () => {
-        contractManager = await ContractManager.new({from: owner});
-        schainsData = await SchainsData.new("SchainsFunctionality", contractManager.address, {from: owner});
-        await contractManager.setContractsAddress("SchainsData", schainsData.address, {from: owner});
-        skaleDKG = await SkaleDKG.new(contractManager.address, {from: owner, gas: 8000000 * gasMultiplier});
-        await contractManager.setContractsAddress("SkaleDKG", skaleDKG.address, {from: owner});
+        contractManager = await deployContractManager();
+        schainsData = await deploySchainsData(contractManager);
     });
 
     it("should initialize schain", async () => {
-        schainsData.initializeSchain("TestSchain", holder, 5, 5);
+        await schainsData.initializeSchain("TestSchain", holder, 5, 5);
 
         const schain: Schain = new Schain(await schainsData.schains(web3.utils.soliditySha3("TestSchain")));
         schain.name.should.be.equal("TestSchain");
@@ -66,7 +60,7 @@ contract("SchainsData", ([owner, holder]) => {
         const schainNameHash = web3.utils.soliditySha3("TestSchain");
 
         beforeEach(async () => {
-            schainsData.initializeSchain("TestSchain", holder, 5, 5);
+            await schainsData.initializeSchain("TestSchain", holder, 5, 5);
         });
 
         it("should register schain index for owner", async () => {
