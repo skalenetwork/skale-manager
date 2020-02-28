@@ -171,6 +171,31 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
             .should.be.eventually.rejectedWith("New address cannot be null");
         });
 
+        it("should return list of trusted validators", async () => {
+            const validatorId1 = 1;
+            const validatorId2 = 2;
+            const validatorId3 = 3;
+            await delegationService.registerValidator(
+                "ValidatorName",
+                "Really good validator",
+                500,
+                100,
+                {from: validator2});
+            await delegationService.registerValidator(
+                "ValidatorName",
+                "Really good validator",
+                500,
+                100,
+                {from: validator3});
+            const whitelist = [];
+            await validatorService.enableValidator(validatorId1, {from: owner});
+            whitelist.push(validatorId1);
+            await validatorService.enableValidator(validatorId3, {from: owner});
+            whitelist.push(validatorId3);
+            const trustedList = (await validatorService.getTrustedValidators()).map(Number);
+            assert.deepEqual(whitelist, trustedList);
+        });
+
         describe("when holder has enough tokens", async () => {
             let validatorId: number;
             let amount: number;
