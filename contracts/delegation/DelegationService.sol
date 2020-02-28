@@ -51,7 +51,7 @@ contract DelegationService is Permissions {
     /// @notice Returns amount of delegated token of the validator
     function getDelegatedAmount(uint validatorId) external returns (uint) {
         DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
-        return delegationController.calculateDelegatedToValidatorNow(validatorId);
+        return delegationController.getAndUpdateDelegatedToValidatorNow(validatorId);
     }
 
     /// @notice Register new as validator

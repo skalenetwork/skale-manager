@@ -97,9 +97,9 @@ contract("TokenLaunchManager", ([owner, holder, delegation, validator, seller, h
             });
 
             it("should lock tokens", async () => {
-                const locked = await skaleToken.calculateLockedAmount.call(holder);
+                const locked = await skaleToken.getAndUpdateLockedAmount.call(holder);
                 locked.toNumber().should.be.equal(totalAmount);
-                const delegated = await skaleToken.calculateDelegatedAmount.call(holder);
+                const delegated = await skaleToken.getAndUpdateDelegatedAmount.call(holder);
                 delegated.toNumber().should.be.equal(0);
             });
 
@@ -112,9 +112,9 @@ contract("TokenLaunchManager", ([owner, holder, delegation, validator, seller, h
 
                 await delegationController.cancelPendingDelegation(delegationId, {from: holder});
 
-                const locked = await skaleToken.calculateLockedAmount.call(holder);
+                const locked = await skaleToken.getAndUpdateLockedAmount.call(holder);
                 locked.toNumber().should.be.equal(totalAmount);
-                const delegated = await skaleToken.calculateDelegatedAmount.call(holder);
+                const delegated = await skaleToken.getAndUpdateDelegatedAmount.call(holder);
                 delegated.toNumber().should.be.equal(0);
             });
 
@@ -157,7 +157,7 @@ contract("TokenLaunchManager", ([owner, holder, delegation, validator, seller, h
                 // skip month
                 skipTime(web3, month);
 
-                let delegated = await skaleToken.calculateDelegatedAmount.call(holder);
+                let delegated = await skaleToken.getAndUpdateDelegatedAmount.call(holder);
                 delegated.toNumber().should.be.equal(amount);
 
                 await delegationController.requestUndelegation(delegationId, {from: holder});
@@ -166,9 +166,9 @@ contract("TokenLaunchManager", ([owner, holder, delegation, validator, seller, h
 
                 const state = await delegationController.getState(delegationId);
                 state.toNumber().should.be.equal(State.COMPLETED);
-                const locked = await skaleToken.calculateLockedAmount.call(holder);
+                const locked = await skaleToken.getAndUpdateLockedAmount.call(holder);
                 locked.toNumber().should.be.equal(0);
-                delegated = await skaleToken.calculateDelegatedAmount.call(holder);
+                delegated = await skaleToken.getAndUpdateDelegatedAmount.call(holder);
                 delegated.toNumber().should.be.equal(0);
             });
 
@@ -183,21 +183,21 @@ contract("TokenLaunchManager", ([owner, holder, delegation, validator, seller, h
                 // skip month
                 skipTime(web3, month);
 
-                let delegated = await skaleToken.calculateDelegatedAmount.call(holder);
+                let delegated = await skaleToken.getAndUpdateDelegatedAmount.call(holder);
                 delegated.toNumber().should.be.equal(amount);
 
                 await delegationController.requestUndelegation(delegationId, {from: holder});
 
-                delegated = await skaleToken.calculateDelegatedAmount.call(holder);
+                delegated = await skaleToken.getAndUpdateDelegatedAmount.call(holder);
                 delegated.toNumber().should.be.equal(amount);
 
                 skipTime(web3, month * period);
 
                 const state = await delegationController.getState(delegationId);
                 state.toNumber().should.be.equal(State.COMPLETED);
-                const locked = await skaleToken.calculateLockedAmount.call(holder);
+                const locked = await skaleToken.getAndUpdateLockedAmount.call(holder);
                 locked.toNumber().should.be.equal(totalAmount);
-                delegated = await skaleToken.calculateDelegatedAmount.call(holder);
+                delegated = await skaleToken.getAndUpdateDelegatedAmount.call(holder);
                 delegated.toNumber().should.be.equal(0);
             });
 
@@ -213,7 +213,7 @@ contract("TokenLaunchManager", ([owner, holder, delegation, validator, seller, h
                 // skip month
                 skipTime(web3, month);
 
-                let delegated = await skaleToken.calculateDelegatedAmount.call(holder);
+                let delegated = await skaleToken.getAndUpdateDelegatedAmount.call(holder);
                 delegated.toNumber().should.be.equal(amount);
 
                 await delegationController.requestUndelegation(delegationId, {from: holder});
@@ -222,9 +222,9 @@ contract("TokenLaunchManager", ([owner, holder, delegation, validator, seller, h
 
                 let state = await delegationController.getState(delegationId);
                 state.toNumber().should.be.equal(State.COMPLETED);
-                let locked = await skaleToken.calculateLockedAmount.call(holder);
+                let locked = await skaleToken.getAndUpdateLockedAmount.call(holder);
                 locked.toNumber().should.be.equal(totalAmount);
-                delegated = await skaleToken.calculateDelegatedAmount.call(holder);
+                delegated = await skaleToken.getAndUpdateDelegatedAmount.call(holder);
                 delegated.toNumber().should.be.equal(0);
 
                 // delegate 10%
@@ -239,7 +239,7 @@ contract("TokenLaunchManager", ([owner, holder, delegation, validator, seller, h
 
                 state = await delegationController.getState(delegationId);
                 state.toNumber().should.be.equal(State.DELEGATED);
-                delegated = await skaleToken.calculateDelegatedAmount.call(holder);
+                delegated = await skaleToken.getAndUpdateDelegatedAmount.call(holder);
                 delegated.toNumber().should.be.equal(amount);
                 await delegationController.requestUndelegation(delegationId, {from: holder});
 
@@ -247,9 +247,9 @@ contract("TokenLaunchManager", ([owner, holder, delegation, validator, seller, h
 
                 state = await delegationController.getState(delegationId);
                 state.toNumber().should.be.equal(State.COMPLETED);
-                locked = await skaleToken.calculateLockedAmount.call(holder);
+                locked = await skaleToken.getAndUpdateLockedAmount.call(holder);
                 locked.toNumber().should.be.equal(0);
-                delegated = await skaleToken.calculateDelegatedAmount.call(holder);
+                delegated = await skaleToken.getAndUpdateDelegatedAmount.call(holder);
                 delegated.toNumber().should.be.equal(0);
             });
 
@@ -278,12 +278,12 @@ contract("TokenLaunchManager", ([owner, holder, delegation, validator, seller, h
 
                 // 3rd month after first delegation
 
-                let locked = await skaleToken.calculateLockedAmount.call(holder);
+                let locked = await skaleToken.getAndUpdateLockedAmount.call(holder);
                 locked.toNumber().should.be.equal(totalAmount);
 
                 skipTime(web3, month);
 
-                locked = await skaleToken.calculateLockedAmount.call(holder);
+                locked = await skaleToken.getAndUpdateLockedAmount.call(holder);
                 locked.toNumber().should.be.equal(delegatedAmount);
             });
 
@@ -298,23 +298,23 @@ contract("TokenLaunchManager", ([owner, holder, delegation, validator, seller, h
                 // skip month
                 skipTime(web3, month);
 
-                let delegated = await skaleToken.calculateDelegatedAmount.call(holder);
+                let delegated = await skaleToken.getAndUpdateDelegatedAmount.call(holder);
                 delegated.toNumber().should.be.equal(amount);
 
                 await punisher.slash(validatorId, amount);
                 await delegationController.requestUndelegation(delegationId, {from: holder});
 
-                delegated = await skaleToken.calculateDelegatedAmount.call(holder);
+                delegated = await skaleToken.getAndUpdateDelegatedAmount.call(holder);
                 delegated.toNumber().should.be.equal(0);
-                (await skaleToken.calculateSlashedAmount.call(holder)).toNumber().should.be.equal(amount);
+                (await skaleToken.getAndUpdateSlashedAmount.call(holder)).toNumber().should.be.equal(amount);
 
                 skipTime(web3, month * 3);
 
                 const state = await delegationController.getState(delegationId);
                 state.toNumber().should.be.equal(State.UNDELEGATION_REQUESTED);
-                const locked = await skaleToken.calculateLockedAmount.call(holder);
+                const locked = await skaleToken.getAndUpdateLockedAmount.call(holder);
                 locked.toNumber().should.be.equal(amount);
-                delegated = await skaleToken.calculateDelegatedAmount.call(holder);
+                delegated = await skaleToken.getAndUpdateDelegatedAmount.call(holder);
                 delegated.toNumber().should.be.equal(0);
             });
 
@@ -325,20 +325,20 @@ contract("TokenLaunchManager", ([owner, holder, delegation, validator, seller, h
 
                 await skaleToken.mint(owner, holder, freeAmount, "0x", "0x");
 
-                (await skaleToken.calculateLockedAmount.call(holder)).toNumber().should.be.equal(purchasedAmount);
+                (await skaleToken.getAndUpdateLockedAmount.call(holder)).toNumber().should.be.equal(purchasedAmount);
 
                 await delegationController.delegate(
                     validatorId, freeAmount + purchasedAmount, period, "D2 is even", {from: holder});
                 const delegationId = 0;
 
                 (await delegationController.getState(delegationId)).toNumber().should.be.equal(State.PROPOSED);
-                (await skaleToken.calculateLockedAmount.call(holder)).toNumber()
+                (await skaleToken.getAndUpdateLockedAmount.call(holder)).toNumber()
                     .should.be.equal(freeAmount + purchasedAmount);
 
                 await delegationController.cancelPendingDelegation(delegationId, {from: holder});
 
                 (await delegationController.getState(delegationId)).toNumber().should.be.equal(State.CANCELED);
-                (await skaleToken.calculateLockedAmount.call(holder)).toNumber().should.be.equal(purchasedAmount);
+                (await skaleToken.getAndUpdateLockedAmount.call(holder)).toNumber().should.be.equal(purchasedAmount);
             });
         });
     });

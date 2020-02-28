@@ -436,9 +436,9 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                         assert.equal(result.logs[0].event, "BadGuy");
                         assert.equal(result.logs[0].args.nodeIndex.toString(), "1");
 
-                        (await skaleToken.calculateLockedAmount.call(validator2)).toNumber().should.be.equal(100);
-                        (await skaleToken.calculateDelegatedAmount.call(validator2)).toNumber().should.be.equal(95);
-                        (await skaleToken.calculateSlashedAmount.call(validator2)).toNumber().should.be.equal(5);
+                        (await skaleToken.getAndUpdateLockedAmount.call(validator2)).toNumber().should.be.equal(100);
+                        (await skaleToken.getAndUpdateDelegatedAmount.call(validator2)).toNumber().should.be.equal(95);
+                        (await skaleToken.getAndUpdateSlashedAmount.call(validator2)).toNumber().should.be.equal(5);
                     });
                 });
             });
@@ -513,9 +513,9 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                         assert.equal(result.logs[0].event, "BadGuy");
                         assert.equal(result.logs[0].args.nodeIndex.toString(), "0");
 
-                        (await skaleToken.calculateLockedAmount.call(validator1)).toNumber().should.be.equal(100);
-                        (await skaleToken.calculateDelegatedAmount.call(validator1)).toNumber().should.be.equal(95);
-                        (await skaleToken.calculateSlashedAmount.call(validator1)).toNumber().should.be.equal(5);
+                        (await skaleToken.getAndUpdateLockedAmount.call(validator1)).toNumber().should.be.equal(100);
+                        (await skaleToken.getAndUpdateDelegatedAmount.call(validator1)).toNumber().should.be.equal(95);
+                        (await skaleToken.getAndUpdateSlashedAmount.call(validator1)).toNumber().should.be.equal(5);
                     });
 
                     it("accused node should send incorrect response", async () => {
@@ -529,9 +529,9 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                         assert.equal(result.logs[0].event, "BadGuy");
                         assert.equal(result.logs[0].args.nodeIndex.toString(), "0");
 
-                        (await skaleToken.calculateLockedAmount.call(validator1)).toNumber().should.be.equal(100);
-                        (await skaleToken.calculateDelegatedAmount.call(validator1)).toNumber().should.be.equal(95);
-                        (await skaleToken.calculateSlashedAmount.call(validator1)).toNumber().should.be.equal(5);
+                        (await skaleToken.getAndUpdateLockedAmount.call(validator1)).toNumber().should.be.equal(100);
+                        (await skaleToken.getAndUpdateDelegatedAmount.call(validator1)).toNumber().should.be.equal(95);
+                        (await skaleToken.getAndUpdateSlashedAmount.call(validator1)).toNumber().should.be.equal(5);
                     });
                 });
             });

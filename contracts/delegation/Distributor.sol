@@ -46,13 +46,13 @@ contract Distributor is Permissions, IERC777Recipient {
     // validatorId => month
     mapping (uint => uint) private _firstUnwithdrawnMonthForValidator;
 
-    function calculateEarnedBountyAmount(uint validatorId) external returns (uint earned, uint endMonth) {
-        return calculateEarnedBountyAmountOf(msg.sender, validatorId);
+    function getAndUpdateEarnedBountyAmount(uint validatorId) external returns (uint earned, uint endMonth) {
+        return getAndUpdateEarnedBountyAmountOf(msg.sender, validatorId);
     }
 
-    function calculateEarnedFeeAmount() external returns (uint earned, uint endMonth) {
+    function getAndUpdateEarnedFeeAmount() external returns (uint earned, uint endMonth) {
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
-        return calculateEarnedFeeAmountOf(validatorService.getValidatorId(msg.sender));
+        return getAndUpdateEarnedFeeAmountOf(validatorService.getValidatorId(msg.sender));
     }
 
     function withdrawBounty(uint validatorId, address to) external {
@@ -63,7 +63,7 @@ contract Distributor is Permissions, IERC777Recipient {
 
         uint bounty;
         uint endMonth;
-        (bounty, endMonth) = calculateEarnedBountyAmountOf(msg.sender, validatorId);
+        (bounty, endMonth) = getAndUpdateEarnedBountyAmountOf(msg.sender, validatorId);
 
         _firstUnwithdrawnMonth[msg.sender][validatorId] = endMonth;
 
@@ -82,7 +82,7 @@ contract Distributor is Permissions, IERC777Recipient {
         uint fee;
         uint endMonth;
         uint validatorId = validatorService.getValidatorId(msg.sender);
-        (fee, endMonth) = calculateEarnedFeeAmountOf(validatorId);
+        (fee, endMonth) = getAndUpdateEarnedFeeAmountOf(validatorId);
 
         _firstUnwithdrawnMonthForValidator[validatorId] = endMonth;
 
@@ -112,7 +112,7 @@ contract Distributor is Permissions, IERC777Recipient {
         _erc1820.setInterfaceImplementer(address(this), keccak256("ERC777TokensRecipient"), address(this));
     }
 
-    function calculateEarnedBountyAmountOf(address wallet, uint validatorId) public returns (uint earned, uint endMonth) {
+    function getAndUpdateEarnedBountyAmountOf(address wallet, uint validatorId) public returns (uint earned, uint endMonth) {
         DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
         TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
 
@@ -132,18 +132,18 @@ contract Distributor is Permissions, IERC777Recipient {
             endMonth = startMonth.add(12);
         }
         for (uint i = startMonth; i < endMonth; ++i) {
-            uint effectiveDelegatedToValidator = delegationController.calculateEffectiveDelegatedToValidator(validatorId, i);
+            uint effectiveDelegatedToValidator = delegationController.getAndUpdateEffectiveDelegatedToValidator(validatorId, i);
             if (effectiveDelegatedToValidator > 0) {
                 earned = earned.add(
                     _bountyPaid[validatorId][i].mul(
-                        delegationController.calculateEffectiveDelegatedByHolderToValidator(wallet, validatorId, i)).div(
+                        delegationController.getAndUpdateEffectiveDelegatedByHolderToValidator(wallet, validatorId, i)).div(
                             effectiveDelegatedToValidator)
                     );
             }
         }
     }
 
-    function calculateEarnedFeeAmountOf(uint validatorId) public returns (uint earned, uint endMonth) {
+    function getAndUpdateEarnedFeeAmountOf(uint validatorId) public returns (uint earned, uint endMonth) {
         TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
 
         uint currentMonth = timeHelpers.getCurrentMonth();

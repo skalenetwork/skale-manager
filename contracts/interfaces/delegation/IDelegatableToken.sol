@@ -21,9 +21,9 @@ pragma solidity ^0.5.3;
 
 interface IDelegatableToken {
 
-    function calculateLockedAmount(address wallet) external returns (uint);
+    function getAndUpdateLockedAmount(address wallet) external returns (uint);
 
-    function calculateDelegatedAmount(address wallet) external returns (uint);
+    function getAndUpdateDelegatedAmount(address wallet) external returns (uint);
 
-    function calculateSlashedAmount(address wallet) external returns (uint);
+    function getAndUpdateSlashedAmount(address wallet) external returns (uint);
 }

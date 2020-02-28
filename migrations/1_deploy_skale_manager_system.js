@@ -79,11 +79,12 @@ async function deploy(deployer, networkName, accounts) {
         "DelegationService",
         "Distributor",
         "Punisher",
+        "SlashingTable",
         "TimeHelpers",
+        "TokenLaunchLocker",
         "TokenLaunchManager",
         "TokenState",
         "ValidatorService",
-        "SlashingTable",
 
         "ConstantsHolder",
         "NodesData",

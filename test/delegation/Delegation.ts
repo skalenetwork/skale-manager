@@ -227,7 +227,7 @@ contract("Delegation", ([owner,
             await delegationController.acceptPendingDelegation(0, {from: validator});
             await delegationController.acceptPendingDelegation(1, {from: validator});
             skipTime(web3, month);
-            const bondAmount = await validatorService.calculateBondAmount.call(validatorId);
+            const bondAmount = await validatorService.getAndUpdateBondAmount.call(validatorId);
             assert.equal(defaultAmount.toString(), bondAmount.toString());
         });
 
@@ -269,12 +269,13 @@ contract("Delegation", ([owner,
                 // holder3: ~37%
 
                 // TODO: Validator should get 17 (not 15) because of rounding errors
-                (await distributor.calculateEarnedFeeAmount.call({from: validator}))[0].toNumber().should.be.equal(15);
-                (await distributor.calculateEarnedBountyAmount.call(
+                (await distributor.getAndUpdateEarnedFeeAmount.call(
+                    {from: validator}))[0].toNumber().should.be.equal(15);
+                (await distributor.getAndUpdateEarnedBountyAmount.call(
                     validatorId, {from: holder1}))[0].toNumber().should.be.equal(25);
-                (await distributor.calculateEarnedBountyAmount.call(
+                (await distributor.getAndUpdateEarnedBountyAmount.call(
                     validatorId, {from: holder2}))[0].toNumber().should.be.equal(28);
-                (await distributor.calculateEarnedBountyAmount.call(
+                (await distributor.getAndUpdateEarnedBountyAmount.call(
                     validatorId, {from: holder3}))[0].toNumber().should.be.equal(31);
 
                 await distributor.withdrawFee(bountyAddress, {from: validator})
@@ -285,17 +286,19 @@ contract("Delegation", ([owner,
                 skipTime(web3, 3 * month);
 
                 await distributor.withdrawFee(bountyAddress, {from: validator});
-                (await distributor.calculateEarnedFeeAmount.call({from: validator}))[0].toNumber().should.be.equal(0);
+                (await distributor.getAndUpdateEarnedFeeAmount.call(
+                    {from: validator}))[0].toNumber().should.be.equal(0);
                 await distributor.withdrawFee(validator, {from: validator});
-                (await distributor.calculateEarnedFeeAmount.call({from: validator}))[0].toNumber().should.be.equal(0);
+                (await distributor.getAndUpdateEarnedFeeAmount.call(
+                    {from: validator}))[0].toNumber().should.be.equal(0);
 
                 (await skaleToken.balanceOf(bountyAddress)).toNumber().should.be.equal(15);
 
                 await distributor.withdrawBounty(validatorId, bountyAddress, {from: holder1});
-                (await distributor.calculateEarnedBountyAmount.call(
+                (await distributor.getAndUpdateEarnedBountyAmount.call(
                     validatorId, {from: holder1}))[0].toNumber().should.be.equal(0);
                 await distributor.withdrawBounty(validatorId, holder2, {from: holder2});
-                (await distributor.calculateEarnedBountyAmount.call(
+                (await distributor.getAndUpdateEarnedBountyAmount.call(
                     validatorId, {from: holder2}))[0].toNumber().should.be.equal(0);
 
                 (await skaleToken.balanceOf(bountyAddress)).toNumber().should.be.equal(15 + 25);
@@ -314,40 +317,48 @@ contract("Delegation", ([owner,
                     // holder2: $3
                     // holder3: $5
 
-                    (await tokenState.calculateLockedAmount.call(holder1)).toNumber().should.be.equal(2);
-                    (await delegationController.calculateDelegatedAmount.call(holder1)).toNumber().should.be.equal(1);
+                    (await tokenState.getAndUpdateLockedAmount.call(holder1)).toNumber().should.be.equal(2);
+                    (await delegationController.getAndUpdateDelegatedAmount.call(
+                        holder1)).toNumber().should.be.equal(1);
 
-                    (await tokenState.calculateLockedAmount.call(holder2)).toNumber().should.be.equal(3);
-                    (await delegationController.calculateDelegatedAmount.call(holder2)).toNumber().should.be.equal(1);
+                    (await tokenState.getAndUpdateLockedAmount.call(holder2)).toNumber().should.be.equal(3);
+                    (await delegationController.getAndUpdateDelegatedAmount.call(
+                        holder2)).toNumber().should.be.equal(1);
 
-                    (await tokenState.calculateLockedAmount.call(holder3)).toNumber().should.be.equal(5);
-                    (await delegationController.calculateDelegatedAmount.call(holder3)).toNumber().should.be.equal(2);
+                    (await tokenState.getAndUpdateLockedAmount.call(holder3)).toNumber().should.be.equal(5);
+                    (await delegationController.getAndUpdateDelegatedAmount.call(
+                        holder3)).toNumber().should.be.equal(2);
                 });
 
                 it("should not lock more tokens than were delegated", async () => {
                     await punisher.slash(validatorId, 100);
 
-                    (await tokenState.calculateLockedAmount.call(holder1)).toNumber().should.be.equal(2);
-                    (await delegationController.calculateDelegatedAmount.call(holder1)).toNumber().should.be.equal(0);
+                    (await tokenState.getAndUpdateLockedAmount.call(holder1)).toNumber().should.be.equal(2);
+                    (await delegationController.getAndUpdateDelegatedAmount.call(
+                        holder1)).toNumber().should.be.equal(0);
 
-                    (await tokenState.calculateLockedAmount.call(holder2)).toNumber().should.be.equal(3);
-                    (await delegationController.calculateDelegatedAmount.call(holder2)).toNumber().should.be.equal(0);
+                    (await tokenState.getAndUpdateLockedAmount.call(holder2)).toNumber().should.be.equal(3);
+                    (await delegationController.getAndUpdateDelegatedAmount.call(
+                        holder2)).toNumber().should.be.equal(0);
 
-                    (await tokenState.calculateLockedAmount.call(holder3)).toNumber().should.be.equal(5);
-                    (await delegationController.calculateDelegatedAmount.call(holder3)).toNumber().should.be.equal(0);
+                    (await tokenState.getAndUpdateLockedAmount.call(holder3)).toNumber().should.be.equal(5);
+                    (await delegationController.getAndUpdateDelegatedAmount.call(
+                        holder3)).toNumber().should.be.equal(0);
                 });
 
                 it("should allow to return slashed tokens back", async () => {
                     await punisher.slash(validatorId, 10);
 
-                    (await tokenState.calculateLockedAmount.call(holder3)).toNumber().should.be.equal(5);
-                    (await delegationController.calculateDelegatedAmount.call(holder3)).toNumber().should.be.equal(0);
+                    (await tokenState.getAndUpdateLockedAmount.call(holder3)).toNumber().should.be.equal(5);
+                    (await delegationController.getAndUpdateDelegatedAmount.call(
+                        holder3)).toNumber().should.be.equal(0);
 
                     await delegationController.processAllSlashes(holder3);
                     await punisher.forgive(holder3, 3);
 
-                    (await tokenState.calculateLockedAmount.call(holder3)).toNumber().should.be.equal(2);
-                    (await delegationController.calculateDelegatedAmount.call(holder3)).toNumber().should.be.equal(0);
+                    (await tokenState.getAndUpdateLockedAmount.call(holder3)).toNumber().should.be.equal(2);
+                    (await delegationController.getAndUpdateDelegatedAmount.call(
+                        holder3)).toNumber().should.be.equal(0);
                 });
             });
         });
@@ -423,7 +434,7 @@ contract("Delegation", ([owner,
                 await web3.eth.sendSignedTransaction(signedWithdrawTx.rawTransaction);
 
                 (await skaleToken.balanceOf(holder.address)).toNumber().should.be.equal(delegatedAmount * 2);
-                (await skaleToken.calculateDelegatedAmount.call(holder.address))
+                (await skaleToken.getAndUpdateDelegatedAmount.call(holder.address))
                     .toNumber().should.be.equal(delegatedAmount);
 
                 const balance = Number.parseInt(await web3.eth.getBalance(holder.address), 10);
