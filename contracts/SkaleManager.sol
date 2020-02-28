@@ -116,7 +116,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
         address nodesFunctionalityAddress = contractManager.getContract("NodesFunctionality");
         INodesFunctionality(nodesFunctionalityAddress).removeNode(msg.sender, nodeIndex);
         MonitorsFunctionality monitorsFunctionality = MonitorsFunctionality(contractManager.getContract("MonitorsFunctionality"));
-        monitorsFunctionality.deleteMonitorByRoot(nodeIndex);
+        monitorsFunctionality.deleteMonitor(nodeIndex);
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
         uint validatorId = validatorService.getValidatorId(msg.sender);
         validatorService.deleteNode(validatorId, nodeIndex);
@@ -129,7 +129,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
 
         nodesFunctionality.removeNodeByRoot(nodeIndex);
-        monitorsFunctionality.deleteMonitorByRoot(nodeIndex);
+        monitorsFunctionality.deleteMonitor(nodeIndex);
         uint validatorId = nodesData.getNodeValidatorId(nodeIndex);
         validatorService.deleteNode(validatorId, nodeIndex);
     }

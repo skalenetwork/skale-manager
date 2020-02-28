@@ -87,6 +87,23 @@ contract ValidatorService is Permissions {
         trustedValidators[validatorId] = false;
     }
 
+    function getTrustedValidators() external view returns (uint[] memory) {
+        uint numberOfTrustedValidators = 0;
+        for (uint i = 1; i <= numberOfValidators; i++) {
+            if (trustedValidators[i]) {
+                numberOfTrustedValidators++;
+            }
+        }
+        uint[] memory whitelist = new uint[](numberOfTrustedValidators);
+        uint cursor = 0;
+        for (uint i = 1; i <= numberOfValidators; i++) {
+            if (trustedValidators[i]) {
+                whitelist[cursor++] = i;
+            }
+        }
+        return whitelist;
+    }
+
     function requestForNewAddress(address oldValidatorAddress, address newValidatorAddress) external allow("DelegationService") {
         require(newValidatorAddress != address(0), "New address cannot be null");
         uint validatorId = getValidatorId(oldValidatorAddress);
