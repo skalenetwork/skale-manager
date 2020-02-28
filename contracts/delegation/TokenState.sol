@@ -31,7 +31,7 @@ contract TokenState is Permissions, ILocker {
 
     string[] private _lockers;
 
-    function getAndUpdateLockedAmount(address holder) external returns (uint locked) {
+    function getAndUpdateLockedAmount(address holder) external returns (uint) {
         uint locked = 0;
         for (uint i = 0; i < _lockers.length; ++i) {
             ILocker locker = ILocker(contractManager.getContract(_lockers[i]));

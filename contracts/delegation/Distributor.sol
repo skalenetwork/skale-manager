@@ -50,9 +50,9 @@ contract Distributor is Permissions, IERC777Recipient {
         return getAndUpdateEarnedBountyAmountOf(msg.sender, validatorId);
     }
 
-    function getAndUpdateEarnedFeeAmount() external returns (uint earned, uint endMonth) {
+    function getEarnedFeeAmount() external view returns (uint earned, uint endMonth) {
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
-        return getAndUpdateEarnedFeeAmountOf(validatorService.getValidatorId(msg.sender));
+        return getEarnedFeeAmountOf(validatorService.getValidatorId(msg.sender));
     }
 
     function withdrawBounty(uint validatorId, address to) external {
@@ -82,7 +82,7 @@ contract Distributor is Permissions, IERC777Recipient {
         uint fee;
         uint endMonth;
         uint validatorId = validatorService.getValidatorId(msg.sender);
-        (fee, endMonth) = getAndUpdateEarnedFeeAmountOf(validatorId);
+        (fee, endMonth) = getEarnedFeeAmountOf(validatorId);
 
         _firstUnwithdrawnMonthForValidator[validatorId] = endMonth;
 
@@ -143,7 +143,7 @@ contract Distributor is Permissions, IERC777Recipient {
         }
     }
 
-    function getAndUpdateEarnedFeeAmountOf(uint validatorId) public returns (uint earned, uint endMonth) {
+    function getEarnedFeeAmountOf(uint validatorId) public view returns (uint earned, uint endMonth) {
         TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
 
         uint currentMonth = timeHelpers.getCurrentMonth();

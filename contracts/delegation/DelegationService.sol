@@ -44,7 +44,7 @@ contract DelegationService is Permissions {
         delegationController.requestUndelegation(delegationId);
     }
 
-    function setMinimumDelegationAmount(uint /* amount */) external {
+    function setMinimumDelegationAmount(uint /* amount */) external pure {
         revert("Not implemented");
     }
 
@@ -84,20 +84,20 @@ contract DelegationService is Permissions {
         validatorService.unlinkNodeAddress(msg.sender, nodeAddress);
     }
 
-    function unregisterValidator(uint /* validatorId */) external {
+    function unregisterValidator(uint /* validatorId */) external pure {
         revert("Not implemented");
     }
 
     /// @notice return how many of validator funds are locked in SkaleManager
-    function getBondAmount(uint /* validatorId */) external returns (uint) {
+    function getBondAmount(uint /* validatorId */) external pure returns (uint) {
         revert("Not implemented");
     }
 
-    function setValidatorName(string calldata /* newName */) external {
+    function setValidatorName(string calldata /* newName */) external pure {
         revert("Not implemented");
     }
 
-    function setValidatorDescription(string calldata /* description */) external {
+    function setValidatorDescription(string calldata /* description */) external pure {
         revert("Not implemented");
     }
 
@@ -118,7 +118,7 @@ contract DelegationService is Permissions {
     }
 
     /// @notice removes node from system
-    function deleteNode(uint /* nodeIndex */) external {
+    function deleteNode(uint /* nodeIndex */) external pure {
         revert("Not implemented");
     }
 

@@ -303,7 +303,7 @@ contract DelegationController is Permissions, ILocker {
 
         processAllSlashes(msg.sender);
         delegations[delegationId].finished = calculateDelegationEndMonth(delegationId);
-        uint amountAfterSlashing = getAndUpdateDelegationAmountAfterSlashing(delegationId);
+        uint amountAfterSlashing = calculateDelegationAmountAfterSlashing(delegationId);
 
         removeFromDelegatedToValidator(
             delegations[delegationId].validatorId,
@@ -558,7 +558,7 @@ contract DelegationController is Permissions, ILocker {
         return getAndUpdateDelegatedByHolder(wallet).add(getLockedInPendingDelegations(wallet));
     }
 
-    function min(uint a, uint b) internal returns (uint) {
+    function min(uint a, uint b) internal pure returns (uint) {
         if (a < b) {
             return a;
         } else {
@@ -584,7 +584,7 @@ contract DelegationController is Permissions, ILocker {
         sequence.firstUnprocessedMonth = 0;
     }
 
-    function getAndUpdateDelegationAmountAfterSlashing(uint delegationId) internal returns (uint) {
+    function calculateDelegationAmountAfterSlashing(uint delegationId) internal view returns (uint) {
         uint startMonth = _delegationExtras[delegationId].lastSlashingMonthBeforeDelegation;
         uint validatorId = delegations[delegationId].validatorId;
         uint amount = delegations[delegationId].amount;

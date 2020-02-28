@@ -115,7 +115,7 @@ contract TokenLaunchLocker is Permissions, ILocker {
         }
     }
 
-    function getAndUpdateForbiddenForDelegationAmount(address wallet) external returns (uint) {
+    function getAndUpdateForbiddenForDelegationAmount(address) external returns (uint) {
         return 0;
     }
 

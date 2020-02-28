@@ -269,7 +269,7 @@ contract("Delegation", ([owner,
                 // holder3: ~37%
 
                 // TODO: Validator should get 17 (not 15) because of rounding errors
-                (await distributor.getAndUpdateEarnedFeeAmount.call(
+                (await distributor.getEarnedFeeAmount.call(
                     {from: validator}))[0].toNumber().should.be.equal(15);
                 (await distributor.getAndUpdateEarnedBountyAmount.call(
                     validatorId, {from: holder1}))[0].toNumber().should.be.equal(25);
@@ -286,10 +286,10 @@ contract("Delegation", ([owner,
                 skipTime(web3, 3 * month);
 
                 await distributor.withdrawFee(bountyAddress, {from: validator});
-                (await distributor.getAndUpdateEarnedFeeAmount.call(
+                (await distributor.getEarnedFeeAmount.call(
                     {from: validator}))[0].toNumber().should.be.equal(0);
                 await distributor.withdrawFee(validator, {from: validator});
-                (await distributor.getAndUpdateEarnedFeeAmount.call(
+                (await distributor.getEarnedFeeAmount.call(
                     {from: validator}))[0].toNumber().should.be.equal(0);
 
                 (await skaleToken.balanceOf(bountyAddress)).toNumber().should.be.equal(15);

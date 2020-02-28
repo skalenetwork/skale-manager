@@ -56,16 +56,17 @@ contract SkaleManager is IERC777Recipient, Permissions {
     );
 
     function tokensReceived(
-        address operator,
+        address, // operator
         address from,
         address to,
         uint256 value,
         bytes calldata userData,
-        bytes calldata operatorData
+        bytes calldata // operator data
     )
         external
         allow("SkaleToken")
     {
+        require(to == address(this), "Receiver is incorrect");
         if (userData.length > 0) {
             TransactionOperation operationType = fallbackOperationTypeConvert(userData);
             if (operationType == TransactionOperation.CreateSchain) {
@@ -200,8 +201,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
             msg.sender,
             nodeIndex,
             averageDowntime,
-            averageLatency,
-            nodesDataAddress);
+            averageLatency);
         INodesData(nodesDataAddress).changeNodeLastRewardDate(nodeIndex);
         monitorsFunctionality.upgradeMonitor(nodeIndex);
         emit BountyGot(
@@ -224,8 +224,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
         address from,
         uint nodeIndex,
         uint32 downtime,
-        uint32 latency,
-        address nodesDataAddress) internal returns (uint)
+        uint32 latency) internal returns (uint)
     {
         uint commonBounty;
         IConstants constants = IConstants(contractManager.getContract("ConstantsHolder"));
