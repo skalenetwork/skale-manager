@@ -134,6 +134,11 @@ contract("Delegation", ([owner,
                             requestId = logs[0].args.delegationId;
                         });
 
+                        it("should not allow to burn locked tokens", async () => {
+                            await skaleToken.burn(1, "0x", {from: holder1})
+                                .should.be.eventually.rejectedWith("Token should be unlocked for burning");
+                        });
+
                         it("should not allow holder to spend tokens", async () => {
                             await skaleToken.transfer(holder2, 1, {from: holder1})
                                 .should.be.eventually.rejectedWith("Token should be unlocked for transferring");
