@@ -129,6 +129,7 @@ contract ValidatorService is Permissions {
 
     function unlinkNodeAddress(address validatorAddress, address nodeAddress) external allow("DelegationService") {
         uint validatorId = getValidatorId(validatorAddress);
+        require(validators[validatorId].validatorAddress == validatorAddress, "Such address hasn't permissions to unlink node");
         deleteValidatorAddress(validatorId, nodeAddress);
     }
 
