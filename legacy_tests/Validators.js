@@ -6,7 +6,7 @@ async function sendVerdict(fromNodeIndex, toNodeIndex, downtime, latency) {
 }
 
 async function getBounty(nodeIndex) {
-    let res = await init.SkaleManager.methods.getBounty(nodeIndex).send({from: init.mainAccount, gas: 8000000});
+    let res = await init.SkaleManager.methods.getBounty(nodeIndex).send({from: init.mainAccount, gas: 6900000});
     let amount;
     await init.SkaleManager.getPastEvents('BountyGot', {fromBlock: res.blockNumber, toBlock: res.blockNumber}).then(
             function(events) {
