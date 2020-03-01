@@ -13,15 +13,12 @@ const Web3 = require('web3');
 // const web3 = new Web3(provider);
 const web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
 //////
-const mainAccount = "0x817690a9cd30c48b529fef7ac813eaa4196546f6";
+const mainAccount = "0x0000000000000000000000000000000000000000";
 
 const jsonData = require(`../data/${networkName}.json`);
 // const updatedData = require("../data/updated.json");
-console.log("OOOOOK");
 const SkaleManager = new web3.eth.Contract(jsonData['skale_manager_abi'], jsonData['skale_manager_address']);
-console.log("OOOOOoooK");
 module.exports.SkaleManager = SkaleManager;//new web3.eth.Contract(jsonData['skale_manager_abi'], jsonData['skale_manager_address']);
-console.log("OOOOOoooOIOOOOOK");
 const SkaleToken = new web3.eth.Contract(jsonData['skale_token_abi'], jsonData['skale_token_address']);
 module.exports.SkaleToken = SkaleToken;//new web3.eth.Contract(jsonData['skale_token_abi'], jsonData['skale_token_address']);
 const NodesFunctionality = new web3.eth.Contract(jsonData['nodes_functionality_abi'], jsonData['nodes_functionality_address']);
@@ -38,6 +35,7 @@ module.exports.ValidatorsData = new web3.eth.Contract(jsonData['monitors_data_ab
 module.exports.ContractManager = new web3.eth.Contract(jsonData['contract_manager_abi'], jsonData['contract_manager_address']);
 module.exports.DelegationService = new web3.eth.Contract(jsonData['delegation_service_abi'], jsonData['delegation_service_address']);
 module.exports.ValidatorService = new web3.eth.Contract(jsonData['validator_service_abi'], jsonData['validator_service_address']);
+module.exports.TokenState = new web3.eth.Contract(jsonData['token_state_abi'], jsonData['token_state_address']);
 module.exports.web3 = web3;
 module.exports.mainAccount = mainAccount;
 module.exports.jsonData = jsonData;

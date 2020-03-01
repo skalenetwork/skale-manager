@@ -1,6 +1,5 @@
 const init = require("./Init.js");
 const GenerateBytesData = require("./GenerateBytesData.js");
-console.log("Starting good");
 
 async function generateRandomIP() {
     let ip1 = Math.floor(Math.random() * 255);
@@ -40,16 +39,22 @@ async function createNode() {
     console.log("Account Deposit", accountDeposit);
     //console.log(SkaleToken);
     //console.log(jsonData['skale_token_address']);
-    let registerValidator = await init.DelegationService.methods.registerValidator("ValidatorName", "Really good validator", 500, 100).send({from: init.mainAccount, gas: 6900000});
-    console.log(registerValidator);
+    //let registerValidator = await init.DelegationService.methods.registerValidator("ValidatorName", "Really good validator", 500, 100).send({from: init.mainAccount, gas: 6900000});
+    //console.log(registerValidator);
     console.log("Validator Registered!");
-    let enableValidator = await init.ValidatorService.methods.enableValidator(1).send({from: init.mainAccount, gas: 6900000});
-    console.log(enableValidator);
+    //let enableValidator = await init.ValidatorService.methods.enableValidator(1).send({from: init.mainAccount, gas: 6900000});
+    //console.log(enableValidator);
     console.log("Validator Enabled!");
-    await init.Constants.methods.setMSR(100).send({from: init.mainAccount, gas: 6900000});
-    let delegated = await init.DelegationService.methods.delegate(1, 100, 3, "Nice").send({from: init.mainAccount, gas: 6900000});
-    console.log(delegated);
+    //await init.Constants.methods.setMSR(100).send({from: init.mainAccount, gas: 6900000});
+    //let delegated = await init.DelegationService.methods.delegate(1, 100, 3, "Nice").send({from: init.mainAccount, gas: 6900000});
+    //console.log(delegated);
     console.log("Delegated!");
+    //let accept = await init.DelegationService.methods.acceptPendingDelegation(0).send({from: init.mainAccount, gas: 6900000});
+    //console.log(accept);
+    console.log("Accepted!");
+    let skipped = await init.TokenState.methods.skipTransitionDelay(0).send({from: init.mainAccount, gas: 6900000});
+    console.log(skipped);
+    console.log("Skipped!");
 	let res = await init.SkaleManager.methods.createNode(data).send({from: init.mainAccount, gas: 6900000});
     console.log(res);
     /*let blockNumber = res.blockNumber;
@@ -70,7 +75,7 @@ async function createNode() {
             }
         });
     console.log("Node", nodeIndex, "created with", res.gasUsed, "gas consumption");*/
-    return nodeIndex;
+    //return nodeIndex;
 }
 
 async function deleteNode(nodeIndex) {
@@ -102,8 +107,8 @@ async function createNodes(n) {
     return nodeIndexes;
 }
 
-createNode();
-getNodeNextRewardDate(1)
+//createNode();
+getNodeNextRewardDate(0)
 
 module.exports.createNode = createNode;
 module.exports.createNodes = createNodes;

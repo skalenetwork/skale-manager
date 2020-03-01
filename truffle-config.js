@@ -41,8 +41,7 @@ module.exports = {
             host: "127.0.0.1",
             port: 8545,
             gas: 6900000,
-            network_id: "*",
-            from: "0x817690a9cd30c48b529fef7ac813eaa4196546f6"
+            network_id: "*"
         }
     },
     mocha: {
