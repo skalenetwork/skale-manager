@@ -220,6 +220,27 @@ contract("MonitorsFunctionality", ([owner, validator]) => {
     });
   });
 
+  it("should delete node from checked list", async () => {
+    await monitorsFunctionality.addMonitor(0);
+
+    const node1Hash = web3.utils.soliditySha3(1);
+    const node2Hash = web3.utils.soliditySha3(2);
+    const node3Hash = web3.utils.soliditySha3(3);
+    const node4Hash = web3.utils.soliditySha3(4);
+
+    (await monitorsData.getCheckedArray(node1Hash)).length.should.be.equal(1);
+    (await monitorsData.getCheckedArray(node2Hash)).length.should.be.equal(1);
+    (await monitorsData.getCheckedArray(node3Hash)).length.should.be.equal(1);
+    (await monitorsData.getCheckedArray(node4Hash)).length.should.be.equal(1);
+
+    await monitorsFunctionality.deleteMonitor(0);
+
+    await monitorsData.getCheckedArray(node1Hash).should.be.eventually.empty;
+    await monitorsData.getCheckedArray(node2Hash).should.be.eventually.empty;
+    await monitorsData.getCheckedArray(node3Hash).should.be.eventually.empty;
+    await monitorsData.getCheckedArray(node4Hash).should.be.eventually.empty;
+  });
+
   const nodesCount = 50;
   const activeNodesCount = 30;
   describe("when " + nodesCount + " nodes in network", async () => {
