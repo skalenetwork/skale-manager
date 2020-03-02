@@ -55,12 +55,12 @@ contract Punisher is Permissions, ILocker {
         }
     }
 
-    function calculateLockedAmount(address wallet) external returns (uint) {
-        return _calculateLockedAmount(wallet);
+    function getAndUpdateLockedAmount(address wallet) external returns (uint) {
+        return _getAndUpdateLockedAmount(wallet);
     }
 
-    function calculateForbiddenForDelegationAmount(address wallet) external returns (uint) {
-        return _calculateLockedAmount(wallet);
+    function getAndUpdateForbiddenForDelegationAmount(address wallet) external returns (uint) {
+        return _getAndUpdateLockedAmount(wallet);
     }
 
     function handleSlash(address holder, uint amount) external allow("DelegationController") {
@@ -73,7 +73,7 @@ contract Punisher is Permissions, ILocker {
 
     // private
 
-    function _calculateLockedAmount(address wallet) internal returns (uint) {
+    function _getAndUpdateLockedAmount(address wallet) internal returns (uint) {
         DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
 
         delegationController.processAllSlashes(wallet);

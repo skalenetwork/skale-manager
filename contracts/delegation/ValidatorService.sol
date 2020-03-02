@@ -160,7 +160,7 @@ contract ValidatorService is Permissions {
         uint validatorId = getValidatorId(validatorAddress);
         require(trustedValidators[validatorId], "Validator is not authorized to create a node");
         uint[] memory validatorNodes = validators[validatorId].nodeIndexes;
-        uint delegationsTotal = delegationController.calculateDelegatedToValidatorNow(validatorId);
+        uint delegationsTotal = delegationController.getAndUpdateDelegatedToValidatorNow(validatorId);
         uint msr = IConstants(contractManager.getContract("ConstantsHolder")).msr();
         require((validatorNodes.length.add(1)) * msr <= delegationsTotal, "Validator has to meet Minimum Staking Requirement");
     }
@@ -172,7 +172,7 @@ contract ValidatorService is Permissions {
         uint[] memory validatorNodes = validators[validatorId].nodeIndexes;
         uint position = findNode(validatorNodes, nodeIndex);
         require(position < validatorNodes.length, "Node does not exist for this Validator");
-        uint delegationsTotal = delegationController.calculateDelegatedToValidatorNow(validatorId);
+        uint delegationsTotal = delegationController.getAndUpdateDelegatedToValidatorNow(validatorId);
         uint msr = IConstants(contractManager.getContract("ConstantsHolder")).msr();
         return position.add(1).mul(msr) <= delegationsTotal;
     }
@@ -181,12 +181,12 @@ contract ValidatorService is Permissions {
         return getValidatorAddresses(getValidatorId(msg.sender));
     }
 
-    function calculateBondAmount(uint validatorId)
+    function getAndUpdateBondAmount(uint validatorId)
         external
         returns (uint delegatedAmount)
     {
         DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
-        return delegationController.calculateDelegatedAmount(validators[validatorId].validatorAddress);
+        return delegationController.getAndUpdateDelegatedAmount(validators[validatorId].validatorAddress);
     }
 
     function initialize(address _contractManager) public initializer {

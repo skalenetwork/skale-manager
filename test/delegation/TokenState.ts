@@ -45,8 +45,8 @@ contract("DelegationController", ([owner, holder, validator]) => {
     });
 
     it("should not lock tokens by default", async () => {
-        (await delegationController.calculateLockedAmount.call(holder)).toNumber().should.be.equal(0);
-        (await delegationController.calculateDelegatedAmount.call(holder)).toNumber().should.be.equal(0);
+        (await delegationController.getAndUpdateLockedAmount.call(holder)).toNumber().should.be.equal(0);
+        (await delegationController.getAndUpdateDelegatedAmount.call(holder)).toNumber().should.be.equal(0);
     });
 
     it("should not allow to get state of non existing delegation", async () => {
@@ -72,25 +72,25 @@ contract("DelegationController", ([owner, holder, validator]) => {
 
             const state = await delegationController.getState(delegationId);
             state.toNumber().should.be.equal(State.REJECTED);
-            const locked = await delegationController.calculateLockedAmount.call(holder);
+            const locked = await delegationController.getAndUpdateLockedAmount.call(holder);
             locked.toNumber().should.be.equal(0);
-            const delegated = await delegationController.calculateDelegatedAmount.call(holder);
+            const delegated = await delegationController.getAndUpdateDelegatedAmount.call(holder);
             delegated.toNumber().should.be.equal(0);
         });
 
         it("should allow holder to cancel delegation before acceptance", async () => {
-            let locked = await delegationController.calculateLockedAmount.call(holder);
+            let locked = await delegationController.getAndUpdateLockedAmount.call(holder);
             locked.toNumber().should.be.equal(amount);
-            let delegated = await delegationController.calculateDelegatedAmount.call(holder);
+            let delegated = await delegationController.getAndUpdateDelegatedAmount.call(holder);
             delegated.toNumber().should.be.equal(0);
 
             await delegationController.cancelPendingDelegation(delegationId, {from: holder});
 
             const state = await delegationController.getState(delegationId);
             state.toNumber().should.be.equal(State.CANCELED);
-            locked = await delegationController.calculateLockedAmount.call(holder);
+            locked = await delegationController.getAndUpdateLockedAmount.call(holder);
             locked.toNumber().should.be.equal(0);
-            delegated = await delegationController.calculateDelegatedAmount.call(holder);
+            delegated = await delegationController.getAndUpdateDelegatedAmount.call(holder);
             delegated.toNumber().should.be.equal(0);
         });
 
@@ -103,9 +103,9 @@ contract("DelegationController", ([owner, holder, validator]) => {
 
             const state = await delegationController.getState(delegationId);
             state.toNumber().should.be.equal(State.REJECTED);
-            const locked = await delegationController.calculateLockedAmount.call(holder);
+            const locked = await delegationController.getAndUpdateLockedAmount.call(holder);
             locked.toNumber().should.be.equal(0);
-            const delegated = await delegationController.calculateDelegatedAmount.call(holder);
+            const delegated = await delegationController.getAndUpdateDelegatedAmount.call(holder);
             delegated.toNumber().should.be.equal(0);
         });
 
@@ -117,9 +117,9 @@ contract("DelegationController", ([owner, holder, validator]) => {
             it("should allow to move delegation from proposed to accepted state", async () => {
                 const state = await delegationController.getState(delegationId);
                 state.toNumber().should.be.equal(State.ACCEPTED);
-                const locked = await delegationController.calculateLockedAmount.call(holder);
+                const locked = await delegationController.getAndUpdateLockedAmount.call(holder);
                 locked.toNumber().should.be.equal(amount);
-                const delegated = await delegationController.calculateDelegatedAmount.call(holder);
+                const delegated = await delegationController.getAndUpdateDelegatedAmount.call(holder);
                 delegated.toNumber().should.be.equal(0);
             });
 
@@ -141,9 +141,9 @@ contract("DelegationController", ([owner, holder, validator]) => {
                 it("should become delegated", async () => {
                     const state = await delegationController.getState(delegationId);
                     state.toNumber().should.be.equal(State.DELEGATED);
-                    const locked = await delegationController.calculateLockedAmount.call(holder);
+                    const locked = await delegationController.getAndUpdateLockedAmount.call(holder);
                     locked.toNumber().should.be.equal(amount);
-                    const delegated = await delegationController.calculateDelegatedAmount.call(holder);
+                    const delegated = await delegationController.getAndUpdateDelegatedAmount.call(holder);
                     delegated.toNumber().should.be.equal(amount);
                 });
 
@@ -152,18 +152,18 @@ contract("DelegationController", ([owner, holder, validator]) => {
 
                     let state = await delegationController.getState(delegationId);
                     state.toNumber().should.be.equal(State.UNDELEGATION_REQUESTED);
-                    let locked = await delegationController.calculateLockedAmount.call(holder);
+                    let locked = await delegationController.getAndUpdateLockedAmount.call(holder);
                     locked.toNumber().should.be.equal(amount);
-                    let delegated = await delegationController.calculateDelegatedAmount.call(holder);
+                    let delegated = await delegationController.getAndUpdateDelegatedAmount.call(holder);
                     delegated.toNumber().should.be.equal(amount);
 
                     skipTime(web3, month * period);
 
                     state = await delegationController.getState(delegationId);
                     state.toNumber().should.be.equal(State.COMPLETED);
-                    locked = await delegationController.calculateLockedAmount.call(holder);
+                    locked = await delegationController.getAndUpdateLockedAmount.call(holder);
                     locked.toNumber().should.be.equal(0);
-                    delegated = await delegationController.calculateDelegatedAmount.call(holder);
+                    delegated = await delegationController.getAndUpdateDelegatedAmount.call(holder);
                     delegated.toNumber().should.be.equal(0);
                 });
             });

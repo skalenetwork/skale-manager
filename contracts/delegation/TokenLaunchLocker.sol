@@ -70,7 +70,7 @@ contract TokenLaunchLocker is Permissions, ILocker {
 
             uint currentMonth = timeHelpers.getCurrentMonth();
             uint fromLocked = amount;
-            uint locked = _locked[holder].sub(calculateDelegatedAmount(holder, currentMonth));
+            uint locked = _locked[holder].sub(getAndUpdateDelegatedAmount(holder, currentMonth));
             if (fromLocked > locked) {
                 fromLocked = locked;
             }
@@ -92,7 +92,7 @@ contract TokenLaunchLocker is Permissions, ILocker {
         }
     }
 
-    function calculateLockedAmount(address wallet) external returns (uint) {
+    function getAndUpdateLockedAmount(address wallet) external returns (uint) {
         if (_locked[wallet] > 0) {
             DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
             TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
@@ -103,7 +103,7 @@ contract TokenLaunchLocker is Permissions, ILocker {
                 unlock(wallet);
                 return 0;
             } else {
-                uint lockedByDelegationController = calculateDelegatedAmount(wallet, currentMonth).add(delegationController.getLockedInPendingDelegations(wallet));
+                uint lockedByDelegationController = getAndUpdateDelegatedAmount(wallet, currentMonth).add(delegationController.getLockedInPendingDelegations(wallet));
                 if (_locked[wallet] > lockedByDelegationController) {
                     return _locked[wallet].sub(lockedByDelegationController);
                 } else {
@@ -115,7 +115,7 @@ contract TokenLaunchLocker is Permissions, ILocker {
         }
     }
 
-    function calculateForbiddenForDelegationAmount(address wallet) external returns (uint) {
+    function getAndUpdateForbiddenForDelegationAmount(address) external returns (uint) {
         return 0;
     }
 
@@ -125,8 +125,8 @@ contract TokenLaunchLocker is Permissions, ILocker {
 
     // private
 
-    function calculateDelegatedAmount(address holder, uint currentMonth) internal returns (uint) {
-        return calculateValue(_delegatedAmount[holder], currentMonth);
+    function getAndUpdateDelegatedAmount(address holder, uint currentMonth) internal returns (uint) {
+        return getAndUpdateValue(_delegatedAmount[holder], currentMonth);
     }
 
     function addToDelegatedAmount(address holder, uint amount, uint month) internal {
@@ -199,7 +199,7 @@ contract TokenLaunchLocker is Permissions, ILocker {
         }
     }
 
-    function calculateValue(PartialDifferencesValue storage sequence, uint month) internal returns (uint) {
+    function getAndUpdateValue(PartialDifferencesValue storage sequence, uint month) internal returns (uint) {
         require(month.add(1) >= sequence.firstUnprocessedMonth, "Can't calculate value in the past");
         if (sequence.firstUnprocessedMonth == 0) {
             return 0;
