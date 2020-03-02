@@ -149,7 +149,7 @@ contract SkaleDKG is Permissions {
         channels[groupIndex].nodeToComplaint = uint(-1);
         delete channels[groupIndex].numberOfBroadcasted;
         delete channels[groupIndex].numberOfCompleted;
-        delete channels[groupIndex].startComplaintBlockNumber;
+        delete channels[groupIndex].startComplaintBlockTimestamp;
         channels[groupIndex].startedBlockTimestamp = block.timestamp;
         emit ChannelOpened(groupIndex);
     }
