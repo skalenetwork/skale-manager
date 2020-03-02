@@ -405,6 +405,12 @@ contract LockableERC777 is IERC777, IERC20 {
         private
     {
         require(from != address(0), "ERC777: burn from the zero address");
+// Added by SKALE----------------------------------------------------------
+        uint locked = _getAndUpdateLockedAmount(from);
+        if (locked > 0) {
+            require(_balances[from] >= locked.add(amount), "Token should be unlocked for burning");
+        }
+//-------------------------------------------------------------------------
 
         _callTokensToSend(
             operator, from, address(0), amount, data, operatorData
@@ -430,7 +436,7 @@ contract LockableERC777 is IERC777, IERC20 {
     )
         private
     {
-// Property of the company SKALE Labs inc.---------------------------------
+// Added by SKALE----------------------------------------------------------
         uint locked = _getAndUpdateLockedAmount(from);
         if (locked > 0) {
             require(_balances[from] >= locked.add(amount), "Token should be unlocked for transferring");

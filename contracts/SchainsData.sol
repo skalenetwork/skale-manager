@@ -37,6 +37,7 @@ contract SchainsData is GroupsData {
         uint8 partOfNode;
         uint lifetime;
         uint32 startDate;
+        uint startBlock;
         uint deposit;
         uint64 index;
     }
@@ -96,6 +97,7 @@ contract SchainsData is GroupsData {
         schains[schainId].name = name;
         schains[schainId].owner = from;
         schains[schainId].startDate = uint32(block.timestamp);
+        schains[schainId].startBlock = block.number;
         schains[schainId].lifetime = lifetime;
         schains[schainId].deposit = deposit;
         schains[schainId].index = numberOfSchains;
