@@ -112,6 +112,12 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
             assert.equal(id, validatorId);
         });
 
+        it("should reject if linked node address tried to unlink validator address", async () => {
+            await delegationService.linkNodeAddress(nodeAddress, {from: validator1});
+            await delegationService.unlinkNodeAddress(validator1, {from: nodeAddress})
+                .should.be.eventually.rejectedWith("Such address hasn't permissions to unlink node");
+        });
+
         it("should reject if validator tried to override node address of another validator", async () => {
             const validatorId = 1;
             await delegationService.registerValidator(
@@ -180,7 +186,6 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
 
         it("should return list of trusted validators", async () => {
             const validatorId1 = 1;
-            const validatorId2 = 2;
             const validatorId3 = 3;
             await delegationService.registerValidator(
                 "ValidatorName",
