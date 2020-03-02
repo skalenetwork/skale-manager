@@ -221,13 +221,14 @@ contract("SkaleToken", ([owner, holder, receiver, nilAddress, accountWith99]) =>
     assert(amount.isEqualTo(logs[0].args.amount));
   });
 
-  it("should not allow reentracy on transfers", async () => {
+  it("should not allow reentrancy on transfers", async () => {
     const amount = 5;
     await skaleToken.mint(owner, holder, amount, "0x", "0x");
 
     const reentrancyTester = await deployReentrancyTester(contractManager);
 
-    await skaleToken.transfer(reentrancyTester.address, amount, {from: holder});
+    await skaleToken.transfer(reentrancyTester.address, amount, {from: holder})
+      .should.be.eventually.rejectedWith("ReentrancyGuard: reentrant call");
 
     (await skaleToken.balanceOf(holder)).toNumber().should.be.equal(amount);
     (await skaleToken.balanceOf(skaleToken.address)).toNumber().should.be.equal(0);
