@@ -25,9 +25,8 @@ class Validator {
     public feeRate: BigNumber;
     public registrationTime: BigNumber;
     public minimumDelegationAmount: BigNumber;
-    public lastBountyCollectionMonth: BigNumber;
 
-    constructor(arrayData: [string, string, string, string, BigNumber, BigNumber, BigNumber, BigNumber]) {
+    constructor(arrayData: [string, string, string, string, BigNumber, BigNumber, BigNumber]) {
         this.name = arrayData[0];
         this.validatorAddress = arrayData[1];
         this.requestedAddress = arrayData[2];
@@ -35,8 +34,6 @@ class Validator {
         this.feeRate = new BigNumber(arrayData[4]);
         this.registrationTime = new BigNumber(arrayData[5]);
         this.minimumDelegationAmount = new BigNumber(arrayData[6]);
-        this.lastBountyCollectionMonth = new BigNumber(arrayData[7]);
-
     }
 }
 
@@ -76,6 +73,16 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
         assert.equal(validator.feeRate.toNumber(), 500);
         assert.equal(validator.minimumDelegationAmount.toNumber(), 100);
         assert.isTrue(await validatorService.checkValidatorAddressToId(validator1, validatorId));
+    });
+
+    it("should reject if validator tried to register with a fee rate higher than 100 percent", async () => {
+        await delegationService.registerValidator(
+            "ValidatorName",
+            "Really good validator",
+            1500,
+            100,
+            {from: validator1})
+            .should.be.eventually.rejectedWith("Fee rate of validator should be lower than 100%");
     });
 
     describe("when validator registered", async () => {
