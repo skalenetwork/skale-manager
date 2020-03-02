@@ -295,8 +295,15 @@ contract DelegationController is Permissions, ILocker {
         sendSlashingSignals(slashingSignals);
     }
 
-    function requestUndelegation(uint delegationId) external {
+    function requestUndelegation(uint delegationId) external checkDelegationExists(delegationId) {
         require(getState(delegationId) == State.DELEGATED, "Can't request undelegation");
+
+        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
+        require(
+            delegations[delegationId].holder == msg.sender ||
+            (validatorService.validatorAddressExists(msg.sender) &&
+            delegations[delegationId].validatorId == validatorService.getValidatorId(msg.sender)),
+            "Permission denied to request undelegation");
 
         TokenLaunchLocker tokenLaunchLocker = TokenLaunchLocker(contractManager.getContract("TokenLaunchLocker"));
         DelegationPeriodManager delegationPeriodManager = DelegationPeriodManager(contractManager.getContract("DelegationPeriodManager"));

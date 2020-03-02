@@ -184,24 +184,26 @@ contract("DelegationController", ([owner, holder1, holder2, validator, validator
 
                     skipTime(web3, delegationPeriod * month);
 
-                    (await delegationController.getState(delegationId)).toNumber.should.be.equal(State.COMPLETED);
+                    (await delegationController.getState(delegationId)).toNumber().should.be.equal(State.COMPLETED);
                     (await skaleToken.getAndUpdateDelegatedAmount.call(holder1)).toNumber().should.be.equal(0);
                 });
 
                 it("should not allow everyone to request undelegation", async () => {
-                    await delegationController.requestUndelegation(delegationId, {from: holder2});
+                    await delegationController.requestUndelegation(delegationId, {from: holder2})
+                        .should.be.eventually.rejectedWith("Permission denied to request undelegation");
 
-                    delegationService.registerValidator(
+                    await delegationService.registerValidator(
                         "ValidatorName",
                         "Really good validator",
                         500,
                         100,
                         {from: validator2});
-                    await delegationController.requestUndelegation(delegationId, {from: validator2});
+                    await delegationController.requestUndelegation(delegationId, {from: validator2})
+                        .should.be.eventually.rejectedWith("Permission denied to request undelegation");
 
                     skipTime(web3, delegationPeriod * month);
 
-                    (await delegationController.getState(delegationId)).toNumber.should.be.equal(State.DELEGATED);
+                    (await delegationController.getState(delegationId)).toNumber().should.be.equal(State.DELEGATED);
                     (await skaleToken.getAndUpdateDelegatedAmount.call(holder1)).toNumber().should.be.equal(amount);
                 });
             });
