@@ -1,11 +1,13 @@
 import BigNumber from "bignumber.js";
 import { ContractManagerInstance,
+         ReentrancyTesterInstance,
          SkaleTokenInstance } from "../types/truffle-contracts";
 
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
 import { deployContractManager } from "./utils/deploy/contractManager";
 import { deploySkaleToken } from "./utils/deploy/skaleToken";
+import { deployReentrancyTester } from "./utils/deploy/test/reentracyTester";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -217,6 +219,19 @@ contract("SkaleToken", ([owner, holder, receiver, nilAddress, accountWith99]) =>
     assert.equal(logs[0].event, "Burned");
     assert.equal(logs[0].args.from, owner);
     assert(amount.isEqualTo(logs[0].args.amount));
+  });
+
+  it("should not allow reentrancy on transfers", async () => {
+    const amount = 5;
+    await skaleToken.mint(owner, holder, amount, "0x", "0x");
+
+    const reentrancyTester = await deployReentrancyTester(contractManager);
+
+    await skaleToken.transfer(reentrancyTester.address, amount, {from: holder})
+      .should.be.eventually.rejectedWith("ReentrancyGuard: reentrant call");
+
+    (await skaleToken.balanceOf(holder)).toNumber().should.be.equal(amount);
+    (await skaleToken.balanceOf(skaleToken.address)).toNumber().should.be.equal(0);
   });
 });
 

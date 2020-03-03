@@ -20,9 +20,12 @@
 pragma solidity ^0.5.3;
 pragma experimental ABIEncoderV2;
 
+import "@openzeppelin/contracts/math/SafeMath.sol";
+
 import "../Permissions.sol";
-import "./DelegationController.sol";
 import "../interfaces/IConstants.sol";
+
+import "./DelegationController.sol";
 
 
 contract ValidatorService is Permissions {
@@ -135,7 +138,7 @@ contract ValidatorService is Permissions {
     function checkMinimumDelegation(uint validatorId, uint amount)
         external view
         checkValidatorExists(validatorId)
-        allow("DelegationRequestManager")
+        allow("DelegationController")
         returns (bool)
     {
         return validators[validatorId].minimumDelegationAmount <= amount ? true : false;
@@ -144,7 +147,6 @@ contract ValidatorService is Permissions {
     function checkValidatorAddressToId(address validatorAddress, uint validatorId)
         external
         view
-        allow("DelegationRequestManager")
         returns (bool)
     {
         return getValidatorId(validatorAddress) == validatorId ? true : false;
@@ -163,9 +165,9 @@ contract ValidatorService is Permissions {
         uint[] memory validatorNodes = validators[validatorId].nodeIndexes;
         uint position = findNode(validatorNodes, nodeIndex);
         if (position < validatorNodes.length) {
-            validators[validatorId].nodeIndexes[position] = validators[validatorId].nodeIndexes[validatorNodes.length - 1];
+            validators[validatorId].nodeIndexes[position] = validators[validatorId].nodeIndexes[validatorNodes.length.sub(1)];
         }
-        delete validators[validatorId].nodeIndexes[validatorNodes.length - 1];
+        delete validators[validatorId].nodeIndexes[validatorNodes.length.sub(1)];
     }
 
     function checkPossibilityCreatingNode(address validatorAddress) external allow("SkaleManager") {
@@ -175,9 +177,9 @@ contract ValidatorService is Permissions {
         uint validatorId = getValidatorId(validatorAddress);
         require(trustedValidators[validatorId], "Validator is not authorized to create a node");
         uint[] memory validatorNodes = validators[validatorId].nodeIndexes;
-        uint delegationsTotal = delegationController.getDelegatedAmount(validatorId);
+        uint delegationsTotal = delegationController.getAndUpdateDelegatedToValidatorNow(validatorId);
         uint msr = IConstants(contractManager.getContract("ConstantsHolder")).msr();
-        require((validatorNodes.length + 1).mul(msr) <= delegationsTotal, "Validator has to meet Minimum Staking Requirement");
+        require((validatorNodes.length.add(1)) * msr <= delegationsTotal, "Validator has to meet Minimum Staking Requirement");
     }
 
     function checkPossibilityToMaintainNode(uint validatorId, uint nodeIndex) external allow("SkaleManager") returns (bool) {
@@ -187,13 +189,21 @@ contract ValidatorService is Permissions {
         uint[] memory validatorNodes = validators[validatorId].nodeIndexes;
         uint position = findNode(validatorNodes, nodeIndex);
         require(position < validatorNodes.length, "Node does not exist for this Validator");
-        uint delegationsTotal = delegationController.getDelegatedAmount(validatorId);
+        uint delegationsTotal = delegationController.getAndUpdateDelegatedToValidatorNow(validatorId);
         uint msr = IConstants(contractManager.getContract("ConstantsHolder")).msr();
-        return (position + 1).mul(msr) <= delegationsTotal;
+        return position.add(1).mul(msr) <= delegationsTotal;
     }
 
     function getMyAddresses() external view returns (address[] memory) {
         return getValidatorAddresses(getValidatorId(msg.sender));
+    }
+
+    function getAndUpdateBondAmount(uint validatorId)
+        external
+        returns (uint delegatedAmount)
+    {
+        DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
+        return delegationController.getAndUpdateDelegatedAmount(validators[validatorId].validatorAddress);
     }
 
     function initialize(address _contractManager) public initializer {
@@ -252,9 +262,9 @@ contract ValidatorService is Permissions {
         for (uint i = 0; i < _validatorAddresses[validatorId].length; ++i) {
             if (_validatorAddresses[validatorId][i] == validatorAddress) {
                 if (i + 1 < _validatorAddresses[validatorId].length) {
-                    _validatorAddresses[validatorId][i] = _validatorAddresses[validatorId][_validatorAddresses[validatorId].length - 1];
+                    _validatorAddresses[validatorId][i] = _validatorAddresses[validatorId][_validatorAddresses[validatorId].length.sub(1)];
                 }
-                delete _validatorAddresses[validatorId][_validatorAddresses[validatorId].length - 1];
+                delete _validatorAddresses[validatorId][_validatorAddresses[validatorId].length.sub(1)];
                 --_validatorAddresses[validatorId].length;
                 break;
             }

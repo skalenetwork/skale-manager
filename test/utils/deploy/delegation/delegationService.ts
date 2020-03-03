@@ -1,9 +1,7 @@
 import { ContractManagerInstance, DelegationServiceContract } from "../../../../types/truffle-contracts";
 import { deploySkaleToken } from "../skaleToken";
 import { deployDelegationController } from "./delegationController";
-import { deployDelegationRequestManager } from "./delegationRequestManager";
 import { deployDistributor } from "./distributor";
-import { deploySkaleBalances } from "./skaleBalances";
 import { deployTokenState } from "./tokenState";
 import { deployValidatorService } from "./validatorService";
 
@@ -20,10 +18,8 @@ async function deploy(contractManager: ContractManagerInstance) {
 async function deployDependencies(contractManager: ContractManagerInstance) {
     await deployTokenState(contractManager);
     await deployDelegationController(contractManager);
-    await deployDelegationRequestManager(contractManager);
     await deployValidatorService(contractManager);
     await deployDistributor(contractManager);
-    await deploySkaleBalances(contractManager);
     await deploySkaleToken(contractManager);
 }
 

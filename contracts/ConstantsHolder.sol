@@ -110,6 +110,8 @@ contract ConstantsHolder is IConstants, Permissions {
 
     //Need to add minimal allowed parameters for verdicts
 
+    uint public launchTimestamp;
+
     uint public rotationDelay;
 
     /**
@@ -158,6 +160,10 @@ contract ConstantsHolder is IConstants, Permissions {
         msr = newMSR;
     }
 
+    function setLaunchTimestamp(uint timestamp) external onlyOwner {
+        launchTimestamp = timestamp;
+    }
+
     function setRotationDelay(uint newDelay) external onlyOwner {
         rotationDelay = newDelay;
     }
@@ -176,6 +182,7 @@ contract ConstantsHolder is IConstants, Permissions {
         checkTime = 120; // Test parameters
         lastTimeUnderloaded = 0;
         lastTimeOverloaded = 0;
+        launchTimestamp = now;
         rotationDelay = 12 hours;
     }
 }

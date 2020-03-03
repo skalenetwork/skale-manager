@@ -37,7 +37,6 @@ async function deploy(deployer, networkName, accounts) {
         } else {
             console.log("ERC1820 contract has already deployed!");
         }
-        console.log("Starting SkaleManager system deploying...");
     } else if (configFile.networks[networkName].provider !== "" && configFile.networks[networkName].provider !== undefined) {
         let web3 = new Web3(configFile.networks[networkName].provider());
         if (await web3.eth.getCode(erc1820Contract) == "0x") {
@@ -60,8 +59,14 @@ async function deploy(deployer, networkName, accounts) {
         } else {
             console.log("ERC1820 contract has already deployed!");
         }
-        console.log("Starting SkaleManager system deploying...");
     }    
+
+    if (networkName == "test") {
+        console.log("Skip deploying");
+        return;
+    } else {
+        console.log("Starting SkaleManager system deploying...");
+    }
     
     const deployAccount = accounts[0];
     const options = await ConfigManager.initNetworkConfiguration({ network: networkName, from: deployAccount });
@@ -71,15 +76,15 @@ async function deploy(deployer, networkName, accounts) {
 
         "DelegationController",
         "DelegationPeriodManager",
-        "DelegationRequestManager",
         "DelegationService",
         "Distributor",
-        "SkaleBalances",
+        "Punisher",
+        "SlashingTable",
         "TimeHelpers",
-        "TokenSaleManager",
+        "TokenLaunchLocker",
+        "TokenLaunchManager",
         "TokenState",
         "ValidatorService",
-        "SlashingTable",
 
         "ConstantsHolder",
         "NodesData",
@@ -141,12 +146,10 @@ async function deploy(deployer, networkName, accounts) {
     });
 
     // TODO: Remove after testing
-    const skaleTokenInst = await SkaleToken.deployed();
-    await skaleTokenInst.send(
-        deployed.get("SkaleBalances").address,
-        "1000000000000000000000000000",
-        "0x000000000000000000000000" + deployed.get("SkaleManager").address.slice(2)
-    );
+    const skaleToken = await SkaleToken.deployed();
+    await skaleToken.transfer(
+        deployed.get("SkaleManager").address,
+        "1000000000000000000000000000");
     
     console.log('Deploy done, writing results...');
 
