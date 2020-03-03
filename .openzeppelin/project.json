@@ -25,7 +25,9 @@
     "ManagerData": "ManagerData",
     "SkaleManager": "SkaleManager",
     "Pricing": "Pricing",
-    "SlashingTable": "SlashingTable"
+    "SlashingTable": "SlashingTable",
+    "Punisher": "Punisher",
+    "TokenLaunchLocker": "TokenLaunchLocker"
   },
   "dependencies": {},
   "name": "skale-manager",
