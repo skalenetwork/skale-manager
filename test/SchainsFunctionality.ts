@@ -45,7 +45,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
         validatorService = await deployValidatorService(contractManager);
         skaleManager = await deploySkaleManager(contractManager);
 
-        validatorService.registerValidator("D2", validator, "D2 is even", 0, 0);
+        validatorService.registerValidator("D2", "D2 is even", 0, 0, {from: validator});
     });
 
     describe("should add schain", async () => {
@@ -450,10 +450,6 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
 
                 obtainedSchainName.should.be.equal("d2");
                 obtainedSchainOwner.should.be.equal(holder);
-                console.log(obtainedPart.toString());
-                console.log(obtainedLifetime.toString());
-                console.log(obtainedDeposit.toString());
-                console.log(deposit.toString());
                 expect(obtainedPart.eq(web3.utils.toBN(1))).be.true;
                 expect(obtainedLifetime.eq(web3.utils.toBN(5))).be.true;
                 expect(obtainedDeposit.eq(web3.utils.toBN(deposit))).be.true;
