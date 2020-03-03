@@ -195,16 +195,6 @@ contract ValidatorService is Permissions {
         return position.add(1).mul(msr) <= delegationsTotal;
     }
 
-    function setValidatorName(string calldata name) external {
-        uint validatorId = getValidatorId(msg.sender);
-        validators[validatorId].name = name;
-    }
-
-    function setValidatorDescription(string calldata description) external {
-        uint validatorId = getValidatorId(msg.sender);
-        validators[validatorId].description = description;
-    }
-
     function setValidatorMDA(uint minimumDelegationAmount) external {
         uint validatorId = getValidatorId(msg.sender);
         validators[validatorId].minimumDelegationAmount = minimumDelegationAmount;
