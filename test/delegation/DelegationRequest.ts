@@ -7,7 +7,6 @@ import { ContractManagerInstance,
 
 import { skipTime } from "../utils/time";
 
-import BigNumber from "bignumber.js";
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
 import { deployContractManager } from "../utils/deploy/contractManager";
@@ -16,11 +15,11 @@ import { deployDelegationService } from "../utils/deploy/delegation/delegationSe
 import { deployTokenState } from "../utils/deploy/delegation/tokenState";
 import { deployValidatorService } from "../utils/deploy/delegation/validatorService";
 import { deploySkaleToken } from "../utils/deploy/skaleToken";
-import { Delegation } from "../utils/types";
+import { Delegation, State } from "../utils/types";
 chai.should();
 chai.use(chaiAsPromised);
 
-contract("DelegationService", ([owner, holder1, holder2, validator, validator1]) => {
+contract("DelegationController", ([owner, holder1, holder2, validator, validator2]) => {
     let contractManager: ContractManagerInstance;
     let skaleToken: SkaleTokenInstance;
     let delegationService: DelegationServiceInstance;
@@ -29,6 +28,7 @@ contract("DelegationService", ([owner, holder1, holder2, validator, validator1])
     let validatorService: ValidatorServiceInstance;
 
     const defaultAmount = 100 * 1e18;
+    const month = 60 * 60 * 24 * 31;
 
     beforeEach(async () => {
         contractManager = await deployContractManager();
@@ -145,7 +145,7 @@ contract("DelegationService", ([owner, holder1, holder2, validator, validator1])
             });
 
             it("should reject accepting request if such validator doesn't exist", async () => {
-                await delegationController.acceptPendingDelegation(delegationId, {from: validator1})
+                await delegationController.acceptPendingDelegation(delegationId, {from: validator2})
                     .should.be.rejectedWith("Validator with such address doesn't exist");
             });
 
@@ -167,77 +167,46 @@ contract("DelegationService", ([owner, holder1, holder2, validator, validator1])
                     "Really good validator",
                     500,
                     100,
-                    {from: validator1});
-                await delegationController.acceptPendingDelegation(delegationId, {from: validator1})
+                    {from: validator2});
+                await delegationController.acceptPendingDelegation(delegationId, {from: validator2})
                         .should.be.rejectedWith("No permissions to accept request");
             });
 
-            // it("should get delegation requests by holder address", async () => {
-            //     let delegations = await delegationService.getDelegationsByHolder.call(0, {from: holder1});
-            //     let delegation = new BigNumber(delegations[0]).toNumber();
-            //     assert.equal(delegation, 0);
+            describe("when delegation is accepted", async () => {
+                beforeEach(async () => {
+                    await delegationController.acceptPendingDelegation(delegationId, {from: validator});
 
-            //     await skaleToken.mint(owner, holder2, amount, "0x", "0x");
-            //     await delegationService.delegate(validatorId, amount, delegationPeriod, info, {from: holder2});
-            //     delegations = await delegationService.getDelegationsByHolder.call(0, {from: holder2});
-            //     delegation = new BigNumber(delegations[0]).toNumber();
-            //     assert.equal(delegation, 1);
+                    skipTime(web3, month);
+                });
 
-            //     await delegationService.acceptPendingDelegation(0, {from: validator});
-            //     await delegationService.acceptPendingDelegation(1, {from: validator});
+                it("should allow validator to request undelegation", async () => {
+                    await delegationController.requestUndelegation(delegationId, {from: validator});
 
-            //     delegations = await delegationService.getDelegationsByHolder.call(1, {from: holder1});
-            //     delegation = new BigNumber(delegations[0]).toNumber();
-            //     assert.equal(delegation, 0);
+                    skipTime(web3, delegationPeriod * month);
 
-            //     delegations = await delegationService.getDelegationsByHolder.call(1, {from: holder2});
-            //     delegation = new BigNumber(delegations[0]).toNumber();
-            //     assert.equal(delegation, 1);
+                    (await delegationController.getState(delegationId)).toNumber().should.be.equal(State.COMPLETED);
+                    (await skaleToken.getAndUpdateDelegatedAmount.call(holder1)).toNumber().should.be.equal(0);
+                });
 
-            //     delegations = await delegationService.getDelegationsByHolder.call(0, {from: holder1});
-            //     assert.deepEqual(delegations, []);
-            //     delegations = await delegationService.getDelegationsByHolder.call(0, {from: holder2});
-            //     assert.deepEqual(delegations, []);
+                it("should not allow everyone to request undelegation", async () => {
+                    await delegationController.requestUndelegation(delegationId, {from: holder2})
+                        .should.be.eventually.rejectedWith("Permission denied to request undelegation");
 
-            //     skipTime(web3, 2592000);
+                    await delegationService.registerValidator(
+                        "ValidatorName",
+                        "Really good validator",
+                        500,
+                        100,
+                        {from: validator2});
+                    await delegationController.requestUndelegation(delegationId, {from: validator2})
+                        .should.be.eventually.rejectedWith("Permission denied to request undelegation");
 
-            //     delegations = await delegationService.getDelegationsByHolder.call(2, {from: holder1});
-            //     delegation = new BigNumber(delegations[0]).toNumber();
-            //     assert.equal(delegation, 0);
+                    skipTime(web3, delegationPeriod * month);
 
-            //     delegations = await delegationService.getDelegationsByHolder.call(2, {from: holder2});
-            //     delegation = new BigNumber(delegations[0]).toNumber();
-            //     assert.equal(delegation, 1);
-
-            //     delegations = await delegationService.getDelegationsByHolder.call(1, {from: holder1});
-            //     assert.deepEqual(delegations, []);
-            //     delegations = await delegationService.getDelegationsByHolder.call(1, {from: holder2});
-            //     assert.deepEqual(delegations, []);
-            // });
-
-            // it("should get delegation requests by validatorId", async () => {
-            //     let delegations = await delegationService.getDelegationsForValidator.call(0, {from: validator});
-            //     let delegation = new BigNumber(delegations[0]).toNumber();
-            //     assert.equal(delegation, 0);
-
-            //     await delegationService.acceptPendingDelegation(0, {from: validator});
-
-            //     delegations = await delegationService.getDelegationsForValidator.call(1, {from: validator});
-            //     delegation = new BigNumber(delegations[0]).toNumber();
-            //     assert.equal(delegation, 0);
-
-            //     delegations = await delegationService.getDelegationsForValidator.call(0, {from: validator});
-            //     assert.deepEqual(delegations, []);
-
-            //     skipTime(web3, 2592000);
-
-            //     delegations = await delegationService.getDelegationsForValidator.call(2, {from: validator});
-            //     delegation = new BigNumber(delegations[0]).toNumber();
-            //     assert.equal(delegation, 0);
-
-            //     delegations = await delegationService.getDelegationsForValidator.call(1, {from: validator});
-            //     assert.deepEqual(delegations, []);
-            // });
+                    (await delegationController.getState(delegationId)).toNumber().should.be.equal(State.DELEGATED);
+                    (await skaleToken.getAndUpdateDelegatedAmount.call(holder1)).toNumber().should.be.equal(amount);
+                });
+            });
         });
     });
 });

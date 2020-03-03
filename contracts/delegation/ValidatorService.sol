@@ -38,7 +38,6 @@ contract ValidatorService is Permissions {
         uint feeRate;
         uint registrationTime;
         uint minimumDelegationAmount;
-        uint lastBountyCollectionMonth;
         uint[] nodeIndexes;
     }
 
@@ -67,6 +66,7 @@ contract ValidatorService is Permissions {
         returns (uint validatorId)
     {
         require(_validatorAddressToId[validatorAddress] == 0, "Validator with such address already exists");
+        require(feeRate < 1000, "Fee rate of validator should be lower than 100%");
         uint[] memory epmtyArray = new uint[](0);
         validatorId = ++numberOfValidators;
         validators[validatorId] = Validator(
@@ -77,7 +77,6 @@ contract ValidatorService is Permissions {
             feeRate,
             now,
             minimumDelegationAmount,
-            0,
             epmtyArray
         );
         setValidatorAddress(validatorId, validatorAddress);
@@ -89,6 +88,23 @@ contract ValidatorService is Permissions {
 
     function disableValidator(uint validatorId) external checkValidatorExists(validatorId) onlyOwner {
         trustedValidators[validatorId] = false;
+    }
+
+    function getTrustedValidators() external view returns (uint[] memory) {
+        uint numberOfTrustedValidators = 0;
+        for (uint i = 1; i <= numberOfValidators; i++) {
+            if (trustedValidators[i]) {
+                numberOfTrustedValidators++;
+            }
+        }
+        uint[] memory whitelist = new uint[](numberOfTrustedValidators);
+        uint cursor = 0;
+        for (uint i = 1; i <= numberOfValidators; i++) {
+            if (trustedValidators[i]) {
+                whitelist[cursor++] = i;
+            }
+        }
+        return whitelist;
     }
 
     function requestForNewAddress(address oldValidatorAddress, address newValidatorAddress) external allow("DelegationService") {
@@ -115,6 +131,7 @@ contract ValidatorService is Permissions {
 
     function unlinkNodeAddress(address validatorAddress, address nodeAddress) external allow("DelegationService") {
         uint validatorId = getValidatorId(validatorAddress);
+        require(validators[validatorId].validatorAddress == validatorAddress, "Such address hasn't permissions to unlink node");
         deleteValidatorAddress(validatorId, nodeAddress);
     }
 
