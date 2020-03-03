@@ -146,12 +146,10 @@ async function deploy(deployer, networkName, accounts) {
     });
 
     // TODO: Remove after testing
-    const skaleTokenInst = await SkaleToken.deployed();
-    await skaleTokenInst.send(
-        deployed.get("SkaleBalances").address,
-        "1000000000000000000000000000",
-        "0x000000000000000000000000" + deployed.get("SkaleManager").address.slice(2)
-    );
+    const skaleToken = await SkaleToken.deployed();
+    await skaleToken.transfer(
+        deployed.get("SkaleManager").address,
+        "1000000000000000000000000000");
     
     console.log('Deploy done, writing results...');
 
