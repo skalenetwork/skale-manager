@@ -31,7 +31,7 @@ async function createSchain(typeOfSchain, lifetime) {
     console.log("Number of nodes:            ", numberOfNodes);
     console.log("Number of full nodes:       ", numberOfFullNodes);
     console.log("NUmber of fractional nodes: ", numberOfFractionalNodes);
-	res = await init.SkaleToken.methods.transfer(init.jsonData['skale_manager_address'], deposit, data).send({from: account, gas: 8000000});
+	res = await init.SkaleToken.methods.transfer(init.jsonData['skale_manager_address'], deposit, data).send({from: account, gas: 6900000});
     let blockNumber = res.blockNumber;
     //init.SchainsFunctionality.getPastEvents("GroupGenerated", {fromBlock: blockNumber, toBlock:blockNumber}).then(function(events) {console.log(events)});
     //init.SchainsFunctionality.getPastEvents("SchainCreated", {fromBlock: blockNumber, toBlock:blockNumber}).then(function(events) {console.log(events)});

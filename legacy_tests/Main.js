@@ -63,7 +63,7 @@ async function rotationNode(secondRandomNumber) {
     let nodeRotated = new Array();
     for (let i = 0; i < schainIds.length; i++) {
         // await schainsFunctionality.rotateNode(schainIds[i]);
-        let tx_hash = await init.SchainsFunctionality.methods.rotateNode(schainIds[i]).send({from: init.mainAccount, gas: 8000000});
+        let tx_hash = await init.SchainsFunctionality.methods.rotateNode(schainIds[i]).send({from: init.mainAccount, gas: 6900000});
         let blockNumber = tx_hash.blockNumber;
         await init.SchainsFunctionality.getPastEvents('NodeRotated', {fromBlock: blockNumber, toBlock: blockNumber}).then(
             function(events) {
@@ -106,7 +106,7 @@ async function rotationValidator(nodeIndex) {
     console.log(res.ids);
     for (index of res.ids) {
         let groupIndex = init.web3.utils.soliditySha3(index);
-        let {logs} = await init.ValidatorsFunctionality.rotateNode(groupIndex).send({from: init.mainAccount, gas: 8000000});
+        let {logs} = await init.ValidatorsFunctionality.rotateNode(groupIndex).send({from: init.mainAccount, gas: 6900000});
         console.log(logs);
     }  
 }
