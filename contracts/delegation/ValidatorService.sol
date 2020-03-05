@@ -204,12 +204,23 @@ contract ValidatorService is Permissions {
         return getValidatorAddresses(getValidatorId(msg.sender));
     }
 
+    /// @notice return how many of validator funds are locked in SkaleManager
     function getAndUpdateBondAmount(uint validatorId)
         external
         returns (uint delegatedAmount)
     {
         DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
         return delegationController.getAndUpdateDelegatedAmount(validators[validatorId].validatorAddress);
+    }
+
+    function setValidatorName(string calldata newName) external {
+        uint validatorId = getValidatorId(msg.sender);
+        validators[validatorId].name = newName;
+    }
+
+    function setValidatorDescription(string calldata newDescription) external {
+        uint validatorId = getValidatorId(msg.sender);
+        validators[validatorId].description = newDescription;
     }
 
     function initialize(address _contractManager) public initializer {
