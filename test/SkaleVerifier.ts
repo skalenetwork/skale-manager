@@ -1,6 +1,7 @@
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
 import { ContractManagerInstance,
+         DelegationServiceInstance,
          NodesFunctionalityInstance,
          SchainsDataInstance,
          SchainsFunctionalityInstance,
@@ -8,6 +9,7 @@ import { ContractManagerInstance,
          ValidatorServiceInstance} from "../types/truffle-contracts";
 
 import { deployContractManager } from "./utils/deploy/contractManager";
+import { deployDelegationService } from "./utils/deploy/delegation/delegationService";
 import { deployValidatorService } from "./utils/deploy/delegation/validatorService";
 import { deployNodesFunctionality } from "./utils/deploy/nodesFunctionality";
 import { deploySchainsData } from "./utils/deploy/schainsData";
@@ -23,6 +25,7 @@ contract("SkaleVerifier", ([validator1, owner, developer, hacker]) => {
     let schainsFunctionality: SchainsFunctionalityInstance;
     let skaleVerifier: SkaleVerifierInstance;
     let validatorService: ValidatorServiceInstance;
+    let delegationService: DelegationServiceInstance;
 
     beforeEach(async () => {
         contractManager = await deployContractManager();
@@ -32,8 +35,10 @@ contract("SkaleVerifier", ([validator1, owner, developer, hacker]) => {
         schainsData = await deploySchainsData(contractManager);
         schainsFunctionality = await deploySchainsFunctionality(contractManager);
         skaleVerifier = await deploySkaleVerifier(contractManager);
+        delegationService = await deployDelegationService(contractManager);
 
-        validatorService.registerValidator("D2", validator1, "D2 is even", 0, 0);
+        await validatorService.registerValidator("D2", validator1, "D2 is even", 0, 0);
+        await delegationService.linkNodeAddress(validator1, {from: validator1});
     });
 
     describe("when skaleVerifier contract is activated", async () => {
