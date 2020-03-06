@@ -22,7 +22,9 @@ pragma solidity ^0.5.3;
 import "./GroupsFunctionality.sol";
 import "./interfaces/IConstants.sol";
 import "./interfaces/INodesData.sol";
+import "./NodesData.sol";
 import "./MonitorsData.sol";
+import "@nomiclabs/buidler/console.sol";
 
 
 contract MonitorsFunctionality is GroupsFunctionality {
@@ -118,6 +120,7 @@ contract MonitorsFunctionality is GroupsFunctionality {
     function deleteMonitor(uint nodeIndex) external allow(executorName) {
         bytes32 groupIndex = keccak256(abi.encodePacked(nodeIndex));
         MonitorsData data = MonitorsData(contractManager.getContract("MonitorsData"));
+        NodesData nodesData = NodesData(contractManager.getContract("NodesData"));
         data.removeAllVerdicts(groupIndex);
         data.removeAllCheckedNodes(groupIndex);
         uint[] memory nodesInGroup = data.getNodesInGroup(groupIndex);
@@ -126,7 +129,9 @@ contract MonitorsFunctionality is GroupsFunctionality {
         for (uint i = 0; i < nodesInGroup.length; i++) {
             monitorIndex = keccak256(abi.encodePacked(nodesInGroup[i]));
             (index, ) = find(monitorIndex, nodeIndex);
-            data.removeCheckedNode(monitorIndex, index);
+            if (index < data.getCheckedArrayLength(monitorIndex)) {
+                data.removeCheckedNode(monitorIndex, index);
+            }
         }
         deleteGroup(groupIndex);
     }
@@ -266,6 +271,7 @@ contract MonitorsFunctionality is GroupsFunctionality {
         bytes32[] memory checkedNodes = data.getCheckedArray(monitorIndex);
         uint possibleIndex;
         uint32 possibleTime;
+        index = checkedNodes.length;
         for (uint i = 0; i < checkedNodes.length; i++) {
             (possibleIndex, possibleTime) = getDataFromBytes(checkedNodes[i]);
             if (possibleIndex == nodeIndex && (time == 0 || possibleTime < time)) {
