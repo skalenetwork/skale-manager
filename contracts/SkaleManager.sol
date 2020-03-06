@@ -117,7 +117,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
         MonitorsFunctionality monitorsFunctionality = MonitorsFunctionality(contractManager.getContract("MonitorsFunctionality"));
         monitorsFunctionality.deleteMonitor(nodeIndex);
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
-        uint validatorId = validatorService.getValidatorId(msg.sender);
+        uint validatorId = validatorService.getValidatorIdByNodeAddress(msg.sender);
         validatorService.deleteNode(validatorId, nodeIndex);
     }
 
@@ -275,7 +275,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
         SkaleToken skaleToken = SkaleToken(contractManager.getContract("SkaleToken"));
         Distributor distributor = Distributor(contractManager.getContract("Distributor"));
 
-        uint validatorId = validatorService.getValidatorId(miner);
+        uint validatorId = validatorService.getValidatorIdByNodeAddress(miner);
         uint bounty = bountyForMiner;
         if (!validatorService.checkPossibilityToMaintainNode(validatorId, nodeIndex)) {
             bounty /= 2;
