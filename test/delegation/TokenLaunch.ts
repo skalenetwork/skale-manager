@@ -6,7 +6,7 @@ import { ContractManagerInstance,
          TokenLaunchManagerInstance,
          ValidatorServiceInstance} from "../../types/truffle-contracts";
 
-import { skipTime, skipTimeToDate } from "../utils/time";
+import { isLeapYear, skipTime, skipTimeToDate } from "../utils/time";
 
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
@@ -136,7 +136,7 @@ contract("TokenLaunchManager", ([owner, holder, delegation, validator, seller, h
 
                 skipTime(web3, month);
 
-                await delegationService.requestUndelegation(delegationId, {from: holder});
+                await delegationController.requestUndelegation(delegationId, {from: holder});
 
                 skipTime(web3, month * delegationPeriod);
 
@@ -146,7 +146,9 @@ contract("TokenLaunchManager", ([owner, holder, delegation, validator, seller, h
                 // TODO: move undelegated tokens too
             });
 
-            it("should unlock all tokens if 50% was delegated", async () => {
+            it("should unlock all tokens if 50% was delegated after 90 days", async () => {
+                await skipTimeToDate(web3, 1, 0); // January
+
                 const amount = Math.ceil(totalAmount / 2);
                 const period = 3;
                 await delegationController.delegate(validatorId, amount, period, "INFO", {from: holder});
@@ -162,12 +164,37 @@ contract("TokenLaunchManager", ([owner, holder, delegation, validator, seller, h
 
                 await delegationController.requestUndelegation(delegationId, {from: holder});
 
-                skipTime(web3, month * period);
+                // skip 89 days
+                const leapYear = await isLeapYear(web3);
+                if (leapYear) {
+                    await skipTimeToDate(web3, 30, 3);
+                } else {
+                    await skipTimeToDate(web3, 1, 4);
+                }
 
-                const state = await delegationController.getState(delegationId);
-                state.toNumber().should.be.equal(State.COMPLETED);
-                const locked = await skaleToken.getAndUpdateLockedAmount.call(holder);
-                locked.toNumber().should.be.equal(0);
+                if (leapYear) {
+                    const state = await delegationController.getState(delegationId);
+                    state.toNumber().should.be.equal(State.UNDELEGATION_REQUESTED);
+                    const locked = await skaleToken.getAndUpdateLockedAmount.call(holder);
+                    locked.toNumber().should.be.equal(totalAmount);
+                    delegated = await skaleToken.getAndUpdateDelegatedAmount.call(holder);
+                    delegated.toNumber().should.be.equal(amount);
+                } else {
+                    const state = await delegationController.getState(delegationId);
+                    state.toNumber().should.be.equal(State.COMPLETED);
+                    const locked = await skaleToken.getAndUpdateLockedAmount.call(holder);
+                    locked.toNumber().should.be.equal(totalAmount);
+                    delegated = await skaleToken.getAndUpdateDelegatedAmount.call(holder);
+                    delegated.toNumber().should.be.equal(0);
+                }
+
+                // skip one more day
+                skipTime(web3, 60 * 60 * 24);
+
+                const finalState = await delegationController.getState(delegationId);
+                finalState.toNumber().should.be.equal(State.COMPLETED);
+                const finalLocked = await skaleToken.getAndUpdateLockedAmount.call(holder);
+                finalLocked.toNumber().should.be.equal(0);
                 delegated = await skaleToken.getAndUpdateDelegatedAmount.call(holder);
                 delegated.toNumber().should.be.equal(0);
             });
