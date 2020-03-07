@@ -120,7 +120,6 @@ contract MonitorsFunctionality is GroupsFunctionality {
     function deleteMonitor(uint nodeIndex) external allow(executorName) {
         bytes32 groupIndex = keccak256(abi.encodePacked(nodeIndex));
         MonitorsData data = MonitorsData(contractManager.getContract("MonitorsData"));
-        NodesData nodesData = NodesData(contractManager.getContract("NodesData"));
         data.removeAllVerdicts(groupIndex);
         data.removeAllCheckedNodes(groupIndex);
         uint[] memory nodesInGroup = data.getNodesInGroup(groupIndex);

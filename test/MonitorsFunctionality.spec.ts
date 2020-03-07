@@ -259,7 +259,7 @@ contract("MonitorsFunctionality", ([owner, validator]) => {
 
     await monitorsFunctionality.deleteMonitor(0);
     console.log("Finished delete 0 monitor");
-    
+
     await monitorsData.getCheckedArray(node0Hash).should.be.eventually.empty;
     await monitorsData.getCheckedArray(node1Hash).should.be.eventually.empty;
     (await monitorsData.getCheckedArray(node2Hash)).length.should.be.equal(1);
