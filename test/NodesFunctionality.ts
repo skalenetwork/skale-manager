@@ -27,7 +27,7 @@ contract("NodesFunctionality", ([owner, validator]) => {
         nodesFunctionality = await deployNodesFunctionality(contractManager);
         validatorService = await deployValidatorService(contractManager);
 
-        await validatorService.registerValidator("Validator", validator, "D2", 0, 0);
+        await validatorService.registerValidator("Validator", "D2", 0, 0, {from: validator});
     });
 
     it("should fail to create node if ip is zero", async () => {

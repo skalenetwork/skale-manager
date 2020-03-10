@@ -1,6 +1,5 @@
 import { ContractManagerInstance,
          DelegationControllerInstance,
-         DelegationServiceInstance,
          PunisherInstance,
          SkaleTokenInstance,
          TokenLaunchManagerInstance,
@@ -12,7 +11,6 @@ import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
 import { deployContractManager } from "../utils/deploy/contractManager";
 import { deployDelegationController } from "../utils/deploy/delegation/delegationController";
-import { deployDelegationService } from "../utils/deploy/delegation/delegationService";
 import { deployPunisher } from "../utils/deploy/delegation/punisher";
 import { deployTokenLaunchManager } from "../utils/deploy/delegation/tokenLaunchManager";
 import { deployValidatorService } from "../utils/deploy/delegation/validatorService";
@@ -25,7 +23,6 @@ contract("TokenLaunchManager", ([owner, holder, delegation, validator, seller, h
     let contractManager: ContractManagerInstance;
     let skaleToken: SkaleTokenInstance;
     let TokenLaunchManager: TokenLaunchManagerInstance;
-    let delegationService: DelegationServiceInstance;
     let validatorService: ValidatorServiceInstance;
     let delegationController: DelegationControllerInstance;
     let punisher: PunisherInstance;
@@ -34,7 +31,6 @@ contract("TokenLaunchManager", ([owner, holder, delegation, validator, seller, h
         contractManager = await deployContractManager();
         skaleToken = await deploySkaleToken(contractManager);
         TokenLaunchManager = await deployTokenLaunchManager(contractManager);
-        delegationService = await deployDelegationService(contractManager);
         validatorService = await deployValidatorService(contractManager);
         delegationController = await deployDelegationController(contractManager);
         punisher = await deployPunisher(contractManager);
@@ -42,7 +38,7 @@ contract("TokenLaunchManager", ([owner, holder, delegation, validator, seller, h
         // each test will start from Nov 10
         await skipTimeToDate(web3, 10, 11);
         await skaleToken.mint(owner, TokenLaunchManager.address, 1000, "0x", "0x");
-        await delegationService.registerValidator("Validator", "D2 is even", 150, 0, {from: validator});
+        await validatorService.registerValidator("Validator", "D2 is even", 150, 0, {from: validator});
         await validatorService.enableValidator(1, {from: owner});
     });
 
