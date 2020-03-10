@@ -1,6 +1,5 @@
 import { ContractManagerInstance, SkaleManagerInstance } from "../../../types/truffle-contracts";
 import { deployConstantsHolder } from "./constantsHolder";
-import { deployDelegationService } from "./delegation/delegationService";
 import { deployDistributor } from "./delegation/distributor";
 import { deployValidatorService } from "./delegation/validatorService";
 import { deployFunctionFactory } from "./factory";
@@ -22,7 +21,6 @@ const deploySkaleManager: (contractManager: ContractManagerInstance) => Promise<
                                 await deployConstantsHolder(contractManager);
                                 await deployManagerData(contractManager);
                                 await deploySkaleToken(contractManager);
-                                await deployDelegationService(contractManager);
                                 await deployDistributor(contractManager);
                             });
 

@@ -1,6 +1,5 @@
 import { ContractManagerInstance,
     DelegationControllerInstance,
-    DelegationServiceInstance,
     SkaleTokenInstance,
     TokenStateInstance,
     ValidatorServiceInstance } from "../../types/truffle-contracts";
@@ -11,7 +10,6 @@ import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
 import { deployContractManager } from "../utils/deploy/contractManager";
 import { deployDelegationController } from "../utils/deploy/delegation/delegationController";
-import { deployDelegationService } from "../utils/deploy/delegation/delegationService";
 import { deployTokenState } from "../utils/deploy/delegation/tokenState";
 import { deployValidatorService } from "../utils/deploy/delegation/validatorService";
 import { deploySkaleToken } from "../utils/deploy/skaleToken";
@@ -22,7 +20,6 @@ chai.use(chaiAsPromised);
 contract("DelegationController", ([owner, holder1, holder2, validator, validator2]) => {
     let contractManager: ContractManagerInstance;
     let skaleToken: SkaleTokenInstance;
-    let delegationService: DelegationServiceInstance;
     let delegationController: DelegationControllerInstance;
     let tokenState: TokenStateInstance;
     let validatorService: ValidatorServiceInstance;
@@ -34,7 +31,6 @@ contract("DelegationController", ([owner, holder1, holder2, validator, validator
         contractManager = await deployContractManager();
 
         skaleToken = await deploySkaleToken(contractManager);
-        delegationService = await deployDelegationService(contractManager);
         delegationController = await deployDelegationController(contractManager);
         tokenState = await deployTokenState(contractManager);
         validatorService = await deployValidatorService(contractManager);
@@ -51,7 +47,7 @@ contract("DelegationController", ([owner, holder1, holder2, validator, validator
             amount = 100;
             delegationPeriod = 3;
             info = "VERY NICE";
-            await delegationService.registerValidator(
+            await validatorService.registerValidator(
                 "ValidatorName",
                 "Really good validator",
                 500,
@@ -162,7 +158,7 @@ contract("DelegationController", ([owner, holder1, holder2, validator, validator
             });
 
             it("should reject accepting request if validator tried to accept request not assigned to him", async () => {
-                delegationService.registerValidator(
+                validatorService.registerValidator(
                     "ValidatorName",
                     "Really good validator",
                     500,
@@ -192,7 +188,7 @@ contract("DelegationController", ([owner, holder1, holder2, validator, validator
                     await delegationController.requestUndelegation(delegationId, {from: holder2})
                         .should.be.eventually.rejectedWith("Permission denied to request undelegation");
 
-                    await delegationService.registerValidator(
+                    await validatorService.registerValidator(
                         "ValidatorName",
                         "Really good validator",
                         500,
