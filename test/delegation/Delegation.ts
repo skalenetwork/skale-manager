@@ -359,6 +359,32 @@ contract("Delegation", ([owner,
                     (await delegationController.getAndUpdateDelegatedAmount.call(
                         holder3)).toNumber().should.be.equal(0);
                 });
+
+                it("should not pay bounty for slashed tokens", async () => {
+                    // slash everything
+                    await punisher.slash(validatorId, 10);
+
+                    delegationController.delegate(validatorId, 1, 3, "D2 is the evenest", {from: holder1});
+                    const delegationId = 3;
+                    await delegationController.acceptPendingDelegation(delegationId, {from: validator});
+
+                    skipTime(web3, month);
+
+                    // now only holder1 has delegated and not slashed tokens
+
+                    await skaleManagerMock.payBounty(validatorId, 100);
+
+                    skipTime(web3, month);
+
+                    (await distributor.getEarnedFeeAmount.call(
+                        {from: validator}))[0].toNumber().should.be.equal(15);
+                    (await distributor.getAndUpdateEarnedBountyAmount.call(
+                        validatorId, {from: holder1}))[0].toNumber().should.be.equal(85);
+                    (await distributor.getAndUpdateEarnedBountyAmount.call(
+                        validatorId, {from: holder1}))[0].toNumber().should.be.equal(0);
+                    (await distributor.getAndUpdateEarnedBountyAmount.call(
+                        validatorId, {from: holder1}))[0].toNumber().should.be.equal(0);
+                });
             });
         });
 
