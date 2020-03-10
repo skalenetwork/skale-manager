@@ -142,7 +142,7 @@ contract("TokenLaunchManager", ([owner, holder, delegation, validator, seller, h
                 // TODO: move undelegated tokens too
             });
 
-            it("should unlock all tokens if 50% was delegated after 90 days", async () => {
+            it("should unlock all tokens if 50% was delegated for 90 days", async () => {
                 await skipTimeToDate(web3, 1, 0); // January
 
                 const amount = Math.ceil(totalAmount / 2);
