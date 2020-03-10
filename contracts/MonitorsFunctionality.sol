@@ -24,7 +24,6 @@ import "./interfaces/IConstants.sol";
 import "./interfaces/INodesData.sol";
 import "./NodesData.sol";
 import "./MonitorsData.sol";
-import "@nomiclabs/buidler/console.sol";
 
 
 contract MonitorsFunctionality is GroupsFunctionality {
