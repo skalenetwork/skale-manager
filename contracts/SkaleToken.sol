@@ -57,7 +57,7 @@ contract SkaleToken is LockableERC777, Permissions, IDelegatableToken {
     }
 
     /**
-     * @dev mint - create some amount of token and transfer it to specify address
+     * @dev mint - create some amount of token and transfer it to the specified address
      * @param operator address operator requesting the transfer
      * @param account - address where some amount of token would be created
      * @param amount - amount of tokens to mine
