@@ -1,7 +1,6 @@
 import { ConstantsHolderInstance,
     ContractManagerInstance,
     DelegationControllerInstance,
-    DelegationServiceInstance,
     SkaleTokenInstance,
     ValidatorServiceInstance} from "../../types/truffle-contracts";
 
@@ -13,7 +12,6 @@ import * as chaiAsPromised from "chai-as-promised";
 import { deployConstantsHolder } from "../utils/deploy/constantsHolder";
 import { deployContractManager } from "../utils/deploy/contractManager";
 import { deployDelegationController } from "../utils/deploy/delegation/delegationController";
-import { deployDelegationService } from "../utils/deploy/delegation/delegationService";
 import { deployValidatorService } from "../utils/deploy/delegation/validatorService";
 import { deploySkaleToken } from "../utils/deploy/skaleToken";
 chai.should();
@@ -41,7 +39,6 @@ class Validator {
 
 contract("ValidatorService", ([owner, holder, validator1, validator2, validator3, nodeAddress]) => {
     let contractManager: ContractManagerInstance;
-    let delegationService: DelegationServiceInstance;
     let validatorService: ValidatorServiceInstance;
     let constantsHolder: ConstantsHolderInstance;
     let skaleToken: SkaleTokenInstance;
@@ -54,21 +51,18 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
 
         constantsHolder = await deployConstantsHolder(contractManager);
         skaleToken = await deploySkaleToken(contractManager);
-        delegationService = await deployDelegationService(contractManager);
         validatorService = await deployValidatorService(contractManager);
         delegationController = await deployDelegationController(contractManager);
     });
 
     it("should register new validator", async () => {
-        const { logs } = await delegationService.registerValidator(
+        await validatorService.registerValidator(
             "ValidatorName",
             "Really good validator",
             500,
             100,
             {from: validator1});
-        assert.equal(logs.length, 1, "No ValidatorRegistered Event emitted");
-        assert.equal(logs[0].event, "ValidatorRegistered");
-        const validatorId = logs[0].args.validatorId;
+        const validatorId = await validatorService.getValidatorId(validator1);
         const validator: Validator = new Validator(
             await validatorService.validators(validatorId));
         assert.equal(validator.name, "ValidatorName");
@@ -80,7 +74,7 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
     });
 
     it("should reject if validator tried to register with a fee rate higher than 100 percent", async () => {
-        await delegationService.registerValidator(
+        await validatorService.registerValidator(
             "ValidatorName",
             "Really good validator",
             1500,
@@ -91,7 +85,7 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
 
     describe("when validator registered", async () => {
         beforeEach(async () => {
-            await delegationService.registerValidator(
+            await validatorService.registerValidator(
                 "ValidatorName",
                 "Really good validator",
                 500,
@@ -99,7 +93,7 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
                 {from: validator1});
         });
         it("should reject when validator tried to register new one with the same address", async () => {
-            await delegationService.registerValidator(
+            await validatorService.registerValidator(
                 "ValidatorName",
                 "Really good validator",
                 500,
@@ -109,29 +103,40 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
 
         });
 
+        it("should reset name, description, minimum delegation amount", async () => {
+            const validatorId = 1;
+            await validatorService.setValidatorName("Validator", {from: validator1});
+            await validatorService.setValidatorDescription("Good", {from: validator1});
+            await validatorService.setValidatorMDA(1, {from: validator1});
+            const validator = await validatorService.getValidator(validatorId);
+            assert.equal(validator.name, "Validator");
+            assert.equal(validator.description, "Good");
+            assert.equal(validator.minimumDelegationAmount, new BigNumber(1));
+        });
+
         it("should link new node address for validator", async () => {
             const validatorId = 1;
-            await delegationService.linkNodeAddress(nodeAddress, {from: validator1});
+            await validatorService.linkNodeAddress(nodeAddress, {from: validator1});
             const id = new BigNumber(await validatorService.getValidatorId(nodeAddress, {from: validator1})).toNumber();
             assert.equal(id, validatorId);
         });
 
         it("should reject if linked node address tried to unlink validator address", async () => {
-            await delegationService.linkNodeAddress(nodeAddress, {from: validator1});
-            await delegationService.unlinkNodeAddress(validator1, {from: nodeAddress})
+            await validatorService.linkNodeAddress(nodeAddress, {from: validator1});
+            await validatorService.unlinkNodeAddress(validator1, {from: nodeAddress})
                 .should.be.eventually.rejectedWith("Such address hasn't permissions to unlink node");
         });
 
         it("should reject if validator tried to override node address of another validator", async () => {
             const validatorId = 1;
-            await delegationService.registerValidator(
+            await validatorService.registerValidator(
                 "Second Validator",
                 "Bad validator",
                 500,
                 100,
                 {from: validator2});
-            await delegationService.linkNodeAddress(nodeAddress, {from: validator1});
-            await delegationService.linkNodeAddress(nodeAddress, {from: validator2})
+            await validatorService.linkNodeAddress(nodeAddress, {from: validator1});
+            await validatorService.linkNodeAddress(nodeAddress, {from: validator2})
                 .should.be.eventually.rejectedWith("Validator cannot override node address");
             const id = new BigNumber(await validatorService.getValidatorId(nodeAddress, {from: validator1})).toNumber();
             assert.equal(id, validatorId);
@@ -139,38 +144,38 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
 
         it("should unlink node address for validator", async () => {
             const validatorId = 1;
-            await delegationService.linkNodeAddress(nodeAddress, {from: validator1});
-            await delegationService.registerValidator(
+            await validatorService.linkNodeAddress(nodeAddress, {from: validator1});
+            await validatorService.registerValidator(
                 "Second Validator",
                 "Not bad validator",
                 500,
                 100,
                 {from: validator2});
-            await delegationService.unlinkNodeAddress(nodeAddress, {from: validator2})
+            await validatorService.unlinkNodeAddress(nodeAddress, {from: validator2})
                 .should.be.eventually.rejectedWith("Validator hasn't permissions to unlink node");
             const id = new BigNumber(await validatorService.getValidatorId(nodeAddress, {from: validator1})).toNumber();
             assert.equal(id, validatorId);
 
-            await delegationService.unlinkNodeAddress(nodeAddress, {from: validator1});
+            await validatorService.unlinkNodeAddress(nodeAddress, {from: validator1});
             await validatorService.getValidatorId(nodeAddress, {from: validator1})
                 .should.be.eventually.rejectedWith("Validator with such address doesn't exist");
         });
 
         describe("when validator requests for a new address", async () => {
             beforeEach(async () => {
-                await delegationService.requestForNewAddress(validator3, {from: validator1});
+                await validatorService.requestForNewAddress(validator3, {from: validator1});
             });
 
             it("should reject when hacker tries to change validator address", async () => {
                 const validatorId = 1;
-                await delegationService.confirmNewAddress(validatorId, {from: validator2})
+                await validatorService.confirmNewAddress(validatorId, {from: validator2})
                     .should.be.eventually.rejectedWith("The validator cannot be changed because it isn't the actual owner");
             });
 
             it("should set new address for validator", async () => {
                 const validatorId = new BigNumber(1);
                 assert.deepEqual(validatorId, new BigNumber(await validatorService.getValidatorId(validator1)));
-                await delegationService.confirmNewAddress(validatorId, {from: validator3});
+                await validatorService.confirmNewAddress(validatorId, {from: validator3});
                 assert.deepEqual(validatorId, new BigNumber(await validatorService.getValidatorId(validator3)));
                 await validatorService.getValidatorId(validator1)
                     .should.be.eventually.rejectedWith("Validator with such address doesn't exist");
@@ -179,25 +184,25 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
         });
 
         it("should reject when someone tries to set new address for validator that doesn't exist", async () => {
-            await delegationService.requestForNewAddress(validator2)
+            await validatorService.requestForNewAddress(validator2)
                 .should.be.eventually.rejectedWith("Validator with such address doesn't exist");
         });
 
         it("should reject if validator tries to set new address as null", async () => {
-            await delegationService.requestForNewAddress("0x0000000000000000000000000000000000000000")
+            await validatorService.requestForNewAddress("0x0000000000000000000000000000000000000000")
             .should.be.eventually.rejectedWith("New address cannot be null");
         });
 
         it("should return list of trusted validators", async () => {
             const validatorId1 = 1;
             const validatorId3 = 3;
-            await delegationService.registerValidator(
+            await validatorService.registerValidator(
                 "ValidatorName",
                 "Really good validator",
                 500,
                 100,
                 {from: validator2});
-            await delegationService.registerValidator(
+            await validatorService.registerValidator(
                 "ValidatorName",
                 "Really good validator",
                 500,

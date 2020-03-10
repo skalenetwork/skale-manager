@@ -1,6 +1,5 @@
 import { ContractManagerInstance,
          DelegationControllerInstance,
-         DelegationServiceInstance,
          SkaleTokenInstance,
          TokenStateInstance,
          ValidatorServiceInstance} from "../../types/truffle-contracts";
@@ -11,7 +10,6 @@ import { currentTime, skipTime } from "../utils/time";
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
 import { deployDelegationController } from "../utils/deploy/delegation/delegationController";
-import { deployDelegationService } from "../utils/deploy/delegation/delegationService";
 import { deployTokenState } from "../utils/deploy/delegation/tokenState";
 import { deployValidatorService } from "../utils/deploy/delegation/validatorService";
 import { deploySkaleToken } from "../utils/deploy/skaleToken";
@@ -24,7 +22,6 @@ contract("DelegationController", ([owner, holder, validator]) => {
     let delegationController: DelegationControllerInstance;
     let tokenState: TokenStateInstance;
     let validatorService: ValidatorServiceInstance;
-    let delegationService: DelegationServiceInstance;
     let skaleToken: SkaleTokenInstance;
 
     let validatorId: number;
@@ -35,10 +32,9 @@ contract("DelegationController", ([owner, holder, validator]) => {
         delegationController = await deployDelegationController(contractManager);
         tokenState = await deployTokenState(contractManager);
         validatorService = await deployValidatorService(contractManager);
-        delegationService = await deployDelegationService(contractManager);
         skaleToken = await deploySkaleToken(contractManager);
 
-        await delegationService.registerValidator("Validator", "D2 is even", 150, 0, {from: validator});
+        await validatorService.registerValidator("Validator", "D2 is even", 150, 0, {from: validator});
         validatorId = 1;
         await validatorService.enableValidator(validatorId, {from: owner});
         await skaleToken.mint(owner, holder, 1000, "0x", "0x");

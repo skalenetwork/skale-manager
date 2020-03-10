@@ -71,7 +71,6 @@ async function deploy(deployer, networkName, accounts) {
 
         "DelegationController",
         "DelegationPeriodManager",
-        "DelegationService",
         "Distributor",
         "Punisher",
         "SlashingTable",

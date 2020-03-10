@@ -165,7 +165,7 @@ contract DelegationController is Permissions, ILocker {
         return delegations[delegationId];
     }
 
-    function getAndUpdateDelegatedToValidatorNow(uint validatorId) external allow("ValidatorService") returns (uint) {
+    function getAndUpdateDelegatedToValidatorNow(uint validatorId) external returns (uint) {
         return getAndUpdateDelegatedToValidator(validatorId, getCurrentMonth());
     }
 

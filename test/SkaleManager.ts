@@ -3,7 +3,6 @@ import * as chaiAsPromised from "chai-as-promised";
 import { ConstantsHolderInstance,
          ContractManagerInstance,
          DelegationControllerInstance,
-         DelegationServiceInstance,
          DistributorInstance,
          MonitorsDataInstance,
          NodesDataInstance,
@@ -16,7 +15,6 @@ import { ConstantsHolderInstance,
 import { deployConstantsHolder } from "./utils/deploy/constantsHolder";
 import { deployContractManager } from "./utils/deploy/contractManager";
 import { deployDelegationController } from "./utils/deploy/delegation/delegationController";
-import { deployDelegationService } from "./utils/deploy/delegation/delegationService";
 import { deployDistributor } from "./utils/deploy/delegation/distributor";
 import { deployValidatorService } from "./utils/deploy/delegation/validatorService";
 import { deployMonitorsData } from "./utils/deploy/monitorsData";
@@ -39,7 +37,6 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
     let monitorsData: MonitorsDataInstance;
     let schainsData: SchainsDataInstance;
     let schainsFunctionality: SchainsFunctionalityInstance;
-    let delegationService: DelegationServiceInstance;
     let validatorService: ValidatorServiceInstance;
     let delegationController: DelegationControllerInstance;
     let distributor: DistributorInstance;
@@ -54,7 +51,6 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
         schainsData = await deploySchainsData(contractManager);
         schainsFunctionality = await deploySchainsFunctionality(contractManager);
         skaleManager = await deploySkaleManager(contractManager);
-        delegationService = await deployDelegationService(contractManager);
         validatorService = await deployValidatorService(contractManager);
         delegationController = await deployDelegationController(contractManager);
         distributor = await deployDistributor(contractManager);
@@ -85,7 +81,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
         const month = 60 * 60 * 24 * 31;
 
         beforeEach(async () => {
-            await delegationService.registerValidator("D2", "D2 is even", 150, 0, {from: validator});
+            await validatorService.registerValidator("D2", "D2 is even", 150, 0, {from: validator});
 
             await skaleToken.transfer(validator, "0x410D586A20A4C00000", {from: owner});
             await validatorService.enableValidator(validatorId, {from: owner});
@@ -333,7 +329,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker]) => {
             it("should fail to create schain if validator doesn't meet MSR", async () => {
                 await constantsHolder.setMSR(6);
                 const newValidatorId = 2;
-                await delegationService.registerValidator("D2", "D2 is even", 150, 0, {from: developer});
+                await validatorService.registerValidator("D2", "D2 is even", 150, 0, {from: developer});
                 await validatorService.enableValidator(newValidatorId, {from: owner});
 
                 await skaleManager.createNode(
