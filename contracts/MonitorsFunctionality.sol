@@ -22,7 +22,6 @@ pragma solidity ^0.5.3;
 import "./GroupsFunctionality.sol";
 import "./interfaces/IConstants.sol";
 import "./interfaces/INodesData.sol";
-import "./NodesData.sol";
 import "./MonitorsData.sol";
 
 
