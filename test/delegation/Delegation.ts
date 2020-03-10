@@ -381,9 +381,9 @@ contract("Delegation", ([owner,
                     (await distributor.getAndUpdateEarnedBountyAmount.call(
                         validatorId, {from: holder1}))[0].toNumber().should.be.equal(85);
                     (await distributor.getAndUpdateEarnedBountyAmount.call(
-                        validatorId, {from: holder1}))[0].toNumber().should.be.equal(0);
+                        validatorId, {from: holder2}))[0].toNumber().should.be.equal(0);
                     (await distributor.getAndUpdateEarnedBountyAmount.call(
-                        validatorId, {from: holder1}))[0].toNumber().should.be.equal(0);
+                        validatorId, {from: holder3}))[0].toNumber().should.be.equal(0);
                 });
             });
         });
