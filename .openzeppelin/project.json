@@ -3,7 +3,6 @@
   "contracts": {
     "DelegationController": "DelegationController",
     "DelegationPeriodManager": "DelegationPeriodManager",
-    "DelegationService": "DelegationService",
     "Distributor": "Distributor",
     "TimeHelpers": "TimeHelpers",
     "TokenLaunchManager": "TokenLaunchManager",
@@ -36,7 +35,7 @@
     "manager": "openzeppelin",
     "compilerSettings": {
       "optimizer": {
-        "enabled": false,
+        "enabled": true,
         "runs": "200"
       }
     },

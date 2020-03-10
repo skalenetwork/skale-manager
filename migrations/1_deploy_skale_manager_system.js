@@ -59,14 +59,9 @@ async function deploy(deployer, networkName, accounts) {
         } else {
             console.log("ERC1820 contract has already deployed!");
         }
-    }    
+    }        
 
-    if (networkName == "test") {
-        console.log("Skip deploying");
-        return;
-    } else {
-        console.log("Starting SkaleManager system deploying...");
-    }
+    console.log("Starting SkaleManager system deploying...");
     
     const deployAccount = accounts[0];
     const options = await ConfigManager.initNetworkConfiguration({ network: networkName, from: deployAccount });
@@ -76,7 +71,6 @@ async function deploy(deployer, networkName, accounts) {
 
         "DelegationController",
         "DelegationPeriodManager",
-        "DelegationService",
         "Distributor",
         "Punisher",
         "SlashingTable",
