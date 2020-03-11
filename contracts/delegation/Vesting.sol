@@ -1,7 +1,9 @@
 pragma solidity ^0.5.3;
 
 import "../interfaces/delegation/ILocker.sol";
+import "../Permissions.sol";
 import "./TimeHelpers.sol";
+
 
 contract Vesting is ILocker, Permissions {
 
@@ -33,7 +35,7 @@ contract Vesting is ILocker, Permissions {
             finishVesting: timeHelpers.addMonths(periodStarts, fullPeriod),
             lockupPeriod: lockupPeriod,
             fullAmount: fullAmount,
-            afterLockupPeriod: lockupAmount,
+            afterLockupAmount: lockupAmount,
             regularPaymentTime: vestingTimes
         });
     }
@@ -41,22 +43,55 @@ contract Vesting is ILocker, Permissions {
     function getLockedAmount(address wallet) external view returns (uint locked) {
         TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
         uint date = block.timestamp;
-        locked = saftHolders[wallet].fullAmount;
-        if (date > timeHelpers.addMonths(periodStarts, saftHolders[wallet].lockupPeriod)) {
-            
+        SAFT memory saftParams = saftHolders[wallet];
+        locked = saftParams.fullAmount;
+        if (date > timeHelpers.addMonths(saftParams.startVesting, saftParams.lockupPeriod)) {
+            locked = locked.sub(saftParams.afterLockupAmount);
+            if (date > saftParams.finishVesting) {
+                locked = 0;
+            } else {
+                uint numberOfPayments = getNumberOfPayments(wallet);
+                uint partPayment = saftParams.fullAmount.sub(saftParams.afterLockupAmount).div(getNumberOfAllPayments(wallet));
+                locked = locked.sub(partPayment.mul(numberOfPayments));
+            }
         }
     }
 
     function getAndUpdateLockedAmount(address wallet) external returns (uint) {
-
+        return this.getLockedAmount(wallet);
     }
 
     function getAndUpdateForbiddenForDelegationAmount(address wallet) external returns (uint) {
-
+        return this.getLockedAmount(wallet);
     }
 
     function initialize(address _contractManager) public initializer {
         Permissions.initialize(_contractManager);
     }
 
+    function getNumberOfPayments(address wallet) internal view returns (uint) {
+        TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
+        uint date = block.timestamp;
+        SAFT memory saftParams = saftHolders[wallet];
+        if (date < timeHelpers.addMonths(saftParams.startVesting, saftParams.lockupPeriod)) {
+            return 0;
+        }
+        uint dateMonth = timeHelpers.timestampToMonth(date);
+        uint lockupMonth = timeHelpers.timestampToMonth(timeHelpers.addMonths(
+            saftParams.startVesting,
+            saftParams.lockupPeriod
+        ));
+        return dateMonth.sub(lockupMonth).div(saftParams.regularPaymentTime);
+    }
+
+    function getNumberOfAllPayments(address wallet) internal view returns (uint) {
+        TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
+        SAFT memory saftParams = saftHolders[wallet];
+        uint finishMonth = timeHelpers.timestampToMonth(saftParams.finishVesting);
+        uint afterLockupMonth = timeHelpers.timestampToMonth(timeHelpers.addMonths(
+            saftParams.startVesting,
+            saftParams.lockupPeriod
+        ));
+        return finishMonth.sub(afterLockupMonth).div(saftParams.regularPaymentTime);
+    }
 }
