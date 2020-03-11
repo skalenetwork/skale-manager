@@ -2,7 +2,6 @@ import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
 import { ContractManagerInstance,
          DelegationControllerInstance,
-         DelegationServiceInstance,
          NodesFunctionalityInstance,
          SchainsDataInstance,
          SchainsFunctionalityInstance,
@@ -16,7 +15,6 @@ import { skipTime } from "./utils/time";
 import BigNumber from "bignumber.js";
 import { deployContractManager } from "./utils/deploy/contractManager";
 import { deployDelegationController } from "./utils/deploy/delegation/delegationController";
-import { deployDelegationService } from "./utils/deploy/delegation/delegationService";
 import { deployValidatorService } from "./utils/deploy/delegation/validatorService";
 import { deployNodesFunctionality } from "./utils/deploy/nodesFunctionality";
 import { deploySchainsData } from "./utils/deploy/schainsData";
@@ -61,7 +59,6 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
     let schainsData: SchainsDataInstance;
     let schainsFunctionality: SchainsFunctionalityInstance;
     let skaleDKG: SkaleDKGInstance;
-    let delegationService: DelegationServiceInstance;
     let skaleToken: SkaleTokenInstance;
     let validatorService: ValidatorServiceInstance;
     let slashingTable: SlashingTableInstance;
@@ -74,7 +71,6 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
         schainsData = await deploySchainsData(contractManager);
         schainsFunctionality = await deploySchainsFunctionality(contractManager);
         skaleDKG = await deploySkaleDKG(contractManager);
-        delegationService = await deployDelegationService(contractManager);
         skaleToken = await deploySkaleToken(contractManager);
         validatorService = await deployValidatorService(contractManager);
         slashingTable = await deploySlashingTable(contractManager);
@@ -170,9 +166,9 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
         let schainName = "";
 
         beforeEach(async () => {
-            await delegationService.registerValidator("Validator1", "D2 is even", 0, 0, {from: validator1});
+            await validatorService.registerValidator("Validator1", "D2 is even", 0, 0, {from: validator1});
             const validator1Id = 1;
-            await delegationService.registerValidator("Validator2", "D2 is even more even", 0, 0, {from: validator2});
+            await validatorService.registerValidator("Validator2", "D2 is even more even", 0, 0, {from: validator2});
             const validator2Id = 2;
             await skaleToken.mint(owner, validator1, 1000, "0x", "0x");
             await skaleToken.mint(owner, validator2, 1000, "0x", "0x");

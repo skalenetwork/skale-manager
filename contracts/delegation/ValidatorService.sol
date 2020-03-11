@@ -58,22 +58,20 @@ contract ValidatorService is Permissions {
 
     function registerValidator(
         string calldata name,
-        address validatorAddress,
         string calldata description,
         uint feeRate,
         uint minimumDelegationAmount
     )
         external
-        allow("DelegationService")
         returns (uint validatorId)
     {
-        require(!validatorAddressExists(validatorAddress), "Validator with such address already exists");
+        require(!validatorAddressExists(msg.sender), "Validator with such address already exists");
         require(feeRate < 1000, "Fee rate of validator should be lower than 100%");
         uint[] memory epmtyArray = new uint[](0);
         validatorId = ++numberOfValidators;
         validators[validatorId] = Validator(
             name,
-            validatorAddress,
+            msg.sender,
             address(0),
             description,
             feeRate,
@@ -81,7 +79,7 @@ contract ValidatorService is Permissions {
             minimumDelegationAmount,
             epmtyArray
         );
-        setValidatorAddress(validatorId, validatorAddress);
+        setValidatorAddress(validatorId, msg.sender);
     }
 
     function enableValidator(uint validatorId) external checkValidatorExists(validatorId) onlyOwner {
@@ -109,28 +107,31 @@ contract ValidatorService is Permissions {
         return whitelist;
     }
 
-    function requestForNewAddress(address oldValidatorAddress, address newValidatorAddress) external allow("DelegationService") {
+    function requestForNewAddress(address newValidatorAddress) external {
         require(newValidatorAddress != address(0), "New address cannot be null");
-        uint validatorId = getValidatorId(oldValidatorAddress);
+        uint validatorId = getValidatorId(msg.sender);
         validators[validatorId].requestedAddress = newValidatorAddress;
     }
 
-    function confirmNewAddress(address newValidatorAddress, uint validatorId)
+    function confirmNewAddress(uint validatorId)
         external
         checkValidatorExists(validatorId)
-        allow("DelegationService")
     {
+        require(
+            getValidator(validatorId).requestedAddress == msg.sender,
+            "The validator address cannot be changed because it isn't the actual owner"
+        );
         validators[validatorId].requestedAddress = address(0);
-        setValidatorAddress(validatorId, validators[validatorId].validatorAddress);
+        setValidatorAddress(validatorId, msg.sender);
     }
 
-    function linkNodeAddress(address validatorAddress, address nodeAddress) external allow("DelegationService") {
-        uint validatorId = getValidatorId(validatorAddress);
+    function linkNodeAddress(address nodeAddress) external {
+        uint validatorId = getValidatorId(msg.sender);
         addNodeAddress(validatorId, nodeAddress);
     }
 
-    function unlinkNodeAddress(address validatorAddress, address nodeAddress) external allow("DelegationService") {
-        uint validatorId = getValidatorId(validatorAddress);
+    function unlinkNodeAddress(address nodeAddress) external allow("DelegationService") {
+        uint validatorId = getValidatorId(msg.sender);
         removeNodeAddress(validatorId, nodeAddress);
     }
 
@@ -191,6 +192,11 @@ contract ValidatorService is Permissions {
         uint delegationsTotal = delegationController.getAndUpdateDelegatedToValidatorNow(validatorId);
         uint msr = IConstants(contractManager.getContract("ConstantsHolder")).msr();
         return position.add(1).mul(msr) <= delegationsTotal;
+    }
+
+    function setValidatorMDA(uint minimumDelegationAmount) external {
+        uint validatorId = getValidatorId(msg.sender);
+        validators[validatorId].minimumDelegationAmount = minimumDelegationAmount;
     }
 
     function getMyNodesAddresses() external view returns (address[] memory) {

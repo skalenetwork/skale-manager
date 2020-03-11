@@ -3,7 +3,6 @@
   "contracts": {
     "DelegationController": "DelegationController",
     "DelegationPeriodManager": "DelegationPeriodManager",
-    "DelegationService": "DelegationService",
     "Distributor": "Distributor",
     "TimeHelpers": "TimeHelpers",
     "TokenLaunchManager": "TokenLaunchManager",

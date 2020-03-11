@@ -26,7 +26,6 @@ import "./interfaces/ISkaleToken.sol";
 import "./interfaces/INodesFunctionality.sol";
 import "./interfaces/ISchainsFunctionality.sol";
 import "./interfaces/IManagerData.sol";
-import "./delegation/DelegationService.sol";
 import "./delegation/Distributor.sol";
 import "./delegation/ValidatorService.sol";
 import "./MonitorsFunctionality.sol";
