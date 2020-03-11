@@ -114,6 +114,8 @@ contract ConstantsHolder is IConstants, Permissions {
 
     uint public rotationDelay;
 
+    uint public proofOfUseLockUpPeriodDays;
+
     /**
      * Set reward and delta periods to new one, run only by owner. This function
      * only for tests.
@@ -168,6 +170,10 @@ contract ConstantsHolder is IConstants, Permissions {
         rotationDelay = newDelay;
     }
 
+    function setProofOfUseLockUpPeriod(uint periodDays) external onlyOwner {
+        proofOfUseLockUpPeriodDays = periodDays;
+    }
+
     /**
      * @dev constructor in Permissions approach
      * @param contractsAddress needed in Permissions constructor
@@ -184,5 +190,6 @@ contract ConstantsHolder is IConstants, Permissions {
         lastTimeOverloaded = 0;
         launchTimestamp = now;
         rotationDelay = 12 hours;
+        proofOfUseLockUpPeriodDays = 90;
     }
 }

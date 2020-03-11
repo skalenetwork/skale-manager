@@ -18,12 +18,12 @@ contract ReentrancyTester is Permissions, IERC777Recipient {
     }
 
     function tokensReceived(
-        address operator,
-        address from,
-        address to,
+        address /* operator */,
+        address /* from */,
+        address /* to */,
         uint256 amount,
-        bytes calldata userData,
-        bytes calldata operatorData
+        bytes calldata /* userData */,
+        bytes calldata /* operatorData */
     )
         external
     {
