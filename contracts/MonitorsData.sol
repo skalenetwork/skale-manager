@@ -81,6 +81,10 @@ contract MonitorsData is GroupsData {
         return checkedNodes[monitorIndex];
     }
 
+    function getCheckedArrayLength(bytes32 monitorIndex) external view returns (uint) {
+        return checkedNodes[monitorIndex].length;
+    }
+
     function getLengthOfMetrics(bytes32 monitorIndex) external view returns (uint) {
         return verdicts[monitorIndex].length;
     }

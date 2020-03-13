@@ -23,6 +23,7 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 
 import "../Permissions.sol";
 import "../interfaces/delegation/ILocker.sol";
+import "../ConstantsHolder.sol";
 
 import "./DelegationController.sol";
 import "./TimeHelpers.sol";
@@ -96,10 +97,11 @@ contract TokenLaunchLocker is Permissions, ILocker {
         if (_locked[wallet] > 0) {
             DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
             TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
+            ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
 
             uint currentMonth = timeHelpers.getCurrentMonth();
             if (_totalDelegatedAmount[wallet].delegated.mul(2) >= _locked[wallet] &&
-                _totalDelegatedAmount[wallet].month.add(3) <= currentMonth) {
+                timeHelpers.calculateProofOfUseLockEndTime(_totalDelegatedAmount[wallet].month, constantsHolder.proofOfUseLockUpPeriodDays()) <= now) {
                 unlock(wallet);
                 return 0;
             } else {

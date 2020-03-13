@@ -69,6 +69,10 @@ contract TimeHelpers {
         }
     }
 
+    function calculateProofOfUseLockEndTime(uint month, uint lockUpPeriodDays) external pure returns (uint timestamp) {
+        timestamp = BokkyPooBahsDateTimeLibrary.addDays(monthToTimestamp(month), lockUpPeriodDays);
+    }
+
     function addMonths(uint fromTimestamp, uint n) external pure returns (uint) {
         uint year;
         uint month;
@@ -91,17 +95,17 @@ contract TimeHelpers {
             second);
     }
 
-    function monthToTimestamp(uint _month) external pure returns (uint timestamp) {
+    function getCurrentMonth() external view returns (uint) {
+        return timestampToMonth(now);
+    }
+
+    function monthToTimestamp(uint _month) public pure returns (uint timestamp) {
         uint year = ZERO_YEAR;
         uint month = _month;
         year = year.add(month.div(12));
         month = month.mod(12);
         month = month.add(1);
         return BokkyPooBahsDateTimeLibrary.timestampFromDate(year, month, 1);
-    }
-
-    function getCurrentMonth() external view returns (uint) {
-        return timestampToMonth(now);
     }
 
     function timestampToMonth(uint timestamp) public pure returns (uint) {

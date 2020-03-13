@@ -65,6 +65,7 @@ contract DelegationController is Permissions, ILocker {
         mapping (uint => uint) value;
 
         uint firstUnprocessedMonth;
+        uint lastChangedMonth;
     }
 
     struct PartialDifferencesValue {
@@ -174,9 +175,11 @@ contract DelegationController is Permissions, ILocker {
     }
 
     function getAndUpdateEffectiveDelegatedByHolderToValidator(address holder, uint validatorId, uint month) external
-        allow("Distributor") returns (uint)
+        allow("Distributor") returns (uint effectiveDelegated)
     {
-        return getAndUpdateValue(_effectiveDelegatedByHolderToValidator[holder][validatorId], month);
+        SlashingSignal[] memory slashingSignals = processSlashesWithoutSignals(holder);
+        effectiveDelegated = getAndUpdateValue(_effectiveDelegatedByHolderToValidator[holder][validatorId], month);
+        sendSlashingSignals(slashingSignals);
     }
 
     /// @notice Creates request to delegate `amount` of tokens to `validator` from the begining of the next month
@@ -251,7 +254,7 @@ contract DelegationController is Permissions, ILocker {
         DelegationPeriodManager delegationPeriodManager = DelegationPeriodManager(contractManager.getContract("DelegationPeriodManager"));
         TokenLaunchLocker tokenLaunchLocker = TokenLaunchLocker(contractManager.getContract("TokenLaunchLocker"));
 
-        SlashingSignal[] memory slashingSignals = processSlashesWithoutSignals(msg.sender);
+        SlashingSignal[] memory slashingSignals = processSlashesWithoutSignals(delegations[delegationId].holder);
 
         uint currentMonth = timeHelpers.timestampToMonth(now);
         delegations[delegationId].started = currentMonth.add(1);
@@ -325,7 +328,7 @@ contract DelegationController is Permissions, ILocker {
             delegations[delegationId].validatorId,
             amountAfterSlashing,
             delegations[delegationId].finished);
-        uint effectiveAmount = delegations[delegationId].amount.mul(delegationPeriodManager.stakeMultipliers(
+        uint effectiveAmount = amountAfterSlashing.mul(delegationPeriodManager.stakeMultipliers(
             delegations[delegationId].delegationPeriod));
         removeFromEffectiveDelegatedToValidator(
             delegations[delegationId].validatorId,
@@ -346,6 +349,7 @@ contract DelegationController is Permissions, ILocker {
     function confiscate(uint validatorId, uint amount) external {
         uint currentMonth = getCurrentMonth();
         Fraction memory coefficient = reduce(_delegatedToValidator[validatorId], amount, currentMonth);
+        reduce(_effectiveDelegatedToValidator[validatorId], coefficient, currentMonth);
         putToSlashingLog(_slashesOfValidator[validatorId], coefficient, currentMonth);
         _slashes.push(SlashingEvent({reducingCoefficient: coefficient, validatorId: validatorId, month: currentMonth}));
     }
@@ -533,9 +537,8 @@ contract DelegationController is Permissions, ILocker {
         return getAndUpdateValue(_delegatedByHolder[holder], currentMonth);
     }
 
-    function getAndUpdateDelegatedByHolderToValidator(address holder, uint validatorId) internal returns (uint) {
-        uint currentMonth = getCurrentMonth();
-        return getAndUpdateValue(_delegatedByHolderToValidator[holder][validatorId], currentMonth);
+    function getAndUpdateDelegatedByHolderToValidator(address holder, uint validatorId, uint month) internal returns (uint) {
+        return getAndUpdateValue(_delegatedByHolderToValidator[holder][validatorId], month);
     }
 
     function addToLockedInPendingDelegations(address holder, uint amount) internal returns (uint) {
@@ -615,6 +618,7 @@ contract DelegationController is Permissions, ILocker {
             sequence.firstUnprocessedMonth = month;
         }
         sequence.addDiff[month] = sequence.addDiff[month].add(diff);
+        sequence.lastChangedMonth = month;
     }
 
     function subtract(PartialDifferences storage sequence, uint diff, uint month) internal {
@@ -623,6 +627,7 @@ contract DelegationController is Permissions, ILocker {
             sequence.firstUnprocessedMonth = month;
         }
         sequence.subtractDiff[month] = sequence.subtractDiff[month].add(diff);
+        sequence.lastChangedMonth = month;
     }
 
     function getAndUpdateValue(PartialDifferences storage sequence, uint month) internal returns (uint) {
@@ -792,6 +797,28 @@ contract DelegationController is Permissions, ILocker {
         }
     }
 
+    function reduce(
+        PartialDifferences storage sequence,
+        Fraction memory reducingCoefficient,
+        uint month) internal
+    {
+        require(month.add(1) >= sequence.firstUnprocessedMonth, "Can't reduce value in the past");
+        require(reducingCoefficient.numerator <= reducingCoefficient.denominator, "Increasing of values is not implemented");
+        if (sequence.firstUnprocessedMonth == 0) {
+            return;
+        }
+        uint value = getAndUpdateValue(sequence, month);
+        if (value == 0) {
+            return;
+        }
+
+        sequence.value[month] = sequence.value[month].mul(reducingCoefficient.numerator).div(reducingCoefficient.denominator);
+
+        for (uint i = month.add(1); i <= sequence.lastChangedMonth; ++i) {
+            sequence.subtractDiff[i] = sequence.subtractDiff[i].mul(reducingCoefficient.numerator).div(reducingCoefficient.denominator);
+        }
+    }
+
     function createFraction(uint numerator, uint denominator) internal pure returns (Fraction memory) {
         require(denominator > 0, "Division by zero");
         Fraction memory fraction = Fraction({numerator: numerator, denominator: denominator});
@@ -860,16 +887,20 @@ contract DelegationController is Permissions, ILocker {
             uint begin = index;
             for (; index < end; ++index) {
                 uint validatorId = _slashes[index].validatorId;
-                uint oldValue = getAndUpdateDelegatedByHolderToValidator(holder, validatorId);
+                uint month = _slashes[index].month;
+                uint oldValue = getAndUpdateDelegatedByHolderToValidator(holder, validatorId, month);
                 if (oldValue > 0) {
-                    uint month = _slashes[index].month;
                     reduce(
                         _delegatedByHolderToValidator[holder][validatorId],
                         _delegatedByHolder[holder],
                         _slashes[index].reducingCoefficient,
                         month);
+                    reduce(
+                        _effectiveDelegatedByHolderToValidator[holder][validatorId],
+                        _slashes[index].reducingCoefficient,
+                        month);
                     slashingSignals[index.sub(begin)].holder = holder;
-                    slashingSignals[index.sub(begin)].penalty = oldValue.sub(getAndUpdateDelegatedByHolderToValidator(holder, validatorId));
+                    slashingSignals[index.sub(begin)].penalty = oldValue.sub(getAndUpdateDelegatedByHolderToValidator(holder, validatorId, month));
                 }
             }
             _firstUnprocessedSlashByHolder[holder] = end;
