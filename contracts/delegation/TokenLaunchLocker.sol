@@ -168,7 +168,7 @@ contract TokenLaunchLocker is Permissions, ILocker {
     }
 
     function add(PartialDifferencesValue storage sequence, uint diff, uint month) internal {
-        require(sequence.firstUnprocessedMonth <= month, "Can't add to the past");
+        require(sequence.firstUnprocessedMonth <= month, "Cannot add to the past");
         if (sequence.firstUnprocessedMonth == 0) {
             sequence.firstUnprocessedMonth = month;
             sequence.lastChangedMonth = month;
@@ -185,7 +185,7 @@ contract TokenLaunchLocker is Permissions, ILocker {
     }
 
     function subtract(PartialDifferencesValue storage sequence, uint diff, uint month) internal {
-        require(sequence.firstUnprocessedMonth <= month.add(1), "Can't subtract from the past");
+        require(sequence.firstUnprocessedMonth <= month.add(1), "Cannot subtract from the past");
         if (sequence.firstUnprocessedMonth == 0) {
             sequence.firstUnprocessedMonth = month;
             sequence.lastChangedMonth = month;
@@ -202,7 +202,7 @@ contract TokenLaunchLocker is Permissions, ILocker {
     }
 
     function getAndUpdateValue(PartialDifferencesValue storage sequence, uint month) internal returns (uint) {
-        require(month.add(1) >= sequence.firstUnprocessedMonth, "Can't calculate value in the past");
+        require(month.add(1) >= sequence.firstUnprocessedMonth, "Cannot calculate value in the past");
         if (sequence.firstUnprocessedMonth == 0) {
             return 0;
         }

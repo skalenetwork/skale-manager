@@ -34,7 +34,7 @@ contract DelegationPeriodManager is Permissions {
     }
 
     function removeDelegationPeriod(uint monthsCount) external onlyOwner {
-        // remove only if there is no guys that stacked tokens for this period
+        // remove only if there are no delegators that staked tokens for this period
         stakeMultipliers[monthsCount] = 0;
     }
 

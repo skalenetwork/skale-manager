@@ -51,7 +51,7 @@ contract DelegationController is Permissions, ILocker {
         uint amount;
         uint delegationPeriod;
         uint created; // time of creation
-        uint started; // month of a delegation becomes active
+        uint started; // month when a delegation becomes active
         uint finished; // first month after a delegation ends
         string info;
     }
@@ -199,7 +199,7 @@ contract DelegationController is Permissions, ILocker {
 
         require(
             validatorService.checkMinimumDelegation(validatorId, amount),
-            "Amount doesn't meet minimum delegation amount");
+            "Amount does not meet minimum delegation amount");
         require(
             validatorService.trustedValidators(validatorId),
             "Validator is not authorized to accept request");
@@ -219,7 +219,7 @@ contract DelegationController is Permissions, ILocker {
         // check that there is enough money
         uint holderBalance = skaleToken.balanceOf(msg.sender);
         uint forbiddenForDelegation = tokenState.getAndUpdateForbiddenForDelegationAmount(msg.sender);
-        require(holderBalance >= forbiddenForDelegation, "Delegator doesn't have enough tokens to delegate");
+        require(holderBalance >= forbiddenForDelegation, "Delegator does not have enough tokens to delegate");
 
         emit DelegationRequestIsSent(delegationId);
 
@@ -248,7 +248,7 @@ contract DelegationController is Permissions, ILocker {
         require(
             validatorService.checkValidatorAddressToId(msg.sender, delegations[delegationId].validatorId),
             "No permissions to accept request");
-        require(getState(delegationId) == State.PROPOSED, "Can't set state to accepted");
+        require(getState(delegationId) == State.PROPOSED, "Cannot set state to accepted");
 
         TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
         DelegationPeriodManager delegationPeriodManager = DelegationPeriodManager(contractManager.getContract("DelegationPeriodManager"));
@@ -299,7 +299,7 @@ contract DelegationController is Permissions, ILocker {
     }
 
     function requestUndelegation(uint delegationId) external checkDelegationExists(delegationId) {
-        require(getState(delegationId) == State.DELEGATED, "Can't request undelegation");
+        require(getState(delegationId) == State.DELEGATED, "Cannot request undelegation");
 
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
         require(
@@ -613,7 +613,7 @@ contract DelegationController is Permissions, ILocker {
     }
 
     function add(PartialDifferences storage sequence, uint diff, uint month) internal {
-        require(sequence.firstUnprocessedMonth <= month, "Can't add to the past");
+        require(sequence.firstUnprocessedMonth <= month, "Cannot add to the past");
         if (sequence.firstUnprocessedMonth == 0) {
             sequence.firstUnprocessedMonth = month;
         }
@@ -622,7 +622,7 @@ contract DelegationController is Permissions, ILocker {
     }
 
     function subtract(PartialDifferences storage sequence, uint diff, uint month) internal {
-        require(sequence.firstUnprocessedMonth <= month, "Can't subtract from the past");
+        require(sequence.firstUnprocessedMonth <= month, "Cannot subtract from the past");
         if (sequence.firstUnprocessedMonth == 0) {
             sequence.firstUnprocessedMonth = month;
         }
@@ -668,7 +668,7 @@ contract DelegationController is Permissions, ILocker {
     }
 
     function add(PartialDifferencesValue storage sequence, uint diff, uint month) internal {
-        require(sequence.firstUnprocessedMonth <= month, "Can't add to the past");
+        require(sequence.firstUnprocessedMonth <= month, "Cannot add to the past");
         if (sequence.firstUnprocessedMonth == 0) {
             sequence.firstUnprocessedMonth = month;
             sequence.lastChangedMonth = month;
@@ -685,7 +685,7 @@ contract DelegationController is Permissions, ILocker {
     }
 
     function subtract(PartialDifferencesValue storage sequence, uint diff, uint month) internal {
-        require(sequence.firstUnprocessedMonth <= month.add(1), "Can't subtract from the past");
+        require(sequence.firstUnprocessedMonth <= month.add(1), "Cannot subtract from the past");
         if (sequence.firstUnprocessedMonth == 0) {
             sequence.firstUnprocessedMonth = month;
             sequence.lastChangedMonth = month;
@@ -702,7 +702,7 @@ contract DelegationController is Permissions, ILocker {
     }
 
     function getAndUpdateValue(PartialDifferencesValue storage sequence, uint month) internal returns (uint) {
-        require(month.add(1) >= sequence.firstUnprocessedMonth, "Can't calculate value in the past");
+        require(month.add(1) >= sequence.firstUnprocessedMonth, "Cannot calculate value in the past");
         if (sequence.firstUnprocessedMonth == 0) {
             return 0;
         }
@@ -720,7 +720,7 @@ contract DelegationController is Permissions, ILocker {
     }
 
     function reduce(PartialDifferencesValue storage sequence, uint amount, uint month) internal returns (Fraction memory) {
-        require(month.add(1) >= sequence.firstUnprocessedMonth, "Can't reduce value in the past");
+        require(month.add(1) >= sequence.firstUnprocessedMonth, "Cannot reduce value in the past");
         if (sequence.firstUnprocessedMonth == 0) {
             return createFraction(0);
         }
@@ -769,9 +769,9 @@ contract DelegationController is Permissions, ILocker {
         uint month,
         bool hasSumSequence) internal
     {
-        require(month.add(1) >= sequence.firstUnprocessedMonth, "Can't reduce value in the past");
+        require(month.add(1) >= sequence.firstUnprocessedMonth, "Cannot reduce value in the past");
         if (hasSumSequence) {
-            require(month.add(1) >= sumSequence.firstUnprocessedMonth, "Can't reduce value in the past");
+            require(month.add(1) >= sumSequence.firstUnprocessedMonth, "Cannot reduce value in the past");
         }
         require(reducingCoefficient.numerator <= reducingCoefficient.denominator, "Increasing of values is not implemented");
         if (sequence.firstUnprocessedMonth == 0) {
@@ -820,7 +820,7 @@ contract DelegationController is Permissions, ILocker {
     }
 
     function createFraction(uint numerator, uint denominator) internal pure returns (Fraction memory) {
-        require(denominator > 0, "Devision by zero");
+        require(denominator > 0, "Division by zero");
         Fraction memory fraction = Fraction({numerator: numerator, denominator: denominator});
         reduceFraction(fraction);
         return fraction;
@@ -864,7 +864,7 @@ contract DelegationController is Permissions, ILocker {
             log.slashes[month].reducingCoefficient = coefficient;
             log.slashes[month].nextMonth = 0;
         } else {
-            require(log.lastMonth <= month, "Can't put slashing event in the past");
+            require(log.lastMonth <= month, "Cannot put slashing event in the past");
             if (log.lastMonth == month) {
                 log.slashes[month].reducingCoefficient = multiplyFraction(log.slashes[month].reducingCoefficient, coefficient);
             } else {
