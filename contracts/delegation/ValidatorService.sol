@@ -41,6 +41,33 @@ contract ValidatorService is Permissions {
         uint[] nodeIndexes;
     }
 
+    event ValidatorRegistered(
+        uint validatorId
+    );
+
+    event ValidatorAddressChanged(
+        uint validatorId,
+        address newAddress
+    );
+
+    event ValidatorWasEnabled(
+        uint validatorId
+    );
+
+    event ValidatorWasDisabled(
+        uint validatorId
+    );
+
+    event NodeAddressWasAdded(
+        uint validatorId,
+        address nodeAddress
+    );
+
+    event NodeAddressWasRemoved(
+        uint validatorId,
+        address nodeAddress
+    );
+
     mapping (uint => Validator) public validators;
     mapping (uint => bool) public trustedValidators;
     ///      address => validatorId
@@ -78,14 +105,18 @@ contract ValidatorService is Permissions {
             emptyArray
         );
         setValidatorAddress(validatorId, msg.sender);
+
+        emit ValidatorRegistered(validatorId);
     }
 
     function enableValidator(uint validatorId) external checkValidatorExists(validatorId) onlyOwner {
         trustedValidators[validatorId] = true;
+        emit ValidatorWasEnabled(validatorId);
     }
 
     function disableValidator(uint validatorId) external checkValidatorExists(validatorId) onlyOwner {
         trustedValidators[validatorId] = false;
+        emit ValidatorWasDisabled(validatorId);
     }
 
     function getTrustedValidators() external view returns (uint[] memory) {
@@ -123,17 +154,21 @@ contract ValidatorService is Permissions {
         validators[validatorId].validatorAddress = msg.sender;
         validators[validatorId].requestedAddress = address(0);
         setValidatorAddress(validatorId, validators[validatorId].validatorAddress);
+
+        emit ValidatorAddressChanged(validatorId, validators[validatorId].validatorAddress);
     }
 
     function linkNodeAddress(address nodeAddress) external {
         uint validatorId = getValidatorId(msg.sender);
         setValidatorAddress(validatorId, nodeAddress);
+        emit NodeAddressWasAdded(validatorId, nodeAddress);
     }
 
     function unlinkNodeAddress(address nodeAddress) external {
         uint validatorId = getValidatorId(msg.sender);
         require(validators[validatorId].validatorAddress == msg.sender, "Address does not have permissions to unlink node");
         deleteValidatorAddress(validatorId, nodeAddress);
+        emit NodeAddressWasRemoved(validatorId, nodeAddress);
     }
 
     function checkMinimumDelegation(uint validatorId, uint amount)

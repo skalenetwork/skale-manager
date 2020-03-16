@@ -35,6 +35,24 @@ import "./TimeHelpers.sol";
 
 
 contract Distributor is Permissions, IERC777Recipient {
+    event WithdrawBounty(
+        address holder,
+        uint validatorId,
+        address destination,
+        uint amount
+    );
+
+    event WithdrawFee(
+        uint validatorId,
+        address destination,
+        uint amount
+    );
+
+    event BountyWasPaid(
+        uint validatorId,
+        uint amount
+    );
+
     IERC1820Registry private _erc1820;
 
     // validatorId =>        month => token
@@ -69,6 +87,13 @@ contract Distributor is Permissions, IERC777Recipient {
 
         SkaleToken skaleToken = SkaleToken(contractManager.getContract("SkaleToken"));
         require(skaleToken.transfer(to, bounty), "Failed to transfer tokens");
+
+        emit WithdrawBounty(
+            msg.sender,
+            validatorId,
+            to,
+            bounty
+        );
     }
 
     function withdrawFee(address to) external {
@@ -87,6 +112,12 @@ contract Distributor is Permissions, IERC777Recipient {
         _firstUnwithdrawnMonthForValidator[validatorId] = endMonth;
 
         require(skaleToken.transfer(to, fee), "Failed to transfer tokens");
+
+        emit WithdrawFee(
+            validatorId,
+            to,
+            fee
+        );
     }
 
     function tokensReceived(
@@ -180,5 +211,7 @@ contract Distributor is Permissions, IERC777Recipient {
         if (_firstUnwithdrawnMonthForValidator[validatorId] == 0) {
             _firstUnwithdrawnMonthForValidator[validatorId] = currentMonth;
         }
+
+        emit BountyWasPaid(validatorId, amount);
     }
 }

@@ -30,6 +30,15 @@ import "./TimeHelpers.sol";
 
 
 contract TokenLaunchLocker is Permissions, ILocker {
+    event Unlocked(
+        address holder,
+        uint amount
+    );
+
+    event Locked(
+        address holder,
+        uint amount
+    );
 
     struct PartialDifferencesValue {
              // month => diff
@@ -60,6 +69,8 @@ contract TokenLaunchLocker is Permissions, ILocker {
 
     function lock(address holder, uint amount) external allow("TokenLaunchManager") {
         _locked[holder] = _locked[holder].add(amount);
+
+        emit Locked(holder, amount);
     }
 
     function handleDelegationAdd(
@@ -153,6 +164,7 @@ contract TokenLaunchLocker is Permissions, ILocker {
     }
 
     function unlock(address holder) internal {
+        emit Unlocked(holder, _locked[holder]);
         delete _locked[holder];
         deleteDelegatedAmount(holder);
         deleteTotalDelegatedAmount(holder);

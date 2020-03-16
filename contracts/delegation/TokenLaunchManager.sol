@@ -29,6 +29,18 @@ import "./TokenLaunchLocker.sol";
 
 
 contract TokenLaunchManager is Permissions, IERC777Recipient {
+    event Approved(
+        address holder,
+        uint amount
+    );
+    event TokensRetrieved(
+        address holder,
+        uint amount
+    );
+    event SellerWasRegistered(
+        address seller
+    );
+
     IERC1820Registry private _erc1820;
 
     address seller;
@@ -43,6 +55,7 @@ contract TokenLaunchManager is Permissions, IERC777Recipient {
         for (uint i = 0; i < walletAddress.length; ++i) {
             approved[walletAddress[i]] = approved[walletAddress[i]].add(value[i]);
             totalApproved = totalApproved.add(value[i]);
+            emit Approved(walletAddress[i], value[i]);
         }
         require(totalApproved <= getBalance(), "Balance is too low");
     }
@@ -54,10 +67,12 @@ contract TokenLaunchManager is Permissions, IERC777Recipient {
         approved[_msgSender()] = 0;
         require(IERC20(contractManager.getContract("SkaleToken")).transfer(_msgSender(), value), "Error of token sending");
         TokenLaunchLocker(contractManager.getContract("TokenLaunchLocker")).lock(_msgSender(), value);
+        emit TokensRetrieved(_msgSender(), value);
     }
 
     function registerSeller(address _seller) external onlyOwner {
         seller = _seller;
+        emit SellerWasRegistered(_seller);
     }
 
     function tokensReceived(

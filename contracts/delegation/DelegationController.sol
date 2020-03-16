@@ -116,7 +116,19 @@ contract DelegationController is Permissions, ILocker {
         uint month;
     }
 
-    event DelegationRequestIsSent(
+    event DelegationProposed(
+        uint delegationId
+    );
+
+    event DelegationAccepted(
+        uint delegationId
+    );
+
+    event DelegationRequestCanceledByUser(
+        uint delegationId
+    );
+
+    event UndelegationRequested(
         uint delegationId
     );
 
@@ -221,7 +233,7 @@ contract DelegationController is Permissions, ILocker {
         uint forbiddenForDelegation = tokenState.getAndUpdateForbiddenForDelegationAmount(msg.sender);
         require(holderBalance >= forbiddenForDelegation, "Delegator does not have enough tokens to delegate");
 
-        emit DelegationRequestIsSent(delegationId);
+        emit DelegationProposed(delegationId);
 
         sendSlashingSignals(slashingSignals);
     }
@@ -240,6 +252,8 @@ contract DelegationController is Permissions, ILocker {
 
         delegations[delegationId].finished = getCurrentMonth();
         subtractFromLockedInPerdingDelegations(delegations[delegationId].holder, delegations[delegationId].amount);
+
+        emit DelegationRequestCanceledByUser(delegationId);
     }
 
     /// @notice Allows validator to accept tokens delegated at `delegationId`
@@ -296,6 +310,8 @@ contract DelegationController is Permissions, ILocker {
             delegations[delegationId].started);
 
         sendSlashingSignals(slashingSignals);
+
+        emit DelegationAccepted(delegationId);
     }
 
     function requestUndelegation(uint delegationId) external checkDelegationExists(delegationId) {
@@ -344,9 +360,11 @@ contract DelegationController is Permissions, ILocker {
             delegations[delegationId].holder,
             delegationId,
             delegations[delegationId].finished);
+
+        emit UndelegationRequested(delegationId);
     }
 
-    function confiscate(uint validatorId, uint amount) external {
+    function confiscate(uint validatorId, uint amount) external allow("Punisher") {
         uint currentMonth = getCurrentMonth();
         Fraction memory coefficient = reduce(_delegatedToValidator[validatorId], amount, currentMonth);
         reduce(_effectiveDelegatedToValidator[validatorId], coefficient, currentMonth);
