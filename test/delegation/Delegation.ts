@@ -100,7 +100,7 @@ contract("Delegation", ([owner,
                         const { logs } = await delegationController.delegate(
                             validatorId, defaultAmount.toString(), delegationPeriod, "D2 is even", {from: holder1});
                         assert.equal(logs.length, 1, "No DelegationRequestIsSent Event emitted");
-                        assert.equal(logs[0].event, "DelegationRequestIsSent");
+                        assert.equal(logs[0].event, "DelegationProposed");
                         requestId = logs[0].args.delegationId;
 
                         const delegation: Delegation = new Delegation(
@@ -117,7 +117,7 @@ contract("Delegation", ([owner,
                             const { logs } = await delegationController.delegate(
                         validatorId, defaultAmount.toString(), delegationPeriod, "D2 is even", {from: holder1});
                             assert.equal(logs.length, 1, "No DelegationRequest Event emitted");
-                            assert.equal(logs[0].event, "DelegationRequestIsSent");
+                            assert.equal(logs[0].event, "DelegationProposed");
                             requestId = logs[0].args.delegationId;
                         });
 
@@ -214,7 +214,7 @@ contract("Delegation", ([owner,
 
         it("should not allow holder to delegate to unregistered validator", async () => {
             await delegationController.delegate(13, 1,  3, "D2 is even", {from: holder1})
-                .should.be.eventually.rejectedWith("Validator with such id doesn't exist");
+                .should.be.eventually.rejectedWith("Validator with such ID does not exist");
         });
 
         it("should return bond amount if validator delegated to itself", async () => {
