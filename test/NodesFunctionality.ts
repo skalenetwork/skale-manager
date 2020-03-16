@@ -14,7 +14,7 @@ import { skipTime } from "./utils/time";
 chai.should();
 chai.use(chaiAsPromised);
 
-contract("NodesFunctionality", ([owner, validator]) => {
+contract("NodesFunctionality", ([owner, validator, nodeAddress, nodeAddress2]) => {
     let contractManager: ContractManagerInstance;
     let nodesData: NodesDataInstance;
     let nodesFunctionality: NodesFunctionalityInstance;
@@ -28,6 +28,8 @@ contract("NodesFunctionality", ([owner, validator]) => {
         validatorService = await deployValidatorService(contractManager);
 
         await validatorService.registerValidator("Validator", "D2", 0, 0, {from: validator});
+        await validatorService.linkNodeAddress(nodeAddress, {from: validator});
+        await validatorService.linkNodeAddress(nodeAddress2, {from: validator});
     });
 
     it("should fail to create node if ip is zero", async () => {
@@ -73,7 +75,7 @@ contract("NodesFunctionality", ([owner, validator]) => {
 
     it("should create node", async () => {
         await nodesFunctionality.createNode(
-            validator,
+            nodeAddress,
             "0x01" +
             "2161" + // port
             "0000" + // nonce
@@ -81,7 +83,7 @@ contract("NodesFunctionality", ([owner, validator]) => {
             "7f000001" + // public ip
             "1122334455667788990011223344556677889900112233445566778899001122" +
             "1122334455667788990011223344556677889900112233445566778899001122" + // public key
-            "6432"); // name
+            "6432");  // name
 
         const node = await nodesData.nodes(0);
         node[0].should.be.equal("d2");
@@ -96,7 +98,7 @@ contract("NodesFunctionality", ([owner, validator]) => {
     describe("when node is created", async () => {
         beforeEach(async () => {
             await nodesFunctionality.createNode(
-                validator,
+                nodeAddress,
                 "0x01" +
                 "2161" + // port
                 "0000" + // nonce
@@ -115,12 +117,12 @@ contract("NodesFunctionality", ([owner, validator]) => {
         it("should fail to delete non active node", async () => {
             await nodesData.setNodeLeaving(0);
 
-            await nodesFunctionality.removeNode(validator, 0)
+            await nodesFunctionality.removeNode(nodeAddress, 0)
                 .should.be.eventually.rejectedWith("Node is not Active");
         });
 
         it("should delete node", async () => {
-            await nodesFunctionality.removeNode(validator, 0);
+            await nodesFunctionality.removeNode(nodeAddress, 0);
 
             await nodesData.numberOfActiveNodes().should.be.eventually.deep.equal(web3.utils.toBN(0));
         });
@@ -128,37 +130,31 @@ contract("NodesFunctionality", ([owner, validator]) => {
         it("should fail to initiate exiting for non existing node", async () => {
             await nodesFunctionality.initExit(validator, 1)
                 .should.be.eventually.rejectedWith("Node does not exist for message sender");
-
-            // await nodesFunctionality.initExit(owner, 0)
-            //     .should.be.eventually.rejectedWith("Validator with such address doesn't exist");
         });
 
         it("should initiate exiting", async () => {
-            await nodesFunctionality.initExit(validator, 0);
+            await nodesFunctionality.initExit(nodeAddress, 0);
 
             await nodesData.numberOfActiveNodes().should.be.eventually.deep.equal(web3.utils.toBN(0));
         });
 
         it("should complete exiting", async () => {
-            // await nodesFunctionality.completeExit(owner, 0)
-            //     .should.be.eventually.rejectedWith("Validator with such address doesn't exist");
-
             await nodesFunctionality.completeExit(validator, 1)
                 .should.be.eventually.rejectedWith("Node does not exist for message sender");
 
-            await nodesFunctionality.completeExit(validator, 0)
+            await nodesFunctionality.completeExit(nodeAddress, 0)
                 .should.be.eventually.rejectedWith("Node is not Leaving");
 
-            await nodesFunctionality.initExit(validator, 0);
+            await nodesFunctionality.initExit(nodeAddress, 0);
 
-            await nodesFunctionality.completeExit(validator, 0);
+            await nodesFunctionality.completeExit(nodeAddress, 0);
         });
     });
 
     describe("when two nodes are created", async () => {
         beforeEach(async () => {
             await nodesFunctionality.createNode(
-                validator,
+                nodeAddress,
                 "0x01" +
                 "2161" + // port
                 "0000" + // nonce
@@ -168,7 +164,7 @@ contract("NodesFunctionality", ([owner, validator]) => {
                 "1122334455667788990011223344556677889900112233445566778899001122" + // public key
                 "6432"); // name
             await nodesFunctionality.createNode(
-                validator,
+                nodeAddress2,
                 "0x01" +
                 "2161" + // port
                 "0000" + // nonce
@@ -180,51 +176,45 @@ contract("NodesFunctionality", ([owner, validator]) => {
         });
 
         it("should delete first node", async () => {
-            await nodesFunctionality.removeNode(validator, 0);
+            await nodesFunctionality.removeNode(nodeAddress, 0);
 
             await nodesData.numberOfActiveNodes().should.be.eventually.deep.equal(web3.utils.toBN(1));
         });
 
         it("should delete second node", async () => {
-            await nodesFunctionality.removeNode(validator, 1);
+            await nodesFunctionality.removeNode(nodeAddress2, 1);
 
             await nodesData.numberOfActiveNodes().should.be.eventually.deep.equal(web3.utils.toBN(1));
         });
 
         it("should initiate exit from first node", async () => {
-            await nodesFunctionality.initExit(validator, 0);
+            await nodesFunctionality.initExit(nodeAddress, 0);
 
             await nodesData.numberOfActiveNodes().should.be.eventually.deep.equal(web3.utils.toBN(1));
         });
 
         it("should initiate exit from second node", async () => {
-            await nodesFunctionality.initExit(validator, 1);
+            await nodesFunctionality.initExit(nodeAddress2, 1);
 
             await nodesData.numberOfActiveNodes().should.be.eventually.deep.equal(web3.utils.toBN(1));
         });
 
         it("should complete exiting from first node", async () => {
-            // await nodesFunctionality.completeExit(owner, 0)
-            //     .should.be.eventually.rejectedWith("Validator with such address doesn't exist");
-
-            await nodesFunctionality.completeExit(validator, 0)
+            await nodesFunctionality.completeExit(nodeAddress, 0)
                 .should.be.eventually.rejectedWith("Node is not Leaving");
 
-            await nodesFunctionality.initExit(validator, 0);
+            await nodesFunctionality.initExit(nodeAddress, 0);
 
-            await nodesFunctionality.completeExit(validator, 0);
+            await nodesFunctionality.completeExit(nodeAddress, 0);
         });
 
         it("should complete exiting from second node", async () => {
-            // await nodesFunctionality.completeExit(owner, 1)
-            //     .should.be.eventually.rejectedWith("Validator with such address doesn't exist");
-
-            await nodesFunctionality.completeExit(validator, 1)
+            await nodesFunctionality.completeExit(nodeAddress2, 1)
                 .should.be.eventually.rejectedWith("Node is not Leaving");
 
-            await nodesFunctionality.initExit(validator, 1);
+            await nodesFunctionality.initExit(nodeAddress2, 1);
 
-            await nodesFunctionality.completeExit(validator, 1);
+            await nodesFunctionality.completeExit(nodeAddress2, 1);
         });
     });
 

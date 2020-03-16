@@ -146,9 +146,7 @@ contract NodesFunctionality is Permissions, INodesFunctionality {
      */
     function initExit(address from, uint nodeIndex) external allow("SkaleManager") returns (bool) {
         NodesData nodesData = NodesData(contractManager.getContract("NodesData"));
-        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
 
-        require(validatorService.validatorAddressExists(from), "Validator with such address doesn't exist");
         require(nodesData.isNodeExist(from, nodeIndex), "Node does not exist for message sender");
 
         nodesData.setNodeLeaving(nodeIndex);
@@ -171,9 +169,7 @@ contract NodesFunctionality is Permissions, INodesFunctionality {
      */
     function completeExit(address from, uint nodeIndex) external allow("SkaleManager") returns (bool) {
         NodesData nodesData = NodesData(contractManager.getContract("NodesData"));
-        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
 
-        require(validatorService.validatorAddressExists(from), "Validator with such address doesn't exist");
         require(nodesData.isNodeExist(from, nodeIndex), "Node does not exist for message sender");
         require(nodesData.isNodeLeaving(nodeIndex), "Node is not Leaving");
 
