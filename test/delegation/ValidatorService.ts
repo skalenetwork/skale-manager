@@ -117,14 +117,14 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
         it("should link new node address for validator", async () => {
             const validatorId = 1;
             await validatorService.linkNodeAddress(nodeAddress, {from: validator1});
-            const id = new BigNumber(await validatorService.getValidatorId(nodeAddress, {from: validator1})).toNumber();
+            const id = new BigNumber(await validatorService.getValidatorIdByNodeAddress(nodeAddress)).toNumber();
             assert.equal(id, validatorId);
         });
 
         it("should reject if linked node address tried to unlink validator address", async () => {
             await validatorService.linkNodeAddress(nodeAddress, {from: validator1});
             await validatorService.unlinkNodeAddress(validator1, {from: nodeAddress})
-                .should.be.eventually.rejectedWith("Such address hasn't permissions to unlink node");
+                .should.be.eventually.rejectedWith("Validator with such address does not exist");
         });
 
         it("should reject if validator tried to override node address of another validator", async () => {
@@ -138,7 +138,7 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
             await validatorService.linkNodeAddress(nodeAddress, {from: validator1});
             await validatorService.linkNodeAddress(nodeAddress, {from: validator2})
                 .should.be.eventually.rejectedWith("Validator cannot override node address");
-            const id = new BigNumber(await validatorService.getValidatorId(nodeAddress, {from: validator1})).toNumber();
+            const id = new BigNumber(await validatorService.getValidatorIdByNodeAddress(nodeAddress)).toNumber();
             assert.equal(id, validatorId);
         });
 
@@ -153,12 +153,12 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
                 {from: validator2});
             await validatorService.unlinkNodeAddress(nodeAddress, {from: validator2})
                 .should.be.eventually.rejectedWith("Validator hasn't permissions to unlink node");
-            const id = new BigNumber(await validatorService.getValidatorId(nodeAddress, {from: validator1})).toNumber();
+            const id = new BigNumber(await validatorService.getValidatorIdByNodeAddress(nodeAddress)).toNumber();
             assert.equal(id, validatorId);
 
             await validatorService.unlinkNodeAddress(nodeAddress, {from: validator1});
             await validatorService.getValidatorId(nodeAddress, {from: validator1})
-                .should.be.eventually.rejectedWith("Validator with such address doesn't exist");
+                .should.be.eventually.rejectedWith("Validator with such address does not exist");
         });
 
         describe("when validator requests for a new address", async () => {
@@ -169,7 +169,7 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
             it("should reject when hacker tries to change validator address", async () => {
                 const validatorId = 1;
                 await validatorService.confirmNewAddress(validatorId, {from: validator2})
-                    .should.be.eventually.rejectedWith("The validator cannot be changed because it isn't the actual owner");
+                    .should.be.eventually.rejectedWith("The validator address cannot be changed because it is not the actual owner");
             });
 
             it("should set new address for validator", async () => {
@@ -178,14 +178,14 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
                 await validatorService.confirmNewAddress(validatorId, {from: validator3});
                 assert.deepEqual(validatorId, new BigNumber(await validatorService.getValidatorId(validator3)));
                 await validatorService.getValidatorId(validator1)
-                    .should.be.eventually.rejectedWith("Validator with such address doesn't exist");
+                    .should.be.eventually.rejectedWith("Validator with such address does not exist");
 
             });
         });
 
         it("should reject when someone tries to set new address for validator that doesn't exist", async () => {
             await validatorService.requestForNewAddress(validator2)
-                .should.be.eventually.rejectedWith("Validator with such address doesn't exist");
+                .should.be.eventually.rejectedWith("Validator with such address does not exist");
         });
 
         it("should reject if validator tries to set new address as null", async () => {
@@ -260,7 +260,7 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
                 await delegationController.acceptPendingDelegation(delegationId, {from: validator1});
 
                 await validatorService.checkPossibilityCreatingNode(validator1)
-                    .should.be.eventually.rejectedWith("Validator has to meet Minimum Staking Requirement");
+                    .should.be.eventually.rejectedWith("Validator must meet Minimum Staking Requirement");
             });
 
             it("should allow to create node if new epoch is started", async () => {
@@ -271,7 +271,7 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
                 skipTime(web3, 2592000);
 
                 await validatorService.checkPossibilityCreatingNode(validator1)
-                    .should.be.eventually.rejectedWith("Validator has to meet Minimum Staking Requirement");
+                    .should.be.eventually.rejectedWith("Validator must meet Minimum Staking Requirement");
 
                 await constantsHolder.setMSR(amount);
 
