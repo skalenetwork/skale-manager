@@ -1,4 +1,4 @@
-pragma solidity ^0.5.3;
+pragma solidity 0.5.16;
 
 import "@openzeppelin/contracts/introspection/IERC1820Registry.sol";
 import "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";

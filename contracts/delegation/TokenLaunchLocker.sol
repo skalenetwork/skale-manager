@@ -17,18 +17,28 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity ^0.5.3;
+pragma solidity 0.5.16;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
 
 import "../Permissions.sol";
 import "../interfaces/delegation/ILocker.sol";
+import "../ConstantsHolder.sol";
 
 import "./DelegationController.sol";
 import "./TimeHelpers.sol";
 
 
 contract TokenLaunchLocker is Permissions, ILocker {
+    event Unlocked(
+        address holder,
+        uint amount
+    );
+
+    event Locked(
+        address holder,
+        uint amount
+    );
 
     struct PartialDifferencesValue {
              // month => diff
@@ -59,6 +69,8 @@ contract TokenLaunchLocker is Permissions, ILocker {
 
     function lock(address holder, uint amount) external allow("TokenLaunchManager") {
         _locked[holder] = _locked[holder].add(amount);
+
+        emit Locked(holder, amount);
     }
 
     function handleDelegationAdd(
@@ -96,10 +108,11 @@ contract TokenLaunchLocker is Permissions, ILocker {
         if (_locked[wallet] > 0) {
             DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
             TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
+            ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
 
             uint currentMonth = timeHelpers.getCurrentMonth();
             if (_totalDelegatedAmount[wallet].delegated.mul(2) >= _locked[wallet] &&
-                _totalDelegatedAmount[wallet].month.add(3) <= currentMonth) {
+                timeHelpers.calculateProofOfUseLockEndTime(_totalDelegatedAmount[wallet].month, constantsHolder.proofOfUseLockUpPeriodDays()) <= now) {
                 unlock(wallet);
                 return 0;
             } else {
@@ -151,6 +164,7 @@ contract TokenLaunchLocker is Permissions, ILocker {
     }
 
     function unlock(address holder) internal {
+        emit Unlocked(holder, _locked[holder]);
         delete _locked[holder];
         deleteDelegatedAmount(holder);
         deleteTotalDelegatedAmount(holder);
@@ -166,7 +180,7 @@ contract TokenLaunchLocker is Permissions, ILocker {
     }
 
     function add(PartialDifferencesValue storage sequence, uint diff, uint month) internal {
-        require(sequence.firstUnprocessedMonth <= month, "Can't add to the past");
+        require(sequence.firstUnprocessedMonth <= month, "Cannot add to the past");
         if (sequence.firstUnprocessedMonth == 0) {
             sequence.firstUnprocessedMonth = month;
             sequence.lastChangedMonth = month;
@@ -183,7 +197,7 @@ contract TokenLaunchLocker is Permissions, ILocker {
     }
 
     function subtract(PartialDifferencesValue storage sequence, uint diff, uint month) internal {
-        require(sequence.firstUnprocessedMonth <= month.add(1), "Can't subtract from the past");
+        require(sequence.firstUnprocessedMonth <= month.add(1), "Cannot subtract from the past");
         if (sequence.firstUnprocessedMonth == 0) {
             sequence.firstUnprocessedMonth = month;
             sequence.lastChangedMonth = month;
@@ -200,7 +214,7 @@ contract TokenLaunchLocker is Permissions, ILocker {
     }
 
     function getAndUpdateValue(PartialDifferencesValue storage sequence, uint month) internal returns (uint) {
-        require(month.add(1) >= sequence.firstUnprocessedMonth, "Can't calculate value in the past");
+        require(month.add(1) >= sequence.firstUnprocessedMonth, "Cannot calculate value in the past");
         if (sequence.firstUnprocessedMonth == 0) {
             return 0;
         }

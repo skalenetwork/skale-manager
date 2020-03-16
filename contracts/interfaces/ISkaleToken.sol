@@ -1,4 +1,4 @@
-pragma solidity ^0.5.3;
+pragma solidity 0.5.16;
 
 interface ISkaleToken {
     function transfer(address to, uint256 value) external returns (bool success);

@@ -17,7 +17,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity ^0.5.3;
+pragma solidity 0.5.16;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
 
@@ -29,6 +29,15 @@ import "./DelegationController.sol";
 
 
 contract Punisher is Permissions, ILocker {
+    event Slash(
+        uint validatorId,
+        uint amount
+    );
+
+    event Forgive(
+        address wallet,
+        uint amount
+    );
 
     //        holder => tokens
     mapping (address => uint) private _locked;
@@ -41,6 +50,8 @@ contract Punisher is Permissions, ILocker {
         require(validatorService.validatorExists(validatorId), "Validator does not exist");
 
         delegationController.confiscate(validatorId, amount);
+
+        emit Slash(validatorId, amount);
     }
 
     function forgive(address holder, uint amount) external onlyOwner {
@@ -53,6 +64,8 @@ contract Punisher is Permissions, ILocker {
         } else {
             _locked[holder] = _locked[holder].sub(amount);
         }
+
+        emit Forgive(holder, amount);
     }
 
     function getAndUpdateLockedAmount(address wallet) external returns (uint) {
