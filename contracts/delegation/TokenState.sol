@@ -17,7 +17,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity ^0.5.3;
+pragma solidity 0.5.16;
 pragma experimental ABIEncoderV2;
 
 import "../Permissions.sol";
@@ -28,6 +28,12 @@ import "../interfaces/delegation/ILocker.sol";
 
 /// @notice Store and manage tokens states
 contract TokenState is Permissions, ILocker {
+    event LockerWasAdded(
+        string locker
+    );
+    event LockerWasRemoved(
+        string locker
+    );
 
     string[] private _lockers;
 
@@ -64,6 +70,7 @@ contract TokenState is Permissions, ILocker {
             delete _lockers[_lockers.length - 1];
             --_lockers.length;
         }
+        emit LockerWasRemoved(locker);
     }
 
     function initialize(address _contractManager) public initializer {
@@ -75,5 +82,6 @@ contract TokenState is Permissions, ILocker {
 
     function registerLocker(string memory locker) public onlyOwner {
         _lockers.push(locker);
+        emit LockerWasAdded(locker);
     }
 }

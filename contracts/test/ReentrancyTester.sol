@@ -1,4 +1,4 @@
-pragma solidity ^0.5.3;
+pragma solidity 0.5.16;
 
 import "@openzeppelin/contracts/introspection/IERC1820Registry.sol";
 import "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
@@ -18,12 +18,12 @@ contract ReentrancyTester is Permissions, IERC777Recipient {
     }
 
     function tokensReceived(
-        address operator,
-        address from,
-        address to,
+        address /* operator */,
+        address /* from */,
+        address /* to */,
         uint256 amount,
-        bytes calldata userData,
-        bytes calldata operatorData
+        bytes calldata /* userData */,
+        bytes calldata /* operatorData */
     )
         external
     {

@@ -17,12 +17,21 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity ^0.5.3;
+pragma solidity 0.5.16;
 
 import "../Permissions.sol";
 
 
 contract DelegationPeriodManager is Permissions {
+    event DelegationPeriodWasSet(
+        uint length,
+        uint stakeMultiplier
+    );
+
+    event DelegationPeriodWasRemoved(
+        uint legth
+    );
+
     mapping (uint => uint) public stakeMultipliers;
 
     function isDelegationPeriodAllowed(uint monthsCount) external view returns (bool) {
@@ -31,11 +40,15 @@ contract DelegationPeriodManager is Permissions {
 
     function setDelegationPeriod(uint monthsCount, uint stakeMultiplier) external onlyOwner {
         stakeMultipliers[monthsCount] = stakeMultiplier;
+
+        emit DelegationPeriodWasSet(monthsCount, stakeMultiplier);
     }
 
     function removeDelegationPeriod(uint monthsCount) external onlyOwner {
-        // remove only if there is no guys that stacked tokens for this period
+        // remove only if there are no delegators that staked tokens for this period
         stakeMultipliers[monthsCount] = 0;
+
+        emit DelegationPeriodWasRemoved(monthsCount);
     }
 
     function initialize(address _contractsAddress) public initializer {
