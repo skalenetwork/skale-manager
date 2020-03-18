@@ -191,8 +191,8 @@ contract ValidatorService is Permissions {
         return getValidator(validatorId).nodeIndexes;
     }
 
-    function pushNode(address validatorAddress, uint nodeIndex) external allow("SkaleManager") {
-        uint validatorId = getValidatorId(validatorAddress);
+    function pushNode(address nodeAddress, uint nodeIndex) external allow("SkaleManager") {
+        uint validatorId = getValidatorIdByNodeAddress(nodeAddress);
         validators[validatorId].nodeIndexes.push(nodeIndex);
     }
 
@@ -205,11 +205,11 @@ contract ValidatorService is Permissions {
         delete validators[validatorId].nodeIndexes[validatorNodes.length.sub(1)];
     }
 
-    function checkPossibilityCreatingNode(address validatorAddress) external allow("SkaleManager") {
+    function checkPossibilityCreatingNode(address nodeAddress) external allow("SkaleManager") {
         DelegationController delegationController = DelegationController(
             contractManager.getContract("DelegationController")
         );
-        uint validatorId = getValidatorId(validatorAddress);
+        uint validatorId = getValidatorIdByNodeAddress(nodeAddress);
         require(trustedValidators[validatorId], "Validator is not authorized to create a node");
         uint[] memory validatorNodes = validators[validatorId].nodeIndexes;
         uint delegationsTotal = delegationController.getAndUpdateDelegatedToValidatorNow(validatorId);
@@ -257,13 +257,13 @@ contract ValidatorService is Permissions {
         validators[validatorId].description = newDescription;
     }
 
-    function getValidatorIdByNodeAddress(address nodeAddress) external view returns (uint validatorId) {
-        validatorId = _nodeAddressToValidatorId[nodeAddress];
-        require(validatorId != 0, "Node address is not assigned to a validator");
-    }
-
     function initialize(address _contractManager) public initializer {
         Permissions.initialize(_contractManager);
+    }
+
+    function getValidatorIdByNodeAddress(address nodeAddress) public view returns (uint validatorId) {
+        validatorId = _nodeAddressToValidatorId[nodeAddress];
+        require(validatorId != 0, "Node address is not assigned to a validator");
     }
 
     function getNodeAddresses(uint validatorId) public view returns (address[] memory) {
