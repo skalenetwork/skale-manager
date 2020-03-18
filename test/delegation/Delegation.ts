@@ -390,7 +390,7 @@ contract("Delegation", ([owner,
 
         it("should be possible for N.O.D.E. foundation to spin up node immediately", async () => {
             await constantsHolder.setMSR(0);
-            await validatorService.linkNodeAddress(bountyAddress);
+            await validatorService.linkNodeAddress(bountyAddress, {from: validator});
             await validatorService.checkPossibilityCreatingNode(bountyAddress);
         });
 
