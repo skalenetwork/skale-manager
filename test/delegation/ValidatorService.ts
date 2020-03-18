@@ -91,6 +91,7 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
                 500,
                 100,
                 {from: validator1});
+            await validatorService.linkNodeAddress(nodeAddress, {from: validator1});
         });
         it("should reject when validator tried to register new one with the same address", async () => {
             await validatorService.registerValidator(
@@ -259,7 +260,7 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
                 const delegationId = 0;
                 await delegationController.acceptPendingDelegation(delegationId, {from: validator1});
 
-                await validatorService.checkPossibilityCreatingNode(validator1)
+                await validatorService.checkPossibilityCreatingNode(nodeAddress)
                     .should.be.eventually.rejectedWith("Validator must meet Minimum Staking Requirement");
             });
 
@@ -270,15 +271,15 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
                 await delegationController.acceptPendingDelegation(delegationId, {from: validator1});
                 skipTime(web3, 2592000);
 
-                await validatorService.checkPossibilityCreatingNode(validator1)
+                await validatorService.checkPossibilityCreatingNode(nodeAddress)
                     .should.be.eventually.rejectedWith("Validator must meet Minimum Staking Requirement");
 
                 await constantsHolder.setMSR(amount);
 
                 // now it should not reject
-                await validatorService.checkPossibilityCreatingNode(validator1);
+                await validatorService.checkPossibilityCreatingNode(nodeAddress);
 
-                await validatorService.pushNode(validator1, 0);
+                await validatorService.pushNode(nodeAddress, 0);
                 const nodeIndexBN = (await validatorService.getValidatorNodeIndexes(validatorId))[0];
                 const nodeIndex = new BigNumber(nodeIndexBN).toNumber();
                 assert.equal(nodeIndex, 0);
@@ -295,11 +296,11 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
                 skipTime(web3, 2592000);
                 await constantsHolder.setMSR(amount);
 
-                await validatorService.checkPossibilityCreatingNode(validator1);
-                await validatorService.pushNode(validator1, 0);
+                await validatorService.checkPossibilityCreatingNode(nodeAddress);
+                await validatorService.pushNode(nodeAddress, 0);
 
-                await validatorService.checkPossibilityCreatingNode(validator1);
-                await validatorService.pushNode(validator1, 1);
+                await validatorService.checkPossibilityCreatingNode(nodeAddress);
+                await validatorService.pushNode(nodeAddress, 1);
 
                 const nodeIndexesBN = (await validatorService.getValidatorNodeIndexes(validatorId));
                 for (let i = 0; i < nodeIndexesBN.length; i++) {

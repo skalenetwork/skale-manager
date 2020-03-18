@@ -390,7 +390,8 @@ contract("Delegation", ([owner,
 
         it("should be possible for N.O.D.E. foundation to spin up node immediately", async () => {
             await constantsHolder.setMSR(0);
-            await validatorService.checkPossibilityCreatingNode(validator);
+            await validatorService.linkNodeAddress(bountyAddress);
+            await validatorService.checkPossibilityCreatingNode(bountyAddress);
         });
 
         it("should be possible to distribute bounty accross thousands of holders", async () => {
