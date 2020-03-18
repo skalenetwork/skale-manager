@@ -77,7 +77,7 @@ contract ValidatorService is Permissions {
     uint public numberOfValidators;
 
     modifier checkValidatorExists(uint validatorId) {
-        require(validatorExists(validatorId), "Validator with such ID does not exist");
+        require(validatorExists(validatorId) && validatorId != 0, "Validator with such ID does not exist");
         _;
     }
 
