@@ -77,7 +77,7 @@ contract ValidatorService is Permissions {
     uint public numberOfValidators;
 
     modifier checkValidatorExists(uint validatorId) {
-        require(validatorExists(validatorId) && validatorId != 0, "Validator with such ID does not exist");
+        require(validatorExists(validatorId), "Validator with such ID does not exist");
         _;
     }
 
@@ -268,7 +268,7 @@ contract ValidatorService is Permissions {
     }
 
     function validatorExists(uint validatorId) public view returns (bool) {
-        return validatorId <= numberOfValidators;
+        return validatorId <= numberOfValidators && validatorId != 0;
     }
 
     function validatorAddressExists(address validatorAddress) public view returns (bool) {
