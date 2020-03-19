@@ -92,6 +92,7 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
                 100,
                 {from: validator1});
         });
+
         it("should reject when validator tried to register new one with the same address", async () => {
             await validatorService.registerValidator(
                 "ValidatorName",
@@ -159,6 +160,17 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
             await validatorService.unlinkNodeAddress(nodeAddress, {from: validator1});
             await validatorService.getValidatorId(nodeAddress, {from: validator1})
                 .should.be.eventually.rejectedWith("Validator with such address does not exist");
+        });
+
+        it("should not allow changing the address to the address of an existing validator", async () => {
+            await validatorService.registerValidator(
+                "Doge",
+                "I'm a cat",
+                500,
+                100,
+                {from: validator2});
+            await validatorService.requestForNewAddress(validator1, {from: validator2})
+                .should.be.eventually.rejectedWith("Address already registered");
         });
 
         describe("when validator requests for a new address", async () => {
