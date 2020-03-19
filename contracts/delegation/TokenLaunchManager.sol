@@ -1,5 +1,5 @@
 /*
-    TokenSaleManager.sol - SKALE Manager
+    TokenLaunchManager.sol - SKALE Manager
     Copyright (C) 2019-Present SKALE Labs
     @author Dmytro Stebaiev
 
@@ -17,20 +17,30 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity ^0.5.3;
+pragma solidity 0.5.16;
 
 import "@openzeppelin/contracts/token/ERC777/IERC777.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
 import "@openzeppelin/contracts/introspection/IERC1820Registry.sol";
 
-import "../interfaces/tokenSale/ITokenSaleManager.sol";
-import "../interfaces/delegation/IDelegatableToken.sol";
 import "../Permissions.sol";
-import "./DelegationService.sol";
+import "./TokenLaunchLocker.sol";
 
 
-contract TokenSaleManager is ITokenSaleManager, Permissions, IERC777Recipient {
+contract TokenLaunchManager is Permissions, IERC777Recipient {
+    event Approved(
+        address holder,
+        uint amount
+    );
+    event TokensRetrieved(
+        address holder,
+        uint amount
+    );
+    event SellerWasRegistered(
+        address seller
+    );
+
     IERC1820Registry private _erc1820;
 
     address seller;
@@ -45,6 +55,7 @@ contract TokenSaleManager is ITokenSaleManager, Permissions, IERC777Recipient {
         for (uint i = 0; i < walletAddress.length; ++i) {
             approved[walletAddress[i]] = approved[walletAddress[i]].add(value[i]);
             totalApproved = totalApproved.add(value[i]);
+            emit Approved(walletAddress[i], value[i]);
         }
         require(totalApproved <= getBalance(), "Balance is too low");
     }
@@ -55,11 +66,13 @@ contract TokenSaleManager is ITokenSaleManager, Permissions, IERC777Recipient {
         uint value = approved[_msgSender()];
         approved[_msgSender()] = 0;
         require(IERC20(contractManager.getContract("SkaleToken")).transfer(_msgSender(), value), "Error of token sending");
-        DelegationService(contractManager.getContract("DelegationService")).lock(_msgSender(), value);
+        TokenLaunchLocker(contractManager.getContract("TokenLaunchLocker")).lock(_msgSender(), value);
+        emit TokensRetrieved(_msgSender(), value);
     }
 
     function registerSeller(address _seller) external onlyOwner {
         seller = _seller;
+        emit SellerWasRegistered(_seller);
     }
 
     function tokensReceived(

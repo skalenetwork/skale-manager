@@ -1,6 +1,6 @@
-import { ContractManagerInstance, SkaleDKGContract, SkaleDKGInstance } from "../../../types/truffle-contracts";
+import { ContractManagerInstance, SkaleDKGInstance } from "../../../types/truffle-contracts";
 import { deployDecryption } from "./dectyption";
-import { deployDelegationService } from "./delegation/delegationService";
+import { deployPunisher } from "./delegation/punisher";
 import { deployECDH } from "./ecdh";
 import { deployFunctionFactory } from "./factory";
 import { deployNodesData } from "./nodesData";
@@ -11,7 +11,7 @@ const deploySkaleDKG: (contractManager: ContractManagerInstance) => Promise<Skal
     = deployFunctionFactory("SkaleDKG",
                             async (contractManager: ContractManagerInstance) => {
                                 await deploySchainsFunctionalityInternal(contractManager);
-                                await deployDelegationService(contractManager);
+                                await deployPunisher(contractManager);
                                 await deployNodesData(contractManager);
                                 await deploySlashingTable(contractManager);
                                 await deployECDH(contractManager);

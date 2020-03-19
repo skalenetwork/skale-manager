@@ -17,7 +17,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity ^0.5.3;
+pragma solidity 0.5.16;
 pragma experimental ABIEncoderV2;
 
 import "./GroupsData.sol";
@@ -361,9 +361,9 @@ contract SchainsData is GroupsData {
     }
 
     function getActiveSchain(uint nodeIndex) external view returns (bytes32) {
-        for (uint i = 0; i < schainsForNodes[nodeIndex].length; i++) {
-            if (schainsForNodes[nodeIndex][i] != bytes32(0)) {
-                return schainsForNodes[nodeIndex][i];
+        for (uint i = schainsForNodes[nodeIndex].length; i > 0; i--) {
+            if (schainsForNodes[nodeIndex][i - 1] != bytes32(0)) {
+                return schainsForNodes[nodeIndex][i - 1];
             }
         }
         return bytes32(0);
@@ -379,9 +379,9 @@ contract SchainsData is GroupsData {
 
         uint cursor = 0;
         activeSchains = new bytes32[](activeAmount);
-        for (uint i = 0; i < schainsForNodes[nodeIndex].length; i++) {
-            if (schainsForNodes[nodeIndex][i] != bytes32(0)) {
-                activeSchains[cursor++] = schainsForNodes[nodeIndex][i];
+        for (uint i = schainsForNodes[nodeIndex].length; i > 0; i--) {
+            if (schainsForNodes[nodeIndex][i - 1] != bytes32(0)) {
+                activeSchains[cursor++] = schainsForNodes[nodeIndex][i - 1];
             }
         }
     }

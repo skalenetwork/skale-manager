@@ -7,15 +7,23 @@ function getContract(contractName: string): Truffle.Contract<Truffle.ContractIns
 async function defaultDeploy(contractName: string,
                              contractManager: ContractManagerInstance): Promise<Truffle.ContractInstance> {
     const Contract = getContract(contractName);
-    const instance = await Contract.new(contractManager.address);
+    const instance = await Contract.new();
     await instance.initialize(contractManager.address);
     return instance;
 }
 
-function deployFunctionFactory(contractName: string,
-                               deployDependencies: (contractManager: ContractManagerInstance) => Promise<void>
+async function defaultDeployWithConstructor(
+    contractName: string,
+    contractManager: ContractManagerInstance): Promise<Truffle.ContractInstance> {
+        const Contract = getContract(contractName);
+        return await Contract.new(contractManager.address);
+}
+
+function deployFunctionFactory(
+    contractName: string,
+    deployDependencies: (contractManager: ContractManagerInstance) => Promise<void>
       = async (contractManager: ContractManagerInstance) => undefined,
-                               deploy: (contractManager: ContractManagerInstance) => Promise<Truffle.ContractInstance>
+    deploy: (contractManager: ContractManagerInstance) => Promise<Truffle.ContractInstance>
       = async ( contractManager: ContractManagerInstance) => {
           return await defaultDeploy(contractName, contractManager);
       }): any {
@@ -33,4 +41,16 @@ function deployFunctionFactory(contractName: string,
         };
 }
 
-export { deployFunctionFactory };
+function deployWithConstructorFunctionFactory(
+    contractName: string,
+    deployDependencies: (contractManager: ContractManagerInstance) => Promise<void>
+        = async (contractManager: ContractManagerInstance) => undefined): any {
+            return deployFunctionFactory(
+                contractName,
+                deployDependencies,
+                async ( contractManager: ContractManagerInstance) => {
+                    return await defaultDeployWithConstructor(contractName, contractManager);
+                });
+    }
+
+export { deployFunctionFactory, deployWithConstructorFunctionFactory };

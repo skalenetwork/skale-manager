@@ -17,13 +17,13 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity ^0.5.3;
+pragma solidity 0.5.16;
 
 interface IDelegatableToken {
 
-    function getLockedOf(address wallet) external returns (uint);
+    function getAndUpdateLockedAmount(address wallet) external returns (uint);
 
-    function getDelegatedOf(address wallet) external returns (uint);
+    function getAndUpdateDelegatedAmount(address wallet) external returns (uint);
 
-    function getSlashedOf(address wallet) external returns (uint);
+    function getAndUpdateSlashedAmount(address wallet) external returns (uint);
 }

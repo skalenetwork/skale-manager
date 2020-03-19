@@ -17,7 +17,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity ^0.5.3;
+pragma solidity 0.5.16;
 
 import "./Permissions.sol";
 import "./interfaces/IConstants.sol";
@@ -148,7 +148,7 @@ contract NodesFunctionality is Permissions, INodesFunctionality {
         NodesData nodesData = NodesData(contractManager.getContract("NodesData"));
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
 
-        require(validatorService.validatorAddressExists(from), "Validator with such address doesn't exist");
+        require(validatorService.validatorAddressExists(from), "Validator with such address does not exist");
         require(nodesData.isNodeExist(from, nodeIndex), "Node does not exist for message sender");
 
         nodesData.setNodeLeaving(nodeIndex);
@@ -173,7 +173,7 @@ contract NodesFunctionality is Permissions, INodesFunctionality {
         NodesData nodesData = NodesData(contractManager.getContract("NodesData"));
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
 
-        require(validatorService.validatorAddressExists(from), "Validator with such address doesn't exist");
+        require(validatorService.validatorAddressExists(from), "Validator with such address does not exist");
         require(nodesData.isNodeExist(from, nodeIndex), "Node does not exist for message sender");
         require(nodesData.isNodeLeaving(nodeIndex), "Node is not Leaving");
 

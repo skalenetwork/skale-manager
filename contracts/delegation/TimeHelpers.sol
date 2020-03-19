@@ -17,14 +17,17 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity ^0.5.3;
+pragma solidity 0.5.16;
+
+import "@openzeppelin/contracts/math/SafeMath.sol";
 
 import "../thirdparty/BokkyPooBahsDateTimeLibrary.sol";
-import "@openzeppelin/contracts/math/SafeMath.sol";
 
 
 contract TimeHelpers {
     using SafeMath for uint;
+
+    uint constant ZERO_YEAR = 2020;
 
     function getNextMonthStart() external view returns (uint timestamp) {
         return getNextMonthStartFromDate(now);
@@ -43,10 +46,10 @@ contract TimeHelpers {
         uint month;
         (year, month, ) = BokkyPooBahsDateTimeLibrary.timestampToDate(requestTime);
 
-        month = month.add(delegationPeriod + 1);
+        month = month.add(delegationPeriod).add(1);
         if (month > 12) {
-            year = year.add((month - 1) / 12);
-            month = (month - 1) % 12 + 1;
+            year = year.add(month.sub(1).div(12));
+            month = month.sub(1).mod(12).add(1);
         }
         timestamp = BokkyPooBahsDateTimeLibrary.timestampFromDate(year, month, 1);
 
@@ -54,15 +57,20 @@ contract TimeHelpers {
             uint currentYear;
             uint currentMonth;
             (currentYear, currentMonth, ) = BokkyPooBahsDateTimeLibrary.timestampToDate(now);
-            currentMonth = currentMonth.add((currentYear - year).mul(12));
+            currentMonth = currentMonth.add(currentYear.sub(year).mul(12));
 
-            month = month.add(((currentMonth - month).div(redelegationPeriod) + 1).mul(redelegationPeriod));
+            month = month.add(
+                currentMonth.sub(month).div(redelegationPeriod).add(1).mul(redelegationPeriod));
             if (month > 12) {
-                year = year.add((month - 1) / 12);
-                month = (month - 1) % 12 + 1;
+                year = year.add(month.sub(1).div(12));
+                month = month.sub(1).mod(12).add(1);
             }
             timestamp = BokkyPooBahsDateTimeLibrary.timestampFromDate(year, month, 1);
         }
+    }
+
+    function calculateProofOfUseLockEndTime(uint month, uint lockUpPeriodDays) external pure returns (uint timestamp) {
+        timestamp = BokkyPooBahsDateTimeLibrary.addDays(monthToTimestamp(month), lockUpPeriodDays);
     }
 
     function addMonths(uint fromTimestamp, uint n) external pure returns (uint) {
@@ -75,8 +83,8 @@ contract TimeHelpers {
         (year, month, day, hour, minute, second) = BokkyPooBahsDateTimeLibrary.timestampToDateTime(fromTimestamp);
         month = month.add(n);
         if (month > 12) {
-            year = year.add((month - 1) / 12);
-            month = (month - 1) % 12 + 1;
+            year = year.add(month.sub(1).div(12));
+            month = month.sub(1).mod(12).add(1);
         }
         return BokkyPooBahsDateTimeLibrary.timestampFromDateTime(
             year,
@@ -87,13 +95,36 @@ contract TimeHelpers {
             second);
     }
 
+    function getCurrentMonth() external view returns (uint) {
+        return timestampToMonth(now);
+    }
+
+    function monthToTimestamp(uint _month) public pure returns (uint timestamp) {
+        uint year = ZERO_YEAR;
+        uint month = _month;
+        year = year.add(month.div(12));
+        month = month.mod(12);
+        month = month.add(1);
+        return BokkyPooBahsDateTimeLibrary.timestampFromDate(year, month, 1);
+    }
+
+    function timestampToMonth(uint timestamp) public pure returns (uint) {
+        uint year;
+        uint month;
+        (year, month, ) = BokkyPooBahsDateTimeLibrary.timestampToDate(timestamp);
+        require(year >= ZERO_YEAR, "Timestamp is too far in the past");
+        month = month.sub(1).add(year.sub(ZERO_YEAR).mul(12));
+        require(month > 0, "Timestamp is too far in the past");
+        return month;
+    }
+
     function getNextMonthStartFromDate(uint dateTimestamp) public pure returns (uint timestamp) {
         uint year;
         uint month;
         (year, month, ) = BokkyPooBahsDateTimeLibrary.timestampToDate(dateTimestamp);
-        month++;
+        month = month.add(1);
         if (month > 12) {
-            year++;
+            year = year.add(1);
             month = 1;
         }
         timestamp = BokkyPooBahsDateTimeLibrary.timestampFromDate(year, month, 1);

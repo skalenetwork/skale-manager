@@ -40,7 +40,7 @@ module.exports = {
         test: {            
             host: "127.0.0.1",
             port: 8545,
-            gas: 8000000,
+            gas: 6900000,
             network_id: "*"
         }
     },
@@ -49,7 +49,7 @@ module.exports = {
     },
     compilers: {
         solc: {
-            version: "0.5.15",
+            version: "0.5.16",
             settings: {
                 optimizer: {
                     enabled: true,

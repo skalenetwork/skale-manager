@@ -17,7 +17,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity ^0.5.3;
+pragma solidity 0.5.16;
 
 import "./Permissions.sol";
 import "./interfaces/INodesData.sol";
@@ -26,7 +26,7 @@ import "./interfaces/ISkaleToken.sol";
 import "./interfaces/INodesFunctionality.sol";
 import "./interfaces/ISchainsFunctionality.sol";
 import "./interfaces/IManagerData.sol";
-import "./delegation/DelegationService.sol";
+import "./delegation/Distributor.sol";
 import "./delegation/ValidatorService.sol";
 import "./MonitorsFunctionality.sol";
 import "./NodesFunctionality.sol";
@@ -55,25 +55,23 @@ contract SkaleManager is IERC777Recipient, Permissions {
     );
 
     function tokensReceived(
-        address operator,
+        address, // operator
         address from,
         address to,
         uint256 value,
         bytes calldata userData,
-        bytes calldata operatorData
+        bytes calldata // operator data
     )
         external
         allow("SkaleToken")
     {
-        if (from == contractManager.getContract("SkaleBalances")) {
-            // skip parsing of user data
-            return;
-        }
-
-        TransactionOperation operationType = fallbackOperationTypeConvert(userData);
-        if (operationType == TransactionOperation.CreateSchain) {
-            address schainsFunctionalityAddress = contractManager.getContract("SchainsFunctionality");
-            ISchainsFunctionality(schainsFunctionalityAddress).addSchain(from, value, userData);
+        require(to == address(this), "Receiver is incorrect");
+        if (userData.length > 0) {
+            TransactionOperation operationType = fallbackOperationTypeConvert(userData);
+            if (operationType == TransactionOperation.CreateSchain) {
+                address schainsFunctionalityAddress = contractManager.getContract("SchainsFunctionality");
+                ISchainsFunctionality(schainsFunctionalityAddress).addSchain(from, value, userData);
+            }
         }
     }
 
@@ -116,7 +114,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
         address nodesFunctionalityAddress = contractManager.getContract("NodesFunctionality");
         INodesFunctionality(nodesFunctionalityAddress).removeNode(msg.sender, nodeIndex);
         MonitorsFunctionality monitorsFunctionality = MonitorsFunctionality(contractManager.getContract("MonitorsFunctionality"));
-        monitorsFunctionality.deleteMonitorByRoot(nodeIndex);
+        monitorsFunctionality.deleteMonitor(nodeIndex);
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
         uint validatorId = validatorService.getValidatorId(msg.sender);
         validatorService.deleteNode(validatorId, nodeIndex);
@@ -129,7 +127,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
 
         nodesFunctionality.removeNodeByRoot(nodeIndex);
-        monitorsFunctionality.deleteMonitorByRoot(nodeIndex);
+        monitorsFunctionality.deleteMonitor(nodeIndex);
         uint validatorId = nodesData.getNodeValidatorId(nodeIndex);
         validatorService.deleteNode(validatorId, nodeIndex);
     }
@@ -202,8 +200,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
             msg.sender,
             nodeIndex,
             averageDowntime,
-            averageLatency,
-            nodesDataAddress);
+            averageLatency);
         INodesData(nodesDataAddress).changeNodeLastRewardDate(nodeIndex);
         monitorsFunctionality.upgradeMonitor(nodeIndex);
         emit BountyGot(
@@ -226,8 +223,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
         address from,
         uint nodeIndex,
         uint32 downtime,
-        uint32 latency,
-        address nodesDataAddress) internal returns (uint)
+        uint32 latency) internal returns (uint)
     {
         uint commonBounty;
         IConstants constants = IConstants(contractManager.getContract("ConstantsHolder"));
@@ -276,14 +272,14 @@ contract SkaleManager is IERC777Recipient, Permissions {
     function payBounty(uint bountyForMiner, address miner, uint nodeIndex) internal returns (bool) {
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
         SkaleToken skaleToken = SkaleToken(contractManager.getContract("SkaleToken"));
-        DelegationService delegationService = DelegationService(contractManager.getContract("DelegationService"));
+        Distributor distributor = Distributor(contractManager.getContract("Distributor"));
+
         uint validatorId = validatorService.getValidatorId(miner);
         uint bounty = bountyForMiner;
         if (!validatorService.checkPossibilityToMaintainNode(validatorId, nodeIndex)) {
             bounty /= 2;
         }
-        delegationService.withdrawBounty(address(this), bounty);
-        skaleToken.send(address(delegationService), bounty, abi.encode(validatorId));
+        skaleToken.send(address(distributor), bounty, abi.encode(validatorId));
     }
 
     function fallbackOperationTypeConvert(bytes memory data) internal pure returns (TransactionOperation) {

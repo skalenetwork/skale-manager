@@ -1,4 +1,4 @@
-pragma solidity ^0.5.3;
+pragma solidity 0.5.16;
 
 import "@openzeppelin/contracts/token/ERC777/IERC777.sol";
 import "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
@@ -7,13 +7,16 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/introspection/IERC1820Registry.sol";
+// Added by SKALE
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+// --------------
 
 
 /**
  * @dev Implementation of the `IERC777` interface.
  * Modified version to support delegation
  */
-contract LockableERC777 is IERC777, IERC20 {
+contract LockableERC777 is IERC777, IERC20 /* Added by SKALE */, ReentrancyGuard { // End of added by SKALE
     using SafeMath for uint256;
     using Address for address;
 
@@ -88,7 +91,7 @@ contract LockableERC777 is IERC777, IERC20 {
      *
      * Also emits a `Sent` event.
      */
-    function transfer(address recipient, uint256 amount) external returns (bool) {
+    function transfer(address recipient, uint256 amount) external /* Added by SKALE */ nonReentrant /* End of added by SKALE */ returns (bool) {
         require(recipient != address(0), "ERC777: transfer to the zero address");
 
         address from = msg.sender;
@@ -204,7 +207,7 @@ contract LockableERC777 is IERC777, IERC20 {
     *
     * Emits `Sent` and `Transfer` events.
     */
-    function transferFrom(address holder, address recipient, uint256 amount) external returns (bool) {
+    function transferFrom(address holder, address recipient, uint256 amount) external /* Added by SKALE */ nonReentrant /*End*/ returns (bool) {
         require(recipient != address(0), "ERC777: transfer to the zero address");
         require(holder != address(0), "ERC777: transfer from the zero address");
 
@@ -347,7 +350,7 @@ contract LockableERC777 is IERC777, IERC20 {
     }
 
     // Added by SKALE
-    function _getLockedOf(address wallet) internal returns (uint);
+    function _getAndUpdateLockedAmount(address wallet) internal returns (uint);
     // --------------
 
     /**
@@ -370,6 +373,7 @@ contract LockableERC777 is IERC777, IERC20 {
         bool requireReceptionAck
     )
         private
+        /* Added by SKALE */ nonReentrant /* End of added by SKALE */
     {
         require(from != address(0), "ERC777: send from the zero address");
         require(to != address(0), "ERC777: send to the zero address");
@@ -405,6 +409,12 @@ contract LockableERC777 is IERC777, IERC20 {
         private
     {
         require(from != address(0), "ERC777: burn from the zero address");
+// Added by SKALE----------------------------------------------------------
+        uint locked = _getAndUpdateLockedAmount(from);
+        if (locked > 0) {
+            require(_balances[from] >= locked.add(amount), "Token should be unlocked for burning");
+        }
+//-------------------------------------------------------------------------
 
         _callTokensToSend(
             operator, from, address(0), amount, data, operatorData
@@ -430,8 +440,8 @@ contract LockableERC777 is IERC777, IERC20 {
     )
         private
     {
-// Property of the company SKALE Labs inc.---------------------------------
-        uint locked = _getLockedOf(from);
+// Added by SKALE----------------------------------------------------------
+        uint locked = _getAndUpdateLockedAmount(from);
         if (locked > 0) {
             require(_balances[from] >= locked.add(amount), "Token should be unlocked for transferring");
         }

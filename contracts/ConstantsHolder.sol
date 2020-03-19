@@ -17,7 +17,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity ^0.5.3;
+pragma solidity 0.5.16;
 
 import "./Permissions.sol";
 import "./interfaces/IConstants.sol";
@@ -110,7 +110,11 @@ contract ConstantsHolder is IConstants, Permissions {
 
     //Need to add minimal allowed parameters for verdicts
 
+    uint public launchTimestamp;
+
     uint public rotationDelay;
+
+    uint public proofOfUseLockUpPeriodDays;
 
     /**
      * Set reward and delta periods to new one, run only by owner. This function
@@ -158,8 +162,16 @@ contract ConstantsHolder is IConstants, Permissions {
         msr = newMSR;
     }
 
+    function setLaunchTimestamp(uint timestamp) external onlyOwner {
+        launchTimestamp = timestamp;
+    }
+
     function setRotationDelay(uint newDelay) external onlyOwner {
         rotationDelay = newDelay;
+    }
+
+    function setProofOfUseLockUpPeriod(uint periodDays) external onlyOwner {
+        proofOfUseLockUpPeriodDays = periodDays;
     }
 
     /**
@@ -176,6 +188,8 @@ contract ConstantsHolder is IConstants, Permissions {
         checkTime = 120; // Test parameters
         lastTimeUnderloaded = 0;
         lastTimeOverloaded = 0;
+        launchTimestamp = now;
         rotationDelay = 12 hours;
+        proofOfUseLockUpPeriodDays = 90;
     }
 }

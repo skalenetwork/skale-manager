@@ -17,14 +17,14 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity ^0.5.3;
+pragma solidity 0.5.16;
 pragma experimental ABIEncoderV2;
 import "./Permissions.sol";
 import "./interfaces/IGroupsData.sol";
 import "./interfaces/INodesData.sol";
 import "./interfaces/ISchainsFunctionality.sol";
 import "./interfaces/ISchainsFunctionalityInternal.sol";
-import "./delegation/DelegationService.sol";
+import "./delegation/Punisher.sol";
 import "./NodesData.sol";
 import "./SlashingTable.sol";
 import "./SchainsFunctionality.sol";
@@ -126,12 +126,32 @@ contract SkaleDKG is Permissions {
         channels[groupIndex].completed = new bool[](IGroupsData(channels[groupIndex].dataAddress).getRecommendedNumberOfNodes(groupIndex));
         channels[groupIndex].publicKeyy.x = 1;
         channels[groupIndex].nodeToComplaint = uint(-1);
+        channels[groupIndex].startedBlockTimestamp = block.timestamp;
         emit ChannelOpened(groupIndex);
     }
 
     function deleteChannel(bytes32 groupIndex) external allowTwo("SchainsData", "MonitorsData") {
         require(channels[groupIndex].active, "Channel is not created");
         delete channels[groupIndex];
+    }
+
+    function reopenChannel(bytes32 groupIndex) external allow("SkaleDKG") {
+        require(channels[groupIndex].active, "Channel is not created");
+        delete channels[groupIndex].broadcasted;
+        delete channels[groupIndex].completed;
+        channels[groupIndex].broadcasted = new bool[](IGroupsData(channels[groupIndex].dataAddress).getRecommendedNumberOfNodes(groupIndex));
+        channels[groupIndex].completed = new bool[](IGroupsData(channels[groupIndex].dataAddress).getRecommendedNumberOfNodes(groupIndex));
+        delete channels[groupIndex].publicKeyx.x;
+        delete channels[groupIndex].publicKeyx.y;
+        channels[groupIndex].publicKeyy.x = 1;
+        delete channels[groupIndex].publicKeyy.y;
+        delete channels[groupIndex].fromNodeToComplaint;
+        channels[groupIndex].nodeToComplaint = uint(-1);
+        delete channels[groupIndex].numberOfBroadcasted;
+        delete channels[groupIndex].numberOfCompleted;
+        delete channels[groupIndex].startComplaintBlockTimestamp;
+        channels[groupIndex].startedBlockTimestamp = block.timestamp;
+        emit ChannelOpened(groupIndex);
     }
 
     function broadcast(
@@ -183,19 +203,20 @@ contract SkaleDKG is Permissions {
         correctNode(groupIndex, toNodeIndex)
     {
         require(isNodeByMessageSender(fromNodeIndex, msg.sender), "Node does not exist for message sender");
-        if (isBroadcasted(groupIndex, toNodeIndex) && channels[groupIndex].nodeToComplaint == uint(-1)) {
+        bool broadcasted = isBroadcasted(groupIndex, toNodeIndex);
+        if (broadcasted && channels[groupIndex].nodeToComplaint == uint(-1)) {
             // need to wait a response from toNodeIndex
             channels[groupIndex].nodeToComplaint = toNodeIndex;
             channels[groupIndex].fromNodeToComplaint = fromNodeIndex;
             channels[groupIndex].startComplaintBlockTimestamp = block.timestamp;
             emit ComplaintSent(groupIndex, fromNodeIndex, toNodeIndex);
-        } else if (isBroadcasted(groupIndex, toNodeIndex) && channels[groupIndex].nodeToComplaint != toNodeIndex) {
+        } else if (broadcasted && channels[groupIndex].nodeToComplaint != toNodeIndex) {
             revert("One complaint has already sent");
-        } else if (isBroadcasted(groupIndex, toNodeIndex) && channels[groupIndex].nodeToComplaint == toNodeIndex) {
+        } else if (broadcasted && channels[groupIndex].nodeToComplaint == toNodeIndex) {
             require(channels[groupIndex].startComplaintBlockTimestamp.add(1800) <= block.timestamp, "One more complaint rejected");
             // need to penalty Node - toNodeIndex
             finalizeSlashing(groupIndex, channels[groupIndex].nodeToComplaint);
-        } else if (!isBroadcasted(groupIndex, toNodeIndex)) {
+        } else if (!broadcasted) {
             // if node have not broadcasted params
             require(channels[groupIndex].startedBlockTimestamp.add(1800) <= block.timestamp, "Complaint rejected");
             // need to penalty Node - toNodeIndex
@@ -316,27 +337,27 @@ contract SkaleDKG is Permissions {
         emit FailedDKG(groupIndex);
 
         address dataAddress = channels[groupIndex].dataAddress;
-        delete channels[groupIndex];
         if (schainsFunctionalityInternal.isAnyFreeNode(groupIndex)) {
             uint newNode = schainsFunctionality.rotateNode(
                 badNode,
                 groupIndex
             );
             emit NewGuy(newNode);
-            this.openChannel(groupIndex);
+            this.reopenChannel(groupIndex);
         } else {
             schainsFunctionalityInternal.removeNodeFromSchain(
                 badNode,
                 groupIndex
             );
             IGroupsData(dataAddress).setGroupFailedDKG(groupIndex);
+            delete channels[groupIndex];
         }
 
-        DelegationService delegationService = DelegationService(contractManager.getContract("DelegationService"));
+        Punisher punisher = Punisher(contractManager.getContract("Punisher"));
         NodesData nodesData = NodesData(contractManager.getContract("NodesData"));
         SlashingTable slashingTable = SlashingTable(contractManager.getContract("SlashingTable"));
 
-        delegationService.slash(nodesData.getValidatorId(badNode), slashingTable.getPenalty("FailedDKG"));
+        punisher.slash(nodesData.getValidatorId(badNode), slashingTable.getPenalty("FailedDKG"));
     }
 
     function verify(

@@ -3,12 +3,9 @@
   "contracts": {
     "DelegationController": "DelegationController",
     "DelegationPeriodManager": "DelegationPeriodManager",
-    "DelegationRequestManager": "DelegationRequestManager",
-    "DelegationService": "DelegationService",
     "Distributor": "Distributor",
-    "SkaleBalances": "SkaleBalances",
     "TimeHelpers": "TimeHelpers",
-    "TokenSaleManager": "TokenSaleManager",
+    "TokenLaunchManager": "TokenLaunchManager",
     "TokenState": "TokenState",
     "ValidatorService": "ValidatorService",
     "ContractManager": "ContractManager",
@@ -27,7 +24,9 @@
     "ManagerData": "ManagerData",
     "SkaleManager": "SkaleManager",
     "Pricing": "Pricing",
-    "SlashingTable": "SlashingTable"
+    "SlashingTable": "SlashingTable",
+    "Punisher": "Punisher",
+    "TokenLaunchLocker": "TokenLaunchLocker"
   },
   "dependencies": {},
   "name": "skale-manager",
@@ -36,7 +35,7 @@
     "manager": "openzeppelin",
     "compilerSettings": {
       "optimizer": {
-        "enabled": false,
+        "enabled": true,
         "runs": "200"
       }
     },

@@ -1,5 +1,6 @@
 import { ContractManagerInstance, TokenStateContract } from "../../../../types/truffle-contracts";
 import { deployDelegationController } from "./delegationController";
+import { deployPunisher } from "./punisher";
 import { deployTimeHelpers } from "./timeHelpers";
 
 const TokenState: TokenStateContract = artifacts.require("./TokenState");
@@ -14,6 +15,7 @@ async function deploy(contractManager: ContractManagerInstance) {
 
 async function deployDependencies(contractManager: ContractManagerInstance) {
     await deployDelegationController(contractManager);
+    await deployPunisher(contractManager);
     await deployTimeHelpers(contractManager);
 }
 
