@@ -56,7 +56,7 @@ contract("DelegationController", ([owner, holder1, holder2, validator, validator
             await validatorService.enableValidator(validatorId, {from: owner});
             });
 
-        it("should reject delegation if validator with such id doesn't exist", async () => {
+        it("should reject delegation if validator with such id does not exist", async () => {
             const nonExistedValidatorId = 2;
             await delegationController.delegate(nonExistedValidatorId, amount, delegationPeriod, info, {from: holder1})
                 .should.be.eventually.rejectedWith("Validator with such ID does not exist");
@@ -104,6 +104,7 @@ contract("DelegationController", ([owner, holder1, holder2, validator, validator
         });
 
         it("should reject canceling if delegation doesn't exist", async () => {
+            delegationId = 99;
             await delegationController.cancelPendingDelegation(delegationId, {from: holder1})
                 .should.be.rejectedWith("Delegation does not exist");
         });
