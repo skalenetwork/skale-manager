@@ -130,7 +130,7 @@ contract("NodesFunctionality", ([owner, validator]) => {
                 .should.be.eventually.rejectedWith("Node does not exist for message sender");
 
             // await nodesFunctionality.initExit(owner, 0)
-            //     .should.be.eventually.rejectedWith("Validator with such address doesn't exist");
+            //     .should.be.eventually.rejectedWith("Validator with such address does not exist");
         });
 
         it("should initiate exiting", async () => {
@@ -141,7 +141,7 @@ contract("NodesFunctionality", ([owner, validator]) => {
 
         it("should complete exiting", async () => {
             // await nodesFunctionality.completeExit(owner, 0)
-            //     .should.be.eventually.rejectedWith("Validator with such address doesn't exist");
+            //     .should.be.eventually.rejectedWith("Validator with such address does not exist");
 
             await nodesFunctionality.completeExit(validator, 1)
                 .should.be.eventually.rejectedWith("Node does not exist for message sender");
@@ -205,7 +205,7 @@ contract("NodesFunctionality", ([owner, validator]) => {
 
         it("should complete exiting from first node", async () => {
             // await nodesFunctionality.completeExit(owner, 0)
-            //     .should.be.eventually.rejectedWith("Validator with such address doesn't exist");
+            //     .should.be.eventually.rejectedWith("Validator with such address does not exist");
 
             await nodesFunctionality.completeExit(validator, 0)
                 .should.be.eventually.rejectedWith("Node is not Leaving");
@@ -217,7 +217,7 @@ contract("NodesFunctionality", ([owner, validator]) => {
 
         it("should complete exiting from second node", async () => {
             // await nodesFunctionality.completeExit(owner, 1)
-            //     .should.be.eventually.rejectedWith("Validator with such address doesn't exist");
+            //     .should.be.eventually.rejectedWith("Validator with such address does not exist");
 
             await nodesFunctionality.completeExit(validator, 1)
                 .should.be.eventually.rejectedWith("Node is not Leaving");

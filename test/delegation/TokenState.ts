@@ -95,7 +95,7 @@ contract("DelegationController", ([owner, holder, validator]) => {
             skipTime(web3, month);
 
             await delegationController.acceptPendingDelegation(delegationId, {from: validator})
-                .should.eventually.be.rejectedWith("Can't set state to accepted");
+                .should.eventually.be.rejectedWith("Cannot set state to accepted");
 
             const state = await delegationController.getState(delegationId);
             state.toNumber().should.be.equal(State.REJECTED);
@@ -121,7 +121,7 @@ contract("DelegationController", ([owner, holder, validator]) => {
 
             it("should not allow to request undelegation while is not delegated", async () => {
                 await delegationController.requestUndelegation(delegationId, {from: holder})
-                    .should.be.eventually.rejectedWith("Can't request undelegation");
+                    .should.be.eventually.rejectedWith("Cannot request undelegation");
             });
 
             it("should not allow to cancel accepted request", async () => {
