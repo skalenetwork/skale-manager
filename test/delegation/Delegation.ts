@@ -99,7 +99,7 @@ contract("Delegation", ([owner,
                     it("should send request for delegation", async () => {
                         const { logs } = await delegationController.delegate(
                             validatorId, defaultAmount.toString(), delegationPeriod, "D2 is even", {from: holder1});
-                        assert.equal(logs.length, 1, "No DelegationProposed Event emitted");
+                        assert.equal(logs.length, 1, "No DelegationRequestIsSent Event emitted");
                         assert.equal(logs[0].event, "DelegationProposed");
                         requestId = logs[0].args.delegationId;
 
@@ -390,7 +390,8 @@ contract("Delegation", ([owner,
 
         it("should be possible for N.O.D.E. foundation to spin up node immediately", async () => {
             await constantsHolder.setMSR(0);
-            await validatorService.checkPossibilityCreatingNode(validator);
+            await validatorService.linkNodeAddress(bountyAddress, {from: validator});
+            await validatorService.checkPossibilityCreatingNode(bountyAddress);
         });
 
         it("should be possible to distribute bounty accross thousands of holders", async () => {
