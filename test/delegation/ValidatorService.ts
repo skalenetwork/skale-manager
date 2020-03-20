@@ -205,6 +205,11 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
             .should.be.eventually.rejectedWith("New address cannot be null");
         });
 
+        it("should reject if provided validatorId equals zero", async () => {
+            await validatorService.enableValidator(0)
+                .should.be.eventually.rejectedWith("Validator with such ID does not exist");
+        });
+
         it("should return list of trusted validators", async () => {
             const validatorId1 = 1;
             const validatorId3 = 3;

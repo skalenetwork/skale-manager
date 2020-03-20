@@ -268,7 +268,7 @@ contract ValidatorService is Permissions {
     }
 
     function validatorExists(uint validatorId) public view returns (bool) {
-        return validatorId <= numberOfValidators;
+        return validatorId <= numberOfValidators && validatorId != 0;
     }
 
     function validatorAddressExists(address validatorAddress) public view returns (bool) {
