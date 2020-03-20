@@ -29,70 +29,12 @@ contract TimeHelpers {
 
     uint constant ZERO_YEAR = 2020;
 
-    function getNextMonthStart() external view returns (uint timestamp) {
-        return getNextMonthStartFromDate(now);
-    }
-
-    function calculateDelegationEndTime(
-        uint requestTime,
-        uint delegationPeriod,
-        uint redelegationPeriod
-    )
-        external
-        view
-        returns (uint timestamp)
-    {
-        uint year;
-        uint month;
-        (year, month, ) = BokkyPooBahsDateTimeLibrary.timestampToDate(requestTime);
-
-        month = month.add(delegationPeriod).add(1);
-        if (month > 12) {
-            year = year.add(month.sub(1).div(12));
-            month = month.sub(1).mod(12).add(1);
-        }
-        timestamp = BokkyPooBahsDateTimeLibrary.timestampFromDate(year, month, 1);
-
-        if (now > timestamp) {
-            uint currentYear;
-            uint currentMonth;
-            (currentYear, currentMonth, ) = BokkyPooBahsDateTimeLibrary.timestampToDate(now);
-            currentMonth = currentMonth.add(currentYear.sub(year).mul(12));
-
-            month = month.add(
-                currentMonth.sub(month).div(redelegationPeriod).add(1).mul(redelegationPeriod));
-            if (month > 12) {
-                year = year.add(month.sub(1).div(12));
-                month = month.sub(1).mod(12).add(1);
-            }
-            timestamp = BokkyPooBahsDateTimeLibrary.timestampFromDate(year, month, 1);
-        }
-    }
-
     function calculateProofOfUseLockEndTime(uint month, uint lockUpPeriodDays) external pure returns (uint timestamp) {
         timestamp = BokkyPooBahsDateTimeLibrary.addDays(monthToTimestamp(month), lockUpPeriodDays);
     }
 
     function addMonths(uint fromTimestamp, uint n) external pure returns (uint) {
-        uint year;
-        uint month;
-        uint day;
-        uint hour;
-        uint minute;
-        uint second;
-        (year, month, day, hour, minute, second) = BokkyPooBahsDateTimeLibrary.timestampToDateTime(fromTimestamp);
-        month = month.add(n);
-        if (month > 12) {
-            year = year.add(month.sub(1).div(12));
-            month = month.sub(1).mod(12).add(1);
-        }
-        return BokkyPooBahsDateTimeLibrary.timestampFromDateTime(
-            year,
-            month,
-            day,
-            hour,
-            minute,
-            second);
+        return BokkyPooBahsDateTimeLibrary.addMonths(fromTimestamp, n);
     }
 
     function getCurrentMonth() external view returns (uint) {
@@ -116,17 +58,5 @@ contract TimeHelpers {
         month = month.sub(1).add(year.sub(ZERO_YEAR).mul(12));
         require(month > 0, "Timestamp is too far in the past");
         return month;
-    }
-
-    function getNextMonthStartFromDate(uint dateTimestamp) public pure returns (uint timestamp) {
-        uint year;
-        uint month;
-        (year, month, ) = BokkyPooBahsDateTimeLibrary.timestampToDate(dateTimestamp);
-        month = month.add(1);
-        if (month > 12) {
-            year = year.add(1);
-            month = 1;
-        }
-        timestamp = BokkyPooBahsDateTimeLibrary.timestampFromDate(year, month, 1);
     }
 }
