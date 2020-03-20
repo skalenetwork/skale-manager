@@ -93,6 +93,7 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
                 {from: validator1});
             await validatorService.linkNodeAddress(nodeAddress, {from: validator1});
         });
+
         it("should reject when validator tried to register new one with the same address", async () => {
             await validatorService.registerValidator(
                 "ValidatorName",
@@ -162,6 +163,17 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
                 .should.be.eventually.rejectedWith("Validator with such address does not exist");
         });
 
+        it("should not allow changing the address to the address of an existing validator", async () => {
+            await validatorService.registerValidator(
+                "Doge",
+                "I'm a cat",
+                500,
+                100,
+                {from: validator2});
+            await validatorService.requestForNewAddress(validator1, {from: validator2})
+                .should.be.eventually.rejectedWith("Address already registered");
+        });
+
         describe("when validator requests for a new address", async () => {
             beforeEach(async () => {
                 await validatorService.requestForNewAddress(validator3, {from: validator1});
@@ -192,6 +204,11 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
         it("should reject if validator tries to set new address as null", async () => {
             await validatorService.requestForNewAddress("0x0000000000000000000000000000000000000000")
             .should.be.eventually.rejectedWith("New address cannot be null");
+        });
+
+        it("should reject if provided validatorId equals zero", async () => {
+            await validatorService.enableValidator(0)
+                .should.be.eventually.rejectedWith("Validator with such ID does not exist");
         });
 
         it("should return list of trusted validators", async () => {

@@ -140,6 +140,7 @@ contract ValidatorService is Permissions {
 
     function requestForNewAddress(address newValidatorAddress) external {
         require(newValidatorAddress != address(0), "New address cannot be null");
+        require(_validatorAddressToId[newValidatorAddress] == 0, "Address already registered");
         uint validatorId = getValidatorId(msg.sender);
         validators[validatorId].requestedAddress = newValidatorAddress;
     }
@@ -271,7 +272,7 @@ contract ValidatorService is Permissions {
     }
 
     function validatorExists(uint validatorId) public view returns (bool) {
-        return validatorId <= numberOfValidators;
+        return validatorId <= numberOfValidators && validatorId != 0;
     }
 
     function validatorAddressExists(address validatorAddress) public view returns (bool) {
