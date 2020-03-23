@@ -161,6 +161,7 @@ contract ValidatorService is Permissions {
 
     function linkNodeAddress(address nodeAddress) external {
         uint validatorId = getValidatorId(msg.sender);
+        require(_validatorAddressToId[nodeAddress] == 0, "Node address is a validator");
         addNodeAddress(validatorId, nodeAddress);
         emit NodeAddressWasAdded(validatorId, nodeAddress);
     }

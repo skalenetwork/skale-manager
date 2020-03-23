@@ -144,6 +144,18 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
             assert.equal(id, validatorId);
         });
 
+        it("should not link validator like node address", async () => {
+            const validatorId = 2;
+            await validatorService.registerValidator(
+                "Second Validator",
+                "Bad validator",
+                500,
+                100,
+                {from: validator2});
+            await validatorService.linkNodeAddress(validator2, {from: validator1})
+                .should.be.eventually.rejectedWith("Node address is a validator");
+        });
+
         it("should unlink node address for validator", async () => {
             const validatorId = 1;
             await validatorService.linkNodeAddress(nodeAddress, {from: validator1});
