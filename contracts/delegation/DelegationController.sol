@@ -412,13 +412,13 @@ contract DelegationController is Permissions, ILocker {
             }
         } else {
             TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
-            if (now < timeHelpers.monthToTimestamp(delegations[delegationId].started)) {
+            if (timeHelpers.getCurrentMonth() < delegations[delegationId].started) {
                 return State.ACCEPTED;
             } else {
                 if (delegations[delegationId].finished == 0) {
                     return State.DELEGATED;
                 } else {
-                    if (now < timeHelpers.monthToTimestamp(delegations[delegationId].finished)) {
+                    if (timeHelpers.getCurrentMonth() < delegations[delegationId].finished) {
                         return State.UNDELEGATION_REQUESTED;
                     } else {
                         return State.COMPLETED;
