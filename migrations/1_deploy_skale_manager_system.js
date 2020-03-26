@@ -81,8 +81,7 @@ async function deploy(deployer, networkName, accounts) {
         "ValidatorService",
 
         "ConstantsHolder",
-        "NodesData",
-        "NodesFunctionality",
+        "Nodes",
         "MonitorsData",
         "MonitorsFunctionality",
         "SchainsData",

@@ -9,7 +9,7 @@ import { deployNodes } from "./utils/deploy/nodes";
 chai.should();
 chai.use(chaiAsPromised);
 
-contract("Nodes", ([owner, validator]) => {
+contract("NodesData", ([owner, validator]) => {
     let contractManager: ContractManagerInstance;
     let nodes: NodesInstance;
 

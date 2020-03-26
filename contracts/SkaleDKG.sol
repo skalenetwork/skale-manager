@@ -21,7 +21,6 @@ pragma solidity 0.5.16;
 pragma experimental ABIEncoderV2;
 import "./Permissions.sol";
 import "./interfaces/IGroupsData.sol";
-import "./interfaces/INodesData.sol";
 import "./interfaces/ISchainsFunctionality.sol";
 import "./interfaces/ISchainsFunctionalityInternal.sol";
 import "./delegation/Punisher.sol";

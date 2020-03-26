@@ -20,10 +20,8 @@
 pragma solidity 0.5.16;
 
 import "./Permissions.sol";
-import "./interfaces/INodesData.sol";
 import "./interfaces/IConstants.sol";
 import "./interfaces/ISkaleToken.sol";
-import "./interfaces/INodesFunctionality.sol";
 import "./interfaces/ISchainsFunctionality.sol";
 import "./interfaces/IManagerData.sol";
 import "./delegation/Distributor.sol";
@@ -108,8 +106,8 @@ contract SkaleManager is IERC777Recipient, Permissions {
     }
 
     function deleteNode(uint nodeIndex) external {
-        address nodesFunctionalityAddress = contractManager.getContract("NodesFunctionality");
-        INodesFunctionality(nodesFunctionalityAddress).removeNode(msg.sender, nodeIndex);
+        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
+        nodes.removeNode(msg.sender, nodeIndex);
         MonitorsFunctionality monitorsFunctionality = MonitorsFunctionality(contractManager.getContract("MonitorsFunctionality"));
         monitorsFunctionality.deleteMonitor(nodeIndex);
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));

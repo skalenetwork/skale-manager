@@ -25,7 +25,6 @@ import "./interfaces/IConstants.sol";
 import "./interfaces/IGroupsData.sol";
 import "./interfaces/ISchainsFunctionality.sol";
 import "./interfaces/ISchainsFunctionalityInternal.sol";
-import "./interfaces/INodesData.sol";
 import "./SchainsData.sol";
 import "./SchainsFunctionalityInternal.sol";
 

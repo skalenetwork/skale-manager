@@ -21,7 +21,6 @@ pragma solidity 0.5.16;
 pragma experimental ABIEncoderV2;
 
 import "./GroupsFunctionality.sol";
-import "./interfaces/INodesData.sol";
 import "./interfaces/IConstants.sol";
 import "./SchainsData.sol";
 import "./Nodes.sol";
@@ -108,7 +107,7 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
 
     function isEnoughNodes(bytes32 groupIndex) external view returns (uint[] memory result) {
         IGroupsData groupsData = IGroupsData(contractManager.getContract(dataName));
-        INodesData nodes = INodesData(contractManager.getContract("NodesData"));
+        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
         uint8 space = uint8(uint(groupsData.getGroupData(groupIndex)));
         uint[] memory nodesWithFreeSpace = nodes.getNodesWithFreeSpace(space);
         uint counter = 0;
@@ -131,7 +130,7 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
 
     function isAnyFreeNode(bytes32 groupIndex) external view returns (bool) {
         IGroupsData groupsData = IGroupsData(contractManager.getContract(dataName));
-        INodesData nodes = INodesData(contractManager.getContract("Nodes"));
+        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
         uint8 space = uint8(uint(groupsData.getGroupData(groupIndex)));
         uint[] memory nodesWithFreeSpace = nodes.getNodesWithFreeSpace(space);
         for (uint i = 0; i < nodesWithFreeSpace.length; i++) {

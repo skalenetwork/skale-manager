@@ -22,7 +22,6 @@ pragma solidity 0.5.16;
 
 import "./Permissions.sol";
 import "./interfaces/IGroupsData.sol";
-import "./interfaces/INodesData.sol";
 import "./SchainsData.sol";
 import "./Nodes.sol";
 

@@ -1,5 +1,5 @@
 /*
-    NodesFunctionality.sol - SKALE Manager
+    Nodes.sol - SKALE Manager
     Copyright (C) 2018-Present SKALE Labs
     @author Artem Payvin
 
@@ -21,15 +21,13 @@ pragma solidity 0.5.16;
 
 import "./Permissions.sol";
 import "./interfaces/IConstants.sol";
-import "./interfaces/INodesData.sol";
-import "./interfaces/INodesFunctionality.sol";
 import "./delegation/ValidatorService.sol";
 
 
 /**
  * @title Nodes - contract contains all functionality logic to manage Nodes
  */
-contract Nodes is Permissions, INodesFunctionality {
+contract Nodes is Permissions {
 
     // All Nodes states
     enum NodeStatus {Active, Leaving, Left}
@@ -319,7 +317,7 @@ contract Nodes is Permissions, INodesFunctionality {
     }
 
     /**
-     * @dev createNode - creates new Node and add it to the NodesData contract
+     * @dev createNode - creates new Node and add it to the Nodes contract
      * function could be only run by SkaleManager
      * @param from - owner of Node
      * @param data - Node's data
@@ -344,7 +342,7 @@ contract Nodes is Permissions, INodesFunctionality {
 
         uint validatorId = ValidatorService(contractManager.getContract("ValidatorService")).getValidatorIdByNodeAddress(from);
 
-        // adds Node to NodesData contract
+        // adds Node to Nodes contract
         nodeIndex = addNode(
             from,
             name,
@@ -354,7 +352,7 @@ contract Nodes is Permissions, INodesFunctionality {
             publicKey,
             validatorId);
         // adds Node to Fractional Nodes or to Full Nodes
-        // setNodeType(nodesDataAddress, constantsAddress, nodeIndex);
+        // setNodeType(nodesAddress, constantsAddress, nodeIndex);
 
         emit NodeCreated(
             nodeIndex,
@@ -498,10 +496,10 @@ contract Nodes is Permissions, INodesFunctionality {
 
     /**
      * @dev setNodeLeaving - set Node Leaving
-     * function could be run only by NodesFunctionality
+     * function could be run only by Nodes
      * @param nodeIndex - index of Node
      */
-    function setNodeLeaving(uint nodeIndex) public {
+    function setNodeLeaving(uint nodeIndex) public allow("Nodes") {
         nodes[nodeIndex].status = NodeStatus.Leaving;
         numberOfActiveNodes--;
         numberOfLeavingNodes++;
@@ -509,10 +507,10 @@ contract Nodes is Permissions, INodesFunctionality {
 
     /**
      * @dev setNodeLeft - set Node Left
-     * function could be run only by NodesFunctionality
+     * function could be run only by Nodes
      * @param nodeIndex - index of Node
      */
-    function setNodeLeft(uint nodeIndex) public {
+    function setNodeLeft(uint nodeIndex) public allow("Nodes") {
         nodesIPCheck[nodes[nodeIndex].ip] = false;
         nodesNameCheck[keccak256(abi.encodePacked(nodes[nodeIndex].name))] = false;
         // address ownerOfNode = nodes[nodeIndex].owner;
@@ -571,6 +569,22 @@ contract Nodes is Permissions, INodesFunctionality {
         numberOfActiveNodes = 0;
         numberOfLeavingNodes = 0;
         numberOfLeftNodes = 0;
+    }
+
+    function moveNodeToNewSpaceMap(uint nodeIndex, uint8 newSpace) internal {
+        uint8 previousSpace = spaceOfNodes[nodeIndex].freeSpace;
+        uint indexInArray = spaceOfNodes[nodeIndex].indexInSpaceMap;
+        if (indexInArray < spaceToNodes[previousSpace].length - 1) {
+            uint shiftedIndex = spaceToNodes[previousSpace][spaceToNodes[previousSpace].length - 1];
+            spaceToNodes[previousSpace][indexInArray] = shiftedIndex;
+            spaceOfNodes[shiftedIndex].indexInSpaceMap = indexInArray;
+            spaceToNodes[previousSpace].length--;
+        } else {
+            spaceToNodes[previousSpace].length--;
+        }
+        spaceToNodes[newSpace].push(nodeIndex);
+        spaceOfNodes[nodeIndex].freeSpace = newSpace;
+        spaceOfNodes[nodeIndex].indexInSpaceMap = spaceToNodes[newSpace].length - 1;
     }
 
     /**
