@@ -3,11 +3,11 @@ import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
 
 import { ContractManagerInstance,
-         NodesDataInstance,
+         NodesInstance,
          PricingInstance,
          SchainsDataInstance } from "../types/truffle-contracts";
 import { deployContractManager } from "./utils/deploy/contractManager";
-import { deployNodesData } from "./utils/deploy/nodesData";
+import { deployNodes } from "./utils/deploy/nodes";
 import { deployPricing } from "./utils/deploy/pricing";
 import { deploySchainsData } from "./utils/deploy/schainsData";
 import { skipTime } from "./utils/time";
@@ -19,13 +19,13 @@ contract("Pricing", ([owner, holder]) => {
     let contractManager: ContractManagerInstance;
     let pricing: PricingInstance;
     let schainsData: SchainsDataInstance;
-    let nodesData: NodesDataInstance;
+    let nodes: NodesInstance;
 
     beforeEach(async () => {
         contractManager = await deployContractManager();
 
+        nodes = await deployNodes(contractManager);
         schainsData = await deploySchainsData(contractManager);
-        nodesData = await deployNodesData(contractManager);
         pricing = await deployPricing(contractManager);
     });
 
@@ -34,10 +34,10 @@ contract("Pricing", ([owner, holder]) => {
             await schainsData.initializeSchain("BobSchain", holder, 10, 2);
             await schainsData.initializeSchain("DavidSchain", holder, 10, 4);
             await schainsData.initializeSchain("JacobSchain", holder, 10, 8);
-            await nodesData.addNode(holder, "John", "0x7f000001", "0x7f000002", 8545, "0x1122334455", 0);
-            await nodesData.addNode(holder, "Michael", "0x7f000003", "0x7f000004", 8545, "0x1122334455", 0);
-            await nodesData.addNode(holder, "Daniel", "0x7f000005", "0x7f000006", 8545, "0x1122334455", 0);
-            await nodesData.addNode(holder, "Steven", "0x7f000007", "0x7f000008", 8545, "0x1122334455", 0);
+            await nodes.addNode(holder, "John", "0x7f000001", "0x7f000002", 8545, "0x1122334455", 0);
+            await nodes.addNode(holder, "Michael", "0x7f000003", "0x7f000004", 8545, "0x1122334455", 0);
+            await nodes.addNode(holder, "Daniel", "0x7f000005", "0x7f000006", 8545, "0x1122334455", 0);
+            await nodes.addNode(holder, "Steven", "0x7f000007", "0x7f000008", 8545, "0x1122334455", 0);
 
         });
 
@@ -47,7 +47,7 @@ contract("Pricing", ([owner, holder]) => {
         });
 
         it("should increase number of nodes", async () => {
-            const numberOfNodes = new BigNumber(await nodesData.getNumberOfNodes());
+            const numberOfNodes = new BigNumber(await nodes.getNumberOfNodes());
             assert(numberOfNodes.isEqualTo(4));
         });
 
@@ -62,10 +62,10 @@ contract("Pricing", ([owner, holder]) => {
             const stevenNodeHash = web3.utils.soliditySha3("Steven");
 
             beforeEach(async () => {
-                const johnNodeIndex = new BigNumber(await nodesData.nodesNameToIndex(johnNodeHash)).toNumber();
-                const michaelNodeIndex = new BigNumber(await nodesData.nodesNameToIndex(michaelNodeHash)).toNumber();
-                const danielNodeIndex = new BigNumber(await nodesData.nodesNameToIndex(danielNodeHash)).toNumber();
-                const stevenNodeIndex = new BigNumber(await nodesData.nodesNameToIndex(stevenNodeHash)).toNumber();
+                const johnNodeIndex = new BigNumber(await nodes.nodesNameToIndex(johnNodeHash)).toNumber();
+                const michaelNodeIndex = new BigNumber(await nodes.nodesNameToIndex(michaelNodeHash)).toNumber();
+                const danielNodeIndex = new BigNumber(await nodes.nodesNameToIndex(danielNodeHash)).toNumber();
+                const stevenNodeIndex = new BigNumber(await nodes.nodesNameToIndex(stevenNodeHash)).toNumber();
 
                 await schainsData.addGroup(bobSchainHash, 1, bobSchainHash);
                 await schainsData.addGroup(davidSchainHash, 1, davidSchainHash);
@@ -88,13 +88,13 @@ contract("Pricing", ([owner, holder]) => {
             });
 
             it("should check load percentage of network", async () => {
-                const numberOfNodes = new BigNumber(await nodesData.getNumberOfNodes()).toNumber();
+                const numberOfNodes = new BigNumber(await nodes.getNumberOfNodes()).toNumber();
                 let sumNode = 0;
                 for (let i = 0; i < numberOfNodes; i++) {
                     const getSchainIdsForNode = await schainsData.getSchainIdsForNode(i);
                     for (const schain of getSchainIdsForNode) {
                         const partOfNode = new BigNumber(await schainsData.getSchainsPartOfNode(schain)).toNumber();
-                        const isNodeLeft = await nodesData.isNodeLeft(i);
+                        const isNodeLeft = await nodes.isNodeLeft(i);
                         if (partOfNode !== 0  && !isNodeLeft) {
                             sumNode += 128 / partOfNode;
                         }
@@ -125,7 +125,7 @@ contract("Pricing", ([owner, holder]) => {
             });
 
             it("should rejected if price - priceChange overflowed price", async () => {
-                await nodesData.addNode(holder, "vadim", "0x7f000010", "0x7f000011", 8545, "0x1122334455", 0);
+                await nodes.addNode(holder, "vadim", "0x7f000010", "0x7f000011", 8545, "0x1122334455", 0);
                 skipTime(web3, 10 ** 6);
                 await pricing.adjustPrice()
                     .should.be.eventually.rejectedWith("SafeMath: subtraction overflow");
@@ -164,7 +164,7 @@ contract("Pricing", ([owner, holder]) => {
                 }
 
                 it("should change price when new active node has been added", async () => {
-                    await nodesData.addNode(holder, "vadim", "0x7f000010", "0x7f000011", 8545, "0x1122334455", 0);
+                    await nodes.addNode(holder, "vadim", "0x7f000010", "0x7f000011", 8545, "0x1122334455", 0);
                     const MINUTES_PASSED = 2;
                     const price = await getPrice(MINUTES_PASSED);
                     const newPrice = new BigNumber(await pricing.price()).toNumber();
@@ -173,7 +173,7 @@ contract("Pricing", ([owner, holder]) => {
                 });
 
                 it("should change price when active node has been removed", async () => {
-                    await nodesData.setNodeLeft(0);
+                    await nodes.setNodeLeft(0);
                     const MINUTES_PASSED = 2;
                     const price = await getPrice(MINUTES_PASSED);
                     const newPrice = new BigNumber(await pricing.price()).toNumber();
@@ -182,7 +182,7 @@ contract("Pricing", ([owner, holder]) => {
                 });
 
                 it("should set price to min of too many minutes passed and price is less than min", async () => {
-                    await nodesData.addNode(holder, "vadim", "0x7f000010", "0x7f000011", 8545, "0x1122334455", 0);
+                    await nodes.addNode(holder, "vadim", "0x7f000010", "0x7f000011", 8545, "0x1122334455", 0);
                     const MINUTES_PASSED = 30;
                     const price = await getPrice(MINUTES_PASSED);
                     const MIN_PRICE = new BigNumber(await pricing.MIN_PRICE()).toNumber();

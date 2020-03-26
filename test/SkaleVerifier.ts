@@ -1,33 +1,34 @@
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
 import { ContractManagerInstance,
-         NodesFunctionalityInstance,
+         NodesInstance,
          SchainsDataInstance,
          SchainsFunctionalityInstance,
          SkaleVerifierInstance,
-         ValidatorServiceInstance} from "../types/truffle-contracts";
+         ValidatorServiceInstance } from "../types/truffle-contracts";
 
 import { deployContractManager } from "./utils/deploy/contractManager";
 import { deployValidatorService } from "./utils/deploy/delegation/validatorService";
-import { deployNodesFunctionality } from "./utils/deploy/nodesFunctionality";
+import { deployNodes } from "./utils/deploy/nodes";
 import { deploySchainsData } from "./utils/deploy/schainsData";
 import { deploySchainsFunctionality } from "./utils/deploy/schainsFunctionality";
 import { deploySkaleVerifier } from "./utils/deploy/skaleVerifier";
+
 chai.should();
 chai.use(chaiAsPromised);
 
 contract("SkaleVerifier", ([validator1, owner, developer, hacker]) => {
     let contractManager: ContractManagerInstance;
-    let nodesFunctionality: NodesFunctionalityInstance;
     let schainsData: SchainsDataInstance;
     let schainsFunctionality: SchainsFunctionalityInstance;
     let skaleVerifier: SkaleVerifierInstance;
     let validatorService: ValidatorServiceInstance;
+    let nodes: NodesInstance;
 
     beforeEach(async () => {
         contractManager = await deployContractManager();
 
-        nodesFunctionality = await deployNodesFunctionality(contractManager);
+        nodes = await deployNodes(contractManager);
         validatorService = await deployValidatorService(contractManager);
         schainsData = await deploySchainsData(contractManager);
         schainsFunctionality = await deploySchainsFunctionality(contractManager);
@@ -186,7 +187,7 @@ contract("SkaleVerifier", ([validator1, owner, developer, hacker]) => {
             const nodesCount = 2;
             for (const index of Array.from(Array(nodesCount).keys())) {
                 const hexIndex = ("0" + index.toString(16)).slice(-2);
-                await nodesFunctionality.createNode(validator1,
+                await nodes.createNode(validator1,
                     "0x00" +
                     "2161" +
                     "0000" +

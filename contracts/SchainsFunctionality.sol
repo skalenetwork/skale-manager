@@ -320,7 +320,7 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
      * @param partOfNode - divisor of given type of Schain
      */
     function addSpace(uint nodeIndex, uint8 partOfNode) internal {
-        address nodesDataAddress = contractManager.getContract("NodesData");
-        INodesData(nodesDataAddress).addSpaceToNode(nodeIndex, partOfNode);
+        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
+        nodes.addSpaceToNode(nodeIndex, partOfNode);
     }
 }
