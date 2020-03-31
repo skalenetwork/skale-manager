@@ -25,6 +25,7 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 
 import "../Permissions.sol";
 import "../SkaleToken.sol";
+import "../utils/MathUtils.sol";
 
 import "./DelegationPeriodManager.sol";
 import "./Punisher.sol";
@@ -34,6 +35,7 @@ import "./ValidatorService.sol";
 
 
 contract DelegationController is Permissions, ILocker {
+    using MathUtils for uint;
 
     enum State {
         PROPOSED,
@@ -655,7 +657,7 @@ contract DelegationController is Permissions, ILocker {
 
         if (sequence.firstUnprocessedMonth <= month) {
             for (uint i = sequence.firstUnprocessedMonth; i <= month; ++i) {
-                sequence.value[i] = sequence.value[i - 1].add(sequence.addDiff[i]).sub(sequence.subtractDiff[i]);
+                sequence.value[i] = sequence.value[i - 1].add(sequence.addDiff[i]).boundedSub(sequence.subtractDiff[i]);
                 delete sequence.addDiff[i];
                 delete sequence.subtractDiff[i];
             }
@@ -672,7 +674,7 @@ contract DelegationController is Permissions, ILocker {
         if (sequence.firstUnprocessedMonth <= month) {
             uint value = sequence.value[sequence.firstUnprocessedMonth - 1];
             for (uint i = sequence.firstUnprocessedMonth; i <= month; ++i) {
-                value = value.add(sequence.addDiff[i]).sub(sequence.subtractDiff[i]);
+                value = value.add(sequence.addDiff[i]).boundedSubWithoutEvent(sequence.subtractDiff[i]);
             }
             return value;
         } else {
@@ -715,7 +717,7 @@ contract DelegationController is Permissions, ILocker {
         if (month >= sequence.firstUnprocessedMonth) {
             sequence.subtractDiff[month] = sequence.subtractDiff[month].add(diff);
         } else {
-            sequence.value = sequence.value.sub(diff);
+            sequence.value = sequence.value.boundedSub(diff);
         }
     }
 
@@ -727,7 +729,7 @@ contract DelegationController is Permissions, ILocker {
 
         if (sequence.firstUnprocessedMonth <= month) {
             for (uint i = sequence.firstUnprocessedMonth; i <= month; ++i) {
-                sequence.value = sequence.value.add(sequence.addDiff[i]).sub(sequence.subtractDiff[i]);
+                sequence.value = sequence.value.add(sequence.addDiff[i]).boundedSub(sequence.subtractDiff[i]);
                 delete sequence.addDiff[i];
                 delete sequence.subtractDiff[i];
             }
@@ -752,7 +754,7 @@ contract DelegationController is Permissions, ILocker {
             _amount = value;
         }
 
-        Fraction memory reducingCoefficient = createFraction(value.sub(_amount), value);
+        Fraction memory reducingCoefficient = createFraction(value.boundedSub(_amount), value);
         reduce(sequence, reducingCoefficient, month);
         return reducingCoefficient;
     }
@@ -802,14 +804,14 @@ contract DelegationController is Permissions, ILocker {
 
         uint newValue = sequence.value.mul(reducingCoefficient.numerator).div(reducingCoefficient.denominator);
         if (hasSumSequence) {
-            subtract(sumSequence, sequence.value.sub(newValue), month);
+            subtract(sumSequence, sequence.value.boundedSub(newValue), month);
         }
         sequence.value = newValue;
 
         for (uint i = month.add(1); i <= sequence.lastChangedMonth; ++i) {
             uint newDiff = sequence.subtractDiff[i].mul(reducingCoefficient.numerator).div(reducingCoefficient.denominator);
             if (hasSumSequence) {
-                sumSequence.subtractDiff[i] = sumSequence.subtractDiff[i].sub(sequence.subtractDiff[i].sub(newDiff));
+                sumSequence.subtractDiff[i] = sumSequence.subtractDiff[i].boundedSub(sequence.subtractDiff[i].boundedSub(newDiff));
             }
             sequence.subtractDiff[i] = newDiff;
         }
@@ -918,7 +920,7 @@ contract DelegationController is Permissions, ILocker {
                         _slashes[index].reducingCoefficient,
                         month);
                     slashingSignals[index.sub(begin)].holder = holder;
-                    slashingSignals[index.sub(begin)].penalty = oldValue.sub(getAndUpdateDelegatedByHolderToValidator(holder, validatorId, month));
+                    slashingSignals[index.sub(begin)].penalty = oldValue.boundedSub(getAndUpdateDelegatedByHolderToValidator(holder, validatorId, month));
                 }
             }
             _firstUnprocessedSlashByHolder[holder] = end;

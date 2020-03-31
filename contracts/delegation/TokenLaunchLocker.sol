@@ -24,12 +24,15 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 import "../Permissions.sol";
 import "../interfaces/delegation/ILocker.sol";
 import "../ConstantsHolder.sol";
+import "../utils/MathUtils.sol";
 
 import "./DelegationController.sol";
 import "./TimeHelpers.sol";
 
 
 contract TokenLaunchLocker is Permissions, ILocker {
+    using MathUtils for uint;
+
     event Unlocked(
         address holder,
         uint amount
@@ -82,7 +85,7 @@ contract TokenLaunchLocker is Permissions, ILocker {
 
             uint currentMonth = timeHelpers.getCurrentMonth();
             uint fromLocked = amount;
-            uint locked = _locked[holder].sub(getAndUpdateDelegatedAmount(holder, currentMonth));
+            uint locked = _locked[holder].boundedSub(getAndUpdateDelegatedAmount(holder, currentMonth));
             if (fromLocked > locked) {
                 fromLocked = locked;
             }
@@ -118,7 +121,7 @@ contract TokenLaunchLocker is Permissions, ILocker {
             } else {
                 uint lockedByDelegationController = getAndUpdateDelegatedAmount(wallet, currentMonth).add(delegationController.getLockedInPendingDelegations(wallet));
                 if (_locked[wallet] > lockedByDelegationController) {
-                    return _locked[wallet].sub(lockedByDelegationController);
+                    return _locked[wallet].boundedSub(lockedByDelegationController);
                 } else {
                     return 0;
                 }
@@ -209,7 +212,7 @@ contract TokenLaunchLocker is Permissions, ILocker {
         if (month >= sequence.firstUnprocessedMonth) {
             sequence.subtractDiff[month] = sequence.subtractDiff[month].add(diff);
         } else {
-            sequence.value = sequence.value.sub(diff);
+            sequence.value = sequence.value.boundedSub(diff);
         }
     }
 
@@ -221,7 +224,7 @@ contract TokenLaunchLocker is Permissions, ILocker {
 
         if (sequence.firstUnprocessedMonth <= month) {
             for (uint i = sequence.firstUnprocessedMonth; i <= month; ++i) {
-                sequence.value = sequence.value.add(sequence.addDiff[i]).sub(sequence.subtractDiff[i]);
+                sequence.value = sequence.value.add(sequence.addDiff[i]).boundedSub(sequence.subtractDiff[i]);
                 delete sequence.addDiff[i];
                 delete sequence.subtractDiff[i];
             }

@@ -37,6 +37,14 @@ library MathUtils {
         }
     }
 
+    function boundedSubWithoutEvent(uint256 a, uint256 b) internal pure returns (uint256) {
+        if (a >= b) {
+            return a - b;
+        } else {
+            return 0;
+        }
+    }
+
     function approximatelyGreater(uint256 a, uint256 b) internal pure returns (bool) {
         assert(uint(-1) - EPS > b);
         return a > b + EPS;

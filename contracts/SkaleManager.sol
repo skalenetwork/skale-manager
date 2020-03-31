@@ -182,7 +182,6 @@ contract SkaleManager is IERC777Recipient, Permissions {
 
     function getBounty(uint nodeIndex) external {
         address nodesDataAddress = contractManager.getContract("NodesData");
-        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
 
         require(INodesData(nodesDataAddress).isNodeExist(msg.sender, nodeIndex), "Node does not exist for Message sender");
         require(INodesData(nodesDataAddress).isTimeForReward(nodeIndex), "Not time for bounty");
