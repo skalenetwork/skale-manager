@@ -133,7 +133,7 @@ contract("NodesData", ([owner, validator]) => {
             const currentTimeValue = web3.utils.toBN(await currentTime(web3));
             const rewardPeriod = web3.utils.toBN(3600);
             const nextRewardTime = currentTimeValue.add(rewardPeriod);
-            const obtainedNextRewardTime = web3.utils.toBN(await nodes.getNodeLastRewardDate(0));
+            const obtainedNextRewardTime = web3.utils.toBN(await nodes.getNodeNextRewardDate(0));
 
             obtainedNextRewardTime.should.be.deep.equal(nextRewardTime);
         });

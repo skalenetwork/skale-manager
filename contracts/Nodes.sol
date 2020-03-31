@@ -109,6 +109,57 @@ contract Nodes is Permissions {
         uint gasSpend
     );
 
+    /**
+     * @dev addNode - adds Node to array
+     * function could be run only by executor
+     * @param from - owner of Node
+     * @param name - Node name
+     * @param ip - Node ip
+     * @param publicIP - Node public ip
+     * @param port - Node public port
+     * @param publicKey - Ethereum public key
+     * @return index of Node
+     */
+    function addNode(
+        address from,
+        string calldata name,
+        bytes4 ip,
+        bytes4 publicIP,
+        uint16 port,
+        bytes calldata publicKey,
+        uint validatorId
+    )
+        external
+        allow("Nodes")
+        returns (uint nodeIndex)
+    {
+        nodes.push(Node({
+            name: name,
+            ip: ip,
+            publicIP: publicIP,
+            port: port,
+            //owner: from,
+            publicKey: publicKey,
+            startDate: uint32(block.timestamp),
+            lastRewardDate: uint32(block.timestamp),
+            finishTime: 0,
+            status: NodeStatus.Active,
+            validatorId: validatorId
+        }));
+        nodeIndex = nodes.length - 1;
+        bytes32 nodeId = keccak256(abi.encodePacked(name));
+        nodesIPCheck[ip] = true;
+        nodesNameCheck[nodeId] = true;
+        nodesNameToIndex[nodeId] = nodeIndex;
+        nodeIndexes[from].isNodeExist[nodeIndex] = true;
+        nodeIndexes[from].numberOfNodes++;
+        spaceOfNodes.push(SpaceManaging({
+            freeSpace: 128,
+            indexInSpaceMap: spaceToNodes[128].length
+        }));
+        spaceToNodes[128].push(nodeIndex);
+        numberOfActiveNodes++;
+    }
 
     function getNodesWithFreeSpace(uint8 freeSpace) external view returns (uint[] memory) {
         uint[] memory nodesWithFreeSpace = new uint[](this.countNodesWithFreeSpace(freeSpace));
@@ -343,7 +394,7 @@ contract Nodes is Permissions {
         uint validatorId = ValidatorService(contractManager.getContract("ValidatorService")).getValidatorIdByNodeAddress(from);
 
         // adds Node to Nodes contract
-        nodeIndex = addNode(
+        nodeIndex = this.addNode(
             from,
             name,
             ip,
@@ -377,15 +428,15 @@ contract Nodes is Permissions {
         require(isNodeExist(from, nodeIndex), "Node does not exist for message sender");
         require(isNodeActive(nodeIndex), "Node is not Active");
 
-        setNodeLeft(nodeIndex);
+        this.setNodeLeft(nodeIndex);
 
-        deleteNode(nodeIndex);
+        this.deleteNode(nodeIndex);
     }
 
     function removeNodeByRoot(uint nodeIndex) external allow("SkaleManager") {
-        setNodeLeft(nodeIndex);
+        this.setNodeLeft(nodeIndex);
 
-        deleteNode(nodeIndex);
+        this.deleteNode(nodeIndex);
     }
 
     /**
@@ -399,7 +450,7 @@ contract Nodes is Permissions {
 
         require(isNodeExist(from, nodeIndex), "Node does not exist for message sender");
 
-        setNodeLeaving(nodeIndex);
+        this.setNodeLeaving(nodeIndex);
 
         emit ExitInited(
             nodeIndex,
@@ -422,8 +473,8 @@ contract Nodes is Permissions {
         require(isNodeExist(from, nodeIndex), "Node does not exist for message sender");
         require(isNodeLeaving(nodeIndex), "Node is not Leaving");
 
-        setNodeLeft(nodeIndex);
-        deleteNode(nodeIndex);
+        this.setNodeLeft(nodeIndex);
+        this.deleteNode(nodeIndex);
 
         emit ExitCompleted(
             nodeIndex,
@@ -433,76 +484,19 @@ contract Nodes is Permissions {
         return true;
     }
 
-    /**
-     * @dev isNodeExist - checks existence of Node at this address
-     * @param from - account address
-     * @param nodeIndex - index of Node
-     * @return if exist - true, else - false
-     */
-    function isNodeExist(address from, uint nodeIndex) public view returns (bool) {
-        return nodeIndexes[from].isNodeExist[nodeIndex];
-    }
-
-  /**
-     * @dev addNode - adds Node to array
-     * function could be run only by executor
-     * @param from - owner of Node
-     * @param name - Node name
-     * @param ip - Node ip
-     * @param publicIP - Node public ip
-     * @param port - Node public port
-     * @param publicKey - Ethereum public key
-     * @return index of Node
-     */
-    function addNode(
-        address from,
-        string memory name,
-        bytes4 ip,
-        bytes4 publicIP,
-        uint16 port,
-        bytes memory publicKey,
-        uint validatorId
-    )
-        public
-        returns (uint nodeIndex)
-    {
-        nodes.push(Node({
-            name: name,
-            ip: ip,
-            publicIP: publicIP,
-            port: port,
-            //owner: from,
-            publicKey: publicKey,
-            startDate: uint32(block.timestamp),
-            lastRewardDate: uint32(block.timestamp),
-            finishTime: 0,
-            status: NodeStatus.Active,
-            validatorId: validatorId
-        }));
-        nodeIndex = nodes.length - 1;
-        bytes32 nodeId = keccak256(abi.encodePacked(name));
-        nodesIPCheck[ip] = true;
-        nodesNameCheck[nodeId] = true;
-        nodesNameToIndex[nodeId] = nodeIndex;
-        nodeIndexes[from].isNodeExist[nodeIndex] = true;
-        nodeIndexes[from].numberOfNodes++;
-        spaceOfNodes.push(SpaceManaging({
-            freeSpace: 128,
-            indexInSpaceMap: spaceToNodes[128].length
-        }));
-        spaceToNodes[128].push(nodeIndex);
-        numberOfActiveNodes++;
-    }
-
-    /**
-     * @dev setNodeLeaving - set Node Leaving
-     * function could be run only by Nodes
-     * @param nodeIndex - index of Node
-     */
-    function setNodeLeaving(uint nodeIndex) public allow("Nodes") {
-        nodes[nodeIndex].status = NodeStatus.Leaving;
-        numberOfActiveNodes--;
-        numberOfLeavingNodes++;
+    function deleteNode(uint nodeIndex) external allow("Nodes") {
+        uint8 space = spaceOfNodes[nodeIndex].freeSpace;
+        uint indexInArray = spaceOfNodes[nodeIndex].indexInSpaceMap;
+        if (indexInArray < spaceToNodes[space].length - 1) {
+            uint shiftedIndex = spaceToNodes[space][spaceToNodes[space].length - 1];
+            spaceToNodes[space][indexInArray] = shiftedIndex;
+            spaceOfNodes[shiftedIndex].indexInSpaceMap = indexInArray;
+            spaceToNodes[space].length--;
+        } else {
+            spaceToNodes[space].length--;
+        }
+        delete spaceOfNodes[nodeIndex].freeSpace;
+        delete spaceOfNodes[nodeIndex].indexInSpaceMap;
     }
 
     /**
@@ -510,7 +504,7 @@ contract Nodes is Permissions {
      * function could be run only by Nodes
      * @param nodeIndex - index of Node
      */
-    function setNodeLeft(uint nodeIndex) public allow("Nodes") {
+    function setNodeLeft(uint nodeIndex) external allow("Nodes") {
         nodesIPCheck[nodes[nodeIndex].ip] = false;
         nodesNameCheck[keccak256(abi.encodePacked(nodes[nodeIndex].name))] = false;
         // address ownerOfNode = nodes[nodeIndex].owner;
@@ -526,19 +520,25 @@ contract Nodes is Permissions {
         numberOfLeftNodes++;
     }
 
-    function deleteNode(uint nodeIndex) public {
-        uint8 space = spaceOfNodes[nodeIndex].freeSpace;
-        uint indexInArray = spaceOfNodes[nodeIndex].indexInSpaceMap;
-        if (indexInArray < spaceToNodes[space].length - 1) {
-            uint shiftedIndex = spaceToNodes[space][spaceToNodes[space].length - 1];
-            spaceToNodes[space][indexInArray] = shiftedIndex;
-            spaceOfNodes[shiftedIndex].indexInSpaceMap = indexInArray;
-            spaceToNodes[space].length--;
-        } else {
-            spaceToNodes[space].length--;
-        }
-        delete spaceOfNodes[nodeIndex].freeSpace;
-        delete spaceOfNodes[nodeIndex].indexInSpaceMap;
+    /**
+     * @dev setNodeLeaving - set Node Leaving
+     * function could be run only by Nodes
+     * @param nodeIndex - index of Node
+     */
+    function setNodeLeaving(uint nodeIndex) external allow("Nodes") {
+        nodes[nodeIndex].status = NodeStatus.Leaving;
+        numberOfActiveNodes--;
+        numberOfLeavingNodes++;
+    }
+
+    /**
+     * @dev isNodeExist - checks existence of Node at this address
+     * @param from - account address
+     * @param nodeIndex - index of Node
+     * @return if exist - true, else - false
+     */
+    function isNodeExist(address from, uint nodeIndex) public view returns (bool) {
+        return nodeIndexes[from].isNodeExist[nodeIndex];
     }
 
     /**
