@@ -27,6 +27,8 @@ import "./MonitorsData.sol";
 
 contract MonitorsFunctionality is GroupsFunctionality {
 
+    using StringUtils for string;
+
     event MonitorCreated(
         uint nodeIndex,
         bytes32 groupIndex,
@@ -144,7 +146,8 @@ contract MonitorsFunctionality is GroupsFunctionality {
         bytes32 monitorIndex = keccak256(abi.encodePacked(fromMonitorIndex));
         (index, time) = find(monitorIndex, toNodeIndex);
         require(time > 0, "Checked Node does not exist in MonitorsArray");
-        require(time <= block.timestamp, "The time has not come to send verdict");
+        string memory message = "The time has not come to send verdict for ";
+        require(time <= block.timestamp, message.strConcat(StringUtils.uint2str(toNodeIndex)).strConcat(" Node"));
         MonitorsData data = MonitorsData(contractManager.getContract("MonitorsData"));
         data.removeCheckedNode(monitorIndex, index);
         address constantsAddress = contractManager.getContract("ConstantsHolder");

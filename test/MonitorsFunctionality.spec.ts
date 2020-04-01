@@ -109,7 +109,7 @@ contract("MonitorsFunctionality", ([owner, validator]) => {
   });
 
   it("should rejected with `The time has...` error when invoke sendVerdict", async () => {
-    const error = "The time has not come to send verdict";
+    const error = "The time has not come to send verdict for 1 Node";
     // preparation
     // ip = 127.0.0.1
     const ipToHex = "7f000001";
