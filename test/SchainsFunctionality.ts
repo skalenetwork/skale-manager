@@ -46,7 +46,9 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
         skaleManager = await deploySkaleManager(contractManager);
 
         validatorService.registerValidator("D2", "D2 is even", 0, 0, {from: validator});
-        validatorService.linkNodeAddress(validator, {from: validator});
+        // const validatorIndex = await validatorService.getValidatorId(validator);
+        // const signature = await web3.eth.sign(web3.utils.soliditySha3(validatorIndex.toString()), validator);
+        // validatorService.linkNodeAddress(validator, signature, {from: validator});
     });
 
     describe("should add schain", async () => {

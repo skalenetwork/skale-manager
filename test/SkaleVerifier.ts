@@ -34,7 +34,7 @@ contract("SkaleVerifier", ([validator1, owner, developer, hacker]) => {
         skaleVerifier = await deploySkaleVerifier(contractManager);
 
         await validatorService.registerValidator("D2", "D2 is even", 0, 0, {from: validator1});
-        await validatorService.linkNodeAddress(validator1, {from: validator1});
+        // await validatorService.linkNodeAddress(validator1, {from: validator1});
     });
 
     describe("when skaleVerifier contract is activated", async () => {

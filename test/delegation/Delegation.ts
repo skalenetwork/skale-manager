@@ -390,7 +390,9 @@ contract("Delegation", ([owner,
 
         it("should be possible for N.O.D.E. foundation to spin up node immediately", async () => {
             await constantsHolder.setMSR(0);
-            await validatorService.linkNodeAddress(bountyAddress, {from: validator});
+            const validatorIndex = await validatorService.getValidatorId(validator);
+            const signature = await web3.eth.sign(web3.utils.soliditySha3(validatorIndex.toString()), bountyAddress);
+            await validatorService.linkNodeAddress(bountyAddress, signature, {from: validator});
             await validatorService.checkPossibilityCreatingNode(bountyAddress);
         });
 

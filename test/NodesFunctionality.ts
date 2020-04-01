@@ -28,8 +28,11 @@ contract("NodesFunctionality", ([owner, validator, nodeAddress, nodeAddress2]) =
         validatorService = await deployValidatorService(contractManager);
 
         await validatorService.registerValidator("Validator", "D2", 0, 0, {from: validator});
-        await validatorService.linkNodeAddress(nodeAddress, {from: validator});
-        await validatorService.linkNodeAddress(nodeAddress2, {from: validator});
+        const validatorIndex = await validatorService.getValidatorId(validator);
+        const signature1 = await web3.eth.sign(web3.utils.soliditySha3(validatorIndex.toString()), nodeAddress);
+        const signature2 = await web3.eth.sign(web3.utils.soliditySha3(validatorIndex.toString()), nodeAddress2);
+        await validatorService.linkNodeAddress(nodeAddress, signature1, {from: validator});
+        await validatorService.linkNodeAddress(nodeAddress2, signature2, {from: validator});
     });
 
     it("should fail to create node if ip is zero", async () => {

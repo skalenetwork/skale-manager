@@ -21,6 +21,8 @@ pragma solidity 0.5.16;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts/cryptography/ECDSA.sol";
+import "@nomiclabs/buidler/console.sol";
 
 import "../Permissions.sol";
 import "../interfaces/IConstants.sol";
@@ -29,6 +31,8 @@ import "./DelegationController.sol";
 
 
 contract ValidatorService is Permissions {
+
+    using ECDSA for bytes32;
 
     struct Validator {
         string name;
@@ -159,8 +163,10 @@ contract ValidatorService is Permissions {
         emit ValidatorAddressChanged(validatorId, validators[validatorId].validatorAddress);
     }
 
-    function linkNodeAddress(address nodeAddress) external {
+    function linkNodeAddress(address nodeAddress, bytes calldata sig) external {
         uint validatorId = getValidatorId(msg.sender);
+        bytes32 hashOfValidatorId = keccak256(abi.encodePacked(validatorId)).toEthSignedMessageHash();
+        require(hashOfValidatorId.recover(sig) == nodeAddress, "Signature is not pass");
         require(_validatorAddressToId[nodeAddress] == 0, "Node address is a validator");
         addNodeAddress(validatorId, nodeAddress);
         emit NodeAddressWasAdded(validatorId, nodeAddress);
@@ -312,6 +318,7 @@ contract ValidatorService is Permissions {
         require(_validatorAddressToId[validatorAddress] == 0, "Address is in use by the another validator");
         address oldAddress = validators[validatorId].validatorAddress;
         delete _validatorAddressToId[oldAddress];
+        _nodeAddressToValidatorId[validatorAddress] = validatorId;
         validators[validatorId].validatorAddress = validatorAddress;
         _validatorAddressToId[validatorAddress] = validatorId;
     }
