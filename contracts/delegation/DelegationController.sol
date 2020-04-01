@@ -745,7 +745,7 @@ contract DelegationController is Permissions, ILocker {
             return createFraction(0);
         }
         uint value = getAndUpdateValue(sequence, month);
-        if (value == 0) {
+        if (value.approximatelyEqual(0)) {
             return createFraction(0);
         }
 
@@ -798,7 +798,7 @@ contract DelegationController is Permissions, ILocker {
             return;
         }
         uint value = getAndUpdateValue(sequence, month);
-        if (value == 0) {
+        if (value.approximatelyEqual(0)) {
             return;
         }
 
@@ -828,7 +828,7 @@ contract DelegationController is Permissions, ILocker {
             return;
         }
         uint value = getAndUpdateValue(sequence, month);
-        if (value == 0) {
+        if (value.approximatelyEqual(0)) {
             return;
         }
 
@@ -909,7 +909,7 @@ contract DelegationController is Permissions, ILocker {
                 uint validatorId = _slashes[index].validatorId;
                 uint month = _slashes[index].month;
                 uint oldValue = getAndUpdateDelegatedByHolderToValidator(holder, validatorId, month);
-                if (oldValue > 0) {
+                if (oldValue.muchGreater(0)) {
                     reduce(
                         _delegatedByHolderToValidator[holder][validatorId],
                         _delegatedByHolder[holder],

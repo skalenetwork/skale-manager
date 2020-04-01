@@ -37,7 +37,7 @@ contract("TokenLaunchManager", ([owner, holder, delegation, validator, seller, h
 
         // each test will start from Nov 10
         await skipTimeToDate(web3, 10, 11);
-        await skaleToken.mint(owner, TokenLaunchManager.address, 1000, "0x", "0x");
+        await skaleToken.mint(owner, TokenLaunchManager.address, 1e9, "0x", "0x");
         await validatorService.registerValidator("Validator", "D2 is even", 150, 0, {from: validator});
         await validatorService.enableValidator(1, {from: owner});
     });
@@ -66,7 +66,7 @@ contract("TokenLaunchManager", ([owner, holder, delegation, validator, seller, h
         });
 
         it("should not allow to approve transfers with more then total money amount in sum", async () => {
-            await TokenLaunchManager.approve([holder, hacker], [500, 501], {from: seller})
+            await TokenLaunchManager.approve([holder, hacker], [5e8, 5e8 + 1], {from: seller})
                 .should.be.eventually.rejectedWith("Balance is too low");
         });
 
@@ -84,7 +84,7 @@ contract("TokenLaunchManager", ([owner, holder, delegation, validator, seller, h
 
         describe("when holder bought tokens", async () => {
             const validatorId = 1;
-            const totalAmount = 100;
+            const totalAmount = 1e7;
             const month = 60 * 60 * 24 * 31;
 
             beforeEach(async () => {
@@ -115,7 +115,7 @@ contract("TokenLaunchManager", ([owner, holder, delegation, validator, seller, h
             });
 
             it("should be able to delegate part of tokens", async () => {
-                const amount = 50;
+                const amount = Math.ceil(totalAmount / 2);
                 const delegationPeriod = 3;
                 await delegationController.delegate(
                     validatorId, amount, delegationPeriod, "D2 is even", {from: holder});

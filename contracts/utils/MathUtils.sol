@@ -45,8 +45,16 @@ library MathUtils {
         }
     }
 
-    function approximatelyGreater(uint256 a, uint256 b) internal pure returns (bool) {
+    function muchGreater(uint256 a, uint256 b) internal pure returns (bool) {
         assert(uint(-1) - EPS > b);
         return a > b + EPS;
+    }
+
+    function approximatelyEqual(uint256 a, uint256 b) internal pure returns (bool) {
+        if (a > b) {
+            return a - b < EPS;
+        } else {
+            return b - a < EPS;
+        }
     }
 }
