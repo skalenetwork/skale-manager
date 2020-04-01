@@ -79,14 +79,15 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
     describe("when validator has delegated SKALE tokens", async () => {
         const validatorId = 1;
         const month = 60 * 60 * 24 * 31;
+        const delegatedAmount = 1e7;
 
         beforeEach(async () => {
             await validatorService.registerValidator("D2", "D2 is even", 150, 0, {from: validator});
             await validatorService.linkNodeAddress(nodeAddress, {from: validator});
 
-            await skaleToken.transfer(validator, "0x410D586A20A4C00000", {from: owner});
+            await skaleToken.transfer(validator, 10 * delegatedAmount, {from: owner});
             await validatorService.enableValidator(validatorId, {from: owner});
-            await delegationController.delegate(validatorId, 100, 12, "Hello from D2", {from: validator});
+            await delegationController.delegate(validatorId, delegatedAmount, 12, "Hello from D2", {from: validator});
             const delegationId = 0;
             await delegationController.acceptPendingDelegation(delegationId, {from: validator});
 
@@ -328,7 +329,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
             });
 
             it("should fail to create schain if validator doesn't meet MSR", async () => {
-                await constantsHolder.setMSR(6);
+                await constantsHolder.setMSR(delegatedAmount + 1);
 
                 await skaleManager.createNode(
                     "0x10" + // create schain
