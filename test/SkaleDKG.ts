@@ -64,6 +64,8 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
     let slashingTable: SlashingTableInstance;
     let delegationController: DelegationControllerInstance;
 
+    const failedDkgPenalty = 5;
+
     beforeEach(async () => {
         contractManager = await deployContractManager();
 
@@ -76,7 +78,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
         slashingTable = await deploySlashingTable(contractManager);
         delegationController = await deployDelegationController(contractManager);
 
-        await slashingTable.setPenalty("FailedDKG", 5);
+        await slashingTable.setPenalty("FailedDKG", failedDkgPenalty);
     });
 
     describe("when 2 nodes are created", async () => {
@@ -164,6 +166,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
 
         const indexes = [0, 1];
         let schainName = "";
+        const delegatedAmount = 1e7;
 
         beforeEach(async () => {
             await validatorService.registerValidator("Validator1", "D2 is even", 0, 0, {from: validator1});
@@ -172,12 +175,13 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
             await validatorService.registerValidator("Validator2", "D2 is even more even", 0, 0, {from: validator2});
             const validator2Id = 2;
             await validatorService.linkNodeAddress(validator2, {from: validator2});
-            await skaleToken.mint(owner, validator1, 1000, "0x", "0x");
-            await skaleToken.mint(owner, validator2, 1000, "0x", "0x");
+            await skaleToken.mint(owner, validator1, delegatedAmount, "0x", "0x");
+            await skaleToken.mint(owner, validator2, delegatedAmount, "0x", "0x");
             await validatorService.enableValidator(validator1Id, {from: owner});
             await validatorService.enableValidator(validator2Id, {from: owner});
-            await delegationController.delegate(validator1Id, 100, 3, "D2 is even", {from: validator1});
-            await delegationController.delegate(validator2Id, 100, 3, "D2 is even more even", {from: validator2});
+            await delegationController.delegate(validator1Id, delegatedAmount, 3, "D2 is even", {from: validator1});
+            await delegationController.delegate(validator2Id, delegatedAmount, 3, "D2 is even more even",
+                {from: validator2});
             await delegationController.acceptPendingDelegation(0, {from: validator1});
             await delegationController.acceptPendingDelegation(1, {from: validator2});
 
@@ -434,9 +438,12 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                         assert.equal(result.logs[0].event, "BadGuy");
                         assert.equal(result.logs[0].args.nodeIndex.toString(), "1");
 
-                        (await skaleToken.getAndUpdateLockedAmount.call(validator2)).toNumber().should.be.equal(100);
-                        (await skaleToken.getAndUpdateDelegatedAmount.call(validator2)).toNumber().should.be.equal(95);
-                        (await skaleToken.getAndUpdateSlashedAmount.call(validator2)).toNumber().should.be.equal(5);
+                        (await skaleToken.getAndUpdateLockedAmount.call(validator2)).toNumber()
+                            .should.be.equal(delegatedAmount);
+                        (await skaleToken.getAndUpdateDelegatedAmount.call(validator2)).toNumber()
+                            .should.be.equal(delegatedAmount - failedDkgPenalty);
+                        (await skaleToken.getAndUpdateSlashedAmount.call(validator2)).toNumber()
+                            .should.be.equal(failedDkgPenalty);
                     });
                 });
             });
@@ -511,9 +518,12 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                         assert.equal(result.logs[0].event, "BadGuy");
                         assert.equal(result.logs[0].args.nodeIndex.toString(), "0");
 
-                        (await skaleToken.getAndUpdateLockedAmount.call(validator1)).toNumber().should.be.equal(100);
-                        (await skaleToken.getAndUpdateDelegatedAmount.call(validator1)).toNumber().should.be.equal(95);
-                        (await skaleToken.getAndUpdateSlashedAmount.call(validator1)).toNumber().should.be.equal(5);
+                        (await skaleToken.getAndUpdateLockedAmount.call(validator1)).toNumber()
+                            .should.be.equal(delegatedAmount);
+                        (await skaleToken.getAndUpdateDelegatedAmount.call(validator1)).toNumber()
+                            .should.be.equal(delegatedAmount - failedDkgPenalty);
+                        (await skaleToken.getAndUpdateSlashedAmount.call(validator1)).toNumber()
+                            .should.be.equal(failedDkgPenalty);
                     });
 
                     it("accused node should send incorrect response", async () => {
@@ -527,9 +537,12 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                         assert.equal(result.logs[0].event, "BadGuy");
                         assert.equal(result.logs[0].args.nodeIndex.toString(), "0");
 
-                        (await skaleToken.getAndUpdateLockedAmount.call(validator1)).toNumber().should.be.equal(100);
-                        (await skaleToken.getAndUpdateDelegatedAmount.call(validator1)).toNumber().should.be.equal(95);
-                        (await skaleToken.getAndUpdateSlashedAmount.call(validator1)).toNumber().should.be.equal(5);
+                        (await skaleToken.getAndUpdateLockedAmount.call(validator1)).toNumber()
+                            .should.be.equal(delegatedAmount);
+                        (await skaleToken.getAndUpdateDelegatedAmount.call(validator1)).toNumber()
+                            .should.be.equal(delegatedAmount - failedDkgPenalty);
+                        (await skaleToken.getAndUpdateSlashedAmount.call(validator1)).toNumber()
+                            .should.be.equal(failedDkgPenalty);
                     });
                 });
             });
