@@ -22,7 +22,6 @@ pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/cryptography/ECDSA.sol";
-import "@nomiclabs/buidler/console.sol";
 
 import "../Permissions.sol";
 import "../interfaces/IConstants.sol";
