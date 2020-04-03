@@ -4,16 +4,16 @@ import { ConstantsHolderInstance,
     SkaleTokenInstance,
     ValidatorServiceInstance} from "../../types/truffle-contracts";
 
-import { skipTime } from "../utils/time";
+import { skipTime } from "../tools/time";
 
 import BigNumber from "bignumber.js";
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
-import { deployConstantsHolder } from "../utils/deploy/constantsHolder";
-import { deployContractManager } from "../utils/deploy/contractManager";
-import { deployDelegationController } from "../utils/deploy/delegation/delegationController";
-import { deployValidatorService } from "../utils/deploy/delegation/validatorService";
-import { deploySkaleToken } from "../utils/deploy/skaleToken";
+import { deployConstantsHolder } from "../tools/deploy/constantsHolder";
+import { deployContractManager } from "../tools/deploy/contractManager";
+import { deployDelegationController } from "../tools/deploy/delegation/delegationController";
+import { deployValidatorService } from "../tools/deploy/delegation/validatorService";
+import { deploySkaleToken } from "../tools/deploy/skaleToken";
 chai.should();
 chai.use(chaiAsPromised);
 

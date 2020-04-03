@@ -4,9 +4,9 @@ import { ContractManagerInstance,
 import BigNumber from "bignumber.js";
 import chai = require("chai");
 import * as chaiAsPromised from "chai-as-promised";
-import { deployContractManager } from "./utils/deploy/contractManager";
-import { deploySchainsData } from "./utils/deploy/schainsData";
-import { skipTime } from "./utils/time";
+import { deployContractManager } from "./tools/deploy/contractManager";
+import { deploySchainsData } from "./tools/deploy/schainsData";
+import { skipTime } from "./tools/time";
 
 chai.should();
 chai.use(chaiAsPromised);

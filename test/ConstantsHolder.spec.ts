@@ -2,11 +2,11 @@ import { BigNumber } from "bignumber.js";
 import * as chaiAsPromised from "chai-as-promised";
 import { ConstantsHolderInstance,
          ContractManagerInstance } from "../types/truffle-contracts";
-import { skipTime } from "./utils/time";
+import { skipTime } from "./tools/time";
 
 import chai = require("chai");
-import { deployConstantsHolder } from "./utils/deploy/constantsHolder";
-import { deployContractManager } from "./utils/deploy/contractManager";
+import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
+import { deployContractManager } from "./tools/deploy/contractManager";
 
 chai.should();
 chai.use((chaiAsPromised as any));

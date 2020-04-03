@@ -10,18 +10,18 @@ import { ContractManagerInstance,
          SlashingTableInstance,
          ValidatorServiceInstance } from "../types/truffle-contracts";
 
-import { skipTime } from "./utils/time";
+import { skipTime } from "./tools/time";
 
 import BigNumber from "bignumber.js";
-import { deployContractManager } from "./utils/deploy/contractManager";
-import { deployDelegationController } from "./utils/deploy/delegation/delegationController";
-import { deployValidatorService } from "./utils/deploy/delegation/validatorService";
-import { deployNodesFunctionality } from "./utils/deploy/nodesFunctionality";
-import { deploySchainsData } from "./utils/deploy/schainsData";
-import { deploySchainsFunctionality } from "./utils/deploy/schainsFunctionality";
-import { deploySkaleDKG } from "./utils/deploy/skaleDKG";
-import { deploySkaleToken } from "./utils/deploy/skaleToken";
-import { deploySlashingTable } from "./utils/deploy/slashingTable";
+import { deployContractManager } from "./tools/deploy/contractManager";
+import { deployDelegationController } from "./tools/deploy/delegation/delegationController";
+import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
+import { deployNodesFunctionality } from "./tools/deploy/nodesFunctionality";
+import { deploySchainsData } from "./tools/deploy/schainsData";
+import { deploySchainsFunctionality } from "./tools/deploy/schainsFunctionality";
+import { deploySkaleDKG } from "./tools/deploy/skaleDKG";
+import { deploySkaleToken } from "./tools/deploy/skaleToken";
+import { deploySlashingTable } from "./tools/deploy/slashingTable";
 
 chai.should();
 chai.use(chaiAsPromised);

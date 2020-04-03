@@ -12,18 +12,18 @@ import { ConstantsHolderInstance,
          SkaleTokenInstance,
          ValidatorServiceInstance} from "../types/truffle-contracts";
 
-import { deployConstantsHolder } from "./utils/deploy/constantsHolder";
-import { deployContractManager } from "./utils/deploy/contractManager";
-import { deployDelegationController } from "./utils/deploy/delegation/delegationController";
-import { deployDistributor } from "./utils/deploy/delegation/distributor";
-import { deployValidatorService } from "./utils/deploy/delegation/validatorService";
-import { deployMonitorsData } from "./utils/deploy/monitorsData";
-import { deployNodesData } from "./utils/deploy/nodesData";
-import { deploySchainsData } from "./utils/deploy/schainsData";
-import { deploySchainsFunctionality } from "./utils/deploy/schainsFunctionality";
-import { deploySkaleManager } from "./utils/deploy/skaleManager";
-import { deploySkaleToken } from "./utils/deploy/skaleToken";
-import { skipTime } from "./utils/time";
+import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
+import { deployContractManager } from "./tools/deploy/contractManager";
+import { deployDelegationController } from "./tools/deploy/delegation/delegationController";
+import { deployDistributor } from "./tools/deploy/delegation/distributor";
+import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
+import { deployMonitorsData } from "./tools/deploy/monitorsData";
+import { deployNodesData } from "./tools/deploy/nodesData";
+import { deploySchainsData } from "./tools/deploy/schainsData";
+import { deploySchainsFunctionality } from "./tools/deploy/schainsFunctionality";
+import { deploySkaleManager } from "./tools/deploy/skaleManager";
+import { deploySkaleToken } from "./tools/deploy/skaleToken";
+import { skipTime } from "./tools/time";
 
 chai.should();
 chai.use(chaiAsPromised);
