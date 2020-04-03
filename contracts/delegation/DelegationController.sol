@@ -667,26 +667,6 @@ contract DelegationController is Permissions, ILocker {
         return sequence.value[month];
     }
 
-    function getValue(PartialDifferences storage sequence, uint month) internal view returns (uint) {
-        if (sequence.firstUnprocessedMonth == 0) {
-            return 0;
-        }
-        if (sequence.firstUnprocessedMonth <= month) {
-            uint value = sequence.value[sequence.firstUnprocessedMonth - 1];
-            for (uint i = sequence.firstUnprocessedMonth; i <= month; ++i) {
-                value = value.add(sequence.addDiff[i]).boundedSubWithoutEvent(sequence.subtractDiff[i]);
-            }
-            return value;
-        } else {
-            return sequence.value[month];
-        }
-    }
-
-    function getAndUpdateValueBeforeMonthAndGetAtMonth(PartialDifferences storage sequence, uint month) internal returns (uint) {
-        getAndUpdateValue(sequence, month.sub(1));
-        return getValue(sequence, month);
-    }
-
     function add(PartialDifferencesValue storage sequence, uint diff, uint month) internal {
         require(sequence.firstUnprocessedMonth <= month, "Cannot add to the past");
         if (sequence.firstUnprocessedMonth == 0) {
