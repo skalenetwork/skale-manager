@@ -399,6 +399,8 @@ contract("Delegation", ([owner,
                 });
 
                 it("should reduce delegated amount immediately after slashing", async () => {
+                    await delegationController.getAndUpdateDelegatedAmount(holder1, {from: holder1});
+
                     await punisher.slash(validatorId, 1);
 
                     (await delegationController.getAndUpdateDelegatedAmount.call(holder1, {from: holder1})).toNumber()
