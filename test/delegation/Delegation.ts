@@ -397,6 +397,13 @@ contract("Delegation", ([owner,
                     (await distributor.getAndUpdateEarnedBountyAmount.call(
                         validatorId, {from: holder3}))[0].toNumber().should.be.equal(0);
                 });
+
+                it("should reduce delegated amount immediately after slashing", async () => {
+                    await punisher.slash(validatorId, 1);
+
+                    (await delegationController.getAndUpdateDelegatedAmount.call(holder1, {from: holder1})).toNumber()
+                        .should.be.equal(delegatedAmount1 - 1);
+                });
             });
         });
 
