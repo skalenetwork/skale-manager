@@ -13,6 +13,7 @@ import { deployDelegationController } from "../tools/deploy/delegation/delegatio
 import { deployTokenState } from "../tools/deploy/delegation/tokenState";
 import { deployValidatorService } from "../tools/deploy/delegation/validatorService";
 import { deploySkaleToken } from "../tools/deploy/skaleToken";
+import { deployTimeHelpersWithDebug } from "../tools/deploy/test/timeHelpersWithDebug";
 import { Delegation, State } from "../tools/types";
 chai.should();
 chai.use(chaiAsPromised);
@@ -167,6 +168,24 @@ contract("DelegationController", ([owner, holder1, holder2, validator, validator
                     {from: validator2});
                 await delegationController.acceptPendingDelegation(delegationId, {from: validator2})
                         .should.be.rejectedWith("No permissions to accept request");
+            });
+
+            it("should allow for QA team to test delegation pipeline immediately", async () => {
+                const timeHelpersWithDebug = await deployTimeHelpersWithDebug(contractManager);
+                await contractManager.setContractsAddress("TimeHelpers", timeHelpersWithDebug.address);
+
+                await delegationController.acceptPendingDelegation(delegationId, {from: validator});
+                (await delegationController.getState(delegationId)).toNumber().should.be.equal(State.ACCEPTED);
+
+                await timeHelpersWithDebug.skipTime(month);
+                (await delegationController.getState(delegationId)).toNumber().should.be.equal(State.DELEGATED);
+
+                await delegationController.requestUndelegation(delegationId, {from: holder1});
+                (await delegationController.getState(delegationId)).toNumber()
+                    .should.be.equal(State.UNDELEGATION_REQUESTED);
+
+                await timeHelpersWithDebug.skipTime(month * delegationPeriod);
+                (await delegationController.getState(delegationId)).toNumber().should.be.equal(State.COMPLETED);
             });
 
             describe("when delegation is accepted", async () => {

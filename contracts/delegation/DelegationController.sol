@@ -272,7 +272,7 @@ contract DelegationController is Permissions, ILocker {
 
         SlashingSignal[] memory slashingSignals = processSlashesWithoutSignals(delegations[delegationId].holder);
 
-        uint currentMonth = timeHelpers.timestampToMonth(now);
+        uint currentMonth = timeHelpers.getCurrentMonth();
         delegations[delegationId].started = currentMonth.add(1);
         _delegationExtras[delegationId].lastSlashingMonthBeforeDelegation = _slashesOfValidator[delegations[delegationId].validatorId].lastMonth;
 
@@ -404,7 +404,7 @@ contract DelegationController is Permissions, ILocker {
         if (delegations[delegationId].started == 0) {
             if (delegations[delegationId].finished == 0) {
                 TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
-                if (now < timeHelpers.getNextMonthStartFromDate(delegations[delegationId].created)) {
+                if (timeHelpers.getCurrentMonth() == timeHelpers.timestampToMonth(delegations[delegationId].created)) {
                     return State.PROPOSED;
                 } else {
                     return State.REJECTED;
@@ -414,13 +414,13 @@ contract DelegationController is Permissions, ILocker {
             }
         } else {
             TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
-            if (now < timeHelpers.monthToTimestamp(delegations[delegationId].started)) {
+            if (timeHelpers.getCurrentMonth() < delegations[delegationId].started) {
                 return State.ACCEPTED;
             } else {
                 if (delegations[delegationId].finished == 0) {
                     return State.DELEGATED;
                 } else {
-                    if (now < timeHelpers.monthToTimestamp(delegations[delegationId].finished)) {
+                    if (timeHelpers.getCurrentMonth() < delegations[delegationId].finished) {
                         return State.UNDELEGATION_REQUESTED;
                     } else {
                         return State.COMPLETED;
@@ -581,7 +581,7 @@ contract DelegationController is Permissions, ILocker {
 
     function getCurrentMonth() internal view returns (uint) {
         TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
-        return timeHelpers.timestampToMonth(now);
+        return timeHelpers.getCurrentMonth();
     }
 
     function _getAndUpdateLockedAmount(address wallet) internal returns (uint) {
