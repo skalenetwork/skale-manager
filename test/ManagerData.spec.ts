@@ -5,8 +5,8 @@ import { ContractManagerInstance,
 
 import chai = require("chai");
 import * as chaiAsPromised from "chai-as-promised";
-import { deployContractManager } from "./utils/deploy/contractManager";
-import { deployManagerData } from "./utils/deploy/managerData";
+import { deployContractManager } from "./tools/deploy/contractManager";
+import { deployManagerData } from "./tools/deploy/managerData";
 chai.should();
 chai.use((chaiAsPromised));
 

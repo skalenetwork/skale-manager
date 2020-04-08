@@ -25,6 +25,7 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 
 import "../Permissions.sol";
 import "../SkaleToken.sol";
+import "../utils/MathUtils.sol";
 
 import "./DelegationPeriodManager.sol";
 import "./Punisher.sol";
@@ -34,6 +35,7 @@ import "./ValidatorService.sol";
 
 
 contract DelegationController is Permissions, ILocker {
+    using MathUtils for uint;
 
     enum State {
         PROPOSED,
@@ -655,7 +657,7 @@ contract DelegationController is Permissions, ILocker {
 
         if (sequence.firstUnprocessedMonth <= month) {
             for (uint i = sequence.firstUnprocessedMonth; i <= month; ++i) {
-                sequence.value[i] = sequence.value[i - 1].add(sequence.addDiff[i]).sub(sequence.subtractDiff[i]);
+                sequence.value[i] = sequence.value[i - 1].add(sequence.addDiff[i]).boundedSub(sequence.subtractDiff[i]);
                 delete sequence.addDiff[i];
                 delete sequence.subtractDiff[i];
             }
@@ -663,26 +665,6 @@ contract DelegationController is Permissions, ILocker {
         }
 
         return sequence.value[month];
-    }
-
-    function getValue(PartialDifferences storage sequence, uint month) internal view returns (uint) {
-        if (sequence.firstUnprocessedMonth == 0) {
-            return 0;
-        }
-        if (sequence.firstUnprocessedMonth <= month) {
-            uint value = sequence.value[sequence.firstUnprocessedMonth - 1];
-            for (uint i = sequence.firstUnprocessedMonth; i <= month; ++i) {
-                value = value.add(sequence.addDiff[i]).sub(sequence.subtractDiff[i]);
-            }
-            return value;
-        } else {
-            return sequence.value[month];
-        }
-    }
-
-    function getAndUpdateValueBeforeMonthAndGetAtMonth(PartialDifferences storage sequence, uint month) internal returns (uint) {
-        getAndUpdateValue(sequence, month.sub(1));
-        return getValue(sequence, month);
     }
 
     function add(PartialDifferencesValue storage sequence, uint diff, uint month) internal {
@@ -715,7 +697,7 @@ contract DelegationController is Permissions, ILocker {
         if (month >= sequence.firstUnprocessedMonth) {
             sequence.subtractDiff[month] = sequence.subtractDiff[month].add(diff);
         } else {
-            sequence.value = sequence.value.sub(diff);
+            sequence.value = sequence.value.boundedSub(diff);
         }
     }
 
@@ -727,7 +709,7 @@ contract DelegationController is Permissions, ILocker {
 
         if (sequence.firstUnprocessedMonth <= month) {
             for (uint i = sequence.firstUnprocessedMonth; i <= month; ++i) {
-                sequence.value = sequence.value.add(sequence.addDiff[i]).sub(sequence.subtractDiff[i]);
+                sequence.value = sequence.value.add(sequence.addDiff[i]).boundedSub(sequence.subtractDiff[i]);
                 delete sequence.addDiff[i];
                 delete sequence.subtractDiff[i];
             }
@@ -743,7 +725,7 @@ contract DelegationController is Permissions, ILocker {
             return createFraction(0);
         }
         uint value = getAndUpdateValue(sequence, month);
-        if (value == 0) {
+        if (value.approximatelyEqual(0)) {
             return createFraction(0);
         }
 
@@ -752,7 +734,7 @@ contract DelegationController is Permissions, ILocker {
             _amount = value;
         }
 
-        Fraction memory reducingCoefficient = createFraction(value.sub(_amount), value);
+        Fraction memory reducingCoefficient = createFraction(value.boundedSub(_amount), value);
         reduce(sequence, reducingCoefficient, month);
         return reducingCoefficient;
     }
@@ -796,20 +778,20 @@ contract DelegationController is Permissions, ILocker {
             return;
         }
         uint value = getAndUpdateValue(sequence, month);
-        if (value == 0) {
+        if (value.approximatelyEqual(0)) {
             return;
         }
 
         uint newValue = sequence.value.mul(reducingCoefficient.numerator).div(reducingCoefficient.denominator);
         if (hasSumSequence) {
-            subtract(sumSequence, sequence.value.sub(newValue), month);
+            subtract(sumSequence, sequence.value.boundedSub(newValue), month);
         }
         sequence.value = newValue;
 
         for (uint i = month.add(1); i <= sequence.lastChangedMonth; ++i) {
             uint newDiff = sequence.subtractDiff[i].mul(reducingCoefficient.numerator).div(reducingCoefficient.denominator);
             if (hasSumSequence) {
-                sumSequence.subtractDiff[i] = sumSequence.subtractDiff[i].sub(sequence.subtractDiff[i].sub(newDiff));
+                sumSequence.subtractDiff[i] = sumSequence.subtractDiff[i].boundedSub(sequence.subtractDiff[i].boundedSub(newDiff));
             }
             sequence.subtractDiff[i] = newDiff;
         }
@@ -826,7 +808,7 @@ contract DelegationController is Permissions, ILocker {
             return;
         }
         uint value = getAndUpdateValue(sequence, month);
-        if (value == 0) {
+        if (value.approximatelyEqual(0)) {
             return;
         }
 
@@ -907,7 +889,7 @@ contract DelegationController is Permissions, ILocker {
                 uint validatorId = _slashes[index].validatorId;
                 uint month = _slashes[index].month;
                 uint oldValue = getAndUpdateDelegatedByHolderToValidator(holder, validatorId, month);
-                if (oldValue > 0) {
+                if (oldValue.muchGreater(0)) {
                     reduce(
                         _delegatedByHolderToValidator[holder][validatorId],
                         _delegatedByHolder[holder],
@@ -918,7 +900,7 @@ contract DelegationController is Permissions, ILocker {
                         _slashes[index].reducingCoefficient,
                         month);
                     slashingSignals[index.sub(begin)].holder = holder;
-                    slashingSignals[index.sub(begin)].penalty = oldValue.sub(getAndUpdateDelegatedByHolderToValidator(holder, validatorId, month));
+                    slashingSignals[index.sub(begin)].penalty = oldValue.boundedSub(getAndUpdateDelegatedByHolderToValidator(holder, validatorId, month));
                 }
             }
             _firstUnprocessedSlashByHolder[holder] = end;

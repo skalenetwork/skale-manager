@@ -4,16 +4,16 @@ import { ConstantsHolderInstance,
     SkaleTokenInstance,
     ValidatorServiceInstance} from "../../types/truffle-contracts";
 
-import { skipTime } from "../utils/time";
+import { skipTime } from "../tools/time";
 
 import BigNumber from "bignumber.js";
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
-import { deployConstantsHolder } from "../utils/deploy/constantsHolder";
-import { deployContractManager } from "../utils/deploy/contractManager";
-import { deployDelegationController } from "../utils/deploy/delegation/delegationController";
-import { deployValidatorService } from "../utils/deploy/delegation/validatorService";
-import { deploySkaleToken } from "../utils/deploy/skaleToken";
+import { deployConstantsHolder } from "../tools/deploy/constantsHolder";
+import { deployContractManager } from "../tools/deploy/contractManager";
+import { deployDelegationController } from "../tools/deploy/delegation/delegationController";
+import { deployValidatorService } from "../tools/deploy/delegation/validatorService";
+import { deploySkaleToken } from "../tools/deploy/skaleToken";
 chai.should();
 chai.use(chaiAsPromised);
 
@@ -240,6 +240,7 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
             let amount: number;
             let delegationPeriod: number;
             let info: string;
+            const month = 60 * 60 * 24 * 31;
             beforeEach(async () => {
                 validatorId = 1;
                 amount = 100;
@@ -286,7 +287,7 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
                 await delegationController.delegate(validatorId, amount, delegationPeriod, info, {from: holder});
                 const delegationId = 0;
                 await delegationController.acceptPendingDelegation(delegationId, {from: validator1});
-                skipTime(web3, 2592000);
+                skipTime(web3, month);
 
                 await validatorService.checkPossibilityCreatingNode(nodeAddress)
                     .should.be.eventually.rejectedWith("Validator must meet Minimum Staking Requirement");
@@ -310,7 +311,7 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
                 const delegationId2 = 1;
                 await delegationController.acceptPendingDelegation(delegationId1, {from: validator1});
                 await delegationController.acceptPendingDelegation(delegationId2, {from: validator1});
-                skipTime(web3, 2592000);
+                skipTime(web3, month);
                 await constantsHolder.setMSR(amount);
 
                 await validatorService.checkPossibilityCreatingNode(nodeAddress);

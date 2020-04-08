@@ -7,12 +7,12 @@ import { ContractManagerInstance,
          SkaleVerifierInstance,
          ValidatorServiceInstance} from "../types/truffle-contracts";
 
-import { deployContractManager } from "./utils/deploy/contractManager";
-import { deployValidatorService } from "./utils/deploy/delegation/validatorService";
-import { deployNodesFunctionality } from "./utils/deploy/nodesFunctionality";
-import { deploySchainsData } from "./utils/deploy/schainsData";
-import { deploySchainsFunctionality } from "./utils/deploy/schainsFunctionality";
-import { deploySkaleVerifier } from "./utils/deploy/skaleVerifier";
+import { deployContractManager } from "./tools/deploy/contractManager";
+import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
+import { deployNodesFunctionality } from "./tools/deploy/nodesFunctionality";
+import { deploySchainsData } from "./tools/deploy/schainsData";
+import { deploySchainsFunctionality } from "./tools/deploy/schainsFunctionality";
+import { deploySkaleVerifier } from "./tools/deploy/skaleVerifier";
 chai.should();
 chai.use(chaiAsPromised);
 

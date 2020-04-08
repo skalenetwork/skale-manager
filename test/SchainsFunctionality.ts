@@ -10,16 +10,16 @@ import { ContractManagerInstance,
          ValidatorServiceInstance } from "../types/truffle-contracts";
 
 import BigNumber from "bignumber.js";
-import { skipTime } from "./utils/time";
+import { skipTime } from "./tools/time";
 
-import { deployContractManager } from "./utils/deploy/contractManager";
-import { deployValidatorService } from "./utils/deploy/delegation/validatorService";
-import { deployNodesData } from "./utils/deploy/nodesData";
-import { deployNodesFunctionality } from "./utils/deploy/nodesFunctionality";
-import { deploySchainsData } from "./utils/deploy/schainsData";
-import { deploySchainsFunctionality } from "./utils/deploy/schainsFunctionality";
-import { deploySchainsFunctionalityInternal } from "./utils/deploy/schainsFunctionalityInternal";
-import { deploySkaleManager } from "./utils/deploy/skaleManager";
+import { deployContractManager } from "./tools/deploy/contractManager";
+import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
+import { deployNodesData } from "./tools/deploy/nodesData";
+import { deployNodesFunctionality } from "./tools/deploy/nodesFunctionality";
+import { deploySchainsData } from "./tools/deploy/schainsData";
+import { deploySchainsFunctionality } from "./tools/deploy/schainsFunctionality";
+import { deploySchainsFunctionalityInternal } from "./tools/deploy/schainsFunctionalityInternal";
+import { deploySkaleManager } from "./tools/deploy/skaleManager";
 
 chai.should();
 chai.use(chaiAsPromised);
