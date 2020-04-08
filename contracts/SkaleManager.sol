@@ -116,7 +116,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
         MonitorsFunctionality monitorsFunctionality = MonitorsFunctionality(contractManager.getContract("MonitorsFunctionality"));
         monitorsFunctionality.deleteMonitor(nodeIndex);
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
-        uint validatorId = validatorService.getValidatorId(msg.sender);
+        uint validatorId = validatorService.getValidatorIdByNodeAddress(msg.sender);
         validatorService.deleteNode(validatorId, nodeIndex);
     }
 
@@ -149,10 +149,8 @@ contract SkaleManager is IERC777Recipient, Permissions {
         uint32 latency) external
     {
         NodesData nodesData = NodesData(contractManager.getContract("NodesData"));
-        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
         MonitorsFunctionality monitorsFunctionality = MonitorsFunctionality(contractManager.getContract("MonitorsFunctionality"));
 
-        validatorService.checkIfValidatorAddressExists(msg.sender);
         require(nodesData.isNodeExist(msg.sender, fromMonitorIndex), "Node does not exist for Message sender");
 
         monitorsFunctionality.sendVerdict(
@@ -186,7 +184,6 @@ contract SkaleManager is IERC777Recipient, Permissions {
         address nodesDataAddress = contractManager.getContract("NodesData");
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
 
-        validatorService.checkIfValidatorAddressExists(msg.sender);
         require(INodesData(nodesDataAddress).isNodeExist(msg.sender, nodeIndex), "Node does not exist for Message sender");
         require(INodesData(nodesDataAddress).isTimeForReward(nodeIndex), "Not time for bounty");
         bool nodeIsActive = INodesData(nodesDataAddress).isNodeActive(nodeIndex);
@@ -274,7 +271,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
         SkaleToken skaleToken = SkaleToken(contractManager.getContract("SkaleToken"));
         Distributor distributor = Distributor(contractManager.getContract("Distributor"));
 
-        uint validatorId = validatorService.getValidatorId(miner);
+        uint validatorId = validatorService.getValidatorIdByNodeAddress(miner);
         uint bounty = bountyForMiner;
         if (!validatorService.checkPossibilityToMaintainNode(validatorId, nodeIndex)) {
             bounty /= 2;
