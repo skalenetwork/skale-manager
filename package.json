@@ -63,7 +63,7 @@
     "@nomiclabs/buidler-web3": "^1.0.1",
     "@types/web3": "^1.0.19",
     "codecov": "^3.6.5",
-    "dotenv": "^7.0.0",
+    "dotenv": "^8.2.0",
     "elliptic": "^6.5.1",
     "ethlint": "^1.2.4",
     "ganache-cli": "^6.1.8",
