@@ -60,7 +60,7 @@
   "devDependencies": {
     "@nomiclabs/buidler": "^1.1.2",
     "@nomiclabs/buidler-truffle5": "^1.0.1",
-    "@nomiclabs/buidler-web3": "^1.0.1",
+    "@nomiclabs/buidler-web3": "^1.1.2",
     "@types/web3": "^1.0.19",
     "codecov": "^3.6.5",
     "dotenv": "^8.2.0",
