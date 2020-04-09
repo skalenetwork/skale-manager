@@ -67,7 +67,7 @@
     "elliptic": "^6.5.2",
     "ethlint": "^1.2.4",
     "ganache-cli": "^6.1.8",
-    "solidity-coverage": "0.7.0",
+    "solidity-coverage": "0.7.3",
     "tslint": "^5.18.0",
     "tslint-no-unused-expression-chai": "^0.1.4",
     "typescript": "3.6.4"
