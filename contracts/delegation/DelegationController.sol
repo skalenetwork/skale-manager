@@ -913,8 +913,21 @@ contract DelegationController is Permissions, ILocker {
 
     function sendSlashingSignals(SlashingSignal[] memory slashingSignals) internal {
         Punisher punisher = Punisher(contractManager.getContract("Punisher"));
+        address previousHolder = address(0);
+        uint accumulatedPenalty = 0;
         for (uint i = 0; i < slashingSignals.length; ++i) {
-            punisher.handleSlash(slashingSignals[i].holder, slashingSignals[i].penalty);
+            if (slashingSignals[i].holder != previousHolder) {
+                if (accumulatedPenalty > 0) {
+                    punisher.handleSlash(previousHolder, accumulatedPenalty);
+                }
+                previousHolder = slashingSignals[i].holder;
+                accumulatedPenalty = slashingSignals[i].penalty;
+            } else {
+                accumulatedPenalty = accumulatedPenalty.add(slashingSignals[i].penalty);
+            }
+        }
+        if (accumulatedPenalty > 0) {
+            punisher.handleSlash(previousHolder, accumulatedPenalty);
         }
     }
 }
