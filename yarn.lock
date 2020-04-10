@@ -390,10 +390,10 @@
     web3-eth-contract "1.2.2"
     web3-utils "1.2.2"
 
-"@openzeppelin/contracts-ethereum-package@^2.4.0":
-  version "2.4.0"
-  resolved "https://registry.yarnpkg.com/@openzeppelin/contracts-ethereum-package/-/contracts-ethereum-package-2.4.0.tgz#cd98612022cadb8710c26901bc564240a19a9b40"
-  integrity sha512-GC1aOgTnuNnlhdYOCKFizLCQRgYlbImWi+aJ9Lw4Yw4BSLHzfPg+XV0tgn9l+KnFAzgoUEg2aD2wmaHZBjEnSw==
+"@openzeppelin/contracts-ethereum-package@^2.5.0":
+  version "2.5.0"
+  resolved "https://registry.yarnpkg.com/@openzeppelin/contracts-ethereum-package/-/contracts-ethereum-package-2.5.0.tgz#cfb4b91f8132edde7e04bcd032575d4c6b544f4a"
+  integrity sha512-14CijdTyy4Y/3D3UUeFC2oW12nt1Yq1M8gFOtkuODEvSYPe3YSAKnKyhUeGf0UDNCZzwfGr15KdiFK6AoJjoSQ==
 
 "@openzeppelin/contracts@^2.4.0":
   version "2.4.0"
@@ -471,6 +471,27 @@
     lodash.uniq "^4.5.0"
     lodash.values "^4.3.0"
     lodash.without "^4.4.0"
+    semver "^5.5.1"
+    spinnies "^0.4.2"
+    truffle-flattener "^1.4.0"
+    web3 "1.2.2"
+    web3-eth "1.2.2"
+    web3-eth-contract "1.2.2"
+    web3-utils "1.2.2"
+
+"@openzeppelin/upgrades@^2.8.0":
+  version "2.8.0"
+  resolved "https://registry.yarnpkg.com/@openzeppelin/upgrades/-/upgrades-2.8.0.tgz#8086ab9c99d9f8dac7205030b0f9e7e4a280c4a3"
+  integrity sha512-LzjTQPeljPsgHDPdZyH9cMCbIHZILgd2cpNcYEkdsC2IylBYRHShlbEDXJV9snnqg9JWfzPiKIqyj3XVliwtqQ==
+  dependencies:
+    "@types/cbor" "^2.0.0"
+    axios "^0.18.0"
+    bignumber.js "^7.2.0"
+    cbor "^4.1.5"
+    chalk "^2.4.1"
+    ethers "^4.0.20"
+    glob "^7.1.3"
+    lodash "^4.17.15"
     semver "^5.5.1"
     spinnies "^0.4.2"
     truffle-flattener "^1.4.0"
@@ -8527,6 +8548,25 @@ solium-plugin-security@0.1.1:
   version "0.1.1"
   resolved "https://registry.yarnpkg.com/solium-plugin-security/-/solium-plugin-security-0.1.1.tgz#2a87bcf8f8c3abf7d198e292e4ac080284e3f3f6"
   integrity sha512-kpLirBwIq4mhxk0Y/nn5cQ6qdJTI+U1LO3gpoNIcqNaW+sI058moXBe2UiHs+9wvF9IzYD49jcKhFTxcR9u9SQ==
+
+solium@^1.2.5:
+  version "1.2.5"
+  resolved "https://registry.yarnpkg.com/solium/-/solium-1.2.5.tgz#d036c30e2901e22137bbf342f106b17529ff22a8"
+  integrity sha512-NuNrm7fp8JcDN/P+SAdM5TVa4wYDtwVtLY/rG4eBOZrC5qItsUhmQKR/YhjszaEW4c8tNUYhkhQcwOsS25znpw==
+  dependencies:
+    ajv "^5.2.2"
+    chokidar "^1.6.0"
+    colors "^1.1.2"
+    commander "^2.9.0"
+    diff "^3.5.0"
+    eol "^0.9.1"
+    js-string-escape "^1.0.1"
+    lodash "^4.14.2"
+    sol-digger "0.0.2"
+    sol-explore "1.6.1"
+    solium-plugin-security "0.1.1"
+    solparse "2.2.8"
+    text-table "^0.2.0"
 
 solparse@2.2.8:
   version "2.2.8"
