@@ -58,7 +58,7 @@
     "web3": "^1.2.1"
   },
   "devDependencies": {
-    "@nomiclabs/buidler": "^1.2.0",
+    "@nomiclabs/buidler": "^1.1.2",
     "@nomiclabs/buidler-truffle5": "^1.0.1",
     "@nomiclabs/buidler-web3": "^1.0.1",
     "@types/web3": "^1.0.19",
@@ -66,8 +66,8 @@
     "dotenv": "^8.2.0",
     "elliptic": "^6.5.2",
     "ethlint": "^1.2.4",
-    "ganache-cli": "^6.9.1",
-    "solidity-coverage": "0.7.3",
+    "ganache-cli": "^6.1.8",
+    "solidity-coverage": "0.7.0",
     "tslint": "^5.18.0",
     "tslint-no-unused-expression-chai": "^0.1.4",
     "typescript": "3.6.4"
