@@ -72,6 +72,6 @@
     "solidity-coverage": "0.7.0",
     "tslint": "^5.18.0",
     "tslint-no-unused-expression-chai": "^0.1.4",
-    "typescript": "3.6.4"
+    "typescript": "3.8.3"
   }
 }
