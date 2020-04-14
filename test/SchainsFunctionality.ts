@@ -46,7 +46,6 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
         skaleManager = await deploySkaleManager(contractManager);
 
         validatorService.registerValidator("D2", "D2 is even", 0, 0, {from: validator});
-        validatorService.linkNodeAddress(validator, {from: validator});
     });
 
     describe("should add schain", async () => {

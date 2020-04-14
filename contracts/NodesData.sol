@@ -38,7 +38,7 @@ contract NodesData is INodesData, Permissions {
         bytes4 publicIP;
         uint16 port;
         bytes publicKey;
-        uint32 startDate;
+        uint startBlock;
         uint32 lastRewardDate;
         // uint8 freeSpace;
         // uint indexInSpaceMap;
@@ -131,7 +131,7 @@ contract NodesData is INodesData, Permissions {
             port: port,
             //owner: from,
             publicKey: publicKey,
-            startDate: uint32(block.timestamp),
+            startBlock: block.number,
             lastRewardDate: uint32(block.timestamp),
             finishTime: 0,
             status: NodeStatus.Active,
