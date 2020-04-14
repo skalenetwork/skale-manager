@@ -406,6 +406,19 @@ contract("Delegation", ([owner,
                     (await delegationController.getAndUpdateDelegatedAmount.call(holder1, {from: holder1})).toNumber()
                         .should.be.equal(delegatedAmount1 - 1);
                 });
+
+                it("should not consume extra gas for slashing calculation if holder has never delegated", async () => {
+                    const amount = 100;
+                    await skaleToken.mint(owner, validator, amount, "0x", "0x");
+                    console.log(await skaleToken.balanceOf(validator));
+                    let tx = await skaleToken.transfer(owner, 1, {from: validator});
+                    const gasUsedBeforeSlashing = tx.receipt.gasUsed;
+                    for (let i = 0; i < 10; ++i) {
+                        await punisher.slash(validatorId, 1);
+                    }
+                    tx = await skaleToken.transfer(owner, 1, {from: validator});
+                    tx.receipt.gasUsed.should.be.equal(gasUsedBeforeSlashing);
+                });
             });
         });
 

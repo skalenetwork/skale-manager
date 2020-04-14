@@ -118,6 +118,13 @@ contract DelegationController is Permissions, ILocker {
         uint month;
     }
 
+    struct FirstDelegationMonth {
+        // month
+        uint value;
+        //validatorId => month
+        mapping (uint => uint) byValidator;
+    }
+
     event DelegationProposed(
         uint delegationId
     );
@@ -166,7 +173,7 @@ contract DelegationController is Permissions, ILocker {
     mapping (address => uint) private _firstUnprocessedSlashByHolder;
 
     //        holder =>   validatorId => month
-    mapping (address => mapping (uint => uint)) private _firstDelegationMonth;
+    mapping (address => FirstDelegationMonth) private _firstDelegationMonth;
 
     //        holder => locked in pending
     mapping (address => LockedInPending) private _lockedInPendingDelegations;
@@ -375,7 +382,7 @@ contract DelegationController is Permissions, ILocker {
     }
 
     function getFirstDelegationMonth(address holder, uint validatorId) external view returns(uint) {
-        return _firstDelegationMonth[holder][validatorId];
+        return _firstDelegationMonth[holder].byValidator[validatorId];
     }
 
     function getAndUpdateEffectiveDelegatedToValidator(uint validatorId, uint month)
@@ -440,7 +447,7 @@ contract DelegationController is Permissions, ILocker {
     }
 
     function hasUnprocessedSlashes(address holder) public view returns (bool) {
-        return _firstUnprocessedSlashByHolder[holder] < _slashes.length;
+        return everDelegated(holder) && _firstUnprocessedSlashByHolder[holder] < _slashes.length;
     }
 
     function processSlashes(address holder, uint limit) public {
@@ -597,9 +604,17 @@ contract DelegationController is Permissions, ILocker {
     }
 
     function updateFirstDelegationMonth(address holder, uint validatorId, uint month) internal {
-        if (_firstDelegationMonth[holder][validatorId] == 0) {
-            _firstDelegationMonth[holder][validatorId] = month;
+        if (_firstDelegationMonth[holder].value == 0) {
+            _firstDelegationMonth[holder].value = month;
+            _firstUnprocessedSlashByHolder[holder] = _slashes.length;
         }
+        if (_firstDelegationMonth[holder].byValidator[validatorId] == 0) {
+            _firstDelegationMonth[holder].byValidator[validatorId] = month;
+        }
+    }
+
+    function everDelegated(address holder) internal view returns (bool) {
+        return _firstDelegationMonth[holder].value > 0;
     }
 
     function removeFromDelegatedToValidator(uint validatorId, uint amount, uint month) internal {
