@@ -27,6 +27,7 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 import "../Permissions.sol";
 import "../SkaleToken.sol";
 import "../ConstantsHolder.sol";
+import "../utils/MathUtils.sol";
 
 import "./ValidatorService.sol";
 import "./DelegationController.sol";
@@ -35,6 +36,8 @@ import "./TimeHelpers.sol";
 
 
 contract Distributor is Permissions, IERC777Recipient {
+    using MathUtils for uint;
+
     event WithdrawBounty(
         address holder,
         uint validatorId,
@@ -164,7 +167,7 @@ contract Distributor is Permissions, IERC777Recipient {
         }
         for (uint i = startMonth; i < endMonth; ++i) {
             uint effectiveDelegatedToValidator = delegationController.getAndUpdateEffectiveDelegatedToValidator(validatorId, i);
-            if (effectiveDelegatedToValidator > 0) {
+            if (effectiveDelegatedToValidator.muchGreater(0)) {
                 earned = earned.add(
                     _bountyPaid[validatorId][i].mul(
                         delegationController.getAndUpdateEffectiveDelegatedByHolderToValidator(wallet, validatorId, i)).div(

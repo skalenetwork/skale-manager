@@ -6,11 +6,11 @@ import { ContractManagerInstance,
          NodesDataInstance,
          PricingInstance,
          SchainsDataInstance } from "../types/truffle-contracts";
-import { deployContractManager } from "./utils/deploy/contractManager";
-import { deployNodesData } from "./utils/deploy/nodesData";
-import { deployPricing } from "./utils/deploy/pricing";
-import { deploySchainsData } from "./utils/deploy/schainsData";
-import { skipTime } from "./utils/time";
+import { deployContractManager } from "./tools/deploy/contractManager";
+import { deployNodesData } from "./tools/deploy/nodesData";
+import { deployPricing } from "./tools/deploy/pricing";
+import { deploySchainsData } from "./tools/deploy/schainsData";
+import { skipTime } from "./tools/time";
 
 chai.should();
 chai.use(chaiAsPromised);

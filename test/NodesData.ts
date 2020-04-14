@@ -1,11 +1,11 @@
 import * as chaiAsPromised from "chai-as-promised";
 import { ContractManagerInstance,
          NodesDataInstance } from "../types/truffle-contracts";
-import { currentTime, skipTime } from "./utils/time";
+import { currentTime, skipTime } from "./tools/time";
 
 import chai = require("chai");
-import { deployContractManager } from "./utils/deploy/contractManager";
-import { deployNodesData } from "./utils/deploy/nodesData";
+import { deployContractManager } from "./tools/deploy/contractManager";
+import { deployNodesData } from "./tools/deploy/nodesData";
 chai.should();
 chai.use(chaiAsPromised);
 

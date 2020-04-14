@@ -4,17 +4,17 @@ import { ContractManagerInstance,
     TokenStateInstance,
     ValidatorServiceInstance } from "../../types/truffle-contracts";
 
-import { skipTime } from "../utils/time";
+import { skipTime } from "../tools/time";
 
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
-import { deployContractManager } from "../utils/deploy/contractManager";
-import { deployDelegationController } from "../utils/deploy/delegation/delegationController";
-import { deployTokenState } from "../utils/deploy/delegation/tokenState";
-import { deployValidatorService } from "../utils/deploy/delegation/validatorService";
-import { deploySkaleToken } from "../utils/deploy/skaleToken";
-import { deployTimeHelpersWithDebug } from "../utils/deploy/test/timeHelpersWithDebug";
-import { Delegation, State } from "../utils/types";
+import { deployContractManager } from "../tools/deploy/contractManager";
+import { deployDelegationController } from "../tools/deploy/delegation/delegationController";
+import { deployTokenState } from "../tools/deploy/delegation/tokenState";
+import { deployValidatorService } from "../tools/deploy/delegation/validatorService";
+import { deploySkaleToken } from "../tools/deploy/skaleToken";
+import { deployTimeHelpersWithDebug } from "../tools/deploy/test/timeHelpersWithDebug";
+import { Delegation, State } from "../tools/types";
 chai.should();
 chai.use(chaiAsPromised);
 
