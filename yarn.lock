@@ -9348,14 +9348,16 @@ type@^1.0.1:
   resolved "https://registry.yarnpkg.com/type/-/type-1.2.0.tgz#848dd7698dafa3e54a6c479e759c4bc3f18847a0"
   integrity sha512-+5nt5AAniqsCnu2cEQQdpzCAh33kVx8n0VoFidKpB1dVVLAN/F+bgVOqOJqOnEnrhp222clB5p3vUlD+1QAnfg==
 
-typechain@^0.3.17:
-  version "0.3.21"
-  resolved "https://registry.yarnpkg.com/typechain/-/typechain-0.3.21.tgz#7ab0ceddaa64479db10d65b8f4f1fa2d84ce96c4"
-  integrity sha512-5AvO3A+NUc1NJmRsq0iH6u00bliSXQg30pTdbSiaQbCCkOhPPuw2jh2rXGs78e2w8lCcHQFGH9xdtthKeMOX2w==
+typechain@^1.0.5:
+  version "1.0.5"
+  resolved "https://registry.yarnpkg.com/typechain/-/typechain-1.0.5.tgz#797899d9dbce54a83b3aef04ce1727ddf07d2138"
+  integrity sha512-gbQmJXPKuYQ0p3tK+dMhpdQql/UPtSnkPQXw2QM/aqwCengI86z2vEM2e5rVQpmk/blFx1PYNdApSDxE12rR1Q==
   dependencies:
     command-line-args "^4.0.7"
     debug "^3.0.1"
     fs-extra "^7.0.0"
+    js-sha3 "^0.8.0"
+    lodash "^4.17.15"
     ts-generator "^0.0.8"
 
 typedarray-to-buffer@^3.1.5:
