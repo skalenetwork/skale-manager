@@ -170,11 +170,9 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
 
         beforeEach(async () => {
             await validatorService.registerValidator("Validator1", "D2 is even", 0, 0, {from: validator1});
-            const validator1Id = 1;
-            await validatorService.linkNodeAddress(validator1, {from: validator1});
+            const validator1Id = await validatorService.getValidatorId(validator1);
             await validatorService.registerValidator("Validator2", "D2 is even more even", 0, 0, {from: validator2});
-            const validator2Id = 2;
-            await validatorService.linkNodeAddress(validator2, {from: validator2});
+            const validator2Id = await validatorService.getValidatorId(validator2);
             await skaleToken.mint(owner, validator1, delegatedAmount, "0x", "0x");
             await skaleToken.mint(owner, validator2, delegatedAmount, "0x", "0x");
             await validatorService.enableValidator(validator1Id, {from: owner});

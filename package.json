@@ -44,25 +44,26 @@
     "@openzeppelin/contracts-ethereum-package": "^2.5.0",
     "@openzeppelin/upgrades": "^2.8.0",
     "@truffle/hdwallet-provider": "^1.0.28",
-    "@types/chai": "^4.1.7",
+    "@types/chai": "^4.2.11",
     "@types/chai-as-promised": "^7.1.0",
     "@types/minimist": "^1.2.0",
     "bignumber.js": "^9.0.0",
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
-    "ethereumjs-tx": "1.3.7",
-    "solc": "^0.5.7",
+    "ethereumjs-tx": "2.1.2",
+    "solc": "^0.6.6",
     "solium": "^1.2.5",
-    "truffle": "5.1.5",
+    "truffle": "5.1.21",
     "truffle-typings": "^1.0.8",
-    "ts-node": "8.4.1",
-    "typechain": "^0.3.17",
+    "ts-node": "8.8.2",
+    "typechain": "^1.0.5",
+    "typechain-target-truffle": "^1.0.2",
     "web3": "^1.2.1"
   },
   "devDependencies": {
-    "@nomiclabs/buidler": "^1.1.2",
+    "@nomiclabs/buidler": "^1.2.0",
     "@nomiclabs/buidler-truffle5": "^1.0.1",
-    "@nomiclabs/buidler-web3": "^1.0.1",
+    "@nomiclabs/buidler-web3": "^1.2.0",
     "@types/web3": "^1.0.19",
     "codecov": "^3.6.5",
     "dotenv": "^8.2.0",
@@ -72,6 +73,6 @@
     "solidity-coverage": "0.7.0",
     "tslint": "^5.18.0",
     "tslint-no-unused-expression-chai": "^0.1.4",
-    "typescript": "3.6.4"
+    "typescript": "3.8.3"
   }
 }
