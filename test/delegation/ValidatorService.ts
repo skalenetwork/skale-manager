@@ -93,7 +93,9 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
                 100,
                 {from: validator1});
             const validatorId = await validatorService.getValidatorId(validator1);
-            const signature = await web3.eth.sign(web3.utils.soliditySha3(validatorId.toString()), nodeAddress);
+            let signature = await web3.eth.sign(web3.utils.soliditySha3(validatorId.toString()), nodeAddress);
+            signature = (signature.slice(130) === "00" ? signature.slice(0, 130) + "1b" :
+                (signature.slice(130) === "01" ? signature.slice(0, 130) + "1c" : signature));
             await validatorService.linkNodeAddress(nodeAddress, signature, {from: validator1});
         });
 
@@ -121,7 +123,9 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
 
         it("should link new node address for validator", async () => {
             const validatorId = await validatorService.getValidatorId(validator1);
-            const signature = await web3.eth.sign(web3.utils.soliditySha3(validatorId.toString()), nodeAddress);
+            let signature = await web3.eth.sign(web3.utils.soliditySha3(validatorId.toString()), nodeAddress);
+            signature = (signature.slice(130) === "00" ? signature.slice(0, 130) + "1b" :
+                (signature.slice(130) === "01" ? signature.slice(0, 130) + "1c" : signature));
             await validatorService.linkNodeAddress(nodeAddress, signature, {from: validator1});
             const id = new BigNumber(await validatorService.getValidatorIdByNodeAddress(nodeAddress)).toNumber();
             assert.equal(id, validatorId.toNumber());
@@ -129,7 +133,9 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
 
         it("should reject if linked node address tried to unlink validator address", async () => {
             const validatorId = await validatorService.getValidatorId(validator1);
-            const signature = await web3.eth.sign(web3.utils.soliditySha3(validatorId.toString()), nodeAddress);
+            let signature = await web3.eth.sign(web3.utils.soliditySha3(validatorId.toString()), nodeAddress);
+            signature = (signature.slice(130) === "00" ? signature.slice(0, 130) + "1b" :
+                (signature.slice(130) === "01" ? signature.slice(0, 130) + "1c" : signature));
             await validatorService.linkNodeAddress(nodeAddress, signature, {from: validator1});
             await validatorService.unlinkNodeAddress(validator1, {from: nodeAddress})
                 .should.be.eventually.rejectedWith("Validator with such address does not exist");
@@ -144,8 +150,12 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
                 {from: validator2});
             const validatorId1 = await validatorService.getValidatorId(validator1);
             const validatorId2 = await validatorService.getValidatorId(validator2);
-            const signature1 = await web3.eth.sign(web3.utils.soliditySha3(validatorId1.toString()), nodeAddress);
-            const signature2 = await web3.eth.sign(web3.utils.soliditySha3(validatorId2.toString()), nodeAddress);
+            let signature1 = await web3.eth.sign(web3.utils.soliditySha3(validatorId1.toString()), nodeAddress);
+            signature1 = (signature1.slice(130) === "00" ? signature1.slice(0, 130) + "1b" :
+                (signature1.slice(130) === "01" ? signature1.slice(0, 130) + "1c" : signature1));
+            let signature2 = await web3.eth.sign(web3.utils.soliditySha3(validatorId2.toString()), nodeAddress);
+            signature2 = (signature2.slice(130) === "00" ? signature2.slice(0, 130) + "1b" :
+                (signature2.slice(130) === "01" ? signature2.slice(0, 130) + "1c" : signature2));
             await validatorService.linkNodeAddress(nodeAddress, signature1, {from: validator1});
             await validatorService.linkNodeAddress(nodeAddress, signature2, {from: validator2})
                 .should.be.eventually.rejectedWith("Validator cannot override node address");
@@ -161,14 +171,18 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
                 100,
                 {from: validator2});
             const validatorId = await validatorService.getValidatorId(validator1);
-            const signature = await web3.eth.sign(web3.utils.soliditySha3(validatorId.toString()), validator2);
+            let signature = await web3.eth.sign(web3.utils.soliditySha3(validatorId.toString()), validator2);
+            signature = (signature.slice(130) === "00" ? signature.slice(0, 130) + "1b" :
+                (signature.slice(130) === "01" ? signature.slice(0, 130) + "1c" : signature));
             await validatorService.linkNodeAddress(validator2, signature, {from: validator1})
                 .should.be.eventually.rejectedWith("Node address is a validator");
         });
 
         it("should unlink node address for validator", async () => {
             const validatorId = await validatorService.getValidatorId(validator1);
-            const signature = await web3.eth.sign(web3.utils.soliditySha3(validatorId.toString()), nodeAddress);
+            let signature = await web3.eth.sign(web3.utils.soliditySha3(validatorId.toString()), nodeAddress);
+            signature = (signature.slice(130) === "00" ? signature.slice(0, 130) + "1b" :
+                (signature.slice(130) === "01" ? signature.slice(0, 130) + "1c" : signature));
             await validatorService.linkNodeAddress(nodeAddress, signature, {from: validator1});
             await validatorService.registerValidator(
                 "Second Validator",

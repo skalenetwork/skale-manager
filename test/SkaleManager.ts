@@ -83,7 +83,9 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
         beforeEach(async () => {
             await validatorService.registerValidator("D2", "D2 is even", 150, 0, {from: validator});
             const validatorIndex = await validatorService.getValidatorId(validator);
-            const signature = await web3.eth.sign(web3.utils.soliditySha3(validatorIndex.toString()), nodeAddress);
+            let signature = await web3.eth.sign(web3.utils.soliditySha3(validatorIndex.toString()), nodeAddress);
+            signature = (signature.slice(130) === "00" ? signature.slice(0, 130) + "1b" :
+                (signature.slice(130) === "01" ? signature.slice(0, 130) + "1c" : signature));
             await validatorService.linkNodeAddress(nodeAddress, signature, {from: validator});
 
             await skaleToken.transfer(validator, "0x410D586A20A4C00000", {from: owner});
