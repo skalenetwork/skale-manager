@@ -40,7 +40,7 @@
   },
   "dependencies": {
     "@openzeppelin/cli": "^2.6.0",
-    "@openzeppelin/contracts": "^2.4.0",
+    "@openzeppelin/contracts": "^2.5.0",
     "@openzeppelin/contracts-ethereum-package": "^2.5.0",
     "@openzeppelin/upgrades": "^2.8.0",
     "@truffle/hdwallet-provider": "^1.0.28",
@@ -62,7 +62,7 @@
   },
   "devDependencies": {
     "@nomiclabs/buidler": "^1.2.0",
-    "@nomiclabs/buidler-truffle5": "^1.0.1",
+    "@nomiclabs/buidler-truffle5": "^1.2.0",
     "@nomiclabs/buidler-web3": "^1.2.0",
     "@types/web3": "^1.0.19",
     "codecov": "^3.6.5",
