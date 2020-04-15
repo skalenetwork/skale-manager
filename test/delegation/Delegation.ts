@@ -313,7 +313,11 @@ contract("Delegation", ([owner,
             describe("Slashing", async () => {
 
                 it("should slash validator and lock delegators fund in proportion of delegation share", async () => {
-                    await punisher.slash(validatorId, 5);
+                    // do 5 seperate slashes to check aggregation
+                    const slashesNumber = 5;
+                    for (let i = 0; i < slashesNumber; ++i) {
+                        await punisher.slash(validatorId, 5);
+                    }
 
                     // Stakes:
                     // holder1: $2e6
@@ -323,17 +327,17 @@ contract("Delegation", ([owner,
                     (await tokenState.getAndUpdateLockedAmount.call(holder1)).toNumber()
                         .should.be.equal(delegatedAmount1);
                     (await delegationController.getAndUpdateDelegatedAmount.call(
-                        holder1)).toNumber().should.be.equal(delegatedAmount1 - 1);
+                        holder1)).toNumber().should.be.equal(delegatedAmount1 - 1 * slashesNumber);
 
                     (await tokenState.getAndUpdateLockedAmount.call(holder2)).toNumber()
                         .should.be.equal(delegatedAmount2);
                     (await delegationController.getAndUpdateDelegatedAmount.call(
-                        holder2)).toNumber().should.be.equal(delegatedAmount2 - 2);
+                        holder2)).toNumber().should.be.equal(delegatedAmount2 - 2 * slashesNumber);
 
                     (await tokenState.getAndUpdateLockedAmount.call(holder3)).toNumber()
                         .should.be.equal(delegatedAmount3);
                     (await delegationController.getAndUpdateDelegatedAmount.call(
-                        holder3)).toNumber().should.be.equal(delegatedAmount3 - 3);
+                        holder3)).toNumber().should.be.equal(delegatedAmount3 - 3 * slashesNumber);
                 });
 
                 it("should not lock more tokens than were delegated", async () => {
