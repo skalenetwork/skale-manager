@@ -17,34 +17,26 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity ^0.5.0;
+pragma solidity 0.5.16;
+pragma experimental ABIEncoderV2;
 
 import "./Permissions.sol";
-import "./interfaces/ISchainsData.sol";
 import "./interfaces/IConstants.sol";
 import "./interfaces/IGroupsData.sol";
 import "./interfaces/ISchainsFunctionality.sol";
+import "./interfaces/ISchainsFunctionalityInternal.sol";
 import "./interfaces/INodesData.sol";
+import "./SchainsData.sol";
+import "./SchainsFunctionalityInternal.sol";
 
-
-interface ISchainsFunctionalityInternal {
-    function getNodesDataFromTypeOfSchain(uint typeOfSchain) external view returns (uint, uint);
-    function createGroupForSchain(
-        string calldata schainName,
-        bytes32 schainId,
-        uint numberOfNodes,
-        uint partOfNode) external;
-    function findSchainAtSchainsForNode(uint nodeIndex, bytes32 schainId) external view returns (uint);
-    function deleteGroup(bytes32 groupIndex) external;
-    function replaceNode(uint nodeIndex, bytes32 groupIndex) external returns (bytes32, uint);
-    function removeNodeFromSchain(uint nodeIndex, bytes32 groupHash) external;
-}
 
 
 /**
  * @title SchainsFunctionality - contract contains all functionality logic to manage Schains
  */
 contract SchainsFunctionality is Permissions, ISchainsFunctionality {
+    using StringUtils for string;
+    using StringUtils for uint;
 
     struct SchainParameters {
         uint lifetime;
@@ -75,16 +67,17 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
 
     event NodeRotated(
         bytes32 groupIndex,
+        uint oldNode,
+        uint newNode
+    );
+
+    event NodeAdded(
+        bytes32 groupIndex,
         uint newNode
     );
 
     string executorName;
     string dataName;
-
-    constructor(string memory newExecutorName, string memory newDataName, address newContractsAddress) Permissions(newContractsAddress) public {
-        executorName = newExecutorName;
-        dataName = newDataName;
-    }
 
     /**
      * @dev addSchain - create Schain in the system
@@ -95,9 +88,9 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
      */
     function addSchain(address from, uint deposit, bytes calldata data) external allow(executorName) {
         uint numberOfNodes;
-        uint partOfNode;
+        uint8 partOfNode;
 
-        address schainsFunctionalityInternalAddress = contractManager.contracts(keccak256(abi.encodePacked("SchainsFunctionalityInternal")));
+        address schainsFunctionalityInternalAddress = contractManager.getContract("SchainsFunctionalityInternal");
 
         SchainParameters memory schainParameters = fallbackSchainParametersDataConverter(data);
 
@@ -125,21 +118,6 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
     }
 
     /**
-     * @dev getSchainNodes - returns Nodes which contained in given Schain
-     * @param schainName - name of Schain
-     * @return array of concatenated parameters: nodeIndex, ip, port which contained in Schain
-     */
-    /*function getSchainNodes(string schainName) public view returns (bytes16[] memory schainNodes) {
-        address dataAddress = contractManager.contracts(keccak256(abi.encodePacked(dataName)));
-        bytes32 schainId = keccak256(abi.encodePacked(schainName));
-        uint[] memory nodesInGroup = IGroupsData(dataAddress).getNodesInGroup(schainId);
-        schainNodes = new bytes16[](nodesInGroup.length);
-        for (uint indexOfNodes = 0; indexOfNodes < nodesInGroup.length; indexOfNodes++) {
-            schainNodes[indexOfNodes] = getBytesParameter(nodesInGroup[indexOfNodes]);
-        }
-    }*/
-
-    /**
      * @dev deleteSchain - removes Schain from the system
      * function could be run only by executor
      * @param from - owner of Schain
@@ -147,61 +125,117 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
      */
     function deleteSchain(address from, string calldata name) external allow(executorName) {
         bytes32 schainId = keccak256(abi.encodePacked(name));
-        address dataAddress = contractManager.contracts(keccak256(abi.encodePacked(dataName)));
-        //require(ISchainsData(dataAddress).isTimeExpired(schainId), "Schain lifetime did not end");
-        require(ISchainsData(dataAddress).isOwnerAddress(from, schainId), "Message sender is not an owner of Schain");
-        address schainsFunctionalityInternalAddress = contractManager.contracts(keccak256(abi.encodePacked("SchainsFunctionalityInternal")));
+        address dataAddress = contractManager.getContract(dataName);
+        require(SchainsData(dataAddress).isOwnerAddress(from, schainId), "Message sender is not an owner of Schain");
+        address schainsFunctionalityInternalAddress = contractManager.getContract("SchainsFunctionalityInternal");
 
         // removes Schain from Nodes
         uint[] memory nodesInGroup = IGroupsData(dataAddress).getNodesInGroup(schainId);
-        uint partOfNode = ISchainsData(dataAddress).getSchainsPartOfNode(schainId);
+        uint8 partOfNode = SchainsData(dataAddress).getSchainsPartOfNode(schainId);
         for (uint i = 0; i < nodesInGroup.length; i++) {
             uint schainIndex = ISchainsFunctionalityInternal(schainsFunctionalityInternalAddress).findSchainAtSchainsForNode(
                 nodesInGroup[i],
                 schainId
             );
             require(
-                schainIndex < ISchainsData(dataAddress).getLengthOfSchainsForNode(nodesInGroup[i]),
+                schainIndex < SchainsData(dataAddress).getLengthOfSchainsForNode(nodesInGroup[i]),
                 "Some Node does not contain given Schain");
             ISchainsFunctionalityInternal(schainsFunctionalityInternalAddress).removeNodeFromSchain(nodesInGroup[i], schainId);
+            ISchainsFunctionalityInternal(schainsFunctionalityInternalAddress).removeNodeFromExceptions(schainId, nodesInGroup[i]);
             addSpace(nodesInGroup[i], partOfNode);
         }
         ISchainsFunctionalityInternal(schainsFunctionalityInternalAddress).deleteGroup(schainId);
-        ISchainsData(dataAddress).removeSchain(schainId, from);
+        SchainsData(dataAddress).removeSchain(schainId, from);
+        SchainsData(dataAddress).removeRotation(schainId);
         emit SchainDeleted(from, name, schainId);
     }
 
     function deleteSchainByRoot(string calldata name) external allow(executorName) {
         bytes32 schainId = keccak256(abi.encodePacked(name));
-        address dataAddress = contractManager.contracts(keccak256(abi.encodePacked(dataName)));
-        address schainsFunctionalityInternalAddress = contractManager.contracts(keccak256(abi.encodePacked("SchainsFunctionalityInternal")));
+        address dataAddress = contractManager.getContract(dataName);
+        address schainsFunctionalityInternalAddress = contractManager.getContract("SchainsFunctionalityInternal");
+        require(SchainsData(dataAddress).isSchainExist(schainId), "Schain does not exist");
 
         // removes Schain from Nodes
         uint[] memory nodesInGroup = IGroupsData(dataAddress).getNodesInGroup(schainId);
-        uint partOfNode = ISchainsData(dataAddress).getSchainsPartOfNode(schainId);
+        uint8 partOfNode = SchainsData(dataAddress).getSchainsPartOfNode(schainId);
         for (uint i = 0; i < nodesInGroup.length; i++) {
             uint schainIndex = ISchainsFunctionalityInternal(schainsFunctionalityInternalAddress).findSchainAtSchainsForNode(
                 nodesInGroup[i],
                 schainId
             );
             require(
-                schainIndex < ISchainsData(dataAddress).getLengthOfSchainsForNode(nodesInGroup[i]),
+                schainIndex < SchainsData(dataAddress).getLengthOfSchainsForNode(nodesInGroup[i]),
                 "Some Node does not contain given Schain");
             ISchainsFunctionalityInternal(schainsFunctionalityInternalAddress).removeNodeFromSchain(nodesInGroup[i], schainId);
+            ISchainsFunctionalityInternal(schainsFunctionalityInternalAddress).removeNodeFromExceptions(schainId, nodesInGroup[i]);
             addSpace(nodesInGroup[i], partOfNode);
         }
         ISchainsFunctionalityInternal(schainsFunctionalityInternalAddress).deleteGroup(schainId);
-        address from = ISchainsData(dataAddress).getSchainOwner(schainId);
-        ISchainsData(dataAddress).removeSchain(schainId, from);
+        address from = SchainsData(dataAddress).getSchainOwner(schainId);
+        SchainsData(dataAddress).removeSchain(schainId, from);
+        SchainsData(dataAddress).removeRotation(schainId);
         emit SchainDeleted(from, name, schainId);
     }
 
-    function rotateNode(uint nodeIndex, bytes32 schainId) external {
-        address schainsFunctionalityInternalAddress = contractManager.contracts(keccak256(abi.encodePacked("SchainsFunctionalityInternal")));
-        bytes32 groupIndex;
-        uint newNodeIndex;
-        (groupIndex, newNodeIndex) = ISchainsFunctionalityInternal(schainsFunctionalityInternalAddress).replaceNode(nodeIndex, schainId);
-        emit NodeRotated(groupIndex, newNodeIndex);
+    function exitFromSchain(uint nodeIndex) external allow(executorName) returns (bool) {
+        SchainsData schainsData = SchainsData(contractManager.getContract(dataName));
+        bytes32 schainId = schainsData.getActiveSchain(nodeIndex);
+        require(this.checkRotation(schainId), "No any free Nodes for rotating");
+        uint newNodeIndex = this.rotateNode(nodeIndex, schainId);
+        schainsData.finishRotation(schainId, nodeIndex, newNodeIndex);
+        return schainsData.getActiveSchain(nodeIndex) == bytes32(0) ? true : false;
+    }
+
+    function checkRotation(bytes32 schainId ) external view returns (bool) {
+        SchainsData schainsData = SchainsData(contractManager.getContract(dataName));
+        require(schainsData.isSchainExist(schainId), "Schain does not exist");
+        SchainsFunctionalityInternal schainsFunctionalityInternal = SchainsFunctionalityInternal(
+            contractManager.getContract("SchainsFunctionalityInternal"));
+        return schainsFunctionalityInternal.isAnyFreeNode(schainId);
+    }
+
+    function rotateNode(uint nodeIndex, bytes32 schainId) external allowTwo("SkaleDKG", "SchainsFunctionality") returns (uint) {
+        SchainsFunctionalityInternal schainsFunctionalityInternal = SchainsFunctionalityInternal(
+            contractManager.getContract("SchainsFunctionalityInternal"));
+        schainsFunctionalityInternal.removeNodeFromSchain(nodeIndex, schainId);
+        return schainsFunctionalityInternal.selectNodeToGroup(schainId);
+    }
+
+    function freezeSchains(uint nodeIndex) external allow(executorName) {
+        SchainsData schainsData = SchainsData(contractManager.getContract("SchainsData"));
+        bytes32[] memory schains = schainsData.getActiveSchains(nodeIndex);
+        for (uint i = 0; i < schains.length; i++) {
+            SchainsData.Rotation memory rotation = schainsData.getRotation(schains[i]);
+            if (rotation.nodeIndex == nodeIndex && now < rotation.freezeUntil) {
+                continue;
+            }
+            string memory schainName = schainsData.getSchainName(schains[i]);
+            string memory revertMessage = "Node cannot rotate on Schain ";
+            revertMessage = revertMessage.strConcat(schainName);
+            revertMessage = revertMessage.strConcat(", occupied by Node ");
+            revertMessage = revertMessage.strConcat(rotation.nodeIndex.uint2str());
+            require(rotation.freezeUntil < now, revertMessage);
+            schainsData.startRotation(schains[i], nodeIndex);
+        }
+    }
+
+    function restartSchainCreation(string calldata name) external allow(executorName) {
+        bytes32 schainId = keccak256(abi.encodePacked(name));
+        address dataAddress = contractManager.getContract(dataName);
+        require(IGroupsData(dataAddress).isGroupFailedDKG(schainId), "DKG success");
+        SchainsFunctionalityInternal schainsFunctionalityInternal = SchainsFunctionalityInternal(
+            contractManager.getContract("SchainsFunctionalityInternal"));
+        require(schainsFunctionalityInternal.isAnyFreeNode(schainId), "No any free Nodes for rotation");
+        uint newNodeIndex = schainsFunctionalityInternal.selectNodeToGroup(schainId);
+        emit NodeAdded(schainId, newNodeIndex);
+
+    }
+
+    function initialize(address newContractsAddress) public initializer {
+        Permissions.initialize(newContractsAddress);
+        executorName = "SkaleManager";
+        dataName = "SchainsData";
     }
 
     /**
@@ -211,23 +245,23 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
      * @return current price for given Schain
      */
     function getSchainPrice(uint typeOfSchain, uint lifetime) public view returns (uint) {
-        address constantsAddress = contractManager.contracts(keccak256(abi.encodePacked("Constants")));
-        address schainsFunctionalityInternalAddress = contractManager.contracts(keccak256(abi.encodePacked("SchainsFunctionalityInternal")));
+        address constantsAddress = contractManager.getContract("ConstantsHolder");
+        address schainsFunctionalityInternalAddress = contractManager.getContract("SchainsFunctionalityInternal");
         uint nodeDeposit = IConstants(constantsAddress).NODE_DEPOSIT();
         uint numberOfNodes;
-        uint divisor;
+        uint8 divisor;
         (numberOfNodes, divisor) = ISchainsFunctionalityInternal(
             schainsFunctionalityInternalAddress
         ).getNodesDataFromTypeOfSchain(typeOfSchain);
-        /*uint up;
-        uint down;
-        (up, down) = coefficientForPrice(constantsAddress);*/
+        // /*uint up;
+        // uint down;
+        // (up, down) = coefficientForPrice(constantsAddress);*/
         if (divisor == 0) {
             return 1e18;
         } else {
-            uint up = nodeDeposit * numberOfNodes * 2 * lifetime;
-            uint down = divisor * IConstants(constantsAddress).SECONDS_TO_YEAR();
-            return up / down;
+            uint up = nodeDeposit.mul(numberOfNodes.mul(lifetime.mul(2)));
+            uint down = uint(uint(IConstants(constantsAddress).TINY_DIVISOR()).div(divisor).mul(uint(IConstants(constantsAddress).SECONDS_TO_YEAR())));
+            return up.div(down);
         }
     }
 
@@ -237,16 +271,16 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
         uint deposit,
         uint lifetime) internal
     {
-        address dataAddress = contractManager.contracts(keccak256(abi.encodePacked(dataName)));
-        require(ISchainsData(dataAddress).isSchainNameAvailable(name), "Schain name is not available");
+        address dataAddress = contractManager.getContract(dataName);
+        require(SchainsData(dataAddress).isSchainNameAvailable(name), "Schain name is not available");
 
         // initialize Schain
-        ISchainsData(dataAddress).initializeSchain(
+        SchainsData(dataAddress).initializeSchain(
             name,
             from,
             lifetime,
             deposit);
-        ISchainsData(dataAddress).setSchainIndex(keccak256(abi.encodePacked(name)), from);
+        SchainsData(dataAddress).setSchainIndex(keccak256(abi.encodePacked(name)), from);
     }
 
     /**
@@ -258,7 +292,9 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
      * @return name
      */
     function fallbackSchainParametersDataConverter(bytes memory data)
-    internal pure returns (SchainParameters memory schainParameters)
+        internal
+        pure
+        returns (SchainParameters memory schainParameters)
     {
         require(data.length > 36, "Incorrect bytes data config");
         bytes32 lifetimeInBytes;
@@ -283,27 +319,8 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
      * @param nodeIndex - index of Node at common array of Nodes
      * @param partOfNode - divisor of given type of Schain
      */
-    function addSpace(uint nodeIndex, uint partOfNode) internal {
-        address nodesDataAddress = contractManager.contracts(keccak256(abi.encodePacked("NodesData")));
-        address constantsAddress = contractManager.contracts(keccak256(abi.encodePacked("Constants")));
-        uint subarrayLink;
-        bool isNodeFull;
-        (subarrayLink, isNodeFull) = INodesData(nodesDataAddress).nodesLink(nodeIndex);
-        // adds space
-        if (isNodeFull) {
-            if (partOfNode == IConstants(constantsAddress).MEDIUM_TEST_DIVISOR()) {
-                INodesData(nodesDataAddress).addSpaceToFullNode(subarrayLink, IConstants(constantsAddress).TINY_DIVISOR() / partOfNode);
-            } else if (partOfNode != 0) {
-                INodesData(nodesDataAddress).addSpaceToFullNode(subarrayLink, IConstants(constantsAddress).TINY_DIVISOR() / partOfNode);
-            } else {
-                INodesData(nodesDataAddress).addSpaceToFullNode(subarrayLink, partOfNode);
-            }
-        } else {
-            if (partOfNode != 0) {
-                INodesData(nodesDataAddress).addSpaceToFractionalNode(subarrayLink, IConstants(constantsAddress).TINY_DIVISOR() / partOfNode);
-            } else {
-                INodesData(nodesDataAddress).addSpaceToFractionalNode(subarrayLink, partOfNode);
-            }
-        }
+    function addSpace(uint nodeIndex, uint8 partOfNode) internal {
+        address nodesDataAddress = contractManager.getContract("NodesData");
+        INodesData(nodesDataAddress).addSpaceToNode(nodeIndex, partOfNode);
     }
 }

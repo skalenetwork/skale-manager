@@ -17,7 +17,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity ^0.5.0;
+pragma solidity 0.5.16;
 
 import "./Permissions.sol";
 import "./interfaces/IConstants.sol";
@@ -37,13 +37,15 @@ contract NodesData is INodesData, Permissions {
         bytes4 ip;
         bytes4 publicIP;
         uint16 port;
-        //address owner;
         bytes publicKey;
         uint32 startDate;
-        uint32 leavingDate;
         uint32 lastRewardDate;
+        // uint8 freeSpace;
+        // uint indexInSpaceMap;
         //address secondAddress;
+        uint32 finishTime;
         NodeStatus status;
+        uint validatorId;
     }
 
     // struct to note which Nodes and which number of Nodes owned by user
@@ -52,22 +54,16 @@ contract NodesData is INodesData, Permissions {
         uint numberOfNodes;
     }
 
-    // struct to note Full or Fractional Node and link to subarray
-    struct NodeLink {
-        uint subarrayLink;
-        bool isNodeFull;
-    }
-
-    // struct to note nodeIndex and remaining space
-    struct NodeFilling {
-        uint nodeIndex;
-        uint freeSpace;
+    struct SpaceManaging {
+        uint8 freeSpace;
+        uint indexInSpaceMap;
     }
 
     // array which contain all Nodes
     Node[] public nodes;
-    // array which contain links to subarrays of Fractional and Full Nodes
-    NodeLink[] public nodesLink;
+
+    SpaceManaging[] public spaceOfNodes;
+
     // mapping for checking which Nodes and which number of Nodes owned by user
     mapping (address => CreatedNodes) public nodeIndexes;
     // mapping for checking is IP address busy
@@ -76,33 +72,31 @@ contract NodesData is INodesData, Permissions {
     mapping (bytes32 => bool) public nodesNameCheck;
     // mapping for indication from Name to Index
     mapping (bytes32 => uint) public nodesNameToIndex;
+    // mapping for indication from space to Nodes
+    mapping (uint8 => uint[]) public spaceToNodes;
 
-    // array which contain only Fractional Nodes
-    NodeFilling[] public fractionalNodes;
-    // array which contain only Full Nodes
-    NodeFilling[] public fullNodes;
+    uint public numberOfActiveNodes;
+    uint public numberOfLeavingNodes;
+    uint public numberOfLeftNodes;
 
-    // leaving Period for Node
-    uint leavingPeriod;
 
-    uint public numberOfActiveNodes = 0;
-    uint public numberOfLeavingNodes = 0;
-    uint public numberOfLeftNodes = 0;
 
-    constructor(uint newLeavingPeriod, address newContractsAddress) Permissions(newContractsAddress) public {
-        leavingPeriod = newLeavingPeriod;
+    function getNodesWithFreeSpace(uint8 freeSpace) external view returns (uint[] memory) {
+        uint[] memory nodesWithFreeSpace = new uint[](this.countNodesWithFreeSpace(freeSpace));
+        uint cursor = 0;
+        for (uint8 i = freeSpace; i <= 128; ++i) {
+            for (uint j = 0; j < spaceToNodes[i].length; j++) {
+                nodesWithFreeSpace[cursor] = spaceToNodes[i][j];
+                ++cursor;
+            }
+        }
+        return nodesWithFreeSpace;
     }
 
-    function getNodesWithFreeSpace(uint partOfNode, uint freeSpace) external view returns (uint[] memory) {
-        address constantsAddress = contractManager.contracts(keccak256(abi.encodePacked("Constants")));
-        // only for testing - should be removed before release
-        if (freeSpace == 0 || partOfNode == 0 || partOfNode == IConstants(constantsAddress).MEDIUM_TEST_DIVISOR()) {
-            return getActiveNodeIds();
-        }
-        if (partOfNode > 1) {
-            return getNodesWithFreeSpace(fractionalNodes, freeSpace);
-        } else {
-            return getNodesWithFreeSpace(fullNodes, freeSpace);
+    function countNodesWithFreeSpace(uint8 freeSpace) external view returns (uint count) {
+        count = 0;
+        for (uint8 i = freeSpace; i <= 128; ++i) {
+            count = count.add(spaceToNodes[i].length);
         }
     }
 
@@ -123,11 +117,12 @@ contract NodesData is INodesData, Permissions {
         bytes4 ip,
         bytes4 publicIP,
         uint16 port,
-        bytes calldata publicKey
+        bytes calldata publicKey,
+        uint validatorId
     )
         external
         allow("NodesFunctionality")
-        returns (uint)
+        returns (uint nodeIndex)
     {
         nodes.push(Node({
             name: name,
@@ -137,50 +132,24 @@ contract NodesData is INodesData, Permissions {
             //owner: from,
             publicKey: publicKey,
             startDate: uint32(block.timestamp),
-            leavingDate: uint32(0),
             lastRewardDate: uint32(block.timestamp),
-            status: NodeStatus.Active
+            finishTime: 0,
+            status: NodeStatus.Active,
+            validatorId: validatorId
         }));
+        nodeIndex = nodes.length - 1;
         bytes32 nodeId = keccak256(abi.encodePacked(name));
         nodesIPCheck[ip] = true;
         nodesNameCheck[nodeId] = true;
-        nodesNameToIndex[nodeId] = nodes.length - 1;
-        nodeIndexes[from].isNodeExist[nodes.length - 1] = true;
+        nodesNameToIndex[nodeId] = nodeIndex;
+        nodeIndexes[from].isNodeExist[nodeIndex] = true;
         nodeIndexes[from].numberOfNodes++;
+        spaceOfNodes.push(SpaceManaging({
+            freeSpace: 128,
+            indexInSpaceMap: spaceToNodes[128].length
+        }));
+        spaceToNodes[128].push(nodeIndex);
         numberOfActiveNodes++;
-        return nodes.length - 1;
-    }
-
-    /**
-     * @dev addFractionalNode - adds Node to array of Fractional Nodes
-     * function could be run only by executor
-     * @param nodeIndex - index of Node
-     */
-    function addFractionalNode(uint nodeIndex) external allow("NodesFunctionality") {
-        fractionalNodes.push(NodeFilling({
-            nodeIndex: nodeIndex,
-            freeSpace: 128
-        }));
-        nodesLink.push(NodeLink({
-            subarrayLink: fractionalNodes.length - 1,
-            isNodeFull: false
-        }));
-    }
-
-    /**
-     * @dev addFullNode - adds Node to array of Full Nodes
-     * function could be run only by executor
-     * @param nodeIndex - index of Node
-     */
-    function addFullNode(uint nodeIndex) external allow("NodesFunctionality") {
-        fullNodes.push(NodeFilling({
-            nodeIndex: nodeIndex,
-            freeSpace: 128
-        }));
-        nodesLink.push(NodeLink({
-            subarrayLink: fullNodes.length - 1,
-            isNodeFull: true
-        }));
     }
 
     /**
@@ -190,7 +159,6 @@ contract NodesData is INodesData, Permissions {
      */
     function setNodeLeaving(uint nodeIndex) external allow("NodesFunctionality") {
         nodes[nodeIndex].status = NodeStatus.Leaving;
-        nodes[nodeIndex].leavingDate = uint32(block.timestamp);
         numberOfActiveNodes--;
         numberOfLeavingNodes++;
     }
@@ -216,82 +184,53 @@ contract NodesData is INodesData, Permissions {
         numberOfLeftNodes++;
     }
 
-    /**
-     * @dev removeFractionalNode - removes Node from Fractional Nodes array
-     * function could be run only by NodesFunctionality
-     * @param subarrayIndex - index of Node at array of Fractional Nodes
-     */
-    function removeFractionalNode(uint subarrayIndex) external allow("NodesFunctionality") {
-        if (subarrayIndex != fractionalNodes.length - 1) {
-            uint secondNodeIndex = fractionalNodes[fractionalNodes.length - 1].nodeIndex;
-            fractionalNodes[subarrayIndex] = fractionalNodes[fractionalNodes.length - 1];
-            nodesLink[secondNodeIndex].subarrayLink = subarrayIndex;
+    function removeNode(uint nodeIndex) external allow("NodesFunctionality") {
+        uint8 space = spaceOfNodes[nodeIndex].freeSpace;
+        uint indexInArray = spaceOfNodes[nodeIndex].indexInSpaceMap;
+        if (indexInArray < spaceToNodes[space].length - 1) {
+            uint shiftedIndex = spaceToNodes[space][spaceToNodes[space].length - 1];
+            spaceToNodes[space][indexInArray] = shiftedIndex;
+            spaceOfNodes[shiftedIndex].indexInSpaceMap = indexInArray;
+            spaceToNodes[space].length--;
+        } else {
+            spaceToNodes[space].length--;
         }
-        delete fractionalNodes[fractionalNodes.length - 1];
-        fractionalNodes.length--;
-    }
-
-    /**
-     * @dev removeFullNode - removes Node from Full Nodes array
-     * function could be run only by NodesFunctionality
-     * @param subarrayIndex - index of Node at array of Full Nodes
-     */
-    function removeFullNode(uint subarrayIndex) external allow("NodesFunctionality") {
-        if (subarrayIndex != fullNodes.length - 1) {
-            uint secondNodeIndex = fullNodes[fullNodes.length - 1].nodeIndex;
-            fullNodes[subarrayIndex] = fullNodes[fullNodes.length - 1];
-            nodesLink[secondNodeIndex].subarrayLink = subarrayIndex;
-        }
-        delete fullNodes[fullNodes.length - 1];
-        fullNodes.length--;
+        delete spaceOfNodes[nodeIndex].freeSpace;
+        delete spaceOfNodes[nodeIndex].indexInSpaceMap;
     }
 
     /**
      * @dev removeSpaceFromFractionalNode - occupies space from Fractional Node
      * function could be run only by SchainsFunctionality
-     * @param subarrayLink - index of Node at array of Fractional Nodes
+     * @param nodeIndex - index of Node at array of Fractional Nodes
      * @param space - space which should be occupied
      */
-    function removeSpaceFromFractionalNode(uint subarrayLink, uint space) external allow("SchainsFunctionalityInternal") returns (bool) {
-        if (fractionalNodes[subarrayLink].freeSpace < space) {
+    function removeSpaceFromNode(uint nodeIndex, uint8 space) external allow("SchainsFunctionalityInternal") returns (bool) {
+        if (spaceOfNodes[nodeIndex].freeSpace < space) {
             return false;
         }
-        fractionalNodes[subarrayLink].freeSpace -= space;
-        return true;
-    }
-
-    /**
-     * @dev removeSpaceFromFullNodes - occupies space from Full Node
-     * function could be run only by SchainsFunctionality
-     * @param subarrayLink - index of Node at array of Full Nodes
-     * @param space - space which should be occupied
-     */
-    function removeSpaceFromFullNode(uint subarrayLink, uint space) external allow("SchainsFunctionalityInternal") returns (bool) {
-        if (fullNodes[subarrayLink].freeSpace < space) {
-            return false;
+        if (space > 0) {
+            moveNodeToNewSpaceMap(
+                nodeIndex,
+                spaceOfNodes[nodeIndex].freeSpace - space
+            );
         }
-        fullNodes[subarrayLink].freeSpace -= space;
         return true;
     }
 
     /**
      * @dev adSpaceToFractionalNode - returns space to Fractional Node
      * function could be run only be SchainsFunctionality
-     * @param subarrayLink - index of Node at array of Fractional Nodes
+     * @param nodeIndex - index of Node at array of Fractional Nodes
      * @param space - space which should be returned
      */
-    function addSpaceToFractionalNode(uint subarrayLink, uint space) external allow("SchainsFunctionality") {
-        fractionalNodes[subarrayLink].freeSpace += space;
-    }
-
-    /**
-     * @dev addSpaceToFullNode - returns space to Full Node
-     * function could be run only by SchainsFunctionality
-     * @param subarrayLink - index of Node at array of Full Nodes
-     * @param space - space which should be returned
-     */
-    function addSpaceToFullNode(uint subarrayLink, uint space) external allow("SchainsFunctionality") {
-        fullNodes[subarrayLink].freeSpace += space;
+    function addSpaceToNode(uint nodeIndex, uint8 space) external allow("SchainsFunctionality") {
+        if (space > 0) {
+            moveNodeToNewSpaceMap(
+                nodeIndex,
+                spaceOfNodes[nodeIndex].freeSpace + space
+            );
+        }
     }
 
     /**
@@ -301,6 +240,10 @@ contract NodesData is INodesData, Permissions {
      */
     function changeNodeLastRewardDate(uint nodeIndex) external allow("SkaleManager") {
         nodes[nodeIndex].lastRewardDate = uint32(block.timestamp);
+    }
+
+    function changeNodeFinishTime(uint nodeIndex, uint32 time) external {
+        nodes[nodeIndex].finishTime = time;
     }
 
     /**
@@ -314,22 +257,13 @@ contract NodesData is INodesData, Permissions {
     }
 
     /**
-     * @dev isLeavingPeriodExpired - checks expiration of leaving period of Node
-     * @param nodeIndex - index of Node
-     * @return if expired - true, else - false
-     */
-    function isLeavingPeriodExpired(uint nodeIndex) external view returns (bool) {
-        return block.timestamp - nodes[nodeIndex].leavingDate >= leavingPeriod;
-    }
-
-    /**
      * @dev isTimeForReward - checks if time for reward has come
      * @param nodeIndex - index of Node
      * @return if time for reward has come - true, else - false
      */
     function isTimeForReward(uint nodeIndex) external view returns (bool) {
-        address constantsAddress = contractManager.contracts(keccak256(abi.encodePacked("Constants")));
-        return nodes[nodeIndex].lastRewardDate + IConstants(constantsAddress).rewardPeriod() <= block.timestamp;
+        address constantsAddress = contractManager.getContract("ConstantsHolder");
+        return nodes[nodeIndex].lastRewardDate.add(IConstants(constantsAddress).rewardPeriod()) <= block.timestamp;
     }
 
     /**
@@ -352,6 +286,14 @@ contract NodesData is INodesData, Permissions {
 
     function getNodePublicKey(uint nodeIndex) external view returns (bytes memory) {
         return nodes[nodeIndex].publicKey;
+    }
+
+    function getNodeValidatorId(uint nodeIndex) external view returns (uint) {
+        return nodes[nodeIndex].validatorId;
+    }
+
+    function getNodeFinishTime(uint nodeIndex) external view returns (uint32) {
+        return nodes[nodeIndex].finishTime;
     }
 
     /**
@@ -387,7 +329,7 @@ contract NodesData is INodesData, Permissions {
      * @return Node next reward date
      */
     function getNodeNextRewardDate(uint nodeIndex) external view returns (uint32) {
-        address constantsAddress = contractManager.contracts(keccak256(abi.encodePacked("Constants")));
+        address constantsAddress = contractManager.getContract("ConstantsHolder");
         return nodes[nodeIndex].lastRewardDate + IConstants(constantsAddress).rewardPeriod();
     }
 
@@ -400,61 +342,11 @@ contract NodesData is INodesData, Permissions {
     }
 
     /**
-     * @dev getNumberOfFractionalNodes - get number of Fractional Nodes
-     * @return number of Fractional Nodes
-     */
-    function getNumberOfFractionalNodes() external view returns (uint) {
-        return fractionalNodes.length;
-    }
-
-    /**
-     * @dev getNumberOfFullNodes - get number of Full Nodes
-     * @return number of Full Nodes
-     */
-    function getNumberOfFullNodes() external view returns (uint) {
-        return fullNodes.length;
-    }
-
-    /**
      * @dev getNumberOfFullNodes - get number Online Nodes
      * @return number of active nodes plus number of leaving nodes
      */
     function getNumberOnlineNodes() external view returns (uint) {
-        return numberOfActiveNodes + numberOfLeavingNodes;
-    }
-
-    /**
-     * @dev getNumberOfFreefractionalNodes - get number of free Fractional Nodes
-     * @return numberOfFreeFractionalNodes - number of free Fractional Nodes
-     */
-    function getNumberOfFreeFractionalNodes(uint space, uint needNodes) external view returns (bool nodesAreEnough) {
-        uint numberOfFreeFractionalNodes = 0;
-        for (uint indexOfNode = 0; indexOfNode < fractionalNodes.length; indexOfNode++) {
-            if (fractionalNodes[indexOfNode].freeSpace >= space && isNodeActive(fractionalNodes[indexOfNode].nodeIndex)) {
-                numberOfFreeFractionalNodes++;
-                if (numberOfFreeFractionalNodes == needNodes) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    /**
-     * @dev getnumberOfFreeFullNodes - get number of free Full Nodes
-     * @return numberOfFreeFullNodes - number of free Full Nodes
-     */
-    function getNumberOfFreeFullNodes(uint needNodes) external view returns (bool nodesAreEnough) {
-        uint numberOfFreeFullNodes = 0;
-        for (uint indexOfNode = 0; indexOfNode < fullNodes.length; indexOfNode++) {
-            if (fullNodes[indexOfNode].freeSpace == 128 && isNodeActive(fullNodes[indexOfNode].nodeIndex)) {
-                numberOfFreeFullNodes++;
-                if (numberOfFreeFullNodes == needNodes) {
-                    return true;
-                }
-            }
-        }
-        return false;
+        return numberOfActiveNodes.add(numberOfLeavingNodes);
     }
 
     /**
@@ -489,36 +381,11 @@ contract NodesData is INodesData, Permissions {
         }
     }
 
-    // function getActiveFractionalNodes() external view returns (uint[] memory) {
-    //     uint[] memory activeFractionalNodes = new uint[](fractionalNodes.length);
-    //     for (uint index = 0; index < fractionalNodes.length; index++) {
-    //         activeFractionalNodes[index] = fractionalNodes[index].nodeIndex;
-    //     }
-    //     return activeFractionalNodes;
-    // }
-
-    // function getActiveFullNodes() external view returns (uint[] memory) {
-    //     uint[] memory activeFullNodes = new uint[](fullNodes.length);
-    //     for (uint index = 0; index < fullNodes.length; index++) {
-    //         activeFullNodes[index] = fullNodes[index].nodeIndex;
-    //     }
-    //     return activeFullNodes;
-    // }
-
-    /**
-     * @dev isNodeActive - checks if Node status Active
-     * @param nodeIndex - index of Node
-     * @return if Node status Active - true, else - false
-     */
-    function isNodeActive(uint nodeIndex) public view returns (bool) {
-        return nodes[nodeIndex].status == NodeStatus.Active;
-    }
-
     /**
      * @dev getActiveNodeIds - get array of indexes of Active Nodes
      * @return activeNodeIds - array of indexes of Active Nodes
      */
-    function getActiveNodeIds() public view returns (uint[] memory activeNodeIds) {
+    function getActiveNodeIds() external view returns (uint[] memory activeNodeIds) {
         activeNodeIds = new uint[](numberOfActiveNodes);
         uint indexOfActiveNodeIds = 0;
         for (uint indexOfNodes = 0; indexOfNodes < nodes.length; indexOfNodes++) {
@@ -529,24 +396,45 @@ contract NodesData is INodesData, Permissions {
         }
     }
 
-    function getNodesWithFreeSpace(NodeFilling[] storage nodesFillings, uint freeSpace) internal view returns (uint[] memory) {
-        uint[] memory nodesWithFreeSpace = new uint[](countNodesWithFreeSpace(nodesFillings, freeSpace));
-        uint cursor = 0;
-        for (uint i = 0; i < nodesFillings.length; ++i) {
-            if (nodesFillings[i].freeSpace >= freeSpace) {
-                nodesWithFreeSpace[cursor] = nodesFillings[i].nodeIndex;
-                ++cursor;
-            }
-        }
-        return nodesWithFreeSpace;
+    function getValidatorId(uint nodeIndex) external view returns (uint) {
+        require(nodeIndex < nodes.length, "Node does not exist");
+        return nodes[nodeIndex].validatorId;
     }
 
-    function countNodesWithFreeSpace(NodeFilling[] storage nodesFillings, uint freeSpace) internal view returns (uint count) {
-        count = 0;
-        for (uint i = 0; i < nodesFillings.length; ++i) {
-            if (nodesFillings[i].freeSpace >= freeSpace) {
-                ++count;
-            }
+    function getNodeStatus(uint nodeIndex) external view returns (NodeStatus) {
+        return nodes[nodeIndex].status;
+    }
+
+    function initialize(address newContractsAddress) public initializer {
+        Permissions.initialize(newContractsAddress);
+
+        numberOfActiveNodes = 0;
+        numberOfLeavingNodes = 0;
+        numberOfLeftNodes = 0;
+    }
+
+    /**
+     * @dev isNodeActive - checks if Node status Active
+     * @param nodeIndex - index of Node
+     * @return if Node status Active - true, else - false
+     */
+    function isNodeActive(uint nodeIndex) public view returns (bool) {
+        return nodes[nodeIndex].status == NodeStatus.Active;
+    }
+
+    function moveNodeToNewSpaceMap(uint nodeIndex, uint8 newSpace) internal {
+        uint8 previousSpace = spaceOfNodes[nodeIndex].freeSpace;
+        uint indexInArray = spaceOfNodes[nodeIndex].indexInSpaceMap;
+        if (indexInArray < spaceToNodes[previousSpace].length - 1) {
+            uint shiftedIndex = spaceToNodes[previousSpace][spaceToNodes[previousSpace].length - 1];
+            spaceToNodes[previousSpace][indexInArray] = shiftedIndex;
+            spaceOfNodes[shiftedIndex].indexInSpaceMap = indexInArray;
+            spaceToNodes[previousSpace].length--;
+        } else {
+            spaceToNodes[previousSpace].length--;
         }
+        spaceToNodes[newSpace].push(nodeIndex);
+        spaceOfNodes[nodeIndex].freeSpace = newSpace;
+        spaceOfNodes[nodeIndex].indexInSpaceMap = spaceToNodes[newSpace].length - 1;
     }
 }

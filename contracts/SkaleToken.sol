@@ -17,19 +17,21 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity ^0.5.0;
+pragma solidity 0.5.16;
 
 
-import "./StandardToken.sol";
+import "./ERC777/LockableERC777.sol";
 import "./Permissions.sol";
-import "./interfaces/ISkaleToken.sol";
+import "./interfaces/delegation/IDelegatableToken.sol";
+import "./delegation/Punisher.sol";
+import "./delegation/TokenState.sol";
 
 
 /**
- * @title SkaleToken is ERC223 Token implementation, also this contract in skale
+ * @title SkaleToken is ERC777 Token implementation, also this contract in skale
  * manager system
  */
-contract SkaleToken is ISkaleToken, StandardToken, Permissions {
+contract SkaleToken is LockableERC777, Permissions, IDelegatableToken {
 
     string public constant NAME = "SKALE";
 
@@ -37,78 +39,71 @@ contract SkaleToken is ISkaleToken, StandardToken, Permissions {
 
     uint public constant DECIMALS = 18;
 
-    uint public constant CAP = 5 * 1e9 * (10 ** DECIMALS); // the maximum amount of tokens that can ever be created
+    uint public constant CAP = 7 * 1e9 * (10 ** DECIMALS); // the maximum amount of tokens that can ever be created
 
-    event Mint(address indexed to, uint256 amount, uint32 time, uint gasSpend);
+    constructor(address contractsAddress, address[] memory defOps)
+    LockableERC777("SKALE", "SKL", defOps) public
+    {
+        Permissions.initialize(contractsAddress);
 
-    event Burn(address indexed from, uint256 amount, uint32 time, uint gasSpend);
-
-    constructor(address contractsAddress) Permissions(contractsAddress) public {
-        totalSupply = 1e7 * 10 ** DECIMALS;
-        balances[msg.sender] = totalSupply;
         // TODO remove after testing
+        uint money = 5e9 * 10 ** DECIMALS;
+        _mint(
+            address(0),
+            address(msg.sender),
+            money, bytes(""),
+            bytes("")
+        );
     }
 
     /**
-     * @dev mint - create some amount of token to specify address
-     * @param to - address where some amount of token would be created
-     * @param amount - current amount of token
+     * @dev mint - create some amount of token and transfer it to the specified address
+     * @param operator address operator requesting the transfer
+     * @param account - address where some amount of token would be created
+     * @param amount - amount of tokens to mine
+     * @param userData bytes extra information provided by the token holder (if any)
+     * @param operatorData bytes extra information provided by the operator (if any)
+     * @return returns success of function call.
      */
-    function mint(address to, uint256 amount)
+    function mint(
+        address operator,
+        address account,
+        uint256 amount,
+        bytes calldata userData,
+        bytes calldata operatorData
+    )
         external
         allow("SkaleManager")
         //onlyAuthorized
         returns (bool)
     {
-        require(amount <= CAP - totalSupply, "Amount is too big");
-        totalSupply = totalSupply + amount;
-        balances[to] = balances[to] + amount;
-        emit Mint(
-            to,
+        require(amount <= CAP.sub(totalSupply()), "Amount is too big");
+        _mint(
+            operator,
+            account,
             amount,
-            uint32(block.timestamp),
-            gasleft());
+            userData,
+            operatorData
+        );
+
         return true;
     }
 
-    /**
-     * @dev burn - burn some amount of token at specify address
-     * @param from - address where some amount of token would be burned
-     * @param amount - current amount of token
-     */
-    function burn(address from, uint256 amount)
-        external
-        allow("SkaleManager")
-        //onlyAuthorized
-        returns (bool)
-    {
-        require(balances[from] >= amount, "Amount is too big");
-        balances[from] = balances[from] - amount;
-        totalSupply = totalSupply - amount;
-        emit Burn(
-            from,
-            amount,
-            uint32(block.timestamp),
-            gasleft());
-        return true;
+    function getAndUpdateDelegatedAmount(address wallet) external returns (uint) {
+        return DelegationController(contractManager.getContract("DelegationController")).getAndUpdateDelegatedAmount(wallet);
     }
 
-    /**
-     * @dev Function that is called when a user or another contract wants to transfer funds.
-     * It is alias for transfer function of StandardToken
-     * @param _to Address of token receiver.
-     * @param _value Number of tokens to transfer.
-     * @param _data Data to be sent to tokenFallback
-     * @return Returns success of function call.
-     */
-    function transferWithData(
-        address _to,
-        uint256 _value,
-        bytes calldata _data
-	)
-        external
-        returns (bool)
-    {
-        return transfer(_to, _value, _data);
+    function getAndUpdateSlashedAmount(address wallet) external returns (uint) {
+        return Punisher(contractManager.getContract("Punisher")).getAndUpdateLockedAmount(wallet);
+    }
+
+    function getAndUpdateLockedAmount(address wallet) public returns (uint) {
+        return TokenState(contractManager.getContract("TokenState")).getAndUpdateLockedAmount(wallet);
+    }
+
+    // private
+
+    function _getAndUpdateLockedAmount(address wallet) internal returns (uint) {
+        return getAndUpdateLockedAmount(wallet);
     }
 }

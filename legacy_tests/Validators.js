@@ -6,7 +6,7 @@ async function sendVerdict(fromNodeIndex, toNodeIndex, downtime, latency) {
 }
 
 async function getBounty(nodeIndex) {
-    let res = await init.SkaleManager.methods.getBounty(nodeIndex).send({from: init.mainAccount, gas: 8000000});
+    let res = await init.SkaleManager.methods.getBounty(nodeIndex).send({from: init.mainAccount, gas: 6900000});
     let amount;
     await init.SkaleManager.getPastEvents('BountyGot', {fromBlock: res.blockNumber, toBlock: res.blockNumber}).then(
             function(events) {
@@ -19,15 +19,15 @@ async function getBounty(nodeIndex) {
     console.log("Node", nodeIndex, "got", amount, "* 10 ^ (-18) SKL");
 }
 
-async function getValidatorsForNode(nodeIndex) {
-    let res = await init.ValidatorsData.methods.getNodesInGroup(init.web3.utils.soliditySha3(nodeIndex)).call();
+async function getMonitorsForNode(nodeIndex) {
+    let res = await init.MonitorsData.methods.getNodesInGroup(init.web3.utils.soliditySha3(nodeIndex)).call();
     console.log("Node index:", nodeIndex);
-    console.log("Validators for this Node", res);
+    console.log("Monitors for this Node", res);
     return res;
 }
 
 async function getValidatedArray(nodeIndex) {
-    let res = await init.ValidatorsData.methods.getValidatedArray(init.web3.utils.soliditySha3(nodeIndex)).call();
+    let res = await init.MonitorsData.methods.getValidatedArray(init.web3.utils.soliditySha3(nodeIndex)).call();
     let result = {
         ids: new Array(res.length),
         times: new Array(res.length)
@@ -41,5 +41,5 @@ async function getValidatedArray(nodeIndex) {
 
 module.exports.sendVerdict = sendVerdict;
 module.exports.getBounty = getBounty;
-module.exports.getValidatorsForNode = getValidatorsForNode;
+module.exports.getMonitorsForNode = getMonitorsForNode;
 module.exports.getValidatedArray = getValidatedArray;

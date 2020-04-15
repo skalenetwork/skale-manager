@@ -17,22 +17,29 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity ^0.5.0;
+pragma solidity 0.5.16;
 
-import "./Ownable.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/ownership/Ownable.sol";
+import "@openzeppelin/upgrades/contracts/Initializable.sol";
+import "./StringUtils.sol";
 
 
 /**
- * @title Main contract in upgradeable approach. This contract contain actual
- * contracts for this moment in skale manager system by human name.
+ * @title Main contract in upgradeable approach. This contract contains the actual
+ * current mapping from contract IDs (in the form of human-readable strings) to addresses.
  * @author Artem Payvin
  */
-contract ContractManager is Ownable {
+contract ContractManager is Initializable, Ownable {
+    using StringUtils for string;
 
     // mapping of actual smart contracts addresses
     mapping (bytes32 => address) public contracts;
 
     event ContractUpgraded(string contractsName, address contractsAddress);
+
+    function initialize() external initializer {
+        Ownable.initialize(msg.sender);
+    }
 
     /**
      * Adds actual contract to mapping of actual contract addresses
@@ -40,7 +47,7 @@ contract ContractManager is Ownable {
      * @param newContractsAddress - contracts address in skale manager system
      */
     function setContractsAddress(string calldata contractsName, address newContractsAddress) external onlyOwner {
-        // check newContractsAddress is not equal zero
+        // check newContractsAddress is not equal to zero
         require(newContractsAddress != address(0), "New address is equal zero");
         // create hash of contractsName
         bytes32 contractId = keccak256(abi.encodePacked(contractsName));
@@ -51,9 +58,14 @@ contract ContractManager is Ownable {
             length := extcodesize(newContractsAddress)
         }
         // check newContractsAddress contains code
-        require(length > 0, "Given contracts address is not contain code");
+        require(length > 0, "Given contracts address does not contain code");
         // add newContractsAddress to mapping of actual contract addresses
         contracts[contractId] = newContractsAddress;
         emit ContractUpgraded(contractsName, newContractsAddress);
+    }
+
+    function getContract(string calldata name) external view returns (address contractAddress) {
+        contractAddress = contracts[keccak256(abi.encodePacked(name))];
+        require(contractAddress != address(0), name.strConcat(" contract has not been found"));
     }
 }

@@ -44,7 +44,6 @@ async function generateBytesForNode(port, ip, account, name) {
     console.log(acc.length);
     return bytes + portHex + nonceHex + ips[0] + ips[1] + ips[2] + ips[3] + ips[0] + ips[1] + ips[2] + ips[3] + acc + Buffer.from(name, 'utf8').toString('hex');
 }
-//0x 01 2161 935b 2c7e18d8 2c7e18d8 d1bc96aad4ab81ba84c18e115664eaab3e7f842cd1bc96aad4ab81ba84c18e11 5664eaab3e7f842cd1bc96aad4ab81ba84c18e115664eaab3e7f842cd1bc96aa 4e6f6465 39333338
 
 async function generateBytesForSchain(lifetime, typeOfSchain, name) {
 	let bytes = "0x10";

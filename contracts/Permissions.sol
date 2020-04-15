@@ -17,9 +17,11 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity ^0.5.0;
+pragma solidity 0.5.16;
 
 import "./ContractManager.sol";
+import "@nomiclabs/buidler/console.sol";
+import "@openzeppelin/contracts/math/SafeMath.sol";
 
 
 /**
@@ -27,8 +29,15 @@ import "./ContractManager.sol";
  * @author Artem Payvin
  */
 contract Permissions is Ownable {
+    using SafeMath for uint;
+    using SafeMath for uint32;
 
     ContractManager contractManager;
+
+    function initialize(address _contractManager) public initializer {
+        Ownable.initialize(msg.sender);
+        contractManager = ContractManager(_contractManager);
+    }
 
     /**
      * @dev allow - throws if called by any account and contract other than the owner
@@ -37,25 +46,27 @@ contract Permissions is Ownable {
      */
     modifier allow(string memory contractName) {
         require(
-            contractManager.contracts(keccak256(abi.encodePacked(contractName))) == msg.sender || owner == msg.sender,
+            contractManager.contracts(keccak256(abi.encodePacked(contractName))) == msg.sender || isOwner(),
             "Message sender is invalid");
         _;
     }
 
-    modifier allowMultiple(string memory contractNameFirst, string memory contractNameSecond) {
+    modifier allowTwo(string memory contractName1, string memory contractName2) {
         require(
-            contractManager.contracts(keccak256(abi.encodePacked(contractNameFirst))) == msg.sender ||
-            contractManager.contracts(keccak256(abi.encodePacked(contractNameSecond))) == msg.sender ||
-            owner == msg.sender,
+            contractManager.contracts(keccak256(abi.encodePacked(contractName1))) == msg.sender ||
+            contractManager.contracts(keccak256(abi.encodePacked(contractName2))) == msg.sender ||
+            isOwner(),
             "Message sender is invalid");
         _;
     }
 
-    /**
-     * @dev constructor - sets current address of ContractManager
-     * @param newContractsAddress - current address of ContractManager
-     */
-    constructor(address newContractsAddress) public {
-        contractManager = ContractManager(newContractsAddress);
+    modifier allowThree(string memory contractName1, string memory contractName2, string memory contractName3) {
+        require(
+            contractManager.contracts(keccak256(abi.encodePacked(contractName1))) == msg.sender ||
+            contractManager.contracts(keccak256(abi.encodePacked(contractName2))) == msg.sender ||
+            contractManager.contracts(keccak256(abi.encodePacked(contractName3))) == msg.sender ||
+            isOwner(),
+            "Message sender is invalid");
+        _;
     }
 }
