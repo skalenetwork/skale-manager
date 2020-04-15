@@ -1,11 +1,11 @@
 import BigNumber from "bignumber.js";
 import { ContractManagerInstance,
-         ReentrancyTesterInstance,
          SkaleTokenInstance } from "../types/truffle-contracts";
 
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
 import { deployContractManager } from "./tools/deploy/contractManager";
+import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
 import { deploySkaleToken } from "./tools/deploy/skaleToken";
 import { deployReentrancyTester } from "./tools/deploy/test/reentracyTester";
 
@@ -226,12 +226,28 @@ contract("SkaleToken", ([owner, holder, receiver, nilAddress, accountWith99]) =>
     await skaleToken.mint(owner, holder, amount, "0x", "0x");
 
     const reentrancyTester = await deployReentrancyTester(contractManager);
+    await reentrancyTester.prepareToReentracyCheck();
 
     await skaleToken.transfer(reentrancyTester.address, amount, {from: holder})
       .should.be.eventually.rejectedWith("ReentrancyGuard: reentrant call");
 
     (await skaleToken.balanceOf(holder)).toNumber().should.be.equal(amount);
     (await skaleToken.balanceOf(skaleToken.address)).toNumber().should.be.equal(0);
+  });
+
+  it("should not allow to delegate burned tokens", async () => {
+    const reentrancyTester = await deployReentrancyTester(contractManager);
+    const validatorService = await deployValidatorService(contractManager);
+
+    await validatorService.registerValidator("Regular validator", "I love D2", 0, 0);
+    const validatorId = 1;
+    await validatorService.enableValidator(validatorId);
+
+    await reentrancyTester.prepareToBurningAttack();
+    const amount = toWei(1);
+    await skaleToken.mint(owner, reentrancyTester.address, amount, "0x", "0x", {from: owner});
+    await reentrancyTester.burningAttack()
+      .should.be.eventually.rejectedWith("Token should be unlocked for burning");
   });
 });
 
