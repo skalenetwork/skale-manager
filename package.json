@@ -71,7 +71,7 @@
     "ethlint": "^1.2.4",
     "ganache-cli": "^6.1.8",
     "solidity-coverage": "0.7.0",
-    "tslint": "^5.18.0",
+    "tslint": "^6.1.1",
     "tslint-no-unused-expression-chai": "^0.1.4",
     "typescript": "3.8.3"
   }
