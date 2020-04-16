@@ -3,8 +3,8 @@ import * as chaiAsPromised from "chai-as-promised";
 import { DecryptionContract,
          DecryptionInstance} from "../types/truffle-contracts";
 
-import { gasMultiplier } from "./utils/command_line";
-import { skipTime } from "./utils/time";
+import { gasMultiplier } from "./tools/command_line";
+import { skipTime } from "./tools/time";
 // const truffleAssert = require('truffle-assertions');
 // const truffleEvent = require('truffle-events');
 

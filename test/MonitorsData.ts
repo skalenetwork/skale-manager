@@ -2,8 +2,8 @@ import BigNumber from "bignumber.js";
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
 import { ContractManagerInstance, MonitorsDataInstance } from "../types/truffle-contracts";
-import { deployContractManager } from "./utils/deploy/contractManager";
-import { deployMonitorsData } from "./utils/deploy/monitorsData";
+import { deployContractManager } from "./tools/deploy/contractManager";
+import { deployMonitorsData } from "./tools/deploy/monitorsData";
 
 chai.should();
 chai.use(chaiAsPromised);

@@ -5,9 +5,9 @@ import { ContractManagerInstance,
 
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
-import { deployContractManager } from "./utils/deploy/contractManager";
-import { deploySkaleToken } from "./utils/deploy/skaleToken";
-import { deployReentrancyTester } from "./utils/deploy/test/reentracyTester";
+import { deployContractManager } from "./tools/deploy/contractManager";
+import { deploySkaleToken } from "./tools/deploy/skaleToken";
+import { deployReentrancyTester } from "./tools/deploy/test/reentracyTester";
 
 chai.should();
 chai.use(chaiAsPromised);

@@ -4,16 +4,17 @@ import { ContractManagerInstance,
     TokenStateInstance,
     ValidatorServiceInstance } from "../../types/truffle-contracts";
 
-import { skipTime } from "../utils/time";
+import { skipTime } from "../tools/time";
 
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
-import { deployContractManager } from "../utils/deploy/contractManager";
-import { deployDelegationController } from "../utils/deploy/delegation/delegationController";
-import { deployTokenState } from "../utils/deploy/delegation/tokenState";
-import { deployValidatorService } from "../utils/deploy/delegation/validatorService";
-import { deploySkaleToken } from "../utils/deploy/skaleToken";
-import { Delegation, State } from "../utils/types";
+import { deployContractManager } from "../tools/deploy/contractManager";
+import { deployDelegationController } from "../tools/deploy/delegation/delegationController";
+import { deployTokenState } from "../tools/deploy/delegation/tokenState";
+import { deployValidatorService } from "../tools/deploy/delegation/validatorService";
+import { deploySkaleToken } from "../tools/deploy/skaleToken";
+import { deployTimeHelpersWithDebug } from "../tools/deploy/test/timeHelpersWithDebug";
+import { Delegation, State } from "../tools/types";
 chai.should();
 chai.use(chaiAsPromised);
 
@@ -167,6 +168,24 @@ contract("DelegationController", ([owner, holder1, holder2, validator, validator
                     {from: validator2});
                 await delegationController.acceptPendingDelegation(delegationId, {from: validator2})
                         .should.be.rejectedWith("No permissions to accept request");
+            });
+
+            it("should allow for QA team to test delegation pipeline immediately", async () => {
+                const timeHelpersWithDebug = await deployTimeHelpersWithDebug(contractManager);
+                await contractManager.setContractsAddress("TimeHelpers", timeHelpersWithDebug.address);
+
+                await delegationController.acceptPendingDelegation(delegationId, {from: validator});
+                (await delegationController.getState(delegationId)).toNumber().should.be.equal(State.ACCEPTED);
+
+                await timeHelpersWithDebug.skipTime(month);
+                (await delegationController.getState(delegationId)).toNumber().should.be.equal(State.DELEGATED);
+
+                await delegationController.requestUndelegation(delegationId, {from: holder1});
+                (await delegationController.getState(delegationId)).toNumber()
+                    .should.be.equal(State.UNDELEGATION_REQUESTED);
+
+                await timeHelpersWithDebug.skipTime(month * delegationPeriod);
+                (await delegationController.getState(delegationId)).toNumber().should.be.equal(State.COMPLETED);
             });
 
             describe("when delegation is accepted", async () => {
