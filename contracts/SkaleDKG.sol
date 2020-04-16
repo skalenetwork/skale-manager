@@ -127,6 +127,7 @@ contract SkaleDKG is Permissions {
         channels[groupIndex].publicKeyy.x = 1;
         channels[groupIndex].nodeToComplaint = uint(-1);
         channels[groupIndex].startedBlockTimestamp = block.timestamp;
+        IGroupsData(channels[groupIndex].dataAddress).setGroupFailedDKG(groupIndex);
         emit ChannelOpened(groupIndex);
     }
 
@@ -151,6 +152,7 @@ contract SkaleDKG is Permissions {
         delete channels[groupIndex].numberOfCompleted;
         delete channels[groupIndex].startComplaintBlockTimestamp;
         channels[groupIndex].startedBlockTimestamp = block.timestamp;
+        IGroupsData(channels[groupIndex].dataAddress).setGroupFailedDKG(groupIndex);
         emit ChannelOpened(groupIndex);
     }
 
