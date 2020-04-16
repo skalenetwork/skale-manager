@@ -414,7 +414,8 @@ contract("Delegation", ([owner,
                 it("should not consume extra gas for slashing calculation if holder has never delegated", async () => {
                     const amount = 100;
                     await skaleToken.mint(owner, validator, amount, "0x", "0x");
-                    console.log(await skaleToken.balanceOf(validator));
+                    // make owner balance non zero to do not affect transfer costs
+                    await skaleToken.mint(owner, owner, 1, "0x", "0x");
                     let tx = await skaleToken.transfer(owner, 1, {from: validator});
                     const gasUsedBeforeSlashing = tx.receipt.gasUsed;
                     for (let i = 0; i < 10; ++i) {
