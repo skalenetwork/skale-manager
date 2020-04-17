@@ -29,6 +29,9 @@ contract("SkaleToken", ([owner, holder, receiver, nilAddress, accountWith99]) =>
 
     contractManager = await deployContractManager();
     skaleToken = await deploySkaleToken(contractManager);
+
+    const premined = "5000000000000000000000000000"; // 5e9 * 1e18
+    await skaleToken.mint(owner, owner, premined, "0x", "0x");
   });
 
   it("should have the correct name", async () => {

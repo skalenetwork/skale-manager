@@ -45,15 +45,6 @@ contract SkaleToken is LockableERC777, Permissions, IDelegatableToken {
     LockableERC777("SKALE", "SKL", defOps) public
     {
         Permissions.initialize(contractsAddress);
-
-        // TODO remove after testing
-        uint money = 5e9 * 10 ** DECIMALS;
-        _mint(
-            address(0),
-            address(msg.sender),
-            money, bytes(""),
-            bytes("")
-        );
     }
 
     /**
