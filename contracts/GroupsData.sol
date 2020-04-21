@@ -108,6 +108,7 @@ contract GroupsData is IGroupsData, Permissions {
             uint[4] memory previousKey = groups[groupIndex].groupsPublicKey;
             previousPublicKeys[groupIndex].push(previousKey);
         }
+        groups[groupIndex].succesfulDKG = true;
         groups[groupIndex].groupsPublicKey[0] = publicKeyx1;
         groups[groupIndex].groupsPublicKey[1] = publicKeyy1;
         groups[groupIndex].groupsPublicKey[2] = publicKeyx2;

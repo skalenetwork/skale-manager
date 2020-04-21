@@ -237,6 +237,8 @@ contract SchainsData is GroupsData {
         leavingHistory[nodeIndex].push(LeavingHistory(schainIndex, now + constants.rotationDelay()));
         rotations[schainIndex].newNodeIndex = newNodeIndex;
         rotations[schainIndex].rotationCounter++;
+        address skaleDKGAddress = contractManager.getContract("SkaleDKG");
+        ISkaleDKG(skaleDKGAddress).openChannel(schainIndex);
     }
 
     function removeRotation(bytes32 schainIndex) external allow("SchainsFunctionality") {
