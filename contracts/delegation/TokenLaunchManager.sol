@@ -64,7 +64,7 @@ contract TokenLaunchManager is Permissions, IERC777Recipient {
     function retrieve() external {
         require(approved[_msgSender()] > 0, "Transfer is not approved");
         uint value = approved[_msgSender()];
-        approved[_msgSender()] = 0;
+        delete approved[_msgSender()];
         require(IERC20(contractManager.getContract("SkaleToken")).transfer(_msgSender(), value), "Error of token sending");
         TokenLaunchLocker(contractManager.getContract("TokenLaunchLocker")).lock(_msgSender(), value);
         emit TokensRetrieved(_msgSender(), value);

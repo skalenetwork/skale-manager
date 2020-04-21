@@ -58,7 +58,9 @@ library PartialDifferences {
             sequence.firstUnprocessedMonth = month;
         }
         sequence.addDiff[month] = sequence.addDiff[month].add(diff);
-        sequence.lastChangedMonth = month;
+        if (sequence.lastChangedMonth != month) {
+            sequence.lastChangedMonth = month;
+        }
     }
 
     function subtract(Sequence storage sequence, uint diff, uint month) internal {
@@ -67,7 +69,9 @@ library PartialDifferences {
             sequence.firstUnprocessedMonth = month;
         }
         sequence.subtractDiff[month] = sequence.subtractDiff[month].add(diff);
-        sequence.lastChangedMonth = month;
+        if (sequence.lastChangedMonth != month) {
+            sequence.lastChangedMonth = month;
+        }
     }
 
     function getAndUpdateValue(Sequence storage sequence, uint month) internal returns (uint) {
@@ -77,7 +81,10 @@ library PartialDifferences {
 
         if (sequence.firstUnprocessedMonth <= month) {
             for (uint i = sequence.firstUnprocessedMonth; i <= month; ++i) {
-                sequence.value[i] = sequence.value[i - 1].add(sequence.addDiff[i]).boundedSub(sequence.subtractDiff[i]);
+                uint nextValue = sequence.value[i - 1].add(sequence.addDiff[i]).boundedSub(sequence.subtractDiff[i]);
+                if (sequence.value[i] != nextValue) {
+                    sequence.value[i] = nextValue;
+                }
                 delete sequence.addDiff[i];
                 delete sequence.subtractDiff[i];
             }
@@ -153,7 +160,10 @@ library PartialDifferences {
 
         if (sequence.firstUnprocessedMonth <= month) {
             for (uint i = sequence.firstUnprocessedMonth; i <= month; ++i) {
-                sequence.value = sequence.value.add(sequence.addDiff[i]).boundedSub(sequence.subtractDiff[i]);
+                uint newValue = sequence.value.add(sequence.addDiff[i]).boundedSub(sequence.subtractDiff[i]);
+                if (sequence.value != newValue) {
+                    sequence.value = newValue;
+                }
                 delete sequence.addDiff[i];
                 delete sequence.subtractDiff[i];
             }
