@@ -240,4 +240,14 @@ library PartialDifferences {
             sequence.subtractDiff[i] = newDiff;
         }
     }
+
+    function clear(Value storage sequence) internal {
+        for (uint i = sequence.firstUnprocessedMonth; i <= sequence.lastChangedMonth; ++i) {
+            delete sequence.addDiff[i];
+            delete sequence.subtractDiff[i];
+        }
+        delete sequence.value;
+        delete sequence.firstUnprocessedMonth;
+        delete sequence.lastChangedMonth;
+    }
 }
