@@ -324,6 +324,20 @@ contract SkaleDKG is Permissions {
             channels[groupIndex].nodeToComplaint == nodeIndex;
     }
 
+    function getBroadcastedData(bytes32 groupIndex, uint nodeIndex) external view returns (bytes memory, bytes memory) {
+        uint index = findNode(groupIndex, nodeIndex);
+        return (data[groupIndex][index].secretKeyContribution, data[groupIndex][index].verificationVector);
+    }
+
+    function isAllDataReceived(bytes32 groupIndex, uint nodeIndex) external view returns (bool) {
+        uint index = findNode(groupIndex, nodeIndex);
+        return channels[groupIndex].completed[index];
+    }
+
+    function getComplaintData(bytes32 groupIndex) external view returns (uint, uint) {
+        return (channels[groupIndex].fromNodeToComplaint, channels[groupIndex].nodeToComplaint);
+    }
+
     function initialize(address contractsAddress) public initializer {
         Permissions.initialize(contractsAddress);
     }
