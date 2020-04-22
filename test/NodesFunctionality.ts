@@ -4,10 +4,9 @@ import { ContractManagerInstance,
          NodesInstance,
          ValidatorServiceInstance } from "../types/truffle-contracts";
 
-import { deployContractManager } from "./utils/deploy/contractManager";
-import { deployValidatorService } from "./utils/deploy/delegation/validatorService";
-import { deployNodes } from "./utils/deploy/nodes";
-import { skipTime } from "./utils/time";
+import { deployContractManager } from "./tools/deploy/contractManager";
+import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
+import { deployNodes } from "./tools/deploy/nodes";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -24,8 +23,15 @@ contract("NodesFunctionality", ([owner, validator, nodeAddress, nodeAddress2]) =
         validatorService = await deployValidatorService(contractManager);
 
         await validatorService.registerValidator("Validator", "D2", 0, 0, {from: validator});
-        await validatorService.linkNodeAddress(nodeAddress, {from: validator});
-        await validatorService.linkNodeAddress(nodeAddress2, {from: validator});
+        const validatorIndex = await validatorService.getValidatorId(validator);
+        let signature1 = await web3.eth.sign(web3.utils.soliditySha3(validatorIndex.toString()), nodeAddress);
+        signature1 = (signature1.slice(130) === "00" ? signature1.slice(0, 130) + "1b" :
+                (signature1.slice(130) === "01" ? signature1.slice(0, 130) + "1c" : signature1));
+        let signature2 = await web3.eth.sign(web3.utils.soliditySha3(validatorIndex.toString()), nodeAddress2);
+        signature2 = (signature2.slice(130) === "00" ? signature2.slice(0, 130) + "1b" :
+                (signature2.slice(130) === "01" ? signature2.slice(0, 130) + "1c" : signature2));
+        await validatorService.linkNodeAddress(nodeAddress, signature1, {from: validator});
+        await validatorService.linkNodeAddress(nodeAddress2, signature2, {from: validator});
     });
 
     it("should fail to create node if ip is zero", async () => {

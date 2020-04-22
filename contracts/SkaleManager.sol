@@ -176,7 +176,6 @@ contract SkaleManager is IERC777Recipient, Permissions {
 
     function getBounty(uint nodeIndex) external {
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));
-
         require(nodes.isNodeExist(msg.sender, nodeIndex), "Node does not exist for Message sender");
         require(nodes.isTimeForReward(nodeIndex), "Not time for bounty");
         bool nodeIsActive = nodes.isNodeActive(nodeIndex);

@@ -5,9 +5,9 @@ import { ContractManagerInstance,
 
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
-import { deployContractManager } from "./utils/deploy/contractManager";
-import { deploySkaleToken } from "./utils/deploy/skaleToken";
-import { deployReentrancyTester } from "./utils/deploy/test/reentracyTester";
+import { deployContractManager } from "./tools/deploy/contractManager";
+import { deploySkaleToken } from "./tools/deploy/skaleToken";
+import { deployReentrancyTester } from "./tools/deploy/test/reentracyTester";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -29,6 +29,9 @@ contract("SkaleToken", ([owner, holder, receiver, nilAddress, accountWith99]) =>
 
     contractManager = await deployContractManager();
     skaleToken = await deploySkaleToken(contractManager);
+
+    const premined = "5000000000000000000000000000"; // 5e9 * 1e18
+    await skaleToken.mint(owner, owner, premined, "0x", "0x");
   });
 
   it("should have the correct name", async () => {

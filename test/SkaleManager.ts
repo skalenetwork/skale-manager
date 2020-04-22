@@ -12,18 +12,18 @@ import { ConstantsHolderInstance,
          SkaleTokenInstance,
          ValidatorServiceInstance} from "../types/truffle-contracts";
 
-import { deployConstantsHolder } from "./utils/deploy/constantsHolder";
-import { deployContractManager } from "./utils/deploy/contractManager";
-import { deployDelegationController } from "./utils/deploy/delegation/delegationController";
-import { deployDistributor } from "./utils/deploy/delegation/distributor";
-import { deployValidatorService } from "./utils/deploy/delegation/validatorService";
-import { deployMonitorsData } from "./utils/deploy/monitorsData";
-import { deployNodes } from "./utils/deploy/nodes";
-import { deploySchainsData } from "./utils/deploy/schainsData";
-import { deploySchainsFunctionality } from "./utils/deploy/schainsFunctionality";
-import { deploySkaleManager } from "./utils/deploy/skaleManager";
-import { deploySkaleToken } from "./utils/deploy/skaleToken";
-import { skipTime } from "./utils/time";
+import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
+import { deployContractManager } from "./tools/deploy/contractManager";
+import { deployDelegationController } from "./tools/deploy/delegation/delegationController";
+import { deployDistributor } from "./tools/deploy/delegation/distributor";
+import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
+import { deployMonitorsData } from "./tools/deploy/monitorsData";
+import { deployNodes } from "./tools/deploy/nodes";
+import { deploySchainsData } from "./tools/deploy/schainsData";
+import { deploySchainsFunctionality } from "./tools/deploy/schainsFunctionality";
+import { deploySkaleManager } from "./tools/deploy/skaleManager";
+import { deploySkaleToken } from "./tools/deploy/skaleToken";
+import { skipTime } from "./tools/time";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -58,6 +58,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
         const prefix = "0x000000000000000000000000";
         const premined = "100000000000000000000000000";
         await skaleToken.mint(owner, skaleManager.address, premined, "0x", "0x");
+        await skaleToken.mint(owner, owner, premined, "0x", "0x");
         await constantsHolder.setMSR(5);
         await constantsHolder.setLaunchTimestamp(0); // to allow bounty withdrawing
     });
@@ -79,14 +80,19 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
     describe("when validator has delegated SKALE tokens", async () => {
         const validatorId = 1;
         const month = 60 * 60 * 24 * 31;
+        const delegatedAmount = 1e7;
 
         beforeEach(async () => {
             await validatorService.registerValidator("D2", "D2 is even", 150, 0, {from: validator});
-            await validatorService.linkNodeAddress(nodeAddress, {from: validator});
+            const validatorIndex = await validatorService.getValidatorId(validator);
+            let signature = await web3.eth.sign(web3.utils.soliditySha3(validatorIndex.toString()), nodeAddress);
+            signature = (signature.slice(130) === "00" ? signature.slice(0, 130) + "1b" :
+                (signature.slice(130) === "01" ? signature.slice(0, 130) + "1c" : signature));
+            await validatorService.linkNodeAddress(nodeAddress, signature, {from: validator});
 
-            await skaleToken.transfer(validator, "0x410D586A20A4C00000", {from: owner});
+            await skaleToken.transfer(validator, 10 * delegatedAmount, {from: owner});
             await validatorService.enableValidator(validatorId, {from: owner});
-            await delegationController.delegate(validatorId, 100, 12, "Hello from D2", {from: validator});
+            await delegationController.delegate(validatorId, delegatedAmount, 12, "Hello from D2", {from: validator});
             const delegationId = 0;
             await delegationController.acceptPendingDelegation(delegationId, {from: validator});
 
@@ -328,7 +334,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
             });
 
             it("should fail to create schain if validator doesn't meet MSR", async () => {
-                await constantsHolder.setMSR(6);
+                await constantsHolder.setMSR(delegatedAmount + 1);
 
                 await skaleManager.createNode(
                     "0x10" + // create schain

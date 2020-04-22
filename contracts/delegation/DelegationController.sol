@@ -25,6 +25,7 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 
 import "../Permissions.sol";
 import "../SkaleToken.sol";
+import "../utils/MathUtils.sol";
 
 import "./DelegationPeriodManager.sol";
 import "./Punisher.sol";
@@ -34,6 +35,7 @@ import "./ValidatorService.sol";
 
 
 contract DelegationController is Permissions, ILocker {
+    using MathUtils for uint;
 
     enum State {
         PROPOSED,
@@ -116,6 +118,13 @@ contract DelegationController is Permissions, ILocker {
         uint month;
     }
 
+    struct FirstDelegationMonth {
+        // month
+        uint value;
+        //validatorId => month
+        mapping (uint => uint) byValidator;
+    }
+
     event DelegationProposed(
         uint delegationId
     );
@@ -164,7 +173,7 @@ contract DelegationController is Permissions, ILocker {
     mapping (address => uint) private _firstUnprocessedSlashByHolder;
 
     //        holder =>   validatorId => month
-    mapping (address => mapping (uint => uint)) private _firstDelegationMonth;
+    mapping (address => FirstDelegationMonth) private _firstDelegationMonth;
 
     //        holder => locked in pending
     mapping (address => LockedInPending) private _lockedInPendingDelegations;
@@ -270,7 +279,7 @@ contract DelegationController is Permissions, ILocker {
 
         SlashingSignal[] memory slashingSignals = processSlashesWithoutSignals(delegations[delegationId].holder);
 
-        uint currentMonth = timeHelpers.timestampToMonth(now);
+        uint currentMonth = timeHelpers.getCurrentMonth();
         delegations[delegationId].started = currentMonth.add(1);
         _delegationExtras[delegationId].lastSlashingMonthBeforeDelegation = _slashesOfValidator[delegations[delegationId].validatorId].lastMonth;
 
@@ -373,7 +382,7 @@ contract DelegationController is Permissions, ILocker {
     }
 
     function getFirstDelegationMonth(address holder, uint validatorId) external view returns(uint) {
-        return _firstDelegationMonth[holder][validatorId];
+        return _firstDelegationMonth[holder].byValidator[validatorId];
     }
 
     function getAndUpdateEffectiveDelegatedToValidator(uint validatorId, uint month)
@@ -402,7 +411,7 @@ contract DelegationController is Permissions, ILocker {
         if (delegations[delegationId].started == 0) {
             if (delegations[delegationId].finished == 0) {
                 TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
-                if (now < timeHelpers.getNextMonthStartFromDate(delegations[delegationId].created)) {
+                if (timeHelpers.getCurrentMonth() == timeHelpers.timestampToMonth(delegations[delegationId].created)) {
                     return State.PROPOSED;
                 } else {
                     return State.REJECTED;
@@ -412,13 +421,13 @@ contract DelegationController is Permissions, ILocker {
             }
         } else {
             TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
-            if (now < timeHelpers.monthToTimestamp(delegations[delegationId].started)) {
+            if (timeHelpers.getCurrentMonth() < delegations[delegationId].started) {
                 return State.ACCEPTED;
             } else {
                 if (delegations[delegationId].finished == 0) {
                     return State.DELEGATED;
                 } else {
-                    if (now < timeHelpers.monthToTimestamp(delegations[delegationId].finished)) {
+                    if (timeHelpers.getCurrentMonth() < delegations[delegationId].finished) {
                         return State.UNDELEGATION_REQUESTED;
                     } else {
                         return State.COMPLETED;
@@ -438,7 +447,7 @@ contract DelegationController is Permissions, ILocker {
     }
 
     function hasUnprocessedSlashes(address holder) public view returns (bool) {
-        return _firstUnprocessedSlashByHolder[holder] < _slashes.length;
+        return everDelegated(holder) && _firstUnprocessedSlashByHolder[holder] < _slashes.length;
     }
 
     function processSlashes(address holder, uint limit) public {
@@ -579,7 +588,7 @@ contract DelegationController is Permissions, ILocker {
 
     function getCurrentMonth() internal view returns (uint) {
         TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
-        return timeHelpers.timestampToMonth(now);
+        return timeHelpers.getCurrentMonth();
     }
 
     function _getAndUpdateLockedAmount(address wallet) internal returns (uint) {
@@ -595,9 +604,17 @@ contract DelegationController is Permissions, ILocker {
     }
 
     function updateFirstDelegationMonth(address holder, uint validatorId, uint month) internal {
-        if (_firstDelegationMonth[holder][validatorId] == 0) {
-            _firstDelegationMonth[holder][validatorId] = month;
+        if (_firstDelegationMonth[holder].value == 0) {
+            _firstDelegationMonth[holder].value = month;
+            _firstUnprocessedSlashByHolder[holder] = _slashes.length;
         }
+        if (_firstDelegationMonth[holder].byValidator[validatorId] == 0) {
+            _firstDelegationMonth[holder].byValidator[validatorId] = month;
+        }
+    }
+
+    function everDelegated(address holder) internal view returns (bool) {
+        return _firstDelegationMonth[holder].value > 0;
     }
 
     function removeFromDelegatedToValidator(uint validatorId, uint amount, uint month) internal {
@@ -655,7 +672,7 @@ contract DelegationController is Permissions, ILocker {
 
         if (sequence.firstUnprocessedMonth <= month) {
             for (uint i = sequence.firstUnprocessedMonth; i <= month; ++i) {
-                sequence.value[i] = sequence.value[i - 1].add(sequence.addDiff[i]).sub(sequence.subtractDiff[i]);
+                sequence.value[i] = sequence.value[i - 1].add(sequence.addDiff[i]).boundedSub(sequence.subtractDiff[i]);
                 delete sequence.addDiff[i];
                 delete sequence.subtractDiff[i];
             }
@@ -663,26 +680,6 @@ contract DelegationController is Permissions, ILocker {
         }
 
         return sequence.value[month];
-    }
-
-    function getValue(PartialDifferences storage sequence, uint month) internal view returns (uint) {
-        if (sequence.firstUnprocessedMonth == 0) {
-            return 0;
-        }
-        if (sequence.firstUnprocessedMonth <= month) {
-            uint value = sequence.value[sequence.firstUnprocessedMonth - 1];
-            for (uint i = sequence.firstUnprocessedMonth; i <= month; ++i) {
-                value = value.add(sequence.addDiff[i]).sub(sequence.subtractDiff[i]);
-            }
-            return value;
-        } else {
-            return sequence.value[month];
-        }
-    }
-
-    function getAndUpdateValueBeforeMonthAndGetAtMonth(PartialDifferences storage sequence, uint month) internal returns (uint) {
-        getAndUpdateValue(sequence, month.sub(1));
-        return getValue(sequence, month);
     }
 
     function add(PartialDifferencesValue storage sequence, uint diff, uint month) internal {
@@ -715,7 +712,7 @@ contract DelegationController is Permissions, ILocker {
         if (month >= sequence.firstUnprocessedMonth) {
             sequence.subtractDiff[month] = sequence.subtractDiff[month].add(diff);
         } else {
-            sequence.value = sequence.value.sub(diff);
+            sequence.value = sequence.value.boundedSub(diff);
         }
     }
 
@@ -727,7 +724,7 @@ contract DelegationController is Permissions, ILocker {
 
         if (sequence.firstUnprocessedMonth <= month) {
             for (uint i = sequence.firstUnprocessedMonth; i <= month; ++i) {
-                sequence.value = sequence.value.add(sequence.addDiff[i]).sub(sequence.subtractDiff[i]);
+                sequence.value = sequence.value.add(sequence.addDiff[i]).boundedSub(sequence.subtractDiff[i]);
                 delete sequence.addDiff[i];
                 delete sequence.subtractDiff[i];
             }
@@ -743,7 +740,7 @@ contract DelegationController is Permissions, ILocker {
             return createFraction(0);
         }
         uint value = getAndUpdateValue(sequence, month);
-        if (value == 0) {
+        if (value.approximatelyEqual(0)) {
             return createFraction(0);
         }
 
@@ -752,7 +749,7 @@ contract DelegationController is Permissions, ILocker {
             _amount = value;
         }
 
-        Fraction memory reducingCoefficient = createFraction(value.sub(_amount), value);
+        Fraction memory reducingCoefficient = createFraction(value.boundedSub(_amount), value);
         reduce(sequence, reducingCoefficient, month);
         return reducingCoefficient;
     }
@@ -796,20 +793,20 @@ contract DelegationController is Permissions, ILocker {
             return;
         }
         uint value = getAndUpdateValue(sequence, month);
-        if (value == 0) {
+        if (value.approximatelyEqual(0)) {
             return;
         }
 
         uint newValue = sequence.value.mul(reducingCoefficient.numerator).div(reducingCoefficient.denominator);
         if (hasSumSequence) {
-            subtract(sumSequence, sequence.value.sub(newValue), month);
+            subtract(sumSequence, sequence.value.boundedSub(newValue), month);
         }
         sequence.value = newValue;
 
         for (uint i = month.add(1); i <= sequence.lastChangedMonth; ++i) {
             uint newDiff = sequence.subtractDiff[i].mul(reducingCoefficient.numerator).div(reducingCoefficient.denominator);
             if (hasSumSequence) {
-                sumSequence.subtractDiff[i] = sumSequence.subtractDiff[i].sub(sequence.subtractDiff[i].sub(newDiff));
+                sumSequence.subtractDiff[i] = sumSequence.subtractDiff[i].boundedSub(sequence.subtractDiff[i].boundedSub(newDiff));
             }
             sequence.subtractDiff[i] = newDiff;
         }
@@ -826,7 +823,7 @@ contract DelegationController is Permissions, ILocker {
             return;
         }
         uint value = getAndUpdateValue(sequence, month);
-        if (value == 0) {
+        if (value.approximatelyEqual(0)) {
             return;
         }
 
@@ -907,7 +904,7 @@ contract DelegationController is Permissions, ILocker {
                 uint validatorId = _slashes[index].validatorId;
                 uint month = _slashes[index].month;
                 uint oldValue = getAndUpdateDelegatedByHolderToValidator(holder, validatorId, month);
-                if (oldValue > 0) {
+                if (oldValue.muchGreater(0)) {
                     reduce(
                         _delegatedByHolderToValidator[holder][validatorId],
                         _delegatedByHolder[holder],
@@ -918,7 +915,7 @@ contract DelegationController is Permissions, ILocker {
                         _slashes[index].reducingCoefficient,
                         month);
                     slashingSignals[index.sub(begin)].holder = holder;
-                    slashingSignals[index.sub(begin)].penalty = oldValue.sub(getAndUpdateDelegatedByHolderToValidator(holder, validatorId, month));
+                    slashingSignals[index.sub(begin)].penalty = oldValue.boundedSub(getAndUpdateDelegatedByHolderToValidator(holder, validatorId, month));
                 }
             }
             _firstUnprocessedSlashByHolder[holder] = end;
@@ -931,8 +928,21 @@ contract DelegationController is Permissions, ILocker {
 
     function sendSlashingSignals(SlashingSignal[] memory slashingSignals) internal {
         Punisher punisher = Punisher(contractManager.getContract("Punisher"));
+        address previousHolder = address(0);
+        uint accumulatedPenalty = 0;
         for (uint i = 0; i < slashingSignals.length; ++i) {
-            punisher.handleSlash(slashingSignals[i].holder, slashingSignals[i].penalty);
+            if (slashingSignals[i].holder != previousHolder) {
+                if (accumulatedPenalty > 0) {
+                    punisher.handleSlash(previousHolder, accumulatedPenalty);
+                }
+                previousHolder = slashingSignals[i].holder;
+                accumulatedPenalty = slashingSignals[i].penalty;
+            } else {
+                accumulatedPenalty = accumulatedPenalty.add(slashingSignals[i].penalty);
+            }
+        }
+        if (accumulatedPenalty > 0) {
+            punisher.handleSlash(previousHolder, accumulatedPenalty);
         }
     }
 }
