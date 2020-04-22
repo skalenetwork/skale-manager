@@ -23,11 +23,32 @@ import "../Permissions.sol";
 
 
 contract DelegationPeriodManager is Permissions {
+    event DelegationPeriodWasSet(
+        uint length,
+        uint stakeMultiplier
+    );
+
+    event DelegationPeriodWasRemoved(
+        uint legth
+    );
 
     mapping (uint => uint) public stakeMultipliers;
 
     function isDelegationPeriodAllowed(uint monthsCount) external view returns (bool) {
         return stakeMultipliers[monthsCount] != 0 ? true : false;
+    }
+
+    function setDelegationPeriod(uint monthsCount, uint stakeMultiplier) external onlyOwner {
+        stakeMultipliers[monthsCount] = stakeMultiplier;
+
+        emit DelegationPeriodWasSet(monthsCount, stakeMultiplier);
+    }
+
+    function removeDelegationPeriod(uint monthsCount) external onlyOwner {
+        // remove only if there are no delegators that staked tokens for this period
+        stakeMultipliers[monthsCount] = 0;
+
+        emit DelegationPeriodWasRemoved(monthsCount);
     }
 
     function initialize(address _contractsAddress) public initializer {
