@@ -57,58 +57,58 @@ contract("DelegationController", ([owner, holder1, holder2, validator, validator
             await validatorService.enableValidator(validatorId, {from: owner});
             });
 
-        // it("should reject delegation if validator with such id does not exist", async () => {
-        //     const nonExistedValidatorId = 2;
-        //     await delegationController.delegate(nonExistedValidatorId, amount, delegationPeriod, info, {from: holder1})
-        //         .should.be.eventually.rejectedWith("Validator with such ID does not exist");
-        // });
+        it("should reject delegation if validator with such id does not exist", async () => {
+            const nonExistedValidatorId = 2;
+            await delegationController.delegate(nonExistedValidatorId, amount, delegationPeriod, info, {from: holder1})
+                .should.be.eventually.rejectedWith("Validator with such ID does not exist");
+        });
 
-        // it("should reject delegation if it doesn't meet minimum delegation amount", async () => {
-        //     amount = 99;
-        //     await delegationController.delegate(validatorId, amount, delegationPeriod, info, {from: holder1})
-        //         .should.be.eventually.rejectedWith("Amount does not meet minimum delegation amount");
-        // });
+        it("should reject delegation if it doesn't meet minimum delegation amount", async () => {
+            amount = 99;
+            await delegationController.delegate(validatorId, amount, delegationPeriod, info, {from: holder1})
+                .should.be.eventually.rejectedWith("Amount does not meet minimum delegation amount");
+        });
 
-        // it("should reject delegation if request doesn't meet allowed delegation period", async () => {
-        //     delegationPeriod = 4;
-        //     await delegationController.delegate(validatorId, amount, delegationPeriod, info, {from: holder1})
-        //         .should.be.eventually.rejectedWith("This delegation period is not allowed");
-        // });
+        it("should reject delegation if request doesn't meet allowed delegation period", async () => {
+            delegationPeriod = 4;
+            await delegationController.delegate(validatorId, amount, delegationPeriod, info, {from: holder1})
+                .should.be.eventually.rejectedWith("This delegation period is not allowed");
+        });
 
-        // it("should reject delegation if holder doesn't have enough unlocked tokens for delegation", async () => {
-        //     amount = 101;
-        //     await delegationController.delegate(validatorId, amount, delegationPeriod, info, {from: holder1})
-        //         .should.be.eventually.rejectedWith("Delegator does not have enough tokens to delegate");
-        // });
+        it("should reject delegation if holder doesn't have enough unlocked tokens for delegation", async () => {
+            amount = 101;
+            await delegationController.delegate(validatorId, amount, delegationPeriod, info, {from: holder1})
+                .should.be.eventually.rejectedWith("Delegator does not have enough tokens to delegate");
+        });
 
-        // it("should send request for delegation", async () => {
-        //     await skaleToken.mint(owner, holder1, amount, "0x", "0x");
-        //     const { logs } = await delegationController.delegate(
-        //         validatorId, amount, delegationPeriod, info, {from: holder1});
-        //     assert.equal(logs.length, 1, "No DelegationProposed Event emitted");
-        //     assert.equal(logs[0].event, "DelegationProposed");
-        //     delegationId = logs[0].args.delegationId;
-        //     const delegation: Delegation = new Delegation(
-        //         await delegationController.delegations(delegationId));
-        //     assert.equal(holder1, delegation.holder);
-        //     assert.equal(validatorId, delegation.validatorId.toNumber());
-        //     assert.equal(delegationPeriod, delegation.delegationPeriod.toNumber());
-        //     assert.equal("VERY NICE", delegation.info);
-        // });
+        it("should send request for delegation", async () => {
+            await skaleToken.mint(owner, holder1, amount, "0x", "0x");
+            const { logs } = await delegationController.delegate(
+                validatorId, amount, delegationPeriod, info, {from: holder1});
+            assert.equal(logs.length, 1, "No DelegationProposed Event emitted");
+            assert.equal(logs[0].event, "DelegationProposed");
+            delegationId = logs[0].args.delegationId;
+            const delegation: Delegation = new Delegation(
+                await delegationController.delegations(delegationId));
+            assert.equal(holder1, delegation.holder);
+            assert.equal(validatorId, delegation.validatorId.toNumber());
+            assert.equal(delegationPeriod, delegation.delegationPeriod.toNumber());
+            assert.equal("VERY NICE", delegation.info);
+        });
 
-        // it("should reject delegation if it doesn't have enough tokens", async () => {
-        //     await skaleToken.mint(owner, holder1, 2 * amount, "0x", "0x");
-        //     await delegationController.delegate(validatorId, amount + 1, delegationPeriod, info, {from: holder1});
-        //     await delegationController.delegate(validatorId, amount, delegationPeriod, info, {from: holder1})
-        //         .should.be.eventually.rejectedWith("Delegator does not have enough tokens to delegate");
+        it("should reject delegation if it doesn't have enough tokens", async () => {
+            await skaleToken.mint(owner, holder1, 2 * amount, "0x", "0x");
+            await delegationController.delegate(validatorId, amount + 1, delegationPeriod, info, {from: holder1});
+            await delegationController.delegate(validatorId, amount, delegationPeriod, info, {from: holder1})
+                .should.be.eventually.rejectedWith("Delegator does not have enough tokens to delegate");
 
-        // });
+        });
 
-        // it("should reject canceling if delegation doesn't exist", async () => {
-        //     delegationId = 99;
-        //     await delegationController.cancelPendingDelegation(delegationId, {from: holder1})
-        //         .should.be.rejectedWith("Delegation does not exist");
-        // });
+        it("should reject canceling if delegation doesn't exist", async () => {
+            delegationId = 99;
+            await delegationController.cancelPendingDelegation(delegationId, {from: holder1})
+                .should.be.rejectedWith("Delegation does not exist");
+        });
 
         describe("when delegation request was created", async () => {
             beforeEach(async () => {
@@ -118,57 +118,57 @@ contract("DelegationController", ([owner, holder1, holder2, validator, validator
                 delegationId = logs[0].args.delegationId;
             });
 
-            // it("should reject canceling request if it isn't actually holder of tokens", async () => {
-            //     await delegationController.cancelPendingDelegation(delegationId, {from: holder2})
-            //         .should.be.rejectedWith("Only token holders can cancel delegation request");
-            // });
+            it("should reject canceling request if it isn't actually holder of tokens", async () => {
+                await delegationController.cancelPendingDelegation(delegationId, {from: holder2})
+                    .should.be.rejectedWith("Only token holders can cancel delegation request");
+            });
 
-            // it("should reject canceling request if validator already accepted it", async () => {
-            //     await delegationController.acceptPendingDelegation(delegationId, {from: validator});
-            //     await delegationController.cancelPendingDelegation(delegationId, {from: holder1})
-            //         .should.be.rejectedWith("Token holders able to cancel only PROPOSED delegations");
-            // });
+            it("should reject canceling request if validator already accepted it", async () => {
+                await delegationController.acceptPendingDelegation(delegationId, {from: validator});
+                await delegationController.cancelPendingDelegation(delegationId, {from: holder1})
+                    .should.be.rejectedWith("Token holders able to cancel only PROPOSED delegations");
+            });
 
-            // it("should reject canceling request if delegation request already rejected", async () => {
-            //     await delegationController.cancelPendingDelegation(delegationId, {from: holder1});
-            //     await delegationController.cancelPendingDelegation(delegationId, {from: holder1})
-            //         .should.be.rejectedWith("Token holders able to cancel only PROPOSED delegations");
-            // });
+            it("should reject canceling request if delegation request already rejected", async () => {
+                await delegationController.cancelPendingDelegation(delegationId, {from: holder1});
+                await delegationController.cancelPendingDelegation(delegationId, {from: holder1})
+                    .should.be.rejectedWith("Token holders able to cancel only PROPOSED delegations");
+            });
 
-            // it("should change state of tokens to CANCELED if delegation was cancelled", async () => {
-            //     await delegationController.cancelPendingDelegation(delegationId, {from: holder1});
-            //     const CANCELED = 2;
-            //     const status = (await delegationController.getState(delegationId)).toNumber();
-            //     status.should.be.equal(CANCELED);
-            // });
+            it("should change state of tokens to CANCELED if delegation was cancelled", async () => {
+                await delegationController.cancelPendingDelegation(delegationId, {from: holder1});
+                const CANCELED = 2;
+                const status = (await delegationController.getState(delegationId)).toNumber();
+                status.should.be.equal(CANCELED);
+            });
 
-            // it("should reject accepting request if such validator doesn't exist", async () => {
-            //     await delegationController.acceptPendingDelegation(delegationId, {from: validator2})
-            //         .should.be.rejectedWith("Validator with such address does not exist");
-            // });
+            it("should reject accepting request if such validator doesn't exist", async () => {
+                await delegationController.acceptPendingDelegation(delegationId, {from: validator2})
+                    .should.be.rejectedWith("Validator with such address does not exist");
+            });
 
-            // it("should reject accepting request if validator already canceled it", async () => {
-            //     await delegationController.cancelPendingDelegation(delegationId, {from: holder1});
-            //     await delegationController.acceptPendingDelegation(delegationId, {from: validator})
-            //         .should.be.rejectedWith("Cannot set state to accepted");
-            // });
+            it("should reject accepting request if validator already canceled it", async () => {
+                await delegationController.cancelPendingDelegation(delegationId, {from: holder1});
+                await delegationController.acceptPendingDelegation(delegationId, {from: validator})
+                    .should.be.rejectedWith("Cannot set state to accepted");
+            });
 
-            // it("should reject accepting request if validator already accepted it", async () => {
-            //     await delegationController.acceptPendingDelegation(delegationId, {from: validator});
-            //     await delegationController.acceptPendingDelegation(delegationId, {from: validator})
-            //         .should.be.rejectedWith("Cannot set state to accepted");
-            // });
+            it("should reject accepting request if validator already accepted it", async () => {
+                await delegationController.acceptPendingDelegation(delegationId, {from: validator});
+                await delegationController.acceptPendingDelegation(delegationId, {from: validator})
+                    .should.be.rejectedWith("Cannot set state to accepted");
+            });
 
-            // it("should reject accepting request if validator tried to accept request not assigned to him", async () => {
-            //     validatorService.registerValidator(
-            //         "ValidatorName",
-            //         "Really good validator",
-            //         500,
-            //         100,
-            //         {from: validator2});
-            //     await delegationController.acceptPendingDelegation(delegationId, {from: validator2})
-            //             .should.be.rejectedWith("No permissions to accept request");
-            // });
+            it("should reject accepting request if validator tried to accept request not assigned to him", async () => {
+                validatorService.registerValidator(
+                    "ValidatorName",
+                    "Really good validator",
+                    500,
+                    100,
+                    {from: validator2});
+                await delegationController.acceptPendingDelegation(delegationId, {from: validator2})
+                        .should.be.rejectedWith("No permissions to accept request");
+            });
 
             it("should allow for QA team to test delegation pipeline immediately", async () => {
                 const timeHelpersWithDebug = await deployTimeHelpersWithDebug(contractManager);
@@ -194,41 +194,41 @@ contract("DelegationController", ([owner, holder1, holder2, validator, validator
                 (await delegationController.getState(delegationId)).toNumber().should.be.equal(State.PROPOSED);
             });
 
-            // describe("when delegation is accepted", async () => {
-            //     beforeEach(async () => {
-            //         await delegationController.acceptPendingDelegation(delegationId, {from: validator});
+            describe("when delegation is accepted", async () => {
+                beforeEach(async () => {
+                    await delegationController.acceptPendingDelegation(delegationId, {from: validator});
 
-            //         skipTime(web3, month);
-            //     });
+                    skipTime(web3, month);
+                });
 
-            //     it("should allow validator to request undelegation", async () => {
-            //         await delegationController.requestUndelegation(delegationId, {from: validator});
+                it("should allow validator to request undelegation", async () => {
+                    await delegationController.requestUndelegation(delegationId, {from: validator});
 
-            //         skipTime(web3, delegationPeriod * month);
+                    skipTime(web3, delegationPeriod * month);
 
-            //         (await delegationController.getState(delegationId)).toNumber().should.be.equal(State.COMPLETED);
-            //         (await skaleToken.getAndUpdateDelegatedAmount.call(holder1)).toNumber().should.be.equal(0);
-            //     });
+                    (await delegationController.getState(delegationId)).toNumber().should.be.equal(State.COMPLETED);
+                    (await skaleToken.getAndUpdateDelegatedAmount.call(holder1)).toNumber().should.be.equal(0);
+                });
 
-            //     it("should not allow everyone to request undelegation", async () => {
-            //         await delegationController.requestUndelegation(delegationId, {from: holder2})
-            //             .should.be.eventually.rejectedWith("Permission denied to request undelegation");
+                it("should not allow everyone to request undelegation", async () => {
+                    await delegationController.requestUndelegation(delegationId, {from: holder2})
+                        .should.be.eventually.rejectedWith("Permission denied to request undelegation");
 
-            //         await validatorService.registerValidator(
-            //             "ValidatorName",
-            //             "Really good validator",
-            //             500,
-            //             100,
-            //             {from: validator2});
-            //         await delegationController.requestUndelegation(delegationId, {from: validator2})
-            //             .should.be.eventually.rejectedWith("Permission denied to request undelegation");
+                    await validatorService.registerValidator(
+                        "ValidatorName",
+                        "Really good validator",
+                        500,
+                        100,
+                        {from: validator2});
+                    await delegationController.requestUndelegation(delegationId, {from: validator2})
+                        .should.be.eventually.rejectedWith("Permission denied to request undelegation");
 
-            //         skipTime(web3, delegationPeriod * month);
+                    skipTime(web3, delegationPeriod * month);
 
-            //         (await delegationController.getState(delegationId)).toNumber().should.be.equal(State.DELEGATED);
-            //         (await skaleToken.getAndUpdateDelegatedAmount.call(holder1)).toNumber().should.be.equal(amount);
-            //     });
-            // });
+                    (await delegationController.getState(delegationId)).toNumber().should.be.equal(State.DELEGATED);
+                    (await skaleToken.getAndUpdateDelegatedAmount.call(holder1)).toNumber().should.be.equal(amount);
+                });
+            });
         });
     });
 });
