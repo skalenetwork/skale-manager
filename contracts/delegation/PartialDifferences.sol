@@ -85,8 +85,12 @@ library PartialDifferences {
                 if (sequence.value[i] != nextValue) {
                     sequence.value[i] = nextValue;
                 }
-                delete sequence.addDiff[i];
-                delete sequence.subtractDiff[i];
+                if (sequence.addDiff[i] > 0) {
+                    delete sequence.addDiff[i];
+                }
+                if (sequence.subtractDiff[i] > 0) {
+                    delete sequence.subtractDiff[i];
+                }
             }
             sequence.firstUnprocessedMonth = month.add(1);
         }
@@ -164,8 +168,12 @@ library PartialDifferences {
                 if (sequence.value != newValue) {
                     sequence.value = newValue;
                 }
-                delete sequence.addDiff[i];
-                delete sequence.subtractDiff[i];
+                if (sequence.addDiff[i] > 0) {
+                    delete sequence.addDiff[i];
+                }
+                if (sequence.subtractDiff[i] > 0) {
+                    delete sequence.subtractDiff[i];
+                }
             }
             sequence.firstUnprocessedMonth = month.add(1);
         }
@@ -253,11 +261,21 @@ library PartialDifferences {
 
     function clear(Value storage sequence) internal {
         for (uint i = sequence.firstUnprocessedMonth; i <= sequence.lastChangedMonth; ++i) {
-            delete sequence.addDiff[i];
-            delete sequence.subtractDiff[i];
+            if (sequence.addDiff[i] > 0) {
+                delete sequence.addDiff[i];
+            }
+            if (sequence.subtractDiff[i] > 0) {
+                delete sequence.subtractDiff[i];
+            }
         }
-        delete sequence.value;
-        delete sequence.firstUnprocessedMonth;
-        delete sequence.lastChangedMonth;
+        if (sequence.value > 0) {
+            delete sequence.value;
+        }
+        if (sequence.firstUnprocessedMonth > 0) {
+            delete sequence.firstUnprocessedMonth;
+        }
+        if (sequence.lastChangedMonth > 0) {
+            delete sequence.lastChangedMonth;
+        }
     }
 }
