@@ -175,7 +175,7 @@ contract DelegationController is Permissions, ILocker {
     function getAndUpdateEffectiveDelegatedByHolderToValidator(address holder, uint validatorId, uint month) external
         allow("Distributor") returns (uint effectiveDelegated)
     {
-        SlashingSignal[] memory slashingSignals = processSlashesWithoutSignals(holder);
+        SlashingSignal[] memory slashingSignals = processAllSlashesWithoutSignals(holder);
         effectiveDelegated = _effectiveDelegatedByHolderToValidator[holder][validatorId].getAndUpdateValue(month);
         sendSlashingSignals(slashingSignals);
     }
@@ -205,7 +205,7 @@ contract DelegationController is Permissions, ILocker {
             delegationPeriodManager.isDelegationPeriodAllowed(delegationPeriod),
             "This delegation period is not allowed");
 
-        SlashingSignal[] memory slashingSignals = processSlashesWithoutSignals(msg.sender);
+        SlashingSignal[] memory slashingSignals = processAllSlashesWithoutSignals(msg.sender);
 
         uint delegationId = addDelegation(
             msg.sender,
@@ -254,7 +254,7 @@ contract DelegationController is Permissions, ILocker {
         DelegationPeriodManager delegationPeriodManager = DelegationPeriodManager(contractManager.getContract("DelegationPeriodManager"));
         TokenLaunchLocker tokenLaunchLocker = TokenLaunchLocker(contractManager.getContract("TokenLaunchLocker"));
 
-        SlashingSignal[] memory slashingSignals = processSlashesWithoutSignals(delegations[delegationId].holder);
+        SlashingSignal[] memory slashingSignals = processAllSlashesWithoutSignals(delegations[delegationId].holder);
 
         uint currentMonth = timeHelpers.getCurrentMonth();
         delegations[delegationId].started = currentMonth.add(1);
@@ -574,14 +574,6 @@ contract DelegationController is Permissions, ILocker {
         return getAndUpdateDelegatedByHolder(wallet).add(getLockedInPendingDelegations(wallet));
     }
 
-    function min(uint a, uint b) internal pure returns (uint) {
-        if (a < b) {
-            return a;
-        } else {
-            return b;
-        }
-    }
-
     function updateFirstDelegationMonth(address holder, uint validatorId, uint month) internal {
         if (_firstDelegationMonth[holder].value == 0) {
             _firstDelegationMonth[holder].value = month;
@@ -670,7 +662,7 @@ contract DelegationController is Permissions, ILocker {
         }
     }
 
-    function processSlashesWithoutSignals(address holder) internal returns (SlashingSignal[] memory slashingSignals) {
+    function processAllSlashesWithoutSignals(address holder) internal returns (SlashingSignal[] memory slashingSignals) {
         return processSlashesWithoutSignals(holder, 0);
     }
 
