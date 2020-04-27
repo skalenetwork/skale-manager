@@ -599,6 +599,12 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
 
                         await schainsData.getSchains().should.be.eventually.empty;
                     });
+
+                    it("should delete schain after deleting node", async () => {
+                        const nodes = await schainsData.getNodesInGroup(web3.utils.soliditySha3("d2"));
+                        await skaleManager.deleteNode(nodes[0], {from: nodeAddress});
+                        await skaleManager.deleteSchain("d2", {from: developer});
+                    });
                 });
 
                 describe("when another schain is created", async () => {
