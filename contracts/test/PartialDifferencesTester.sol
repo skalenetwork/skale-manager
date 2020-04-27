@@ -41,17 +41,17 @@ contract PartialDifferencesTester {
 
     function addToSequence(uint sequence, uint diff, uint month) external {
         require(sequence < sequences.length, "Sequence does not exist");
-        sequences[sequence].add(diff, month);
+        sequences[sequence].addToSequence(diff, month);
     }
 
     function subtractFromSequence(uint sequence, uint diff, uint month) external {
         require(sequence < sequences.length, "Sequence does not exist");
-        sequences[sequence].subtract(diff, month);
+        sequences[sequence].subtractFromSequence(diff, month);
     }
 
     function getAndUpdateSequenceItem(uint sequence, uint month) external returns (uint) {
         require(sequence < sequences.length, "Sequence does not exist");
-        return sequences[sequence].getAndUpdateValue(month);
+        return sequences[sequence].getAndUpdateValueInSequence(month);
     }
 
     function reduceSequence(
@@ -62,6 +62,6 @@ contract PartialDifferencesTester {
     {
         require(sequence < sequences.length, "Sequence does not exist");
         FractionUtils.Fraction memory reducingCoefficient = FractionUtils.createFraction(a, b);
-        return sequences[sequence].reduce(reducingCoefficient, month);
+        return sequences[sequence].reduceSequence(reducingCoefficient, month);
     }
 }

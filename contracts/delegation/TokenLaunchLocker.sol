@@ -137,11 +137,11 @@ contract TokenLaunchLocker is Permissions, ILocker {
     }
 
     function addToDelegatedAmount(address holder, uint amount, uint month) internal {
-        _delegatedAmount[holder].add(amount, month);
+        _delegatedAmount[holder].addToValue(amount, month);
     }
 
     function removeFromDelegatedAmount(address holder, uint amount, uint month) internal {
-        _delegatedAmount[holder].subtract(amount, month);
+        _delegatedAmount[holder].subtractFromValue(amount, month);
     }
 
     function addToTotalDelegatedAmount(address holder, uint amount, uint month) internal {
