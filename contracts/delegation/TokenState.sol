@@ -68,7 +68,7 @@ contract TokenState is Permissions, ILocker {
                 _lockers[index] = _lockers[_lockers.length - 1];
             }
             delete _lockers[_lockers.length - 1];
-            --_lockers.length;
+            _lockers.pop();
         }
         emit LockerWasRemoved(locker);
     }
