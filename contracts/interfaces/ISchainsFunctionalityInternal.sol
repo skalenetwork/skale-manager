@@ -1,4 +1,4 @@
-pragma solidity ^0.5.0;
+pragma solidity 0.6.6;
 
 interface ISchainsFunctionalityInternal {
     function getNodesDataFromTypeOfSchain(uint typeOfSchain) external view returns (uint, uint8);

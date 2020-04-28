@@ -19,8 +19,9 @@
 
 pragma solidity 0.6.6;
 
-import "@openzeppelin/contracts-ethereum-package/contracts/ownership/Ownable.sol";
 import "@openzeppelin/upgrades/contracts/Initializable.sol";
+
+import "./thirdparty/openzeppelin/Ownable.sol";
 import "./utils/StringUtils.sol";
 
 
