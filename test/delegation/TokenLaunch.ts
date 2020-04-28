@@ -56,17 +56,17 @@ contract("TokenLaunchManager", ([owner, holder, delegation, validator, seller, h
         });
 
         it("should not allow to approve transfer if sender is not seller", async () => {
-            await TokenLaunchManager.approve([holder], [10], {from: hacker})
+            await TokenLaunchManager.approveTransfer(holder, 10, {from: hacker})
                 .should.be.eventually.rejectedWith("Not authorized");
         });
 
         it("should fail if parameter arrays are with different lengths", async () => {
-            await TokenLaunchManager.approve([holder, hacker], [10], {from: seller})
+            await TokenLaunchManager.approveBatchOfTransfers([holder, hacker], [10], {from: seller})
                 .should.be.eventually.rejectedWith("Wrong input arrays length");
         });
 
         it("should not allow to approve transfers with more then total money amount in sum", async () => {
-            await TokenLaunchManager.approve([holder, hacker], [5e8, 5e8 + 1], {from: seller})
+            await TokenLaunchManager.approveBatchOfTransfers([holder, hacker], [5e8, 5e8 + 1], {from: seller})
                 .should.be.eventually.rejectedWith("Balance is too low");
         });
 
@@ -76,11 +76,28 @@ contract("TokenLaunchManager", ([owner, holder, delegation, validator, seller, h
         });
 
         it("should allow seller to approve transfer to buyer", async () => {
-            await TokenLaunchManager.approve([holder], [10], {from: seller});
+            await TokenLaunchManager.approveBatchOfTransfers([holder], [10], {from: seller});
             await TokenLaunchManager.retrieve({from: holder});
             (await skaleToken.balanceOf(holder)).toNumber().should.be.equal(10);
             await skaleToken.transfer(hacker, "1", {from: holder}).should.be.eventually.rejectedWith("Token should be unlocked for transferring");
         });
+
+        it("should allow seller to change address of approval", async () => {
+            await TokenLaunchManager.approveTransfer(hacker, 10, {from: seller});
+            await TokenLaunchManager.changeApprovalAddress(hacker, holder, {from: seller});
+            await TokenLaunchManager.retrieve({from: hacker})
+                .should.be.eventually.rejectedWith("Transfer is not approved");
+            await TokenLaunchManager.retrieve({from: holder});
+            (await skaleToken.balanceOf(hacker)).toNumber().should.be.equal(0);
+            (await skaleToken.balanceOf(holder)).toNumber().should.be.equal(10);
+        })
+
+        it("should allow seller to change value of approval", async () => {
+            await TokenLaunchManager.approveTransfer(holder, 10, {from: seller});
+            await TokenLaunchManager.changeApprovalValue(holder, 5, {from: seller});
+            await TokenLaunchManager.retrieve({from: holder});
+            (await skaleToken.balanceOf(holder)).toNumber().should.be.equal(5);
+        })
 
         describe("when holder bought tokens", async () => {
             const validatorId = 1;
@@ -88,7 +105,7 @@ contract("TokenLaunchManager", ([owner, holder, delegation, validator, seller, h
             const month = 60 * 60 * 24 * 31;
 
             beforeEach(async () => {
-                await TokenLaunchManager.approve([holder], [totalAmount], {from: seller});
+                await TokenLaunchManager.approveTransfer(holder, totalAmount, {from: seller});
                 await TokenLaunchManager.retrieve({from: holder});
             });
 
