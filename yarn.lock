@@ -9302,10 +9302,10 @@ ts-generator@^0.0.8:
     resolve "^1.8.1"
     ts-essentials "^1.0.0"
 
-ts-node@8.9.0:
-  version "8.9.0"
-  resolved "https://registry.yarnpkg.com/ts-node/-/ts-node-8.9.0.tgz#d7bf7272dcbecd3a2aa18bd0b96c7d2f270c15d4"
-  integrity sha512-rwkXfOs9zmoHrV8xE++dmNd6ZIS+nmHHCxcV53ekGJrxFLMbp+pizpPS07ARvhwneCIECPppOwbZHvw9sQtU4w==
+ts-node@8.9.1:
+  version "8.9.1"
+  resolved "https://registry.yarnpkg.com/ts-node/-/ts-node-8.9.1.tgz#2f857f46c47e91dcd28a14e052482eb14cfd65a5"
+  integrity sha512-yrq6ODsxEFTLz0R3BX2myf0WBCSQh9A+py8PBo1dCzWIOcvisbyH6akNKqDHMgXePF2kir5mm5JXJTH3OUJYOQ==
   dependencies:
     arg "^4.1.0"
     diff "^4.0.1"
@@ -9330,10 +9330,10 @@ tslint-no-unused-expression-chai@^0.1.4:
   dependencies:
     tsutils "^3.0.0"
 
-tslint@^6.1.1:
-  version "6.1.1"
-  resolved "https://registry.yarnpkg.com/tslint/-/tslint-6.1.1.tgz#ac03fbd17f85bfefaae348b353b25a88efe10cde"
-  integrity sha512-kd6AQ/IgPRpLn6g5TozqzPdGNZ0q0jtXW4//hRcj10qLYBaa3mTUU2y2MCG+RXZm8Zx+KZi0eA+YCrMyNlF4UA==
+tslint@^6.1.2:
+  version "6.1.2"
+  resolved "https://registry.yarnpkg.com/tslint/-/tslint-6.1.2.tgz#2433c248512cc5a7b2ab88ad44a6b1b34c6911cf"
+  integrity sha512-UyNrLdK3E0fQG/xWNqAFAC5ugtFyPO4JJR1KyyfQAyzR8W0fTRrC91A8Wej4BntFzcvETdCSDa/4PnNYJQLYiA==
   dependencies:
     "@babel/code-frame" "^7.0.0"
     builtin-modules "^1.1.1"
