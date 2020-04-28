@@ -137,7 +137,7 @@ contract GroupsData is IGroupsData, Permissions {
             groups[groupIndex].nodesInGroup[indexOfNode] = groups[groupIndex].nodesInGroup[size - 1];
         }
         delete groups[groupIndex].nodesInGroup[size - 1];
-        groups[groupIndex].nodesInGroup.length--;
+        groups[groupIndex].nodesInGroup.pop();
     }
 
     /**
@@ -147,7 +147,9 @@ contract GroupsData is IGroupsData, Permissions {
      */
     function removeAllNodesInGroup(bytes32 groupIndex) external allow(executorName) {
         delete groups[groupIndex].nodesInGroup;
-        groups[groupIndex].nodesInGroup.length = 0;
+        while (groups[groupIndex].nodesInGroup.length > 0) {
+            groups[groupIndex].nodesInGroup.pop();
+        }
     }
 
     /**
