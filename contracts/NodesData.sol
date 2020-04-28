@@ -191,9 +191,9 @@ contract NodesData is INodesData, Permissions {
             uint shiftedIndex = spaceToNodes[space][spaceToNodes[space].length - 1];
             spaceToNodes[space][indexInArray] = shiftedIndex;
             spaceOfNodes[shiftedIndex].indexInSpaceMap = indexInArray;
-            spaceToNodes[space].length--;
+            spaceToNodes[space].pop();
         } else {
-            spaceToNodes[space].length--;
+            spaceToNodes[space].pop();
         }
         delete spaceOfNodes[nodeIndex].freeSpace;
         delete spaceOfNodes[nodeIndex].indexInSpaceMap;
@@ -429,9 +429,9 @@ contract NodesData is INodesData, Permissions {
             uint shiftedIndex = spaceToNodes[previousSpace][spaceToNodes[previousSpace].length - 1];
             spaceToNodes[previousSpace][indexInArray] = shiftedIndex;
             spaceOfNodes[shiftedIndex].indexInSpaceMap = indexInArray;
-            spaceToNodes[previousSpace].length--;
+            spaceToNodes[previousSpace].pop();
         } else {
-            spaceToNodes[previousSpace].length--;
+            spaceToNodes[previousSpace].pop();
         }
         spaceToNodes[newSpace].push(nodeIndex);
         spaceOfNodes[nodeIndex].freeSpace = newSpace;
