@@ -31,7 +31,7 @@ contract PartialDifferencesTester {
 
     function createSequence() external returns (uint id) {
         id = sequences.length;
-        ++sequences.length;
+        sequences.push();
     }
 
     function latestSequence() external view returns (uint id) {
