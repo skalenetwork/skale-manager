@@ -342,7 +342,7 @@ contract ValidatorService is Permissions {
                     _nodeAddresses[validatorId][i] = _nodeAddresses[validatorId][_nodeAddresses[validatorId].length.sub(1)];
                 }
                 delete _nodeAddresses[validatorId][_nodeAddresses[validatorId].length.sub(1)];
-                --_nodeAddresses[validatorId].length;
+                _nodeAddresses[validatorId].pop();
                 break;
             }
         }
