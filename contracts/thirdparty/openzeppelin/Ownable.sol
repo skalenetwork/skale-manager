@@ -1,8 +1,8 @@
 pragma solidity ^0.6.0;
 
 import "@openzeppelin/upgrades/contracts/Initializable.sol";
+import "@openzeppelin/contracts/GSN/Context.sol";
 
-import "./Context.sol";
 
 /**
  * @dev Contract module which provides a basic access control mechanism, where
