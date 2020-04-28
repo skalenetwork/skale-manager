@@ -204,6 +204,7 @@ contract DelegationController is Permissions, ILocker {
         require(
             delegationPeriodManager.isDelegationPeriodAllowed(delegationPeriod),
             "This delegation period is not allowed");
+        require(validatorService.isAcceptingNewRequests(validatorId), "The validator does not accept new requests");
 
         SlashingSignal[] memory slashingSignals = processAllSlashesWithoutSignals(msg.sender);
 
