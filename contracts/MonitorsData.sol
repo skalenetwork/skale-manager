@@ -66,7 +66,7 @@ contract MonitorsData is GroupsData {
             checkedNodes[monitorIndex][indexOfCheckedNode] = checkedNodes[monitorIndex][checkedNodes[monitorIndex].length - 1];
         }
         delete checkedNodes[monitorIndex][checkedNodes[monitorIndex].length - 1];
-        checkedNodes[monitorIndex].length--;
+        checkedNodes[monitorIndex].pop();
     }
 
     function removeAllCheckedNodes(bytes32 monitorIndex) external allow(executorName) {
@@ -74,7 +74,9 @@ contract MonitorsData is GroupsData {
     }
 
     function removeAllVerdicts(bytes32 monitorIndex) external allow(executorName) {
-        verdicts[monitorIndex].length = 0;
+        while (verdicts[monitorIndex].length > 0) {
+            verdicts[monitorIndex].pop();
+        }
     }
 
     function getCheckedArray(bytes32 monitorIndex) external view returns (bytes32[] memory) {
