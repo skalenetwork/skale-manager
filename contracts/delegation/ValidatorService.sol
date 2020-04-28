@@ -115,11 +115,13 @@ contract ValidatorService is Permissions {
     }
 
     function enableValidator(uint validatorId) external checkValidatorExists(validatorId) onlyOwner {
+        require(!trustedValidators[validatorId], "Validator is already enabled");
         trustedValidators[validatorId] = true;
         emit ValidatorWasEnabled(validatorId);
     }
 
     function disableValidator(uint validatorId) external checkValidatorExists(validatorId) onlyOwner {
+        require(trustedValidators[validatorId], "Validator is already disabled");
         trustedValidators[validatorId] = false;
         emit ValidatorWasDisabled(validatorId);
     }
@@ -156,7 +158,7 @@ contract ValidatorService is Permissions {
             getValidator(validatorId).requestedAddress == msg.sender,
             "The validator address cannot be changed because it is not the actual owner"
         );
-        validators[validatorId].requestedAddress = address(0);
+        delete validators[validatorId].requestedAddress;
         setValidatorAddress(validatorId, msg.sender);
 
         emit ValidatorAddressChanged(validatorId, validators[validatorId].validatorAddress);
