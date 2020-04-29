@@ -224,11 +224,11 @@ contract DelegationController is Permissions, ILocker {
         sendSlashingSignals(slashingSignals);
     }
 
-    function getAndUpdateLockedAmount(address wallet) external returns (uint) {
+    function getAndUpdateLockedAmount(address wallet) external override returns (uint) {
         return _getAndUpdateLockedAmount(wallet);
     }
 
-    function getAndUpdateForbiddenForDelegationAmount(address wallet) external returns (uint) {
+    function getAndUpdateForbiddenForDelegationAmount(address wallet) external override returns (uint) {
         return _getAndUpdateLockedAmount(wallet);
     }
 
