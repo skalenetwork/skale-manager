@@ -109,7 +109,7 @@ contract NodesData is INodesData, Permissions {
      * @param publicIP - Node public ip
      * @param port - Node public port
      * @param publicKey - Ethereum public key
-     * @return index of Node
+     * @return nodeIndex Index of Node
      */
     function addNode(
         address from,
@@ -367,8 +367,7 @@ contract NodesData is INodesData, Permissions {
     /**
      * @dev getActiveNodesByAddress - get array of indexes of Active Nodes, which were
      * created by msg.sender
-     * @return activeNodesbyAddress - array of indexes of Active Nodes, which were created
-     * by msg.sender
+     * @return activeNodesByAddress Array of indexes of Active Nodes, which were created by msg.sender
      */
     function getActiveNodesByAddress() external view returns (uint[] memory activeNodesByAddress) {
         activeNodesByAddress = new uint[](nodeIndexes[msg.sender].numberOfNodes);

@@ -288,10 +288,7 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
     /**
      * @dev fallbackSchainParameterDataConverter - converts data from bytes to normal parameters
      * @param data - concatenated parameters
-     * @return lifetime
-     * @return typeOfSchain
-     * @return nonce
-     * @return name
+     * @return schainParameters Parsed lifetime, typeOfSchain, nonce and name
      */
     function fallbackSchainParametersDataConverter(bytes memory data)
         internal

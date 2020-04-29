@@ -183,7 +183,7 @@ abstract contract GroupsFunctionality is Permissions {
      * @dev findNode - find local index of Node in Schain
      * @param groupIndex - Groups identifier
      * @param nodeIndex - global index of Node
-     * @return local index of Node in Schain
+     * @return index Local index of Node in Schain
      */
     function findNode(bytes32 groupIndex, uint nodeIndex) internal view returns (uint index) {
         address groupsDataAddress = contractManager.getContract(dataName);
