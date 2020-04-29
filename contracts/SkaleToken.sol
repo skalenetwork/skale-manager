@@ -51,7 +51,6 @@ contract SkaleToken is ERC777, Permissions, IDelegatableToken {
 
     /**
      * @dev mint - create some amount of token and transfer it to the specified address
-     * @param operator address operator requesting the transfer
      * @param account - address where some amount of token would be created
      * @param amount - amount of tokens to mine
      * @param userData bytes extra information provided by the token holder (if any)
@@ -59,7 +58,6 @@ contract SkaleToken is ERC777, Permissions, IDelegatableToken {
      * @return returns success of function call.
      */
     function mint(
-        address operator,
         address account,
         uint256 amount,
         bytes calldata userData,
@@ -96,9 +94,9 @@ contract SkaleToken is ERC777, Permissions, IDelegatableToken {
     // private
 
     function _beforeTokenTransfer(
-        address operator,
+        address, // operator
         address from,
-        address to,
+        address, // to
         uint256 tokenId)
         internal override
     {
