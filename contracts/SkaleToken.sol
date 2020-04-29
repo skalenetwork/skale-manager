@@ -19,8 +19,9 @@
 
 pragma solidity 0.6.6;
 
+import "@openzeppelin/contracts/token/ERC777/ERC777.sol";
+import "@openzeppelin/contracts/math/SafeMath.sol";
 
-import "./ERC777/LockableERC777.sol";
 import "./Permissions.sol";
 import "./interfaces/delegation/IDelegatableToken.sol";
 import "./delegation/Punisher.sol";
@@ -31,7 +32,8 @@ import "./delegation/TokenState.sol";
  * @title SkaleToken is ERC777 Token implementation, also this contract in skale
  * manager system
  */
-contract SkaleToken is LockableERC777, Permissions, IDelegatableToken {
+contract SkaleToken is ERC777, Permissions, IDelegatableToken {
+    using SafeMath for uint;
 
     string public constant NAME = "SKALE";
 
@@ -42,7 +44,7 @@ contract SkaleToken is LockableERC777, Permissions, IDelegatableToken {
     uint public constant CAP = 7 * 1e9 * (10 ** DECIMALS); // the maximum amount of tokens that can ever be created
 
     constructor(address contractsAddress, address[] memory defOps)
-    LockableERC777("SKALE", "SKL", defOps) public
+    ERC777("SKALE", "SKL", defOps) public
     {
         Permissions.initialize(contractsAddress);
     }
@@ -70,7 +72,6 @@ contract SkaleToken is LockableERC777, Permissions, IDelegatableToken {
     {
         require(amount <= CAP.sub(totalSupply()), "Amount is too big");
         _mint(
-            operator,
             account,
             amount,
             userData,
@@ -94,7 +95,16 @@ contract SkaleToken is LockableERC777, Permissions, IDelegatableToken {
 
     // private
 
-    function _getAndUpdateLockedAmount(address wallet) internal returns (uint) {
-        return getAndUpdateLockedAmount(wallet);
+    function _beforeTokenTransfer(
+        address operator,
+        address from,
+        address to,
+        uint256 tokenId)
+        internal override
+    {
+        uint locked = getAndUpdateLockedAmount(from);
+        if (locked > 0) {
+            require(balanceOf(from) >= locked.add(tokenId), "Token should be unlocked for transferring");
+        }
     }
 }
