@@ -69,7 +69,7 @@ contract NodesFunctionality is Permissions, INodesFunctionality {
      * @param data - Node's data
      * @return nodeIndex - index of Node
      */
-    function createNode(address from, bytes calldata data) external allow("SkaleManager") returns (uint nodeIndex) {
+    function createNode(address from, bytes calldata data) external override allow("SkaleManager") returns (uint nodeIndex) {
         address nodesDataAddress = contractManager.getContract("NodesData");
         uint16 nonce;
         bytes4 ip;
@@ -119,7 +119,7 @@ contract NodesFunctionality is Permissions, INodesFunctionality {
      * @param from - owner of Node
      * @param nodeIndex - index of Node
      */
-    function removeNode(address from, uint nodeIndex) external allow("SkaleManager") {
+    function removeNode(address from, uint nodeIndex) external override allow("SkaleManager") {
         address nodesDataAddress = contractManager.getContract("NodesData");
 
         require(INodesData(nodesDataAddress).isNodeExist(from, nodeIndex), "Node does not exist for message sender");
@@ -130,7 +130,7 @@ contract NodesFunctionality is Permissions, INodesFunctionality {
         INodesData(nodesDataAddress).removeNode(nodeIndex);
     }
 
-    function removeNodeByRoot(uint nodeIndex) external allow("SkaleManager") {
+    function removeNodeByRoot(uint nodeIndex) external override allow("SkaleManager") {
         address nodesDataAddress = contractManager.getContract("NodesData");
         INodesData(nodesDataAddress).setNodeLeft(nodeIndex);
 
@@ -144,7 +144,7 @@ contract NodesFunctionality is Permissions, INodesFunctionality {
      * @param nodeIndex - index of Node
      * @return true - if everything OK
      */
-    function initExit(address from, uint nodeIndex) external allow("SkaleManager") returns (bool) {
+    function initExit(address from, uint nodeIndex) external override allow("SkaleManager") returns (bool) {
         NodesData nodesData = NodesData(contractManager.getContract("NodesData"));
 
         require(nodesData.isNodeExist(from, nodeIndex), "Node does not exist for message sender");
@@ -167,7 +167,7 @@ contract NodesFunctionality is Permissions, INodesFunctionality {
      * @param nodeIndex - index of Node
      * @return amount of SKL which be returned
      */
-    function completeExit(address from, uint nodeIndex) external allow("SkaleManager") returns (bool) {
+    function completeExit(address from, uint nodeIndex) external override allow("SkaleManager") returns (bool) {
         NodesData nodesData = NodesData(contractManager.getContract("NodesData"));
 
         require(nodesData.isNodeExist(from, nodeIndex), "Node does not exist for message sender");
