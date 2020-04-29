@@ -28,6 +28,7 @@ import "./interfaces/ISchainsFunctionalityInternal.sol";
 import "./interfaces/INodesData.sol";
 import "./SchainsData.sol";
 import "./SchainsFunctionalityInternal.sol";
+import "./ConstantsHolder.sol";
 
 
 
@@ -247,9 +248,9 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
      * @return current price for given Schain
      */
     function getSchainPrice(uint typeOfSchain, uint lifetime) public view returns (uint) {
-        address constantsAddress = contractManager.getContract("ConstantsHolder");
+        ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
         address schainsFunctionalityInternalAddress = contractManager.getContract("SchainsFunctionalityInternal");
-        uint nodeDeposit = IConstants(constantsAddress).NODE_DEPOSIT();
+        uint nodeDeposit = constantsHolder.NODE_DEPOSIT();
         uint numberOfNodes;
         uint8 divisor;
         (numberOfNodes, divisor) = ISchainsFunctionalityInternal(
@@ -262,7 +263,7 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
             return 1e18;
         } else {
             uint up = nodeDeposit.mul(numberOfNodes.mul(lifetime.mul(2)));
-            uint down = uint(uint(IConstants(constantsAddress).TINY_DIVISOR()).div(divisor).mul(uint(IConstants(constantsAddress).SECONDS_TO_YEAR())));
+            uint down = uint(uint(constantsHolder.TINY_DIVISOR()).div(divisor).mul(uint(constantsHolder.SECONDS_TO_YEAR())));
             return up.div(down);
         }
     }

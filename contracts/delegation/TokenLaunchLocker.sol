@@ -106,11 +106,15 @@ contract TokenLaunchLocker is Permissions, ILocker {
 
             uint currentMonth = timeHelpers.getCurrentMonth();
             if (_totalDelegatedAmount[wallet].delegated.mul(2) >= _locked[wallet] &&
-                timeHelpers.calculateProofOfUseLockEndTime(_totalDelegatedAmount[wallet].month, constantsHolder.proofOfUseLockUpPeriodDays()) <= now) {
+                timeHelpers.calculateProofOfUseLockEndTime(
+                    _totalDelegatedAmount[wallet].month,
+                    constantsHolder.proofOfUseLockUpPeriodDays()
+                ) <= now) {
                 unlock(wallet);
                 return 0;
             } else {
-                uint lockedByDelegationController = getAndUpdateDelegatedAmount(wallet, currentMonth).add(delegationController.getLockedInPendingDelegations(wallet));
+                uint lockedByDelegationController = getAndUpdateDelegatedAmount(wallet, currentMonth)
+                    .add(delegationController.getLockedInPendingDelegations(wallet));
                 if (_locked[wallet] > lockedByDelegationController) {
                     return _locked[wallet].boundedSub(lockedByDelegationController);
                 } else {

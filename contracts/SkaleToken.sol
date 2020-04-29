@@ -80,7 +80,8 @@ contract SkaleToken is ERC777, Permissions, IDelegatableToken {
     }
 
     function getAndUpdateDelegatedAmount(address wallet) external override returns (uint) {
-        return DelegationController(contractManager.getContract("DelegationController")).getAndUpdateDelegatedAmount(wallet);
+        return DelegationController(contractManager.getContract("DelegationController"))
+            .getAndUpdateDelegatedAmount(wallet);
     }
 
     function getAndUpdateSlashedAmount(address wallet) external override returns (uint) {

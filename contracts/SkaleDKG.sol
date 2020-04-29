@@ -120,10 +120,13 @@ contract SkaleDKG is Permissions {
 
     function openChannel(bytes32 groupIndex) external allowThree("SchainsData", "MonitorsData", "SkaleDKG") {
         require(!channels[groupIndex].active, "Channel already is created");
+
+        GroupsData groupsData = GroupsData(channels[groupIndex].dataAddress);
+
         channels[groupIndex].active = true;
         channels[groupIndex].dataAddress = msg.sender;
-        channels[groupIndex].broadcasted = new bool[](IGroupsData(channels[groupIndex].dataAddress).getRecommendedNumberOfNodes(groupIndex));
-        channels[groupIndex].completed = new bool[](IGroupsData(channels[groupIndex].dataAddress).getRecommendedNumberOfNodes(groupIndex));
+        channels[groupIndex].broadcasted = new bool[](groupsData.getRecommendedNumberOfNodes(groupIndex));
+        channels[groupIndex].completed = new bool[](groupsData.getRecommendedNumberOfNodes(groupIndex));
         channels[groupIndex].publicKeyy.x = 1;
         channels[groupIndex].nodeToComplaint = uint(-1);
         channels[groupIndex].startedBlockTimestamp = block.timestamp;
@@ -138,10 +141,13 @@ contract SkaleDKG is Permissions {
 
     function reopenChannel(bytes32 groupIndex) external allow("SkaleDKG") {
         require(channels[groupIndex].active, "Channel is not created");
+
+        GroupsData groupsData = GroupsData(channels[groupIndex].dataAddress);
+
         delete channels[groupIndex].broadcasted;
         delete channels[groupIndex].completed;
-        channels[groupIndex].broadcasted = new bool[](IGroupsData(channels[groupIndex].dataAddress).getRecommendedNumberOfNodes(groupIndex));
-        channels[groupIndex].completed = new bool[](IGroupsData(channels[groupIndex].dataAddress).getRecommendedNumberOfNodes(groupIndex));
+        channels[groupIndex].broadcasted = new bool[](groupsData.getRecommendedNumberOfNodes(groupIndex));
+        channels[groupIndex].completed = new bool[](groupsData.getRecommendedNumberOfNodes(groupIndex));
         delete channels[groupIndex].publicKeyx.x;
         delete channels[groupIndex].publicKeyx.y;
         channels[groupIndex].publicKeyy.x = 1;
