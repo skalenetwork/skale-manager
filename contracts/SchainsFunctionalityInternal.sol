@@ -192,7 +192,7 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
      * @dev generateGroup - generates Group for Schain
      * @param groupIndex - index of Group
      */
-    function generateGroup(bytes32 groupIndex) internal returns (uint[] memory nodesInGroup) {
+    function generateGroup(bytes32 groupIndex) internal override returns (uint[] memory nodesInGroup) {
         IGroupsData groupsData = IGroupsData(contractManager.getContract(dataName));
         SchainsData schainsData = SchainsData(contractManager.getContract(dataName));
         require(groupsData.isGroupActive(groupIndex), "Group is not active");
