@@ -86,7 +86,7 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
      * @param deposit - received amoung of SKL
      * @param data - Schain's data
      */
-    function addSchain(address from, uint deposit, bytes calldata data) external allow(executorName) {
+    function addSchain(address from, uint deposit, bytes calldata data) external override allow(executorName) {
         uint numberOfNodes;
         uint8 partOfNode;
 
@@ -123,7 +123,7 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
      * @param from - owner of Schain
      * @param name - Schain name
      */
-    function deleteSchain(address from, string calldata name) external allow(executorName) {
+    function deleteSchain(address from, string calldata name) external override allow(executorName) {
         bytes32 schainId = keccak256(abi.encodePacked(name));
         address dataAddress = contractManager.getContract(dataName);
         require(SchainsData(dataAddress).isOwnerAddress(from, schainId), "Message sender is not an owner of Schain");
@@ -150,7 +150,7 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
         emit SchainDeleted(from, name, schainId);
     }
 
-    function deleteSchainByRoot(string calldata name) external allow(executorName) {
+    function deleteSchainByRoot(string calldata name) external override allow(executorName) {
         bytes32 schainId = keccak256(abi.encodePacked(name));
         address dataAddress = contractManager.getContract(dataName);
         address schainsFunctionalityInternalAddress = contractManager.getContract("SchainsFunctionalityInternal");
@@ -178,7 +178,7 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
         emit SchainDeleted(from, name, schainId);
     }
 
-    function exitFromSchain(uint nodeIndex) external allow(executorName) returns (bool) {
+    function exitFromSchain(uint nodeIndex) external override allow(executorName) returns (bool) {
         SchainsData schainsData = SchainsData(contractManager.getContract(dataName));
         bytes32 schainId = schainsData.getActiveSchain(nodeIndex);
         require(this.checkRotation(schainId), "No any free Nodes for rotating");
@@ -195,7 +195,7 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
         return schainsFunctionalityInternal.isAnyFreeNode(schainId);
     }
 
-    function rotateNode(uint nodeIndex, bytes32 schainId) external allowTwo("SkaleDKG", "SchainsFunctionality") returns (uint) {
+    function rotateNode(uint nodeIndex, bytes32 schainId) external override allowTwo("SkaleDKG", "SchainsFunctionality") returns (uint) {
         SchainsFunctionalityInternal schainsFunctionalityInternal = SchainsFunctionalityInternal(
             contractManager.getContract("SchainsFunctionalityInternal"));
         schainsFunctionalityInternal.removeNodeFromSchain(nodeIndex, schainId);
