@@ -29,13 +29,13 @@ import "./interfaces/IManagerData.sol";
 contract ManagerData is IManagerData, Permissions {
 
     // miners capitalization
-    uint public minersCap;
+    uint public override minersCap;
     // start time
-    uint32 public startTime;
+    uint32 public override startTime;
     // time of current stage
-    uint32 public stageTime;
+    uint32 public override stageTime;
     // amount of Nodes at current stage
-    uint public stageNodes;
+    uint public override stageNodes;
 
     //name of executor contract
     string executorName;
@@ -43,14 +43,14 @@ contract ManagerData is IManagerData, Permissions {
     /**
      * @dev setMinersCap - sets miners capitalization
      */
-    function setMinersCap(uint newMinersCap) external allow(executorName) {
+    function setMinersCap(uint newMinersCap) external override allow(executorName) {
         minersCap = newMinersCap;
     }
 
     /**
      * @dev setStageTimeAndStageNodes - sets new stage time and new amount of Nodes at this stage
      */
-    function setStageTimeAndStageNodes(uint newStageNodes) external allow(executorName) {
+    function setStageTimeAndStageNodes(uint newStageNodes) external override allow(executorName) {
         stageNodes = newStageNodes;
         stageTime = uint32(block.timestamp);
     }

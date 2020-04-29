@@ -43,7 +43,7 @@ interface ISkaleVerifier {
  * @title GroupsFunctionality - contract with some Groups functionality, will be inherited by
  * MonitorsFunctionality and SchainsFunctionality
  */
-contract GroupsFunctionality is Permissions {
+abstract contract GroupsFunctionality is Permissions {
 
     // informs that Group is added
     event GroupAdded(
@@ -123,7 +123,7 @@ contract GroupsFunctionality is Permissions {
      * @param newDataName - name of data contract
      * @param newContractsAddress needed in Permissions constructor
      */
-    function initialize(string memory newExecutorName, string memory newDataName, address newContractsAddress) public override initializer {
+    function initialize(string memory newExecutorName, string memory newDataName, address newContractsAddress) public initializer {
         Permissions.initialize(newContractsAddress);
         executorName = newExecutorName;
         dataName = newDataName;

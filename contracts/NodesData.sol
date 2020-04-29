@@ -67,21 +67,21 @@ contract NodesData is INodesData, Permissions {
     // mapping for checking which Nodes and which number of Nodes owned by user
     mapping (address => CreatedNodes) public nodeIndexes;
     // mapping for checking is IP address busy
-    mapping (bytes4 => bool) public nodesIPCheck;
+    mapping (bytes4 => bool) public override nodesIPCheck;
     // mapping for checking is Name busy
-    mapping (bytes32 => bool) public nodesNameCheck;
+    mapping (bytes32 => bool) public override nodesNameCheck;
     // mapping for indication from Name to Index
     mapping (bytes32 => uint) public nodesNameToIndex;
     // mapping for indication from space to Nodes
     mapping (uint8 => uint[]) public spaceToNodes;
 
-    uint public numberOfActiveNodes;
-    uint public numberOfLeavingNodes;
+    uint public override numberOfActiveNodes;
+    uint public override numberOfLeavingNodes;
     uint public numberOfLeftNodes;
 
 
 
-    function getNodesWithFreeSpace(uint8 freeSpace) external view returns (uint[] memory) {
+    function getNodesWithFreeSpace(uint8 freeSpace) external view override returns (uint[] memory) {
         uint[] memory nodesWithFreeSpace = new uint[](this.countNodesWithFreeSpace(freeSpace));
         uint cursor = 0;
         for (uint8 i = freeSpace; i <= 128; ++i) {
@@ -93,7 +93,7 @@ contract NodesData is INodesData, Permissions {
         return nodesWithFreeSpace;
     }
 
-    function countNodesWithFreeSpace(uint8 freeSpace) external view returns (uint count) {
+    function countNodesWithFreeSpace(uint8 freeSpace) external view override returns (uint count) {
         count = 0;
         for (uint8 i = freeSpace; i <= 128; ++i) {
             count = count.add(spaceToNodes[i].length);
@@ -120,7 +120,7 @@ contract NodesData is INodesData, Permissions {
         bytes calldata publicKey,
         uint validatorId
     )
-        external
+        external override
         allow("NodesFunctionality")
         returns (uint nodeIndex)
     {
@@ -157,7 +157,7 @@ contract NodesData is INodesData, Permissions {
      * function could be run only by NodesFunctionality
      * @param nodeIndex - index of Node
      */
-    function setNodeLeaving(uint nodeIndex) external allow("NodesFunctionality") {
+    function setNodeLeaving(uint nodeIndex) external override allow("NodesFunctionality") {
         nodes[nodeIndex].status = NodeStatus.Leaving;
         numberOfActiveNodes--;
         numberOfLeavingNodes++;
@@ -168,7 +168,7 @@ contract NodesData is INodesData, Permissions {
      * function could be run only by NodesFunctionality
      * @param nodeIndex - index of Node
      */
-    function setNodeLeft(uint nodeIndex) external allow("NodesFunctionality") {
+    function setNodeLeft(uint nodeIndex) external override allow("NodesFunctionality") {
         nodesIPCheck[nodes[nodeIndex].ip] = false;
         nodesNameCheck[keccak256(abi.encodePacked(nodes[nodeIndex].name))] = false;
         // address ownerOfNode = nodes[nodeIndex].owner;
@@ -184,7 +184,7 @@ contract NodesData is INodesData, Permissions {
         numberOfLeftNodes++;
     }
 
-    function removeNode(uint nodeIndex) external allow("NodesFunctionality") {
+    function removeNode(uint nodeIndex) external override allow("NodesFunctionality") {
         uint8 space = spaceOfNodes[nodeIndex].freeSpace;
         uint indexInArray = spaceOfNodes[nodeIndex].indexInSpaceMap;
         if (indexInArray < spaceToNodes[space].length - 1) {
@@ -205,7 +205,7 @@ contract NodesData is INodesData, Permissions {
      * @param nodeIndex - index of Node at array of Fractional Nodes
      * @param space - space which should be occupied
      */
-    function removeSpaceFromNode(uint nodeIndex, uint8 space) external allow("SchainsFunctionalityInternal") returns (bool) {
+    function removeSpaceFromNode(uint nodeIndex, uint8 space) external override allow("SchainsFunctionalityInternal") returns (bool) {
         if (spaceOfNodes[nodeIndex].freeSpace < space) {
             return false;
         }
@@ -224,7 +224,7 @@ contract NodesData is INodesData, Permissions {
      * @param nodeIndex - index of Node at array of Fractional Nodes
      * @param space - space which should be returned
      */
-    function addSpaceToNode(uint nodeIndex, uint8 space) external allow("SchainsFunctionality") {
+    function addSpaceToNode(uint nodeIndex, uint8 space) external override allow("SchainsFunctionality") {
         if (space > 0) {
             moveNodeToNewSpaceMap(
                 nodeIndex,
@@ -238,7 +238,7 @@ contract NodesData is INodesData, Permissions {
      * function could be run only by SkaleManager
      * @param nodeIndex - index of Node
      */
-    function changeNodeLastRewardDate(uint nodeIndex) external allow("SkaleManager") {
+    function changeNodeLastRewardDate(uint nodeIndex) external override allow("SkaleManager") {
         nodes[nodeIndex].lastRewardDate = uint32(block.timestamp);
     }
 
@@ -252,7 +252,7 @@ contract NodesData is INodesData, Permissions {
      * @param nodeIndex - index of Node
      * @return if exist - true, else - false
      */
-    function isNodeExist(address from, uint nodeIndex) external view returns (bool) {
+    function isNodeExist(address from, uint nodeIndex) external view override returns (bool) {
         return nodeIndexes[from].isNodeExist[nodeIndex];
     }
 
@@ -261,7 +261,7 @@ contract NodesData is INodesData, Permissions {
      * @param nodeIndex - index of Node
      * @return if time for reward has come - true, else - false
      */
-    function isTimeForReward(uint nodeIndex) external view returns (bool) {
+    function isTimeForReward(uint nodeIndex) external view override returns (bool) {
         address constantsAddress = contractManager.getContract("ConstantsHolder");
         return nodes[nodeIndex].lastRewardDate.add(IConstants(constantsAddress).rewardPeriod()) <= block.timestamp;
     }
@@ -271,7 +271,7 @@ contract NodesData is INodesData, Permissions {
      * @param nodeIndex - index of Node
      * @return ip address
      */
-    function getNodeIP(uint nodeIndex) external view returns (bytes4) {
+    function getNodeIP(uint nodeIndex) external view override returns (bytes4) {
         return nodes[nodeIndex].ip;
     }
 
@@ -284,11 +284,11 @@ contract NodesData is INodesData, Permissions {
         return nodes[nodeIndex].port;
     }
 
-    function getNodePublicKey(uint nodeIndex) external view returns (bytes memory) {
+    function getNodePublicKey(uint nodeIndex) external view override returns (bytes memory) {
         return nodes[nodeIndex].publicKey;
     }
 
-    function getNodeValidatorId(uint nodeIndex) external view returns (uint) {
+    function getNodeValidatorId(uint nodeIndex) external view override returns (uint) {
         return nodes[nodeIndex].validatorId;
     }
 
@@ -301,7 +301,7 @@ contract NodesData is INodesData, Permissions {
      * @param nodeIndex - index of Node
      * @return if Node status Leaving - true, else - false
      */
-    function isNodeLeaving(uint nodeIndex) external view returns (bool) {
+    function isNodeLeaving(uint nodeIndex) external view override returns (bool) {
         return nodes[nodeIndex].status == NodeStatus.Leaving;
     }
 
@@ -310,7 +310,7 @@ contract NodesData is INodesData, Permissions {
      * @param nodeIndex - index of Node
      * @return if Node status Left - true, else - false
      */
-    function isNodeLeft(uint nodeIndex) external view returns (bool) {
+    function isNodeLeft(uint nodeIndex) external view override returns (bool) {
         return nodes[nodeIndex].status == NodeStatus.Left;
     }
 
@@ -319,7 +319,7 @@ contract NodesData is INodesData, Permissions {
      * @param nodeIndex - index of Node
      * @return Node last reward date
      */
-    function getNodeLastRewardDate(uint nodeIndex) external view returns (uint32) {
+    function getNodeLastRewardDate(uint nodeIndex) external view override returns (uint32) {
         return nodes[nodeIndex].lastRewardDate;
     }
 
@@ -328,7 +328,7 @@ contract NodesData is INodesData, Permissions {
      * @param nodeIndex - index of Node
      * @return Node next reward date
      */
-    function getNodeNextRewardDate(uint nodeIndex) external view returns (uint32) {
+    function getNodeNextRewardDate(uint nodeIndex) external view override returns (uint32) {
         address constantsAddress = contractManager.getContract("ConstantsHolder");
         return nodes[nodeIndex].lastRewardDate + IConstants(constantsAddress).rewardPeriod();
     }
@@ -337,7 +337,7 @@ contract NodesData is INodesData, Permissions {
      * @dev getNumberOfNodes - get number of Nodes
      * @return number of Nodes
      */
-    function getNumberOfNodes() external view returns (uint) {
+    function getNumberOfNodes() external view override returns (uint) {
         return nodes.length;
     }
 
@@ -345,7 +345,7 @@ contract NodesData is INodesData, Permissions {
      * @dev getNumberOfFullNodes - get number Online Nodes
      * @return number of active nodes plus number of leaving nodes
      */
-    function getNumberOnlineNodes() external view returns (uint) {
+    function getNumberOnlineNodes() external view override returns (uint) {
         return numberOfActiveNodes.add(numberOfLeavingNodes);
     }
 
@@ -385,7 +385,7 @@ contract NodesData is INodesData, Permissions {
      * @dev getActiveNodeIds - get array of indexes of Active Nodes
      * @return activeNodeIds - array of indexes of Active Nodes
      */
-    function getActiveNodeIds() external view returns (uint[] memory activeNodeIds) {
+    function getActiveNodeIds() external view override returns (uint[] memory activeNodeIds) {
         activeNodeIds = new uint[](numberOfActiveNodes);
         uint indexOfActiveNodeIds = 0;
         for (uint indexOfNodes = 0; indexOfNodes < nodes.length; indexOfNodes++) {
@@ -418,7 +418,7 @@ contract NodesData is INodesData, Permissions {
      * @param nodeIndex - index of Node
      * @return if Node status Active - true, else - false
      */
-    function isNodeActive(uint nodeIndex) public view returns (bool) {
+    function isNodeActive(uint nodeIndex) public view override returns (bool) {
         return nodes[nodeIndex].status == NodeStatus.Active;
     }
 

@@ -187,7 +187,7 @@ contract MonitorsFunctionality is GroupsFunctionality {
             _contractManager);
     }
 
-    function generateGroup(bytes32 groupIndex) internal allow(executorName) returns (uint[] memory) {
+    function generateGroup(bytes32 groupIndex) internal override allow(executorName) returns (uint[] memory) {
         address dataAddress = contractManager.getContract(dataName);
         address nodesDataAddress = contractManager.getContract("NodesData");
 

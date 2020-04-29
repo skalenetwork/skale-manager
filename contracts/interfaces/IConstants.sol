@@ -23,7 +23,7 @@ interface IConstants {
     function checkTime() external view returns (uint8);
     function rewardPeriod() external view returns (uint32);
     function allowableLatency() external view returns (uint32);
-    function deltaPeriod() external view returns (uint);
+    function deltaPeriod() external view returns (uint32);
     function rotationDelay() external view returns (uint);
     function SIX_YEARS() external view returns (uint32);
     function NUMBER_OF_MONITORS() external view returns (uint);
