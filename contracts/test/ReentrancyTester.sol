@@ -25,7 +25,7 @@ contract ReentrancyTester is Permissions, IERC777Recipient {
         bytes calldata /* userData */,
         bytes calldata /* operatorData */
     )
-        external
+        external override
     {
         SkaleToken skaleToken = SkaleToken(contractManager.getContract("SkaleToken"));
 
