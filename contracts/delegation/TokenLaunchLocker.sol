@@ -98,7 +98,7 @@ contract TokenLaunchLocker is Permissions, ILocker {
         }
     }
 
-    function getAndUpdateLockedAmount(address wallet) external returns (uint) {
+    function getAndUpdateLockedAmount(address wallet) external override returns (uint) {
         if (_locked[wallet] > 0) {
             DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
             TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
@@ -122,7 +122,7 @@ contract TokenLaunchLocker is Permissions, ILocker {
         }
     }
 
-    function getAndUpdateForbiddenForDelegationAmount(address) external returns (uint) {
+    function getAndUpdateForbiddenForDelegationAmount(address) external override returns (uint) {
         return 0;
     }
 
