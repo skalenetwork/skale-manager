@@ -28,7 +28,7 @@ import "../delegation/TimeHelpers.sol";
 contract TimeHelpersWithDebug is TimeHelpers, Ownable {
     uint timeShift;
 
-    function getCurrentMonth() external view returns (uint) {
+    function getCurrentMonth() external view override returns (uint) {
         return timestampToMonth(now.add(timeShift));
     }
 

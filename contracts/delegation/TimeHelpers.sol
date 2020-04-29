@@ -37,7 +37,7 @@ contract TimeHelpers {
         return BokkyPooBahsDateTimeLibrary.addMonths(fromTimestamp, n);
     }
 
-    function getCurrentMonth() external view returns (uint) {
+    function getCurrentMonth() external view virtual returns (uint) {
         return timestampToMonth(now);
     }
 
