@@ -116,7 +116,7 @@ contract SkaleDKG is Permissions {
         _;
     }
 
-    function openChannel(bytes32 groupIndex) external allowThree("SchainsData", "MonitorsData", "SkaleDKG") {
+    function openChannel(bytes32 groupIndex) external allowThree("SchainsData", "Monitors", "SkaleDKG") {
         require(!channels[groupIndex].active, "Channel already is created");
         channels[groupIndex].active = true;
         channels[groupIndex].dataAddress = msg.sender;
@@ -129,7 +129,7 @@ contract SkaleDKG is Permissions {
         emit ChannelOpened(groupIndex);
     }
 
-    function deleteChannel(bytes32 groupIndex) external allowTwo("SchainsData", "MonitorsData") {
+    function deleteChannel(bytes32 groupIndex) external allowTwo("SchainsData", "Monitors") {
         require(channels[groupIndex].active, "Channel is not created");
         delete channels[groupIndex];
     }

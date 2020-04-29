@@ -1,5 +1,5 @@
 /*
-    MonitorsFunctionality.sol - SKALE Manager
+    Monitors.sol - SKALE Manager
     Copyright (C) 2018-Present SKALE Labs
     @author Artem Payvin
 
@@ -19,15 +19,30 @@
 
 pragma solidity 0.5.16;
 
+import "./GroupsData.sol";
 import "./GroupsFunctionality.sol";
 import "./interfaces/IConstants.sol";
 import "./Nodes.sol";
-import "./MonitorsData.sol";
+import "@nomiclabs/buidler/console.sol";
 
 
-contract MonitorsFunctionality is GroupsFunctionality {
+contract Monitors is GroupsData, GroupsFunctionality {
 
     using StringUtils for string;
+
+    struct Metrics {
+        uint32 downtime;
+        uint32 latency;
+    }
+
+    struct Monitor {
+        uint nodeIndex;
+        bytes32[] checkedNodes;
+        Metrics[] verdicts;
+    }
+
+    mapping (bytes32 => bytes32[]) public checkedNodes;
+    mapping (bytes32 => uint32[][]) public verdicts;
 
     event MonitorCreated(
         uint nodeIndex,
@@ -85,6 +100,48 @@ contract MonitorsFunctionality is GroupsFunctionality {
     );
 
     /**
+     *  Add checked node or update existing one if it is already exits
+     */
+    function addCheckedNode(bytes32 monitorIndex, bytes32 data) external allow("Monitors") {
+        uint indexLength = 14;
+        require(data.length >= indexLength, "data is too small");
+        for (uint i = 0; i < checkedNodes[monitorIndex].length; ++i) {
+            require(checkedNodes[monitorIndex][i].length >= indexLength, "checked nodes data is too small");
+            uint shift = (32 - indexLength).mul(8);
+            bool equalIndex = checkedNodes[monitorIndex][i] >> shift == data >> shift;
+            if (equalIndex) {
+                checkedNodes[monitorIndex][i] = data;
+                return;
+            }
+        }
+        checkedNodes[monitorIndex].push(data);
+    }
+
+    function addVerdict(bytes32 monitorIndex, uint32 downtime, uint32 latency) external allow("Monitors") {
+        verdicts[monitorIndex].push([downtime, latency]);
+    }
+
+    function getCheckedArray(bytes32 monitorIndex) external view returns (bytes32[] memory) {
+        return checkedNodes[monitorIndex];
+    }
+
+    function getLengthOfMetrics(bytes32 monitorIndex) external view returns (uint) {
+        return verdicts[monitorIndex].length;
+    }
+
+    function removeCheckedNode(bytes32 monitorIndex, uint indexOfCheckedNode) external allow("Monitors") {
+        if (indexOfCheckedNode != checkedNodes[monitorIndex].length - 1) {
+            checkedNodes[monitorIndex][indexOfCheckedNode] = checkedNodes[monitorIndex][checkedNodes[monitorIndex].length - 1];
+        }
+        delete checkedNodes[monitorIndex][checkedNodes[monitorIndex].length - 1];
+        checkedNodes[monitorIndex].length--;
+    }
+
+    function removeAllVerdicts(bytes32 monitorIndex) external allow("Monitors") {
+        verdicts[monitorIndex].length = 0;
+    }
+
+    /**
      * addMonitor - setup monitors of node
      */
     function addMonitor(uint nodeIndex) external allow(executorName) {
@@ -92,7 +149,8 @@ contract MonitorsFunctionality is GroupsFunctionality {
         IConstants constantsHolder = IConstants(constantsAddress);
         bytes32 groupIndex = keccak256(abi.encodePacked(nodeIndex));
         uint possibleNumberOfNodes = constantsHolder.NUMBER_OF_MONITORS();
-        addGroup(groupIndex, possibleNumberOfNodes, bytes32(nodeIndex));
+        this.createGroup(groupIndex, possibleNumberOfNodes, bytes32(nodeIndex));
+
         uint numberOfNodesInGroup = setMonitors(groupIndex, nodeIndex);
         emit MonitorCreated(
             nodeIndex,
@@ -107,7 +165,7 @@ contract MonitorsFunctionality is GroupsFunctionality {
         IConstants constantsHolder = IConstants(constantsAddress);
         bytes32 groupIndex = keccak256(abi.encodePacked(nodeIndex));
         uint possibleNumberOfNodes = constantsHolder.NUMBER_OF_MONITORS();
-        upgradeGroup(groupIndex, possibleNumberOfNodes, bytes32(nodeIndex));
+        this.upgradeGroup(groupIndex, possibleNumberOfNodes, bytes32(nodeIndex));
         uint numberOfNodesInGroup = setMonitors(groupIndex, nodeIndex);
         emit MonitorUpgraded(
             nodeIndex,
@@ -117,85 +175,82 @@ contract MonitorsFunctionality is GroupsFunctionality {
         );
     }
 
-    function deleteMonitor(uint nodeIndex) external allow(executorName) {
-        bytes32 groupIndex = keccak256(abi.encodePacked(nodeIndex));
-        MonitorsData data = MonitorsData(contractManager.getContract("MonitorsData"));
-        data.removeAllVerdicts(groupIndex);
-        data.removeAllCheckedNodes(groupIndex);
-        uint[] memory nodesInGroup = data.getNodesInGroup(groupIndex);
-        uint index;
-        bytes32 monitorIndex;
-        for (uint i = 0; i < nodesInGroup.length; i++) {
-            monitorIndex = keccak256(abi.encodePacked(nodesInGroup[i]));
-            (index, ) = find(monitorIndex, nodeIndex);
-            if (index < data.getCheckedArrayLength(monitorIndex)) {
-                data.removeCheckedNode(monitorIndex, index);
-            }
-        }
-        deleteGroup(groupIndex);
-    }
+    // function deleteMonitor(uint nodeIndex) external allow(executorName) {
+    //     uint left = gasleft();
+    //     bytes32 groupIndex = keccak256(abi.encodePacked(nodeIndex));
+    //     this.removeAllVerdicts(groupIndex);
+    //     delete checkedNodes[groupIndex];
+    //     uint[] memory nodesInGroup = this.getNodesInGroup(groupIndex);
+    //     uint index;
+    //     bytes32 monitorIndex;
+    //     for (uint i = 0; i < nodesInGroup.length; i++) {
+    //         monitorIndex = keccak256(abi.encodePacked(nodesInGroup[i]));
+    //         (index, ) = find(monitorIndex, nodeIndex);
+    //         if (index < checkedNodes[monitorIndex].length) {
+    //             this.removeCheckedNode(monitorIndex, index);
+    //         }
+    //     }
+    //     this.deleteGroup(groupIndex);
+    // }
 
-    function sendVerdict(
-        uint fromMonitorIndex,
-        uint toNodeIndex,
-        uint32 downtime,
-        uint32 latency) external allow(executorName)
-    {
-        uint index;
-        uint32 time;
-        bytes32 monitorIndex = keccak256(abi.encodePacked(fromMonitorIndex));
-        (index, time) = find(monitorIndex, toNodeIndex);
-        require(time > 0, "Checked Node does not exist in MonitorsArray");
-        string memory message = "The time has not come to send verdict for ";
-        require(time <= block.timestamp, message.strConcat(StringUtils.uint2str(toNodeIndex)).strConcat(" Node"));
-        MonitorsData data = MonitorsData(contractManager.getContract("MonitorsData"));
-        data.removeCheckedNode(monitorIndex, index);
-        address constantsAddress = contractManager.getContract("ConstantsHolder");
-        bool receiveVerdict = time.add(IConstants(constantsAddress).deltaPeriod()) > uint32(block.timestamp);
-        if (receiveVerdict) {
-            data.addVerdict(keccak256(abi.encodePacked(toNodeIndex)), downtime, latency);
-        }
-        emit VerdictWasSent(
-            fromMonitorIndex,
-            toNodeIndex,
-            downtime,
-            latency,
-            receiveVerdict, uint32(block.timestamp), gasleft());
-    }
+    // function sendVerdict(
+    //     uint fromMonitorIndex,
+    //     uint toNodeIndex,
+    //     uint32 downtime,
+    //     uint32 latency) external allow(executorName)
+    // {
+    //     uint index;
+    //     uint32 time;
+    //     bytes32 monitorIndex = keccak256(abi.encodePacked(fromMonitorIndex));
+    //     (index, time) = find(monitorIndex, toNodeIndex);
+    //     require(time > 0, "Checked Node does not exist in MonitorsArray");
+    //     string memory message = "The time has not come to send verdict for ";
+    //     require(time <= block.timestamp, message.strConcat(StringUtils.uint2str(toNodeIndex)).strConcat(" Node"));
+    //     this.removeCheckedNode(monitorIndex, index);
+    //     address constantsAddress = contractManager.getContract("ConstantsHolder");
+    //     bool receiveVerdict = time.add(IConstants(constantsAddress).deltaPeriod()) > uint32(block.timestamp);
+    //     if (receiveVerdict) {
+    //         this.addVerdict(keccak256(abi.encodePacked(toNodeIndex)), downtime, latency);
+    //     }
+    //     emit VerdictWasSent(
+    //         fromMonitorIndex,
+    //         toNodeIndex,
+    //         downtime,
+    //         latency,
+    //         receiveVerdict, uint32(block.timestamp), gasleft());
+    // }
 
-    function calculateMetrics(uint nodeIndex) external allow(executorName) returns (uint32 averageDowntime, uint32 averageLatency) {
-        MonitorsData data = MonitorsData(contractManager.getContract("MonitorsData"));
-        bytes32 monitorIndex = keccak256(abi.encodePacked(nodeIndex));
-        uint lengthOfArray = data.getLengthOfMetrics(monitorIndex);
-        uint32[] memory downtimeArray = new uint32[](lengthOfArray);
-        uint32[] memory latencyArray = new uint32[](lengthOfArray);
-        for (uint i = 0; i < lengthOfArray; i++) {
-            downtimeArray[i] = data.verdicts(monitorIndex, i, 0);
-            latencyArray[i] = data.verdicts(monitorIndex, i, 1);
-        }
-        if (lengthOfArray > 0) {
-            averageDowntime = median(downtimeArray);
-            averageLatency = median(latencyArray);
-            data.removeAllVerdicts(monitorIndex);
-        }
-    }
+    // function calculateMetrics(uint nodeIndex) external allow(executorName) returns (uint32 averageDowntime, uint32 averageLatency) {
+    //     bytes32 monitorIndex = keccak256(abi.encodePacked(nodeIndex));
+    //     uint lengthOfArray = this.getLengthOfMetrics(monitorIndex);
+    //     uint32[] memory downtimeArray = new uint32[](lengthOfArray);
+    //     uint32[] memory latencyArray = new uint32[](lengthOfArray);
+    //     for (uint i = 0; i < lengthOfArray; i++) {
+    //         downtimeArray[i] = this.verdicts(monitorIndex, i, 0);
+    //         latencyArray[i] = this.verdicts(monitorIndex, i, 1);
+    //     }
+    //     if (lengthOfArray > 0) {
+    //         averageDowntime = median(downtimeArray);
+    //         averageLatency = median(latencyArray);
+    //         this.removeAllVerdicts(monitorIndex);
+    //     }
+    // }
+
 
     function initialize(address _contractManager) public initializer {
         GroupsFunctionality.initialize(
             "SkaleManager",
-            "MonitorsData",
+            "Monitors",
             _contractManager);
+        GroupsData.initialize("Monitors", _contractManager);
     }
 
     function generateGroup(bytes32 groupIndex) internal allow(executorName) returns (uint[] memory) {
-        address dataAddress = contractManager.getContract(dataName);
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));
-
-        require(IGroupsData(dataAddress).isGroupActive(groupIndex), "Group is not active");
-
-        uint exceptionNode = uint(IGroupsData(dataAddress).getGroupData(groupIndex));
+        require(this.isGroupActive(groupIndex), "Group is not active");
+        uint exceptionNode = uint(this.getGroupData(groupIndex));
         uint[] memory activeNodes = nodes.getActiveNodeIds();
-        uint numberOfNodesInGroup = IGroupsData(dataAddress).getRecommendedNumberOfNodes(groupIndex);
+        uint numberOfNodesInGroup = this.getRecommendedNumberOfNodes(groupIndex);
         uint availableAmount = activeNodes.length.sub((nodes.isNodeActive(exceptionNode)) ? 1 : 0);
         if (numberOfNodesInGroup > availableAmount) {
             numberOfNodesInGroup = availableAmount;
@@ -213,7 +268,7 @@ contract MonitorsFunctionality is GroupsFunctionality {
             nodesInGroup[i] = activeNodes[index];
             swap(activeNodes, index, activeNodes.length.sub(ignoringTail) - 1);
             ++ignoringTail;
-            IGroupsData(dataAddress).setNodeInGroup(groupIndex, nodesInGroup[i]);
+            this.setNodeInGroup(groupIndex, nodesInGroup[i]);
         }
         emit GroupGenerated(
             groupIndex,
@@ -233,29 +288,26 @@ contract MonitorsFunctionality is GroupsFunctionality {
 
     function setNumberOfNodesInGroup(bytes32 groupIndex, bytes32 groupData) internal view returns (uint numberOfNodes, uint finish) {
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));
-        address dataAddress = contractManager.getContract(dataName);
         numberOfNodes = nodes.getNumberOfNodes();
         uint numberOfActiveNodes = nodes.numberOfActiveNodes();
         uint numberOfExceptionNodes = (nodes.isNodeActive(uint(groupData)) ? 1 : 0);
-        uint recommendedNumberOfNodes = IGroupsData(dataAddress).getRecommendedNumberOfNodes(groupIndex);
+        uint recommendedNumberOfNodes = this.getRecommendedNumberOfNodes(groupIndex);
         finish = (recommendedNumberOfNodes > numberOfActiveNodes.sub(numberOfExceptionNodes) ?
             numberOfActiveNodes.sub(numberOfExceptionNodes) : recommendedNumberOfNodes);
     }
 
     function comparator(bytes32 groupIndex, uint indexOfNode) internal view returns (bool) {
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));
-        address dataAddress = contractManager.getContract(dataName);
-        return nodes.isNodeActive(indexOfNode) && !IGroupsData(dataAddress).isExceptionNode(groupIndex, indexOfNode);
+        return nodes.isNodeActive(indexOfNode) && !this.isExceptionNode(groupIndex, indexOfNode);
     }
 
     function setMonitors(bytes32 groupIndex, uint nodeIndex) internal returns (uint) {
-        MonitorsData data = MonitorsData(contractManager.getContract("MonitorsData"));
-        data.setException(groupIndex, nodeIndex);
+        this.setException(groupIndex, nodeIndex);
         uint[] memory indexOfNodesInGroup = generateGroup(groupIndex);
         bytes32 bytesParametersOfNodeIndex = getDataToBytes(nodeIndex);
         for (uint i = 0; i < indexOfNodesInGroup.length; i++) {
             bytes32 index = keccak256(abi.encodePacked(indexOfNodesInGroup[i]));
-            data.addCheckedNode(index, bytesParametersOfNodeIndex);
+            this.addCheckedNode(index, bytesParametersOfNodeIndex);
         }
         emit MonitorsArray(
             nodeIndex,
@@ -267,13 +319,12 @@ contract MonitorsFunctionality is GroupsFunctionality {
     }
 
     function find(bytes32 monitorIndex, uint nodeIndex) internal view returns (uint index, uint32 time) {
-        MonitorsData data = MonitorsData(contractManager.getContract("MonitorsData"));
-        bytes32[] memory checkedNodes = data.getCheckedArray(monitorIndex);
+        bytes32[] memory _checkedNodes = checkedNodes[monitorIndex];
         uint possibleIndex;
         uint32 possibleTime;
-        index = checkedNodes.length;
-        for (uint i = 0; i < checkedNodes.length; i++) {
-            (possibleIndex, possibleTime) = getDataFromBytes(checkedNodes[i]);
+        index = _checkedNodes.length;
+        for (uint i = 0; i < _checkedNodes.length; i++) {
+            (possibleIndex, possibleTime) = getDataFromBytes(_checkedNodes[i]);
             if (possibleIndex == nodeIndex && (time == 0 || possibleTime < time)) {
                 index = i;
                 time = possibleTime;

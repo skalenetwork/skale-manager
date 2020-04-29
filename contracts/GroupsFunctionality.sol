@@ -118,25 +118,13 @@ contract GroupsFunctionality is Permissions {
     }
 
     /**
-     * @dev contructor in Permissions approach
-     * @param newExecutorName - name of executor contract
-     * @param newDataName - name of data contract
-     * @param newContractsAddress needed in Permissions constructor
-     */
-    function initialize(string memory newExecutorName, string memory newDataName, address newContractsAddress) public initializer {
-        Permissions.initialize(newContractsAddress);
-        executorName = newExecutorName;
-        dataName = newDataName;
-    }
-
-    /**
-     * @dev addGroup - creates and adds new Group to Data contract
+     * @dev createGroup - creates and adds new Group to Data contract
      * function could be run only by executor
      * @param groupIndex - Groups identifier
      * @param newRecommendedNumberOfNodes - recommended number of Nodes
      * @param data - some extra data
      */
-    function addGroup(bytes32 groupIndex, uint newRecommendedNumberOfNodes, bytes32 data) public allow(executorName) {
+    function createGroup(bytes32 groupIndex, uint newRecommendedNumberOfNodes, bytes32 data) external allowTwo(executorName, "Monitors") {
         address groupsDataAddress = contractManager.getContract(dataName);
         IGroupsData(groupsDataAddress).addGroup(groupIndex, newRecommendedNumberOfNodes, data);
         emit GroupAdded(
@@ -151,7 +139,7 @@ contract GroupsFunctionality is Permissions {
      * function could be run only by executor
      * @param groupIndex - Groups identifier
      */
-    function deleteGroup(bytes32 groupIndex) public allow(executorName) {
+    function deleteGroup(bytes32 groupIndex) external allow(executorName) {
         address groupsDataAddress = contractManager.getContract(dataName);
         require(IGroupsData(groupsDataAddress).isGroupActive(groupIndex), "Group is not active");
         IGroupsData(groupsDataAddress).removeGroup(groupIndex);
@@ -166,7 +154,7 @@ contract GroupsFunctionality is Permissions {
      * @param newRecommendedNumberOfNodes - recommended number of Nodes
      * @param data - some extra data
      */
-    function upgradeGroup(bytes32 groupIndex, uint newRecommendedNumberOfNodes, bytes32 data) public allow(executorName) {
+    function upgradeGroup(bytes32 groupIndex, uint newRecommendedNumberOfNodes, bytes32 data) external allow(executorName) {
         address groupsDataAddress = contractManager.getContract(dataName);
         require(IGroupsData(groupsDataAddress).isGroupActive(groupIndex), "Group is not active");
         IGroupsData(groupsDataAddress).removeGroup(groupIndex);
@@ -177,6 +165,18 @@ contract GroupsFunctionality is Permissions {
             data,
             uint32(block.timestamp),
             gasleft());
+    }
+
+    /**
+     * @dev contructor in Permissions approach
+     * @param newExecutorName - name of executor contract
+     * @param newDataName - name of data contract
+     * @param newContractsAddress needed in Permissions constructor
+     */
+    function initialize(string memory newExecutorName, string memory newDataName, address newContractsAddress) public initializer {
+        Permissions.initialize(newContractsAddress);
+        executorName = newExecutorName;
+        dataName = newDataName;
     }
 
     /**

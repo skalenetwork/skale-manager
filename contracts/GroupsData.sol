@@ -22,13 +22,7 @@ pragma experimental ABIEncoderV2;
 
 import "./Permissions.sol";
 import "./interfaces/IGroupsData.sol";
-
-
-interface ISkaleDKG {
-    function openChannel(bytes32 groupIndex) external;
-    function deleteChannel(bytes32 groupIndex) external;
-    function isChannelOpened(bytes32 groupIndex) external view returns (bool);
-}
+import "./interfaces/ISkaleDKG.sol";
 
 
 /**
@@ -245,15 +239,6 @@ contract GroupsData is IGroupsData, Permissions {
     }
 
     /**
-     * @dev getNodesInGroup - shows Nodes in Group
-     * @param groupIndex - Groups identifier
-     * @return array of indexes of Nodes in Group
-     */
-    function getNodesInGroup(bytes32 groupIndex) external view returns (uint[] memory) {
-        return groups[groupIndex].nodesInGroup;
-    }
-
-    /**
      * @dev getGroupsData - shows Groups extra data
      * @param groupIndex - Groups identifier
      * @return Groups extra data
@@ -278,6 +263,15 @@ contract GroupsData is IGroupsData, Permissions {
      */
     function getNumberOfNodesInGroup(bytes32 groupIndex) external view returns (uint) {
         return groups[groupIndex].nodesInGroup.length;
+    }
+
+    /**
+     * @dev getNodesInGroup - shows Nodes in Group
+     * @param groupIndex - Groups identifier
+     * @return array of indexes of Nodes in Group
+     */
+    function getNodesInGroup(bytes32 groupIndex) external view returns (uint[] memory) {
+        return groups[groupIndex].nodesInGroup;
     }
 
     /**

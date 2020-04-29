@@ -26,8 +26,8 @@ import "./interfaces/ISchainsFunctionality.sol";
 import "./interfaces/IManagerData.sol";
 import "./delegation/Distributor.sol";
 import "./delegation/ValidatorService.sol";
-import "./MonitorsFunctionality.sol";
-import "./SchainsFunctionality.sol";
+import "./Monitors.sol";
+// import "./SchainsFunctionality.sol";
 import "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
 import "@openzeppelin/contracts/introspection/IERC1820Registry.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
@@ -74,42 +74,42 @@ contract SkaleManager is IERC777Recipient, Permissions {
     function createNode(bytes calldata data) external {
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
-        MonitorsFunctionality monitorsFunctionality = MonitorsFunctionality(contractManager.getContract("MonitorsFunctionality"));
+        // Monitors monitors = Monitors(contractManager.getContract("Monitors"));
 
         validatorService.checkPossibilityCreatingNode(msg.sender);
         uint nodeIndex = nodes.createNode(msg.sender, data);
         validatorService.pushNode(msg.sender, nodeIndex);
-        monitorsFunctionality.addMonitor(nodeIndex);
+        // monitors.addMonitor(nodeIndex);
     }
 
     function nodeExit(uint nodeIndex) external {
-        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
-        SchainsFunctionality schainsFunctionality = SchainsFunctionality(contractManager.getContract("SchainsFunctionality"));
-        SchainsData schainsData = SchainsData(contractManager.getContract("SchainsData"));
-        IConstants constants = IConstants(contractManager.getContract("ConstantsHolder"));
-        schainsFunctionality.freezeSchains(nodeIndex);
-        if (nodes.isNodeActive(nodeIndex)) {
-            require(nodes.initExit(msg.sender, nodeIndex), "Initialization of node exit is failed");
-        }
-        bool completed;
-        bool schains = false;
-        if (schainsData.getActiveSchain(nodeIndex) != bytes32(0)) {
-            completed = schainsFunctionality.exitFromSchain(nodeIndex);
-            schains = true;
-        } else {
-            completed = true;
-        }
-        if (completed) {
-            require(nodes.completeExit(msg.sender, nodeIndex), "Finishing of node exit is failed");
-            nodes.changeNodeFinishTime(nodeIndex, uint32(now + (schains ? constants.rotationDelay() : 0)));
-        }
+        // Nodes nodes = Nodes(contractManager.getContract("Nodes"));
+        // SchainsFunctionality schainsFunctionality = SchainsFunctionality(contractManager.getContract("SchainsFunctionality"));
+        // SchainsData schainsData = SchainsData(contractManager.getContract("SchainsData"));
+        // IConstants constants = IConstants(contractManager.getContract("ConstantsHolder"));
+        // schainsFunctionality.freezeSchains(nodeIndex);
+        // if (nodes.isNodeActive(nodeIndex)) {
+        //     require(nodes.initExit(msg.sender, nodeIndex), "Initialization of node exit is failed");
+        // }
+        // bool completed;
+        // bool schains = false;
+        // if (schainsData.getActiveSchain(nodeIndex) != bytes32(0)) {
+        //     completed = schainsFunctionality.exitFromSchain(nodeIndex);
+        //     schains = true;
+        // } else {
+        //     completed = true;
+        // }
+        // if (completed) {
+        //     require(nodes.completeExit(msg.sender, nodeIndex), "Finishing of node exit is failed");
+        //     nodes.changeNodeFinishTime(nodeIndex, uint32(now + (schains ? constants.rotationDelay() : 0)));
+        // }
     }
 
     function deleteNode(uint nodeIndex) external {
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));
         nodes.removeNode(msg.sender, nodeIndex);
-        MonitorsFunctionality monitorsFunctionality = MonitorsFunctionality(contractManager.getContract("MonitorsFunctionality"));
-        monitorsFunctionality.deleteMonitor(nodeIndex);
+        // Monitors monitors = Monitors(contractManager.getContract("Monitors"));
+        // monitors.deleteMonitor(nodeIndex);
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
         uint validatorId = validatorService.getValidatorIdByNodeAddress(msg.sender);
         validatorService.deleteNode(validatorId, nodeIndex);
@@ -117,23 +117,23 @@ contract SkaleManager is IERC777Recipient, Permissions {
 
     function deleteNodeByRoot(uint nodeIndex) external onlyOwner {
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));
-        MonitorsFunctionality monitorsFunctionality = MonitorsFunctionality(contractManager.getContract("MonitorsFunctionality"));
+        // Monitors monitors = Monitors(contractManager.getContract("Monitors"));
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
 
         nodes.removeNodeByRoot(nodeIndex);
-        monitorsFunctionality.deleteMonitor(nodeIndex);
+        // monitors.deleteMonitor(nodeIndex);
         uint validatorId = nodes.getNodeValidatorId(nodeIndex);
         validatorService.deleteNode(validatorId, nodeIndex);
     }
 
     function deleteSchain(string calldata name) external {
-        address schainsFunctionalityAddress = contractManager.getContract("SchainsFunctionality");
-        ISchainsFunctionality(schainsFunctionalityAddress).deleteSchain(msg.sender, name);
+        // address schainsFunctionalityAddress = contractManager.getContract("SchainsFunctionality");
+        // ISchainsFunctionality(schainsFunctionalityAddress).deleteSchain(msg.sender, name);
     }
 
     function deleteSchainByRoot(string calldata name) external onlyOwner {
-        address schainsFunctionalityAddress = contractManager.getContract("SchainsFunctionality");
-        ISchainsFunctionality(schainsFunctionalityAddress).deleteSchainByRoot(name);
+        // address schainsFunctionalityAddress = contractManager.getContract("SchainsFunctionality");
+        // ISchainsFunctionality(schainsFunctionalityAddress).deleteSchainByRoot(name);
     }
 
     function sendVerdict(
@@ -143,15 +143,15 @@ contract SkaleManager is IERC777Recipient, Permissions {
         uint32 latency) external
     {
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));
-        MonitorsFunctionality monitorsFunctionality = MonitorsFunctionality(contractManager.getContract("MonitorsFunctionality"));
+        // Monitors monitors = Monitors(contractManager.getContract("Monitors"));
 
         require(nodes.isNodeExist(msg.sender, fromMonitorIndex), "Node does not exist for Message sender");
 
-        monitorsFunctionality.sendVerdict(
-            fromMonitorIndex,
-            toNodeIndex,
-            downtime,
-            latency);
+        // monitors.sendVerdict(
+        //     fromMonitorIndex,
+        //     toNodeIndex,
+        //     downtime,
+        //     latency);
     }
 
     function sendVerdicts(
@@ -164,14 +164,14 @@ contract SkaleManager is IERC777Recipient, Permissions {
         require(nodes.isNodeExist(msg.sender, fromMonitorIndex), "Node does not exist for Message sender");
         require(toNodeIndexes.length == downtimes.length, "Incorrect data");
         require(latencies.length == downtimes.length, "Incorrect data");
-        MonitorsFunctionality monitorsFunctionalityAddress = MonitorsFunctionality(contractManager.getContract("MonitorsFunctionality"));
-        for (uint i = 0; i < toNodeIndexes.length; i++) {
-            monitorsFunctionalityAddress.sendVerdict(
-                fromMonitorIndex,
-                toNodeIndexes[i],
-                downtimes[i],
-                latencies[i]);
-        }
+        // Monitors monitors = Monitors(contractManager.getContract("Monitors"));
+        // for (uint i = 0; i < toNodeIndexes.length; i++) {
+        //     monitors.sendVerdict(
+        //         fromMonitorIndex,
+        //         toNodeIndexes[i],
+        //         downtimes[i],
+        //         latencies[i]);
+        // }
     }
 
     function getBounty(uint nodeIndex) external {
@@ -181,25 +181,25 @@ contract SkaleManager is IERC777Recipient, Permissions {
         bool nodeIsActive = nodes.isNodeActive(nodeIndex);
         bool nodeIsLeaving = nodes.isNodeLeaving(nodeIndex);
         require(nodeIsActive || nodeIsLeaving, "Node is not Active and is not Leaving");
-        uint32 averageDowntime;
-        uint32 averageLatency;
-        MonitorsFunctionality monitorsFunctionality = MonitorsFunctionality(contractManager.getContract("MonitorsFunctionality"));
-        (averageDowntime, averageLatency) = monitorsFunctionality.calculateMetrics(nodeIndex);
-        uint bounty = manageBounty(
-            msg.sender,
-            nodeIndex,
-            averageDowntime,
-            averageLatency);
+        // uint32 averageDowntime;
+        // uint32 averageLatency;
+        // Monitors monitors = Monitors(contractManager.getContract("Monitors"));
+        // (averageDowntime, averageLatency) = monitors.calculateMetrics(nodeIndex);
+        // uint bounty = manageBounty(
+        //     msg.sender,
+        //     nodeIndex,
+        //     averageDowntime,
+        //     averageLatency);
         nodes.changeNodeLastRewardDate(nodeIndex);
-        monitorsFunctionality.upgradeMonitor(nodeIndex);
-        emit BountyGot(
-            nodeIndex,
-            msg.sender,
-            averageDowntime,
-            averageLatency,
-            bounty,
-            uint32(block.timestamp),
-            gasleft());
+        // monitors.upgradeMonitor(nodeIndex);
+        // emit BountyGot(
+        //     nodeIndex,
+        //     msg.sender,
+        //     averageDowntime,
+        //     averageLatency,
+        //     bounty,
+        //     uint32(block.timestamp),
+        //     gasleft());
     }
 
     function initialize(address newContractsAddress) public initializer {

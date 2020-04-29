@@ -4,7 +4,7 @@ import { ConstantsHolderInstance,
          ContractManagerInstance,
          DelegationControllerInstance,
          DistributorInstance,
-         MonitorsDataInstance,
+         MonitorsInstance,
          NodesInstance,
          SchainsDataInstance,
          SchainsFunctionalityInstance,
@@ -17,7 +17,7 @@ import { deployContractManager } from "./tools/deploy/contractManager";
 import { deployDelegationController } from "./tools/deploy/delegation/delegationController";
 import { deployDistributor } from "./tools/deploy/delegation/distributor";
 import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
-import { deployMonitorsData } from "./tools/deploy/monitorsData";
+import { deployMonitors } from "./tools/deploy/monitors";
 import { deployNodes } from "./tools/deploy/nodes";
 import { deploySchainsData } from "./tools/deploy/schainsData";
 import { deploySchainsFunctionality } from "./tools/deploy/schainsFunctionality";
@@ -34,7 +34,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
     let nodes: NodesInstance;
     let skaleManager: SkaleManagerInstance;
     let skaleToken: SkaleTokenInstance;
-    let monitorsData: MonitorsDataInstance;
+    let monitors: MonitorsInstance;
     let schainsData: SchainsDataInstance;
     let schainsFunctionality: SchainsFunctionalityInstance;
     let validatorService: ValidatorServiceInstance;
@@ -47,7 +47,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
         skaleToken = await deploySkaleToken(contractManager);
         constantsHolder = await deployConstantsHolder(contractManager);
         nodes = await deployNodes(contractManager);
-        monitorsData = await deployMonitorsData(contractManager);
+        monitors = await deployMonitors(contractManager);
         schainsData = await deploySchainsData(contractManager);
         schainsFunctionality = await deploySchainsFunctionality(contractManager);
         skaleManager = await deploySkaleManager(contractManager);
@@ -118,7 +118,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
 
             await nodes.numberOfActiveNodes().should.be.eventually.deep.equal(web3.utils.toBN(1));
             (await nodes.getNodePort(0)).toNumber().should.be.equal(8545);
-            await monitorsData.isGroupActive(web3.utils.soliditySha3(0)).should.be.eventually.true;
+            await monitors.isGroupActive(web3.utils.soliditySha3(0)).should.be.eventually.true;
         });
 
         it("should not allow to create node if validator became untrusted", async () => {
@@ -364,9 +364,9 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                 skipTime(web3, 3400);
                 await skaleManager.sendVerdict(0, 1, 0, 50, {from: nodeAddress});
 
-                await monitorsData.verdicts(web3.utils.soliditySha3(1), 0, 0)
+                await monitors.verdicts(web3.utils.soliditySha3(1), 0, 0)
                     .should.be.eventually.deep.equal(web3.utils.toBN(0));
-                await monitorsData.verdicts(web3.utils.soliditySha3(1), 0, 1)
+                await monitors.verdicts(web3.utils.soliditySha3(1), 0, 1)
                     .should.be.eventually.deep.equal(web3.utils.toBN(50));
             });
 
@@ -374,13 +374,13 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                 skipTime(web3, 3400);
                 await skaleManager.sendVerdicts(0, [1, 2], [0, 0], [50, 50], {from: nodeAddress});
 
-                await monitorsData.verdicts(web3.utils.soliditySha3(1), 0, 0)
+                await monitors.verdicts(web3.utils.soliditySha3(1), 0, 0)
                     .should.be.eventually.deep.equal(web3.utils.toBN(0));
-                await monitorsData.verdicts(web3.utils.soliditySha3(1), 0, 1)
+                await monitors.verdicts(web3.utils.soliditySha3(1), 0, 1)
                     .should.be.eventually.deep.equal(web3.utils.toBN(50));
-                await monitorsData.verdicts(web3.utils.soliditySha3(2), 0, 0)
+                await monitors.verdicts(web3.utils.soliditySha3(2), 0, 0)
                     .should.be.eventually.deep.equal(web3.utils.toBN(0));
-                await monitorsData.verdicts(web3.utils.soliditySha3(2), 0, 1)
+                await monitors.verdicts(web3.utils.soliditySha3(2), 0, 1)
                     .should.be.eventually.deep.equal(web3.utils.toBN(50));
             });
 

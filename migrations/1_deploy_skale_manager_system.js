@@ -83,8 +83,7 @@ async function deploy(deployer, networkName, accounts) {
 
         "ConstantsHolder",
         "Nodes",
-        "MonitorsData",
-        "MonitorsFunctionality",
+        "Monitors",
         "SchainsData",
         "SchainsFunctionality",
         "SchainsFunctionalityInternal",
