@@ -42,6 +42,7 @@ contract ValidatorService is Permissions {
         uint registrationTime;
         uint minimumDelegationAmount;
         uint[] nodeIndexes;
+        bool acceptNewRequests;
     }
 
     event ValidatorRegistered(
@@ -107,7 +108,8 @@ contract ValidatorService is Permissions {
             feeRate,
             now,
             minimumDelegationAmount,
-            emptyArray
+            emptyArray,
+            true
         );
         setValidatorAddress(validatorId, msg.sender);
 
@@ -266,6 +268,18 @@ contract ValidatorService is Permissions {
         validators[validatorId].description = newDescription;
     }
 
+    function startAcceptingNewRequests() external {
+        uint validatorId = getValidatorId(msg.sender);
+        require(isAcceptingNewRequests(validatorId) == false, "Accepting request is already enabled");
+        validators[validatorId].acceptNewRequests = true;
+    }
+
+    function stopAcceptingNewRequests() external {
+        uint validatorId = getValidatorId(msg.sender);
+        require(isAcceptingNewRequests(validatorId), "Accepting request is already disabled");
+        validators[validatorId].acceptNewRequests = false;
+    }
+
     function initialize(address _contractManager) public initializer {
         Permissions.initialize(_contractManager);
     }
@@ -298,6 +312,10 @@ contract ValidatorService is Permissions {
     function getValidatorId(address validatorAddress) public view returns (uint) {
         checkIfValidatorAddressExists(validatorAddress);
         return _validatorAddressToId[validatorAddress];
+    }
+
+    function isAcceptingNewRequests(uint validatorId) public view checkValidatorExists(validatorId) returns (bool) {
+        return validators[validatorId].acceptNewRequests;
     }
 
     // private
