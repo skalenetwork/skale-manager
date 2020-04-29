@@ -131,7 +131,7 @@ contract Distributor is Permissions, IERC777Recipient {
         bytes calldata userData,
         bytes calldata
     )
-        external
+        external override
         allow("SkaleToken")
     {
         require(to == address(this), "Receiver is incorrect");

@@ -62,7 +62,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
         bytes calldata userData,
         bytes calldata // operator data
     )
-        external
+        external override
         allow("SkaleToken")
     {
         require(to == address(this), "Receiver is incorrect");
