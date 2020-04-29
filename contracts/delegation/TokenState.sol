@@ -73,7 +73,7 @@ contract TokenState is Permissions, ILocker {
         emit LockerWasRemoved(locker);
     }
 
-    function initialize(address _contractManager) public initializer {
+    function initialize(address _contractManager) public override initializer {
         Permissions.initialize(_contractManager);
         registerLocker("DelegationController");
         registerLocker("Punisher");

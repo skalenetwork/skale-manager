@@ -188,7 +188,7 @@ contract NodesFunctionality is Permissions, INodesFunctionality {
      * @dev constructor in Permissions approach
      * @param _contractsAddress needed in Permissions constructor
     */
-    function initialize(address _contractsAddress) public initializer {
+    function initialize(address _contractsAddress) public override initializer {
         Permissions.initialize(_contractsAddress);
     }
 

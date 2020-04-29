@@ -167,7 +167,7 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
         return nodeIndex;
     }
 
-    function initialize(address newContractsAddress) public initializer {
+    function initialize(address newContractsAddress) public override initializer {
         GroupsFunctionality.initialize("SchainsFunctionality", "SchainsData", newContractsAddress);
     }
 

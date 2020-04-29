@@ -83,7 +83,7 @@ contract SkaleVerifier is Permissions {
         );
     }
 
-    function initialize(address newContractsAddress) public initializer {
+    function initialize(address newContractsAddress) public override initializer {
         Permissions.initialize(newContractsAddress);
     }
 

@@ -324,7 +324,7 @@ contract SkaleDKG is Permissions {
             channels[groupIndex].nodeToComplaint == nodeIndex;
     }
 
-    function initialize(address contractsAddress) public initializer {
+    function initialize(address contractsAddress) public override initializer {
         Permissions.initialize(contractsAddress);
     }
 

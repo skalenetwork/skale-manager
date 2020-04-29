@@ -126,7 +126,7 @@ contract TokenLaunchLocker is Permissions, ILocker {
         return 0;
     }
 
-    function initialize(address _contractManager) public initializer {
+    function initialize(address _contractManager) public override initializer {
         Permissions.initialize(_contractManager);
     }
 

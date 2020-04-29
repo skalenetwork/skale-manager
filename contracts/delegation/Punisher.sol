@@ -80,7 +80,7 @@ contract Punisher is Permissions, ILocker {
         _locked[holder] = _locked[holder].add(amount);
     }
 
-    function initialize(address _contractManager) public initializer {
+    function initialize(address _contractManager) public override initializer {
         Permissions.initialize(_contractManager);
     }
 

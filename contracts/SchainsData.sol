@@ -388,7 +388,7 @@ contract SchainsData is GroupsData {
         }
     }
 
-    function initialize(address newContractsAddress) public initializer {
+    function initialize(address newContractsAddress) public override initializer {
         GroupsData.initialize("SchainsFunctionalityInternal", newContractsAddress);
 
         numberOfSchains = 0;

@@ -405,7 +405,7 @@ contract NodesData is INodesData, Permissions {
         return nodes[nodeIndex].status;
     }
 
-    function initialize(address newContractsAddress) public initializer {
+    function initialize(address newContractsAddress) public override initializer {
         Permissions.initialize(newContractsAddress);
 
         numberOfActiveNodes = 0;

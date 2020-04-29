@@ -180,7 +180,7 @@ contract MonitorsFunctionality is GroupsFunctionality {
         }
     }
 
-    function initialize(address _contractManager) public initializer {
+    function initialize(address _contractManager) public override initializer {
         GroupsFunctionality.initialize(
             "SkaleManager",
             "MonitorsData",

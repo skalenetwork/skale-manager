@@ -91,7 +91,7 @@ contract MonitorsData is GroupsData {
         return verdicts[monitorIndex].length;
     }
 
-    function initialize(address newContractsAddress) public initializer {
+    function initialize(address newContractsAddress) public override initializer {
         GroupsData.initialize("MonitorsFunctionality", newContractsAddress);
     }
 }

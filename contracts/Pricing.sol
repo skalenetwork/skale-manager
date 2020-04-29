@@ -63,7 +63,7 @@ contract Pricing is Permissions {
         lastUpdated = now;
     }
 
-    function initialize(address newContractsAddress) public initializer {
+    function initialize(address newContractsAddress) public override initializer {
         Permissions.initialize(newContractsAddress);
         lastUpdated = now;
         price = 5*10**6;

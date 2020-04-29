@@ -234,7 +234,7 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
 
     }
 
-    function initialize(address newContractsAddress) public initializer {
+    function initialize(address newContractsAddress) public override initializer {
         Permissions.initialize(newContractsAddress);
         executorName = "SkaleManager";
         dataName = "SchainsData";

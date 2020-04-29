@@ -123,7 +123,7 @@ contract GroupsFunctionality is Permissions {
      * @param newDataName - name of data contract
      * @param newContractsAddress needed in Permissions constructor
      */
-    function initialize(string memory newExecutorName, string memory newDataName, address newContractsAddress) public initializer {
+    function initialize(string memory newExecutorName, string memory newDataName, address newContractsAddress) public override initializer {
         Permissions.initialize(newContractsAddress);
         executorName = newExecutorName;
         dataName = newDataName;

@@ -59,7 +59,7 @@ contract ManagerData is IManagerData, Permissions {
      * @dev constuctor in Permissions approach
      * @param newContractsAddress needed in Permissions constructor
      */
-    function initialize(address newContractsAddress) public initializer {
+    function initialize(address newContractsAddress) public override initializer {
         Permissions.initialize(newContractsAddress);
         startTime = uint32(block.timestamp);
         executorName = "SkaleManager";

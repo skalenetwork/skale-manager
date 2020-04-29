@@ -266,7 +266,7 @@ contract ValidatorService is Permissions {
         validators[validatorId].description = newDescription;
     }
 
-    function initialize(address _contractManager) public initializer {
+    function initialize(address _contractManager) public override initializer {
         Permissions.initialize(_contractManager);
     }
 

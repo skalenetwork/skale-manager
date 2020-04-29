@@ -287,7 +287,7 @@ contract GroupsData is IGroupsData, Permissions {
      * @param newExecutorName - name of executor contract
      * @param newContractsAddress needed in Permissions constructor
      */
-    function initialize(string memory newExecutorName, address newContractsAddress) public initializer {
+    function initialize(string memory newExecutorName, address newContractsAddress) public override initializer {
         Permissions.initialize(newContractsAddress);
         executorName = newExecutorName;
     }

@@ -38,7 +38,7 @@ contract ContractManager is Initializable, Ownable {
 
     event ContractUpgraded(string contractsName, address contractsAddress);
 
-    function initialize() external initializer {
+    function initialize() external override initializer {
         Ownable.initialize(msg.sender);
     }
 

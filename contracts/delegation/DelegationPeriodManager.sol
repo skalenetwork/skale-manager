@@ -51,7 +51,7 @@ contract DelegationPeriodManager is Permissions {
         emit DelegationPeriodWasRemoved(monthsCount);
     }
 
-    function initialize(address _contractsAddress) public initializer {
+    function initialize(address _contractsAddress) public override initializer {
         Permissions.initialize(_contractsAddress);
         stakeMultipliers[3] = 100;
         stakeMultipliers[6] = 150;

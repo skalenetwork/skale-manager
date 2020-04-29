@@ -33,7 +33,7 @@ contract Permissions is Ownable {
 
     ContractManager contractManager;
 
-    function initialize(address _contractManager) public initializer {
+    function initialize(address _contractManager) public virtual initializer {
         Ownable.initialize(msg.sender);
         contractManager = ContractManager(_contractManager);
     }
