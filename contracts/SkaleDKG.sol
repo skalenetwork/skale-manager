@@ -502,7 +502,7 @@ contract SkaleDKG is Permissions {
         internal
     {
         uint index = findNode(groupIndex, nodeIndex);
-        require(channels[groupIndex].broadcasted[index] == false, "This node is already broadcasted");
+        require(!channels[groupIndex].broadcasted[index], "This node is already broadcasted");
         channels[groupIndex].broadcasted[index] = true;
         channels[groupIndex].numberOfBroadcasted++;
         data[groupIndex][index] = BroadcastedData({

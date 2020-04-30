@@ -29,8 +29,7 @@ contract PartialDifferencesTester {
     PartialDifferences.Sequence[] sequences;
     PartialDifferences.Value[] values;
 
-    function createSequence() external returns (uint id) {
-        id = sequences.length;
+    function createSequence() external {
         sequences.push();
     }
 
