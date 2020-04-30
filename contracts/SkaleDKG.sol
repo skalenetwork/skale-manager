@@ -118,19 +118,20 @@ contract SkaleDKG is Permissions {
         _;
     }
 
-    function openChannel(bytes32 groupIndex) external allowThree("SchainsData", "MonitorsData", "SkaleDKG") {
+    function openChannel(bytes32 groupIndex) external allowTwo("SchainsData", "MonitorsData") {
         require(!channels[groupIndex].active, "Channel already is created");
-
-        GroupsData groupsData = GroupsData(channels[groupIndex].dataAddress);
+        
+        GroupsData groupsData = GroupsData(msg.sender);
 
         channels[groupIndex].active = true;
-        channels[groupIndex].dataAddress = msg.sender;
+        channels[groupIndex].dataAddress = address(groupsData);
         channels[groupIndex].broadcasted = new bool[](groupsData.getRecommendedNumberOfNodes(groupIndex));
         channels[groupIndex].completed = new bool[](groupsData.getRecommendedNumberOfNodes(groupIndex));
         channels[groupIndex].publicKeyy.x = 1;
         channels[groupIndex].nodeToComplaint = uint(-1);
         channels[groupIndex].startedBlockTimestamp = block.timestamp;
-        IGroupsData(channels[groupIndex].dataAddress).setGroupFailedDKG(groupIndex);
+
+        groupsData.setGroupFailedDKG(groupIndex);
         emit ChannelOpened(groupIndex);
     }
 
