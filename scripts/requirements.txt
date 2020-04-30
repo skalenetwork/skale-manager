@@ -1,2 +1,1 @@
-slither-analyzer==0.6.8
-crytic-compile==0.1.5
+slither-analyzer==0.6.12
