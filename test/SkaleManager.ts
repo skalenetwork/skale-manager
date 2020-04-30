@@ -57,8 +57,8 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
 
         const prefix = "0x000000000000000000000000";
         const premined = "100000000000000000000000000";
-        await skaleToken.mint(owner, skaleManager.address, premined, "0x", "0x");
-        await skaleToken.mint(owner, owner, premined, "0x", "0x");
+        await skaleToken.mint(skaleManager.address, premined, "0x", "0x");
+        await skaleToken.mint(owner, premined, "0x", "0x");
         await constantsHolder.setMSR(5);
         await constantsHolder.setLaunchTimestamp(0); // to allow bounty withdrawing
     });

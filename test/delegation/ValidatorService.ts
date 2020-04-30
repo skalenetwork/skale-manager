@@ -282,8 +282,8 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
                 amount = 100;
                 delegationPeriod = 3;
                 info = "NICE";
-                await skaleToken.mint(owner, holder, 200, "0x", "0x");
-                await skaleToken.mint(owner, validator3, 200, "0x", "0x");
+                await skaleToken.mint(holder, 200, "0x", "0x");
+                await skaleToken.mint(validator3, 200, "0x", "0x");
             });
 
             it("should allow to enable validator in whitelist", async () => {

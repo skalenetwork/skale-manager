@@ -31,7 +31,7 @@ contract("SkaleToken", ([owner, holder, receiver, nilAddress, accountWith99]) =>
     skaleToken = await deploySkaleToken(contractManager);
 
     const premined = "5000000000000000000000000000"; // 5e9 * 1e18
-    await skaleToken.mint(owner, owner, premined, "0x", "0x");
+    await skaleToken.mint(owner, premined, "0x", "0x");
   });
 
   it("should have the correct name", async () => {
@@ -207,7 +207,7 @@ contract("SkaleToken", ([owner, holder, receiver, nilAddress, accountWith99]) =>
 
   it("should emit a Minted Event", async () => {
     const amount = toWei(10);
-    const { logs } = await skaleToken.mint(owner, owner, amount, "0x", "0x", {from: owner});
+    const { logs } = await skaleToken.mint(owner, amount, "0x", "0x", {from: owner});
 
     assert.equal(logs.length, 2, "No Mint Event emitted");
     assert.equal(logs[0].event, "Minted");
@@ -226,7 +226,7 @@ contract("SkaleToken", ([owner, holder, receiver, nilAddress, accountWith99]) =>
 
   it("should not allow reentrancy on transfers", async () => {
     const amount = 5;
-    await skaleToken.mint(owner, holder, amount, "0x", "0x");
+    await skaleToken.mint(holder, amount, "0x", "0x");
 
     const reentrancyTester = await deployReentrancyTester(contractManager);
 

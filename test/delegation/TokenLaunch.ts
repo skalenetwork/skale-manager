@@ -37,7 +37,7 @@ contract("TokenLaunchManager", ([owner, holder, delegation, validator, seller, h
 
         // each test will start from Nov 10
         await skipTimeToDate(web3, 10, 11);
-        await skaleToken.mint(owner, TokenLaunchManager.address, 1e9, "0x", "0x");
+        await skaleToken.mint(TokenLaunchManager.address, 1e9, "0x", "0x");
         await validatorService.registerValidator("Validator", "D2 is even", 150, 0, {from: validator});
         await validatorService.enableValidator(1, {from: owner});
     });
@@ -346,7 +346,7 @@ contract("TokenLaunchManager", ([owner, holder, delegation, validator, seller, h
                 const purchasedAmount = totalAmount;
                 const period = 12;
 
-                await skaleToken.mint(owner, holder, freeAmount, "0x", "0x");
+                await skaleToken.mint(holder, freeAmount, "0x", "0x");
 
                 (await skaleToken.getAndUpdateLockedAmount.call(holder)).toNumber().should.be.equal(purchasedAmount);
 
