@@ -136,9 +136,9 @@ contract ConstantsHolder is IConstants, Permissions {
     }
 
     /**
-     * Set time if system underloaded, run only by NodesFunctionality contract
+     * Set time if system underloaded, run only by Nodes contract
      */
-    function setLastTimeUnderloaded() external allow("NodesFunctionality") {
+    function setLastTimeUnderloaded() external allow("Nodes") {
         lastTimeUnderloaded = now;
     }
 

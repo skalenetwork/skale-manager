@@ -1,5 +1,5 @@
 /*
-    NodesData.sol - SKALE Manager
+    Nodes.sol - SKALE Manager
     Copyright (C) 2018-Present SKALE Labs
     @author Artem Payvin
 
@@ -21,13 +21,13 @@ pragma solidity 0.5.16;
 
 import "./Permissions.sol";
 import "./interfaces/IConstants.sol";
-import "./interfaces/INodesData.sol";
+import "./delegation/ValidatorService.sol";
 
 
 /**
- * @title NodesData - Data contract for NodesFunctionality
+ * @title Nodes - contract contains all functionality logic to manage Nodes
  */
-contract NodesData is INodesData, Permissions {
+contract Nodes is Permissions {
 
     // All Nodes states
     enum NodeStatus {Active, Leaving, Left}
@@ -79,26 +79,35 @@ contract NodesData is INodesData, Permissions {
     uint public numberOfLeavingNodes;
     uint public numberOfLeftNodes;
 
+    // informs that Node is created
+    event NodeCreated(
+        uint nodeIndex,
+        address owner,
+        string name,
+        bytes4 ip,
+        bytes4 publicIP,
+        uint16 port,
+        uint16 nonce,
+        uint32 time,
+        uint gasSpend
+    );
 
+    // informs that node is fully finished quitting from the system
+    event ExitCompleted(
+        uint nodeIndex,
+        address owner,
+        uint32 time,
+        uint gasSpend
+    );
 
-    function getNodesWithFreeSpace(uint8 freeSpace) external view returns (uint[] memory) {
-        uint[] memory nodesWithFreeSpace = new uint[](this.countNodesWithFreeSpace(freeSpace));
-        uint cursor = 0;
-        for (uint8 i = freeSpace; i <= 128; ++i) {
-            for (uint j = 0; j < spaceToNodes[i].length; j++) {
-                nodesWithFreeSpace[cursor] = spaceToNodes[i][j];
-                ++cursor;
-            }
-        }
-        return nodesWithFreeSpace;
-    }
-
-    function countNodesWithFreeSpace(uint8 freeSpace) external view returns (uint count) {
-        count = 0;
-        for (uint8 i = freeSpace; i <= 128; ++i) {
-            count = count.add(spaceToNodes[i].length);
-        }
-    }
+    // informs that owner starts the procedure of quitting the Node from the system
+    event ExitInited(
+        uint nodeIndex,
+        address owner,
+        uint32 startLeavingPeriod,
+        uint32 time,
+        uint gasSpend
+    );
 
     /**
      * @dev addNode - adds Node to array
@@ -121,7 +130,7 @@ contract NodesData is INodesData, Permissions {
         uint validatorId
     )
         external
-        allow("NodesFunctionality")
+        allow("Nodes")
         returns (uint nodeIndex)
     {
         nodes.push(Node({
@@ -152,51 +161,23 @@ contract NodesData is INodesData, Permissions {
         numberOfActiveNodes++;
     }
 
-    /**
-     * @dev setNodeLeaving - set Node Leaving
-     * function could be run only by NodesFunctionality
-     * @param nodeIndex - index of Node
-     */
-    function setNodeLeaving(uint nodeIndex) external allow("NodesFunctionality") {
-        nodes[nodeIndex].status = NodeStatus.Leaving;
-        numberOfActiveNodes--;
-        numberOfLeavingNodes++;
+    function getNodesWithFreeSpace(uint8 freeSpace) external view returns (uint[] memory) {
+        uint[] memory nodesWithFreeSpace = new uint[](this.countNodesWithFreeSpace(freeSpace));
+        uint cursor = 0;
+        for (uint8 i = freeSpace; i <= 128; ++i) {
+            for (uint j = 0; j < spaceToNodes[i].length; j++) {
+                nodesWithFreeSpace[cursor] = spaceToNodes[i][j];
+                ++cursor;
+            }
+        }
+        return nodesWithFreeSpace;
     }
 
-    /**
-     * @dev setNodeLeft - set Node Left
-     * function could be run only by NodesFunctionality
-     * @param nodeIndex - index of Node
-     */
-    function setNodeLeft(uint nodeIndex) external allow("NodesFunctionality") {
-        nodesIPCheck[nodes[nodeIndex].ip] = false;
-        nodesNameCheck[keccak256(abi.encodePacked(nodes[nodeIndex].name))] = false;
-        // address ownerOfNode = nodes[nodeIndex].owner;
-        // nodeIndexes[ownerOfNode].isNodeExist[nodeIndex] = false;
-        // nodeIndexes[ownerOfNode].numberOfNodes--;
-        delete nodesNameToIndex[keccak256(abi.encodePacked(nodes[nodeIndex].name))];
-        if (nodes[nodeIndex].status == NodeStatus.Active) {
-            numberOfActiveNodes--;
-        } else {
-            numberOfLeavingNodes--;
+    function countNodesWithFreeSpace(uint8 freeSpace) external view returns (uint count) {
+        count = 0;
+        for (uint8 i = freeSpace; i <= 128; ++i) {
+            count = count.add(spaceToNodes[i].length);
         }
-        nodes[nodeIndex].status = NodeStatus.Left;
-        numberOfLeftNodes++;
-    }
-
-    function removeNode(uint nodeIndex) external allow("NodesFunctionality") {
-        uint8 space = spaceOfNodes[nodeIndex].freeSpace;
-        uint indexInArray = spaceOfNodes[nodeIndex].indexInSpaceMap;
-        if (indexInArray < spaceToNodes[space].length - 1) {
-            uint shiftedIndex = spaceToNodes[space][spaceToNodes[space].length - 1];
-            spaceToNodes[space][indexInArray] = shiftedIndex;
-            spaceOfNodes[shiftedIndex].indexInSpaceMap = indexInArray;
-            spaceToNodes[space].length--;
-        } else {
-            spaceToNodes[space].length--;
-        }
-        delete spaceOfNodes[nodeIndex].freeSpace;
-        delete spaceOfNodes[nodeIndex].indexInSpaceMap;
     }
 
     /**
@@ -247,16 +228,6 @@ contract NodesData is INodesData, Permissions {
     }
 
     /**
-     * @dev isNodeExist - checks existence of Node at this address
-     * @param from - account address
-     * @param nodeIndex - index of Node
-     * @return if exist - true, else - false
-     */
-    function isNodeExist(address from, uint nodeIndex) external view returns (bool) {
-        return nodeIndexes[from].isNodeExist[nodeIndex];
-    }
-
-    /**
      * @dev isTimeForReward - checks if time for reward has come
      * @param nodeIndex - index of Node
      * @return if time for reward has come - true, else - false
@@ -294,15 +265,6 @@ contract NodesData is INodesData, Permissions {
 
     function getNodeFinishTime(uint nodeIndex) external view returns (uint32) {
         return nodes[nodeIndex].finishTime;
-    }
-
-    /**
-     * @dev isNodeLeaving - checks if Node status Leaving
-     * @param nodeIndex - index of Node
-     * @return if Node status Leaving - true, else - false
-     */
-    function isNodeLeaving(uint nodeIndex) external view returns (bool) {
-        return nodes[nodeIndex].status == NodeStatus.Leaving;
     }
 
     /**
@@ -405,12 +367,178 @@ contract NodesData is INodesData, Permissions {
         return nodes[nodeIndex].status;
     }
 
-    function initialize(address newContractsAddress) public initializer {
-        Permissions.initialize(newContractsAddress);
+    /**
+     * @dev createNode - creates new Node and add it to the Nodes contract
+     * function could be only run by SkaleManager
+     * @param from - owner of Node
+     * @param data - Node's data
+     * @return nodeIndex - index of Node
+     */
+    function createNode(address from, bytes calldata data) external allow("SkaleManager") returns (uint nodeIndex) {
+        uint16 nonce;
+        bytes4 ip;
+        bytes4 publicIP;
+        uint16 port;
+        string memory name;
+        bytes memory publicKey;
 
-        numberOfActiveNodes = 0;
-        numberOfLeavingNodes = 0;
-        numberOfLeftNodes = 0;
+        // decode data from the bytes
+        (port, nonce, ip, publicIP) = fallbackDataConverter(data);
+        (publicKey, name) = fallbackDataConverterPublicKeyAndName(data);
+
+        // checks that Node has correct data
+        require(ip != 0x0 && !nodesIPCheck[ip], "IP address is zero or is not available");
+        require(!nodesNameCheck[keccak256(abi.encodePacked(name))], "Name has already registered");
+        require(port > 0, "Port is zero");
+
+        uint validatorId = ValidatorService(contractManager.getContract("ValidatorService")).getValidatorIdByNodeAddress(from);
+
+        // adds Node to Nodes contract
+        nodeIndex = this.addNode(
+            from,
+            name,
+            ip,
+            publicIP,
+            port,
+            publicKey,
+            validatorId);
+        // adds Node to Fractional Nodes or to Full Nodes
+        // setNodeType(nodesAddress, constantsAddress, nodeIndex);
+
+        emit NodeCreated(
+            nodeIndex,
+            from,
+            name,
+            ip,
+            publicIP,
+            port,
+            nonce,
+            uint32(block.timestamp),
+            gasleft());
+    }
+
+    /**
+     * @dev removeNode - delete Node
+     * function could be only run by SkaleManager
+     * @param from - owner of Node
+     * @param nodeIndex - index of Node
+     */
+    function removeNode(address from, uint nodeIndex) external allow("SkaleManager") {
+
+        require(isNodeExist(from, nodeIndex), "Node does not exist for message sender");
+        require(isNodeActive(nodeIndex), "Node is not Active");
+
+        this.setNodeLeft(nodeIndex);
+
+        this.deleteNode(nodeIndex);
+    }
+
+    function removeNodeByRoot(uint nodeIndex) external allow("SkaleManager") {
+        this.setNodeLeft(nodeIndex);
+
+        this.deleteNode(nodeIndex);
+    }
+
+    /**
+     * @dev initExit - initiate a procedure of quitting the system
+     * function could be only run by SkaleManager
+     * @param from - owner of Node
+     * @param nodeIndex - index of Node
+     * @return true - if everything OK
+     */
+    function initExit(address from, uint nodeIndex) external allow("SkaleManager") returns (bool) {
+
+        require(isNodeExist(from, nodeIndex), "Node does not exist for message sender");
+
+        this.setNodeLeaving(nodeIndex);
+
+        emit ExitInited(
+            nodeIndex,
+            from,
+            uint32(block.timestamp),
+            uint32(block.timestamp),
+            gasleft());
+        return true;
+    }
+
+    /**
+     * @dev completeExit - finish a procedure of quitting the system
+     * function could be run only by SkaleMManager
+     * @param from - owner of Node
+     * @param nodeIndex - index of Node
+     * @return amount of SKL which be returned
+     */
+    function completeExit(address from, uint nodeIndex) external allow("SkaleManager") returns (bool) {
+
+        require(isNodeExist(from, nodeIndex), "Node does not exist for message sender");
+        require(isNodeLeaving(nodeIndex), "Node is not Leaving");
+
+        this.setNodeLeft(nodeIndex);
+        this.deleteNode(nodeIndex);
+
+        emit ExitCompleted(
+            nodeIndex,
+            from,
+            uint32(block.timestamp),
+            gasleft());
+        return true;
+    }
+
+    function deleteNode(uint nodeIndex) external allow("Nodes") {
+        uint8 space = spaceOfNodes[nodeIndex].freeSpace;
+        uint indexInArray = spaceOfNodes[nodeIndex].indexInSpaceMap;
+        if (indexInArray < spaceToNodes[space].length - 1) {
+            uint shiftedIndex = spaceToNodes[space][spaceToNodes[space].length - 1];
+            spaceToNodes[space][indexInArray] = shiftedIndex;
+            spaceOfNodes[shiftedIndex].indexInSpaceMap = indexInArray;
+            spaceToNodes[space].length--;
+        } else {
+            spaceToNodes[space].length--;
+        }
+        delete spaceOfNodes[nodeIndex].freeSpace;
+        delete spaceOfNodes[nodeIndex].indexInSpaceMap;
+    }
+
+    /**
+     * @dev setNodeLeft - set Node Left
+     * function could be run only by Nodes
+     * @param nodeIndex - index of Node
+     */
+    function setNodeLeft(uint nodeIndex) external allow("Nodes") {
+        nodesIPCheck[nodes[nodeIndex].ip] = false;
+        nodesNameCheck[keccak256(abi.encodePacked(nodes[nodeIndex].name))] = false;
+        // address ownerOfNode = nodes[nodeIndex].owner;
+        // nodeIndexes[ownerOfNode].isNodeExist[nodeIndex] = false;
+        // nodeIndexes[ownerOfNode].numberOfNodes--;
+        delete nodesNameToIndex[keccak256(abi.encodePacked(nodes[nodeIndex].name))];
+        if (nodes[nodeIndex].status == NodeStatus.Active) {
+            numberOfActiveNodes--;
+        } else {
+            numberOfLeavingNodes--;
+        }
+        nodes[nodeIndex].status = NodeStatus.Left;
+        numberOfLeftNodes++;
+    }
+
+    /**
+     * @dev setNodeLeaving - set Node Leaving
+     * function could be run only by Nodes
+     * @param nodeIndex - index of Node
+     */
+    function setNodeLeaving(uint nodeIndex) external allow("Nodes") {
+        nodes[nodeIndex].status = NodeStatus.Leaving;
+        numberOfActiveNodes--;
+        numberOfLeavingNodes++;
+    }
+
+    /**
+     * @dev isNodeExist - checks existence of Node at this address
+     * @param from - account address
+     * @param nodeIndex - index of Node
+     * @return if exist - true, else - false
+     */
+    function isNodeExist(address from, uint nodeIndex) public view returns (bool) {
+        return nodeIndexes[from].isNodeExist[nodeIndex];
     }
 
     /**
@@ -420,6 +548,27 @@ contract NodesData is INodesData, Permissions {
      */
     function isNodeActive(uint nodeIndex) public view returns (bool) {
         return nodes[nodeIndex].status == NodeStatus.Active;
+    }
+
+    /**
+     * @dev isNodeLeaving - checks if Node status Leaving
+     * @param nodeIndex - index of Node
+     * @return if Node status Leaving - true, else - false
+     */
+    function isNodeLeaving(uint nodeIndex) public view returns (bool) {
+        return nodes[nodeIndex].status == NodeStatus.Leaving;
+    }
+
+    /**
+     * @dev constructor in Permissions approach
+     * @param _contractsAddress needed in Permissions constructor
+    */
+    function initialize(address _contractsAddress) public initializer {
+        Permissions.initialize(_contractsAddress);
+
+        numberOfActiveNodes = 0;
+        numberOfLeavingNodes = 0;
+        numberOfLeftNodes = 0;
     }
 
     function moveNodeToNewSpaceMap(uint nodeIndex, uint8 newSpace) internal {
@@ -437,4 +586,66 @@ contract NodesData is INodesData, Permissions {
         spaceOfNodes[nodeIndex].freeSpace = newSpace;
         spaceOfNodes[nodeIndex].indexInSpaceMap = spaceToNodes[newSpace].length - 1;
     }
+
+    /**
+     * @dev fallbackDataConverter - converts data from bytes to normal parameters
+     * @param data - concatenated parameters
+     * @return port
+     * @return nonce
+     * @return ip address
+     * @return public ip address
+     */
+    function fallbackDataConverter(bytes memory data)
+        private
+        pure
+        returns (uint16, uint16, bytes4, bytes4 /*address secondAddress,*/)
+    {
+        require(data.length > 77, "Incorrect bytes data config");
+
+        bytes4 ip;
+        bytes4 publicIP;
+        bytes2 portInBytes;
+        bytes2 nonceInBytes;
+        assembly {
+            portInBytes := mload(add(data, 33)) // 0x21
+            nonceInBytes := mload(add(data, 35)) // 0x25
+            ip := mload(add(data, 37)) // 0x29
+            publicIP := mload(add(data, 41))
+        }
+
+        return (uint16(portInBytes), uint16(nonceInBytes), ip, publicIP);
+    }
+
+    /**
+     * @dev fallbackDataConverterPublicKeyAndName - converts data from bytes to public key and name
+     * @param data - concatenated public key and name
+     * @return public key
+     * @return name of Node
+     */
+    function fallbackDataConverterPublicKeyAndName(bytes memory data) private pure returns (bytes memory, string memory) {
+        require(data.length > 77, "Incorrect bytes data config");
+        bytes32 firstPartPublicKey;
+        bytes32 secondPartPublicKey;
+        bytes memory publicKey = new bytes(64);
+
+        // convert public key
+        assembly {
+            firstPartPublicKey := mload(add(data, 45))
+            secondPartPublicKey := mload(add(data, 77))
+        }
+        for (uint8 i = 0; i < 32; i++) {
+            publicKey[i] = firstPartPublicKey[i];
+        }
+        for (uint8 i = 0; i < 32; i++) {
+            publicKey[i + 32] = secondPartPublicKey[i];
+        }
+
+        // convert name
+        string memory name = new string(data.length - 77);
+        for (uint i = 0; i < bytes(name).length; ++i) {
+            bytes(name)[i] = data[77 + i];
+        }
+        return (publicKey, name);
+    }
+
 }
