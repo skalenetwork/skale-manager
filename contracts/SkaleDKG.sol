@@ -21,11 +21,9 @@ pragma solidity 0.5.16;
 pragma experimental ABIEncoderV2;
 import "./Permissions.sol";
 import "./interfaces/IGroupsData.sol";
-import "./interfaces/INodesData.sol";
 import "./interfaces/ISchainsFunctionality.sol";
 import "./interfaces/ISchainsFunctionalityInternal.sol";
 import "./delegation/Punisher.sol";
-import "./NodesData.sol";
 import "./SlashingTable.sol";
 import "./SchainsFunctionality.sol";
 import "./SchainsFunctionalityInternal.sol";
@@ -356,10 +354,10 @@ contract SkaleDKG is Permissions {
         }
 
         Punisher punisher = Punisher(contractManager.getContract("Punisher"));
-        NodesData nodesData = NodesData(contractManager.getContract("NodesData"));
+        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
         SlashingTable slashingTable = SlashingTable(contractManager.getContract("SlashingTable"));
 
-        punisher.slash(nodesData.getValidatorId(badNode), slashingTable.getPenalty("FailedDKG"));
+        punisher.slash(nodes.getValidatorId(badNode), slashingTable.getPenalty("FailedDKG"));
     }
 
     function verify(
@@ -392,9 +390,9 @@ contract SkaleDKG is Permissions {
     }
 
     function getCommonPublicKey(bytes32 groupIndex, uint256 secretNumber) internal view returns (bytes32 key) {
-        address nodesDataAddress = contractManager.getContract("NodesData");
+        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
         address ecdhAddress = contractManager.getContract("ECDH");
-        bytes memory publicKey = INodesData(nodesDataAddress).getNodePublicKey(channels[groupIndex].fromNodeToComplaint);
+        bytes memory publicKey = nodes.getNodePublicKey(channels[groupIndex].fromNodeToComplaint);
         uint256 pkX;
         uint256 pkY;
 
@@ -524,8 +522,8 @@ contract SkaleDKG is Permissions {
     }
 
     function isNodeByMessageSender(uint nodeIndex, address from) internal view returns (bool) {
-        address nodesDataAddress = contractManager.getContract("NodesData");
-        return INodesData(nodesDataAddress).isNodeExist(from, nodeIndex);
+        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
+        return nodes.isNodeExist(from, nodeIndex);
     }
 
     // Fp2 operations
