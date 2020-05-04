@@ -186,6 +186,12 @@ contract("DelegationController", ([owner, holder1, holder2, validator, validator
 
                 await timeHelpersWithDebug.skipTime(month * delegationPeriod);
                 (await delegationController.getState(delegationId)).toNumber().should.be.equal(State.COMPLETED);
+
+                // skipTime should now affect new delegations
+                const { logs } = await delegationController.delegate(
+                    validatorId, amount, delegationPeriod, info, {from: holder1});
+                delegationId = logs[0].args.delegationId;
+                (await delegationController.getState(delegationId)).toNumber().should.be.equal(State.PROPOSED);
             });
 
             describe("when delegation is accepted", async () => {
