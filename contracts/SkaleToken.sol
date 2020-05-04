@@ -19,8 +19,10 @@
 
 pragma solidity 0.6.6;
 
-import "@openzeppelin/contracts/token/ERC777/ERC777.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+
+import "./thirdparty/openzeppelin/ERC777.sol";
 
 import "./Permissions.sol";
 import "./interfaces/delegation/IDelegatableToken.sol";
@@ -32,7 +34,7 @@ import "./delegation/TokenState.sol";
  * @title SkaleToken is ERC777 Token implementation, also this contract in skale
  * manager system
  */
-contract SkaleToken is ERC777, Permissions, IDelegatableToken {
+contract SkaleToken is ERC777, Permissions, ReentrancyGuard, IDelegatableToken {
     using SafeMath for uint;
 
     string public constant NAME = "SKALE";
@@ -79,6 +81,10 @@ contract SkaleToken is ERC777, Permissions, IDelegatableToken {
         return true;
     }
 
+    // function transfer(address recipient, uint256 amount) public override nonReentrant returns (bool) {
+    //     super.transfer(recipient, amount);
+    // }
+
     function getAndUpdateDelegatedAmount(address wallet) external override returns (uint) {
         return DelegationController(contractManager.getContract("DelegationController"))
             .getAndUpdateDelegatedAmount(wallet);
@@ -105,5 +111,28 @@ contract SkaleToken is ERC777, Permissions, IDelegatableToken {
         if (locked > 0) {
             require(balanceOf(from) >= locked.add(tokenId), "Token should be unlocked for transferring");
         }
+    }
+
+    function _callTokensToSend(
+        address operator,
+        address from,
+        address to,
+        uint256 amount,
+        bytes memory userData,
+        bytes memory operatorData
+    ) internal override nonReentrant {
+        super._callTokensToSend(operator, from, to, amount, userData, operatorData);
+    }
+
+    function _callTokensReceived(
+        address operator,
+        address from,
+        address to,
+        uint256 amount,
+        bytes memory userData,
+        bytes memory operatorData,
+        bool requireReceptionAck
+    ) internal override nonReentrant {
+        super._callTokensReceived(operator, from, to, amount, userData, operatorData, requireReceptionAck);
     }
 }
