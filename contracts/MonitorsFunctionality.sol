@@ -21,7 +21,7 @@ pragma solidity 0.5.16;
 
 import "./GroupsFunctionality.sol";
 import "./interfaces/IConstants.sol";
-import "./interfaces/INodesData.sol";
+import "./Nodes.sol";
 import "./MonitorsData.sol";
 
 
@@ -189,14 +189,14 @@ contract MonitorsFunctionality is GroupsFunctionality {
 
     function generateGroup(bytes32 groupIndex) internal allow(executorName) returns (uint[] memory) {
         address dataAddress = contractManager.getContract(dataName);
-        address nodesDataAddress = contractManager.getContract("NodesData");
+        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
 
         require(IGroupsData(dataAddress).isGroupActive(groupIndex), "Group is not active");
 
         uint exceptionNode = uint(IGroupsData(dataAddress).getGroupData(groupIndex));
-        uint[] memory activeNodes = INodesData(nodesDataAddress).getActiveNodeIds();
+        uint[] memory activeNodes = nodes.getActiveNodeIds();
         uint numberOfNodesInGroup = IGroupsData(dataAddress).getRecommendedNumberOfNodes(groupIndex);
-        uint availableAmount = activeNodes.length.sub((INodesData(nodesDataAddress).isNodeActive(exceptionNode)) ? 1 : 0);
+        uint availableAmount = activeNodes.length.sub((nodes.isNodeActive(exceptionNode)) ? 1 : 0);
         if (numberOfNodesInGroup > availableAmount) {
             numberOfNodesInGroup = availableAmount;
         }
@@ -232,20 +232,20 @@ contract MonitorsFunctionality is GroupsFunctionality {
     }
 
     function setNumberOfNodesInGroup(bytes32 groupIndex, bytes32 groupData) internal view returns (uint numberOfNodes, uint finish) {
-        address nodesDataAddress = contractManager.getContract("NodesData");
+        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
         address dataAddress = contractManager.getContract(dataName);
-        numberOfNodes = INodesData(nodesDataAddress).getNumberOfNodes();
-        uint numberOfActiveNodes = INodesData(nodesDataAddress).numberOfActiveNodes();
-        uint numberOfExceptionNodes = (INodesData(nodesDataAddress).isNodeActive(uint(groupData)) ? 1 : 0);
+        numberOfNodes = nodes.getNumberOfNodes();
+        uint numberOfActiveNodes = nodes.numberOfActiveNodes();
+        uint numberOfExceptionNodes = (nodes.isNodeActive(uint(groupData)) ? 1 : 0);
         uint recommendedNumberOfNodes = IGroupsData(dataAddress).getRecommendedNumberOfNodes(groupIndex);
         finish = (recommendedNumberOfNodes > numberOfActiveNodes.sub(numberOfExceptionNodes) ?
             numberOfActiveNodes.sub(numberOfExceptionNodes) : recommendedNumberOfNodes);
     }
 
     function comparator(bytes32 groupIndex, uint indexOfNode) internal view returns (bool) {
-        address nodesDataAddress = contractManager.getContract("NodesData");
+        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
         address dataAddress = contractManager.getContract(dataName);
-        return INodesData(nodesDataAddress).isNodeActive(indexOfNode) && !IGroupsData(dataAddress).isExceptionNode(groupIndex, indexOfNode);
+        return nodes.isNodeActive(indexOfNode) && !IGroupsData(dataAddress).isExceptionNode(groupIndex, indexOfNode);
     }
 
     function setMonitors(bytes32 groupIndex, uint nodeIndex) internal returns (uint) {
@@ -319,13 +319,13 @@ contract MonitorsFunctionality is GroupsFunctionality {
 
     function getDataToBytes(uint nodeIndex) internal view returns (bytes32 bytesParameters) {
         address constantsAddress = contractManager.getContract("ConstantsHolder");
-        address nodesDataAddress = contractManager.getContract("NodesData");
+        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
         bytes memory tempData = new bytes(32);
         bytes14 bytesOfIndex = bytes14(uint112(nodeIndex));
         bytes14 bytesOfTime = bytes14(
-            uint112(INodesData(nodesDataAddress).getNodeNextRewardDate(nodeIndex).sub(IConstants(constantsAddress).deltaPeriod()))
+            uint112(nodes.getNodeNextRewardDate(nodeIndex).sub(IConstants(constantsAddress).deltaPeriod()))
         );
-        bytes4 ip = INodesData(nodesDataAddress).getNodeIP(nodeIndex);
+        bytes4 ip = nodes.getNodeIP(nodeIndex);
         assembly {
             mstore(add(tempData, 32), bytesOfIndex)
             mstore(add(tempData, 46), bytesOfTime)
