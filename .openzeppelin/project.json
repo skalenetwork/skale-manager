@@ -10,8 +10,7 @@
     "ValidatorService": "ValidatorService",
     "ContractManager": "ContractManager",
     "ConstantsHolder": "ConstantsHolder",
-    "NodesData": "NodesData",
-    "NodesFunctionality": "NodesFunctionality",
+    "Nodes": "Nodes",
     "MonitorsData": "MonitorsData",
     "MonitorsFunctionality": "MonitorsFunctionality",
     "SchainsData": "SchainsData",
@@ -26,7 +25,8 @@
     "Pricing": "Pricing",
     "SlashingTable": "SlashingTable",
     "Punisher": "Punisher",
-    "TokenLaunchLocker": "TokenLaunchLocker"
+    "TokenLaunchLocker": "TokenLaunchLocker",
+    "TimeHelpersWithDebug": "TimeHelpersWithDebug"
   },
   "dependencies": {},
   "name": "skale-manager",

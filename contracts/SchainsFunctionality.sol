@@ -25,7 +25,6 @@ import "./interfaces/IConstants.sol";
 import "./interfaces/IGroupsData.sol";
 import "./interfaces/ISchainsFunctionality.sol";
 import "./interfaces/ISchainsFunctionalityInternal.sol";
-import "./interfaces/INodesData.sol";
 import "./SchainsData.sol";
 import "./SchainsFunctionalityInternal.sol";
 
@@ -215,6 +214,8 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
             revertMessage = revertMessage.strConcat(schainName);
             revertMessage = revertMessage.strConcat(", occupied by Node ");
             revertMessage = revertMessage.strConcat(rotation.nodeIndex.uint2str());
+            string memory dkgRevert = "DKG proccess did not finish on schain ";
+            require(!schainsData.isGroupFailedDKG(keccak256(abi.encodePacked(schainName))), dkgRevert.strConcat(schainName));
             require(rotation.freezeUntil < now, revertMessage);
             schainsData.startRotation(schains[i], nodeIndex);
         }
@@ -320,7 +321,7 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
      * @param partOfNode - divisor of given type of Schain
      */
     function addSpace(uint nodeIndex, uint8 partOfNode) internal {
-        address nodesDataAddress = contractManager.getContract("NodesData");
-        INodesData(nodesDataAddress).addSpaceToNode(nodeIndex, partOfNode);
+        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
+        nodes.addSpaceToNode(nodeIndex, partOfNode);
     }
 }

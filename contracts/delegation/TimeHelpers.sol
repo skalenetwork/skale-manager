@@ -29,7 +29,7 @@ contract TimeHelpers {
 
     uint constant ZERO_YEAR = 2020;
 
-    function calculateProofOfUseLockEndTime(uint month, uint lockUpPeriodDays) external pure returns (uint timestamp) {
+    function calculateProofOfUseLockEndTime(uint month, uint lockUpPeriodDays) external view returns (uint timestamp) {
         timestamp = BokkyPooBahsDateTimeLibrary.addDays(monthToTimestamp(month), lockUpPeriodDays);
     }
 
@@ -41,16 +41,7 @@ contract TimeHelpers {
         return timestampToMonth(now);
     }
 
-    function monthToTimestamp(uint _month) public pure returns (uint timestamp) {
-        uint year = ZERO_YEAR;
-        uint month = _month;
-        year = year.add(month.div(12));
-        month = month.mod(12);
-        month = month.add(1);
-        return BokkyPooBahsDateTimeLibrary.timestampFromDate(year, month, 1);
-    }
-
-    function timestampToMonth(uint timestamp) public pure returns (uint) {
+    function timestampToMonth(uint timestamp) public view returns (uint) {
         uint year;
         uint month;
         (year, month, ) = BokkyPooBahsDateTimeLibrary.timestampToDate(timestamp);
@@ -58,5 +49,14 @@ contract TimeHelpers {
         month = month.sub(1).add(year.sub(ZERO_YEAR).mul(12));
         require(month > 0, "Timestamp is too far in the past");
         return month;
+    }
+
+    function monthToTimestamp(uint _month) public view returns (uint timestamp) {
+        uint year = ZERO_YEAR;
+        uint month = _month;
+        year = year.add(month.div(12));
+        month = month.mod(12);
+        month = month.add(1);
+        return BokkyPooBahsDateTimeLibrary.timestampFromDate(year, month, 1);
     }
 }

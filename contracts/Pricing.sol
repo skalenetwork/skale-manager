@@ -22,8 +22,8 @@ pragma solidity 0.5.16;
 
 import "./Permissions.sol";
 import "./interfaces/IGroupsData.sol";
-import "./interfaces/INodesData.sol";
 import "./SchainsData.sol";
+import "./Nodes.sol";
 
 
 contract Pricing is Permissions {
@@ -36,8 +36,8 @@ contract Pricing is Permissions {
     uint lastUpdated;
 
     function initNodes() external {
-        address nodesDataAddress = contractManager.getContract("NodesData");
-        totalNodes = INodesData(nodesDataAddress).getNumberOnlineNodes();
+        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
+        totalNodes = nodes.getNumberOnlineNodes();
     }
 
     function adjustPrice() external {
@@ -70,8 +70,8 @@ contract Pricing is Permissions {
     }
 
     function checkAllNodes() public {
-        address nodesDataAddress = contractManager.getContract("NodesData");
-        uint numberOfActiveNodes = INodesData(nodesDataAddress).getNumberOnlineNodes();
+        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
+        uint numberOfActiveNodes = nodes.getNumberOnlineNodes();
 
         require(totalNodes != numberOfActiveNodes, "No any changes on nodes");
         totalNodes = numberOfActiveNodes;
@@ -81,8 +81,8 @@ contract Pricing is Permissions {
     function getTotalLoadPercentage() public view returns (uint) {
         address schainsDataAddress = contractManager.getContract("SchainsData");
         uint64 numberOfSchains = SchainsData(schainsDataAddress).numberOfSchains();
-        address nodesDataAddress = contractManager.getContract("NodesData");
-        uint numberOfNodes = INodesData(nodesDataAddress).getNumberOnlineNodes();
+        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
+        uint numberOfNodes = nodes.getNumberOnlineNodes();
         uint sumLoadSchain = 0;
         for (uint i = 0; i < numberOfSchains; i++) {
             bytes32 schain = SchainsData(schainsDataAddress).schainsAtSystem(i);

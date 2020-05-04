@@ -82,8 +82,7 @@ async function deploy(deployer, networkName, accounts) {
         "ValidatorService",
 
         "ConstantsHolder",
-        "NodesData",
-        "NodesFunctionality",
+        "Nodes",
         "MonitorsData",
         "MonitorsFunctionality",
         "SchainsData",
@@ -150,11 +149,15 @@ async function deploy(deployer, networkName, accounts) {
         console.log("Contract Skale Token with address", SkaleToken.address, "registred in Contract Manager");
     });
 
-    // TODO: Remove after testing
-    const skaleToken = await SkaleToken.deployed();
-    await skaleToken.transfer(
-        deployed.get("SkaleManager").address,
-        "1000000000000000000000000000");
+    if (!production) {
+        // TODO: Remove after testing
+        const skaleToken = await SkaleToken.deployed();
+        const money = "5000000000000000000000000000"; // 5e9 * 1e18
+        await skaleToken.mint(deployAccount, deployAccount, money, "0x", "0x");
+        await skaleToken.transfer(
+            deployed.get("SkaleManager").address,
+            "1000000000000000000000000000");
+    }
     
     console.log('Deploy done, writing results...');
 
@@ -169,12 +172,7 @@ async function deploy(deployer, networkName, accounts) {
     }
 
     await fsPromises.writeFile(`data/${networkName}.json`, JSON.stringify(jsonObject));
-    await sleep(10000);
     console.log(`Done, check ${networkName}.json file in data folder.`);
-}
-
-function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 module.exports = deploy;
