@@ -2,7 +2,7 @@ import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
 import { ContractManagerInstance,
          DelegationControllerInstance,
-         NodesFunctionalityInstance,
+         NodesInstance,
          SchainsDataInstance,
          SchainsFunctionalityInstance,
          SkaleDKGInstance,
@@ -16,7 +16,7 @@ import BigNumber from "bignumber.js";
 import { deployContractManager } from "./tools/deploy/contractManager";
 import { deployDelegationController } from "./tools/deploy/delegation/delegationController";
 import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
-import { deployNodesFunctionality } from "./tools/deploy/nodesFunctionality";
+import { deployNodes } from "./tools/deploy/nodes";
 import { deploySchainsData } from "./tools/deploy/schainsData";
 import { deploySchainsFunctionality } from "./tools/deploy/schainsFunctionality";
 import { deploySkaleDKG } from "./tools/deploy/skaleDKG";
@@ -55,7 +55,6 @@ class Channel {
 
 contract("SkaleDKG", ([owner, validator1, validator2]) => {
     let contractManager: ContractManagerInstance;
-    let nodesFunctionality: NodesFunctionalityInstance;
     let schainsData: SchainsDataInstance;
     let schainsFunctionality: SchainsFunctionalityInstance;
     let skaleDKG: SkaleDKGInstance;
@@ -63,13 +62,14 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
     let validatorService: ValidatorServiceInstance;
     let slashingTable: SlashingTableInstance;
     let delegationController: DelegationControllerInstance;
+    let nodes: NodesInstance;
 
     const failedDkgPenalty = 5;
 
     beforeEach(async () => {
         contractManager = await deployContractManager();
 
-        nodesFunctionality = await deployNodesFunctionality(contractManager);
+        nodes = await deployNodes(contractManager);
         schainsData = await deploySchainsData(contractManager);
         schainsFunctionality = await deploySchainsFunctionality(contractManager);
         skaleDKG = await deploySkaleDKG(contractManager);
@@ -188,7 +188,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
             const nodesCount = 2;
             for (const index of Array.from(Array(nodesCount).keys())) {
                 const hexIndex = ("0" + index.toString(16)).slice(-2);
-                await nodesFunctionality.createNode(validatorsAccount[index],
+                await nodes.createNode(validatorsAccount[index],
                     "0x00" +
                     "2161" +
                     "0000" +
@@ -248,9 +248,9 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                     "0000" +
                     "6432");
 
-                let nodes = await schainsData.getNodesInGroup(web3.utils.soliditySha3("d2"));
+                let nodesInGroup = await schainsData.getNodesInGroup(web3.utils.soliditySha3("d2"));
                 schainName = "d2";
-                while ((new BigNumber(nodes[0])).toFixed() === "1") {
+                while ((new BigNumber(nodesInGroup[0])).toFixed() === "1") {
                     await schainsFunctionality.deleteSchainByRoot(schainName);
                     await schainsFunctionality.addSchain(
                         validator1,
@@ -260,7 +260,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                         "04" +
                         "0000" +
                         "6432");
-                    nodes = await schainsData.getNodesInGroup(web3.utils.soliditySha3(schainName));
+                    nodesInGroup = await schainsData.getNodesInGroup(web3.utils.soliditySha3(schainName));
                 }
             });
 

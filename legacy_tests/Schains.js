@@ -21,9 +21,9 @@ async function createSchain(typeOfSchain, lifetime) {
     console.log("Schain Price:", res);
 	let deposit = res;
 	let accountDeposit = await init.SkaleToken.methods.balanceOf(account).call();
-    let numberOfFullNodes = await init.NodesData.methods.getNumberOfFullNodes().call();
-    let numberOfFractionalNodes = await init.NodesData.methods.getNumberOfFractionalNodes().call();
-    let numberOfNodes = await init.NodesData.methods.getNumberOfNodes().call();
+    let numberOfFullNodes = await init.Nodes.methods.getNumberOfFullNodes().call();
+    let numberOfFractionalNodes = await init.Nodes.methods.getNumberOfFractionalNodes().call();
+    let numberOfNodes = await init.Nodes.methods.getNumberOfNodes().call();
 	console.log("Account:                    ", account);
 	console.log("Data:                       ", data);
 	console.log("Deposit:                    ", deposit);
