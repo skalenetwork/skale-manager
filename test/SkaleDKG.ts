@@ -33,10 +33,10 @@ class Channel {
     public publicKeyx: object;
     public publicKeyy: object;
     public numberOfCompleted: BigNumber;
-    public startedBlockNumber: BigNumber;
+    public startedBlockTimestamp: BigNumber;
     public nodeToComplaint: BigNumber;
     public fromNodeToComplaint: BigNumber;
-    public startedComplaintBlockNumber: BigNumber;
+    public startedComplaintBlockTimestamp: BigNumber;
 
     constructor(arrayData: [boolean, string, BigNumber, object, object, BigNumber, BigNumber, BigNumber,
         BigNumber, BigNumber]) {
@@ -46,10 +46,10 @@ class Channel {
         this.publicKeyx = arrayData[3];
         this.publicKeyy = arrayData[4];
         this.numberOfCompleted = new BigNumber(arrayData[5]);
-        this.startedBlockNumber = new BigNumber(arrayData[6]);
+        this.startedBlockTimestamp = new BigNumber(arrayData[6]);
         this.nodeToComplaint = new BigNumber(arrayData[7]);
         this.fromNodeToComplaint = new BigNumber(arrayData[8]);
-        this.startedComplaintBlockNumber = new BigNumber(arrayData[9]);
+        this.startedComplaintBlockTimestamp = new BigNumber(arrayData[9]);
     }
 }
 
@@ -215,6 +215,22 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
             assert(channel.active.should.be.true);
         });
 
+        it("should create schain and reopen a DKG channel", async () => {
+            const deposit = await schainsFunctionality.getSchainPrice(4, 5);
+
+            await schainsFunctionality.addSchain(
+                validator1,
+                deposit,
+                "0x10" +
+                "0000000000000000000000000000000000000000000000000000000000000005" +
+                "04" +
+                "0000" +
+                "6432");
+
+            const channel: Channel = new Channel(await skaleDKG.channels(web3.utils.soliditySha3("d2")));
+            assert(channel.active.should.be.true);
+        });
+
         it("should create & delete schain and open & close a DKG channel", async () => {
             const deposit = await schainsFunctionality.getSchainPrice(4, 5);
 
@@ -275,6 +291,9 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                 assert.equal(result.logs[0].event, "BroadcastAndKeyShare");
                 assert.equal(result.logs[0].args.groupIndex, web3.utils.soliditySha3(schainName));
                 assert.equal(result.logs[0].args.fromNode.toString(), "0");
+                const res = await skaleDKG.getBroadcastedData(web3.utils.soliditySha3(schainName), 0);
+                assert.equal(res[0], encryptedSecretKeyContributions[indexes[0]]);
+                assert.equal(res[1], verificationVectors[indexes[0]]);
             });
 
             it("should broadcast data from 1 node & check", async () => {
@@ -345,6 +364,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                         0,
                         {from: validatorsAccount[0]},
                     );
+                    assert.equal(await skaleDKG.isAllDataReceived(web3.utils.soliditySha3(schainName), 0), true);
                     assert.equal(result.logs[0].event, "AllDataReceived");
                     assert.equal(result.logs[0].args.groupIndex, web3.utils.soliditySha3(schainName));
                     assert.equal(result.logs[0].args.nodeIndex.toString(), "0");
@@ -473,6 +493,9 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                         0,
                         {from: validatorsAccount[1]},
                     );
+                    const res = await skaleDKG.getComplaintData(web3.utils.soliditySha3(schainName));
+                    assert.equal(res[0].toString(), "1");
+                    assert.equal(res[1].toString(), "0");
                     assert.equal(result.logs[0].event, "ComplaintSent");
                     assert.equal(result.logs[0].args.groupIndex, web3.utils.soliditySha3(schainName));
                     assert.equal(result.logs[0].args.fromNodeIndex.toString(), "1");
@@ -534,6 +557,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                         );
                         assert.equal(result.logs[0].event, "BadGuy");
                         assert.equal(result.logs[0].args.nodeIndex.toString(), "0");
+                        assert.equal(result.logs.length, 2);
 
                         (await skaleToken.getAndUpdateLockedAmount.call(validator1)).toNumber()
                             .should.be.equal(delegatedAmount);
@@ -544,6 +568,90 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                     });
                 });
             });
+        });
+
+        it("should reopen channel correctly", async () => {
+            const deposit = await schainsFunctionality.getSchainPrice(4, 5);
+
+            await schainsFunctionality.addSchain(
+                validator1,
+                deposit,
+                "0x10" +
+                "0000000000000000000000000000000000000000000000000000000000000005" +
+                "04" +
+                "0000" +
+                "6432");
+
+            let nodesInGroup = await schainsData.getNodesInGroup(web3.utils.soliditySha3("d2"));
+            schainName = "d2";
+            while ((new BigNumber(nodesInGroup[0])).toFixed() === "1") {
+                await schainsFunctionality.deleteSchainByRoot(schainName);
+                await schainsFunctionality.addSchain(
+                    validator1,
+                    deposit,
+                    "0x10" +
+                    "0000000000000000000000000000000000000000000000000000000000000005" +
+                    "04" +
+                    "0000" +
+                    "6432");
+                    nodesInGroup = await schainsData.getNodesInGroup(web3.utils.soliditySha3(schainName));
+            }
+
+            await nodes.createNode(validatorsAccount[0],
+                "0x00" +
+                "2161" +
+                "0000" +
+                "7f000003" +
+                "7f000003" +
+                validatorsPublicKey[0] +
+                "d203");
+
+            await skaleDKG.broadcast(
+                web3.utils.soliditySha3(schainName),
+                0,
+                verificationVectors[indexes[0]],
+                // the last symbol is spoiled in parameter below
+                badEncryptedSecretKeyContributions[indexes[0]],
+                {from: validatorsAccount[0]},
+            );
+
+            await skaleDKG.broadcast(
+                web3.utils.soliditySha3(schainName),
+                1,
+                verificationVectors[indexes[1]],
+                encryptedSecretKeyContributions[indexes[1]],
+                {from: validatorsAccount[1]},
+            );
+
+            await skaleDKG.complaint(
+                web3.utils.soliditySha3(schainName),
+                1,
+                0,
+                {from: validatorsAccount[1]},
+            );
+
+            let channel: Channel = new Channel(await skaleDKG.channels(web3.utils.soliditySha3(schainName)));
+            const dataAddress = channel.dataAddress;
+
+            const result = await skaleDKG.response(
+                web3.utils.soliditySha3(schainName),
+                0,
+                secretNumbers[indexes[0]],
+                badMultipliedShares[indexes[0]],
+                {from: validatorsAccount[0]},
+            );
+            assert.equal(result.logs[0].event, "BadGuy");
+            assert.equal(result.logs[0].args.nodeIndex.toString(), "0");
+
+            assert.equal(result.logs[3].event, "ChannelOpened");
+            assert.equal(result.logs[3].args.groupIndex, web3.utils.soliditySha3(schainName));
+            const blockNumber = result.receipt.blockNumber;
+            const timestamp = (await web3.eth.getBlock(blockNumber)).timestamp;
+
+            channel = new Channel(await skaleDKG.channels(web3.utils.soliditySha3(schainName)));
+            assert.equal(channel.numberOfBroadcasted.toString(), "0");
+            assert.equal(channel.startedBlockTimestamp.toString(), timestamp.toString());
+            assert.equal(channel.dataAddress, dataAddress);
         });
     });
 });
