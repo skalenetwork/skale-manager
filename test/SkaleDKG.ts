@@ -582,9 +582,9 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                 "0000" +
                 "6432");
 
-            let nodes = await schainsData.getNodesInGroup(web3.utils.soliditySha3("d2"));
+            let nodesInGroup = await schainsData.getNodesInGroup(web3.utils.soliditySha3("d2"));
             schainName = "d2";
-            while ((new BigNumber(nodes[0])).toFixed() === "1") {
+            while ((new BigNumber(nodesInGroup[0])).toFixed() === "1") {
                 await schainsFunctionality.deleteSchainByRoot(schainName);
                 await schainsFunctionality.addSchain(
                     validator1,
@@ -594,10 +594,10 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                     "04" +
                     "0000" +
                     "6432");
-                nodes = await schainsData.getNodesInGroup(web3.utils.soliditySha3(schainName));
+                    nodesInGroup = await schainsData.getNodesInGroup(web3.utils.soliditySha3(schainName));
             }
 
-            await nodesFunctionality.createNode(validatorsAccount[0],
+            await nodes.createNode(validatorsAccount[0],
                 "0x00" +
                 "2161" +
                 "0000" +
