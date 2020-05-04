@@ -18,6 +18,7 @@
 */
 
 pragma solidity 0.5.16;
+pragma experimental ABIEncoderV2;
 
 import "./Permissions.sol";
 import "./interfaces/IConstants.sol";
@@ -27,6 +28,7 @@ import "./interfaces/IManagerData.sol";
 import "./delegation/Distributor.sol";
 import "./delegation/ValidatorService.sol";
 import "./MonitorsFunctionality.sol";
+import "./MonitorsData.sol";
 import "./SchainsFunctionality.sol";
 import "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
 import "@openzeppelin/contracts/introspection/IERC1820Registry.sol";
@@ -43,8 +45,8 @@ contract SkaleManager is IERC777Recipient, Permissions {
     event BountyGot(
         uint indexed nodeIndex,
         address owner,
-        uint32 averageDowntime,
-        uint32 averageLatency,
+        uint averageDowntime,
+        uint averageLatency,
         uint bounty,
         uint32 time,
         uint gasSpend
@@ -136,41 +138,21 @@ contract SkaleManager is IERC777Recipient, Permissions {
         ISchainsFunctionality(schainsFunctionalityAddress).deleteSchainByRoot(name);
     }
 
-    function sendVerdict(
-        uint fromMonitorIndex,
-        uint toNodeIndex,
-        uint32 downtime,
-        uint32 latency) external
-    {
+    function sendVerdict(uint fromMonitorIndex, MonitorsData.Verdict calldata verdict) external {
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));
         MonitorsFunctionality monitorsFunctionality = MonitorsFunctionality(contractManager.getContract("MonitorsFunctionality"));
 
         require(nodes.isNodeExist(msg.sender, fromMonitorIndex), "Node does not exist for Message sender");
 
-        monitorsFunctionality.sendVerdict(
-            fromMonitorIndex,
-            toNodeIndex,
-            downtime,
-            latency);
+        monitorsFunctionality.sendVerdict(fromMonitorIndex, verdict);
     }
 
-    function sendVerdicts(
-        uint fromMonitorIndex,
-        uint[] calldata toNodeIndexes,
-        uint32[] calldata downtimes,
-        uint32[] calldata latencies) external
-    {
+    function sendVerdicts(uint fromMonitorIndex, MonitorsData.Verdict[] calldata verdicts) external {
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));
         require(nodes.isNodeExist(msg.sender, fromMonitorIndex), "Node does not exist for Message sender");
-        require(toNodeIndexes.length == downtimes.length, "Incorrect data");
-        require(latencies.length == downtimes.length, "Incorrect data");
-        MonitorsFunctionality monitorsFunctionalityAddress = MonitorsFunctionality(contractManager.getContract("MonitorsFunctionality"));
-        for (uint i = 0; i < toNodeIndexes.length; i++) {
-            monitorsFunctionalityAddress.sendVerdict(
-                fromMonitorIndex,
-                toNodeIndexes[i],
-                downtimes[i],
-                latencies[i]);
+        MonitorsFunctionality monitorsFunctionality = MonitorsFunctionality(contractManager.getContract("MonitorsFunctionality"));
+        for (uint i = 0; i < verdicts.length; i++) {
+            monitorsFunctionality.sendVerdict(fromMonitorIndex, verdicts[i]);
         }
     }
 
@@ -181,8 +163,8 @@ contract SkaleManager is IERC777Recipient, Permissions {
         bool nodeIsActive = nodes.isNodeActive(nodeIndex);
         bool nodeIsLeaving = nodes.isNodeLeaving(nodeIndex);
         require(nodeIsActive || nodeIsLeaving, "Node is not Active and is not Leaving");
-        uint32 averageDowntime;
-        uint32 averageLatency;
+        uint averageDowntime;
+        uint averageLatency;
         MonitorsFunctionality monitorsFunctionality = MonitorsFunctionality(contractManager.getContract("MonitorsFunctionality"));
         (averageDowntime, averageLatency) = monitorsFunctionality.calculateMetrics(nodeIndex);
         uint bounty = manageBounty(
@@ -211,8 +193,8 @@ contract SkaleManager is IERC777Recipient, Permissions {
     function manageBounty(
         address from,
         uint nodeIndex,
-        uint32 downtime,
-        uint32 latency) internal returns (uint)
+        uint downtime,
+        uint latency) internal returns (uint)
     {
         uint commonBounty;
         IConstants constants = IConstants(contractManager.getContract("ConstantsHolder"));

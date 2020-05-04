@@ -12,7 +12,7 @@
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU Affero General Public License for more details.
-
+`
     You should have received a copy of the GNU Affero General Public License
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
@@ -24,20 +24,14 @@ import "./GroupsData.sol";
 
 contract MonitorsData is GroupsData {
 
-
-    struct Metrics {
+    struct Verdict {
+        uint toNodeIndex;
         uint32 downtime;
         uint32 latency;
     }
 
-    struct Monitor {
-        uint nodeIndex;
-        bytes32[] checkedNodes;
-        Metrics[] verdicts;
-    }
-
     mapping (bytes32 => bytes32[]) public checkedNodes;
-    mapping (bytes32 => uint32[][]) public verdicts;
+    mapping (bytes32 => uint[][]) public verdicts;
 
     /**
      *  Add checked node or update existing one if it is already exits
@@ -58,7 +52,7 @@ contract MonitorsData is GroupsData {
     }
 
     function addVerdict(bytes32 monitorIndex, uint32 downtime, uint32 latency) external allow(executorName) {
-        verdicts[monitorIndex].push([downtime, latency]);
+        verdicts[monitorIndex].push([uint(downtime), uint(latency)]);
     }
 
     function removeCheckedNode(bytes32 monitorIndex, uint indexOfCheckedNode) external allow(executorName) {
