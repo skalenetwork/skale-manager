@@ -92,16 +92,26 @@ contract("MonitorsFunctionality", ([owner, validator]) => {
       indexNode0inSha3, data32bytes, {from: owner},
       );
     // execution
+    const verd = {
+      toNodeIndex: indexNode1,
+      downtime: 1,
+      latency: 0,
+    };
     const { logs } = await monitorsFunctionality
-          .sendVerdict(0, indexNode1, 1, 0, {from: owner});
+          .sendVerdict(0, verd, {from: owner});
     // assertion
     assert.equal(logs[0].event, "VerdictWasSent");
   });
 
   it("should rejected with `Checked Node...` error when invoke sendVerdict", async () => {
     const error = "Checked Node does not exist in MonitorsArray";
+    const verd = {
+      toNodeIndex: 1,
+      downtime: 0,
+      latency: 0,
+    };
     await monitorsFunctionality
-          .sendVerdict(0, 1, 0, 0, {from: owner})
+          .sendVerdict(0, verd, {from: owner})
           .should.be.eventually.rejectedWith(error);
   });
 
@@ -127,8 +137,13 @@ contract("MonitorsFunctionality", ([owner, validator]) => {
     await monitorsData.addCheckedNode(
       indexNode0inSha3, data32bytes, {from: owner},
       );
+    const verd = {
+      toNodeIndex: 1,
+      downtime: 0,
+      latency: 0,
+    };
     await monitorsFunctionality
-          .sendVerdict(0, 1, 0, 0, {from: owner})
+          .sendVerdict(0, verd, {from: owner})
           .should.be.eventually.rejectedWith(error);
   });
 
@@ -183,8 +198,13 @@ contract("MonitorsFunctionality", ([owner, validator]) => {
       );
     // execution
     // skipTime(web3, time - 200);
+    const verd = {
+      toNodeIndex: 1,
+      downtime: 0,
+      latency: 0,
+    };
     await monitorsFunctionality
-          .sendVerdict(0, 1, 0, 0, {from: owner});
+          .sendVerdict(0, verd, {from: owner});
     const res = new BigNumber(await monitorsData.getLengthOfMetrics(monitorIndex1, {from: owner}));
     // expectation
     expect(parseInt(res.toString(), 10)).to.equal(1);
@@ -196,7 +216,12 @@ contract("MonitorsFunctionality", ([owner, validator]) => {
     const rewardPeriod = (await constantsHolder.rewardPeriod()).toNumber();
     skipTime(web3, rewardPeriod);
 
-    await monitorsFunctionality.sendVerdict(1, 0, 0, 0);
+    const verd = {
+      toNodeIndex: 0,
+      downtime: 0,
+      latency: 0,
+    };
+    await monitorsFunctionality.sendVerdict(1, verd);
 
     const node1Hash = web3.utils.soliditySha3(1);
     const node2Hash = web3.utils.soliditySha3(2);
