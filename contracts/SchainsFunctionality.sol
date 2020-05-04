@@ -142,7 +142,7 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
                 "Some Node does not contain given Schain");
             ISchainsFunctionalityInternal(schainsFunctionalityInternalAddress).removeNodeFromSchain(nodesInGroup[i], schainId);
             ISchainsFunctionalityInternal(schainsFunctionalityInternalAddress).removeNodeFromExceptions(schainId, nodesInGroup[i]);
-            if (!INodesData(nodesDataAddress).isNodeLeft(nodesInGroup[i])) {
+            if (!Nodes(nodesDataAddress).isNodeLeft(nodesInGroup[i])) {
                 addSpace(nodesInGroup[i], partOfNode);
             }
         }
