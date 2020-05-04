@@ -82,6 +82,8 @@ contract ValidatorService is Permissions {
     mapping (uint => address[]) private _nodeAddresses;
     uint public numberOfValidators;
 
+    bool public useWhitelist;
+
     modifier checkValidatorExists(uint validatorId) {
         require(validatorExists(validatorId), "Validator with such ID does not exist");
         _;
@@ -126,6 +128,10 @@ contract ValidatorService is Permissions {
         require(trustedValidators[validatorId], "Validator is already disabled");
         trustedValidators[validatorId] = false;
         emit ValidatorWasDisabled(validatorId);
+    }
+
+    function disableWhitelist() external onlyOwner {
+        useWhitelist = false;
     }
 
     function getTrustedValidators() external view returns (uint[] memory) {
@@ -282,6 +288,7 @@ contract ValidatorService is Permissions {
 
     function initialize(address _contractManager) public initializer {
         Permissions.initialize(_contractManager);
+        useWhitelist = true;
     }
 
     function getValidatorIdByNodeAddress(address nodeAddress) public view returns (uint validatorId) {
