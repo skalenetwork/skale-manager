@@ -110,6 +110,15 @@ contract("DelegationController", ([owner, holder1, holder2, validator, validator
                 .should.be.rejectedWith("Delegation does not exist");
         });
 
+        it("should allow to delegate if whitelist of validators is no longer supports", async () => {
+            await skaleToken.mint(owner, holder1, amount, "0x", "0x");
+            await validatorService.disableValidator(validatorId, {from: owner});
+            await delegationController.delegate(validatorId, amount, delegationPeriod, info, {from: holder1})
+                .should.be.eventually.rejectedWith("Validator is not authorized to accept request");
+            await validatorService.disableWhitelist();
+            await delegationController.delegate(validatorId, amount, delegationPeriod, info, {from: holder1});
+        });
+
         describe("when delegation request was created", async () => {
             beforeEach(async () => {
                 await skaleToken.mint(owner, holder1, amount, "0x", "0x");
