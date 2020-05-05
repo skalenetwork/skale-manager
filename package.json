@@ -40,7 +40,7 @@
   },
   "dependencies": {
     "@openzeppelin/cli": "^2.6.0",
-    "@openzeppelin/contracts": "^2.5.0",
+    "@openzeppelin/contracts": "^3.0.1",
     "@openzeppelin/contracts-ethereum-package": "^2.5.0",
     "@openzeppelin/upgrades": "^2.8.0",
     "@truffle/hdwallet-provider": "^1.0.28",
