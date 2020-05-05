@@ -250,7 +250,7 @@ contract("SkaleToken", ([owner, holder, receiver, nilAddress, accountWith99]) =>
     const amount = toWei(1);
     await skaleToken.mint(reentrancyTester.address, amount, "0x", "0x", {from: owner});
     await reentrancyTester.burningAttack()
-      .should.be.eventually.rejectedWith("Token should be unlocked for burning");
+      .should.be.eventually.rejectedWith("Token should be unlocked for transferring");
   });
 });
 

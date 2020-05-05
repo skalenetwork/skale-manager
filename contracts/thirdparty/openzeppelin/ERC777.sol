@@ -384,9 +384,13 @@ contract ERC777 is Context, IERC777, IERC20 {
 
         address operator = _msgSender();
 
-        _beforeTokenTransfer(operator, from, address(0), amount);
+        /* Chaged by SKALE: we swapped these lines to prevent delegation of burning tokens */
 
         _callTokensToSend(operator, from, address(0), amount, data, operatorData);
+
+        _beforeTokenTransfer(operator, from, address(0), amount);
+
+        /* End of changed by SKALE */
 
         // Update state variables
         _balances[from] = _balances[from].sub(amount, "ERC777: burn amount exceeds balance");
