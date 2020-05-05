@@ -20,11 +20,11 @@ async function createNode() {
     console.log("OK");
     let name = await generateRandomName();
     console.log(name);
-    let k = await init.NodesData.methods.nodesNameCheck(init.web3.utils.soliditySha3(name)).call();
+    let k = await init.Nodes.methods.nodesNameCheck(init.web3.utils.soliditySha3(name)).call();
     console.log(k);
     while (k) {
         name = await generateRandomName();
-        k = await init.NodesData.methods.nodesNameCheck(init.web3.utils.soliditySha3(name)).call();
+        k = await init.Nodes.methods.nodesNameCheck(init.web3.utils.soliditySha3(name)).call();
     }
     let data = await GenerateBytesData.generateBytesForNode(8545, await generateRandomIP(), init.mainAccount, name);
     console.log(data);
@@ -84,16 +84,16 @@ async function deleteNode(nodeIndex) {
 }
 
 async function getNode(nodeIndex) {
-    let res = await init.NodesData.methods.nodes(nodeIndex).call();
+    let res = await init.Nodes.methods.nodes(nodeIndex).call();
     console.log("Node index:", nodeIndex);
     console.log("Node name:", res.name);
     return res;
 }
 
 async function getNodeNextRewardDate(nodeIndex) {
-    let res = await init.NodesData.methods.nodes(nodeIndex).call();
+    let res = await init.Nodes.methods.nodes(nodeIndex).call();
     console.log(res);
-    let res1 = await init.NodesData.methods.getNodeNextRewardDate(nodeIndex).call();
+    let res1 = await init.Nodes.methods.getNodeNextRewardDate(nodeIndex).call();
     console.log(res1);
     console.log("Did everything!");
     return res;

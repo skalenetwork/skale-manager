@@ -21,9 +21,9 @@ pragma solidity 0.6.6;
 pragma experimental ABIEncoderV2;
 
 import "./GroupsFunctionality.sol";
-import "./interfaces/INodesData.sol";
 import "./interfaces/IConstants.sol";
 import "./SchainsData.sol";
+import "./Nodes.sol";
 
 
 /**
@@ -107,9 +107,9 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
 
     function isEnoughNodes(bytes32 groupIndex) external view returns (uint[] memory result) {
         IGroupsData groupsData = IGroupsData(contractManager.getContract(dataName));
-        INodesData nodesData = INodesData(contractManager.getContract("NodesData"));
+        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
         uint8 space = uint8(uint(groupsData.getGroupData(groupIndex)));
-        uint[] memory nodesWithFreeSpace = nodesData.getNodesWithFreeSpace(space);
+        uint[] memory nodesWithFreeSpace = nodes.getNodesWithFreeSpace(space);
         uint counter = 0;
         for (uint i = 0; i < nodesWithFreeSpace.length; i++) {
             if (!isCorrespond(groupIndex, nodesWithFreeSpace[i])) {
@@ -130,9 +130,9 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
 
     function isAnyFreeNode(bytes32 groupIndex) external view returns (bool) {
         IGroupsData groupsData = IGroupsData(contractManager.getContract(dataName));
-        INodesData nodesData = INodesData(contractManager.getContract("NodesData"));
+        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
         uint8 space = uint8(uint(groupsData.getGroupData(groupIndex)));
-        uint[] memory nodesWithFreeSpace = nodesData.getNodesWithFreeSpace(space);
+        uint[] memory nodesWithFreeSpace = nodes.getNodesWithFreeSpace(space);
         for (uint i = 0; i < nodesWithFreeSpace.length; i++) {
             if (isCorrespond(groupIndex, nodesWithFreeSpace[i])) {
                 return true;
@@ -235,13 +235,13 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
      * @return if ouccupied - true, else - false
      */
     function removeSpace(uint nodeIndex, uint8 space) internal returns (bool) {
-        address nodesDataAddress = contractManager.getContract("NodesData");
-        return INodesData(nodesDataAddress).removeSpaceFromNode(nodeIndex, space);
+        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
+        return nodes.removeSpaceFromNode(nodeIndex, space);
     }
 
     function isCorrespond(bytes32 groupIndex, uint nodeIndex) internal view returns (bool) {
         IGroupsData groupsData = IGroupsData(contractManager.contracts(keccak256(abi.encodePacked(dataName))));
-        INodesData nodesData = INodesData(contractManager.contracts(keccak256(abi.encodePacked("NodesData"))));
-        return !groupsData.isExceptionNode(groupIndex, nodeIndex) && nodesData.isNodeActive(nodeIndex);
+        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
+        return !groupsData.isExceptionNode(groupIndex, nodeIndex) && nodes.isNodeActive(nodeIndex);
     }
 }

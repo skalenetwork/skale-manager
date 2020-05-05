@@ -42,6 +42,7 @@ contract ValidatorService is Permissions {
         uint registrationTime;
         uint minimumDelegationAmount;
         uint[] nodeIndexes;
+        bool acceptNewRequests;
     }
 
     event ValidatorRegistered(
@@ -81,6 +82,8 @@ contract ValidatorService is Permissions {
     mapping (uint => address[]) private _nodeAddresses;
     uint public numberOfValidators;
 
+    bool public useWhitelist;
+
     modifier checkValidatorExists(uint validatorId) {
         require(validatorExists(validatorId), "Validator with such ID does not exist");
         _;
@@ -107,7 +110,8 @@ contract ValidatorService is Permissions {
             feeRate,
             now,
             minimumDelegationAmount,
-            emptyArray
+            emptyArray,
+            true
         );
         setValidatorAddress(validatorId, msg.sender);
 
@@ -124,6 +128,10 @@ contract ValidatorService is Permissions {
         require(trustedValidators[validatorId], "Validator is already disabled");
         trustedValidators[validatorId] = false;
         emit ValidatorWasDisabled(validatorId);
+    }
+
+    function disableWhitelist() external onlyOwner {
+        useWhitelist = false;
     }
 
     function getTrustedValidators() external view returns (uint[] memory) {
@@ -266,8 +274,21 @@ contract ValidatorService is Permissions {
         validators[validatorId].description = newDescription;
     }
 
+    function startAcceptingNewRequests() external {
+        uint validatorId = getValidatorId(msg.sender);
+        require(!isAcceptingNewRequests(validatorId), "Accepting request is already enabled");
+        validators[validatorId].acceptNewRequests = true;
+    }
+
+    function stopAcceptingNewRequests() external {
+        uint validatorId = getValidatorId(msg.sender);
+        require(isAcceptingNewRequests(validatorId), "Accepting request is already disabled");
+        validators[validatorId].acceptNewRequests = false;
+    }
+
     function initialize(address _contractManager) public override initializer {
         Permissions.initialize(_contractManager);
+        useWhitelist = true;
     }
 
     function getValidatorIdByNodeAddress(address nodeAddress) public view returns (uint validatorId) {
@@ -298,6 +319,10 @@ contract ValidatorService is Permissions {
     function getValidatorId(address validatorAddress) public view returns (uint) {
         checkIfValidatorAddressExists(validatorAddress);
         return _validatorAddressToId[validatorAddress];
+    }
+
+    function isAcceptingNewRequests(uint validatorId) public view checkValidatorExists(validatorId) returns (bool) {
+        return validators[validatorId].acceptNewRequests;
     }
 
     // private
