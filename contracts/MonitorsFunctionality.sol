@@ -173,6 +173,12 @@ contract MonitorsFunctionality is GroupsFunctionality {
             downtimeArray[i] = data.verdicts(monitorIndex, i, 0);
             latencyArray[i] = data.verdicts(monitorIndex, i, 1);
         }
+        bytes32[] memory badMonitors = data.getCheckedArray(monitorIndex);
+        uint index;
+        for (uint i = 0; i < badMonitors.length; i++) {
+            (index, ) = getDataFromBytes(badMonitors[i]);
+            data.addBadMonitor(keccak256(abi.encodePacked(index)));
+        }
         if (lengthOfArray > 0) {
             averageDowntime = median(downtimeArray);
             averageLatency = median(latencyArray);

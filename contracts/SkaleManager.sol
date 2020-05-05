@@ -250,7 +250,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
             if (latency > constants.allowableLatency()) {
                 bountyForMiner = int((constants.allowableLatency().mul(uint(bountyForMiner))).div(latency));
             }
-            payBounty(uint(bountyForMiner), from, nodeIndex);
+            payBounty(slashBadVerdicts(nodeIndex, uint(bountyForMiner)), from, nodeIndex);
         } else {
             //Need to add penalty
             bountyForMiner = 0;
@@ -269,6 +269,11 @@ contract SkaleManager is IERC777Recipient, Permissions {
             bounty /= 2;
         }
         skaleToken.send(address(distributor), bounty, abi.encode(validatorId));
+    }
+
+    function slashBadVerdicts(uint nodeIndex, uint bounty) internal view returns (uint) {
+        MonitorsData monitorsData = MonitorsData(contractManager.getContract("MonitorsData"));
+        return monitorsData.slashedBounty(keccak256(abi.encodePacked(nodeIndex))) ? bounty * 9 / 10 : bounty;
     }
 
     function fallbackOperationTypeConvert(bytes memory data) internal pure returns (TransactionOperation) {

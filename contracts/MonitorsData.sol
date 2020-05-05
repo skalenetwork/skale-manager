@@ -39,6 +39,8 @@ contract MonitorsData is GroupsData {
     mapping (bytes32 => bytes32[]) public checkedNodes;
     mapping (bytes32 => uint32[][]) public verdicts;
 
+    mapping (bytes32 => bool) public slashedBounty;
+
     /**
      *  Add checked node or update existing one if it is already exits
      */
@@ -87,6 +89,14 @@ contract MonitorsData is GroupsData {
 
     function getLengthOfMetrics(bytes32 monitorIndex) external view returns (uint) {
         return verdicts[monitorIndex].length;
+    }
+
+    function addBadMonitor(bytes32 monitorIndex) external {
+        slashedBounty[monitorIndex] = true;
+    }
+
+    function removeBadMonitor(bytes32 monitorIndex) external {
+        slashedBounty[monitorIndex] = false;
     }
 
     function initialize(address newContractsAddress) public initializer {
