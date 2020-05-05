@@ -31,7 +31,7 @@ chai.use(chaiAsPromised);
 contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) => {
     let contractManager: ContractManagerInstance;
     let constantsHolder: ConstantsHolderInstance;
-    let nodes: NodesInstance;
+    let nodesContract: NodesInstance;
     let skaleManager: SkaleManagerInstance;
     let skaleToken: SkaleTokenInstance;
     let monitorsData: MonitorsDataInstance;
@@ -46,7 +46,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
 
         skaleToken = await deploySkaleToken(contractManager);
         constantsHolder = await deployConstantsHolder(contractManager);
-        nodes = await deployNodes(contractManager);
+        nodesContract = await deployNodes(contractManager);
         monitorsData = await deployMonitorsData(contractManager);
         schainsData = await deploySchainsData(contractManager);
         schainsFunctionality = await deploySchainsFunctionality(contractManager);
@@ -116,8 +116,8 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                 "6432", // name,
                 {from: nodeAddress});
 
-            await nodes.numberOfActiveNodes().should.be.eventually.deep.equal(web3.utils.toBN(1));
-            (await nodes.getNodePort(0)).toNumber().should.be.equal(8545);
+            await nodesContract.numberOfActiveNodes().should.be.eventually.deep.equal(web3.utils.toBN(1));
+            (await nodesContract.getNodePort(0)).toNumber().should.be.equal(8545);
             await monitorsData.isGroupActive(web3.utils.soliditySha3(0)).should.be.eventually.true;
         });
 
@@ -173,7 +173,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
             it("should initiate exiting", async () => {
                 await skaleManager.nodeExit(0, {from: nodeAddress});
 
-                await nodes.isNodeLeft(0).should.be.eventually.true;
+                await nodesContract.isNodeLeft(0).should.be.eventually.true;
             });
 
             it("should remove the node", async () => {
@@ -181,7 +181,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
 
                 await skaleManager.deleteNode(0, {from: nodeAddress});
 
-                await nodes.isNodeLeft(0).should.be.eventually.true;
+                await nodesContract.isNodeLeft(0).should.be.eventually.true;
 
                 const balanceAfter = web3.utils.toBN(await skaleToken.balanceOf(validator));
 
@@ -193,7 +193,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
 
                 await skaleManager.deleteNodeByRoot(0, {from: owner});
 
-                await nodes.isNodeLeft(0).should.be.eventually.true;
+                await nodesContract.isNodeLeft(0).should.be.eventually.true;
 
                 const balanceAfter = web3.utils.toBN(await skaleToken.balanceOf(validator));
 
@@ -239,13 +239,13 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
             it("should initiate exiting of first node", async () => {
                 await skaleManager.nodeExit(0, {from: nodeAddress});
 
-                await nodes.isNodeLeft(0).should.be.eventually.true;
+                await nodesContract.isNodeLeft(0).should.be.eventually.true;
             });
 
             it("should initiate exiting of second node", async () => {
                 await skaleManager.nodeExit(1, {from: nodeAddress});
 
-                await nodes.isNodeLeft(1).should.be.eventually.true;
+                await nodesContract.isNodeLeft(1).should.be.eventually.true;
             });
 
             it("should remove the first node", async () => {
@@ -253,7 +253,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
 
                 await skaleManager.deleteNode(0, {from: nodeAddress});
 
-                await nodes.isNodeLeft(0).should.be.eventually.true;
+                await nodesContract.isNodeLeft(0).should.be.eventually.true;
 
                 const balanceAfter = web3.utils.toBN(await skaleToken.balanceOf(validator));
 
@@ -265,7 +265,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
 
                 await skaleManager.deleteNode(1, {from: nodeAddress});
 
-                await nodes.isNodeLeft(1).should.be.eventually.true;
+                await nodesContract.isNodeLeft(1).should.be.eventually.true;
 
                 const balanceAfter = web3.utils.toBN(await skaleToken.balanceOf(validator));
 
@@ -277,7 +277,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
 
                 await skaleManager.deleteNodeByRoot(0, {from: owner});
 
-                await nodes.isNodeLeft(0).should.be.eventually.true;
+                await nodesContract.isNodeLeft(0).should.be.eventually.true;
 
                 const balanceAfter = web3.utils.toBN(await skaleToken.balanceOf(validator));
 
@@ -289,7 +289,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
 
                 await skaleManager.deleteNodeByRoot(1, {from: owner});
 
-                await nodes.isNodeLeft(1).should.be.eventually.true;
+                await nodesContract.isNodeLeft(1).should.be.eventually.true;
 
                 const balanceAfter = web3.utils.toBN(await skaleToken.balanceOf(validator));
 
@@ -598,6 +598,12 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                         await skaleManager.deleteSchain("d2", {from: developer});
 
                         await schainsData.getSchains().should.be.eventually.empty;
+                    });
+
+                    it("should delete schain after deleting node", async () => {
+                        const nodes = await schainsData.getNodesInGroup(web3.utils.soliditySha3("d2"));
+                        await skaleManager.deleteNode(nodes[0], {from: nodeAddress});
+                        await skaleManager.deleteSchain("d2", {from: developer});
                     });
                 });
 

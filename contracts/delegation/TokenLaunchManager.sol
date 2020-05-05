@@ -45,26 +45,41 @@ contract TokenLaunchManager is Permissions, IERC777Recipient {
 
     address seller;
 
-    mapping (address => uint) approved;
+    mapping (address => uint) public approved;
     uint totalApproved;
 
-    /// @notice Allocates values for `walletAddresses`
-    function approve(address[] calldata walletAddress, uint[] calldata value) external {
+    modifier onlySeller() {
         require(isOwner() || _msgSender() == seller, "Not authorized");
+        _;
+    }
+
+    /// @notice Allocates values for `walletAddresses`
+    function approveBatchOfTransfers(address[] calldata walletAddress, uint[] calldata value) external onlySeller {
         require(walletAddress.length == value.length, "Wrong input arrays length");
         for (uint i = 0; i < walletAddress.length; ++i) {
-            approved[walletAddress[i]] = approved[walletAddress[i]].add(value[i]);
-            totalApproved = totalApproved.add(value[i]);
-            emit Approved(walletAddress[i], value[i]);
+            approveTransfer(walletAddress[i], value[i]);
         }
         require(totalApproved <= getBalance(), "Balance is too low");
+    }
+
+    function changeApprovalAddress(address oldAddress, address newAddress) external onlySeller {
+        require(approved[newAddress] == 0, "New address is already used");
+        uint oldValue = approved[oldAddress];
+        if (oldValue > 0) {
+            setApprovedAmount(oldAddress, 0);
+            approveTransfer(newAddress, oldValue);
+        }
+    }
+
+    function changeApprovalValue(address wallet, uint newValue) external onlySeller {
+        setApprovedAmount(wallet, newValue);
     }
 
     /// @notice Transfers the entire value to sender address. Tokens are locked.
     function retrieve() external {
         require(approved[_msgSender()] > 0, "Transfer is not approved");
         uint value = approved[_msgSender()];
-        delete approved[_msgSender()];
+        setApprovedAmount(_msgSender(), 0);
         require(IERC20(contractManager.getContract("SkaleToken")).transfer(_msgSender(), value), "Error of token sending");
         TokenLaunchLocker(contractManager.getContract("TokenLaunchLocker")).lock(_msgSender(), value);
         emit TokensRetrieved(_msgSender(), value);
@@ -95,9 +110,26 @@ contract TokenLaunchManager is Permissions, IERC777Recipient {
         _erc1820.setInterfaceImplementer(address(this), keccak256("ERC777TokensRecipient"), address(this));
     }
 
+    function approveTransfer(address walletAddress, uint value) public onlySeller {
+        setApprovedAmount(walletAddress, approved[walletAddress].add(value));
+        emit Approved(walletAddress, value);
+    }
+
     // internal
 
     function getBalance() internal view returns(uint balance) {
         return IERC20(contractManager.getContract("SkaleToken")).balanceOf(address(this));
+    }
+
+    function setApprovedAmount(address wallet, uint value) internal {
+        uint oldValue = approved[wallet];
+        if (oldValue != value) {
+            approved[wallet] = value;
+            if (value > oldValue) {
+                totalApproved = totalApproved.add(value - oldValue);
+            } else {
+                totalApproved = totalApproved.sub(oldValue - value);
+            }
+        }
     }
 }
