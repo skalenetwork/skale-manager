@@ -128,6 +128,7 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
         address dataAddress = contractManager.getContract(dataName);
         require(SchainsData(dataAddress).isOwnerAddress(from, schainId), "Message sender is not an owner of Schain");
         address schainsFunctionalityInternalAddress = contractManager.getContract("SchainsFunctionalityInternal");
+        address nodesAddress = contractManager.getContract("Nodes");
 
         // removes Schain from Nodes
         uint[] memory nodesInGroup = IGroupsData(dataAddress).getNodesInGroup(schainId);
@@ -142,7 +143,9 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
                 "Some Node does not contain given Schain");
             ISchainsFunctionalityInternal(schainsFunctionalityInternalAddress).removeNodeFromSchain(nodesInGroup[i], schainId);
             ISchainsFunctionalityInternal(schainsFunctionalityInternalAddress).removeNodeFromExceptions(schainId, nodesInGroup[i]);
-            addSpace(nodesInGroup[i], partOfNode);
+            if (!Nodes(nodesAddress).isNodeLeft(nodesInGroup[i])) {
+                addSpace(nodesInGroup[i], partOfNode);
+            }
         }
         ISchainsFunctionalityInternal(schainsFunctionalityInternalAddress).deleteGroup(schainId);
         SchainsData(dataAddress).removeSchain(schainId, from);
