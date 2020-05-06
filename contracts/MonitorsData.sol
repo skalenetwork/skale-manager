@@ -17,7 +17,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.5.16;
+pragma solidity 0.6.6;
 
 import "./GroupsData.sol";
 
@@ -60,7 +60,7 @@ contract MonitorsData is GroupsData {
             checkedNodes[monitorIndex][indexOfCheckedNode] = checkedNodes[monitorIndex][checkedNodes[monitorIndex].length - 1];
         }
         delete checkedNodes[monitorIndex][checkedNodes[monitorIndex].length - 1];
-        checkedNodes[monitorIndex].length--;
+        checkedNodes[monitorIndex].pop();
     }
 
     function removeAllCheckedNodes(bytes32 monitorIndex) external allow(executorName) {
@@ -68,7 +68,9 @@ contract MonitorsData is GroupsData {
     }
 
     function removeAllVerdicts(bytes32 monitorIndex) external allow(executorName) {
-        verdicts[monitorIndex].length = 0;
+        while (verdicts[monitorIndex].length > 0) {
+            verdicts[monitorIndex].pop();
+        }
     }
 
     function getCheckedArray(bytes32 monitorIndex) external view returns (bytes32[] memory) {
@@ -83,7 +85,7 @@ contract MonitorsData is GroupsData {
         return verdicts[monitorIndex].length;
     }
 
-    function initialize(address newContractsAddress) public initializer {
+    function initialize(address newContractsAddress) public override initializer {
         GroupsData.initialize("MonitorsFunctionality", newContractsAddress);
     }
 }

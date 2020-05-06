@@ -17,11 +17,11 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.5.16;
+pragma solidity 0.6.6;
 
-import "@openzeppelin/contracts-ethereum-package/contracts/ownership/Ownable.sol";
 import "@openzeppelin/upgrades/contracts/Initializable.sol";
 
+import "../thirdparty/openzeppelin/Ownable.sol";
 import "../delegation/TimeHelpers.sol";
 
 
@@ -45,11 +45,11 @@ contract TimeHelpersWithDebug is TimeHelpers, Ownable {
         Ownable.initialize(msg.sender);
     }
 
-    function timestampToMonth(uint timestamp) public view returns (uint) {
+    function timestampToMonth(uint timestamp) public view override returns (uint) {
         return super.timestampToMonth(timestamp.add(getTimeShift(timestamp)));
     }
 
-    function monthToTimestamp(uint _month) public view returns (uint) {
+    function monthToTimestamp(uint _month) public view override returns (uint) {
         uint shiftedTimestamp = super.monthToTimestamp(_month);
         if (timeShift.length > 0) {
             uint lastTimeShiftIndex = timeShift.length - 1;

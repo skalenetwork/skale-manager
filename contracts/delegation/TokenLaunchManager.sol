@@ -17,7 +17,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.5.16;
+pragma solidity 0.6.6;
 
 import "@openzeppelin/contracts/token/ERC777/IERC777.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -98,13 +98,13 @@ contract TokenLaunchManager is Permissions, IERC777Recipient {
         bytes calldata userData,
         bytes calldata operatorData
     )
-        external
+        external override
         allow("SkaleToken")
     {
 
     }
 
-    function initialize(address _contractManager) public initializer {
+    function initialize(address _contractManager) public override initializer {
         Permissions.initialize(_contractManager);
         _erc1820 = IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
         _erc1820.setInterfaceImplementer(address(this), keccak256("ERC777TokensRecipient"), address(this));

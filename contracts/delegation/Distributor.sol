@@ -17,7 +17,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.5.16;
+pragma solidity 0.6.6;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/introspection/IERC1820Registry.sol";
@@ -131,7 +131,7 @@ contract Distributor is Permissions, IERC777Recipient {
         bytes calldata userData,
         bytes calldata
     )
-        external
+        external override
         allow("SkaleToken")
     {
         require(to == address(this), "Receiver is incorrect");
@@ -140,7 +140,7 @@ contract Distributor is Permissions, IERC777Recipient {
         distributeBounty(amount, validatorId);
     }
 
-    function initialize(address _contractsAddress) public initializer {
+    function initialize(address _contractsAddress) public override initializer {
         Permissions.initialize(_contractsAddress);
         _erc1820 = IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
         _erc1820.setInterfaceImplementer(address(this), keccak256("ERC777TokensRecipient"), address(this));

@@ -1,4 +1,4 @@
-pragma solidity 0.5.16;
+pragma solidity 0.6.6;
 
 import "./Permissions.sol";
 
@@ -15,7 +15,7 @@ contract SlashingTable is Permissions {
         return penalty;
     }
 
-    function initialize(address _contractManager) public initializer {
+    function initialize(address _contractManager) public override initializer {
         Permissions.initialize(_contractManager);
     }
 }

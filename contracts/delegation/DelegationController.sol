@@ -18,7 +18,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.5.16;
+pragma solidity 0.6.6;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
@@ -225,11 +225,11 @@ contract DelegationController is Permissions, ILocker {
         sendSlashingSignals(slashingSignals);
     }
 
-    function getAndUpdateLockedAmount(address wallet) external returns (uint) {
+    function getAndUpdateLockedAmount(address wallet) external override returns (uint) {
         return _getAndUpdateLockedAmount(wallet);
     }
 
-    function getAndUpdateForbiddenForDelegationAmount(address wallet) external returns (uint) {
+    function getAndUpdateForbiddenForDelegationAmount(address wallet) external override returns (uint) {
         return _getAndUpdateLockedAmount(wallet);
     }
 
@@ -260,7 +260,8 @@ contract DelegationController is Permissions, ILocker {
         uint currentMonth = timeHelpers.getCurrentMonth();
         delegations[delegationId].started = currentMonth.add(1);
         if (_slashesOfValidator[delegations[delegationId].validatorId].lastMonth > 0) {
-            _delegationExtras[delegationId].lastSlashingMonthBeforeDelegation = _slashesOfValidator[delegations[delegationId].validatorId].lastMonth;
+            _delegationExtras[delegationId].lastSlashingMonthBeforeDelegation =
+                _slashesOfValidator[delegations[delegationId].validatorId].lastMonth;
         }
 
         addToDelegatedToValidator(
@@ -379,7 +380,7 @@ contract DelegationController is Permissions, ILocker {
         return delegationsByHolder[holder].length;
     }
 
-    function initialize(address _contractsAddress) public initializer {
+    function initialize(address _contractsAddress) public override initializer {
         Permissions.initialize(_contractsAddress);
     }
 
@@ -607,9 +608,13 @@ contract DelegationController is Permissions, ILocker {
                 return amount;
             }
         }
-        for (uint i = startMonth; i > 0 && i < delegations[delegationId].finished; i = _slashesOfValidator[validatorId].slashes[i].nextMonth) {
+        for (uint i = startMonth;
+            i > 0 && i < delegations[delegationId].finished;
+            i = _slashesOfValidator[validatorId].slashes[i].nextMonth) {
             if (i >= delegations[delegationId].started) {
-                amount = amount.mul(_slashesOfValidator[validatorId].slashes[i].reducingCoefficient.numerator).div(_slashesOfValidator[validatorId].slashes[i].reducingCoefficient.denominator);
+                amount = amount
+                    .mul(_slashesOfValidator[validatorId].slashes[i].reducingCoefficient.numerator)
+                    .div(_slashesOfValidator[validatorId].slashes[i].reducingCoefficient.denominator);
             }
         }
         return amount;
@@ -656,7 +661,8 @@ contract DelegationController is Permissions, ILocker {
                         _slashes[index].reducingCoefficient,
                         month);
                     slashingSignals[index.sub(begin)].holder = holder;
-                    slashingSignals[index.sub(begin)].penalty = oldValue.boundedSub(getAndUpdateDelegatedByHolderToValidator(holder, validatorId, month));
+                    slashingSignals[index.sub(begin)].penalty
+                        = oldValue.boundedSub(getAndUpdateDelegatedByHolderToValidator(holder, validatorId, month));
                 }
             }
             _firstUnprocessedSlashByHolder[holder] = end;

@@ -17,7 +17,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.5.16;
+pragma solidity 0.6.6;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
 
@@ -98,7 +98,7 @@ contract TokenLaunchLocker is Permissions, ILocker {
         }
     }
 
-    function getAndUpdateLockedAmount(address wallet) external returns (uint) {
+    function getAndUpdateLockedAmount(address wallet) external override returns (uint) {
         if (_locked[wallet] > 0) {
             DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
             TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
@@ -106,11 +106,15 @@ contract TokenLaunchLocker is Permissions, ILocker {
 
             uint currentMonth = timeHelpers.getCurrentMonth();
             if (_totalDelegatedAmount[wallet].delegated.mul(2) >= _locked[wallet] &&
-                timeHelpers.calculateProofOfUseLockEndTime(_totalDelegatedAmount[wallet].month, constantsHolder.proofOfUseLockUpPeriodDays()) <= now) {
+                timeHelpers.calculateProofOfUseLockEndTime(
+                    _totalDelegatedAmount[wallet].month,
+                    constantsHolder.proofOfUseLockUpPeriodDays()
+                ) <= now) {
                 unlock(wallet);
                 return 0;
             } else {
-                uint lockedByDelegationController = getAndUpdateDelegatedAmount(wallet, currentMonth).add(delegationController.getLockedInPendingDelegations(wallet));
+                uint lockedByDelegationController = getAndUpdateDelegatedAmount(wallet, currentMonth)
+                    .add(delegationController.getLockedInPendingDelegations(wallet));
                 if (_locked[wallet] > lockedByDelegationController) {
                     return _locked[wallet].boundedSub(lockedByDelegationController);
                 } else {
@@ -122,11 +126,11 @@ contract TokenLaunchLocker is Permissions, ILocker {
         }
     }
 
-    function getAndUpdateForbiddenForDelegationAmount(address) external returns (uint) {
+    function getAndUpdateForbiddenForDelegationAmount(address) external override returns (uint) {
         return 0;
     }
 
-    function initialize(address _contractManager) public initializer {
+    function initialize(address _contractManager) public override initializer {
         Permissions.initialize(_contractManager);
     }
 

@@ -17,7 +17,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.5.16;
+pragma solidity 0.6.6;
 pragma experimental ABIEncoderV2;
 
 import "./GroupsFunctionality.sol";
@@ -167,7 +167,7 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
         return nodeIndex;
     }
 
-    function initialize(address newContractsAddress) public initializer {
+    function initialize(address newContractsAddress) public override initializer {
         GroupsFunctionality.initialize("SchainsFunctionality", "SchainsData", newContractsAddress);
     }
 
@@ -192,7 +192,7 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
      * @dev generateGroup - generates Group for Schain
      * @param groupIndex - index of Group
      */
-    function generateGroup(bytes32 groupIndex) internal returns (uint[] memory nodesInGroup) {
+    function generateGroup(bytes32 groupIndex) internal override returns (uint[] memory nodesInGroup) {
         IGroupsData groupsData = IGroupsData(contractManager.getContract(dataName));
         SchainsData schainsData = SchainsData(contractManager.getContract(dataName));
         require(groupsData.isGroupActive(groupIndex), "Group is not active");

@@ -17,7 +17,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.5.16;
+pragma solidity 0.6.6;
 
 import "../delegation/PartialDifferences.sol";
 
@@ -29,9 +29,8 @@ contract PartialDifferencesTester {
     PartialDifferences.Sequence[] sequences;
     PartialDifferences.Value[] values;
 
-    function createSequence() external returns (uint id) {
-        id = sequences.length;
-        ++sequences.length;
+    function createSequence() external {
+        sequences.push();
     }
 
     function latestSequence() external view returns (uint id) {

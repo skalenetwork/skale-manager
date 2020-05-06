@@ -17,7 +17,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.5.16;
+pragma solidity 0.6.6;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
 
@@ -37,11 +37,11 @@ contract TimeHelpers {
         return BokkyPooBahsDateTimeLibrary.addMonths(fromTimestamp, n);
     }
 
-    function getCurrentMonth() external view returns (uint) {
+    function getCurrentMonth() external view virtual returns (uint) {
         return timestampToMonth(now);
     }
 
-    function timestampToMonth(uint timestamp) public view returns (uint) {
+    function timestampToMonth(uint timestamp) public view virtual returns (uint) {
         uint year;
         uint month;
         (year, month, ) = BokkyPooBahsDateTimeLibrary.timestampToDate(timestamp);
@@ -51,7 +51,7 @@ contract TimeHelpers {
         return month;
     }
 
-    function monthToTimestamp(uint _month) public view returns (uint timestamp) {
+    function monthToTimestamp(uint _month) public view virtual returns (uint timestamp) {
         uint year = ZERO_YEAR;
         uint month = _month;
         year = year.add(month.div(12));

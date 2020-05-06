@@ -17,7 +17,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.5.16;
+pragma solidity 0.6.6;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
@@ -172,10 +172,10 @@ contract ValidatorService is Permissions {
         emit ValidatorAddressChanged(validatorId, validators[validatorId].validatorAddress);
     }
 
-    function linkNodeAddress(address nodeAddress, bytes calldata signature) external {
+    function linkNodeAddress(address nodeAddress, bytes calldata sig) external {
         uint validatorId = getValidatorId(msg.sender);
         bytes32 hashOfValidatorId = keccak256(abi.encodePacked(validatorId)).toEthSignedMessageHash();
-        require(hashOfValidatorId.recover(signature) == nodeAddress, "Signature is not pass");
+        require(hashOfValidatorId.recover(sig) == nodeAddress, "Signature is not pass");
         require(_validatorAddressToId[nodeAddress] == 0, "Node address is a validator");
         addNodeAddress(validatorId, nodeAddress);
         emit NodeAddressWasAdded(validatorId, nodeAddress);
@@ -276,7 +276,7 @@ contract ValidatorService is Permissions {
 
     function startAcceptingNewRequests() external {
         uint validatorId = getValidatorId(msg.sender);
-        require(isAcceptingNewRequests(validatorId) == false, "Accepting request is already enabled");
+        require(!isAcceptingNewRequests(validatorId), "Accepting request is already enabled");
         validators[validatorId].acceptNewRequests = true;
     }
 
@@ -286,7 +286,7 @@ contract ValidatorService is Permissions {
         validators[validatorId].acceptNewRequests = false;
     }
 
-    function initialize(address _contractManager) public initializer {
+    function initialize(address _contractManager) public override initializer {
         Permissions.initialize(_contractManager);
         useWhitelist = true;
     }
@@ -367,7 +367,7 @@ contract ValidatorService is Permissions {
                     _nodeAddresses[validatorId][i] = _nodeAddresses[validatorId][_nodeAddresses[validatorId].length.sub(1)];
                 }
                 delete _nodeAddresses[validatorId][_nodeAddresses[validatorId].length.sub(1)];
-                --_nodeAddresses[validatorId].length;
+                _nodeAddresses[validatorId].pop();
                 break;
             }
         }

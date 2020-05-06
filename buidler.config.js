@@ -13,7 +13,7 @@ task("erc", "Deploy erc1820", async () => {
 module.exports = {
   defaultNetwork: "buidlerevm",
   solc: {
-    version: '0.5.16',
+    version: '0.6.6',
     evmVersion: 'petersburg',
     optimizer:{
       enabled: true,

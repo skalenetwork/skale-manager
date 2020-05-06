@@ -17,7 +17,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.5.16;
+pragma solidity 0.6.6;
 pragma experimental ABIEncoderV2;
 import "./Permissions.sol";
 import "./interfaces/IGroupsData.sol";
@@ -116,16 +116,20 @@ contract SkaleDKG is Permissions {
         _;
     }
 
-    function openChannel(bytes32 groupIndex) external allowThree("SchainsData", "MonitorsData", "SkaleDKG") {
+    function openChannel(bytes32 groupIndex) external allowTwo("SchainsData", "MonitorsData") {
         require(!channels[groupIndex].active, "Channel already is created");
+        
+        GroupsData groupsData = GroupsData(msg.sender);
+
         channels[groupIndex].active = true;
-        channels[groupIndex].dataAddress = msg.sender;
-        channels[groupIndex].broadcasted = new bool[](IGroupsData(channels[groupIndex].dataAddress).getRecommendedNumberOfNodes(groupIndex));
-        channels[groupIndex].completed = new bool[](IGroupsData(channels[groupIndex].dataAddress).getRecommendedNumberOfNodes(groupIndex));
+        channels[groupIndex].dataAddress = address(groupsData);
+        channels[groupIndex].broadcasted = new bool[](groupsData.getRecommendedNumberOfNodes(groupIndex));
+        channels[groupIndex].completed = new bool[](groupsData.getRecommendedNumberOfNodes(groupIndex));
         channels[groupIndex].publicKeyy.x = 1;
         channels[groupIndex].nodeToComplaint = uint(-1);
         channels[groupIndex].startedBlockTimestamp = block.timestamp;
-        IGroupsData(channels[groupIndex].dataAddress).setGroupFailedDKG(groupIndex);
+
+        groupsData.setGroupFailedDKG(groupIndex);
         emit ChannelOpened(groupIndex);
     }
 
@@ -136,10 +140,13 @@ contract SkaleDKG is Permissions {
 
     function reopenChannel(bytes32 groupIndex) external allow("SkaleDKG") {
         require(channels[groupIndex].active, "Channel is not created");
+
+        GroupsData groupsData = GroupsData(channels[groupIndex].dataAddress);
+
         delete channels[groupIndex].broadcasted;
         delete channels[groupIndex].completed;
-        channels[groupIndex].broadcasted = new bool[](IGroupsData(channels[groupIndex].dataAddress).getRecommendedNumberOfNodes(groupIndex));
-        channels[groupIndex].completed = new bool[](IGroupsData(channels[groupIndex].dataAddress).getRecommendedNumberOfNodes(groupIndex));
+        channels[groupIndex].broadcasted = new bool[](groupsData.getRecommendedNumberOfNodes(groupIndex));
+        channels[groupIndex].completed = new bool[](groupsData.getRecommendedNumberOfNodes(groupIndex));
         delete channels[groupIndex].publicKeyx.x;
         delete channels[groupIndex].publicKeyx.y;
         channels[groupIndex].publicKeyy.x = 1;
@@ -336,7 +343,7 @@ contract SkaleDKG is Permissions {
         return (channels[groupIndex].fromNodeToComplaint, channels[groupIndex].nodeToComplaint);
     }
 
-    function initialize(address contractsAddress) public initializer {
+    function initialize(address contractsAddress) public override initializer {
         Permissions.initialize(contractsAddress);
     }
 
@@ -508,7 +515,7 @@ contract SkaleDKG is Permissions {
         internal
     {
         uint index = findNode(groupIndex, nodeIndex);
-        require(channels[groupIndex].broadcasted[index] == false, "This node is already broadcasted");
+        require(!channels[groupIndex].broadcasted[index], "This node is already broadcasted");
         channels[groupIndex].broadcasted[index] = true;
         channels[groupIndex].numberOfBroadcasted++;
         data[groupIndex][index] = BroadcastedData({

@@ -17,7 +17,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.5.16;
+pragma solidity 0.6.6;
 
 import "./ContractManager.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
@@ -33,7 +33,7 @@ contract Permissions is Ownable {
 
     ContractManager contractManager;
 
-    function initialize(address _contractManager) public initializer {
+    function initialize(address _contractManager) public override virtual initializer {
         Ownable.initialize(msg.sender);
         contractManager = ContractManager(_contractManager);
     }

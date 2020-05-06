@@ -17,7 +17,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.5.16;
+pragma solidity 0.6.6;
 pragma experimental ABIEncoderV2;
 
 import "./GroupsFunctionality.sol";
@@ -174,14 +174,14 @@ contract MonitorsFunctionality is GroupsFunctionality {
         }
     }
 
-    function initialize(address _contractManager) public initializer {
+    function initialize(address _contractManager) public override initializer {
         GroupsFunctionality.initialize(
             "SkaleManager",
             "MonitorsData",
             _contractManager);
     }
 
-    function generateGroup(bytes32 groupIndex) internal allow(executorName) returns (uint[] memory) {
+    function generateGroup(bytes32 groupIndex) internal override allow(executorName) returns (uint[] memory) {
         address dataAddress = contractManager.getContract(dataName);
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));
 

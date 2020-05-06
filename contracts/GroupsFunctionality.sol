@@ -17,7 +17,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.5.16;
+pragma solidity 0.6.6;
 
 import "./Permissions.sol";
 import "./interfaces/IGroupsData.sol";
@@ -43,7 +43,7 @@ interface ISkaleVerifier {
  * @title GroupsFunctionality - contract with some Groups functionality, will be inherited by
  * MonitorsFunctionality and SchainsFunctionality
  */
-contract GroupsFunctionality is Permissions {
+abstract contract GroupsFunctionality is Permissions {
 
     // informs that Group is added
     event GroupAdded(
@@ -183,7 +183,7 @@ contract GroupsFunctionality is Permissions {
      * @dev findNode - find local index of Node in Schain
      * @param groupIndex - Groups identifier
      * @param nodeIndex - global index of Node
-     * @return local index of Node in Schain
+     * @return index Local index of Node in Schain
      */
     function findNode(bytes32 groupIndex, uint nodeIndex) internal view returns (uint index) {
         address groupsDataAddress = contractManager.getContract(dataName);
@@ -202,7 +202,7 @@ contract GroupsFunctionality is Permissions {
      * @param groupIndex - Groups identifier
      * return array of indexes of Nodes in Group
      */
-    function generateGroup(bytes32 groupIndex) internal returns (uint[] memory);
+    function generateGroup(bytes32 groupIndex) internal virtual returns (uint[] memory);
 
     function swap(uint[] memory array, uint index1, uint index2) internal pure {
         uint buffer = array[index1];

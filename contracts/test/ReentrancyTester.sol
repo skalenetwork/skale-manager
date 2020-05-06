@@ -1,4 +1,4 @@
-pragma solidity 0.5.16;
+pragma solidity 0.6.6;
 
 import "@openzeppelin/contracts/introspection/IERC1820Registry.sol";
 import "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
@@ -31,7 +31,7 @@ contract ReentrancyTester is Permissions, IERC777Recipient, IERC777Sender {
         bytes calldata /* userData */,
         bytes calldata /* operatorData */
     )
-        external
+        external override
     {
         if (_reentrancyCheck) {
             SkaleToken skaleToken = SkaleToken(contractManager.getContract("SkaleToken"));
@@ -49,7 +49,7 @@ contract ReentrancyTester is Permissions, IERC777Recipient, IERC777Sender {
         uint256 amount,
         bytes calldata userData,
         bytes calldata operatorData
-    ) external
+    ) external override
     {
         if (_burningAttack) {
             DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
