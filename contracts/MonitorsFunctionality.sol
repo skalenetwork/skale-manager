@@ -18,6 +18,7 @@
 */
 
 pragma solidity 0.6.6;
+pragma experimental ABIEncoderV2;
 
 import "./GroupsFunctionality.sol";
 import "./interfaces/IConstants.sol";
@@ -56,8 +57,7 @@ contract MonitorsFunctionality is GroupsFunctionality {
     event VerdictWasSent(
         uint indexed fromMonitorIndex,
         uint indexed toNodeIndex,
-        uint32 downtime,
-        uint32 latency,
+        MonitorsData.Verdict verdict,
         bool status,
         uint32 time,
         uint gasSpend
@@ -135,40 +135,34 @@ contract MonitorsFunctionality is GroupsFunctionality {
         deleteGroup(groupIndex);
     }
 
-    function sendVerdict(
-        uint fromMonitorIndex,
-        uint toNodeIndex,
-        uint32 downtime,
-        uint32 latency) external allow(executorName)
-    {
+    function sendVerdict(uint fromMonitorIndex, MonitorsData.Verdict calldata verdict) external allow(executorName) {
         uint index;
         uint32 time;
         bytes32 monitorIndex = keccak256(abi.encodePacked(fromMonitorIndex));
-        (index, time) = find(monitorIndex, toNodeIndex);
+        (index, time) = find(monitorIndex, verdict.toNodeIndex);
         require(time > 0, "Checked Node does not exist in MonitorsArray");
         string memory message = "The time has not come to send verdict for ";
-        require(time <= block.timestamp, message.strConcat(StringUtils.uint2str(toNodeIndex)).strConcat(" Node"));
+        require(time <= block.timestamp, message.strConcat(StringUtils.uint2str(verdict.toNodeIndex)).strConcat(" Node"));
         MonitorsData data = MonitorsData(contractManager.getContract("MonitorsData"));
         data.removeCheckedNode(monitorIndex, index);
         address constantsAddress = contractManager.getContract("ConstantsHolder");
         bool receiveVerdict = time.add(IConstants(constantsAddress).deltaPeriod()) > uint32(block.timestamp);
         if (receiveVerdict) {
-            data.addVerdict(keccak256(abi.encodePacked(toNodeIndex)), downtime, latency);
+            data.addVerdict(keccak256(abi.encodePacked(verdict.toNodeIndex)), verdict.downtime, verdict.latency);
         }
         emit VerdictWasSent(
             fromMonitorIndex,
-            toNodeIndex,
-            downtime,
-            latency,
+            verdict.toNodeIndex,
+            verdict,
             receiveVerdict, uint32(block.timestamp), gasleft());
     }
 
-    function calculateMetrics(uint nodeIndex) external allow(executorName) returns (uint32 averageDowntime, uint32 averageLatency) {
+    function calculateMetrics(uint nodeIndex) external allow(executorName) returns (uint averageDowntime, uint averageLatency) {
         MonitorsData data = MonitorsData(contractManager.getContract("MonitorsData"));
         bytes32 monitorIndex = keccak256(abi.encodePacked(nodeIndex));
         uint lengthOfArray = data.getLengthOfMetrics(monitorIndex);
-        uint32[] memory downtimeArray = new uint32[](lengthOfArray);
-        uint32[] memory latencyArray = new uint32[](lengthOfArray);
+        uint[] memory downtimeArray = new uint[](lengthOfArray);
+        uint[] memory latencyArray = new uint[](lengthOfArray);
         for (uint i = 0; i < lengthOfArray; i++) {
             downtimeArray[i] = data.verdicts(monitorIndex, i, 0);
             latencyArray[i] = data.verdicts(monitorIndex, i, 1);
@@ -223,7 +217,7 @@ contract MonitorsFunctionality is GroupsFunctionality {
         return nodesInGroup;
     }
 
-    function median(uint32[] memory values) internal pure returns (uint32) {
+    function median(uint[] memory values) internal pure returns (uint) {
         if (values.length < 1) {
             revert("Can't calculate median of empty array");
         }
@@ -281,10 +275,10 @@ contract MonitorsFunctionality is GroupsFunctionality {
         }
     }
 
-    function quickSort(uint32[] memory array, uint left, uint right) internal pure {
+    function quickSort(uint[] memory array, uint left, uint right) internal pure {
         uint leftIndex = left;
         uint rightIndex = right;
-        uint32 middle = array[(right.add(left)) / 2];
+        uint middle = array[(right.add(left)) / 2];
         while (leftIndex <= rightIndex) {
             while (array[leftIndex] < middle) {
                 leftIndex++;
