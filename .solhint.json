@@ -5,6 +5,7 @@
 
     "compiler-version": ["error","0.6.6"],
     "state-visibility": "error",
-    "no-empty-blocks": "error"
+    "no-empty-blocks": "error",
+    "check-send-result": "error"
   }
 }

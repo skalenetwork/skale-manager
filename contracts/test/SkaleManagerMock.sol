@@ -19,6 +19,7 @@ contract SkaleManagerMock is Permissions, IERC777Recipient {
 
     function payBounty(uint validatorId, uint amount) external {
         SkaleToken skaleToken = SkaleToken(contractManager.getContract("SkaleToken"));
+        // solhint-disable-next-line check-send-result
         skaleToken.send(contractManager.getContract("Distributor"), amount, abi.encode(validatorId));
     }
 

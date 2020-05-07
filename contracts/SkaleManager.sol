@@ -258,6 +258,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
         if (!validatorService.checkPossibilityToMaintainNode(validatorId, nodeIndex)) {
             bounty /= 2;
         }
+        // solhint-disable-next-line check-send-result
         skaleToken.send(address(distributor), bounty, abi.encode(validatorId));
     }
 
