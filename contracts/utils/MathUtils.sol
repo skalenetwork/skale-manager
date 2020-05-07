@@ -26,7 +26,7 @@ library MathUtils {
         uint b
     );
 
-    uint constant private EPS = 1e6;
+    uint constant private _EPS = 1e6;
 
     function boundedSub(uint256 a, uint256 b) internal returns (uint256) {
         if (a >= b) {
@@ -46,15 +46,15 @@ library MathUtils {
     }
 
     function muchGreater(uint256 a, uint256 b) internal pure returns (bool) {
-        assert(uint(-1) - EPS > b);
-        return a > b + EPS;
+        assert(uint(-1) - _EPS > b);
+        return a > b + _EPS;
     }
 
     function approximatelyEqual(uint256 a, uint256 b) internal pure returns (bool) {
         if (a > b) {
-            return a - b < EPS;
+            return a - b < _EPS;
         } else {
-            return b - a < EPS;
+            return b - a < _EPS;
         }
     }
 }

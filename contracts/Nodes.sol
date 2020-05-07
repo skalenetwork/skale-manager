@@ -193,7 +193,7 @@ contract Nodes is Permissions {
             return false;
         }
         if (space > 0) {
-            moveNodeToNewSpaceMap(
+            _moveNodeToNewSpaceMap(
                 nodeIndex,
                 spaceOfNodes[nodeIndex].freeSpace - space
             );
@@ -209,7 +209,7 @@ contract Nodes is Permissions {
      */
     function addSpaceToNode(uint nodeIndex, uint8 space) external allow("SchainsFunctionality") {
         if (space > 0) {
-            moveNodeToNewSpaceMap(
+            _moveNodeToNewSpaceMap(
                 nodeIndex,
                 spaceOfNodes[nodeIndex].freeSpace + space
             );
@@ -235,7 +235,7 @@ contract Nodes is Permissions {
      * @return if time for reward has come - true, else - false
      */
     function isTimeForReward(uint nodeIndex) external view returns (bool) {
-        address constantsAddress = contractManager.getContract("ConstantsHolder");
+        address constantsAddress = _contractManager.getContract("ConstantsHolder");
         return nodes[nodeIndex].lastRewardDate.add(IConstants(constantsAddress).rewardPeriod()) <= block.timestamp;
     }
 
@@ -293,7 +293,7 @@ contract Nodes is Permissions {
      * @return Node next reward date
      */
     function getNodeNextRewardDate(uint nodeIndex) external view returns (uint32) {
-        address constantsAddress = contractManager.getContract("ConstantsHolder");
+        address constantsAddress = _contractManager.getContract("ConstantsHolder");
         return nodes[nodeIndex].lastRewardDate + IConstants(constantsAddress).rewardPeriod();
     }
 
@@ -384,8 +384,8 @@ contract Nodes is Permissions {
         bytes memory publicKey;
 
         // decode data from the bytes
-        (port, nonce, ip, publicIP) = fallbackDataConverter(data);
-        (publicKey, name) = fallbackDataConverterPublicKeyAndName(data);
+        (port, nonce, ip, publicIP) = _fallbackDataConverter(data);
+        (publicKey, name) = _fallbackDataConverterPublicKeyAndName(data);
 
         // checks that Node has correct data
         require(ip != 0x0 && !nodesIPCheck[ip], "IP address is zero or is not available");
@@ -393,7 +393,7 @@ contract Nodes is Permissions {
         require(port > 0, "Port is zero");
 
         uint validatorId = ValidatorService(
-            contractManager.getContract("ValidatorService")).getValidatorIdByNodeAddress(from);
+            _contractManager.getContract("ValidatorService")).getValidatorIdByNodeAddress(from);
 
         // adds Node to Nodes contract
         nodeIndex = this.addNode(
@@ -573,7 +573,7 @@ contract Nodes is Permissions {
         numberOfLeftNodes = 0;
     }
 
-    function moveNodeToNewSpaceMap(uint nodeIndex, uint8 newSpace) internal {
+    function _moveNodeToNewSpaceMap(uint nodeIndex, uint8 newSpace) internal {
         uint8 previousSpace = spaceOfNodes[nodeIndex].freeSpace;
         uint indexInArray = spaceOfNodes[nodeIndex].indexInSpaceMap;
         if (indexInArray < spaceToNodes[previousSpace].length - 1) {
@@ -590,14 +590,14 @@ contract Nodes is Permissions {
     }
 
     /**
-     * @dev fallbackDataConverter - converts data from bytes to normal parameters
+     * @dev _fallbackDataConverter - converts data from bytes to normal parameters
      * @param data - concatenated parameters
      * @return port
      * @return nonce
      * @return ip address
      * @return public ip address
      */
-    function fallbackDataConverter(bytes memory data)
+    function _fallbackDataConverter(bytes memory data)
         private
         pure
         returns (uint16, uint16, bytes4, bytes4 /*address secondAddress,*/)
@@ -619,12 +619,12 @@ contract Nodes is Permissions {
     }
 
     /**
-     * @dev fallbackDataConverterPublicKeyAndName - converts data from bytes to public key and name
+     * @dev _fallbackDataConverterPublicKeyAndName - converts data from bytes to public key and name
      * @param data - concatenated public key and name
      * @return public key
      * @return name of Node
      */
-    function fallbackDataConverterPublicKeyAndName(bytes memory data)
+    function _fallbackDataConverterPublicKeyAndName(bytes memory data)
         private pure returns (bytes memory, string memory)
     {
         require(data.length > 77, "Incorrect bytes data config");

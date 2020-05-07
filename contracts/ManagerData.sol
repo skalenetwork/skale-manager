@@ -38,19 +38,19 @@ contract ManagerData is IManagerData, Permissions {
     uint public override stageNodes;
 
     //name of executor contract
-    string private executorName;
+    string private _executorName;
 
     /**
      * @dev setMinersCap - sets miners capitalization
      */
-    function setMinersCap(uint newMinersCap) external override allow(executorName) {
+    function setMinersCap(uint newMinersCap) external override allow(_executorName) {
         minersCap = newMinersCap;
     }
 
     /**
      * @dev setStageTimeAndStageNodes - sets new stage time and new amount of Nodes at this stage
      */
-    function setStageTimeAndStageNodes(uint newStageNodes) external override allow(executorName) {
+    function setStageTimeAndStageNodes(uint newStageNodes) external override allow(_executorName) {
         stageNodes = newStageNodes;
         stageTime = uint32(block.timestamp);
     }
@@ -62,6 +62,6 @@ contract ManagerData is IManagerData, Permissions {
     function initialize(address newContractsAddress) public override initializer {
         Permissions.initialize(newContractsAddress);
         startTime = uint32(block.timestamp);
-        executorName = "SkaleManager";
+        _executorName = "SkaleManager";
     }
 }

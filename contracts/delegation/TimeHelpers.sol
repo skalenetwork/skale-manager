@@ -27,7 +27,7 @@ import "../thirdparty/BokkyPooBahsDateTimeLibrary.sol";
 contract TimeHelpers {
     using SafeMath for uint;
 
-    uint constant private ZERO_YEAR = 2020;
+    uint constant private _ZERO_YEAR = 2020;
 
     function calculateProofOfUseLockEndTime(uint month, uint lockUpPeriodDays) external view returns (uint timestamp) {
         timestamp = BokkyPooBahsDateTimeLibrary.addDays(monthToTimestamp(month), lockUpPeriodDays);
@@ -45,14 +45,14 @@ contract TimeHelpers {
         uint year;
         uint month;
         (year, month, ) = BokkyPooBahsDateTimeLibrary.timestampToDate(timestamp);
-        require(year >= ZERO_YEAR, "Timestamp is too far in the past");
-        month = month.sub(1).add(year.sub(ZERO_YEAR).mul(12));
+        require(year >= _ZERO_YEAR, "Timestamp is too far in the past");
+        month = month.sub(1).add(year.sub(_ZERO_YEAR).mul(12));
         require(month > 0, "Timestamp is too far in the past");
         return month;
     }
 
     function monthToTimestamp(uint _month) public view virtual returns (uint timestamp) {
-        uint year = ZERO_YEAR;
+        uint year = _ZERO_YEAR;
         uint month = _month;
         year = year.add(month.div(12));
         month = month.mod(12);

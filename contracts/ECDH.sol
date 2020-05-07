@@ -10,7 +10,7 @@
 
     SKALE Manager is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    MERCHANTABILITY or FITNESS FOR _A PARTICULAR PURPOSE.  See the
     GNU Affero General Public License for more details.
 
     You should have received a copy of the GNU Affero General Public License
@@ -24,10 +24,10 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 contract ECDH {
     using SafeMath for uint256;
 
-    uint256 constant private GX = 0x79BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798;
-    uint256 constant private GY = 0x483ADA7726A3C4655DA4FBFC0E1108A8FD17B448A68554199C47D08FFB10D4B8;
-    uint256 constant private N = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F;
-    uint256 constant private A = 0;
+    uint256 constant private _GX = 0x79BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798;
+    uint256 constant private _GY = 0x483ADA7726A3C4655DA4FBFC0E1108A8FD17B448A68554199C47D08FFB10D4B8;
+    uint256 constant private _N = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F;
+    uint256 constant private _A = 0;
 
     function publicKey(uint256 privKey) external pure returns (uint256 qx, uint256 qy) {
         uint256 x;
@@ -35,13 +35,13 @@ contract ECDH {
         uint256 z;
         (x, y, z) = ecMul(
             privKey,
-            GX,
-            GY,
+            _GX,
+            _GY,
             1
         );
         z = inverse(z);
-        qx = mulmod(x, z, N);
-        qy = mulmod(y, z, N);
+        qx = mulmod(x, z, _N);
+        qy = mulmod(y, z, _N);
     }
 
     function deriveKey(
@@ -63,8 +63,8 @@ contract ECDH {
             1
         );
         z = inverse(z);
-        qx = mulmod(x, z, N);
-        qy = mulmod(y, z, N);
+        qx = mulmod(x, z, _N);
+        qy = mulmod(y, z, _N);
     }
 
     function jAdd(
@@ -77,7 +77,7 @@ contract ECDH {
         pure
         returns (uint256 x3, uint256 z3)
     {
-        (x3, z3) = (addmod(mulmod(z2, x1, N), mulmod(x2, z1, N), N), mulmod(z1, z2, N));
+        (x3, z3) = (addmod(mulmod(z2, x1, _N), mulmod(x2, z1, _N), _N), mulmod(z1, z2, _N));
     }
 
     function jSub(
@@ -90,7 +90,7 @@ contract ECDH {
         pure
         returns (uint256 x3, uint256 z3)
     {
-        (x3, z3) = (addmod(mulmod(z2, x1, N), mulmod(N.sub(x2), z1, N), N), mulmod(z1, z2, N));
+        (x3, z3) = (addmod(mulmod(z2, x1, _N), mulmod(_N.sub(x2), z1, _N), _N), mulmod(z1, z2, _N));
     }
 
     function jMul(
@@ -103,7 +103,7 @@ contract ECDH {
         pure
         returns (uint256 x3, uint256 z3)
     {
-        (x3, z3) = (mulmod(x1, x2, N), mulmod(z1, z2, N));
+        (x3, z3) = (mulmod(x1, x2, _N), mulmod(z1, z2, _N));
     }
 
     function jDiv(
@@ -116,18 +116,18 @@ contract ECDH {
         pure
         returns (uint256 x3, uint256 z3)
     {
-        (x3, z3) = (mulmod(x1, z2, N), mulmod(z1, x2, N));
+        (x3, z3) = (mulmod(x1, z2, _N), mulmod(z1, x2, _N));
     }
 
     function inverse(uint256 a) public pure returns (uint256 invA) {
         uint256 t = 0;
         uint256 newT = 1;
-        uint256 r = N;
+        uint256 r = _N;
         uint256 newR = a;
         uint256 q;
         while (newR != 0) {
             q = r.div(newR);
-            (t, newT) = (newT, addmod(t, (N.sub(mulmod(q, newT, N))), N));
+            (t, newT) = (newT, addmod(t, (_N.sub(mulmod(q, newT, _N))), _N));
             (r, newR) = (newR, r.sub(q.mul(newR)));
         }
         return t;
@@ -174,7 +174,7 @@ contract ECDH {
             (ln, lz) = jAdd(
                 ln,
                 lz,
-                A,
+                _A,
                 1
             );
             (da, db) = jMul(
@@ -243,9 +243,9 @@ contract ECDH {
         );
 
         if (da != db) {
-            x3 = mulmod(x3, db, N);
-            y3 = mulmod(y3, da, N);
-            z3 = mulmod(da, db, N);
+            x3 = mulmod(x3, db, _N);
+            y3 = mulmod(y3, da, _N);
+            z3 = mulmod(da, db, _N);
         } else {
             z3 = da;
         }

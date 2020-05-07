@@ -36,7 +36,7 @@ contract MonitorsData is GroupsData {
     /**
      *  Add checked node or update existing one if it is already exits
      */
-    function addCheckedNode(bytes32 monitorIndex, bytes32 data) external allow(executorName) {
+    function addCheckedNode(bytes32 monitorIndex, bytes32 data) external allow(_executorName) {
         uint indexLength = 14;
         require(data.length >= indexLength, "data is too small");
         for (uint i = 0; i < checkedNodes[monitorIndex].length; ++i) {
@@ -51,11 +51,11 @@ contract MonitorsData is GroupsData {
         checkedNodes[monitorIndex].push(data);
     }
 
-    function addVerdict(bytes32 monitorIndex, uint32 downtime, uint32 latency) external allow(executorName) {
+    function addVerdict(bytes32 monitorIndex, uint32 downtime, uint32 latency) external allow(_executorName) {
         verdicts[monitorIndex].push([uint(downtime), uint(latency)]);
     }
 
-    function removeCheckedNode(bytes32 monitorIndex, uint indexOfCheckedNode) external allow(executorName) {
+    function removeCheckedNode(bytes32 monitorIndex, uint indexOfCheckedNode) external allow(_executorName) {
         if (indexOfCheckedNode != checkedNodes[monitorIndex].length - 1) {
             checkedNodes[monitorIndex][indexOfCheckedNode] =
                 checkedNodes[monitorIndex][checkedNodes[monitorIndex].length - 1];
@@ -64,11 +64,11 @@ contract MonitorsData is GroupsData {
         checkedNodes[monitorIndex].pop();
     }
 
-    function removeAllCheckedNodes(bytes32 monitorIndex) external allow(executorName) {
+    function removeAllCheckedNodes(bytes32 monitorIndex) external allow(_executorName) {
         delete checkedNodes[monitorIndex];
     }
 
-    function removeAllVerdicts(bytes32 monitorIndex) external allow(executorName) {
+    function removeAllVerdicts(bytes32 monitorIndex) external allow(_executorName) {
         while (verdicts[monitorIndex].length > 0) {
             verdicts[monitorIndex].pop();
         }
