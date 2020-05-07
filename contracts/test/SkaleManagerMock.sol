@@ -30,8 +30,9 @@ contract SkaleManagerMock is Permissions, IERC777Recipient {
         bytes calldata userData,
         bytes calldata operatorData
     )
-        external override
+        external override allow("SkaleToken")
+        // solhint-disable-next-line no-empty-blocks
     {
-
+        
     }
 }

@@ -102,6 +102,7 @@ contract TokenLaunchManager is Permissions, IERC777Recipient {
     )
         external override
         allow("SkaleToken")
+        // solhint-disable-next-line no-empty-blocks
     {
 
     }
