@@ -33,11 +33,6 @@ contract PartialDifferencesTester {
         _sequences.push();
     }
 
-    function latestSequence() external view returns (uint id) {
-        require(_sequences.length > 0, "There are no _sequences");
-        return _sequences.length - 1;
-    }
-
     function addToSequence(uint sequence, uint diff, uint month) external {
         require(sequence < _sequences.length, "Sequence does not exist");
         _sequences[sequence].addToSequence(diff, month);
@@ -62,5 +57,10 @@ contract PartialDifferencesTester {
         require(sequence < _sequences.length, "Sequence does not exist");
         FractionUtils.Fraction memory reducingCoefficient = FractionUtils.createFraction(a, b);
         return _sequences[sequence].reduceSequence(reducingCoefficient, month);
+    }
+
+    function latestSequence() external view returns (uint id) {
+        require(_sequences.length > 0, "There are no _sequences");
+        return _sequences.length - 1;
     }
 }

@@ -160,12 +160,6 @@ contract DelegationController is Permissions, ILocker {
         _;
     }
 
-    function getDelegation(uint delegationId)
-        external view checkDelegationExists(delegationId) returns (Delegation memory)
-    {
-        return delegations[delegationId];
-    }
-
     function getAndUpdateDelegatedToValidatorNow(uint validatorId) external returns (uint) {
         return getAndUpdateDelegatedToValidator(validatorId, _getCurrentMonth());
     }
@@ -368,14 +362,20 @@ contract DelegationController is Permissions, ILocker {
         _slashes.push(SlashingEvent({reducingCoefficient: coefficient, validatorId: validatorId, month: currentMonth}));
     }
 
-    function getFirstDelegationMonth(address holder, uint validatorId) external view returns(uint) {
-        return _firstDelegationMonth[holder].byValidator[validatorId];
-    }
-
     function getAndUpdateEffectiveDelegatedToValidator(uint validatorId, uint month)
         external allow("Distributor") returns (uint)
     {
         return _effectiveDelegatedToValidator[validatorId].getAndUpdateValueInSequence(month);
+    }
+
+    function getDelegation(uint delegationId)
+        external view checkDelegationExists(delegationId) returns (Delegation memory)
+    {
+        return delegations[delegationId];
+    }
+
+    function getFirstDelegationMonth(address holder, uint validatorId) external view returns(uint) {
+        return _firstDelegationMonth[holder].byValidator[validatorId];
     }
 
     function getDelegationsByValidatorLength(uint validatorId) external view returns (uint) {
@@ -394,6 +394,14 @@ contract DelegationController is Permissions, ILocker {
         public allow("ValidatorService") returns (uint)
     {
         return _delegatedToValidator[validatorId].getAndUpdateValue(month);
+    }
+
+    function processSlashes(address holder, uint limit) public {
+        _sendSlashingSignals(_processSlashesWithoutSignals(holder, limit));
+    }
+
+    function processAllSlashes(address holder) public {
+        processSlashes(holder, 0);
     }
 
     function getState(uint delegationId) public view checkDelegationExists(delegationId) returns (State state) {
@@ -436,14 +444,6 @@ contract DelegationController is Permissions, ILocker {
 
     function hasUnprocessedSlashes(address holder) public view returns (bool) {
         return _everDelegated(holder) && _firstUnprocessedSlashByHolder[holder] < _slashes.length;
-    }
-
-    function processSlashes(address holder, uint limit) public {
-        _sendSlashingSignals(_processSlashesWithoutSignals(holder, limit));
-    }
-
-    function processAllSlashes(address holder) public {
-        processSlashes(holder, 0);
     }
 
     // private

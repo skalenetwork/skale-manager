@@ -64,6 +64,46 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
             gasleft());
     }
 
+    function removeNodeFromSchain(uint nodeIndex, bytes32 groupHash) external allowTwo(_executorName, "SkaleDKG") {
+        address schainsDataAddress = _contractManager.contracts(keccak256(abi.encodePacked("SchainsData")));
+        uint groupIndex = findSchainAtSchainsForNode(nodeIndex, groupHash);
+        uint indexOfNode = _findNode(groupHash, nodeIndex);
+        IGroupsData(schainsDataAddress).removeNodeFromGroup(indexOfNode, groupHash);
+        // IGroupsData(schainsDataAddress).removeExceptionNode(groupHash, nodeIndex);
+        SchainsData(schainsDataAddress).removeSchainForNode(nodeIndex, groupIndex);
+    }
+
+    function removeNodeFromExceptions(bytes32 groupHash, uint nodeIndex) external allow(_executorName) {
+        address schainsDataAddress = _contractManager.contracts(keccak256(abi.encodePacked("SchainsData")));
+        IGroupsData(schainsDataAddress).removeExceptionNode(groupHash, nodeIndex);
+    }
+
+    /**
+     * @dev selectNodeToGroup - pseudo-randomly select new Node for Schain
+     * @param groupIndex - hash of name of Schain
+     * @return nodeIndex - global index of Node
+     */
+    function selectNodeToGroup(bytes32 groupIndex) external allow(_executorName) returns (uint) {
+        IGroupsData groupsData = IGroupsData(_contractManager.getContract(_dataName));
+        SchainsData schainsData = SchainsData(_contractManager.getContract(_dataName));
+        require(groupsData.isGroupActive(groupIndex), "Group is not active");
+        uint8 space = uint8(uint(groupsData.getGroupData(groupIndex)));
+        uint[] memory possibleNodes = this.isEnoughNodes(groupIndex);
+        require(possibleNodes.length > 0, "No any free Nodes for rotation");
+        uint nodeIndex;
+        uint random = uint(keccak256(abi.encodePacked(uint(blockhash(block.number - 1)), groupIndex)));
+        do {
+            uint index = random % possibleNodes.length;
+            nodeIndex = possibleNodes[index];
+            random = uint(keccak256(abi.encodePacked(random, nodeIndex)));
+        } while (groupsData.isExceptionNode(groupIndex, nodeIndex));
+        require(_removeSpace(nodeIndex, space), "Could not remove space from nodeIndex");
+        schainsData.addSchainForNode(nodeIndex, groupIndex);
+        groupsData.setException(groupIndex, nodeIndex);
+        groupsData.setNodeInGroup(groupIndex, nodeIndex);
+        return nodeIndex;
+    }
+
     /**
      * @dev getNodesDataFromTypeOfSchain - returns number if Nodes
      * and part of Node which needed to this Schain
@@ -91,20 +131,6 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
         } else {
             revert("Bad schain type");
         }
-    }
-
-    function removeNodeFromSchain(uint nodeIndex, bytes32 groupHash) external allowTwo(_executorName, "SkaleDKG") {
-        address schainsDataAddress = _contractManager.contracts(keccak256(abi.encodePacked("SchainsData")));
-        uint groupIndex = findSchainAtSchainsForNode(nodeIndex, groupHash);
-        uint indexOfNode = _findNode(groupHash, nodeIndex);
-        IGroupsData(schainsDataAddress).removeNodeFromGroup(indexOfNode, groupHash);
-        // IGroupsData(schainsDataAddress).removeExceptionNode(groupHash, nodeIndex);
-        SchainsData(schainsDataAddress).removeSchainForNode(nodeIndex, groupIndex);
-    }
-
-    function removeNodeFromExceptions(bytes32 groupHash, uint nodeIndex) external allow(_executorName) {
-        address schainsDataAddress = _contractManager.contracts(keccak256(abi.encodePacked("SchainsData")));
-        IGroupsData(schainsDataAddress).removeExceptionNode(groupHash, nodeIndex);
     }
 
     function isEnoughNodes(bytes32 groupIndex) external view returns (uint[] memory result) {
@@ -141,32 +167,6 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
             }
         }
         return false;
-    }
-
-    /**
-     * @dev selectNodeToGroup - pseudo-randomly select new Node for Schain
-     * @param groupIndex - hash of name of Schain
-     * @return nodeIndex - global index of Node
-     */
-    function selectNodeToGroup(bytes32 groupIndex) external allow(_executorName) returns (uint) {
-        IGroupsData groupsData = IGroupsData(_contractManager.getContract(_dataName));
-        SchainsData schainsData = SchainsData(_contractManager.getContract(_dataName));
-        require(groupsData.isGroupActive(groupIndex), "Group is not active");
-        uint8 space = uint8(uint(groupsData.getGroupData(groupIndex)));
-        uint[] memory possibleNodes = this.isEnoughNodes(groupIndex);
-        require(possibleNodes.length > 0, "No any free Nodes for rotation");
-        uint nodeIndex;
-        uint random = uint(keccak256(abi.encodePacked(uint(blockhash(block.number - 1)), groupIndex)));
-        do {
-            uint index = random % possibleNodes.length;
-            nodeIndex = possibleNodes[index];
-            random = uint(keccak256(abi.encodePacked(random, nodeIndex)));
-        } while (groupsData.isExceptionNode(groupIndex, nodeIndex));
-        require(_removeSpace(nodeIndex, space), "Could not remove space from nodeIndex");
-        schainsData.addSchainForNode(nodeIndex, groupIndex);
-        groupsData.setException(groupIndex, nodeIndex);
-        groupsData.setNodeInGroup(groupIndex, nodeIndex);
-        return nodeIndex;
     }
 
     function initialize(address newContractsAddress) public override initializer {

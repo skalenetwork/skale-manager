@@ -202,14 +202,6 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
         return schainsData.getActiveSchain(nodeIndex) == bytes32(0) ? true : false;
     }
 
-    function checkRotation(bytes32 schainId ) external view returns (bool) {
-        SchainsData schainsData = SchainsData(_contractManager.getContract(_dataName));
-        require(schainsData.isSchainExist(schainId), "Schain does not exist");
-        SchainsFunctionalityInternal schainsFunctionalityInternal = SchainsFunctionalityInternal(
-            _contractManager.getContract("SchainsFunctionalityInternal"));
-        return schainsFunctionalityInternal.isAnyFreeNode(schainId);
-    }
-
     function rotateNode(
         uint nodeIndex,
         bytes32 schainId)
@@ -253,6 +245,14 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
         uint newNodeIndex = schainsFunctionalityInternal.selectNodeToGroup(schainId);
         emit NodeAdded(schainId, newNodeIndex);
 
+    }
+
+    function checkRotation(bytes32 schainId ) external view returns (bool) {
+        SchainsData schainsData = SchainsData(_contractManager.getContract(_dataName));
+        require(schainsData.isSchainExist(schainId), "Schain does not exist");
+        SchainsFunctionalityInternal schainsFunctionalityInternal = SchainsFunctionalityInternal(
+            _contractManager.getContract("SchainsFunctionalityInternal"));
+        return schainsFunctionalityInternal.isAnyFreeNode(schainId);
     }
 
     function initialize(address newContractsAddress) public override initializer {

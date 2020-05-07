@@ -9,6 +9,7 @@
     "no-empty-blocks": "error",
     "check-send-result": "error",
     "private-vars-leading-underscore": "error",
-    "code-complexity": "error"
+    "code-complexity": "error",
+    "func-order": "error"
   }
 }

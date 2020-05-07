@@ -161,25 +161,6 @@ contract Nodes is Permissions {
         numberOfActiveNodes++;
     }
 
-    function getNodesWithFreeSpace(uint8 freeSpace) external view returns (uint[] memory) {
-        uint[] memory nodesWithFreeSpace = new uint[](this.countNodesWithFreeSpace(freeSpace));
-        uint cursor = 0;
-        for (uint8 i = freeSpace; i <= 128; ++i) {
-            for (uint j = 0; j < spaceToNodes[i].length; j++) {
-                nodesWithFreeSpace[cursor] = spaceToNodes[i][j];
-                ++cursor;
-            }
-        }
-        return nodesWithFreeSpace;
-    }
-
-    function countNodesWithFreeSpace(uint8 freeSpace) external view returns (uint count) {
-        count = 0;
-        for (uint8 i = freeSpace; i <= 128; ++i) {
-            count = count.add(spaceToNodes[i].length);
-        }
-    }
-
     /**
      * @dev removeSpaceFromFractionalNode - occupies space from Fractional Node
      * function could be run only by SchainsFunctionality
@@ -227,146 +208,7 @@ contract Nodes is Permissions {
 
     function changeNodeFinishTime(uint nodeIndex, uint32 time) external {
         nodes[nodeIndex].finishTime = time;
-    }
-
-    /**
-     * @dev isTimeForReward - checks if time for reward has come
-     * @param nodeIndex - index of Node
-     * @return if time for reward has come - true, else - false
-     */
-    function isTimeForReward(uint nodeIndex) external view returns (bool) {
-        address constantsAddress = _contractManager.getContract("ConstantsHolder");
-        return nodes[nodeIndex].lastRewardDate.add(IConstants(constantsAddress).rewardPeriod()) <= block.timestamp;
-    }
-
-    /**
-     * @dev getNodeIP - get ip address of Node
-     * @param nodeIndex - index of Node
-     * @return ip address
-     */
-    function getNodeIP(uint nodeIndex) external view returns (bytes4) {
-        return nodes[nodeIndex].ip;
-    }
-
-    /**
-     * @dev getNodePort - get Node's port
-     * @param nodeIndex - index of Node
-     * @return port
-     */
-    function getNodePort(uint nodeIndex) external view returns (uint16) {
-        return nodes[nodeIndex].port;
-    }
-
-    function getNodePublicKey(uint nodeIndex) external view returns (bytes memory) {
-        return nodes[nodeIndex].publicKey;
-    }
-
-    function getNodeValidatorId(uint nodeIndex) external view returns (uint) {
-        return nodes[nodeIndex].validatorId;
-    }
-
-    function getNodeFinishTime(uint nodeIndex) external view returns (uint32) {
-        return nodes[nodeIndex].finishTime;
-    }
-
-    /**
-     * @dev isNodeLeft - checks if Node status Left
-     * @param nodeIndex - index of Node
-     * @return if Node status Left - true, else - false
-     */
-    function isNodeLeft(uint nodeIndex) external view returns (bool) {
-        return nodes[nodeIndex].status == NodeStatus.Left;
-    }
-
-    /**
-     * @dev getNodeLastRewardDate - get Node last reward date
-     * @param nodeIndex - index of Node
-     * @return Node last reward date
-     */
-    function getNodeLastRewardDate(uint nodeIndex) external view returns (uint32) {
-        return nodes[nodeIndex].lastRewardDate;
-    }
-
-    /**
-     * @dev getNodeNextRewardDate - get Node next reward date
-     * @param nodeIndex - index of Node
-     * @return Node next reward date
-     */
-    function getNodeNextRewardDate(uint nodeIndex) external view returns (uint32) {
-        address constantsAddress = _contractManager.getContract("ConstantsHolder");
-        return nodes[nodeIndex].lastRewardDate + IConstants(constantsAddress).rewardPeriod();
-    }
-
-    /**
-     * @dev getNumberOfNodes - get number of Nodes
-     * @return number of Nodes
-     */
-    function getNumberOfNodes() external view returns (uint) {
-        return nodes.length;
-    }
-
-    /**
-     * @dev getNumberOfFullNodes - get number Online Nodes
-     * @return number of active nodes plus number of leaving nodes
-     */
-    function getNumberOnlineNodes() external view returns (uint) {
-        return numberOfActiveNodes.add(numberOfLeavingNodes);
-    }
-
-    /**
-     * @dev getActiveNodeIPs - get array of ips of Active Nodes
-     * @return activeNodeIPs - array of ips of Active Nodes
-     */
-    function getActiveNodeIPs() external view returns (bytes4[] memory activeNodeIPs) {
-        activeNodeIPs = new bytes4[](numberOfActiveNodes);
-        uint indexOfActiveNodeIPs = 0;
-        for (uint indexOfNodes = 0; indexOfNodes < nodes.length; indexOfNodes++) {
-            if (isNodeActive(indexOfNodes)) {
-                activeNodeIPs[indexOfActiveNodeIPs] = nodes[indexOfNodes].ip;
-                indexOfActiveNodeIPs++;
-            }
-        }
-    }
-
-    /**
-     * @dev getActiveNodesByAddress - get array of indexes of Active Nodes, which were
-     * created by msg.sender
-     * @return activeNodesByAddress Array of indexes of Active Nodes, which were created by msg.sender
-     */
-    function getActiveNodesByAddress() external view returns (uint[] memory activeNodesByAddress) {
-        activeNodesByAddress = new uint[](nodeIndexes[msg.sender].numberOfNodes);
-        uint indexOfActiveNodesByAddress = 0;
-        for (uint indexOfNodes = 0; indexOfNodes < nodes.length; indexOfNodes++) {
-            if (nodeIndexes[msg.sender].isNodeExist[indexOfNodes] && isNodeActive(indexOfNodes)) {
-                activeNodesByAddress[indexOfActiveNodesByAddress] = indexOfNodes;
-                indexOfActiveNodesByAddress++;
-            }
-        }
-    }
-
-    /**
-     * @dev getActiveNodeIds - get array of indexes of Active Nodes
-     * @return activeNodeIds - array of indexes of Active Nodes
-     */
-    function getActiveNodeIds() external view returns (uint[] memory activeNodeIds) {
-        activeNodeIds = new uint[](numberOfActiveNodes);
-        uint indexOfActiveNodeIds = 0;
-        for (uint indexOfNodes = 0; indexOfNodes < nodes.length; indexOfNodes++) {
-            if (isNodeActive(indexOfNodes)) {
-                activeNodeIds[indexOfActiveNodeIds] = indexOfNodes;
-                indexOfActiveNodeIds++;
-            }
-        }
-    }
-
-    function getValidatorId(uint nodeIndex) external view returns (uint) {
-        require(nodeIndex < nodes.length, "Node does not exist");
-        return nodes[nodeIndex].validatorId;
-    }
-
-    function getNodeStatus(uint nodeIndex) external view returns (NodeStatus) {
-        return nodes[nodeIndex].status;
-    }
+    }    
 
     /**
      * @dev createNode - creates new Node and add it to the Nodes contract
@@ -533,6 +375,176 @@ contract Nodes is Permissions {
         numberOfLeavingNodes++;
     }
 
+    function getNodesWithFreeSpace(uint8 freeSpace) external view returns (uint[] memory) {
+        uint[] memory nodesWithFreeSpace = new uint[](this.countNodesWithFreeSpace(freeSpace));
+        uint cursor = 0;
+        for (uint8 i = freeSpace; i <= 128; ++i) {
+            for (uint j = 0; j < spaceToNodes[i].length; j++) {
+                nodesWithFreeSpace[cursor] = spaceToNodes[i][j];
+                ++cursor;
+            }
+        }
+        return nodesWithFreeSpace;
+    }
+
+    function countNodesWithFreeSpace(uint8 freeSpace) external view returns (uint count) {
+        count = 0;
+        for (uint8 i = freeSpace; i <= 128; ++i) {
+            count = count.add(spaceToNodes[i].length);
+        }
+    }
+
+    /**
+     * @dev isTimeForReward - checks if time for reward has come
+     * @param nodeIndex - index of Node
+     * @return if time for reward has come - true, else - false
+     */
+    function isTimeForReward(uint nodeIndex) external view returns (bool) {
+        address constantsAddress = _contractManager.getContract("ConstantsHolder");
+        return nodes[nodeIndex].lastRewardDate.add(IConstants(constantsAddress).rewardPeriod()) <= block.timestamp;
+    }
+
+    /**
+     * @dev getNodeIP - get ip address of Node
+     * @param nodeIndex - index of Node
+     * @return ip address
+     */
+    function getNodeIP(uint nodeIndex) external view returns (bytes4) {
+        return nodes[nodeIndex].ip;
+    }
+
+    /**
+     * @dev getNodePort - get Node's port
+     * @param nodeIndex - index of Node
+     * @return port
+     */
+    function getNodePort(uint nodeIndex) external view returns (uint16) {
+        return nodes[nodeIndex].port;
+    }
+
+    function getNodePublicKey(uint nodeIndex) external view returns (bytes memory) {
+        return nodes[nodeIndex].publicKey;
+    }
+
+    function getNodeValidatorId(uint nodeIndex) external view returns (uint) {
+        return nodes[nodeIndex].validatorId;
+    }
+
+    function getNodeFinishTime(uint nodeIndex) external view returns (uint32) {
+        return nodes[nodeIndex].finishTime;
+    }
+
+    /**
+     * @dev isNodeLeft - checks if Node status Left
+     * @param nodeIndex - index of Node
+     * @return if Node status Left - true, else - false
+     */
+    function isNodeLeft(uint nodeIndex) external view returns (bool) {
+        return nodes[nodeIndex].status == NodeStatus.Left;
+    }
+
+    /**
+     * @dev getNodeLastRewardDate - get Node last reward date
+     * @param nodeIndex - index of Node
+     * @return Node last reward date
+     */
+    function getNodeLastRewardDate(uint nodeIndex) external view returns (uint32) {
+        return nodes[nodeIndex].lastRewardDate;
+    }
+
+    /**
+     * @dev getNodeNextRewardDate - get Node next reward date
+     * @param nodeIndex - index of Node
+     * @return Node next reward date
+     */
+    function getNodeNextRewardDate(uint nodeIndex) external view returns (uint32) {
+        address constantsAddress = _contractManager.getContract("ConstantsHolder");
+        return nodes[nodeIndex].lastRewardDate + IConstants(constantsAddress).rewardPeriod();
+    }
+
+    /**
+     * @dev getNumberOfNodes - get number of Nodes
+     * @return number of Nodes
+     */
+    function getNumberOfNodes() external view returns (uint) {
+        return nodes.length;
+    }
+
+    /**
+     * @dev getNumberOfFullNodes - get number Online Nodes
+     * @return number of active nodes plus number of leaving nodes
+     */
+    function getNumberOnlineNodes() external view returns (uint) {
+        return numberOfActiveNodes.add(numberOfLeavingNodes);
+    }
+
+    /**
+     * @dev getActiveNodeIPs - get array of ips of Active Nodes
+     * @return activeNodeIPs - array of ips of Active Nodes
+     */
+    function getActiveNodeIPs() external view returns (bytes4[] memory activeNodeIPs) {
+        activeNodeIPs = new bytes4[](numberOfActiveNodes);
+        uint indexOfActiveNodeIPs = 0;
+        for (uint indexOfNodes = 0; indexOfNodes < nodes.length; indexOfNodes++) {
+            if (isNodeActive(indexOfNodes)) {
+                activeNodeIPs[indexOfActiveNodeIPs] = nodes[indexOfNodes].ip;
+                indexOfActiveNodeIPs++;
+            }
+        }
+    }
+
+    /**
+     * @dev getActiveNodesByAddress - get array of indexes of Active Nodes, which were
+     * created by msg.sender
+     * @return activeNodesByAddress Array of indexes of Active Nodes, which were created by msg.sender
+     */
+    function getActiveNodesByAddress() external view returns (uint[] memory activeNodesByAddress) {
+        activeNodesByAddress = new uint[](nodeIndexes[msg.sender].numberOfNodes);
+        uint indexOfActiveNodesByAddress = 0;
+        for (uint indexOfNodes = 0; indexOfNodes < nodes.length; indexOfNodes++) {
+            if (nodeIndexes[msg.sender].isNodeExist[indexOfNodes] && isNodeActive(indexOfNodes)) {
+                activeNodesByAddress[indexOfActiveNodesByAddress] = indexOfNodes;
+                indexOfActiveNodesByAddress++;
+            }
+        }
+    }
+
+    /**
+     * @dev getActiveNodeIds - get array of indexes of Active Nodes
+     * @return activeNodeIds - array of indexes of Active Nodes
+     */
+    function getActiveNodeIds() external view returns (uint[] memory activeNodeIds) {
+        activeNodeIds = new uint[](numberOfActiveNodes);
+        uint indexOfActiveNodeIds = 0;
+        for (uint indexOfNodes = 0; indexOfNodes < nodes.length; indexOfNodes++) {
+            if (isNodeActive(indexOfNodes)) {
+                activeNodeIds[indexOfActiveNodeIds] = indexOfNodes;
+                indexOfActiveNodeIds++;
+            }
+        }
+    }
+
+    function getValidatorId(uint nodeIndex) external view returns (uint) {
+        require(nodeIndex < nodes.length, "Node does not exist");
+        return nodes[nodeIndex].validatorId;
+    }
+
+    function getNodeStatus(uint nodeIndex) external view returns (NodeStatus) {
+        return nodes[nodeIndex].status;
+    }
+
+    /**
+     * @dev constructor in Permissions approach
+     * @param _contractsAddress needed in Permissions constructor
+    */
+    function initialize(address _contractsAddress) public override initializer {
+        Permissions.initialize(_contractsAddress);
+
+        numberOfActiveNodes = 0;
+        numberOfLeavingNodes = 0;
+        numberOfLeftNodes = 0;
+    }
+
     /**
      * @dev isNodeExist - checks existence of Node at this address
      * @param from - account address
@@ -559,18 +571,6 @@ contract Nodes is Permissions {
      */
     function isNodeLeaving(uint nodeIndex) public view returns (bool) {
         return nodes[nodeIndex].status == NodeStatus.Leaving;
-    }
-
-    /**
-     * @dev constructor in Permissions approach
-     * @param _contractsAddress needed in Permissions constructor
-    */
-    function initialize(address _contractsAddress) public override initializer {
-        Permissions.initialize(_contractsAddress);
-
-        numberOfActiveNodes = 0;
-        numberOfLeavingNodes = 0;
-        numberOfLeftNodes = 0;
     }
 
     function _moveNodeToNewSpaceMap(uint nodeIndex, uint8 newSpace) internal {

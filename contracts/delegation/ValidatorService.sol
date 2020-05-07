@@ -134,23 +134,6 @@ contract ValidatorService is Permissions {
         useWhitelist = false;
     }
 
-    function getTrustedValidators() external view returns (uint[] memory) {
-        uint numberOfTrustedValidators = 0;
-        for (uint i = 1; i <= numberOfValidators; i++) {
-            if (trustedValidators[i]) {
-                numberOfTrustedValidators++;
-            }
-        }
-        uint[] memory whitelist = new uint[](numberOfTrustedValidators);
-        uint cursor = 0;
-        for (uint i = 1; i <= numberOfValidators; i++) {
-            if (trustedValidators[i]) {
-                whitelist[cursor++] = i;
-            }
-        }
-        return whitelist;
-    }
-
     function requestForNewAddress(address newValidatorAddress) external {
         require(newValidatorAddress != address(0), "New address cannot be null");
         require(_validatorAddressToId[newValidatorAddress] == 0, "Address already registered");
@@ -185,27 +168,6 @@ contract ValidatorService is Permissions {
         uint validatorId = getValidatorId(msg.sender);
         _removeNodeAddress(validatorId, nodeAddress);
         emit NodeAddressWasRemoved(validatorId, nodeAddress);
-    }
-
-    function checkMinimumDelegation(uint validatorId, uint amount)
-        external view
-        checkValidatorExists(validatorId)
-        allow("DelegationController")
-        returns (bool)
-    {
-        return validators[validatorId].minimumDelegationAmount <= amount ? true : false;
-    }
-
-    function checkValidatorAddressToId(address validatorAddress, uint validatorId)
-        external
-        view
-        returns (bool)
-    {
-        return getValidatorId(validatorAddress) == validatorId ? true : false;
-    }
-
-    function getValidatorNodeIndexes(uint validatorId) external view returns (uint[] memory) {
-        return getValidator(validatorId).nodeIndexes;
     }
 
     function pushNode(address nodeAddress, uint nodeIndex) external allow("SkaleManager") {
@@ -256,10 +218,6 @@ contract ValidatorService is Permissions {
         validators[validatorId].minimumDelegationAmount = minimumDelegationAmount;
     }
 
-    function getMyNodesAddresses() external view returns (address[] memory) {
-        return getNodeAddresses(getValidatorId(msg.sender));
-    }
-
     /// @notice return how many of validator funds are locked in SkaleManager
     function getAndUpdateBondAmount(uint validatorId)
         external
@@ -290,6 +248,48 @@ contract ValidatorService is Permissions {
         uint validatorId = getValidatorId(msg.sender);
         require(isAcceptingNewRequests(validatorId), "Accepting request is already disabled");
         validators[validatorId].acceptNewRequests = false;
+    }
+
+    function getMyNodesAddresses() external view returns (address[] memory) {
+        return getNodeAddresses(getValidatorId(msg.sender));
+    }
+
+    function getTrustedValidators() external view returns (uint[] memory) {
+        uint numberOfTrustedValidators = 0;
+        for (uint i = 1; i <= numberOfValidators; i++) {
+            if (trustedValidators[i]) {
+                numberOfTrustedValidators++;
+            }
+        }
+        uint[] memory whitelist = new uint[](numberOfTrustedValidators);
+        uint cursor = 0;
+        for (uint i = 1; i <= numberOfValidators; i++) {
+            if (trustedValidators[i]) {
+                whitelist[cursor++] = i;
+            }
+        }
+        return whitelist;
+    }
+
+    function checkMinimumDelegation(uint validatorId, uint amount)
+        external view
+        checkValidatorExists(validatorId)
+        allow("DelegationController")
+        returns (bool)
+    {
+        return validators[validatorId].minimumDelegationAmount <= amount ? true : false;
+    }
+
+    function checkValidatorAddressToId(address validatorAddress, uint validatorId)
+        external
+        view
+        returns (bool)
+    {
+        return getValidatorId(validatorAddress) == validatorId ? true : false;
+    }
+
+    function getValidatorNodeIndexes(uint validatorId) external view returns (uint[] memory) {
+        return getValidator(validatorId).nodeIndexes;
     }
 
     function initialize(address contractManager) public override initializer {

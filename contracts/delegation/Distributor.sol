@@ -71,11 +71,6 @@ contract Distributor is Permissions, IERC777Recipient {
         return getAndUpdateEarnedBountyAmountOf(msg.sender, validatorId);
     }
 
-    function getEarnedFeeAmount() external view returns (uint earned, uint endMonth) {
-        ValidatorService validatorService = ValidatorService(_contractManager.getContract("ValidatorService"));
-        return getEarnedFeeAmountOf(validatorService.getValidatorId(msg.sender));
-    }
-
     function withdrawBounty(uint validatorId, address to) external {
         TimeHelpers timeHelpers = TimeHelpers(_contractManager.getContract("TimeHelpers"));
         ConstantsHolder constantsHolder = ConstantsHolder(_contractManager.getContract("ConstantsHolder"));
@@ -138,6 +133,11 @@ contract Distributor is Permissions, IERC777Recipient {
         require(userData.length == 32, "Data length is incorrect");
         uint validatorId = abi.decode(userData, (uint));
         _distributeBounty(amount, validatorId);
+    }
+
+    function getEarnedFeeAmount() external view returns (uint earned, uint endMonth) {
+        ValidatorService validatorService = ValidatorService(_contractManager.getContract("ValidatorService"));
+        return getEarnedFeeAmountOf(validatorService.getValidatorId(msg.sender));
     }
 
     function initialize(address _contractsAddress) public override initializer {
