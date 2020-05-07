@@ -57,7 +57,8 @@ contract MonitorsData is GroupsData {
 
     function removeCheckedNode(bytes32 monitorIndex, uint indexOfCheckedNode) external allow(executorName) {
         if (indexOfCheckedNode != checkedNodes[monitorIndex].length - 1) {
-            checkedNodes[monitorIndex][indexOfCheckedNode] = checkedNodes[monitorIndex][checkedNodes[monitorIndex].length - 1];
+            checkedNodes[monitorIndex][indexOfCheckedNode] =
+                checkedNodes[monitorIndex][checkedNodes[monitorIndex].length - 1];
         }
         delete checkedNodes[monitorIndex][checkedNodes[monitorIndex].length - 1];
         checkedNodes[monitorIndex].pop();

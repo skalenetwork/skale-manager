@@ -1,7 +1,6 @@
 {
   "extends": "solhint:all",
   "rules": {
-    "max-line-length": ["error", 140],
     "compiler-version": ["error","0.6.6"]
   }
 }

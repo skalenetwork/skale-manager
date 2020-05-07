@@ -160,7 +160,9 @@ contract DelegationController is Permissions, ILocker {
         _;
     }
 
-    function getDelegation(uint delegationId) external view checkDelegationExists(delegationId) returns (Delegation memory) {
+    function getDelegation(uint delegationId)
+        external view checkDelegationExists(delegationId) returns (Delegation memory)
+    {
         return delegations[delegationId];
     }
 
@@ -176,7 +178,8 @@ contract DelegationController is Permissions, ILocker {
         allow("Distributor") returns (uint effectiveDelegated)
     {
         SlashingSignal[] memory slashingSignals = processAllSlashesWithoutSignals(holder);
-        effectiveDelegated = _effectiveDelegatedByHolderToValidator[holder][validatorId].getAndUpdateValueInSequence(month);
+        effectiveDelegated = _effectiveDelegatedByHolderToValidator[holder][validatorId]
+            .getAndUpdateValueInSequence(month);
         sendSlashingSignals(slashingSignals);
     }
 
@@ -191,7 +194,8 @@ contract DelegationController is Permissions, ILocker {
     {
 
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
-        DelegationPeriodManager delegationPeriodManager = DelegationPeriodManager(contractManager.getContract("DelegationPeriodManager"));
+        DelegationPeriodManager delegationPeriodManager = DelegationPeriodManager(
+            contractManager.getContract("DelegationPeriodManager"));
         SkaleToken skaleToken = SkaleToken(contractManager.getContract("SkaleToken"));
         TokenState tokenState = TokenState(contractManager.getContract("TokenState"));
 
@@ -252,7 +256,8 @@ contract DelegationController is Permissions, ILocker {
         require(getState(delegationId) == State.PROPOSED, "Cannot set state to accepted");
 
         TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
-        DelegationPeriodManager delegationPeriodManager = DelegationPeriodManager(contractManager.getContract("DelegationPeriodManager"));
+        DelegationPeriodManager delegationPeriodManager = DelegationPeriodManager(
+            contractManager.getContract("DelegationPeriodManager"));
         TokenLaunchLocker tokenLaunchLocker = TokenLaunchLocker(contractManager.getContract("TokenLaunchLocker"));
 
         SlashingSignal[] memory slashingSignals = processAllSlashesWithoutSignals(delegations[delegationId].holder);
@@ -315,7 +320,8 @@ contract DelegationController is Permissions, ILocker {
             "Permission denied to request undelegation");
 
         TokenLaunchLocker tokenLaunchLocker = TokenLaunchLocker(contractManager.getContract("TokenLaunchLocker"));
-        DelegationPeriodManager delegationPeriodManager = DelegationPeriodManager(contractManager.getContract("DelegationPeriodManager"));
+        DelegationPeriodManager delegationPeriodManager = DelegationPeriodManager(
+            contractManager.getContract("DelegationPeriodManager"));
 
         processAllSlashes(msg.sender);
         delegations[delegationId].finished = calculateDelegationEndMonth(delegationId);
@@ -356,7 +362,8 @@ contract DelegationController is Permissions, ILocker {
 
     function confiscate(uint validatorId, uint amount) external allow("Punisher") {
         uint currentMonth = getCurrentMonth();
-        FractionUtils.Fraction memory coefficient = _delegatedToValidator[validatorId].reduceValue(amount, currentMonth);
+        FractionUtils.Fraction memory coefficient =
+            _delegatedToValidator[validatorId].reduceValue(amount, currentMonth);
         _effectiveDelegatedToValidator[validatorId].reduceSequence(coefficient, currentMonth);
         putToSlashingLog(_slashesOfValidator[validatorId], coefficient, currentMonth);
         _slashes.push(SlashingEvent({reducingCoefficient: coefficient, validatorId: validatorId, month: currentMonth}));
@@ -384,7 +391,9 @@ contract DelegationController is Permissions, ILocker {
         Permissions.initialize(_contractsAddress);
     }
 
-    function getAndUpdateDelegatedToValidator(uint validatorId, uint month) public allow("ValidatorService") returns (uint) {
+    function getAndUpdateDelegatedToValidator(uint validatorId, uint month)
+        public allow("ValidatorService") returns (uint)
+    {
         return _delegatedToValidator[validatorId].getAndUpdateValue(month);
     }
 
@@ -545,7 +554,12 @@ contract DelegationController is Permissions, ILocker {
         return _delegatedByHolder[holder].getAndUpdateValue(currentMonth);
     }
 
-    function getAndUpdateDelegatedByHolderToValidator(address holder, uint validatorId, uint month) internal returns (uint) {
+    function getAndUpdateDelegatedByHolderToValidator(
+        address holder,
+        uint validatorId,
+        uint month)
+        internal returns (uint)
+    {
         return _delegatedByHolderToValidator[holder][validatorId].getAndUpdateValue(month);
     }
 
@@ -562,7 +576,9 @@ contract DelegationController is Permissions, ILocker {
 
     function subtractFromLockedInPerdingDelegations(address holder, uint amount) internal returns (uint) {
         uint currentMonth = getCurrentMonth();
-        require(_lockedInPendingDelegations[holder].month == currentMonth, "There are no delegation requests this month");
+        require(
+            _lockedInPendingDelegations[holder].month == currentMonth,
+            "There are no delegation requests this month");
         require(_lockedInPendingDelegations[holder].amount >= amount, "Unlocking amount is too big");
         _lockedInPendingDelegations[holder].amount = _lockedInPendingDelegations[holder].amount.sub(amount);
     }
@@ -629,7 +645,8 @@ contract DelegationController is Permissions, ILocker {
         } else {
             require(log.lastMonth <= month, "Cannot put slashing event in the past");
             if (log.lastMonth == month) {
-                log.slashes[month].reducingCoefficient = log.slashes[month].reducingCoefficient.multiplyFraction(coefficient);
+                log.slashes[month].reducingCoefficient =
+                    log.slashes[month].reducingCoefficient.multiplyFraction(coefficient);
             } else {
                 log.slashes[month].reducingCoefficient = coefficient;
                 log.slashes[month].nextMonth = 0;
@@ -639,7 +656,9 @@ contract DelegationController is Permissions, ILocker {
         }
     }
 
-    function processSlashesWithoutSignals(address holder, uint limit) internal returns (SlashingSignal[] memory slashingSignals) {
+    function processSlashesWithoutSignals(address holder, uint limit)
+        internal returns (SlashingSignal[] memory slashingSignals)
+    {
         if (hasUnprocessedSlashes(holder)) {
             uint index = _firstUnprocessedSlashByHolder[holder];
             uint end = _slashes.length;
@@ -669,7 +688,9 @@ contract DelegationController is Permissions, ILocker {
         }
     }
 
-    function processAllSlashesWithoutSignals(address holder) internal returns (SlashingSignal[] memory slashingSignals) {
+    function processAllSlashesWithoutSignals(address holder)
+        internal returns (SlashingSignal[] memory slashingSignals)
+    {
         return processSlashesWithoutSignals(holder, 0);
     }
 

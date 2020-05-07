@@ -142,7 +142,9 @@ contract MonitorsFunctionality is GroupsFunctionality {
         (index, time) = find(monitorIndex, verdict.toNodeIndex);
         require(time > 0, "Checked Node does not exist in MonitorsArray");
         string memory message = "The time has not come to send verdict for ";
-        require(time <= block.timestamp, message.strConcat(StringUtils.uint2str(verdict.toNodeIndex)).strConcat(" Node"));
+        require(
+            time <= block.timestamp,
+            message.strConcat(StringUtils.uint2str(verdict.toNodeIndex)).strConcat(" Node"));
         MonitorsData data = MonitorsData(contractManager.getContract("MonitorsData"));
         data.removeCheckedNode(monitorIndex, index);
         address constantsAddress = contractManager.getContract("ConstantsHolder");
@@ -157,7 +159,10 @@ contract MonitorsFunctionality is GroupsFunctionality {
             receiveVerdict, uint32(block.timestamp), gasleft());
     }
 
-    function calculateMetrics(uint nodeIndex) external allow(executorName) returns (uint averageDowntime, uint averageLatency) {
+    function calculateMetrics(uint nodeIndex)
+        external allow(executorName)
+        returns (uint averageDowntime, uint averageLatency)
+    {
         MonitorsData data = MonitorsData(contractManager.getContract("MonitorsData"));
         bytes32 monitorIndex = keccak256(abi.encodePacked(nodeIndex));
         uint lengthOfArray = data.getLengthOfMetrics(monitorIndex);
@@ -225,7 +230,9 @@ contract MonitorsFunctionality is GroupsFunctionality {
         return values[values.length / 2];
     }
 
-    function setNumberOfNodesInGroup(bytes32 groupIndex, bytes32 groupData) internal view returns (uint numberOfNodes, uint finish) {
+    function setNumberOfNodesInGroup(bytes32 groupIndex, bytes32 groupData)
+        internal view returns (uint numberOfNodes, uint finish)
+    {
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));
         address dataAddress = contractManager.getContract(dataName);
         numberOfNodes = nodes.getNumberOfNodes();

@@ -112,7 +112,9 @@ contract SkaleDKG is Permissions {
 
     modifier correctNode(bytes32 groupIndex, uint nodeIndex) {
         uint index = findNode(groupIndex, nodeIndex);
-        require(index < IGroupsData(channels[groupIndex].dataAddress).getNumberOfNodesInGroup(groupIndex), "Node is not in this group");
+        require(
+            index < IGroupsData(channels[groupIndex].dataAddress).getNumberOfNodesInGroup(groupIndex),
+            "Node is not in this group");
         _;
     }
 
@@ -220,7 +222,9 @@ contract SkaleDKG is Permissions {
         } else if (broadcasted && channels[groupIndex].nodeToComplaint != toNodeIndex) {
             revert("One complaint has already sent");
         } else if (broadcasted && channels[groupIndex].nodeToComplaint == toNodeIndex) {
-            require(channels[groupIndex].startComplaintBlockTimestamp.add(1800) <= block.timestamp, "One more complaint rejected");
+            require(
+                channels[groupIndex].startComplaintBlockTimestamp.add(1800) <= block.timestamp,
+                "One more complaint rejected");
             // need to penalty Node - toNodeIndex
             finalizeSlashing(groupIndex, channels[groupIndex].nodeToComplaint);
         } else if (!broadcasted) {
@@ -249,7 +253,8 @@ contract SkaleDKG is Permissions {
             secretNumber,
             multipliedShare
         );
-        uint badNode = (verificationResult ? channels[groupIndex].fromNodeToComplaint : channels[groupIndex].nodeToComplaint);
+        uint badNode = (verificationResult ?
+            channels[groupIndex].fromNodeToComplaint : channels[groupIndex].nodeToComplaint);
         finalizeSlashing(groupIndex, badNode);
     }
 
@@ -291,7 +296,12 @@ contract SkaleDKG is Permissions {
             !channels[groupIndex].broadcasted[index];
     }
 
-    function isComplaintPossible(bytes32 groupIndex, uint fromNodeIndex, uint toNodeIndex) external view returns (bool) {
+    function isComplaintPossible(
+        bytes32 groupIndex,
+        uint fromNodeIndex,
+        uint toNodeIndex)
+        external view returns (bool)
+    {
         uint indexFrom = findNode(groupIndex, fromNodeIndex);
         uint indexTo = findNode(groupIndex, toNodeIndex);
         bool complaintSending = channels[groupIndex].nodeToComplaint == uint(-1) ||
@@ -314,10 +324,11 @@ contract SkaleDKG is Permissions {
 
     function isAlrightPossible(bytes32 groupIndex, uint nodeIndex) external view returns (bool) {
         uint index = findNode(groupIndex, nodeIndex);
+        GroupsData groupsData = GroupsData(channels[groupIndex].dataAddress);
         return channels[groupIndex].active &&
-            index < IGroupsData(channels[groupIndex].dataAddress).getNumberOfNodesInGroup(groupIndex) &&
+            index < groupsData.getNumberOfNodesInGroup(groupIndex) &&
             isNodeByMessageSender(nodeIndex, msg.sender) &&
-            IGroupsData(channels[groupIndex].dataAddress).getNumberOfNodesInGroup(groupIndex) == channels[groupIndex].numberOfBroadcasted &&
+            groupsData.getNumberOfNodesInGroup(groupIndex) == channels[groupIndex].numberOfBroadcasted &&
             !channels[groupIndex].completed[index];
     }
 
@@ -407,7 +418,8 @@ contract SkaleDKG is Permissions {
                 valY
             );
         }
-        return checkDKGVerification(valX, valY, multipliedShare) && checkCorrectMultipliedShare(multipliedShare, secret);
+        return checkDKGVerification(valX, valY, multipliedShare) &&
+            checkCorrectMultipliedShare(multipliedShare, secret);
     }
 
     function getCommonPublicKey(bytes32 groupIndex, uint256 secretNumber) internal view returns (bytes32 key) {
@@ -758,7 +770,12 @@ contract SkaleDKG is Permissions {
         return out[0];
     }
 
-    function loop(uint index, bytes memory verificationVector, uint loopIndex) internal view returns (Fp2 memory, Fp2 memory) {
+    function loop(
+        uint index,
+        bytes memory verificationVector,
+        uint loopIndex)
+        internal view returns (Fp2 memory, Fp2 memory)
+    {
         bytes32[4] memory vector;
         bytes32 vector1;
         assembly {
@@ -784,7 +801,12 @@ contract SkaleDKG is Permissions {
         );
     }
 
-    function checkDKGVerification(Fp2 memory valX, Fp2 memory valY, bytes memory multipliedShare) internal pure returns (bool) {
+    function checkDKGVerification(
+        Fp2 memory valX,
+        Fp2 memory valY,
+        bytes memory multipliedShare)
+        internal pure returns (bool)
+    {
         Fp2 memory tmpX;
         Fp2 memory tmpY;
         (tmpX, tmpY) = bytesToG2(multipliedShare);

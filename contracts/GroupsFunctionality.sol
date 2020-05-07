@@ -110,7 +110,8 @@ abstract contract GroupsFunctionality is Permissions {
         uint publicKeyy1;
         uint publicKeyx2;
         uint publicKeyy2;
-        (publicKeyx1, publicKeyy1, publicKeyx2, publicKeyy2) = IGroupsData(groupsDataAddress).getGroupsPublicKey(groupIndex);
+        (publicKeyx1, publicKeyy1, publicKeyx2, publicKeyy2) =
+            IGroupsData(groupsDataAddress).getGroupsPublicKey(groupIndex);
         address skaleVerifierAddress = contractManager.getContract("SkaleVerifier");
         return ISkaleVerifier(skaleVerifierAddress).verify(
             signatureX, signatureY, hashX, hashY, publicKeyx1, publicKeyy1, publicKeyx2, publicKeyy2
@@ -123,7 +124,12 @@ abstract contract GroupsFunctionality is Permissions {
      * @param newDataName - name of data contract
      * @param newContractsAddress needed in Permissions constructor
      */
-    function initialize(string memory newExecutorName, string memory newDataName, address newContractsAddress) public initializer {
+    function initialize(
+        string memory newExecutorName,
+        string memory newDataName,
+        address newContractsAddress)
+        public initializer
+    {
         Permissions.initialize(newContractsAddress);
         executorName = newExecutorName;
         dataName = newDataName;
@@ -166,7 +172,12 @@ abstract contract GroupsFunctionality is Permissions {
      * @param newRecommendedNumberOfNodes - recommended number of Nodes
      * @param data - some extra data
      */
-    function upgradeGroup(bytes32 groupIndex, uint newRecommendedNumberOfNodes, bytes32 data) public allow(executorName) {
+    function upgradeGroup(
+            bytes32 groupIndex,
+            uint newRecommendedNumberOfNodes,
+            bytes32 data)
+        public allow(executorName)
+    {
         address groupsDataAddress = contractManager.getContract(dataName);
         require(IGroupsData(groupsDataAddress).isGroupActive(groupIndex), "Group is not active");
         IGroupsData(groupsDataAddress).removeGroup(groupIndex);

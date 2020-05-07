@@ -146,8 +146,11 @@ contract Distributor is Permissions, IERC777Recipient {
         _erc1820.setInterfaceImplementer(address(this), keccak256("ERC777TokensRecipient"), address(this));
     }
 
-    function getAndUpdateEarnedBountyAmountOf(address wallet, uint validatorId) public returns (uint earned, uint endMonth) {
-        DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
+    function getAndUpdateEarnedBountyAmountOf(address wallet, uint validatorId)
+        public returns (uint earned, uint endMonth)
+    {
+        DelegationController delegationController = DelegationController(
+            contractManager.getContract("DelegationController"));
         TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
 
         uint currentMonth = timeHelpers.getCurrentMonth();
@@ -166,12 +169,13 @@ contract Distributor is Permissions, IERC777Recipient {
             endMonth = startMonth.add(12);
         }
         for (uint i = startMonth; i < endMonth; ++i) {
-            uint effectiveDelegatedToValidator = delegationController.getAndUpdateEffectiveDelegatedToValidator(validatorId, i);
+            uint effectiveDelegatedToValidator =
+                delegationController.getAndUpdateEffectiveDelegatedToValidator(validatorId, i);
             if (effectiveDelegatedToValidator.muchGreater(0)) {
                 earned = earned.add(
                     _bountyPaid[validatorId][i].mul(
-                        delegationController.getAndUpdateEffectiveDelegatedByHolderToValidator(wallet, validatorId, i)).div(
-                            effectiveDelegatedToValidator)
+                        delegationController.getAndUpdateEffectiveDelegatedByHolderToValidator(wallet, validatorId, i))
+                            .div(effectiveDelegatedToValidator)
                     );
             }
         }

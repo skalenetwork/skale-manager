@@ -52,7 +52,8 @@ contract ReentrancyTester is Permissions, IERC777Recipient, IERC777Sender {
     ) external override
     {
         if (_burningAttack) {
-            DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
+            DelegationController delegationController = DelegationController(
+                contractManager.getContract("DelegationController"));
             delegationController.delegate(
                 1,
                 _amount,

@@ -155,7 +155,8 @@ contract SchainsData is GroupsData {
     function setSchainPartOfNode(bytes32 schainId, uint8 partOfNode) external allow(executorName) {
         schains[schainId].partOfNode = partOfNode;
         if (partOfNode > 0) {
-            sumOfSchainsResources = sumOfSchainsResources.add((128 / partOfNode) * groups[schainId].nodesInGroup.length);
+            sumOfSchainsResources = sumOfSchainsResources.add(
+                (128 / partOfNode) * groups[schainId].nodesInGroup.length);
         }
     }
 
@@ -232,7 +233,12 @@ contract SchainsData is GroupsData {
         rotations[schainIndex].freezeUntil = now + constants.rotationDelay();
     }
 
-    function finishRotation(bytes32 schainIndex, uint nodeIndex, uint newNodeIndex) external allow("SchainsFunctionality") {
+    function finishRotation(
+        bytes32 schainIndex,
+        uint nodeIndex,
+        uint newNodeIndex)
+        external allow("SchainsFunctionality")
+    {
         IConstants constants = IConstants(contractManager.getContract("ConstantsHolder"));
         leavingHistory[nodeIndex].push(LeavingHistory(schainIndex, now + constants.rotationDelay()));
         rotations[schainIndex].newNodeIndex = newNodeIndex;

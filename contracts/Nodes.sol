@@ -186,7 +186,9 @@ contract Nodes is Permissions {
      * @param nodeIndex - index of Node at array of Fractional Nodes
      * @param space - space which should be occupied
      */
-    function removeSpaceFromNode(uint nodeIndex, uint8 space) external allow("SchainsFunctionalityInternal") returns (bool) {
+    function removeSpaceFromNode(uint nodeIndex, uint8 space)
+        external allow("SchainsFunctionalityInternal") returns (bool)
+    {
         if (spaceOfNodes[nodeIndex].freeSpace < space) {
             return false;
         }
@@ -390,7 +392,8 @@ contract Nodes is Permissions {
         require(!nodesNameCheck[keccak256(abi.encodePacked(name))], "Name has already registered");
         require(port > 0, "Port is zero");
 
-        uint validatorId = ValidatorService(contractManager.getContract("ValidatorService")).getValidatorIdByNodeAddress(from);
+        uint validatorId = ValidatorService(
+            contractManager.getContract("ValidatorService")).getValidatorIdByNodeAddress(from);
 
         // adds Node to Nodes contract
         nodeIndex = this.addNode(
@@ -621,7 +624,9 @@ contract Nodes is Permissions {
      * @return public key
      * @return name of Node
      */
-    function fallbackDataConverterPublicKeyAndName(bytes memory data) private pure returns (bytes memory, string memory) {
+    function fallbackDataConverterPublicKeyAndName(bytes memory data)
+        private pure returns (bytes memory, string memory)
+    {
         require(data.length > 77, "Incorrect bytes data config");
         bytes32 firstPartPublicKey;
         bytes32 secondPartPublicKey;

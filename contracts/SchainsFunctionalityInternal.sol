@@ -71,21 +71,23 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
      * @return numberOfNodes - number of Nodes needed to this Schain
      * @return partOfNode - divisor of given type of Schain
      */
-    function getNodesDataFromTypeOfSchain(uint typeOfSchain) external view returns (uint numberOfNodes, uint8 partOfNode) {
-        address constantsAddress = contractManager.getContract("ConstantsHolder");
-        numberOfNodes = IConstants(constantsAddress).NUMBER_OF_NODES_FOR_SCHAIN();
+    function getNodesDataFromTypeOfSchain(uint typeOfSchain)
+        external view returns (uint numberOfNodes, uint8 partOfNode)
+    {
+        ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
+        numberOfNodes = constantsHolder.NUMBER_OF_NODES_FOR_SCHAIN();
         if (typeOfSchain == 1) {
-            partOfNode = IConstants(constantsAddress).TINY_DIVISOR() / IConstants(constantsAddress).TINY_DIVISOR();
+            partOfNode = constantsHolder.TINY_DIVISOR() / constantsHolder.TINY_DIVISOR();
         } else if (typeOfSchain == 2) {
-            partOfNode = IConstants(constantsAddress).TINY_DIVISOR() / IConstants(constantsAddress).SMALL_DIVISOR();
+            partOfNode = constantsHolder.TINY_DIVISOR() / constantsHolder.SMALL_DIVISOR();
         } else if (typeOfSchain == 3) {
-            partOfNode = IConstants(constantsAddress).TINY_DIVISOR() / IConstants(constantsAddress).MEDIUM_DIVISOR();
+            partOfNode = constantsHolder.TINY_DIVISOR() / constantsHolder.MEDIUM_DIVISOR();
         } else if (typeOfSchain == 4) {
             partOfNode = 0;
-            numberOfNodes = IConstants(constantsAddress).NUMBER_OF_NODES_FOR_TEST_SCHAIN();
+            numberOfNodes = constantsHolder.NUMBER_OF_NODES_FOR_TEST_SCHAIN();
         } else if (typeOfSchain == 5) {
-            partOfNode = IConstants(constantsAddress).TINY_DIVISOR() / IConstants(constantsAddress).MEDIUM_TEST_DIVISOR();
-            numberOfNodes = IConstants(constantsAddress).NUMBER_OF_NODES_FOR_MEDIUM_TEST_SCHAIN();
+            partOfNode = constantsHolder.TINY_DIVISOR() / constantsHolder.MEDIUM_TEST_DIVISOR();
+            numberOfNodes = constantsHolder.NUMBER_OF_NODES_FOR_MEDIUM_TEST_SCHAIN();
         } else {
             revert("Bad schain type");
         }
@@ -196,11 +198,8 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
         IGroupsData groupsData = IGroupsData(contractManager.getContract(dataName));
         SchainsData schainsData = SchainsData(contractManager.getContract(dataName));
         require(groupsData.isGroupActive(groupIndex), "Group is not active");
-
-        // uint numberOfNodes = setNumberOfNodesInGroup(groupIndex, uint(groupsData.getGroupData(groupIndex)), address(groupsData));
+        
         uint8 space = uint8(uint(groupsData.getGroupData(groupIndex)));
-        // (numberOfNodes, space) = setNumberOfNodesInGroup(groupIndex, uint(groupsData.getGroupData(groupIndex)), address(groupsData));
-
         nodesInGroup = new uint[](groupsData.getRecommendedNumberOfNodes(groupIndex));
 
         uint[] memory possibleNodes = this.isEnoughNodes(groupIndex);

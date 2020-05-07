@@ -89,7 +89,12 @@ contract TokenLaunchLocker is Permissions, ILocker {
         }
     }
 
-    function handleDelegationRemoving(address holder, uint delegationId, uint month) external allow("DelegationController") {
+    function handleDelegationRemoving(
+        address holder,
+        uint delegationId,
+        uint month)
+        external allow("DelegationController")
+    {
         if (_delegationAmount[delegationId] > 0) {
             if (_locked[holder] > 0) {
                 removeFromDelegatedAmount(holder, _delegationAmount[delegationId], month);
@@ -100,7 +105,8 @@ contract TokenLaunchLocker is Permissions, ILocker {
 
     function getAndUpdateLockedAmount(address wallet) external override returns (uint) {
         if (_locked[wallet] > 0) {
-            DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
+            DelegationController delegationController = DelegationController(
+                contractManager.getContract("DelegationController"));
             TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
             ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
 

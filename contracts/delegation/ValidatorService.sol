@@ -217,7 +217,8 @@ contract ValidatorService is Permissions {
         uint[] memory validatorNodes = validators[validatorId].nodeIndexes;
         uint position = findNode(validatorNodes, nodeIndex);
         if (position < validatorNodes.length) {
-            validators[validatorId].nodeIndexes[position] = validators[validatorId].nodeIndexes[validatorNodes.length.sub(1)];
+            validators[validatorId].nodeIndexes[position] =
+                validators[validatorId].nodeIndexes[validatorNodes.length.sub(1)];
         }
         delete validators[validatorId].nodeIndexes[validatorNodes.length.sub(1)];
     }
@@ -231,10 +232,14 @@ contract ValidatorService is Permissions {
         uint[] memory validatorNodes = validators[validatorId].nodeIndexes;
         uint delegationsTotal = delegationController.getAndUpdateDelegatedToValidatorNow(validatorId);
         uint msr = IConstants(contractManager.getContract("ConstantsHolder")).msr();
-        require((validatorNodes.length.add(1)) * msr <= delegationsTotal, "Validator must meet Minimum Staking Requirement");
+        require(
+            (validatorNodes.length.add(1)) * msr <= delegationsTotal,
+            "Validator must meet Minimum Staking Requirement");
     }
 
-    function checkPossibilityToMaintainNode(uint validatorId, uint nodeIndex) external allow("SkaleManager") returns (bool) {
+    function checkPossibilityToMaintainNode(uint validatorId, uint nodeIndex)
+        external allow("SkaleManager") returns (bool)
+    {
         DelegationController delegationController = DelegationController(
             contractManager.getContract("DelegationController")
         );
@@ -260,7 +265,8 @@ contract ValidatorService is Permissions {
         external
         returns (uint delegatedAmount)
     {
-        DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
+        DelegationController delegationController = DelegationController(
+            contractManager.getContract("DelegationController"));
         return delegationController.getAndUpdateDelegatedAmount(validators[validatorId].validatorAddress);
     }
 
@@ -364,7 +370,8 @@ contract ValidatorService is Permissions {
         for (uint i = 0; i < _nodeAddresses[validatorId].length; ++i) {
             if (_nodeAddresses[validatorId][i] == nodeAddress) {
                 if (i + 1 < _nodeAddresses[validatorId].length) {
-                    _nodeAddresses[validatorId][i] = _nodeAddresses[validatorId][_nodeAddresses[validatorId].length.sub(1)];
+                    _nodeAddresses[validatorId][i] =
+                        _nodeAddresses[validatorId][_nodeAddresses[validatorId].length.sub(1)];
                 }
                 delete _nodeAddresses[validatorId][_nodeAddresses[validatorId].length.sub(1)];
                 _nodeAddresses[validatorId].pop();

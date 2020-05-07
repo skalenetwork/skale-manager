@@ -95,7 +95,9 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
         SchainParameters memory schainParameters = fallbackSchainParametersDataConverter(data);
 
         require(schainParameters.typeOfSchain <= 5, "Invalid type of Schain");
-        require(getSchainPrice(schainParameters.typeOfSchain, schainParameters.lifetime) <= deposit, "Not enough money to create Schain");
+        require(
+            getSchainPrice(schainParameters.typeOfSchain, schainParameters.lifetime) <= deposit,
+            "Not enough money to create Schain");
 
         //initialize Schain
         initializeSchainInSchainsData(
@@ -113,8 +115,16 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
             schainParameters.name, keccak256(abi.encodePacked(schainParameters.name)), numberOfNodes, partOfNode);
 
         emit SchainCreated(
-            schainParameters.name, from, partOfNode, schainParameters.lifetime, numberOfNodes, deposit, schainParameters.nonce,
-            keccak256(abi.encodePacked(schainParameters.name)), uint32(block.timestamp), gasleft());
+            schainParameters.name,
+            from,
+            partOfNode,
+            schainParameters.lifetime,
+            numberOfNodes,
+            deposit,
+            schainParameters.nonce,
+            keccak256(abi.encodePacked(schainParameters.name)),
+            uint32(block.timestamp),
+            gasleft());
     }
 
     /**
@@ -127,27 +137,28 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
         bytes32 schainId = keccak256(abi.encodePacked(name));
         address dataAddress = contractManager.getContract(dataName);
         require(SchainsData(dataAddress).isOwnerAddress(from, schainId), "Message sender is not an owner of Schain");
-        address schainsFunctionalityInternalAddress = contractManager.getContract("SchainsFunctionalityInternal");
+        SchainsFunctionalityInternal schainsFunctionalityInternal = SchainsFunctionalityInternal(
+            contractManager.getContract("SchainsFunctionalityInternal"));
         address nodesAddress = contractManager.getContract("Nodes");
 
         // removes Schain from Nodes
         uint[] memory nodesInGroup = IGroupsData(dataAddress).getNodesInGroup(schainId);
         uint8 partOfNode = SchainsData(dataAddress).getSchainsPartOfNode(schainId);
         for (uint i = 0; i < nodesInGroup.length; i++) {
-            uint schainIndex = ISchainsFunctionalityInternal(schainsFunctionalityInternalAddress).findSchainAtSchainsForNode(
+            uint schainIndex = schainsFunctionalityInternal.findSchainAtSchainsForNode(
                 nodesInGroup[i],
                 schainId
             );
             require(
                 schainIndex < SchainsData(dataAddress).getLengthOfSchainsForNode(nodesInGroup[i]),
                 "Some Node does not contain given Schain");
-            ISchainsFunctionalityInternal(schainsFunctionalityInternalAddress).removeNodeFromSchain(nodesInGroup[i], schainId);
-            ISchainsFunctionalityInternal(schainsFunctionalityInternalAddress).removeNodeFromExceptions(schainId, nodesInGroup[i]);
+            schainsFunctionalityInternal.removeNodeFromSchain(nodesInGroup[i], schainId);
+            schainsFunctionalityInternal.removeNodeFromExceptions(schainId, nodesInGroup[i]);
             if (!Nodes(nodesAddress).isNodeLeft(nodesInGroup[i])) {
                 addSpace(nodesInGroup[i], partOfNode);
             }
         }
-        ISchainsFunctionalityInternal(schainsFunctionalityInternalAddress).deleteGroup(schainId);
+        schainsFunctionalityInternal.deleteGroup(schainId);
         SchainsData(dataAddress).removeSchain(schainId, from);
         SchainsData(dataAddress).removeRotation(schainId);
         emit SchainDeleted(from, name, schainId);
@@ -156,25 +167,26 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
     function deleteSchainByRoot(string calldata name) external override allow(executorName) {
         bytes32 schainId = keccak256(abi.encodePacked(name));
         address dataAddress = contractManager.getContract(dataName);
-        address schainsFunctionalityInternalAddress = contractManager.getContract("SchainsFunctionalityInternal");
+        SchainsFunctionalityInternal schainsFunctionalityInternal = SchainsFunctionalityInternal(
+            contractManager.getContract("SchainsFunctionalityInternal"));
         require(SchainsData(dataAddress).isSchainExist(schainId), "Schain does not exist");
 
         // removes Schain from Nodes
         uint[] memory nodesInGroup = IGroupsData(dataAddress).getNodesInGroup(schainId);
         uint8 partOfNode = SchainsData(dataAddress).getSchainsPartOfNode(schainId);
         for (uint i = 0; i < nodesInGroup.length; i++) {
-            uint schainIndex = ISchainsFunctionalityInternal(schainsFunctionalityInternalAddress).findSchainAtSchainsForNode(
+            uint schainIndex = schainsFunctionalityInternal.findSchainAtSchainsForNode(
                 nodesInGroup[i],
                 schainId
             );
             require(
                 schainIndex < SchainsData(dataAddress).getLengthOfSchainsForNode(nodesInGroup[i]),
                 "Some Node does not contain given Schain");
-            ISchainsFunctionalityInternal(schainsFunctionalityInternalAddress).removeNodeFromSchain(nodesInGroup[i], schainId);
-            ISchainsFunctionalityInternal(schainsFunctionalityInternalAddress).removeNodeFromExceptions(schainId, nodesInGroup[i]);
+            schainsFunctionalityInternal.removeNodeFromSchain(nodesInGroup[i], schainId);
+            schainsFunctionalityInternal.removeNodeFromExceptions(schainId, nodesInGroup[i]);
             addSpace(nodesInGroup[i], partOfNode);
         }
-        ISchainsFunctionalityInternal(schainsFunctionalityInternalAddress).deleteGroup(schainId);
+        schainsFunctionalityInternal.deleteGroup(schainId);
         address from = SchainsData(dataAddress).getSchainOwner(schainId);
         SchainsData(dataAddress).removeSchain(schainId, from);
         SchainsData(dataAddress).removeRotation(schainId);
@@ -198,7 +210,11 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
         return schainsFunctionalityInternal.isAnyFreeNode(schainId);
     }
 
-    function rotateNode(uint nodeIndex, bytes32 schainId) external override allowTwo("SkaleDKG", "SchainsFunctionality") returns (uint) {
+    function rotateNode(
+        uint nodeIndex,
+        bytes32 schainId)
+    external override allowTwo("SkaleDKG", "SchainsFunctionality") returns (uint)
+    {
         SchainsFunctionalityInternal schainsFunctionalityInternal = SchainsFunctionalityInternal(
             contractManager.getContract("SchainsFunctionalityInternal"));
         schainsFunctionalityInternal.removeNodeFromSchain(nodeIndex, schainId);
@@ -219,7 +235,9 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
             revertMessage = revertMessage.strConcat(", occupied by Node ");
             revertMessage = revertMessage.strConcat(rotation.nodeIndex.uint2str());
             string memory dkgRevert = "DKG proccess did not finish on schain ";
-            require(!schainsData.isGroupFailedDKG(keccak256(abi.encodePacked(schainName))), dkgRevert.strConcat(schainName));
+            require(
+                !schainsData.isGroupFailedDKG(keccak256(abi.encodePacked(schainName))),
+                dkgRevert.strConcat(schainName));
             require(rotation.freezeUntil < now, revertMessage);
             schainsData.startRotation(schains[i], nodeIndex);
         }
@@ -265,7 +283,10 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
             return 1e18;
         } else {
             uint up = nodeDeposit.mul(numberOfNodes.mul(lifetime.mul(2)));
-            uint down = uint(uint(constantsHolder.TINY_DIVISOR()).div(divisor).mul(uint(constantsHolder.SECONDS_TO_YEAR())));
+            uint down = uint(
+                uint(constantsHolder.TINY_DIVISOR())
+                    .div(divisor)
+                    .mul(uint(constantsHolder.SECONDS_TO_YEAR())));
             return up.div(down);
         }
     }

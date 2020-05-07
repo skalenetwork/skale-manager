@@ -45,7 +45,8 @@ contract Punisher is Permissions, ILocker {
     /// @notice Allows service to slash `validator` by `amount` of tokens
     function slash(uint validatorId, uint amount) external allow("SkaleDKG") {
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
-        DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
+        DelegationController delegationController = DelegationController(
+            contractManager.getContract("DelegationController"));
 
         require(validatorService.validatorExists(validatorId), "Validator does not exist");
 
@@ -55,7 +56,8 @@ contract Punisher is Permissions, ILocker {
     }
 
     function forgive(address holder, uint amount) external onlyOwner {
-        DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
+        DelegationController delegationController = DelegationController(
+            contractManager.getContract("DelegationController"));
 
         require(!delegationController.hasUnprocessedSlashes(holder), "Not all slashes were calculated");
 
@@ -87,7 +89,8 @@ contract Punisher is Permissions, ILocker {
     // private
 
     function _getAndUpdateLockedAmount(address wallet) internal returns (uint) {
-        DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
+        DelegationController delegationController = DelegationController(
+            contractManager.getContract("DelegationController"));
 
         delegationController.processAllSlashes(wallet);
         return _locked[wallet];
