@@ -8,6 +8,7 @@
     "state-visibility": "error",
     "no-empty-blocks": "error",
     "check-send-result": "error",
-    "private-vars-leading-underscore": "error"
+    "private-vars-leading-underscore": "error",
+    "code-complexity": "error"
   }
 }
