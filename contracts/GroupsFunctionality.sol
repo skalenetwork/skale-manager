@@ -85,9 +85,9 @@ abstract contract GroupsFunctionality is Permissions {
     );
 
     // name of executor contract
-    string executorName;
+    string internal executorName;
     // name of data contract
-    string dataName;
+    string internal dataName;
 
     /**
      * @dev verifySignature - verify signature which create Group by Groups BLS master public key

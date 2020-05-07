@@ -31,7 +31,7 @@ contract Permissions is Ownable {
     using SafeMath for uint;
     using SafeMath for uint32;
 
-    ContractManager contractManager;
+    ContractManager internal contractManager;
 
     function initialize(address _contractManager) public override virtual initializer {
         Ownable.initialize(msg.sender);

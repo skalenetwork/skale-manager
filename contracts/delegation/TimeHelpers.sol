@@ -27,7 +27,7 @@ import "../thirdparty/BokkyPooBahsDateTimeLibrary.sol";
 contract TimeHelpers {
     using SafeMath for uint;
 
-    uint constant ZERO_YEAR = 2020;
+    uint constant private ZERO_YEAR = 2020;
 
     function calculateProofOfUseLockEndTime(uint month, uint lockUpPeriodDays) external view returns (uint timestamp) {
         timestamp = BokkyPooBahsDateTimeLibrary.addDays(monthToTimestamp(month), lockUpPeriodDays);

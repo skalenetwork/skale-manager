@@ -76,8 +76,8 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
         uint newNode
     );
 
-    string executorName;
-    string dataName;
+    string private executorName;
+    string private dataName;
 
     /**
      * @dev addSchain - create Schain in the system

@@ -26,7 +26,7 @@ library MathUtils {
         uint b
     );
 
-    uint constant EPS = 1e6;
+    uint constant private EPS = 1e6;
 
     function boundedSub(uint256 a, uint256 b) internal returns (uint256) {
         if (a >= b) {

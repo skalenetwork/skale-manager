@@ -38,7 +38,7 @@ contract ManagerData is IManagerData, Permissions {
     uint public override stageNodes;
 
     //name of executor contract
-    string executorName;
+    string private executorName;
 
     /**
      * @dev setMinersCap - sets miners capitalization

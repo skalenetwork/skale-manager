@@ -43,10 +43,10 @@ contract TokenLaunchManager is Permissions, IERC777Recipient {
 
     IERC1820Registry private _erc1820;
 
-    address seller;
+    address public seller;
 
     mapping (address => uint) public approved;
-    uint totalApproved;
+    uint private totalApproved;
 
     modifier onlySeller() {
         require(isOwner() || _msgSender() == seller, "Not authorized");

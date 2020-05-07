@@ -31,7 +31,7 @@ contract TimeHelpersWithDebug is TimeHelpers, Ownable {
         uint shift;
     }
 
-    TimeShift[] timeShift;
+    TimeShift[] private timeShift;
 
     function skipTime(uint sec) external onlyOwner {
         if (timeShift.length > 0) {

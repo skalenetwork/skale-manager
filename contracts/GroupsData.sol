@@ -57,10 +57,10 @@ contract GroupsData is IGroupsData, Permissions {
     // past groups common BLS public keys
     mapping (bytes32 => uint[4][]) public previousPublicKeys;
     // mapping for checking Has Node already joined to the group
-    mapping (bytes32 => GroupCheck) exceptions;
+    mapping (bytes32 => GroupCheck) private exceptions;
 
     // name of executor contract
-    string executorName;
+    string internal executorName;
 
     /**
      * @dev addGroup - creates and adds new Group to mapping

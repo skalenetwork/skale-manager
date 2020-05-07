@@ -33,7 +33,7 @@ contract Pricing is Permissions {
     uint public constant MIN_PRICE = 10**6;
     uint public price;
     uint public totalNodes;
-    uint lastUpdated;
+    uint private lastUpdated;
 
     function initNodes() external {
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));

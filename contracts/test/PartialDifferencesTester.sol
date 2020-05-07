@@ -26,8 +26,8 @@ contract PartialDifferencesTester {
     using PartialDifferences for PartialDifferences.Sequence;
     using PartialDifferences for PartialDifferences.Value;
 
-    PartialDifferences.Sequence[] sequences;
-    PartialDifferences.Value[] values;
+    PartialDifferences.Sequence[] private sequences;
+    PartialDifferences.Value[] private values;
 
     function createSequence() external {
         sequences.push();
