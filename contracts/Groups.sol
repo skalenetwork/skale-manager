@@ -227,7 +227,7 @@ contract Groups is Permissions {
      * @param newRecommendedNumberOfNodes - recommended number of Nodes
      * @param data - some extra data
      */
-    function createGroup(bytes32 groupIndex, uint newRecommendedNumberOfNodes, bytes32 data) external allowTwo(executorName, "Monitors") {
+    function createGroup(bytes32 groupIndex, uint newRecommendedNumberOfNodes, bytes32 data) external allow(executorName) {
         groups[groupIndex].active = true;
         groups[groupIndex].recommendedNumberOfNodes = newRecommendedNumberOfNodes;
         groups[groupIndex].groupData = data;

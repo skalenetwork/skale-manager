@@ -22,7 +22,7 @@ pragma solidity 0.5.16;
 import "./Groups.sol";
 import "./interfaces/IConstants.sol";
 import "./Nodes.sol";
-// import "@nomiclabs/buidler/console.sol";
+import "@nomiclabs/buidler/console.sol";
 
 
 contract Monitors is Groups {
@@ -98,7 +98,7 @@ contract Monitors is Groups {
     /**
      * addMonitor - setup monitors of node
      */
-    function addMonitor(uint nodeIndex) external allow(executorName) {
+    function addMonitor(uint nodeIndex) external allow("SkaleManager") {
         address constantsAddress = contractManager.getContract("ConstantsHolder");
         IConstants constantsHolder = IConstants(constantsAddress);
         bytes32 groupIndex = keccak256(abi.encodePacked(nodeIndex));
@@ -114,7 +114,7 @@ contract Monitors is Groups {
         );
     }
 
-    function upgradeMonitor(uint nodeIndex) external allow(executorName) {
+    function upgradeMonitor(uint nodeIndex) external allow("SkaleManager") {
         address constantsAddress = contractManager.getContract("ConstantsHolder");
         IConstants constantsHolder = IConstants(constantsAddress);
         bytes32 groupIndex = keccak256(abi.encodePacked(nodeIndex));
@@ -129,7 +129,7 @@ contract Monitors is Groups {
         );
     }
 
-    function deleteMonitor(uint nodeIndex) external allow(executorName) {
+    function deleteMonitor(uint nodeIndex) external allow("SkaleManager") {
         bytes32 groupIndex = keccak256(abi.encodePacked(nodeIndex));
         verdicts[keccak256(abi.encodePacked(nodeIndex))].length = 0;
         delete checkedNodes[groupIndex];
@@ -154,7 +154,7 @@ contract Monitors is Groups {
         uint fromMonitorIndex,
         uint toNodeIndex,
         uint32 downtime,
-        uint32 latency) external allow(executorName)
+        uint32 latency) external allow("SkaleManager")
     {
         uint index;
         uint32 time;
@@ -181,7 +181,7 @@ contract Monitors is Groups {
             receiveVerdict, uint32(block.timestamp), gasleft());
     }
 
-    function calculateMetrics(uint nodeIndex) external allow(executorName) returns (uint32 averageDowntime, uint32 averageLatency) {
+    function calculateMetrics(uint nodeIndex) external allow("SkaleManager") returns (uint32 averageDowntime, uint32 averageLatency) {
         bytes32 monitorIndex = keccak256(abi.encodePacked(nodeIndex));
         uint lengthOfArray = this.getLengthOfMetrics(monitorIndex);
         uint32[] memory downtimeArray = new uint32[](lengthOfArray);
@@ -201,7 +201,7 @@ contract Monitors is Groups {
         Groups.initialize("Monitors", _contractManager);
     }
 
-    function generateGroup(bytes32 groupIndex) internal allow(executorName) returns (uint[] memory) {
+    function generateGroup(bytes32 groupIndex) internal allow("SkaleManager") returns (uint[] memory) {
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));
         require(this.isGroupActive(groupIndex), "Group is not active");
         uint exceptionNode = uint(this.getGroupData(groupIndex));
@@ -247,6 +247,7 @@ contract Monitors is Groups {
         uint[] memory indexOfNodesInGroup = generateGroup(groupIndex);
         bytes32 bytesParametersOfNodeIndex = getDataToBytes(nodeIndex);
         for (uint i = 0; i < indexOfNodesInGroup.length; i++) {
+            bool stop = false;
             bytes32 index = keccak256(abi.encodePacked(indexOfNodesInGroup[i]));
             uint indexLength = 14;
             require(bytesParametersOfNodeIndex.length >= indexLength, "data is too small");
@@ -255,10 +256,12 @@ contract Monitors is Groups {
                 uint shift = (32 - indexLength).mul(8);
                 if (checkedNodes[index][j] >> shift == bytesParametersOfNodeIndex >> shift) {
                     checkedNodes[index][j] = bytesParametersOfNodeIndex;
-                    break;
+                    stop = true;
                 }
             }
-            checkedNodes[index].push(bytesParametersOfNodeIndex);
+            if (!stop) {
+                checkedNodes[index].push(bytesParametersOfNodeIndex);
+            }
         }
         emit MonitorsArray(
             nodeIndex,

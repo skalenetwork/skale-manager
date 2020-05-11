@@ -118,23 +118,6 @@ contract GroupsFunctionality is Permissions {
     }
 
     /**
-     * @dev createGroup - creates and adds new Group to Data contract
-     * function could be run only by executor
-     * @param groupIndex - Groups identifier
-     * @param newRecommendedNumberOfNodes - recommended number of Nodes
-     * @param data - some extra data
-     */
-    function createGroup(bytes32 groupIndex, uint newRecommendedNumberOfNodes, bytes32 data) external allowTwo(executorName, "Monitors") {
-        address groupsDataAddress = contractManager.getContract(dataName);
-        IGroupsData(groupsDataAddress).addGroup(groupIndex, newRecommendedNumberOfNodes, data);
-        emit GroupAdded(
-            groupIndex,
-            data,
-            uint32(block.timestamp),
-            gasleft());
-    }
-
-    /**
      * @dev deleteGroup - delete Group from Data contract
      * function could be run only by executor
      * @param groupIndex - Groups identifier
@@ -161,6 +144,23 @@ contract GroupsFunctionality is Permissions {
         IGroupsData(groupsDataAddress).removeAllNodesInGroup(groupIndex);
         IGroupsData(groupsDataAddress).addGroup(groupIndex, newRecommendedNumberOfNodes, data);
         emit GroupUpgraded(
+            groupIndex,
+            data,
+            uint32(block.timestamp),
+            gasleft());
+    }
+
+    /**
+     * @dev createGroup - creates and adds new Group to Data contract
+     * function could be run only by executor
+     * @param groupIndex - Groups identifier
+     * @param newRecommendedNumberOfNodes - recommended number of Nodes
+     * @param data - some extra data
+     */
+    function createGroup(bytes32 groupIndex, uint newRecommendedNumberOfNodes, bytes32 data) public allow(executorName) {
+        address groupsDataAddress = contractManager.getContract(dataName);
+        IGroupsData(groupsDataAddress).addGroup(groupIndex, newRecommendedNumberOfNodes, data);
+        emit GroupAdded(
             groupIndex,
             data,
             uint32(block.timestamp),

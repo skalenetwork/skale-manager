@@ -38,35 +38,35 @@ contract("MonitorsFunctionality", ([owner, validator]) => {
   // nodeIndex = 0 because we add one node and her index in array is 0
   const nodeIndex = 0;
 
-  // it("should add Monitor", async () => {
-  //   const { logs } = await monitorsFunctionality.addMonitor(nodeIndex, {from: owner});
-  //   // check events after `.addMonitor` invoke
-  //   assert.equal(logs[0].event, "GroupAdded");
-  //   assert.equal(logs[1].event, "GroupGenerated");
-  //   assert.equal(logs[2].event, "MonitorsArray");
-  //   assert.equal(logs[3].event, "MonitorCreated");
+  it("should add Monitor", async () => {
+    const { logs } = await monitors.addMonitor(nodeIndex, {from: owner});
+    // check events after `.addMonitor` invoke
+    assert.equal(logs[0].event, "GroupAdded");
+    assert.equal(logs[1].event, "GroupGenerated");
+    assert.equal(logs[2].event, "MonitorsArray");
+    assert.equal(logs[3].event, "MonitorCreated");
 
-  //   const targetNodes = logs[2].args[2].map((value: BN) => value.toNumber());
-  //   targetNodes.sort();
-  //   targetNodes.forEach((value: number, index: number) => {
-  //     if (index > 0) {
-  //       assert.notEqual(value, targetNodes[index - 1], "Array should not contain duplicates");
-  //     }
-  //     assert(nodes.isNodeActive(value), "Node should be active");
-  //   });
-  // });
+    const targetNodes = logs[2].args[2].map((value: BN) => value.toNumber());
+    targetNodes.sort();
+    targetNodes.forEach((value: number, index: number) => {
+      if (index > 0) {
+        assert.notEqual(value, targetNodes[index - 1], "Array should not contain duplicates");
+      }
+      assert(nodes.isNodeActive(value), "Node should be active");
+    });
+  });
 
-  // it("should upgrade Monitor", async () => {
-  //   // add monitor
-  //   await monitorsFunctionality.addMonitor(nodeIndex, {from: owner});
-  //   // upgrade Monitor
-  //   const { logs } = await monitorsFunctionality.upgradeMonitor(nodeIndex, {from: owner});
-  //   // check events after `.upgradeMonitor` invoke
-  //   assert.equal(logs[0].event, "GroupUpgraded");
-  //   assert.equal(logs[1].event, "GroupGenerated");
-  //   assert.equal(logs[2].event, "MonitorsArray");
-  //   assert.equal(logs[3].event, "MonitorUpgraded");
-  // });
+  it("should upgrade Monitor", async () => {
+    // add monitor
+    await monitors.addMonitor(nodeIndex, {from: owner});
+    // upgrade Monitor
+    const { logs } = await monitors.upgradeMonitor(nodeIndex, {from: owner});
+    // check events after `.upgradeMonitor` invoke
+    assert.equal(logs[0].event, "GroupUpgraded");
+    assert.equal(logs[1].event, "GroupGenerated");
+    assert.equal(logs[2].event, "MonitorsArray");
+    assert.equal(logs[3].event, "MonitorUpgraded");
+  });
 
   // it("should send Verdict", async () => {
   //   // preparation
@@ -82,24 +82,24 @@ contract("MonitorsFunctionality", ([owner, validator]) => {
   //       timeInSec).slice(-28);
   //   const data32bytes = "0x" + indexNode1ToHex + timeToHex + ipToHex;
   //   //
-  //   await monitorsFunctionality.addMonitor(indexNode0, {from: owner});
+  //   await monitors.addMonitor(indexNode0, {from: owner});
   //   //
-  //   await monitors.addCheckedNode(
+  //   await monitors.setMonitors(
   //     indexNode0inSha3, data32bytes, {from: owner},
   //     );
   //   // execution
-  //   const { logs } = await monitorsFunctionality
+  //   const { logs } = await monitors
   //         .sendVerdict(0, indexNode1, 1, 0, {from: owner});
   //   // assertion
   //   assert.equal(logs[0].event, "VerdictWasSent");
   // });
 
-  // it("should rejected with `Checked Node...` error when invoke sendVerdict", async () => {
-  //   const error = "Checked Node does not exist in MonitorsArray";
-  //   await monitorsFunctionality
-  //         .sendVerdict(0, 1, 0, 0, {from: owner})
-  //         .should.be.eventually.rejectedWith(error);
-  // });
+  it("should rejected with `Checked Node...` error when invoke sendVerdict", async () => {
+    const error = "Checked Node does not exist in MonitorsArray";
+    await monitors
+          .sendVerdict(0, 1, 0, 0, {from: owner})
+          .should.be.eventually.rejectedWith(error);
+  });
 
   // it("should rejected with `The time has...` error when invoke sendVerdict", async () => {
   //   const error = "The time has not come to send verdict for 1 Node";
@@ -118,12 +118,12 @@ contract("MonitorsFunctionality", ([owner, validator]) => {
   //   // for data32bytes should revert to hex indexNode1 + oneSec + 127.0.0.1
   //   const data32bytes = "0x" + indexNode1ToHex + add0ToHex + ipToHex;
   //   //
-  //   // await monitorsFunctionality.addMonitor(indexNode0, {from: owner});
+  //   // await monitors.addMonitor(indexNode0, {from: owner});
   //   //
   //   await monitors.addCheckedNode(
   //     indexNode0inSha3, data32bytes, {from: owner},
   //     );
-  //   await monitorsFunctionality
+  //   await monitors
   //         .sendVerdict(0, 1, 0, 0, {from: owner})
   //         .should.be.eventually.rejectedWith(error);
   // });
@@ -144,14 +144,14 @@ contract("MonitorsFunctionality", ([owner, validator]) => {
   //   const res = new BigNumber(await monitors.getLengthOfMetrics(monitorIndex1, {from: owner}));
   //   expect(parseInt(res.toString(), 10)).to.equal(3);
 
-  //   const metrics = await await monitorsFunctionality.calculateMetrics.call(indexNode1, {from: owner});
+  //   const metrics = await await monitors.calculateMetrics.call(indexNode1, {from: owner});
   //   const downtime = web3.utils.toBN(metrics[0]).toNumber();
   //   const latency = web3.utils.toBN(metrics[1]).toNumber();
   //   downtime.should.be.equal(10);
   //   latency.should.be.equal(40);
 
   //   // execution
-  //   await monitorsFunctionality
+  //   await monitors
   //         .calculateMetrics(indexNode1, {from: owner});
   //   const res2 = new BigNumber(await monitors.getLengthOfMetrics(monitorIndex1, {from: owner}));
   //   // expectation
@@ -179,39 +179,38 @@ contract("MonitorsFunctionality", ([owner, validator]) => {
   //     );
   //   // execution
   //   // skipTime(web3, time - 200);
-  //   await monitorsFunctionality
+  //   await monitors
   //         .sendVerdict(0, 1, 0, 0, {from: owner});
   //   const res = new BigNumber(await monitors.getLengthOfMetrics(monitorIndex1, {from: owner}));
   //   // expectation
   //   expect(parseInt(res.toString(), 10)).to.equal(1);
   // });
 
-  // it("should not contain duplicates after epoch ending", async () => {
-  //   await monitorsFunctionality.addMonitor(0);
+  it("should not contain duplicates after epoch ending", async () => {
+    await monitors.addMonitor(0);
 
-  //   const rewardPeriod = (await constantsHolder.rewardPeriod()).toNumber();
-  //   skipTime(web3, rewardPeriod);
+    const rewardPeriod = (await constantsHolder.rewardPeriod()).toNumber();
+    skipTime(web3, rewardPeriod);
 
-  //   await monitorsFunctionality.sendVerdict(1, 0, 0, 0);
+    await monitors.sendVerdict(1, 0, 0, 0);
 
-  //   const node1Hash = web3.utils.soliditySha3(1);
-  //   const node2Hash = web3.utils.soliditySha3(2);
-  //   await monitors.getCheckedArray(node1Hash).should.be.eventually.empty;
-  //   (await monitors.getCheckedArray(node2Hash)).length.should.be.equal(1);
+    const node1Hash = web3.utils.soliditySha3(1);
+    const node2Hash = web3.utils.soliditySha3(2);
+    await monitors.getCheckedArray(node1Hash).should.be.eventually.empty;
+    (await monitors.getCheckedArray(node2Hash)).length.should.be.equal(1);
 
-  //   await nodes.changeNodeLastRewardDate(0);
-  //   await monitorsFunctionality.upgradeMonitor(0);
+    await nodes.changeNodeLastRewardDate(0);
+    await monitors.upgradeMonitor(0);
 
-  //   const validatedArray = await monitors.getCheckedArray(node2Hash);
-  //   const validatedNodeIndexes = validatedArray.map((value) => value.slice(2, 2 + 14 * 2)).map(Number);
-
-  //   validatedNodeIndexes.sort();
-  //   validatedNodeIndexes.forEach((value: number, index: number, array: number[]) => {
-  //     if (index > 0) {
-  //       assert.notDeepEqual(value, array[index - 1], "Should not contain duplicates");
-  //     }
-  //   });
-  // });
+    const validatedArray = await monitors.getCheckedArray(node2Hash);
+    const validatedNodeIndexes = validatedArray.map((value) => value.slice(2, 2 + 14 * 2)).map(Number);
+    validatedNodeIndexes.sort();
+    validatedNodeIndexes.forEach((value: number, index: number, array: number[]) => {
+      if (index > 0) {
+        assert.notDeepEqual(value, array[index - 1], "Should not contain duplicates");
+      }
+    });
+  });
 
   it("should delete node from checked list", async () => {
     await monitors.addMonitor(0);
@@ -226,90 +225,87 @@ contract("MonitorsFunctionality", ([owner, validator]) => {
     (await monitors.getCheckedArray(node3Hash)).length.should.be.equal(1);
     (await monitors.getCheckedArray(node4Hash)).length.should.be.equal(1);
 
-    // await monitors.deleteMonitor(0);
+    await monitors.deleteMonitor(0);
 
-    // await monitors.getCheckedArray(node1Hash).should.be.eventually.empty;
-    // await monitors.getCheckedArray(node2Hash).should.be.eventually.empty;
-    // await monitors.getCheckedArray(node3Hash).should.be.eventually.empty;
-    // await monitors.getCheckedArray(node4Hash).should.be.eventually.empty;
+    await monitors.getCheckedArray(node1Hash).should.be.eventually.empty;
+    await monitors.getCheckedArray(node2Hash).should.be.eventually.empty;
+    await monitors.getCheckedArray(node3Hash).should.be.eventually.empty;
+    await monitors.getCheckedArray(node4Hash).should.be.eventually.empty;
   });
 
-  // it("should delete nodes from checked list", async () => {
-  //   await monitorsFunctionality.addMonitor(0);
-  //   await monitorsFunctionality.addMonitor(1);
+  it("should delete nodes from checked list", async () => {
+    await monitors.addMonitor(0);
+    await monitors.addMonitor(1);
 
-  //   const node0Hash = web3.utils.soliditySha3(0);
-  //   const node1Hash = web3.utils.soliditySha3(1);
-  //   const node2Hash = web3.utils.soliditySha3(2);
-  //   const node3Hash = web3.utils.soliditySha3(3);
-  //   const node4Hash = web3.utils.soliditySha3(4);
+    const node0Hash = web3.utils.soliditySha3(0);
+    const node1Hash = web3.utils.soliditySha3(1);
+    const node2Hash = web3.utils.soliditySha3(2);
+    const node3Hash = web3.utils.soliditySha3(3);
+    const node4Hash = web3.utils.soliditySha3(4);
 
-  //   (await monitors.getCheckedArray(node0Hash)).length.should.be.equal(1);
-  //   (await monitors.getCheckedArray(node1Hash)).length.should.be.equal(1);
-  //   (await monitors.getCheckedArray(node2Hash)).length.should.be.equal(2);
-  //   (await monitors.getCheckedArray(node3Hash)).length.should.be.equal(2);
-  //   (await monitors.getCheckedArray(node4Hash)).length.should.be.equal(2);
+    (await monitors.getCheckedArray(node0Hash)).length.should.be.equal(1);
+    (await monitors.getCheckedArray(node1Hash)).length.should.be.equal(1);
+    (await monitors.getCheckedArray(node2Hash)).length.should.be.equal(2);
+    (await monitors.getCheckedArray(node3Hash)).length.should.be.equal(2);
+    (await monitors.getCheckedArray(node4Hash)).length.should.be.equal(2);
 
-  //   await monitorsFunctionality.deleteMonitor(0);
-  //   console.log("Finished delete 0 monitor");
+    await monitors.deleteMonitor(0);
 
-  //   await monitors.getCheckedArray(node0Hash).should.be.eventually.empty;
-  //   await monitors.getCheckedArray(node1Hash).should.be.eventually.empty;
-  //   (await monitors.getCheckedArray(node2Hash)).length.should.be.equal(1);
-  //   (await monitors.getCheckedArray(node3Hash)).length.should.be.equal(1);
-  //   (await monitors.getCheckedArray(node4Hash)).length.should.be.equal(1);
+    await monitors.getCheckedArray(node0Hash).should.be.eventually.empty;
+    await monitors.getCheckedArray(node1Hash).should.be.eventually.empty;
+    (await monitors.getCheckedArray(node2Hash)).length.should.be.equal(1);
+    (await monitors.getCheckedArray(node3Hash)).length.should.be.equal(1);
+    (await monitors.getCheckedArray(node4Hash)).length.should.be.equal(1);
 
-  //   console.log("Started delete 1 monitor");
-  //   await monitorsFunctionality.deleteMonitor(1);
-  //   console.log("Finished delete 1 monitor");
+    await monitors.deleteMonitor(1);
 
-  //   // await monitors.getCheckedArray(node0Hash).should.be.eventually.empty;
-  //   // await monitors.getCheckedArray(node1Hash).should.be.eventually.empty;
-  //   // await monitors.getCheckedArray(node2Hash).should.be.eventually.empty;
-  //   // await monitors.getCheckedArray(node3Hash).should.be.eventually.empty;
-  //   // await monitors.getCheckedArray(node4Hash).should.be.eventually.empty;
-  // });
+    await monitors.getCheckedArray(node0Hash).should.be.eventually.empty;
+    await monitors.getCheckedArray(node1Hash).should.be.eventually.empty;
+    await monitors.getCheckedArray(node2Hash).should.be.eventually.empty;
+    await monitors.getCheckedArray(node3Hash).should.be.eventually.empty;
+    await monitors.getCheckedArray(node4Hash).should.be.eventually.empty;
+  });
 
-  // const nodesCount = 50;
-  // const activeNodesCount = 30;
-  // describe("when " + nodesCount + " nodes in network", async () => {
+  const nodesCount = 50;
+  const activeNodesCount = 30;
+  describe("when " + nodesCount + " nodes in network", async () => {
 
-  //   beforeEach(async () => {
-  //     for (let node = (await nodes.getNumberOfNodes()).toNumber(); node < nodesCount; ++node) {
-  //       const address = ("0000" + node.toString(16)).slice(-4);
+    beforeEach(async () => {
+      for (let node = (await nodes.getNumberOfNodes()).toNumber(); node < nodesCount; ++node) {
+        const address = ("0000" + node.toString(16)).slice(-4);
 
-  //       await nodes.addNode(validator,
-  //                               "d2_" + node,
-  //                               "0x7f" + address + "01",
-  //                               "0x7f" + address + "02",
-  //                               8545,
-  //                               "0x1122334459",
-  //                               0);
-  //     }
+        await nodes.addNode(validator,
+                                "d2_" + node,
+                                "0x7f" + address + "01",
+                                "0x7f" + address + "02",
+                                8545,
+                                "0x1122334459",
+                                0);
+      }
 
-  //     const leavingCount = nodesCount - activeNodesCount;
-  //     for (let i = 0; i < leavingCount; ++i) {
-  //       await nodes.setNodeLeaving(Math.floor(i * nodesCount / leavingCount));
-  //     }
-  //   });
+      const leavingCount = nodesCount - activeNodesCount;
+      for (let i = 0; i < leavingCount; ++i) {
+        await nodes.setNodeLeaving(Math.floor(i * nodesCount / leavingCount));
+      }
+    });
 
-  //   it("should add monitor", async () => {
-  //     for (let node = 0; node < nodesCount; ++node) {
-  //       if (await nodes.isNodeActive(node)) {
-  //         const { logs } = await monitorsFunctionality.addMonitor(node);
+    it("should add monitor", async () => {
+      for (let node = 0; node < nodesCount; ++node) {
+        if (await nodes.isNodeActive(node)) {
+          const { logs } = await monitors.addMonitor(node);
 
-  //         const targetNodes = logs[2].args[2].map((value: BN) => value.toNumber());
-  //         targetNodes.length.should.be.equal(24);
-  //         targetNodes.sort();
-  //         targetNodes.forEach(async (value: number, index: number) => {
-  //           if (index > 0) {
-  //             assert.notEqual(value, targetNodes[index - 1], "Array should not contain duplicates");
-  //           }
-  //           assert(await nodes.isNodeActive(value), "Node should be active");
-  //         });
-  //       }
-  //     }
-  //   });
-  // });
+          const targetNodes = logs[2].args[2].map((value: BN) => value.toNumber());
+          targetNodes.length.should.be.equal(24);
+          targetNodes.sort();
+          targetNodes.forEach(async (value: number, index: number) => {
+            if (index > 0) {
+              assert.notEqual(value, targetNodes[index - 1], "Array should not contain duplicates");
+            }
+            assert(await nodes.isNodeActive(value), "Node should be active");
+          });
+        }
+      }
+    });
+  });
 
 });

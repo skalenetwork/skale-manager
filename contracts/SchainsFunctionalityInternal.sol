@@ -53,7 +53,7 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
         uint8 partOfNode) external allow(executorName)
     {
         address dataAddress = contractManager.getContract(dataName);
-        this.createGroup(schainId, numberOfNodes, bytes32(uint(partOfNode)));
+        createGroup(schainId, numberOfNodes, bytes32(uint(partOfNode)));
         uint[] memory numberOfNodesInGroup = generateGroup(schainId);
         SchainsData(dataAddress).setSchainPartOfNode(schainId, partOfNode);
         emit SchainNodes(
