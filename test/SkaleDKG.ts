@@ -538,7 +538,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                         );
                         assert.equal(result.logs[0].event, "BadGuy");
                         assert.equal(result.logs[0].args.nodeIndex.toString(), "0");
-                        assert.equal(result.logs.length, 2);
+                        assert.equal(result.logs.length, 3);
 
                         (await skaleToken.getAndUpdateLockedAmount.call(validator1)).toNumber()
                             .should.be.equal(delegatedAmount);
@@ -617,8 +617,8 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
             assert.equal(result.logs[0].event, "BadGuy");
             assert.equal(result.logs[0].args.nodeIndex.toString(), "0");
 
-            assert.equal(result.logs[3].event, "ChannelOpened");
-            assert.equal(result.logs[3].args.groupIndex, web3.utils.soliditySha3(schainName));
+            assert.equal(result.logs[2].event, "ChannelOpened");
+            assert.equal(result.logs[2].args.groupIndex, web3.utils.soliditySha3(schainName));
             const blockNumber = result.receipt.blockNumber;
             const timestamp = (await web3.eth.getBlock(blockNumber)).timestamp;
 
