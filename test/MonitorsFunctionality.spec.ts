@@ -82,22 +82,32 @@ contract("MonitorsFunctionality", ([owner, validator]) => {
   //       timeInSec).slice(-28);
   //   const data32bytes = "0x" + indexNode1ToHex + timeToHex + ipToHex;
   //   //
-  //   await monitors.addMonitor(indexNode0, {from: owner});
+  //   await monitorsFunctionality.addMonitor(indexNode0, {from: owner});
   //   //
-  //   await monitors.setMonitors(
+  //   await monitorsData.addCheckedNode(
   //     indexNode0inSha3, data32bytes, {from: owner},
   //     );
   //   // execution
-  //   const { logs } = await monitors
-  //         .sendVerdict(0, indexNode1, 1, 0, {from: owner});
+  //   const verd = {
+  //     toNodeIndex: indexNode1,
+  //     downtime: 1,
+  //     latency: 0,
+  //   };
+  //   const { logs } = await monitorsFunctionality
+  //         .sendVerdict(0, verd, {from: owner});
   //   // assertion
   //   assert.equal(logs[0].event, "VerdictWasSent");
   // });
 
   it("should rejected with `Checked Node...` error when invoke sendVerdict", async () => {
     const error = "Checked Node does not exist in MonitorsArray";
+    const verd = {
+      toNodeIndex: 1,
+      downtime: 0,
+      latency: 0,
+    };
     await monitors
-          .sendVerdict(0, 1, 0, 0, {from: owner})
+          .sendVerdict(0, verd, {from: owner})
           .should.be.eventually.rejectedWith(error);
   });
 
@@ -118,13 +128,18 @@ contract("MonitorsFunctionality", ([owner, validator]) => {
   //   // for data32bytes should revert to hex indexNode1 + oneSec + 127.0.0.1
   //   const data32bytes = "0x" + indexNode1ToHex + add0ToHex + ipToHex;
   //   //
-  //   // await monitors.addMonitor(indexNode0, {from: owner});
+  //   // await monitorsFunctionality.addMonitor(indexNode0, {from: owner});
   //   //
-  //   await monitors.addCheckedNode(
+  //   await monitorsData.addCheckedNode(
   //     indexNode0inSha3, data32bytes, {from: owner},
   //     );
-  //   await monitors
-  //         .sendVerdict(0, 1, 0, 0, {from: owner})
+  //   const verd = {
+  //     toNodeIndex: 1,
+  //     downtime: 0,
+  //     latency: 0,
+  //   };
+  //   await monitorsFunctionality
+  //         .sendVerdict(0, verd, {from: owner})
   //         .should.be.eventually.rejectedWith(error);
   // });
 
@@ -132,28 +147,28 @@ contract("MonitorsFunctionality", ([owner, validator]) => {
   //   // preparation
   //   const indexNode1 = 1;
   //   const monitorIndex1 = web3.utils.soliditySha3(indexNode1);
-  //   await monitors.createGroup(
+  //   await monitorsData.addGroup(
   //     monitorIndex1, 1, "0x0000000000000000000000000000000000000000000000000000000000000000", {from: owner},
   //     );
-  //   await monitors.setNodeInGroup(
+  //   await monitorsData.setNodeInGroup(
   //     monitorIndex1, indexNode1, {from: owner},
   //     );
-  //   await monitors.addVerdict(monitorIndex1, 10, 0, {from: owner});
-  //   await monitors.addVerdict(monitorIndex1, 10, 50, {from: owner});
-  //   await monitors.addVerdict(monitorIndex1, 100, 40, {from: owner});
-  //   const res = new BigNumber(await monitors.getLengthOfMetrics(monitorIndex1, {from: owner}));
+  //   await monitorsData.addVerdict(monitorIndex1, 10, 0, {from: owner});
+  //   await monitorsData.addVerdict(monitorIndex1, 10, 50, {from: owner});
+  //   await monitorsData.addVerdict(monitorIndex1, 100, 40, {from: owner});
+  //   const res = new BigNumber(await monitorsData.getLengthOfMetrics(monitorIndex1, {from: owner}));
   //   expect(parseInt(res.toString(), 10)).to.equal(3);
 
-  //   const metrics = await await monitors.calculateMetrics.call(indexNode1, {from: owner});
+  //   const metrics = await await monitorsFunctionality.calculateMetrics.call(indexNode1, {from: owner});
   //   const downtime = web3.utils.toBN(metrics[0]).toNumber();
   //   const latency = web3.utils.toBN(metrics[1]).toNumber();
   //   downtime.should.be.equal(10);
   //   latency.should.be.equal(40);
 
   //   // execution
-  //   await monitors
+  //   await monitorsFunctionality
   //         .calculateMetrics(indexNode1, {from: owner});
-  //   const res2 = new BigNumber(await monitors.getLengthOfMetrics(monitorIndex1, {from: owner}));
+  //   const res2 = new BigNumber(await monitorsData.getLengthOfMetrics(monitorIndex1, {from: owner}));
   //   // expectation
   //   expect(parseInt(res2.toString(), 10)).to.equal(0);
   // });
@@ -174,14 +189,19 @@ contract("MonitorsFunctionality", ([owner, validator]) => {
   //   timeInHex).slice(-28);
   //   const data32bytes = "0x" + indexNode1ToHex + add0ToHex + ipToHex;
   //   //
-  //   await monitors.addCheckedNode(
+  //   await monitorsData.addCheckedNode(
   //     indexNode0inSha3, data32bytes, {from: owner},
   //     );
   //   // execution
   //   // skipTime(web3, time - 200);
-  //   await monitors
-  //         .sendVerdict(0, 1, 0, 0, {from: owner});
-  //   const res = new BigNumber(await monitors.getLengthOfMetrics(monitorIndex1, {from: owner}));
+  //   const verd = {
+  //     toNodeIndex: 1,
+  //     downtime: 0,
+  //     latency: 0,
+  //   };
+  //   await monitorsFunctionality
+  //         .sendVerdict(0, verd, {from: owner});
+  //   const res = new BigNumber(await monitorsData.getLengthOfMetrics(monitorIndex1, {from: owner}));
   //   // expectation
   //   expect(parseInt(res.toString(), 10)).to.equal(1);
   // });
@@ -192,7 +212,12 @@ contract("MonitorsFunctionality", ([owner, validator]) => {
     const rewardPeriod = (await constantsHolder.rewardPeriod()).toNumber();
     skipTime(web3, rewardPeriod);
 
-    await monitors.sendVerdict(1, 0, 0, 0);
+    const verd = {
+      toNodeIndex: 0,
+      downtime: 0,
+      latency: 0,
+    };
+    await monitors.sendVerdict(1, verd);
 
     const node1Hash = web3.utils.soliditySha3(1);
     const node2Hash = web3.utils.soliditySha3(2);

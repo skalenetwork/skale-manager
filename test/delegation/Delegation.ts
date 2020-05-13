@@ -76,10 +76,10 @@ contract("Delegation", ([owner,
         let validatorId: number;
         beforeEach(async () => {
             validatorId = 1;
-            await skaleToken.mint(owner, holder1, defaultAmount.toString(), "0x", "0x");
-            await skaleToken.mint(owner, holder2, defaultAmount.toString(), "0x", "0x");
-            await skaleToken.mint(owner, holder3, defaultAmount.toString(), "0x", "0x");
-            await skaleToken.mint(owner, skaleManagerMock.address, defaultAmount.toString(), "0x", "0x");
+            await skaleToken.mint(holder1, defaultAmount.toString(), "0x", "0x");
+            await skaleToken.mint(holder2, defaultAmount.toString(), "0x", "0x");
+            await skaleToken.mint(holder3, defaultAmount.toString(), "0x", "0x");
+            await skaleToken.mint(skaleManagerMock.address, defaultAmount.toString(), "0x", "0x");
             await validatorService.registerValidator(
                 "First validator", "Super-pooper validator", 150, 0, {from: validator});
             await validatorService.enableValidator(validatorId, {from: owner});
@@ -123,7 +123,7 @@ contract("Delegation", ([owner,
 
                         it("should not allow to burn locked tokens", async () => {
                             await skaleToken.burn(1, "0x", {from: holder1})
-                                .should.be.eventually.rejectedWith("Token should be unlocked for burning");
+                                .should.be.eventually.rejectedWith("Token should be unlocked for transferring");
                         });
 
                         it("should not allow holder to spend tokens", async () => {
@@ -218,7 +218,7 @@ contract("Delegation", ([owner,
         });
 
         it("should return bond amount if validator delegated to itself", async () => {
-            await skaleToken.mint(owner, validator, defaultAmount.toString(), "0x", "0x");
+            await skaleToken.mint(validator, defaultAmount.toString(), "0x", "0x");
             await delegationController.delegate(
                 validatorId, defaultAmount.toString(), 3, "D2 is even", {from: validator});
             await delegationController.delegate(
@@ -413,9 +413,9 @@ contract("Delegation", ([owner,
 
                 it("should not consume extra gas for slashing calculation if holder has never delegated", async () => {
                     const amount = 100;
-                    await skaleToken.mint(owner, validator, amount, "0x", "0x");
+                    await skaleToken.mint(validator, amount, "0x", "0x");
                     // make owner balance non zero to do not affect transfer costs
-                    await skaleToken.mint(owner, owner, 1, "0x", "0x");
+                    await skaleToken.mint(owner, 1, "0x", "0x");
                     let tx = await skaleToken.transfer(owner, 1, {from: validator});
                     const gasUsedBeforeSlashing = tx.receipt.gasUsed;
                     for (let i = 0; i < 10; ++i) {
@@ -462,7 +462,7 @@ contract("Delegation", ([owner,
             let delegationId = 0;
             for (const holder of holders) {
                 await web3.eth.sendTransaction({from: holder1, to: holder.address, value: etherAmount});
-                await skaleToken.mint(owner, holder.address, delegatedAmount, "0x", "0x");
+                await skaleToken.mint(holder.address, delegatedAmount, "0x", "0x");
 
                 const callData = web3DelegationController.methods.delegate(
                     validatorId, delegatedAmount, 3, "D2 is even").encodeABI();

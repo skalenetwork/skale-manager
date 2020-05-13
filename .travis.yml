@@ -37,7 +37,6 @@ jobs:
       script:
         - pip3 install -r scripts/requirements.txt
         - slither --version
-        - slither . || true
         - yarn fullcheck || travis_terminate 1
 
     - stage: test

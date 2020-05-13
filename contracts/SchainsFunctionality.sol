@@ -17,7 +17,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.5.16;
+pragma solidity 0.6.6;
 pragma experimental ABIEncoderV2;
 
 import "./Permissions.sol";
@@ -27,6 +27,7 @@ import "./interfaces/ISchainsFunctionality.sol";
 import "./interfaces/ISchainsFunctionalityInternal.sol";
 import "./SchainsData.sol";
 import "./SchainsFunctionalityInternal.sol";
+import "./ConstantsHolder.sol";
 
 
 
@@ -85,7 +86,7 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
      * @param deposit - received amoung of SKL
      * @param data - Schain's data
      */
-    function addSchain(address from, uint deposit, bytes calldata data) external allow(executorName) {
+    function addSchain(address from, uint deposit, bytes calldata data) external override allow(executorName) {
         uint numberOfNodes;
         uint8 partOfNode;
 
@@ -122,11 +123,12 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
      * @param from - owner of Schain
      * @param name - Schain name
      */
-    function deleteSchain(address from, string calldata name) external allow(executorName) {
+    function deleteSchain(address from, string calldata name) external override allow(executorName) {
         bytes32 schainId = keccak256(abi.encodePacked(name));
         address dataAddress = contractManager.getContract(dataName);
         require(SchainsData(dataAddress).isOwnerAddress(from, schainId), "Message sender is not an owner of Schain");
         address schainsFunctionalityInternalAddress = contractManager.getContract("SchainsFunctionalityInternal");
+        address nodesAddress = contractManager.getContract("Nodes");
 
         // removes Schain from Nodes
         uint[] memory nodesInGroup = IGroupsData(dataAddress).getNodesInGroup(schainId);
@@ -141,7 +143,9 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
                 "Some Node does not contain given Schain");
             ISchainsFunctionalityInternal(schainsFunctionalityInternalAddress).removeNodeFromSchain(nodesInGroup[i], schainId);
             ISchainsFunctionalityInternal(schainsFunctionalityInternalAddress).removeNodeFromExceptions(schainId, nodesInGroup[i]);
-            addSpace(nodesInGroup[i], partOfNode);
+            if (!Nodes(nodesAddress).isNodeLeft(nodesInGroup[i])) {
+                addSpace(nodesInGroup[i], partOfNode);
+            }
         }
         ISchainsFunctionalityInternal(schainsFunctionalityInternalAddress).deleteGroup(schainId);
         SchainsData(dataAddress).removeSchain(schainId, from);
@@ -149,7 +153,7 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
         emit SchainDeleted(from, name, schainId);
     }
 
-    function deleteSchainByRoot(string calldata name) external allow(executorName) {
+    function deleteSchainByRoot(string calldata name) external override allow(executorName) {
         bytes32 schainId = keccak256(abi.encodePacked(name));
         address dataAddress = contractManager.getContract(dataName);
         address schainsFunctionalityInternalAddress = contractManager.getContract("SchainsFunctionalityInternal");
@@ -177,7 +181,7 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
         emit SchainDeleted(from, name, schainId);
     }
 
-    function exitFromSchain(uint nodeIndex) external allow(executorName) returns (bool) {
+    function exitFromSchain(uint nodeIndex) external override allow(executorName) returns (bool) {
         SchainsData schainsData = SchainsData(contractManager.getContract(dataName));
         bytes32 schainId = schainsData.getActiveSchain(nodeIndex);
         require(this.checkRotation(schainId), "No any free Nodes for rotating");
@@ -194,7 +198,7 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
         return schainsFunctionalityInternal.isAnyFreeNode(schainId);
     }
 
-    function rotateNode(uint nodeIndex, bytes32 schainId) external allowTwo("SkaleDKG", "SchainsFunctionality") returns (uint) {
+    function rotateNode(uint nodeIndex, bytes32 schainId) external override allowTwo("SkaleDKG", "SchainsFunctionality") returns (uint) {
         SchainsFunctionalityInternal schainsFunctionalityInternal = SchainsFunctionalityInternal(
             contractManager.getContract("SchainsFunctionalityInternal"));
         schainsFunctionalityInternal.removeNodeFromSchain(nodeIndex, schainId);
@@ -233,7 +237,7 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
 
     }
 
-    function initialize(address newContractsAddress) public initializer {
+    function initialize(address newContractsAddress) public override initializer {
         Permissions.initialize(newContractsAddress);
         executorName = "SkaleManager";
         dataName = "SchainsData";
@@ -246,9 +250,9 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
      * @return current price for given Schain
      */
     function getSchainPrice(uint typeOfSchain, uint lifetime) public view returns (uint) {
-        address constantsAddress = contractManager.getContract("ConstantsHolder");
+        ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
         address schainsFunctionalityInternalAddress = contractManager.getContract("SchainsFunctionalityInternal");
-        uint nodeDeposit = IConstants(constantsAddress).NODE_DEPOSIT();
+        uint nodeDeposit = constantsHolder.NODE_DEPOSIT();
         uint numberOfNodes;
         uint8 divisor;
         (numberOfNodes, divisor) = ISchainsFunctionalityInternal(
@@ -261,7 +265,7 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
             return 1e18;
         } else {
             uint up = nodeDeposit.mul(numberOfNodes.mul(lifetime.mul(2)));
-            uint down = uint(uint(IConstants(constantsAddress).TINY_DIVISOR()).div(divisor).mul(uint(IConstants(constantsAddress).SECONDS_TO_YEAR())));
+            uint down = uint(uint(constantsHolder.TINY_DIVISOR()).div(divisor).mul(uint(constantsHolder.SECONDS_TO_YEAR())));
             return up.div(down);
         }
     }
@@ -287,10 +291,7 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
     /**
      * @dev fallbackSchainParameterDataConverter - converts data from bytes to normal parameters
      * @param data - concatenated parameters
-     * @return lifetime
-     * @return typeOfSchain
-     * @return nonce
-     * @return name
+     * @return schainParameters Parsed lifetime, typeOfSchain, nonce and name
      */
     function fallbackSchainParametersDataConverter(bytes memory data)
         internal

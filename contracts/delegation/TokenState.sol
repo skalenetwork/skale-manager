@@ -17,7 +17,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.5.16;
+pragma solidity 0.6.6;
 pragma experimental ABIEncoderV2;
 
 import "../Permissions.sol";
@@ -37,7 +37,7 @@ contract TokenState is Permissions, ILocker {
 
     string[] private _lockers;
 
-    function getAndUpdateLockedAmount(address holder) external returns (uint) {
+    function getAndUpdateLockedAmount(address holder) external override returns (uint) {
         uint locked = 0;
         for (uint i = 0; i < _lockers.length; ++i) {
             ILocker locker = ILocker(contractManager.getContract(_lockers[i]));
@@ -46,7 +46,7 @@ contract TokenState is Permissions, ILocker {
         return locked;
     }
 
-    function getAndUpdateForbiddenForDelegationAmount(address holder) external returns (uint amount) {
+    function getAndUpdateForbiddenForDelegationAmount(address holder) external override returns (uint amount) {
         uint forbidden = 0;
         for (uint i = 0; i < _lockers.length; ++i) {
             ILocker locker = ILocker(contractManager.getContract(_lockers[i]));
@@ -68,12 +68,12 @@ contract TokenState is Permissions, ILocker {
                 _lockers[index] = _lockers[_lockers.length - 1];
             }
             delete _lockers[_lockers.length - 1];
-            --_lockers.length;
+            _lockers.pop();
         }
         emit LockerWasRemoved(locker);
     }
 
-    function initialize(address _contractManager) public initializer {
+    function initialize(address _contractManager) public override initializer {
         Permissions.initialize(_contractManager);
         registerLocker("DelegationController");
         registerLocker("Punisher");

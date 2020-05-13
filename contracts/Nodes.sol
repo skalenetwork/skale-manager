@@ -17,7 +17,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.5.16;
+pragma solidity 0.6.6;
 
 import "./Permissions.sol";
 import "./interfaces/IConstants.sol";
@@ -118,7 +118,7 @@ contract Nodes is Permissions {
      * @param publicIP - Node public ip
      * @param port - Node public port
      * @param publicKey - Ethereum public key
-     * @return index of Node
+     * @return nodeIndex Index of Node
      */
     function addNode(
         address from,
@@ -329,8 +329,7 @@ contract Nodes is Permissions {
     /**
      * @dev getActiveNodesByAddress - get array of indexes of Active Nodes, which were
      * created by msg.sender
-     * @return activeNodesbyAddress - array of indexes of Active Nodes, which were created
-     * by msg.sender
+     * @return activeNodesByAddress Array of indexes of Active Nodes, which were created by msg.sender
      */
     function getActiveNodesByAddress() external view returns (uint[] memory activeNodesByAddress) {
         activeNodesByAddress = new uint[](nodeIndexes[msg.sender].numberOfNodes);
@@ -491,9 +490,9 @@ contract Nodes is Permissions {
             uint shiftedIndex = spaceToNodes[space][spaceToNodes[space].length - 1];
             spaceToNodes[space][indexInArray] = shiftedIndex;
             spaceOfNodes[shiftedIndex].indexInSpaceMap = indexInArray;
-            spaceToNodes[space].length--;
+            spaceToNodes[space].pop();
         } else {
-            spaceToNodes[space].length--;
+            spaceToNodes[space].pop();
         }
         delete spaceOfNodes[nodeIndex].freeSpace;
         delete spaceOfNodes[nodeIndex].indexInSpaceMap;
@@ -563,7 +562,7 @@ contract Nodes is Permissions {
      * @dev constructor in Permissions approach
      * @param _contractsAddress needed in Permissions constructor
     */
-    function initialize(address _contractsAddress) public initializer {
+    function initialize(address _contractsAddress) public override initializer {
         Permissions.initialize(_contractsAddress);
 
         numberOfActiveNodes = 0;
@@ -578,9 +577,9 @@ contract Nodes is Permissions {
             uint shiftedIndex = spaceToNodes[previousSpace][spaceToNodes[previousSpace].length - 1];
             spaceToNodes[previousSpace][indexInArray] = shiftedIndex;
             spaceOfNodes[shiftedIndex].indexInSpaceMap = indexInArray;
-            spaceToNodes[previousSpace].length--;
+            spaceToNodes[previousSpace].pop();
         } else {
-            spaceToNodes[previousSpace].length--;
+            spaceToNodes[previousSpace].pop();
         }
         spaceToNodes[newSpace].push(nodeIndex);
         spaceOfNodes[nodeIndex].freeSpace = newSpace;

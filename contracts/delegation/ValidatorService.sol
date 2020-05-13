@@ -17,7 +17,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.5.16;
+pragma solidity 0.6.6;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
@@ -42,6 +42,7 @@ contract ValidatorService is Permissions {
         uint registrationTime;
         uint minimumDelegationAmount;
         uint[] nodeIndexes;
+        bool acceptNewRequests;
     }
 
     event ValidatorRegistered(
@@ -81,6 +82,8 @@ contract ValidatorService is Permissions {
     mapping (uint => address[]) private _nodeAddresses;
     uint public numberOfValidators;
 
+    bool public useWhitelist;
+
     modifier checkValidatorExists(uint validatorId) {
         require(validatorExists(validatorId), "Validator with such ID does not exist");
         _;
@@ -107,7 +110,8 @@ contract ValidatorService is Permissions {
             feeRate,
             now,
             minimumDelegationAmount,
-            emptyArray
+            emptyArray,
+            true
         );
         setValidatorAddress(validatorId, msg.sender);
 
@@ -115,13 +119,19 @@ contract ValidatorService is Permissions {
     }
 
     function enableValidator(uint validatorId) external checkValidatorExists(validatorId) onlyOwner {
+        require(!trustedValidators[validatorId], "Validator is already enabled");
         trustedValidators[validatorId] = true;
         emit ValidatorWasEnabled(validatorId);
     }
 
     function disableValidator(uint validatorId) external checkValidatorExists(validatorId) onlyOwner {
+        require(trustedValidators[validatorId], "Validator is already disabled");
         trustedValidators[validatorId] = false;
         emit ValidatorWasDisabled(validatorId);
+    }
+
+    function disableWhitelist() external onlyOwner {
+        useWhitelist = false;
     }
 
     function getTrustedValidators() external view returns (uint[] memory) {
@@ -156,7 +166,7 @@ contract ValidatorService is Permissions {
             getValidator(validatorId).requestedAddress == msg.sender,
             "The validator address cannot be changed because it is not the actual owner"
         );
-        validators[validatorId].requestedAddress = address(0);
+        delete validators[validatorId].requestedAddress;
         setValidatorAddress(validatorId, msg.sender);
 
         emit ValidatorAddressChanged(validatorId, validators[validatorId].validatorAddress);
@@ -264,8 +274,21 @@ contract ValidatorService is Permissions {
         validators[validatorId].description = newDescription;
     }
 
-    function initialize(address _contractManager) public initializer {
+    function startAcceptingNewRequests() external {
+        uint validatorId = getValidatorId(msg.sender);
+        require(!isAcceptingNewRequests(validatorId), "Accepting request is already enabled");
+        validators[validatorId].acceptNewRequests = true;
+    }
+
+    function stopAcceptingNewRequests() external {
+        uint validatorId = getValidatorId(msg.sender);
+        require(isAcceptingNewRequests(validatorId), "Accepting request is already disabled");
+        validators[validatorId].acceptNewRequests = false;
+    }
+
+    function initialize(address _contractManager) public override initializer {
         Permissions.initialize(_contractManager);
+        useWhitelist = true;
     }
 
     function getValidatorIdByNodeAddress(address nodeAddress) public view returns (uint validatorId) {
@@ -296,6 +319,10 @@ contract ValidatorService is Permissions {
     function getValidatorId(address validatorAddress) public view returns (uint) {
         checkIfValidatorAddressExists(validatorAddress);
         return _validatorAddressToId[validatorAddress];
+    }
+
+    function isAcceptingNewRequests(uint validatorId) public view checkValidatorExists(validatorId) returns (bool) {
+        return validators[validatorId].acceptNewRequests;
     }
 
     // private
@@ -340,7 +367,7 @@ contract ValidatorService is Permissions {
                     _nodeAddresses[validatorId][i] = _nodeAddresses[validatorId][_nodeAddresses[validatorId].length.sub(1)];
                 }
                 delete _nodeAddresses[validatorId][_nodeAddresses[validatorId].length.sub(1)];
-                --_nodeAddresses[validatorId].length;
+                _nodeAddresses[validatorId].pop();
                 break;
             }
         }

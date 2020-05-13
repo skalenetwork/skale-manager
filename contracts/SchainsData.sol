@@ -17,7 +17,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.5.16;
+pragma solidity 0.6.6;
 pragma experimental ABIEncoderV2;
 
 import "./GroupsData.sol";
@@ -141,7 +141,7 @@ contract SchainsData is GroupsData {
                 holesForNodes[nodeIndex][0] = min;
                 holesForNodes[nodeIndex][index] = holesForNodes[nodeIndex][holesForNodes[nodeIndex].length - 1];
                 delete holesForNodes[nodeIndex][holesForNodes[nodeIndex].length - 1];
-                holesForNodes[nodeIndex].length--;
+                holesForNodes[nodeIndex].pop();
             }
         }
     }
@@ -186,7 +186,7 @@ contract SchainsData is GroupsData {
             schainIndexes[from][index] = lastSchainId;
         }
         delete schainIndexes[from][length - 1];
-        schainIndexes[from].length--;
+        schainIndexes[from].pop();
 
         // TODO:
         // optimize
@@ -197,7 +197,7 @@ contract SchainsData is GroupsData {
             }
         }
         delete schainsAtSystem[schainsAtSystem.length - 1];
-        schainsAtSystem.length--;
+        schainsAtSystem.pop();
 
         delete schains[schainId];
         numberOfSchains--;
@@ -213,7 +213,7 @@ contract SchainsData is GroupsData {
         uint length = schainsForNodes[nodeIndex].length;
         if (schainIndex == length - 1) {
             delete schainsForNodes[nodeIndex][length - 1];
-            schainsForNodes[nodeIndex].length--;
+            schainsForNodes[nodeIndex].pop();
         } else {
             schainsForNodes[nodeIndex][schainIndex] = bytes32(0);
             if (holesForNodes[nodeIndex].length > 0 && holesForNodes[nodeIndex][0] > schainIndex) {
@@ -388,7 +388,7 @@ contract SchainsData is GroupsData {
         }
     }
 
-    function initialize(address newContractsAddress) public initializer {
+    function initialize(address newContractsAddress) public override initializer {
         GroupsData.initialize("SchainsFunctionalityInternal", newContractsAddress);
 
         numberOfSchains = 0;

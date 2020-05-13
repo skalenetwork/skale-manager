@@ -17,7 +17,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.5.16;
+pragma solidity 0.6.6;
 
 import "./Permissions.sol";
 import "./interfaces/ISkaleDKG.sol";
@@ -43,7 +43,7 @@ interface ISkaleVerifierG {
  * @title GroupsFunctionality - contract with some Groups functionality, will be inherited by
  * MonitorsFunctionality and SchainsFunctionality
  */
-contract Groups is Permissions {
+abstract contract Groups is Permissions {
 
     // informs that Group is added
     event GroupAdded(
@@ -114,7 +114,7 @@ contract Groups is Permissions {
      * @param groupIndex - Groups identifier
      * @param nodeIndex - index of Node which would be notes like exception
      */
-    function setException(bytes32 groupIndex, uint nodeIndex) external allow(executorName) {
+    function setException(bytes32 groupIndex, uint nodeIndex) public allow("SkaleManager") {
         exceptions[groupIndex].check[nodeIndex] = true;
     }
 
@@ -151,7 +151,7 @@ contract Groups is Permissions {
      * @param groupIndex - Groups identifier
      * @param nodeIndex - index of Node which would be added to the Group
      */
-    function setNodeInGroup(bytes32 groupIndex, uint nodeIndex) external allow(executorName) {
+    function setNodeInGroup(bytes32 groupIndex, uint nodeIndex) public allow("SkaleManager") {
         groups[groupIndex].nodesInGroup.push(nodeIndex);
     }
 
@@ -167,7 +167,7 @@ contract Groups is Permissions {
             groups[groupIndex].nodesInGroup[indexOfNode] = groups[groupIndex].nodesInGroup[size - 1];
         }
         delete groups[groupIndex].nodesInGroup[size - 1];
-        groups[groupIndex].nodesInGroup.length--;
+        groups[groupIndex].nodesInGroup.pop();
     }
 
     /**
@@ -227,7 +227,7 @@ contract Groups is Permissions {
      * @param newRecommendedNumberOfNodes - recommended number of Nodes
      * @param data - some extra data
      */
-    function createGroup(bytes32 groupIndex, uint newRecommendedNumberOfNodes, bytes32 data) external allow(executorName) {
+    function createGroup(bytes32 groupIndex, uint newRecommendedNumberOfNodes, bytes32 data) public allow("SkaleManager") {
         groups[groupIndex].active = true;
         groups[groupIndex].recommendedNumberOfNodes = newRecommendedNumberOfNodes;
         groups[groupIndex].groupData = data;
@@ -262,7 +262,9 @@ contract Groups is Permissions {
             ISkaleDKG(skaleDKGAddress).deleteChannel(groupIndex);
         }
         delete groups[groupIndex].nodesInGroup;
-        groups[groupIndex].nodesInGroup.length = 0;
+        while (groups[groupIndex].nodesInGroup.length > 0) {
+            groups[groupIndex].nodesInGroup.pop();
+        }
         emit GroupDeleted(groupIndex, uint32(block.timestamp), gasleft());
     }
 
@@ -273,7 +275,7 @@ contract Groups is Permissions {
      * @param newRecommendedNumberOfNodes - recommended number of Nodes
      * @param data - some extra data
      */
-    function upgradeGroup(bytes32 groupIndex, uint newRecommendedNumberOfNodes, bytes32 data) external allow(executorName) {
+    function upgradeGroup(bytes32 groupIndex, uint newRecommendedNumberOfNodes, bytes32 data) public allow("SkaleManager") {
         require(groups[groupIndex].active, "Group is not active");
 
         groups[groupIndex].recommendedNumberOfNodes = newRecommendedNumberOfNodes;
@@ -282,7 +284,9 @@ contract Groups is Permissions {
         previousPublicKeys[groupIndex].push(previousKey);
         delete groups[groupIndex].groupsPublicKey;
         delete groups[groupIndex].nodesInGroup;
-        groups[groupIndex].nodesInGroup.length = 0;
+        while (groups[groupIndex].nodesInGroup.length > 0) {
+            groups[groupIndex].nodesInGroup.pop();
+        }
         address skaleDKGAddress = contractManager.getContract("SkaleDKG");
         if (ISkaleDKG(skaleDKGAddress).isChannelOpened(groupIndex)) {
             ISkaleDKG(skaleDKGAddress).deleteChannel(groupIndex);
@@ -399,8 +403,9 @@ contract Groups is Permissions {
      * @param nodeIndex - global index of Node
      * @return local index of Node in Schain
      */
-    function findNode(bytes32 groupIndex, uint nodeIndex) internal view returns (uint index) {
+    function findNode(bytes32 groupIndex, uint nodeIndex) internal view returns (uint) {
         uint[] memory nodesInGroup = groups[groupIndex].nodesInGroup;
+        uint index;
         for (index = 0; index < nodesInGroup.length; index++) {
             if (nodesInGroup[index] == nodeIndex) {
                 return index;
@@ -415,7 +420,7 @@ contract Groups is Permissions {
      * @param groupIndex - Groups identifier
      * return array of indexes of Nodes in Group
      */
-    function generateGroup(bytes32 groupIndex) internal returns (uint[] memory);
+    function generateGroup(bytes32 groupIndex) internal virtual returns (uint[] memory);
 
     function isPublicKeyZero(bytes32 groupIndex) internal view returns (bool) {
         return groups[groupIndex].groupsPublicKey[0] == 0 &&

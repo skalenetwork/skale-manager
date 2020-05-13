@@ -37,7 +37,7 @@ contract("DelegationController", ([owner, holder, validator]) => {
         await validatorService.registerValidator("Validator", "D2 is even", 150, 0, {from: validator});
         validatorId = 1;
         await validatorService.enableValidator(validatorId, {from: owner});
-        await skaleToken.mint(owner, holder, 1000, "0x", "0x");
+        await skaleToken.mint(holder, 1000, "0x", "0x");
     });
 
     it("should not lock tokens by default", async () => {
