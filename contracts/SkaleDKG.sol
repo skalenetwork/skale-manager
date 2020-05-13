@@ -126,6 +126,7 @@ contract SkaleDKG is Permissions {
         channels[groupIndex].broadcasted = new bool[](groupsData.getRecommendedNumberOfNodes(groupIndex));
         channels[groupIndex].completed = new bool[](groupsData.getRecommendedNumberOfNodes(groupIndex));
         channels[groupIndex].publicKeyy.x = 1;
+        channels[groupIndex].fromNodeToComplaint = uint(-1);
         channels[groupIndex].nodeToComplaint = uint(-1);
         channels[groupIndex].startedBlockTimestamp = block.timestamp;
 
@@ -151,7 +152,7 @@ contract SkaleDKG is Permissions {
         delete channels[groupIndex].publicKeyx.y;
         channels[groupIndex].publicKeyy.x = 1;
         delete channels[groupIndex].publicKeyy.y;
-        delete channels[groupIndex].fromNodeToComplaint;
+        channels[groupIndex].fromNodeToComplaint = uint(-1);
         channels[groupIndex].nodeToComplaint = uint(-1);
         delete channels[groupIndex].numberOfBroadcasted;
         delete channels[groupIndex].numberOfCompleted;
@@ -274,7 +275,8 @@ contract SkaleDKG is Permissions {
                 channels[groupIndex].publicKeyy.x,
                 channels[groupIndex].publicKeyy.y
             );
-            delete channels[groupIndex];
+            // delete channels[groupIndex];
+            channels[groupIndex].active = false;
             emit SuccessfulDKG(groupIndex);
         }
     }
@@ -358,20 +360,20 @@ contract SkaleDKG is Permissions {
         emit FailedDKG(groupIndex);
 
         address dataAddress = channels[groupIndex].dataAddress;
+        this.reopenChannel(groupIndex);
         if (schainsFunctionalityInternal.isAnyFreeNode(groupIndex)) {
             uint newNode = schainsFunctionality.rotateNode(
                 badNode,
                 groupIndex
             );
             emit NewGuy(newNode);
-            this.reopenChannel(groupIndex);
         } else {
             schainsFunctionalityInternal.removeNodeFromSchain(
                 badNode,
                 groupIndex
             );
             IGroupsData(dataAddress).setGroupFailedDKG(groupIndex);
-            delete channels[groupIndex];
+            channels[groupIndex].active = false;
         }
 
         Punisher punisher = Punisher(contractManager.getContract("Punisher"));
