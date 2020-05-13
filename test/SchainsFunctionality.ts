@@ -53,7 +53,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
             await schainsFunctionality.addSchain(
                 holder,
                 5,
-                "0x10" + "0000000000000000000000000000000000000000000000000000000000000005" + "01" + "0000" + "d2",
+                web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 1, 0, "d2"]),
                 {from: owner})
                 .should.be.eventually.rejectedWith("Not enough money to create Schain");
         });
@@ -62,7 +62,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
             await schainsFunctionality.addSchain(
                 holder,
                 5,
-                "0x10" + "0000000000000000000000000000000000000000000000000000000000000005" + "06" + "0000" + "d2",
+                web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 6, 0, "d2"]),
                 {from: owner})
                 .should.be.eventually.rejectedWith("Invalid type of Schain");
         });
@@ -71,9 +71,9 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
             await schainsFunctionality.addSchain(
                 holder,
                 5,
-                "0x10" + "0000000000000000000000000000000000000000000000000000000000000005" + "06" + "0000",
+                web3.eth.abi.encodeParameters(["uint", "uint8", "uint16"], [5, 6, 0]),
                 {from: owner}).
-                should.be.eventually.rejectedWith("Incorrect bytes data config");
+                should.be.eventually.rejected;
         });
 
         it("should fail when nodes count is too low", async () => {
@@ -81,7 +81,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
             await schainsFunctionality.addSchain(
                 holder,
                 price.toString(),
-                "0x10" + "0000000000000000000000000000000000000000000000000000000000000005" + "01" + "0000" + "d2",
+                web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 1, 0, "d2"]),
                 {from: owner})
                 .should.be.eventually.rejectedWith("Not enough nodes to create Schain");
         });
@@ -92,14 +92,15 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                 for (const index of Array.from(Array(nodesCount).keys())) {
                     const hexIndex = ("0" + index.toString(16)).slice(-2);
                     await nodes.createNode(validator,
-                        "0x00" +
-                        "2161" +
-                        "0000" +
-                        "7f0000" + hexIndex +
-                        "7f0000" + hexIndex +
-                        "1122334455667788990011223344556677889900112233445566778899001122" +
-                        "1122334455667788990011223344556677889900112233445566778899001122" +
-                        "d2" + hexIndex);
+                        {
+                            port: 8545,
+                            nonce: 0,
+                            ip: "0x7f0000" + hexIndex,
+                            publicIp: "0x7f0000" + hexIndex,
+                            publicKey: "0x1122334455667788990011223344556677889900112233445566778899001122" +
+                                         "1122334455667788990011223344556677889900112233445566778899001122",
+                            name: "D2-" + hexIndex
+                        });
                 }
 
                 const deposit = await schainsFunctionality.getSchainPrice(4, 5);
@@ -107,21 +108,13 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                 await schainsFunctionality.addSchain(
                     owner,
                     deposit,
-                    "0x10" +
-                    "0000000000000000000000000000000000000000000000000000000000000005" +
-                    "04" +
-                    "0000" +
-                    "6432",
+                    web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, "d2"]),
                     {from: owner});
 
                 await schainsFunctionality.addSchain(
                     owner,
                     deposit,
-                    "0x10" +
-                    "0000000000000000000000000000000000000000000000000000000000000005" +
-                    "04" +
-                    "0000" +
-                    "6433",
+                    web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, "d3"]),
                     {from: owner});
 
                 await schainsFunctionality.deleteSchain(
@@ -140,24 +133,21 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                 for (const index of Array.from(Array(nodesCount).keys())) {
                     const hexIndex = ("1" + index.toString(16)).slice(-2);
                     await nodes.createNode(validator,
-                        "0x00" +
-                        "2161" +
-                        "0000" +
-                        "7f0000" + hexIndex +
-                        "7f0000" + hexIndex +
-                        "1122334455667788990011223344556677889900112233445566778899001122" +
-                        "1122334455667788990011223344556677889900112233445566778899001122" +
-                        "d2" + hexIndex);
+                        {
+                            port: 8545,
+                            nonce: 0,
+                            ip: "0x7f0000" + hexIndex,
+                            publicIp: "0x7f0000" + hexIndex,
+                            publicKey: "0x1122334455667788990011223344556677889900112233445566778899001122" +
+                                         "1122334455667788990011223344556677889900112233445566778899001122",
+                            name: "D2-" + hexIndex
+                        });
                 }
 
                 await schainsFunctionality.addSchain(
                     holder,
                     deposit,
-                    "0x10" +
-                    "0000000000000000000000000000000000000000000000000000000000000005" +
-                    "04" +
-                    "0000" +
-                    "6434",
+                    web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, "d4"]),
                     {from: owner});
             });
         });
@@ -168,14 +158,15 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                 for (const index of Array.from(Array(nodesCount).keys())) {
                     const hexIndex = ("0" + index.toString(16)).slice(-2);
                     await nodes.createNode(validator,
-                        "0x00" +
-                        "2161" +
-                        "0000" +
-                        "7f0000" + hexIndex +
-                        "7f0000" + hexIndex +
-                        "1122334455667788990011223344556677889900112233445566778899001122" +
-                        "1122334455667788990011223344556677889900112233445566778899001122" +
-                        "d2" + hexIndex);
+                        {
+                            port: 8545,
+                            nonce: 0,
+                            ip: "0x7f0000" + hexIndex,
+                            publicIp: "0x7f0000" + hexIndex,
+                            publicKey: "0x1122334455667788990011223344556677889900112233445566778899001122" +
+                                         "1122334455667788990011223344556677889900112233445566778899001122",
+                            name: "D2-" + hexIndex
+                        });
                 }
             });
 
@@ -185,11 +176,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                 await schainsFunctionality.addSchain(
                     holder,
                     deposit,
-                    "0x10" +
-                    "0000000000000000000000000000000000000000000000000000000000000005" +
-                    "05" +
-                    "0000" +
-                    "6432",
+                    web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d2"]),
                     {from: owner});
 
                 const schains = await schainsData.getSchains();
@@ -207,11 +194,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                 await schainsFunctionality.addSchain(
                     holder,
                     deposit,
-                    "0x10" +
-                    "0000000000000000000000000000000000000000000000000000000000000005" +
-                    "05" +
-                    "0000" +
-                    "6432",
+                    web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d2"]),
                     {from: owner}).should.be.eventually.rejectedWith("Not enough nodes to create Schain");
             });
 
@@ -223,14 +206,15 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                 data = await nodes.getNodesWithFreeSpace(32);
 
                 await nodes.createNode(validator,
-                        "0x00" +
-                        "2161" +
-                        "0000" +
-                        "7f000028" +
-                        "7f000028" +
-                        "1122334455667788990011223344556677889900112233445566778899001122" +
-                        "1122334455667788990011223344556677889900112233445566778899001122" +
-                        "d228");
+                    {
+                        port: 8545,
+                        nonce: 0,
+                        ip: "0x7f000028",
+                        publicIp: "0x7f000028",
+                        publicKey: "0x1122334455667788990011223344556677889900112233445566778899001122" +
+                                     "1122334455667788990011223344556677889900112233445566778899001122",
+                        name: "D2-28"
+                    });
 
                 const deposit = await schainsFunctionality.getSchainPrice(5, 5);
 
@@ -239,11 +223,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                 await schainsFunctionality.addSchain(
                     holder,
                     deposit,
-                    "0x10" +
-                    "0000000000000000000000000000000000000000000000000000000000000005" +
-                    "05" +
-                    "0000" +
-                    "6432",
+                    web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d2"]),
                     {from: owner});
 
                 let nodesInGroup = await schainsData.getNodesInGroup(web3.utils.soliditySha3("d2"));
@@ -257,11 +237,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                 await schainsFunctionality.addSchain(
                     holder,
                     deposit,
-                    "0x10" +
-                    "0000000000000000000000000000000000000000000000000000000000000005" +
-                    "05" +
-                    "0000" +
-                    "6433",
+                    web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d3"]),
                     {from: owner});
 
                 nodesInGroup = await schainsData.getNodesInGroup(web3.utils.soliditySha3("d3"));
@@ -275,11 +251,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                 await schainsFunctionality.addSchain(
                     holder,
                     deposit,
-                    "0x10" +
-                    "0000000000000000000000000000000000000000000000000000000000000005" +
-                    "05" +
-                    "0000" +
-                    "6434",
+                    web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d4"]),
                     {from: owner});
 
                 nodesInGroup = await schainsData.getNodesInGroup(web3.utils.soliditySha3("d4"));
@@ -293,11 +265,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                 await schainsFunctionality.addSchain(
                     holder,
                     deposit,
-                    "0x10" +
-                    "0000000000000000000000000000000000000000000000000000000000000005" +
-                    "05" +
-                    "0000" +
-                    "6435",
+                    web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d5"]),
                     {from: owner});
 
                 nodesInGroup = await schainsData.getNodesInGroup(web3.utils.soliditySha3("d5"));
@@ -313,11 +281,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                 await schainsFunctionality.addSchain(
                     holder,
                     deposit,
-                    "0x10" +
-                    "0000000000000000000000000000000000000000000000000000000000000005" +
-                    "05" +
-                    "0000" +
-                    "6432",
+                    web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d2"]),
                     {from: owner});
 
                 const schains = await schainsData.getSchains();
@@ -341,14 +305,15 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                 for (const index of Array.from(Array(nodesCount).keys())) {
                     const hexIndex = ("0" + index.toString(16)).slice(-2);
                     await nodes.createNode(validator,
-                        "0x00" +
-                        "2161" +
-                        "0000" +
-                        "7f0000" + hexIndex +
-                        "7f0000" + hexIndex +
-                        "1122334455667788990011223344556677889900112233445566778899001122" +
-                        "1122334455667788990011223344556677889900112233445566778899001122" +
-                        "d2" + hexIndex);
+                        {
+                            port: 8545,
+                            nonce: 0,
+                            ip: "0x7f0000" + hexIndex,
+                            publicIp: "0x7f0000" + hexIndex,
+                            publicKey: "0x1122334455667788990011223344556677889900112233445566778899001122" +
+                                         "1122334455667788990011223344556677889900112233445566778899001122",
+                            name: "D2-" + hexIndex
+                        });
                 }
             });
 
@@ -358,11 +323,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                 await schainsFunctionality.addSchain(
                     holder,
                     deposit,
-                    "0x10" +
-                    "0000000000000000000000000000000000000000000000000000000000000005" +
-                    "03" +
-                    "0000" +
-                    "6432",
+                    web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 3, 0, "d2"]),
                     {from: owner});
 
                 const schains = await schainsData.getSchains();
@@ -375,21 +336,13 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                 await schainsFunctionality.addSchain(
                     holder,
                     deposit,
-                    "0x10" +
-                    "0000000000000000000000000000000000000000000000000000000000000005" +
-                    "03" +
-                    "0000" +
-                    "6432",
+                    web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 3, 0, "d2"]),
                     {from: owner});
 
                 await schainsFunctionality.addSchain(
                     holder,
                     deposit,
-                    "0x10" +
-                    "0000000000000000000000000000000000000000000000000000000000000005" +
-                    "03" +
-                    "0000" +
-                    "6433",
+                    web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 3, 0, "d3"]),
                     {from: owner},
                 ).should.be.eventually.rejectedWith("Not enough nodes to create Schain");
             });
@@ -402,14 +355,15 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                 for (const index of Array.from(Array(nodesCount).keys())) {
                     const hexIndex = ("0" + index.toString(16)).slice(-2);
                     await nodes.createNode(validator,
-                        "0x00" +
-                        "2161" +
-                        "0000" +
-                        "7f0000" + hexIndex +
-                        "7f0000" + hexIndex +
-                        "1122334455667788990011223344556677889900112233445566778899001122" +
-                        "1122334455667788990011223344556677889900112233445566778899001122" +
-                        "d2" + hexIndex);
+                        {
+                            port: 8545,
+                            nonce: 0,
+                            ip: "0x7f0000" + hexIndex,
+                            publicIp: "0x7f0000" + hexIndex,
+                            publicKey: "0x1122334455667788990011223344556677889900112233445566778899001122" +
+                                         "1122334455667788990011223344556677889900112233445566778899001122",
+                            name: "D2-" + hexIndex
+                        });
                 }
             });
 
@@ -419,11 +373,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                 await schainsFunctionality.addSchain(
                     holder,
                     deposit,
-                    "0x10" +
-                    "0000000000000000000000000000000000000000000000000000000000000005" +
-                    "01" +
-                    "0000" +
-                    "6432",
+                    web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 1, 0, "d2"]),
                     {from: owner});
 
                 const schains = await schainsData.getSchains();
@@ -462,11 +412,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                     await schainsFunctionality.addSchain(
                         holder,
                         deposit,
-                        "0x10" +
-                        "0000000000000000000000000000000000000000000000000000000000000005" +
-                        "01" +
-                        "0000" +
-                        "4432",
+                        web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 1, 0, "D2"]),
                         {from: owner});
                 });
 
@@ -475,11 +421,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                     await schainsFunctionality.addSchain(
                         holder,
                         deposit,
-                        "0x10" +
-                        "0000000000000000000000000000000000000000000000000000000000000005" +
-                        "01" +
-                        "0000" +
-                        "4432",
+                        web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 1, 0, "D2"]),
                         {from: owner})
                         .should.be.eventually.rejectedWith("Schain name is not available");
                 });
@@ -509,11 +451,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                     await schainsFunctionality.addSchain(
                         holder,
                         deposit,
-                        "0x10" +
-                        "0000000000000000000000000000000000000000000000000000000000000005" +
-                        "04" +
-                        "0000" +
-                        "4432",
+                        web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, "D2"]),
                         {from: owner});
                 });
 
@@ -522,11 +460,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                     await schainsFunctionality.addSchain(
                         holder,
                         deposit,
-                        "0x10" +
-                        "0000000000000000000000000000000000000000000000000000000000000005" +
-                        "04" +
-                        "0000" +
-                        "4432",
+                        web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, "D2"]),
                         {from: owner})
                         .should.be.eventually.rejectedWith("Schain name is not available");
                 });
@@ -606,23 +540,20 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
             for (const index of Array.from(Array(nodesCount).keys())) {
                 const hexIndex = ("0" + index.toString(16)).slice(-2);
                 await nodes.createNode(validator,
-                    "0x00" +
-                    "2161" +
-                    "0000" +
-                    "7f0000" + hexIndex +
-                    "7f0000" + hexIndex +
-                    "1122334455667788990011223344556677889900112233445566778899001122" +
-                    "1122334455667788990011223344556677889900112233445566778899001122" +
-                    "d2" + hexIndex);
+                    {
+                        port: 8545,
+                        nonce: 0,
+                        ip: "0x7f0000" + hexIndex,
+                        publicIp: "0x7f0000" + hexIndex,
+                        publicKey: "0x1122334455667788990011223344556677889900112233445566778899001122" +
+                                     "1122334455667788990011223344556677889900112233445566778899001122",
+                        name: "D2-" + hexIndex
+                    });
             }
             await schainsFunctionality.addSchain(
                 holder,
                 deposit,
-                "0x10" +
-                "0000000000000000000000000000000000000000000000000000000000000005" +
-                "05" +
-                "0000" +
-                "6432",
+                web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d2"]),
                 {from: owner});
             await schainsData.setPublicKey(
                 web3.utils.soliditySha3("d2"),
@@ -635,11 +566,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
             await schainsFunctionality.addSchain(
                 holder,
                 deposit,
-                "0x10" +
-                "0000000000000000000000000000000000000000000000000000000000000005" +
-                "05" +
-                "0000" +
-                "6433",
+                web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d3"]),
                 {from: owner});
             await schainsData.setPublicKey(
                 web3.utils.soliditySha3("d3"),
@@ -650,23 +577,25 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
             );
             await skaleDKG.deleteChannel(web3.utils.soliditySha3("d3"));
             await nodes.createNode(validator,
-                "0x00" +
-                "2161" +
-                "0000" +
-                "7f000010" +
-                "7f000010" +
-                "1122334455667788990011223344556677889900112233445566778899001122" +
-                "1122334455667788990011223344556677889900112233445566778899001122" +
-                "d210");
+                {
+                    port: 8545,
+                    nonce: 0,
+                    ip: "0x7f000010",
+                    publicIp: "0x7f000010",
+                    publicKey: "0x1122334455667788990011223344556677889900112233445566778899001122" +
+                                 "1122334455667788990011223344556677889900112233445566778899001122",
+                    name: "D2-10"
+                });
             await nodes.createNode(validator,
-                "0x00" +
-                "2161" +
-                "0000" +
-                "7f000011" +
-                "7f000011" +
-                "1122334455667788990011223344556677889900112233445566778899001122" +
-                "1122334455667788990011223344556677889900112233445566778899001122" +
-                "d211");
+                {
+                    port: 8545,
+                    nonce: 0,
+                    ip: "0x7f000011",
+                    publicIp: "0x7f000011",
+                    publicKey: "0x1122334455667788990011223344556677889900112233445566778899001122" +
+                                 "1122334455667788990011223344556677889900112233445566778899001122",
+                    name: "D2-11"
+                });
 
         });
 
@@ -791,11 +720,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
             await schainsFunctionality.addSchain(
                 holder,
                 deposit,
-                "0x10" +
-                "0000000000000000000000000000000000000000000000000000000000000005" +
-                "05" +
-                "0000" +
-                "6432",
+                web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d2"]),
                 {from: owner});
             await schainsData.setPublicKey(
                 web3.utils.soliditySha3("d2"),

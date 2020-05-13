@@ -21,6 +21,7 @@ pragma solidity 0.6.6;
 
 import "./Permissions.sol";
 import "./interfaces/IGroupsData.sol";
+import "./utils/Precompiled.sol";
 
 
 contract SkaleVerifier is Permissions {
@@ -123,26 +124,19 @@ contract SkaleVerifier is Permissions {
         require(_isG2(Fp2({x: _G2A, y: _G2B}), Fp2({x: _G2C, y: _G2D})), "G2.one not in G2");
         require(_isG2(Fp2({x: pkA, y: pkB}), Fp2({x: pkC, y: pkD})), "Public Key not in G2");
 
-        bool success;
-        uint[12] memory inputToPairing;
-        inputToPairing[0] = signA;
-        inputToPairing[1] = newSignB;
-        inputToPairing[2] = _G2B;
-        inputToPairing[3] = _G2A;
-        inputToPairing[4] = _G2D;
-        inputToPairing[5] = _G2C;
-        inputToPairing[6] = hashA;
-        inputToPairing[7] = hashB;
-        inputToPairing[8] = pkB;
-        inputToPairing[9] = pkA;
-        inputToPairing[10] = pkD;
-        inputToPairing[11] = pkC;
-        uint[1] memory out;
-        assembly {
-            success := staticcall(not(0), 8, inputToPairing, mul(12, 0x20), out, 0x20)
-        }
-        require(success, "Pairing check failed");
-        return out[0] != 0;
+        return Precompiled.bn256Pairing(
+            signA,
+            newSignB,
+            _G2B,
+            _G2A,
+            _G2D,
+            _G2C,
+            hashA,
+            hashB,
+            pkB,
+            pkA,
+            pkD,
+            pkC);
     }
 
     function _checkHashToGroupWithHelper(
@@ -216,7 +210,7 @@ contract SkaleVerifier is Permissions {
         } else {
             t2 = _P.sub(addmod(t2, _P.sub(t0), _P));
         }
-        uint t3 = _bigModExp(t2, _P - 2);
+        uint t3 = Precompiled.bigModExp(t2, _P - 2, _P);
         x.x = mulmod(a.x, t3, _P);
         x.y = _P.sub(mulmod(a.y, t3, _P));
     }
@@ -238,22 +232,5 @@ contract SkaleVerifier is Permissions {
 
     function _isG2Zero(Fp2 memory x, Fp2 memory y) internal pure returns (bool) {
         return x.x == 0 && x.y == 0 && y.x == 1 && y.y == 0;
-    }
-
-    function _bigModExp(uint base, uint power) internal view returns (uint) {
-        uint[6] memory inputToBigModExp;
-        inputToBigModExp[0] = 32;
-        inputToBigModExp[1] = 32;
-        inputToBigModExp[2] = 32;
-        inputToBigModExp[3] = base;
-        inputToBigModExp[4] = power;
-        inputToBigModExp[5] = _P;
-        uint[1] memory out;
-        bool success;
-        assembly {
-            success := staticcall(not(0), 5, inputToBigModExp, mul(6, 0x20), out, 0x20)
-        }
-        require(success, "BigModExp failed");
-        return out[0];
     }
 }

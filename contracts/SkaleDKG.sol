@@ -27,6 +27,7 @@ import "./delegation/Punisher.sol";
 import "./SlashingTable.sol";
 import "./SchainsFunctionality.sol";
 import "./SchainsFunctionalityInternal.sol";
+import "./utils/Precompiled.sol";
 
 interface IECDH {
     function deriveKey(
@@ -563,7 +564,7 @@ contract SkaleDKG is Permissions {
         } else {
             t2 = _P.sub(addmod(t2, _P.sub(t0), _P));
         }
-        uint t3 = _bigModExp(t2, _P - 2);
+        uint t3 = Precompiled.bigModExp(t2, _P - 2, _P);
         x.x = mulmod(a.x, t3, _P);
         x.y = _P.sub(mulmod(a.y, t3, _P));
     }
@@ -694,23 +695,6 @@ contract SkaleDKG is Permissions {
         }
     }
 
-    function _bigModExp(uint base, uint power) internal view returns (uint) {
-        uint[6] memory inputToBigModExp;
-        inputToBigModExp[0] = 32;
-        inputToBigModExp[1] = 32;
-        inputToBigModExp[2] = 32;
-        inputToBigModExp[3] = base;
-        inputToBigModExp[4] = power;
-        inputToBigModExp[5] = _P;
-        uint[1] memory out;
-        bool success;
-        assembly {
-            success := staticcall(not(0), 5, inputToBigModExp, mul(6, 0x20), out, 0x20)
-        }
-        require(success, "BigModExp failed");
-        return out[0];
-    }
-
     function _loop(
         uint index,
         bytes memory verificationVector,
@@ -736,7 +720,7 @@ contract SkaleDKG is Permissions {
         }
         vector[3] = vector1;
         return _mulG2(
-            _bigModExp(index.add(1), loopIndex),
+            Precompiled.bigModExp(index.add(1), loopIndex, _P),
             Fp2({x: uint(vector[1]), y: uint(vector[0])}),
             Fp2({x: uint(vector[3]), y: uint(vector[2])})
         );

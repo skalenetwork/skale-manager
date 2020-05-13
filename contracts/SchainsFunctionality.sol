@@ -40,7 +40,7 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
 
     struct SchainParameters {
         uint lifetime;
-        uint typeOfSchain;
+        uint8 typeOfSchain;
         uint16 nonce;
         string name;
     }
@@ -319,22 +319,10 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
         pure
         returns (SchainParameters memory schainParameters)
     {
-        require(data.length > 36, "Incorrect bytes data config");
-        bytes32 lifetimeInBytes;
-        bytes1 typeOfSchainInBytes;
-        bytes2 nonceInBytes;
-        assembly {
-            lifetimeInBytes := mload(add(data, 33))
-            typeOfSchainInBytes := mload(add(data, 65))
-            nonceInBytes := mload(add(data, 66))
-        }
-        schainParameters.typeOfSchain = uint(uint8(typeOfSchainInBytes));
-        schainParameters.lifetime = uint(lifetimeInBytes);
-        schainParameters.nonce = uint16(nonceInBytes);
-        schainParameters.name = new string(data.length - 36);
-        for (uint i = 0; i < bytes(schainParameters.name).length; ++i) {
-            bytes(schainParameters.name)[i] = data[36 + i];
-        }
+        (schainParameters.lifetime,
+        schainParameters.typeOfSchain,
+        schainParameters.nonce,
+        schainParameters.name) = abi.decode(data, (uint, uint8, uint16, string));
     }
 
     /**

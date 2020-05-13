@@ -66,22 +66,35 @@ contract SkaleManager is IERC777Recipient, Permissions {
     {
         require(to == address(this), "Receiver is incorrect");
         if (userData.length > 0) {
-            TransactionOperation operationType = _fallbackOperationTypeConvert(userData);
-            if (operationType == TransactionOperation.CreateSchain) {
-                address schainsFunctionalityAddress = _contractManager.getContract("SchainsFunctionality");
-                ISchainsFunctionality(schainsFunctionalityAddress).addSchain(from, value, userData);
-            }
+            SchainsFunctionality schainsFunctionality = SchainsFunctionality(
+                _contractManager.getContract("SchainsFunctionality"));
+            schainsFunctionality.addSchain(from, value, userData);
         }
     }
 
-    function createNode(bytes calldata data) external {
+    function createNode(
+        uint16 port,
+        uint16 nonce,
+        bytes4 ip,
+        bytes4 publicIp,
+        bytes calldata publicKey,
+        string calldata name)
+        external
+    {
         Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
         ValidatorService validatorService = ValidatorService(_contractManager.getContract("ValidatorService"));
         MonitorsFunctionality monitorsFunctionality = MonitorsFunctionality(
             _contractManager.getContract("MonitorsFunctionality"));
 
         validatorService.checkPossibilityCreatingNode(msg.sender);
-        uint nodeIndex = nodes.createNode(msg.sender, data);
+        Nodes.NodeCreationParams memory params = Nodes.NodeCreationParams({
+            name: name,
+            ip: ip,
+            publicIp: publicIp,
+            port: port,
+            publicKey: publicKey,
+            nonce: nonce});
+        uint nodeIndex = nodes.createNode(msg.sender, params);
         validatorService.pushNode(msg.sender, nodeIndex);
         monitorsFunctionality.addMonitor(nodeIndex);
     }
@@ -261,21 +274,4 @@ contract SkaleManager is IERC777Recipient, Permissions {
         // solhint-disable-next-line check-send-result
         skaleToken.send(address(distributor), bounty, abi.encode(validatorId));
     }
-
-    function _fallbackOperationTypeConvert(bytes memory data) internal pure returns (TransactionOperation) {
-        bytes1 operationType;
-        assembly {
-            operationType := mload(add(data, 0x20))
-        }
-        bool isIdentified = operationType == bytes1(uint8(1)) ||
-            operationType == bytes1(uint8(16)) ||
-            operationType == bytes1(uint8(2));
-        require(isIdentified, "Operation type is not identified");
-        if (operationType == bytes1(uint8(1))) {
-            return TransactionOperation.CreateNode;
-        } else if (operationType == bytes1(uint8(16))) {
-            return TransactionOperation.CreateSchain;
-        }
-    }
-
 }

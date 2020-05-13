@@ -18,6 +18,7 @@
 */
 
 pragma solidity 0.6.6;
+pragma experimental ABIEncoderV2;
 
 import "./Permissions.sol";
 import "./interfaces/IConstants.sol";
@@ -40,9 +41,6 @@ contract Nodes is Permissions {
         bytes publicKey;
         uint startBlock;
         uint32 lastRewardDate;
-        // uint8 freeSpace;
-        // uint indexInSpaceMap;
-        //address secondAddress;
         uint32 finishTime;
         NodeStatus status;
         uint validatorId;
@@ -57,6 +55,16 @@ contract Nodes is Permissions {
     struct SpaceManaging {
         uint8 freeSpace;
         uint indexInSpaceMap;
+    }
+
+    // TODO: move outside the contract
+    struct NodeCreationParams {
+        string name;
+        bytes4 ip;
+        bytes4 publicIp;
+        uint16 port;
+        bytes publicKey;
+        uint16 nonce;
     }
 
     // array which contain all Nodes
@@ -214,25 +222,17 @@ contract Nodes is Permissions {
      * @dev createNode - creates new Node and add it to the Nodes contract
      * function could be only run by SkaleManager
      * @param from - owner of Node
-     * @param data - Node's data
      * @return nodeIndex - index of Node
      */
-    function createNode(address from, bytes calldata data) external allow("SkaleManager") returns (uint nodeIndex) {
-        uint16 nonce;
-        bytes4 ip;
-        bytes4 publicIP;
-        uint16 port;
-        string memory name;
-        bytes memory publicKey;
-
-        // decode data from the bytes
-        (port, nonce, ip, publicIP) = _fallbackDataConverter(data);
-        (publicKey, name) = _fallbackDataConverterPublicKeyAndName(data);
-
+    function createNode(
+        address from,
+        NodeCreationParams calldata params)
+        external allow("SkaleManager") returns (uint nodeIndex)
+    {
         // checks that Node has correct data
-        require(ip != 0x0 && !nodesIPCheck[ip], "IP address is zero or is not available");
-        require(!nodesNameCheck[keccak256(abi.encodePacked(name))], "Name has already registered");
-        require(port > 0, "Port is zero");
+        require(params.ip != 0x0 && !nodesIPCheck[params.ip], "IP address is zero or is not available");
+        require(!nodesNameCheck[keccak256(abi.encodePacked(params.name))], "Name has already registered");
+        require(params.port > 0, "Port is zero");
 
         uint validatorId = ValidatorService(
             _contractManager.getContract("ValidatorService")).getValidatorIdByNodeAddress(from);
@@ -240,11 +240,11 @@ contract Nodes is Permissions {
         // adds Node to Nodes contract
         nodeIndex = this.addNode(
             from,
-            name,
-            ip,
-            publicIP,
-            port,
-            publicKey,
+            params.name,
+            params.ip,
+            params.publicIp,
+            params.port,
+            params.publicKey,
             validatorId);
         // adds Node to Fractional Nodes or to Full Nodes
         // setNodeType(nodesAddress, constantsAddress, nodeIndex);
@@ -252,11 +252,11 @@ contract Nodes is Permissions {
         emit NodeCreated(
             nodeIndex,
             from,
-            name,
-            ip,
-            publicIP,
-            port,
-            nonce,
+            params.name,
+            params.ip,
+            params.publicIp,
+            params.port,
+            params.nonce,
             uint32(block.timestamp),
             gasleft());
     }
@@ -588,68 +588,4 @@ contract Nodes is Permissions {
         spaceOfNodes[nodeIndex].freeSpace = newSpace;
         spaceOfNodes[nodeIndex].indexInSpaceMap = spaceToNodes[newSpace].length - 1;
     }
-
-    /**
-     * @dev _fallbackDataConverter - converts data from bytes to normal parameters
-     * @param data - concatenated parameters
-     * @return port
-     * @return nonce
-     * @return ip address
-     * @return public ip address
-     */
-    function _fallbackDataConverter(bytes memory data)
-        private
-        pure
-        returns (uint16, uint16, bytes4, bytes4 /*address secondAddress,*/)
-    {
-        require(data.length > 77, "Incorrect bytes data config");
-
-        bytes4 ip;
-        bytes4 publicIP;
-        bytes2 portInBytes;
-        bytes2 nonceInBytes;
-        assembly {
-            portInBytes := mload(add(data, 33)) // 0x21
-            nonceInBytes := mload(add(data, 35)) // 0x25
-            ip := mload(add(data, 37)) // 0x29
-            publicIP := mload(add(data, 41))
-        }
-
-        return (uint16(portInBytes), uint16(nonceInBytes), ip, publicIP);
-    }
-
-    /**
-     * @dev _fallbackDataConverterPublicKeyAndName - converts data from bytes to public key and name
-     * @param data - concatenated public key and name
-     * @return public key
-     * @return name of Node
-     */
-    function _fallbackDataConverterPublicKeyAndName(bytes memory data)
-        private pure returns (bytes memory, string memory)
-    {
-        require(data.length > 77, "Incorrect bytes data config");
-        bytes32 firstPartPublicKey;
-        bytes32 secondPartPublicKey;
-        bytes memory publicKey = new bytes(64);
-
-        // convert public key
-        assembly {
-            firstPartPublicKey := mload(add(data, 45))
-            secondPartPublicKey := mload(add(data, 77))
-        }
-        for (uint8 i = 0; i < 32; i++) {
-            publicKey[i] = firstPartPublicKey[i];
-        }
-        for (uint8 i = 0; i < 32; i++) {
-            publicKey[i + 32] = secondPartPublicKey[i];
-        }
-
-        // convert name
-        string memory name = new string(data.length - 77);
-        for (uint i = 0; i < bytes(name).length; ++i) {
-            bytes(name)[i] = data[77 + i];
-        }
-        return (publicKey, name);
-    }
-
 }
