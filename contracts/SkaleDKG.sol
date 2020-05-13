@@ -126,6 +126,7 @@ contract SkaleDKG is Permissions {
         channels[groupIndex].broadcasted = new bool[](groupsData.getRecommendedNumberOfNodes(groupIndex));
         channels[groupIndex].completed = new bool[](groupsData.getRecommendedNumberOfNodes(groupIndex));
         channels[groupIndex].publicKeyy.x = 1;
+        channels[groupIndex].fromNodeToComplaint = uint(-1);
         channels[groupIndex].nodeToComplaint = uint(-1);
         channels[groupIndex].startedBlockTimestamp = block.timestamp;
 
@@ -151,7 +152,7 @@ contract SkaleDKG is Permissions {
         delete channels[groupIndex].publicKeyx.y;
         channels[groupIndex].publicKeyy.x = 1;
         delete channels[groupIndex].publicKeyy.y;
-        delete channels[groupIndex].fromNodeToComplaint;
+        channels[groupIndex].fromNodeToComplaint = uint(-1);
         channels[groupIndex].nodeToComplaint = uint(-1);
         delete channels[groupIndex].numberOfBroadcasted;
         delete channels[groupIndex].numberOfCompleted;
