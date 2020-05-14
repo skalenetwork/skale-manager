@@ -71,14 +71,9 @@ contract Distributor is Permissions, IERC777Recipient {
         return getAndUpdateEarnedBountyAmountOf(msg.sender, validatorId);
     }
 
-    function getEarnedFeeAmount() external view returns (uint earned, uint endMonth) {
-        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
-        return getEarnedFeeAmountOf(validatorService.getValidatorId(msg.sender));
-    }
-
     function withdrawBounty(uint validatorId, address to) external {
-        TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
-        ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
+        TimeHelpers timeHelpers = TimeHelpers(_contractManager.getContract("TimeHelpers"));
+        ConstantsHolder constantsHolder = ConstantsHolder(_contractManager.getContract("ConstantsHolder"));
 
         require(now >= timeHelpers.addMonths(constantsHolder.launchTimestamp(), 3), "Bounty is locked");
 
@@ -88,7 +83,7 @@ contract Distributor is Permissions, IERC777Recipient {
 
         _firstUnwithdrawnMonth[msg.sender][validatorId] = endMonth;
 
-        SkaleToken skaleToken = SkaleToken(contractManager.getContract("SkaleToken"));
+        SkaleToken skaleToken = SkaleToken(_contractManager.getContract("SkaleToken"));
         require(skaleToken.transfer(to, bounty), "Failed to transfer tokens");
 
         emit WithdrawBounty(
@@ -100,10 +95,10 @@ contract Distributor is Permissions, IERC777Recipient {
     }
 
     function withdrawFee(address to) external {
-        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
-        SkaleToken skaleToken = SkaleToken(contractManager.getContract("SkaleToken"));
-        TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
-        ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
+        ValidatorService validatorService = ValidatorService(_contractManager.getContract("ValidatorService"));
+        SkaleToken skaleToken = SkaleToken(_contractManager.getContract("SkaleToken"));
+        TimeHelpers timeHelpers = TimeHelpers(_contractManager.getContract("TimeHelpers"));
+        ConstantsHolder constantsHolder = ConstantsHolder(_contractManager.getContract("ConstantsHolder"));
 
         require(now >= timeHelpers.addMonths(constantsHolder.launchTimestamp(), 3), "Bounty is locked");
 
@@ -137,7 +132,12 @@ contract Distributor is Permissions, IERC777Recipient {
         require(to == address(this), "Receiver is incorrect");
         require(userData.length == 32, "Data length is incorrect");
         uint validatorId = abi.decode(userData, (uint));
-        distributeBounty(amount, validatorId);
+        _distributeBounty(amount, validatorId);
+    }
+
+    function getEarnedFeeAmount() external view returns (uint earned, uint endMonth) {
+        ValidatorService validatorService = ValidatorService(_contractManager.getContract("ValidatorService"));
+        return getEarnedFeeAmountOf(validatorService.getValidatorId(msg.sender));
     }
 
     function initialize(address _contractsAddress) public override initializer {
@@ -146,9 +146,12 @@ contract Distributor is Permissions, IERC777Recipient {
         _erc1820.setInterfaceImplementer(address(this), keccak256("ERC777TokensRecipient"), address(this));
     }
 
-    function getAndUpdateEarnedBountyAmountOf(address wallet, uint validatorId) public returns (uint earned, uint endMonth) {
-        DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
-        TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
+    function getAndUpdateEarnedBountyAmountOf(address wallet, uint validatorId)
+        public returns (uint earned, uint endMonth)
+    {
+        DelegationController delegationController = DelegationController(
+            _contractManager.getContract("DelegationController"));
+        TimeHelpers timeHelpers = TimeHelpers(_contractManager.getContract("TimeHelpers"));
 
         uint currentMonth = timeHelpers.getCurrentMonth();
 
@@ -166,19 +169,20 @@ contract Distributor is Permissions, IERC777Recipient {
             endMonth = startMonth.add(12);
         }
         for (uint i = startMonth; i < endMonth; ++i) {
-            uint effectiveDelegatedToValidator = delegationController.getAndUpdateEffectiveDelegatedToValidator(validatorId, i);
+            uint effectiveDelegatedToValidator =
+                delegationController.getAndUpdateEffectiveDelegatedToValidator(validatorId, i);
             if (effectiveDelegatedToValidator.muchGreater(0)) {
                 earned = earned.add(
                     _bountyPaid[validatorId][i].mul(
-                        delegationController.getAndUpdateEffectiveDelegatedByHolderToValidator(wallet, validatorId, i)).div(
-                            effectiveDelegatedToValidator)
+                        delegationController.getAndUpdateEffectiveDelegatedByHolderToValidator(wallet, validatorId, i))
+                            .div(effectiveDelegatedToValidator)
                     );
             }
         }
     }
 
     function getEarnedFeeAmountOf(uint validatorId) public view returns (uint earned, uint endMonth) {
-        TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
+        TimeHelpers timeHelpers = TimeHelpers(_contractManager.getContract("TimeHelpers"));
 
         uint currentMonth = timeHelpers.getCurrentMonth();
 
@@ -199,9 +203,9 @@ contract Distributor is Permissions, IERC777Recipient {
 
     // private
 
-    function distributeBounty(uint amount, uint validatorId) internal {
-        TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
-        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
+    function _distributeBounty(uint amount, uint validatorId) internal {
+        TimeHelpers timeHelpers = TimeHelpers(_contractManager.getContract("TimeHelpers"));
+        ValidatorService validatorService = ValidatorService(_contractManager.getContract("ValidatorService"));
 
         uint currentMonth = timeHelpers.getCurrentMonth();
         uint feeRate = validatorService.getValidator(validatorId).feeRate;

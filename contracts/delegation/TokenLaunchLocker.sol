@@ -72,27 +72,32 @@ contract TokenLaunchLocker is Permissions, ILocker {
         external allow("DelegationController")
     {
         if (_locked[holder] > 0) {
-            TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
+            TimeHelpers timeHelpers = TimeHelpers(_contractManager.getContract("TimeHelpers"));
 
             uint currentMonth = timeHelpers.getCurrentMonth();
             uint fromLocked = amount;
-            uint locked = _locked[holder].boundedSub(getAndUpdateDelegatedAmount(holder, currentMonth));
+            uint locked = _locked[holder].boundedSub(_getAndUpdateDelegatedAmount(holder, currentMonth));
             if (fromLocked > locked) {
                 fromLocked = locked;
             }
             if (fromLocked > 0) {
                 require(_delegationAmount[delegationId] == 0, "Delegation already was added");
-                addToDelegatedAmount(holder, fromLocked, month);
-                addToTotalDelegatedAmount(holder, fromLocked, month);
+                _addToDelegatedAmount(holder, fromLocked, month);
+                _addToTotalDelegatedAmount(holder, fromLocked, month);
                 _delegationAmount[delegationId] = fromLocked;
             }
         }
     }
 
-    function handleDelegationRemoving(address holder, uint delegationId, uint month) external allow("DelegationController") {
+    function handleDelegationRemoving(
+        address holder,
+        uint delegationId,
+        uint month)
+        external allow("DelegationController")
+    {
         if (_delegationAmount[delegationId] > 0) {
             if (_locked[holder] > 0) {
-                removeFromDelegatedAmount(holder, _delegationAmount[delegationId], month);
+                _removeFromDelegatedAmount(holder, _delegationAmount[delegationId], month);
             }
             delete _delegationAmount[delegationId];
         }
@@ -100,9 +105,10 @@ contract TokenLaunchLocker is Permissions, ILocker {
 
     function getAndUpdateLockedAmount(address wallet) external override returns (uint) {
         if (_locked[wallet] > 0) {
-            DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
-            TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
-            ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
+            DelegationController delegationController = DelegationController(
+                _contractManager.getContract("DelegationController"));
+            TimeHelpers timeHelpers = TimeHelpers(_contractManager.getContract("TimeHelpers"));
+            ConstantsHolder constantsHolder = ConstantsHolder(_contractManager.getContract("ConstantsHolder"));
 
             uint currentMonth = timeHelpers.getCurrentMonth();
             if (_totalDelegatedAmount[wallet].delegated.mul(2) >= _locked[wallet] &&
@@ -110,10 +116,10 @@ contract TokenLaunchLocker is Permissions, ILocker {
                     _totalDelegatedAmount[wallet].month,
                     constantsHolder.proofOfUseLockUpPeriodDays()
                 ) <= now) {
-                unlock(wallet);
+                _unlock(wallet);
                 return 0;
             } else {
-                uint lockedByDelegationController = getAndUpdateDelegatedAmount(wallet, currentMonth)
+                uint lockedByDelegationController = _getAndUpdateDelegatedAmount(wallet, currentMonth)
                     .add(delegationController.getLockedInPendingDelegations(wallet));
                 if (_locked[wallet] > lockedByDelegationController) {
                     return _locked[wallet].boundedSub(lockedByDelegationController);
@@ -130,25 +136,25 @@ contract TokenLaunchLocker is Permissions, ILocker {
         return 0;
     }
 
-    function initialize(address _contractManager) public override initializer {
-        Permissions.initialize(_contractManager);
+    function initialize(address contractManager) public override initializer {
+        Permissions.initialize(contractManager);
     }
 
     // private
 
-    function getAndUpdateDelegatedAmount(address holder, uint currentMonth) internal returns (uint) {
+    function _getAndUpdateDelegatedAmount(address holder, uint currentMonth) internal returns (uint) {
         return _delegatedAmount[holder].getAndUpdateValue(currentMonth);
     }
 
-    function addToDelegatedAmount(address holder, uint amount, uint month) internal {
+    function _addToDelegatedAmount(address holder, uint amount, uint month) internal {
         _delegatedAmount[holder].addToValue(amount, month);
     }
 
-    function removeFromDelegatedAmount(address holder, uint amount, uint month) internal {
+    function _removeFromDelegatedAmount(address holder, uint amount, uint month) internal {
         _delegatedAmount[holder].subtractFromValue(amount, month);
     }
 
-    function addToTotalDelegatedAmount(address holder, uint amount, uint month) internal {
+    function _addToTotalDelegatedAmount(address holder, uint amount, uint month) internal {
         require(
             _totalDelegatedAmount[holder].month == 0 || _totalDelegatedAmount[holder].month <= month,
             "Can't add to total delegated in the past");
@@ -161,18 +167,18 @@ contract TokenLaunchLocker is Permissions, ILocker {
         }
     }
 
-    function unlock(address holder) internal {
+    function _unlock(address holder) internal {
         emit Unlocked(holder, _locked[holder]);
         delete _locked[holder];
-        deleteDelegatedAmount(holder);
-        deleteTotalDelegatedAmount(holder);
+        _deleteDelegatedAmount(holder);
+        _deleteTotalDelegatedAmount(holder);
     }
 
-    function deleteDelegatedAmount(address holder) internal {
+    function _deleteDelegatedAmount(address holder) internal {
         _delegatedAmount[holder].clear();
     }
 
-    function deleteTotalDelegatedAmount(address holder) internal {
+    function _deleteTotalDelegatedAmount(address holder) internal {
         delete _totalDelegatedAmount[holder].delegated;
         delete _totalDelegatedAmount[holder].month;
     }

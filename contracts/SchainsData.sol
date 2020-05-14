@@ -122,7 +122,7 @@ contract SchainsData is GroupsData {
      * @param nodeIndex - index of Node
      * @param schainId - hash by Schain name
      */
-    function addSchainForNode(uint nodeIndex, bytes32 schainId) external allow(executorName) {
+    function addSchainForNode(uint nodeIndex, bytes32 schainId) external allow(_executorName) {
         if (holesForNodes[nodeIndex].length == 0) {
             schainsForNodes[nodeIndex].push(schainId);
         } else {
@@ -152,10 +152,11 @@ contract SchainsData is GroupsData {
      * @param schainId - hash by Schain name
      * @param partOfNode - occupied space
      */
-    function setSchainPartOfNode(bytes32 schainId, uint8 partOfNode) external allow(executorName) {
+    function setSchainPartOfNode(bytes32 schainId, uint8 partOfNode) external allow(_executorName) {
         schains[schainId].partOfNode = partOfNode;
         if (partOfNode > 0) {
-            sumOfSchainsResources = sumOfSchainsResources.add((128 / partOfNode) * groups[schainId].nodesInGroup.length);
+            sumOfSchainsResources = sumOfSchainsResources.add(
+                (128 / partOfNode) * groups[schainId].nodesInGroup.length);
         }
     }
 
@@ -227,17 +228,22 @@ contract SchainsData is GroupsData {
     }
 
     function startRotation(bytes32 schainIndex, uint nodeIndex) external allow("SchainsFunctionality") {
-        IConstants constants = IConstants(contractManager.getContract("ConstantsHolder"));
+        IConstants constants = IConstants(_contractManager.getContract("ConstantsHolder"));
         rotations[schainIndex].nodeIndex = nodeIndex;
         rotations[schainIndex].freezeUntil = now + constants.rotationDelay();
     }
 
-    function finishRotation(bytes32 schainIndex, uint nodeIndex, uint newNodeIndex) external allow("SchainsFunctionality") {
-        IConstants constants = IConstants(contractManager.getContract("ConstantsHolder"));
+    function finishRotation(
+        bytes32 schainIndex,
+        uint nodeIndex,
+        uint newNodeIndex)
+        external allow("SchainsFunctionality")
+    {
+        IConstants constants = IConstants(_contractManager.getContract("ConstantsHolder"));
         leavingHistory[nodeIndex].push(LeavingHistory(schainIndex, now + constants.rotationDelay()));
         rotations[schainIndex].newNodeIndex = newNodeIndex;
         rotations[schainIndex].rotationCounter++;
-        address skaleDKGAddress = contractManager.getContract("SkaleDKG");
+        address skaleDKGAddress = _contractManager.getContract("SkaleDKG");
         ISkaleDKG(skaleDKGAddress).openChannel(schainIndex);
     }
 

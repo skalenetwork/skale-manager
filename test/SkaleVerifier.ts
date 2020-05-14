@@ -143,14 +143,15 @@ contract("SkaleVerifier", ([validator1, owner, developer, hacker]) => {
             for (const index of Array.from(Array(nodesCount).keys())) {
                 const hexIndex = ("0" + index.toString(16)).slice(-2);
                 await nodes.createNode(validator1,
-                    "0x00" +
-                    "2161" +
-                    "0000" +
-                    "7f0000" + hexIndex +
-                    "7f0000" + hexIndex +
-                    "1122334455667788990011223344556677889900112233445566778899001122" +
-                    "1122334455667788990011223344556677889900112233445566778899001122" +
-                    "d2" + hexIndex,
+                    {
+                        port: 8545,
+                        nonce: 0,
+                        ip: "0x7f0000" + hexIndex,
+                        publicIp: "0x7f0000" + hexIndex,
+                        publicKey: "0x1122334455667788990011223344556677889900112233445566778899001122" +
+                                     "1122334455667788990011223344556677889900112233445566778899001122",
+                        name: "d2" + hexIndex
+                    },
                     {from: validator1});
             }
 
@@ -159,11 +160,7 @@ contract("SkaleVerifier", ([validator1, owner, developer, hacker]) => {
             await schainsFunctionality.addSchain(
                 validator1,
                 deposit,
-                "0x10" +
-                "0000000000000000000000000000000000000000000000000000000000000005" +
-                "04" +
-                "0000" +
-                "426f62",
+                web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, "Bob"]),
                 {from: validator1});
 
             await schainsData.setPublicKey(

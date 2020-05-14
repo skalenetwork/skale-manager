@@ -33,15 +33,15 @@ contract Pricing is Permissions {
     uint public constant MIN_PRICE = 10**6;
     uint public price;
     uint public totalNodes;
-    uint lastUpdated;
+    uint private _lastUpdated;
 
     function initNodes() external {
-        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
+        Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
         totalNodes = nodes.getNumberOnlineNodes();
     }
 
     function adjustPrice() external {
-        require(now > lastUpdated.add(COOLDOWN_TIME), "It's not a time to update a price");
+        require(now > _lastUpdated.add(COOLDOWN_TIME), "It's not a time to update a price");
         checkAllNodes();
         uint loadPercentage = getTotalLoadPercentage();
         uint priceChange;
@@ -49,28 +49,28 @@ contract Pricing is Permissions {
 
         if (loadPercentage < OPTIMAL_LOAD_PERCENTAGE) {
             priceChange = (ADJUSTMENT_SPEED.mul(price)).mul((OPTIMAL_LOAD_PERCENTAGE.sub(loadPercentage))) / 10**6;
-            timeSkipped = (now.sub(lastUpdated)).div(COOLDOWN_TIME);
+            timeSkipped = (now.sub(_lastUpdated)).div(COOLDOWN_TIME);
             price = price.sub(priceChange.mul(timeSkipped));
             if (price < MIN_PRICE) {
                 price = MIN_PRICE;
             }
         } else {
             priceChange = (ADJUSTMENT_SPEED.mul(price)).mul((loadPercentage.sub(OPTIMAL_LOAD_PERCENTAGE))) / 10**6;
-            timeSkipped = (now.sub(lastUpdated)).div(COOLDOWN_TIME);
+            timeSkipped = (now.sub(_lastUpdated)).div(COOLDOWN_TIME);
             require(price.add(priceChange.mul(timeSkipped)) > price, "New price should be greater than old price");
             price = price.add(priceChange.mul(timeSkipped));
         }
-        lastUpdated = now;
+        _lastUpdated = now;
     }
 
     function initialize(address newContractsAddress) public override initializer {
         Permissions.initialize(newContractsAddress);
-        lastUpdated = now;
+        _lastUpdated = now;
         price = 5*10**6;
     }
 
     function checkAllNodes() public {
-        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
+        Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
         uint numberOfActiveNodes = nodes.getNumberOnlineNodes();
 
         require(totalNodes != numberOfActiveNodes, "No any changes on nodes");
@@ -79,9 +79,9 @@ contract Pricing is Permissions {
     }
 
     function getTotalLoadPercentage() public view returns (uint) {
-        address schainsDataAddress = contractManager.getContract("SchainsData");
+        address schainsDataAddress = _contractManager.getContract("SchainsData");
         uint64 numberOfSchains = SchainsData(schainsDataAddress).numberOfSchains();
-        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
+        Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
         uint numberOfNodes = nodes.getNumberOnlineNodes();
         uint sumLoadSchain = 0;
         for (uint i = 0; i < numberOfSchains; i++) {

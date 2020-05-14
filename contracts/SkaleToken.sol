@@ -86,16 +86,16 @@ contract SkaleToken is ERC777, Permissions, ReentrancyGuard, IDelegatableToken {
     // }
 
     function getAndUpdateDelegatedAmount(address wallet) external override returns (uint) {
-        return DelegationController(contractManager.getContract("DelegationController"))
+        return DelegationController(_contractManager.getContract("DelegationController"))
             .getAndUpdateDelegatedAmount(wallet);
     }
 
     function getAndUpdateSlashedAmount(address wallet) external override returns (uint) {
-        return Punisher(contractManager.getContract("Punisher")).getAndUpdateLockedAmount(wallet);
+        return Punisher(_contractManager.getContract("Punisher")).getAndUpdateLockedAmount(wallet);
     }
 
     function getAndUpdateLockedAmount(address wallet) public override returns (uint) {
-        return TokenState(contractManager.getContract("TokenState")).getAndUpdateLockedAmount(wallet);
+        return TokenState(_contractManager.getContract("TokenState")).getAndUpdateLockedAmount(wallet);
     }
 
     // private
