@@ -231,9 +231,7 @@ abstract contract Groups is Permissions {
         groups[groupIndex].active = true;
         groups[groupIndex].recommendedNumberOfNodes = newRecommendedNumberOfNodes;
         groups[groupIndex].groupData = data;
-        // Open channel in SkaleDKG
-        address skaleDKGAddress = contractManager.getContract("SkaleDKG");
-        ISkaleDKG(skaleDKGAddress).openChannel(groupIndex);
+
         emit GroupAdded(
             groupIndex,
             data,
@@ -287,12 +285,6 @@ abstract contract Groups is Permissions {
         while (groups[groupIndex].nodesInGroup.length > 0) {
             groups[groupIndex].nodesInGroup.pop();
         }
-        address skaleDKGAddress = contractManager.getContract("SkaleDKG");
-        if (ISkaleDKG(skaleDKGAddress).isChannelOpened(groupIndex)) {
-            ISkaleDKG(skaleDKGAddress).deleteChannel(groupIndex);
-        }
-        // Open channel in SkaleDKG
-        ISkaleDKG(skaleDKGAddress).openChannel(groupIndex);
 
         emit GroupUpgraded(
             groupIndex,

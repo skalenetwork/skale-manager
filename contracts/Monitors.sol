@@ -110,6 +110,7 @@ contract Monitors is Groups {
         uint possibleNumberOfNodes = constantsHolder.NUMBER_OF_MONITORS();
         createGroup(groupIndex, possibleNumberOfNodes, bytes32(nodeIndex));
         uint numberOfNodesInGroup = setMonitors(groupIndex, nodeIndex);
+        ISkaleDKG(contractManager.getContract("SkaleDKG")).openChannel(groupIndex);
 
         emit MonitorCreated(
             nodeIndex,
@@ -126,6 +127,12 @@ contract Monitors is Groups {
         uint possibleNumberOfNodes = constantsHolder.NUMBER_OF_MONITORS();
         upgradeGroup(groupIndex, possibleNumberOfNodes, bytes32(nodeIndex));
         uint numberOfNodesInGroup = setMonitors(groupIndex, nodeIndex);
+
+        ISkaleDKG skaleDKG = ISkaleDKG(contractManager.getContract("SkaleDKG"));
+        if (skaleDKG.isChannelOpened(groupIndex)) {
+            skaleDKG.deleteChannel(groupIndex);
+        }
+        skaleDKG.openChannel(groupIndex);
 
         emit MonitorUpgraded(
             nodeIndex,
