@@ -174,33 +174,6 @@ abstract contract Groups is Permissions {
     }
 
     /**
-     * @dev deleteGroup - delete Group from Data contract
-     * function could be run only by executor
-     * @param groupIndex - Groups identifier
-     */
-    function deleteGroup(bytes32 groupIndex) external allow(_executorName) {
-        require(groups[groupIndex].active, "Group is not active");
-        groups[groupIndex].active = false;
-        delete groups[groupIndex].groupData;
-        delete groups[groupIndex].recommendedNumberOfNodes;
-        uint[4] memory previousKey = groups[groupIndex].groupsPublicKey;
-        previousPublicKeys[groupIndex].push(previousKey);
-        delete groups[groupIndex].groupsPublicKey;
-        delete groups[groupIndex];
-        // delete channel
-        address skaleDKGAddress = _contractManager.getContract("SkaleDKG");
-
-        if (ISkaleDKG(skaleDKGAddress).isChannelOpened(groupIndex)) {
-            ISkaleDKG(skaleDKGAddress).deleteChannel(groupIndex);
-        }
-        delete groups[groupIndex].nodesInGroup;
-        while (groups[groupIndex].nodesInGroup.length > 0) {
-            groups[groupIndex].nodesInGroup.pop();
-        }
-        emit GroupDeleted(groupIndex, uint32(block.timestamp), gasleft());
-    }
-
-    /**
      * @dev verifySignature - verify signature which create Group by Groups BLS master public key
      * @param groupIndex - Groups identifier
      * @param signatureX - first part of BLS signature
@@ -220,20 +193,11 @@ abstract contract Groups is Permissions {
         uint publicKeyy1;
         uint publicKeyx2;
         uint publicKeyy2;
-        (publicKeyx1, publicKeyy1, publicKeyx2, publicKeyy2) = this.getGroupsPublicKey(groupIndex);
+        (publicKeyx1, publicKeyy1, publicKeyx2, publicKeyy2) = getGroupsPublicKey(groupIndex);
         address skaleVerifierAddress = _contractManager.getContract("SkaleVerifier");
         return ISkaleVerifierG(skaleVerifierAddress).verify(
             signatureX, signatureY, hashX, hashY, publicKeyx1, publicKeyy1, publicKeyx2, publicKeyy2
         );
-    }
-
-    /**
-     * @dev isGroupActive - checks is Group active
-     * @param groupIndex - Groups identifier
-     * @return true - active, false - not active
-     */
-    function isGroupActive(bytes32 groupIndex) external view returns (bool) {
-        return groups[groupIndex].active;
     }
 
     /**
@@ -244,20 +208,6 @@ abstract contract Groups is Permissions {
      */
     function isExceptionNode(bytes32 groupIndex, uint nodeIndex) external view returns (bool) {
         return _exceptions[groupIndex].check[nodeIndex];
-    }
-
-    /**
-     * @dev getGroupsPublicKey - shows Groups public key
-     * @param groupIndex - Groups identifier
-     * @return publicKey(x1, y1, x2, y2) - parts of BLS master public key
-     */
-    function getGroupsPublicKey(bytes32 groupIndex) external view returns (uint, uint, uint, uint) {
-        return (
-            groups[groupIndex].groupsPublicKey[0],
-            groups[groupIndex].groupsPublicKey[1],
-            groups[groupIndex].groupsPublicKey[2],
-            groups[groupIndex].groupsPublicKey[3]
-        );
     }
 
     function getPreviousGroupsPublicKey(bytes32 groupIndex) external view returns (uint, uint, uint, uint) {
@@ -278,39 +228,12 @@ abstract contract Groups is Permissions {
     }
 
     /**
-     * @dev getGroupsData - shows Groups extra data
-     * @param groupIndex - Groups identifier
-     * @return Groups extra data
-     */
-    function getGroupData(bytes32 groupIndex) external view returns (bytes32) {
-        return groups[groupIndex].groupData;
-    }
-
-    /**
-     * @dev getRecommendedNumberOfNodes - shows recommended number of Nodes
-     * @param groupIndex - Groups identifier
-     * @return recommended number of Nodes
-     */
-    function getRecommendedNumberOfNodes(bytes32 groupIndex) external view returns (uint) {
-        return groups[groupIndex].recommendedNumberOfNodes;
-    }
-
-    /**
      * @dev getNumberOfNodesInGroup - shows number of Nodes in Group
      * @param groupIndex - Groups identifier
      * @return number of Nodes in Group
      */
     function getNumberOfNodesInGroup(bytes32 groupIndex) external view returns (uint) {
         return groups[groupIndex].nodesInGroup.length;
-    }
-
-    /**
-     * @dev getNodesInGroup - shows Nodes in Group
-     * @param groupIndex - Groups identifier
-     * @return array of indexes of Nodes in Group
-     */
-    function getNodesInGroup(bytes32 groupIndex) external view returns (uint[] memory) {
-        return groups[groupIndex].nodesInGroup;
     }
 
     /**
@@ -364,6 +287,33 @@ abstract contract Groups is Permissions {
             uint32(block.timestamp),
             gasleft());
     }
+
+    /**
+     * @dev deleteGroup - delete Group from Data contract
+     * function could be run only by executor
+     * @param groupIndex - Groups identifier
+     */
+    function deleteGroup(bytes32 groupIndex) public allow("SkaleManager") {
+        require(groups[groupIndex].active, "Group is not active");
+        groups[groupIndex].active = false;
+        delete groups[groupIndex].groupData;
+        delete groups[groupIndex].recommendedNumberOfNodes;
+        uint[4] memory previousKey = groups[groupIndex].groupsPublicKey;
+        previousPublicKeys[groupIndex].push(previousKey);
+        delete groups[groupIndex].groupsPublicKey;
+        delete groups[groupIndex];
+        // delete channel
+        address skaleDKGAddress = _contractManager.getContract("SkaleDKG");
+
+        if (ISkaleDKG(skaleDKGAddress).isChannelOpened(groupIndex)) {
+            ISkaleDKG(skaleDKGAddress).deleteChannel(groupIndex);
+        }
+        delete groups[groupIndex].nodesInGroup;
+        while (groups[groupIndex].nodesInGroup.length > 0) {
+            groups[groupIndex].nodesInGroup.pop();
+        }
+        emit GroupDeleted(groupIndex, uint32(block.timestamp), gasleft());
+    }
     
     /**
      * @dev setException - sets a Node like exception
@@ -393,6 +343,57 @@ abstract contract Groups is Permissions {
     function initialize(string memory newExecutorName, address newContractsAddress) public initializer {
         Permissions.initialize(newContractsAddress);
         _executorName = newExecutorName;
+    }
+
+
+    /**
+     * @dev getGroupsPublicKey - shows Groups public key
+     * @param groupIndex - Groups identifier
+     * @return publicKey(x1, y1, x2, y2) - parts of BLS master public key
+     */
+    function getGroupsPublicKey(bytes32 groupIndex) public view returns (uint, uint, uint, uint) {
+        return (
+            groups[groupIndex].groupsPublicKey[0],
+            groups[groupIndex].groupsPublicKey[1],
+            groups[groupIndex].groupsPublicKey[2],
+            groups[groupIndex].groupsPublicKey[3]
+        );
+    }
+
+    /**
+     * @dev isGroupActive - checks is Group active
+     * @param groupIndex - Groups identifier
+     * @return true - active, false - not active
+     */
+    function isGroupActive(bytes32 groupIndex) public view returns (bool) {
+        return groups[groupIndex].active;
+    }
+
+    /**
+     * @dev getGroupsData - shows Groups extra data
+     * @param groupIndex - Groups identifier
+     * @return Groups extra data
+     */
+    function getGroupData(bytes32 groupIndex) public view returns (bytes32) {
+        return groups[groupIndex].groupData;
+    }
+
+    /**
+     * @dev getRecommendedNumberOfNodes - shows recommended number of Nodes
+     * @param groupIndex - Groups identifier
+     * @return recommended number of Nodes
+     */
+    function getRecommendedNumberOfNodes(bytes32 groupIndex) public view returns (uint) {
+        return groups[groupIndex].recommendedNumberOfNodes;
+    }
+
+    /**
+     * @dev getNodesInGroup - shows Nodes in Group
+     * @param groupIndex - Groups identifier
+     * @return array of indexes of Nodes in Group
+     */
+    function getNodesInGroup(bytes32 groupIndex) public view returns (uint[] memory) {
+        return groups[groupIndex].nodesInGroup;
     }
 
     /**

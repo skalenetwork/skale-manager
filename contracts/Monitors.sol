@@ -135,7 +135,7 @@ contract Monitors is Groups {
             verdicts[keccak256(abi.encodePacked(nodeIndex))].pop();
         }
         delete checkedNodes[groupIndex];
-        uint[] memory nodesInGroup = this.getNodesInGroup(groupIndex);
+        uint[] memory nodesInGroup = getNodesInGroup(groupIndex);
         uint index;
         bytes32 monitorIndex;
         for (uint i = 0; i < nodesInGroup.length; i++) {
@@ -150,7 +150,7 @@ contract Monitors is Groups {
                 checkedNodes[monitorIndex].pop();
             }
         }
-        this.deleteGroup(groupIndex);
+        deleteGroup(groupIndex);
     }
 
     function sendVerdict(uint fromMonitorIndex, Verdict calldata verdict) external allow("SkaleManager") {
@@ -181,17 +181,17 @@ contract Monitors is Groups {
     }
 
     function calculateMetrics(uint nodeIndex)
-        external 
+        external
         allow("SkaleManager")
         returns (uint averageDowntime, uint averageLatency)
     {
         bytes32 monitorIndex = keccak256(abi.encodePacked(nodeIndex));
-        uint lengthOfArray = this.getLengthOfMetrics(monitorIndex);
+        uint lengthOfArray = getLengthOfMetrics(monitorIndex);
         uint[] memory downtimeArray = new uint[](lengthOfArray);
         uint[] memory latencyArray = new uint[](lengthOfArray);
         for (uint i = 0; i < lengthOfArray; i++) {
-            downtimeArray[i] = this.verdicts(monitorIndex, i, 0);
-            latencyArray[i] = this.verdicts(monitorIndex, i, 1);
+            downtimeArray[i] = verdicts[monitorIndex][i][0];
+            latencyArray[i] = verdicts[monitorIndex][i][1];
         }
         if (lengthOfArray > 0) {
             averageDowntime = _median(downtimeArray);
@@ -206,12 +206,12 @@ contract Monitors is Groups {
         return checkedNodes[monitorIndex];
     }
 
-    function getLengthOfMetrics(bytes32 monitorIndex) external view returns (uint) {
-        return verdicts[monitorIndex].length;
-    }
-
     function initialize(address newContractsAddress) public override initializer {
         Groups.initialize("Monitors", newContractsAddress);
+    }
+
+    function getLengthOfMetrics(bytes32 monitorIndex) public view returns (uint) {
+        return verdicts[monitorIndex].length;
     }
 
     function _generateGroup(bytes32 groupIndex)
@@ -221,10 +221,10 @@ contract Monitors is Groups {
         returns (uint[] memory)
     {
         Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
-        require(this.isGroupActive(groupIndex), "Group is not active");
-        uint exceptionNode = uint(this.getGroupData(groupIndex));
+        require(isGroupActive(groupIndex), "Group is not active");
+        uint exceptionNode = uint(getGroupData(groupIndex));
         uint[] memory activeNodes = nodes.getActiveNodeIds();
-        uint numberOfNodesInGroup = this.getRecommendedNumberOfNodes(groupIndex);
+        uint numberOfNodesInGroup = getRecommendedNumberOfNodes(groupIndex);
         uint availableAmount = activeNodes.length.sub((nodes.isNodeActive(exceptionNode)) ? 1 : 0);
         if (numberOfNodesInGroup > availableAmount) {
             numberOfNodesInGroup = availableAmount;
