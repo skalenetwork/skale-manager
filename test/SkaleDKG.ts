@@ -626,8 +626,9 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
             assert.equal(channel.numberOfBroadcasted.toString(), "0");
             assert.equal(channel.startedBlockTimestamp.toString(), timestamp.toString());
             assert.equal(channel.dataAddress, dataAddress);
+            console.log(channel);
 
-            console.log("is broadcast possible");
+            console.log("Before broadcast");
             let res = await skaleDKG.isBroadcastPossible(
                     web3.utils.soliditySha3(schainName),
                     2,
@@ -636,7 +637,6 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
 
             assert.equal(res, true);
 
-            console.log("broadcast");
             await skaleDKG.broadcast(
                 web3.utils.soliditySha3(schainName),
                 2,
@@ -646,7 +646,8 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                 {from: validatorsAccount[0]},
             );
 
-            console.log("is broadcast possible");
+            console.log("Another broadcast");
+
             res = await skaleDKG.isBroadcastPossible(
                     web3.utils.soliditySha3(schainName),
                     1,
@@ -654,7 +655,6 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                 );
             assert.equal(res, true);
 
-            console.log("broadcast");
             await skaleDKG.broadcast(
                 web3.utils.soliditySha3(schainName),
                 1,
@@ -663,13 +663,16 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                 {from: validatorsAccount[1]},
             );
 
-            console.log("is alright possible");
+            channel = new Channel(await skaleDKG.channels(web3.utils.soliditySha3(schainName)));
+            console.log(channel);
+
+            console.log("Broadcast did!");
+
             res = await skaleDKG.isAlrightPossible(
                         web3.utils.soliditySha3(schainName),
                         2,
                         {from: validatorsAccount[0]},
                     );
-            console.log(res);
             assert.equal(res, true);
 
             await skaleDKG.alright(

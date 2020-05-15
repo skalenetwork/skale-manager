@@ -562,7 +562,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                 0,
                 0,
             );
-            await skaleDKG.deleteChannel(web3.utils.soliditySha3("d2"));
+            // await skaleDKG.deleteChannel(web3.utils.soliditySha3("d2"));
             await schainsFunctionality.addSchain(
                 holder,
                 deposit,
@@ -575,7 +575,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                 0,
                 0,
             );
-            await skaleDKG.deleteChannel(web3.utils.soliditySha3("d3"));
+            // await skaleDKG.deleteChannel(web3.utils.soliditySha3("d3"));
             await nodes.createNode(validator,
                 {
                     port: 8545,
@@ -613,7 +613,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                 0,
                 0,
             );
-            await skaleDKG.deleteChannel(web3.utils.soliditySha3("d3"));
+            // await skaleDKG.deleteChannel(web3.utils.soliditySha3("d3"));
             await skaleManager.nodeExit(1, {from: validator})
                 .should.be.eventually.rejectedWith("Node cannot rotate on Schain d3, occupied by Node 0");
             await skaleManager.nodeExit(0, {from: validator});
@@ -624,7 +624,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                 0,
                 0,
             );
-            await skaleDKG.deleteChannel(web3.utils.soliditySha3("d2"));
+            // await skaleDKG.deleteChannel(web3.utils.soliditySha3("d2"));
             nodeStatus = (await nodes.getNodeStatus(0)).toNumber();
             assert.equal(nodeStatus, LEFT);
             await skaleManager.nodeExit(0, {from: validator})
@@ -644,7 +644,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                 0,
                 0,
             );
-            await skaleDKG.deleteChannel(web3.utils.soliditySha3("d3"));
+            // await skaleDKG.deleteChannel(web3.utils.soliditySha3("d3"));
             nodeStatus = (await nodes.getNodeStatus(1)).toNumber();
             assert.equal(nodeStatus, LEAVING);
             await skaleManager.nodeExit(1, {from: validator});
@@ -655,7 +655,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                 0,
                 0,
             );
-            await skaleDKG.deleteChannel(web3.utils.soliditySha3("d2"));
+            // await skaleDKG.deleteChannel(web3.utils.soliditySha3("d2"));
             nodeStatus = (await nodes.getNodeStatus(1)).toNumber();
             assert.equal(nodeStatus, LEFT);
             await skaleManager.nodeExit(1, {from: validator})
@@ -671,7 +671,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                 0,
                 0,
             );
-            await skaleDKG.deleteChannel(web3.utils.soliditySha3("d3"));
+            // await skaleDKG.deleteChannel(web3.utils.soliditySha3("d3"));
             await skaleManager.nodeExit(1, {from: validator})
                 .should.be.eventually.rejectedWith("Node cannot rotate on Schain d3, occupied by Node 0");
             skipTime(web3, 43260);
@@ -683,7 +683,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                 0,
                 0,
             );
-            await skaleDKG.deleteChannel(web3.utils.soliditySha3("d3"));
+            // await skaleDKG.deleteChannel(web3.utils.soliditySha3("d3"));
 
             await skaleManager.nodeExit(0, {from: validator})
                 .should.be.eventually.rejectedWith("Node cannot rotate on Schain d2, occupied by Node 1");
@@ -705,7 +705,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                 0,
                 0,
             );
-            await skaleDKG.deleteChannel(web3.utils.soliditySha3("d3"));
+            // await skaleDKG.deleteChannel(web3.utils.soliditySha3("d3"));
             await skaleManager.nodeExit(0, {from: validator});
             await schainsData.setPublicKey(
                 web3.utils.soliditySha3("d2"),
@@ -714,7 +714,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                 0,
                 0,
             );
-            await skaleDKG.deleteChannel(web3.utils.soliditySha3("d2"));
+            // await skaleDKG.deleteChannel(web3.utils.soliditySha3("d2"));
             await skaleManager.deleteSchainByRoot("d2", {from: owner});
             await skaleManager.deleteSchainByRoot("d3", {from: owner});
             await schainsFunctionality.addSchain(
@@ -729,7 +729,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                 0,
                 0,
             );
-            await skaleDKG.deleteChannel(web3.utils.soliditySha3("d2"));
+            // await skaleDKG.deleteChannel(web3.utils.soliditySha3("d2"));
             const nodesInGroupBN = await schainsData.getNodesInGroup(web3.utils.soliditySha3("d2"));
             const nodeInGroup = nodesInGroupBN.map((value: BigNumber) => value.toNumber())[0];
             await skaleManager.nodeExit(nodeInGroup, {from: validator});
@@ -737,7 +737,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
 
         it("should be possible to send broadcast", async () => {
             let res = await skaleDKG.isChannelOpened(web3.utils.soliditySha3("d3"));
-            assert.equal(res, false);
+            assert.equal(res, true);
             await skaleManager.nodeExit(0, {from: validator});
             const res1 = await schainsData.getNodesInGroup(web3.utils.soliditySha3("d3"));
             const nodeRot = res1[3];
@@ -749,7 +749,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
 
         it("should revert if dkg not finished", async () => {
             let res = await skaleDKG.isChannelOpened(web3.utils.soliditySha3("d3"));
-            assert.equal(res, false);
+            assert.equal(res, true);
             await skaleManager.nodeExit(0, {from: validator});
             const res1 = await schainsData.getNodesInGroup(web3.utils.soliditySha3("d3"));
             const nodeRot = res1[3];
@@ -770,7 +770,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
 
         it("should be possible to send broadcast", async () => {
             let res = await skaleDKG.isChannelOpened(web3.utils.soliditySha3("d3"));
-            assert.equal(res, false);
+            assert.equal(res, true);
             await skaleManager.nodeExit(0, {from: validator});
             const res1 = await schainsData.getNodesInGroup(web3.utils.soliditySha3("d3"));
             const nodeRot = res1[3];
@@ -787,7 +787,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
 
         it("should be possible to send broadcast", async () => {
             let res = await skaleDKG.isChannelOpened(web3.utils.soliditySha3("d3"));
-            assert.equal(res, false);
+            assert.equal(res, true);
             await skaleManager.nodeExit(0, {from: validator});
             const res1 = await schainsData.getNodesInGroup(web3.utils.soliditySha3("d3"));
             const nodeRot = res1[3];
@@ -802,7 +802,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                 0,
                 0,
             );
-            await skaleDKG.deleteChannel(web3.utils.soliditySha3("d3"));
+            // await skaleDKG.deleteChannel(web3.utils.soliditySha3("d3"));
             await skaleManager.nodeExit(1, {from: validator})
                 .should.be.eventually.rejectedWith("Node cannot rotate on Schain d3, occupied by Node 0");
             await skaleManager.nodeExit(0, {from: validator});
@@ -813,7 +813,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                 0,
                 0,
             );
-            await skaleDKG.deleteChannel(web3.utils.soliditySha3("d2"));
+            // await skaleDKG.deleteChannel(web3.utils.soliditySha3("d2"));
 
             skipTime(web3, 43260);
 
