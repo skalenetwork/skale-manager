@@ -372,7 +372,6 @@ contract SkaleDKG is Permissions {
                 badNode,
                 groupIndex
             );
-            IGroupsData(dataAddress).setGroupFailedDKG(groupIndex);
             channels[groupIndex].active = false;
         }
 
