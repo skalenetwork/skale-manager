@@ -143,7 +143,7 @@ contract SkaleDKG is Permissions {
     }
 
     function reopenChannel(bytes32 groupIndex) external allow("SkaleDKG") {
-        require(channels[groupIndex].active, "Channel is not created");
+        // require(channels[groupIndex].active, "Channel is not created");
 
         GroupsData groupsData = GroupsData(channels[groupIndex].dataAddress);
 
