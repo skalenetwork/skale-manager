@@ -160,24 +160,21 @@ contract DelegationController is Permissions, ILocker {
         _;
     }
 
-    function getDelegation(uint delegationId) external view checkDelegationExists(delegationId) returns (Delegation memory) {
-        return delegations[delegationId];
-    }
-
     function getAndUpdateDelegatedToValidatorNow(uint validatorId) external returns (uint) {
-        return getAndUpdateDelegatedToValidator(validatorId, getCurrentMonth());
+        return getAndUpdateDelegatedToValidator(validatorId, _getCurrentMonth());
     }
 
     function getAndUpdateDelegatedAmount(address holder) external returns (uint) {
-        return getAndUpdateDelegatedByHolder(holder);
+        return _getAndUpdateDelegatedByHolder(holder);
     }
 
     function getAndUpdateEffectiveDelegatedByHolderToValidator(address holder, uint validatorId, uint month) external
         allow("Distributor") returns (uint effectiveDelegated)
     {
-        SlashingSignal[] memory slashingSignals = processAllSlashesWithoutSignals(holder);
-        effectiveDelegated = _effectiveDelegatedByHolderToValidator[holder][validatorId].getAndUpdateValueInSequence(month);
-        sendSlashingSignals(slashingSignals);
+        SlashingSignal[] memory slashingSignals = _processAllSlashesWithoutSignals(holder);
+        effectiveDelegated = _effectiveDelegatedByHolderToValidator[holder][validatorId]
+            .getAndUpdateValueInSequence(month);
+        _sendSlashingSignals(slashingSignals);
     }
 
     /// @notice Creates request to delegate `amount` of tokens to `validator` from the begining of the next month
@@ -190,10 +187,11 @@ contract DelegationController is Permissions, ILocker {
         external
     {
 
-        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
-        DelegationPeriodManager delegationPeriodManager = DelegationPeriodManager(contractManager.getContract("DelegationPeriodManager"));
-        SkaleToken skaleToken = SkaleToken(contractManager.getContract("SkaleToken"));
-        TokenState tokenState = TokenState(contractManager.getContract("TokenState"));
+        ValidatorService validatorService = ValidatorService(_contractManager.getContract("ValidatorService"));
+        DelegationPeriodManager delegationPeriodManager = DelegationPeriodManager(
+            _contractManager.getContract("DelegationPeriodManager"));
+        SkaleToken skaleToken = SkaleToken(_contractManager.getContract("SkaleToken"));
+        TokenState tokenState = TokenState(_contractManager.getContract("TokenState"));
 
         require(
             validatorService.checkMinimumDelegation(validatorId, amount),
@@ -206,9 +204,9 @@ contract DelegationController is Permissions, ILocker {
             "This delegation period is not allowed");
         require(validatorService.isAcceptingNewRequests(validatorId), "The validator does not accept new requests");
 
-        SlashingSignal[] memory slashingSignals = processAllSlashesWithoutSignals(msg.sender);
+        SlashingSignal[] memory slashingSignals = _processAllSlashesWithoutSignals(msg.sender);
 
-        uint delegationId = addDelegation(
+        uint delegationId = _addDelegation(
             msg.sender,
             validatorId,
             amount,
@@ -222,7 +220,7 @@ contract DelegationController is Permissions, ILocker {
 
         emit DelegationProposed(delegationId);
 
-        sendSlashingSignals(slashingSignals);
+        _sendSlashingSignals(slashingSignals);
     }
 
     function getAndUpdateLockedAmount(address wallet) external override returns (uint) {
@@ -237,57 +235,57 @@ contract DelegationController is Permissions, ILocker {
         require(msg.sender == delegations[delegationId].holder, "Only token holders can cancel delegation request");
         require(getState(delegationId) == State.PROPOSED, "Token holders able to cancel only PROPOSED delegations");
 
-        delegations[delegationId].finished = getCurrentMonth();
-        subtractFromLockedInPerdingDelegations(delegations[delegationId].holder, delegations[delegationId].amount);
+        delegations[delegationId].finished = _getCurrentMonth();
+        _subtractFromLockedInPerdingDelegations(delegations[delegationId].holder, delegations[delegationId].amount);
 
         emit DelegationRequestCanceledByUser(delegationId);
     }
 
     /// @notice Allows validator to accept tokens delegated at `delegationId`
     function acceptPendingDelegation(uint delegationId) external checkDelegationExists(delegationId) {
-        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
+        ValidatorService validatorService = ValidatorService(_contractManager.getContract("ValidatorService"));
         require(
             validatorService.checkValidatorAddressToId(msg.sender, delegations[delegationId].validatorId),
             "No permissions to accept request");
         require(getState(delegationId) == State.PROPOSED, "Cannot set state to accepted");
+        
+        DelegationPeriodManager delegationPeriodManager = DelegationPeriodManager(
+            _contractManager.getContract("DelegationPeriodManager"));
+        TokenLaunchLocker tokenLaunchLocker = TokenLaunchLocker(_contractManager.getContract("TokenLaunchLocker"));
 
-        TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
-        DelegationPeriodManager delegationPeriodManager = DelegationPeriodManager(contractManager.getContract("DelegationPeriodManager"));
-        TokenLaunchLocker tokenLaunchLocker = TokenLaunchLocker(contractManager.getContract("TokenLaunchLocker"));
+        SlashingSignal[] memory slashingSignals = _processAllSlashesWithoutSignals(delegations[delegationId].holder);
 
-        SlashingSignal[] memory slashingSignals = processAllSlashesWithoutSignals(delegations[delegationId].holder);
-
-        uint currentMonth = timeHelpers.getCurrentMonth();
+        uint currentMonth = _getCurrentMonth();
         delegations[delegationId].started = currentMonth.add(1);
         if (_slashesOfValidator[delegations[delegationId].validatorId].lastMonth > 0) {
             _delegationExtras[delegationId].lastSlashingMonthBeforeDelegation =
                 _slashesOfValidator[delegations[delegationId].validatorId].lastMonth;
         }
 
-        addToDelegatedToValidator(
+        _addToDelegatedToValidator(
             delegations[delegationId].validatorId,
             delegations[delegationId].amount,
             currentMonth.add(1));
-        addToDelegatedByHolder(
+        _addToDelegatedByHolder(
             delegations[delegationId].holder,
             delegations[delegationId].amount,
             currentMonth.add(1));
-        addToDelegatedByHolderToValidator(
+        _addToDelegatedByHolderToValidator(
             delegations[delegationId].holder,
             delegations[delegationId].validatorId,
             delegations[delegationId].amount,
             currentMonth.add(1));
-        updateFirstDelegationMonth(
+        _updateFirstDelegationMonth(
             delegations[delegationId].holder,
             delegations[delegationId].validatorId,
             currentMonth.add(1));
         uint effectiveAmount = delegations[delegationId].amount.mul(delegationPeriodManager.stakeMultipliers(
             delegations[delegationId].delegationPeriod));
-        addToEffectiveDelegatedToValidator(
+        _addToEffectiveDelegatedToValidator(
             delegations[delegationId].validatorId,
             effectiveAmount,
             currentMonth.add(1));
-        addToEffectiveDelegatedByHolderToValidator(
+        _addToEffectiveDelegatedByHolderToValidator(
             delegations[delegationId].holder,
             delegations[delegationId].validatorId,
             effectiveAmount,
@@ -299,7 +297,7 @@ contract DelegationController is Permissions, ILocker {
             delegations[delegationId].amount,
             delegations[delegationId].started);
 
-        sendSlashingSignals(slashingSignals);
+        _sendSlashingSignals(slashingSignals);
 
         emit DelegationAccepted(delegationId);
     }
@@ -307,40 +305,41 @@ contract DelegationController is Permissions, ILocker {
     function requestUndelegation(uint delegationId) external checkDelegationExists(delegationId) {
         require(getState(delegationId) == State.DELEGATED, "Cannot request undelegation");
 
-        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
+        ValidatorService validatorService = ValidatorService(_contractManager.getContract("ValidatorService"));
         require(
             delegations[delegationId].holder == msg.sender ||
             (validatorService.validatorAddressExists(msg.sender) &&
             delegations[delegationId].validatorId == validatorService.getValidatorId(msg.sender)),
             "Permission denied to request undelegation");
 
-        TokenLaunchLocker tokenLaunchLocker = TokenLaunchLocker(contractManager.getContract("TokenLaunchLocker"));
-        DelegationPeriodManager delegationPeriodManager = DelegationPeriodManager(contractManager.getContract("DelegationPeriodManager"));
+        TokenLaunchLocker tokenLaunchLocker = TokenLaunchLocker(_contractManager.getContract("TokenLaunchLocker"));
+        DelegationPeriodManager delegationPeriodManager = DelegationPeriodManager(
+            _contractManager.getContract("DelegationPeriodManager"));
 
         processAllSlashes(msg.sender);
-        delegations[delegationId].finished = calculateDelegationEndMonth(delegationId);
-        uint amountAfterSlashing = calculateDelegationAmountAfterSlashing(delegationId);
+        delegations[delegationId].finished = _calculateDelegationEndMonth(delegationId);
+        uint amountAfterSlashing = _calculateDelegationAmountAfterSlashing(delegationId);
 
-        removeFromDelegatedToValidator(
+        _removeFromDelegatedToValidator(
             delegations[delegationId].validatorId,
             amountAfterSlashing,
             delegations[delegationId].finished);
-        removeFromDelegatedByHolder(
+        _removeFromDelegatedByHolder(
             delegations[delegationId].holder,
             amountAfterSlashing,
             delegations[delegationId].finished);
-        removeFromDelegatedByHolderToValidator(
+        _removeFromDelegatedByHolderToValidator(
             delegations[delegationId].holder,
             delegations[delegationId].validatorId,
             amountAfterSlashing,
             delegations[delegationId].finished);
         uint effectiveAmount = amountAfterSlashing.mul(delegationPeriodManager.stakeMultipliers(
             delegations[delegationId].delegationPeriod));
-        removeFromEffectiveDelegatedToValidator(
+        _removeFromEffectiveDelegatedToValidator(
             delegations[delegationId].validatorId,
             effectiveAmount,
             delegations[delegationId].finished);
-        removeFromEffectiveDelegatedByHolderToValidator(
+        _removeFromEffectiveDelegatedByHolderToValidator(
             delegations[delegationId].holder,
             delegations[delegationId].validatorId,
             effectiveAmount,
@@ -355,21 +354,28 @@ contract DelegationController is Permissions, ILocker {
     }
 
     function confiscate(uint validatorId, uint amount) external allow("Punisher") {
-        uint currentMonth = getCurrentMonth();
-        FractionUtils.Fraction memory coefficient = _delegatedToValidator[validatorId].reduceValue(amount, currentMonth);
+        uint currentMonth = _getCurrentMonth();
+        FractionUtils.Fraction memory coefficient =
+            _delegatedToValidator[validatorId].reduceValue(amount, currentMonth);
         _effectiveDelegatedToValidator[validatorId].reduceSequence(coefficient, currentMonth);
-        putToSlashingLog(_slashesOfValidator[validatorId], coefficient, currentMonth);
+        _putToSlashingLog(_slashesOfValidator[validatorId], coefficient, currentMonth);
         _slashes.push(SlashingEvent({reducingCoefficient: coefficient, validatorId: validatorId, month: currentMonth}));
-    }
-
-    function getFirstDelegationMonth(address holder, uint validatorId) external view returns(uint) {
-        return _firstDelegationMonth[holder].byValidator[validatorId];
     }
 
     function getAndUpdateEffectiveDelegatedToValidator(uint validatorId, uint month)
         external allow("Distributor") returns (uint)
     {
         return _effectiveDelegatedToValidator[validatorId].getAndUpdateValueInSequence(month);
+    }
+
+    function getDelegation(uint delegationId)
+        external view checkDelegationExists(delegationId) returns (Delegation memory)
+    {
+        return delegations[delegationId];
+    }
+
+    function getFirstDelegationMonth(address holder, uint validatorId) external view returns(uint) {
+        return _firstDelegationMonth[holder].byValidator[validatorId];
     }
 
     function getDelegationsByValidatorLength(uint validatorId) external view returns (uint) {
@@ -384,15 +390,25 @@ contract DelegationController is Permissions, ILocker {
         Permissions.initialize(_contractsAddress);
     }
 
-    function getAndUpdateDelegatedToValidator(uint validatorId, uint month) public allow("ValidatorService") returns (uint) {
+    function getAndUpdateDelegatedToValidator(uint validatorId, uint month)
+        public allow("ValidatorService") returns (uint)
+    {
         return _delegatedToValidator[validatorId].getAndUpdateValue(month);
+    }
+
+    function processSlashes(address holder, uint limit) public {
+        _sendSlashingSignals(_processSlashesWithoutSignals(holder, limit));
+    }
+
+    function processAllSlashes(address holder) public {
+        processSlashes(holder, 0);
     }
 
     function getState(uint delegationId) public view checkDelegationExists(delegationId) returns (State state) {
         if (delegations[delegationId].started == 0) {
             if (delegations[delegationId].finished == 0) {
-                TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
-                if (timeHelpers.getCurrentMonth() == timeHelpers.timestampToMonth(delegations[delegationId].created)) {
+                TimeHelpers timeHelpers = TimeHelpers(_contractManager.getContract("TimeHelpers"));
+                if (_getCurrentMonth() == timeHelpers.timestampToMonth(delegations[delegationId].created)) {
                     return State.PROPOSED;
                 } else {
                     return State.REJECTED;
@@ -401,14 +417,13 @@ contract DelegationController is Permissions, ILocker {
                 return State.CANCELED;
             }
         } else {
-            TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
-            if (timeHelpers.getCurrentMonth() < delegations[delegationId].started) {
+            if (_getCurrentMonth() < delegations[delegationId].started) {
                 return State.ACCEPTED;
             } else {
                 if (delegations[delegationId].finished == 0) {
                     return State.DELEGATED;
                 } else {
-                    if (timeHelpers.getCurrentMonth() < delegations[delegationId].finished) {
+                    if (_getCurrentMonth() < delegations[delegationId].finished) {
                         return State.UNDELEGATION_REQUESTED;
                     } else {
                         return State.COMPLETED;
@@ -419,7 +434,7 @@ contract DelegationController is Permissions, ILocker {
     }
 
     function getLockedInPendingDelegations(address holder) public view returns (uint) {
-        uint currentMonth = getCurrentMonth();
+        uint currentMonth = _getCurrentMonth();
         if (_lockedInPendingDelegations[holder].month < currentMonth) {
             return 0;
         } else {
@@ -428,20 +443,12 @@ contract DelegationController is Permissions, ILocker {
     }
 
     function hasUnprocessedSlashes(address holder) public view returns (bool) {
-        return everDelegated(holder) && _firstUnprocessedSlashByHolder[holder] < _slashes.length;
-    }
-
-    function processSlashes(address holder, uint limit) public {
-        sendSlashingSignals(processSlashesWithoutSignals(holder, limit));
-    }
-
-    function processAllSlashes(address holder) public {
-        processSlashes(holder, 0);
+        return _everDelegated(holder) && _firstUnprocessedSlashByHolder[holder] < _slashes.length;
     }
 
     // private
 
-    function addDelegation(
+    function _addDelegation(
         address holder,
         uint validatorId,
         uint amount,
@@ -464,23 +471,23 @@ contract DelegationController is Permissions, ILocker {
         ));
         delegationsByValidator[validatorId].push(delegationId);
         delegationsByHolder[holder].push(delegationId);
-        addToLockedInPendingDelegations(delegations[delegationId].holder, delegations[delegationId].amount);
+        _addToLockedInPendingDelegations(delegations[delegationId].holder, delegations[delegationId].amount);
     }
 
-    function isTerminated(State state) internal pure returns (bool) {
+    function _isTerminated(State state) internal pure returns (bool) {
         return state == State.COMPLETED || state == State.REJECTED;
     }
 
-    function isLocked(State state) internal pure returns (bool) {
-        return !isTerminated(state);
+    function _isLocked(State state) internal pure returns (bool) {
+        return !_isTerminated(state);
     }
 
-    function isDelegated(State state) internal pure returns (bool) {
+    function _isDelegated(State state) internal pure returns (bool) {
         return state == State.DELEGATED || state == State.UNDELEGATION_REQUESTED;
     }
 
-    function calculateDelegationEndMonth(uint delegationId) internal view returns (uint) {
-        uint currentMonth = getCurrentMonth();
+    function _calculateDelegationEndMonth(uint delegationId) internal view returns (uint) {
+        uint currentMonth = _getCurrentMonth();
         uint started = delegations[delegationId].started;
 
         if (currentMonth < started) {
@@ -491,35 +498,35 @@ contract DelegationController is Permissions, ILocker {
         }
     }
 
-    function addToDelegatedToValidator(uint validatorId, uint amount, uint month) internal {
+    function _addToDelegatedToValidator(uint validatorId, uint amount, uint month) internal {
         _delegatedToValidator[validatorId].addToValue(amount, month);
     }
 
-    function addToEffectiveDelegatedToValidator(uint validatorId, uint effectiveAmount, uint month) internal {
+    function _addToEffectiveDelegatedToValidator(uint validatorId, uint effectiveAmount, uint month) internal {
         _effectiveDelegatedToValidator[validatorId].addToSequence(effectiveAmount, month);
     }
 
-    function addToDelegatedByHolder(address holder, uint amount, uint month) internal {
+    function _addToDelegatedByHolder(address holder, uint amount, uint month) internal {
         _delegatedByHolder[holder].addToValue(amount, month);
     }
 
-    function addToDelegatedByHolderToValidator(
+    function _addToDelegatedByHolderToValidator(
         address holder, uint validatorId, uint amount, uint month) internal
     {
         _delegatedByHolderToValidator[holder][validatorId].addToValue(amount, month);
     }
 
-    function removeFromDelegatedByHolder(address holder, uint amount, uint month) internal {
+    function _removeFromDelegatedByHolder(address holder, uint amount, uint month) internal {
         _delegatedByHolder[holder].subtractFromValue(amount, month);
     }
 
-    function removeFromDelegatedByHolderToValidator(
+    function _removeFromDelegatedByHolderToValidator(
         address holder, uint validatorId, uint amount, uint month) internal
     {
         _delegatedByHolderToValidator[holder][validatorId].subtractFromValue(amount, month);
     }
 
-    function addToEffectiveDelegatedByHolderToValidator(
+    function _addToEffectiveDelegatedByHolderToValidator(
         address holder,
         uint validatorId,
         uint effectiveAmount,
@@ -529,7 +536,7 @@ contract DelegationController is Permissions, ILocker {
         _effectiveDelegatedByHolderToValidator[holder][validatorId].addToSequence(effectiveAmount, month);
     }
 
-    function removeFromEffectiveDelegatedByHolderToValidator(
+    function _removeFromEffectiveDelegatedByHolderToValidator(
         address holder,
         uint validatorId,
         uint effectiveAmount,
@@ -539,18 +546,23 @@ contract DelegationController is Permissions, ILocker {
         _effectiveDelegatedByHolderToValidator[holder][validatorId].subtractFromSequence(effectiveAmount, month);
     }
 
-    function getAndUpdateDelegatedByHolder(address holder) internal returns (uint) {
-        uint currentMonth = getCurrentMonth();
+    function _getAndUpdateDelegatedByHolder(address holder) internal returns (uint) {
+        uint currentMonth = _getCurrentMonth();
         processAllSlashes(holder);
         return _delegatedByHolder[holder].getAndUpdateValue(currentMonth);
     }
 
-    function getAndUpdateDelegatedByHolderToValidator(address holder, uint validatorId, uint month) internal returns (uint) {
+    function _getAndUpdateDelegatedByHolderToValidator(
+        address holder,
+        uint validatorId,
+        uint month)
+        internal returns (uint)
+    {
         return _delegatedByHolderToValidator[holder][validatorId].getAndUpdateValue(month);
     }
 
-    function addToLockedInPendingDelegations(address holder, uint amount) internal returns (uint) {
-        uint currentMonth = getCurrentMonth();
+    function _addToLockedInPendingDelegations(address holder, uint amount) internal returns (uint) {
+        uint currentMonth = _getCurrentMonth();
         if (_lockedInPendingDelegations[holder].month < currentMonth) {
             _lockedInPendingDelegations[holder].amount = amount;
             _lockedInPendingDelegations[holder].month = currentMonth;
@@ -560,23 +572,25 @@ contract DelegationController is Permissions, ILocker {
         }
     }
 
-    function subtractFromLockedInPerdingDelegations(address holder, uint amount) internal returns (uint) {
-        uint currentMonth = getCurrentMonth();
-        require(_lockedInPendingDelegations[holder].month == currentMonth, "There are no delegation requests this month");
+    function _subtractFromLockedInPerdingDelegations(address holder, uint amount) internal returns (uint) {
+        uint currentMonth = _getCurrentMonth();
+        require(
+            _lockedInPendingDelegations[holder].month == currentMonth,
+            "There are no delegation requests this month");
         require(_lockedInPendingDelegations[holder].amount >= amount, "Unlocking amount is too big");
         _lockedInPendingDelegations[holder].amount = _lockedInPendingDelegations[holder].amount.sub(amount);
     }
 
-    function getCurrentMonth() internal view returns (uint) {
-        TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
+    function _getCurrentMonth() internal view returns (uint) {
+        TimeHelpers timeHelpers = TimeHelpers(_contractManager.getContract("TimeHelpers"));
         return timeHelpers.getCurrentMonth();
     }
 
     function _getAndUpdateLockedAmount(address wallet) internal returns (uint) {
-        return getAndUpdateDelegatedByHolder(wallet).add(getLockedInPendingDelegations(wallet));
+        return _getAndUpdateDelegatedByHolder(wallet).add(getLockedInPendingDelegations(wallet));
     }
 
-    function updateFirstDelegationMonth(address holder, uint validatorId, uint month) internal {
+    function _updateFirstDelegationMonth(address holder, uint validatorId, uint month) internal {
         if (_firstDelegationMonth[holder].value == 0) {
             _firstDelegationMonth[holder].value = month;
             _firstUnprocessedSlashByHolder[holder] = _slashes.length;
@@ -586,19 +600,19 @@ contract DelegationController is Permissions, ILocker {
         }
     }
 
-    function everDelegated(address holder) internal view returns (bool) {
+    function _everDelegated(address holder) internal view returns (bool) {
         return _firstDelegationMonth[holder].value > 0;
     }
 
-    function removeFromDelegatedToValidator(uint validatorId, uint amount, uint month) internal {
+    function _removeFromDelegatedToValidator(uint validatorId, uint amount, uint month) internal {
         _delegatedToValidator[validatorId].subtractFromValue(amount, month);
     }
 
-    function removeFromEffectiveDelegatedToValidator(uint validatorId, uint effectiveAmount, uint month) internal {
+    function _removeFromEffectiveDelegatedToValidator(uint validatorId, uint effectiveAmount, uint month) internal {
         _effectiveDelegatedToValidator[validatorId].subtractFromSequence(effectiveAmount, month);
     }
 
-    function calculateDelegationAmountAfterSlashing(uint delegationId) internal view returns (uint) {
+    function _calculateDelegationAmountAfterSlashing(uint delegationId) internal view returns (uint) {
         uint startMonth = _delegationExtras[delegationId].lastSlashingMonthBeforeDelegation;
         uint validatorId = delegations[delegationId].validatorId;
         uint amount = delegations[delegationId].amount;
@@ -620,7 +634,12 @@ contract DelegationController is Permissions, ILocker {
         return amount;
     }
 
-    function putToSlashingLog(SlashingLog storage log, FractionUtils.Fraction memory coefficient, uint month) internal {
+    function _putToSlashingLog(
+        SlashingLog storage log,
+        FractionUtils.Fraction memory coefficient,
+        uint month)
+        internal
+    {
         if (log.firstMonth == 0) {
             log.firstMonth = month;
             log.lastMonth = month;
@@ -629,7 +648,8 @@ contract DelegationController is Permissions, ILocker {
         } else {
             require(log.lastMonth <= month, "Cannot put slashing event in the past");
             if (log.lastMonth == month) {
-                log.slashes[month].reducingCoefficient = log.slashes[month].reducingCoefficient.multiplyFraction(coefficient);
+                log.slashes[month].reducingCoefficient =
+                    log.slashes[month].reducingCoefficient.multiplyFraction(coefficient);
             } else {
                 log.slashes[month].reducingCoefficient = coefficient;
                 log.slashes[month].nextMonth = 0;
@@ -639,7 +659,9 @@ contract DelegationController is Permissions, ILocker {
         }
     }
 
-    function processSlashesWithoutSignals(address holder, uint limit) internal returns (SlashingSignal[] memory slashingSignals) {
+    function _processSlashesWithoutSignals(address holder, uint limit)
+        internal returns (SlashingSignal[] memory slashingSignals)
+    {
         if (hasUnprocessedSlashes(holder)) {
             uint index = _firstUnprocessedSlashByHolder[holder];
             uint end = _slashes.length;
@@ -651,7 +673,7 @@ contract DelegationController is Permissions, ILocker {
             for (; index < end; ++index) {
                 uint validatorId = _slashes[index].validatorId;
                 uint month = _slashes[index].month;
-                uint oldValue = getAndUpdateDelegatedByHolderToValidator(holder, validatorId, month);
+                uint oldValue = _getAndUpdateDelegatedByHolderToValidator(holder, validatorId, month);
                 if (oldValue.muchGreater(0)) {
                     _delegatedByHolderToValidator[holder][validatorId].reduceValueByCoefficientAndUpdateSum(
                         _delegatedByHolder[holder],
@@ -662,19 +684,21 @@ contract DelegationController is Permissions, ILocker {
                         month);
                     slashingSignals[index.sub(begin)].holder = holder;
                     slashingSignals[index.sub(begin)].penalty
-                        = oldValue.boundedSub(getAndUpdateDelegatedByHolderToValidator(holder, validatorId, month));
+                        = oldValue.boundedSub(_getAndUpdateDelegatedByHolderToValidator(holder, validatorId, month));
                 }
             }
             _firstUnprocessedSlashByHolder[holder] = end;
         }
     }
 
-    function processAllSlashesWithoutSignals(address holder) internal returns (SlashingSignal[] memory slashingSignals) {
-        return processSlashesWithoutSignals(holder, 0);
+    function _processAllSlashesWithoutSignals(address holder)
+        internal returns (SlashingSignal[] memory slashingSignals)
+    {
+        return _processSlashesWithoutSignals(holder, 0);
     }
 
-    function sendSlashingSignals(SlashingSignal[] memory slashingSignals) internal {
-        Punisher punisher = Punisher(contractManager.getContract("Punisher"));
+    function _sendSlashingSignals(SlashingSignal[] memory slashingSignals) internal {
+        Punisher punisher = Punisher(_contractManager.getContract("Punisher"));
         address previousHolder = address(0);
         uint accumulatedPenalty = 0;
         for (uint i = 0; i < slashingSignals.length; ++i) {
