@@ -146,6 +146,7 @@ contract SkaleDKG is Permissions {
         // require(channels[groupIndex].active, "Channel is not created");
 
         GroupsData groupsData = GroupsData(channels[groupIndex].dataAddress);
+        channels[groupIndex].active = true;
 
         delete channels[groupIndex].broadcasted;
         delete channels[groupIndex].completed;
