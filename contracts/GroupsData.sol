@@ -51,10 +51,10 @@ contract GroupsData is IGroupsData, Permissions {
     // past groups common BLS public keys
     mapping (bytes32 => uint[4][]) public previousPublicKeys;
     // mapping for checking Has Node already joined to the group
-    mapping (bytes32 => GroupCheck) exceptions;
+    mapping (bytes32 => GroupCheck) private _exceptions;
 
     // name of executor contract
-    string executorName;
+    string internal _executorName;
 
     /**
      * @dev addGroup - creates and adds new Group to mapping
@@ -63,12 +63,12 @@ contract GroupsData is IGroupsData, Permissions {
      * @param amountOfNodes - recommended number of Nodes in this Group
      * @param data - some extra data
      */
-    function addGroup(bytes32 groupIndex, uint amountOfNodes, bytes32 data) external override allow(executorName) {
+    function addGroup(bytes32 groupIndex, uint amountOfNodes, bytes32 data) external override allow(_executorName) {
         groups[groupIndex].active = true;
         groups[groupIndex].recommendedNumberOfNodes = amountOfNodes;
         groups[groupIndex].groupData = data;
         // Open channel in SkaleDKG
-        address skaleDKGAddress = contractManager.getContract("SkaleDKG");
+        address skaleDKGAddress = _contractManager.getContract("SkaleDKG");
         ISkaleDKG(skaleDKGAddress).openChannel(groupIndex);
     }
 
@@ -78,8 +78,8 @@ contract GroupsData is IGroupsData, Permissions {
      * @param groupIndex - Groups identifier
      * @param nodeIndex - index of Node which would be notes like exception
      */
-    function setException(bytes32 groupIndex, uint nodeIndex) external override allow(executorName) {
-        exceptions[groupIndex].check[nodeIndex] = true;
+    function setException(bytes32 groupIndex, uint nodeIndex) external override allow(_executorName) {
+        _exceptions[groupIndex].check[nodeIndex] = true;
     }
 
     /**
@@ -98,7 +98,7 @@ contract GroupsData is IGroupsData, Permissions {
         uint publicKeyx2,
         uint publicKeyy2) external override allow("SkaleDKG")
     {
-        if (!isPublicKeyZero(groupIndex)) {
+        if (!_isPublicKeyZero(groupIndex)) {
             uint[4] memory previousKey = groups[groupIndex].groupsPublicKey;
             previousPublicKeys[groupIndex].push(previousKey);
         }
@@ -115,7 +115,7 @@ contract GroupsData is IGroupsData, Permissions {
      * @param groupIndex - Groups identifier
      * @param nodeIndex - index of Node which would be added to the Group
      */
-    function setNodeInGroup(bytes32 groupIndex, uint nodeIndex) external override allow(executorName) {
+    function setNodeInGroup(bytes32 groupIndex, uint nodeIndex) external override allow(_executorName) {
         groups[groupIndex].nodesInGroup.push(nodeIndex);
     }
 
@@ -125,7 +125,7 @@ contract GroupsData is IGroupsData, Permissions {
      * @param indexOfNode - Nodes identifier
      * @param groupIndex - Groups identifier
      */
-    function removeNodeFromGroup(uint indexOfNode, bytes32 groupIndex) external override allow(executorName) {
+    function removeNodeFromGroup(uint indexOfNode, bytes32 groupIndex) external override allow(_executorName) {
         uint size = groups[groupIndex].nodesInGroup.length;
         if (indexOfNode < size) {
             groups[groupIndex].nodesInGroup[indexOfNode] = groups[groupIndex].nodesInGroup[size - 1];
@@ -139,7 +139,7 @@ contract GroupsData is IGroupsData, Permissions {
      * function could be run only by executor
      * @param groupIndex - Groups identifier
      */
-    function removeAllNodesInGroup(bytes32 groupIndex) external override allow(executorName) {
+    function removeAllNodesInGroup(bytes32 groupIndex) external override allow(_executorName) {
         delete groups[groupIndex].nodesInGroup;
         while (groups[groupIndex].nodesInGroup.length > 0) {
             groups[groupIndex].nodesInGroup.pop();
@@ -152,7 +152,7 @@ contract GroupsData is IGroupsData, Permissions {
      * @param groupIndex - Groups identifier
      * @param nodesInGroup - array of indexes of Nodes which would be added to the Group
     */
-    function setNodesInGroup(bytes32 groupIndex, uint[] calldata nodesInGroup) external override allow(executorName) {
+    function setNodesInGroup(bytes32 groupIndex, uint[] calldata nodesInGroup) external override allow(_executorName) {
         groups[groupIndex].nodesInGroup = nodesInGroup;
     }
 
@@ -165,7 +165,7 @@ contract GroupsData is IGroupsData, Permissions {
      * function could be run only be executor
      * @param groupIndex - Groups identifier
      */
-    function removeGroup(bytes32 groupIndex) external override allow(executorName) {
+    function removeGroup(bytes32 groupIndex) external override allow(_executorName) {
         groups[groupIndex].active = false;
         delete groups[groupIndex].groupData;
         delete groups[groupIndex].recommendedNumberOfNodes;
@@ -174,7 +174,7 @@ contract GroupsData is IGroupsData, Permissions {
         delete groups[groupIndex].groupsPublicKey;
         delete groups[groupIndex];
         // delete channel
-        address skaleDKGAddress = contractManager.getContract("SkaleDKG");
+        address skaleDKGAddress = _contractManager.getContract("SkaleDKG");
 
         if (ISkaleDKG(skaleDKGAddress).isChannelOpened(groupIndex)) {
             ISkaleDKG(skaleDKGAddress).deleteChannel(groupIndex);
@@ -186,8 +186,8 @@ contract GroupsData is IGroupsData, Permissions {
      * function could be run only by executor
      * @param groupIndex - Groups identifier
      */
-    function removeExceptionNode(bytes32 groupIndex, uint nodeIndex) external override allow(executorName) {
-        exceptions[groupIndex].check[nodeIndex] = false;
+    function removeExceptionNode(bytes32 groupIndex, uint nodeIndex) external override allow(_executorName) {
+        _exceptions[groupIndex].check[nodeIndex] = false;
     }
 
     /**
@@ -206,7 +206,7 @@ contract GroupsData is IGroupsData, Permissions {
      * return true - exception, false - not exception
      */
     function isExceptionNode(bytes32 groupIndex, uint nodeIndex) external view override returns (bool) {
-        return exceptions[groupIndex].check[nodeIndex];
+        return _exceptions[groupIndex].check[nodeIndex];
     }
 
     /**
@@ -283,10 +283,10 @@ contract GroupsData is IGroupsData, Permissions {
      */
     function initialize(string memory newExecutorName, address newContractsAddress) public initializer {
         Permissions.initialize(newContractsAddress);
-        executorName = newExecutorName;
+        _executorName = newExecutorName;
     }
 
-    function isPublicKeyZero(bytes32 groupIndex) internal view returns (bool) {
+    function _isPublicKeyZero(bytes32 groupIndex) internal view returns (bool) {
         return groups[groupIndex].groupsPublicKey[0] == 0 &&
             groups[groupIndex].groupsPublicKey[1] == 0 &&
             groups[groupIndex].groupsPublicKey[2] == 0 &&

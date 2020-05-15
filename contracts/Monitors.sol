@@ -92,25 +92,13 @@ contract Monitors is Groups {
         uint newNode
     );
 
-    function getCheckedArray(bytes32 monitorIndex) external view returns (bytes32[] memory) {
-        return checkedNodes[monitorIndex];
-    }
-
-    function getLengthOfMetrics(bytes32 monitorIndex) external view returns (uint) {
-        return verdicts[monitorIndex].length;
-    }
-
-    /**
-     * addMonitor - setup monitors of node
-     */
     function addMonitor(uint nodeIndex) external allow("SkaleManager") {
-        address constantsAddress = contractManager.getContract("ConstantsHolder");
-        IConstants constantsHolder = IConstants(constantsAddress);
+        IConstants constantsHolder = IConstants(_contractManager.getContract("ConstantsHolder"));
         bytes32 groupIndex = keccak256(abi.encodePacked(nodeIndex));
         uint possibleNumberOfNodes = constantsHolder.NUMBER_OF_MONITORS();
         createGroup(groupIndex, possibleNumberOfNodes, bytes32(nodeIndex));
-        uint numberOfNodesInGroup = setMonitors(groupIndex, nodeIndex);
-        ISkaleDKG(contractManager.getContract("SkaleDKG")).openChannel(groupIndex);
+        uint numberOfNodesInGroup = _setMonitors(groupIndex, nodeIndex);
+        ISkaleDKG(_contractManager.getContract("SkaleDKG")).openChannel(groupIndex);
 
         emit MonitorCreated(
             nodeIndex,
@@ -121,14 +109,13 @@ contract Monitors is Groups {
     }
 
     function upgradeMonitor(uint nodeIndex) external allow("SkaleManager") {
-        address constantsAddress = contractManager.getContract("ConstantsHolder");
-        IConstants constantsHolder = IConstants(constantsAddress);
+        IConstants constantsHolder = IConstants(_contractManager.getContract("ConstantsHolder"));
         bytes32 groupIndex = keccak256(abi.encodePacked(nodeIndex));
         uint possibleNumberOfNodes = constantsHolder.NUMBER_OF_MONITORS();
         upgradeGroup(groupIndex, possibleNumberOfNodes, bytes32(nodeIndex));
-        uint numberOfNodesInGroup = setMonitors(groupIndex, nodeIndex);
+        uint numberOfNodesInGroup = _setMonitors(groupIndex, nodeIndex);
 
-        ISkaleDKG skaleDKG = ISkaleDKG(contractManager.getContract("SkaleDKG"));
+        ISkaleDKG skaleDKG = ISkaleDKG(_contractManager.getContract("SkaleDKG"));
         if (skaleDKG.isChannelOpened(groupIndex)) {
             skaleDKG.deleteChannel(groupIndex);
         }
@@ -153,10 +140,11 @@ contract Monitors is Groups {
         bytes32 monitorIndex;
         for (uint i = 0; i < nodesInGroup.length; i++) {
             monitorIndex = keccak256(abi.encodePacked(nodesInGroup[i]));
-            (index, ) = find(monitorIndex, nodeIndex);
+            (index, ) = _find(monitorIndex, nodeIndex);
             if (index < checkedNodes[monitorIndex].length) {
                 if (index != checkedNodes[monitorIndex].length - 1) {
-                    checkedNodes[monitorIndex][index] = checkedNodes[monitorIndex][checkedNodes[monitorIndex].length - 1];
+                    checkedNodes[monitorIndex][index] =
+                        checkedNodes[monitorIndex][checkedNodes[monitorIndex].length - 1];
                 }
                 delete checkedNodes[monitorIndex][checkedNodes[monitorIndex].length - 1];
                 checkedNodes[monitorIndex].pop();
@@ -169,16 +157,18 @@ contract Monitors is Groups {
         uint index;
         uint32 time;
         bytes32 monitorIndex = keccak256(abi.encodePacked(fromMonitorIndex));
-        (index, time) = find(monitorIndex, verdict.toNodeIndex);
+        (index, time) = _find(monitorIndex, verdict.toNodeIndex);
         require(time > 0, "Checked Node does not exist in MonitorsArray");
         string memory message = "The time has not come to send verdict for ";
-        require(time <= block.timestamp, message.strConcat(StringUtils.uint2str(verdict.toNodeIndex)).strConcat(" Node"));
+        require(
+            time <= block.timestamp,
+            message.strConcat(StringUtils.uint2str(verdict.toNodeIndex)).strConcat(" Node"));
         if (index != checkedNodes[monitorIndex].length - 1) {
             checkedNodes[monitorIndex][index] = checkedNodes[monitorIndex][checkedNodes[monitorIndex].length - 1];
         }
         delete checkedNodes[monitorIndex][checkedNodes[monitorIndex].length - 1];
         checkedNodes[monitorIndex].pop();
-        address constantsAddress = contractManager.getContract("ConstantsHolder");
+        address constantsAddress = _contractManager.getContract("ConstantsHolder");
         bool receiveVerdict = time.add(IConstants(constantsAddress).deltaPeriod()) > uint32(block.timestamp);
         if (receiveVerdict) {
             verdicts[keccak256(abi.encodePacked(verdict.toNodeIndex))].push([verdict.downtime, verdict.latency]);
@@ -190,7 +180,11 @@ contract Monitors is Groups {
             receiveVerdict, uint32(block.timestamp), gasleft());
     }
 
-    function calculateMetrics(uint nodeIndex) external allow("SkaleManager") returns (uint averageDowntime, uint averageLatency) {
+    function calculateMetrics(uint nodeIndex)
+        external 
+        allow("SkaleManager")
+        returns (uint averageDowntime, uint averageLatency)
+    {
         bytes32 monitorIndex = keccak256(abi.encodePacked(nodeIndex));
         uint lengthOfArray = this.getLengthOfMetrics(monitorIndex);
         uint[] memory downtimeArray = new uint[](lengthOfArray);
@@ -200,20 +194,33 @@ contract Monitors is Groups {
             latencyArray[i] = this.verdicts(monitorIndex, i, 1);
         }
         if (lengthOfArray > 0) {
-            averageDowntime = median(downtimeArray);
-            averageLatency = median(latencyArray);
+            averageDowntime = _median(downtimeArray);
+            averageLatency = _median(latencyArray);
             while (verdicts[monitorIndex].length > 0) {
                 verdicts[monitorIndex].pop();
             }
         }
     }
 
-    function initialize(address _contractManager) public override initializer {
-        Groups.initialize("Monitors", _contractManager);
+    function getCheckedArray(bytes32 monitorIndex) external view returns (bytes32[] memory) {
+        return checkedNodes[monitorIndex];
     }
 
-    function generateGroup(bytes32 groupIndex) internal override allow("SkaleManager") returns (uint[] memory) {
-        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
+    function getLengthOfMetrics(bytes32 monitorIndex) external view returns (uint) {
+        return verdicts[monitorIndex].length;
+    }
+
+    function initialize(address newContractsAddress) public override initializer {
+        Groups.initialize("Monitors", newContractsAddress);
+    }
+
+    function _generateGroup(bytes32 groupIndex)
+        internal
+        override
+        allow("SkaleManager")
+        returns (uint[] memory)
+    {
+        Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
         require(this.isGroupActive(groupIndex), "Group is not active");
         uint exceptionNode = uint(this.getGroupData(groupIndex));
         uint[] memory activeNodes = nodes.getActiveNodeIds();
@@ -228,12 +235,12 @@ contract Monitors is Groups {
         for (uint i = 0; i < nodesInGroup.length; ++i) {
             uint index = random % (activeNodes.length.sub(ignoringTail));
             if (activeNodes[index] == exceptionNode) {
-                swap(activeNodes, index, activeNodes.length.sub(ignoringTail) - 1);
+                _swap(activeNodes, index, activeNodes.length.sub(ignoringTail) - 1);
                 ++ignoringTail;
                 index = random % (activeNodes.length.sub(ignoringTail));
             }
             nodesInGroup[i] = activeNodes[index];
-            swap(activeNodes, index, activeNodes.length.sub(ignoringTail) - 1);
+            _swap(activeNodes, index, activeNodes.length.sub(ignoringTail) - 1);
             ++ignoringTail;
             setNodeInGroup(groupIndex, nodesInGroup[i]);
         }
@@ -245,18 +252,18 @@ contract Monitors is Groups {
         return nodesInGroup;
     }
 
-    function median(uint[] memory values) internal pure returns (uint) {
+    function _median(uint[] memory values) internal pure returns (uint) {
         if (values.length < 1) {
-            revert("Can't calculate median of empty array");
+            revert("Can't calculate _median of empty array");
         }
-        quickSort(values, 0, values.length - 1);
+        _quickSort(values, 0, values.length - 1);
         return values[values.length / 2];
     }
 
-    function setMonitors(bytes32 groupIndex, uint nodeIndex) internal returns (uint) {
+    function _setMonitors(bytes32 groupIndex, uint nodeIndex) internal returns (uint) {
         setException(groupIndex, nodeIndex);
-        uint[] memory indexOfNodesInGroup = generateGroup(groupIndex);
-        bytes32 bytesParametersOfNodeIndex = getDataToBytes(nodeIndex);
+        uint[] memory indexOfNodesInGroup = _generateGroup(groupIndex);
+        bytes32 bytesParametersOfNodeIndex = _getDataToBytes(nodeIndex);
         for (uint i = 0; i < indexOfNodesInGroup.length; i++) {
             bool stop = false;
             bytes32 index = keccak256(abi.encodePacked(indexOfNodesInGroup[i]));
@@ -283,13 +290,13 @@ contract Monitors is Groups {
         return indexOfNodesInGroup.length;
     }
 
-    function find(bytes32 monitorIndex, uint nodeIndex) internal view returns (uint index, uint32 time) {
-        bytes32[] memory _checkedNodes = checkedNodes[monitorIndex];
+    function _find(bytes32 monitorIndex, uint nodeIndex) internal view returns (uint index, uint32 time) {
+        bytes32[] memory nodes = checkedNodes[monitorIndex];
         uint possibleIndex;
         uint32 possibleTime;
-        index = _checkedNodes.length;
-        for (uint i = 0; i < _checkedNodes.length; i++) {
-            (possibleIndex, possibleTime) = getDataFromBytes(_checkedNodes[i]);
+        index = nodes.length;
+        for (uint i = 0; i < nodes.length; i++) {
+            (possibleIndex, possibleTime) = _getDataFromBytes(nodes[i]);
             if (possibleIndex == nodeIndex && (time == 0 || possibleTime < time)) {
                 index = i;
                 time = possibleTime;
@@ -297,7 +304,7 @@ contract Monitors is Groups {
         }
     }
 
-    function quickSort(uint[] memory array, uint left, uint right) internal pure {
+    function _quickSort(uint[] memory array, uint left, uint right) internal pure {
         uint leftIndex = left;
         uint rightIndex = right;
         uint middle = array[(right.add(left)) / 2];
@@ -315,12 +322,12 @@ contract Monitors is Groups {
             }
         }
         if (left < rightIndex)
-            quickSort(array, left, rightIndex);
+            _quickSort(array, left, rightIndex);
         if (leftIndex < right)
-            quickSort(array, leftIndex, right);
+            _quickSort(array, leftIndex, right);
     }
 
-    function getDataFromBytes(bytes32 data) internal pure returns (uint index, uint32 time) {
+    function _getDataFromBytes(bytes32 data) internal pure returns (uint index, uint32 time) {
         bytes memory tempBytes = new bytes(32);
         bytes14 bytesIndex;
         bytes14 bytesTime;
@@ -333,9 +340,9 @@ contract Monitors is Groups {
         time = uint32(uint112(bytesTime));
     }
 
-    function getDataToBytes(uint nodeIndex) internal view returns (bytes32 bytesParameters) {
-        address constantsAddress = contractManager.getContract("ConstantsHolder");
-        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
+    function _getDataToBytes(uint nodeIndex) internal view returns (bytes32 bytesParameters) {
+        address constantsAddress = _contractManager.getContract("ConstantsHolder");
+        Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
         bytes memory tempData = new bytes(32);
         bytes14 bytesOfIndex = bytes14(uint112(nodeIndex));
         bytes14 bytesOfTime = bytes14(

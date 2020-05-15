@@ -103,20 +103,10 @@ abstract contract Groups is Permissions {
     // past groups common BLS public keys
     mapping (bytes32 => uint[4][]) public previousPublicKeys;
     // mapping for checking Has Node already joined to the group
-    mapping (bytes32 => GroupCheck) exceptions;
+    mapping (bytes32 => GroupCheck) private _exceptions;
 
     // name of executor contract
-    string executorName;
-
-    /**
-     * @dev setException - sets a Node like exception
-     * function could be run only by executor
-     * @param groupIndex - Groups identifier
-     * @param nodeIndex - index of Node which would be notes like exception
-     */
-    function setException(bytes32 groupIndex, uint nodeIndex) public allow("SkaleManager") {
-        exceptions[groupIndex].check[nodeIndex] = true;
-    }
+    string internal _executorName;
 
     /**
      * @dev setPublicKey - sets BLS master public key
@@ -134,7 +124,7 @@ abstract contract Groups is Permissions {
         uint publicKeyx2,
         uint publicKeyy2) external allow("SkaleDKG")
     {
-        if (!isPublicKeyZero(groupIndex)) {
+        if (!_isPublicKeyZero(groupIndex)) {
             uint[4] memory previousKey = groups[groupIndex].groupsPublicKey;
             previousPublicKeys[groupIndex].push(previousKey);
         }
@@ -146,22 +136,12 @@ abstract contract Groups is Permissions {
     }
 
     /**
-     * @dev setNodeInGroup - adds Node to Group
-     * function could be run only by executor
-     * @param groupIndex - Groups identifier
-     * @param nodeIndex - index of Node which would be added to the Group
-     */
-    function setNodeInGroup(bytes32 groupIndex, uint nodeIndex) public allow("SkaleManager") {
-        groups[groupIndex].nodesInGroup.push(nodeIndex);
-    }
-
-    /**
      * @dev removeNodeFromGroup - removes Node out of the Group
      * function could be run only by executor
      * @param indexOfNode - Nodes identifier
      * @param groupIndex - Groups identifier
      */
-    function removeNodeFromGroup(uint indexOfNode, bytes32 groupIndex) external allow(executorName) {
+    function removeNodeFromGroup(uint indexOfNode, bytes32 groupIndex) external allow(_executorName) {
         uint size = groups[groupIndex].nodesInGroup.length;
         if (indexOfNode < size) {
             groups[groupIndex].nodesInGroup[indexOfNode] = groups[groupIndex].nodesInGroup[size - 1];
@@ -176,7 +156,7 @@ abstract contract Groups is Permissions {
      * @param groupIndex - Groups identifier
      * @param nodesInGroup - array of indexes of Nodes which would be added to the Group
     */
-    function setNodesInGroup(bytes32 groupIndex, uint[] calldata nodesInGroup) external allow(executorName) {
+    function setNodesInGroup(bytes32 groupIndex, uint[] calldata nodesInGroup) external allow(_executorName) {
         groups[groupIndex].nodesInGroup = nodesInGroup;
     }
 
@@ -189,8 +169,35 @@ abstract contract Groups is Permissions {
      * function could be run only by executor
      * @param groupIndex - Groups identifier
      */
-    function removeExceptionNode(bytes32 groupIndex, uint nodeIndex) external allow(executorName) {
-        exceptions[groupIndex].check[nodeIndex] = false;
+    function removeExceptionNode(bytes32 groupIndex, uint nodeIndex) external allow(_executorName) {
+        _exceptions[groupIndex].check[nodeIndex] = false;
+    }
+
+    /**
+     * @dev deleteGroup - delete Group from Data contract
+     * function could be run only by executor
+     * @param groupIndex - Groups identifier
+     */
+    function deleteGroup(bytes32 groupIndex) external allow(_executorName) {
+        require(groups[groupIndex].active, "Group is not active");
+        groups[groupIndex].active = false;
+        delete groups[groupIndex].groupData;
+        delete groups[groupIndex].recommendedNumberOfNodes;
+        uint[4] memory previousKey = groups[groupIndex].groupsPublicKey;
+        previousPublicKeys[groupIndex].push(previousKey);
+        delete groups[groupIndex].groupsPublicKey;
+        delete groups[groupIndex];
+        // delete channel
+        address skaleDKGAddress = _contractManager.getContract("SkaleDKG");
+
+        if (ISkaleDKG(skaleDKGAddress).isChannelOpened(groupIndex)) {
+            ISkaleDKG(skaleDKGAddress).deleteChannel(groupIndex);
+        }
+        delete groups[groupIndex].nodesInGroup;
+        while (groups[groupIndex].nodesInGroup.length > 0) {
+            groups[groupIndex].nodesInGroup.pop();
+        }
+        emit GroupDeleted(groupIndex, uint32(block.timestamp), gasleft());
     }
 
     /**
@@ -214,83 +221,10 @@ abstract contract Groups is Permissions {
         uint publicKeyx2;
         uint publicKeyy2;
         (publicKeyx1, publicKeyy1, publicKeyx2, publicKeyy2) = this.getGroupsPublicKey(groupIndex);
-        address skaleVerifierAddress = contractManager.getContract("SkaleVerifier");
+        address skaleVerifierAddress = _contractManager.getContract("SkaleVerifier");
         return ISkaleVerifierG(skaleVerifierAddress).verify(
             signatureX, signatureY, hashX, hashY, publicKeyx1, publicKeyy1, publicKeyx2, publicKeyy2
         );
-    }
-
-    /**
-     * @dev createGroup - creates and adds new Group to Data contract
-     * function could be run only by executor
-     * @param groupIndex - Groups identifier
-     * @param newRecommendedNumberOfNodes - recommended number of Nodes
-     * @param data - some extra data
-     */
-    function createGroup(bytes32 groupIndex, uint newRecommendedNumberOfNodes, bytes32 data) public allow("SkaleManager") {
-        groups[groupIndex].active = true;
-        groups[groupIndex].recommendedNumberOfNodes = newRecommendedNumberOfNodes;
-        groups[groupIndex].groupData = data;
-
-        emit GroupAdded(
-            groupIndex,
-            data,
-            uint32(block.timestamp),
-            gasleft());
-    }
-
-    /**
-     * @dev deleteGroup - delete Group from Data contract
-     * function could be run only by executor
-     * @param groupIndex - Groups identifier
-     */
-    function deleteGroup(bytes32 groupIndex) external allow(executorName) {
-        require(groups[groupIndex].active, "Group is not active");
-        groups[groupIndex].active = false;
-        delete groups[groupIndex].groupData;
-        delete groups[groupIndex].recommendedNumberOfNodes;
-        uint[4] memory previousKey = groups[groupIndex].groupsPublicKey;
-        previousPublicKeys[groupIndex].push(previousKey);
-        delete groups[groupIndex].groupsPublicKey;
-        delete groups[groupIndex];
-        // delete channel
-        address skaleDKGAddress = contractManager.getContract("SkaleDKG");
-
-        if (ISkaleDKG(skaleDKGAddress).isChannelOpened(groupIndex)) {
-            ISkaleDKG(skaleDKGAddress).deleteChannel(groupIndex);
-        }
-        delete groups[groupIndex].nodesInGroup;
-        while (groups[groupIndex].nodesInGroup.length > 0) {
-            groups[groupIndex].nodesInGroup.pop();
-        }
-        emit GroupDeleted(groupIndex, uint32(block.timestamp), gasleft());
-    }
-
-    /**
-     * @dev upgradeGroup - upgrade Group at Data contract
-     * function could be run only by executor
-     * @param groupIndex - Groups identifier
-     * @param newRecommendedNumberOfNodes - recommended number of Nodes
-     * @param data - some extra data
-     */
-    function upgradeGroup(bytes32 groupIndex, uint newRecommendedNumberOfNodes, bytes32 data) public allow("SkaleManager") {
-        require(groups[groupIndex].active, "Group is not active");
-
-        groups[groupIndex].recommendedNumberOfNodes = newRecommendedNumberOfNodes;
-        groups[groupIndex].groupData = data;
-        uint[4] memory previousKey = groups[groupIndex].groupsPublicKey;
-        previousPublicKeys[groupIndex].push(previousKey);
-        delete groups[groupIndex].groupsPublicKey;
-        delete groups[groupIndex].nodesInGroup;
-        while (groups[groupIndex].nodesInGroup.length > 0) {
-            groups[groupIndex].nodesInGroup.pop();
-        }
-
-        emit GroupUpgraded(
-            groupIndex,
-            data,
-            uint32(block.timestamp),
-            gasleft());
     }
 
     /**
@@ -309,7 +243,7 @@ abstract contract Groups is Permissions {
      * return true - exception, false - not exception
      */
     function isExceptionNode(bytes32 groupIndex, uint nodeIndex) external view returns (bool) {
-        return exceptions[groupIndex].check[nodeIndex];
+        return _exceptions[groupIndex].check[nodeIndex];
     }
 
     /**
@@ -380,13 +314,85 @@ abstract contract Groups is Permissions {
     }
 
     /**
+     * @dev createGroup - creates and adds new Group to Data contract
+     * function could be run only by executor
+     * @param groupIndex - Groups identifier
+     * @param newRecommendedNumberOfNodes - recommended number of Nodes
+     * @param data - some extra data
+     */
+    function createGroup(bytes32 groupIndex, uint newRecommendedNumberOfNodes, bytes32 data)
+        public
+        allow("SkaleManager")
+    {
+        groups[groupIndex].active = true;
+        groups[groupIndex].recommendedNumberOfNodes = newRecommendedNumberOfNodes;
+        groups[groupIndex].groupData = data;
+
+        emit GroupAdded(
+            groupIndex,
+            data,
+            uint32(block.timestamp),
+            gasleft());
+    }
+
+    /**
+     * @dev upgradeGroup - upgrade Group at Data contract
+     * function could be run only by executor
+     * @param groupIndex - Groups identifier
+     * @param newRecommendedNumberOfNodes - recommended number of Nodes
+     * @param data - some extra data
+     */
+    function upgradeGroup(bytes32 groupIndex, uint newRecommendedNumberOfNodes, bytes32 data)
+        public
+        allow("SkaleManager")
+    {
+        require(groups[groupIndex].active, "Group is not active");
+
+        groups[groupIndex].recommendedNumberOfNodes = newRecommendedNumberOfNodes;
+        groups[groupIndex].groupData = data;
+        uint[4] memory previousKey = groups[groupIndex].groupsPublicKey;
+        previousPublicKeys[groupIndex].push(previousKey);
+        delete groups[groupIndex].groupsPublicKey;
+        delete groups[groupIndex].nodesInGroup;
+        while (groups[groupIndex].nodesInGroup.length > 0) {
+            groups[groupIndex].nodesInGroup.pop();
+        }
+
+        emit GroupUpgraded(
+            groupIndex,
+            data,
+            uint32(block.timestamp),
+            gasleft());
+    }
+    
+    /**
+     * @dev setException - sets a Node like exception
+     * function could be run only by executor
+     * @param groupIndex - Groups identifier
+     * @param nodeIndex - index of Node which would be notes like exception
+     */
+    function setException(bytes32 groupIndex, uint nodeIndex) public allow("SkaleManager") {
+        _exceptions[groupIndex].check[nodeIndex] = true;
+    }
+
+    /**
+     * @dev setNodeInGroup - adds Node to Group
+     * function could be run only by executor
+     * @param groupIndex - Groups identifier
+     * @param nodeIndex - index of Node which would be added to the Group
+     */
+    function setNodeInGroup(bytes32 groupIndex, uint nodeIndex) public allow("SkaleManager") {
+        groups[groupIndex].nodesInGroup.push(nodeIndex);
+    }
+
+    /**
      * @dev contructor in Permissions approach
      * @param newExecutorName - name of executor contract
      * @param newContractsAddress needed in Permissions constructor
      */
     function initialize(string memory newExecutorName, address newContractsAddress) public initializer {
         Permissions.initialize(newContractsAddress);
-        executorName = newExecutorName;
+        _executorName = newExecutorName;
     }
 
     /**
@@ -395,7 +401,7 @@ abstract contract Groups is Permissions {
      * @param nodeIndex - global index of Node
      * @return local index of Node in Schain
      */
-    function findNode(bytes32 groupIndex, uint nodeIndex) internal view returns (uint) {
+    function _findNode(bytes32 groupIndex, uint nodeIndex) internal view returns (uint) {
         uint[] memory nodesInGroup = groups[groupIndex].nodesInGroup;
         uint index;
         for (index = 0; index < nodesInGroup.length; index++) {
@@ -407,21 +413,21 @@ abstract contract Groups is Permissions {
     }
 
     /**
-     * @dev generateGroup - abstract method which would be implemented in inherited contracts
+     * @dev _generateGroup - abstract method which would be implemented in inherited contracts
      * function generates group of Nodes
      * @param groupIndex - Groups identifier
      * return array of indexes of Nodes in Group
      */
-    function generateGroup(bytes32 groupIndex) internal virtual returns (uint[] memory);
+    function _generateGroup(bytes32 groupIndex) internal virtual returns (uint[] memory);
 
-    function isPublicKeyZero(bytes32 groupIndex) internal view returns (bool) {
+    function _isPublicKeyZero(bytes32 groupIndex) internal view returns (bool) {
         return groups[groupIndex].groupsPublicKey[0] == 0 &&
             groups[groupIndex].groupsPublicKey[1] == 0 &&
             groups[groupIndex].groupsPublicKey[2] == 0 &&
             groups[groupIndex].groupsPublicKey[3] == 0;
     }
 
-    function swap(uint[] memory array, uint index1, uint index2) internal pure {
+    function _swap(uint[] memory array, uint index1, uint index2) internal pure {
         uint buffer = array[index1];
         array[index1] = array[index2];
         array[index2] = buffer;

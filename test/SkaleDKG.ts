@@ -189,13 +189,14 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
             for (const index of Array.from(Array(nodesCount).keys())) {
                 const hexIndex = ("0" + index.toString(16)).slice(-2);
                 await nodes.createNode(validatorsAccount[index],
-                    "0x00" +
-                    "2161" +
-                    "0000" +
-                    "7f0000" + hexIndex +
-                    "7f0000" + hexIndex +
-                    validatorsPublicKey[index] +
-                    "d2" + hexIndex);
+                    {
+                        port: 8545,
+                        nonce: 0,
+                        ip: "0x7f0000" + hexIndex,
+                        publicIp: "0x7f0000" + hexIndex,
+                        publicKey: "0x" + validatorsPublicKey[index],
+                        name: "d2" + hexIndex
+                    });
             }
         });
 
@@ -205,11 +206,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
             await schainsFunctionality.addSchain(
                 validator1,
                 deposit,
-                "0x10" +
-                "0000000000000000000000000000000000000000000000000000000000000005" +
-                "04" +
-                "0000" +
-                "6432");
+                web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, "d2"]));
 
             const channel: Channel = new Channel(await skaleDKG.channels(web3.utils.soliditySha3("d2")));
             assert(channel.active.should.be.true);
@@ -221,11 +218,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
             await schainsFunctionality.addSchain(
                 validator1,
                 deposit,
-                "0x10" +
-                "0000000000000000000000000000000000000000000000000000000000000005" +
-                "04" +
-                "0000" +
-                "6432");
+                web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, "d2"]));
 
             const channel: Channel = new Channel(await skaleDKG.channels(web3.utils.soliditySha3("d2")));
             assert(channel.active.should.be.true);
@@ -237,11 +230,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
             await schainsFunctionality.addSchain(
                 validator1,
                 deposit,
-                "0x10" +
-                "0000000000000000000000000000000000000000000000000000000000000005" +
-                "04" +
-                "0000" +
-                "6432");
+                web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, "d2"]));
 
             let channel: Channel = new Channel(await skaleDKG.channels(web3.utils.soliditySha3("d2")));
             assert(channel.active.should.be.true);
@@ -258,11 +247,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                 await schainsFunctionality.addSchain(
                     validator1,
                     deposit,
-                    "0x10" +
-                    "0000000000000000000000000000000000000000000000000000000000000005" +
-                    "04" +
-                    "0000" +
-                    "6432");
+                    web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, "d2"]));
 
                 let nodesInGroup = await schainsData.getNodesInGroup(web3.utils.soliditySha3("d2"));
                 schainName = "d2";
@@ -271,11 +256,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                     await schainsFunctionality.addSchain(
                         validator1,
                         deposit,
-                        "0x10" +
-                        "0000000000000000000000000000000000000000000000000000000000000005" +
-                        "04" +
-                        "0000" +
-                        "6432");
+                        web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, "d2"]));
                     nodesInGroup = await schainsData.getNodesInGroup(web3.utils.soliditySha3(schainName));
                 }
             });
@@ -557,7 +538,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                         );
                         assert.equal(result.logs[0].event, "BadGuy");
                         assert.equal(result.logs[0].args.nodeIndex.toString(), "0");
-                        assert.equal(result.logs.length, 2);
+                        assert.equal(result.logs.length, 3);
 
                         (await skaleToken.getAndUpdateLockedAmount.call(validator1)).toNumber()
                             .should.be.equal(delegatedAmount);
@@ -576,11 +557,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
             await schainsFunctionality.addSchain(
                 validator1,
                 deposit,
-                "0x10" +
-                "0000000000000000000000000000000000000000000000000000000000000005" +
-                "04" +
-                "0000" +
-                "6432");
+                web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, "d2"]));
 
             let nodesInGroup = await schainsData.getNodesInGroup(web3.utils.soliditySha3("d2"));
             schainName = "d2";
@@ -589,22 +566,19 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                 await schainsFunctionality.addSchain(
                     validator1,
                     deposit,
-                    "0x10" +
-                    "0000000000000000000000000000000000000000000000000000000000000005" +
-                    "04" +
-                    "0000" +
-                    "6432");
-                    nodesInGroup = await schainsData.getNodesInGroup(web3.utils.soliditySha3(schainName));
+                    web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, "d2"]));
+                nodesInGroup = await schainsData.getNodesInGroup(web3.utils.soliditySha3(schainName));
             }
 
             await nodes.createNode(validatorsAccount[0],
-                "0x00" +
-                "2161" +
-                "0000" +
-                "7f000003" +
-                "7f000003" +
-                validatorsPublicKey[0] +
-                "d203");
+                {
+                    port: 8545,
+                    nonce: 0,
+                    ip: "0x7f000003",
+                    publicIp: "0x7f000003",
+                    publicKey: "0x" + validatorsPublicKey[0],
+                    name: "d203"
+                });
 
             await skaleDKG.broadcast(
                 web3.utils.soliditySha3(schainName),
@@ -643,8 +617,8 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
             assert.equal(result.logs[0].event, "BadGuy");
             assert.equal(result.logs[0].args.nodeIndex.toString(), "0");
 
-            assert.equal(result.logs[3].event, "ChannelOpened");
-            assert.equal(result.logs[3].args.groupIndex, web3.utils.soliditySha3(schainName));
+            assert.equal(result.logs[2].event, "ChannelOpened");
+            assert.equal(result.logs[2].args.groupIndex, web3.utils.soliditySha3(schainName));
             const blockNumber = result.receipt.blockNumber;
             const timestamp = (await web3.eth.getBlock(blockNumber)).timestamp;
 

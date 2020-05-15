@@ -99,21 +99,15 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
             skipTime(web3, month);
         });
 
-        it("should fail to process token fallback if operation type is wrong", async () => {
-            await skaleToken.send(skaleManager.address, "0x1", "0x11", {from: validator}).
-                should.be.eventually.rejectedWith("Operation type is not identified");
-        });
-
         it("should create a node", async () => {
             await skaleManager.createNode(
-                "0x01" + // create node
-                "2161" + // port
-                "0000" + // nonce
-                "7f000001" + // ip
-                "7f000001" + // public ip
-                "1122334455667788990011223344556677889900112233445566778899001122" +
-                "1122334455667788990011223344556677889900112233445566778899001122" + // public key
-                "6432", // name,
+                8545, // port
+                0, // nonce
+                "0x7f000001", // ip
+                "0x7f000001", // public ip
+                "0x1122334455667788990011223344556677889900112233445566778899001122" +
+                  "1122334455667788990011223344556677889900112233445566778899001122", // public key
+                "d2", // name
                 {from: nodeAddress});
 
             await nodesContract.numberOfActiveNodes().should.be.eventually.deep.equal(web3.utils.toBN(1));
@@ -126,26 +120,24 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
 
             await validatorService.disableValidator(validatorId, {from: owner});
             await skaleManager.createNode(
-                "0x01" + // create node
-                "2161" + // port
-                "0000" + // nonce
-                "7f000001" + // ip
-                "7f000001" + // public ip
-                "1122334455667788990011223344556677889900112233445566778899001122" +
-                "1122334455667788990011223344556677889900112233445566778899001122" + // public key
-                "6432", // name,
+                8545, // port
+                0, // nonce
+                "0x7f000001", // ip
+                "0x7f000001", // public ip
+                "0x1122334455667788990011223344556677889900112233445566778899001122" +
+                  "1122334455667788990011223344556677889900112233445566778899001122", // public key
+                "d2", // name
                 {from: nodeAddress})
                 .should.be.eventually.rejectedWith("Validator is not authorized to create a node");
             await validatorService.enableValidator(validatorId, {from: owner});
             await skaleManager.createNode(
-                "0x01" + // create node
-                "2161" + // port
-                "0000" + // nonce
-                "7f000001" + // ip
-                "7f000001" + // public ip
-                "1122334455667788990011223344556677889900112233445566778899001122" +
-                "1122334455667788990011223344556677889900112233445566778899001122" + // public key
-                "6432", // name,
+                8545, // port
+                0, // nonce
+                "0x7f000001", // ip
+                "0x7f000001", // public ip
+                "0x1122334455667788990011223344556677889900112233445566778899001122" +
+                  "1122334455667788990011223344556677889900112233445566778899001122", // public key
+                "d2", // name
                 {from: nodeAddress});
         });
 
@@ -153,14 +145,13 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
 
             beforeEach(async () => {
                 await skaleManager.createNode(
-                    "0x01" + // create node
-                    "2161" + // port
-                    "0000" + // nonce
-                    "7f000001" + // ip
-                    "7f000001" + // public ip
-                    "1122334455667788990011223344556677889900112233445566778899001122" +
-                    "1122334455667788990011223344556677889900112233445566778899001122" + // public key
-                    "6432", // name,
+                    8545, // port
+                    0, // nonce
+                    "0x7f000001", // ip
+                    "0x7f000001", // public ip
+                    "0x1122334455667788990011223344556677889900112233445566778899001122" +
+                    "1122334455667788990011223344556677889900112233445566778899001122", // public key
+                    "d2", // name
                     {from: nodeAddress});
             });
 
@@ -204,24 +195,22 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
 
             beforeEach(async () => {
                 await skaleManager.createNode(
-                    "0x01" + // create node
-                    "2161" + // port
-                    "0000" + // nonce
-                    "7f000001" + // ip
-                    "7f000001" + // public ip
-                    "1122334455667788990011223344556677889900112233445566778899001122" +
-                    "1122334455667788990011223344556677889900112233445566778899001122" + // public key
-                    "6432", // name,
+                    8545, // port
+                    0, // nonce
+                    "0x7f000001", // ip
+                    "0x7f000001", // public ip
+                    "0x1122334455667788990011223344556677889900112233445566778899001122" +
+                    "1122334455667788990011223344556677889900112233445566778899001122", // public key
+                    "d2", // name
                     {from: nodeAddress});
                 await skaleManager.createNode(
-                    "0x01" + // create node
-                    "2161" + // port
-                    "0000" + // nonce
-                    "7f000002" + // ip
-                    "7f000002" + // public ip
-                    "1122334455667788990011223344556677889900112233445566778899001122" +
-                    "1122334455667788990011223344556677889900112233445566778899001122" + // public key
-                    "6433", // name,
+                    8545, // port
+                    0, // nonce
+                    "0x7f000002", // ip
+                    "0x7f000002", // public ip
+                    "0x1122334455667788990011223344556677889900112233445566778899001122" +
+                    "1122334455667788990011223344556677889900112233445566778899001122", // public key
+                    "d3", // name
                     {from: nodeAddress});
             });
 
@@ -309,14 +298,13 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
 
                 for (let i = 0; i < 18; ++i) {
                     await skaleManager.createNode(
-                        "0x01" + // create node
-                        "2161" + // port
-                        "0000" + // nonce
-                        "7f0000" + ("0" + (i + 1).toString(16)).slice(-2) + // ip
-                        "7f000001" + // public ip
-                        "1122334455667788990011223344556677889900112233445566778899001122" +
-                        "1122334455667788990011223344556677889900112233445566778899001122" + // public key
-                        "64322d" + (48 + i + 1).toString(16), // name,
+                        8545, // port
+                        0, // nonce
+                        "0x7f0000" + ("0" + (i + 1).toString(16)).slice(-2), // ip
+                        "0x7f000001", // public ip
+                        "0x1122334455667788990011223344556677889900112233445566778899001122" +
+                        "1122334455667788990011223344556677889900112233445566778899001122", // public key
+                        "d2-" + i, // name
                         {from: nodeAddress});
                 }
 
@@ -326,11 +314,13 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                 await constantsHolder.setMSR(delegatedAmount + 1);
 
                 await skaleManager.createNode(
-                    "0x10" + // create schain
-                    "0000000000000000000000000000000000000000000000000000000000000005" + // lifetime
-                    "01" + // type of schain
-                    "0000" + // nonce
-                    "6432", // name
+                    8545, // port
+                    0, // nonce
+                    "0x7f000001", // ip
+                    "0x7f000001", // public ip
+                    "0x1122334455667788990011223344556677889900112233445566778899001122" +
+                    "1122334455667788990011223344556677889900112233445566778899001122", // public key
+                    "d2", // name
                     {from: nodeAddress}).should.be.eventually.rejectedWith("Validator must meet Minimum Staking Requirement");
             });
 
@@ -564,11 +554,11 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                     await skaleToken.send(
                         skaleManager.address,
                         "0x1cc2d6d04a2ca",
-                        "0x10" + // create schain
-                        "0000000000000000000000000000000000000000000000000000000000000005" + // lifetime
-                        "03" + // type of schain
-                        "0000" + // nonce
-                        "6432", // name
+                        web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [
+                            5, // lifetime
+                            3, // type of schain
+                            0, // nonce
+                            "d2"]), // name
                         {from: developer});
 
                     const schain = await schainsData.schains(web3.utils.soliditySha3("d2"));
@@ -580,11 +570,11 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                         await skaleToken.send(
                             skaleManager.address,
                             "0x1cc2d6d04a2ca",
-                            "0x10" + // create schain
-                            "0000000000000000000000000000000000000000000000000000000000000005" + // lifetime
-                            "03" + // type of schain
-                            "0000" + // nonce
-                            "6432", // name
+                            web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [
+                                5, // lifetime
+                                3, // type of schain
+                                0, // nonce
+                                "d2"]), // name
                             {from: developer});
                     });
 
@@ -611,11 +601,11 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                         await skaleToken.send(
                             skaleManager.address,
                             "0x1cc2d6d04a2ca",
-                            "0x10" + // create schain
-                            "0000000000000000000000000000000000000000000000000000000000000005" + // lifetime
-                            "03" + // type of schain
-                            "0000" + // nonce
-                            "6433", // name
+                            web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [
+                                5, // lifetime
+                                3, // type of schain
+                                0, // nonce
+                                "d3"]), // name
                             {from: developer});
                     });
 
@@ -639,14 +629,13 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
 
                 for (let i = 0; i < 32; ++i) {
                     await skaleManager.createNode(
-                        "0x01" + // create node
-                        "2161" + // port
-                        "0000" + // nonce
-                        "7f0000" + ("0" + (i + 1).toString(16)).slice(-2) + // ip
-                        "7f000001" + // public ip
-                        "1122334455667788990011223344556677889900112233445566778899001122" +
-                        "1122334455667788990011223344556677889900112233445566778899001122" + // public key
-                        "64322d" + (48 + i + 1).toString(16), // name,
+                        8545, // port
+                        0, // nonce
+                        "0x7f0000" + ("0" + (i + 1).toString(16)).slice(-2), // ip
+                        "0x7f000001", // public ip
+                        "0x1122334455667788990011223344556677889900112233445566778899001122" +
+                        "1122334455667788990011223344556677889900112233445566778899001122", // public key
+                        "d2-" + i, // name
                         {from: nodeAddress});
                 }
             });
@@ -660,11 +649,11 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                     await skaleToken.send(
                         skaleManager.address,
                         "0x1cc2d6d04a2ca",
-                        "0x10" + // create schain
-                        "0000000000000000000000000000000000000000000000000000000000000005" + // lifetime
-                        "03" + // type of schain
-                        "0000" + // nonce
-                        "6432", // name
+                        web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [
+                            5, // lifetime
+                            3, // type of schain
+                            0, // nonce
+                            "d2"]), // name
                         {from: developer});
 
                     const schain1 = await schainsData.schains(web3.utils.soliditySha3("d2"));
@@ -673,11 +662,11 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                     await skaleToken.send(
                         skaleManager.address,
                         "0x1cc2d6d04a2ca",
-                        "0x10" + // create schain
-                        "0000000000000000000000000000000000000000000000000000000000000005" + // lifetime
-                        "03" + // type of schain
-                        "0000" + // nonce
-                        "6433", // name
+                        web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [
+                            5, // lifetime
+                            3, // type of schain
+                            0, // nonce
+                            "d3"]), // name
                         {from: developer});
 
                     const schain2 = await schainsData.schains(web3.utils.soliditySha3("d3"));
@@ -689,21 +678,21 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                         await skaleToken.send(
                             skaleManager.address,
                             "0x1cc2d6d04a2ca",
-                            "0x10" + // create schain
-                            "0000000000000000000000000000000000000000000000000000000000000005" + // lifetime
-                            "03" + // type of schain
-                            "0000" + // nonce
-                            "6432", // name
+                            web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [
+                                5, // lifetime
+                                3, // type of schain
+                                0, // nonce
+                                "d2"]), // name
                             {from: developer});
 
                         await skaleToken.send(
                             skaleManager.address,
                             "0x1cc2d6d04a2ca",
-                            "0x10" + // create schain
-                            "0000000000000000000000000000000000000000000000000000000000000005" + // lifetime
-                            "03" + // type of schain
-                            "0000" + // nonce
-                            "6433", // name
+                            web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [
+                                5, // lifetime
+                                3, // type of schain
+                                0, // nonce
+                                "d3"]), // name
                             {from: developer});
                     });
 
@@ -729,14 +718,13 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
 
                 for (let i = 0; i < 16; ++i) {
                     await skaleManager.createNode(
-                        "0x01" + // create node
-                        "2161" + // port
-                        "0000" + // nonce
-                        "7f0000" + ("0" + (i + 1).toString(16)).slice(-2) + // ip
-                        "7f000001" + // public ip
-                        "1122334455667788990011223344556677889900112233445566778899001122" +
-                        "1122334455667788990011223344556677889900112233445566778899001122" + // public key
-                        "64322d" + (48 + i + 1).toString(16), // name,
+                        8545, // port
+                        0, // nonce
+                        "0x7f0000" + ("0" + (i + 1).toString(16)).slice(-2), // ip
+                        "0x7f000001", // public ip
+                        "0x1122334455667788990011223344556677889900112233445566778899001122" +
+                        "1122334455667788990011223344556677889900112233445566778899001122", // public key
+                        "d2-" + i, // name
                         {from: nodeAddress});
                     }
 
@@ -746,11 +734,11 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                 await skaleToken.send(
                     skaleManager.address,
                     price.toString(),
-                    "0x10" + // create schain
-                    "0000000000000000000000000000000000000000000000000000000000000005" + // lifetime
-                    "01" + // type of schain
-                    "0000" + // nonce
-                    "6432", // name
+                    web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [
+                        5, // lifetime
+                        1, // type of schain
+                        0, // nonce
+                        "d2"]), // name
                     {from: developer});
 
                 let schain1 = await schainsData.schains(web3.utils.soliditySha3("d2"));
@@ -764,11 +752,11 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                 await skaleToken.send(
                     skaleManager.address,
                     price.toString(),
-                    "0x10" + // create schain
-                    "0000000000000000000000000000000000000000000000000000000000000005" + // lifetime
-                    "02" + // type of schain
-                    "0000" + // nonce
-                    "6432", // name
+                    web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [
+                        5, // lifetime
+                        2, // type of schain
+                        0, // nonce
+                        "d2"]), // name
                     {from: developer});
 
                 schain1 = await schainsData.schains(web3.utils.soliditySha3("d2"));
@@ -781,11 +769,11 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                 await skaleToken.send(
                     skaleManager.address,
                     price.toString(),
-                    "0x10" + // create schain
-                    "0000000000000000000000000000000000000000000000000000000000000005" + // lifetime
-                    "03" + // type of schain
-                    "0000" + // nonce
-                    "6432", // name
+                    web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [
+                        5, // lifetime
+                        3, // type of schain
+                        0, // nonce
+                        "d2"]), // name
                     {from: developer});
 
                 schain1 = await schainsData.schains(web3.utils.soliditySha3("d2"));
@@ -798,11 +786,11 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                 await skaleToken.send(
                     skaleManager.address,
                     price.toString(),
-                    "0x10" + // create schain
-                    "0000000000000000000000000000000000000000000000000000000000000005" + // lifetime
-                    "04" + // type of schain
-                    "0000" + // nonce
-                    "6432", // name
+                    web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [
+                        5, // lifetime
+                        4, // type of schain
+                        0, // nonce
+                        "d2"]), // name
                     {from: developer});
 
                 schain1 = await schainsData.schains(web3.utils.soliditySha3("d2"));
@@ -815,11 +803,11 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                 await skaleToken.send(
                     skaleManager.address,
                     price.toString(),
-                    "0x10" + // create schain
-                    "0000000000000000000000000000000000000000000000000000000000000005" + // lifetime
-                    "05" + // type of schain
-                    "0000" + // nonce
-                    "6432", // name
+                    web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [
+                        5, // lifetime
+                        5, // type of schain
+                        0, // nonce
+                        "d2"]), // name
                     {from: developer});
 
                 schain1 = await schainsData.schains(web3.utils.soliditySha3("d2"));

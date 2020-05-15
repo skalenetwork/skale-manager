@@ -85,9 +85,48 @@ abstract contract GroupsFunctionality is Permissions {
     );
 
     // name of executor contract
-    string executorName;
+    string internal _executorName;
     // name of data contract
-    string dataName;
+    string internal _dataName;
+
+
+    /**
+     * @dev deleteGroup - delete Group from Data contract
+     * function could be run only by executor
+     * @param groupIndex - Groups identifier
+     */
+    function deleteGroup(bytes32 groupIndex) external allow(_executorName) {
+        address groupsDataAddress = _contractManager.getContract(_dataName);
+        require(IGroupsData(groupsDataAddress).isGroupActive(groupIndex), "Group is not active");
+        IGroupsData(groupsDataAddress).removeGroup(groupIndex);
+        IGroupsData(groupsDataAddress).removeAllNodesInGroup(groupIndex);
+        emit GroupDeleted(groupIndex, uint32(block.timestamp), gasleft());
+    }
+
+    /**
+     * @dev upgradeGroup - upgrade Group at Data contract
+     * function could be run only by executor
+     * @param groupIndex - Groups identifier
+     * @param newRecommendedNumberOfNodes - recommended number of Nodes
+     * @param data - some extra data
+     */
+    function upgradeGroup(
+            bytes32 groupIndex,
+            uint newRecommendedNumberOfNodes,
+            bytes32 data)
+        external allow(_executorName)
+    {
+        address groupsDataAddress = _contractManager.getContract(_dataName);
+        require(IGroupsData(groupsDataAddress).isGroupActive(groupIndex), "Group is not active");
+        IGroupsData(groupsDataAddress).removeGroup(groupIndex);
+        IGroupsData(groupsDataAddress).removeAllNodesInGroup(groupIndex);
+        IGroupsData(groupsDataAddress).addGroup(groupIndex, newRecommendedNumberOfNodes, data);
+        emit GroupUpgraded(
+            groupIndex,
+            data,
+            uint32(block.timestamp),
+            gasleft());
+    }
 
     /**
      * @dev verifySignature - verify signature which create Group by Groups BLS master public key
@@ -105,49 +144,34 @@ abstract contract GroupsFunctionality is Permissions {
         uint hashX,
         uint hashY) external view returns (bool)
     {
-        address groupsDataAddress = contractManager.getContract(dataName);
+        address groupsDataAddress = _contractManager.getContract(_dataName);
         uint publicKeyx1;
         uint publicKeyy1;
         uint publicKeyx2;
         uint publicKeyy2;
-        (publicKeyx1, publicKeyy1, publicKeyx2, publicKeyy2) = IGroupsData(groupsDataAddress).getGroupsPublicKey(groupIndex);
-        address skaleVerifierAddress = contractManager.getContract("SkaleVerifier");
+        (publicKeyx1, publicKeyy1, publicKeyx2, publicKeyy2) =
+            IGroupsData(groupsDataAddress).getGroupsPublicKey(groupIndex);
+        address skaleVerifierAddress = _contractManager.getContract("SkaleVerifier");
         return ISkaleVerifier(skaleVerifierAddress).verify(
             signatureX, signatureY, hashX, hashY, publicKeyx1, publicKeyy1, publicKeyx2, publicKeyy2
         );
     }
 
     /**
-     * @dev deleteGroup - delete Group from Data contract
-     * function could be run only by executor
-     * @param groupIndex - Groups identifier
+     * @dev contructor in Permissions approach
+     * @param newExecutorName - name of executor contract
+     * @param newDataName - name of data contract
+     * @param newContractsAddress needed in Permissions constructor
      */
-    function deleteGroup(bytes32 groupIndex) external allow(executorName) {
-        address groupsDataAddress = contractManager.getContract(dataName);
-        require(IGroupsData(groupsDataAddress).isGroupActive(groupIndex), "Group is not active");
-        IGroupsData(groupsDataAddress).removeGroup(groupIndex);
-        IGroupsData(groupsDataAddress).removeAllNodesInGroup(groupIndex);
-        emit GroupDeleted(groupIndex, uint32(block.timestamp), gasleft());
-    }
-
-    /**
-     * @dev upgradeGroup - upgrade Group at Data contract
-     * function could be run only by executor
-     * @param groupIndex - Groups identifier
-     * @param newRecommendedNumberOfNodes - recommended number of Nodes
-     * @param data - some extra data
-     */
-    function upgradeGroup(bytes32 groupIndex, uint newRecommendedNumberOfNodes, bytes32 data) external allow(executorName) {
-        address groupsDataAddress = contractManager.getContract(dataName);
-        require(IGroupsData(groupsDataAddress).isGroupActive(groupIndex), "Group is not active");
-        IGroupsData(groupsDataAddress).removeGroup(groupIndex);
-        IGroupsData(groupsDataAddress).removeAllNodesInGroup(groupIndex);
-        IGroupsData(groupsDataAddress).addGroup(groupIndex, newRecommendedNumberOfNodes, data);
-        emit GroupUpgraded(
-            groupIndex,
-            data,
-            uint32(block.timestamp),
-            gasleft());
+    function initialize(
+        string memory newExecutorName,
+        string memory newDataName,
+        address newContractsAddress)
+        public initializer
+    {
+        Permissions.initialize(newContractsAddress);
+        _executorName = newExecutorName;
+        _dataName = newDataName;
     }
 
     /**
@@ -157,8 +181,11 @@ abstract contract GroupsFunctionality is Permissions {
      * @param newRecommendedNumberOfNodes - recommended number of Nodes
      * @param data - some extra data
      */
-    function createGroup(bytes32 groupIndex, uint newRecommendedNumberOfNodes, bytes32 data) public allow(executorName) {
-        address groupsDataAddress = contractManager.getContract(dataName);
+    function createGroup(bytes32 groupIndex, uint newRecommendedNumberOfNodes, bytes32 data)
+        public 
+        allow(_executorName)
+    {
+        address groupsDataAddress = _contractManager.getContract(_dataName);
         IGroupsData(groupsDataAddress).addGroup(groupIndex, newRecommendedNumberOfNodes, data);
         emit GroupAdded(
             groupIndex,
@@ -168,25 +195,13 @@ abstract contract GroupsFunctionality is Permissions {
     }
 
     /**
-     * @dev contructor in Permissions approach
-     * @param newExecutorName - name of executor contract
-     * @param newDataName - name of data contract
-     * @param newContractsAddress needed in Permissions constructor
-     */
-    function initialize(string memory newExecutorName, string memory newDataName, address newContractsAddress) public initializer {
-        Permissions.initialize(newContractsAddress);
-        executorName = newExecutorName;
-        dataName = newDataName;
-    }
-
-    /**
-     * @dev findNode - find local index of Node in Schain
+     * @dev _findNode - find local index of Node in Schain
      * @param groupIndex - Groups identifier
      * @param nodeIndex - global index of Node
      * @return index Local index of Node in Schain
      */
-    function findNode(bytes32 groupIndex, uint nodeIndex) internal view returns (uint index) {
-        address groupsDataAddress = contractManager.getContract(dataName);
+    function _findNode(bytes32 groupIndex, uint nodeIndex) internal view returns (uint index) {
+        address groupsDataAddress = _contractManager.getContract(_dataName);
         uint[] memory nodesInGroup = IGroupsData(groupsDataAddress).getNodesInGroup(groupIndex);
         for (index = 0; index < nodesInGroup.length; index++) {
             if (nodesInGroup[index] == nodeIndex) {
@@ -197,14 +212,14 @@ abstract contract GroupsFunctionality is Permissions {
     }
 
     /**
-     * @dev generateGroup - abstract method which would be implemented in inherited contracts
+     * @dev _generateGroup - abstract method which would be implemented in inherited contracts
      * function generates group of Nodes
      * @param groupIndex - Groups identifier
      * return array of indexes of Nodes in Group
      */
-    function generateGroup(bytes32 groupIndex) internal virtual returns (uint[] memory);
+    function _generateGroup(bytes32 groupIndex) internal virtual returns (uint[] memory);
 
-    function swap(uint[] memory array, uint index1, uint index2) internal pure {
+    function _swap(uint[] memory array, uint index1, uint index2) internal pure {
         uint buffer = array[index1];
         array[index1] = array[index2];
         array[index2] = buffer;

@@ -37,7 +37,8 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 contract SkaleManager is IERC777Recipient, Permissions {
     IERC1820Registry private _erc1820;
 
-    bytes32 constant private TOKENS_RECIPIENT_INTERFACE_HASH = 0xb281fc8c12954d22544db45de3159a39272895b169a852b314f9cc762e44c53b;
+    bytes32 constant private _TOKENS_RECIPIENT_INTERFACE_HASH =
+        0xb281fc8c12954d22544db45de3159a39272895b169a852b314f9cc762e44c53b;
 
     enum TransactionOperation {CreateNode, CreateSchain}
 
@@ -64,30 +65,44 @@ contract SkaleManager is IERC777Recipient, Permissions {
     {
         require(to == address(this), "Receiver is incorrect");
         if (userData.length > 0) {
-            TransactionOperation operationType = fallbackOperationTypeConvert(userData);
-            if (operationType == TransactionOperation.CreateSchain) {
-                address schainsFunctionalityAddress = contractManager.getContract("SchainsFunctionality");
-                ISchainsFunctionality(schainsFunctionalityAddress).addSchain(from, value, userData);
-            }
+            SchainsFunctionality schainsFunctionality = SchainsFunctionality(
+                _contractManager.getContract("SchainsFunctionality"));
+            schainsFunctionality.addSchain(from, value, userData);
         }
     }
 
-    function createNode(bytes calldata data) external {
-        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
-        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
-        Monitors monitors = Monitors(contractManager.getContract("Monitors"));
+    function createNode(
+        uint16 port,
+        uint16 nonce,
+        bytes4 ip,
+        bytes4 publicIp,
+        bytes calldata publicKey,
+        string calldata name)
+        external
+    {
+        Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
+        ValidatorService validatorService = ValidatorService(_contractManager.getContract("ValidatorService"));
+        Monitors monitors = Monitors(_contractManager.getContract("Monitors"));
 
         validatorService.checkPossibilityCreatingNode(msg.sender);
-        uint nodeIndex = nodes.createNode(msg.sender, data);
+        Nodes.NodeCreationParams memory params = Nodes.NodeCreationParams({
+            name: name,
+            ip: ip,
+            publicIp: publicIp,
+            port: port,
+            publicKey: publicKey,
+            nonce: nonce});
+        uint nodeIndex = nodes.createNode(msg.sender, params);
         validatorService.pushNode(msg.sender, nodeIndex);
         monitors.addMonitor(nodeIndex);
     }
 
     function nodeExit(uint nodeIndex) external {
-        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
-        SchainsFunctionality schainsFunctionality = SchainsFunctionality(contractManager.getContract("SchainsFunctionality"));
-        SchainsData schainsData = SchainsData(contractManager.getContract("SchainsData"));
-        IConstants constants = IConstants(contractManager.getContract("ConstantsHolder"));
+        Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
+        SchainsFunctionality schainsFunctionality = SchainsFunctionality(
+            _contractManager.getContract("SchainsFunctionality"));
+        SchainsData schainsData = SchainsData(_contractManager.getContract("SchainsData"));
+        IConstants constants = IConstants(_contractManager.getContract("ConstantsHolder"));
         schainsFunctionality.freezeSchains(nodeIndex);
         if (nodes.isNodeActive(nodeIndex)) {
             require(nodes.initExit(msg.sender, nodeIndex), "Initialization of node exit is failed");
@@ -107,19 +122,19 @@ contract SkaleManager is IERC777Recipient, Permissions {
     }
 
     function deleteNode(uint nodeIndex) external {
-        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
+        Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
         nodes.removeNode(msg.sender, nodeIndex);
-        Monitors monitors = Monitors(contractManager.getContract("Monitors"));
+        Monitors monitors = Monitors(_contractManager.getContract("Monitors"));
         monitors.deleteMonitor(nodeIndex);
-        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
+        ValidatorService validatorService = ValidatorService(_contractManager.getContract("ValidatorService"));
         uint validatorId = validatorService.getValidatorIdByNodeAddress(msg.sender);
         validatorService.deleteNode(validatorId, nodeIndex);
     }
 
     function deleteNodeByRoot(uint nodeIndex) external onlyOwner {
-        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
-        Monitors monitors = Monitors(contractManager.getContract("Monitors"));
-        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
+        Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
+        Monitors monitors = Monitors(_contractManager.getContract("Monitors"));
+        ValidatorService validatorService = ValidatorService(_contractManager.getContract("ValidatorService"));
 
         nodes.removeNodeByRoot(nodeIndex);
         monitors.deleteMonitor(nodeIndex);
@@ -128,18 +143,18 @@ contract SkaleManager is IERC777Recipient, Permissions {
     }
 
     function deleteSchain(string calldata name) external {
-        address schainsFunctionalityAddress = contractManager.getContract("SchainsFunctionality");
+        address schainsFunctionalityAddress = _contractManager.getContract("SchainsFunctionality");
         ISchainsFunctionality(schainsFunctionalityAddress).deleteSchain(msg.sender, name);
     }
 
     function deleteSchainByRoot(string calldata name) external onlyOwner {
-        address schainsFunctionalityAddress = contractManager.getContract("SchainsFunctionality");
+        address schainsFunctionalityAddress = _contractManager.getContract("SchainsFunctionality");
         ISchainsFunctionality(schainsFunctionalityAddress).deleteSchainByRoot(name);
     }
 
     function sendVerdict(uint fromMonitorIndex, Monitors.Verdict calldata verdict) external {
-        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
-        Monitors monitors = Monitors(contractManager.getContract("Monitors"));
+        Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
+        Monitors monitors = Monitors(_contractManager.getContract("Monitors"));
 
         require(nodes.isNodeExist(msg.sender, fromMonitorIndex), "Node does not exist for Message sender");
 
@@ -147,16 +162,16 @@ contract SkaleManager is IERC777Recipient, Permissions {
     }
 
     function sendVerdicts(uint fromMonitorIndex, Monitors.Verdict[] calldata verdicts) external {
-        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
+        Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
         require(nodes.isNodeExist(msg.sender, fromMonitorIndex), "Node does not exist for Message sender");
-        Monitors monitors = Monitors(contractManager.getContract("Monitors"));
+        Monitors monitors = Monitors(_contractManager.getContract("Monitors"));
         for (uint i = 0; i < verdicts.length; i++) {
             monitors.sendVerdict(fromMonitorIndex, verdicts[i]);
         }
     }
 
     function getBounty(uint nodeIndex) external {
-        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
+        Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
         require(nodes.isNodeExist(msg.sender, nodeIndex), "Node does not exist for Message sender");
         require(nodes.isTimeForReward(nodeIndex), "Not time for bounty");
         bool nodeIsActive = nodes.isNodeActive(nodeIndex);
@@ -164,9 +179,9 @@ contract SkaleManager is IERC777Recipient, Permissions {
         require(nodeIsActive || nodeIsLeaving, "Node is not Active and is not Leaving");
         uint averageDowntime;
         uint averageLatency;
-        Monitors monitors = Monitors(contractManager.getContract("Monitors"));
+        Monitors monitors = Monitors(_contractManager.getContract("Monitors"));
         (averageDowntime, averageLatency) = monitors.calculateMetrics(nodeIndex);
-        uint bounty = manageBounty(
+        uint bounty = _manageBounty(
             msg.sender,
             nodeIndex,
             averageDowntime,
@@ -186,25 +201,25 @@ contract SkaleManager is IERC777Recipient, Permissions {
     function initialize(address newContractsAddress) public override initializer {
         Permissions.initialize(newContractsAddress);
         _erc1820 = IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
-        _erc1820.setInterfaceImplementer(address(this), TOKENS_RECIPIENT_INTERFACE_HASH, address(this));
+        _erc1820.setInterfaceImplementer(address(this), _TOKENS_RECIPIENT_INTERFACE_HASH, address(this));
     }
 
-    function manageBounty(
+    function _manageBounty(
         address from,
         uint nodeIndex,
         uint downtime,
         uint latency) internal returns (uint)
     {
         uint commonBounty;
-        IConstants constants = IConstants(contractManager.getContract("ConstantsHolder"));
-        IManagerData managerData = IManagerData(contractManager.getContract("ManagerData"));
-        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
+        IConstants constants = IConstants(_contractManager.getContract("ConstantsHolder"));
+        IManagerData managerData = IManagerData(_contractManager.getContract("ManagerData"));
+        Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
 
         uint diffTime = nodes.getNodeLastRewardDate(nodeIndex)
             .add(constants.rewardPeriod())
             .add(constants.deltaPeriod());
         if (managerData.minersCap() == 0) {
-            managerData.setMinersCap(ISkaleToken(contractManager.getContract("SkaleToken")).CAP() / 3);
+            managerData.setMinersCap(ISkaleToken(_contractManager.getContract("SkaleToken")).CAP() / 3);
         }
         if (managerData.stageTime().add(constants.rewardPeriod()) < now) {
             managerData.setStageTimeAndStageNodes(nodes.numberOfActiveNodes().add(nodes.numberOfLeavingNodes()));
@@ -231,7 +246,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
             if (latency > constants.allowableLatency()) {
                 bountyForMiner = int((constants.allowableLatency().mul(uint(bountyForMiner))).div(latency));
             }
-            payBounty(uint(bountyForMiner), from, nodeIndex);
+            _payBounty(uint(bountyForMiner), from, nodeIndex);
         } else {
             //Need to add penalty
             bountyForMiner = 0;
@@ -239,33 +254,17 @@ contract SkaleManager is IERC777Recipient, Permissions {
         return uint(bountyForMiner);
     }
 
-    function payBounty(uint bountyForMiner, address miner, uint nodeIndex) internal returns (bool) {
-        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
-        SkaleToken skaleToken = SkaleToken(contractManager.getContract("SkaleToken"));
-        Distributor distributor = Distributor(contractManager.getContract("Distributor"));
+    function _payBounty(uint bountyForMiner, address miner, uint nodeIndex) internal returns (bool) {
+        ValidatorService validatorService = ValidatorService(_contractManager.getContract("ValidatorService"));
+        SkaleToken skaleToken = SkaleToken(_contractManager.getContract("SkaleToken"));
+        Distributor distributor = Distributor(_contractManager.getContract("Distributor"));
 
         uint validatorId = validatorService.getValidatorIdByNodeAddress(miner);
         uint bounty = bountyForMiner;
         if (!validatorService.checkPossibilityToMaintainNode(validatorId, nodeIndex)) {
             bounty /= 2;
         }
+        // solhint-disable-next-line check-send-result
         skaleToken.send(address(distributor), bounty, abi.encode(validatorId));
     }
-
-    function fallbackOperationTypeConvert(bytes memory data) internal pure returns (TransactionOperation) {
-        bytes1 operationType;
-        assembly {
-            operationType := mload(add(data, 0x20))
-        }
-        bool isIdentified = operationType == bytes1(uint8(1)) ||
-            operationType == bytes1(uint8(16)) ||
-            operationType == bytes1(uint8(2));
-        require(isIdentified, "Operation type is not identified");
-        if (operationType == bytes1(uint8(1))) {
-            return TransactionOperation.CreateNode;
-        } else if (operationType == bytes1(uint8(16))) {
-            return TransactionOperation.CreateSchain;
-        }
-    }
-
 }

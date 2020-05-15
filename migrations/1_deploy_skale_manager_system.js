@@ -152,7 +152,7 @@ async function deploy(deployer, networkName, accounts) {
         // TODO: Remove after testing
         const skaleToken = await SkaleToken.deployed();
         const money = "5000000000000000000000000000"; // 5e9 * 1e18
-        await skaleToken.mint(deployAccount, deployAccount, money, "0x", "0x");
+        await skaleToken.mint(deployAccount, money, "0x", "0x");
         await skaleToken.transfer(
             deployed.get("SkaleManager").address,
             "1000000000000000000000000000");

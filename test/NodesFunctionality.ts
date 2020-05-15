@@ -37,58 +37,46 @@ contract("NodesFunctionality", ([owner, validator, nodeAddress, nodeAddress2]) =
     it("should fail to create node if ip is zero", async () => {
         await nodes.createNode(
             validator,
-            "0x01" +
-            "2161" + // port
-            "0000" + // nonce
-            "00000000" + // ip
-            "7f000001" + // public ip
-            "1122334455667788990011223344556677889900112233445566778899001122" +
-            "1122334455667788990011223344556677889900112233445566778899001122" + // public key
-            "d2") // name
-            .should.be.eventually.rejectedWith("IP address is zero or is not available");
-    });
-
-    it("should fail if data string is too short", async () => {
-        await nodes.createNode(
-        validator,
-        "0x01" +
-        "2161" + // port
-        "0000" + // nonce
-        "00000000" + // ip
-        "7f000001" + // public ip
-        "1122334455667788990011223344556677889900112233445566778899001122" +
-        "1122334455667788990011223344556677889900112233445566778899001122") // public key
-        .should.be.eventually.rejectedWith("Incorrect bytes data config");
+            {
+                port: 8545,
+                nonce: 0,
+                ip: "0x00000000",
+                publicIp: "0x7f000001",
+                publicKey: "0x1122334455667788990011223344556677889900112233445566778899001122" +
+                             "1122334455667788990011223344556677889900112233445566778899001122",
+                name: "D2"
+            }).should.be.eventually.rejectedWith("IP address is zero or is not available");
     });
 
     it("should fail to create node if port is zero", async () => {
         await nodes.createNode(
             validator,
-            "0x01" +
-            "0000" + // port
-            "0000" + // nonce
-            "7f000001" + // ip
-            "7f000001" + // public ip
-            "1122334455667788990011223344556677889900112233445566778899001122" +
-            "1122334455667788990011223344556677889900112233445566778899001122" + // public key
-            "d2") // name
-            .should.be.eventually.rejectedWith("Port is zero");
+            {
+                port: 0,
+                nonce: 0,
+                ip: "0x7f000001",
+                publicIp: "0x7f000001",
+                publicKey: "0x1122334455667788990011223344556677889900112233445566778899001122" +
+                             "1122334455667788990011223344556677889900112233445566778899001122",
+                name: "D2"
+            }).should.be.eventually.rejectedWith("Port is zero");
     });
 
     it("should create node", async () => {
         await nodes.createNode(
             nodeAddress,
-            "0x01" +
-            "2161" + // port
-            "0000" + // nonce
-            "7f000001" + // ip
-            "7f000001" + // public ip
-            "1122334455667788990011223344556677889900112233445566778899001122" +
-            "1122334455667788990011223344556677889900112233445566778899001122" + // public key
-            "6432");  // name
+            {
+                port: 8545,
+                nonce: 0,
+                ip: "0x7f000001",
+                publicIp: "0x7f000001",
+                publicKey: "0x1122334455667788990011223344556677889900112233445566778899001122" +
+                             "1122334455667788990011223344556677889900112233445566778899001122",
+                name: "D2"
+            });
 
         const node = await nodes.nodes(0);
-        node[0].should.be.equal("d2");
+        node[0].should.be.equal("D2");
         node[1].should.be.equal("0x7f000001");
         node[2].should.be.equal("0x7f000001");
         node[3].should.be.deep.equal(web3.utils.toBN(8545));
@@ -101,14 +89,15 @@ contract("NodesFunctionality", ([owner, validator, nodeAddress, nodeAddress2]) =
         beforeEach(async () => {
             await nodes.createNode(
                 nodeAddress,
-                "0x01" +
-                "2161" + // port
-                "0000" + // nonce
-                "7f000001" + // ip
-                "7f000001" + // public ip
-                "1122334455667788990011223344556677889900112233445566778899001122" +
-                "1122334455667788990011223344556677889900112233445566778899001122" + // public key
-                "6432"); // name
+                {
+                    port: 8545,
+                    nonce: 0,
+                    ip: "0x7f000001",
+                    publicIp: "0x7f000001",
+                    publicKey: "0x1122334455667788990011223344556677889900112233445566778899001122" +
+                                 "1122334455667788990011223344556677889900112233445566778899001122",
+                    name: "D2"
+                });
         });
 
         it("should fail to delete non existing node", async () => {
@@ -157,24 +146,26 @@ contract("NodesFunctionality", ([owner, validator, nodeAddress, nodeAddress2]) =
         beforeEach(async () => {
             await nodes.createNode(
                 nodeAddress,
-                "0x01" +
-                "2161" + // port
-                "0000" + // nonce
-                "7f000001" + // ip
-                "7f000001" + // public ip
-                "1122334455667788990011223344556677889900112233445566778899001122" +
-                "1122334455667788990011223344556677889900112233445566778899001122" + // public key
-                "6432"); // name
+                {
+                    port: 8545,
+                    nonce: 0,
+                    ip: "0x7f000001",
+                    publicIp: "0x7f000001",
+                    publicKey: "0x1122334455667788990011223344556677889900112233445566778899001122" +
+                                 "1122334455667788990011223344556677889900112233445566778899001122",
+                    name: "D2"
+                }); // name
             await nodes.createNode(
                 nodeAddress2,
-                "0x01" +
-                "2161" + // port
-                "0000" + // nonce
-                "7f000002" + // ip
-                "7f000002" + // public ip
-                "1122334455667788990011223344556677889900112233445566778899001122" +
-                "1122334455667788990011223344556677889900112233445566778899001122" + // public key
-                "6433"); // name
+                {
+                    port: 8545,
+                    nonce: 0,
+                    ip: "0x7f000002",
+                    publicIp: "0x7f000002",
+                    publicKey: "0x1122334455667788990011223344556677889900112233445566778899001122" +
+                                 "1122334455667788990011223344556677889900112233445566778899001122",
+                    name: "D3"
+                }); // name
         });
 
         it("should delete first node", async () => {
