@@ -628,7 +628,6 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
             assert.equal(channel.dataAddress, dataAddress);
             console.log(channel);
 
-            console.log("Before broadcast");
             let res = await skaleDKG.isBroadcastPossible(
                     web3.utils.soliditySha3(schainName),
                     2,
@@ -646,8 +645,6 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                 {from: validatorsAccount[0]},
             );
 
-            console.log("Another broadcast");
-
             res = await skaleDKG.isBroadcastPossible(
                     web3.utils.soliditySha3(schainName),
                     1,
@@ -664,9 +661,6 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
             );
 
             channel = new Channel(await skaleDKG.channels(web3.utils.soliditySha3(schainName)));
-            console.log(channel);
-
-            console.log("Broadcast did!");
 
             res = await skaleDKG.isAlrightPossible(
                         web3.utils.soliditySha3(schainName),
