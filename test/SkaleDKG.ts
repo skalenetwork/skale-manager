@@ -626,7 +626,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
             assert.equal(channel.numberOfBroadcasted.toString(), "0");
             assert.equal(channel.startedBlockTimestamp.toString(), timestamp.toString());
             assert.equal(channel.dataAddress, dataAddress);
-            console.log(channel);
+            // console.log(channel);
 
             let res = await skaleDKG.isBroadcastPossible(
                     web3.utils.soliditySha3(schainName),
