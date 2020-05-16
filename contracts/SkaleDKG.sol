@@ -148,11 +148,11 @@ contract SkaleDKG is Permissions {
         GroupsData groupsData = GroupsData(channels[groupIndex].dataAddress);
         channels[groupIndex].active = true;
 
-        delete channels[groupIndex].broadcasted;
         delete channels[groupIndex].completed;
         for (uint i = 0; i < channels[groupIndex].broadcasted.length; i++) {
             delete _data[groupIndex][i];
         }
+        delete channels[groupIndex].broadcasted;
         channels[groupIndex].broadcasted = new bool[](groupsData.getRecommendedNumberOfNodes(groupIndex));
         channels[groupIndex].completed = new bool[](groupsData.getRecommendedNumberOfNodes(groupIndex));
         delete channels[groupIndex].publicKeyx.x;
