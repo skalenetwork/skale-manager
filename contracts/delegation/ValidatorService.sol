@@ -218,16 +218,6 @@ contract ValidatorService is Permissions {
         validators[validatorId].minimumDelegationAmount = minimumDelegationAmount;
     }
 
-    /// @notice return how many of validator funds are locked in SkaleManager
-    function getAndUpdateBondAmount(uint validatorId)
-        external
-        returns (uint delegatedAmount)
-    {
-        DelegationController delegationController = DelegationController(
-            _contractManager.getContract("DelegationController"));
-        return delegationController.getAndUpdateDelegatedAmount(validators[validatorId].validatorAddress);
-    }
-
     function setValidatorName(string calldata newName) external {
         uint validatorId = getValidatorId(msg.sender);
         validators[validatorId].name = newName;
@@ -271,8 +261,31 @@ contract ValidatorService is Permissions {
         return whitelist;
     }
 
+    /// @notice return how many of validator funds are locked in SkaleManager
+    function getBondAmount(uint validatorId)
+        external
+        view
+        returns (uint bondAmount)
+    {
+        DelegationController delegationController = DelegationController(
+            _contractManager.getContract("DelegationController"));
+        uint[] memory delegationsByHolder = delegationController.getDelegationsByHolder(
+            validators[validatorId].validatorAddress
+        );
+        for (uint i = 0; i < delegationsByHolder.length; i++) {
+            uint delegationId = delegationsByHolder[i];
+            DelegationController.Delegation memory delegation = delegationController.getDelegation(delegationId);
+            DelegationController.State state = delegationController.getState(delegationId);
+            if (state == DelegationController.State.DELEGATED &&
+                delegation.validatorId == validatorId) {
+                bondAmount += delegation.amount;
+            }
+        }
+    }
+
     function checkMinimumDelegation(uint validatorId, uint amount)
-        external view
+        external
+        view
         checkValidatorExists(validatorId)
         allow("DelegationController")
         returns (bool)
