@@ -30,14 +30,14 @@ contract DelegationPeriodManager is Permissions {
 
     mapping (uint => uint) public stakeMultipliers;
 
-    function isDelegationPeriodAllowed(uint monthsCount) external view returns (bool) {
-        return stakeMultipliers[monthsCount] != 0 ? true : false;
-    }
-
     function setDelegationPeriod(uint monthsCount, uint stakeMultiplier) external onlyOwner {
         stakeMultipliers[monthsCount] = stakeMultiplier;
 
         emit DelegationPeriodWasSet(monthsCount, stakeMultiplier);
+    }
+
+    function isDelegationPeriodAllowed(uint monthsCount) external view returns (bool) {
+        return stakeMultipliers[monthsCount] != 0 ? true : false;
     }
 
     function initialize(address _contractsAddress) public override initializer {
