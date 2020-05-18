@@ -386,6 +386,10 @@ contract DelegationController is Permissions, ILocker {
         return delegationsByHolder[holder].length;
     }
 
+    function getDelegationsByHolder(address holder) external view returns (uint[] memory) {
+        return delegationsByHolder[holder];
+    }
+
     function initialize(address _contractsAddress) public override initializer {
         Permissions.initialize(_contractsAddress);
     }
