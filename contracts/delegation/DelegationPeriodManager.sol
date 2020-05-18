@@ -28,10 +28,6 @@ contract DelegationPeriodManager is Permissions {
         uint stakeMultiplier
     );
 
-    event DelegationPeriodWasRemoved(
-        uint legth
-    );
-
     mapping (uint => uint) public stakeMultipliers;
 
     function isDelegationPeriodAllowed(uint monthsCount) external view returns (bool) {
@@ -42,13 +38,6 @@ contract DelegationPeriodManager is Permissions {
         stakeMultipliers[monthsCount] = stakeMultiplier;
 
         emit DelegationPeriodWasSet(monthsCount, stakeMultiplier);
-    }
-
-    function removeDelegationPeriod(uint monthsCount) external onlyOwner {
-        // remove only if there are no delegators that staked tokens for this period
-        stakeMultipliers[monthsCount] = 0;
-
-        emit DelegationPeriodWasRemoved(monthsCount);
     }
 
     function initialize(address _contractsAddress) public override initializer {
