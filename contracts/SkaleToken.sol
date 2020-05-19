@@ -81,10 +81,6 @@ contract SkaleToken is ERC777, Permissions, ReentrancyGuard, IDelegatableToken {
         return true;
     }
 
-    // function transfer(address recipient, uint256 amount) public override nonReentrant returns (bool) {
-    //     super.transfer(recipient, amount);
-    // }
-
     function getAndUpdateDelegatedAmount(address wallet) external override returns (uint) {
         return DelegationController(_contractManager.getContract("DelegationController"))
             .getAndUpdateDelegatedAmount(wallet);
@@ -134,5 +130,15 @@ contract SkaleToken is ERC777, Permissions, ReentrancyGuard, IDelegatableToken {
         bool requireReceptionAck
     ) internal override nonReentrant {
         super._callTokensReceived(operator, from, to, amount, userData, operatorData, requireReceptionAck);
+    }
+
+    // we have to override _msgData() and _msgSender() functions because of collision in Context and ContextUpgradeSafe
+
+    function _msgData() internal view override(Context, ContextUpgradeSafe) returns (bytes memory) {
+        return Context._msgData();
+    }
+
+    function _msgSender() internal view override(Context, ContextUpgradeSafe) returns (address payable) {
+        return Context._msgSender();
     }
 }
