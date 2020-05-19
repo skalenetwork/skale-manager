@@ -19,13 +19,12 @@
 
 pragma solidity 0.6.6;
 
-import "@openzeppelin/upgrades/contracts/Initializable.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/access/Ownable.sol";
 
-import "../thirdparty/openzeppelin/Ownable.sol";
 import "../delegation/TimeHelpers.sol";
 
 
-contract TimeHelpersWithDebug is TimeHelpers, Ownable {
+contract TimeHelpersWithDebug is TimeHelpers, OwnableUpgradeSafe {
     struct TimeShift {
         uint pointInTime;
         uint shift;
@@ -42,7 +41,7 @@ contract TimeHelpersWithDebug is TimeHelpers, Ownable {
     }
 
     function initialize() external initializer {
-        Ownable.initialize(msg.sender);
+        OwnableUpgradeSafe.__Ownable_init();
     }
 
     function timestampToMonth(uint timestamp) public view override returns (uint) {
