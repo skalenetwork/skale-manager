@@ -13,6 +13,7 @@
     "code-complexity": "error",
     "func-order": "error",
     "visibility-modifier-order": "error",
-    "func-name-mixedcase": "error"
+    "func-name-mixedcase": "error",
+    "function-max-lines": "error"
   }
 }

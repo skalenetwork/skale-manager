@@ -249,47 +249,11 @@ contract DelegationController is Permissions, ILocker {
             "No permissions to accept request");
         require(getState(delegationId) == State.PROPOSED, "Cannot set state to accepted");
         
-        DelegationPeriodManager delegationPeriodManager = DelegationPeriodManager(
-            _contractManager.getContract("DelegationPeriodManager"));
         TokenLaunchLocker tokenLaunchLocker = TokenLaunchLocker(_contractManager.getContract("TokenLaunchLocker"));
 
         SlashingSignal[] memory slashingSignals = _processAllSlashesWithoutSignals(delegations[delegationId].holder);
 
-        uint currentMonth = _getCurrentMonth();
-        delegations[delegationId].started = currentMonth.add(1);
-        if (_slashesOfValidator[delegations[delegationId].validatorId].lastMonth > 0) {
-            _delegationExtras[delegationId].lastSlashingMonthBeforeDelegation =
-                _slashesOfValidator[delegations[delegationId].validatorId].lastMonth;
-        }
-
-        _addToDelegatedToValidator(
-            delegations[delegationId].validatorId,
-            delegations[delegationId].amount,
-            currentMonth.add(1));
-        _addToDelegatedByHolder(
-            delegations[delegationId].holder,
-            delegations[delegationId].amount,
-            currentMonth.add(1));
-        _addToDelegatedByHolderToValidator(
-            delegations[delegationId].holder,
-            delegations[delegationId].validatorId,
-            delegations[delegationId].amount,
-            currentMonth.add(1));
-        _updateFirstDelegationMonth(
-            delegations[delegationId].holder,
-            delegations[delegationId].validatorId,
-            currentMonth.add(1));
-        uint effectiveAmount = delegations[delegationId].amount.mul(delegationPeriodManager.stakeMultipliers(
-            delegations[delegationId].delegationPeriod));
-        _addToEffectiveDelegatedToValidator(
-            delegations[delegationId].validatorId,
-            effectiveAmount,
-            currentMonth.add(1));
-        _addToEffectiveDelegatedByHolderToValidator(
-            delegations[delegationId].holder,
-            delegations[delegationId].validatorId,
-            effectiveAmount,
-            currentMonth.add(1));
+        _addToAllStatistics(delegationId);
 
         tokenLaunchLocker.handleDelegationAdd(
             delegations[delegationId].holder,
@@ -715,5 +679,46 @@ contract DelegationController is Permissions, ILocker {
         if (accumulatedPenalty > 0) {
             punisher.handleSlash(previousHolder, accumulatedPenalty);
         }
+    }
+
+    function _addToAllStatistics(uint delegationId) internal {
+        DelegationPeriodManager delegationPeriodManager = DelegationPeriodManager(
+            _contractManager.getContract("DelegationPeriodManager"));
+
+        uint currentMonth = _getCurrentMonth();
+        delegations[delegationId].started = currentMonth.add(1);
+        if (_slashesOfValidator[delegations[delegationId].validatorId].lastMonth > 0) {
+            _delegationExtras[delegationId].lastSlashingMonthBeforeDelegation =
+                _slashesOfValidator[delegations[delegationId].validatorId].lastMonth;
+        }
+
+        _addToDelegatedToValidator(
+            delegations[delegationId].validatorId,
+            delegations[delegationId].amount,
+            currentMonth.add(1));
+        _addToDelegatedByHolder(
+            delegations[delegationId].holder,
+            delegations[delegationId].amount,
+            currentMonth.add(1));
+        _addToDelegatedByHolderToValidator(
+            delegations[delegationId].holder,
+            delegations[delegationId].validatorId,
+            delegations[delegationId].amount,
+            currentMonth.add(1));
+        _updateFirstDelegationMonth(
+            delegations[delegationId].holder,
+            delegations[delegationId].validatorId,
+            currentMonth.add(1));
+        uint effectiveAmount = delegations[delegationId].amount.mul(delegationPeriodManager.stakeMultipliers(
+            delegations[delegationId].delegationPeriod));
+        _addToEffectiveDelegatedToValidator(
+            delegations[delegationId].validatorId,
+            effectiveAmount,
+            currentMonth.add(1));
+        _addToEffectiveDelegatedByHolderToValidator(
+            delegations[delegationId].holder,
+            delegations[delegationId].validatorId,
+            effectiveAmount,
+            currentMonth.add(1));
     }
 }
