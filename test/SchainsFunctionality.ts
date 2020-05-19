@@ -171,17 +171,74 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
 
                 const deposit = await schainsFunctionality.getSchainPrice(4, 5);
 
+                const verificationVector =
+                    "0x02c2b888a23187f22195eadadbc05847a00dc59c913d465dbc4dfac9cfab437d2695832627b9081e77da7a3fc4d574363bf05" +
+                    "1700055822f3d394dc3d9ff741724727c45f9322be756fbec6514525cbbfa27ef1951d3fed10f483c23f921879d03a7a3e6f3b5" +
+                    "39dad43c0eca46e3f889b2b2300815ffc4633e26e64406625a99";
+
+                const encryptedSecretKeyContribution =
+                    "0x937c9c846a6fa7fd1984fe82e739ae37fcaa555c1dc0e8597c9f81b6a12f232f04fdf8101e91bd658fa1cea6fdd75adb85429" +
+                    "51ce3d251cdaa78f43493dad730b59d32d2e872b36aa70cdce544b550ebe96994de860b6f6ebb7d0b4d4e6724b4bf7232f27fdf" +
+                    "e521f3c7997dbb1c15452b7f196bd119d915ce76af3d1a008e181004086ff076abe442563ae9b8938d483ae581f4de2ee54298b" +
+                    "3078289bbd85250c8df956450d32f671e4a8ec1e584119753ff171e80a61465246bfd291e8dac3d77";
+
                 await schainsFunctionality.addSchain(
                     owner,
                     deposit,
                     web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, "d2"]),
                     {from: owner});
-                await schainsData.setPublicKey(
+                let res1 = await schainsData.getNodesInGroup(web3.utils.soliditySha3("d2"));
+                let res = await skaleDKG.isBroadcastPossible(web3.utils.soliditySha3("d2"), res1[0], {from: validator});
+                assert.equal(res, true);
+                await skaleDKG.broadcast(
                     web3.utils.soliditySha3("d2"),
-                    0,
-                    0,
-                    0,
-                    0,
+                    res1[0],
+                    verificationVector,
+                    // the last symbol is spoiled in parameter below
+                    encryptedSecretKeyContribution,
+                    {from: validator},
+                );
+                res = await skaleDKG.isBroadcastPossible(web3.utils.soliditySha3("d2"), res1[1], {from: validator});
+                assert.equal(res, true);
+                await skaleDKG.broadcast(
+                    web3.utils.soliditySha3("d2"),
+                    res1[1],
+                    verificationVector,
+                    // the last symbol is spoiled in parameter below
+                    encryptedSecretKeyContribution,
+                    {from: validator},
+                );
+
+                res = await skaleDKG.isChannelOpened(web3.utils.soliditySha3("d2"));
+                assert.equal(res, true);
+
+                res = await skaleDKG.isAlrightPossible(
+                    web3.utils.soliditySha3("d2"),
+                    res1[0],
+                    {from: validator},
+                );
+                assert.equal(res, true);
+
+                await skaleDKG.alright(
+                    web3.utils.soliditySha3("d2"),
+                    res1[0],
+                    {from: validator},
+                );
+
+                res = await skaleDKG.isChannelOpened(web3.utils.soliditySha3("d2"));
+                assert.equal(res, true);
+
+                res = await skaleDKG.isAlrightPossible(
+                    web3.utils.soliditySha3("d2"),
+                    res1[1],
+                    {from: validator},
+                );
+                assert.equal(res, true);
+
+                await skaleDKG.alright(
+                    web3.utils.soliditySha3("d2"),
+                    res1[1],
+                    {from: validator},
                 );
 
                 await nodes.createNode(validator,
@@ -195,23 +252,13 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                         name: "D2-11"
                     });
 
-                let res = await skaleDKG.isChannelOpened(web3.utils.soliditySha3("d2"));
-                assert.equal(res, true);
+                res = await skaleDKG.isChannelOpened(web3.utils.soliditySha3("d2"));
+                assert.equal(res, false);
                 await skaleManager.nodeExit(0, {from: validator});
-                const res1 = await schainsData.getNodesInGroup(web3.utils.soliditySha3("d2"));
+                res1 = await schainsData.getNodesInGroup(web3.utils.soliditySha3("d2"));
                 const nodeRot = res1[1];
                 res = await skaleDKG.isBroadcastPossible(web3.utils.soliditySha3("d2"), nodeRot, {from: validator});
                 assert.equal(res, true);
-                const verificationVector =
-                    "0x02c2b888a23187f22195eadadbc05847a00dc59c913d465dbc4dfac9cfab437d2695832627b9081e77da7a3fc4d574363bf05" +
-                    "1700055822f3d394dc3d9ff741724727c45f9322be756fbec6514525cbbfa27ef1951d3fed10f483c23f921879d03a7a3e6f3b5" +
-                    "39dad43c0eca46e3f889b2b2300815ffc4633e26e64406625a99";
-
-                const encryptedSecretKeyContribution =
-                    "0x937c9c846a6fa7fd1984fe82e739ae37fcaa555c1dc0e8597c9f81b6a12f232f04fdf8101e91bd658fa1cea6fdd75adb85429" +
-                    "51ce3d251cdaa78f43493dad730b59d32d2e872b36aa70cdce544b550ebe96994de860b6f6ebb7d0b4d4e6724b4bf7232f27fdf" +
-                    "e521f3c7997dbb1c15452b7f196bd119d915ce76af3d1a008e181004086ff076abe442563ae9b8938d483ae581f4de2ee54298b" +
-                    "3078289bbd85250c8df956450d32f671e4a8ec1e584119753ff171e80a61465246bfd291e8dac3d77";
                 res = await skaleDKG.isBroadcastPossible(web3.utils.soliditySha3("d2"), res1[0], {from: validator});
                 assert.equal(res, true);
                 await skaleDKG.broadcast(
@@ -953,6 +1000,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                 "51ce3d251cdaa78f43493dad730b59d32d2e872b36aa70cdce544b550ebe96994de860b6f6ebb7d0b4d4e6724b4bf7232f27fdf" +
                 "e521f3c7997dbb1c15452b7f196bd119d915ce76af3d1a008e181004086ff076abe442563ae9b8938d483ae581f4de2ee54298b" +
                 "3078289bbd85250c8df956450d32f671e4a8ec1e584119753ff171e80a61465246bfd291e8dac3d77";
+            let res10 = await skaleDKG.getBroadcastedData(web3.utils.soliditySha3("d3"), res1[0]);
             res = await skaleDKG.isBroadcastPossible(web3.utils.soliditySha3("d3"), res1[0], {from: validator});
             assert.equal(res, true);
             await skaleDKG.broadcast(
@@ -963,6 +1011,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                 encryptedSecretKeyContribution,
                 {from: validator},
             );
+            res10 = await skaleDKG.getBroadcastedData(web3.utils.soliditySha3("d3"), res1[1]);
             res = await skaleDKG.isBroadcastPossible(web3.utils.soliditySha3("d3"), res1[1], {from: validator});
             assert.equal(res, true);
             await skaleDKG.broadcast(
