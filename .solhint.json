@@ -12,6 +12,7 @@
     "private-vars-leading-underscore": "error",
     "code-complexity": "error",
     "func-order": "error",
-    "visibility-modifier-order": "error"
+    "visibility-modifier-order": "error",
+    "func-name-mixedcase": "error"
   }
 }
