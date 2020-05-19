@@ -54,7 +54,7 @@
     "truffle": "5.1.26",
     "truffle-typings": "^1.0.8",
     "ts-node": "8.10.1",
-    "typechain": "^1.0.5",
+    "typechain": "^2.0.0",
     "typechain-target-truffle": "^1.0.2",
     "web3": "^1.2.1"
   },
