@@ -49,7 +49,7 @@ contract TokenLaunchManager is Permissions, IERC777Recipient {
     uint private _totalApproved;
 
     modifier onlySeller() {
-        require(isOwner() || _msgSender() == seller, "Not authorized");
+        require(_isOwner() || _msgSender() == seller, "Not authorized");
         _;
     }
 

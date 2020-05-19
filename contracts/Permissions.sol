@@ -27,14 +27,14 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
  * @title Permissions - connected module for Upgradeable approach, knows ContractManager
  * @author Artem Payvin
  */
-contract Permissions is Ownable {
+contract Permissions is OwnableUpgradeSafe {
     using SafeMath for uint;
     using SafeMath for uint32;
 
     ContractManager internal _contractManager;
 
-    function initialize(address contractManager) public override virtual initializer {
-        Ownable.initialize(msg.sender);
+    function initialize(address contractManager) public virtual initializer {
+        OwnableUpgradeSafe.__Ownable_init();
         _contractManager = ContractManager(contractManager);
     }
 
@@ -45,7 +45,7 @@ contract Permissions is Ownable {
      */
     modifier allow(string memory contractName) {
         require(
-            _contractManager.contracts(keccak256(abi.encodePacked(contractName))) == msg.sender || isOwner(),
+            _contractManager.contracts(keccak256(abi.encodePacked(contractName))) == msg.sender || _isOwner(),
             "Message sender is invalid");
         _;
     }
@@ -54,7 +54,7 @@ contract Permissions is Ownable {
         require(
             _contractManager.contracts(keccak256(abi.encodePacked(contractName1))) == msg.sender ||
             _contractManager.contracts(keccak256(abi.encodePacked(contractName2))) == msg.sender ||
-            isOwner(),
+            _isOwner(),
             "Message sender is invalid");
         _;
     }
@@ -64,8 +64,12 @@ contract Permissions is Ownable {
             _contractManager.contracts(keccak256(abi.encodePacked(contractName1))) == msg.sender ||
             _contractManager.contracts(keccak256(abi.encodePacked(contractName2))) == msg.sender ||
             _contractManager.contracts(keccak256(abi.encodePacked(contractName3))) == msg.sender ||
-            isOwner(),
+            _isOwner(),
             "Message sender is invalid");
         _;
+    }
+
+    function _isOwner() internal view returns (bool) {
+        return msg.sender == owner();
     }
 }

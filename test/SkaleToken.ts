@@ -1,6 +1,7 @@
 import BigNumber from "bignumber.js";
 import { ContractManagerInstance,
-         SkaleTokenInstance } from "../types/truffle-contracts";
+         SkaleTokenInstance,
+         SkaleTokenInternalTesterInstance} from "../types/truffle-contracts";
 
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
@@ -251,6 +252,12 @@ contract("SkaleToken", ([owner, holder, receiver, nilAddress, accountWith99]) =>
     await skaleToken.mint(reentrancyTester.address, amount, "0x", "0x", {from: owner});
     await reentrancyTester.burningAttack()
       .should.be.eventually.rejectedWith("Token should be unlocked for transferring");
+  });
+
+  it("should parse call data correctly", async () => {
+    const SkaleTokenInternalTesterContract = artifacts.require("./SkaleTokenInternalTester");
+    const skaleTokenInternalTester: SkaleTokenInternalTesterInstance = await SkaleTokenInternalTesterContract.new(contractManager.address, []);
+    await skaleTokenInternalTester.getMsgData().should.be.eventually.equal(web3.eth.abi.encodeFunctionSignature("getMsgData()"));
   });
 });
 
