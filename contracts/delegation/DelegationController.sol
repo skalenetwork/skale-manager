@@ -25,6 +25,7 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 
 import "../Permissions.sol";
 import "../SkaleToken.sol";
+import "../Nodes.sol";
 import "../utils/MathUtils.sol";
 import "../utils/FractionUtils.sol";
 
@@ -391,7 +392,7 @@ contract DelegationController is Permissions, ILocker {
     }
 
     function getAndUpdateDelegatedToValidator(uint validatorId, uint month)
-        public allow("ValidatorService") returns (uint)
+        public allow("Nodes") returns (uint)
     {
         return _delegatedToValidator[validatorId].getAndUpdateValue(month);
     }

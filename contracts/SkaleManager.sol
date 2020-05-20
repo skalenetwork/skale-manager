@@ -81,10 +81,9 @@ contract SkaleManager is IERC777Recipient, Permissions {
         external
     {
         Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
-        ValidatorService validatorService = ValidatorService(_contractManager.getContract("ValidatorService"));
         Monitors monitors = Monitors(_contractManager.getContract("Monitors"));
 
-        validatorService.checkPossibilityCreatingNode(msg.sender);
+        nodes.checkPossibilityCreatingNode(msg.sender);
         Nodes.NodeCreationParams memory params = Nodes.NodeCreationParams({
             name: name,
             ip: ip,
@@ -93,7 +92,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
             publicKey: publicKey,
             nonce: nonce});
         uint nodeIndex = nodes.createNode(msg.sender, params);
-        validatorService.pushNode(msg.sender, nodeIndex);
+        nodes.pushNode(msg.sender, nodeIndex);
         monitors.addMonitor(nodeIndex);
     }
 
@@ -128,18 +127,17 @@ contract SkaleManager is IERC777Recipient, Permissions {
         monitors.deleteMonitor(nodeIndex);
         ValidatorService validatorService = ValidatorService(_contractManager.getContract("ValidatorService"));
         uint validatorId = validatorService.getValidatorIdByNodeAddress(msg.sender);
-        validatorService.deleteNode(validatorId, nodeIndex);
+        nodes.deleteNode(validatorId, nodeIndex);
     }
 
     function deleteNodeByRoot(uint nodeIndex) external onlyOwner {
         Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
         Monitors monitors = Monitors(_contractManager.getContract("Monitors"));
-        ValidatorService validatorService = ValidatorService(_contractManager.getContract("ValidatorService"));
 
         nodes.removeNodeByRoot(nodeIndex);
         monitors.deleteMonitor(nodeIndex);
         uint validatorId = nodes.getNodeValidatorId(nodeIndex);
-        validatorService.deleteNode(validatorId, nodeIndex);
+        nodes.deleteNode(validatorId, nodeIndex);
     }
 
     function deleteSchain(string calldata name) external {
@@ -256,12 +254,13 @@ contract SkaleManager is IERC777Recipient, Permissions {
 
     function _payBounty(uint bountyForMiner, address miner, uint nodeIndex) internal returns (bool) {
         ValidatorService validatorService = ValidatorService(_contractManager.getContract("ValidatorService"));
+        Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
         SkaleToken skaleToken = SkaleToken(_contractManager.getContract("SkaleToken"));
         Distributor distributor = Distributor(_contractManager.getContract("Distributor"));
 
         uint validatorId = validatorService.getValidatorIdByNodeAddress(miner);
         uint bounty = bountyForMiner;
-        if (!validatorService.checkPossibilityToMaintainNode(validatorId, nodeIndex)) {
+        if (!nodes.checkPossibilityToMaintainNode(validatorId, nodeIndex)) {
             bounty /= 2;
         }
         // solhint-disable-next-line check-send-result

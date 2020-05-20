@@ -2,25 +2,41 @@ import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
 import { ContractManagerInstance,
          NodesInstance,
-         ValidatorServiceInstance } from "../types/truffle-contracts";
+         SkaleTokenInstance,
+         ValidatorServiceInstance,
+         DelegationControllerInstance,
+         ConstantsHolderInstance} from "../types/truffle-contracts";
 
+import { skipTime } from "./tools/time";
+
+import BigNumber from "bignumber.js";
 import { deployContractManager } from "./tools/deploy/contractManager";
+import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
 import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
 import { deployNodes } from "./tools/deploy/nodes";
+import { deploySkaleToken } from "./tools/deploy/skaleToken";
+import { deployDelegationController } from "./tools/deploy/delegation/delegationController";
+
 
 chai.should();
 chai.use(chaiAsPromised);
 
-contract("NodesFunctionality", ([owner, validator, nodeAddress, nodeAddress2]) => {
+contract("NodesFunctionality", ([owner, validator, nodeAddress, nodeAddress2, holder, ]) => {
     let contractManager: ContractManagerInstance;
     let nodes: NodesInstance;
     let validatorService: ValidatorServiceInstance;
-    const validatorId = 1;
+    let constantsHolder: ConstantsHolderInstance;
+    let skaleToken: SkaleTokenInstance;
+    let delegationController: DelegationControllerInstance;
 
     beforeEach(async () => {
         contractManager = await deployContractManager();
         nodes = await deployNodes(contractManager);
         validatorService = await deployValidatorService(contractManager);
+        constantsHolder = await deployConstantsHolder(contractManager);
+        skaleToken = await deploySkaleToken(contractManager);
+        delegationController = await deployDelegationController(contractManager);
+
 
         await validatorService.registerValidator("Validator", "D2", 0, 0, {from: validator});
         const validatorIndex = await validatorService.getValidatorId(validator);
@@ -211,4 +227,79 @@ contract("NodesFunctionality", ([owner, validator, nodeAddress, nodeAddress2]) =
         });
     });
 
+    describe("when holder has enough tokens", async () => {
+        const validatorId = 1;
+        let amount: number;
+        let delegationPeriod: number;
+        let info: string;
+        const month = 60 * 60 * 24 * 31;
+        beforeEach(async () => {
+            amount = 100;
+            delegationPeriod = 3;
+            info = "NICE";
+            await skaleToken.mint(holder, 200, "0x", "0x");
+            await skaleToken.mint(nodeAddress, 200, "0x", "0x");
+        });
+
+        it("should not allow to create node if new epoch isn't started", async () => {
+            await validatorService.enableValidator(validatorId, {from: owner});
+            await delegationController.delegate(validatorId, amount, delegationPeriod, info, {from: holder});
+            const delegationId = 0;
+            await delegationController.acceptPendingDelegation(delegationId, {from: validator});
+
+            await nodes.checkPossibilityCreatingNode(nodeAddress)
+                .should.be.eventually.rejectedWith("Validator must meet Minimum Staking Requirement");
+        });
+
+        it("should allow to create node if new epoch is started", async () => {
+            await validatorService.enableValidator(validatorId, {from: owner});
+            await delegationController.delegate(validatorId, amount, delegationPeriod, info, {from: holder});
+            const delegationId = 0;
+            await delegationController.acceptPendingDelegation(delegationId, {from: validator});
+            skipTime(web3, month);
+
+            await nodes.checkPossibilityCreatingNode(nodeAddress)
+                .should.be.eventually.rejectedWith("Validator must meet Minimum Staking Requirement");
+
+            await constantsHolder.setMSR(amount);
+
+            // now it should not reject
+            await nodes.checkPossibilityCreatingNode(nodeAddress);
+
+            await nodes.pushNode(nodeAddress, 0);
+            const nodeIndexBN = (await nodes.getValidatorNodeIndexes(validatorId))[0];
+            const nodeIndex = new BigNumber(nodeIndexBN).toNumber();
+            assert.equal(nodeIndex, 0);
+        });
+
+        it("should allow to create 2 nodes", async () => {
+            const validator3 = nodeAddress;
+            await validatorService.enableValidator(validatorId, {from: owner});
+            await delegationController.delegate(validatorId, amount, delegationPeriod, info, {from: holder});
+            const delegationId1 = 0;
+            await delegationController.acceptPendingDelegation(delegationId1, {from: validator});
+            await delegationController.delegate(validatorId, amount, delegationPeriod, info, {from: validator3});
+            const delegationId2 = 1;
+            await delegationController.acceptPendingDelegation(delegationId2, {from: validator});
+
+            skipTime(web3, 2678400); // 31 days
+            await nodes.checkPossibilityCreatingNode(nodeAddress)
+                .should.be.eventually.rejectedWith("Validator must meet Minimum Staking Requirement");
+
+            await constantsHolder.setMSR(amount);
+
+            await nodes.checkPossibilityCreatingNode(nodeAddress);
+            await nodes.pushNode(nodeAddress, 0);
+
+            await nodes.checkPossibilityCreatingNode(nodeAddress);
+            await nodes.pushNode(nodeAddress, 1);
+
+            const nodeIndexesBN = (await nodes.getValidatorNodeIndexes(validatorId));
+            for (let i = 0; i < nodeIndexesBN.length; i++) {
+                const nodeIndexBN = (await nodes.getValidatorNodeIndexes(validatorId))[i];
+                const nodeIndex = new BigNumber(nodeIndexBN).toNumber();
+                assert.equal(nodeIndex, i);
+            }
+        });
+    });
 });
