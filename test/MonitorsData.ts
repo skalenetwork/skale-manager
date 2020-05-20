@@ -107,4 +107,21 @@ contract("MonitorsData", ([owner, user]) => {
         const dataLengthAfter = await monitorsData.getLengthOfMetrics(monitorIndex);
         dataLengthAfter.should.be.deep.equal(web3.utils.toBN(3));
     });
+
+    it("should add bad monitor", async () => {
+        const monitorIndex = web3.utils.soliditySha3("1");
+        await monitorsData.addBadMonitor(monitorIndex, {from: owner});
+        const res = await monitorsData.slashedBounty(monitorIndex);
+        res.should.be.equal(true);
+    });
+
+    it("should remove bad monitor", async () => {
+        const monitorIndex = web3.utils.soliditySha3("1");
+        await monitorsData.addBadMonitor(monitorIndex, {from: owner});
+        let res = await monitorsData.slashedBounty(monitorIndex);
+        res.should.be.equal(true);
+        await monitorsData.removeBadMonitor(monitorIndex, {from: owner});
+        res = await monitorsData.slashedBounty(monitorIndex);
+        res.should.be.equal(false);
+    });
 });

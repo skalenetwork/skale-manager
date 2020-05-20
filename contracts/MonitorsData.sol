@@ -40,6 +40,7 @@ contract MonitorsData is GroupsData {
     mapping (bytes32 => uint32[][]) public verdicts;
 
     mapping (bytes32 => bool) public slashedBounty;
+    mapping (bytes32 => uint[]) public monitoringNodes;
 
     /**
      *  Add checked node or update existing one if it is already exits
@@ -79,6 +80,35 @@ contract MonitorsData is GroupsData {
         verdicts[monitorIndex].length = 0;
     }
 
+    function addBadMonitor(bytes32 monitorIndex) external allow(executorName) {
+        slashedBounty[monitorIndex] = true;
+    }
+
+    function removeBadMonitor(bytes32 monitorIndex) external allow(executorName) {
+        slashedBounty[monitorIndex] = false;
+    }
+
+    function addMonitoringNode(bytes32 monitorIndex, uint nodeIndex) external allow(executorName) {
+        monitoringNodes[monitorIndex].push(nodeIndex);
+    }
+
+    function removeMonitoringNode(bytes32 monitorIndex, uint nodeIndex) external allow(executorName) {
+        uint index;
+        for (index = 0; index < monitoringNodes[monitorIndex].length; index++) {
+            if (monitoringNodes[monitorIndex][index] == nodeIndex) {
+                break;
+            }
+        }
+        if (index != monitoringNodes[monitorIndex].length - 1) {
+            monitoringNodes[monitorIndex][index] = monitoringNodes[monitorIndex][monitoringNodes[monitorIndex].length - 1];
+        }
+        monitoringNodes[monitorIndex].pop();
+    }
+
+    function getMonitoringNodes(bytes32 monitorIndex) external view returns (uint[] memory) {
+        return monitoringNodes[monitorIndex];
+    }
+
     function getCheckedArray(bytes32 monitorIndex) external view returns (bytes32[] memory) {
         return checkedNodes[monitorIndex];
     }
@@ -89,14 +119,6 @@ contract MonitorsData is GroupsData {
 
     function getLengthOfMetrics(bytes32 monitorIndex) external view returns (uint) {
         return verdicts[monitorIndex].length;
-    }
-
-    function addBadMonitor(bytes32 monitorIndex) external {
-        slashedBounty[monitorIndex] = true;
-    }
-
-    function removeBadMonitor(bytes32 monitorIndex) external {
-        slashedBounty[monitorIndex] = false;
     }
 
     function initialize(address newContractsAddress) public initializer {

@@ -491,6 +491,54 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
 
                     expect(balanceAfter.sub(balanceBefore).eq(bounty)).to.be.true;
                 });
+
+                it("should get normal bounty", async () => {
+                    await skaleManager.sendVerdict(0, 2, 0, 50, {from: nodeAddress});
+
+                    skipTime(web3, 200);
+                    await skaleManager.getBounty(2, {from: nodeAddress});
+
+                    await distributor.withdrawBounty(validatorId, validator, {from: validator});
+                    await distributor.withdrawFee(validator, {from: validator});
+                    const balanceBefore = web3.utils.toBN(await skaleToken.balanceOf(validator));
+
+                    const normalBounty = web3.utils.toBN("1250285779606767261088");
+
+                    await skaleManager.getBounty(0, {from: nodeAddress});
+
+                    skipTime(web3, month); // can withdraw bounty only next month
+
+                    await distributor.withdrawBounty(validatorId, validator, {from: validator});
+                    await distributor.withdrawFee(validator, {from: validator});
+
+                    const balanceAfter = web3.utils.toBN(await skaleToken.balanceOf(validator));
+
+                    expect(balanceAfter.sub(balanceBefore).eq(normalBounty.mul(web3.utils.toBN("2")))).to.be.true;
+                });
+
+                it("should get decreased bounty", async () => {
+                    skipTime(web3, 200);
+
+                    await skaleManager.getBounty(2, {from: nodeAddress});
+
+                    await distributor.withdrawBounty(validatorId, validator, {from: validator});
+                    await distributor.withdrawFee(validator, {from: validator});
+                    const balanceBefore = web3.utils.toBN(await skaleToken.balanceOf(validator));
+
+                    const normalBounty = web3.utils.toBN("1250285779606767261088");
+                    const decreasedBounty = web3.utils.toBN("1125257201646090534979");
+
+                    await skaleManager.getBounty(0, {from: nodeAddress});
+
+                    skipTime(web3, month); // can withdraw bounty only next month
+
+                    await distributor.withdrawBounty(validatorId, validator, {from: validator});
+                    await distributor.withdrawFee(validator, {from: validator});
+
+                    const balanceAfter = web3.utils.toBN(await skaleToken.balanceOf(validator));
+
+                    expect(balanceAfter.sub(balanceBefore).eq(normalBounty.add(decreasedBounty))).to.be.true;
+                });
             });
 
             describe("when monitor verdict with latency is received", async () => {

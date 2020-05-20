@@ -150,6 +150,7 @@ contract MonitorsFunctionality is GroupsFunctionality {
         require(time <= block.timestamp, message.strConcat(StringUtils.uint2str(toNodeIndex)).strConcat(" Node"));
         MonitorsData data = MonitorsData(contractManager.getContract("MonitorsData"));
         data.removeCheckedNode(monitorIndex, index);
+        data.removeMonitoringNode(keccak256(abi.encodePacked(toNodeIndex)), fromMonitorIndex);
         address constantsAddress = contractManager.getContract("ConstantsHolder");
         bool receiveVerdict = time.add(IConstants(constantsAddress).deltaPeriod()) > uint32(block.timestamp);
         if (receiveVerdict) {
@@ -173,11 +174,10 @@ contract MonitorsFunctionality is GroupsFunctionality {
             downtimeArray[i] = data.verdicts(monitorIndex, i, 0);
             latencyArray[i] = data.verdicts(monitorIndex, i, 1);
         }
-        bytes32[] memory badMonitors = data.getCheckedArray(monitorIndex);
+        uint[] memory badMonitors = data.getMonitoringNodes(monitorIndex);
         uint index;
         for (uint i = 0; i < badMonitors.length; i++) {
-            (index, ) = getDataFromBytes(badMonitors[i]);
-            data.addBadMonitor(keccak256(abi.encodePacked(index)));
+            data.addBadMonitor(keccak256(abi.encodePacked(badMonitors[i])));
         }
         if (lengthOfArray > 0) {
             averageDowntime = median(downtimeArray);
@@ -261,8 +261,10 @@ contract MonitorsFunctionality is GroupsFunctionality {
         bytes32 bytesParametersOfNodeIndex = getDataToBytes(nodeIndex);
         for (uint i = 0; i < indexOfNodesInGroup.length; i++) {
             bytes32 index = keccak256(abi.encodePacked(indexOfNodesInGroup[i]));
+            data.addMonitoringNode(groupIndex, indexOfNodesInGroup[i]);
             data.addCheckedNode(index, bytesParametersOfNodeIndex);
         }
+        data.removeBadMonitor(groupIndex);
         emit MonitorsArray(
             nodeIndex,
             groupIndex,
