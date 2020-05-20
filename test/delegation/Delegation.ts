@@ -246,7 +246,6 @@ contract("Delegation", ([owner,
                 validator1Id, 200, 3, "D2 is even", {from: validator2});
             await delegationController.acceptPendingDelegation(0, {from: validator2});
             await delegationController.acceptPendingDelegation(1, {from: validator1});
-
             skipTime(web3, month);
 
             const bondAmount1 = await validatorService.getBondAmount(validator1Id);
