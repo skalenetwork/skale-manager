@@ -17,10 +17,13 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.5.16;
+pragma solidity 0.6.6;
 
+import "@openzeppelin/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
-import "./ERC777/LockableERC777.sol";
+import "./thirdparty/openzeppelin/ERC777.sol";
+
 import "./Permissions.sol";
 import "./interfaces/delegation/IDelegatableToken.sol";
 import "./delegation/Punisher.sol";
@@ -31,7 +34,8 @@ import "./delegation/TokenState.sol";
  * @title SkaleToken is ERC777 Token implementation, also this contract in skale
  * manager system
  */
-contract SkaleToken is LockableERC777, Permissions, IDelegatableToken {
+contract SkaleToken is ERC777, Permissions, ReentrancyGuard, IDelegatableToken {
+    using SafeMath for uint;
 
     string public constant NAME = "SKALE";
 
@@ -42,14 +46,13 @@ contract SkaleToken is LockableERC777, Permissions, IDelegatableToken {
     uint public constant CAP = 7 * 1e9 * (10 ** DECIMALS); // the maximum amount of tokens that can ever be created
 
     constructor(address contractsAddress, address[] memory defOps)
-    LockableERC777("SKALE", "SKL", defOps) public
+    ERC777("SKALE", "SKL", defOps) public
     {
         Permissions.initialize(contractsAddress);
     }
 
     /**
      * @dev mint - create some amount of token and transfer it to the specified address
-     * @param operator address operator requesting the transfer
      * @param account - address where some amount of token would be created
      * @param amount - amount of tokens to mine
      * @param userData bytes extra information provided by the token holder (if any)
@@ -57,7 +60,6 @@ contract SkaleToken is LockableERC777, Permissions, IDelegatableToken {
      * @return returns success of function call.
      */
     function mint(
-        address operator,
         address account,
         uint256 amount,
         bytes calldata userData,
@@ -70,7 +72,6 @@ contract SkaleToken is LockableERC777, Permissions, IDelegatableToken {
     {
         require(amount <= CAP.sub(totalSupply()), "Amount is too big");
         _mint(
-            operator,
             account,
             amount,
             userData,
@@ -80,21 +81,64 @@ contract SkaleToken is LockableERC777, Permissions, IDelegatableToken {
         return true;
     }
 
-    function getAndUpdateDelegatedAmount(address wallet) external returns (uint) {
-        return DelegationController(contractManager.getContract("DelegationController")).getAndUpdateDelegatedAmount(wallet);
+    function getAndUpdateDelegatedAmount(address wallet) external override returns (uint) {
+        return DelegationController(_contractManager.getContract("DelegationController"))
+            .getAndUpdateDelegatedAmount(wallet);
     }
 
-    function getAndUpdateSlashedAmount(address wallet) external returns (uint) {
-        return Punisher(contractManager.getContract("Punisher")).getAndUpdateLockedAmount(wallet);
+    function getAndUpdateSlashedAmount(address wallet) external override returns (uint) {
+        return Punisher(_contractManager.getContract("Punisher")).getAndUpdateLockedAmount(wallet);
     }
 
-    function getAndUpdateLockedAmount(address wallet) public returns (uint) {
-        return TokenState(contractManager.getContract("TokenState")).getAndUpdateLockedAmount(wallet);
+    function getAndUpdateLockedAmount(address wallet) public override returns (uint) {
+        return TokenState(_contractManager.getContract("TokenState")).getAndUpdateLockedAmount(wallet);
     }
 
     // private
 
-    function _getAndUpdateLockedAmount(address wallet) internal returns (uint) {
-        return getAndUpdateLockedAmount(wallet);
+    function _beforeTokenTransfer(
+        address, // operator
+        address from,
+        address, // to
+        uint256 tokenId)
+        internal override
+    {
+        uint locked = getAndUpdateLockedAmount(from);
+        if (locked > 0) {
+            require(balanceOf(from) >= locked.add(tokenId), "Token should be unlocked for transferring");
+        }
+    }
+
+    function _callTokensToSend(
+        address operator,
+        address from,
+        address to,
+        uint256 amount,
+        bytes memory userData,
+        bytes memory operatorData
+    ) internal override nonReentrant {
+        super._callTokensToSend(operator, from, to, amount, userData, operatorData);
+    }
+
+    function _callTokensReceived(
+        address operator,
+        address from,
+        address to,
+        uint256 amount,
+        bytes memory userData,
+        bytes memory operatorData,
+        bool requireReceptionAck
+    ) internal override nonReentrant {
+        super._callTokensReceived(operator, from, to, amount, userData, operatorData, requireReceptionAck);
+    }
+
+    // we have to override _msgData() and _msgSender() functions because of collision in Context and ContextUpgradeSafe
+
+    function _msgData() internal view override(Context, ContextUpgradeSafe) returns (bytes memory) {
+        return Context._msgData();
+    }
+
+    function _msgSender() internal view override(Context, ContextUpgradeSafe) returns (address payable) {
+        return Context._msgSender();
     }
 }

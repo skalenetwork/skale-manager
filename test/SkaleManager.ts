@@ -31,7 +31,7 @@ chai.use(chaiAsPromised);
 contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) => {
     let contractManager: ContractManagerInstance;
     let constantsHolder: ConstantsHolderInstance;
-    let nodes: NodesInstance;
+    let nodesContract: NodesInstance;
     let skaleManager: SkaleManagerInstance;
     let skaleToken: SkaleTokenInstance;
     let monitorsData: MonitorsDataInstance;
@@ -46,7 +46,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
 
         skaleToken = await deploySkaleToken(contractManager);
         constantsHolder = await deployConstantsHolder(contractManager);
-        nodes = await deployNodes(contractManager);
+        nodesContract = await deployNodes(contractManager);
         monitorsData = await deployMonitorsData(contractManager);
         schainsData = await deploySchainsData(contractManager);
         schainsFunctionality = await deploySchainsFunctionality(contractManager);
@@ -57,8 +57,8 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
 
         const prefix = "0x000000000000000000000000";
         const premined = "100000000000000000000000000";
-        await skaleToken.mint(owner, skaleManager.address, premined, "0x", "0x");
-        await skaleToken.mint(owner, owner, premined, "0x", "0x");
+        await skaleToken.mint(skaleManager.address, premined, "0x", "0x");
+        await skaleToken.mint(owner, premined, "0x", "0x");
         await constantsHolder.setMSR(5);
         await constantsHolder.setLaunchTimestamp(0); // to allow bounty withdrawing
     });
@@ -99,25 +99,19 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
             skipTime(web3, month);
         });
 
-        it("should fail to process token fallback if operation type is wrong", async () => {
-            await skaleToken.send(skaleManager.address, "0x1", "0x11", {from: validator}).
-                should.be.eventually.rejectedWith("Operation type is not identified");
-        });
-
         it("should create a node", async () => {
             await skaleManager.createNode(
-                "0x01" + // create node
-                "2161" + // port
-                "0000" + // nonce
-                "7f000001" + // ip
-                "7f000001" + // public ip
-                "1122334455667788990011223344556677889900112233445566778899001122" +
-                "1122334455667788990011223344556677889900112233445566778899001122" + // public key
-                "6432", // name,
+                8545, // port
+                0, // nonce
+                "0x7f000001", // ip
+                "0x7f000001", // public ip
+                "0x1122334455667788990011223344556677889900112233445566778899001122" +
+                  "1122334455667788990011223344556677889900112233445566778899001122", // public key
+                "d2", // name
                 {from: nodeAddress});
 
-            await nodes.numberOfActiveNodes().should.be.eventually.deep.equal(web3.utils.toBN(1));
-            (await nodes.getNodePort(0)).toNumber().should.be.equal(8545);
+            await nodesContract.numberOfActiveNodes().should.be.eventually.deep.equal(web3.utils.toBN(1));
+            (await nodesContract.getNodePort(0)).toNumber().should.be.equal(8545);
             await monitorsData.isGroupActive(web3.utils.soliditySha3(0)).should.be.eventually.true;
         });
 
@@ -127,26 +121,24 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
 
             await validatorService.disableValidator(validatorId, {from: owner});
             await skaleManager.createNode(
-                "0x01" + // create node
-                "2161" + // port
-                "0000" + // nonce
-                "7f000001" + // ip
-                "7f000001" + // public ip
-                "1122334455667788990011223344556677889900112233445566778899001122" +
-                "1122334455667788990011223344556677889900112233445566778899001122" + // public key
-                "6432", // name,
+                8545, // port
+                0, // nonce
+                "0x7f000001", // ip
+                "0x7f000001", // public ip
+                "0x1122334455667788990011223344556677889900112233445566778899001122" +
+                  "1122334455667788990011223344556677889900112233445566778899001122", // public key
+                "d2", // name
                 {from: nodeAddress})
                 .should.be.eventually.rejectedWith("Validator is not authorized to create a node");
             await validatorService.enableValidator(validatorId, {from: owner});
             await skaleManager.createNode(
-                "0x01" + // create node
-                "2161" + // port
-                "0000" + // nonce
-                "7f000001" + // ip
-                "7f000001" + // public ip
-                "1122334455667788990011223344556677889900112233445566778899001122" +
-                "1122334455667788990011223344556677889900112233445566778899001122" + // public key
-                "6432", // name,
+                8545, // port
+                0, // nonce
+                "0x7f000001", // ip
+                "0x7f000001", // public ip
+                "0x1122334455667788990011223344556677889900112233445566778899001122" +
+                  "1122334455667788990011223344556677889900112233445566778899001122", // public key
+                "d2", // name
                 {from: nodeAddress});
         });
 
@@ -154,14 +146,13 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
 
             beforeEach(async () => {
                 await skaleManager.createNode(
-                    "0x01" + // create node
-                    "2161" + // port
-                    "0000" + // nonce
-                    "7f000001" + // ip
-                    "7f000001" + // public ip
-                    "1122334455667788990011223344556677889900112233445566778899001122" +
-                    "1122334455667788990011223344556677889900112233445566778899001122" + // public key
-                    "6432", // name,
+                    8545, // port
+                    0, // nonce
+                    "0x7f000001", // ip
+                    "0x7f000001", // public ip
+                    "0x1122334455667788990011223344556677889900112233445566778899001122" +
+                    "1122334455667788990011223344556677889900112233445566778899001122", // public key
+                    "d2", // name
                     {from: nodeAddress});
             });
 
@@ -173,7 +164,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
             it("should initiate exiting", async () => {
                 await skaleManager.nodeExit(0, {from: nodeAddress});
 
-                await nodes.isNodeLeft(0).should.be.eventually.true;
+                await nodesContract.isNodeLeft(0).should.be.eventually.true;
             });
 
             it("should remove the node", async () => {
@@ -181,7 +172,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
 
                 await skaleManager.deleteNode(0, {from: nodeAddress});
 
-                await nodes.isNodeLeft(0).should.be.eventually.true;
+                await nodesContract.isNodeLeft(0).should.be.eventually.true;
 
                 const balanceAfter = web3.utils.toBN(await skaleToken.balanceOf(validator));
 
@@ -193,54 +184,34 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
 
                 await skaleManager.deleteNodeByRoot(0, {from: owner});
 
-                await nodes.isNodeLeft(0).should.be.eventually.true;
+                await nodesContract.isNodeLeft(0).should.be.eventually.true;
 
                 const balanceAfter = web3.utils.toBN(await skaleToken.balanceOf(validator));
 
                 expect(balanceAfter.sub(balanceBefore).eq(web3.utils.toBN("0"))).to.be.true;
             });
-
-            // describe("when withdrawing of deposit is initialized", async () => {
-            //     beforeEach (async () => {
-            //         await skaleManager.initWithdrawDeposit(0, {from: validator});
-            //     });
-
-            //     it("should fail if withdrawing completes too early", async () => {
-            //         await skaleManager.completeWithdrawdeposit(0, {from: validator})
-            //             .should.be.eventually.rejectedWith("Leaving period has not expired");
-            //     });
-
-                // it("should complete deposit withdrawing process", async () => {
-                //     skipTime(web3, 5);
-
-                //     await skaleManager.completeWithdrawdeposit(0, {from: validator});
-                //     await nodes.isNodeLeft(0).should.be.eventually.true;
-                // });
-            // });
         });
 
         describe("when two nodes are created", async () => {
 
             beforeEach(async () => {
                 await skaleManager.createNode(
-                    "0x01" + // create node
-                    "2161" + // port
-                    "0000" + // nonce
-                    "7f000001" + // ip
-                    "7f000001" + // public ip
-                    "1122334455667788990011223344556677889900112233445566778899001122" +
-                    "1122334455667788990011223344556677889900112233445566778899001122" + // public key
-                    "6432", // name,
+                    8545, // port
+                    0, // nonce
+                    "0x7f000001", // ip
+                    "0x7f000001", // public ip
+                    "0x1122334455667788990011223344556677889900112233445566778899001122" +
+                    "1122334455667788990011223344556677889900112233445566778899001122", // public key
+                    "d2", // name
                     {from: nodeAddress});
                 await skaleManager.createNode(
-                    "0x01" + // create node
-                    "2161" + // port
-                    "0000" + // nonce
-                    "7f000002" + // ip
-                    "7f000002" + // public ip
-                    "1122334455667788990011223344556677889900112233445566778899001122" +
-                    "1122334455667788990011223344556677889900112233445566778899001122" + // public key
-                    "6433", // name,
+                    8545, // port
+                    0, // nonce
+                    "0x7f000002", // ip
+                    "0x7f000002", // public ip
+                    "0x1122334455667788990011223344556677889900112233445566778899001122" +
+                    "1122334455667788990011223344556677889900112233445566778899001122", // public key
+                    "d3", // name
                     {from: nodeAddress});
             });
 
@@ -257,13 +228,13 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
             it("should initiate exiting of first node", async () => {
                 await skaleManager.nodeExit(0, {from: nodeAddress});
 
-                await nodes.isNodeLeft(0).should.be.eventually.true;
+                await nodesContract.isNodeLeft(0).should.be.eventually.true;
             });
 
             it("should initiate exiting of second node", async () => {
                 await skaleManager.nodeExit(1, {from: nodeAddress});
 
-                await nodes.isNodeLeft(1).should.be.eventually.true;
+                await nodesContract.isNodeLeft(1).should.be.eventually.true;
             });
 
             it("should remove the first node", async () => {
@@ -271,7 +242,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
 
                 await skaleManager.deleteNode(0, {from: nodeAddress});
 
-                await nodes.isNodeLeft(0).should.be.eventually.true;
+                await nodesContract.isNodeLeft(0).should.be.eventually.true;
 
                 const balanceAfter = web3.utils.toBN(await skaleToken.balanceOf(validator));
 
@@ -283,7 +254,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
 
                 await skaleManager.deleteNode(1, {from: nodeAddress});
 
-                await nodes.isNodeLeft(1).should.be.eventually.true;
+                await nodesContract.isNodeLeft(1).should.be.eventually.true;
 
                 const balanceAfter = web3.utils.toBN(await skaleToken.balanceOf(validator));
 
@@ -295,7 +266,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
 
                 await skaleManager.deleteNodeByRoot(0, {from: owner});
 
-                await nodes.isNodeLeft(0).should.be.eventually.true;
+                await nodesContract.isNodeLeft(0).should.be.eventually.true;
 
                 const balanceAfter = web3.utils.toBN(await skaleToken.balanceOf(validator));
 
@@ -307,7 +278,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
 
                 await skaleManager.deleteNodeByRoot(1, {from: owner});
 
-                await nodes.isNodeLeft(1).should.be.eventually.true;
+                await nodesContract.isNodeLeft(1).should.be.eventually.true;
 
                 const balanceAfter = web3.utils.toBN(await skaleToken.balanceOf(validator));
 
@@ -316,53 +287,62 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
         });
 
         describe("when 18 nodes are in the system", async () => {
+
+            const verdict = {
+                toNodeIndex: 1,
+                downtime: 0,
+                latency: 50
+            };
+
             beforeEach(async () => {
                 await skaleToken.transfer(validator, "0x3635c9adc5dea00000", {from: owner});
 
                 for (let i = 0; i < 18; ++i) {
                     await skaleManager.createNode(
-                        "0x01" + // create node
-                        "2161" + // port
-                        "0000" + // nonce
-                        "7f0000" + ("0" + (i + 1).toString(16)).slice(-2) + // ip
-                        "7f000001" + // public ip
-                        "1122334455667788990011223344556677889900112233445566778899001122" +
-                        "1122334455667788990011223344556677889900112233445566778899001122" + // public key
-                        "64322d" + (48 + i + 1).toString(16), // name,
+                        8545, // port
+                        0, // nonce
+                        "0x7f0000" + ("0" + (i + 1).toString(16)).slice(-2), // ip
+                        "0x7f000001", // public ip
+                        "0x1122334455667788990011223344556677889900112233445566778899001122" +
+                        "1122334455667788990011223344556677889900112233445566778899001122", // public key
+                        "d2-" + i, // name
                         {from: nodeAddress});
                 }
+
             });
 
             it("should fail to create schain if validator doesn't meet MSR", async () => {
                 await constantsHolder.setMSR(delegatedAmount + 1);
 
                 await skaleManager.createNode(
-                    "0x10" + // create schain
-                    "0000000000000000000000000000000000000000000000000000000000000005" + // lifetime
-                    "01" + // type of schain
-                    "0000" + // nonce
-                    "6432", // name
+                    8545, // port
+                    0, // nonce
+                    "0x7f000001", // ip
+                    "0x7f000001", // public ip
+                    "0x1122334455667788990011223344556677889900112233445566778899001122" +
+                    "1122334455667788990011223344556677889900112233445566778899001122", // public key
+                    "d2", // name
                     {from: nodeAddress}).should.be.eventually.rejectedWith("Validator must meet Minimum Staking Requirement");
             });
 
             it("should fail to send monitor verdict from not node owner", async () => {
-                await skaleManager.sendVerdict(0, 1, 0, 50, {from: hacker})
+                await skaleManager.sendVerdict(0, verdict, {from: hacker})
                     .should.be.eventually.rejectedWith("Node does not exist for Message sender");
             });
 
             it("should fail to send monitor verdict if send it too early", async () => {
-                await skaleManager.sendVerdict(0, 1, 0, 50, {from: nodeAddress})
+                await skaleManager.sendVerdict(0, verdict, {from: nodeAddress})
                     .should.be.eventually.rejectedWith("The time has not come to send verdict");
             });
 
             it("should fail to send monitor verdict if sender node does not exist", async () => {
-                await skaleManager.sendVerdict(18, 1, 0, 50, {from: nodeAddress})
+                await skaleManager.sendVerdict(18, verdict, {from: nodeAddress})
                     .should.be.eventually.rejectedWith("Node does not exist for Message sender");
             });
 
             it("should send monitor verdict", async () => {
                 skipTime(web3, 3400);
-                await skaleManager.sendVerdict(0, 1, 0, 50, {from: nodeAddress});
+                await skaleManager.sendVerdict(0, verdict, {from: nodeAddress});
 
                 await monitorsData.verdicts(web3.utils.soliditySha3(1), 0, 0)
                     .should.be.eventually.deep.equal(web3.utils.toBN(0));
@@ -372,7 +352,19 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
 
             it("should send monitor verdicts", async () => {
                 skipTime(web3, 3400);
-                await skaleManager.sendVerdicts(0, [1, 2], [0, 0], [50, 50], {from: nodeAddress});
+                const arr = [
+                    {
+                        toNodeIndex: 1,
+                        downtime: 0,
+                        latency: 50
+                    },
+                    {
+                        toNodeIndex: 2,
+                        downtime: 0,
+                        latency: 50
+                    },
+                ]
+                await skaleManager.sendVerdicts(0, arr, {from: nodeAddress});
 
                 await monitorsData.verdicts(web3.utils.soliditySha3(1), 0, 0)
                     .should.be.eventually.deep.equal(web3.utils.toBN(0));
@@ -384,22 +376,10 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                     .should.be.eventually.deep.equal(web3.utils.toBN(50));
             });
 
-            it("should not send incorrect monitor verdicts", async () => {
-                skipTime(web3, 3400);
-                await skaleManager.sendVerdicts(0, [1], [0, 0], [50, 50], {from: nodeAddress})
-                    .should.be.eventually.rejectedWith("Incorrect data");
-            });
-
-            it("should not send incorrect monitor verdicts part 2", async () => {
-                skipTime(web3, 3400);
-                await skaleManager.sendVerdicts(0, [1, 2], [0, 0], [50], {from: nodeAddress})
-                    .should.be.eventually.rejectedWith("Incorrect data");
-            });
-
             describe("when monitor verdict is received", async () => {
                 beforeEach(async () => {
                     skipTime(web3, 3400);
-                    await skaleManager.sendVerdict(0, 1, 0, 50, {from: nodeAddress});
+                    await skaleManager.sendVerdict(0, verdict, {from: nodeAddress});
                 });
 
                 it("should fail to get bounty if sender is not owner of the node", async () => {
@@ -429,7 +409,12 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
             describe("when monitor verdict with downtime is received", async () => {
                 beforeEach(async () => {
                     skipTime(web3, 3400);
-                    await skaleManager.sendVerdict(0, 1, 1, 50, {from: nodeAddress});
+                    const verdictWithDowntime = {
+                        toNodeIndex: 1,
+                        downtime: 1,
+                        latency: 50,
+                    };
+                    await skaleManager.sendVerdict(0, verdictWithDowntime, {from: nodeAddress});
                 });
 
                 it("should fail to get bounty if sender is not owner of the node", async () => {
@@ -544,7 +529,12 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
             describe("when monitor verdict with latency is received", async () => {
                 beforeEach(async () => {
                     skipTime(web3, 3400);
-                    await skaleManager.sendVerdict(0, 1, 0, 200000, {from: nodeAddress});
+                    const verdictWithLatency = {
+                        toNodeIndex: 1,
+                        downtime: 0,
+                        latency: 20000,
+                    };
+                    await skaleManager.sendVerdict(0, verdictWithLatency, {from: nodeAddress});
                 });
 
                 it("should fail to get bounty if sender is not owner of the node", async () => {
@@ -555,7 +545,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                 it("should get bounty", async () => {
                     skipTime(web3, 200);
                     const balanceBefore = web3.utils.toBN(await skaleToken.balanceOf(validator));
-                    const bounty = web3.utils.toBN("937714334705075445816");
+                    const bounty = web3.utils.toBN("1250285779606767261088");
 
                     await skaleManager.getBounty(1, {from: nodeAddress});
 
@@ -572,7 +562,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                 it("should get bounty after break", async () => {
                     skipTime(web3, 500);
                     const balanceBefore = web3.utils.toBN(await skaleToken.balanceOf(validator));
-                    const bounty = web3.utils.toBN("937714334705075445816");
+                    const bounty = web3.utils.toBN("1250285779606767261088");
 
                     await skaleManager.getBounty(1, {from: nodeAddress});
 
@@ -589,7 +579,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                 it("should get bounty after big break", async () => {
                     skipTime(web3, 800);
                     const balanceBefore = web3.utils.toBN(await skaleToken.balanceOf(validator));
-                    const bounty = web3.utils.toBN("937627509303713864756");
+                    const bounty = web3.utils.toBN("1250170012404951819675");
 
                     await skaleManager.getBounty(1, {from: nodeAddress});
 
@@ -613,11 +603,11 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                     await skaleToken.send(
                         skaleManager.address,
                         "0x1cc2d6d04a2ca",
-                        "0x10" + // create schain
-                        "0000000000000000000000000000000000000000000000000000000000000005" + // lifetime
-                        "03" + // type of schain
-                        "0000" + // nonce
-                        "6432", // name
+                        web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [
+                            5, // lifetime
+                            3, // type of schain
+                            0, // nonce
+                            "d2"]), // name
                         {from: developer});
 
                     const schain = await schainsData.schains(web3.utils.soliditySha3("d2"));
@@ -629,11 +619,11 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                         await skaleToken.send(
                             skaleManager.address,
                             "0x1cc2d6d04a2ca",
-                            "0x10" + // create schain
-                            "0000000000000000000000000000000000000000000000000000000000000005" + // lifetime
-                            "03" + // type of schain
-                            "0000" + // nonce
-                            "6432", // name
+                            web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [
+                                5, // lifetime
+                                3, // type of schain
+                                0, // nonce
+                                "d2"]), // name
                             {from: developer});
                     });
 
@@ -647,6 +637,12 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
 
                         await schainsData.getSchains().should.be.eventually.empty;
                     });
+
+                    it("should delete schain after deleting node", async () => {
+                        const nodes = await schainsData.getNodesInGroup(web3.utils.soliditySha3("d2"));
+                        await skaleManager.deleteNode(nodes[0], {from: nodeAddress});
+                        await skaleManager.deleteSchain("d2", {from: developer});
+                    });
                 });
 
                 describe("when another schain is created", async () => {
@@ -654,11 +650,11 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                         await skaleToken.send(
                             skaleManager.address,
                             "0x1cc2d6d04a2ca",
-                            "0x10" + // create schain
-                            "0000000000000000000000000000000000000000000000000000000000000005" + // lifetime
-                            "03" + // type of schain
-                            "0000" + // nonce
-                            "6433", // name
+                            web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [
+                                5, // lifetime
+                                3, // type of schain
+                                0, // nonce
+                                "d3"]), // name
                             {from: developer});
                     });
 
@@ -682,14 +678,13 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
 
                 for (let i = 0; i < 32; ++i) {
                     await skaleManager.createNode(
-                        "0x01" + // create node
-                        "2161" + // port
-                        "0000" + // nonce
-                        "7f0000" + ("0" + (i + 1).toString(16)).slice(-2) + // ip
-                        "7f000001" + // public ip
-                        "1122334455667788990011223344556677889900112233445566778899001122" +
-                        "1122334455667788990011223344556677889900112233445566778899001122" + // public key
-                        "64322d" + (48 + i + 1).toString(16), // name,
+                        8545, // port
+                        0, // nonce
+                        "0x7f0000" + ("0" + (i + 1).toString(16)).slice(-2), // ip
+                        "0x7f000001", // public ip
+                        "0x1122334455667788990011223344556677889900112233445566778899001122" +
+                        "1122334455667788990011223344556677889900112233445566778899001122", // public key
+                        "d2-" + i, // name
                         {from: nodeAddress});
                 }
             });
@@ -703,11 +698,11 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                     await skaleToken.send(
                         skaleManager.address,
                         "0x1cc2d6d04a2ca",
-                        "0x10" + // create schain
-                        "0000000000000000000000000000000000000000000000000000000000000005" + // lifetime
-                        "03" + // type of schain
-                        "0000" + // nonce
-                        "6432", // name
+                        web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [
+                            5, // lifetime
+                            3, // type of schain
+                            0, // nonce
+                            "d2"]), // name
                         {from: developer});
 
                     const schain1 = await schainsData.schains(web3.utils.soliditySha3("d2"));
@@ -716,11 +711,11 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                     await skaleToken.send(
                         skaleManager.address,
                         "0x1cc2d6d04a2ca",
-                        "0x10" + // create schain
-                        "0000000000000000000000000000000000000000000000000000000000000005" + // lifetime
-                        "03" + // type of schain
-                        "0000" + // nonce
-                        "6433", // name
+                        web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [
+                            5, // lifetime
+                            3, // type of schain
+                            0, // nonce
+                            "d3"]), // name
                         {from: developer});
 
                     const schain2 = await schainsData.schains(web3.utils.soliditySha3("d3"));
@@ -732,21 +727,21 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                         await skaleToken.send(
                             skaleManager.address,
                             "0x1cc2d6d04a2ca",
-                            "0x10" + // create schain
-                            "0000000000000000000000000000000000000000000000000000000000000005" + // lifetime
-                            "03" + // type of schain
-                            "0000" + // nonce
-                            "6432", // name
+                            web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [
+                                5, // lifetime
+                                3, // type of schain
+                                0, // nonce
+                                "d2"]), // name
                             {from: developer});
 
                         await skaleToken.send(
                             skaleManager.address,
                             "0x1cc2d6d04a2ca",
-                            "0x10" + // create schain
-                            "0000000000000000000000000000000000000000000000000000000000000005" + // lifetime
-                            "03" + // type of schain
-                            "0000" + // nonce
-                            "6433", // name
+                            web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [
+                                5, // lifetime
+                                3, // type of schain
+                                0, // nonce
+                                "d3"]), // name
                             {from: developer});
                     });
 
@@ -772,14 +767,13 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
 
                 for (let i = 0; i < 16; ++i) {
                     await skaleManager.createNode(
-                        "0x01" + // create node
-                        "2161" + // port
-                        "0000" + // nonce
-                        "7f0000" + ("0" + (i + 1).toString(16)).slice(-2) + // ip
-                        "7f000001" + // public ip
-                        "1122334455667788990011223344556677889900112233445566778899001122" +
-                        "1122334455667788990011223344556677889900112233445566778899001122" + // public key
-                        "64322d" + (48 + i + 1).toString(16), // name,
+                        8545, // port
+                        0, // nonce
+                        "0x7f0000" + ("0" + (i + 1).toString(16)).slice(-2), // ip
+                        "0x7f000001", // public ip
+                        "0x1122334455667788990011223344556677889900112233445566778899001122" +
+                        "1122334455667788990011223344556677889900112233445566778899001122", // public key
+                        "d2-" + i, // name
                         {from: nodeAddress});
                     }
 
@@ -789,11 +783,11 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                 await skaleToken.send(
                     skaleManager.address,
                     price.toString(),
-                    "0x10" + // create schain
-                    "0000000000000000000000000000000000000000000000000000000000000005" + // lifetime
-                    "01" + // type of schain
-                    "0000" + // nonce
-                    "6432", // name
+                    web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [
+                        5, // lifetime
+                        1, // type of schain
+                        0, // nonce
+                        "d2"]), // name
                     {from: developer});
 
                 let schain1 = await schainsData.schains(web3.utils.soliditySha3("d2"));
@@ -807,11 +801,11 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                 await skaleToken.send(
                     skaleManager.address,
                     price.toString(),
-                    "0x10" + // create schain
-                    "0000000000000000000000000000000000000000000000000000000000000005" + // lifetime
-                    "02" + // type of schain
-                    "0000" + // nonce
-                    "6432", // name
+                    web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [
+                        5, // lifetime
+                        2, // type of schain
+                        0, // nonce
+                        "d2"]), // name
                     {from: developer});
 
                 schain1 = await schainsData.schains(web3.utils.soliditySha3("d2"));
@@ -824,11 +818,11 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                 await skaleToken.send(
                     skaleManager.address,
                     price.toString(),
-                    "0x10" + // create schain
-                    "0000000000000000000000000000000000000000000000000000000000000005" + // lifetime
-                    "03" + // type of schain
-                    "0000" + // nonce
-                    "6432", // name
+                    web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [
+                        5, // lifetime
+                        3, // type of schain
+                        0, // nonce
+                        "d2"]), // name
                     {from: developer});
 
                 schain1 = await schainsData.schains(web3.utils.soliditySha3("d2"));
@@ -841,11 +835,11 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                 await skaleToken.send(
                     skaleManager.address,
                     price.toString(),
-                    "0x10" + // create schain
-                    "0000000000000000000000000000000000000000000000000000000000000005" + // lifetime
-                    "04" + // type of schain
-                    "0000" + // nonce
-                    "6432", // name
+                    web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [
+                        5, // lifetime
+                        4, // type of schain
+                        0, // nonce
+                        "d2"]), // name
                     {from: developer});
 
                 schain1 = await schainsData.schains(web3.utils.soliditySha3("d2"));
@@ -858,11 +852,11 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                 await skaleToken.send(
                     skaleManager.address,
                     price.toString(),
-                    "0x10" + // create schain
-                    "0000000000000000000000000000000000000000000000000000000000000005" + // lifetime
-                    "05" + // type of schain
-                    "0000" + // nonce
-                    "6432", // name
+                    web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [
+                        5, // lifetime
+                        5, // type of schain
+                        0, // nonce
+                        "d2"]), // name
                     {from: developer});
 
                 schain1 = await schainsData.schains(web3.utils.soliditySha3("d2"));

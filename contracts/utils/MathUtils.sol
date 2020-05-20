@@ -17,7 +17,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.5.16;
+pragma solidity 0.6.6;
 
 
 library MathUtils {
@@ -26,7 +26,7 @@ library MathUtils {
         uint b
     );
 
-    uint constant EPS = 1e6;
+    uint constant private _EPS = 1e6;
 
     function boundedSub(uint256 a, uint256 b) internal returns (uint256) {
         if (a >= b) {
@@ -46,15 +46,15 @@ library MathUtils {
     }
 
     function muchGreater(uint256 a, uint256 b) internal pure returns (bool) {
-        assert(uint(-1) - EPS > b);
-        return a > b + EPS;
+        assert(uint(-1) - _EPS > b);
+        return a > b + _EPS;
     }
 
     function approximatelyEqual(uint256 a, uint256 b) internal pure returns (bool) {
         if (a > b) {
-            return a - b < EPS;
+            return a - b < _EPS;
         } else {
-            return b - a < EPS;
+            return b - a < _EPS;
         }
     }
 }

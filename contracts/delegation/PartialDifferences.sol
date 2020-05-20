@@ -17,7 +17,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.5.16;
+pragma solidity 0.6.6;
 
 import "../utils/MathUtils.sol";
 import "../utils/FractionUtils.sol";
@@ -104,7 +104,9 @@ library PartialDifferences {
         uint month) internal
     {
         require(month.add(1) >= sequence.firstUnprocessedMonth, "Can't reduce value in the past");
-        require(reducingCoefficient.numerator <= reducingCoefficient.denominator, "Increasing of values is not implemented");
+        require(
+            reducingCoefficient.numerator <= reducingCoefficient.denominator,
+            "Increasing of values is not implemented");
         if (sequence.firstUnprocessedMonth == 0) {
             return;
         }
@@ -113,10 +115,14 @@ library PartialDifferences {
             return;
         }
 
-        sequence.value[month] = sequence.value[month].mul(reducingCoefficient.numerator).div(reducingCoefficient.denominator);
+        sequence.value[month] = sequence.value[month]
+            .mul(reducingCoefficient.numerator)
+            .div(reducingCoefficient.denominator);
 
         for (uint i = month.add(1); i <= sequence.lastChangedMonth; ++i) {
-            sequence.subtractDiff[i] = sequence.subtractDiff[i].mul(reducingCoefficient.numerator).div(reducingCoefficient.denominator);
+            sequence.subtractDiff[i] = sequence.subtractDiff[i]
+                .mul(reducingCoefficient.numerator)
+                .div(reducingCoefficient.denominator);
         }
     }
 
@@ -157,7 +163,9 @@ library PartialDifferences {
     }
 
     function getAndUpdateValue(Value storage sequence, uint month) internal returns (uint) {
-        require(month.add(1) >= sequence.firstUnprocessedMonth, "Cannot calculate value in the past");
+        require(
+            month.add(1) >= sequence.firstUnprocessedMonth,
+            "Cannot calculate value in the past");
         if (sequence.firstUnprocessedMonth == 0) {
             return 0;
         }
@@ -181,7 +189,12 @@ library PartialDifferences {
         return sequence.value;
     }
 
-    function reduceValue(Value storage sequence, uint amount, uint month) internal returns (FractionUtils.Fraction memory) {
+    function reduceValue(
+        Value storage sequence,
+        uint amount,
+        uint month)
+        internal returns (FractionUtils.Fraction memory)
+    {
         require(month.add(1) >= sequence.firstUnprocessedMonth, "Cannot reduce value in the past");
         if (sequence.firstUnprocessedMonth == 0) {
             return FractionUtils.createFraction(0);
@@ -196,12 +209,18 @@ library PartialDifferences {
             _amount = value;
         }
 
-        FractionUtils.Fraction memory reducingCoefficient = FractionUtils.createFraction(value.boundedSub(_amount), value);
+        FractionUtils.Fraction memory reducingCoefficient =
+            FractionUtils.createFraction(value.boundedSub(_amount), value);
         reduceValueByCoefficient(sequence, reducingCoefficient, month);
         return reducingCoefficient;
     }
 
-    function reduceValueByCoefficient(Value storage sequence, FractionUtils.Fraction memory reducingCoefficient, uint month) internal {
+    function reduceValueByCoefficient(
+        Value storage sequence,
+        FractionUtils.Fraction memory reducingCoefficient,
+        uint month)
+        internal
+    {
         reduceValueByCoefficientAndUpdateSumIfNeeded(
             sequence,
             sequence,
@@ -235,7 +254,9 @@ library PartialDifferences {
         if (hasSumSequence) {
             require(month.add(1) >= sumSequence.firstUnprocessedMonth, "Cannot reduce value in the past");
         }
-        require(reducingCoefficient.numerator <= reducingCoefficient.denominator, "Increasing of values is not implemented");
+        require(
+            reducingCoefficient.numerator <= reducingCoefficient.denominator,
+            "Increasing of values is not implemented");
         if (sequence.firstUnprocessedMonth == 0) {
             return;
         }
@@ -251,9 +272,12 @@ library PartialDifferences {
         sequence.value = newValue;
 
         for (uint i = month.add(1); i <= sequence.lastChangedMonth; ++i) {
-            uint newDiff = sequence.subtractDiff[i].mul(reducingCoefficient.numerator).div(reducingCoefficient.denominator);
+            uint newDiff = sequence.subtractDiff[i]
+                .mul(reducingCoefficient.numerator)
+                .div(reducingCoefficient.denominator);
             if (hasSumSequence) {
-                sumSequence.subtractDiff[i] = sumSequence.subtractDiff[i].boundedSub(sequence.subtractDiff[i].boundedSub(newDiff));
+                sumSequence.subtractDiff[i] = sumSequence.subtractDiff[i]
+                    .boundedSub(sequence.subtractDiff[i].boundedSub(newDiff));
             }
             sequence.subtractDiff[i] = newDiff;
         }
