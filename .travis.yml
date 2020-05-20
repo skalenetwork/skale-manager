@@ -36,11 +36,9 @@ jobs:
     - stage: lint
       script:
         - pip3 install -r scripts/requirements.txt
-        - yarn lint || travis_terminate 1
         - slither --version
-        - slither . || true
-        - yarn slither || travis_terminate 5
-        - yarn tslint || travis_terminate 2
+        - yarn fullcheck || travis_terminate 1
+        - bash scripts/test_deploy.sh || travis_terminate 2
 
     - stage: test
       env:

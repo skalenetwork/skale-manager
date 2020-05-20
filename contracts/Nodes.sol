@@ -1,5 +1,5 @@
 /*
-    NodesData.sol - SKALE Manager
+    Nodes.sol - SKALE Manager
     Copyright (C) 2018-Present SKALE Labs
     @author Artem Payvin
 
@@ -17,17 +17,18 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity ^0.5.3;
+pragma solidity 0.6.6;
+pragma experimental ABIEncoderV2;
 
 import "./Permissions.sol";
 import "./interfaces/IConstants.sol";
-import "./interfaces/INodesData.sol";
+import "./delegation/ValidatorService.sol";
 
 
 /**
- * @title NodesData - Data contract for NodesFunctionality
+ * @title Nodes - contract contains all functionality logic to manage Nodes
  */
-contract NodesData is INodesData, Permissions {
+contract Nodes is Permissions {
 
     // All Nodes states
     enum NodeStatus {Active, Leaving, Left}
@@ -38,11 +39,8 @@ contract NodesData is INodesData, Permissions {
         bytes4 publicIP;
         uint16 port;
         bytes publicKey;
-        uint32 startDate;
+        uint startBlock;
         uint32 lastRewardDate;
-        // uint8 freeSpace;
-        // uint indexInSpaceMap;
-        //address secondAddress;
         uint32 finishTime;
         NodeStatus status;
         uint validatorId;
@@ -57,6 +55,16 @@ contract NodesData is INodesData, Permissions {
     struct SpaceManaging {
         uint8 freeSpace;
         uint indexInSpaceMap;
+    }
+
+    // TODO: move outside the contract
+    struct NodeCreationParams {
+        string name;
+        bytes4 ip;
+        bytes4 publicIp;
+        uint16 port;
+        bytes publicKey;
+        uint16 nonce;
     }
 
     // array which contain all Nodes
@@ -79,26 +87,35 @@ contract NodesData is INodesData, Permissions {
     uint public numberOfLeavingNodes;
     uint public numberOfLeftNodes;
 
+    // informs that Node is created
+    event NodeCreated(
+        uint nodeIndex,
+        address owner,
+        string name,
+        bytes4 ip,
+        bytes4 publicIP,
+        uint16 port,
+        uint16 nonce,
+        uint32 time,
+        uint gasSpend
+    );
 
+    // informs that node is fully finished quitting from the system
+    event ExitCompleted(
+        uint nodeIndex,
+        address owner,
+        uint32 time,
+        uint gasSpend
+    );
 
-    function getNodesWithFreeSpace(uint8 freeSpace) external view returns (uint[] memory) {
-        uint[] memory nodesWithFreeSpace = new uint[](this.countNodesWithFreeSpace(freeSpace));
-        uint cursor = 0;
-        for (uint8 i = freeSpace; i <= 128; ++i) {
-            for (uint j = 0; j < spaceToNodes[i].length; j++) {
-                nodesWithFreeSpace[cursor] = spaceToNodes[i][j];
-                ++cursor;
-            }
-        }
-        return nodesWithFreeSpace;
-    }
-
-    function countNodesWithFreeSpace(uint8 freeSpace) external view returns (uint count) {
-        count = 0;
-        for (uint8 i = freeSpace; i <= 128; ++i) {
-            count = count.add(spaceToNodes[i].length);
-        }
-    }
+    // informs that owner starts the procedure of quitting the Node from the system
+    event ExitInited(
+        uint nodeIndex,
+        address owner,
+        uint32 startLeavingPeriod,
+        uint32 time,
+        uint gasSpend
+    );
 
     /**
      * @dev addNode - adds Node to array
@@ -109,7 +126,7 @@ contract NodesData is INodesData, Permissions {
      * @param publicIP - Node public ip
      * @param port - Node public port
      * @param publicKey - Ethereum public key
-     * @return index of Node
+     * @return nodeIndex Index of Node
      */
     function addNode(
         address from,
@@ -121,7 +138,7 @@ contract NodesData is INodesData, Permissions {
         uint validatorId
     )
         external
-        allow("NodesFunctionality")
+        allow("Nodes")
         returns (uint nodeIndex)
     {
         nodes.push(Node({
@@ -131,7 +148,7 @@ contract NodesData is INodesData, Permissions {
             port: port,
             //owner: from,
             publicKey: publicKey,
-            startDate: uint32(block.timestamp),
+            startBlock: block.number,
             lastRewardDate: uint32(block.timestamp),
             finishTime: 0,
             status: NodeStatus.Active,
@@ -153,64 +170,19 @@ contract NodesData is INodesData, Permissions {
     }
 
     /**
-     * @dev setNodeLeaving - set Node Leaving
-     * function could be run only by NodesFunctionality
-     * @param nodeIndex - index of Node
-     */
-    function setNodeLeaving(uint nodeIndex) external allow("NodesFunctionality") {
-        nodes[nodeIndex].status = NodeStatus.Leaving;
-        numberOfActiveNodes--;
-        numberOfLeavingNodes++;
-    }
-
-    /**
-     * @dev setNodeLeft - set Node Left
-     * function could be run only by NodesFunctionality
-     * @param nodeIndex - index of Node
-     */
-    function setNodeLeft(uint nodeIndex) external allow("NodesFunctionality") {
-        nodesIPCheck[nodes[nodeIndex].ip] = false;
-        nodesNameCheck[keccak256(abi.encodePacked(nodes[nodeIndex].name))] = false;
-        // address ownerOfNode = nodes[nodeIndex].owner;
-        // nodeIndexes[ownerOfNode].isNodeExist[nodeIndex] = false;
-        // nodeIndexes[ownerOfNode].numberOfNodes--;
-        delete nodesNameToIndex[keccak256(abi.encodePacked(nodes[nodeIndex].name))];
-        if (nodes[nodeIndex].status == NodeStatus.Active) {
-            numberOfActiveNodes--;
-        } else {
-            numberOfLeavingNodes--;
-        }
-        nodes[nodeIndex].status = NodeStatus.Left;
-        numberOfLeftNodes++;
-    }
-
-    function removeNode(uint nodeIndex) external allow("NodesFunctionality") {
-        uint8 space = spaceOfNodes[nodeIndex].freeSpace;
-        uint indexInArray = spaceOfNodes[nodeIndex].indexInSpaceMap;
-        if (indexInArray < spaceToNodes[space].length - 1) {
-            uint shiftedIndex = spaceToNodes[space][spaceToNodes[space].length - 1];
-            spaceToNodes[space][indexInArray] = shiftedIndex;
-            spaceOfNodes[shiftedIndex].indexInSpaceMap = indexInArray;
-            spaceToNodes[space].length--;
-        } else {
-            spaceToNodes[space].length--;
-        }
-        delete spaceOfNodes[nodeIndex].freeSpace;
-        delete spaceOfNodes[nodeIndex].indexInSpaceMap;
-    }
-
-    /**
      * @dev removeSpaceFromFractionalNode - occupies space from Fractional Node
      * function could be run only by SchainsFunctionality
      * @param nodeIndex - index of Node at array of Fractional Nodes
      * @param space - space which should be occupied
      */
-    function removeSpaceFromNode(uint nodeIndex, uint8 space) external allow("SchainsFunctionalityInternal") returns (bool) {
+    function removeSpaceFromNode(uint nodeIndex, uint8 space)
+        external allow("SchainsFunctionalityInternal") returns (bool)
+    {
         if (spaceOfNodes[nodeIndex].freeSpace < space) {
             return false;
         }
         if (space > 0) {
-            moveNodeToNewSpaceMap(
+            _moveNodeToNewSpaceMap(
                 nodeIndex,
                 spaceOfNodes[nodeIndex].freeSpace - space
             );
@@ -226,7 +198,7 @@ contract NodesData is INodesData, Permissions {
      */
     function addSpaceToNode(uint nodeIndex, uint8 space) external allow("SchainsFunctionality") {
         if (space > 0) {
-            moveNodeToNewSpaceMap(
+            _moveNodeToNewSpaceMap(
                 nodeIndex,
                 spaceOfNodes[nodeIndex].freeSpace + space
             );
@@ -244,16 +216,182 @@ contract NodesData is INodesData, Permissions {
 
     function changeNodeFinishTime(uint nodeIndex, uint32 time) external {
         nodes[nodeIndex].finishTime = time;
+    }    
+
+    /**
+     * @dev createNode - creates new Node and add it to the Nodes contract
+     * function could be only run by SkaleManager
+     * @param from - owner of Node
+     * @return nodeIndex - index of Node
+     */
+    function createNode(
+        address from,
+        NodeCreationParams calldata params)
+        external allow("SkaleManager") returns (uint nodeIndex)
+    {
+        // checks that Node has correct data
+        require(params.ip != 0x0 && !nodesIPCheck[params.ip], "IP address is zero or is not available");
+        require(!nodesNameCheck[keccak256(abi.encodePacked(params.name))], "Name has already registered");
+        require(params.port > 0, "Port is zero");
+
+        uint validatorId = ValidatorService(
+            _contractManager.getContract("ValidatorService")).getValidatorIdByNodeAddress(from);
+
+        // adds Node to Nodes contract
+        nodeIndex = this.addNode(
+            from,
+            params.name,
+            params.ip,
+            params.publicIp,
+            params.port,
+            params.publicKey,
+            validatorId);
+        // adds Node to Fractional Nodes or to Full Nodes
+        // setNodeType(nodesAddress, constantsAddress, nodeIndex);
+
+        emit NodeCreated(
+            nodeIndex,
+            from,
+            params.name,
+            params.ip,
+            params.publicIp,
+            params.port,
+            params.nonce,
+            uint32(block.timestamp),
+            gasleft());
     }
 
     /**
-     * @dev isNodeExist - checks existence of Node at this address
-     * @param from - account address
+     * @dev removeNode - delete Node
+     * function could be only run by SkaleManager
+     * @param from - owner of Node
      * @param nodeIndex - index of Node
-     * @return if exist - true, else - false
      */
-    function isNodeExist(address from, uint nodeIndex) external view returns (bool) {
-        return nodeIndexes[from].isNodeExist[nodeIndex];
+    function removeNode(address from, uint nodeIndex) external allow("SkaleManager") {
+
+        require(isNodeExist(from, nodeIndex), "Node does not exist for message sender");
+        require(isNodeActive(nodeIndex), "Node is not Active");
+
+        this.setNodeLeft(nodeIndex);
+
+        this.deleteNode(nodeIndex);
+    }
+
+    function removeNodeByRoot(uint nodeIndex) external allow("SkaleManager") {
+        this.setNodeLeft(nodeIndex);
+
+        this.deleteNode(nodeIndex);
+    }
+
+    /**
+     * @dev initExit - initiate a procedure of quitting the system
+     * function could be only run by SkaleManager
+     * @param from - owner of Node
+     * @param nodeIndex - index of Node
+     * @return true - if everything OK
+     */
+    function initExit(address from, uint nodeIndex) external allow("SkaleManager") returns (bool) {
+
+        require(isNodeExist(from, nodeIndex), "Node does not exist for message sender");
+
+        this.setNodeLeaving(nodeIndex);
+
+        emit ExitInited(
+            nodeIndex,
+            from,
+            uint32(block.timestamp),
+            uint32(block.timestamp),
+            gasleft());
+        return true;
+    }
+
+    /**
+     * @dev completeExit - finish a procedure of quitting the system
+     * function could be run only by SkaleMManager
+     * @param from - owner of Node
+     * @param nodeIndex - index of Node
+     * @return amount of SKL which be returned
+     */
+    function completeExit(address from, uint nodeIndex) external allow("SkaleManager") returns (bool) {
+
+        require(isNodeExist(from, nodeIndex), "Node does not exist for message sender");
+        require(isNodeLeaving(nodeIndex), "Node is not Leaving");
+
+        this.setNodeLeft(nodeIndex);
+        this.deleteNode(nodeIndex);
+
+        emit ExitCompleted(
+            nodeIndex,
+            from,
+            uint32(block.timestamp),
+            gasleft());
+        return true;
+    }
+
+    function deleteNode(uint nodeIndex) external allow("Nodes") {
+        uint8 space = spaceOfNodes[nodeIndex].freeSpace;
+        uint indexInArray = spaceOfNodes[nodeIndex].indexInSpaceMap;
+        if (indexInArray < spaceToNodes[space].length - 1) {
+            uint shiftedIndex = spaceToNodes[space][spaceToNodes[space].length - 1];
+            spaceToNodes[space][indexInArray] = shiftedIndex;
+            spaceOfNodes[shiftedIndex].indexInSpaceMap = indexInArray;
+            spaceToNodes[space].pop();
+        } else {
+            spaceToNodes[space].pop();
+        }
+        delete spaceOfNodes[nodeIndex].freeSpace;
+        delete spaceOfNodes[nodeIndex].indexInSpaceMap;
+    }
+
+    /**
+     * @dev setNodeLeft - set Node Left
+     * function could be run only by Nodes
+     * @param nodeIndex - index of Node
+     */
+    function setNodeLeft(uint nodeIndex) external allow("Nodes") {
+        nodesIPCheck[nodes[nodeIndex].ip] = false;
+        nodesNameCheck[keccak256(abi.encodePacked(nodes[nodeIndex].name))] = false;
+        // address ownerOfNode = nodes[nodeIndex].owner;
+        // nodeIndexes[ownerOfNode].isNodeExist[nodeIndex] = false;
+        // nodeIndexes[ownerOfNode].numberOfNodes--;
+        delete nodesNameToIndex[keccak256(abi.encodePacked(nodes[nodeIndex].name))];
+        if (nodes[nodeIndex].status == NodeStatus.Active) {
+            numberOfActiveNodes--;
+        } else {
+            numberOfLeavingNodes--;
+        }
+        nodes[nodeIndex].status = NodeStatus.Left;
+        numberOfLeftNodes++;
+    }
+
+    /**
+     * @dev setNodeLeaving - set Node Leaving
+     * function could be run only by Nodes
+     * @param nodeIndex - index of Node
+     */
+    function setNodeLeaving(uint nodeIndex) external allow("Nodes") {
+        nodes[nodeIndex].status = NodeStatus.Leaving;
+        numberOfActiveNodes--;
+        numberOfLeavingNodes++;
+    }
+
+    function getNodesWithFreeSpace(uint8 freeSpace) external view returns (uint[] memory) {
+        uint[] memory nodesWithFreeSpace = new uint[](this.countNodesWithFreeSpace(freeSpace));
+        uint cursor = 0;
+        for (uint8 i = freeSpace; i <= 128; ++i) {
+            for (uint j = 0; j < spaceToNodes[i].length; j++) {
+                nodesWithFreeSpace[cursor] = spaceToNodes[i][j];
+                ++cursor;
+            }
+        }
+        return nodesWithFreeSpace;
+    }
+
+    function countNodesWithFreeSpace(uint8 freeSpace) external view returns (uint count) {
+        count = 0;
+        for (uint8 i = freeSpace; i <= 128; ++i) {
+            count = count.add(spaceToNodes[i].length);
+        }
     }
 
     /**
@@ -262,7 +400,7 @@ contract NodesData is INodesData, Permissions {
      * @return if time for reward has come - true, else - false
      */
     function isTimeForReward(uint nodeIndex) external view returns (bool) {
-        address constantsAddress = contractManager.getContract("ConstantsHolder");
+        address constantsAddress = _contractManager.getContract("ConstantsHolder");
         return nodes[nodeIndex].lastRewardDate.add(IConstants(constantsAddress).rewardPeriod()) <= block.timestamp;
     }
 
@@ -297,15 +435,6 @@ contract NodesData is INodesData, Permissions {
     }
 
     /**
-     * @dev isNodeLeaving - checks if Node status Leaving
-     * @param nodeIndex - index of Node
-     * @return if Node status Leaving - true, else - false
-     */
-    function isNodeLeaving(uint nodeIndex) external view returns (bool) {
-        return nodes[nodeIndex].status == NodeStatus.Leaving;
-    }
-
-    /**
      * @dev isNodeLeft - checks if Node status Left
      * @param nodeIndex - index of Node
      * @return if Node status Left - true, else - false
@@ -329,7 +458,7 @@ contract NodesData is INodesData, Permissions {
      * @return Node next reward date
      */
     function getNodeNextRewardDate(uint nodeIndex) external view returns (uint32) {
-        address constantsAddress = contractManager.getContract("ConstantsHolder");
+        address constantsAddress = _contractManager.getContract("ConstantsHolder");
         return nodes[nodeIndex].lastRewardDate + IConstants(constantsAddress).rewardPeriod();
     }
 
@@ -367,8 +496,7 @@ contract NodesData is INodesData, Permissions {
     /**
      * @dev getActiveNodesByAddress - get array of indexes of Active Nodes, which were
      * created by msg.sender
-     * @return activeNodesbyAddress - array of indexes of Active Nodes, which were created
-     * by msg.sender
+     * @return activeNodesByAddress Array of indexes of Active Nodes, which were created by msg.sender
      */
     function getActiveNodesByAddress() external view returns (uint[] memory activeNodesByAddress) {
         activeNodesByAddress = new uint[](nodeIndexes[msg.sender].numberOfNodes);
@@ -405,12 +533,26 @@ contract NodesData is INodesData, Permissions {
         return nodes[nodeIndex].status;
     }
 
-    function initialize(address newContractsAddress) public initializer {
-        Permissions.initialize(newContractsAddress);
+    /**
+     * @dev constructor in Permissions approach
+     * @param _contractsAddress needed in Permissions constructor
+    */
+    function initialize(address _contractsAddress) public override initializer {
+        Permissions.initialize(_contractsAddress);
 
         numberOfActiveNodes = 0;
         numberOfLeavingNodes = 0;
         numberOfLeftNodes = 0;
+    }
+
+    /**
+     * @dev isNodeExist - checks existence of Node at this address
+     * @param from - account address
+     * @param nodeIndex - index of Node
+     * @return if exist - true, else - false
+     */
+    function isNodeExist(address from, uint nodeIndex) public view returns (bool) {
+        return nodeIndexes[from].isNodeExist[nodeIndex];
     }
 
     /**
@@ -422,16 +564,25 @@ contract NodesData is INodesData, Permissions {
         return nodes[nodeIndex].status == NodeStatus.Active;
     }
 
-    function moveNodeToNewSpaceMap(uint nodeIndex, uint8 newSpace) internal {
+    /**
+     * @dev isNodeLeaving - checks if Node status Leaving
+     * @param nodeIndex - index of Node
+     * @return if Node status Leaving - true, else - false
+     */
+    function isNodeLeaving(uint nodeIndex) public view returns (bool) {
+        return nodes[nodeIndex].status == NodeStatus.Leaving;
+    }
+
+    function _moveNodeToNewSpaceMap(uint nodeIndex, uint8 newSpace) internal {
         uint8 previousSpace = spaceOfNodes[nodeIndex].freeSpace;
         uint indexInArray = spaceOfNodes[nodeIndex].indexInSpaceMap;
         if (indexInArray < spaceToNodes[previousSpace].length - 1) {
             uint shiftedIndex = spaceToNodes[previousSpace][spaceToNodes[previousSpace].length - 1];
             spaceToNodes[previousSpace][indexInArray] = shiftedIndex;
             spaceOfNodes[shiftedIndex].indexInSpaceMap = indexInArray;
-            spaceToNodes[previousSpace].length--;
+            spaceToNodes[previousSpace].pop();
         } else {
-            spaceToNodes[previousSpace].length--;
+            spaceToNodes[previousSpace].pop();
         }
         spaceToNodes[newSpace].push(nodeIndex);
         spaceOfNodes[nodeIndex].freeSpace = newSpace;

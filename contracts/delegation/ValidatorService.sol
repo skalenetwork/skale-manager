@@ -17,10 +17,11 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity ^0.5.3;
+pragma solidity 0.6.6;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts/cryptography/ECDSA.sol";
 
 import "../Permissions.sol";
 import "../interfaces/IConstants.sol";
@@ -29,6 +30,8 @@ import "./DelegationController.sol";
 
 
 contract ValidatorService is Permissions {
+
+    using ECDSA for bytes32;
 
     struct Validator {
         string name;
@@ -39,18 +42,50 @@ contract ValidatorService is Permissions {
         uint registrationTime;
         uint minimumDelegationAmount;
         uint[] nodeIndexes;
+        bool acceptNewRequests;
     }
+
+    event ValidatorRegistered(
+        uint validatorId
+    );
+
+    event ValidatorAddressChanged(
+        uint validatorId,
+        address newAddress
+    );
+
+    event ValidatorWasEnabled(
+        uint validatorId
+    );
+
+    event ValidatorWasDisabled(
+        uint validatorId
+    );
+
+    event NodeAddressWasAdded(
+        uint validatorId,
+        address nodeAddress
+    );
+
+    event NodeAddressWasRemoved(
+        uint validatorId,
+        address nodeAddress
+    );
 
     mapping (uint => Validator) public validators;
     mapping (uint => bool) public trustedValidators;
     ///      address => validatorId
     mapping (address => uint) private _validatorAddressToId;
-    /// validatorId => address[]
-    mapping (uint => address[]) private _validatorAddresses;
+    ///      address => validatorId
+    mapping (address => uint) private _nodeAddressToValidatorId;
+    /// validatorId => nodeAddress[]
+    mapping (uint => address[]) private _nodeAddresses;
     uint public numberOfValidators;
 
+    bool public useWhitelist;
+
     modifier checkValidatorExists(uint validatorId) {
-        require(validatorExists(validatorId), "Validator with such id doesn't exist");
+        require(validatorExists(validatorId), "Validator with such ID does not exist");
         _;
     }
 
@@ -63,9 +98,9 @@ contract ValidatorService is Permissions {
         external
         returns (uint validatorId)
     {
-        require(_validatorAddressToId[msg.sender] == 0, "Validator with such address already exists");
+        require(!validatorAddressExists(msg.sender), "Validator with such address already exists");
         require(feeRate < 1000, "Fee rate of validator should be lower than 100%");
-        uint[] memory epmtyArray = new uint[](0);
+        uint[] memory emptyArray = new uint[](0);
         validatorId = ++numberOfValidators;
         validators[validatorId] = Validator(
             name,
@@ -75,17 +110,148 @@ contract ValidatorService is Permissions {
             feeRate,
             now,
             minimumDelegationAmount,
-            epmtyArray
+            emptyArray,
+            true
         );
-        setValidatorAddress(validatorId, msg.sender);
+        _setValidatorAddress(validatorId, msg.sender);
+
+        emit ValidatorRegistered(validatorId);
     }
 
     function enableValidator(uint validatorId) external checkValidatorExists(validatorId) onlyOwner {
+        require(!trustedValidators[validatorId], "Validator is already enabled");
         trustedValidators[validatorId] = true;
+        emit ValidatorWasEnabled(validatorId);
     }
 
     function disableValidator(uint validatorId) external checkValidatorExists(validatorId) onlyOwner {
+        require(trustedValidators[validatorId], "Validator is already disabled");
         trustedValidators[validatorId] = false;
+        emit ValidatorWasDisabled(validatorId);
+    }
+
+    function disableWhitelist() external onlyOwner {
+        useWhitelist = false;
+    }
+
+    function requestForNewAddress(address newValidatorAddress) external {
+        require(newValidatorAddress != address(0), "New address cannot be null");
+        require(_validatorAddressToId[newValidatorAddress] == 0, "Address already registered");
+        uint validatorId = getValidatorId(msg.sender);
+        validators[validatorId].requestedAddress = newValidatorAddress;
+    }
+
+    function confirmNewAddress(uint validatorId)
+        external
+        checkValidatorExists(validatorId)
+    {
+        require(
+            getValidator(validatorId).requestedAddress == msg.sender,
+            "The validator address cannot be changed because it is not the actual owner"
+        );
+        delete validators[validatorId].requestedAddress;
+        _setValidatorAddress(validatorId, msg.sender);
+
+        emit ValidatorAddressChanged(validatorId, validators[validatorId].validatorAddress);
+    }
+
+    function linkNodeAddress(address nodeAddress, bytes calldata sig) external {
+        uint validatorId = getValidatorId(msg.sender);
+        bytes32 hashOfValidatorId = keccak256(abi.encodePacked(validatorId)).toEthSignedMessageHash();
+        require(hashOfValidatorId.recover(sig) == nodeAddress, "Signature is not pass");
+        require(_validatorAddressToId[nodeAddress] == 0, "Node address is a validator");
+        _addNodeAddress(validatorId, nodeAddress);
+        emit NodeAddressWasAdded(validatorId, nodeAddress);
+    }
+
+    function unlinkNodeAddress(address nodeAddress) external {
+        uint validatorId = getValidatorId(msg.sender);
+        _removeNodeAddress(validatorId, nodeAddress);
+        emit NodeAddressWasRemoved(validatorId, nodeAddress);
+    }
+
+    function pushNode(address nodeAddress, uint nodeIndex) external allow("SkaleManager") {
+        uint validatorId = getValidatorIdByNodeAddress(nodeAddress);
+        validators[validatorId].nodeIndexes.push(nodeIndex);
+    }
+
+    function deleteNode(uint validatorId, uint nodeIndex) external allow("SkaleManager") {
+        uint[] memory validatorNodes = validators[validatorId].nodeIndexes;
+        uint position = _findNode(validatorNodes, nodeIndex);
+        if (position < validatorNodes.length) {
+            validators[validatorId].nodeIndexes[position] =
+                validators[validatorId].nodeIndexes[validatorNodes.length.sub(1)];
+        }
+        delete validators[validatorId].nodeIndexes[validatorNodes.length.sub(1)];
+    }
+
+    function checkPossibilityCreatingNode(address nodeAddress) external allow("SkaleManager") {
+        DelegationController delegationController = DelegationController(
+            _contractManager.getContract("DelegationController")
+        );
+        uint validatorId = getValidatorIdByNodeAddress(nodeAddress);
+        require(trustedValidators[validatorId], "Validator is not authorized to create a node");
+        uint[] memory validatorNodes = validators[validatorId].nodeIndexes;
+        uint delegationsTotal = delegationController.getAndUpdateDelegatedToValidatorNow(validatorId);
+        uint msr = IConstants(_contractManager.getContract("ConstantsHolder")).msr();
+        require(
+            (validatorNodes.length.add(1)) * msr <= delegationsTotal,
+            "Validator must meet Minimum Staking Requirement");
+    }
+
+    function checkPossibilityToMaintainNode(uint validatorId, uint nodeIndex)
+        external allow("SkaleManager") returns (bool)
+    {
+        DelegationController delegationController = DelegationController(
+            _contractManager.getContract("DelegationController")
+        );
+        uint[] memory validatorNodes = validators[validatorId].nodeIndexes;
+        uint position = _findNode(validatorNodes, nodeIndex);
+        require(position < validatorNodes.length, "Node does not exist for this Validator");
+        uint delegationsTotal = delegationController.getAndUpdateDelegatedToValidatorNow(validatorId);
+        uint msr = IConstants(_contractManager.getContract("ConstantsHolder")).msr();
+        return position.add(1).mul(msr) <= delegationsTotal;
+    }
+
+    function setValidatorMDA(uint minimumDelegationAmount) external {
+        uint validatorId = getValidatorId(msg.sender);
+        validators[validatorId].minimumDelegationAmount = minimumDelegationAmount;
+    }
+
+    /// @notice return how many of validator funds are locked in SkaleManager
+    function getAndUpdateBondAmount(uint validatorId)
+        external
+        returns (uint delegatedAmount)
+    {
+        DelegationController delegationController = DelegationController(
+            _contractManager.getContract("DelegationController"));
+        return delegationController.getAndUpdateDelegatedAmount(validators[validatorId].validatorAddress);
+    }
+
+    function setValidatorName(string calldata newName) external {
+        uint validatorId = getValidatorId(msg.sender);
+        validators[validatorId].name = newName;
+    }
+
+    function setValidatorDescription(string calldata newDescription) external {
+        uint validatorId = getValidatorId(msg.sender);
+        validators[validatorId].description = newDescription;
+    }
+
+    function startAcceptingNewRequests() external {
+        uint validatorId = getValidatorId(msg.sender);
+        require(!isAcceptingNewRequests(validatorId), "Accepting request is already enabled");
+        validators[validatorId].acceptNewRequests = true;
+    }
+
+    function stopAcceptingNewRequests() external {
+        uint validatorId = getValidatorId(msg.sender);
+        require(isAcceptingNewRequests(validatorId), "Accepting request is already disabled");
+        validators[validatorId].acceptNewRequests = false;
+    }
+
+    function getMyNodesAddresses() external view returns (address[] memory) {
+        return getNodeAddresses(getValidatorId(msg.sender));
     }
 
     function getTrustedValidators() external view returns (uint[] memory) {
@@ -103,37 +269,6 @@ contract ValidatorService is Permissions {
             }
         }
         return whitelist;
-    }
-
-    function requestForNewAddress(address newValidatorAddress) external {
-        require(newValidatorAddress != address(0), "New address cannot be null");
-        uint validatorId = getValidatorId(msg.sender);
-        validators[validatorId].requestedAddress = newValidatorAddress;
-    }
-
-    function confirmNewAddress(uint validatorId)
-        external
-        checkValidatorExists(validatorId)
-    {
-        require(
-            getValidator(validatorId).requestedAddress == msg.sender,
-            "The validator cannot be changed because it isn't the actual owner"
-        );
-        deleteValidatorAddress(validatorId, validators[validatorId].validatorAddress);
-        validators[validatorId].validatorAddress = msg.sender;
-        validators[validatorId].requestedAddress = address(0);
-        setValidatorAddress(validatorId, validators[validatorId].validatorAddress);
-    }
-
-    function linkNodeAddress(address nodeAddress) external {
-        uint validatorId = getValidatorId(msg.sender);
-        setValidatorAddress(validatorId, nodeAddress);
-    }
-
-    function unlinkNodeAddress(address nodeAddress) external {
-        uint validatorId = getValidatorId(msg.sender);
-        require(validators[validatorId].validatorAddress == msg.sender, "Such address hasn't permissions to unlink node");
-        deleteValidatorAddress(validatorId, nodeAddress);
     }
 
     function checkMinimumDelegation(uint validatorId, uint amount)
@@ -157,82 +292,22 @@ contract ValidatorService is Permissions {
         return getValidator(validatorId).nodeIndexes;
     }
 
-    function pushNode(address validatorAddress, uint nodeIndex) external allow("SkaleManager") {
-        uint validatorId = getValidatorId(validatorAddress);
-        validators[validatorId].nodeIndexes.push(nodeIndex);
+    function initialize(address contractManager) public override initializer {
+        Permissions.initialize(contractManager);
+        useWhitelist = true;
     }
 
-    function deleteNode(uint validatorId, uint nodeIndex) external allow("SkaleManager") {
-        uint[] memory validatorNodes = validators[validatorId].nodeIndexes;
-        uint position = findNode(validatorNodes, nodeIndex);
-        if (position < validatorNodes.length) {
-            validators[validatorId].nodeIndexes[position] = validators[validatorId].nodeIndexes[validatorNodes.length.sub(1)];
-        }
-        delete validators[validatorId].nodeIndexes[validatorNodes.length.sub(1)];
+    function getValidatorIdByNodeAddress(address nodeAddress) public view returns (uint validatorId) {
+        validatorId = _nodeAddressToValidatorId[nodeAddress];
+        require(validatorId != 0, "Node address is not assigned to a validator");
     }
 
-    function checkPossibilityCreatingNode(address validatorAddress) external allow("SkaleManager") {
-        DelegationController delegationController = DelegationController(
-            contractManager.getContract("DelegationController")
-        );
-        uint validatorId = getValidatorId(validatorAddress);
-        require(trustedValidators[validatorId], "Validator is not authorized to create a node");
-        uint[] memory validatorNodes = validators[validatorId].nodeIndexes;
-        uint delegationsTotal = delegationController.getAndUpdateDelegatedToValidatorNow(validatorId);
-        uint msr = IConstants(contractManager.getContract("ConstantsHolder")).msr();
-        require((validatorNodes.length.add(1)) * msr <= delegationsTotal, "Validator has to meet Minimum Staking Requirement");
-    }
-
-    function checkPossibilityToMaintainNode(uint validatorId, uint nodeIndex) external allow("SkaleManager") returns (bool) {
-        DelegationController delegationController = DelegationController(
-            contractManager.getContract("DelegationController")
-        );
-        uint[] memory validatorNodes = validators[validatorId].nodeIndexes;
-        uint position = findNode(validatorNodes, nodeIndex);
-        require(position < validatorNodes.length, "Node does not exist for this Validator");
-        uint delegationsTotal = delegationController.getAndUpdateDelegatedToValidatorNow(validatorId);
-        uint msr = IConstants(contractManager.getContract("ConstantsHolder")).msr();
-        return position.add(1).mul(msr) <= delegationsTotal;
-    }
-
-    function setValidatorMDA(uint minimumDelegationAmount) external {
-        uint validatorId = getValidatorId(msg.sender);
-        validators[validatorId].minimumDelegationAmount = minimumDelegationAmount;
-    }
-
-    function getMyAddresses() external view returns (address[] memory) {
-        return getValidatorAddresses(getValidatorId(msg.sender));
-    }
-
-    /// @notice return how many of validator funds are locked in SkaleManager
-    function getAndUpdateBondAmount(uint validatorId)
-        external
-        returns (uint delegatedAmount)
-    {
-        DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
-        return delegationController.getAndUpdateDelegatedAmount(validators[validatorId].validatorAddress);
-    }
-
-    function setValidatorName(string calldata newName) external {
-        uint validatorId = getValidatorId(msg.sender);
-        validators[validatorId].name = newName;
-    }
-
-    function setValidatorDescription(string calldata newDescription) external {
-        uint validatorId = getValidatorId(msg.sender);
-        validators[validatorId].description = newDescription;
-    }
-
-    function initialize(address _contractManager) public initializer {
-        Permissions.initialize(_contractManager);
-    }
-
-    function getValidatorAddresses(uint validatorId) public view returns (address[] memory) {
-        return _validatorAddresses[validatorId];
+    function getNodeAddresses(uint validatorId) public view returns (address[] memory) {
+        return _nodeAddresses[validatorId];
     }
 
     function validatorExists(uint validatorId) public view returns (bool) {
-        return validatorId <= numberOfValidators;
+        return validatorId <= numberOfValidators && validatorId != 0;
     }
 
     function validatorAddressExists(address validatorAddress) public view returns (bool) {
@@ -240,7 +315,7 @@ contract ValidatorService is Permissions {
     }
 
     function checkIfValidatorAddressExists(address validatorAddress) public view {
-        require(validatorAddressExists(validatorAddress), "Validator with such address doesn't exist");
+        require(validatorAddressExists(validatorAddress), "Validator with such address does not exist");
     }
 
     function getValidator(uint validatorId) public view checkValidatorExists(validatorId) returns (Validator memory) {
@@ -252,9 +327,13 @@ contract ValidatorService is Permissions {
         return _validatorAddressToId[validatorAddress];
     }
 
+    function isAcceptingNewRequests(uint validatorId) public view checkValidatorExists(validatorId) returns (bool) {
+        return validators[validatorId].acceptNewRequests;
+    }
+
     // private
 
-    function findNode(uint[] memory nodeIndexes, uint nodeIndex) internal pure returns (uint) {
+    function _findNode(uint[] memory nodeIndexes, uint nodeIndex) internal pure returns (uint) {
         uint i;
         for (i = 0; i < nodeIndexes.length; i++) {
             if (nodeIndexes[i] == nodeIndex) {
@@ -264,25 +343,38 @@ contract ValidatorService is Permissions {
         return i;
     }
 
-    function setValidatorAddress(uint validatorId, address validatorAddress) internal {
+    function _setValidatorAddress(uint validatorId, address validatorAddress) internal {
         if (_validatorAddressToId[validatorAddress] == validatorId) {
             return;
         }
-        require(_validatorAddressToId[validatorAddress] == 0, "Validator cannot override node address");
+        require(_validatorAddressToId[validatorAddress] == 0, "Address is in use by the another validator");
+        address oldAddress = validators[validatorId].validatorAddress;
+        delete _validatorAddressToId[oldAddress];
+        _nodeAddressToValidatorId[validatorAddress] = validatorId;
+        validators[validatorId].validatorAddress = validatorAddress;
         _validatorAddressToId[validatorAddress] = validatorId;
-        _validatorAddresses[validatorId].push(validatorAddress);
     }
 
-    function deleteValidatorAddress(uint validatorId, address validatorAddress) internal {
-        require(_validatorAddressToId[validatorAddress] == validatorId, "Validator hasn't permissions to unlink node");
-        delete _validatorAddressToId[validatorAddress];
-        for (uint i = 0; i < _validatorAddresses[validatorId].length; ++i) {
-            if (_validatorAddresses[validatorId][i] == validatorAddress) {
-                if (i + 1 < _validatorAddresses[validatorId].length) {
-                    _validatorAddresses[validatorId][i] = _validatorAddresses[validatorId][_validatorAddresses[validatorId].length.sub(1)];
+    function _addNodeAddress(uint validatorId, address nodeAddress) internal {
+        if (_nodeAddressToValidatorId[nodeAddress] == validatorId) {
+            return;
+        }
+        require(_nodeAddressToValidatorId[nodeAddress] == 0, "Validator cannot override node address");
+        _nodeAddressToValidatorId[nodeAddress] = validatorId;
+        _nodeAddresses[validatorId].push(nodeAddress);
+    }
+
+    function _removeNodeAddress(uint validatorId, address nodeAddress) internal {
+        require(_nodeAddressToValidatorId[nodeAddress] == validatorId, "Validator hasn't permissions to unlink node");
+        delete _nodeAddressToValidatorId[nodeAddress];
+        for (uint i = 0; i < _nodeAddresses[validatorId].length; ++i) {
+            if (_nodeAddresses[validatorId][i] == nodeAddress) {
+                if (i + 1 < _nodeAddresses[validatorId].length) {
+                    _nodeAddresses[validatorId][i] =
+                        _nodeAddresses[validatorId][_nodeAddresses[validatorId].length.sub(1)];
                 }
-                delete _validatorAddresses[validatorId][_validatorAddresses[validatorId].length.sub(1)];
-                --_validatorAddresses[validatorId].length;
+                delete _nodeAddresses[validatorId][_nodeAddresses[validatorId].length.sub(1)];
+                _nodeAddresses[validatorId].pop();
                 break;
             }
         }

@@ -17,10 +17,9 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity ^0.5.3;
+pragma solidity 0.6.6;
 
 import "./ContractManager.sol";
-import "@nomiclabs/buidler/console.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 
 
@@ -28,15 +27,15 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
  * @title Permissions - connected module for Upgradeable approach, knows ContractManager
  * @author Artem Payvin
  */
-contract Permissions is Ownable {
+contract Permissions is OwnableUpgradeSafe {
     using SafeMath for uint;
     using SafeMath for uint32;
 
-    ContractManager contractManager;
+    ContractManager internal _contractManager;
 
-    function initialize(address _contractManager) public initializer {
-        Ownable.initialize(msg.sender);
-        contractManager = ContractManager(_contractManager);
+    function initialize(address contractManager) public virtual initializer {
+        OwnableUpgradeSafe.__Ownable_init();
+        _contractManager = ContractManager(contractManager);
     }
 
     /**
@@ -46,27 +45,31 @@ contract Permissions is Ownable {
      */
     modifier allow(string memory contractName) {
         require(
-            contractManager.contracts(keccak256(abi.encodePacked(contractName))) == msg.sender || isOwner(),
+            _contractManager.contracts(keccak256(abi.encodePacked(contractName))) == msg.sender || _isOwner(),
             "Message sender is invalid");
         _;
     }
 
     modifier allowTwo(string memory contractName1, string memory contractName2) {
         require(
-            contractManager.contracts(keccak256(abi.encodePacked(contractName1))) == msg.sender ||
-            contractManager.contracts(keccak256(abi.encodePacked(contractName2))) == msg.sender ||
-            isOwner(),
+            _contractManager.contracts(keccak256(abi.encodePacked(contractName1))) == msg.sender ||
+            _contractManager.contracts(keccak256(abi.encodePacked(contractName2))) == msg.sender ||
+            _isOwner(),
             "Message sender is invalid");
         _;
     }
 
     modifier allowThree(string memory contractName1, string memory contractName2, string memory contractName3) {
         require(
-            contractManager.contracts(keccak256(abi.encodePacked(contractName1))) == msg.sender ||
-            contractManager.contracts(keccak256(abi.encodePacked(contractName2))) == msg.sender ||
-            contractManager.contracts(keccak256(abi.encodePacked(contractName3))) == msg.sender ||
-            isOwner(),
+            _contractManager.contracts(keccak256(abi.encodePacked(contractName1))) == msg.sender ||
+            _contractManager.contracts(keccak256(abi.encodePacked(contractName2))) == msg.sender ||
+            _contractManager.contracts(keccak256(abi.encodePacked(contractName3))) == msg.sender ||
+            _isOwner(),
             "Message sender is invalid");
         _;
+    }
+
+    function _isOwner() internal view returns (bool) {
+        return msg.sender == owner();
     }
 }

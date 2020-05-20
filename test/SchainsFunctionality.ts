@@ -1,25 +1,25 @@
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
 import { ContractManagerInstance,
-         NodesDataInstance,
-         NodesFunctionalityInstance,
+         NodesInstance,
          SchainsDataInstance,
          SchainsFunctionalityInstance,
          SchainsFunctionalityInternalInstance,
+         SkaleDKGInstance,
          SkaleManagerInstance,
          ValidatorServiceInstance } from "../types/truffle-contracts";
 
 import BigNumber from "bignumber.js";
-import { skipTime } from "./utils/time";
+import { skipTime } from "./tools/time";
 
-import { deployContractManager } from "./utils/deploy/contractManager";
-import { deployValidatorService } from "./utils/deploy/delegation/validatorService";
-import { deployNodesData } from "./utils/deploy/nodesData";
-import { deployNodesFunctionality } from "./utils/deploy/nodesFunctionality";
-import { deploySchainsData } from "./utils/deploy/schainsData";
-import { deploySchainsFunctionality } from "./utils/deploy/schainsFunctionality";
-import { deploySchainsFunctionalityInternal } from "./utils/deploy/schainsFunctionalityInternal";
-import { deploySkaleManager } from "./utils/deploy/skaleManager";
+import { deployContractManager } from "./tools/deploy/contractManager";
+import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
+import { deployNodes } from "./tools/deploy/nodes";
+import { deploySchainsData } from "./tools/deploy/schainsData";
+import { deploySchainsFunctionality } from "./tools/deploy/schainsFunctionality";
+import { deploySchainsFunctionalityInternal } from "./tools/deploy/schainsFunctionalityInternal";
+import { deploySkaleDKG } from "./tools/deploy/skaleDKG";
+import { deploySkaleManager } from "./tools/deploy/skaleManager";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -29,20 +29,20 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
     let schainsFunctionality: SchainsFunctionalityInstance;
     let schainsFunctionalityInternal: SchainsFunctionalityInternalInstance;
     let schainsData: SchainsDataInstance;
-    let nodesData: NodesDataInstance;
-    let nodesFunctionality: NodesFunctionalityInstance;
+    let nodes: NodesInstance;
     let validatorService: ValidatorServiceInstance;
+    let skaleDKG: SkaleDKGInstance;
     let skaleManager: SkaleManagerInstance;
 
     beforeEach(async () => {
         contractManager = await deployContractManager();
 
-        nodesData = await deployNodesData(contractManager);
-        nodesFunctionality = await deployNodesFunctionality(contractManager);
+        nodes = await deployNodes(contractManager);
         schainsData = await deploySchainsData(contractManager);
         schainsFunctionality = await deploySchainsFunctionality(contractManager);
         schainsFunctionalityInternal = await deploySchainsFunctionalityInternal(contractManager);
         validatorService = await deployValidatorService(contractManager);
+        skaleDKG = await deploySkaleDKG(contractManager);
         skaleManager = await deploySkaleManager(contractManager);
 
         validatorService.registerValidator("D2", "D2 is even", 0, 0, {from: validator});
@@ -53,7 +53,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
             await schainsFunctionality.addSchain(
                 holder,
                 5,
-                "0x10" + "0000000000000000000000000000000000000000000000000000000000000005" + "01" + "0000" + "d2",
+                web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 1, 0, "d2"]),
                 {from: owner})
                 .should.be.eventually.rejectedWith("Not enough money to create Schain");
         });
@@ -62,7 +62,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
             await schainsFunctionality.addSchain(
                 holder,
                 5,
-                "0x10" + "0000000000000000000000000000000000000000000000000000000000000005" + "06" + "0000" + "d2",
+                web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 6, 0, "d2"]),
                 {from: owner})
                 .should.be.eventually.rejectedWith("Invalid type of Schain");
         });
@@ -71,9 +71,9 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
             await schainsFunctionality.addSchain(
                 holder,
                 5,
-                "0x10" + "0000000000000000000000000000000000000000000000000000000000000005" + "06" + "0000",
+                web3.eth.abi.encodeParameters(["uint", "uint8", "uint16"], [5, 6, 0]),
                 {from: owner}).
-                should.be.eventually.rejectedWith("Incorrect bytes data config");
+                should.be.eventually.rejected;
         });
 
         it("should fail when nodes count is too low", async () => {
@@ -81,7 +81,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
             await schainsFunctionality.addSchain(
                 holder,
                 price.toString(),
-                "0x10" + "0000000000000000000000000000000000000000000000000000000000000005" + "01" + "0000" + "d2",
+                web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 1, 0, "d2"]),
                 {from: owner})
                 .should.be.eventually.rejectedWith("Not enough nodes to create Schain");
         });
@@ -91,15 +91,16 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                 const nodesCount = 2;
                 for (const index of Array.from(Array(nodesCount).keys())) {
                     const hexIndex = ("0" + index.toString(16)).slice(-2);
-                    await nodesFunctionality.createNode(validator,
-                        "0x00" +
-                        "2161" +
-                        "0000" +
-                        "7f0000" + hexIndex +
-                        "7f0000" + hexIndex +
-                        "1122334455667788990011223344556677889900112233445566778899001122" +
-                        "1122334455667788990011223344556677889900112233445566778899001122" +
-                        "d2" + hexIndex);
+                    await nodes.createNode(validator,
+                        {
+                            port: 8545,
+                            nonce: 0,
+                            ip: "0x7f0000" + hexIndex,
+                            publicIp: "0x7f0000" + hexIndex,
+                            publicKey: "0x1122334455667788990011223344556677889900112233445566778899001122" +
+                                         "1122334455667788990011223344556677889900112233445566778899001122",
+                            name: "D2-" + hexIndex
+                        });
                 }
 
                 const deposit = await schainsFunctionality.getSchainPrice(4, 5);
@@ -107,21 +108,13 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                 await schainsFunctionality.addSchain(
                     owner,
                     deposit,
-                    "0x10" +
-                    "0000000000000000000000000000000000000000000000000000000000000005" +
-                    "04" +
-                    "0000" +
-                    "6432",
+                    web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, "d2"]),
                     {from: owner});
 
                 await schainsFunctionality.addSchain(
                     owner,
                     deposit,
-                    "0x10" +
-                    "0000000000000000000000000000000000000000000000000000000000000005" +
-                    "04" +
-                    "0000" +
-                    "6433",
+                    web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, "d3"]),
                     {from: owner});
 
                 await schainsFunctionality.deleteSchain(
@@ -134,30 +127,27 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                     "d3",
                     {from: owner});
 
-                await nodesFunctionality.removeNodeByRoot(0, {from: owner});
-                await nodesFunctionality.removeNodeByRoot(1, {from: owner});
+                await nodes.removeNodeByRoot(0, {from: owner});
+                await nodes.removeNodeByRoot(1, {from: owner});
 
                 for (const index of Array.from(Array(nodesCount).keys())) {
                     const hexIndex = ("1" + index.toString(16)).slice(-2);
-                    await nodesFunctionality.createNode(validator,
-                        "0x00" +
-                        "2161" +
-                        "0000" +
-                        "7f0000" + hexIndex +
-                        "7f0000" + hexIndex +
-                        "1122334455667788990011223344556677889900112233445566778899001122" +
-                        "1122334455667788990011223344556677889900112233445566778899001122" +
-                        "d2" + hexIndex);
+                    await nodes.createNode(validator,
+                        {
+                            port: 8545,
+                            nonce: 0,
+                            ip: "0x7f0000" + hexIndex,
+                            publicIp: "0x7f0000" + hexIndex,
+                            publicKey: "0x1122334455667788990011223344556677889900112233445566778899001122" +
+                                         "1122334455667788990011223344556677889900112233445566778899001122",
+                            name: "D2-" + hexIndex
+                        });
                 }
 
                 await schainsFunctionality.addSchain(
                     holder,
                     deposit,
-                    "0x10" +
-                    "0000000000000000000000000000000000000000000000000000000000000005" +
-                    "04" +
-                    "0000" +
-                    "6434",
+                    web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, "d4"]),
                     {from: owner});
             });
         });
@@ -167,15 +157,16 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                 const nodesCount = 4;
                 for (const index of Array.from(Array(nodesCount).keys())) {
                     const hexIndex = ("0" + index.toString(16)).slice(-2);
-                    await nodesFunctionality.createNode(validator,
-                        "0x00" +
-                        "2161" +
-                        "0000" +
-                        "7f0000" + hexIndex +
-                        "7f0000" + hexIndex +
-                        "1122334455667788990011223344556677889900112233445566778899001122" +
-                        "1122334455667788990011223344556677889900112233445566778899001122" +
-                        "d2" + hexIndex);
+                    await nodes.createNode(validator,
+                        {
+                            port: 8545,
+                            nonce: 0,
+                            ip: "0x7f0000" + hexIndex,
+                            publicIp: "0x7f0000" + hexIndex,
+                            publicKey: "0x1122334455667788990011223344556677889900112233445566778899001122" +
+                                         "1122334455667788990011223344556677889900112233445566778899001122",
+                            name: "D2-" + hexIndex
+                        });
                 }
             });
 
@@ -185,11 +176,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                 await schainsFunctionality.addSchain(
                     holder,
                     deposit,
-                    "0x10" +
-                    "0000000000000000000000000000000000000000000000000000000000000005" +
-                    "05" +
-                    "0000" +
-                    "6432",
+                    web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d2"]),
                     {from: owner});
 
                 const schains = await schainsData.getSchains();
@@ -200,50 +187,43 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
             });
 
             it("should not create 4 node schain with 1 deleted node", async () => {
-                await nodesFunctionality.removeNodeByRoot(1);
+                await nodes.removeNodeByRoot(1);
 
                 const deposit = await schainsFunctionality.getSchainPrice(5, 5);
 
                 await schainsFunctionality.addSchain(
                     holder,
                     deposit,
-                    "0x10" +
-                    "0000000000000000000000000000000000000000000000000000000000000005" +
-                    "05" +
-                    "0000" +
-                    "6432",
+                    web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d2"]),
                     {from: owner}).should.be.eventually.rejectedWith("Not enough nodes to create Schain");
             });
 
             it("should not create 4 node schain on deleted node", async () => {
-                let data = await nodesData.getNodesWithFreeSpace(32);
+                let data = await nodes.getNodesWithFreeSpace(32);
                 const removedNode = 1;
-                await nodesFunctionality.removeNodeByRoot(removedNode);
+                await nodes.removeNodeByRoot(removedNode);
 
-                data = await nodesData.getNodesWithFreeSpace(32);
+                data = await nodes.getNodesWithFreeSpace(32);
 
-                await nodesFunctionality.createNode(validator,
-                        "0x00" +
-                        "2161" +
-                        "0000" +
-                        "7f000028" +
-                        "7f000028" +
-                        "1122334455667788990011223344556677889900112233445566778899001122" +
-                        "1122334455667788990011223344556677889900112233445566778899001122" +
-                        "d228");
+                await nodes.createNode(validator,
+                    {
+                        port: 8545,
+                        nonce: 0,
+                        ip: "0x7f000028",
+                        publicIp: "0x7f000028",
+                        publicKey: "0x1122334455667788990011223344556677889900112233445566778899001122" +
+                                     "1122334455667788990011223344556677889900112233445566778899001122",
+                        name: "D2-28"
+                    });
 
                 const deposit = await schainsFunctionality.getSchainPrice(5, 5);
 
-                data = await nodesData.getNodesWithFreeSpace(32);
+                data = await nodes.getNodesWithFreeSpace(32);
 
                 await schainsFunctionality.addSchain(
                     holder,
                     deposit,
-                    "0x10" +
-                    "0000000000000000000000000000000000000000000000000000000000000005" +
-                    "05" +
-                    "0000" +
-                    "6432",
+                    web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d2"]),
                     {from: owner});
 
                 let nodesInGroup = await schainsData.getNodesInGroup(web3.utils.soliditySha3("d2"));
@@ -252,16 +232,12 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                     expect(web3.utils.toBN(node).toNumber()).to.be.not.equal(removedNode);
                 }
 
-                data = await nodesData.getNodesWithFreeSpace(32);
+                data = await nodes.getNodesWithFreeSpace(32);
 
                 await schainsFunctionality.addSchain(
                     holder,
                     deposit,
-                    "0x10" +
-                    "0000000000000000000000000000000000000000000000000000000000000005" +
-                    "05" +
-                    "0000" +
-                    "6433",
+                    web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d3"]),
                     {from: owner});
 
                 nodesInGroup = await schainsData.getNodesInGroup(web3.utils.soliditySha3("d3"));
@@ -270,16 +246,12 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                     expect(web3.utils.toBN(node).toNumber()).to.be.not.equal(removedNode);
                 }
 
-                data = await nodesData.getNodesWithFreeSpace(32);
+                data = await nodes.getNodesWithFreeSpace(32);
 
                 await schainsFunctionality.addSchain(
                     holder,
                     deposit,
-                    "0x10" +
-                    "0000000000000000000000000000000000000000000000000000000000000005" +
-                    "05" +
-                    "0000" +
-                    "6434",
+                    web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d4"]),
                     {from: owner});
 
                 nodesInGroup = await schainsData.getNodesInGroup(web3.utils.soliditySha3("d4"));
@@ -288,16 +260,12 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                     expect(web3.utils.toBN(node).toNumber()).to.be.not.equal(removedNode);
                 }
 
-                data = await nodesData.getNodesWithFreeSpace(32);
+                data = await nodes.getNodesWithFreeSpace(32);
 
                 await schainsFunctionality.addSchain(
                     holder,
                     deposit,
-                    "0x10" +
-                    "0000000000000000000000000000000000000000000000000000000000000005" +
-                    "05" +
-                    "0000" +
-                    "6435",
+                    web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d5"]),
                     {from: owner});
 
                 nodesInGroup = await schainsData.getNodesInGroup(web3.utils.soliditySha3("d5"));
@@ -313,11 +281,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                 await schainsFunctionality.addSchain(
                     holder,
                     deposit,
-                    "0x10" +
-                    "0000000000000000000000000000000000000000000000000000000000000005" +
-                    "05" +
-                    "0000" +
-                    "6432",
+                    web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d2"]),
                     {from: owner});
 
                 const schains = await schainsData.getSchains();
@@ -340,15 +304,16 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                 const nodesCount = 20;
                 for (const index of Array.from(Array(nodesCount).keys())) {
                     const hexIndex = ("0" + index.toString(16)).slice(-2);
-                    await nodesFunctionality.createNode(validator,
-                        "0x00" +
-                        "2161" +
-                        "0000" +
-                        "7f0000" + hexIndex +
-                        "7f0000" + hexIndex +
-                        "1122334455667788990011223344556677889900112233445566778899001122" +
-                        "1122334455667788990011223344556677889900112233445566778899001122" +
-                        "d2" + hexIndex);
+                    await nodes.createNode(validator,
+                        {
+                            port: 8545,
+                            nonce: 0,
+                            ip: "0x7f0000" + hexIndex,
+                            publicIp: "0x7f0000" + hexIndex,
+                            publicKey: "0x1122334455667788990011223344556677889900112233445566778899001122" +
+                                         "1122334455667788990011223344556677889900112233445566778899001122",
+                            name: "D2-" + hexIndex
+                        });
                 }
             });
 
@@ -358,11 +323,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                 await schainsFunctionality.addSchain(
                     holder,
                     deposit,
-                    "0x10" +
-                    "0000000000000000000000000000000000000000000000000000000000000005" +
-                    "03" +
-                    "0000" +
-                    "6432",
+                    web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 3, 0, "d2"]),
                     {from: owner});
 
                 const schains = await schainsData.getSchains();
@@ -375,21 +336,13 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                 await schainsFunctionality.addSchain(
                     holder,
                     deposit,
-                    "0x10" +
-                    "0000000000000000000000000000000000000000000000000000000000000005" +
-                    "03" +
-                    "0000" +
-                    "6432",
+                    web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 3, 0, "d2"]),
                     {from: owner});
 
                 await schainsFunctionality.addSchain(
                     holder,
                     deposit,
-                    "0x10" +
-                    "0000000000000000000000000000000000000000000000000000000000000005" +
-                    "03" +
-                    "0000" +
-                    "6433",
+                    web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 3, 0, "d3"]),
                     {from: owner},
                 ).should.be.eventually.rejectedWith("Not enough nodes to create Schain");
             });
@@ -401,15 +354,16 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                 const nodesCount = 16;
                 for (const index of Array.from(Array(nodesCount).keys())) {
                     const hexIndex = ("0" + index.toString(16)).slice(-2);
-                    await nodesFunctionality.createNode(validator,
-                        "0x00" +
-                        "2161" +
-                        "0000" +
-                        "7f0000" + hexIndex +
-                        "7f0000" + hexIndex +
-                        "1122334455667788990011223344556677889900112233445566778899001122" +
-                        "1122334455667788990011223344556677889900112233445566778899001122" +
-                        "d2" + hexIndex);
+                    await nodes.createNode(validator,
+                        {
+                            port: 8545,
+                            nonce: 0,
+                            ip: "0x7f0000" + hexIndex,
+                            publicIp: "0x7f0000" + hexIndex,
+                            publicKey: "0x1122334455667788990011223344556677889900112233445566778899001122" +
+                                         "1122334455667788990011223344556677889900112233445566778899001122",
+                            name: "D2-" + hexIndex
+                        });
                 }
             });
 
@@ -419,11 +373,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                 await schainsFunctionality.addSchain(
                     holder,
                     deposit,
-                    "0x10" +
-                    "0000000000000000000000000000000000000000000000000000000000000005" +
-                    "01" +
-                    "0000" +
-                    "6432",
+                    web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 1, 0, "d2"]),
                     {from: owner});
 
                 const schains = await schainsData.getSchains();
@@ -462,11 +412,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                     await schainsFunctionality.addSchain(
                         holder,
                         deposit,
-                        "0x10" +
-                        "0000000000000000000000000000000000000000000000000000000000000005" +
-                        "01" +
-                        "0000" +
-                        "4432",
+                        web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 1, 0, "D2"]),
                         {from: owner});
                 });
 
@@ -475,11 +421,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                     await schainsFunctionality.addSchain(
                         holder,
                         deposit,
-                        "0x10" +
-                        "0000000000000000000000000000000000000000000000000000000000000005" +
-                        "01" +
-                        "0000" +
-                        "4432",
+                        web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 1, 0, "D2"]),
                         {from: owner})
                         .should.be.eventually.rejectedWith("Schain name is not available");
                 });
@@ -509,11 +451,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                     await schainsFunctionality.addSchain(
                         holder,
                         deposit,
-                        "0x10" +
-                        "0000000000000000000000000000000000000000000000000000000000000005" +
-                        "04" +
-                        "0000" +
-                        "4432",
+                        web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, "D2"]),
                         {from: owner});
                 });
 
@@ -522,11 +460,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                     await schainsFunctionality.addSchain(
                         holder,
                         deposit,
-                        "0x10" +
-                        "0000000000000000000000000000000000000000000000000000000000000005" +
-                        "04" +
-                        "0000" +
-                        "4432",
+                        web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, "D2"]),
                         {from: owner})
                         .should.be.eventually.rejectedWith("Schain name is not available");
                 });
@@ -605,76 +539,124 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
             const nodesCount = 4;
             for (const index of Array.from(Array(nodesCount).keys())) {
                 const hexIndex = ("0" + index.toString(16)).slice(-2);
-                await nodesFunctionality.createNode(validator,
-                    "0x00" +
-                    "2161" +
-                    "0000" +
-                    "7f0000" + hexIndex +
-                    "7f0000" + hexIndex +
-                    "1122334455667788990011223344556677889900112233445566778899001122" +
-                    "1122334455667788990011223344556677889900112233445566778899001122" +
-                    "d2" + hexIndex);
+                await nodes.createNode(validator,
+                    {
+                        port: 8545,
+                        nonce: 0,
+                        ip: "0x7f0000" + hexIndex,
+                        publicIp: "0x7f0000" + hexIndex,
+                        publicKey: "0x1122334455667788990011223344556677889900112233445566778899001122" +
+                                     "1122334455667788990011223344556677889900112233445566778899001122",
+                        name: "D2-" + hexIndex
+                    });
             }
             await schainsFunctionality.addSchain(
                 holder,
                 deposit,
-                "0x10" +
-                "0000000000000000000000000000000000000000000000000000000000000005" +
-                "05" +
-                "0000" +
-                "6432",
+                web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d2"]),
                 {from: owner});
+            await schainsData.setPublicKey(
+                web3.utils.soliditySha3("d2"),
+                0,
+                0,
+                0,
+                0,
+            );
+            await skaleDKG.deleteChannel(web3.utils.soliditySha3("d2"));
             await schainsFunctionality.addSchain(
                 holder,
                 deposit,
-                "0x10" +
-                "0000000000000000000000000000000000000000000000000000000000000005" +
-                "05" +
-                "0000" +
-                "6433",
+                web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d3"]),
                 {from: owner});
-            await nodesFunctionality.createNode(validator,
-                "0x00" +
-                "2161" +
-                "0000" +
-                "7f000010" +
-                "7f000010" +
-                "1122334455667788990011223344556677889900112233445566778899001122" +
-                "1122334455667788990011223344556677889900112233445566778899001122" +
-                "d210");
-            await nodesFunctionality.createNode(validator,
-                "0x00" +
-                "2161" +
-                "0000" +
-                "7f000011" +
-                "7f000011" +
-                "1122334455667788990011223344556677889900112233445566778899001122" +
-                "1122334455667788990011223344556677889900112233445566778899001122" +
-                "d211");
+            await schainsData.setPublicKey(
+                web3.utils.soliditySha3("d3"),
+                0,
+                0,
+                0,
+                0,
+            );
+            await skaleDKG.deleteChannel(web3.utils.soliditySha3("d3"));
+            await nodes.createNode(validator,
+                {
+                    port: 8545,
+                    nonce: 0,
+                    ip: "0x7f000010",
+                    publicIp: "0x7f000010",
+                    publicKey: "0x1122334455667788990011223344556677889900112233445566778899001122" +
+                                 "1122334455667788990011223344556677889900112233445566778899001122",
+                    name: "D2-10"
+                });
+            await nodes.createNode(validator,
+                {
+                    port: 8545,
+                    nonce: 0,
+                    ip: "0x7f000011",
+                    publicIp: "0x7f000011",
+                    publicKey: "0x1122334455667788990011223344556677889900112233445566778899001122" +
+                                 "1122334455667788990011223344556677889900112233445566778899001122",
+                    name: "D2-11"
+                });
 
         });
 
         it("should rotate 2 nodes consistently", async () => {
             await skaleManager.nodeExit(0, {from: validator});
+            const res1 = await schainsData.getNodesInGroup(web3.utils.soliditySha3("d2"));
+            const res2 = await schainsData.getNodesInGroup(web3.utils.soliditySha3("d3"));
+            const nodeRot = res1[3];
+            const res = await skaleDKG.isBroadcastPossible(
+                web3.utils.soliditySha3("d3"), nodeRot);
+            await schainsData.setPublicKey(
+                web3.utils.soliditySha3("d3"),
+                0,
+                0,
+                0,
+                0,
+            );
+            await skaleDKG.deleteChannel(web3.utils.soliditySha3("d3"));
             await skaleManager.nodeExit(1, {from: validator})
-                .should.be.eventually.rejectedWith("Node cannot rotate on Schain d2, occupied by Node 0");
+                .should.be.eventually.rejectedWith("Node cannot rotate on Schain d3, occupied by Node 0");
             await skaleManager.nodeExit(0, {from: validator});
-            nodeStatus = (await nodesData.getNodeStatus(0)).toNumber();
+            await schainsData.setPublicKey(
+                web3.utils.soliditySha3("d2"),
+                0,
+                0,
+                0,
+                0,
+            );
+            await skaleDKG.deleteChannel(web3.utils.soliditySha3("d2"));
+            nodeStatus = (await nodes.getNodeStatus(0)).toNumber();
             assert.equal(nodeStatus, LEFT);
             await skaleManager.nodeExit(0, {from: validator})
                 .should.be.eventually.rejectedWith("Node is not Leaving");
 
-            nodeStatus = (await nodesData.getNodeStatus(1)).toNumber();
+            nodeStatus = (await nodes.getNodeStatus(1)).toNumber();
             assert.equal(nodeStatus, ACTIVE);
             await skaleManager.nodeExit(1, {from: validator})
-                .should.be.eventually.rejectedWith("Node cannot rotate on Schain d2, occupied by Node 0");
+                .should.be.eventually.rejectedWith("Node cannot rotate on Schain d3, occupied by Node 0");
             skipTime(web3, 43260);
 
             await skaleManager.nodeExit(1, {from: validator});
-            nodeStatus = (await nodesData.getNodeStatus(1)).toNumber();
+            await schainsData.setPublicKey(
+                web3.utils.soliditySha3("d3"),
+                0,
+                0,
+                0,
+                0,
+            );
+            await skaleDKG.deleteChannel(web3.utils.soliditySha3("d3"));
+            nodeStatus = (await nodes.getNodeStatus(1)).toNumber();
             assert.equal(nodeStatus, LEAVING);
             await skaleManager.nodeExit(1, {from: validator});
-            nodeStatus = (await nodesData.getNodeStatus(1)).toNumber();
+            await schainsData.setPublicKey(
+                web3.utils.soliditySha3("d2"),
+                0,
+                0,
+                0,
+                0,
+            );
+            await skaleDKG.deleteChannel(web3.utils.soliditySha3("d2"));
+            nodeStatus = (await nodes.getNodeStatus(1)).toNumber();
             assert.equal(nodeStatus, LEFT);
             await skaleManager.nodeExit(1, {from: validator})
                 .should.be.eventually.rejectedWith("Node is not Leaving");
@@ -682,39 +664,160 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
 
         it("should allow to rotate if occupied node didn't rotated for 12 hours", async () => {
             await skaleManager.nodeExit(0, {from: validator});
+            await schainsData.setPublicKey(
+                web3.utils.soliditySha3("d3"),
+                0,
+                0,
+                0,
+                0,
+            );
+            await skaleDKG.deleteChannel(web3.utils.soliditySha3("d3"));
             await skaleManager.nodeExit(1, {from: validator})
-                .should.be.eventually.rejectedWith("Node cannot rotate on Schain d2, occupied by Node 0");
+                .should.be.eventually.rejectedWith("Node cannot rotate on Schain d3, occupied by Node 0");
             skipTime(web3, 43260);
             await skaleManager.nodeExit(1, {from: validator});
+            await schainsData.setPublicKey(
+                web3.utils.soliditySha3("d3"),
+                0,
+                0,
+                0,
+                0,
+            );
+            await skaleDKG.deleteChannel(web3.utils.soliditySha3("d3"));
 
             await skaleManager.nodeExit(0, {from: validator})
-                .should.be.eventually.rejectedWith("Node cannot rotate on Schain d3, occupied by Node 1");
+                .should.be.eventually.rejectedWith("Node cannot rotate on Schain d2, occupied by Node 1");
 
-            nodeStatus = (await nodesData.getNodeStatus(1)).toNumber();
+            nodeStatus = (await nodes.getNodeStatus(1)).toNumber();
             assert.equal(nodeStatus, LEAVING);
             await skaleManager.nodeExit(1, {from: validator});
-            nodeStatus = (await nodesData.getNodeStatus(1)).toNumber();
+            nodeStatus = (await nodes.getNodeStatus(1)).toNumber();
             assert.equal(nodeStatus, LEFT);
         });
 
         it("should rotate on schain that previously was deleted", async () => {
             const deposit = await schainsFunctionality.getSchainPrice(5, 5);
             await skaleManager.nodeExit(0, {from: validator});
+            await schainsData.setPublicKey(
+                web3.utils.soliditySha3("d3"),
+                0,
+                0,
+                0,
+                0,
+            );
+            await skaleDKG.deleteChannel(web3.utils.soliditySha3("d3"));
             await skaleManager.nodeExit(0, {from: validator});
+            await schainsData.setPublicKey(
+                web3.utils.soliditySha3("d2"),
+                0,
+                0,
+                0,
+                0,
+            );
+            await skaleDKG.deleteChannel(web3.utils.soliditySha3("d2"));
             await skaleManager.deleteSchainByRoot("d2", {from: owner});
             await skaleManager.deleteSchainByRoot("d3", {from: owner});
             await schainsFunctionality.addSchain(
                 holder,
                 deposit,
-                "0x10" +
-                "0000000000000000000000000000000000000000000000000000000000000005" +
-                "05" +
-                "0000" +
-                "6432",
+                web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d2"]),
                 {from: owner});
+            await schainsData.setPublicKey(
+                web3.utils.soliditySha3("d2"),
+                0,
+                0,
+                0,
+                0,
+            );
+            await skaleDKG.deleteChannel(web3.utils.soliditySha3("d2"));
             const nodesInGroupBN = await schainsData.getNodesInGroup(web3.utils.soliditySha3("d2"));
             const nodeInGroup = nodesInGroupBN.map((value: BigNumber) => value.toNumber())[0];
             await skaleManager.nodeExit(nodeInGroup, {from: validator});
+        });
+
+        it("should be possible to send broadcast", async () => {
+            let res = await skaleDKG.isChannelOpened(web3.utils.soliditySha3("d3"));
+            assert.equal(res, false);
+            await skaleManager.nodeExit(0, {from: validator});
+            const res1 = await schainsData.getNodesInGroup(web3.utils.soliditySha3("d3"));
+            const nodeRot = res1[3];
+            res = await skaleDKG.isChannelOpened(web3.utils.soliditySha3("d3"));
+            assert.equal(res, true);
+            res = await skaleDKG.isBroadcastPossible(web3.utils.soliditySha3("d3"), nodeRot, {from: validator});
+            assert.equal(res, true);
+        });
+
+        it("should revert if dkg not finished", async () => {
+            let res = await skaleDKG.isChannelOpened(web3.utils.soliditySha3("d3"));
+            assert.equal(res, false);
+            await skaleManager.nodeExit(0, {from: validator});
+            const res1 = await schainsData.getNodesInGroup(web3.utils.soliditySha3("d3"));
+            const nodeRot = res1[3];
+            res = await skaleDKG.isChannelOpened(web3.utils.soliditySha3("d3"));
+            assert.equal(res, true);
+            res = await skaleDKG.isBroadcastPossible(web3.utils.soliditySha3("d3"), nodeRot, {from: validator});
+            assert.equal(res, true);
+
+            await skaleManager.nodeExit(1, {from: validator})
+                .should.be.eventually.rejectedWith("DKG proccess did not finish on schain d3");
+            await skaleManager.nodeExit(0, {from: validator});
+
+            skipTime(web3, 43260);
+
+            await skaleManager.nodeExit(1, {from: validator})
+                .should.be.eventually.rejectedWith("DKG proccess did not finish on schain d3");
+        });
+
+        it("should be possible to send broadcast", async () => {
+            let res = await skaleDKG.isChannelOpened(web3.utils.soliditySha3("d3"));
+            assert.equal(res, false);
+            await skaleManager.nodeExit(0, {from: validator});
+            const res1 = await schainsData.getNodesInGroup(web3.utils.soliditySha3("d3"));
+            const nodeRot = res1[3];
+            res = await skaleDKG.isChannelOpened(web3.utils.soliditySha3("d3"));
+            assert.equal(res, true);
+            res = await skaleDKG.isBroadcastPossible(web3.utils.soliditySha3("d3"), nodeRot, {from: validator});
+            assert.equal(res, true);
+            skipTime(web3, 43260);
+            await skaleManager.nodeExit(0, {from: validator});
+
+            await skaleManager.nodeExit(1, {from: validator})
+                .should.be.eventually.rejectedWith("DKG proccess did not finish on schain d3");
+        });
+
+        it("should be possible to send broadcast", async () => {
+            let res = await skaleDKG.isChannelOpened(web3.utils.soliditySha3("d3"));
+            assert.equal(res, false);
+            await skaleManager.nodeExit(0, {from: validator});
+            const res1 = await schainsData.getNodesInGroup(web3.utils.soliditySha3("d3"));
+            const nodeRot = res1[3];
+            res = await skaleDKG.isChannelOpened(web3.utils.soliditySha3("d3"));
+            assert.equal(res, true);
+            res = await skaleDKG.isBroadcastPossible(web3.utils.soliditySha3("d3"), nodeRot, {from: validator});
+            assert.equal(res, true);
+            await schainsData.setPublicKey(
+                web3.utils.soliditySha3("d3"),
+                0,
+                0,
+                0,
+                0,
+            );
+            await skaleDKG.deleteChannel(web3.utils.soliditySha3("d3"));
+            await skaleManager.nodeExit(1, {from: validator})
+                .should.be.eventually.rejectedWith("Node cannot rotate on Schain d3, occupied by Node 0");
+            await skaleManager.nodeExit(0, {from: validator});
+            await schainsData.setPublicKey(
+                web3.utils.soliditySha3("d2"),
+                0,
+                0,
+                0,
+                0,
+            );
+            await skaleDKG.deleteChannel(web3.utils.soliditySha3("d2"));
+
+            skipTime(web3, 43260);
+
+            await skaleManager.nodeExit(1, {from: validator});
         });
     });
 

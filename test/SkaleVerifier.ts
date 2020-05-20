@@ -1,87 +1,44 @@
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
 import { ContractManagerInstance,
-         NodesFunctionalityInstance,
+         NodesInstance,
          SchainsDataInstance,
          SchainsFunctionalityInstance,
          SkaleVerifierInstance,
-         ValidatorServiceInstance} from "../types/truffle-contracts";
+         ValidatorServiceInstance } from "../types/truffle-contracts";
 
-import { deployContractManager } from "./utils/deploy/contractManager";
-import { deployValidatorService } from "./utils/deploy/delegation/validatorService";
-import { deployNodesFunctionality } from "./utils/deploy/nodesFunctionality";
-import { deploySchainsData } from "./utils/deploy/schainsData";
-import { deploySchainsFunctionality } from "./utils/deploy/schainsFunctionality";
-import { deploySkaleVerifier } from "./utils/deploy/skaleVerifier";
+import { deployContractManager } from "./tools/deploy/contractManager";
+import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
+import { deployNodes } from "./tools/deploy/nodes";
+import { deploySchainsData } from "./tools/deploy/schainsData";
+import { deploySchainsFunctionality } from "./tools/deploy/schainsFunctionality";
+import { deploySkaleVerifier } from "./tools/deploy/skaleVerifier";
 chai.should();
 chai.use(chaiAsPromised);
 
 contract("SkaleVerifier", ([validator1, owner, developer, hacker]) => {
     let contractManager: ContractManagerInstance;
-    let nodesFunctionality: NodesFunctionalityInstance;
     let schainsData: SchainsDataInstance;
     let schainsFunctionality: SchainsFunctionalityInstance;
     let skaleVerifier: SkaleVerifierInstance;
     let validatorService: ValidatorServiceInstance;
+    let nodes: NodesInstance;
 
     beforeEach(async () => {
         contractManager = await deployContractManager();
 
-        nodesFunctionality = await deployNodesFunctionality(contractManager);
+        nodes = await deployNodes(contractManager);
         validatorService = await deployValidatorService(contractManager);
         schainsData = await deploySchainsData(contractManager);
         schainsFunctionality = await deploySchainsFunctionality(contractManager);
         skaleVerifier = await deploySkaleVerifier(contractManager);
 
-        validatorService.registerValidator("D2", "D2 is even", 0, 0, {from: validator1});
+        await validatorService.registerValidator("D2", "D2 is even", 0, 0, {from: validator1});
     });
 
     describe("when skaleVerifier contract is activated", async () => {
 
         it("should verify valid signatures with valid data", async () => {
-            // const signa = new BigNumber(
-            //     "12246224789371979764448582489488838691424696526644556990733838563729335147344"
-            // );
-            // const signb = new BigNumber(
-            //     "10528945047297938115197671113541113701111057011888716549967014037021507698430"
-            // );
-            //
-            // const hash = "0x3733cd977ff8eb18b987357e22ced99f46097f31ecb239e878ae63760e83e4d5";
-            //
-            // const counter = 2;
-            //
-            // const hasha = new BigNumber(
-            //     "8330398017606383362778967296125384542293285683930042644463579736059414477560"
-            // );
-            // const hashb = new BigNumber(
-            //     "15983567607269484412063625758442416507299349120463367396521067445601767939624"
-            // );
-            //
-            // const pkx1 = new BigNumber(
-            //     "7400107192966145181399535745499335165347120346963667754929581055788152472106"
-            // );
-            // const pky1 = new BigNumber(
-            //     "18353520504408127630771487258260700969877478367957411410017068328387547117081"
-            // );
-            // const pkx2 = new BigNumber(
-            //     "4917434737461214318927199341232485422238948576908897268618382214023701714282"
-            // );
-            // const pky2 = new BigNumber(
-            //     "15295158583345622866054024228469218054851674208376922650223378778985088227953"
-            // );
-
-            // const isVerified = await skaleVerifier.verify(
-            //     signa,
-            //     signb,
-            //     hash,
-            //     counter,
-            //     hasha,
-            //     hashb,
-            //     pkx1,
-            //     pky1,
-            //     pkx2,
-            //     pky2
-            // );
             const isVerified = await skaleVerifier.verify(
                 "178325537405109593276798394634841698946852714038246117383766698579865918287",
                 "493565443574555904019191451171395204672818649274520396086461475162723833781",
@@ -185,15 +142,16 @@ contract("SkaleVerifier", ([validator1, owner, developer, hacker]) => {
             const nodesCount = 2;
             for (const index of Array.from(Array(nodesCount).keys())) {
                 const hexIndex = ("0" + index.toString(16)).slice(-2);
-                await nodesFunctionality.createNode(validator1,
-                    "0x00" +
-                    "2161" +
-                    "0000" +
-                    "7f0000" + hexIndex +
-                    "7f0000" + hexIndex +
-                    "1122334455667788990011223344556677889900112233445566778899001122" +
-                    "1122334455667788990011223344556677889900112233445566778899001122" +
-                    "d2" + hexIndex,
+                await nodes.createNode(validator1,
+                    {
+                        port: 8545,
+                        nonce: 0,
+                        ip: "0x7f0000" + hexIndex,
+                        publicIp: "0x7f0000" + hexIndex,
+                        publicKey: "0x1122334455667788990011223344556677889900112233445566778899001122" +
+                                     "1122334455667788990011223344556677889900112233445566778899001122",
+                        name: "d2" + hexIndex
+                    },
                     {from: validator1});
             }
 
@@ -202,11 +160,7 @@ contract("SkaleVerifier", ([validator1, owner, developer, hacker]) => {
             await schainsFunctionality.addSchain(
                 validator1,
                 deposit,
-                "0x10" +
-                "0000000000000000000000000000000000000000000000000000000000000005" +
-                "04" +
-                "0000" +
-                "426f62",
+                web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, "Bob"]),
                 {from: validator1});
 
             await schainsData.setPublicKey(

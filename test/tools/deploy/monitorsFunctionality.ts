@@ -2,7 +2,7 @@ import { ContractManagerInstance, MonitorsFunctionalityContract, MonitorsFunctio
 import { deployConstantsHolder } from "./constantsHolder";
 import { deployFunctionFactory } from "./factory";
 import { deployMonitorsData } from "./monitorsData";
-import { deployNodesData } from "./nodesData";
+import { deployNodes } from "./nodes";
 import { deploySkaleVerifier } from "./skaleVerifier";
 
 const deployMonitorsFunctionality: (contractManager: ContractManagerInstance) => Promise<MonitorsFunctionalityInstance>
@@ -10,7 +10,7 @@ const deployMonitorsFunctionality: (contractManager: ContractManagerInstance) =>
                             async (contractManager: ContractManagerInstance) => {
                                 await deployConstantsHolder(contractManager);
                                 await deployMonitorsData(contractManager);
-                                await deployNodesData(contractManager);
+                                await deployNodes(contractManager);
                                 await deploySkaleVerifier(contractManager);
                             });
 

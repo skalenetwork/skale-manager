@@ -1,10 +1,11 @@
-pragma solidity ^0.5.3;
+pragma solidity 0.6.6;
 
 /**
  * @title Constants - interface of Constants contract
  * Contains only needed functions for current contract
  */
 interface IConstants {
+    function setLastTimeOverloaded() external;
     function NODE_DEPOSIT() external view returns (uint);
     function FRACTIONAL_FACTOR() external view returns (uint);
     function FULL_FACTOR() external view returns (uint);
@@ -19,11 +20,10 @@ interface IConstants {
     function NUMBER_OF_NODES_FOR_MEDIUM_TEST_SCHAIN() external view returns (uint);
     function lastTimeUnderloaded() external view returns (uint);
     function lastTimeOverloaded() external view returns (uint);
-    function setLastTimeOverloaded() external;
     function checkTime() external view returns (uint8);
     function rewardPeriod() external view returns (uint32);
     function allowableLatency() external view returns (uint32);
-    function deltaPeriod() external view returns (uint);
+    function deltaPeriod() external view returns (uint32);
     function rotationDelay() external view returns (uint);
     function SIX_YEARS() external view returns (uint32);
     function NUMBER_OF_MONITORS() external view returns (uint);

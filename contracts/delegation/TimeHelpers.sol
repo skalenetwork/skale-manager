@@ -17,7 +17,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity ^0.5.3;
+pragma solidity 0.6.6;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
 
@@ -27,106 +27,36 @@ import "../thirdparty/BokkyPooBahsDateTimeLibrary.sol";
 contract TimeHelpers {
     using SafeMath for uint;
 
-    uint constant ZERO_YEAR = 2020;
+    uint constant private _ZERO_YEAR = 2020;
 
-    function getNextMonthStart() external view returns (uint timestamp) {
-        return getNextMonthStartFromDate(now);
-    }
-
-    function calculateDelegationEndTime(
-        uint requestTime,
-        uint delegationPeriod,
-        uint redelegationPeriod
-    )
-        external
-        view
-        returns (uint timestamp)
-    {
-        uint year;
-        uint month;
-        (year, month, ) = BokkyPooBahsDateTimeLibrary.timestampToDate(requestTime);
-
-        month = month.add(delegationPeriod).add(1);
-        if (month > 12) {
-            year = year.add(month.sub(1).div(12));
-            month = month.sub(1).mod(12).add(1);
-        }
-        timestamp = BokkyPooBahsDateTimeLibrary.timestampFromDate(year, month, 1);
-
-        if (now > timestamp) {
-            uint currentYear;
-            uint currentMonth;
-            (currentYear, currentMonth, ) = BokkyPooBahsDateTimeLibrary.timestampToDate(now);
-            currentMonth = currentMonth.add(currentYear.sub(year).mul(12));
-
-            month = month.add(
-                currentMonth.sub(month).div(redelegationPeriod).add(1).mul(redelegationPeriod));
-            if (month > 12) {
-                year = year.add(month.sub(1).div(12));
-                month = month.sub(1).mod(12).add(1);
-            }
-            timestamp = BokkyPooBahsDateTimeLibrary.timestampFromDate(year, month, 1);
-        }
-    }
-
-    function calculateProofOfUseLockEndTime(uint month, uint lockUpPeriodDays) external pure returns (uint timestamp) {
+    function calculateProofOfUseLockEndTime(uint month, uint lockUpPeriodDays) external view returns (uint timestamp) {
         timestamp = BokkyPooBahsDateTimeLibrary.addDays(monthToTimestamp(month), lockUpPeriodDays);
     }
 
     function addMonths(uint fromTimestamp, uint n) external pure returns (uint) {
-        uint year;
-        uint month;
-        uint day;
-        uint hour;
-        uint minute;
-        uint second;
-        (year, month, day, hour, minute, second) = BokkyPooBahsDateTimeLibrary.timestampToDateTime(fromTimestamp);
-        month = month.add(n);
-        if (month > 12) {
-            year = year.add(month.sub(1).div(12));
-            month = month.sub(1).mod(12).add(1);
-        }
-        return BokkyPooBahsDateTimeLibrary.timestampFromDateTime(
-            year,
-            month,
-            day,
-            hour,
-            minute,
-            second);
+        return BokkyPooBahsDateTimeLibrary.addMonths(fromTimestamp, n);
     }
 
-    function getCurrentMonth() external view returns (uint) {
+    function getCurrentMonth() external view virtual returns (uint) {
         return timestampToMonth(now);
     }
 
-    function monthToTimestamp(uint _month) public pure returns (uint timestamp) {
-        uint year = ZERO_YEAR;
+    function timestampToMonth(uint timestamp) public view virtual returns (uint) {
+        uint year;
+        uint month;
+        (year, month, ) = BokkyPooBahsDateTimeLibrary.timestampToDate(timestamp);
+        require(year >= _ZERO_YEAR, "Timestamp is too far in the past");
+        month = month.sub(1).add(year.sub(_ZERO_YEAR).mul(12));
+        require(month > 0, "Timestamp is too far in the past");
+        return month;
+    }
+
+    function monthToTimestamp(uint _month) public view virtual returns (uint timestamp) {
+        uint year = _ZERO_YEAR;
         uint month = _month;
         year = year.add(month.div(12));
         month = month.mod(12);
         month = month.add(1);
         return BokkyPooBahsDateTimeLibrary.timestampFromDate(year, month, 1);
-    }
-
-    function timestampToMonth(uint timestamp) public pure returns (uint) {
-        uint year;
-        uint month;
-        (year, month, ) = BokkyPooBahsDateTimeLibrary.timestampToDate(timestamp);
-        require(year >= ZERO_YEAR, "Timestamp is too far in the past");
-        month = month.sub(1).add(year.sub(ZERO_YEAR).mul(12));
-        require(month > 0, "Timestamp is too far in the past");
-        return month;
-    }
-
-    function getNextMonthStartFromDate(uint dateTimestamp) public pure returns (uint timestamp) {
-        uint year;
-        uint month;
-        (year, month, ) = BokkyPooBahsDateTimeLibrary.timestampToDate(dateTimestamp);
-        month = month.add(1);
-        if (month > 12) {
-            year = year.add(1);
-            month = 1;
-        }
-        timestamp = BokkyPooBahsDateTimeLibrary.timestampFromDate(year, month, 1);
     }
 }

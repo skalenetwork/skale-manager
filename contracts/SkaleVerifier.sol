@@ -17,24 +17,25 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity ^0.5.3;
+pragma solidity 0.6.6;
 
 import "./Permissions.sol";
 import "./interfaces/IGroupsData.sol";
+import "./utils/Precompiled.sol";
 
 
 contract SkaleVerifier is Permissions {
 
 
-    uint constant P = 21888242871839275222246405745257275088696311157297823662689037894645226208583;
+    uint constant private _P = 21888242871839275222246405745257275088696311157297823662689037894645226208583;
 
-    uint constant G2A = 10857046999023057135944570762232829481370756359578518086990519993285655852781;
-    uint constant G2B = 11559732032986387107991004021392285783925812861821192530917403151452391805634;
-    uint constant G2C = 8495653923123431417604973247489272438418190587263600148770280649306958101930;
-    uint constant G2D = 4082367875863433681332203403145435568316851327593401208105741076214120093531;
+    uint constant private _G2A = 10857046999023057135944570762232829481370756359578518086990519993285655852781;
+    uint constant private _G2B = 11559732032986387107991004021392285783925812861821192530917403151452391805634;
+    uint constant private _G2C = 8495653923123431417604973247489272438418190587263600148770280649306958101930;
+    uint constant private _G2D = 4082367875863433681332203403145435568316851327593401208105741076214120093531;
 
-    uint constant TWISTBX = 19485874751759354771024239261021720505790618469301721065564631296452457478373;
-    uint constant TWISTBY = 266929791119991161246907387137283842545076965332900288569378510910307636690;
+    uint constant private _TWISTBX = 19485874751759354771024239261021720505790618469301721065564631296452457478373;
+    uint constant private _TWISTBY = 266929791119991161246907387137283842545076965332900288569378510910307636690;
 
     struct Fp2 {
         uint x;
@@ -54,7 +55,7 @@ contract SkaleVerifier is Permissions {
         view
         returns (bool)
     {
-        if (!checkHashToGroupWithHelper(
+        if (!_checkHashToGroupWithHelper(
             hash,
             counter,
             hashA,
@@ -65,7 +66,7 @@ contract SkaleVerifier is Permissions {
             return false;
         }
 
-        address schainsDataAddress = contractManager.getContract("SchainsData");
+        address schainsDataAddress = _contractManager.getContract("SchainsData");
         (uint pkA, uint pkB, uint pkC, uint pkD) = IGroupsData(schainsDataAddress).getGroupsPublicKey(
             keccak256(abi.encodePacked(schainName))
         );
@@ -83,7 +84,7 @@ contract SkaleVerifier is Permissions {
         );
     }
 
-    function initialize(address newContractsAddress) public initializer {
+    function initialize(address newContractsAddress) public override initializer {
         Permissions.initialize(newContractsAddress);
     }
 
@@ -99,7 +100,7 @@ contract SkaleVerifier is Permissions {
         uint pkC,
         uint pkD) public view returns (bool)
     {
-        if (!checkHashToGroupWithHelper(
+        if (!_checkHashToGroupWithHelper(
             hash,
             counter,
             hashA,
@@ -112,40 +113,33 @@ contract SkaleVerifier is Permissions {
 
         uint newSignB;
         if (!(signA == 0 && signB == 0)) {
-            newSignB = P.sub((signB % P));
+            newSignB = _P.sub((signB % _P));
         } else {
             newSignB = signB;
         }
 
-        require(isG1(signA, newSignB), "Sign not in G1");
-        require(isG1(hashA, hashB), "Hash not in G1");
+        require(_isG1(signA, newSignB), "Sign not in G1");
+        require(_isG1(hashA, hashB), "Hash not in G1");
 
-        require(isG2(Fp2({x: G2A, y: G2B}), Fp2({x: G2C, y: G2D})), "G2.one not in G2");
-        require(isG2(Fp2({x: pkA, y: pkB}), Fp2({x: pkC, y: pkD})), "Public Key not in G2");
+        require(_isG2(Fp2({x: _G2A, y: _G2B}), Fp2({x: _G2C, y: _G2D})), "G2.one not in G2");
+        require(_isG2(Fp2({x: pkA, y: pkB}), Fp2({x: pkC, y: pkD})), "Public Key not in G2");
 
-        bool success;
-        uint[12] memory inputToPairing;
-        inputToPairing[0] = signA;
-        inputToPairing[1] = newSignB;
-        inputToPairing[2] = G2B;
-        inputToPairing[3] = G2A;
-        inputToPairing[4] = G2D;
-        inputToPairing[5] = G2C;
-        inputToPairing[6] = hashA;
-        inputToPairing[7] = hashB;
-        inputToPairing[8] = pkB;
-        inputToPairing[9] = pkA;
-        inputToPairing[10] = pkD;
-        inputToPairing[11] = pkC;
-        uint[1] memory out;
-        assembly {
-            success := staticcall(not(0), 8, inputToPairing, mul(12, 0x20), out, 0x20)
-        }
-        require(success, "Pairing check failed");
-        return out[0] != 0;
+        return Precompiled.bn256Pairing(
+            signA,
+            newSignB,
+            _G2B,
+            _G2A,
+            _G2D,
+            _G2C,
+            hashA,
+            hashB,
+            pkB,
+            pkA,
+            pkD,
+            pkC);
     }
 
-    function checkHashToGroupWithHelper(
+    function _checkHashToGroupWithHelper(
         bytes32 hash,
         uint counter,
         uint hashA,
@@ -155,11 +149,11 @@ contract SkaleVerifier is Permissions {
         pure
         returns (bool)
     {
-        uint xCoord = uint(hash) % P;
-        xCoord = (xCoord.add(counter)) % P;
+        uint xCoord = uint(hash) % _P;
+        xCoord = (xCoord.add(counter)) % _P;
 
-        uint ySquared = addmod(mulmod(mulmod(xCoord, xCoord, P), xCoord, P), 3, P);
-        if (hashB < P / 2 || mulmod(hashB, hashB, P) != ySquared || xCoord != hashA) {
+        uint ySquared = addmod(mulmod(mulmod(xCoord, xCoord, _P), xCoord, _P), 3, _P);
+        if (hashB < _P / 2 || mulmod(hashB, hashB, _P) != ySquared || xCoord != hashA) {
             return false;
         }
 
@@ -168,92 +162,75 @@ contract SkaleVerifier is Permissions {
 
     // Fp2 operations
 
-    function addFp2(Fp2 memory a, Fp2 memory b) internal pure returns (Fp2 memory) {
-        return Fp2({ x: addmod(a.x, b.x, P), y: addmod(a.y, b.y, P) });
+    function _addFp2(Fp2 memory a, Fp2 memory b) internal pure returns (Fp2 memory) {
+        return Fp2({ x: addmod(a.x, b.x, _P), y: addmod(a.y, b.y, _P) });
     }
 
-    function scalarMulFp2(uint scalar, Fp2 memory a) internal pure returns (Fp2 memory) {
-        return Fp2({ x: mulmod(scalar, a.x, P), y: mulmod(scalar, a.y, P) });
+    function _scalarMulFp2(uint scalar, Fp2 memory a) internal pure returns (Fp2 memory) {
+        return Fp2({ x: mulmod(scalar, a.x, _P), y: mulmod(scalar, a.y, _P) });
     }
 
-    function minusFp2(Fp2 memory a, Fp2 memory b) internal pure returns (Fp2 memory) {
+    function _minusFp2(Fp2 memory a, Fp2 memory b) internal pure returns (Fp2 memory) {
         uint first;
         uint second;
         if (a.x >= b.x) {
-            first = addmod(a.x, P.sub(b.x), P);
+            first = addmod(a.x, _P.sub(b.x), _P);
         } else {
-            first = P.sub(addmod(b.x, P.sub(a.x), P));
+            first = _P.sub(addmod(b.x, _P.sub(a.x), _P));
         }
         if (a.y >= b.y) {
-            second = addmod(a.y, P.sub(b.y), P);
+            second = addmod(a.y, _P.sub(b.y), _P);
         } else {
-            second = P.sub(addmod(b.y, P.sub(a.y), P));
+            second = _P.sub(addmod(b.y, _P.sub(a.y), _P));
         }
         return Fp2({ x: first, y: second });
     }
 
-    function mulFp2(Fp2 memory a, Fp2 memory b) internal pure returns (Fp2 memory) {
-        uint aA = mulmod(a.x, b.x, P);
-        uint bB = mulmod(a.y, b.y, P);
+    function _mulFp2(Fp2 memory a, Fp2 memory b) internal pure returns (Fp2 memory) {
+        uint aA = mulmod(a.x, b.x, _P);
+        uint bB = mulmod(a.y, b.y, _P);
         return Fp2({
-            x: addmod(aA, mulmod(P - 1, bB, P), P),
-            y: addmod(mulmod(addmod(a.x, a.y, P), addmod(b.x, b.y, P), P), P.sub(addmod(aA, bB, P)), P)
+            x: addmod(aA, mulmod(_P - 1, bB, _P), _P),
+            y: addmod(mulmod(addmod(a.x, a.y, _P), addmod(b.x, b.y, _P), _P), _P.sub(addmod(aA, bB, _P)), _P)
         });
     }
 
-    function squaredFp2(Fp2 memory a) internal pure returns (Fp2 memory) {
-        uint ab = mulmod(a.x, a.y, P);
-        uint mult = mulmod(addmod(a.x, a.y, P), addmod(a.x, mulmod(P - 1, a.y, P), P), P);
-        return Fp2({ x: mult, y: addmod(ab, ab, P) });
+    function _squaredFp2(Fp2 memory a) internal pure returns (Fp2 memory) {
+        uint ab = mulmod(a.x, a.y, _P);
+        uint mult = mulmod(addmod(a.x, a.y, _P), addmod(a.x, mulmod(_P - 1, a.y, _P), _P), _P);
+        return Fp2({ x: mult, y: addmod(ab, ab, _P) });
     }
 
-    function inverseFp2(Fp2 memory a) internal view returns (Fp2 memory x) {
-        uint t0 = mulmod(a.x, a.x, P);
-        uint t1 = mulmod(a.y, a.y, P);
-        uint t2 = mulmod(P - 1, t1, P);
+    function _inverseFp2(Fp2 memory a) internal view returns (Fp2 memory x) {
+        uint t0 = mulmod(a.x, a.x, _P);
+        uint t1 = mulmod(a.y, a.y, _P);
+        uint t2 = mulmod(_P - 1, t1, _P);
         if (t0 >= t2) {
-            t2 = addmod(t0, P.sub(t2), P);
+            t2 = addmod(t0, _P.sub(t2), _P);
         } else {
-            t2 = P.sub(addmod(t2, P.sub(t0), P));
+            t2 = _P.sub(addmod(t2, _P.sub(t0), _P));
         }
-        uint t3 = bigModExp(t2, P - 2);
-        x.x = mulmod(a.x, t3, P);
-        x.y = P.sub(mulmod(a.y, t3, P));
+        uint t3 = Precompiled.bigModExp(t2, _P - 2, _P);
+        x.x = mulmod(a.x, t3, _P);
+        x.y = _P.sub(mulmod(a.y, t3, _P));
     }
 
     // End of Fp2 operations
 
-    function isG1(uint x, uint y) internal pure returns (bool) {
-        return mulmod(y, y, P) == addmod(mulmod(mulmod(x, x, P), x, P), 3, P);
+    function _isG1(uint x, uint y) internal pure returns (bool) {
+        return mulmod(y, y, _P) == addmod(mulmod(mulmod(x, x, _P), x, _P), 3, _P);
     }
 
-    function isG2(Fp2 memory x, Fp2 memory y) internal pure returns (bool) {
-        if (isG2Zero(x, y)) {
+    function _isG2(Fp2 memory x, Fp2 memory y) internal pure returns (bool) {
+        if (_isG2Zero(x, y)) {
             return true;
         }
-        Fp2 memory squaredY = squaredFp2(y);
-        Fp2 memory res = minusFp2(minusFp2(squaredY, mulFp2(squaredFp2(x), x)), Fp2({x: TWISTBX, y: TWISTBY}));
+        Fp2 memory squaredY = _squaredFp2(y);
+        Fp2 memory res = _minusFp2(_minusFp2(squaredY, _mulFp2(_squaredFp2(x), x)), Fp2({x: _TWISTBX, y: _TWISTBY}));
         return res.x == 0 && res.y == 0;
     }
 
-    function isG2Zero(Fp2 memory x, Fp2 memory y) internal pure returns (bool) {
+    function _isG2Zero(Fp2 memory x, Fp2 memory y) internal pure returns (bool) {
         return x.x == 0 && x.y == 0 && y.x == 1 && y.y == 0;
-    }
-
-    function bigModExp(uint base, uint power) internal view returns (uint) {
-        uint[6] memory inputToBigModExp;
-        inputToBigModExp[0] = 32;
-        inputToBigModExp[1] = 32;
-        inputToBigModExp[2] = 32;
-        inputToBigModExp[3] = base;
-        inputToBigModExp[4] = power;
-        inputToBigModExp[5] = P;
-        uint[1] memory out;
-        bool success;
-        assembly {
-            success := staticcall(not(0), 5, inputToBigModExp, mul(6, 0x20), out, 0x20)
-        }
-        require(success, "BigModExp failed");
-        return out[0];
     }
 }

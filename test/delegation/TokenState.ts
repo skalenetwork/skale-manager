@@ -4,16 +4,16 @@ import { ContractManagerInstance,
          TokenStateInstance,
          ValidatorServiceInstance} from "../../types/truffle-contracts";
 
-import { deployContractManager } from "../utils/deploy/contractManager";
-import { currentTime, skipTime } from "../utils/time";
+import { deployContractManager } from "../tools/deploy/contractManager";
+import { currentTime, skipTime } from "../tools/time";
 
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
-import { deployDelegationController } from "../utils/deploy/delegation/delegationController";
-import { deployTokenState } from "../utils/deploy/delegation/tokenState";
-import { deployValidatorService } from "../utils/deploy/delegation/validatorService";
-import { deploySkaleToken } from "../utils/deploy/skaleToken";
-import { State } from "../utils/types";
+import { deployDelegationController } from "../tools/deploy/delegation/delegationController";
+import { deployTokenState } from "../tools/deploy/delegation/tokenState";
+import { deployValidatorService } from "../tools/deploy/delegation/validatorService";
+import { deploySkaleToken } from "../tools/deploy/skaleToken";
+import { State } from "../tools/types";
 chai.should();
 chai.use(chaiAsPromised);
 
@@ -37,7 +37,7 @@ contract("DelegationController", ([owner, holder, validator]) => {
         await validatorService.registerValidator("Validator", "D2 is even", 150, 0, {from: validator});
         validatorId = 1;
         await validatorService.enableValidator(validatorId, {from: owner});
-        await skaleToken.mint(owner, holder, 1000, "0x", "0x");
+        await skaleToken.mint(holder, 1000, "0x", "0x");
     });
 
     it("should not lock tokens by default", async () => {
@@ -95,7 +95,7 @@ contract("DelegationController", ([owner, holder, validator]) => {
             skipTime(web3, month);
 
             await delegationController.acceptPendingDelegation(delegationId, {from: validator})
-                .should.eventually.be.rejectedWith("Can't set state to accepted");
+                .should.eventually.be.rejectedWith("Cannot set state to accepted");
 
             const state = await delegationController.getState(delegationId);
             state.toNumber().should.be.equal(State.REJECTED);
@@ -121,7 +121,7 @@ contract("DelegationController", ([owner, holder, validator]) => {
 
             it("should not allow to request undelegation while is not delegated", async () => {
                 await delegationController.requestUndelegation(delegationId, {from: holder})
-                    .should.be.eventually.rejectedWith("Can't request undelegation");
+                    .should.be.eventually.rejectedWith("Cannot request undelegation");
             });
 
             it("should not allow to cancel accepted request", async () => {

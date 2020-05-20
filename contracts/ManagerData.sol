@@ -17,7 +17,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity ^0.5.3;
+pragma solidity 0.6.6;
 
 import "./Permissions.sol";
 import "./interfaces/IManagerData.sol";
@@ -29,28 +29,28 @@ import "./interfaces/IManagerData.sol";
 contract ManagerData is IManagerData, Permissions {
 
     // miners capitalization
-    uint public minersCap;
+    uint public override minersCap;
     // start time
-    uint32 public startTime;
+    uint32 public override startTime;
     // time of current stage
-    uint32 public stageTime;
+    uint32 public override stageTime;
     // amount of Nodes at current stage
-    uint public stageNodes;
+    uint public override stageNodes;
 
     //name of executor contract
-    string executorName;
+    string private _executorName;
 
     /**
      * @dev setMinersCap - sets miners capitalization
      */
-    function setMinersCap(uint newMinersCap) external allow(executorName) {
+    function setMinersCap(uint newMinersCap) external override allow(_executorName) {
         minersCap = newMinersCap;
     }
 
     /**
      * @dev setStageTimeAndStageNodes - sets new stage time and new amount of Nodes at this stage
      */
-    function setStageTimeAndStageNodes(uint newStageNodes) external allow(executorName) {
+    function setStageTimeAndStageNodes(uint newStageNodes) external override allow(_executorName) {
         stageNodes = newStageNodes;
         stageTime = uint32(block.timestamp);
     }
@@ -59,9 +59,9 @@ contract ManagerData is IManagerData, Permissions {
      * @dev constuctor in Permissions approach
      * @param newContractsAddress needed in Permissions constructor
      */
-    function initialize(address newContractsAddress) public initializer {
+    function initialize(address newContractsAddress) public override initializer {
         Permissions.initialize(newContractsAddress);
         startTime = uint32(block.timestamp);
-        executorName = "SkaleManager";
+        _executorName = "SkaleManager";
     }
 }

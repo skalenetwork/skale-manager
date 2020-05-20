@@ -1,4 +1,4 @@
-pragma solidity ^0.5.3;
+pragma solidity 0.6.6;
 
 interface IManagerData {
     function setMinersCap(uint newMinersCap) external;
