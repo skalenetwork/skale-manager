@@ -78,6 +78,7 @@ contract TokenState is Permissions, ILocker {
         registerLocker("DelegationController");
         registerLocker("Punisher");
         registerLocker("TokenLaunchLocker");
+        registerLocker("Vesting");
     }
 
     function registerLocker(string memory locker) public onlyOwner {

@@ -49,6 +49,12 @@ export async function currentTime(web3: Web3) {
     return (await web3.eth.getBlock("latest")).timestamp;
 }
 
+export function getTimeAtDate(day: number, monthIndex: number, year: number) {
+    const targetDate = new Date(Date.now());
+    targetDate.setFullYear(year, monthIndex, day);
+    return Math.round(targetDate.getTime() / 1000);
+}
+
 export const months = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
 
 export async function isLeapYear(web3: Web3) {

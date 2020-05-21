@@ -67,7 +67,6 @@ contract SkaleToken is ERC777, Permissions, ReentrancyGuard, IDelegatableToken {
     )
         external
         allow("SkaleManager")
-        //onlyAuthorized
         returns (bool)
     {
         require(amount <= CAP.sub(totalSupply()), "Amount is too big");

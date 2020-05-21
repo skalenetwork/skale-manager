@@ -80,6 +80,7 @@ async function deploy(deployer, networkName, accounts) {
         "TokenLaunchManager",
         "TokenState",
         "ValidatorService",
+        "Vesting",
 
         "ConstantsHolder",
         "Nodes",
