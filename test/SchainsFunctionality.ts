@@ -171,10 +171,18 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
 
                 const deposit = await schainsFunctionality.getSchainPrice(4, 5);
 
-                const verificationVector =
-                    "0x02c2b888a23187f22195eadadbc05847a00dc59c913d465dbc4dfac9cfab437d2695832627b9081e77da7a3fc4d574363bf05" +
-                    "1700055822f3d394dc3d9ff741724727c45f9322be756fbec6514525cbbfa27ef1951d3fed10f483c23f921879d03a7a3e6f3b5" +
-                    "39dad43c0eca46e3f889b2b2300815ffc4633e26e64406625a99";
+                const verificationVector = {
+                    points: [
+                        {
+                            x: "0x02c2b888a23187f22195eadadbc05847a00dc59c913d465dbc4dfac9cfab437d",
+                            y: "0x2695832627b9081e77da7a3fc4d574363bf051700055822f3d394dc3d9ff7417",
+                        },
+                        {
+                            x: "0x24727c45f9322be756fbec6514525cbbfa27ef1951d3fed10f483c23f921879d",
+                            y: "0x03a7a3e6f3b539dad43c0eca46e3f889b2b2300815ffc4633e26e64406625a99"
+                        }
+                    ]
+                };
 
                 const encryptedSecretKeyContribution =
                     "0x937c9c846a6fa7fd1984fe82e739ae37fcaa555c1dc0e8597c9f81b6a12f232f04fdf8101e91bd658fa1cea6fdd75adb85429" +
@@ -978,10 +986,18 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
             const nodeRot = res1[3];
             res = await skaleDKG.isBroadcastPossible(web3.utils.soliditySha3("d3"), nodeRot, {from: validator});
             assert.equal(res, true);
-            const verificationVector =
-                "0x02c2b888a23187f22195eadadbc05847a00dc59c913d465dbc4dfac9cfab437d2695832627b9081e77da7a3fc4d574363bf05" +
-                "1700055822f3d394dc3d9ff741724727c45f9322be756fbec6514525cbbfa27ef1951d3fed10f483c23f921879d03a7a3e6f3b5" +
-                "39dad43c0eca46e3f889b2b2300815ffc4633e26e64406625a99";
+            const verificationVector = {
+                points: [
+                    {
+                        x: "0x02c2b888a23187f22195eadadbc05847a00dc59c913d465dbc4dfac9cfab437d",
+                        y: "0x2695832627b9081e77da7a3fc4d574363bf051700055822f3d394dc3d9ff7417",
+                    },
+                    {
+                        x: "0x24727c45f9322be756fbec6514525cbbfa27ef1951d3fed10f483c23f921879d",
+                        y: "0x03a7a3e6f3b539dad43c0eca46e3f889b2b2300815ffc4633e26e64406625a99"
+                    }
+                ]
+            };
 
             const encryptedSecretKeyContribution =
                 "0x937c9c846a6fa7fd1984fe82e739ae37fcaa555c1dc0e8597c9f81b6a12f232f04fdf8101e91bd658fa1cea6fdd75adb85429" +

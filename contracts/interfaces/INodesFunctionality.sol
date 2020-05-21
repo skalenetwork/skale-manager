@@ -1,4 +1,4 @@
-pragma solidity 0.6.6;
+pragma solidity 0.6.8;
 
 interface INodesFunctionality {
     function createNode(address from, bytes calldata data) external returns (uint);

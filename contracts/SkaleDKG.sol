@@ -17,7 +17,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.6;
+pragma solidity 0.6.8;
 pragma experimental ABIEncoderV2;
 import "./Permissions.sol";
 import "./interfaces/IGroupsData.sol";
@@ -69,7 +69,11 @@ contract SkaleDKG is Permissions {
 
     struct BroadcastedData {
         bytes secretKeyContribution;
-        bytes verificationVector;
+        VerificationVector verificationVector;
+    }
+
+    struct VerificationVector {
+        Fp2[] points;
     }
 
     uint constant private _P = 21888242871839275222246405745257275088696311157297823662689037894645226208583;
@@ -95,7 +99,7 @@ contract SkaleDKG is Permissions {
     event BroadcastAndKeyShare(
         bytes32 indexed groupIndex,
         uint indexed fromNode,
-        bytes verificationVector,
+        VerificationVector verificationVector,
         bytes secretKeyContribution
     );
 
@@ -142,35 +146,10 @@ contract SkaleDKG is Permissions {
         delete channels[groupIndex];
     }
 
-    function reopenChannel(bytes32 groupIndex) external allowTwo("SkaleDKG", "SchainsData") {
-        GroupsData groupsData = GroupsData(channels[groupIndex].dataAddress);
-        channels[groupIndex].active = true;
-
-        delete channels[groupIndex].completed;
-        for (uint i = 0; i < channels[groupIndex].broadcasted.length; i++) {
-            delete _data[groupIndex][i];
-        }
-        delete channels[groupIndex].broadcasted;
-        channels[groupIndex].broadcasted = new bool[](groupsData.getRecommendedNumberOfNodes(groupIndex));
-        channels[groupIndex].completed = new bool[](groupsData.getRecommendedNumberOfNodes(groupIndex));
-        delete channels[groupIndex].publicKeyx.x;
-        delete channels[groupIndex].publicKeyx.y;
-        channels[groupIndex].publicKeyy.x = 1;
-        delete channels[groupIndex].publicKeyy.y;
-        channels[groupIndex].fromNodeToComplaint = uint(-1);
-        channels[groupIndex].nodeToComplaint = uint(-1);
-        delete channels[groupIndex].numberOfBroadcasted;
-        delete channels[groupIndex].numberOfCompleted;
-        delete channels[groupIndex].startComplaintBlockTimestamp;
-        channels[groupIndex].startedBlockTimestamp = block.timestamp;
-        IGroupsData(channels[groupIndex].dataAddress).setGroupFailedDKG(groupIndex);
-        emit ChannelOpened(groupIndex);
-    }
-
     function broadcast(
         bytes32 groupIndex,
         uint nodeIndex,
-        bytes calldata verificationVector,
+        VerificationVector calldata verificationVector,
         bytes calldata secretKeyContribution
     )
         external
@@ -178,28 +157,27 @@ contract SkaleDKG is Permissions {
         correctNode(groupIndex, nodeIndex)
     {
         require(_isNodeByMessageSender(nodeIndex, msg.sender), "Node does not exist for message sender");
+        require(verificationVector.points.length >= 2, "2 points is needed for broadcast");
+
+        // manually load verification vector to memory because solc does not suppurt this operation
+        VerificationVector memory _verificationVector = VerificationVector({points: new Fp2[](0)});
+        _verificationVector.points = new Fp2[](verificationVector.points.length);
+        for (uint i = 0; i < verificationVector.points.length; ++i) {
+            _verificationVector.points[i] = verificationVector.points[i];
+        }
+        
         _isBroadcast(
             groupIndex,
             nodeIndex,
             secretKeyContribution,
-            verificationVector
+            _verificationVector
         );
-        bytes32 vector;
-        bytes32 vector1;
-        bytes32 vector2;
-        bytes32 vector3;
-        assembly {
-            vector := calldataload(add(4, 160))
-            vector1 := calldataload(add(4, 192))
-            vector2 := calldataload(add(4, 224))
-            vector3 := calldataload(add(4, 256))
-        }
         _adding(
             groupIndex,
-            uint(vector),
-            uint(vector1),
-            uint(vector2),
-            uint(vector3)
+            verificationVector.points[0].x,
+            verificationVector.points[0].y,
+            verificationVector.points[1].x,
+            verificationVector.points[1].y
         );
         emit BroadcastAndKeyShare(
             groupIndex,
@@ -345,7 +323,9 @@ contract SkaleDKG is Permissions {
             channels[groupIndex].nodeToComplaint == nodeIndex;
     }
 
-    function getBroadcastedData(bytes32 groupIndex, uint nodeIndex) external view returns (bytes memory, bytes memory) {
+    function getBroadcastedData(bytes32 groupIndex, uint nodeIndex)
+        external view returns (bytes memory, VerificationVector memory)
+    {
         uint index = _findNode(groupIndex, nodeIndex);
         return (_data[groupIndex][index].secretKeyContribution, _data[groupIndex][index].verificationVector);
     }
@@ -363,6 +343,31 @@ contract SkaleDKG is Permissions {
         Permissions.initialize(contractsAddress);
     }
 
+    function reopenChannel(bytes32 groupIndex) public allowTwo("SkaleDKG", "SchainsData") {
+        GroupsData groupsData = GroupsData(channels[groupIndex].dataAddress);
+        channels[groupIndex].active = true;
+
+        delete channels[groupIndex].completed;
+        for (uint i = 0; i < channels[groupIndex].broadcasted.length; i++) {
+            delete _data[groupIndex][i];
+        }
+        delete channels[groupIndex].broadcasted;
+        channels[groupIndex].broadcasted = new bool[](groupsData.getRecommendedNumberOfNodes(groupIndex));
+        channels[groupIndex].completed = new bool[](groupsData.getRecommendedNumberOfNodes(groupIndex));
+        delete channels[groupIndex].publicKeyx.x;
+        delete channels[groupIndex].publicKeyx.y;
+        channels[groupIndex].publicKeyy.x = 1;
+        delete channels[groupIndex].publicKeyy.y;
+        channels[groupIndex].fromNodeToComplaint = uint(-1);
+        channels[groupIndex].nodeToComplaint = uint(-1);
+        delete channels[groupIndex].numberOfBroadcasted;
+        delete channels[groupIndex].numberOfCompleted;
+        delete channels[groupIndex].startComplaintBlockTimestamp;
+        channels[groupIndex].startedBlockTimestamp = block.timestamp;
+        IGroupsData(channels[groupIndex].dataAddress).setGroupFailedDKG(groupIndex);
+        emit ChannelOpened(groupIndex);
+    }
+
     function _finalizeSlashing(bytes32 groupIndex, uint badNode) internal {
         SchainsFunctionalityInternal schainsFunctionalityInternal = SchainsFunctionalityInternal(
             _contractManager.getContract("SchainsFunctionalityInternal")
@@ -372,9 +377,8 @@ contract SkaleDKG is Permissions {
         );
         emit BadGuy(badNode);
         emit FailedDKG(groupIndex);
-
-        address dataAddress = channels[groupIndex].dataAddress;
-        this.reopenChannel(groupIndex);
+        
+        reopenChannel(groupIndex);
         if (schainsFunctionalityInternal.isAnyFreeNode(groupIndex)) {
             uint newNode = schainsFunctionality.rotateNode(
                 badNode,
@@ -408,13 +412,18 @@ contract SkaleDKG is Permissions {
     {
         uint index = _findNode(groupIndex, fromNodeIndex);
         uint secret = _decryptMessage(groupIndex, secretNumber);
-        bytes memory verificationVector = _data[groupIndex][index].verificationVector;
+        VerificationVector memory verificationVector = _data[groupIndex][index].verificationVector;
+        require(verificationVector.points.length % 2 == 0, "Verification vector contains odd number of points");
         Fp2 memory valX = Fp2({x: 0, y: 0});
         Fp2 memory valY = Fp2({x: 1, y: 0});
         Fp2 memory tmpX = Fp2({x: 0, y: 0});
         Fp2 memory tmpY = Fp2({x: 1, y: 0});
-        for (uint i = 0; i < verificationVector.length / 128; i++) {
-            (tmpX, tmpY) = _loop(index, verificationVector, i);
+        for (uint i = 0; i < verificationVector.points.length / 2; i++) {
+            (tmpX, tmpY) = _mulG2(
+                Precompiled.bigModExp(index.add(1), i, _P),
+                _swapCoordinates(verificationVector.points[2 * i]),
+                _swapCoordinates(verificationVector.points[2 * i + 1])
+            );
             (valX, valY) = _addG2(
                 tmpX,
                 tmpY,
@@ -480,7 +489,7 @@ contract SkaleDKG is Permissions {
         bytes32 groupIndex,
         uint nodeIndex,
         bytes memory sc,
-        bytes memory vv
+        VerificationVector memory verificationVector
     )
         internal
     {
@@ -488,10 +497,11 @@ contract SkaleDKG is Permissions {
         require(!channels[groupIndex].broadcasted[index], "This node is already broadcasted");
         channels[groupIndex].broadcasted[index] = true;
         channels[groupIndex].numberOfBroadcasted++;
-        _data[groupIndex][index] = BroadcastedData({
-            secretKeyContribution: sc,
-            verificationVector: vv
-        });
+
+        _data[groupIndex][index].secretKeyContribution = sc;
+        for (uint i = 0; i < verificationVector.points.length; ++i) {
+            _data[groupIndex][index].verificationVector.points.push(verificationVector.points[i]);
+        }
     }
 
     function _isBroadcasted(bytes32 groupIndex, uint nodeIndex) internal view returns (bool) {
@@ -698,37 +708,6 @@ contract SkaleDKG is Permissions {
         }
     }
 
-    function _loop(
-        uint index,
-        bytes memory verificationVector,
-        uint loopIndex)
-        internal view returns (Fp2 memory, Fp2 memory)
-    {
-        bytes32[4] memory vector;
-        bytes32 vector1;
-        assembly {
-            vector1 := mload(add(verificationVector, add(32, mul(loopIndex, 128))))
-        }
-        vector[0] = vector1;
-        assembly {
-            vector1 := mload(add(verificationVector, add(64, mul(loopIndex, 128))))
-        }
-        vector[1] = vector1;
-        assembly {
-            vector1 := mload(add(verificationVector, add(96, mul(loopIndex, 128))))
-        }
-        vector[2] = vector1;
-        assembly {
-            vector1 := mload(add(verificationVector, add(128, mul(loopIndex, 128))))
-        }
-        vector[3] = vector1;
-        return _mulG2(
-            Precompiled.bigModExp(index.add(1), loopIndex, _P),
-            Fp2({x: uint(vector[1]), y: uint(vector[0])}),
-            Fp2({x: uint(vector[3]), y: uint(vector[2])})
-        );
-    }
-
     function _checkDKGVerification(
         Fp2 memory valX,
         Fp2 memory valY,
@@ -812,5 +791,9 @@ contract SkaleDKG is Permissions {
 
         x = Fp2({x: uint(xa), y: uint(xb)});
         y = Fp2({x: uint(ya), y: uint(yb)});
+    }
+
+    function _swapCoordinates(Fp2 memory point) internal pure returns (Fp2 memory) {
+        return Fp2({x: point.y, y: point.x});
     }
 }
