@@ -21,7 +21,7 @@ pragma solidity 0.6.6;
 pragma experimental ABIEncoderV2;
 
 import "./GroupsData.sol";
-import "./interfaces/IConstants.sol";
+import "./ConstantsHolder.sol";
 
 
 /**
@@ -228,7 +228,7 @@ contract SchainsData is GroupsData {
     }
 
     function startRotation(bytes32 schainIndex, uint nodeIndex) external allow("SchainsFunctionality") {
-        IConstants constants = IConstants(_contractManager.getContract("ConstantsHolder"));
+        ConstantsHolder constants = ConstantsHolder(_contractManager.getContract("ConstantsHolder"));
         rotations[schainIndex].nodeIndex = nodeIndex;
         rotations[schainIndex].freezeUntil = now + constants.rotationDelay();
     }
@@ -239,7 +239,7 @@ contract SchainsData is GroupsData {
         uint newNodeIndex)
         external allow("SchainsFunctionality")
     {
-        IConstants constants = IConstants(_contractManager.getContract("ConstantsHolder"));
+        ConstantsHolder constants = ConstantsHolder(_contractManager.getContract("ConstantsHolder"));
         leavingHistory[nodeIndex].push(LeavingHistory(schainIndex, now + constants.rotationDelay()));
         rotations[schainIndex].newNodeIndex = newNodeIndex;
         rotations[schainIndex].rotationCounter++;

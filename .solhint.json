@@ -3,6 +3,7 @@
   "rules": {
     "not-rely-on-time": "off",
     "mark-callable-contracts": "off",
+    "reason-string": "off",
 
     "compiler-version": ["error","0.6.6"],
     "state-visibility": "error",
@@ -10,6 +11,9 @@
     "check-send-result": "error",
     "private-vars-leading-underscore": "error",
     "code-complexity": "error",
-    "func-order": "error"
+    "func-order": "error",
+    "visibility-modifier-order": "error",
+    "func-name-mixedcase": "error",
+    "function-max-lines": "error"
   }
 }
