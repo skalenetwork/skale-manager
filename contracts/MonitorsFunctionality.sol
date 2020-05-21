@@ -147,12 +147,8 @@ contract MonitorsFunctionality is GroupsFunctionality {
             message.strConcat(StringUtils.uint2str(verdict.toNodeIndex)).strConcat(" Node"));
         MonitorsData data = MonitorsData(_contractManager.getContract("MonitorsData"));
         data.removeCheckedNode(monitorIndex, index);
-<<<<<<< HEAD
-        data.removeMonitoringNode(keccak256(abi.encodePacked(toNodeIndex)), fromMonitorIndex);
-        address constantsAddress = contractManager.getContract("ConstantsHolder");
-=======
+        data.removeMonitoringNode(keccak256(abi.encodePacked(verdict.toNodeIndex)), fromMonitorIndex);
         address constantsAddress = _contractManager.getContract("ConstantsHolder");
->>>>>>> develop
         bool receiveVerdict = time.add(IConstants(constantsAddress).deltaPeriod()) > uint32(block.timestamp);
         if (receiveVerdict) {
             data.addVerdict(keccak256(abi.encodePacked(verdict.toNodeIndex)), verdict.downtime, verdict.latency);

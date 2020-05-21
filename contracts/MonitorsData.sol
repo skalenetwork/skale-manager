@@ -77,19 +77,19 @@ contract MonitorsData is GroupsData {
         }
     }
 
-    function addBadMonitor(bytes32 monitorIndex) external allow(executorName) {
+    function addBadMonitor(bytes32 monitorIndex) external allow(_executorName) {
         slashedBounty[monitorIndex] = true;
     }
 
-    function removeBadMonitor(bytes32 monitorIndex) external allow(executorName) {
+    function removeBadMonitor(bytes32 monitorIndex) external allow(_executorName) {
         slashedBounty[monitorIndex] = false;
     }
 
-    function addMonitoringNode(bytes32 monitorIndex, uint nodeIndex) external allow(executorName) {
+    function addMonitoringNode(bytes32 monitorIndex, uint nodeIndex) external allow(_executorName) {
         monitoringNodes[monitorIndex].push(nodeIndex);
     }
 
-    function removeMonitoringNode(bytes32 monitorIndex, uint nodeIndex) external allow(executorName) {
+    function removeMonitoringNode(bytes32 monitorIndex, uint nodeIndex) external allow(_executorName) {
         uint index;
         for (index = 0; index < monitoringNodes[monitorIndex].length; index++) {
             if (monitoringNodes[monitorIndex][index] == nodeIndex) {
@@ -97,7 +97,8 @@ contract MonitorsData is GroupsData {
             }
         }
         if (index != monitoringNodes[monitorIndex].length - 1) {
-            monitoringNodes[monitorIndex][index] = monitoringNodes[monitorIndex][monitoringNodes[monitorIndex].length - 1];
+            monitoringNodes[monitorIndex][index] =
+                monitoringNodes[monitorIndex][monitoringNodes[monitorIndex].length - 1];
         }
         monitoringNodes[monitorIndex].pop();
     }

@@ -253,7 +253,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
             if (latency > constants.allowableLatency()) {
                 bountyForMiner = int((constants.allowableLatency().mul(uint(bountyForMiner))).div(latency));
             }
-            payBounty(slashBadVerdicts(nodeIndex, uint(bountyForMiner)), from, nodeIndex);
+            _payBounty(_slashBadVerdicts(nodeIndex, uint(bountyForMiner)), from, nodeIndex);
         } else {
             //Need to add penalty
             bountyForMiner = 0;
@@ -275,12 +275,12 @@ contract SkaleManager is IERC777Recipient, Permissions {
         skaleToken.send(address(distributor), bounty, abi.encode(validatorId));
     }
 
-    function slashBadVerdicts(uint nodeIndex, uint bounty) internal view returns (uint) {
-        MonitorsData monitorsData = MonitorsData(contractManager.getContract("MonitorsData"));
+    function _slashBadVerdicts(uint nodeIndex, uint bounty) internal view returns (uint) {
+        MonitorsData monitorsData = MonitorsData(_contractManager.getContract("MonitorsData"));
         return monitorsData.slashedBounty(keccak256(abi.encodePacked(nodeIndex))) ? bounty * 9 / 10 : bounty;
     }
 
-    function fallbackOperationTypeConvert(bytes memory data) internal pure returns (TransactionOperation) {
+    function _fallbackOperationTypeConvert(bytes memory data) internal pure returns (TransactionOperation) {
         bytes1 operationType;
         assembly {
             operationType := mload(add(data, 0x20))

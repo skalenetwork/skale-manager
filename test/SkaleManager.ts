@@ -478,7 +478,12 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                 });
 
                 it("should get normal bounty", async () => {
-                    await skaleManager.sendVerdict(0, 2, 0, 50, {from: nodeAddress});
+                    const newVerdict = {
+                        toNodeIndex: 2,
+                        downtime: 0,
+                        latency: 50
+                    };
+                    await skaleManager.sendVerdict(0, newVerdict, {from: nodeAddress});
 
                     skipTime(web3, 200);
                     await skaleManager.getBounty(2, {from: nodeAddress});
