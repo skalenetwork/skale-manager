@@ -159,88 +159,23 @@ contract ECDH {
         }
 
         if ((x1 == x2) && (y1 == y2)) {
-            (ln, lz) = jMul(
-                x1,
-                z1,
-                x1,
-                z1
-            );
-            (ln, lz) = jMul(
-                ln,
-                lz,
-                3,
-                1
-            );
-            (ln, lz) = jAdd(
-                ln,
-                lz,
-                _A,
-                1
-            );
-            (da, db) = jMul(
-                y1,
-                z1,
-                2,
-                1
-            );
+            (ln, lz) = jMul(x1, z1, x1, z1);
+            (ln, lz) = jMul(ln,lz,3,1);
+            (ln, lz) = jAdd(ln,lz,_A,1);
+            (da, db) = jMul(y1,z1,2,1);
         } else {
-            (ln, lz) = jSub(
-                y2,
-                z2,
-                y1,
-                z1
-            );
-            (da, db) = jSub(
-                x2,
-                z2,
-                x1,
-                z1
-            );
+            (ln, lz) = jSub(y2,z2,y1,z1);
+            (da, db) = jSub(x2,z2,x1,z1);
         }
-        (ln, lz) = jDiv(
-            ln,
-            lz,
-            da,
-            db
-        );
+        (ln, lz) = jDiv(ln,lz,da,db);
 
-        (x3, da) = jMul(
-            ln,
-            lz,
-            ln,
-            lz
-        );
-        (x3, da) = jSub(
-            x3,
-            da,
-            x1,
-            z1
-        );
-        (x3, da) = jSub(
-            x3,
-            da,
-            x2,
-            z2
-        );
+        (x3, da) = jMul(ln,lz,ln,lz);
+        (x3, da) = jSub(x3,da,x1,z1);
+        (x3, da) = jSub(x3,da,x2,z2);
 
-        (y3, db) = jSub(
-            x1,
-            z1,
-            x3,
-            da
-        );
-        (y3, db) = jMul(
-            y3,
-            db,
-            ln,
-            lz
-        );
-        (y3, db) = jSub(
-            y3,
-            db,
-            y1,
-            z1
-        );
+        (y3, db) = jSub(x1,z1,x3,da);
+        (y3, db) = jMul(y3,db,ln,lz);
+        (y3, db) = jSub(y3,db,y1,z1);
 
         if (da != db) {
             x3 = mulmod(x3, db, _N);

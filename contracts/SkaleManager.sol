@@ -21,8 +21,8 @@ pragma solidity 0.6.6;
 pragma experimental ABIEncoderV2;
 
 import "./Permissions.sol";
-import "./interfaces/IConstants.sol";
-import "./interfaces/ISkaleToken.sol";
+import "./ConstantsHolder.sol";
+import "./SkaleToken.sol";
 import "./interfaces/ISchainsFunctionality.sol";
 import "./interfaces/IManagerData.sol";
 import "./delegation/Distributor.sol";
@@ -104,7 +104,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
         SchainsFunctionality schainsFunctionality = SchainsFunctionality(
             _contractManager.getContract("SchainsFunctionality"));
         SchainsData schainsData = SchainsData(_contractManager.getContract("SchainsData"));
-        IConstants constants = IConstants(_contractManager.getContract("ConstantsHolder"));
+        ConstantsHolder constants = ConstantsHolder(_contractManager.getContract("ConstantsHolder"));
         schainsFunctionality.freezeSchains(nodeIndex);
         if (nodes.isNodeActive(nodeIndex)) {
             require(nodes.initExit(msg.sender, nodeIndex), "Initialization of node exit is failed");
@@ -218,7 +218,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
         uint latency) internal returns (uint)
     {
         uint commonBounty;
-        IConstants constants = IConstants(_contractManager.getContract("ConstantsHolder"));
+        ConstantsHolder constants = ConstantsHolder(_contractManager.getContract("ConstantsHolder"));
         IManagerData managerData = IManagerData(_contractManager.getContract("ManagerData"));
         Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
 
@@ -226,7 +226,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
             .add(constants.rewardPeriod())
             .add(constants.deltaPeriod());
         if (managerData.minersCap() == 0) {
-            managerData.setMinersCap(ISkaleToken(_contractManager.getContract("SkaleToken")).CAP() / 3);
+            managerData.setMinersCap(SkaleToken(_contractManager.getContract("SkaleToken")).CAP() / 3);
         }
         if (managerData.stageTime().add(constants.rewardPeriod()) < now) {
             managerData.setStageTimeAndStageNodes(nodes.numberOfActiveNodes().add(nodes.numberOfLeavingNodes()));

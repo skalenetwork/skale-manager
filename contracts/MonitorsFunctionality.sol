@@ -21,7 +21,7 @@ pragma solidity 0.6.6;
 pragma experimental ABIEncoderV2;
 
 import "./GroupsFunctionality.sol";
-import "./interfaces/IConstants.sol";
+import "./ConstantsHolder.sol";
 import "./Nodes.sol";
 import "./MonitorsData.sol";
 
@@ -88,8 +88,7 @@ contract MonitorsFunctionality is GroupsFunctionality {
      * addMonitor - setup monitors of node
      */
     function addMonitor(uint nodeIndex) external allow(_executorName) {
-        address constantsAddress = _contractManager.getContract("ConstantsHolder");
-        IConstants constantsHolder = IConstants(constantsAddress);
+        ConstantsHolder constantsHolder = ConstantsHolder(_contractManager.getContract("ConstantsHolder"));
         bytes32 groupIndex = keccak256(abi.encodePacked(nodeIndex));
         uint possibleNumberOfNodes = constantsHolder.NUMBER_OF_MONITORS();
         addGroup(groupIndex, possibleNumberOfNodes, bytes32(nodeIndex));
@@ -103,8 +102,7 @@ contract MonitorsFunctionality is GroupsFunctionality {
     }
 
     function upgradeMonitor(uint nodeIndex) external allow(_executorName) {
-        address constantsAddress = _contractManager.getContract("ConstantsHolder");
-        IConstants constantsHolder = IConstants(constantsAddress);
+        ConstantsHolder constantsHolder = ConstantsHolder(_contractManager.getContract("ConstantsHolder"));
         bytes32 groupIndex = keccak256(abi.encodePacked(nodeIndex));
         uint possibleNumberOfNodes = constantsHolder.NUMBER_OF_MONITORS();
         upgradeGroup(groupIndex, possibleNumberOfNodes, bytes32(nodeIndex));
@@ -148,8 +146,8 @@ contract MonitorsFunctionality is GroupsFunctionality {
         MonitorsData data = MonitorsData(_contractManager.getContract("MonitorsData"));
         data.removeCheckedNode(monitorIndex, index);
         data.removeMonitoringNode(keccak256(abi.encodePacked(verdict.toNodeIndex)), fromMonitorIndex);
-        address constantsAddress = _contractManager.getContract("ConstantsHolder");
-        bool receiveVerdict = time.add(IConstants(constantsAddress).deltaPeriod()) > uint32(block.timestamp);
+        ConstantsHolder constantsHolder = ConstantsHolder(_contractManager.getContract("ConstantsHolder"));
+        bool receiveVerdict = time.add(constantsHolder.deltaPeriod()) > uint32(block.timestamp);
         if (receiveVerdict) {
             data.addVerdict(keccak256(abi.encodePacked(verdict.toNodeIndex)), verdict.downtime, verdict.latency);
         }
@@ -327,12 +325,12 @@ contract MonitorsFunctionality is GroupsFunctionality {
     }
 
     function _getDataToBytes(uint nodeIndex) internal view returns (bytes32 bytesParameters) {
-        address constantsAddress = _contractManager.getContract("ConstantsHolder");
+        ConstantsHolder constantsHolder = ConstantsHolder(_contractManager.getContract("ConstantsHolder"));
         Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
         bytes memory tempData = new bytes(32);
         bytes14 bytesOfIndex = bytes14(uint112(nodeIndex));
         bytes14 bytesOfTime = bytes14(
-            uint112(nodes.getNodeNextRewardDate(nodeIndex).sub(IConstants(constantsAddress).deltaPeriod()))
+            uint112(nodes.getNodeNextRewardDate(nodeIndex).sub(constantsHolder.deltaPeriod()))
         );
         bytes4 ip = nodes.getNodeIP(nodeIndex);
         assembly {

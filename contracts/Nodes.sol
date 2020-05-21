@@ -21,7 +21,7 @@ pragma solidity 0.6.6;
 pragma experimental ABIEncoderV2;
 
 import "./Permissions.sol";
-import "./interfaces/IConstants.sol";
+import "./ConstantsHolder.sol";
 import "./delegation/ValidatorService.sol";
 
 
@@ -400,8 +400,8 @@ contract Nodes is Permissions {
      * @return if time for reward has come - true, else - false
      */
     function isTimeForReward(uint nodeIndex) external view returns (bool) {
-        address constantsAddress = _contractManager.getContract("ConstantsHolder");
-        return nodes[nodeIndex].lastRewardDate.add(IConstants(constantsAddress).rewardPeriod()) <= block.timestamp;
+        ConstantsHolder constantsHolder = ConstantsHolder(_contractManager.getContract("ConstantsHolder"));
+        return nodes[nodeIndex].lastRewardDate.add(constantsHolder.rewardPeriod()) <= block.timestamp;
     }
 
     /**
@@ -458,8 +458,8 @@ contract Nodes is Permissions {
      * @return Node next reward date
      */
     function getNodeNextRewardDate(uint nodeIndex) external view returns (uint32) {
-        address constantsAddress = _contractManager.getContract("ConstantsHolder");
-        return nodes[nodeIndex].lastRewardDate + IConstants(constantsAddress).rewardPeriod();
+        ConstantsHolder constantsHolder = ConstantsHolder(_contractManager.getContract("ConstantsHolder"));
+        return nodes[nodeIndex].lastRewardDate + constantsHolder.rewardPeriod();
     }
 
     /**
