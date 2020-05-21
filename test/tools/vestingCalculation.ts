@@ -16,17 +16,10 @@ export function calculateLockedAmount(time: number, startDate: number, lockupPer
     const finishDate = new Date(tempDate.setFullYear(initDate.getFullYear() + Math.floor(temp / 12), temp % 12));
 
     const currentTime = new Date(time * 1000);
-    // console.log("Start time:", initDate);
-    // console.log("Current time:", currentTime);
-    // console.log("Finish time:", finishDate);
 
     if (Math.floor(currentTime.getTime() / 1000) >= Math.floor(finishDate.getTime() / 1000)) {
-        // console.log("Current time seconds:", Math.floor(currentTime.getTime() / 1000));
-        // console.log("Finish time seconds:", Math.floor(finishDate.getTime() / 1000));
         return 0;
     }
-
-    // console.log("Lockup time:", lockupDate);
 
     if (Math.floor(currentTime.getTime() / 1000) < Math.floor(lockupDate.getTime() / 1000)) {
         return fullAmount;
@@ -37,16 +30,8 @@ export function calculateLockedAmount(time: number, startDate: number, lockupPer
 
     temp = lockupDate.getMonth() + vestPeriod;
     const indexTime = new Date(lockupDate.setFullYear(lockupDate.getFullYear() + Math.floor(temp / 12), temp % 12));
-    // console.log(temp);
-    // console.log(Math.floor(temp / 12));
-    // console.log(temp % 12);
-    // console.log("Index time:", indexTime);
-    // console.log("Current time:", currentTime);
 
     while (Math.floor(indexTime.getTime() / 1000) < Math.floor(currentTime.getTime() / 1000)) {
-        // console.log("Locked amount:", lockedAmount);
-        // console.log("Current time:", currentTime);
-        // console.log("Index time:", indexTime);
         lockedAmount -= partPayment;
         temp = indexTime.getMonth() + vestPeriod;
         indexTime.setFullYear(indexTime.getFullYear() + Math.floor(temp / 12), temp % 12);
