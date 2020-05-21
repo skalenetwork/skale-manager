@@ -1,47 +1,37 @@
 import { ContractManagerInstance,
     DelegationControllerInstance,
-    PunisherInstance,
     SkaleTokenInstance,
-    TokenLaunchManagerInstance,
     ValidatorServiceInstance,
     VestingInstance} from "../../types/truffle-contracts";
 
 import { calculateLockedAmount } from "../tools/vestingCalculation";
-import { currentTime, getTimeAtDate, isLeapYear, skipTime, skipTimeToDate } from "../tools/time";
+import { currentTime, getTimeAtDate, skipTimeToDate } from "../tools/time";
 
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
 import { deployContractManager } from "../tools/deploy/contractManager";
 import { deployDelegationController } from "../tools/deploy/delegation/delegationController";
-import { deployPunisher } from "../tools/deploy/delegation/punisher";
-import { deployTokenLaunchManager } from "../tools/deploy/delegation/tokenLaunchManager";
 import { deployValidatorService } from "../tools/deploy/delegation/validatorService";
 import { deployVesting } from "../tools/deploy/delegation/vesting";
 import { deploySkaleToken } from "../tools/deploy/skaleToken";
-import { State } from "../tools/types";
-import { start } from "repl";
 chai.should();
 chai.use(chaiAsPromised);
 
 contract("Vesting", ([owner, holder, holder1, holder2, holder3, hacker]) => {
     let contractManager: ContractManagerInstance;
     let skaleToken: SkaleTokenInstance;
-    let tokenLaunchManager: TokenLaunchManagerInstance;
     let validatorService: ValidatorServiceInstance;
     let Vesting: VestingInstance;
     let delegationController: DelegationControllerInstance;
-    let punisher: PunisherInstance;
 
     beforeEach(async () => {
         contractManager = await deployContractManager();
         skaleToken = await deploySkaleToken(contractManager);
-        tokenLaunchManager = await deployTokenLaunchManager(contractManager);
         validatorService = await deployValidatorService(contractManager);
         delegationController = await deployDelegationController(contractManager);
-        punisher = await deployPunisher(contractManager);
         Vesting = await deployVesting(contractManager);
 
-        // each test will start from Nov 10
+        // each test will start from July 1
         await skipTimeToDate(web3, 1, 6);
         await skaleToken.mint(Vesting.address, 1e9, "0x", "0x");
     });

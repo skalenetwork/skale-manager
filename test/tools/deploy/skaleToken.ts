@@ -2,6 +2,7 @@ import { ContractManagerInstance, SkaleTokenContract } from "../../../types/truf
 import { deployDelegationController } from "./delegation/delegationController";
 import { deployPunisher } from "./delegation/punisher";
 import { deployTokenState } from "./delegation/tokenState";
+import { deployVesting } from "./delegation/vesting";
 
 const SkaleToken: SkaleTokenContract = artifacts.require("./SkaleToken");
 const name = "SkaleToken";
@@ -16,6 +17,7 @@ async function deployDependencies(contractManager: ContractManagerInstance) {
     await deployTokenState(contractManager);
     await deployDelegationController(contractManager);
     await deployPunisher(contractManager);
+    await deployVesting(contractManager);
 }
 
 export async function deploySkaleToken(contractManager: ContractManagerInstance) {
