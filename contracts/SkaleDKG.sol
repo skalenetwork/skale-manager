@@ -142,13 +142,15 @@ contract SkaleDKG is Permissions {
         delete channels[groupIndex];
     }
 
-    function reopenChannel(bytes32 groupIndex) external allow("SkaleDKG") {
-        require(channels[groupIndex].active, "Channel is not created");
-
+    function reopenChannel(bytes32 groupIndex) external allowTwo("SkaleDKG", "SchainsData") {
         GroupsData groupsData = GroupsData(channels[groupIndex].dataAddress);
+        channels[groupIndex].active = true;
 
-        delete channels[groupIndex].broadcasted;
         delete channels[groupIndex].completed;
+        for (uint i = 0; i < channels[groupIndex].broadcasted.length; i++) {
+            delete _data[groupIndex][i];
+        }
+        delete channels[groupIndex].broadcasted;
         channels[groupIndex].broadcasted = new bool[](groupsData.getRecommendedNumberOfNodes(groupIndex));
         channels[groupIndex].completed = new bool[](groupsData.getRecommendedNumberOfNodes(groupIndex));
         delete channels[groupIndex].publicKeyx.x;
@@ -384,7 +386,6 @@ contract SkaleDKG is Permissions {
                 badNode,
                 groupIndex
             );
-            IGroupsData(dataAddress).setGroupFailedDKG(groupIndex);
             channels[groupIndex].active = false;
         }
 
