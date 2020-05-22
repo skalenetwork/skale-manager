@@ -24,7 +24,7 @@ import "./Permissions.sol";
 import "./ConstantsHolder.sol";
 import "./SkaleToken.sol";
 import "./interfaces/ISchainsFunctionality.sol";
-import "./interfaces/IManagerData.sol";
+// import "./interfaces/IManagerData.sol";
 import "./delegation/Distributor.sol";
 import "./delegation/ValidatorService.sol";
 import "./MonitorsFunctionality.sol";
@@ -36,6 +36,17 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 
 
 contract SkaleManager is IERC777Recipient, Permissions {
+    // miners capitalization
+    uint public minersCap;
+    // start time
+    uint32 public startTime;
+    // time of current stage
+    uint32 public stageTime;
+    // amount of Nodes at current stage
+    uint public stageNodes;
+
+    mapping (uint => uint[]) public bountyBlocks;
+
     IERC1820Registry private _erc1820;
 
     bytes32 constant private _TOKENS_RECIPIENT_INTERFACE_HASH =
@@ -206,12 +217,12 @@ contract SkaleManager is IERC777Recipient, Permissions {
     }
 
     function getBountyBlocks(uint nodeIndex) external view returns (uint[] memory) {
-        IManagerData managerData = IManagerData(_contractManager.getContract("ManagerData"));
-        return managerData.getBountyBlocks(nodeIndex);
+        return bountyBlocks[nodeIndex];
     }
 
     function initialize(address newContractsAddress) public override initializer {
         Permissions.initialize(newContractsAddress);
+        startTime = uint32(block.timestamp);
         _erc1820 = IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
         _erc1820.setInterfaceImplementer(address(this), _TOKENS_RECIPIENT_INTERFACE_HASH, address(this));
     }
@@ -224,25 +235,26 @@ contract SkaleManager is IERC777Recipient, Permissions {
     {
         uint commonBounty;
         ConstantsHolder constants = ConstantsHolder(_contractManager.getContract("ConstantsHolder"));
-        IManagerData managerData = IManagerData(_contractManager.getContract("ManagerData"));
+        // IManagerData managerData = IManagerData(_contractManager.getContract("ManagerData"));
         Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
-        managerData.setBountyBlock(nodeIndex);
+        bountyBlocks[nodeIndex].push(block.number);
 
         uint diffTime = nodes.getNodeLastRewardDate(nodeIndex)
             .add(constants.rewardPeriod())
             .add(constants.deltaPeriod());
-        if (managerData.minersCap() == 0) {
-            managerData.setMinersCap(SkaleToken(_contractManager.getContract("SkaleToken")).CAP() / 3);
+        if (minersCap == 0) {
+            minersCap = SkaleToken(_contractManager.getContract("SkaleToken")).CAP() / 3;
         }
-        if (managerData.stageTime().add(constants.rewardPeriod()) < now) {
-            managerData.setStageTimeAndStageNodes(nodes.numberOfActiveNodes().add(nodes.numberOfLeavingNodes()));
+        if (stageTime.add(constants.rewardPeriod()) < now) {
+            stageNodes = nodes.numberOfActiveNodes().add(nodes.numberOfLeavingNodes());
+            stageTime = uint32(block.timestamp);
         }
-        commonBounty = managerData.minersCap()
-            .div((2 ** (((now.sub(managerData.startTime()))
+        commonBounty = minersCap
+            .div((2 ** (((now.sub(startTime))
             .div(constants.SIX_YEARS())) + 1))
             .mul((constants.SIX_YEARS()
             .div(constants.rewardPeriod())))
-            .mul(managerData.stageNodes()));
+            .mul(stageNodes));
         if (now > diffTime) {
             diffTime = now.sub(diffTime);
         } else {

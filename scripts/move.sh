@@ -13,7 +13,6 @@ group2=(
     SchainsData.ts
     ECDH.ts
     Decryption.ts
-    ManagerData.spec.ts
     ContractManager.ts
 )
 group3=()
