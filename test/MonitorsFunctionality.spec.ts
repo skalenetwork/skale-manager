@@ -79,6 +79,7 @@ contract("MonitorsFunctionality", ([owner, validator]) => {
     const indexNode0 = 0;
     const indexNode0inSha3 = web3.utils.soliditySha3(indexNode0);
     const indexNode1 = 1;
+    const monitorIndex1 = web3.utils.soliditySha3(indexNode1);
     const indexNode1ToHex = ("0000000000000000000000000000000000" +
         indexNode1).slice(-28);
     const timeInSec = 1;
@@ -91,6 +92,7 @@ contract("MonitorsFunctionality", ([owner, validator]) => {
     await monitorsData.addCheckedNode(
       indexNode0inSha3, data32bytes, {from: owner},
       );
+    await monitorsData.addMonitoringNode(monitorIndex1, indexNode0, {from: owner});
     // execution
     const verd = {
       toNodeIndex: indexNode1,
@@ -196,6 +198,8 @@ contract("MonitorsFunctionality", ([owner, validator]) => {
     await monitorsData.addCheckedNode(
       indexNode0inSha3, data32bytes, {from: owner},
       );
+    await monitorsData.addMonitoringNode(monitorIndex1, indexNode0, {from: owner});
+    
     // execution
     // skipTime(web3, time - 200);
     const verd = {
@@ -280,7 +284,6 @@ contract("MonitorsFunctionality", ([owner, validator]) => {
     (await monitorsData.getCheckedArray(node4Hash)).length.should.be.equal(2);
 
     await monitorsFunctionality.deleteMonitor(0);
-    console.log("Finished delete 0 monitor");
 
     await monitorsData.getCheckedArray(node0Hash).should.be.eventually.empty;
     await monitorsData.getCheckedArray(node1Hash).should.be.eventually.empty;
@@ -288,9 +291,7 @@ contract("MonitorsFunctionality", ([owner, validator]) => {
     (await monitorsData.getCheckedArray(node3Hash)).length.should.be.equal(1);
     (await monitorsData.getCheckedArray(node4Hash)).length.should.be.equal(1);
 
-    console.log("Started delete 1 monitor");
     await monitorsFunctionality.deleteMonitor(1);
-    console.log("Finished delete 1 monitor");
 
     // await monitorsData.getCheckedArray(node0Hash).should.be.eventually.empty;
     // await monitorsData.getCheckedArray(node1Hash).should.be.eventually.empty;
