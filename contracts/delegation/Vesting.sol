@@ -85,16 +85,15 @@ contract Vesting is ILocker, Permissions, IERC777Recipient {
         uint date = now;
         SAFT memory saftParams = _saftHolders[wallet];
         locked = saftParams.fullAmount;
-        if (date > timeHelpers.addMonths(saftParams.startVesting, saftParams.lockupPeriod)) {
+        if (date >= timeHelpers.addMonths(saftParams.startVesting, saftParams.lockupPeriod)) {
             locked = locked.sub(saftParams.afterLockupAmount);
-            if (date > saftParams.finishVesting) {
+            if (date >= saftParams.finishVesting) {
                 locked = 0;
             } else {
-                uint numberOfPayments = _getNumberOfPayments(wallet);
                 uint partPayment = saftParams.fullAmount
                     .sub(saftParams.afterLockupAmount)
                     .div(_getNumberOfAllPayments(wallet));
-                locked = locked.sub(partPayment.mul(numberOfPayments));
+                locked = locked.sub(partPayment.mul(_getNumberOfPayments(wallet)));
             }
         }
     }

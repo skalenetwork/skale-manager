@@ -94,6 +94,37 @@ contract("Vesting", ([owner, holder, holder1, holder2, holder3, hacker]) => {
         lockedAmount.toNumber().should.be.equal(0);
     });
 
+    it("should operate with fractional payments", async () => {
+        const lockupPeriod = 1;
+        const fullPeriod = 4;
+        const fullAmount = 2e6;
+        const lockupAmount = 1e6;
+        const vestPeriod = 1;
+        const startDate = await currentTime(web3);
+        const dat = new Date(startDate * 1000);
+        await Vesting.addVestingTerm(holder, startDate, lockupPeriod, fullPeriod, fullAmount, lockupAmount, vestPeriod, {from: owner});
+        let lockedAmount = await Vesting.getLockedAmount(holder);
+        lockedAmount.toNumber().should.be.equal(fullAmount);
+        await skipTimeToDate(web3, 1, 7);
+        lockedAmount = await Vesting.getLockedAmount(holder);
+        lockedAmount.toNumber().should.be.equal(fullAmount - lockupAmount);
+        await skipTimeToDate(web3, 1, 8);
+        lockedAmount = await Vesting.getLockedAmount(holder);
+        let lockedCalculatedAmount = calculateLockedAmount(await currentTime(web3), startDate, lockupPeriod, fullPeriod, fullAmount, lockupAmount, vestPeriod);
+        lockedAmount.toNumber().should.be.equal(lockedCalculatedAmount);
+        lockedAmount.toNumber().should.be.equal(Math.round(fullAmount - lockupAmount - (fullAmount - lockupAmount) / ((fullPeriod - lockupPeriod) / vestPeriod)));
+        await skipTimeToDate(web3, 1, 9);
+        lockedAmount = await Vesting.getLockedAmount(holder);
+        lockedCalculatedAmount = calculateLockedAmount(await currentTime(web3), startDate, lockupPeriod, fullPeriod, fullAmount, lockupAmount, vestPeriod);
+        lockedAmount.toNumber().should.be.equal(lockedCalculatedAmount);
+        lockedAmount.toNumber().should.be.equal(fullAmount - lockupAmount - Math.trunc(2 * (fullAmount - lockupAmount) / ((fullPeriod - lockupPeriod) / vestPeriod)));
+        await skipTimeToDate(web3, 1, 10);
+        lockedAmount = await Vesting.getLockedAmount(holder);
+        lockedCalculatedAmount = calculateLockedAmount(await currentTime(web3), startDate, lockupPeriod, fullPeriod, fullAmount, lockupAmount, vestPeriod);
+        lockedAmount.toNumber().should.be.equal(lockedCalculatedAmount);
+        lockedAmount.toNumber().should.be.equal(0);
+    });
+
     describe("when SAFTs are registered at the past", async () => {
         const lockupPeriod = 6;
         const fullPeriod = 36;

@@ -6,12 +6,12 @@ function calculatePartPayment(lockupPeriod: number, fullPeriod: number, fullAmou
 
 export function calculateLockedAmount(time: number, startDate: number, lockupPeriod: number, fullPeriod: number, fullAmount: number, lockupAmount: number, vestPeriod: number) {
     const initDate = new Date(startDate * 1000);
-    let tempDate = initDate;
 
+    let tempDate = new Date(initDate.getTime());
     let temp = initDate.getMonth() + lockupPeriod;
     const lockupDate = new Date(tempDate.setFullYear(initDate.getFullYear() + Math.floor(temp / 12), temp % 12));
 
-    tempDate = initDate;
+    tempDate = new Date(initDate.getTime());
     temp = initDate.getMonth() + fullPeriod;
     const finishDate = new Date(tempDate.setFullYear(initDate.getFullYear() + Math.floor(temp / 12), temp % 12));
 
