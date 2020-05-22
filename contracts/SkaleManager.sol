@@ -279,21 +279,4 @@ contract SkaleManager is IERC777Recipient, Permissions {
         MonitorsData monitorsData = MonitorsData(_contractManager.getContract("MonitorsData"));
         return monitorsData.slashedBounty(keccak256(abi.encodePacked(nodeIndex))) ? bounty * 9 / 10 : bounty;
     }
-
-    function _fallbackOperationTypeConvert(bytes memory data) internal pure returns (TransactionOperation) {
-        bytes1 operationType;
-        assembly {
-            operationType := mload(add(data, 0x20))
-        }
-        bool isIdentified = operationType == bytes1(uint8(1)) ||
-            operationType == bytes1(uint8(16)) ||
-            operationType == bytes1(uint8(2));
-        require(isIdentified, "Operation type is not identified");
-        if (operationType == bytes1(uint8(1))) {
-            return TransactionOperation.CreateNode;
-        } else if (operationType == bytes1(uint8(16))) {
-            return TransactionOperation.CreateSchain;
-        }
-    }
-
 }
