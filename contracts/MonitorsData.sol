@@ -33,6 +33,9 @@ contract MonitorsData is GroupsData {
     mapping (bytes32 => bytes32[]) public checkedNodes;
     mapping (bytes32 => uint[][]) public verdicts;
 
+    mapping (bytes32 => uint[]) public verdictBlocks;
+    mapping (bytes32 => uint[]) public bountyBlocks;
+
     /**
      *  Add checked node or update existing one if it is already exits
      */
@@ -53,6 +56,7 @@ contract MonitorsData is GroupsData {
 
     function addVerdict(bytes32 monitorIndex, uint32 downtime, uint32 latency) external allow(_executorName) {
         verdicts[monitorIndex].push([uint(downtime), uint(latency)]);
+        verdictBlocks[monitorIndex].push(block.number);
     }
 
     function removeCheckedNode(bytes32 monitorIndex, uint indexOfCheckedNode) external allow(_executorName) {
@@ -69,9 +73,18 @@ contract MonitorsData is GroupsData {
     }
 
     function removeAllVerdicts(bytes32 monitorIndex) external allow(_executorName) {
+        bountyBlocks[monitorIndex].push(block.number);
         while (verdicts[monitorIndex].length > 0) {
             verdicts[monitorIndex].pop();
         }
+    }
+
+    function getReceivedVerdictBlocks(uint nodeIndex) external view returns (uint[] memory) {
+        return verdictBlocks[keccak256(abi.encodePacked(nodeIndex))];
+    }
+
+    function getBountyBlocks(uint nodeIndex) external view returns (uint[] memory) {
+        return bountyBlocks[keccak256(abi.encodePacked(nodeIndex))];
     }
 
     function getCheckedArray(bytes32 monitorIndex) external view returns (bytes32[] memory) {

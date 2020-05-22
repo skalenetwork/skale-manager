@@ -173,8 +173,8 @@ contract MonitorsFunctionality is GroupsFunctionality {
         if (lengthOfArray > 0) {
             averageDowntime = _median(downtimeArray);
             averageLatency = _median(latencyArray);
-            data.removeAllVerdicts(monitorIndex);
         }
+        data.removeAllVerdicts(monitorIndex);
     }
 
     function initialize(address contractManager) public override initializer {

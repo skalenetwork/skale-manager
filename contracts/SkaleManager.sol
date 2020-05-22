@@ -45,8 +45,6 @@ contract SkaleManager is IERC777Recipient, Permissions {
     // amount of Nodes at current stage
     uint public stageNodes;
 
-    mapping (uint => uint[]) public bountyBlocks;
-
     IERC1820Registry private _erc1820;
 
     bytes32 constant private _TOKENS_RECIPIENT_INTERFACE_HASH =
@@ -216,10 +214,6 @@ contract SkaleManager is IERC777Recipient, Permissions {
             gasleft());
     }
 
-    function getBountyBlocks(uint nodeIndex) external view returns (uint[] memory) {
-        return bountyBlocks[nodeIndex];
-    }
-
     function initialize(address newContractsAddress) public override initializer {
         Permissions.initialize(newContractsAddress);
         startTime = uint32(block.timestamp);
@@ -237,7 +231,6 @@ contract SkaleManager is IERC777Recipient, Permissions {
         ConstantsHolder constants = ConstantsHolder(_contractManager.getContract("ConstantsHolder"));
         // IManagerData managerData = IManagerData(_contractManager.getContract("ManagerData"));
         Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
-        bountyBlocks[nodeIndex].push(block.number);
 
         uint diffTime = nodes.getNodeLastRewardDate(nodeIndex)
             .add(constants.rewardPeriod())
