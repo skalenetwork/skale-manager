@@ -139,22 +139,20 @@ contract MonitorsFunctionality is GroupsFunctionality {
         bytes32 monitorIndex = keccak256(abi.encodePacked(fromMonitorIndex));
         (index, time) = _find(monitorIndex, verdict.toNodeIndex);
         require(time > 0, "Checked Node does not exist in MonitorsArray");
-        string memory message = "The time has not come to send verdict for ";
-        require(
-            time <= block.timestamp,
-            message.strConcat(StringUtils.uint2str(verdict.toNodeIndex)).strConcat(" Node"));
-        MonitorsData data = MonitorsData(_contractManager.getContract("MonitorsData"));
-        data.removeCheckedNode(monitorIndex, index);
-        ConstantsHolder constantsHolder = ConstantsHolder(_contractManager.getContract("ConstantsHolder"));
-        bool receiveVerdict = time.add(constantsHolder.deltaPeriod()) > uint32(block.timestamp);
-        if (receiveVerdict) {
-            data.addVerdict(keccak256(abi.encodePacked(verdict.toNodeIndex)), verdict.downtime, verdict.latency);
+        if (time <= block.timestamp) {
+            MonitorsData data = MonitorsData(_contractManager.getContract("MonitorsData"));
+            data.removeCheckedNode(monitorIndex, index);
+            ConstantsHolder constantsHolder = ConstantsHolder(_contractManager.getContract("ConstantsHolder"));
+            bool receiveVerdict = time.add(constantsHolder.deltaPeriod()) > uint32(block.timestamp);
+            if (receiveVerdict) {
+                data.addVerdict(keccak256(abi.encodePacked(verdict.toNodeIndex)), verdict.downtime, verdict.latency);
+            }
+            emit VerdictWasSent(
+                fromMonitorIndex,
+                verdict.toNodeIndex,
+                verdict,
+                receiveVerdict, uint32(block.timestamp), gasleft());
         }
-        emit VerdictWasSent(
-            fromMonitorIndex,
-            verdict.toNodeIndex,
-            verdict,
-            receiveVerdict, uint32(block.timestamp), gasleft());
     }
 
     function calculateMetrics(uint nodeIndex)
@@ -226,25 +224,6 @@ contract MonitorsFunctionality is GroupsFunctionality {
         }
         _quickSort(values, 0, values.length - 1);
         return values[values.length / 2];
-    }
-
-    function _setNumberOfNodesInGroup(bytes32 groupIndex, bytes32 groupData)
-        internal view returns (uint numberOfNodes, uint finish)
-    {
-        Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
-        address dataAddress = _contractManager.getContract(_dataName);
-        numberOfNodes = nodes.getNumberOfNodes();
-        uint numberOfActiveNodes = nodes.numberOfActiveNodes();
-        uint numberOfExceptionNodes = (nodes.isNodeActive(uint(groupData)) ? 1 : 0);
-        uint recommendedNumberOfNodes = IGroupsData(dataAddress).getRecommendedNumberOfNodes(groupIndex);
-        finish = (recommendedNumberOfNodes > numberOfActiveNodes.sub(numberOfExceptionNodes) ?
-            numberOfActiveNodes.sub(numberOfExceptionNodes) : recommendedNumberOfNodes);
-    }
-
-    function _comparator(bytes32 groupIndex, uint indexOfNode) internal view returns (bool) {
-        Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
-        address dataAddress = _contractManager.getContract(_dataName);
-        return nodes.isNodeActive(indexOfNode) && !IGroupsData(dataAddress).isExceptionNode(groupIndex, indexOfNode);
     }
 
     function _setMonitors(bytes32 groupIndex, uint nodeIndex) internal returns (uint) {
