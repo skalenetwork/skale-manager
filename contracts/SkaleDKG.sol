@@ -19,6 +19,7 @@
 
 pragma solidity 0.6.8;
 pragma experimental ABIEncoderV2;
+import "./Decryption.sol";
 import "./Permissions.sol";
 import "./interfaces/IGroupsData.sol";
 import "./interfaces/ISchainsFunctionality.sol";
@@ -68,12 +69,17 @@ contract SkaleDKG is Permissions {
     }
 
     struct BroadcastedData {
-        bytes secretKeyContribution;
+        KeyShare[] secretKeyContribution;
         VerificationVector verificationVector;
     }
 
     struct VerificationVector {
         Fp2[] points;
+    }
+
+    struct KeyShare {
+        bytes32[2] publicKey;
+        bytes32 share;
     }
 
     uint constant private _P = 21888242871839275222246405745257275088696311157297823662689037894645226208583;
@@ -100,7 +106,7 @@ contract SkaleDKG is Permissions {
         bytes32 indexed groupIndex,
         uint indexed fromNode,
         VerificationVector verificationVector,
-        bytes secretKeyContribution
+        KeyShare[] secretKeyContribution
     );
 
     event AllDataReceived(bytes32 indexed groupIndex, uint nodeIndex);
@@ -150,7 +156,7 @@ contract SkaleDKG is Permissions {
         bytes32 groupIndex,
         uint nodeIndex,
         VerificationVector calldata verificationVector,
-        bytes calldata secretKeyContribution
+        KeyShare[] calldata secretKeyContribution
     )
         external
         correctGroup(groupIndex)
@@ -267,6 +273,10 @@ contract SkaleDKG is Permissions {
         }
     }
 
+    function reopenChannel(bytes32 groupIndex) external allow("SchainsData") {
+        _reopenChannel(groupIndex);
+    }
+
     function isChannelOpened(bytes32 groupIndex) external view returns (bool) {
         return channels[groupIndex].active;
     }
@@ -324,7 +334,7 @@ contract SkaleDKG is Permissions {
     }
 
     function getBroadcastedData(bytes32 groupIndex, uint nodeIndex)
-        external view returns (bytes memory, VerificationVector memory)
+        external view returns (KeyShare[] memory, VerificationVector memory)
     {
         uint index = _findNode(groupIndex, nodeIndex);
         return (_data[groupIndex][index].secretKeyContribution, _data[groupIndex][index].verificationVector);
@@ -343,7 +353,7 @@ contract SkaleDKG is Permissions {
         Permissions.initialize(contractsAddress);
     }
 
-    function reopenChannel(bytes32 groupIndex) public allowTwo("SkaleDKG", "SchainsData") {
+    function _reopenChannel(bytes32 groupIndex) internal {
         GroupsData groupsData = GroupsData(channels[groupIndex].dataAddress);
         channels[groupIndex].active = true;
 
@@ -378,7 +388,7 @@ contract SkaleDKG is Permissions {
         emit BadGuy(badNode);
         emit FailedDKG(groupIndex);
         
-        reopenChannel(groupIndex);
+        _reopenChannel(groupIndex);
         if (schainsFunctionalityInternal.isAnyFreeNode(groupIndex)) {
             uint newNode = schainsFunctionality.rotateNode(
                 badNode,
@@ -450,20 +460,14 @@ contract SkaleDKG is Permissions {
     }
 
     function _decryptMessage(bytes32 groupIndex, uint secretNumber) internal view returns (uint) {
-        address decryptionAddress = _contractManager.getContract("Decryption");
+        Decryption decryption = Decryption(_contractManager.getContract("Decryption"));
 
         bytes32 key = _getCommonPublicKey(groupIndex, secretNumber);
 
         // Decrypt secret key contribution
-        bytes32 ciphertext;
         uint index = _findNode(groupIndex, channels[groupIndex].fromNodeToComplaint);
         uint indexOfNode = _findNode(groupIndex, channels[groupIndex].nodeToComplaint);
-        bytes memory sc = _data[groupIndex][indexOfNode].secretKeyContribution;
-        assembly {
-            ciphertext := mload(add(sc, add(32, mul(index, 97))))
-        }
-
-        uint secret = IDecryption(decryptionAddress).decrypt(ciphertext, key);
+        uint secret = decryption.decrypt(_data[groupIndex][indexOfNode].secretKeyContribution[index].share, key);
         return secret;
     }
 
@@ -488,7 +492,7 @@ contract SkaleDKG is Permissions {
     function _isBroadcast(
         bytes32 groupIndex,
         uint nodeIndex,
-        bytes memory sc,
+        KeyShare[] memory sc,
         VerificationVector memory verificationVector
     )
         internal
@@ -497,10 +501,27 @@ contract SkaleDKG is Permissions {
         require(!channels[groupIndex].broadcasted[index], "This node is already broadcasted");
         channels[groupIndex].broadcasted[index] = true;
         channels[groupIndex].numberOfBroadcasted++;
+        
+        for (uint i = 0; i < sc.length; ++i) {
+            if (i < _data[groupIndex][index].secretKeyContribution.length) {
+                _data[groupIndex][index].secretKeyContribution[i] = sc[i];    
+            } else {
+                _data[groupIndex][index].secretKeyContribution.push(sc[i]);
+            }
+        }
+        while (_data[groupIndex][index].secretKeyContribution.length > sc.length) {
+            _data[groupIndex][index].secretKeyContribution.pop();
+        }
 
-        _data[groupIndex][index].secretKeyContribution = sc;
         for (uint i = 0; i < verificationVector.points.length; ++i) {
-            _data[groupIndex][index].verificationVector.points.push(verificationVector.points[i]);
+            if (i < _data[groupIndex][index].verificationVector.points.length) {
+                _data[groupIndex][index].verificationVector.points[i] = verificationVector.points[i];
+            } else {
+                _data[groupIndex][index].verificationVector.points.push(verificationVector.points[i]);
+            }
+        }
+        while (_data[groupIndex][index].verificationVector.points.length > verificationVector.points.length) {
+            _data[groupIndex][index].verificationVector.points.pop();
         }
     }
 

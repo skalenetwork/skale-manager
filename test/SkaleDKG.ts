@@ -107,25 +107,73 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
         );
 
         const encryptedSecretKeyContributions = [
-            "0x937c9c846a6fa7fd1984fe82e739ae37fcaa555c1dc0e8597c9f81b6a12f232f04fdf8101e91bd658fa1cea6fdd75adb85429" +
-            "51ce3d251cdaa78f43493dad730b59d32d2e872b36aa70cdce544b550ebe96994de860b6f6ebb7d0b4d4e6724b4bf7232f27fdf" +
-            "e521f3c7997dbb1c15452b7f196bd119d915ce76af3d1a008e181004086ff076abe442563ae9b8938d483ae581f4de2ee54298b" +
-            "3078289bbd85250c8df956450d32f671e4a8ec1e584119753ff171e80a61465246bfd291e8dac3d77",
-            "0xe371b8589b56d29e43ad703fa42666c02d0fb6144ec12962d2532560af3cc72e046b0a8bce07bd18f50e4c5b7ebe2f9e17a31" +
-            "7b91c64926bf2d46a8f1ff58acbeba17652e16f18345856a148a2730a83760a181eb129e0c6059091ab11aa3fc5b899b9787530" +
-            "3f76ad5dcf51d300d152958e063d4099e564bcc9e33bd6d351b1bf04e081fec066435a30e875ced147985c35ecba48407c550ba" +
-            "d42fc652366d9731c707f24d4865584868154798d727237aea2ad3c086c5f41b85d7eb697bb8fec5e",
+            [
+                {
+                    share: "0x937c9c846a6fa7fd1984fe82e739ae37fcaa555c1dc0e8597c9f81b6a12f232f",
+                    publicKey: [
+                        "0xfdf8101e91bd658fa1cea6fdd75adb8542951ce3d251cdaa78f43493dad730b5",
+                        "0x9d32d2e872b36aa70cdce544b550ebe96994de860b6f6ebb7d0b4d4e6724b4bf"
+                    ]
+                },
+                {
+                    share: "0x7232f27fdfe521f3c7997dbb1c15452b7f196bd119d915ce76af3d1a008e1810",
+                    publicKey: [
+                        "0x086ff076abe442563ae9b8938d483ae581f4de2ee54298b3078289bbd85250c8",
+                        "0xdf956450d32f671e4a8ec1e584119753ff171e80a61465246bfd291e8dac3d77"
+                    ]
+                }
+            ],
+            [
+                {
+                    share: "0xe371b8589b56d29e43ad703fa42666c02d0fb6144ec12962d2532560af3cc72e",
+                    publicKey: [
+                        "0x6b0a8bce07bd18f50e4c5b7ebe2f9e17a317b91c64926bf2d46a8f1ff58acbeb",
+                        "0xa17652e16f18345856a148a2730a83760a181eb129e0c6059091ab11aa3fc5b8"
+                    ]
+                },
+                {
+                    share: "0x99b97875303f76ad5dcf51d300d152958e063d4099e564bcc9e33bd6d351b1bf",
+                    publicKey: [
+                        "0xe081fec066435a30e875ced147985c35ecba48407c550bad42fc652366d9731c",
+                        "0x707f24d4865584868154798d727237aea2ad3c086c5f41b85d7eb697bb8fec5e"
+                    ]
+                }
+            ]
         ];
 
         const badEncryptedSecretKeyContributions = [
-            "0x937c9c846a6fa7fd1984fe82e739ae37f444444444444444444441b6a12f232f04fdf8101e91bd658fa1cea6fdd75adb85429" +
-            "51ce3d251cdaa78f43493dad730b59d32d24444444444444444444450ebe96994de860b6f6ebb7d0b4d4e6724b4c07232f27fdf" +
-            "e521f3c7997dbb1c15452b7f196bd119d91444444444444444444444086ff076abe442563ae9b8938d483ae581f4de2ee54298b" +
-            "3078289bbd85250c8df956450d32f671e4a4444444444444444444480a61465246bfd291e8dac3d78",
-            "0xe371b8589b56d29e43ad703fa42666c0244444444444444444444560af3cc72e046b0a8bce07bd18f50e4c5b7ebe2f9e17a31" +
-            "7b91c64926bf2d46a8f1ff58acbeba17652444444444444444444440a83760a181eb129e0c6059091ab11aa3fc5b999b9787530" +
-            "3f76ad5dcf51d300d152958e063d4099e56444444444444444444444e081fec066435a30e875ced147985c35ecba48407c550ba" +
-            "d42fc652366d9731c707f24d4865584868144444444444444444444086c5f41b85d7eb697bb8fec5f",
+            [
+                {
+                    share: "0x937c9c846a6fa7fd1984fe82e739ae37f444444444444444444441b6a12f232f",
+                    publicKey: [
+                        "0xfdf8101e91bd658fa1cea6fdd75adb8542951ce3d251cdaa78f43493dad730b5",
+                        "0x9d32d24444444444444444444450ebe96994de860b6f6ebb7d0b4d4e6724b4c0"
+                    ]
+                },
+                {
+                    share: "0x7232f27fdfe521f3c7997dbb1c15452b7f196bd119d914444444444444444444",
+                    publicKey: [
+                        "0x086ff076abe442563ae9b8938d483ae581f4de2ee54298b3078289bbd85250c8",
+                        "0xdf956450d32f671e4a4444444444444444444480a61465246bfd291e8dac3d78"
+                    ]
+                }
+            ],
+            [
+                {
+                    share: "0xe371b8589b56d29e43ad703fa42666c0244444444444444444444560af3cc72e",
+                    publicKey: [
+                        "0x6b0a8bce07bd18f50e4c5b7ebe2f9e17a317b91c64926bf2d46a8f1ff58acbeb",
+                        "0xa17652444444444444444444440a83760a181eb129e0c6059091ab11aa3fc5b9"
+                    ]
+                },
+                {
+                    share: "0x99b97875303f76ad5dcf51d300d152958e063d4099e564444444444444444444",
+                    publicKey: [
+                        "0xe081fec066435a30e875ced147985c35ecba48407c550bad42fc652366d9731c",
+                        "0x707f24d4865584868144444444444444444444086c5f41b85d7eb697bb8fec5f"
+                    ]
+                }
+            ]
         ];
 
         const verificationVectors = [
@@ -291,7 +339,13 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                 assert.equal(result.logs[0].args.groupIndex, web3.utils.soliditySha3(schainName));
                 assert.equal(result.logs[0].args.fromNode.toString(), "0");
                 const res = await skaleDKG.getBroadcastedData(web3.utils.soliditySha3(schainName), 0);
-                assert.equal(res[0], encryptedSecretKeyContributions[indexes[0]]);
+
+                encryptedSecretKeyContributions[indexes[0]].forEach( (keyShare, i) => {
+                    keyShare.share.should.be.equal(res[0][i].share);
+                    keyShare.publicKey[0].should.be.equal(res[0][i].publicKey[0]);
+                    keyShare.publicKey[1].should.be.equal(res[0][i].publicKey[1]);
+                });
+
                 verificationVectors[indexes[0]].points.forEach((point, i) => {
                     ("0x" + ("00" + new BigNumber(res[1].points[i].x).toString(16)).slice(-2 * 32))
                         .should.be.equal(point.x);
