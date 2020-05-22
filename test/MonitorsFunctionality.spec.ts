@@ -199,7 +199,7 @@ contract("MonitorsFunctionality", ([owner, validator]) => {
       indexNode0inSha3, data32bytes, {from: owner},
       );
     await monitorsData.addMonitoringNode(monitorIndex1, indexNode0, {from: owner});
-    
+
     // execution
     // skipTime(web3, time - 200);
     const verd = {
