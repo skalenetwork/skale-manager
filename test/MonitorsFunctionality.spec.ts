@@ -33,11 +33,21 @@ contract("MonitorsFunctionality", ([owner, validator]) => {
     constantsHolder = await deployConstantsHolder(contractManager);
 
     // create a node for monitors functions tests
-    await nodes.addNode(validator, "elvis1", "0x7f000001", "0x7f000002", 8545, "0x1122334455", 0);
-    await nodes.addNode(validator, "elvis2", "0x7f000003", "0x7f000004", 8545, "0x1122334456", 0);
-    await nodes.addNode(validator, "elvis3", "0x7f000005", "0x7f000006", 8545, "0x1122334457", 0);
-    await nodes.addNode(validator, "elvis4", "0x7f000007", "0x7f000008", 8545, "0x1122334458", 0);
-    await nodes.addNode(validator, "elvis5", "0x7f000009", "0x7f000010", 8545, "0x1122334459", 0);
+    await nodes.addNode(validator, "elvis1", "0x7f000001", "0x7f000002", 8545,
+    ["0x1122334455667788990011223344556677889900112233445566778899001122",
+    "0x1122334455667788990011223344556677889900112233445566778899001122"], 0);
+    await nodes.addNode(validator, "elvis2", "0x7f000003", "0x7f000004", 8545,
+    ["0x1122334455667788990011223344556677889900112233445566778899001122",
+    "0x1122334455667788990011223344556677889900112233445566778899001122"], 0);
+    await nodes.addNode(validator, "elvis3", "0x7f000005", "0x7f000006", 8545,
+    ["0x1122334455667788990011223344556677889900112233445566778899001122",
+    "0x1122334455667788990011223344556677889900112233445566778899001122"], 0);
+    await nodes.addNode(validator, "elvis4", "0x7f000007", "0x7f000008", 8545,
+    ["0x1122334455667788990011223344556677889900112233445566778899001122",
+    "0x1122334455667788990011223344556677889900112233445566778899001122"], 0);
+    await nodes.addNode(validator, "elvis5", "0x7f000009", "0x7f000010", 8545,
+    ["0x1122334455667788990011223344556677889900112233445566778899001122",
+    "0x1122334455667788990011223344556677889900112233445566778899001122"], 0);
   });
   // nodeIndex = 0 because we add one node and her index in array is 0
   const nodeIndex = 0;
@@ -312,7 +322,8 @@ contract("MonitorsFunctionality", ([owner, validator]) => {
                                 "0x7f" + address + "01",
                                 "0x7f" + address + "02",
                                 8545,
-                                "0x1122334459",
+                                ["0x1122334455667788990011223344556677889900112233445566778899001122",
+                                 "0x1122334455667788990011223344556677889900112233445566778899001122"],
                                 0);
       }
 

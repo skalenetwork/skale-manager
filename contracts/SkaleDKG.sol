@@ -448,11 +448,9 @@ contract SkaleDKG is Permissions {
     function _getCommonPublicKey(bytes32 groupIndex, uint256 secretNumber) internal view returns (bytes32 key) {
         Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
         address ecdhAddress = _contractManager.getContract("ECDH");
-        bytes memory publicKey = nodes.getNodePublicKey(channels[groupIndex].fromNodeToComplaint);
-        uint256 pkX;
-        uint256 pkY;
-
-        (pkX, pkY) = _bytesToPublicKey(publicKey);
+        bytes32[2] memory publicKey = nodes.getNodePublicKey(channels[groupIndex].fromNodeToComplaint);
+        uint256 pkX = uint(publicKey[0]);
+        uint256 pkY = uint(publicKey[1]);
 
         (pkX, pkY) = IECDH(ecdhAddress).deriveKey(secretNumber, pkX, pkY);
 
@@ -747,9 +745,9 @@ contract SkaleDKG is Permissions {
         (tmpX, tmpY) = _bytesToG2(multipliedShare);
         uint x;
         uint y;
-        (x, y) = Precompiled.bn256ScalarMul(_G1A, _G2B, secret);
+        (x, y) = Precompiled.bn256ScalarMul(_G1A, _G1B, secret);
         if (!(x == 0 && y == 0)) {
-            x = _P.sub((y % _P));
+            y = _P.sub((y % _P));
         }
 
         require(_isG1(_G1A, _G1B), "G1.one not in G1");
@@ -759,18 +757,6 @@ contract SkaleDKG is Permissions {
         require(_isG2(tmpX, tmpY), "tmp not in G2");
 
         return Precompiled.bn256Pairing(x, y, _G2B, _G2A, _G2D, _G2C, _G1A, _G1B, tmpX.y, tmpX.x, tmpY.y, tmpY.x);
-    }
-
-    function _bytesToPublicKey(bytes memory someBytes) internal pure returns (uint x, uint y) {
-        bytes32 pkX;
-        bytes32 pkY;
-        assembly {
-            pkX := mload(add(someBytes, 32))
-            pkY := mload(add(someBytes, 64))
-        }
-
-        x = uint(pkX);
-        y = uint(pkY);
     }
 
     function _bytesToG2(bytes memory someBytes) internal pure returns (Fp2 memory x, Fp2 memory y) {

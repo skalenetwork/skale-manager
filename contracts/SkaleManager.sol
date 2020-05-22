@@ -77,7 +77,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
         uint16 nonce,
         bytes4 ip,
         bytes4 publicIp,
-        bytes calldata publicKey,
+        bytes32[2] calldata publicKey,
         string calldata name)
         external
     {

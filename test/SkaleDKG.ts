@@ -91,10 +91,10 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
             "0xe7af72d241d4dd77bc080ce9234d742f6b22e35b3a660e8c197517b909f63ca8",
         ];
         const validatorsPublicKey = [
-            "8f163316925bf2e12a30832dee812f6ff60bf872171a84d9091672dd3848be9fc0b7bd257fbb038019c41f055e81736d8116b83" +
-            "e9ac59a1407aa6ea804ec88a8",
-            "307654b2716eb09f01f33115173867611d403424586357226515ae6a92774b10d168ab741e8f7650116d0677fddc1aea8dc86a0" +
-            "0747e7224d2bf36e0ea3dd62c",
+            ["0x8f163316925bf2e12a30832dee812f6ff60bf872171a84d9091672dd3848be9f",
+             "0xc0b7bd257fbb038019c41f055e81736d8116b83e9ac59a1407aa6ea804ec88a8"],
+            ["0x307654b2716eb09f01f33115173867611d403424586357226515ae6a92774b10",
+             "0xd168ab741e8f7650116d0677fddc1aea8dc86a00747e7224d2bf36e0ea3dd62c"]
         ];
 
         const secretNumbers = [
@@ -260,7 +260,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                         nonce: 0,
                         ip: "0x7f0000" + hexIndex,
                         publicIp: "0x7f0000" + hexIndex,
-                        publicKey: "0x" + validatorsPublicKey[index],
+                        publicKey: validatorsPublicKey[index],
                         name: "d2" + hexIndex
                     });
             }
@@ -653,7 +653,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                     nonce: 0,
                     ip: "0x7f000003",
                     publicIp: "0x7f000003",
-                    publicKey: "0x" + validatorsPublicKey[0],
+                    publicKey: validatorsPublicKey[0],
                     name: "d203"
                 });
 

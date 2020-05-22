@@ -38,7 +38,7 @@ contract Nodes is Permissions {
         bytes4 ip;
         bytes4 publicIP;
         uint16 port;
-        bytes publicKey;
+        bytes32[2] publicKey;
         uint startBlock;
         uint32 lastRewardDate;
         uint32 finishTime;
@@ -63,7 +63,7 @@ contract Nodes is Permissions {
         bytes4 ip;
         bytes4 publicIp;
         uint16 port;
-        bytes publicKey;
+        bytes32[2] publicKey;
         uint16 nonce;
     }
 
@@ -134,7 +134,7 @@ contract Nodes is Permissions {
         bytes4 ip,
         bytes4 publicIP,
         uint16 port,
-        bytes calldata publicKey,
+        bytes32[2] calldata publicKey,
         uint validatorId
     )
         external
@@ -422,7 +422,7 @@ contract Nodes is Permissions {
         return nodes[nodeIndex].port;
     }
 
-    function getNodePublicKey(uint nodeIndex) external view returns (bytes memory) {
+    function getNodePublicKey(uint nodeIndex) external view returns (bytes32[2] memory) {
         return nodes[nodeIndex].publicKey;
     }
 
