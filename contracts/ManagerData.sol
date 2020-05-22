@@ -40,6 +40,12 @@ contract ManagerData is IManagerData, Permissions {
     //name of executor contract
     string private _executorName;
 
+    mapping (uint => uint[]) public bountyBlocks;
+
+    function setBountyBlock(uint nodeIndex) external override allow(_executorName) {
+        bountyBlocks[nodeIndex].push(block.number);
+    }
+
     /**
      * @dev setMinersCap - sets miners capitalization
      */
@@ -53,6 +59,10 @@ contract ManagerData is IManagerData, Permissions {
     function setStageTimeAndStageNodes(uint newStageNodes) external override allow(_executorName) {
         stageNodes = newStageNodes;
         stageTime = uint32(block.timestamp);
+    }
+
+    function getBountyBlocks(uint nodeIndex) external override view returns (uint[] memory) {
+        return bountyBlocks[nodeIndex];
     }
 
     /**

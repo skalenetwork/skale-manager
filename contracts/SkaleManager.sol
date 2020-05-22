@@ -205,6 +205,11 @@ contract SkaleManager is IERC777Recipient, Permissions {
             gasleft());
     }
 
+    function getBountyBlocks(uint nodeIndex) external view returns (uint[] memory) {
+        IManagerData managerData = IManagerData(_contractManager.getContract("ManagerData"));
+        return managerData.getBountyBlocks(nodeIndex);
+    }
+
     function initialize(address newContractsAddress) public override initializer {
         Permissions.initialize(newContractsAddress);
         _erc1820 = IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
@@ -221,6 +226,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
         ConstantsHolder constants = ConstantsHolder(_contractManager.getContract("ConstantsHolder"));
         IManagerData managerData = IManagerData(_contractManager.getContract("ManagerData"));
         Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
+        managerData.setBountyBlock(nodeIndex);
 
         uint diffTime = nodes.getNodeLastRewardDate(nodeIndex)
             .add(constants.rewardPeriod())
