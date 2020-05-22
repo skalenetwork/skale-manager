@@ -332,7 +332,8 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
 
             it("should fail to send monitor verdict if send it too early", async () => {
                 await skaleManager.sendVerdict(0, verdict, {from: nodeAddress})
-                    .should.be.eventually.rejectedWith("The time has not come to send verdict");
+                const lengthOfMetrics = await monitorsData.getLengthOfMetrics(web3.utils.soliditySha3(1), {from: owner});
+                lengthOfMetrics.toNumber().should.be.equal(0);
             });
 
             it("should fail to send monitor verdict if sender node does not exist", async () => {
