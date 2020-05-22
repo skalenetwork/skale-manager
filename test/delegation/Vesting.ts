@@ -62,7 +62,10 @@ contract("Vesting", ([owner, holder, holder1, holder2, holder3, hacker]) => {
     });
 
     it("should not register seller if period starts incorrect", async () => {
-        await Vesting.addVestingTerm(holder, getTimeAtDate(1, 6, 2021), 6, 36, 1e6, 1e5, 6, {from: owner}).should.be.eventually.rejectedWith("Incorrect period starts");
+        const time = await currentTime(web3);
+        const currentDate = new Date(time * 1000);
+        const nextYear = currentDate.getFullYear() + 1;
+        await Vesting.addVestingTerm(holder, getTimeAtDate(1, 6, nextYear), 6, 36, 1e6, 1e5, 6, {from: owner}).should.be.eventually.rejectedWith("Incorrect period starts");
     });
 
     it("should be possible to delegate SAFT tokens", async () => {
@@ -101,7 +104,10 @@ contract("Vesting", ([owner, holder, holder1, holder2, holder3, hacker]) => {
         let startDate: number;
 
         beforeEach(async () => {
-            startDate = getTimeAtDate(1, 9, 2019)
+            const time = await currentTime(web3);
+            const currentDate = new Date(time * 1000);
+            const previousYear = currentDate.getFullYear() - 1;
+            startDate = getTimeAtDate(1, 9, previousYear)
             // SAFT example 0
             await Vesting.addVestingTerm(holder, startDate, lockupPeriod, fullPeriod, fullAmount, lockupAmount, vestPeriod, {from: owner});
         });
