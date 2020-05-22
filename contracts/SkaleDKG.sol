@@ -745,45 +745,20 @@ contract SkaleDKG is Permissions {
         Fp2 memory tmpX;
         Fp2 memory tmpY;
         (tmpX, tmpY) = _bytesToG2(multipliedShare);
-        uint[3] memory inputToMul;
-        uint[2] memory mulShare;
-        inputToMul[0] = _G1A;
-        inputToMul[1] = _G1B;
-        inputToMul[2] = secret;
-        bool success;
-        assembly {
-            success := staticcall(not(0), 7, inputToMul, 0x60, mulShare, 0x40)
-        }
-        require(success, "Multiplication failed");
-        if (!(mulShare[0] == 0 && mulShare[1] == 0)) {
-            mulShare[1] = _P.sub((mulShare[1] % _P));
+        uint x;
+        uint y;
+        (x, y) = Precompiled.bn256ScalarMul(_G1A, _G2B, secret);
+        if (!(x == 0 && y == 0)) {
+            x = _P.sub((y % _P));
         }
 
         require(_isG1(_G1A, _G1B), "G1.one not in G1");
-        require(_isG1(mulShare[0], mulShare[1]), "mulShare not in G1");
+        require(_isG1(x, y), "mulShare not in G1");
 
         require(_isG2(Fp2({x: _G2A, y: _G2B}), Fp2({x: _G2C, y: _G2D})), "G2.one not in G2");
         require(_isG2(tmpX, tmpY), "tmp not in G2");
 
-        uint[12] memory inputToPairing;
-        inputToPairing[0] = mulShare[0];
-        inputToPairing[1] = mulShare[1];
-        inputToPairing[2] = _G2B;
-        inputToPairing[3] = _G2A;
-        inputToPairing[4] = _G2D;
-        inputToPairing[5] = _G2C;
-        inputToPairing[6] = _G1A;
-        inputToPairing[7] = _G1B;
-        inputToPairing[8] = tmpX.y;
-        inputToPairing[9] = tmpX.x;
-        inputToPairing[10] = tmpY.y;
-        inputToPairing[11] = tmpY.x;
-        uint[1] memory out;
-        assembly {
-            success := staticcall(not(0), 8, inputToPairing, mul(12, 0x20), out, 0x20)
-        }
-        require(success, "Pairing check failed");
-        return out[0] != 0;
+        return Precompiled.bn256Pairing(x, y, _G2B, _G2A, _G2D, _G2C, _G1A, _G1B, tmpX.y, tmpX.x, tmpY.y, tmpY.x);
     }
 
     function _bytesToPublicKey(bytes memory someBytes) internal pure returns (uint x, uint y) {
