@@ -21,7 +21,6 @@ pragma solidity 0.6.6;
 pragma experimental ABIEncoderV2;
 
 import "./Permissions.sol";
-import "./interfaces/IConstants.sol";
 import "./interfaces/IGroupsData.sol";
 import "./interfaces/ISchainsFunctionality.sol";
 import "./interfaces/ISchainsFunctionalityInternal.sol";
@@ -276,9 +275,6 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
         (numberOfNodes, divisor) = ISchainsFunctionalityInternal(
             schainsFunctionalityInternalAddress
         ).getNodesDataFromTypeOfSchain(typeOfSchain);
-        // /*uint up;
-        // uint down;
-        // (up, down) = coefficientForPrice(constantsAddress);*/
         if (divisor == 0) {
             return 1e18;
         } else {
