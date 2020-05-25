@@ -57,7 +57,8 @@ contract MonitorsFunctionality is GroupsFunctionality {
     event VerdictWasSent(
         uint indexed fromMonitorIndex,
         uint indexed toNodeIndex,
-        MonitorsData.Verdict verdict,
+        uint32 downtime,
+        uint32 latency,
         bool status,
         uint previousBlockEvent,
         uint32 time,
@@ -152,7 +153,8 @@ contract MonitorsFunctionality is GroupsFunctionality {
             emit VerdictWasSent(
                 fromMonitorIndex,
                 verdict.toNodeIndex,
-                verdict,
+                verdict.downtime,
+                verdict.latency,
                 receiveVerdict,
                 previousBlockEvent,
                 uint32(block.timestamp),
