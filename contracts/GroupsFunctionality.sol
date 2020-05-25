@@ -104,31 +104,6 @@ abstract contract GroupsFunctionality is Permissions {
     }
 
     /**
-     * @dev upgradeGroup - upgrade Group at Data contract
-     * function could be run only by executor
-     * @param groupIndex - Groups identifier
-     * @param newRecommendedNumberOfNodes - recommended number of Nodes
-     * @param data - some extra data
-     */
-    function upgradeGroup(
-            bytes32 groupIndex,
-            uint newRecommendedNumberOfNodes,
-            bytes32 data)
-        external allow(_executorName)
-    {
-        address groupsDataAddress = _contractManager.getContract(_dataName);
-        require(IGroupsData(groupsDataAddress).isGroupActive(groupIndex), "Group is not active");
-        IGroupsData(groupsDataAddress).removeGroup(groupIndex);
-        IGroupsData(groupsDataAddress).removeAllNodesInGroup(groupIndex);
-        IGroupsData(groupsDataAddress).addGroup(groupIndex, newRecommendedNumberOfNodes, data);
-        emit GroupUpgraded(
-            groupIndex,
-            data,
-            uint32(block.timestamp),
-            gasleft());
-    }
-
-    /**
      * @dev verifySignature - verify signature which create Group by Groups BLS master public key
      * @param groupIndex - Groups identifier
      * @param signatureX - first part of BLS signature

@@ -115,7 +115,7 @@ contract Monitors is Groups {
         ConstantsHolder constantsHolder = ConstantsHolder(_contractManager.getContract("ConstantsHolder"));
         bytes32 groupIndex = keccak256(abi.encodePacked(nodeIndex));
         uint possibleNumberOfNodes = constantsHolder.NUMBER_OF_MONITORS();
-        upgradeGroup(groupIndex, possibleNumberOfNodes, bytes32(nodeIndex));
+        _upgradeGroup(groupIndex, possibleNumberOfNodes, bytes32(nodeIndex));
         uint numberOfNodesInGroup = _setMonitors(groupIndex, nodeIndex);
 
         ISkaleDKG skaleDKG = ISkaleDKG(_contractManager.getContract("SkaleDKG"));
@@ -291,6 +291,36 @@ contract Monitors is Groups {
             uint32(block.timestamp),
             gasleft());
         return indexOfNodesInGroup.length;
+    }
+
+    /**
+     * @dev upgradeGroup - upgrade Group at Data contract
+     * function could be run only by executor
+     * @param groupIndex - Groups identifier
+     * @param newRecommendedNumberOfNodes - recommended number of Nodes
+     * @param data - some extra data
+     */
+    function _upgradeGroup(bytes32 groupIndex, uint newRecommendedNumberOfNodes, bytes32 data)
+        internal
+        allow("SkaleManager")
+    {
+        require(groups[groupIndex].active, "Group is not active");
+
+        groups[groupIndex].recommendedNumberOfNodes = newRecommendedNumberOfNodes;
+        groups[groupIndex].groupData = data;
+        uint[4] memory previousKey = groups[groupIndex].groupsPublicKey;
+        previousPublicKeys[groupIndex].push(previousKey);
+        delete groups[groupIndex].groupsPublicKey;
+        delete groups[groupIndex].nodesInGroup;
+        while (groups[groupIndex].nodesInGroup.length > 0) {
+            groups[groupIndex].nodesInGroup.pop();
+        }
+
+        emit GroupUpgraded(
+            groupIndex,
+            data,
+            uint32(block.timestamp),
+            gasleft());
     }
 
     function _find(bytes32 monitorIndex, uint nodeIndex) internal view returns (uint index, uint32 time) {
