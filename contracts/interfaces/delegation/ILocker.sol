@@ -22,14 +22,20 @@
 pragma solidity 0.6.6;
 
 /**
- * @dev Interface of Locker functions.
+ * @dev Interface of Locker functions of the {TokenState} contract.
  *
- * The SKALE Network has two types of locked tokens:
+ * The SKALE Network has three types of locked tokens:
  *
- * 1. Tokens that are not transferable from one address to another, but may be
- * delegated to a validator {getAndUpdateLockedAmount}; and,
+ * - Tokens that are transferrable but are currently locked into delegation with
+ * a validator. See {DelegationController};
  *
- * 2. Tokens that are neither transferable nor delegatable {getAndUpdateForbiddenForDelegationAmount}.
+ * - Tokens that are not transferable from one address to another, but may be
+ * delegated to a validator {getAndUpdateLockedAmount}. This lock enforces
+ * Proof-of-Use requirements. See {TokenLaunchLocker}; and,
+ *
+ * - Tokens that are neither transferable nor delegatable
+ * {getAndUpdateForbiddenForDelegationAmount}. This lock enforces slashing.
+ * See {Punisher}.
  */
 interface ILocker {
     /**
