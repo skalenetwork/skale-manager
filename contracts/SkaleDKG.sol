@@ -82,6 +82,11 @@ contract SkaleDKG is Permissions {
         bytes32 share;
     }
 
+    struct MultipliedShare {
+        Fp2 x;
+        Fp2 y;
+    }
+
     uint constant private _P = 21888242871839275222246405745257275088696311157297823662689037894645226208583;
 
     uint constant private _G2A = 10857046999023057135944570762232829481370756359578518086990519993285655852781;
@@ -227,7 +232,7 @@ contract SkaleDKG is Permissions {
         bytes32 groupIndex,
         uint fromNodeIndex,
         uint secretNumber,
-        bytes calldata multipliedShare
+        MultipliedShare calldata multipliedShare
     )
         external
         correctGroup(groupIndex)
@@ -414,7 +419,7 @@ contract SkaleDKG is Permissions {
         bytes32 groupIndex,
         uint fromNodeIndex,
         uint secretNumber,
-        bytes memory multipliedShare
+        MultipliedShare memory multipliedShare
     )
         internal
         view
@@ -730,19 +735,21 @@ contract SkaleDKG is Permissions {
     function _checkDKGVerification(
         Fp2 memory valX,
         Fp2 memory valY,
-        bytes memory multipliedShare)
+        MultipliedShare memory multipliedShare)
         internal pure returns (bool)
     {
         Fp2 memory tmpX;
         Fp2 memory tmpY;
-        (tmpX, tmpY) = _bytesToG2(multipliedShare);
+        (tmpX, tmpY) = (multipliedShare.x, multipliedShare.y);
         return valX.x == tmpX.y && valX.y == tmpX.x && valY.x == tmpY.y && valY.y == tmpY.x;
     }
 
-    function _checkCorrectMultipliedShare(bytes memory multipliedShare, uint secret) internal view returns (bool) {
+    function _checkCorrectMultipliedShare(MultipliedShare memory multipliedShare, uint secret)
+        internal view returns (bool)
+    {
         Fp2 memory tmpX;
         Fp2 memory tmpY;
-        (tmpX, tmpY) = _bytesToG2(multipliedShare);
+        (tmpX, tmpY) = (multipliedShare.x, multipliedShare.y);
         uint x;
         uint y;
         (x, y) = Precompiled.bn256ScalarMul(_G1A, _G1B, secret);
@@ -757,22 +764,6 @@ contract SkaleDKG is Permissions {
         require(_isG2(tmpX, tmpY), "tmp not in G2");
 
         return Precompiled.bn256Pairing(x, y, _G2B, _G2A, _G2D, _G2C, _G1A, _G1B, tmpX.y, tmpX.x, tmpY.y, tmpY.x);
-    }
-
-    function _bytesToG2(bytes memory someBytes) internal pure returns (Fp2 memory x, Fp2 memory y) {
-        bytes32 xa;
-        bytes32 xb;
-        bytes32 ya;
-        bytes32 yb;
-        assembly {
-            xa := mload(add(someBytes, 32))
-            xb := mload(add(someBytes, 64))
-            ya := mload(add(someBytes, 96))
-            yb := mload(add(someBytes, 128))
-        }
-
-        x = Fp2({x: uint(xa), y: uint(xb)});
-        y = Fp2({x: uint(ya), y: uint(yb)});
     }
 
     function _swapCoordinates(Fp2 memory point) internal pure returns (Fp2 memory) {

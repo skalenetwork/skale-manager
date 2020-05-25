@@ -213,21 +213,49 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
         ];
 
         const multipliedShares = [
-            "0x02c2b888a23187f22195eadadbc05847a00dc59c913d465dbc4dfac9cfab437d2695832627b9081e77da7a3fc4d574363bf05" +
-            "1700055822f3d394dc3d9ff741724727c45f9322be756fbec6514525cbbfa27ef1951d3fed10f483c23f921879d03a7a3e6f3b5" +
-            "39dad43c0eca46e3f889b2b2300815ffc4633e26e64406625a99",
-            "0x2b61d71274e46235006128f6383539fa58ccf40c832fb1e81f3554c20efecbe4019708db3cb154aed20b0dba21505fac4e065" +
-            "93f353a8339fddaa21d2a43a5d91fed922c1955704caa85cdbcc7f33d24046362c635163e0e08bda8446c46699424d9e95c8cfa" +
-            "056db786176b84f9f8657a9cc8044855d43f1f088a515ed02af7",
+            {
+                x: {
+                    x: "0x02c2b888a23187f22195eadadbc05847a00dc59c913d465dbc4dfac9cfab437d",
+                    y: "0x2695832627b9081e77da7a3fc4d574363bf051700055822f3d394dc3d9ff7417"
+                },
+                y: {
+                    x: "0x24727c45f9322be756fbec6514525cbbfa27ef1951d3fed10f483c23f921879d",
+                    y: "0x03a7a3e6f3b539dad43c0eca46e3f889b2b2300815ffc4633e26e64406625a99"
+                }
+            },
+            {
+                x: {
+                    x: "0x2b61d71274e46235006128f6383539fa58ccf40c832fb1e81f3554c20efecbe4",
+                    y: "0x019708db3cb154aed20b0dba21505fac4e06593f353a8339fddaa21d2a43a5d9"
+                },
+                y: {
+                    x: "0x1fed922c1955704caa85cdbcc7f33d24046362c635163e0e08bda8446c466994",
+                    y: "0x24d9e95c8cfa056db786176b84f9f8657a9cc8044855d43f1f088a515ed02af7"
+                }
+            }
         ];
 
         const badMultipliedShares = [
-            "0x02c2b888a23187f22195eadadbc05847a00dc59c913d465dbc4dfac9cfab437d2695832627b9081e77da7a3fc4d574363bf05" +
-            "1700055822f3d394dc3d9ff741824727c45f9322be756fbec6514525cbbfa27ef1951d3fed10f483c23f921879d03a7a3e6f3b5" +
-            "39dad43c0eca46e3f889b2b2300815ffc4633e26e64406625a9b",
-            "0x2b61d71274e46235006128f6383539fa58ccf40c832fb1e81f3554c20efecbe4019708db3cb154aed20b0dba21505fac4e065" +
-            "93f353a8339fddaa21d2a43a5da1fed922c1955704caa85cdbcc7f33d24046362c635163e0e08bda8446c46699424d9e95c8cfa" +
-            "056db786176b84f9f8657a9cc8044855d43f1f088a515ed02af9",
+            {
+                x: {
+                    x: "0x02c2b888a23187f22195eadadbc05847a00dc59c913d465dbc4dfac9cfab437d",
+                    y: "0x2695832627b9081e77da7a3fc4d574363bf051700055822f3d394dc3d9ff7418"
+                },
+                y: {
+                    x: "0x24727c45f9322be756fbec6514525cbbfa27ef1951d3fed10f483c23f921879d",
+                    y: "0x03a7a3e6f3b539dad43c0eca46e3f889b2b2300815ffc4633e26e64406625a9b"
+                }
+            },
+            {
+                x: {
+                    x: "0x2b61d71274e46235006128f6383539fa58ccf40c832fb1e81f3554c20efecbe4",
+                    y: "0x019708db3cb154aed20b0dba21505fac4e06593f353a8339fddaa21d2a43a5da"
+                },
+                y: {
+                    x: "0x1fed922c1955704caa85cdbcc7f33d24046362c635163e0e08bda8446c466994",
+                    y: "0x24d9e95c8cfa056db786176b84f9f8657a9cc8044855d43f1f088a515ed02af9"
+                }
+            }
         ];
 
         const indexes = [0, 1];
