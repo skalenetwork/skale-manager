@@ -58,6 +58,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
         uint averageDowntime,
         uint averageLatency,
         uint bounty,
+        uint previousBlockEvent,
         uint32 time,
         uint gasSpend
     );
@@ -196,6 +197,8 @@ contract SkaleManager is IERC777Recipient, Permissions {
         uint averageLatency;
         MonitorsFunctionality monitorsFunctionality = MonitorsFunctionality(
             _contractManager.getContract("MonitorsFunctionality"));
+        MonitorsData monitorsData = MonitorsData(_contractManager.getContract("MonitorsData"));
+        uint previousBlockEvent = monitorsData.getLastBountyBlock(nodeIndex);
         (averageDowntime, averageLatency) = monitorsFunctionality.calculateMetrics(nodeIndex);
         uint bounty = _manageBounty(
             msg.sender,
@@ -210,6 +213,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
             averageDowntime,
             averageLatency,
             bounty,
+            previousBlockEvent,
             uint32(block.timestamp),
             gasleft());
     }

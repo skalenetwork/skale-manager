@@ -59,6 +59,7 @@ contract MonitorsFunctionality is GroupsFunctionality {
         uint indexed toNodeIndex,
         MonitorsData.Verdict verdict,
         bool status,
+        uint previousBlockEvent,
         uint32 time,
         uint gasSpend
     );
@@ -144,6 +145,7 @@ contract MonitorsFunctionality is GroupsFunctionality {
             data.removeCheckedNode(monitorIndex, index);
             ConstantsHolder constantsHolder = ConstantsHolder(_contractManager.getContract("ConstantsHolder"));
             bool receiveVerdict = time.add(constantsHolder.deltaPeriod()) > uint32(block.timestamp);
+            uint previousBlockEvent = data.getLastReceivedVerdictBlock(verdict.toNodeIndex);
             if (receiveVerdict) {
                 data.addVerdict(keccak256(abi.encodePacked(verdict.toNodeIndex)), verdict.downtime, verdict.latency);
             }
@@ -151,7 +153,11 @@ contract MonitorsFunctionality is GroupsFunctionality {
                 fromMonitorIndex,
                 verdict.toNodeIndex,
                 verdict,
-                receiveVerdict, uint32(block.timestamp), gasleft());
+                receiveVerdict,
+                previousBlockEvent,
+                uint32(block.timestamp),
+                gasleft()
+            );
         }
     }
 
