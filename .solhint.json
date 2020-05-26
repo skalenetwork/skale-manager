@@ -16,6 +16,6 @@
     "func-name-mixedcase": "error",
     "function-max-lines": "error",
     "no-unused-vars": "error",
-    "no-inline-assembly": "warn"
+    "no-inline-assembly": "error"
   }
 }
