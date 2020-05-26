@@ -86,7 +86,7 @@ contract Pricing is Permissions {
         uint sumLoadSchain = 0;
         for (uint i = 0; i < numberOfSchains; i++) {
             bytes32 schain = SchainsData(schainsDataAddress).schainsAtSystem(i);
-            uint numberOfNodesInGroup = IGroupsData(schainsDataAddress).getNumberOfNodesInGroup(schain);
+            uint numberOfNodesInGroup = SchainsData(schainsDataAddress).getNumberOfNodesInGroup(schain);
             uint part = SchainsData(schainsDataAddress).getSchainsPartOfNode(schain);
             sumLoadSchain = sumLoadSchain.add((numberOfNodesInGroup*10**7).div(part));
         }

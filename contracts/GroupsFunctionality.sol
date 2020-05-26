@@ -103,34 +103,34 @@ abstract contract GroupsFunctionality is Permissions {
         emit GroupDeleted(groupIndex, uint32(block.timestamp), gasleft());
     }
 
-    /**
-     * @dev verifySignature - verify signature which create Group by Groups BLS master public key
-     * @param groupIndex - Groups identifier
-     * @param signatureX - first part of BLS signature
-     * @param signatureY - second part of BLS signature
-     * @param hashX - first part of hashed message
-     * @param hashY - second part of hashed message
-     * @return true - if correct, false - if not
-     */
-    function verifySignature(
-        bytes32 groupIndex,
-        uint signatureX,
-        uint signatureY,
-        uint hashX,
-        uint hashY) external view returns (bool)
-    {
-        address groupsDataAddress = _contractManager.getContract(_dataName);
-        uint publicKeyx1;
-        uint publicKeyy1;
-        uint publicKeyx2;
-        uint publicKeyy2;
-        (publicKeyx1, publicKeyy1, publicKeyx2, publicKeyy2) =
-            IGroupsData(groupsDataAddress).getGroupsPublicKey(groupIndex);
-        address skaleVerifierAddress = _contractManager.getContract("SkaleVerifier");
-        return ISkaleVerifier(skaleVerifierAddress).verify(
-            signatureX, signatureY, hashX, hashY, publicKeyx1, publicKeyy1, publicKeyx2, publicKeyy2
-        );
-    }
+    // /**
+    //  * @dev verifySignature - verify signature which create Group by Groups BLS master public key
+    //  * @param groupIndex - Groups identifier
+    //  * @param signatureX - first part of BLS signature
+    //  * @param signatureY - second part of BLS signature
+    //  * @param hashX - first part of hashed message
+    //  * @param hashY - second part of hashed message
+    //  * @return true - if correct, false - if not
+    //  */
+    // function verifySignature(
+    //     bytes32 groupIndex,
+    //     uint signatureX,
+    //     uint signatureY,
+    //     uint hashX,
+    //     uint hashY) external view returns (bool)
+    // {
+    //     address groupsDataAddress = _contractManager.getContract(_dataName);
+    //     uint publicKeyx1;
+    //     uint publicKeyy1;
+    //     uint publicKeyx2;
+    //     uint publicKeyy2;
+    //     (publicKeyx1, publicKeyy1, publicKeyx2, publicKeyy2) =
+    //         IGroupsData(groupsDataAddress).getGroupsPublicKey(groupIndex);
+    //     address skaleVerifierAddress = _contractManager.getContract("SkaleVerifier");
+    //     return ISkaleVerifier(skaleVerifierAddress).verify(
+    //         signatureX, signatureY, hashX, hashY, publicKeyx1, publicKeyy1, publicKeyx2, publicKeyy2
+    //     );
+    // }
 
     /**
      * @dev contructor in Permissions approach

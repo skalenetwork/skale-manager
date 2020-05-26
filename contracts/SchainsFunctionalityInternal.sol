@@ -52,10 +52,10 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
         uint numberOfNodes,
         uint8 partOfNode) external allow(_executorName)
     {
-        address dataAddress = _contractManager.getContract(_dataName);
+        SchainsData schainsData = SchainsData(_contractManager.getContract(_dataName));
         createGroup(schainId, numberOfNodes, bytes32(uint(partOfNode)));
         uint[] memory numberOfNodesInGroup = _generateGroup(schainId);
-        SchainsData(dataAddress).setSchainPartOfNode(schainId, partOfNode);
+        schainsData.setSchainPartOfNode(schainId, partOfNode);
         emit SchainNodes(
             schainName,
             schainId,
@@ -65,17 +65,17 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
     }
 
     function removeNodeFromSchain(uint nodeIndex, bytes32 groupHash) external allowTwo(_executorName, "SkaleDKG") {
-        address schainsDataAddress = _contractManager.contracts(keccak256(abi.encodePacked("SchainsData")));
+        SchainsData schainsData = SchainsData(_contractManager.getContract(_dataName));
         uint groupIndex = findSchainAtSchainsForNode(nodeIndex, groupHash);
         uint indexOfNode = _findNode(groupHash, nodeIndex);
-        IGroupsData(schainsDataAddress).removeNodeFromGroup(indexOfNode, groupHash);
-        // IGroupsData(schainsDataAddress).removeExceptionNode(groupHash, nodeIndex);
-        SchainsData(schainsDataAddress).removeSchainForNode(nodeIndex, groupIndex);
+        schainsData.removeNodeFromGroup(indexOfNode, groupHash);
+        // schainsData.removeExceptionNode(groupHash, nodeIndex);
+        schainsData.removeSchainForNode(nodeIndex, groupIndex);
     }
 
     function removeNodeFromExceptions(bytes32 groupHash, uint nodeIndex) external allow(_executorName) {
-        address schainsDataAddress = _contractManager.contracts(keccak256(abi.encodePacked("SchainsData")));
-        IGroupsData(schainsDataAddress).removeExceptionNode(groupHash, nodeIndex);
+        SchainsData schainsData = SchainsData(_contractManager.getContract(_dataName));
+        schainsData.removeExceptionNode(groupHash, nodeIndex);
     }
 
     /**
@@ -96,7 +96,7 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
             uint index = random % possibleNodes.length;
             nodeIndex = possibleNodes[index];
             random = uint(keccak256(abi.encodePacked(random, nodeIndex)));
-        } while (groupsData.isExceptionNode(groupIndex, nodeIndex));
+        } while (schainsData.isExceptionNode(groupIndex, nodeIndex));
         require(_removeSpace(nodeIndex, space), "Could not remove space from nodeIndex");
         schainsData.addSchainForNode(nodeIndex, groupIndex);
         groupsData.setException(groupIndex, nodeIndex);
@@ -180,10 +180,10 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
      * @return index of Schain at schainsForNode array
      */
     function findSchainAtSchainsForNode(uint nodeIndex, bytes32 schainId) public view returns (uint) {
-        address dataAddress = _contractManager.contracts(keccak256(abi.encodePacked(_dataName)));
-        uint length = SchainsData(dataAddress).getLengthOfSchainsForNode(nodeIndex);
+        SchainsData schainsData = SchainsData(_contractManager.getContract(_dataName));
+        uint length = schainsData.getLengthOfSchainsForNode(nodeIndex);
         for (uint i = 0; i < length; i++) {
-            if (SchainsData(dataAddress).schainsForNodes(nodeIndex, i) == schainId) {
+            if (schainsData.schainsForNodes(nodeIndex, i) == schainId) {
                 return i;
             }
         }
@@ -219,7 +219,7 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
         }
 
         // set generated group
-        groupsData.setNodesInGroup(groupIndex, nodesInGroup);
+        schainsData.setNodesInGroup(groupIndex, nodesInGroup);
         emit GroupGenerated(
             groupIndex,
             nodesInGroup,
@@ -239,8 +239,8 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
     }
 
     function _isCorrespond(bytes32 groupIndex, uint nodeIndex) internal view returns (bool) {
-        IGroupsData groupsData = IGroupsData(_contractManager.contracts(keccak256(abi.encodePacked(_dataName))));
+        SchainsData schainsData = SchainsData(_contractManager.getContract(_dataName));
         Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
-        return !groupsData.isExceptionNode(groupIndex, nodeIndex) && nodes.isNodeActive(nodeIndex);
+        return !schainsData.isExceptionNode(groupIndex, nodeIndex) && nodes.isNodeActive(nodeIndex);
     }
 }

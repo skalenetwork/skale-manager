@@ -237,7 +237,7 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
     function restartSchainCreation(string calldata name) external allow(_executorName) {
         bytes32 schainId = keccak256(abi.encodePacked(name));
         address dataAddress = _contractManager.getContract(_dataName);
-        require(IGroupsData(dataAddress).isGroupFailedDKG(schainId), "DKG success");
+        require(SchainsData(dataAddress).isGroupFailedDKG(schainId), "DKG success");
         SchainsFunctionalityInternal schainsFunctionalityInternal = SchainsFunctionalityInternal(
             _contractManager.getContract("SchainsFunctionalityInternal"));
         require(schainsFunctionalityInternal.isAnyFreeNode(schainId), "No any free Nodes for rotation");

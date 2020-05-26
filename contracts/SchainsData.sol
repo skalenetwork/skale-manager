@@ -106,6 +106,67 @@ contract SchainsData is GroupsData {
     }
 
     /**
+     * @dev setPublicKey - sets BLS master public key
+     * function could be run only by SkaleDKG
+     * @param groupIndex - Groups identifier
+     * @param publicKeyx1 }
+     * @param publicKeyy1 } parts of BLS master public key
+     * @param publicKeyx2 }
+     * @param publicKeyy2 }
+     */
+    function setPublicKey(
+        bytes32 groupIndex,
+        uint publicKeyx1,
+        uint publicKeyy1,
+        uint publicKeyx2,
+        uint publicKeyy2) external allow("SkaleDKG")
+    {
+        if (!_isPublicKeyZero(groupIndex)) {
+            uint[4] memory previousKey = groups[groupIndex].groupsPublicKey;
+            previousPublicKeys[groupIndex].push(previousKey);
+        }
+        groups[groupIndex].succesfulDKG = true;
+        groups[groupIndex].groupsPublicKey[0] = publicKeyx1;
+        groups[groupIndex].groupsPublicKey[1] = publicKeyy1;
+        groups[groupIndex].groupsPublicKey[2] = publicKeyx2;
+        groups[groupIndex].groupsPublicKey[3] = publicKeyy2;
+    }
+
+    /**
+     * @dev removeNodeFromGroup - removes Node out of the Group
+     * function could be run only by executor
+     * @param indexOfNode - Nodes identifier
+     * @param groupIndex - Groups identifier
+     */
+    function removeNodeFromGroup(uint indexOfNode, bytes32 groupIndex) external allow(_executorName) {
+        uint size = groups[groupIndex].nodesInGroup.length;
+        if (indexOfNode < size) {
+            groups[groupIndex].nodesInGroup[indexOfNode] = groups[groupIndex].nodesInGroup[size - 1];
+        }
+        delete groups[groupIndex].nodesInGroup[size - 1];
+        groups[groupIndex].nodesInGroup.pop();
+    }
+
+    /**
+     * @dev setNodesInGroup - adds Nodes to Group
+     * function could be run only by executor
+     * @param groupIndex - Groups identifier
+     * @param nodesInGroup - array of indexes of Nodes which would be added to the Group
+    */
+    function setNodesInGroup(bytes32 groupIndex, uint[] calldata nodesInGroup) external allow(_executorName) {
+        groups[groupIndex].nodesInGroup = nodesInGroup;
+    }
+
+    /**
+     * @dev removeExceptionNode - remove exception Node from Group
+     * function could be run only by executor
+     * @param groupIndex - Groups identifier
+     */
+    function removeExceptionNode(bytes32 groupIndex, uint nodeIndex) external allow(_executorName) {
+        _exceptions[groupIndex].check[nodeIndex] = false;
+    }
+
+    /**
      * @dev setSchainIndex - adds Schain's hash to owner
      * function could be run only by executor
      * @param schainId - hash by Schain name
@@ -392,6 +453,43 @@ contract SchainsData is GroupsData {
                 activeSchains[cursor++] = schainsForNodes[nodeIndex][i - 1];
             }
         }
+    }
+
+    /**
+     * @dev isExceptionNode - checks is Node - exception at given Group
+     * @param groupIndex - Groups identifier
+     * @param nodeIndex - index of Node
+     * return true - exception, false - not exception
+     */
+    function isExceptionNode(bytes32 groupIndex, uint nodeIndex) external view returns (bool) {
+        return _exceptions[groupIndex].check[nodeIndex];
+    }
+
+    function isGroupFailedDKG(bytes32 groupIndex) external view returns (bool) {
+        return !groups[groupIndex].succesfulDKG;
+    }
+
+    /**
+     * @dev getNumberOfNodesInGroup - shows number of Nodes in Group
+     * @param groupIndex - Groups identifier
+     * @return number of Nodes in Group
+     */
+    function getNumberOfNodesInGroup(bytes32 groupIndex) external view returns (uint) {
+        return groups[groupIndex].nodesInGroup.length;
+    }
+
+    /**
+     * @dev getGroupsPublicKey - shows Groups public key
+     * @param groupIndex - Groups identifier
+     * @return publicKey(x1, y1, x2, y2) - parts of BLS master public key
+     */
+    function getGroupsPublicKey(bytes32 groupIndex) external view returns (uint, uint, uint, uint) {
+        return (
+            groups[groupIndex].groupsPublicKey[0],
+            groups[groupIndex].groupsPublicKey[1],
+            groups[groupIndex].groupsPublicKey[2],
+            groups[groupIndex].groupsPublicKey[3]
+        );
     }
 
     function initialize(address newContractsAddress) public override initializer {

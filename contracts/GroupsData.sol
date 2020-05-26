@@ -51,7 +51,7 @@ contract GroupsData is IGroupsData, Permissions {
     // past groups common BLS public keys
     mapping (bytes32 => uint[4][]) public previousPublicKeys;
     // mapping for checking Has Node already joined to the group
-    mapping (bytes32 => GroupCheck) private _exceptions;
+    mapping (bytes32 => GroupCheck) internal _exceptions;
 
     // name of executor contract
     string internal _executorName;
@@ -82,32 +82,6 @@ contract GroupsData is IGroupsData, Permissions {
         _exceptions[groupIndex].check[nodeIndex] = true;
     }
 
-    /**
-     * @dev setPublicKey - sets BLS master public key
-     * function could be run only by SkaleDKG
-     * @param groupIndex - Groups identifier
-     * @param publicKeyx1 }
-     * @param publicKeyy1 } parts of BLS master public key
-     * @param publicKeyx2 }
-     * @param publicKeyy2 }
-     */
-    function setPublicKey(
-        bytes32 groupIndex,
-        uint publicKeyx1,
-        uint publicKeyy1,
-        uint publicKeyx2,
-        uint publicKeyy2) external override allow("SkaleDKG")
-    {
-        if (!_isPublicKeyZero(groupIndex)) {
-            uint[4] memory previousKey = groups[groupIndex].groupsPublicKey;
-            previousPublicKeys[groupIndex].push(previousKey);
-        }
-        groups[groupIndex].succesfulDKG = true;
-        groups[groupIndex].groupsPublicKey[0] = publicKeyx1;
-        groups[groupIndex].groupsPublicKey[1] = publicKeyy1;
-        groups[groupIndex].groupsPublicKey[2] = publicKeyx2;
-        groups[groupIndex].groupsPublicKey[3] = publicKeyy2;
-    }
 
     /**
      * @dev setNodeInGroup - adds Node to Group
@@ -119,20 +93,6 @@ contract GroupsData is IGroupsData, Permissions {
         groups[groupIndex].nodesInGroup.push(nodeIndex);
     }
 
-    /**
-     * @dev removeNodeFromGroup - removes Node out of the Group
-     * function could be run only by executor
-     * @param indexOfNode - Nodes identifier
-     * @param groupIndex - Groups identifier
-     */
-    function removeNodeFromGroup(uint indexOfNode, bytes32 groupIndex) external override allow(_executorName) {
-        uint size = groups[groupIndex].nodesInGroup.length;
-        if (indexOfNode < size) {
-            groups[groupIndex].nodesInGroup[indexOfNode] = groups[groupIndex].nodesInGroup[size - 1];
-        }
-        delete groups[groupIndex].nodesInGroup[size - 1];
-        groups[groupIndex].nodesInGroup.pop();
-    }
 
     /**
      * @dev removeAllNodesInGroup - removes all added Nodes out the Group
@@ -146,19 +106,6 @@ contract GroupsData is IGroupsData, Permissions {
         }
     }
 
-    /**
-     * @dev setNodesInGroup - adds Nodes to Group
-     * function could be run only by executor
-     * @param groupIndex - Groups identifier
-     * @param nodesInGroup - array of indexes of Nodes which would be added to the Group
-    */
-    function setNodesInGroup(bytes32 groupIndex, uint[] calldata nodesInGroup) external override allow(_executorName) {
-        groups[groupIndex].nodesInGroup = nodesInGroup;
-    }
-
-    function setGroupFailedDKG(bytes32 groupIndex) external override allow("SkaleDKG") {
-        groups[groupIndex].succesfulDKG = false;
-    }
 
     /**
      * @dev removeGroup - remove Group from storage
@@ -181,13 +128,8 @@ contract GroupsData is IGroupsData, Permissions {
         }
     }
 
-    /**
-     * @dev removeExceptionNode - remove exception Node from Group
-     * function could be run only by executor
-     * @param groupIndex - Groups identifier
-     */
-    function removeExceptionNode(bytes32 groupIndex, uint nodeIndex) external override allow(_executorName) {
-        _exceptions[groupIndex].check[nodeIndex] = false;
+    function setGroupFailedDKG(bytes32 groupIndex) external override allow("SkaleDKG") {
+        groups[groupIndex].succesfulDKG = false;
     }
 
     /**
@@ -199,46 +141,21 @@ contract GroupsData is IGroupsData, Permissions {
         return groups[groupIndex].active;
     }
 
-    /**
-     * @dev isExceptionNode - checks is Node - exception at given Group
-     * @param groupIndex - Groups identifier
-     * @param nodeIndex - index of Node
-     * return true - exception, false - not exception
-     */
-    function isExceptionNode(bytes32 groupIndex, uint nodeIndex) external view override returns (bool) {
-        return _exceptions[groupIndex].check[nodeIndex];
-    }
 
-    /**
-     * @dev getGroupsPublicKey - shows Groups public key
-     * @param groupIndex - Groups identifier
-     * @return publicKey(x1, y1, x2, y2) - parts of BLS master public key
-     */
-    function getGroupsPublicKey(bytes32 groupIndex) external view override returns (uint, uint, uint, uint) {
-        return (
-            groups[groupIndex].groupsPublicKey[0],
-            groups[groupIndex].groupsPublicKey[1],
-            groups[groupIndex].groupsPublicKey[2],
-            groups[groupIndex].groupsPublicKey[3]
-        );
-    }
 
-    function getPreviousGroupsPublicKey(bytes32 groupIndex) external view returns (uint, uint, uint, uint) {
-        uint length = previousPublicKeys[groupIndex].length;
-        if (length == 0) {
-            return (0, 0, 0, 0);
-        }
-        return (
-            previousPublicKeys[groupIndex][length - 1][0],
-            previousPublicKeys[groupIndex][length - 1][1],
-            previousPublicKeys[groupIndex][length - 1][2],
-            previousPublicKeys[groupIndex][length - 1][3]
-        );
-    }
+    // function getPreviousGroupsPublicKey(bytes32 groupIndex) external view returns (uint, uint, uint, uint) {
+    //     uint length = previousPublicKeys[groupIndex].length;
+    //     if (length == 0) {
+    //         return (0, 0, 0, 0);
+    //     }
+    //     return (
+    //         previousPublicKeys[groupIndex][length - 1][0],
+    //         previousPublicKeys[groupIndex][length - 1][1],
+    //         previousPublicKeys[groupIndex][length - 1][2],
+    //         previousPublicKeys[groupIndex][length - 1][3]
+    //     );
+    // }
 
-    function isGroupFailedDKG(bytes32 groupIndex) external view override returns (bool) {
-        return !groups[groupIndex].succesfulDKG;
-    }
 
     /**
      * @dev getNodesInGroup - shows Nodes in Group
@@ -267,14 +184,7 @@ contract GroupsData is IGroupsData, Permissions {
         return groups[groupIndex].recommendedNumberOfNodes;
     }
 
-    /**
-     * @dev getNumberOfNodesInGroup - shows number of Nodes in Group
-     * @param groupIndex - Groups identifier
-     * @return number of Nodes in Group
-     */
-    function getNumberOfNodesInGroup(bytes32 groupIndex) external view override returns (uint) {
-        return groups[groupIndex].nodesInGroup.length;
-    }
+
 
     /**
      * @dev constructor in Permissions approach

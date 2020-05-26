@@ -20,7 +20,7 @@
 pragma solidity 0.6.6;
 
 import "./Permissions.sol";
-import "./interfaces/IGroupsData.sol";
+import "./SchainsData.sol";
 import "./utils/Precompiled.sol";
 
 
@@ -67,7 +67,7 @@ contract SkaleVerifier is Permissions {
         }
 
         address schainsDataAddress = _contractManager.getContract("SchainsData");
-        (uint pkA, uint pkB, uint pkC, uint pkD) = IGroupsData(schainsDataAddress).getGroupsPublicKey(
+        (uint pkA, uint pkB, uint pkC, uint pkD) = SchainsData(schainsDataAddress).getGroupsPublicKey(
             keccak256(abi.encodePacked(schainName))
         );
         return verify(

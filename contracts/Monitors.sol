@@ -294,7 +294,7 @@ contract Monitors is Groups {
     }
 
     /**
-     * @dev upgradeGroup - upgrade Group at Data contract
+     * @dev _upgradeGroup - upgrade Group at Data contract
      * function could be run only by executor
      * @param groupIndex - Groups identifier
      * @param newRecommendedNumberOfNodes - recommended number of Nodes

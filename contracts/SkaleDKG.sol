@@ -114,7 +114,7 @@ contract SkaleDKG is Permissions {
     modifier correctNode(bytes32 groupIndex, uint nodeIndex) {
         uint index = _findNode(groupIndex, nodeIndex);
         require(
-            index < IGroupsData(channels[groupIndex].dataAddress).getNumberOfNodesInGroup(groupIndex),
+            index < SchainsData(channels[groupIndex].dataAddress).getNumberOfNodesInGroup(groupIndex),
             "Node is not in this group");
         _;
     }
@@ -269,14 +269,14 @@ contract SkaleDKG is Permissions {
     {
         require(_isNodeByMessageSender(fromNodeIndex, msg.sender), "Node does not exist for message sender");
         uint index = _findNode(groupIndex, fromNodeIndex);
-        uint numberOfParticipant = IGroupsData(channels[groupIndex].dataAddress).getNumberOfNodesInGroup(groupIndex);
+        uint numberOfParticipant = SchainsData(channels[groupIndex].dataAddress).getNumberOfNodesInGroup(groupIndex);
         require(numberOfParticipant == channels[groupIndex].numberOfBroadcasted, "Still Broadcasting phase");
         require(!channels[groupIndex].completed[index], "Node is already alright");
         channels[groupIndex].completed[index] = true;
         channels[groupIndex].numberOfCompleted++;
         emit AllDataReceived(groupIndex, fromNodeIndex);
         if (channels[groupIndex].numberOfCompleted == numberOfParticipant) {
-            IGroupsData(channels[groupIndex].dataAddress).setPublicKey(
+            SchainsData(channels[groupIndex].dataAddress).setPublicKey(
                 groupIndex,
                 channels[groupIndex].publicKeyx.x,
                 channels[groupIndex].publicKeyx.y,
@@ -296,7 +296,7 @@ contract SkaleDKG is Permissions {
     function isBroadcastPossible(bytes32 groupIndex, uint nodeIndex) external view returns (bool) {
         uint index = _findNode(groupIndex, nodeIndex);
         return channels[groupIndex].active &&
-            index < IGroupsData(channels[groupIndex].dataAddress).getNumberOfNodesInGroup(groupIndex) &&
+            index < SchainsData(channels[groupIndex].dataAddress).getNumberOfNodesInGroup(groupIndex) &&
             _isNodeByMessageSender(nodeIndex, msg.sender) &&
             !channels[groupIndex].broadcasted[index];
     }
@@ -321,26 +321,26 @@ contract SkaleDKG is Permissions {
                 channels[groupIndex].startedBlockTimestamp.add(1800) <= block.timestamp
             );
         return channels[groupIndex].active &&
-            indexFrom < IGroupsData(channels[groupIndex].dataAddress).getNumberOfNodesInGroup(groupIndex) &&
-            indexTo < IGroupsData(channels[groupIndex].dataAddress).getNumberOfNodesInGroup(groupIndex) &&
+            indexFrom < SchainsData(channels[groupIndex].dataAddress).getNumberOfNodesInGroup(groupIndex) &&
+            indexTo < SchainsData(channels[groupIndex].dataAddress).getNumberOfNodesInGroup(groupIndex) &&
             _isNodeByMessageSender(fromNodeIndex, msg.sender) &&
             complaintSending;
     }
 
     function isAlrightPossible(bytes32 groupIndex, uint nodeIndex) external view returns (bool) {
         uint index = _findNode(groupIndex, nodeIndex);
-        GroupsData groupsData = GroupsData(channels[groupIndex].dataAddress);
+        SchainsData schainsData = SchainsData(channels[groupIndex].dataAddress);
         return channels[groupIndex].active &&
-            index < groupsData.getNumberOfNodesInGroup(groupIndex) &&
+            index < schainsData.getNumberOfNodesInGroup(groupIndex) &&
             _isNodeByMessageSender(nodeIndex, msg.sender) &&
-            groupsData.getNumberOfNodesInGroup(groupIndex) == channels[groupIndex].numberOfBroadcasted &&
+            schainsData.getNumberOfNodesInGroup(groupIndex) == channels[groupIndex].numberOfBroadcasted &&
             !channels[groupIndex].completed[index];
     }
 
     function isResponsePossible(bytes32 groupIndex, uint nodeIndex) external view returns (bool) {
         uint index = _findNode(groupIndex, nodeIndex);
         return channels[groupIndex].active &&
-            index < IGroupsData(channels[groupIndex].dataAddress).getNumberOfNodesInGroup(groupIndex) &&
+            index < SchainsData(channels[groupIndex].dataAddress).getNumberOfNodesInGroup(groupIndex) &&
             _isNodeByMessageSender(nodeIndex, msg.sender) &&
             channels[groupIndex].nodeToComplaint == nodeIndex;
     }
