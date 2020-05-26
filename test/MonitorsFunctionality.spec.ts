@@ -85,21 +85,21 @@ contract("MonitorsFunctionality", ([owner, validator]) => {
   it("should send Verdict", async () => {
     // preparation
     // ip = 127.0.0.1
-    const ipToHex = "7f000001";
+    const ip = "0x7f000001";
     const indexNode0 = 0;
     const indexNode0inSha3 = web3.utils.soliditySha3(indexNode0);
     const indexNode1 = 1;
-    const indexNode1ToHex = ("0000000000000000000000000000000000" +
-        indexNode1).slice(-28);
     const timeInSec = 1;
-    const timeToHex = ("0000000000000000000000000000000000" +
-        timeInSec).slice(-28);
-    const data32bytes = "0x" + indexNode1ToHex + timeToHex + ipToHex;
+    const node = {
+      nodeIndex: indexNode1,
+      time: timeInSec,
+      ip
+    }
     //
     await monitorsFunctionality.addMonitor(indexNode0, {from: owner});
     //
     await monitorsData.addCheckedNode(
-      indexNode0inSha3, data32bytes, {from: owner},
+      indexNode0inSha3, node, {from: owner},
       );
     // execution
     const verd = {
@@ -129,23 +129,21 @@ contract("MonitorsFunctionality", ([owner, validator]) => {
     const error = "The time has not come to send verdict for 1 Node";
     // preparation
     // ip = 127.0.0.1
-    const ipToHex = "7f000001";
+    const ip = "0x7f000001";
     const indexNode0 = 0;
     const indexNode0inSha3 = web3.utils.soliditySha3(indexNode0);
     const indexNode1 = 1;
-    const indexNode1ToHex = ("0000000000000000000000000000000000" +
-        indexNode1).slice(-28);
     const time = await currentTime(web3) + 100;
-    const timeInHex = time.toString(16);
-    const add0ToHex = ("00000000000000000000000000000" +
-    timeInHex).slice(-28);
-    // for data32bytes should revert to hex indexNode1 + oneSec + 127.0.0.1
-    const data32bytes = "0x" + indexNode1ToHex + add0ToHex + ipToHex;
+    const node = {
+      nodeIndex: indexNode1,
+      time,
+      ip
+    }
     //
     // await monitorsFunctionality.addMonitor(indexNode0, {from: owner});
     //
     await monitorsData.addCheckedNode(
-      indexNode0inSha3, data32bytes, {from: owner},
+      indexNode0inSha3, node, {from: owner},
       );
     const verd = {
       toNodeIndex: 1,
@@ -190,21 +188,20 @@ contract("MonitorsFunctionality", ([owner, validator]) => {
   it("should add verdict when sendVerdict invoke", async () => {
     // preparation
     // ip = 127.0.0.1
-    const ipToHex = "7f000001";
+    const ip = "0x7f000001";
     const indexNode0 = 0;
     const indexNode0inSha3 = web3.utils.soliditySha3(indexNode0);
     const indexNode1 = 1;
     const monitorIndex1 = web3.utils.soliditySha3(indexNode1);
-    const indexNode1ToHex = ("0000000000000000000000000000000000" +
-        indexNode1).slice(-28);
     const time = await currentTime(web3);
-    const timeInHex = time.toString(16);
-    const add0ToHex = ("00000000000000000000000000000" +
-    timeInHex).slice(-28);
-    const data32bytes = "0x" + indexNode1ToHex + add0ToHex + ipToHex;
+    const node = {
+      nodeIndex: indexNode1,
+      time,
+      ip
+    }
     //
     await monitorsData.addCheckedNode(
-      indexNode0inSha3, data32bytes, {from: owner},
+      indexNode0inSha3, node, {from: owner},
       );
     // execution
     // skipTime(web3, time - 200);
@@ -242,7 +239,7 @@ contract("MonitorsFunctionality", ([owner, validator]) => {
     await monitorsFunctionality.upgradeMonitor(0);
 
     const validatedArray = await monitorsData.getCheckedArray(node2Hash);
-    const validatedNodeIndexes = validatedArray.map((value) => value.slice(2, 2 + 14 * 2)).map(Number);
+    const validatedNodeIndexes = validatedArray.map((value) => new BigNumber(value.nodeIndex).toNumber());
 
     validatedNodeIndexes.sort();
     validatedNodeIndexes.forEach((value: number, index: number, array: number[]) => {

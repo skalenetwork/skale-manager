@@ -410,6 +410,7 @@ contract Nodes is Permissions {
      * @return ip address
      */
     function getNodeIP(uint nodeIndex) external view returns (bytes4) {
+        require(nodeIndex < nodes.length, "Node does not exist");
         return nodes[nodeIndex].ip;
     }
 

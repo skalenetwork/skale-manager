@@ -251,10 +251,10 @@ contract MonitorsFunctionality is GroupsFunctionality {
         MonitorsData data = MonitorsData(_contractManager.getContract("MonitorsData"));
         data.setException(groupIndex, nodeIndex);
         uint[] memory indexOfNodesInGroup = _generateGroup(groupIndex);
-        bytes32 bytesParametersOfNodeIndex = _getDataToBytes(nodeIndex);
+        MonitorsData.CheckedNode memory checkedNode = _getCheckedNodeData(nodeIndex);
         for (uint i = 0; i < indexOfNodesInGroup.length; i++) {
             bytes32 index = keccak256(abi.encodePacked(indexOfNodesInGroup[i]));
-            data.addCheckedNode(index, bytesParametersOfNodeIndex);
+            data.addCheckedNode(index, checkedNode);
         }
         emit MonitorsArray(
             nodeIndex,
@@ -267,15 +267,16 @@ contract MonitorsFunctionality is GroupsFunctionality {
 
     function _find(bytes32 monitorIndex, uint nodeIndex) internal view returns (uint index, uint32 time) {
         MonitorsData data = MonitorsData(_contractManager.getContract("MonitorsData"));
-        bytes32[] memory checkedNodes = data.getCheckedArray(monitorIndex);
-        uint possibleIndex;
-        uint32 possibleTime;
-        index = checkedNodes.length;
-        for (uint i = 0; i < checkedNodes.length; i++) {
-            (possibleIndex, possibleTime) = _getDataFromBytes(checkedNodes[i]);
-            if (possibleIndex == nodeIndex && (time == 0 || possibleTime < time)) {
+        index = data.getCheckedArrayLength(monitorIndex);
+        time = 0;
+        for (uint i = 0; i < data.getCheckedArrayLength(monitorIndex); i++) {
+            uint checkedNodeNodeIndex;
+            uint32 checkedNodeTime;
+            (checkedNodeNodeIndex, checkedNodeTime) = data.checkedNodes(monitorIndex, i);
+            if (checkedNodeNodeIndex == nodeIndex && (time == 0 || checkedNodeTime < time))
+            {
                 index = i;
-                time = possibleTime;
+                time = checkedNodeTime;
             }
         }
     }
@@ -303,33 +304,13 @@ contract MonitorsFunctionality is GroupsFunctionality {
             _quickSort(array, leftIndex, right);
     }
 
-    function _getDataFromBytes(bytes32 data) internal pure returns (uint index, uint32 time) {
-        bytes memory tempBytes = new bytes(32);
-        bytes14 bytesIndex;
-        bytes14 bytesTime;
-        assembly {
-            mstore(add(tempBytes, 32), data)
-            bytesIndex := mload(add(tempBytes, 32))
-            bytesTime := mload(add(tempBytes, 46))
-        }
-        index = uint112(bytesIndex);
-        time = uint32(uint112(bytesTime));
-    }
-
-    function _getDataToBytes(uint nodeIndex) internal view returns (bytes32 bytesParameters) {
+    function _getCheckedNodeData(uint nodeIndex) internal view returns (MonitorsData.CheckedNode memory checkedNode) {
         ConstantsHolder constantsHolder = ConstantsHolder(_contractManager.getContract("ConstantsHolder"));
         Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
-        bytes memory tempData = new bytes(32);
-        bytes14 bytesOfIndex = bytes14(uint112(nodeIndex));
-        bytes14 bytesOfTime = bytes14(
-            uint112(nodes.getNodeNextRewardDate(nodeIndex).sub(constantsHolder.deltaPeriod()))
-        );
-        bytes4 ip = nodes.getNodeIP(nodeIndex);
-        assembly {
-            mstore(add(tempData, 32), bytesOfIndex)
-            mstore(add(tempData, 46), bytesOfTime)
-            mstore(add(tempData, 60), ip)
-            bytesParameters := mload(add(tempData, 32))
-        }
+
+        checkedNode.nodeIndex = nodeIndex;
+        // Can't use SafeMath because we substract uint32
+        assert(nodes.getNodeNextRewardDate(nodeIndex) >= constantsHolder.deltaPeriod());
+        checkedNode.time = nodes.getNodeNextRewardDate(nodeIndex) - constantsHolder.deltaPeriod();
     }
 }
