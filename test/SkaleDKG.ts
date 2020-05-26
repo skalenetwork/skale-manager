@@ -626,6 +626,67 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
             assert.equal(channel.numberOfBroadcasted.toString(), "0");
             assert.equal(channel.startedBlockTimestamp.toString(), timestamp.toString());
             assert.equal(channel.dataAddress, dataAddress);
+            // console.log(channel);
+
+            let res = await skaleDKG.isBroadcastPossible(
+                    web3.utils.soliditySha3(schainName),
+                    2,
+                    {from: validatorsAccount[0]},
+                );
+
+            assert.equal(res, true);
+
+            await skaleDKG.broadcast(
+                web3.utils.soliditySha3(schainName),
+                2,
+                verificationVectors[indexes[0]],
+                // the last symbol is spoiled in parameter below
+                badEncryptedSecretKeyContributions[indexes[0]],
+                {from: validatorsAccount[0]},
+            );
+
+            res = await skaleDKG.isBroadcastPossible(
+                    web3.utils.soliditySha3(schainName),
+                    1,
+                    {from: validatorsAccount[1]},
+                );
+            assert.equal(res, true);
+
+            await skaleDKG.broadcast(
+                web3.utils.soliditySha3(schainName),
+                1,
+                verificationVectors[indexes[1]],
+                encryptedSecretKeyContributions[indexes[1]],
+                {from: validatorsAccount[1]},
+            );
+
+            channel = new Channel(await skaleDKG.channels(web3.utils.soliditySha3(schainName)));
+
+            res = await skaleDKG.isAlrightPossible(
+                        web3.utils.soliditySha3(schainName),
+                        2,
+                        {from: validatorsAccount[0]},
+                    );
+            assert.equal(res, true);
+
+            await skaleDKG.alright(
+                        web3.utils.soliditySha3(schainName),
+                        2,
+                        {from: validatorsAccount[0]},
+                    );
+
+            res = await skaleDKG.isAlrightPossible(
+                        web3.utils.soliditySha3(schainName),
+                        1,
+                        {from: validatorsAccount[1]},
+                    );
+            assert.equal(res, true);
+
+            await skaleDKG.alright(
+                        web3.utils.soliditySha3(schainName),
+                        1,
+                        {from: validatorsAccount[1]},
+                    );
         });
     });
 });
