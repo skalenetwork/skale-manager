@@ -23,21 +23,6 @@ import "./Permissions.sol";
 import "./interfaces/ISkaleDKG.sol";
 
 
-/**
- * @title SkaleVerifier - interface of SkaleVerifier
- */
-interface ISkaleVerifierG {
-    function verify(
-        uint sigx,
-        uint sigy,
-        uint hashx,
-        uint hashy,
-        uint pkx1,
-        uint pky1,
-        uint pkx2,
-        uint pky2) external view returns (bool);
-}
-
 
 /**
  * @title GroupsFunctionality - contract with some Groups functionality, will be inherited by
@@ -111,47 +96,6 @@ abstract contract Groups is Permissions {
     function setGroupFailedDKG(bytes32 groupIndex) external allow("SkaleDKG") {
         groups[groupIndex].succesfulDKG = false;
     }
-
-    // /**
-    //  * @dev verifySignature - verify signature which create Group by Groups BLS master public key
-    //  * @param groupIndex - Groups identifier
-    //  * @param signatureX - first part of BLS signature
-    //  * @param signatureY - second part of BLS signature
-    //  * @param hashX - first part of hashed message
-    //  * @param hashY - second part of hashed message
-    //  * @return true - if correct, false - if not
-    //  */
-    // function verifySignature(
-    //     bytes32 groupIndex,
-    //     uint signatureX,
-    //     uint signatureY,
-    //     uint hashX,
-    //     uint hashY) external view returns (bool)
-    // {
-    //     uint publicKeyx1;
-    //     uint publicKeyy1;
-    //     uint publicKeyx2;
-    //     uint publicKeyy2;
-    //     (publicKeyx1, publicKeyy1, publicKeyx2, publicKeyy2) = getGroupsPublicKey(groupIndex);
-    //     address skaleVerifierAddress = _contractManager.getContract("SkaleVerifier");
-    //     return ISkaleVerifierG(skaleVerifierAddress).verify(
-    //         signatureX, signatureY, hashX, hashY, publicKeyx1, publicKeyy1, publicKeyx2, publicKeyy2
-    //     );
-    // }
-
-
-    // function getPreviousGroupsPublicKey(bytes32 groupIndex) external view returns (uint, uint, uint, uint) {
-    //     uint length = previousPublicKeys[groupIndex].length;
-    //     if (length == 0) {
-    //         return (0, 0, 0, 0);
-    //     }
-    //     return (
-    //         previousPublicKeys[groupIndex][length - 1][0],
-    //         previousPublicKeys[groupIndex][length - 1][1],
-    //         previousPublicKeys[groupIndex][length - 1][2],
-    //         previousPublicKeys[groupIndex][length - 1][3]
-    //     );
-    // }
 
     /**
      * @dev createGroup - creates and adds new Group to Data contract
@@ -268,23 +212,6 @@ abstract contract Groups is Permissions {
      */
     function getNodesInGroup(bytes32 groupIndex) public view returns (uint[] memory) {
         return groups[groupIndex].nodesInGroup;
-    }
-
-    /**
-     * @dev findNode - find local index of Node in Schain
-     * @param groupIndex - Groups identifier
-     * @param nodeIndex - global index of Node
-     * @return local index of Node in Schain
-     */
-    function _findNode(bytes32 groupIndex, uint nodeIndex) internal view returns (uint) {
-        uint[] memory nodesInGroup = groups[groupIndex].nodesInGroup;
-        uint index;
-        for (index = 0; index < nodesInGroup.length; index++) {
-            if (nodesInGroup[index] == nodeIndex) {
-                return index;
-            }
-        }
-        return index;
     }
 
     /**

@@ -24,6 +24,24 @@ import "./GroupsData.sol";
 import "./ConstantsHolder.sol";
 
 
+
+/**
+ * @title SkaleVerifier - interface of SkaleVerifier
+ */
+interface ISkaleVerifierG {
+    function verify(
+        uint sigx,
+        uint sigy,
+        uint hashx,
+        uint hashy,
+        uint pkx1,
+        uint pky1,
+        uint pkx2,
+        uint pky2) external view returns (bool);
+}
+
+
+
 /**
  * @title SchainsData - Data contract for SchainsFunctionality.
  * Contain all information about SKALE-Chains.
@@ -479,16 +497,43 @@ contract SchainsData is GroupsData {
     }
 
     /**
-     * @dev getGroupsPublicKey - shows Groups public key
+     * @dev verifySignature - verify signature which create Group by Groups BLS master public key
      * @param groupIndex - Groups identifier
-     * @return publicKey(x1, y1, x2, y2) - parts of BLS master public key
+     * @param signatureX - first part of BLS signature
+     * @param signatureY - second part of BLS signature
+     * @param hashX - first part of hashed message
+     * @param hashY - second part of hashed message
+     * @return true - if correct, false - if not
      */
-    function getGroupsPublicKey(bytes32 groupIndex) external view returns (uint, uint, uint, uint) {
+    function verifySignature(
+        bytes32 groupIndex,
+        uint signatureX,
+        uint signatureY,
+        uint hashX,
+        uint hashY) external view returns (bool)
+    {
+        uint publicKeyx1;
+        uint publicKeyy1;
+        uint publicKeyx2;
+        uint publicKeyy2;
+        
+        (publicKeyx1, publicKeyy1, publicKeyx2, publicKeyy2) = getGroupsPublicKey(groupIndex);
+        address skaleVerifierAddress = _contractManager.getContract("SkaleVerifier");
+        return ISkaleVerifierG(skaleVerifierAddress).verify(
+            signatureX, signatureY, hashX, hashY, publicKeyx1, publicKeyy1, publicKeyx2, publicKeyy2
+        );
+    }
+
+    function getPreviousGroupsPublicKey(bytes32 groupIndex) external view returns (uint, uint, uint, uint) {
+        uint length = previousPublicKeys[groupIndex].length;
+        if (length == 0) {
+            return (0, 0, 0, 0);
+        }
         return (
-            groups[groupIndex].groupsPublicKey[0],
-            groups[groupIndex].groupsPublicKey[1],
-            groups[groupIndex].groupsPublicKey[2],
-            groups[groupIndex].groupsPublicKey[3]
+            previousPublicKeys[groupIndex][length - 1][0],
+            previousPublicKeys[groupIndex][length - 1][1],
+            previousPublicKeys[groupIndex][length - 1][2],
+            previousPublicKeys[groupIndex][length - 1][3]
         );
     }
 
@@ -498,4 +543,19 @@ contract SchainsData is GroupsData {
         numberOfSchains = 0;
         sumOfSchainsResources = 0;
     }
+
+    /**
+     * @dev getGroupsPublicKey - shows Groups public key
+     * @param groupIndex - Groups identifier
+     * @return publicKey(x1, y1, x2, y2) - parts of BLS master public key
+     */
+    function getGroupsPublicKey(bytes32 groupIndex) public view returns (uint, uint, uint, uint) {
+        return (
+            groups[groupIndex].groupsPublicKey[0],
+            groups[groupIndex].groupsPublicKey[1],
+            groups[groupIndex].groupsPublicKey[2],
+            groups[groupIndex].groupsPublicKey[3]
+        );
+    }
+
 }
