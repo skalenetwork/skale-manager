@@ -283,6 +283,51 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
 
                 expect(balanceAfter.sub(balanceBefore).eq(web3.utils.toBN("0"))).to.be.true;
             });
+
+            it("should check several monitoring periods", async () => {
+                const verdict1 = {
+                    toNodeIndex: 1,
+                    downtime: 0,
+                    latency: 50
+                };
+                const verdict2 = {
+                    toNodeIndex: 0,
+                    downtime: 0,
+                    latency: 50
+                };
+                skipTime(web3, 3400);
+                let txSendVerdict1 = await skaleManager.sendVerdict(0, verdict1, {from: nodeAddress});
+
+                let blocks = await monitors.getLastReceivedVerdictBlock(1);
+                txSendVerdict1.receipt.blockNumber.should.be.equal(blocks.toNumber());
+
+                skipTime(web3, 200);
+                let txGetBounty1 = await skaleManager.getBounty(0, {from: nodeAddress});
+                let txGetBounty2 = await skaleManager.getBounty(1, {from: nodeAddress});
+
+                blocks = await monitors.getLastBountyBlock(0);
+                txGetBounty1.receipt.blockNumber.should.be.equal(blocks.toNumber());
+                blocks = await monitors.getLastBountyBlock(1);
+                txGetBounty2.receipt.blockNumber.should.be.equal(blocks.toNumber());
+
+                skipTime(web3, 3400);
+                txSendVerdict1 = await skaleManager.sendVerdict(0, verdict1, {from: nodeAddress});
+                const txSendVerdict2 = await skaleManager.sendVerdict(1, verdict2, {from: nodeAddress});
+
+                blocks = await monitors.getLastReceivedVerdictBlock(1);
+                txSendVerdict1.receipt.blockNumber.should.be.equal(blocks.toNumber());
+                blocks = await monitors.getLastReceivedVerdictBlock(0);
+                txSendVerdict2.receipt.blockNumber.should.be.equal(blocks.toNumber());
+
+                skipTime(web3, 200);
+                txGetBounty1 = await skaleManager.getBounty(0, {from: nodeAddress});
+                txGetBounty2 = await skaleManager.getBounty(1, {from: nodeAddress});
+
+                blocks = await monitors.getLastBountyBlock(0);
+                txGetBounty1.receipt.blockNumber.should.be.equal(blocks.toNumber());
+                blocks = await monitors.getLastBountyBlock(1);
+                txGetBounty2.receipt.blockNumber.should.be.equal(blocks.toNumber());
+            });
         });
 
         describe("when 18 nodes are in the system", async () => {
@@ -330,8 +375,9 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
             });
 
             it("should fail to send monitor verdict if send it too early", async () => {
-                await skaleManager.sendVerdict(0, verdict, {from: nodeAddress})
-                    .should.be.eventually.rejectedWith("The time has not come to send verdict");
+                await skaleManager.sendVerdict(0, verdict, {from: nodeAddress});
+                const lengthOfMetrics = await monitors.getLengthOfMetrics(web3.utils.soliditySha3(1), {from: owner});
+                lengthOfMetrics.toNumber().should.be.equal(0);
             });
 
             it("should fail to send monitor verdict if sender node does not exist", async () => {
@@ -363,7 +409,13 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                         latency: 50
                     },
                 ]
-                await skaleManager.sendVerdicts(0, arr, {from: nodeAddress});
+                const txSendVerdict = await skaleManager.sendVerdicts(0, arr, {from: nodeAddress});
+
+                let blocks = await monitors.getLastReceivedVerdictBlock(1);
+                txSendVerdict.receipt.blockNumber.should.be.equal(blocks.toNumber());
+
+                blocks = await monitors.getLastReceivedVerdictBlock(2);
+                txSendVerdict.receipt.blockNumber.should.be.equal(blocks.toNumber());
 
                 await monitors.verdicts(web3.utils.soliditySha3(1), 0, 0)
                     .should.be.eventually.deep.equal(web3.utils.toBN(0));
@@ -376,10 +428,17 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
             });
 
             describe("when monitor verdict is received", async () => {
+                let blockNum: number;
                 beforeEach(async () => {
                     skipTime(web3, 3400);
-                    await skaleManager.sendVerdict(0, verdict, {from: nodeAddress});
+                    const txSendVerdict = await skaleManager.sendVerdict(0, verdict, {from: nodeAddress});
+                    blockNum = txSendVerdict.receipt.blockNumber;
                 });
+
+                it("should store verdict block", async () => {
+                    const blocks = await monitors.getLastReceivedVerdictBlock(1);
+                    blockNum.should.be.equal(blocks.toNumber());
+                })
 
                 it("should fail to get bounty if sender is not owner of the node", async () => {
                     await skaleManager.getBounty(1, {from: hacker})
@@ -392,7 +451,10 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                     // const bounty = web3.utils.toBN("893061271147690900777");
                     const bounty = web3.utils.toBN("1250285779606767261088");
 
-                    await skaleManager.getBounty(1, {from: nodeAddress});
+                    const txGetBounty = await skaleManager.getBounty(1, {from: nodeAddress});
+
+                    const blocks = await monitors.getLastBountyBlock(1);
+                    txGetBounty.receipt.blockNumber.should.be.equal(blocks.toNumber());
 
                     skipTime(web3, month); // can withdraw bounty only next month
 
@@ -406,6 +468,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
             });
 
             describe("when monitor verdict with downtime is received", async () => {
+                let blockNum: number;
                 beforeEach(async () => {
                     skipTime(web3, 3400);
                     const verdictWithDowntime = {
@@ -413,7 +476,13 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                         downtime: 1,
                         latency: 50,
                     };
-                    await skaleManager.sendVerdict(0, verdictWithDowntime, {from: nodeAddress});
+                    const txSendVerdict = await skaleManager.sendVerdict(0, verdictWithDowntime, {from: nodeAddress});
+                    blockNum = txSendVerdict.receipt.blockNumber;
+                });
+
+                it("should store verdict block", async () => {
+                    const blocks = await monitors.getLastReceivedVerdictBlock(1);
+                    blockNum.should.be.equal(blocks.toNumber());
                 });
 
                 it("should fail to get bounty if sender is not owner of the node", async () => {
@@ -428,7 +497,10 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
 
                     const bounty = web3.utils.toBN("1250227896005859540382");
 
-                    await skaleManager.getBounty(1, {from: nodeAddress});
+                    const txGetBounty = await skaleManager.getBounty(1, {from: nodeAddress});
+
+                    const blocks = await monitors.getLastBountyBlock(1);
+                    txGetBounty.receipt.blockNumber.should.be.equal(blocks.toNumber());
 
                     skipTime(web3, month); // can withdraw bounty only next month
 
@@ -446,7 +518,10 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                     // const bounty = web3.utils.toBN("893019925718471100273");
                     const bounty = web3.utils.toBN("1250227896005859540382");
 
-                    await skaleManager.getBounty(1, {from: nodeAddress});
+                    const txGetBounty = await skaleManager.getBounty(1, {from: nodeAddress});
+
+                    const blocks = await monitors.getLastBountyBlock(1);
+                    txGetBounty.receipt.blockNumber.should.be.equal(blocks.toNumber());
 
                     skipTime(web3, month); // can withdraw bounty only next month
 
@@ -461,10 +536,12 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                 it("should get bounty after big break", async () => {
                     skipTime(web3, 800);
                     const balanceBefore = web3.utils.toBN(await skaleToken.balanceOf(validator));
-                    // const bounty = web3.utils.toBN("892937234860031499264");
                     const bounty = web3.utils.toBN("1250112128804044098969");
 
-                    await skaleManager.getBounty(1, {from: nodeAddress});
+                    const txGetBounty = await skaleManager.getBounty(1, {from: nodeAddress});
+
+                    const blocks = await monitors.getLastBountyBlock(1);
+                    txGetBounty.receipt.blockNumber.should.be.equal(blocks.toNumber());
 
                     skipTime(web3, month); // can withdraw bounty only next month
 
@@ -478,6 +555,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
             });
 
             describe("when monitor verdict with latency is received", async () => {
+                let blockNum: number;
                 beforeEach(async () => {
                     skipTime(web3, 3400);
                     const verdictWithLatency = {
@@ -485,7 +563,13 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                         downtime: 0,
                         latency: 20000,
                     };
-                    await skaleManager.sendVerdict(0, verdictWithLatency, {from: nodeAddress});
+                    const txSendverdict = await skaleManager.sendVerdict(0, verdictWithLatency, {from: nodeAddress});
+                    blockNum = txSendverdict.receipt.blockNumber;
+                });
+
+                it("should store verdict block", async () => {
+                    const blocks = await monitors.getLastReceivedVerdictBlock(1);
+                    blockNum.should.be.equal(blocks.toNumber());
                 });
 
                 it("should fail to get bounty if sender is not owner of the node", async () => {
@@ -498,7 +582,10 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                     const balanceBefore = web3.utils.toBN(await skaleToken.balanceOf(validator));
                     const bounty = web3.utils.toBN("1250285779606767261088");
 
-                    await skaleManager.getBounty(1, {from: nodeAddress});
+                    const txGetBounty = await skaleManager.getBounty(1, {from: nodeAddress});
+
+                    const blocks = await monitors.getLastBountyBlock(1);
+                    txGetBounty.receipt.blockNumber.should.be.equal(blocks.toNumber());
 
                     skipTime(web3, month); // can withdraw bounty only next month
 
@@ -515,7 +602,10 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                     const balanceBefore = web3.utils.toBN(await skaleToken.balanceOf(validator));
                     const bounty = web3.utils.toBN("1250285779606767261088");
 
-                    await skaleManager.getBounty(1, {from: nodeAddress});
+                    const txGetBounty = await skaleManager.getBounty(1, {from: nodeAddress});
+
+                    const blocks = await monitors.getLastBountyBlock(1);
+                    txGetBounty.receipt.blockNumber.should.be.equal(blocks.toNumber());
 
                     skipTime(web3, month); // can withdraw bounty only next month
 
@@ -532,7 +622,10 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                     const balanceBefore = web3.utils.toBN(await skaleToken.balanceOf(validator));
                     const bounty = web3.utils.toBN("1250170012404951819675");
 
-                    await skaleManager.getBounty(1, {from: nodeAddress});
+                    const txGetBounty = await skaleManager.getBounty(1, {from: nodeAddress});
+
+                    const blocks = await monitors.getLastBountyBlock(1);
+                    txGetBounty.receipt.blockNumber.should.be.equal(blocks.toNumber());
 
                     skipTime(web3, month); // can withdraw bounty only next month
 

@@ -91,7 +91,6 @@ async function deploy(deployer, networkName, accounts) {
         "ECDH",
         "SkaleDKG",
         "SkaleVerifier",
-        "ManagerData",
         "SkaleManager",
         "Pricing"
     ]

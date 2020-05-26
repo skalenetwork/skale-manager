@@ -36,7 +36,11 @@ contract Monitors is Groups {
     }
 
     mapping (bytes32 => bytes32[]) public checkedNodes;
-    mapping (bytes32 => uint32[][]) public verdicts;
+    mapping (bytes32 => uint[][]) public verdicts;
+
+    mapping (bytes32 => uint) public lastVerdictBlocks;
+    mapping (bytes32 => uint) public lastBountyBlocks;
+
 
     event MonitorCreated(
         uint nodeIndex,
@@ -65,8 +69,10 @@ contract Monitors is Groups {
     event VerdictWasSent(
         uint indexed fromMonitorIndex,
         uint indexed toNodeIndex,
-        Verdict verdict,
+        uint32 downtime,
+        uint32 latency,
         bool status,
+        uint previousBlockEvent,
         uint32 time,
         uint gasSpend
     );
@@ -162,25 +168,29 @@ contract Monitors is Groups {
         bytes32 monitorIndex = keccak256(abi.encodePacked(fromMonitorIndex));
         (index, time) = _find(monitorIndex, verdict.toNodeIndex);
         require(time > 0, "Checked Node does not exist in MonitorsArray");
-        string memory message = "The time has not come to send verdict for ";
-        require(
-            time <= block.timestamp,
-            message.strConcat(StringUtils.uint2str(verdict.toNodeIndex)).strConcat(" Node"));
-        if (index != checkedNodes[monitorIndex].length - 1) {
-            checkedNodes[monitorIndex][index] = checkedNodes[monitorIndex][checkedNodes[monitorIndex].length - 1];
+        if (time <= block.timestamp) {
+            if (index != checkedNodes[monitorIndex].length - 1) {
+                checkedNodes[monitorIndex][index] = checkedNodes[monitorIndex][checkedNodes[monitorIndex].length - 1];
+            }
+            delete checkedNodes[monitorIndex][checkedNodes[monitorIndex].length - 1];
+            checkedNodes[monitorIndex].pop();
+            ConstantsHolder constantsHolder = ConstantsHolder(_contractManager.getContract("ConstantsHolder"));
+            bool receiveVerdict = time.add(constantsHolder.deltaPeriod()) > uint32(block.timestamp);
+            uint previousBlockEvent = getLastReceivedVerdictBlock(verdict.toNodeIndex);
+            if (receiveVerdict) {
+                addVerdict(keccak256(abi.encodePacked(verdict.toNodeIndex)), verdict.downtime, verdict.latency);
+            }
+            emit VerdictWasSent(
+                fromMonitorIndex,
+                verdict.toNodeIndex,
+                verdict.downtime,
+                verdict.latency,
+                receiveVerdict,
+                previousBlockEvent,
+                uint32(block.timestamp),
+                gasleft()
+            );
         }
-        delete checkedNodes[monitorIndex][checkedNodes[monitorIndex].length - 1];
-        checkedNodes[monitorIndex].pop();
-        ConstantsHolder constantsHolder = ConstantsHolder(_contractManager.getContract("ConstantsHolder"));
-        bool receiveVerdict = time.add(constantsHolder.deltaPeriod()) > uint32(block.timestamp);
-        if (receiveVerdict) {
-            verdicts[keccak256(abi.encodePacked(verdict.toNodeIndex))].push([verdict.downtime, verdict.latency]);
-        }
-        emit VerdictWasSent(
-            fromMonitorIndex,
-            verdict.toNodeIndex,
-            verdict,
-            receiveVerdict, uint32(block.timestamp), gasleft());
     }
 
     function calculateMetrics(uint nodeIndex)
@@ -199,14 +209,39 @@ contract Monitors is Groups {
         if (lengthOfArray > 0) {
             averageDowntime = _median(downtimeArray);
             averageLatency = _median(latencyArray);
-            while (verdicts[monitorIndex].length > 0) {
-                verdicts[monitorIndex].pop();
-            }
+        }
+        lastBountyBlocks[monitorIndex] = block.number;
+        while (verdicts[monitorIndex].length > 0) {
+            verdicts[monitorIndex].pop();
         }
     }
 
     function getCheckedArray(bytes32 monitorIndex) external view returns (bytes32[] memory) {
         return checkedNodes[monitorIndex];
+    }
+
+    function getLastBountyBlock(uint nodeIndex) external view returns (uint) {
+        return lastBountyBlocks[keccak256(abi.encodePacked(nodeIndex))];
+    }
+
+    function addCheckedNode(bytes32 monitorIndex, bytes32 data) public allow("SkaleManager") {
+        uint indexLength = 14;
+        require(data.length >= indexLength, "data is too small");
+        for (uint i = 0; i < checkedNodes[monitorIndex].length; ++i) {
+            require(checkedNodes[monitorIndex][i].length >= indexLength, "checked nodes data is too small");
+            uint shift = (32 - indexLength).mul(8);
+            bool equalIndex = checkedNodes[monitorIndex][i] >> shift == data >> shift;
+            if (equalIndex) {
+                checkedNodes[monitorIndex][i] = data;
+                return;
+            }
+        }
+        checkedNodes[monitorIndex].push(data);
+    }
+
+    function addVerdict(bytes32 monitorIndex, uint32 downtime, uint32 latency) public allow("SkaleManager") {
+        verdicts[monitorIndex].push([uint(downtime), uint(latency)]);
+        lastVerdictBlocks[monitorIndex] = block.number;
     }
 
     function initialize(address newContractsAddress) public override initializer {
@@ -215,6 +250,10 @@ contract Monitors is Groups {
 
     function getLengthOfMetrics(bytes32 monitorIndex) public view returns (uint) {
         return verdicts[monitorIndex].length;
+    }
+
+    function getLastReceivedVerdictBlock(uint nodeIndex) public view returns (uint) {
+        return lastVerdictBlocks[keccak256(abi.encodePacked(nodeIndex))];
     }
 
     function _generateGroup(bytes32 groupIndex)
@@ -268,21 +307,8 @@ contract Monitors is Groups {
         uint[] memory indexOfNodesInGroup = _generateGroup(groupIndex);
         bytes32 bytesParametersOfNodeIndex = _getDataToBytes(nodeIndex);
         for (uint i = 0; i < indexOfNodesInGroup.length; i++) {
-            bool stop = false;
             bytes32 index = keccak256(abi.encodePacked(indexOfNodesInGroup[i]));
-            uint indexLength = 14;
-            require(bytesParametersOfNodeIndex.length >= indexLength, "data is too small");
-            for (uint j = 0; j < checkedNodes[index].length; ++j) {
-                require(checkedNodes[index][j].length >= indexLength, "checked nodes data is too small");
-                uint shift = (32 - indexLength).mul(8);
-                if (checkedNodes[index][j] >> shift == bytesParametersOfNodeIndex >> shift) {
-                    checkedNodes[index][j] = bytesParametersOfNodeIndex;
-                    stop = true;
-                }
-            }
-            if (!stop) {
-                checkedNodes[index].push(bytesParametersOfNodeIndex);
-            }
+            addCheckedNode(index, bytesParametersOfNodeIndex);
         }
         emit MonitorsArray(
             nodeIndex,
