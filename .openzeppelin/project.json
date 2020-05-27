@@ -20,7 +20,6 @@
     "ECDH": "ECDH",
     "SkaleDKG": "SkaleDKG",
     "SkaleVerifier": "SkaleVerifier",
-    "ManagerData": "ManagerData",
     "SkaleManager": "SkaleManager",
     "Pricing": "Pricing",
     "SlashingTable": "SlashingTable",
