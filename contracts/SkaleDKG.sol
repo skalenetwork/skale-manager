@@ -48,13 +48,27 @@ interface IDecryption {
 
 contract SkaleDKG is Permissions {
 
+    struct Complex {
+        uint a;
+        uint b;
+    }
+
+    struct G1Point {
+        uint x;
+        uint y;
+    }
+
+    struct G2Point {
+        Complex x;
+        Complex y;
+    }
+
     struct Channel {
         bool active;
         address dataAddress;
         bool[] broadcasted;
         uint numberOfBroadcasted;
-        Fp2 publicKeyx;
-        Fp2 publicKeyy;
+        G2Point publicKey;
         uint numberOfCompleted;
         bool[] completed;
         uint startedBlockTimestamp;
@@ -63,18 +77,9 @@ contract SkaleDKG is Permissions {
         uint startComplaintBlockTimestamp;
     }
 
-    struct Fp2 {
-        uint x;
-        uint y;
-    }
-
     struct BroadcastedData {
         KeyShare[] secretKeyContribution;
-        VerificationVector verificationVector;
-    }
-
-    struct VerificationVector {
-        Fp2[] points;
+        G2Point[] verificationVector;
     }
 
     struct KeyShare {
@@ -83,8 +88,8 @@ contract SkaleDKG is Permissions {
     }
 
     struct MultipliedShare {
-        Fp2 x;
-        Fp2 y;
+        Complex x;
+        Complex y;
     }
 
     uint constant private _P = 21888242871839275222246405745257275088696311157297823662689037894645226208583;
@@ -110,7 +115,7 @@ contract SkaleDKG is Permissions {
     event BroadcastAndKeyShare(
         bytes32 indexed groupIndex,
         uint indexed fromNode,
-        VerificationVector verificationVector,
+        G2Point[] verificationVector,
         KeyShare[] secretKeyContribution
     );
 
@@ -143,7 +148,7 @@ contract SkaleDKG is Permissions {
         channels[groupIndex].dataAddress = address(groupsData);
         channels[groupIndex].broadcasted = new bool[](groupsData.getRecommendedNumberOfNodes(groupIndex));
         channels[groupIndex].completed = new bool[](groupsData.getRecommendedNumberOfNodes(groupIndex));
-        channels[groupIndex].publicKeyy.x = 1;
+        channels[groupIndex].publicKey.y.a = 1;
         channels[groupIndex].fromNodeToComplaint = uint(-1);
         channels[groupIndex].nodeToComplaint = uint(-1);
         channels[groupIndex].startedBlockTimestamp = block.timestamp;
@@ -160,7 +165,7 @@ contract SkaleDKG is Permissions {
     function broadcast(
         bytes32 groupIndex,
         uint nodeIndex,
-        VerificationVector calldata verificationVector,
+        G2Point[] calldata verificationVector,
         KeyShare[] calldata secretKeyContribution
     )
         external
@@ -168,27 +173,20 @@ contract SkaleDKG is Permissions {
         correctNode(groupIndex, nodeIndex)
     {
         require(_isNodeByMessageSender(nodeIndex, msg.sender), "Node does not exist for message sender");
-        require(verificationVector.points.length >= 2, "2 points is needed for broadcast");
-
-        // manually load verification vector to memory because solc does not suppurt this operation
-        VerificationVector memory _verificationVector = VerificationVector({points: new Fp2[](0)});
-        _verificationVector.points = new Fp2[](verificationVector.points.length);
-        for (uint i = 0; i < verificationVector.points.length; ++i) {
-            _verificationVector.points[i] = verificationVector.points[i];
-        }
+        require(verificationVector.length >= 1, "VerificationVector is empty");
         
         _isBroadcast(
             groupIndex,
             nodeIndex,
             secretKeyContribution,
-            _verificationVector
+            verificationVector
         );
         _adding(
             groupIndex,
-            verificationVector.points[0].x,
-            verificationVector.points[0].y,
-            verificationVector.points[1].x,
-            verificationVector.points[1].y
+            verificationVector[0].x.a,
+            verificationVector[0].x.b,
+            verificationVector[0].y.a,
+            verificationVector[0].y.b
         );
         emit BroadcastAndKeyShare(
             groupIndex,
@@ -267,10 +265,10 @@ contract SkaleDKG is Permissions {
         if (channels[groupIndex].numberOfCompleted == numberOfParticipant) {
             IGroupsData(channels[groupIndex].dataAddress).setPublicKey(
                 groupIndex,
-                channels[groupIndex].publicKeyx.x,
-                channels[groupIndex].publicKeyx.y,
-                channels[groupIndex].publicKeyy.x,
-                channels[groupIndex].publicKeyy.y
+                channels[groupIndex].publicKey.x.a,
+                channels[groupIndex].publicKey.x.b,
+                channels[groupIndex].publicKey.y.a,
+                channels[groupIndex].publicKey.y.b
             );
             // delete channels[groupIndex];
             channels[groupIndex].active = false;
@@ -339,7 +337,7 @@ contract SkaleDKG is Permissions {
     }
 
     function getBroadcastedData(bytes32 groupIndex, uint nodeIndex)
-        external view returns (KeyShare[] memory, VerificationVector memory)
+        external view returns (KeyShare[] memory, G2Point[] memory)
     {
         uint index = _findNode(groupIndex, nodeIndex);
         return (_data[groupIndex][index].secretKeyContribution, _data[groupIndex][index].verificationVector);
@@ -369,10 +367,10 @@ contract SkaleDKG is Permissions {
         delete channels[groupIndex].broadcasted;
         channels[groupIndex].broadcasted = new bool[](groupsData.getRecommendedNumberOfNodes(groupIndex));
         channels[groupIndex].completed = new bool[](groupsData.getRecommendedNumberOfNodes(groupIndex));
-        delete channels[groupIndex].publicKeyx.x;
-        delete channels[groupIndex].publicKeyx.y;
-        channels[groupIndex].publicKeyy.x = 1;
-        delete channels[groupIndex].publicKeyy.y;
+        delete channels[groupIndex].publicKey.x.a;
+        delete channels[groupIndex].publicKey.x.b;
+        channels[groupIndex].publicKey.y.a = 1;
+        delete channels[groupIndex].publicKey.y.b;
         channels[groupIndex].fromNodeToComplaint = uint(-1);
         channels[groupIndex].nodeToComplaint = uint(-1);
         delete channels[groupIndex].numberOfBroadcasted;
@@ -427,17 +425,16 @@ contract SkaleDKG is Permissions {
     {
         uint index = _findNode(groupIndex, fromNodeIndex);
         uint secret = _decryptMessage(groupIndex, secretNumber);
-        VerificationVector memory verificationVector = _data[groupIndex][index].verificationVector;
-        require(verificationVector.points.length % 2 == 0, "Verification vector contains odd number of points");
-        Fp2 memory valX = Fp2({x: 0, y: 0});
-        Fp2 memory valY = Fp2({x: 1, y: 0});
-        Fp2 memory tmpX = Fp2({x: 0, y: 0});
-        Fp2 memory tmpY = Fp2({x: 1, y: 0});
-        for (uint i = 0; i < verificationVector.points.length / 2; i++) {
+        G2Point[] memory verificationVector = _data[groupIndex][index].verificationVector;
+        Complex memory valX = Complex({a: 0, b: 0});
+        Complex memory valY = Complex({a: 1, b: 0});
+        Complex memory tmpX = Complex({a: 0, b: 0});
+        Complex memory tmpY = Complex({a: 1, b: 0});
+        for (uint i = 0; i < verificationVector.length; i++) {
             (tmpX, tmpY) = _mulG2(
                 Precompiled.bigModExp(index.add(1), i, _P),
-                _swapCoordinates(verificationVector.points[2 * i]),
-                _swapCoordinates(verificationVector.points[2 * i + 1])
+                _swapCoordinates(verificationVector[i].x),
+                _swapCoordinates(verificationVector[i].y)
             );
             (valX, valY) = _addG2(
                 tmpX,
@@ -483,12 +480,12 @@ contract SkaleDKG is Permissions {
     )
         internal
     {
-        require(_isG2(Fp2({ x: x1, y: y1 }), Fp2({ x: x2, y: y2 })), "Incorrect G2 point");
-        (channels[groupIndex].publicKeyx, channels[groupIndex].publicKeyy) = _addG2(
-            Fp2({ x: x1, y: y1 }),
-            Fp2({ x: x2, y: y2 }),
-            channels[groupIndex].publicKeyx,
-            channels[groupIndex].publicKeyy
+        require(_isG2(Complex({ a: x1, b: y1 }), Complex({ a: x2, b: y2 })), "Incorrect G2 point");
+        (channels[groupIndex].publicKey.x, channels[groupIndex].publicKey.y) = _addG2(
+            Complex({ a: x1, b: y1 }),
+            Complex({ a: x2, b: y2 }),
+            channels[groupIndex].publicKey.x,
+            channels[groupIndex].publicKey.y
         );
     }
 
@@ -496,7 +493,7 @@ contract SkaleDKG is Permissions {
         bytes32 groupIndex,
         uint nodeIndex,
         KeyShare[] memory sc,
-        VerificationVector memory verificationVector
+        G2Point[] memory verificationVector
     )
         internal
     {
@@ -515,16 +512,16 @@ contract SkaleDKG is Permissions {
         while (_data[groupIndex][index].secretKeyContribution.length > sc.length) {
             _data[groupIndex][index].secretKeyContribution.pop();
         }
-
-        for (uint i = 0; i < verificationVector.points.length; ++i) {
-            if (i < _data[groupIndex][index].verificationVector.points.length) {
-                _data[groupIndex][index].verificationVector.points[i] = verificationVector.points[i];
+        
+        for (uint i = 0; i < verificationVector.length; ++i) {
+            if (i < _data[groupIndex][index].verificationVector.length) {
+                _data[groupIndex][index].verificationVector[i] = verificationVector[i];
             } else {
-                _data[groupIndex][index].verificationVector.points.push(verificationVector.points[i]);
+                _data[groupIndex][index].verificationVector.push(verificationVector[i]);
             }
         }
-        while (_data[groupIndex][index].verificationVector.points.length > verificationVector.points.length) {
-            _data[groupIndex][index].verificationVector.points.pop();
+        while (_data[groupIndex][index].verificationVector.length > verificationVector.length) {
+            _data[groupIndex][index].verificationVector.pop();
         }
     }
 
@@ -551,50 +548,57 @@ contract SkaleDKG is Permissions {
         return nodes.isNodeExist(from, nodeIndex);
     }
 
-    // Fp2 operations
+    // Complex operations
 
-    function _addFp2(Fp2 memory a, Fp2 memory b) internal pure returns (Fp2 memory) {
-        return Fp2({ x: addmod(a.x, b.x, _P), y: addmod(a.y, b.y, _P) });
+    function _addFp2(Complex memory value1, Complex memory value2) internal pure returns (Complex memory) {
+        return Complex({ a: addmod(value1.a, value2.a, _P), b: addmod(value1.b, value2.b, _P) });
     }
 
-    function _scalarMulFp2(uint scalar, Fp2 memory a) internal pure returns (Fp2 memory) {
-        return Fp2({ x: mulmod(scalar, a.x, _P), y: mulmod(scalar, a.y, _P) });
+    function _scalarMulFp2(uint scalar, Complex memory value) internal pure returns (Complex memory) {
+        return Complex({ a: mulmod(scalar, value.a, _P), b: mulmod(scalar, value.b, _P) });
     }
 
-    function _minusFp2(Fp2 memory a, Fp2 memory b) internal pure returns (Fp2 memory) {
-        uint first;
-        uint second;
-        if (a.x >= b.x) {
-            first = addmod(a.x, _P.sub(b.x), _P);
+    function _minusFp2(Complex memory diminished, Complex memory subtracted) internal pure
+        returns (Complex memory difference)
+    {
+        if (diminished.a >= subtracted.a) {
+            difference.a = addmod(diminished.a, _P.sub(subtracted.a), _P);
         } else {
-            first = _P.sub(addmod(b.x, _P.sub(a.x), _P));
+            difference.a = _P.sub(addmod(subtracted.a, _P.sub(diminished.a), _P));
         }
-        if (a.y >= b.y) {
-            second = addmod(a.y, _P.sub(b.y), _P);
+        if (diminished.b >= subtracted.b) {
+            difference.b = addmod(diminished.b, _P.sub(subtracted.b), _P);
         } else {
-            second = _P.sub(addmod(b.y, _P.sub(a.y), _P));
+            difference.b = _P.sub(addmod(subtracted.b, _P.sub(diminished.b), _P));
         }
-        return Fp2({ x: first, y: second });
     }
 
-    function _mulFp2(Fp2 memory a, Fp2 memory b) internal pure returns (Fp2 memory) {
-        uint aA = mulmod(a.x, b.x, _P);
-        uint bB = mulmod(a.y, b.y, _P);
-        return Fp2({
-            x: addmod(aA, mulmod(_P - 1, bB, _P), _P),
-            y: addmod(mulmod(addmod(a.x, a.y, _P), addmod(b.x, b.y, _P), _P), _P.sub(addmod(aA, bB, _P)), _P)
-        });
+    function _mulFp2(Complex memory value1, Complex memory value2) internal pure returns (Complex memory result) {
+        Complex memory point = Complex({
+            a: mulmod(value1.a, value2.a, _P),
+            b: mulmod(value1.b, value2.b, _P)});
+        result.a = addmod(
+            point.a,
+            mulmod(_P - 1, point.b, _P),
+            _P);
+        result.b = addmod(
+            mulmod(
+                addmod(value1.a, value1.b, _P),
+                addmod(value2.a, value2.b, _P),
+                _P),
+            _P.sub(addmod(point.a, point.b, _P)),
+            _P);
     }
 
-    function _squaredFp2(Fp2 memory a) internal pure returns (Fp2 memory) {
-        uint ab = mulmod(a.x, a.y, _P);
-        uint mult = mulmod(addmod(a.x, a.y, _P), addmod(a.x, mulmod(_P - 1, a.y, _P), _P), _P);
-        return Fp2({ x: mult, y: addmod(ab, ab, _P) });
+    function _squaredFp2(Complex memory value) internal pure returns (Complex memory) {
+        uint ab = mulmod(value.a, value.b, _P);
+        uint mult = mulmod(addmod(value.a, value.b, _P), addmod(value.a, mulmod(_P - 1, value.b, _P), _P), _P);
+        return Complex({ a: mult, b: addmod(ab, ab, _P) });
     }
 
-    function _inverseFp2(Fp2 memory a) internal view returns (Fp2 memory x) {
-        uint t0 = mulmod(a.x, a.x, _P);
-        uint t1 = mulmod(a.y, a.y, _P);
+    function _inverseFp2(Complex memory value) internal view returns (Complex memory result) {
+        uint t0 = mulmod(value.a, value.a, _P);
+        uint t1 = mulmod(value.b, value.b, _P);
         uint t2 = mulmod(_P - 1, t1, _P);
         if (t0 >= t2) {
             t2 = addmod(t0, _P.sub(t2), _P);
@@ -602,82 +606,86 @@ contract SkaleDKG is Permissions {
             t2 = _P.sub(addmod(t2, _P.sub(t0), _P));
         }
         uint t3 = Precompiled.bigModExp(t2, _P - 2, _P);
-        x.x = mulmod(a.x, t3, _P);
-        x.y = _P.sub(mulmod(a.y, t3, _P));
+        result.a = mulmod(value.a, t3, _P);
+        result.b = _P.sub(mulmod(value.b, t3, _P));
     }
 
-    // End of Fp2 operations
+    // End of Complex operations
 
     function _isG1(uint x, uint y) internal pure returns (bool) {
         return mulmod(y, y, _P) == addmod(mulmod(mulmod(x, x, _P), x, _P), 3, _P);
     }
 
-    function _isG2(Fp2 memory x, Fp2 memory y) internal pure returns (bool) {
+    function _isG2(Complex memory x, Complex memory y) internal pure returns (bool) {
         if (_isG2Zero(x, y)) {
             return true;
         }
-        Fp2 memory squaredY = _squaredFp2(y);
-        Fp2 memory res = _minusFp2(_minusFp2(squaredY, _mulFp2(_squaredFp2(x), x)), Fp2({x: _TWISTBX, y: _TWISTBY}));
-        return res.x == 0 && res.y == 0;
+        Complex memory squaredY = _squaredFp2(y);
+        Complex memory res = _minusFp2(
+            _minusFp2(squaredY, _mulFp2(_squaredFp2(x), x)),
+            Complex({a: _TWISTBX, b: _TWISTBY}));
+        return res.a == 0 && res.b == 0;
     }
 
-    function _isG2Zero(Fp2 memory x, Fp2 memory y) internal pure returns (bool) {
-        return x.x == 0 && x.y == 0 && y.x == 1 && y.y == 0;
+    function _isG2Zero(Complex memory x, Complex memory y) internal pure returns (bool) {
+        return x.a == 0 && x.b == 0 && y.a == 1 && y.b == 0;
     }
 
-    function _doubleG2(Fp2 memory x1, Fp2 memory y1) internal view returns (Fp2 memory x3, Fp2 memory y3) {
+    function _doubleG2(Complex memory x1, Complex memory y1) internal view
+    returns (Complex memory x3, Complex memory y3)
+    {
         if (_isG2Zero(x1, y1)) {
             x3 = x1;
             y3 = y1;
         } else {
-            Fp2 memory s = _mulFp2(_scalarMulFp2(3, _squaredFp2(x1)), _inverseFp2(_scalarMulFp2(2, y1)));
+            Complex memory s = _mulFp2(_scalarMulFp2(3, _squaredFp2(x1)), _inverseFp2(_scalarMulFp2(2, y1)));
             x3 = _minusFp2(_squaredFp2(s), _scalarMulFp2(2, x1));
             y3 = _addFp2(y1, _mulFp2(s, _minusFp2(x3, x1)));
-            y3.x = _P.sub(y3.x % _P);
-            y3.y = _P.sub(y3.y % _P);
+            y3.a = _P.sub(y3.a % _P);
+            y3.b = _P.sub(y3.b % _P);
         }
     }
 
-    function _u1(Fp2 memory x1) internal pure returns (Fp2 memory) {
-        return _mulFp2(x1, _squaredFp2(Fp2({ x: 1, y: 0 })));
+    function _u1(Complex memory x1) internal pure returns (Complex memory) {
+        return _mulFp2(x1, _squaredFp2(Complex({ a: 1, b: 0 })));
     }
 
-    function _u2(Fp2 memory x2) internal pure returns (Fp2 memory) {
-        return _mulFp2(x2, _squaredFp2(Fp2({ x: 1, y: 0 })));
+    function _u2(Complex memory x2) internal pure returns (Complex memory) {
+        return _mulFp2(x2, _squaredFp2(Complex({ a: 1, b: 0 })));
     }
 
-    function _s1(Fp2 memory y1) internal pure returns (Fp2 memory) {
-        return _mulFp2(y1, _mulFp2(Fp2({ x: 1, y: 0 }), _squaredFp2(Fp2({ x: 1, y: 0 }))));
+    function _s1(Complex memory y1) internal pure returns (Complex memory) {
+        return _mulFp2(y1, _mulFp2(Complex({ a: 1, b: 0 }), _squaredFp2(Complex({ a: 1, b: 0 }))));
     }
 
-    function _s2(Fp2 memory y2) internal pure returns (Fp2 memory) {
-        return _mulFp2(y2, _mulFp2(Fp2({ x: 1, y: 0 }), _squaredFp2(Fp2({ x: 1, y: 0 }))));
+    function _s2(Complex memory y2) internal pure returns (Complex memory) {
+        return _mulFp2(y2, _mulFp2(Complex({ a: 1, b: 0 }), _squaredFp2(Complex({ a: 1, b: 0 }))));
     }
 
     function _isEqual(
-        Fp2 memory u1Value,
-        Fp2 memory u2Value,
-        Fp2 memory s1Value,
-        Fp2 memory s2Value
+        Complex memory u1Value,
+        Complex memory u2Value,
+        Complex memory s1Value,
+        Complex memory s2Value
     )
         internal
         pure
         returns (bool)
     {
-        return (u1Value.x == u2Value.x && u1Value.y == u2Value.y && s1Value.x == s2Value.x && s1Value.y == s2Value.y);
+        return (u1Value.a == u2Value.a && u1Value.b == u2Value.b && s1Value.a == s2Value.a && s1Value.b == s2Value.b);
     }
 
     function _addG2(
-        Fp2 memory x1,
-        Fp2 memory y1,
-        Fp2 memory x2,
-        Fp2 memory y2
+        Complex memory x1,
+        Complex memory y1,
+        Complex memory x2,
+        Complex memory y2
     )
         internal
         view
         returns (
-            Fp2 memory x3,
-            Fp2 memory y3
+            Complex memory x3,
+            Complex memory y3
         )
     {
         if (_isG2Zero(x1, y1)) {
@@ -697,27 +705,27 @@ contract SkaleDKG is Permissions {
             (x3, y3) = _doubleG2(x1, y1);
         }
 
-        Fp2 memory s = _mulFp2(_minusFp2(y2, y1), _inverseFp2(_minusFp2(x2, x1)));
+        Complex memory s = _mulFp2(_minusFp2(y2, y1), _inverseFp2(_minusFp2(x2, x1)));
         x3 = _minusFp2(_squaredFp2(s), _addFp2(x1, x2));
         y3 = _addFp2(y1, _mulFp2(s, _minusFp2(x3, x1)));
-        y3.x = _P.sub(y3.x % _P);
-        y3.y = _P.sub(y3.y % _P);
+        y3.a = _P.sub(y3.a % _P);
+        y3.b = _P.sub(y3.b % _P);
     }
 
     function _mulG2(
         uint scalar,
-        Fp2 memory x1,
-        Fp2 memory y1
+        Complex memory x1,
+        Complex memory y1
     )
         internal
         view
-        returns (Fp2 memory x, Fp2 memory y)
+        returns (Complex memory x, Complex memory y)
     {
         uint step = scalar;
-        x = Fp2({x: 0, y: 0});
-        y = Fp2({x: 1, y: 0});
-        Fp2 memory tmpX = x1;
-        Fp2 memory tmpY = y1;
+        x = Complex({a: 0, b: 0});
+        y = Complex({a: 1, b: 0});
+        Complex memory tmpX = x1;
+        Complex memory tmpY = y1;
         while (step > 0) {
             if (step % 2 == 1) {
                 (x, y) = _addG2(
@@ -733,22 +741,22 @@ contract SkaleDKG is Permissions {
     }
 
     function _checkDKGVerification(
-        Fp2 memory valX,
-        Fp2 memory valY,
+        Complex memory valX,
+        Complex memory valY,
         MultipliedShare memory multipliedShare)
         internal pure returns (bool)
     {
-        Fp2 memory tmpX;
-        Fp2 memory tmpY;
+        Complex memory tmpX;
+        Complex memory tmpY;
         (tmpX, tmpY) = (multipliedShare.x, multipliedShare.y);
-        return valX.x == tmpX.y && valX.y == tmpX.x && valY.x == tmpY.y && valY.y == tmpY.x;
+        return valX.a == tmpX.b && valX.b == tmpX.a && valY.a == tmpY.b && valY.b == tmpY.a;
     }
 
     function _checkCorrectMultipliedShare(MultipliedShare memory multipliedShare, uint secret)
         internal view returns (bool)
     {
-        Fp2 memory tmpX;
-        Fp2 memory tmpY;
+        Complex memory tmpX;
+        Complex memory tmpY;
         (tmpX, tmpY) = (multipliedShare.x, multipliedShare.y);
         uint x;
         uint y;
@@ -760,13 +768,13 @@ contract SkaleDKG is Permissions {
         require(_isG1(_G1A, _G1B), "G1.one not in G1");
         require(_isG1(x, y), "mulShare not in G1");
 
-        require(_isG2(Fp2({x: _G2A, y: _G2B}), Fp2({x: _G2C, y: _G2D})), "G2.one not in G2");
+        require(_isG2(Complex({a: _G2A, b: _G2B}), Complex({a: _G2C, b: _G2D})), "G2.one not in G2");
         require(_isG2(tmpX, tmpY), "tmp not in G2");
 
-        return Precompiled.bn256Pairing(x, y, _G2B, _G2A, _G2D, _G2C, _G1A, _G1B, tmpX.y, tmpX.x, tmpY.y, tmpY.x);
+        return Precompiled.bn256Pairing(x, y, _G2B, _G2A, _G2D, _G2C, _G1A, _G1B, tmpX.b, tmpX.a, tmpY.b, tmpY.a);
     }
 
-    function _swapCoordinates(Fp2 memory point) internal pure returns (Fp2 memory) {
-        return Fp2({x: point.y, y: point.x});
+    function _swapCoordinates(Complex memory value) internal pure returns (Complex memory) {
+        return Complex({a: value.b, b: value.a});
     }
 }
