@@ -55,6 +55,7 @@ contract Vesting is ILocker, Permissions, IERC777Recipient {
         require(fullPeriod >= lockupPeriod, "Incorrect periods");
         require(fullAmount >= lockupAmount, "Incorrect amounts");
         require(
+            (fullPeriod - lockupPeriod) == vestingTimes ||
             ((fullPeriod - lockupPeriod) / vestingTimes) * vestingTimes == fullPeriod - lockupPeriod,
             "Incorrect vesting times"
         );
