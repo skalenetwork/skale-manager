@@ -279,15 +279,16 @@ contract ValidatorService is Permissions {
     }
 
     /**
-     * @dev Allows SKALE Manager to check whether a validator can maintain a node.
+     * @dev Allows SKALE Manager to check whether a validator can maintain a node
+     * per minimum stake requirement (MSR).
      *
      * Requirements:
      *
      * - node must exist on the given validator
      *
      * @param validatorId uint ID of validator to perform the check
-     * @param nodeIndex uint 
-     * @return bool
+     * @param nodeIndex uint ID of the node under validatorID
+     * @return bool True if validatorID can maintain nodeID
      */
     function checkPossibilityToMaintainNode(uint validatorId, uint nodeIndex)
         external allow("SkaleManager") returns (bool)
