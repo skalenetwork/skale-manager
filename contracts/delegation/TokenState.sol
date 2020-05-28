@@ -32,7 +32,7 @@ import "../interfaces/delegation/ILocker.sol";
  * @title Token State
  * @dev This contract manages lockers to control token transferability.
  *
- * See {ILocker}.
+ * See ILocker.
  */
 contract TokenState is Permissions, ILocker {
 
@@ -68,10 +68,10 @@ contract TokenState is Permissions, ILocker {
     }
 
     /**
-     *  @dev Return and update the total locked and un-delegatable amount of a given `holder`.
+     * @dev Return and update the total locked and un-delegatable amount of a given `holder`.
      *
-     *  @param holder address of the token holder
-     *  @return total slashed amount (non-transferable and non-delegatable)
+     * @param holder address of the token holder
+     * @return amount total slashed amount (non-transferable and non-delegatable)
     */
     function getAndUpdateForbiddenForDelegationAmount(address holder) external override returns (uint amount) {
         uint forbidden = 0;
@@ -85,7 +85,7 @@ contract TokenState is Permissions, ILocker {
     /**
      * @dev Allows the Owner to remove a contract from the locker.
      *
-     * Emits a {LockerWasRemoved} event.
+     * Emits a LockerWasRemoved event.
      *
      * @param locker string name of contract to remove from locker
      */
@@ -117,7 +117,7 @@ contract TokenState is Permissions, ILocker {
     /**
      * @dev Allows the Owner to add a contract to the Locker.
      *
-     * Emits a {LockerWasAdded} event.
+     * Emits a LockerWasAdded event.
      *
      * @param locker string name of contract to add to locker
      */

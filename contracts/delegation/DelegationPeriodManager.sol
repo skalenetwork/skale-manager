@@ -3,8 +3,8 @@
 /*
     DelegationPeriodManager.sol - SKALE Manager
     Copyright (C) 2018-Present SKALE Labs
-    @author Vadim Yavorsky
     @author Dmytro Stebaiev
+    @author Vadim Yavorsky
 
     SKALE Manager is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as published
@@ -31,6 +31,10 @@ import "../Permissions.sol";
  * returns or `stakeMultiplier`. Currently, only delegation periods can be added.
  */
 contract DelegationPeriodManager is Permissions {
+
+    /**
+     * @dev Emitted when a new delegation period is specified.
+     */
     event DelegationPeriodWasSet(
         uint length,
         uint stakeMultiplier
@@ -42,7 +46,7 @@ contract DelegationPeriodManager is Permissions {
      * @dev Creates a new available delegation period and return in the network.
      * Only the owner may set new delegation period and returns in the network.
      *
-     * Emits a {DelegationPeriodWasSet} event.
+     * Emits a DelegationPeriodWasSet event.
      *
      * @param monthsCount uint delegation duration in months
      * @param stakeMultiplier uint return for delegation
@@ -64,12 +68,12 @@ contract DelegationPeriodManager is Permissions {
     }
 
     /**
-     * @dev Initial delegation period settings.
+     * @dev Initial delegation period and multiplier settings.
      */
     function initialize(address _contractsAddress) public override initializer {
         Permissions.initialize(_contractsAddress);
-        stakeMultipliers[3] = 100;  // 3 months at 100 basis
-        stakeMultipliers[6] = 150;  // 6 months at 150 basis
-        stakeMultipliers[12] = 200; // 12 months at 200 basis
+        stakeMultipliers[3] = 100;  // 3 months at 100
+        stakeMultipliers[6] = 150;  // 6 months at 150
+        stakeMultipliers[12] = 200; // 12 months at 200
     }
 }
