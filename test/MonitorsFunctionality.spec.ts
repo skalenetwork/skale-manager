@@ -85,9 +85,9 @@ contract("MonitorsFunctionality", ([owner, validator]) => {
     const timeToHex = ("0000000000000000000000000000000000" +
         timeInSec).slice(-28);
     const data32bytes = "0x" + indexNode1ToHex + timeToHex + ipToHex;
-    //
+
     await monitorsFunctionality.addMonitor(indexNode0, {from: owner});
-    //
+
     await monitorsData.addCheckedNode(
       indexNode0inSha3, data32bytes, {from: owner},
       );
@@ -115,14 +115,14 @@ contract("MonitorsFunctionality", ([owner, validator]) => {
           .should.be.eventually.rejectedWith(error);
   });
 
-  it("should rejected with `The time has...` error when invoke sendVerdict", async () => {
-    const error = "The time has not come to send verdict for 1 Node";
+  it("should not reject when try to send sendVerdict early", async () => {
     // preparation
     // ip = 127.0.0.1
     const ipToHex = "7f000001";
     const indexNode0 = 0;
     const indexNode0inSha3 = web3.utils.soliditySha3(indexNode0);
     const indexNode1 = 1;
+    const monitorIndex1 = web3.utils.soliditySha3(indexNode1);
     const indexNode1ToHex = ("0000000000000000000000000000000000" +
         indexNode1).slice(-28);
     const time = await currentTime(web3) + 100;
@@ -131,9 +131,7 @@ contract("MonitorsFunctionality", ([owner, validator]) => {
     timeInHex).slice(-28);
     // for data32bytes should revert to hex indexNode1 + oneSec + 127.0.0.1
     const data32bytes = "0x" + indexNode1ToHex + add0ToHex + ipToHex;
-    //
-    // await monitorsFunctionality.addMonitor(indexNode0, {from: owner});
-    //
+
     await monitorsData.addCheckedNode(
       indexNode0inSha3, data32bytes, {from: owner},
       );
@@ -143,8 +141,9 @@ contract("MonitorsFunctionality", ([owner, validator]) => {
       latency: 0,
     };
     await monitorsFunctionality
-          .sendVerdict(0, verd, {from: owner})
-          .should.be.eventually.rejectedWith(error);
+          .sendVerdict(0, verd, {from: owner});
+    const lengthOfMetrics = await monitorsData.getLengthOfMetrics(monitorIndex1, {from: owner});
+    lengthOfMetrics.toNumber().should.be.equal(0);
   });
 
   it("should calculate Metrics", async () => {
@@ -192,7 +191,7 @@ contract("MonitorsFunctionality", ([owner, validator]) => {
     const add0ToHex = ("00000000000000000000000000000" +
     timeInHex).slice(-28);
     const data32bytes = "0x" + indexNode1ToHex + add0ToHex + ipToHex;
-    //
+
     await monitorsData.addCheckedNode(
       indexNode0inSha3, data32bytes, {from: owner},
       );
@@ -280,7 +279,6 @@ contract("MonitorsFunctionality", ([owner, validator]) => {
     (await monitorsData.getCheckedArray(node4Hash)).length.should.be.equal(2);
 
     await monitorsFunctionality.deleteMonitor(0);
-    console.log("Finished delete 0 monitor");
 
     await monitorsData.getCheckedArray(node0Hash).should.be.eventually.empty;
     await monitorsData.getCheckedArray(node1Hash).should.be.eventually.empty;
@@ -288,15 +286,8 @@ contract("MonitorsFunctionality", ([owner, validator]) => {
     (await monitorsData.getCheckedArray(node3Hash)).length.should.be.equal(1);
     (await monitorsData.getCheckedArray(node4Hash)).length.should.be.equal(1);
 
-    console.log("Started delete 1 monitor");
     await monitorsFunctionality.deleteMonitor(1);
-    console.log("Finished delete 1 monitor");
 
-    // await monitorsData.getCheckedArray(node0Hash).should.be.eventually.empty;
-    // await monitorsData.getCheckedArray(node1Hash).should.be.eventually.empty;
-    // await monitorsData.getCheckedArray(node2Hash).should.be.eventually.empty;
-    // await monitorsData.getCheckedArray(node3Hash).should.be.eventually.empty;
-    // await monitorsData.getCheckedArray(node4Hash).should.be.eventually.empty;
   });
 
   const nodesCount = 50;
