@@ -496,7 +496,8 @@ contract ValidatorService is Permissions {
     }
 
     function _removeNodeAddress(uint validatorId, address nodeAddress) internal {
-        require(_nodeAddressToValidatorId[nodeAddress] == validatorId, "Validator does not have permissions to unlink node");
+        require(_nodeAddressToValidatorId[nodeAddress] == validatorId,
+            "Validator does not have permissions to unlink node");
         delete _nodeAddressToValidatorId[nodeAddress];
         for (uint i = 0; i < _nodeAddresses[validatorId].length; ++i) {
             if (_nodeAddresses[validatorId][i] == nodeAddress) {
