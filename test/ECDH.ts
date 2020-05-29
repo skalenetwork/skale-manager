@@ -3,10 +3,10 @@ import * as chaiAsPromised from "chai-as-promised";
 import * as elliptic from "elliptic";
 import { ECDHContract,
          ECDHInstance} from "../types/truffle-contracts";
-import "./utils/elliptic-types";
+import "./tools/elliptic-types";
 
-import { gasMultiplier } from "./utils/command_line";
-import { skipTime } from "./utils/time";
+import { gasMultiplier } from "./tools/command_line";
+import { skipTime } from "./tools/time";
 
 const EC = elliptic.ec;
 const ec = new EC("secp256k1");

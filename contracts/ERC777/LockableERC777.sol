@@ -91,7 +91,7 @@ contract LockableERC777 is IERC777, IERC20 /* Added by SKALE */, ReentrancyGuard
      *
      * Also emits a `Sent` event.
      */
-    function transfer(address recipient, uint256 amount) external /* Added by SKALE */ nonReentrant /* End of added by SKALE */ returns (bool) {
+    function transfer(address recipient, uint256 amount) external returns (bool) {
         require(recipient != address(0), "ERC777: transfer to the zero address");
 
         address from = msg.sender;
@@ -207,7 +207,7 @@ contract LockableERC777 is IERC777, IERC20 /* Added by SKALE */, ReentrancyGuard
     *
     * Emits `Sent` and `Transfer` events.
     */
-    function transferFrom(address holder, address recipient, uint256 amount) external /* Added by SKALE */ nonReentrant /*End*/ returns (bool) {
+    function transferFrom(address holder, address recipient, uint256 amount) external returns (bool) {
         require(recipient != address(0), "ERC777: transfer to the zero address");
         require(holder != address(0), "ERC777: transfer from the zero address");
 
@@ -373,7 +373,6 @@ contract LockableERC777 is IERC777, IERC20 /* Added by SKALE */, ReentrancyGuard
         bool requireReceptionAck
     )
         private
-        /* Added by SKALE */ nonReentrant /* End of added by SKALE */
     {
         require(from != address(0), "ERC777: send from the zero address");
         require(to != address(0), "ERC777: send to the zero address");
@@ -409,16 +408,17 @@ contract LockableERC777 is IERC777, IERC20 /* Added by SKALE */, ReentrancyGuard
         private
     {
         require(from != address(0), "ERC777: burn from the zero address");
+
+        _callTokensToSend(
+            operator, from, address(0), amount, data, operatorData
+        );
+
 // Added by SKALE----------------------------------------------------------
         uint locked = _getAndUpdateLockedAmount(from);
         if (locked > 0) {
             require(_balances[from] >= locked.add(amount), "Token should be unlocked for burning");
         }
 //-------------------------------------------------------------------------
-
-        _callTokensToSend(
-            operator, from, address(0), amount, data, operatorData
-        );
 
         // Update state variables
         _totalSupply = _totalSupply.sub(amount);
@@ -483,6 +483,7 @@ contract LockableERC777 is IERC777, IERC20 /* Added by SKALE */, ReentrancyGuard
         bytes memory operatorData
     )
         private
+        /* Added by SKALE */ nonReentrant /* End of added by SKALE */
     {
         address implementer = _erc1820.getInterfaceImplementer(from, TOKENS_SENDER_INTERFACE_HASH);
         if (implementer != address(0)) {
@@ -513,6 +514,7 @@ contract LockableERC777 is IERC777, IERC20 /* Added by SKALE */, ReentrancyGuard
         bool requireReceptionAck
     )
         private
+        /* Added by SKALE */ nonReentrant /* End of added by SKALE */
     {
         address implementer = _erc1820.getInterfaceImplementer(to, TOKENS_RECIPIENT_INTERFACE_HASH);
         if (implementer != address(0)) {

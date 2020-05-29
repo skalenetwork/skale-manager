@@ -21,6 +21,7 @@ pragma solidity 0.5.16;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts/cryptography/ECDSA.sol";
 
 import "../Permissions.sol";
 import "../interfaces/IConstants.sol";
@@ -29,6 +30,8 @@ import "./DelegationController.sol";
 
 
 contract ValidatorService is Permissions {
+
+    using ECDSA for bytes32;
 
     struct Validator {
         string name;
@@ -78,6 +81,8 @@ contract ValidatorService is Permissions {
     mapping (uint => address[]) private _nodeAddresses;
     uint public numberOfValidators;
 
+    bool public useWhitelist;
+
     modifier checkValidatorExists(uint validatorId) {
         require(validatorExists(validatorId), "Validator with such ID does not exist");
         _;
@@ -121,6 +126,10 @@ contract ValidatorService is Permissions {
         emit ValidatorWasDisabled(validatorId);
     }
 
+    function disableWhitelist() external onlyOwner {
+        useWhitelist = false;
+    }
+
     function getTrustedValidators() external view returns (uint[] memory) {
         uint numberOfTrustedValidators = 0;
         for (uint i = 1; i <= numberOfValidators; i++) {
@@ -159,8 +168,11 @@ contract ValidatorService is Permissions {
         emit ValidatorAddressChanged(validatorId, validators[validatorId].validatorAddress);
     }
 
-    function linkNodeAddress(address nodeAddress) external {
+    function linkNodeAddress(address nodeAddress, bytes calldata signature) external {
         uint validatorId = getValidatorId(msg.sender);
+        bytes32 hashOfValidatorId = keccak256(abi.encodePacked(validatorId)).toEthSignedMessageHash();
+        require(hashOfValidatorId.recover(signature) == nodeAddress, "Signature is not pass");
+        require(_validatorAddressToId[nodeAddress] == 0, "Node address is a validator");
         addNodeAddress(validatorId, nodeAddress);
         emit NodeAddressWasAdded(validatorId, nodeAddress);
     }
@@ -260,6 +272,7 @@ contract ValidatorService is Permissions {
 
     function initialize(address _contractManager) public initializer {
         Permissions.initialize(_contractManager);
+        useWhitelist = true;
     }
 
     function getValidatorIdByNodeAddress(address nodeAddress) public view returns (uint validatorId) {
@@ -311,6 +324,7 @@ contract ValidatorService is Permissions {
         require(_validatorAddressToId[validatorAddress] == 0, "Address is in use by the another validator");
         address oldAddress = validators[validatorId].validatorAddress;
         delete _validatorAddressToId[oldAddress];
+        _nodeAddressToValidatorId[validatorAddress] = validatorId;
         validators[validatorId].validatorAddress = validatorAddress;
         _validatorAddressToId[validatorAddress] = validatorId;
     }

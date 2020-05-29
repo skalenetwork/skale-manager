@@ -5,16 +5,16 @@ import { ConstantsHolderInstance,
          MonitorsFunctionalityInstance,
          NodesDataInstance,
          NodesFunctionalityInstance } from "../types/truffle-contracts";
-import { currentTime, skipTime } from "./utils/time";
+import { currentTime, skipTime } from "./tools/time";
 
 import chai = require("chai");
 import * as chaiAsPromised from "chai-as-promised";
-import { deployConstantsHolder } from "./utils/deploy/constantsHolder";
-import { deployContractManager } from "./utils/deploy/contractManager";
-import { deployMonitorsData } from "./utils/deploy/monitorsData";
-import { deployMonitorsFunctionality } from "./utils/deploy/monitorsFunctionality";
-import { deployNodesData } from "./utils/deploy/nodesData";
-import { deployNodesFunctionality } from "./utils/deploy/nodesFunctionality";
+import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
+import { deployContractManager } from "./tools/deploy/contractManager";
+import { deployMonitorsData } from "./tools/deploy/monitorsData";
+import { deployMonitorsFunctionality } from "./tools/deploy/monitorsFunctionality";
+import { deployNodesData } from "./tools/deploy/nodesData";
+import { deployNodesFunctionality } from "./tools/deploy/nodesFunctionality";
 chai.should();
 chai.use((chaiAsPromised));
 
@@ -109,7 +109,7 @@ contract("MonitorsFunctionality", ([owner, validator]) => {
   });
 
   it("should rejected with `The time has...` error when invoke sendVerdict", async () => {
-    const error = "The time has not come to send verdict";
+    const error = "The time has not come to send verdict for 1 Node";
     // preparation
     // ip = 127.0.0.1
     const ipToHex = "7f000001";
