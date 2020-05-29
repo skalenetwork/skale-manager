@@ -159,7 +159,7 @@ contract("DelegationController", ([owner, holder1, holder2, validator, validator
             it("should reject accepting request if delegator already canceled it", async () => {
                 await delegationController.cancelPendingDelegation(delegationId, {from: holder1});
                 await delegationController.acceptPendingDelegation(delegationId, {from: validator})
-                    .should.be.rejectedWith("The delegation has been cancelled by delegator");
+                    .should.be.rejectedWith("The delegation has been cancelled by token holder");
             });
 
             it("should reject accepting request if validator already accepted it", async () => {

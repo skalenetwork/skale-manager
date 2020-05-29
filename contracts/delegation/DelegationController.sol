@@ -257,7 +257,7 @@ contract DelegationController is Permissions, ILocker {
             {
                 revert("The delegation has been already accepted");
             } else if (currentState == State.CANCELED) {
-                revert("The delegation has been cancelled by delegator");
+                revert("The delegation has been cancelled by token holder");
             } else if (currentState == State.REJECTED) {
                 revert("The delegation request is outdated");
             }
