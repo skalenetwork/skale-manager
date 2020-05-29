@@ -367,7 +367,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                     "0x1122334455667788990011223344556677889900112233445566778899001122" +
                     "1122334455667788990011223344556677889900112233445566778899001122", // public key
                     "d2", // name
-                    {from: nodeAddress}).should.be.eventually.rejectedWith("Validator must meet Minimum Staking Requirement");
+                    {from: nodeAddress}).should.be.eventually.rejectedWith("Validator must meet the Minimum Staking Requirement");
             });
 
             it("should fail to send monitor verdict from not node owner", async () => {
