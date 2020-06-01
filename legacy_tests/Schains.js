@@ -10,10 +10,10 @@ function generateRandomName() {
 async function createSchain(typeOfSchain, lifetime) {
     let account = init.mainAccount;
     let schainName = generateRandomName();
-    let k = await init.SchainsData.methods.isSchainNameAvailable(schainName).call();
+    let k = await init.SchainsInternal.methods.isSchainNameAvailable(schainName).call();
     while (!k) {
         schainName = generateRandomName();
-        k = await init.SchainsData.methods.isSchainNameAvailable(schainName).call();
+        k = await init.SchainsInternal.methods.isSchainNameAvailable(schainName).call();
     }
     let data = await GenerateBytesData.generateBytesForSchain(lifetime, typeOfSchain, schainName);
     console.log("Generated data:", data);
@@ -46,24 +46,24 @@ async function deleteSchain(schainName) {
 }
 
 async function getSchain(schainName) {
-    let res = await init.SchainsData.methods.schains(init.web3.utils.soliditySha3(schainName)).call();
+    let res = await init.SchainsInternal.methods.schains(init.web3.utils.soliditySha3(schainName)).call();
     console.log(res);
     return res;
 }
 
 async function getSchainNodes(schainName) {
-    let res = await init.SchainsData.methods.getNodesInGroup(init.web3.utils.soliditySha3(schainName)).call();
+    let res = await init.SchainsInternal.methods.getNodesInGroup(init.web3.utils.soliditySha3(schainName)).call();
     console.log("Schain name:", schainName);
     console.log("Nodes in Schain", res);
     return res;
 }
 
 async function getSchainsForNode(nodeIndex) {
-    let res = await init.SchainsData.methods.getSchainIdsForNode(nodeIndex).call();
+    let res = await init.SchainsInternal.methods.getSchainIdsForNode(nodeIndex).call();
     console.log(res);
     let res1;
     for (let i = 0; i < res.length; i++) {
-        res1 = await init.SchainsData.methods.schains(res[i]).call();
+        res1 = await init.SchainsInternal.methods.schains(res[i]).call();
         console.log(res1);
     }
     return res;

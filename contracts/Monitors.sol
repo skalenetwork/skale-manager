@@ -101,7 +101,7 @@ contract Monitors is Groups {
     /**
      * addMonitor - setup monitors of node
      */
-    function addMonitor(uint nodeIndex) external allow("SkaleManager") {
+    function addMonitor(uint nodeIndex) external allow(_executorName) {
         ConstantsHolder constantsHolder = ConstantsHolder(_contractManager.getContract("ConstantsHolder"));
         bytes32 groupIndex = keccak256(abi.encodePacked(nodeIndex));
         uint possibleNumberOfNodes = constantsHolder.NUMBER_OF_MONITORS();
@@ -117,7 +117,7 @@ contract Monitors is Groups {
         );
     }
 
-    function upgradeMonitor(uint nodeIndex) external allow("SkaleManager") {
+    function upgradeMonitor(uint nodeIndex) external allow(_executorName) {
         ConstantsHolder constantsHolder = ConstantsHolder(_contractManager.getContract("ConstantsHolder"));
         bytes32 groupIndex = keccak256(abi.encodePacked(nodeIndex));
         uint possibleNumberOfNodes = constantsHolder.NUMBER_OF_MONITORS();
@@ -138,7 +138,7 @@ contract Monitors is Groups {
         );
     }
 
-    function deleteMonitor(uint nodeIndex) external allow("SkaleManager") {
+    function deleteMonitor(uint nodeIndex) external allow(_executorName) {
         bytes32 groupIndex = keccak256(abi.encodePacked(nodeIndex));
         while (verdicts[keccak256(abi.encodePacked(nodeIndex))].length > 0) {
             verdicts[keccak256(abi.encodePacked(nodeIndex))].pop();
@@ -162,7 +162,7 @@ contract Monitors is Groups {
         deleteGroup(groupIndex);
     }
 
-    function sendVerdict(uint fromMonitorIndex, Verdict calldata verdict) external allow("SkaleManager") {
+    function sendVerdict(uint fromMonitorIndex, Verdict calldata verdict) external allow(_executorName) {
         uint index;
         uint32 time;
         bytes32 monitorIndex = keccak256(abi.encodePacked(fromMonitorIndex));
@@ -195,7 +195,7 @@ contract Monitors is Groups {
 
     function calculateMetrics(uint nodeIndex)
         external
-        allow("SkaleManager")
+        allow(_executorName)
         returns (uint averageDowntime, uint averageLatency)
     {
         bytes32 monitorIndex = keccak256(abi.encodePacked(nodeIndex));
@@ -224,7 +224,7 @@ contract Monitors is Groups {
         return lastBountyBlocks[keccak256(abi.encodePacked(nodeIndex))];
     }
 
-    function addCheckedNode(bytes32 monitorIndex, bytes32 data) public allow("SkaleManager") {
+    function addCheckedNode(bytes32 monitorIndex, bytes32 data) public allow(_executorName) {
         uint indexLength = 14;
         require(data.length >= indexLength, "data is too small");
         for (uint i = 0; i < checkedNodes[monitorIndex].length; ++i) {
@@ -239,13 +239,13 @@ contract Monitors is Groups {
         checkedNodes[monitorIndex].push(data);
     }
 
-    function addVerdict(bytes32 monitorIndex, uint32 downtime, uint32 latency) public allow("SkaleManager") {
+    function addVerdict(bytes32 monitorIndex, uint32 downtime, uint32 latency) public allow(_executorName) {
         verdicts[monitorIndex].push([uint(downtime), uint(latency)]);
         lastVerdictBlocks[monitorIndex] = block.number;
     }
 
     function initialize(address newContractsAddress) public override initializer {
-        Groups.initialize("Monitors", newContractsAddress);
+        Groups.initialize("SkaleManager", newContractsAddress);
     }
 
     function getLengthOfMetrics(bytes32 monitorIndex) public view returns (uint) {
@@ -258,8 +258,7 @@ contract Monitors is Groups {
 
     function _generateGroup(bytes32 groupIndex)
         internal
-        override
-        allow("SkaleManager")
+        allow(_executorName)
         returns (uint[] memory)
     {
         Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
@@ -328,7 +327,7 @@ contract Monitors is Groups {
      */
     function _upgradeGroup(bytes32 groupIndex, uint newRecommendedNumberOfNodes, bytes32 data)
         internal
-        allow("SkaleManager")
+        allow(_executorName)
     {
         require(groups[groupIndex].active, "Group is not active");
 

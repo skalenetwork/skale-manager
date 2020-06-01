@@ -111,7 +111,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
         Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
         SchainsFunctionality schainsFunctionality = SchainsFunctionality(
             _contractManager.getContract("SchainsFunctionality"));
-        SchainsData schainsData = SchainsData(_contractManager.getContract("SchainsData"));
+        SchainsInternal schainsInternal = SchainsInternal(_contractManager.getContract("SchainsInternal"));
         ConstantsHolder constants = ConstantsHolder(_contractManager.getContract("ConstantsHolder"));
         schainsFunctionality.freezeSchains(nodeIndex);
         if (nodes.isNodeActive(nodeIndex)) {
@@ -119,7 +119,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
         }
         bool completed;
         bool schains = false;
-        if (schainsData.getActiveSchain(nodeIndex) != bytes32(0)) {
+        if (schainsInternal.getActiveSchain(nodeIndex) != bytes32(0)) {
             completed = schainsFunctionality.exitFromSchain(nodeIndex);
             schains = true;
         } else {

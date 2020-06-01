@@ -5,11 +5,11 @@ import * as chaiAsPromised from "chai-as-promised";
 import { ContractManagerInstance,
          NodesInstance,
          PricingInstance,
-         SchainsDataInstance } from "../types/truffle-contracts";
+         SchainsInternalInstance } from "../types/truffle-contracts";
 import { deployContractManager } from "./tools/deploy/contractManager";
 import { deployNodes } from "./tools/deploy/nodes";
 import { deployPricing } from "./tools/deploy/pricing";
-import { deploySchainsData } from "./tools/deploy/schainsData";
+import { deploySchainsInternal } from "./tools/deploy/schainsInternal";
 import { skipTime } from "./tools/time";
 
 chai.should();
@@ -18,22 +18,22 @@ chai.use(chaiAsPromised);
 contract("Pricing", ([owner, holder]) => {
     let contractManager: ContractManagerInstance;
     let pricing: PricingInstance;
-    let schainsData: SchainsDataInstance;
+    let schainsInternal: SchainsInternalInstance;
     let nodes: NodesInstance;
 
     beforeEach(async () => {
         contractManager = await deployContractManager();
 
         nodes = await deployNodes(contractManager);
-        schainsData = await deploySchainsData(contractManager);
+        schainsInternal = await deploySchainsInternal(contractManager);
         pricing = await deployPricing(contractManager);
     });
 
     describe("on initialized contracts", async () => {
         beforeEach(async () => {
-            await schainsData.initializeSchain("BobSchain", holder, 10, 2);
-            await schainsData.initializeSchain("DavidSchain", holder, 10, 4);
-            await schainsData.initializeSchain("JacobSchain", holder, 10, 8);
+            await schainsInternal.initializeSchain("BobSchain", holder, 10, 2);
+            await schainsInternal.initializeSchain("DavidSchain", holder, 10, 4);
+            await schainsInternal.initializeSchain("JacobSchain", holder, 10, 8);
             await nodes.addNode(holder, "John", "0x7f000001", "0x7f000002", 8545, "0x1122334455", 0);
             await nodes.addNode(holder, "Michael", "0x7f000003", "0x7f000004", 8545, "0x1122334455", 0);
             await nodes.addNode(holder, "Daniel", "0x7f000005", "0x7f000006", 8545, "0x1122334455", 0);
@@ -42,7 +42,7 @@ contract("Pricing", ([owner, holder]) => {
         });
 
         it("should increase number of schains", async () => {
-            const numberOfSchains = new BigNumber(await schainsData.numberOfSchains());
+            const numberOfSchains = new BigNumber(await schainsInternal.numberOfSchains());
             assert(numberOfSchains.isEqualTo(3));
         });
 
@@ -67,23 +67,23 @@ contract("Pricing", ([owner, holder]) => {
                 const danielNodeIndex = new BigNumber(await nodes.nodesNameToIndex(danielNodeHash)).toNumber();
                 const stevenNodeIndex = new BigNumber(await nodes.nodesNameToIndex(stevenNodeHash)).toNumber();
 
-                await schainsData.addGroup(bobSchainHash, 1, bobSchainHash);
-                await schainsData.addGroup(davidSchainHash, 1, davidSchainHash);
-                await schainsData.addGroup(jacobSchainHash, 2, jacobSchainHash);
+                await schainsInternal.createGroup(bobSchainHash, 1, bobSchainHash);
+                await schainsInternal.createGroup(davidSchainHash, 1, davidSchainHash);
+                await schainsInternal.createGroup(jacobSchainHash, 2, jacobSchainHash);
 
-                await schainsData.setNodeInGroup(bobSchainHash, johnNodeIndex);
-                await schainsData.setNodeInGroup(davidSchainHash, michaelNodeIndex);
-                await schainsData.setNodeInGroup(jacobSchainHash, danielNodeIndex);
-                await schainsData.setNodeInGroup(jacobSchainHash, stevenNodeIndex);
+                await schainsInternal.setNodeInGroup(bobSchainHash, johnNodeIndex);
+                await schainsInternal.setNodeInGroup(davidSchainHash, michaelNodeIndex);
+                await schainsInternal.setNodeInGroup(jacobSchainHash, danielNodeIndex);
+                await schainsInternal.setNodeInGroup(jacobSchainHash, stevenNodeIndex);
 
-                await schainsData.addSchainForNode(johnNodeIndex, bobSchainHash);
-                await schainsData.addSchainForNode(michaelNodeIndex, davidSchainHash);
-                await schainsData.addSchainForNode(danielNodeIndex, jacobSchainHash);
-                await schainsData.addSchainForNode(stevenNodeIndex, jacobSchainHash);
+                await schainsInternal.addSchainForNode(johnNodeIndex, bobSchainHash);
+                await schainsInternal.addSchainForNode(michaelNodeIndex, davidSchainHash);
+                await schainsInternal.addSchainForNode(danielNodeIndex, jacobSchainHash);
+                await schainsInternal.addSchainForNode(stevenNodeIndex, jacobSchainHash);
 
-                await schainsData.setSchainPartOfNode(bobSchainHash, 4);
-                await schainsData.setSchainPartOfNode(davidSchainHash, 4);
-                await schainsData.setSchainPartOfNode(jacobSchainHash, 1);
+                await schainsInternal.setSchainPartOfNode(bobSchainHash, 4);
+                await schainsInternal.setSchainPartOfNode(davidSchainHash, 4);
+                await schainsInternal.setSchainPartOfNode(jacobSchainHash, 1);
 
             });
 
@@ -91,9 +91,9 @@ contract("Pricing", ([owner, holder]) => {
                 const numberOfNodes = new BigNumber(await nodes.getNumberOfNodes()).toNumber();
                 let sumNode = 0;
                 for (let i = 0; i < numberOfNodes; i++) {
-                    const getSchainIdsForNode = await schainsData.getSchainIdsForNode(i);
+                    const getSchainIdsForNode = await schainsInternal.getSchainIdsForNode(i);
                     for (const schain of getSchainIdsForNode) {
-                        const partOfNode = new BigNumber(await schainsData.getSchainsPartOfNode(schain)).toNumber();
+                        const partOfNode = new BigNumber(await schainsInternal.getSchainsPartOfNode(schain)).toNumber();
                         const isNodeLeft = await nodes.isNodeLeft(i);
                         if (partOfNode !== 0  && !isNodeLeft) {
                             sumNode += 128 / partOfNode;

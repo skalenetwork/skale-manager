@@ -1,5 +1,5 @@
 /*
-    SchainsData.sol - SKALE Manager
+    SchainsInternal.sol - SKALE Manager
     Copyright (C) 2018-Present SKALE Labs
     @author Artem Payvin
 
@@ -20,15 +20,15 @@
 pragma solidity 0.6.6;
 pragma experimental ABIEncoderV2;
 
-import "./GroupsData.sol";
+import "./Groups.sol";
 import "./ConstantsHolder.sol";
+import "./Nodes.sol";
 
 
 /**
- * @title SchainsData - Data contract for SchainsFunctionality.
- * Contain all information about SKALE-Chains.
+ * @title SchainsInternal - contract contains all functionality logic to manage Schains
  */
-contract SchainsData is GroupsData {
+contract SchainsInternal is Groups {
 
     struct Schain {
         string name;
@@ -79,6 +79,8 @@ contract SchainsData is GroupsData {
     // total resources that schains occupied
     uint public sumOfSchainsResources;
 
+
+
     /**
      * @dev initializeSchain - initializes Schain
      * function could be run only by executor
@@ -91,7 +93,7 @@ contract SchainsData is GroupsData {
         string calldata name,
         address from,
         uint lifetime,
-        uint deposit) external allow("SchainsFunctionality")
+        uint deposit) external allow(_executorName)
     {
         bytes32 schainId = keccak256(abi.encodePacked(name));
         schains[schainId].name = name;
@@ -132,39 +134,7 @@ contract SchainsData is GroupsData {
         groups[groupIndex].groupsPublicKey[3] = publicKeyy2;
     }
 
-    /**
-     * @dev removeNodeFromGroup - removes Node out of the Group
-     * function could be run only by executor
-     * @param indexOfNode - Nodes identifier
-     * @param groupIndex - Groups identifier
-     */
-    function removeNodeFromGroup(uint indexOfNode, bytes32 groupIndex) external allow(_executorName) {
-        uint size = groups[groupIndex].nodesInGroup.length;
-        if (indexOfNode < size) {
-            groups[groupIndex].nodesInGroup[indexOfNode] = groups[groupIndex].nodesInGroup[size - 1];
-        }
-        delete groups[groupIndex].nodesInGroup[size - 1];
-        groups[groupIndex].nodesInGroup.pop();
-    }
 
-    /**
-     * @dev setNodesInGroup - adds Nodes to Group
-     * function could be run only by executor
-     * @param groupIndex - Groups identifier
-     * @param nodesInGroup - array of indexes of Nodes which would be added to the Group
-    */
-    function setNodesInGroup(bytes32 groupIndex, uint[] calldata nodesInGroup) external allow(_executorName) {
-        groups[groupIndex].nodesInGroup = nodesInGroup;
-    }
-
-    /**
-     * @dev removeExceptionNode - remove exception Node from Group
-     * function could be run only by executor
-     * @param groupIndex - Groups identifier
-     */
-    function removeExceptionNode(bytes32 groupIndex, uint nodeIndex) external allow(_executorName) {
-        _exceptions[groupIndex].check[nodeIndex] = false;
-    }
 
     /**
      * @dev setSchainIndex - adds Schain's hash to owner
@@ -172,53 +142,9 @@ contract SchainsData is GroupsData {
      * @param schainId - hash by Schain name
      * @param from - Schain owner
      */
-    function setSchainIndex(bytes32 schainId, address from) external allow("SchainsFunctionality") {
+    function setSchainIndex(bytes32 schainId, address from) external allow(_executorName) {
         schains[schainId].indexInOwnerList = schainIndexes[from].length;
         schainIndexes[from].push(schainId);
-    }
-
-    /**
-     * @dev addSchainForNode - adds Schain hash to Node
-     * function could be run only by executor
-     * @param nodeIndex - index of Node
-     * @param schainId - hash by Schain name
-     */
-    function addSchainForNode(uint nodeIndex, bytes32 schainId) external allow(_executorName) {
-        if (holesForNodes[nodeIndex].length == 0) {
-            schainsForNodes[nodeIndex].push(schainId);
-        } else {
-            schainsForNodes[nodeIndex][holesForNodes[nodeIndex][0]] = schainId;
-            uint min = uint(-1);
-            uint index = 0;
-            for (uint i = 1; i < holesForNodes[nodeIndex].length; i++) {
-                if (min > holesForNodes[nodeIndex][i]) {
-                    min = holesForNodes[nodeIndex][i];
-                    index = i;
-                }
-            }
-            if (min == uint(-1)) {
-                delete holesForNodes[nodeIndex];
-            } else {
-                holesForNodes[nodeIndex][0] = min;
-                holesForNodes[nodeIndex][index] = holesForNodes[nodeIndex][holesForNodes[nodeIndex].length - 1];
-                delete holesForNodes[nodeIndex][holesForNodes[nodeIndex].length - 1];
-                holesForNodes[nodeIndex].pop();
-            }
-        }
-    }
-
-    /**
-     * @dev setSchainPartOfNode - sets how much Schain would be occupy of Node
-     * function could be run onlye by executor
-     * @param schainId - hash by Schain name
-     * @param partOfNode - occupied space
-     */
-    function setSchainPartOfNode(bytes32 schainId, uint8 partOfNode) external allow(_executorName) {
-        schains[schainId].partOfNode = partOfNode;
-        if (partOfNode > 0) {
-            sumOfSchainsResources = sumOfSchainsResources.add(
-                (128 / partOfNode) * groups[schainId].nodesInGroup.length);
-        }
     }
 
     /**
@@ -228,7 +154,7 @@ contract SchainsData is GroupsData {
      * @param lifetime - time which would be added to lifetime of Schain
      * @param deposit - amount of SKL which payed for this time
      */
-    function changeLifetime(bytes32 schainId, uint lifetime, uint deposit) external allow("SchainsFunctionality") {
+    function changeLifetime(bytes32 schainId, uint lifetime, uint deposit) external allow(_executorName) {
         schains[schainId].deposit = schains[schainId].deposit.add(deposit);
         schains[schainId].lifetime = schains[schainId].lifetime.add(lifetime);
     }
@@ -239,7 +165,7 @@ contract SchainsData is GroupsData {
      * @param schainId - hash by Schain name
      * @param from - owner of Schain
      */
-    function removeSchain(bytes32 schainId, address from) external allow("SchainsFunctionality") {
+    function removeSchain(bytes32 schainId, address from) external allow(_executorName) {
         uint length = schainIndexes[from].length;
         uint index = schains[schainId].indexInOwnerList;
         if (index != length - 1) {
@@ -265,30 +191,78 @@ contract SchainsData is GroupsData {
         numberOfSchains--;
     }
 
+    function removeNodeFromSchain(uint nodeIndex, bytes32 groupHash) external allowTwo(_executorName, "SkaleDKG") {
+        uint groupIndex = findSchainAtSchainsForNode(nodeIndex, groupHash);
+        uint indexOfNode = _findNode(groupHash, nodeIndex);
+        uint size = groups[groupHash].nodesInGroup.length;
+        if (indexOfNode < size) {
+            groups[groupHash].nodesInGroup[indexOfNode] = groups[groupHash].nodesInGroup[size - 1];
+        }
+        delete groups[groupHash].nodesInGroup[size - 1];
+        groups[groupHash].nodesInGroup.pop();
+
+        removeSchainForNode(nodeIndex, groupIndex);
+    }
+
+    function removeNodeFromExceptions(bytes32 groupHash, uint nodeIndex) external allow(_executorName) {
+        _exceptions[groupHash].check[nodeIndex] = false;
+    }
+
+    function redirectOpenChannel(bytes32 schainId) external allow("SchainsFunctionality") {
+        ISkaleDKG(_contractManager.getContract("SkaleDKG")).openChannel(schainId);
+    }
+
+
     /**
-     * @dev removesSchainForNode - clean given Node of Schain
-     * function could be run only by executor
-     * @param nodeIndex - index of Node
-     * @param schainIndex - index of Schain in schainsForNodes array by this Node
+     * @dev generateGroup - generates Group for Schain
+     * @param groupIndex - index of Group
      */
-    function removeSchainForNode(uint nodeIndex, uint schainIndex) external allow("SchainsFunctionalityInternal") {
-        uint length = schainsForNodes[nodeIndex].length;
-        if (schainIndex == length - 1) {
-            delete schainsForNodes[nodeIndex][length - 1];
-            schainsForNodes[nodeIndex].pop();
-        } else {
-            schainsForNodes[nodeIndex][schainIndex] = bytes32(0);
-            if (holesForNodes[nodeIndex].length > 0 && holesForNodes[nodeIndex][0] > schainIndex) {
-                uint hole = holesForNodes[nodeIndex][0];
-                holesForNodes[nodeIndex][0] = schainIndex;
-                holesForNodes[nodeIndex].push(hole);
-            } else {
-                holesForNodes[nodeIndex].push(schainIndex);
-            }
+    function generateGroup(bytes32 groupIndex) external allow(_executorName) returns (uint[] memory nodesInGroup) {
+        Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
+        require(isGroupActive(groupIndex), "Group is not active");
+        uint8 space = uint8(uint(getGroupData(groupIndex)));
+        nodesInGroup = new uint[](getRecommendedNumberOfNodes(groupIndex));
+
+        uint[] memory possibleNodes = isEnoughNodes(groupIndex);
+        require(possibleNodes.length >= nodesInGroup.length, "Not enough nodes to create Schain");
+        uint ignoringTail = 0;
+        uint random = uint(keccak256(abi.encodePacked(uint(blockhash(block.number - 1)), groupIndex)));
+        for (uint i = 0; i < nodesInGroup.length; ++i) {
+            uint index = random % (possibleNodes.length.sub(ignoringTail));
+            uint node = possibleNodes[index];
+            nodesInGroup[i] = node;
+            _swap(possibleNodes, index, possibleNodes.length.sub(ignoringTail) - 1);
+            ++ignoringTail;
+
+            setException(groupIndex, node);
+            addSchainForNode(node, groupIndex);
+            require(nodes.removeSpaceFromNode(node, space), "Could not remove space from Node");
+        }
+
+        // set generated group
+        groups[groupIndex].nodesInGroup = nodesInGroup;
+        emit GroupGenerated(
+            groupIndex,
+            nodesInGroup,
+            uint32(block.timestamp),
+            gasleft());
+    }
+
+    /**
+     * @dev setSchainPartOfNode - sets how much Schain would be occupy of Node
+     * function could be run onlye by executor
+     * @param schainId - hash by Schain name
+     * @param partOfNode - occupied space
+     */
+    function setSchainPartOfNode(bytes32 schainId, uint8 partOfNode) external allow(_executorName) {
+        schains[schainId].partOfNode = partOfNode;
+        if (partOfNode > 0) {
+            sumOfSchainsResources = sumOfSchainsResources.add(
+                (128 / partOfNode) * groups[schainId].nodesInGroup.length);
         }
     }
 
-    function startRotation(bytes32 schainIndex, uint nodeIndex) external allow("SchainsFunctionality") {
+    function startRotation(bytes32 schainIndex, uint nodeIndex) external allow(_executorName) {
         ConstantsHolder constants = ConstantsHolder(_contractManager.getContract("ConstantsHolder"));
         rotations[schainIndex].nodeIndex = nodeIndex;
         rotations[schainIndex].freezeUntil = now + constants.rotationDelay();
@@ -298,7 +272,7 @@ contract SchainsData is GroupsData {
         bytes32 schainIndex,
         uint nodeIndex,
         uint newNodeIndex)
-        external allow("SchainsFunctionality")
+        external allow(_executorName)
     {
         ConstantsHolder constants = ConstantsHolder(_contractManager.getContract("ConstantsHolder"));
         leavingHistory[nodeIndex].push(LeavingHistory(schainIndex, now + constants.rotationDelay()));
@@ -308,7 +282,7 @@ contract SchainsData is GroupsData {
         ISkaleDKG(skaleDKGAddress).reopenChannel(schainIndex);
     }
 
-    function removeRotation(bytes32 schainIndex) external allow("SchainsFunctionality") {
+    function removeRotation(bytes32 schainIndex) external allow(_executorName) {
         delete rotations[schainIndex];
     }
 
@@ -367,24 +341,6 @@ contract SchainsData is GroupsData {
      */
     function getSchainIdsForNode(uint nodeIndex) external view returns (bytes32[] memory) {
         return schainsForNodes[nodeIndex];
-    }
-
-    /**
-     * @dev getLengthOfSchainsForNode - returns number of Schains which contain given Node
-     * @param nodeIndex - index of Node
-     * @return number of Schains
-     */
-    function getLengthOfSchainsForNode(uint nodeIndex) external view returns (uint) {
-        return schainsForNodes[nodeIndex].length;
-    }
-
-    /**
-     * @dev getSchainIdFromSchainName - returns hash of given name
-     * @param schainName - name of Schain
-     * @return hash
-     */
-    function getSchainIdFromSchainName(string calldata schainName) external pure returns (bytes32) {
-        return keccak256(abi.encodePacked(schainName));
     }
 
     function getSchainOwner(bytes32 schainId) external view returns (address) {
@@ -455,15 +411,6 @@ contract SchainsData is GroupsData {
         }
     }
 
-    /**
-     * @dev isExceptionNode - checks is Node - exception at given Group
-     * @param groupIndex - Groups identifier
-     * @param nodeIndex - index of Node
-     * return true - exception, false - not exception
-     */
-    function isExceptionNode(bytes32 groupIndex, uint nodeIndex) external view returns (bool) {
-        return _exceptions[groupIndex].check[nodeIndex];
-    }
 
     function isGroupFailedDKG(bytes32 groupIndex) external view returns (bool) {
         return !groups[groupIndex].succesfulDKG;
@@ -492,10 +439,136 @@ contract SchainsData is GroupsData {
         );
     }
 
+    function isAnyFreeNode(bytes32 groupIndex) external view returns (bool) {
+        Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
+        uint8 space = uint8(uint(getGroupData(groupIndex)));
+        uint[] memory nodesWithFreeSpace = nodes.getNodesWithFreeSpace(space);
+        for (uint i = 0; i < nodesWithFreeSpace.length; i++) {
+            if (_isCorrespond(groupIndex, nodesWithFreeSpace[i])) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    function checkException(bytes32 groupIndex, uint nodeIndex) external view returns (bool) {
+        return _exceptions[groupIndex].check[nodeIndex];
+    }
+
     function initialize(address newContractsAddress) public override initializer {
-        GroupsData.initialize("SchainsFunctionalityInternal", newContractsAddress);
+        Groups.initialize("SchainsFunctionality", newContractsAddress);
 
         numberOfSchains = 0;
         sumOfSchainsResources = 0;
     }
+
+    /**
+     * @dev addSchainForNode - adds Schain hash to Node
+     * function could be run only by executor
+     * @param nodeIndex - index of Node
+     * @param schainId - hash by Schain name
+     */
+    function addSchainForNode(uint nodeIndex, bytes32 schainId) public allow(_executorName) {
+        if (holesForNodes[nodeIndex].length == 0) {
+            schainsForNodes[nodeIndex].push(schainId);
+        } else {
+            schainsForNodes[nodeIndex][holesForNodes[nodeIndex][0]] = schainId;
+            uint min = uint(-1);
+            uint index = 0;
+            for (uint i = 1; i < holesForNodes[nodeIndex].length; i++) {
+                if (min > holesForNodes[nodeIndex][i]) {
+                    min = holesForNodes[nodeIndex][i];
+                    index = i;
+                }
+            }
+            if (min == uint(-1)) {
+                delete holesForNodes[nodeIndex];
+            } else {
+                holesForNodes[nodeIndex][0] = min;
+                holesForNodes[nodeIndex][index] = holesForNodes[nodeIndex][holesForNodes[nodeIndex].length - 1];
+                delete holesForNodes[nodeIndex][holesForNodes[nodeIndex].length - 1];
+                holesForNodes[nodeIndex].pop();
+            }
+        }
+    }
+
+
+
+    /**
+     * @dev removesSchainForNode - clean given Node of Schain
+     * function could be run only by executor
+     * @param nodeIndex - index of Node
+     * @param schainIndex - index of Schain in schainsForNodes array by this Node
+     */
+    function removeSchainForNode(uint nodeIndex, uint schainIndex) public allow(_executorName) {
+        uint length = schainsForNodes[nodeIndex].length;
+        if (schainIndex == length - 1) {
+            delete schainsForNodes[nodeIndex][length - 1];
+            schainsForNodes[nodeIndex].pop();
+        } else {
+            schainsForNodes[nodeIndex][schainIndex] = bytes32(0);
+            if (holesForNodes[nodeIndex].length > 0 && holesForNodes[nodeIndex][0] > schainIndex) {
+                uint hole = holesForNodes[nodeIndex][0];
+                holesForNodes[nodeIndex][0] = schainIndex;
+                holesForNodes[nodeIndex].push(hole);
+            } else {
+                holesForNodes[nodeIndex].push(schainIndex);
+            }
+        }
+    }
+
+    /**
+     * @dev getLengthOfSchainsForNode - returns number of Schains which contain given Node
+     * @param nodeIndex - index of Node
+     * @return number of Schains
+     */
+    function getLengthOfSchainsForNode(uint nodeIndex) public view returns (uint) {
+        return schainsForNodes[nodeIndex].length;
+    }
+
+    /**
+     * @dev findSchainAtSchainsForNode - finds index of Schain at schainsForNode array
+     * @param nodeIndex - index of Node at common array of Nodes
+     * @param schainId - hash of name of Schain
+     * @return index of Schain at schainsForNode array
+     */
+    function findSchainAtSchainsForNode(uint nodeIndex, bytes32 schainId) public view returns (uint) {
+        uint length = getLengthOfSchainsForNode(nodeIndex);
+        for (uint i = 0; i < length; i++) {
+            if (schainsForNodes[nodeIndex][i] == schainId) {
+                return i;
+            }
+        }
+        return length;
+    }
+
+
+
+    function isEnoughNodes(bytes32 groupIndex) public view returns (uint[] memory result) {
+        Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
+        uint8 space = uint8(uint(getGroupData(groupIndex)));
+        uint[] memory nodesWithFreeSpace = nodes.getNodesWithFreeSpace(space);
+        uint counter = 0;
+        for (uint i = 0; i < nodesWithFreeSpace.length; i++) {
+            if (!_isCorrespond(groupIndex, nodesWithFreeSpace[i])) {
+                counter++;
+            }
+        }
+        if (counter < nodesWithFreeSpace.length) {
+            result = new uint[](nodesWithFreeSpace.length.sub(counter));
+            counter = 0;
+            for (uint i = 0; i < nodesWithFreeSpace.length; i++) {
+                if (_isCorrespond(groupIndex, nodesWithFreeSpace[i])) {
+                    result[counter] = nodesWithFreeSpace[i];
+                    counter++;
+                }
+            }
+        }
+    }
+
+    function _isCorrespond(bytes32 groupIndex, uint nodeIndex) internal view returns (bool) {
+        Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
+        return !_exceptions[groupIndex].check[nodeIndex] && nodes.isNodeActive(nodeIndex);
+    }
+
 }

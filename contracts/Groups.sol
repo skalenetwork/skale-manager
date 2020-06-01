@@ -103,7 +103,7 @@ abstract contract Groups is Permissions {
     // past groups common BLS public keys
     mapping (bytes32 => uint[4][]) public previousPublicKeys;
     // mapping for checking Has Node already joined to the group
-    mapping (bytes32 => GroupCheck) private _exceptions;
+    mapping (bytes32 => GroupCheck) internal _exceptions;
 
     // name of executor contract
     string internal _executorName;
@@ -162,7 +162,7 @@ abstract contract Groups is Permissions {
      */
     function createGroup(bytes32 groupIndex, uint newRecommendedNumberOfNodes, bytes32 data)
         public
-        allow("SkaleManager")
+        allow("SchainsFunctionality")
     {
         groups[groupIndex].active = true;
         groups[groupIndex].recommendedNumberOfNodes = newRecommendedNumberOfNodes;
@@ -182,7 +182,7 @@ abstract contract Groups is Permissions {
      * function could be run only by executor
      * @param groupIndex - Groups identifier
      */
-    function deleteGroup(bytes32 groupIndex) public allow("SkaleManager") {
+    function deleteGroup(bytes32 groupIndex) public allow(_executorName) {
         require(groups[groupIndex].active, "Group is not active");
         groups[groupIndex].active = false;
         delete groups[groupIndex].groupData;
@@ -210,7 +210,7 @@ abstract contract Groups is Permissions {
      * @param groupIndex - Groups identifier
      * @param nodeIndex - index of Node which would be notes like exception
      */
-    function setException(bytes32 groupIndex, uint nodeIndex) public allow("SkaleManager") {
+    function setException(bytes32 groupIndex, uint nodeIndex) public allow(_executorName) {
         _exceptions[groupIndex].check[nodeIndex] = true;
     }
 
@@ -220,7 +220,7 @@ abstract contract Groups is Permissions {
      * @param groupIndex - Groups identifier
      * @param nodeIndex - index of Node which would be added to the Group
      */
-    function setNodeInGroup(bytes32 groupIndex, uint nodeIndex) public allow("SkaleManager") {
+    function setNodeInGroup(bytes32 groupIndex, uint nodeIndex) public allow(_executorName) {
         groups[groupIndex].nodesInGroup.push(nodeIndex);
     }
 
@@ -293,7 +293,7 @@ abstract contract Groups is Permissions {
      * @param groupIndex - Groups identifier
      * return array of indexes of Nodes in Group
      */
-    function _generateGroup(bytes32 groupIndex) internal virtual returns (uint[] memory);
+    // function _generateGroup(bytes32 groupIndex) internal virtual returns (uint[] memory);
 
     function _isPublicKeyZero(bytes32 groupIndex) internal view returns (bool) {
         return groups[groupIndex].groupsPublicKey[0] == 0 &&

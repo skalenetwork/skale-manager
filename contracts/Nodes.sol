@@ -176,7 +176,7 @@ contract Nodes is Permissions {
      * @param space - space which should be occupied
      */
     function removeSpaceFromNode(uint nodeIndex, uint8 space)
-        external allow("SchainsFunctionalityInternal") returns (bool)
+        external allowTwo("SchainsFunctionality", "SchainsInternal") returns (bool)
     {
         if (spaceOfNodes[nodeIndex].freeSpace < space) {
             return false;

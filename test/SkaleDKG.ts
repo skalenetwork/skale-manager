@@ -3,7 +3,7 @@ import * as chaiAsPromised from "chai-as-promised";
 import { ContractManagerInstance,
          DelegationControllerInstance,
          NodesInstance,
-         SchainsDataInstance,
+         SchainsInternalInstance,
          SchainsFunctionalityInstance,
          SkaleDKGInstance,
          SkaleTokenInstance,
@@ -17,7 +17,7 @@ import { deployContractManager } from "./tools/deploy/contractManager";
 import { deployDelegationController } from "./tools/deploy/delegation/delegationController";
 import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
 import { deployNodes } from "./tools/deploy/nodes";
-import { deploySchainsData } from "./tools/deploy/schainsData";
+import { deploySchainsInternal } from "./tools/deploy/schainsInternal";
 import { deploySchainsFunctionality } from "./tools/deploy/schainsFunctionality";
 import { deploySkaleDKG } from "./tools/deploy/skaleDKG";
 import { deploySkaleToken } from "./tools/deploy/skaleToken";
@@ -55,7 +55,7 @@ class Channel {
 
 contract("SkaleDKG", ([owner, validator1, validator2]) => {
     let contractManager: ContractManagerInstance;
-    let schainsData: SchainsDataInstance;
+    let schainsInternal: SchainsInternalInstance;
     let schainsFunctionality: SchainsFunctionalityInstance;
     let skaleDKG: SkaleDKGInstance;
     let skaleToken: SkaleTokenInstance;
@@ -70,7 +70,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
         contractManager = await deployContractManager();
 
         nodes = await deployNodes(contractManager);
-        schainsData = await deploySchainsData(contractManager);
+        schainsInternal = await deploySchainsInternal(contractManager);
         schainsFunctionality = await deploySchainsFunctionality(contractManager);
         skaleDKG = await deploySkaleDKG(contractManager);
         skaleToken = await deploySkaleToken(contractManager);
@@ -249,7 +249,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                     deposit,
                     web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, "d2"]));
 
-                let nodesInGroup = await schainsData.getNodesInGroup(web3.utils.soliditySha3("d2"));
+                let nodesInGroup = await schainsInternal.getNodesInGroup(web3.utils.soliditySha3("d2"));
                 schainName = "d2";
                 while ((new BigNumber(nodesInGroup[0])).toFixed() === "1") {
                     await schainsFunctionality.deleteSchainByRoot(schainName);
@@ -257,7 +257,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                         validator1,
                         deposit,
                         web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, "d2"]));
-                    nodesInGroup = await schainsData.getNodesInGroup(web3.utils.soliditySha3(schainName));
+                    nodesInGroup = await schainsInternal.getNodesInGroup(web3.utils.soliditySha3(schainName));
                 }
             });
 
@@ -559,7 +559,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                 deposit,
                 web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, "d2"]));
 
-            let nodesInGroup = await schainsData.getNodesInGroup(web3.utils.soliditySha3("d2"));
+            let nodesInGroup = await schainsInternal.getNodesInGroup(web3.utils.soliditySha3("d2"));
             schainName = "d2";
             while ((new BigNumber(nodesInGroup[0])).toFixed() === "1") {
                 await schainsFunctionality.deleteSchainByRoot(schainName);
@@ -567,7 +567,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                     validator1,
                     deposit,
                     web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, "d2"]));
-                nodesInGroup = await schainsData.getNodesInGroup(web3.utils.soliditySha3(schainName));
+                nodesInGroup = await schainsInternal.getNodesInGroup(web3.utils.soliditySha3(schainName));
             }
 
             await nodes.createNode(validatorsAccount[0],

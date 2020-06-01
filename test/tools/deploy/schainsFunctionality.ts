@@ -2,15 +2,14 @@ import { ContractManagerInstance, SchainsFunctionalityInstance } from "../../../
 import { deployConstantsHolder } from "./constantsHolder";
 import { deployFunctionFactory } from "./factory";
 import { deployNodes } from "./nodes";
-import { deploySchainsData } from "./schainsData";
-import { deploySchainsFunctionalityInternal } from "./schainsFunctionalityInternal";
+import { deploySchainsInternal } from "./schainsInternal";
 import { deploySkaleVerifier } from "./skaleVerifier";
 
 const deploySchainsFunctionality: (contractManager: ContractManagerInstance) => Promise<SchainsFunctionalityInstance>
     = deployFunctionFactory("SchainsFunctionality",
                             async (contractManager: ContractManagerInstance) => {
-                                await deploySchainsFunctionalityInternal(contractManager);
-                                await deploySchainsData(contractManager);
+                                await deploySchainsInternal(contractManager);
+                                await deploySchainsInternal(contractManager);
                                 await deployConstantsHolder(contractManager);
                                 await deployNodes(contractManager);
                                 await deploySkaleVerifier(contractManager);

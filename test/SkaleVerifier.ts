@@ -2,7 +2,7 @@ import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
 import { ContractManagerInstance,
          NodesInstance,
-         SchainsDataInstance,
+         SchainsInternalInstance,
          SchainsFunctionalityInstance,
          SkaleVerifierInstance,
          ValidatorServiceInstance } from "../types/truffle-contracts";
@@ -10,7 +10,7 @@ import { ContractManagerInstance,
 import { deployContractManager } from "./tools/deploy/contractManager";
 import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
 import { deployNodes } from "./tools/deploy/nodes";
-import { deploySchainsData } from "./tools/deploy/schainsData";
+import { deploySchainsInternal } from "./tools/deploy/schainsInternal";
 import { deploySchainsFunctionality } from "./tools/deploy/schainsFunctionality";
 import { deploySkaleVerifier } from "./tools/deploy/skaleVerifier";
 chai.should();
@@ -18,7 +18,7 @@ chai.use(chaiAsPromised);
 
 contract("SkaleVerifier", ([validator1, owner, developer, hacker]) => {
     let contractManager: ContractManagerInstance;
-    let schainsData: SchainsDataInstance;
+    let schainsInternal: SchainsInternalInstance;
     let schainsFunctionality: SchainsFunctionalityInstance;
     let skaleVerifier: SkaleVerifierInstance;
     let validatorService: ValidatorServiceInstance;
@@ -29,7 +29,7 @@ contract("SkaleVerifier", ([validator1, owner, developer, hacker]) => {
 
         nodes = await deployNodes(contractManager);
         validatorService = await deployValidatorService(contractManager);
-        schainsData = await deploySchainsData(contractManager);
+        schainsInternal = await deploySchainsInternal(contractManager);
         schainsFunctionality = await deploySchainsFunctionality(contractManager);
         skaleVerifier = await deploySkaleVerifier(contractManager);
 
@@ -163,7 +163,7 @@ contract("SkaleVerifier", ([validator1, owner, developer, hacker]) => {
                 web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, "Bob"]),
                 {from: validator1});
 
-            await schainsData.setPublicKey(
+            await schainsInternal.setPublicKey(
                 await web3.utils.soliditySha3("Bob"),
                 "14175454883274808069161681493814261634483894346393730614200347712729091773660",
                 "8121803279407808453525231194818737640175140181756432249172777264745467034059",
