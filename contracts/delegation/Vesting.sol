@@ -73,7 +73,7 @@ contract Vesting is ILocker, Permissions, IERC777Recipient {
         require(_saftHolders[holder].approved, "SAFT is not approved");
         _saftHolders[holder].active = true;
         require(
-            IERC20(_contractManager.getContract("SkaleToken")).transfer(holder, fullAmount),
+            IERC20(_contractManager.getContract("SkaleToken")).transfer(holder, _saftHolders[holder].fullAmount),
             "Error of token sending");
     }
 
@@ -87,6 +87,7 @@ contract Vesting is ILocker, Permissions, IERC777Recipient {
         external
         onlyOwner
     {
+        TimeHelpers timeHelpers = TimeHelpers(_contractManager.getContract("TimeHelpers"));
         require(_registeredSAFTHolders[holder], "SAFT is not registered");
         require(_saftHolders[holder].startVestingTime != 0, "SAFT holder is not added");
         require(fullPeriod >= lockupPeriod, "Incorrect periods");
@@ -136,9 +137,10 @@ contract Vesting is ILocker, Permissions, IERC777Recipient {
             "Incorrect vesting times"
         );
         require(periodStarts <= now, "Incorrect period starts");
-        _registeredSAFTHolder[holder] = true;
+        _registeredSAFTHolders[holder] = true;
         _saftHolders[holder] = SAFT({
-
+            active: false,
+            approved: false,
             startVestingTime: periodStarts,
             finishVesting: timeHelpers.addMonths(periodStarts, fullPeriod),
             lockupPeriod: lockupPeriod,
@@ -184,7 +186,7 @@ contract Vesting is ILocker, Permissions, IERC777Recipient {
     }
 
     function getStartVestingTime(address holder) external view returns (uint) {
-        return _saftHolders[holder].startVesting;
+        return _saftHolders[holder].startVestingTime;
     }
 
     function getFinishVestingTime(address holder) external view returns (uint) {
@@ -198,13 +200,13 @@ contract Vesting is ILocker, Permissions, IERC777Recipient {
     function getLockupPeriodTimestamp(address holder) external view returns (uint) {
         TimeHelpers timeHelpers = TimeHelpers(_contractManager.getContract("TimeHelpers"));
         SAFT memory saftParams = _saftHolders[holder];
-        return TimeHelpers.addMonths(saftParams.startVestingTime, saftParams.lockupPeriod)
+        return timeHelpers.addMonths(saftParams.startVestingTime, saftParams.lockupPeriod);
     }
 
     function getTimeOfNextPayment(address holder) external view returns (uint) {
         TimeHelpers timeHelpers = TimeHelpers(_contractManager.getContract("TimeHelpers"));
         uint date = now;
-        SAFT memory saftParams = _saftHolders[wallet];
+        SAFT memory saftParams = _saftHolders[holder];
         uint lockupDate = timeHelpers.addMonths(saftParams.startVestingTime, saftParams.lockupPeriod);
         if (date < lockupDate) {
             return lockupDate;
