@@ -240,6 +240,21 @@ contract ValidatorService is Permissions {
         validators[validatorId].acceptNewRequests = false;
     }
 
+    /// @notice return how many of validator funds are locked in SkaleManager
+    function getBondAmount(uint validatorId)
+        external
+        returns (uint bondAmount)
+    {
+        TimeHelpers timeHelpers = TimeHelpers(_contractManager.getContract("TimeHelpers"));
+        DelegationController delegationController = DelegationController(
+            _contractManager.getContract("DelegationController"));
+        bondAmount = delegationController.getAndUpdateEffectiveDelegatedByHolderToValidator(
+            validators[validatorId].validatorAddress,
+            validatorId,
+            timeHelpers.getCurrentMonth()
+        ).div(100);
+    }
+
     function getMyNodesAddresses() external view returns (address[] memory) {
         return getNodeAddresses(getValidatorId(msg.sender));
     }
@@ -259,28 +274,6 @@ contract ValidatorService is Permissions {
             }
         }
         return whitelist;
-    }
-
-    /// @notice return how many of validator funds are locked in SkaleManager
-    function getBondAmount(uint validatorId)
-        external
-        view
-        returns (uint bondAmount)
-    {
-        DelegationController delegationController = DelegationController(
-            _contractManager.getContract("DelegationController"));
-        uint[] memory delegationsByHolder = delegationController.getDelegationsByHolder(
-            validators[validatorId].validatorAddress
-        );
-        for (uint i = 0; i < delegationsByHolder.length; i++) {
-            uint delegationId = delegationsByHolder[i];
-            DelegationController.Delegation memory delegation = delegationController.getDelegation(delegationId);
-            DelegationController.State state = delegationController.getState(delegationId);
-            if (state == DelegationController.State.DELEGATED &&
-                delegation.validatorId == validatorId) {
-                bondAmount += delegation.amount;
-            }
-        }
     }
 
     function checkMinimumDelegation(uint validatorId, uint amount)

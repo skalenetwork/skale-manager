@@ -169,7 +169,7 @@ contract DelegationController is Permissions, ILocker {
     }
 
     function getAndUpdateEffectiveDelegatedByHolderToValidator(address holder, uint validatorId, uint month) external
-        allow("Distributor") returns (uint effectiveDelegated)
+        allowTwo("Distributor", "ValidatorService") returns (uint effectiveDelegated)
     {
         SlashingSignal[] memory slashingSignals = _processAllSlashesWithoutSignals(holder);
         effectiveDelegated = _effectiveDelegatedByHolderToValidator[holder][validatorId]
