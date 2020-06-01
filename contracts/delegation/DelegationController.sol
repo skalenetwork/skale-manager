@@ -322,7 +322,22 @@ contract DelegationController is Permissions, ILocker {
         require(
             validatorService.checkValidatorAddressToId(msg.sender, delegations[delegationId].validatorId),
             "No permissions to accept request");
-        require(getState(delegationId) == State.PROPOSED, "Cannot set delegation state to accepted");
+        
+        State currentState = getState(delegationId);
+        if (currentState != State.PROPOSED) {
+            if (currentState == State.ACCEPTED ||
+                currentState == State.DELEGATED ||
+                currentState == State.UNDELEGATION_REQUESTED ||
+                currentState == State.COMPLETED)
+            {
+                revert("The delegation has been already accepted");
+            } else if (currentState == State.CANCELED) {
+                revert("The delegation has been cancelled by token holder");
+            } else if (currentState == State.REJECTED) {
+                revert("The delegation request is outdated");
+            }
+        }
+        require(getState(delegationId) == State.PROPOSED, "Cannot set state to accepted");
         
         TokenLaunchLocker tokenLaunchLocker = TokenLaunchLocker(_contractManager.getContract("TokenLaunchLocker"));
 
