@@ -156,16 +156,22 @@ contract("DelegationController", ([owner, holder1, holder2, validator, validator
                     .should.be.rejectedWith("Validator with such address does not exist");
             });
 
-            it("should reject accepting request if validator already canceled it", async () => {
+            it("should reject accepting request if delegator already canceled it", async () => {
                 await delegationController.cancelPendingDelegation(delegationId, {from: holder1});
                 await delegationController.acceptPendingDelegation(delegationId, {from: validator})
-                    .should.be.rejectedWith("Cannot set state to accepted");
+                    .should.be.rejectedWith("The delegation has been cancelled by token holder");
             });
 
             it("should reject accepting request if validator already accepted it", async () => {
                 await delegationController.acceptPendingDelegation(delegationId, {from: validator});
                 await delegationController.acceptPendingDelegation(delegationId, {from: validator})
-                    .should.be.rejectedWith("Cannot set state to accepted");
+                    .should.be.rejectedWith("The delegation has been already accepted");
+            });
+
+            it("should reject accepting request if next month started", async () => {
+                skipTime(web3, month);
+                await delegationController.acceptPendingDelegation(delegationId, {from: validator})
+                    .should.be.rejectedWith("The delegation request is outdated");
             });
 
             it("should reject accepting request if validator tried to accept request not assigned to him", async () => {
