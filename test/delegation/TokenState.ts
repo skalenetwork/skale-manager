@@ -95,7 +95,7 @@ contract("DelegationController", ([owner, holder, validator]) => {
             skipTime(web3, month);
 
             await delegationController.acceptPendingDelegation(delegationId, {from: validator})
-                .should.eventually.be.rejectedWith("Cannot set state to accepted");
+                .should.eventually.be.rejectedWith("The delegation request is outdated");
 
             const state = await delegationController.getState(delegationId);
             state.toNumber().should.be.equal(State.REJECTED);
