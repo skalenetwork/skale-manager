@@ -3,8 +3,8 @@ import { ConstantsHolderInstance,
          ContractManagerInstance,
          MonitorsDataInstance,
          MonitorsFunctionalityInstance,
-         NodesDataInstance,
-         NodesFunctionalityInstance } from "../types/truffle-contracts";
+        NodesInstance } from "../types/truffle-contracts";
+
 import { currentTime, skipTime } from "./tools/time";
 
 import chai = require("chai");
@@ -13,8 +13,7 @@ import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
 import { deployContractManager } from "./tools/deploy/contractManager";
 import { deployMonitorsData } from "./tools/deploy/monitorsData";
 import { deployMonitorsFunctionality } from "./tools/deploy/monitorsFunctionality";
-import { deployNodesData } from "./tools/deploy/nodesData";
-import { deployNodesFunctionality } from "./tools/deploy/nodesFunctionality";
+import { deployNodes } from "./tools/deploy/nodes";
 chai.should();
 chai.use((chaiAsPromised));
 
@@ -23,24 +22,22 @@ contract("MonitorsFunctionality", ([owner, validator]) => {
   let monitorsFunctionality: MonitorsFunctionalityInstance;
   let constantsHolder: ConstantsHolderInstance;
   let monitorsData: MonitorsDataInstance;
-  let nodesData: NodesDataInstance;
-  let nodesFunctionality: NodesFunctionalityInstance;
+  let nodes: NodesInstance;
 
   beforeEach(async () => {
     contractManager = await deployContractManager();
 
+    nodes = await deployNodes(contractManager);
     monitorsFunctionality = await deployMonitorsFunctionality(contractManager);
     monitorsData = await deployMonitorsData(contractManager);
-    nodesData = await deployNodesData(contractManager);
     constantsHolder = await deployConstantsHolder(contractManager);
-    nodesFunctionality = await deployNodesFunctionality(contractManager);
 
     // create a node for monitors functions tests
-    await nodesData.addNode(validator, "elvis1", "0x7f000001", "0x7f000002", 8545, "0x1122334455", 0);
-    await nodesData.addNode(validator, "elvis2", "0x7f000003", "0x7f000004", 8545, "0x1122334456", 0);
-    await nodesData.addNode(validator, "elvis3", "0x7f000005", "0x7f000006", 8545, "0x1122334457", 0);
-    await nodesData.addNode(validator, "elvis4", "0x7f000007", "0x7f000008", 8545, "0x1122334458", 0);
-    await nodesData.addNode(validator, "elvis5", "0x7f000009", "0x7f000010", 8545, "0x1122334459", 0);
+    await nodes.addNode(validator, "elvis1", "0x7f000001", "0x7f000002", 8545, "0x1122334455", 0);
+    await nodes.addNode(validator, "elvis2", "0x7f000003", "0x7f000004", 8545, "0x1122334456", 0);
+    await nodes.addNode(validator, "elvis3", "0x7f000005", "0x7f000006", 8545, "0x1122334457", 0);
+    await nodes.addNode(validator, "elvis4", "0x7f000007", "0x7f000008", 8545, "0x1122334458", 0);
+    await nodes.addNode(validator, "elvis5", "0x7f000009", "0x7f000010", 8545, "0x1122334459", 0);
   });
   // nodeIndex = 0 because we add one node and her index in array is 0
   const nodeIndex = 0;
@@ -59,7 +56,7 @@ contract("MonitorsFunctionality", ([owner, validator]) => {
       if (index > 0) {
         assert.notEqual(value, targetNodes[index - 1], "Array should not contain duplicates");
       }
-      assert(nodesData.isNodeActive(value), "Node should be active");
+      assert(nodes.isNodeActive(value), "Node should be active");
     });
   });
 
@@ -88,34 +85,44 @@ contract("MonitorsFunctionality", ([owner, validator]) => {
     const timeToHex = ("0000000000000000000000000000000000" +
         timeInSec).slice(-28);
     const data32bytes = "0x" + indexNode1ToHex + timeToHex + ipToHex;
-    //
+
     await monitorsFunctionality.addMonitor(indexNode0, {from: owner});
-    //
+
     await monitorsData.addCheckedNode(
       indexNode0inSha3, data32bytes, {from: owner},
       );
     // execution
+    const verd = {
+      toNodeIndex: indexNode1,
+      downtime: 1,
+      latency: 0,
+    };
     const { logs } = await monitorsFunctionality
-          .sendVerdict(0, indexNode1, 1, 0, {from: owner});
+          .sendVerdict(0, verd, {from: owner});
     // assertion
     assert.equal(logs[0].event, "VerdictWasSent");
   });
 
   it("should rejected with `Checked Node...` error when invoke sendVerdict", async () => {
     const error = "Checked Node does not exist in MonitorsArray";
+    const verd = {
+      toNodeIndex: 1,
+      downtime: 0,
+      latency: 0,
+    };
     await monitorsFunctionality
-          .sendVerdict(0, 1, 0, 0, {from: owner})
+          .sendVerdict(0, verd, {from: owner})
           .should.be.eventually.rejectedWith(error);
   });
 
-  it("should rejected with `The time has...` error when invoke sendVerdict", async () => {
-    const error = "The time has not come to send verdict for 1 Node";
+  it("should not reject when try to send sendVerdict early", async () => {
     // preparation
     // ip = 127.0.0.1
     const ipToHex = "7f000001";
     const indexNode0 = 0;
     const indexNode0inSha3 = web3.utils.soliditySha3(indexNode0);
     const indexNode1 = 1;
+    const monitorIndex1 = web3.utils.soliditySha3(indexNode1);
     const indexNode1ToHex = ("0000000000000000000000000000000000" +
         indexNode1).slice(-28);
     const time = await currentTime(web3) + 100;
@@ -124,15 +131,19 @@ contract("MonitorsFunctionality", ([owner, validator]) => {
     timeInHex).slice(-28);
     // for data32bytes should revert to hex indexNode1 + oneSec + 127.0.0.1
     const data32bytes = "0x" + indexNode1ToHex + add0ToHex + ipToHex;
-    //
-    // await monitorsFunctionality.addMonitor(indexNode0, {from: owner});
-    //
+
     await monitorsData.addCheckedNode(
       indexNode0inSha3, data32bytes, {from: owner},
       );
+    const verd = {
+      toNodeIndex: 1,
+      downtime: 0,
+      latency: 0,
+    };
     await monitorsFunctionality
-          .sendVerdict(0, 1, 0, 0, {from: owner})
-          .should.be.eventually.rejectedWith(error);
+          .sendVerdict(0, verd, {from: owner});
+    const lengthOfMetrics = await monitorsData.getLengthOfMetrics(monitorIndex1, {from: owner});
+    lengthOfMetrics.toNumber().should.be.equal(0);
   });
 
   it("should calculate Metrics", async () => {
@@ -180,14 +191,19 @@ contract("MonitorsFunctionality", ([owner, validator]) => {
     const add0ToHex = ("00000000000000000000000000000" +
     timeInHex).slice(-28);
     const data32bytes = "0x" + indexNode1ToHex + add0ToHex + ipToHex;
-    //
+
     await monitorsData.addCheckedNode(
       indexNode0inSha3, data32bytes, {from: owner},
       );
     // execution
     // skipTime(web3, time - 200);
+    const verd = {
+      toNodeIndex: 1,
+      downtime: 0,
+      latency: 0,
+    };
     await monitorsFunctionality
-          .sendVerdict(0, 1, 0, 0, {from: owner});
+          .sendVerdict(0, verd, {from: owner});
     const res = new BigNumber(await monitorsData.getLengthOfMetrics(monitorIndex1, {from: owner}));
     // expectation
     expect(parseInt(res.toString(), 10)).to.equal(1);
@@ -199,14 +215,19 @@ contract("MonitorsFunctionality", ([owner, validator]) => {
     const rewardPeriod = (await constantsHolder.rewardPeriod()).toNumber();
     skipTime(web3, rewardPeriod);
 
-    await monitorsFunctionality.sendVerdict(1, 0, 0, 0);
+    const verd = {
+      toNodeIndex: 0,
+      downtime: 0,
+      latency: 0,
+    };
+    await monitorsFunctionality.sendVerdict(1, verd);
 
     const node1Hash = web3.utils.soliditySha3(1);
     const node2Hash = web3.utils.soliditySha3(2);
     await monitorsData.getCheckedArray(node1Hash).should.be.eventually.empty;
     (await monitorsData.getCheckedArray(node2Hash)).length.should.be.equal(1);
 
-    await nodesData.changeNodeLastRewardDate(0);
+    await nodes.changeNodeLastRewardDate(0);
     await monitorsFunctionality.upgradeMonitor(0);
 
     const validatedArray = await monitorsData.getCheckedArray(node2Hash);
@@ -258,7 +279,6 @@ contract("MonitorsFunctionality", ([owner, validator]) => {
     (await monitorsData.getCheckedArray(node4Hash)).length.should.be.equal(2);
 
     await monitorsFunctionality.deleteMonitor(0);
-    console.log("Finished delete 0 monitor");
 
     await monitorsData.getCheckedArray(node0Hash).should.be.eventually.empty;
     await monitorsData.getCheckedArray(node1Hash).should.be.eventually.empty;
@@ -266,15 +286,8 @@ contract("MonitorsFunctionality", ([owner, validator]) => {
     (await monitorsData.getCheckedArray(node3Hash)).length.should.be.equal(1);
     (await monitorsData.getCheckedArray(node4Hash)).length.should.be.equal(1);
 
-    console.log("Started delete 1 monitor");
     await monitorsFunctionality.deleteMonitor(1);
-    console.log("Finished delete 1 monitor");
 
-    // await monitorsData.getCheckedArray(node0Hash).should.be.eventually.empty;
-    // await monitorsData.getCheckedArray(node1Hash).should.be.eventually.empty;
-    // await monitorsData.getCheckedArray(node2Hash).should.be.eventually.empty;
-    // await monitorsData.getCheckedArray(node3Hash).should.be.eventually.empty;
-    // await monitorsData.getCheckedArray(node4Hash).should.be.eventually.empty;
   });
 
   const nodesCount = 50;
@@ -282,10 +295,10 @@ contract("MonitorsFunctionality", ([owner, validator]) => {
   describe("when " + nodesCount + " nodes in network", async () => {
 
     beforeEach(async () => {
-      for (let node = (await nodesData.getNumberOfNodes()).toNumber(); node < nodesCount; ++node) {
+      for (let node = (await nodes.getNumberOfNodes()).toNumber(); node < nodesCount; ++node) {
         const address = ("0000" + node.toString(16)).slice(-4);
 
-        await nodesData.addNode(validator,
+        await nodes.addNode(validator,
                                 "d2_" + node,
                                 "0x7f" + address + "01",
                                 "0x7f" + address + "02",
@@ -296,13 +309,13 @@ contract("MonitorsFunctionality", ([owner, validator]) => {
 
       const leavingCount = nodesCount - activeNodesCount;
       for (let i = 0; i < leavingCount; ++i) {
-        await nodesData.setNodeLeaving(Math.floor(i * nodesCount / leavingCount));
+        await nodes.setNodeLeaving(Math.floor(i * nodesCount / leavingCount));
       }
     });
 
     it("should add monitor", async () => {
       for (let node = 0; node < nodesCount; ++node) {
-        if (await nodesData.isNodeActive(node)) {
+        if (await nodes.isNodeActive(node)) {
           const { logs } = await monitorsFunctionality.addMonitor(node);
 
           const targetNodes = logs[2].args[2].map((value: BN) => value.toNumber());
@@ -312,7 +325,7 @@ contract("MonitorsFunctionality", ([owner, validator]) => {
             if (index > 0) {
               assert.notEqual(value, targetNodes[index - 1], "Array should not contain duplicates");
             }
-            assert(await nodesData.isNodeActive(value), "Node should be active");
+            assert(await nodes.isNodeActive(value), "Node should be active");
           });
         }
       }

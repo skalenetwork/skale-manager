@@ -3,7 +3,7 @@ import { deployDecryption } from "./dectyption";
 import { deployPunisher } from "./delegation/punisher";
 import { deployECDH } from "./ecdh";
 import { deployFunctionFactory } from "./factory";
-import { deployNodesData } from "./nodesData";
+import { deployNodes } from "./nodes";
 import { deploySchainsFunctionalityInternal } from "./schainsFunctionalityInternal";
 import { deploySlashingTable } from "./slashingTable";
 
@@ -12,7 +12,7 @@ const deploySkaleDKG: (contractManager: ContractManagerInstance) => Promise<Skal
                             async (contractManager: ContractManagerInstance) => {
                                 await deploySchainsFunctionalityInternal(contractManager);
                                 await deployPunisher(contractManager);
-                                await deployNodesData(contractManager);
+                                await deployNodes(contractManager);
                                 await deploySlashingTable(contractManager);
                                 await deployECDH(contractManager);
                                 await deployDecryption(contractManager);

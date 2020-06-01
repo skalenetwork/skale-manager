@@ -17,17 +17,16 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.5.16;
+pragma solidity 0.6.6;
 
 import "./Permissions.sol";
-import "./interfaces/IConstants.sol";
 
 
 /**
  * @title Contains constants and common variables for Skale Manager system
  * @author Artem Payvin
  */
-contract ConstantsHolder is IConstants, Permissions {
+contract ConstantsHolder is Permissions {
 
     // initial price for creating Node (100 SKL)
     uint public constant NODE_DEPOSIT = 100 * 1e18;
@@ -136,9 +135,9 @@ contract ConstantsHolder is IConstants, Permissions {
     }
 
     /**
-     * Set time if system underloaded, run only by NodesFunctionality contract
+     * Set time if system underloaded, run only by Nodes contract
      */
-    function setLastTimeUnderloaded() external allow("NodesFunctionality") {
+    function setLastTimeUnderloaded() external allow("Nodes") {
         lastTimeUnderloaded = now;
     }
 
@@ -178,7 +177,7 @@ contract ConstantsHolder is IConstants, Permissions {
      * @dev constructor in Permissions approach
      * @param contractsAddress needed in Permissions constructor
      */
-    function initialize(address contractsAddress) public initializer {
+    function initialize(address contractsAddress) public override initializer {
         Permissions.initialize(contractsAddress);
 
         msr = 5e6 * 1e18;

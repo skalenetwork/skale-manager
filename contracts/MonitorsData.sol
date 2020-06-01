@@ -12,37 +12,34 @@
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU Affero General Public License for more details.
-
+`
     You should have received a copy of the GNU Affero General Public License
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.5.16;
+pragma solidity 0.6.6;
 
 import "./GroupsData.sol";
 
 
 contract MonitorsData is GroupsData {
 
-
-    struct Metrics {
+    struct Verdict {
+        uint toNodeIndex;
         uint32 downtime;
         uint32 latency;
     }
 
-    struct Monitor {
-        uint nodeIndex;
-        bytes32[] checkedNodes;
-        Metrics[] verdicts;
-    }
-
     mapping (bytes32 => bytes32[]) public checkedNodes;
-    mapping (bytes32 => uint32[][]) public verdicts;
+    mapping (bytes32 => uint[][]) public verdicts;
+
+    mapping (bytes32 => uint) public lastVerdictBlocks;
+    mapping (bytes32 => uint) public lastBountyBlocks;
 
     /**
      *  Add checked node or update existing one if it is already exits
      */
-    function addCheckedNode(bytes32 monitorIndex, bytes32 data) external allow(executorName) {
+    function addCheckedNode(bytes32 monitorIndex, bytes32 data) external allow(_executorName) {
         uint indexLength = 14;
         require(data.length >= indexLength, "data is too small");
         for (uint i = 0; i < checkedNodes[monitorIndex].length; ++i) {
@@ -57,24 +54,37 @@ contract MonitorsData is GroupsData {
         checkedNodes[monitorIndex].push(data);
     }
 
-    function addVerdict(bytes32 monitorIndex, uint32 downtime, uint32 latency) external allow(executorName) {
-        verdicts[monitorIndex].push([downtime, latency]);
+    function addVerdict(bytes32 monitorIndex, uint32 downtime, uint32 latency) external allow(_executorName) {
+        verdicts[monitorIndex].push([uint(downtime), uint(latency)]);
+        lastVerdictBlocks[monitorIndex] = block.number;
     }
 
-    function removeCheckedNode(bytes32 monitorIndex, uint indexOfCheckedNode) external allow(executorName) {
+    function removeCheckedNode(bytes32 monitorIndex, uint indexOfCheckedNode) external allow(_executorName) {
         if (indexOfCheckedNode != checkedNodes[monitorIndex].length - 1) {
-            checkedNodes[monitorIndex][indexOfCheckedNode] = checkedNodes[monitorIndex][checkedNodes[monitorIndex].length - 1];
+            checkedNodes[monitorIndex][indexOfCheckedNode] =
+                checkedNodes[monitorIndex][checkedNodes[monitorIndex].length - 1];
         }
         delete checkedNodes[monitorIndex][checkedNodes[monitorIndex].length - 1];
-        checkedNodes[monitorIndex].length--;
+        checkedNodes[monitorIndex].pop();
     }
 
-    function removeAllCheckedNodes(bytes32 monitorIndex) external allow(executorName) {
+    function removeAllCheckedNodes(bytes32 monitorIndex) external allow(_executorName) {
         delete checkedNodes[monitorIndex];
     }
 
-    function removeAllVerdicts(bytes32 monitorIndex) external allow(executorName) {
-        verdicts[monitorIndex].length = 0;
+    function removeAllVerdicts(bytes32 monitorIndex) external allow(_executorName) {
+        lastBountyBlocks[monitorIndex] = block.number;
+        while (verdicts[monitorIndex].length > 0) {
+            verdicts[monitorIndex].pop();
+        }
+    }
+
+    function getLastReceivedVerdictBlock(uint nodeIndex) external view returns (uint) {
+        return lastVerdictBlocks[keccak256(abi.encodePacked(nodeIndex))];
+    }
+
+    function getLastBountyBlock(uint nodeIndex) external view returns (uint) {
+        return lastBountyBlocks[keccak256(abi.encodePacked(nodeIndex))];
     }
 
     function getCheckedArray(bytes32 monitorIndex) external view returns (bytes32[] memory) {
@@ -89,7 +99,7 @@ contract MonitorsData is GroupsData {
         return verdicts[monitorIndex].length;
     }
 
-    function initialize(address newContractsAddress) public initializer {
+    function initialize(address newContractsAddress) public override initializer {
         GroupsData.initialize("MonitorsFunctionality", newContractsAddress);
     }
 }

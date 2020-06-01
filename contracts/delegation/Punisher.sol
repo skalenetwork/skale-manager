@@ -17,7 +17,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.5.16;
+pragma solidity 0.6.6;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
 
@@ -44,8 +44,9 @@ contract Punisher is Permissions, ILocker {
 
     /// @notice Allows service to slash `validator` by `amount` of tokens
     function slash(uint validatorId, uint amount) external allow("SkaleDKG") {
-        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
-        DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
+        ValidatorService validatorService = ValidatorService(_contractManager.getContract("ValidatorService"));
+        DelegationController delegationController = DelegationController(
+            _contractManager.getContract("DelegationController"));
 
         require(validatorService.validatorExists(validatorId), "Validator does not exist");
 
@@ -55,7 +56,8 @@ contract Punisher is Permissions, ILocker {
     }
 
     function forgive(address holder, uint amount) external onlyOwner {
-        DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
+        DelegationController delegationController = DelegationController(
+            _contractManager.getContract("DelegationController"));
 
         require(!delegationController.hasUnprocessedSlashes(holder), "Not all slashes were calculated");
 
@@ -68,11 +70,11 @@ contract Punisher is Permissions, ILocker {
         emit Forgive(holder, amount);
     }
 
-    function getAndUpdateLockedAmount(address wallet) external returns (uint) {
+    function getAndUpdateLockedAmount(address wallet) external override returns (uint) {
         return _getAndUpdateLockedAmount(wallet);
     }
 
-    function getAndUpdateForbiddenForDelegationAmount(address wallet) external returns (uint) {
+    function getAndUpdateForbiddenForDelegationAmount(address wallet) external override returns (uint) {
         return _getAndUpdateLockedAmount(wallet);
     }
 
@@ -80,14 +82,15 @@ contract Punisher is Permissions, ILocker {
         _locked[holder] = _locked[holder].add(amount);
     }
 
-    function initialize(address _contractManager) public initializer {
-        Permissions.initialize(_contractManager);
+    function initialize(address contractManager) public override initializer {
+        Permissions.initialize(contractManager);
     }
 
     // private
 
     function _getAndUpdateLockedAmount(address wallet) internal returns (uint) {
-        DelegationController delegationController = DelegationController(contractManager.getContract("DelegationController"));
+        DelegationController delegationController = DelegationController(
+            _contractManager.getContract("DelegationController"));
 
         delegationController.processAllSlashes(wallet);
         return _locked[wallet];

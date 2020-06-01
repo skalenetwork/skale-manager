@@ -10,8 +10,7 @@
     "ValidatorService": "ValidatorService",
     "ContractManager": "ContractManager",
     "ConstantsHolder": "ConstantsHolder",
-    "NodesData": "NodesData",
-    "NodesFunctionality": "NodesFunctionality",
+    "Nodes": "Nodes",
     "MonitorsData": "MonitorsData",
     "MonitorsFunctionality": "MonitorsFunctionality",
     "SchainsData": "SchainsData",
@@ -21,12 +20,12 @@
     "ECDH": "ECDH",
     "SkaleDKG": "SkaleDKG",
     "SkaleVerifier": "SkaleVerifier",
-    "ManagerData": "ManagerData",
     "SkaleManager": "SkaleManager",
     "Pricing": "Pricing",
     "SlashingTable": "SlashingTable",
     "Punisher": "Punisher",
-    "TokenLaunchLocker": "TokenLaunchLocker"
+    "TokenLaunchLocker": "TokenLaunchLocker",
+    "TimeHelpersWithDebug": "TimeHelpersWithDebug"
   },
   "dependencies": {},
   "name": "skale-manager",
@@ -39,7 +38,7 @@
         "runs": "200"
       }
     },
-    "solcVersion": "0.5.16"
+    "solcVersion": "0.6.6"
   },
   "telemetryOptIn": true
 }

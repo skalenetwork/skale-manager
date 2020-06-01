@@ -1,15 +1,15 @@
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
 import { ContractManagerInstance,
-         NodesFunctionalityInstance,
+         NodesInstance,
          SchainsDataInstance,
          SchainsFunctionalityInstance,
          SkaleVerifierInstance,
-         ValidatorServiceInstance} from "../types/truffle-contracts";
+         ValidatorServiceInstance } from "../types/truffle-contracts";
 
 import { deployContractManager } from "./tools/deploy/contractManager";
 import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
-import { deployNodesFunctionality } from "./tools/deploy/nodesFunctionality";
+import { deployNodes } from "./tools/deploy/nodes";
 import { deploySchainsData } from "./tools/deploy/schainsData";
 import { deploySchainsFunctionality } from "./tools/deploy/schainsFunctionality";
 import { deploySkaleVerifier } from "./tools/deploy/skaleVerifier";
@@ -18,16 +18,16 @@ chai.use(chaiAsPromised);
 
 contract("SkaleVerifier", ([validator1, owner, developer, hacker]) => {
     let contractManager: ContractManagerInstance;
-    let nodesFunctionality: NodesFunctionalityInstance;
     let schainsData: SchainsDataInstance;
     let schainsFunctionality: SchainsFunctionalityInstance;
     let skaleVerifier: SkaleVerifierInstance;
     let validatorService: ValidatorServiceInstance;
+    let nodes: NodesInstance;
 
     beforeEach(async () => {
         contractManager = await deployContractManager();
 
-        nodesFunctionality = await deployNodesFunctionality(contractManager);
+        nodes = await deployNodes(contractManager);
         validatorService = await deployValidatorService(contractManager);
         schainsData = await deploySchainsData(contractManager);
         schainsFunctionality = await deploySchainsFunctionality(contractManager);
@@ -142,15 +142,16 @@ contract("SkaleVerifier", ([validator1, owner, developer, hacker]) => {
             const nodesCount = 2;
             for (const index of Array.from(Array(nodesCount).keys())) {
                 const hexIndex = ("0" + index.toString(16)).slice(-2);
-                await nodesFunctionality.createNode(validator1,
-                    "0x00" +
-                    "2161" +
-                    "0000" +
-                    "7f0000" + hexIndex +
-                    "7f0000" + hexIndex +
-                    "1122334455667788990011223344556677889900112233445566778899001122" +
-                    "1122334455667788990011223344556677889900112233445566778899001122" +
-                    "d2" + hexIndex,
+                await nodes.createNode(validator1,
+                    {
+                        port: 8545,
+                        nonce: 0,
+                        ip: "0x7f0000" + hexIndex,
+                        publicIp: "0x7f0000" + hexIndex,
+                        publicKey: "0x1122334455667788990011223344556677889900112233445566778899001122" +
+                                     "1122334455667788990011223344556677889900112233445566778899001122",
+                        name: "d2" + hexIndex
+                    },
                     {from: validator1});
             }
 
@@ -159,11 +160,7 @@ contract("SkaleVerifier", ([validator1, owner, developer, hacker]) => {
             await schainsFunctionality.addSchain(
                 validator1,
                 deposit,
-                "0x10" +
-                "0000000000000000000000000000000000000000000000000000000000000005" +
-                "04" +
-                "0000" +
-                "426f62",
+                web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, "Bob"]),
                 {from: validator1});
 
             await schainsData.setPublicKey(

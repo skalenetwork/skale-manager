@@ -25,8 +25,9 @@ class Validator {
     public feeRate: BigNumber;
     public registrationTime: BigNumber;
     public minimumDelegationAmount: BigNumber;
+    public acceptNewRequests: boolean;
 
-    constructor(arrayData: [string, string, string, string, BigNumber, BigNumber, BigNumber]) {
+    constructor(arrayData: [string, string, string, string, BigNumber, BigNumber, BigNumber, boolean]) {
         this.name = arrayData[0];
         this.validatorAddress = arrayData[1];
         this.requestedAddress = arrayData[2];
@@ -34,6 +35,7 @@ class Validator {
         this.feeRate = new BigNumber(arrayData[4]);
         this.registrationTime = new BigNumber(arrayData[5]);
         this.minimumDelegationAmount = new BigNumber(arrayData[6]);
+        this.acceptNewRequests = arrayData[7];
     }
 }
 
@@ -282,8 +284,8 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
                 amount = 100;
                 delegationPeriod = 3;
                 info = "NICE";
-                await skaleToken.mint(owner, holder, 200, "0x", "0x");
-                await skaleToken.mint(owner, validator3, 200, "0x", "0x");
+                await skaleToken.mint(holder, 200, "0x", "0x");
+                await skaleToken.mint(validator3, 200, "0x", "0x");
             });
 
             it("should allow to enable validator in whitelist", async () => {
@@ -295,7 +297,13 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
             it("should allow to disable validator from whitelist", async () => {
                 await validatorService.disableValidator(validatorId, {from: validator1})
                     .should.be.eventually.rejectedWith("Ownable: caller is not the owner");
+                await validatorService.disableValidator(validatorId, {from: owner})
+                    .should.be.eventually.rejectedWith("Validator is already disabled");
+
+                await validatorService.enableValidator(validatorId, {from: owner});
+                await validatorService.trustedValidators(validatorId).should.eventually.be.true;
                 await validatorService.disableValidator(validatorId, {from: owner});
+                await validatorService.trustedValidators(validatorId).should.eventually.be.false;
             });
 
             it("should not allow to send delegation request if validator isn't authorized", async () => {
@@ -367,6 +375,22 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
                     assert.equal(nodeIndex, i);
                 }
             });
+
+            it("should be possible for the validator to enable and disable new delegation requests", async () => {
+                await validatorService.enableValidator(validatorId);
+                // should be enabled by default
+                await delegationController.delegate(validatorId, amount, delegationPeriod, info, {from: holder});
+
+                await validatorService.stopAcceptingNewRequests({from: holder})
+                    .should.be.eventually.rejectedWith("Validator with such address does not exist");
+
+                await validatorService.stopAcceptingNewRequests({from: validator1})
+                await delegationController.delegate(validatorId, amount, delegationPeriod, info, {from: holder})
+                    .should.be.eventually.rejectedWith("The validator does not accept new requests");
+
+                await validatorService.startAcceptingNewRequests({from: validator1});
+                await delegationController.delegate(validatorId, amount, delegationPeriod, info, {from: holder});
+            })
         });
     });
 });
