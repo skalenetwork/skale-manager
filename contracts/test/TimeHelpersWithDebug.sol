@@ -1,5 +1,7 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 /*
-    TimeHellpersWithDebug.sol - SKALE Manager
+    TimeHelpersWithDebug.sol - SKALE Manager
     Copyright (C) 2019-Present SKALE Labs
     @author Dmytro Stebaiev
 

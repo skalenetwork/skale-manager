@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 /*
     PartialDifferences.sol - SKALE Manager
     Copyright (C) 2018-Present SKALE Labs
@@ -22,7 +24,22 @@ pragma solidity 0.6.8;
 import "../utils/MathUtils.sol";
 import "../utils/FractionUtils.sol";
 
-
+/**
+ * @title Partial Differences Library
+ * @dev This library contains functions to manage Partial Differences data
+ * structure. Partial Differences is an array of value differences over time.
+ *
+ * For example: assuming an array [3, 6, 3, 1, 2], partial differences can
+ * represent this array as [_, 3, -3, -2, 1].
+ *
+ * This data structure allows adding values on an open interval with O(1)
+ * complexity.
+ *
+ * For example: add +5 to [3, 6, 3, 1, 2] starting from the second element (3),
+ * instead of performing [3, 6, 3+5, 1+5, 2+5] partial differences allows
+ * performing [_, 3, -3+5, -2, 1]. The original array can be restored by
+ * adding values from partial differences.
+ */
 library PartialDifferences {
     using SafeMath for uint;
     using MathUtils for uint;

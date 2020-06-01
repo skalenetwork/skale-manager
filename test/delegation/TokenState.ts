@@ -126,7 +126,7 @@ contract("DelegationController", ([owner, holder, validator]) => {
 
             it("should not allow to cancel accepted request", async () => {
                 await delegationController.cancelPendingDelegation(delegationId, {from: holder})
-                    .should.be.eventually.rejectedWith("Token holders able to cancel only PROPOSED delegations");
+                    .should.be.eventually.rejectedWith("Token holders are only able to cancel PROPOSED delegations");
             });
 
             describe("when 1 month was passed", async () => {

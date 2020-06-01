@@ -1,7 +1,9 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 /*
     StringUtils.sol - SKALE Manager
     Copyright (C) 2018-Present SKALE Labs
-    @author DmytroStebaiev
+    @author Dmytro Stebaiev
 
     SKALE Manager is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as published

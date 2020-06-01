@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 /*
     FractionUtils.sol - SKALE Manager
     Copyright (C) 2018-Present SKALE Labs
