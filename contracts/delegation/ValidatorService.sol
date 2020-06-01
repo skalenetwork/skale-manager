@@ -35,7 +35,7 @@ import "./DelegationController.sol";
 /**
  * @title ValidatorService
  * @dev This contract handles all validator operations including registration,
- * node management, delegation accept/reject functions, and more.
+ * node management, validator-specific delegation parameters, and more.
  *
  * Validators register an address, and use this address to accept delegations and
  * register nodes.
