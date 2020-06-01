@@ -66,7 +66,7 @@ contract("DelegationController", ([owner, holder1, holder2, validator, validator
         it("should reject delegation if it doesn't meet minimum delegation amount", async () => {
             amount = 99;
             await delegationController.delegate(validatorId, amount, delegationPeriod, info, {from: holder1})
-                .should.be.eventually.rejectedWith("Amount does not meet minimum delegation amount");
+                .should.be.eventually.rejectedWith("Amount does not meet the validator's minimum delegation amount");
         });
 
         it("should reject delegation if request doesn't meet allowed delegation period", async () => {
@@ -78,7 +78,7 @@ contract("DelegationController", ([owner, holder1, holder2, validator, validator
         it("should reject delegation if holder doesn't have enough unlocked tokens for delegation", async () => {
             amount = 101;
             await delegationController.delegate(validatorId, amount, delegationPeriod, info, {from: holder1})
-                .should.be.eventually.rejectedWith("Delegator does not have enough tokens to delegate");
+                .should.be.eventually.rejectedWith("Token holder does not have enough tokens to delegate");
         });
 
         it("should send request for delegation", async () => {
@@ -100,7 +100,7 @@ contract("DelegationController", ([owner, holder1, holder2, validator, validator
             await skaleToken.mint(holder1, 2 * amount, "0x", "0x");
             await delegationController.delegate(validatorId, amount + 1, delegationPeriod, info, {from: holder1});
             await delegationController.delegate(validatorId, amount, delegationPeriod, info, {from: holder1})
-                .should.be.eventually.rejectedWith("Delegator does not have enough tokens to delegate");
+                .should.be.eventually.rejectedWith("Token holder does not have enough tokens to delegate");
 
         });
 
@@ -114,7 +114,7 @@ contract("DelegationController", ([owner, holder1, holder2, validator, validator
             await skaleToken.mint(holder1, amount, "0x", "0x");
             await validatorService.disableValidator(validatorId, {from: owner});
             await delegationController.delegate(validatorId, amount, delegationPeriod, info, {from: holder1})
-                .should.be.eventually.rejectedWith("Validator is not authorized to accept request");
+                .should.be.eventually.rejectedWith("Validator is not authorized to accept delegation request");
             await validatorService.disableWhitelist();
             await delegationController.delegate(validatorId, amount, delegationPeriod, info, {from: holder1});
         });
@@ -135,13 +135,13 @@ contract("DelegationController", ([owner, holder1, holder2, validator, validator
             it("should reject canceling request if validator already accepted it", async () => {
                 await delegationController.acceptPendingDelegation(delegationId, {from: validator});
                 await delegationController.cancelPendingDelegation(delegationId, {from: holder1})
-                    .should.be.rejectedWith("Token holders able to cancel only PROPOSED delegations");
+                    .should.be.rejectedWith("Token holders are only able to cancel PROPOSED delegations");
             });
 
             it("should reject canceling request if delegation request already rejected", async () => {
                 await delegationController.cancelPendingDelegation(delegationId, {from: holder1});
                 await delegationController.cancelPendingDelegation(delegationId, {from: holder1})
-                    .should.be.rejectedWith("Token holders able to cancel only PROPOSED delegations");
+                    .should.be.rejectedWith("Token holders are only able to cancel PROPOSED delegations");
             });
 
             it("should change state of tokens to CANCELED if delegation was cancelled", async () => {
@@ -153,10 +153,10 @@ contract("DelegationController", ([owner, holder1, holder2, validator, validator
 
             it("should reject accepting request if such validator doesn't exist", async () => {
                 await delegationController.acceptPendingDelegation(delegationId, {from: validator2})
-                    .should.be.rejectedWith("Validator with such address does not exist");
+                    .should.be.rejectedWith("Validator with given address does not exist");
             });
 
-            it("should reject accepting request if delegator already canceled it", async () => {
+            it("should reject accepting request if validator already canceled it", async () => {
                 await delegationController.cancelPendingDelegation(delegationId, {from: holder1});
                 await delegationController.acceptPendingDelegation(delegationId, {from: validator})
                     .should.be.rejectedWith("The delegation has been cancelled by token holder");
