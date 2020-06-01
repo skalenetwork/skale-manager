@@ -236,7 +236,7 @@ contract DelegationController is Permissions, ILocker {
         require(getState(delegationId) == State.PROPOSED, "Token holders able to cancel only PROPOSED delegations");
 
         delegations[delegationId].finished = _getCurrentMonth();
-        _subtractFromLockedInPerdingDelegations(delegations[delegationId].holder, delegations[delegationId].amount);
+        _subtractFromLockedInPendingDelegations(delegations[delegationId].holder, delegations[delegationId].amount);
 
         emit DelegationRequestCanceledByUser(delegationId);
     }
@@ -536,7 +536,7 @@ contract DelegationController is Permissions, ILocker {
         }
     }
 
-    function _subtractFromLockedInPerdingDelegations(address holder, uint amount) internal returns (uint) {
+    function _subtractFromLockedInPendingDelegations(address holder, uint amount) internal returns (uint) {
         uint currentMonth = _getCurrentMonth();
         require(
             _lockedInPendingDelegations[holder].month == currentMonth,
