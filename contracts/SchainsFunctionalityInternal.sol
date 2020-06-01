@@ -233,7 +233,7 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
      * @dev _removeSpace - occupy space of given Node
      * @param nodeIndex - index of Node at common array of Nodes
      * @param space - needed space to occupy
-     * @return if unoccupied - true, else - false
+     * @return true if space was successfully removed
      */
     function _removeSpace(uint nodeIndex, uint8 space) internal returns (bool) {
         Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
