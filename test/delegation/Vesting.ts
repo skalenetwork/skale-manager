@@ -37,39 +37,162 @@ contract("Vesting", ([owner, holder, holder1, holder2, holder3, hacker]) => {
     });
 
     it("should register SAFT investor", async () => {
-        await Vesting.addVestingTerm(holder, getTimeAtDate(1, 6, 2020), 6, 36, 1e6, 1e5, 6, {from: owner});
+        (await Vesting.isSAFTRegistered(holder)).should.be.eq(false);
+        await Vesting.addVestingTerm(holder, getTimeAtDate(1, 6, 2020), 6, 36, 1e6, 1e5, 6, false, {from: owner});
+        (await Vesting.isSAFTRegistered(holder)).should.be.eq(true);
+        (await Vesting.isApprovedSAFT(holder)).should.be.eq(false);
+        (await Vesting.isActiveVestingTerm(holder)).should.be.eq(false);
+    });
+
+    it("should approve SAFT", async () => {
+        (await Vesting.isSAFTRegistered(holder)).should.be.eq(false);
+        await Vesting.addVestingTerm(holder, getTimeAtDate(1, 6, 2020), 6, 36, 1e6, 1e5, 6, false, {from: owner});
+        (await Vesting.isSAFTRegistered(holder)).should.be.eq(true);
+        (await Vesting.isApprovedSAFT(holder)).should.be.eq(false);
+        await Vesting.approveSAFTHolder({from: holder});
+        (await Vesting.isApprovedSAFT(holder)).should.be.eq(true);
+        (await Vesting.isActiveVestingTerm(holder)).should.be.eq(false);
+    });
+
+    it("should not approve SAFT from hacker", async () => {
+        (await Vesting.isSAFTRegistered(holder)).should.be.eq(false);
+        await Vesting.addVestingTerm(holder, getTimeAtDate(1, 6, 2020), 6, 36, 1e6, 1e5, 6, false, {from: owner});
+        (await Vesting.isSAFTRegistered(holder)).should.be.eq(true);
+        (await Vesting.isApprovedSAFT(holder)).should.be.eq(false);
+        await Vesting.approveSAFTHolder({from: hacker}).should.be.eventually.rejectedWith("SAFT is not registered");
+        (await Vesting.isApprovedSAFT(holder)).should.be.eq(false);
+        (await Vesting.isActiveVestingTerm(holder)).should.be.eq(false);
+    });
+
+    it("should not approve SAFT twice", async () => {
+        (await Vesting.isSAFTRegistered(holder)).should.be.eq(false);
+        await Vesting.addVestingTerm(holder, getTimeAtDate(1, 6, 2020), 6, 36, 1e6, 1e5, 6, false, {from: owner});
+        (await Vesting.isSAFTRegistered(holder)).should.be.eq(true);
+        (await Vesting.isApprovedSAFT(holder)).should.be.eq(false);
+        await Vesting.approveSAFTHolder({from: holder});
+        (await Vesting.isApprovedSAFT(holder)).should.be.eq(true);
+        (await Vesting.isActiveVestingTerm(holder)).should.be.eq(false);
+        await Vesting.approveSAFTHolder({from: holder}).should.be.eventually.rejectedWith("SAFT is already approved");
+    });
+
+    it("should not start vesting without approve SAFT", async () => {
+        (await Vesting.isSAFTRegistered(holder)).should.be.eq(false);
+        await Vesting.addVestingTerm(holder, getTimeAtDate(1, 6, 2020), 6, 36, 1e6, 1e5, 6, false, {from: owner});
+        (await Vesting.isSAFTRegistered(holder)).should.be.eq(true);
+        (await Vesting.isApprovedSAFT(holder)).should.be.eq(false);
+        await Vesting.startVesting(holder, {from: owner}).should.be.eventually.rejectedWith("SAFT is not approved");
+        (await Vesting.isApprovedSAFT(holder)).should.be.eq(false);
+        (await Vesting.isActiveVestingTerm(holder)).should.be.eq(false);
+    });
+
+    it("should not start vesting without registering SAFT", async () => {
+        (await Vesting.isSAFTRegistered(holder)).should.be.eq(false);
+        await Vesting.startVesting(holder, {from: owner}).should.be.eventually.rejectedWith("SAFT is not registered");
+        (await Vesting.isSAFTRegistered(holder)).should.be.eq(false);
+        (await Vesting.isApprovedSAFT(holder)).should.be.eq(false);
+        (await Vesting.isActiveVestingTerm(holder)).should.be.eq(false);
+    });
+
+    it("should start vesting with register & approve SAFT", async () => {
+        (await Vesting.isSAFTRegistered(holder)).should.be.eq(false);
+        await Vesting.addVestingTerm(holder, getTimeAtDate(1, 6, 2020), 6, 36, 1e6, 1e5, 6, false, {from: owner});
+        (await Vesting.isSAFTRegistered(holder)).should.be.eq(true);
+        (await Vesting.isApprovedSAFT(holder)).should.be.eq(false);
+        await Vesting.approveSAFTHolder({from: holder});
+        (await Vesting.isApprovedSAFT(holder)).should.be.eq(true);
+        (await Vesting.isActiveVestingTerm(holder)).should.be.eq(false);
+        await Vesting.startVesting(holder, {from: owner});
+        (await Vesting.isActiveVestingTerm(holder)).should.be.eq(true);
+    });
+
+    it("should stop cancelable vesting before start", async () => {
+        (await Vesting.isSAFTRegistered(holder)).should.be.eq(false);
+        await Vesting.addVestingTerm(holder, getTimeAtDate(1, 6, 2020), 6, 36, 1e6, 1e5, 6, true, {from: owner});
+        (await Vesting.isSAFTRegistered(holder)).should.be.eq(true);
+        (await Vesting.isApprovedSAFT(holder)).should.be.eq(false);
+        await Vesting.approveSAFTHolder({from: holder});
+        (await Vesting.isApprovedSAFT(holder)).should.be.eq(true);
+        (await Vesting.isActiveVestingTerm(holder)).should.be.eq(false);
+        await Vesting.stopVesting(holder, {from: owner});
+        await Vesting.startVesting(holder, {from: owner}).should.be.eventually.rejectedWith("SAFT is already canceled");
+        (await Vesting.isActiveVestingTerm(holder)).should.be.eq(false);
+    });
+
+    it("should stop cancelable vesting after start", async () => {
+        (await Vesting.isSAFTRegistered(holder)).should.be.eq(false);
+        await Vesting.addVestingTerm(holder, getTimeAtDate(1, 6, 2020), 6, 36, 1e6, 1e5, 6, true, {from: owner});
+        (await Vesting.isSAFTRegistered(holder)).should.be.eq(true);
+        (await Vesting.isApprovedSAFT(holder)).should.be.eq(false);
+        await Vesting.approveSAFTHolder({from: holder});
+        (await Vesting.isApprovedSAFT(holder)).should.be.eq(true);
+        (await Vesting.isActiveVestingTerm(holder)).should.be.eq(false);
+        await Vesting.startVesting(holder, {from: owner});
+        (await Vesting.isActiveVestingTerm(holder)).should.be.eq(true);
+        await Vesting.stopVesting(holder, {from: owner});
+        (await Vesting.isActiveVestingTerm(holder)).should.be.eq(false);
+        await Vesting.startVesting(holder, {from: owner}).should.be.eventually.rejectedWith("SAFT is already canceled");
+        (await Vesting.isActiveVestingTerm(holder)).should.be.eq(false);
+    });
+
+    it("should stop not-cancelable vesting before start", async () => {
+        (await Vesting.isSAFTRegistered(holder)).should.be.eq(false);
+        await Vesting.addVestingTerm(holder, getTimeAtDate(1, 6, 2020), 6, 36, 1e6, 1e5, 6, false, {from: owner});
+        (await Vesting.isSAFTRegistered(holder)).should.be.eq(true);
+        (await Vesting.isApprovedSAFT(holder)).should.be.eq(false);
+        await Vesting.approveSAFTHolder({from: holder});
+        (await Vesting.isApprovedSAFT(holder)).should.be.eq(true);
+        (await Vesting.isActiveVestingTerm(holder)).should.be.eq(false);
+        await Vesting.stopVesting(holder, {from: owner});
+        await Vesting.startVesting(holder, {from: owner}).should.be.eventually.rejectedWith("SAFT is already canceled");
+        (await Vesting.isActiveVestingTerm(holder)).should.be.eq(false);
+    });
+
+    it("should not stop not-cancelable vesting before start", async () => {
+        (await Vesting.isSAFTRegistered(holder)).should.be.eq(false);
+        await Vesting.addVestingTerm(holder, getTimeAtDate(1, 6, 2020), 6, 36, 1e6, 1e5, 6, false, {from: owner});
+        (await Vesting.isSAFTRegistered(holder)).should.be.eq(true);
+        (await Vesting.isApprovedSAFT(holder)).should.be.eq(false);
+        await Vesting.approveSAFTHolder({from: holder});
+        (await Vesting.isApprovedSAFT(holder)).should.be.eq(true);
+        (await Vesting.isActiveVestingTerm(holder)).should.be.eq(false);
+        await Vesting.startVesting(holder, {from: owner});
+        (await Vesting.isActiveVestingTerm(holder)).should.be.eq(true);
+        await Vesting.stopVesting(holder, {from: owner}).should.be.eventually.rejectedWith("You could not stop vesting for holder");
+        (await Vesting.isActiveVestingTerm(holder)).should.be.eq(true);
     });
 
     it("should not register seller if sender is not owner", async () => {
-        await Vesting.addVestingTerm(holder, getTimeAtDate(1, 6, 2020), 6, 36, 1e6, 1e5, 6, {from: hacker}).should.be.eventually.rejectedWith("Ownable: caller is not the owner");
+        await Vesting.addVestingTerm(holder, getTimeAtDate(1, 6, 2020), 6, 36, 1e6, 1e5, 6, false, {from: hacker}).should.be.eventually.rejectedWith("Ownable: caller is not the owner");
     });
 
     it("should not register already registered SAFT investor", async () => {
-        await Vesting.addVestingTerm(holder, getTimeAtDate(1, 6, 2020), 6, 36, 1e6, 1e5, 6, {from: owner});
-        await Vesting.addVestingTerm(holder, getTimeAtDate(1, 6, 2020), 6, 36, 1e6, 1e5, 6, {from: owner}).should.be.eventually.rejectedWith("SAFT holder is already added");
+        await Vesting.addVestingTerm(holder, getTimeAtDate(1, 6, 2020), 6, 36, 1e6, 1e5, 6, false, {from: owner});
+        await Vesting.addVestingTerm(holder, getTimeAtDate(1, 6, 2020), 6, 36, 1e6, 1e5, 6, false, {from: owner}).should.be.eventually.rejectedWith("SAFT holder is already added");
     });
 
     it("should not register seller if periods incorrect", async () => {
-        await Vesting.addVestingTerm(holder, getTimeAtDate(1, 6, 2020), 37, 36, 1e6, 1e5, 6, {from: owner}).should.be.eventually.rejectedWith("Incorrect periods");
+        await Vesting.addVestingTerm(holder, getTimeAtDate(1, 6, 2020), 37, 36, 1e6, 1e5, 6, false, {from: owner}).should.be.eventually.rejectedWith("Incorrect periods");
     });
 
     it("should not register seller if amounts incorrect", async () => {
-        await Vesting.addVestingTerm(holder, getTimeAtDate(1, 6, 2020), 6, 36, 1e5, 1e6, 6, {from: owner}).should.be.eventually.rejectedWith("Incorrect amounts");
+        await Vesting.addVestingTerm(holder, getTimeAtDate(1, 6, 2020), 6, 36, 1e5, 1e6, 6, false, {from: owner}).should.be.eventually.rejectedWith("Incorrect amounts");
     });
 
     it("should not register seller if vesting times incorrect", async () => {
-        await Vesting.addVestingTerm(holder, getTimeAtDate(1, 6, 2020), 6, 36, 1e6, 1e5, 7, {from: owner}).should.be.eventually.rejectedWith("Incorrect vesting times");
+        await Vesting.addVestingTerm(holder, getTimeAtDate(1, 6, 2020), 6, 36, 1e6, 1e5, 7, false, {from: owner}).should.be.eventually.rejectedWith("Incorrect vesting times");
     });
 
     it("should not register seller if period starts incorrect", async () => {
         const time = await currentTime(web3);
         const currentDate = new Date(time * 1000);
         const nextYear = currentDate.getFullYear() + 1;
-        await Vesting.addVestingTerm(holder, getTimeAtDate(1, 6, nextYear), 6, 36, 1e6, 1e5, 6, {from: owner}).should.be.eventually.rejectedWith("Incorrect period starts");
+        await Vesting.addVestingTerm(holder, getTimeAtDate(1, 6, nextYear), 6, 36, 1e6, 1e5, 6, false, {from: owner}).should.be.eventually.rejectedWith("Incorrect period starts");
     });
 
     it("should be possible to delegate SAFT tokens", async () => {
-        await Vesting.addVestingTerm(holder, getTimeAtDate(1, 6, 2020), 6, 36, 1e6, 1e5, 6, {from: owner});
+        await Vesting.addVestingTerm(holder, getTimeAtDate(1, 6, 2020), 6, 36, 1e6, 1e5, 6, false, {from: owner});
+        await Vesting.approveSAFTHolder({from: holder});
+        await Vesting.startVesting(holder, {from: owner});
         (await skaleToken.balanceOf(holder)).toNumber().should.be.equal(1e6);
         await validatorService.registerValidator("Validator", "D2 is even", 150, 0, {from: owner});
         await validatorService.enableValidator(1, {from: owner});
@@ -88,8 +211,11 @@ contract("Vesting", ([owner, holder, holder1, holder2, holder3, hacker]) => {
         const fullAmount = 4e6;
         const lockupAmount = 1e6;
         const vestPeriod = 3;
-        const startDate = getTimeAtDate(1, 9, 2018)
-        await Vesting.addVestingTerm(holder, startDate, lockupPeriod, fullPeriod, fullAmount, lockupAmount, vestPeriod, {from: owner});
+        const startDate = getTimeAtDate(1, 9, 2018);
+        const isCancelable = false;
+        await Vesting.addVestingTerm(holder, startDate, lockupPeriod, fullPeriod, fullAmount, lockupAmount, vestPeriod, isCancelable, {from: owner});
+        await Vesting.approveSAFTHolder({from: holder});
+        await Vesting.startVesting(holder, {from: owner});
         const lockedAmount = await Vesting.getLockedAmount(holder);
         lockedAmount.toNumber().should.be.equal(0);
     });
@@ -101,8 +227,8 @@ contract("Vesting", ([owner, holder, holder1, holder2, holder3, hacker]) => {
         const lockupAmount = 1e6;
         const vestPeriod = 1;
         const startDate = await currentTime(web3);
-        const dat = new Date(startDate * 1000);
-        await Vesting.addVestingTerm(holder, startDate, lockupPeriod, fullPeriod, fullAmount, lockupAmount, vestPeriod, {from: owner});
+        const isCancelable = false;
+        await Vesting.addVestingTerm(holder, startDate, lockupPeriod, fullPeriod, fullAmount, lockupAmount, vestPeriod, isCancelable, {from: owner});
         let lockedAmount = await Vesting.getLockedAmount(holder);
         lockedAmount.toNumber().should.be.equal(fullAmount);
         await skipTimeToDate(web3, 1, 7);
@@ -132,8 +258,8 @@ contract("Vesting", ([owner, holder, holder1, holder2, holder3, hacker]) => {
         const lockupAmount = 2e6;
         const vestPeriod = 0;
         const startDate = await currentTime(web3);
-        const dat = new Date(startDate * 1000);
-        await Vesting.addVestingTerm(holder, startDate, lockupPeriod, fullPeriod, fullAmount, lockupAmount, vestPeriod, {from: owner});
+        const isCancelable = false;
+        await Vesting.addVestingTerm(holder, startDate, lockupPeriod, fullPeriod, fullAmount, lockupAmount, vestPeriod, isCancelable, {from: owner});
         let lockedAmount = await Vesting.getLockedAmount(holder);
         lockedAmount.toNumber().should.be.equal(fullAmount);
         await skipTimeToDate(web3, 1, 7);
@@ -193,8 +319,8 @@ contract("Vesting", ([owner, holder, holder1, holder2, holder3, hacker]) => {
         const lockupAmount = 2e5;
         const vestPeriod = 1;
         const startDate = await currentTime(web3);
-        const dat = new Date(startDate * 1000);
-        await Vesting.addVestingTerm(holder, startDate, lockupPeriod, fullPeriod, fullAmount, lockupAmount, vestPeriod, {from: owner});
+        const isCancelable = false;
+        await Vesting.addVestingTerm(holder, startDate, lockupPeriod, fullPeriod, fullAmount, lockupAmount, vestPeriod, isCancelable, {from: owner});
         let lockedAmount = await Vesting.getLockedAmount(holder);
         lockedAmount.toNumber().should.be.equal(fullAmount);
         await skipTimeToDate(web3, 1, 7);
@@ -256,8 +382,8 @@ contract("Vesting", ([owner, holder, holder1, holder2, holder3, hacker]) => {
         const lockupAmount = 2e6;
         const vestPeriod = 0;
         const startDate = await currentTime(web3);
-        const dat = new Date(startDate * 1000);
-        await Vesting.addVestingTerm(holder, startDate, lockupPeriod, fullPeriod, fullAmount, lockupAmount, vestPeriod, {from: owner});
+        const isCancelable = false;
+        await Vesting.addVestingTerm(holder, startDate, lockupPeriod, fullPeriod, fullAmount, lockupAmount, vestPeriod, isCancelable, {from: owner});
         const lockedAmount = await Vesting.getLockedAmount(holder);
         const lockedCalculatedAmount = calculateLockedAmount(await currentTime(web3), startDate, lockupPeriod, fullPeriod, fullAmount, lockupAmount, vestPeriod);
         lockedAmount.toNumber().should.be.equal(0);
@@ -269,6 +395,7 @@ contract("Vesting", ([owner, holder, holder1, holder2, holder3, hacker]) => {
         const fullAmount = 6e6;
         const lockupAmount = 1e6;
         const vestPeriod = 6;
+        const isCancelable = false;
 
         let startDate: number;
 
@@ -278,7 +405,7 @@ contract("Vesting", ([owner, holder, holder1, holder2, holder3, hacker]) => {
             const previousYear = currentDate.getFullYear() - 1;
             startDate = getTimeAtDate(1, 9, previousYear)
             // SAFT example 0
-            await Vesting.addVestingTerm(holder, startDate, lockupPeriod, fullPeriod, fullAmount, lockupAmount, vestPeriod, {from: owner});
+            await Vesting.addVestingTerm(holder, startDate, lockupPeriod, fullPeriod, fullAmount, lockupAmount, vestPeriod, isCancelable, {from: owner});
         });
 
         it("should unlock tokens after lockup", async () => {
@@ -318,37 +445,41 @@ contract("Vesting", ([owner, holder, holder1, holder2, holder3, hacker]) => {
         const fullAmount = 6e6;
         const lockupAmount = 1e6;
         const vestPeriod = 6;
+        const isCancelable = false;
 
         const lockupPeriod1 = 12;
         const fullPeriod1 = 15;
         const fullAmount1 = 1e6;
         const lockupAmount1 = 5e5;
         const vestPeriod1 = 3;
+        const isCancelable1 = false;
 
         const lockupPeriod2 = 9;
         const fullPeriod2 = 15;
         const fullAmount2 = 1e6;
         const lockupAmount2 = 5e5;
         const vestPeriod2 = 6;
+        const isCancelable2 = false;
 
         const lockupPeriod3 = 12;
         const fullPeriod3 = 36;
         const fullAmount3 = 36e6;
         const lockupAmount3 = 12e6;
         const vestPeriod3 = 1;
+        const isCancelable3 = false;
 
         let startDate: number;
 
         beforeEach(async () => {
             startDate = await currentTime(web3);
             // SAFT example 0
-            await Vesting.addVestingTerm(holder, startDate, lockupPeriod, fullPeriod, fullAmount, lockupAmount, vestPeriod, {from: owner});
+            await Vesting.addVestingTerm(holder, startDate, lockupPeriod, fullPeriod, fullAmount, lockupAmount, vestPeriod, isCancelable, {from: owner});
             // SAFT example 1
-            await Vesting.addVestingTerm(holder1, startDate, lockupPeriod1, fullPeriod1, fullAmount1, lockupAmount1, vestPeriod1, {from: owner});
+            await Vesting.addVestingTerm(holder1, startDate, lockupPeriod1, fullPeriod1, fullAmount1, lockupAmount1, vestPeriod1, isCancelable1, {from: owner});
             // SAFT example 2
-            await Vesting.addVestingTerm(holder2, startDate, lockupPeriod2, fullPeriod2, fullAmount2, lockupAmount2, vestPeriod2, {from: owner});
+            await Vesting.addVestingTerm(holder2, startDate, lockupPeriod2, fullPeriod2, fullAmount2, lockupAmount2, vestPeriod2, isCancelable2, {from: owner});
             // SAFT example 3
-            await Vesting.addVestingTerm(holder3, startDate, lockupPeriod3, fullPeriod3, fullAmount3, lockupAmount3, vestPeriod3, {from: owner});
+            await Vesting.addVestingTerm(holder3, startDate, lockupPeriod3, fullPeriod3, fullAmount3, lockupAmount3, vestPeriod3, isCancelable3, {from: owner});
         });
 
         it("should show balance of all SAFTs", async () => {

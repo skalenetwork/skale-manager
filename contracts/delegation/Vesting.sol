@@ -33,6 +33,7 @@ contract Vesting is ILocker, Permissions, IERC777Recipient {
     struct SAFT {
         bool active;
         bool approved;
+        bool isCancelable;
         uint startVestingTime; // timestamp
         uint finishVesting; // timestamp
         uint lockupPeriod; // months
@@ -71,6 +72,7 @@ contract Vesting is ILocker, Permissions, IERC777Recipient {
     function startVesting(address holder) external onlyOwner {
         require(_registeredSAFTHolders[holder], "SAFT is not registered");
         require(_saftHolders[holder].approved, "SAFT is not approved");
+        require(_canceledTokens[holder] == 0, "SAFT is already canceled");
         _saftHolders[holder].active = true;
         require(
             IERC20(_contractManager.getContract("SkaleToken")).transfer(holder, _saftHolders[holder].fullAmount),
@@ -102,17 +104,13 @@ contract Vesting is ILocker, Permissions, IERC777Recipient {
         _saftHolders[holder].regularPaymentTime = vestingTimes;
     }
 
-    function cancelVesting(address holder) external onlyOwner {
-        uint fullAmount = _saftHolders[holder].fullAmount;
-        require(_canceledTokens[holder] == 0, "Already canceled");
-        _canceledTokens[holder] = fullAmount;
-    }
-
     function stopVesting(address holder) external onlyOwner {
+        require(!_saftHolders[holder].active || _saftHolders[holder].isCancelable, "You could not stop vesting for holder");
         uint fullAmount = _saftHolders[holder].fullAmount;
         uint lockedAmount = getLockedAmount(holder);
         require(_canceledTokens[holder] == 0, "Already canceled");
         _canceledTokens[holder] = lockedAmount;
+        _saftHolders[holder].active = false;
     }
 
     function addVestingTerm(
@@ -122,7 +120,8 @@ contract Vesting is ILocker, Permissions, IERC777Recipient {
         uint fullPeriod, // months
         uint fullAmount, // number
         uint lockupAmount, // number
-        uint vestingTimes // months
+        uint vestingTimes, // months
+        bool cancelable
     )
         external
         onlyOwner
@@ -141,6 +140,7 @@ contract Vesting is ILocker, Permissions, IERC777Recipient {
         _saftHolders[holder] = SAFT({
             active: false,
             approved: false,
+            isCancelable: cancelable,
             startVestingTime: periodStarts,
             finishVesting: timeHelpers.addMonths(periodStarts, fullPeriod),
             lockupPeriod: lockupPeriod,
@@ -195,6 +195,22 @@ contract Vesting is ILocker, Permissions, IERC777Recipient {
 
     function getLockupPeriodInMonth(address holder) external view returns (uint) {
         return _saftHolders[holder].finishVesting;
+    }
+
+    function isActiveVestingTerm(address holder) external view returns (bool) {
+        return _saftHolders[holder].active;
+    }
+
+    function isApprovedSAFT(address holder) external view returns (bool) {
+        return _saftHolders[holder].approved;
+    }
+
+    function isSAFTRegistered(address holder) external view returns (bool) {
+        return _registeredSAFTHolders[holder];
+    }
+
+    function isCancelableVestingTerm(address holder) external view returns (bool) {
+        return _saftHolders[holder].isCancelable;
     }
 
     function getLockupPeriodTimestamp(address holder) external view returns (uint) {
