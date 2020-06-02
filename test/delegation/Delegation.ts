@@ -228,7 +228,7 @@ contract("Delegation", ([owner,
 
             skipTime(web3, month);
 
-            const bondAmount = await delegationController.getAndUpdateBondAmount.call(validatorId);
+            const bondAmount = await validatorService.getAndUpdateBondAmount.call(validatorId);
             assert.equal(defaultAmount.toString(), bondAmount.toString());
         });
 
@@ -243,7 +243,7 @@ contract("Delegation", ([owner,
 
             skipTime(web3, month);
 
-            const bondAmount = await delegationController.getAndUpdateBondAmount.call(validatorId);
+            const bondAmount = await validatorService.getAndUpdateBondAmount.call(validatorId);
             assert.equal(18, bondAmount.toNumber());
         });
 
@@ -263,8 +263,8 @@ contract("Delegation", ([owner,
             await delegationController.acceptPendingDelegation(1, {from: validator2});
             skipTime(web3, month);
 
-            const bondAmount1 = await delegationController.getAndUpdateBondAmount.call(validator1Id);
-            let bondAmount2 = await delegationController.getAndUpdateBondAmount.call(validator2Id);
+            const bondAmount1 = await validatorService.getAndUpdateBondAmount.call(validator1Id);
+            let bondAmount2 = await validatorService.getAndUpdateBondAmount.call(validator2Id);
             assert.equal(bondAmount1.toNumber(), 0);
             assert.equal(bondAmount2.toNumber(), 200);
             await delegationController.delegate(
@@ -272,7 +272,7 @@ contract("Delegation", ([owner,
             await delegationController.acceptPendingDelegation(2, {from: validator2});
 
             skipTime(web3, month);
-            bondAmount2 = await delegationController.getAndUpdateBondAmount.call(validator2Id);
+            bondAmount2 = await validatorService.getAndUpdateBondAmount.call(validator2Id);
             assert.equal(bondAmount2.toNumber(), 400);
         });
 

@@ -449,23 +449,8 @@ contract DelegationController is Permissions, ILocker {
         return _effectiveDelegatedToValidator[validatorId].getAndUpdateValueInSequence(month);
     }
 
-    /**
-     * @dev Returns the amount of validator bond.
-     *
-     * @param validatorId uint ID of validator to return the amount of locked funds
-     * @return bondAmount uint the amount of self-delegated funds by the validator
-    */
-    function getAndUpdateBondAmount(uint validatorId)
-        external
-        returns (uint bondAmount)
-    {
-        TimeHelpers timeHelpers = TimeHelpers(_contractManager.getContract("TimeHelpers"));
-        ValidatorService validatorService = ValidatorService(_contractManager.getContract("ValidatorService"));
-        bondAmount = _getAndUpdateDelegatedByHolderToValidator(
-            validatorService.getValidator(validatorId).validatorAddress,
-            validatorId,
-            timeHelpers.getCurrentMonth()
-        );
+    function getAndUpdateDelegatedByHolderToValidatorNow(address holder, uint validatorId) external returns (uint) {
+        return _getAndUpdateDelegatedByHolderToValidator(holder, validatorId, _getCurrentMonth());
     }
 
     function getDelegation(uint delegationId)

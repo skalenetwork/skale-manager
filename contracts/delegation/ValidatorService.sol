@@ -361,6 +361,25 @@ contract ValidatorService is Permissions {
         validators[validatorId].acceptNewRequests = false;
     }
 
+    /**
+     * @dev Returns the amount of validator bond.
+     *
+     * @param validatorId uint ID of validator to return the amount of locked funds
+     * @return bondAmount uint the amount of self-delegated funds by the validator
+    */
+    function getAndUpdateBondAmount(uint validatorId)
+        external
+        returns (uint)
+    {
+        DelegationController delegationController = DelegationController(
+            _contractManager.getContract("DelegationController")
+        );
+        return delegationController.getAndUpdateDelegatedByHolderToValidatorNow(
+            getValidator(validatorId).validatorAddress,
+            validatorId
+        );
+    }
+
     function getMyNodesAddresses() external view returns (address[] memory) {
         return getNodeAddresses(getValidatorId(msg.sender));
     }
