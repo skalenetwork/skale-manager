@@ -203,7 +203,7 @@ contract DelegationController is Permissions, ILocker {
     }
 
     function getAndUpdateEffectiveDelegatedByHolderToValidator(address holder, uint validatorId, uint month) external
-        allowTwo("Distributor", "ValidatorService") returns (uint effectiveDelegated)
+        allow("Distributor") returns (uint effectiveDelegated)
     {
         SlashingSignal[] memory slashingSignals = _processAllSlashesWithoutSignals(holder);
         effectiveDelegated = _effectiveDelegatedByHolderToValidator[holder][validatorId]
@@ -447,6 +447,25 @@ contract DelegationController is Permissions, ILocker {
         external allow("Distributor") returns (uint)
     {
         return _effectiveDelegatedToValidator[validatorId].getAndUpdateValueInSequence(month);
+    }
+
+    /**
+     * @dev Returns the amount of validator bond.
+     *
+     * @param validatorId uint ID of validator to return the amount of locked funds
+     * @return bondAmount uint the amount of self-delegated funds by the validator
+    */
+    function getAndUpdateBondAmount(uint validatorId)
+        external
+        returns (uint bondAmount)
+    {
+        TimeHelpers timeHelpers = TimeHelpers(_contractManager.getContract("TimeHelpers"));
+        ValidatorService validatorService = ValidatorService(_contractManager.getContract("ValidatorService"));
+        bondAmount = _getAndUpdateDelegatedByHolderToValidator(
+            validatorService.getValidator(validatorId).validatorAddress,
+            validatorId,
+            timeHelpers.getCurrentMonth()
+        );
     }
 
     function getDelegation(uint delegationId)

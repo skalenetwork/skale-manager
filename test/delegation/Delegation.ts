@@ -217,7 +217,7 @@ contract("Delegation", ([owner,
                 .should.be.eventually.rejectedWith("Validator with such ID does not exist");
         });
 
-        it("should return bond amount if validator delegated to itself", async () => {
+        it("should calculate bond amount if validator delegated to itself", async () => {
             await skaleToken.mint(validator, defaultAmount.toString(), "0x", "0x");
             await delegationController.delegate(
                 validatorId, defaultAmount.toString(), 3, "D2 is even", {from: validator});
@@ -228,8 +228,23 @@ contract("Delegation", ([owner,
 
             skipTime(web3, month);
 
-            const bondAmount = await validatorService.getBondAmount.call(validatorId);
+            const bondAmount = await delegationController.getAndUpdateBondAmount.call(validatorId);
             assert.equal(defaultAmount.toString(), bondAmount.toString());
+        });
+
+        it("should calculate bond amount if validator delegated to itself using different periods", async () => {
+            await skaleToken.mint(validator, defaultAmount.toString(), "0x", "0x");
+            await delegationController.delegate(
+                validatorId, 5, 3, "D2 is even", {from: validator});
+            await delegationController.delegate(
+                validatorId, 13, 12, "D2 is even", {from: validator});
+            await delegationController.acceptPendingDelegation(0, {from: validator});
+            await delegationController.acceptPendingDelegation(1, {from: validator});
+
+            skipTime(web3, month);
+
+            const bondAmount = await delegationController.getAndUpdateBondAmount.call(validatorId);
+            assert.equal(18, bondAmount.toNumber());
         });
 
         it("should bond equals zero for validator if she delegated to another validator", async () =>{
@@ -248,8 +263,8 @@ contract("Delegation", ([owner,
             await delegationController.acceptPendingDelegation(1, {from: validator2});
             skipTime(web3, month);
 
-            const bondAmount1 = await validatorService.getBondAmount.call(validator1Id);
-            let bondAmount2 = await validatorService.getBondAmount.call(validator2Id);
+            const bondAmount1 = await delegationController.getAndUpdateBondAmount.call(validator1Id);
+            let bondAmount2 = await delegationController.getAndUpdateBondAmount.call(validator2Id);
             assert.equal(bondAmount1.toNumber(), 0);
             assert.equal(bondAmount2.toNumber(), 200);
             await delegationController.delegate(
@@ -257,7 +272,7 @@ contract("Delegation", ([owner,
             await delegationController.acceptPendingDelegation(2, {from: validator2});
 
             skipTime(web3, month);
-            bondAmount2 = await validatorService.getBondAmount.call(validator2Id);
+            bondAmount2 = await delegationController.getAndUpdateBondAmount.call(validator2Id);
             assert.equal(bondAmount2.toNumber(), 400);
         });
 
