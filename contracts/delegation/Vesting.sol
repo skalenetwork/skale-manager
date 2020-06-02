@@ -105,12 +105,18 @@ contract Vesting is ILocker, Permissions, IERC777Recipient {
     }
 
     function stopVesting(address holder) external onlyOwner {
-        require(!_saftHolders[holder].active || _saftHolders[holder].isCancelable, "You could not stop vesting for holder");
+        require(
+            !_saftHolders[holder].active || _saftHolders[holder].isCancelable, "You could not stop vesting for holder"
+        );
+        require(_canceledTokens[holder] == 0, "Already canceled");
         uint fullAmount = _saftHolders[holder].fullAmount;
         uint lockedAmount = getLockedAmount(holder);
-        require(_canceledTokens[holder] == 0, "Already canceled");
-        _canceledTokens[holder] = lockedAmount;
-        _saftHolders[holder].active = false;
+        if (_saftHolders[holder].active) {
+            _canceledTokens[holder] = lockedAmount;
+            _saftHolders[holder].active = false;
+        } else {
+            _canceledTokens[holder] = fullAmount;
+        }
     }
 
     function addVestingTerm(
@@ -154,35 +160,17 @@ contract Vesting is ILocker, Permissions, IERC777Recipient {
     }
 
     function getAndUpdateLockedAmount(address wallet) external override returns (uint) {
-        return _canceledTokens[wallet] == 0 ? getLockedAmount(wallet) : _canceledTokens[wallet];
+        // if (! _saftHolders[wallet].active) {
+        //     return 0;
+        // }
+        if (_canceledTokens[wallet] > 0) {
+            return _canceledTokens[wallet];
+        }
+        return getLockedAmount(wallet);
     }
 
     function getAndUpdateForbiddenForDelegationAmount(address wallet) external override returns (uint) {
         return _canceledTokens[wallet];
-    }
-
-    function getLockedAmount(address wallet) public view returns (uint locked) {
-        TimeHelpers timeHelpers = TimeHelpers(_contractManager.getContract("TimeHelpers"));
-        uint date = now;
-        SAFT memory saftParams = _saftHolders[wallet];
-        locked = saftParams.fullAmount;
-        if (date >= timeHelpers.addMonths(saftParams.startVestingTime, saftParams.lockupPeriod)) {
-            locked = locked.sub(saftParams.afterLockupAmount);
-            if (date >= saftParams.finishVesting) {
-                locked = 0;
-            } else {
-                uint partPayment = saftParams.fullAmount
-                    .sub(saftParams.afterLockupAmount)
-                    .div(_getNumberOfAllPayments(wallet));
-                locked = locked.sub(partPayment.mul(_getNumberOfPayments(wallet)));
-            }
-        }
-    }
-
-    function initialize(address contractManager) public override initializer {
-        Permissions.initialize(contractManager);
-        _erc1820 = IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
-        _erc1820.setInterfaceImplementer(address(this), keccak256("ERC777TokensRecipient"), address(this));
     }
 
     function getStartVestingTime(address holder) external view returns (uint) {
@@ -240,6 +228,33 @@ contract Vesting is ILocker, Permissions, IERC777Recipient {
         }
         uint nextPayment = dateMonth.add(1).sub(lockupMonth).div(saftParams.regularPaymentTime);
         return timeHelpers.addMonths(lockupDate, nextPayment);
+    }
+
+    function initialize(address contractManager) public override initializer {
+        Permissions.initialize(contractManager);
+        _erc1820 = IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
+        _erc1820.setInterfaceImplementer(address(this), keccak256("ERC777TokensRecipient"), address(this));
+    }
+
+    function getLockedAmount(address wallet) public view returns (uint locked) {
+        TimeHelpers timeHelpers = TimeHelpers(_contractManager.getContract("TimeHelpers"));
+        uint date = now;
+        SAFT memory saftParams = _saftHolders[wallet];
+        if (!saftParams.active) {
+            return 0;
+        }
+        locked = saftParams.fullAmount;
+        if (date >= timeHelpers.addMonths(saftParams.startVestingTime, saftParams.lockupPeriod)) {
+            locked = locked.sub(saftParams.afterLockupAmount);
+            if (date >= saftParams.finishVesting) {
+                locked = 0;
+            } else {
+                uint partPayment = saftParams.fullAmount
+                    .sub(saftParams.afterLockupAmount)
+                    .div(_getNumberOfAllPayments(wallet));
+                locked = locked.sub(partPayment.mul(_getNumberOfPayments(wallet)));
+            }
+        }
     }
 
     function _getNumberOfPayments(address wallet) internal view returns (uint) {

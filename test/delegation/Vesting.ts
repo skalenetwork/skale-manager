@@ -229,6 +229,8 @@ contract("Vesting", ([owner, holder, holder1, holder2, holder3, hacker]) => {
         const startDate = await currentTime(web3);
         const isCancelable = false;
         await Vesting.addVestingTerm(holder, startDate, lockupPeriod, fullPeriod, fullAmount, lockupAmount, vestPeriod, isCancelable, {from: owner});
+        await Vesting.approveSAFTHolder({from: holder});
+        await Vesting.startVesting(holder, {from: owner});
         let lockedAmount = await Vesting.getLockedAmount(holder);
         lockedAmount.toNumber().should.be.equal(fullAmount);
         await skipTimeToDate(web3, 1, 7);
@@ -260,6 +262,8 @@ contract("Vesting", ([owner, holder, holder1, holder2, holder3, hacker]) => {
         const startDate = await currentTime(web3);
         const isCancelable = false;
         await Vesting.addVestingTerm(holder, startDate, lockupPeriod, fullPeriod, fullAmount, lockupAmount, vestPeriod, isCancelable, {from: owner});
+        await Vesting.approveSAFTHolder({from: holder});
+        await Vesting.startVesting(holder, {from: owner});
         let lockedAmount = await Vesting.getLockedAmount(holder);
         lockedAmount.toNumber().should.be.equal(fullAmount);
         await skipTimeToDate(web3, 1, 7);
@@ -321,6 +325,8 @@ contract("Vesting", ([owner, holder, holder1, holder2, holder3, hacker]) => {
         const startDate = await currentTime(web3);
         const isCancelable = false;
         await Vesting.addVestingTerm(holder, startDate, lockupPeriod, fullPeriod, fullAmount, lockupAmount, vestPeriod, isCancelable, {from: owner});
+        await Vesting.approveSAFTHolder({from: holder});
+        await Vesting.startVesting(holder, {from: owner});
         let lockedAmount = await Vesting.getLockedAmount(holder);
         lockedAmount.toNumber().should.be.equal(fullAmount);
         await skipTimeToDate(web3, 1, 7);
@@ -384,6 +390,8 @@ contract("Vesting", ([owner, holder, holder1, holder2, holder3, hacker]) => {
         const startDate = await currentTime(web3);
         const isCancelable = false;
         await Vesting.addVestingTerm(holder, startDate, lockupPeriod, fullPeriod, fullAmount, lockupAmount, vestPeriod, isCancelable, {from: owner});
+        await Vesting.approveSAFTHolder({from: holder});
+        await Vesting.startVesting(holder, {from: owner});
         const lockedAmount = await Vesting.getLockedAmount(holder);
         const lockedCalculatedAmount = calculateLockedAmount(await currentTime(web3), startDate, lockupPeriod, fullPeriod, fullAmount, lockupAmount, vestPeriod);
         lockedAmount.toNumber().should.be.equal(0);
@@ -406,6 +414,8 @@ contract("Vesting", ([owner, holder, holder1, holder2, holder3, hacker]) => {
             startDate = getTimeAtDate(1, 9, previousYear)
             // SAFT example 0
             await Vesting.addVestingTerm(holder, startDate, lockupPeriod, fullPeriod, fullAmount, lockupAmount, vestPeriod, isCancelable, {from: owner});
+            await Vesting.approveSAFTHolder({from: holder});
+            await Vesting.startVesting(holder, {from: owner});
         });
 
         it("should unlock tokens after lockup", async () => {
@@ -474,12 +484,20 @@ contract("Vesting", ([owner, holder, holder1, holder2, holder3, hacker]) => {
             startDate = await currentTime(web3);
             // SAFT example 0
             await Vesting.addVestingTerm(holder, startDate, lockupPeriod, fullPeriod, fullAmount, lockupAmount, vestPeriod, isCancelable, {from: owner});
+            await Vesting.approveSAFTHolder({from: holder});
+            await Vesting.startVesting(holder, {from: owner});
             // SAFT example 1
             await Vesting.addVestingTerm(holder1, startDate, lockupPeriod1, fullPeriod1, fullAmount1, lockupAmount1, vestPeriod1, isCancelable1, {from: owner});
+            await Vesting.approveSAFTHolder({from: holder1});
+            await Vesting.startVesting(holder1, {from: owner});
             // SAFT example 2
             await Vesting.addVestingTerm(holder2, startDate, lockupPeriod2, fullPeriod2, fullAmount2, lockupAmount2, vestPeriod2, isCancelable2, {from: owner});
+            await Vesting.approveSAFTHolder({from: holder2});
+            await Vesting.startVesting(holder2, {from: owner});
             // SAFT example 3
             await Vesting.addVestingTerm(holder3, startDate, lockupPeriod3, fullPeriod3, fullAmount3, lockupAmount3, vestPeriod3, isCancelable3, {from: owner});
+            await Vesting.approveSAFTHolder({from: holder3});
+            await Vesting.startVesting(holder3, {from: owner});
         });
 
         it("should show balance of all SAFTs", async () => {
