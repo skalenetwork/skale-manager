@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 /*
     Distributor.sol - SKALE Manager
     Copyright (C) 2019-Present SKALE Labs
@@ -38,6 +40,9 @@ import "./TimeHelpers.sol";
 contract Distributor is Permissions, IERC777Recipient {
     using MathUtils for uint;
 
+    /**
+     * @dev Emitted when a bounty is withdrawn by the token holder.
+     */
     event WithdrawBounty(
         address holder,
         uint validatorId,
@@ -45,12 +50,18 @@ contract Distributor is Permissions, IERC777Recipient {
         uint amount
     );
 
+    /**
+     * @dev Emitted when a validator fee is withdrawn by the validator.
+     */
     event WithdrawFee(
         uint validatorId,
         address destination,
         uint amount
     );
 
+    /**
+     * @dev Emitted when a bounty is distributed.
+     */
     event BountyWasPaid(
         uint validatorId,
         uint amount
