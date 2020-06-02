@@ -217,10 +217,10 @@
     "@nodelib/fs.scandir" "2.1.3"
     fastq "^1.6.0"
 
-"@nomiclabs/buidler-truffle5@^1.2.0":
-  version "1.2.0"
-  resolved "https://registry.yarnpkg.com/@nomiclabs/buidler-truffle5/-/buidler-truffle5-1.2.0.tgz#2a23171426a58d315be7c5166042f3f9998375b7"
-  integrity sha512-1/ZbSt2o+cafe+MUsThrJjUrWCbgiDj4G3Ds+1/PNeuHuB/hmTVNkz3BFT7kje+QYgfNr21tOlxPaBdoe91cZA==
+"@nomiclabs/buidler-truffle5@^1.3.4":
+  version "1.3.4"
+  resolved "https://registry.yarnpkg.com/@nomiclabs/buidler-truffle5/-/buidler-truffle5-1.3.4.tgz#aee775eff6a99e4102d993654a5af87ca708feab"
+  integrity sha512-aPbkdbNUF4R/hbb2B8BULlsQ5AUB5l4baIHFmLQ/fdRmFrkWBx+53tjpf+XOv8g8RZTJstpkxFSBRWD/U1EahA==
   dependencies:
     "@nomiclabs/truffle-contract" "^4.1.2"
     "@types/chai" "^4.2.0"
