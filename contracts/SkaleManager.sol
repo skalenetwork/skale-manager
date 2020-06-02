@@ -201,6 +201,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
             _contractManager.getContract("MonitorsFunctionality"));
         MonitorsData monitorsData = MonitorsData(_contractManager.getContract("MonitorsData"));
         uint previousBlockEvent = monitorsData.getLastBountyBlock(nodeIndex);
+        monitorsData.setLastBountyBlock(nodeIndex);
         (averageDowntime, averageLatency) = monitorsFunctionality.calculateMetrics(nodeIndex);
         uint bounty = _manageBounty(
             msg.sender,

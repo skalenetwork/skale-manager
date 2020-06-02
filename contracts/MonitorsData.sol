@@ -75,10 +75,13 @@ contract MonitorsData is GroupsData {
     }
 
     function removeAllVerdicts(bytes32 monitorIndex) external allow(_executorName) {
-        lastBountyBlocks[monitorIndex] = block.number;
         while (verdicts[monitorIndex].length > 0) {
             verdicts[monitorIndex].pop();
         }
+    }
+
+    function setLastBountyBlock(uint nodeIndex) external allow("SkaleManager") {
+        lastBountyBlocks[keccak256(abi.encodePacked(nodeIndex))] = block.number;
     }
 
     function getLastReceivedVerdictBlock(uint nodeIndex) external view returns (uint) {
