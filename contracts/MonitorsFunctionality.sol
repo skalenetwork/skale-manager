@@ -148,20 +148,21 @@ contract MonitorsFunctionality is GroupsFunctionality {
             data.removeCheckedNode(monitorIndex, index);
             ConstantsHolder constantsHolder = ConstantsHolder(_contractManager.getContract("ConstantsHolder"));
             bool receiveVerdict = time.add(constantsHolder.deltaPeriod()) > uint32(block.timestamp);
-            uint previousBlockEvent = data.getLastReceivedVerdictBlock(verdict.toNodeIndex);
+            // uint previousBlockEvent = data.getLastReceivedVerdictBlock(verdict.toNodeIndex);
             if (receiveVerdict) {
                 data.addVerdict(keccak256(abi.encodePacked(verdict.toNodeIndex)), verdict.downtime, verdict.latency);
             }
-            emit VerdictWasSent(
-                fromMonitorIndex,
-                verdict.toNodeIndex,
-                verdict.downtime,
-                verdict.latency,
-                receiveVerdict,
-                previousBlockEvent,
-                uint32(block.timestamp),
-                gasleft()
-            );
+            _emitVerdictsEvent(fromMonitorIndex, verdict, receiveVerdict);
+            // emit VerdictWasSent(
+            //     fromMonitorIndex,
+            //     verdict.toNodeIndex,
+            //     verdict.downtime,
+            //     verdict.latency,
+            //     receiveVerdict,
+            //     previousBlockEvent,
+            //     uint32(block.timestamp),
+            //     gasleft()
+            // );
         }
     }
 
@@ -320,5 +321,27 @@ contract MonitorsFunctionality is GroupsFunctionality {
             mstore(add(tempData, 60), ip)
             bytesParameters := mload(add(tempData, 32))
         }
+    }
+
+    function _emitVerdictsEvent(
+        uint fromMonitorIndex,
+        MonitorsData.Verdict memory verdict,
+        bool receiveVerdict
+    )
+        internal
+    {
+        MonitorsData data = MonitorsData(_contractManager.getContract("MonitorsData"));
+        uint previousBlockEvent = data.getLastReceivedVerdictBlock(verdict.toNodeIndex);
+        data.setLastReceivedVerdictBlock(verdict.toNodeIndex);
+        emit VerdictWasSent(
+                fromMonitorIndex,
+                verdict.toNodeIndex,
+                verdict.downtime,
+                verdict.latency,
+                receiveVerdict,
+                previousBlockEvent,
+                uint32(block.timestamp),
+                gasleft()
+            );
     }
 }

@@ -199,9 +199,9 @@ contract SkaleManager is IERC777Recipient, Permissions {
         uint averageLatency;
         MonitorsFunctionality monitorsFunctionality = MonitorsFunctionality(
             _contractManager.getContract("MonitorsFunctionality"));
-        MonitorsData monitorsData = MonitorsData(_contractManager.getContract("MonitorsData"));
-        uint previousBlockEvent = monitorsData.getLastBountyBlock(nodeIndex);
-        monitorsData.setLastBountyBlock(nodeIndex);
+        // MonitorsData monitorsData = MonitorsData(_contractManager.getContract("MonitorsData"));
+        // uint previousBlockEvent = monitorsData.getLastBountyBlock(nodeIndex);
+        // monitorsData.setLastBountyBlock(nodeIndex);
         (averageDowntime, averageLatency) = monitorsFunctionality.calculateMetrics(nodeIndex);
         uint bounty = _manageBounty(
             msg.sender,
@@ -210,15 +210,16 @@ contract SkaleManager is IERC777Recipient, Permissions {
             averageLatency);
         nodes.changeNodeLastRewardDate(nodeIndex);
         monitorsFunctionality.upgradeMonitor(nodeIndex);
-        emit BountyGot(
-            nodeIndex,
-            msg.sender,
-            averageDowntime,
-            averageLatency,
-            bounty,
-            previousBlockEvent,
-            uint32(block.timestamp),
-            gasleft());
+        _emitBountyEvent(nodeIndex, msg.sender, averageDowntime, averageLatency, bounty);
+        // emit BountyGot(
+        //     nodeIndex,
+        //     msg.sender,
+        //     averageDowntime,
+        //     averageLatency,
+        //     bounty,
+        //     previousBlockEvent,
+        //     uint32(block.timestamp),
+        //     gasleft());
     }
 
     function initialize(address newContractsAddress) public override initializer {
@@ -291,5 +292,28 @@ contract SkaleManager is IERC777Recipient, Permissions {
         }
         // solhint-disable-next-line check-send-result
         skaleToken.send(address(distributor), bounty, abi.encode(validatorId));
+    }
+
+    function _emitBountyEvent(
+        uint nodeIndex,
+        address from,
+        uint averageDowntime,
+        uint averageLatency,
+        uint bounty
+    )
+        internal
+    {
+        MonitorsData monitorsData = MonitorsData(_contractManager.getContract("MonitorsData"));
+        uint previousBlockEvent = monitorsData.getLastBountyBlock(nodeIndex);
+        monitorsData.setLastBountyBlock(nodeIndex);
+        emit BountyGot(
+            nodeIndex,
+            from,
+            averageDowntime,
+            averageLatency,
+            bounty,
+            previousBlockEvent,
+            uint32(block.timestamp),
+            gasleft());
     }
 }
