@@ -1,8 +1,10 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 /*
     DelegationController.sol - SKALE Manager
     Copyright (C) 2018-Present SKALE Labs
-    @author Vadim Yavorsky
     @author Dmytro Stebaiev
+    @author Vadim Yavorsky
 
     SKALE Manager is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as published
@@ -35,7 +37,24 @@ import "./TokenState.sol";
 import "./ValidatorService.sol";
 import "./PartialDifferences.sol";
 
-
+/**
+ * @title Delegation Controller
+ * @dev This contract performs all delegation functions including delegation
+ * requests, undelegation, slashing, etc.
+ *
+ * Delegators and validators may both perform delegations. Validators who perform
+ * delegations to themselves are effectively self-delegating or self-bonding.
+ *
+ * Delegated tokens may be in one of several states:
+ *
+ * - PROPOSED: token holder proposes tokens to delegate to a validator
+ * - ACCEPTED: token delegations are accepted by a validator and are locked-by-delegation
+ * - CANCELED: token holder cancels delegation proposal. Only allowed before the proposal is accepted by the validator
+ * - REJECTED: token proposal expires at the UTC start of the next month
+ * - DELEGATED: accepted delegations are delegated at the UTC start of the month
+ * - UNDELEGATION_REQUESTED: token holder requests delegations to undelegate from the validator
+ * - COMPLETED: undelegation request is completed at the end of the delegation period
+ */
 contract DelegationController is Permissions, ILocker {
     using MathUtils for uint;
     using PartialDifferences for PartialDifferences.Sequence;
@@ -53,11 +72,11 @@ contract DelegationController is Permissions, ILocker {
     }
 
     struct Delegation {
-        address holder; // address of tokens owner
+        address holder; // address of token owner
         uint validatorId;
         uint amount;
         uint delegationPeriod;
-        uint created; // time of creation
+        uint created; // time of delegation creation
         uint started; // month when a delegation becomes active
         uint finished; // first month after a delegation ends
         string info;
@@ -102,23 +121,35 @@ contract DelegationController is Permissions, ILocker {
         mapping (uint => uint) byValidator;
     }
 
+    /**
+     * @dev Emitted when a delegation is proposed to a validator.
+     */
     event DelegationProposed(
         uint delegationId
     );
 
+    /**
+     * @dev Emitted when a delegation is accepted by a validator.
+     */
     event DelegationAccepted(
         uint delegationId
     );
 
+    /**
+     * @dev Emitted when a delegation is cancelled by the delegator.
+     */
     event DelegationRequestCanceledByUser(
         uint delegationId
     );
 
+    /**
+     * @dev Emitted when a delegation is requested to undelegate.
+     */
     event UndelegationRequested(
         uint delegationId
     );
 
-    /// @notice delegations will never be deleted to index in this array may be used like delegation id
+    /// @dev delegations will never be deleted to index in this array may be used like delegation id
     Delegation[] public delegations;
 
     // validatorId => delegationId[]
@@ -155,6 +186,9 @@ contract DelegationController is Permissions, ILocker {
     //        holder => locked in pending
     mapping (address => LockedInPending) private _lockedInPendingDelegations;
 
+    /**
+     * @dev Modifier to make a function callable only if delegation exists.
+     */
     modifier checkDelegationExists(uint delegationId) {
         require(delegationId < delegations.length, "Delegation does not exist");
         _;
@@ -177,7 +211,19 @@ contract DelegationController is Permissions, ILocker {
         _sendSlashingSignals(slashingSignals);
     }
 
-    /// @notice Creates request to delegate `amount` of tokens to `validator` from the begining of the next month
+    /**
+     * @dev Allows a token holder to create a delegation proposal of an `amount`
+     * and `delegationPeriod` to a `validatorId`. Delegation must be accepted
+     * by the validator before the UTC start of the month, otherwise the
+     * delegation will be rejected.
+     *
+     * The token holder may add additional information in each proposal.
+     *
+     * @param validatorId uint ID of validator to receive delegation proposal
+     * @param amount uint amount of proposed delegation
+     * @param delegationPeriod uint period of proposed delegation
+     * @param info string extra information provided by the token holder (if any)
+     */
     function delegate(
         uint validatorId,
         uint amount,
@@ -195,14 +241,16 @@ contract DelegationController is Permissions, ILocker {
 
         require(
             validatorService.checkMinimumDelegation(validatorId, amount),
-            "Amount does not meet minimum delegation amount");
+            "Amount does not meet the validator's minimum delegation amount");
         require(
             validatorService.trustedValidators(validatorId) || !validatorService.useWhitelist(),
-            "Validator is not authorized to accept request");
+            "Validator is not authorized to accept delegation request");
         require(
             delegationPeriodManager.isDelegationPeriodAllowed(delegationPeriod),
             "This delegation period is not allowed");
-        require(validatorService.isAcceptingNewRequests(validatorId), "The validator does not accept new requests");
+        require(
+            validatorService.isAcceptingNewRequests(validatorId),
+            "The validator is not currently accepting new requests");
 
         SlashingSignal[] memory slashingSignals = _processAllSlashesWithoutSignals(msg.sender);
 
@@ -216,24 +264,42 @@ contract DelegationController is Permissions, ILocker {
         // check that there is enough money
         uint holderBalance = skaleToken.balanceOf(msg.sender);
         uint forbiddenForDelegation = tokenState.getAndUpdateForbiddenForDelegationAmount(msg.sender);
-        require(holderBalance >= forbiddenForDelegation, "Delegator does not have enough tokens to delegate");
+        require(holderBalance >= forbiddenForDelegation, "Token holder does not have enough tokens to delegate");
 
         emit DelegationProposed(delegationId);
 
         _sendSlashingSignals(slashingSignals);
     }
 
+    /**
+     * @dev See ILocker.
+     */
     function getAndUpdateLockedAmount(address wallet) external override returns (uint) {
         return _getAndUpdateLockedAmount(wallet);
     }
 
+    /**
+     * @dev See ILocker.
+     */
     function getAndUpdateForbiddenForDelegationAmount(address wallet) external override returns (uint) {
         return _getAndUpdateLockedAmount(wallet);
     }
 
+    /**
+     * @dev Allows a token holder to cancel a delegation proposal.
+     *
+     * Requirements:
+     *
+     * - the sender must be the token holder of the delegation proposal.
+     * - the delegation must still be in a PROPOSED state.
+     *
+     * Emits a DelegationRequestCanceledByUser event.
+     *
+     * @param delegationId uint ID of delegation proposal
+     */
     function cancelPendingDelegation(uint delegationId) external checkDelegationExists(delegationId) {
         require(msg.sender == delegations[delegationId].holder, "Only token holders can cancel delegation request");
-        require(getState(delegationId) == State.PROPOSED, "Token holders able to cancel only PROPOSED delegations");
+        require(getState(delegationId) == State.PROPOSED, "Token holders are only able to cancel PROPOSED delegations");
 
         delegations[delegationId].finished = _getCurrentMonth();
         _subtractFromLockedInPendingDelegations(delegations[delegationId].holder, delegations[delegationId].amount);
@@ -241,13 +307,37 @@ contract DelegationController is Permissions, ILocker {
         emit DelegationRequestCanceledByUser(delegationId);
     }
 
-    /// @notice Allows validator to accept tokens delegated at `delegationId`
+    /**
+     * @dev Allows a validator to accept a proposed delegation.
+     * Successful acceptance of delegations transition the tokens from a
+     * PROPOSED state to ACCEPTED, and tokens are locked for the remainder of the
+     * delegation period.
+     *
+     * Emits a DelegationAccepted event.
+     *
+     * @param delegationId uint ID of delegation proposal
+     */
     function acceptPendingDelegation(uint delegationId) external checkDelegationExists(delegationId) {
         ValidatorService validatorService = ValidatorService(_contractManager.getContract("ValidatorService"));
         require(
             validatorService.checkValidatorAddressToId(msg.sender, delegations[delegationId].validatorId),
             "No permissions to accept request");
-        require(getState(delegationId) == State.PROPOSED, "Cannot set state to accepted");
+        
+        State currentState = getState(delegationId);
+        if (currentState != State.PROPOSED) {
+            if (currentState == State.ACCEPTED ||
+                currentState == State.DELEGATED ||
+                currentState == State.UNDELEGATION_REQUESTED ||
+                currentState == State.COMPLETED)
+            {
+                revert("The delegation has been already accepted");
+            } else if (currentState == State.CANCELED) {
+                revert("The delegation has been cancelled by token holder");
+            } else if (currentState == State.REJECTED) {
+                revert("The delegation request is outdated");
+            }
+        }
+        require(currentState == State.PROPOSED, "Cannot set delegation state to accepted");
         
         TokenLaunchLocker tokenLaunchLocker = TokenLaunchLocker(_contractManager.getContract("TokenLaunchLocker"));
 
@@ -266,6 +356,18 @@ contract DelegationController is Permissions, ILocker {
         emit DelegationAccepted(delegationId);
     }
 
+    /**
+     * @dev Allows a delegator to undelegate a specific delegation.
+     *
+     * Requirements:
+     *
+     * - the sender must be the delegator.
+     * - the delegation must be in DELEGATED state.
+     *
+     * Emits an UndelegationRequested event.
+     *
+     * @param delegationId uint ID of delegation to undelegate
+     */
     function requestUndelegation(uint delegationId) external checkDelegationExists(delegationId) {
         require(getState(delegationId) == State.DELEGATED, "Cannot request undelegation");
 
@@ -317,6 +419,21 @@ contract DelegationController is Permissions, ILocker {
         emit UndelegationRequested(delegationId);
     }
 
+    /**
+     * @dev Allows the Punisher to confiscate an `amount` of stake from
+     * `validatorId` by slashing. This slashes all delegations of the validator,
+     * which reduces the amount that the validator has staked. This consequence
+     * may force the SKALE Manger to reduce the number of nodes a validator is
+     * operating so the validator can meet the Minimum Staking Requirement.
+     *
+     * See Punisher.
+     *
+     * Emits a SlashingEvent.
+     *
+     * @param validatorId uint validator to slash
+     * @param amount uint amount to slash
+     *
+     */
     function confiscate(uint validatorId, uint amount) external allow("Punisher") {
         uint currentMonth = _getCurrentMonth();
         FractionUtils.Fraction memory coefficient =
@@ -330,6 +447,10 @@ contract DelegationController is Permissions, ILocker {
         external allow("Distributor") returns (uint)
     {
         return _effectiveDelegatedToValidator[validatorId].getAndUpdateValueInSequence(month);
+    }
+
+    function getAndUpdateDelegatedByHolderToValidatorNow(address holder, uint validatorId) external returns (uint) {
+        return _getAndUpdateDelegatedByHolderToValidator(holder, validatorId, _getCurrentMonth());
     }
 
     function getDelegation(uint delegationId)
@@ -368,6 +489,11 @@ contract DelegationController is Permissions, ILocker {
         processSlashes(holder, 0);
     }
 
+    /**
+     * @dev Returns the token state of a given delegation.
+     *
+     * @param delegationId uint ID of the delegation
+     */
     function getState(uint delegationId) public view checkDelegationExists(delegationId) returns (State state) {
         if (delegations[delegationId].started == 0) {
             if (delegations[delegationId].finished == 0) {

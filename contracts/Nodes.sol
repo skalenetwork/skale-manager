@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 /*
     Nodes.sol - SKALE Manager
     Copyright (C) 2018-Present SKALE Labs
