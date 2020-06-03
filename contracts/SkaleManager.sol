@@ -26,7 +26,6 @@ import "./Permissions.sol";
 import "./ConstantsHolder.sol";
 import "./SkaleToken.sol";
 import "./interfaces/ISchainsFunctionality.sol";
-// import "./interfaces/IManagerData.sol";
 import "./delegation/Distributor.sol";
 import "./delegation/ValidatorService.sol";
 import "./Monitors.sol";
@@ -192,7 +191,6 @@ contract SkaleManager is IERC777Recipient, Permissions {
         uint averageDowntime;
         uint averageLatency;
         Monitors monitors = Monitors(_contractManager.getContract("Monitors"));
-        uint previousBlockEvent = monitors.getLastBountyBlock(nodeIndex);
         (averageDowntime, averageLatency) = monitors.calculateMetrics(nodeIndex);
         uint bounty = _manageBounty(
             msg.sender,
@@ -201,15 +199,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
             averageLatency);
         nodes.changeNodeLastRewardDate(nodeIndex);
         monitors.upgradeMonitor(nodeIndex);
-        emit BountyGot(
-            nodeIndex,
-            msg.sender,
-            averageDowntime,
-            averageLatency,
-            bounty,
-            previousBlockEvent,
-            uint32(block.timestamp),
-            gasleft());
+        _emitBountyEvent(nodeIndex, msg.sender, averageDowntime, averageLatency, bounty);
     }
 
     function initialize(address newContractsAddress) public override initializer {
@@ -227,7 +217,6 @@ contract SkaleManager is IERC777Recipient, Permissions {
     {
         uint commonBounty;
         ConstantsHolder constants = ConstantsHolder(_contractManager.getContract("ConstantsHolder"));
-        // IManagerData managerData = IManagerData(_contractManager.getContract("ManagerData"));
         Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
 
         uint diffTime = nodes.getNodeLastRewardDate(nodeIndex)
@@ -282,5 +271,29 @@ contract SkaleManager is IERC777Recipient, Permissions {
         }
         // solhint-disable-next-line check-send-result
         skaleToken.send(address(distributor), bounty, abi.encode(validatorId));
+    }
+
+    function _emitBountyEvent(
+        uint nodeIndex,
+        address from,
+        uint averageDowntime,
+        uint averageLatency,
+        uint bounty
+    )
+        internal
+    {
+        Monitors monitors = Monitors(_contractManager.getContract("Monitors"));
+        uint previousBlockEvent = monitors.getLastBountyBlock(nodeIndex);
+        monitors.setLastBountyBlock(nodeIndex);
+
+        emit BountyGot(
+            nodeIndex,
+            from,
+            averageDowntime,
+            averageLatency,
+            bounty,
+            previousBlockEvent,
+            uint32(block.timestamp),
+            gasleft());
     }
 }

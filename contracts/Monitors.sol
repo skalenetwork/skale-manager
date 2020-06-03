@@ -178,20 +178,10 @@ contract Monitors is Groups {
             checkedNodes[monitorIndex].pop();
             ConstantsHolder constantsHolder = ConstantsHolder(_contractManager.getContract("ConstantsHolder"));
             bool receiveVerdict = time.add(constantsHolder.deltaPeriod()) > uint32(block.timestamp);
-            uint previousBlockEvent = getLastReceivedVerdictBlock(verdict.toNodeIndex);
             if (receiveVerdict) {
                 addVerdict(keccak256(abi.encodePacked(verdict.toNodeIndex)), verdict.downtime, verdict.latency);
             }
-            emit VerdictWasSent(
-                fromMonitorIndex,
-                verdict.toNodeIndex,
-                verdict.downtime,
-                verdict.latency,
-                receiveVerdict,
-                previousBlockEvent,
-                uint32(block.timestamp),
-                gasleft()
-            );
+            _emitVerdictsEvent(fromMonitorIndex, verdict, receiveVerdict);
         }
     }
 
@@ -212,10 +202,13 @@ contract Monitors is Groups {
             averageDowntime = _median(downtimeArray);
             averageLatency = _median(latencyArray);
         }
-        lastBountyBlocks[monitorIndex] = block.number;
         while (verdicts[monitorIndex].length > 0) {
             verdicts[monitorIndex].pop();
         }
+    }
+
+    function setLastBountyBlock(uint nodeIndex) external allow("SkaleManager") {
+        lastBountyBlocks[keccak256(abi.encodePacked(nodeIndex))] = block.number;
     }
 
     function getCheckedArray(bytes32 monitorIndex) external view returns (bytes32[] memory) {
@@ -243,7 +236,6 @@ contract Monitors is Groups {
 
     function addVerdict(bytes32 monitorIndex, uint32 downtime, uint32 latency) public allow("SkaleManager") {
         verdicts[monitorIndex].push([uint(downtime), uint(latency)]);
-        lastVerdictBlocks[monitorIndex] = block.number;
     }
 
     function initialize(address newContractsAddress) public override initializer {
@@ -416,5 +408,27 @@ contract Monitors is Groups {
             mstore(add(tempData, 60), ip)
             bytesParameters := mload(add(tempData, 32))
         }
+    }
+
+    function _emitVerdictsEvent(
+        uint fromMonitorIndex,
+        Verdict memory verdict,
+        bool receiveVerdict
+    )
+        internal
+    {
+        uint previousBlockEvent = getLastReceivedVerdictBlock(verdict.toNodeIndex);
+        lastVerdictBlocks[keccak256(abi.encodePacked(verdict.toNodeIndex))] = block.number;
+
+        emit VerdictWasSent(
+                fromMonitorIndex,
+                verdict.toNodeIndex,
+                verdict.downtime,
+                verdict.latency,
+                receiveVerdict,
+                previousBlockEvent,
+                uint32(block.timestamp),
+                gasleft()
+            );
     }
 }
