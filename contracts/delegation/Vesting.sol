@@ -109,14 +109,14 @@ contract Vesting is ILocker, Permissions, IERC777Recipient {
             !_saftHolders[holder].active || _saftHolders[holder].isCancelable, "You could not stop vesting for holder"
         );
         require(_canceledTokens[holder] == 0, "Already canceled");
-        uint fullAmount = _saftHolders[holder].fullAmount;
+        // uint fullAmount = _saftHolders[holder].fullAmount;
         uint lockedAmount = getLockedAmount(holder);
-        if (_saftHolders[holder].active) {
-            _canceledTokens[holder] = lockedAmount;
-            _saftHolders[holder].active = false;
-        } else {
-            _canceledTokens[holder] = fullAmount;
-        }
+        // if (_saftHolders[holder].active) {
+        _canceledTokens[holder] = lockedAmount;
+        _saftHolders[holder].active = false;
+        // } else {
+        //     _canceledTokens[holder] = fullAmount;
+        // }
     }
 
     function addVestingTerm(
@@ -182,7 +182,7 @@ contract Vesting is ILocker, Permissions, IERC777Recipient {
     }
 
     function getLockupPeriodInMonth(address holder) external view returns (uint) {
-        return _saftHolders[holder].finishVesting;
+        return _saftHolders[holder].lockupPeriod;
     }
 
     function isActiveVestingTerm(address holder) external view returns (bool) {
@@ -240,11 +240,11 @@ contract Vesting is ILocker, Permissions, IERC777Recipient {
         TimeHelpers timeHelpers = TimeHelpers(_contractManager.getContract("TimeHelpers"));
         uint date = now;
         SAFT memory saftParams = _saftHolders[wallet];
-        if (!saftParams.active) {
-            return 0;
-        }
+        // if (!saftParams.active) {
+        //     return 0;
+        // }
         locked = saftParams.fullAmount;
-        if (date >= timeHelpers.addMonths(saftParams.startVestingTime, saftParams.lockupPeriod)) {
+        if (date >= timeHelpers.addMonths(saftParams.startVestingTime, saftParams.lockupPeriod) && saftParams.active) {
             locked = locked.sub(saftParams.afterLockupAmount);
             if (date >= saftParams.finishVesting) {
                 locked = 0;

@@ -50,8 +50,8 @@ export async function currentTime(web3: Web3) {
 }
 
 export function getTimeAtDate(day: number, monthIndex: number, year: number) {
-    const targetDate = new Date(Date.now());
-    targetDate.setFullYear(year, monthIndex, day);
+    // make a date with a middle time(12:00)
+    const targetDate = new Date(Date.UTC(year, monthIndex % 12, day, 12, 0, 0));
     return Math.round(targetDate.getTime() / 1000);
 }
 

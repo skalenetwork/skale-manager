@@ -44,6 +44,18 @@ contract("Vesting", ([owner, holder, holder1, holder2, holder3, hacker]) => {
         (await Vesting.isActiveVestingTerm(holder)).should.be.eq(false);
     });
 
+    it("should get SAFT data", async () => {
+        (await Vesting.isSAFTRegistered(holder)).should.be.eq(false);
+        await Vesting.addVestingTerm(holder, getTimeAtDate(1, 6, 2020), 6, 36, 1e6, 1e5, 6, false, {from: owner});
+        (await Vesting.isSAFTRegistered(holder)).should.be.eq(true);
+        ((await Vesting.getStartVestingTime(holder)).toNumber()).should.be.equal(getTimeAtDate(1, 6, 2020));
+        ((await Vesting.getLockupPeriodInMonth(holder)).toNumber()).should.be.equal(6);
+        ((await Vesting.getLockupPeriodTimestamp(holder)).toNumber()).should.be.equal(getTimeAtDate(1, 0, 2021));
+        (await Vesting.isCancelableVestingTerm(holder)).should.be.equal(false);
+        console.log(getTimeAtDate(1, 6, 2023));
+        ((await Vesting.getFinishVestingTime(holder)).toNumber()).should.be.equal(getTimeAtDate(1, 6, 2023));
+    });
+
     it("should approve SAFT", async () => {
         (await Vesting.isSAFTRegistered(holder)).should.be.eq(false);
         await Vesting.addVestingTerm(holder, getTimeAtDate(1, 6, 2020), 6, 36, 1e6, 1e5, 6, false, {from: owner});
@@ -445,8 +457,6 @@ contract("Vesting", ([owner, holder, holder1, holder2, holder3, hacker]) => {
             lockedAmount.toNumber().should.be.equal(lockedCalculatedAmount);
             lockedAmount.toNumber().should.be.lessThan(fullAmount - lockupAmount);
         });
-
-
     });
 
     describe("when All SAFTs are registered", async () => {
