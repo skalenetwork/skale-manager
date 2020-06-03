@@ -449,6 +449,10 @@ contract DelegationController is Permissions, ILocker {
         return _effectiveDelegatedToValidator[validatorId].getAndUpdateValueInSequence(month);
     }
 
+    function getAndUpdateDelegatedByHolderToValidatorNow(address holder, uint validatorId) external returns (uint) {
+        return _getAndUpdateDelegatedByHolderToValidator(holder, validatorId, _getCurrentMonth());
+    }
+
     function getDelegation(uint delegationId)
         external view checkDelegationExists(delegationId) returns (Delegation memory)
     {
