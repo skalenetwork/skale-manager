@@ -26,7 +26,6 @@ import "./Permissions.sol";
 import "./ConstantsHolder.sol";
 import "./SkaleToken.sol";
 import "./interfaces/ISchainsFunctionality.sol";
-// import "./interfaces/IManagerData.sol";
 import "./delegation/Distributor.sol";
 import "./delegation/ValidatorService.sol";
 import "./MonitorsFunctionality.sol";
@@ -199,9 +198,6 @@ contract SkaleManager is IERC777Recipient, Permissions {
         uint averageLatency;
         MonitorsFunctionality monitorsFunctionality = MonitorsFunctionality(
             _contractManager.getContract("MonitorsFunctionality"));
-        // MonitorsData monitorsData = MonitorsData(_contractManager.getContract("MonitorsData"));
-        // uint previousBlockEvent = monitorsData.getLastBountyBlock(nodeIndex);
-        // monitorsData.setLastBountyBlock(nodeIndex);
         (averageDowntime, averageLatency) = monitorsFunctionality.calculateMetrics(nodeIndex);
         uint bounty = _manageBounty(
             msg.sender,
@@ -211,15 +207,6 @@ contract SkaleManager is IERC777Recipient, Permissions {
         nodes.changeNodeLastRewardDate(nodeIndex);
         monitorsFunctionality.upgradeMonitor(nodeIndex);
         _emitBountyEvent(nodeIndex, msg.sender, averageDowntime, averageLatency, bounty);
-        // emit BountyGot(
-        //     nodeIndex,
-        //     msg.sender,
-        //     averageDowntime,
-        //     averageLatency,
-        //     bounty,
-        //     previousBlockEvent,
-        //     uint32(block.timestamp),
-        //     gasleft());
     }
 
     function initialize(address newContractsAddress) public override initializer {
@@ -237,7 +224,6 @@ contract SkaleManager is IERC777Recipient, Permissions {
     {
         uint commonBounty;
         ConstantsHolder constants = ConstantsHolder(_contractManager.getContract("ConstantsHolder"));
-        // IManagerData managerData = IManagerData(_contractManager.getContract("ManagerData"));
         Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
 
         uint diffTime = nodes.getNodeLastRewardDate(nodeIndex)

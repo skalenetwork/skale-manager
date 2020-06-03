@@ -58,7 +58,6 @@ contract MonitorsData is GroupsData {
 
     function addVerdict(bytes32 monitorIndex, uint32 downtime, uint32 latency) external allow(_executorName) {
         verdicts[monitorIndex].push([uint(downtime), uint(latency)]);
-        // lastVerdictBlocks[monitorIndex] = block.number;
     }
 
     function removeCheckedNode(bytes32 monitorIndex, uint indexOfCheckedNode) external allow(_executorName) {
