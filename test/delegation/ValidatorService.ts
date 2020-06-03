@@ -139,7 +139,7 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
                 (signature.slice(130) === "01" ? signature.slice(0, 130) + "1c" : signature));
             await validatorService.linkNodeAddress(nodeAddress, signature, {from: validator1});
             await validatorService.unlinkNodeAddress(validator1, {from: nodeAddress})
-                .should.be.eventually.rejectedWith("Validator with such address does not exist");
+                .should.be.eventually.rejectedWith("Validator with given address does not exist");
         });
 
         it("should reject if validator tried to override node address of another validator", async () => {
@@ -192,13 +192,13 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
                 100,
                 {from: validator2});
             await validatorService.unlinkNodeAddress(nodeAddress, {from: validator2})
-                .should.be.eventually.rejectedWith("Validator hasn't permissions to unlink node");
+                .should.be.eventually.rejectedWith("Validator does not have permissions to unlink node");
             const id = new BigNumber(await validatorService.getValidatorIdByNodeAddress(nodeAddress)).toNumber();
             assert.equal(id, validatorId.toNumber());
 
             await validatorService.unlinkNodeAddress(nodeAddress, {from: validator1});
             await validatorService.getValidatorId(nodeAddress, {from: validator1})
-                .should.be.eventually.rejectedWith("Validator with such address does not exist");
+                .should.be.eventually.rejectedWith("Validator with given address does not exist");
         });
 
         it("should not allow changing the address to the address of an existing validator", async () => {
@@ -229,14 +229,14 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
                 await validatorService.confirmNewAddress(validatorId, {from: validator3});
                 assert.deepEqual(validatorId, new BigNumber(await validatorService.getValidatorId(validator3)));
                 await validatorService.getValidatorId(validator1)
-                    .should.be.eventually.rejectedWith("Validator with such address does not exist");
+                    .should.be.eventually.rejectedWith("Validator with given address does not exist");
 
             });
         });
 
         it("should reject when someone tries to set new address for validator that doesn't exist", async () => {
             await validatorService.requestForNewAddress(validator2)
-                .should.be.eventually.rejectedWith("Validator with such address does not exist");
+                .should.be.eventually.rejectedWith("Validator with given address does not exist");
         });
 
         it("should reject if validator tries to set new address as null", async () => {
@@ -308,7 +308,7 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
 
             it("should not allow to send delegation request if validator isn't authorized", async () => {
                 await delegationController.delegate(validatorId, amount, delegationPeriod, info, {from: holder})
-                    .should.be.eventually.rejectedWith("Validator is not authorized to accept request");
+                    .should.be.eventually.rejectedWith("Validator is not authorized to accept delegation request");
             });
 
             it("should allow to send delegation request if validator is authorized", async () => {
@@ -323,7 +323,7 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
                 await delegationController.acceptPendingDelegation(delegationId, {from: validator1});
 
                 await validatorService.checkPossibilityCreatingNode(nodeAddress)
-                    .should.be.eventually.rejectedWith("Validator must meet Minimum Staking Requirement");
+                    .should.be.eventually.rejectedWith("Validator must meet the Minimum Staking Requirement");
             });
 
             it("should allow to create node if new epoch is started", async () => {
@@ -334,7 +334,7 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
                 skipTime(web3, month);
 
                 await validatorService.checkPossibilityCreatingNode(nodeAddress)
-                    .should.be.eventually.rejectedWith("Validator must meet Minimum Staking Requirement");
+                    .should.be.eventually.rejectedWith("Validator must meet the Minimum Staking Requirement");
 
                 await constantsHolder.setMSR(amount);
 
@@ -358,7 +358,7 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
 
                 skipTime(web3, 2678400); // 31 days
                 await validatorService.checkPossibilityCreatingNode(nodeAddress)
-                    .should.be.eventually.rejectedWith("Validator must meet Minimum Staking Requirement");
+                    .should.be.eventually.rejectedWith("Validator must meet the Minimum Staking Requirement");
 
                 await constantsHolder.setMSR(amount);
 
@@ -382,11 +382,11 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
                 await delegationController.delegate(validatorId, amount, delegationPeriod, info, {from: holder});
 
                 await validatorService.stopAcceptingNewRequests({from: holder})
-                    .should.be.eventually.rejectedWith("Validator with such address does not exist");
+                    .should.be.eventually.rejectedWith("Validator with given address does not exist");
 
                 await validatorService.stopAcceptingNewRequests({from: validator1})
                 await delegationController.delegate(validatorId, amount, delegationPeriod, info, {from: holder})
-                    .should.be.eventually.rejectedWith("The validator does not accept new requests");
+                    .should.be.eventually.rejectedWith("The validator is not currently accepting new requests");
 
                 await validatorService.startAcceptingNewRequests({from: validator1});
                 await delegationController.delegate(validatorId, amount, delegationPeriod, info, {from: holder});
