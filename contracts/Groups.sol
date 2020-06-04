@@ -162,7 +162,7 @@ abstract contract Groups is Permissions {
      */
     function createGroup(bytes32 groupIndex, uint newRecommendedNumberOfNodes, bytes32 data)
         public
-        allow("SchainsFunctionality")
+        allowTwo("SchainsFunctionality","SkaleManager")
     {
         groups[groupIndex].active = true;
         groups[groupIndex].recommendedNumberOfNodes = newRecommendedNumberOfNodes;

@@ -259,7 +259,7 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
     )
         public
         override
-        allowTwo("SkaleDKG", "SchainsFunctionality")
+        allowTwo("SkaleDKG", "SkaleManager")
         returns (uint)
     {
         SchainsInternal schainsInternal = SchainsInternal(
