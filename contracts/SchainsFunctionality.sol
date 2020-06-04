@@ -416,10 +416,10 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
             nodeIndex = possibleNodes[index];
             random = uint(keccak256(abi.encodePacked(random, nodeIndex)));
         } while (schainsInternal.checkException(groupIndex, nodeIndex));
+        require(nodes.removeSpaceFromNode(nodeIndex, space), "Could not remove space from nodeIndex");
         schainsInternal.addSchainForNode(nodeIndex, groupIndex);
         schainsInternal.setException(groupIndex, nodeIndex);
         schainsInternal.setNodeInGroup(groupIndex, nodeIndex);
-        require(nodes.removeSpaceFromNode(nodeIndex, space), "Could not remove space from nodeIndex");
         return nodeIndex;
     }
 

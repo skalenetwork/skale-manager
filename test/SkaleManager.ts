@@ -168,10 +168,13 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
 
             it("should remove the node", async () => {
                 const balanceBefore = web3.utils.toBN(await skaleToken.balanceOf(validator));
+                const lastBlock = await monitors.getLastBountyBlock(0);
 
                 await skaleManager.deleteNode(0, {from: nodeAddress});
 
                 await nodesContract.isNodeLeft(0).should.be.eventually.true;
+
+                expect((await monitors.getLastBountyBlock(0)).eq(lastBlock)).to.be.true;
 
                 const balanceAfter = web3.utils.toBN(await skaleToken.balanceOf(validator));
 

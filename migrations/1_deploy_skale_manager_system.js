@@ -86,7 +86,6 @@ async function deploy(deployer, networkName, accounts) {
         "Monitors",
         "SchainsInternal",
         "SchainsFunctionality",
-        "SchainsInternal",
         "Decryption",
         "ECDH",
         "SkaleDKG",
