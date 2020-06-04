@@ -29,23 +29,6 @@ import "./Nodes.sol";
 
 
 /**
- * @title SkaleVerifier - interface of SkaleVerifier
- */
-interface ISkaleVerifierG {
-    function verify(
-        uint sigx,
-        uint sigy,
-        uint hashx,
-        uint hashy,
-        uint pkx1,
-        uint pky1,
-        uint pkx2,
-        uint pky2) external view returns (bool);
-}
-
-
-
-/**
  * @title SchainsInternal - contract contains all functionality logic to manage Schains
  */
 contract SchainsInternal is Groups {
@@ -446,31 +429,17 @@ contract SchainsInternal is Groups {
         return groups[groupIndex].nodesInGroup.length;
     }
 
-    /**
-     * @dev verifySignature - verify signature which create Group by Groups BLS master public key
+    /*
+     * @dev getGroupsPublicKey - shows Groups public key
      * @param groupIndex - Groups identifier
-     * @param signatureX - first part of BLS signature
-     * @param signatureY - second part of BLS signature
-     * @param hashX - first part of hashed message
-     * @param hashY - second part of hashed message
-     * @return true - if correct, false - if not
+     * @return publicKey(x1, y1, x2, y2) - parts of BLS master public key
      */
-    function verifySignature(
-        bytes32 groupIndex,
-        uint signatureX,
-        uint signatureY,
-        uint hashX,
-        uint hashY) external view returns (bool)
-    {
-        uint publicKeyx1;
-        uint publicKeyy1;
-        uint publicKeyx2;
-        uint publicKeyy2;
-        
-        (publicKeyx1, publicKeyy1, publicKeyx2, publicKeyy2) = getGroupsPublicKey(groupIndex);
-        address skaleVerifierAddress = _contractManager.getContract("SkaleVerifier");
-        return ISkaleVerifierG(skaleVerifierAddress).verify(
-            signatureX, signatureY, hashX, hashY, publicKeyx1, publicKeyy1, publicKeyx2, publicKeyy2
+    function getGroupsPublicKey(bytes32 groupIndex) external view returns (uint, uint, uint, uint) {
+        return (
+            groups[groupIndex].groupsPublicKey[0],
+            groups[groupIndex].groupsPublicKey[1],
+            groups[groupIndex].groupsPublicKey[2],
+            groups[groupIndex].groupsPublicKey[3]
         );
     }
 
@@ -608,20 +577,6 @@ contract SchainsInternal is Groups {
                 }
             }
         }
-    }
-
-    /*
-     * @dev getGroupsPublicKey - shows Groups public key
-     * @param groupIndex - Groups identifier
-     * @return publicKey(x1, y1, x2, y2) - parts of BLS master public key
-     */
-    function getGroupsPublicKey(bytes32 groupIndex) public view returns (uint, uint, uint, uint) {
-        return (
-            groups[groupIndex].groupsPublicKey[0],
-            groups[groupIndex].groupsPublicKey[1],
-            groups[groupIndex].groupsPublicKey[2],
-            groups[groupIndex].groupsPublicKey[3]
-        );
     }
 
     function _isCorrespond(bytes32 groupIndex, uint nodeIndex) internal view returns (bool) {

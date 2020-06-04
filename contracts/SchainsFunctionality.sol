@@ -30,6 +30,21 @@ import "./SchainsInternal.sol";
 import "./ConstantsHolder.sol";
 
 
+/**
+ * @title SkaleVerifier - interface of SkaleVerifier
+ */
+interface ISkaleVerifierG {
+    function verify(
+        uint sigx,
+        uint sigy,
+        uint hashx,
+        uint hashy,
+        uint pkx1,
+        uint pky1,
+        uint pkx2,
+        uint pky2) external view returns (bool);
+}
+
 
 /**
  * @title SchainsFunctionality - contract contains all functionality logic to manage Schains
@@ -247,6 +262,34 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
 
     }
 
+    /**
+     * @dev verifySignature - verify signature which create Group by Groups BLS master public key
+     * @param groupIndex - Groups identifier
+     * @param signatureX - first part of BLS signature
+     * @param signatureY - second part of BLS signature
+     * @param hashX - first part of hashed message
+     * @param hashY - second part of hashed message
+     * @return true - if correct, false - if not
+     */
+    function verifySignature(
+        bytes32 groupIndex,
+        uint signatureX,
+        uint signatureY,
+        uint hashX,
+        uint hashY) external view returns (bool)
+    {
+        uint publicKeyx1;
+        uint publicKeyy1;
+        uint publicKeyx2;
+        uint publicKeyy2;
+        SchainsInternal schainsInternal = SchainsInternal(_contractManager.getContract("SchainsInternal"));
+        (publicKeyx1, publicKeyy1, publicKeyx2, publicKeyy2) = schainsInternal.getGroupsPublicKey(groupIndex);
+        address skaleVerifierAddress = _contractManager.getContract("SkaleVerifier");
+        return ISkaleVerifierG(skaleVerifierAddress).verify(
+            signatureX, signatureY, hashX, hashY, publicKeyx1, publicKeyy1, publicKeyx2, publicKeyy2
+        );
+    }
+
     function initialize(address newContractsAddress) public override initializer {
         Permissions.initialize(newContractsAddress);
         _executorName = "SkaleManager";
@@ -262,8 +305,7 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
         allowTwo("SkaleDKG", "SkaleManager")
         returns (uint)
     {
-        SchainsInternal schainsInternal = SchainsInternal(
-            _contractManager.getContract("SchainsInternal"));
+        SchainsInternal schainsInternal = SchainsInternal(_contractManager.getContract("SchainsInternal"));
         schainsInternal.removeNodeFromSchain(nodeIndex, schainId);
         return _selectNodeToGroup(schainId);
     }
