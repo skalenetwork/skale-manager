@@ -27,6 +27,24 @@ import "./ConstantsHolder.sol";
 import "./Nodes.sol";
 
 
+
+/**
+ * @title SkaleVerifier - interface of SkaleVerifier
+ */
+interface ISkaleVerifierG {
+    function verify(
+        uint sigx,
+        uint sigy,
+        uint hashx,
+        uint hashy,
+        uint pkx1,
+        uint pky1,
+        uint pkx2,
+        uint pky2) external view returns (bool);
+}
+
+
+
 /**
  * @title SchainsInternal - contract contains all functionality logic to manage Schains
  */
@@ -205,6 +223,7 @@ contract SchainsInternal is Groups {
 
         removeSchainForNode(nodeIndex, groupIndex);
     }
+    
 
     function removeNodeFromExceptions(bytes32 groupHash, uint nodeIndex) external allow(_executorName) {
         _exceptions[groupHash].check[nodeIndex] = false;
@@ -428,16 +447,43 @@ contract SchainsInternal is Groups {
     }
 
     /**
-     * @dev getGroupsPublicKey - shows Groups public key
+     * @dev verifySignature - verify signature which create Group by Groups BLS master public key
      * @param groupIndex - Groups identifier
-     * @return publicKey(x1, y1, x2, y2) - parts of BLS master public key
+     * @param signatureX - first part of BLS signature
+     * @param signatureY - second part of BLS signature
+     * @param hashX - first part of hashed message
+     * @param hashY - second part of hashed message
+     * @return true - if correct, false - if not
      */
-    function getGroupsPublicKey(bytes32 groupIndex) external view returns (uint, uint, uint, uint) {
+    function verifySignature(
+        bytes32 groupIndex,
+        uint signatureX,
+        uint signatureY,
+        uint hashX,
+        uint hashY) external view returns (bool)
+    {
+        uint publicKeyx1;
+        uint publicKeyy1;
+        uint publicKeyx2;
+        uint publicKeyy2;
+        
+        (publicKeyx1, publicKeyy1, publicKeyx2, publicKeyy2) = getGroupsPublicKey(groupIndex);
+        address skaleVerifierAddress = _contractManager.getContract("SkaleVerifier");
+        return ISkaleVerifierG(skaleVerifierAddress).verify(
+            signatureX, signatureY, hashX, hashY, publicKeyx1, publicKeyy1, publicKeyx2, publicKeyy2
+        );
+    }
+
+    function getPreviousGroupsPublicKey(bytes32 groupIndex) external view returns (uint, uint, uint, uint) {
+        uint length = previousPublicKeys[groupIndex].length;
+        if (length == 0) {
+            return (0, 0, 0, 0);
+        }
         return (
-            groups[groupIndex].groupsPublicKey[0],
-            groups[groupIndex].groupsPublicKey[1],
-            groups[groupIndex].groupsPublicKey[2],
-            groups[groupIndex].groupsPublicKey[3]
+            previousPublicKeys[groupIndex][length - 1][0],
+            previousPublicKeys[groupIndex][length - 1][1],
+            previousPublicKeys[groupIndex][length - 1][2],
+            previousPublicKeys[groupIndex][length - 1][3]
         );
     }
 
@@ -494,8 +540,6 @@ contract SchainsInternal is Groups {
         }
     }
 
-
-
     /**
      * @dev removesSchainForNode - clean given Node of Schain
      * function could be run only by executor
@@ -544,8 +588,6 @@ contract SchainsInternal is Groups {
         return length;
     }
 
-
-
     function isEnoughNodes(bytes32 groupIndex) public view returns (uint[] memory result) {
         Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
         uint8 space = uint8(uint(getGroupData(groupIndex)));
@@ -568,9 +610,40 @@ contract SchainsInternal is Groups {
         }
     }
 
+    /*
+     * @dev getGroupsPublicKey - shows Groups public key
+     * @param groupIndex - Groups identifier
+     * @return publicKey(x1, y1, x2, y2) - parts of BLS master public key
+     */
+    function getGroupsPublicKey(bytes32 groupIndex) public view returns (uint, uint, uint, uint) {
+        return (
+            groups[groupIndex].groupsPublicKey[0],
+            groups[groupIndex].groupsPublicKey[1],
+            groups[groupIndex].groupsPublicKey[2],
+            groups[groupIndex].groupsPublicKey[3]
+        );
+    }
+
     function _isCorrespond(bytes32 groupIndex, uint nodeIndex) internal view returns (bool) {
         Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
         return !_exceptions[groupIndex].check[nodeIndex] && nodes.isNodeActive(nodeIndex);
+    }
+
+    /**
+     * @dev findNode - find local index of Node in Schain
+     * @param groupIndex - Groups identifier
+     * @param nodeIndex - global index of Node
+     * @return local index of Node in Schain
+     */
+    function _findNode(bytes32 groupIndex, uint nodeIndex) internal view returns (uint) {
+        uint[] memory nodesInGroup = groups[groupIndex].nodesInGroup;
+        uint index;
+        for (index = 0; index < nodesInGroup.length; index++) {
+            if (nodesInGroup[index] == nodeIndex) {
+                return index;
+            }
+        }
+        return index;
     }
 
 }

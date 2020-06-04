@@ -211,10 +211,6 @@ contract Monitors is Groups {
         lastBountyBlocks[keccak256(abi.encodePacked(nodeIndex))] = block.number;
     }
 
-     function setLastReceivedVerdictBlock(uint nodeIndex) external allow(_executorName) {
-        lastVerdictBlocks[keccak256(abi.encodePacked(nodeIndex))] = block.number;
-    }
-
     function getCheckedArray(bytes32 monitorIndex) external view returns (bytes32[] memory) {
         return checkedNodes[monitorIndex];
     }
