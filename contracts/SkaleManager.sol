@@ -25,11 +25,10 @@ pragma experimental ABIEncoderV2;
 import "./Permissions.sol";
 import "./ConstantsHolder.sol";
 import "./SkaleToken.sol";
-import "./interfaces/ISchainsFunctionality.sol";
 import "./delegation/Distributor.sol";
 import "./delegation/ValidatorService.sol";
 import "./Monitors.sol";
-import "./SchainsFunctionality.sol";
+import "./Schains.sol";
 import "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
 import "@openzeppelin/contracts/introspection/IERC1820Registry.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
@@ -76,9 +75,9 @@ contract SkaleManager is IERC777Recipient, Permissions {
     {
         require(to == address(this), "Receiver is incorrect");
         if (userData.length > 0) {
-            SchainsFunctionality schainsFunctionality = SchainsFunctionality(
-                _contractManager.getContract("SchainsFunctionality"));
-            schainsFunctionality.addSchain(from, value, userData);
+            Schains schains = Schains(
+                _contractManager.getContract("Schains"));
+            schains.addSchain(from, value, userData);
         }
     }
 
@@ -110,25 +109,25 @@ contract SkaleManager is IERC777Recipient, Permissions {
 
     function nodeExit(uint nodeIndex) external {
         Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
-        SchainsFunctionality schainsFunctionality = SchainsFunctionality(
-            _contractManager.getContract("SchainsFunctionality"));
+        Schains schains = Schains(
+            _contractManager.getContract("Schains"));
         SchainsInternal schainsInternal = SchainsInternal(_contractManager.getContract("SchainsInternal"));
         ConstantsHolder constants = ConstantsHolder(_contractManager.getContract("ConstantsHolder"));
-        schainsFunctionality.freezeSchains(nodeIndex);
+        schains.freezeSchains(nodeIndex);
         if (nodes.isNodeActive(nodeIndex)) {
             require(nodes.initExit(msg.sender, nodeIndex), "Initialization of node exit is failed");
         }
         bool completed;
-        bool schains = false;
+        bool isSchains = false;
         if (schainsInternal.getActiveSchain(nodeIndex) != bytes32(0)) {
-            completed = schainsFunctionality.exitFromSchain(nodeIndex);
-            schains = true;
+            completed = schains.exitFromSchain(nodeIndex);
+            isSchains = true;
         } else {
             completed = true;
         }
         if (completed) {
             require(nodes.completeExit(msg.sender, nodeIndex), "Finishing of node exit is failed");
-            nodes.changeNodeFinishTime(nodeIndex, uint32(now + (schains ? constants.rotationDelay() : 0)));
+            nodes.changeNodeFinishTime(nodeIndex, uint32(now + (isSchains ? constants.rotationDelay() : 0)));
         }
     }
 
@@ -154,13 +153,13 @@ contract SkaleManager is IERC777Recipient, Permissions {
     }
 
     function deleteSchain(string calldata name) external {
-        address schainsFunctionalityAddress = _contractManager.getContract("SchainsFunctionality");
-        ISchainsFunctionality(schainsFunctionalityAddress).deleteSchain(msg.sender, name);
+        Schains schains = Schains(_contractManager.getContract("Schains"));
+        schains.deleteSchain(msg.sender, name);
     }
 
     function deleteSchainByRoot(string calldata name) external onlyOwner {
-        address schainsFunctionalityAddress = _contractManager.getContract("SchainsFunctionality");
-        ISchainsFunctionality(schainsFunctionalityAddress).deleteSchainByRoot(name);
+        Schains schains = Schains(_contractManager.getContract("Schains"));
+        schains.deleteSchainByRoot(name);
     }
 
     function sendVerdict(uint fromMonitorIndex, Monitors.Verdict calldata verdict) external {

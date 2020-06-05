@@ -7,7 +7,7 @@ import { ConstantsHolderInstance,
          MonitorsInstance,
          NodesInstance,
          SchainsInternalInstance,
-         SchainsFunctionalityInstance,
+         SchainsInstance,
          SkaleManagerInstance,
          SkaleTokenInstance,
          ValidatorServiceInstance} from "../types/truffle-contracts";
@@ -20,7 +20,7 @@ import { deployValidatorService } from "./tools/deploy/delegation/validatorServi
 import { deployMonitors } from "./tools/deploy/monitors";
 import { deployNodes } from "./tools/deploy/nodes";
 import { deploySchainsInternal } from "./tools/deploy/schainsInternal";
-import { deploySchainsFunctionality } from "./tools/deploy/schainsFunctionality";
+import { deploySchains } from "./tools/deploy/schains";
 import { deploySkaleManager } from "./tools/deploy/skaleManager";
 import { deploySkaleToken } from "./tools/deploy/skaleToken";
 import { skipTime } from "./tools/time";
@@ -36,7 +36,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
     let skaleToken: SkaleTokenInstance;
     let monitors: MonitorsInstance;
     let schainsInternal: SchainsInternalInstance;
-    let schainsFunctionality: SchainsFunctionalityInstance;
+    let schains: SchainsInstance;
     let validatorService: ValidatorServiceInstance;
     let delegationController: DelegationControllerInstance;
     let distributor: DistributorInstance;
@@ -49,7 +49,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
         nodesContract = await deployNodes(contractManager);
         monitors = await deployMonitors(contractManager);
         schainsInternal = await deploySchainsInternal(contractManager);
-        schainsFunctionality = await deploySchainsFunctionality(contractManager);
+        schains = await deploySchains(contractManager);
         skaleManager = await deploySkaleManager(contractManager);
         validatorService = await deployValidatorService(contractManager);
         delegationController = await deployDelegationController(contractManager);
@@ -826,7 +826,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
 
                 await skaleToken.transfer(developer, "0x3635C9ADC5DEA000000", {from: owner});
 
-                let price = web3.utils.toBN(await schainsFunctionality.getSchainPrice(1, 5));
+                let price = web3.utils.toBN(await schains.getSchainPrice(1, 5));
                 await skaleToken.send(
                     skaleManager.address,
                     price.toString(),
@@ -843,7 +843,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                 await skaleManager.deleteSchain("d2", {from: developer});
 
                 await schainsInternal.numberOfSchains().should.be.eventually.deep.equal(web3.utils.toBN(0));
-                price = web3.utils.toBN(await schainsFunctionality.getSchainPrice(2, 5));
+                price = web3.utils.toBN(await schains.getSchainPrice(2, 5));
 
                 await skaleToken.send(
                     skaleManager.address,
@@ -861,7 +861,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                 await skaleManager.deleteSchain("d2", {from: developer});
 
                 await schainsInternal.numberOfSchains().should.be.eventually.deep.equal(web3.utils.toBN(0));
-                price = web3.utils.toBN(await schainsFunctionality.getSchainPrice(3, 5));
+                price = web3.utils.toBN(await schains.getSchainPrice(3, 5));
                 await skaleToken.send(
                     skaleManager.address,
                     price.toString(),
@@ -878,7 +878,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                 await skaleManager.deleteSchain("d2", {from: developer});
 
                 await schainsInternal.numberOfSchains().should.be.eventually.deep.equal(web3.utils.toBN(0));
-                price = web3.utils.toBN(await schainsFunctionality.getSchainPrice(4, 5));
+                price = web3.utils.toBN(await schains.getSchainPrice(4, 5));
                 await skaleToken.send(
                     skaleManager.address,
                     price.toString(),
@@ -895,7 +895,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                 await skaleManager.deleteSchain("d2", {from: developer});
 
                 await schainsInternal.numberOfSchains().should.be.eventually.deep.equal(web3.utils.toBN(0));
-                price = web3.utils.toBN(await schainsFunctionality.getSchainPrice(5, 5));
+                price = web3.utils.toBN(await schains.getSchainPrice(5, 5));
                 await skaleToken.send(
                     skaleManager.address,
                     price.toString(),

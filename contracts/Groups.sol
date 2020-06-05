@@ -1,5 +1,5 @@
 /*
-    GroupsFunctionality.sol - SKALE Manager
+    Groups.sol - SKALE Manager
     Copyright (C) 2018-Present SKALE Labs
     @author Artem Payvin
 
@@ -25,8 +25,8 @@ import "./interfaces/ISkaleDKG.sol";
 
 
 /**
- * @title GroupsFunctionality - contract with some Groups functionality, will be inherited by
- * MonitorsFunctionality and SchainsFunctionality
+ * @title Groups - contract will be inherited by
+ * Monitors and Schains
  */
 abstract contract Groups is Permissions {
 
@@ -106,7 +106,7 @@ abstract contract Groups is Permissions {
      */
     function createGroup(bytes32 groupIndex, uint newRecommendedNumberOfNodes, bytes32 data)
         public
-        allowTwo("SchainsFunctionality","SkaleManager")
+        allowTwo("Schains","SkaleManager")
     {
         groups[groupIndex].active = true;
         groups[groupIndex].recommendedNumberOfNodes = newRecommendedNumberOfNodes;

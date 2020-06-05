@@ -212,7 +212,7 @@ contract SchainsInternal is Groups {
         _exceptions[groupHash].check[nodeIndex] = false;
     }
 
-    function redirectOpenChannel(bytes32 schainId) external allow("SchainsFunctionality") {
+    function redirectOpenChannel(bytes32 schainId) external allow("Schains") {
         ISkaleDKG(_contractManager.getContract("SkaleDKG")).openChannel(schainId);
     }
 
@@ -473,7 +473,7 @@ contract SchainsInternal is Groups {
     }
 
     function initialize(address newContractsAddress) public override initializer {
-        Groups.initialize("SchainsFunctionality", newContractsAddress);
+        Groups.initialize("Schains", newContractsAddress);
 
         numberOfSchains = 0;
         sumOfSchainsResources = 0;

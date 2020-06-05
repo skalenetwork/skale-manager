@@ -22,12 +22,9 @@
 pragma solidity 0.6.6;
 pragma experimental ABIEncoderV2;
 import "./Permissions.sol";
-import "./interfaces/IGroupsData.sol";
-import "./interfaces/ISchainsFunctionality.sol";
-import "./interfaces/ISchainsFunctionalityInternal.sol";
 import "./delegation/Punisher.sol";
 import "./SlashingTable.sol";
-import "./SchainsFunctionality.sol";
+import "./Schains.sol";
 import "./SchainsInternal.sol";
 import "./utils/Precompiled.sol";
 
@@ -165,7 +162,7 @@ contract SkaleDKG is Permissions {
         delete channels[groupIndex].numberOfCompleted;
         delete channels[groupIndex].startComplaintBlockTimestamp;
         channels[groupIndex].startedBlockTimestamp = block.timestamp;
-        IGroupsData(channels[groupIndex].dataAddress).setGroupFailedDKG(groupIndex);
+        Groups(channels[groupIndex].dataAddress).setGroupFailedDKG(groupIndex);
         emit ChannelOpened(groupIndex);
     }
 
@@ -371,8 +368,8 @@ contract SkaleDKG is Permissions {
         SchainsInternal schainsInternal = SchainsInternal(
             _contractManager.getContract("SchainsInternal")
         );
-        SchainsFunctionality schainsFunctionality = SchainsFunctionality(
-            _contractManager.getContract("SchainsFunctionality")
+        Schains schains = Schains(
+            _contractManager.getContract("Schains")
         );
         emit BadGuy(badNode);
         emit FailedDKG(groupIndex);
@@ -380,7 +377,7 @@ contract SkaleDKG is Permissions {
         address dataAddress = channels[groupIndex].dataAddress;
         this.reopenChannel(groupIndex);
         if (schainsInternal.isAnyFreeNode(groupIndex)) {
-            uint newNode = schainsFunctionality.rotateNode(
+            uint newNode = schains.rotateNode(
                 badNode,
                 groupIndex
             );
@@ -504,7 +501,7 @@ contract SkaleDKG is Permissions {
     }
 
     function _findNode(bytes32 groupIndex, uint nodeIndex) internal view returns (uint) {
-        uint[] memory nodesInGroup = IGroupsData(channels[groupIndex].dataAddress).getNodesInGroup(groupIndex);
+        uint[] memory nodesInGroup = Groups(channels[groupIndex].dataAddress).getNodesInGroup(groupIndex);
         uint correctIndex = nodesInGroup.length;
         bool set = false;
         for (uint index = 0; index < nodesInGroup.length; index++) {

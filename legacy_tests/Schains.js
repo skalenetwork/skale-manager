@@ -17,7 +17,7 @@ async function createSchain(typeOfSchain, lifetime) {
     }
     let data = await GenerateBytesData.generateBytesForSchain(lifetime, typeOfSchain, schainName);
     console.log("Generated data:", data);
-    let res = await init.SchainsFunctionality.methods.getSchainPrice(typeOfSchain, lifetime).call();
+    let res = await init.Schains.methods.getSchainPrice(typeOfSchain, lifetime).call();
     console.log("Schain Price:", res);
 	let deposit = res;
 	let accountDeposit = await init.SkaleToken.methods.balanceOf(account).call();
@@ -33,8 +33,8 @@ async function createSchain(typeOfSchain, lifetime) {
     console.log("NUmber of fractional nodes: ", numberOfFractionalNodes);
 	res = await init.SkaleToken.methods.transfer(init.jsonData['skale_manager_address'], deposit, data).send({from: account, gas: 6900000});
     let blockNumber = res.blockNumber;
-    //init.SchainsFunctionality.getPastEvents("GroupGenerated", {fromBlock: blockNumber, toBlock:blockNumber}).then(function(events) {console.log(events)});
-    //init.SchainsFunctionality.getPastEvents("SchainCreated", {fromBlock: blockNumber, toBlock:blockNumber}).then(function(events) {console.log(events)});
+    //init.Schains.getPastEvents("GroupGenerated", {fromBlock: blockNumber, toBlock:blockNumber}).then(function(events) {console.log(events)});
+    //init.Schains.getPastEvents("SchainCreated", {fromBlock: blockNumber, toBlock:blockNumber}).then(function(events) {console.log(events)});
     //console.log(schainName);
     console.log("Schain", schainName, "created with", res.gasUsed, "gas comsumption");
     return schainName;

@@ -62,10 +62,10 @@ async function rotationNode(secondRandomNumber) {
     let schainIds = await init.SchainsInternal.methods.getSchainIdsForNode(secondRandomNumber).call();
     let nodeRotated = new Array();
     for (let i = 0; i < schainIds.length; i++) {
-        // await schainsFunctionality.rotateNode(schainIds[i]);
-        let tx_hash = await init.SchainsFunctionality.methods.rotateNode(schainIds[i]).send({from: init.mainAccount, gas: 6900000});
+        // await schains.rotateNode(schainIds[i]);
+        let tx_hash = await init.Schains.methods.rotateNode(schainIds[i]).send({from: init.mainAccount, gas: 6900000});
         let blockNumber = tx_hash.blockNumber;
-        await init.SchainsFunctionality.getPastEvents('NodeRotated', {fromBlock: blockNumber, toBlock: blockNumber}).then(
+        await init.Schains.getPastEvents('NodeRotated', {fromBlock: blockNumber, toBlock: blockNumber}).then(
             function(events) {
                 for (let i = 0; i < events.length; i++) {
                     // console.log(events[i].returnValues);

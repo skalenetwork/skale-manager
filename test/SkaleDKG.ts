@@ -4,7 +4,7 @@ import { ContractManagerInstance,
          DelegationControllerInstance,
          NodesInstance,
          SchainsInternalInstance,
-         SchainsFunctionalityInstance,
+         SchainsInstance,
          SkaleDKGInstance,
          SkaleTokenInstance,
          SlashingTableInstance,
@@ -18,7 +18,7 @@ import { deployDelegationController } from "./tools/deploy/delegation/delegation
 import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
 import { deployNodes } from "./tools/deploy/nodes";
 import { deploySchainsInternal } from "./tools/deploy/schainsInternal";
-import { deploySchainsFunctionality } from "./tools/deploy/schainsFunctionality";
+import { deploySchains } from "./tools/deploy/schains";
 import { deploySkaleDKG } from "./tools/deploy/skaleDKG";
 import { deploySkaleToken } from "./tools/deploy/skaleToken";
 import { deploySlashingTable } from "./tools/deploy/slashingTable";
@@ -56,7 +56,7 @@ class Channel {
 contract("SkaleDKG", ([owner, validator1, validator2]) => {
     let contractManager: ContractManagerInstance;
     let schainsInternal: SchainsInternalInstance;
-    let schainsFunctionality: SchainsFunctionalityInstance;
+    let schains: SchainsInstance;
     let skaleDKG: SkaleDKGInstance;
     let skaleToken: SkaleTokenInstance;
     let validatorService: ValidatorServiceInstance;
@@ -71,7 +71,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
 
         nodes = await deployNodes(contractManager);
         schainsInternal = await deploySchainsInternal(contractManager);
-        schainsFunctionality = await deploySchainsFunctionality(contractManager);
+        schains = await deploySchains(contractManager);
         skaleDKG = await deploySkaleDKG(contractManager);
         skaleToken = await deploySkaleToken(contractManager);
         validatorService = await deployValidatorService(contractManager);
@@ -201,9 +201,9 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
         });
 
         it("should create schain and open a DKG channel", async () => {
-            const deposit = await schainsFunctionality.getSchainPrice(4, 5);
+            const deposit = await schains.getSchainPrice(4, 5);
 
-            await schainsFunctionality.addSchain(
+            await schains.addSchain(
                 validator1,
                 deposit,
                 web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, "d2"]));
@@ -213,9 +213,9 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
         });
 
         it("should create schain and reopen a DKG channel", async () => {
-            const deposit = await schainsFunctionality.getSchainPrice(4, 5);
+            const deposit = await schains.getSchainPrice(4, 5);
 
-            await schainsFunctionality.addSchain(
+            await schains.addSchain(
                 validator1,
                 deposit,
                 web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, "d2"]));
@@ -225,9 +225,9 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
         });
 
         it("should create & delete schain and open & close a DKG channel", async () => {
-            const deposit = await schainsFunctionality.getSchainPrice(4, 5);
+            const deposit = await schains.getSchainPrice(4, 5);
 
-            await schainsFunctionality.addSchain(
+            await schains.addSchain(
                 validator1,
                 deposit,
                 web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, "d2"]));
@@ -235,16 +235,16 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
             let channel: Channel = new Channel(await skaleDKG.channels(web3.utils.soliditySha3("d2")));
             assert(channel.active.should.be.true);
 
-            await schainsFunctionality.deleteSchainByRoot("d2");
+            await schains.deleteSchainByRoot("d2");
             channel = new Channel(await skaleDKG.channels(web3.utils.soliditySha3("d2")));
             assert(channel.active.should.be.false);
         });
 
         describe("when 2-node schain is created", async () => {
             beforeEach(async () => {
-                const deposit = await schainsFunctionality.getSchainPrice(4, 5);
+                const deposit = await schains.getSchainPrice(4, 5);
 
-                await schainsFunctionality.addSchain(
+                await schains.addSchain(
                     validator1,
                     deposit,
                     web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, "d2"]));
@@ -252,8 +252,8 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                 let nodesInGroup = await schainsInternal.getNodesInGroup(web3.utils.soliditySha3("d2"));
                 schainName = "d2";
                 while ((new BigNumber(nodesInGroup[0])).toFixed() === "1") {
-                    await schainsFunctionality.deleteSchainByRoot(schainName);
-                    await schainsFunctionality.addSchain(
+                    await schains.deleteSchainByRoot(schainName);
+                    await schains.addSchain(
                         validator1,
                         deposit,
                         web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, "d2"]));
@@ -552,9 +552,9 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
         });
 
         it("should reopen channel correctly", async () => {
-            const deposit = await schainsFunctionality.getSchainPrice(4, 5);
+            const deposit = await schains.getSchainPrice(4, 5);
 
-            await schainsFunctionality.addSchain(
+            await schains.addSchain(
                 validator1,
                 deposit,
                 web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, "d2"]));
@@ -562,8 +562,8 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
             let nodesInGroup = await schainsInternal.getNodesInGroup(web3.utils.soliditySha3("d2"));
             schainName = "d2";
             while ((new BigNumber(nodesInGroup[0])).toFixed() === "1") {
-                await schainsFunctionality.deleteSchainByRoot(schainName);
-                await schainsFunctionality.addSchain(
+                await schains.deleteSchainByRoot(schainName);
+                await schains.addSchain(
                     validator1,
                     deposit,
                     web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, "d2"]));

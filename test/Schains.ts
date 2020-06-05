@@ -3,7 +3,7 @@ import * as chaiAsPromised from "chai-as-promised";
 import { ContractManagerInstance,
          NodesInstance,
          SchainsInternalInstance,
-         SchainsFunctionalityInstance,
+         SchainsInstance,
          SkaleDKGInstance,
          SkaleManagerInstance,
          ValidatorServiceInstance } from "../types/truffle-contracts";
@@ -15,16 +15,16 @@ import { deployContractManager } from "./tools/deploy/contractManager";
 import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
 import { deployNodes } from "./tools/deploy/nodes";
 import { deploySchainsInternal } from "./tools/deploy/schainsInternal";
-import { deploySchainsFunctionality } from "./tools/deploy/schainsFunctionality";
+import { deploySchains } from "./tools/deploy/schains";
 import { deploySkaleDKG } from "./tools/deploy/skaleDKG";
 import { deploySkaleManager } from "./tools/deploy/skaleManager";
 
 chai.should();
 chai.use(chaiAsPromised);
 
-contract("SchainsFunctionality", ([owner, holder, validator]) => {
+contract("Schains", ([owner, holder, validator]) => {
     let contractManager: ContractManagerInstance;
-    let schainsFunctionality: SchainsFunctionalityInstance;
+    let schains: SchainsInstance;
     let schainsInternal: SchainsInternalInstance;
     let nodes: NodesInstance;
     let validatorService: ValidatorServiceInstance;
@@ -36,7 +36,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
 
         nodes = await deployNodes(contractManager);
         schainsInternal = await deploySchainsInternal(contractManager);
-        schainsFunctionality = await deploySchainsFunctionality(contractManager);
+        schains = await deploySchains(contractManager);
         validatorService = await deployValidatorService(contractManager);
         skaleDKG = await deploySkaleDKG(contractManager);
         skaleManager = await deploySkaleManager(contractManager);
@@ -46,7 +46,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
 
     describe("should add schain", async () => {
         it("should fail when money are not enough", async () => {
-            await schainsFunctionality.addSchain(
+            await schains.addSchain(
                 holder,
                 5,
                 web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 1, 0, "d2"]),
@@ -55,7 +55,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
         });
 
         it("should fail when schain type is wrong", async () => {
-            await schainsFunctionality.addSchain(
+            await schains.addSchain(
                 holder,
                 5,
                 web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 6, 0, "d2"]),
@@ -64,7 +64,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
         });
 
         it("should fail when data parameter is too short", async () => {
-            await schainsFunctionality.addSchain(
+            await schains.addSchain(
                 holder,
                 5,
                 web3.eth.abi.encodeParameters(["uint", "uint8", "uint16"], [5, 6, 0]),
@@ -73,8 +73,8 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
         });
 
         it("should fail when nodes count is too low", async () => {
-            const price = new BigNumber(await schainsFunctionality.getSchainPrice(1, 5));
-            await schainsFunctionality.addSchain(
+            const price = new BigNumber(await schains.getSchainPrice(1, 5));
+            await schains.addSchain(
                 holder,
                 price.toString(),
                 web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 1, 0, "d2"]),
@@ -99,26 +99,26 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                         });
                 }
 
-                const deposit = await schainsFunctionality.getSchainPrice(4, 5);
+                const deposit = await schains.getSchainPrice(4, 5);
 
-                await schainsFunctionality.addSchain(
+                await schains.addSchain(
                     owner,
                     deposit,
                     web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, "d2"]),
                     {from: owner});
 
-                await schainsFunctionality.addSchain(
+                await schains.addSchain(
                     owner,
                     deposit,
                     web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, "d3"]),
                     {from: owner});
 
-                await schainsFunctionality.deleteSchain(
+                await schains.deleteSchain(
                     owner,
                     "d2",
                     {from: owner});
 
-                await schainsFunctionality.deleteSchain(
+                await schains.deleteSchain(
                     owner,
                     "d3",
                     {from: owner});
@@ -140,7 +140,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                         });
                 }
 
-                await schainsFunctionality.addSchain(
+                await schains.addSchain(
                     holder,
                     deposit,
                     web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, "d4"]),
@@ -165,7 +165,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                         });
                 }
 
-                const deposit = await schainsFunctionality.getSchainPrice(4, 5);
+                const deposit = await schains.getSchainPrice(4, 5);
 
                 const verificationVector =
                     "0x02c2b888a23187f22195eadadbc05847a00dc59c913d465dbc4dfac9cfab437d2695832627b9081e77da7a3fc4d574363bf05" +
@@ -178,7 +178,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                     "e521f3c7997dbb1c15452b7f196bd119d915ce76af3d1a008e181004086ff076abe442563ae9b8938d483ae581f4de2ee54298b" +
                     "3078289bbd85250c8df956450d32f671e4a8ec1e584119753ff171e80a61465246bfd291e8dac3d77";
 
-                await schainsFunctionality.addSchain(
+                await schains.addSchain(
                     owner,
                     deposit,
                     web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, "d2"]),
@@ -329,17 +329,17 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
             });
 
             it("should create 4 node schain", async () => {
-                const deposit = await schainsFunctionality.getSchainPrice(5, 5);
+                const deposit = await schains.getSchainPrice(5, 5);
 
-                await schainsFunctionality.addSchain(
+                await schains.addSchain(
                     holder,
                     deposit,
                     web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d2"]),
                     {from: owner});
 
-                const schains = await schainsInternal.getSchains();
-                schains.length.should.be.equal(1);
-                const schainId = schains[0];
+                const sChains = await schainsInternal.getSchains();
+                sChains.length.should.be.equal(1);
+                const schainId = sChains[0];
 
                 await schainsInternal.isOwnerAddress(holder, schainId).should.be.eventually.true;
             });
@@ -347,9 +347,9 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
             it("should not create 4 node schain with 1 deleted node", async () => {
                 await nodes.removeNodeByRoot(1);
 
-                const deposit = await schainsFunctionality.getSchainPrice(5, 5);
+                const deposit = await schains.getSchainPrice(5, 5);
 
-                await schainsFunctionality.addSchain(
+                await schains.addSchain(
                     holder,
                     deposit,
                     web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d2"]),
@@ -374,11 +374,11 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                         name: "D2-28"
                     });
 
-                const deposit = await schainsFunctionality.getSchainPrice(5, 5);
+                const deposit = await schains.getSchainPrice(5, 5);
 
                 data = await nodes.getNodesWithFreeSpace(32);
 
-                await schainsFunctionality.addSchain(
+                await schains.addSchain(
                     holder,
                     deposit,
                     web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d2"]),
@@ -392,7 +392,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
 
                 data = await nodes.getNodesWithFreeSpace(32);
 
-                await schainsFunctionality.addSchain(
+                await schains.addSchain(
                     holder,
                     deposit,
                     web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d3"]),
@@ -406,7 +406,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
 
                 data = await nodes.getNodesWithFreeSpace(32);
 
-                await schainsFunctionality.addSchain(
+                await schains.addSchain(
                     holder,
                     deposit,
                     web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d4"]),
@@ -420,7 +420,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
 
                 data = await nodes.getNodesWithFreeSpace(32);
 
-                await schainsFunctionality.addSchain(
+                await schains.addSchain(
                     holder,
                     deposit,
                     web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d5"]),
@@ -434,21 +434,21 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
             });
 
             it("should create & delete 4 node schain", async () => {
-                const deposit = await schainsFunctionality.getSchainPrice(5, 5);
+                const deposit = await schains.getSchainPrice(5, 5);
 
-                await schainsFunctionality.addSchain(
+                await schains.addSchain(
                     holder,
                     deposit,
                     web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d2"]),
                     {from: owner});
 
-                const schains = await schainsInternal.getSchains();
-                schains.length.should.be.equal(1);
-                const schainId = schains[0];
+                const sChains = await schainsInternal.getSchains();
+                sChains.length.should.be.equal(1);
+                const schainId = sChains[0];
 
                 await schainsInternal.isOwnerAddress(holder, schainId).should.be.eventually.true;
 
-                await schainsFunctionality.deleteSchain(
+                await schains.deleteSchain(
                     holder,
                     "d2",
                     {from: owner});
@@ -476,28 +476,28 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
             });
 
             it("should create Medium schain", async () => {
-                const deposit = await schainsFunctionality.getSchainPrice(3, 5);
+                const deposit = await schains.getSchainPrice(3, 5);
 
-                await schainsFunctionality.addSchain(
+                await schains.addSchain(
                     holder,
                     deposit,
                     web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 3, 0, "d2"]),
                     {from: owner});
 
-                const schains = await schainsInternal.getSchains();
-                schains.length.should.be.equal(1);
+                const sChains = await schainsInternal.getSchains();
+                sChains.length.should.be.equal(1);
             });
 
             it("should not create another Medium schain", async () => {
-                const deposit = await schainsFunctionality.getSchainPrice(3, 5);
+                const deposit = await schains.getSchainPrice(3, 5);
 
-                await schainsFunctionality.addSchain(
+                await schains.addSchain(
                     holder,
                     deposit,
                     web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 3, 0, "d2"]),
                     {from: owner});
 
-                await schainsFunctionality.addSchain(
+                await schains.addSchain(
                     holder,
                     deposit,
                     web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 3, 0, "d3"]),
@@ -526,17 +526,17 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
             });
 
             it("successfully", async () => {
-                const deposit = await schainsFunctionality.getSchainPrice(1, 5);
+                const deposit = await schains.getSchainPrice(1, 5);
 
-                await schainsFunctionality.addSchain(
+                await schains.addSchain(
                     holder,
                     deposit,
                     web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 1, 0, "d2"]),
                     {from: owner});
 
-                const schains = await schainsInternal.getSchains();
-                schains.length.should.be.equal(1);
-                const schainId = schains[0];
+                const sChains = await schainsInternal.getSchains();
+                sChains.length.should.be.equal(1);
+                const schainId = sChains[0];
 
                 await schainsInternal.isOwnerAddress(holder, schainId).should.be.eventually.true;
 
@@ -566,8 +566,8 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
             describe("when schain is created", async () => {
 
                 beforeEach(async () => {
-                    const deposit = await schainsFunctionality.getSchainPrice(1, 5);
-                    await schainsFunctionality.addSchain(
+                    const deposit = await schains.getSchainPrice(1, 5);
+                    await schains.addSchain(
                         holder,
                         deposit,
                         web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 1, 0, "D2"]),
@@ -575,8 +575,8 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                 });
 
                 it("should failed when create another schain with the same name", async () => {
-                    const deposit = await schainsFunctionality.getSchainPrice(1, 5);
-                    await schainsFunctionality.addSchain(
+                    const deposit = await schains.getSchainPrice(1, 5);
+                    await schains.addSchain(
                         holder,
                         deposit,
                         web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 1, 0, "D2"]),
@@ -585,7 +585,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                 });
 
                 it("should be able to delete schain", async () => {
-                    await schainsFunctionality.deleteSchain(
+                    await schains.deleteSchain(
                         holder,
                         "D2",
                         {from: owner});
@@ -593,7 +593,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                 });
 
                 it("should fail on deleting schain if owner is wrong", async () => {
-                    await schainsFunctionality.deleteSchain(
+                    await schains.deleteSchain(
                         validator,
                         "D2",
                         {from: owner})
@@ -605,8 +605,8 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
             describe("when test schain is created", async () => {
 
                 beforeEach(async () => {
-                    const deposit = await schainsFunctionality.getSchainPrice(4, 5);
-                    await schainsFunctionality.addSchain(
+                    const deposit = await schains.getSchainPrice(4, 5);
+                    await schains.addSchain(
                         holder,
                         deposit,
                         web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, "D2"]),
@@ -614,8 +614,8 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                 });
 
                 it("should failed when create another schain with the same name", async () => {
-                    const deposit = await schainsFunctionality.getSchainPrice(4, 5);
-                    await schainsFunctionality.addSchain(
+                    const deposit = await schains.getSchainPrice(4, 5);
+                    await schains.addSchain(
                         holder,
                         deposit,
                         web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, "D2"]),
@@ -625,7 +625,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
 
                 it("should be able to delete schain", async () => {
 
-                    await schainsFunctionality.deleteSchain(
+                    await schains.deleteSchain(
                         holder,
                         "D2",
                         {from: owner});
@@ -634,7 +634,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
 
                 it("should fail on deleting schain if owner is wrong", async () => {
 
-                    await schainsFunctionality.deleteSchain(
+                    await schains.deleteSchain(
                         validator,
                         "D2",
                         {from: owner})
@@ -648,42 +648,42 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
 
     describe("should calculate schain price", async () => {
         it("of tiny schain", async () => {
-            const price = web3.utils.toBN(await schainsFunctionality.getSchainPrice(1, 5));
+            const price = web3.utils.toBN(await schains.getSchainPrice(1, 5));
             const correctPrice = web3.utils.toBN(3952894150981);
 
             expect(price.eq(correctPrice)).to.be.true;
         });
 
         it("of small schain", async () => {
-            const price = web3.utils.toBN(await schainsFunctionality.getSchainPrice(2, 5));
+            const price = web3.utils.toBN(await schains.getSchainPrice(2, 5));
             const correctPrice = web3.utils.toBN(63246306415705);
 
             expect(price.eq(correctPrice)).to.be.true;
         });
 
         it("of medium schain", async () => {
-            const price = web3.utils.toBN(await schainsFunctionality.getSchainPrice(3, 5));
+            const price = web3.utils.toBN(await schains.getSchainPrice(3, 5));
             const correctPrice = web3.utils.toBN(505970451325642);
 
             expect(price.eq(correctPrice)).to.be.true;
         });
 
         it("of test schain", async () => {
-            const price = web3.utils.toBN(await schainsFunctionality.getSchainPrice(4, 5));
+            const price = web3.utils.toBN(await schains.getSchainPrice(4, 5));
             const correctPrice = web3.utils.toBN(1000000000000000000);
 
             expect(price.eq(correctPrice)).to.be.true;
         });
 
         it("of medium test schain", async () => {
-            const price = web3.utils.toBN(await schainsFunctionality.getSchainPrice(5, 5));
+            const price = web3.utils.toBN(await schains.getSchainPrice(5, 5));
             const correctPrice = web3.utils.toBN(31623153207852);
 
             expect(price.eq(correctPrice)).to.be.true;
         });
 
         it("should revert on wrong schain type", async () => {
-            await schainsFunctionality.getSchainPrice(6, 5).should.be.eventually.rejectedWith("Bad schain type");
+            await schains.getSchainPrice(6, 5).should.be.eventually.rejectedWith("Bad schain type");
         });
     });
 
@@ -693,7 +693,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
         const LEFT = 2;
         let nodeStatus;
         beforeEach(async () => {
-            const deposit = await schainsFunctionality.getSchainPrice(5, 5);
+            const deposit = await schains.getSchainPrice(5, 5);
             const nodesCount = 4;
             for (const index of Array.from(Array(nodesCount).keys())) {
                 const hexIndex = ("0" + index.toString(16)).slice(-2);
@@ -708,7 +708,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                         name: "D2-" + hexIndex
                     });
             }
-            await schainsFunctionality.addSchain(
+            await schains.addSchain(
                 holder,
                 deposit,
                 web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d2"]),
@@ -721,7 +721,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                 0,
             );
 
-            await schainsFunctionality.addSchain(
+            await schains.addSchain(
                 holder,
                 deposit,
                 web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d3"]),
@@ -847,7 +847,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
         });
 
         it("should rotate on schain that previously was deleted", async () => {
-            const deposit = await schainsFunctionality.getSchainPrice(5, 5);
+            const deposit = await schains.getSchainPrice(5, 5);
             await skaleManager.nodeExit(0, {from: validator});
             await schainsInternal.setPublicKey(
                 web3.utils.soliditySha3("d3"),
@@ -866,7 +866,7 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
             );
             await skaleManager.deleteSchainByRoot("d2", {from: owner});
             await skaleManager.deleteSchainByRoot("d3", {from: owner});
-            await schainsFunctionality.addSchain(
+            await schains.addSchain(
                 holder,
                 deposit,
                 web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d2"]),

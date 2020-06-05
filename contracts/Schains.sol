@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /*
-    SchainsFunctionality.sol - SKALE Manager
+    Schains.sol - SKALE Manager
     Copyright (C) 2018-Present SKALE Labs
     @author Artem Payvin
 
@@ -23,9 +23,6 @@ pragma solidity 0.6.6;
 pragma experimental ABIEncoderV2;
 
 import "./Permissions.sol";
-import "./interfaces/IGroupsData.sol";
-import "./interfaces/ISchainsFunctionality.sol";
-import "./interfaces/ISchainsFunctionalityInternal.sol";
 import "./SchainsInternal.sol";
 import "./ConstantsHolder.sol";
 
@@ -47,9 +44,9 @@ interface ISkaleVerifierG {
 
 
 /**
- * @title SchainsFunctionality - contract contains all functionality logic to manage Schains
+ * @title Schains - contract contains all functionality logic to manage Schains
  */
-contract SchainsFunctionality is Permissions, ISchainsFunctionality {
+contract Schains is Permissions {
     using StringUtils for string;
     using StringUtils for uint;
 
@@ -110,7 +107,7 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
      * @param deposit - received amoung of SKL
      * @param data - Schain's data
      */
-    function addSchain(address from, uint deposit, bytes calldata data) external override allow(_executorName) {
+    function addSchain(address from, uint deposit, bytes calldata data) external allow(_executorName) {
         uint numberOfNodes;
         uint8 partOfNode;
 
@@ -157,7 +154,7 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
      * @param from - owner of Schain
      * @param name - Schain name
      */
-    function deleteSchain(address from, string calldata name) external override allow(_executorName) {
+    function deleteSchain(address from, string calldata name) external allow(_executorName) {
         bytes32 schainId = keccak256(abi.encodePacked(name));
         address dataAddress = _contractManager.getContract(_dataName);
         require(
@@ -168,7 +165,7 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
         address nodesAddress = _contractManager.getContract("Nodes");
 
         // removes Schain from Nodes
-        uint[] memory nodesInGroup = IGroupsData(dataAddress).getNodesInGroup(schainId);
+        uint[] memory nodesInGroup = Groups(dataAddress).getNodesInGroup(schainId);
         uint8 partOfNode = SchainsInternal(dataAddress).getSchainsPartOfNode(schainId);
         for (uint i = 0; i < nodesInGroup.length; i++) {
             uint schainIndex = schainsInternal.findSchainAtSchainsForNode(
@@ -190,7 +187,7 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
         emit SchainDeleted(from, name, schainId);
     }
 
-    function deleteSchainByRoot(string calldata name) external override allow(_executorName) {
+    function deleteSchainByRoot(string calldata name) external allow(_executorName) {
         bytes32 schainId = keccak256(abi.encodePacked(name));
         address dataAddress = _contractManager.getContract(_dataName);
         SchainsInternal schainsInternal = SchainsInternal(
@@ -198,7 +195,7 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
         require(SchainsInternal(dataAddress).isSchainExist(schainId), "Schain does not exist");
 
         // removes Schain from Nodes
-        uint[] memory nodesInGroup = IGroupsData(dataAddress).getNodesInGroup(schainId);
+        uint[] memory nodesInGroup = Groups(dataAddress).getNodesInGroup(schainId);
         uint8 partOfNode = SchainsInternal(dataAddress).getSchainsPartOfNode(schainId);
         for (uint i = 0; i < nodesInGroup.length; i++) {
             uint schainIndex = schainsInternal.findSchainAtSchainsForNode(
@@ -219,7 +216,7 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
         emit SchainDeleted(from, name, schainId);
     }
 
-    function exitFromSchain(uint nodeIndex) external override allow(_executorName) returns (bool) {
+    function exitFromSchain(uint nodeIndex) external allow(_executorName) returns (bool) {
         SchainsInternal schainsInternal = SchainsInternal(_contractManager.getContract(_dataName));
         bytes32 schainId = schainsInternal.getActiveSchain(nodeIndex);
         require(_checkRotation(schainId), "No any free Nodes for rotating");
@@ -301,7 +298,6 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
         bytes32 schainId
     )
         public
-        override
         allowTwo("SkaleDKG", "SkaleManager")
         returns (uint)
     {

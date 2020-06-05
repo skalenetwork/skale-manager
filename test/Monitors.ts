@@ -15,7 +15,7 @@ import { deployNodes } from "./tools/deploy/nodes";
 chai.should();
 chai.use((chaiAsPromised));
 
-contract("MonitorsFunctionality", ([owner, validator]) => {
+contract("Monitors", ([owner, validator]) => {
   let contractManager: ContractManagerInstance;
   let constantsHolder: ConstantsHolderInstance;
   let monitors: MonitorsInstance;

@@ -3,7 +3,7 @@ import * as chaiAsPromised from "chai-as-promised";
 import { ContractManagerInstance,
          NodesInstance,
          SchainsInternalInstance,
-         SchainsFunctionalityInstance,
+         SchainsInstance,
          SkaleVerifierInstance,
          ValidatorServiceInstance } from "../types/truffle-contracts";
 
@@ -11,7 +11,7 @@ import { deployContractManager } from "./tools/deploy/contractManager";
 import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
 import { deployNodes } from "./tools/deploy/nodes";
 import { deploySchainsInternal } from "./tools/deploy/schainsInternal";
-import { deploySchainsFunctionality } from "./tools/deploy/schainsFunctionality";
+import { deploySchains } from "./tools/deploy/schains";
 import { deploySkaleVerifier } from "./tools/deploy/skaleVerifier";
 chai.should();
 chai.use(chaiAsPromised);
@@ -19,7 +19,7 @@ chai.use(chaiAsPromised);
 contract("SkaleVerifier", ([validator1, owner, developer, hacker]) => {
     let contractManager: ContractManagerInstance;
     let schainsInternal: SchainsInternalInstance;
-    let schainsFunctionality: SchainsFunctionalityInstance;
+    let schains: SchainsInstance;
     let skaleVerifier: SkaleVerifierInstance;
     let validatorService: ValidatorServiceInstance;
     let nodes: NodesInstance;
@@ -30,7 +30,7 @@ contract("SkaleVerifier", ([validator1, owner, developer, hacker]) => {
         nodes = await deployNodes(contractManager);
         validatorService = await deployValidatorService(contractManager);
         schainsInternal = await deploySchainsInternal(contractManager);
-        schainsFunctionality = await deploySchainsFunctionality(contractManager);
+        schains = await deploySchains(contractManager);
         skaleVerifier = await deploySkaleVerifier(contractManager);
 
         await validatorService.registerValidator("D2", "D2 is even", 0, 0, {from: validator1});
@@ -155,9 +155,9 @@ contract("SkaleVerifier", ([validator1, owner, developer, hacker]) => {
                     {from: validator1});
             }
 
-            const deposit = await schainsFunctionality.getSchainPrice(4, 5);
+            const deposit = await schains.getSchainPrice(4, 5);
 
-            await schainsFunctionality.addSchain(
+            await schains.addSchain(
                 validator1,
                 deposit,
                 web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, "Bob"]),
