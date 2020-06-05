@@ -19,7 +19,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.6;
+pragma solidity 0.6.8;
 pragma experimental ABIEncoderV2;
 
 import "./Permissions.sol";
@@ -86,7 +86,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
         uint16 nonce,
         bytes4 ip,
         bytes4 publicIp,
-        bytes calldata publicKey,
+        bytes32[2] calldata publicKey,
         string calldata name)
         external
     {

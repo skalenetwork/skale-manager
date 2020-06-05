@@ -1,4 +1,4 @@
-pragma solidity 0.6.6;
+pragma solidity 0.6.8;
 
 interface ISkaleDKG {
     function openChannel(bytes32 groupIndex) external;
