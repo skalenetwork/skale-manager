@@ -89,11 +89,6 @@ contract SkaleDKG is Permissions {
         bytes32 share;
     }
 
-    struct MultipliedShare {
-        Complex x;
-        Complex y;
-    }
-
     uint constant private _P = 21888242871839275222246405745257275088696311157297823662689037894645226208583;
 
     uint constant private _G2A = 10857046999023057135944570762232829481370756359578518086990519993285655852781;
@@ -232,7 +227,7 @@ contract SkaleDKG is Permissions {
         bytes32 groupIndex,
         uint fromNodeIndex,
         uint secretNumber,
-        MultipliedShare calldata multipliedShare
+        G2Point calldata multipliedShare
     )
         external
         correctGroup(groupIndex)
@@ -419,7 +414,7 @@ contract SkaleDKG is Permissions {
         bytes32 groupIndex,
         uint fromNodeIndex,
         uint secretNumber,
-        MultipliedShare memory multipliedShare
+        G2Point memory multipliedShare
     )
         internal
         view
@@ -745,7 +740,7 @@ contract SkaleDKG is Permissions {
     function _checkDKGVerification(
         Complex memory valX,
         Complex memory valY,
-        MultipliedShare memory multipliedShare)
+        G2Point memory multipliedShare)
         internal pure returns (bool)
     {
         Complex memory tmpX;
@@ -754,7 +749,7 @@ contract SkaleDKG is Permissions {
         return valX.a == tmpX.b && valX.b == tmpX.a && valY.a == tmpY.b && valY.b == tmpY.a;
     }
 
-    function _checkCorrectMultipliedShare(MultipliedShare memory multipliedShare, uint secret)
+    function _checkCorrectMultipliedShare(G2Point memory multipliedShare, uint secret)
         internal view returns (bool)
     {
         Complex memory tmpX;
