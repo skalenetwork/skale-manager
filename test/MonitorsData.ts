@@ -1,9 +1,10 @@
 import BigNumber from "bignumber.js";
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
-import { ContractManagerInstance, MonitorsDataInstance } from "../types/truffle-contracts";
+import { ContractManagerInstance, MonitorsDataInstance, NodesInstance } from "../types/truffle-contracts";
 import { deployContractManager } from "./tools/deploy/contractManager";
 import { deployMonitorsData } from "./tools/deploy/monitorsData";
+import { deployNodes } from "./tools/deploy/nodes";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -11,21 +12,40 @@ chai.use(chaiAsPromised);
 contract("MonitorsData", ([owner, user]) => {
     let monitorsData: MonitorsDataInstance;
     let contractManager: ContractManagerInstance;
+    let nodes: NodesInstance;
 
     beforeEach(async () => {
         contractManager = await deployContractManager();
         monitorsData = await deployMonitorsData(contractManager);
+        nodes = await deployNodes(contractManager);
+
+        await nodes.addNode(
+            owner,
+            "D2",
+            "0x00000003",
+            "0x00000003",
+            5,
+            ["0x1122334455667788990011223344556677889900112233445566778899001122",
+            "0x1122334455667788990011223344556677889900112233445566778899001122"],
+            5);
     });
 
     it("should add validated node to validated array by valid monitor", async () => {
         const monitorIndex = web3.utils.soliditySha3("1");
-        const data = web3.utils.soliditySha3("2");
-        await monitorsData.addCheckedNode(monitorIndex, data, {from: user})
+        const node = {
+            nodeIndex: 0,
+            time: 2
+        };
+        await monitorsData.addCheckedNode(monitorIndex, node, {from: user})
         .should.be.rejectedWith("Message sender is invalid");
-        await monitorsData.addCheckedNode(monitorIndex, data, {from: owner});
+        await monitorsData.addCheckedNode(monitorIndex, node, {from: owner});
         const validatedArray = await monitorsData.getCheckedArray(monitorIndex);
         validatedArray.length.should.be.equal(1);
-        validatedArray.should.be.deep.equal([data]);
+        validatedArray.forEach((checkedNode) => {
+            checkedNode.nodeIndex.should.be.equal(node.nodeIndex.toString(10));
+            checkedNode.time.should.be.equal(node.time.toString(10));
+            checkedNode.ip.should.be.equal("0x00000003");
+        });
     });
 
     it("should add correct verdict only by correct monitor", async () => {
@@ -46,7 +66,10 @@ contract("MonitorsData", ([owner, user]) => {
     it("should remove validated node by valid monitor", async () => {
         const monitorIndex = web3.utils.soliditySha3("1");
         const nodeIndex = 0;
-        const data = web3.utils.soliditySha3("2");
+        const data = {
+            nodeIndex: 0,
+            time: 2
+        };
         await monitorsData.addCheckedNode(monitorIndex, data, {from: owner});
         const validatedArray = await monitorsData.getCheckedArray(monitorIndex);
         validatedArray.length.should.be.equal(1);
@@ -81,11 +104,29 @@ contract("MonitorsData", ([owner, user]) => {
         const monitorIndex = web3.utils.soliditySha3("1");
         const validatedArray = await monitorsData.getCheckedArray(monitorIndex);
         validatedArray.length.should.be.equal(0);
-        const data1 = web3.utils.soliditySha3("2");
+        const data1 = {
+            nodeIndex: 0,
+            time: 2,
+        };;
         await monitorsData.addCheckedNode(monitorIndex, data1, {from: owner});
         const validatedArray1 = await monitorsData.getCheckedArray(monitorIndex);
         validatedArray1.length.should.be.equal(1);
-        const data2 = web3.utils.soliditySha3("3");
+
+        // create node with id 1
+        await nodes.addNode(
+            owner,
+            "D2",
+            "0x00000006",
+            "0x00000006",
+            5,
+            ["0x1122334455667788990011223344556677889900112233445566778899001122",
+            "0x1122334455667788990011223344556677889900112233445566778899001122"],
+            5);
+
+        const data2 = {
+            nodeIndex: 1,
+            time: 5
+        };;
         await monitorsData.addCheckedNode(monitorIndex, data2, {from: owner});
         const validatedArray2 = await monitorsData.getCheckedArray(monitorIndex);
         validatedArray2.length.should.be.equal(2);

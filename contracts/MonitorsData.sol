@@ -19,9 +19,11 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.6;
+pragma solidity 0.6.8;
+pragma experimental ABIEncoderV2;
 
 import "./GroupsData.sol";
+import "./Nodes.sol";
 
 
 contract MonitorsData is GroupsData {
@@ -32,29 +34,22 @@ contract MonitorsData is GroupsData {
         uint32 latency;
     }
 
-    mapping (bytes32 => bytes32[]) public checkedNodes;
+    struct CheckedNode {
+        uint nodeIndex;
+        uint32 time;
+    }
+
+    struct CheckedNodeWithIp {
+        uint nodeIndex;
+        uint32 time;
+        bytes4 ip;
+    }
+
+    mapping (bytes32 => CheckedNode[]) public checkedNodes;
     mapping (bytes32 => uint[][]) public verdicts;
 
     mapping (bytes32 => uint) public lastVerdictBlocks;
     mapping (bytes32 => uint) public lastBountyBlocks;
-
-    /**
-     *  Add checked node or update existing one if it is already exits
-     */
-    function addCheckedNode(bytes32 monitorIndex, bytes32 data) external allow(_executorName) {
-        uint indexLength = 14;
-        require(data.length >= indexLength, "data is too small");
-        for (uint i = 0; i < checkedNodes[monitorIndex].length; ++i) {
-            require(checkedNodes[monitorIndex][i].length >= indexLength, "checked nodes data is too small");
-            uint shift = (32 - indexLength).mul(8);
-            bool equalIndex = checkedNodes[monitorIndex][i] >> shift == data >> shift;
-            if (equalIndex) {
-                checkedNodes[monitorIndex][i] = data;
-                return;
-            }
-        }
-        checkedNodes[monitorIndex].push(data);
-    }
 
     function addVerdict(bytes32 monitorIndex, uint32 downtime, uint32 latency) external allow(_executorName) {
         verdicts[monitorIndex].push([uint(downtime), uint(latency)]);
@@ -87,16 +82,22 @@ contract MonitorsData is GroupsData {
         lastVerdictBlocks[keccak256(abi.encodePacked(nodeIndex))] = block.number;
     }
 
-    function getLastReceivedVerdictBlock(uint nodeIndex) external view returns (uint) {
-        return lastVerdictBlocks[keccak256(abi.encodePacked(nodeIndex))];
+    function removeAfterMergingMonitors() external {
+        addCheckedNode(0, CheckedNode(0, 0));
+        // TODO: This function is a workaround to fix "InternalCompilerError: Structs in calldata not supported." error
+        // TODO: We will remove it after merging MonitorsFunctionality and MonitorsData
     }
 
-    function getLastBountyBlock(uint nodeIndex) external view returns (uint) {
-        return lastBountyBlocks[keccak256(abi.encodePacked(nodeIndex))];
-    }
-
-    function getCheckedArray(bytes32 monitorIndex) external view returns (bytes32[] memory) {
-        return checkedNodes[monitorIndex];
+    function getCheckedArray(bytes32 monitorIndex) external view
+    returns (CheckedNodeWithIp[] memory checkedNodesWithIp)
+    {
+        Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
+        checkedNodesWithIp = new CheckedNodeWithIp[](checkedNodes[monitorIndex].length);
+        for (uint i = 0; i < checkedNodes[monitorIndex].length; ++i) {
+            checkedNodesWithIp[i].nodeIndex = checkedNodes[monitorIndex][i].nodeIndex;
+            checkedNodesWithIp[i].time = checkedNodes[monitorIndex][i].time;
+            checkedNodesWithIp[i].ip = nodes.getNodeIP(checkedNodes[monitorIndex][i].nodeIndex);
+        }
     }
 
     function getCheckedArrayLength(bytes32 monitorIndex) external view returns (uint) {
@@ -107,7 +108,28 @@ contract MonitorsData is GroupsData {
         return verdicts[monitorIndex].length;
     }
 
+    function getLastReceivedVerdictBlock(uint nodeIndex) external view returns (uint) {
+        return lastVerdictBlocks[keccak256(abi.encodePacked(nodeIndex))];
+    }
+
+    function getLastBountyBlock(uint nodeIndex) external view returns (uint) {
+        return lastBountyBlocks[keccak256(abi.encodePacked(nodeIndex))];
+    }
+
     function initialize(address newContractsAddress) public override initializer {
         GroupsData.initialize("MonitorsFunctionality", newContractsAddress);
+    }
+
+    /**
+     *  Add checked node or update existing one if it is already exits
+     */
+    function addCheckedNode(bytes32 monitorIndex, CheckedNode memory checkedNode) public allow(_executorName) {
+        for (uint i = 0; i < checkedNodes[monitorIndex].length; ++i) {
+            if (checkedNodes[monitorIndex][i].nodeIndex == checkedNode.nodeIndex) {
+                checkedNodes[monitorIndex][i] = checkedNode;
+                return;
+            }
+        }
+        checkedNodes[monitorIndex].push(checkedNode);
     }
 }

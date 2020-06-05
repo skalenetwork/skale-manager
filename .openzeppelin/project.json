@@ -38,7 +38,7 @@
         "runs": "200"
       }
     },
-    "solcVersion": "0.6.6"
+    "solcVersion": "0.6.8"
   },
   "telemetryOptIn": true
 }
