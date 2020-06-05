@@ -34,6 +34,7 @@ import "./TokenLaunchLocker.sol";
 import "./TokenState.sol";
 import "./ValidatorService.sol";
 import "./PartialDifferences.sol";
+import "./Vesting.sol";
 
 
 contract DelegationController is Permissions, ILocker {
@@ -192,6 +193,7 @@ contract DelegationController is Permissions, ILocker {
             _contractManager.getContract("DelegationPeriodManager"));
         SkaleToken skaleToken = SkaleToken(_contractManager.getContract("SkaleToken"));
         TokenState tokenState = TokenState(_contractManager.getContract("TokenState"));
+        Vesting vesting = Vesting(_contractManager.getContract("Vesting"));
 
         require(
             validatorService.checkMinimumDelegation(validatorId, amount),
@@ -215,8 +217,9 @@ contract DelegationController is Permissions, ILocker {
 
         // check that there is enough money
         uint holderBalance = skaleToken.balanceOf(msg.sender);
+        uint vestingBalance = vesting.getBalance(msg.sender);
         uint forbiddenForDelegation = tokenState.getAndUpdateForbiddenForDelegationAmount(msg.sender);
-        require(holderBalance >= forbiddenForDelegation, "Delegator does not have enough tokens to delegate");
+        require(holderBalance + vestingBalance >= forbiddenForDelegation, "Delegator does not have enough tokens to delegate");
 
         emit DelegationProposed(delegationId);
 
