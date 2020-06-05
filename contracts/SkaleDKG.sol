@@ -50,7 +50,7 @@ interface IDecryption {
 
 contract SkaleDKG is Permissions {
 
-    struct Complex {
+    struct Fp2Point {
         uint a;
         uint b;
     }
@@ -61,8 +61,8 @@ contract SkaleDKG is Permissions {
     }
 
     struct G2Point {
-        Complex x;
-        Complex y;
+        Fp2Point x;
+        Fp2Point y;
     }
 
     struct Channel {
@@ -423,10 +423,10 @@ contract SkaleDKG is Permissions {
         uint index = _findNode(groupIndex, fromNodeIndex);
         uint secret = _decryptMessage(groupIndex, secretNumber);
         G2Point[] memory verificationVector = _data[groupIndex][index].verificationVector;
-        Complex memory valX = Complex({a: 0, b: 0});
-        Complex memory valY = Complex({a: 1, b: 0});
-        Complex memory tmpX = Complex({a: 0, b: 0});
-        Complex memory tmpY = Complex({a: 1, b: 0});
+        Fp2Point memory valX = Fp2Point({a: 0, b: 0});
+        Fp2Point memory valY = Fp2Point({a: 1, b: 0});
+        Fp2Point memory tmpX = Fp2Point({a: 0, b: 0});
+        Fp2Point memory tmpY = Fp2Point({a: 1, b: 0});
         for (uint i = 0; i < verificationVector.length; i++) {
             (tmpX, tmpY) = _mulG2(
                 Precompiled.bigModExp(index.add(1), i, _P),
@@ -477,10 +477,10 @@ contract SkaleDKG is Permissions {
     )
         internal
     {
-        require(_isG2(Complex({ a: x1, b: y1 }), Complex({ a: x2, b: y2 })), "Incorrect G2 point");
+        require(_isG2(Fp2Point({ a: x1, b: y1 }), Fp2Point({ a: x2, b: y2 })), "Incorrect G2 point");
         (channels[groupIndex].publicKey.x, channels[groupIndex].publicKey.y) = _addG2(
-            Complex({ a: x1, b: y1 }),
-            Complex({ a: x2, b: y2 }),
+            Fp2Point({ a: x1, b: y1 }),
+            Fp2Point({ a: x2, b: y2 }),
             channels[groupIndex].publicKey.x,
             channels[groupIndex].publicKey.y
         );
@@ -545,18 +545,18 @@ contract SkaleDKG is Permissions {
         return nodes.isNodeExist(from, nodeIndex);
     }
 
-    // Complex operations
+    // Fp2Point operations
 
-    function _addFp2(Complex memory value1, Complex memory value2) internal pure returns (Complex memory) {
-        return Complex({ a: addmod(value1.a, value2.a, _P), b: addmod(value1.b, value2.b, _P) });
+    function _addFp2(Fp2Point memory value1, Fp2Point memory value2) internal pure returns (Fp2Point memory) {
+        return Fp2Point({ a: addmod(value1.a, value2.a, _P), b: addmod(value1.b, value2.b, _P) });
     }
 
-    function _scalarMulFp2(uint scalar, Complex memory value) internal pure returns (Complex memory) {
-        return Complex({ a: mulmod(scalar, value.a, _P), b: mulmod(scalar, value.b, _P) });
+    function _scalarMulFp2(uint scalar, Fp2Point memory value) internal pure returns (Fp2Point memory) {
+        return Fp2Point({ a: mulmod(scalar, value.a, _P), b: mulmod(scalar, value.b, _P) });
     }
 
-    function _minusFp2(Complex memory diminished, Complex memory subtracted) internal pure
-        returns (Complex memory difference)
+    function _minusFp2(Fp2Point memory diminished, Fp2Point memory subtracted) internal pure
+        returns (Fp2Point memory difference)
     {
         if (diminished.a >= subtracted.a) {
             difference.a = addmod(diminished.a, _P.sub(subtracted.a), _P);
@@ -570,8 +570,8 @@ contract SkaleDKG is Permissions {
         }
     }
 
-    function _mulFp2(Complex memory value1, Complex memory value2) internal pure returns (Complex memory result) {
-        Complex memory point = Complex({
+    function _mulFp2(Fp2Point memory value1, Fp2Point memory value2) internal pure returns (Fp2Point memory result) {
+        Fp2Point memory point = Fp2Point({
             a: mulmod(value1.a, value2.a, _P),
             b: mulmod(value1.b, value2.b, _P)});
         result.a = addmod(
@@ -587,13 +587,13 @@ contract SkaleDKG is Permissions {
             _P);
     }
 
-    function _squaredFp2(Complex memory value) internal pure returns (Complex memory) {
+    function _squaredFp2(Fp2Point memory value) internal pure returns (Fp2Point memory) {
         uint ab = mulmod(value.a, value.b, _P);
         uint mult = mulmod(addmod(value.a, value.b, _P), addmod(value.a, mulmod(_P - 1, value.b, _P), _P), _P);
-        return Complex({ a: mult, b: addmod(ab, ab, _P) });
+        return Fp2Point({ a: mult, b: addmod(ab, ab, _P) });
     }
 
-    function _inverseFp2(Complex memory value) internal view returns (Complex memory result) {
+    function _inverseFp2(Fp2Point memory value) internal view returns (Fp2Point memory result) {
         uint t0 = mulmod(value.a, value.a, _P);
         uint t1 = mulmod(value.b, value.b, _P);
         uint t2 = mulmod(_P - 1, t1, _P);
@@ -607,35 +607,35 @@ contract SkaleDKG is Permissions {
         result.b = _P.sub(mulmod(value.b, t3, _P));
     }
 
-    // End of Complex operations
+    // End of Fp2Point operations
 
     function _isG1(uint x, uint y) internal pure returns (bool) {
         return mulmod(y, y, _P) == addmod(mulmod(mulmod(x, x, _P), x, _P), 3, _P);
     }
 
-    function _isG2(Complex memory x, Complex memory y) internal pure returns (bool) {
+    function _isG2(Fp2Point memory x, Fp2Point memory y) internal pure returns (bool) {
         if (_isG2Zero(x, y)) {
             return true;
         }
-        Complex memory squaredY = _squaredFp2(y);
-        Complex memory res = _minusFp2(
+        Fp2Point memory squaredY = _squaredFp2(y);
+        Fp2Point memory res = _minusFp2(
             _minusFp2(squaredY, _mulFp2(_squaredFp2(x), x)),
-            Complex({a: _TWISTBX, b: _TWISTBY}));
+            Fp2Point({a: _TWISTBX, b: _TWISTBY}));
         return res.a == 0 && res.b == 0;
     }
 
-    function _isG2Zero(Complex memory x, Complex memory y) internal pure returns (bool) {
+    function _isG2Zero(Fp2Point memory x, Fp2Point memory y) internal pure returns (bool) {
         return x.a == 0 && x.b == 0 && y.a == 1 && y.b == 0;
     }
 
-    function _doubleG2(Complex memory x1, Complex memory y1) internal view
-    returns (Complex memory x3, Complex memory y3)
+    function _doubleG2(Fp2Point memory x1, Fp2Point memory y1) internal view
+    returns (Fp2Point memory x3, Fp2Point memory y3)
     {
         if (_isG2Zero(x1, y1)) {
             x3 = x1;
             y3 = y1;
         } else {
-            Complex memory s = _mulFp2(_scalarMulFp2(3, _squaredFp2(x1)), _inverseFp2(_scalarMulFp2(2, y1)));
+            Fp2Point memory s = _mulFp2(_scalarMulFp2(3, _squaredFp2(x1)), _inverseFp2(_scalarMulFp2(2, y1)));
             x3 = _minusFp2(_squaredFp2(s), _scalarMulFp2(2, x1));
             y3 = _addFp2(y1, _mulFp2(s, _minusFp2(x3, x1)));
             y3.a = _P.sub(y3.a % _P);
@@ -643,27 +643,27 @@ contract SkaleDKG is Permissions {
         }
     }
 
-    function _u1(Complex memory x1) internal pure returns (Complex memory) {
-        return _mulFp2(x1, _squaredFp2(Complex({ a: 1, b: 0 })));
+    function _u1(Fp2Point memory x1) internal pure returns (Fp2Point memory) {
+        return _mulFp2(x1, _squaredFp2(Fp2Point({ a: 1, b: 0 })));
     }
 
-    function _u2(Complex memory x2) internal pure returns (Complex memory) {
-        return _mulFp2(x2, _squaredFp2(Complex({ a: 1, b: 0 })));
+    function _u2(Fp2Point memory x2) internal pure returns (Fp2Point memory) {
+        return _mulFp2(x2, _squaredFp2(Fp2Point({ a: 1, b: 0 })));
     }
 
-    function _s1(Complex memory y1) internal pure returns (Complex memory) {
-        return _mulFp2(y1, _mulFp2(Complex({ a: 1, b: 0 }), _squaredFp2(Complex({ a: 1, b: 0 }))));
+    function _s1(Fp2Point memory y1) internal pure returns (Fp2Point memory) {
+        return _mulFp2(y1, _mulFp2(Fp2Point({ a: 1, b: 0 }), _squaredFp2(Fp2Point({ a: 1, b: 0 }))));
     }
 
-    function _s2(Complex memory y2) internal pure returns (Complex memory) {
-        return _mulFp2(y2, _mulFp2(Complex({ a: 1, b: 0 }), _squaredFp2(Complex({ a: 1, b: 0 }))));
+    function _s2(Fp2Point memory y2) internal pure returns (Fp2Point memory) {
+        return _mulFp2(y2, _mulFp2(Fp2Point({ a: 1, b: 0 }), _squaredFp2(Fp2Point({ a: 1, b: 0 }))));
     }
 
     function _isEqual(
-        Complex memory u1Value,
-        Complex memory u2Value,
-        Complex memory s1Value,
-        Complex memory s2Value
+        Fp2Point memory u1Value,
+        Fp2Point memory u2Value,
+        Fp2Point memory s1Value,
+        Fp2Point memory s2Value
     )
         internal
         pure
@@ -673,16 +673,16 @@ contract SkaleDKG is Permissions {
     }
 
     function _addG2(
-        Complex memory x1,
-        Complex memory y1,
-        Complex memory x2,
-        Complex memory y2
+        Fp2Point memory x1,
+        Fp2Point memory y1,
+        Fp2Point memory x2,
+        Fp2Point memory y2
     )
         internal
         view
         returns (
-            Complex memory x3,
-            Complex memory y3
+            Fp2Point memory x3,
+            Fp2Point memory y3
         )
     {
         if (_isG2Zero(x1, y1)) {
@@ -702,7 +702,7 @@ contract SkaleDKG is Permissions {
             (x3, y3) = _doubleG2(x1, y1);
         }
 
-        Complex memory s = _mulFp2(_minusFp2(y2, y1), _inverseFp2(_minusFp2(x2, x1)));
+        Fp2Point memory s = _mulFp2(_minusFp2(y2, y1), _inverseFp2(_minusFp2(x2, x1)));
         x3 = _minusFp2(_squaredFp2(s), _addFp2(x1, x2));
         y3 = _addFp2(y1, _mulFp2(s, _minusFp2(x3, x1)));
         y3.a = _P.sub(y3.a % _P);
@@ -711,18 +711,18 @@ contract SkaleDKG is Permissions {
 
     function _mulG2(
         uint scalar,
-        Complex memory x1,
-        Complex memory y1
+        Fp2Point memory x1,
+        Fp2Point memory y1
     )
         internal
         view
-        returns (Complex memory x, Complex memory y)
+        returns (Fp2Point memory x, Fp2Point memory y)
     {
         uint step = scalar;
-        x = Complex({a: 0, b: 0});
-        y = Complex({a: 1, b: 0});
-        Complex memory tmpX = x1;
-        Complex memory tmpY = y1;
+        x = Fp2Point({a: 0, b: 0});
+        y = Fp2Point({a: 1, b: 0});
+        Fp2Point memory tmpX = x1;
+        Fp2Point memory tmpY = y1;
         while (step > 0) {
             if (step % 2 == 1) {
                 (x, y) = _addG2(
@@ -738,13 +738,13 @@ contract SkaleDKG is Permissions {
     }
 
     function _checkDKGVerification(
-        Complex memory valX,
-        Complex memory valY,
+        Fp2Point memory valX,
+        Fp2Point memory valY,
         G2Point memory multipliedShare)
         internal pure returns (bool)
     {
-        Complex memory tmpX;
-        Complex memory tmpY;
+        Fp2Point memory tmpX;
+        Fp2Point memory tmpY;
         (tmpX, tmpY) = (multipliedShare.x, multipliedShare.y);
         return valX.a == tmpX.b && valX.b == tmpX.a && valY.a == tmpY.b && valY.b == tmpY.a;
     }
@@ -752,8 +752,8 @@ contract SkaleDKG is Permissions {
     function _checkCorrectMultipliedShare(G2Point memory multipliedShare, uint secret)
         internal view returns (bool)
     {
-        Complex memory tmpX;
-        Complex memory tmpY;
+        Fp2Point memory tmpX;
+        Fp2Point memory tmpY;
         (tmpX, tmpY) = (multipliedShare.x, multipliedShare.y);
         uint x;
         uint y;
@@ -765,13 +765,13 @@ contract SkaleDKG is Permissions {
         require(_isG1(_G1A, _G1B), "G1.one not in G1");
         require(_isG1(x, y), "mulShare not in G1");
 
-        require(_isG2(Complex({a: _G2A, b: _G2B}), Complex({a: _G2C, b: _G2D})), "G2.one not in G2");
+        require(_isG2(Fp2Point({a: _G2A, b: _G2B}), Fp2Point({a: _G2C, b: _G2D})), "G2.one not in G2");
         require(_isG2(tmpX, tmpY), "tmp not in G2");
 
         return Precompiled.bn256Pairing(x, y, _G2B, _G2A, _G2D, _G2C, _G1A, _G1B, tmpX.b, tmpX.a, tmpY.b, tmpY.a);
     }
 
-    function _swapCoordinates(Complex memory value) internal pure returns (Complex memory) {
-        return Complex({a: value.b, b: value.a});
+    function _swapCoordinates(Fp2Point memory value) internal pure returns (Fp2Point memory) {
+        return Fp2Point({a: value.b, b: value.a});
     }
 }
