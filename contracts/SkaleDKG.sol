@@ -489,7 +489,7 @@ contract SkaleDKG is Permissions {
     function _isBroadcast(
         bytes32 groupIndex,
         uint nodeIndex,
-        KeyShare[] memory sc,
+        KeyShare[] memory secretKeyContribution,
         G2Point[] memory verificationVector
     )
         internal
@@ -499,14 +499,14 @@ contract SkaleDKG is Permissions {
         channels[groupIndex].broadcasted[index] = true;
         channels[groupIndex].numberOfBroadcasted++;
         
-        for (uint i = 0; i < sc.length; ++i) {
+        for (uint i = 0; i < secretKeyContribution.length; ++i) {
             if (i < _data[groupIndex][index].secretKeyContribution.length) {
-                _data[groupIndex][index].secretKeyContribution[i] = sc[i];    
+                _data[groupIndex][index].secretKeyContribution[i] = secretKeyContribution[i];    
             } else {
-                _data[groupIndex][index].secretKeyContribution.push(sc[i]);
+                _data[groupIndex][index].secretKeyContribution.push(secretKeyContribution[i]);
             }
         }
-        while (_data[groupIndex][index].secretKeyContribution.length > sc.length) {
+        while (_data[groupIndex][index].secretKeyContribution.length > secretKeyContribution.length) {
             _data[groupIndex][index].secretKeyContribution.pop();
         }
         
