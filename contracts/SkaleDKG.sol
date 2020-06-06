@@ -272,7 +272,7 @@ contract SkaleDKG is Permissions {
         }
     }
 
-    function reopenChannel(bytes32 groupIndex) external allow("SchainsData") {
+    function reopenChannel(bytes32 groupIndex) external allow("SchainsInternal") {
         _reopenChannel(groupIndex);
     }
 
