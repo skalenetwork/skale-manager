@@ -164,7 +164,7 @@ contract ConstantsHolder is Permissions {
     }
 
     function setLaunchTimestamp(uint timestamp) external onlyOwner {
-        require(timestamp >= now, "Can't set network launch timestamp to the past");
+        require(now < launchTimestamp, "Can't set network launch timestamp because network is already launched");
         launchTimestamp = timestamp;
     }
 
@@ -190,7 +190,7 @@ contract ConstantsHolder is Permissions {
         checkTime = 120; // Test parameters
         lastTimeUnderloaded = 0;
         lastTimeOverloaded = 0;
-        launchTimestamp = now;
+        launchTimestamp = uint(-1);
         rotationDelay = 12 hours;
         proofOfUseLockUpPeriodDays = 90;
     }
