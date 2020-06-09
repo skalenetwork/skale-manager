@@ -164,6 +164,7 @@ contract ConstantsHolder is Permissions {
     }
 
     function setLaunchTimestamp(uint timestamp) external onlyOwner {
+        require(timestamp >= now, "Can't set network launch timestamp to the past");
         launchTimestamp = timestamp;
     }
 
