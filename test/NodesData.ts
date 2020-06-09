@@ -19,7 +19,9 @@ contract("NodesData", ([owner, validator]) => {
     });
 
     it("should add node", async () => {
-        await nodes.addNode(validator, "d2", "0x7f000001", "0x7f000002", 8545, "0x1122334455", 0);
+        await nodes.addNode(validator, "d2", "0x7f000001", "0x7f000002", 8545,
+        ["0x1122334455667788990011223344556677889900112233445566778899001122",
+        "0x1122334455667788990011223344556677889900112233445566778899001122"], 0);
 
         const node = await nodes.nodes(0);
 
@@ -27,7 +29,9 @@ contract("NodesData", ([owner, validator]) => {
         node[1].should.be.equal("0x7f000001");
         node[2].should.be.equal("0x7f000002");
         node[3].should.be.deep.eq(web3.utils.toBN(8545));
-        node[4].should.be.equal("0x1122334455");
+        (await nodes.getNodePublicKey(0)).should.be.deep.equal(
+            ["0x1122334455667788990011223344556677889900112233445566778899001122",
+             "0x1122334455667788990011223344556677889900112233445566778899001122"]);
         node[7].should.be.deep.eq(web3.utils.toBN(0));
 
         const nodeId = web3.utils.soliditySha3("d2");
@@ -44,7 +48,9 @@ contract("NodesData", ([owner, validator]) => {
 
     describe("when a node is added", async () => {
         beforeEach(async () => {
-            await nodes.addNode(validator, "d2", "0x7f000001", "0x7f000002", 8545, "0x1122334455", 0);
+            await nodes.addNode(validator, "d2", "0x7f000001", "0x7f000002", 8545,
+            ["0x1122334455667788990011223344556677889900112233445566778899001122",
+            "0x1122334455667788990011223344556677889900112233445566778899001122"], 0);
         });
 
         // it("should add a fractional node", async () => {
@@ -93,7 +99,7 @@ contract("NodesData", ([owner, validator]) => {
             const res = await nodes.changeNodeLastRewardDate(0);
             const currentTimeLocal = (await web3.eth.getBlock(res.receipt.blockNumber)).timestamp;
 
-            (await nodes.nodes(0))[6].should.be.deep.equal(web3.utils.toBN(currentTimeLocal));
+            (await nodes.nodes(0))[5].should.be.deep.equal(web3.utils.toBN(currentTimeLocal));
             await nodes.getNodeLastRewardDate(0).should.be.eventually.deep.equal(web3.utils.toBN(currentTimeLocal));
         });
 
@@ -227,7 +233,9 @@ contract("NodesData", ([owner, validator]) => {
 
         describe("when node is registered", async () => {
             beforeEach(async () => {
-                await nodes.addNode(validator, "d2", "0x7f000001", "0x7f000002", 8545, "0x1122334455", 0);
+                await nodes.addNode(validator, "d2", "0x7f000001", "0x7f000002", 8545,
+                ["0x1122334455667788990011223344556677889900112233445566778899001122",
+                "0x1122334455667788990011223344556677889900112233445566778899001122"], 0);
             });
 
             it("should remove node", async () => {
@@ -258,8 +266,12 @@ contract("NodesData", ([owner, validator]) => {
 
     describe("when two nodes are added", async () => {
         beforeEach(async () => {
-            await nodes.addNode(validator, "d2", "0x7f000001", "0x7f000002", 8545, "0x1122334455", 0);
-            await nodes.addNode(validator, "d3", "0x7f000002", "0x7f000003", 8545, "0x1122334455", 0);
+            await nodes.addNode(validator, "d2", "0x7f000001", "0x7f000002", 8545,
+            ["0x1122334455667788990011223344556677889900112233445566778899001122",
+            "0x1122334455667788990011223344556677889900112233445566778899001122"], 0);
+            await nodes.addNode(validator, "d3", "0x7f000002", "0x7f000003", 8545,
+            ["0x1122334455667788990011223344556677889900112233445566778899001122",
+            "0x1122334455667788990011223344556677889900112233445566778899001122"], 0);
         });
 
         // describe("when nodes are registered as fractional", async () => {
@@ -292,8 +304,12 @@ contract("NodesData", ([owner, validator]) => {
 
         describe("when nodes are registered", async () => {
             beforeEach(async () => {
-                await nodes.addNode(validator, "d2", "0x7f000001", "0x7f000002", 8545, "0x1122334455", 0);
-                await nodes.addNode(validator, "d3", "0x7f000002", "0x7f000003", 8545, "0x1122334455", 0);
+                await nodes.addNode(validator, "d2", "0x7f000001", "0x7f000002", 8545,
+                ["0x1122334455667788990011223344556677889900112233445566778899001122",
+                "0x1122334455667788990011223344556677889900112233445566778899001122"], 0);
+                await nodes.addNode(validator, "d3", "0x7f000002", "0x7f000003", 8545,
+                ["0x1122334455667788990011223344556677889900112233445566778899001122",
+                "0x1122334455667788990011223344556677889900112233445566778899001122"], 0);
             });
 
             it("should remove first node", async () => {

@@ -105,8 +105,8 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                 0, // nonce
                 "0x7f000001", // ip
                 "0x7f000001", // public ip
-                "0x1122334455667788990011223344556677889900112233445566778899001122" +
-                  "1122334455667788990011223344556677889900112233445566778899001122", // public key
+                ["0x1122334455667788990011223344556677889900112233445566778899001122",
+                 "0x1122334455667788990011223344556677889900112233445566778899001122"], // public key
                 "d2", // name
                 {from: nodeAddress});
 
@@ -125,8 +125,8 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                 0, // nonce
                 "0x7f000001", // ip
                 "0x7f000001", // public ip
-                "0x1122334455667788990011223344556677889900112233445566778899001122" +
-                  "1122334455667788990011223344556677889900112233445566778899001122", // public key
+                ["0x1122334455667788990011223344556677889900112233445566778899001122",
+                 "0x1122334455667788990011223344556677889900112233445566778899001122"], // public key
                 "d2", // name
                 {from: nodeAddress})
                 .should.be.eventually.rejectedWith("Validator is not authorized to create a node");
@@ -136,8 +136,8 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                 0, // nonce
                 "0x7f000001", // ip
                 "0x7f000001", // public ip
-                "0x1122334455667788990011223344556677889900112233445566778899001122" +
-                  "1122334455667788990011223344556677889900112233445566778899001122", // public key
+                ["0x1122334455667788990011223344556677889900112233445566778899001122",
+                 "0x1122334455667788990011223344556677889900112233445566778899001122"], // public key
                 "d2", // name
                 {from: nodeAddress});
         });
@@ -150,8 +150,8 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                     0, // nonce
                     "0x7f000001", // ip
                     "0x7f000001", // public ip
-                    "0x1122334455667788990011223344556677889900112233445566778899001122" +
-                    "1122334455667788990011223344556677889900112233445566778899001122", // public key
+                    ["0x1122334455667788990011223344556677889900112233445566778899001122",
+                     "0x1122334455667788990011223344556677889900112233445566778899001122"], // public key
                     "d2", // name
                     {from: nodeAddress});
             });
@@ -169,10 +169,13 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
 
             it("should remove the node", async () => {
                 const balanceBefore = web3.utils.toBN(await skaleToken.balanceOf(validator));
+                const lastBlock = await monitorsData.getLastBountyBlock(0);
 
                 await skaleManager.deleteNode(0, {from: nodeAddress});
 
                 await nodesContract.isNodeLeft(0).should.be.eventually.true;
+
+                expect((await monitorsData.getLastBountyBlock(0)).eq(lastBlock)).to.be.true;
 
                 const balanceAfter = web3.utils.toBN(await skaleToken.balanceOf(validator));
 
@@ -200,8 +203,8 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                     0, // nonce
                     "0x7f000001", // ip
                     "0x7f000001", // public ip
-                    "0x1122334455667788990011223344556677889900112233445566778899001122" +
-                    "1122334455667788990011223344556677889900112233445566778899001122", // public key
+                    ["0x1122334455667788990011223344556677889900112233445566778899001122",
+                     "0x1122334455667788990011223344556677889900112233445566778899001122"], // public key
                     "d2", // name
                     {from: nodeAddress});
                 await skaleManager.createNode(
@@ -209,8 +212,8 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                     0, // nonce
                     "0x7f000002", // ip
                     "0x7f000002", // public ip
-                    "0x1122334455667788990011223344556677889900112233445566778899001122" +
-                    "1122334455667788990011223344556677889900112233445566778899001122", // public key
+                    ["0x1122334455667788990011223344556677889900112233445566778899001122",
+                     "0x1122334455667788990011223344556677889900112233445566778899001122"], // public key
                     "d3", // name
                     {from: nodeAddress});
             });
@@ -348,8 +351,8 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                         0, // nonce
                         "0x7f0000" + ("0" + (i + 1).toString(16)).slice(-2), // ip
                         "0x7f000001", // public ip
-                        "0x1122334455667788990011223344556677889900112233445566778899001122" +
-                        "1122334455667788990011223344556677889900112233445566778899001122", // public key
+                        ["0x1122334455667788990011223344556677889900112233445566778899001122",
+                         "0x1122334455667788990011223344556677889900112233445566778899001122"], // public key
                         "d2-" + i, // name
                         {from: nodeAddress});
                 }
@@ -364,8 +367,8 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                     0, // nonce
                     "0x7f000001", // ip
                     "0x7f000001", // public ip
-                    "0x1122334455667788990011223344556677889900112233445566778899001122" +
-                    "1122334455667788990011223344556677889900112233445566778899001122", // public key
+                    ["0x1122334455667788990011223344556677889900112233445566778899001122",
+                     "0x1122334455667788990011223344556677889900112233445566778899001122"], // public key
                     "d2", // name
                     {from: nodeAddress}).should.be.eventually.rejectedWith("Validator must meet the Minimum Staking Requirement");
             });
@@ -727,8 +730,8 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                         0, // nonce
                         "0x7f0000" + ("0" + (i + 1).toString(16)).slice(-2), // ip
                         "0x7f000001", // public ip
-                        "0x1122334455667788990011223344556677889900112233445566778899001122" +
-                        "1122334455667788990011223344556677889900112233445566778899001122", // public key
+                        ["0x1122334455667788990011223344556677889900112233445566778899001122",
+                         "0x1122334455667788990011223344556677889900112233445566778899001122"], // public key
                         "d2-" + i, // name
                         {from: nodeAddress});
                 }
@@ -816,8 +819,8 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                         0, // nonce
                         "0x7f0000" + ("0" + (i + 1).toString(16)).slice(-2), // ip
                         "0x7f000001", // public ip
-                        "0x1122334455667788990011223344556677889900112233445566778899001122" +
-                        "1122334455667788990011223344556677889900112233445566778899001122", // public key
+                        ["0x1122334455667788990011223344556677889900112233445566778899001122",
+                         "0x1122334455667788990011223344556677889900112233445566778899001122"], // public key
                         "d2-" + i, // name
                         {from: nodeAddress});
                     }
