@@ -3,17 +3,17 @@ import { deployConstantsHolder } from "./constantsHolder";
 import { deployDistributor } from "./delegation/distributor";
 import { deployValidatorService } from "./delegation/validatorService";
 import { deployFunctionFactory } from "./factory";
-import { deployMonitorsFunctionality } from "./monitorsFunctionality";
+import { deployMonitors } from "./monitors";
 import { deployNodes } from "./nodes";
-import { deploySchainsFunctionality } from "./schainsFunctionality";
+import { deploySchains } from "./schains";
 import { deploySkaleToken } from "./skaleToken";
 
 const deploySkaleManager: (contractManager: ContractManagerInstance) => Promise<SkaleManagerInstance>
     = deployFunctionFactory("SkaleManager",
                             async (contractManager: ContractManagerInstance) => {
-                                await deploySchainsFunctionality(contractManager);
+                                await deploySchains(contractManager);
                                 await deployValidatorService(contractManager);
-                                await deployMonitorsFunctionality(contractManager);
+                                await deployMonitors(contractManager);
                                 await deployNodes(contractManager);
                                 await deployConstantsHolder(contractManager);
                                 await deploySkaleToken(contractManager);

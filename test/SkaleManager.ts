@@ -4,10 +4,10 @@ import { ConstantsHolderInstance,
          ContractManagerInstance,
          DelegationControllerInstance,
          DistributorInstance,
-         MonitorsDataInstance,
+         MonitorsInstance,
          NodesInstance,
-         SchainsDataInstance,
-         SchainsFunctionalityInstance,
+         SchainsInternalInstance,
+         SchainsInstance,
          SkaleManagerInstance,
          SkaleTokenInstance,
          ValidatorServiceInstance} from "../types/truffle-contracts";
@@ -17,10 +17,10 @@ import { deployContractManager } from "./tools/deploy/contractManager";
 import { deployDelegationController } from "./tools/deploy/delegation/delegationController";
 import { deployDistributor } from "./tools/deploy/delegation/distributor";
 import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
-import { deployMonitorsData } from "./tools/deploy/monitorsData";
+import { deployMonitors } from "./tools/deploy/monitors";
 import { deployNodes } from "./tools/deploy/nodes";
-import { deploySchainsData } from "./tools/deploy/schainsData";
-import { deploySchainsFunctionality } from "./tools/deploy/schainsFunctionality";
+import { deploySchainsInternal } from "./tools/deploy/schainsInternal";
+import { deploySchains } from "./tools/deploy/schains";
 import { deploySkaleManager } from "./tools/deploy/skaleManager";
 import { deploySkaleToken } from "./tools/deploy/skaleToken";
 import { skipTime } from "./tools/time";
@@ -34,9 +34,9 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
     let nodesContract: NodesInstance;
     let skaleManager: SkaleManagerInstance;
     let skaleToken: SkaleTokenInstance;
-    let monitorsData: MonitorsDataInstance;
-    let schainsData: SchainsDataInstance;
-    let schainsFunctionality: SchainsFunctionalityInstance;
+    let monitors: MonitorsInstance;
+    let schainsInternal: SchainsInternalInstance;
+    let schains: SchainsInstance;
     let validatorService: ValidatorServiceInstance;
     let delegationController: DelegationControllerInstance;
     let distributor: DistributorInstance;
@@ -47,9 +47,9 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
         skaleToken = await deploySkaleToken(contractManager);
         constantsHolder = await deployConstantsHolder(contractManager);
         nodesContract = await deployNodes(contractManager);
-        monitorsData = await deployMonitorsData(contractManager);
-        schainsData = await deploySchainsData(contractManager);
-        schainsFunctionality = await deploySchainsFunctionality(contractManager);
+        monitors = await deployMonitors(contractManager);
+        schainsInternal = await deploySchainsInternal(contractManager);
+        schains = await deploySchains(contractManager);
         skaleManager = await deploySkaleManager(contractManager);
         validatorService = await deployValidatorService(contractManager);
         delegationController = await deployDelegationController(contractManager);
@@ -112,7 +112,6 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
 
             await nodesContract.numberOfActiveNodes().should.be.eventually.deep.equal(web3.utils.toBN(1));
             (await nodesContract.getNodePort(0)).toNumber().should.be.equal(8545);
-            await monitorsData.isGroupActive(web3.utils.soliditySha3(0)).should.be.eventually.true;
         });
 
         it("should not allow to create node if validator became untrusted", async () => {
@@ -169,13 +168,13 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
 
             it("should remove the node", async () => {
                 const balanceBefore = web3.utils.toBN(await skaleToken.balanceOf(validator));
-                const lastBlock = await monitorsData.getLastBountyBlock(0);
+                const lastBlock = await monitors.getLastBountyBlock(0);
 
                 await skaleManager.deleteNode(0, {from: nodeAddress});
 
                 await nodesContract.isNodeLeft(0).should.be.eventually.true;
 
-                expect((await monitorsData.getLastBountyBlock(0)).eq(lastBlock)).to.be.true;
+                expect((await monitors.getLastBountyBlock(0)).eq(lastBlock)).to.be.true;
 
                 const balanceAfter = web3.utils.toBN(await skaleToken.balanceOf(validator));
 
@@ -302,34 +301,34 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                 skipTime(web3, 3400);
                 let txSendVerdict1 = await skaleManager.sendVerdict(0, verdict1, {from: nodeAddress});
 
-                let blocks = await monitorsData.getLastReceivedVerdictBlock(1);
+                let blocks = await monitors.getLastReceivedVerdictBlock(1);
                 txSendVerdict1.receipt.blockNumber.should.be.equal(blocks.toNumber());
 
                 skipTime(web3, 200);
                 let txGetBounty1 = await skaleManager.getBounty(0, {from: nodeAddress});
                 let txGetBounty2 = await skaleManager.getBounty(1, {from: nodeAddress});
 
-                blocks = await monitorsData.getLastBountyBlock(0);
+                blocks = await monitors.getLastBountyBlock(0);
                 txGetBounty1.receipt.blockNumber.should.be.equal(blocks.toNumber());
-                blocks = await monitorsData.getLastBountyBlock(1);
+                blocks = await monitors.getLastBountyBlock(1);
                 txGetBounty2.receipt.blockNumber.should.be.equal(blocks.toNumber());
 
                 skipTime(web3, 3400);
                 txSendVerdict1 = await skaleManager.sendVerdict(0, verdict1, {from: nodeAddress});
                 const txSendVerdict2 = await skaleManager.sendVerdict(1, verdict2, {from: nodeAddress});
 
-                blocks = await monitorsData.getLastReceivedVerdictBlock(1);
+                blocks = await monitors.getLastReceivedVerdictBlock(1);
                 txSendVerdict1.receipt.blockNumber.should.be.equal(blocks.toNumber());
-                blocks = await monitorsData.getLastReceivedVerdictBlock(0);
+                blocks = await monitors.getLastReceivedVerdictBlock(0);
                 txSendVerdict2.receipt.blockNumber.should.be.equal(blocks.toNumber());
 
                 skipTime(web3, 200);
                 txGetBounty1 = await skaleManager.getBounty(0, {from: nodeAddress});
                 txGetBounty2 = await skaleManager.getBounty(1, {from: nodeAddress});
 
-                blocks = await monitorsData.getLastBountyBlock(0);
+                blocks = await monitors.getLastBountyBlock(0);
                 txGetBounty1.receipt.blockNumber.should.be.equal(blocks.toNumber());
-                blocks = await monitorsData.getLastBountyBlock(1);
+                blocks = await monitors.getLastBountyBlock(1);
                 txGetBounty2.receipt.blockNumber.should.be.equal(blocks.toNumber());
             });
         });
@@ -380,7 +379,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
 
             it("should fail to send monitor verdict if send it too early", async () => {
                 await skaleManager.sendVerdict(0, verdict, {from: nodeAddress});
-                const lengthOfMetrics = await monitorsData.getLengthOfMetrics(web3.utils.soliditySha3(1), {from: owner});
+                const lengthOfMetrics = await monitors.getLengthOfMetrics(web3.utils.soliditySha3(1), {from: owner});
                 lengthOfMetrics.toNumber().should.be.equal(0);
             });
 
@@ -393,9 +392,9 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                 skipTime(web3, 3400);
                 await skaleManager.sendVerdict(0, verdict, {from: nodeAddress});
 
-                await monitorsData.verdicts(web3.utils.soliditySha3(1), 0, 0)
+                await monitors.verdicts(web3.utils.soliditySha3(1), 0, 0)
                     .should.be.eventually.deep.equal(web3.utils.toBN(0));
-                await monitorsData.verdicts(web3.utils.soliditySha3(1), 0, 1)
+                await monitors.verdicts(web3.utils.soliditySha3(1), 0, 1)
                     .should.be.eventually.deep.equal(web3.utils.toBN(50));
             });
 
@@ -415,19 +414,19 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                 ]
                 const txSendVerdict = await skaleManager.sendVerdicts(0, arr, {from: nodeAddress});
 
-                let blocks = await monitorsData.getLastReceivedVerdictBlock(1);
+                let blocks = await monitors.getLastReceivedVerdictBlock(1);
                 txSendVerdict.receipt.blockNumber.should.be.equal(blocks.toNumber());
 
-                blocks = await monitorsData.getLastReceivedVerdictBlock(2);
+                blocks = await monitors.getLastReceivedVerdictBlock(2);
                 txSendVerdict.receipt.blockNumber.should.be.equal(blocks.toNumber());
 
-                await monitorsData.verdicts(web3.utils.soliditySha3(1), 0, 0)
+                await monitors.verdicts(web3.utils.soliditySha3(1), 0, 0)
                     .should.be.eventually.deep.equal(web3.utils.toBN(0));
-                await monitorsData.verdicts(web3.utils.soliditySha3(1), 0, 1)
+                await monitors.verdicts(web3.utils.soliditySha3(1), 0, 1)
                     .should.be.eventually.deep.equal(web3.utils.toBN(50));
-                await monitorsData.verdicts(web3.utils.soliditySha3(2), 0, 0)
+                await monitors.verdicts(web3.utils.soliditySha3(2), 0, 0)
                     .should.be.eventually.deep.equal(web3.utils.toBN(0));
-                await monitorsData.verdicts(web3.utils.soliditySha3(2), 0, 1)
+                await monitors.verdicts(web3.utils.soliditySha3(2), 0, 1)
                     .should.be.eventually.deep.equal(web3.utils.toBN(50));
             });
 
@@ -440,7 +439,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                 });
 
                 it("should store verdict block", async () => {
-                    const blocks = await monitorsData.getLastReceivedVerdictBlock(1);
+                    const blocks = await monitors.getLastReceivedVerdictBlock(1);
                     blockNum.should.be.equal(blocks.toNumber());
                 })
 
@@ -457,7 +456,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
 
                     const txGetBounty = await skaleManager.getBounty(1, {from: nodeAddress});
 
-                    const blocks = await monitorsData.getLastBountyBlock(1);
+                    const blocks = await monitors.getLastBountyBlock(1);
                     txGetBounty.receipt.blockNumber.should.be.equal(blocks.toNumber());
 
                     skipTime(web3, month); // can withdraw bounty only next month
@@ -485,7 +484,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                 });
 
                 it("should store verdict block", async () => {
-                    const blocks = await monitorsData.getLastReceivedVerdictBlock(1);
+                    const blocks = await monitors.getLastReceivedVerdictBlock(1);
                     blockNum.should.be.equal(blocks.toNumber());
                 });
 
@@ -503,7 +502,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
 
                     const txGetBounty = await skaleManager.getBounty(1, {from: nodeAddress});
 
-                    const blocks = await monitorsData.getLastBountyBlock(1);
+                    const blocks = await monitors.getLastBountyBlock(1);
                     txGetBounty.receipt.blockNumber.should.be.equal(blocks.toNumber());
 
                     skipTime(web3, month); // can withdraw bounty only next month
@@ -524,7 +523,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
 
                     const txGetBounty = await skaleManager.getBounty(1, {from: nodeAddress});
 
-                    const blocks = await monitorsData.getLastBountyBlock(1);
+                    const blocks = await monitors.getLastBountyBlock(1);
                     txGetBounty.receipt.blockNumber.should.be.equal(blocks.toNumber());
 
                     skipTime(web3, month); // can withdraw bounty only next month
@@ -544,7 +543,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
 
                     const txGetBounty = await skaleManager.getBounty(1, {from: nodeAddress});
 
-                    const blocks = await monitorsData.getLastBountyBlock(1);
+                    const blocks = await monitors.getLastBountyBlock(1);
                     txGetBounty.receipt.blockNumber.should.be.equal(blocks.toNumber());
 
                     skipTime(web3, month); // can withdraw bounty only next month
@@ -572,7 +571,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                 });
 
                 it("should store verdict block", async () => {
-                    const blocks = await monitorsData.getLastReceivedVerdictBlock(1);
+                    const blocks = await monitors.getLastReceivedVerdictBlock(1);
                     blockNum.should.be.equal(blocks.toNumber());
                 });
 
@@ -588,7 +587,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
 
                     const txGetBounty = await skaleManager.getBounty(1, {from: nodeAddress});
 
-                    const blocks = await monitorsData.getLastBountyBlock(1);
+                    const blocks = await monitors.getLastBountyBlock(1);
                     txGetBounty.receipt.blockNumber.should.be.equal(blocks.toNumber());
 
                     skipTime(web3, month); // can withdraw bounty only next month
@@ -608,7 +607,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
 
                     const txGetBounty = await skaleManager.getBounty(1, {from: nodeAddress});
 
-                    const blocks = await monitorsData.getLastBountyBlock(1);
+                    const blocks = await monitors.getLastBountyBlock(1);
                     txGetBounty.receipt.blockNumber.should.be.equal(blocks.toNumber());
 
                     skipTime(web3, month); // can withdraw bounty only next month
@@ -628,7 +627,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
 
                     const txGetBounty = await skaleManager.getBounty(1, {from: nodeAddress});
 
-                    const blocks = await monitorsData.getLastBountyBlock(1);
+                    const blocks = await monitors.getLastBountyBlock(1);
                     txGetBounty.receipt.blockNumber.should.be.equal(blocks.toNumber());
 
                     skipTime(web3, month); // can withdraw bounty only next month
@@ -658,7 +657,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                             "d2"]), // name
                         {from: developer});
 
-                    const schain = await schainsData.schains(web3.utils.soliditySha3("d2"));
+                    const schain = await schainsInternal.schains(web3.utils.soliditySha3("d2"));
                     schain[0].should.be.equal("d2");
                 });
 
@@ -683,11 +682,11 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                     it("should delete schain", async () => {
                         await skaleManager.deleteSchain("d2", {from: developer});
 
-                        await schainsData.getSchains().should.be.eventually.empty;
+                        await schainsInternal.getSchains().should.be.eventually.empty;
                     });
 
                     it("should delete schain after deleting node", async () => {
-                        const nodes = await schainsData.getNodesInGroup(web3.utils.soliditySha3("d2"));
+                        const nodes = await schainsInternal.getNodesInGroup(web3.utils.soliditySha3("d2"));
                         await skaleManager.deleteNode(nodes[0], {from: nodeAddress});
                         await skaleManager.deleteSchain("d2", {from: developer});
                     });
@@ -714,7 +713,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                     it("should delete schain by root", async () => {
                         await skaleManager.deleteSchainByRoot("d3", {from: owner});
 
-                        await schainsData.getSchains().should.be.eventually.empty;
+                        await schainsInternal.getSchains().should.be.eventually.empty;
                     });
                 });
             });
@@ -753,7 +752,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                             "d2"]), // name
                         {from: developer});
 
-                    const schain1 = await schainsData.schains(web3.utils.soliditySha3("d2"));
+                    const schain1 = await schainsInternal.schains(web3.utils.soliditySha3("d2"));
                     schain1[0].should.be.equal("d2");
 
                     await skaleToken.send(
@@ -766,7 +765,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                             "d3"]), // name
                         {from: developer});
 
-                    const schain2 = await schainsData.schains(web3.utils.soliditySha3("d3"));
+                    const schain2 = await schainsInternal.schains(web3.utils.soliditySha3("d3"));
                     schain2[0].should.be.equal("d3");
                 });
 
@@ -796,13 +795,13 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                     it("should delete first schain", async () => {
                         await skaleManager.deleteSchain("d2", {from: developer});
 
-                        await schainsData.numberOfSchains().should.be.eventually.deep.equal(web3.utils.toBN(1));
+                        await schainsInternal.numberOfSchains().should.be.eventually.deep.equal(web3.utils.toBN(1));
                     });
 
                     it("should delete second schain", async () => {
                         await skaleManager.deleteSchain("d3", {from: developer});
 
-                        await schainsData.numberOfSchains().should.be.eventually.deep.equal(web3.utils.toBN(1));
+                        await schainsInternal.numberOfSchains().should.be.eventually.deep.equal(web3.utils.toBN(1));
                     });
                 });
             });
@@ -827,7 +826,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
 
                 await skaleToken.transfer(developer, "0x3635C9ADC5DEA000000", {from: owner});
 
-                let price = web3.utils.toBN(await schainsFunctionality.getSchainPrice(1, 5));
+                let price = web3.utils.toBN(await schains.getSchainPrice(1, 5));
                 await skaleToken.send(
                     skaleManager.address,
                     price.toString(),
@@ -838,13 +837,13 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                         "d2"]), // name
                     {from: developer});
 
-                let schain1 = await schainsData.schains(web3.utils.soliditySha3("d2"));
+                let schain1 = await schainsInternal.schains(web3.utils.soliditySha3("d2"));
                 schain1[0].should.be.equal("d2");
 
                 await skaleManager.deleteSchain("d2", {from: developer});
 
-                await schainsData.numberOfSchains().should.be.eventually.deep.equal(web3.utils.toBN(0));
-                price = web3.utils.toBN(await schainsFunctionality.getSchainPrice(2, 5));
+                await schainsInternal.numberOfSchains().should.be.eventually.deep.equal(web3.utils.toBN(0));
+                price = web3.utils.toBN(await schains.getSchainPrice(2, 5));
 
                 await skaleToken.send(
                     skaleManager.address,
@@ -856,13 +855,13 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                         "d2"]), // name
                     {from: developer});
 
-                schain1 = await schainsData.schains(web3.utils.soliditySha3("d2"));
+                schain1 = await schainsInternal.schains(web3.utils.soliditySha3("d2"));
                 schain1[0].should.be.equal("d2");
 
                 await skaleManager.deleteSchain("d2", {from: developer});
 
-                await schainsData.numberOfSchains().should.be.eventually.deep.equal(web3.utils.toBN(0));
-                price = web3.utils.toBN(await schainsFunctionality.getSchainPrice(3, 5));
+                await schainsInternal.numberOfSchains().should.be.eventually.deep.equal(web3.utils.toBN(0));
+                price = web3.utils.toBN(await schains.getSchainPrice(3, 5));
                 await skaleToken.send(
                     skaleManager.address,
                     price.toString(),
@@ -873,13 +872,13 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                         "d2"]), // name
                     {from: developer});
 
-                schain1 = await schainsData.schains(web3.utils.soliditySha3("d2"));
+                schain1 = await schainsInternal.schains(web3.utils.soliditySha3("d2"));
                 schain1[0].should.be.equal("d2");
 
                 await skaleManager.deleteSchain("d2", {from: developer});
 
-                await schainsData.numberOfSchains().should.be.eventually.deep.equal(web3.utils.toBN(0));
-                price = web3.utils.toBN(await schainsFunctionality.getSchainPrice(4, 5));
+                await schainsInternal.numberOfSchains().should.be.eventually.deep.equal(web3.utils.toBN(0));
+                price = web3.utils.toBN(await schains.getSchainPrice(4, 5));
                 await skaleToken.send(
                     skaleManager.address,
                     price.toString(),
@@ -890,13 +889,13 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                         "d2"]), // name
                     {from: developer});
 
-                schain1 = await schainsData.schains(web3.utils.soliditySha3("d2"));
+                schain1 = await schainsInternal.schains(web3.utils.soliditySha3("d2"));
                 schain1[0].should.be.equal("d2");
 
                 await skaleManager.deleteSchain("d2", {from: developer});
 
-                await schainsData.numberOfSchains().should.be.eventually.deep.equal(web3.utils.toBN(0));
-                price = web3.utils.toBN(await schainsFunctionality.getSchainPrice(5, 5));
+                await schainsInternal.numberOfSchains().should.be.eventually.deep.equal(web3.utils.toBN(0));
+                price = web3.utils.toBN(await schains.getSchainPrice(5, 5));
                 await skaleToken.send(
                     skaleManager.address,
                     price.toString(),
@@ -907,12 +906,12 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                         "d2"]), // name
                     {from: developer});
 
-                schain1 = await schainsData.schains(web3.utils.soliditySha3("d2"));
+                schain1 = await schainsInternal.schains(web3.utils.soliditySha3("d2"));
                 schain1[0].should.be.equal("d2");
 
                 await skaleManager.deleteSchain("d2", {from: developer});
 
-                await schainsData.numberOfSchains().should.be.eventually.deep.equal(web3.utils.toBN(0));
+                await schainsInternal.numberOfSchains().should.be.eventually.deep.equal(web3.utils.toBN(0));
             });
         });
     });

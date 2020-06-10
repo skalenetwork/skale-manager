@@ -173,12 +173,12 @@ contract Nodes is Permissions {
 
     /**
      * @dev removeSpaceFromFractionalNode - occupies space from Fractional Node
-     * function could be run only by SchainsFunctionality
+     * function could be run only by Schains
      * @param nodeIndex - index of Node at array of Fractional Nodes
      * @param space - space which should be occupied
      */
     function removeSpaceFromNode(uint nodeIndex, uint8 space)
-        external allow("SchainsFunctionalityInternal") returns (bool)
+        external allowTwo("Schains", "SchainsInternal") returns (bool)
     {
         if (spaceOfNodes[nodeIndex].freeSpace < space) {
             return false;
@@ -194,11 +194,11 @@ contract Nodes is Permissions {
 
     /**
      * @dev adSpaceToFractionalNode - returns space to Fractional Node
-     * function could be run only be SchainsFunctionality
+     * function could be run only be Schains
      * @param nodeIndex - index of Node at array of Fractional Nodes
      * @param space - space which should be returned
      */
-    function addSpaceToNode(uint nodeIndex, uint8 space) external allow("SchainsFunctionality") {
+    function addSpaceToNode(uint nodeIndex, uint8 space) external allow("Schains") {
         if (space > 0) {
             _moveNodeToNewSpaceMap(
                 nodeIndex,

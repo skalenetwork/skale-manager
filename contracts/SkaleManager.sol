@@ -25,12 +25,10 @@ pragma experimental ABIEncoderV2;
 import "./Permissions.sol";
 import "./ConstantsHolder.sol";
 import "./SkaleToken.sol";
-import "./interfaces/ISchainsFunctionality.sol";
 import "./delegation/Distributor.sol";
 import "./delegation/ValidatorService.sol";
-import "./MonitorsFunctionality.sol";
-import "./MonitorsData.sol";
-import "./SchainsFunctionality.sol";
+import "./Monitors.sol";
+import "./Schains.sol";
 import "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
 import "@openzeppelin/contracts/introspection/IERC1820Registry.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
@@ -77,9 +75,9 @@ contract SkaleManager is IERC777Recipient, Permissions {
     {
         require(to == address(this), "Receiver is incorrect");
         if (userData.length > 0) {
-            SchainsFunctionality schainsFunctionality = SchainsFunctionality(
-                _contractManager.getContract("SchainsFunctionality"));
-            schainsFunctionality.addSchain(from, value, userData);
+            Schains schains = Schains(
+                _contractManager.getContract("Schains"));
+            schains.addSchain(from, value, userData);
         }
     }
 
@@ -94,8 +92,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
     {
         Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
         ValidatorService validatorService = ValidatorService(_contractManager.getContract("ValidatorService"));
-        MonitorsFunctionality monitorsFunctionality = MonitorsFunctionality(
-            _contractManager.getContract("MonitorsFunctionality"));
+        Monitors monitors = Monitors(_contractManager.getContract("Monitors"));
 
         validatorService.checkPossibilityCreatingNode(msg.sender);
         Nodes.NodeCreationParams memory params = Nodes.NodeCreationParams({
@@ -107,39 +104,38 @@ contract SkaleManager is IERC777Recipient, Permissions {
             nonce: nonce});
         uint nodeIndex = nodes.createNode(msg.sender, params);
         validatorService.pushNode(msg.sender, nodeIndex);
-        monitorsFunctionality.addMonitor(nodeIndex);
+        monitors.addMonitor(nodeIndex);
     }
 
     function nodeExit(uint nodeIndex) external {
         Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
-        SchainsFunctionality schainsFunctionality = SchainsFunctionality(
-            _contractManager.getContract("SchainsFunctionality"));
-        SchainsData schainsData = SchainsData(_contractManager.getContract("SchainsData"));
+        Schains schains = Schains(
+            _contractManager.getContract("Schains"));
+        SchainsInternal schainsInternal = SchainsInternal(_contractManager.getContract("SchainsInternal"));
         ConstantsHolder constants = ConstantsHolder(_contractManager.getContract("ConstantsHolder"));
-        schainsFunctionality.freezeSchains(nodeIndex);
+        schains.freezeSchains(nodeIndex);
         if (nodes.isNodeActive(nodeIndex)) {
             require(nodes.initExit(msg.sender, nodeIndex), "Initialization of node exit is failed");
         }
         bool completed;
-        bool schains = false;
-        if (schainsData.getActiveSchain(nodeIndex) != bytes32(0)) {
-            completed = schainsFunctionality.exitFromSchain(nodeIndex);
-            schains = true;
+        bool isSchains = false;
+        if (schainsInternal.getActiveSchain(nodeIndex) != bytes32(0)) {
+            completed = schains.exitFromSchain(nodeIndex);
+            isSchains = true;
         } else {
             completed = true;
         }
         if (completed) {
             require(nodes.completeExit(msg.sender, nodeIndex), "Finishing of node exit is failed");
-            nodes.changeNodeFinishTime(nodeIndex, uint32(now + (schains ? constants.rotationDelay() : 0)));
+            nodes.changeNodeFinishTime(nodeIndex, uint32(now + (isSchains ? constants.rotationDelay() : 0)));
         }
     }
 
     function deleteNode(uint nodeIndex) external {
         Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
         nodes.removeNode(msg.sender, nodeIndex);
-        MonitorsFunctionality monitorsFunctionality = MonitorsFunctionality(
-            _contractManager.getContract("MonitorsFunctionality"));
-        monitorsFunctionality.deleteMonitor(nodeIndex);
+        Monitors monitors = Monitors(_contractManager.getContract("Monitors"));
+        monitors.deleteMonitor(nodeIndex);
         ValidatorService validatorService = ValidatorService(_contractManager.getContract("ValidatorService"));
         uint validatorId = validatorService.getValidatorIdByNodeAddress(msg.sender);
         validatorService.deleteNode(validatorId, nodeIndex);
@@ -147,43 +143,40 @@ contract SkaleManager is IERC777Recipient, Permissions {
 
     function deleteNodeByRoot(uint nodeIndex) external onlyOwner {
         Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
-        MonitorsFunctionality monitorsFunctionality = MonitorsFunctionality(
-            _contractManager.getContract("MonitorsFunctionality"));
+        Monitors monitors = Monitors(_contractManager.getContract("Monitors"));
         ValidatorService validatorService = ValidatorService(_contractManager.getContract("ValidatorService"));
 
         nodes.removeNodeByRoot(nodeIndex);
-        monitorsFunctionality.deleteMonitor(nodeIndex);
+        monitors.deleteMonitor(nodeIndex);
         uint validatorId = nodes.getNodeValidatorId(nodeIndex);
         validatorService.deleteNode(validatorId, nodeIndex);
     }
 
     function deleteSchain(string calldata name) external {
-        address schainsFunctionalityAddress = _contractManager.getContract("SchainsFunctionality");
-        ISchainsFunctionality(schainsFunctionalityAddress).deleteSchain(msg.sender, name);
+        Schains schains = Schains(_contractManager.getContract("Schains"));
+        schains.deleteSchain(msg.sender, name);
     }
 
     function deleteSchainByRoot(string calldata name) external onlyOwner {
-        address schainsFunctionalityAddress = _contractManager.getContract("SchainsFunctionality");
-        ISchainsFunctionality(schainsFunctionalityAddress).deleteSchainByRoot(name);
+        Schains schains = Schains(_contractManager.getContract("Schains"));
+        schains.deleteSchainByRoot(name);
     }
 
-    function sendVerdict(uint fromMonitorIndex, MonitorsData.Verdict calldata verdict) external {
+    function sendVerdict(uint fromMonitorIndex, Monitors.Verdict calldata verdict) external {
         Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
-        MonitorsFunctionality monitorsFunctionality = MonitorsFunctionality(
-            _contractManager.getContract("MonitorsFunctionality"));
+        Monitors monitors = Monitors(_contractManager.getContract("Monitors"));
 
         require(nodes.isNodeExist(msg.sender, fromMonitorIndex), "Node does not exist for Message sender");
 
-        monitorsFunctionality.sendVerdict(fromMonitorIndex, verdict);
+        monitors.sendVerdict(fromMonitorIndex, verdict);
     }
 
-    function sendVerdicts(uint fromMonitorIndex, MonitorsData.Verdict[] calldata verdicts) external {
+    function sendVerdicts(uint fromMonitorIndex, Monitors.Verdict[] calldata verdicts) external {
         Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
         require(nodes.isNodeExist(msg.sender, fromMonitorIndex), "Node does not exist for Message sender");
-        MonitorsFunctionality monitorsFunctionality = MonitorsFunctionality(
-            _contractManager.getContract("MonitorsFunctionality"));
+        Monitors monitors = Monitors(_contractManager.getContract("Monitors"));
         for (uint i = 0; i < verdicts.length; i++) {
-            monitorsFunctionality.sendVerdict(fromMonitorIndex, verdicts[i]);
+            monitors.sendVerdict(fromMonitorIndex, verdicts[i]);
         }
     }
 
@@ -196,16 +189,15 @@ contract SkaleManager is IERC777Recipient, Permissions {
         require(nodeIsActive || nodeIsLeaving, "Node is not Active and is not Leaving");
         uint averageDowntime;
         uint averageLatency;
-        MonitorsFunctionality monitorsFunctionality = MonitorsFunctionality(
-            _contractManager.getContract("MonitorsFunctionality"));
-        (averageDowntime, averageLatency) = monitorsFunctionality.calculateMetrics(nodeIndex);
+        Monitors monitors = Monitors(_contractManager.getContract("Monitors"));
+        (averageDowntime, averageLatency) = monitors.calculateMetrics(nodeIndex);
         uint bounty = _manageBounty(
             msg.sender,
             nodeIndex,
             averageDowntime,
             averageLatency);
         nodes.changeNodeLastRewardDate(nodeIndex);
-        monitorsFunctionality.upgradeMonitor(nodeIndex);
+        monitors.upgradeMonitor(nodeIndex);
         _emitBountyEvent(nodeIndex, msg.sender, averageDowntime, averageLatency, bounty);
     }
 
@@ -289,9 +281,10 @@ contract SkaleManager is IERC777Recipient, Permissions {
     )
         internal
     {
-        MonitorsData monitorsData = MonitorsData(_contractManager.getContract("MonitorsData"));
-        uint previousBlockEvent = monitorsData.getLastBountyBlock(nodeIndex);
-        monitorsData.setLastBountyBlock(nodeIndex);
+        Monitors monitors = Monitors(_contractManager.getContract("Monitors"));
+        uint previousBlockEvent = monitors.getLastBountyBlock(nodeIndex);
+        monitors.setLastBountyBlock(nodeIndex);
+
         emit BountyGot(
             nodeIndex,
             from,
