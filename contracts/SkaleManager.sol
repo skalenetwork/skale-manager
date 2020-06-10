@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 /*
     SkaleManager.sol - SKALE Manager
     Copyright (C) 2018-Present SKALE Labs
@@ -17,24 +19,31 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.6;
+pragma solidity 0.6.8;
 pragma experimental ABIEncoderV2;
 
 import "./Permissions.sol";
-import "./interfaces/IConstants.sol";
-import "./interfaces/ISkaleToken.sol";
-import "./interfaces/ISchainsFunctionality.sol";
-import "./interfaces/IManagerData.sol";
+import "./ConstantsHolder.sol";
+import "./SkaleToken.sol";
 import "./delegation/Distributor.sol";
 import "./delegation/ValidatorService.sol";
 import "./Monitors.sol";
-import "./SchainsFunctionality.sol";
+import "./Schains.sol";
 import "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
 import "@openzeppelin/contracts/introspection/IERC1820Registry.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 
 
 contract SkaleManager is IERC777Recipient, Permissions {
+    // miners capitalization
+    uint public minersCap;
+    // start time
+    uint32 public startTime;
+    // time of current stage
+    uint32 public stageTime;
+    // amount of Nodes at current stage
+    uint public stageNodes;
+
     IERC1820Registry private _erc1820;
 
     bytes32 constant private _TOKENS_RECIPIENT_INTERFACE_HASH =
@@ -48,6 +57,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
         uint averageDowntime,
         uint averageLatency,
         uint bounty,
+        uint previousBlockEvent,
         uint32 time,
         uint gasSpend
     );
@@ -65,9 +75,9 @@ contract SkaleManager is IERC777Recipient, Permissions {
     {
         require(to == address(this), "Receiver is incorrect");
         if (userData.length > 0) {
-            SchainsFunctionality schainsFunctionality = SchainsFunctionality(
-                _contractManager.getContract("SchainsFunctionality"));
-            schainsFunctionality.addSchain(from, value, userData);
+            Schains schains = Schains(
+                _contractManager.getContract("Schains"));
+            schains.addSchain(from, value, userData);
         }
     }
 
@@ -76,7 +86,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
         uint16 nonce,
         bytes4 ip,
         bytes4 publicIp,
-        bytes calldata publicKey,
+        bytes32[2] calldata publicKey,
         string calldata name)
         external
     {
@@ -98,25 +108,25 @@ contract SkaleManager is IERC777Recipient, Permissions {
 
     function nodeExit(uint nodeIndex) external {
         Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
-        SchainsFunctionality schainsFunctionality = SchainsFunctionality(
-            _contractManager.getContract("SchainsFunctionality"));
-        SchainsData schainsData = SchainsData(_contractManager.getContract("SchainsData"));
-        IConstants constants = IConstants(_contractManager.getContract("ConstantsHolder"));
-        schainsFunctionality.freezeSchains(nodeIndex);
+        Schains schains = Schains(
+            _contractManager.getContract("Schains"));
+        SchainsInternal schainsInternal = SchainsInternal(_contractManager.getContract("SchainsInternal"));
+        ConstantsHolder constants = ConstantsHolder(_contractManager.getContract("ConstantsHolder"));
+        schains.freezeSchains(nodeIndex);
         if (nodes.isNodeActive(nodeIndex)) {
             require(nodes.initExit(msg.sender, nodeIndex), "Initialization of node exit is failed");
         }
         bool completed;
-        bool schains = false;
-        if (schainsData.getActiveSchain(nodeIndex) != bytes32(0)) {
-            completed = schainsFunctionality.exitFromSchain(nodeIndex);
-            schains = true;
+        bool isSchains = false;
+        if (schainsInternal.getActiveSchain(nodeIndex) != bytes32(0)) {
+            completed = schains.exitFromSchain(nodeIndex);
+            isSchains = true;
         } else {
             completed = true;
         }
         if (completed) {
             require(nodes.completeExit(msg.sender, nodeIndex), "Finishing of node exit is failed");
-            nodes.changeNodeFinishTime(nodeIndex, uint32(now + (schains ? constants.rotationDelay() : 0)));
+            nodes.changeNodeFinishTime(nodeIndex, uint32(now + (isSchains ? constants.rotationDelay() : 0)));
         }
     }
 
@@ -141,13 +151,13 @@ contract SkaleManager is IERC777Recipient, Permissions {
     }
 
     function deleteSchain(string calldata name) external {
-        address schainsFunctionalityAddress = _contractManager.getContract("SchainsFunctionality");
-        ISchainsFunctionality(schainsFunctionalityAddress).deleteSchain(msg.sender, name);
+        Schains schains = Schains(_contractManager.getContract("Schains"));
+        schains.deleteSchain(msg.sender, name);
     }
 
     function deleteSchainByRoot(string calldata name) external onlyOwner {
-        address schainsFunctionalityAddress = _contractManager.getContract("SchainsFunctionality");
-        ISchainsFunctionality(schainsFunctionalityAddress).deleteSchainByRoot(name);
+        Schains schains = Schains(_contractManager.getContract("Schains"));
+        schains.deleteSchainByRoot(name);
     }
 
     function sendVerdict(uint fromMonitorIndex, Monitors.Verdict calldata verdict) external {
@@ -186,18 +196,12 @@ contract SkaleManager is IERC777Recipient, Permissions {
             averageLatency);
         nodes.changeNodeLastRewardDate(nodeIndex);
         monitors.upgradeMonitor(nodeIndex);
-        emit BountyGot(
-            nodeIndex,
-            msg.sender,
-            averageDowntime,
-            averageLatency,
-            bounty,
-            uint32(block.timestamp),
-            gasleft());
+        _emitBountyEvent(nodeIndex, msg.sender, averageDowntime, averageLatency, bounty);
     }
 
     function initialize(address newContractsAddress) public override initializer {
         Permissions.initialize(newContractsAddress);
+        startTime = uint32(block.timestamp);
         _erc1820 = IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
         _erc1820.setInterfaceImplementer(address(this), _TOKENS_RECIPIENT_INTERFACE_HASH, address(this));
     }
@@ -209,25 +213,25 @@ contract SkaleManager is IERC777Recipient, Permissions {
         uint latency) internal returns (uint)
     {
         uint commonBounty;
-        IConstants constants = IConstants(_contractManager.getContract("ConstantsHolder"));
-        IManagerData managerData = IManagerData(_contractManager.getContract("ManagerData"));
+        ConstantsHolder constants = ConstantsHolder(_contractManager.getContract("ConstantsHolder"));
         Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
 
         uint diffTime = nodes.getNodeLastRewardDate(nodeIndex)
             .add(constants.rewardPeriod())
             .add(constants.deltaPeriod());
-        if (managerData.minersCap() == 0) {
-            managerData.setMinersCap(ISkaleToken(_contractManager.getContract("SkaleToken")).CAP() / 3);
+        if (minersCap == 0) {
+            minersCap = SkaleToken(_contractManager.getContract("SkaleToken")).CAP() / 3;
         }
-        if (managerData.stageTime().add(constants.rewardPeriod()) < now) {
-            managerData.setStageTimeAndStageNodes(nodes.numberOfActiveNodes().add(nodes.numberOfLeavingNodes()));
+        if (stageTime.add(constants.rewardPeriod()) < now) {
+            stageNodes = nodes.numberOfActiveNodes().add(nodes.numberOfLeavingNodes());
+            stageTime = uint32(block.timestamp);
         }
-        commonBounty = managerData.minersCap()
-            .div((2 ** (((now.sub(managerData.startTime()))
+        commonBounty = minersCap
+            .div((2 ** (((now.sub(startTime))
             .div(constants.SIX_YEARS())) + 1))
             .mul((constants.SIX_YEARS()
             .div(constants.rewardPeriod())))
-            .mul(managerData.stageNodes()));
+            .mul(stageNodes));
         if (now > diffTime) {
             diffTime = now.sub(diffTime);
         } else {
@@ -265,5 +269,29 @@ contract SkaleManager is IERC777Recipient, Permissions {
         }
         // solhint-disable-next-line check-send-result
         skaleToken.send(address(distributor), bounty, abi.encode(validatorId));
+    }
+
+    function _emitBountyEvent(
+        uint nodeIndex,
+        address from,
+        uint averageDowntime,
+        uint averageLatency,
+        uint bounty
+    )
+        internal
+    {
+        Monitors monitors = Monitors(_contractManager.getContract("Monitors"));
+        uint previousBlockEvent = monitors.getLastBountyBlock(nodeIndex);
+        monitors.setLastBountyBlock(nodeIndex);
+
+        emit BountyGot(
+            nodeIndex,
+            from,
+            averageDowntime,
+            averageLatency,
+            bounty,
+            previousBlockEvent,
+            uint32(block.timestamp),
+            gasleft());
     }
 }

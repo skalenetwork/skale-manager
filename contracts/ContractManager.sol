@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 /*
     ContractManager.sol - SKALE Manager
     Copyright (C) 2018-Present SKALE Labs
@@ -17,7 +19,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.6;
+pragma solidity 0.6.8;
 
 import "@openzeppelin/contracts-ethereum-package/contracts/access/Ownable.sol";
 
@@ -53,12 +55,7 @@ contract ContractManager is OwnableUpgradeSafe {
         bytes32 contractId = keccak256(abi.encodePacked(contractsName));
         // check newContractsAddress is not equal the previous contract's address
         require(contracts[contractId] != newContractsAddress, "Contract is already added");
-        uint length;
-        assembly {
-            length := extcodesize(newContractsAddress)
-        }
-        // check newContractsAddress contains code
-        require(length > 0, "Given contracts address does not contain code");
+        require(_containsCode(newContractsAddress), "Given contracts address does not contain code");
         // add newContractsAddress to mapping of actual contract addresses
         contracts[contractId] = newContractsAddress;
         emit ContractUpgraded(contractsName, newContractsAddress);
@@ -67,5 +64,15 @@ contract ContractManager is OwnableUpgradeSafe {
     function getContract(string calldata name) external view returns (address contractAddress) {
         contractAddress = contracts[keccak256(abi.encodePacked(name))];
         require(contractAddress != address(0), name.strConcat(" contract has not been found"));
+    }
+
+    // check account contains code
+    function _containsCode(address account) internal view returns (bool) {
+        uint length;
+        // solhint-disable-next-line no-inline-assembly
+        assembly {
+            length := extcodesize(account)
+        }
+        return length > 0;
     }
 }

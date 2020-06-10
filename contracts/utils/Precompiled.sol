@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 /*
     Precompiled.sol - SKALE Manager
     Copyright (C) 2018-Present SKALE Labs
@@ -17,7 +19,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.6;
+pragma solidity 0.6.8;
 
 
 library Precompiled {
@@ -38,6 +40,21 @@ library Precompiled {
         }
         require(success, "BigModExp failed");
         return out[0];
+    }
+
+    function bn256ScalarMul(uint x, uint y, uint k) internal view returns (uint , uint ) {
+        uint[3] memory inputToMul;
+        uint[2] memory output;
+        inputToMul[0] = x;
+        inputToMul[1] = y;
+        inputToMul[2] = k;
+        bool success;
+        // solhint-disable-next-line no-inline-assembly
+        assembly {
+            success := staticcall(not(0), 7, inputToMul, 0x60, output, 0x40)
+        }
+        require(success, "Multiplication failed");
+        return (output[0], output[1]);
     }
 
     function bn256Pairing(

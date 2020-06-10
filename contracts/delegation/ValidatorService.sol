@@ -1,7 +1,11 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 /*
     ValidatorService.sol - SKALE Manager
     Copyright (C) 2019-Present SKALE Labs
     @author Dmytro Stebaiev
+    @author Artem Payvin
+    @author Vadim Yavorsky
 
     SKALE Manager is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as published
@@ -17,18 +21,26 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.6;
+pragma solidity 0.6.8;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/cryptography/ECDSA.sol";
 
 import "../Permissions.sol";
-import "../interfaces/IConstants.sol";
+import "../ConstantsHolder.sol";
 
 import "./DelegationController.sol";
 
-
+/**
+ * @title ValidatorService
+ * @dev This contract handles all validator operations including registration,
+ * node management, validator-specific delegation parameters, and more.
+ *
+ * Validators register an address, and use this address to accept delegations and
+ * register nodes.
+ *
+ */
 contract ValidatorService is Permissions {
 
     using ECDSA for bytes32;
@@ -44,10 +56,16 @@ contract ValidatorService is Permissions {
         bool acceptNewRequests;
     }
 
+    /**
+     * @dev Emitted when a validator registers.
+     */
     event ValidatorRegistered(
         uint validatorId
     );
 
+    /**
+     * @dev Emitted when a validator address changes.
+     */
     event ValidatorAddressChanged(
         uint validatorId,
         address newAddress
@@ -61,11 +79,17 @@ contract ValidatorService is Permissions {
         uint validatorId
     );
 
+    /**
+     * @dev Emitted when a node address is linked to a validator.
+     */
     event NodeAddressWasAdded(
         uint validatorId,
         address nodeAddress
     );
 
+    /**
+     * @dev Emitted when a node address is unlinked from a validator.
+     */
     event NodeAddressWasRemoved(
         uint validatorId,
         address nodeAddress
@@ -88,6 +112,21 @@ contract ValidatorService is Permissions {
         _;
     }
 
+    /**
+     * @dev Creates a new validator Id.
+     *
+     * Requirements:
+     *
+     * - sender must not already have registered a validator Id.
+     * - fee rate must be between 0 - 1000‰. Note: per mille!
+     *
+     * Emits ValidatorRegistered event.
+     *
+     * @param name string
+     * @param description string
+     * @param feeRate uint Fee charged on delegations by the validator per mille
+     * @param minimumDelegationAmount uint Minimum delegation amount accepted by the validator
+     */
     function registerValidator(
         string calldata name,
         string calldata description,
@@ -127,10 +166,24 @@ contract ValidatorService is Permissions {
         emit ValidatorWasDisabled(validatorId);
     }
 
+    /**
+     * @dev Owner can disable the validator whitelist. Once turned off the
+     * whitelist cannot be re-enabled.
+     */
     function disableWhitelist() external onlyOwner {
         useWhitelist = false;
     }
 
+    /**
+     * @dev Allows a validator to request a new address.
+     *
+     * Requirements:
+     *
+     * - new address must not be null
+     * - new address must not be already registered as a validator
+     *
+     * @param newValidatorAddress address
+     */
     function requestForNewAddress(address newValidatorAddress) external {
         require(newValidatorAddress != address(0), "New address cannot be null");
         require(_validatorAddressToId[newValidatorAddress] == 0, "Address already registered");
@@ -152,6 +205,19 @@ contract ValidatorService is Permissions {
         emit ValidatorAddressChanged(validatorId, validators[validatorId].validatorAddress);
     }
 
+    /**
+     * @dev Links a given node address.
+     *
+     * Requirements:
+     *
+     * - the given signature must be valid.
+     * - the address must not be assigned to a validator.
+     *
+     * Emits NodeAddressWasAdded event.
+     *
+     * @param nodeAddress address
+     * @param sig bytes signature of validator Id by node operator.
+     */
     function linkNodeAddress(address nodeAddress, bytes calldata sig) external {
         uint validatorId = getValidatorId(msg.sender);
         bytes32 hashOfValidatorId = keccak256(abi.encodePacked(validatorId)).toEthSignedMessageHash();
@@ -161,6 +227,13 @@ contract ValidatorService is Permissions {
         emit NodeAddressWasAdded(validatorId, nodeAddress);
     }
 
+    /**
+     * @dev Unlinks a given node address from a validator.
+     *
+     * Emits NodeAddressWasRemoved event.
+     *
+     * @param nodeAddress address
+     */
     function unlinkNodeAddress(address nodeAddress) external {
         uint validatorId = getValidatorId(msg.sender);
         _removeNodeAddress(validatorId, nodeAddress);
@@ -172,42 +245,80 @@ contract ValidatorService is Permissions {
         validators[validatorId].minimumDelegationAmount = minimumDelegationAmount;
     }
 
-    /// @notice return how many of validator funds are locked in SkaleManager
-    function getAndUpdateBondAmount(uint validatorId)
-        external
-        returns (uint delegatedAmount)
-    {
-        DelegationController delegationController = DelegationController(
-            _contractManager.getContract("DelegationController"));
-        return delegationController.getAndUpdateDelegatedAmount(validators[validatorId].validatorAddress);
-    }
-
+    /**
+     * @dev Allows a validator to set a new validator name.
+     *
+     * @param newName string
+     */
     function setValidatorName(string calldata newName) external {
         uint validatorId = getValidatorId(msg.sender);
         validators[validatorId].name = newName;
     }
 
+    /**
+     * @dev Allows a validator to set a new validator description.
+     *
+     * @param newDescription string
+     */
     function setValidatorDescription(string calldata newDescription) external {
         uint validatorId = getValidatorId(msg.sender);
         validators[validatorId].description = newDescription;
     }
 
+    /**
+     * @dev Allows a validator to start accepting new delegation requests.
+     *
+     * Requirements:
+     *
+     * - validator must not have already enabled accepting new requests
+     */
     function startAcceptingNewRequests() external {
         uint validatorId = getValidatorId(msg.sender);
         require(!isAcceptingNewRequests(validatorId), "Accepting request is already enabled");
         validators[validatorId].acceptNewRequests = true;
     }
 
+    /**
+     * @dev Allows a validator to stop accepting new delegation requests.
+     *
+     * Requirements:
+     *
+     * - validator must not have already stopped accepting new requests
+     */
     function stopAcceptingNewRequests() external {
         uint validatorId = getValidatorId(msg.sender);
         require(isAcceptingNewRequests(validatorId), "Accepting request is already disabled");
         validators[validatorId].acceptNewRequests = false;
     }
 
+    /**
+     * @dev Returns the amount of validator bond.
+     *
+     * @param validatorId uint ID of validator to return the amount of locked funds
+     * @return bondAmount uint the amount of self-delegated funds by the validator
+    */
+    function getAndUpdateBondAmount(uint validatorId)
+        external
+        returns (uint)
+    {
+        DelegationController delegationController = DelegationController(
+            _contractManager.getContract("DelegationController")
+        );
+        return delegationController.getAndUpdateDelegatedByHolderToValidatorNow(
+            getValidator(validatorId).validatorAddress,
+            validatorId
+        );
+    }
+
     function getMyNodesAddresses() external view returns (address[] memory) {
         return getNodeAddresses(getValidatorId(msg.sender));
     }
 
+    /**
+     * @dev Returns a list of trusted validators.
+     *
+     * @return uint[] trusted validators
+     */
     function getTrustedValidators() external view returns (uint[] memory) {
         uint numberOfTrustedValidators = 0;
         for (uint i = 1; i <= numberOfValidators; i++) {
@@ -226,7 +337,8 @@ contract ValidatorService is Permissions {
     }
 
     function checkMinimumDelegation(uint validatorId, uint amount)
-        external view
+        external
+        view
         checkValidatorExists(validatorId)
         allow("DelegationController")
         returns (bool)
@@ -265,7 +377,7 @@ contract ValidatorService is Permissions {
     }
 
     function checkIfValidatorAddressExists(address validatorAddress) public view {
-        require(validatorAddressExists(validatorAddress), "Validator with such address does not exist");
+        require(validatorAddressExists(validatorAddress), "Validator with given address does not exist");
     }
 
     function getValidator(uint validatorId) public view checkValidatorExists(validatorId) returns (Validator memory) {
@@ -286,7 +398,7 @@ contract ValidatorService is Permissions {
         if (_validatorAddressToId[validatorAddress] == validatorId) {
             return;
         }
-        require(_validatorAddressToId[validatorAddress] == 0, "Address is in use by the another validator");
+        require(_validatorAddressToId[validatorAddress] == 0, "Address is in use by another validator");
         address oldAddress = validators[validatorId].validatorAddress;
         delete _validatorAddressToId[oldAddress];
         _nodeAddressToValidatorId[validatorAddress] = validatorId;
@@ -304,7 +416,8 @@ contract ValidatorService is Permissions {
     }
 
     function _removeNodeAddress(uint validatorId, address nodeAddress) internal {
-        require(_nodeAddressToValidatorId[nodeAddress] == validatorId, "Validator hasn't permissions to unlink node");
+        require(_nodeAddressToValidatorId[nodeAddress] == validatorId,
+            "Validator does not have permissions to unlink node");
         delete _nodeAddressToValidatorId[nodeAddress];
         for (uint i = 0; i < _nodeAddresses[validatorId].length; ++i) {
             if (_nodeAddresses[validatorId][i] == nodeAddress) {

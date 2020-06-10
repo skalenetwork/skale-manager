@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 /*
     TokenLaunchLocker.sol - SKALE Manager
     Copyright (C) 2019-Present SKALE Labs
@@ -17,7 +19,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.6;
+pragma solidity 0.6.8;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
 
@@ -35,11 +37,17 @@ contract TokenLaunchLocker is Permissions, ILocker {
     using MathUtils for uint;
     using PartialDifferences for PartialDifferences.Value;
 
+    /**
+     * @dev Emitted when an `amount` is unlocked.
+     */
     event Unlocked(
         address holder,
         uint amount
     );
 
+    /**
+     * @dev Emitted when an `amount` is locked.
+     */
     event Locked(
         address holder,
         uint amount
@@ -81,7 +89,7 @@ contract TokenLaunchLocker is Permissions, ILocker {
                 fromLocked = locked;
             }
             if (fromLocked > 0) {
-                require(_delegationAmount[delegationId] == 0, "Delegation already was added");
+                require(_delegationAmount[delegationId] == 0, "Delegation was already added");
                 _addToDelegatedAmount(holder, fromLocked, month);
                 _addToTotalDelegatedAmount(holder, fromLocked, month);
                 _delegationAmount[delegationId] = fromLocked;

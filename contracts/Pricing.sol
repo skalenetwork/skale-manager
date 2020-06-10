@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 /*
     Pricing.sol - SKALE Manager
     Copyright (C) 2018-Present SKALE Labs
@@ -18,11 +20,10 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.6;
+pragma solidity 0.6.8;
 
 import "./Permissions.sol";
-import "./interfaces/IGroupsData.sol";
-import "./SchainsData.sol";
+import "./SchainsInternal.sol";
 import "./Nodes.sol";
 
 
@@ -79,15 +80,15 @@ contract Pricing is Permissions {
     }
 
     function getTotalLoadPercentage() public view returns (uint) {
-        address schainsDataAddress = _contractManager.getContract("SchainsData");
-        uint64 numberOfSchains = SchainsData(schainsDataAddress).numberOfSchains();
+        SchainsInternal schainsInternal = SchainsInternal(_contractManager.getContract("SchainsInternal"));
+        uint64 numberOfSchains = schainsInternal.numberOfSchains();
         Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
         uint numberOfNodes = nodes.getNumberOnlineNodes();
         uint sumLoadSchain = 0;
         for (uint i = 0; i < numberOfSchains; i++) {
-            bytes32 schain = SchainsData(schainsDataAddress).schainsAtSystem(i);
-            uint numberOfNodesInGroup = IGroupsData(schainsDataAddress).getNumberOfNodesInGroup(schain);
-            uint part = SchainsData(schainsDataAddress).getSchainsPartOfNode(schain);
+            bytes32 schain = schainsInternal.schainsAtSystem(i);
+            uint numberOfNodesInGroup = schainsInternal.getNumberOfNodesInGroup(schain);
+            uint part = schainsInternal.getSchainsPartOfNode(schain);
             sumLoadSchain = sumLoadSchain.add((numberOfNodesInGroup*10**7).div(part));
         }
         return uint(sumLoadSchain.div(10**5*numberOfNodes));

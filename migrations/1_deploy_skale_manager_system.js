@@ -84,14 +84,12 @@ async function deploy(deployer, networkName, accounts) {
         "ConstantsHolder",
         "Nodes",
         "Monitors",
-        "SchainsData",
-        "SchainsFunctionality",
-        "SchainsFunctionalityInternal",
+        "SchainsInternal",
+        "Schains",
         "Decryption",
         "ECDH",
         "SkaleDKG",
         "SkaleVerifier",
-        "ManagerData",
         "SkaleManager",
         "Pricing"
     ]

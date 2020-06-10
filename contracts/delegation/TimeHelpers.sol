@@ -1,5 +1,7 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 /*
-    TimeHellper.sol - SKALE Manager
+    TimeHelpers.sol - SKALE Manager
     Copyright (C) 2019-Present SKALE Labs
     @author Dmytro Stebaiev
 
@@ -17,13 +19,18 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.6;
+pragma solidity 0.6.8;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
 
 import "../thirdparty/BokkyPooBahsDateTimeLibrary.sol";
 
-
+/**
+ * @title TimeHelpers
+ * @dev The contract performs time operations.
+ *
+ * These functions are used to calculate monthly and Proof of Use epochs.
+ */
 contract TimeHelpers {
     using SafeMath for uint;
 

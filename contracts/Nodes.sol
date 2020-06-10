@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 /*
     Nodes.sol - SKALE Manager
     Copyright (C) 2018-Present SKALE Labs
@@ -17,11 +19,11 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.6;
+pragma solidity 0.6.8;
 pragma experimental ABIEncoderV2;
 
 import "./Permissions.sol";
-import "./interfaces/IConstants.sol";
+import "./ConstantsHolder.sol";
 import "./delegation/ValidatorService.sol";
 
 
@@ -38,7 +40,7 @@ contract Nodes is Permissions {
         bytes4 ip;
         bytes4 publicIP;
         uint16 port;
-        bytes publicKey;
+        bytes32[2] publicKey;
         uint startBlock;
         uint32 lastRewardDate;
         uint32 finishTime;
@@ -63,7 +65,7 @@ contract Nodes is Permissions {
         bytes4 ip;
         bytes4 publicIp;
         uint16 port;
-        bytes publicKey;
+        bytes32[2] publicKey;
         uint16 nonce;
     }
 
@@ -136,7 +138,7 @@ contract Nodes is Permissions {
         bytes4 ip,
         bytes4 publicIP,
         uint16 port,
-        bytes calldata publicKey,
+        bytes32[2] calldata publicKey,
         uint validatorId
     )
         external
@@ -173,12 +175,12 @@ contract Nodes is Permissions {
 
     /**
      * @dev removeSpaceFromFractionalNode - occupies space from Fractional Node
-     * function could be run only by SchainsFunctionality
+     * function could be run only by Schains
      * @param nodeIndex - index of Node at array of Fractional Nodes
      * @param space - space which should be occupied
      */
     function removeSpaceFromNode(uint nodeIndex, uint8 space)
-        external allow("SchainsFunctionalityInternal") returns (bool)
+        external allowTwo("Schains", "SchainsInternal") returns (bool)
     {
         if (spaceOfNodes[nodeIndex].freeSpace < space) {
             return false;
@@ -194,11 +196,11 @@ contract Nodes is Permissions {
 
     /**
      * @dev adSpaceToFractionalNode - returns space to Fractional Node
-     * function could be run only be SchainsFunctionality
+     * function could be run only be Schains
      * @param nodeIndex - index of Node at array of Fractional Nodes
      * @param space - space which should be returned
      */
-    function addSpaceToNode(uint nodeIndex, uint8 space) external allow("SchainsFunctionality") {
+    function addSpaceToNode(uint nodeIndex, uint8 space) external allow("Schains") {
         if (space > 0) {
             _moveNodeToNewSpaceMap(
                 nodeIndex,
@@ -454,8 +456,8 @@ contract Nodes is Permissions {
      * @return if time for reward has come - true, else - false
      */
     function isTimeForReward(uint nodeIndex) external view returns (bool) {
-        address constantsAddress = _contractManager.getContract("ConstantsHolder");
-        return nodes[nodeIndex].lastRewardDate.add(IConstants(constantsAddress).rewardPeriod()) <= block.timestamp;
+        ConstantsHolder constantsHolder = ConstantsHolder(_contractManager.getContract("ConstantsHolder"));
+        return nodes[nodeIndex].lastRewardDate.add(constantsHolder.rewardPeriod()) <= block.timestamp;
     }
 
     /**
@@ -464,6 +466,7 @@ contract Nodes is Permissions {
      * @return ip address
      */
     function getNodeIP(uint nodeIndex) external view returns (bytes4) {
+        require(nodeIndex < nodes.length, "Node does not exist");
         return nodes[nodeIndex].ip;
     }
 
@@ -476,7 +479,7 @@ contract Nodes is Permissions {
         return nodes[nodeIndex].port;
     }
 
-    function getNodePublicKey(uint nodeIndex) external view returns (bytes memory) {
+    function getNodePublicKey(uint nodeIndex) external view returns (bytes32[2] memory) {
         return nodes[nodeIndex].publicKey;
     }
 
@@ -512,8 +515,8 @@ contract Nodes is Permissions {
      * @return Node next reward date
      */
     function getNodeNextRewardDate(uint nodeIndex) external view returns (uint32) {
-        address constantsAddress = _contractManager.getContract("ConstantsHolder");
-        return nodes[nodeIndex].lastRewardDate + IConstants(constantsAddress).rewardPeriod();
+        ConstantsHolder constantsHolder = ConstantsHolder(_contractManager.getContract("ConstantsHolder"));
+        return nodes[nodeIndex].lastRewardDate + constantsHolder.rewardPeriod();
     }
 
     /**

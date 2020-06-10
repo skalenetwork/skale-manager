@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 /*
     SkaleToken.sol - SKALE Manager
     Copyright (C) 2018-Present SKALE Labs
@@ -17,7 +19,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.6;
+pragma solidity 0.6.8;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
@@ -45,8 +47,8 @@ contract SkaleToken is ERC777, Permissions, ReentrancyGuard, IDelegatableToken {
 
     uint public constant CAP = 7 * 1e9 * (10 ** DECIMALS); // the maximum amount of tokens that can ever be created
 
-    constructor(address contractsAddress, address[] memory defOps)
-    ERC777("SKALE", "SKL", defOps) public
+    constructor(address contractsAddress, address[] memory defOps) public
+    ERC777("SKALE", "SKL", defOps)
     {
         Permissions.initialize(contractsAddress);
     }

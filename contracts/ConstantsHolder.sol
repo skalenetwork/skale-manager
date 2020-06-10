@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 /*
     ConstantsHolder.sol - SKALE Manager
     Copyright (C) 2018-Present SKALE Labs
@@ -17,102 +19,101 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.6;
+pragma solidity 0.6.8;
 
 import "./Permissions.sol";
-import "./interfaces/IConstants.sol";
 
 
 /**
  * @title Contains constants and common variables for Skale Manager system
  * @author Artem Payvin
  */
-contract ConstantsHolder is IConstants, Permissions {
+contract ConstantsHolder is Permissions {
 
     // initial price for creating Node (100 SKL)
-    uint public constant override NODE_DEPOSIT = 100 * 1e18;
+    uint public constant NODE_DEPOSIT = 100 * 1e18;
 
     // part of Node for Tiny Skale-chain (1/128 of Node)
-    uint8 public constant override TINY_DIVISOR = 128;
+    uint8 public constant TINY_DIVISOR = 128;
 
     // part of Node for Small Skale-chain (1/8 of Node)
-    uint8 public constant override SMALL_DIVISOR = 8;
+    uint8 public constant SMALL_DIVISOR = 8;
 
     // part of Node for Medium Skale-chain (full Node)
-    uint8 public constant override MEDIUM_DIVISOR = 1;
+    uint8 public constant MEDIUM_DIVISOR = 1;
 
     // part of Node for Medium Test Skale-chain (1/4 of Node)
-    uint8 public constant override MEDIUM_TEST_DIVISOR = 4;
+    uint8 public constant MEDIUM_TEST_DIVISOR = 4;
 
     // typically number of Nodes for Skale-chain (16 Nodes)
-    uint public constant override NUMBER_OF_NODES_FOR_SCHAIN = 16;
+    uint public constant NUMBER_OF_NODES_FOR_SCHAIN = 16;
 
     // number of Nodes for Test Skale-chain (2 Nodes)
-    uint public constant override NUMBER_OF_NODES_FOR_TEST_SCHAIN = 2;
+    uint public constant NUMBER_OF_NODES_FOR_TEST_SCHAIN = 2;
 
     // number of Nodes for Test Skale-chain (4 Nodes)
-    uint public constant override NUMBER_OF_NODES_FOR_MEDIUM_TEST_SCHAIN = 4;
+    uint public constant NUMBER_OF_NODES_FOR_MEDIUM_TEST_SCHAIN = 4;
 
     // 'Fractional' Part of ratio for create Fractional or Full Node
-    uint public constant override FRACTIONAL_FACTOR = 128;
+    uint public constant FRACTIONAL_FACTOR = 128;
 
     // 'Full' part of ratio for create Fractional or Full Node
-    uint public constant override FULL_FACTOR = 17;
+    uint public constant FULL_FACTOR = 17;
 
     // number of second in one day
-    uint32 public constant override SECONDS_TO_DAY = 86400;
+    uint32 public constant SECONDS_TO_DAY = 86400;
 
     // number of seconds in one month
     uint32 public constant SECONDS_TO_MONTH = 2592000;
 
     // number of seconds in one year
-    uint32 public constant override SECONDS_TO_YEAR = 31622400;
+    uint32 public constant SECONDS_TO_YEAR = 31622400;
 
     // number of seconds in six years
-    uint32 public constant override SIX_YEARS = 186624000;
+    uint32 public constant SIX_YEARS = 186624000;
 
     // initial number of monitors
-    uint public constant override NUMBER_OF_MONITORS = 24;
+    uint public constant NUMBER_OF_MONITORS = 24;
 
     // MSR - Minimum staking requirement
-    uint public override msr;
+    uint public msr;
 
     // Reward period - 30 days (each 30 days Node would be granted for bounty)
-    uint32 public override rewardPeriod;
+    uint32 public rewardPeriod;
 
     // Allowable latency - 150000 ms by default
-    uint32 public override allowableLatency;
+    uint32 public allowableLatency;
 
     /**
      * Delta period - 1 hour (1 hour before Reward period became Monitors need
      * to send Verdicts and 1 hour after Reward period became Node need to come
      * and get Bounty)
      */
-    uint32 public override deltaPeriod;
+    uint32 public deltaPeriod;
 
     /**
      * Check time - 2 minutes (every 2 minutes monitors should check metrics
      * from checked nodes)
      */
-    uint8 public override checkTime;
+    uint8 public checkTime;
 
     /**
      * Last time when system was underloaded
      * (allocations on Skale-chain / allocations on Nodes < 75%)
      */
-    uint public override lastTimeUnderloaded;
+    uint public lastTimeUnderloaded;
 
     /**
      * Last time when system was overloaded
      * (allocations on Skale-chain / allocations on Nodes > 85%)
      */
-    uint public override lastTimeOverloaded;
+    uint public lastTimeOverloaded;
 
     //Need to add minimal allowed parameters for verdicts
 
     uint public launchTimestamp;
 
-    uint public override rotationDelay;
+    uint public rotationDelay;
 
     uint public proofOfUseLockUpPeriodDays;
 
@@ -143,9 +144,9 @@ contract ConstantsHolder is IConstants, Permissions {
     }
 
     /**
-     * Set time if system iverloaded, run only by SchainsFunctionality contract
+     * Set time if system iverloaded, run only by Schains contract
      */
-    function setLastTimeOverloaded() external override allow("SchainsFunctionality") {
+    function setLastTimeOverloaded() external allow("Schains") {
         lastTimeOverloaded = now;
     }
 

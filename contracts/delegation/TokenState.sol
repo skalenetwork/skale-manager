@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 /*
     TokenState.sol - SKALE Manager
     Copyright (C) 2019-Present SKALE Labs
@@ -17,7 +19,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.6;
+pragma solidity 0.6.8;
 pragma experimental ABIEncoderV2;
 
 import "../Permissions.sol";
@@ -26,17 +28,36 @@ import "./TimeHelpers.sol";
 import "../interfaces/delegation/ILocker.sol";
 
 
-/// @notice Store and manage tokens states
+/**
+ * @title Token State
+ * @dev This contract manages lockers to control token transferability.
+ *
+ * See ILocker.
+ */
 contract TokenState is Permissions, ILocker {
+
+    /**
+     * @dev Emitted when a contract is added to the locker.
+     */
     event LockerWasAdded(
         string locker
     );
+
+    /**
+     * @dev Emitted when a contract is removed from the locker.
+     */
     event LockerWasRemoved(
         string locker
     );
 
     string[] private _lockers;
 
+    /**
+     *  @dev Return and update the total locked amount of a given `holder`.
+     *
+     *  @param holder address of the token holder
+     *  @return total locked amount
+    */
     function getAndUpdateLockedAmount(address holder) external override returns (uint) {
         uint locked = 0;
         for (uint i = 0; i < _lockers.length; ++i) {
@@ -46,6 +67,12 @@ contract TokenState is Permissions, ILocker {
         return locked;
     }
 
+    /**
+     * @dev Return and update the total locked and un-delegatable amount of a given `holder`.
+     *
+     * @param holder address of the token holder
+     * @return amount total slashed amount (non-transferable and non-delegatable)
+    */
     function getAndUpdateForbiddenForDelegationAmount(address holder) external override returns (uint amount) {
         uint forbidden = 0;
         for (uint i = 0; i < _lockers.length; ++i) {
@@ -55,6 +82,13 @@ contract TokenState is Permissions, ILocker {
         return forbidden;
     }
 
+    /**
+     * @dev Allows the Owner to remove a contract from the locker.
+     *
+     * Emits a LockerWasRemoved event.
+     *
+     * @param locker string name of contract to remove from locker
+     */
     function removeLocker(string calldata locker) external onlyOwner {
         uint index;
         bytes32 hash = keccak256(abi.encodePacked(locker));
@@ -75,12 +109,19 @@ contract TokenState is Permissions, ILocker {
 
     function initialize(address __contractManager) public override initializer {
         Permissions.initialize(__contractManager);
-        registerLocker("DelegationController");
-        registerLocker("Punisher");
-        registerLocker("TokenLaunchLocker");
+        addLocker("DelegationController");
+        addLocker("Punisher");
+        addLocker("TokenLaunchLocker");
     }
 
-    function registerLocker(string memory locker) public onlyOwner {
+    /**
+     * @dev Allows the Owner to add a contract to the Locker.
+     *
+     * Emits a LockerWasAdded event.
+     *
+     * @param locker string name of contract to add to locker
+     */
+    function addLocker(string memory locker) public onlyOwner {
         _lockers.push(locker);
         emit LockerWasAdded(locker);
     }
