@@ -23,7 +23,7 @@ import { deploySchainsData } from "./tools/deploy/schainsData";
 import { deploySchainsFunctionality } from "./tools/deploy/schainsFunctionality";
 import { deploySkaleManager } from "./tools/deploy/skaleManager";
 import { deploySkaleToken } from "./tools/deploy/skaleToken";
-import { skipTime } from "./tools/time";
+import { skipTime, currentTime } from "./tools/time";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -60,7 +60,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
         await skaleToken.mint(skaleManager.address, premined, "0x", "0x");
         await skaleToken.mint(owner, premined, "0x", "0x");
         await constantsHolder.setMSR(5);
-        await constantsHolder.setLaunchTimestamp(0); // to allow bounty withdrawing
+        await constantsHolder.setLaunchTimestamp(await currentTime(web3)); // to allow bounty withdrawing
     });
 
     it("should fail to process token fallback if sent not from SkaleToken", async () => {
@@ -461,6 +461,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                     txGetBounty.receipt.blockNumber.should.be.equal(blocks.toNumber());
 
                     skipTime(web3, month); // can withdraw bounty only next month
+                    skipTime(web3, 3 * month); // bounty is locked for 3 months after network launch
 
                     await distributor.withdrawBounty(validatorId, validator, {from: validator});
                     await distributor.withdrawFee(validator, {from: validator});
@@ -507,6 +508,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                     txGetBounty.receipt.blockNumber.should.be.equal(blocks.toNumber());
 
                     skipTime(web3, month); // can withdraw bounty only next month
+                    skipTime(web3, 3 * month); // bounty is locked for 3 months after network launch
 
                     await distributor.withdrawBounty(validatorId, validator, {from: validator});
                     await distributor.withdrawFee(validator, {from: validator});
@@ -528,6 +530,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                     txGetBounty.receipt.blockNumber.should.be.equal(blocks.toNumber());
 
                     skipTime(web3, month); // can withdraw bounty only next month
+                    skipTime(web3, 3 * month); // bounty is locked for 3 months after network launch
 
                     await distributor.withdrawBounty(validatorId, validator, {from: validator});
                     await distributor.withdrawFee(validator, {from: validator});
@@ -548,6 +551,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                     txGetBounty.receipt.blockNumber.should.be.equal(blocks.toNumber());
 
                     skipTime(web3, month); // can withdraw bounty only next month
+                    skipTime(web3, 3 * month); // bounty is locked for 3 months after network launch
 
                     await distributor.withdrawBounty(validatorId, validator, {from: validator});
                     await distributor.withdrawFee(validator, {from: validator});
@@ -592,6 +596,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                     txGetBounty.receipt.blockNumber.should.be.equal(blocks.toNumber());
 
                     skipTime(web3, month); // can withdraw bounty only next month
+                    skipTime(web3, 3 * month); // bounty is locked for 3 months after network launch
 
                     await distributor.withdrawBounty(validatorId, validator, {from: validator});
                     await distributor.withdrawFee(validator, {from: validator});
@@ -612,6 +617,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                     txGetBounty.receipt.blockNumber.should.be.equal(blocks.toNumber());
 
                     skipTime(web3, month); // can withdraw bounty only next month
+                    skipTime(web3, 3 * month); // bounty is locked for 3 months after network launch
 
                     await distributor.withdrawBounty(validatorId, validator, {from: validator});
                     await distributor.withdrawFee(validator, {from: validator});
@@ -632,6 +638,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                     txGetBounty.receipt.blockNumber.should.be.equal(blocks.toNumber());
 
                     skipTime(web3, month); // can withdraw bounty only next month
+                    skipTime(web3, 3 * month); // bounty is locked for 3 months after network launch
 
                     await distributor.withdrawBounty(validatorId, validator, {from: validator});
                     await distributor.withdrawFee(validator, {from: validator});
