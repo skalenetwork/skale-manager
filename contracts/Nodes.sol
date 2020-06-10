@@ -410,7 +410,7 @@ contract Nodes is Permissions {
         uint msr = ConstantsHolder(_contractManager.getContract("ConstantsHolder")).msr();
         require(
             (validatorNodes.length.add(1)) * msr <= delegationsTotal,
-            "Validator must meet Minimum Staking Requirement");
+            "Validator must meet the Minimum Staking Requirement");
     }
 
     function checkPossibilityToMaintainNode(uint validatorId, uint nodeIndex)

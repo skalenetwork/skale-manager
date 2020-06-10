@@ -248,7 +248,7 @@ contract("NodesFunctionality", ([owner, validator, nodeAddress, nodeAddress2, ho
             await delegationController.acceptPendingDelegation(delegationId, {from: validator});
 
             await nodes.checkPossibilityCreatingNode(nodeAddress)
-                .should.be.eventually.rejectedWith("Validator must meet Minimum Staking Requirement");
+                .should.be.eventually.rejectedWith("Validator must meet the Minimum Staking Requirement");
         });
 
         it("should allow to create node if new epoch is started", async () => {
@@ -259,7 +259,7 @@ contract("NodesFunctionality", ([owner, validator, nodeAddress, nodeAddress2, ho
             skipTime(web3, month);
 
             await nodes.checkPossibilityCreatingNode(nodeAddress)
-                .should.be.eventually.rejectedWith("Validator must meet Minimum Staking Requirement");
+                .should.be.eventually.rejectedWith("Validator must meet the Minimum Staking Requirement");
 
             await constantsHolder.setMSR(amount);
 
@@ -284,7 +284,7 @@ contract("NodesFunctionality", ([owner, validator, nodeAddress, nodeAddress2, ho
 
             skipTime(web3, 2678400); // 31 days
             await nodes.checkPossibilityCreatingNode(nodeAddress)
-                .should.be.eventually.rejectedWith("Validator must meet Minimum Staking Requirement");
+                .should.be.eventually.rejectedWith("Validator must meet the Minimum Staking Requirement");
 
             await constantsHolder.setMSR(amount);
 
