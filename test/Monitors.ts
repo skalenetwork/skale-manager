@@ -1,8 +1,7 @@
 import { BigNumber } from "bignumber.js";
 import { ConstantsHolderInstance,
          ContractManagerInstance,
-         MonitorsDataInstance,
-         MonitorsFunctionalityInstance,
+         MonitorsInstance,
         NodesInstance } from "../types/truffle-contracts";
 
 import { currentTime, skipTime } from "./tools/time";
@@ -11,25 +10,22 @@ import chai = require("chai");
 import * as chaiAsPromised from "chai-as-promised";
 import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
 import { deployContractManager } from "./tools/deploy/contractManager";
-import { deployMonitorsData } from "./tools/deploy/monitorsData";
-import { deployMonitorsFunctionality } from "./tools/deploy/monitorsFunctionality";
+import { deployMonitors } from "./tools/deploy/monitors";
 import { deployNodes } from "./tools/deploy/nodes";
 chai.should();
 chai.use((chaiAsPromised));
 
-contract("MonitorsFunctionality", ([owner, validator]) => {
+contract("Monitors", ([owner, validator]) => {
   let contractManager: ContractManagerInstance;
-  let monitorsFunctionality: MonitorsFunctionalityInstance;
   let constantsHolder: ConstantsHolderInstance;
-  let monitorsData: MonitorsDataInstance;
+  let monitors: MonitorsInstance;
   let nodes: NodesInstance;
 
   beforeEach(async () => {
     contractManager = await deployContractManager();
 
     nodes = await deployNodes(contractManager);
-    monitorsFunctionality = await deployMonitorsFunctionality(contractManager);
-    monitorsData = await deployMonitorsData(contractManager);
+    monitors = await deployMonitors(contractManager);
     constantsHolder = await deployConstantsHolder(contractManager);
 
     // create a node for monitors functions tests
@@ -53,7 +49,7 @@ contract("MonitorsFunctionality", ([owner, validator]) => {
   const nodeIndex = 0;
 
   it("should add Monitor", async () => {
-    const { logs } = await monitorsFunctionality.addMonitor(nodeIndex, {from: owner});
+    const { logs } = await monitors.addMonitor(nodeIndex, {from: owner});
     // check events after `.addMonitor` invoke
     assert.equal(logs[0].event, "GroupAdded");
     assert.equal(logs[1].event, "GroupGenerated");
@@ -72,9 +68,9 @@ contract("MonitorsFunctionality", ([owner, validator]) => {
 
   it("should upgrade Monitor", async () => {
     // add monitor
-    await monitorsFunctionality.addMonitor(nodeIndex, {from: owner});
+    await monitors.addMonitor(nodeIndex, {from: owner});
     // upgrade Monitor
-    const { logs } = await monitorsFunctionality.upgradeMonitor(nodeIndex, {from: owner});
+    const { logs } = await monitors.upgradeMonitor(nodeIndex, {from: owner});
     // check events after `.upgradeMonitor` invoke
     assert.equal(logs[0].event, "GroupUpgraded");
     assert.equal(logs[1].event, "GroupGenerated");
@@ -98,9 +94,9 @@ contract("MonitorsFunctionality", ([owner, validator]) => {
       ip
     }
     //
-    await monitorsFunctionality.addMonitor(indexNode0, {from: owner});
+    await monitors.addMonitor(indexNode0, {from: owner});
 
-    await monitorsData.addCheckedNode(
+    await monitors.addCheckedNode(
       indexNode0inSha3, node, {from: owner},
       );
     // execution
@@ -109,7 +105,7 @@ contract("MonitorsFunctionality", ([owner, validator]) => {
       downtime: 1,
       latency: 0,
     };
-    const { logs } = await monitorsFunctionality
+    const { logs } = await monitors
           .sendVerdict(0, verd, {from: owner});
     // assertion
     assert.equal(logs[0].event, "VerdictWasSent");
@@ -122,7 +118,7 @@ contract("MonitorsFunctionality", ([owner, validator]) => {
       downtime: 0,
       latency: 0,
     };
-    await monitorsFunctionality
+    await monitors
           .sendVerdict(0, verd, {from: owner})
           .should.be.eventually.rejectedWith(error);
   });
@@ -144,9 +140,9 @@ contract("MonitorsFunctionality", ([owner, validator]) => {
       ip
     }
     //
-    // await monitorsFunctionality.addMonitor(indexNode0, {from: owner});
+    // await monitors.addMonitor(indexNode0, {from: owner});
     //
-    await monitorsData.addCheckedNode(
+    await monitors.addCheckedNode(
       indexNode0inSha3, node, {from: owner},
       );
     const verd = {
@@ -154,9 +150,9 @@ contract("MonitorsFunctionality", ([owner, validator]) => {
       downtime: 0,
       latency: 0,
     };
-    await monitorsFunctionality
+    await monitors
           .sendVerdict(0, verd, {from: owner});
-    const lengthOfMetrics = await monitorsData.getLengthOfMetrics(monitorIndex1, {from: owner});
+    const lengthOfMetrics = await monitors.getLengthOfMetrics(monitorIndex1, {from: owner});
     lengthOfMetrics.toNumber().should.be.equal(0);
   });
 
@@ -164,28 +160,28 @@ contract("MonitorsFunctionality", ([owner, validator]) => {
     // preparation
     const indexNode1 = 1;
     const monitorIndex1 = web3.utils.soliditySha3(indexNode1);
-    await monitorsData.addGroup(
+    await monitors.createGroup(
       monitorIndex1, 1, "0x0000000000000000000000000000000000000000000000000000000000000000", {from: owner},
       );
-    await monitorsData.setNodeInGroup(
+    await monitors.setNodeInGroup(
       monitorIndex1, indexNode1, {from: owner},
       );
-    await monitorsData.addVerdict(monitorIndex1, 10, 0, {from: owner});
-    await monitorsData.addVerdict(monitorIndex1, 10, 50, {from: owner});
-    await monitorsData.addVerdict(monitorIndex1, 100, 40, {from: owner});
-    const res = new BigNumber(await monitorsData.getLengthOfMetrics(monitorIndex1, {from: owner}));
+    await monitors.addVerdict(monitorIndex1, 10, 0, {from: owner});
+    await monitors.addVerdict(monitorIndex1, 10, 50, {from: owner});
+    await monitors.addVerdict(monitorIndex1, 100, 40, {from: owner});
+    const res = new BigNumber(await monitors.getLengthOfMetrics(monitorIndex1, {from: owner}));
     expect(parseInt(res.toString(), 10)).to.equal(3);
 
-    const metrics = await await monitorsFunctionality.calculateMetrics.call(indexNode1, {from: owner});
+    const metrics = await await monitors.calculateMetrics.call(indexNode1, {from: owner});
     const downtime = web3.utils.toBN(metrics[0]).toNumber();
     const latency = web3.utils.toBN(metrics[1]).toNumber();
     downtime.should.be.equal(10);
     latency.should.be.equal(40);
 
     // execution
-    await monitorsFunctionality
+    await monitors
           .calculateMetrics(indexNode1, {from: owner});
-    const res2 = new BigNumber(await monitorsData.getLengthOfMetrics(monitorIndex1, {from: owner}));
+    const res2 = new BigNumber(await monitors.getLengthOfMetrics(monitorIndex1, {from: owner}));
     // expectation
     expect(parseInt(res2.toString(), 10)).to.equal(0);
   });
@@ -206,7 +202,7 @@ contract("MonitorsFunctionality", ([owner, validator]) => {
       time,
       ip
     }
-    await monitorsData.addCheckedNode(
+    await monitors.addCheckedNode(
       indexNode0inSha3, node, {from: owner},
       );
     // execution
@@ -216,15 +212,15 @@ contract("MonitorsFunctionality", ([owner, validator]) => {
       downtime: 0,
       latency: 0,
     };
-    await monitorsFunctionality
+    await monitors
           .sendVerdict(0, verd, {from: owner});
-    const res = new BigNumber(await monitorsData.getLengthOfMetrics(monitorIndex1, {from: owner}));
+    const res = new BigNumber(await monitors.getLengthOfMetrics(monitorIndex1, {from: owner}));
     // expectation
     expect(parseInt(res.toString(), 10)).to.equal(1);
   });
 
   it("should not contain duplicates after epoch ending", async () => {
-    await monitorsFunctionality.addMonitor(0);
+    await monitors.addMonitor(0);
 
     const rewardPeriod = (await constantsHolder.rewardPeriod()).toNumber();
     skipTime(web3, rewardPeriod);
@@ -234,17 +230,17 @@ contract("MonitorsFunctionality", ([owner, validator]) => {
       downtime: 0,
       latency: 0,
     };
-    await monitorsFunctionality.sendVerdict(1, verd);
+    await monitors.sendVerdict(1, verd);
 
     const node1Hash = web3.utils.soliditySha3(1);
     const node2Hash = web3.utils.soliditySha3(2);
-    await monitorsData.getCheckedArray(node1Hash).should.be.eventually.empty;
-    (await monitorsData.getCheckedArray(node2Hash)).length.should.be.equal(1);
+    await monitors.getCheckedArray(node1Hash).should.be.eventually.empty;
+    (await monitors.getCheckedArray(node2Hash)).length.should.be.equal(1);
 
     await nodes.changeNodeLastRewardDate(0);
-    await monitorsFunctionality.upgradeMonitor(0);
+    await monitors.upgradeMonitor(0);
 
-    const validatedArray = await monitorsData.getCheckedArray(node2Hash);
+    const validatedArray = await monitors.getCheckedArray(node2Hash);
     const validatedNodeIndexes = validatedArray.map((value) => new BigNumber(value.nodeIndex).toNumber());
 
     validatedNodeIndexes.sort();
@@ -256,29 +252,29 @@ contract("MonitorsFunctionality", ([owner, validator]) => {
   });
 
   it("should delete node from checked list", async () => {
-    await monitorsFunctionality.addMonitor(0);
+    await monitors.addMonitor(0);
 
     const node1Hash = web3.utils.soliditySha3(1);
     const node2Hash = web3.utils.soliditySha3(2);
     const node3Hash = web3.utils.soliditySha3(3);
     const node4Hash = web3.utils.soliditySha3(4);
 
-    (await monitorsData.getCheckedArray(node1Hash)).length.should.be.equal(1);
-    (await monitorsData.getCheckedArray(node2Hash)).length.should.be.equal(1);
-    (await monitorsData.getCheckedArray(node3Hash)).length.should.be.equal(1);
-    (await monitorsData.getCheckedArray(node4Hash)).length.should.be.equal(1);
+    (await monitors.getCheckedArray(node1Hash)).length.should.be.equal(1);
+    (await monitors.getCheckedArray(node2Hash)).length.should.be.equal(1);
+    (await monitors.getCheckedArray(node3Hash)).length.should.be.equal(1);
+    (await monitors.getCheckedArray(node4Hash)).length.should.be.equal(1);
 
-    await monitorsFunctionality.deleteMonitor(0);
+    await monitors.deleteMonitor(0);
 
-    await monitorsData.getCheckedArray(node1Hash).should.be.eventually.empty;
-    await monitorsData.getCheckedArray(node2Hash).should.be.eventually.empty;
-    await monitorsData.getCheckedArray(node3Hash).should.be.eventually.empty;
-    await monitorsData.getCheckedArray(node4Hash).should.be.eventually.empty;
+    await monitors.getCheckedArray(node1Hash).should.be.eventually.empty;
+    await monitors.getCheckedArray(node2Hash).should.be.eventually.empty;
+    await monitors.getCheckedArray(node3Hash).should.be.eventually.empty;
+    await monitors.getCheckedArray(node4Hash).should.be.eventually.empty;
   });
 
   it("should delete nodes from checked list", async () => {
-    await monitorsFunctionality.addMonitor(0);
-    await monitorsFunctionality.addMonitor(1);
+    await monitors.addMonitor(0);
+    await monitors.addMonitor(1);
 
     const node0Hash = web3.utils.soliditySha3(0);
     const node1Hash = web3.utils.soliditySha3(1);
@@ -286,21 +282,21 @@ contract("MonitorsFunctionality", ([owner, validator]) => {
     const node3Hash = web3.utils.soliditySha3(3);
     const node4Hash = web3.utils.soliditySha3(4);
 
-    (await monitorsData.getCheckedArray(node0Hash)).length.should.be.equal(1);
-    (await monitorsData.getCheckedArray(node1Hash)).length.should.be.equal(1);
-    (await monitorsData.getCheckedArray(node2Hash)).length.should.be.equal(2);
-    (await monitorsData.getCheckedArray(node3Hash)).length.should.be.equal(2);
-    (await monitorsData.getCheckedArray(node4Hash)).length.should.be.equal(2);
+    (await monitors.getCheckedArray(node0Hash)).length.should.be.equal(1);
+    (await monitors.getCheckedArray(node1Hash)).length.should.be.equal(1);
+    (await monitors.getCheckedArray(node2Hash)).length.should.be.equal(2);
+    (await monitors.getCheckedArray(node3Hash)).length.should.be.equal(2);
+    (await monitors.getCheckedArray(node4Hash)).length.should.be.equal(2);
 
-    await monitorsFunctionality.deleteMonitor(0);
+    await monitors.deleteMonitor(0);
 
-    await monitorsData.getCheckedArray(node0Hash).should.be.eventually.empty;
-    await monitorsData.getCheckedArray(node1Hash).should.be.eventually.empty;
-    (await monitorsData.getCheckedArray(node2Hash)).length.should.be.equal(1);
-    (await monitorsData.getCheckedArray(node3Hash)).length.should.be.equal(1);
-    (await monitorsData.getCheckedArray(node4Hash)).length.should.be.equal(1);
+    await monitors.getCheckedArray(node0Hash).should.be.eventually.empty;
+    await monitors.getCheckedArray(node1Hash).should.be.eventually.empty;
+    (await monitors.getCheckedArray(node2Hash)).length.should.be.equal(1);
+    (await monitors.getCheckedArray(node3Hash)).length.should.be.equal(1);
+    (await monitors.getCheckedArray(node4Hash)).length.should.be.equal(1);
 
-    await monitorsFunctionality.deleteMonitor(1);
+    await monitors.deleteMonitor(1);
 
   });
 
@@ -331,7 +327,7 @@ contract("MonitorsFunctionality", ([owner, validator]) => {
     it("should add monitor", async () => {
       for (let node = 0; node < nodesCount; ++node) {
         if (await nodes.isNodeActive(node)) {
-          const { logs } = await monitorsFunctionality.addMonitor(node);
+          const { logs } = await monitors.addMonitor(node);
 
           const targetNodes = logs[2].args[2].map((value: BN) => value.toNumber());
           targetNodes.length.should.be.equal(24);

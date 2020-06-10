@@ -28,7 +28,7 @@
   "scripts": {
     "compile": "rm -r ./build && ./node_modules/.bin/truffle compile",
     "deploy": "bash ./scripts/deploy.sh",
-    "generate": "truffle compile && typechain --target truffle './build/**/*.json'",
+    "generate": "npx truffle compile && typechain --target truffle './build/**/*.json'",
     "hooks": "git config core.hooksPath .githooks || true",
     "lint": "npx solhint \"contracts/**/*.sol\"",
     "prepare": "yarn generate && yarn hooks",
