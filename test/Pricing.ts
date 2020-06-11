@@ -71,10 +71,10 @@ contract("Pricing", ([owner, holder]) => {
                 await schainsData.addGroup(davidSchainHash, 1, davidSchainHash);
                 await schainsData.addGroup(jacobSchainHash, 2, jacobSchainHash);
 
-                await schainsData.setNodeInGroup(bobSchainHash, johnNodeIndex);
-                await schainsData.setNodeInGroup(davidSchainHash, michaelNodeIndex);
-                await schainsData.setNodeInGroup(jacobSchainHash, danielNodeIndex);
-                await schainsData.setNodeInGroup(jacobSchainHash, stevenNodeIndex);
+                await schainsInternal.setNodeInGroup(bobSchainHash, 100000, johnNodeIndex);
+                await schainsInternal.setNodeInGroup(davidSchainHash, 100000, michaelNodeIndex);
+                await schainsInternal.setNodeInGroup(jacobSchainHash, 100000, danielNodeIndex);
+                await schainsInternal.setNodeInGroup(jacobSchainHash, 100000, stevenNodeIndex);
 
                 await schainsData.addSchainForNode(johnNodeIndex, bobSchainHash);
                 await schainsData.addSchainForNode(michaelNodeIndex, davidSchainHash);

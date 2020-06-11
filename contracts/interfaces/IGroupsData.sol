@@ -28,7 +28,7 @@ pragma solidity 0.6.6;
 interface IGroupsData {
     function addGroup(bytes32 groupIndex, uint amountOfNodes, bytes32 data) external;
     function removeAllNodesInGroup(bytes32 groupIndex) external;
-    function setNodeInGroup(bytes32 groupIndex, uint nodeIndex) external;
+    function setNodeInGroup(bytes32 groupIndex, uint indexOfNode, uint nodeIndex) external;
     function setNodesInGroup(bytes32 groupIndex, uint[] calldata nodesInGroup) external;
     function removeExceptionNode(bytes32 groupIndex, uint nodeIndex) external;
     function removeGroup(bytes32 groupIndex) external;

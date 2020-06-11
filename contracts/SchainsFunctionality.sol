@@ -210,8 +210,8 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
     {
         SchainsFunctionalityInternal schainsFunctionalityInternal = SchainsFunctionalityInternal(
             _contractManager.getContract("SchainsFunctionalityInternal"));
-        schainsFunctionalityInternal.removeNodeFromSchain(nodeIndex, schainId);
-        return schainsFunctionalityInternal.selectNodeToGroup(schainId);
+        uint indexOfNode = schainsFunctionalityInternal.removeNodeFromSchain(nodeIndex, schainId);
+        return schainsFunctionalityInternal.selectNodeToGroup(schainId, indexOfNode);
     }
 
     function freezeSchains(uint nodeIndex) external allow(_executorName) {
@@ -243,7 +243,7 @@ contract SchainsFunctionality is Permissions, ISchainsFunctionality {
         SchainsFunctionalityInternal schainsFunctionalityInternal = SchainsFunctionalityInternal(
             _contractManager.getContract("SchainsFunctionalityInternal"));
         require(schainsFunctionalityInternal.isAnyFreeNode(schainId), "No any free Nodes for rotation");
-        uint newNodeIndex = schainsFunctionalityInternal.selectNodeToGroup(schainId);
+        uint newNodeIndex = schainsFunctionalityInternal.selectNodeToGroup(schainId, uint(-1));
         emit NodeAdded(schainId, newNodeIndex);
 
     }

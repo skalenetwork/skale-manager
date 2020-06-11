@@ -153,13 +153,8 @@ contract("MonitorsFunctionality", ([owner, validator]) => {
     await monitorsData.addGroup(
       monitorIndex1, 1, "0x0000000000000000000000000000000000000000000000000000000000000000", {from: owner},
       );
-    await monitorsData.setNodeInGroup(
-      monitorIndex1, indexNode1, {from: owner},
-      );
-    await monitorsData.addVerdict(monitorIndex1, 10, 0, {from: owner});
     await monitorsData.addVerdict(monitorIndex1, 10, 50, {from: owner});
     await monitorsData.addVerdict(monitorIndex1, 100, 40, {from: owner});
-    const res = new BigNumber(await monitorsData.getLengthOfMetrics(monitorIndex1, {from: owner}));
     expect(parseInt(res.toString(), 10)).to.equal(3);
 
     const metrics = await await monitorsFunctionality.calculateMetrics.call(indexNode1, {from: owner});

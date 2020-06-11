@@ -66,13 +66,14 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
             gasleft());
     }
 
-    function removeNodeFromSchain(uint nodeIndex, bytes32 groupHash) external allowTwo(_executorName, "SkaleDKG") {
+    function removeNodeFromSchain(uint nodeIndex, bytes32 groupHash) external allowTwo(_executorName, "SkaleDKG") returns (uint){
         address schainsDataAddress = _contractManager.contracts(keccak256(abi.encodePacked("SchainsData")));
         uint groupIndex = findSchainAtSchainsForNode(nodeIndex, groupHash);
         uint indexOfNode = _findNode(groupHash, nodeIndex);
         IGroupsData(schainsDataAddress).removeNodeFromGroup(indexOfNode, groupHash);
         // IGroupsData(schainsDataAddress).removeExceptionNode(groupHash, nodeIndex);
         SchainsData(schainsDataAddress).removeSchainForNode(nodeIndex, groupIndex);
+        return indexOfNode;
     }
 
     function removeNodeFromExceptions(bytes32 groupHash, uint nodeIndex) external allow(_executorName) {
@@ -80,12 +81,28 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
         IGroupsData(schainsDataAddress).removeExceptionNode(groupHash, nodeIndex);
     }
 
+    // function removeNodeFromSchain(
+    //     uint nodeIndex,
+    //     bytes32 groupHash
+    // )
+    //     external 
+    //     allowTwo(_executorName, "SkaleDKG")
+    //     returns (uint) 
+    // {
+    //     uint groupIndex = findSchainAtSchainsForNode(nodeIndex, groupHash);
+    //     uint indexOfNode = _findNode(groupHash, nodeIndex);
+    //     delete groups[groupHash].nodesInGroup[indexOfNode];
+
+    //     removeSchainForNode(nodeIndex, groupIndex);
+    //     return indexOfNode;
+    // }
+
     /**
      * @dev selectNodeToGroup - pseudo-randomly select new Node for Schain
      * @param groupIndex - hash of name of Schain
      * @return nodeIndex - global index of Node
      */
-    function selectNodeToGroup(bytes32 groupIndex) external allow(_executorName) returns (uint) {
+    function selectNodeToGroup(bytes32 groupIndex, uint indexOfNode) external allow(_executorName) returns (uint) {
         IGroupsData groupsData = IGroupsData(_contractManager.getContract(_dataName));
         SchainsData schainsData = SchainsData(_contractManager.getContract(_dataName));
         require(groupsData.isGroupActive(groupIndex), "Group is not active");
@@ -102,7 +119,7 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
         require(_removeSpace(nodeIndex, space), "Could not remove space from nodeIndex");
         schainsData.addSchainForNode(nodeIndex, groupIndex);
         groupsData.setException(groupIndex, nodeIndex);
-        groupsData.setNodeInGroup(groupIndex, nodeIndex);
+        groupsData.setNodeInGroup(groupIndex, indexOfNode, nodeIndex);
         return nodeIndex;
     }
 

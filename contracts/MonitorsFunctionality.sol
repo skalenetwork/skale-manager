@@ -208,7 +208,7 @@ contract MonitorsFunctionality is GroupsFunctionality {
             nodesInGroup[i] = activeNodes[index];
             _swap(activeNodes, index, activeNodes.length.sub(ignoringTail) - 1);
             ++ignoringTail;
-            IGroupsData(dataAddress).setNodeInGroup(groupIndex, nodesInGroup[i]);
+            IGroupsData(dataAddress).setNodeInGroup(groupIndex, uint(-1), nodesInGroup[i]);
         }
         emit GroupGenerated(
             groupIndex,

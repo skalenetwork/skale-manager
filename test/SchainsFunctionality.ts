@@ -819,6 +819,152 @@ contract("SchainsFunctionality", ([owner, holder, validator]) => {
                 .should.be.eventually.rejectedWith("Node is not Leaving");
         });
 
+        it("should rotate node on the same position", async () => {
+            const arrayD2 = await schainsData.getNodesInGroup(web3.utils.soliditySha3("d2"));
+            const arrayD3 = await schainsData.getNodesInGroup(web3.utils.soliditySha3("d3"));
+            await skaleManager.nodeExit(0, {from: validator});
+            const newArrayD3 = await schainsData.getNodesInGroup(web3.utils.soliditySha3("d3"));
+            let zeroPositionD3 = 0;
+            let iter = 0;
+            for (const nodeIndex of arrayD3) {
+                if (nodeIndex.toNumber() === 0) {
+                    zeroPositionD3 = iter;
+                }
+                iter++;
+            }
+            let exist4 = false;
+            let exist5 = false;
+            iter = 0;
+            for (const nodeIndex of newArrayD3) {
+                if (nodeIndex.toNumber() === 4) {
+                    exist4 = true;
+                }
+                if (nodeIndex.toNumber() === 5) {
+                    exist5 = true;
+                }
+                iter++;
+            }
+            assert.equal(exist4 && exist5, false);
+            assert.equal(
+                (exist5 && newArrayD3[zeroPositionD3].toNumber() === 5) ||
+                (exist4 && newArrayD3[zeroPositionD3].toNumber() === 4),
+                true
+            );
+            await schainsData.setPublicKey(
+                web3.utils.soliditySha3("d3"),
+                0,
+                0,
+                0,
+                0,
+            );
+            await skaleManager.nodeExit(0, {from: validator});
+            const newArrayD2 = await schainsData.getNodesInGroup(web3.utils.soliditySha3("d2"));
+            let zeroPositionD2 = 0;
+            iter = 0;
+            for (const nodeIndex of arrayD2) {
+                if (nodeIndex.toNumber() === 0) {
+                    zeroPositionD2 = iter;
+                }
+                iter++;
+            }
+            exist4 = false;
+            exist5 = false;
+            iter = 0;
+            for (const nodeIndex of newArrayD2) {
+                if (nodeIndex.toNumber() === 4) {
+                    exist4 = true;
+                }
+                if (nodeIndex.toNumber() === 5) {
+                    exist5 = true;
+                }
+                iter++;
+            }
+            assert.equal(exist4 && exist5, false);
+            assert.equal(
+                (exist5 && newArrayD2[zeroPositionD2].toNumber() === 5) ||
+                (exist4 && newArrayD2[zeroPositionD2].toNumber() === 4),
+                true
+            );
+            await schainsData.setPublicKey(
+                web3.utils.soliditySha3("d2"),
+                0,
+                0,
+                0,
+                0,
+            );
+            skipTime(web3, 43260);
+            await skaleManager.nodeExit(1, {from: validator});
+            const newNewArrayD3 = await schainsData.getNodesInGroup(web3.utils.soliditySha3("d3"));
+            let onePositionD3 = 0;
+            iter = 0;
+            for (const nodeIndex of arrayD3) {
+                if (nodeIndex.toNumber() === 1) {
+                    onePositionD3 = iter;
+                }
+                iter++;
+            }
+            exist4 = false;
+            exist5 = false;
+            iter = 0;
+            for (const nodeIndex of newNewArrayD3) {
+                if (nodeIndex.toNumber() === 4 && iter !== zeroPositionD3) {
+                    exist4 = true;
+                }
+                if (nodeIndex.toNumber() === 5 && iter !== zeroPositionD3) {
+                    exist5 = true;
+                }
+                iter++;
+            }
+            assert.equal(exist4 && exist5, false);
+            assert.equal(
+                (exist5 && newNewArrayD3[onePositionD3].toNumber() === 5) ||
+                (exist4 && newNewArrayD3[onePositionD3].toNumber() === 4),
+                true
+            );
+            await schainsData.setPublicKey(
+                web3.utils.soliditySha3("d3"),
+                0,
+                0,
+                0,
+                0,
+            );
+            await skaleManager.nodeExit(1, {from: validator});
+            const newNewArrayD2 = await schainsData.getNodesInGroup(web3.utils.soliditySha3("d2"));
+            let onePositionD2 = 0;
+            iter = 0;
+            for (const nodeIndex of arrayD2) {
+                if (nodeIndex.toNumber() === 1) {
+                    onePositionD2 = iter;
+                }
+                iter++;
+            }
+            exist4 = false;
+            exist5 = false;
+            iter = 0;
+            for (const nodeIndex of newNewArrayD2) {
+                if (nodeIndex.toNumber() === 4 && iter !== zeroPositionD2) {
+                    exist4 = true;
+                }
+                if (nodeIndex.toNumber() === 5 && iter !== zeroPositionD2) {
+                    exist5 = true;
+                }
+                iter++;
+            }
+            assert.equal(exist4 && exist5, false);
+            assert.equal(
+                (exist5 && newNewArrayD2[onePositionD2].toNumber() === 5) ||
+                (exist4 && newNewArrayD2[onePositionD2].toNumber() === 4),
+                true
+            );
+            await schainsData.setPublicKey(
+                web3.utils.soliditySha3("d2"),
+                0,
+                0,
+                0,
+                0,
+            );
+        });
+
         it("should allow to rotate if occupied node didn't rotated for 12 hours", async () => {
             await skaleManager.nodeExit(0, {from: validator});
             await schainsData.setPublicKey(

@@ -124,8 +124,12 @@ contract GroupsData is IGroupsData, Permissions {
      * @param groupIndex - Groups identifier
      * @param nodeIndex - index of Node which would be added to the Group
      */
-    function setNodeInGroup(bytes32 groupIndex, uint nodeIndex) external override allow(_executorName) {
-        groups[groupIndex].nodesInGroup.push(nodeIndex);
+    function setNodeInGroup(bytes32 groupIndex, uint indexOfNode, uint nodeIndex) external override allow(_executorName) {
+        if (indexOfNode < groups[groupIndex].nodesInGroup.length) {
+            groups[groupIndex].nodesInGroup[indexOfNode] = nodeIndex;
+        } else {
+            groups[groupIndex].nodesInGroup.push(nodeIndex);
+        }
     }
 
     /**
@@ -135,12 +139,12 @@ contract GroupsData is IGroupsData, Permissions {
      * @param groupIndex - Groups identifier
      */
     function removeNodeFromGroup(uint indexOfNode, bytes32 groupIndex) external override allow(_executorName) {
-        uint size = groups[groupIndex].nodesInGroup.length;
-        if (indexOfNode < size) {
-            groups[groupIndex].nodesInGroup[indexOfNode] = groups[groupIndex].nodesInGroup[size - 1];
-        }
-        delete groups[groupIndex].nodesInGroup[size - 1];
-        groups[groupIndex].nodesInGroup.pop();
+        // uint size = groups[groupIndex].nodesInGroup.length;
+        // if (indexOfNode < size) {
+        //     groups[groupIndex].nodesInGroup[indexOfNode] = groups[groupIndex].nodesInGroup[size - 1];
+        // }
+        delete groups[groupIndex].nodesInGroup[indexOfNode];
+        // groups[groupIndex].nodesInGroup.pop();
     }
 
     /**
