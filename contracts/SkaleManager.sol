@@ -48,8 +48,6 @@ contract SkaleManager is IERC777Recipient, Permissions {
     bytes32 constant private _TOKENS_RECIPIENT_INTERFACE_HASH =
         0xb281fc8c12954d22544db45de3159a39272895b169a852b314f9cc762e44c53b;
 
-    enum TransactionOperation {CreateNode, CreateSchain}
-
     event BountyGot(
         uint indexed nodeIndex,
         address owner,

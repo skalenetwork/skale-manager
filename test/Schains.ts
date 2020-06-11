@@ -472,6 +472,16 @@ contract("Schains", ([owner, holder, validator]) => {
 
                 await schainsInternal.getSchains().should.be.eventually.empty;
             });
+
+            it("should allow the foundation to create schain without tokens", async () => {
+                await schains.addSchainByOwner(5, 5, 0, "d2", {from: owner});
+
+                const sChains = await schainsInternal.getSchains();
+                sChains.length.should.be.equal(1);
+                const schainId = sChains[0];
+
+                await schainsInternal.isOwnerAddress(owner, schainId).should.be.eventually.true;
+            });
         });
 
         describe("when 20 nodes are registered", async () => {
@@ -700,7 +710,7 @@ contract("Schains", ([owner, holder, validator]) => {
         });
 
         it("should revert on wrong schain type", async () => {
-            await schains.getSchainPrice(6, 5).should.be.eventually.rejectedWith("Bad schain type");
+            await schains.getSchainPrice(6, 5).should.be.eventually.rejectedWith("Invalid type of Schain");
         });
     });
 

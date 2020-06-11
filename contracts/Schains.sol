@@ -108,44 +108,32 @@ contract Schains is Permissions {
      * @param data - Schain's data
      */
     function addSchain(address from, uint deposit, bytes calldata data) external allow(_executorName) {
-        uint numberOfNodes;
-        uint8 partOfNode;
-
         SchainParameters memory schainParameters = _fallbackSchainParametersDataConverter(data);
-
-        require(schainParameters.typeOfSchain <= 5, "Invalid type of Schain");
+        
         require(
             getSchainPrice(schainParameters.typeOfSchain, schainParameters.lifetime) <= deposit,
             "Not enough money to create Schain");
 
-        //initialize Schain
-        _initializeSchainInSchainsInternal(
-            schainParameters.name,
-            from,
-            deposit,
-            schainParameters.lifetime);
+        _addSchain(from, deposit, schainParameters);
+    }
 
-        // create a group for Schain
-        (numberOfNodes, partOfNode) = getNodesDataFromTypeOfSchain(schainParameters.typeOfSchain);
+    function addSchainByOwner(
+        uint lifetime,
+        uint8 typeOfSchain,
+        uint16 nonce,
+        string calldata name
+    )
+        external
+        onlyOwner
+    {
+        SchainParameters memory schainParameters = SchainParameters({
+            lifetime: lifetime,
+            typeOfSchain: typeOfSchain,
+            nonce: nonce,
+            name: name
+        });
 
-        _createGroupForSchain(
-            schainParameters.name,
-            keccak256(abi.encodePacked(schainParameters.name)),
-            numberOfNodes,
-            partOfNode
-        );
-
-        emit SchainCreated(
-            schainParameters.name,
-            from,
-            partOfNode,
-            schainParameters.lifetime,
-            numberOfNodes,
-            deposit,
-            schainParameters.nonce,
-            keccak256(abi.encodePacked(schainParameters.name)),
-            uint32(block.timestamp),
-            gasleft());
+        _addSchain(msg.sender, 0, schainParameters);
     }
 
     /**
@@ -357,7 +345,7 @@ contract Schains is Permissions {
             partOfNode = constantsHolder.TINY_DIVISOR() / constantsHolder.MEDIUM_TEST_DIVISOR();
             numberOfNodes = constantsHolder.NUMBER_OF_NODES_FOR_MEDIUM_TEST_SCHAIN();
         } else {
-            revert("Bad schain type");
+            revert("Invalid type of Schain");
         }
     }
 
@@ -465,5 +453,48 @@ contract Schains is Permissions {
         SchainsInternal schainsInternal = SchainsInternal(_contractManager.getContract(_dataName));
         require(schainsInternal.isSchainExist(schainId), "Schain does not exist");
         return schainsInternal.isAnyFreeNode(schainId);
+    }
+
+    /**
+     * @dev _addSchain - create Schain in the system
+     * function could be run only by executor
+     * @param from - owner of Schain
+     * @param deposit - received amoung of SKL
+     * @param schainParameters - Schain's data
+     */
+    function _addSchain(address from, uint deposit, SchainParameters memory schainParameters) internal {
+        uint numberOfNodes;
+        uint8 partOfNode;
+
+        require(schainParameters.typeOfSchain <= 5, "Invalid type of Schain");
+
+        //initialize Schain
+        _initializeSchainInSchainsInternal(
+            schainParameters.name,
+            from,
+            deposit,
+            schainParameters.lifetime);
+
+        // create a group for Schain
+        (numberOfNodes, partOfNode) = getNodesDataFromTypeOfSchain(schainParameters.typeOfSchain);
+
+        _createGroupForSchain(
+            schainParameters.name,
+            keccak256(abi.encodePacked(schainParameters.name)),
+            numberOfNodes,
+            partOfNode
+        );
+
+        emit SchainCreated(
+            schainParameters.name,
+            from,
+            partOfNode,
+            schainParameters.lifetime,
+            numberOfNodes,
+            deposit,
+            schainParameters.nonce,
+            keccak256(abi.encodePacked(schainParameters.name)),
+            uint32(block.timestamp),
+            gasleft());
     }
 }
