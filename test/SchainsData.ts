@@ -80,7 +80,7 @@ contract("SchainsData", ([owner, holder]) => {
         it("should set amount of resources that schains occupied", async () => {
             await schainsData.addSchainForNode(5, schainNameHash);
             await schainsData.addGroup(schainNameHash, 1, schainNameHash);
-            await schainsData.setNodeInGroup(schainNameHash, 5);
+            await schainsData.setNodeInGroup(schainNameHash, 100000000, 5);
             await schainsData.setSchainPartOfNode(schainNameHash, 2);
 
             expect(new Schain(await schainsData.schains(schainNameHash)).partOfNode).to.be.equal(2);

@@ -124,7 +124,15 @@ contract GroupsData is IGroupsData, Permissions {
      * @param groupIndex - Groups identifier
      * @param nodeIndex - index of Node which would be added to the Group
      */
-    function setNodeInGroup(bytes32 groupIndex, uint indexOfNode, uint nodeIndex) external override allow(_executorName) {
+    function setNodeInGroup(
+        bytes32 groupIndex,
+        uint indexOfNode,
+        uint nodeIndex
+    )
+        external 
+        override 
+        allow(_executorName)
+    {
         if (indexOfNode < groups[groupIndex].nodesInGroup.length) {
             groups[groupIndex].nodesInGroup[indexOfNode] = nodeIndex;
         } else {

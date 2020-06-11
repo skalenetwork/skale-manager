@@ -66,7 +66,14 @@ contract SchainsFunctionalityInternal is GroupsFunctionality {
             gasleft());
     }
 
-    function removeNodeFromSchain(uint nodeIndex, bytes32 groupHash) external allowTwo(_executorName, "SkaleDKG") returns (uint){
+    function removeNodeFromSchain(
+        uint nodeIndex,
+        bytes32 groupHash
+    )
+        external
+        allowTwo(_executorName, "SkaleDKG")
+        returns (uint)
+    {
         address schainsDataAddress = _contractManager.contracts(keccak256(abi.encodePacked("SchainsData")));
         uint groupIndex = findSchainAtSchainsForNode(nodeIndex, groupHash);
         uint indexOfNode = _findNode(groupHash, nodeIndex);
