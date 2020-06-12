@@ -228,17 +228,17 @@
     ethereumjs-util "^6.1.0"
     fs-extra "^7.0.1"
 
-"@nomiclabs/buidler-web3@^1.3.3":
-  version "1.3.3"
-  resolved "https://registry.yarnpkg.com/@nomiclabs/buidler-web3/-/buidler-web3-1.3.3.tgz#c457a40908733b9d1a89419b79027bffa5740f8f"
-  integrity sha512-rESg1mQoQuAHyqfhE+XNnR2KcFvCl3HJFNW/Cfi41jIlYN/dUTkhV0F/BXrbMifW+J3+BXjRtRNKMQZ6BjF9zw==
+"@nomiclabs/buidler-web3@^1.3.4":
+  version "1.3.4"
+  resolved "https://registry.yarnpkg.com/@nomiclabs/buidler-web3/-/buidler-web3-1.3.4.tgz#46bef1aa5b11aecb43e08065863d8b35226c1b29"
+  integrity sha512-fVJczSfZBp1xDJA2Bdh49P6mhaAO8vGY7kbi6uoMLO8J288O6s/Ldw36kb7iRebifNbKP69MJsUu2nXLaklqdg==
   dependencies:
     "@types/bignumber.js" "^5.0.0"
 
-"@nomiclabs/buidler@^1.3.4":
-  version "1.3.4"
-  resolved "https://registry.yarnpkg.com/@nomiclabs/buidler/-/buidler-1.3.4.tgz#13b7be82b947997dfac0e5cd5b53ecf6bb4b42d4"
-  integrity sha512-WfYzETXvoVAtmWYIxEcWWxP/hY+qQLFrEs4PtLVu1dX0fZYnhO8RyuK/nLgdeA5tbE+pPZ6rcdh1Kx+P8DTsHQ==
+"@nomiclabs/buidler@^1.3.6":
+  version "1.3.6"
+  resolved "https://registry.yarnpkg.com/@nomiclabs/buidler/-/buidler-1.3.6.tgz#70e0890342a21e46b9a53e5d3c28e65cdcf54999"
+  integrity sha512-DkweSibtx2EuJai/x4Xl1qGN02oLas+m3nwo90z40nDDUZYmXOt6VU8utlroZeH1NJ3homJOOHr1CVbNgz/FcA==
   dependencies:
     "@nomiclabs/ethereumjs-vm" "^4.1.1"
     "@solidity-parser/parser" "^0.5.2"
@@ -274,7 +274,7 @@
     raw-body "^2.4.1"
     semver "^6.3.0"
     slash "^3.0.0"
-    solc "0.5.15"
+    solc "0.6.8"
     source-map-support "^0.5.13"
     ts-essentials "^2.0.7"
     tsort "0.0.1"
@@ -401,10 +401,10 @@
   resolved "https://registry.yarnpkg.com/@openzeppelin/contracts-ethereum-package/-/contracts-ethereum-package-3.0.0.tgz#d5db971a177c3b37733db2ee4ebdb79c67575d64"
   integrity sha512-Xg33RtX7FGbSK/YnroLhcGNAvH30/C84NRW8KvbSdXXYiLA8YqM1bOA9sAeLjmQxXqYUn/YL4AUVTgDnG51NOw==
 
-"@openzeppelin/contracts@^3.0.1":
-  version "3.0.1"
-  resolved "https://registry.yarnpkg.com/@openzeppelin/contracts/-/contracts-3.0.1.tgz#2f327f77d16b43f14674086b2b634bda38cb0838"
-  integrity sha512-uSrD7hZ0ViuHGqHZbeHawZBi/uy7aBiNramXAt2dFFuSuoU4u9insS3V3zdVfOnYSPreUo636xSOuQIFN4//HA==
+"@openzeppelin/contracts@^3.0.2":
+  version "3.0.2"
+  resolved "https://registry.yarnpkg.com/@openzeppelin/contracts/-/contracts-3.0.2.tgz#7f3e7f234b8d3f1ad818581c71b6cccc7fdc35f5"
+  integrity sha512-eK9F3jEbjQeRYLiqrHUrXCZBxE+7L4Ve5scYInsLezuasoFkrrEFlnDWD8gbN+6e5NgdgJP9fTWxjxWmaHh7dA==
 
 "@openzeppelin/resolver-engine-core@^0.3.3":
   version "0.3.3"
@@ -7368,21 +7368,7 @@ solc-wrapper@^0.5.8:
     semver "^5.5.0"
     tmp "0.0.33"
 
-solc@0.5.15:
-  version "0.5.15"
-  resolved "https://registry.yarnpkg.com/solc/-/solc-0.5.15.tgz#f674ce93d4d04a86b65a4393657edf03b2f26028"
-  integrity sha512-uI+7XtBu/0CXRc8IMjzxbh0haLwaBF32VxAkkks06zEk+mVcsQbHdjvojXX6zQYtZVuXdVYPVccoIjEhvvqKnQ==
-  dependencies:
-    command-exists "^1.2.8"
-    commander "3.0.2"
-    fs-extra "^0.30.0"
-    js-sha3 "0.8.0"
-    memorystream "^0.3.1"
-    require-from-string "^2.0.0"
-    semver "^5.5.0"
-    tmp "0.0.33"
-
-solc@^0.6.8:
+solc@0.6.8, solc@^0.6.8:
   version "0.6.8"
   resolved "https://registry.yarnpkg.com/solc/-/solc-0.6.8.tgz#accf03634554938e166ba9b9853d17ca5c728131"
   integrity sha512-7URBAisWVjO7dwWNpEkQ5dpRSpSF4Wm0aD5EB82D5BQKh+q7jhOxhgkG4K5gax/geM0kPZUAxnaLcgl2ZXBgMQ==
@@ -7956,10 +7942,10 @@ truffle-typings@^1.0.8:
     "@types/mocha" "^5.2.5"
     "@types/web3" "^1.0.18"
 
-truffle@5.1.27:
-  version "5.1.27"
-  resolved "https://registry.yarnpkg.com/truffle/-/truffle-5.1.27.tgz#cf044704a9787c91ab278418ffd500bebe971546"
-  integrity sha512-um/mxQ0y8ZQ5+iDApqfvV4+yZX7UOyWlbzYmtFvJRkkB4PRk0xghV9ssDBC1zlXFy/OmSTUSzApQXA2WA763/Q==
+truffle@5.1.29:
+  version "5.1.29"
+  resolved "https://registry.yarnpkg.com/truffle/-/truffle-5.1.29.tgz#28073476a9cf68c42dcf608c241e6d96cfb9141c"
+  integrity sha512-/j5MjilyB7+W81Ssga8gruh3Cm9e1ed3HSdLzfOR8kQJ2u5HTCPYhXrjw89vWmydMUXWd+rha/6Y3mqQm1d+JQ==
   dependencies:
     app-module-path "^2.2.0"
     mocha "5.2.0"
@@ -7990,10 +7976,10 @@ ts-generator@^0.0.8:
     resolve "^1.8.1"
     ts-essentials "^1.0.0"
 
-ts-node@8.10.1:
-  version "8.10.1"
-  resolved "https://registry.yarnpkg.com/ts-node/-/ts-node-8.10.1.tgz#77da0366ff8afbe733596361d2df9a60fc9c9bd3"
-  integrity sha512-bdNz1L4ekHiJul6SHtZWs1ujEKERJnHs4HxN7rjTyyVOFf3HaJ6sLqe6aPG62XTzAB/63pKRh5jTSWL0D7bsvw==
+ts-node@8.10.2:
+  version "8.10.2"
+  resolved "https://registry.yarnpkg.com/ts-node/-/ts-node-8.10.2.tgz#eee03764633b1234ddd37f8db9ec10b75ec7fb8d"
+  integrity sha512-ISJJGgkIpDdBhWVu3jufsWpK3Rzo7bdiIXJjQc0ynKxVOVcg2oIrf2H2cejminGrptVc6q6/uynAHNCuWGbpVA==
   dependencies:
     arg "^4.1.0"
     diff "^4.0.1"
@@ -8139,10 +8125,10 @@ typedarray@^0.0.6:
   resolved "https://registry.yarnpkg.com/typedarray/-/typedarray-0.0.6.tgz#867ac74e3864187b1d3d47d996a78ec5c8830777"
   integrity sha1-hnrHTjhkGHsdPUfZlqeOxciDB3c=
 
-typescript@3.9.3:
-  version "3.9.3"
-  resolved "https://registry.yarnpkg.com/typescript/-/typescript-3.9.3.tgz#d3ac8883a97c26139e42df5e93eeece33d610b8a"
-  integrity sha512-D/wqnB2xzNFIcoBG9FG8cXRDjiqSTbG2wd8DMZeQyJlP1vfTkIxH4GKveWaEBYySKIg+USu+E+EDIR47SqnaMQ==
+typescript@3.9.5:
+  version "3.9.5"
+  resolved "https://registry.yarnpkg.com/typescript/-/typescript-3.9.5.tgz#586f0dba300cde8be52dd1ac4f7e1009c1b13f36"
+  integrity sha512-hSAifV3k+i6lEoCJ2k6R2Z/rp/H3+8sdmcn5NrS3/3kE7+RyZXm9aqvxWqjEXHAd8b0pShatpcdMTvEdvAJltQ==
 
 typical@^2.6.0, typical@^2.6.1:
   version "2.6.1"
@@ -9043,9 +9029,9 @@ websocket-driver@>=0.5.1:
     websocket-extensions ">=0.1.1"
 
 websocket-extensions@>=0.1.1:
-  version "0.1.3"
-  resolved "https://registry.yarnpkg.com/websocket-extensions/-/websocket-extensions-0.1.3.tgz#5d2ff22977003ec687a4b87073dfbbac146ccf29"
-  integrity sha512-nqHUnMXmBzT0w570r2JpJxfiSD1IzoI+HGVdd3aZ0yNi3ngvQ4jv1dtHt5VGxfI2yj5yqImPhOK4vmIh2xMbGg==
+  version "0.1.4"
+  resolved "https://registry.yarnpkg.com/websocket-extensions/-/websocket-extensions-0.1.4.tgz#7f8473bc839dfd87608adb95d7eb075211578a42"
+  integrity sha512-OqedPIGOfsDlo31UNwYbCFMSaO9m9G/0faIHj5/dZFDMFqPTcx6UwqyOy3COEaEOg/9VsGIpdqn62W5KhoKSpg==
 
 "websocket@github:web3-js/WebSocket-Node#polyfill/globalThis":
   version "1.0.29"

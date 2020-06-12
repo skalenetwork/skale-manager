@@ -11,11 +11,9 @@
     "ContractManager": "ContractManager",
     "ConstantsHolder": "ConstantsHolder",
     "Nodes": "Nodes",
-    "MonitorsData": "MonitorsData",
-    "MonitorsFunctionality": "MonitorsFunctionality",
-    "SchainsData": "SchainsData",
-    "SchainsFunctionality": "SchainsFunctionality",
-    "SchainsFunctionalityInternal": "SchainsFunctionalityInternal",
+    "Monitors": "Monitors",
+    "Schains": "Schains",
+    "SchainsInternal": "SchainsInternal",
     "Decryption": "Decryption",
     "ECDH": "ECDH",
     "SkaleDKG": "SkaleDKG",
@@ -38,7 +36,7 @@
         "runs": "200"
       }
     },
-    "solcVersion": "0.6.6"
+    "solcVersion": "0.6.8"
   },
   "telemetryOptIn": true
 }
