@@ -422,9 +422,9 @@ contract Schains is Permissions {
         allow(_executorName)
     {
         SchainsInternal schainsInternal = SchainsInternal(_contractManager.getContract("SchainsInternal"));
-        schainsInternal.createGroup(schainId, numberOfNodes, bytes32(uint(partOfNode)));
-        uint[] memory numberOfNodesInGroup = schainsInternal.generateGroup(schainId);
-        schainsInternal.setSchainPartOfNode(schainId, partOfNode);
+        uint[] memory numberOfNodesInGroup = schainsInternal.createGroupForSchain(schainId, numberOfNodes, partOfNode);
+        // uint[] memory numberOfNodesInGroup = schainsInternal.generateGroup(schainId);
+        // schainsInternal.setSchainPartOfNode(schainId, partOfNode);
         schainsInternal.redirectOpenChannel(schainId);
 
         emit SchainNodes(
@@ -443,8 +443,8 @@ contract Schains is Permissions {
     function _selectNodeToGroup(bytes32 groupIndex, uint indexOfNode) internal returns (uint) {
         SchainsInternal schainsInternal = SchainsInternal(_contractManager.getContract("SchainsInternal"));
         Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
-        require(schainsInternal.isGroupActive(groupIndex), "Group is not active");
-        uint8 space = uint8(uint(schainsInternal.getGroupData(groupIndex)));
+        require(schainsInternal.isSchainActive(groupIndex), "Group is not active");
+        uint8 space = schainsInternal.getSchainsPartOfNode(groupIndex);
         uint[] memory possibleNodes = schainsInternal.isEnoughNodes(groupIndex);
         require(possibleNodes.length > 0, "No any free Nodes for rotation");
         uint nodeIndex;

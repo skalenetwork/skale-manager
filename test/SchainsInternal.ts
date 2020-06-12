@@ -1,11 +1,15 @@
 import { ContractManagerInstance,
-         SchainsInternalInstance } from "../types/truffle-contracts";
+         NodesInstance,
+         SchainsInternalInstance,
+         ValidatorServiceInstance } from "../types/truffle-contracts";
 
 import BigNumber from "bignumber.js";
 import chai = require("chai");
 import * as chaiAsPromised from "chai-as-promised";
 import { deployContractManager } from "./tools/deploy/contractManager";
+import { deployNodes } from "./tools/deploy/nodes";
 import { deploySchainsInternal } from "./tools/deploy/schainsInternal";
+import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
 import { skipTime } from "./tools/time";
 
 chai.should();
@@ -39,11 +43,17 @@ class Schain {
 
 contract("SchainsInternal", ([owner, holder]) => {
     let contractManager: ContractManagerInstance;
+    let nodes: NodesInstance;
     let schainsInternal: SchainsInternalInstance;
+    let validatorService: ValidatorServiceInstance;
 
     beforeEach(async () => {
         contractManager = await deployContractManager();
+        nodes = await deployNodes(contractManager);
         schainsInternal = await deploySchainsInternal(contractManager);
+        validatorService = await deployValidatorService(contractManager);
+
+        validatorService.registerValidator("D2", "D2 is even", 0, 0, {from: holder});
     });
 
     it("should initialize schain", async () => {
@@ -61,6 +71,16 @@ contract("SchainsInternal", ([owner, holder]) => {
 
         beforeEach(async () => {
             await schainsInternal.initializeSchain("TestSchain", holder, 5, 5);
+            await nodes.createNode(holder,
+                {
+                    port: 8545,
+                    nonce: 0,
+                    ip: "0x7f000001",
+                    publicIp: "0x7f000001",
+                    publicKey: ["0x1122334455667788990011223344556677889900112233445566778899001122",
+                                "0x1122334455667788990011223344556677889900112233445566778899001122"],
+                    name: "D2-01"
+                });
         });
 
         it("should register schain index for owner", async () => {
@@ -79,13 +99,20 @@ contract("SchainsInternal", ([owner, holder]) => {
 
         it("should set amount of resources that schains occupied", async () => {
             await schainsInternal.addSchainForNode(5, schainNameHash);
-            await schainsInternal.createGroup(schainNameHash, 1, schainNameHash);
+            console.log("OK");
+            await schainsInternal.createGroupForSchain(schainNameHash, 1, 2);
+            console.log("OK2");
             await schainsInternal.setNodeInGroup(schainNameHash, 1000000, 5);
-            await schainsInternal.setSchainPartOfNode(schainNameHash, 2);
+            // await schainsInternal.setSchainPartOfNode(schainNameHash, 2);
 
+            console.log("Hmm");
             expect(new Schain(await schainsInternal.schains(schainNameHash)).partOfNode).to.be.equal(2);
+            console.log("Hmm");
             const totalResources = new BigNumber(await schainsInternal.sumOfSchainsResources());
+            console.log("Hmm");
+            console.log(totalResources.toNumber());
             assert(totalResources.isEqualTo(64));
+            console.log("Hmmm");
         });
 
         it("should change schain lifetime", async () => {
@@ -99,7 +126,8 @@ contract("SchainsInternal", ([owner, holder]) => {
             this.beforeEach(async () => {
                 await schainsInternal.setSchainIndex(schainNameHash, holder);
                 await schainsInternal.addSchainForNode(5, schainNameHash);
-                await schainsInternal.setSchainPartOfNode(schainNameHash, 2);
+                await schainsInternal.createGroupForSchain(schainNameHash, 0, 2);
+                // await schainsInternal.setSchainPartOfNode(schainNameHash, 2);
             });
 
             it("should delete schain", async () => {

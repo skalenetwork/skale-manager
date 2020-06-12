@@ -774,9 +774,9 @@ contract("Schains", ([owner, holder, validator]) => {
         });
 
         it("should rotate 2 nodes consistently", async () => {
-            await skaleManager.nodeExit(0, {from: validator});
             const res1 = await schainsInternal.getNodesInGroup(web3.utils.soliditySha3("d2"));
             const res2 = await schainsInternal.getNodesInGroup(web3.utils.soliditySha3("d3"));
+            await skaleManager.nodeExit(0, {from: validator});
             const nodeRot = res1[3];
             const res = await skaleDKG.isBroadcastPossible(
                 web3.utils.soliditySha3("d3"), nodeRot);

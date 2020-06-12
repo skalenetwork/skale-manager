@@ -161,7 +161,8 @@ abstract contract Groups is Permissions {
     /**
      * @dev setNodeInGroup - adds Node to Group
      * function could be run only by executor
-     * @param groupIndex - Groups identifier
+     * @param groupIndex - Groups 
+     * @param indexOfNode - index in group array
      * @param nodeIndex - index of Node which would be added to the Group
      */
     function setNodeInGroup(bytes32 groupIndex, uint indexOfNode, uint nodeIndex) public allow(_executorName) {

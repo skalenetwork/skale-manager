@@ -18,7 +18,7 @@ let privateKey = process.env.PRIVATE_KEY;
 
 let SkaleToken = artifacts.require('./SkaleToken.sol');
 
-let gasLimit = 6900000;
+let gasLimit = 10000000;
 
 let erc1820Contract = erc1820Params.contractAddress;
 let erc1820Sender = erc1820Params.senderAddress;
