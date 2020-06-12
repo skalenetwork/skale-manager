@@ -269,7 +269,12 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
             whitelist.push(validatorId1);
             await validatorService.enableValidator(validatorId3, {from: owner});
             whitelist.push(validatorId3);
-            const trustedList = (await validatorService.getTrustedValidators()).map(Number);
+            let trustedList = (await validatorService.getTrustedValidators()).map(Number);
+            assert.deepEqual(whitelist, trustedList);
+
+            await validatorService.disableValidator(validatorId3, {from: owner});
+            whitelist.pop();
+            trustedList = (await validatorService.getTrustedValidators()).map(Number);
             assert.deepEqual(whitelist, trustedList);
         });
 

@@ -98,6 +98,7 @@ contract ValidatorService is Permissions {
 
     mapping (uint => Validator) public validators;
     mapping (uint => bool) public trustedValidators;
+    uint[] public trustedValidatorsArray;
     ///      address => validatorId
     mapping (address => uint) private _validatorAddressToId;
     ///      address => validatorId
@@ -160,6 +161,7 @@ contract ValidatorService is Permissions {
     function enableValidator(uint validatorId) external checkValidatorExists(validatorId) onlyOwner {
         require(!trustedValidators[validatorId], "Validator is already enabled");
         trustedValidators[validatorId] = true;
+        trustedValidatorsArray.push(validatorId);
         emit ValidatorWasEnabled(validatorId);
     }
 
@@ -391,16 +393,16 @@ contract ValidatorService is Permissions {
      */
     function getTrustedValidators() external view returns (uint[] memory) {
         uint numberOfTrustedValidators = 0;
-        for (uint i = 1; i <= numberOfValidators; i++) {
-            if (trustedValidators[i]) {
+        for (uint i = 0; i < trustedValidatorsArray.length; i++) {
+            if (trustedValidators[trustedValidatorsArray[i]]) {
                 numberOfTrustedValidators++;
             }
         }
         uint[] memory whitelist = new uint[](numberOfTrustedValidators);
         uint cursor = 0;
-        for (uint i = 1; i <= numberOfValidators; i++) {
-            if (trustedValidators[i]) {
-                whitelist[cursor++] = i;
+        for (uint i = 0; i < trustedValidatorsArray.length; i++) {
+            if (trustedValidators[trustedValidatorsArray[i]]) {
+                whitelist[cursor++] = trustedValidatorsArray[i];
             }
         }
         return whitelist;
