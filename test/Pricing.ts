@@ -75,23 +75,23 @@ contract("Pricing", ([owner, holder]) => {
                 const danielNodeIndex = new BigNumber(await nodes.nodesNameToIndex(danielNodeHash)).toNumber();
                 const stevenNodeIndex = new BigNumber(await nodes.nodesNameToIndex(stevenNodeHash)).toNumber();
 
-                await schainsInternal.createGroup(bobSchainHash, 1, bobSchainHash);
-                await schainsInternal.createGroup(davidSchainHash, 1, davidSchainHash);
-                await schainsInternal.createGroup(jacobSchainHash, 2, jacobSchainHash);
+                await schainsInternal.createGroupForSchain(bobSchainHash, 1, 4);
+                await schainsInternal.createGroupForSchain(davidSchainHash, 1, 4);
+                await schainsInternal.createGroupForSchain(jacobSchainHash, 2, 1);
 
-                await schainsInternal.setNodeInGroup(bobSchainHash, 100000, johnNodeIndex);
-                await schainsInternal.setNodeInGroup(davidSchainHash, 100000, michaelNodeIndex);
-                await schainsInternal.setNodeInGroup(jacobSchainHash, 100000, danielNodeIndex);
-                await schainsInternal.setNodeInGroup(jacobSchainHash, 100000, stevenNodeIndex);
+                // await schainsInternal.setNodeInGroup(bobSchainHash, 100000, johnNodeIndex);
+                // await schainsInternal.setNodeInGroup(davidSchainHash, 100000, michaelNodeIndex);
+                // await schainsInternal.setNodeInGroup(jacobSchainHash, 100000, danielNodeIndex);
+                // await schainsInternal.setNodeInGroup(jacobSchainHash, 100000, stevenNodeIndex);
 
-                await schainsInternal.addSchainForNode(johnNodeIndex, bobSchainHash);
-                await schainsInternal.addSchainForNode(michaelNodeIndex, davidSchainHash);
-                await schainsInternal.addSchainForNode(danielNodeIndex, jacobSchainHash);
-                await schainsInternal.addSchainForNode(stevenNodeIndex, jacobSchainHash);
+                // await schainsInternal.addSchainForNode(johnNodeIndex, bobSchainHash);
+                // await schainsInternal.addSchainForNode(michaelNodeIndex, davidSchainHash);
+                // await schainsInternal.addSchainForNode(danielNodeIndex, jacobSchainHash);
+                // await schainsInternal.addSchainForNode(stevenNodeIndex, jacobSchainHash);
 
-                await schainsInternal.setSchainPartOfNode(bobSchainHash, 4);
-                await schainsInternal.setSchainPartOfNode(davidSchainHash, 4);
-                await schainsInternal.setSchainPartOfNode(jacobSchainHash, 1);
+                // await schainsInternal.setSchainPartOfNode(bobSchainHash, 4);
+                // await schainsInternal.setSchainPartOfNode(davidSchainHash, 4);
+                // await schainsInternal.setSchainPartOfNode(jacobSchainHash, 1);
 
             });
 
