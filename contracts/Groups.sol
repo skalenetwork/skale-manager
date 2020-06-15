@@ -91,10 +91,6 @@ abstract contract Groups is Permissions {
     // name of executor contract
     string internal _executorName;
 
-    function setGroupFailedDKG(bytes32 groupIndex) external allow("SkaleDKG") {
-        groups[groupIndex].succesfulDKG = false;
-    }
-
     /**
      * @dev createGroup - creates and adds new Group to Data contract
      * function could be run only by executor
@@ -134,7 +130,6 @@ abstract contract Groups is Permissions {
         delete groups[groupIndex].groupsPublicKey;
         delete groups[groupIndex];
         // delete channel
-        address skaleDKGAddress = _contractManager.getContract("SkaleDKG");
 
         
         delete groups[groupIndex].nodesInGroup;
