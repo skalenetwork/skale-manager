@@ -125,6 +125,17 @@ contract("SchainsInternal", ([owner, holder]) => {
                 res.name.should.be.equal("");
             });
 
+            it("should check group", async () => {
+                const res = await schainsInternal.getNodesInGroup(schainNameHash);
+                res.length.should.be.equal(1);
+                res[0].toNumber().should.be.equal(0);
+            });
+
+            it("should delete group", async () => {
+                await schainsInternal.deleteGroup(schainNameHash);
+                await schainsInternal.getNodesInGroup(schainNameHash).should.be.eventually.empty;
+            });
+
             it("should remove schain from node", async () => {
                 await schainsInternal.removeSchainForNode(nodeIndex, 0);
                 assert(new BigNumber(await schainsInternal.getLengthOfSchainsForNode(nodeIndex)).isEqualTo(0));

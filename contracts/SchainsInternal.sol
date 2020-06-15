@@ -22,7 +22,6 @@
 pragma solidity 0.6.8;
 pragma experimental ABIEncoderV2;
 
-// import "./Groups.sol";
 import "./ConstantsHolder.sol";
 import "./Nodes.sol";
 
@@ -51,10 +50,11 @@ contract SchainsInternal is Permissions {
     }
 
     /**
-    nodeIndex - index of Node which is in process of rotation
-    startedRotation - timestamp of starting node rotation
-    inRotation - if true, only nodeIndex able to rotate
-    */
+     * nodeIndex - index of Node which is in process of rotation(left from schain)
+     * newNodeIndex - index of Node which is rotated(added to schain)
+     * freezeUntil - time till which Node should be turned on
+     * rotationCounter - how many rotations were on this schain
+     */
     struct Rotation {
         uint nodeIndex;
         uint newNodeIndex;
@@ -87,6 +87,8 @@ contract SchainsInternal is Permissions {
     mapping (uint => bytes32[]) public schainsForNodes;
 
     mapping (uint => uint[]) public holesForNodes;
+
+    mapping (bytes32 => uint[]) public holesForSchains;
 
     mapping (bytes32 => Rotation) public rotations;
 
@@ -240,14 +242,26 @@ contract SchainsInternal is Permissions {
     )
         external 
         allowTwo(_executorName, "SkaleDKG")
-        returns (uint) 
     {
         uint groupIndex = findSchainAtSchainsForNode(nodeIndex, groupHash);
         uint indexOfNode = _findNode(groupHash, nodeIndex);
         delete schainsGroups[groupHash].nodesInGroup[indexOfNode];
 
+        uint length = schainsGroups[groupHash].nodesInGroup.length;
+        if (indexOfNode == length - 1) {
+            schainsGroups[groupHash].nodesInGroup.pop();
+        } else {
+            delete schainsGroups[groupHash].nodesInGroup[indexOfNode];
+            if (holesForSchains[groupHash].length > 0 && holesForSchains[groupHash][0] > indexOfNode) {
+                uint hole = holesForSchains[groupHash][0];
+                holesForSchains[groupHash][0] = indexOfNode;
+                holesForSchains[groupHash].push(hole);
+            } else {
+                holesForSchains[groupHash].push(indexOfNode);
+            }
+        }
+
         removeSchainForNode(nodeIndex, groupIndex);
-        return indexOfNode;
     }
 
     function removeNodeFromExceptions(bytes32 groupHash, uint nodeIndex) external allow(_executorName) {
@@ -274,8 +288,8 @@ contract SchainsInternal is Permissions {
         leavingHistory[nodeIndex].push(LeavingHistory(schainIndex, now + constants.rotationDelay()));
         rotations[schainIndex].newNodeIndex = newNodeIndex;
         rotations[schainIndex].rotationCounter++;
-        address skaleDKGAddress = _contractManager.getContract("SkaleDKG");
-        ISkaleDKG(skaleDKGAddress).reopenChannel(schainIndex);
+        ISkaleDKG skaleDKG = ISkaleDKG(_contractManager.getContract("SkaleDKG"));
+        skaleDKG.reopenChannel(schainIndex);
     }
 
     function removeRotation(bytes32 schainIndex) external allow(_executorName) {
@@ -296,17 +310,16 @@ contract SchainsInternal is Permissions {
         previousPublicKeys[groupIndex].push(previousKey);
         delete schainsGroups[groupIndex].groupsPublicKey;
         // delete channel
-        address skaleDKGAddress = _contractManager.getContract("SkaleDKG");
+        ISkaleDKG skaleDKG = ISkaleDKG(_contractManager.getContract("SkaleDKG"));
 
-        if (ISkaleDKG(skaleDKGAddress).isChannelOpened(groupIndex)) {
-            ISkaleDKG(skaleDKGAddress).deleteChannel(groupIndex);
+        if (skaleDKG.isChannelOpened(groupIndex)) {
+            skaleDKG.deleteChannel(groupIndex);
         }
         delete schainsGroups[groupIndex].nodesInGroup;
         // while (schainsGroups[groupIndex].nodesInGroup.length > 0) {
         //     schainsGroups[groupIndex].nodesInGroup.pop();
         // }
         delete schainsGroups[groupIndex];
-        // emit GroupDeleted(groupIndex, uint32(block.timestamp), gasleft());
     }
 
     /**
@@ -323,14 +336,29 @@ contract SchainsInternal is Permissions {
      * @dev setNodeInGroup - adds Node to Group
      * function could be run only by executor
      * @param groupIndex - Groups 
-     * @param indexOfNode - index in group array
      * @param nodeIndex - index of Node which would be added to the Group
      */
-    function setNodeInGroup(bytes32 groupIndex, uint indexOfNode, uint nodeIndex) external allow(_executorName) {
-        if (indexOfNode < schainsGroups[groupIndex].nodesInGroup.length) {
-            schainsGroups[groupIndex].nodesInGroup[indexOfNode] = nodeIndex;
-        } else {
+    function setNodeInGroup(bytes32 groupIndex, uint nodeIndex) external allow(_executorName) {
+        if (holesForSchains[groupIndex].length == 0) {
             schainsGroups[groupIndex].nodesInGroup.push(nodeIndex);
+        } else {
+            schainsGroups[groupIndex].nodesInGroup[holesForSchains[groupIndex][0]] = nodeIndex;
+            uint min = uint(-1);
+            uint index = 0;
+            for (uint i = 1; i < holesForSchains[groupIndex].length; i++) {
+                if (min > holesForSchains[groupIndex][i]) {
+                    min = holesForSchains[groupIndex][i];
+                    index = i;
+                }
+            }
+            if (min == uint(-1)) {
+                delete holesForSchains[groupIndex];
+            } else {
+                holesForSchains[groupIndex][0] = min;
+                holesForSchains[groupIndex][index] =
+                    holesForSchains[groupIndex][holesForSchains[groupIndex].length - 1];
+                holesForSchains[groupIndex].pop();
+            }
         }
     }
 
@@ -660,11 +688,6 @@ contract SchainsInternal is Permissions {
 
         // set generated group
         schainsGroups[schainId].nodesInGroup = nodesInGroup;
-        // emit GroupGenerated(
-        //     schainId,
-        //     nodesInGroup,
-        //     uint32(block.timestamp),
-        //     gasleft());
     }
 
     function _isPublicKeyZero(bytes32 groupIndex) internal view returns (bool) {

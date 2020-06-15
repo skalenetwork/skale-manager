@@ -254,7 +254,7 @@ contract Schains is Permissions {
         SchainsInternal schainsInternal = SchainsInternal(
             _contractManager.getContract("SchainsInternal"));
         require(schainsInternal.isAnyFreeNode(schainId), "No any free Nodes for rotation");
-        uint newNodeIndex = _selectNodeToGroup(schainId, uint(-1));
+        uint newNodeIndex = _selectNodeToGroup(schainId);
         emit NodeAdded(schainId, newNodeIndex);
 
     }
@@ -302,8 +302,8 @@ contract Schains is Permissions {
         returns (uint)
     {
         SchainsInternal schainsInternal = SchainsInternal(_contractManager.getContract("SchainsInternal"));
-        uint indexOfNode = schainsInternal.removeNodeFromSchain(nodeIndex, schainId);
-        return _selectNodeToGroup(schainId, indexOfNode);
+        schainsInternal.removeNodeFromSchain(nodeIndex, schainId);
+        return _selectNodeToGroup(schainId);
     }
 
     /**
@@ -422,15 +422,13 @@ contract Schains is Permissions {
         allow(_executorName)
     {
         SchainsInternal schainsInternal = SchainsInternal(_contractManager.getContract("SchainsInternal"));
-        uint[] memory numberOfNodesInGroup = schainsInternal.createGroupForSchain(schainId, numberOfNodes, partOfNode);
-        // uint[] memory numberOfNodesInGroup = schainsInternal.generateGroup(schainId);
-        // schainsInternal.setSchainPartOfNode(schainId, partOfNode);
+        uint[] memory nodesInGroup = schainsInternal.createGroupForSchain(schainId, numberOfNodes, partOfNode);
         schainsInternal.redirectOpenChannel(schainId);
 
         emit SchainNodes(
             schainName,
             schainId,
-            numberOfNodesInGroup,
+            nodesInGroup,
             uint32(block.timestamp),
             gasleft());
     }
@@ -440,7 +438,7 @@ contract Schains is Permissions {
      * @param groupIndex - hash of name of Schain
      * @return nodeIndex - global index of Node
      */
-    function _selectNodeToGroup(bytes32 groupIndex, uint indexOfNode) internal returns (uint) {
+    function _selectNodeToGroup(bytes32 groupIndex) internal returns (uint) {
         SchainsInternal schainsInternal = SchainsInternal(_contractManager.getContract("SchainsInternal"));
         Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
         require(schainsInternal.isSchainActive(groupIndex), "Group is not active");
@@ -457,7 +455,7 @@ contract Schains is Permissions {
         require(nodes.removeSpaceFromNode(nodeIndex, space), "Could not remove space from nodeIndex");
         schainsInternal.addSchainForNode(nodeIndex, groupIndex);
         schainsInternal.setException(groupIndex, nodeIndex);
-        schainsInternal.setNodeInGroup(groupIndex, indexOfNode, nodeIndex);
+        schainsInternal.setNodeInGroup(groupIndex, nodeIndex);
         return nodeIndex;
     }
 

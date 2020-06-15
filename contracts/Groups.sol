@@ -152,16 +152,11 @@ abstract contract Groups is Permissions {
     /**
      * @dev setNodeInGroup - adds Node to Group
      * function could be run only by executor
-     * @param groupIndex - Groups 
-     * @param indexOfNode - index in group array
+     * @param groupIndex - Groups index
      * @param nodeIndex - index of Node which would be added to the Group
      */
-    function setNodeInGroup(bytes32 groupIndex, uint indexOfNode, uint nodeIndex) public allow(_executorName) {
-        if (indexOfNode < groups[groupIndex].nodesInGroup.length) {
-            groups[groupIndex].nodesInGroup[indexOfNode] = nodeIndex;
-        } else {
-            groups[groupIndex].nodesInGroup.push(nodeIndex);
-        }
+    function setNodeInGroup(bytes32 groupIndex, uint nodeIndex) public allow(_executorName) {
+        groups[groupIndex].nodesInGroup.push(nodeIndex);
     }
 
     /**
@@ -209,14 +204,6 @@ abstract contract Groups is Permissions {
     function getNodesInGroup(bytes32 groupIndex) public view returns (uint[] memory) {
         return groups[groupIndex].nodesInGroup;
     }
-
-    /**
-     * @dev _generateGroup - abstract method which would be implemented in inherited contracts
-     * function generates group of Nodes
-     * @param groupIndex - Groups identifier
-     * return array of indexes of Nodes in Group
-     */
-    // function _generateGroup(bytes32 groupIndex) internal virtual returns (uint[] memory);
 
     function _isPublicKeyZero(bytes32 groupIndex) internal view returns (bool) {
         return groups[groupIndex].groupsPublicKey[0] == 0 &&

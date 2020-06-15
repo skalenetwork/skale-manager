@@ -164,7 +164,7 @@ contract("Monitors", ([owner, validator]) => {
       monitorIndex1, 1, "0x0000000000000000000000000000000000000000000000000000000000000000", {from: owner},
       );
     await monitors.setNodeInGroup(
-      monitorIndex1, 1000000, indexNode1, {from: owner},
+      monitorIndex1, indexNode1, {from: owner}
       );
     await monitors.addVerdict(monitorIndex1, 10, 0, {from: owner});
     await monitors.addVerdict(monitorIndex1, 10, 50, {from: owner});

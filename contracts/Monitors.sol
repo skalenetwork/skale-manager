@@ -289,7 +289,7 @@ contract Monitors is Groups {
             nodesInGroup[i] = activeNodes[index];
             _swap(activeNodes, index, activeNodes.length.sub(ignoringTail) - 1);
             ++ignoringTail;
-            setNodeInGroup(groupIndex, uint(-1), nodesInGroup[i]);
+            setNodeInGroup(groupIndex, nodesInGroup[i]);
         }
         emit GroupGenerated(
             groupIndex,
