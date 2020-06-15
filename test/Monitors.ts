@@ -51,12 +51,9 @@ contract("Monitors", ([owner, validator]) => {
   it("should add Monitor", async () => {
     const { logs } = await monitors.addMonitor(nodeIndex, {from: owner});
     // check events after `.addMonitor` invoke
-    assert.equal(logs[0].event, "GroupAdded");
-    assert.equal(logs[1].event, "GroupGenerated");
-    assert.equal(logs[2].event, "MonitorsArray");
-    assert.equal(logs[3].event, "MonitorCreated");
+    assert.equal(logs[0].event, "MonitorCreated");
 
-    const targetNodes = logs[2].args[2].map((value: BN) => value.toNumber());
+    const targetNodes = logs[0].args[3].map((value: BN) => value.toNumber());
     targetNodes.sort();
     targetNodes.forEach((value: number, index: number) => {
       if (index > 0) {
@@ -64,18 +61,6 @@ contract("Monitors", ([owner, validator]) => {
       }
       assert(nodes.isNodeActive(value), "Node should be active");
     });
-  });
-
-  it("should upgrade Monitor", async () => {
-    // add monitor
-    await monitors.addMonitor(nodeIndex, {from: owner});
-    // upgrade Monitor
-    const { logs } = await monitors.upgradeMonitor(nodeIndex, {from: owner});
-    // check events after `.upgradeMonitor` invoke
-    assert.equal(logs[0].event, "GroupUpgraded");
-    assert.equal(logs[1].event, "GroupGenerated");
-    assert.equal(logs[2].event, "MonitorsArray");
-    assert.equal(logs[3].event, "MonitorUpgraded");
   });
 
   it("should send Verdict", async () => {
@@ -160,17 +145,32 @@ contract("Monitors", ([owner, validator]) => {
     // preparation
     const indexNode1 = 1;
     const monitorIndex1 = web3.utils.soliditySha3(indexNode1);
-    await monitors.createGroup(
-      monitorIndex1, 1, "0x0000000000000000000000000000000000000000000000000000000000000000", {from: owner},
+    await monitors.addMonitor(
+      indexNode1, {from: owner},
       );
-    await monitors.setNodeInGroup(
-      monitorIndex1, indexNode1, {from: owner}
-      );
-    await monitors.addVerdict(monitorIndex1, 10, 0, {from: owner});
-    await monitors.addVerdict(monitorIndex1, 10, 50, {from: owner});
-    await monitors.addVerdict(monitorIndex1, 100, 40, {from: owner});
-    const res = new BigNumber(await monitors.getLengthOfMetrics(monitorIndex1, {from: owner}));
-    expect(parseInt(res.toString(), 10)).to.equal(3);
+    const nodesInGroup = await monitors.getNodesInGroup(monitorIndex1);
+    const verd1 = {
+      toNodeIndex: 1,
+      downtime: 10,
+      latency: 0,
+    };
+    const verd2 = {
+      toNodeIndex: 1,
+      downtime: 10,
+      latency: 50,
+    };
+    const verd3 = {
+      toNodeIndex: 1,
+      downtime: 100,
+      latency: 40,
+    };
+    const rewardPeriod = (await constantsHolder.rewardPeriod()).toNumber();
+    const deltaPeriod = (await constantsHolder.deltaPeriod()).toNumber();
+    skipTime(web3, rewardPeriod - deltaPeriod);
+    await monitors.sendVerdict(2, verd1, {from: owner});
+    await monitors.sendVerdict(3, verd2, {from: owner});
+    await monitors.sendVerdict(4, verd3, {from: owner});
+    (await monitors.getLengthOfMetrics(monitorIndex1, {from: owner})).toNumber().should.be.equal(3);
 
     const metrics = await await monitors.calculateMetrics.call(indexNode1, {from: owner});
     const downtime = web3.utils.toBN(metrics[0]).toNumber();
@@ -238,7 +238,7 @@ contract("Monitors", ([owner, validator]) => {
     (await monitors.getCheckedArray(node2Hash)).length.should.be.equal(1);
 
     await nodes.changeNodeLastRewardDate(0);
-    await monitors.upgradeMonitor(0);
+    await monitors.addMonitor(0);
 
     const validatedArray = await monitors.getCheckedArray(node2Hash);
     const validatedNodeIndexes = validatedArray.map((value) => new BigNumber(value.nodeIndex).toNumber());
@@ -329,7 +329,7 @@ contract("Monitors", ([owner, validator]) => {
         if (await nodes.isNodeActive(node)) {
           const { logs } = await monitors.addMonitor(node);
 
-          const targetNodes = logs[2].args[2].map((value: BN) => value.toNumber());
+          const targetNodes = logs[0].args[3].map((value: BN) => value.toNumber());
           targetNodes.length.should.be.equal(24);
           targetNodes.sort();
           targetNodes.forEach(async (value: number, index: number) => {

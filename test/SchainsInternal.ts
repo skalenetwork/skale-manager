@@ -133,6 +133,8 @@ contract("SchainsInternal", ([owner, holder]) => {
 
             it("should delete group", async () => {
                 await schainsInternal.deleteGroup(schainNameHash);
+                const res = await schainsInternal.getNodesInGroup(schainNameHash);
+                res.length.should.be.equal(0);
                 await schainsInternal.getNodesInGroup(schainNameHash).should.be.eventually.empty;
             });
 

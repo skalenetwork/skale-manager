@@ -197,7 +197,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
             averageDowntime,
             averageLatency);
         nodes.changeNodeLastRewardDate(nodeIndex);
-        monitors.upgradeMonitor(nodeIndex);
+        monitors.addMonitor(nodeIndex);
         _emitBountyEvent(nodeIndex, msg.sender, averageDowntime, averageLatency, bounty);
     }
 

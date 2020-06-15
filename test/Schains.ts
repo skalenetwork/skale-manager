@@ -609,6 +609,18 @@ contract("Schains", ([owner, holder, validator]) => {
                     await schainsInternal.getSchains().should.be.eventually.empty;
                 });
 
+                it("should check group", async () => {
+                    const res = await schainsInternal.getNodesInGroup(web3.utils.soliditySha3("D2"));
+                    res.length.should.be.equal(16);
+                });
+
+                it("should delete group", async () => {
+                    await schainsInternal.deleteGroup(web3.utils.soliditySha3("D2"));
+                    const res = await schainsInternal.getNodesInGroup(web3.utils.soliditySha3("D2"));
+                    res.length.should.be.equal(0);
+                    await schainsInternal.getNodesInGroup(web3.utils.soliditySha3("D2")).should.be.eventually.empty;
+                });
+
                 it("should fail on deleting schain if owner is wrong", async () => {
                     await schains.deleteSchain(
                         validator,
