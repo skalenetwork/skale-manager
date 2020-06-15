@@ -22,11 +22,16 @@
 pragma solidity 0.6.8;
 pragma experimental ABIEncoderV2;
 
-import "./Groups.sol";
+// import "./Groups.sol";
 import "./ConstantsHolder.sol";
 import "./Nodes.sol";
 
-
+interface ISkaleDKG {
+    function openChannel(bytes32 groupIndex) external;
+    function reopenChannel(bytes32 groupIndex) external;
+    function deleteChannel(bytes32 groupIndex) external;
+    function isChannelOpened(bytes32 groupIndex) external view returns (bool);
+}
 
 /**
  * @title SchainsInternal - contract contains all functionality logic to manage Schains
@@ -136,8 +141,6 @@ contract SchainsInternal is Permissions {
         allow(_executorName)
         returns (uint[] memory)
     {
-        // schainsGroups[schainId].active = true;
-        // schainsGroups[schainId].numberOfNodes = numberOfNodes;
         schains[schainId].partOfNode = partOfNode;
         if (partOfNode > 0) {
             sumOfSchainsResources = sumOfSchainsResources.add(
@@ -254,20 +257,6 @@ contract SchainsInternal is Permissions {
     function redirectOpenChannel(bytes32 schainId) external allow("Schains") {
         ISkaleDKG(_contractManager.getContract("SkaleDKG")).openChannel(schainId);
     }
-
-    // /**
-    //  * @dev setSchainPartOfNode - sets how much Schain would be occupy of Node
-    //  * function could be run onlye by executor
-    //  * @param schainId - hash by Schain name
-    //  * @param partOfNode - occupied space
-    //  */
-    // function setSchainPartOfNode(bytes32 schainId, uint8 partOfNode) external allow(_executorName) {
-    //     schains[schainId].partOfNode = partOfNode;
-    //     if (partOfNode > 0) {
-    //         sumOfSchainsResources = sumOfSchainsResources.add(
-    //             (128 / partOfNode) * schainsGroups[schainId].nodesInGroup.length);
-    //     }
-    // }
 
     function startRotation(bytes32 schainIndex, uint nodeIndex) external allow(_executorName) {
         ConstantsHolder constants = ConstantsHolder(_contractManager.getContract("ConstantsHolder"));
@@ -537,7 +526,6 @@ contract SchainsInternal is Permissions {
     }
 
     function initialize(address newContractsAddress) public override initializer {
-        // Groups.initialize("Schains", newContractsAddress);
         Permissions.initialize(newContractsAddress);
         _executorName = "Schains";
 
@@ -651,7 +639,6 @@ contract SchainsInternal is Permissions {
      */
     function _generateGroup(bytes32 schainId, uint numberOfNodes) internal returns (uint[] memory nodesInGroup) {
         Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
-        // require(schainsGroups[schainId].active, "Group is not active");
         uint8 space = schains[schainId].partOfNode;
         nodesInGroup = new uint[](numberOfNodes);
 
@@ -667,7 +654,6 @@ contract SchainsInternal is Permissions {
             ++ignoringTail;
 
             _exceptionsForGroups[schainId][node] = true;
-            // setException(schainId, node);
             addSchainForNode(node, schainId);
             require(nodes.removeSpaceFromNode(node, space), "Could not remove space from Node");
         }

@@ -353,7 +353,9 @@ contract SkaleDKG is Permissions {
     }
 
     function _reopenChannel(bytes32 groupIndex) internal {
-        Groups groups = Groups(channels[groupIndex].dataAddress);
+        SchainsInternal schainsInternal = SchainsInternal(
+            _contractManager.getContract("SchainsInternal")
+        );
         channels[groupIndex].active = true;
 
         delete channels[groupIndex].completed;
@@ -361,8 +363,8 @@ contract SkaleDKG is Permissions {
             delete _data[groupIndex][i];
         }
         delete channels[groupIndex].broadcasted;
-        channels[groupIndex].broadcasted = new bool[](groups.getRecommendedNumberOfNodes(groupIndex));
-        channels[groupIndex].completed = new bool[](groups.getRecommendedNumberOfNodes(groupIndex));
+        channels[groupIndex].broadcasted = new bool[](schainsInternal.getNumberOfNodesInGroup(groupIndex));
+        channels[groupIndex].completed = new bool[](schainsInternal.getNumberOfNodesInGroup(groupIndex));
         delete channels[groupIndex].publicKey.x.a;
         delete channels[groupIndex].publicKey.x.b;
         channels[groupIndex].publicKey.y.a = 1;
@@ -373,7 +375,7 @@ contract SkaleDKG is Permissions {
         delete channels[groupIndex].numberOfCompleted;
         delete channels[groupIndex].startComplaintBlockTimestamp;
         channels[groupIndex].startedBlockTimestamp = block.timestamp;
-        Groups(channels[groupIndex].dataAddress).setGroupFailedDKG(groupIndex);
+        schainsInternal.setGroupFailedDKG(groupIndex);
         emit ChannelOpened(groupIndex);
     }
 
@@ -527,7 +529,7 @@ contract SkaleDKG is Permissions {
     }
 
     function _findNode(bytes32 groupIndex, uint nodeIndex) internal view returns (uint) {
-        uint[] memory nodesInGroup = Groups(channels[groupIndex].dataAddress).getNodesInGroup(groupIndex);
+        uint[] memory nodesInGroup = SchainsInternal(channels[groupIndex].dataAddress).getNodesInGroup(groupIndex);
         uint correctIndex = nodesInGroup.length;
         bool set = false;
         for (uint index = 0; index < nodesInGroup.length; index++) {

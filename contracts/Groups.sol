@@ -20,8 +20,6 @@
 pragma solidity 0.6.8;
 
 import "./Permissions.sol";
-import "./interfaces/ISkaleDKG.sol";
-
 
 
 /**
@@ -138,9 +136,7 @@ abstract contract Groups is Permissions {
         // delete channel
         address skaleDKGAddress = _contractManager.getContract("SkaleDKG");
 
-        if (ISkaleDKG(skaleDKGAddress).isChannelOpened(groupIndex)) {
-            ISkaleDKG(skaleDKGAddress).deleteChannel(groupIndex);
-        }
+        
         delete groups[groupIndex].nodesInGroup;
         while (groups[groupIndex].nodesInGroup.length > 0) {
             groups[groupIndex].nodesInGroup.pop();

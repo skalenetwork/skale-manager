@@ -165,7 +165,7 @@ contract Schains is Permissions {
         address nodesAddress = _contractManager.getContract("Nodes");
 
         // removes Schain from Nodes
-        uint[] memory nodesInGroup = Groups(dataAddress).getNodesInGroup(schainId);
+        uint[] memory nodesInGroup = SchainsInternal(dataAddress).getNodesInGroup(schainId);
         uint8 partOfNode = SchainsInternal(dataAddress).getSchainsPartOfNode(schainId);
         for (uint i = 0; i < nodesInGroup.length; i++) {
             uint schainIndex = schainsInternal.findSchainAtSchainsForNode(
@@ -195,7 +195,7 @@ contract Schains is Permissions {
         require(SchainsInternal(dataAddress).isSchainExist(schainId), "Schain does not exist");
 
         // removes Schain from Nodes
-        uint[] memory nodesInGroup = Groups(dataAddress).getNodesInGroup(schainId);
+        uint[] memory nodesInGroup = SchainsInternal(dataAddress).getNodesInGroup(schainId);
         uint8 partOfNode = SchainsInternal(dataAddress).getSchainsPartOfNode(schainId);
         for (uint i = 0; i < nodesInGroup.length; i++) {
             uint schainIndex = schainsInternal.findSchainAtSchainsForNode(
