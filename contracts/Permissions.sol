@@ -21,23 +21,34 @@
 
 pragma solidity 0.6.8;
 
-import "./ContractManager.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/access/AccessControl.sol";
+
+import "./ContractManager.sol";
 
 
 /**
  * @title Permissions - connected module for Upgradeable approach, knows ContractManager
  * @author Artem Payvin
  */
-contract Permissions is OwnableUpgradeSafe {
+contract Permissions is AccessControlUpgradeSafe {
     using SafeMath for uint;
     using SafeMath for uint32;
 
     ContractManager internal _contractManager;
 
     function initialize(address contractManager) public virtual initializer {
-        OwnableUpgradeSafe.__Ownable_init();
+        AccessControlUpgradeSafe.__AccessControl_init();
+        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _contractManager = ContractManager(contractManager);
+    }
+
+    /**
+     * @dev Throws if called by any account other than the owner.
+     */
+    modifier onlyOwner() {
+        require(_isOwner(), "Caller is not the owner");
+        _;
     }
 
     /**
@@ -72,6 +83,6 @@ contract Permissions is OwnableUpgradeSafe {
     }
 
     function _isOwner() internal view returns (bool) {
-        return msg.sender == owner();
+        return hasRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 }

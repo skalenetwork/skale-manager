@@ -69,12 +69,12 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
     });
 
     it("should transfer ownership", async () => {
-        await skaleManager.transferOwnership(hacker, {from: hacker})
+        await skaleManager.grantRole(await skaleManager.DEFAULT_ADMIN_ROLE(), hacker , {from: hacker})
             .should.be.eventually.rejectedWith("Ownable: caller is not the owner");
 
-        await skaleManager.transferOwnership(hacker, {from: owner});
+        await skaleManager.grantRole(await skaleManager.DEFAULT_ADMIN_ROLE(), hacker, {from: owner});
 
-        await skaleManager.owner().should.be.eventually.equal(hacker);
+        await skaleManager.hasRole(await skaleManager.DEFAULT_ADMIN_ROLE(), hacker).should.be.eventually.true;
     });
 
     describe("when validator has delegated SKALE tokens", async () => {
