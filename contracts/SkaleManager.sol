@@ -231,9 +231,12 @@ contract SkaleManager is IERC777Recipient, Permissions {
         int bountyForMiner = int(commonBounty);
         uint normalDowntime = ((constants.rewardPeriod().sub(constants.deltaPeriod())).div(constants.checkTime())) / 30;
         if (downtime.add(diffTime) > normalDowntime) {
-            bountyForMiner -= int(((downtime.add(diffTime)).mul(commonBounty)) / (constants.SECONDS_TO_DAY() / 4));
+            bountyForMiner -= int(
+                ((downtime.add(diffTime)).mul(commonBounty)).div(
+                    (constants.rewardPeriod().sub(constants.deltaPeriod())).div(constants.checkTime())
+                )
+            );
         }
-
         if (bountyForMiner > 0) {
             if (latency > constants.allowableLatency()) {
                 bountyForMiner = int((constants.allowableLatency().mul(uint(bountyForMiner))).div(latency));

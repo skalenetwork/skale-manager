@@ -465,6 +465,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                     await distributor.withdrawFee(validator, {from: validator});
 
                     const balanceAfter = web3.utils.toBN(await skaleToken.balanceOf(validator));
+                    console.log((balanceAfter.sub(balanceBefore)).toString());
 
                     expect(balanceAfter.sub(balanceBefore).eq(bounty)).to.be.true;
                 });
@@ -498,7 +499,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                     const balanceBefore = web3.utils.toBN(await skaleToken.balanceOf(validator));
                     // const bounty = web3.utils.toBN("893019925718471100273");
 
-                    const bounty = web3.utils.toBN("1250227896005859540382");
+                    const bounty = web3.utils.toBN("1203978898880590695863");
 
                     const txGetBounty = await skaleManager.getBounty(1, {from: nodeAddress});
 
@@ -511,6 +512,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                     await distributor.withdrawFee(validator, {from: validator});
 
                     const balanceAfter = web3.utils.toBN(await skaleToken.balanceOf(validator));
+                    console.log((balanceAfter.sub(balanceBefore)).toString());
 
                     expect(balanceAfter.sub(balanceBefore).eq(bounty)).to.be.true;
                 });
@@ -519,7 +521,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                     skipTime(web3, 500);
                     const balanceBefore = web3.utils.toBN(await skaleToken.balanceOf(validator));
                     // const bounty = web3.utils.toBN("893019925718471100273");
-                    const bounty = web3.utils.toBN("1250227896005859540382");
+                    const bounty = web3.utils.toBN("1203978898880590695863");
 
                     const txGetBounty = await skaleManager.getBounty(1, {from: nodeAddress});
 
@@ -532,14 +534,15 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                     await distributor.withdrawFee(validator, {from: validator});
 
                     const balanceAfter = web3.utils.toBN(await skaleToken.balanceOf(validator));
+                    console.log((balanceAfter.sub(balanceBefore)).toString());
 
-                    expect(balanceAfter.sub(balanceBefore).toString(10)).to.be.equal(bounty.toString(10));
+                    expect(balanceAfter.sub(balanceBefore).eq(bounty)).to.be.true;
                 });
 
                 it("should get bounty after big break", async () => {
                     skipTime(web3, 800);
                     const balanceBefore = web3.utils.toBN(await skaleToken.balanceOf(validator));
-                    const bounty = web3.utils.toBN("1250112128804044098969");
+                    const bounty = web3.utils.toBN("1111365137428237565412");
 
                     const txGetBounty = await skaleManager.getBounty(1, {from: nodeAddress});
 
@@ -552,6 +555,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                     await distributor.withdrawFee(validator, {from: validator});
 
                     const balanceAfter = web3.utils.toBN(await skaleToken.balanceOf(validator));
+                    console.log((balanceAfter.sub(balanceBefore)).toString());
 
                     expect(balanceAfter.sub(balanceBefore).eq(bounty)).to.be.true;
                 });
@@ -596,6 +600,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                     await distributor.withdrawFee(validator, {from: validator});
 
                     const balanceAfter = web3.utils.toBN(await skaleToken.balanceOf(validator));
+                    console.log((balanceAfter.sub(balanceBefore)).toString());
 
                     expect(balanceAfter.sub(balanceBefore).eq(bounty)).to.be.true;
                 });
@@ -616,14 +621,15 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                     await distributor.withdrawFee(validator, {from: validator});
 
                     const balanceAfter = web3.utils.toBN(await skaleToken.balanceOf(validator));
+                    console.log((balanceAfter.sub(balanceBefore)).toString());
 
-                    expect(balanceAfter.sub(balanceBefore).toString(10)).to.be.equal(bounty.toString(10));
+                    expect(balanceAfter.sub(balanceBefore).eq(bounty)).to.be.true;
                 });
 
                 it("should get bounty after big break", async () => {
                     skipTime(web3, 800);
                     const balanceBefore = web3.utils.toBN(await skaleToken.balanceOf(validator));
-                    const bounty = web3.utils.toBN("1250170012404951819675");
+                    const bounty = web3.utils.toBN("1157672018154414130638");
 
                     const txGetBounty = await skaleManager.getBounty(1, {from: nodeAddress});
 
@@ -636,6 +642,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                     await distributor.withdrawFee(validator, {from: validator});
 
                     const balanceAfter = web3.utils.toBN(await skaleToken.balanceOf(validator));
+                    console.log((balanceAfter.sub(balanceBefore)).toString());
 
                     expect(balanceAfter.sub(balanceBefore).eq(bounty)).to.be.true;
                 });
