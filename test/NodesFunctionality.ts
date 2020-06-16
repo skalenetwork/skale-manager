@@ -100,45 +100,40 @@ contract("NodesFunctionality", ([owner, validator, nodeAddress, nodeAddress2]) =
                 });
         });
 
-        it("should fail to delete non existing node", async () => {
-            await nodes.removeNode(validator, 1)
-                .should.be.eventually.rejectedWith("Node does not exist for message sender");
-        });
+        // it("should fail to delete non existing node", async () => {
+        //     // await nodes.setNodeLeaving(1);
+        //     await nodes.completeExit(validator, 1)
+        //         .should.be.eventually.rejectedWith("Node does not exist for message sender");
+        // });
 
         it("should fail to delete non active node", async () => {
-            await nodes.setNodeLeaving(0);
+            await nodes.setNodeLeft(0);
 
-            await nodes.removeNode(nodeAddress, 0)
-                .should.be.eventually.rejectedWith("Node is not Active");
+            await nodes.completeExit(0)
+                .should.be.eventually.rejectedWith("Node is not Leaving");
         });
 
         it("should delete node", async () => {
-            await nodes.removeNode(nodeAddress, 0);
+            await nodes.setNodeLeaving(0);
+            await nodes.completeExit(0);
 
             await nodes.numberOfActiveNodes().should.be.eventually.deep.equal(web3.utils.toBN(0));
         });
 
-        it("should fail to initiate exiting for non existing node", async () => {
-            await nodes.initExit(validator, 1)
-                .should.be.eventually.rejectedWith("Node does not exist for message sender");
-        });
-
         it("should initiate exiting", async () => {
-            await nodes.initExit(nodeAddress, 0);
+            await nodes.initExit(0);
 
             await nodes.numberOfActiveNodes().should.be.eventually.deep.equal(web3.utils.toBN(0));
         });
 
         it("should complete exiting", async () => {
-            await nodes.completeExit(validator, 1)
-                .should.be.eventually.rejectedWith("Node does not exist for message sender");
 
-            await nodes.completeExit(nodeAddress, 0)
+            await nodes.completeExit(0)
                 .should.be.eventually.rejectedWith("Node is not Leaving");
 
-            await nodes.initExit(nodeAddress, 0);
+            await nodes.initExit(0);
 
-            await nodes.completeExit(nodeAddress, 0);
+            await nodes.completeExit(0);
         });
     });
 
@@ -169,45 +164,47 @@ contract("NodesFunctionality", ([owner, validator, nodeAddress, nodeAddress2]) =
         });
 
         it("should delete first node", async () => {
-            await nodes.removeNode(nodeAddress, 0);
+            await nodes.setNodeLeaving(0);
+            await nodes.completeExit(0);
 
             await nodes.numberOfActiveNodes().should.be.eventually.deep.equal(web3.utils.toBN(1));
         });
 
         it("should delete second node", async () => {
-            await nodes.removeNode(nodeAddress2, 1);
+            await nodes.setNodeLeaving(1);
+            await nodes.completeExit(1);
 
             await nodes.numberOfActiveNodes().should.be.eventually.deep.equal(web3.utils.toBN(1));
         });
 
         it("should initiate exit from first node", async () => {
-            await nodes.initExit(nodeAddress, 0);
+            await nodes.initExit(0);
 
             await nodes.numberOfActiveNodes().should.be.eventually.deep.equal(web3.utils.toBN(1));
         });
 
         it("should initiate exit from second node", async () => {
-            await nodes.initExit(nodeAddress2, 1);
+            await nodes.initExit(1);
 
             await nodes.numberOfActiveNodes().should.be.eventually.deep.equal(web3.utils.toBN(1));
         });
 
         it("should complete exiting from first node", async () => {
-            await nodes.completeExit(nodeAddress, 0)
+            await nodes.completeExit(0)
                 .should.be.eventually.rejectedWith("Node is not Leaving");
 
-            await nodes.initExit(nodeAddress, 0);
+            await nodes.initExit(0);
 
-            await nodes.completeExit(nodeAddress, 0);
+            await nodes.completeExit(0);
         });
 
         it("should complete exiting from second node", async () => {
-            await nodes.completeExit(nodeAddress2, 1)
+            await nodes.completeExit(1)
                 .should.be.eventually.rejectedWith("Node is not Leaving");
 
-            await nodes.initExit(nodeAddress2, 1);
+            await nodes.initExit(1);
 
-            await nodes.completeExit(nodeAddress2, 1);
+            await nodes.completeExit(1);
         });
     });
 

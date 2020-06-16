@@ -157,7 +157,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
 
             it("should fail to init exiting of someone else's node", async () => {
                 await skaleManager.nodeExit(0, {from: hacker})
-                    .should.be.eventually.rejectedWith("Node does not exist for message sender");
+                    .should.be.eventually.rejectedWith("Validator with given address does not exist");
             });
 
             it("should initiate exiting", async () => {
@@ -170,7 +170,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                 const balanceBefore = web3.utils.toBN(await skaleToken.balanceOf(validator));
                 const lastBlock = await monitors.getLastBountyBlock(0);
 
-                await skaleManager.deleteNode(0, {from: nodeAddress});
+                await skaleManager.nodeExit(0, {from: nodeAddress});
 
                 await nodesContract.isNodeLeft(0).should.be.eventually.true;
 
@@ -184,7 +184,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
             it("should remove the node by root", async () => {
                 const balanceBefore = web3.utils.toBN(await skaleToken.balanceOf(validator));
 
-                await skaleManager.deleteNodeByRoot(0, {from: owner});
+                await skaleManager.nodeExit(0, {from: owner});
 
                 await nodesContract.isNodeLeft(0).should.be.eventually.true;
 
@@ -219,12 +219,12 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
 
             it("should fail to initiate exiting of first node from another account", async () => {
                 await skaleManager.nodeExit(0, {from: hacker})
-                    .should.be.eventually.rejectedWith("Node does not exist for message sender");
+                    .should.be.eventually.rejectedWith("Validator with given address does not exist");
             });
 
             it("should fail to initiate exiting of second node from another account", async () => {
                 await skaleManager.nodeExit(1, {from: hacker})
-                    .should.be.eventually.rejectedWith("Node does not exist for message sender");
+                    .should.be.eventually.rejectedWith("Validator with given address does not exist");
             });
 
             it("should initiate exiting of first node", async () => {
@@ -242,7 +242,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
             it("should remove the first node", async () => {
                 const balanceBefore = web3.utils.toBN(await skaleToken.balanceOf(validator));
 
-                await skaleManager.deleteNode(0, {from: nodeAddress});
+                await skaleManager.nodeExit(0, {from: nodeAddress});
 
                 await nodesContract.isNodeLeft(0).should.be.eventually.true;
 
@@ -254,7 +254,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
             it("should remove the second node", async () => {
                 const balanceBefore = web3.utils.toBN(await skaleToken.balanceOf(validator));
 
-                await skaleManager.deleteNode(1, {from: nodeAddress});
+                await skaleManager.nodeExit(1, {from: nodeAddress});
 
                 await nodesContract.isNodeLeft(1).should.be.eventually.true;
 
@@ -266,7 +266,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
             it("should remove the first node by root", async () => {
                 const balanceBefore = web3.utils.toBN(await skaleToken.balanceOf(validator));
 
-                await skaleManager.deleteNodeByRoot(0, {from: owner});
+                await skaleManager.nodeExit(0, {from: owner});
 
                 await nodesContract.isNodeLeft(0).should.be.eventually.true;
 
@@ -278,7 +278,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
             it("should remove the second node by root", async () => {
                 const balanceBefore = web3.utils.toBN(await skaleToken.balanceOf(validator));
 
-                await skaleManager.deleteNodeByRoot(1, {from: owner});
+                await skaleManager.nodeExit(1, {from: owner});
 
                 await nodesContract.isNodeLeft(1).should.be.eventually.true;
 
@@ -672,6 +672,13 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                                 0, // nonce
                                 "d2"]), // name
                             {from: developer});
+                        await schainsInternal.setPublicKey(
+                            web3.utils.soliditySha3("d2"),
+                            0,
+                            0,
+                            0,
+                            0,
+                        );
                     });
 
                     it("should fail to delete schain if sender is not owner of it", async () => {
@@ -687,7 +694,14 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
 
                     it("should delete schain after deleting node", async () => {
                         const nodes = await schainsInternal.getNodesInGroup(web3.utils.soliditySha3("d2"));
-                        await skaleManager.deleteNode(nodes[0], {from: nodeAddress});
+                        await skaleManager.nodeExit(nodes[0], {from: nodeAddress});
+                        await schainsInternal.setPublicKey(
+                            web3.utils.soliditySha3("d2"),
+                            0,
+                            0,
+                            0,
+                            0,
+                        );
                         await skaleManager.deleteSchain("d2", {from: developer});
                     });
                 });

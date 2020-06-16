@@ -64,7 +64,6 @@ contract SkaleDKG is Permissions {
 
     struct Channel {
         bool active;
-        address dataAddress;
         bool[] broadcasted;
         uint numberOfBroadcasted;
         G2Point publicKey;
@@ -128,30 +127,30 @@ contract SkaleDKG is Permissions {
     modifier correctNode(bytes32 groupIndex, uint nodeIndex) {
         uint index = _findNode(groupIndex, nodeIndex);
         require(
-            index < SchainsInternal(channels[groupIndex].dataAddress).getNumberOfNodesInGroup(groupIndex),
+            index < SchainsInternal(_contractManager.getContract("SchainsInternal"))
+                .getNumberOfNodesInGroup(groupIndex),
             "Node is not in this group");
         _;
     }
 
-    function openChannel(bytes32 groupIndex) external allowTwo("SchainsInternal", "Monitors") {
+    function openChannel(bytes32 groupIndex) external allow("SchainsInternal") {
         require(!channels[groupIndex].active, "Channel already is created");
         
-        SchainsInternal schainInternal = SchainsInternal(msg.sender);
+        SchainsInternal schainsInternal = SchainsInternal(msg.sender);
 
         channels[groupIndex].active = true;
-        channels[groupIndex].dataAddress = address(schainInternal);
-        channels[groupIndex].broadcasted = new bool[](schainInternal.getNumberOfNodesInGroup(groupIndex));
-        channels[groupIndex].completed = new bool[](schainInternal.getNumberOfNodesInGroup(groupIndex));
+        channels[groupIndex].broadcasted = new bool[](schainsInternal.getNumberOfNodesInGroup(groupIndex));
+        channels[groupIndex].completed = new bool[](schainsInternal.getNumberOfNodesInGroup(groupIndex));
         channels[groupIndex].publicKey.y.a = 1;
         channels[groupIndex].fromNodeToComplaint = uint(-1);
         channels[groupIndex].nodeToComplaint = uint(-1);
         channels[groupIndex].startedBlockTimestamp = block.timestamp;
 
-        schainInternal.setGroupFailedDKG(groupIndex);
+        schainsInternal.setGroupFailedDKG(groupIndex);
         emit ChannelOpened(groupIndex);
     }
 
-    function deleteChannel(bytes32 groupIndex) external allowTwo("SchainsInternal", "Monitors") {
+    function deleteChannel(bytes32 groupIndex) external allow("SchainsInternal") {
         require(channels[groupIndex].active, "Channel is not created");
         delete channels[groupIndex];
     }
@@ -166,8 +165,13 @@ contract SkaleDKG is Permissions {
         correctGroup(groupIndex)
         correctNode(groupIndex, nodeIndex)
     {
+        SchainsInternal schainsInternal = SchainsInternal(_contractManager.getContract("SchainsInternal"));
         require(_isNodeByMessageSender(nodeIndex, msg.sender), "Node does not exist for message sender");
         require(verificationVector.length >= 1, "VerificationVector is empty");
+        require(
+            secretKeyContribution.length == schainsInternal.getNumberOfNodesInGroup(groupIndex),
+            "Incorrect number of secret key shares"
+        );
         
         _isBroadcast(
             groupIndex,
@@ -205,7 +209,8 @@ contract SkaleDKG is Permissions {
             channels[groupIndex].startComplaintBlockTimestamp = block.timestamp;
             emit ComplaintSent(groupIndex, fromNodeIndex, toNodeIndex);
         } else if (broadcasted && channels[groupIndex].nodeToComplaint != toNodeIndex) {
-            revert("One complaint has already sent");
+            // will not revert if someone already sent the same complaint
+            return;
         } else if (broadcasted && channels[groupIndex].nodeToComplaint == toNodeIndex) {
             require(
                 channels[groupIndex].startComplaintBlockTimestamp.add(1800) <= block.timestamp,
@@ -251,7 +256,7 @@ contract SkaleDKG is Permissions {
         require(_isNodeByMessageSender(fromNodeIndex, msg.sender), "Node does not exist for message sender");
         uint index = _findNode(groupIndex, fromNodeIndex);
         uint numberOfParticipant = SchainsInternal(
-            channels[groupIndex].dataAddress
+            _contractManager.getContract("SchainsInternal")
         ).getNumberOfNodesInGroup(groupIndex);
         require(numberOfParticipant == channels[groupIndex].numberOfBroadcasted, "Still Broadcasting phase");
         require(!channels[groupIndex].completed[index], "Node is already alright");
@@ -259,7 +264,7 @@ contract SkaleDKG is Permissions {
         channels[groupIndex].numberOfCompleted++;
         emit AllDataReceived(groupIndex, fromNodeIndex);
         if (channels[groupIndex].numberOfCompleted == numberOfParticipant) {
-            SchainsInternal(channels[groupIndex].dataAddress).setPublicKey(
+            SchainsInternal(_contractManager.getContract("SchainsInternal")).setPublicKey(
                 groupIndex,
                 channels[groupIndex].publicKey.x.a,
                 channels[groupIndex].publicKey.x.b,
@@ -282,8 +287,9 @@ contract SkaleDKG is Permissions {
 
     function isBroadcastPossible(bytes32 groupIndex, uint nodeIndex) external view returns (bool) {
         uint index = _findNode(groupIndex, nodeIndex);
+        SchainsInternal schainsInternal = SchainsInternal(_contractManager.getContract("SchainsInternal"));
         return channels[groupIndex].active &&
-            index < SchainsInternal(channels[groupIndex].dataAddress).getNumberOfNodesInGroup(groupIndex) &&
+            index < schainsInternal.getNumberOfNodesInGroup(groupIndex) &&
             _isNodeByMessageSender(nodeIndex, msg.sender) &&
             !channels[groupIndex].broadcasted[index];
     }
@@ -307,16 +313,17 @@ contract SkaleDKG is Permissions {
                 channels[groupIndex].nodeToComplaint == toNodeIndex &&
                 channels[groupIndex].startedBlockTimestamp.add(1800) <= block.timestamp
             );
+        SchainsInternal schainsInternal = SchainsInternal(_contractManager.getContract("SchainsInternal"));
         return channels[groupIndex].active &&
-            indexFrom < SchainsInternal(channels[groupIndex].dataAddress).getNumberOfNodesInGroup(groupIndex) &&
-            indexTo < SchainsInternal(channels[groupIndex].dataAddress).getNumberOfNodesInGroup(groupIndex) &&
+            indexFrom < schainsInternal.getNumberOfNodesInGroup(groupIndex) &&
+            indexTo < schainsInternal.getNumberOfNodesInGroup(groupIndex) &&
             _isNodeByMessageSender(fromNodeIndex, msg.sender) &&
             complaintSending;
     }
 
     function isAlrightPossible(bytes32 groupIndex, uint nodeIndex) external view returns (bool) {
         uint index = _findNode(groupIndex, nodeIndex);
-        SchainsInternal schainsInternal = SchainsInternal(channels[groupIndex].dataAddress);
+        SchainsInternal schainsInternal = SchainsInternal(_contractManager.getContract("SchainsInternal"));
         return channels[groupIndex].active &&
             index < schainsInternal.getNumberOfNodesInGroup(groupIndex) &&
             _isNodeByMessageSender(nodeIndex, msg.sender) &&
@@ -326,8 +333,9 @@ contract SkaleDKG is Permissions {
 
     function isResponsePossible(bytes32 groupIndex, uint nodeIndex) external view returns (bool) {
         uint index = _findNode(groupIndex, nodeIndex);
+        SchainsInternal schainsInternal = SchainsInternal(_contractManager.getContract("SchainsInternal"));
         return channels[groupIndex].active &&
-            index < SchainsInternal(channels[groupIndex].dataAddress).getNumberOfNodesInGroup(groupIndex) &&
+            index < schainsInternal.getNumberOfNodesInGroup(groupIndex) &&
             _isNodeByMessageSender(nodeIndex, msg.sender) &&
             channels[groupIndex].nodeToComplaint == nodeIndex;
     }
@@ -529,7 +537,8 @@ contract SkaleDKG is Permissions {
     }
 
     function _findNode(bytes32 groupIndex, uint nodeIndex) internal view returns (uint) {
-        uint[] memory nodesInGroup = SchainsInternal(channels[groupIndex].dataAddress).getNodesInGroup(groupIndex);
+        uint[] memory nodesInGroup = SchainsInternal(_contractManager.getContract("SchainsInternal"))
+            .getNodesInGroup(groupIndex);
         uint correctIndex = nodesInGroup.length;
         bool set = false;
         for (uint index = 0; index < nodesInGroup.length; index++) {
