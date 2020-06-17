@@ -18,6 +18,7 @@
 */
 
 pragma solidity 0.6.6;
+pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
@@ -51,10 +52,10 @@ contract Vesting is ILocker, Permissions, IERC777Recipient {
         uint afterLockupAmount;
     }
 
-    struct Balances {
-        uint sentAmount;
-        uint delegatedAmount;
-    }
+    // struct Balances {
+    //     uint sentAmount;
+    //     uint delegatedAmount;
+    // }
 
     IERC1820Registry private _erc1820;
 
@@ -66,9 +67,9 @@ contract Vesting is ILocker, Permissions, IERC777Recipient {
 
     //        holder => SAFT holder params
     mapping (address => SAFTHolder) private _saftHolders;
-    
-    //        holder => Balances
-    mapping (address => Balances) private _holderBalances;
+
+    // //        holder => Balances
+    // mapping (address => Balances) private _holderBalances;
 
     function tokensReceived(
         address operator,
@@ -95,11 +96,11 @@ contract Vesting is ILocker, Permissions, IERC777Recipient {
     function startVesting(address holder) external onlyOwner {
         require(_saftHolders[holder].registered, "SAFT is not registered");
         require(_saftHolders[holder].approved, "SAFT is not approved");
-        // require(_canceledTokens[holder] == 0, "SAFT is already canceled");
         _saftHolders[holder].active = true;
-        // require(
-        //     IERC20(_contractManager.getContract("SkaleToken")).transfer(holder, _saftHolders[holder].fullAmount),
-        //     "Error of token sending");
+        _usedSAFTRounds[_saftHolders[holder].saftRound - 1]++;
+        require(
+            IERC20(_contractManager.getContract("SkaleToken")).transfer(holder, _saftHolders[holder].fullAmount),
+            "Error of token sending");
     }
 
     function addSAFTRound(
@@ -142,7 +143,7 @@ contract Vesting is ILocker, Permissions, IERC777Recipient {
             ((fullPeriod - lockupPeriod) / vestingTimes) * vestingTimes == fullPeriod - lockupPeriod,
             "Incorrect vesting times"
         );
-        // require(_usedSAFTRounds[saftRound] == 0, "This SAFT is already used");
+        require(_usedSAFTRounds[saftRound] == 0, "This SAFT is already used");
         // network_launch_timestamp
         _saftRounds[saftRound].fullPeriod = fullPeriod;
         _saftRounds[saftRound].lockupPeriod = lockupPeriod;
@@ -177,6 +178,8 @@ contract Vesting is ILocker, Permissions, IERC777Recipient {
     {
         require(_saftRounds.length >= saftRound, "SAFT round does not exist");
         require(fullAmount >= lockupAmount, "Incorrect amounts");
+        require(startVestingTime <= now, "Incorrect period starts");
+        require(!_saftHolders[holder].registered, "SAFT holder is already added");
         _saftHolders[holder] = SAFTHolder({
             registered: true,
             approved: false,
@@ -190,44 +193,41 @@ contract Vesting is ILocker, Permissions, IERC777Recipient {
     }
 
     function getAndUpdateLockedAmount(address wallet) external override returns (uint) {
-        // if (! _saftHolders[wallet].active) {
-        //     return 0;
-        // }
-        // if (_canceledTokens[wallet] > 0) {
-        //     return _canceledTokens[wallet];
-        // }
-        // return getLockedAmount(wallet);
-        return 0;
+        if (! _saftHolders[wallet].active) {
+            return 0;
+        }
+        return getLockedAmount(wallet);
     }
 
     function getAndUpdateForbiddenForDelegationAmount(address wallet) external override returns (uint) {
-        return 0; //_canceledTokens[wallet];
+        // metwork_launch_timestamp
+        return 0;
     }
 
-    function retrieve() external {
-        address holder = msg.sender;
-        SAFTHolder memory saftHolder = _saftHolders[holder];
-        require(saftHolder.active, "SAFT is not active");
-        uint availableAmount = calculateAvailableAmount(holder);
-        Balances memory holderBalance = _holderBalances[holder];
-        if (availableAmount > holderBalance.sentAmount) {
-            _holderBalances[holder].sentAmount = availableAmount;
-            require(
-                IERC20(_contractManager.getContract("SkaleToken")).transfer(
-                    holder,
-                    availableAmount - holderBalance.sentAmount
-                ), "Error of token sending"
-            );
-        }
-        // add slashed + delegated
-    }
+    // function retrieve() external {
+    //     address holder = msg.sender;
+    //     SAFTHolder memory saftHolder = _saftHolders[holder];
+    //     require(saftHolder.active, "SAFT is not active");
+    //     uint availableAmount = calculateAvailableAmount(holder);
+    //     Balances memory holderBalance = _holderBalances[holder];
+    //     if (availableAmount > holderBalance.sentAmount) {
+    //         _holderBalances[holder].sentAmount = availableAmount;
+    //         require(
+    //             IERC20(_contractManager.getContract("SkaleToken")).transfer(
+    //                 holder,
+    //                 availableAmount - holderBalance.sentAmount
+    //             ), "Error of token sending"
+    //         );
+    //     }
+    //     // add slashed + delegated
+    // }
 
-    function getBalance(address holder) external view returns (uint balance) {
-        SAFTHolder memory saftHolder = _saftHolders[holder];
-        Balances memory holderBalance = _holderBalances[holder];
-        balance = saftHolder.fullAmount - holderBalance.sentAmount;
-        // add slashed + delegated
-    }
+    // function getBalance(address holder) external view returns (uint balance) {
+    //     SAFTHolder memory saftHolder = _saftHolders[holder];
+    //     Balances memory holderBalance = _holderBalances[holder];
+    //     balance = saftHolder.fullAmount - holderBalance.sentAmount;
+    //     // add slashed + delegated
+    // }
 
     function getStartVestingTime(address holder) external view returns (uint) {
         return _saftHolders[holder].startVestingTime;
@@ -236,12 +236,12 @@ contract Vesting is ILocker, Permissions, IERC777Recipient {
     function getFinishVestingTime(address holder) external view returns (uint) {
         TimeHelpers timeHelpers = TimeHelpers(_contractManager.getContract("TimeHelpers"));
         SAFTHolder memory saftHolder = _saftHolders[holder];
-        SAFT memory saftParams = _saftRounds[saftHolder.saftRound];
+        SAFT memory saftParams = _saftRounds[saftHolder.saftRound - 1];
         return timeHelpers.addMonths(saftHolder.startVestingTime, saftParams.fullPeriod);
     }
 
     function getLockupPeriodInMonth(address holder) external view returns (uint) {
-        return _saftRounds[_saftHolders[holder].saftRound].lockupPeriod;
+        return _saftRounds[_saftHolders[holder].saftRound - 1].lockupPeriod;
     }
 
     function isActiveVestingTerm(address holder) external view returns (bool) {
@@ -257,38 +257,55 @@ contract Vesting is ILocker, Permissions, IERC777Recipient {
     }
 
     function isCancelableVestingTerm(address holder) external view returns (bool) {
-        return _saftRounds[_saftHolders[holder].saftRound].isCancelable;
+        return _saftRounds[_saftHolders[holder].saftRound - 1].isCancelable;
     }
 
     function getLockupPeriodTimestamp(address holder) external view returns (uint) {
         TimeHelpers timeHelpers = TimeHelpers(_contractManager.getContract("TimeHelpers"));
         SAFTHolder memory saftHolder = _saftHolders[holder];
-        SAFT memory saftParams = _saftRounds[saftHolder.saftRound];
+        SAFT memory saftParams = _saftRounds[saftHolder.saftRound - 1];
         return timeHelpers.addMonths(saftHolder.startVestingTime, saftParams.lockupPeriod);
     }
 
-    // function getTimeOfNextPayment(address holder) external view returns (uint) {
-    //     TimeHelpers timeHelpers = TimeHelpers(_contractManager.getContract("TimeHelpers"));
-    //     uint date = now;
-    //     SAFT memory saftParams = _saftRounds[_saftHolders[holder].saftRound];
-    //     uint lockupDate = timeHelpers.addMonths(saftParams.startVestingTime, saftParams.lockupPeriod);
-    //     if (date < lockupDate) {
-    //         return lockupDate;
-    //     }
-    //     uint dateMonth = timeHelpers.timestampToMonth(date);
-    //     uint lockupMonth = timeHelpers.timestampToMonth(timeHelpers.addMonths(
-    //         saftParams.startVestingTime,
-    //         saftParams.lockupPeriod
-    //     ));
-    //     uint finishMonth = timeHelpers.timestampToMonth(saftParams.finishVesting);
-    //     uint numberOfDonePayments = dateMonth.sub(lockupMonth).div(saftParams.regularPaymentTime);
-    //     uint numberOfAllPayments = finishMonth.sub(lockupMonth).div(saftParams.regularPaymentTime);
-    //     if (numberOfAllPayments <= numberOfDonePayments + 1) {
-    //         return saftParams.finishVesting;
-    //     }
-    //     uint nextPayment = dateMonth.add(1).sub(lockupMonth).div(saftParams.regularPaymentTime);
-    //     return timeHelpers.addMonths(lockupDate, nextPayment);
-    // }
+    function getTimeOfNextPayment(address holder) external view returns (uint) {
+        TimeHelpers timeHelpers = TimeHelpers(_contractManager.getContract("TimeHelpers"));
+        uint date = now;
+        SAFTHolder memory saftHolder = _saftHolders[holder];
+        SAFT memory saftParams = _saftRounds[saftHolder.saftRound - 1];
+        uint lockupDate = timeHelpers.addMonths(saftHolder.startVestingTime, saftParams.lockupPeriod);
+        if (date < lockupDate) {
+            return lockupDate;
+        }
+        uint dateMonth = timeHelpers.timestampToMonth(date);
+        uint lockupMonth = timeHelpers.timestampToMonth(timeHelpers.addMonths(
+            saftHolder.startVestingTime,
+            saftParams.lockupPeriod
+        ));
+        uint finishMonth = timeHelpers.timestampToMonth(timeHelpers.addMonths(
+            saftHolder.startVestingTime,
+            saftParams.fullPeriod
+        ));
+        uint numberOfDonePayments = dateMonth.sub(lockupMonth).div(saftParams.regularPaymentTime);
+        uint numberOfAllPayments = finishMonth.sub(lockupMonth).div(saftParams.regularPaymentTime);
+        if (numberOfAllPayments <= numberOfDonePayments + 1) {
+            return timeHelpers.addMonths(
+                saftHolder.startVestingTime,
+                saftParams.fullPeriod
+            );
+        }
+        uint nextPayment = dateMonth.add(1).sub(lockupMonth).div(saftParams.regularPaymentTime);
+        return timeHelpers.addMonths(lockupDate, nextPayment);
+    }
+
+    function getSAFTRound(uint saftRound) external view returns (SAFT memory) {
+        require(saftRound < _saftRounds.length, "SAFT Round does not exist");
+        return _saftRounds[saftRound];
+    }
+
+    function getSAFTHolderParams(address holder) external view returns (SAFTHolder memory) {
+        require(_saftHolders[holder].registered, "SAFT holder is not registered");
+        return _saftHolders[holder];
+    }
 
     function initialize(address contractManager) public override initializer {
         Permissions.initialize(contractManager);
@@ -296,11 +313,15 @@ contract Vesting is ILocker, Permissions, IERC777Recipient {
         _erc1820.setInterfaceImplementer(address(this), keccak256("ERC777TokensRecipient"), address(this));
     }
 
-    function calculateAvailableAmount(address wallet) public view returns (uint availableAmount) {
+    function getLockedAmount(address wallet) public view returns (uint) {
+        return _saftHolders[wallet].fullAmount - _calculateAvailableAmount(wallet);
+    }
+
+    function _calculateAvailableAmount(address wallet) internal view returns (uint availableAmount) {
         TimeHelpers timeHelpers = TimeHelpers(_contractManager.getContract("TimeHelpers"));
         uint date = now;
         SAFTHolder memory saftHolder = _saftHolders[wallet];
-        SAFT memory saftParams = _saftRounds[saftHolder.saftRound];
+        SAFT memory saftParams = _saftRounds[saftHolder.saftRound - 1];
         availableAmount = 0;
         if (date >= timeHelpers.addMonths(saftHolder.startVestingTime, saftParams.lockupPeriod)) {
             availableAmount = saftHolder.afterLockupAmount;
@@ -319,7 +340,7 @@ contract Vesting is ILocker, Permissions, IERC777Recipient {
         TimeHelpers timeHelpers = TimeHelpers(_contractManager.getContract("TimeHelpers"));
         uint date = now;
         SAFTHolder memory saftHolder = _saftHolders[wallet];
-        SAFT memory saftParams = _saftRounds[saftHolder.saftRound];
+        SAFT memory saftParams = _saftRounds[saftHolder.saftRound - 1];
         if (date < timeHelpers.addMonths(saftHolder.startVestingTime, saftParams.lockupPeriod)) {
             return 0;
         }
@@ -334,7 +355,7 @@ contract Vesting is ILocker, Permissions, IERC777Recipient {
     function _getNumberOfAllPayments(address wallet) internal view returns (uint) {
         TimeHelpers timeHelpers = TimeHelpers(_contractManager.getContract("TimeHelpers"));
         SAFTHolder memory saftHolder = _saftHolders[wallet];
-        SAFT memory saftParams = _saftRounds[saftHolder.saftRound];
+        SAFT memory saftParams = _saftRounds[saftHolder.saftRound - 1];
         uint finishMonth = timeHelpers.timestampToMonth(
             timeHelpers.addMonths(saftHolder.startVestingTime, saftParams.fullPeriod)
         );

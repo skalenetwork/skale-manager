@@ -217,10 +217,9 @@ contract DelegationController is Permissions, ILocker {
 
         // check that there is enough money
         uint holderBalance = skaleToken.balanceOf(msg.sender);
-        uint vestingBalance = vesting.getBalance(msg.sender);
         uint forbiddenForDelegation = tokenState.getAndUpdateForbiddenForDelegationAmount(msg.sender);
         require(
-            holderBalance + vestingBalance >= forbiddenForDelegation,
+            holderBalance >= forbiddenForDelegation,
             "Delegator does not have enough tokens to delegate"
         );
 
