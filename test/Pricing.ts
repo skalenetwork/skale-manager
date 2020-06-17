@@ -70,28 +70,10 @@ contract("Pricing", ([owner, holder]) => {
             const stevenNodeHash = web3.utils.soliditySha3("Steven");
 
             beforeEach(async () => {
-                const johnNodeIndex = new BigNumber(await nodes.nodesNameToIndex(johnNodeHash)).toNumber();
-                const michaelNodeIndex = new BigNumber(await nodes.nodesNameToIndex(michaelNodeHash)).toNumber();
-                const danielNodeIndex = new BigNumber(await nodes.nodesNameToIndex(danielNodeHash)).toNumber();
-                const stevenNodeIndex = new BigNumber(await nodes.nodesNameToIndex(stevenNodeHash)).toNumber();
 
-                await schainsInternal.createGroup(bobSchainHash, 1, bobSchainHash);
-                await schainsInternal.createGroup(davidSchainHash, 1, davidSchainHash);
-                await schainsInternal.createGroup(jacobSchainHash, 2, jacobSchainHash);
-
-                await schainsInternal.setNodeInGroup(bobSchainHash, johnNodeIndex);
-                await schainsInternal.setNodeInGroup(davidSchainHash, michaelNodeIndex);
-                await schainsInternal.setNodeInGroup(jacobSchainHash, danielNodeIndex);
-                await schainsInternal.setNodeInGroup(jacobSchainHash, stevenNodeIndex);
-
-                await schainsInternal.addSchainForNode(johnNodeIndex, bobSchainHash);
-                await schainsInternal.addSchainForNode(michaelNodeIndex, davidSchainHash);
-                await schainsInternal.addSchainForNode(danielNodeIndex, jacobSchainHash);
-                await schainsInternal.addSchainForNode(stevenNodeIndex, jacobSchainHash);
-
-                await schainsInternal.setSchainPartOfNode(bobSchainHash, 4);
-                await schainsInternal.setSchainPartOfNode(davidSchainHash, 4);
-                await schainsInternal.setSchainPartOfNode(jacobSchainHash, 1);
+                await schainsInternal.createGroupForSchain(bobSchainHash, 1, 4);
+                await schainsInternal.createGroupForSchain(davidSchainHash, 1, 4);
+                await schainsInternal.createGroupForSchain(jacobSchainHash, 2, 1);
 
             });
 
