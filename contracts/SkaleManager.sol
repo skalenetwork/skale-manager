@@ -33,7 +33,6 @@ import "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
 import "@openzeppelin/contracts/introspection/IERC1820Registry.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 
-
 contract SkaleManager is IERC777Recipient, Permissions {
     // miners capitalization
     uint public minersCap;
@@ -108,14 +107,21 @@ contract SkaleManager is IERC777Recipient, Permissions {
     }
 
     function nodeExit(uint nodeIndex) external {
+        ValidatorService validatorService = ValidatorService(_contractManager.getContract("ValidatorService"));
         Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
+        uint validatorId = nodes.getValidatorId(nodeIndex);
+        bool permitted = (msg.sender == owner() || nodes.isNodeExist(msg.sender, nodeIndex));
+        if (!permitted) {
+            permitted = validatorService.getValidatorId(msg.sender) == validatorId;
+        }
+        require(permitted, "Sender is not permitted to call this function");
         Schains schains = Schains(
             _contractManager.getContract("Schains"));
         SchainsInternal schainsInternal = SchainsInternal(_contractManager.getContract("SchainsInternal"));
         ConstantsHolder constants = ConstantsHolder(_contractManager.getContract("ConstantsHolder"));
         schains.freezeSchains(nodeIndex);
         if (nodes.isNodeActive(nodeIndex)) {
-            require(nodes.initExit(msg.sender, nodeIndex), "Initialization of node exit is failed");
+            require(nodes.initExit(nodeIndex), "Initialization of node exit is failed");
         }
         bool completed;
         bool isSchains = false;
@@ -126,30 +132,12 @@ contract SkaleManager is IERC777Recipient, Permissions {
             completed = true;
         }
         if (completed) {
-            require(nodes.completeExit(msg.sender, nodeIndex), "Finishing of node exit is failed");
+            require(nodes.completeExit(nodeIndex), "Finishing of node exit is failed");
             nodes.changeNodeFinishTime(nodeIndex, uint32(now + (isSchains ? constants.rotationDelay() : 0)));
+            Monitors monitors = Monitors(_contractManager.getContract("Monitors"));
+            monitors.deleteMonitor(nodeIndex);
+            validatorService.deleteNode(validatorId, nodeIndex);
         }
-    }
-
-    function deleteNode(uint nodeIndex) external {
-        Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
-        nodes.removeNode(msg.sender, nodeIndex);
-        Monitors monitors = Monitors(_contractManager.getContract("Monitors"));
-        monitors.deleteMonitor(nodeIndex);
-        ValidatorService validatorService = ValidatorService(_contractManager.getContract("ValidatorService"));
-        uint validatorId = validatorService.getValidatorIdByNodeAddress(msg.sender);
-        validatorService.deleteNode(validatorId, nodeIndex);
-    }
-
-    function deleteNodeByRoot(uint nodeIndex) external onlyOwner {
-        Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
-        Monitors monitors = Monitors(_contractManager.getContract("Monitors"));
-        ValidatorService validatorService = ValidatorService(_contractManager.getContract("ValidatorService"));
-
-        nodes.removeNodeByRoot(nodeIndex);
-        monitors.deleteMonitor(nodeIndex);
-        uint validatorId = nodes.getNodeValidatorId(nodeIndex);
-        validatorService.deleteNode(validatorId, nodeIndex);
     }
 
     function deleteSchain(string calldata name) external {
@@ -197,8 +185,26 @@ contract SkaleManager is IERC777Recipient, Permissions {
             averageDowntime,
             averageLatency);
         nodes.changeNodeLastRewardDate(nodeIndex);
-        monitors.upgradeMonitor(nodeIndex);
+        monitors.addMonitor(nodeIndex);
         _emitBountyEvent(nodeIndex, msg.sender, averageDowntime, averageLatency, bounty);
+    }
+
+    function calculateNormalBounty() external view returns (uint) {
+        ConstantsHolder constants = ConstantsHolder(_contractManager.getContract("ConstantsHolder"));
+        Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
+        uint minersCapLocal = SkaleToken(_contractManager.getContract("SkaleToken")).CAP() / 3;
+        uint stageNodesLocal = stageTime;
+        uint stageTimeLocal = stageTime;
+        if (stageTimeLocal.add(constants.rewardPeriod()) < now) {
+            stageNodesLocal = nodes.numberOfActiveNodes().add(nodes.numberOfLeavingNodes());
+            stageTimeLocal = uint32(block.timestamp);
+        }
+        return minersCapLocal
+            .div((2 ** (((now.sub(startTime))
+            .div(constants.SIX_YEARS())) + 1))
+            .mul((constants.SIX_YEARS()
+            .div(constants.rewardPeriod())))
+            .mul(stageNodesLocal));
     }
 
     function initialize(address newContractsAddress) public override initializer {
@@ -243,9 +249,12 @@ contract SkaleManager is IERC777Recipient, Permissions {
         int bountyForMiner = int(commonBounty);
         uint normalDowntime = ((constants.rewardPeriod().sub(constants.deltaPeriod())).div(constants.checkTime())) / 30;
         if (downtime.add(diffTime) > normalDowntime) {
-            bountyForMiner -= int(((downtime.add(diffTime)).mul(commonBounty)) / (constants.SECONDS_TO_DAY() / 4));
+            bountyForMiner -= int(
+                ((downtime.add(diffTime)).mul(commonBounty)).div(
+                    (constants.rewardPeriod().sub(constants.deltaPeriod())).div(constants.checkTime())
+                )
+            );
         }
-
         if (bountyForMiner > 0) {
             if (latency > constants.allowableLatency()) {
                 bountyForMiner = int((constants.allowableLatency().mul(uint(bountyForMiner))).div(latency));

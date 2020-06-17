@@ -105,7 +105,6 @@ contract Nodes is Permissions {
     // informs that node is fully finished quitting from the system
     event ExitCompleted(
         uint nodeIndex,
-        address owner,
         uint32 time,
         uint gasSpend
     );
@@ -113,7 +112,6 @@ contract Nodes is Permissions {
     // informs that owner starts the procedure of quitting the Node from the system
     event ExitInited(
         uint nodeIndex,
-        address owner,
         uint32 startLeavingPeriod,
         uint32 time,
         uint gasSpend
@@ -178,7 +176,9 @@ contract Nodes is Permissions {
      * @param space - space which should be occupied
      */
     function removeSpaceFromNode(uint nodeIndex, uint8 space)
-        external allowTwo("Schains", "SchainsInternal") returns (bool)
+        external
+        allowTwo("Schains", "SchainsInternal")
+        returns (bool)
     {
         if (spaceOfNodes[nodeIndex].freeSpace < space) {
             return false;
@@ -216,9 +216,9 @@ contract Nodes is Permissions {
         nodes[nodeIndex].lastRewardDate = uint32(block.timestamp);
     }
 
-    function changeNodeFinishTime(uint nodeIndex, uint32 time) external {
+    function changeNodeFinishTime(uint nodeIndex, uint32 time) external allow("SkaleManager") {
         nodes[nodeIndex].finishTime = time;
-    }    
+    }
 
     /**
      * @dev createNode - creates new Node and add it to the Nodes contract
@@ -226,10 +226,10 @@ contract Nodes is Permissions {
      * @param from - owner of Node
      * @return nodeIndex - index of Node
      */
-    function createNode(
-        address from,
-        NodeCreationParams calldata params)
-        external allow("SkaleManager") returns (uint nodeIndex)
+    function createNode(address from, NodeCreationParams calldata params)
+        external
+        allow("SkaleManager")
+        returns (uint nodeIndex)
     {
         // checks that Node has correct data
         require(params.ip != 0x0 && !nodesIPCheck[params.ip], "IP address is zero or is not available");
@@ -248,8 +248,6 @@ contract Nodes is Permissions {
             params.port,
             params.publicKey,
             validatorId);
-        // adds Node to Fractional Nodes or to Full Nodes
-        // setNodeType(nodesAddress, constantsAddress, nodeIndex);
 
         emit NodeCreated(
             nodeIndex,
@@ -264,43 +262,17 @@ contract Nodes is Permissions {
     }
 
     /**
-     * @dev removeNode - delete Node
-     * function could be only run by SkaleManager
-     * @param from - owner of Node
-     * @param nodeIndex - index of Node
-     */
-    function removeNode(address from, uint nodeIndex) external allow("SkaleManager") {
-
-        require(isNodeExist(from, nodeIndex), "Node does not exist for message sender");
-        require(isNodeActive(nodeIndex), "Node is not Active");
-
-        this.setNodeLeft(nodeIndex);
-
-        this.deleteNode(nodeIndex);
-    }
-
-    function removeNodeByRoot(uint nodeIndex) external allow("SkaleManager") {
-        this.setNodeLeft(nodeIndex);
-
-        this.deleteNode(nodeIndex);
-    }
-
-    /**
      * @dev initExit - initiate a procedure of quitting the system
      * function could be only run by SkaleManager
-     * @param from - owner of Node
      * @param nodeIndex - index of Node
      * @return true - if everything OK
      */
-    function initExit(address from, uint nodeIndex) external allow("SkaleManager") returns (bool) {
-
-        require(isNodeExist(from, nodeIndex), "Node does not exist for message sender");
+    function initExit(uint nodeIndex) external allow("SkaleManager") returns (bool) {
 
         this.setNodeLeaving(nodeIndex);
 
         emit ExitInited(
             nodeIndex,
-            from,
             uint32(block.timestamp),
             uint32(block.timestamp),
             gasleft());
@@ -309,14 +281,12 @@ contract Nodes is Permissions {
 
     /**
      * @dev completeExit - finish a procedure of quitting the system
-     * function could be run only by SkaleMManager
-     * @param from - owner of Node
+     * function could be run only by SkaleManager
      * @param nodeIndex - index of Node
      * @return amount of SKL which be returned
      */
-    function completeExit(address from, uint nodeIndex) external allow("SkaleManager") returns (bool) {
+    function completeExit(uint nodeIndex) external allow("SkaleManager") returns (bool) {
 
-        require(isNodeExist(from, nodeIndex), "Node does not exist for message sender");
         require(isNodeLeaving(nodeIndex), "Node is not Leaving");
 
         this.setNodeLeft(nodeIndex);
@@ -324,7 +294,6 @@ contract Nodes is Permissions {
 
         emit ExitCompleted(
             nodeIndex,
-            from,
             uint32(block.timestamp),
             gasleft());
         return true;
@@ -353,9 +322,6 @@ contract Nodes is Permissions {
     function setNodeLeft(uint nodeIndex) external allow("Nodes") {
         nodesIPCheck[nodes[nodeIndex].ip] = false;
         nodesNameCheck[keccak256(abi.encodePacked(nodes[nodeIndex].name))] = false;
-        // address ownerOfNode = nodes[nodeIndex].owner;
-        // nodeIndexes[ownerOfNode].isNodeExist[nodeIndex] = false;
-        // nodeIndexes[ownerOfNode].numberOfNodes--;
         delete nodesNameToIndex[keccak256(abi.encodePacked(nodes[nodeIndex].name))];
         if (nodes[nodeIndex].status == NodeStatus.Active) {
             numberOfActiveNodes--;
@@ -404,6 +370,16 @@ contract Nodes is Permissions {
     function isTimeForReward(uint nodeIndex) external view returns (bool) {
         ConstantsHolder constantsHolder = ConstantsHolder(_contractManager.getContract("ConstantsHolder"));
         return nodes[nodeIndex].lastRewardDate.add(constantsHolder.rewardPeriod()) <= block.timestamp;
+    }
+
+    /**
+     * @dev isNodeExist - checks existence of Node at this address
+     * @param from - account address
+     * @param nodeIndex - index of Node
+     * @return if exist - true, else - false
+     */
+    function isNodeExist(address from, uint nodeIndex) external view returns (bool) {
+        return nodeIndexes[from].isNodeExist[nodeIndex];
     }
 
     /**
@@ -546,16 +522,6 @@ contract Nodes is Permissions {
         numberOfActiveNodes = 0;
         numberOfLeavingNodes = 0;
         numberOfLeftNodes = 0;
-    }
-
-    /**
-     * @dev isNodeExist - checks existence of Node at this address
-     * @param from - account address
-     * @param nodeIndex - index of Node
-     * @return if exist - true, else - false
-     */
-    function isNodeExist(address from, uint nodeIndex) public view returns (bool) {
-        return nodeIndexes[from].isNodeExist[nodeIndex];
     }
 
     /**

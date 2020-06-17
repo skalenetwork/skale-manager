@@ -28,7 +28,6 @@ chai.use(chaiAsPromised);
 
 class Channel {
     public active: boolean;
-    public dataAddress: string;
     public numberOfBroadcasted: BigNumber;
     public publicKey: {x: {a: BigNumber, b: BigNumber}, y: {a: BigNumber, b: BigNumber}};
     public numberOfCompleted: BigNumber;
@@ -37,17 +36,16 @@ class Channel {
     public fromNodeToComplaint: BigNumber;
     public startedComplaintBlockTimestamp: BigNumber;
 
-    constructor(arrayData: [boolean, string, BigNumber, {x: {a: BigNumber, b: BigNumber}, y: {a: BigNumber, b: BigNumber}}, BigNumber, BigNumber, BigNumber,
+    constructor(arrayData: [boolean, BigNumber, {x: {a: BigNumber, b: BigNumber}, y: {a: BigNumber, b: BigNumber}}, BigNumber, BigNumber, BigNumber,
         BigNumber, BigNumber]) {
         this.active = arrayData[0];
-        this.dataAddress = arrayData[1];
-        this.numberOfBroadcasted = new BigNumber(arrayData[2]);
-        this.publicKey = arrayData[3];
-        this.numberOfCompleted = new BigNumber(arrayData[4]);
-        this.startedBlockTimestamp = new BigNumber(arrayData[5]);
-        this.nodeToComplaint = new BigNumber(arrayData[6]);
-        this.fromNodeToComplaint = new BigNumber(arrayData[7]);
-        this.startedComplaintBlockTimestamp = new BigNumber(arrayData[8]);
+        this.numberOfBroadcasted = new BigNumber(arrayData[1]);
+        this.publicKey = arrayData[2];
+        this.numberOfCompleted = new BigNumber(arrayData[3]);
+        this.startedBlockTimestamp = new BigNumber(arrayData[4]);
+        this.nodeToComplaint = new BigNumber(arrayData[5]);
+        this.fromNodeToComplaint = new BigNumber(arrayData[6]);
+        this.startedComplaintBlockTimestamp = new BigNumber(arrayData[7]);
     }
 }
 
@@ -712,7 +710,6 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
             );
 
             let channel: Channel = new Channel(await skaleDKG.channels(web3.utils.soliditySha3(schainName)));
-            const dataAddress = channel.dataAddress;
 
             const result = await skaleDKG.response(
                 web3.utils.soliditySha3(schainName),
@@ -732,7 +729,6 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
             channel = new Channel(await skaleDKG.channels(web3.utils.soliditySha3(schainName)));
             assert.equal(channel.numberOfBroadcasted.toString(), "0");
             assert.equal(channel.startedBlockTimestamp.toString(), timestamp.toString());
-            assert.equal(channel.dataAddress, dataAddress);
             // console.log(channel);
 
             let res = await skaleDKG.isBroadcastPossible(
