@@ -12,6 +12,8 @@ import { ConstantsHolderInstance,
          SkaleTokenInstance,
          ValidatorServiceInstance} from "../types/truffle-contracts";
 
+// import BigNumber from "bignumber.js";
+
 import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
 import { deployContractManager } from "./tools/deploy/contractManager";
 import { deployDelegationController } from "./tools/deploy/delegation/delegationController";
@@ -358,6 +360,46 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
 
             });
 
+            async function calculateBounty(
+                normalBounty: string,
+                txTime: number,
+                downtime: number,
+                latency: number,
+                previousRewardDate: number
+            )
+            {
+                const bountyCalculatedBN = web3.utils.toBN(normalBounty);
+                const rewardPeriod = web3.utils.toBN(await constantsHolder.rewardPeriod());
+                const deltaPeriod = web3.utils.toBN(await constantsHolder.deltaPeriod());
+                const checkTime = web3.utils.toBN(await constantsHolder.checkTime());
+                const normalDowtime = (rewardPeriod.sub(deltaPeriod)).div(checkTime).div(web3.utils.toBN(30));
+                const lastRewardDate = web3.utils.toBN(previousRewardDate);
+                const lastChance = lastRewardDate.add(rewardPeriod).add(deltaPeriod);
+                const allowableLatency = web3.utils.toBN(await constantsHolder.allowableLatency());
+                let difftime = web3.utils.toBN(0);
+                const downtimeBN = web3.utils.toBN(downtime);
+                const latencyBN = web3.utils.toBN(latency);
+                if (txTime > lastChance.toNumber()) {
+                    difftime = web3.utils.toBN(txTime).sub(lastChance);
+                }
+                let returningBounty = bountyCalculatedBN;
+                difftime = difftime.div(checkTime);
+
+                if(difftime.add(downtimeBN) > normalDowtime) {
+                    returningBounty = returningBounty.sub(((downtimeBN.add(difftime)).mul(bountyCalculatedBN)).div(
+                        (rewardPeriod.sub(deltaPeriod).div(checkTime))
+                    ));
+                }
+                if (returningBounty.gt(web3.utils.toBN(0))) {
+                    if (latencyBN.gt(allowableLatency)) {
+                        returningBounty = (returningBounty.mul(allowableLatency)).div(latencyBN);
+                    }
+                } else {
+                    returningBounty = web3.utils.toBN(0)
+                }
+                return returningBounty;
+            }
+
             it("should fail to create schain if validator doesn't meet MSR", async () => {
                 await constantsHolder.setMSR(delegatedAmount + 1);
 
@@ -448,16 +490,27 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                         .should.be.eventually.rejectedWith("Node does not exist for Message sender");
                 });
 
+                it("should calculate normal bounty", async () => {
+                    const bounty = await skaleManager.calculateNormalBounty();
+                    console.log(bounty.toString());
+                });
+
                 it("should get bounty", async () => {
                     skipTime(web3, 200);
                     const balanceBefore = web3.utils.toBN(await skaleToken.balanceOf(validator));
-                    // const bounty = web3.utils.toBN("893061271147690900777");
-                    const bounty = web3.utils.toBN("1250285779606767261088");
+                    const bountyCalculated = web3.utils.toBN(await skaleManager.calculateNormalBounty());
+                    const lastRewardDate = await nodesContract.getNodeLastRewardDate(1);
 
                     const txGetBounty = await skaleManager.getBounty(1, {from: nodeAddress});
-
                     const blocks = await monitors.getLastBountyBlock(1);
                     txGetBounty.receipt.blockNumber.should.be.equal(blocks.toNumber());
+                    const calcBounty = await calculateBounty(
+                        bountyCalculated.toString(),
+                        (await web3.eth.getBlock(txGetBounty.receipt.blockNumber)).timestamp,
+                        0,
+                        50,
+                        lastRewardDate.toNumber()
+                    );
 
                     skipTime(web3, month); // can withdraw bounty only next month
 
@@ -465,9 +518,9 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                     await distributor.withdrawFee(validator, {from: validator});
 
                     const balanceAfter = web3.utils.toBN(await skaleToken.balanceOf(validator));
-                    console.log((balanceAfter.sub(balanceBefore)).toString());
 
-                    expect(balanceAfter.sub(balanceBefore).eq(bounty)).to.be.true;
+                    expect(balanceAfter.sub(balanceBefore).eq(bountyCalculated)).to.be.true;
+                    expect(balanceAfter.sub(balanceBefore).eq(calcBounty)).to.be.true;
                 });
             });
 
@@ -497,14 +550,21 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                 it("should get bounty", async () => {
                     skipTime(web3, 200);
                     const balanceBefore = web3.utils.toBN(await skaleToken.balanceOf(validator));
-                    // const bounty = web3.utils.toBN("893019925718471100273");
 
-                    const bounty = web3.utils.toBN("1203978898880590695863");
+                    const bountyCalculated = await skaleManager.calculateNormalBounty();
+                    const lastRewardDate = await nodesContract.getNodeLastRewardDate(1);
 
                     const txGetBounty = await skaleManager.getBounty(1, {from: nodeAddress});
 
                     const blocks = await monitors.getLastBountyBlock(1);
                     txGetBounty.receipt.blockNumber.should.be.equal(blocks.toNumber());
+                    const calcBounty = await calculateBounty(
+                        bountyCalculated.toString(),
+                        (await web3.eth.getBlock(txGetBounty.receipt.blockNumber)).timestamp,
+                        1,
+                        50,
+                        lastRewardDate.toNumber()
+                    );
 
                     skipTime(web3, month); // can withdraw bounty only next month
 
@@ -512,21 +572,28 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                     await distributor.withdrawFee(validator, {from: validator});
 
                     const balanceAfter = web3.utils.toBN(await skaleToken.balanceOf(validator));
-                    console.log((balanceAfter.sub(balanceBefore)).toString());
 
-                    expect(balanceAfter.sub(balanceBefore).eq(bounty)).to.be.true;
+                    expect(balanceAfter.sub(balanceBefore).eq(calcBounty)).to.be.true;
                 });
 
                 it("should get bounty after break", async () => {
                     skipTime(web3, 500);
                     const balanceBefore = web3.utils.toBN(await skaleToken.balanceOf(validator));
-                    // const bounty = web3.utils.toBN("893019925718471100273");
-                    const bounty = web3.utils.toBN("1203978898880590695863");
+
+                    const bountyCalculated = await skaleManager.calculateNormalBounty();
+                    const lastRewardDate = await nodesContract.getNodeLastRewardDate(1);
 
                     const txGetBounty = await skaleManager.getBounty(1, {from: nodeAddress});
 
                     const blocks = await monitors.getLastBountyBlock(1);
                     txGetBounty.receipt.blockNumber.should.be.equal(blocks.toNumber());
+                    const calcBounty = await calculateBounty(
+                        bountyCalculated.toString(),
+                        (await web3.eth.getBlock(txGetBounty.receipt.blockNumber)).timestamp,
+                        1,
+                        50,
+                        lastRewardDate.toNumber()
+                    );
 
                     skipTime(web3, month); // can withdraw bounty only next month
 
@@ -534,20 +601,28 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                     await distributor.withdrawFee(validator, {from: validator});
 
                     const balanceAfter = web3.utils.toBN(await skaleToken.balanceOf(validator));
-                    console.log((balanceAfter.sub(balanceBefore)).toString());
 
-                    expect(balanceAfter.sub(balanceBefore).eq(bounty)).to.be.true;
+                    expect(balanceAfter.sub(balanceBefore).eq(calcBounty)).to.be.true;
                 });
 
                 it("should get bounty after big break", async () => {
                     skipTime(web3, 800);
                     const balanceBefore = web3.utils.toBN(await skaleToken.balanceOf(validator));
-                    const bounty = web3.utils.toBN("1111365137428237565412");
+
+                    const bountyCalculated = await skaleManager.calculateNormalBounty();
+                    const lastRewardDate = await nodesContract.getNodeLastRewardDate(1);
 
                     const txGetBounty = await skaleManager.getBounty(1, {from: nodeAddress});
 
                     const blocks = await monitors.getLastBountyBlock(1);
                     txGetBounty.receipt.blockNumber.should.be.equal(blocks.toNumber());
+                    const calcBounty = await calculateBounty(
+                        bountyCalculated.toString(),
+                        (await web3.eth.getBlock(txGetBounty.receipt.blockNumber)).timestamp,
+                        1,
+                        50,
+                        lastRewardDate.toNumber()
+                    );
 
                     skipTime(web3, month); // can withdraw bounty only next month
 
@@ -555,9 +630,8 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                     await distributor.withdrawFee(validator, {from: validator});
 
                     const balanceAfter = web3.utils.toBN(await skaleToken.balanceOf(validator));
-                    console.log((balanceAfter.sub(balanceBefore)).toString());
 
-                    expect(balanceAfter.sub(balanceBefore).eq(bounty)).to.be.true;
+                    expect(balanceAfter.sub(balanceBefore).eq(calcBounty)).to.be.true;
                 });
             });
 
@@ -568,7 +642,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                     const verdictWithLatency = {
                         toNodeIndex: 1,
                         downtime: 0,
-                        latency: 20000,
+                        latency: 200000,
                     };
                     const txSendverdict = await skaleManager.sendVerdict(0, verdictWithLatency, {from: nodeAddress});
                     blockNum = txSendverdict.receipt.blockNumber;
@@ -587,12 +661,21 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                 it("should get bounty", async () => {
                     skipTime(web3, 200);
                     const balanceBefore = web3.utils.toBN(await skaleToken.balanceOf(validator));
-                    const bounty = web3.utils.toBN("1250285779606767261088");
+
+                    const bountyCalculated = await skaleManager.calculateNormalBounty();
+                    const lastRewardDate = await nodesContract.getNodeLastRewardDate(1);
 
                     const txGetBounty = await skaleManager.getBounty(1, {from: nodeAddress});
 
                     const blocks = await monitors.getLastBountyBlock(1);
                     txGetBounty.receipt.blockNumber.should.be.equal(blocks.toNumber());
+                    const calcBounty = await calculateBounty(
+                        bountyCalculated.toString(),
+                        (await web3.eth.getBlock(txGetBounty.receipt.blockNumber)).timestamp,
+                        0,
+                        200000,
+                        lastRewardDate.toNumber()
+                    );
 
                     skipTime(web3, month); // can withdraw bounty only next month
 
@@ -600,20 +683,28 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                     await distributor.withdrawFee(validator, {from: validator});
 
                     const balanceAfter = web3.utils.toBN(await skaleToken.balanceOf(validator));
-                    console.log((balanceAfter.sub(balanceBefore)).toString());
 
-                    expect(balanceAfter.sub(balanceBefore).eq(bounty)).to.be.true;
+                    expect(balanceAfter.sub(balanceBefore).eq(calcBounty)).to.be.true;
                 });
 
                 it("should get bounty after break", async () => {
                     skipTime(web3, 500);
                     const balanceBefore = web3.utils.toBN(await skaleToken.balanceOf(validator));
-                    const bounty = web3.utils.toBN("1250285779606767261088");
+
+                    const bountyCalculated = await skaleManager.calculateNormalBounty();
+                    const lastRewardDate = await nodesContract.getNodeLastRewardDate(1);
 
                     const txGetBounty = await skaleManager.getBounty(1, {from: nodeAddress});
 
                     const blocks = await monitors.getLastBountyBlock(1);
                     txGetBounty.receipt.blockNumber.should.be.equal(blocks.toNumber());
+                    const calcBounty = await calculateBounty(
+                        bountyCalculated.toString(),
+                        (await web3.eth.getBlock(txGetBounty.receipt.blockNumber)).timestamp,
+                        0,
+                        200000,
+                        lastRewardDate.toNumber()
+                    );
 
                     skipTime(web3, month); // can withdraw bounty only next month
 
@@ -621,20 +712,28 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                     await distributor.withdrawFee(validator, {from: validator});
 
                     const balanceAfter = web3.utils.toBN(await skaleToken.balanceOf(validator));
-                    console.log((balanceAfter.sub(balanceBefore)).toString());
 
-                    expect(balanceAfter.sub(balanceBefore).eq(bounty)).to.be.true;
+                    expect(balanceAfter.sub(balanceBefore).eq(calcBounty)).to.be.true;
                 });
 
                 it("should get bounty after big break", async () => {
                     skipTime(web3, 800);
                     const balanceBefore = web3.utils.toBN(await skaleToken.balanceOf(validator));
-                    const bounty = web3.utils.toBN("1157672018154414130638");
+
+                    const bountyCalculated = await skaleManager.calculateNormalBounty();
+                    const lastRewardDate = await nodesContract.getNodeLastRewardDate(1);
 
                     const txGetBounty = await skaleManager.getBounty(1, {from: nodeAddress});
 
                     const blocks = await monitors.getLastBountyBlock(1);
                     txGetBounty.receipt.blockNumber.should.be.equal(blocks.toNumber());
+                    const calcBounty = await calculateBounty(
+                        bountyCalculated.toString(),
+                        (await web3.eth.getBlock(txGetBounty.receipt.blockNumber)).timestamp,
+                        0,
+                        200000,
+                        lastRewardDate.toNumber()
+                    );
 
                     skipTime(web3, month); // can withdraw bounty only next month
 
@@ -642,9 +741,8 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                     await distributor.withdrawFee(validator, {from: validator});
 
                     const balanceAfter = web3.utils.toBN(await skaleToken.balanceOf(validator));
-                    console.log((balanceAfter.sub(balanceBefore)).toString());
 
-                    expect(balanceAfter.sub(balanceBefore).eq(bounty)).to.be.true;
+                    expect(balanceAfter.sub(balanceBefore).eq(calcBounty)).to.be.true;
                 });
             });
 

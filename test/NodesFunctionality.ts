@@ -100,12 +100,6 @@ contract("NodesFunctionality", ([owner, validator, nodeAddress, nodeAddress2]) =
                 });
         });
 
-        // it("should fail to delete non existing node", async () => {
-        //     // await nodes.setNodeLeaving(1);
-        //     await nodes.completeExit(validator, 1)
-        //         .should.be.eventually.rejectedWith("Node does not exist for message sender");
-        // });
-
         it("should fail to delete non active node", async () => {
             await nodes.setNodeLeft(0);
 

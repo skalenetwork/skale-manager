@@ -189,6 +189,24 @@ contract SkaleManager is IERC777Recipient, Permissions {
         _emitBountyEvent(nodeIndex, msg.sender, averageDowntime, averageLatency, bounty);
     }
 
+    function calculateNormalBounty() external view returns (uint) {
+        ConstantsHolder constants = ConstantsHolder(_contractManager.getContract("ConstantsHolder"));
+        Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
+        uint minersCapLocal = SkaleToken(_contractManager.getContract("SkaleToken")).CAP() / 3;
+        uint stageNodesLocal = stageTime;
+        uint stageTimeLocal = stageTime;
+        if (stageTimeLocal.add(constants.rewardPeriod()) < now) {
+            stageNodesLocal = nodes.numberOfActiveNodes().add(nodes.numberOfLeavingNodes());
+            stageTimeLocal = uint32(block.timestamp);
+        }
+        return minersCapLocal
+            .div((2 ** (((now.sub(startTime))
+            .div(constants.SIX_YEARS())) + 1))
+            .mul((constants.SIX_YEARS()
+            .div(constants.rewardPeriod())))
+            .mul(stageNodesLocal));
+    }
+
     function initialize(address newContractsAddress) public override initializer {
         Permissions.initialize(newContractsAddress);
         startTime = uint32(block.timestamp);
