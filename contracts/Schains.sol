@@ -97,6 +97,8 @@ contract Schains is Permissions {
         uint gasSpend
     );
 
+    bytes32 public constant SCHAIN_CREATOR_ROLE = keccak256("SCHAIN_CREATOR_ROLE");
+
     /**
      * @dev addSchain - create Schain in the system
      * function could be run only by executor
@@ -114,15 +116,16 @@ contract Schains is Permissions {
         _addSchain(from, deposit, schainParameters);
     }
 
-    function addSchainByOwner(
+    function addSchainByFoundation(
         uint lifetime,
         uint8 typeOfSchain,
         uint16 nonce,
         string calldata name
     )
         external
-        onlyOwner
     {
+        require(hasRole(SCHAIN_CREATOR_ROLE, msg.sender), "Sender is not authorized to create schian");
+
         SchainParameters memory schainParameters = SchainParameters({
             lifetime: lifetime,
             typeOfSchain: typeOfSchain,
