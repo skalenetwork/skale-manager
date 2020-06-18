@@ -167,7 +167,7 @@ contract("Pricing", ([owner, holder]) => {
                 });
 
                 it("should change price when active node has been removed", async () => {
-                    await nodes.setNodeLeft(0);
+                    await nodes.completeExit(0);
                     const MINUTES_PASSED = 2;
                     const price = await getPrice(MINUTES_PASSED);
                     const newPrice = new BigNumber(await pricing.price()).toNumber();

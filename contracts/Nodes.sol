@@ -220,7 +220,7 @@ contract Nodes is Permissions {
      */
     function initExit(uint nodeIndex) external allow("SkaleManager") returns (bool) {
 
-        setNodeLeaving(nodeIndex);
+        _setNodeLeaving(nodeIndex);
 
         emit ExitInited(
             nodeIndex,
@@ -239,7 +239,7 @@ contract Nodes is Permissions {
     function completeExit(uint nodeIndex) external allow("SkaleManager") returns (bool) {
         require(isNodeLeaving(nodeIndex), "Node is not Leaving");
 
-        setNodeLeft(nodeIndex);
+        _setNodeLeft(nodeIndex);
         deleteNode(nodeIndex);
 
         emit ExitCompleted(
@@ -526,35 +526,6 @@ contract Nodes is Permissions {
         validatorToNodeIndexes[validatorId].push(nodeIndex);
     }
 
-    /**
-     * @dev setNodeLeft - set Node Left
-     * function could be run only by Nodes
-     * @param nodeIndex - index of Node
-     */
-    function setNodeLeft(uint nodeIndex) public allow("SkaleManager") {
-        nodesIPCheck[nodes[nodeIndex].ip] = false;
-        nodesNameCheck[keccak256(abi.encodePacked(nodes[nodeIndex].name))] = false;
-        delete nodesNameToIndex[keccak256(abi.encodePacked(nodes[nodeIndex].name))];
-        if (nodes[nodeIndex].status == NodeStatus.Active) {
-            numberOfActiveNodes--;
-        } else {
-            numberOfLeavingNodes--;
-        }
-        nodes[nodeIndex].status = NodeStatus.Left;
-        numberOfLeftNodes++;
-    }
-
-    /**
-     * @dev setNodeLeaving - set Node Leaving
-     * function could be run only by Nodes
-     * @param nodeIndex - index of Node
-     */
-    function setNodeLeaving(uint nodeIndex) public allow("SkaleManager") {
-        nodes[nodeIndex].status = NodeStatus.Leaving;
-        numberOfActiveNodes--;
-        numberOfLeavingNodes++;
-    }
-
     function deleteNode(uint nodeIndex) public allow("SkaleManager") {
         uint8 space = spaceOfNodes[nodeIndex].freeSpace;
         uint indexInArray = spaceOfNodes[nodeIndex].indexInSpaceMap;
@@ -620,4 +591,34 @@ contract Nodes is Permissions {
         spaceOfNodes[nodeIndex].freeSpace = newSpace;
         spaceOfNodes[nodeIndex].indexInSpaceMap = spaceToNodes[newSpace].length - 1;
     }
+
+    /**
+     * @dev _setNodeLeft - set Node Left
+     * function could be run only by Nodes
+     * @param nodeIndex - index of Node
+     */
+    function _setNodeLeft(uint nodeIndex) private {
+        nodesIPCheck[nodes[nodeIndex].ip] = false;
+        nodesNameCheck[keccak256(abi.encodePacked(nodes[nodeIndex].name))] = false;
+        delete nodesNameToIndex[keccak256(abi.encodePacked(nodes[nodeIndex].name))];
+        if (nodes[nodeIndex].status == NodeStatus.Active) {
+            numberOfActiveNodes--;
+        } else {
+            numberOfLeavingNodes--;
+        }
+        nodes[nodeIndex].status = NodeStatus.Left;
+        numberOfLeftNodes++;
+    }
+
+    /**
+     * @dev _setNodeLeaving - set Node Leaving
+     * function could be run only by Nodes
+     * @param nodeIndex - index of Node
+     */
+    function _setNodeLeaving(uint nodeIndex) private {
+        nodes[nodeIndex].status = NodeStatus.Leaving;
+        numberOfActiveNodes--;
+        numberOfLeavingNodes++;
+    }
+
 }

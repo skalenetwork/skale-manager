@@ -320,7 +320,7 @@ contract("Monitors", ([owner, validator]) => {
 
       const leavingCount = nodesCount - activeNodesCount;
       for (let i = 0; i < leavingCount; ++i) {
-        await nodes.setNodeLeaving(Math.floor(i * nodesCount / leavingCount));
+        await nodes.initExit(Math.floor(i * nodesCount / leavingCount));
       }
     });
 

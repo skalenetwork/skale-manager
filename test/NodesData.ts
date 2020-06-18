@@ -78,14 +78,15 @@ contract("NodesData", ([owner, validator]) => {
         // });
 
         it("should set node as leaving", async () => {
-            await nodes.setNodeLeaving(0);
+            await nodes.initExit(0);
 
             await nodes.numberOfActiveNodes().should.be.eventually.deep.equal(web3.utils.toBN(0));
             await nodes.numberOfLeavingNodes().should.be.eventually.deep.equal(web3.utils.toBN(1));
         });
 
         it("should set node as left one", async () => {
-            await nodes.setNodeLeft(0);
+            await nodes.initExit(0);
+            await nodes.completeExit(0);
 
             await nodes.nodesIPCheck("0x7f000001").should.be.eventually.false;
             await nodes.nodesNameCheck(web3.utils.soliditySha3("d2")).should.be.eventually.false;
@@ -170,7 +171,7 @@ contract("NodesData", ([owner, validator]) => {
         it("should return Node status", async () => {
             let status = await nodes.getNodeStatus(0);
             assert.equal(status.toNumber(), 0);
-            await nodes.setNodeLeaving(0);
+            await nodes.initExit(0);
             status = await nodes.getNodeStatus(0);
             assert.equal(status.toNumber(), 1);
         });
@@ -240,8 +241,8 @@ contract("NodesData", ([owner, validator]) => {
 
             it("should remove node", async () => {
                 await nodes.getNumberOnlineNodes().should.be.eventually.deep.equal(web3.utils.toBN(2));
-                await nodes.deleteNode(0);
-                await nodes.setNodeLeft(0);
+                await nodes.initExit(0);
+                await nodes.completeExit(0);
                 await nodes.getNumberOnlineNodes().should.be.eventually.deep.equal(web3.utils.toBN(1));
             });
 
@@ -313,14 +314,14 @@ contract("NodesData", ([owner, validator]) => {
             });
 
             it("should remove first node", async () => {
-                await nodes.deleteNode(0);
-                await nodes.setNodeLeft(0);
+                await nodes.initExit(0);
+                await nodes.completeExit(0);
                 await nodes.getNumberOnlineNodes().should.be.eventually.deep.equal(web3.utils.toBN(3));
             });
 
             it("should remove second node", async () => {
-                await nodes.deleteNode(1);
-                await nodes.setNodeLeft(1);
+                await nodes.initExit(1);
+                await nodes.completeExit(1);
                 await nodes.getNumberOnlineNodes().should.be.eventually.deep.equal(web3.utils.toBN(3));
             });
 

@@ -117,14 +117,14 @@ contract("NodesFunctionality", ([owner, validator, nodeAddress, nodeAddress2, ho
         });
 
         it("should fail to delete non active node", async () => {
-            await nodes.setNodeLeft(0);
+            await nodes.completeExit(0);
 
             await nodes.completeExit(0)
                 .should.be.eventually.rejectedWith("Node is not Leaving");
         });
 
         it("should delete node", async () => {
-            await nodes.setNodeLeaving(0);
+            await nodes.initExit(0);
             await nodes.completeExit(0);
 
             await nodes.numberOfActiveNodes().should.be.eventually.deep.equal(web3.utils.toBN(0));
@@ -174,14 +174,14 @@ contract("NodesFunctionality", ([owner, validator, nodeAddress, nodeAddress2, ho
         });
 
         it("should delete first node", async () => {
-            await nodes.setNodeLeaving(0);
+            await nodes.initExit(0);
             await nodes.completeExit(0);
 
             await nodes.numberOfActiveNodes().should.be.eventually.deep.equal(web3.utils.toBN(1));
         });
 
         it("should delete second node", async () => {
-            await nodes.setNodeLeaving(1);
+            await nodes.initExit(1);
             await nodes.completeExit(1);
 
             await nodes.numberOfActiveNodes().should.be.eventually.deep.equal(web3.utils.toBN(1));
