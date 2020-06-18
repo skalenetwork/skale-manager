@@ -735,7 +735,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
         });
 
         it("should revert on wrong schain type", async () => {
-            await schains.getSchainPrice(6, 5).should.be.eventually.rejectedWith("Invalid type of Schain");
+            await schains.getSchainPrice(6, 5).should.be.eventually.rejectedWith("Bad schain type");
         });
     });
 

@@ -72,7 +72,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
 
     it("should transfer ownership", async () => {
         await skaleManager.grantRole(await skaleManager.DEFAULT_ADMIN_ROLE(), hacker , {from: hacker})
-            .should.be.eventually.rejectedWith("Ownable: caller is not the owner");
+            .should.be.eventually.rejectedWith("AccessControl: sender must be an admin to grant");
 
         await skaleManager.grantRole(await skaleManager.DEFAULT_ADMIN_ROLE(), hacker, {from: owner});
 
@@ -520,8 +520,9 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
 
                     const balanceAfter = web3.utils.toBN(await skaleToken.balanceOf(validator));
 
-                    expect(balanceAfter.sub(balanceBefore).eq(bountyCalculated)).to.be.true;
-                    expect(balanceAfter.sub(balanceBefore).eq(calcBounty)).to.be.true;
+                    const bountyPaid = balanceAfter.sub(balanceBefore);
+                    bountyPaid.toString(16).should.be.equal(bountyCalculated.toString(16));
+                    bountyPaid.toString(16).should.be.equal(calcBounty.toString(16));
                 });
             });
 
@@ -575,7 +576,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
 
                     const balanceAfter = web3.utils.toBN(await skaleToken.balanceOf(validator));
 
-                    expect(balanceAfter.sub(balanceBefore).eq(calcBounty)).to.be.true;
+                    balanceAfter.sub(balanceBefore).toString(16).should.be.equal(calcBounty.toString(16));
                 });
 
                 it("should get bounty after break", async () => {
@@ -605,7 +606,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
 
                     const balanceAfter = web3.utils.toBN(await skaleToken.balanceOf(validator));
 
-                    expect(balanceAfter.sub(balanceBefore).eq(calcBounty)).to.be.true;
+                    balanceAfter.sub(balanceBefore).toString(16).should.be.equal(calcBounty.toString(16));
                 });
 
                 it("should get bounty after big break", async () => {
@@ -635,7 +636,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
 
                     const balanceAfter = web3.utils.toBN(await skaleToken.balanceOf(validator));
 
-                    expect(balanceAfter.sub(balanceBefore).eq(calcBounty)).to.be.true;
+                    balanceAfter.sub(balanceBefore).toString(16).should.be.equal(calcBounty.toString());
                 });
             });
 
@@ -749,7 +750,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
 
                     const balanceAfter = web3.utils.toBN(await skaleToken.balanceOf(validator));
 
-                    expect(balanceAfter.sub(balanceBefore).eq(calcBounty)).to.be.true;
+                    balanceAfter.sub(balanceBefore).toString(16).should.be.equal(calcBounty.toString(16));
                 });
             });
 
