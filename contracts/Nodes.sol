@@ -198,7 +198,6 @@ contract Nodes is Permissions {
             params.port,
             params.publicKey,
             validatorId);
-        pushNode(from, nodeIndex);
 
         emit NodeCreated(
             nodeIndex,
@@ -240,7 +239,7 @@ contract Nodes is Permissions {
         require(isNodeLeaving(nodeIndex), "Node is not Leaving");
 
         _setNodeLeft(nodeIndex);
-        deleteNode(nodeIndex);
+        _deleteNode(nodeIndex);
 
         emit ExitCompleted(
             nodeIndex,
@@ -506,6 +505,7 @@ contract Nodes is Permissions {
             validatorId: validatorId
         }));
         nodeIndex = nodes.length - 1;
+        validatorToNodeIndexes[validatorId].push(nodeIndex);
         bytes32 nodeId = keccak256(abi.encodePacked(name));
         nodesIPCheck[ip] = true;
         nodesNameCheck[nodeId] = true;
@@ -518,27 +518,6 @@ contract Nodes is Permissions {
         }));
         spaceToNodes[128].push(nodeIndex);
         numberOfActiveNodes++;
-    }
-
-    function pushNode(address nodeAddress, uint nodeIndex) public allow("SkaleManager") {
-        ValidatorService validatorService = ValidatorService(_contractManager.getContract("ValidatorService"));
-        uint validatorId = validatorService.getValidatorIdByNodeAddress(nodeAddress);
-        validatorToNodeIndexes[validatorId].push(nodeIndex);
-    }
-
-    function deleteNode(uint nodeIndex) public allow("SkaleManager") {
-        uint8 space = spaceOfNodes[nodeIndex].freeSpace;
-        uint indexInArray = spaceOfNodes[nodeIndex].indexInSpaceMap;
-        if (indexInArray < spaceToNodes[space].length - 1) {
-            uint shiftedIndex = spaceToNodes[space][spaceToNodes[space].length - 1];
-            spaceToNodes[space][indexInArray] = shiftedIndex;
-            spaceOfNodes[shiftedIndex].indexInSpaceMap = indexInArray;
-            spaceToNodes[space].pop();
-        } else {
-            spaceToNodes[space].pop();
-        }
-        delete spaceOfNodes[nodeIndex].freeSpace;
-        delete spaceOfNodes[nodeIndex].indexInSpaceMap;
     }
 
     /**
@@ -619,6 +598,21 @@ contract Nodes is Permissions {
         nodes[nodeIndex].status = NodeStatus.Leaving;
         numberOfActiveNodes--;
         numberOfLeavingNodes++;
+    }
+
+    function _deleteNode(uint nodeIndex) private {
+        uint8 space = spaceOfNodes[nodeIndex].freeSpace;
+        uint indexInArray = spaceOfNodes[nodeIndex].indexInSpaceMap;
+        if (indexInArray < spaceToNodes[space].length - 1) {
+            uint shiftedIndex = spaceToNodes[space][spaceToNodes[space].length - 1];
+            spaceToNodes[space][indexInArray] = shiftedIndex;
+            spaceOfNodes[shiftedIndex].indexInSpaceMap = indexInArray;
+            spaceToNodes[space].pop();
+        } else {
+            spaceToNodes[space].pop();
+        }
+        delete spaceOfNodes[nodeIndex].freeSpace;
+        delete spaceOfNodes[nodeIndex].indexInSpaceMap;
     }
 
 }

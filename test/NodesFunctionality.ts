@@ -117,8 +117,6 @@ contract("NodesFunctionality", ([owner, validator, nodeAddress, nodeAddress2, ho
         });
 
         it("should fail to delete non active node", async () => {
-            await nodes.completeExit(0);
-
             await nodes.completeExit(0)
                 .should.be.eventually.rejectedWith("Node is not Leaving");
         });
@@ -257,7 +255,17 @@ contract("NodesFunctionality", ([owner, validator, nodeAddress, nodeAddress2, ho
             // now it should not reject
             await nodes.checkPossibilityCreatingNode(nodeAddress);
 
-            await nodes.pushNode(nodeAddress, 0);
+            await nodes.createNode(
+                nodeAddress,
+                {
+                    port: 8545,
+                    nonce: 0,
+                    ip: "0x7f000001",
+                    publicIp: "0x7f000001",
+                    publicKey: ["0x1122334455667788990011223344556677889900112233445566778899001122",
+                                "0x1122334455667788990011223344556677889900112233445566778899001122"],
+                    name: "D2"
+                });
             const nodeIndexBN = (await nodes.getValidatorNodeIndexes(validatorId))[0];
             const nodeIndex = new BigNumber(nodeIndexBN).toNumber();
             assert.equal(nodeIndex, 0);
@@ -280,10 +288,30 @@ contract("NodesFunctionality", ([owner, validator, nodeAddress, nodeAddress2, ho
             await constantsHolder.setMSR(amount);
 
             await nodes.checkPossibilityCreatingNode(nodeAddress);
-            await nodes.pushNode(nodeAddress, 0);
+            await nodes.createNode(
+                nodeAddress,
+                {
+                    port: 8545,
+                    nonce: 0,
+                    ip: "0x7f000001",
+                    publicIp: "0x7f000001",
+                    publicKey: ["0x1122334455667788990011223344556677889900112233445566778899001122",
+                                "0x1122334455667788990011223344556677889900112233445566778899001122"],
+                    name: "D2"
+                });
 
             await nodes.checkPossibilityCreatingNode(nodeAddress);
-            await nodes.pushNode(nodeAddress, 1);
+            await nodes.createNode(
+                nodeAddress,
+                {
+                    port: 8545,
+                    nonce: 0,
+                    ip: "0x7f000002",
+                    publicIp: "0x7f000002",
+                    publicKey: ["0x1122334455667788990011223344556677889900112233445566778899001123",
+                                "0x1122334455667788990011223344556677889900112233445566778899001123"],
+                    name: "D3"
+                });
 
             const nodeIndexesBN = (await nodes.getValidatorNodeIndexes(validatorId));
             for (let i = 0; i < nodeIndexesBN.length; i++) {

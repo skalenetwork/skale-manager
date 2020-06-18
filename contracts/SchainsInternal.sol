@@ -67,7 +67,7 @@ contract SchainsInternal is Permissions {
         uint finishedRotation;
     }
 
-    struct groupForSchain {
+    struct GroupForSchain {
         uint[] nodesInGroup;
         uint[4] groupsPublicKey;
         bool lastSuccessfulDKG;
@@ -78,7 +78,7 @@ contract SchainsInternal is Permissions {
 
     mapping (bytes32 => bool) public isSchainActive;
 
-    mapping (bytes32 => groupForSchain) public schainsGroups;
+    mapping (bytes32 => GroupForSchain) public schainsGroups;
 
     mapping (bytes32 => mapping (uint => bool)) private _exceptionsForGroups;
     // mapping shows schains by owner's address
