@@ -499,6 +499,21 @@ contract SchainsInternal is Permissions {
         return schainsGroups[schainId].nodesInGroup;
     }
 
+    /**
+     * @dev getNodeIndexInGroup - looks for Node in Group
+     * @param schainId - Groups identifier
+     * @param nodeId - Nodes identifier
+     * @return index of Node in Group
+     */
+    function getNodeIndexInGroup(bytes32 schainId, uint nodeId) external view returns (uint) {
+        for (uint index = 0; index < schainsGroups[schainId].nodesInGroup.length; index++) {
+            if (schainsGroups[schainId].nodesInGroup[index] == nodeId) {
+                return index;
+            }
+        }
+        return schainsGroups[schainId].nodesInGroup.length;
+    }
+
     /*
      * @dev getGroupsPublicKey - shows Groups public key
      * @param schainId - Groups identifier
