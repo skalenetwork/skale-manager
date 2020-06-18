@@ -27,46 +27,20 @@ import "./delegation/Punisher.sol";
 import "./SlashingTable.sol";
 import "./Schains.sol";
 import "./SchainsInternal.sol";
+import "./ECDH.sol";
 import "./utils/Precompiled.sol";
-
-interface IECDH {
-    function deriveKey(
-        uint256 privKey,
-        uint256 pubX,
-        uint256 pubY
-    )
-        external
-        pure
-        returns (uint256, uint256);
-}
-
-interface IDecryption {
-    function decrypt(bytes32 ciphertext, bytes32 key) external pure returns (uint256);
-}
+import "./utils/FieldOperations.sol";
 
 
 contract SkaleDKG is Permissions {
-
-    struct Fp2Point {
-        uint a;
-        uint b;
-    }
-
-    struct G1Point {
-        uint x;
-        uint y;
-    }
-
-    struct G2Point {
-        Fp2Point x;
-        Fp2Point y;
-    }
+    using Fp2Operations for Fp2Operations.Fp2Point;
+    using G2Operations for G2Operations.G2Point;  
 
     struct Channel {
         bool active;
         bool[] broadcasted;
         uint numberOfBroadcasted;
-        G2Point publicKey;
+        G2Operations.G2Point publicKey;
         uint numberOfCompleted;
         bool[] completed;
         uint startedBlockTimestamp;
@@ -77,7 +51,7 @@ contract SkaleDKG is Permissions {
 
     struct BroadcastedData {
         KeyShare[] secretKeyContribution;
-        G2Point[] verificationVector;
+        G2Operations.G2Point[] verificationVector;
     }
 
     struct KeyShare {
@@ -85,15 +59,10 @@ contract SkaleDKG is Permissions {
         bytes32 share;
     }
 
-    uint constant private _P = 21888242871839275222246405745257275088696311157297823662689037894645226208583;
-
     uint constant private _G2A = 10857046999023057135944570762232829481370756359578518086990519993285655852781;
     uint constant private _G2B = 11559732032986387107991004021392285783925812861821192530917403151452391805634;
     uint constant private _G2C = 8495653923123431417604973247489272438418190587263600148770280649306958101930;
     uint constant private _G2D = 4082367875863433681332203403145435568316851327593401208105741076214120093531;
-
-    uint constant private _TWISTBX = 19485874751759354771024239261021720505790618469301721065564631296452457478373;
-    uint constant private _TWISTBY = 266929791119991161246907387137283842545076965332900288569378510910307636690;
 
     uint constant private _G1A = 1;
     uint constant private _G1B = 2;
@@ -108,7 +77,7 @@ contract SkaleDKG is Permissions {
     event BroadcastAndKeyShare(
         bytes32 indexed groupIndex,
         uint indexed fromNode,
-        G2Point[] verificationVector,
+        G2Operations.G2Point[] verificationVector,
         KeyShare[] secretKeyContribution
     );
 
@@ -158,7 +127,7 @@ contract SkaleDKG is Permissions {
     function broadcast(
         bytes32 groupIndex,
         uint nodeIndex,
-        G2Point[] calldata verificationVector,
+        G2Operations.G2Point[] calldata verificationVector,
         KeyShare[] calldata secretKeyContribution
     )
         external
@@ -181,10 +150,7 @@ contract SkaleDKG is Permissions {
         );
         _adding(
             groupIndex,
-            verificationVector[0].x.a,
-            verificationVector[0].x.b,
-            verificationVector[0].y.a,
-            verificationVector[0].y.b
+            verificationVector[0]
         );
         emit BroadcastAndKeyShare(
             groupIndex,
@@ -229,7 +195,7 @@ contract SkaleDKG is Permissions {
         bytes32 groupIndex,
         uint fromNodeIndex,
         uint secretNumber,
-        G2Point calldata multipliedShare
+        G2Operations.G2Point calldata multipliedShare
     )
         external
         correctGroup(groupIndex)
@@ -341,7 +307,7 @@ contract SkaleDKG is Permissions {
     }
 
     function getBroadcastedData(bytes32 groupIndex, uint nodeIndex)
-        external view returns (KeyShare[] memory, G2Point[] memory)
+        external view returns (KeyShare[] memory, G2Operations.G2Point[] memory)
     {
         uint index = _findNode(groupIndex, nodeIndex);
         return (_data[groupIndex][index].secretKeyContribution, _data[groupIndex][index].verificationVector);
@@ -423,7 +389,7 @@ contract SkaleDKG is Permissions {
         bytes32 groupIndex,
         uint fromNodeIndex,
         uint secretNumber,
-        G2Point memory multipliedShare
+        G2Operations.G2Point memory multipliedShare
     )
         internal
         view
@@ -431,36 +397,47 @@ contract SkaleDKG is Permissions {
     {
         uint index = _findNode(groupIndex, fromNodeIndex);
         uint secret = _decryptMessage(groupIndex, secretNumber);
-        G2Point[] memory verificationVector = _data[groupIndex][index].verificationVector;
-        Fp2Point memory valX = Fp2Point({a: 0, b: 0});
-        Fp2Point memory valY = Fp2Point({a: 1, b: 0});
-        Fp2Point memory tmpX = Fp2Point({a: 0, b: 0});
-        Fp2Point memory tmpY = Fp2Point({a: 1, b: 0});
+        G2Operations.G2Point[] memory verificationVector = _data[groupIndex][index].verificationVector;
+        G2Operations.G2Point memory value = G2Operations.G2Point({
+            x: Fp2Operations.Fp2Point({
+                a: 0,
+                b: 0
+            }),
+            y: Fp2Operations.Fp2Point({
+                a: 1,
+                b: 0
+            })
+        });
+        G2Operations.G2Point memory tmp = G2Operations.G2Point({
+            x: Fp2Operations.Fp2Point({
+                a: 0,
+                b: 0
+            }),
+            y: Fp2Operations.Fp2Point({
+                a: 1,
+                b: 0
+            })
+        });
         for (uint i = 0; i < verificationVector.length; i++) {
-            (tmpX, tmpY) = _mulG2(
-                Precompiled.bigModExp(index.add(1), i, _P),
-                _swapCoordinates(verificationVector[i].x),
-                _swapCoordinates(verificationVector[i].y)
-            );
-            (valX, valY) = _addG2(
-                tmpX,
-                tmpY,
-                valX,
-                valY
-            );
+            G2Operations.G2Point memory verificationVectorComponent = G2Operations.G2Point({
+                x: _swapCoordinates(verificationVector[i].x),
+                y: _swapCoordinates(verificationVector[i].y)
+            });
+            tmp = verificationVectorComponent.mulG2(Precompiled.bigModExp(index.add(1), i, Fp2Operations.P));
+            value = tmp.addG2(value);
         }
-        return _checkDKGVerification(valX, valY, multipliedShare) &&
+        return _checkDKGVerification(value, multipliedShare) &&
             _checkCorrectMultipliedShare(multipliedShare, secret);
     }
 
     function _getCommonPublicKey(bytes32 groupIndex, uint256 secretNumber) internal view returns (bytes32 key) {
         Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
-        address ecdhAddress = _contractManager.getContract("ECDH");
+        ECDH ecdh = ECDH(_contractManager.getContract("ECDH"));
         bytes32[2] memory publicKey = nodes.getNodePublicKey(channels[groupIndex].fromNodeToComplaint);
         uint256 pkX = uint(publicKey[0]);
         uint256 pkY = uint(publicKey[1]);
 
-        (pkX, pkY) = IECDH(ecdhAddress).deriveKey(secretNumber, pkX, pkY);
+        (pkX, pkY) = ecdh.deriveKey(secretNumber, pkX, pkY);
 
         key = bytes32(pkX);
     }
@@ -479,27 +456,19 @@ contract SkaleDKG is Permissions {
 
     function _adding(
         bytes32 groupIndex,
-        uint x1,
-        uint y1,
-        uint x2,
-        uint y2
+        G2Operations.G2Point memory value
     )
         internal
     {
-        require(_isG2(Fp2Point({ a: x1, b: y1 }), Fp2Point({ a: x2, b: y2 })), "Incorrect G2 point");
-        (channels[groupIndex].publicKey.x, channels[groupIndex].publicKey.y) = _addG2(
-            Fp2Point({ a: x1, b: y1 }),
-            Fp2Point({ a: x2, b: y2 }),
-            channels[groupIndex].publicKey.x,
-            channels[groupIndex].publicKey.y
-        );
+        require(value.isG2(), "Incorrect G2 point");
+        channels[groupIndex].publicKey = value.addG2(channels[groupIndex].publicKey);
     }
 
     function _isBroadcast(
         bytes32 groupIndex,
         uint nodeIndex,
         KeyShare[] memory secretKeyContribution,
-        G2Point[] memory verificationVector
+        G2Operations.G2Point[] memory verificationVector
     )
         internal
     {
@@ -555,233 +524,52 @@ contract SkaleDKG is Permissions {
         return nodes.isNodeExist(from, nodeIndex);
     }
 
-    // Fp2Point operations
-
-    function _addFp2(Fp2Point memory value1, Fp2Point memory value2) internal pure returns (Fp2Point memory) {
-        return Fp2Point({ a: addmod(value1.a, value2.a, _P), b: addmod(value1.b, value2.b, _P) });
-    }
-
-    function _scalarMulFp2(uint scalar, Fp2Point memory value) internal pure returns (Fp2Point memory) {
-        return Fp2Point({ a: mulmod(scalar, value.a, _P), b: mulmod(scalar, value.b, _P) });
-    }
-
-    function _minusFp2(Fp2Point memory diminished, Fp2Point memory subtracted) internal pure
-        returns (Fp2Point memory difference)
-    {
-        if (diminished.a >= subtracted.a) {
-            difference.a = addmod(diminished.a, _P.sub(subtracted.a), _P);
-        } else {
-            difference.a = _P.sub(addmod(subtracted.a, _P.sub(diminished.a), _P));
-        }
-        if (diminished.b >= subtracted.b) {
-            difference.b = addmod(diminished.b, _P.sub(subtracted.b), _P);
-        } else {
-            difference.b = _P.sub(addmod(subtracted.b, _P.sub(diminished.b), _P));
-        }
-    }
-
-    function _mulFp2(Fp2Point memory value1, Fp2Point memory value2) internal pure returns (Fp2Point memory result) {
-        Fp2Point memory point = Fp2Point({
-            a: mulmod(value1.a, value2.a, _P),
-            b: mulmod(value1.b, value2.b, _P)});
-        result.a = addmod(
-            point.a,
-            mulmod(_P - 1, point.b, _P),
-            _P);
-        result.b = addmod(
-            mulmod(
-                addmod(value1.a, value1.b, _P),
-                addmod(value2.a, value2.b, _P),
-                _P),
-            _P.sub(addmod(point.a, point.b, _P)),
-            _P);
-    }
-
-    function _squaredFp2(Fp2Point memory value) internal pure returns (Fp2Point memory) {
-        uint ab = mulmod(value.a, value.b, _P);
-        uint mult = mulmod(addmod(value.a, value.b, _P), addmod(value.a, mulmod(_P - 1, value.b, _P), _P), _P);
-        return Fp2Point({ a: mult, b: addmod(ab, ab, _P) });
-    }
-
-    function _inverseFp2(Fp2Point memory value) internal view returns (Fp2Point memory result) {
-        uint t0 = mulmod(value.a, value.a, _P);
-        uint t1 = mulmod(value.b, value.b, _P);
-        uint t2 = mulmod(_P - 1, t1, _P);
-        if (t0 >= t2) {
-            t2 = addmod(t0, _P.sub(t2), _P);
-        } else {
-            t2 = _P.sub(addmod(t2, _P.sub(t0), _P));
-        }
-        uint t3 = Precompiled.bigModExp(t2, _P - 2, _P);
-        result.a = mulmod(value.a, t3, _P);
-        result.b = _P.sub(mulmod(value.b, t3, _P));
-    }
-
-    // End of Fp2Point operations
-
-    function _isG1(uint x, uint y) internal pure returns (bool) {
-        return mulmod(y, y, _P) == addmod(mulmod(mulmod(x, x, _P), x, _P), 3, _P);
-    }
-
-    function _isG2(Fp2Point memory x, Fp2Point memory y) internal pure returns (bool) {
-        if (_isG2Zero(x, y)) {
-            return true;
-        }
-        Fp2Point memory squaredY = _squaredFp2(y);
-        Fp2Point memory res = _minusFp2(
-            _minusFp2(squaredY, _mulFp2(_squaredFp2(x), x)),
-            Fp2Point({a: _TWISTBX, b: _TWISTBY}));
-        return res.a == 0 && res.b == 0;
-    }
-
-    function _isG2Zero(Fp2Point memory x, Fp2Point memory y) internal pure returns (bool) {
-        return x.a == 0 && x.b == 0 && y.a == 1 && y.b == 0;
-    }
-
-    function _doubleG2(Fp2Point memory x1, Fp2Point memory y1) internal view
-    returns (Fp2Point memory x3, Fp2Point memory y3)
-    {
-        if (_isG2Zero(x1, y1)) {
-            x3 = x1;
-            y3 = y1;
-        } else {
-            Fp2Point memory s = _mulFp2(_scalarMulFp2(3, _squaredFp2(x1)), _inverseFp2(_scalarMulFp2(2, y1)));
-            x3 = _minusFp2(_squaredFp2(s), _scalarMulFp2(2, x1));
-            y3 = _addFp2(y1, _mulFp2(s, _minusFp2(x3, x1)));
-            y3.a = _P.sub(y3.a % _P);
-            y3.b = _P.sub(y3.b % _P);
-        }
-    }
-
-    function _u1(Fp2Point memory x1) internal pure returns (Fp2Point memory) {
-        return _mulFp2(x1, _squaredFp2(Fp2Point({ a: 1, b: 0 })));
-    }
-
-    function _u2(Fp2Point memory x2) internal pure returns (Fp2Point memory) {
-        return _mulFp2(x2, _squaredFp2(Fp2Point({ a: 1, b: 0 })));
-    }
-
-    function _s1(Fp2Point memory y1) internal pure returns (Fp2Point memory) {
-        return _mulFp2(y1, _mulFp2(Fp2Point({ a: 1, b: 0 }), _squaredFp2(Fp2Point({ a: 1, b: 0 }))));
-    }
-
-    function _s2(Fp2Point memory y2) internal pure returns (Fp2Point memory) {
-        return _mulFp2(y2, _mulFp2(Fp2Point({ a: 1, b: 0 }), _squaredFp2(Fp2Point({ a: 1, b: 0 }))));
-    }
-
-    function _isEqual(
-        Fp2Point memory u1Value,
-        Fp2Point memory u2Value,
-        Fp2Point memory s1Value,
-        Fp2Point memory s2Value
-    )
-        internal
-        pure
-        returns (bool)
-    {
-        return (u1Value.a == u2Value.a && u1Value.b == u2Value.b && s1Value.a == s2Value.a && s1Value.b == s2Value.b);
-    }
-
-    function _addG2(
-        Fp2Point memory x1,
-        Fp2Point memory y1,
-        Fp2Point memory x2,
-        Fp2Point memory y2
-    )
-        internal
-        view
-        returns (
-            Fp2Point memory x3,
-            Fp2Point memory y3
-        )
-    {
-        if (_isG2Zero(x1, y1)) {
-            return (x2, y2);
-        }
-        if (_isG2Zero(x2, y2)) {
-            return (x1, y1);
-        }
-        if (
-            _isEqual(
-                _u1(x1),
-                _u2(x2),
-                _s1(y1),
-                _s2(y2)
-            )
-        ) {
-            (x3, y3) = _doubleG2(x1, y1);
-        }
-
-        Fp2Point memory s = _mulFp2(_minusFp2(y2, y1), _inverseFp2(_minusFp2(x2, x1)));
-        x3 = _minusFp2(_squaredFp2(s), _addFp2(x1, x2));
-        y3 = _addFp2(y1, _mulFp2(s, _minusFp2(x3, x1)));
-        y3.a = _P.sub(y3.a % _P);
-        y3.b = _P.sub(y3.b % _P);
-    }
-
-    function _mulG2(
-        uint scalar,
-        Fp2Point memory x1,
-        Fp2Point memory y1
-    )
-        internal
-        view
-        returns (Fp2Point memory x, Fp2Point memory y)
-    {
-        uint step = scalar;
-        x = Fp2Point({a: 0, b: 0});
-        y = Fp2Point({a: 1, b: 0});
-        Fp2Point memory tmpX = x1;
-        Fp2Point memory tmpY = y1;
-        while (step > 0) {
-            if (step % 2 == 1) {
-                (x, y) = _addG2(
-                    x,
-                    y,
-                    tmpX,
-                    tmpY
-                );
-            }
-            (tmpX, tmpY) = _doubleG2(tmpX, tmpY);
-            step >>= 1;
-        }
-    }
-
     function _checkDKGVerification(
-        Fp2Point memory valX,
-        Fp2Point memory valY,
-        G2Point memory multipliedShare)
+        G2Operations.G2Point memory value,
+        G2Operations.G2Point memory multipliedShare)
         internal pure returns (bool)
     {
-        Fp2Point memory tmpX;
-        Fp2Point memory tmpY;
-        (tmpX, tmpY) = (multipliedShare.x, multipliedShare.y);
-        return valX.a == tmpX.b && valX.b == tmpX.a && valY.a == tmpY.b && valY.b == tmpY.a;
+        return value.x.a == multipliedShare.x.b && 
+            value.x.b == multipliedShare.x.a &&
+            value.y.a == multipliedShare.y.b &&
+            value.y.b == multipliedShare.y.a;
     }
 
-    function _checkCorrectMultipliedShare(G2Point memory multipliedShare, uint secret)
+    function _checkCorrectMultipliedShare(G2Operations.G2Point memory multipliedShare, uint secret)
         internal view returns (bool)
     {
-        Fp2Point memory tmpX;
-        Fp2Point memory tmpY;
+        Fp2Operations.Fp2Point memory tmpX;
+        Fp2Operations.Fp2Point memory tmpY;
         (tmpX, tmpY) = (multipliedShare.x, multipliedShare.y);
         uint x;
         uint y;
         (x, y) = Precompiled.bn256ScalarMul(_G1A, _G1B, secret);
         if (!(x == 0 && y == 0)) {
-            y = _P.sub((y % _P));
+            y = Fp2Operations.P.sub((y % Fp2Operations.P));
         }
 
-        require(_isG1(_G1A, _G1B), "G1.one not in G1");
-        require(_isG1(x, y), "mulShare not in G1");
+        require(G2Operations.isG1(_G1A, _G1B), "G1.one not in G1");
+        require(G2Operations.isG1(x, y), "mulShare not in G1");
 
-        require(_isG2(Fp2Point({a: _G2A, b: _G2B}), Fp2Point({a: _G2C, b: _G2D})), "G2.one not in G2");
-        require(_isG2(tmpX, tmpY), "tmp not in G2");
+        require(
+            G2Operations.isG2Point(
+                Fp2Operations.Fp2Point({a: _G2A, b: _G2B}),
+                Fp2Operations.Fp2Point({a: _G2C, b: _G2D})
+            ),
+            "G2.one not in G2"
+        );
+        require(G2Operations.isG2Point(tmpX, tmpY), "tmp not in G2");
 
         return Precompiled.bn256Pairing(x, y, _G2B, _G2A, _G2D, _G2C, _G1A, _G1B, tmpX.b, tmpX.a, tmpY.b, tmpY.a);
     }
 
-    function _swapCoordinates(Fp2Point memory value) internal pure returns (Fp2Point memory) {
-        return Fp2Point({a: value.b, b: value.a});
+    function _swapCoordinates(
+        Fp2Operations.Fp2Point memory value
+    )
+        internal
+        pure
+        returns (Fp2Operations.Fp2Point memory)
+    {
+        return Fp2Operations.Fp2Point({a: value.b, b: value.a});
     }
 }
