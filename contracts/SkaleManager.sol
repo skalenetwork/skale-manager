@@ -102,7 +102,6 @@ contract SkaleManager is IERC777Recipient, Permissions {
             publicKey: publicKey,
             nonce: nonce});
         uint nodeIndex = nodes.createNode(msg.sender, params);
-        nodes.pushNode(msg.sender, nodeIndex);
         monitors.addMonitor(nodeIndex);
     }
 
@@ -132,12 +131,10 @@ contract SkaleManager is IERC777Recipient, Permissions {
 
     function deleteNode(uint nodeIndex) external {
         Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
-        nodes.removeNode(msg.sender, nodeIndex);
         Monitors monitors = Monitors(_contractManager.getContract("Monitors"));
+
+        nodes.removeNode(msg.sender, nodeIndex);
         monitors.deleteMonitor(nodeIndex);
-        ValidatorService validatorService = ValidatorService(_contractManager.getContract("ValidatorService"));
-        uint validatorId = validatorService.getValidatorIdByNodeAddress(msg.sender);
-        nodes.deleteNode(validatorId, nodeIndex);
     }
 
     function deleteNodeByRoot(uint nodeIndex) external onlyOwner {
@@ -146,8 +143,6 @@ contract SkaleManager is IERC777Recipient, Permissions {
 
         nodes.removeNodeByRoot(nodeIndex);
         monitors.deleteMonitor(nodeIndex);
-        uint validatorId = nodes.getNodeValidatorId(nodeIndex);
-        nodes.deleteNode(validatorId, nodeIndex);
     }
 
     function deleteSchain(string calldata name) external {
