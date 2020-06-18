@@ -1,11 +1,15 @@
 import { ContractManagerInstance,
-         SchainsInternalInstance } from "../types/truffle-contracts";
+         NodesInstance,
+         SchainsInternalInstance,
+         ValidatorServiceInstance } from "../types/truffle-contracts";
 
 import BigNumber from "bignumber.js";
 import chai = require("chai");
 import * as chaiAsPromised from "chai-as-promised";
 import { deployContractManager } from "./tools/deploy/contractManager";
+import { deployNodes } from "./tools/deploy/nodes";
 import { deploySchainsInternal } from "./tools/deploy/schainsInternal";
+import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
 import { skipTime } from "./tools/time";
 
 chai.should();
@@ -39,11 +43,17 @@ class Schain {
 
 contract("SchainsInternal", ([owner, holder]) => {
     let contractManager: ContractManagerInstance;
+    let nodes: NodesInstance;
     let schainsInternal: SchainsInternalInstance;
+    let validatorService: ValidatorServiceInstance;
 
     beforeEach(async () => {
         contractManager = await deployContractManager();
+        nodes = await deployNodes(contractManager);
         schainsInternal = await deploySchainsInternal(contractManager);
+        validatorService = await deployValidatorService(contractManager);
+
+        validatorService.registerValidator("D2", "D2 is even", 0, 0, {from: holder});
     });
 
     it("should initialize schain", async () => {
@@ -61,6 +71,16 @@ contract("SchainsInternal", ([owner, holder]) => {
 
         beforeEach(async () => {
             await schainsInternal.initializeSchain("TestSchain", holder, 5, 5);
+            await nodes.createNode(holder,
+                {
+                    port: 8545,
+                    nonce: 0,
+                    ip: "0x7f000001",
+                    publicIp: "0x7f000001",
+                    publicKey: ["0x1122334455667788990011223344556677889900112233445566778899001122",
+                                "0x1122334455667788990011223344556677889900112233445566778899001122"],
+                    name: "D2-01"
+                });
         });
 
         it("should register schain index for owner", async () => {
@@ -78,10 +98,7 @@ contract("SchainsInternal", ([owner, holder]) => {
         });
 
         it("should set amount of resources that schains occupied", async () => {
-            await schainsInternal.addSchainForNode(5, schainNameHash);
-            await schainsInternal.createGroup(schainNameHash, 1, schainNameHash);
-            await schainsInternal.setNodeInGroup(schainNameHash, 5);
-            await schainsInternal.setSchainPartOfNode(schainNameHash, 2);
+            await schainsInternal.createGroupForSchain(schainNameHash, 1, 2);
 
             expect(new Schain(await schainsInternal.schains(schainNameHash)).partOfNode).to.be.equal(2);
             const totalResources = new BigNumber(await schainsInternal.sumOfSchainsResources());
@@ -96,10 +113,10 @@ contract("SchainsInternal", ([owner, holder]) => {
         });
 
         describe("on registered schain", async function() {
+            const nodeIndex = 0;
             this.beforeEach(async () => {
                 await schainsInternal.setSchainIndex(schainNameHash, holder);
-                await schainsInternal.addSchainForNode(5, schainNameHash);
-                await schainsInternal.setSchainPartOfNode(schainNameHash, 2);
+                await schainsInternal.createGroupForSchain(schainNameHash, 1, 2);
             });
 
             it("should delete schain", async () => {
@@ -108,53 +125,66 @@ contract("SchainsInternal", ([owner, holder]) => {
                 res.name.should.be.equal("");
             });
 
+            it("should check group", async () => {
+                const res = await schainsInternal.getNodesInGroup(schainNameHash);
+                res.length.should.be.equal(1);
+                res[0].toNumber().should.be.equal(0);
+            });
+
+            it("should delete group", async () => {
+                await schainsInternal.deleteGroup(schainNameHash);
+                const res = await schainsInternal.getNodesInGroup(schainNameHash);
+                res.length.should.be.equal(0);
+                await schainsInternal.getNodesInGroup(schainNameHash).should.be.eventually.empty;
+            });
+
             it("should remove schain from node", async () => {
-                await schainsInternal.removeSchainForNode(5, 0);
-                assert(new BigNumber(await schainsInternal.getLengthOfSchainsForNode(5)).isEqualTo(0));
+                await schainsInternal.removeSchainForNode(nodeIndex, 0);
+                assert(new BigNumber(await schainsInternal.getLengthOfSchainsForNode(nodeIndex)).isEqualTo(0));
             });
 
             it("should add another schain to the node and remove first correctly", async () => {
-                await schainsInternal.addSchainForNode(5, web3.utils.soliditySha3("NewSchain"));
-                await schainsInternal.removeSchainForNode(5, 0);
-                await schainsInternal.addSchainForNode(5, web3.utils.soliditySha3("NewSchain1"));
-                await schainsInternal.getSchainIdsForNode(5).should.eventually.be.deep.equal(
+                await schainsInternal.addSchainForNode(nodeIndex, web3.utils.soliditySha3("NewSchain"));
+                await schainsInternal.removeSchainForNode(nodeIndex, 0);
+                await schainsInternal.addSchainForNode(nodeIndex, web3.utils.soliditySha3("NewSchain1"));
+                await schainsInternal.getSchainIdsForNode(nodeIndex).should.eventually.be.deep.equal(
                     [web3.utils.soliditySha3("NewSchain1"), web3.utils.soliditySha3("NewSchain")],
                 );
             });
 
             it("should add a hole after deleting", async () => {
-                await schainsInternal.addSchainForNode(5, web3.utils.soliditySha3("NewSchain"));
-                await schainsInternal.addSchainForNode(5, web3.utils.soliditySha3("NewSchain1"));
-                await schainsInternal.removeSchainForNode(5, 1);
-                assert(new BigNumber(await schainsInternal.holesForNodes(5, 0)).isEqualTo(1));
+                await schainsInternal.addSchainForNode(nodeIndex, web3.utils.soliditySha3("NewSchain"));
+                await schainsInternal.addSchainForNode(nodeIndex, web3.utils.soliditySha3("NewSchain1"));
+                await schainsInternal.removeSchainForNode(nodeIndex, 1);
+                assert(new BigNumber(await schainsInternal.holesForNodes(nodeIndex, 0)).isEqualTo(1));
             });
 
             it("should add another hole after deleting", async () => {
-                await schainsInternal.addSchainForNode(5, web3.utils.soliditySha3("NewSchain"));
-                await schainsInternal.addSchainForNode(5, web3.utils.soliditySha3("NewSchain1"));
-                await schainsInternal.removeSchainForNode(5, 1);
-                await schainsInternal.removeSchainForNode(5, 0);
-                assert(new BigNumber(await schainsInternal.holesForNodes(5, 0)).isEqualTo(0));
-                assert(new BigNumber(await schainsInternal.holesForNodes(5, 1)).isEqualTo(1));
+                await schainsInternal.addSchainForNode(nodeIndex, web3.utils.soliditySha3("NewSchain"));
+                await schainsInternal.addSchainForNode(nodeIndex, web3.utils.soliditySha3("NewSchain1"));
+                await schainsInternal.removeSchainForNode(nodeIndex, 1);
+                await schainsInternal.removeSchainForNode(nodeIndex, 0);
+                assert(new BigNumber(await schainsInternal.holesForNodes(nodeIndex, 0)).isEqualTo(0));
+                assert(new BigNumber(await schainsInternal.holesForNodes(nodeIndex, 1)).isEqualTo(1));
             });
 
             it("should add another hole after deleting different order", async () => {
-                await schainsInternal.addSchainForNode(5, web3.utils.soliditySha3("NewSchain"));
-                await schainsInternal.addSchainForNode(5, web3.utils.soliditySha3("NewSchain1"));
-                await schainsInternal.removeSchainForNode(5, 0);
-                await schainsInternal.removeSchainForNode(5, 1);
-                assert(new BigNumber(await schainsInternal.holesForNodes(5, 0)).isEqualTo(0));
-                assert(new BigNumber(await schainsInternal.holesForNodes(5, 1)).isEqualTo(1));
+                await schainsInternal.addSchainForNode(nodeIndex, web3.utils.soliditySha3("NewSchain"));
+                await schainsInternal.addSchainForNode(nodeIndex, web3.utils.soliditySha3("NewSchain1"));
+                await schainsInternal.removeSchainForNode(nodeIndex, 0);
+                await schainsInternal.removeSchainForNode(nodeIndex, 1);
+                assert(new BigNumber(await schainsInternal.holesForNodes(nodeIndex, 0)).isEqualTo(0));
+                assert(new BigNumber(await schainsInternal.holesForNodes(nodeIndex, 1)).isEqualTo(1));
             });
 
             it("should add schain in a hole", async () => {
-                await schainsInternal.addSchainForNode(5, web3.utils.soliditySha3("NewSchain"));
-                await schainsInternal.addSchainForNode(5, web3.utils.soliditySha3("NewSchain1"));
-                await schainsInternal.removeSchainForNode(5, 0);
-                await schainsInternal.removeSchainForNode(5, 1);
-                await schainsInternal.addSchainForNode(5, web3.utils.soliditySha3("NewSchain2"));
-                assert(new BigNumber(await schainsInternal.holesForNodes(5, 0)).isEqualTo(1));
-                await schainsInternal.getSchainIdsForNode(5).should.eventually.be.deep.equal(
+                await schainsInternal.addSchainForNode(nodeIndex, web3.utils.soliditySha3("NewSchain"));
+                await schainsInternal.addSchainForNode(nodeIndex, web3.utils.soliditySha3("NewSchain1"));
+                await schainsInternal.removeSchainForNode(nodeIndex, 0);
+                await schainsInternal.removeSchainForNode(nodeIndex, 1);
+                await schainsInternal.addSchainForNode(nodeIndex, web3.utils.soliditySha3("NewSchain2"));
+                assert(new BigNumber(await schainsInternal.holesForNodes(nodeIndex, 0)).isEqualTo(1));
+                await schainsInternal.getSchainIdsForNode(nodeIndex).should.eventually.be.deep.equal(
                     [
                         web3.utils.soliditySha3("NewSchain2"),
                         "0x0000000000000000000000000000000000000000000000000000000000000000",
@@ -164,13 +194,13 @@ contract("SchainsInternal", ([owner, holder]) => {
             });
 
             it("should add second schain in a hole", async () => {
-                await schainsInternal.addSchainForNode(5, web3.utils.soliditySha3("NewSchain"));
-                await schainsInternal.addSchainForNode(5, web3.utils.soliditySha3("NewSchain1"));
-                await schainsInternal.removeSchainForNode(5, 0);
-                await schainsInternal.removeSchainForNode(5, 1);
-                await schainsInternal.addSchainForNode(5, web3.utils.soliditySha3("NewSchain2"));
-                await schainsInternal.addSchainForNode(5, web3.utils.soliditySha3("NewSchain3"));
-                await schainsInternal.getSchainIdsForNode(5).should.eventually.be.deep.equal(
+                await schainsInternal.addSchainForNode(nodeIndex, web3.utils.soliditySha3("NewSchain"));
+                await schainsInternal.addSchainForNode(nodeIndex, web3.utils.soliditySha3("NewSchain1"));
+                await schainsInternal.removeSchainForNode(nodeIndex, 0);
+                await schainsInternal.removeSchainForNode(nodeIndex, 1);
+                await schainsInternal.addSchainForNode(nodeIndex, web3.utils.soliditySha3("NewSchain2"));
+                await schainsInternal.addSchainForNode(nodeIndex, web3.utils.soliditySha3("NewSchain3"));
+                await schainsInternal.getSchainIdsForNode(nodeIndex).should.eventually.be.deep.equal(
                     [
                         web3.utils.soliditySha3("NewSchain2"),
                         web3.utils.soliditySha3("NewSchain3"),
@@ -180,14 +210,14 @@ contract("SchainsInternal", ([owner, holder]) => {
             });
 
             it("should add third schain like new", async () => {
-                await schainsInternal.addSchainForNode(5, web3.utils.soliditySha3("NewSchain"));
-                await schainsInternal.addSchainForNode(5, web3.utils.soliditySha3("NewSchain1"));
-                await schainsInternal.removeSchainForNode(5, 0);
-                await schainsInternal.removeSchainForNode(5, 1);
-                await schainsInternal.addSchainForNode(5, web3.utils.soliditySha3("NewSchain2"));
-                await schainsInternal.addSchainForNode(5, web3.utils.soliditySha3("NewSchain3"));
-                await schainsInternal.addSchainForNode(5, web3.utils.soliditySha3("NewSchain4"));
-                await schainsInternal.getSchainIdsForNode(5).should.eventually.be.deep.equal(
+                await schainsInternal.addSchainForNode(nodeIndex, web3.utils.soliditySha3("NewSchain"));
+                await schainsInternal.addSchainForNode(nodeIndex, web3.utils.soliditySha3("NewSchain1"));
+                await schainsInternal.removeSchainForNode(nodeIndex, 0);
+                await schainsInternal.removeSchainForNode(nodeIndex, 1);
+                await schainsInternal.addSchainForNode(nodeIndex, web3.utils.soliditySha3("NewSchain2"));
+                await schainsInternal.addSchainForNode(nodeIndex, web3.utils.soliditySha3("NewSchain3"));
+                await schainsInternal.addSchainForNode(nodeIndex, web3.utils.soliditySha3("NewSchain4"));
+                await schainsInternal.getSchainIdsForNode(nodeIndex).should.eventually.be.deep.equal(
                     [
                         web3.utils.soliditySha3("NewSchain2"),
                         web3.utils.soliditySha3("NewSchain3"),
@@ -212,11 +242,11 @@ contract("SchainsInternal", ([owner, holder]) => {
             });
 
             it("should return schains by node", async () => {
-                await schainsInternal.getSchainIdsForNode(5).should.eventually.be.deep.equal([schainNameHash]);
+                await schainsInternal.getSchainIdsForNode(nodeIndex).should.eventually.be.deep.equal([schainNameHash]);
             });
 
             it("should return number of schains per node", async () => {
-                const count = new BigNumber(await schainsInternal.getLengthOfSchainsForNode(5));
+                const count = new BigNumber(await schainsInternal.getLengthOfSchainsForNode(nodeIndex));
                 assert (count.isEqualTo(1));
             });
 

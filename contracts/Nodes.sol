@@ -107,7 +107,6 @@ contract Nodes is Permissions {
     // informs that node is fully finished quitting from the system
     event ExitCompleted(
         uint nodeIndex,
-        address owner,
         uint32 time,
         uint gasSpend
     );
@@ -115,7 +114,6 @@ contract Nodes is Permissions {
     // informs that owner starts the procedure of quitting the Node from the system
     event ExitInited(
         uint nodeIndex,
-        address owner,
         uint32 startLeavingPeriod,
         uint32 time,
         uint gasSpend
@@ -128,7 +126,9 @@ contract Nodes is Permissions {
      * @param space - space which should be occupied
      */
     function removeSpaceFromNode(uint nodeIndex, uint8 space)
-        external allowTwo("Schains", "SchainsInternal") returns (bool)
+        external
+        allowTwo("Schains", "SchainsInternal")
+        returns (bool)
     {
         if (spaceOfNodes[nodeIndex].freeSpace < space) {
             return false;
@@ -166,9 +166,9 @@ contract Nodes is Permissions {
         nodes[nodeIndex].lastRewardDate = uint32(block.timestamp);
     }
 
-    function changeNodeFinishTime(uint nodeIndex, uint32 time) external {
+    function changeNodeFinishTime(uint nodeIndex, uint32 time) external allow("SkaleManager") {
         nodes[nodeIndex].finishTime = time;
-    }    
+    }
 
     /**
      * @dev createNode - creates new Node and add it to the Nodes contract
@@ -176,10 +176,10 @@ contract Nodes is Permissions {
      * @param from - owner of Node
      * @return nodeIndex - index of Node
      */
-    function createNode(
-        address from,
-        NodeCreationParams calldata params)
-        external allow("SkaleManager") returns (uint nodeIndex)
+    function createNode(address from, NodeCreationParams calldata params)
+        external
+        allow("SkaleManager")
+        returns (uint nodeIndex)
     {
         // checks that Node has correct data
         require(params.ip != 0x0 && !nodesIPCheck[params.ip], "IP address is zero or is not available");
@@ -200,9 +200,6 @@ contract Nodes is Permissions {
             validatorId);
         pushNode(from, nodeIndex);
 
-        // adds Node to Fractional Nodes or to Full Nodes
-        // setNodeType(nodesAddress, constantsAddress, nodeIndex);
-
         emit NodeCreated(
             nodeIndex,
             from,
@@ -216,45 +213,17 @@ contract Nodes is Permissions {
     }
 
     /**
-     * @dev removeNode - delete Node
-     * function could be only run by SkaleManager
-     * @param from - owner of Node
-     * @param nodeIndex - index of Node
-     */
-    function removeNode(address from, uint nodeIndex) external allow("SkaleManager") {
-        require(isNodeExist(from, nodeIndex), "Node does not exist for message sender");
-        require(isNodeActive(nodeIndex), "Node is not Active");
-        uint validatorId = nodes[nodeIndex].validatorId;
-
-        setNodeLeft(nodeIndex);
-        deleteNode(nodeIndex);
-        deleteNode(validatorId, nodeIndex);
-    }
-
-    function removeNodeByRoot(uint nodeIndex) external allow("SkaleManager") {
-        uint validatorId = nodes[nodeIndex].validatorId;
-
-        setNodeLeft(nodeIndex);
-        deleteNode(nodeIndex);
-        deleteNode(validatorId, nodeIndex);
-    }
-
-    /**
      * @dev initExit - initiate a procedure of quitting the system
      * function could be only run by SkaleManager
-     * @param from - owner of Node
      * @param nodeIndex - index of Node
      * @return true - if everything OK
      */
-    function initExit(address from, uint nodeIndex) external allow("SkaleManager") returns (bool) {
-
-        require(isNodeExist(from, nodeIndex), "Node does not exist for message sender");
+    function initExit(uint nodeIndex) external allow("SkaleManager") returns (bool) {
 
         setNodeLeaving(nodeIndex);
 
         emit ExitInited(
             nodeIndex,
-            from,
             uint32(block.timestamp),
             uint32(block.timestamp),
             gasleft());
@@ -263,27 +232,33 @@ contract Nodes is Permissions {
 
     /**
      * @dev completeExit - finish a procedure of quitting the system
-     * function could be run only by SkaleMManager
-     * @param from - owner of Node
+     * function could be run only by SkaleManager
      * @param nodeIndex - index of Node
      * @return amount of SKL which be returned
      */
-    function completeExit(address from, uint nodeIndex) external allow("SkaleManager") returns (bool) {
-        ValidatorService validatorService = ValidatorService(_contractManager.getContract("ValidatorService"));
-        uint validatorId = validatorService.getValidatorIdByNodeAddress(from);
-        require(isNodeExist(from, nodeIndex), "Node does not exist for message sender");
+    function completeExit(uint nodeIndex) external allow("SkaleManager") returns (bool) {
         require(isNodeLeaving(nodeIndex), "Node is not Leaving");
 
         setNodeLeft(nodeIndex);
         deleteNode(nodeIndex);
-        deleteNode(validatorId, nodeIndex);
 
         emit ExitCompleted(
             nodeIndex,
-            from,
             uint32(block.timestamp),
             gasleft());
         return true;
+    }
+
+    function deleteNodeForValidator(uint validatorId, uint nodeIndex) external allow("SkaleManager") {
+        ValidatorService validatorService = ValidatorService(_contractManager.getContract("ValidatorService"));
+        require(validatorService.validatorExists(validatorId), "Validator with such ID does not exist");
+        uint[] memory validatorNodes = validatorToNodeIndexes[validatorId];
+        uint position = _findNode(validatorNodes, nodeIndex);
+        if (position < validatorNodes.length) {
+            validatorToNodeIndexes[validatorId][position] =
+                validatorToNodeIndexes[validatorId][validatorNodes.length.sub(1)];
+        }
+        validatorToNodeIndexes[validatorId].pop();
     }
 
     function checkPossibilityCreatingNode(address nodeAddress) external allow("SkaleManager") {
@@ -317,8 +292,6 @@ contract Nodes is Permissions {
         return position.add(1).mul(msr) <= delegationsTotal;
     }
 
-
-
     function getNodesWithFreeSpace(uint8 freeSpace) external view returns (uint[] memory) {
         uint[] memory nodesWithFreeSpace = new uint[](countNodesWithFreeSpace(freeSpace));
         uint cursor = 0;
@@ -339,6 +312,16 @@ contract Nodes is Permissions {
     function isTimeForReward(uint nodeIndex) external view returns (bool) {
         ConstantsHolder constantsHolder = ConstantsHolder(_contractManager.getContract("ConstantsHolder"));
         return nodes[nodeIndex].lastRewardDate.add(constantsHolder.rewardPeriod()) <= block.timestamp;
+    }
+
+    /**
+     * @dev isNodeExist - checks existence of Node at this address
+     * @param from - account address
+     * @param nodeIndex - index of Node
+     * @return if exist - true, else - false
+     */
+    function isNodeExist(address from, uint nodeIndex) external view returns (bool) {
+        return nodeIndexes[from].isNodeExist[nodeIndex];
     }
 
     /**
@@ -551,9 +534,6 @@ contract Nodes is Permissions {
     function setNodeLeft(uint nodeIndex) public allow("SkaleManager") {
         nodesIPCheck[nodes[nodeIndex].ip] = false;
         nodesNameCheck[keccak256(abi.encodePacked(nodes[nodeIndex].name))] = false;
-        // address ownerOfNode = nodes[nodeIndex].owner;
-        // nodeIndexes[ownerOfNode].isNodeExist[nodeIndex] = false;
-        // nodeIndexes[ownerOfNode].numberOfNodes--;
         delete nodesNameToIndex[keccak256(abi.encodePacked(nodes[nodeIndex].name))];
         if (nodes[nodeIndex].status == NodeStatus.Active) {
             numberOfActiveNodes--;
@@ -588,28 +568,6 @@ contract Nodes is Permissions {
         }
         delete spaceOfNodes[nodeIndex].freeSpace;
         delete spaceOfNodes[nodeIndex].indexInSpaceMap;
-    }
-
-    function deleteNode(uint validatorId, uint nodeIndex) public allow("SkaleManager") {
-        ValidatorService validatorService = ValidatorService(_contractManager.getContract("ValidatorService"));
-        require(validatorService.validatorExists(validatorId), "Validator with such ID does not exist");
-        uint[] memory validatorNodes = validatorToNodeIndexes[validatorId];
-        uint position = _findNode(validatorNodes, nodeIndex);
-        if (position < validatorNodes.length) {
-            validatorToNodeIndexes[validatorId][position] =
-                validatorToNodeIndexes[validatorId][validatorNodes.length.sub(1)];
-        }
-        validatorToNodeIndexes[validatorId].pop();
-    }
-
-    /**
-     * @dev isNodeExist - checks existence of Node at this address
-     * @param from - account address
-     * @param nodeIndex - index of Node
-     * @return if exist - true, else - false
-     */
-    function isNodeExist(address from, uint nodeIndex) public view returns (bool) {
-        return nodeIndexes[from].isNodeExist[nodeIndex];
     }
 
     /**
