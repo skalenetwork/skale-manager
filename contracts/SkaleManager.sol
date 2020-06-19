@@ -33,6 +33,7 @@ import "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
 import "@openzeppelin/contracts/introspection/IERC1820Registry.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 
+
 contract SkaleManager is IERC777Recipient, Permissions {
     // miners capitalization
     uint public minersCap;
@@ -190,26 +191,16 @@ contract SkaleManager is IERC777Recipient, Permissions {
         ConstantsHolder constants = ConstantsHolder(_contractManager.getContract("ConstantsHolder"));
         Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
 
-        uint networkLaunchTimestamp = constants.launchTimestamp();
-        if (now < networkLaunchTimestamp) {
-            // network is not launched
-            // bounty is turned off
-            return 0;
+        uint nodesAmount = stageNodes;
+        if (stageTime.add(constants.rewardPeriod()) < now) {
+            nodesAmount = nodes.numberOfActiveNodes().add(nodes.numberOfLeavingNodes());
         }
-
-        uint minersCapLocal = SkaleToken(_contractManager.getContract("SkaleToken")).CAP() / 3;
-        uint stageNodesLocal = stageTime;
-        uint stageTimeLocal = stageTime;
-        if (stageTimeLocal.add(constants.rewardPeriod()) < now) {
-            stageNodesLocal = nodes.numberOfActiveNodes().add(nodes.numberOfLeavingNodes());
-            stageTimeLocal = uint32(block.timestamp);
-        }
-        return minersCapLocal
-            .div((2 ** (((now.sub(networkLaunchTimestamp))
-            .div(constants.SIX_YEARS())) + 1))
-            .mul((constants.SIX_YEARS()
-            .div(constants.rewardPeriod())))
-            .mul(stageNodesLocal));
+        
+        return _calculateMaximumBountyAmount(
+            _getValidatorsCapitalization(),
+            nodesAmount,
+            constants.launchTimestamp()
+        );
     }
 
     function initialize(address newContractsAddress) public override initializer {
@@ -298,9 +289,16 @@ contract SkaleManager is IERC777Recipient, Permissions {
             gasleft());
     }
 
+    function _getValidatorsCapitalization() internal view returns (uint) {
+        if (minersCap == 0) {
+            return SkaleToken(_contractManager.getContract("SkaleToken")).CAP() / 3;
+        }
+        return minersCap;
+    }
+
     function _getAndUpdateValidatorsCapitalization() internal returns (uint) {
         if (minersCap == 0) {
-            minersCap = SkaleToken(_contractManager.getContract("SkaleToken")).CAP() / 3;
+            minersCap = _getValidatorsCapitalization();
         }
         return minersCap;
     }
@@ -349,7 +347,12 @@ contract SkaleManager is IERC777Recipient, Permissions {
         uint totalDowntime = downtime.add(numberOfExpiredIntervals);
         if (totalDowntime > normalDowntime) {
             // reduce bounty because downtime is too big
-            uint penalty = bounty.mul(totalDowntime).div(constants.SECONDS_TO_DAY() / 4);
+            uint penalty = bounty
+                .mul(totalDowntime)
+                .div(
+                    constants.rewardPeriod().sub(constants.deltaPeriod())
+                        .div(constants.checkTime())
+                );            
             if (bounty > penalty) {
                 reducedBounty = bounty - penalty;
             } else {
