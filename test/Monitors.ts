@@ -2,7 +2,8 @@ import { BigNumber } from "bignumber.js";
 import { ConstantsHolderInstance,
          ContractManagerInstance,
          MonitorsInstance,
-        NodesInstance } from "../types/truffle-contracts";
+        NodesInstance,
+        ValidatorServiceInstance} from "../types/truffle-contracts";
 
 import { currentTime, skipTime } from "./tools/time";
 
@@ -12,14 +13,16 @@ import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
 import { deployContractManager } from "./tools/deploy/contractManager";
 import { deployMonitors } from "./tools/deploy/monitors";
 import { deployNodes } from "./tools/deploy/nodes";
+import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
 chai.should();
 chai.use((chaiAsPromised));
 
-contract("Monitors", ([owner, validator]) => {
+contract("Monitors", ([owner, validator, nodeAddress]) => {
   let contractManager: ContractManagerInstance;
   let constantsHolder: ConstantsHolderInstance;
   let monitors: MonitorsInstance;
   let nodes: NodesInstance;
+  let validatorService: ValidatorServiceInstance;
 
   beforeEach(async () => {
     contractManager = await deployContractManager();
@@ -27,23 +30,76 @@ contract("Monitors", ([owner, validator]) => {
     nodes = await deployNodes(contractManager);
     monitors = await deployMonitors(contractManager);
     constantsHolder = await deployConstantsHolder(contractManager);
+    validatorService = await deployValidatorService(contractManager);
 
     // create a node for monitors functions tests
-    await nodes.addNode(validator, "elvis1", "0x7f000001", "0x7f000002", 8545,
-    ["0x1122334455667788990011223344556677889900112233445566778899001122",
-    "0x1122334455667788990011223344556677889900112233445566778899001122"], 0);
-    await nodes.addNode(validator, "elvis2", "0x7f000003", "0x7f000004", 8545,
-    ["0x1122334455667788990011223344556677889900112233445566778899001122",
-    "0x1122334455667788990011223344556677889900112233445566778899001122"], 0);
-    await nodes.addNode(validator, "elvis3", "0x7f000005", "0x7f000006", 8545,
-    ["0x1122334455667788990011223344556677889900112233445566778899001122",
-    "0x1122334455667788990011223344556677889900112233445566778899001122"], 0);
-    await nodes.addNode(validator, "elvis4", "0x7f000007", "0x7f000008", 8545,
-    ["0x1122334455667788990011223344556677889900112233445566778899001122",
-    "0x1122334455667788990011223344556677889900112233445566778899001122"], 0);
-    await nodes.addNode(validator, "elvis5", "0x7f000009", "0x7f000010", 8545,
-    ["0x1122334455667788990011223344556677889900112233445566778899001122",
-    "0x1122334455667788990011223344556677889900112233445566778899001122"], 0);
+    await validatorService.registerValidator("Validator", "D2", 0, 0, {from: validator});
+    const validatorIndex = await validatorService.getValidatorId(validator);
+    let signature1 = await web3.eth.sign(web3.utils.soliditySha3(validatorIndex.toString()), nodeAddress);
+    signature1 = (signature1.slice(130) === "00" ? signature1.slice(0, 130) + "1b" :
+            (signature1.slice(130) === "01" ? signature1.slice(0, 130) + "1c" : signature1));
+    await validatorService.linkNodeAddress(nodeAddress, signature1, {from: validator});
+
+
+    await nodes.createNode(
+      nodeAddress,
+      {
+          port: 8545,
+          nonce: 0,
+          ip: "0x7f000001",
+          publicIp: "0x7f000001",
+          publicKey: ["0x1122334455667788990011223344556677889900112233445566778899001122",
+                      "0x1122334455667788990011223344556677889900112233445566778899001122"],
+          name: "elvis1"
+      });
+
+    await nodes.createNode(
+      nodeAddress,
+      {
+          port: 8545,
+          nonce: 0,
+          ip: "0x7f000003",
+          publicIp: "0x7f000003",
+          publicKey: ["0x1122334455667788990011223344556677889900112233445566778899001122",
+                      "0x1122334455667788990011223344556677889900112233445566778899001122"],
+          name: "elvis2"
+      });
+
+    await nodes.createNode(
+      nodeAddress,
+      {
+          port: 8545,
+          nonce: 0,
+          ip: "0x7f000005",
+          publicIp: "0x7f000005",
+          publicKey: ["0x1122334455667788990011223344556677889900112233445566778899001122",
+                      "0x1122334455667788990011223344556677889900112233445566778899001122"],
+          name: "elvis3"
+      });
+
+    await nodes.createNode(
+      nodeAddress,
+      {
+          port: 8545,
+          nonce: 0,
+          ip: "0x7f000007",
+          publicIp: "0x7f000007",
+          publicKey: ["0x1122334455667788990011223344556677889900112233445566778899001122",
+                      "0x1122334455667788990011223344556677889900112233445566778899001122"],
+          name: "elvis4"
+      });
+
+    await nodes.createNode(
+      nodeAddress,
+      {
+          port: 8545,
+          nonce: 0,
+          ip: "0x7f000009",
+          publicIp: "0x7f000009",
+          publicKey: ["0x1122334455667788990011223344556677889900112233445566778899001122",
+                      "0x1122334455667788990011223344556677889900112233445566778899001122"],
+          name: "elvis5"
+      });
   });
   // nodeIndex = 0 because we add one node and her index in array is 0
   const nodeIndex = 0;
@@ -308,14 +364,17 @@ contract("Monitors", ([owner, validator]) => {
       for (let node = (await nodes.getNumberOfNodes()).toNumber(); node < nodesCount; ++node) {
         const address = ("0000" + node.toString(16)).slice(-4);
 
-        await nodes.addNode(validator,
-                                "d2_" + node,
-                                "0x7f" + address + "01",
-                                "0x7f" + address + "02",
-                                8545,
-                                ["0x1122334455667788990011223344556677889900112233445566778899001122",
-                                 "0x1122334455667788990011223344556677889900112233445566778899001122"],
-                                0);
+        await nodes.createNode(
+          nodeAddress,
+          {
+              port: 8545,
+              nonce: 0,
+              ip: "0x7f" + address + "01",
+              publicIp: "0x7f" + address + "02",
+              publicKey: ["0x1122334455667788990011223344556677889900112233445566778899001122",
+                          "0x1122334455667788990011223344556677889900112233445566778899001122"],
+              name: "d2_" + node
+          });
       }
 
       const leavingCount = nodesCount - activeNodesCount;

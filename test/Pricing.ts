@@ -5,21 +5,25 @@ import * as chaiAsPromised from "chai-as-promised";
 import { ContractManagerInstance,
          NodesInstance,
          PricingInstance,
-         SchainsInternalInstance } from "../types/truffle-contracts";
+         SchainsInternalInstance,
+         ValidatorServiceInstance} from "../types/truffle-contracts";
+
 import { deployContractManager } from "./tools/deploy/contractManager";
 import { deployNodes } from "./tools/deploy/nodes";
 import { deployPricing } from "./tools/deploy/pricing";
 import { deploySchainsInternal } from "./tools/deploy/schainsInternal";
 import { skipTime } from "./tools/time";
+import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
 
 chai.should();
 chai.use(chaiAsPromised);
 
-contract("Pricing", ([owner, holder]) => {
+contract("Pricing", ([owner, holder, validator, nodeAddress]) => {
     let contractManager: ContractManagerInstance;
     let pricing: PricingInstance;
     let schainsInternal: SchainsInternalInstance;
     let nodes: NodesInstance;
+    let validatorService: ValidatorServiceInstance;
 
     beforeEach(async () => {
         contractManager = await deployContractManager();
@@ -27,6 +31,14 @@ contract("Pricing", ([owner, holder]) => {
         nodes = await deployNodes(contractManager);
         schainsInternal = await deploySchainsInternal(contractManager);
         pricing = await deployPricing(contractManager);
+        validatorService = await deployValidatorService(contractManager);
+
+        await validatorService.registerValidator("Validator", "D2", 0, 0, {from: validator});
+        const validatorIndex = await validatorService.getValidatorId(validator);
+        let signature1 = await web3.eth.sign(web3.utils.soliditySha3(validatorIndex.toString()), nodeAddress);
+        signature1 = (signature1.slice(130) === "00" ? signature1.slice(0, 130) + "1b" :
+                (signature1.slice(130) === "01" ? signature1.slice(0, 130) + "1c" : signature1));
+        await validatorService.linkNodeAddress(nodeAddress, signature1, {from: validator});
     });
 
     describe("on initialized contracts", async () => {
@@ -34,18 +46,53 @@ contract("Pricing", ([owner, holder]) => {
             await schainsInternal.initializeSchain("BobSchain", holder, 10, 2);
             await schainsInternal.initializeSchain("DavidSchain", holder, 10, 4);
             await schainsInternal.initializeSchain("JacobSchain", holder, 10, 8);
-            await nodes.addNode(holder, "John", "0x7f000001", "0x7f000002", 8545,
-            ["0x1122334455667788990011223344556677889900112233445566778899001122",
-            "0x1122334455667788990011223344556677889900112233445566778899001122"], 0);
-            await nodes.addNode(holder, "Michael", "0x7f000003", "0x7f000004", 8545,
-            ["0x1122334455667788990011223344556677889900112233445566778899001122",
-            "0x1122334455667788990011223344556677889900112233445566778899001122"], 0);
-            await nodes.addNode(holder, "Daniel", "0x7f000005", "0x7f000006", 8545,
-            ["0x1122334455667788990011223344556677889900112233445566778899001122",
-            "0x1122334455667788990011223344556677889900112233445566778899001122"], 0);
-            await nodes.addNode(holder, "Steven", "0x7f000007", "0x7f000008", 8545,
-            ["0x1122334455667788990011223344556677889900112233445566778899001122",
-            "0x1122334455667788990011223344556677889900112233445566778899001122"], 0);
+            await nodes.createNode(
+                nodeAddress,
+                {
+                    port: 8545,
+                    nonce: 0,
+                    ip: "0x7f000001",
+                    publicIp: "0x7f000001",
+                    publicKey: ["0x1122334455667788990011223344556677889900112233445566778899001122",
+                                "0x1122334455667788990011223344556677889900112233445566778899001122"],
+                    name: "elvis1"
+                });
+
+            await nodes.createNode(
+                nodeAddress,
+                {
+                    port: 8545,
+                    nonce: 0,
+                    ip: "0x7f000003",
+                    publicIp: "0x7f000003",
+                    publicKey: ["0x1122334455667788990011223344556677889900112233445566778899001122",
+                                "0x1122334455667788990011223344556677889900112233445566778899001122"],
+                    name: "elvis2"
+                });
+
+            await nodes.createNode(
+                nodeAddress,
+                {
+                    port: 8545,
+                    nonce: 0,
+                    ip: "0x7f000005",
+                    publicIp: "0x7f000005",
+                    publicKey: ["0x1122334455667788990011223344556677889900112233445566778899001122",
+                                "0x1122334455667788990011223344556677889900112233445566778899001122"],
+                    name: "elvis3"
+                });
+
+            await nodes.createNode(
+                nodeAddress,
+                {
+                    port: 8545,
+                    nonce: 0,
+                    ip: "0x7f000007",
+                    publicIp: "0x7f000007",
+                    publicKey: ["0x1122334455667788990011223344556677889900112233445566778899001122",
+                                "0x1122334455667788990011223344556677889900112233445566778899001122"],
+                    name: "elvis4"
+                });
 
         });
 
@@ -115,9 +162,17 @@ contract("Pricing", ([owner, holder]) => {
             });
 
             it("should rejected if price - priceChange overflowed price", async () => {
-                await nodes.addNode(holder, "vadim", "0x7f000010", "0x7f000011", 8545,
-                ["0x1122334455667788990011223344556677889900112233445566778899001122",
-                "0x1122334455667788990011223344556677889900112233445566778899001122"], 0);
+                await nodes.createNode(
+                    nodeAddress,
+                    {
+                        port: 8545,
+                        nonce: 0,
+                        ip: "0x7f000010",
+                        publicIp: "0x7f000011",
+                        publicKey: ["0x1122334455667788990011223344556677889900112233445566778899001122",
+                                    "0x1122334455667788990011223344556677889900112233445566778899001122"],
+                        name: "vadim"
+                    });
                 skipTime(web3, 10 ** 6);
                 await pricing.adjustPrice()
                     .should.be.eventually.rejectedWith("SafeMath: subtraction overflow");
@@ -156,9 +211,17 @@ contract("Pricing", ([owner, holder]) => {
                 }
 
                 it("should change price when new active node has been added", async () => {
-                    await nodes.addNode(holder, "vadim", "0x7f000010", "0x7f000011", 8545,
-                    ["0x1122334455667788990011223344556677889900112233445566778899001122",
-                    "0x1122334455667788990011223344556677889900112233445566778899001122"], 0);
+                    await nodes.createNode(
+                        nodeAddress,
+                        {
+                            port: 8545,
+                            nonce: 0,
+                            ip: "0x7f000010",
+                            publicIp: "0x7f000011",
+                            publicKey: ["0x1122334455667788990011223344556677889900112233445566778899001122",
+                                        "0x1122334455667788990011223344556677889900112233445566778899001122"],
+                            name: "vadim"
+                        });
                     const MINUTES_PASSED = 2;
                     const price = await getPrice(MINUTES_PASSED);
                     const newPrice = new BigNumber(await pricing.price()).toNumber();
@@ -167,6 +230,7 @@ contract("Pricing", ([owner, holder]) => {
                 });
 
                 it("should change price when active node has been removed", async () => {
+                    await nodes.initExit(0);
                     await nodes.completeExit(0);
                     const MINUTES_PASSED = 2;
                     const price = await getPrice(MINUTES_PASSED);
@@ -176,9 +240,17 @@ contract("Pricing", ([owner, holder]) => {
                 });
 
                 it("should set price to min of too many minutes passed and price is less than min", async () => {
-                    await nodes.addNode(holder, "vadim", "0x7f000010", "0x7f000011", 8545,
-                    ["0x1122334455667788990011223344556677889900112233445566778899001122",
-                    "0x1122334455667788990011223344556677889900112233445566778899001122"], 0);
+                    await nodes.createNode(
+                        nodeAddress,
+                        {
+                            port: 8545,
+                            nonce: 0,
+                            ip: "0x7f000010",
+                            publicIp: "0x7f000011",
+                            publicKey: ["0x1122334455667788990011223344556677889900112233445566778899001122",
+                                        "0x1122334455667788990011223344556677889900112233445566778899001122"],
+                            name: "vadim"
+                        });
                     const MINUTES_PASSED = 30;
                     const price = await getPrice(MINUTES_PASSED);
                     const MIN_PRICE = new BigNumber(await pricing.MIN_PRICE()).toNumber();

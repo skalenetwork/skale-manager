@@ -190,7 +190,7 @@ contract Nodes is Permissions {
             _contractManager.getContract("ValidatorService")).getValidatorIdByNodeAddress(from);
 
         // adds Node to Nodes contract
-        nodeIndex = addNode(
+        nodeIndex = _addNode(
             from,
             params.name,
             params.ip,
@@ -468,59 +468,6 @@ contract Nodes is Permissions {
     }
 
     /**
-     * @dev addNode - adds Node to array
-     * function could be run only by executor
-     * @param from - owner of Node
-     * @param name - Node name
-     * @param ip - Node ip
-     * @param publicIP - Node public ip
-     * @param port - Node public port
-     * @param publicKey - Ethereum public key
-     * @return nodeIndex Index of Node
-     */
-    function addNode(
-        address from,
-        string memory name,
-        bytes4 ip,
-        bytes4 publicIP,
-        uint16 port,
-        bytes32[2] memory publicKey,
-        uint validatorId
-    )
-        public
-        allow("SkaleManager")
-        returns (uint nodeIndex)
-    {
-        nodes.push(Node({
-            name: name,
-            ip: ip,
-            publicIP: publicIP,
-            port: port,
-            //owner: from,
-            publicKey: publicKey,
-            startBlock: block.number,
-            lastRewardDate: uint32(block.timestamp),
-            finishTime: 0,
-            status: NodeStatus.Active,
-            validatorId: validatorId
-        }));
-        nodeIndex = nodes.length - 1;
-        validatorToNodeIndexes[validatorId].push(nodeIndex);
-        bytes32 nodeId = keccak256(abi.encodePacked(name));
-        nodesIPCheck[ip] = true;
-        nodesNameCheck[nodeId] = true;
-        nodesNameToIndex[nodeId] = nodeIndex;
-        nodeIndexes[from].isNodeExist[nodeIndex] = true;
-        nodeIndexes[from].numberOfNodes++;
-        spaceOfNodes.push(SpaceManaging({
-            freeSpace: 128,
-            indexInSpaceMap: spaceToNodes[128].length
-        }));
-        spaceToNodes[128].push(nodeIndex);
-        numberOfActiveNodes++;
-    }
-
-    /**
      * @dev isNodeActive - checks if Node status Active
      * @param nodeIndex - index of Node
      * @return if Node status Active - true, else - false
@@ -598,6 +545,58 @@ contract Nodes is Permissions {
         nodes[nodeIndex].status = NodeStatus.Leaving;
         numberOfActiveNodes--;
         numberOfLeavingNodes++;
+    }
+
+    /**
+     * @dev _addNode - adds Node to array
+     * function could be run only by executor
+     * @param from - owner of Node
+     * @param name - Node name
+     * @param ip - Node ip
+     * @param publicIP - Node public ip
+     * @param port - Node public port
+     * @param publicKey - Ethereum public key
+     * @return nodeIndex Index of Node
+     */
+    function _addNode(
+        address from,
+        string memory name,
+        bytes4 ip,
+        bytes4 publicIP,
+        uint16 port,
+        bytes32[2] memory publicKey,
+        uint validatorId
+    )
+        private
+        returns (uint nodeIndex)
+    {
+        nodes.push(Node({
+            name: name,
+            ip: ip,
+            publicIP: publicIP,
+            port: port,
+            //owner: from,
+            publicKey: publicKey,
+            startBlock: block.number,
+            lastRewardDate: uint32(block.timestamp),
+            finishTime: 0,
+            status: NodeStatus.Active,
+            validatorId: validatorId
+        }));
+        nodeIndex = nodes.length - 1;
+        validatorToNodeIndexes[validatorId].push(nodeIndex);
+        bytes32 nodeId = keccak256(abi.encodePacked(name));
+        nodesIPCheck[ip] = true;
+        nodesNameCheck[nodeId] = true;
+        nodesNameToIndex[nodeId] = nodeIndex;
+        nodeIndexes[from].isNodeExist[nodeIndex] = true;
+        nodeIndexes[from].numberOfNodes++;
+        spaceOfNodes.push(SpaceManaging({
+            freeSpace: 128,
+            indexInSpaceMap: spaceToNodes[128].length
+        }));
+        spaceToNodes[128].push(nodeIndex);
+        numberOfActiveNodes++;
     }
 
     function _deleteNode(uint nodeIndex) private {

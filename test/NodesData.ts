@@ -1,27 +1,46 @@
 import * as chaiAsPromised from "chai-as-promised";
 import { ContractManagerInstance,
-         NodesInstance } from "../types/truffle-contracts";
+         NodesInstance,
+         ValidatorServiceInstance} from "../types/truffle-contracts";
 import { currentTime, skipTime } from "./tools/time";
 
 import chai = require("chai");
 import { deployContractManager } from "./tools/deploy/contractManager";
 import { deployNodes } from "./tools/deploy/nodes";
+import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
 chai.should();
 chai.use(chaiAsPromised);
 
-contract("NodesData", ([owner, validator]) => {
+contract("NodesData", ([owner, validator, nodeAddress]) => {
     let contractManager: ContractManagerInstance;
     let nodes: NodesInstance;
+    let validatorService: ValidatorServiceInstance;
 
     beforeEach(async () => {
         contractManager = await deployContractManager();
         nodes = await deployNodes(contractManager);
+        validatorService = await deployValidatorService(contractManager);
+
+        await validatorService.registerValidator("Validator", "D2", 0, 0, {from: validator});
+        const validatorIndex = await validatorService.getValidatorId(validator);
+        let signature1 = await web3.eth.sign(web3.utils.soliditySha3(validatorIndex.toString()), nodeAddress);
+        signature1 = (signature1.slice(130) === "00" ? signature1.slice(0, 130) + "1b" :
+                (signature1.slice(130) === "01" ? signature1.slice(0, 130) + "1c" : signature1));
+        await validatorService.linkNodeAddress(nodeAddress, signature1, {from: validator});
     });
 
     it("should add node", async () => {
-        await nodes.addNode(validator, "d2", "0x7f000001", "0x7f000002", 8545,
-        ["0x1122334455667788990011223344556677889900112233445566778899001122",
-        "0x1122334455667788990011223344556677889900112233445566778899001122"], 0);
+        await nodes.createNode(
+            nodeAddress,
+            {
+                port: 8545,
+                nonce: 0,
+                ip: "0x7f000001",
+                publicIp: "0x7f000002",
+                publicKey: ["0x1122334455667788990011223344556677889900112233445566778899001122",
+                            "0x1122334455667788990011223344556677889900112233445566778899001122"],
+                name: "d2"
+            });
 
         const node = await nodes.nodes(0);
 
@@ -39,8 +58,8 @@ contract("NodesData", ([owner, validator]) => {
         await nodes.nodesNameCheck(nodeId).should.be.eventually.true;
         const nodeByName = await nodes.nodes(await nodes.nodesNameToIndex(nodeId));
         node.should.be.deep.equal(nodeByName);
-        await nodes.isNodeExist(validator, 0).should.be.eventually.true;
-        (await nodes.getActiveNodesByAddress({from: validator})).should.be.deep.equal([web3.utils.toBN(0)]);
+        await nodes.isNodeExist(nodeAddress, 0).should.be.eventually.true;
+        (await nodes.getActiveNodesByAddress({from: nodeAddress})).should.be.deep.equal([web3.utils.toBN(0)]);
         expect(await nodes.getActiveNodesByAddress({from: owner})).to.be.empty;
         await nodes.numberOfActiveNodes().should.be.eventually.deep.equal(web3.utils.toBN(1));
         await nodes.getNumberOfNodes().should.be.eventually.deep.equal(web3.utils.toBN(1));
@@ -48,9 +67,17 @@ contract("NodesData", ([owner, validator]) => {
 
     describe("when a node is added", async () => {
         beforeEach(async () => {
-            await nodes.addNode(validator, "d2", "0x7f000001", "0x7f000002", 8545,
-            ["0x1122334455667788990011223344556677889900112233445566778899001122",
-            "0x1122334455667788990011223344556677889900112233445566778899001122"], 0);
+            await nodes.createNode(
+                nodeAddress,
+                {
+                    port: 8545,
+                    nonce: 0,
+                    ip: "0x7f000001",
+                    publicIp: "0x7f000002",
+                    publicKey: ["0x1122334455667788990011223344556677889900112233445566778899001122",
+                                "0x1122334455667788990011223344556677889900112233445566778899001122"],
+                    name: "d2"
+                });
         });
 
         // it("should add a fractional node", async () => {
@@ -161,7 +188,7 @@ contract("NodesData", ([owner, validator]) => {
         });
 
         it("should get array of indexes of active nodes of msg.sender", async () => {
-            const activeNodes = await nodes.getActiveNodesByAddress({from: validator});
+            const activeNodes = await nodes.getActiveNodesByAddress({from: nodeAddress});
 
             activeNodes.length.should.be.equal(1);
             const nodeIndex = web3.utils.toBN(activeNodes[0]);
@@ -234,9 +261,17 @@ contract("NodesData", ([owner, validator]) => {
 
         describe("when node is registered", async () => {
             beforeEach(async () => {
-                await nodes.addNode(validator, "d2", "0x7f000001", "0x7f000002", 8545,
-                ["0x1122334455667788990011223344556677889900112233445566778899001122",
-                "0x1122334455667788990011223344556677889900112233445566778899001122"], 0);
+                await nodes.createNode(
+                    nodeAddress,
+                    {
+                        port: 8545,
+                        nonce: 0,
+                        ip: "0x7f000003",
+                        publicIp: "0x7f000004",
+                        publicKey: ["0x1122334455667788990011223344556677889900112233445566778899001122",
+                                    "0x1122334455667788990011223344556677889900112233445566778899001122"],
+                        name: "d3"
+                    });
             });
 
             it("should remove node", async () => {
@@ -267,12 +302,28 @@ contract("NodesData", ([owner, validator]) => {
 
     describe("when two nodes are added", async () => {
         beforeEach(async () => {
-            await nodes.addNode(validator, "d2", "0x7f000001", "0x7f000002", 8545,
-            ["0x1122334455667788990011223344556677889900112233445566778899001122",
-            "0x1122334455667788990011223344556677889900112233445566778899001122"], 0);
-            await nodes.addNode(validator, "d3", "0x7f000002", "0x7f000003", 8545,
-            ["0x1122334455667788990011223344556677889900112233445566778899001122",
-            "0x1122334455667788990011223344556677889900112233445566778899001122"], 0);
+            await nodes.createNode(
+                nodeAddress,
+                {
+                    port: 8545,
+                    nonce: 0,
+                    ip: "0x7f000001",
+                    publicIp: "0x7f000001",
+                    publicKey: ["0x1122334455667788990011223344556677889900112233445566778899001122",
+                                "0x1122334455667788990011223344556677889900112233445566778899001122"],
+                    name: "d1"
+                });
+            await nodes.createNode(
+                nodeAddress,
+                {
+                    port: 8545,
+                    nonce: 0,
+                    ip: "0x7f000002",
+                    publicIp: "0x7f000002",
+                    publicKey: ["0x1122334455667788990011223344556677889900112233445566778899001122",
+                                "0x1122334455667788990011223344556677889900112233445566778899001122"],
+                    name: "d2"
+                });
         });
 
         // describe("when nodes are registered as fractional", async () => {
@@ -305,12 +356,28 @@ contract("NodesData", ([owner, validator]) => {
 
         describe("when nodes are registered", async () => {
             beforeEach(async () => {
-                await nodes.addNode(validator, "d2", "0x7f000001", "0x7f000002", 8545,
-                ["0x1122334455667788990011223344556677889900112233445566778899001122",
-                "0x1122334455667788990011223344556677889900112233445566778899001122"], 0);
-                await nodes.addNode(validator, "d3", "0x7f000002", "0x7f000003", 8545,
-                ["0x1122334455667788990011223344556677889900112233445566778899001122",
-                "0x1122334455667788990011223344556677889900112233445566778899001122"], 0);
+                await nodes.createNode(
+                    nodeAddress,
+                    {
+                        port: 8545,
+                        nonce: 0,
+                        ip: "0x7f000003",
+                        publicIp: "0x7f000003",
+                        publicKey: ["0x1122334455667788990011223344556677889900112233445566778899001122",
+                                    "0x1122334455667788990011223344556677889900112233445566778899001122"],
+                        name: "d3"
+                    });
+                await nodes.createNode(
+                    nodeAddress,
+                    {
+                        port: 8545,
+                        nonce: 0,
+                        ip: "0x7f000004",
+                        publicIp: "0x7f000004",
+                        publicKey: ["0x1122334455667788990011223344556677889900112233445566778899001122",
+                                    "0x1122334455667788990011223344556677889900112233445566778899001122"],
+                        name: "d4"
+                    });
             });
 
             it("should remove first node", async () => {
