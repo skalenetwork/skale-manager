@@ -492,7 +492,7 @@ contract Nodes is Permissions {
         }
     }
 
-    function _findNode(uint[] memory validatorNodeIndexes, uint nodeIndex) internal pure returns (uint) {
+    function _findNode(uint[] memory validatorNodeIndexes, uint nodeIndex) private pure returns (uint) {
         uint i;
         for (i = 0; i < validatorNodeIndexes.length; i++) {
             if (validatorNodeIndexes[i] == nodeIndex) {
@@ -502,7 +502,7 @@ contract Nodes is Permissions {
         return i;
     }
 
-    function _moveNodeToNewSpaceMap(uint nodeIndex, uint8 newSpace) internal {
+    function _moveNodeToNewSpaceMap(uint nodeIndex, uint8 newSpace) private {
         uint8 previousSpace = spaceOfNodes[nodeIndex].freeSpace;
         uint indexInArray = spaceOfNodes[nodeIndex].indexInSpaceMap;
         if (indexInArray < spaceToNodes[previousSpace].length - 1) {

@@ -240,7 +240,7 @@ contract Monitors is Permissions {
     }
 
     function _generateGroup(bytes32 monitorIndex, uint nodeIndex, uint numberOfNodes)
-        internal
+        private
         allow("SkaleManager")
     {
         Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
@@ -267,7 +267,7 @@ contract Monitors is Permissions {
         }
     }
 
-    function _median(uint[] memory values) internal pure returns (uint) {
+    function _median(uint[] memory values) private pure returns (uint) {
         if (values.length < 1) {
             revert("Can't calculate _median of empty array");
         }
@@ -275,13 +275,13 @@ contract Monitors is Permissions {
         return values[values.length / 2];
     }
 
-    function _swap(uint[] memory array, uint index1, uint index2) internal pure {
+    function _swap(uint[] memory array, uint index1, uint index2) private pure {
         uint buffer = array[index1];
         array[index1] = array[index2];
         array[index2] = buffer;
     }
 
-    function _find(bytes32 monitorIndex, uint nodeIndex) internal view returns (uint index, uint32 time) {
+    function _find(bytes32 monitorIndex, uint nodeIndex) private view returns (uint index, uint32 time) {
         index = checkedNodes[monitorIndex].length;
         time = 0;
         for (uint i = 0; i < checkedNodes[monitorIndex].length; i++) {
@@ -297,7 +297,7 @@ contract Monitors is Permissions {
         }
     }
 
-    function _quickSort(uint[] memory array, uint left, uint right) internal pure {
+    function _quickSort(uint[] memory array, uint left, uint right) private pure {
         uint leftIndex = left;
         uint rightIndex = right;
         uint middle = array[(right.add(left)) / 2];
@@ -320,7 +320,7 @@ contract Monitors is Permissions {
             _quickSort(array, leftIndex, right);
     }
 
-    function _getCheckedNodeData(uint nodeIndex) internal view returns (CheckedNode memory checkedNode) {
+    function _getCheckedNodeData(uint nodeIndex) private view returns (CheckedNode memory checkedNode) {
         ConstantsHolder constantsHolder = ConstantsHolder(_contractManager.getContract("ConstantsHolder"));
         Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
 
@@ -335,7 +335,7 @@ contract Monitors is Permissions {
         Verdict memory verdict,
         bool receiveVerdict
     )
-        internal
+        private
     {
         uint previousBlockEvent = getLastReceivedVerdictBlock(verdict.toNodeIndex);
         lastVerdictBlocks[keccak256(abi.encodePacked(verdict.toNodeIndex))] = block.number;

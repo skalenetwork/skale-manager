@@ -147,7 +147,7 @@ contract SkaleVerifier is Permissions {
         uint hashA,
         uint hashB
     )
-        internal
+        private
         pure
         returns (bool)
     {
@@ -164,15 +164,15 @@ contract SkaleVerifier is Permissions {
 
     // Fp2 operations
 
-    function _addFp2(Fp2 memory a, Fp2 memory b) internal pure returns (Fp2 memory) {
+    function _addFp2(Fp2 memory a, Fp2 memory b) private pure returns (Fp2 memory) {
         return Fp2({ x: addmod(a.x, b.x, _P), y: addmod(a.y, b.y, _P) });
     }
 
-    function _scalarMulFp2(uint scalar, Fp2 memory a) internal pure returns (Fp2 memory) {
+    function _scalarMulFp2(uint scalar, Fp2 memory a) private pure returns (Fp2 memory) {
         return Fp2({ x: mulmod(scalar, a.x, _P), y: mulmod(scalar, a.y, _P) });
     }
 
-    function _minusFp2(Fp2 memory a, Fp2 memory b) internal pure returns (Fp2 memory) {
+    function _minusFp2(Fp2 memory a, Fp2 memory b) private pure returns (Fp2 memory) {
         uint first;
         uint second;
         if (a.x >= b.x) {
@@ -188,7 +188,7 @@ contract SkaleVerifier is Permissions {
         return Fp2({ x: first, y: second });
     }
 
-    function _mulFp2(Fp2 memory a, Fp2 memory b) internal pure returns (Fp2 memory) {
+    function _mulFp2(Fp2 memory a, Fp2 memory b) private pure returns (Fp2 memory) {
         uint aA = mulmod(a.x, b.x, _P);
         uint bB = mulmod(a.y, b.y, _P);
         return Fp2({
@@ -197,13 +197,13 @@ contract SkaleVerifier is Permissions {
         });
     }
 
-    function _squaredFp2(Fp2 memory a) internal pure returns (Fp2 memory) {
+    function _squaredFp2(Fp2 memory a) private pure returns (Fp2 memory) {
         uint ab = mulmod(a.x, a.y, _P);
         uint mult = mulmod(addmod(a.x, a.y, _P), addmod(a.x, mulmod(_P - 1, a.y, _P), _P), _P);
         return Fp2({ x: mult, y: addmod(ab, ab, _P) });
     }
 
-    function _inverseFp2(Fp2 memory a) internal view returns (Fp2 memory x) {
+    function _inverseFp2(Fp2 memory a) private view returns (Fp2 memory x) {
         uint t0 = mulmod(a.x, a.x, _P);
         uint t1 = mulmod(a.y, a.y, _P);
         uint t2 = mulmod(_P - 1, t1, _P);
@@ -219,11 +219,11 @@ contract SkaleVerifier is Permissions {
 
     // End of Fp2 operations
 
-    function _isG1(uint x, uint y) internal pure returns (bool) {
+    function _isG1(uint x, uint y) private pure returns (bool) {
         return mulmod(y, y, _P) == addmod(mulmod(mulmod(x, x, _P), x, _P), 3, _P);
     }
 
-    function _isG2(Fp2 memory x, Fp2 memory y) internal pure returns (bool) {
+    function _isG2(Fp2 memory x, Fp2 memory y) private pure returns (bool) {
         if (_isG2Zero(x, y)) {
             return true;
         }
@@ -232,7 +232,7 @@ contract SkaleVerifier is Permissions {
         return res.x == 0 && res.y == 0;
     }
 
-    function _isG2Zero(Fp2 memory x, Fp2 memory y) internal pure returns (bool) {
+    function _isG2Zero(Fp2 memory x, Fp2 memory y) private pure returns (bool) {
         return x.x == 0 && x.y == 0 && y.x == 1 && y.y == 0;
     }
 }

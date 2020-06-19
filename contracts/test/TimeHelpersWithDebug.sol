@@ -61,7 +61,7 @@ contract TimeHelpersWithDebug is TimeHelpers, OwnableUpgradeSafe {
 
     // private
 
-    function _getTimeShift(uint timestamp) internal view returns (uint) {
+    function _getTimeShift(uint timestamp) private view returns (uint) {
         if (_timeShift.length > 0) {
             if (timestamp < _timeShift[0].pointInTime) {
                 return 0;
@@ -85,7 +85,7 @@ contract TimeHelpersWithDebug is TimeHelpers, OwnableUpgradeSafe {
         }
     }
 
-    function _findTimeBeforeTimeShift(uint shiftedTimestamp) internal view returns (uint) {
+    function _findTimeBeforeTimeShift(uint shiftedTimestamp) private view returns (uint) {
         uint lastTimeShiftIndex = _timeShift.length - 1;
         if (_timeShift[lastTimeShiftIndex].pointInTime.add(_timeShift[lastTimeShiftIndex].shift)
             < shiftedTimestamp) {

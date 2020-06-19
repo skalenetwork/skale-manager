@@ -216,7 +216,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
         address from,
         uint nodeIndex,
         uint downtime,
-        uint latency) internal returns (uint)
+        uint latency) private returns (uint)
     {
         uint commonBounty;
         ConstantsHolder constants = ConstantsHolder(_contractManager.getContract("ConstantsHolder"));
@@ -265,7 +265,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
         return uint(bountyForMiner);
     }
 
-    function _payBounty(uint bountyForMiner, address miner, uint nodeIndex) internal returns (bool) {
+    function _payBounty(uint bountyForMiner, address miner, uint nodeIndex) private returns (bool) {
         ValidatorService validatorService = ValidatorService(_contractManager.getContract("ValidatorService"));
         Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
         SkaleToken skaleToken = SkaleToken(_contractManager.getContract("SkaleToken"));
@@ -287,7 +287,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
         uint averageLatency,
         uint bounty
     )
-        internal
+        private
     {
         Monitors monitors = Monitors(_contractManager.getContract("Monitors"));
         uint previousBlockEvent = monitors.getLastBountyBlock(nodeIndex);

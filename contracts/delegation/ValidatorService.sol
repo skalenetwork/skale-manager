@@ -394,7 +394,7 @@ contract ValidatorService is Permissions {
     }
 
     // private
-    function _setValidatorAddress(uint validatorId, address validatorAddress) internal {
+    function _setValidatorAddress(uint validatorId, address validatorAddress) private {
         if (_validatorAddressToId[validatorAddress] == validatorId) {
             return;
         }
@@ -406,7 +406,7 @@ contract ValidatorService is Permissions {
         _validatorAddressToId[validatorAddress] = validatorId;
     }
 
-    function _addNodeAddress(uint validatorId, address nodeAddress) internal {
+    function _addNodeAddress(uint validatorId, address nodeAddress) private {
         if (_nodeAddressToValidatorId[nodeAddress] == validatorId) {
             return;
         }
@@ -415,7 +415,7 @@ contract ValidatorService is Permissions {
         _nodeAddresses[validatorId].push(nodeAddress);
     }
 
-    function _removeNodeAddress(uint validatorId, address nodeAddress) internal {
+    function _removeNodeAddress(uint validatorId, address nodeAddress) private {
         require(_nodeAddressToValidatorId[nodeAddress] == validatorId,
             "Validator does not have permissions to unlink node");
         delete _nodeAddressToValidatorId[nodeAddress];
