@@ -123,7 +123,7 @@ contract Punisher is Permissions, ILocker {
 
     // private
 
-    function _getAndUpdateLockedAmount(address wallet) internal returns (uint) {
+    function _getAndUpdateLockedAmount(address wallet) private returns (uint) {
         DelegationController delegationController = DelegationController(
             _contractManager.getContract("DelegationController"));
 

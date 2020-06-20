@@ -214,7 +214,7 @@ contract Distributor is Permissions, IERC777Recipient {
 
     // private
 
-    function _distributeBounty(uint amount, uint validatorId) internal {
+    function _distributeBounty(uint amount, uint validatorId) private {
         TimeHelpers timeHelpers = TimeHelpers(_contractManager.getContract("TimeHelpers"));
         ValidatorService validatorService = ValidatorService(_contractManager.getContract("ValidatorService"));
 

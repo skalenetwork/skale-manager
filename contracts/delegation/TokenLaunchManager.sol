@@ -180,13 +180,13 @@ contract TokenLaunchManager is Permissions, IERC777Recipient {
         emit Approved(walletAddress, value);
     }
 
-    // internal
+    // private
 
-    function _getBalance() internal view returns(uint balance) {
+    function _getBalance() private view returns(uint balance) {
         return IERC20(_contractManager.getContract("SkaleToken")).balanceOf(address(this));
     }
 
-    function _setApprovedAmount(address wallet, uint value) internal {
+    function _setApprovedAmount(address wallet, uint value) private {
         uint oldValue = approved[wallet];
         if (oldValue != value) {
             approved[wallet] = value;

@@ -360,7 +360,7 @@ contract SkaleDKG is Permissions {
         Permissions.initialize(contractsAddress);
     }
 
-    function _reopenChannel(bytes32 groupIndex) internal {
+    function _reopenChannel(bytes32 groupIndex) private {
         SchainsInternal schainsInternal = SchainsInternal(
             _contractManager.getContract("SchainsInternal")
         );
@@ -387,7 +387,7 @@ contract SkaleDKG is Permissions {
         emit ChannelOpened(groupIndex);
     }
 
-    function _finalizeSlashing(bytes32 groupIndex, uint badNode) internal {
+    function _finalizeSlashing(bytes32 groupIndex, uint badNode) private {
         SchainsInternal schainsInternal = SchainsInternal(
             _contractManager.getContract("SchainsInternal")
         );
@@ -425,7 +425,7 @@ contract SkaleDKG is Permissions {
         uint secretNumber,
         G2Point memory multipliedShare
     )
-        internal
+        private
         view
         returns (bool)
     {
@@ -453,7 +453,7 @@ contract SkaleDKG is Permissions {
             _checkCorrectMultipliedShare(multipliedShare, secret);
     }
 
-    function _getCommonPublicKey(bytes32 groupIndex, uint256 secretNumber) internal view returns (bytes32 key) {
+    function _getCommonPublicKey(bytes32 groupIndex, uint256 secretNumber) private view returns (bytes32 key) {
         Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
         address ecdhAddress = _contractManager.getContract("ECDH");
         bytes32[2] memory publicKey = nodes.getNodePublicKey(channels[groupIndex].fromNodeToComplaint);
@@ -465,7 +465,7 @@ contract SkaleDKG is Permissions {
         key = bytes32(pkX);
     }
 
-    function _decryptMessage(bytes32 groupIndex, uint secretNumber) internal view returns (uint) {
+    function _decryptMessage(bytes32 groupIndex, uint secretNumber) private view returns (uint) {
         Decryption decryption = Decryption(_contractManager.getContract("Decryption"));
 
         bytes32 key = _getCommonPublicKey(groupIndex, secretNumber);
@@ -484,7 +484,7 @@ contract SkaleDKG is Permissions {
         uint x2,
         uint y2
     )
-        internal
+        private
     {
         require(_isG2(Fp2Point({ a: x1, b: y1 }), Fp2Point({ a: x2, b: y2 })), "Incorrect G2 point");
         (channels[groupIndex].publicKey.x, channels[groupIndex].publicKey.y) = _addG2(
@@ -501,7 +501,7 @@ contract SkaleDKG is Permissions {
         KeyShare[] memory secretKeyContribution,
         G2Point[] memory verificationVector
     )
-        internal
+        private
     {
         uint index = _findNode(groupIndex, nodeIndex);
         require(!channels[groupIndex].broadcasted[index], "This node is already broadcasted");
@@ -531,12 +531,12 @@ contract SkaleDKG is Permissions {
         }
     }
 
-    function _isBroadcasted(bytes32 groupIndex, uint nodeIndex) internal view returns (bool) {
+    function _isBroadcasted(bytes32 groupIndex, uint nodeIndex) private view returns (bool) {
         uint index = _findNode(groupIndex, nodeIndex);
         return channels[groupIndex].broadcasted[index];
     }
 
-    function _findNode(bytes32 groupIndex, uint nodeIndex) internal view returns (uint) {
+    function _findNode(bytes32 groupIndex, uint nodeIndex) private view returns (uint) {
         uint[] memory nodesInGroup = SchainsInternal(_contractManager.getContract("SchainsInternal"))
             .getNodesInGroup(groupIndex);
         uint correctIndex = nodesInGroup.length;
@@ -550,22 +550,22 @@ contract SkaleDKG is Permissions {
         return correctIndex;
     }
 
-    function _isNodeByMessageSender(uint nodeIndex, address from) internal view returns (bool) {
+    function _isNodeByMessageSender(uint nodeIndex, address from) private view returns (bool) {
         Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
         return nodes.isNodeExist(from, nodeIndex);
     }
 
     // Fp2Point operations
 
-    function _addFp2(Fp2Point memory value1, Fp2Point memory value2) internal pure returns (Fp2Point memory) {
+    function _addFp2(Fp2Point memory value1, Fp2Point memory value2) private pure returns (Fp2Point memory) {
         return Fp2Point({ a: addmod(value1.a, value2.a, _P), b: addmod(value1.b, value2.b, _P) });
     }
 
-    function _scalarMulFp2(uint scalar, Fp2Point memory value) internal pure returns (Fp2Point memory) {
+    function _scalarMulFp2(uint scalar, Fp2Point memory value) private pure returns (Fp2Point memory) {
         return Fp2Point({ a: mulmod(scalar, value.a, _P), b: mulmod(scalar, value.b, _P) });
     }
 
-    function _minusFp2(Fp2Point memory diminished, Fp2Point memory subtracted) internal pure
+    function _minusFp2(Fp2Point memory diminished, Fp2Point memory subtracted) private pure
         returns (Fp2Point memory difference)
     {
         if (diminished.a >= subtracted.a) {
@@ -580,7 +580,7 @@ contract SkaleDKG is Permissions {
         }
     }
 
-    function _mulFp2(Fp2Point memory value1, Fp2Point memory value2) internal pure returns (Fp2Point memory result) {
+    function _mulFp2(Fp2Point memory value1, Fp2Point memory value2) private pure returns (Fp2Point memory result) {
         Fp2Point memory point = Fp2Point({
             a: mulmod(value1.a, value2.a, _P),
             b: mulmod(value1.b, value2.b, _P)});
@@ -597,13 +597,13 @@ contract SkaleDKG is Permissions {
             _P);
     }
 
-    function _squaredFp2(Fp2Point memory value) internal pure returns (Fp2Point memory) {
+    function _squaredFp2(Fp2Point memory value) private pure returns (Fp2Point memory) {
         uint ab = mulmod(value.a, value.b, _P);
         uint mult = mulmod(addmod(value.a, value.b, _P), addmod(value.a, mulmod(_P - 1, value.b, _P), _P), _P);
         return Fp2Point({ a: mult, b: addmod(ab, ab, _P) });
     }
 
-    function _inverseFp2(Fp2Point memory value) internal view returns (Fp2Point memory result) {
+    function _inverseFp2(Fp2Point memory value) private view returns (Fp2Point memory result) {
         uint t0 = mulmod(value.a, value.a, _P);
         uint t1 = mulmod(value.b, value.b, _P);
         uint t2 = mulmod(_P - 1, t1, _P);
@@ -619,11 +619,11 @@ contract SkaleDKG is Permissions {
 
     // End of Fp2Point operations
 
-    function _isG1(uint x, uint y) internal pure returns (bool) {
+    function _isG1(uint x, uint y) private pure returns (bool) {
         return mulmod(y, y, _P) == addmod(mulmod(mulmod(x, x, _P), x, _P), 3, _P);
     }
 
-    function _isG2(Fp2Point memory x, Fp2Point memory y) internal pure returns (bool) {
+    function _isG2(Fp2Point memory x, Fp2Point memory y) private pure returns (bool) {
         if (_isG2Zero(x, y)) {
             return true;
         }
@@ -634,11 +634,11 @@ contract SkaleDKG is Permissions {
         return res.a == 0 && res.b == 0;
     }
 
-    function _isG2Zero(Fp2Point memory x, Fp2Point memory y) internal pure returns (bool) {
+    function _isG2Zero(Fp2Point memory x, Fp2Point memory y) private pure returns (bool) {
         return x.a == 0 && x.b == 0 && y.a == 1 && y.b == 0;
     }
 
-    function _doubleG2(Fp2Point memory x1, Fp2Point memory y1) internal view
+    function _doubleG2(Fp2Point memory x1, Fp2Point memory y1) private view
     returns (Fp2Point memory x3, Fp2Point memory y3)
     {
         if (_isG2Zero(x1, y1)) {
@@ -653,19 +653,19 @@ contract SkaleDKG is Permissions {
         }
     }
 
-    function _u1(Fp2Point memory x1) internal pure returns (Fp2Point memory) {
+    function _u1(Fp2Point memory x1) private pure returns (Fp2Point memory) {
         return _mulFp2(x1, _squaredFp2(Fp2Point({ a: 1, b: 0 })));
     }
 
-    function _u2(Fp2Point memory x2) internal pure returns (Fp2Point memory) {
+    function _u2(Fp2Point memory x2) private pure returns (Fp2Point memory) {
         return _mulFp2(x2, _squaredFp2(Fp2Point({ a: 1, b: 0 })));
     }
 
-    function _s1(Fp2Point memory y1) internal pure returns (Fp2Point memory) {
+    function _s1(Fp2Point memory y1) private pure returns (Fp2Point memory) {
         return _mulFp2(y1, _mulFp2(Fp2Point({ a: 1, b: 0 }), _squaredFp2(Fp2Point({ a: 1, b: 0 }))));
     }
 
-    function _s2(Fp2Point memory y2) internal pure returns (Fp2Point memory) {
+    function _s2(Fp2Point memory y2) private pure returns (Fp2Point memory) {
         return _mulFp2(y2, _mulFp2(Fp2Point({ a: 1, b: 0 }), _squaredFp2(Fp2Point({ a: 1, b: 0 }))));
     }
 
@@ -675,7 +675,7 @@ contract SkaleDKG is Permissions {
         Fp2Point memory s1Value,
         Fp2Point memory s2Value
     )
-        internal
+        private
         pure
         returns (bool)
     {
@@ -688,7 +688,7 @@ contract SkaleDKG is Permissions {
         Fp2Point memory x2,
         Fp2Point memory y2
     )
-        internal
+        private
         view
         returns (
             Fp2Point memory x3,
@@ -724,7 +724,7 @@ contract SkaleDKG is Permissions {
         Fp2Point memory x1,
         Fp2Point memory y1
     )
-        internal
+        private
         view
         returns (Fp2Point memory x, Fp2Point memory y)
     {
@@ -751,7 +751,7 @@ contract SkaleDKG is Permissions {
         Fp2Point memory valX,
         Fp2Point memory valY,
         G2Point memory multipliedShare)
-        internal pure returns (bool)
+        private pure returns (bool)
     {
         Fp2Point memory tmpX;
         Fp2Point memory tmpY;
@@ -760,7 +760,7 @@ contract SkaleDKG is Permissions {
     }
 
     function _checkCorrectMultipliedShare(G2Point memory multipliedShare, uint secret)
-        internal view returns (bool)
+        private view returns (bool)
     {
         Fp2Point memory tmpX;
         Fp2Point memory tmpY;
@@ -781,7 +781,7 @@ contract SkaleDKG is Permissions {
         return Precompiled.bn256Pairing(x, y, _G2B, _G2A, _G2D, _G2C, _G1A, _G1B, tmpX.b, tmpX.a, tmpY.b, tmpY.a);
     }
 
-    function _swapCoordinates(Fp2Point memory value) internal pure returns (Fp2Point memory) {
+    function _swapCoordinates(Fp2Point memory value) private pure returns (Fp2Point memory) {
         return Fp2Point({a: value.b, b: value.a});
     }
 }

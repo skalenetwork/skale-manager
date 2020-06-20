@@ -67,7 +67,7 @@ contract ContractManager is OwnableUpgradeSafe {
     }
 
     // check account contains code
-    function _containsCode(address account) internal view returns (bool) {
+    function _containsCode(address account) private view returns (bool) {
         uint length;
         // solhint-disable-next-line no-inline-assembly
         assembly {
