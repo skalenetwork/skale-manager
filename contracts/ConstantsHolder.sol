@@ -25,8 +25,8 @@ import "./Permissions.sol";
 
 
 /**
- * @title Contains constants and common variables for Skale Manager system
- * @author Artem Payvin
+ * @title ConstantsHolder
+ * @dev Contract contains constants and common variables for the SKALE Network.
  */
 contract ConstantsHolder is Permissions {
 
@@ -98,13 +98,13 @@ contract ConstantsHolder is Permissions {
     uint8 public checkTime;
 
     /**
-     * Last time when system was underloaded
+     * Last time when system was underloaded (excess supply)
      * (allocations on Skale-chain / allocations on Nodes < 75%)
      */
     uint public lastTimeUnderloaded;
 
     /**
-     * Last time when system was overloaded
+     * Last time when system was overloaded (excess demand)
      * (allocations on Skale-chain / allocations on Nodes > 85%)
      */
     uint public lastTimeOverloaded;
@@ -118,10 +118,8 @@ contract ConstantsHolder is Permissions {
     uint public proofOfUseLockUpPeriodDays;
 
     /**
-     * Set reward and delta periods to new one, run only by owner. This function
-     * only for tests.
-     * @param newRewardPeriod - new Reward period
-     * @param newDeltaPeriod - new Delta period
+     * @dev Allows the Owner to set new reward and delta periods
+     * This function is only for tests.
      */
     function setPeriods(uint32 newRewardPeriod, uint32 newDeltaPeriod) external onlyOwner {
         rewardPeriod = newRewardPeriod;
@@ -129,55 +127,67 @@ contract ConstantsHolder is Permissions {
     }
 
     /**
-     * Set new check time. This function only for tests.
-     * @param newCheckTime - new check time
+     * @dev Allows the Owner to set the new check time.
+     * This function only for tests.
      */
     function setCheckTime(uint8 newCheckTime) external onlyOwner {
         checkTime = newCheckTime;
     }
 
     /**
-     * Set time if system underloaded, run only by Nodes contract
+     * @dev Allows Nodes contract to set the time when the SKALE network has
+     * excess supply.
      */
     function setLastTimeUnderloaded() external allow("Nodes") {
         lastTimeUnderloaded = now;
     }
 
     /**
-     * Set time if system iverloaded, run only by Schains contract
+     * @dev Allows Schain contract to set the time when the SKALE network is
+     * excess demand.
      */
     function setLastTimeOverloaded() external allow("Schains") {
         lastTimeOverloaded = now;
     }
 
     /**
-     * Set latency new one in ms, run only by owner. This function
-     * only for tests.
-     * @param newAllowableLatency - new Allowable Latency
+     * @dev Allows the Owner to set the allowable latency in milliseconds.
+     * This function is only for testing purposes.
      */
     function setLatency(uint32 newAllowableLatency) external onlyOwner {
         allowableLatency = newAllowableLatency;
     }
 
+    /**
+     * @dev Allows the Owner to set the minimum stake requirement.
+     */
     function setMSR(uint newMSR) external onlyOwner {
         msr = newMSR;
     }
 
+    /**
+     * @dev Allows the Owner to set the launch timestamp.
+     */
     function setLaunchTimestamp(uint timestamp) external onlyOwner {
         launchTimestamp = timestamp;
     }
 
+    /**
+     * @dev Allows the Owner to set the node rotation delay.
+     */
     function setRotationDelay(uint newDelay) external onlyOwner {
         rotationDelay = newDelay;
     }
 
+    /**
+     * @dev Allows the Owner to set the proof-of-use lockup period.
+     */
     function setProofOfUseLockUpPeriod(uint periodDays) external onlyOwner {
         proofOfUseLockUpPeriodDays = periodDays;
     }
 
     /**
      * @dev constructor in Permissions approach
-     * @param contractsAddress needed in Permissions constructor
      */
     function initialize(address contractsAddress) public override initializer {
         Permissions.initialize(contractsAddress);

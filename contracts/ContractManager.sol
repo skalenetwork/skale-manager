@@ -27,9 +27,9 @@ import "./utils/StringUtils.sol";
 
 
 /**
- * @title Main contract in upgradeable approach. This contract contains the actual
- * current mapping from contract IDs (in the form of human-readable strings) to addresses.
- * @author Artem Payvin
+ * @title ContractManager
+ * @dev Contract contains the actual current mapping from contract IDs
+ * (in the form of human-readable strings) to addresses.
  */
 contract ContractManager is OwnableUpgradeSafe {
     using StringUtils for string;
@@ -37,6 +37,9 @@ contract ContractManager is OwnableUpgradeSafe {
     // mapping of actual smart contracts addresses
     mapping (bytes32 => address) public contracts;
 
+    /**
+     * @dev Emitted when contract is upgraded.
+     */
     event ContractUpgraded(string contractsName, address contractsAddress);
 
     function initialize() external initializer {
@@ -44,9 +47,15 @@ contract ContractManager is OwnableUpgradeSafe {
     }
 
     /**
-     * Adds actual contract to mapping of actual contract addresses
-     * @param contractsName - contracts name in skale manager system
-     * @param newContractsAddress - contracts address in skale manager system
+     * @dev Allows the Owner to add contract to mapping of contract addresses.
+     *
+     * Emits ContractUpgraded event.
+     *
+     * Requirements:
+     *
+     * - New address is non-zero.
+     * - Contract is not already added.
+     * - Contract address contains code.
      */
     function setContractsAddress(string calldata contractsName, address newContractsAddress) external onlyOwner {
         // check newContractsAddress is not equal to zero
@@ -55,18 +64,27 @@ contract ContractManager is OwnableUpgradeSafe {
         bytes32 contractId = keccak256(abi.encodePacked(contractsName));
         // check newContractsAddress is not equal the previous contract's address
         require(contracts[contractId] != newContractsAddress, "Contract is already added");
-        require(_containsCode(newContractsAddress), "Given contracts address does not contain code");
+        require(_containsCode(newContractsAddress), "Given contract address does not contain code");
         // add newContractsAddress to mapping of actual contract addresses
         contracts[contractId] = newContractsAddress;
         emit ContractUpgraded(contractsName, newContractsAddress);
     }
 
+    /**
+     * @dev Returns contract address.
+     *
+     * Requirements:
+     *
+     * - Contract must exist.
+     */
     function getContract(string calldata name) external view returns (address contractAddress) {
         contractAddress = contracts[keccak256(abi.encodePacked(name))];
         require(contractAddress != address(0), name.strConcat(" contract has not been found"));
     }
 
-    // check account contains code
+    /**
+     * @dev Performs check on whether contract address contains code.
+     */
     function _containsCode(address account) private view returns (bool) {
         uint length;
         // solhint-disable-next-line no-inline-assembly

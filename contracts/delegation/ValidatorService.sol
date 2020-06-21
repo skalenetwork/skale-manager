@@ -179,10 +179,8 @@ contract ValidatorService is Permissions {
      *
      * Requirements:
      *
-     * - new address must not be null
-     * - new address must not be already registered as a validator
-     *
-     * @param newValidatorAddress address
+     * - New address must not be null.
+     * - New address must not be already registered as a validator.
      */
     function requestForNewAddress(address newValidatorAddress) external {
         require(newValidatorAddress != address(0), "New address cannot be null");
@@ -191,6 +189,15 @@ contract ValidatorService is Permissions {
         validators[validatorId].requestedAddress = newValidatorAddress;
     }
 
+    /**
+     * @dev Allows a validator to confirm an address change.
+     *
+     * Emits ValidatorAddressChanged event.
+     *
+     * Requirements:
+     *
+     * - Validator must be owner of new address.
+     */
     function confirmNewAddress(uint validatorId)
         external
         checkValidatorExists(validatorId)
@@ -208,15 +215,13 @@ contract ValidatorService is Permissions {
     /**
      * @dev Links a given node address.
      *
-     * Requirements:
-     *
-     * - the given signature must be valid.
-     * - the address must not be assigned to a validator.
-     *
      * Emits NodeAddressWasAdded event.
      *
-     * @param nodeAddress address
-     * @param sig bytes signature of validator Id by node operator.
+     * Requirements:
+     *
+     * - Given signature must be valid.
+     * - Address must not be assigned to a validator.
+     *
      */
     function linkNodeAddress(address nodeAddress, bytes calldata sig) external {
         uint validatorId = getValidatorId(msg.sender);
@@ -231,8 +236,6 @@ contract ValidatorService is Permissions {
      * @dev Unlinks a given node address from a validator.
      *
      * Emits NodeAddressWasRemoved event.
-     *
-     * @param nodeAddress address
      */
     function unlinkNodeAddress(address nodeAddress) external {
         uint validatorId = getValidatorId(msg.sender);
@@ -240,6 +243,9 @@ contract ValidatorService is Permissions {
         emit NodeAddressWasRemoved(validatorId, nodeAddress);
     }
 
+    /**
+     * @dev Allows a validator to set a minimum delegation amount.
+     */
     function setValidatorMDA(uint minimumDelegationAmount) external {
         uint validatorId = getValidatorId(msg.sender);
         validators[validatorId].minimumDelegationAmount = minimumDelegationAmount;
@@ -247,8 +253,6 @@ contract ValidatorService is Permissions {
 
     /**
      * @dev Allows a validator to set a new validator name.
-     *
-     * @param newName string
      */
     function setValidatorName(string calldata newName) external {
         uint validatorId = getValidatorId(msg.sender);
@@ -257,8 +261,6 @@ contract ValidatorService is Permissions {
 
     /**
      * @dev Allows a validator to set a new validator description.
-     *
-     * @param newDescription string
      */
     function setValidatorDescription(string calldata newDescription) external {
         uint validatorId = getValidatorId(msg.sender);
@@ -270,7 +272,7 @@ contract ValidatorService is Permissions {
      *
      * Requirements:
      *
-     * - validator must not have already enabled accepting new requests
+     * - Must not have already enabled accepting new requests
      */
     function startAcceptingNewRequests() external {
         uint validatorId = getValidatorId(msg.sender);
@@ -283,7 +285,7 @@ contract ValidatorService is Permissions {
      *
      * Requirements:
      *
-     * - validator must not have already stopped accepting new requests
+     * - Must not have already stopped accepting new requests
      */
     function stopAcceptingNewRequests() external {
         uint validatorId = getValidatorId(msg.sender);
@@ -292,11 +294,8 @@ contract ValidatorService is Permissions {
     }
 
     /**
-     * @dev Returns the amount of validator bond.
-     *
-     * @param validatorId uint ID of validator to return the amount of locked funds
-     * @return bondAmount uint the amount of self-delegated funds by the validator
-    */
+     * @dev Returns the amount of validator bond (self-delegation).
+     */
     function getAndUpdateBondAmount(uint validatorId)
         external
         returns (uint)
@@ -310,14 +309,15 @@ contract ValidatorService is Permissions {
         );
     }
 
+    /**
+     * @dev Returns a validator's node addresses.
+     */
     function getMyNodesAddresses() external view returns (address[] memory) {
         return getNodeAddresses(getValidatorId(msg.sender));
     }
 
     /**
      * @dev Returns a list of trusted validators.
-     *
-     * @return uint[] trusted validators
      */
     function getTrustedValidators() external view returns (uint[] memory) {
         uint numberOfTrustedValidators = 0;
@@ -336,6 +336,10 @@ contract ValidatorService is Permissions {
         return whitelist;
     }
 
+    /**
+     * @dev Checks whether the amount meets the validator's minimum delegation
+     * amount.
+     */
     function checkMinimumDelegation(uint validatorId, uint amount)
         external
         view
@@ -346,6 +350,9 @@ contract ValidatorService is Permissions {
         return validators[validatorId].minimumDelegationAmount <= amount ? true : false;
     }
 
+    /**
+     * @dev Checks whether the validator ID matches the validator address.
+     */
     function checkValidatorAddressToId(address validatorAddress, uint validatorId)
         external
         view
@@ -354,6 +361,13 @@ contract ValidatorService is Permissions {
         return getValidatorId(validatorAddress) == validatorId ? true : false;
     }
 
+    /**
+     * @dev Returns the validator ID linked to a node address.
+     *
+     * Requirements:
+     *
+     * - Node address must be linked to a validator.
+     */
     function getValidatorIdByNodeAddress(address nodeAddress) external view returns (uint validatorId) {
         validatorId = _nodeAddressToValidatorId[nodeAddress];
         require(validatorId != 0, "Node address is not assigned to a validator");

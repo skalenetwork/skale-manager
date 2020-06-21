@@ -33,6 +33,10 @@ import "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
 import "@openzeppelin/contracts/introspection/IERC1820Registry.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 
+/**
+ * @title SkaleManager
+ * @dev 
+ */
 contract SkaleManager is IERC777Recipient, Permissions {
     // miners capitalization
     uint public minersCap;
@@ -50,6 +54,9 @@ contract SkaleManager is IERC777Recipient, Permissions {
 
     enum TransactionOperation {CreateNode, CreateSchain}
 
+    /**
+     * @dev TODO
+     */
     event BountyGot(
         uint indexed nodeIndex,
         address owner,

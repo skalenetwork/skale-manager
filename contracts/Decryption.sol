@@ -21,7 +21,12 @@
 
 pragma solidity 0.6.8;
 
-
+/**
+ * @title Decryption
+ * @dev This contract performs encryption and decryption functions.
+ * Decrypt is used by SkaleDKG contract to decrypt secret key contribution to
+ * validate complaints.
+ */
 contract Decryption {
 
     function encrypt(uint256 secretNumber, bytes32 key) external pure returns (bytes32 ciphertext) {

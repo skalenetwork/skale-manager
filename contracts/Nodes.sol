@@ -4,6 +4,8 @@
     Nodes.sol - SKALE Manager
     Copyright (C) 2018-Present SKALE Labs
     @author Artem Payvin
+    @author Dmytro Stebaiev
+    @author Vadim Yavorsky
 
     SKALE Manager is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as published
@@ -28,7 +30,17 @@ import "./delegation/ValidatorService.sol";
 
 
 /**
- * @title Nodes - contract contains all functionality logic to manage Nodes
+ * @title Nodes
+ * @dev This contract contains all logic to manage SKALE Network nodes states,
+ * space availability, stake requirement checks, and exit functions.
+ *
+ * Nodes may be in one of several states:
+ *
+ * - Active:    Node is registered and is in network operation.
+ * - Leaving:   Node has begun exiting from the network.
+ * - Left:      Node has left the network.
+ *
+ * Note: Online nodes contain both Active and Leaving states.
  */
 contract Nodes is Permissions {
 
@@ -91,7 +103,9 @@ contract Nodes is Permissions {
     uint public numberOfLeavingNodes;
     uint public numberOfLeftNodes;
 
-    // informs that Node is created
+    /**
+     * @dev Emitted when a node is created.
+     */
     event NodeCreated(
         uint nodeIndex,
         address owner,
@@ -104,15 +118,19 @@ contract Nodes is Permissions {
         uint gasSpend
     );
 
-    // informs that node is fully finished quitting from the system
+    /**
+     * @dev Emitted when a node completes a network exit.
+     */
     event ExitCompleted(
         uint nodeIndex,
         uint32 time,
         uint gasSpend
     );
 
-    // informs that owner starts the procedure of quitting the Node from the system
-    event ExitInited(
+    /**
+     * @dev Emitted when a node begins to exit from the network.
+     */
+    event ExitInitialized(
         uint nodeIndex,
         uint32 startLeavingPeriod,
         uint32 time,
@@ -120,10 +138,10 @@ contract Nodes is Permissions {
     );
 
     /**
-     * @dev removeSpaceFromFractionalNode - occupies space from Fractional Node
-     * function could be run only by Schains
-     * @param nodeIndex - index of Node at array of Fractional Nodes
-     * @param space - space which should be occupied
+     * @dev Allows Schains and SchainsInternal contracts to occupy available
+     * capacity on a node.
+     *
+     * Returns boolean whether operation is successful.
      */
     function removeSpaceFromNode(uint nodeIndex, uint8 space)
         external
@@ -143,10 +161,9 @@ contract Nodes is Permissions {
     }
 
     /**
-     * @dev adSpaceToFractionalNode - returns space to Fractional Node
-     * function could be run only be Schains
-     * @param nodeIndex - index of Node at array of Fractional Nodes
-     * @param space - space which should be returned
+     * @dev Allows Schains contract to occupy available capacity on a node.
+     *
+     * Returns boolean whether operation is successful.
      */
     function addSpaceToNode(uint nodeIndex, uint8 space) external allow("Schains") {
         if (space > 0) {
@@ -158,9 +175,7 @@ contract Nodes is Permissions {
     }
 
     /**
-     * @dev changeNodeLastRewardDate - changes Node's last reward date
-     * function could be run only by SkaleManager
-     * @param nodeIndex - index of Node
+     * @dev Allows SkaleManager to change a node's last reward date.
      */
     function changeNodeLastRewardDate(uint nodeIndex) external allow("SkaleManager") {
         nodes[nodeIndex].lastRewardDate = uint32(block.timestamp);
@@ -171,10 +186,17 @@ contract Nodes is Permissions {
     }
 
     /**
-     * @dev createNode - creates new Node and add it to the Nodes contract
-     * function could be only run by SkaleManager
-     * @param from - owner of Node
-     * @return nodeIndex - index of Node
+     * @dev Allows SkaleManager contract to create new node and adds it to the
+     * Nodes contract.
+     *
+     * Emits NodeCreated event.
+     *
+     * Requirements:
+     *
+     * - Node must be non-zero
+     * - Node IP must be available
+     * - Node name must not already be registered
+     * - Node port must be greater than zero
      */
     function createNode(address from, NodeCreationParams calldata params)
         external
@@ -183,7 +205,7 @@ contract Nodes is Permissions {
     {
         // checks that Node has correct data
         require(params.ip != 0x0 && !nodesIPCheck[params.ip], "IP address is zero or is not available");
-        require(!nodesNameCheck[keccak256(abi.encodePacked(params.name))], "Name has already registered");
+        require(!nodesNameCheck[keccak256(abi.encodePacked(params.name))], "Name is already registered");
         require(params.port > 0, "Port is zero");
 
         uint validatorId = ValidatorService(
@@ -212,16 +234,17 @@ contract Nodes is Permissions {
     }
 
     /**
-     * @dev initExit - initiate a procedure of quitting the system
-     * function could be only run by SkaleManager
-     * @param nodeIndex - index of Node
-     * @return true - if everything OK
+     * @dev Allows SkaleManager contract to initiate a node exit procedure.
+     *
+     * Returns a boolean whether the operation is successful.
+     *
+     * Emits ExitInitialized event.
      */
     function initExit(uint nodeIndex) external allow("SkaleManager") returns (bool) {
 
         _setNodeLeaving(nodeIndex);
 
-        emit ExitInited(
+        emit ExitInitialized(
             nodeIndex,
             uint32(block.timestamp),
             uint32(block.timestamp),
@@ -230,10 +253,15 @@ contract Nodes is Permissions {
     }
 
     /**
-     * @dev completeExit - finish a procedure of quitting the system
-     * function could be run only by SkaleManager
-     * @param nodeIndex - index of Node
-     * @return amount of SKL which be returned
+     * @dev Allows SkaleManager contract to complete a node exit procedure.
+     *
+     * Returns a boolean whether the operation is successful.
+     *
+     * Emits ExitCompleted event.
+     *
+     * Requirements:
+     *
+     * - Node must have already initialized a node exit procedure.
      */
     function completeExit(uint nodeIndex) external allow("SkaleManager") returns (bool) {
         require(isNodeLeaving(nodeIndex), "Node is not Leaving");
@@ -248,9 +276,16 @@ contract Nodes is Permissions {
         return true;
     }
 
+    /**
+     * @dev Allows SkaleManager contract to delete a validator's node.
+     *
+     * Requirements:
+     *
+     * - Validator ID must exist.
+     */
     function deleteNodeForValidator(uint validatorId, uint nodeIndex) external allow("SkaleManager") {
         ValidatorService validatorService = ValidatorService(_contractManager.getContract("ValidatorService"));
-        require(validatorService.validatorExists(validatorId), "Validator with such ID does not exist");
+        require(validatorService.validatorExists(validatorId), "Validator ID does not exist");
         uint[] memory validatorNodes = validatorToNodeIndexes[validatorId];
         uint position = _findNode(validatorNodes, nodeIndex);
         if (position < validatorNodes.length) {
@@ -260,6 +295,15 @@ contract Nodes is Permissions {
         validatorToNodeIndexes[validatorId].pop();
     }
 
+    /**
+     * @dev Allows SkaleManager contract to check whether a validator has
+     * sufficient stake to create another node.
+     *
+     * Requirements:
+     *
+     * - Validator must be included on trusted list if trusted list is enabled.
+     * - Validator must have sufficient stake to operate an additional node.
+     */
     function checkPossibilityCreatingNode(address nodeAddress) external allow("SkaleManager") {
         ValidatorService validatorService = ValidatorService(_contractManager.getContract("ValidatorService"));
         DelegationController delegationController = DelegationController(
@@ -275,6 +319,16 @@ contract Nodes is Permissions {
             "Validator must meet the Minimum Staking Requirement");
     }
 
+    /**
+     * @dev Allows SkaleManager contract to check whether a validator has
+     * sufficient stake to maintain a node.
+     *
+     * Returns boolean whether validator can maintain node with current stake.
+     *
+     * Requirements:
+     *
+     * - Validator ID and nodeIndex must both exist.
+     */
     function checkPossibilityToMaintainNode(uint validatorId, uint nodeIndex)
         external allow("SkaleManager") returns (bool)
     {
@@ -282,7 +336,7 @@ contract Nodes is Permissions {
             _contractManager.getContract("DelegationController")
         );
         ValidatorService validatorService = ValidatorService(_contractManager.getContract("ValidatorService"));
-        require(validatorService.validatorExists(validatorId), "Validator with such ID does not exist");
+        require(validatorService.validatorExists(validatorId), "Validator ID does not exist");
         uint[] memory validatorNodes = validatorToNodeIndexes[validatorId];
         uint position = _findNode(validatorNodes, nodeIndex);
         require(position < validatorNodes.length, "Node does not exist for this Validator");
@@ -291,6 +345,9 @@ contract Nodes is Permissions {
         return position.add(1).mul(msr) <= delegationsTotal;
     }
 
+    /**
+     * @dev Returns nodes with resource availability.
+     */
     function getNodesWithFreeSpace(uint8 freeSpace) external view returns (uint[] memory) {
         uint[] memory nodesWithFreeSpace = new uint[](countNodesWithFreeSpace(freeSpace));
         uint cursor = 0;
@@ -304,9 +361,7 @@ contract Nodes is Permissions {
     }
 
     /**
-     * @dev isTimeForReward - checks if time for reward has come
-     * @param nodeIndex - index of Node
-     * @return if time for reward has come - true, else - false
+     * @dev Checks whether time for a node's reward has come.
      */
     function isTimeForReward(uint nodeIndex) external view returns (bool) {
         ConstantsHolder constantsHolder = ConstantsHolder(_contractManager.getContract("ConstantsHolder"));
@@ -314,19 +369,18 @@ contract Nodes is Permissions {
     }
 
     /**
-     * @dev isNodeExist - checks existence of Node at this address
-     * @param from - account address
-     * @param nodeIndex - index of Node
-     * @return if exist - true, else - false
+     * @dev Checks whether node at a given address exists.
      */
     function isNodeExist(address from, uint nodeIndex) external view returns (bool) {
         return nodeIndexes[from].isNodeExist[nodeIndex];
     }
 
     /**
-     * @dev getNodeIP - get ip address of Node
-     * @param nodeIndex - index of Node
-     * @return ip address
+     * @dev Returns IP address of a given node.
+     *
+     * Requirements:
+     *
+     * - Node must exist.
      */
     function getNodeIP(uint nodeIndex) external view returns (bytes4) {
         require(nodeIndex < nodes.length, "Node does not exist");
@@ -334,14 +388,15 @@ contract Nodes is Permissions {
     }
 
     /**
-     * @dev getNodePort - get Node's port
-     * @param nodeIndex - index of Node
-     * @return port
+     * @dev Returns the port of a given node.
      */
     function getNodePort(uint nodeIndex) external view returns (uint16) {
         return nodes[nodeIndex].port;
     }
 
+    /**
+     * @dev Returns the public key of a given node.
+     */
     function getNodePublicKey(uint nodeIndex) external view returns (bytes32[2] memory) {
         return nodes[nodeIndex].publicKey;
     }
@@ -351,27 +406,21 @@ contract Nodes is Permissions {
     }
 
     /**
-     * @dev isNodeLeft - checks if Node status Left
-     * @param nodeIndex - index of Node
-     * @return if Node status Left - true, else - false
+     * @dev Checks whether a node has left the network.
      */
     function isNodeLeft(uint nodeIndex) external view returns (bool) {
         return nodes[nodeIndex].status == NodeStatus.Left;
     }
 
     /**
-     * @dev getNodeLastRewardDate - get Node last reward date
-     * @param nodeIndex - index of Node
-     * @return Node last reward date
+     * @dev Returns a given node's last reward date.
      */
     function getNodeLastRewardDate(uint nodeIndex) external view returns (uint32) {
         return nodes[nodeIndex].lastRewardDate;
     }
 
     /**
-     * @dev getNodeNextRewardDate - get Node next reward date
-     * @param nodeIndex - index of Node
-     * @return Node next reward date
+     * @dev Returns a given node's next reward date.
      */
     function getNodeNextRewardDate(uint nodeIndex) external view returns (uint32) {
         ConstantsHolder constantsHolder = ConstantsHolder(_contractManager.getContract("ConstantsHolder"));
@@ -379,24 +428,22 @@ contract Nodes is Permissions {
     }
 
     /**
-     * @dev getNumberOfNodes - get number of Nodes
-     * @return number of Nodes
+     * @dev Returns the total number of registered nodes.
      */
     function getNumberOfNodes() external view returns (uint) {
         return nodes.length;
     }
 
     /**
-     * @dev getNumberOfFullNodes - get number Online Nodes
-     * @return number of active nodes plus number of leaving nodes
+     * @dev Returns the total number of online nodes.
+     * Online nodes are equal to the number of active plus leaving nodes.
      */
     function getNumberOnlineNodes() external view returns (uint) {
         return numberOfActiveNodes.add(numberOfLeavingNodes);
     }
 
     /**
-     * @dev getActiveNodeIPs - get array of ips of Active Nodes
-     * @return activeNodeIPs - array of ips of Active Nodes
+     * @dev Returns IPs of active nodes.
      */
     function getActiveNodeIPs() external view returns (bytes4[] memory activeNodeIPs) {
         activeNodeIPs = new bytes4[](numberOfActiveNodes);
@@ -410,9 +457,7 @@ contract Nodes is Permissions {
     }
 
     /**
-     * @dev getActiveNodesByAddress - get array of indexes of Active Nodes, which were
-     * created by msg.sender
-     * @return activeNodesByAddress Array of indexes of Active Nodes, which were created by msg.sender
+     * @dev Returns active nodes linked to the msg.sender (validator address).
      */
     function getActiveNodesByAddress() external view returns (uint[] memory activeNodesByAddress) {
         activeNodesByAddress = new uint[](nodeIndexes[msg.sender].numberOfNodes);
@@ -426,8 +471,7 @@ contract Nodes is Permissions {
     }
 
     /**
-     * @dev getActiveNodeIds - get array of indexes of Active Nodes
-     * @return activeNodeIds - array of indexes of Active Nodes
+     * @dev Return active node IDs.
      */
     function getActiveNodeIds() external view returns (uint[] memory activeNodeIds) {
         activeNodeIds = new uint[](numberOfActiveNodes);
@@ -440,24 +484,40 @@ contract Nodes is Permissions {
         }
     }
 
+    /**
+     * @dev Return validator ID linked to a given node.
+     *
+     * Requirements:
+     *
+     * - Node must exist.
+     */
     function getValidatorId(uint nodeIndex) external view returns (uint) {
         require(nodeIndex < nodes.length, "Node does not exist");
         return nodes[nodeIndex].validatorId;
     }
 
+    /**
+     * @dev Return a given node's current status.
+     */
     function getNodeStatus(uint nodeIndex) external view returns (NodeStatus) {
         return nodes[nodeIndex].status;
     }
 
+    /**
+     * @dev Return a validator's linked nodes.
+     *
+     * Requirements:
+     *
+     * - Validator ID must exist.
+     */
     function getValidatorNodeIndexes(uint validatorId) external view returns (uint[] memory) {
         ValidatorService validatorService = ValidatorService(_contractManager.getContract("ValidatorService"));
-        require(validatorService.validatorExists(validatorId), "Validator with such ID does not exist");
+        require(validatorService.validatorExists(validatorId), "Validator ID does not exist");
         return validatorToNodeIndexes[validatorId];
     }
 
     /**
-     * @dev constructor in Permissions approach
-     * @param _contractsAddress needed in Permissions constructor
+     * @dev constructor in Permissions approach.
     */
     function initialize(address _contractsAddress) public override initializer {
         Permissions.initialize(_contractsAddress);
@@ -468,23 +528,22 @@ contract Nodes is Permissions {
     }
 
     /**
-     * @dev isNodeActive - checks if Node status Active
-     * @param nodeIndex - index of Node
-     * @return if Node status Active - true, else - false
+     * @dev Checks whether a node's status is Active.
      */
     function isNodeActive(uint nodeIndex) public view returns (bool) {
         return nodes[nodeIndex].status == NodeStatus.Active;
     }
 
     /**
-     * @dev isNodeLeaving - checks if Node status Leaving
-     * @param nodeIndex - index of Node
-     * @return if Node status Leaving - true, else - false
+     * @dev Checks whether a node's status is Leaving.
      */
     function isNodeLeaving(uint nodeIndex) public view returns (bool) {
         return nodes[nodeIndex].status == NodeStatus.Leaving;
     }
 
+    /**
+     * @dev Returns number of nodes with free space.
+     */
     function countNodesWithFreeSpace(uint8 freeSpace) public view returns (uint count) {
         count = 0;
         for (uint8 i = freeSpace; i <= 128; ++i) {
@@ -492,6 +551,9 @@ contract Nodes is Permissions {
         }
     }
 
+    /**
+     * @dev Returns the index of a given node within the validator's node index.
+     */
     function _findNode(uint[] memory validatorNodeIndexes, uint nodeIndex) private pure returns (uint) {
         uint i;
         for (i = 0; i < validatorNodeIndexes.length; i++) {
@@ -502,6 +564,9 @@ contract Nodes is Permissions {
         return i;
     }
 
+    /**
+     * @dev Moves a node to a new space mapping.
+     */
     function _moveNodeToNewSpaceMap(uint nodeIndex, uint8 newSpace) private {
         uint8 previousSpace = spaceOfNodes[nodeIndex].freeSpace;
         uint indexInArray = spaceOfNodes[nodeIndex].indexInSpaceMap;
@@ -519,9 +584,7 @@ contract Nodes is Permissions {
     }
 
     /**
-     * @dev _setNodeLeft - set Node Left
-     * function could be run only by Nodes
-     * @param nodeIndex - index of Node
+     * @dev Change a node's status to Left.
      */
     function _setNodeLeft(uint nodeIndex) private {
         nodesIPCheck[nodes[nodeIndex].ip] = false;
@@ -537,9 +600,7 @@ contract Nodes is Permissions {
     }
 
     /**
-     * @dev _setNodeLeaving - set Node Leaving
-     * function could be run only by Nodes
-     * @param nodeIndex - index of Node
+     * @dev Change a node's status to Leaving.
      */
     function _setNodeLeaving(uint nodeIndex) private {
         nodes[nodeIndex].status = NodeStatus.Leaving;
@@ -548,15 +609,7 @@ contract Nodes is Permissions {
     }
 
     /**
-     * @dev _addNode - adds Node to array
-     * function could be run only by executor
-     * @param from - owner of Node
-     * @param name - Node name
-     * @param ip - Node ip
-     * @param publicIP - Node public ip
-     * @param port - Node public port
-     * @param publicKey - Ethereum public key
-     * @return nodeIndex Index of Node
+     * @dev Adds node to array.
      */
     function _addNode(
         address from,
@@ -599,6 +652,9 @@ contract Nodes is Permissions {
         numberOfActiveNodes++;
     }
 
+    /**
+     * @dev Deletes node from array.
+     */
     function _deleteNode(uint nodeIndex) private {
         uint8 space = spaceOfNodes[nodeIndex].freeSpace;
         uint indexInArray = spaceOfNodes[nodeIndex].indexInSpaceMap;

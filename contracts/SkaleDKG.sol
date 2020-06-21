@@ -44,7 +44,11 @@ interface IDecryption {
     function decrypt(bytes32 ciphertext, bytes32 key) external pure returns (uint256);
 }
 
-
+/**
+ * @title SkaleDKG
+ * @dev Contains functions to manage distributed key generation per
+ * Joint-Feldman protocol.
+ */
 contract SkaleDKG is Permissions {
 
     struct Fp2Point {
@@ -101,10 +105,19 @@ contract SkaleDKG is Permissions {
     mapping(bytes32 => Channel) public channels;
     mapping(bytes32 => mapping(uint => BroadcastedData)) private _data;
 
+    /**
+     * @dev Emitted when a channel is opened.
+     */
     event ChannelOpened(bytes32 groupIndex);
 
+    /**
+     * @dev Emitted when a channel is closed.
+     */
     event ChannelClosed(bytes32 groupIndex);
 
+    /**
+     * @dev Emitted when a node broadcasts keyshare. TODO!
+     */
     event BroadcastAndKeyShare(
         bytes32 indexed groupIndex,
         uint indexed fromNode,
@@ -112,11 +125,34 @@ contract SkaleDKG is Permissions {
         KeyShare[] secretKeyContribution
     );
 
+    /**
+     * @dev Emitted when all group data is received.
+     */
     event AllDataReceived(bytes32 indexed groupIndex, uint nodeIndex);
+
+    /**
+     * @dev Emitted when DKG is successful.
+     */
     event SuccessfulDKG(bytes32 indexed groupIndex);
+
+    /**
+     * @dev Emitted when a node is validated to be malicious.
+     */
     event BadGuy(uint nodeIndex);
+
+    /**
+     * @dev Emitted when DKG failed.
+     */
     event FailedDKG(bytes32 indexed groupIndex);
+
+    /**
+     * @dev Emitted when a complaint is sent.
+     */
     event ComplaintSent(bytes32 indexed groupIndex, uint indexed fromNodeIndex, uint indexed toNodeIndex);
+
+    /**
+     * @dev Emitted when a new node is rotated in to restart DKG.
+     */
     event NewGuy(uint nodeIndex);
 
     modifier correctGroup(bytes32 groupIndex) {
@@ -133,6 +169,15 @@ contract SkaleDKG is Permissions {
         _;
     }
 
+    /**
+     * @dev Allows SchainsInternal contract to open a channel.
+     *
+     * Emits ChannelOpened event.
+     *
+     * Requirements:
+     *
+     * - Channel is not already created.
+     */
     function openChannel(bytes32 groupIndex) external allow("SchainsInternal") {
         require(!channels[groupIndex].active, "Channel already is created");
         
@@ -150,11 +195,29 @@ contract SkaleDKG is Permissions {
         emit ChannelOpened(groupIndex);
     }
 
+    /**
+     * @dev Allows SchainsInternal contract to delete a channel.
+     *
+     * Requirements:
+     *
+     * - Channel must exist.
+     */
     function deleteChannel(bytes32 groupIndex) external allow("SchainsInternal") {
         require(channels[groupIndex].active, "Channel is not created");
         delete channels[groupIndex];
     }
 
+    /**
+     * @dev Broadcasts verification vector and secret key contribution to all
+     * other nodes in the group.
+     *
+     * Emits BroadcastAndKeyShare event.
+     *
+     * Requirements:
+     *
+     * - msg.sender must have an associated node.
+     * - VerificationVector must not be empty.
+     */
     function broadcast(
         bytes32 groupIndex,
         uint nodeIndex,
@@ -194,6 +257,16 @@ contract SkaleDKG is Permissions {
         );
     }
 
+    /**
+     * @dev Creates a complaint from a node (accuser) to a given node.
+     * The accusing node must broadcast additional parameters within 1800 blocks.
+     *
+     * Emits BroadcastAndKeyShare event.
+     *
+     * Requirements:
+     *
+     * - msg.sender must have an associated node.
+     */
     function complaint(bytes32 groupIndex, uint fromNodeIndex, uint toNodeIndex)
         external
         correctGroup(groupIndex)

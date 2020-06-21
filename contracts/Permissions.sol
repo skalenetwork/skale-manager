@@ -26,8 +26,8 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 
 
 /**
- * @title Permissions - connected module for Upgradeable approach, knows ContractManager
- * @author Artem Payvin
+ * @title Permissions
+ * @dev Contract is connected module for Upgradeable approach, knows ContractManager
  */
 contract Permissions is OwnableUpgradeSafe {
     using SafeMath for uint;
@@ -40,11 +40,6 @@ contract Permissions is OwnableUpgradeSafe {
         _contractManager = ContractManager(contractManager);
     }
 
-    /**
-     * @dev allow - throws if called by any account and contract other than the owner
-     * or `contractName` contract
-     * @param contractName - human readable name of contract
-     */
     modifier allow(string memory contractName) {
         require(
             _contractManager.contracts(keccak256(abi.encodePacked(contractName))) == msg.sender || _isOwner(),

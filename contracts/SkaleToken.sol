@@ -33,8 +33,9 @@ import "./delegation/TokenState.sol";
 
 
 /**
- * @title SkaleToken is ERC777 Token implementation, also this contract in skale
- * manager system
+ * @title SkaleToken
+ * @dev Contract defines the SKALE token and is based on ERC777 token
+ * implementation.
  */
 contract SkaleToken is ERC777, Permissions, ReentrancyGuard, IDelegatableToken {
     using SafeMath for uint;
@@ -54,12 +55,14 @@ contract SkaleToken is ERC777, Permissions, ReentrancyGuard, IDelegatableToken {
     }
 
     /**
-     * @dev mint - create some amount of token and transfer it to the specified address
-     * @param account - address where some amount of token would be created
-     * @param amount - amount of tokens to mine
-     * @param userData bytes extra information provided by the token holder (if any)
-     * @param operatorData bytes extra information provided by the operator (if any)
-     * @return returns success of function call.
+     * @dev Allows SkaleManger to mint an amount of tokens and transfer minted
+     * tokens to a specified address.
+     *
+     * Returns a boolean whether the operation is successful.
+     *
+     * Requirements:
+     *
+     * - Mint must not exceed the total supply.
      */
     function mint(
         address account,
@@ -83,15 +86,24 @@ contract SkaleToken is ERC777, Permissions, ReentrancyGuard, IDelegatableToken {
         return true;
     }
 
+    /**
+     * @dev Returns and updates the delegated amount in SKL tokens for a given wallet.
+     */
     function getAndUpdateDelegatedAmount(address wallet) external override returns (uint) {
         return DelegationController(_contractManager.getContract("DelegationController"))
             .getAndUpdateDelegatedAmount(wallet);
     }
 
+    /**
+     * @dev Returns and updates the slashed amount in SKL tokens for a given wallet.
+     */
     function getAndUpdateSlashedAmount(address wallet) external override returns (uint) {
         return Punisher(_contractManager.getContract("Punisher")).getAndUpdateLockedAmount(wallet);
     }
 
+    /**
+     * @dev Returns and updates the locked amount in SKL tokens for a given wallet.
+     */
     function getAndUpdateLockedAmount(address wallet) public override returns (uint) {
         return TokenState(_contractManager.getContract("TokenState")).getAndUpdateLockedAmount(wallet);
     }

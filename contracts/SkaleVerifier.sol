@@ -25,7 +25,10 @@ import "./Permissions.sol";
 import "./SchainsInternal.sol";
 import "./utils/Precompiled.sol";
 
-
+/**
+ * @title SkaleVerifier
+ * @dev 
+ */
 contract SkaleVerifier is Permissions {
 
 
@@ -44,6 +47,11 @@ contract SkaleVerifier is Permissions {
         uint y;
     }
 
+    /**
+     * @dev Verifies an schain signature.
+     *
+     * Returns boolean whether verification is successful.
+     */
     function verifySchainSignature(
         uint signA,
         uint signB,
@@ -90,6 +98,16 @@ contract SkaleVerifier is Permissions {
         Permissions.initialize(newContractsAddress);
     }
 
+    /**
+     * @dev Performs verification of signatures using bn256Pairing precompile.
+     *
+     * Requirements:
+     *
+     * - Signature and hash are both in G1.
+     * - Hash is in G1.
+     * - G2.one is in G2.
+     * - Public key is in G2.
+     */
     function verify(
         uint signA,
         uint signB,
@@ -141,7 +159,7 @@ contract SkaleVerifier is Permissions {
             pkC);
     }
 
-    function _checkHashToGroupWithHelper(
+        function _checkHashToGroupWithHelper(
         bytes32 hash,
         uint counter,
         uint hashA,

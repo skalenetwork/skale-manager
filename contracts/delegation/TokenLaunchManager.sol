@@ -36,13 +36,17 @@ import "./TokenLaunchLocker.sol";
  * The seller is an entity who distributes tokens through a Launch process.
  */
 contract TokenLaunchManager is Permissions, IERC777Recipient {
+
+    /**
+     * @dev Emitted when a holder is approved for an amount.
+     */
     event Approved(
         address holder,
         uint amount
     );
 
     /**
-     * @dev Emitted when a `holder` retrieves `amount`.
+     * @dev Emitted when a holder retrieves amount.
      */
     event TokensRetrieved(
         address holder,
@@ -73,13 +77,10 @@ contract TokenLaunchManager is Permissions, IERC777Recipient {
      *
      * Requirements:
      *
-     * - the input arrays must be equal in size.
-     * - the total approved must be less than or equal to the seller balance.
+     * - Input arrays must be equal in size.
+     * - Total approved must be less than or equal to the seller balance.
      *
      * Emits an Approved event.
-     *
-     * @param walletAddress address[] array of wallet addresses to approve transfers to
-     * @param value uint[] array of token amounts to approve transfer to
      */
     function approveBatchOfTransfers(address[] calldata walletAddress, uint[] calldata value) external onlySeller {
         require(walletAddress.length == value.length, "Wrong input arrays length");
@@ -94,12 +95,9 @@ contract TokenLaunchManager is Permissions, IERC777Recipient {
      *
      * Requirements:
      *
-     * - the updated address must not already be in use.
+     * - Updated address must not already be in use.
      *
      * Emits an Approved event.
-     *
-     * @param oldAddress address token purchaser's previous address
-     * @param newAddress address token purchaser's new address
      */
     function changeApprovalAddress(address oldAddress, address newAddress) external onlySeller {
         require(approved[newAddress] == 0, "New address is already used");
@@ -112,9 +110,6 @@ contract TokenLaunchManager is Permissions, IERC777Recipient {
 
     /**
      * @dev Allows the seller to update a purchaser's amount in case of an error.
-     *
-     * @param wallet address of the token purchaser
-     * @param newValue uint of the updated token amount
      */
     function changeApprovalValue(address wallet, uint newValue) external onlySeller {
         _setApprovedAmount(wallet, newValue);
@@ -126,7 +121,7 @@ contract TokenLaunchManager is Permissions, IERC777Recipient {
      *
      * Requirements:
      *
-     * - token transfer must be approved.
+     * - Token transfer must be approved.
      */
     function retrieve() external {
         require(approved[_msgSender()] > 0, "Transfer is not approved");
@@ -143,8 +138,6 @@ contract TokenLaunchManager is Permissions, IERC777Recipient {
      * @dev Allows the Owner to register a Seller.
      *
      * Emits a SellerWasRegistered event.
-     *
-     * @param _seller address seller address who will conduct the launch.
      */
     function registerSeller(address _seller) external onlyOwner {
         seller = _seller;

@@ -54,10 +54,7 @@ contract TokenState is Permissions, ILocker {
 
     /**
      *  @dev Return and update the total locked amount of a given `holder`.
-     *
-     *  @param holder address of the token holder
-     *  @return total locked amount
-    */
+     */
     function getAndUpdateLockedAmount(address holder) external override returns (uint) {
         uint locked = 0;
         for (uint i = 0; i < _lockers.length; ++i) {
@@ -68,11 +65,9 @@ contract TokenState is Permissions, ILocker {
     }
 
     /**
-     * @dev Return and update the total locked and un-delegatable amount of a given `holder`.
-     *
-     * @param holder address of the token holder
-     * @return amount total slashed amount (non-transferable and non-delegatable)
-    */
+     * @dev Return and update the total non-transferrable and un-delegatable
+     * amount of a given `holder`.
+     */
     function getAndUpdateForbiddenForDelegationAmount(address holder) external override returns (uint amount) {
         uint forbidden = 0;
         for (uint i = 0; i < _lockers.length; ++i) {
@@ -86,8 +81,6 @@ contract TokenState is Permissions, ILocker {
      * @dev Allows the Owner to remove a contract from the locker.
      *
      * Emits a LockerWasRemoved event.
-     *
-     * @param locker string name of contract to remove from locker
      */
     function removeLocker(string calldata locker) external onlyOwner {
         uint index;
@@ -118,8 +111,6 @@ contract TokenState is Permissions, ILocker {
      * @dev Allows the Owner to add a contract to the Locker.
      *
      * Emits a LockerWasAdded event.
-     *
-     * @param locker string name of contract to add to locker
      */
     function addLocker(string memory locker) public onlyOwner {
         _lockers.push(locker);

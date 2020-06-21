@@ -220,10 +220,12 @@ contract DelegationController is Permissions, ILocker {
      *
      * The token holder may add additional information in each proposal.
      *
-     * @param validatorId uint ID of validator to receive delegation proposal
-     * @param amount uint amount of proposed delegation
-     * @param delegationPeriod uint period of proposed delegation
-     * @param info string extra information provided by the token holder (if any)
+     * Emits DelegationProposed event.
+     *
+     * Requirements:
+     *
+     * - Delegation must be above the validator's minimum delegation amount.
+     * - If trusted list is enabled
      */
     function delegate(
         uint validatorId,

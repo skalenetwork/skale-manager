@@ -43,13 +43,10 @@ contract DelegationPeriodManager is Permissions {
     mapping (uint => uint) public stakeMultipliers;
 
     /**
-     * @dev Creates a new available delegation period and return in the network.
-     * Only the owner may set new delegation period and returns in the network.
+     * @dev Allows the Owner to create a new available delegation period and
+     * return in the network.
      *
      * Emits a DelegationPeriodWasSet event.
-     *
-     * @param monthsCount uint delegation duration in months
-     * @param stakeMultiplier uint return for delegation
      */
     function setDelegationPeriod(uint monthsCount, uint stakeMultiplier) external onlyOwner {
         stakeMultipliers[monthsCount] = stakeMultiplier;
@@ -59,9 +56,6 @@ contract DelegationPeriodManager is Permissions {
 
     /**
      * @dev Checks whether given delegation period is allowed.
-     *
-     * @param monthsCount uint delegation duration in months
-     * @return bool True if delegation period is allowed
      */
     function isDelegationPeriodAllowed(uint monthsCount) external view returns (bool) {
         return stakeMultipliers[monthsCount] != 0 ? true : false;
