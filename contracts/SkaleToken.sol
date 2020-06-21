@@ -96,7 +96,7 @@ contract SkaleToken is ERC777, Permissions, ReentrancyGuard, IDelegatableToken {
         return TokenState(_contractManager.getContract("TokenState")).getAndUpdateLockedAmount(wallet);
     }
 
-    // private
+    // internal
 
     function _beforeTokenTransfer(
         address, // operator

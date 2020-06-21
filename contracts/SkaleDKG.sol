@@ -315,7 +315,7 @@ contract SkaleDKG is Permissions {
         Permissions.initialize(contractsAddress);
     }
 
-    function _reopenChannel(bytes32 groupIndex) internal {
+    function _reopenChannel(bytes32 groupIndex) private {
         SchainsInternal schainsInternal = SchainsInternal(
             _contractManager.getContract("SchainsInternal")
         );
@@ -352,7 +352,7 @@ contract SkaleDKG is Permissions {
         emit ChannelOpened(groupIndex);
     }
 
-    function _finalizeSlashing(bytes32 groupIndex, uint badNode) internal {
+    function _finalizeSlashing(bytes32 groupIndex, uint badNode) private {
         SchainsInternal schainsInternal = SchainsInternal(
             _contractManager.getContract("SchainsInternal")
         );
@@ -390,7 +390,7 @@ contract SkaleDKG is Permissions {
         uint secretNumber,
         G2Operations.G2Point memory multipliedShare
     )
-        internal
+        private
         view
         returns (bool)
     {
@@ -429,7 +429,7 @@ contract SkaleDKG is Permissions {
             _checkCorrectMultipliedShare(multipliedShare, secret);
     }
 
-    function _getCommonPublicKey(bytes32 groupIndex, uint256 secretNumber) internal view returns (bytes32 key) {
+    function _getCommonPublicKey(bytes32 groupIndex, uint256 secretNumber) private view returns (bytes32 key) {
         Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
         ECDH ecdh = ECDH(_contractManager.getContract("ECDH"));
         bytes32[2] memory publicKey = nodes.getNodePublicKey(channels[groupIndex].fromNodeToComplaint);
@@ -441,7 +441,7 @@ contract SkaleDKG is Permissions {
         key = bytes32(pkX);
     }
 
-    function _decryptMessage(bytes32 groupIndex, uint secretNumber) internal view returns (uint) {
+    function _decryptMessage(bytes32 groupIndex, uint secretNumber) private view returns (uint) {
         Decryption decryption = Decryption(_contractManager.getContract("Decryption"));
 
         bytes32 key = _getCommonPublicKey(groupIndex, secretNumber);
@@ -457,7 +457,7 @@ contract SkaleDKG is Permissions {
         bytes32 groupIndex,
         G2Operations.G2Point memory value
     )
-        internal
+        private
     {
         require(value.isG2(), "Incorrect G2 point");
         channels[groupIndex].publicKey = value.addG2(channels[groupIndex].publicKey);
@@ -469,7 +469,7 @@ contract SkaleDKG is Permissions {
         KeyShare[] memory secretKeyContribution,
         G2Operations.G2Point[] memory verificationVector
     )
-        internal
+        private
     {
         uint index = _nodeIndexInSchain(groupIndex, nodeIndex);
         require(!channels[groupIndex].broadcasted[index], "This node is already broadcasted");
@@ -499,17 +499,17 @@ contract SkaleDKG is Permissions {
         }
     }
 
-    function _isBroadcasted(bytes32 groupIndex, uint nodeIndex) internal view returns (bool) {
+    function _isBroadcasted(bytes32 groupIndex, uint nodeIndex) private view returns (bool) {
         uint index = _nodeIndexInSchain(groupIndex, nodeIndex);
         return channels[groupIndex].broadcasted[index];
     }
 
-    function _nodeIndexInSchain(bytes32 schainId, uint nodeIndex) internal view returns (uint) {
+    function _nodeIndexInSchain(bytes32 schainId, uint nodeIndex) private view returns (uint) {
         return SchainsInternal(_contractManager.getContract("SchainsInternal"))
             .getNodeIndexInGroup(schainId, nodeIndex);
     }
 
-    function _isNodeByMessageSender(uint nodeIndex, address from) internal view returns (bool) {
+    function _isNodeByMessageSender(uint nodeIndex, address from) private view returns (bool) {
         Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
         return nodes.isNodeExist(from, nodeIndex);
     }
@@ -517,7 +517,7 @@ contract SkaleDKG is Permissions {
     function _checkDKGVerification(
         G2Operations.G2Point memory value,
         G2Operations.G2Point memory multipliedShare)
-        internal pure returns (bool)
+        private pure returns (bool)
     {
         return value.x.a == multipliedShare.x.b && 
             value.x.b == multipliedShare.x.a &&
@@ -526,7 +526,7 @@ contract SkaleDKG is Permissions {
     }
 
     function _checkCorrectMultipliedShare(G2Operations.G2Point memory multipliedShare, uint secret)
-        internal view returns (bool)
+        private view returns (bool)
     {
         Fp2Operations.Fp2Point memory tmpX;
         Fp2Operations.Fp2Point memory tmpY;
@@ -556,7 +556,7 @@ contract SkaleDKG is Permissions {
     function _swapCoordinates(
         Fp2Operations.Fp2Point memory value
     )
-        internal
+        private
         pure
         returns (Fp2Operations.Fp2Point memory)
     {

@@ -666,7 +666,7 @@ contract SchainsInternal is Permissions {
      * @dev _generateGroup - generates Group for Schain
      * @param schainId - index of Group
      */
-    function _generateGroup(bytes32 schainId, uint numberOfNodes) internal returns (uint[] memory nodesInGroup) {
+    function _generateGroup(bytes32 schainId, uint numberOfNodes) private returns (uint[] memory nodesInGroup) {
         Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
         uint8 space = schains[schainId].partOfNode;
         nodesInGroup = new uint[](numberOfNodes);
@@ -691,19 +691,19 @@ contract SchainsInternal is Permissions {
         schainsGroups[schainId].nodesInGroup = nodesInGroup;
     }
 
-    function _isPublicKeyZero(bytes32 schainId) internal view returns (bool) {
+    function _isPublicKeyZero(bytes32 schainId) private view returns (bool) {
         return schainsGroups[schainId].groupsPublicKey[0] == 0 &&
             schainsGroups[schainId].groupsPublicKey[1] == 0 &&
             schainsGroups[schainId].groupsPublicKey[2] == 0 &&
             schainsGroups[schainId].groupsPublicKey[3] == 0;
     }
 
-    function _isCorrespond(bytes32 schainId, uint nodeIndex) internal view returns (bool) {
+    function _isCorrespond(bytes32 schainId, uint nodeIndex) private view returns (bool) {
         Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
         return !_exceptionsForGroups[schainId][nodeIndex] && nodes.isNodeActive(nodeIndex);
     }
 
-    function _swap(uint[] memory array, uint index1, uint index2) internal pure {
+    function _swap(uint[] memory array, uint index1, uint index2) private pure {
         uint buffer = array[index1];
         array[index1] = array[index2];
         array[index2] = buffer;
@@ -715,7 +715,7 @@ contract SchainsInternal is Permissions {
      * @param nodeIndex - global index of Node
      * @return local index of Node in Schain
      */
-    function _findNode(bytes32 schainId, uint nodeIndex) internal view returns (uint) {
+    function _findNode(bytes32 schainId, uint nodeIndex) private view returns (uint) {
         uint[] memory nodesInGroup = schainsGroups[schainId].nodesInGroup;
         uint index;
         for (index = 0; index < nodesInGroup.length; index++) {

@@ -350,7 +350,7 @@ contract Schains is Permissions {
         string memory name,
         address from,
         uint deposit,
-        uint lifetime) internal
+        uint lifetime) private
     {
         address dataAddress = _contractManager.getContract("SchainsInternal");
         require(SchainsInternal(dataAddress).isSchainNameAvailable(name), "Schain name is not available");
@@ -370,7 +370,7 @@ contract Schains is Permissions {
      * @return schainParameters Parsed lifetime, typeOfSchain, nonce and name
      */
     function _fallbackSchainParametersDataConverter(bytes memory data)
-        internal
+        private
         pure
         returns (SchainParameters memory schainParameters)
     {
@@ -385,7 +385,7 @@ contract Schains is Permissions {
      * @param nodeIndex - index of Node at common array of Nodes
      * @param partOfNode - divisor of given type of Schain
      */
-    function _addSpace(uint nodeIndex, uint8 partOfNode) internal {
+    function _addSpace(uint nodeIndex, uint8 partOfNode) private {
         Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
         nodes.addSpaceToNode(nodeIndex, partOfNode);
     }
@@ -403,7 +403,7 @@ contract Schains is Permissions {
         uint numberOfNodes,
         uint8 partOfNode
     )
-        internal
+        private
         allow("SkaleManager")
     {
         SchainsInternal schainsInternal = SchainsInternal(_contractManager.getContract("SchainsInternal"));
@@ -423,7 +423,7 @@ contract Schains is Permissions {
      * @param schainId - hash of name of Schain
      * @return nodeIndex - global index of Node
      */
-    function _selectNodeToGroup(bytes32 schainId) internal returns (uint) {
+    function _selectNodeToGroup(bytes32 schainId) private returns (uint) {
         SchainsInternal schainsInternal = SchainsInternal(_contractManager.getContract("SchainsInternal"));
         Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
         require(schainsInternal.isSchainActive(schainId), "Group is not active");
@@ -444,7 +444,7 @@ contract Schains is Permissions {
         return nodeIndex;
     }
 
-    function _checkRotation(bytes32 schainId ) internal view returns (bool) {
+    function _checkRotation(bytes32 schainId ) private view returns (bool) {
         SchainsInternal schainsInternal = SchainsInternal(_contractManager.getContract("SchainsInternal"));
         require(schainsInternal.isSchainExist(schainId), "Schain does not exist");
         return schainsInternal.isAnyFreeNode(schainId);
@@ -457,7 +457,7 @@ contract Schains is Permissions {
      * @param deposit - received amoung of SKL
      * @param schainParameters - Schain's data
      */
-    function _addSchain(address from, uint deposit, SchainParameters memory schainParameters) internal {
+    function _addSchain(address from, uint deposit, SchainParameters memory schainParameters) private {
         uint numberOfNodes;
         uint8 partOfNode;
 

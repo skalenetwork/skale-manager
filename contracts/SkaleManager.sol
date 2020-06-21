@@ -88,10 +88,9 @@ contract SkaleManager is IERC777Recipient, Permissions {
         external
     {
         Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
-        ValidatorService validatorService = ValidatorService(_contractManager.getContract("ValidatorService"));
         Monitors monitors = Monitors(_contractManager.getContract("Monitors"));
 
-        validatorService.checkPossibilityCreatingNode(msg.sender);
+        nodes.checkPossibilityCreatingNode(msg.sender);
         Nodes.NodeCreationParams memory params = Nodes.NodeCreationParams({
             name: name,
             ip: ip,
@@ -100,7 +99,6 @@ contract SkaleManager is IERC777Recipient, Permissions {
             publicKey: publicKey,
             nonce: nonce});
         uint nodeIndex = nodes.createNode(msg.sender, params);
-        validatorService.pushNode(msg.sender, nodeIndex);
         monitors.addMonitor(nodeIndex);
     }
 
@@ -134,7 +132,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
             nodes.changeNodeFinishTime(nodeIndex, uint32(now + (isSchains ? constants.rotationDelay() : 0)));
             Monitors monitors = Monitors(_contractManager.getContract("Monitors"));
             monitors.deleteMonitor(nodeIndex);
-            validatorService.deleteNode(validatorId, nodeIndex);
+            nodes.deleteNodeForValidator(validatorId, nodeIndex);
         }
     }
 
@@ -213,7 +211,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
         address from,
         uint nodeIndex,
         uint downtime,
-        uint latency) internal returns (uint)
+        uint latency) private returns (uint)
     {
         ConstantsHolder constants = ConstantsHolder(_contractManager.getContract("ConstantsHolder"));
         Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
@@ -251,14 +249,15 @@ contract SkaleManager is IERC777Recipient, Permissions {
         return bountyAmount;
     }
 
-    function _payBounty(uint bountyForMiner, address miner, uint nodeIndex) internal returns (bool) {
+    function _payBounty(uint bountyForMiner, address miner, uint nodeIndex) private returns (bool) {
         ValidatorService validatorService = ValidatorService(_contractManager.getContract("ValidatorService"));
+        Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
         SkaleToken skaleToken = SkaleToken(_contractManager.getContract("SkaleToken"));
         Distributor distributor = Distributor(_contractManager.getContract("Distributor"));
 
         uint validatorId = validatorService.getValidatorIdByNodeAddress(miner);
         uint bounty = bountyForMiner;
-        if (!validatorService.checkPossibilityToMaintainNode(validatorId, nodeIndex)) {
+        if (!nodes.checkPossibilityToMaintainNode(validatorId, nodeIndex)) {
             bounty /= 2;
         }
         // solhint-disable-next-line check-send-result
@@ -272,7 +271,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
         uint averageLatency,
         uint bounty
     )
-        internal
+        private
     {
         Monitors monitors = Monitors(_contractManager.getContract("Monitors"));
         uint previousBlockEvent = monitors.getLastBountyBlock(nodeIndex);
@@ -289,14 +288,14 @@ contract SkaleManager is IERC777Recipient, Permissions {
             gasleft());
     }
 
-    function _getValidatorsCapitalization() internal view returns (uint) {
+    function _getValidatorsCapitalization() private view returns (uint) {
         if (minersCap == 0) {
             return SkaleToken(_contractManager.getContract("SkaleToken")).CAP() / 3;
         }
         return minersCap;
     }
 
-    function _getAndUpdateValidatorsCapitalization() internal returns (uint) {
+    function _getAndUpdateValidatorsCapitalization() private returns (uint) {
         if (minersCap == 0) {
             minersCap = _getValidatorsCapitalization();
         }
@@ -308,7 +307,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
         uint nodesAmount,
         uint networkLaunchTimestamp
         )
-        internal
+        private
         view
         returns (uint)
     {
@@ -329,7 +328,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
         Nodes nodes,
         ConstantsHolder constants
     )
-        internal
+        private
         view
         returns (uint reducedBounty)
     {

@@ -137,7 +137,7 @@ contract SkaleVerifier is Permissions {
         uint hashA,
         uint hashB
     )
-        internal
+        private
         pure
         returns (bool)
     {

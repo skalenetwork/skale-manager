@@ -150,19 +150,19 @@ contract TokenLaunchLocker is Permissions, ILocker {
 
     // private
 
-    function _getAndUpdateDelegatedAmount(address holder, uint currentMonth) internal returns (uint) {
+    function _getAndUpdateDelegatedAmount(address holder, uint currentMonth) private returns (uint) {
         return _delegatedAmount[holder].getAndUpdateValue(currentMonth);
     }
 
-    function _addToDelegatedAmount(address holder, uint amount, uint month) internal {
+    function _addToDelegatedAmount(address holder, uint amount, uint month) private {
         _delegatedAmount[holder].addToValue(amount, month);
     }
 
-    function _removeFromDelegatedAmount(address holder, uint amount, uint month) internal {
+    function _removeFromDelegatedAmount(address holder, uint amount, uint month) private {
         _delegatedAmount[holder].subtractFromValue(amount, month);
     }
 
-    function _addToTotalDelegatedAmount(address holder, uint amount, uint month) internal {
+    function _addToTotalDelegatedAmount(address holder, uint amount, uint month) private {
         require(
             _totalDelegatedAmount[holder].month == 0 || _totalDelegatedAmount[holder].month <= month,
             "Can't add to total delegated in the past");
@@ -175,18 +175,18 @@ contract TokenLaunchLocker is Permissions, ILocker {
         }
     }
 
-    function _unlock(address holder) internal {
+    function _unlock(address holder) private {
         emit Unlocked(holder, _locked[holder]);
         delete _locked[holder];
         _deleteDelegatedAmount(holder);
         _deleteTotalDelegatedAmount(holder);
     }
 
-    function _deleteDelegatedAmount(address holder) internal {
+    function _deleteDelegatedAmount(address holder) private {
         _delegatedAmount[holder].clear();
     }
 
-    function _deleteTotalDelegatedAmount(address holder) internal {
+    function _deleteTotalDelegatedAmount(address holder) private {
         delete _totalDelegatedAmount[holder].delegated;
         delete _totalDelegatedAmount[holder].month;
     }
