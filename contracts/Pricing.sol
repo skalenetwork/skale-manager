@@ -34,7 +34,7 @@ contract Pricing is Permissions {
     uint public constant MIN_PRICE = 10**6;
     uint public price;
     uint public totalNodes;
-    uint private _lastUpdated;
+    uint public lastUpdated;
 
     function initNodes() external {
         Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
@@ -42,32 +42,53 @@ contract Pricing is Permissions {
     }
 
     function adjustPrice() external {
-        require(now > _lastUpdated.add(COOLDOWN_TIME), "It's not a time to update a price");
+        require(now > lastUpdated.add(COOLDOWN_TIME), "It's not a time to update a price");
         checkAllNodes();
-        uint loadPercentage = getTotalLoadPercentage();
-        uint priceChange;
-        uint timeSkipped;
+        uint load = _getTotalLoad();
+        uint capacity = _getTotalCapacity();
 
-        if (loadPercentage < OPTIMAL_LOAD_PERCENTAGE) {
-            priceChange = (ADJUSTMENT_SPEED.mul(price)).mul((OPTIMAL_LOAD_PERCENTAGE.sub(loadPercentage))) / 10**6;
-            timeSkipped = (now.sub(_lastUpdated)).div(COOLDOWN_TIME);
-            price = price.sub(priceChange.mul(timeSkipped));
-            if (price < MIN_PRICE) {
-                price = MIN_PRICE;
-            }
+        bool networkIsOverloaded = load.mul(100) > OPTIMAL_LOAD_PERCENTAGE.mul(capacity);
+        uint loadDiff;
+        if (networkIsOverloaded) {
+            loadDiff = load.mul(100).sub(OPTIMAL_LOAD_PERCENTAGE.mul(capacity));
         } else {
-            priceChange = (ADJUSTMENT_SPEED.mul(price)).mul((loadPercentage.sub(OPTIMAL_LOAD_PERCENTAGE))) / 10**6;
-            timeSkipped = (now.sub(_lastUpdated)).div(COOLDOWN_TIME);
-            require(price.add(priceChange.mul(timeSkipped)) > price, "New price should be greater than old price");
-            price = price.add(priceChange.mul(timeSkipped));
+            loadDiff = OPTIMAL_LOAD_PERCENTAGE.mul(capacity).sub(load.mul(100));
         }
-        _lastUpdated = now;
+
+        uint priceChangeSpeedMultipliedByCapacityAndMinPrice = ADJUSTMENT_SPEED.mul(loadDiff).mul(price);
+        
+        uint timeSkipped = now.sub(lastUpdated);
+        
+        uint priceChange = priceChangeSpeedMultipliedByCapacityAndMinPrice
+            .mul(timeSkipped)
+            .div(COOLDOWN_TIME)
+            .div(capacity)
+            .div(MIN_PRICE);
+
+        if (networkIsOverloaded) {
+            assert(priceChange > 0);
+            price = price.add(priceChange);
+        } else {
+            if (priceChange > price) {
+                price = MIN_PRICE;
+            } else {
+                price = price.sub(priceChange);
+                if (price < MIN_PRICE) {
+                    price = MIN_PRICE;
+                }
+            }
+        }
+        lastUpdated = now;
+    }
+
+    function getTotalLoadPercentage() external view returns (uint) {
+        return _getTotalLoad().mul(100).div(_getTotalCapacity());
     }
 
     function initialize(address newContractsAddress) public override initializer {
         Permissions.initialize(newContractsAddress);
-        _lastUpdated = now;
-        price = 5*10**6;
+        lastUpdated = now;
+        price = 5 * MIN_PRICE;
     }
 
     function checkAllNodes() public {
@@ -76,21 +97,26 @@ contract Pricing is Permissions {
 
         require(totalNodes != numberOfActiveNodes, "No any changes on nodes");
         totalNodes = numberOfActiveNodes;
-
     }
 
-    function getTotalLoadPercentage() public view returns (uint) {
+    function _getTotalLoad() private view returns (uint) {
         SchainsInternal schainsInternal = SchainsInternal(_contractManager.getContract("SchainsInternal"));
-        uint64 numberOfSchains = schainsInternal.numberOfSchains();
-        Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
-        uint numberOfNodes = nodes.getNumberOnlineNodes();
-        uint sumLoadSchain = 0;
-        for (uint i = 0; i < numberOfSchains; i++) {
+
+        uint load = 0;
+        for (uint i = 0; i < schainsInternal.numberOfSchains(); i++) {
             bytes32 schain = schainsInternal.schainsAtSystem(i);
-            uint numberOfNodesInGroup = schainsInternal.getNumberOfNodesInGroup(schain);
+            uint numberOfNodesInSchain = schainsInternal.getNumberOfNodesInGroup(schain);
             uint part = schainsInternal.getSchainsPartOfNode(schain);
-            sumLoadSchain = sumLoadSchain.add((numberOfNodesInGroup*10**7).div(part));
+            load = load.add(
+                numberOfNodesInSchain.mul(part)
+            );
         }
-        return uint(sumLoadSchain.div(10**5*numberOfNodes));
+        return load;
+    }
+
+    function _getTotalCapacity() private view returns (uint) {
+        Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
+
+        return 128 * nodes.getNumberOnlineNodes();
     }
 }

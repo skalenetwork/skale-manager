@@ -217,11 +217,6 @@ contract SkaleManager is IERC777Recipient, Permissions {
         Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
 
         uint networkLaunchTimestamp = constants.launchTimestamp();
-        if (now < networkLaunchTimestamp) {
-            // network is not launched
-            // bounty is turned off
-            return 0;
-        }
         if (stageTime.add(constants.rewardPeriod()) < now) {
             stageNodes = nodes.numberOfActiveNodes().add(nodes.numberOfLeavingNodes());
             stageTime = uint32(block.timestamp);
@@ -311,13 +306,21 @@ contract SkaleManager is IERC777Recipient, Permissions {
         view
         returns (uint)
     {
+        if (now < networkLaunchTimestamp) {
+            // network is not launched
+            // bounty is turned off
+            return 0;
+        }
+
         ConstantsHolder constants = ConstantsHolder(_contractManager.getContract("ConstantsHolder"));
         
-        return cap.div(
-                (2 ** (now.sub(networkLaunchTimestamp).div(constants.SIX_YEARS()) + 1))
-                .mul(constants.SIX_YEARS().div(constants.rewardPeriod()))
-                .mul(nodesAmount)
-            );
+        uint numberOfSixYearsPeriods = now.sub(networkLaunchTimestamp).div(constants.SIX_YEARS()) + 1;
+
+        return cap
+            .mul(constants.rewardPeriod())
+            .div(constants.SIX_YEARS())
+            .div(2 ** numberOfSixYearsPeriods)
+            .div(nodesAmount);
     }
 
     function _reduceBounty(

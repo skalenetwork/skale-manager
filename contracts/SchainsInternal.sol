@@ -143,7 +143,8 @@ contract SchainsInternal is Permissions {
         schains[schainId].partOfNode = partOfNode;
         if (partOfNode > 0) {
             sumOfSchainsResources = sumOfSchainsResources.add(
-                (128 / partOfNode) * numberOfNodes);
+                numberOfNodes.mul(128).div(partOfNode)
+            );
         }
         return _generateGroup(schainId, numberOfNodes);
     }

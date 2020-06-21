@@ -307,8 +307,9 @@ contract Schains is Permissions {
             uint up = nodeDeposit.mul(numberOfNodes.mul(lifetime.mul(2)));
             uint down = uint(
                 uint(constantsHolder.TINY_DIVISOR())
+                    .mul(uint(constantsHolder.SECONDS_TO_YEAR()))
                     .div(divisor)
-                    .mul(uint(constantsHolder.SECONDS_TO_YEAR())));
+            );
             return up.div(down);
         }
     }
