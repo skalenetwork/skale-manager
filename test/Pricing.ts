@@ -222,20 +222,28 @@ contract("Pricing", ([owner, holder, validator, nodeAddress]) => {
                 it("should change price when active node has been removed", async () => {
                     // search non full node to rotate
                     let nodeToExit = -1;
+                    let numberOfSchains = 0;
                     for (let i = 0; i < (await nodes.getNumberOfNodes()).toNumber(); i++) {
                         if (await nodes.isNodeActive(i)) {
                             const getSchainIdsForNode = await schainsInternal.getSchainIdsForNode(i);
+                            let totalPartOfNode = 0;
+                            numberOfSchains = 0;
                             for (const schain of getSchainIdsForNode) {
                                 const partOfNode = (await schainsInternal.getSchainsPartOfNode(schain)).toNumber();
-                                if (partOfNode < 100) {
-                                    nodeToExit = i;
-                                }
+                                ++numberOfSchains;
+                                totalPartOfNode += partOfNode;
+                            }
+                            if (totalPartOfNode < 100) {
+                                nodeToExit = i;
+                                break;
                             }
                         }
                     }
 
                     await nodes.initExit(nodeToExit);
-                    await schains.exitFromSchain(nodeToExit);
+                    for(let i = 0; i < numberOfSchains; ++i) {
+                        await schains.exitFromSchain(nodeToExit);
+                    }
                     await nodes.completeExit(nodeToExit);
 
                     const MINUTES_PASSED = 2;
