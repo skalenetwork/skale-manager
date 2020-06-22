@@ -315,10 +315,8 @@ contract SkaleDKG is Permissions {
         channels[groupIndex].active = true;
         delete channels[groupIndex].completed;
         delete channels[groupIndex].broadcasted;
-        for (uint i = 0; i < schainsInternal.getNumberOfNodesInGroup(groupIndex); ++i) {
-           channels[groupIndex].broadcasted.push(); 
-           channels[groupIndex].completed.push();
-        }
+        channels[groupIndex].broadcasted = new bool[](schainsInternal.getNumberOfNodesInGroup(groupIndex));
+        channels[groupIndex].completed = new bool[](schainsInternal.getNumberOfNodesInGroup(groupIndex));
         channels[groupIndex].publicKey = G2Operations.G2Point({
             x: Fp2Operations.Fp2Point({
                 a: 0,
