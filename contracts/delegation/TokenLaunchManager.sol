@@ -133,9 +133,9 @@ contract TokenLaunchManager is Permissions, IERC777Recipient {
         uint value = approved[_msgSender()];
         _setApprovedAmount(_msgSender(), 0);
         require(
-            IERC20(_contractManager.getContract("SkaleToken")).transfer(_msgSender(), value),
+            IERC20(contractManager.getContract("SkaleToken")).transfer(_msgSender(), value),
             "Error in transfer call to SkaleToken");
-        TokenLaunchLocker(_contractManager.getContract("TokenLaunchLocker")).lock(_msgSender(), value);
+        TokenLaunchLocker(contractManager.getContract("TokenLaunchLocker")).lock(_msgSender(), value);
         emit TokensRetrieved(_msgSender(), value);
     }
 
@@ -144,11 +144,11 @@ contract TokenLaunchManager is Permissions, IERC777Recipient {
      *
      * Emits a SellerWasRegistered event.
      *
-     * @param _seller address seller address who will conduct the launch.
+     * @param sellerAddress address seller address who will conduct the launch.
      */
-    function registerSeller(address _seller) external onlyOwner {
-        seller = _seller;
-        emit SellerWasRegistered(_seller);
+    function registerSeller(address sellerAddress) external onlyOwner {
+        seller = sellerAddress;
+        emit SellerWasRegistered(sellerAddress);
     }
 
     /**
@@ -169,8 +169,8 @@ contract TokenLaunchManager is Permissions, IERC777Recipient {
 
     }
 
-    function initialize(address contractManager) public override initializer {
-        Permissions.initialize(contractManager);
+    function initialize(address contractManagerAddress) public override initializer {
+        Permissions.initialize(contractManagerAddress);
         _erc1820 = IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
         _erc1820.setInterfaceImplementer(address(this), keccak256("ERC777TokensRecipient"), address(this));
     }
@@ -183,7 +183,7 @@ contract TokenLaunchManager is Permissions, IERC777Recipient {
     // private
 
     function _getBalance() private view returns(uint balance) {
-        return IERC20(_contractManager.getContract("SkaleToken")).balanceOf(address(this));
+        return IERC20(contractManager.getContract("SkaleToken")).balanceOf(address(this));
     }
 
     function _setApprovedAmount(address wallet, uint value) private {

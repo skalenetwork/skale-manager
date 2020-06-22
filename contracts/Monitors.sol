@@ -100,7 +100,7 @@ contract Monitors is Permissions {
      * addMonitor - setup monitors of node
      */
     function addMonitor(uint nodeIndex) external allow("SkaleManager") {
-        ConstantsHolder constantsHolder = ConstantsHolder(_contractManager.getContract("ConstantsHolder"));
+        ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
         bytes32 monitorIndex = keccak256(abi.encodePacked(nodeIndex));
         _generateGroup(monitorIndex, nodeIndex, constantsHolder.NUMBER_OF_MONITORS());
         CheckedNode memory checkedNode = _getCheckedNodeData(nodeIndex);
@@ -153,8 +153,8 @@ contract Monitors is Permissions {
             }
             delete checkedNodes[monitorIndex][checkedNodes[monitorIndex].length - 1];
             checkedNodes[monitorIndex].pop();
-            ConstantsHolder constantsHolder = ConstantsHolder(_contractManager.getContract("ConstantsHolder"));
-            bool receiveVerdict = time.add(constantsHolder.deltaPeriod()) > uint32(block.timestamp);
+            ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
+            bool receiveVerdict = uint(time).add(constantsHolder.deltaPeriod()) > uint32(block.timestamp);
             if (receiveVerdict) {
                 verdicts[keccak256(abi.encodePacked(verdict.toNodeIndex))].push(
                     [uint(verdict.downtime), uint(verdict.latency)]
@@ -193,7 +193,7 @@ contract Monitors is Permissions {
         view
         returns (CheckedNodeWithIp[] memory checkedNodesWithIp)
     {
-        Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
+        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
         checkedNodesWithIp = new CheckedNodeWithIp[](checkedNodes[monitorIndex].length);
         for (uint i = 0; i < checkedNodes[monitorIndex].length; ++i) {
             checkedNodesWithIp[i].nodeIndex = checkedNodes[monitorIndex][i].nodeIndex;
@@ -243,7 +243,7 @@ contract Monitors is Permissions {
         private
         allow("SkaleManager")
     {
-        Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
+        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
         uint[] memory activeNodes = nodes.getActiveNodeIds();
         uint numberOfNodesInGroup;
         uint availableAmount = activeNodes.length.sub((nodes.isNodeActive(nodeIndex)) ? 1 : 0);
@@ -321,8 +321,8 @@ contract Monitors is Permissions {
     }
 
     function _getCheckedNodeData(uint nodeIndex) private view returns (CheckedNode memory checkedNode) {
-        ConstantsHolder constantsHolder = ConstantsHolder(_contractManager.getContract("ConstantsHolder"));
-        Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
+        ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
+        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
 
         checkedNode.nodeIndex = nodeIndex;
         // Can't use SafeMath because we substract uint32

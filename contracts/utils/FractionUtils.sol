@@ -53,17 +53,17 @@ library FractionUtils {
         return createFraction(a.numerator.mul(b.numerator), a.denominator.mul(b.denominator));
     }
 
-    function gcd(uint _a, uint _b) internal pure returns (uint) {
-        uint a = _a;
-        uint b = _b;
-        if (b > a) {
-            (a, b) = swap(a, b);
+    function gcd(uint a, uint b) internal pure returns (uint) {
+        uint _a = a;
+        uint _b = b;
+        if (_b > _a) {
+            (_a, _b) = swap(_a, _b);
         }
-        while (b > 0) {
-            a = a.mod(b);
-            (a, b) = swap (a, b);
+        while (_b > 0) {
+            _a = _a.mod(_b);
+            (_a, _b) = swap (_a, _b);
         }
-        return a;
+        return _a;
     }
 
     function swap(uint a, uint b) internal pure returns (uint, uint) {

@@ -37,7 +37,7 @@ contract Pricing is Permissions {
     uint public lastUpdated;
 
     function initNodes() external {
-        Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
+        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
         totalNodes = nodes.getNumberOnlineNodes();
     }
 
@@ -92,7 +92,7 @@ contract Pricing is Permissions {
     }
 
     function checkAllNodes() public {
-        Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
+        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
         uint numberOfActiveNodes = nodes.getNumberOnlineNodes();
 
         require(totalNodes != numberOfActiveNodes, "No any changes on nodes");
@@ -100,7 +100,7 @@ contract Pricing is Permissions {
     }
 
     function _getTotalLoad() private view returns (uint) {
-        SchainsInternal schainsInternal = SchainsInternal(_contractManager.getContract("SchainsInternal"));
+        SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
 
         uint load = 0;
         for (uint i = 0; i < schainsInternal.numberOfSchains(); i++) {
@@ -115,7 +115,7 @@ contract Pricing is Permissions {
     }
 
     function _getTotalCapacity() private view returns (uint) {
-        Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
+        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
 
         return 128 * nodes.getNumberOnlineNodes();
     }

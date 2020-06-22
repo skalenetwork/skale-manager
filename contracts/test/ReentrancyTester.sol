@@ -38,8 +38,8 @@ contract ReentrancyTester is Permissions, IERC777Recipient, IERC777Sender {
     bool private _burningAttack = false;
     uint private _amount = 0;
 
-    constructor (address contractManager) public {
-        Permissions.initialize(contractManager);
+    constructor (address contractManagerAddress) public {
+        Permissions.initialize(contractManagerAddress);
         _erc1820.setInterfaceImplementer(address(this), keccak256("ERC777TokensRecipient"), address(this));
         _erc1820.setInterfaceImplementer(address(this), keccak256("ERC777TokensSender"), address(this));
     }
@@ -55,10 +55,10 @@ contract ReentrancyTester is Permissions, IERC777Recipient, IERC777Sender {
         external override
     {
         if (_reentrancyCheck) {
-            SkaleToken skaleToken = SkaleToken(_contractManager.getContract("SkaleToken"));
+            SkaleToken skaleToken = SkaleToken(contractManager.getContract("SkaleToken"));
 
             require(
-                skaleToken.transfer(_contractManager.getContract("SkaleToken"), amount),
+                skaleToken.transfer(contractManager.getContract("SkaleToken"), amount),
                 "Transfer is not successful");
         }
     }
@@ -74,7 +74,7 @@ contract ReentrancyTester is Permissions, IERC777Recipient, IERC777Sender {
     {
         if (_burningAttack) {
             DelegationController delegationController = DelegationController(
-                _contractManager.getContract("DelegationController"));
+                contractManager.getContract("DelegationController"));
             delegationController.delegate(
                 1,
                 _amount,
@@ -92,7 +92,7 @@ contract ReentrancyTester is Permissions, IERC777Recipient, IERC777Sender {
     }
 
     function burningAttack() external {
-        SkaleToken skaleToken = SkaleToken(_contractManager.getContract("SkaleToken"));
+        SkaleToken skaleToken = SkaleToken(contractManager.getContract("SkaleToken"));
 
         _amount = skaleToken.balanceOf(address(this));
 

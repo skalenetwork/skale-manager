@@ -26,8 +26,8 @@ import "../SkaleToken.sol";
 
 contract SkaleTokenInternalTester is SkaleToken {
 
-    constructor(address contractManager, address[] memory defOps) public
-    SkaleToken(contractManager, defOps)
+    constructor(address contractManagerAddress, address[] memory defOps) public
+    SkaleToken(contractManagerAddress, defOps)
     // solhint-disable-next-line no-empty-blocks
     { }
 

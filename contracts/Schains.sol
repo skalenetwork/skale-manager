@@ -129,13 +129,13 @@ contract Schains is Permissions {
      */
     function deleteSchain(address from, string calldata name) external allow("SkaleManager") {
         bytes32 schainId = keccak256(abi.encodePacked(name));
-        address dataAddress = _contractManager.getContract("SchainsInternal");
+        address dataAddress = contractManager.getContract("SchainsInternal");
         require(
             SchainsInternal(dataAddress).isOwnerAddress(from, schainId), 
             "Message sender is not an owner of Schain"
         );
-        SchainsInternal schainsInternal = SchainsInternal(_contractManager.getContract("SchainsInternal"));
-        address nodesAddress = _contractManager.getContract("Nodes");
+        SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
+        address nodesAddress = contractManager.getContract("Nodes");
 
         // removes Schain from Nodes
         uint[] memory nodesInGroup = SchainsInternal(dataAddress).getNodesInGroup(schainId);
@@ -162,9 +162,9 @@ contract Schains is Permissions {
 
     function deleteSchainByRoot(string calldata name) external allow("SkaleManager") {
         bytes32 schainId = keccak256(abi.encodePacked(name));
-        address dataAddress = _contractManager.getContract("SchainsInternal");
+        address dataAddress = contractManager.getContract("SchainsInternal");
         SchainsInternal schainsInternal = SchainsInternal(
-            _contractManager.getContract("SchainsInternal"));
+            contractManager.getContract("SchainsInternal"));
         require(SchainsInternal(dataAddress).isSchainExist(schainId), "Schain does not exist");
 
         // removes Schain from Nodes
@@ -190,7 +190,7 @@ contract Schains is Permissions {
     }
 
     function exitFromSchain(uint nodeIndex) external allow("SkaleManager") returns (bool) {
-        SchainsInternal schainsInternal = SchainsInternal(_contractManager.getContract("SchainsInternal"));
+        SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
         bytes32 schainId = schainsInternal.getActiveSchain(nodeIndex);
         require(_checkRotation(schainId), "No any free Nodes for rotating");
         uint newNodeIndex = rotateNode(nodeIndex, schainId);
@@ -199,7 +199,7 @@ contract Schains is Permissions {
     }
 
     function freezeSchains(uint nodeIndex) external allow("SkaleManager") {
-        SchainsInternal schainsInternal = SchainsInternal(_contractManager.getContract("SchainsInternal"));
+        SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
         bytes32[] memory schains = schainsInternal.getActiveSchains(nodeIndex);
         for (uint i = 0; i < schains.length; i++) {
             SchainsInternal.Rotation memory rotation = schainsInternal.getRotation(schains[i]);
@@ -222,10 +222,10 @@ contract Schains is Permissions {
 
     function restartSchainCreation(string calldata name) external allow("SkaleManager") {
         bytes32 schainId = keccak256(abi.encodePacked(name));
-        address dataAddress = _contractManager.getContract("SchainsInternal");
+        address dataAddress = contractManager.getContract("SchainsInternal");
         require(SchainsInternal(dataAddress).isGroupFailedDKG(schainId), "DKG success");
         SchainsInternal schainsInternal = SchainsInternal(
-            _contractManager.getContract("SchainsInternal"));
+            contractManager.getContract("SchainsInternal"));
         require(schainsInternal.isAnyFreeNode(schainId), "No any free Nodes for rotation");
         uint newNodeIndex = _selectNodeToGroup(schainId);
         emit NodeAdded(schainId, newNodeIndex);
@@ -255,8 +255,8 @@ contract Schains is Permissions {
         view
         returns (bool)
     {
-        SchainsInternal schainsInternal = SchainsInternal(_contractManager.getContract("SchainsInternal"));
-        SkaleVerifier skaleVerifier = SkaleVerifier(_contractManager.getContract("SkaleVerifier"));
+        SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
+        SkaleVerifier skaleVerifier = SkaleVerifier(contractManager.getContract("SkaleVerifier"));
 
         G2Operations.G2Point memory publicKey = schainsInternal.getGroupsPublicKey(
             keccak256(abi.encodePacked(schainName))
@@ -284,7 +284,7 @@ contract Schains is Permissions {
         allowTwo("SkaleDKG", "SkaleManager")
         returns (uint)
     {
-        SchainsInternal schainsInternal = SchainsInternal(_contractManager.getContract("SchainsInternal"));
+        SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
         schainsInternal.removeNodeFromSchain(nodeIndex, schainId);
         return _selectNodeToGroup(schainId);
     }
@@ -296,7 +296,7 @@ contract Schains is Permissions {
      * @return current price for given Schain
      */
     function getSchainPrice(uint typeOfSchain, uint lifetime) public view returns (uint) {
-        ConstantsHolder constantsHolder = ConstantsHolder(_contractManager.getContract("ConstantsHolder"));
+        ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
         uint nodeDeposit = constantsHolder.NODE_DEPOSIT();
         uint numberOfNodes;
         uint8 divisor;
@@ -326,7 +326,7 @@ contract Schains is Permissions {
         view
         returns (uint numberOfNodes, uint8 partOfNode)
     {
-        ConstantsHolder constantsHolder = ConstantsHolder(_contractManager.getContract("ConstantsHolder"));
+        ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
         numberOfNodes = constantsHolder.NUMBER_OF_NODES_FOR_SCHAIN();
         if (typeOfSchain == 1) {
             partOfNode = constantsHolder.TINY_DIVISOR() / constantsHolder.TINY_DIVISOR();
@@ -351,7 +351,7 @@ contract Schains is Permissions {
         uint deposit,
         uint lifetime) private
     {
-        address dataAddress = _contractManager.getContract("SchainsInternal");
+        address dataAddress = contractManager.getContract("SchainsInternal");
         require(SchainsInternal(dataAddress).isSchainNameAvailable(name), "Schain name is not available");
 
         // initialize Schain
@@ -385,7 +385,7 @@ contract Schains is Permissions {
      * @param partOfNode - divisor of given type of Schain
      */
     function _addSpace(uint nodeIndex, uint8 partOfNode) private {
-        Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
+        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
         nodes.addSpaceToNode(nodeIndex, partOfNode);
     }
 
@@ -405,7 +405,7 @@ contract Schains is Permissions {
         private
         allow("SkaleManager")
     {
-        SchainsInternal schainsInternal = SchainsInternal(_contractManager.getContract("SchainsInternal"));
+        SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
         uint[] memory nodesInGroup = schainsInternal.createGroupForSchain(schainId, numberOfNodes, partOfNode);
         schainsInternal.redirectOpenChannel(schainId);
 
@@ -423,8 +423,8 @@ contract Schains is Permissions {
      * @return nodeIndex - global index of Node
      */
     function _selectNodeToGroup(bytes32 schainId) private returns (uint) {
-        SchainsInternal schainsInternal = SchainsInternal(_contractManager.getContract("SchainsInternal"));
-        Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
+        SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
+        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
         require(schainsInternal.isSchainActive(schainId), "Group is not active");
         uint8 space = schainsInternal.getSchainsPartOfNode(schainId);
         uint[] memory possibleNodes = schainsInternal.isEnoughNodes(schainId);
@@ -444,7 +444,7 @@ contract Schains is Permissions {
     }
 
     function _checkRotation(bytes32 schainId ) private view returns (bool) {
-        SchainsInternal schainsInternal = SchainsInternal(_contractManager.getContract("SchainsInternal"));
+        SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
         require(schainsInternal.isSchainExist(schainId), "Schain does not exist");
         return schainsInternal.isAnyFreeNode(schainId);
     }

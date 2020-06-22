@@ -73,7 +73,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
         require(to == address(this), "Receiver is incorrect");
         if (userData.length > 0) {
             Schains schains = Schains(
-                _contractManager.getContract("Schains"));
+                contractManager.getContract("Schains"));
             schains.addSchain(from, value, userData);
         }
     }
@@ -87,8 +87,8 @@ contract SkaleManager is IERC777Recipient, Permissions {
         string calldata name)
         external
     {
-        Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
-        Monitors monitors = Monitors(_contractManager.getContract("Monitors"));
+        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
+        Monitors monitors = Monitors(contractManager.getContract("Monitors"));
 
         nodes.checkPossibilityCreatingNode(msg.sender);
         Nodes.NodeCreationParams memory params = Nodes.NodeCreationParams({
@@ -103,8 +103,8 @@ contract SkaleManager is IERC777Recipient, Permissions {
     }
 
     function nodeExit(uint nodeIndex) external {
-        ValidatorService validatorService = ValidatorService(_contractManager.getContract("ValidatorService"));
-        Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
+        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
+        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
         uint validatorId = nodes.getValidatorId(nodeIndex);
         bool permitted = (_isOwner() || nodes.isNodeExist(msg.sender, nodeIndex));
         if (!permitted) {
@@ -112,9 +112,9 @@ contract SkaleManager is IERC777Recipient, Permissions {
         }
         require(permitted, "Sender is not permitted to call this function");
         Schains schains = Schains(
-            _contractManager.getContract("Schains"));
-        SchainsInternal schainsInternal = SchainsInternal(_contractManager.getContract("SchainsInternal"));
-        ConstantsHolder constants = ConstantsHolder(_contractManager.getContract("ConstantsHolder"));
+            contractManager.getContract("Schains"));
+        SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
+        ConstantsHolder constants = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
         schains.freezeSchains(nodeIndex);
         if (nodes.isNodeActive(nodeIndex)) {
             require(nodes.initExit(nodeIndex), "Initialization of node exit is failed");
@@ -130,25 +130,25 @@ contract SkaleManager is IERC777Recipient, Permissions {
         if (completed) {
             require(nodes.completeExit(nodeIndex), "Finishing of node exit is failed");
             nodes.changeNodeFinishTime(nodeIndex, uint32(now + (isSchains ? constants.rotationDelay() : 0)));
-            Monitors monitors = Monitors(_contractManager.getContract("Monitors"));
+            Monitors monitors = Monitors(contractManager.getContract("Monitors"));
             monitors.deleteMonitor(nodeIndex);
             nodes.deleteNodeForValidator(validatorId, nodeIndex);
         }
     }
 
     function deleteSchain(string calldata name) external {
-        Schains schains = Schains(_contractManager.getContract("Schains"));
+        Schains schains = Schains(contractManager.getContract("Schains"));
         schains.deleteSchain(msg.sender, name);
     }
 
     function deleteSchainByRoot(string calldata name) external onlyOwner {
-        Schains schains = Schains(_contractManager.getContract("Schains"));
+        Schains schains = Schains(contractManager.getContract("Schains"));
         schains.deleteSchainByRoot(name);
     }
 
     function sendVerdict(uint fromMonitorIndex, Monitors.Verdict calldata verdict) external {
-        Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
-        Monitors monitors = Monitors(_contractManager.getContract("Monitors"));
+        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
+        Monitors monitors = Monitors(contractManager.getContract("Monitors"));
 
         require(nodes.isNodeExist(msg.sender, fromMonitorIndex), "Node does not exist for Message sender");
 
@@ -156,16 +156,16 @@ contract SkaleManager is IERC777Recipient, Permissions {
     }
 
     function sendVerdicts(uint fromMonitorIndex, Monitors.Verdict[] calldata verdicts) external {
-        Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
+        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
         require(nodes.isNodeExist(msg.sender, fromMonitorIndex), "Node does not exist for Message sender");
-        Monitors monitors = Monitors(_contractManager.getContract("Monitors"));
+        Monitors monitors = Monitors(contractManager.getContract("Monitors"));
         for (uint i = 0; i < verdicts.length; i++) {
             monitors.sendVerdict(fromMonitorIndex, verdicts[i]);
         }
     }
 
     function getBounty(uint nodeIndex) external {
-        Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
+        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
         require(nodes.isNodeExist(msg.sender, nodeIndex), "Node does not exist for Message sender");
         require(nodes.isTimeForReward(nodeIndex), "Not time for bounty");
         bool nodeIsActive = nodes.isNodeActive(nodeIndex);
@@ -173,7 +173,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
         require(nodeIsActive || nodeIsLeaving, "Node is not Active and is not Leaving");
         uint averageDowntime;
         uint averageLatency;
-        Monitors monitors = Monitors(_contractManager.getContract("Monitors"));
+        Monitors monitors = Monitors(contractManager.getContract("Monitors"));
         (averageDowntime, averageLatency) = monitors.calculateMetrics(nodeIndex);
         uint bounty = _manageBounty(
             msg.sender,
@@ -186,11 +186,11 @@ contract SkaleManager is IERC777Recipient, Permissions {
     }
 
     function calculateNormalBounty() external view returns (uint) {
-        ConstantsHolder constants = ConstantsHolder(_contractManager.getContract("ConstantsHolder"));
-        Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
+        ConstantsHolder constants = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
+        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
 
         uint nodesAmount = stageNodes;
-        if (stageTime.add(constants.rewardPeriod()) < now) {
+        if (uint(stageTime).add(constants.rewardPeriod()) < now) {
             nodesAmount = nodes.numberOfActiveNodes().add(nodes.numberOfLeavingNodes());
         }
         
@@ -213,11 +213,11 @@ contract SkaleManager is IERC777Recipient, Permissions {
         uint downtime,
         uint latency) private returns (uint)
     {
-        ConstantsHolder constants = ConstantsHolder(_contractManager.getContract("ConstantsHolder"));
-        Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
+        ConstantsHolder constants = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
+        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
 
         uint networkLaunchTimestamp = constants.launchTimestamp();
-        if (stageTime.add(constants.rewardPeriod()) < now) {
+        if (uint(stageTime).add(constants.rewardPeriod()) < now) {
             stageNodes = nodes.numberOfActiveNodes().add(nodes.numberOfLeavingNodes());
             stageTime = uint32(block.timestamp);
         }
@@ -245,10 +245,10 @@ contract SkaleManager is IERC777Recipient, Permissions {
     }
 
     function _payBounty(uint bountyForMiner, address miner, uint nodeIndex) private returns (bool) {
-        ValidatorService validatorService = ValidatorService(_contractManager.getContract("ValidatorService"));
-        Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
-        SkaleToken skaleToken = SkaleToken(_contractManager.getContract("SkaleToken"));
-        Distributor distributor = Distributor(_contractManager.getContract("Distributor"));
+        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
+        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
+        SkaleToken skaleToken = SkaleToken(contractManager.getContract("SkaleToken"));
+        Distributor distributor = Distributor(contractManager.getContract("Distributor"));
 
         uint validatorId = validatorService.getValidatorIdByNodeAddress(miner);
         uint bounty = bountyForMiner;
@@ -268,7 +268,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
     )
         private
     {
-        Monitors monitors = Monitors(_contractManager.getContract("Monitors"));
+        Monitors monitors = Monitors(contractManager.getContract("Monitors"));
         uint previousBlockEvent = monitors.getLastBountyBlock(nodeIndex);
         monitors.setLastBountyBlock(nodeIndex);
 
@@ -285,7 +285,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
 
     function _getValidatorsCapitalization() private view returns (uint) {
         if (minersCap == 0) {
-            return SkaleToken(_contractManager.getContract("SkaleToken")).CAP() / 3;
+            return SkaleToken(contractManager.getContract("SkaleToken")).CAP() / 3;
         }
         return minersCap;
     }
@@ -312,7 +312,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
             return 0;
         }
 
-        ConstantsHolder constants = ConstantsHolder(_contractManager.getContract("ConstantsHolder"));
+        ConstantsHolder constants = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
         
         uint numberOfSixYearsPeriods = now.sub(networkLaunchTimestamp).div(constants.SIX_YEARS()) + 1;
 
@@ -336,7 +336,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
         returns (uint reducedBounty)
     {
         reducedBounty = bounty;
-        uint getBountyDeadline = nodes.getNodeLastRewardDate(nodeIndex)
+        uint getBountyDeadline = uint(nodes.getNodeLastRewardDate(nodeIndex))
             .add(constants.rewardPeriod())
             .add(constants.deltaPeriod());
         uint numberOfExpiredIntervals;
@@ -345,14 +345,17 @@ contract SkaleManager is IERC777Recipient, Permissions {
         } else {
             numberOfExpiredIntervals = 0;
         }
-        uint normalDowntime = ((constants.rewardPeriod().sub(constants.deltaPeriod())).div(constants.checkTime())) / 30;
+        uint normalDowntime = uint(constants.rewardPeriod())
+            .sub(constants.deltaPeriod())
+            .div(constants.checkTime())
+            .div(30);
         uint totalDowntime = downtime.add(numberOfExpiredIntervals);
         if (totalDowntime > normalDowntime) {
             // reduce bounty because downtime is too big
             uint penalty = bounty
                 .mul(totalDowntime)
                 .div(
-                    constants.rewardPeriod().sub(constants.deltaPeriod())
+                    uint(constants.rewardPeriod()).sub(constants.deltaPeriod())
                         .div(constants.checkTime())
                 );            
             if (bounty > penalty) {

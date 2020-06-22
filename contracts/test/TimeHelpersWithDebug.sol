@@ -50,8 +50,8 @@ contract TimeHelpersWithDebug is TimeHelpers, OwnableUpgradeSafe {
         return super.timestampToMonth(timestamp.add(_getTimeShift(timestamp)));
     }
 
-    function monthToTimestamp(uint _month) public view override returns (uint) {
-        uint shiftedTimestamp = super.monthToTimestamp(_month);
+    function monthToTimestamp(uint month) public view override returns (uint) {
+        uint shiftedTimestamp = super.monthToTimestamp(month);
         if (_timeShift.length > 0) {
             _findTimeBeforeTimeShift(shiftedTimestamp);
         } else {

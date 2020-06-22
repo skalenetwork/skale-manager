@@ -88,7 +88,7 @@ contract SkaleDKG is Permissions {
     modifier correctNode(bytes32 groupIndex, uint nodeIndex) {
         uint index = _nodeIndexInSchain(groupIndex, nodeIndex);
         require(
-            index < SchainsInternal(_contractManager.getContract("SchainsInternal"))
+            index < SchainsInternal(contractManager.getContract("SchainsInternal"))
                 .getNumberOfNodesInGroup(groupIndex),
             "Node is not in this group");
         _;
@@ -115,7 +115,7 @@ contract SkaleDKG is Permissions {
         correctGroup(groupIndex)
         correctNode(groupIndex, nodeIndex)
     {
-        SchainsInternal schainsInternal = SchainsInternal(_contractManager.getContract("SchainsInternal"));
+        SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
         require(_isNodeByMessageSender(nodeIndex, msg.sender), "Node does not exist for message sender");
         require(verificationVector.length >= 1, "VerificationVector is empty");
         require(
@@ -203,7 +203,7 @@ contract SkaleDKG is Permissions {
         require(_isNodeByMessageSender(fromNodeIndex, msg.sender), "Node does not exist for message sender");
         uint index = _nodeIndexInSchain(groupIndex, fromNodeIndex);
         uint numberOfParticipant = SchainsInternal(
-            _contractManager.getContract("SchainsInternal")
+            contractManager.getContract("SchainsInternal")
         ).getNumberOfNodesInGroup(groupIndex);
         require(numberOfParticipant == channels[groupIndex].numberOfBroadcasted, "Still Broadcasting phase");
         require(!channels[groupIndex].completed[index], "Node is already alright");
@@ -211,7 +211,7 @@ contract SkaleDKG is Permissions {
         channels[groupIndex].numberOfCompleted++;
         emit AllDataReceived(groupIndex, fromNodeIndex);
         if (channels[groupIndex].numberOfCompleted == numberOfParticipant) {
-            SchainsInternal(_contractManager.getContract("SchainsInternal")).setPublicKey(
+            SchainsInternal(contractManager.getContract("SchainsInternal")).setPublicKey(
                 groupIndex,
                 channels[groupIndex].publicKey.x.a,
                 channels[groupIndex].publicKey.x.b,
@@ -234,7 +234,7 @@ contract SkaleDKG is Permissions {
 
     function isBroadcastPossible(bytes32 groupIndex, uint nodeIndex) external view returns (bool) {
         uint index = _nodeIndexInSchain(groupIndex, nodeIndex);
-        SchainsInternal schainsInternal = SchainsInternal(_contractManager.getContract("SchainsInternal"));
+        SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
         return channels[groupIndex].active &&
             index < schainsInternal.getNumberOfNodesInGroup(groupIndex) &&
             _isNodeByMessageSender(nodeIndex, msg.sender) &&
@@ -260,7 +260,7 @@ contract SkaleDKG is Permissions {
                 channels[groupIndex].nodeToComplaint == toNodeIndex &&
                 channels[groupIndex].startedBlockTimestamp.add(1800) <= block.timestamp
             );
-        SchainsInternal schainsInternal = SchainsInternal(_contractManager.getContract("SchainsInternal"));
+        SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
         return channels[groupIndex].active &&
             indexFrom < schainsInternal.getNumberOfNodesInGroup(groupIndex) &&
             indexTo < schainsInternal.getNumberOfNodesInGroup(groupIndex) &&
@@ -270,7 +270,7 @@ contract SkaleDKG is Permissions {
 
     function isAlrightPossible(bytes32 groupIndex, uint nodeIndex) external view returns (bool) {
         uint index = _nodeIndexInSchain(groupIndex, nodeIndex);
-        SchainsInternal schainsInternal = SchainsInternal(_contractManager.getContract("SchainsInternal"));
+        SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
         return channels[groupIndex].active &&
             index < schainsInternal.getNumberOfNodesInGroup(groupIndex) &&
             _isNodeByMessageSender(nodeIndex, msg.sender) &&
@@ -280,7 +280,7 @@ contract SkaleDKG is Permissions {
 
     function isResponsePossible(bytes32 groupIndex, uint nodeIndex) external view returns (bool) {
         uint index = _nodeIndexInSchain(groupIndex, nodeIndex);
-        SchainsInternal schainsInternal = SchainsInternal(_contractManager.getContract("SchainsInternal"));
+        SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
         return channels[groupIndex].active &&
             index < schainsInternal.getNumberOfNodesInGroup(groupIndex) &&
             _isNodeByMessageSender(nodeIndex, msg.sender) &&
@@ -309,7 +309,7 @@ contract SkaleDKG is Permissions {
 
     function _reopenChannel(bytes32 groupIndex) private {
         SchainsInternal schainsInternal = SchainsInternal(
-            _contractManager.getContract("SchainsInternal")
+            contractManager.getContract("SchainsInternal")
         );
 
         channels[groupIndex].active = true;
@@ -340,10 +340,10 @@ contract SkaleDKG is Permissions {
 
     function _finalizeSlashing(bytes32 groupIndex, uint badNode) private {
         SchainsInternal schainsInternal = SchainsInternal(
-            _contractManager.getContract("SchainsInternal")
+            contractManager.getContract("SchainsInternal")
         );
         Schains schains = Schains(
-            _contractManager.getContract("Schains")
+            contractManager.getContract("Schains")
         );
         emit BadGuy(badNode);
         emit FailedDKG(groupIndex);
@@ -363,9 +363,9 @@ contract SkaleDKG is Permissions {
             channels[groupIndex].active = false;
         }
 
-        Punisher punisher = Punisher(_contractManager.getContract("Punisher"));
-        Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
-        SlashingTable slashingTable = SlashingTable(_contractManager.getContract("SlashingTable"));
+        Punisher punisher = Punisher(contractManager.getContract("Punisher"));
+        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
+        SlashingTable slashingTable = SlashingTable(contractManager.getContract("SlashingTable"));
 
         punisher.slash(nodes.getValidatorId(badNode), slashingTable.getPenalty("FailedDKG"));
     }
@@ -416,8 +416,8 @@ contract SkaleDKG is Permissions {
     }
 
     function _getCommonPublicKey(bytes32 groupIndex, uint256 secretNumber) private view returns (bytes32 key) {
-        Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
-        ECDH ecdh = ECDH(_contractManager.getContract("ECDH"));
+        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
+        ECDH ecdh = ECDH(contractManager.getContract("ECDH"));
         bytes32[2] memory publicKey = nodes.getNodePublicKey(channels[groupIndex].fromNodeToComplaint);
         uint256 pkX = uint(publicKey[0]);
         uint256 pkY = uint(publicKey[1]);
@@ -428,7 +428,7 @@ contract SkaleDKG is Permissions {
     }
 
     function _decryptMessage(bytes32 groupIndex, uint secretNumber) private view returns (uint) {
-        Decryption decryption = Decryption(_contractManager.getContract("Decryption"));
+        Decryption decryption = Decryption(contractManager.getContract("Decryption"));
 
         bytes32 key = _getCommonPublicKey(groupIndex, secretNumber);
 
@@ -491,12 +491,12 @@ contract SkaleDKG is Permissions {
     }
 
     function _nodeIndexInSchain(bytes32 schainId, uint nodeIndex) private view returns (uint) {
-        return SchainsInternal(_contractManager.getContract("SchainsInternal"))
+        return SchainsInternal(contractManager.getContract("SchainsInternal"))
             .getNodeIndexInGroup(schainId, nodeIndex);
     }
 
     function _isNodeByMessageSender(uint nodeIndex, address from) private view returns (bool) {
-        Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
+        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
         return nodes.isNodeExist(from, nodeIndex);
     }
 

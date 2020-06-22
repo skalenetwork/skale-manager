@@ -53,7 +53,7 @@ contract SlashingTable is Permissions {
         return penalty;
     }
 
-    function initialize(address contractManager) public override initializer {
-        Permissions.initialize(contractManager);
+    function initialize(address contractManagerAddress) public override initializer {
+        Permissions.initialize(contractManagerAddress);
     }
 }
