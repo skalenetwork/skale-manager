@@ -25,23 +25,8 @@ pragma experimental ABIEncoderV2;
 import "./Permissions.sol";
 import "./SchainsInternal.sol";
 import "./ConstantsHolder.sol";
-
-
-/**
- * @title SkaleVerifier - interface of SkaleVerifier
- */
-interface ISkaleVerifierG {
-    function verify(
-        uint sigx,
-        uint sigy,
-        uint hashx,
-        uint hashy,
-        uint pkx1,
-        uint pky1,
-        uint pkx2,
-        uint pky2) external view returns (bool);
-}
-
+import "./SkaleVerifier.sol";
+import "./utils/FieldOperations.sol";
 
 /**
  * @title Schains - contract contains all functionality logic to manage Schains
@@ -247,30 +232,43 @@ contract Schains is Permissions {
     }
 
     /**
-     * @dev verifySignature - verify signature which create Group by Groups BLS master public key
-     * @param schainId - Groups identifier
-     * @param signatureX - first part of BLS signature
-     * @param signatureY - second part of BLS signature
-     * @param hashX - first part of hashed message
-     * @param hashY - second part of hashed message
+     * @dev verifySignature - verify signature which create Group by Groups BLS master public key     
+     * @param signatureA - first part of BLS signature
+     * @param signatureB - second part of BLS signature
+     * @param hash - hashed message
+     * @param counter - smalles sub from square
+     * @param hashA - first part of hashed message
+     * @param hashB - second part of hashed message
+     * @param schainName - name of the Schain
      * @return true - if correct, false - if not
      */
-    function verifySignature(
-        bytes32 schainId,
-        uint signatureX,
-        uint signatureY,
-        uint hashX,
-        uint hashY) external view returns (bool)
+    function verifySchainSignature(
+        uint signatureA,
+        uint signatureB,
+        bytes32 hash,
+        uint counter,
+        uint hashA,
+        uint hashB,
+        string calldata schainName
+    )
+        external
+        view
+        returns (bool)
     {
-        uint publicKeyx1;
-        uint publicKeyy1;
-        uint publicKeyx2;
-        uint publicKeyy2;
         SchainsInternal schainsInternal = SchainsInternal(_contractManager.getContract("SchainsInternal"));
-        (publicKeyx1, publicKeyy1, publicKeyx2, publicKeyy2) = schainsInternal.getGroupsPublicKey(schainId);
-        address skaleVerifierAddress = _contractManager.getContract("SkaleVerifier");
-        return ISkaleVerifierG(skaleVerifierAddress).verify(
-            signatureX, signatureY, hashX, hashY, publicKeyx1, publicKeyy1, publicKeyx2, publicKeyy2
+        SkaleVerifier skaleVerifier = SkaleVerifier(_contractManager.getContract("SkaleVerifier"));
+
+        G2Operations.G2Point memory publicKey = schainsInternal.getGroupsPublicKey(
+            keccak256(abi.encodePacked(schainName))
+        );
+        return skaleVerifier.verify(
+            Fp2Operations.Fp2Point({
+                a: signatureA,
+                b: signatureB
+            }),
+            hash, counter,
+            hashA, hashB,
+            publicKey
         );
     }
 

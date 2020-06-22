@@ -24,6 +24,7 @@ pragma experimental ABIEncoderV2;
 
 import "./ConstantsHolder.sol";
 import "./Nodes.sol";
+import "./utils/FieldOperations.sol";
 
 interface ISkaleDKG {
     function openChannel(bytes32 schainId) external;
@@ -69,7 +70,7 @@ contract SchainsInternal is Permissions {
 
     struct GroupForSchain {
         uint[] nodesInGroup;
-        uint[4] groupsPublicKey;
+        G2Operations.G2Point groupsPublicKey;
         bool lastSuccessfulDKG;
     }
 
@@ -94,7 +95,7 @@ contract SchainsInternal is Permissions {
 
     mapping (uint => LeavingHistory[]) public leavingHistory;
 
-    mapping (bytes32 => uint[4][]) public previousPublicKeys;
+    mapping (bytes32 => G2Operations.G2Point[]) public previousPublicKeys;
 
     // array which contain all schains
     bytes32[] public schainsAtSystem;
@@ -164,14 +165,20 @@ contract SchainsInternal is Permissions {
         uint publicKeyy2) external allow("SkaleDKG")
     {
         if (!_isPublicKeyZero(schainId)) {
-            uint[4] memory previousKey = schainsGroups[schainId].groupsPublicKey;
+            G2Operations.G2Point memory previousKey = schainsGroups[schainId].groupsPublicKey;
             previousPublicKeys[schainId].push(previousKey);
         }
         schainsGroups[schainId].lastSuccessfulDKG = true;
-        schainsGroups[schainId].groupsPublicKey[0] = publicKeyx1;
-        schainsGroups[schainId].groupsPublicKey[1] = publicKeyy1;
-        schainsGroups[schainId].groupsPublicKey[2] = publicKeyx2;
-        schainsGroups[schainId].groupsPublicKey[3] = publicKeyy2;
+        schainsGroups[schainId].groupsPublicKey = G2Operations.G2Point({
+            x: Fp2Operations.Fp2Point({
+                a: publicKeyx1,
+                b: publicKeyy1
+            }),
+            y: Fp2Operations.Fp2Point({
+                a: publicKeyx2,
+                b: publicKeyy2
+            })
+        });
     }
 
     /**
@@ -298,7 +305,7 @@ contract SchainsInternal is Permissions {
      * @param schainId - Groups identifier
      */
     function deleteGroup(bytes32 schainId) external allow("Schains") {
-        uint[4] memory previousKey = schainsGroups[schainId].groupsPublicKey;
+        G2Operations.G2Point memory previousKey = schainsGroups[schainId].groupsPublicKey;
         previousPublicKeys[schainId].push(previousKey);
         delete schainsGroups[schainId].groupsPublicKey;
         // delete channel
@@ -519,26 +526,25 @@ contract SchainsInternal is Permissions {
      * @param schainId - Groups identifier
      * @return publicKey(x1, y1, x2, y2) - parts of BLS master public key
      */
-    function getGroupsPublicKey(bytes32 schainId) external view returns (uint, uint, uint, uint) {
-        return (
-            schainsGroups[schainId].groupsPublicKey[0],
-            schainsGroups[schainId].groupsPublicKey[1],
-            schainsGroups[schainId].groupsPublicKey[2],
-            schainsGroups[schainId].groupsPublicKey[3]
-        );
+    function getGroupsPublicKey(bytes32 schainId) external view returns (G2Operations.G2Point memory) {
+        return schainsGroups[schainId].groupsPublicKey;
     }
 
-    function getPreviousGroupsPublicKey(bytes32 schainId) external view returns (uint, uint, uint, uint) {
+    function getPreviousGroupsPublicKey(bytes32 schainId) external view returns (G2Operations.G2Point memory) {
         uint length = previousPublicKeys[schainId].length;
         if (length == 0) {
-            return (0, 0, 0, 0);
+            return G2Operations.G2Point({
+                x: Fp2Operations.Fp2Point({
+                    a: 0,
+                    b: 0
+                }),
+                y: Fp2Operations.Fp2Point({
+                    a: 0,
+                    b: 0
+                })
+            });
         }
-        return (
-            previousPublicKeys[schainId][length - 1][0],
-            previousPublicKeys[schainId][length - 1][1],
-            previousPublicKeys[schainId][length - 1][2],
-            previousPublicKeys[schainId][length - 1][3]
-        );
+        return previousPublicKeys[schainId][length - 1];
     }
 
     function isAnyFreeNode(bytes32 schainId) external view returns (bool) {
@@ -692,10 +698,10 @@ contract SchainsInternal is Permissions {
     }
 
     function _isPublicKeyZero(bytes32 schainId) private view returns (bool) {
-        return schainsGroups[schainId].groupsPublicKey[0] == 0 &&
-            schainsGroups[schainId].groupsPublicKey[1] == 0 &&
-            schainsGroups[schainId].groupsPublicKey[2] == 0 &&
-            schainsGroups[schainId].groupsPublicKey[3] == 0;
+        return schainsGroups[schainId].groupsPublicKey.x.a == 0 &&
+            schainsGroups[schainId].groupsPublicKey.x.b == 0 &&
+            schainsGroups[schainId].groupsPublicKey.y.a == 0 &&
+            schainsGroups[schainId].groupsPublicKey.y.b == 0;
     }
 
     function _isCorrespond(bytes32 schainId, uint nodeIndex) private view returns (bool) {

@@ -20,6 +20,7 @@
 */
 
 pragma solidity 0.6.8;
+pragma experimental ABIEncoderV2;
 
 import "./Permissions.sol";
 import "./SchainsInternal.sol";
@@ -28,21 +29,15 @@ import "./utils/FieldOperations.sol";
 
 
 contract SkaleVerifier is Permissions {  
-    using Fp2Operations for Fp2Operations.Fp2Point;  
+    using Fp2Operations for Fp2Operations.Fp2Point;
 
-    uint constant private _G2A = 10857046999023057135944570762232829481370756359578518086990519993285655852781;
-    uint constant private _G2B = 11559732032986387107991004021392285783925812861821192530917403151452391805634;
-    uint constant private _G2C = 8495653923123431417604973247489272438418190587263600148770280649306958101930;
-    uint constant private _G2D = 4082367875863433681332203403145435568316851327593401208105741076214120093531;
-
-    function verifySchainSignature(
-        uint signA,
-        uint signB,
+    function verify(
+        Fp2Operations.Fp2Point calldata signature,
         bytes32 hash,
         uint counter,
         uint hashA,
         uint hashB,
-        string calldata schainName
+        G2Operations.G2Point calldata publicKey
     )
         external
         view
@@ -59,76 +54,36 @@ contract SkaleVerifier is Permissions {
             return false;
         }
 
-        SchainsInternal schainsInternal = SchainsInternal(_contractManager.getContract("SchainsInternal"));
-        (uint pkA, uint pkB, uint pkC, uint pkD) = schainsInternal.getGroupsPublicKey(
-            keccak256(abi.encodePacked(schainName))
+        uint newSignB;
+        if (!(signature.a == 0 && signature.b == 0)) {
+            newSignB = Fp2Operations.P.sub((signature.b % Fp2Operations.P));
+        } else {
+            newSignB = signature.b;
+        }
+
+        require(G2Operations.isG1(signature.a, newSignB), "Sign not in G1");
+        require(G2Operations.isG1(hashA, hashB), "Hash not in G1");
+
+        G2Operations.G2Point memory g2 = G2Operations.getG2();
+        require(
+            G2Operations.isG2(g2),
+            "G2.one not in G2"
         );
-        return verify(
-            signA,
-            signB,
-            hash,
-            counter,
-            hashA,
-            hashB,
-            pkA,
-            pkB,
-            pkC,
-            pkD
+        require(
+            G2Operations.isG2(publicKey),
+            "Public Key not in G2"
+        );
+
+        return Precompiled.bn256Pairing(
+            signature.a, newSignB,
+            g2.x.b, g2.x.a, g2.y.b, g2.y.a,
+            hashA, hashB,
+            publicKey.x.b, publicKey.x.a, publicKey.y.b, publicKey.y.a
         );
     }
 
     function initialize(address newContractsAddress) public override initializer {
         Permissions.initialize(newContractsAddress);
-    }
-
-    function verify(
-        uint signA,
-        uint signB,
-        bytes32 hash,
-        uint counter,
-        uint hashA,
-        uint hashB,
-        uint pkA,
-        uint pkB,
-        uint pkC,
-        uint pkD) public view returns (bool)
-    {
-        if (!_checkHashToGroupWithHelper(
-            hash,
-            counter,
-            hashA,
-            hashB
-            )
-        )
-        {
-            return false;
-        }
-
-        uint newSignB;
-        if (!(signA == 0 && signB == 0)) {
-            newSignB = Fp2Operations.P.sub((signB % Fp2Operations.P));
-        } else {
-            newSignB = signB;
-        }
-
-        require(G2Operations.isG1(signA, newSignB), "Sign not in G1");
-        require(G2Operations.isG1(hashA, hashB), "Hash not in G1");
-
-        require(
-            G2Operations.isG2Point(
-                Fp2Operations.Fp2Point({a: _G2A, b: _G2B}),
-                Fp2Operations.Fp2Point({a: _G2C, b: _G2D})
-            ),
-            "G2.one not in G2"
-        );
-        require(
-            G2Operations.isG2Point(
-                Fp2Operations.Fp2Point({a: pkA, b: pkB}),
-                Fp2Operations.Fp2Point({a: pkC, b: pkD})),
-            "Public Key not in G2"
-        );
-
-        return Precompiled.bn256Pairing(signA, newSignB, _G2B, _G2A, _G2D, _G2C, hashA, hashB, pkB, pkA, pkD, pkC);
     }
 
     function _checkHashToGroupWithHelper(

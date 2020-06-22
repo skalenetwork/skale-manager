@@ -59,11 +59,6 @@ contract SkaleDKG is Permissions {
         bytes32 share;
     }
 
-    uint constant private _G2A = 10857046999023057135944570762232829481370756359578518086990519993285655852781;
-    uint constant private _G2B = 11559732032986387107991004021392285783925812861821192530917403151452391805634;
-    uint constant private _G2C = 8495653923123431417604973247489272438418190587263600148770280649306958101930;
-    uint constant private _G2D = 4082367875863433681332203403145435568316851327593401208105741076214120093531;
-
     uint constant private _G1A = 1;
     uint constant private _G1B = 2;
 
@@ -459,7 +454,7 @@ contract SkaleDKG is Permissions {
     )
         private
     {
-        require(value.isG2(), "Incorrect G2 point");
+        require(value.isG2(), "Incorrect g2 point");
         channels[groupIndex].publicKey = value.addG2(channels[groupIndex].publicKey);
     }
 
@@ -541,16 +536,15 @@ contract SkaleDKG is Permissions {
         require(G2Operations.isG1(_G1A, _G1B), "G1.one not in G1");
         require(G2Operations.isG1(x, y), "mulShare not in G1");
 
+        G2Operations.G2Point memory g2 = G2Operations.getG2();
         require(
-            G2Operations.isG2Point(
-                Fp2Operations.Fp2Point({a: _G2A, b: _G2B}),
-                Fp2Operations.Fp2Point({a: _G2C, b: _G2D})
-            ),
-            "G2.one not in G2"
+            G2Operations.isG2(g2),
+            "g2.one not in g2"
         );
-        require(G2Operations.isG2Point(tmpX, tmpY), "tmp not in G2");
+        require(G2Operations.isG2Point(tmpX, tmpY), "tmp not in g2");
 
-        return Precompiled.bn256Pairing(x, y, _G2B, _G2A, _G2D, _G2C, _G1A, _G1B, tmpX.b, tmpX.a, tmpY.b, tmpY.a);
+        return Precompiled.bn256Pairing(
+            x, y, g2.x.b, g2.x.a, g2.y.b, g2.y.a, _G1A, _G1B, tmpX.b, tmpX.a, tmpY.b, tmpY.a);
     }
 
     function _swapCoordinates(
