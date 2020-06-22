@@ -25,23 +25,8 @@ pragma experimental ABIEncoderV2;
 import "./Permissions.sol";
 import "./SchainsInternal.sol";
 import "./ConstantsHolder.sol";
-
-
-/**
- * @title SkaleVerifier - interface of SkaleVerifier
- */
-interface ISkaleVerifierG {
-    function verify(
-        uint sigx,
-        uint sigy,
-        uint hashx,
-        uint hashy,
-        uint pkx1,
-        uint pky1,
-        uint pkx2,
-        uint pky2) external view returns (bool);
-}
-
+import "./SkaleVerifier.sol";
+import "./utils/FieldOperations.sol";
 
 /**
  * @title Schains - contract contains all functionality logic to manage Schains
@@ -97,6 +82,8 @@ contract Schains is Permissions {
         uint gasSpend
     );
 
+    bytes32 public constant SCHAIN_CREATOR_ROLE = keccak256("SCHAIN_CREATOR_ROLE");
+
     /**
      * @dev addSchain - create Schain in the system
      * function could be run only by executor
@@ -105,44 +92,33 @@ contract Schains is Permissions {
      * @param data - Schain's data
      */
     function addSchain(address from, uint deposit, bytes calldata data) external allow("SkaleManager") {
-        uint numberOfNodes;
-        uint8 partOfNode;
-
         SchainParameters memory schainParameters = _fallbackSchainParametersDataConverter(data);
-
-        require(schainParameters.typeOfSchain <= 5, "Invalid type of Schain");
+        
         require(
             getSchainPrice(schainParameters.typeOfSchain, schainParameters.lifetime) <= deposit,
             "Not enough money to create Schain");
 
-        //initialize Schain
-        _initializeSchainInSchainsInternal(
-            schainParameters.name,
-            from,
-            deposit,
-            schainParameters.lifetime);
+        _addSchain(from, deposit, schainParameters);
+    }
 
-        // create a group for Schain
-        (numberOfNodes, partOfNode) = getNodesDataFromTypeOfSchain(schainParameters.typeOfSchain);
+    function addSchainByFoundation(
+        uint lifetime,
+        uint8 typeOfSchain,
+        uint16 nonce,
+        string calldata name
+    )
+        external
+    {
+        require(hasRole(SCHAIN_CREATOR_ROLE, msg.sender), "Sender is not authorized to create schian");
 
-        _createGroupForSchain(
-            schainParameters.name,
-            keccak256(abi.encodePacked(schainParameters.name)),
-            numberOfNodes,
-            partOfNode
-        );
+        SchainParameters memory schainParameters = SchainParameters({
+            lifetime: lifetime,
+            typeOfSchain: typeOfSchain,
+            nonce: nonce,
+            name: name
+        });
 
-        emit SchainCreated(
-            schainParameters.name,
-            from,
-            partOfNode,
-            schainParameters.lifetime,
-            numberOfNodes,
-            deposit,
-            schainParameters.nonce,
-            keccak256(abi.encodePacked(schainParameters.name)),
-            uint32(block.timestamp),
-            gasleft());
+        _addSchain(msg.sender, 0, schainParameters);
     }
 
     /**
@@ -256,30 +232,43 @@ contract Schains is Permissions {
     }
 
     /**
-     * @dev verifySignature - verify signature which create Group by Groups BLS master public key
-     * @param schainId - Groups identifier
-     * @param signatureX - first part of BLS signature
-     * @param signatureY - second part of BLS signature
-     * @param hashX - first part of hashed message
-     * @param hashY - second part of hashed message
+     * @dev verifySignature - verify signature which create Group by Groups BLS master public key     
+     * @param signatureA - first part of BLS signature
+     * @param signatureB - second part of BLS signature
+     * @param hash - hashed message
+     * @param counter - smalles sub from square
+     * @param hashA - first part of hashed message
+     * @param hashB - second part of hashed message
+     * @param schainName - name of the Schain
      * @return true - if correct, false - if not
      */
-    function verifySignature(
-        bytes32 schainId,
-        uint signatureX,
-        uint signatureY,
-        uint hashX,
-        uint hashY) external view returns (bool)
+    function verifySchainSignature(
+        uint signatureA,
+        uint signatureB,
+        bytes32 hash,
+        uint counter,
+        uint hashA,
+        uint hashB,
+        string calldata schainName
+    )
+        external
+        view
+        returns (bool)
     {
-        uint publicKeyx1;
-        uint publicKeyy1;
-        uint publicKeyx2;
-        uint publicKeyy2;
         SchainsInternal schainsInternal = SchainsInternal(_contractManager.getContract("SchainsInternal"));
-        (publicKeyx1, publicKeyy1, publicKeyx2, publicKeyy2) = schainsInternal.getGroupsPublicKey(schainId);
-        address skaleVerifierAddress = _contractManager.getContract("SkaleVerifier");
-        return ISkaleVerifierG(skaleVerifierAddress).verify(
-            signatureX, signatureY, hashX, hashY, publicKeyx1, publicKeyy1, publicKeyx2, publicKeyy2
+        SkaleVerifier skaleVerifier = SkaleVerifier(_contractManager.getContract("SkaleVerifier"));
+
+        G2Operations.G2Point memory publicKey = schainsInternal.getGroupsPublicKey(
+            keccak256(abi.encodePacked(schainName))
+        );
+        return skaleVerifier.verify(
+            Fp2Operations.Fp2Point({
+                a: signatureA,
+                b: signatureB
+            }),
+            hash, counter,
+            hashA, hashB,
+            publicKey
         );
     }
 
@@ -457,5 +446,48 @@ contract Schains is Permissions {
         SchainsInternal schainsInternal = SchainsInternal(_contractManager.getContract("SchainsInternal"));
         require(schainsInternal.isSchainExist(schainId), "Schain does not exist");
         return schainsInternal.isAnyFreeNode(schainId);
+    }
+
+    /**
+     * @dev _addSchain - create Schain in the system
+     * function could be run only by executor
+     * @param from - owner of Schain
+     * @param deposit - received amoung of SKL
+     * @param schainParameters - Schain's data
+     */
+    function _addSchain(address from, uint deposit, SchainParameters memory schainParameters) private {
+        uint numberOfNodes;
+        uint8 partOfNode;
+
+        require(schainParameters.typeOfSchain <= 5, "Invalid type of Schain");
+
+        //initialize Schain
+        _initializeSchainInSchainsInternal(
+            schainParameters.name,
+            from,
+            deposit,
+            schainParameters.lifetime);
+
+        // create a group for Schain
+        (numberOfNodes, partOfNode) = getNodesDataFromTypeOfSchain(schainParameters.typeOfSchain);
+
+        _createGroupForSchain(
+            schainParameters.name,
+            keccak256(abi.encodePacked(schainParameters.name)),
+            numberOfNodes,
+            partOfNode
+        );
+
+        emit SchainCreated(
+            schainParameters.name,
+            from,
+            partOfNode,
+            schainParameters.lifetime,
+            numberOfNodes,
+            deposit,
+            schainParameters.nonce,
+            keccak256(abi.encodePacked(schainParameters.name)),
+            uint32(block.timestamp),
+            gasleft());
     }
 }

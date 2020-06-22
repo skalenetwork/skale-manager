@@ -25,6 +25,7 @@ pragma experimental ABIEncoderV2;
 import "./Permissions.sol";
 import "./ConstantsHolder.sol";
 import "./delegation/ValidatorService.sol";
+import "./delegation/DelegationController.sol";
 
 
 /**

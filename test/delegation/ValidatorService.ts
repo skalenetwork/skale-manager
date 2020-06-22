@@ -291,13 +291,13 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
 
             it("should allow to enable validator in whitelist", async () => {
                 await validatorService.enableValidator(validatorId, {from: validator1})
-                    .should.be.eventually.rejectedWith("Ownable: caller is not the owner");
+                    .should.be.eventually.rejectedWith("Caller is not the owner");
                 await validatorService.enableValidator(validatorId, {from: owner});
             });
 
             it("should allow to disable validator from whitelist", async () => {
                 await validatorService.disableValidator(validatorId, {from: validator1})
-                    .should.be.eventually.rejectedWith("Ownable: caller is not the owner");
+                    .should.be.eventually.rejectedWith("Caller is not the owner");
                 await validatorService.disableValidator(validatorId, {from: owner})
                     .should.be.eventually.rejectedWith("Validator is already disabled");
 

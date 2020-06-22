@@ -16,6 +16,7 @@
     "func-name-mixedcase": "error",
     "function-max-lines": "error",
     "no-unused-vars": "error",
-    "no-inline-assembly": "error"
+    "no-inline-assembly": "error",
+    "contract-name-camelcase": "error"
   }
 }

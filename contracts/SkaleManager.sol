@@ -33,11 +33,11 @@ import "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
 import "@openzeppelin/contracts/introspection/IERC1820Registry.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 
+
 contract SkaleManager is IERC777Recipient, Permissions {
     // miners capitalization
     uint public minersCap;
-    // start time
-    uint32 public startTime;
+    
     // time of current stage
     uint32 public stageTime;
     // amount of Nodes at current stage
@@ -47,8 +47,6 @@ contract SkaleManager is IERC777Recipient, Permissions {
 
     bytes32 constant private _TOKENS_RECIPIENT_INTERFACE_HASH =
         0xb281fc8c12954d22544db45de3159a39272895b169a852b314f9cc762e44c53b;
-
-    enum TransactionOperation {CreateNode, CreateSchain}
 
     event BountyGot(
         uint indexed nodeIndex,
@@ -108,7 +106,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
         ValidatorService validatorService = ValidatorService(_contractManager.getContract("ValidatorService"));
         Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
         uint validatorId = nodes.getValidatorId(nodeIndex);
-        bool permitted = (msg.sender == owner() || nodes.isNodeExist(msg.sender, nodeIndex));
+        bool permitted = (_isOwner() || nodes.isNodeExist(msg.sender, nodeIndex));
         if (!permitted) {
             permitted = validatorService.getValidatorId(msg.sender) == validatorId;
         }
@@ -190,24 +188,21 @@ contract SkaleManager is IERC777Recipient, Permissions {
     function calculateNormalBounty() external view returns (uint) {
         ConstantsHolder constants = ConstantsHolder(_contractManager.getContract("ConstantsHolder"));
         Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
-        uint minersCapLocal = SkaleToken(_contractManager.getContract("SkaleToken")).CAP() / 3;
-        uint stageNodesLocal = stageTime;
-        uint stageTimeLocal = stageTime;
-        if (stageTimeLocal.add(constants.rewardPeriod()) < now) {
-            stageNodesLocal = nodes.numberOfActiveNodes().add(nodes.numberOfLeavingNodes());
-            stageTimeLocal = uint32(block.timestamp);
+
+        uint nodesAmount = stageNodes;
+        if (stageTime.add(constants.rewardPeriod()) < now) {
+            nodesAmount = nodes.numberOfActiveNodes().add(nodes.numberOfLeavingNodes());
         }
-        return minersCapLocal
-            .div((2 ** (((now.sub(startTime))
-            .div(constants.SIX_YEARS())) + 1))
-            .mul((constants.SIX_YEARS()
-            .div(constants.rewardPeriod())))
-            .mul(stageNodesLocal));
+        
+        return _calculateMaximumBountyAmount(
+            _getValidatorsCapitalization(),
+            nodesAmount,
+            constants.launchTimestamp()
+        );
     }
 
     function initialize(address newContractsAddress) public override initializer {
         Permissions.initialize(newContractsAddress);
-        startTime = uint32(block.timestamp);
         _erc1820 = IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
         _erc1820.setInterfaceImplementer(address(this), _TOKENS_RECIPIENT_INTERFACE_HASH, address(this));
     }
@@ -218,51 +213,40 @@ contract SkaleManager is IERC777Recipient, Permissions {
         uint downtime,
         uint latency) private returns (uint)
     {
-        uint commonBounty;
         ConstantsHolder constants = ConstantsHolder(_contractManager.getContract("ConstantsHolder"));
         Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
 
-        uint diffTime = nodes.getNodeLastRewardDate(nodeIndex)
-            .add(constants.rewardPeriod())
-            .add(constants.deltaPeriod());
-        if (minersCap == 0) {
-            minersCap = SkaleToken(_contractManager.getContract("SkaleToken")).CAP() / 3;
+        uint networkLaunchTimestamp = constants.launchTimestamp();
+        if (now < networkLaunchTimestamp) {
+            // network is not launched
+            // bounty is turned off
+            return 0;
         }
         if (stageTime.add(constants.rewardPeriod()) < now) {
             stageNodes = nodes.numberOfActiveNodes().add(nodes.numberOfLeavingNodes());
             stageTime = uint32(block.timestamp);
         }
-        commonBounty = minersCap
-            .div((2 ** (((now.sub(startTime))
-            .div(constants.SIX_YEARS())) + 1))
-            .mul((constants.SIX_YEARS()
-            .div(constants.rewardPeriod())))
-            .mul(stageNodes));
-        if (now > diffTime) {
-            diffTime = now.sub(diffTime);
-        } else {
-            diffTime = 0;
+        
+        uint bountyAmount = _calculateMaximumBountyAmount(
+            _getAndUpdateValidatorsCapitalization(),
+            stageNodes,
+            networkLaunchTimestamp
+        );
+
+        // reduce bounty if metrics are too bad
+        bountyAmount = _reduceBounty(
+            bountyAmount,
+            nodeIndex,
+            downtime,
+            latency,
+            nodes,
+            constants
+        );
+
+        if (bountyAmount > 0) {
+            _payBounty(bountyAmount, from, nodeIndex);
         }
-        diffTime = diffTime.div(constants.checkTime());
-        int bountyForMiner = int(commonBounty);
-        uint normalDowntime = ((constants.rewardPeriod().sub(constants.deltaPeriod())).div(constants.checkTime())) / 30;
-        if (downtime.add(diffTime) > normalDowntime) {
-            bountyForMiner -= int(
-                ((downtime.add(diffTime)).mul(commonBounty)).div(
-                    (constants.rewardPeriod().sub(constants.deltaPeriod())).div(constants.checkTime())
-                )
-            );
-        }
-        if (bountyForMiner > 0) {
-            if (latency > constants.allowableLatency()) {
-                bountyForMiner = int((constants.allowableLatency().mul(uint(bountyForMiner))).div(latency));
-            }
-            _payBounty(uint(bountyForMiner), from, nodeIndex);
-        } else {
-            //Need to add penalty
-            bountyForMiner = 0;
-        }
-        return uint(bountyForMiner);
+        return bountyAmount;
     }
 
     function _payBounty(uint bountyForMiner, address miner, uint nodeIndex) private returns (bool) {
@@ -302,5 +286,82 @@ contract SkaleManager is IERC777Recipient, Permissions {
             previousBlockEvent,
             uint32(block.timestamp),
             gasleft());
+    }
+
+    function _getValidatorsCapitalization() private view returns (uint) {
+        if (minersCap == 0) {
+            return SkaleToken(_contractManager.getContract("SkaleToken")).CAP() / 3;
+        }
+        return minersCap;
+    }
+
+    function _getAndUpdateValidatorsCapitalization() private returns (uint) {
+        if (minersCap == 0) {
+            minersCap = _getValidatorsCapitalization();
+        }
+        return minersCap;
+    }
+
+    function _calculateMaximumBountyAmount(
+        uint cap,
+        uint nodesAmount,
+        uint networkLaunchTimestamp
+        )
+        private
+        view
+        returns (uint)
+    {
+        ConstantsHolder constants = ConstantsHolder(_contractManager.getContract("ConstantsHolder"));
+        
+        return cap.div(
+                (2 ** (now.sub(networkLaunchTimestamp).div(constants.SIX_YEARS()) + 1))
+                .mul(constants.SIX_YEARS().div(constants.rewardPeriod()))
+                .mul(nodesAmount)
+            );
+    }
+
+    function _reduceBounty(
+        uint bounty,
+        uint nodeIndex,
+        uint downtime,
+        uint latency,
+        Nodes nodes,
+        ConstantsHolder constants
+    )
+        private
+        view
+        returns (uint reducedBounty)
+    {
+        reducedBounty = bounty;
+        uint getBountyDeadline = nodes.getNodeLastRewardDate(nodeIndex)
+            .add(constants.rewardPeriod())
+            .add(constants.deltaPeriod());
+        uint numberOfExpiredIntervals;
+        if (now > getBountyDeadline) {
+            numberOfExpiredIntervals = now.sub(getBountyDeadline).div(constants.checkTime());
+        } else {
+            numberOfExpiredIntervals = 0;
+        }
+        uint normalDowntime = ((constants.rewardPeriod().sub(constants.deltaPeriod())).div(constants.checkTime())) / 30;
+        uint totalDowntime = downtime.add(numberOfExpiredIntervals);
+        if (totalDowntime > normalDowntime) {
+            // reduce bounty because downtime is too big
+            uint penalty = bounty
+                .mul(totalDowntime)
+                .div(
+                    constants.rewardPeriod().sub(constants.deltaPeriod())
+                        .div(constants.checkTime())
+                );            
+            if (bounty > penalty) {
+                reducedBounty = bounty - penalty;
+            } else {
+                reducedBounty = 0;
+            }
+        }
+
+        if (latency > constants.allowableLatency()) {
+            // reduce bounty because latency is too big
+            reducedBounty = reducedBounty.mul(constants.allowableLatency()).div(latency);
+        }
     }
 }
