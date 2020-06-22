@@ -59,9 +59,6 @@ contract SkaleDKG is Permissions {
         bytes32 share;
     }
 
-    uint constant private _G1A = 1;
-    uint constant private _G1B = 2;
-
     mapping(bytes32 => Channel) public channels;
     mapping(bytes32 => mapping(uint => BroadcastedData)) private _data;
 
@@ -523,28 +520,29 @@ contract SkaleDKG is Permissions {
     function _checkCorrectMultipliedShare(G2Operations.G2Point memory multipliedShare, uint secret)
         private view returns (bool)
     {
-        Fp2Operations.Fp2Point memory tmpX;
-        Fp2Operations.Fp2Point memory tmpY;
-        (tmpX, tmpY) = (multipliedShare.x, multipliedShare.y);
-        uint x;
-        uint y;
-        (x, y) = Precompiled.bn256ScalarMul(_G1A, _G1B, secret);
-        if (!(x == 0 && y == 0)) {
-            y = Fp2Operations.P.sub((y % Fp2Operations.P));
+        G2Operations.G2Point memory tmp = multipliedShare;
+        Fp2Operations.Fp2Point memory g1 = G2Operations.getG1();
+        Fp2Operations.Fp2Point memory share = Fp2Operations.Fp2Point({
+            a: 0,
+            b: 0
+        });
+        (share.a, share.b) = Precompiled.bn256ScalarMul(g1.a, g1.b, secret);
+        if (!(share.a == 0 && share.b == 0)) {
+            share.b = Fp2Operations.P.sub((share.b % Fp2Operations.P));
         }
 
-        require(G2Operations.isG1(_G1A, _G1B), "G1.one not in G1");
-        require(G2Operations.isG1(x, y), "mulShare not in G1");
+        require(G2Operations.isG1(g1), "G1.one not in G1");
+        require(G2Operations.isG1(share), "mulShare not in G1");
 
         G2Operations.G2Point memory g2 = G2Operations.getG2();
-        require(
-            G2Operations.isG2(g2),
-            "g2.one not in g2"
-        );
-        require(G2Operations.isG2Point(tmpX, tmpY), "tmp not in g2");
+        require(G2Operations.isG2(g2), "g2.one not in g2");
+        require(G2Operations.isG2(tmp), "tmp not in g2");
 
         return Precompiled.bn256Pairing(
-            x, y, g2.x.b, g2.x.a, g2.y.b, g2.y.a, _G1A, _G1B, tmpX.b, tmpX.a, tmpY.b, tmpY.a);
+            share.a, share.b,
+            g2.x.b, g2.x.a, g2.y.b, g2.y.a,
+            g1.a, g1.b,
+            tmp.x.b, tmp.x.a, tmp.y.b, tmp.y.a);
     }
 
     function _swapCoordinates(

@@ -149,9 +149,21 @@ library G2Operations {
         });
     }
 
-    function isG1(uint x, uint y) internal pure returns (bool) {
+    function getG1() internal pure returns (Fp2Operations.Fp2Point memory) {
+        // Current solidity version does not support Constants of non-value type
+        // so we implemented this function
+        return Fp2Operations.Fp2Point({
+            a: 1,
+            b: 2
+        });
+    }
+
+    function isG1Point(uint x, uint y) internal pure returns (bool) {
         return mulmod(y, y, Fp2Operations.P) == 
             addmod(mulmod(mulmod(x, x, Fp2Operations.P), x, Fp2Operations.P), 3, Fp2Operations.P);
+    }
+    function isG1(Fp2Operations.Fp2Point memory point) internal pure returns (bool) {
+        return isG1Point(point.a, point.b);
     }
 
     function isG2Point(Fp2Operations.Fp2Point memory x, Fp2Operations.Fp2Point memory y) internal pure returns (bool) {
