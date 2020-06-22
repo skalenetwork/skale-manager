@@ -313,12 +313,8 @@ contract SkaleDKG is Permissions {
         );
 
         channels[groupIndex].active = true;
-        while(channels[groupIndex].completed.length > 0) {
-            channels[groupIndex].completed.pop();
-        }
-        while(channels[groupIndex].broadcasted.length > 0) {
-            channels[groupIndex].broadcasted.pop();
-        }
+        delete channels[groupIndex].completed;
+        delete channels[groupIndex].broadcasted;
         for (uint i = 0; i < schainsInternal.getNumberOfNodesInGroup(groupIndex); ++i) {
            channels[groupIndex].broadcasted.push(); 
            channels[groupIndex].completed.push();
