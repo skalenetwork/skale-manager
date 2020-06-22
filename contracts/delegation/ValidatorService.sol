@@ -125,8 +125,8 @@ contract ValidatorService is Permissions {
      *
      * Requirements:
      *
-     * - sender must not already have registered a validator Id.
-     * - fee rate must be between 0 - 1000‰. Note: in per mille
+     * - Sender must not already have registered a validator ID.
+     * - Fee rate must be between 0 - 1000‰. Note: in per mille
      */
     function registerValidator(
         string calldata name,
@@ -190,8 +190,8 @@ contract ValidatorService is Permissions {
      *
      * Requirements:
      *
-     * - new address must not be null
-     * - new address must not be already registered as a validator
+     * - New address must not be null.
+     * - New address must not be already registered as a validator.
      */
     function requestForNewAddress(address newValidatorAddress) external {
         require(newValidatorAddress != address(0), "New address cannot be null");
@@ -207,7 +207,7 @@ contract ValidatorService is Permissions {
      *
      * Requirements:
      *
-     * - must be performed by the actual owner
+     * - Must be performed by the owner of the new validator address.
      */
     function confirmNewAddress(uint validatorId)
         external
@@ -231,8 +231,8 @@ contract ValidatorService is Permissions {
      *
      * Requirements:
      *
-     * - the given signature must be valid.
-     * - the address must not be assigned to a validator.
+     * - Signature must be valid.
+     * - Address must not be assigned to a validator.
      */
     function linkNodeAddress(address nodeAddress, bytes calldata sig) external {
         uint validatorId = getValidatorId(msg.sender);
@@ -283,7 +283,7 @@ contract ValidatorService is Permissions {
      *
      * Requirements:
      *
-     * - validator must not have already enabled accepting new requests
+     * - Validator must not have already enabled accepting new requests.
      */
     function startAcceptingNewRequests() external {
         uint validatorId = getValidatorId(msg.sender);
@@ -296,7 +296,7 @@ contract ValidatorService is Permissions {
      *
      * Requirements:
      *
-     * - validator must not have already stopped accepting new requests
+     * - Validator must not have already stopped accepting new requests.
      */
     function stopAcceptingNewRequests() external {
         uint validatorId = getValidatorId(msg.sender);
@@ -351,7 +351,7 @@ contract ValidatorService is Permissions {
     /**
      * @dev Checks whether the amount passes the validator's minimum delegation amount (MDA).
      *
-     * Returns a boolean value indicating whether the amount meets or exceeds the MDA.
+     * Returns a boolean value whether the amount meets or exceeds the MDA.
      */
     function checkMinimumDelegation(uint validatorId, uint amount)
         external
@@ -366,7 +366,7 @@ contract ValidatorService is Permissions {
     /**
      * @dev Checks whether the validator address matches the validator ID.
      *
-     * Returns a boolean value indicating whether the validator address matches the validator ID.
+     * Returns a boolean value whether the validator address matches the validator ID.
      */
     function checkValidatorAddressToId(address validatorAddress, uint validatorId)
         external
@@ -431,7 +431,7 @@ contract ValidatorService is Permissions {
      *
      * Requirements:
      *
-     * - address is not currently in use by another validator ID
+     * - Address is not currently in use by another validator ID.
      */
     function _setValidatorAddress(uint validatorId, address validatorAddress) private {
         if (_validatorAddressToId[validatorAddress] == validatorId) {
@@ -450,7 +450,7 @@ contract ValidatorService is Permissions {
      *
      * Requirements:
      *
-     * - node address must not be currently linked to a validator ID.
+     * - Node address must not be currently linked to a validator ID.
      */
     function _addNodeAddress(uint validatorId, address nodeAddress) private {
         if (_nodeAddressToValidatorId[nodeAddress] == validatorId) {
@@ -466,7 +466,7 @@ contract ValidatorService is Permissions {
      *
      * Requirements:
      *
-     * - must be performed by the validator.
+     * - Must be performed by the validator.
      */
     function _removeNodeAddress(uint validatorId, address nodeAddress) private {
         require(_nodeAddressToValidatorId[nodeAddress] == validatorId,
