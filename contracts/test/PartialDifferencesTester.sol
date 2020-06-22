@@ -32,7 +32,7 @@ contract PartialDifferencesTester {
     // PartialDifferences.Value[] private _values;
 
     function createSequence() external {
-        _sequences.push();
+        _sequences.push(PartialDifferences.Sequence({firstUnprocessedMonth: 0, lastChangedMonth: 0}));
     }
 
     function addToSequence(uint sequence, uint diff, uint month) external {
