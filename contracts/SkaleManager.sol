@@ -254,7 +254,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
         uint validatorId = validatorService.getValidatorIdByNodeAddress(miner);
         uint bounty = bountyForMiner;
         if (!nodes.checkPossibilityToMaintainNode(validatorId, nodeIndex)) {
-            bounty /= constantsHolder.MSR_REDUCING_COEFFICIENT();
+            bounty = bounty.div(constantsHolder.MSR_REDUCING_COEFFICIENT());
         }
         // solhint-disable-next-line check-send-result
         skaleToken.send(address(distributor), bounty, abi.encode(validatorId));
@@ -287,7 +287,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
     function _getValidatorsCapitalization() private view returns (uint) {
         if (minersCap == 0) {
             ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
-            return SkaleToken(contractManager.getContract("SkaleToken")).CAP() / constantsHolder.BOUNTY_POOL_PART();
+            return SkaleToken(contractManager.getContract("SkaleToken")).CAP().div(constantsHolder.BOUNTY_POOL_PART());
         }
         return minersCap;
     }
@@ -361,7 +361,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
                         .div(constants.checkTime())
                 );            
             if (bounty > penalty) {
-                reducedBounty = bounty - penalty;
+                reducedBounty = bounty.sub(penalty);
             } else {
                 reducedBounty = 0;
             }

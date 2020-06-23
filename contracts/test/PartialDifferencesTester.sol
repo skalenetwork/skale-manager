@@ -21,12 +21,15 @@
 
 pragma solidity 0.6.10;
 
+import "@openzeppelin/contracts/math/SafeMath.sol";
+
 import "../delegation/PartialDifferences.sol";
 
 
 contract PartialDifferencesTester {
     using PartialDifferences for PartialDifferences.Sequence;
     using PartialDifferences for PartialDifferences.Value;
+    using SafeMath for uint;
 
     PartialDifferences.Sequence[] private _sequences;
     // PartialDifferences.Value[] private _values;
@@ -63,6 +66,6 @@ contract PartialDifferencesTester {
 
     function latestSequence() external view returns (uint id) {
         require(_sequences.length > 0, "There are no _sequences");
-        return _sequences.length - 1;
+        return _sequences.length.sub(1);
     }
 }

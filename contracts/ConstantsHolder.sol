@@ -137,6 +137,8 @@ contract ConstantsHolder is Permissions {
 
     uint public proofOfUseLockUpPeriodDays;
 
+    uint public proofOfUseDelegationPercentage;
+
     /**
      * Set reward and delta periods to new one, run only by owner. This function
      * only for tests.
@@ -196,6 +198,11 @@ contract ConstantsHolder is Permissions {
         proofOfUseLockUpPeriodDays = periodDays;
     }
 
+    function setProofOfUseDelegationPercentage(uint percentage) external onlyOwner {
+        require(percentage <= 100, "Percentage value is incorrect");
+        proofOfUseDelegationPercentage = percentage;
+    }
+
     /**
      * @dev constructor in Permissions approach
      * @param contractsAddress needed in Permissions constructor
@@ -213,5 +220,6 @@ contract ConstantsHolder is Permissions {
         launchTimestamp = uint(-1);
         rotationDelay = 12 hours;
         proofOfUseLockUpPeriodDays = 90;
+        proofOfUseDelegationPercentage = 50;
     }
 }

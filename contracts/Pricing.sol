@@ -117,6 +117,6 @@ contract Pricing is Permissions {
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));
         ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
 
-        return constantsHolder.TOTAL_SPACE_ON_NODE() * nodes.getNumberOnlineNodes();
+        return nodes.getNumberOnlineNodes().mul(constantsHolder.TOTAL_SPACE_ON_NODE());
     }
 }

@@ -216,8 +216,8 @@ contract SchainsInternal is Permissions {
         isSchainActive[schainId] = false;
         uint length = schainIndexes[from].length;
         uint index = schains[schainId].indexInOwnerList;
-        if (index != length - 1) {
-            bytes32 lastSchainId = schainIndexes[from][length - 1];
+        if (index != length.sub(1)) {
+            bytes32 lastSchainId = schainIndexes[from][length.sub(1)];
             schains[lastSchainId].indexInOwnerList = index;
             schainIndexes[from][index] = lastSchainId;
         }
@@ -227,7 +227,7 @@ contract SchainsInternal is Permissions {
         // optimize
         for (uint i = 0; i + 1 < schainsAtSystem.length; i++) {
             if (schainsAtSystem[i] == schainId) {
-                schainsAtSystem[i] = schainsAtSystem[schainsAtSystem.length - 1];
+                schainsAtSystem[i] = schainsAtSystem[schainsAtSystem.length.sub(1)];
                 break;
             }
         }
@@ -249,7 +249,7 @@ contract SchainsInternal is Permissions {
         delete schainsGroups[schainHash].nodesInGroup[indexOfNode];
 
         uint length = schainsGroups[schainHash].nodesInGroup.length;
-        if (indexOfNode == length - 1) {
+        if (indexOfNode == length.sub(1)) {
             schainsGroups[schainHash].nodesInGroup.pop();
         } else {
             delete schainsGroups[schainHash].nodesInGroup[indexOfNode];
@@ -276,7 +276,7 @@ contract SchainsInternal is Permissions {
     function startRotation(bytes32 schainIndex, uint nodeIndex) external allow("Schains") {
         ConstantsHolder constants = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
         rotations[schainIndex].nodeIndex = nodeIndex;
-        rotations[schainIndex].freezeUntil = now + constants.rotationDelay();
+        rotations[schainIndex].freezeUntil = now.add(constants.rotationDelay());
     }
 
     function finishRotation(
@@ -286,7 +286,7 @@ contract SchainsInternal is Permissions {
         external allow("Schains")
     {
         ConstantsHolder constants = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
-        leavingHistory[nodeIndex].push(LeavingHistory(schainIndex, now + constants.rotationDelay()));
+        leavingHistory[nodeIndex].push(LeavingHistory(schainIndex, now.add(constants.rotationDelay())));
         rotations[schainIndex].newNodeIndex = newNodeIndex;
         rotations[schainIndex].rotationCounter++;
         ISkaleDKG skaleDKG = ISkaleDKG(contractManager.getContract("SkaleDKG"));
@@ -546,7 +546,7 @@ contract SchainsInternal is Permissions {
                 })
             });
         }
-        return previousPublicKeys[schainId][length - 1];
+        return previousPublicKeys[schainId][length.sub(1)];
     }
 
     function isAnyFreeNode(bytes32 schainId) external view returns (bool) {
@@ -609,7 +609,7 @@ contract SchainsInternal is Permissions {
      */
     function removeSchainForNode(uint nodeIndex, uint schainIndex) public allowTwo("Schains", "SkaleDKG") {
         uint length = schainsForNodes[nodeIndex].length;
-        if (schainIndex == length - 1) {
+        if (schainIndex == length.sub(1)) {
             schainsForNodes[nodeIndex].pop();
         } else {
             schainsForNodes[nodeIndex][schainIndex] = bytes32(0);
@@ -682,12 +682,12 @@ contract SchainsInternal is Permissions {
         uint[] memory possibleNodes = isEnoughNodes(schainId);
         require(possibleNodes.length >= nodesInGroup.length, "Not enough nodes to create Schain");
         uint ignoringTail = 0;
-        uint random = uint(keccak256(abi.encodePacked(uint(blockhash(block.number - 1)), schainId)));
+        uint random = uint(keccak256(abi.encodePacked(uint(blockhash(block.number.sub(1))), schainId)));
         for (uint i = 0; i < nodesInGroup.length; ++i) {
             uint index = random % (possibleNodes.length.sub(ignoringTail));
             uint node = possibleNodes[index];
             nodesInGroup[i] = node;
-            _swap(possibleNodes, index, possibleNodes.length.sub(ignoringTail) - 1);
+            _swap(possibleNodes, index, possibleNodes.length.sub(ignoringTail).sub(1));
             ++ignoringTail;
 
             _exceptionsForGroups[schainId][node] = true;
