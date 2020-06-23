@@ -24,9 +24,9 @@ pragma solidity 0.6.8;
 
 library StringUtils {
 
-    function strConcat(string memory _a, string memory _b) internal pure returns (string memory) {
-        bytes memory _ba = bytes(_a);
-        bytes memory _bb = bytes(_b);
+    function strConcat(string memory a, string memory b) internal pure returns (string memory) {
+        bytes memory _ba = bytes(a);
+        bytes memory _bb = bytes(b);
 
         string memory ab = new string(_ba.length + _bb.length);
         bytes memory strBytes = bytes(ab);
@@ -41,12 +41,12 @@ library StringUtils {
         return string(strBytes);
     }
 
-    function uint2str(uint _i) internal pure returns (string memory) {
-        if (_i == 0) {
+    function uint2str(uint i) internal pure returns (string memory) {
+        if (i == 0) {
             return "0";
         }
-        uint j = _i;
-        uint i = _i;
+        uint j = i;
+        uint _i = i;
         uint len;
         while (j != 0) {
             len++;
@@ -54,9 +54,9 @@ library StringUtils {
         }
         bytes memory bstr = new bytes(len);
         uint k = len - 1;
-        while (i != 0) {
-            bstr[k--] = byte(uint8(48 + i % 10));
-            i /= 10;
+        while (_i != 0) {
+            bstr[k--] = byte(uint8(48 + _i % 10));
+            _i /= 10;
         }
         return string(bstr);
     }

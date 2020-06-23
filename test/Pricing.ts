@@ -6,14 +6,16 @@ import { ContractManagerInstance,
          NodesInstance,
          PricingInstance,
          SchainsInternalInstance,
-         ValidatorServiceInstance} from "../types/truffle-contracts";
+         ValidatorServiceInstance,
+         SchainsInstance} from "../types/truffle-contracts";
 
 import { deployContractManager } from "./tools/deploy/contractManager";
 import { deployNodes } from "./tools/deploy/nodes";
 import { deployPricing } from "./tools/deploy/pricing";
 import { deploySchainsInternal } from "./tools/deploy/schainsInternal";
-import { skipTime } from "./tools/time";
+import { skipTime, currentTime } from "./tools/time";
 import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
+import { deploySchains } from "./tools/deploy/schains";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -22,6 +24,7 @@ contract("Pricing", ([owner, holder, validator, nodeAddress]) => {
     let contractManager: ContractManagerInstance;
     let pricing: PricingInstance;
     let schainsInternal: SchainsInternalInstance;
+    let schains: SchainsInstance;
     let nodes: NodesInstance;
     let validatorService: ValidatorServiceInstance;
 
@@ -30,6 +33,7 @@ contract("Pricing", ([owner, holder, validator, nodeAddress]) => {
 
         nodes = await deployNodes(contractManager);
         schainsInternal = await deploySchainsInternal(contractManager);
+        schains = await deploySchains(contractManager);
         pricing = await deployPricing(contractManager);
         validatorService = await deployValidatorService(contractManager);
 
@@ -118,28 +122,34 @@ contract("Pricing", ([owner, holder, validator, nodeAddress]) => {
 
             beforeEach(async () => {
 
-                await schainsInternal.createGroupForSchain(bobSchainHash, 1, 4);
-                await schainsInternal.createGroupForSchain(davidSchainHash, 1, 4);
-                await schainsInternal.createGroupForSchain(jacobSchainHash, 2, 1);
+                await schainsInternal.createGroupForSchain(bobSchainHash, 1, 32);
+                await schainsInternal.createGroupForSchain(davidSchainHash, 1, 32);
+                await schainsInternal.createGroupForSchain(jacobSchainHash, 2, 128);
 
             });
 
-            it("should check load percentage of network", async () => {
-                const numberOfNodes = new BigNumber(await nodes.getNumberOfNodes()).toNumber();
+            async function getLoadCoefficient() {
+                const numberOfNodes = (await nodes.getNumberOfNodes()).toNumber();
                 let sumNode = 0;
                 for (let i = 0; i < numberOfNodes; i++) {
-                    const getSchainIdsForNode = await schainsInternal.getSchainIdsForNode(i);
-                    for (const schain of getSchainIdsForNode) {
-                        const partOfNode = new BigNumber(await schainsInternal.getSchainsPartOfNode(schain)).toNumber();
-                        const isNodeLeft = await nodes.isNodeLeft(i);
-                        if (partOfNode !== 0  && !isNodeLeft) {
-                            sumNode += 128 / partOfNode;
+                    if (await nodes.isNodeActive(i)) {
+                        const getSchainIdsForNode = await schainsInternal.getSchainIdsForNode(i);
+                        for (const schain of getSchainIdsForNode) {
+                            const partOfNode = (await schainsInternal.getSchainsPartOfNode(schain)).toNumber();
+                            const isNodeLeft = await nodes.isNodeLeft(i);
+                            if (partOfNode !== 0  && !isNodeLeft) {
+                                sumNode += partOfNode;
+                            }
                         }
                     }
                 }
-                const newLoadPercentage = Math.floor((sumNode * 100) / (128 * numberOfNodes));
+                return sumNode / (128 * (await nodes.getNumberOnlineNodes()).toNumber());
+            }
+
+            it("should check load percentage of network", async () => {
+                const newLoadPercentage = Math.floor(await getLoadCoefficient() * 100);
                 const loadPercentage = new BigNumber(await pricing.getTotalLoadPercentage()).toNumber();
-                newLoadPercentage.should.be.equal(loadPercentage);
+                loadPercentage.should.be.equal(newLoadPercentage);
             });
 
             it("should check total number of nodes", async () => {
@@ -161,53 +171,28 @@ contract("Pricing", ([owner, holder, validator, nodeAddress]) => {
                     .should.be.eventually.rejectedWith("It's not a time to update a price");
             });
 
-            it("should rejected if price - priceChange overflowed price", async () => {
-                await nodes.createNode(
-                    nodeAddress,
-                    {
-                        port: 8545,
-                        nonce: 0,
-                        ip: "0x7f000010",
-                        publicIp: "0x7f000011",
-                        publicKey: ["0x1122334455667788990011223344556677889900112233445566778899001122",
-                                    "0x1122334455667788990011223344556677889900112233445566778899001122"],
-                        name: "vadim"
-                    });
-                skipTime(web3, 10 ** 6);
-                await pricing.adjustPrice()
-                    .should.be.eventually.rejectedWith("SafeMath: subtraction overflow");
-            });
-
             describe("change price when changing the number of nodes", async () => {
                 let oldPrice: number;
+                let lastUpdated: number;
 
                 beforeEach(async () => {
                     await pricing.initNodes();
-                    oldPrice = new BigNumber(await pricing.price()).toNumber();
+                    oldPrice = (await pricing.price()).toNumber();
+                    lastUpdated = (await pricing.lastUpdated()).toNumber()
                 });
 
-                async function getPrice(MINUTES_PASSED: number) {
-                    const MIN_PRICE = new BigNumber(await pricing.MIN_PRICE()).toNumber();
-                    const ADJUSTMENT_SPEED = new BigNumber(await pricing.ADJUSTMENT_SPEED()).toNumber();
-                    const OPTIMAL_LOAD_PERCENTAGE = new BigNumber(await pricing.OPTIMAL_LOAD_PERCENTAGE()).toNumber();
-                    const COOLDOWN_TIME = new BigNumber(await pricing.COOLDOWN_TIME()).toNumber();
-                    skipTime(web3, MINUTES_PASSED * COOLDOWN_TIME);
-                    await pricing.adjustPrice();
+                async function getPrice(secondSincePreviousUpdate: number) {
+                    const MIN_PRICE = (await pricing.MIN_PRICE()).toNumber();
+                    const ADJUSTMENT_SPEED = (await pricing.ADJUSTMENT_SPEED()).toNumber();
+                    const OPTIMAL_LOAD_PERCENTAGE = (await pricing.OPTIMAL_LOAD_PERCENTAGE()).toNumber();
+                    const COOLDOWN_TIME = (await pricing.COOLDOWN_TIME()).toNumber();
 
-                    const loadPercentage = new BigNumber(await pricing.getTotalLoadPercentage()).toNumber();
-                    let priceChange: number;
-                    if (loadPercentage < OPTIMAL_LOAD_PERCENTAGE) {
-                        priceChange = (-1) * (ADJUSTMENT_SPEED * oldPrice)
-                                      * (OPTIMAL_LOAD_PERCENTAGE - loadPercentage) / 10 ** 6;
-                    } else {
-                        priceChange = (ADJUSTMENT_SPEED * oldPrice)
-                                      * (loadPercentage - OPTIMAL_LOAD_PERCENTAGE) / 10 ** 6;
-                    }
-                    let price = oldPrice + priceChange * MINUTES_PASSED;
+                    const priceChangeSpeed = ADJUSTMENT_SPEED * (oldPrice / MIN_PRICE) * (await getLoadCoefficient() * 100 - OPTIMAL_LOAD_PERCENTAGE);
+                    let price = oldPrice + priceChangeSpeed * secondSincePreviousUpdate / COOLDOWN_TIME;
                     if (price < MIN_PRICE) {
                         price = MIN_PRICE;
                     }
-                    return price;
+                    return Math.floor(price);
                 }
 
                 it("should change price when new active node has been added", async () => {
@@ -223,20 +208,54 @@ contract("Pricing", ([owner, holder, validator, nodeAddress]) => {
                             name: "vadim"
                         });
                     const MINUTES_PASSED = 2;
-                    const price = await getPrice(MINUTES_PASSED);
-                    const newPrice = new BigNumber(await pricing.price()).toNumber();
-                    price.should.be.equal(newPrice);
-                    oldPrice.should.be.above(price);
+                    skipTime(web3, lastUpdated + MINUTES_PASSED * 60 - await currentTime(web3));
+
+                    await pricing.adjustPrice();
+                    const receivedPrice = (await pricing.price()).toNumber();
+
+                    const correctPrice = await getPrice((await pricing.lastUpdated()).toNumber() - lastUpdated);
+
+                    receivedPrice.should.be.equal(correctPrice);
+                    oldPrice.should.be.above(receivedPrice);
                 });
 
                 it("should change price when active node has been removed", async () => {
-                    await nodes.initExit(0);
-                    await nodes.completeExit(0);
+                    // search non full node to rotate
+                    let nodeToExit = -1;
+                    let numberOfSchains = 0;
+                    for (let i = 0; i < (await nodes.getNumberOfNodes()).toNumber(); i++) {
+                        if (await nodes.isNodeActive(i)) {
+                            const getSchainIdsForNode = await schainsInternal.getSchainIdsForNode(i);
+                            let totalPartOfNode = 0;
+                            numberOfSchains = 0;
+                            for (const schain of getSchainIdsForNode) {
+                                const partOfNode = (await schainsInternal.getSchainsPartOfNode(schain)).toNumber();
+                                ++numberOfSchains;
+                                totalPartOfNode += partOfNode;
+                            }
+                            if (totalPartOfNode < 100) {
+                                nodeToExit = i;
+                                break;
+                            }
+                        }
+                    }
+
+                    await nodes.initExit(nodeToExit);
+                    for(let i = 0; i < numberOfSchains; ++i) {
+                        await schains.exitFromSchain(nodeToExit);
+                    }
+                    await nodes.completeExit(nodeToExit);
+
                     const MINUTES_PASSED = 2;
-                    const price = await getPrice(MINUTES_PASSED);
-                    const newPrice = new BigNumber(await pricing.price()).toNumber();
-                    price.should.be.equal(newPrice);
-                    price.should.be.above(oldPrice);
+                    skipTime(web3, lastUpdated + MINUTES_PASSED * 60 - await currentTime(web3));
+
+                    await pricing.adjustPrice();
+                    const receivedPrice = (await pricing.price()).toNumber();
+
+                    const correctPrice = await getPrice((await pricing.lastUpdated()).toNumber() - lastUpdated);
+
+                    receivedPrice.should.be.equal(correctPrice);
+                    oldPrice.should.be.below(receivedPrice);
                 });
 
                 it("should set price to min of too many minutes passed and price is less than min", async () => {
@@ -251,10 +270,17 @@ contract("Pricing", ([owner, holder, validator, nodeAddress]) => {
                                         "0x1122334455667788990011223344556677889900112233445566778899001122"],
                             name: "vadim"
                         });
+
                     const MINUTES_PASSED = 30;
-                    const price = await getPrice(MINUTES_PASSED);
-                    const MIN_PRICE = new BigNumber(await pricing.MIN_PRICE()).toNumber();
-                    price.should.be.equal(MIN_PRICE);
+                    skipTime(web3, lastUpdated + MINUTES_PASSED * 60 - await currentTime(web3));
+
+                    await pricing.adjustPrice();
+                    const receivedPrice = (await pricing.price()).toNumber();
+
+                    const correctPrice = await getPrice((await pricing.lastUpdated()).toNumber() - lastUpdated);
+
+                    receivedPrice.should.be.equal(correctPrice);
+                    oldPrice.should.be.above(receivedPrice);
                 });
             });
         });

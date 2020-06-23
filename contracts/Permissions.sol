@@ -33,14 +33,13 @@ import "./ContractManager.sol";
  */
 contract Permissions is AccessControlUpgradeSafe {
     using SafeMath for uint;
-    using SafeMath for uint32;
+    
+    ContractManager public contractManager;
 
-    ContractManager internal _contractManager;
-
-    function initialize(address contractManager) public virtual initializer {
+    function initialize(address contractManagerAddress) public virtual initializer {
         AccessControlUpgradeSafe.__AccessControl_init();
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
-        _contractManager = ContractManager(contractManager);
+        contractManager = ContractManager(contractManagerAddress);
     }
 
     /**
@@ -58,15 +57,15 @@ contract Permissions is AccessControlUpgradeSafe {
      */
     modifier allow(string memory contractName) {
         require(
-            _contractManager.contracts(keccak256(abi.encodePacked(contractName))) == msg.sender || _isOwner(),
+            contractManager.contracts(keccak256(abi.encodePacked(contractName))) == msg.sender || _isOwner(),
             "Message sender is invalid");
         _;
     }
 
     modifier allowTwo(string memory contractName1, string memory contractName2) {
         require(
-            _contractManager.contracts(keccak256(abi.encodePacked(contractName1))) == msg.sender ||
-            _contractManager.contracts(keccak256(abi.encodePacked(contractName2))) == msg.sender ||
+            contractManager.contracts(keccak256(abi.encodePacked(contractName1))) == msg.sender ||
+            contractManager.contracts(keccak256(abi.encodePacked(contractName2))) == msg.sender ||
             _isOwner(),
             "Message sender is invalid");
         _;
@@ -74,9 +73,9 @@ contract Permissions is AccessControlUpgradeSafe {
 
     modifier allowThree(string memory contractName1, string memory contractName2, string memory contractName3) {
         require(
-            _contractManager.contracts(keccak256(abi.encodePacked(contractName1))) == msg.sender ||
-            _contractManager.contracts(keccak256(abi.encodePacked(contractName2))) == msg.sender ||
-            _contractManager.contracts(keccak256(abi.encodePacked(contractName3))) == msg.sender ||
+            contractManager.contracts(keccak256(abi.encodePacked(contractName1))) == msg.sender ||
+            contractManager.contracts(keccak256(abi.encodePacked(contractName2))) == msg.sender ||
+            contractManager.contracts(keccak256(abi.encodePacked(contractName3))) == msg.sender ||
             _isOwner(),
             "Message sender is invalid");
         _;

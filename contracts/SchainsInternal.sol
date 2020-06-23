@@ -143,7 +143,8 @@ contract SchainsInternal is Permissions {
         schains[schainId].partOfNode = partOfNode;
         if (partOfNode > 0) {
             sumOfSchainsResources = sumOfSchainsResources.add(
-                (128 / partOfNode) * numberOfNodes);
+                numberOfNodes.mul(128).div(partOfNode)
+            );
         }
         return _generateGroup(schainId, numberOfNodes);
     }
@@ -268,11 +269,11 @@ contract SchainsInternal is Permissions {
     }
 
     function redirectOpenChannel(bytes32 schainId) external allow("Schains") {
-        ISkaleDKG(_contractManager.getContract("SkaleDKG")).openChannel(schainId);
+        ISkaleDKG(contractManager.getContract("SkaleDKG")).openChannel(schainId);
     }
 
     function startRotation(bytes32 schainIndex, uint nodeIndex) external allow("Schains") {
-        ConstantsHolder constants = ConstantsHolder(_contractManager.getContract("ConstantsHolder"));
+        ConstantsHolder constants = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
         rotations[schainIndex].nodeIndex = nodeIndex;
         rotations[schainIndex].freezeUntil = now + constants.rotationDelay();
     }
@@ -283,11 +284,11 @@ contract SchainsInternal is Permissions {
         uint newNodeIndex)
         external allow("Schains")
     {
-        ConstantsHolder constants = ConstantsHolder(_contractManager.getContract("ConstantsHolder"));
+        ConstantsHolder constants = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
         leavingHistory[nodeIndex].push(LeavingHistory(schainIndex, now + constants.rotationDelay()));
         rotations[schainIndex].newNodeIndex = newNodeIndex;
         rotations[schainIndex].rotationCounter++;
-        ISkaleDKG skaleDKG = ISkaleDKG(_contractManager.getContract("SkaleDKG"));
+        ISkaleDKG skaleDKG = ISkaleDKG(contractManager.getContract("SkaleDKG"));
         skaleDKG.reopenChannel(schainIndex);
     }
 
@@ -309,7 +310,7 @@ contract SchainsInternal is Permissions {
         previousPublicKeys[schainId].push(previousKey);
         delete schainsGroups[schainId].groupsPublicKey;
         // delete channel
-        ISkaleDKG skaleDKG = ISkaleDKG(_contractManager.getContract("SkaleDKG"));
+        ISkaleDKG skaleDKG = ISkaleDKG(contractManager.getContract("SkaleDKG"));
 
         if (skaleDKG.isChannelOpened(schainId)) {
             skaleDKG.deleteChannel(schainId);
@@ -436,7 +437,7 @@ contract SchainsInternal is Permissions {
      * @return if expired - true, else - false
      */
     function isTimeExpired(bytes32 schainId) external view returns (bool) {
-        return schains[schainId].startDate.add(schains[schainId].lifetime) < block.timestamp;
+        return uint(schains[schainId].startDate).add(schains[schainId].lifetime) < block.timestamp;
     }
 
     /**
@@ -548,7 +549,7 @@ contract SchainsInternal is Permissions {
     }
 
     function isAnyFreeNode(bytes32 schainId) external view returns (bool) {
-        Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
+        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
         uint8 space = schains[schainId].partOfNode;
         uint[] memory nodesWithFreeSpace = nodes.getNodesWithFreeSpace(space);
         for (uint i = 0; i < nodesWithFreeSpace.length; i++) {
@@ -647,7 +648,7 @@ contract SchainsInternal is Permissions {
     }
 
     function isEnoughNodes(bytes32 schainId) public view returns (uint[] memory result) {
-        Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
+        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
         uint8 space = schains[schainId].partOfNode;
         uint[] memory nodesWithFreeSpace = nodes.getNodesWithFreeSpace(space);
         uint counter = 0;
@@ -673,7 +674,7 @@ contract SchainsInternal is Permissions {
      * @param schainId - index of Group
      */
     function _generateGroup(bytes32 schainId, uint numberOfNodes) private returns (uint[] memory nodesInGroup) {
-        Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
+        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
         uint8 space = schains[schainId].partOfNode;
         nodesInGroup = new uint[](numberOfNodes);
 
@@ -705,7 +706,7 @@ contract SchainsInternal is Permissions {
     }
 
     function _isCorrespond(bytes32 schainId, uint nodeIndex) private view returns (bool) {
-        Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
+        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
         return !_exceptionsForGroups[schainId][nodeIndex] && nodes.isNodeActive(nodeIndex);
     }
 

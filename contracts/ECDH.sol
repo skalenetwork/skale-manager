@@ -130,7 +130,7 @@ contract ECDH {
         while (newR != 0) {
             q = r.div(newR);
             (t, newT) = (newT, addmod(t, (_N.sub(mulmod(q, newT, _N))), _N));
-            (r, newR) = (newR, r.sub(q.mul(newR)));
+            (r, newR) = (newR, r % newR);
         }
         return t;
     }

@@ -80,7 +80,7 @@ contract TokenLaunchLocker is Permissions, ILocker {
         external allow("DelegationController")
     {
         if (_locked[holder] > 0) {
-            TimeHelpers timeHelpers = TimeHelpers(_contractManager.getContract("TimeHelpers"));
+            TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
 
             uint currentMonth = timeHelpers.getCurrentMonth();
             uint fromLocked = amount;
@@ -114,9 +114,9 @@ contract TokenLaunchLocker is Permissions, ILocker {
     function getAndUpdateLockedAmount(address wallet) external override returns (uint) {
         if (_locked[wallet] > 0) {
             DelegationController delegationController = DelegationController(
-                _contractManager.getContract("DelegationController"));
-            TimeHelpers timeHelpers = TimeHelpers(_contractManager.getContract("TimeHelpers"));
-            ConstantsHolder constantsHolder = ConstantsHolder(_contractManager.getContract("ConstantsHolder"));
+                contractManager.getContract("DelegationController"));
+            TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
+            ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
 
             uint currentMonth = timeHelpers.getCurrentMonth();
             if (_totalDelegatedAmount[wallet].delegated.mul(2) >= _locked[wallet] &&
@@ -144,8 +144,8 @@ contract TokenLaunchLocker is Permissions, ILocker {
         return 0;
     }
 
-    function initialize(address contractManager) public override initializer {
-        Permissions.initialize(contractManager);
+    function initialize(address contractManagerAddress) public override initializer {
+        Permissions.initialize(contractManagerAddress);
     }
 
     // private

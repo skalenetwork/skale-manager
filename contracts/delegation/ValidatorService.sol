@@ -302,7 +302,7 @@ contract ValidatorService is Permissions {
         returns (uint)
     {
         DelegationController delegationController = DelegationController(
-            _contractManager.getContract("DelegationController")
+            contractManager.getContract("DelegationController")
         );
         return delegationController.getAndUpdateDelegatedByHolderToValidatorNow(
             getValidator(validatorId).validatorAddress,
@@ -359,8 +359,8 @@ contract ValidatorService is Permissions {
         require(validatorId != 0, "Node address is not assigned to a validator");
     }
 
-    function initialize(address contractManager) public override initializer {
-        Permissions.initialize(contractManager);
+    function initialize(address contractManagerAddress) public override initializer {
+        Permissions.initialize(contractManagerAddress);
         useWhitelist = true;
     }
 

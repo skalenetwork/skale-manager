@@ -188,7 +188,7 @@ contract Nodes is Permissions {
         require(params.port > 0, "Port is zero");
 
         uint validatorId = ValidatorService(
-            _contractManager.getContract("ValidatorService")).getValidatorIdByNodeAddress(from);
+            contractManager.getContract("ValidatorService")).getValidatorIdByNodeAddress(from);
 
         // adds Node to Nodes contract
         nodeIndex = _addNode(
@@ -250,7 +250,7 @@ contract Nodes is Permissions {
     }
 
     function deleteNodeForValidator(uint validatorId, uint nodeIndex) external allow("SkaleManager") {
-        ValidatorService validatorService = ValidatorService(_contractManager.getContract("ValidatorService"));
+        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
         require(validatorService.validatorExists(validatorId), "Validator with such ID does not exist");
         uint[] memory validatorNodes = validatorToNodeIndexes[validatorId];
         uint position = _findNode(validatorNodes, nodeIndex);
@@ -262,15 +262,15 @@ contract Nodes is Permissions {
     }
 
     function checkPossibilityCreatingNode(address nodeAddress) external allow("SkaleManager") {
-        ValidatorService validatorService = ValidatorService(_contractManager.getContract("ValidatorService"));
+        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
         DelegationController delegationController = DelegationController(
-            _contractManager.getContract("DelegationController")
+            contractManager.getContract("DelegationController")
         );
         uint validatorId = validatorService.getValidatorIdByNodeAddress(nodeAddress);
         require(validatorService.trustedValidators(validatorId), "Validator is not authorized to create a node");
         uint[] memory validatorNodes = validatorToNodeIndexes[validatorId];
         uint delegationsTotal = delegationController.getAndUpdateDelegatedToValidatorNow(validatorId);
-        uint msr = ConstantsHolder(_contractManager.getContract("ConstantsHolder")).msr();
+        uint msr = ConstantsHolder(contractManager.getContract("ConstantsHolder")).msr();
         require(
             (validatorNodes.length.add(1)) * msr <= delegationsTotal,
             "Validator must meet the Minimum Staking Requirement");
@@ -280,15 +280,15 @@ contract Nodes is Permissions {
         external allow("SkaleManager") returns (bool)
     {
         DelegationController delegationController = DelegationController(
-            _contractManager.getContract("DelegationController")
+            contractManager.getContract("DelegationController")
         );
-        ValidatorService validatorService = ValidatorService(_contractManager.getContract("ValidatorService"));
+        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
         require(validatorService.validatorExists(validatorId), "Validator with such ID does not exist");
         uint[] memory validatorNodes = validatorToNodeIndexes[validatorId];
         uint position = _findNode(validatorNodes, nodeIndex);
         require(position < validatorNodes.length, "Node does not exist for this Validator");
         uint delegationsTotal = delegationController.getAndUpdateDelegatedToValidatorNow(validatorId);
-        uint msr = ConstantsHolder(_contractManager.getContract("ConstantsHolder")).msr();
+        uint msr = ConstantsHolder(contractManager.getContract("ConstantsHolder")).msr();
         return position.add(1).mul(msr) <= delegationsTotal;
     }
 
@@ -310,8 +310,8 @@ contract Nodes is Permissions {
      * @return if time for reward has come - true, else - false
      */
     function isTimeForReward(uint nodeIndex) external view returns (bool) {
-        ConstantsHolder constantsHolder = ConstantsHolder(_contractManager.getContract("ConstantsHolder"));
-        return nodes[nodeIndex].lastRewardDate.add(constantsHolder.rewardPeriod()) <= block.timestamp;
+        ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
+        return uint(nodes[nodeIndex].lastRewardDate).add(constantsHolder.rewardPeriod()) <= block.timestamp;
     }
 
     /**
@@ -375,7 +375,7 @@ contract Nodes is Permissions {
      * @return Node next reward date
      */
     function getNodeNextRewardDate(uint nodeIndex) external view returns (uint32) {
-        ConstantsHolder constantsHolder = ConstantsHolder(_contractManager.getContract("ConstantsHolder"));
+        ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
         return nodes[nodeIndex].lastRewardDate + constantsHolder.rewardPeriod();
     }
 
@@ -451,17 +451,17 @@ contract Nodes is Permissions {
     }
 
     function getValidatorNodeIndexes(uint validatorId) external view returns (uint[] memory) {
-        ValidatorService validatorService = ValidatorService(_contractManager.getContract("ValidatorService"));
+        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
         require(validatorService.validatorExists(validatorId), "Validator with such ID does not exist");
         return validatorToNodeIndexes[validatorId];
     }
 
     /**
      * @dev constructor in Permissions approach
-     * @param _contractsAddress needed in Permissions constructor
+     * @param contractsAddress needed in Permissions constructor
     */
-    function initialize(address _contractsAddress) public override initializer {
-        Permissions.initialize(_contractsAddress);
+    function initialize(address contractsAddress) public override initializer {
+        Permissions.initialize(contractsAddress);
 
         numberOfActiveNodes = 0;
         numberOfLeavingNodes = 0;

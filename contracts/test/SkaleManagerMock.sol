@@ -33,15 +33,15 @@ contract SkaleManagerMock is Permissions, IERC777Recipient {
 
     IERC1820Registry private _erc1820 = IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
 
-    constructor (address contractManager) public {
-        Permissions.initialize(contractManager);
+    constructor (address contractManagerAddress) public {
+        Permissions.initialize(contractManagerAddress);
         _erc1820.setInterfaceImplementer(address(this), keccak256("ERC777TokensRecipient"), address(this));
     }
 
     function payBounty(uint validatorId, uint amount) external {
-        SkaleToken skaleToken = SkaleToken(_contractManager.getContract("SkaleToken"));
+        SkaleToken skaleToken = SkaleToken(contractManager.getContract("SkaleToken"));
         // solhint-disable-next-line check-send-result
-        skaleToken.send(_contractManager.getContract("Distributor"), amount, abi.encode(validatorId));
+        skaleToken.send(contractManager.getContract("Distributor"), amount, abi.encode(validatorId));
     }
 
     function tokensReceived(
