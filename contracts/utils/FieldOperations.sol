@@ -72,7 +72,7 @@ library Fp2Operations {
             b: mulmod(value1.b, value2.b, P)});
         result.a = addmod(
             point.a,
-            mulmod(P - 1, point.b, P),
+            mulmod(P.sub(1), point.b, P),
             P);
         result.b = addmod(
             mulmod(
@@ -85,20 +85,20 @@ library Fp2Operations {
 
     function squaredFp2(Fp2Point memory value) internal pure returns (Fp2Point memory) {
         uint ab = mulmod(value.a, value.b, P);
-        uint mult = mulmod(addmod(value.a, value.b, P), addmod(value.a, mulmod(P - 1, value.b, P), P), P);
+        uint mult = mulmod(addmod(value.a, value.b, P), addmod(value.a, mulmod(P.sub(1), value.b, P), P), P);
         return Fp2Point({ a: mult, b: addmod(ab, ab, P) });
     }
 
     function inverseFp2(Fp2Point memory value) internal view returns (Fp2Point memory result) {
         uint t0 = mulmod(value.a, value.a, P);
         uint t1 = mulmod(value.b, value.b, P);
-        uint t2 = mulmod(P - 1, t1, P);
+        uint t2 = mulmod(P.sub(1), t1, P);
         if (t0 >= t2) {
             t2 = addmod(t0, P.sub(t2), P);
         } else {
             t2 = P.sub(addmod(t2, P.sub(t0), P));
         }
-        uint t3 = Precompiled.bigModExp(t2, P - 2, P);
+        uint t3 = Precompiled.bigModExp(t2, P.sub(2), P);
         result.a = mulmod(value.a, t3, P);
         result.b = P.sub(mulmod(value.b, t3, P));
     }

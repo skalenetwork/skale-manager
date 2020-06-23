@@ -98,10 +98,10 @@ contract TokenState is Permissions, ILocker {
             }
         }
         if (index < _lockers.length) {
-            if (index < _lockers.length - 1) {
-                _lockers[index] = _lockers[_lockers.length - 1];
+            if (index < _lockers.length.sub(1)) {
+                _lockers[index] = _lockers[_lockers.length.sub(1)];
             }
-            delete _lockers[_lockers.length - 1];
+            delete _lockers[_lockers.length.sub(1)];
             _lockers.pop();
         }
         emit LockerWasRemoved(locker);

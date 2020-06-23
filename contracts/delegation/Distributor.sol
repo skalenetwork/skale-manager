@@ -222,7 +222,7 @@ contract Distributor is Permissions, IERC777Recipient {
         uint feeRate = validatorService.getValidator(validatorId).feeRate;
 
         uint fee = amount.mul(feeRate).div(1000);
-        uint bounty = amount - fee;
+        uint bounty = amount.sub(fee);
         _bountyPaid[validatorId][currentMonth] = _bountyPaid[validatorId][currentMonth].add(bounty);
         _feePaid[validatorId][currentMonth] = _feePaid[validatorId][currentMonth].add(fee);
 

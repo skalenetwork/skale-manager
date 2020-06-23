@@ -191,9 +191,9 @@ contract TokenLaunchManager is Permissions, IERC777Recipient {
         if (oldValue != value) {
             approved[wallet] = value;
             if (value > oldValue) {
-                _totalApproved = _totalApproved.add(value - oldValue);
+                _totalApproved = _totalApproved.add(value.sub(oldValue));
             } else {
-                _totalApproved = _totalApproved.sub(oldValue - value);
+                _totalApproved = _totalApproved.sub(oldValue.sub(value));
             }
         }
     }
