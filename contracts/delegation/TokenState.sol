@@ -103,8 +103,8 @@ contract TokenState is Permissions, ILocker {
             }
             delete _lockers[_lockers.length.sub(1)];
             _lockers.pop();
+            emit LockerWasRemoved(locker);
         }
-        emit LockerWasRemoved(locker);
     }
 
     function initialize(address contractManagerAddress) public override initializer {
