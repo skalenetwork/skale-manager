@@ -22,12 +22,15 @@
 pragma solidity 0.6.10;
 pragma experimental ABIEncoderV2;
 
+import "@openzeppelin/contracts/utils/SafeCast.sol";
+
 import "./ConstantsHolder.sol";
 import "./Nodes.sol";
 
 contract Monitors is Permissions {
 
     using StringUtils for string;
+    using SafeCast for uint;
 
     struct Verdict {
         uint toNodeIndex;
@@ -131,9 +134,9 @@ contract Monitors is Permissions {
             monitoringIndex = keccak256(abi.encodePacked(nodesInGroup[i]));
             (index, ) = _find(monitoringIndex, nodeIndex);
             if (index < checkedNodes[monitoringIndex].length) {
-                if (index != checkedNodes[monitoringIndex].length - 1) {
+                if (index != checkedNodes[monitoringIndex].length.sub(1)) {
                     checkedNodes[monitoringIndex][index] =
-                        checkedNodes[monitoringIndex][checkedNodes[monitoringIndex].length - 1];
+                        checkedNodes[monitoringIndex][checkedNodes[monitoringIndex].length.sub(1)];
                 }
                 checkedNodes[monitoringIndex].pop();
             }
@@ -153,10 +156,11 @@ contract Monitors is Permissions {
         (index, time) = _find(monitorIndex, verdict.toNodeIndex);
         require(time > 0, "Checked Node does not exist in MonitorsArray");
         if (time <= block.timestamp) {
-            if (index != checkedNodes[monitorIndex].length - 1) {
-                checkedNodes[monitorIndex][index] = checkedNodes[monitorIndex][checkedNodes[monitorIndex].length - 1];
+            if (index != checkedNodes[monitorIndex].length.sub(1)) {
+                checkedNodes[monitorIndex][index] = 
+                    checkedNodes[monitorIndex][checkedNodes[monitorIndex].length.sub(1)];
             }
-            delete checkedNodes[monitorIndex][checkedNodes[monitorIndex].length - 1];
+            delete checkedNodes[monitorIndex][checkedNodes[monitorIndex].length.sub(1)];
             checkedNodes[monitorIndex].pop();
             ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
             bool receiveVerdict = uint(time).add(constantsHolder.deltaPeriod()) > uint32(block.timestamp);
@@ -258,16 +262,16 @@ contract Monitors is Permissions {
             numberOfNodesInGroup = numberOfNodes;
         }
         uint ignoringTail = 0;
-        uint random = uint(keccak256(abi.encodePacked(uint(blockhash(block.number - 1)), monitorIndex)));
+        uint random = uint(keccak256(abi.encodePacked(uint(blockhash(block.number.sub(1))), monitorIndex)));
         for (uint i = 0; i < numberOfNodesInGroup; ++i) {
             uint index = random % (activeNodes.length.sub(ignoringTail));
             if (activeNodes[index] == nodeIndex) {
-                _swap(activeNodes, index, activeNodes.length.sub(ignoringTail) - 1);
+                _swap(activeNodes, index, activeNodes.length.sub(ignoringTail).sub(1));
                 ++ignoringTail;
                 index = random % (activeNodes.length.sub(ignoringTail));
             }
             groupsForMonitors[monitorIndex].push(activeNodes[index]);
-            _swap(activeNodes, index, activeNodes.length.sub(ignoringTail) - 1);
+            _swap(activeNodes, index, activeNodes.length.sub(ignoringTail).sub(1));
             ++ignoringTail;
         }
     }
@@ -276,8 +280,8 @@ contract Monitors is Permissions {
         if (values.length < 1) {
             revert("Can't calculate _median of empty array");
         }
-        _quickSort(values, 0, values.length - 1);
-        return values[values.length / 2];
+        _quickSort(values, 0, values.length.sub(1));
+        return values[values.length.div(2)];
     }
 
     function _swap(uint[] memory array, uint index1, uint index2) private pure {
@@ -305,7 +309,7 @@ contract Monitors is Permissions {
     function _quickSort(uint[] memory array, uint left, uint right) private pure {
         uint leftIndex = left;
         uint rightIndex = right;
-        uint middle = array[(right.add(left)) / 2];
+        uint middle = array[right.add(left).div(2)];
         while (leftIndex <= rightIndex) {
             while (array[leftIndex] < middle) {
                 leftIndex++;
@@ -316,7 +320,7 @@ contract Monitors is Permissions {
             if (leftIndex <= rightIndex) {
                 (array[leftIndex], array[rightIndex]) = (array[rightIndex], array[leftIndex]);
                 leftIndex++;
-                rightIndex = (rightIndex > 0 ? rightIndex - 1 : 0);
+                rightIndex = (rightIndex > 0 ? rightIndex.sub(1) : 0);
             }
         }
         if (left < rightIndex)
@@ -332,7 +336,7 @@ contract Monitors is Permissions {
         checkedNode.nodeIndex = nodeIndex;
         // Can't use SafeMath because we substract uint32
         assert(nodes.getNodeNextRewardDate(nodeIndex) >= constantsHolder.deltaPeriod());
-        checkedNode.time = nodes.getNodeNextRewardDate(nodeIndex) - constantsHolder.deltaPeriod();
+        checkedNode.time = uint(nodes.getNodeNextRewardDate(nodeIndex)).sub(constantsHolder.deltaPeriod()).toUint32();
     }
 
     function _emitVerdictsEvent(

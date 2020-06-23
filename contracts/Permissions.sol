@@ -39,6 +39,7 @@ contract Permissions is AccessControlUpgradeSafe {
     function initialize(address contractManagerAddress) public virtual initializer {
         AccessControlUpgradeSafe.__AccessControl_init();
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        require(contractManagerAddress != address(0), "ContractManager address is not set");
         contractManager = ContractManager(contractManagerAddress);
     }
 
