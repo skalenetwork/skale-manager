@@ -50,21 +50,22 @@ contract TokenLaunchManager is Permissions, IERC777Recipient {
     );
 
     /**
-     * @dev Emitted when a `seller` is registered.
+     * @dev Emitted when token launch is completed.
      */
-    event SellerWasRegistered(
-        address seller
+    event TokenLaunchIsCompleted(
+        uint timestamp
     );
+
+    bytes32 public constant SELLER_ROLE = keccak256("SCHAIN_CREATOR_ROLE");
 
     IERC1820Registry private _erc1820;
 
-    address public seller;
-
     mapping (address => uint) public approved;
+    bool public tokenLaunchIsCompleted;
     uint private _totalApproved;
 
     modifier onlySeller() {
-        require(_isOwner() || _msgSender() == seller, "Not authorized");
+        require(_isOwner() || hasRole(SELLER_ROLE, _msgSender()), "Not authorized");
         _;
     }
 
@@ -82,11 +83,27 @@ contract TokenLaunchManager is Permissions, IERC777Recipient {
      * @param value uint[] array of token amounts to approve transfer to
      */
     function approveBatchOfTransfers(address[] calldata walletAddress, uint[] calldata value) external onlySeller {
+        require(!tokenLaunchIsCompleted, "Can't approve because token launch is completed");
         require(walletAddress.length == value.length, "Wrong input arrays length");
         for (uint i = 0; i < walletAddress.length; ++i) {
             approveTransfer(walletAddress[i], value[i]);
         }
         require(_totalApproved <= _getBalance(), "Balance is too low");
+    }
+
+    /**
+     * @dev Allow withdrawals and disallow approvals changes
+     *
+     * Requirements:
+     *
+     * - all approvals must be done
+     * - token launch must be not completed
+     *
+     */
+    function completeTokenLaunch() external onlySeller {
+        require(!tokenLaunchIsCompleted, "Can't complete launch because it's already completed");
+        tokenLaunchIsCompleted = true;
+        emit TokenLaunchIsCompleted(now);
     }
 
     /**
@@ -102,6 +119,7 @@ contract TokenLaunchManager is Permissions, IERC777Recipient {
      * @param newAddress address token purchaser's new address
      */
     function changeApprovalAddress(address oldAddress, address newAddress) external onlySeller {
+        require(!tokenLaunchIsCompleted, "Can't change approval because token launch is completed");
         require(approved[newAddress] == 0, "New address is already used");
         uint oldValue = approved[oldAddress];
         if (oldValue > 0) {
@@ -117,6 +135,7 @@ contract TokenLaunchManager is Permissions, IERC777Recipient {
      * @param newValue uint of the updated token amount
      */
     function changeApprovalValue(address wallet, uint newValue) external onlySeller {
+        require(!tokenLaunchIsCompleted, "Can't change approval because token launch is completed");
         _setApprovedAmount(wallet, newValue);
     }
 
@@ -129,6 +148,7 @@ contract TokenLaunchManager is Permissions, IERC777Recipient {
      * - token transfer must be approved.
      */
     function retrieve() external {
+        require(tokenLaunchIsCompleted, "Can't retrive tokens because token launch is not completed");
         require(approved[_msgSender()] > 0, "Transfer is not approved");
         uint value = approved[_msgSender()];
         _setApprovedAmount(_msgSender(), 0);
@@ -137,18 +157,6 @@ contract TokenLaunchManager is Permissions, IERC777Recipient {
             "Error in transfer call to SkaleToken");
         TokenLaunchLocker(contractManager.getContract("TokenLaunchLocker")).lock(_msgSender(), value);
         emit TokensRetrieved(_msgSender(), value);
-    }
-
-    /**
-     * @dev Allows the Owner to register a Seller.
-     *
-     * Emits a SellerWasRegistered event.
-     *
-     * @param sellerAddress address seller address who will conduct the launch.
-     */
-    function registerSeller(address sellerAddress) external onlyOwner {
-        seller = sellerAddress;
-        emit SellerWasRegistered(sellerAddress);
     }
 
     /**
@@ -171,6 +179,7 @@ contract TokenLaunchManager is Permissions, IERC777Recipient {
 
     function initialize(address contractManagerAddress) public override initializer {
         Permissions.initialize(contractManagerAddress);
+        tokenLaunchIsCompleted = false;
         _erc1820 = IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
         _erc1820.setInterfaceImplementer(address(this), keccak256("ERC777TokensRecipient"), address(this));
     }
