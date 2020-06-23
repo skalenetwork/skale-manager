@@ -19,7 +19,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.8;
+pragma solidity 0.6.10;
 
 import "../utils/MathUtils.sol";
 import "../utils/FractionUtils.sol";
@@ -98,7 +98,7 @@ library PartialDifferences {
 
         if (sequence.firstUnprocessedMonth <= month) {
             for (uint i = sequence.firstUnprocessedMonth; i <= month; ++i) {
-                uint nextValue = sequence.value[i - 1].add(sequence.addDiff[i]).boundedSub(sequence.subtractDiff[i]);
+                uint nextValue = sequence.value[i.sub(1)].add(sequence.addDiff[i]).boundedSub(sequence.subtractDiff[i]);
                 if (sequence.value[i] != nextValue) {
                     sequence.value[i] = nextValue;
                 }

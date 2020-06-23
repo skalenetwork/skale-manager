@@ -19,7 +19,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.8;
+pragma solidity 0.6.10;
 
 import "./Permissions.sol";
 
@@ -117,6 +117,8 @@ contract ConstantsHolder is Permissions {
 
     uint public proofOfUseLockUpPeriodDays;
 
+    uint public proofOfUseDelegationPercentage;
+
     /**
      * Set reward and delta periods to new one, run only by owner. This function
      * only for tests.
@@ -164,6 +166,7 @@ contract ConstantsHolder is Permissions {
     }
 
     function setLaunchTimestamp(uint timestamp) external onlyOwner {
+        require(now < launchTimestamp, "Can't set network launch timestamp because network is already launched");
         launchTimestamp = timestamp;
     }
 
@@ -173,6 +176,11 @@ contract ConstantsHolder is Permissions {
 
     function setProofOfUseLockUpPeriod(uint periodDays) external onlyOwner {
         proofOfUseLockUpPeriodDays = periodDays;
+    }
+
+    function setProofOfUseDelegationPercentage(uint percentage) external onlyOwner {
+        require(percentage <= 100, "Percentage value is incorrect");
+        proofOfUseDelegationPercentage = percentage;
     }
 
     /**
@@ -189,8 +197,9 @@ contract ConstantsHolder is Permissions {
         checkTime = 120; // Test parameters
         lastTimeUnderloaded = 0;
         lastTimeOverloaded = 0;
-        launchTimestamp = now;
+        launchTimestamp = uint(-1);
         rotationDelay = 12 hours;
         proofOfUseLockUpPeriodDays = 90;
+        proofOfUseDelegationPercentage = 50;
     }
 }

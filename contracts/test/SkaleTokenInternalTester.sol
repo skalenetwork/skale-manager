@@ -19,15 +19,15 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.8;
+pragma solidity 0.6.10;
 
 import "../SkaleToken.sol";
 
 
 contract SkaleTokenInternalTester is SkaleToken {
 
-    constructor(address contractManager, address[] memory defOps) public
-    SkaleToken(contractManager, defOps)
+    constructor(address contractManagerAddress, address[] memory defOps) public
+    SkaleToken(contractManagerAddress, defOps)
     // solhint-disable-next-line no-empty-blocks
     { }
 

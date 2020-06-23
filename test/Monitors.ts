@@ -2,7 +2,8 @@ import { BigNumber } from "bignumber.js";
 import { ConstantsHolderInstance,
          ContractManagerInstance,
          MonitorsInstance,
-        NodesInstance } from "../types/truffle-contracts";
+        NodesInstance,
+        ValidatorServiceInstance} from "../types/truffle-contracts";
 
 import { currentTime, skipTime } from "./tools/time";
 
@@ -12,14 +13,16 @@ import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
 import { deployContractManager } from "./tools/deploy/contractManager";
 import { deployMonitors } from "./tools/deploy/monitors";
 import { deployNodes } from "./tools/deploy/nodes";
+import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
 chai.should();
 chai.use((chaiAsPromised));
 
-contract("Monitors", ([owner, validator]) => {
+contract("Monitors", ([owner, validator, nodeAddress]) => {
   let contractManager: ContractManagerInstance;
   let constantsHolder: ConstantsHolderInstance;
   let monitors: MonitorsInstance;
   let nodes: NodesInstance;
+  let validatorService: ValidatorServiceInstance;
 
   beforeEach(async () => {
     contractManager = await deployContractManager();
@@ -27,23 +30,76 @@ contract("Monitors", ([owner, validator]) => {
     nodes = await deployNodes(contractManager);
     monitors = await deployMonitors(contractManager);
     constantsHolder = await deployConstantsHolder(contractManager);
+    validatorService = await deployValidatorService(contractManager);
 
     // create a node for monitors functions tests
-    await nodes.addNode(validator, "elvis1", "0x7f000001", "0x7f000002", 8545,
-    ["0x1122334455667788990011223344556677889900112233445566778899001122",
-    "0x1122334455667788990011223344556677889900112233445566778899001122"], 0);
-    await nodes.addNode(validator, "elvis2", "0x7f000003", "0x7f000004", 8545,
-    ["0x1122334455667788990011223344556677889900112233445566778899001122",
-    "0x1122334455667788990011223344556677889900112233445566778899001122"], 0);
-    await nodes.addNode(validator, "elvis3", "0x7f000005", "0x7f000006", 8545,
-    ["0x1122334455667788990011223344556677889900112233445566778899001122",
-    "0x1122334455667788990011223344556677889900112233445566778899001122"], 0);
-    await nodes.addNode(validator, "elvis4", "0x7f000007", "0x7f000008", 8545,
-    ["0x1122334455667788990011223344556677889900112233445566778899001122",
-    "0x1122334455667788990011223344556677889900112233445566778899001122"], 0);
-    await nodes.addNode(validator, "elvis5", "0x7f000009", "0x7f000010", 8545,
-    ["0x1122334455667788990011223344556677889900112233445566778899001122",
-    "0x1122334455667788990011223344556677889900112233445566778899001122"], 0);
+    await validatorService.registerValidator("Validator", "D2", 0, 0, {from: validator});
+    const validatorIndex = await validatorService.getValidatorId(validator);
+    let signature1 = await web3.eth.sign(web3.utils.soliditySha3(validatorIndex.toString()), nodeAddress);
+    signature1 = (signature1.slice(130) === "00" ? signature1.slice(0, 130) + "1b" :
+            (signature1.slice(130) === "01" ? signature1.slice(0, 130) + "1c" : signature1));
+    await validatorService.linkNodeAddress(nodeAddress, signature1, {from: validator});
+
+
+    await nodes.createNode(
+      nodeAddress,
+      {
+          port: 8545,
+          nonce: 0,
+          ip: "0x7f000001",
+          publicIp: "0x7f000001",
+          publicKey: ["0x1122334455667788990011223344556677889900112233445566778899001122",
+                      "0x1122334455667788990011223344556677889900112233445566778899001122"],
+          name: "elvis1"
+      });
+
+    await nodes.createNode(
+      nodeAddress,
+      {
+          port: 8545,
+          nonce: 0,
+          ip: "0x7f000003",
+          publicIp: "0x7f000003",
+          publicKey: ["0x1122334455667788990011223344556677889900112233445566778899001122",
+                      "0x1122334455667788990011223344556677889900112233445566778899001122"],
+          name: "elvis2"
+      });
+
+    await nodes.createNode(
+      nodeAddress,
+      {
+          port: 8545,
+          nonce: 0,
+          ip: "0x7f000005",
+          publicIp: "0x7f000005",
+          publicKey: ["0x1122334455667788990011223344556677889900112233445566778899001122",
+                      "0x1122334455667788990011223344556677889900112233445566778899001122"],
+          name: "elvis3"
+      });
+
+    await nodes.createNode(
+      nodeAddress,
+      {
+          port: 8545,
+          nonce: 0,
+          ip: "0x7f000007",
+          publicIp: "0x7f000007",
+          publicKey: ["0x1122334455667788990011223344556677889900112233445566778899001122",
+                      "0x1122334455667788990011223344556677889900112233445566778899001122"],
+          name: "elvis4"
+      });
+
+    await nodes.createNode(
+      nodeAddress,
+      {
+          port: 8545,
+          nonce: 0,
+          ip: "0x7f000009",
+          publicIp: "0x7f000009",
+          publicKey: ["0x1122334455667788990011223344556677889900112233445566778899001122",
+                      "0x1122334455667788990011223344556677889900112233445566778899001122"],
+          name: "elvis5"
+      });
   });
   // nodeIndex = 0 because we add one node and her index in array is 0
   const nodeIndex = 0;
@@ -51,12 +107,9 @@ contract("Monitors", ([owner, validator]) => {
   it("should add Monitor", async () => {
     const { logs } = await monitors.addMonitor(nodeIndex, {from: owner});
     // check events after `.addMonitor` invoke
-    assert.equal(logs[0].event, "GroupAdded");
-    assert.equal(logs[1].event, "GroupGenerated");
-    assert.equal(logs[2].event, "MonitorsArray");
-    assert.equal(logs[3].event, "MonitorCreated");
+    assert.equal(logs[0].event, "MonitorCreated");
 
-    const targetNodes = logs[2].args[2].map((value: BN) => value.toNumber());
+    const targetNodes = logs[0].args[3].map((value: BN) => value.toNumber());
     targetNodes.sort();
     targetNodes.forEach((value: number, index: number) => {
       if (index > 0) {
@@ -64,18 +117,6 @@ contract("Monitors", ([owner, validator]) => {
       }
       assert(nodes.isNodeActive(value), "Node should be active");
     });
-  });
-
-  it("should upgrade Monitor", async () => {
-    // add monitor
-    await monitors.addMonitor(nodeIndex, {from: owner});
-    // upgrade Monitor
-    const { logs } = await monitors.upgradeMonitor(nodeIndex, {from: owner});
-    // check events after `.upgradeMonitor` invoke
-    assert.equal(logs[0].event, "GroupUpgraded");
-    assert.equal(logs[1].event, "GroupGenerated");
-    assert.equal(logs[2].event, "MonitorsArray");
-    assert.equal(logs[3].event, "MonitorUpgraded");
   });
 
   it("should send Verdict", async () => {
@@ -160,17 +201,32 @@ contract("Monitors", ([owner, validator]) => {
     // preparation
     const indexNode1 = 1;
     const monitorIndex1 = web3.utils.soliditySha3(indexNode1);
-    await monitors.createGroup(
-      monitorIndex1, 1, "0x0000000000000000000000000000000000000000000000000000000000000000", {from: owner},
+    await monitors.addMonitor(
+      indexNode1, {from: owner},
       );
-    await monitors.setNodeInGroup(
-      monitorIndex1, indexNode1, {from: owner},
-      );
-    await monitors.addVerdict(monitorIndex1, 10, 0, {from: owner});
-    await monitors.addVerdict(monitorIndex1, 10, 50, {from: owner});
-    await monitors.addVerdict(monitorIndex1, 100, 40, {from: owner});
-    const res = new BigNumber(await monitors.getLengthOfMetrics(monitorIndex1, {from: owner}));
-    expect(parseInt(res.toString(), 10)).to.equal(3);
+    const nodesInGroup = await monitors.getNodesInGroup(monitorIndex1);
+    const verd1 = {
+      toNodeIndex: 1,
+      downtime: 10,
+      latency: 0,
+    };
+    const verd2 = {
+      toNodeIndex: 1,
+      downtime: 10,
+      latency: 50,
+    };
+    const verd3 = {
+      toNodeIndex: 1,
+      downtime: 100,
+      latency: 40,
+    };
+    const rewardPeriod = (await constantsHolder.rewardPeriod()).toNumber();
+    const deltaPeriod = (await constantsHolder.deltaPeriod()).toNumber();
+    skipTime(web3, rewardPeriod - deltaPeriod);
+    await monitors.sendVerdict(2, verd1, {from: owner});
+    await monitors.sendVerdict(3, verd2, {from: owner});
+    await monitors.sendVerdict(4, verd3, {from: owner});
+    (await monitors.getLengthOfMetrics(monitorIndex1, {from: owner})).toNumber().should.be.equal(3);
 
     const metrics = await await monitors.calculateMetrics.call(indexNode1, {from: owner});
     const downtime = web3.utils.toBN(metrics[0]).toNumber();
@@ -238,7 +294,7 @@ contract("Monitors", ([owner, validator]) => {
     (await monitors.getCheckedArray(node2Hash)).length.should.be.equal(1);
 
     await nodes.changeNodeLastRewardDate(0);
-    await monitors.upgradeMonitor(0);
+    await monitors.addMonitor(0);
 
     const validatedArray = await monitors.getCheckedArray(node2Hash);
     const validatedNodeIndexes = validatedArray.map((value) => new BigNumber(value.nodeIndex).toNumber());
@@ -308,19 +364,22 @@ contract("Monitors", ([owner, validator]) => {
       for (let node = (await nodes.getNumberOfNodes()).toNumber(); node < nodesCount; ++node) {
         const address = ("0000" + node.toString(16)).slice(-4);
 
-        await nodes.addNode(validator,
-                                "d2_" + node,
-                                "0x7f" + address + "01",
-                                "0x7f" + address + "02",
-                                8545,
-                                ["0x1122334455667788990011223344556677889900112233445566778899001122",
-                                 "0x1122334455667788990011223344556677889900112233445566778899001122"],
-                                0);
+        await nodes.createNode(
+          nodeAddress,
+          {
+              port: 8545,
+              nonce: 0,
+              ip: "0x7f" + address + "01",
+              publicIp: "0x7f" + address + "02",
+              publicKey: ["0x1122334455667788990011223344556677889900112233445566778899001122",
+                          "0x1122334455667788990011223344556677889900112233445566778899001122"],
+              name: "d2_" + node
+          });
       }
 
       const leavingCount = nodesCount - activeNodesCount;
       for (let i = 0; i < leavingCount; ++i) {
-        await nodes.setNodeLeaving(Math.floor(i * nodesCount / leavingCount));
+        await nodes.initExit(Math.floor(i * nodesCount / leavingCount));
       }
     });
 
@@ -329,7 +388,7 @@ contract("Monitors", ([owner, validator]) => {
         if (await nodes.isNodeActive(node)) {
           const { logs } = await monitors.addMonitor(node);
 
-          const targetNodes = logs[2].args[2].map((value: BN) => value.toNumber());
+          const targetNodes = logs[0].args[3].map((value: BN) => value.toNumber());
           targetNodes.length.should.be.equal(24);
           targetNodes.sort();
           targetNodes.forEach(async (value: number, index: number) => {

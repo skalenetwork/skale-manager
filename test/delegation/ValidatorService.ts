@@ -14,6 +14,7 @@ import { deployContractManager } from "../tools/deploy/contractManager";
 import { deployDelegationController } from "../tools/deploy/delegation/delegationController";
 import { deployValidatorService } from "../tools/deploy/delegation/validatorService";
 import { deploySkaleToken } from "../tools/deploy/skaleToken";
+
 chai.should();
 chai.use(chaiAsPromised);
 
@@ -295,13 +296,13 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
 
             it("should allow to enable validator in whitelist", async () => {
                 await validatorService.enableValidator(validatorId, {from: validator1})
-                    .should.be.eventually.rejectedWith("Ownable: caller is not the owner");
+                    .should.be.eventually.rejectedWith("Caller is not the owner");
                 await validatorService.enableValidator(validatorId, {from: owner});
             });
 
             it("should allow to disable validator from whitelist", async () => {
                 await validatorService.disableValidator(validatorId, {from: validator1})
-                    .should.be.eventually.rejectedWith("Ownable: caller is not the owner");
+                    .should.be.eventually.rejectedWith("Caller is not the owner");
                 await validatorService.disableValidator(validatorId, {from: owner})
                     .should.be.eventually.rejectedWith("Validator is already disabled");
 
@@ -319,66 +320,6 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
             it("should allow to send delegation request if validator is authorized", async () => {
                 await validatorService.enableValidator(validatorId, {from: owner});
                 await delegationController.delegate(validatorId, amount, delegationPeriod, info, {from: holder});
-            });
-
-            it("should not allow to create node if new epoch isn't started", async () => {
-                await validatorService.enableValidator(validatorId, {from: owner});
-                await delegationController.delegate(validatorId, amount, delegationPeriod, info, {from: holder});
-                const delegationId = 0;
-                await delegationController.acceptPendingDelegation(delegationId, {from: validator1});
-
-                await validatorService.checkPossibilityCreatingNode(nodeAddress)
-                    .should.be.eventually.rejectedWith("Validator must meet the Minimum Staking Requirement");
-            });
-
-            it("should allow to create node if new epoch is started", async () => {
-                await validatorService.enableValidator(validatorId, {from: owner});
-                await delegationController.delegate(validatorId, amount, delegationPeriod, info, {from: holder});
-                const delegationId = 0;
-                await delegationController.acceptPendingDelegation(delegationId, {from: validator1});
-                skipTime(web3, month);
-
-                await validatorService.checkPossibilityCreatingNode(nodeAddress)
-                    .should.be.eventually.rejectedWith("Validator must meet the Minimum Staking Requirement");
-
-                await constantsHolder.setMSR(amount);
-
-                // now it should not reject
-                await validatorService.checkPossibilityCreatingNode(nodeAddress);
-
-                await validatorService.pushNode(nodeAddress, 0);
-                const nodeIndexBN = (await validatorService.getValidatorNodeIndexes(validatorId))[0];
-                const nodeIndex = new BigNumber(nodeIndexBN).toNumber();
-                assert.equal(nodeIndex, 0);
-            });
-
-            it("should allow to create 2 nodes", async () => {
-                await validatorService.enableValidator(validatorId, {from: owner});
-                await delegationController.delegate(validatorId, amount, delegationPeriod, info, {from: holder});
-                const delegationId1 = 0;
-                await delegationController.acceptPendingDelegation(delegationId1, {from: validator1});
-                await delegationController.delegate(validatorId, amount, delegationPeriod, info, {from: validator3});
-                const delegationId2 = 1;
-                await delegationController.acceptPendingDelegation(delegationId2, {from: validator1});
-
-                skipTime(web3, 2678400); // 31 days
-                await validatorService.checkPossibilityCreatingNode(nodeAddress)
-                    .should.be.eventually.rejectedWith("Validator must meet the Minimum Staking Requirement");
-
-                await constantsHolder.setMSR(amount);
-
-                await validatorService.checkPossibilityCreatingNode(nodeAddress);
-                await validatorService.pushNode(nodeAddress, 0);
-
-                await validatorService.checkPossibilityCreatingNode(nodeAddress);
-                await validatorService.pushNode(nodeAddress, 1);
-
-                const nodeIndexesBN = (await validatorService.getValidatorNodeIndexes(validatorId));
-                for (let i = 0; i < nodeIndexesBN.length; i++) {
-                    const nodeIndexBN = (await validatorService.getValidatorNodeIndexes(validatorId))[i];
-                    const nodeIndex = new BigNumber(nodeIndexBN).toNumber();
-                    assert.equal(nodeIndex, i);
-                }
             });
 
             it("should be possible for the validator to enable and disable new delegation requests", async () => {

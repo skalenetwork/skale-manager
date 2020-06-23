@@ -8,7 +8,8 @@ import { ConstantsHolderInstance,
     SkaleManagerMockInstance,
     SkaleTokenInstance,
     TokenStateInstance,
-    ValidatorServiceInstance} from "../../types/truffle-contracts";
+    ValidatorServiceInstance,
+    NodesInstance} from "../../types/truffle-contracts";
 
 const SkaleManagerMock: SkaleManagerMockContract = artifacts.require("./SkaleManagerMock");
 
@@ -27,6 +28,7 @@ import { deployTokenState } from "../tools/deploy/delegation/tokenState";
 import { deployValidatorService } from "../tools/deploy/delegation/validatorService";
 import { deploySkaleToken } from "../tools/deploy/skaleToken";
 import { Delegation } from "../tools/types";
+import { deployNodes } from "../tools/deploy/nodes";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -49,6 +51,7 @@ contract("Delegation", ([owner,
     let tokenState: TokenStateInstance;
     let distributor: DistributorInstance;
     let punisher: PunisherInstance;
+    let nodes: NodesInstance;
 
     const defaultAmount = 100 * 1e18;
     const month = 60 * 60 * 24 * 31;
@@ -67,6 +70,7 @@ contract("Delegation", ([owner,
         tokenState = await deployTokenState(contractManager);
         distributor = await deployDistributor(contractManager);
         punisher = await deployPunisher(contractManager);
+        nodes = await deployNodes(contractManager);
 
         // each test will start from Nov 10
         await skipTimeToDate(web3, 10, 10);
@@ -480,7 +484,7 @@ contract("Delegation", ([owner,
             signature = (signature.slice(130) === "00" ? signature.slice(0, 130) + "1b" :
                 (signature.slice(130) === "01" ? signature.slice(0, 130) + "1c" : signature));
             await validatorService.linkNodeAddress(bountyAddress, signature, {from: validator});
-            await validatorService.checkPossibilityCreatingNode(bountyAddress);
+            await nodes.checkPossibilityCreatingNode(bountyAddress);
         });
 
         it("should be possible to distribute bounty accross thousands of holders", async () => {

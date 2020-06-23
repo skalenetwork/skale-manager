@@ -19,7 +19,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.8;
+pragma solidity 0.6.10;
 
 import "@openzeppelin/contracts-ethereum-package/contracts/access/Ownable.sol";
 
@@ -67,7 +67,7 @@ contract ContractManager is OwnableUpgradeSafe {
     }
 
     // check account contains code
-    function _containsCode(address account) internal view returns (bool) {
+    function _containsCode(address account) private view returns (bool) {
         uint length;
         // solhint-disable-next-line no-inline-assembly
         assembly {

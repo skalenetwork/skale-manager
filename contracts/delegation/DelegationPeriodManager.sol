@@ -20,7 +20,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.8;
+pragma solidity 0.6.10;
 
 import "../Permissions.sol";
 
@@ -70,8 +70,8 @@ contract DelegationPeriodManager is Permissions {
     /**
      * @dev Initial delegation period and multiplier settings.
      */
-    function initialize(address _contractsAddress) public override initializer {
-        Permissions.initialize(_contractsAddress);
+    function initialize(address contractsAddress) public override initializer {
+        Permissions.initialize(contractsAddress);
         stakeMultipliers[3] = 100;  // 3 months at 100
         stakeMultipliers[6] = 150;  // 6 months at 150
         stakeMultipliers[12] = 200; // 12 months at 200

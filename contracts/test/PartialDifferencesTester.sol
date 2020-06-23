@@ -19,7 +19,9 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.8;
+pragma solidity 0.6.10;
+
+import "@openzeppelin/contracts/math/SafeMath.sol";
 
 import "../delegation/PartialDifferences.sol";
 
@@ -27,12 +29,13 @@ import "../delegation/PartialDifferences.sol";
 contract PartialDifferencesTester {
     using PartialDifferences for PartialDifferences.Sequence;
     using PartialDifferences for PartialDifferences.Value;
+    using SafeMath for uint;
 
     PartialDifferences.Sequence[] private _sequences;
-    PartialDifferences.Value[] private _values;
+    // PartialDifferences.Value[] private _values;
 
     function createSequence() external {
-        _sequences.push();
+        _sequences.push(PartialDifferences.Sequence({firstUnprocessedMonth: 0, lastChangedMonth: 0}));
     }
 
     function addToSequence(uint sequence, uint diff, uint month) external {
@@ -63,6 +66,6 @@ contract PartialDifferencesTester {
 
     function latestSequence() external view returns (uint id) {
         require(_sequences.length > 0, "There are no _sequences");
-        return _sequences.length - 1;
+        return _sequences.length.sub(1);
     }
 }
