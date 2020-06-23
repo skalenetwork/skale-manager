@@ -119,7 +119,7 @@ contract TokenLaunchLocker is Permissions, ILocker {
             ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
 
             uint currentMonth = timeHelpers.getCurrentMonth();
-            if (_totalDelegatedAmount[wallet].delegated.mul(2) >= _locked[wallet] &&
+            if (_totalDelegatedSatisfiesProofOfUserCondition(wallet) &&
                 timeHelpers.calculateProofOfUseLockEndTime(
                     _totalDelegatedAmount[wallet].month,
                     constantsHolder.proofOfUseLockUpPeriodDays()
@@ -169,7 +169,7 @@ contract TokenLaunchLocker is Permissions, ILocker {
 
         // do not update counter if it is big enough
         // because it will override month value
-        if (_totalDelegatedAmount[holder].delegated.mul(2) < _locked[holder]) {
+        if (!_totalDelegatedSatisfiesProofOfUserCondition(holder)) {
             _totalDelegatedAmount[holder].delegated = _totalDelegatedAmount[holder].delegated.add(amount);
             _totalDelegatedAmount[holder].month = month;
         }
@@ -189,5 +189,12 @@ contract TokenLaunchLocker is Permissions, ILocker {
     function _deleteTotalDelegatedAmount(address holder) private {
         delete _totalDelegatedAmount[holder].delegated;
         delete _totalDelegatedAmount[holder].month;
+    }
+
+    function _totalDelegatedSatisfiesProofOfUserCondition(address holder) private view returns (bool) {
+        ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
+
+        return _totalDelegatedAmount[holder].delegated.mul(100) >=
+            _locked[holder].mul(constantsHolder.proofOfUseDelegationPercentage());
     }
 }
