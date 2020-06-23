@@ -185,6 +185,7 @@ contract TokenLaunchManager is Permissions, IERC777Recipient {
     }
 
     function approveTransfer(address walletAddress, uint value) public onlySeller {
+        require(value > 0, "Value must be greater than zero");
         _setApprovedAmount(walletAddress, approved[walletAddress].add(value));
         emit Approved(walletAddress, value);
     }
@@ -196,6 +197,7 @@ contract TokenLaunchManager is Permissions, IERC777Recipient {
     }
 
     function _setApprovedAmount(address wallet, uint value) private {
+        require(wallet != address(0), "Wallet address must be non zero");
         uint oldValue = approved[wallet];
         if (oldValue != value) {
             approved[wallet] = value;
