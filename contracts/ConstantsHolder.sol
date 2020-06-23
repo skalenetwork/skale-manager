@@ -164,7 +164,7 @@ contract ConstantsHolder is Permissions {
     }
 
     /**
-     * Set time if system iverloaded, run only by Schains contract
+     * Set time if system overloaded, run only by Schains contract
      */
     function setLastTimeOverloaded() external allow("Schains") {
         lastTimeOverloaded = now;
