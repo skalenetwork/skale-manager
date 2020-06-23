@@ -88,7 +88,7 @@ contract Pricing is Permissions {
     function initialize(address newContractsAddress) public override initializer {
         Permissions.initialize(newContractsAddress);
         lastUpdated = now;
-        price = 5 * MIN_PRICE;
+        price = MIN_PRICE.mul(5);
     }
 
     function checkAllNodes() public {
@@ -117,6 +117,6 @@ contract Pricing is Permissions {
     function _getTotalCapacity() private view returns (uint) {
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));
 
-        return 128 * nodes.getNumberOnlineNodes();
+        return nodes.getNumberOnlineNodes().mul(128);
     }
 }

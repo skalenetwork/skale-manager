@@ -36,7 +36,7 @@ contract TimeHelpersWithDebug is TimeHelpers, OwnableUpgradeSafe {
 
     function skipTime(uint sec) external onlyOwner {
         if (_timeShift.length > 0) {
-            _timeShift.push(TimeShift({pointInTime: now, shift: _timeShift[_timeShift.length - 1].shift.add(sec)}));
+            _timeShift.push(TimeShift({pointInTime: now, shift: _timeShift[_timeShift.length.sub(1)].shift.add(sec)}));
         } else {
             _timeShift.push(TimeShift({pointInTime: now, shift: sec}));
         }
@@ -65,11 +65,11 @@ contract TimeHelpersWithDebug is TimeHelpers, OwnableUpgradeSafe {
         if (_timeShift.length > 0) {
             if (timestamp < _timeShift[0].pointInTime) {
                 return 0;
-            } else if (timestamp >= _timeShift[_timeShift.length - 1].pointInTime) {
-                return _timeShift[_timeShift.length - 1].shift;
+            } else if (timestamp >= _timeShift[_timeShift.length.sub(1)].pointInTime) {
+                return _timeShift[_timeShift.length.sub(1)].shift;
             } else {
                 uint left = 0;
-                uint right = _timeShift.length - 1;
+                uint right = _timeShift.length.sub(1);
                 while (left + 1 < right) {
                     uint middle = left.add(right).div(2);
                     if (timestamp < _timeShift[middle].pointInTime) {
@@ -86,7 +86,7 @@ contract TimeHelpersWithDebug is TimeHelpers, OwnableUpgradeSafe {
     }
 
     function _findTimeBeforeTimeShift(uint shiftedTimestamp) private view returns (uint) {
-        uint lastTimeShiftIndex = _timeShift.length - 1;
+        uint lastTimeShiftIndex = _timeShift.length.sub(1);
         if (_timeShift[lastTimeShiftIndex].pointInTime.add(_timeShift[lastTimeShiftIndex].shift)
             < shiftedTimestamp) {
             if (_timeShift[0].pointInTime.add(_timeShift[0].shift) < shiftedTimestamp) {

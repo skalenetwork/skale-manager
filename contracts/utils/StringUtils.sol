@@ -21,14 +21,17 @@
 
 pragma solidity 0.6.10;
 
+import "@openzeppelin/contracts/math/SafeMath.sol";
+
 
 library StringUtils {
+    using SafeMath for uint;
 
     function strConcat(string memory a, string memory b) internal pure returns (string memory) {
         bytes memory _ba = bytes(a);
         bytes memory _bb = bytes(b);
 
-        string memory ab = new string(_ba.length + _bb.length);
+        string memory ab = new string(_ba.length.add(_bb.length));
         bytes memory strBytes = bytes(ab);
         uint k = 0;
         uint i = 0;
@@ -53,7 +56,7 @@ library StringUtils {
             j /= 10;
         }
         bytes memory bstr = new bytes(len);
-        uint k = len - 1;
+        uint k = len.sub(1);
         while (_i != 0) {
             bstr[k--] = byte(uint8(48 + _i % 10));
             _i /= 10;

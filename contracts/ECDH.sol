@@ -240,7 +240,7 @@ contract ECDH {
                     pz
                 );
             }
-            remaining = remaining / 2;
+            remaining = remaining.div(2);
             (px, py, pz) = ecDouble(px, py, pz);
         }
 

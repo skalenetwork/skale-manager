@@ -22,6 +22,8 @@
 pragma solidity 0.6.10;
 pragma experimental ABIEncoderV2;
 
+import "@openzeppelin/contracts/utils/SafeCast.sol";
+
 import "./Permissions.sol";
 import "./ConstantsHolder.sol";
 import "./delegation/ValidatorService.sol";
@@ -32,6 +34,8 @@ import "./delegation/DelegationController.sol";
  * @title Nodes - contract contains all functionality logic to manage Nodes
  */
 contract Nodes is Permissions {
+    
+    using SafeCast for uint;
 
     // All Nodes states
     enum NodeStatus {Active, Leaving, Left}
@@ -137,7 +141,7 @@ contract Nodes is Permissions {
         if (space > 0) {
             _moveNodeToNewSpaceMap(
                 nodeIndex,
-                spaceOfNodes[nodeIndex].freeSpace - space
+                uint(spaceOfNodes[nodeIndex].freeSpace).sub(space).toUint8()
             );
         }
         return true;
@@ -153,7 +157,7 @@ contract Nodes is Permissions {
         if (space > 0) {
             _moveNodeToNewSpaceMap(
                 nodeIndex,
-                spaceOfNodes[nodeIndex].freeSpace + space
+                uint(spaceOfNodes[nodeIndex].freeSpace).add(space).toUint8()
             );
         }
     }
@@ -272,7 +276,7 @@ contract Nodes is Permissions {
         uint delegationsTotal = delegationController.getAndUpdateDelegatedToValidatorNow(validatorId);
         uint msr = ConstantsHolder(contractManager.getContract("ConstantsHolder")).msr();
         require(
-            (validatorNodes.length.add(1)) * msr <= delegationsTotal,
+            validatorNodes.length.add(1).mul(msr) <= delegationsTotal,
             "Validator must meet the Minimum Staking Requirement");
     }
 
@@ -376,7 +380,7 @@ contract Nodes is Permissions {
      */
     function getNodeNextRewardDate(uint nodeIndex) external view returns (uint32) {
         ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
-        return nodes[nodeIndex].lastRewardDate + constantsHolder.rewardPeriod();
+        return uint(nodes[nodeIndex].lastRewardDate).add(constantsHolder.rewardPeriod()).toUint32();
     }
 
     /**
@@ -506,8 +510,8 @@ contract Nodes is Permissions {
     function _moveNodeToNewSpaceMap(uint nodeIndex, uint8 newSpace) private {
         uint8 previousSpace = spaceOfNodes[nodeIndex].freeSpace;
         uint indexInArray = spaceOfNodes[nodeIndex].indexInSpaceMap;
-        if (indexInArray < spaceToNodes[previousSpace].length - 1) {
-            uint shiftedIndex = spaceToNodes[previousSpace][spaceToNodes[previousSpace].length - 1];
+        if (indexInArray < spaceToNodes[previousSpace].length.sub(1)) {
+            uint shiftedIndex = spaceToNodes[previousSpace][spaceToNodes[previousSpace].length.sub(1)];
             spaceToNodes[previousSpace][indexInArray] = shiftedIndex;
             spaceOfNodes[shiftedIndex].indexInSpaceMap = indexInArray;
             spaceToNodes[previousSpace].pop();
@@ -516,7 +520,7 @@ contract Nodes is Permissions {
         }
         spaceToNodes[newSpace].push(nodeIndex);
         spaceOfNodes[nodeIndex].freeSpace = newSpace;
-        spaceOfNodes[nodeIndex].indexInSpaceMap = spaceToNodes[newSpace].length - 1;
+        spaceOfNodes[nodeIndex].indexInSpaceMap = spaceToNodes[newSpace].length.sub(1);
     }
 
     /**
@@ -584,7 +588,7 @@ contract Nodes is Permissions {
             status: NodeStatus.Active,
             validatorId: validatorId
         }));
-        nodeIndex = nodes.length - 1;
+        nodeIndex = nodes.length.sub(1);
         validatorToNodeIndexes[validatorId].push(nodeIndex);
         bytes32 nodeId = keccak256(abi.encodePacked(name));
         nodesIPCheck[ip] = true;
@@ -603,8 +607,8 @@ contract Nodes is Permissions {
     function _deleteNode(uint nodeIndex) private {
         uint8 space = spaceOfNodes[nodeIndex].freeSpace;
         uint indexInArray = spaceOfNodes[nodeIndex].indexInSpaceMap;
-        if (indexInArray < spaceToNodes[space].length - 1) {
-            uint shiftedIndex = spaceToNodes[space][spaceToNodes[space].length - 1];
+        if (indexInArray < spaceToNodes[space].length.sub(1)) {
+            uint shiftedIndex = spaceToNodes[space][spaceToNodes[space].length.sub(1)];
             spaceToNodes[space][indexInArray] = shiftedIndex;
             spaceOfNodes[shiftedIndex].indexInSpaceMap = indexInArray;
             spaceToNodes[space].pop();
