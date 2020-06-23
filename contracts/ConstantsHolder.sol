@@ -85,8 +85,6 @@ contract ConstantsHolder is Permissions {
 
     uint public constant MIN_PRICE = 10**6;
 
-    uint public constant INITIAL_PRICE = 5 * MIN_PRICE;
-
     uint public constant MSR_REDUCING_COEFFICIENT = 2;
 
     uint public constant BOUNTY_POOL_PART = 3;

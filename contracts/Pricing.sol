@@ -28,6 +28,9 @@ import "./Nodes.sol";
 
 
 contract Pricing is Permissions {
+
+    uint public constant INITIAL_PRICE = 5 * 10**6;
+
     uint public price;
     uint public totalNodes;
     uint public lastUpdated;
@@ -85,9 +88,8 @@ contract Pricing is Permissions {
 
     function initialize(address newContractsAddress) public override initializer {
         Permissions.initialize(newContractsAddress);
-        ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
         lastUpdated = now;
-        price = constantsHolder.INITIAL_PRICE();
+        price = INITIAL_PRICE;
     }
 
     function checkAllNodes() public {
