@@ -565,18 +565,6 @@ contract DelegationController is Permissions, ILocker {
         _addToLockedInPendingDelegations(delegations[delegationId].holder, delegations[delegationId].amount);
     }
 
-    function _isTerminated(State state) private pure returns (bool) {
-        return state == State.COMPLETED || state == State.REJECTED;
-    }
-
-    function _isLocked(State state) private pure returns (bool) {
-        return !_isTerminated(state);
-    }
-
-    function _isDelegated(State state) private pure returns (bool) {
-        return state == State.DELEGATED || state == State.UNDELEGATION_REQUESTED;
-    }
-
     function _calculateDelegationEndMonth(uint delegationId) private view returns (uint) {
         uint currentMonth = _getCurrentMonth();
         uint started = delegations[delegationId].started;
