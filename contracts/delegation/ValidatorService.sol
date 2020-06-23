@@ -434,6 +434,6 @@ contract ValidatorService is Permissions {
                 return i;
             }
         }
-        return i;
+        return array.length;
     }
 }

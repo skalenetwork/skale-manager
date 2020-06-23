@@ -504,7 +504,7 @@ contract Nodes is Permissions {
                 return i;
             }
         }
-        return i;
+        return validatorNodeIndexes.length;
     }
 
     function _moveNodeToNewSpaceMap(uint nodeIndex, uint8 newSpace) private {
