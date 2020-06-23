@@ -123,7 +123,7 @@ contract Monitors is Permissions {
         while (verdicts[keccak256(abi.encodePacked(nodeIndex))].length > 0) {
             verdicts[keccak256(abi.encodePacked(nodeIndex))].pop();
         }
-        delete checkedNodes[monitorIndex];
+        // delete checkedNodes[monitorIndex];
         uint[] memory nodesInGroup = groupsForMonitors[monitorIndex];
         uint index;
         bytes32 monitoringIndex;
@@ -139,6 +139,11 @@ contract Monitors is Permissions {
             }
         }
         delete groupsForMonitors[monitorIndex];
+    }
+
+    function removeCheckedNodes(uint nodeIndex) external allow("SkaleManager") {
+        bytes32 monitorIndex = keccak256(abi.encodePacked(nodeIndex));
+        delete checkedNodes[monitorIndex];
     }
 
     function sendVerdict(uint fromMonitorIndex, Verdict calldata verdict) external allow("SkaleManager") {

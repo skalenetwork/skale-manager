@@ -333,7 +333,48 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                 blocks = await monitors.getLastBountyBlock(1);
                 txGetBounty2.receipt.blockNumber.should.be.equal(blocks.toNumber());
             });
+
+            it("Alex test", async () => {
+                skipTime(web3, 3600);
+                let txGetBounty1 = await skaleManager.getBounty(0, {from: nodeAddress});
+                let txGetBounty2 = await skaleManager.getBounty(1, {from: nodeAddress});
+
+                (await monitors.getNodesInGroup(web3.utils.soliditySha3(0))).length.should.be.equal(1);
+                (await monitors.getNodesInGroup(web3.utils.soliditySha3(0)))[0].toNumber().should.be.equal(1);
+                (await monitors.getNodesInGroup(web3.utils.soliditySha3(1))).length.should.be.equal(1);
+                (await monitors.getNodesInGroup(web3.utils.soliditySha3(1)))[0].toNumber().should.be.equal(0);
+
+                skipTime(web3, 3600);
+                txGetBounty1 = await skaleManager.getBounty(0, {from: nodeAddress});
+                txGetBounty2 = await skaleManager.getBounty(1, {from: nodeAddress});
+
+                (await monitors.getNodesInGroup(web3.utils.soliditySha3(0))).length.should.be.equal(1);
+                (await monitors.getNodesInGroup(web3.utils.soliditySha3(0)))[0].toNumber().should.be.equal(1);
+                (await monitors.getNodesInGroup(web3.utils.soliditySha3(1))).length.should.be.equal(1);
+                (await monitors.getNodesInGroup(web3.utils.soliditySha3(1)))[0].toNumber().should.be.equal(0);
+
+                skipTime(web3, 3600);
+                txGetBounty1 = await skaleManager.getBounty(0, {from: nodeAddress});
+                txGetBounty2 = await skaleManager.getBounty(1, {from: nodeAddress});
+
+                (await monitors.getNodesInGroup(web3.utils.soliditySha3(0))).length.should.be.equal(1);
+                (await monitors.getNodesInGroup(web3.utils.soliditySha3(0)))[0].toNumber().should.be.equal(1);
+                (await monitors.getNodesInGroup(web3.utils.soliditySha3(1))).length.should.be.equal(1);
+                (await monitors.getNodesInGroup(web3.utils.soliditySha3(1)))[0].toNumber().should.be.equal(0);
+
+                skipTime(web3, 3600);
+                txGetBounty1 = await skaleManager.getBounty(0, {from: nodeAddress});
+                txGetBounty2 = await skaleManager.getBounty(1, {from: nodeAddress});
+
+                (await monitors.getNodesInGroup(web3.utils.soliditySha3(0))).length.should.be.equal(1);
+                (await monitors.getNodesInGroup(web3.utils.soliditySha3(0)))[0].toNumber().should.be.equal(1);
+                (await monitors.getNodesInGroup(web3.utils.soliditySha3(1))).length.should.be.equal(1);
+                (await monitors.getNodesInGroup(web3.utils.soliditySha3(1)))[0].toNumber().should.be.equal(0);
+
+            });
         });
+
+
 
         describe("when 18 nodes are in the system", async () => {
 

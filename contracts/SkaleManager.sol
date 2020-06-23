@@ -131,6 +131,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
             require(nodes.completeExit(nodeIndex), "Finishing of node exit is failed");
             nodes.changeNodeFinishTime(nodeIndex, uint32(now + (isSchains ? constants.rotationDelay() : 0)));
             Monitors monitors = Monitors(contractManager.getContract("Monitors"));
+            monitors.removeCheckedNodes(nodeIndex);
             monitors.deleteMonitor(nodeIndex);
             nodes.deleteNodeForValidator(validatorId, nodeIndex);
         }
@@ -168,9 +169,9 @@ contract SkaleManager is IERC777Recipient, Permissions {
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));
         require(nodes.isNodeExist(msg.sender, nodeIndex), "Node does not exist for Message sender");
         require(nodes.isTimeForReward(nodeIndex), "Not time for bounty");
-        bool nodeIsActive = nodes.isNodeActive(nodeIndex);
-        bool nodeIsLeaving = nodes.isNodeLeaving(nodeIndex);
-        require(nodeIsActive || nodeIsLeaving, "Node is not Active and is not Leaving");
+        require(
+            nodes.isNodeActive(nodeIndex) || nodes.isNodeLeaving(nodeIndex), "Node is not Active and is not Leaving"
+        );
         uint averageDowntime;
         uint averageLatency;
         Monitors monitors = Monitors(contractManager.getContract("Monitors"));
@@ -181,6 +182,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
             averageDowntime,
             averageLatency);
         nodes.changeNodeLastRewardDate(nodeIndex);
+        monitors.deleteMonitor(nodeIndex);
         monitors.addMonitor(nodeIndex);
         _emitBountyEvent(nodeIndex, msg.sender, averageDowntime, averageLatency, bounty);
     }
