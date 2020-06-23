@@ -33,6 +33,8 @@ contract ConstantsHolder is Permissions {
     // initial price for creating Node (100 SKL)
     uint public constant NODE_DEPOSIT = 100 * 1e18;
 
+    uint8 public constant TOTAL_SPACE_ON_NODE = 128;
+
     // part of Node for Tiny Skale-chain (1/128 of Node)
     uint8 public constant TINY_DIVISOR = 128;
 
@@ -74,6 +76,24 @@ contract ConstantsHolder is Permissions {
 
     // initial number of monitors
     uint public constant NUMBER_OF_MONITORS = 24;
+
+    uint public constant OPTIMAL_LOAD_PERCENTAGE = 80;
+
+    uint public constant ADJUSTMENT_SPEED = 1000;
+
+    uint public constant COOLDOWN_TIME = 60;
+
+    uint public constant MIN_PRICE = 10**6;
+
+    uint public constant INITIAL_PRICE = 5 * MIN_PRICE;
+
+    uint public constant MSR_REDUCING_COEFFICIENT = 2;
+
+    uint public constant BOUNTY_POOL_PART = 3;
+
+    uint public constant DOWNTIME_THRESHOLD_PART = 30;
+
+    uint public constant BOUNTY_LOCKUP_MONTHS = 3;
 
     // MSR - Minimum staking requirement
     uint public msr;
