@@ -57,12 +57,12 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
         delegationController = await deployDelegationController(contractManager);
         distributor = await deployDistributor(contractManager);
 
-        const prefix = "0x000000000000000000000000";
         const premined = "100000000000000000000000000";
         await skaleToken.mint(skaleManager.address, premined, "0x", "0x");
         await skaleToken.mint(owner, premined, "0x", "0x");
         await constantsHolder.setMSR(5);
         await constantsHolder.setLaunchTimestamp(await currentTime(web3)); // to allow bounty withdrawing
+        await skaleManager.enableBountyReduction();
     });
 
     it("should fail to process token fallback if sent not from SkaleToken", async () => {
@@ -419,6 +419,9 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
 
             async function calculateBounty(timestamp: number, nodesAmount: number, nodeId: number, metrics: {downtime: number, latency: number}) {
                 let bounty = await getMaximumBountyAmount(timestamp, nodesAmount);
+                if (!await skaleManager.bountyReduction()) {
+                    return bounty;
+                }
                 const checkTime = (await constantsHolder.checkTime()).toNumber();
                 const rewardPeriod = (await constantsHolder.rewardPeriod()).toNumber();
                 const deltaPeriod = (await constantsHolder.deltaPeriod()).toNumber();
