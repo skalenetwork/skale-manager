@@ -30,6 +30,7 @@ import "./SchainsInternal.sol";
 import "./ECDH.sol";
 import "./utils/Precompiled.sol";
 import "./utils/FieldOperations.sol";
+import "./KeyStorage.sol";
 
 
 contract SkaleDKG is Permissions {
@@ -41,7 +42,6 @@ contract SkaleDKG is Permissions {
         bool[] broadcasted;
         uint numberOfBroadcasted;
         G2Operations.G2Point publicKey;
-        G2Operations.G2Point[] publicValues;
         uint numberOfCompleted;
         bool[] completed;
         uint startedBlockTimestamp;
@@ -63,7 +63,7 @@ contract SkaleDKG is Permissions {
     uint public constant COMPLAINT_TIMELIMIT = 1800;
 
     mapping(bytes32 => Channel) public channels;
-    mapping(bytes32 => mapping(uint => BroadcastedData)) private _data;
+    // mapping(bytes32 => mapping(uint => BroadcastedData)) private _data;
 
     event ChannelOpened(bytes32 groupIndex);
 
@@ -73,7 +73,7 @@ contract SkaleDKG is Permissions {
         bytes32 indexed groupIndex,
         uint indexed fromNode,
         G2Operations.G2Point[] verificationVector,
-        KeyShare[] secretKeyContribution
+        KeyStorage.KeyShare[] secretKeyContribution
     );
 
     event AllDataReceived(bytes32 indexed groupIndex, uint nodeIndex);
@@ -112,7 +112,7 @@ contract SkaleDKG is Permissions {
         bytes32 groupIndex,
         uint nodeIndex,
         G2Operations.G2Point[] calldata verificationVector,
-        KeyShare[] calldata secretKeyContribution
+        KeyStorage.KeyShare[] calldata secretKeyContribution
     )
         external
         correctGroup(groupIndex)
@@ -136,7 +136,8 @@ contract SkaleDKG is Permissions {
             groupIndex,
             verificationVector[0]
         );
-        _computePublicValues(groupIndex, verificationVector);
+        KeyStorage keyStorage = KeyStorage(contractManager.getContract("KeyStorage"));
+        keyStorage.computePublicValues(groupIndex, verificationVector);
         emit BroadcastAndKeyShare(
             groupIndex,
             nodeIndex,
@@ -243,36 +244,38 @@ contract SkaleDKG is Permissions {
         returns (G2Operations.G2Point memory)
     {
         uint index = _nodeIndexInSchain(groupIndex, nodeIndex);
-        G2Operations.G2Point memory publicKey = G2Operations.G2Point({
-            x: Fp2Operations.Fp2Point({
-                a: 0,
-                b: 0
-            }),
-            y: Fp2Operations.Fp2Point({
-                a: 1,
-                b: 0
-            })
-        });
-        G2Operations.G2Point memory tmp = G2Operations.G2Point({
-            x: Fp2Operations.Fp2Point({
-                a: 0,
-                b: 0
-            }),
-            y: Fp2Operations.Fp2Point({
-                a: 1,
-                b: 0
-            })
-        });
-        G2Operations.G2Point[] memory publicValues = channels[groupIndex].publicValues;
-        for (uint i = 0; i < publicValues.length; ++i) {
-            G2Operations.G2Point memory publicValuesComponent = G2Operations.G2Point({
-                x: _swapCoordinates(publicValues[i].x),
-                y: _swapCoordinates(publicValues[i].y)
-            });
-            tmp = publicValuesComponent.mulG2(Precompiled.bigModExp(index.add(1), i, Fp2Operations.P));
-            publicKey = tmp.addG2(publicKey);
-        }
-        return publicKey;
+        KeyStorage keyStorage = KeyStorage(contractManager.getContract("KeyStorage"));
+        return keyStorage.calculateBlsPublicKey(groupIndex, index);
+        // G2Operations.G2Point memory publicKey = G2Operations.G2Point({
+        //     x: Fp2Operations.Fp2Point({
+        //         a: 0,
+        //         b: 0
+        //     }),
+        //     y: Fp2Operations.Fp2Point({
+        //         a: 1,
+        //         b: 0
+        //     })
+        // });
+        // G2Operations.G2Point memory tmp = G2Operations.G2Point({
+        //     x: Fp2Operations.Fp2Point({
+        //         a: 0,
+        //         b: 0
+        //     }),
+        //     y: Fp2Operations.Fp2Point({
+        //         a: 1,
+        //         b: 0
+        //     })
+        // });
+        // G2Operations.G2Point[] memory publicValues = channels[groupIndex].publicValues;
+        // for (uint i = 0; i < publicValues.length; ++i) {
+        //     G2Operations.G2Point memory publicValuesComponent = G2Operations.G2Point({
+        //         x: _swapCoordinates(publicValues[i].x),
+        //         y: _swapCoordinates(publicValues[i].y)
+        //     });
+        //     tmp = publicValuesComponent.mulG2(Precompiled.bigModExp(index.add(1), i, Fp2Operations.P));
+        //     publicKey = tmp.addG2(publicKey);
+        // }
+        // return publicKey;
     }
 
     function isChannelOpened(bytes32 groupIndex) external view returns (bool) {
@@ -334,12 +337,13 @@ contract SkaleDKG is Permissions {
             channels[groupIndex].nodeToComplaint == nodeIndex;
     }
 
-    function getBroadcastedData(bytes32 groupIndex, uint nodeIndex)
-        external view returns (KeyShare[] memory, G2Operations.G2Point[] memory)
-    {
-        uint index = _nodeIndexInSchain(groupIndex, nodeIndex);
-        return (_data[groupIndex][index].secretKeyContribution, _data[groupIndex][index].verificationVector);
-    }
+    // function getBroadcastedData(bytes32 groupIndex, uint nodeIndex)
+    //     external view returns (KeyStorage.KeyShare[] memory, G2Operations.G2Point[] memory)
+    // {
+    //     uint index = _nodeIndexInSchain(groupIndex, nodeIndex);
+    //     KeyStorage keyStorage = KeyStorage(contractManager.getContract("KeyStorage"));
+    //     return keyStorage.getBroadcastedData(groupIndex, index);
+    // }
 
     function isAllDataReceived(bytes32 groupIndex, uint nodeIndex) external view returns (bool) {
         uint index = _nodeIndexInSchain(groupIndex, nodeIndex);
@@ -374,7 +378,7 @@ contract SkaleDKG is Permissions {
                 b: 0
             })
         });
-        delete channels[groupIndex].publicValues;
+        // delete channels[groupIndex].publicValues;
         channels[groupIndex].fromNodeToComplaint = uint(-1);
         channels[groupIndex].nodeToComplaint = uint(-1);
         delete channels[groupIndex].numberOfBroadcasted;
@@ -430,7 +434,8 @@ contract SkaleDKG is Permissions {
     {
         uint index = _nodeIndexInSchain(groupIndex, fromNodeIndex);
         uint secret = _decryptMessage(groupIndex, secretNumber);
-        G2Operations.G2Point[] memory verificationVector = _data[groupIndex][index].verificationVector;
+        KeyStorage keyStorage = KeyStorage(contractManager.getContract("KeyStorage"));
+        G2Operations.G2Point[] memory verificationVector = keyStorage.getVerificationVector(groupIndex, index);
         G2Operations.G2Point memory value = G2Operations.G2Point({
             x: Fp2Operations.Fp2Point({
                 a: 0,
@@ -483,7 +488,9 @@ contract SkaleDKG is Permissions {
         // Decrypt secret key contribution
         uint index = _nodeIndexInSchain(groupIndex, channels[groupIndex].fromNodeToComplaint);
         uint indexOfNode = _nodeIndexInSchain(groupIndex, channels[groupIndex].nodeToComplaint);
-        uint secret = decryption.decrypt(_data[groupIndex][indexOfNode].secretKeyContribution[index].share, key);
+        KeyStorage keyStorage = KeyStorage(contractManager.getContract("KeyStorage"));
+        // keyStorage.getSecretKeyShare(groupIndex, indexOfNode, index);
+        uint secret = decryption.decrypt(keyStorage.getSecretKeyShare(groupIndex, indexOfNode, index), key);
         return secret;
     }
 
@@ -497,46 +504,46 @@ contract SkaleDKG is Permissions {
         channels[groupIndex].publicKey = value.addG2(channels[groupIndex].publicKey);
     }
 
-    function _computePublicValues(bytes32 groupIndex, G2Operations.G2Point[] memory verificationVector) private {
-        for (uint i = 0; i < verificationVector.length; ++i) {
-            if (channels[groupIndex].publicValues.length < verificationVector.length) {
-                channels[groupIndex].publicValues.push(G2Operations.G2Point({
-                    x: Fp2Operations.Fp2Point({
-                        a: 0,
-                        b: 0
-                    }),
-                    y: Fp2Operations.Fp2Point({
-                        a: 1,
-                        b: 0
-                    })
-                }));
-            } else {
-                channels[groupIndex].publicValues[i] = G2Operations.G2Point({
-                    x: Fp2Operations.Fp2Point({
-                        a: 0,
-                        b: 0
-                    }),
-                    y: Fp2Operations.Fp2Point({
-                        a: 1,
-                        b: 0
-                    })
-                });
-            }
-        }
-        for (uint i = 0; i < channels[groupIndex].publicValues.length; ++i) {
-            for (uint j = 0; j < verificationVector.length; ++j) {
-                require(verificationVector[j].isG2(), "Incorrect g2 point");
-                channels[groupIndex].publicValues[i] = verificationVector[j].addG2(
-                    channels[groupIndex].publicValues[i]
-                );
-            }
-        }
-    }
+    // function _computePublicValues(bytes32 groupIndex, G2Operations.G2Point[] memory verificationVector) private {
+    //     for (uint i = 0; i < verificationVector.length; ++i) {
+    //         if (channels[groupIndex].publicValues.length < verificationVector.length) {
+    //             channels[groupIndex].publicValues.push(G2Operations.G2Point({
+    //                 x: Fp2Operations.Fp2Point({
+    //                     a: 0,
+    //                     b: 0
+    //                 }),
+    //                 y: Fp2Operations.Fp2Point({
+    //                     a: 1,
+    //                     b: 0
+    //                 })
+    //             }));
+    //         } else {
+    //             channels[groupIndex].publicValues[i] = G2Operations.G2Point({
+    //                 x: Fp2Operations.Fp2Point({
+    //                     a: 0,
+    //                     b: 0
+    //                 }),
+    //                 y: Fp2Operations.Fp2Point({
+    //                     a: 1,
+    //                     b: 0
+    //                 })
+    //             });
+    //         }
+    //     }
+    //     for (uint i = 0; i < channels[groupIndex].publicValues.length; ++i) {
+    //         for (uint j = 0; j < verificationVector.length; ++j) {
+    //             require(verificationVector[j].isG2(), "Incorrect g2 point");
+    //             channels[groupIndex].publicValues[i] = verificationVector[j].addG2(
+    //                 channels[groupIndex].publicValues[i]
+    //             );
+    //         }
+    //     }
+    // }
 
     function _isBroadcast(
         bytes32 groupIndex,
         uint nodeIndex,
-        KeyShare[] memory secretKeyContribution,
+        KeyStorage.KeyShare[] memory secretKeyContribution,
         G2Operations.G2Point[] memory verificationVector
     )
         private
@@ -545,28 +552,29 @@ contract SkaleDKG is Permissions {
         require(!channels[groupIndex].broadcasted[index], "This node is already broadcasted");
         channels[groupIndex].broadcasted[index] = true;
         channels[groupIndex].numberOfBroadcasted++;
+        KeyStorage keyStorage = KeyStorage(contractManager.getContract("KeyStorage"));
+        keyStorage.addBroadcastedData(groupIndex, index, secretKeyContribution, verificationVector);
+        // for (uint i = 0; i < secretKeyContribution.length; ++i) {
+        //     if (i < _data[groupIndex][index].secretKeyContribution.length) {
+        //         _data[groupIndex][index].secretKeyContribution[i] = secretKeyContribution[i];
+        //     } else {
+        //         _data[groupIndex][index].secretKeyContribution.push(secretKeyContribution[i]);
+        //     }
+        // }
+        // while (_data[groupIndex][index].secretKeyContribution.length > secretKeyContribution.length) {
+        //     _data[groupIndex][index].secretKeyContribution.pop();
+        // }
 
-        for (uint i = 0; i < secretKeyContribution.length; ++i) {
-            if (i < _data[groupIndex][index].secretKeyContribution.length) {
-                _data[groupIndex][index].secretKeyContribution[i] = secretKeyContribution[i];
-            } else {
-                _data[groupIndex][index].secretKeyContribution.push(secretKeyContribution[i]);
-            }
-        }
-        while (_data[groupIndex][index].secretKeyContribution.length > secretKeyContribution.length) {
-            _data[groupIndex][index].secretKeyContribution.pop();
-        }
-
-        for (uint i = 0; i < verificationVector.length; ++i) {
-            if (i < _data[groupIndex][index].verificationVector.length) {
-                _data[groupIndex][index].verificationVector[i] = verificationVector[i];
-            } else {
-                _data[groupIndex][index].verificationVector.push(verificationVector[i]);
-            }
-        }
-        while (_data[groupIndex][index].verificationVector.length > verificationVector.length) {
-            _data[groupIndex][index].verificationVector.pop();
-        }
+        // for (uint i = 0; i < verificationVector.length; ++i) {
+        //     if (i < _data[groupIndex][index].verificationVector.length) {
+        //         _data[groupIndex][index].verificationVector[i] = verificationVector[i];
+        //     } else {
+        //         _data[groupIndex][index].verificationVector.push(verificationVector[i]);
+        //     }
+        // }
+        // while (_data[groupIndex][index].verificationVector.length > verificationVector.length) {
+        //     _data[groupIndex][index].verificationVector.pop();
+        // }
     }
 
     function _isBroadcasted(bytes32 groupIndex, uint nodeIndex) private view returns (bool) {
