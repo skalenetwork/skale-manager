@@ -126,7 +126,6 @@ contract Monitors is Permissions {
         while (verdicts[keccak256(abi.encodePacked(nodeIndex))].length > 0) {
             verdicts[keccak256(abi.encodePacked(nodeIndex))].pop();
         }
-        // delete checkedNodes[monitorIndex];
         uint[] memory nodesInGroup = groupsForMonitors[monitorIndex];
         uint index;
         bytes32 monitoringIndex;
