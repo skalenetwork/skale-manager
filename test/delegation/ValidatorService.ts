@@ -140,7 +140,7 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
                 (signature.slice(130) === "01" ? signature.slice(0, 130) + "1c" : signature));
             await validatorService.linkNodeAddress(nodeAddress, signature, {from: validator1});
             await validatorService.unlinkNodeAddress(validator1, {from: nodeAddress})
-                .should.be.eventually.rejectedWith("Validator with address does not exist");
+                .should.be.eventually.rejectedWith("Validator address does not exist");
         });
 
         it("should reject if validator tried to override node address of another validator", async () => {
@@ -199,7 +199,7 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
 
             await validatorService.unlinkNodeAddress(nodeAddress, {from: validator1});
             await validatorService.getValidatorId(nodeAddress, {from: validator1})
-                .should.be.eventually.rejectedWith("Validator with address does not exist");
+                .should.be.eventually.rejectedWith("Validator address does not exist");
         });
 
         it("should not allow changing the address to the address of an existing validator", async () => {
@@ -230,14 +230,14 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
                 await validatorService.confirmNewAddress(validatorId, {from: validator3});
                 assert.deepEqual(validatorId, new BigNumber(await validatorService.getValidatorId(validator3)));
                 await validatorService.getValidatorId(validator1)
-                    .should.be.eventually.rejectedWith("Validator with address does not exist");
+                    .should.be.eventually.rejectedWith("Validator address does not exist");
 
             });
         });
 
         it("should reject when someone tries to set new address for validator that doesn't exist", async () => {
             await validatorService.requestForNewAddress(validator2)
-                .should.be.eventually.rejectedWith("Validator with address does not exist");
+                .should.be.eventually.rejectedWith("Validator address does not exist");
         });
 
         it("should reject if validator tries to set new address as null", async () => {
@@ -328,7 +328,7 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
                 await delegationController.delegate(validatorId, amount, delegationPeriod, info, {from: holder});
 
                 await validatorService.stopAcceptingNewRequests({from: holder})
-                    .should.be.eventually.rejectedWith("Validator with address does not exist");
+                    .should.be.eventually.rejectedWith("Validator address does not exist");
 
                 await validatorService.stopAcceptingNewRequests({from: validator1})
                 await delegationController.delegate(validatorId, amount, delegationPeriod, info, {from: holder})

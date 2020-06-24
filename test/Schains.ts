@@ -649,7 +649,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
                         nodeAddress,
                         "D2",
                         {from: owner})
-                        .should.be.eventually.rejectedWith("Message sender is not an owner of Schain");
+                        .should.be.eventually.rejectedWith("Message sender is not the owner of the Schain");
                 });
 
             });
@@ -690,7 +690,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
                         nodeAddress,
                         "D2",
                         {from: owner})
-                        .should.be.eventually.rejectedWith("Message sender is not an owner of Schain");
+                        .should.be.eventually.rejectedWith("Message sender is not the owner of the Schain");
                 });
 
             });
