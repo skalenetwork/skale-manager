@@ -113,7 +113,7 @@ contract ConstantsHolder is Permissions {
      * Check time - 2 minutes (every 2 minutes monitors should check metrics
      * from checked nodes)
      */
-    uint8 public checkTime;
+    uint public checkTime;
 
     /**
      * Last time when system was underloaded
@@ -152,7 +152,7 @@ contract ConstantsHolder is Permissions {
      * Set new check time. This function only for tests.
      * @param newCheckTime - new check time
      */
-    function setCheckTime(uint8 newCheckTime) external onlyOwner {
+    function setCheckTime(uint newCheckTime) external onlyOwner {
         checkTime = newCheckTime;
     }
 
