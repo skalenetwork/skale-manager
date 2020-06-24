@@ -34,8 +34,8 @@ interface ISkaleDKG {
 }
 
 /**
- * @title SchainsInternal 
- * @dev Contract contains all functionality logic to manage Schains
+ * @title SchainsInternal
+ * @dev Contract contains all functionality logic to internally manage Schains.
  */
 contract SchainsInternal is Permissions {
 
@@ -150,7 +150,7 @@ contract SchainsInternal is Permissions {
     }
 
     /**
-     * @dev Allows SkaleDKG contract to set the BLS master public key from 
+     * @dev Allows SkaleDKG contract to set the BLS master public key from
      * the schain node group.
      */
     function setPublicKey(
@@ -179,7 +179,7 @@ contract SchainsInternal is Permissions {
 
     /**
      * @dev Allows Schains contract to add Schain's hash to owner
-     * TODO: complete!
+     * TODO: finish
      */
     function setSchainIndex(bytes32 schainId, address from) external allow("Schains") {
         schains[schainId].indexInOwnerList = schainIndexes[from].length;
@@ -187,8 +187,8 @@ contract SchainsInternal is Permissions {
     }
 
     /**
-     * @dev Allows Schains contract to change the Schain lifetime through 
-     * an addtional SKL token deposit.
+     * @dev Allows Schains contract to change the Schain lifetime through
+     * an additional SKL token deposit.
      */
     function changeLifetime(bytes32 schainId, uint lifetime, uint deposit) external allow("Schains") {
         schains[schainId].deposit = schains[schainId].deposit.add(deposit);
@@ -227,9 +227,8 @@ contract SchainsInternal is Permissions {
 
     /**
      * @dev Allows Schains and SkaleDKG contracts to remove a node from an
-     * schain. Node rotation and schain deletion. DKG removes a node from an schain in the event that the node
-     * punished by a DKG failure.
-     * TODO: Finish!
+     * schain for node rotation or DKG failure.
+     * TODO: finish
      */
     function removeNodeFromSchain(
         uint nodeIndex,
@@ -593,7 +592,7 @@ contract SchainsInternal is Permissions {
     }
 
     /**
-     * @dev Allows Schains and SkaleDKG contracts to remove an schain from a 
+     * @dev Allows Schains and SkaleDKG contracts to remove an schain from a
      * node.
      */
     function removeSchainForNode(uint nodeIndex, uint schainIndex) public allowTwo("Schains", "SkaleDKG") {
@@ -620,7 +619,7 @@ contract SchainsInternal is Permissions {
     }
 
     /**
-     * @dev Returns index of Schain in schainsForNode array. TODO?
+     * @dev Returns index of Schain in schainsForNode array. TODO
      */
     function findSchainAtSchainsForNode(uint nodeIndex, bytes32 schainId) public view returns (uint) {
         uint length = getLengthOfSchainsForNode(nodeIndex);
@@ -633,7 +632,7 @@ contract SchainsInternal is Permissions {
     }
 
     /**
-     * @dev TODO?
+     * @dev TODO
      */
     function isEnoughNodes(bytes32 schainId) public view returns (uint[] memory result) {
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));

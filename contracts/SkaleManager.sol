@@ -35,7 +35,8 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 
 /**
  * @title SkaleManager
- * @dev Contract contains TODO
+ * @dev Contract contains functions for node registration and exit, bounty
+ * management, and monitoring verdicts. TODO
  */
 contract SkaleManager is IERC777Recipient, Permissions {
     // miners capitalization
@@ -54,9 +55,9 @@ contract SkaleManager is IERC777Recipient, Permissions {
         0xb281fc8c12954d22544db45de3159a39272895b169a852b314f9cc762e44c53b;
 
     /**
-     * @dev TODO Got -> received
+     * @dev Emitted when bounty is received.
      */
-    event BountyGot(
+    event BountyReceived(
         uint indexed nodeIndex,
         address owner,
         uint averageDowntime,
@@ -282,7 +283,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
         uint previousBlockEvent = monitors.getLastBountyBlock(nodeIndex);
         monitors.setLastBountyBlock(nodeIndex);
 
-        emit BountyGot(
+        emit BountyReceived(
             nodeIndex,
             from,
             averageDowntime,

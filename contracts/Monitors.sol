@@ -119,7 +119,7 @@ contract Monitors is Permissions {
     );
 
     /**
-     * @dev Allows SkaleManger to create a monitoring group.
+     * @dev Allows SkaleManager to create a monitoring group.
      *
      * Emits MonitorCreated event.
      */
@@ -143,7 +143,7 @@ contract Monitors is Permissions {
     }
 
     /**
-     * @dev Allows SkaleManger to delete a monitoring group.
+     * @dev Allows SkaleManager to delete a monitoring group.
      */
     function deleteMonitor(uint nodeIndex) external allow("SkaleManager") {
         bytes32 monitorIndex = keccak256(abi.encodePacked(nodeIndex));
@@ -168,7 +168,7 @@ contract Monitors is Permissions {
     }
 
     /**
-     * @dev Allows SkaleManger contract to remove a node from a monitor group.
+     * @dev Allows SkaleManager contract to remove a node from a monitor group.
      */
     function removeCheckedNodes(uint nodeIndex) external allow("SkaleManager") {
         bytes32 monitorIndex = keccak256(abi.encodePacked(nodeIndex));
@@ -176,7 +176,7 @@ contract Monitors is Permissions {
     }
 
     /**
-     * @dev Allows SkaleManger contract to send a monitoring verdict.
+     * @dev Allows SkaleManager contract to send a monitoring verdict.
      *
      * Emits VerdictWasSent event.
      *
@@ -209,7 +209,7 @@ contract Monitors is Permissions {
     }
 
     /**
-     * @dev Allows SkaleManger to calculate median statistics of downtime
+     * @dev Allows SkaleManager to calculate median statistics of downtime
      * and latency.
      */
     function calculateMetrics(uint nodeIndex)
@@ -233,7 +233,7 @@ contract Monitors is Permissions {
     }
 
     /**
-     * @dev Allows SkaleManger to set a node's last bounty block.
+     * @dev Allows SkaleManager to set a node's last bounty block.
      */
     function setLastBountyBlock(uint nodeIndex) external allow("SkaleManager") {
         lastBountyBlocks[keccak256(abi.encodePacked(nodeIndex))] = block.number;
