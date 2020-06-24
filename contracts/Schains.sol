@@ -236,7 +236,7 @@ contract Schains is Permissions {
      * @param signatureA - first part of BLS signature
      * @param signatureB - second part of BLS signature
      * @param hash - hashed message
-     * @param counter - smalles sub from square
+     * @param counter - smallest sub from square
      * @param hashA - first part of hashed message
      * @param hashB - second part of hashed message
      * @param schainName - name of the Schain
@@ -306,7 +306,7 @@ contract Schains is Permissions {
         } else {
             uint up = nodeDeposit.mul(numberOfNodes.mul(lifetime.mul(2)));
             uint down = uint(
-                uint(constantsHolder.TINY_DIVISOR())
+                uint(constantsHolder.SMALL_DIVISOR())
                     .mul(uint(constantsHolder.SECONDS_TO_YEAR()))
                     .div(divisor)
             );
@@ -329,16 +329,16 @@ contract Schains is Permissions {
         ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
         numberOfNodes = constantsHolder.NUMBER_OF_NODES_FOR_SCHAIN();
         if (typeOfSchain == 1) {
-            partOfNode = constantsHolder.TINY_DIVISOR() / constantsHolder.TINY_DIVISOR();
+            partOfNode = constantsHolder.SMALL_DIVISOR() / constantsHolder.SMALL_DIVISOR();
         } else if (typeOfSchain == 2) {
-            partOfNode = constantsHolder.TINY_DIVISOR() / constantsHolder.SMALL_DIVISOR();
+            partOfNode = constantsHolder.SMALL_DIVISOR() / constantsHolder.MEDIUM_DIVISOR();
         } else if (typeOfSchain == 3) {
-            partOfNode = constantsHolder.TINY_DIVISOR() / constantsHolder.MEDIUM_DIVISOR();
+            partOfNode = constantsHolder.SMALL_DIVISOR() / constantsHolder.LARGE_DIVISOR();
         } else if (typeOfSchain == 4) {
             partOfNode = 0;
             numberOfNodes = constantsHolder.NUMBER_OF_NODES_FOR_TEST_SCHAIN();
         } else if (typeOfSchain == 5) {
-            partOfNode = constantsHolder.TINY_DIVISOR() / constantsHolder.MEDIUM_TEST_DIVISOR();
+            partOfNode = constantsHolder.SMALL_DIVISOR() / constantsHolder.MEDIUM_TEST_DIVISOR();
             numberOfNodes = constantsHolder.NUMBER_OF_NODES_FOR_MEDIUM_TEST_SCHAIN();
         } else {
             revert("Bad schain type");
