@@ -271,7 +271,7 @@ contract Nodes is Permissions {
             contractManager.getContract("DelegationController")
         );
         uint validatorId = validatorService.getValidatorIdByNodeAddress(nodeAddress);
-        require(validatorService.trustedValidators(validatorId), "Validator is not authorized to create a node");
+        require(validatorService.isAuthorizedValidator(validatorId), "Validator is not authorized to create a node");
         uint[] memory validatorNodes = validatorToNodeIndexes[validatorId];
         uint delegationsTotal = delegationController.getAndUpdateDelegatedToValidatorNow(validatorId);
         uint msr = ConstantsHolder(contractManager.getContract("ConstantsHolder")).msr();

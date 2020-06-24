@@ -307,9 +307,9 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
                     .should.be.eventually.rejectedWith("Validator is already disabled");
 
                 await validatorService.enableValidator(validatorId, {from: owner});
-                await validatorService.trustedValidators(validatorId).should.eventually.be.true;
+                await validatorService.isAuthorizedValidator(validatorId).should.eventually.be.true;
                 await validatorService.disableValidator(validatorId, {from: owner});
-                await validatorService.trustedValidators(validatorId).should.eventually.be.false;
+                await validatorService.isAuthorizedValidator(validatorId).should.eventually.be.false;
             });
 
             it("should not allow to send delegation request if validator isn't authorized", async () => {
