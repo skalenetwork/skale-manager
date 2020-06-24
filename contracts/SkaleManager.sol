@@ -249,11 +249,12 @@ contract SkaleManager is IERC777Recipient, Permissions {
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));
         SkaleToken skaleToken = SkaleToken(contractManager.getContract("SkaleToken"));
         Distributor distributor = Distributor(contractManager.getContract("Distributor"));
+        ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
 
         uint validatorId = validatorService.getValidatorIdByNodeAddress(miner);
         uint bounty = bountyForMiner;
         if (!nodes.checkPossibilityToMaintainNode(validatorId, nodeIndex)) {
-            bounty = bounty.div(2);
+            bounty = bounty.div(constantsHolder.MSR_REDUCING_COEFFICIENT());
         }
         // solhint-disable-next-line check-send-result
         skaleToken.send(address(distributor), bounty, abi.encode(validatorId));
@@ -285,7 +286,8 @@ contract SkaleManager is IERC777Recipient, Permissions {
 
     function _getValidatorsCapitalization() private view returns (uint) {
         if (minersCap == 0) {
-            return SkaleToken(contractManager.getContract("SkaleToken")).CAP().div(3);
+            ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
+            return SkaleToken(contractManager.getContract("SkaleToken")).CAP().div(constantsHolder.BOUNTY_POOL_PART());
         }
         return minersCap;
     }
@@ -348,7 +350,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
         uint normalDowntime = uint(constants.rewardPeriod())
             .sub(constants.deltaPeriod())
             .div(constants.checkTime())
-            .div(30);
+            .div(ConstantsHolder(contractManager.getContract("ConstantsHolder")).DOWNTIME_THRESHOLD_PART());
         uint totalDowntime = downtime.add(numberOfExpiredIntervals);
         if (totalDowntime > normalDowntime) {
             // reduce bounty because downtime is too big
