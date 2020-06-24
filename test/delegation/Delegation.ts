@@ -332,7 +332,7 @@ contract("Delegation", ([owner,
                     validatorId, {from: holder3}))[0].toNumber().should.be.equal(31);
 
                 await distributor.withdrawFee(bountyAddress, {from: validator})
-                    .should.be.eventually.rejectedWith("Bounty is locked");
+                    .should.be.eventually.rejectedWith("Fee is locked");
                 await distributor.withdrawBounty(validatorId, bountyAddress, {from: holder1})
                     .should.be.eventually.rejectedWith("Bounty is locked");
 

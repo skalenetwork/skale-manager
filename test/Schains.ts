@@ -1102,13 +1102,13 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
             assert.equal(res, true);
 
             await skaleManager.nodeExit(1, {from: nodeAddress})
-                .should.be.eventually.rejectedWith("DKG proccess did not finish on schain d3");
+                .should.be.eventually.rejectedWith("DKG process did not complete on schain d3");
             await skaleManager.nodeExit(0, {from: nodeAddress});
 
             skipTime(web3, 43260);
 
             await skaleManager.nodeExit(1, {from: nodeAddress})
-                .should.be.eventually.rejectedWith("DKG proccess did not finish on schain d3");
+                .should.be.eventually.rejectedWith("DKG process did not complete on schain d3");
         });
 
         it("should be possible to send broadcast", async () => {
@@ -1125,7 +1125,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
             await skaleManager.nodeExit(0, {from: nodeAddress});
 
             await skaleManager.nodeExit(1, {from: nodeAddress})
-                .should.be.eventually.rejectedWith("DKG proccess did not finish on schain d3");
+                .should.be.eventually.rejectedWith("DKG process did not complete on schain d3");
         });
 
         it("should be possible to send broadcast", async () => {
