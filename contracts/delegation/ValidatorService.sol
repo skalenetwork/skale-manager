@@ -97,6 +97,7 @@ contract ValidatorService is Permissions {
 
     mapping (uint => Validator) public validators;
     mapping (uint => bool) public trustedValidators;
+    uint[] public trustedValidatorsArray;
     ///      address => validatorId
     mapping (address => uint) private _validatorAddressToId;
     ///      address => validatorId
@@ -157,12 +158,19 @@ contract ValidatorService is Permissions {
     function enableValidator(uint validatorId) external checkValidatorExists(validatorId) onlyOwner {
         require(!trustedValidators[validatorId], "Validator is already enabled");
         trustedValidators[validatorId] = true;
+        trustedValidatorsArray.push(validatorId);
         emit ValidatorWasEnabled(validatorId);
     }
 
     function disableValidator(uint validatorId) external checkValidatorExists(validatorId) onlyOwner {
         require(trustedValidators[validatorId], "Validator is already disabled");
         trustedValidators[validatorId] = false;
+        uint position = _find(trustedValidatorsArray, validatorId);
+        if (position < trustedValidatorsArray.length) {
+            trustedValidatorsArray[position] =
+                trustedValidatorsArray[trustedValidatorsArray.length.sub(1)];
+        }
+        trustedValidatorsArray.pop();
         emit ValidatorWasDisabled(validatorId);
     }
 
@@ -320,20 +328,7 @@ contract ValidatorService is Permissions {
      * @return uint[] trusted validators
      */
     function getTrustedValidators() external view returns (uint[] memory) {
-        uint numberOfTrustedValidators = 0;
-        for (uint i = 1; i <= numberOfValidators; i++) {
-            if (trustedValidators[i]) {
-                numberOfTrustedValidators++;
-            }
-        }
-        uint[] memory whitelist = new uint[](numberOfTrustedValidators);
-        uint cursor = 0;
-        for (uint i = 1; i <= numberOfValidators; i++) {
-            if (trustedValidators[i]) {
-                whitelist[cursor++] = i;
-            }
-        }
-        return whitelist;
+        return trustedValidatorsArray;
     }
 
     function checkMinimumDelegation(uint validatorId, uint amount)
@@ -430,5 +425,15 @@ contract ValidatorService is Permissions {
                 break;
             }
         }
+    }
+
+    function _find(uint[] memory array, uint index) private pure returns (uint) {
+        uint i;
+        for (i = 0; i < array.length; i++) {
+            if (array[i] == index) {
+                return i;
+            }
+        }
+        return array.length;
     }
 }
