@@ -168,7 +168,7 @@ contract Nodes is Permissions {
      * @param nodeIndex - index of Node
      */
     function changeNodeLastRewardDate(uint nodeIndex) external allow("SkaleManager") {
-        nodes[nodeIndex].lastRewardDate = uint32(block.timestamp);
+        nodes[nodeIndex].lastRewardDate = block.timestamp.toUint32();
     }
 
     function changeNodeFinishTime(uint nodeIndex, uint32 time) external allow("SkaleManager") {
@@ -586,7 +586,7 @@ contract Nodes is Permissions {
             //owner: from,
             publicKey: publicKey,
             startBlock: block.number,
-            lastRewardDate: uint32(block.timestamp),
+            lastRewardDate: block.timestamp.toUint32(),
             finishTime: 0,
             status: NodeStatus.Active,
             validatorId: validatorId
