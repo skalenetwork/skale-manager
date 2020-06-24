@@ -345,7 +345,7 @@ contract Monitors is Permissions {
      */
     function _median(uint[] memory values) private pure returns (uint) {
         if (values.length < 1) {
-            revert("Can't calculate _median of empty array");
+            revert("Cannot calculate _median of empty array");
         }
         _quickSort(values, 0, values.length.sub(1));
         return values[values.length.div(2)];
@@ -410,7 +410,7 @@ contract Monitors is Permissions {
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));
 
         checkedNode.nodeIndex = nodeIndex;
-        // Can't use SafeMath because we subtract uint32
+        // Cannot use SafeMath because we subtract uint32
         assert(nodes.getNodeNextRewardDate(nodeIndex) >= constantsHolder.deltaPeriod());
         checkedNode.time = uint(nodes.getNodeNextRewardDate(nodeIndex)).sub(constantsHolder.deltaPeriod()).toUint32();
     }
