@@ -34,13 +34,14 @@ import "./utils/FieldOperations.sol";
 
 contract SkaleDKG is Permissions {
     using Fp2Operations for Fp2Operations.Fp2Point;
-    using G2Operations for G2Operations.G2Point;  
+    using G2Operations for G2Operations.G2Point;
 
     struct Channel {
         bool active;
         bool[] broadcasted;
         uint numberOfBroadcasted;
         G2Operations.G2Point publicKey;
+        G2Operations.G2Point[] publicValues;
         uint numberOfCompleted;
         bool[] completed;
         uint startedBlockTimestamp;
@@ -98,7 +99,7 @@ contract SkaleDKG is Permissions {
 
     function openChannel(bytes32 groupIndex) external allow("SchainsInternal") {
         require(!channels[groupIndex].active, "Channel already is created");
-        
+
         _reopenChannel(groupIndex);
     }
 
@@ -124,7 +125,7 @@ contract SkaleDKG is Permissions {
             secretKeyContribution.length == schainsInternal.getNumberOfNodesInGroup(groupIndex),
             "Incorrect number of secret key shares"
         );
-        
+
         _isBroadcast(
             groupIndex,
             nodeIndex,
@@ -135,6 +136,7 @@ contract SkaleDKG is Permissions {
             groupIndex,
             verificationVector[0]
         );
+        _computePublicValues(groupIndex, verificationVector);
         emit BroadcastAndKeyShare(
             groupIndex,
             nodeIndex,
@@ -231,6 +233,46 @@ contract SkaleDKG is Permissions {
 
     function reopenChannel(bytes32 groupIndex) external allow("SchainsInternal") {
         _reopenChannel(groupIndex);
+    }
+
+    function getBlsPublicKey(bytes32 groupIndex, uint nodeIndex)
+        external
+        correctGroup(groupIndex)
+        correctNode(groupIndex, nodeIndex)
+        view
+        returns (G2Operations.G2Point memory)
+    {
+        uint index = _nodeIndexInSchain(groupIndex, nodeIndex);
+        G2Operations.G2Point memory publicKey = G2Operations.G2Point({
+            x: Fp2Operations.Fp2Point({
+                a: 0,
+                b: 0
+            }),
+            y: Fp2Operations.Fp2Point({
+                a: 1,
+                b: 0
+            })
+        });
+        G2Operations.G2Point memory tmp = G2Operations.G2Point({
+            x: Fp2Operations.Fp2Point({
+                a: 0,
+                b: 0
+            }),
+            y: Fp2Operations.Fp2Point({
+                a: 1,
+                b: 0
+            })
+        });
+        G2Operations.G2Point[] memory publicValues = channels[groupIndex].publicValues;
+        for (uint i = 0; i < publicValues.length; ++i) {
+            G2Operations.G2Point memory publicValuesComponent = G2Operations.G2Point({
+                x: _swapCoordinates(publicValues[i].x),
+                y: _swapCoordinates(publicValues[i].y)
+            });
+            tmp = publicValuesComponent.mulG2(Precompiled.bigModExp(index.add(1), i, Fp2Operations.P));
+            publicKey = tmp.addG2(publicKey);
+        }
+        return publicKey;
     }
 
     function isChannelOpened(bytes32 groupIndex) external view returns (bool) {
@@ -332,6 +374,7 @@ contract SkaleDKG is Permissions {
                 b: 0
             })
         });
+        delete channels[groupIndex].publicValues;
         channels[groupIndex].fromNodeToComplaint = uint(-1);
         channels[groupIndex].nodeToComplaint = uint(-1);
         delete channels[groupIndex].numberOfBroadcasted;
@@ -352,7 +395,7 @@ contract SkaleDKG is Permissions {
         );
         emit BadGuy(badNode);
         emit FailedDKG(groupIndex);
-        
+
         _reopenChannel(groupIndex);
         if (schainsInternal.isAnyFreeNode(groupIndex)) {
             uint newNode = schains.rotateNode(
@@ -454,6 +497,42 @@ contract SkaleDKG is Permissions {
         channels[groupIndex].publicKey = value.addG2(channels[groupIndex].publicKey);
     }
 
+    function _computePublicValues(bytes32 groupIndex, G2Operations.G2Point[] memory verificationVector) private {
+        for (uint i = 0; i < verificationVector.length; ++i) {
+            if (channels[groupIndex].publicValues.length < verificationVector.length) {
+                channels[groupIndex].publicValues.push(G2Operations.G2Point({
+                    x: Fp2Operations.Fp2Point({
+                        a: 0,
+                        b: 0
+                    }),
+                    y: Fp2Operations.Fp2Point({
+                        a: 1,
+                        b: 0
+                    })
+                }));
+            } else {
+                channels[groupIndex].publicValues[i] = G2Operations.G2Point({
+                    x: Fp2Operations.Fp2Point({
+                        a: 0,
+                        b: 0
+                    }),
+                    y: Fp2Operations.Fp2Point({
+                        a: 1,
+                        b: 0
+                    })
+                });
+            }
+        }
+        for (uint i = 0; i < channels[groupIndex].publicValues.length; ++i) {
+            for (uint j = 0; j < verificationVector.length; ++j) {
+                require(verificationVector[j].isG2(), "Incorrect g2 point");
+                channels[groupIndex].publicValues[i] = verificationVector[j].addG2(
+                    channels[groupIndex].publicValues[i]
+                );
+            }
+        }
+    }
+
     function _isBroadcast(
         bytes32 groupIndex,
         uint nodeIndex,
@@ -466,10 +545,10 @@ contract SkaleDKG is Permissions {
         require(!channels[groupIndex].broadcasted[index], "This node is already broadcasted");
         channels[groupIndex].broadcasted[index] = true;
         channels[groupIndex].numberOfBroadcasted++;
-        
+
         for (uint i = 0; i < secretKeyContribution.length; ++i) {
             if (i < _data[groupIndex][index].secretKeyContribution.length) {
-                _data[groupIndex][index].secretKeyContribution[i] = secretKeyContribution[i];    
+                _data[groupIndex][index].secretKeyContribution[i] = secretKeyContribution[i];
             } else {
                 _data[groupIndex][index].secretKeyContribution.push(secretKeyContribution[i]);
             }
@@ -477,7 +556,7 @@ contract SkaleDKG is Permissions {
         while (_data[groupIndex][index].secretKeyContribution.length > secretKeyContribution.length) {
             _data[groupIndex][index].secretKeyContribution.pop();
         }
-        
+
         for (uint i = 0; i < verificationVector.length; ++i) {
             if (i < _data[groupIndex][index].verificationVector.length) {
                 _data[groupIndex][index].verificationVector[i] = verificationVector[i];
@@ -510,7 +589,7 @@ contract SkaleDKG is Permissions {
         G2Operations.G2Point memory multipliedShare)
         private pure returns (bool)
     {
-        return value.x.a == multipliedShare.x.b && 
+        return value.x.a == multipliedShare.x.b &&
             value.x.b == multipliedShare.x.a &&
             value.y.a == multipliedShare.y.b &&
             value.y.b == multipliedShare.y.a;
