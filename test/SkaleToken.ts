@@ -56,8 +56,7 @@ contract("SkaleToken", ([owner, holder, receiver, nilAddress, accountWith99]) =>
   });
 
   it("owner should be equal owner", async () => {
-    const contractOwner = await skaleToken.owner();
-    expect(contractOwner).to.be.equal(owner);
+    await skaleToken.hasRole(await skaleToken.DEFAULT_ADMIN_ROLE(), owner).should.be.eventually.true;
   });
 
   it("should check 10 SKALE tokens to mint", async () => {

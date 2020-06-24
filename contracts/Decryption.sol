@@ -19,7 +19,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.8;
+pragma solidity 0.6.10;
 
 /**
  * @title Decryption

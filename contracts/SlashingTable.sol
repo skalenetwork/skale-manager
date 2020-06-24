@@ -20,7 +20,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.8;
+pragma solidity 0.6.10;
 
 import "./Permissions.sol";
 
@@ -47,7 +47,7 @@ contract SlashingTable is Permissions {
         return penalty;
     }
 
-    function initialize(address contractManager) public override initializer {
-        Permissions.initialize(contractManager);
+    function initialize(address contractManagerAddress) public override initializer {
+        Permissions.initialize(contractManagerAddress);
     }
 }

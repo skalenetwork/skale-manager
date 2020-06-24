@@ -19,7 +19,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.8;
+pragma solidity 0.6.10;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
 
@@ -65,9 +65,9 @@ contract Punisher is Permissions, ILocker {
      * @param amount uint slashed amount
     */
     function slash(uint validatorId, uint amount) external allow("SkaleDKG") {
-        ValidatorService validatorService = ValidatorService(_contractManager.getContract("ValidatorService"));
+        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
         DelegationController delegationController = DelegationController(
-            _contractManager.getContract("DelegationController"));
+            contractManager.getContract("DelegationController"));
 
         require(validatorService.validatorExists(validatorId), "Validator does not exist");
 
@@ -86,7 +86,7 @@ contract Punisher is Permissions, ILocker {
      */
     function forgive(address holder, uint amount) external onlyOwner {
         DelegationController delegationController = DelegationController(
-            _contractManager.getContract("DelegationController"));
+            contractManager.getContract("DelegationController"));
 
         require(!delegationController.hasUnprocessedSlashes(holder), "Not all slashes were calculated");
 
@@ -117,15 +117,15 @@ contract Punisher is Permissions, ILocker {
         _locked[holder] = _locked[holder].add(amount);
     }
 
-    function initialize(address contractManager) public override initializer {
-        Permissions.initialize(contractManager);
+    function initialize(address contractManagerAddress) public override initializer {
+        Permissions.initialize(contractManagerAddress);
     }
 
     // private
 
     function _getAndUpdateLockedAmount(address wallet) private returns (uint) {
         DelegationController delegationController = DelegationController(
-            _contractManager.getContract("DelegationController"));
+            contractManager.getContract("DelegationController"));
 
         delegationController.processAllSlashes(wallet);
         return _locked[wallet];

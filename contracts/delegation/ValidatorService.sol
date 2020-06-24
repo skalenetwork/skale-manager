@@ -21,7 +21,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.8;
+pragma solidity 0.6.10;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
@@ -115,17 +115,12 @@ contract ValidatorService is Permissions {
     /**
      * @dev Creates a new validator Id.
      *
-     * Requirements:
-     *
-     * - sender must not already have registered a validator Id.
-     * - fee rate must be between 0 - 1000‰. Note: per mille!
-     *
      * Emits ValidatorRegistered event.
      *
-     * @param name string
-     * @param description string
-     * @param feeRate uint Fee charged on delegations by the validator per mille
-     * @param minimumDelegationAmount uint Minimum delegation amount accepted by the validator
+     * Requirements:
+     *
+     * - Sender must not already have registered a validator ID.
+     * - Fee rate must be between 0 - 1000‰. Note: in per mille.
      */
     function registerValidator(
         string calldata name,
@@ -301,7 +296,7 @@ contract ValidatorService is Permissions {
         returns (uint)
     {
         DelegationController delegationController = DelegationController(
-            _contractManager.getContract("DelegationController")
+            contractManager.getContract("DelegationController")
         );
         return delegationController.getAndUpdateDelegatedByHolderToValidatorNow(
             getValidator(validatorId).validatorAddress,
@@ -373,8 +368,8 @@ contract ValidatorService is Permissions {
         require(validatorId != 0, "Node address is not assigned to a validator");
     }
 
-    function initialize(address contractManager) public override initializer {
-        Permissions.initialize(contractManager);
+    function initialize(address contractManagerAddress) public override initializer {
+        Permissions.initialize(contractManagerAddress);
         useWhitelist = true;
     }
 

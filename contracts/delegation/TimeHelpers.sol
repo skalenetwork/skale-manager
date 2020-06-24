@@ -19,7 +19,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.8;
+pragma solidity 0.6.10;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
 
@@ -58,12 +58,12 @@ contract TimeHelpers {
         return month;
     }
 
-    function monthToTimestamp(uint _month) public view virtual returns (uint timestamp) {
+    function monthToTimestamp(uint month) public view virtual returns (uint timestamp) {
         uint year = _ZERO_YEAR;
-        uint month = _month;
-        year = year.add(month.div(12));
-        month = month.mod(12);
-        month = month.add(1);
-        return BokkyPooBahsDateTimeLibrary.timestampFromDate(year, month, 1);
+        uint _month = month;
+        year = year.add(_month.div(12));
+        _month = _month.mod(12);
+        _month = _month.add(1);
+        return BokkyPooBahsDateTimeLibrary.timestampFromDate(year, _month, 1);
     }
 }

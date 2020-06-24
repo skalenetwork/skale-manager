@@ -20,7 +20,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.8;
+pragma solidity 0.6.10;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
@@ -236,11 +236,11 @@ contract DelegationController is Permissions, ILocker {
         external
     {
 
-        ValidatorService validatorService = ValidatorService(_contractManager.getContract("ValidatorService"));
+        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
         DelegationPeriodManager delegationPeriodManager = DelegationPeriodManager(
-            _contractManager.getContract("DelegationPeriodManager"));
-        SkaleToken skaleToken = SkaleToken(_contractManager.getContract("SkaleToken"));
-        TokenState tokenState = TokenState(_contractManager.getContract("TokenState"));
+            contractManager.getContract("DelegationPeriodManager"));
+        SkaleToken skaleToken = SkaleToken(contractManager.getContract("SkaleToken"));
+        TokenState tokenState = TokenState(contractManager.getContract("TokenState"));
 
         require(
             validatorService.checkMinimumDelegation(validatorId, amount),
@@ -321,7 +321,7 @@ contract DelegationController is Permissions, ILocker {
      * @param delegationId uint ID of delegation proposal
      */
     function acceptPendingDelegation(uint delegationId) external checkDelegationExists(delegationId) {
-        ValidatorService validatorService = ValidatorService(_contractManager.getContract("ValidatorService"));
+        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
         require(
             validatorService.checkValidatorAddressToId(msg.sender, delegations[delegationId].validatorId),
             "No permissions to accept request");
@@ -342,7 +342,7 @@ contract DelegationController is Permissions, ILocker {
         }
         require(currentState == State.PROPOSED, "Cannot set delegation state to accepted");
         
-        TokenLaunchLocker tokenLaunchLocker = TokenLaunchLocker(_contractManager.getContract("TokenLaunchLocker"));
+        TokenLaunchLocker tokenLaunchLocker = TokenLaunchLocker(contractManager.getContract("TokenLaunchLocker"));
 
         SlashingSignal[] memory slashingSignals = _processAllSlashesWithoutSignals(delegations[delegationId].holder);
 
@@ -374,16 +374,16 @@ contract DelegationController is Permissions, ILocker {
     function requestUndelegation(uint delegationId) external checkDelegationExists(delegationId) {
         require(getState(delegationId) == State.DELEGATED, "Cannot request undelegation");
 
-        ValidatorService validatorService = ValidatorService(_contractManager.getContract("ValidatorService"));
+        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
         require(
             delegations[delegationId].holder == msg.sender ||
             (validatorService.validatorAddressExists(msg.sender) &&
             delegations[delegationId].validatorId == validatorService.getValidatorId(msg.sender)),
             "Permission denied to request undelegation");
 
-        TokenLaunchLocker tokenLaunchLocker = TokenLaunchLocker(_contractManager.getContract("TokenLaunchLocker"));
+        TokenLaunchLocker tokenLaunchLocker = TokenLaunchLocker(contractManager.getContract("TokenLaunchLocker"));
         DelegationPeriodManager delegationPeriodManager = DelegationPeriodManager(
-            _contractManager.getContract("DelegationPeriodManager"));
+            contractManager.getContract("DelegationPeriodManager"));
 
         processAllSlashes(msg.sender);
         delegations[delegationId].finished = _calculateDelegationEndMonth(delegationId);
@@ -474,8 +474,8 @@ contract DelegationController is Permissions, ILocker {
         return delegationsByHolder[holder].length;
     }
 
-    function initialize(address _contractsAddress) public override initializer {
-        Permissions.initialize(_contractsAddress);
+    function initialize(address contractsAddress) public override initializer {
+        Permissions.initialize(contractsAddress);
     }
 
     function getAndUpdateDelegatedToValidator(uint validatorId, uint month)
@@ -500,7 +500,7 @@ contract DelegationController is Permissions, ILocker {
     function getState(uint delegationId) public view checkDelegationExists(delegationId) returns (State state) {
         if (delegations[delegationId].started == 0) {
             if (delegations[delegationId].finished == 0) {
-                TimeHelpers timeHelpers = TimeHelpers(_contractManager.getContract("TimeHelpers"));
+                TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
                 if (_getCurrentMonth() == timeHelpers.timestampToMonth(delegations[delegationId].created)) {
                     return State.PROPOSED;
                 } else {
@@ -565,18 +565,6 @@ contract DelegationController is Permissions, ILocker {
         delegationsByValidator[validatorId].push(delegationId);
         delegationsByHolder[holder].push(delegationId);
         _addToLockedInPendingDelegations(delegations[delegationId].holder, delegations[delegationId].amount);
-    }
-
-    function _isTerminated(State state) private pure returns (bool) {
-        return state == State.COMPLETED || state == State.REJECTED;
-    }
-
-    function _isLocked(State state) private pure returns (bool) {
-        return !_isTerminated(state);
-    }
-
-    function _isDelegated(State state) private pure returns (bool) {
-        return state == State.DELEGATED || state == State.UNDELEGATION_REQUESTED;
     }
 
     function _calculateDelegationEndMonth(uint delegationId) private view returns (uint) {
@@ -675,7 +663,7 @@ contract DelegationController is Permissions, ILocker {
     }
 
     function _getCurrentMonth() private view returns (uint) {
-        TimeHelpers timeHelpers = TimeHelpers(_contractManager.getContract("TimeHelpers"));
+        TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
         return timeHelpers.getCurrentMonth();
     }
 
@@ -791,7 +779,7 @@ contract DelegationController is Permissions, ILocker {
     }
 
     function _sendSlashingSignals(SlashingSignal[] memory slashingSignals) private {
-        Punisher punisher = Punisher(_contractManager.getContract("Punisher"));
+        Punisher punisher = Punisher(contractManager.getContract("Punisher"));
         address previousHolder = address(0);
         uint accumulatedPenalty = 0;
         for (uint i = 0; i < slashingSignals.length; ++i) {
@@ -812,7 +800,7 @@ contract DelegationController is Permissions, ILocker {
 
     function _addToAllStatistics(uint delegationId) private {
         DelegationPeriodManager delegationPeriodManager = DelegationPeriodManager(
-            _contractManager.getContract("DelegationPeriodManager"));
+            contractManager.getContract("DelegationPeriodManager"));
 
         uint currentMonth = _getCurrentMonth();
         delegations[delegationId].started = currentMonth.add(1);

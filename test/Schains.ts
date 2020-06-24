@@ -65,13 +65,18 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
                 .should.be.eventually.rejectedWith("Not enough money to create Schain");
         });
 
+        it("should not allow everyone to create schains as the foundation", async () => {
+            await schains.addSchainByFoundation(5, 1, 0, "d2")
+                .should.be.eventually.rejectedWith("Sender is not authorized to create schian");
+        })
+
         it("should fail when schain type is wrong", async () => {
             await schains.addSchain(
                 holder,
                 5,
                 web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 6, 0, "d2"]),
                 {from: owner})
-                .should.be.eventually.rejectedWith("Invalid type of Schain");
+                .should.be.eventually.rejectedWith("Bad schain type");
         });
 
         it("should fail when data parameter is too short", async () => {
@@ -480,6 +485,17 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
                     {from: owner});
 
                 await schainsInternal.getSchains().should.be.eventually.empty;
+            });
+
+            it("should allow the foundation to create schain without tokens", async () => {
+                await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), owner);
+                await schains.addSchainByFoundation(5, 5, 0, "d2", {from: owner});
+
+                const sChains = await schainsInternal.getSchains();
+                sChains.length.should.be.equal(1);
+                const schainId = sChains[0];
+
+                await schainsInternal.isOwnerAddress(owner, schainId).should.be.eventually.true;
             });
         });
 
