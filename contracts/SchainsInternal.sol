@@ -139,10 +139,11 @@ contract SchainsInternal is Permissions {
         allow("Schains")
         returns (uint[] memory)
     {
+        ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
         schains[schainId].partOfNode = partOfNode;
         if (partOfNode > 0) {
             sumOfSchainsResources = sumOfSchainsResources.add(
-                numberOfNodes.mul(128).div(partOfNode)
+                numberOfNodes.mul(constantsHolder.TOTAL_SPACE_ON_NODE()).div(partOfNode)
             );
         }
         return _generateGroup(schainId, numberOfNodes);

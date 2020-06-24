@@ -103,7 +103,10 @@ contract Distributor is Permissions, IERC777Recipient {
         TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
         ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
 
-        require(now >= timeHelpers.addMonths(constantsHolder.launchTimestamp(), 3), "Bounty is locked");
+        require(now >= timeHelpers.addMonths(
+                constantsHolder.launchTimestamp(),
+                constantsHolder.BOUNTY_LOCKUP_MONTHS()
+            ), "Bounty is locked");
 
         uint bounty;
         uint endMonth;
@@ -138,7 +141,10 @@ contract Distributor is Permissions, IERC777Recipient {
         TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
         ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
 
-        require(now >= timeHelpers.addMonths(constantsHolder.launchTimestamp(), 3), "Fee is locked");
+        require(now >= timeHelpers.addMonths(
+                constantsHolder.launchTimestamp(),
+                constantsHolder.BOUNTY_LOCKUP_MONTHS()
+            ), "Fee is locked");
 
         uint fee;
         uint endMonth;

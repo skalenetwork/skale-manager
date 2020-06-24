@@ -7,7 +7,8 @@ import { ContractManagerInstance,
          PricingInstance,
          SchainsInternalInstance,
          ValidatorServiceInstance,
-         SchainsInstance} from "../types/truffle-contracts";
+         SchainsInstance,
+         ConstantsHolderInstance} from "../types/truffle-contracts";
 
 import { deployContractManager } from "./tools/deploy/contractManager";
 import { deployNodes } from "./tools/deploy/nodes";
@@ -16,6 +17,7 @@ import { deploySchainsInternal } from "./tools/deploy/schainsInternal";
 import { skipTime, currentTime } from "./tools/time";
 import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
 import { deploySchains } from "./tools/deploy/schains";
+import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -27,6 +29,7 @@ contract("Pricing", ([owner, holder, validator, nodeAddress]) => {
     let schains: SchainsInstance;
     let nodes: NodesInstance;
     let validatorService: ValidatorServiceInstance;
+    let constants: ConstantsHolderInstance;
 
     beforeEach(async () => {
         contractManager = await deployContractManager();
@@ -36,6 +39,7 @@ contract("Pricing", ([owner, holder, validator, nodeAddress]) => {
         schains = await deploySchains(contractManager);
         pricing = await deployPricing(contractManager);
         validatorService = await deployValidatorService(contractManager);
+        constants = await deployConstantsHolder(contractManager);
 
         await validatorService.registerValidator("Validator", "D2", 0, 0, {from: validator});
         const validatorIndex = await validatorService.getValidatorId(validator);
@@ -182,10 +186,10 @@ contract("Pricing", ([owner, holder, validator, nodeAddress]) => {
                 });
 
                 async function getPrice(secondSincePreviousUpdate: number) {
-                    const MIN_PRICE = (await pricing.MIN_PRICE()).toNumber();
-                    const ADJUSTMENT_SPEED = (await pricing.ADJUSTMENT_SPEED()).toNumber();
-                    const OPTIMAL_LOAD_PERCENTAGE = (await pricing.OPTIMAL_LOAD_PERCENTAGE()).toNumber();
-                    const COOLDOWN_TIME = (await pricing.COOLDOWN_TIME()).toNumber();
+                    const MIN_PRICE = (await constants.MIN_PRICE()).toNumber();
+                    const ADJUSTMENT_SPEED = (await constants.ADJUSTMENT_SPEED()).toNumber();
+                    const OPTIMAL_LOAD_PERCENTAGE = (await constants.OPTIMAL_LOAD_PERCENTAGE()).toNumber();
+                    const COOLDOWN_TIME = (await constants.COOLDOWN_TIME()).toNumber();
 
                     const priceChangeSpeed = ADJUSTMENT_SPEED * (oldPrice / MIN_PRICE) * (await getLoadCoefficient() * 100 - OPTIMAL_LOAD_PERCENTAGE);
                     let price = oldPrice + priceChangeSpeed * secondSincePreviousUpdate / COOLDOWN_TIME;

@@ -137,6 +137,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
             require(nodes.completeExit(nodeIndex), "Finishing of node exit is failed");
             nodes.changeNodeFinishTime(nodeIndex, uint32(now + (isSchains ? constants.rotationDelay() : 0)));
             Monitors monitors = Monitors(contractManager.getContract("Monitors"));
+            monitors.removeCheckedNodes(nodeIndex);
             monitors.deleteMonitor(nodeIndex);
             nodes.deleteNodeForValidator(validatorId, nodeIndex);
         }
@@ -174,9 +175,9 @@ contract SkaleManager is IERC777Recipient, Permissions {
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));
         require(nodes.isNodeExist(msg.sender, nodeIndex), "Node does not exist for Message sender");
         require(nodes.isTimeForReward(nodeIndex), "Not time for bounty");
-        bool nodeIsActive = nodes.isNodeActive(nodeIndex);
-        bool nodeIsLeaving = nodes.isNodeLeaving(nodeIndex);
-        require(nodeIsActive || nodeIsLeaving, "Node is not Active and is not Leaving");
+        require(
+            nodes.isNodeActive(nodeIndex) || nodes.isNodeLeaving(nodeIndex), "Node is not Active and is not Leaving"
+        );
         uint averageDowntime;
         uint averageLatency;
         Monitors monitors = Monitors(contractManager.getContract("Monitors"));
@@ -187,6 +188,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
             averageDowntime,
             averageLatency);
         nodes.changeNodeLastRewardDate(nodeIndex);
+        monitors.deleteMonitor(nodeIndex);
         monitors.addMonitor(nodeIndex);
         _emitBountyEvent(nodeIndex, msg.sender, averageDowntime, averageLatency, bounty);
     }
@@ -255,11 +257,12 @@ contract SkaleManager is IERC777Recipient, Permissions {
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));
         SkaleToken skaleToken = SkaleToken(contractManager.getContract("SkaleToken"));
         Distributor distributor = Distributor(contractManager.getContract("Distributor"));
+        ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
 
         uint validatorId = validatorService.getValidatorIdByNodeAddress(miner);
         uint bounty = bountyForMiner;
         if (!nodes.checkPossibilityToMaintainNode(validatorId, nodeIndex)) {
-            bounty = bounty.div(2);
+            bounty = bounty.div(constantsHolder.MSR_REDUCING_COEFFICIENT());
         }
         // solhint-disable-next-line check-send-result
         skaleToken.send(address(distributor), bounty, abi.encode(validatorId));
@@ -291,7 +294,8 @@ contract SkaleManager is IERC777Recipient, Permissions {
 
     function _getValidatorsCapitalization() private view returns (uint) {
         if (minersCap == 0) {
-            return SkaleToken(contractManager.getContract("SkaleToken")).CAP().div(3);
+            ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
+            return SkaleToken(contractManager.getContract("SkaleToken")).CAP().div(constantsHolder.BOUNTY_POOL_PART());
         }
         return minersCap;
     }
@@ -354,7 +358,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
         uint normalDowntime = uint(constants.rewardPeriod())
             .sub(constants.deltaPeriod())
             .div(constants.checkTime())
-            .div(30);
+            .div(ConstantsHolder(contractManager.getContract("ConstantsHolder")).DOWNTIME_THRESHOLD_PART());
         uint totalDowntime = downtime.add(numberOfExpiredIntervals);
         if (totalDowntime > normalDowntime) {
             // reduce bounty because downtime is too big

@@ -28,10 +28,9 @@ import "./Nodes.sol";
 
 
 contract Pricing is Permissions {
-    uint public constant OPTIMAL_LOAD_PERCENTAGE = 80;
-    uint public constant ADJUSTMENT_SPEED = 1000;
-    uint public constant COOLDOWN_TIME = 60;
-    uint public constant MIN_PRICE = 10**6;
+
+    uint public constant INITIAL_PRICE = 5 * 10**6;
+
     uint public price;
     uint public totalNodes;
     uint public lastUpdated;
@@ -42,39 +41,41 @@ contract Pricing is Permissions {
     }
 
     function adjustPrice() external {
-        require(now > lastUpdated.add(COOLDOWN_TIME), "It's not a time to update a price");
+        ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
+        require(now > lastUpdated.add(constantsHolder.COOLDOWN_TIME()), "It's not a time to update a price");
         checkAllNodes();
         uint load = _getTotalLoad();
         uint capacity = _getTotalCapacity();
 
-        bool networkIsOverloaded = load.mul(100) > OPTIMAL_LOAD_PERCENTAGE.mul(capacity);
+        bool networkIsOverloaded = load.mul(100) > constantsHolder.OPTIMAL_LOAD_PERCENTAGE().mul(capacity);
         uint loadDiff;
         if (networkIsOverloaded) {
-            loadDiff = load.mul(100).sub(OPTIMAL_LOAD_PERCENTAGE.mul(capacity));
+            loadDiff = load.mul(100).sub(constantsHolder.OPTIMAL_LOAD_PERCENTAGE().mul(capacity));
         } else {
-            loadDiff = OPTIMAL_LOAD_PERCENTAGE.mul(capacity).sub(load.mul(100));
+            loadDiff = constantsHolder.OPTIMAL_LOAD_PERCENTAGE().mul(capacity).sub(load.mul(100));
         }
 
-        uint priceChangeSpeedMultipliedByCapacityAndMinPrice = ADJUSTMENT_SPEED.mul(loadDiff).mul(price);
+        uint priceChangeSpeedMultipliedByCapacityAndMinPrice =
+            constantsHolder.ADJUSTMENT_SPEED().mul(loadDiff).mul(price);
         
         uint timeSkipped = now.sub(lastUpdated);
         
         uint priceChange = priceChangeSpeedMultipliedByCapacityAndMinPrice
             .mul(timeSkipped)
-            .div(COOLDOWN_TIME)
+            .div(constantsHolder.COOLDOWN_TIME())
             .div(capacity)
-            .div(MIN_PRICE);
+            .div(constantsHolder.MIN_PRICE());
 
         if (networkIsOverloaded) {
             assert(priceChange > 0);
             price = price.add(priceChange);
         } else {
             if (priceChange > price) {
-                price = MIN_PRICE;
+                price = constantsHolder.MIN_PRICE();
             } else {
                 price = price.sub(priceChange);
-                if (price < MIN_PRICE) {
-                    price = MIN_PRICE;
+                if (price < constantsHolder.MIN_PRICE()) {
+                    price = constantsHolder.MIN_PRICE();
                 }
             }
         }
@@ -88,7 +89,7 @@ contract Pricing is Permissions {
     function initialize(address newContractsAddress) public override initializer {
         Permissions.initialize(newContractsAddress);
         lastUpdated = now;
-        price = MIN_PRICE.mul(5);
+        price = INITIAL_PRICE;
     }
 
     function checkAllNodes() public {
@@ -116,7 +117,8 @@ contract Pricing is Permissions {
 
     function _getTotalCapacity() private view returns (uint) {
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));
+        ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
 
-        return nodes.getNumberOnlineNodes().mul(128);
+        return nodes.getNumberOnlineNodes().mul(constantsHolder.TOTAL_SPACE_ON_NODE());
     }
 }

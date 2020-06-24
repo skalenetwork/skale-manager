@@ -354,9 +354,10 @@ contract Nodes is Permissions {
      * @dev Returns nodes with resource availability.
      */
     function getNodesWithFreeSpace(uint8 freeSpace) external view returns (uint[] memory) {
+        ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
         uint[] memory nodesWithFreeSpace = new uint[](countNodesWithFreeSpace(freeSpace));
         uint cursor = 0;
-        for (uint8 i = freeSpace; i <= 128; ++i) {
+        for (uint8 i = freeSpace; i <= constantsHolder.TOTAL_SPACE_ON_NODE(); ++i) {
             for (uint j = 0; j < spaceToNodes[i].length; j++) {
                 nodesWithFreeSpace[cursor] = spaceToNodes[i][j];
                 ++cursor;
@@ -550,8 +551,9 @@ contract Nodes is Permissions {
      * @dev Returns number of nodes with free space.
      */
     function countNodesWithFreeSpace(uint8 freeSpace) public view returns (uint count) {
+        ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
         count = 0;
-        for (uint8 i = freeSpace; i <= 128; ++i) {
+        for (uint8 i = freeSpace; i <= constantsHolder.TOTAL_SPACE_ON_NODE(); ++i) {
             count = count.add(spaceToNodes[i].length);
         }
     }
@@ -566,7 +568,7 @@ contract Nodes is Permissions {
                 return i;
             }
         }
-        return i;
+        return validatorNodeIndexes.length;
     }
 
     /**
@@ -628,6 +630,7 @@ contract Nodes is Permissions {
         private
         returns (uint nodeIndex)
     {
+        ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
         nodes.push(Node({
             name: name,
             ip: ip,
@@ -650,10 +653,10 @@ contract Nodes is Permissions {
         nodeIndexes[from].isNodeExist[nodeIndex] = true;
         nodeIndexes[from].numberOfNodes++;
         spaceOfNodes.push(SpaceManaging({
-            freeSpace: 128,
-            indexInSpaceMap: spaceToNodes[128].length
+            freeSpace: constantsHolder.TOTAL_SPACE_ON_NODE(),
+            indexInSpaceMap: spaceToNodes[constantsHolder.TOTAL_SPACE_ON_NODE()].length
         }));
-        spaceToNodes[128].push(nodeIndex);
+        spaceToNodes[constantsHolder.TOTAL_SPACE_ON_NODE()].push(nodeIndex);
         numberOfActiveNodes++;
     }
 

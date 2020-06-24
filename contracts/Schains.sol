@@ -285,8 +285,7 @@ contract Schains is Permissions {
     }
 
     /**
-     * @dev Checks whether schian group signature is valid.
-     * TODO
+     * @dev Checks whether Schian group signature is valid. TODO: confirm
      */
     function verifySchainSignature(
         uint signatureA,
@@ -354,7 +353,7 @@ contract Schains is Permissions {
         } else {
             uint up = nodeDeposit.mul(numberOfNodes.mul(lifetime.mul(2)));
             uint down = uint(
-                uint(constantsHolder.TINY_DIVISOR())
+                uint(constantsHolder.SMALL_DIVISOR())
                     .mul(uint(constantsHolder.SECONDS_TO_YEAR()))
                     .div(divisor)
             );
@@ -374,16 +373,16 @@ contract Schains is Permissions {
         ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
         numberOfNodes = constantsHolder.NUMBER_OF_NODES_FOR_SCHAIN();
         if (typeOfSchain == 1) {
-            partOfNode = constantsHolder.TINY_DIVISOR() / constantsHolder.TINY_DIVISOR();
+            partOfNode = constantsHolder.SMALL_DIVISOR() / constantsHolder.SMALL_DIVISOR();
         } else if (typeOfSchain == 2) {
-            partOfNode = constantsHolder.TINY_DIVISOR() / constantsHolder.SMALL_DIVISOR();
+            partOfNode = constantsHolder.SMALL_DIVISOR() / constantsHolder.MEDIUM_DIVISOR();
         } else if (typeOfSchain == 3) {
-            partOfNode = constantsHolder.TINY_DIVISOR() / constantsHolder.MEDIUM_DIVISOR();
+            partOfNode = constantsHolder.SMALL_DIVISOR() / constantsHolder.LARGE_DIVISOR();
         } else if (typeOfSchain == 4) {
             partOfNode = 0;
             numberOfNodes = constantsHolder.NUMBER_OF_NODES_FOR_TEST_SCHAIN();
         } else if (typeOfSchain == 5) {
-            partOfNode = constantsHolder.TINY_DIVISOR() / constantsHolder.MEDIUM_TEST_DIVISOR();
+            partOfNode = constantsHolder.SMALL_DIVISOR() / constantsHolder.MEDIUM_TEST_DIVISOR();
             numberOfNodes = constantsHolder.NUMBER_OF_NODES_FOR_MEDIUM_TEST_SCHAIN();
         } else {
             revert("Bad schain type");

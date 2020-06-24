@@ -63,6 +63,8 @@ contract SkaleDKG is Permissions {
         bytes32 share;
     }
 
+    uint public constant COMPLAINT_TIMELIMIT = 1800;
+
     mapping(bytes32 => Channel) public channels;
     mapping(bytes32 => mapping(uint => BroadcastedData)) private _data;
 
@@ -233,13 +235,16 @@ contract SkaleDKG is Permissions {
             return;
         } else if (broadcasted && channels[groupIndex].nodeToComplaint == toNodeIndex) {
             require(
-                channels[groupIndex].startComplaintBlockTimestamp.add(1800) <= block.timestamp,
+                channels[groupIndex].startComplaintBlockTimestamp.add(COMPLAINT_TIMELIMIT) <= block.timestamp,
                 "One more complaint rejected");
             // need to penalty Node - toNodeIndex
             _finalizeSlashing(groupIndex, channels[groupIndex].nodeToComplaint);
         } else if (!broadcasted) {
             // if node have not broadcasted params
-            require(channels[groupIndex].startedBlockTimestamp.add(1800) <= block.timestamp, "Complaint rejected");
+            require(
+                channels[groupIndex].startedBlockTimestamp.add(COMPLAINT_TIMELIMIT) <= block.timestamp,
+                "Complaint rejected"
+            );
             // need to penalty Node - toNodeIndex
             _finalizeSlashing(groupIndex, channels[groupIndex].nodeToComplaint);
         }
@@ -325,13 +330,13 @@ contract SkaleDKG is Permissions {
         bool complaintSending = channels[groupIndex].nodeToComplaint == uint(-1) ||
             (
                 channels[groupIndex].broadcasted[indexTo] &&
-                channels[groupIndex].startComplaintBlockTimestamp.add(1800) <= block.timestamp &&
+                channels[groupIndex].startComplaintBlockTimestamp.add(COMPLAINT_TIMELIMIT) <= block.timestamp &&
                 channels[groupIndex].nodeToComplaint == toNodeIndex
             ) ||
             (
                 !channels[groupIndex].broadcasted[indexTo] &&
                 channels[groupIndex].nodeToComplaint == toNodeIndex &&
-                channels[groupIndex].startedBlockTimestamp.add(1800) <= block.timestamp
+                channels[groupIndex].startedBlockTimestamp.add(COMPLAINT_TIMELIMIT) <= block.timestamp
             );
         SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
         return channels[groupIndex].active &&
