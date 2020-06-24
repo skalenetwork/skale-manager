@@ -344,6 +344,7 @@ contract("Monitors", ([owner, validator, nodeAddress]) => {
     (await monitors.getCheckedArray(node3Hash)).length.should.be.equal(2);
     (await monitors.getCheckedArray(node4Hash)).length.should.be.equal(2);
 
+    await monitors.removeCheckedNodes(0);
     await monitors.deleteMonitor(0);
 
     await monitors.getCheckedArray(node0Hash).should.be.eventually.empty;
