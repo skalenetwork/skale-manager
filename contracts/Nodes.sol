@@ -47,8 +47,8 @@ contract Nodes is Permissions {
         uint16 port;
         bytes32[2] publicKey;
         uint startBlock;
-        uint32 lastRewardDate;
-        uint32 finishTime;
+        uint lastRewardDate;
+        uint finishTime;
         NodeStatus status;
         uint validatorId;
     }
@@ -105,22 +105,22 @@ contract Nodes is Permissions {
         bytes4 publicIP,
         uint16 port,
         uint16 nonce,
-        uint32 time,
+        uint time,
         uint gasSpend
     );
 
     // informs that node is fully finished quitting from the system
     event ExitCompleted(
         uint nodeIndex,
-        uint32 time,
+        uint time,
         uint gasSpend
     );
 
     // informs that owner starts the procedure of quitting the Node from the system
     event ExitInited(
         uint nodeIndex,
-        uint32 startLeavingPeriod,
-        uint32 time,
+        uint startLeavingPeriod,
+        uint time,
         uint gasSpend
     );
 
@@ -168,10 +168,10 @@ contract Nodes is Permissions {
      * @param nodeIndex - index of Node
      */
     function changeNodeLastRewardDate(uint nodeIndex) external allow("SkaleManager") {
-        nodes[nodeIndex].lastRewardDate = block.timestamp.toUint32();
+        nodes[nodeIndex].lastRewardDate = block.timestamp;
     }
 
-    function changeNodeFinishTime(uint nodeIndex, uint32 time) external allow("SkaleManager") {
+    function changeNodeFinishTime(uint nodeIndex, uint time) external allow("SkaleManager") {
         nodes[nodeIndex].finishTime = time;
     }
 
@@ -212,7 +212,7 @@ contract Nodes is Permissions {
             params.publicIp,
             params.port,
             params.nonce,
-            uint32(block.timestamp),
+            block.timestamp,
             gasleft());
     }
 
@@ -228,8 +228,8 @@ contract Nodes is Permissions {
 
         emit ExitInited(
             nodeIndex,
-            uint32(block.timestamp),
-            uint32(block.timestamp),
+            block.timestamp,
+            block.timestamp,
             gasleft());
         return true;
     }
@@ -248,7 +248,7 @@ contract Nodes is Permissions {
 
         emit ExitCompleted(
             nodeIndex,
-            uint32(block.timestamp),
+            block.timestamp,
             gasleft());
         return true;
     }
@@ -352,7 +352,7 @@ contract Nodes is Permissions {
         return nodes[nodeIndex].publicKey;
     }
 
-    function getNodeFinishTime(uint nodeIndex) external view returns (uint32) {
+    function getNodeFinishTime(uint nodeIndex) external view returns (uint) {
         return nodes[nodeIndex].finishTime;
     }
 
@@ -370,7 +370,7 @@ contract Nodes is Permissions {
      * @param nodeIndex - index of Node
      * @return Node last reward date
      */
-    function getNodeLastRewardDate(uint nodeIndex) external view returns (uint32) {
+    function getNodeLastRewardDate(uint nodeIndex) external view returns (uint) {
         return nodes[nodeIndex].lastRewardDate;
     }
 
@@ -379,9 +379,9 @@ contract Nodes is Permissions {
      * @param nodeIndex - index of Node
      * @return Node next reward date
      */
-    function getNodeNextRewardDate(uint nodeIndex) external view returns (uint32) {
+    function getNodeNextRewardDate(uint nodeIndex) external view returns (uint) {
         ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
-        return uint(nodes[nodeIndex].lastRewardDate).add(constantsHolder.rewardPeriod()).toUint32();
+        return nodes[nodeIndex].lastRewardDate.add(constantsHolder.rewardPeriod());
     }
 
     /**
@@ -586,7 +586,7 @@ contract Nodes is Permissions {
             //owner: from,
             publicKey: publicKey,
             startBlock: block.number,
-            lastRewardDate: block.timestamp.toUint32(),
+            lastRewardDate: block.timestamp,
             finishTime: 0,
             status: NodeStatus.Active,
             validatorId: validatorId

@@ -52,7 +52,7 @@ contract Schains is Permissions {
         uint deposit,
         uint16 nonce,
         bytes32 schainId,
-        uint32 time,
+        uint time,
         uint gasSpend
     );
 
@@ -78,7 +78,7 @@ contract Schains is Permissions {
         string name,
         bytes32 schainId,
         uint[] nodesInGroup,
-        uint32 time,
+        uint time,
         uint gasSpend
     );
 
@@ -413,7 +413,7 @@ contract Schains is Permissions {
             schainName,
             schainId,
             nodesInGroup,
-            uint32(block.timestamp),
+            block.timestamp,
             gasleft());
     }
 
@@ -488,7 +488,7 @@ contract Schains is Permissions {
             deposit,
             schainParameters.nonce,
             keccak256(abi.encodePacked(schainParameters.name)),
-            uint32(block.timestamp),
+            block.timestamp,
             gasleft());
     }
 }
