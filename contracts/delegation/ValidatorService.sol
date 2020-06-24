@@ -39,7 +39,6 @@ import "./DelegationController.sol";
  *
  * Validators register an address, and use this address to accept delegations and
  * register nodes.
- *
  */
 contract ValidatorService is Permissions {
 
@@ -71,10 +70,16 @@ contract ValidatorService is Permissions {
         address newAddress
     );
 
+    /**
+     * @dev Emitted when a validator is enabled.
+     */
     event ValidatorWasEnabled(
         uint validatorId
     );
 
+    /**
+     * @dev Emitted when a validator is disabled.
+     */
     event ValidatorWasDisabled(
         uint validatorId
     );
@@ -113,7 +118,8 @@ contract ValidatorService is Permissions {
     }
 
     /**
-     * @dev Creates a new validator Id.
+     * @dev Creates a new validator ID that includes a validator name, description,
+     * commission or fee rate, and a minimum delegation amount accepted by the validator.
      *
      * Emits ValidatorRegistered event.
      *
@@ -149,12 +155,22 @@ contract ValidatorService is Permissions {
         emit ValidatorRegistered(validatorId);
     }
 
+    /**
+     * @dev Owner can enable validators by adding them to the trusted list.
+     *
+     * Emits ValidatorWasEnabled event.
+     */
     function enableValidator(uint validatorId) external checkValidatorExists(validatorId) onlyOwner {
         require(!trustedValidators[validatorId], "Validator is already enabled");
         trustedValidators[validatorId] = true;
         emit ValidatorWasEnabled(validatorId);
     }
 
+    /**
+     * @dev Owner can disable validators by removing them from the trusted list.
+     *
+     * Emits ValidatorWasDisabled event.
+     */
     function disableValidator(uint validatorId) external checkValidatorExists(validatorId) onlyOwner {
         require(trustedValidators[validatorId], "Validator is already disabled");
         trustedValidators[validatorId] = false;
@@ -162,8 +178,8 @@ contract ValidatorService is Permissions {
     }
 
     /**
-     * @dev Owner can disable the validator whitelist. Once turned off the
-     * whitelist cannot be re-enabled.
+     * @dev Owner can disable the trusted validator list. Once turned off, the
+     * trusted list cannot be re-enabled.
      */
     function disableWhitelist() external onlyOwner {
         useWhitelist = false;
@@ -208,15 +224,13 @@ contract ValidatorService is Permissions {
     }
 
     /**
-     * @dev Links a given node address.
-     *
-     * Emits NodeAddressWasAdded event.
+     * @dev Links a validator ID to a node address. Validator must present
+     * the node signature of the validator ID.
      *
      * Requirements:
      *
-     * - Given signature must be valid.
+     * - Signature must be valid.
      * - Address must not be assigned to a validator.
-     *
      */
     function linkNodeAddress(address nodeAddress, bytes calldata sig) external {
         uint validatorId = getValidatorId(msg.sender);
@@ -228,7 +242,7 @@ contract ValidatorService is Permissions {
     }
 
     /**
-     * @dev Unlinks a given node address from a validator.
+     * @dev Unlinks a node address from a validator.
      *
      * Emits NodeAddressWasRemoved event.
      */
@@ -267,7 +281,7 @@ contract ValidatorService is Permissions {
      *
      * Requirements:
      *
-     * - Must not have already enabled accepting new requests
+     * - Must not have already enabled accepting new requests.
      */
     function startAcceptingNewRequests() external {
         uint validatorId = getValidatorId(msg.sender);
@@ -280,7 +294,7 @@ contract ValidatorService is Permissions {
      *
      * Requirements:
      *
-     * - Must not have already stopped accepting new requests
+     * - Must not have already stopped accepting new requests.
      */
     function stopAcceptingNewRequests() external {
         uint validatorId = getValidatorId(msg.sender);
@@ -393,16 +407,30 @@ contract ValidatorService is Permissions {
         return validators[validatorId];
     }
 
+    /**
+     * @dev Returns the validator ID for the given validator address.
+     */
     function getValidatorId(address validatorAddress) public view returns (uint) {
         checkIfValidatorAddressExists(validatorAddress);
         return _validatorAddressToId[validatorAddress];
     }
 
+    /**
+     * @dev Checks whether the validator ID is currently accepting new delegation requests.
+     */
     function isAcceptingNewRequests(uint validatorId) public view checkValidatorExists(validatorId) returns (bool) {
         return validators[validatorId].acceptNewRequests;
     }
 
     // private
+
+    /**
+     * @dev Associates a validator address to a validator ID.
+     *
+     * Requirements:
+     *
+     * - Address is not currently in use by another validator ID.
+     */
     function _setValidatorAddress(uint validatorId, address validatorAddress) private {
         if (_validatorAddressToId[validatorAddress] == validatorId) {
             return;
@@ -415,6 +443,13 @@ contract ValidatorService is Permissions {
         _validatorAddressToId[validatorAddress] = validatorId;
     }
 
+    /**
+     * @dev Associates a node address to a validator ID.
+     *
+     * Requirements:
+     *
+     * - Node address must not be currently linked to a validator ID.
+     */
     function _addNodeAddress(uint validatorId, address nodeAddress) private {
         if (_nodeAddressToValidatorId[nodeAddress] == validatorId) {
             return;
@@ -424,6 +459,13 @@ contract ValidatorService is Permissions {
         _nodeAddresses[validatorId].push(nodeAddress);
     }
 
+    /**
+     * @dev Disassociates a node address from a validator ID.
+     *
+     * Requirements:
+     *
+     * - Must be performed by the validator.
+     */
     function _removeNodeAddress(uint validatorId, address nodeAddress) private {
         require(_nodeAddressToValidatorId[nodeAddress] == validatorId,
             "Validator does not have permissions to unlink node");
