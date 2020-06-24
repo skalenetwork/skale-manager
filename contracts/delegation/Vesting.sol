@@ -27,17 +27,14 @@ import "../interfaces/delegation/ILocker.sol";
 import "../Permissions.sol";
 import "./TimeHelpers.sol";
 import "./DelegationController.sol";
+import "./VestingEscrow.sol";
 
 
 contract Vesting is ILocker, Permissions, IERC777Recipient {
 
     struct SAFT {
-        // uint startVestingTime; // timestamp
-        // uint finishVesting; // timestamp
         uint fullPeriod;
         uint lockupPeriod; // months
-        // uint fullAmount; // number
-        // uint afterLockupAmount; // number
         uint regularPaymentTime; // months
         bool isCancelable;
     }
@@ -52,24 +49,19 @@ contract Vesting is ILocker, Permissions, IERC777Recipient {
         uint afterLockupAmount;
     }
 
-    // struct Balances {
-    //     uint sentAmount;
-    //     uint delegatedAmount;
-    // }
-
     IERC1820Registry private _erc1820;
 
     // array of SAFT configs
     SAFT[] private _saftRounds;
 
     // number of SAFT Round => amount of holders connected
-    mapping (uint => uint) private _usedSAFTRounds;
+    // mapping (uint => uint) private _usedSAFTRounds;
 
     //        holder => SAFT holder params
     mapping (address => SAFTHolder) private _saftHolders;
 
-    // //        holder => Balances
-    // mapping (address => Balances) private _holderBalances;
+    //        holder => address of vesting escrow
+    mapping (address => address) private _holderToEscrow;
 
     function tokensReceived(
         address operator,
@@ -97,10 +89,14 @@ contract Vesting is ILocker, Permissions, IERC777Recipient {
         require(_saftHolders[holder].registered, "SAFT is not registered");
         require(_saftHolders[holder].approved, "SAFT is not approved");
         _saftHolders[holder].active = true;
-        _usedSAFTRounds[_saftHolders[holder].saftRound - 1]++;
+        // _usedSAFTRounds[_saftHolders[holder].saftRound - 1]++;
         require(
-            IERC20(_contractManager.getContract("SkaleToken")).transfer(holder, _saftHolders[holder].fullAmount),
-            "Error of token sending");
+            IERC20(_contractManager.getContract("SkaleToken")).transfer(
+                _holderToEscrow[holder],
+                _saftHolders[holder].fullAmount
+            ),
+            "Error of token sending"
+        );
     }
 
     function addSAFTRound(
@@ -127,44 +123,14 @@ contract Vesting is ILocker, Permissions, IERC777Recipient {
         }));
     }
 
-    function changeSAFTRound(
-        uint saftRound,
-        uint lockupPeriod, // months
-        uint fullPeriod, // months
-        uint vestingTimes // months
-    )
-        external
-        onlyOwner
-    {
-        TimeHelpers timeHelpers = TimeHelpers(_contractManager.getContract("TimeHelpers"));
-        require(fullPeriod >= lockupPeriod, "Incorrect periods");
+    function stopVesting(address holder) external onlyOwner {
         require(
-            (fullPeriod - lockupPeriod) == vestingTimes ||
-            ((fullPeriod - lockupPeriod) / vestingTimes) * vestingTimes == fullPeriod - lockupPeriod,
-            "Incorrect vesting times"
+            !_saftHolders[holder].active || _saftRounds[_saftHolders[holder].saftRound].isCancelable,
+            "You could not stop vesting for this holder"
         );
-        require(_usedSAFTRounds[saftRound] == 0, "This SAFT is already used");
-        // network_launch_timestamp
-        _saftRounds[saftRound].fullPeriod = fullPeriod;
-        _saftRounds[saftRound].lockupPeriod = lockupPeriod;
-        _saftRounds[saftRound].regularPaymentTime = vestingTimes;
+        VestingEscrow vestingEscrow = VestingEscrow(_holderToEscrow[holder]);
+        vestingEscrow.cancelVesting();
     }
-
-    // function stopVesting(address holder) external onlyOwner {
-    //     require(
-    //         !_saftHolders[holder].active || _saftHolders[holder].isCancelable,
-    //         "You could not stop vesting for holder"
-    //     );
-    //     require(_canceledTokens[holder] == 0, "Already canceled");
-    //     // uint fullAmount = _saftHolders[holder].fullAmount;
-    //     uint lockedAmount = getLockedAmount(holder);
-    //     // if (_saftHolders[holder].active) {
-    //     _canceledTokens[holder] = lockedAmount;
-    //     _saftHolders[holder].active = false;
-    //     // } else {
-    //     //     _canceledTokens[holder] = fullAmount;
-    //     // }
-    // }
 
     function connectHolderToSAFT(
         address holder,
@@ -189,7 +155,8 @@ contract Vesting is ILocker, Permissions, IERC777Recipient {
             fullAmount: fullAmount,
             afterLockupAmount: lockupAmount
         });
-        _usedSAFTRounds[saftRound]++;
+        // VestingEscrow vestingEscrow = new VestingEscrow(address(_contractManager), holder);
+        _holderToEscrow[holder] = address(new VestingEscrow(address(_contractManager), holder));
     }
 
     function getAndUpdateLockedAmount(address wallet) external override returns (uint) {
@@ -203,31 +170,6 @@ contract Vesting is ILocker, Permissions, IERC777Recipient {
         // metwork_launch_timestamp
         return 0;
     }
-
-    // function retrieve() external {
-    //     address holder = msg.sender;
-    //     SAFTHolder memory saftHolder = _saftHolders[holder];
-    //     require(saftHolder.active, "SAFT is not active");
-    //     uint availableAmount = calculateAvailableAmount(holder);
-    //     Balances memory holderBalance = _holderBalances[holder];
-    //     if (availableAmount > holderBalance.sentAmount) {
-    //         _holderBalances[holder].sentAmount = availableAmount;
-    //         require(
-    //             IERC20(_contractManager.getContract("SkaleToken")).transfer(
-    //                 holder,
-    //                 availableAmount - holderBalance.sentAmount
-    //             ), "Error of token sending"
-    //         );
-    //     }
-    //     // add slashed + delegated
-    // }
-
-    // function getBalance(address holder) external view returns (uint balance) {
-    //     SAFTHolder memory saftHolder = _saftHolders[holder];
-    //     Balances memory holderBalance = _holderBalances[holder];
-    //     balance = saftHolder.fullAmount - holderBalance.sentAmount;
-    //     // add slashed + delegated
-    // }
 
     function getStartVestingTime(address holder) external view returns (uint) {
         return _saftHolders[holder].startVestingTime;
@@ -258,6 +200,10 @@ contract Vesting is ILocker, Permissions, IERC777Recipient {
 
     function isCancelableVestingTerm(address holder) external view returns (bool) {
         return _saftRounds[_saftHolders[holder].saftRound - 1].isCancelable;
+    }
+
+    function getFullAmount(address holder) external view returns (uint) {
+        return _saftHolders[holder].fullAmount;
     }
 
     function getLockupPeriodTimestamp(address holder) external view returns (uint) {
@@ -314,10 +260,10 @@ contract Vesting is ILocker, Permissions, IERC777Recipient {
     }
 
     function getLockedAmount(address wallet) public view returns (uint) {
-        return _saftHolders[wallet].fullAmount - _calculateAvailableAmount(wallet);
+        return _saftHolders[wallet].fullAmount - calculateAvailableAmount(wallet);
     }
 
-    function _calculateAvailableAmount(address wallet) internal view returns (uint availableAmount) {
+    function calculateAvailableAmount(address wallet) public view returns (uint availableAmount) {
         TimeHelpers timeHelpers = TimeHelpers(_contractManager.getContract("TimeHelpers"));
         uint date = now;
         SAFTHolder memory saftHolder = _saftHolders[wallet];

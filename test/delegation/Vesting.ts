@@ -194,7 +194,9 @@ contract("Vesting", ([owner, holder, holder1, holder2, holder3, hacker]) => {
     it("should not register already registered SAFT investor", async () => {
         await Vesting.addSAFTRound(6, 36,  6, false, {from: owner});
         await Vesting.connectHolderToSAFT(holder, 1, getTimeAtDate(1, 6, 2020), 1e6, 1e5, {from: owner});
-        await Vesting.connectHolderToSAFT(holder, 1, getTimeAtDate(1, 6, 2020), 1e6, 1e5, {from: owner}).should.be.eventually.rejectedWith("SAFT holder is already added")
+        await Vesting.connectHolderToSAFT(holder, 1, getTimeAtDate(1, 6, 2020), 1e6, 1e5, {from: owner}).should.be.eventually.rejectedWith("SAFT holder is already added");
+        await Vesting.addSAFTRound(6, 36,  6, false, {from: owner});
+        await Vesting.connectHolderToSAFT(holder, 2, getTimeAtDate(1, 6, 2020), 1e6, 1e5, {from: owner}).should.be.eventually.rejectedWith("SAFT holder is already added");
         // await Vesting.addVestingTerm(holder, getTimeAtDate(1, 6, 2020), 6, 36, 1e6, 1e5, 6, false, {from: owner});
         // await Vesting.addVestingTerm(holder, getTimeAtDate(1, 6, 2020), 6, 36, 1e6, 1e5, 6, false, {from: owner}).should.be.eventually.rejectedWith("SAFT holder is already added");
     });
