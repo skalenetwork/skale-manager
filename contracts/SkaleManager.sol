@@ -39,7 +39,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
     uint public minersCap;
     
     // time of current stage
-    uint32 public stageTime;
+    uint public stageTime;
     // amount of Nodes at current stage
     uint public stageNodes;
 
@@ -57,7 +57,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
         uint averageLatency,
         uint bounty,
         uint previousBlockEvent,
-        uint32 time,
+        uint time,
         uint gasSpend
     );
 
@@ -131,7 +131,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
         }
         if (completed) {
             require(nodes.completeExit(nodeIndex), "Finishing of node exit is failed");
-            nodes.changeNodeFinishTime(nodeIndex, uint32(now + (isSchains ? constants.rotationDelay() : 0)));
+            nodes.changeNodeFinishTime(nodeIndex, now.add(isSchains ? constants.rotationDelay() : 0));
             Monitors monitors = Monitors(contractManager.getContract("Monitors"));
             monitors.removeCheckedNodes(nodeIndex);
             monitors.deleteMonitor(nodeIndex);
@@ -230,7 +230,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
         uint networkLaunchTimestamp = constants.launchTimestamp();
         if (uint(stageTime).add(constants.rewardPeriod()) < now) {
             stageNodes = nodes.numberOfActiveNodes().add(nodes.numberOfLeavingNodes());
-            stageTime = uint32(block.timestamp);
+            stageTime = block.timestamp;
         }
         
         uint bountyAmount = _calculateMaximumBountyAmount(
@@ -283,7 +283,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
             averageLatency,
             bounty,
             previousBlockEvent,
-            uint32(block.timestamp),
+            block.timestamp,
             gasleft());
     }
 
