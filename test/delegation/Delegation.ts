@@ -363,7 +363,7 @@ contract("Delegation", ([owner,
             describe("Slashing", async () => {
 
                 it("should slash validator and lock delegators fund in proportion of delegation share", async () => {
-                    // do 5 seperate slashes to check aggregation
+                    // do 5 separate slashes to check aggregation
                     const slashesNumber = 5;
                     for (let i = 0; i < slashesNumber; ++i) {
                         await punisher.slash(validatorId, 5);
@@ -487,7 +487,7 @@ contract("Delegation", ([owner,
             await nodes.checkPossibilityCreatingNode(bountyAddress);
         });
 
-        it("should be possible to distribute bounty accross thousands of holders", async () => {
+        it("should be possible to distribute bounty across thousands of holders", async () => {
             let holdersAmount = 1000;
             if (process.env.TRAVIS) {
                 console.log("Reduce holders amount to fit Travis timelimit");

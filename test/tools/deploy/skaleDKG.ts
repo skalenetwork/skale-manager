@@ -1,5 +1,5 @@
 import { ContractManagerInstance, SkaleDKGInstance } from "../../../types/truffle-contracts";
-import { deployDecryption } from "./dectyption";
+import { deployDecryption } from "./decryption";
 import { deployPunisher } from "./delegation/punisher";
 import { deployECDH } from "./ecdh";
 import { deployFunctionFactory } from "./factory";

@@ -127,7 +127,7 @@ contract Schains is Permissions {
     )
         external
     {
-        require(hasRole(SCHAIN_CREATOR_ROLE, msg.sender), "Sender is not authorized to create schian");
+        require(hasRole(SCHAIN_CREATOR_ROLE, msg.sender), "Sender is not authorized to create schain");
 
         SchainParameters memory schainParameters = SchainParameters({
             lifetime: lifetime,
@@ -240,8 +240,7 @@ contract Schains is Permissions {
     }
 
     /**
-     * @dev Allows SkaleManager to freeze schains, meaning node rotation is paused
-     * until further TODO???.
+     * @dev Allows SkaleManager contract to freeze node rotation.
      */
     function freezeSchains(uint nodeIndex) external allow("SkaleManager") {
         SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
@@ -266,12 +265,15 @@ contract Schains is Permissions {
     }
 
     /**
-     * @dev Allows SkaleManager to restart schain creation by forming a new node
-     * group.
+     * @dev Allows SkaleManager contract to restart schain creation by forming a
+     * new schain group.
+     *
+     * Emits NodeAdded event.
      *
      * Requirements:
      *
-     * TODO
+     * - Schain group must pass DKG.
+     * - Free nodes must be available in the network.
      */
     function restartSchainCreation(string calldata name) external allow("SkaleManager") {
         bytes32 schainId = keccak256(abi.encodePacked(name));
@@ -285,7 +287,7 @@ contract Schains is Permissions {
     }
 
     /**
-     * @dev Checks whether Schian group signature is valid. TODO: confirm
+     * @dev Checks whether schain group signature is valid.
      */
     function verifySchainSignature(
         uint signatureA,
@@ -322,9 +324,8 @@ contract Schains is Permissions {
     }
 
     /**
-     * @dev Allows SkaleDKG and SkaleManager contracts to rotate a node
-     * TODO fix
-     * Returns a boolean whether the verification is successful.
+     * @dev Allows SkaleDKG and SkaleManager contracts to rotate a node from an
+     * schain. Returns a boolean whether the rotation is successful.
      */
     function rotateNode(
         uint nodeIndex,
@@ -430,7 +431,7 @@ contract Schains is Permissions {
     }
 
     /**
-     * @dev Frees previously occupied space in Node.
+     * @dev Releases previously occupied space in Node.
      */
     function _addSpace(uint nodeIndex, uint8 partOfNode) private {
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));
@@ -494,8 +495,11 @@ contract Schains is Permissions {
     }
 
     /**
-     * @dev Checks whether there are
-     * TODO
+     * @dev Checks whether node rotation is possible.
+     *
+     * Requirements:
+     *
+     * - schain must exist.
      */
     function _checkRotation(bytes32 schainId ) private view returns (bool) {
         SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
@@ -504,11 +508,13 @@ contract Schains is Permissions {
     }
 
     /**
-     * @dev _addSchain - create Schain in the system
-     * function could be run only by executor
-     * @param from - owner of Schain
-     * @param deposit - received amoung of SKL
-     * @param schainParameters - Schain's data
+     * @dev Creates an schain.
+     *
+     * Emits SchainCreated event.
+     *
+     * Requirements:
+     *
+     * - schain type must be valid.
      */
     function _addSchain(address from, uint deposit, SchainParameters memory schainParameters) private {
         uint numberOfNodes;

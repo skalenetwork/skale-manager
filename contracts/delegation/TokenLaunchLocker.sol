@@ -87,7 +87,7 @@ contract TokenLaunchLocker is Permissions, ILocker {
 
     /**
      * @dev Allows DelegationController contract to add locked tokens to
-     * a delegation. TODO: confirm? 
+     * a delegation. TODO: confirm
      */
     function handleDelegationAdd(
         address holder, uint delegationId, uint amount, uint month)
@@ -113,7 +113,7 @@ contract TokenLaunchLocker is Permissions, ILocker {
 
     /**
      * @dev Allows DelegationController contract to remove locked tokens from
-     * a delegation. TODO: confirm? 
+     * a delegation. TODO: confirm
      */
     function handleDelegationRemoving(
         address holder,
@@ -162,7 +162,7 @@ contract TokenLaunchLocker is Permissions, ILocker {
     }
 
     /**
-     * @dev TODO
+     * @dev See ILocker.
      */
     function getAndUpdateForbiddenForDelegationAmount(address) external override returns (uint) {
         return 0;
@@ -239,7 +239,7 @@ contract TokenLaunchLocker is Permissions, ILocker {
     }
 
     /**
-     * @dev Checks whether total delegated satisifies Proof-of-Use.
+     * @dev Checks whether total delegated satisfies Proof-of-Use.
      */
     function _totalDelegatedSatisfiesProofOfUseCondition(address holder) private view returns (bool) {
         ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));

@@ -67,7 +67,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
 
         it("should not allow everyone to create schains as the foundation", async () => {
             await schains.addSchainByFoundation(5, 1, 0, "d2")
-                .should.be.eventually.rejectedWith("Sender is not authorized to create schian");
+                .should.be.eventually.rejectedWith("Sender is not authorized to create schain");
         })
 
         it("should fail when schain type is wrong", async () => {

@@ -178,8 +178,7 @@ contract SchainsInternal is Permissions {
     }
 
     /**
-     * @dev Allows Schains contract to add Schain's hash to owner
-     * TODO: finish
+     * @dev Allows Schains contract to set schain index.
      */
     function setSchainIndex(bytes32 schainId, address from) external allow("Schains") {
         schains[schainId].indexInOwnerList = schainIndexes[from].length;
@@ -228,7 +227,6 @@ contract SchainsInternal is Permissions {
     /**
      * @dev Allows Schains and SkaleDKG contracts to remove a node from an
      * schain for node rotation or DKG failure.
-     * TODO: finish
      */
     function removeNodeFromSchain(
         uint nodeIndex,
@@ -441,7 +439,7 @@ contract SchainsInternal is Permissions {
     }
 
     /**
-     * @dev Returns active schains of a node. TODO?
+     * @dev Returns active schains of a node. TODO: confirm
      */
     function getActiveSchain(uint nodeIndex) external view returns (bytes32) {
         for (uint i = schainsForNodes[nodeIndex].length; i > 0; i--) {
@@ -453,7 +451,7 @@ contract SchainsInternal is Permissions {
     }
 
     /**
-     * @dev Returns active schains of a node. TODO?
+     * @dev Returns active schains of a node. TODO: confirm
      */
     function getActiveSchains(uint nodeIndex) external view returns (bytes32[] memory activeSchains) {
         uint activeAmount = 0;
@@ -494,10 +492,7 @@ contract SchainsInternal is Permissions {
     }
 
     /**
-     * @dev getNodeIndexInGroup - looks for Node in Group
-     * @param schainId - Groups identifier
-     * @param nodeId - Nodes identifier
-     * @return index of Node in Group
+     * @dev Returns node index in schain group.
      */
     function getNodeIndexInGroup(bytes32 schainId, uint nodeId) external view returns (uint) {
         for (uint index = 0; index < schainsGroups[schainId].nodesInGroup.length; index++) {
@@ -537,7 +532,8 @@ contract SchainsInternal is Permissions {
     }
 
     /*
-     * @dev Returns  TODO?
+     * @dev Checks whether there are any schain nodes with free resources.
+     * TODO: confirm
      */
     function isAnyFreeNode(bytes32 schainId) external view returns (bool) {
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));
@@ -552,7 +548,7 @@ contract SchainsInternal is Permissions {
     }
 
     /*
-     * @dev Returns whether any exceptions exist for node in a schain group TODO?
+     * @dev Returns whether any exceptions exist for node in a schain group. TODO: confirm
      */
     function checkException(bytes32 schainId, uint nodeIndex) external view returns (bool) {
         return _exceptionsForGroups[schainId][nodeIndex];
@@ -619,7 +615,7 @@ contract SchainsInternal is Permissions {
     }
 
     /**
-     * @dev Returns index of Schain in schainsForNode array. TODO
+     * @dev Returns index of Schain in schainsForNode array. TODO: confirm
      */
     function findSchainAtSchainsForNode(uint nodeIndex, bytes32 schainId) public view returns (uint) {
         uint length = getLengthOfSchainsForNode(nodeIndex);
@@ -632,7 +628,7 @@ contract SchainsInternal is Permissions {
     }
 
     /**
-     * @dev TODO
+     * @dev TODO: confirm
      */
     function isEnoughNodes(bytes32 schainId) public view returns (uint[] memory result) {
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));
@@ -695,7 +691,7 @@ contract SchainsInternal is Permissions {
     }
 
     /**
-     * @dev TODO
+     * @dev TODO: confirm
      */
     function _isCorrespond(bytes32 schainId, uint nodeIndex) private view returns (bool) {
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));
@@ -703,7 +699,7 @@ contract SchainsInternal is Permissions {
     }
 
     /**
-     * @dev TODO
+     * @dev Swaps one index for another in an array.
      */
     function _swap(uint[] memory array, uint index1, uint index2) private pure {
         uint buffer = array[index1];

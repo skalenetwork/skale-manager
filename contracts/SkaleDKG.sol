@@ -79,7 +79,7 @@ contract SkaleDKG is Permissions {
     event ChannelClosed(bytes32 groupIndex);
 
     /**
-     * @dev Emitted when a node broadcasts keyshare. TODO!
+     * @dev Emitted when a node broadcasts keyshare. TODO: confirm
      */
     event BroadcastAndKeyShare(
         bytes32 indexed groupIndex,
@@ -250,6 +250,9 @@ contract SkaleDKG is Permissions {
         }
     }
 
+    /**
+     * @dev TODO: confirm
+     */
     function response(
         bytes32 groupIndex,
         uint fromNodeIndex,
@@ -273,6 +276,9 @@ contract SkaleDKG is Permissions {
         _finalizeSlashing(groupIndex, badNode);
     }
 
+    /**
+     * @dev TODO: confirm
+     */
     function alright(bytes32 groupIndex, uint fromNodeIndex)
         external
         correctGroup(groupIndex)
@@ -302,14 +308,23 @@ contract SkaleDKG is Permissions {
         }
     }
 
+    /**
+     * @dev Allows SchainsInternal contract to reopen a channel.
+     */
     function reopenChannel(bytes32 groupIndex) external allow("SchainsInternal") {
         _reopenChannel(groupIndex);
     }
 
+    /**
+     * @dev Checks whether channel is opened.
+     */
     function isChannelOpened(bytes32 groupIndex) external view returns (bool) {
         return channels[groupIndex].active;
     }
 
+    /**
+     * @dev Checks whether broadcast is possible.
+     */
     function isBroadcastPossible(bytes32 groupIndex, uint nodeIndex) external view returns (bool) {
         uint index = _nodeIndexInSchain(groupIndex, nodeIndex);
         SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
@@ -319,6 +334,9 @@ contract SkaleDKG is Permissions {
             !channels[groupIndex].broadcasted[index];
     }
 
+    /**
+     * @dev Checks whether complaint is possible.  TODO: confirm
+     */
     function isComplaintPossible(
         bytes32 groupIndex,
         uint fromNodeIndex,
@@ -346,6 +364,9 @@ contract SkaleDKG is Permissions {
             complaintSending;
     }
 
+    /**
+     * @dev Checks whether sending Alright response is possible.  TODO: confirm
+     */
     function isAlrightPossible(bytes32 groupIndex, uint nodeIndex) external view returns (bool) {
         uint index = _nodeIndexInSchain(groupIndex, nodeIndex);
         SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
@@ -356,6 +377,9 @@ contract SkaleDKG is Permissions {
             !channels[groupIndex].completed[index];
     }
 
+    /**
+     * @dev Checks whether sending a response is possible.  TODO: confirm
+     */
     function isResponsePossible(bytes32 groupIndex, uint nodeIndex) external view returns (bool) {
         uint index = _nodeIndexInSchain(groupIndex, nodeIndex);
         SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
@@ -365,6 +389,9 @@ contract SkaleDKG is Permissions {
             channels[groupIndex].nodeToComplaint == nodeIndex;
     }
 
+    /**
+     * @dev Returns broacasted data.  TODO: confirm
+     */
     function getBroadcastedData(bytes32 groupIndex, uint nodeIndex)
         external view returns (KeyShare[] memory, G2Operations.G2Point[] memory)
     {
@@ -372,11 +399,17 @@ contract SkaleDKG is Permissions {
         return (_data[groupIndex][index].secretKeyContribution, _data[groupIndex][index].verificationVector);
     }
 
+    /**
+     * @dev Checks whether all boradcasted data has been received.  TODO: confirm
+     */
     function isAllDataReceived(bytes32 groupIndex, uint nodeIndex) external view returns (bool) {
         uint index = _nodeIndexInSchain(groupIndex, nodeIndex);
         return channels[groupIndex].completed[index];
     }
 
+    /**
+     * @dev Returns complaint data.  TODO: confirm
+     */
     function getComplaintData(bytes32 groupIndex) external view returns (uint, uint) {
         return (channels[groupIndex].fromNodeToComplaint, channels[groupIndex].nodeToComplaint);
     }

@@ -294,7 +294,8 @@ contract DelegationController is Permissions, ILocker {
     }
 
     /**
-     * @dev See ILocker.
+     * @dev Return and update the total non-transferrable and un-delegatable
+     * amount of a given `holder`.
      */
     function getAndUpdateForbiddenForDelegationAmount(address wallet) external override returns (uint) {
         return _getAndUpdateLockedAmount(wallet);
@@ -480,7 +481,7 @@ contract DelegationController is Permissions, ILocker {
     }
 
     /**
-     * @dev Returns the first delgation month.
+     * @dev Returns the first delegation month.
      */
     function getFirstDelegationMonth(address holder, uint validatorId) external view returns(uint) {
         return _firstDelegationMonth[holder].byValidator[validatorId];

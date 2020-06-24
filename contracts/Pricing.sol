@@ -26,7 +26,10 @@ import "./Permissions.sol";
 import "./SchainsInternal.sol";
 import "./Nodes.sol";
 
-
+/**
+ * @title Pricing
+ * @dev Contains pricing operations for SKALE network.
+ */
 contract Pricing is Permissions {
 
     uint public constant INITIAL_PRICE = 5 * 10**6;
@@ -40,6 +43,13 @@ contract Pricing is Permissions {
         totalNodes = nodes.getNumberOnlineNodes();
     }
 
+    /**
+     * @dev Adjust the schain price based on network capacity and demand.
+     *
+     * Requirements:
+     *
+     * - Cooldown time has exceeded. TODO: confirm
+     */
     function adjustPrice() external {
         ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
         require(now > lastUpdated.add(constantsHolder.COOLDOWN_TIME()), "It's not a time to update a price");
@@ -82,6 +92,9 @@ contract Pricing is Permissions {
         lastUpdated = now;
     }
 
+    /**
+     * @dev Returns the total load percentage.
+     */
     function getTotalLoadPercentage() external view returns (uint) {
         return _getTotalLoad().mul(100).div(_getTotalCapacity());
     }
@@ -96,7 +109,7 @@ contract Pricing is Permissions {
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));
         uint numberOfActiveNodes = nodes.getNumberOnlineNodes();
 
-        require(totalNodes != numberOfActiveNodes, "No any changes on nodes");
+        require(totalNodes != numberOfActiveNodes, "No changes to node supply");
         totalNodes = numberOfActiveNodes;
     }
 

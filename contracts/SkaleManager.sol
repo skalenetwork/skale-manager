@@ -36,7 +36,7 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 /**
  * @title SkaleManager
  * @dev Contract contains functions for node registration and exit, bounty
- * management, and monitoring verdicts. TODO
+ * management, and monitoring verdicts. TODO: confirm
  */
 contract SkaleManager is IERC777Recipient, Permissions {
     // miners capitalization
