@@ -27,17 +27,17 @@ contract("ConstantsHolder", ([deployer, user]) => {
   });
 
   it("TINY_DIVISOR should be equal 128", async () => {
-    const bn = new BigNumber(await constantsHolder.TINY_DIVISOR());
+    const bn = new BigNumber(await constantsHolder.SMALL_DIVISOR());
     parseInt(bn.toString(), 10).should.be.equal(128);
   });
 
   it("SMALL_DIVISOR should be equal 8", async () => {
-    const bn = new BigNumber(await constantsHolder.SMALL_DIVISOR());
+    const bn = new BigNumber(await constantsHolder.MEDIUM_DIVISOR());
     parseInt(bn.toString(), 10).should.be.equal(8);
   });
 
   it("MEDIUM_DIVISOR should be equal 1", async () => {
-    const bn = new BigNumber(await constantsHolder.MEDIUM_DIVISOR());
+    const bn = new BigNumber(await constantsHolder.LARGE_DIVISOR());
     parseInt(bn.toString(), 10).should.be.equal(1);
   });
 

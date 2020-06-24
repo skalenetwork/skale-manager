@@ -287,7 +287,8 @@ contract SkaleManager is IERC777Recipient, Permissions {
 
     function _getValidatorsCapitalization() private view returns (uint) {
         if (minersCap == 0) {
-            return SkaleToken(contractManager.getContract("SkaleToken")).CAP().div(3);
+            ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
+            return SkaleToken(contractManager.getContract("SkaleToken")).CAP().div(constantsHolder.BOUNTY_POOL_PART());
         }
         return minersCap;
     }
@@ -348,7 +349,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
         }
         
         if (!nodes.checkPossibilityToMaintainNode(nodes.getValidatorId(nodeIndex), nodeIndex)) {
-            reducedBounty = reducedBounty.div(2);
+            reducedBounty = reducedBounty.div(constants.MSR_REDUCING_COEFFICIENT());
         }
     }
 
@@ -376,7 +377,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
         uint normalDowntime = uint(constants.rewardPeriod())
             .sub(constants.deltaPeriod())
             .div(constants.checkTime())
-            .div(30);
+            .div(constants.DOWNTIME_THRESHOLD_PART());
         uint totalDowntime = downtime.add(numberOfExpiredIntervals);
         if (totalDowntime > normalDowntime) {
             // reduce bounty because downtime is too big
