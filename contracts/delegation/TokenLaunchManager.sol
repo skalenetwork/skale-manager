@@ -4,6 +4,7 @@
     TokenLaunchManager.sol - SKALE Manager
     Copyright (C) 2019-Present SKALE Labs
     @author Dmytro Stebaiev
+    @author Vadim Yavorsky
 
     SKALE Manager is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as published
@@ -33,7 +34,7 @@ import "./TokenLaunchLocker.sol";
  * @title Token Launch Manager
  * @dev This contract manages functions for the Token Launch event.
  *
- * The seller is an entity who distributes tokens through a Launch process.
+ * The Seller is an entity who distributes tokens through a Launch process.
  */
 contract TokenLaunchManager is Permissions, IERC777Recipient {
 
@@ -76,15 +77,16 @@ contract TokenLaunchManager is Permissions, IERC777Recipient {
     /**
      * @dev Allocates values for `walletAddresses`
      *
+     * Emits Approved events.
+     *
      * Requirements:
      *
+     * - Token launch must not have already completed.
      * - Input arrays must be equal in size.
-     * - Total approved must be less than or equal to the seller balance.
-     *
-     * Emits an Approved event.
+     * - Total approved must be less than or equal to the Seller balance.
      */
     function approveBatchOfTransfers(address[] calldata walletAddress, uint[] calldata value) external onlySeller {
-        require(!tokenLaunchIsCompleted, "Can't approve because token launch is completed");
+        require(!tokenLaunchIsCompleted, "Cannot approve because token launch has already completed");
         require(walletAddress.length == value.length, "Wrong input arrays length");
         for (uint i = 0; i < walletAddress.length; ++i) {
             approveTransfer(walletAddress[i], value[i]);
@@ -93,31 +95,34 @@ contract TokenLaunchManager is Permissions, IERC777Recipient {
     }
 
     /**
-     * @dev Allow withdrawals and disallow approvals changes
+     * @dev Allows the Seller to complete the token launch process.
+     * This then allows participants to retrieve tokens and this disallows
+     * any further approval changes.
+     *
+     * Emits TokenLaunchIsCompleted event.
      *
      * Requirements:
      *
-     * - all approvals must be done
-     * - token launch must be not completed
-     *
+     * - Token launch must not already be completed.
      */
     function completeTokenLaunch() external onlySeller {
-        require(!tokenLaunchIsCompleted, "Can't complete launch because it's already completed");
+        require(!tokenLaunchIsCompleted, "Token launch has already completed");
         tokenLaunchIsCompleted = true;
         emit TokenLaunchIsCompleted(now);
     }
 
     /**
-     * @dev Allows the seller to update a purchaser's address in case of an error.
+     * @dev Allows the Seller to correct a participant's address.
+     *
+     * Emits Approved event.
      *
      * Requirements:
      *
      * - Updated address must not already be in use.
-     *
-     * Emits an Approved event.
+     * - Token launch must not have already completed.
      */
     function changeApprovalAddress(address oldAddress, address newAddress) external onlySeller {
-        require(!tokenLaunchIsCompleted, "Can't change approval because token launch is completed");
+        require(!tokenLaunchIsCompleted, "Cannot change approval because token launch has completed");
         require(approved[newAddress] == 0, "New address is already used");
         uint oldValue = approved[oldAddress];
         if (oldValue > 0) {
@@ -127,23 +132,31 @@ contract TokenLaunchManager is Permissions, IERC777Recipient {
     }
 
     /**
-     * @dev Allows the seller to update a purchaser's amount in case of an error.
+     * @dev Allows the Seller to correct a participant's amount.
+     *
+     * Requirements:
+     *
+     * - Token launch must not have already completed.
      */
     function changeApprovalValue(address wallet, uint newValue) external onlySeller {
-        require(!tokenLaunchIsCompleted, "Can't change approval because token launch is completed");
+        require(!tokenLaunchIsCompleted, "Cannot change approval because token launch has completed");
         _setApprovedAmount(wallet, newValue);
     }
 
     /**
-     * @dev Transfers the entire value to the sender's address. Transferred tokens
-     * are locked for Proof-of-Use.
+     * @dev Allows a token launch participant to retrieve the entire amount to
+     * the msg.sender's address. Retrieved tokens are locked for Proof-of-Use
+     * requirements.
+     *
+     * Emits TokensRetrieved event.
      *
      * Requirements:
      *
      * - Token transfer must be approved.
+     * - Token launch must have completed.
      */
     function retrieve() external {
-        require(tokenLaunchIsCompleted, "Can't retrive tokens because token launch is not completed");
+        require(tokenLaunchIsCompleted, "Cannot retrieve tokens because token launch has not yet completed");
         require(approved[_msgSender()] > 0, "Transfer is not approved");
         uint value = approved[_msgSender()];
         _setApprovedAmount(_msgSender(), 0);
@@ -179,6 +192,15 @@ contract TokenLaunchManager is Permissions, IERC777Recipient {
         _erc1820.setInterfaceImplementer(address(this), keccak256("ERC777TokensRecipient"), address(this));
     }
 
+    /**
+     * @dev Allows the Seller to approve transfer of tokens to a wallet address.
+     *
+     * Emits Approved event.
+     *
+     * Requirements:
+     *
+     * - Value must be greater than zero.
+     */
     function approveTransfer(address walletAddress, uint value) public onlySeller {
         require(value > 0, "Value must be greater than zero");
         _setApprovedAmount(walletAddress, approved[walletAddress].add(value));
@@ -187,10 +209,20 @@ contract TokenLaunchManager is Permissions, IERC777Recipient {
 
     // private
 
+    /**
+     * @dev Returns the balance of the TokenLaunchManager contract.
+     */
     function _getBalance() private view returns(uint balance) {
         return IERC20(contractManager.getContract("SkaleToken")).balanceOf(address(this));
     }
 
+    /**
+     * @dev Approves an amount of tokens for a wallet address.
+     *
+     * Requirements:
+     *
+     * - Address must be non-zero.
+     */
     function _setApprovedAmount(address wallet, uint value) private {
         require(wallet != address(0), "Wallet address must be non zero");
         uint oldValue = approved[wallet];

@@ -80,7 +80,7 @@ contract TokenState is Permissions, ILocker {
     /**
      * @dev Allows the Owner to remove a contract from the locker.
      *
-     * Emits a LockerWasRemoved event.
+     * Emits LockerWasRemoved event.
      */
     function removeLocker(string calldata locker) external onlyOwner {
         uint index;
@@ -110,7 +110,7 @@ contract TokenState is Permissions, ILocker {
     /**
      * @dev Allows the Owner to add a contract to the Locker.
      *
-     * Emits a LockerWasAdded event.
+     * Emits LockerWasAdded event.
      */
     function addLocker(string memory locker) public onlyOwner {
         _lockers.push(locker);

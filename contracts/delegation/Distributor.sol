@@ -36,12 +36,16 @@ import "./DelegationController.sol";
 import "./DelegationPeriodManager.sol";
 import "./TimeHelpers.sol";
 
-
+/**
+ * @title Distributor
+ * @dev This contract handles all distribution functions of bounty and fee
+ * payments.
+ */
 contract Distributor is Permissions, IERC777Recipient {
     using MathUtils for uint;
 
     /**
-     * @dev Emitted when a bounty is withdrawn by the token holder.
+     * @dev Emitted when bounty is withdrawn.
      */
     event WithdrawBounty(
         address holder,
@@ -51,7 +55,7 @@ contract Distributor is Permissions, IERC777Recipient {
     );
 
     /**
-     * @dev Emitted when a validator fee is withdrawn by the validator.
+     * @dev Emitted when a validator fee is withdrawn.
      */
     event WithdrawFee(
         uint validatorId,
@@ -60,7 +64,7 @@ contract Distributor is Permissions, IERC777Recipient {
     );
 
     /**
-     * @dev Emitted when a bounty is distributed.
+     * @dev Emitted when bounty is distributed.
      */
     event BountyWasPaid(
         uint validatorId,
@@ -78,10 +82,23 @@ contract Distributor is Permissions, IERC777Recipient {
     // validatorId => month
     mapping (uint => uint) private _firstUnwithdrawnMonthForValidator;
 
+    /**
+     * @dev Return and update the amount of earned bounty from a validator.
+     */
     function getAndUpdateEarnedBountyAmount(uint validatorId) external returns (uint earned, uint endMonth) {
         return getAndUpdateEarnedBountyAmountOf(msg.sender, validatorId);
     }
 
+    /**
+     * @dev Allows msg.sender to withdraw earned bounty. Bounties are locked
+     * until launchTimestamp has passed.
+     *
+     * Emits WithdrawBounty event.
+     *
+     * Requirements:
+     *
+     * - Bounty must be unlocked.
+     */
     function withdrawBounty(uint validatorId, address to) external {
         TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
         ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
@@ -105,13 +122,23 @@ contract Distributor is Permissions, IERC777Recipient {
         );
     }
 
+    /**
+     * @dev Allows msg.sender to withdraw earned validator fees. Fees are locked
+     * until launchTimestamp has passed.
+     *
+     * Emits WithdrawFee event.
+     *
+     * Requirements:
+     *
+     * - Fee must be unlocked.
+     */
     function withdrawFee(address to) external {
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
         SkaleToken skaleToken = SkaleToken(contractManager.getContract("SkaleToken"));
         TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
         ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
 
-        require(now >= timeHelpers.addMonths(constantsHolder.launchTimestamp(), 3), "Bounty is locked");
+        require(now >= timeHelpers.addMonths(constantsHolder.launchTimestamp(), 3), "Fee is locked");
 
         uint fee;
         uint endMonth;
@@ -146,6 +173,9 @@ contract Distributor is Permissions, IERC777Recipient {
         _distributeBounty(amount, validatorId);
     }
 
+    /**
+     * @dev Return the amount of earned validator fees.
+     */
     function getEarnedFeeAmount() external view returns (uint earned, uint endMonth) {
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
         return getEarnedFeeAmountOf(validatorService.getValidatorId(msg.sender));
@@ -157,6 +187,9 @@ contract Distributor is Permissions, IERC777Recipient {
         _erc1820.setInterfaceImplementer(address(this), keccak256("ERC777TokensRecipient"), address(this));
     }
 
+    /**
+     * @dev Return and update the amount of earned bounties.
+     */
     function getAndUpdateEarnedBountyAmountOf(address wallet, uint validatorId)
         public returns (uint earned, uint endMonth)
     {
@@ -192,6 +225,9 @@ contract Distributor is Permissions, IERC777Recipient {
         }
     }
 
+    /**
+     * @dev Return the amount of earned fees.
+     */
     function getEarnedFeeAmountOf(uint validatorId) public view returns (uint earned, uint endMonth) {
         TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
 
@@ -214,6 +250,11 @@ contract Distributor is Permissions, IERC777Recipient {
 
     // private
 
+    /**
+     * @dev Distributes bounties to delegators.
+     *
+     * Emits BountyWasPaid event.
+     */
     function _distributeBounty(uint amount, uint validatorId) private {
         TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));

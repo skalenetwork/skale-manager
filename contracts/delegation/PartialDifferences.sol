@@ -120,7 +120,7 @@ library PartialDifferences {
         FractionUtils.Fraction memory reducingCoefficient,
         uint month) internal
     {
-        require(month.add(1) >= sequence.firstUnprocessedMonth, "Can't reduce value in the past");
+        require(month.add(1) >= sequence.firstUnprocessedMonth, "Cannot reduce value in the past");
         require(
             reducingCoefficient.numerator <= reducingCoefficient.denominator,
             "Increasing of values is not implemented");

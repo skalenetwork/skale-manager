@@ -156,9 +156,14 @@ contract ValidatorService is Permissions {
     }
 
     /**
-     * @dev Owner can enable validators by adding them to the trusted list.
+     * @dev Allows the Owner to enable a validator by adding their ID to the
+     * trusted list.
      *
      * Emits ValidatorWasEnabled event.
+     *
+     * Requirements:
+     *
+     * - Validator must not already be enabled.
      */
     function enableValidator(uint validatorId) external checkValidatorExists(validatorId) onlyOwner {
         require(!trustedValidators[validatorId], "Validator is already enabled");
@@ -167,9 +172,14 @@ contract ValidatorService is Permissions {
     }
 
     /**
-     * @dev Owner can disable validators by removing them from the trusted list.
+     * @dev Allows the Owner to disable a validator by removing their ID from
+     * the trusted list.
      *
      * Emits ValidatorWasDisabled event.
+     *
+     * Requirements:
+     *
+     * - Validator must not already be disabled.
      */
     function disableValidator(uint validatorId) external checkValidatorExists(validatorId) onlyOwner {
         require(trustedValidators[validatorId], "Validator is already disabled");
@@ -186,7 +196,7 @@ contract ValidatorService is Permissions {
     }
 
     /**
-     * @dev Allows a validator to request a new address.
+     * @dev Allows msg.sender to request a new address.
      *
      * Requirements:
      *
@@ -201,13 +211,13 @@ contract ValidatorService is Permissions {
     }
 
     /**
-     * @dev Allows a validator to confirm an address change.
+     * @dev Allows msg.sender to confirm an address change.
      *
      * Emits ValidatorAddressChanged event.
      *
      * Requirements:
      *
-     * - Validator must be owner of new address.
+     * - Must be owner of new address.
      */
     function confirmNewAddress(uint validatorId)
         external
@@ -319,14 +329,14 @@ contract ValidatorService is Permissions {
     }
 
     /**
-     * @dev Returns a validator's node addresses.
+     * @dev Returns node addresses linked to the msg.sender.
      */
     function getMyNodesAddresses() external view returns (address[] memory) {
         return getNodeAddresses(getValidatorId(msg.sender));
     }
 
     /**
-     * @dev Returns a list of trusted validators.
+     * @dev Returns the list of trusted validators.
      */
     function getTrustedValidators() external view returns (uint[] memory) {
         uint numberOfTrustedValidators = 0;
@@ -346,8 +356,8 @@ contract ValidatorService is Permissions {
     }
 
     /**
-     * @dev Checks whether the amount meets the validator's minimum delegation
-     * amount.
+     * @dev Checks whether the amount meets or exceeds the validator's minimum
+     * delegation amount.
      */
     function checkMinimumDelegation(uint validatorId, uint amount)
         external
@@ -360,7 +370,7 @@ contract ValidatorService is Permissions {
     }
 
     /**
-     * @dev Checks whether the validator ID matches the validator address.
+     * @dev Checks whether the validator ID is linked to the validator address.
      */
     function checkValidatorAddressToId(address validatorAddress, uint validatorId)
         external
@@ -387,22 +397,37 @@ contract ValidatorService is Permissions {
         useWhitelist = true;
     }
 
+    /**
+     * @dev Returns a validator's node addresses.
+     */
     function getNodeAddresses(uint validatorId) public view returns (address[] memory) {
         return _nodeAddresses[validatorId];
     }
 
+    /**
+     * @dev Checks whether validator ID exists.
+     */
     function validatorExists(uint validatorId) public view returns (bool) {
         return validatorId <= numberOfValidators && validatorId != 0;
     }
 
+    /**
+     * @dev Checks whether validator address exists.
+     */
     function validatorAddressExists(address validatorAddress) public view returns (bool) {
         return _validatorAddressToId[validatorAddress] != 0;
     }
 
+    /**
+     * @dev Checks whether validator address exists.
+     */
     function checkIfValidatorAddressExists(address validatorAddress) public view {
-        require(validatorAddressExists(validatorAddress), "Validator with given address does not exist");
+        require(validatorAddressExists(validatorAddress), "Validator address does not exist");
     }
 
+    /**
+     * @dev Returns the Validator struct.
+     */
     function getValidator(uint validatorId) public view checkValidatorExists(validatorId) returns (Validator memory) {
         return validators[validatorId];
     }
@@ -416,7 +441,7 @@ contract ValidatorService is Permissions {
     }
 
     /**
-     * @dev Checks whether the validator ID is currently accepting new delegation requests.
+     * @dev Checks whether the validator is currently accepting new delegation requests.
      */
     function isAcceptingNewRequests(uint validatorId) public view checkValidatorExists(validatorId) returns (bool) {
         return validators[validatorId].acceptNewRequests;
@@ -425,11 +450,11 @@ contract ValidatorService is Permissions {
     // private
 
     /**
-     * @dev Associates a validator address to a validator ID.
+     * @dev Links a validator address to a validator ID.
      *
      * Requirements:
      *
-     * - Address is not currently in use by another validator ID.
+     * - Address is not already in use by another validator.
      */
     function _setValidatorAddress(uint validatorId, address validatorAddress) private {
         if (_validatorAddressToId[validatorAddress] == validatorId) {
@@ -444,11 +469,11 @@ contract ValidatorService is Permissions {
     }
 
     /**
-     * @dev Associates a node address to a validator ID.
+     * @dev Links a node address to a validator ID.
      *
      * Requirements:
      *
-     * - Node address must not be currently linked to a validator ID.
+     * - Node address must not be already linked to a validator.
      */
     function _addNodeAddress(uint validatorId, address nodeAddress) private {
         if (_nodeAddressToValidatorId[nodeAddress] == validatorId) {
@@ -460,11 +485,11 @@ contract ValidatorService is Permissions {
     }
 
     /**
-     * @dev Disassociates a node address from a validator ID.
+     * @dev Unlinks a node address from a validator ID.
      *
      * Requirements:
      *
-     * - Must be performed by the validator.
+     * - Node must be linked to the validator.
      */
     function _removeNodeAddress(uint validatorId, address nodeAddress) private {
         require(_nodeAddressToValidatorId[nodeAddress] == validatorId,
