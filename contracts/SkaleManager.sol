@@ -43,6 +43,8 @@ contract SkaleManager is IERC777Recipient, Permissions {
     // amount of Nodes at current stage
     uint public stageNodes;
 
+    bool public bountyReduction;
+
     IERC1820Registry private _erc1820;
 
     bytes32 constant private _TOKENS_RECIPIENT_INTERFACE_HASH =
@@ -177,7 +179,6 @@ contract SkaleManager is IERC777Recipient, Permissions {
         Monitors monitors = Monitors(contractManager.getContract("Monitors"));
         (averageDowntime, averageLatency) = monitors.calculateMetrics(nodeIndex);
         uint bounty = _manageBounty(
-            msg.sender,
             nodeIndex,
             averageDowntime,
             averageLatency);
@@ -185,6 +186,14 @@ contract SkaleManager is IERC777Recipient, Permissions {
         monitors.deleteMonitor(nodeIndex);
         monitors.addMonitor(nodeIndex);
         _emitBountyEvent(nodeIndex, msg.sender, averageDowntime, averageLatency, bounty);
+    }
+
+    function enableBountyReduction() external onlyOwner {
+        bountyReduction = true;
+    }
+
+    function disableBountyReduction() external onlyOwner {
+        bountyReduction = false;
     }
 
     function calculateNormalBounty() external view returns (uint) {
@@ -205,12 +214,12 @@ contract SkaleManager is IERC777Recipient, Permissions {
 
     function initialize(address newContractsAddress) public override initializer {
         Permissions.initialize(newContractsAddress);
+        bountyReduction = false;
         _erc1820 = IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
         _erc1820.setInterfaceImplementer(address(this), _TOKENS_RECIPIENT_INTERFACE_HASH, address(this));
     }
 
     function _manageBounty(
-        address from,
         uint nodeIndex,
         uint downtime,
         uint latency) private returns (uint)
@@ -241,23 +250,15 @@ contract SkaleManager is IERC777Recipient, Permissions {
         );
 
         if (bountyAmount > 0) {
-            _payBounty(bountyAmount, from, nodeIndex);
+            _payBounty(bountyAmount, nodes.getValidatorId(nodeIndex));
         }
         return bountyAmount;
     }
 
-    function _payBounty(uint bountyForMiner, address miner, uint nodeIndex) private returns (bool) {
-        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
-        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
+    function _payBounty(uint bounty, uint validatorId) private returns (bool) {        
         SkaleToken skaleToken = SkaleToken(contractManager.getContract("SkaleToken"));
         Distributor distributor = Distributor(contractManager.getContract("Distributor"));
-        ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
-
-        uint validatorId = validatorService.getValidatorIdByNodeAddress(miner);
-        uint bounty = bountyForMiner;
-        if (!nodes.checkPossibilityToMaintainNode(validatorId, nodeIndex)) {
-            bounty = bounty.div(constantsHolder.MSR_REDUCING_COEFFICIENT());
-        }
+        
         // solhint-disable-next-line check-send-result
         skaleToken.send(address(distributor), bounty, abi.encode(validatorId));
     }
@@ -336,6 +337,32 @@ contract SkaleManager is IERC777Recipient, Permissions {
         ConstantsHolder constants
     )
         private
+        returns (uint reducedBounty)
+    {
+        if (!bountyReduction) {
+            return bounty;
+        }
+
+        reducedBounty = _reduceBountyByDowntime(bounty, nodeIndex, downtime, nodes, constants);
+
+        if (latency > constants.allowableLatency()) {
+            // reduce bounty because latency is too big
+            reducedBounty = reducedBounty.mul(constants.allowableLatency()).div(latency);
+        }
+        
+        if (!nodes.checkPossibilityToMaintainNode(nodes.getValidatorId(nodeIndex), nodeIndex)) {
+            reducedBounty = reducedBounty.div(constants.MSR_REDUCING_COEFFICIENT());
+        }
+    }
+
+    function _reduceBountyByDowntime(
+        uint bounty,
+        uint nodeIndex,
+        uint downtime,
+        Nodes nodes,
+        ConstantsHolder constants
+    )
+        private
         view
         returns (uint reducedBounty)
     {
@@ -352,7 +379,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
         uint normalDowntime = uint(constants.rewardPeriod())
             .sub(constants.deltaPeriod())
             .div(constants.checkTime())
-            .div(ConstantsHolder(contractManager.getContract("ConstantsHolder")).DOWNTIME_THRESHOLD_PART());
+            .div(constants.DOWNTIME_THRESHOLD_PART());
         uint totalDowntime = downtime.add(numberOfExpiredIntervals);
         if (totalDowntime > normalDowntime) {
             // reduce bounty because downtime is too big
@@ -367,11 +394,6 @@ contract SkaleManager is IERC777Recipient, Permissions {
             } else {
                 reducedBounty = 0;
             }
-        }
-
-        if (latency > constants.allowableLatency()) {
-            // reduce bounty because latency is too big
-            reducedBounty = reducedBounty.mul(constants.allowableLatency()).div(latency);
         }
     }
 }
