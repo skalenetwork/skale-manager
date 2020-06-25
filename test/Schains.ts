@@ -2,6 +2,7 @@ import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
 import { ConstantsHolderInstance,
          ContractManagerInstance,
+         KeyStorageInstance,
          NodesInstance,
          SchainsInternalInstance,
          SchainsInstance,
@@ -14,6 +15,7 @@ import { skipTime } from "./tools/time";
 
 import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
 import { deployContractManager } from "./tools/deploy/contractManager";
+import { deployKeyStorage } from "./tools/deploy/keyStorage";
 import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
 import { deployNodes } from "./tools/deploy/nodes";
 import { deploySchainsInternal } from "./tools/deploy/schainsInternal";
@@ -33,6 +35,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
     let validatorService: ValidatorServiceInstance;
     let skaleDKG: SkaleDKGInstance;
     let skaleManager: SkaleManagerInstance;
+    let keyStorage: KeyStorageInstance;
 
     beforeEach(async () => {
         contractManager = await deployContractManager();
@@ -43,6 +46,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
         schains = await deploySchains(contractManager);
         validatorService = await deployValidatorService(contractManager);
         skaleDKG = await deploySkaleDKG(contractManager);
+        keyStorage = await deployKeyStorage(contractManager);
         skaleManager = await deploySkaleManager(contractManager);
 
         await validatorService.registerValidator("D2", "D2 is even", 0, 0, {from: validator});
@@ -1211,7 +1215,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
                 }
             ];
 
-            let res10 = await skaleDKG.getBroadcastedData(web3.utils.soliditySha3("d3"), res1[0]);
+            let res10 = await keyStorage.getBroadcastedData(web3.utils.soliditySha3("d3"), res1[0]);
             res = await skaleDKG.isBroadcastPossible(web3.utils.soliditySha3("d3"), res1[0], {from: nodeAddress});
             assert.equal(res, true);
             await skaleDKG.broadcast(
@@ -1222,7 +1226,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
                 encryptedSecretKeyContribution,
                 {from: nodeAddress},
             );
-            res10 = await skaleDKG.getBroadcastedData(web3.utils.soliditySha3("d3"), res1[1]);
+            res10 = await keyStorage.getBroadcastedData(web3.utils.soliditySha3("d3"), res1[1]);
             res = await skaleDKG.isBroadcastPossible(web3.utils.soliditySha3("d3"), res1[1], {from: nodeAddress});
             assert.equal(res, true);
             await skaleDKG.broadcast(

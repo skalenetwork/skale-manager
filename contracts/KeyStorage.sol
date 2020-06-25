@@ -23,9 +23,6 @@ pragma solidity 0.6.10;
 pragma experimental ABIEncoderV2;
 import "./Decryption.sol";
 import "./Permissions.sol";
-import "./delegation/Punisher.sol";
-import "./SlashingTable.sol";
-import "./Schains.sol";
 import "./SchainsInternal.sol";
 import "./ECDH.sol";
 import "./utils/Precompiled.sol";
@@ -82,51 +79,9 @@ contract KeyStorage is Permissions {
         }
     }
 
-    function verify(
-        bytes32 groupIndex,
-        uint nodeToComplaint,
-        uint fromNodeToComplaint,
-        uint secretNumber,
-        G2Operations.G2Point memory multipliedShare
-    )
-        external
-        view
-        returns (bool)
-    {
-        uint index = _nodeIndexInSchain(groupIndex, nodeToComplaint);
-        uint secret = _decryptMessage(groupIndex, secretNumber, nodeToComplaint, fromNodeToComplaint);
-        KeyStorage keyStorage = KeyStorage(contractManager.getContract("KeyStorage"));
-        G2Operations.G2Point[] memory verificationVector = keyStorage.getVerificationVector(groupIndex, index);
-        G2Operations.G2Point memory value = G2Operations.G2Point({
-            x: Fp2Operations.Fp2Point({
-                a: 0,
-                b: 0
-            }),
-            y: Fp2Operations.Fp2Point({
-                a: 1,
-                b: 0
-            })
-        });
-        G2Operations.G2Point memory tmp = G2Operations.G2Point({
-            x: Fp2Operations.Fp2Point({
-                a: 0,
-                b: 0
-            }),
-            y: Fp2Operations.Fp2Point({
-                a: 1,
-                b: 0
-            })
-        });
-        for (uint i = 0; i < verificationVector.length; i++) {
-            G2Operations.G2Point memory verificationVectorComponent = G2Operations.G2Point({
-                x: _swapCoordinates(verificationVector[i].x),
-                y: _swapCoordinates(verificationVector[i].y)
-            });
-            tmp = verificationVectorComponent.mulG2(Precompiled.bigModExp(index.add(1), i, Fp2Operations.P));
-            value = tmp.addG2(value);
-        }
-        return _checkDKGVerification(value, multipliedShare) &&
-            _checkCorrectMultipliedShare(multipliedShare, secret);
+    function deleteKey(bytes32 groupIndex) external allow("SkaleDKG") {
+        previousSchainsPublicKeys[groupIndex].push(schainsPublicKeys[groupIndex]);
+        delete schainsPublicKeys[groupIndex];
     }
 
     function initPublicKeyInProgress(bytes32 groupIndex) external allow("SkaleDKG") {
@@ -140,6 +95,7 @@ contract KeyStorage is Permissions {
                 b: 0
             })
         });
+        delete schainsNodesPublicKeys[groupIndex];
     }
 
     function adding(bytes32 groupIndex, G2Operations.G2Point memory value) external allow("SkaleDKG") {
@@ -156,46 +112,7 @@ contract KeyStorage is Permissions {
         delete _publicKeysInProgress[groupIndex];
     }
 
-    function calculateBlsPublicKey(bytes32 groupIndex, uint index)
-        external
-        allow("SkaleDKG")
-        view
-        returns (G2Operations.G2Point memory)
-    {
-        // uint index = _nodeIndexInSchain(groupIndex, nodeIndex);
-        G2Operations.G2Point memory publicKey = G2Operations.G2Point({
-            x: Fp2Operations.Fp2Point({
-                a: 0,
-                b: 0
-            }),
-            y: Fp2Operations.Fp2Point({
-                a: 1,
-                b: 0
-            })
-        });
-        G2Operations.G2Point memory tmp = G2Operations.G2Point({
-            x: Fp2Operations.Fp2Point({
-                a: 0,
-                b: 0
-            }),
-            y: Fp2Operations.Fp2Point({
-                a: 1,
-                b: 0
-            })
-        });
-        G2Operations.G2Point[] memory publicValues = schainsNodesPublicKeys[groupIndex];
-        for (uint i = 0; i < publicValues.length; ++i) {
-            G2Operations.G2Point memory publicValuesComponent = G2Operations.G2Point({
-                x: _swapCoordinates(publicValues[i].x),
-                y: _swapCoordinates(publicValues[i].y)
-            });
-            tmp = publicValuesComponent.mulG2(Precompiled.bigModExp(index.add(1), i, Fp2Operations.P));
-            publicKey = tmp.addG2(publicKey);
-        }
-        return publicKey;
-    }
-
-    function computePublicValues(bytes32 groupIndex, G2Operations.G2Point[] memory verificationVector)
+    function computePublicValues(bytes32 groupIndex, G2Operations.G2Point[] calldata verificationVector)
         external
         allow("SkaleDKG")
     {
@@ -234,12 +151,99 @@ contract KeyStorage is Permissions {
         }
     }
 
+    function verify(
+        bytes32 groupIndex,
+        uint nodeToComplaint,
+        uint fromNodeToComplaint,
+        uint secretNumber,
+        G2Operations.G2Point memory multipliedShare
+    )
+        external
+        view
+        returns (bool)
+    {
+        SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
+        uint index = schainsInternal.getNodeIndexInGroup(groupIndex, nodeToComplaint);
+        uint secret = _decryptMessage(groupIndex, secretNumber, nodeToComplaint, fromNodeToComplaint);
+        G2Operations.G2Point[] memory verificationVector = _data[groupIndex][index].verificationVector;
+        G2Operations.G2Point memory value = G2Operations.G2Point({
+            x: Fp2Operations.Fp2Point({
+                a: 0,
+                b: 0
+            }),
+            y: Fp2Operations.Fp2Point({
+                a: 1,
+                b: 0
+            })
+        });
+        G2Operations.G2Point memory tmp = G2Operations.G2Point({
+            x: Fp2Operations.Fp2Point({
+                a: 0,
+                b: 0
+            }),
+            y: Fp2Operations.Fp2Point({
+                a: 1,
+                b: 0
+            })
+        });
+        for (uint i = 0; i < verificationVector.length; i++) {
+            G2Operations.G2Point memory verificationVectorComponent = G2Operations.G2Point({
+                x: _swapCoordinates(verificationVector[i].x),
+                y: _swapCoordinates(verificationVector[i].y)
+            });
+            tmp = verificationVectorComponent.mulG2(Precompiled.bigModExp(index.add(1), i, Fp2Operations.P));
+            value = tmp.addG2(value);
+        }
+        return _checkDKGVerification(value, multipliedShare) &&
+            _checkCorrectMultipliedShare(multipliedShare, secret);
+    }
+
+    function calculateBlsPublicKey(bytes32 groupIndex, uint index)
+        external
+        view
+        returns (G2Operations.G2Point memory)
+    {
+        G2Operations.G2Point memory publicKey = G2Operations.G2Point({
+            x: Fp2Operations.Fp2Point({
+                a: 0,
+                b: 0
+            }),
+            y: Fp2Operations.Fp2Point({
+                a: 1,
+                b: 0
+            })
+        });
+        G2Operations.G2Point memory tmp = G2Operations.G2Point({
+            x: Fp2Operations.Fp2Point({
+                a: 0,
+                b: 0
+            }),
+            y: Fp2Operations.Fp2Point({
+                a: 1,
+                b: 0
+            })
+        });
+        G2Operations.G2Point[] memory publicValues = schainsNodesPublicKeys[groupIndex];
+        for (uint i = 0; i < publicValues.length; ++i) {
+            G2Operations.G2Point memory publicValuesComponent = G2Operations.G2Point({
+                x: _swapCoordinates(publicValues[i].x),
+                y: _swapCoordinates(publicValues[i].y)
+            });
+            tmp = publicValuesComponent.mulG2(Precompiled.bigModExp(index.add(1), i, Fp2Operations.P));
+            publicKey = tmp.addG2(publicKey);
+        }
+        return publicKey;
+    }
+
     function getBroadcastedData(bytes32 groupIndex, uint indexInSchain)
         external
         view
         returns (KeyShare[] memory, G2Operations.G2Point[] memory)
     {
-        return (_data[groupIndex][indexInSchain].secretKeyContribution, _data[groupIndex][indexInSchain].verificationVector);
+        return (
+            _data[groupIndex][indexInSchain].secretKeyContribution,
+            _data[groupIndex][indexInSchain].verificationVector
+        );
     }
 
     function getSecretKeyShare(bytes32 groupIndex, uint indexInSchain, uint index)
@@ -258,6 +262,10 @@ contract KeyStorage is Permissions {
         return (_data[groupIndex][indexInSchain].verificationVector);
     }
 
+    function initialize(address contractsAddress) public override initializer {
+        Permissions.initialize(contractsAddress);
+    }
+
     function _isPublicKeyZero(bytes32 schainId) private view returns (bool) {
         return schainsPublicKeys[schainId].x.a == 0 &&
             schainsPublicKeys[schainId].x.b == 0 &&
@@ -266,7 +274,6 @@ contract KeyStorage is Permissions {
     }
 
     function _getCommonPublicKey(
-        bytes32 groupIndex,
         uint256 secretNumber,
         uint fromNodeToComplaint
     )
@@ -297,15 +304,14 @@ contract KeyStorage is Permissions {
     {
         Decryption decryption = Decryption(contractManager.getContract("Decryption"));
 
-        bytes32 key = _getCommonPublicKey(groupIndex, secretNumber, fromNodeToComplaint);
+        bytes32 key = _getCommonPublicKey(secretNumber, fromNodeToComplaint);
 
         // Decrypt secret key contribution
-        uint index = _nodeIndexInSchain(groupIndex, fromNodeToComplaint);
-        uint indexOfNode = _nodeIndexInSchain(groupIndex, nodeToComplaint);
-        KeyStorage keyStorage = KeyStorage(contractManager.getContract("KeyStorage"));
-        // keyStorage.getSecretKeyShare(groupIndex, indexOfNode, index);
+        SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
+        uint index = schainsInternal.getNodeIndexInGroup(groupIndex, fromNodeToComplaint);
+        uint indexOfNode = schainsInternal.getNodeIndexInGroup(groupIndex, nodeToComplaint);
         uint secret = decryption.decrypt(
-            keyStorage.getSecretKeyShare(groupIndex, indexOfNode, index),
+            _data[groupIndex][indexOfNode].secretKeyContribution[index].share,
             key
         );
         return secret;
@@ -358,15 +364,6 @@ contract KeyStorage is Permissions {
         returns (Fp2Operations.Fp2Point memory)
     {
         return Fp2Operations.Fp2Point({a: value.b, b: value.a});
-    }
-
-    function _nodeIndexInSchain(bytes32 schainId, uint nodeIndex) private view returns (uint) {
-        return SchainsInternal(contractManager.getContract("SchainsInternal"))
-            .getNodeIndexInGroup(schainId, nodeIndex);
-    }
-
-    function initialize(address contractsAddress) public override initializer {
-        Permissions.initialize(contractsAddress);
     }
 
 }

@@ -2,6 +2,7 @@ import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
 import { ContractManagerInstance,
          DelegationControllerInstance,
+         KeyStorageInstance,
          NodesInstance,
          SchainsInternalInstance,
          SchainsInstance,
@@ -15,6 +16,7 @@ import { skipTime } from "./tools/time";
 import BigNumber from "bignumber.js";
 import { deployContractManager } from "./tools/deploy/contractManager";
 import { deployDelegationController } from "./tools/deploy/delegation/delegationController";
+import { deployKeyStorage } from "./tools/deploy/keyStorage";
 import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
 import { deployNodes } from "./tools/deploy/nodes";
 import { deploySchainsInternal } from "./tools/deploy/schainsInternal";
@@ -29,28 +31,29 @@ chai.use(chaiAsPromised);
 class Channel {
     public active: boolean;
     public numberOfBroadcasted: BigNumber;
-    public publicKey: {x: {a: BigNumber, b: BigNumber}, y: {a: BigNumber, b: BigNumber}};
+    // public publicKey: {x: {a: BigNumber, b: BigNumber}, y: {a: BigNumber, b: BigNumber}};
     public numberOfCompleted: BigNumber;
     public startedBlockTimestamp: BigNumber;
     public nodeToComplaint: BigNumber;
     public fromNodeToComplaint: BigNumber;
     public startedComplaintBlockTimestamp: BigNumber;
 
-    constructor(arrayData: [boolean, BigNumber, {x: {a: BigNumber, b: BigNumber}, y: {a: BigNumber, b: BigNumber}}, BigNumber, BigNumber, BigNumber,
+    constructor(arrayData: [boolean, BigNumber, BigNumber, BigNumber, BigNumber,
         BigNumber, BigNumber]) {
         this.active = arrayData[0];
         this.numberOfBroadcasted = new BigNumber(arrayData[1]);
-        this.publicKey = arrayData[2];
-        this.numberOfCompleted = new BigNumber(arrayData[3]);
-        this.startedBlockTimestamp = new BigNumber(arrayData[4]);
-        this.nodeToComplaint = new BigNumber(arrayData[5]);
-        this.fromNodeToComplaint = new BigNumber(arrayData[6]);
-        this.startedComplaintBlockTimestamp = new BigNumber(arrayData[7]);
+        // this.publicKey = arrayData[2];
+        this.numberOfCompleted = new BigNumber(arrayData[2]);
+        this.startedBlockTimestamp = new BigNumber(arrayData[3]);
+        this.nodeToComplaint = new BigNumber(arrayData[4]);
+        this.fromNodeToComplaint = new BigNumber(arrayData[5]);
+        this.startedComplaintBlockTimestamp = new BigNumber(arrayData[6]);
     }
 }
 
 contract("SkaleDKG", ([owner, validator1, validator2]) => {
     let contractManager: ContractManagerInstance;
+    let keyStorage: KeyStorageInstance
     let schainsInternal: SchainsInternalInstance;
     let schains: SchainsInstance;
     let skaleDKG: SkaleDKGInstance;
@@ -69,6 +72,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
         schainsInternal = await deploySchainsInternal(contractManager);
         schains = await deploySchains(contractManager);
         skaleDKG = await deploySkaleDKG(contractManager);
+        keyStorage = await deployKeyStorage(contractManager);
         skaleToken = await deploySkaleToken(contractManager);
         validatorService = await deployValidatorService(contractManager);
         slashingTable = await deploySlashingTable(contractManager);
@@ -362,7 +366,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                 assert.equal(result.logs[0].event, "BroadcastAndKeyShare");
                 assert.equal(result.logs[0].args.groupIndex, web3.utils.soliditySha3(schainName));
                 assert.equal(result.logs[0].args.fromNode.toString(), "0");
-                const res = await skaleDKG.getBroadcastedData(web3.utils.soliditySha3(schainName), 0);
+                const res = await keyStorage.getBroadcastedData(web3.utils.soliditySha3(schainName), 0);
 
                 encryptedSecretKeyContributions[indexes[0]].forEach( (keyShare, i) => {
                     keyShare.share.should.be.equal(res[0][i].share);
