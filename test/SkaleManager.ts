@@ -418,6 +418,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                 }
 
                 const stageLength = (await bountyContract.STAGE_LENGTH()).toNumber();
+                let stageEnd = networkLaunchTimestamp;
                 let bountyBlock = bountyPoolSize;
                 for(let i = 0; networkLaunchTimestamp + stageLength * i < timestamp; ++i) {
                     if (i < payments.length) {
@@ -427,10 +428,11 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                             bountyBlock = bountyBlock.divn(2);
                         }
                     }
+                    stageEnd = networkLaunchTimestamp + stageLength * (i + 1);
                 }
 
                 const rewardPeriod = (await constantsHolder.rewardPeriod()).toNumber();
-                const numberOfBountyPayments = Math.floor(stageLength / rewardPeriod);
+                const numberOfBountyPayments = Math.floor((stageEnd - timestamp) / rewardPeriod) + 1;
 
                 return bountyBlock.divn(nodesAmount).divn(numberOfBountyPayments);
             }

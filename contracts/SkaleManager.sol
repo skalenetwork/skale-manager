@@ -172,13 +172,13 @@ contract SkaleManager is IERC777Recipient, Permissions {
         uint averageLatency;
         Monitors monitors = Monitors(contractManager.getContract("Monitors"));
         (averageDowntime, averageLatency) = monitors.calculateMetrics(nodeIndex);
-
-        nodes.changeNodeLastRewardDate(nodeIndex);
+        
         uint bounty = bountyContract.getBounty(
             nodeIndex,
             averageDowntime,
             averageLatency);            
         
+        nodes.changeNodeLastRewardDate(nodeIndex);
         monitors.deleteMonitor(nodeIndex);
         monitors.addMonitor(nodeIndex);
 

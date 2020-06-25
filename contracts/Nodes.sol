@@ -281,7 +281,7 @@ contract Nodes is Permissions {
     }
 
     function checkPossibilityToMaintainNode(uint validatorId, uint nodeIndex)
-        external allow("SkaleManager") returns (bool)
+        external allow("Bounty") returns (bool)
     {
         DelegationController delegationController = DelegationController(
             contractManager.getContract("DelegationController")

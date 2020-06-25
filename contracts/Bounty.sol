@@ -21,8 +21,6 @@
 
 pragma solidity 0.6.10;
 
-import "@nomiclabs/buidler/console.sol";
-
 import "./ConstantsHolder.sol";
 import "./Nodes.sol";
 import "./Permissions.sol";
@@ -54,7 +52,7 @@ contract Bounty is Permissions {
 
         _refillStagePool(constantsHolder);
         
-        uint bounty = _calculateMaximumBountyAmount(_stagePool, nodeIndex, constantsHolder, nodes);
+        uint bounty = _calculateMaximumBountyAmount(_stagePool, _nextStage, nodeIndex, constantsHolder, nodes);
 
         bounty = _reduceBounty(
             bounty,
@@ -81,10 +79,12 @@ contract Bounty is Permissions {
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));
 
         uint stagePoolSize;
-        (stagePoolSize, ) = _getStagePoolSize(constantsHolder);
+        uint nextStage;
+        (stagePoolSize, nextStage) = _getStagePoolSize(constantsHolder);
         
         return _calculateMaximumBountyAmount(
             stagePoolSize,
+            nextStage,
             nodeIndex,
             constantsHolder,
             nodes
@@ -102,6 +102,7 @@ contract Bounty is Permissions {
 
     function _calculateMaximumBountyAmount(
         uint stagePoolSize,
+        uint nextStage,
         uint nodeIndex,
         ConstantsHolder constantsHolder,
         Nodes nodes
@@ -120,11 +121,9 @@ contract Bounty is Permissions {
             return 0;
         }
 
-        console.log("Hello");
-
         uint numberOfNodes = nodes.getNumberOnlineNodes();
-        uint numberOfRewards = _getStageBeginningTimestamp(_nextStage, constantsHolder)
-            .sub(nodes.getNodeLastRewardDate(nodeIndex))
+        uint numberOfRewards = _getStageBeginningTimestamp(nextStage, constantsHolder)
+            .sub(now)
             .div(constantsHolder.rewardPeriod())
             .add(1);
 
