@@ -48,6 +48,8 @@ contract SkaleDKG is Permissions {
 
     mapping(bytes32 => Channel) public channels;
 
+    mapping(bytes32 => uint) public lastSuccesfulDKG;
+
     event ChannelOpened(bytes32 groupIndex);
 
     event ChannelClosed(bytes32 groupIndex);
@@ -173,7 +175,6 @@ contract SkaleDKG is Permissions {
     {
         require(channels[groupIndex].nodeToComplaint == fromNodeIndex, "Not this Node");
         require(_isNodeByMessageSender(fromNodeIndex, msg.sender), "Node does not exist for message sender");
-        // uint index = _nodeIndexInSchain(groupIndex, fromNodeIndex);
         bool verificationResult = KeyStorage(contractManager.getContract("KeyStorage")).verify(
             groupIndex,
             channels[groupIndex].nodeToComplaint,
@@ -202,15 +203,8 @@ contract SkaleDKG is Permissions {
         channels[groupIndex].numberOfCompleted++;
         emit AllDataReceived(groupIndex, fromNodeIndex);
         if (channels[groupIndex].numberOfCompleted == numberOfParticipant) {
-            // SchainsInternal(contractManager.getContract("SchainsInternal")).setPublicKey(
-            //     groupIndex,
-            //     channels[groupIndex].publicKey.x.a,
-            //     channels[groupIndex].publicKey.x.b,
-            //     channels[groupIndex].publicKey.y.a,
-            //     channels[groupIndex].publicKey.y.b
-            // );
+            lastSuccesfulDKG[groupIndex] = now;
             KeyStorage(contractManager.getContract("KeyStorage")).finalizePublicKey(groupIndex);
-            // delete channels[groupIndex];
             channels[groupIndex].active = false;
             emit SuccessfulDKG(groupIndex);
         }
@@ -220,19 +214,16 @@ contract SkaleDKG is Permissions {
         _reopenChannel(groupIndex);
     }
 
-    function getBlsPublicKey(bytes32 groupIndex, uint nodeIndex)
-        external
-        correctGroup(groupIndex)
-        correctNode(groupIndex, nodeIndex)
-        view
-        returns (G2Operations.G2Point memory)
-    {
-        uint index = _nodeIndexInSchain(groupIndex, nodeIndex);
-        return KeyStorage(contractManager.getContract("KeyStorage")).calculateBlsPublicKey(groupIndex, index);
-    }
-
     function isChannelOpened(bytes32 groupIndex) external view returns (bool) {
         return channels[groupIndex].active;
+    }
+
+    function getTimeOfLastSuccesfulDKG(bytes32 groupIndex) external view returns (uint) {
+        return lastSuccesfulDKG[groupIndex];
+    }
+
+    function isLastDKGSuccesful(bytes32 groupIndex) external view returns (bool) {
+        return channels[groupIndex].startedBlockTimestamp < lastSuccesfulDKG[groupIndex];
     }
 
     function isBroadcastPossible(bytes32 groupIndex, uint nodeIndex) external view returns (bool) {
@@ -321,7 +312,6 @@ contract SkaleDKG is Permissions {
         delete channels[groupIndex].startComplaintBlockTimestamp;
         channels[groupIndex].startedBlockTimestamp = now;
 
-        schainsInternal.setGroupFailedDKG(groupIndex);
         emit ChannelOpened(groupIndex);
     }
 

@@ -198,8 +198,72 @@ contract KeyStorage is Permissions {
             _checkCorrectMultipliedShare(multipliedShare, secret);
     }
 
-    function calculateBlsPublicKey(bytes32 groupIndex, uint index)
+    function getBroadcastedData(bytes32 groupIndex, uint indexInSchain)
         external
+        view
+        returns (KeyShare[] memory, G2Operations.G2Point[] memory)
+    {
+        return (
+            _data[groupIndex][indexInSchain].secretKeyContribution,
+            _data[groupIndex][indexInSchain].verificationVector
+        );
+    }
+
+    function getSecretKeyShare(bytes32 groupIndex, uint indexInSchain, uint index)
+        external
+        view
+        returns (bytes32)
+    {
+        return (_data[groupIndex][indexInSchain].secretKeyContribution[index].share);
+    }
+
+    function getVerificationVector(bytes32 groupIndex, uint indexInSchain)
+        external
+        view
+        returns (G2Operations.G2Point[] memory)
+    {
+        return (_data[groupIndex][indexInSchain].verificationVector);
+    }
+
+    function getCommonPublicKey(bytes32 groupIndex) external view returns (G2Operations.G2Point memory) {
+        return schainsPublicKeys[groupIndex];
+    }
+
+    function getPreviousPublicKey(bytes32 groupIndex) external view returns (G2Operations.G2Point memory) {
+        uint length = previousSchainsPublicKeys[groupIndex].length;
+        if (length == 0) {
+            return G2Operations.G2Point({
+                x: Fp2Operations.Fp2Point({
+                    a: 0,
+                    b: 0
+                }),
+                y: Fp2Operations.Fp2Point({
+                    a: 0,
+                    b: 0
+                })
+            });
+        }
+        return previousSchainsPublicKeys[groupIndex][length - 1];
+    }
+
+    function getAllPreviousPublicKeys(bytes32 groupIndex) external view returns (G2Operations.G2Point[] memory) {
+        return previousSchainsPublicKeys[groupIndex];
+    }
+
+    function getBLSPublicKey(bytes32 groupIndex, uint nodeIndex) external view returns (G2Operations.G2Point memory) {
+        uint index = SchainsInternal(contractManager.getContract("SchainsInternal")).getNodeIndexInGroup(
+            groupIndex,
+            nodeIndex
+        );
+        return calculateBlsPublicKey(groupIndex, index);
+    }
+
+    function initialize(address contractsAddress) public override initializer {
+        Permissions.initialize(contractsAddress);
+    }
+
+    function _calculateBlsPublicKey(bytes32 groupIndex, uint index)
+        private
         view
         returns (G2Operations.G2Point memory)
     {
@@ -233,37 +297,6 @@ contract KeyStorage is Permissions {
             publicKey = tmp.addG2(publicKey);
         }
         return publicKey;
-    }
-
-    function getBroadcastedData(bytes32 groupIndex, uint indexInSchain)
-        external
-        view
-        returns (KeyShare[] memory, G2Operations.G2Point[] memory)
-    {
-        return (
-            _data[groupIndex][indexInSchain].secretKeyContribution,
-            _data[groupIndex][indexInSchain].verificationVector
-        );
-    }
-
-    function getSecretKeyShare(bytes32 groupIndex, uint indexInSchain, uint index)
-        external
-        view
-        returns (bytes32)
-    {
-        return (_data[groupIndex][indexInSchain].secretKeyContribution[index].share);
-    }
-
-    function getVerificationVector(bytes32 groupIndex, uint indexInSchain)
-        external
-        view
-        returns (G2Operations.G2Point[] memory)
-    {
-        return (_data[groupIndex][indexInSchain].verificationVector);
-    }
-
-    function initialize(address contractsAddress) public override initializer {
-        Permissions.initialize(contractsAddress);
     }
 
     function _isPublicKeyZero(bytes32 schainId) private view returns (bool) {

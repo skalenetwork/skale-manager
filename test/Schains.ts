@@ -768,12 +768,8 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
                 deposit,
                 web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d2"]),
                 {from: owner});
-            await schainsInternal.setPublicKey(
-                web3.utils.soliditySha3("d2"),
-                0,
-                0,
-                0,
-                0,
+            await keyStorage.finalizePublicKey(
+                web3.utils.soliditySha3("d3"),
             );
 
             await schains.addSchain(
@@ -781,12 +777,8 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
                 deposit,
                 web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d3"]),
                 {from: owner});
-            await schainsInternal.setPublicKey(
+            await keyStorage.finalizePublicKey(
                 web3.utils.soliditySha3("d3"),
-                0,
-                0,
-                0,
-                0,
             );
             await skaleManager.createNode(
                 8545, // port
@@ -816,22 +808,14 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
             const nodeRot = res1[3];
             const res = await skaleDKG.isBroadcastPossible(
                 web3.utils.soliditySha3("d3"), nodeRot);
-            await schainsInternal.setPublicKey(
+            await keyStorage.finalizePublicKey(
                 web3.utils.soliditySha3("d3"),
-                0,
-                0,
-                0,
-                0,
             );
             await skaleManager.nodeExit(1, {from: nodeAddress})
                 .should.be.eventually.rejectedWith("Node cannot rotate on Schain d3, occupied by Node 0");
             await skaleManager.nodeExit(0, {from: nodeAddress});
-            await schainsInternal.setPublicKey(
-                web3.utils.soliditySha3("d2"),
-                0,
-                0,
-                0,
-                0,
+            await keyStorage.finalizePublicKey(
+                web3.utils.soliditySha3("d3"),
             );
             nodeStatus = (await nodes.getNodeStatus(0)).toNumber();
             assert.equal(nodeStatus, LEFT);
@@ -845,22 +829,14 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
             skipTime(web3, 43260);
 
             await skaleManager.nodeExit(1, {from: nodeAddress});
-            await schainsInternal.setPublicKey(
+            await keyStorage.finalizePublicKey(
                 web3.utils.soliditySha3("d3"),
-                0,
-                0,
-                0,
-                0,
             );
             nodeStatus = (await nodes.getNodeStatus(1)).toNumber();
             assert.equal(nodeStatus, LEAVING);
             await skaleManager.nodeExit(1, {from: nodeAddress});
-            await schainsInternal.setPublicKey(
-                web3.utils.soliditySha3("d2"),
-                0,
-                0,
-                0,
-                0,
+            await keyStorage.finalizePublicKey(
+                web3.utils.soliditySha3("d3"),
             );
             nodeStatus = (await nodes.getNodeStatus(1)).toNumber();
             assert.equal(nodeStatus, LEFT);
@@ -899,12 +875,8 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
                 (exist4 && newArrayD3[zeroPositionD3].toNumber() === 4),
                 true
             );
-            await schainsInternal.setPublicKey(
+            await keyStorage.finalizePublicKey(
                 web3.utils.soliditySha3("d3"),
-                0,
-                0,
-                0,
-                0,
             );
             await skaleManager.nodeExit(0, {from: nodeAddress});
             const newArrayD2 = await schainsInternal.getNodesInGroup(web3.utils.soliditySha3("d2"));
@@ -934,12 +906,8 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
                 (exist4 && newArrayD2[zeroPositionD2].toNumber() === 4),
                 true
             );
-            await schainsInternal.setPublicKey(
-                web3.utils.soliditySha3("d2"),
-                0,
-                0,
-                0,
-                0,
+            await keyStorage.finalizePublicKey(
+                web3.utils.soliditySha3("d3"),
             );
             skipTime(web3, 43260);
             await skaleManager.nodeExit(1, {from: nodeAddress});
@@ -970,12 +938,8 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
                 (exist4 && newNewArrayD3[onePositionD3].toNumber() === 4),
                 true
             );
-            await schainsInternal.setPublicKey(
+            await keyStorage.finalizePublicKey(
                 web3.utils.soliditySha3("d3"),
-                0,
-                0,
-                0,
-                0,
             );
             await skaleManager.nodeExit(1, {from: nodeAddress});
             const newNewArrayD2 = await schainsInternal.getNodesInGroup(web3.utils.soliditySha3("d2"));
@@ -1005,34 +969,22 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
                 (exist4 && newNewArrayD2[onePositionD2].toNumber() === 4),
                 true
             );
-            await schainsInternal.setPublicKey(
-                web3.utils.soliditySha3("d2"),
-                0,
-                0,
-                0,
-                0,
+            await keyStorage.finalizePublicKey(
+                web3.utils.soliditySha3("d3"),
             );
         });
 
         it("should allow to rotate if occupied node didn't rotated for 12 hours", async () => {
             await skaleManager.nodeExit(0, {from: nodeAddress});
-            await schainsInternal.setPublicKey(
+            await keyStorage.finalizePublicKey(
                 web3.utils.soliditySha3("d3"),
-                0,
-                0,
-                0,
-                0,
             );
             await skaleManager.nodeExit(1, {from: nodeAddress})
                 .should.be.eventually.rejectedWith("Node cannot rotate on Schain d3, occupied by Node 0");
             skipTime(web3, 43260);
             await skaleManager.nodeExit(1, {from: nodeAddress});
-            await schainsInternal.setPublicKey(
+            await keyStorage.finalizePublicKey(
                 web3.utils.soliditySha3("d3"),
-                0,
-                0,
-                0,
-                0,
             );
 
             await skaleManager.nodeExit(0, {from: nodeAddress})
@@ -1048,20 +1000,12 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
         it("should rotate on schain that previously was deleted", async () => {
             const deposit = await schains.getSchainPrice(5, 5);
             await skaleManager.nodeExit(0, {from: nodeAddress});
-            await schainsInternal.setPublicKey(
+            await keyStorage.finalizePublicKey(
                 web3.utils.soliditySha3("d3"),
-                0,
-                0,
-                0,
-                0,
             );
             await skaleManager.nodeExit(0, {from: nodeAddress});
-            await schainsInternal.setPublicKey(
-                web3.utils.soliditySha3("d2"),
-                0,
-                0,
-                0,
-                0,
+            await keyStorage.finalizePublicKey(
+                web3.utils.soliditySha3("d3"),
             );
             await skaleManager.deleteSchainByRoot("d2", {from: owner});
             await skaleManager.deleteSchainByRoot("d3", {from: owner});
@@ -1070,12 +1014,8 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
                 deposit,
                 web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d2"]),
                 {from: owner});
-            await schainsInternal.setPublicKey(
-                web3.utils.soliditySha3("d2"),
-                0,
-                0,
-                0,
-                0,
+            await keyStorage.finalizePublicKey(
+                web3.utils.soliditySha3("d3"),
             );
             const nodesInGroupBN = await schainsInternal.getNodesInGroup(web3.utils.soliditySha3("d2"));
             const nodeInGroup = nodesInGroupBN.map((value: BigNumber) => value.toNumber())[0];
@@ -1142,22 +1082,14 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
             assert.equal(res, true);
             res = await skaleDKG.isBroadcastPossible(web3.utils.soliditySha3("d3"), nodeRot, {from: nodeAddress});
             assert.equal(res, true);
-            await schainsInternal.setPublicKey(
+            await keyStorage.finalizePublicKey(
                 web3.utils.soliditySha3("d3"),
-                0,
-                0,
-                0,
-                0,
             );
             await skaleManager.nodeExit(1, {from: nodeAddress})
                 .should.be.eventually.rejectedWith("Node cannot rotate on Schain d3, occupied by Node 0");
             await skaleManager.nodeExit(0, {from: nodeAddress});
-            await schainsInternal.setPublicKey(
-                web3.utils.soliditySha3("d2"),
-                0,
-                0,
-                0,
-                0,
+            await keyStorage.finalizePublicKey(
+                web3.utils.soliditySha3("d3"),
             );
 
             skipTime(web3, 43260);
