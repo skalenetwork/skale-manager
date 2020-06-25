@@ -268,10 +268,10 @@ contract SchainsInternal is Permissions {
         // delete channel
         ISkaleDKG skaleDKG = ISkaleDKG(contractManager.getContract("SkaleDKG"));
 
+        delete schainsGroups[schainId];
         if (skaleDKG.isChannelOpened(schainId)) {
             skaleDKG.deleteChannel(schainId);
         }
-        delete schainsGroups[schainId];
     }
 
     /**

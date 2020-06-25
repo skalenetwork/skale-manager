@@ -255,7 +255,7 @@ contract KeyStorage is Permissions {
             groupIndex,
             nodeIndex
         );
-        return calculateBlsPublicKey(groupIndex, index);
+        return _calculateBlsPublicKey(groupIndex, index);
     }
 
     function initialize(address contractsAddress) public override initializer {

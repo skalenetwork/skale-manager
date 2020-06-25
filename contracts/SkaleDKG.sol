@@ -90,8 +90,8 @@ contract SkaleDKG is Permissions {
 
     function deleteChannel(bytes32 groupIndex) external allow("SchainsInternal") {
         require(channels[groupIndex].active, "Channel is not created");
-        KeyStorage(contractManager.getContract("KeyStorage")).deleteKey(groupIndex);
         delete channels[groupIndex];
+        KeyStorage(contractManager.getContract("KeyStorage")).deleteKey(groupIndex);
     }
 
     function broadcast(
