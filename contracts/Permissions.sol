@@ -52,7 +52,6 @@ contract Permissions is AccessControlUpgradeSafe {
     }
 
     modifier onlyAdmin() {
-        AccessControlUpgradeSafe skaleManager = AccessControlUpgradeSafe(contractManager.getContract("SkaleManager"));
         require(_isAdmin(msg.sender), "Caller is not an admin");
         _;
     }
@@ -93,7 +92,12 @@ contract Permissions is AccessControlUpgradeSafe {
     }
 
     function _isAdmin(address account) internal view returns (bool) {
-        AccessControlUpgradeSafe skaleManager = AccessControlUpgradeSafe(contractManager.getContract("SkaleManager"));
-        return skaleManager.hasRole(keccak256("ADMIN_ROLE"), account) || _isOwner();
+        address skaleManagerAddress = contractManager.contracts(keccak256(abi.encodePacked("SkaleManager")));
+        if (skaleManagerAddress != address(0)) {
+            AccessControlUpgradeSafe skaleManager = AccessControlUpgradeSafe(skaleManagerAddress);
+            return skaleManager.hasRole(keccak256("ADMIN_ROLE"), account) || _isOwner();
+        } else {
+            return _isOwner();
+        }
     }
 }
