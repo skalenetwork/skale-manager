@@ -43,7 +43,7 @@
     "@openzeppelin/contracts": "^3.1.0",
     "@openzeppelin/contracts-ethereum-package": "^3.0.0",
     "@openzeppelin/upgrades": "^2.8.0",
-    "@truffle/hdwallet-provider": "^1.0.28",
+    "@truffle/hdwallet-provider": "^1.0.36",
     "@types/chai": "^4.2.11",
     "@types/chai-as-promised": "^7.1.0",
     "@types/minimist": "^1.2.0",
