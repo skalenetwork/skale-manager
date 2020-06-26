@@ -27,6 +27,7 @@ import "./SchainsInternal.sol";
 import "./ConstantsHolder.sol";
 import "./SkaleVerifier.sol";
 import "./utils/FieldOperations.sol";
+import "./NodeRotation.sol";
 
 /**
  * @title Schains - contract contains all functionality logic to manage Schains
@@ -128,25 +129,25 @@ contract Schains is Permissions {
      * @param name - Schain name
      */
     function deleteSchain(address from, string calldata name) external allow("SkaleManager") {
+        NodeRotation nodeRotation = NodeRotation(contractManager.getContract("NodeRotation"));
+        SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
         bytes32 schainId = keccak256(abi.encodePacked(name));
-        address dataAddress = contractManager.getContract("SchainsInternal");
         require(
-            SchainsInternal(dataAddress).isOwnerAddress(from, schainId), 
+            schainsInternal.isOwnerAddress(from, schainId), 
             "Message sender is not an owner of Schain"
         );
-        SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
         address nodesAddress = contractManager.getContract("Nodes");
 
         // removes Schain from Nodes
-        uint[] memory nodesInGroup = SchainsInternal(dataAddress).getNodesInGroup(schainId);
-        uint8 partOfNode = SchainsInternal(dataAddress).getSchainsPartOfNode(schainId);
+        uint[] memory nodesInGroup = schainsInternal.getNodesInGroup(schainId);
+        uint8 partOfNode = schainsInternal.getSchainsPartOfNode(schainId);
         for (uint i = 0; i < nodesInGroup.length; i++) {
             uint schainIndex = schainsInternal.findSchainAtSchainsForNode(
                 nodesInGroup[i],
                 schainId
             );
             require(
-                schainIndex < SchainsInternal(dataAddress).getLengthOfSchainsForNode(nodesInGroup[i]),
+                schainIndex < schainsInternal.getLengthOfSchainsForNode(nodesInGroup[i]),
                 "Some Node does not contain given Schain");
             schainsInternal.removeNodeFromSchain(nodesInGroup[i], schainId);
             schainsInternal.removeNodeFromExceptions(schainId, nodesInGroup[i]);
@@ -155,79 +156,51 @@ contract Schains is Permissions {
             }
         }
         schainsInternal.deleteGroup(schainId);
-        SchainsInternal(dataAddress).removeSchain(schainId, from);
-        SchainsInternal(dataAddress).removeRotation(schainId);
+        schainsInternal.removeSchain(schainId, from);
+        nodeRotation.removeRotation(schainId);
         emit SchainDeleted(from, name, schainId);
     }
 
     function deleteSchainByRoot(string calldata name) external allow("SkaleManager") {
+        NodeRotation nodeRotation = NodeRotation(contractManager.getContract("NodeRotation"));
         bytes32 schainId = keccak256(abi.encodePacked(name));
-        address dataAddress = contractManager.getContract("SchainsInternal");
         SchainsInternal schainsInternal = SchainsInternal(
             contractManager.getContract("SchainsInternal"));
-        require(SchainsInternal(dataAddress).isSchainExist(schainId), "Schain does not exist");
+        require(schainsInternal.isSchainExist(schainId), "Schain does not exist");
 
         // removes Schain from Nodes
-        uint[] memory nodesInGroup = SchainsInternal(dataAddress).getNodesInGroup(schainId);
-        uint8 partOfNode = SchainsInternal(dataAddress).getSchainsPartOfNode(schainId);
+        uint[] memory nodesInGroup = schainsInternal.getNodesInGroup(schainId);
+        uint8 partOfNode = schainsInternal.getSchainsPartOfNode(schainId);
         for (uint i = 0; i < nodesInGroup.length; i++) {
             uint schainIndex = schainsInternal.findSchainAtSchainsForNode(
                 nodesInGroup[i],
                 schainId
             );
             require(
-                schainIndex < SchainsInternal(dataAddress).getLengthOfSchainsForNode(nodesInGroup[i]),
+                schainIndex < schainsInternal.getLengthOfSchainsForNode(nodesInGroup[i]),
                 "Some Node does not contain given Schain");
             schainsInternal.removeNodeFromSchain(nodesInGroup[i], schainId);
             schainsInternal.removeNodeFromExceptions(schainId, nodesInGroup[i]);
             _addSpace(nodesInGroup[i], partOfNode);
         }
         schainsInternal.deleteGroup(schainId);
-        address from = SchainsInternal(dataAddress).getSchainOwner(schainId);
-        SchainsInternal(dataAddress).removeSchain(schainId, from);
-        SchainsInternal(dataAddress).removeRotation(schainId);
+        address from = schainsInternal.getSchainOwner(schainId);
+        schainsInternal.removeSchain(schainId, from);
+        nodeRotation.removeRotation(schainId);
         emit SchainDeleted(from, name, schainId);
     }
 
-    function exitFromSchain(uint nodeIndex) external allow("SkaleManager") returns (bool) {
-        SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
-        bytes32 schainId = schainsInternal.getActiveSchain(nodeIndex);
-        require(_checkRotation(schainId), "No any free Nodes for rotating");
-        uint newNodeIndex = rotateNode(nodeIndex, schainId);
-        schainsInternal.finishRotation(schainId, nodeIndex, newNodeIndex);
-        return schainsInternal.getActiveSchain(nodeIndex) == bytes32(0) ? true : false;
-    }
 
-    function freezeSchains(uint nodeIndex) external allow("SkaleManager") {
-        SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
-        bytes32[] memory schains = schainsInternal.getActiveSchains(nodeIndex);
-        for (uint i = 0; i < schains.length; i++) {
-            SchainsInternal.Rotation memory rotation = schainsInternal.getRotation(schains[i]);
-            if (rotation.nodeIndex == nodeIndex && now < rotation.freezeUntil) {
-                continue;
-            }
-            string memory schainName = schainsInternal.getSchainName(schains[i]);
-            string memory revertMessage = "Node cannot rotate on Schain ";
-            revertMessage = revertMessage.strConcat(schainName);
-            revertMessage = revertMessage.strConcat(", occupied by Node ");
-            revertMessage = revertMessage.strConcat(rotation.nodeIndex.uint2str());
-            string memory dkgRevert = "DKG proccess did not finish on schain ";
-            require(
-                !schainsInternal.isGroupFailedDKG(keccak256(abi.encodePacked(schainName))),
-                dkgRevert.strConcat(schainName));
-            require(rotation.freezeUntil < now, revertMessage);
-            schainsInternal.startRotation(schains[i], nodeIndex);
-        }
-    }
 
     function restartSchainCreation(string calldata name) external allow("SkaleManager") {
+        NodeRotation nodeRotation = NodeRotation(contractManager.getContract("NodeRotation"));
         bytes32 schainId = keccak256(abi.encodePacked(name));
         address dataAddress = contractManager.getContract("SchainsInternal");
         require(SchainsInternal(dataAddress).isGroupFailedDKG(schainId), "DKG success");
         SchainsInternal schainsInternal = SchainsInternal(
             contractManager.getContract("SchainsInternal"));
         require(schainsInternal.isAnyFreeNode(schainId), "No any free Nodes for rotation");
-        uint newNodeIndex = _selectNodeToGroup(schainId);
+        uint newNodeIndex = nodeRotation.selectNodeToGroup(schainId);
         emit NodeAdded(schainId, newNodeIndex);
     }
 
@@ -276,18 +249,6 @@ contract Schains is Permissions {
         Permissions.initialize(newContractsAddress);
     }
 
-    function rotateNode(
-        uint nodeIndex,
-        bytes32 schainId
-    )
-        public
-        allowTwo("SkaleDKG", "SkaleManager")
-        returns (uint)
-    {
-        SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
-        schainsInternal.removeNodeFromSchain(nodeIndex, schainId);
-        return _selectNodeToGroup(schainId);
-    }
 
     /**
      * @dev getSchainPrice - returns current price for given Schain
@@ -415,38 +376,6 @@ contract Schains is Permissions {
             nodesInGroup,
             block.timestamp,
             gasleft());
-    }
-
-    /**
-     * @dev _selectNodeToGroup - pseudo-randomly select new Node for Schain
-     * @param schainId - hash of name of Schain
-     * @return nodeIndex - global index of Node
-     */
-    function _selectNodeToGroup(bytes32 schainId) private returns (uint) {
-        SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
-        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
-        require(schainsInternal.isSchainActive(schainId), "Group is not active");
-        uint8 space = schainsInternal.getSchainsPartOfNode(schainId);
-        uint[] memory possibleNodes = schainsInternal.isEnoughNodes(schainId);
-        require(possibleNodes.length > 0, "No any free Nodes for rotation");
-        uint nodeIndex;
-        uint random = uint(keccak256(abi.encodePacked(uint(blockhash(block.number - 1)), schainId)));
-        do {
-            uint index = random % possibleNodes.length;
-            nodeIndex = possibleNodes[index];
-            random = uint(keccak256(abi.encodePacked(random, nodeIndex)));
-        } while (schainsInternal.checkException(schainId, nodeIndex));
-        require(nodes.removeSpaceFromNode(nodeIndex, space), "Could not remove space from nodeIndex");
-        schainsInternal.addSchainForNode(nodeIndex, schainId);
-        schainsInternal.setException(schainId, nodeIndex);
-        schainsInternal.setNodeInGroup(schainId, nodeIndex);
-        return nodeIndex;
-    }
-
-    function _checkRotation(bytes32 schainId ) private view returns (bool) {
-        SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
-        require(schainsInternal.isSchainExist(schainId), "Schain does not exist");
-        return schainsInternal.isAnyFreeNode(schainId);
     }
 
     /**
