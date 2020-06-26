@@ -66,6 +66,8 @@ contract Bounty is Permissions {
             constantsHolder
         );
 
+        _stagePool = _stagePool.sub(bounty);
+
         return bounty;
     }
 
@@ -150,7 +152,7 @@ contract Bounty is Permissions {
 
     function _getStageReward(uint stage) private pure returns (uint) {
         if (stage >= 6) {
-            return BOUNTY.div(2 ** stage.sub(6).div(3).add(1));
+            return BOUNTY.div(2 ** stage.sub(6).div(3));
         } else {
             if (stage == 0) {
                 return YEAR1_BOUNTY;
