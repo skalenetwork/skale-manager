@@ -451,19 +451,41 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
             });
 
             async function getMaximumBountyAmount(timestamp: number, nodesAmount: number) {
-                const bountyPoolSize = web3.utils.toBN(await skaleToken.CAP()).divn(3);
+                const ten18 = web3.utils.toBN("1" + "0".repeat(18));
+                const bountyPoolSize = web3.utils.toBN("2310000000" + "0".repeat(18));
+                const yearLength = (await bountyContract.STAGE_LENGTH()).toNumber();
+                const rewardPeriod = (await constantsHolder.rewardPeriod()).toNumber();
+
                 const networkLaunchTimestamp = (await constantsHolder.launchTimestamp()).toNumber();
                 if (timestamp < networkLaunchTimestamp) {
                     return web3.utils.toBN(0);
                 }
 
-                const sixYears = web3.utils.toBN(await constantsHolder.SIX_YEARS());
-                const rewardPeriod = (await constantsHolder.rewardPeriod()).toNumber();
-                let bountyBlock = bountyPoolSize;
-                for(let i = 0; networkLaunchTimestamp + sixYears.muln(i).toNumber() < timestamp; ++i) {
-                    bountyBlock = bountyBlock.divn(2);
+                function getBountyForYear(yearIndex: number) {
+                    const schedule = [
+                        385000000,
+                        346500000,
+                        308000000,
+                        269500000,
+                        231000000,
+                        192500000
+                    ]
+                    if (yearIndex < schedule.length) {
+                        return web3.utils.toBN(schedule[yearIndex]).mul(ten18);
+                    } else {
+                        let bounty = web3.utils.toBN(schedule[schedule.length - 1]).mul(ten18);
+                        for (let i = 0; i < Math.floor((yearIndex - schedule.length) / 3) + 1; ++i) {
+                            bounty = bounty.divn(2);
+                        }
+                        return bounty;
+                    }
                 }
-                return bountyBlock.muln(rewardPeriod).div(sixYears.muln(nodesAmount));
+
+                const year = Math.floor((timestamp - networkLaunchTimestamp) / yearLength);
+                const yearEnd = networkLaunchTimestamp + (year + 1) * yearLength;
+                const rewardsAmount = Math.floor((yearEnd - timestamp) / rewardPeriod) + 1;
+
+                return getBountyForYear(year).divn(nodesAmount).divn(rewardsAmount);
             }
 
             async function calculateBounty(timestamp: number, nodesAmount: number, nodeId: number, metrics: {downtime: number, latency: number}) {

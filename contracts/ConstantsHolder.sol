@@ -165,7 +165,7 @@ contract ConstantsHolder is Permissions {
     function initialize(address contractsAddress) public override initializer {
         Permissions.initialize(contractsAddress);
 
-        msr = 5e6 * 1e18;
+        msr = 0;
         rewardPeriod = 3600; // Test parameters
         allowableLatency = 150000; // Test parameters
         deltaPeriod = 300;  // Test parameters
