@@ -244,7 +244,7 @@ contract DelegationController is Permissions, ILocker {
             validatorService.checkMinimumDelegation(validatorId, amount),
             "Amount does not meet the validator's minimum delegation amount");
         require(
-            validatorService.trustedValidators(validatorId) || !validatorService.useWhitelist(),
+            validatorService.isAuthorizedValidator(validatorId),
             "Validator is not authorized to accept delegation request");
         require(
             delegationPeriodManager.isDelegationPeriodAllowed(delegationPeriod),
