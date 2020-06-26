@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /*
-    SkaleTokenInternalTester.sol - SKALE Manager
+    SkaleDKGTester.sol - SKALE Manager
     Copyright (C) 2018-Present SKALE Labs
-    @author Dmytro Stebaiev
+    @author Artem Payvin
 
     SKALE Manager is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as published
@@ -20,18 +20,12 @@
 */
 
 pragma solidity 0.6.9;
+pragma experimental ABIEncoderV2;
 
-import "../SkaleToken.sol";
+import "../SkaleDKG.sol";
 
-
-contract SkaleTokenInternalTester is SkaleToken {
-
-    constructor(address contractManagerAddress, address[] memory defOps) public
-    SkaleToken(contractManagerAddress, defOps)
-    // solhint-disable-next-line no-empty-blocks
-    { }
-
-    function getMsgData() external view returns (bytes memory) {
-        return _msgData();
+contract SkaleDKGTester is SkaleDKG {
+    function setSuccesfulDKGPublic(bytes32 groupIndex) external {
+        _setSuccesfulDKG(groupIndex);
     }
 }
