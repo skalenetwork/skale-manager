@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /*
-    IDelegatableToken.sol - SKALE Manager
-    Copyright (C) 2019-Present SKALE Labs
+    LockerMock.sol - SKALE Manager
+    Copyright (C) 2018-Present SKALE Labs
     @author Dmytro Stebaiev
 
     SKALE Manager is free software: you can redistribute it and/or modify
@@ -21,20 +21,14 @@
 
 pragma solidity 0.6.9;
 
-/**
- * @dev Interface of Delegatable Token operations.
- */
-interface IDelegatableToken {
-    /**
-     * @dev Updates and returns the amount of locked tokens of a given account (`wallet`).
-     */
-    function getAndUpdateLockedAmount(address wallet) external returns (uint);
-    /**
-     * @dev Updates and returns the amount of delegated tokens of a given account (`wallet`).
-     */
-    function getAndUpdateDelegatedAmount(address wallet) external returns (uint);
-    /**
-     * @dev Updates and returns the amount of slashed tokens of a given account (`wallet`).
-     */
-    function getAndUpdateSlashedAmount(address wallet) external returns (uint);
+import "../interfaces/delegation/ILocker.sol";
+
+contract LockerMock is ILocker {
+    function getAndUpdateLockedAmount(address) external override returns (uint) {
+        return 13;
+    }
+    
+    function getAndUpdateForbiddenForDelegationAmount(address) external override returns (uint) {
+        return 13;
+    }
 }

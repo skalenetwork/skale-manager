@@ -3,6 +3,7 @@ import { ConstantsHolderInstance,
     DelegationControllerInstance,
     DelegationPeriodManagerInstance,
     DistributorInstance,
+    LockerMockContract,
     PunisherInstance,
     SkaleManagerMockContract,
     SkaleManagerMockInstance,
@@ -74,6 +75,27 @@ contract("Delegation", ([owner,
 
         // each test will start from Nov 10
         await skipTimeToDate(web3, 10, 10);
+    });
+
+    it("should allow owner to remove locker", async () => {
+        const LockerMock: LockerMockContract = artifacts.require("./LockerMock");
+        const lockerMock = await LockerMock.new();
+        await contractManager.setContractsAddress("D2", lockerMock.address);
+
+        await tokenState.addLocker("D2", {from: validator})
+            .should.be.eventually.rejectedWith("Caller is not the owner");
+        await tokenState.addLocker("D2");
+        (await tokenState.getAndUpdateLockedAmount.call(owner)).toNumber().should.be.equal(13);
+        await tokenState.removeLocker("D2");
+        (await tokenState.getAndUpdateLockedAmount.call(owner)).toNumber().should.be.equal(0);
+    });
+
+    it("should allow owner to set new delegation period", async () => {
+        await delegationPeriodManager.setDelegationPeriod(13, 13, {from: validator})
+            .should.be.eventually.rejectedWith("Caller is not the owner");
+        await delegationPeriodManager.setDelegationPeriod(13, 13);
+        (await delegationPeriodManager.stakeMultipliers(13)).toNumber()
+            .should.be.equal(13);
     });
 
     describe("when holders have tokens and validator is registered", async () => {

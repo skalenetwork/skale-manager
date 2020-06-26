@@ -19,7 +19,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.10;
+pragma solidity 0.6.9;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/access/AccessControl.sol";
@@ -72,16 +72,6 @@ contract Permissions is AccessControlUpgradeSafe {
         require(
             contractManager.contracts(keccak256(abi.encodePacked(contractName1))) == msg.sender ||
             contractManager.contracts(keccak256(abi.encodePacked(contractName2))) == msg.sender ||
-            _isOwner(),
-            "Message sender is invalid");
-        _;
-    }
-
-    modifier allowThree(string memory contractName1, string memory contractName2, string memory contractName3) {
-        require(
-            contractManager.contracts(keccak256(abi.encodePacked(contractName1))) == msg.sender ||
-            contractManager.contracts(keccak256(abi.encodePacked(contractName2))) == msg.sender ||
-            contractManager.contracts(keccak256(abi.encodePacked(contractName3))) == msg.sender ||
             _isOwner(),
             "Message sender is invalid");
         _;
