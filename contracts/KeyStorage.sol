@@ -116,35 +116,28 @@ contract KeyStorage is Permissions {
         external
         allow("SkaleDKG")
     {
-        for (uint i = 0; i < verificationVector.length; ++i) {
-            if (schainsNodesPublicKeys[groupIndex].length < verificationVector.length) {
-                schainsNodesPublicKeys[groupIndex].push(G2Operations.G2Point({
-                    x: Fp2Operations.Fp2Point({
-                        a: 0,
-                        b: 0
-                    }),
-                    y: Fp2Operations.Fp2Point({
-                        a: 1,
-                        b: 0
-                    })
-                }));
-            } else {
-                schainsNodesPublicKeys[groupIndex][i] = G2Operations.G2Point({
-                    x: Fp2Operations.Fp2Point({
-                        a: 0,
-                        b: 0
-                    }),
-                    y: Fp2Operations.Fp2Point({
-                        a: 1,
-                        b: 0
-                    })
-                });
+        if (schainsNodesPublicKeys[groupIndex].length == 0) {
+            for (uint i = 0; i < verificationVector.length; ++i) {
+                require(verificationVector[i].isG2(), "Incorrect g2 point");
+                G2Operations.G2Point memory tmp = verificationVector[i];
+                schainsNodesPublicKeys[groupIndex].push(tmp);
+                // schainsNodesPublicKeys[groupIndex].push(G2Operations.G2Point({
+                //     x: Fp2Operations.Fp2Point({
+                //         a: verificationVector[i].x.a,
+                //         b: verificationVector[i].x.b
+                //     }),
+                //     y: Fp2Operations.Fp2Point({
+                //         a: verificationVector[i].y.a,
+                //         b: verificationVector[i].y.b
+                //     })
+                // }));
+                require(schainsNodesPublicKeys[groupIndex][i].isG2(), "Incorrect g2 point");
             }
-        }
-        for (uint i = 0; i < schainsNodesPublicKeys[groupIndex].length; ++i) {
-            for (uint j = 0; j < verificationVector.length; ++j) {
-                require(verificationVector[j].isG2(), "Incorrect g2 point");
-                schainsNodesPublicKeys[groupIndex][i] = verificationVector[j].addG2(
+        } else {
+            for (uint i = 0; i < schainsNodesPublicKeys[groupIndex].length; ++i) {
+                require(verificationVector[i].isG2(), "Incorrect g2 point");
+                require(schainsNodesPublicKeys[groupIndex][i].isG2(), "Incorrect g2 point");
+                schainsNodesPublicKeys[groupIndex][i] = verificationVector[i].addG2(
                     schainsNodesPublicKeys[groupIndex][i]
                 );
             }

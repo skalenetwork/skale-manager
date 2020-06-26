@@ -203,11 +203,15 @@ contract SkaleDKG is Permissions {
         channels[groupIndex].numberOfCompleted++;
         emit AllDataReceived(groupIndex, fromNodeIndex);
         if (channels[groupIndex].numberOfCompleted == numberOfParticipant) {
-            lastSuccesfulDKG[groupIndex] = now;
-            KeyStorage(contractManager.getContract("KeyStorage")).finalizePublicKey(groupIndex);
-            channels[groupIndex].active = false;
-            emit SuccessfulDKG(groupIndex);
+            this.setSuccesfulDKG(groupIndex);
         }
+    }
+
+    function setSuccesfulDKG(bytes32 groupIndex) external allow("SkaleDKG") {
+        lastSuccesfulDKG[groupIndex] = now;
+        channels[groupIndex].active = false;
+        KeyStorage(contractManager.getContract("KeyStorage")).finalizePublicKey(groupIndex);
+        emit SuccessfulDKG(groupIndex);
     }
 
     function reopenChannel(bytes32 groupIndex) external allow("SchainsInternal") {
@@ -223,7 +227,7 @@ contract SkaleDKG is Permissions {
     }
 
     function isLastDKGSuccesful(bytes32 groupIndex) external view returns (bool) {
-        return channels[groupIndex].startedBlockTimestamp < lastSuccesfulDKG[groupIndex];
+        return channels[groupIndex].startedBlockTimestamp <= lastSuccesfulDKG[groupIndex];
     }
 
     function isBroadcastPossible(bytes32 groupIndex, uint nodeIndex) external view returns (bool) {

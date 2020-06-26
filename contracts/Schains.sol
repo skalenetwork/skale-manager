@@ -217,9 +217,9 @@ contract Schains is Permissions {
             revertMessage = revertMessage.strConcat(", occupied by Node ");
             revertMessage = revertMessage.strConcat(rotation.nodeIndex.uint2str());
             string memory dkgRevert = "DKG proccess did not finish on schain ";
-            ISkaleDKGCheck skaleDKG = ISkaleDKGCheck(contractManager.getContract("SchainsDKG"));
+            ISkaleDKGCheck skaleDKG = ISkaleDKGCheck(contractManager.getContract("SkaleDKG"));
             require(
-                !skaleDKG.isLastDKGSuccesful(keccak256(abi.encodePacked(schainName))),
+                skaleDKG.isLastDKGSuccesful(keccak256(abi.encodePacked(schainName))),
                 dkgRevert.strConcat(schainName));
             require(rotation.freezeUntil < now, revertMessage);
             schainsInternal.startRotation(schains[i], nodeIndex);
@@ -228,8 +228,8 @@ contract Schains is Permissions {
 
     function restartSchainCreation(string calldata name) external allow("SkaleManager") {
         bytes32 schainId = keccak256(abi.encodePacked(name));
-        ISkaleDKGCheck skaleDKG = ISkaleDKGCheck(contractManager.getContract("SchainsDKG"));
-        require(skaleDKG.isLastDKGSuccesful(schainId), "DKG success");
+        ISkaleDKGCheck skaleDKG = ISkaleDKGCheck(contractManager.getContract("SkaleDKG"));
+        require(!skaleDKG.isLastDKGSuccesful(schainId), "DKG success");
         SchainsInternal schainsInternal = SchainsInternal(
             contractManager.getContract("SchainsInternal"));
         require(schainsInternal.isAnyFreeNode(schainId), "No any free Nodes for rotation");

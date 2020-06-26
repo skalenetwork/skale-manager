@@ -31,18 +31,15 @@ chai.use(chaiAsPromised);
 class Channel {
     public active: boolean;
     public numberOfBroadcasted: BigNumber;
-    // public publicKey: {x: {a: BigNumber, b: BigNumber}, y: {a: BigNumber, b: BigNumber}};
     public numberOfCompleted: BigNumber;
     public startedBlockTimestamp: BigNumber;
     public nodeToComplaint: BigNumber;
     public fromNodeToComplaint: BigNumber;
     public startedComplaintBlockTimestamp: BigNumber;
 
-    constructor(arrayData: [boolean, BigNumber, BigNumber, BigNumber, BigNumber,
-        BigNumber, BigNumber]) {
+    constructor(arrayData: [boolean, BigNumber, BigNumber, BigNumber, BigNumber, BigNumber, BigNumber]) {
         this.active = arrayData[0];
         this.numberOfBroadcasted = new BigNumber(arrayData[1]);
-        // this.publicKey = arrayData[2];
         this.numberOfCompleted = new BigNumber(arrayData[2]);
         this.startedBlockTimestamp = new BigNumber(arrayData[3]);
         this.nodeToComplaint = new BigNumber(arrayData[4]);
@@ -101,10 +98,6 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
             "58625848706037406511582962295430965185674934704233043314647478422698817926283",
             "111405529669975789441427095287571197384937932095062249739044064944770017976403",
         ];
-
-        const secretNumberSecond = new BigNumber(
-            "111405529669975789441427095287571197384937932095062249739044064944770017976403",
-        );
 
         const encryptedSecretKeyContributions = [
             [
@@ -176,6 +169,17 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
             ]
         ];
 
+        const blsPublicKey = {
+            x: {
+                a: "19575648972062104039156457944800096485192277725771522457821135495599016919475",
+                b: "10461414583903273397964170863293307257793164852201073648813106332646797608431"
+            },
+            y: {
+                a: "9987791793343586452762678914063017437446978276276947139413192800155919071920",
+                b: "14950268549909528666366175582391711509445871373604198590837458858258893860219"
+            }
+        }
+
         const verificationVectors = [
             [
                 {
@@ -201,15 +205,6 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                     }
                 }
             ]
-        ];
-
-        const badVerificationVectors = [
-            "0x02c2b888a23187f22195eadadbc05847a00dc59c913d465dbc4dfac9cfab437d2695832627b9081e77da7a3fc4d574363bf05" +
-            "1700055822f3d394dc3d9ff741724727c45f9322be756fbec6514525cbbfa27ef1951d3fed10f483c23f921879d03a7a3e6f3b5" +
-            "39dad43c0eca46e3f889b2b2300815ffc4633e26e64406625a9a",
-            "0x2b61d71274e46235006128f6383539fa58ccf40c832fb1e81f3554c20efecbe4019708db3cb154aed20b0dba21505fac4e065" +
-            "93f353a8339fddaa21d2a43a5d91fed922c1955704caa85cdbcc7f33d24046362c635163e0e08bda8446c46699424d9e95c8cfa" +
-            "056db786176b84f9f8657a9cc8044855d43f1f088a515ed02af8",
         ];
 
         const multipliedShares = [
@@ -506,6 +501,27 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                     );
                     assert.equal(result.logs[1].event, "SuccessfulDKG");
                     assert.equal(result.logs[1].args.groupIndex, web3.utils.soliditySha3(schainName));
+                });
+
+                it("should calculate BLS public key ", async () => {
+                    await skaleDKG.alright(web3.utils.soliditySha3(schainName), 0, {from: validatorsAccount[0]});
+                    const result = await skaleDKG.alright(
+                        web3.utils.soliditySha3(schainName),
+                        1,
+                        {from: validatorsAccount[1]},
+                    );
+                    assert.equal(result.logs[1].event, "SuccessfulDKG");
+                    assert.equal(result.logs[1].args.groupIndex, web3.utils.soliditySha3(schainName));
+                    const key1 = await keyStorage.getBLSPublicKey(web3.utils.soliditySha3(schainName), 0);
+                    const key2 = await keyStorage.getBLSPublicKey(web3.utils.soliditySha3(schainName), 1);
+                    assert.equal(key1.x.a.toString(), blsPublicKey.x.a);
+                    assert.equal(key1.x.b.toString(), blsPublicKey.x.b);
+                    assert.equal(key1.y.a.toString(), blsPublicKey.y.a);
+                    assert.equal(key1.y.b.toString(), blsPublicKey.y.b);
+                    assert.equal(key2.x.a.toString(), blsPublicKey.x.a);
+                    assert.equal(key2.x.b.toString(), blsPublicKey.x.b);
+                    assert.equal(key2.y.a.toString(), blsPublicKey.y.a);
+                    assert.equal(key2.y.b.toString(), blsPublicKey.y.b);
                 });
 
                 describe("when 2 node sent incorrect complaint", async () => {
