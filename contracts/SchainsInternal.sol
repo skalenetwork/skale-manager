@@ -223,7 +223,7 @@ contract SchainsInternal is Permissions {
         bytes32 schainHash
     )
         external 
-        allowTwo("Schains", "SkaleDKG")
+        allowThree("NodeRotation", "SkaleDKG", "Schains")
     {
         uint schainId = findSchainAtSchainsForNode(nodeIndex, schainHash);
         uint indexOfNode = _findNode(schainHash, nodeIndex);
@@ -279,7 +279,7 @@ contract SchainsInternal is Permissions {
      * @param schainId - Groups identifier
      * @param nodeIndex - index of Node which would be notes like exception
      */
-    function setException(bytes32 schainId, uint nodeIndex) external allow("Schains") {
+    function setException(bytes32 schainId, uint nodeIndex) external allowTwo("Schains", "NodeRotation") {
         _exceptionsForGroups[schainId][nodeIndex] = true;
     }
 
@@ -289,7 +289,7 @@ contract SchainsInternal is Permissions {
      * @param schainId - Groups 
      * @param nodeIndex - index of Node which would be added to the Group
      */
-    function setNodeInGroup(bytes32 schainId, uint nodeIndex) external allow("Schains") {
+    function setNodeInGroup(bytes32 schainId, uint nodeIndex) external allowTwo("Schains", "NodeRotation") {
         if (holesForSchains[schainId].length == 0) {
             schainsGroups[schainId].nodesInGroup.push(nodeIndex);
         } else {
@@ -525,7 +525,7 @@ contract SchainsInternal is Permissions {
      * @param nodeIndex - index of Node
      * @param schainId - hash by Schain name
      */
-    function addSchainForNode(uint nodeIndex, bytes32 schainId) public allow("Schains") {
+    function addSchainForNode(uint nodeIndex, bytes32 schainId) public allowTwo("Schains", "NodeRotation") {
         if (holesForNodes[nodeIndex].length == 0) {
             schainsForNodes[nodeIndex].push(schainId);
         } else {
@@ -554,7 +554,10 @@ contract SchainsInternal is Permissions {
      * @param nodeIndex - index of Node
      * @param schainIndex - index of Schain in schainsForNodes array by this Node
      */
-    function removeSchainForNode(uint nodeIndex, uint schainIndex) public allowTwo("Schains", "SkaleDKG") {
+    function removeSchainForNode(uint nodeIndex, uint schainIndex)
+        public
+        allowThree("NodeRotation", "SkaleDKG", "Schains")
+    {
         uint length = schainsForNodes[nodeIndex].length;
         if (schainIndex == length.sub(1)) {
             schainsForNodes[nodeIndex].pop();

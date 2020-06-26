@@ -6,6 +6,7 @@ import { deployFunctionFactory } from "./factory";
 import { deployNodes } from "./nodes";
 import { deploySchainsInternal } from "./schainsInternal";
 import { deploySlashingTable } from "./slashingTable";
+import { deployNodeRotation } from "./nodeRotation";
 
 const deploySkaleDKG: (contractManager: ContractManagerInstance) => Promise<SkaleDKGInstance>
     = deployFunctionFactory("SkaleDKG",
@@ -16,6 +17,7 @@ const deploySkaleDKG: (contractManager: ContractManagerInstance) => Promise<Skal
                                 await deploySlashingTable(contractManager);
                                 await deployECDH(contractManager);
                                 await deployDecryption(contractManager);
+                                await deployNodeRotation(contractManager);
                             });
 
 export { deploySkaleDKG };
