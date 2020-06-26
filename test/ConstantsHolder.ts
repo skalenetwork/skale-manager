@@ -26,17 +26,17 @@ contract("ConstantsHolder", ([deployer, user]) => {
     parseInt(bn.toString(), 10).should.be.equal(100000000000000000000);
   });
 
-  it("TINY_DIVISOR should be equal 128", async () => {
+  it("SMALL_DIVISOR should be equal 128", async () => {
     const bn = new BigNumber(await constantsHolder.SMALL_DIVISOR());
     parseInt(bn.toString(), 10).should.be.equal(128);
   });
 
-  it("SMALL_DIVISOR should be equal 8", async () => {
+  it("MEDIUM_DIVISOR should be equal 8", async () => {
     const bn = new BigNumber(await constantsHolder.MEDIUM_DIVISOR());
     parseInt(bn.toString(), 10).should.be.equal(8);
   });
 
-  it("MEDIUM_DIVISOR should be equal 1", async () => {
+  it("LARGE_DIVISOR should be equal 1", async () => {
     const bn = new BigNumber(await constantsHolder.LARGE_DIVISOR());
     parseInt(bn.toString(), 10).should.be.equal(1);
   });
@@ -168,6 +168,24 @@ contract("ConstantsHolder", ([deployer, user]) => {
     const res = new BigNumber(await constantsHolder.checkTime());
     // parseInt(bn.toString(), 10).should.be.equal(0)
     expect(parseInt(res.toString(), 10)).to.be.equal(sec);
+  });
+
+  it("should set rotation delay", async () => {
+    await constantsHolder.setRotationDelay(13);
+    (await constantsHolder.rotationDelay()).toNumber()
+      .should.be.equal(13);
+  });
+
+  it("should set proof-of-use lockup period", async () => {
+    await constantsHolder.setProofOfUseLockUpPeriod(13);
+    (await constantsHolder.proofOfUseLockUpPeriodDays()).toNumber()
+      .should.be.equal(13);
+  });
+
+  it("should set proof-of-use delegation percentage", async () => {
+    await constantsHolder.setProofOfUseDelegationPercentage(13);
+    (await constantsHolder.proofOfUseDelegationPercentage()).toNumber()
+      .should.be.equal(13);
   });
 
 });
