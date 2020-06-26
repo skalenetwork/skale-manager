@@ -21,7 +21,7 @@ task("accounts", "Prints the list of accounts", async () => {
 module.exports = {
   defaultNetwork: "buidlerevm",
   solc: {
-    version: '0.6.9',
+    version: '0.6.10',
     evmVersion: 'petersburg',
     optimizer:{
       enabled: true,

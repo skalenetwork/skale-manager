@@ -10,7 +10,8 @@ import { ConstantsHolderInstance,
     SkaleTokenInstance,
     TokenStateInstance,
     ValidatorServiceInstance,
-    NodesInstance} from "../../types/truffle-contracts";
+    NodesInstance,
+    SlashingTableInstance} from "../../types/truffle-contracts";
 
 const SkaleManagerMock: SkaleManagerMockContract = artifacts.require("./SkaleManagerMock");
 
@@ -28,8 +29,10 @@ import { deployPunisher } from "../tools/deploy/delegation/punisher";
 import { deployTokenState } from "../tools/deploy/delegation/tokenState";
 import { deployValidatorService } from "../tools/deploy/delegation/validatorService";
 import { deploySkaleToken } from "../tools/deploy/skaleToken";
-import { Delegation } from "../tools/types";
+import { Delegation, State } from "../tools/types";
 import { deployNodes } from "../tools/deploy/nodes";
+import { deploySlashingTable } from "../tools/deploy/slashingTable";
+import { deployTimeHelpersWithDebug } from "../tools/deploy/test/timeHelpersWithDebug";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -300,6 +303,70 @@ contract("Delegation", ([owner,
             skipTime(web3, month);
             bondAmount2 = await validatorService.getAndUpdateBondAmount.call(validator2Id);
             assert.equal(bondAmount2.toNumber(), 400);
+        });
+
+        it("should not pay bounty for slashed tokens", async () => {
+            const ten18 = web3.utils.toBN(10).pow(web3.utils.toBN(18));
+            const timeHelpersWithDebug = await deployTimeHelpersWithDebug(contractManager);
+            await contractManager.setContractsAddress("TimeHelpers", timeHelpersWithDebug.address);
+            await skaleToken.mint(holder1, ten18.muln(10000).toString(10), "0x", "0x");
+            await skaleToken.mint(holder2, ten18.muln(10000).toString(10), "0x", "0x");
+
+            await constantsHolder.setMSR(ten18.muln(2000).toString(10));
+
+            const slashingTable: SlashingTableInstance = await deploySlashingTable(contractManager);
+            slashingTable.setPenalty("FailedDKG", ten18.muln(10000).toString(10));
+
+            await constantsHolder.setLaunchTimestamp((await currentTime(web3)) - 4 * month);
+
+            await delegationController.delegate(validatorId, ten18.muln(10000).toString(10), 3, "First delegation", {from: holder1});
+            const delegationId1 = 0;
+            await delegationController.acceptPendingDelegation(delegationId1, {from: validator});
+
+            await timeHelpersWithDebug.skipTime(month);
+            (await delegationController.getState(delegationId1)).toNumber().should.be.equal(State.DELEGATED);
+
+            const bounty = ten18;
+            for (let i = 0; i < 5; ++i) {
+                skaleManagerMock.payBounty(validatorId, bounty.toString(10));
+            }
+
+            await timeHelpersWithDebug.skipTime(month);
+
+            await distributor.withdrawBounty(validatorId, bountyAddress, {from: holder1});
+            let balance = (await skaleToken.balanceOf(bountyAddress)).toString(10);
+            balance.should.be.equal(bounty.muln(5).muln(85).divn(100).toString(10));
+            await skaleToken.transfer(holder1, balance, {from: bountyAddress});
+
+            await punisher.slash(validatorId, ten18.muln(10000).toString(10));
+
+            (await skaleToken.getAndUpdateSlashedAmount.call(holder1)).toString(10)
+                .should.be.equal(ten18.muln(10000).toString(10));
+            (await skaleToken.getAndUpdateDelegatedAmount.call(holder1)).toString(10)
+                .should.be.equal("0");
+
+            await delegationController.delegate(validatorId, ten18.muln(10000).toString(10), 3, "Second delegation", {from: holder2});
+            const delegationId2 = 1;
+            await delegationController.acceptPendingDelegation(delegationId2, {from: validator});
+
+            await timeHelpersWithDebug.skipTime(month);
+            (await delegationController.getState(delegationId2)).toNumber().should.be.equal(State.DELEGATED);
+
+            for (let i = 0; i < 5; ++i) {
+                skaleManagerMock.payBounty(validatorId, bounty.toString(10));
+            }
+
+            await timeHelpersWithDebug.skipTime(month);
+
+            await distributor.withdrawBounty(validatorId, bountyAddress, {from: holder1});
+            balance = (await skaleToken.balanceOf(bountyAddress)).toString(10);
+            balance.should.be.equal("0");
+            await skaleToken.transfer(holder1, balance, {from: bountyAddress});
+
+            await distributor.withdrawBounty(validatorId, bountyAddress, {from: holder2});
+            balance = (await skaleToken.balanceOf(bountyAddress)).toString(10);
+            balance.should.be.equal(bounty.muln(5).muln(85).divn(100).toString(10));
+            await skaleToken.transfer(holder2, balance, {from: bountyAddress});
         });
 
         describe("when 3 holders delegated", async () => {

@@ -19,7 +19,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.9;
+pragma solidity 0.6.10;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/access/AccessControl.sol";
@@ -55,6 +55,11 @@ contract Permissions is AccessControlUpgradeSafe {
         _;
     }
 
+    modifier onlyAdmin() {
+        require(_isAdmin(msg.sender), "Caller is not an admin");
+        _;
+    }
+
     /**
      * @dev allow - throws if called by any account and contract other than the owner
      * or `contractName` contract
@@ -74,10 +79,20 @@ contract Permissions is AccessControlUpgradeSafe {
             _isOwner(),
             "Message sender is invalid");
         _;
-    }    
+    }
 
     function _isOwner() internal view returns (bool) {
         return hasRole(DEFAULT_ADMIN_ROLE, msg.sender);
+    }
+
+    function _isAdmin(address account) internal view returns (bool) {
+        address skaleManagerAddress = contractManager.contracts(keccak256(abi.encodePacked("SkaleManager")));
+        if (skaleManagerAddress != address(0)) {
+            AccessControlUpgradeSafe skaleManager = AccessControlUpgradeSafe(skaleManagerAddress);
+            return skaleManager.hasRole(keccak256("ADMIN_ROLE"), account) || _isOwner();
+        } else {
+            return _isOwner();
+        }
     }
 
     function _setContractManager(address contractManagerAddress) private {
