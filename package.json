@@ -40,7 +40,7 @@
   },
   "dependencies": {
     "@openzeppelin/cli": "^2.6.0",
-    "@openzeppelin/contracts": "^3.0.2",
+    "@openzeppelin/contracts": "^3.1.0",
     "@openzeppelin/contracts-ethereum-package": "^3.0.0",
     "@openzeppelin/upgrades": "^2.8.0",
     "@truffle/hdwallet-provider": "^1.0.28",
@@ -51,7 +51,7 @@
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
     "ethereumjs-tx": "2.1.2",
-    "solc": "^0.6.10",
+    "solc": "^0.6.9",
     "truffle": "5.1.31",
     "truffle-typings": "^1.0.8",
     "ts-node": "8.10.2",

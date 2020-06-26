@@ -5,7 +5,7 @@
     "mark-callable-contracts": "off",
     "reason-string": "off",
 
-    "compiler-version": ["error","0.6.10"],
+    "compiler-version": ["error","0.6.9"],
     "state-visibility": "error",
     "no-empty-blocks": "error",
     "check-send-result": "error",

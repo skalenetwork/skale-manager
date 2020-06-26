@@ -21,7 +21,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.10;
+pragma solidity 0.6.9;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
@@ -96,8 +96,8 @@ contract ValidatorService is Permissions {
     );
 
     mapping (uint => Validator) public validators;
-    mapping (uint => bool) public trustedValidators;
-    uint[] public trustedValidatorsArray;
+    mapping (uint => bool) private _trustedValidators;
+    uint[] public trustedValidatorsList;
     ///      address => validatorId
     mapping (address => uint) private _validatorAddressToId;
     ///      address => validatorId
@@ -105,7 +105,6 @@ contract ValidatorService is Permissions {
     /// validatorId => nodeAddress[]
     mapping (uint => address[]) private _nodeAddresses;
     uint public numberOfValidators;
-
     bool public useWhitelist;
 
     modifier checkValidatorExists(uint validatorId) {
@@ -156,21 +155,21 @@ contract ValidatorService is Permissions {
     }
 
     function enableValidator(uint validatorId) external checkValidatorExists(validatorId) onlyOwner {
-        require(!trustedValidators[validatorId], "Validator is already enabled");
-        trustedValidators[validatorId] = true;
-        trustedValidatorsArray.push(validatorId);
+        require(!_trustedValidators[validatorId], "Validator is already enabled");
+        _trustedValidators[validatorId] = true;
+        trustedValidatorsList.push(validatorId);
         emit ValidatorWasEnabled(validatorId);
     }
 
     function disableValidator(uint validatorId) external checkValidatorExists(validatorId) onlyOwner {
-        require(trustedValidators[validatorId], "Validator is already disabled");
-        trustedValidators[validatorId] = false;
-        uint position = _find(trustedValidatorsArray, validatorId);
-        if (position < trustedValidatorsArray.length) {
-            trustedValidatorsArray[position] =
-                trustedValidatorsArray[trustedValidatorsArray.length.sub(1)];
+        require(_trustedValidators[validatorId], "Validator is already disabled");
+        _trustedValidators[validatorId] = false;
+        uint position = _find(trustedValidatorsList, validatorId);
+        if (position < trustedValidatorsList.length) {
+            trustedValidatorsList[position] =
+                trustedValidatorsList[trustedValidatorsList.length.sub(1)];
         }
-        trustedValidatorsArray.pop();
+        trustedValidatorsList.pop();
         emit ValidatorWasDisabled(validatorId);
     }
 
@@ -328,7 +327,7 @@ contract ValidatorService is Permissions {
      * @return uint[] trusted validators
      */
     function getTrustedValidators() external view returns (uint[] memory) {
-        return trustedValidatorsArray;
+        return trustedValidatorsList;
     }
 
     function checkMinimumDelegation(uint validatorId, uint amount)
@@ -352,6 +351,11 @@ contract ValidatorService is Permissions {
     function getValidatorIdByNodeAddress(address nodeAddress) external view returns (uint validatorId) {
         validatorId = _nodeAddressToValidatorId[nodeAddress];
         require(validatorId != 0, "Node address is not assigned to a validator");
+    }
+
+
+    function isAuthorizedValidator(uint validatorId) external view checkValidatorExists(validatorId) returns (bool) {
+        return _trustedValidators[validatorId] || !useWhitelist;
     }
 
     function initialize(address contractManagerAddress) public override initializer {

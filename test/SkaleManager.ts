@@ -8,6 +8,7 @@ import { ConstantsHolderInstance,
          NodesInstance,
          SchainsInternalInstance,
          SchainsInstance,
+         SkaleDKGTesterInstance,
          SkaleManagerInstance,
          SkaleTokenInstance,
          ValidatorServiceInstance,
@@ -17,6 +18,7 @@ import { ConstantsHolderInstance,
 
 import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
 import { deployContractManager } from "./tools/deploy/contractManager";
+import { deploySkaleDKGTester } from "./tools/deploy/test/skaleDKGTester";
 import { deployDelegationController } from "./tools/deploy/delegation/delegationController";
 import { deployDistributor } from "./tools/deploy/delegation/distributor";
 import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
@@ -44,6 +46,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
     let validatorService: ValidatorServiceInstance;
     let delegationController: DelegationControllerInstance;
     let distributor: DistributorInstance;
+    let skaleDKG: SkaleDKGTesterInstance;
     let bountyContract: BountyInstance;
 
     beforeEach(async () => {
@@ -59,7 +62,9 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
         validatorService = await deployValidatorService(contractManager);
         delegationController = await deployDelegationController(contractManager);
         distributor = await deployDistributor(contractManager);
-        bountyContract = await deployBounty(contractManager);
+        skaleDKG = await deploySkaleDKGTester(contractManager);
+        await contractManager.setContractsAddress("SkaleDKG", skaleDKG.address);
+	bountyContract = await deployBounty(contractManager);
 
         const premined = "100000000000000000000000000";
         await skaleToken.mint(skaleManager.address, premined, "0x", "0x");
@@ -378,6 +383,8 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
             });
         });
 
+
+
         describe("when 18 nodes are in the system", async () => {
 
             const verdict = {
@@ -404,37 +411,19 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
             });
 
             async function getMaximumBountyAmount(timestamp: number, nodesAmount: number) {
-                const ten18 = web3.utils.toBN(10).pow(web3.utils.toBN(18));
-                const bountyPoolSize = web3.utils.toBN(2310000000).mul(ten18);
-                const payments = [
-                    web3.utils.toBN(385000000).mul(ten18),
-                    web3.utils.toBN(346500000).mul(ten18),
-                    web3.utils.toBN(308000000).mul(ten18),
-                    web3.utils.toBN(192000000).mul(ten18)
-                ]
+                const bountyPoolSize = web3.utils.toBN(await skaleToken.CAP()).divn(3);
                 const networkLaunchTimestamp = (await constantsHolder.launchTimestamp()).toNumber();
                 if (timestamp < networkLaunchTimestamp) {
                     return web3.utils.toBN(0);
                 }
 
-                const stageLength = (await bountyContract.STAGE_LENGTH()).toNumber();
-                let stageEnd = networkLaunchTimestamp;
-                let bountyBlock = bountyPoolSize;
-                for(let i = 0; networkLaunchTimestamp + stageLength * i < timestamp; ++i) {
-                    if (i < payments.length) {
-                        bountyBlock = payments[i];
-                    } else {
-                        if (i % 3 === 0) {
-                            bountyBlock = bountyBlock.divn(2);
-                        }
-                    }
-                    stageEnd = networkLaunchTimestamp + stageLength * (i + 1);
-                }
-
+                const sixYears = web3.utils.toBN(await constantsHolder.SIX_YEARS());
                 const rewardPeriod = (await constantsHolder.rewardPeriod()).toNumber();
-                const numberOfBountyPayments = Math.floor((stageEnd - timestamp) / rewardPeriod) + 1;
-
-                return bountyBlock.divn(nodesAmount).divn(numberOfBountyPayments);
+                let bountyBlock = bountyPoolSize;
+                for(let i = 0; networkLaunchTimestamp + sixYears.muln(i).toNumber() < timestamp; ++i) {
+                    bountyBlock = bountyBlock.divn(2);
+                }
+                return bountyBlock.muln(rewardPeriod).div(sixYears.muln(nodesAmount));
             }
 
             async function calculateBounty(timestamp: number, nodesAmount: number, nodeId: number, metrics: {downtime: number, latency: number}) {
@@ -826,12 +815,8 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                                 0, // nonce
                                 "d2"]), // name
                             {from: developer});
-                        await schainsInternal.setPublicKey(
+                        await skaleDKG.setSuccesfulDKGPublic(
                             web3.utils.soliditySha3("d2"),
-                            0,
-                            0,
-                            0,
-                            0,
                         );
                     });
 
@@ -849,12 +834,8 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                     it("should delete schain after deleting node", async () => {
                         const nodes = await schainsInternal.getNodesInGroup(web3.utils.soliditySha3("d2"));
                         await skaleManager.nodeExit(nodes[0], {from: nodeAddress});
-                        await schainsInternal.setPublicKey(
+                        await skaleDKG.setSuccesfulDKGPublic(
                             web3.utils.soliditySha3("d2"),
-                            0,
-                            0,
-                            0,
-                            0,
                         );
                         await skaleManager.deleteSchain("d2", {from: developer});
                     });
