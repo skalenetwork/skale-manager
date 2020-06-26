@@ -95,6 +95,7 @@ contract KeyStorage is Permissions {
                 b: 0
             })
         });
+        _removeAllBroadcastedData(groupIndex);
         delete schainsNodesPublicKeys[groupIndex];
     }
 
@@ -178,30 +179,50 @@ contract KeyStorage is Permissions {
             _checkCorrectMultipliedShare(multipliedShare, secret);
     }
 
-    function getBroadcastedData(bytes32 groupIndex, uint indexInSchain)
+    function getBroadcastedData(bytes32 groupIndex, uint nodeIndex)
         external
         view
         returns (KeyShare[] memory, G2Operations.G2Point[] memory)
     {
+        uint indexInSchain = SchainsInternal(contractManager.getContract("SchainsInternal")).getNodeIndexInGroup(
+            groupIndex,
+            nodeIndex
+        );
+        if (
+            _data[groupIndex][indexInSchain].secretKeyContribution.length == 0 &&
+            _data[groupIndex][indexInSchain].verificationVector.length == 0
+        ) {
+            KeyShare[] memory keyShare = new KeyShare[](0);
+            G2Operations.G2Point[] memory g2Point = new G2Operations.G2Point[](0);
+            return (keyShare, g2Point);
+        }
         return (
             _data[groupIndex][indexInSchain].secretKeyContribution,
             _data[groupIndex][indexInSchain].verificationVector
         );
     }
 
-    function getSecretKeyShare(bytes32 groupIndex, uint indexInSchain, uint index)
+    function getSecretKeyShare(bytes32 groupIndex, uint nodeIndex, uint index)
         external
         view
         returns (bytes32)
     {
+        uint indexInSchain = SchainsInternal(contractManager.getContract("SchainsInternal")).getNodeIndexInGroup(
+            groupIndex,
+            nodeIndex
+        );
         return (_data[groupIndex][indexInSchain].secretKeyContribution[index].share);
     }
 
-    function getVerificationVector(bytes32 groupIndex, uint indexInSchain)
+    function getVerificationVector(bytes32 groupIndex, uint nodeIndex)
         external
         view
         returns (G2Operations.G2Point[] memory)
     {
+        uint indexInSchain = SchainsInternal(contractManager.getContract("SchainsInternal")).getNodeIndexInGroup(
+            groupIndex,
+            nodeIndex
+        );
         return (_data[groupIndex][indexInSchain].verificationVector);
     }
 
@@ -240,6 +261,15 @@ contract KeyStorage is Permissions {
 
     function initialize(address contractsAddress) public override initializer {
         Permissions.initialize(contractsAddress);
+    }
+
+    function _removeAllBroadcastedData(bytes32 groupIndex) internal {
+        uint length = SchainsInternal(
+            contractManager.getContract("SchainsInternal")
+        ).getNumberOfNodesInGroup(groupIndex);
+        for (uint i = 0; i < length; i++) {
+            delete _data[groupIndex][i];
+        }
     }
 
     function _calculateBlsPublicKey(bytes32 groupIndex, uint index)

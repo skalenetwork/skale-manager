@@ -759,6 +759,10 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
 
             assert.equal(res, true);
 
+            const broadcastedDataFrom2 = await keyStorage.getBroadcastedData(web3.utils.soliditySha3(schainName), 2);
+            assert(broadcastedDataFrom2[0].length.toString(), "0");
+            assert(broadcastedDataFrom2[1].length.toString(), "0");
+
             await skaleDKG.broadcast(
                 web3.utils.soliditySha3(schainName),
                 2,
@@ -774,6 +778,10 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                     {from: validatorsAccount[1]},
                 );
             assert.equal(res, true);
+
+            const broadcastedDataFrom1 = await keyStorage.getBroadcastedData(web3.utils.soliditySha3(schainName), 1);
+            assert(broadcastedDataFrom1[0].length.toString(), "0");
+            assert(broadcastedDataFrom1[1].length.toString(), "0");
 
             await skaleDKG.broadcast(
                 web3.utils.soliditySha3(schainName),
