@@ -29,10 +29,13 @@ import "./Permissions.sol";
 contract Bounty is Permissions {
 
     uint public constant STAGE_LENGTH = 31558150; // 1 year
-    uint public constant YEAR1_BOUNTY = 385e6 * 1e18;
+    uint public constant YEAR1_BOUNTY = 3850e5 * 1e18;
     uint public constant YEAR2_BOUNTY = 3465e5 * 1e18;
-    uint public constant YEAR3_BOUNTY = 308e6 * 1e18;
-    uint public constant BOUNTY = 192e6 * 1e18;
+    uint public constant YEAR3_BOUNTY = 3080e5 * 1e18;
+    uint public constant YEAR4_BOUNTY = 2695e5 * 1e18;
+    uint public constant YEAR5_BOUNTY = 2310e5 * 1e18;
+    uint public constant YEAR6_BOUNTY = 1925e5 * 1e18;
+    uint public constant BOUNTY = 96250000 * 1e18;
 
     uint private _nextStage;
     uint private _stagePool;
@@ -146,15 +149,21 @@ contract Bounty is Permissions {
     }
 
     function _getStageReward(uint stage) private pure returns (uint) {
-        if (stage >= 3) {
-            return BOUNTY.div(2 ** stage.sub(3).div(3).add(1));
+        if (stage >= 6) {
+            return BOUNTY.div(2 ** stage.sub(6).div(3).add(1));
         } else {
             if (stage == 0) {
                 return YEAR1_BOUNTY;
             } else if (stage == 1) {
                 return YEAR2_BOUNTY;
-            } else {
+            } else if (stage == 2) {
                 return YEAR3_BOUNTY;
+            } else if (stage == 3) {
+                return YEAR4_BOUNTY;
+            } else if (stage == 4) {
+                return YEAR5_BOUNTY;
+            } else {
+                return YEAR6_BOUNTY;
             }
         }
     }
