@@ -28,9 +28,10 @@ import "./Schains.sol";
 import "./SchainsInternal.sol";
 import "./utils/FieldOperations.sol";
 import "./KeyStorage.sol";
+import "./interfaces/ISkaleDKG.sol";
 
 
-contract SkaleDKG is Permissions {
+contract SkaleDKG is Permissions, ISkaleDKG {
 
     struct Channel {
         bool active;
@@ -82,13 +83,13 @@ contract SkaleDKG is Permissions {
         _;
     }
 
-    function openChannel(bytes32 groupIndex) external allow("SchainsInternal") {
+    function openChannel(bytes32 groupIndex) external override allow("SchainsInternal") {
         require(!channels[groupIndex].active, "Channel already is created");
 
         _reopenChannel(groupIndex);
     }
 
-    function deleteChannel(bytes32 groupIndex) external allow("SchainsInternal") {
+    function deleteChannel(bytes32 groupIndex) external override allow("SchainsInternal") {
         require(channels[groupIndex].active, "Channel is not created");
         delete channels[groupIndex];
         KeyStorage(contractManager.getContract("KeyStorage")).deleteKey(groupIndex);
@@ -203,22 +204,15 @@ contract SkaleDKG is Permissions {
         channels[groupIndex].numberOfCompleted++;
         emit AllDataReceived(groupIndex, fromNodeIndex);
         if (channels[groupIndex].numberOfCompleted == numberOfParticipant) {
-            this.setSuccesfulDKG(groupIndex);
+            _setSuccesfulDKG(groupIndex);
         }
     }
 
-    function setSuccesfulDKG(bytes32 groupIndex) external allow("SkaleDKG") {
-        lastSuccesfulDKG[groupIndex] = now;
-        channels[groupIndex].active = false;
-        KeyStorage(contractManager.getContract("KeyStorage")).finalizePublicKey(groupIndex);
-        emit SuccessfulDKG(groupIndex);
-    }
-
-    function reopenChannel(bytes32 groupIndex) external allow("SchainsInternal") {
+    function reopenChannel(bytes32 groupIndex) external override allow("SchainsInternal") {
         _reopenChannel(groupIndex);
     }
 
-    function isChannelOpened(bytes32 groupIndex) external view returns (bool) {
+    function isChannelOpened(bytes32 groupIndex) external override view returns (bool) {
         return channels[groupIndex].active;
     }
 
@@ -226,7 +220,7 @@ contract SkaleDKG is Permissions {
         return lastSuccesfulDKG[groupIndex];
     }
 
-    function isLastDKGSuccesful(bytes32 groupIndex) external view returns (bool) {
+    function isLastDKGSuccesful(bytes32 groupIndex) external override view returns (bool) {
         return channels[groupIndex].startedBlockTimestamp <= lastSuccesfulDKG[groupIndex];
     }
 
@@ -296,6 +290,13 @@ contract SkaleDKG is Permissions {
 
     function initialize(address contractsAddress) public override initializer {
         Permissions.initialize(contractsAddress);
+    }
+
+    function _setSuccesfulDKG(bytes32 groupIndex) internal {
+        lastSuccesfulDKG[groupIndex] = now;
+        channels[groupIndex].active = false;
+        KeyStorage(contractManager.getContract("KeyStorage")).finalizePublicKey(groupIndex);
+        emit SuccessfulDKG(groupIndex);
     }
 
     function _reopenChannel(bytes32 groupIndex) private {

@@ -28,10 +28,11 @@ import "./ConstantsHolder.sol";
 import "./KeyStorage.sol";
 import "./SkaleVerifier.sol";
 import "./utils/FieldOperations.sol";
+import "./interfaces/ISkaleDKG.sol";
 
-interface ISkaleDKGCheck {
-    function isLastDKGSuccesful(bytes32 groupIndex) external view returns (bool);
-}
+// interface ISkaleDKGCheck {
+//     function isLastDKGSuccesful(bytes32 groupIndex) external view returns (bool);
+// }
 
 /**
  * @title Schains - contract contains all functionality logic to manage Schains
@@ -217,7 +218,7 @@ contract Schains is Permissions {
             revertMessage = revertMessage.strConcat(", occupied by Node ");
             revertMessage = revertMessage.strConcat(rotation.nodeIndex.uint2str());
             string memory dkgRevert = "DKG proccess did not finish on schain ";
-            ISkaleDKGCheck skaleDKG = ISkaleDKGCheck(contractManager.getContract("SkaleDKG"));
+            ISkaleDKG skaleDKG = ISkaleDKG(contractManager.getContract("SkaleDKG"));
             require(
                 skaleDKG.isLastDKGSuccesful(keccak256(abi.encodePacked(schainName))),
                 dkgRevert.strConcat(schainName));
@@ -228,7 +229,7 @@ contract Schains is Permissions {
 
     function restartSchainCreation(string calldata name) external allow("SkaleManager") {
         bytes32 schainId = keccak256(abi.encodePacked(name));
-        ISkaleDKGCheck skaleDKG = ISkaleDKGCheck(contractManager.getContract("SkaleDKG"));
+        ISkaleDKG skaleDKG = ISkaleDKG(contractManager.getContract("SkaleDKG"));
         require(!skaleDKG.isLastDKGSuccesful(schainId), "DKG success");
         SchainsInternal schainsInternal = SchainsInternal(
             contractManager.getContract("SchainsInternal"));

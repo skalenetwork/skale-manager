@@ -6,7 +6,7 @@ import { ConstantsHolderInstance,
          NodesInstance,
          SchainsInternalInstance,
          SchainsInstance,
-         SkaleDKGInstance,
+         SkaleDKGTesterInstance,
          SkaleManagerInstance,
          ValidatorServiceInstance } from "../types/truffle-contracts";
 
@@ -20,7 +20,7 @@ import { deployValidatorService } from "./tools/deploy/delegation/validatorServi
 import { deployNodes } from "./tools/deploy/nodes";
 import { deploySchainsInternal } from "./tools/deploy/schainsInternal";
 import { deploySchains } from "./tools/deploy/schains";
-import { deploySkaleDKG } from "./tools/deploy/skaleDKG";
+import { deploySkaleDKGTester } from "./tools/deploy/test/skaleDKGTester";
 import { deploySkaleManager } from "./tools/deploy/skaleManager";
 
 chai.should();
@@ -33,7 +33,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
     let schainsInternal: SchainsInternalInstance;
     let nodes: NodesInstance;
     let validatorService: ValidatorServiceInstance;
-    let skaleDKG: SkaleDKGInstance;
+    let skaleDKG: SkaleDKGTesterInstance;
     let skaleManager: SkaleManagerInstance;
     let keyStorage: KeyStorageInstance;
 
@@ -45,7 +45,8 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
         schainsInternal = await deploySchainsInternal(contractManager);
         schains = await deploySchains(contractManager);
         validatorService = await deployValidatorService(contractManager);
-        skaleDKG = await deploySkaleDKG(contractManager);
+        skaleDKG = await deploySkaleDKGTester(contractManager);
+        await contractManager.setContractsAddress("SkaleDKG", skaleDKG.address);
         keyStorage = await deployKeyStorage(contractManager);
         skaleManager = await deploySkaleManager(contractManager);
 
@@ -769,7 +770,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
                 deposit,
                 web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d2"]),
                 {from: owner});
-            await skaleDKG.setSuccesfulDKG(
+            await skaleDKG.setSuccesfulDKGPublic(
                 web3.utils.soliditySha3("d2"),
             );
 
@@ -778,7 +779,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
                 deposit,
                 web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d3"]),
                 {from: owner});
-            await skaleDKG.setSuccesfulDKG(
+            await skaleDKG.setSuccesfulDKGPublic(
                 web3.utils.soliditySha3("d3"),
             );
             await skaleManager.createNode(
@@ -809,13 +810,13 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
             const nodeRot = res1[3];
             const res = await skaleDKG.isBroadcastPossible(
                 web3.utils.soliditySha3("d3"), nodeRot);
-            await skaleDKG.setSuccesfulDKG(
+            await skaleDKG.setSuccesfulDKGPublic(
                 web3.utils.soliditySha3("d3"),
             );
             await skaleManager.nodeExit(1, {from: nodeAddress})
                 .should.be.eventually.rejectedWith("Node cannot rotate on Schain d3, occupied by Node 0");
             await skaleManager.nodeExit(0, {from: nodeAddress});
-            await skaleDKG.setSuccesfulDKG(
+            await skaleDKG.setSuccesfulDKGPublic(
                 web3.utils.soliditySha3("d2"),
             );
             nodeStatus = (await nodes.getNodeStatus(0)).toNumber();
@@ -830,13 +831,13 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
             skipTime(web3, 43260);
 
             await skaleManager.nodeExit(1, {from: nodeAddress});
-            await skaleDKG.setSuccesfulDKG(
+            await skaleDKG.setSuccesfulDKGPublic(
                 web3.utils.soliditySha3("d3"),
             );
             nodeStatus = (await nodes.getNodeStatus(1)).toNumber();
             assert.equal(nodeStatus, LEAVING);
             await skaleManager.nodeExit(1, {from: nodeAddress});
-            await skaleDKG.setSuccesfulDKG(
+            await skaleDKG.setSuccesfulDKGPublic(
                 web3.utils.soliditySha3("d2"),
             );
             nodeStatus = (await nodes.getNodeStatus(1)).toNumber();
@@ -876,7 +877,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
                 (exist4 && newArrayD3[zeroPositionD3].toNumber() === 4),
                 true
             );
-            await skaleDKG.setSuccesfulDKG(
+            await skaleDKG.setSuccesfulDKGPublic(
                 web3.utils.soliditySha3("d3"),
             );
             await skaleManager.nodeExit(0, {from: nodeAddress});
@@ -907,7 +908,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
                 (exist4 && newArrayD2[zeroPositionD2].toNumber() === 4),
                 true
             );
-            await skaleDKG.setSuccesfulDKG(
+            await skaleDKG.setSuccesfulDKGPublic(
                 web3.utils.soliditySha3("d2"),
             );
             skipTime(web3, 43260);
@@ -939,7 +940,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
                 (exist4 && newNewArrayD3[onePositionD3].toNumber() === 4),
                 true
             );
-            await skaleDKG.setSuccesfulDKG(
+            await skaleDKG.setSuccesfulDKGPublic(
                 web3.utils.soliditySha3("d3"),
             );
             await skaleManager.nodeExit(1, {from: nodeAddress});
@@ -970,21 +971,21 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
                 (exist4 && newNewArrayD2[onePositionD2].toNumber() === 4),
                 true
             );
-            await skaleDKG.setSuccesfulDKG(
+            await skaleDKG.setSuccesfulDKGPublic(
                 web3.utils.soliditySha3("d2"),
             );
         });
 
         it("should allow to rotate if occupied node didn't rotated for 12 hours", async () => {
             await skaleManager.nodeExit(0, {from: nodeAddress});
-            await skaleDKG.setSuccesfulDKG(
+            await skaleDKG.setSuccesfulDKGPublic(
                 web3.utils.soliditySha3("d3"),
             );
             await skaleManager.nodeExit(1, {from: nodeAddress})
                 .should.be.eventually.rejectedWith("Node cannot rotate on Schain d3, occupied by Node 0");
             skipTime(web3, 43260);
             await skaleManager.nodeExit(1, {from: nodeAddress});
-            await skaleDKG.setSuccesfulDKG(
+            await skaleDKG.setSuccesfulDKGPublic(
                 web3.utils.soliditySha3("d3"),
             );
 
@@ -1001,11 +1002,11 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
         it("should rotate on schain that previously was deleted", async () => {
             const deposit = await schains.getSchainPrice(5, 5);
             await skaleManager.nodeExit(0, {from: nodeAddress});
-            await skaleDKG.setSuccesfulDKG(
+            await skaleDKG.setSuccesfulDKGPublic(
                 web3.utils.soliditySha3("d3"),
             );
             await skaleManager.nodeExit(0, {from: nodeAddress});
-            await skaleDKG.setSuccesfulDKG(
+            await skaleDKG.setSuccesfulDKGPublic(
                 web3.utils.soliditySha3("d2"),
             );
             await skaleManager.deleteSchainByRoot("d2", {from: owner});
@@ -1015,7 +1016,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
                 deposit,
                 web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d2"]),
                 {from: owner});
-            await skaleDKG.setSuccesfulDKG(
+            await skaleDKG.setSuccesfulDKGPublic(
                 web3.utils.soliditySha3("d2"),
             );
             const nodesInGroupBN = await schainsInternal.getNodesInGroup(web3.utils.soliditySha3("d2"));
@@ -1083,13 +1084,13 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
             assert.equal(res, true);
             res = await skaleDKG.isBroadcastPossible(web3.utils.soliditySha3("d3"), nodeRot, {from: nodeAddress});
             assert.equal(res, true);
-            await skaleDKG.setSuccesfulDKG(
+            await skaleDKG.setSuccesfulDKGPublic(
                 web3.utils.soliditySha3("d3"),
             );
             await skaleManager.nodeExit(1, {from: nodeAddress})
                 .should.be.eventually.rejectedWith("Node cannot rotate on Schain d3, occupied by Node 0");
             await skaleManager.nodeExit(0, {from: nodeAddress});
-            await skaleDKG.setSuccesfulDKG(
+            await skaleDKG.setSuccesfulDKGPublic(
                 web3.utils.soliditySha3("d2"),
             );
 
@@ -1277,7 +1278,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
                 deposit,
                 web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d1"]),
                 {from: owner});
-            await skaleDKG.setSuccesfulDKG(
+            await skaleDKG.setSuccesfulDKGPublic(
                 web3.utils.soliditySha3("d1"),
             );
 
@@ -1286,7 +1287,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
                 deposit,
                 web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d2"]),
                 {from: owner});
-            await skaleDKG.setSuccesfulDKG(
+            await skaleDKG.setSuccesfulDKGPublic(
                 web3.utils.soliditySha3("d2"),
             );
 
@@ -1295,7 +1296,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
                 deposit,
                 web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d3"]),
                 {from: owner});
-            await skaleDKG.setSuccesfulDKG(
+            await skaleDKG.setSuccesfulDKGPublic(
                 web3.utils.soliditySha3("d3"),
             );
 
@@ -1304,7 +1305,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
                 deposit,
                 web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d4"]),
                 {from: owner});
-            await skaleDKG.setSuccesfulDKG(
+            await skaleDKG.setSuccesfulDKGPublic(
                 web3.utils.soliditySha3("d4"),
             );
 
@@ -1323,7 +1324,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
             }
             for (const schainId of schainIds.reverse()) {
                 await skaleManager.nodeExit(rotIndex, {from: nodeAddress});
-                await skaleDKG.setSuccesfulDKG(
+                await skaleDKG.setSuccesfulDKGPublic(
                     schainId,
                 );
             }
@@ -1343,7 +1344,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
             }
             for (const schainId of schainIds1.reverse()) {
                 await skaleManager.nodeExit(rotIndex1, {from: nodeAddress});
-                await skaleDKG.setSuccesfulDKG(
+                await skaleDKG.setSuccesfulDKGPublic(
                     schainId,
                 );
             }
@@ -1363,7 +1364,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
             skipTime(web3, 43260);
             for (const schainId of schainIds2.reverse()) {
                 await skaleManager.nodeExit(rotIndex2, {from: nodeAddress});
-                await skaleDKG.setSuccesfulDKG(
+                await skaleDKG.setSuccesfulDKGPublic(
                     schainId,
                 );
             }

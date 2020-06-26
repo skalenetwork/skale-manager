@@ -9,14 +9,14 @@ import { ConstantsHolderInstance,
          NodesInstance,
          SchainsInternalInstance,
          SchainsInstance,
-         SkaleDKGInstance,
+         SkaleDKGTesterInstance,
          SkaleManagerInstance,
          SkaleTokenInstance,
          ValidatorServiceInstance} from "../types/truffle-contracts";
 
 import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
 import { deployContractManager } from "./tools/deploy/contractManager";
-import { deploySkaleDKG } from "./tools/deploy/skaleDKG";
+import { deploySkaleDKGTester } from "./tools/deploy/test/skaleDKGTester";
 import { deployDelegationController } from "./tools/deploy/delegation/delegationController";
 import { deployDistributor } from "./tools/deploy/delegation/distributor";
 import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
@@ -43,7 +43,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
     let validatorService: ValidatorServiceInstance;
     let delegationController: DelegationControllerInstance;
     let distributor: DistributorInstance;
-    let skaleDKG: SkaleDKGInstance;
+    let skaleDKG: SkaleDKGTesterInstance;
 
     beforeEach(async () => {
         contractManager = await deployContractManager();
@@ -58,7 +58,8 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
         validatorService = await deployValidatorService(contractManager);
         delegationController = await deployDelegationController(contractManager);
         distributor = await deployDistributor(contractManager);
-        skaleDKG = await deploySkaleDKG(contractManager);
+        skaleDKG = await deploySkaleDKGTester(contractManager);
+        await contractManager.setContractsAddress("SkaleDKG", skaleDKG.address);
 
         const premined = "100000000000000000000000000";
         await skaleToken.mint(skaleManager.address, premined, "0x", "0x");
@@ -809,7 +810,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                                 0, // nonce
                                 "d2"]), // name
                             {from: developer});
-                        await skaleDKG.setSuccesfulDKG(
+                        await skaleDKG.setSuccesfulDKGPublic(
                             web3.utils.soliditySha3("d2"),
                         );
                     });
@@ -828,7 +829,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                     it("should delete schain after deleting node", async () => {
                         const nodes = await schainsInternal.getNodesInGroup(web3.utils.soliditySha3("d2"));
                         await skaleManager.nodeExit(nodes[0], {from: nodeAddress});
-                        await skaleDKG.setSuccesfulDKG(
+                        await skaleDKG.setSuccesfulDKGPublic(
                             web3.utils.soliditySha3("d2"),
                         );
                         await skaleManager.deleteSchain("d2", {from: developer});

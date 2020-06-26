@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /*
-    LockerMock.sol - SKALE Manager
+    SkaleDKGTester.sol - SKALE Manager
     Copyright (C) 2018-Present SKALE Labs
-    @author Dmytro Stebaiev
+    @author Artem Payvin
 
     SKALE Manager is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as published
@@ -20,15 +20,12 @@
 */
 
 pragma solidity 0.6.9;
+pragma experimental ABIEncoderV2;
 
-import "../interfaces/delegation/ILocker.sol";
+import "../SkaleDKG.sol";
 
-contract LockerMock is ILocker {
-    function getAndUpdateLockedAmount(address) external override returns (uint) {
-        return 13;
-    }
-    
-    function getAndUpdateForbiddenForDelegationAmount(address) external override returns (uint) {
-        return 13;
+contract SkaleDKGTester is SkaleDKG {
+    function setSuccesfulDKGPublic(bytes32 groupIndex) external {
+        _setSuccesfulDKG(groupIndex);
     }
 }
