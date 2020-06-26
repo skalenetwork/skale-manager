@@ -194,7 +194,9 @@ contract ValidatorService is Permissions {
     function requestForNewAddress(address newValidatorAddress) external {
         require(newValidatorAddress != address(0), "New address cannot be null");
         require(_validatorAddressToId[newValidatorAddress] == 0, "Address already registered");
+        // check Validator Exist inside getValidatorId
         uint validatorId = getValidatorId(msg.sender);
+
         validators[validatorId].requestedAddress = newValidatorAddress;
     }
 
@@ -226,10 +228,14 @@ contract ValidatorService is Permissions {
      * @param sig bytes signature of validator Id by node operator.
      */
     function linkNodeAddress(address nodeAddress, bytes calldata sig) external {
+        // check Validator Exist inside getValidatorId
         uint validatorId = getValidatorId(msg.sender);
-        bytes32 hashOfValidatorId = keccak256(abi.encodePacked(validatorId)).toEthSignedMessageHash();
-        require(hashOfValidatorId.recover(sig) == nodeAddress, "Signature is not pass");
+        require(
+            keccak256(abi.encodePacked(validatorId)).toEthSignedMessageHash().recover(sig) == nodeAddress,
+            "Signature is not pass"
+        );
         require(_validatorAddressToId[nodeAddress] == 0, "Node address is a validator");
+
         _addNodeAddress(validatorId, nodeAddress);
         emit NodeAddressWasAdded(validatorId, nodeAddress);
     }
@@ -242,13 +248,17 @@ contract ValidatorService is Permissions {
      * @param nodeAddress address
      */
     function unlinkNodeAddress(address nodeAddress) external {
+        // check Validator Exist inside getValidatorId
         uint validatorId = getValidatorId(msg.sender);
+
         _removeNodeAddress(validatorId, nodeAddress);
         emit NodeAddressWasRemoved(validatorId, nodeAddress);
     }
 
     function setValidatorMDA(uint minimumDelegationAmount) external {
+        // check Validator Exist inside getValidatorId
         uint validatorId = getValidatorId(msg.sender);
+
         validators[validatorId].minimumDelegationAmount = minimumDelegationAmount;
     }
 
@@ -258,7 +268,9 @@ contract ValidatorService is Permissions {
      * @param newName string
      */
     function setValidatorName(string calldata newName) external {
+        // check Validator Exist inside getValidatorId
         uint validatorId = getValidatorId(msg.sender);
+
         validators[validatorId].name = newName;
     }
 
@@ -268,7 +280,9 @@ contract ValidatorService is Permissions {
      * @param newDescription string
      */
     function setValidatorDescription(string calldata newDescription) external {
+        // check Validator Exist inside getValidatorId
         uint validatorId = getValidatorId(msg.sender);
+
         validators[validatorId].description = newDescription;
     }
 
@@ -280,8 +294,10 @@ contract ValidatorService is Permissions {
      * - validator must not have already enabled accepting new requests
      */
     function startAcceptingNewRequests() external {
+        // check Validator Exist inside getValidatorId
         uint validatorId = getValidatorId(msg.sender);
         require(!isAcceptingNewRequests(validatorId), "Accepting request is already enabled");
+
         validators[validatorId].acceptNewRequests = true;
     }
 
@@ -293,8 +309,10 @@ contract ValidatorService is Permissions {
      * - validator must not have already stopped accepting new requests
      */
     function stopAcceptingNewRequests() external {
+        // check Validator Exist inside getValidatorId
         uint validatorId = getValidatorId(msg.sender);
         require(isAcceptingNewRequests(validatorId), "Accepting request is already disabled");
+
         validators[validatorId].acceptNewRequests = false;
     }
 
