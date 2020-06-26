@@ -250,7 +250,6 @@ contract Monitors is Permissions {
 
     function _generateGroup(bytes32 monitorIndex, uint nodeIndex, uint numberOfNodes)
         private
-        allow("SkaleManager")
     {
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));
         uint[] memory activeNodes = nodes.getActiveNodeIds();
