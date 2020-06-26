@@ -19,13 +19,14 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.10;
+pragma solidity 0.6.9;
 pragma experimental ABIEncoderV2;
 
 import "./Permissions.sol";
 import "./ConstantsHolder.sol";
 import "./SchainsInternal.sol";
 import "./Nodes.sol";
+import "./interfaces/ISkaleDKG.sol";
 
 
 contract NodeRotation is Permissions {
@@ -78,8 +79,9 @@ contract NodeRotation is Permissions {
             revertMessage = revertMessage.strConcat(", occupied by Node ");
             revertMessage = revertMessage.strConcat(rotation.nodeIndex.uint2str());
             string memory dkgRevert = "DKG proccess did not finish on schain ";
+            ISkaleDKG skaleDKG = ISkaleDKG(contractManager.getContract("SkaleDKG"));
             require(
-                !schainsInternal.isGroupFailedDKG(keccak256(abi.encodePacked(schainName))),
+                skaleDKG.isLastDKGSuccesful(keccak256(abi.encodePacked(schainName))),
                 dkgRevert.strConcat(schainName));
             require(rotation.freezeUntil < now, revertMessage);
             _startRotation(schains[i], nodeIndex);
