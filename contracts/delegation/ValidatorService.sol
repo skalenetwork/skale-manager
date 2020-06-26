@@ -21,7 +21,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.10;
+pragma solidity 0.6.9;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
@@ -154,14 +154,14 @@ contract ValidatorService is Permissions {
         emit ValidatorRegistered(validatorId);
     }
 
-    function enableValidator(uint validatorId) external checkValidatorExists(validatorId) onlyOwner {
+    function enableValidator(uint validatorId) external checkValidatorExists(validatorId) onlyAdmin {
         require(!_trustedValidators[validatorId], "Validator is already enabled");
         _trustedValidators[validatorId] = true;
         trustedValidatorsList.push(validatorId);
         emit ValidatorWasEnabled(validatorId);
     }
 
-    function disableValidator(uint validatorId) external checkValidatorExists(validatorId) onlyOwner {
+    function disableValidator(uint validatorId) external checkValidatorExists(validatorId) onlyAdmin {
         require(_trustedValidators[validatorId], "Validator is already disabled");
         _trustedValidators[validatorId] = false;
         uint position = _find(trustedValidatorsList, validatorId);
