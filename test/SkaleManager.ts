@@ -14,11 +14,8 @@ import { ConstantsHolderInstance,
          SkaleTokenInstance,
          ValidatorServiceInstance} from "../types/truffle-contracts";
 
-// import BigNumber from "bignumber.js";
-
 import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
 import { deployContractManager } from "./tools/deploy/contractManager";
-// import { deployKeyStorage } from "./tools/deploy/keyStorage";
 import { deploySkaleDKG } from "./tools/deploy/skaleDKG";
 import { deployDelegationController } from "./tools/deploy/delegation/delegationController";
 import { deployDistributor } from "./tools/deploy/delegation/distributor";
@@ -46,7 +43,6 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
     let validatorService: ValidatorServiceInstance;
     let delegationController: DelegationControllerInstance;
     let distributor: DistributorInstance;
-    // let keyStorage: KeyStorageInstance;
     let skaleDKG: SkaleDKGInstance;
 
     beforeEach(async () => {
@@ -62,7 +58,6 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
         validatorService = await deployValidatorService(contractManager);
         delegationController = await deployDelegationController(contractManager);
         distributor = await deployDistributor(contractManager);
-        // keyStorage = await deployKeyStorage(contractManager);
         skaleDKG = await deploySkaleDKG(contractManager);
 
         const premined = "100000000000000000000000000";

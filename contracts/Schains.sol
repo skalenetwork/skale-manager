@@ -136,7 +136,7 @@ contract Schains is Permissions {
         bytes32 schainId = keccak256(abi.encodePacked(name));
         address dataAddress = contractManager.getContract("SchainsInternal");
         require(
-            SchainsInternal(dataAddress).isOwnerAddress(from, schainId), 
+            SchainsInternal(dataAddress).isOwnerAddress(from, schainId),
             "Message sender is not an owner of Schain"
         );
         SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));

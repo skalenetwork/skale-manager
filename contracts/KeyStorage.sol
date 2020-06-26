@@ -104,8 +104,7 @@ contract KeyStorage is Permissions {
     }
 
     function finalizePublicKey(bytes32 groupIndex) external allow("SkaleDKG") {
-        if (!_isPublicKeyZero(groupIndex)) {
-            // G2Operations.G2Point memory previousKey = schainsGroups[groupIndex].groupsPublicKey;
+        if (!_isSchainsPublicKeyZero(groupIndex)) {
             previousSchainsPublicKeys[groupIndex].push(schainsPublicKeys[groupIndex]);
         }
         schainsPublicKeys[groupIndex] = _publicKeysInProgress[groupIndex];
@@ -121,16 +120,6 @@ contract KeyStorage is Permissions {
                 require(verificationVector[i].isG2(), "Incorrect g2 point");
                 G2Operations.G2Point memory tmp = verificationVector[i];
                 schainsNodesPublicKeys[groupIndex].push(tmp);
-                // schainsNodesPublicKeys[groupIndex].push(G2Operations.G2Point({
-                //     x: Fp2Operations.Fp2Point({
-                //         a: verificationVector[i].x.a,
-                //         b: verificationVector[i].x.b
-                //     }),
-                //     y: Fp2Operations.Fp2Point({
-                //         a: verificationVector[i].y.a,
-                //         b: verificationVector[i].y.b
-                //     })
-                // }));
                 require(schainsNodesPublicKeys[groupIndex][i].isG2(), "Incorrect g2 point");
             }
         } else {
@@ -292,7 +281,7 @@ contract KeyStorage is Permissions {
         return publicKey;
     }
 
-    function _isPublicKeyZero(bytes32 schainId) private view returns (bool) {
+    function _isSchainsPublicKeyZero(bytes32 schainId) private view returns (bool) {
         return schainsPublicKeys[schainId].x.a == 0 &&
             schainsPublicKeys[schainId].x.b == 0 &&
             schainsPublicKeys[schainId].y.a == 0 &&
