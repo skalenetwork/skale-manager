@@ -235,10 +235,10 @@
   dependencies:
     "@types/bignumber.js" "^5.0.0"
 
-"@nomiclabs/buidler@^1.3.7":
-  version "1.3.7"
-  resolved "https://registry.yarnpkg.com/@nomiclabs/buidler/-/buidler-1.3.7.tgz#f23eb7024dc8e4aa538bd1f31d6d3ad1ad054db7"
-  integrity sha512-eAAcM0Mds+GCm00O91LRQ+gZmNb5Gl3ESYoq+XvC7gu5LYqqZw3/v11DXD5XTsUgVkWMmUpcsj4FcqOjg79RWg==
+"@nomiclabs/buidler@^1.3.8":
+  version "1.3.8"
+  resolved "https://registry.yarnpkg.com/@nomiclabs/buidler/-/buidler-1.3.8.tgz#55013ed8513afbd0d06ff9d00f6fa8b5e6173982"
+  integrity sha512-SmSsNteks20Vl4WBELRV8Vnokh1CxbPHFF5aBqhe/4tR2QVR51dNy8dwDkmj153UyAW+f6ZtxF9QT+TxNomZBg==
   dependencies:
     "@nomiclabs/ethereumjs-vm" "^4.1.1"
     "@solidity-parser/parser" "^0.5.2"
