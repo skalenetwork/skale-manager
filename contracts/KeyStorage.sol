@@ -120,12 +120,10 @@ contract KeyStorage is Permissions {
                 require(verificationVector[i].isG2(), "Incorrect g2 point");
                 G2Operations.G2Point memory tmp = verificationVector[i];
                 schainsNodesPublicKeys[groupIndex].push(tmp);
-                require(schainsNodesPublicKeys[groupIndex][i].isG2(), "Incorrect g2 point");
             }
         } else {
             for (uint i = 0; i < schainsNodesPublicKeys[groupIndex].length; ++i) {
                 require(verificationVector[i].isG2(), "Incorrect g2 point");
-                require(schainsNodesPublicKeys[groupIndex][i].isG2(), "Incorrect g2 point");
                 schainsNodesPublicKeys[groupIndex][i] = verificationVector[i].addG2(
                     schainsNodesPublicKeys[groupIndex][i]
                 );
