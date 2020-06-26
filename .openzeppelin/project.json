@@ -23,7 +23,6 @@
     "SlashingTable": "SlashingTable",
     "Punisher": "Punisher",
     "TokenLaunchLocker": "TokenLaunchLocker",
-    "TimeHelpersWithDebug": "TimeHelpersWithDebug",
     "KeyStorage": "KeyStorage"
   },
   "dependencies": {},
