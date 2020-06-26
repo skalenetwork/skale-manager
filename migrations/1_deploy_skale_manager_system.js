@@ -89,6 +89,7 @@ async function deploy(deployer, networkName, accounts) {
         "Schains",
         "Decryption",
         "ECDH",
+        "KeyStorage",
         "SkaleDKG",
         "SkaleVerifier",
         "SkaleManager",

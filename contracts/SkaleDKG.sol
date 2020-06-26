@@ -19,29 +19,25 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.10;
+pragma solidity 0.6.9;
 pragma experimental ABIEncoderV2;
-import "./Decryption.sol";
 import "./Permissions.sol";
 import "./delegation/Punisher.sol";
 import "./SlashingTable.sol";
 import "./Schains.sol";
 import "./SchainsInternal.sol";
-import "./ECDH.sol";
-import "./utils/Precompiled.sol";
 import "./utils/FieldOperations.sol";
 import "./NodeRotation.sol";
+import "./KeyStorage.sol";
+import "./interfaces/ISkaleDKG.sol";
 
 
-contract SkaleDKG is Permissions {
-    using Fp2Operations for Fp2Operations.Fp2Point;
-    using G2Operations for G2Operations.G2Point;  
+contract SkaleDKG is Permissions, ISkaleDKG {
 
     struct Channel {
         bool active;
         bool[] broadcasted;
         uint numberOfBroadcasted;
-        G2Operations.G2Point publicKey;
         uint numberOfCompleted;
         bool[] completed;
         uint startedBlockTimestamp;
@@ -50,20 +46,11 @@ contract SkaleDKG is Permissions {
         uint startComplaintBlockTimestamp;
     }
 
-    struct BroadcastedData {
-        KeyShare[] secretKeyContribution;
-        G2Operations.G2Point[] verificationVector;
-    }
-
-    struct KeyShare {
-        bytes32[2] publicKey;
-        bytes32 share;
-    }
-
     uint public constant COMPLAINT_TIMELIMIT = 1800;
 
     mapping(bytes32 => Channel) public channels;
-    mapping(bytes32 => mapping(uint => BroadcastedData)) private _data;
+
+    mapping(bytes32 => uint) public lastSuccesfulDKG;
 
     event ChannelOpened(bytes32 groupIndex);
 
@@ -73,7 +60,7 @@ contract SkaleDKG is Permissions {
         bytes32 indexed groupIndex,
         uint indexed fromNode,
         G2Operations.G2Point[] verificationVector,
-        KeyShare[] secretKeyContribution
+        KeyStorage.KeyShare[] secretKeyContribution
     );
 
     event AllDataReceived(bytes32 indexed groupIndex, uint nodeIndex);
@@ -97,22 +84,23 @@ contract SkaleDKG is Permissions {
         _;
     }
 
-    function openChannel(bytes32 groupIndex) external allow("SchainsInternal") {
+    function openChannel(bytes32 groupIndex) external override allow("SchainsInternal") {
         require(!channels[groupIndex].active, "Channel already is created");
-        
+
         _reopenChannel(groupIndex);
     }
 
-    function deleteChannel(bytes32 groupIndex) external allow("SchainsInternal") {
+    function deleteChannel(bytes32 groupIndex) external override allow("SchainsInternal") {
         require(channels[groupIndex].active, "Channel is not created");
         delete channels[groupIndex];
+        KeyStorage(contractManager.getContract("KeyStorage")).deleteKey(groupIndex);
     }
 
     function broadcast(
         bytes32 groupIndex,
         uint nodeIndex,
         G2Operations.G2Point[] calldata verificationVector,
-        KeyShare[] calldata secretKeyContribution
+        KeyStorage.KeyShare[] calldata secretKeyContribution
     )
         external
         correctGroup(groupIndex)
@@ -125,17 +113,16 @@ contract SkaleDKG is Permissions {
             secretKeyContribution.length == schainsInternal.getNumberOfNodesInGroup(groupIndex),
             "Incorrect number of secret key shares"
         );
-        
+
         _isBroadcast(
             groupIndex,
             nodeIndex,
             secretKeyContribution,
             verificationVector
         );
-        _adding(
-            groupIndex,
-            verificationVector[0]
-        );
+        KeyStorage keyStorage = KeyStorage(contractManager.getContract("KeyStorage"));
+        keyStorage.adding(groupIndex, verificationVector[0]);
+        keyStorage.computePublicValues(groupIndex, verificationVector);
         emit BroadcastAndKeyShare(
             groupIndex,
             nodeIndex,
@@ -190,9 +177,10 @@ contract SkaleDKG is Permissions {
     {
         require(channels[groupIndex].nodeToComplaint == fromNodeIndex, "Not this Node");
         require(_isNodeByMessageSender(fromNodeIndex, msg.sender), "Node does not exist for message sender");
-        bool verificationResult = _verify(
+        bool verificationResult = KeyStorage(contractManager.getContract("KeyStorage")).verify(
             groupIndex,
-            fromNodeIndex,
+            channels[groupIndex].nodeToComplaint,
+            channels[groupIndex].fromNodeToComplaint,
             secretNumber,
             multipliedShare
         );
@@ -217,25 +205,24 @@ contract SkaleDKG is Permissions {
         channels[groupIndex].numberOfCompleted++;
         emit AllDataReceived(groupIndex, fromNodeIndex);
         if (channels[groupIndex].numberOfCompleted == numberOfParticipant) {
-            SchainsInternal(contractManager.getContract("SchainsInternal")).setPublicKey(
-                groupIndex,
-                channels[groupIndex].publicKey.x.a,
-                channels[groupIndex].publicKey.x.b,
-                channels[groupIndex].publicKey.y.a,
-                channels[groupIndex].publicKey.y.b
-            );
-            // delete channels[groupIndex];
-            channels[groupIndex].active = false;
-            emit SuccessfulDKG(groupIndex);
+            _setSuccesfulDKG(groupIndex);
         }
     }
 
-    function reopenChannel(bytes32 groupIndex) external allow("NodeRotation") {
+    function reopenChannel(bytes32 groupIndex) external override allow("NodeRotation") {
         _reopenChannel(groupIndex);
     }
 
-    function isChannelOpened(bytes32 groupIndex) external view returns (bool) {
+    function isChannelOpened(bytes32 groupIndex) external override view returns (bool) {
         return channels[groupIndex].active;
+    }
+
+    function getTimeOfLastSuccesfulDKG(bytes32 groupIndex) external view returns (uint) {
+        return lastSuccesfulDKG[groupIndex];
+    }
+
+    function isLastDKGSuccesful(bytes32 groupIndex) external override view returns (bool) {
+        return channels[groupIndex].startedBlockTimestamp <= lastSuccesfulDKG[groupIndex];
     }
 
     function isBroadcastPossible(bytes32 groupIndex, uint nodeIndex) external view returns (bool) {
@@ -293,13 +280,6 @@ contract SkaleDKG is Permissions {
             channels[groupIndex].nodeToComplaint == nodeIndex;
     }
 
-    function getBroadcastedData(bytes32 groupIndex, uint nodeIndex)
-        external view returns (KeyShare[] memory, G2Operations.G2Point[] memory)
-    {
-        uint index = _nodeIndexInSchain(groupIndex, nodeIndex);
-        return (_data[groupIndex][index].secretKeyContribution, _data[groupIndex][index].verificationVector);
-    }
-
     function isAllDataReceived(bytes32 groupIndex, uint nodeIndex) external view returns (bool) {
         uint index = _nodeIndexInSchain(groupIndex, nodeIndex);
         return channels[groupIndex].completed[index];
@@ -313,6 +293,13 @@ contract SkaleDKG is Permissions {
         Permissions.initialize(contractsAddress);
     }
 
+    function _setSuccesfulDKG(bytes32 groupIndex) internal {
+        lastSuccesfulDKG[groupIndex] = now;
+        channels[groupIndex].active = false;
+        KeyStorage(contractManager.getContract("KeyStorage")).finalizePublicKey(groupIndex);
+        emit SuccessfulDKG(groupIndex);
+    }
+
     function _reopenChannel(bytes32 groupIndex) private {
         SchainsInternal schainsInternal = SchainsInternal(
             contractManager.getContract("SchainsInternal")
@@ -323,16 +310,7 @@ contract SkaleDKG is Permissions {
         delete channels[groupIndex].broadcasted;
         channels[groupIndex].broadcasted = new bool[](schainsInternal.getNumberOfNodesInGroup(groupIndex));
         channels[groupIndex].completed = new bool[](schainsInternal.getNumberOfNodesInGroup(groupIndex));
-        channels[groupIndex].publicKey = G2Operations.G2Point({
-            x: Fp2Operations.Fp2Point({
-                a: 0,
-                b: 0
-            }),
-            y: Fp2Operations.Fp2Point({
-                a: 1,
-                b: 0
-            })
-        });
+        KeyStorage(contractManager.getContract("KeyStorage")).initPublicKeyInProgress(groupIndex);
         channels[groupIndex].fromNodeToComplaint = uint(-1);
         channels[groupIndex].nodeToComplaint = uint(-1);
         delete channels[groupIndex].numberOfBroadcasted;
@@ -340,7 +318,6 @@ contract SkaleDKG is Permissions {
         delete channels[groupIndex].startComplaintBlockTimestamp;
         channels[groupIndex].startedBlockTimestamp = now;
 
-        schainsInternal.setGroupFailedDKG(groupIndex);
         emit ChannelOpened(groupIndex);
     }
 
@@ -351,7 +328,7 @@ contract SkaleDKG is Permissions {
         );
         emit BadGuy(badNode);
         emit FailedDKG(groupIndex);
-        
+
         _reopenChannel(groupIndex);
         if (schainsInternal.isAnyFreeNode(groupIndex)) {
             uint newNode = nodeRotation.rotateNode(
@@ -374,89 +351,10 @@ contract SkaleDKG is Permissions {
         punisher.slash(nodes.getValidatorId(badNode), slashingTable.getPenalty("FailedDKG"));
     }
 
-    function _verify(
-        bytes32 groupIndex,
-        uint fromNodeIndex,
-        uint secretNumber,
-        G2Operations.G2Point memory multipliedShare
-    )
-        private
-        view
-        returns (bool)
-    {
-        uint index = _nodeIndexInSchain(groupIndex, fromNodeIndex);
-        uint secret = _decryptMessage(groupIndex, secretNumber);
-        G2Operations.G2Point[] memory verificationVector = _data[groupIndex][index].verificationVector;
-        G2Operations.G2Point memory value = G2Operations.G2Point({
-            x: Fp2Operations.Fp2Point({
-                a: 0,
-                b: 0
-            }),
-            y: Fp2Operations.Fp2Point({
-                a: 1,
-                b: 0
-            })
-        });
-        G2Operations.G2Point memory tmp = G2Operations.G2Point({
-            x: Fp2Operations.Fp2Point({
-                a: 0,
-                b: 0
-            }),
-            y: Fp2Operations.Fp2Point({
-                a: 1,
-                b: 0
-            })
-        });
-        for (uint i = 0; i < verificationVector.length; i++) {
-            G2Operations.G2Point memory verificationVectorComponent = G2Operations.G2Point({
-                x: _swapCoordinates(verificationVector[i].x),
-                y: _swapCoordinates(verificationVector[i].y)
-            });
-            tmp = verificationVectorComponent.mulG2(Precompiled.bigModExp(index.add(1), i, Fp2Operations.P));
-            value = tmp.addG2(value);
-        }
-        return _checkDKGVerification(value, multipliedShare) &&
-            _checkCorrectMultipliedShare(multipliedShare, secret);
-    }
-
-    function _getCommonPublicKey(bytes32 groupIndex, uint256 secretNumber) private view returns (bytes32 key) {
-        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
-        ECDH ecdh = ECDH(contractManager.getContract("ECDH"));
-        bytes32[2] memory publicKey = nodes.getNodePublicKey(channels[groupIndex].fromNodeToComplaint);
-        uint256 pkX = uint(publicKey[0]);
-        uint256 pkY = uint(publicKey[1]);
-
-        (pkX, pkY) = ecdh.deriveKey(secretNumber, pkX, pkY);
-
-        key = bytes32(pkX);
-    }
-
-    function _decryptMessage(bytes32 groupIndex, uint secretNumber) private view returns (uint) {
-        Decryption decryption = Decryption(contractManager.getContract("Decryption"));
-
-        bytes32 key = _getCommonPublicKey(groupIndex, secretNumber);
-
-        // Decrypt secret key contribution
-        uint index = _nodeIndexInSchain(groupIndex, channels[groupIndex].fromNodeToComplaint);
-        uint indexOfNode = _nodeIndexInSchain(groupIndex, channels[groupIndex].nodeToComplaint);
-        uint secret = decryption.decrypt(_data[groupIndex][indexOfNode].secretKeyContribution[index].share, key);
-        return secret;
-    }
-
-    function _adding(
-        bytes32 groupIndex,
-        G2Operations.G2Point memory value
-    )
-        private
-    {
-        require(value.isG2(), "Incorrect g2 point");
-        channels[groupIndex].publicKey = value.addG2(channels[groupIndex].publicKey);
-    }
-
     function _isBroadcast(
         bytes32 groupIndex,
         uint nodeIndex,
-        KeyShare[] memory secretKeyContribution,
+        KeyStorage.KeyShare[] memory secretKeyContribution,
         G2Operations.G2Point[] memory verificationVector
     )
         private
@@ -465,28 +363,12 @@ contract SkaleDKG is Permissions {
         require(!channels[groupIndex].broadcasted[index], "This node is already broadcasted");
         channels[groupIndex].broadcasted[index] = true;
         channels[groupIndex].numberOfBroadcasted++;
-        
-        for (uint i = 0; i < secretKeyContribution.length; ++i) {
-            if (i < _data[groupIndex][index].secretKeyContribution.length) {
-                _data[groupIndex][index].secretKeyContribution[i] = secretKeyContribution[i];    
-            } else {
-                _data[groupIndex][index].secretKeyContribution.push(secretKeyContribution[i]);
-            }
-        }
-        while (_data[groupIndex][index].secretKeyContribution.length > secretKeyContribution.length) {
-            _data[groupIndex][index].secretKeyContribution.pop();
-        }
-        
-        for (uint i = 0; i < verificationVector.length; ++i) {
-            if (i < _data[groupIndex][index].verificationVector.length) {
-                _data[groupIndex][index].verificationVector[i] = verificationVector[i];
-            } else {
-                _data[groupIndex][index].verificationVector.push(verificationVector[i]);
-            }
-        }
-        while (_data[groupIndex][index].verificationVector.length > verificationVector.length) {
-            _data[groupIndex][index].verificationVector.pop();
-        }
+        KeyStorage(contractManager.getContract("KeyStorage")).addBroadcastedData(
+            groupIndex,
+            index,
+            secretKeyContribution,
+            verificationVector
+        );
     }
 
     function _isBroadcasted(bytes32 groupIndex, uint nodeIndex) private view returns (bool) {
@@ -502,54 +384,5 @@ contract SkaleDKG is Permissions {
     function _isNodeByMessageSender(uint nodeIndex, address from) private view returns (bool) {
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));
         return nodes.isNodeExist(from, nodeIndex);
-    }
-
-    function _checkDKGVerification(
-        G2Operations.G2Point memory value,
-        G2Operations.G2Point memory multipliedShare)
-        private pure returns (bool)
-    {
-        return value.x.a == multipliedShare.x.b && 
-            value.x.b == multipliedShare.x.a &&
-            value.y.a == multipliedShare.y.b &&
-            value.y.b == multipliedShare.y.a;
-    }
-
-    function _checkCorrectMultipliedShare(G2Operations.G2Point memory multipliedShare, uint secret)
-        private view returns (bool)
-    {
-        G2Operations.G2Point memory tmp = multipliedShare;
-        Fp2Operations.Fp2Point memory g1 = G2Operations.getG1();
-        Fp2Operations.Fp2Point memory share = Fp2Operations.Fp2Point({
-            a: 0,
-            b: 0
-        });
-        (share.a, share.b) = Precompiled.bn256ScalarMul(g1.a, g1.b, secret);
-        if (!(share.a == 0 && share.b == 0)) {
-            share.b = Fp2Operations.P.sub((share.b % Fp2Operations.P));
-        }
-
-        require(G2Operations.isG1(g1), "G1.one not in G1");
-        require(G2Operations.isG1(share), "mulShare not in G1");
-
-        G2Operations.G2Point memory g2 = G2Operations.getG2();
-        require(G2Operations.isG2(g2), "g2.one not in g2");
-        require(G2Operations.isG2(tmp), "tmp not in g2");
-
-        return Precompiled.bn256Pairing(
-            share.a, share.b,
-            g2.x.b, g2.x.a, g2.y.b, g2.y.a,
-            g1.a, g1.b,
-            tmp.x.b, tmp.x.a, tmp.y.b, tmp.y.a);
-    }
-
-    function _swapCoordinates(
-        Fp2Operations.Fp2Point memory value
-    )
-        private
-        pure
-        returns (Fp2Operations.Fp2Point memory)
-    {
-        return Fp2Operations.Fp2Point({a: value.b, b: value.a});
     }
 }

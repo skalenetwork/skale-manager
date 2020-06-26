@@ -19,15 +19,21 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.10;
+pragma solidity 0.6.9;
 pragma experimental ABIEncoderV2;
 
 import "./Permissions.sol";
 import "./SchainsInternal.sol";
 import "./ConstantsHolder.sol";
+import "./KeyStorage.sol";
 import "./SkaleVerifier.sol";
 import "./utils/FieldOperations.sol";
 import "./NodeRotation.sol";
+import "./interfaces/ISkaleDKG.sol";
+
+// interface ISkaleDKGCheck {
+//     function isLastDKGSuccesful(bytes32 groupIndex) external view returns (bool);
+// }
 
 /**
  * @title Schains - contract contains all functionality logic to manage Schains
@@ -133,7 +139,7 @@ contract Schains is Permissions {
         SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
         bytes32 schainId = keccak256(abi.encodePacked(name));
         require(
-            schainsInternal.isOwnerAddress(from, schainId), 
+            schainsInternal.isOwnerAddress(from, schainId),
             "Message sender is not an owner of Schain"
         );
         address nodesAddress = contractManager.getContract("Nodes");
@@ -190,13 +196,11 @@ contract Schains is Permissions {
         emit SchainDeleted(from, name, schainId);
     }
 
-
-
     function restartSchainCreation(string calldata name) external allow("SkaleManager") {
         NodeRotation nodeRotation = NodeRotation(contractManager.getContract("NodeRotation"));
         bytes32 schainId = keccak256(abi.encodePacked(name));
-        address dataAddress = contractManager.getContract("SchainsInternal");
-        require(SchainsInternal(dataAddress).isGroupFailedDKG(schainId), "DKG success");
+        ISkaleDKG skaleDKG = ISkaleDKG(contractManager.getContract("SkaleDKG"));
+        require(!skaleDKG.isLastDKGSuccesful(schainId), "DKG success");
         SchainsInternal schainsInternal = SchainsInternal(
             contractManager.getContract("SchainsInternal"));
         require(schainsInternal.isAnyFreeNode(schainId), "No any free Nodes for rotation");
@@ -228,10 +232,11 @@ contract Schains is Permissions {
         view
         returns (bool)
     {
-        SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
         SkaleVerifier skaleVerifier = SkaleVerifier(contractManager.getContract("SkaleVerifier"));
 
-        G2Operations.G2Point memory publicKey = schainsInternal.getGroupsPublicKey(
+        G2Operations.G2Point memory publicKey = KeyStorage(
+            contractManager.getContract("KeyStorage")
+        ).getCommonPublicKey(
             keccak256(abi.encodePacked(schainName))
         );
         return skaleVerifier.verify(

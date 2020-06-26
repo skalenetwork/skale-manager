@@ -19,7 +19,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.10;
+pragma solidity 0.6.9;
 
 import "@openzeppelin/contracts/math/SafeMath.sol";
 
@@ -84,7 +84,7 @@ contract Punisher is Permissions, ILocker {
      * @param holder address of the slashed
      * @param amount uint amount to be forgiven
      */
-    function forgive(address holder, uint amount) external onlyOwner {
+    function forgive(address holder, uint amount) external onlyAdmin {
         DelegationController delegationController = DelegationController(
             contractManager.getContract("DelegationController"));
 
