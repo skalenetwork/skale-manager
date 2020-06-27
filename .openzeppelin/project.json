@@ -23,7 +23,8 @@
     "SlashingTable": "SlashingTable",
     "Punisher": "Punisher",
     "TokenLaunchLocker": "TokenLaunchLocker",
-    "KeyStorage": "KeyStorage"
+    "KeyStorage": "KeyStorage",
+    "TimeHelpersWithDebug": "TimeHelpersWithDebug"
   },
   "dependencies": {},
   "name": "skale-manager",
