@@ -108,6 +108,15 @@ async function setProofOfUseDelegationPercentage(param) {
     
 }
 
+async function getPeriodsAndCheckTime() {
+    console.log();
+    console.log("Reward Period:", await init.ConstantsHolder.methods.rewardPeriod().call({from: init.mainAccount}));
+    console.log("Delta Period:", await init.ConstantsHolder.methods.deltaPeriod().call({from: init.mainAccount}));
+    console.log("Check Time:", await init.ConstantsHolder.methods.checkTime().call({from: init.mainAccount}));
+    console.log();
+    process.exit();
+}
+
 if (process.argv[2] == 'setCheckTime') {
     newCheckTime = process.argv[3];
     setCheckTime(newCheckTime);
@@ -123,6 +132,8 @@ if (process.argv[2] == 'setCheckTime') {
 } else if (process.argv[2] == 'setPOUDP') {
     param = process.argv[3];
     setProofOfUseDelegationPercentage(param);
+} else if (process.argv[2] == 'getPeriodsAndCheckTime') {
+    getPeriodsAndCheckTime();
 } else {
     console.log("Recheck name of function");
     process.exit();

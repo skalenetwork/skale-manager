@@ -82,6 +82,7 @@ async function calculateNormalBounty(nodeIndex) {
     console.log("Should show normal bounty for ", nodeIndex, " node");
     console.log("Normal bounty : ", await init.Bounty.methods.calculateNormalBounty(nodeIndex).call());
     console.log();
+    process.exit();
 }
 
 
