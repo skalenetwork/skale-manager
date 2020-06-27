@@ -26,6 +26,7 @@ module.exports.SchainsInternal = new web3.eth.Contract(jsonData['schains_interna
 module.exports.ContractManager = new web3.eth.Contract(jsonData['contract_manager_abi'], jsonData['contract_manager_address']);
 module.exports.ValidatorService = new web3.eth.Contract(jsonData['validator_service_abi'], jsonData['validator_service_address']);
 module.exports.TokenState = new web3.eth.Contract(jsonData['token_state_abi'], jsonData['token_state_address']);
+module.exports.SlashingTable = new web3.eth.Contract(jsonData['slashing_table_abi'], jsonData['slashing_table_address']);
 module.exports.web3 = web3;
 module.exports.mainAccount = mainAccount;
 module.exports.jsonData = jsonData;
