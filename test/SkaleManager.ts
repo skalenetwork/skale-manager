@@ -212,6 +212,8 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                     await constantsHolder.setPeriods(month, 300);
                     rewardPeriod = (await constantsHolder.rewardPeriod()).toNumber();
                 }
+                const timelimit = 300;
+                const start = Date.now();
                 const launch = (await constantsHolder.launchTimestamp()).toNumber();
                 const yearLength = (await bountyContract.STAGE_LENGTH()).toNumber();
                 const ten18 = web3.utils.toBN(10).pow(web3.utils.toBN(18));
@@ -231,7 +233,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                 }
 
                 let mustBePaid = web3.utils.toBN(0);
-                for (let year = 0; year < schedule.length; ++year) {
+                for (let year = 0; year < schedule.length && Date.now() < 0.9 * timelimit; ++year) {
                     do {
                         skipTime(web3, rewardPeriod);
                         await skaleManager.getBounty(0, {from: nodeAddress});
