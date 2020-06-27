@@ -167,14 +167,14 @@ contract ConstantsHolder is Permissions {
      * @dev constructor in Permissions approach
      * @param contractsAddress needed in Permissions constructor
      */
-    function initialize(address contractsAddress) public override initializer {
+    function initialize(address contractsAddress, uint32 newRewardPeriod, uint32 newDeltaPeriod, uint newCheckTime) public initializer {
         Permissions.initialize(contractsAddress);
 
         msr = 0;
-        rewardPeriod = 86400;
+        rewardPeriod = newRewardPeriod;
         allowableLatency = 150000; 
-        deltaPeriod = 3600;  
-        checkTime = 300; 
+        deltaPeriod = newDeltaPeriod;  
+        checkTime = newCheckTime; 
         launchTimestamp = uint(-1);
         rotationDelay = 12 hours;
         proofOfUseLockUpPeriodDays = 90;

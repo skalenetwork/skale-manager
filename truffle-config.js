@@ -9,6 +9,18 @@ let uniqueEndpoint = process.env.ENDPOINT;
 
 let gasprice = process.env.GASPRICE;
 
+try {
+    gasprice = parseInt(gasprice);
+    if (!(typeof gasprice == "number") || gasprice < 10000000000 || isNaN(gasprice)) {
+        gasprice = 10000000000;
+    }
+    console.log("Nice", gasprice);
+} catch (error) {
+    console.log(error);
+    console.log(gasprice)
+    gasprice = 10000000000;
+}
+
 module.exports = {
     // this is required by truffle to find any ts test files
     test_file_extension_regexp: /.*\.ts$/,

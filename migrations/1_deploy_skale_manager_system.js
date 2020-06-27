@@ -134,6 +134,24 @@ async function deploy(deployer, networkName, accounts) {
             contract = await create(Object.assign({ contractAlias: contractName }, options));
         } else if (["TimeHelpersWithDebug"].includes(contractName)) {
             contract = await create(Object.assign({ contractAlias: contractName, methodName: 'initialize', methodArgs: [] }, options));
+        } else if (["ConstantsHolder"].includes(contractName)) {
+            if (!production) {
+                contract = await create(Object.assign(
+                    {
+                        contractAlias: contractName,
+                        methodName: 'initialize',
+                        methodArgs: [contractManager.address, 3600, 300, 120] 
+                    }, options
+                ));
+            } else {
+                contract = await create(Object.assign(
+                    {
+                        contractAlias: contractName,
+                        methodName: 'initialize',
+                        methodArgs: [contractManager.address, 86400, 3600, 300]
+                    }, options
+                    ));
+            }
         } else {
             contract = await create(Object.assign({ contractAlias: contractName, methodName: 'initialize', methodArgs: [contractManager.address] }, options));
         }
