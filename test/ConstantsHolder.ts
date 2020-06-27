@@ -87,12 +87,12 @@ contract("ConstantsHolder", ([deployer, user]) => {
   });
 
   it("should invoke setPeriods function and change rewardPeriod and deltaPeriod", async () => {
-    await constantsHolder.setPeriods(333, 555, {from: deployer});
+    await constantsHolder.setPeriods(555, 333, {from: deployer});
     const rewardPeriod = new BigNumber(await constantsHolder.rewardPeriod());
-    parseInt(rewardPeriod.toString(), 10).should.be.equal(333);
+    parseInt(rewardPeriod.toString(), 10).should.be.equal(555);
 
     const deltaPeriod = new BigNumber(await constantsHolder.deltaPeriod());
-    parseInt(deltaPeriod.toString(), 10).should.be.equal(555);
+    parseInt(deltaPeriod.toString(), 10).should.be.equal(333);
   });
 
   it("should Set latency", async () => {

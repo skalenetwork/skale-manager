@@ -280,8 +280,13 @@ contract Nodes is Permissions {
             "Validator must meet the Minimum Staking Requirement");
     }
 
-    function checkPossibilityToMaintainNode(uint validatorId, uint nodeIndex)
-        external allow("Bounty") returns (bool)
+    function checkPossibilityToMaintainNode(
+        uint validatorId,
+        uint nodeIndex
+    )
+        external
+        allow("Bounty")
+        returns (bool)
     {
         DelegationController delegationController = DelegationController(
             contractManager.getContract("DelegationController")

@@ -37,16 +37,6 @@ contract Permissions is AccessControlUpgradeSafe {
     
     ContractManager public contractManager;
 
-    function updateContractManager(address contractManagerAddress) external onlyOwner {
-        _setContractManager(contractManagerAddress);
-    }
-
-    function initialize(address contractManagerAddress) public virtual initializer {
-        AccessControlUpgradeSafe.__AccessControl_init();
-        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
-        _setContractManager(contractManagerAddress);
-    }
-
     /**
      * @dev Throws if called by any account other than the owner.
      */
@@ -79,6 +69,12 @@ contract Permissions is AccessControlUpgradeSafe {
             _isOwner(),
             "Message sender is invalid");
         _;
+    }
+
+    function initialize(address contractManagerAddress) public virtual initializer {
+        AccessControlUpgradeSafe.__AccessControl_init();
+        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _setContractManager(contractManagerAddress);
     }
 
     function _isOwner() internal view returns (bool) {

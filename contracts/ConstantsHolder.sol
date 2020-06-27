@@ -115,6 +115,10 @@ contract ConstantsHolder is Permissions {
      * @param newDeltaPeriod - new Delta period
      */
     function setPeriods(uint32 newRewardPeriod, uint32 newDeltaPeriod) external onlyOwner {
+        require(
+            newRewardPeriod >= newDeltaPeriod && newRewardPeriod - newDeltaPeriod >= checkTime,
+            "Incorrect Periods"
+        );
         rewardPeriod = newRewardPeriod;
         deltaPeriod = newDeltaPeriod;
     }
@@ -124,6 +128,7 @@ contract ConstantsHolder is Permissions {
      * @param newCheckTime - new check time
      */
     function setCheckTime(uint newCheckTime) external onlyOwner {
+        require(rewardPeriod - deltaPeriod >= checkTime, "Incorrect check time");
         checkTime = newCheckTime;
     }    
 
