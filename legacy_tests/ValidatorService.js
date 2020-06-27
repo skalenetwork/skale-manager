@@ -41,12 +41,28 @@ async function disableWhitelist() {
     
 }
 
+async function grantRole(address) {
+    const admin_role = await init.SkaleManager.methods.ADMIN_ROLE().call();
+    console.log("Is this address has admin role: ",await init.SkaleManager.methods.hasRole(admin_role, address).call());
+    const grantRoleABI = init.SkaleManager.methods.grantRole(admin_role, address).encodeABI(); //.send({from: init.mainAccount});
+    contractAddress = init.jsonData['skale_manager_address'];
+    let privateKeyB = Buffer.from(init.privateKey, "hex");
+    const success = await sendTransaction(init.web3, init.mainAccount, privateKeyB, grantRoleABI, contractAddress, "0");
+    console.log("Is this address has admin role after transaction: ",await init.SkaleManager.methods.hasRole(admin_role, address).call());
+    console.log()
+    console.log("Transaction was successful:", success);
+    console.log("Exiting...");
+    process.exit()
+}
+
 async function enableValidator(validatorId) {
     console.log("Whitelist of validators:", await init.ValidatorService.methods.getTrustedValidators().call());
     contractAddress = init.jsonData['validator_service_address'];
     const functionABI = init.ValidatorService.methods.enableValidator(validatorId).encodeABI();
-    const privateKeyB = Buffer.from(init.privateKey, "hex");
-    const success = await sendTransaction(init.web3, init.mainAccount, privateKeyB, functionABI, contractAddress, "0");
+    const privateKeyAdmin = process.env.PRIVATE_KEY_ADMIN;
+    const accountAdmin = process.env.ACCOUNT_ADMIN;
+    const privateKeyB = Buffer.from(privateKeyAdmin, "hex");
+    const success = await sendTransaction(init.web3, accountAdmin, privateKeyB, functionABI, contractAddress, "0");
     console.log("Transaction was successful:", success);
     console.log("Whitelist of validators:", await init.ValidatorService.methods.getTrustedValidators().call());
     console.log("Exiting...");
@@ -57,8 +73,10 @@ async function disableValidator(validatorId) {
     console.log("Whitelist of validators:", await init.ValidatorService.methods.getTrustedValidators().call());
     contractAddress = init.jsonData['validator_service_address'];
     const functionABI = init.ValidatorService.methods.disableValidator(validatorId).encodeABI();
-    const privateKeyB = Buffer.from(init.privateKey, "hex");
-    const success = await sendTransaction(init.web3, init.mainAccount, privateKeyB, functionABI, contractAddress, "0");
+    const privateKeyAdmin = process.env.PRIVATE_KEY_ADMIN;
+    const accountAdmin = process.env.ACCOUNT_ADMIN;
+    const privateKeyB = Buffer.from(privateKeyAdmin, "hex");
+    const success = await sendTransaction(init.web3, accountAdmin, privateKeyB, functionABI, contractAddress, "0");
     console.log("Transaction was successful:", success);
     console.log("Whitelist of validators:", await init.ValidatorService.methods.getTrustedValidators().call());
     console.log("Exiting...");
@@ -67,14 +85,15 @@ async function disableValidator(validatorId) {
 
 if (process.argv[2] == 'disableWhitelist') {
     disableWhitelist();
-}
-
-if (process.argv[2] == 'enableValidator') {
+} else if (process.argv[2] == 'grantRole') {
+    grantRole(process.argv[3]);
+} else if (process.argv[2] == 'enableValidator') {
     validatorId = Number(process.argv[3]);
     enableValidator(validatorId);
-}
-
-if (process.argv[2] == 'disableValidator') {
+} else if (process.argv[2] == 'disableValidator') {
     validatorId = Number(process.argv[3]);
     disableValidator(validatorId);
+} else {
+    console.log("Recheck name of function");
+    process.exit();
 }

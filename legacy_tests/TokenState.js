@@ -55,10 +55,10 @@ async function addLocker(param) {
 if (process.argv[2] == 'removeLocker') {
     param = process.argv[3];
     removeLocker(param);
-}
-
-
-if (process.argv[2] == 'addLocker') {
+} else if (process.argv[2] == 'addLocker') {
     param = process.argv[3];
     addLocker(param);
+} else {
+    console.log("Recheck name of function");
+    process.exit();
 }

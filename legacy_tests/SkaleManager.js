@@ -77,24 +77,26 @@ async function deleteSchain(schainName) {
     process.exit()
 }
 
-async function calculateNormalBounty() {
-
+async function calculateNormalBounty(nodeIndex) {
+    console.log();
+    console.log("Should show normal bounty for ", nodeIndex, " node");
+    console.log("Normal bounty : ", await init.Bounty.methods.calculateNormalBounty(nodeIndex).call());
+    console.log();
 }
 
 
 if (process.argv[2] == 'enableBountyReduction') {
     enableBountyReduction();
-}
-
-if (process.argv[2] == 'disableBountyReduction') {
+} else if (process.argv[2] == 'disableBountyReduction') {
     disableBountyReduction();
-}
-
-if (process.argv[2] == 'grantRole') {
+} else if (process.argv[2] == 'grantRole') {
     grantRole(process.argv[3]);
-}
-
-if (process.argv[2] == 'deleteSchain') {
+} else if (process.argv[2] == 'deleteSchain') {
     deleteSchain(process.argv[3]);
+} else if (process.argv[2] == 'calculateNormalBounty') {
+    calculateNormalBounty(process.argv[3]);
+} else {
+    console.log("Recheck name of function");
+    process.exit();
 }
 

@@ -111,27 +111,20 @@ async function setProofOfUseDelegationPercentage(param) {
 if (process.argv[2] == 'setCheckTime') {
     newCheckTime = process.argv[3];
     setCheckTime(newCheckTime);
-}
-
-
-if (process.argv[2] == 'setLatency') {
+} else if (process.argv[2] == 'setLatency') {
     newAllowableLatency = process.argv[3];
     setLatency(newAllowableLatency);
-}
-
-if (process.argv[2] == 'setMSR') {
+} else if (process.argv[2] == 'setMSR') {
     newMSR = process.argv[3];
     setMSR(newMSR);
-}
-
-if (process.argv[2] == 'setRotationDelay') {
+} else if (process.argv[2] == 'setRotationDelay') {
     param = process.argv[3];
     setRotationDelay(param);
-}
-
-
-if (process.argv[2] == 'setPOUDP') {
+} else if (process.argv[2] == 'setPOUDP') {
     param = process.argv[3];
     setProofOfUseDelegationPercentage(param);
+} else {
+    console.log("Recheck name of function");
+    process.exit();
 }
 
