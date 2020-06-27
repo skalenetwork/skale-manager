@@ -15,9 +15,7 @@ async function sendTransaction(web3Inst, account, privateKey, data, receiverCont
     const tx = new Tx(rawTx, {chain: "rinkeby"});
     tx.sign(privateKey);
     const serializedTx = tx.serialize();
-    console.log("Transaction sent!")
     const txReceipt = await web3Inst.eth.sendSignedTransaction('0x' + serializedTx.toString('hex')); //.on('receipt', receipt => {
-    console.log("Transaction done!");
     console.log("Transaction receipt is - ");
     console.log(txReceipt);
     console.log();
