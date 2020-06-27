@@ -171,10 +171,10 @@ contract ConstantsHolder is Permissions {
         Permissions.initialize(contractsAddress);
 
         msr = 0;
-        rewardPeriod = 3600; // Test parameters
-        allowableLatency = 150000; // Test parameters
-        deltaPeriod = 300;  // Test parameters
-        checkTime = 120; // Test parameters
+        rewardPeriod = 86400;
+        allowableLatency = 150000; 
+        deltaPeriod = 3600;  
+        checkTime = 300; 
         launchTimestamp = uint(-1);
         rotationDelay = 12 hours;
         proofOfUseLockUpPeriodDays = 90;

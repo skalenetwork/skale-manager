@@ -7,6 +7,7 @@ let mnemonicOrPrivateKey = process.env.PRIVATE_KEY;
 
 let uniqueEndpoint = process.env.ENDPOINT;
 
+let gasprice = process.env.GASPRICE;
 
 module.exports = {
     // this is required by truffle to find any ts test files
@@ -41,6 +42,14 @@ module.exports = {
             host: "127.0.0.1",
             port: 8545,
             gas: 6900000,
+            network_id: "*"
+        },
+        mainnet: {
+            provider: () => { 
+                return new hdwalletProvider(mnemonicOrPrivateKey, uniqueEndpoint); 
+            },
+            gasPrice: gasprice,
+            gas: 8000000,
             network_id: "*"
         }
     },
