@@ -37,14 +37,6 @@ contract Permissions is AccessControlUpgradeSafe, Destructible {
     
     ContractManager public contractManager;
 
-    function initialize(address contractManagerAddress) public virtual initializer {
-        AccessControlUpgradeSafe.__AccessControl_init();
-        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
-        require(contractManagerAddress != address(0), "ContractManager address is not set");
-        contractManager = ContractManager(contractManagerAddress);
-        _setOwner(msg.sender);
-    }
-
     /**
      * @dev Throws if called by any account other than the owner.
      */
@@ -77,6 +69,14 @@ contract Permissions is AccessControlUpgradeSafe, Destructible {
             _isOwner(),
             "Message sender is invalid");
         _;
+    }
+
+    function initialize(address contractManagerAddress) public virtual initializer {
+        AccessControlUpgradeSafe.__AccessControl_init();
+        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        require(contractManagerAddress != address(0), "ContractManager address is not set");
+        contractManager = ContractManager(contractManagerAddress);
+        _setOwner(msg.sender);
     }
 
     function _isOwner() internal view returns (bool) {

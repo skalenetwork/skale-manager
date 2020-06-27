@@ -92,9 +92,9 @@ contract SkaleManager is IERC777Recipient, Permissions {
         external
     {
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));
-        Monitors monitors = Monitors(contractManager.getContract("Monitors"));
-
+        // validators checks inside checkPossibilityCreatingNode
         nodes.checkPossibilityCreatingNode(msg.sender);
+
         Nodes.NodeCreationParams memory params = Nodes.NodeCreationParams({
             name: name,
             ip: ip,
@@ -103,6 +103,8 @@ contract SkaleManager is IERC777Recipient, Permissions {
             publicKey: publicKey,
             nonce: nonce});
         uint nodeIndex = nodes.createNode(msg.sender, params);
+
+        Monitors monitors = Monitors(contractManager.getContract("Monitors"));
         monitors.addMonitor(nodeIndex);
     }
 
@@ -115,6 +117,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
             permitted = validatorService.getValidatorId(msg.sender) == validatorId;
         }
         require(permitted, "Sender is not permitted to call this function");
+
         Schains schains = Schains(
             contractManager.getContract("Schains"));
         SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
@@ -143,6 +146,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
 
     function deleteSchain(string calldata name) external {
         Schains schains = Schains(contractManager.getContract("Schains"));
+        // schain owner checks inside deleteSchain
         schains.deleteSchain(msg.sender, name);
     }
 
@@ -153,18 +157,20 @@ contract SkaleManager is IERC777Recipient, Permissions {
 
     function sendVerdict(uint fromMonitorIndex, Monitors.Verdict calldata verdict) external {
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));
-        Monitors monitors = Monitors(contractManager.getContract("Monitors"));
-
         require(nodes.isNodeExist(msg.sender, fromMonitorIndex), "Node does not exist for Message sender");
 
+        Monitors monitors = Monitors(contractManager.getContract("Monitors"));
+        // additional checks for monitoring inside sendVerdict
         monitors.sendVerdict(fromMonitorIndex, verdict);
     }
 
     function sendVerdicts(uint fromMonitorIndex, Monitors.Verdict[] calldata verdicts) external {
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));
         require(nodes.isNodeExist(msg.sender, fromMonitorIndex), "Node does not exist for Message sender");
+
         Monitors monitors = Monitors(contractManager.getContract("Monitors"));
         for (uint i = 0; i < verdicts.length; i++) {
+            // additional checks for monitoring inside sendVerdict
             monitors.sendVerdict(fromMonitorIndex, verdicts[i]);
         }
     }
@@ -176,6 +182,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
         require(
             nodes.isNodeActive(nodeIndex) || nodes.isNodeLeaving(nodeIndex), "Node is not Active and is not Leaving"
         );
+
         uint averageDowntime;
         uint averageLatency;
         Monitors monitors = Monitors(contractManager.getContract("Monitors"));
