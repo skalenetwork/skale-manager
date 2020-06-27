@@ -83,6 +83,7 @@ async function deploy(deployer, networkName, accounts) {
 
         "ConstantsHolder",
         "Nodes",
+        "NodeRotation",
         "Monitors",
         "SchainsInternal",
         "Schains",
