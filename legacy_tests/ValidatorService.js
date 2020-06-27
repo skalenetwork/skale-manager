@@ -39,5 +39,6 @@ async function disableWhiteList() {
     console.log("Use whitelist after Transaction: ", await init.ValidatorService.methods.useWhitelist().call());
     console.log("Exiting...");
     process.exit()
+    
 }
 disableWhiteList();
