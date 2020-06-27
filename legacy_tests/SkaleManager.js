@@ -50,8 +50,8 @@ async function disableBountyReduction() {
 
 async function grantRole(address) {
     const admin_role = await init.SkaleManager.methods.ADMIN_ROLE().call();
-    const grantRoleABI = init.SkaleManager.methods.grantRole(admin_role, address).encodeABI();
-    console.log("Is this address has admin role after transaction: ",await init.SkaleManager.methods.hasRole(admin_role, address).call());
+    console.log("Is this address has admin role: ",await init.SkaleManager.methods.hasRole(admin_role, address).call());
+    const grantRoleABI = init.SkaleManager.methods.grantRole(admin_role, address).encodeABI(); //.send({from: init.mainAccount});
     contractAddress = init.jsonData['skale_manager_address'];
     let privateKeyB = Buffer.from(init.privateKey, "hex");
     const success = await sendTransaction(init.web3, init.mainAccount, privateKeyB, grantRoleABI, contractAddress, "0");
@@ -65,21 +65,21 @@ async function grantRole(address) {
 async function deleteSchain(schainName) {
     console.log("Check is schain exist: ", await init.SchainsInternal.methods.isSchainExist(init.web3.utils.soliditySha3(schainName)).call());
     contractAddress = init.jsonData['skale_manager_address'];
-    const disableWhitelistABI = init.SkaleManager.methods.deleteSchainByRoot(schainName).encodeABI();
-    const privateKeyOwner = process.env.PRIVATE_KEY_ADMIN;
-    const accountOwner = process.env.ACCOUNT_ADMIN;
-    const privateKeyB = Buffer.from(privateKeyOwner, "hex");
-    const success = await sendTransaction(init.web3, accountOwner, privateKeyB, disableWhitelistABI, init.jsonData['skale_manager_address']);
+    const deleteSchainABI = init.SkaleManager.methods.deleteSchainByRoot(schainName).encodeABI();
+    const privateKeyAdmin = process.env.PRIVATE_KEY_ADMIN;
+    const accountAdmin = process.env.ACCOUNT_ADMIN;
+    const privateKeyB = Buffer.from(privateKeyAdmin, "hex");
+    const success = await sendTransaction(init.web3, accountAdmin, privateKeyB, deleteSchainABI, init.jsonData['skale_manager_address']);
     console.log("Transaction was successful:", success);
     console.log();
-    console.log("Check bounty reduction after transaction: ", await init.SkaleManager.methods.bountyReduction().call());
+    console.log("Check is schain exist after transaction: ", await init.SchainsInternal.methods.isSchainExist(init.web3.utils.soliditySha3(schainName)).call());
     console.log("Exiting...");
     process.exit()
 }
-// enableBountyReduction();
-// disableBountyReduction();
-// grantRole(process.env.ACCOUNT_ADMIN)
-// deleteSchain("Name");
+
+async function calculateNormalBounty() {
+
+}
 
 
 if (process.argv[2] == 'enableBountyReduction') {

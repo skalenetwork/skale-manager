@@ -29,7 +29,7 @@ async function setContractsAddress(contractName, newAddress) {
         process.exit();
     }
     try {
-        contractAddress = init.web3.utils.toChecksumAddress(newAddress);
+        newAddress = init.web3.utils.toChecksumAddress(newAddress);
     } catch (error) {
         console.log("Something wrong with address:", error);
         process.exit();
