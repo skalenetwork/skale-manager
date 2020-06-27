@@ -36,13 +36,6 @@ contract Permissions is AccessControlUpgradeSafe {
     
     ContractManager public contractManager;
 
-    function initialize(address contractManagerAddress) public virtual initializer {
-        AccessControlUpgradeSafe.__AccessControl_init();
-        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
-        require(contractManagerAddress != address(0), "ContractManager address is not set");
-        contractManager = ContractManager(contractManagerAddress);
-    }
-
     /**
      * @dev Throws if called by any account other than the owner.
      */
@@ -75,6 +68,13 @@ contract Permissions is AccessControlUpgradeSafe {
             _isOwner(),
             "Message sender is invalid");
         _;
+    }
+
+    function initialize(address contractManagerAddress) public virtual initializer {
+        AccessControlUpgradeSafe.__AccessControl_init();
+        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        require(contractManagerAddress != address(0), "ContractManager address is not set");
+        contractManager = ContractManager(contractManagerAddress);
     }
 
     function _isOwner() internal view returns (bool) {
