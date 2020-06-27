@@ -15,9 +15,7 @@ async function sendTransaction(web3Inst, account, privateKey, data, receiverCont
     const tx = new Tx(rawTx, {chain: "rinkeby"});
     tx.sign(privateKey);
     const serializedTx = tx.serialize();
-    console.log("Transaction sent!")
     const txReceipt = await web3Inst.eth.sendSignedTransaction('0x' + serializedTx.toString('hex')); //.on('receipt', receipt => {
-    console.log("Transaction done!");
     console.log("Transaction receipt is - ");
     console.log(txReceipt);
     console.log();
@@ -65,7 +63,7 @@ async function grantRole(address) {
 }
 
 async function deleteSchain(schainName) {
-    console.log("Check is schain exist: ", await init.SchainsInternal.methods.isSchainExist(web3.utils.soliditySha3(schainName)).call());
+    console.log("Check is schain exist: ", await init.SchainsInternal.methods.isSchainExist(init.web3.utils.soliditySha3(schainName)).call());
     contractAddress = init.jsonData['skale_manager_address'];
     const disableWhitelistABI = init.SkaleManager.methods.deleteSchainByRoot(schainName).encodeABI();
     const privateKeyOwner = process.env.PRIVATE_KEY_ADMIN;
