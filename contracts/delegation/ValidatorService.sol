@@ -98,11 +98,11 @@ contract ValidatorService is Permissions {
     mapping (uint => Validator) public validators;
     mapping (uint => bool) private _trustedValidators;
     uint[] public trustedValidatorsList;
-    ///      address => validatorId
+    //       address => validatorId
     mapping (address => uint) private _validatorAddressToId;
-    ///      address => validatorId
+    //       address => validatorId
     mapping (address => uint) private _nodeAddressToValidatorId;
-    /// validatorId => nodeAddress[]
+    // validatorId => nodeAddress[]
     mapping (uint => address[]) private _nodeAddresses;
     uint public numberOfValidators;
     bool public useWhitelist;

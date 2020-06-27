@@ -24,14 +24,14 @@ pragma solidity 0.6.10;
 import "@openzeppelin/contracts-ethereum-package/contracts/access/Ownable.sol";
 
 import "./utils/StringUtils.sol";
-
+import "./Destructible.sol";
 
 /**
  * @title Main contract in upgradeable approach. This contract contains the actual
  * current mapping from contract IDs (in the form of human-readable strings) to addresses.
  * @author Artem Payvin
  */
-contract ContractManager is OwnableUpgradeSafe {
+contract ContractManager is OwnableUpgradeSafe, Destructible {
     using StringUtils for string;
 
     // mapping of actual smart contracts addresses
@@ -41,6 +41,7 @@ contract ContractManager is OwnableUpgradeSafe {
 
     function initialize() external initializer {
         OwnableUpgradeSafe.__Ownable_init();
+        _setOwner(msg.sender);
     }
 
     /**

@@ -25,13 +25,14 @@ import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/access/AccessControl.sol";
 
 import "./ContractManager.sol";
+import "./Destructible.sol";
 
 
 /**
  * @title Permissions - connected module for Upgradeable approach, knows ContractManager
  * @author Artem Payvin
  */
-contract Permissions is AccessControlUpgradeSafe {
+contract Permissions is AccessControlUpgradeSafe, Destructible {
     using SafeMath for uint;
     
     ContractManager public contractManager;
@@ -41,6 +42,7 @@ contract Permissions is AccessControlUpgradeSafe {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
         require(contractManagerAddress != address(0), "ContractManager address is not set");
         contractManager = ContractManager(contractManagerAddress);
+        _setOwner(msg.sender);
     }
 
     /**
