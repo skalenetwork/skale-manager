@@ -33,6 +33,7 @@ import "./ContractManager.sol";
  */
 contract Permissions is AccessControlUpgradeSafe {
     using SafeMath for uint;
+    using Address for address;
     
     ContractManager public contractManager;
 
@@ -83,8 +84,7 @@ contract Permissions is AccessControlUpgradeSafe {
     function initialize(address contractManagerAddress) public virtual initializer {
         AccessControlUpgradeSafe.__AccessControl_init();
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
-        require(contractManagerAddress != address(0), "ContractManager address is not set");
-        contractManager = ContractManager(contractManagerAddress);
+        _setContractManager(contractManagerAddress);
     }
 
     function _isOwner() internal view returns (bool) {
@@ -99,5 +99,11 @@ contract Permissions is AccessControlUpgradeSafe {
         } else {
             return _isOwner();
         }
+    }
+
+    function _setContractManager(address contractManagerAddress) private {
+        require(contractManagerAddress != address(0), "ContractManager address is not set");
+        require(contractManagerAddress.isContract(), "Address is not contract");
+        contractManager = ContractManager(contractManagerAddress);
     }
 }

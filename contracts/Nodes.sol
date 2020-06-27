@@ -285,7 +285,7 @@ contract Nodes is Permissions {
         uint nodeIndex
     )
         external
-        allow("SkaleManager")
+        allow("Bounty")
         returns (bool)
     {
         DelegationController delegationController = DelegationController(

@@ -33,19 +33,10 @@ import "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
 import "@openzeppelin/contracts/introspection/IERC1820Registry.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "./NodeRotation.sol";
+import "./Bounty.sol";
 
 
 contract SkaleManager is IERC777Recipient, Permissions {
-    // miners capitalization
-    uint public minersCap;
-    
-    // time of current stage
-    uint public stageTime;
-    // amount of Nodes at current stage
-    uint public stageNodes;
-
-    bool public bountyReduction;
-
     IERC1820Registry private _erc1820;
 
     bytes32 constant private _TOKENS_RECIPIENT_INTERFACE_HASH =
@@ -181,86 +172,32 @@ contract SkaleManager is IERC777Recipient, Permissions {
         require(
             nodes.isNodeActive(nodeIndex) || nodes.isNodeLeaving(nodeIndex), "Node is not Active and is not Leaving"
         );
-
+        Bounty bountyContract = Bounty(contractManager.getContract("Bounty"));
         uint averageDowntime;
         uint averageLatency;
         Monitors monitors = Monitors(contractManager.getContract("Monitors"));
         (averageDowntime, averageLatency) = monitors.calculateMetrics(nodeIndex);
-        uint bounty = _manageBounty(
+        
+        uint bounty = bountyContract.getBounty(
             nodeIndex,
             averageDowntime,
-            averageLatency);
+            averageLatency);            
+        
         nodes.changeNodeLastRewardDate(nodeIndex);
         monitors.deleteMonitor(nodeIndex);
         monitors.addMonitor(nodeIndex);
-        _emitBountyEvent(nodeIndex, msg.sender, averageDowntime, averageLatency, bounty);
-    }
 
-    function enableBountyReduction() external onlyOwner {
-        bountyReduction = true;
-    }
-
-    function disableBountyReduction() external onlyOwner {
-        bountyReduction = false;
-    }
-
-    function calculateNormalBounty() external view returns (uint) {
-        ConstantsHolder constants = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
-        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
-
-        uint nodesAmount = stageNodes;
-        if (uint(stageTime).add(constants.rewardPeriod()) < now) {
-            nodesAmount = nodes.numberOfActiveNodes().add(nodes.numberOfLeavingNodes());
+        if (bounty > 0) {
+            _payBounty(bounty, nodes.getValidatorId(nodeIndex));
         }
-        
-        return _calculateMaximumBountyAmount(
-            _getValidatorsCapitalization(),
-            nodesAmount,
-            constants.launchTimestamp()
-        );
+
+        _emitBountyEvent(nodeIndex, msg.sender, averageDowntime, averageLatency, bounty);
     }
 
     function initialize(address newContractsAddress) public override initializer {
         Permissions.initialize(newContractsAddress);
-        bountyReduction = false;
         _erc1820 = IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
         _erc1820.setInterfaceImplementer(address(this), _TOKENS_RECIPIENT_INTERFACE_HASH, address(this));
-    }
-
-    function _manageBounty(
-        uint nodeIndex,
-        uint downtime,
-        uint latency) private returns (uint)
-    {
-        ConstantsHolder constants = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
-        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
-
-        uint networkLaunchTimestamp = constants.launchTimestamp();
-        if (uint(stageTime).add(constants.rewardPeriod()) < now) {
-            stageNodes = nodes.numberOfActiveNodes().add(nodes.numberOfLeavingNodes());
-            stageTime = block.timestamp;
-        }
-        
-        uint bountyAmount = _calculateMaximumBountyAmount(
-            _getAndUpdateValidatorsCapitalization(),
-            stageNodes,
-            networkLaunchTimestamp
-        );
-
-        // reduce bounty if metrics are too bad
-        bountyAmount = _reduceBounty(
-            bountyAmount,
-            nodeIndex,
-            downtime,
-            latency,
-            nodes,
-            constants
-        );
-
-        if (bountyAmount > 0) {
-            _payBounty(bountyAmount, nodes.getValidatorId(nodeIndex));
-        }
-        return bountyAmount;
     }
 
     function _payBounty(uint bounty, uint validatorId) private returns (bool) {        
@@ -293,115 +230,5 @@ contract SkaleManager is IERC777Recipient, Permissions {
             previousBlockEvent,
             block.timestamp,
             gasleft());
-    }
-
-    function _getValidatorsCapitalization() private view returns (uint) {
-        if (minersCap == 0) {
-            ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
-            return SkaleToken(contractManager.getContract("SkaleToken")).CAP().div(constantsHolder.BOUNTY_POOL_PART());
-        }
-        return minersCap;
-    }
-
-    function _getAndUpdateValidatorsCapitalization() private returns (uint) {
-        if (minersCap == 0) {
-            minersCap = _getValidatorsCapitalization();
-        }
-        return minersCap;
-    }
-
-    function _calculateMaximumBountyAmount(
-        uint cap,
-        uint nodesAmount,
-        uint networkLaunchTimestamp
-        )
-        private
-        view
-        returns (uint)
-    {
-        if (now < networkLaunchTimestamp) {
-            // network is not launched
-            // bounty is turned off
-            return 0;
-        }
-
-        ConstantsHolder constants = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
-        
-        uint numberOfSixYearsPeriods = now.sub(networkLaunchTimestamp).div(constants.SIX_YEARS()) + 1;
-
-        return cap
-            .mul(constants.rewardPeriod())
-            .div(constants.SIX_YEARS())
-            .div(2 ** numberOfSixYearsPeriods)
-            .div(nodesAmount);
-    }
-
-    function _reduceBounty(
-        uint bounty,
-        uint nodeIndex,
-        uint downtime,
-        uint latency,
-        Nodes nodes,
-        ConstantsHolder constants
-    )
-        private
-        returns (uint reducedBounty)
-    {
-        if (!bountyReduction) {
-            return bounty;
-        }
-
-        reducedBounty = _reduceBountyByDowntime(bounty, nodeIndex, downtime, nodes, constants);
-
-        if (latency > constants.allowableLatency()) {
-            // reduce bounty because latency is too big
-            reducedBounty = reducedBounty.mul(constants.allowableLatency()).div(latency);
-        }
-        
-        if (!nodes.checkPossibilityToMaintainNode(nodes.getValidatorId(nodeIndex), nodeIndex)) {
-            reducedBounty = reducedBounty.div(constants.MSR_REDUCING_COEFFICIENT());
-        }
-    }
-
-    function _reduceBountyByDowntime(
-        uint bounty,
-        uint nodeIndex,
-        uint downtime,
-        Nodes nodes,
-        ConstantsHolder constants
-    )
-        private
-        view
-        returns (uint reducedBounty)
-    {
-        reducedBounty = bounty;
-        uint getBountyDeadline = uint(nodes.getNodeLastRewardDate(nodeIndex))
-            .add(constants.rewardPeriod())
-            .add(constants.deltaPeriod());
-        uint numberOfExpiredIntervals;
-        if (now > getBountyDeadline) {
-            numberOfExpiredIntervals = now.sub(getBountyDeadline).div(constants.checkTime());
-        } else {
-            numberOfExpiredIntervals = 0;
-        }
-        uint normalDowntime = uint(constants.rewardPeriod())
-            .sub(constants.deltaPeriod())
-            .div(constants.checkTime())
-            .div(constants.DOWNTIME_THRESHOLD_PART());
-        uint totalDowntime = downtime.add(numberOfExpiredIntervals);
-        if (totalDowntime > normalDowntime) {
-            // reduce bounty because downtime is too big
-            uint penalty = bounty
-                .mul(totalDowntime)
-                .div(
-                    uint(constants.rewardPeriod()).sub(constants.deltaPeriod())
-                        .div(constants.checkTime())
-                );            
-            if (bounty > penalty) {
-                reducedBounty = bounty.sub(penalty);
-            } else {
-                reducedBounty = 0;
-            }
-        }
     }
 }

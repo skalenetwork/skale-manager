@@ -228,6 +228,7 @@ contract("NodesFunctionality", ([owner, validator, nodeAddress, nodeAddress2, ho
             info = "NICE";
             await skaleToken.mint(holder, 200, "0x", "0x");
             await skaleToken.mint(nodeAddress, 200, "0x", "0x");
+            await constantsHolder.setMSR(amount * 5);
         });
 
         it("should not allow to create node if new epoch isn't started", async () => {
