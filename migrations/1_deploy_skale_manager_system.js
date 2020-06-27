@@ -24,10 +24,12 @@ let erc1820Contract = erc1820Params.contractAddress;
 let erc1820Sender = erc1820Params.senderAddress;
 let erc1820Bytecode = erc1820Params.bytecode;
 let erc1820Amount = "80000000000000000";
-if (!(process.env.PRODUCTION == true || process.env.PRODUCTION == false)) {
+
+if (!(process.env.PRODUCTION != true || process.env.PRODUCTION != false)) {
     console.log("Recheck Production variable in .env");
     process.exit();
 }
+
 const production = process.env.PRODUCTION; // TODO: change to true before launch
 
 async function deploy(deployer, networkName, accounts) {
