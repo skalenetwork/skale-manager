@@ -4,6 +4,7 @@ import { deployFunctionFactory } from "./factory";
 import { deployNodes } from "./nodes";
 import { deploySchainsInternal } from "./schainsInternal";
 import { deploySkaleVerifier } from "./skaleVerifier";
+import { deployNodeRotation } from "./nodeRotation";
 
 const deploySchains: (contractManager: ContractManagerInstance) => Promise<SchainsInstance>
     = deployFunctionFactory("Schains",
@@ -13,6 +14,7 @@ const deploySchains: (contractManager: ContractManagerInstance) => Promise<Schai
                                 await deployConstantsHolder(contractManager);
                                 await deployNodes(contractManager);
                                 await deploySkaleVerifier(contractManager);
+                                await deployNodeRotation(contractManager);
                             });
 
 export { deploySchains };

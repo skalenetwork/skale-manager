@@ -132,7 +132,7 @@ contract Nodes is Permissions {
      */
     function removeSpaceFromNode(uint nodeIndex, uint8 space)
         external
-        allowTwo("Schains", "SchainsInternal")
+        allowTwo("NodeRotation", "SchainsInternal")
         returns (bool)
     {
         if (spaceOfNodes[nodeIndex].freeSpace < space) {
