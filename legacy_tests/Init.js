@@ -29,4 +29,5 @@ module.exports.TokenState = new web3.eth.Contract(jsonData['token_state_abi'], j
 module.exports.web3 = web3;
 module.exports.mainAccount = mainAccount;
 module.exports.jsonData = jsonData;
-module.exports.privateKey
+module.exports.privateKey = privateKey;
+module.exports.network = networkName;

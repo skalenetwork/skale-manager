@@ -2,8 +2,7 @@ const init = require("./Init.js");
 const Tx = require("ethereumjs-tx").Transaction;
 async function sendTransaction(web3Inst, account, privateKey, data, receiverContract, amount) {
     console.log("Transaction generating started!");
-    const nonce = await web3Inst.eth.getTransactionCount("7E6CE355Ca303EAe3a858c172c3cD4CeB23701bc");
-    console.log(nonce);
+    const nonce = await web3Inst.eth.getTransactionCount(account);
     const rawTx = {
         from: web3Inst.utils.toChecksumAddress(account),
         nonce: "0x" + nonce.toString(16),
@@ -12,8 +11,14 @@ async function sendTransaction(web3Inst, account, privateKey, data, receiverCont
         gasPrice: 10000000000,
         gas: 8000000,
         value: web3Inst.utils.toHex(amount)
+        // chainId: await web3Inst.eth.getChainId()
     };
-    const tx = new Tx(rawTx, {chain: 'test'});
+    let tx;
+    if (init.network !== "test") {
+        tx = new Tx(rawTx, {chain: "rinkeby"});
+    } else {
+        tx = new Tx(rawTx);
+    }
     tx.sign(privateKey);
     const serializedTx = tx.serialize();
     console.log("Transaction sent!")
@@ -24,11 +29,14 @@ async function sendTransaction(web3Inst, account, privateKey, data, receiverCont
     return true;
 }
 async function disableWhiteList() {
+    console.log("Use whitelist:", await init.ValidatorService.methods.useWhitelist().call());
     contractAddress = init.jsonData['validator_service_address'];
-    contractABI = init.jsonData['validator_service_abi'];
-    let privateKeyB = Buffer.from(String(init.privateKey), "hex");
-    const success = await sendTransaction(init.web3, init.mainAccount, privateKeyB, contractABI, contractAddress, "0");
+    const disableWhitelistABI = init.ValidatorService.methods.disableWhitelist().encodeABI();
+    const privateKeyB = Buffer.from(init.privateKey, "hex");
+    // console.log(await )
+    const success = await sendTransaction(init.web3, init.mainAccount, privateKeyB, disableWhitelistABI, contractAddress, "0");
     console.log("Transaction was successful:", success);
+    console.log("Use whitelist after Transaction: ", await init.ValidatorService.methods.useWhitelist().call());
     console.log("Exiting...");
     process.exit()
 }
