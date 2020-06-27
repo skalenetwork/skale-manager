@@ -80,5 +80,23 @@ async function deleteSchain(schainName) {
 }
 // enableBountyReduction();
 // disableBountyReduction();
-grantRole(process.env.ACCOUNT_ADMIN)
+// grantRole(process.env.ACCOUNT_ADMIN)
 // deleteSchain("Name");
+
+
+if (process.argv[2] == 'enableBountyReduction') {
+    enableBountyReduction();
+}
+
+if (process.argv[2] == 'disableBountyReduction') {
+    disableBountyReduction();
+}
+
+if (process.argv[2] == 'grantRole') {
+    grantRole(process.argv[3]);
+}
+
+if (process.argv[2] == 'deleteSchain') {
+    deleteSchain(process.argv[3]);
+}
+
