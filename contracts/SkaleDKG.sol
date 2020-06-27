@@ -27,6 +27,7 @@ import "./SlashingTable.sol";
 import "./Schains.sol";
 import "./SchainsInternal.sol";
 import "./utils/FieldOperations.sol";
+import "./NodeRotation.sol";
 import "./KeyStorage.sol";
 import "./interfaces/ISkaleDKG.sol";
 
@@ -208,7 +209,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         }
     }
 
-    function reopenChannel(bytes32 groupIndex) external override allow("SchainsInternal") {
+    function reopenChannel(bytes32 groupIndex) external override allow("NodeRotation") {
         _reopenChannel(groupIndex);
     }
 
@@ -321,18 +322,16 @@ contract SkaleDKG is Permissions, ISkaleDKG {
     }
 
     function _finalizeSlashing(bytes32 groupIndex, uint badNode) private {
+        NodeRotation nodeRotation = NodeRotation(contractManager.getContract("NodeRotation"));
         SchainsInternal schainsInternal = SchainsInternal(
             contractManager.getContract("SchainsInternal")
-        );
-        Schains schains = Schains(
-            contractManager.getContract("Schains")
         );
         emit BadGuy(badNode);
         emit FailedDKG(groupIndex);
 
         _reopenChannel(groupIndex);
         if (schainsInternal.isAnyFreeNode(groupIndex)) {
-            uint newNode = schains.rotateNode(
+            uint newNode = nodeRotation.rotateNode(
                 badNode,
                 groupIndex
             );

@@ -32,6 +32,7 @@ import "./Schains.sol";
 import "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
 import "@openzeppelin/contracts/introspection/IERC1820Registry.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
+import "./NodeRotation.sol";
 
 
 contract SkaleManager is IERC777Recipient, Permissions {
@@ -107,6 +108,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
     }
 
     function nodeExit(uint nodeIndex) external {
+        NodeRotation nodeRotation = NodeRotation(contractManager.getContract("NodeRotation"));
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));
         uint validatorId = nodes.getValidatorId(nodeIndex);
@@ -115,18 +117,16 @@ contract SkaleManager is IERC777Recipient, Permissions {
             permitted = validatorService.getValidatorId(msg.sender) == validatorId;
         }
         require(permitted, "Sender is not permitted to call this function");
-        Schains schains = Schains(
-            contractManager.getContract("Schains"));
         SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
         ConstantsHolder constants = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
-        schains.freezeSchains(nodeIndex);
+        nodeRotation.freezeSchains(nodeIndex);
         if (nodes.isNodeActive(nodeIndex)) {
             require(nodes.initExit(nodeIndex), "Initialization of node exit is failed");
         }
         bool completed;
         bool isSchains = false;
         if (schainsInternal.getActiveSchain(nodeIndex) != bytes32(0)) {
-            completed = schains.exitFromSchain(nodeIndex);
+            completed = nodeRotation.exitFromSchain(nodeIndex);
             isSchains = true;
         } else {
             completed = true;

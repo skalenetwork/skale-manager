@@ -7,6 +7,7 @@ import { deployMonitors } from "./monitors";
 import { deployNodes } from "./nodes";
 import { deploySchains } from "./schains";
 import { deploySkaleToken } from "./skaleToken";
+import { deployNodeRotation } from "./nodeRotation";
 
 const deploySkaleManager: (contractManager: ContractManagerInstance) => Promise<SkaleManagerInstance>
     = deployFunctionFactory("SkaleManager",
@@ -18,6 +19,7 @@ const deploySkaleManager: (contractManager: ContractManagerInstance) => Promise<
                                 await deployConstantsHolder(contractManager);
                                 await deploySkaleToken(contractManager);
                                 await deployDistributor(contractManager);
+                                await deployNodeRotation(contractManager);
                             });
 
 export { deploySkaleManager };
