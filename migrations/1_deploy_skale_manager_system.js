@@ -66,6 +66,8 @@ async function deploy(deployer, networkName, accounts) {
     
     const deployAccount = accounts[0];
     const options = await ConfigManager.initNetworkConfiguration({ network: networkName, from: deployAccount });
+    // TODO: remove before production!
+    options.force = !production;
 
     const contracts = [
         "ContractManager", // must be in first position
