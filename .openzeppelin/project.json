@@ -24,7 +24,8 @@
     "SlashingTable": "SlashingTable",
     "Punisher": "Punisher",
     "TokenLaunchLocker": "TokenLaunchLocker",
-    "KeyStorage": "KeyStorage"
+    "KeyStorage": "KeyStorage",
+    "Bounty": "Bounty"
   },
   "dependencies": {},
   "name": "skale-manager",
