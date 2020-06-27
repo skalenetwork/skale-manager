@@ -50,23 +50,6 @@ contract SchainsInternal is Permissions {
         uint64 index;
     }
 
-    /**
-     * nodeIndex - index of Node which is in process of rotation(left from schain)
-     * newNodeIndex - index of Node which is rotated(added to schain)
-     * freezeUntil - time till which Node should be turned on
-     * rotationCounter - how many rotations were on this schain
-     */
-    struct Rotation {
-        uint nodeIndex;
-        uint newNodeIndex;
-        uint freezeUntil;
-        uint rotationCounter;
-    }
-
-    struct LeavingHistory {
-        bytes32 schainIndex;
-        uint finishedRotation;
-    }
 
     // mapping which contain all schains
     mapping (bytes32 => Schain) public schains;
@@ -85,9 +68,7 @@ contract SchainsInternal is Permissions {
 
     mapping (bytes32 => uint[]) public holesForSchains;
 
-    mapping (bytes32 => Rotation) public rotations;
 
-    mapping (uint => LeavingHistory[]) public leavingHistory;
 
     // array which contain all schains
     bytes32[] public schainsAtSystem;
@@ -200,8 +181,8 @@ contract SchainsInternal is Permissions {
         uint nodeIndex,
         bytes32 schainHash
     )
-        external
-        allowTwo("Schains", "SkaleDKG")
+        external 
+        allowThree("NodeRotation", "SkaleDKG", "Schains")
     {
         uint schainId = findSchainAtSchainsForNode(nodeIndex, schainHash);
         uint indexOfNode = _findNode(schainHash, nodeIndex);
@@ -232,34 +213,6 @@ contract SchainsInternal is Permissions {
         ISkaleDKG(contractManager.getContract("SkaleDKG")).openChannel(schainId);
     }
 
-    function startRotation(bytes32 schainIndex, uint nodeIndex) external allow("Schains") {
-        ConstantsHolder constants = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
-        rotations[schainIndex].nodeIndex = nodeIndex;
-        rotations[schainIndex].freezeUntil = now.add(constants.rotationDelay());
-    }
-
-    function finishRotation(
-        bytes32 schainIndex,
-        uint nodeIndex,
-        uint newNodeIndex)
-        external allow("Schains")
-    {
-        ConstantsHolder constants = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
-        leavingHistory[nodeIndex].push(LeavingHistory(schainIndex, now.add(constants.rotationDelay())));
-        rotations[schainIndex].newNodeIndex = newNodeIndex;
-        rotations[schainIndex].rotationCounter++;
-        ISkaleDKG skaleDKG = ISkaleDKG(contractManager.getContract("SkaleDKG"));
-        skaleDKG.reopenChannel(schainIndex);
-    }
-
-    function removeRotation(bytes32 schainIndex) external allow("Schains") {
-        delete rotations[schainIndex];
-    }
-
-    function skipRotationDelay(bytes32 schainIndex) external onlyOwner {
-        rotations[schainIndex].freezeUntil = now;
-    }
-
     /**
      * @dev deleteGroup - delete Group from Data contract
      * function could be run only by executor
@@ -281,7 +234,7 @@ contract SchainsInternal is Permissions {
      * @param schainId - Groups identifier
      * @param nodeIndex - index of Node which would be notes like exception
      */
-    function setException(bytes32 schainId, uint nodeIndex) external allow("Schains") {
+    function setException(bytes32 schainId, uint nodeIndex) external allowTwo("Schains", "NodeRotation") {
         _exceptionsForGroups[schainId][nodeIndex] = true;
     }
 
@@ -291,7 +244,7 @@ contract SchainsInternal is Permissions {
      * @param schainId - Groups
      * @param nodeIndex - index of Node which would be added to the Group
      */
-    function setNodeInGroup(bytes32 schainId, uint nodeIndex) external allow("Schains") {
+    function setNodeInGroup(bytes32 schainId, uint nodeIndex) external allowTwo("Schains", "NodeRotation") {
         if (holesForSchains[schainId].length == 0) {
             schainsGroups[schainId].push(nodeIndex);
         } else {
@@ -313,14 +266,6 @@ contract SchainsInternal is Permissions {
                 holesForSchains[schainId].pop();
             }
         }
-    }
-
-    function getRotation(bytes32 schainIndex) external view returns (Rotation memory) {
-        return rotations[schainIndex];
-    }
-
-    function getLeavingHistory(uint nodeIndex) external view returns (LeavingHistory[] memory) {
-        return leavingHistory[nodeIndex];
     }
 
     /**
@@ -498,7 +443,7 @@ contract SchainsInternal is Permissions {
      * @param nodeIndex - index of Node
      * @param schainId - hash by Schain name
      */
-    function addSchainForNode(uint nodeIndex, bytes32 schainId) public allow("Schains") {
+    function addSchainForNode(uint nodeIndex, bytes32 schainId) public allowTwo("Schains", "NodeRotation") {
         if (holesForNodes[nodeIndex].length == 0) {
             schainsForNodes[nodeIndex].push(schainId);
         } else {
@@ -527,7 +472,10 @@ contract SchainsInternal is Permissions {
      * @param nodeIndex - index of Node
      * @param schainIndex - index of Schain in schainsForNodes array by this Node
      */
-    function removeSchainForNode(uint nodeIndex, uint schainIndex) public allowTwo("Schains", "SkaleDKG") {
+    function removeSchainForNode(uint nodeIndex, uint schainIndex)
+        public
+        allowThree("NodeRotation", "SkaleDKG", "Schains")
+    {
         uint length = schainsForNodes[nodeIndex].length;
         if (schainIndex == length.sub(1)) {
             schainsForNodes[nodeIndex].pop();
