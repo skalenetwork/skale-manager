@@ -11,7 +11,6 @@ async function sendTransaction(web3Inst, account, privateKey, data, receiverCont
         gasPrice: 10000000000,
         gas: 8000000,
         value: web3Inst.utils.toHex(amount)
-        // chainId: await web3Inst.eth.getChainId()
     };
     let tx;
     if (init.network !== "test") {
@@ -28,17 +27,54 @@ async function sendTransaction(web3Inst, account, privateKey, data, receiverCont
     console.log(txReceipt);
     return true;
 }
-async function disableWhiteList() {
+
+async function disableWhitelist() {
     console.log("Use whitelist:", await init.ValidatorService.methods.useWhitelist().call());
     contractAddress = init.jsonData['validator_service_address'];
     const disableWhitelistABI = init.ValidatorService.methods.disableWhitelist().encodeABI();
     const privateKeyB = Buffer.from(init.privateKey, "hex");
-    // console.log(await )
     const success = await sendTransaction(init.web3, init.mainAccount, privateKeyB, disableWhitelistABI, contractAddress, "0");
     console.log("Transaction was successful:", success);
     console.log("Use whitelist after Transaction: ", await init.ValidatorService.methods.useWhitelist().call());
     console.log("Exiting...");
-    process.exit()
+    process.exit();
     
 }
-disableWhiteList();
+
+async function enableValidator(validatorId) {
+    console.log("Whitelist of validators:", await init.ValidatorService.methods.getTrustedValidators().call());
+    contractAddress = init.jsonData['validator_service_address'];
+    const functionABI = init.ValidatorService.methods.enableValidator(validatorId).encodeABI();
+    const privateKeyB = Buffer.from(init.privateKey, "hex");
+    const success = await sendTransaction(init.web3, init.mainAccount, privateKeyB, functionABI, contractAddress, "0");
+    console.log("Transaction was successful:", success);
+    console.log("Whitelist of validators:", await init.ValidatorService.methods.getTrustedValidators().call());
+    console.log("Exiting...");
+    process.exit();
+}
+
+async function disableValidator(validatorId) {
+    console.log("Whitelist of validators:", await init.ValidatorService.methods.getTrustedValidators().call());
+    contractAddress = init.jsonData['validator_service_address'];
+    const functionABI = init.ValidatorService.methods.disableValidator(validatorId).encodeABI();
+    const privateKeyB = Buffer.from(init.privateKey, "hex");
+    const success = await sendTransaction(init.web3, init.mainAccount, privateKeyB, functionABI, contractAddress, "0");
+    console.log("Transaction was successful:", success);
+    console.log("Whitelist of validators:", await init.ValidatorService.methods.getTrustedValidators().call());
+    console.log("Exiting...");
+    process.exit();
+}
+
+if (process.argv[2] == 'disableWhitelist') {
+    disableWhitelist();
+}
+
+if (process.argv[2] == 'enableValidator') {
+    validatorId = Number(process.argv[3]);
+    enableValidator(validatorId);
+}
+
+if (process.argv[2] == 'disableValidator') {
+    validatorId = Number(process.argv[3]);
+    disableValidator(validatorId);
+}
