@@ -11,6 +11,7 @@
     "ContractManager": "ContractManager",
     "ConstantsHolder": "ConstantsHolder",
     "Nodes": "Nodes",
+    "NodeRotation": "NodeRotation",
     "Monitors": "Monitors",
     "Schains": "Schains",
     "SchainsInternal": "SchainsInternal",
