@@ -118,10 +118,11 @@ contract Distributor is Permissions, IERC777Recipient {
                 constantsHolder.launchTimestamp(),
                 constantsHolder.BOUNTY_LOCKUP_MONTHS()
             ), "Bounty is locked");
+        // check Validator Exist inside getValidatorId
+        uint validatorId = validatorService.getValidatorId(msg.sender);
 
         uint fee;
         uint endMonth;
-        uint validatorId = validatorService.getValidatorId(msg.sender);
         (fee, endMonth) = getEarnedFeeAmountOf(validatorId);
 
         _firstUnwithdrawnMonthForValidator[validatorId] = endMonth;

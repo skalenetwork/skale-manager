@@ -237,8 +237,11 @@ contract SkaleDKG is Permissions, ISkaleDKG {
     function isComplaintPossible(
         bytes32 groupIndex,
         uint fromNodeIndex,
-        uint toNodeIndex)
-        external view returns (bool)
+        uint toNodeIndex
+    )
+        external
+        view
+        returns (bool)
     {
         uint indexFrom = _nodeIndexInSchain(groupIndex, fromNodeIndex);
         uint indexTo = _nodeIndexInSchain(groupIndex, toNodeIndex);
