@@ -83,6 +83,7 @@ async function deploy(deployer, networkName, accounts) {
 
         "ConstantsHolder",
         "Nodes",
+        "NodeRotation",
         "Monitors",
         "SchainsInternal",
         "Schains",
@@ -92,7 +93,8 @@ async function deploy(deployer, networkName, accounts) {
         "SkaleDKG",
         "SkaleVerifier",
         "SkaleManager",
-        "Pricing"
+        "Pricing",
+        "Bounty"
     ]
     if (!production) {
         contracts.push("TimeHelpersWithDebug");

@@ -54,25 +54,10 @@ contract ConstantsHolder is Permissions {
     uint public constant NUMBER_OF_NODES_FOR_TEST_SCHAIN = 2;
 
     // number of Nodes for Test Skale-chain (4 Nodes)
-    uint public constant NUMBER_OF_NODES_FOR_MEDIUM_TEST_SCHAIN = 4;
-
-    // 'Fractional' Part of ratio for create Fractional or Full Node
-    uint public constant FRACTIONAL_FACTOR = 128;
-
-    // 'Full' part of ratio for create Fractional or Full Node
-    uint public constant FULL_FACTOR = 17;
-
-    // number of second in one day
-    uint32 public constant SECONDS_TO_DAY = 86400;
-
-    // number of seconds in one month
-    uint32 public constant SECONDS_TO_MONTH = 2592000;
+    uint public constant NUMBER_OF_NODES_FOR_MEDIUM_TEST_SCHAIN = 4;    
 
     // number of seconds in one year
     uint32 public constant SECONDS_TO_YEAR = 31622400;
-
-    // number of seconds in six years
-    uint32 public constant SIX_YEARS = 186624000;
 
     // initial number of monitors
     uint public constant NUMBER_OF_MONITORS = 24;
@@ -86,8 +71,6 @@ contract ConstantsHolder is Permissions {
     uint public constant MIN_PRICE = 10**6;
 
     uint public constant MSR_REDUCING_COEFFICIENT = 2;
-
-    uint public constant BOUNTY_POOL_PART = 3;
 
     uint public constant DOWNTIME_THRESHOLD_PART = 30;
 
@@ -114,18 +97,6 @@ contract ConstantsHolder is Permissions {
      * from checked nodes)
      */
     uint public checkTime;
-
-    /**
-     * Last time when system was underloaded
-     * (allocations on Skale-chain / allocations on Nodes < 75%)
-     */
-    uint public lastTimeUnderloaded;
-
-    /**
-     * Last time when system was overloaded
-     * (allocations on Skale-chain / allocations on Nodes > 85%)
-     */
-    uint public lastTimeOverloaded;
 
     //Need to add minimal allowed parameters for verdicts
 
@@ -159,21 +130,7 @@ contract ConstantsHolder is Permissions {
     function setCheckTime(uint newCheckTime) external onlyOwner {
         require(rewardPeriod - deltaPeriod >= checkTime, "Incorrect check time");
         checkTime = newCheckTime;
-    }
-
-    /**
-     * Set time if system underloaded, run only by Nodes contract
-     */
-    function setLastTimeUnderloaded() external allow("Nodes") {
-        lastTimeUnderloaded = now;
-    }
-
-    /**
-     * Set time if system overloaded, run only by Schains contract
-     */
-    function setLastTimeOverloaded() external allow("Schains") {
-        lastTimeOverloaded = now;
-    }
+    }    
 
     /**
      * Set latency new one in ms, run only by owner. This function
@@ -213,13 +170,11 @@ contract ConstantsHolder is Permissions {
     function initialize(address contractsAddress) public override initializer {
         Permissions.initialize(contractsAddress);
 
-        msr = 5e6 * 1e18;
+        msr = 0;
         rewardPeriod = 3600; // Test parameters
         allowableLatency = 150000; // Test parameters
         deltaPeriod = 300;  // Test parameters
         checkTime = 120; // Test parameters
-        lastTimeUnderloaded = 0;
-        lastTimeOverloaded = 0;
         launchTimestamp = uint(-1);
         rotationDelay = 12 hours;
         proofOfUseLockUpPeriodDays = 90;
