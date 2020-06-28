@@ -63,7 +63,8 @@ module.exports = {
             },
             gasPrice: gasprice,
             gas: 8000000,
-            network_id: "*"
+            network_id: "*",
+            skipDryRun: true
         }
     },
     mocha: {
