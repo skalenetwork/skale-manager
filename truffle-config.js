@@ -14,10 +14,8 @@ try {
     if (!(typeof gasprice == "number") || gasprice < 10000000000 || isNaN(gasprice)) {
         gasprice = 10000000000;
     }
-    console.log("Nice", gasprice);
 } catch (error) {
     console.log(error);
-    console.log(gasprice)
     gasprice = 10000000000;
 }
 
@@ -32,6 +30,7 @@ module.exports = {
             },
             gasPrice: 1000000000,
             gas: 8000000,
+            gasPrice: gasprice,
             network_id: "*"
         },
         unique: {
@@ -40,6 +39,7 @@ module.exports = {
             },
             gasPrice: 10000000000,
             gas: 8000000,
+            gasPrice: gasprice,
             network_id: "*",
             skipDryRun: true
         },
@@ -54,6 +54,7 @@ module.exports = {
             host: "127.0.0.1",
             port: 8545,
             gas: 6900000,
+            gasPrice: gasprice,
             network_id: "*"
         },
         mainnet: {

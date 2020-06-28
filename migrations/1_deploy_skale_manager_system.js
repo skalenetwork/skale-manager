@@ -17,6 +17,7 @@ const { add, push, create } = scripts;
 let privateKey = process.env.PRIVATE_KEY;
 
 let SkaleToken = artifacts.require('./SkaleToken.sol');
+let ConstantsHolder = artifacts.require('./ConstantsHolder.sol');
 
 let gasLimit = 8000000;
 
@@ -33,7 +34,8 @@ if (process.env.PRODUCTION === "true") {
     production = false;
 } else {
     console.log("Recheck Production variable in .env");
-    process.exit();    
+    console.log("Set Production as false");
+    production = false;
 }
 
 async function deploy(deployer, networkName, accounts) {
@@ -134,24 +136,6 @@ async function deploy(deployer, networkName, accounts) {
             contract = await create(Object.assign({ contractAlias: contractName }, options));
         } else if (["TimeHelpersWithDebug"].includes(contractName)) {
             contract = await create(Object.assign({ contractAlias: contractName, methodName: 'initialize', methodArgs: [] }, options));
-        } else if (["ConstantsHolder"].includes(contractName)) {
-            if (!production) {
-                contract = await create(Object.assign(
-                    {
-                        contractAlias: contractName,
-                        methodName: 'initialize',
-                        methodArgs: [contractManager.address, 3600, 300, 120] 
-                    }, options
-                ));
-            } else {
-                contract = await create(Object.assign(
-                    {
-                        contractAlias: contractName,
-                        methodName: 'initialize',
-                        methodArgs: [contractManager.address, 86400, 3600, 300]
-                    }, options
-                    ));
-            }
         } else {
             contract = await create(Object.assign({ contractAlias: contractName, methodName: 'initialize', methodArgs: [contractManager.address] }, options));
         }
@@ -179,6 +163,9 @@ async function deploy(deployer, networkName, accounts) {
 
     if (!production) {
         // TODO: Remove after testing
+        const constants = await ConstantsHolder.at(deployed.get("ConstantsHolder").address);
+        await constants.setPeriods(3600, 300);
+        await constants.setCheckTime(120);
         const skaleToken = await SkaleToken.deployed();
         const money = "5000000000000000000000000000"; // 5e9 * 1e18
         await skaleToken.mint(deployAccount, money, "0x", "0x");
