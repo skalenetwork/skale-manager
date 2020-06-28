@@ -21,32 +21,6 @@ async function sendTransaction(web3Inst, account, privateKey, data, receiverCont
     console.log();
     return true;
 }
-async function enableBountyReduction() {
-    console.log("Check bounty reduction: ", await init.SkaleManager.methods.bountyReduction().call());
-    contractAddress = init.jsonData['skale_manager_address'];
-    const enableBountyReductionABI = init.SkaleManager.methods.enableBountyReduction().encodeABI();
-    const privateKeyB = Buffer.from(init.privateKey, "hex");
-    const success = await sendTransaction(init.web3, init.mainAccount, privateKeyB, enableBountyReductionABI, init.jsonData['skale_manager_address']);
-    console.log("Transaction was successful:", success);
-    console.log();
-    console.log("Check bounty reduction after transaction: ", await init.SkaleManager.methods.bountyReduction().call());
-    console.log("Exiting...");
-    process.exit()
-    
-}
-
-async function disableBountyReduction() {
-    console.log("Check bounty reduction: ", await init.SkaleManager.methods.bountyReduction().call());
-    contractAddress = init.jsonData['skale_manager_address'];
-    const disableBountyReductionABI = init.SkaleManager.methods.disableBountyReduction().encodeABI();
-    const privateKeyB = Buffer.from(init.privateKey, "hex");
-    const success = await sendTransaction(init.web3, init.mainAccount, privateKeyB, disableBountyReductionABI, init.jsonData['skale_manager_address']);
-    console.log("Transaction was successful:", success);
-    console.log();
-    console.log("Check bounty reduction after transaction: ", await init.SkaleManager.methods.bountyReduction().call());
-    console.log("Exiting...");
-    process.exit()
-}
 
 async function grantRole(address) {
     const admin_role = await init.SkaleManager.methods.ADMIN_ROLE().call();
@@ -86,11 +60,7 @@ async function calculateNormalBounty(nodeIndex) {
 }
 
 
-if (process.argv[2] == 'enableBountyReduction') {
-    enableBountyReduction();
-} else if (process.argv[2] == 'disableBountyReduction') {
-    disableBountyReduction();
-} else if (process.argv[2] == 'grantRole') {
+if (process.argv[2] == 'grantRole') {
     grantRole(process.argv[3]);
 } else if (process.argv[2] == 'deleteSchain') {
     deleteSchain(process.argv[3]);
