@@ -966,8 +966,9 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                 assert.equal(broadPoss, false);
             }
 
+            let comPubKey;
             for (let i = 0; i < 16; i++) {
-                const comPubKey = await keyStorage.getCommonPublicKey(web3.utils.soliditySha3("New16NodeSchain"));
+                comPubKey = await keyStorage.getCommonPublicKey(web3.utils.soliditySha3("New16NodeSchain"));
                 assert(comPubKey.x.a, "0");
                 assert(comPubKey.x.b, "0");
                 assert(comPubKey.y.a, "0");
@@ -995,7 +996,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                 assert.equal(alrightPoss, false);
             }
 
-            const comPubKey = await keyStorage.getCommonPublicKey(web3.utils.soliditySha3("New16NodeSchain"));
+            comPubKey = await keyStorage.getCommonPublicKey(web3.utils.soliditySha3("New16NodeSchain"));
             assert.equal(comPubKey.x.a.toString() !== "0", true);
             assert.equal(comPubKey.x.b.toString() !== "0", true);
             assert.equal(comPubKey.y.a.toString() !== "0", true);
