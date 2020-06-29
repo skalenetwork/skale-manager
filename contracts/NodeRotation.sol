@@ -61,7 +61,6 @@ contract NodeRotation is Permissions {
         bytes32 schainId = schainsInternal.getActiveSchain(nodeIndex);
         require(_checkRotation(schainId), "No any free Nodes for rotating");
         uint newNodeIndex = rotateNode(nodeIndex, schainId);
-        _finishRotation(schainId, nodeIndex, newNodeIndex);
         return schainsInternal.getActiveSchain(nodeIndex) == bytes32(0) ? true : false;
     }
 
@@ -115,11 +114,12 @@ contract NodeRotation is Permissions {
     )
         public
         allowTwo("SkaleDKG", "SkaleManager")
-        returns (uint)
+        returns (uint newNode)
     {
         SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
         schainsInternal.removeNodeFromSchain(nodeIndex, schainId);
-        return selectNodeToGroup(schainId);
+        newNode = selectNodeToGroup(schainId);
+        _finishRotation(schainId, nodeIndex, newNode);
     }
 
     /**

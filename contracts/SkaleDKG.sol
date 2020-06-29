@@ -114,6 +114,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             "Incorrect number of secret key shares"
         );
 
+
         _isBroadcast(
             groupIndex,
             nodeIndex,
@@ -140,28 +141,23 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         require(_isNodeByMessageSender(fromNodeIndex, msg.sender), "Node does not exist for message sender");
         bool broadcasted = _isBroadcasted(groupIndex, toNodeIndex);
         if (broadcasted && channels[groupIndex].nodeToComplaint == uint(-1)) {
-            // need to wait a response from toNodeIndex
             channels[groupIndex].nodeToComplaint = toNodeIndex;
             channels[groupIndex].fromNodeToComplaint = fromNodeIndex;
             channels[groupIndex].startComplaintBlockTimestamp = block.timestamp;
             emit ComplaintSent(groupIndex, fromNodeIndex, toNodeIndex);
         } else if (broadcasted && channels[groupIndex].nodeToComplaint != toNodeIndex) {
-            // will not revert if someone already sent the same complaint
             return;
         } else if (broadcasted && channels[groupIndex].nodeToComplaint == toNodeIndex) {
             require(
                 channels[groupIndex].startComplaintBlockTimestamp.add(COMPLAINT_TIMELIMIT) <= block.timestamp,
                 "One more complaint rejected");
-            // need to penalty Node - toNodeIndex
             _finalizeSlashing(groupIndex, channels[groupIndex].nodeToComplaint);
         } else if (!broadcasted) {
-            // if node have not broadcasted params
             require(
                 channels[groupIndex].startedBlockTimestamp.add(COMPLAINT_TIMELIMIT) <= block.timestamp,
                 "Complaint rejected"
             );
-            // need to penalty Node - toNodeIndex
-            _finalizeSlashing(groupIndex, channels[groupIndex].nodeToComplaint);
+            _finalizeSlashing(groupIndex, toNodeIndex);
         }
     }
 
@@ -332,7 +328,6 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         emit BadGuy(badNode);
         emit FailedDKG(groupIndex);
 
-        _reopenChannel(groupIndex);
         if (schainsInternal.isAnyFreeNode(groupIndex)) {
             uint newNode = nodeRotation.rotateNode(
                 badNode,
@@ -340,6 +335,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             );
             emit NewGuy(newNode);
         } else {
+            _reopenChannel(groupIndex);
             schainsInternal.removeNodeFromSchain(
                 badNode,
                 groupIndex
