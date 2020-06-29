@@ -1,6 +1,14 @@
 const init = require("./Init.js");
 const GenerateBytesData = require("./GenerateBytesData.js");
 
+async function getFreeSpace(nodes) {
+    for (let i = 0; i < nodes.length; i++) {
+        const freeSpace = await init.Nodes.methods.spaceOfNodes(nodes[i]).call();
+        console.log(nodes[i], ':', freeSpace.freeSpace);
+    }
+    process.exit();
+}
+
 async function generateRandomIP() {
     let ip1 = Math.floor(Math.random() * 255);
     let ip2 = Math.floor(Math.random() * 255);
@@ -108,10 +116,18 @@ async function createNodes(n) {
 }
 
 //createNode();
-getNodeNextRewardDate(0)
+// getNodeNextRewardDate(0)
 
 module.exports.createNode = createNode;
 module.exports.createNodes = createNodes;
 module.exports.getNode = getNode;
 module.exports.deleteNode = deleteNode;
 module.exports.getNodeNextRewardDate = getNodeNextRewardDate;
+
+if (process.argv[2] == 'getFreeSpace') {
+    nodes = (process.argv);
+    nodes.shift();
+    nodes.shift();
+    nodes.shift();
+    getFreeSpace(nodes);
+}
