@@ -26,13 +26,6 @@ import "./ConstantsHolder.sol";
 import "./Nodes.sol";
 import "./interfaces/ISkaleDKG.sol";
 
-// interface ISkaleDKG {
-//     function openChannel(bytes32 schainId) external;
-//     function reopenChannel(bytes32 schainId) external;
-//     function deleteChannel(bytes32 schainId) external;
-//     function isChannelOpened(bytes32 schainId) external view returns (bool);
-// }
-
 /**
  * @title SchainsInternal - contract contains all functionality logic to manage Schains
  */
