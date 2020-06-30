@@ -97,6 +97,8 @@ contract("ConstantsHolder", ([deployer, user]) => {
 
   it("should Set latency", async () => {
     const miliSec = 100;
+    await constantsHolder.setLatency(miliSec, {from: user})
+      .should.be.eventually.rejectedWith("Caller is not the owner");
     await constantsHolder.setLatency(miliSec, {from: deployer});
     // expectation
     const res = new BigNumber(await constantsHolder.allowableLatency());
@@ -106,6 +108,8 @@ contract("ConstantsHolder", ([deployer, user]) => {
 
   it("should Set checkTime", async () => {
     const sec = 240;
+    await constantsHolder.setCheckTime(sec, {from: user})
+      .should.be.eventually.rejectedWith("Caller is not the owner");
     await constantsHolder.setCheckTime(sec, {from: deployer});
     // expectation
     const res = new BigNumber(await constantsHolder.checkTime());
@@ -114,6 +118,8 @@ contract("ConstantsHolder", ([deployer, user]) => {
   });
 
   it("should set rotation delay", async () => {
+    await constantsHolder.setRotationDelay(13, {from: user})
+      .should.be.eventually.rejectedWith("Caller is not the owner");
     await constantsHolder.setRotationDelay(13);
     (await constantsHolder.rotationDelay()).toNumber()
       .should.be.equal(13);
@@ -129,6 +135,50 @@ contract("ConstantsHolder", ([deployer, user]) => {
     await constantsHolder.setProofOfUseDelegationPercentage(13);
     (await constantsHolder.proofOfUseDelegationPercentage()).toNumber()
       .should.be.equal(13);
+  });
+
+  it("should set MSR", async () => {
+    const msr = 100;
+    await constantsHolder.setMSR(msr, {from: user})
+      .should.be.eventually.rejectedWith("Caller is not the owner");
+    await constantsHolder.setMSR(msr, {from: deployer});
+    // expectation
+    const res = new BigNumber(await constantsHolder.msr());
+    // parseInt(bn.toString(), 10).should.be.equal(0)
+    expect(parseInt(res.toString(), 10)).to.be.equal(msr);
+  });
+
+  it("should set launch timestamp", async () => {
+    const launch = 100;
+    await constantsHolder.setLaunchTimestamp(launch, {from: user})
+      .should.be.eventually.rejectedWith("Caller is not the owner");
+    await constantsHolder.setLaunchTimestamp(launch, {from: deployer});
+    // expectation
+    const res = new BigNumber(await constantsHolder.launchTimestamp());
+    // parseInt(bn.toString(), 10).should.be.equal(0)
+    expect(parseInt(res.toString(), 10)).to.be.equal(launch);
+  });
+
+  it("should set PoU delegation percentage", async () => {
+    const percentage = 100;
+    await constantsHolder.setProofOfUseDelegationPercentage(percentage, {from: user})
+      .should.be.eventually.rejectedWith("Caller is not the owner");
+    await constantsHolder.setProofOfUseDelegationPercentage(percentage, {from: deployer});
+    // expectation
+    const res = new BigNumber(await constantsHolder.proofOfUseDelegationPercentage());
+    // parseInt(bn.toString(), 10).should.be.equal(0)
+    expect(parseInt(res.toString(), 10)).to.be.equal(percentage);
+  });
+
+  it("should set PoU delegation time", async () => {
+    const period = 180;
+    await constantsHolder.setProofOfUseLockUpPeriod(period, {from: user})
+      .should.be.eventually.rejectedWith("Caller is not the owner");
+    await constantsHolder.setProofOfUseLockUpPeriod(period, {from: deployer});
+    // expectation
+    const res = new BigNumber(await constantsHolder.proofOfUseLockUpPeriodDays());
+    // parseInt(bn.toString(), 10).should.be.equal(0)
+    expect(parseInt(res.toString(), 10)).to.be.equal(period);
   });
 
 });

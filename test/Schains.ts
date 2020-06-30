@@ -494,14 +494,15 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
             });
 
             it("should allow the foundation to create schain without tokens", async () => {
-                await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), owner);
-                await schains.addSchainByFoundation(5, 5, 0, "d2", {from: owner});
+                const schainCreator = holder;
+                await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), schainCreator);
+                await schains.addSchainByFoundation(5, 5, 0, "d2", {from: schainCreator});
 
                 const sChains = await schainsInternal.getSchains();
                 sChains.length.should.be.equal(1);
                 const schainId = sChains[0];
 
-                await schainsInternal.isOwnerAddress(owner, schainId).should.be.eventually.true;
+                await schainsInternal.isOwnerAddress(schainCreator, schainId).should.be.eventually.true;
             });
 
             it("should assign schain creator on different address", async () => {
@@ -1054,8 +1055,11 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
             await skaleDKG.setSuccesfulDKGPublic(
                 web3.utils.soliditySha3("d2"),
             );
-            await skaleManager.deleteSchainByRoot("d2", {from: owner});
-            await skaleManager.deleteSchainByRoot("d3", {from: owner});
+            await skaleManager.deleteSchainByRoot("d2", {from: holder})
+                .should.be.eventually.rejectedWith("Caller is not an admin");
+            await skaleManager.grantRole(await skaleManager.ADMIN_ROLE(), holder);
+            await skaleManager.deleteSchainByRoot("d2", {from: holder});
+            await skaleManager.deleteSchainByRoot("d3", {from: holder});
             await schains.addSchain(
                 holder,
                 deposit,
