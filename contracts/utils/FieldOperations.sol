@@ -3,6 +3,7 @@
 /*
     FieldOperations.sol - SKALE Manager
     Copyright (C) 2018-Present SKALE Labs
+
     @author Dmytro Stebaiev
 
     SKALE Manager is free software: you can redistribute it and/or modify
@@ -155,6 +156,19 @@ library G2Operations {
         return Fp2Operations.Fp2Point({
             a: 1,
             b: 2
+        });
+    }
+
+    function getG2Zero() internal pure returns (G2Point memory) {
+        return G2Point({
+            x: Fp2Operations.Fp2Point({
+                a: 0,
+                b: 0
+            }),
+            y: Fp2Operations.Fp2Point({
+                a: 1,
+                b: 0
+            })
         });
     }
 
