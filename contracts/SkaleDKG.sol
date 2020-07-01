@@ -118,14 +118,13 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         correctGroup(groupIndex)
         correctNode(groupIndex, nodeIndex)
     {
-        SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
         require(_isNodeByMessageSender(nodeIndex, msg.sender), "Node does not exist for message sender");
-        require(verificationVector.length >= 1, "VerificationVector is empty");
+        uint n = channels[groupIndex].n;
+        require(verificationVector.length == getT(n), "Incorrect number of verification vectors");
         require(
-            secretKeyContribution.length == schainsInternal.getNumberOfNodesInGroup(groupIndex),
+            secretKeyContribution.length == n,
             "Incorrect number of secret key shares"
         );
-
 
         _isBroadcast(
             groupIndex,
@@ -273,7 +272,6 @@ contract SkaleDKG is Permissions, ISkaleDKG {
                 complaints[groupIndex].nodeToComplaint == toNodeIndex &&
                 channels[groupIndex].startedBlockTimestamp.add(COMPLAINT_TIMELIMIT) <= block.timestamp
             );
-        SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
         return channels[groupIndex].active &&
             indexFrom < channels[groupIndex].n &&
             indexTo < channels[groupIndex].n &&
@@ -311,6 +309,10 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         Permissions.initialize(contractsAddress);
     }
 
+    function getT(uint n) public view returns (uint) {
+        return n.mul(2).add(1).div(3);
+    }
+
     function _setSuccesfulDKG(bytes32 groupIndex) internal {
         lastSuccesfulDKG[groupIndex] = now;
         channels[groupIndex].active = false;
@@ -330,7 +332,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         delete dkgProcess[groupIndex].broadcasted;
         dkgProcess[groupIndex].broadcasted = new bool[](len);
         dkgProcess[groupIndex].completed = new bool[](len);
-        KeyStorage(contractManager.getContract("KeyStorage")).initPublicKeyInProgress(groupIndex);
+        KeyStorage(contractManager.getContract("KeyStorage")).initPublicKeyInProgress(groupIndex, len);
         complaints[groupIndex].fromNodeToComplaint = uint(-1);
         complaints[groupIndex].nodeToComplaint = uint(-1);
         delete complaints[groupIndex].startComplaintBlockTimestamp;
