@@ -31,7 +31,6 @@ import "./NodeRotation.sol";
 import "./KeyStorage.sol";
 import "./interfaces/ISkaleDKG.sol";
 
-
 contract SkaleDKG is Permissions, ISkaleDKG {
 
     struct Channel {
@@ -69,6 +68,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
     event FailedDKG(bytes32 indexed groupIndex);
     event ComplaintSent(bytes32 indexed groupIndex, uint indexed fromNodeIndex, uint indexed toNodeIndex);
     event NewGuy(uint nodeIndex);
+    event ComplaintError(string error);
 
     modifier correctGroup(bytes32 groupIndex) {
         require(channels[groupIndex].active, "Group is not created");
@@ -146,18 +146,19 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             channels[groupIndex].startComplaintBlockTimestamp = block.timestamp;
             emit ComplaintSent(groupIndex, fromNodeIndex, toNodeIndex);
         } else if (broadcasted && channels[groupIndex].nodeToComplaint != toNodeIndex) {
-            return;
+            emit ComplaintError("One complaint is already sent");
         } else if (broadcasted && channels[groupIndex].nodeToComplaint == toNodeIndex) {
-            require(
-                channels[groupIndex].startComplaintBlockTimestamp.add(COMPLAINT_TIMELIMIT) <= block.timestamp,
-                "One more complaint rejected");
-            _finalizeSlashing(groupIndex, channels[groupIndex].nodeToComplaint);
+            if (channels[groupIndex].startComplaintBlockTimestamp.add(COMPLAINT_TIMELIMIT) <= block.timestamp) {
+                _finalizeSlashing(groupIndex, channels[groupIndex].nodeToComplaint);
+            } else {
+                emit ComplaintError("The same complaint rejected");
+            }
         } else if (!broadcasted) {
-            require(
-                channels[groupIndex].startedBlockTimestamp.add(COMPLAINT_TIMELIMIT) <= block.timestamp,
-                "Complaint rejected"
-            );
-            _finalizeSlashing(groupIndex, toNodeIndex);
+            if (channels[groupIndex].startedBlockTimestamp.add(COMPLAINT_TIMELIMIT) <= block.timestamp) {
+                _finalizeSlashing(groupIndex, toNodeIndex);
+            } else {
+                emit ComplaintError("Complaint sent too early");
+            }
         }
     }
 
@@ -241,7 +242,10 @@ contract SkaleDKG is Permissions, ISkaleDKG {
     {
         uint indexFrom = _nodeIndexInSchain(groupIndex, fromNodeIndex);
         uint indexTo = _nodeIndexInSchain(groupIndex, toNodeIndex);
-        bool complaintSending = channels[groupIndex].nodeToComplaint == uint(-1) ||
+        bool complaintSending = (
+                channels[groupIndex].nodeToComplaint == uint(-1) &&
+                channels[groupIndex].broadcasted[indexTo]
+            ) ||
             (
                 channels[groupIndex].broadcasted[indexTo] &&
                 channels[groupIndex].startComplaintBlockTimestamp.add(COMPLAINT_TIMELIMIT) <= block.timestamp &&
@@ -249,7 +253,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             ) ||
             (
                 !channels[groupIndex].broadcasted[indexTo] &&
-                channels[groupIndex].nodeToComplaint == toNodeIndex &&
+                channels[groupIndex].nodeToComplaint == uint(-1) &&
                 channels[groupIndex].startedBlockTimestamp.add(COMPLAINT_TIMELIMIT) <= block.timestamp
             );
         SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
