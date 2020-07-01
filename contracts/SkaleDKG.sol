@@ -309,7 +309,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         Permissions.initialize(contractsAddress);
     }
 
-    function getT(uint n) public view returns (uint) {
+    function getT(uint n) public pure returns (uint) {
         return n.mul(2).add(1).div(3);
     }
 
@@ -332,13 +332,13 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         delete dkgProcess[groupIndex].broadcasted;
         dkgProcess[groupIndex].broadcasted = new bool[](len);
         dkgProcess[groupIndex].completed = new bool[](len);
-        KeyStorage(contractManager.getContract("KeyStorage")).initPublicKeyInProgress(groupIndex, len);
         complaints[groupIndex].fromNodeToComplaint = uint(-1);
         complaints[groupIndex].nodeToComplaint = uint(-1);
         delete complaints[groupIndex].startComplaintBlockTimestamp;
         delete dkgProcess[groupIndex].numberOfBroadcasted;
         delete dkgProcess[groupIndex].numberOfCompleted;
         channels[groupIndex].startedBlockTimestamp = now;
+        KeyStorage(contractManager.getContract("KeyStorage")).initPublicKeyInProgress(groupIndex, len);
 
         emit ChannelOpened(groupIndex);
     }
