@@ -1,13 +1,119 @@
 const init = require("./Init.js");
-
+const Tx = require("ethereumjs-tx").Transaction;
 const GenerateBytesData = require("./GenerateBytesData.js");
 
-function generateRandomName() {
-	let number = Math.floor(Math.random() * 100000);
-	return "Schain" + number;
+async function sendTransaction(web3Inst, account, privateKey, data, receiverContract) {
+    console.log("Transaction generating started!");
+    const nonce = await web3Inst.eth.getTransactionCount(account);
+    const rawTx = {
+        from: web3Inst.utils.toChecksumAddress(account),
+        nonce: "0x" + nonce.toString(16),
+        data: data,
+        to: receiverContract,
+        gasPrice: 10000000000,
+        gas: 8000000,
+    };
+    let tx;
+    if (init.network === "unique") {
+        tx = new Tx(rawTx, {chain: "rinkeby"});
+    } else {
+        tx = new Tx(rawTx);
+    }
+    tx.sign(privateKey);
+    const serializedTx = tx.serialize();
+    console.log("Transaction sent!")
+    const txReceipt = await web3Inst.eth.sendSignedTransaction('0x' + serializedTx.toString('hex')); //.on('receipt', receipt => {
+    console.log("Transaction done!");
+    console.log("Transaction receipt is - ");
+    console.log(txReceipt);
+    return true;
 }
 
-async function createSchain(typeOfSchain, lifetime) {
+
+
+async function createSchain(typeOfSchain, schainName) {
+    const scr = await init.Schains.methods.SCHAIN_CREATOR_ROLE().call({from: init.mainAccount});
+    let abi = await init.Schains.methods.grantRole(scr, init.mainAccount).encodeABI();
+    let privateKeyB = Buffer.from(init.privateKey, "hex");
+    let contractAddress = init.jsonData['schains_address'];
+    await sendTransaction(init.web3, init.mainAccount, privateKeyB, abi, contractAddress);
+
+    abi = await init.Schains.methods.addSchainByFoundation(5, typeOfSchain, 1, schainName).encodeABI();
+    await sendTransaction(init.web3, init.mainAccount, privateKeyB, abi, contractAddress);
+
+    abi = await init.SkaleDKG.methods.setSuccesfulDKGPublic(init.web3.utils.soliditySha3(schainName)).encodeABI();
+    contractAddress = init.jsonData['skale_d_k_g_tester_address'];
+    await sendTransaction(init.web3, init.mainAccount, privateKeyB, abi, contractAddress);
+    process.exit();
+}
+
+async function deleteSchain(schainName) {
+    let abi = await init.SkaleManager.methods.deleteSchain(schainName).encodeABI();
+    let privateKeyB = Buffer.from(init.privateKey, "hex");
+    let contractAddress = init.jsonData['schains_address'];
+    await sendTransaction(init.web3, init.mainAccount, privateKeyB, abi, contractAddress);
+}
+
+async function getSchain(schainName) {
+    let res = await init.SchainsInternal.methods.schains(init.web3.utils.soliditySha3(schainName)).call();
+    console.log(res);
+    return res;
+}
+
+async function getSchainNodes(schainName) {
+    let res = await init.SchainsInternal.methods.getNodesInGroup(init.web3.utils.soliditySha3(schainName)).call();
+    console.log("Schain name:", schainName);
+    console.log("Nodes in Schain", res);
+    process.exit();
+    // return res;
+}
+
+async function getSchainName(schainId) {
+     const schainName = await init.SchainsInternal.methods.getSchainName(schainId).call();
+     return schainName;
+}
+
+async function getSchainsForNode(nodeIndex) {
+    let res = await init.SchainsInternal.methods.getSchainIdsForNode(nodeIndex).call();
+    // console.log(res);
+    let res1;
+    for (let i = 0; i < res.length; i++) {
+        res1 = await init.SchainsInternal.methods.schains(res[i]).call();
+        console.log(res1);
+    }
+    return res;
+}
+
+// createSchain(4, 'ouue');
+
+module.exports.createSchain = createSchain;
+module.exports.deleteSchain = deleteSchain;
+module.exports.getSchain = getSchain;
+module.exports.getSchainNodes = getSchainNodes;
+module.exports.getSchainName = getSchainName;
+module.exports.getSchainsForNode = getSchainsForNode;
+
+
+if (process.argv[2] == 'getSchainNodes') {
+    getSchainNodes(process.argv[3]);
+} else if (process.argv[2] == 'createSchain') {
+    createSchain(process.argv[3], process.argv[4]);
+} else if (process.argv[2] == 'deleteSchain') {
+    deleteSchain(process.argv[3]);
+} else if (process.argv[2] == 'getSchainsForNode') {
+    getSchainsForNode(process.argv[3]);
+}
+
+
+
+
+
+
+
+
+
+
+async function createSchain_legacy(typeOfSchain, lifetime) {
     let account = init.mainAccount;
     let schainName = generateRandomName();
     let k = await init.SchainsInternal.methods.isSchainNameAvailable(schainName).call();
@@ -40,39 +146,8 @@ async function createSchain(typeOfSchain, lifetime) {
     return schainName;
 }
 
-async function deleteSchain(schainName) {
-    let res = await init.SkaleManager.methods.deleteSchain(schainName).send({from: init.mainAccount, gas: 4712388});
-    console.log("Schain", schainName, "deleted with", res.gasUsed);
+
+function generateRandomName() {
+	let number = Math.floor(Math.random() * 100000);
+	return "Schain" + number;
 }
-
-async function getSchain(schainName) {
-    let res = await init.SchainsInternal.methods.schains(init.web3.utils.soliditySha3(schainName)).call();
-    console.log(res);
-    return res;
-}
-
-async function getSchainNodes(schainName) {
-    let res = await init.SchainsInternal.methods.getNodesInGroup(init.web3.utils.soliditySha3(schainName)).call();
-    console.log("Schain name:", schainName);
-    console.log("Nodes in Schain", res);
-    return res;
-}
-
-async function getSchainsForNode(nodeIndex) {
-    let res = await init.SchainsInternal.methods.getSchainIdsForNode(nodeIndex).call();
-    console.log(res);
-    let res1;
-    for (let i = 0; i < res.length; i++) {
-        res1 = await init.SchainsInternal.methods.schains(res[i]).call();
-        console.log(res1);
-    }
-    return res;
-}
-
-//createSchain(4, 94867200);
-
-module.exports.createSchain = createSchain;
-module.exports.deleteSchain = deleteSchain;
-module.exports.getSchain = getSchain;
-module.exports.getSchainNodes = getSchainNodes;
-module.exports.getSchainsForNode = getSchainsForNode;

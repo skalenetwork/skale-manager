@@ -98,6 +98,7 @@ async function deploy(deployer, networkName, accounts) {
     ]
     if (!production) {
         contracts.push("TimeHelpersWithDebug");
+        contracts.push("SkaleDKGTester");
     }
 
     contractsData = [];
@@ -141,6 +142,9 @@ async function deploy(deployer, networkName, accounts) {
     if (!production) {
         await contractManager.methods.setContractsAddress("TimeHelpers", deployed.get("TimeHelpersWithDebug").address).send({from: deployAccount}).then(function(res) {
             console.log("TimeHelpersWithDebug was enabled");
+        });
+        await contractManager.methods.setContractsAddress("SkaleDKG", deployed.get("SkaleDKGTester").address).send({from: deployAccount}).then(function(res) {
+            console.log("SkaleDKGTester was enabled");
         });
     }
     
