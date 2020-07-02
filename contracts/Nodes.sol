@@ -305,7 +305,8 @@ contract Nodes is Permissions {
         ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
         uint[] memory nodesWithFreeSpace = new uint[](countNodesWithFreeSpace(freeSpace));
         uint cursor = 0;
-        for (uint8 i = freeSpace; i <= constantsHolder.TOTAL_SPACE_ON_NODE(); ++i) {
+        uint totalSpace = constantsHolder.TOTAL_SPACE_ON_NODE();
+        for (uint8 i = freeSpace; i <= totalSpace; ++i) {
             for (uint j = 0; j < spaceToNodes[i].length; j++) {
                 nodesWithFreeSpace[cursor] = spaceToNodes[i][j];
                 ++cursor;
@@ -499,7 +500,8 @@ contract Nodes is Permissions {
     function countNodesWithFreeSpace(uint8 freeSpace) public view returns (uint count) {
         ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
         count = 0;
-        for (uint8 i = freeSpace; i <= constantsHolder.TOTAL_SPACE_ON_NODE(); ++i) {
+        uint totalSpace = constantsHolder.TOTAL_SPACE_ON_NODE();
+        for (uint8 i = freeSpace; i <= totalSpace; ++i) {
             count = count.add(spaceToNodes[i].length);
         }
     }

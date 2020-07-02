@@ -4,12 +4,13 @@ import { ContractManagerInstance,
          DelegationControllerInstance,
          KeyStorageInstance,
          NodesInstance,
+         NodeRotationInstance,
          SchainsInternalInstance,
          SchainsInstance,
          SkaleDKGInstance,
          SkaleTokenInstance,
          SlashingTableInstance,
-         ValidatorServiceInstance } from "../types/truffle-contracts";
+         ValidatorServiceInstance} from "../types/truffle-contracts";
 
 import { skipTime } from "./tools/time";
 
@@ -24,6 +25,7 @@ import { deploySchains } from "./tools/deploy/schains";
 import { deploySkaleDKG } from "./tools/deploy/skaleDKG";
 import { deploySkaleToken } from "./tools/deploy/skaleToken";
 import { deploySlashingTable } from "./tools/deploy/slashingTable";
+import { deployNodeRotation } from "./tools/deploy/nodeRotation";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -59,6 +61,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
     let slashingTable: SlashingTableInstance;
     let delegationController: DelegationControllerInstance;
     let nodes: NodesInstance;
+    let nodeRotation: NodeRotationInstance;
 
     const failedDkgPenalty = 5;
 
@@ -74,6 +77,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
         validatorService = await deployValidatorService(contractManager);
         slashingTable = await deploySlashingTable(contractManager);
         delegationController = await deployDelegationController(contractManager);
+        nodeRotation = await deployNodeRotation(contractManager);
 
         await slashingTable.setPenalty("FailedDKG", failedDkgPenalty);
     });
@@ -424,6 +428,53 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                 ).should.be.eventually.rejectedWith(" Node does not exist for message sender");
             });
 
+            it("should send complaint after missing broadcast", async () => {
+                let res = await skaleDKG.isBroadcastPossible(
+                    web3.utils.soliditySha3(schainName),
+                    0,
+                    {from: validatorsAccount[0]},
+                );
+                assert(res.should.be.true);
+                const result = await skaleDKG.broadcast(
+                    web3.utils.soliditySha3(schainName),
+                    0,
+                    verificationVectors[indexes[0]],
+                    encryptedSecretKeyContributions[indexes[0]],
+                    {from: validatorsAccount[0]},
+                );
+                res = await skaleDKG.isBroadcastPossible(
+                    web3.utils.soliditySha3(schainName),
+                    0,
+                    {from: validatorsAccount[0]},
+                );
+                assert(res.should.be.false);
+                res = await skaleDKG.isBroadcastPossible(
+                    web3.utils.soliditySha3(schainName),
+                    1,
+                    {from: validatorsAccount[1]},
+                );
+                assert(res.should.be.true);
+                skipTime(web3, 1800);
+                const resCompl = await skaleDKG.isComplaintPossible(
+                    web3.utils.soliditySha3(schainName),
+                    0,
+                    1,
+                    {from: validatorsAccount[0]},
+                );
+                assert(resCompl.should.be.true);
+                await skaleDKG.complaint(
+                    web3.utils.soliditySha3(schainName),
+                    0,
+                    1,
+                    {from: validatorsAccount[0]},
+                );
+                res = await skaleDKG.isChannelOpened(
+                    web3.utils.soliditySha3(schainName),
+                    {from: validatorsAccount[1]},
+                );
+                assert(res.should.be.false);
+            });
+
             describe("when correct broadcasts sent", async () => {
                 beforeEach(async () => {
                     await skaleDKG.broadcast(
@@ -695,6 +746,10 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                 nodesInGroup = await schainsInternal.getNodesInGroup(web3.utils.soliditySha3(schainName));
             }
 
+            let rotCounter = await nodeRotation.getRotation(web3.utils.soliditySha3("d2"));
+            assert.equal(rotCounter.rotationCounter.toString(), "0");
+            // console.log(rotCounter);
+
             await nodes.createNode(validatorsAccount[0],
                 {
                     port: 8545,
@@ -750,6 +805,9 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
             assert.equal(channel.numberOfBroadcasted.toString(), "0");
             assert.equal(channel.startedBlockTimestamp.toString(), timestamp.toString());
             // console.log(channel);
+
+            rotCounter = await nodeRotation.getRotation(web3.utils.soliditySha3("d2"));
+            assert.equal(rotCounter.rotationCounter.toString(), "1");
 
             let res = await skaleDKG.isBroadcastPossible(
                     web3.utils.soliditySha3(schainName),
@@ -818,6 +876,132 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                         1,
                         {from: validatorsAccount[1]},
                     );
+        });
+
+        it("16 nodes schain test", async () => {
+
+            for (let i = 3; i <= 16; i++) {
+                const hexIndex = ("0" + i.toString(16)).slice(-2);
+                await nodes.createNode(validatorsAccount[0],
+                    {
+                        port: 8545,
+                        nonce: 0,
+                        ip: "0x7f0000" + hexIndex,
+                        publicIp: "0x7f0000" + hexIndex,
+                        publicKey: validatorsPublicKey[0],
+                        name: "d2" + hexIndex
+                    });
+            }
+
+            const deposit = await schains.getSchainPrice(3, 5);
+
+            await schains.addSchain(
+                validator1,
+                deposit,
+                web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 3, 0, "New16NodeSchain"]));
+
+            const secretKeyContributions = [];
+            for (let i = 0; i < 16; i++) {
+                secretKeyContributions[i] = encryptedSecretKeyContributions[0][0];
+            }
+
+            for (let i = 0; i < 16; i++) {
+                let broadData = await keyStorage.getBroadcastedData(web3.utils.soliditySha3("New16NodeSchain"), i);
+                assert(broadData[0].length.toString(), "0");
+                assert(broadData[1].length.toString(), "0");
+                let index = 0;
+                if (i === 1) {
+                    index = 1;
+                }
+                let broadPoss = await skaleDKG.isBroadcastPossible(
+                    web3.utils.soliditySha3("New16NodeSchain"),
+                    i,
+                    {from: validatorsAccount[index]},
+                );
+                assert.equal(broadPoss, true);
+                await skaleDKG.broadcast(
+                    web3.utils.soliditySha3("New16NodeSchain"),
+                    i,
+                    verificationVectors[0],
+                    secretKeyContributions,
+                    {from: validatorsAccount[index]},
+                );
+                broadData = await keyStorage.getBroadcastedData(web3.utils.soliditySha3("New16NodeSchain"), i);
+                secretKeyContributions.forEach( (keyShare, j) => {
+                    keyShare.share.should.be.equal(broadData[0][j].share);
+                    keyShare.publicKey[0].should.be.equal(broadData[0][j].publicKey[0]);
+                    keyShare.publicKey[1].should.be.equal(broadData[0][j].publicKey[1]);
+                });
+                verificationVectors[0].forEach( (verVec, j) => {
+                    let data = BigInt(broadData[1][j].x.a).toString(16);
+                    if (data.length % 2) {
+                        data = "0" + data;
+                    }
+                    data = "0x" + data;
+                    verVec.x.a.should.be.equal(data);
+                    data = BigInt(broadData[1][j].x.b).toString(16);
+                    if (data.length % 2) {
+                        data = "0" + data;
+                    }
+                    data = "0x" + data;
+                    verVec.x.b.should.be.equal(data);
+                    data = BigInt(broadData[1][j].y.a).toString(16);
+                    if (data.length % 2) {
+                        data = "0" + data;
+                    }
+                    data = "0x" + data;
+                    verVec.y.a.should.be.equal(data);
+                    data = BigInt(broadData[1][j].y.b).toString(16);
+                    if (data.length % 2) {
+                        data = "0" + data;
+                    }
+                    data = "0x" + data;
+                    verVec.y.b.should.be.equal(data);
+                });
+                broadPoss = await skaleDKG.isBroadcastPossible(
+                    web3.utils.soliditySha3("New16NodeSchain"),
+                    i,
+                    {from: validatorsAccount[index]},
+                );
+                assert.equal(broadPoss, false);
+            }
+
+            let comPubKey;
+            for (let i = 0; i < 16; i++) {
+                comPubKey = await keyStorage.getCommonPublicKey(web3.utils.soliditySha3("New16NodeSchain"));
+                assert(comPubKey.x.a, "0");
+                assert(comPubKey.x.b, "0");
+                assert(comPubKey.y.a, "0");
+                assert(comPubKey.y.b, "0");
+                let index = 0;
+                if (i === 1) {
+                    index = 1;
+                }
+                let alrightPoss = await skaleDKG.isAlrightPossible(
+                    web3.utils.soliditySha3("New16NodeSchain"),
+                    i,
+                    {from: validatorsAccount[index]},
+                );
+                assert.equal(alrightPoss, true);
+                await skaleDKG.alright(
+                    web3.utils.soliditySha3("New16NodeSchain"),
+                    i,
+                    {from: validatorsAccount[index]},
+                );
+                alrightPoss = await skaleDKG.isAlrightPossible(
+                    web3.utils.soliditySha3("New16NodeSchain"),
+                    i,
+                    {from: validatorsAccount[index]},
+                );
+                assert.equal(alrightPoss, false);
+            }
+
+            comPubKey = await keyStorage.getCommonPublicKey(web3.utils.soliditySha3("New16NodeSchain"));
+            assert.equal(comPubKey.x.a.toString() !== "0", true);
+            assert.equal(comPubKey.x.b.toString() !== "0", true);
+            assert.equal(comPubKey.y.a.toString() !== "0", true);
+            assert.equal(comPubKey.y.b.toString() !== "0", true);
+
         });
     });
 });

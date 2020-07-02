@@ -33,6 +33,7 @@ import { Delegation, State } from "../tools/types";
 import { deployNodes } from "../tools/deploy/nodes";
 import { deploySlashingTable } from "../tools/deploy/slashingTable";
 import { deployTimeHelpersWithDebug } from "../tools/deploy/test/timeHelpersWithDebug";
+import { deploySkaleManager } from "../tools/deploy/skaleManager";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -89,6 +90,8 @@ contract("Delegation", ([owner,
             .should.be.eventually.rejectedWith("Caller is not the owner");
         await tokenState.addLocker("D2");
         (await tokenState.getAndUpdateLockedAmount.call(owner)).toNumber().should.be.equal(13);
+        await tokenState.removeLocker("D2", {from: validator})
+            .should.be.eventually.rejectedWith("Caller is not the owner");
         await tokenState.removeLocker("D2");
         (await tokenState.getAndUpdateLockedAmount.call(owner)).toNumber().should.be.equal(0);
     });
@@ -513,6 +516,18 @@ contract("Delegation", ([owner,
                         .should.be.equal(delegatedAmount3 - 3);
                     (await delegationController.getAndUpdateDelegatedAmount.call(
                         holder3)).toNumber().should.be.equal(delegatedAmount3 - 5);
+                });
+
+                it("should allow only ADMIN to return slashed tokens", async() => {
+                    const skaleManager = await deploySkaleManager(contractManager);
+
+                    await punisher.slash(validatorId, 10);
+                    await delegationController.processAllSlashes(holder3);
+
+                    await punisher.forgive(holder3, 3, {from: holder1})
+                        .should.be.eventually.rejectedWith("Caller is not an admin");
+                    skaleManager.grantRole(await skaleManager.ADMIN_ROLE(), holder1);
+                    await punisher.forgive(holder3, 3, {from: holder1});
                 });
 
                 it("should not pay bounty for slashed tokens", async () => {
