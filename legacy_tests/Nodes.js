@@ -27,30 +27,50 @@ async function sendTransaction(web3Inst, account, privateKey, data, receiverCont
     console.log("Transaction sent!")
     const txReceipt = await web3Inst.eth.sendSignedTransaction('0x' + serializedTx.toString('hex')); //.on('receipt', receipt => {
     console.log("Transaction done!");
-    console.log("Transaction receipt is - ");
-    console.log(txReceipt);
+    console.log("Gas used: ", txReceipt.gasUsed);
+    console.log('------------------------------');
     return true;
 }
+
+
+async function skipRotationDelay(schainId) {
+    //skip rotation delay for schain 
+    let privateKeyB = Buffer.from(init.privateKey, "hex");
+    abi = await init.NodeRotation.methods.skipRotationDelay(schainId).encodeABI();
+    contractAddress = init.jsonData['node_rotation_address'];
+    console.log("------------------------------");
+    console.log("skipRotationDelay");
+    await sendTransaction(init.web3, init.mainAccount, privateKeyB, abi, contractAddress);
+}
+
+async function setSuccesfulDKGPublic(schainId) {
+    // set successful dkg for schain
+    schainName = await schains.getSchainName(schainId);
+    let privateKeyB = Buffer.from(init.privateKey, "hex");
+    abi = await init.SkaleDKG.methods.setSuccesfulDKGPublic(init.web3.utils.soliditySha3(schainName)).encodeABI();
+    contractAddress = init.jsonData['skale_d_k_g_tester_address'];
+    console.log("------------------------------");
+    console.log("setSuccesfulDKGPublic");
+    await sendTransaction(init.web3, init.mainAccount, privateKeyB, abi, contractAddress);
+}
+
+
 
 
 async function nodeExit(nodeIndex) {
     let abi = await init.SkaleManager.methods.nodeExit(nodeIndex).encodeABI();
     let privateKeyB = Buffer.from(init.privateKey, "hex");
     let contractAddress = init.jsonData['skale_manager_address'];
+    console.log("Schains on node ", nodeIndex, " BEFORE rotation:")
     const schainsForNode = await schains.getSchainsForNode(nodeIndex);
+    console.log("------------------------------");
+    console.log("NodeExit");
     await sendTransaction(init.web3, init.mainAccount, privateKeyB, abi, contractAddress);
-    for (let schainId of schainsForNode) {
-        //skip rotation delay for schain 
-        abi = await init.NodeRotation.methods.skipRotationDelay(schainId).encodeABI();
-        contractAddress = init.jsonData['node_rotation_address'];
-        await sendTransaction(init.web3, init.mainAccount, privateKeyB, abi, contractAddress);
-        
-        // set successful dkg for schain
-        schainName = await schains.getSchainName(schainId);
-        abi = await init.SkaleDKG.methods.setSuccesfulDKGPublic(init.web3.utils.soliditySha3(schainName)).encodeABI();
-        contractAddress = init.jsonData['skale_d_k_g_tester_address'];
-        await sendTransaction(init.web3, init.mainAccount, privateKeyB, abi, contractAddress);
-    }
+    console.log("Schains on node ", nodeIndex, " AFTER rotation:")
+    const schainsForNodeAfterRotation = await schains.getSchainsForNode(nodeIndex);
+    let schainId = schainsForNode.filter(x => schainsForNodeAfterRotation.indexOf(x) == -1);
+    await skipRotationDelay(schainId[0]);
+    await setSuccesfulDKGPublic(schainId[0]);
     process.exit();
 }
 

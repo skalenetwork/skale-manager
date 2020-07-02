@@ -79,7 +79,8 @@ async function getSchainsForNode(nodeIndex) {
     let res1;
     for (let i = 0; i < res.length; i++) {
         res1 = await init.SchainsInternal.methods.schains(res[i]).call();
-        console.log(res1);
+        console.log(res1.name);
+        // console.log(res1);
     }
     return res;
 }
@@ -103,8 +104,6 @@ if (process.argv[2] == 'getSchainNodes') {
 } else if (process.argv[2] == 'getSchainsForNode') {
     getSchainsForNode(process.argv[3]);
 }
-
-
 
 
 
