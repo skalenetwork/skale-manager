@@ -1,0 +1,212 @@
+:SchainsFunctionalityInternal: pass:normal[xref:#SchainsFunctionalityInternal[`++SchainsFunctionalityInternal++`]]
+:createGroupForSchain: pass:normal[xref:#SchainsFunctionalityInternal-createGroupForSchain-string-bytes32-uint256-uint8-[`++createGroupForSchain++`]]
+:removeNodeFromSchain: pass:normal[xref:#SchainsFunctionalityInternal-removeNodeFromSchain-uint256-bytes32-[`++removeNodeFromSchain++`]]
+:removeNodeFromExceptions: pass:normal[xref:#SchainsFunctionalityInternal-removeNodeFromExceptions-bytes32-uint256-[`++removeNodeFromExceptions++`]]
+:selectNodeToGroup: pass:normal[xref:#SchainsFunctionalityInternal-selectNodeToGroup-bytes32-[`++selectNodeToGroup++`]]
+:getNodesDataFromTypeOfSchain: pass:normal[xref:#SchainsFunctionalityInternal-getNodesDataFromTypeOfSchain-uint256-[`++getNodesDataFromTypeOfSchain++`]]
+:isEnoughNodes: pass:normal[xref:#SchainsFunctionalityInternal-isEnoughNodes-bytes32-[`++isEnoughNodes++`]]
+:isAnyFreeNode: pass:normal[xref:#SchainsFunctionalityInternal-isAnyFreeNode-bytes32-[`++isAnyFreeNode++`]]
+:initialize: pass:normal[xref:#SchainsFunctionalityInternal-initialize-address-[`++initialize++`]]
+:findSchainAtSchainsForNode: pass:normal[xref:#SchainsFunctionalityInternal-findSchainAtSchainsForNode-uint256-bytes32-[`++findSchainAtSchainsForNode++`]]
+:_generateGroup: pass:normal[xref:#SchainsFunctionalityInternal-_generateGroup-bytes32-[`++_generateGroup++`]]
+:_removeSpace: pass:normal[xref:#SchainsFunctionalityInternal-_removeSpace-uint256-uint8-[`++_removeSpace++`]]
+:_isCorrespond: pass:normal[xref:#SchainsFunctionalityInternal-_isCorrespond-bytes32-uint256-[`++_isCorrespond++`]]
+:SchainNodes: pass:normal[xref:#SchainsFunctionalityInternal-SchainNodes-string-bytes32-uint256---uint32-uint256-[`++SchainNodes++`]]
+
+[.contract]
+[[SchainsFunctionalityInternal]]
+=== `++SchainsFunctionalityInternal++`
+
+
+
+[.contract-index]
+.Modifiers
+--
+
+[.contract-subindex-inherited]
+.GroupsFunctionality
+
+[.contract-subindex-inherited]
+.Permissions
+* {xref-Permissions-allow-string-}[`++allow(contractName)++`]
+* {xref-Permissions-allowTwo-string-string-}[`++allowTwo(contractName1, contractName2)++`]
+* {xref-Permissions-allowThree-string-string-string-}[`++allowThree(contractName1, contractName2, contractName3)++`]
+
+[.contract-subindex-inherited]
+.OwnableUpgradeSafe
+* {xref-OwnableUpgradeSafe-onlyOwner--}[`++onlyOwner()++`]
+
+[.contract-subindex-inherited]
+.ContextUpgradeSafe
+
+[.contract-subindex-inherited]
+.Initializable
+* {xref-Initializable-initializer--}[`++initializer()++`]
+
+--
+
+[.contract-index]
+.Functions
+--
+* {xref-SchainsFunctionalityInternal-createGroupForSchain-string-bytes32-uint256-uint8-}[`++createGroupForSchain(schainName, schainId, numberOfNodes, partOfNode)++`]
+* {xref-SchainsFunctionalityInternal-removeNodeFromSchain-uint256-bytes32-}[`++removeNodeFromSchain(nodeIndex, groupHash)++`]
+* {xref-SchainsFunctionalityInternal-removeNodeFromExceptions-bytes32-uint256-}[`++removeNodeFromExceptions(groupHash, nodeIndex)++`]
+* {xref-SchainsFunctionalityInternal-selectNodeToGroup-bytes32-}[`++selectNodeToGroup(groupIndex)++`]
+* {xref-SchainsFunctionalityInternal-getNodesDataFromTypeOfSchain-uint256-}[`++getNodesDataFromTypeOfSchain(typeOfSchain)++`]
+* {xref-SchainsFunctionalityInternal-isEnoughNodes-bytes32-}[`++isEnoughNodes(groupIndex)++`]
+* {xref-SchainsFunctionalityInternal-isAnyFreeNode-bytes32-}[`++isAnyFreeNode(groupIndex)++`]
+* {xref-SchainsFunctionalityInternal-initialize-address-}[`++initialize(newContractsAddress)++`]
+* {xref-SchainsFunctionalityInternal-findSchainAtSchainsForNode-uint256-bytes32-}[`++findSchainAtSchainsForNode(nodeIndex, schainId)++`]
+* {xref-SchainsFunctionalityInternal-_generateGroup-bytes32-}[`++_generateGroup(groupIndex)++`]
+* {xref-SchainsFunctionalityInternal-_removeSpace-uint256-uint8-}[`++_removeSpace(nodeIndex, space)++`]
+* {xref-SchainsFunctionalityInternal-_isCorrespond-bytes32-uint256-}[`++_isCorrespond(groupIndex, nodeIndex)++`]
+
+[.contract-subindex-inherited]
+.GroupsFunctionality
+* {xref-GroupsFunctionality-verifySignature-bytes32-uint256-uint256-uint256-uint256-}[`++verifySignature(groupIndex, signatureX, signatureY, hashX, hashY)++`]
+* {xref-GroupsFunctionality-initialize-string-string-address-}[`++initialize(newExecutorName, newDataName, newContractsAddress)++`]
+* {xref-GroupsFunctionality-addGroup-bytes32-uint256-bytes32-}[`++addGroup(groupIndex, newRecommendedNumberOfNodes, data)++`]
+* {xref-GroupsFunctionality-deleteGroup-bytes32-}[`++deleteGroup(groupIndex)++`]
+* {xref-GroupsFunctionality-upgradeGroup-bytes32-uint256-bytes32-}[`++upgradeGroup(groupIndex, newRecommendedNumberOfNodes, data)++`]
+* {xref-GroupsFunctionality-_findNode-bytes32-uint256-}[`++_findNode(groupIndex, nodeIndex)++`]
+* {xref-GroupsFunctionality-_swap-uint256---uint256-uint256-}[`++_swap(array, index1, index2)++`]
+
+[.contract-subindex-inherited]
+.Permissions
+* {xref-Permissions-_isOwner--}[`++_isOwner()++`]
+
+[.contract-subindex-inherited]
+.OwnableUpgradeSafe
+* {xref-OwnableUpgradeSafe-__Ownable_init--}[`++__Ownable_init()++`]
+* {xref-OwnableUpgradeSafe-__Ownable_init_unchained--}[`++__Ownable_init_unchained()++`]
+* {xref-OwnableUpgradeSafe-owner--}[`++owner()++`]
+* {xref-OwnableUpgradeSafe-renounceOwnership--}[`++renounceOwnership()++`]
+* {xref-OwnableUpgradeSafe-transferOwnership-address-}[`++transferOwnership(newOwner)++`]
+
+[.contract-subindex-inherited]
+.ContextUpgradeSafe
+* {xref-ContextUpgradeSafe-__Context_init--}[`++__Context_init()++`]
+* {xref-ContextUpgradeSafe-__Context_init_unchained--}[`++__Context_init_unchained()++`]
+* {xref-ContextUpgradeSafe-_msgSender--}[`++_msgSender()++`]
+* {xref-ContextUpgradeSafe-_msgData--}[`++_msgData()++`]
+
+[.contract-subindex-inherited]
+.Initializable
+
+--
+
+[.contract-index]
+.Events
+--
+* {xref-SchainsFunctionalityInternal-SchainNodes-string-bytes32-uint256---uint32-uint256-}[`++SchainNodes(name, groupIndex, nodesInGroup, time, gasSpend)++`]
+
+[.contract-subindex-inherited]
+.GroupsFunctionality
+* {xref-GroupsFunctionality-GroupAdded-bytes32-bytes32-uint32-uint256-}[`++GroupAdded(groupIndex, groupData, time, gasSpend)++`]
+* {xref-GroupsFunctionality-ExceptionSet-bytes32-uint256-uint32-uint256-}[`++ExceptionSet(groupIndex, exceptionNodeIndex, time, gasSpend)++`]
+* {xref-GroupsFunctionality-GroupDeleted-bytes32-uint32-uint256-}[`++GroupDeleted(groupIndex, time, gasSpend)++`]
+* {xref-GroupsFunctionality-GroupUpgraded-bytes32-bytes32-uint32-uint256-}[`++GroupUpgraded(groupIndex, groupData, time, gasSpend)++`]
+* {xref-GroupsFunctionality-GroupGenerated-bytes32-uint256---uint32-uint256-}[`++GroupGenerated(groupIndex, nodesInGroup, time, gasSpend)++`]
+
+[.contract-subindex-inherited]
+.Permissions
+
+[.contract-subindex-inherited]
+.OwnableUpgradeSafe
+* {xref-OwnableUpgradeSafe-OwnershipTransferred-address-address-}[`++OwnershipTransferred(previousOwner, newOwner)++`]
+
+[.contract-subindex-inherited]
+.ContextUpgradeSafe
+
+[.contract-subindex-inherited]
+.Initializable
+
+--
+
+
+[.contract-item]
+[[SchainsFunctionalityInternal-createGroupForSchain-string-bytes32-uint256-uint8-]]
+==== `++createGroupForSchain(++[.var-type]#++string++#++ ++[.var-name]#++schainName++#++, ++[.var-type]#++bytes32++#++ ++[.var-name]#++schainId++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++numberOfNodes++#++, ++[.var-type]#++uint8++#++ ++[.var-name]#++partOfNode++#++)++` [.item-kind]#external#
+
+createGroupForSchain - creates Group for Schain
+
+
+[.contract-item]
+[[SchainsFunctionalityInternal-removeNodeFromSchain-uint256-bytes32-]]
+==== `++removeNodeFromSchain(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++, ++[.var-type]#++bytes32++#++ ++[.var-name]#++groupHash++#++)++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[SchainsFunctionalityInternal-removeNodeFromExceptions-bytes32-uint256-]]
+==== `++removeNodeFromExceptions(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupHash++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++)++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[SchainsFunctionalityInternal-selectNodeToGroup-bytes32-]]
+==== `++selectNodeToGroup(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++) → ++[.var-type]#++uint256++#++++` [.item-kind]#external#
+
+selectNodeToGroup - pseudo-randomly select new Node for Schain
+
+
+[.contract-item]
+[[SchainsFunctionalityInternal-getNodesDataFromTypeOfSchain-uint256-]]
+==== `++getNodesDataFromTypeOfSchain(++[.var-type]#++uint256++#++ ++[.var-name]#++typeOfSchain++#++) → ++[.var-type]#++uint256++#++ ++[.var-name]#++numberOfNodes++#++, ++[.var-type]#++uint8++#++ ++[.var-name]#++partOfNode++#++++` [.item-kind]#external#
+
+getNodesDataFromTypeOfSchain - returns number if Nodes
+and part of Node which needed to this Schain
+
+
+[.contract-item]
+[[SchainsFunctionalityInternal-isEnoughNodes-bytes32-]]
+==== `++isEnoughNodes(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++) → ++[.var-type]#++uint256[]++#++ ++[.var-name]#++result++#++++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[SchainsFunctionalityInternal-isAnyFreeNode-bytes32-]]
+==== `++isAnyFreeNode(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++) → ++[.var-type]#++bool++#++++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[SchainsFunctionalityInternal-initialize-address-]]
+==== `++initialize(++[.var-type]#++address++#++ ++[.var-name]#++newContractsAddress++#++)++` [.item-kind]#public#
+
+
+
+[.contract-item]
+[[SchainsFunctionalityInternal-findSchainAtSchainsForNode-uint256-bytes32-]]
+==== `++findSchainAtSchainsForNode(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++, ++[.var-type]#++bytes32++#++ ++[.var-name]#++schainId++#++) → ++[.var-type]#++uint256++#++++` [.item-kind]#public#
+
+findSchainAtSchainsForNode - finds index of Schain at schainsForNode array
+
+
+[.contract-item]
+[[SchainsFunctionalityInternal-_generateGroup-bytes32-]]
+==== `++_generateGroup(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++) → ++[.var-type]#++uint256[]++#++ ++[.var-name]#++nodesInGroup++#++++` [.item-kind]#internal#
+
+_generateGroup - generates Group for Schain
+
+
+[.contract-item]
+[[SchainsFunctionalityInternal-_removeSpace-uint256-uint8-]]
+==== `++_removeSpace(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++, ++[.var-type]#++uint8++#++ ++[.var-name]#++space++#++) → ++[.var-type]#++bool++#++++` [.item-kind]#internal#
+
+_removeSpace - occupy space of given Node
+
+
+[.contract-item]
+[[SchainsFunctionalityInternal-_isCorrespond-bytes32-uint256-]]
+==== `++_isCorrespond(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++) → ++[.var-type]#++bool++#++++` [.item-kind]#internal#
+
+
+
+
+[.contract-item]
+[[SchainsFunctionalityInternal-SchainNodes-string-bytes32-uint256---uint32-uint256-]]
+==== `++SchainNodes(++[.var-type]#++string++#++ ++[.var-name]#++name++#++, ++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++, ++[.var-type]#++uint256[]++#++ ++[.var-name]#++nodesInGroup++#++, ++[.var-type]#++uint32++#++ ++[.var-name]#++time++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++gasSpend++#++)++` [.item-kind]#event#
+
+
+

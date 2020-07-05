@@ -1,0 +1,122 @@
+:DelegationPeriodManager: pass:normal[xref:#DelegationPeriodManager[`++DelegationPeriodManager++`]]
+:stakeMultipliers: pass:normal[xref:#DelegationPeriodManager-stakeMultipliers-mapping-uint256----uint256-[`++stakeMultipliers++`]]
+:setDelegationPeriod: pass:normal[xref:#DelegationPeriodManager-setDelegationPeriod-uint256-uint256-[`++setDelegationPeriod++`]]
+:isDelegationPeriodAllowed: pass:normal[xref:#DelegationPeriodManager-isDelegationPeriodAllowed-uint256-[`++isDelegationPeriodAllowed++`]]
+:initialize: pass:normal[xref:#DelegationPeriodManager-initialize-address-[`++initialize++`]]
+:DelegationPeriodWasSet: pass:normal[xref:#DelegationPeriodManager-DelegationPeriodWasSet-uint256-uint256-[`++DelegationPeriodWasSet++`]]
+
+[.contract]
+[[DelegationPeriodManager]]
+=== `++DelegationPeriodManager++`
+
+This contract handles all delegation offerings. Delegations are held for
+a specified period (months), and different durations can have different
+returns or `stakeMultiplier`. Currently, only delegation periods can be added.
+
+[.contract-index]
+.Modifiers
+--
+
+[.contract-subindex-inherited]
+.Permissions
+* {xref-Permissions-allow-string-}[`++allow(contractName)++`]
+* {xref-Permissions-allowTwo-string-string-}[`++allowTwo(contractName1, contractName2)++`]
+* {xref-Permissions-allowThree-string-string-string-}[`++allowThree(contractName1, contractName2, contractName3)++`]
+
+[.contract-subindex-inherited]
+.OwnableUpgradeSafe
+* {xref-OwnableUpgradeSafe-onlyOwner--}[`++onlyOwner()++`]
+
+[.contract-subindex-inherited]
+.ContextUpgradeSafe
+
+[.contract-subindex-inherited]
+.Initializable
+* {xref-Initializable-initializer--}[`++initializer()++`]
+
+--
+
+[.contract-index]
+.Functions
+--
+* {xref-DelegationPeriodManager-setDelegationPeriod-uint256-uint256-}[`++setDelegationPeriod(monthsCount, stakeMultiplier)++`]
+* {xref-DelegationPeriodManager-isDelegationPeriodAllowed-uint256-}[`++isDelegationPeriodAllowed(monthsCount)++`]
+* {xref-DelegationPeriodManager-initialize-address-}[`++initialize(_contractsAddress)++`]
+
+[.contract-subindex-inherited]
+.Permissions
+* {xref-Permissions-_isOwner--}[`++_isOwner()++`]
+
+[.contract-subindex-inherited]
+.OwnableUpgradeSafe
+* {xref-OwnableUpgradeSafe-__Ownable_init--}[`++__Ownable_init()++`]
+* {xref-OwnableUpgradeSafe-__Ownable_init_unchained--}[`++__Ownable_init_unchained()++`]
+* {xref-OwnableUpgradeSafe-owner--}[`++owner()++`]
+* {xref-OwnableUpgradeSafe-renounceOwnership--}[`++renounceOwnership()++`]
+* {xref-OwnableUpgradeSafe-transferOwnership-address-}[`++transferOwnership(newOwner)++`]
+
+[.contract-subindex-inherited]
+.ContextUpgradeSafe
+* {xref-ContextUpgradeSafe-__Context_init--}[`++__Context_init()++`]
+* {xref-ContextUpgradeSafe-__Context_init_unchained--}[`++__Context_init_unchained()++`]
+* {xref-ContextUpgradeSafe-_msgSender--}[`++_msgSender()++`]
+* {xref-ContextUpgradeSafe-_msgData--}[`++_msgData()++`]
+
+[.contract-subindex-inherited]
+.Initializable
+
+--
+
+[.contract-index]
+.Events
+--
+* {xref-DelegationPeriodManager-DelegationPeriodWasSet-uint256-uint256-}[`++DelegationPeriodWasSet(length, stakeMultiplier)++`]
+
+[.contract-subindex-inherited]
+.Permissions
+
+[.contract-subindex-inherited]
+.OwnableUpgradeSafe
+* {xref-OwnableUpgradeSafe-OwnershipTransferred-address-address-}[`++OwnershipTransferred(previousOwner, newOwner)++`]
+
+[.contract-subindex-inherited]
+.ContextUpgradeSafe
+
+[.contract-subindex-inherited]
+.Initializable
+
+--
+
+
+[.contract-item]
+[[DelegationPeriodManager-setDelegationPeriod-uint256-uint256-]]
+==== `++setDelegationPeriod(++[.var-type]#++uint256++#++ ++[.var-name]#++monthsCount++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++stakeMultiplier++#++)++` [.item-kind]#external#
+
+Creates a new available delegation period and return in the network.
+Only the owner may set new delegation period and returns in the network.
+
+Emits a DelegationPeriodWasSet event.
+
+
+
+[.contract-item]
+[[DelegationPeriodManager-isDelegationPeriodAllowed-uint256-]]
+==== `++isDelegationPeriodAllowed(++[.var-type]#++uint256++#++ ++[.var-name]#++monthsCount++#++) → ++[.var-type]#++bool++#++++` [.item-kind]#external#
+
+Checks whether given delegation period is allowed.
+
+
+
+[.contract-item]
+[[DelegationPeriodManager-initialize-address-]]
+==== `++initialize(++[.var-type]#++address++#++ ++[.var-name]#++_contractsAddress++#++)++` [.item-kind]#public#
+
+Initial delegation period and multiplier settings.
+
+
+[.contract-item]
+[[DelegationPeriodManager-DelegationPeriodWasSet-uint256-uint256-]]
+==== `++DelegationPeriodWasSet(++[.var-type]#++uint256++#++ ++[.var-name]#++length++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++stakeMultiplier++#++)++` [.item-kind]#event#
+
+Emitted when a new delegation period is specified.
+

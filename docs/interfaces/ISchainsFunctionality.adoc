@@ -1,0 +1,58 @@
+:ISchainsFunctionality: pass:normal[xref:#ISchainsFunctionality[`++ISchainsFunctionality++`]]
+:addSchain: pass:normal[xref:#ISchainsFunctionality-addSchain-address-uint256-bytes-[`++addSchain++`]]
+:deleteSchain: pass:normal[xref:#ISchainsFunctionality-deleteSchain-address-string-[`++deleteSchain++`]]
+:deleteSchainByRoot: pass:normal[xref:#ISchainsFunctionality-deleteSchainByRoot-string-[`++deleteSchainByRoot++`]]
+:rotateNode: pass:normal[xref:#ISchainsFunctionality-rotateNode-uint256-bytes32-[`++rotateNode++`]]
+:exitFromSchain: pass:normal[xref:#ISchainsFunctionality-exitFromSchain-uint256-[`++exitFromSchain++`]]
+
+[.contract]
+[[ISchainsFunctionality]]
+=== `++ISchainsFunctionality++`
+
+
+
+
+[.contract-index]
+.Functions
+--
+* {xref-ISchainsFunctionality-addSchain-address-uint256-bytes-}[`++addSchain(from, value, data)++`]
+* {xref-ISchainsFunctionality-deleteSchain-address-string-}[`++deleteSchain(from, name)++`]
+* {xref-ISchainsFunctionality-deleteSchainByRoot-string-}[`++deleteSchainByRoot(name)++`]
+* {xref-ISchainsFunctionality-rotateNode-uint256-bytes32-}[`++rotateNode(nodeIndex, schainId)++`]
+* {xref-ISchainsFunctionality-exitFromSchain-uint256-}[`++exitFromSchain(nodeIndex)++`]
+
+--
+
+
+
+[.contract-item]
+[[ISchainsFunctionality-addSchain-address-uint256-bytes-]]
+==== `++addSchain(++[.var-type]#++address++#++ ++[.var-name]#++from++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++value++#++, ++[.var-type]#++bytes++#++ ++[.var-name]#++data++#++)++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[ISchainsFunctionality-deleteSchain-address-string-]]
+==== `++deleteSchain(++[.var-type]#++address++#++ ++[.var-name]#++from++#++, ++[.var-type]#++string++#++ ++[.var-name]#++name++#++)++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[ISchainsFunctionality-deleteSchainByRoot-string-]]
+==== `++deleteSchainByRoot(++[.var-type]#++string++#++ ++[.var-name]#++name++#++)++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[ISchainsFunctionality-rotateNode-uint256-bytes32-]]
+==== `++rotateNode(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++, ++[.var-type]#++bytes32++#++ ++[.var-name]#++schainId++#++) → ++[.var-type]#++uint256++#++++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[ISchainsFunctionality-exitFromSchain-uint256-]]
+==== `++exitFromSchain(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++) → ++[.var-type]#++bool++#++++` [.item-kind]#external#
+
+
+
+

@@ -1,0 +1,184 @@
+:SkaleVerifier: pass:normal[xref:#SkaleVerifier[`++SkaleVerifier++`]]
+:verifySchainSignature: pass:normal[xref:#SkaleVerifier-verifySchainSignature-uint256-uint256-bytes32-uint256-uint256-uint256-string-[`++verifySchainSignature++`]]
+:initialize: pass:normal[xref:#SkaleVerifier-initialize-address-[`++initialize++`]]
+:verify: pass:normal[xref:#SkaleVerifier-verify-uint256-uint256-bytes32-uint256-uint256-uint256-uint256-uint256-uint256-uint256-[`++verify++`]]
+:_checkHashToGroupWithHelper: pass:normal[xref:#SkaleVerifier-_checkHashToGroupWithHelper-bytes32-uint256-uint256-uint256-[`++_checkHashToGroupWithHelper++`]]
+:_addFp2: pass:normal[xref:#SkaleVerifier-_addFp2-struct-SkaleVerifier-Fp2-struct-SkaleVerifier-Fp2-[`++_addFp2++`]]
+:_scalarMulFp2: pass:normal[xref:#SkaleVerifier-_scalarMulFp2-uint256-struct-SkaleVerifier-Fp2-[`++_scalarMulFp2++`]]
+:_minusFp2: pass:normal[xref:#SkaleVerifier-_minusFp2-struct-SkaleVerifier-Fp2-struct-SkaleVerifier-Fp2-[`++_minusFp2++`]]
+:_mulFp2: pass:normal[xref:#SkaleVerifier-_mulFp2-struct-SkaleVerifier-Fp2-struct-SkaleVerifier-Fp2-[`++_mulFp2++`]]
+:_squaredFp2: pass:normal[xref:#SkaleVerifier-_squaredFp2-struct-SkaleVerifier-Fp2-[`++_squaredFp2++`]]
+:_inverseFp2: pass:normal[xref:#SkaleVerifier-_inverseFp2-struct-SkaleVerifier-Fp2-[`++_inverseFp2++`]]
+:_isG1: pass:normal[xref:#SkaleVerifier-_isG1-uint256-uint256-[`++_isG1++`]]
+:_isG2: pass:normal[xref:#SkaleVerifier-_isG2-struct-SkaleVerifier-Fp2-struct-SkaleVerifier-Fp2-[`++_isG2++`]]
+:_isG2Zero: pass:normal[xref:#SkaleVerifier-_isG2Zero-struct-SkaleVerifier-Fp2-struct-SkaleVerifier-Fp2-[`++_isG2Zero++`]]
+
+[.contract]
+[[SkaleVerifier]]
+=== `++SkaleVerifier++`
+
+
+
+[.contract-index]
+.Modifiers
+--
+
+[.contract-subindex-inherited]
+.Permissions
+* {xref-Permissions-allow-string-}[`++allow(contractName)++`]
+* {xref-Permissions-allowTwo-string-string-}[`++allowTwo(contractName1, contractName2)++`]
+* {xref-Permissions-allowThree-string-string-string-}[`++allowThree(contractName1, contractName2, contractName3)++`]
+
+[.contract-subindex-inherited]
+.OwnableUpgradeSafe
+* {xref-OwnableUpgradeSafe-onlyOwner--}[`++onlyOwner()++`]
+
+[.contract-subindex-inherited]
+.ContextUpgradeSafe
+
+[.contract-subindex-inherited]
+.Initializable
+* {xref-Initializable-initializer--}[`++initializer()++`]
+
+--
+
+[.contract-index]
+.Functions
+--
+* {xref-SkaleVerifier-verifySchainSignature-uint256-uint256-bytes32-uint256-uint256-uint256-string-}[`++verifySchainSignature(signA, signB, hash, counter, hashA, hashB, schainName)++`]
+* {xref-SkaleVerifier-initialize-address-}[`++initialize(newContractsAddress)++`]
+* {xref-SkaleVerifier-verify-uint256-uint256-bytes32-uint256-uint256-uint256-uint256-uint256-uint256-uint256-}[`++verify(signA, signB, hash, counter, hashA, hashB, pkA, pkB, pkC, pkD)++`]
+* {xref-SkaleVerifier-_checkHashToGroupWithHelper-bytes32-uint256-uint256-uint256-}[`++_checkHashToGroupWithHelper(hash, counter, hashA, hashB)++`]
+* {xref-SkaleVerifier-_addFp2-struct-SkaleVerifier-Fp2-struct-SkaleVerifier-Fp2-}[`++_addFp2(a, b)++`]
+* {xref-SkaleVerifier-_scalarMulFp2-uint256-struct-SkaleVerifier-Fp2-}[`++_scalarMulFp2(scalar, a)++`]
+* {xref-SkaleVerifier-_minusFp2-struct-SkaleVerifier-Fp2-struct-SkaleVerifier-Fp2-}[`++_minusFp2(a, b)++`]
+* {xref-SkaleVerifier-_mulFp2-struct-SkaleVerifier-Fp2-struct-SkaleVerifier-Fp2-}[`++_mulFp2(a, b)++`]
+* {xref-SkaleVerifier-_squaredFp2-struct-SkaleVerifier-Fp2-}[`++_squaredFp2(a)++`]
+* {xref-SkaleVerifier-_inverseFp2-struct-SkaleVerifier-Fp2-}[`++_inverseFp2(a)++`]
+* {xref-SkaleVerifier-_isG1-uint256-uint256-}[`++_isG1(x, y)++`]
+* {xref-SkaleVerifier-_isG2-struct-SkaleVerifier-Fp2-struct-SkaleVerifier-Fp2-}[`++_isG2(x, y)++`]
+* {xref-SkaleVerifier-_isG2Zero-struct-SkaleVerifier-Fp2-struct-SkaleVerifier-Fp2-}[`++_isG2Zero(x, y)++`]
+
+[.contract-subindex-inherited]
+.Permissions
+* {xref-Permissions-_isOwner--}[`++_isOwner()++`]
+
+[.contract-subindex-inherited]
+.OwnableUpgradeSafe
+* {xref-OwnableUpgradeSafe-__Ownable_init--}[`++__Ownable_init()++`]
+* {xref-OwnableUpgradeSafe-__Ownable_init_unchained--}[`++__Ownable_init_unchained()++`]
+* {xref-OwnableUpgradeSafe-owner--}[`++owner()++`]
+* {xref-OwnableUpgradeSafe-renounceOwnership--}[`++renounceOwnership()++`]
+* {xref-OwnableUpgradeSafe-transferOwnership-address-}[`++transferOwnership(newOwner)++`]
+
+[.contract-subindex-inherited]
+.ContextUpgradeSafe
+* {xref-ContextUpgradeSafe-__Context_init--}[`++__Context_init()++`]
+* {xref-ContextUpgradeSafe-__Context_init_unchained--}[`++__Context_init_unchained()++`]
+* {xref-ContextUpgradeSafe-_msgSender--}[`++_msgSender()++`]
+* {xref-ContextUpgradeSafe-_msgData--}[`++_msgData()++`]
+
+[.contract-subindex-inherited]
+.Initializable
+
+--
+
+[.contract-index]
+.Events
+--
+
+[.contract-subindex-inherited]
+.Permissions
+
+[.contract-subindex-inherited]
+.OwnableUpgradeSafe
+* {xref-OwnableUpgradeSafe-OwnershipTransferred-address-address-}[`++OwnershipTransferred(previousOwner, newOwner)++`]
+
+[.contract-subindex-inherited]
+.ContextUpgradeSafe
+
+[.contract-subindex-inherited]
+.Initializable
+
+--
+
+
+[.contract-item]
+[[SkaleVerifier-verifySchainSignature-uint256-uint256-bytes32-uint256-uint256-uint256-string-]]
+==== `++verifySchainSignature(++[.var-type]#++uint256++#++ ++[.var-name]#++signA++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++signB++#++, ++[.var-type]#++bytes32++#++ ++[.var-name]#++hash++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++counter++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++hashA++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++hashB++#++, ++[.var-type]#++string++#++ ++[.var-name]#++schainName++#++) → ++[.var-type]#++bool++#++++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[SkaleVerifier-initialize-address-]]
+==== `++initialize(++[.var-type]#++address++#++ ++[.var-name]#++newContractsAddress++#++)++` [.item-kind]#public#
+
+
+
+[.contract-item]
+[[SkaleVerifier-verify-uint256-uint256-bytes32-uint256-uint256-uint256-uint256-uint256-uint256-uint256-]]
+==== `++verify(++[.var-type]#++uint256++#++ ++[.var-name]#++signA++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++signB++#++, ++[.var-type]#++bytes32++#++ ++[.var-name]#++hash++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++counter++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++hashA++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++hashB++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++pkA++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++pkB++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++pkC++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++pkD++#++) → ++[.var-type]#++bool++#++++` [.item-kind]#public#
+
+
+
+[.contract-item]
+[[SkaleVerifier-_checkHashToGroupWithHelper-bytes32-uint256-uint256-uint256-]]
+==== `++_checkHashToGroupWithHelper(++[.var-type]#++bytes32++#++ ++[.var-name]#++hash++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++counter++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++hashA++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++hashB++#++) → ++[.var-type]#++bool++#++++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[SkaleVerifier-_addFp2-struct-SkaleVerifier-Fp2-struct-SkaleVerifier-Fp2-]]
+==== `++_addFp2(++[.var-type]#++struct SkaleVerifier.Fp2++#++ ++[.var-name]#++a++#++, ++[.var-type]#++struct SkaleVerifier.Fp2++#++ ++[.var-name]#++b++#++) → ++[.var-type]#++struct SkaleVerifier.Fp2++#++++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[SkaleVerifier-_scalarMulFp2-uint256-struct-SkaleVerifier-Fp2-]]
+==== `++_scalarMulFp2(++[.var-type]#++uint256++#++ ++[.var-name]#++scalar++#++, ++[.var-type]#++struct SkaleVerifier.Fp2++#++ ++[.var-name]#++a++#++) → ++[.var-type]#++struct SkaleVerifier.Fp2++#++++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[SkaleVerifier-_minusFp2-struct-SkaleVerifier-Fp2-struct-SkaleVerifier-Fp2-]]
+==== `++_minusFp2(++[.var-type]#++struct SkaleVerifier.Fp2++#++ ++[.var-name]#++a++#++, ++[.var-type]#++struct SkaleVerifier.Fp2++#++ ++[.var-name]#++b++#++) → ++[.var-type]#++struct SkaleVerifier.Fp2++#++++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[SkaleVerifier-_mulFp2-struct-SkaleVerifier-Fp2-struct-SkaleVerifier-Fp2-]]
+==== `++_mulFp2(++[.var-type]#++struct SkaleVerifier.Fp2++#++ ++[.var-name]#++a++#++, ++[.var-type]#++struct SkaleVerifier.Fp2++#++ ++[.var-name]#++b++#++) → ++[.var-type]#++struct SkaleVerifier.Fp2++#++++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[SkaleVerifier-_squaredFp2-struct-SkaleVerifier-Fp2-]]
+==== `++_squaredFp2(++[.var-type]#++struct SkaleVerifier.Fp2++#++ ++[.var-name]#++a++#++) → ++[.var-type]#++struct SkaleVerifier.Fp2++#++++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[SkaleVerifier-_inverseFp2-struct-SkaleVerifier-Fp2-]]
+==== `++_inverseFp2(++[.var-type]#++struct SkaleVerifier.Fp2++#++ ++[.var-name]#++a++#++) → ++[.var-type]#++struct SkaleVerifier.Fp2++#++ ++[.var-name]#++x++#++++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[SkaleVerifier-_isG1-uint256-uint256-]]
+==== `++_isG1(++[.var-type]#++uint256++#++ ++[.var-name]#++x++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++y++#++) → ++[.var-type]#++bool++#++++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[SkaleVerifier-_isG2-struct-SkaleVerifier-Fp2-struct-SkaleVerifier-Fp2-]]
+==== `++_isG2(++[.var-type]#++struct SkaleVerifier.Fp2++#++ ++[.var-name]#++x++#++, ++[.var-type]#++struct SkaleVerifier.Fp2++#++ ++[.var-name]#++y++#++) → ++[.var-type]#++bool++#++++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[SkaleVerifier-_isG2Zero-struct-SkaleVerifier-Fp2-struct-SkaleVerifier-Fp2-]]
+==== `++_isG2Zero(++[.var-type]#++struct SkaleVerifier.Fp2++#++ ++[.var-name]#++x++#++, ++[.var-type]#++struct SkaleVerifier.Fp2++#++ ++[.var-name]#++y++#++) → ++[.var-type]#++bool++#++++` [.item-kind]#internal#
+
+
+
+

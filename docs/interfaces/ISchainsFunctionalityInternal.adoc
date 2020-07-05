@@ -1,0 +1,90 @@
+:ISchainsFunctionalityInternal: pass:normal[xref:#ISchainsFunctionalityInternal[`++ISchainsFunctionalityInternal++`]]
+:createGroupForSchain: pass:normal[xref:#ISchainsFunctionalityInternal-createGroupForSchain-string-bytes32-uint256-uint8-[`++createGroupForSchain++`]]
+:deleteGroup: pass:normal[xref:#ISchainsFunctionalityInternal-deleteGroup-bytes32-[`++deleteGroup++`]]
+:selectNodeToGroup: pass:normal[xref:#ISchainsFunctionalityInternal-selectNodeToGroup-bytes32-[`++selectNodeToGroup++`]]
+:removeNodeFromSchain: pass:normal[xref:#ISchainsFunctionalityInternal-removeNodeFromSchain-uint256-bytes32-[`++removeNodeFromSchain++`]]
+:removeNodeFromExceptions: pass:normal[xref:#ISchainsFunctionalityInternal-removeNodeFromExceptions-bytes32-uint256-[`++removeNodeFromExceptions++`]]
+:excludeNodeFromSchain: pass:normal[xref:#ISchainsFunctionalityInternal-excludeNodeFromSchain-uint256-bytes32-[`++excludeNodeFromSchain++`]]
+:getNodesDataFromTypeOfSchain: pass:normal[xref:#ISchainsFunctionalityInternal-getNodesDataFromTypeOfSchain-uint256-[`++getNodesDataFromTypeOfSchain++`]]
+:findSchainAtSchainsForNode: pass:normal[xref:#ISchainsFunctionalityInternal-findSchainAtSchainsForNode-uint256-bytes32-[`++findSchainAtSchainsForNode++`]]
+:isEnoughNodes: pass:normal[xref:#ISchainsFunctionalityInternal-isEnoughNodes-bytes32-[`++isEnoughNodes++`]]
+
+[.contract]
+[[ISchainsFunctionalityInternal]]
+=== `++ISchainsFunctionalityInternal++`
+
+
+
+
+[.contract-index]
+.Functions
+--
+* {xref-ISchainsFunctionalityInternal-createGroupForSchain-string-bytes32-uint256-uint8-}[`++createGroupForSchain(schainName, schainId, numberOfNodes, partOfNode)++`]
+* {xref-ISchainsFunctionalityInternal-deleteGroup-bytes32-}[`++deleteGroup(groupIndex)++`]
+* {xref-ISchainsFunctionalityInternal-selectNodeToGroup-bytes32-}[`++selectNodeToGroup(groupIndex)++`]
+* {xref-ISchainsFunctionalityInternal-removeNodeFromSchain-uint256-bytes32-}[`++removeNodeFromSchain(nodeIndex, groupHash)++`]
+* {xref-ISchainsFunctionalityInternal-removeNodeFromExceptions-bytes32-uint256-}[`++removeNodeFromExceptions(groupHash, nodeIndex)++`]
+* {xref-ISchainsFunctionalityInternal-excludeNodeFromSchain-uint256-bytes32-}[`++excludeNodeFromSchain(nodeIndex, groupHash)++`]
+* {xref-ISchainsFunctionalityInternal-getNodesDataFromTypeOfSchain-uint256-}[`++getNodesDataFromTypeOfSchain(typeOfSchain)++`]
+* {xref-ISchainsFunctionalityInternal-findSchainAtSchainsForNode-uint256-bytes32-}[`++findSchainAtSchainsForNode(nodeIndex, schainId)++`]
+* {xref-ISchainsFunctionalityInternal-isEnoughNodes-bytes32-}[`++isEnoughNodes(groupIndex)++`]
+
+--
+
+
+
+[.contract-item]
+[[ISchainsFunctionalityInternal-createGroupForSchain-string-bytes32-uint256-uint8-]]
+==== `++createGroupForSchain(++[.var-type]#++string++#++ ++[.var-name]#++schainName++#++, ++[.var-type]#++bytes32++#++ ++[.var-name]#++schainId++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++numberOfNodes++#++, ++[.var-type]#++uint8++#++ ++[.var-name]#++partOfNode++#++)++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[ISchainsFunctionalityInternal-deleteGroup-bytes32-]]
+==== `++deleteGroup(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++)++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[ISchainsFunctionalityInternal-selectNodeToGroup-bytes32-]]
+==== `++selectNodeToGroup(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++)++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[ISchainsFunctionalityInternal-removeNodeFromSchain-uint256-bytes32-]]
+==== `++removeNodeFromSchain(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++, ++[.var-type]#++bytes32++#++ ++[.var-name]#++groupHash++#++)++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[ISchainsFunctionalityInternal-removeNodeFromExceptions-bytes32-uint256-]]
+==== `++removeNodeFromExceptions(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupHash++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++)++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[ISchainsFunctionalityInternal-excludeNodeFromSchain-uint256-bytes32-]]
+==== `++excludeNodeFromSchain(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++, ++[.var-type]#++bytes32++#++ ++[.var-name]#++groupHash++#++)++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[ISchainsFunctionalityInternal-getNodesDataFromTypeOfSchain-uint256-]]
+==== `++getNodesDataFromTypeOfSchain(++[.var-type]#++uint256++#++ ++[.var-name]#++typeOfSchain++#++) → ++[.var-type]#++uint256++#++, ++[.var-type]#++uint8++#++++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[ISchainsFunctionalityInternal-findSchainAtSchainsForNode-uint256-bytes32-]]
+==== `++findSchainAtSchainsForNode(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++, ++[.var-type]#++bytes32++#++ ++[.var-name]#++schainId++#++) → ++[.var-type]#++uint256++#++++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[ISchainsFunctionalityInternal-isEnoughNodes-bytes32-]]
+==== `++isEnoughNodes(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++) → ++[.var-type]#++uint256[]++#++++` [.item-kind]#external#
+
+
+
+

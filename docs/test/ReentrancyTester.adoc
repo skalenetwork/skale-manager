@@ -1,0 +1,147 @@
+:ReentrancyTester: pass:normal[xref:#ReentrancyTester[`++ReentrancyTester++`]]
+:constructor: pass:normal[xref:#ReentrancyTester-constructor-address-[`++constructor++`]]
+:tokensReceived: pass:normal[xref:#ReentrancyTester-tokensReceived-address-address-address-uint256-bytes-bytes-[`++tokensReceived++`]]
+:tokensToSend: pass:normal[xref:#ReentrancyTester-tokensToSend-address-address-address-uint256-bytes-bytes-[`++tokensToSend++`]]
+:prepareToReentracyCheck: pass:normal[xref:#ReentrancyTester-prepareToReentracyCheck--[`++prepareToReentracyCheck++`]]
+:prepareToBurningAttack: pass:normal[xref:#ReentrancyTester-prepareToBurningAttack--[`++prepareToBurningAttack++`]]
+:burningAttack: pass:normal[xref:#ReentrancyTester-burningAttack--[`++burningAttack++`]]
+
+[.contract]
+[[ReentrancyTester]]
+=== `++ReentrancyTester++`
+
+
+
+[.contract-index]
+.Modifiers
+--
+
+[.contract-subindex-inherited]
+.IERC777Sender
+
+[.contract-subindex-inherited]
+.IERC777Recipient
+
+[.contract-subindex-inherited]
+.Permissions
+* {xref-Permissions-allow-string-}[`++allow(contractName)++`]
+* {xref-Permissions-allowTwo-string-string-}[`++allowTwo(contractName1, contractName2)++`]
+* {xref-Permissions-allowThree-string-string-string-}[`++allowThree(contractName1, contractName2, contractName3)++`]
+
+[.contract-subindex-inherited]
+.OwnableUpgradeSafe
+* {xref-OwnableUpgradeSafe-onlyOwner--}[`++onlyOwner()++`]
+
+[.contract-subindex-inherited]
+.ContextUpgradeSafe
+
+[.contract-subindex-inherited]
+.Initializable
+* {xref-Initializable-initializer--}[`++initializer()++`]
+
+--
+
+[.contract-index]
+.Functions
+--
+* {xref-ReentrancyTester-constructor-address-}[`++constructor(contractManager)++`]
+* {xref-ReentrancyTester-tokensReceived-address-address-address-uint256-bytes-bytes-}[`++tokensReceived(_, _, _, amount, _, _)++`]
+* {xref-ReentrancyTester-tokensToSend-address-address-address-uint256-bytes-bytes-}[`++tokensToSend(_, _, _, _, _, _)++`]
+* {xref-ReentrancyTester-prepareToReentracyCheck--}[`++prepareToReentracyCheck()++`]
+* {xref-ReentrancyTester-prepareToBurningAttack--}[`++prepareToBurningAttack()++`]
+* {xref-ReentrancyTester-burningAttack--}[`++burningAttack()++`]
+
+[.contract-subindex-inherited]
+.IERC777Sender
+
+[.contract-subindex-inherited]
+.IERC777Recipient
+
+[.contract-subindex-inherited]
+.Permissions
+* {xref-Permissions-initialize-address-}[`++initialize(contractManager)++`]
+* {xref-Permissions-_isOwner--}[`++_isOwner()++`]
+
+[.contract-subindex-inherited]
+.OwnableUpgradeSafe
+* {xref-OwnableUpgradeSafe-__Ownable_init--}[`++__Ownable_init()++`]
+* {xref-OwnableUpgradeSafe-__Ownable_init_unchained--}[`++__Ownable_init_unchained()++`]
+* {xref-OwnableUpgradeSafe-owner--}[`++owner()++`]
+* {xref-OwnableUpgradeSafe-renounceOwnership--}[`++renounceOwnership()++`]
+* {xref-OwnableUpgradeSafe-transferOwnership-address-}[`++transferOwnership(newOwner)++`]
+
+[.contract-subindex-inherited]
+.ContextUpgradeSafe
+* {xref-ContextUpgradeSafe-__Context_init--}[`++__Context_init()++`]
+* {xref-ContextUpgradeSafe-__Context_init_unchained--}[`++__Context_init_unchained()++`]
+* {xref-ContextUpgradeSafe-_msgSender--}[`++_msgSender()++`]
+* {xref-ContextUpgradeSafe-_msgData--}[`++_msgData()++`]
+
+[.contract-subindex-inherited]
+.Initializable
+
+--
+
+[.contract-index]
+.Events
+--
+
+[.contract-subindex-inherited]
+.IERC777Sender
+
+[.contract-subindex-inherited]
+.IERC777Recipient
+
+[.contract-subindex-inherited]
+.Permissions
+
+[.contract-subindex-inherited]
+.OwnableUpgradeSafe
+* {xref-OwnableUpgradeSafe-OwnershipTransferred-address-address-}[`++OwnershipTransferred(previousOwner, newOwner)++`]
+
+[.contract-subindex-inherited]
+.ContextUpgradeSafe
+
+[.contract-subindex-inherited]
+.Initializable
+
+--
+
+
+[.contract-item]
+[[ReentrancyTester-constructor-address-]]
+==== `++constructor(++[.var-type]#++address++#++ ++[.var-name]#++contractManager++#++)++` [.item-kind]#public#
+
+
+
+[.contract-item]
+[[ReentrancyTester-tokensReceived-address-address-address-uint256-bytes-bytes-]]
+==== `++tokensReceived(++[.var-type]#++address++#++, ++[.var-type]#++address++#++, ++[.var-type]#++address++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++amount++#++, ++[.var-type]#++bytes++#++, ++[.var-type]#++bytes++#++)++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[ReentrancyTester-tokensToSend-address-address-address-uint256-bytes-bytes-]]
+==== `++tokensToSend(++[.var-type]#++address++#++, ++[.var-type]#++address++#++, ++[.var-type]#++address++#++, ++[.var-type]#++uint256++#++, ++[.var-type]#++bytes++#++, ++[.var-type]#++bytes++#++)++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[ReentrancyTester-prepareToReentracyCheck--]]
+==== `++prepareToReentracyCheck()++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[ReentrancyTester-prepareToBurningAttack--]]
+==== `++prepareToBurningAttack()++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[ReentrancyTester-burningAttack--]]
+==== `++burningAttack()++` [.item-kind]#external#
+
+
+
+

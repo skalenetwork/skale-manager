@@ -1,0 +1,34 @@
+:StringUtils: pass:normal[xref:#StringUtils[`++StringUtils++`]]
+:strConcat: pass:normal[xref:#StringUtils-strConcat-string-string-[`++strConcat++`]]
+:uint2str: pass:normal[xref:#StringUtils-uint2str-uint256-[`++uint2str++`]]
+
+[.contract]
+[[StringUtils]]
+=== `++StringUtils++`
+
+
+
+
+[.contract-index]
+.Functions
+--
+* {xref-StringUtils-strConcat-string-string-}[`++strConcat(_a, _b)++`]
+* {xref-StringUtils-uint2str-uint256-}[`++uint2str(_i)++`]
+
+--
+
+
+
+[.contract-item]
+[[StringUtils-strConcat-string-string-]]
+==== `++strConcat(++[.var-type]#++string++#++ ++[.var-name]#++_a++#++, ++[.var-type]#++string++#++ ++[.var-name]#++_b++#++) → ++[.var-type]#++string++#++++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[StringUtils-uint2str-uint256-]]
+==== `++uint2str(++[.var-type]#++uint256++#++ ++[.var-name]#++_i++#++) → ++[.var-type]#++string++#++++` [.item-kind]#internal#
+
+
+
+

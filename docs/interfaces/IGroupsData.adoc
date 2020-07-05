@@ -1,0 +1,162 @@
+:IGroupsData: pass:normal[xref:#IGroupsData[`++IGroupsData++`]]
+:addGroup: pass:normal[xref:#IGroupsData-addGroup-bytes32-uint256-bytes32-[`++addGroup++`]]
+:removeAllNodesInGroup: pass:normal[xref:#IGroupsData-removeAllNodesInGroup-bytes32-[`++removeAllNodesInGroup++`]]
+:setNodeInGroup: pass:normal[xref:#IGroupsData-setNodeInGroup-bytes32-uint256-[`++setNodeInGroup++`]]
+:setNodesInGroup: pass:normal[xref:#IGroupsData-setNodesInGroup-bytes32-uint256---[`++setNodesInGroup++`]]
+:removeExceptionNode: pass:normal[xref:#IGroupsData-removeExceptionNode-bytes32-uint256-[`++removeExceptionNode++`]]
+:removeGroup: pass:normal[xref:#IGroupsData-removeGroup-bytes32-[`++removeGroup++`]]
+:setException: pass:normal[xref:#IGroupsData-setException-bytes32-uint256-[`++setException++`]]
+:removeNodeFromGroup: pass:normal[xref:#IGroupsData-removeNodeFromGroup-uint256-bytes32-[`++removeNodeFromGroup++`]]
+:setPublicKey: pass:normal[xref:#IGroupsData-setPublicKey-bytes32-uint256-uint256-uint256-uint256-[`++setPublicKey++`]]
+:setGroupFailedDKG: pass:normal[xref:#IGroupsData-setGroupFailedDKG-bytes32-[`++setGroupFailedDKG++`]]
+:isGroupActive: pass:normal[xref:#IGroupsData-isGroupActive-bytes32-[`++isGroupActive++`]]
+:isExceptionNode: pass:normal[xref:#IGroupsData-isExceptionNode-bytes32-uint256-[`++isExceptionNode++`]]
+:getGroupsPublicKey: pass:normal[xref:#IGroupsData-getGroupsPublicKey-bytes32-[`++getGroupsPublicKey++`]]
+:getNodesInGroup: pass:normal[xref:#IGroupsData-getNodesInGroup-bytes32-[`++getNodesInGroup++`]]
+:getGroupData: pass:normal[xref:#IGroupsData-getGroupData-bytes32-[`++getGroupData++`]]
+:getRecommendedNumberOfNodes: pass:normal[xref:#IGroupsData-getRecommendedNumberOfNodes-bytes32-[`++getRecommendedNumberOfNodes++`]]
+:getNumberOfNodesInGroup: pass:normal[xref:#IGroupsData-getNumberOfNodesInGroup-bytes32-[`++getNumberOfNodesInGroup++`]]
+:isGroupFailedDKG: pass:normal[xref:#IGroupsData-isGroupFailedDKG-bytes32-[`++isGroupFailedDKG++`]]
+
+[.contract]
+[[IGroupsData]]
+=== `++IGroupsData++`
+
+
+
+
+[.contract-index]
+.Functions
+--
+* {xref-IGroupsData-addGroup-bytes32-uint256-bytes32-}[`++addGroup(groupIndex, amountOfNodes, data)++`]
+* {xref-IGroupsData-removeAllNodesInGroup-bytes32-}[`++removeAllNodesInGroup(groupIndex)++`]
+* {xref-IGroupsData-setNodeInGroup-bytes32-uint256-}[`++setNodeInGroup(groupIndex, nodeIndex)++`]
+* {xref-IGroupsData-setNodesInGroup-bytes32-uint256---}[`++setNodesInGroup(groupIndex, nodesInGroup)++`]
+* {xref-IGroupsData-removeExceptionNode-bytes32-uint256-}[`++removeExceptionNode(groupIndex, nodeIndex)++`]
+* {xref-IGroupsData-removeGroup-bytes32-}[`++removeGroup(groupIndex)++`]
+* {xref-IGroupsData-setException-bytes32-uint256-}[`++setException(groupIndex, nodeIndex)++`]
+* {xref-IGroupsData-removeNodeFromGroup-uint256-bytes32-}[`++removeNodeFromGroup(nodeIndex, groupIndex)++`]
+* {xref-IGroupsData-setPublicKey-bytes32-uint256-uint256-uint256-uint256-}[`++setPublicKey(groupIndex, pubKeyx1, pubKeyy1, pubKeyx2, pubKeyy2)++`]
+* {xref-IGroupsData-setGroupFailedDKG-bytes32-}[`++setGroupFailedDKG(groupIndex)++`]
+* {xref-IGroupsData-isGroupActive-bytes32-}[`++isGroupActive(groupIndex)++`]
+* {xref-IGroupsData-isExceptionNode-bytes32-uint256-}[`++isExceptionNode(groupIndex, nodeIndex)++`]
+* {xref-IGroupsData-getGroupsPublicKey-bytes32-}[`++getGroupsPublicKey(groupIndex)++`]
+* {xref-IGroupsData-getNodesInGroup-bytes32-}[`++getNodesInGroup(schainId)++`]
+* {xref-IGroupsData-getGroupData-bytes32-}[`++getGroupData(groupIndex)++`]
+* {xref-IGroupsData-getRecommendedNumberOfNodes-bytes32-}[`++getRecommendedNumberOfNodes(groupIndex)++`]
+* {xref-IGroupsData-getNumberOfNodesInGroup-bytes32-}[`++getNumberOfNodesInGroup(groupIndex)++`]
+* {xref-IGroupsData-isGroupFailedDKG-bytes32-}[`++isGroupFailedDKG(groupIndex)++`]
+
+--
+
+
+
+[.contract-item]
+[[IGroupsData-addGroup-bytes32-uint256-bytes32-]]
+==== `++addGroup(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++amountOfNodes++#++, ++[.var-type]#++bytes32++#++ ++[.var-name]#++data++#++)++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[IGroupsData-removeAllNodesInGroup-bytes32-]]
+==== `++removeAllNodesInGroup(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++)++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[IGroupsData-setNodeInGroup-bytes32-uint256-]]
+==== `++setNodeInGroup(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++)++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[IGroupsData-setNodesInGroup-bytes32-uint256---]]
+==== `++setNodesInGroup(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++, ++[.var-type]#++uint256[]++#++ ++[.var-name]#++nodesInGroup++#++)++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[IGroupsData-removeExceptionNode-bytes32-uint256-]]
+==== `++removeExceptionNode(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++)++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[IGroupsData-removeGroup-bytes32-]]
+==== `++removeGroup(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++)++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[IGroupsData-setException-bytes32-uint256-]]
+==== `++setException(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++)++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[IGroupsData-removeNodeFromGroup-uint256-bytes32-]]
+==== `++removeNodeFromGroup(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++, ++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++)++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[IGroupsData-setPublicKey-bytes32-uint256-uint256-uint256-uint256-]]
+==== `++setPublicKey(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++pubKeyx1++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++pubKeyy1++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++pubKeyx2++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++pubKeyy2++#++)++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[IGroupsData-setGroupFailedDKG-bytes32-]]
+==== `++setGroupFailedDKG(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++)++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[IGroupsData-isGroupActive-bytes32-]]
+==== `++isGroupActive(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++) → ++[.var-type]#++bool++#++++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[IGroupsData-isExceptionNode-bytes32-uint256-]]
+==== `++isExceptionNode(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++) → ++[.var-type]#++bool++#++++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[IGroupsData-getGroupsPublicKey-bytes32-]]
+==== `++getGroupsPublicKey(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++) → ++[.var-type]#++uint256++#++, ++[.var-type]#++uint256++#++, ++[.var-type]#++uint256++#++, ++[.var-type]#++uint256++#++++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[IGroupsData-getNodesInGroup-bytes32-]]
+==== `++getNodesInGroup(++[.var-type]#++bytes32++#++ ++[.var-name]#++schainId++#++) → ++[.var-type]#++uint256[]++#++++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[IGroupsData-getGroupData-bytes32-]]
+==== `++getGroupData(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++) → ++[.var-type]#++bytes32++#++++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[IGroupsData-getRecommendedNumberOfNodes-bytes32-]]
+==== `++getRecommendedNumberOfNodes(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++) → ++[.var-type]#++uint256++#++++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[IGroupsData-getNumberOfNodesInGroup-bytes32-]]
+==== `++getNumberOfNodesInGroup(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++) → ++[.var-type]#++uint256++#++++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[IGroupsData-isGroupFailedDKG-bytes32-]]
+==== `++isGroupFailedDKG(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++) → ++[.var-type]#++bool++#++++` [.item-kind]#external#
+
+
+
+

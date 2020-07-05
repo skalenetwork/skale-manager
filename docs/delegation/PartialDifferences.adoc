@@ -1,0 +1,126 @@
+:PartialDifferences: pass:normal[xref:#PartialDifferences[`++PartialDifferences++`]]
+:addToSequence: pass:normal[xref:#PartialDifferences-addToSequence-struct-PartialDifferences-Sequence-uint256-uint256-[`++addToSequence++`]]
+:subtractFromSequence: pass:normal[xref:#PartialDifferences-subtractFromSequence-struct-PartialDifferences-Sequence-uint256-uint256-[`++subtractFromSequence++`]]
+:getAndUpdateValueInSequence: pass:normal[xref:#PartialDifferences-getAndUpdateValueInSequence-struct-PartialDifferences-Sequence-uint256-[`++getAndUpdateValueInSequence++`]]
+:reduceSequence: pass:normal[xref:#PartialDifferences-reduceSequence-struct-PartialDifferences-Sequence-struct-FractionUtils-Fraction-uint256-[`++reduceSequence++`]]
+:addToValue: pass:normal[xref:#PartialDifferences-addToValue-struct-PartialDifferences-Value-uint256-uint256-[`++addToValue++`]]
+:subtractFromValue: pass:normal[xref:#PartialDifferences-subtractFromValue-struct-PartialDifferences-Value-uint256-uint256-[`++subtractFromValue++`]]
+:getAndUpdateValue: pass:normal[xref:#PartialDifferences-getAndUpdateValue-struct-PartialDifferences-Value-uint256-[`++getAndUpdateValue++`]]
+:reduceValue: pass:normal[xref:#PartialDifferences-reduceValue-struct-PartialDifferences-Value-uint256-uint256-[`++reduceValue++`]]
+:reduceValueByCoefficient: pass:normal[xref:#PartialDifferences-reduceValueByCoefficient-struct-PartialDifferences-Value-struct-FractionUtils-Fraction-uint256-[`++reduceValueByCoefficient++`]]
+:reduceValueByCoefficientAndUpdateSum: pass:normal[xref:#PartialDifferences-reduceValueByCoefficientAndUpdateSum-struct-PartialDifferences-Value-struct-PartialDifferences-Value-struct-FractionUtils-Fraction-uint256-[`++reduceValueByCoefficientAndUpdateSum++`]]
+:reduceValueByCoefficientAndUpdateSumIfNeeded: pass:normal[xref:#PartialDifferences-reduceValueByCoefficientAndUpdateSumIfNeeded-struct-PartialDifferences-Value-struct-PartialDifferences-Value-struct-FractionUtils-Fraction-uint256-bool-[`++reduceValueByCoefficientAndUpdateSumIfNeeded++`]]
+:clear: pass:normal[xref:#PartialDifferences-clear-struct-PartialDifferences-Value-[`++clear++`]]
+
+[.contract]
+[[PartialDifferences]]
+=== `++PartialDifferences++`
+
+This library contains functions to manage Partial Differences data
+structure. Partial Differences is an array of value differences over time.
+
+For example: assuming an array [3, 6, 3, 1, 2], partial differences can
+represent this array as [_, 3, -3, -2, 1].
+
+This data structure allows adding values on an open interval with O(1)
+complexity.
+
+For example: add +5 to [3, 6, 3, 1, 2] starting from the second element (3),
+instead of performing [3, 6, 3+5, 1+5, 2+5] partial differences allows
+performing [_, 3, -3+5, -2, 1]. The original array can be restored by
+adding values from partial differences.
+
+
+[.contract-index]
+.Functions
+--
+* {xref-PartialDifferences-addToSequence-struct-PartialDifferences-Sequence-uint256-uint256-}[`++addToSequence(sequence, diff, month)++`]
+* {xref-PartialDifferences-subtractFromSequence-struct-PartialDifferences-Sequence-uint256-uint256-}[`++subtractFromSequence(sequence, diff, month)++`]
+* {xref-PartialDifferences-getAndUpdateValueInSequence-struct-PartialDifferences-Sequence-uint256-}[`++getAndUpdateValueInSequence(sequence, month)++`]
+* {xref-PartialDifferences-reduceSequence-struct-PartialDifferences-Sequence-struct-FractionUtils-Fraction-uint256-}[`++reduceSequence(sequence, reducingCoefficient, month)++`]
+* {xref-PartialDifferences-addToValue-struct-PartialDifferences-Value-uint256-uint256-}[`++addToValue(sequence, diff, month)++`]
+* {xref-PartialDifferences-subtractFromValue-struct-PartialDifferences-Value-uint256-uint256-}[`++subtractFromValue(sequence, diff, month)++`]
+* {xref-PartialDifferences-getAndUpdateValue-struct-PartialDifferences-Value-uint256-}[`++getAndUpdateValue(sequence, month)++`]
+* {xref-PartialDifferences-reduceValue-struct-PartialDifferences-Value-uint256-uint256-}[`++reduceValue(sequence, amount, month)++`]
+* {xref-PartialDifferences-reduceValueByCoefficient-struct-PartialDifferences-Value-struct-FractionUtils-Fraction-uint256-}[`++reduceValueByCoefficient(sequence, reducingCoefficient, month)++`]
+* {xref-PartialDifferences-reduceValueByCoefficientAndUpdateSum-struct-PartialDifferences-Value-struct-PartialDifferences-Value-struct-FractionUtils-Fraction-uint256-}[`++reduceValueByCoefficientAndUpdateSum(sequence, sumSequence, reducingCoefficient, month)++`]
+* {xref-PartialDifferences-reduceValueByCoefficientAndUpdateSumIfNeeded-struct-PartialDifferences-Value-struct-PartialDifferences-Value-struct-FractionUtils-Fraction-uint256-bool-}[`++reduceValueByCoefficientAndUpdateSumIfNeeded(sequence, sumSequence, reducingCoefficient, month, hasSumSequence)++`]
+* {xref-PartialDifferences-clear-struct-PartialDifferences-Value-}[`++clear(sequence)++`]
+
+--
+
+
+
+[.contract-item]
+[[PartialDifferences-addToSequence-struct-PartialDifferences-Sequence-uint256-uint256-]]
+==== `++addToSequence(++[.var-type]#++struct PartialDifferences.Sequence++#++ ++[.var-name]#++sequence++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++diff++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++month++#++)++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[PartialDifferences-subtractFromSequence-struct-PartialDifferences-Sequence-uint256-uint256-]]
+==== `++subtractFromSequence(++[.var-type]#++struct PartialDifferences.Sequence++#++ ++[.var-name]#++sequence++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++diff++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++month++#++)++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[PartialDifferences-getAndUpdateValueInSequence-struct-PartialDifferences-Sequence-uint256-]]
+==== `++getAndUpdateValueInSequence(++[.var-type]#++struct PartialDifferences.Sequence++#++ ++[.var-name]#++sequence++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++month++#++) → ++[.var-type]#++uint256++#++++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[PartialDifferences-reduceSequence-struct-PartialDifferences-Sequence-struct-FractionUtils-Fraction-uint256-]]
+==== `++reduceSequence(++[.var-type]#++struct PartialDifferences.Sequence++#++ ++[.var-name]#++sequence++#++, ++[.var-type]#++struct FractionUtils.Fraction++#++ ++[.var-name]#++reducingCoefficient++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++month++#++)++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[PartialDifferences-addToValue-struct-PartialDifferences-Value-uint256-uint256-]]
+==== `++addToValue(++[.var-type]#++struct PartialDifferences.Value++#++ ++[.var-name]#++sequence++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++diff++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++month++#++)++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[PartialDifferences-subtractFromValue-struct-PartialDifferences-Value-uint256-uint256-]]
+==== `++subtractFromValue(++[.var-type]#++struct PartialDifferences.Value++#++ ++[.var-name]#++sequence++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++diff++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++month++#++)++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[PartialDifferences-getAndUpdateValue-struct-PartialDifferences-Value-uint256-]]
+==== `++getAndUpdateValue(++[.var-type]#++struct PartialDifferences.Value++#++ ++[.var-name]#++sequence++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++month++#++) → ++[.var-type]#++uint256++#++++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[PartialDifferences-reduceValue-struct-PartialDifferences-Value-uint256-uint256-]]
+==== `++reduceValue(++[.var-type]#++struct PartialDifferences.Value++#++ ++[.var-name]#++sequence++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++amount++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++month++#++) → ++[.var-type]#++struct FractionUtils.Fraction++#++++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[PartialDifferences-reduceValueByCoefficient-struct-PartialDifferences-Value-struct-FractionUtils-Fraction-uint256-]]
+==== `++reduceValueByCoefficient(++[.var-type]#++struct PartialDifferences.Value++#++ ++[.var-name]#++sequence++#++, ++[.var-type]#++struct FractionUtils.Fraction++#++ ++[.var-name]#++reducingCoefficient++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++month++#++)++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[PartialDifferences-reduceValueByCoefficientAndUpdateSum-struct-PartialDifferences-Value-struct-PartialDifferences-Value-struct-FractionUtils-Fraction-uint256-]]
+==== `++reduceValueByCoefficientAndUpdateSum(++[.var-type]#++struct PartialDifferences.Value++#++ ++[.var-name]#++sequence++#++, ++[.var-type]#++struct PartialDifferences.Value++#++ ++[.var-name]#++sumSequence++#++, ++[.var-type]#++struct FractionUtils.Fraction++#++ ++[.var-name]#++reducingCoefficient++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++month++#++)++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[PartialDifferences-reduceValueByCoefficientAndUpdateSumIfNeeded-struct-PartialDifferences-Value-struct-PartialDifferences-Value-struct-FractionUtils-Fraction-uint256-bool-]]
+==== `++reduceValueByCoefficientAndUpdateSumIfNeeded(++[.var-type]#++struct PartialDifferences.Value++#++ ++[.var-name]#++sequence++#++, ++[.var-type]#++struct PartialDifferences.Value++#++ ++[.var-name]#++sumSequence++#++, ++[.var-type]#++struct FractionUtils.Fraction++#++ ++[.var-name]#++reducingCoefficient++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++month++#++, ++[.var-type]#++bool++#++ ++[.var-name]#++hasSumSequence++#++)++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[PartialDifferences-clear-struct-PartialDifferences-Value-]]
+==== `++clear(++[.var-type]#++struct PartialDifferences.Value++#++ ++[.var-name]#++sequence++#++)++` [.item-kind]#internal#
+
+
+
+

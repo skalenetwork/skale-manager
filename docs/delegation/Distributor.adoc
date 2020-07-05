@@ -1,0 +1,185 @@
+:Distributor: pass:normal[xref:#Distributor[`++Distributor++`]]
+:getAndUpdateEarnedBountyAmount: pass:normal[xref:#Distributor-getAndUpdateEarnedBountyAmount-uint256-[`++getAndUpdateEarnedBountyAmount++`]]
+:withdrawBounty: pass:normal[xref:#Distributor-withdrawBounty-uint256-address-[`++withdrawBounty++`]]
+:withdrawFee: pass:normal[xref:#Distributor-withdrawFee-address-[`++withdrawFee++`]]
+:tokensReceived: pass:normal[xref:#Distributor-tokensReceived-address-address-address-uint256-bytes-bytes-[`++tokensReceived++`]]
+:getEarnedFeeAmount: pass:normal[xref:#Distributor-getEarnedFeeAmount--[`++getEarnedFeeAmount++`]]
+:initialize: pass:normal[xref:#Distributor-initialize-address-[`++initialize++`]]
+:getAndUpdateEarnedBountyAmountOf: pass:normal[xref:#Distributor-getAndUpdateEarnedBountyAmountOf-address-uint256-[`++getAndUpdateEarnedBountyAmountOf++`]]
+:getEarnedFeeAmountOf: pass:normal[xref:#Distributor-getEarnedFeeAmountOf-uint256-[`++getEarnedFeeAmountOf++`]]
+:_distributeBounty: pass:normal[xref:#Distributor-_distributeBounty-uint256-uint256-[`++_distributeBounty++`]]
+:WithdrawBounty: pass:normal[xref:#Distributor-WithdrawBounty-address-uint256-address-uint256-[`++WithdrawBounty++`]]
+:WithdrawFee: pass:normal[xref:#Distributor-WithdrawFee-uint256-address-uint256-[`++WithdrawFee++`]]
+:BountyWasPaid: pass:normal[xref:#Distributor-BountyWasPaid-uint256-uint256-[`++BountyWasPaid++`]]
+
+[.contract]
+[[Distributor]]
+=== `++Distributor++`
+
+
+
+[.contract-index]
+.Modifiers
+--
+
+[.contract-subindex-inherited]
+.IERC777Recipient
+
+[.contract-subindex-inherited]
+.Permissions
+* {xref-Permissions-allow-string-}[`++allow(contractName)++`]
+* {xref-Permissions-allowTwo-string-string-}[`++allowTwo(contractName1, contractName2)++`]
+* {xref-Permissions-allowThree-string-string-string-}[`++allowThree(contractName1, contractName2, contractName3)++`]
+
+[.contract-subindex-inherited]
+.OwnableUpgradeSafe
+* {xref-OwnableUpgradeSafe-onlyOwner--}[`++onlyOwner()++`]
+
+[.contract-subindex-inherited]
+.ContextUpgradeSafe
+
+[.contract-subindex-inherited]
+.Initializable
+* {xref-Initializable-initializer--}[`++initializer()++`]
+
+--
+
+[.contract-index]
+.Functions
+--
+* {xref-Distributor-getAndUpdateEarnedBountyAmount-uint256-}[`++getAndUpdateEarnedBountyAmount(validatorId)++`]
+* {xref-Distributor-withdrawBounty-uint256-address-}[`++withdrawBounty(validatorId, to)++`]
+* {xref-Distributor-withdrawFee-address-}[`++withdrawFee(to)++`]
+* {xref-Distributor-tokensReceived-address-address-address-uint256-bytes-bytes-}[`++tokensReceived(_, _, to, amount, userData, _)++`]
+* {xref-Distributor-getEarnedFeeAmount--}[`++getEarnedFeeAmount()++`]
+* {xref-Distributor-initialize-address-}[`++initialize(_contractsAddress)++`]
+* {xref-Distributor-getAndUpdateEarnedBountyAmountOf-address-uint256-}[`++getAndUpdateEarnedBountyAmountOf(wallet, validatorId)++`]
+* {xref-Distributor-getEarnedFeeAmountOf-uint256-}[`++getEarnedFeeAmountOf(validatorId)++`]
+* {xref-Distributor-_distributeBounty-uint256-uint256-}[`++_distributeBounty(amount, validatorId)++`]
+
+[.contract-subindex-inherited]
+.IERC777Recipient
+
+[.contract-subindex-inherited]
+.Permissions
+* {xref-Permissions-_isOwner--}[`++_isOwner()++`]
+
+[.contract-subindex-inherited]
+.OwnableUpgradeSafe
+* {xref-OwnableUpgradeSafe-__Ownable_init--}[`++__Ownable_init()++`]
+* {xref-OwnableUpgradeSafe-__Ownable_init_unchained--}[`++__Ownable_init_unchained()++`]
+* {xref-OwnableUpgradeSafe-owner--}[`++owner()++`]
+* {xref-OwnableUpgradeSafe-renounceOwnership--}[`++renounceOwnership()++`]
+* {xref-OwnableUpgradeSafe-transferOwnership-address-}[`++transferOwnership(newOwner)++`]
+
+[.contract-subindex-inherited]
+.ContextUpgradeSafe
+* {xref-ContextUpgradeSafe-__Context_init--}[`++__Context_init()++`]
+* {xref-ContextUpgradeSafe-__Context_init_unchained--}[`++__Context_init_unchained()++`]
+* {xref-ContextUpgradeSafe-_msgSender--}[`++_msgSender()++`]
+* {xref-ContextUpgradeSafe-_msgData--}[`++_msgData()++`]
+
+[.contract-subindex-inherited]
+.Initializable
+
+--
+
+[.contract-index]
+.Events
+--
+* {xref-Distributor-WithdrawBounty-address-uint256-address-uint256-}[`++WithdrawBounty(holder, validatorId, destination, amount)++`]
+* {xref-Distributor-WithdrawFee-uint256-address-uint256-}[`++WithdrawFee(validatorId, destination, amount)++`]
+* {xref-Distributor-BountyWasPaid-uint256-uint256-}[`++BountyWasPaid(validatorId, amount)++`]
+
+[.contract-subindex-inherited]
+.IERC777Recipient
+
+[.contract-subindex-inherited]
+.Permissions
+
+[.contract-subindex-inherited]
+.OwnableUpgradeSafe
+* {xref-OwnableUpgradeSafe-OwnershipTransferred-address-address-}[`++OwnershipTransferred(previousOwner, newOwner)++`]
+
+[.contract-subindex-inherited]
+.ContextUpgradeSafe
+
+[.contract-subindex-inherited]
+.Initializable
+
+--
+
+
+[.contract-item]
+[[Distributor-getAndUpdateEarnedBountyAmount-uint256-]]
+==== `++getAndUpdateEarnedBountyAmount(++[.var-type]#++uint256++#++ ++[.var-name]#++validatorId++#++) → ++[.var-type]#++uint256++#++ ++[.var-name]#++earned++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++endMonth++#++++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[Distributor-withdrawBounty-uint256-address-]]
+==== `++withdrawBounty(++[.var-type]#++uint256++#++ ++[.var-name]#++validatorId++#++, ++[.var-type]#++address++#++ ++[.var-name]#++to++#++)++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[Distributor-withdrawFee-address-]]
+==== `++withdrawFee(++[.var-type]#++address++#++ ++[.var-name]#++to++#++)++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[Distributor-tokensReceived-address-address-address-uint256-bytes-bytes-]]
+==== `++tokensReceived(++[.var-type]#++address++#++, ++[.var-type]#++address++#++, ++[.var-type]#++address++#++ ++[.var-name]#++to++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++amount++#++, ++[.var-type]#++bytes++#++ ++[.var-name]#++userData++#++, ++[.var-type]#++bytes++#++)++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[Distributor-getEarnedFeeAmount--]]
+==== `++getEarnedFeeAmount() → ++[.var-type]#++uint256++#++ ++[.var-name]#++earned++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++endMonth++#++++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[Distributor-initialize-address-]]
+==== `++initialize(++[.var-type]#++address++#++ ++[.var-name]#++_contractsAddress++#++)++` [.item-kind]#public#
+
+
+
+[.contract-item]
+[[Distributor-getAndUpdateEarnedBountyAmountOf-address-uint256-]]
+==== `++getAndUpdateEarnedBountyAmountOf(++[.var-type]#++address++#++ ++[.var-name]#++wallet++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++validatorId++#++) → ++[.var-type]#++uint256++#++ ++[.var-name]#++earned++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++endMonth++#++++` [.item-kind]#public#
+
+
+
+[.contract-item]
+[[Distributor-getEarnedFeeAmountOf-uint256-]]
+==== `++getEarnedFeeAmountOf(++[.var-type]#++uint256++#++ ++[.var-name]#++validatorId++#++) → ++[.var-type]#++uint256++#++ ++[.var-name]#++earned++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++endMonth++#++++` [.item-kind]#public#
+
+
+
+[.contract-item]
+[[Distributor-_distributeBounty-uint256-uint256-]]
+==== `++_distributeBounty(++[.var-type]#++uint256++#++ ++[.var-name]#++amount++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++validatorId++#++)++` [.item-kind]#internal#
+
+
+
+
+[.contract-item]
+[[Distributor-WithdrawBounty-address-uint256-address-uint256-]]
+==== `++WithdrawBounty(++[.var-type]#++address++#++ ++[.var-name]#++holder++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++validatorId++#++, ++[.var-type]#++address++#++ ++[.var-name]#++destination++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++amount++#++)++` [.item-kind]#event#
+
+Emitted when a bounty is withdrawn by the token holder.
+
+[.contract-item]
+[[Distributor-WithdrawFee-uint256-address-uint256-]]
+==== `++WithdrawFee(++[.var-type]#++uint256++#++ ++[.var-name]#++validatorId++#++, ++[.var-type]#++address++#++ ++[.var-name]#++destination++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++amount++#++)++` [.item-kind]#event#
+
+Emitted when a validator fee is withdrawn by the validator.
+
+[.contract-item]
+[[Distributor-BountyWasPaid-uint256-uint256-]]
+==== `++BountyWasPaid(++[.var-type]#++uint256++#++ ++[.var-name]#++validatorId++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++amount++#++)++` [.item-kind]#event#
+
+Emitted when a bounty is distributed.
+

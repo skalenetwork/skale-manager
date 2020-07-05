@@ -1,0 +1,58 @@
+:INodesFunctionality: pass:normal[xref:#INodesFunctionality[`++INodesFunctionality++`]]
+:createNode: pass:normal[xref:#INodesFunctionality-createNode-address-bytes-[`++createNode++`]]
+:initExit: pass:normal[xref:#INodesFunctionality-initExit-address-uint256-[`++initExit++`]]
+:completeExit: pass:normal[xref:#INodesFunctionality-completeExit-address-uint256-[`++completeExit++`]]
+:removeNode: pass:normal[xref:#INodesFunctionality-removeNode-address-uint256-[`++removeNode++`]]
+:removeNodeByRoot: pass:normal[xref:#INodesFunctionality-removeNodeByRoot-uint256-[`++removeNodeByRoot++`]]
+
+[.contract]
+[[INodesFunctionality]]
+=== `++INodesFunctionality++`
+
+
+
+
+[.contract-index]
+.Functions
+--
+* {xref-INodesFunctionality-createNode-address-bytes-}[`++createNode(from, data)++`]
+* {xref-INodesFunctionality-initExit-address-uint256-}[`++initExit(from, nodeIndex)++`]
+* {xref-INodesFunctionality-completeExit-address-uint256-}[`++completeExit(from, nodeIndex)++`]
+* {xref-INodesFunctionality-removeNode-address-uint256-}[`++removeNode(from, nodeIndex)++`]
+* {xref-INodesFunctionality-removeNodeByRoot-uint256-}[`++removeNodeByRoot(nodeIndex)++`]
+
+--
+
+
+
+[.contract-item]
+[[INodesFunctionality-createNode-address-bytes-]]
+==== `++createNode(++[.var-type]#++address++#++ ++[.var-name]#++from++#++, ++[.var-type]#++bytes++#++ ++[.var-name]#++data++#++) → ++[.var-type]#++uint256++#++++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[INodesFunctionality-initExit-address-uint256-]]
+==== `++initExit(++[.var-type]#++address++#++ ++[.var-name]#++from++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++) → ++[.var-type]#++bool++#++++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[INodesFunctionality-completeExit-address-uint256-]]
+==== `++completeExit(++[.var-type]#++address++#++ ++[.var-name]#++from++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++) → ++[.var-type]#++bool++#++++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[INodesFunctionality-removeNode-address-uint256-]]
+==== `++removeNode(++[.var-type]#++address++#++ ++[.var-name]#++from++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++)++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[INodesFunctionality-removeNodeByRoot-uint256-]]
+==== `++removeNodeByRoot(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++)++` [.item-kind]#external#
+
+
+
+

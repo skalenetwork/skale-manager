@@ -1,0 +1,49 @@
+:Migrations: pass:normal[xref:#Migrations[`++Migrations++`]]
+:restricted: pass:normal[xref:#Migrations-restricted--[`++restricted++`]]
+:owner: pass:normal[xref:#Migrations-owner-address[`++owner++`]]
+:last_completed_migration: pass:normal[xref:#Migrations-last_completed_migration-uint256[`++last_completed_migration++`]]
+:setCompleted: pass:normal[xref:#Migrations-setCompleted-uint256-[`++setCompleted++`]]
+:upgrade: pass:normal[xref:#Migrations-upgrade-address-[`++upgrade++`]]
+
+[.contract]
+[[Migrations]]
+=== `++Migrations++`
+
+
+
+[.contract-index]
+.Modifiers
+--
+* {xref-Migrations-restricted--}[`++restricted()++`]
+
+--
+
+[.contract-index]
+.Functions
+--
+* {xref-Migrations-setCompleted-uint256-}[`++setCompleted(completed)++`]
+* {xref-Migrations-upgrade-address-}[`++upgrade(new_address)++`]
+
+--
+
+
+[.contract-item]
+[[Migrations-restricted--]]
+==== `++restricted()++` [.item-kind]#modifier#
+
+
+
+
+[.contract-item]
+[[Migrations-setCompleted-uint256-]]
+==== `++setCompleted(++[.var-type]#++uint256++#++ ++[.var-name]#++completed++#++)++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[Migrations-upgrade-address-]]
+==== `++upgrade(++[.var-type]#++address++#++ ++[.var-name]#++new_address++#++)++` [.item-kind]#external#
+
+
+
+

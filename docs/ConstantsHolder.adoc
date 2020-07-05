@@ -1,0 +1,186 @@
+:ConstantsHolder: pass:normal[xref:#ConstantsHolder[`++ConstantsHolder++`]]
+:NODE_DEPOSIT: pass:normal[xref:#ConstantsHolder-NODE_DEPOSIT-uint256[`++NODE_DEPOSIT++`]]
+:TINY_DIVISOR: pass:normal[xref:#ConstantsHolder-TINY_DIVISOR-uint8[`++TINY_DIVISOR++`]]
+:SMALL_DIVISOR: pass:normal[xref:#ConstantsHolder-SMALL_DIVISOR-uint8[`++SMALL_DIVISOR++`]]
+:MEDIUM_DIVISOR: pass:normal[xref:#ConstantsHolder-MEDIUM_DIVISOR-uint8[`++MEDIUM_DIVISOR++`]]
+:MEDIUM_TEST_DIVISOR: pass:normal[xref:#ConstantsHolder-MEDIUM_TEST_DIVISOR-uint8[`++MEDIUM_TEST_DIVISOR++`]]
+:NUMBER_OF_NODES_FOR_SCHAIN: pass:normal[xref:#ConstantsHolder-NUMBER_OF_NODES_FOR_SCHAIN-uint256[`++NUMBER_OF_NODES_FOR_SCHAIN++`]]
+:NUMBER_OF_NODES_FOR_TEST_SCHAIN: pass:normal[xref:#ConstantsHolder-NUMBER_OF_NODES_FOR_TEST_SCHAIN-uint256[`++NUMBER_OF_NODES_FOR_TEST_SCHAIN++`]]
+:NUMBER_OF_NODES_FOR_MEDIUM_TEST_SCHAIN: pass:normal[xref:#ConstantsHolder-NUMBER_OF_NODES_FOR_MEDIUM_TEST_SCHAIN-uint256[`++NUMBER_OF_NODES_FOR_MEDIUM_TEST_SCHAIN++`]]
+:FRACTIONAL_FACTOR: pass:normal[xref:#ConstantsHolder-FRACTIONAL_FACTOR-uint256[`++FRACTIONAL_FACTOR++`]]
+:FULL_FACTOR: pass:normal[xref:#ConstantsHolder-FULL_FACTOR-uint256[`++FULL_FACTOR++`]]
+:SECONDS_TO_DAY: pass:normal[xref:#ConstantsHolder-SECONDS_TO_DAY-uint32[`++SECONDS_TO_DAY++`]]
+:SECONDS_TO_MONTH: pass:normal[xref:#ConstantsHolder-SECONDS_TO_MONTH-uint32[`++SECONDS_TO_MONTH++`]]
+:SECONDS_TO_YEAR: pass:normal[xref:#ConstantsHolder-SECONDS_TO_YEAR-uint32[`++SECONDS_TO_YEAR++`]]
+:SIX_YEARS: pass:normal[xref:#ConstantsHolder-SIX_YEARS-uint32[`++SIX_YEARS++`]]
+:NUMBER_OF_MONITORS: pass:normal[xref:#ConstantsHolder-NUMBER_OF_MONITORS-uint256[`++NUMBER_OF_MONITORS++`]]
+:msr: pass:normal[xref:#ConstantsHolder-msr-uint256[`++msr++`]]
+:rewardPeriod: pass:normal[xref:#ConstantsHolder-rewardPeriod-uint32[`++rewardPeriod++`]]
+:allowableLatency: pass:normal[xref:#ConstantsHolder-allowableLatency-uint32[`++allowableLatency++`]]
+:deltaPeriod: pass:normal[xref:#ConstantsHolder-deltaPeriod-uint32[`++deltaPeriod++`]]
+:checkTime: pass:normal[xref:#ConstantsHolder-checkTime-uint8[`++checkTime++`]]
+:lastTimeUnderloaded: pass:normal[xref:#ConstantsHolder-lastTimeUnderloaded-uint256[`++lastTimeUnderloaded++`]]
+:lastTimeOverloaded: pass:normal[xref:#ConstantsHolder-lastTimeOverloaded-uint256[`++lastTimeOverloaded++`]]
+:launchTimestamp: pass:normal[xref:#ConstantsHolder-launchTimestamp-uint256[`++launchTimestamp++`]]
+:rotationDelay: pass:normal[xref:#ConstantsHolder-rotationDelay-uint256[`++rotationDelay++`]]
+:proofOfUseLockUpPeriodDays: pass:normal[xref:#ConstantsHolder-proofOfUseLockUpPeriodDays-uint256[`++proofOfUseLockUpPeriodDays++`]]
+:setPeriods: pass:normal[xref:#ConstantsHolder-setPeriods-uint32-uint32-[`++setPeriods++`]]
+:setCheckTime: pass:normal[xref:#ConstantsHolder-setCheckTime-uint8-[`++setCheckTime++`]]
+:setLastTimeUnderloaded: pass:normal[xref:#ConstantsHolder-setLastTimeUnderloaded--[`++setLastTimeUnderloaded++`]]
+:setLastTimeOverloaded: pass:normal[xref:#ConstantsHolder-setLastTimeOverloaded--[`++setLastTimeOverloaded++`]]
+:setLatency: pass:normal[xref:#ConstantsHolder-setLatency-uint32-[`++setLatency++`]]
+:setMSR: pass:normal[xref:#ConstantsHolder-setMSR-uint256-[`++setMSR++`]]
+:setLaunchTimestamp: pass:normal[xref:#ConstantsHolder-setLaunchTimestamp-uint256-[`++setLaunchTimestamp++`]]
+:setRotationDelay: pass:normal[xref:#ConstantsHolder-setRotationDelay-uint256-[`++setRotationDelay++`]]
+:setProofOfUseLockUpPeriod: pass:normal[xref:#ConstantsHolder-setProofOfUseLockUpPeriod-uint256-[`++setProofOfUseLockUpPeriod++`]]
+:initialize: pass:normal[xref:#ConstantsHolder-initialize-address-[`++initialize++`]]
+
+[.contract]
+[[ConstantsHolder]]
+=== `++ConstantsHolder++`
+
+
+
+[.contract-index]
+.Modifiers
+--
+
+[.contract-subindex-inherited]
+.Permissions
+* {xref-Permissions-allow-string-}[`++allow(contractName)++`]
+* {xref-Permissions-allowTwo-string-string-}[`++allowTwo(contractName1, contractName2)++`]
+* {xref-Permissions-allowThree-string-string-string-}[`++allowThree(contractName1, contractName2, contractName3)++`]
+
+[.contract-subindex-inherited]
+.OwnableUpgradeSafe
+* {xref-OwnableUpgradeSafe-onlyOwner--}[`++onlyOwner()++`]
+
+[.contract-subindex-inherited]
+.ContextUpgradeSafe
+
+[.contract-subindex-inherited]
+.Initializable
+* {xref-Initializable-initializer--}[`++initializer()++`]
+
+--
+
+[.contract-index]
+.Functions
+--
+* {xref-ConstantsHolder-setPeriods-uint32-uint32-}[`++setPeriods(newRewardPeriod, newDeltaPeriod)++`]
+* {xref-ConstantsHolder-setCheckTime-uint8-}[`++setCheckTime(newCheckTime)++`]
+* {xref-ConstantsHolder-setLastTimeUnderloaded--}[`++setLastTimeUnderloaded()++`]
+* {xref-ConstantsHolder-setLastTimeOverloaded--}[`++setLastTimeOverloaded()++`]
+* {xref-ConstantsHolder-setLatency-uint32-}[`++setLatency(newAllowableLatency)++`]
+* {xref-ConstantsHolder-setMSR-uint256-}[`++setMSR(newMSR)++`]
+* {xref-ConstantsHolder-setLaunchTimestamp-uint256-}[`++setLaunchTimestamp(timestamp)++`]
+* {xref-ConstantsHolder-setRotationDelay-uint256-}[`++setRotationDelay(newDelay)++`]
+* {xref-ConstantsHolder-setProofOfUseLockUpPeriod-uint256-}[`++setProofOfUseLockUpPeriod(periodDays)++`]
+* {xref-ConstantsHolder-initialize-address-}[`++initialize(contractsAddress)++`]
+
+[.contract-subindex-inherited]
+.Permissions
+* {xref-Permissions-_isOwner--}[`++_isOwner()++`]
+
+[.contract-subindex-inherited]
+.OwnableUpgradeSafe
+* {xref-OwnableUpgradeSafe-__Ownable_init--}[`++__Ownable_init()++`]
+* {xref-OwnableUpgradeSafe-__Ownable_init_unchained--}[`++__Ownable_init_unchained()++`]
+* {xref-OwnableUpgradeSafe-owner--}[`++owner()++`]
+* {xref-OwnableUpgradeSafe-renounceOwnership--}[`++renounceOwnership()++`]
+* {xref-OwnableUpgradeSafe-transferOwnership-address-}[`++transferOwnership(newOwner)++`]
+
+[.contract-subindex-inherited]
+.ContextUpgradeSafe
+* {xref-ContextUpgradeSafe-__Context_init--}[`++__Context_init()++`]
+* {xref-ContextUpgradeSafe-__Context_init_unchained--}[`++__Context_init_unchained()++`]
+* {xref-ContextUpgradeSafe-_msgSender--}[`++_msgSender()++`]
+* {xref-ContextUpgradeSafe-_msgData--}[`++_msgData()++`]
+
+[.contract-subindex-inherited]
+.Initializable
+
+--
+
+[.contract-index]
+.Events
+--
+
+[.contract-subindex-inherited]
+.Permissions
+
+[.contract-subindex-inherited]
+.OwnableUpgradeSafe
+* {xref-OwnableUpgradeSafe-OwnershipTransferred-address-address-}[`++OwnershipTransferred(previousOwner, newOwner)++`]
+
+[.contract-subindex-inherited]
+.ContextUpgradeSafe
+
+[.contract-subindex-inherited]
+.Initializable
+
+--
+
+
+[.contract-item]
+[[ConstantsHolder-setPeriods-uint32-uint32-]]
+==== `++setPeriods(++[.var-type]#++uint32++#++ ++[.var-name]#++newRewardPeriod++#++, ++[.var-type]#++uint32++#++ ++[.var-name]#++newDeltaPeriod++#++)++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[ConstantsHolder-setCheckTime-uint8-]]
+==== `++setCheckTime(++[.var-type]#++uint8++#++ ++[.var-name]#++newCheckTime++#++)++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[ConstantsHolder-setLastTimeUnderloaded--]]
+==== `++setLastTimeUnderloaded()++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[ConstantsHolder-setLastTimeOverloaded--]]
+==== `++setLastTimeOverloaded()++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[ConstantsHolder-setLatency-uint32-]]
+==== `++setLatency(++[.var-type]#++uint32++#++ ++[.var-name]#++newAllowableLatency++#++)++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[ConstantsHolder-setMSR-uint256-]]
+==== `++setMSR(++[.var-type]#++uint256++#++ ++[.var-name]#++newMSR++#++)++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[ConstantsHolder-setLaunchTimestamp-uint256-]]
+==== `++setLaunchTimestamp(++[.var-type]#++uint256++#++ ++[.var-name]#++timestamp++#++)++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[ConstantsHolder-setRotationDelay-uint256-]]
+==== `++setRotationDelay(++[.var-type]#++uint256++#++ ++[.var-name]#++newDelay++#++)++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[ConstantsHolder-setProofOfUseLockUpPeriod-uint256-]]
+==== `++setProofOfUseLockUpPeriod(++[.var-type]#++uint256++#++ ++[.var-name]#++periodDays++#++)++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[ConstantsHolder-initialize-address-]]
+==== `++initialize(++[.var-type]#++address++#++ ++[.var-name]#++contractsAddress++#++)++` [.item-kind]#public#
+
+constructor in Permissions approach
+
+
+

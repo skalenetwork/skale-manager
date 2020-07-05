@@ -1,0 +1,209 @@
+:TokenLaunchLocker: pass:normal[xref:#TokenLaunchLocker[`++TokenLaunchLocker++`]]
+:lock: pass:normal[xref:#TokenLaunchLocker-lock-address-uint256-[`++lock++`]]
+:handleDelegationAdd: pass:normal[xref:#TokenLaunchLocker-handleDelegationAdd-address-uint256-uint256-uint256-[`++handleDelegationAdd++`]]
+:handleDelegationRemoving: pass:normal[xref:#TokenLaunchLocker-handleDelegationRemoving-address-uint256-uint256-[`++handleDelegationRemoving++`]]
+:getAndUpdateLockedAmount: pass:normal[xref:#TokenLaunchLocker-getAndUpdateLockedAmount-address-[`++getAndUpdateLockedAmount++`]]
+:getAndUpdateForbiddenForDelegationAmount: pass:normal[xref:#TokenLaunchLocker-getAndUpdateForbiddenForDelegationAmount-address-[`++getAndUpdateForbiddenForDelegationAmount++`]]
+:initialize: pass:normal[xref:#TokenLaunchLocker-initialize-address-[`++initialize++`]]
+:_getAndUpdateDelegatedAmount: pass:normal[xref:#TokenLaunchLocker-_getAndUpdateDelegatedAmount-address-uint256-[`++_getAndUpdateDelegatedAmount++`]]
+:_addToDelegatedAmount: pass:normal[xref:#TokenLaunchLocker-_addToDelegatedAmount-address-uint256-uint256-[`++_addToDelegatedAmount++`]]
+:_removeFromDelegatedAmount: pass:normal[xref:#TokenLaunchLocker-_removeFromDelegatedAmount-address-uint256-uint256-[`++_removeFromDelegatedAmount++`]]
+:_addToTotalDelegatedAmount: pass:normal[xref:#TokenLaunchLocker-_addToTotalDelegatedAmount-address-uint256-uint256-[`++_addToTotalDelegatedAmount++`]]
+:_unlock: pass:normal[xref:#TokenLaunchLocker-_unlock-address-[`++_unlock++`]]
+:_deleteDelegatedAmount: pass:normal[xref:#TokenLaunchLocker-_deleteDelegatedAmount-address-[`++_deleteDelegatedAmount++`]]
+:_deleteTotalDelegatedAmount: pass:normal[xref:#TokenLaunchLocker-_deleteTotalDelegatedAmount-address-[`++_deleteTotalDelegatedAmount++`]]
+:Unlocked: pass:normal[xref:#TokenLaunchLocker-Unlocked-address-uint256-[`++Unlocked++`]]
+:Locked: pass:normal[xref:#TokenLaunchLocker-Locked-address-uint256-[`++Locked++`]]
+
+[.contract]
+[[TokenLaunchLocker]]
+=== `++TokenLaunchLocker++`
+
+
+
+[.contract-index]
+.Modifiers
+--
+
+[.contract-subindex-inherited]
+.ILocker
+
+[.contract-subindex-inherited]
+.Permissions
+* {xref-Permissions-allow-string-}[`++allow(contractName)++`]
+* {xref-Permissions-allowTwo-string-string-}[`++allowTwo(contractName1, contractName2)++`]
+* {xref-Permissions-allowThree-string-string-string-}[`++allowThree(contractName1, contractName2, contractName3)++`]
+
+[.contract-subindex-inherited]
+.OwnableUpgradeSafe
+* {xref-OwnableUpgradeSafe-onlyOwner--}[`++onlyOwner()++`]
+
+[.contract-subindex-inherited]
+.ContextUpgradeSafe
+
+[.contract-subindex-inherited]
+.Initializable
+* {xref-Initializable-initializer--}[`++initializer()++`]
+
+--
+
+[.contract-index]
+.Functions
+--
+* {xref-TokenLaunchLocker-lock-address-uint256-}[`++lock(holder, amount)++`]
+* {xref-TokenLaunchLocker-handleDelegationAdd-address-uint256-uint256-uint256-}[`++handleDelegationAdd(holder, delegationId, amount, month)++`]
+* {xref-TokenLaunchLocker-handleDelegationRemoving-address-uint256-uint256-}[`++handleDelegationRemoving(holder, delegationId, month)++`]
+* {xref-TokenLaunchLocker-getAndUpdateLockedAmount-address-}[`++getAndUpdateLockedAmount(wallet)++`]
+* {xref-TokenLaunchLocker-getAndUpdateForbiddenForDelegationAmount-address-}[`++getAndUpdateForbiddenForDelegationAmount(_)++`]
+* {xref-TokenLaunchLocker-initialize-address-}[`++initialize(contractManager)++`]
+* {xref-TokenLaunchLocker-_getAndUpdateDelegatedAmount-address-uint256-}[`++_getAndUpdateDelegatedAmount(holder, currentMonth)++`]
+* {xref-TokenLaunchLocker-_addToDelegatedAmount-address-uint256-uint256-}[`++_addToDelegatedAmount(holder, amount, month)++`]
+* {xref-TokenLaunchLocker-_removeFromDelegatedAmount-address-uint256-uint256-}[`++_removeFromDelegatedAmount(holder, amount, month)++`]
+* {xref-TokenLaunchLocker-_addToTotalDelegatedAmount-address-uint256-uint256-}[`++_addToTotalDelegatedAmount(holder, amount, month)++`]
+* {xref-TokenLaunchLocker-_unlock-address-}[`++_unlock(holder)++`]
+* {xref-TokenLaunchLocker-_deleteDelegatedAmount-address-}[`++_deleteDelegatedAmount(holder)++`]
+* {xref-TokenLaunchLocker-_deleteTotalDelegatedAmount-address-}[`++_deleteTotalDelegatedAmount(holder)++`]
+
+[.contract-subindex-inherited]
+.ILocker
+
+[.contract-subindex-inherited]
+.Permissions
+* {xref-Permissions-_isOwner--}[`++_isOwner()++`]
+
+[.contract-subindex-inherited]
+.OwnableUpgradeSafe
+* {xref-OwnableUpgradeSafe-__Ownable_init--}[`++__Ownable_init()++`]
+* {xref-OwnableUpgradeSafe-__Ownable_init_unchained--}[`++__Ownable_init_unchained()++`]
+* {xref-OwnableUpgradeSafe-owner--}[`++owner()++`]
+* {xref-OwnableUpgradeSafe-renounceOwnership--}[`++renounceOwnership()++`]
+* {xref-OwnableUpgradeSafe-transferOwnership-address-}[`++transferOwnership(newOwner)++`]
+
+[.contract-subindex-inherited]
+.ContextUpgradeSafe
+* {xref-ContextUpgradeSafe-__Context_init--}[`++__Context_init()++`]
+* {xref-ContextUpgradeSafe-__Context_init_unchained--}[`++__Context_init_unchained()++`]
+* {xref-ContextUpgradeSafe-_msgSender--}[`++_msgSender()++`]
+* {xref-ContextUpgradeSafe-_msgData--}[`++_msgData()++`]
+
+[.contract-subindex-inherited]
+.Initializable
+
+--
+
+[.contract-index]
+.Events
+--
+* {xref-TokenLaunchLocker-Unlocked-address-uint256-}[`++Unlocked(holder, amount)++`]
+* {xref-TokenLaunchLocker-Locked-address-uint256-}[`++Locked(holder, amount)++`]
+
+[.contract-subindex-inherited]
+.ILocker
+
+[.contract-subindex-inherited]
+.Permissions
+
+[.contract-subindex-inherited]
+.OwnableUpgradeSafe
+* {xref-OwnableUpgradeSafe-OwnershipTransferred-address-address-}[`++OwnershipTransferred(previousOwner, newOwner)++`]
+
+[.contract-subindex-inherited]
+.ContextUpgradeSafe
+
+[.contract-subindex-inherited]
+.Initializable
+
+--
+
+
+[.contract-item]
+[[TokenLaunchLocker-lock-address-uint256-]]
+==== `++lock(++[.var-type]#++address++#++ ++[.var-name]#++holder++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++amount++#++)++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[TokenLaunchLocker-handleDelegationAdd-address-uint256-uint256-uint256-]]
+==== `++handleDelegationAdd(++[.var-type]#++address++#++ ++[.var-name]#++holder++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++delegationId++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++amount++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++month++#++)++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[TokenLaunchLocker-handleDelegationRemoving-address-uint256-uint256-]]
+==== `++handleDelegationRemoving(++[.var-type]#++address++#++ ++[.var-name]#++holder++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++delegationId++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++month++#++)++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[TokenLaunchLocker-getAndUpdateLockedAmount-address-]]
+==== `++getAndUpdateLockedAmount(++[.var-type]#++address++#++ ++[.var-name]#++wallet++#++) → ++[.var-type]#++uint256++#++++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[TokenLaunchLocker-getAndUpdateForbiddenForDelegationAmount-address-]]
+==== `++getAndUpdateForbiddenForDelegationAmount(++[.var-type]#++address++#++) → ++[.var-type]#++uint256++#++++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[TokenLaunchLocker-initialize-address-]]
+==== `++initialize(++[.var-type]#++address++#++ ++[.var-name]#++contractManager++#++)++` [.item-kind]#public#
+
+
+
+[.contract-item]
+[[TokenLaunchLocker-_getAndUpdateDelegatedAmount-address-uint256-]]
+==== `++_getAndUpdateDelegatedAmount(++[.var-type]#++address++#++ ++[.var-name]#++holder++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++currentMonth++#++) → ++[.var-type]#++uint256++#++++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[TokenLaunchLocker-_addToDelegatedAmount-address-uint256-uint256-]]
+==== `++_addToDelegatedAmount(++[.var-type]#++address++#++ ++[.var-name]#++holder++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++amount++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++month++#++)++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[TokenLaunchLocker-_removeFromDelegatedAmount-address-uint256-uint256-]]
+==== `++_removeFromDelegatedAmount(++[.var-type]#++address++#++ ++[.var-name]#++holder++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++amount++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++month++#++)++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[TokenLaunchLocker-_addToTotalDelegatedAmount-address-uint256-uint256-]]
+==== `++_addToTotalDelegatedAmount(++[.var-type]#++address++#++ ++[.var-name]#++holder++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++amount++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++month++#++)++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[TokenLaunchLocker-_unlock-address-]]
+==== `++_unlock(++[.var-type]#++address++#++ ++[.var-name]#++holder++#++)++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[TokenLaunchLocker-_deleteDelegatedAmount-address-]]
+==== `++_deleteDelegatedAmount(++[.var-type]#++address++#++ ++[.var-name]#++holder++#++)++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[TokenLaunchLocker-_deleteTotalDelegatedAmount-address-]]
+==== `++_deleteTotalDelegatedAmount(++[.var-type]#++address++#++ ++[.var-name]#++holder++#++)++` [.item-kind]#internal#
+
+
+
+
+[.contract-item]
+[[TokenLaunchLocker-Unlocked-address-uint256-]]
+==== `++Unlocked(++[.var-type]#++address++#++ ++[.var-name]#++holder++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++amount++#++)++` [.item-kind]#event#
+
+Emitted when an `amount` is unlocked.
+
+[.contract-item]
+[[TokenLaunchLocker-Locked-address-uint256-]]
+==== `++Locked(++[.var-type]#++address++#++ ++[.var-name]#++holder++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++amount++#++)++` [.item-kind]#event#
+
+Emitted when an `amount` is locked.
+

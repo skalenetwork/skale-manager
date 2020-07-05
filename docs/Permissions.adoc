@@ -1,0 +1,110 @@
+:Permissions: pass:normal[xref:#Permissions[`++Permissions++`]]
+:allow: pass:normal[xref:#Permissions-allow-string-[`++allow++`]]
+:allowTwo: pass:normal[xref:#Permissions-allowTwo-string-string-[`++allowTwo++`]]
+:allowThree: pass:normal[xref:#Permissions-allowThree-string-string-string-[`++allowThree++`]]
+:_contractManager: pass:normal[xref:#Permissions-_contractManager-contract-ContractManager[`++_contractManager++`]]
+:initialize: pass:normal[xref:#Permissions-initialize-address-[`++initialize++`]]
+:_isOwner: pass:normal[xref:#Permissions-_isOwner--[`++_isOwner++`]]
+
+[.contract]
+[[Permissions]]
+=== `++Permissions++`
+
+
+
+[.contract-index]
+.Modifiers
+--
+* {xref-Permissions-allow-string-}[`++allow(contractName)++`]
+* {xref-Permissions-allowTwo-string-string-}[`++allowTwo(contractName1, contractName2)++`]
+* {xref-Permissions-allowThree-string-string-string-}[`++allowThree(contractName1, contractName2, contractName3)++`]
+
+[.contract-subindex-inherited]
+.OwnableUpgradeSafe
+* {xref-OwnableUpgradeSafe-onlyOwner--}[`++onlyOwner()++`]
+
+[.contract-subindex-inherited]
+.ContextUpgradeSafe
+
+[.contract-subindex-inherited]
+.Initializable
+* {xref-Initializable-initializer--}[`++initializer()++`]
+
+--
+
+[.contract-index]
+.Functions
+--
+* {xref-Permissions-initialize-address-}[`++initialize(contractManager)++`]
+* {xref-Permissions-_isOwner--}[`++_isOwner()++`]
+
+[.contract-subindex-inherited]
+.OwnableUpgradeSafe
+* {xref-OwnableUpgradeSafe-__Ownable_init--}[`++__Ownable_init()++`]
+* {xref-OwnableUpgradeSafe-__Ownable_init_unchained--}[`++__Ownable_init_unchained()++`]
+* {xref-OwnableUpgradeSafe-owner--}[`++owner()++`]
+* {xref-OwnableUpgradeSafe-renounceOwnership--}[`++renounceOwnership()++`]
+* {xref-OwnableUpgradeSafe-transferOwnership-address-}[`++transferOwnership(newOwner)++`]
+
+[.contract-subindex-inherited]
+.ContextUpgradeSafe
+* {xref-ContextUpgradeSafe-__Context_init--}[`++__Context_init()++`]
+* {xref-ContextUpgradeSafe-__Context_init_unchained--}[`++__Context_init_unchained()++`]
+* {xref-ContextUpgradeSafe-_msgSender--}[`++_msgSender()++`]
+* {xref-ContextUpgradeSafe-_msgData--}[`++_msgData()++`]
+
+[.contract-subindex-inherited]
+.Initializable
+
+--
+
+[.contract-index]
+.Events
+--
+
+[.contract-subindex-inherited]
+.OwnableUpgradeSafe
+* {xref-OwnableUpgradeSafe-OwnershipTransferred-address-address-}[`++OwnershipTransferred(previousOwner, newOwner)++`]
+
+[.contract-subindex-inherited]
+.ContextUpgradeSafe
+
+[.contract-subindex-inherited]
+.Initializable
+
+--
+
+[.contract-item]
+[[Permissions-allow-string-]]
+==== `++allow(++[.var-type]#++string++#++ ++[.var-name]#++contractName++#++)++` [.item-kind]#modifier#
+
+allow - throws if called by any account and contract other than the owner
+or `contractName` contract
+
+
+[.contract-item]
+[[Permissions-allowTwo-string-string-]]
+==== `++allowTwo(++[.var-type]#++string++#++ ++[.var-name]#++contractName1++#++, ++[.var-type]#++string++#++ ++[.var-name]#++contractName2++#++)++` [.item-kind]#modifier#
+
+
+
+[.contract-item]
+[[Permissions-allowThree-string-string-string-]]
+==== `++allowThree(++[.var-type]#++string++#++ ++[.var-name]#++contractName1++#++, ++[.var-type]#++string++#++ ++[.var-name]#++contractName2++#++, ++[.var-type]#++string++#++ ++[.var-name]#++contractName3++#++)++` [.item-kind]#modifier#
+
+
+
+
+[.contract-item]
+[[Permissions-initialize-address-]]
+==== `++initialize(++[.var-type]#++address++#++ ++[.var-name]#++contractManager++#++)++` [.item-kind]#public#
+
+
+
+[.contract-item]
+[[Permissions-_isOwner--]]
+==== `++_isOwner() → ++[.var-type]#++bool++#++++` [.item-kind]#internal#
+
+
+
+

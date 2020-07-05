@@ -1,0 +1,47 @@
+:ILocker: pass:normal[xref:#ILocker[`++ILocker++`]]
+:getAndUpdateLockedAmount: pass:normal[xref:#ILocker-getAndUpdateLockedAmount-address-[`++getAndUpdateLockedAmount++`]]
+:getAndUpdateForbiddenForDelegationAmount: pass:normal[xref:#ILocker-getAndUpdateForbiddenForDelegationAmount-address-[`++getAndUpdateForbiddenForDelegationAmount++`]]
+
+[.contract]
+[[ILocker]]
+=== `++ILocker++`
+
+Interface of Locker functions of the {TokenState} contract.
+
+The SKALE Network has three types of locked tokens:
+
+- Tokens that are transferrable but are currently locked into delegation with
+a validator. See {DelegationController};
+
+- Tokens that are not transferable from one address to another, but may be
+delegated to a validator {getAndUpdateLockedAmount}. This lock enforces
+Proof-of-Use requirements. See {TokenLaunchLocker}; and,
+
+- Tokens that are neither transferable nor delegatable
+{getAndUpdateForbiddenForDelegationAmount}. This lock enforces slashing.
+See {Punisher}.
+
+
+[.contract-index]
+.Functions
+--
+* {xref-ILocker-getAndUpdateLockedAmount-address-}[`++getAndUpdateLockedAmount(wallet)++`]
+* {xref-ILocker-getAndUpdateForbiddenForDelegationAmount-address-}[`++getAndUpdateForbiddenForDelegationAmount(wallet)++`]
+
+--
+
+
+
+[.contract-item]
+[[ILocker-getAndUpdateLockedAmount-address-]]
+==== `++getAndUpdateLockedAmount(++[.var-type]#++address++#++ ++[.var-name]#++wallet++#++) → ++[.var-type]#++uint256++#++++` [.item-kind]#external#
+
+Returns the locked amount of untransferable tokens of a given `wallet`
+
+[.contract-item]
+[[ILocker-getAndUpdateForbiddenForDelegationAmount-address-]]
+==== `++getAndUpdateForbiddenForDelegationAmount(++[.var-type]#++address++#++ ++[.var-name]#++wallet++#++) → ++[.var-type]#++uint256++#++++` [.item-kind]#external#
+
+Returns the locked amount of untransferable and un-delegatable tokens of a given `wallet`.
+
+

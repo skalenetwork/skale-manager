@@ -1,0 +1,63 @@
+:MathUtils: pass:normal[xref:#MathUtils[`++MathUtils++`]]
+:boundedSub: pass:normal[xref:#MathUtils-boundedSub-uint256-uint256-[`++boundedSub++`]]
+:boundedSubWithoutEvent: pass:normal[xref:#MathUtils-boundedSubWithoutEvent-uint256-uint256-[`++boundedSubWithoutEvent++`]]
+:muchGreater: pass:normal[xref:#MathUtils-muchGreater-uint256-uint256-[`++muchGreater++`]]
+:approximatelyEqual: pass:normal[xref:#MathUtils-approximatelyEqual-uint256-uint256-[`++approximatelyEqual++`]]
+:UnderflowError: pass:normal[xref:#MathUtils-UnderflowError-uint256-uint256-[`++UnderflowError++`]]
+
+[.contract]
+[[MathUtils]]
+=== `++MathUtils++`
+
+
+
+
+[.contract-index]
+.Functions
+--
+* {xref-MathUtils-boundedSub-uint256-uint256-}[`++boundedSub(a, b)++`]
+* {xref-MathUtils-boundedSubWithoutEvent-uint256-uint256-}[`++boundedSubWithoutEvent(a, b)++`]
+* {xref-MathUtils-muchGreater-uint256-uint256-}[`++muchGreater(a, b)++`]
+* {xref-MathUtils-approximatelyEqual-uint256-uint256-}[`++approximatelyEqual(a, b)++`]
+
+--
+
+[.contract-index]
+.Events
+--
+* {xref-MathUtils-UnderflowError-uint256-uint256-}[`++UnderflowError(a, b)++`]
+
+--
+
+
+[.contract-item]
+[[MathUtils-boundedSub-uint256-uint256-]]
+==== `++boundedSub(++[.var-type]#++uint256++#++ ++[.var-name]#++a++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++b++#++) → ++[.var-type]#++uint256++#++++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[MathUtils-boundedSubWithoutEvent-uint256-uint256-]]
+==== `++boundedSubWithoutEvent(++[.var-type]#++uint256++#++ ++[.var-name]#++a++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++b++#++) → ++[.var-type]#++uint256++#++++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[MathUtils-muchGreater-uint256-uint256-]]
+==== `++muchGreater(++[.var-type]#++uint256++#++ ++[.var-name]#++a++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++b++#++) → ++[.var-type]#++bool++#++++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[MathUtils-approximatelyEqual-uint256-uint256-]]
+==== `++approximatelyEqual(++[.var-type]#++uint256++#++ ++[.var-name]#++a++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++b++#++) → ++[.var-type]#++bool++#++++` [.item-kind]#internal#
+
+
+
+
+[.contract-item]
+[[MathUtils-UnderflowError-uint256-uint256-]]
+==== `++UnderflowError(++[.var-type]#++uint256++#++ ++[.var-name]#++a++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++b++#++)++` [.item-kind]#event#
+
+
+

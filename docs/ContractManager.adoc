@@ -1,0 +1,100 @@
+:ContractManager: pass:normal[xref:#ContractManager[`++ContractManager++`]]
+:contracts: pass:normal[xref:#ContractManager-contracts-mapping-bytes32----address-[`++contracts++`]]
+:initialize: pass:normal[xref:#ContractManager-initialize--[`++initialize++`]]
+:setContractsAddress: pass:normal[xref:#ContractManager-setContractsAddress-string-address-[`++setContractsAddress++`]]
+:getContract: pass:normal[xref:#ContractManager-getContract-string-[`++getContract++`]]
+:ContractUpgraded: pass:normal[xref:#ContractManager-ContractUpgraded-string-address-[`++ContractUpgraded++`]]
+
+[.contract]
+[[ContractManager]]
+=== `++ContractManager++`
+
+
+
+[.contract-index]
+.Modifiers
+--
+
+[.contract-subindex-inherited]
+.OwnableUpgradeSafe
+* {xref-OwnableUpgradeSafe-onlyOwner--}[`++onlyOwner()++`]
+
+[.contract-subindex-inherited]
+.ContextUpgradeSafe
+
+[.contract-subindex-inherited]
+.Initializable
+* {xref-Initializable-initializer--}[`++initializer()++`]
+
+--
+
+[.contract-index]
+.Functions
+--
+* {xref-ContractManager-initialize--}[`++initialize()++`]
+* {xref-ContractManager-setContractsAddress-string-address-}[`++setContractsAddress(contractsName, newContractsAddress)++`]
+* {xref-ContractManager-getContract-string-}[`++getContract(name)++`]
+
+[.contract-subindex-inherited]
+.OwnableUpgradeSafe
+* {xref-OwnableUpgradeSafe-__Ownable_init--}[`++__Ownable_init()++`]
+* {xref-OwnableUpgradeSafe-__Ownable_init_unchained--}[`++__Ownable_init_unchained()++`]
+* {xref-OwnableUpgradeSafe-owner--}[`++owner()++`]
+* {xref-OwnableUpgradeSafe-renounceOwnership--}[`++renounceOwnership()++`]
+* {xref-OwnableUpgradeSafe-transferOwnership-address-}[`++transferOwnership(newOwner)++`]
+
+[.contract-subindex-inherited]
+.ContextUpgradeSafe
+* {xref-ContextUpgradeSafe-__Context_init--}[`++__Context_init()++`]
+* {xref-ContextUpgradeSafe-__Context_init_unchained--}[`++__Context_init_unchained()++`]
+* {xref-ContextUpgradeSafe-_msgSender--}[`++_msgSender()++`]
+* {xref-ContextUpgradeSafe-_msgData--}[`++_msgData()++`]
+
+[.contract-subindex-inherited]
+.Initializable
+
+--
+
+[.contract-index]
+.Events
+--
+* {xref-ContractManager-ContractUpgraded-string-address-}[`++ContractUpgraded(contractsName, contractsAddress)++`]
+
+[.contract-subindex-inherited]
+.OwnableUpgradeSafe
+* {xref-OwnableUpgradeSafe-OwnershipTransferred-address-address-}[`++OwnershipTransferred(previousOwner, newOwner)++`]
+
+[.contract-subindex-inherited]
+.ContextUpgradeSafe
+
+[.contract-subindex-inherited]
+.Initializable
+
+--
+
+
+[.contract-item]
+[[ContractManager-initialize--]]
+==== `++initialize()++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[ContractManager-setContractsAddress-string-address-]]
+==== `++setContractsAddress(++[.var-type]#++string++#++ ++[.var-name]#++contractsName++#++, ++[.var-type]#++address++#++ ++[.var-name]#++newContractsAddress++#++)++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[ContractManager-getContract-string-]]
+==== `++getContract(++[.var-type]#++string++#++ ++[.var-name]#++name++#++) → ++[.var-type]#++address++#++ ++[.var-name]#++contractAddress++#++++` [.item-kind]#external#
+
+
+
+
+[.contract-item]
+[[ContractManager-ContractUpgraded-string-address-]]
+==== `++ContractUpgraded(++[.var-type]#++string++#++ ++[.var-name]#++contractsName++#++, ++[.var-type]#++address++#++ ++[.var-name]#++contractsAddress++#++)++` [.item-kind]#event#
+
+
+

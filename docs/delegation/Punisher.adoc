@@ -1,0 +1,171 @@
+:Punisher: pass:normal[xref:#Punisher[`++Punisher++`]]
+:slash: pass:normal[xref:#Punisher-slash-uint256-uint256-[`++slash++`]]
+:forgive: pass:normal[xref:#Punisher-forgive-address-uint256-[`++forgive++`]]
+:getAndUpdateLockedAmount: pass:normal[xref:#Punisher-getAndUpdateLockedAmount-address-[`++getAndUpdateLockedAmount++`]]
+:getAndUpdateForbiddenForDelegationAmount: pass:normal[xref:#Punisher-getAndUpdateForbiddenForDelegationAmount-address-[`++getAndUpdateForbiddenForDelegationAmount++`]]
+:handleSlash: pass:normal[xref:#Punisher-handleSlash-address-uint256-[`++handleSlash++`]]
+:initialize: pass:normal[xref:#Punisher-initialize-address-[`++initialize++`]]
+:_getAndUpdateLockedAmount: pass:normal[xref:#Punisher-_getAndUpdateLockedAmount-address-[`++_getAndUpdateLockedAmount++`]]
+:Slash: pass:normal[xref:#Punisher-Slash-uint256-uint256-[`++Slash++`]]
+:Forgive: pass:normal[xref:#Punisher-Forgive-address-uint256-[`++Forgive++`]]
+
+[.contract]
+[[Punisher]]
+=== `++Punisher++`
+
+This contract handles all slashing and forgiving operations.
+
+[.contract-index]
+.Modifiers
+--
+
+[.contract-subindex-inherited]
+.ILocker
+
+[.contract-subindex-inherited]
+.Permissions
+* {xref-Permissions-allow-string-}[`++allow(contractName)++`]
+* {xref-Permissions-allowTwo-string-string-}[`++allowTwo(contractName1, contractName2)++`]
+* {xref-Permissions-allowThree-string-string-string-}[`++allowThree(contractName1, contractName2, contractName3)++`]
+
+[.contract-subindex-inherited]
+.OwnableUpgradeSafe
+* {xref-OwnableUpgradeSafe-onlyOwner--}[`++onlyOwner()++`]
+
+[.contract-subindex-inherited]
+.ContextUpgradeSafe
+
+[.contract-subindex-inherited]
+.Initializable
+* {xref-Initializable-initializer--}[`++initializer()++`]
+
+--
+
+[.contract-index]
+.Functions
+--
+* {xref-Punisher-slash-uint256-uint256-}[`++slash(validatorId, amount)++`]
+* {xref-Punisher-forgive-address-uint256-}[`++forgive(holder, amount)++`]
+* {xref-Punisher-getAndUpdateLockedAmount-address-}[`++getAndUpdateLockedAmount(wallet)++`]
+* {xref-Punisher-getAndUpdateForbiddenForDelegationAmount-address-}[`++getAndUpdateForbiddenForDelegationAmount(wallet)++`]
+* {xref-Punisher-handleSlash-address-uint256-}[`++handleSlash(holder, amount)++`]
+* {xref-Punisher-initialize-address-}[`++initialize(contractManager)++`]
+* {xref-Punisher-_getAndUpdateLockedAmount-address-}[`++_getAndUpdateLockedAmount(wallet)++`]
+
+[.contract-subindex-inherited]
+.ILocker
+
+[.contract-subindex-inherited]
+.Permissions
+* {xref-Permissions-_isOwner--}[`++_isOwner()++`]
+
+[.contract-subindex-inherited]
+.OwnableUpgradeSafe
+* {xref-OwnableUpgradeSafe-__Ownable_init--}[`++__Ownable_init()++`]
+* {xref-OwnableUpgradeSafe-__Ownable_init_unchained--}[`++__Ownable_init_unchained()++`]
+* {xref-OwnableUpgradeSafe-owner--}[`++owner()++`]
+* {xref-OwnableUpgradeSafe-renounceOwnership--}[`++renounceOwnership()++`]
+* {xref-OwnableUpgradeSafe-transferOwnership-address-}[`++transferOwnership(newOwner)++`]
+
+[.contract-subindex-inherited]
+.ContextUpgradeSafe
+* {xref-ContextUpgradeSafe-__Context_init--}[`++__Context_init()++`]
+* {xref-ContextUpgradeSafe-__Context_init_unchained--}[`++__Context_init_unchained()++`]
+* {xref-ContextUpgradeSafe-_msgSender--}[`++_msgSender()++`]
+* {xref-ContextUpgradeSafe-_msgData--}[`++_msgData()++`]
+
+[.contract-subindex-inherited]
+.Initializable
+
+--
+
+[.contract-index]
+.Events
+--
+* {xref-Punisher-Slash-uint256-uint256-}[`++Slash(validatorId, amount)++`]
+* {xref-Punisher-Forgive-address-uint256-}[`++Forgive(wallet, amount)++`]
+
+[.contract-subindex-inherited]
+.ILocker
+
+[.contract-subindex-inherited]
+.Permissions
+
+[.contract-subindex-inherited]
+.OwnableUpgradeSafe
+* {xref-OwnableUpgradeSafe-OwnershipTransferred-address-address-}[`++OwnershipTransferred(previousOwner, newOwner)++`]
+
+[.contract-subindex-inherited]
+.ContextUpgradeSafe
+
+[.contract-subindex-inherited]
+.Initializable
+
+--
+
+
+[.contract-item]
+[[Punisher-slash-uint256-uint256-]]
+==== `++slash(++[.var-type]#++uint256++#++ ++[.var-name]#++validatorId++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++amount++#++)++` [.item-kind]#external#
+
+Executes slashing on a validator and its delegations by an `amount`
+of tokens. Currently, SkaleDKG is the only service allowed to execute
+slashing.
+
+Emits a Slash event.
+
+
+
+[.contract-item]
+[[Punisher-forgive-address-uint256-]]
+==== `++forgive(++[.var-type]#++address++#++ ++[.var-name]#++holder++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++amount++#++)++` [.item-kind]#external#
+
+Allows the Owner to forgive a slashing condition.
+
+Emits a Forgive event.
+
+
+
+[.contract-item]
+[[Punisher-getAndUpdateLockedAmount-address-]]
+==== `++getAndUpdateLockedAmount(++[.var-type]#++address++#++ ++[.var-name]#++wallet++#++) → ++[.var-type]#++uint256++#++++` [.item-kind]#external#
+
+See ILocker-getAndUpdateLockedAmount
+
+[.contract-item]
+[[Punisher-getAndUpdateForbiddenForDelegationAmount-address-]]
+==== `++getAndUpdateForbiddenForDelegationAmount(++[.var-type]#++address++#++ ++[.var-name]#++wallet++#++) → ++[.var-type]#++uint256++#++++` [.item-kind]#external#
+
+See ILocker-getAndUpdateForbiddenForDelegationAmount
+
+[.contract-item]
+[[Punisher-handleSlash-address-uint256-]]
+==== `++handleSlash(++[.var-type]#++address++#++ ++[.var-name]#++holder++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++amount++#++)++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[Punisher-initialize-address-]]
+==== `++initialize(++[.var-type]#++address++#++ ++[.var-name]#++contractManager++#++)++` [.item-kind]#public#
+
+
+
+[.contract-item]
+[[Punisher-_getAndUpdateLockedAmount-address-]]
+==== `++_getAndUpdateLockedAmount(++[.var-type]#++address++#++ ++[.var-name]#++wallet++#++) → ++[.var-type]#++uint256++#++++` [.item-kind]#internal#
+
+
+
+
+[.contract-item]
+[[Punisher-Slash-uint256-uint256-]]
+==== `++Slash(++[.var-type]#++uint256++#++ ++[.var-name]#++validatorId++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++amount++#++)++` [.item-kind]#event#
+
+Emitted when a slashing condition occurs.
+
+[.contract-item]
+[[Punisher-Forgive-address-uint256-]]
+==== `++Forgive(++[.var-type]#++address++#++ ++[.var-name]#++wallet++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++amount++#++)++` [.item-kind]#event#
+
+Emitted when a forgive condition occurs.
+

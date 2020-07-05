@@ -1,0 +1,545 @@
+:SkaleDKG: pass:normal[xref:#SkaleDKG[`++SkaleDKG++`]]
+:correctGroup: pass:normal[xref:#SkaleDKG-correctGroup-bytes32-[`++correctGroup++`]]
+:correctNode: pass:normal[xref:#SkaleDKG-correctNode-bytes32-uint256-[`++correctNode++`]]
+:channels: pass:normal[xref:#SkaleDKG-channels-mapping-bytes32----struct-SkaleDKG-Channel-[`++channels++`]]
+:openChannel: pass:normal[xref:#SkaleDKG-openChannel-bytes32-[`++openChannel++`]]
+:deleteChannel: pass:normal[xref:#SkaleDKG-deleteChannel-bytes32-[`++deleteChannel++`]]
+:reopenChannel: pass:normal[xref:#SkaleDKG-reopenChannel-bytes32-[`++reopenChannel++`]]
+:broadcast: pass:normal[xref:#SkaleDKG-broadcast-bytes32-uint256-bytes-bytes-[`++broadcast++`]]
+:complaint: pass:normal[xref:#SkaleDKG-complaint-bytes32-uint256-uint256-[`++complaint++`]]
+:response: pass:normal[xref:#SkaleDKG-response-bytes32-uint256-uint256-bytes-[`++response++`]]
+:alright: pass:normal[xref:#SkaleDKG-alright-bytes32-uint256-[`++alright++`]]
+:isChannelOpened: pass:normal[xref:#SkaleDKG-isChannelOpened-bytes32-[`++isChannelOpened++`]]
+:isBroadcastPossible: pass:normal[xref:#SkaleDKG-isBroadcastPossible-bytes32-uint256-[`++isBroadcastPossible++`]]
+:isComplaintPossible: pass:normal[xref:#SkaleDKG-isComplaintPossible-bytes32-uint256-uint256-[`++isComplaintPossible++`]]
+:isAlrightPossible: pass:normal[xref:#SkaleDKG-isAlrightPossible-bytes32-uint256-[`++isAlrightPossible++`]]
+:isResponsePossible: pass:normal[xref:#SkaleDKG-isResponsePossible-bytes32-uint256-[`++isResponsePossible++`]]
+:getBroadcastedData: pass:normal[xref:#SkaleDKG-getBroadcastedData-bytes32-uint256-[`++getBroadcastedData++`]]
+:isAllDataReceived: pass:normal[xref:#SkaleDKG-isAllDataReceived-bytes32-uint256-[`++isAllDataReceived++`]]
+:getComplaintData: pass:normal[xref:#SkaleDKG-getComplaintData-bytes32-[`++getComplaintData++`]]
+:initialize: pass:normal[xref:#SkaleDKG-initialize-address-[`++initialize++`]]
+:_finalizeSlashing: pass:normal[xref:#SkaleDKG-_finalizeSlashing-bytes32-uint256-[`++_finalizeSlashing++`]]
+:_verify: pass:normal[xref:#SkaleDKG-_verify-bytes32-uint256-uint256-bytes-[`++_verify++`]]
+:_getCommonPublicKey: pass:normal[xref:#SkaleDKG-_getCommonPublicKey-bytes32-uint256-[`++_getCommonPublicKey++`]]
+:_decryptMessage: pass:normal[xref:#SkaleDKG-_decryptMessage-bytes32-uint256-[`++_decryptMessage++`]]
+:_adding: pass:normal[xref:#SkaleDKG-_adding-bytes32-uint256-uint256-uint256-uint256-[`++_adding++`]]
+:_isBroadcast: pass:normal[xref:#SkaleDKG-_isBroadcast-bytes32-uint256-bytes-bytes-[`++_isBroadcast++`]]
+:_isBroadcasted: pass:normal[xref:#SkaleDKG-_isBroadcasted-bytes32-uint256-[`++_isBroadcasted++`]]
+:_findNode: pass:normal[xref:#SkaleDKG-_findNode-bytes32-uint256-[`++_findNode++`]]
+:_isNodeByMessageSender: pass:normal[xref:#SkaleDKG-_isNodeByMessageSender-uint256-address-[`++_isNodeByMessageSender++`]]
+:_addFp2: pass:normal[xref:#SkaleDKG-_addFp2-struct-SkaleDKG-Fp2-struct-SkaleDKG-Fp2-[`++_addFp2++`]]
+:_scalarMulFp2: pass:normal[xref:#SkaleDKG-_scalarMulFp2-uint256-struct-SkaleDKG-Fp2-[`++_scalarMulFp2++`]]
+:_minusFp2: pass:normal[xref:#SkaleDKG-_minusFp2-struct-SkaleDKG-Fp2-struct-SkaleDKG-Fp2-[`++_minusFp2++`]]
+:_mulFp2: pass:normal[xref:#SkaleDKG-_mulFp2-struct-SkaleDKG-Fp2-struct-SkaleDKG-Fp2-[`++_mulFp2++`]]
+:_squaredFp2: pass:normal[xref:#SkaleDKG-_squaredFp2-struct-SkaleDKG-Fp2-[`++_squaredFp2++`]]
+:_inverseFp2: pass:normal[xref:#SkaleDKG-_inverseFp2-struct-SkaleDKG-Fp2-[`++_inverseFp2++`]]
+:_isG1: pass:normal[xref:#SkaleDKG-_isG1-uint256-uint256-[`++_isG1++`]]
+:_isG2: pass:normal[xref:#SkaleDKG-_isG2-struct-SkaleDKG-Fp2-struct-SkaleDKG-Fp2-[`++_isG2++`]]
+:_isG2Zero: pass:normal[xref:#SkaleDKG-_isG2Zero-struct-SkaleDKG-Fp2-struct-SkaleDKG-Fp2-[`++_isG2Zero++`]]
+:_doubleG2: pass:normal[xref:#SkaleDKG-_doubleG2-struct-SkaleDKG-Fp2-struct-SkaleDKG-Fp2-[`++_doubleG2++`]]
+:_u1: pass:normal[xref:#SkaleDKG-_u1-struct-SkaleDKG-Fp2-[`++_u1++`]]
+:_u2: pass:normal[xref:#SkaleDKG-_u2-struct-SkaleDKG-Fp2-[`++_u2++`]]
+:_s1: pass:normal[xref:#SkaleDKG-_s1-struct-SkaleDKG-Fp2-[`++_s1++`]]
+:_s2: pass:normal[xref:#SkaleDKG-_s2-struct-SkaleDKG-Fp2-[`++_s2++`]]
+:_isEqual: pass:normal[xref:#SkaleDKG-_isEqual-struct-SkaleDKG-Fp2-struct-SkaleDKG-Fp2-struct-SkaleDKG-Fp2-struct-SkaleDKG-Fp2-[`++_isEqual++`]]
+:_addG2: pass:normal[xref:#SkaleDKG-_addG2-struct-SkaleDKG-Fp2-struct-SkaleDKG-Fp2-struct-SkaleDKG-Fp2-struct-SkaleDKG-Fp2-[`++_addG2++`]]
+:_mulG2: pass:normal[xref:#SkaleDKG-_mulG2-uint256-struct-SkaleDKG-Fp2-struct-SkaleDKG-Fp2-[`++_mulG2++`]]
+:_loop: pass:normal[xref:#SkaleDKG-_loop-uint256-bytes-uint256-[`++_loop++`]]
+:_checkDKGVerification: pass:normal[xref:#SkaleDKG-_checkDKGVerification-struct-SkaleDKG-Fp2-struct-SkaleDKG-Fp2-bytes-[`++_checkDKGVerification++`]]
+:_checkCorrectMultipliedShare: pass:normal[xref:#SkaleDKG-_checkCorrectMultipliedShare-bytes-uint256-[`++_checkCorrectMultipliedShare++`]]
+:_bytesToPublicKey: pass:normal[xref:#SkaleDKG-_bytesToPublicKey-bytes-[`++_bytesToPublicKey++`]]
+:_bytesToG2: pass:normal[xref:#SkaleDKG-_bytesToG2-bytes-[`++_bytesToG2++`]]
+:ChannelOpened: pass:normal[xref:#SkaleDKG-ChannelOpened-bytes32-[`++ChannelOpened++`]]
+:ChannelClosed: pass:normal[xref:#SkaleDKG-ChannelClosed-bytes32-[`++ChannelClosed++`]]
+:BroadcastAndKeyShare: pass:normal[xref:#SkaleDKG-BroadcastAndKeyShare-bytes32-uint256-bytes-bytes-[`++BroadcastAndKeyShare++`]]
+:AllDataReceived: pass:normal[xref:#SkaleDKG-AllDataReceived-bytes32-uint256-[`++AllDataReceived++`]]
+:SuccessfulDKG: pass:normal[xref:#SkaleDKG-SuccessfulDKG-bytes32-[`++SuccessfulDKG++`]]
+:BadGuy: pass:normal[xref:#SkaleDKG-BadGuy-uint256-[`++BadGuy++`]]
+:FailedDKG: pass:normal[xref:#SkaleDKG-FailedDKG-bytes32-[`++FailedDKG++`]]
+:ComplaintSent: pass:normal[xref:#SkaleDKG-ComplaintSent-bytes32-uint256-uint256-[`++ComplaintSent++`]]
+:NewGuy: pass:normal[xref:#SkaleDKG-NewGuy-uint256-[`++NewGuy++`]]
+
+[.contract]
+[[SkaleDKG]]
+=== `++SkaleDKG++`
+
+
+
+[.contract-index]
+.Modifiers
+--
+* {xref-SkaleDKG-correctGroup-bytes32-}[`++correctGroup(groupIndex)++`]
+* {xref-SkaleDKG-correctNode-bytes32-uint256-}[`++correctNode(groupIndex, nodeIndex)++`]
+
+[.contract-subindex-inherited]
+.Permissions
+* {xref-Permissions-allow-string-}[`++allow(contractName)++`]
+* {xref-Permissions-allowTwo-string-string-}[`++allowTwo(contractName1, contractName2)++`]
+* {xref-Permissions-allowThree-string-string-string-}[`++allowThree(contractName1, contractName2, contractName3)++`]
+
+[.contract-subindex-inherited]
+.OwnableUpgradeSafe
+* {xref-OwnableUpgradeSafe-onlyOwner--}[`++onlyOwner()++`]
+
+[.contract-subindex-inherited]
+.ContextUpgradeSafe
+
+[.contract-subindex-inherited]
+.Initializable
+* {xref-Initializable-initializer--}[`++initializer()++`]
+
+--
+
+[.contract-index]
+.Functions
+--
+* {xref-SkaleDKG-openChannel-bytes32-}[`++openChannel(groupIndex)++`]
+* {xref-SkaleDKG-deleteChannel-bytes32-}[`++deleteChannel(groupIndex)++`]
+* {xref-SkaleDKG-reopenChannel-bytes32-}[`++reopenChannel(groupIndex)++`]
+* {xref-SkaleDKG-broadcast-bytes32-uint256-bytes-bytes-}[`++broadcast(groupIndex, nodeIndex, verificationVector, secretKeyContribution)++`]
+* {xref-SkaleDKG-complaint-bytes32-uint256-uint256-}[`++complaint(groupIndex, fromNodeIndex, toNodeIndex)++`]
+* {xref-SkaleDKG-response-bytes32-uint256-uint256-bytes-}[`++response(groupIndex, fromNodeIndex, secretNumber, multipliedShare)++`]
+* {xref-SkaleDKG-alright-bytes32-uint256-}[`++alright(groupIndex, fromNodeIndex)++`]
+* {xref-SkaleDKG-isChannelOpened-bytes32-}[`++isChannelOpened(groupIndex)++`]
+* {xref-SkaleDKG-isBroadcastPossible-bytes32-uint256-}[`++isBroadcastPossible(groupIndex, nodeIndex)++`]
+* {xref-SkaleDKG-isComplaintPossible-bytes32-uint256-uint256-}[`++isComplaintPossible(groupIndex, fromNodeIndex, toNodeIndex)++`]
+* {xref-SkaleDKG-isAlrightPossible-bytes32-uint256-}[`++isAlrightPossible(groupIndex, nodeIndex)++`]
+* {xref-SkaleDKG-isResponsePossible-bytes32-uint256-}[`++isResponsePossible(groupIndex, nodeIndex)++`]
+* {xref-SkaleDKG-getBroadcastedData-bytes32-uint256-}[`++getBroadcastedData(groupIndex, nodeIndex)++`]
+* {xref-SkaleDKG-isAllDataReceived-bytes32-uint256-}[`++isAllDataReceived(groupIndex, nodeIndex)++`]
+* {xref-SkaleDKG-getComplaintData-bytes32-}[`++getComplaintData(groupIndex)++`]
+* {xref-SkaleDKG-initialize-address-}[`++initialize(contractsAddress)++`]
+* {xref-SkaleDKG-_finalizeSlashing-bytes32-uint256-}[`++_finalizeSlashing(groupIndex, badNode)++`]
+* {xref-SkaleDKG-_verify-bytes32-uint256-uint256-bytes-}[`++_verify(groupIndex, fromNodeIndex, secretNumber, multipliedShare)++`]
+* {xref-SkaleDKG-_getCommonPublicKey-bytes32-uint256-}[`++_getCommonPublicKey(groupIndex, secretNumber)++`]
+* {xref-SkaleDKG-_decryptMessage-bytes32-uint256-}[`++_decryptMessage(groupIndex, secretNumber)++`]
+* {xref-SkaleDKG-_adding-bytes32-uint256-uint256-uint256-uint256-}[`++_adding(groupIndex, x1, y1, x2, y2)++`]
+* {xref-SkaleDKG-_isBroadcast-bytes32-uint256-bytes-bytes-}[`++_isBroadcast(groupIndex, nodeIndex, sc, vv)++`]
+* {xref-SkaleDKG-_isBroadcasted-bytes32-uint256-}[`++_isBroadcasted(groupIndex, nodeIndex)++`]
+* {xref-SkaleDKG-_findNode-bytes32-uint256-}[`++_findNode(groupIndex, nodeIndex)++`]
+* {xref-SkaleDKG-_isNodeByMessageSender-uint256-address-}[`++_isNodeByMessageSender(nodeIndex, from)++`]
+* {xref-SkaleDKG-_addFp2-struct-SkaleDKG-Fp2-struct-SkaleDKG-Fp2-}[`++_addFp2(a, b)++`]
+* {xref-SkaleDKG-_scalarMulFp2-uint256-struct-SkaleDKG-Fp2-}[`++_scalarMulFp2(scalar, a)++`]
+* {xref-SkaleDKG-_minusFp2-struct-SkaleDKG-Fp2-struct-SkaleDKG-Fp2-}[`++_minusFp2(a, b)++`]
+* {xref-SkaleDKG-_mulFp2-struct-SkaleDKG-Fp2-struct-SkaleDKG-Fp2-}[`++_mulFp2(a, b)++`]
+* {xref-SkaleDKG-_squaredFp2-struct-SkaleDKG-Fp2-}[`++_squaredFp2(a)++`]
+* {xref-SkaleDKG-_inverseFp2-struct-SkaleDKG-Fp2-}[`++_inverseFp2(a)++`]
+* {xref-SkaleDKG-_isG1-uint256-uint256-}[`++_isG1(x, y)++`]
+* {xref-SkaleDKG-_isG2-struct-SkaleDKG-Fp2-struct-SkaleDKG-Fp2-}[`++_isG2(x, y)++`]
+* {xref-SkaleDKG-_isG2Zero-struct-SkaleDKG-Fp2-struct-SkaleDKG-Fp2-}[`++_isG2Zero(x, y)++`]
+* {xref-SkaleDKG-_doubleG2-struct-SkaleDKG-Fp2-struct-SkaleDKG-Fp2-}[`++_doubleG2(x1, y1)++`]
+* {xref-SkaleDKG-_u1-struct-SkaleDKG-Fp2-}[`++_u1(x1)++`]
+* {xref-SkaleDKG-_u2-struct-SkaleDKG-Fp2-}[`++_u2(x2)++`]
+* {xref-SkaleDKG-_s1-struct-SkaleDKG-Fp2-}[`++_s1(y1)++`]
+* {xref-SkaleDKG-_s2-struct-SkaleDKG-Fp2-}[`++_s2(y2)++`]
+* {xref-SkaleDKG-_isEqual-struct-SkaleDKG-Fp2-struct-SkaleDKG-Fp2-struct-SkaleDKG-Fp2-struct-SkaleDKG-Fp2-}[`++_isEqual(u1Value, u2Value, s1Value, s2Value)++`]
+* {xref-SkaleDKG-_addG2-struct-SkaleDKG-Fp2-struct-SkaleDKG-Fp2-struct-SkaleDKG-Fp2-struct-SkaleDKG-Fp2-}[`++_addG2(x1, y1, x2, y2)++`]
+* {xref-SkaleDKG-_mulG2-uint256-struct-SkaleDKG-Fp2-struct-SkaleDKG-Fp2-}[`++_mulG2(scalar, x1, y1)++`]
+* {xref-SkaleDKG-_loop-uint256-bytes-uint256-}[`++_loop(index, verificationVector, loopIndex)++`]
+* {xref-SkaleDKG-_checkDKGVerification-struct-SkaleDKG-Fp2-struct-SkaleDKG-Fp2-bytes-}[`++_checkDKGVerification(valX, valY, multipliedShare)++`]
+* {xref-SkaleDKG-_checkCorrectMultipliedShare-bytes-uint256-}[`++_checkCorrectMultipliedShare(multipliedShare, secret)++`]
+* {xref-SkaleDKG-_bytesToPublicKey-bytes-}[`++_bytesToPublicKey(someBytes)++`]
+* {xref-SkaleDKG-_bytesToG2-bytes-}[`++_bytesToG2(someBytes)++`]
+
+[.contract-subindex-inherited]
+.Permissions
+* {xref-Permissions-_isOwner--}[`++_isOwner()++`]
+
+[.contract-subindex-inherited]
+.OwnableUpgradeSafe
+* {xref-OwnableUpgradeSafe-__Ownable_init--}[`++__Ownable_init()++`]
+* {xref-OwnableUpgradeSafe-__Ownable_init_unchained--}[`++__Ownable_init_unchained()++`]
+* {xref-OwnableUpgradeSafe-owner--}[`++owner()++`]
+* {xref-OwnableUpgradeSafe-renounceOwnership--}[`++renounceOwnership()++`]
+* {xref-OwnableUpgradeSafe-transferOwnership-address-}[`++transferOwnership(newOwner)++`]
+
+[.contract-subindex-inherited]
+.ContextUpgradeSafe
+* {xref-ContextUpgradeSafe-__Context_init--}[`++__Context_init()++`]
+* {xref-ContextUpgradeSafe-__Context_init_unchained--}[`++__Context_init_unchained()++`]
+* {xref-ContextUpgradeSafe-_msgSender--}[`++_msgSender()++`]
+* {xref-ContextUpgradeSafe-_msgData--}[`++_msgData()++`]
+
+[.contract-subindex-inherited]
+.Initializable
+
+--
+
+[.contract-index]
+.Events
+--
+* {xref-SkaleDKG-ChannelOpened-bytes32-}[`++ChannelOpened(groupIndex)++`]
+* {xref-SkaleDKG-ChannelClosed-bytes32-}[`++ChannelClosed(groupIndex)++`]
+* {xref-SkaleDKG-BroadcastAndKeyShare-bytes32-uint256-bytes-bytes-}[`++BroadcastAndKeyShare(groupIndex, fromNode, verificationVector, secretKeyContribution)++`]
+* {xref-SkaleDKG-AllDataReceived-bytes32-uint256-}[`++AllDataReceived(groupIndex, nodeIndex)++`]
+* {xref-SkaleDKG-SuccessfulDKG-bytes32-}[`++SuccessfulDKG(groupIndex)++`]
+* {xref-SkaleDKG-BadGuy-uint256-}[`++BadGuy(nodeIndex)++`]
+* {xref-SkaleDKG-FailedDKG-bytes32-}[`++FailedDKG(groupIndex)++`]
+* {xref-SkaleDKG-ComplaintSent-bytes32-uint256-uint256-}[`++ComplaintSent(groupIndex, fromNodeIndex, toNodeIndex)++`]
+* {xref-SkaleDKG-NewGuy-uint256-}[`++NewGuy(nodeIndex)++`]
+
+[.contract-subindex-inherited]
+.Permissions
+
+[.contract-subindex-inherited]
+.OwnableUpgradeSafe
+* {xref-OwnableUpgradeSafe-OwnershipTransferred-address-address-}[`++OwnershipTransferred(previousOwner, newOwner)++`]
+
+[.contract-subindex-inherited]
+.ContextUpgradeSafe
+
+[.contract-subindex-inherited]
+.Initializable
+
+--
+
+[.contract-item]
+[[SkaleDKG-correctGroup-bytes32-]]
+==== `++correctGroup(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++)++` [.item-kind]#modifier#
+
+
+
+[.contract-item]
+[[SkaleDKG-correctNode-bytes32-uint256-]]
+==== `++correctNode(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++)++` [.item-kind]#modifier#
+
+
+
+
+[.contract-item]
+[[SkaleDKG-openChannel-bytes32-]]
+==== `++openChannel(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++)++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[SkaleDKG-deleteChannel-bytes32-]]
+==== `++deleteChannel(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++)++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[SkaleDKG-reopenChannel-bytes32-]]
+==== `++reopenChannel(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++)++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[SkaleDKG-broadcast-bytes32-uint256-bytes-bytes-]]
+==== `++broadcast(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++, ++[.var-type]#++bytes++#++ ++[.var-name]#++verificationVector++#++, ++[.var-type]#++bytes++#++ ++[.var-name]#++secretKeyContribution++#++)++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[SkaleDKG-complaint-bytes32-uint256-uint256-]]
+==== `++complaint(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++fromNodeIndex++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++toNodeIndex++#++)++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[SkaleDKG-response-bytes32-uint256-uint256-bytes-]]
+==== `++response(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++fromNodeIndex++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++secretNumber++#++, ++[.var-type]#++bytes++#++ ++[.var-name]#++multipliedShare++#++)++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[SkaleDKG-alright-bytes32-uint256-]]
+==== `++alright(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++fromNodeIndex++#++)++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[SkaleDKG-isChannelOpened-bytes32-]]
+==== `++isChannelOpened(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++) → ++[.var-type]#++bool++#++++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[SkaleDKG-isBroadcastPossible-bytes32-uint256-]]
+==== `++isBroadcastPossible(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++) → ++[.var-type]#++bool++#++++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[SkaleDKG-isComplaintPossible-bytes32-uint256-uint256-]]
+==== `++isComplaintPossible(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++fromNodeIndex++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++toNodeIndex++#++) → ++[.var-type]#++bool++#++++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[SkaleDKG-isAlrightPossible-bytes32-uint256-]]
+==== `++isAlrightPossible(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++) → ++[.var-type]#++bool++#++++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[SkaleDKG-isResponsePossible-bytes32-uint256-]]
+==== `++isResponsePossible(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++) → ++[.var-type]#++bool++#++++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[SkaleDKG-getBroadcastedData-bytes32-uint256-]]
+==== `++getBroadcastedData(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++) → ++[.var-type]#++bytes++#++, ++[.var-type]#++bytes++#++++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[SkaleDKG-isAllDataReceived-bytes32-uint256-]]
+==== `++isAllDataReceived(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++) → ++[.var-type]#++bool++#++++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[SkaleDKG-getComplaintData-bytes32-]]
+==== `++getComplaintData(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++) → ++[.var-type]#++uint256++#++, ++[.var-type]#++uint256++#++++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[SkaleDKG-initialize-address-]]
+==== `++initialize(++[.var-type]#++address++#++ ++[.var-name]#++contractsAddress++#++)++` [.item-kind]#public#
+
+
+
+[.contract-item]
+[[SkaleDKG-_finalizeSlashing-bytes32-uint256-]]
+==== `++_finalizeSlashing(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++badNode++#++)++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[SkaleDKG-_verify-bytes32-uint256-uint256-bytes-]]
+==== `++_verify(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++fromNodeIndex++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++secretNumber++#++, ++[.var-type]#++bytes++#++ ++[.var-name]#++multipliedShare++#++) → ++[.var-type]#++bool++#++++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[SkaleDKG-_getCommonPublicKey-bytes32-uint256-]]
+==== `++_getCommonPublicKey(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++secretNumber++#++) → ++[.var-type]#++bytes32++#++ ++[.var-name]#++key++#++++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[SkaleDKG-_decryptMessage-bytes32-uint256-]]
+==== `++_decryptMessage(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++secretNumber++#++) → ++[.var-type]#++uint256++#++++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[SkaleDKG-_adding-bytes32-uint256-uint256-uint256-uint256-]]
+==== `++_adding(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++x1++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++y1++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++x2++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++y2++#++)++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[SkaleDKG-_isBroadcast-bytes32-uint256-bytes-bytes-]]
+==== `++_isBroadcast(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++, ++[.var-type]#++bytes++#++ ++[.var-name]#++sc++#++, ++[.var-type]#++bytes++#++ ++[.var-name]#++vv++#++)++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[SkaleDKG-_isBroadcasted-bytes32-uint256-]]
+==== `++_isBroadcasted(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++) → ++[.var-type]#++bool++#++++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[SkaleDKG-_findNode-bytes32-uint256-]]
+==== `++_findNode(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++) → ++[.var-type]#++uint256++#++++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[SkaleDKG-_isNodeByMessageSender-uint256-address-]]
+==== `++_isNodeByMessageSender(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++, ++[.var-type]#++address++#++ ++[.var-name]#++from++#++) → ++[.var-type]#++bool++#++++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[SkaleDKG-_addFp2-struct-SkaleDKG-Fp2-struct-SkaleDKG-Fp2-]]
+==== `++_addFp2(++[.var-type]#++struct SkaleDKG.Fp2++#++ ++[.var-name]#++a++#++, ++[.var-type]#++struct SkaleDKG.Fp2++#++ ++[.var-name]#++b++#++) → ++[.var-type]#++struct SkaleDKG.Fp2++#++++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[SkaleDKG-_scalarMulFp2-uint256-struct-SkaleDKG-Fp2-]]
+==== `++_scalarMulFp2(++[.var-type]#++uint256++#++ ++[.var-name]#++scalar++#++, ++[.var-type]#++struct SkaleDKG.Fp2++#++ ++[.var-name]#++a++#++) → ++[.var-type]#++struct SkaleDKG.Fp2++#++++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[SkaleDKG-_minusFp2-struct-SkaleDKG-Fp2-struct-SkaleDKG-Fp2-]]
+==== `++_minusFp2(++[.var-type]#++struct SkaleDKG.Fp2++#++ ++[.var-name]#++a++#++, ++[.var-type]#++struct SkaleDKG.Fp2++#++ ++[.var-name]#++b++#++) → ++[.var-type]#++struct SkaleDKG.Fp2++#++++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[SkaleDKG-_mulFp2-struct-SkaleDKG-Fp2-struct-SkaleDKG-Fp2-]]
+==== `++_mulFp2(++[.var-type]#++struct SkaleDKG.Fp2++#++ ++[.var-name]#++a++#++, ++[.var-type]#++struct SkaleDKG.Fp2++#++ ++[.var-name]#++b++#++) → ++[.var-type]#++struct SkaleDKG.Fp2++#++++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[SkaleDKG-_squaredFp2-struct-SkaleDKG-Fp2-]]
+==== `++_squaredFp2(++[.var-type]#++struct SkaleDKG.Fp2++#++ ++[.var-name]#++a++#++) → ++[.var-type]#++struct SkaleDKG.Fp2++#++++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[SkaleDKG-_inverseFp2-struct-SkaleDKG-Fp2-]]
+==== `++_inverseFp2(++[.var-type]#++struct SkaleDKG.Fp2++#++ ++[.var-name]#++a++#++) → ++[.var-type]#++struct SkaleDKG.Fp2++#++ ++[.var-name]#++x++#++++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[SkaleDKG-_isG1-uint256-uint256-]]
+==== `++_isG1(++[.var-type]#++uint256++#++ ++[.var-name]#++x++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++y++#++) → ++[.var-type]#++bool++#++++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[SkaleDKG-_isG2-struct-SkaleDKG-Fp2-struct-SkaleDKG-Fp2-]]
+==== `++_isG2(++[.var-type]#++struct SkaleDKG.Fp2++#++ ++[.var-name]#++x++#++, ++[.var-type]#++struct SkaleDKG.Fp2++#++ ++[.var-name]#++y++#++) → ++[.var-type]#++bool++#++++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[SkaleDKG-_isG2Zero-struct-SkaleDKG-Fp2-struct-SkaleDKG-Fp2-]]
+==== `++_isG2Zero(++[.var-type]#++struct SkaleDKG.Fp2++#++ ++[.var-name]#++x++#++, ++[.var-type]#++struct SkaleDKG.Fp2++#++ ++[.var-name]#++y++#++) → ++[.var-type]#++bool++#++++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[SkaleDKG-_doubleG2-struct-SkaleDKG-Fp2-struct-SkaleDKG-Fp2-]]
+==== `++_doubleG2(++[.var-type]#++struct SkaleDKG.Fp2++#++ ++[.var-name]#++x1++#++, ++[.var-type]#++struct SkaleDKG.Fp2++#++ ++[.var-name]#++y1++#++) → ++[.var-type]#++struct SkaleDKG.Fp2++#++ ++[.var-name]#++x3++#++, ++[.var-type]#++struct SkaleDKG.Fp2++#++ ++[.var-name]#++y3++#++++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[SkaleDKG-_u1-struct-SkaleDKG-Fp2-]]
+==== `++_u1(++[.var-type]#++struct SkaleDKG.Fp2++#++ ++[.var-name]#++x1++#++) → ++[.var-type]#++struct SkaleDKG.Fp2++#++++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[SkaleDKG-_u2-struct-SkaleDKG-Fp2-]]
+==== `++_u2(++[.var-type]#++struct SkaleDKG.Fp2++#++ ++[.var-name]#++x2++#++) → ++[.var-type]#++struct SkaleDKG.Fp2++#++++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[SkaleDKG-_s1-struct-SkaleDKG-Fp2-]]
+==== `++_s1(++[.var-type]#++struct SkaleDKG.Fp2++#++ ++[.var-name]#++y1++#++) → ++[.var-type]#++struct SkaleDKG.Fp2++#++++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[SkaleDKG-_s2-struct-SkaleDKG-Fp2-]]
+==== `++_s2(++[.var-type]#++struct SkaleDKG.Fp2++#++ ++[.var-name]#++y2++#++) → ++[.var-type]#++struct SkaleDKG.Fp2++#++++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[SkaleDKG-_isEqual-struct-SkaleDKG-Fp2-struct-SkaleDKG-Fp2-struct-SkaleDKG-Fp2-struct-SkaleDKG-Fp2-]]
+==== `++_isEqual(++[.var-type]#++struct SkaleDKG.Fp2++#++ ++[.var-name]#++u1Value++#++, ++[.var-type]#++struct SkaleDKG.Fp2++#++ ++[.var-name]#++u2Value++#++, ++[.var-type]#++struct SkaleDKG.Fp2++#++ ++[.var-name]#++s1Value++#++, ++[.var-type]#++struct SkaleDKG.Fp2++#++ ++[.var-name]#++s2Value++#++) → ++[.var-type]#++bool++#++++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[SkaleDKG-_addG2-struct-SkaleDKG-Fp2-struct-SkaleDKG-Fp2-struct-SkaleDKG-Fp2-struct-SkaleDKG-Fp2-]]
+==== `++_addG2(++[.var-type]#++struct SkaleDKG.Fp2++#++ ++[.var-name]#++x1++#++, ++[.var-type]#++struct SkaleDKG.Fp2++#++ ++[.var-name]#++y1++#++, ++[.var-type]#++struct SkaleDKG.Fp2++#++ ++[.var-name]#++x2++#++, ++[.var-type]#++struct SkaleDKG.Fp2++#++ ++[.var-name]#++y2++#++) → ++[.var-type]#++struct SkaleDKG.Fp2++#++ ++[.var-name]#++x3++#++, ++[.var-type]#++struct SkaleDKG.Fp2++#++ ++[.var-name]#++y3++#++++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[SkaleDKG-_mulG2-uint256-struct-SkaleDKG-Fp2-struct-SkaleDKG-Fp2-]]
+==== `++_mulG2(++[.var-type]#++uint256++#++ ++[.var-name]#++scalar++#++, ++[.var-type]#++struct SkaleDKG.Fp2++#++ ++[.var-name]#++x1++#++, ++[.var-type]#++struct SkaleDKG.Fp2++#++ ++[.var-name]#++y1++#++) → ++[.var-type]#++struct SkaleDKG.Fp2++#++ ++[.var-name]#++x++#++, ++[.var-type]#++struct SkaleDKG.Fp2++#++ ++[.var-name]#++y++#++++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[SkaleDKG-_loop-uint256-bytes-uint256-]]
+==== `++_loop(++[.var-type]#++uint256++#++ ++[.var-name]#++index++#++, ++[.var-type]#++bytes++#++ ++[.var-name]#++verificationVector++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++loopIndex++#++) → ++[.var-type]#++struct SkaleDKG.Fp2++#++, ++[.var-type]#++struct SkaleDKG.Fp2++#++++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[SkaleDKG-_checkDKGVerification-struct-SkaleDKG-Fp2-struct-SkaleDKG-Fp2-bytes-]]
+==== `++_checkDKGVerification(++[.var-type]#++struct SkaleDKG.Fp2++#++ ++[.var-name]#++valX++#++, ++[.var-type]#++struct SkaleDKG.Fp2++#++ ++[.var-name]#++valY++#++, ++[.var-type]#++bytes++#++ ++[.var-name]#++multipliedShare++#++) → ++[.var-type]#++bool++#++++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[SkaleDKG-_checkCorrectMultipliedShare-bytes-uint256-]]
+==== `++_checkCorrectMultipliedShare(++[.var-type]#++bytes++#++ ++[.var-name]#++multipliedShare++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++secret++#++) → ++[.var-type]#++bool++#++++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[SkaleDKG-_bytesToPublicKey-bytes-]]
+==== `++_bytesToPublicKey(++[.var-type]#++bytes++#++ ++[.var-name]#++someBytes++#++) → ++[.var-type]#++uint256++#++ ++[.var-name]#++x++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++y++#++++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[SkaleDKG-_bytesToG2-bytes-]]
+==== `++_bytesToG2(++[.var-type]#++bytes++#++ ++[.var-name]#++someBytes++#++) → ++[.var-type]#++struct SkaleDKG.Fp2++#++ ++[.var-name]#++x++#++, ++[.var-type]#++struct SkaleDKG.Fp2++#++ ++[.var-name]#++y++#++++` [.item-kind]#internal#
+
+
+
+
+[.contract-item]
+[[SkaleDKG-ChannelOpened-bytes32-]]
+==== `++ChannelOpened(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++)++` [.item-kind]#event#
+
+
+
+[.contract-item]
+[[SkaleDKG-ChannelClosed-bytes32-]]
+==== `++ChannelClosed(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++)++` [.item-kind]#event#
+
+
+
+[.contract-item]
+[[SkaleDKG-BroadcastAndKeyShare-bytes32-uint256-bytes-bytes-]]
+==== `++BroadcastAndKeyShare(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++fromNode++#++, ++[.var-type]#++bytes++#++ ++[.var-name]#++verificationVector++#++, ++[.var-type]#++bytes++#++ ++[.var-name]#++secretKeyContribution++#++)++` [.item-kind]#event#
+
+
+
+[.contract-item]
+[[SkaleDKG-AllDataReceived-bytes32-uint256-]]
+==== `++AllDataReceived(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++)++` [.item-kind]#event#
+
+
+
+[.contract-item]
+[[SkaleDKG-SuccessfulDKG-bytes32-]]
+==== `++SuccessfulDKG(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++)++` [.item-kind]#event#
+
+
+
+[.contract-item]
+[[SkaleDKG-BadGuy-uint256-]]
+==== `++BadGuy(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++)++` [.item-kind]#event#
+
+
+
+[.contract-item]
+[[SkaleDKG-FailedDKG-bytes32-]]
+==== `++FailedDKG(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++)++` [.item-kind]#event#
+
+
+
+[.contract-item]
+[[SkaleDKG-ComplaintSent-bytes32-uint256-uint256-]]
+==== `++ComplaintSent(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++fromNodeIndex++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++toNodeIndex++#++)++` [.item-kind]#event#
+
+
+
+[.contract-item]
+[[SkaleDKG-NewGuy-uint256-]]
+==== `++NewGuy(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++)++` [.item-kind]#event#
+
+
+

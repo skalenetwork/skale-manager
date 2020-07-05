@@ -1,0 +1,109 @@
+:SlashingTable: pass:normal[xref:#SlashingTable[`++SlashingTable++`]]
+:setPenalty: pass:normal[xref:#SlashingTable-setPenalty-string-uint256-[`++setPenalty++`]]
+:getPenalty: pass:normal[xref:#SlashingTable-getPenalty-string-[`++getPenalty++`]]
+:initialize: pass:normal[xref:#SlashingTable-initialize-address-[`++initialize++`]]
+
+[.contract]
+[[SlashingTable]]
+=== `++SlashingTable++`
+
+This contract manages slashing conditions and penalties.
+
+[.contract-index]
+.Modifiers
+--
+
+[.contract-subindex-inherited]
+.Permissions
+* {xref-Permissions-allow-string-}[`++allow(contractName)++`]
+* {xref-Permissions-allowTwo-string-string-}[`++allowTwo(contractName1, contractName2)++`]
+* {xref-Permissions-allowThree-string-string-string-}[`++allowThree(contractName1, contractName2, contractName3)++`]
+
+[.contract-subindex-inherited]
+.OwnableUpgradeSafe
+* {xref-OwnableUpgradeSafe-onlyOwner--}[`++onlyOwner()++`]
+
+[.contract-subindex-inherited]
+.ContextUpgradeSafe
+
+[.contract-subindex-inherited]
+.Initializable
+* {xref-Initializable-initializer--}[`++initializer()++`]
+
+--
+
+[.contract-index]
+.Functions
+--
+* {xref-SlashingTable-setPenalty-string-uint256-}[`++setPenalty(offense, penalty)++`]
+* {xref-SlashingTable-getPenalty-string-}[`++getPenalty(offense)++`]
+* {xref-SlashingTable-initialize-address-}[`++initialize(contractManager)++`]
+
+[.contract-subindex-inherited]
+.Permissions
+* {xref-Permissions-_isOwner--}[`++_isOwner()++`]
+
+[.contract-subindex-inherited]
+.OwnableUpgradeSafe
+* {xref-OwnableUpgradeSafe-__Ownable_init--}[`++__Ownable_init()++`]
+* {xref-OwnableUpgradeSafe-__Ownable_init_unchained--}[`++__Ownable_init_unchained()++`]
+* {xref-OwnableUpgradeSafe-owner--}[`++owner()++`]
+* {xref-OwnableUpgradeSafe-renounceOwnership--}[`++renounceOwnership()++`]
+* {xref-OwnableUpgradeSafe-transferOwnership-address-}[`++transferOwnership(newOwner)++`]
+
+[.contract-subindex-inherited]
+.ContextUpgradeSafe
+* {xref-ContextUpgradeSafe-__Context_init--}[`++__Context_init()++`]
+* {xref-ContextUpgradeSafe-__Context_init_unchained--}[`++__Context_init_unchained()++`]
+* {xref-ContextUpgradeSafe-_msgSender--}[`++_msgSender()++`]
+* {xref-ContextUpgradeSafe-_msgData--}[`++_msgData()++`]
+
+[.contract-subindex-inherited]
+.Initializable
+
+--
+
+[.contract-index]
+.Events
+--
+
+[.contract-subindex-inherited]
+.Permissions
+
+[.contract-subindex-inherited]
+.OwnableUpgradeSafe
+* {xref-OwnableUpgradeSafe-OwnershipTransferred-address-address-}[`++OwnershipTransferred(previousOwner, newOwner)++`]
+
+[.contract-subindex-inherited]
+.ContextUpgradeSafe
+
+[.contract-subindex-inherited]
+.Initializable
+
+--
+
+
+[.contract-item]
+[[SlashingTable-setPenalty-string-uint256-]]
+==== `++setPenalty(++[.var-type]#++string++#++ ++[.var-name]#++offense++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++penalty++#++)++` [.item-kind]#external#
+
+Sets a penalty for a given offense
+Only the owner can set penalties.
+
+
+
+[.contract-item]
+[[SlashingTable-getPenalty-string-]]
+==== `++getPenalty(++[.var-type]#++string++#++ ++[.var-name]#++offense++#++) → ++[.var-type]#++uint256++#++++` [.item-kind]#external#
+
+Returns the penalty for a given offense
+
+
+
+[.contract-item]
+[[SlashingTable-initialize-address-]]
+==== `++initialize(++[.var-type]#++address++#++ ++[.var-name]#++contractManager++#++)++` [.item-kind]#public#
+
+
+
+

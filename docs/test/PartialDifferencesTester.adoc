@@ -1,0 +1,66 @@
+:PartialDifferencesTester: pass:normal[xref:#PartialDifferencesTester[`++PartialDifferencesTester++`]]
+:createSequence: pass:normal[xref:#PartialDifferencesTester-createSequence--[`++createSequence++`]]
+:addToSequence: pass:normal[xref:#PartialDifferencesTester-addToSequence-uint256-uint256-uint256-[`++addToSequence++`]]
+:subtractFromSequence: pass:normal[xref:#PartialDifferencesTester-subtractFromSequence-uint256-uint256-uint256-[`++subtractFromSequence++`]]
+:getAndUpdateSequenceItem: pass:normal[xref:#PartialDifferencesTester-getAndUpdateSequenceItem-uint256-uint256-[`++getAndUpdateSequenceItem++`]]
+:reduceSequence: pass:normal[xref:#PartialDifferencesTester-reduceSequence-uint256-uint256-uint256-uint256-[`++reduceSequence++`]]
+:latestSequence: pass:normal[xref:#PartialDifferencesTester-latestSequence--[`++latestSequence++`]]
+
+[.contract]
+[[PartialDifferencesTester]]
+=== `++PartialDifferencesTester++`
+
+
+
+
+[.contract-index]
+.Functions
+--
+* {xref-PartialDifferencesTester-createSequence--}[`++createSequence()++`]
+* {xref-PartialDifferencesTester-addToSequence-uint256-uint256-uint256-}[`++addToSequence(sequence, diff, month)++`]
+* {xref-PartialDifferencesTester-subtractFromSequence-uint256-uint256-uint256-}[`++subtractFromSequence(sequence, diff, month)++`]
+* {xref-PartialDifferencesTester-getAndUpdateSequenceItem-uint256-uint256-}[`++getAndUpdateSequenceItem(sequence, month)++`]
+* {xref-PartialDifferencesTester-reduceSequence-uint256-uint256-uint256-uint256-}[`++reduceSequence(sequence, a, b, month)++`]
+* {xref-PartialDifferencesTester-latestSequence--}[`++latestSequence()++`]
+
+--
+
+
+
+[.contract-item]
+[[PartialDifferencesTester-createSequence--]]
+==== `++createSequence()++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[PartialDifferencesTester-addToSequence-uint256-uint256-uint256-]]
+==== `++addToSequence(++[.var-type]#++uint256++#++ ++[.var-name]#++sequence++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++diff++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++month++#++)++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[PartialDifferencesTester-subtractFromSequence-uint256-uint256-uint256-]]
+==== `++subtractFromSequence(++[.var-type]#++uint256++#++ ++[.var-name]#++sequence++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++diff++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++month++#++)++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[PartialDifferencesTester-getAndUpdateSequenceItem-uint256-uint256-]]
+==== `++getAndUpdateSequenceItem(++[.var-type]#++uint256++#++ ++[.var-name]#++sequence++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++month++#++) → ++[.var-type]#++uint256++#++++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[PartialDifferencesTester-reduceSequence-uint256-uint256-uint256-uint256-]]
+==== `++reduceSequence(++[.var-type]#++uint256++#++ ++[.var-name]#++sequence++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++a++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++b++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++month++#++)++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[PartialDifferencesTester-latestSequence--]]
+==== `++latestSequence() → ++[.var-type]#++uint256++#++ ++[.var-name]#++id++#++++` [.item-kind]#external#
+
+
+
+

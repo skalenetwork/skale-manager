@@ -1,0 +1,197 @@
+:SkaleTokenInternalTester: pass:normal[xref:#SkaleTokenInternalTester[`++SkaleTokenInternalTester++`]]
+:constructor: pass:normal[xref:#SkaleTokenInternalTester-constructor-address-address---[`++constructor++`]]
+:getMsgData: pass:normal[xref:#SkaleTokenInternalTester-getMsgData--[`++getMsgData++`]]
+
+[.contract]
+[[SkaleTokenInternalTester]]
+=== `++SkaleTokenInternalTester++`
+
+
+
+[.contract-index]
+.Modifiers
+--
+
+[.contract-subindex-inherited]
+.SkaleToken
+
+[.contract-subindex-inherited]
+.IDelegatableToken
+
+[.contract-subindex-inherited]
+.ReentrancyGuard
+* {xref-ReentrancyGuard-nonReentrant--}[`++nonReentrant()++`]
+
+[.contract-subindex-inherited]
+.Permissions
+* {xref-Permissions-allow-string-}[`++allow(contractName)++`]
+* {xref-Permissions-allowTwo-string-string-}[`++allowTwo(contractName1, contractName2)++`]
+* {xref-Permissions-allowThree-string-string-string-}[`++allowThree(contractName1, contractName2, contractName3)++`]
+
+[.contract-subindex-inherited]
+.OwnableUpgradeSafe
+* {xref-OwnableUpgradeSafe-onlyOwner--}[`++onlyOwner()++`]
+
+[.contract-subindex-inherited]
+.ContextUpgradeSafe
+
+[.contract-subindex-inherited]
+.Initializable
+* {xref-Initializable-initializer--}[`++initializer()++`]
+
+[.contract-subindex-inherited]
+.ERC777
+
+[.contract-subindex-inherited]
+.IERC20
+
+[.contract-subindex-inherited]
+.IERC777
+
+[.contract-subindex-inherited]
+.Context
+
+--
+
+[.contract-index]
+.Functions
+--
+* {xref-SkaleTokenInternalTester-constructor-address-address---}[`++constructor(contractManager, defOps)++`]
+* {xref-SkaleTokenInternalTester-getMsgData--}[`++getMsgData()++`]
+
+[.contract-subindex-inherited]
+.SkaleToken
+* {xref-SkaleToken-mint-address-uint256-bytes-bytes-}[`++mint(account, amount, userData, operatorData)++`]
+* {xref-SkaleToken-getAndUpdateDelegatedAmount-address-}[`++getAndUpdateDelegatedAmount(wallet)++`]
+* {xref-SkaleToken-getAndUpdateSlashedAmount-address-}[`++getAndUpdateSlashedAmount(wallet)++`]
+* {xref-SkaleToken-getAndUpdateLockedAmount-address-}[`++getAndUpdateLockedAmount(wallet)++`]
+* {xref-SkaleToken-_beforeTokenTransfer-address-address-address-uint256-}[`++_beforeTokenTransfer(_, from, _, tokenId)++`]
+* {xref-SkaleToken-_callTokensToSend-address-address-address-uint256-bytes-bytes-}[`++_callTokensToSend(operator, from, to, amount, userData, operatorData)++`]
+* {xref-SkaleToken-_callTokensReceived-address-address-address-uint256-bytes-bytes-bool-}[`++_callTokensReceived(operator, from, to, amount, userData, operatorData, requireReceptionAck)++`]
+* {xref-SkaleToken-_msgData--}[`++_msgData()++`]
+* {xref-SkaleToken-_msgSender--}[`++_msgSender()++`]
+
+[.contract-subindex-inherited]
+.IDelegatableToken
+
+[.contract-subindex-inherited]
+.ReentrancyGuard
+
+[.contract-subindex-inherited]
+.Permissions
+* {xref-Permissions-initialize-address-}[`++initialize(contractManager)++`]
+* {xref-Permissions-_isOwner--}[`++_isOwner()++`]
+
+[.contract-subindex-inherited]
+.OwnableUpgradeSafe
+* {xref-OwnableUpgradeSafe-__Ownable_init--}[`++__Ownable_init()++`]
+* {xref-OwnableUpgradeSafe-__Ownable_init_unchained--}[`++__Ownable_init_unchained()++`]
+* {xref-OwnableUpgradeSafe-owner--}[`++owner()++`]
+* {xref-OwnableUpgradeSafe-renounceOwnership--}[`++renounceOwnership()++`]
+* {xref-OwnableUpgradeSafe-transferOwnership-address-}[`++transferOwnership(newOwner)++`]
+
+[.contract-subindex-inherited]
+.ContextUpgradeSafe
+* {xref-ContextUpgradeSafe-__Context_init--}[`++__Context_init()++`]
+* {xref-ContextUpgradeSafe-__Context_init_unchained--}[`++__Context_init_unchained()++`]
+
+[.contract-subindex-inherited]
+.Initializable
+
+[.contract-subindex-inherited]
+.ERC777
+* {xref-ERC777-name--}[`++name()++`]
+* {xref-ERC777-symbol--}[`++symbol()++`]
+* {xref-ERC777-decimals--}[`++decimals()++`]
+* {xref-ERC777-granularity--}[`++granularity()++`]
+* {xref-ERC777-totalSupply--}[`++totalSupply()++`]
+* {xref-ERC777-balanceOf-address-}[`++balanceOf(tokenHolder)++`]
+* {xref-ERC777-send-address-uint256-bytes-}[`++send(recipient, amount, data)++`]
+* {xref-ERC777-transfer-address-uint256-}[`++transfer(recipient, amount)++`]
+* {xref-ERC777-burn-uint256-bytes-}[`++burn(amount, data)++`]
+* {xref-ERC777-isOperatorFor-address-address-}[`++isOperatorFor(operator, tokenHolder)++`]
+* {xref-ERC777-authorizeOperator-address-}[`++authorizeOperator(operator)++`]
+* {xref-ERC777-revokeOperator-address-}[`++revokeOperator(operator)++`]
+* {xref-ERC777-defaultOperators--}[`++defaultOperators()++`]
+* {xref-ERC777-operatorSend-address-address-uint256-bytes-bytes-}[`++operatorSend(sender, recipient, amount, data, operatorData)++`]
+* {xref-ERC777-operatorBurn-address-uint256-bytes-bytes-}[`++operatorBurn(account, amount, data, operatorData)++`]
+* {xref-ERC777-allowance-address-address-}[`++allowance(holder, spender)++`]
+* {xref-ERC777-approve-address-uint256-}[`++approve(spender, value)++`]
+* {xref-ERC777-transferFrom-address-address-uint256-}[`++transferFrom(holder, recipient, amount)++`]
+* {xref-ERC777-_mint-address-uint256-bytes-bytes-}[`++_mint(account, amount, userData, operatorData)++`]
+* {xref-ERC777-_send-address-address-uint256-bytes-bytes-bool-}[`++_send(from, to, amount, userData, operatorData, requireReceptionAck)++`]
+* {xref-ERC777-_burn-address-uint256-bytes-bytes-}[`++_burn(from, amount, data, operatorData)++`]
+* {xref-ERC777-_approve-address-address-uint256-}[`++_approve(holder, spender, value)++`]
+
+[.contract-subindex-inherited]
+.IERC20
+
+[.contract-subindex-inherited]
+.IERC777
+
+[.contract-subindex-inherited]
+.Context
+
+--
+
+[.contract-index]
+.Events
+--
+
+[.contract-subindex-inherited]
+.SkaleToken
+
+[.contract-subindex-inherited]
+.IDelegatableToken
+
+[.contract-subindex-inherited]
+.ReentrancyGuard
+
+[.contract-subindex-inherited]
+.Permissions
+
+[.contract-subindex-inherited]
+.OwnableUpgradeSafe
+* {xref-OwnableUpgradeSafe-OwnershipTransferred-address-address-}[`++OwnershipTransferred(previousOwner, newOwner)++`]
+
+[.contract-subindex-inherited]
+.ContextUpgradeSafe
+
+[.contract-subindex-inherited]
+.Initializable
+
+[.contract-subindex-inherited]
+.ERC777
+
+[.contract-subindex-inherited]
+.IERC20
+* {xref-IERC20-Transfer-address-address-uint256-}[`++Transfer(from, to, value)++`]
+* {xref-IERC20-Approval-address-address-uint256-}[`++Approval(owner, spender, value)++`]
+
+[.contract-subindex-inherited]
+.IERC777
+* {xref-IERC777-Sent-address-address-address-uint256-bytes-bytes-}[`++Sent(operator, from, to, amount, data, operatorData)++`]
+* {xref-IERC777-Minted-address-address-uint256-bytes-bytes-}[`++Minted(operator, to, amount, data, operatorData)++`]
+* {xref-IERC777-Burned-address-address-uint256-bytes-bytes-}[`++Burned(operator, from, amount, data, operatorData)++`]
+* {xref-IERC777-AuthorizedOperator-address-address-}[`++AuthorizedOperator(operator, tokenHolder)++`]
+* {xref-IERC777-RevokedOperator-address-address-}[`++RevokedOperator(operator, tokenHolder)++`]
+
+[.contract-subindex-inherited]
+.Context
+
+--
+
+
+[.contract-item]
+[[SkaleTokenInternalTester-constructor-address-address---]]
+==== `++constructor(++[.var-type]#++address++#++ ++[.var-name]#++contractManager++#++, ++[.var-type]#++address[]++#++ ++[.var-name]#++defOps++#++)++` [.item-kind]#public#
+
+
+
+[.contract-item]
+[[SkaleTokenInternalTester-getMsgData--]]
+==== `++getMsgData() → ++[.var-type]#++bytes++#++++` [.item-kind]#external#
+
+
+
+

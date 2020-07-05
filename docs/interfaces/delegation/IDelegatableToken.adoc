@@ -1,0 +1,42 @@
+:IDelegatableToken: pass:normal[xref:#IDelegatableToken[`++IDelegatableToken++`]]
+:getAndUpdateLockedAmount: pass:normal[xref:#IDelegatableToken-getAndUpdateLockedAmount-address-[`++getAndUpdateLockedAmount++`]]
+:getAndUpdateDelegatedAmount: pass:normal[xref:#IDelegatableToken-getAndUpdateDelegatedAmount-address-[`++getAndUpdateDelegatedAmount++`]]
+:getAndUpdateSlashedAmount: pass:normal[xref:#IDelegatableToken-getAndUpdateSlashedAmount-address-[`++getAndUpdateSlashedAmount++`]]
+
+[.contract]
+[[IDelegatableToken]]
+=== `++IDelegatableToken++`
+
+Interface of Delegatable Token operations.
+
+
+[.contract-index]
+.Functions
+--
+* {xref-IDelegatableToken-getAndUpdateLockedAmount-address-}[`++getAndUpdateLockedAmount(wallet)++`]
+* {xref-IDelegatableToken-getAndUpdateDelegatedAmount-address-}[`++getAndUpdateDelegatedAmount(wallet)++`]
+* {xref-IDelegatableToken-getAndUpdateSlashedAmount-address-}[`++getAndUpdateSlashedAmount(wallet)++`]
+
+--
+
+
+
+[.contract-item]
+[[IDelegatableToken-getAndUpdateLockedAmount-address-]]
+==== `++getAndUpdateLockedAmount(++[.var-type]#++address++#++ ++[.var-name]#++wallet++#++) → ++[.var-type]#++uint256++#++++` [.item-kind]#external#
+
+Updates and returns the amount of locked tokens of a given account (`wallet`).
+
+[.contract-item]
+[[IDelegatableToken-getAndUpdateDelegatedAmount-address-]]
+==== `++getAndUpdateDelegatedAmount(++[.var-type]#++address++#++ ++[.var-name]#++wallet++#++) → ++[.var-type]#++uint256++#++++` [.item-kind]#external#
+
+Updates and returns the amount of delegated tokens of a given account (`wallet`).
+
+[.contract-item]
+[[IDelegatableToken-getAndUpdateSlashedAmount-address-]]
+==== `++getAndUpdateSlashedAmount(++[.var-type]#++address++#++ ++[.var-name]#++wallet++#++) → ++[.var-type]#++uint256++#++++` [.item-kind]#external#
+
+Updates and returns the amount of slashed tokens of a given account (`wallet`).
+
+

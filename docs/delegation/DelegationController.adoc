@@ -1,0 +1,598 @@
+:DelegationController: pass:normal[xref:#DelegationController[`++DelegationController++`]]
+:checkDelegationExists: pass:normal[xref:#DelegationController-checkDelegationExists-uint256-[`++checkDelegationExists++`]]
+:delegations: pass:normal[xref:#DelegationController-delegations-struct-DelegationController-Delegation--[`++delegations++`]]
+:delegationsByValidator: pass:normal[xref:#DelegationController-delegationsByValidator-mapping-uint256----uint256---[`++delegationsByValidator++`]]
+:delegationsByHolder: pass:normal[xref:#DelegationController-delegationsByHolder-mapping-address----uint256---[`++delegationsByHolder++`]]
+:getAndUpdateDelegatedToValidatorNow: pass:normal[xref:#DelegationController-getAndUpdateDelegatedToValidatorNow-uint256-[`++getAndUpdateDelegatedToValidatorNow++`]]
+:getAndUpdateDelegatedAmount: pass:normal[xref:#DelegationController-getAndUpdateDelegatedAmount-address-[`++getAndUpdateDelegatedAmount++`]]
+:getAndUpdateEffectiveDelegatedByHolderToValidator: pass:normal[xref:#DelegationController-getAndUpdateEffectiveDelegatedByHolderToValidator-address-uint256-uint256-[`++getAndUpdateEffectiveDelegatedByHolderToValidator++`]]
+:delegate: pass:normal[xref:#DelegationController-delegate-uint256-uint256-uint256-string-[`++delegate++`]]
+:getAndUpdateLockedAmount: pass:normal[xref:#DelegationController-getAndUpdateLockedAmount-address-[`++getAndUpdateLockedAmount++`]]
+:getAndUpdateForbiddenForDelegationAmount: pass:normal[xref:#DelegationController-getAndUpdateForbiddenForDelegationAmount-address-[`++getAndUpdateForbiddenForDelegationAmount++`]]
+:cancelPendingDelegation: pass:normal[xref:#DelegationController-cancelPendingDelegation-uint256-[`++cancelPendingDelegation++`]]
+:acceptPendingDelegation: pass:normal[xref:#DelegationController-acceptPendingDelegation-uint256-[`++acceptPendingDelegation++`]]
+:requestUndelegation: pass:normal[xref:#DelegationController-requestUndelegation-uint256-[`++requestUndelegation++`]]
+:confiscate: pass:normal[xref:#DelegationController-confiscate-uint256-uint256-[`++confiscate++`]]
+:getAndUpdateEffectiveDelegatedToValidator: pass:normal[xref:#DelegationController-getAndUpdateEffectiveDelegatedToValidator-uint256-uint256-[`++getAndUpdateEffectiveDelegatedToValidator++`]]
+:getDelegation: pass:normal[xref:#DelegationController-getDelegation-uint256-[`++getDelegation++`]]
+:getFirstDelegationMonth: pass:normal[xref:#DelegationController-getFirstDelegationMonth-address-uint256-[`++getFirstDelegationMonth++`]]
+:getDelegationsByValidatorLength: pass:normal[xref:#DelegationController-getDelegationsByValidatorLength-uint256-[`++getDelegationsByValidatorLength++`]]
+:getDelegationsByHolderLength: pass:normal[xref:#DelegationController-getDelegationsByHolderLength-address-[`++getDelegationsByHolderLength++`]]
+:initialize: pass:normal[xref:#DelegationController-initialize-address-[`++initialize++`]]
+:getAndUpdateDelegatedToValidator: pass:normal[xref:#DelegationController-getAndUpdateDelegatedToValidator-uint256-uint256-[`++getAndUpdateDelegatedToValidator++`]]
+:processSlashes: pass:normal[xref:#DelegationController-processSlashes-address-uint256-[`++processSlashes++`]]
+:processAllSlashes: pass:normal[xref:#DelegationController-processAllSlashes-address-[`++processAllSlashes++`]]
+:getState: pass:normal[xref:#DelegationController-getState-uint256-[`++getState++`]]
+:getLockedInPendingDelegations: pass:normal[xref:#DelegationController-getLockedInPendingDelegations-address-[`++getLockedInPendingDelegations++`]]
+:hasUnprocessedSlashes: pass:normal[xref:#DelegationController-hasUnprocessedSlashes-address-[`++hasUnprocessedSlashes++`]]
+:_addDelegation: pass:normal[xref:#DelegationController-_addDelegation-address-uint256-uint256-uint256-string-[`++_addDelegation++`]]
+:_isTerminated: pass:normal[xref:#DelegationController-_isTerminated-enum-DelegationController-State-[`++_isTerminated++`]]
+:_isLocked: pass:normal[xref:#DelegationController-_isLocked-enum-DelegationController-State-[`++_isLocked++`]]
+:_isDelegated: pass:normal[xref:#DelegationController-_isDelegated-enum-DelegationController-State-[`++_isDelegated++`]]
+:_calculateDelegationEndMonth: pass:normal[xref:#DelegationController-_calculateDelegationEndMonth-uint256-[`++_calculateDelegationEndMonth++`]]
+:_addToDelegatedToValidator: pass:normal[xref:#DelegationController-_addToDelegatedToValidator-uint256-uint256-uint256-[`++_addToDelegatedToValidator++`]]
+:_addToEffectiveDelegatedToValidator: pass:normal[xref:#DelegationController-_addToEffectiveDelegatedToValidator-uint256-uint256-uint256-[`++_addToEffectiveDelegatedToValidator++`]]
+:_addToDelegatedByHolder: pass:normal[xref:#DelegationController-_addToDelegatedByHolder-address-uint256-uint256-[`++_addToDelegatedByHolder++`]]
+:_addToDelegatedByHolderToValidator: pass:normal[xref:#DelegationController-_addToDelegatedByHolderToValidator-address-uint256-uint256-uint256-[`++_addToDelegatedByHolderToValidator++`]]
+:_removeFromDelegatedByHolder: pass:normal[xref:#DelegationController-_removeFromDelegatedByHolder-address-uint256-uint256-[`++_removeFromDelegatedByHolder++`]]
+:_removeFromDelegatedByHolderToValidator: pass:normal[xref:#DelegationController-_removeFromDelegatedByHolderToValidator-address-uint256-uint256-uint256-[`++_removeFromDelegatedByHolderToValidator++`]]
+:_addToEffectiveDelegatedByHolderToValidator: pass:normal[xref:#DelegationController-_addToEffectiveDelegatedByHolderToValidator-address-uint256-uint256-uint256-[`++_addToEffectiveDelegatedByHolderToValidator++`]]
+:_removeFromEffectiveDelegatedByHolderToValidator: pass:normal[xref:#DelegationController-_removeFromEffectiveDelegatedByHolderToValidator-address-uint256-uint256-uint256-[`++_removeFromEffectiveDelegatedByHolderToValidator++`]]
+:_getAndUpdateDelegatedByHolder: pass:normal[xref:#DelegationController-_getAndUpdateDelegatedByHolder-address-[`++_getAndUpdateDelegatedByHolder++`]]
+:_getAndUpdateDelegatedByHolderToValidator: pass:normal[xref:#DelegationController-_getAndUpdateDelegatedByHolderToValidator-address-uint256-uint256-[`++_getAndUpdateDelegatedByHolderToValidator++`]]
+:_addToLockedInPendingDelegations: pass:normal[xref:#DelegationController-_addToLockedInPendingDelegations-address-uint256-[`++_addToLockedInPendingDelegations++`]]
+:_subtractFromLockedInPendingDelegations: pass:normal[xref:#DelegationController-_subtractFromLockedInPendingDelegations-address-uint256-[`++_subtractFromLockedInPendingDelegations++`]]
+:_getCurrentMonth: pass:normal[xref:#DelegationController-_getCurrentMonth--[`++_getCurrentMonth++`]]
+:_getAndUpdateLockedAmount: pass:normal[xref:#DelegationController-_getAndUpdateLockedAmount-address-[`++_getAndUpdateLockedAmount++`]]
+:_updateFirstDelegationMonth: pass:normal[xref:#DelegationController-_updateFirstDelegationMonth-address-uint256-uint256-[`++_updateFirstDelegationMonth++`]]
+:_everDelegated: pass:normal[xref:#DelegationController-_everDelegated-address-[`++_everDelegated++`]]
+:_removeFromDelegatedToValidator: pass:normal[xref:#DelegationController-_removeFromDelegatedToValidator-uint256-uint256-uint256-[`++_removeFromDelegatedToValidator++`]]
+:_removeFromEffectiveDelegatedToValidator: pass:normal[xref:#DelegationController-_removeFromEffectiveDelegatedToValidator-uint256-uint256-uint256-[`++_removeFromEffectiveDelegatedToValidator++`]]
+:_calculateDelegationAmountAfterSlashing: pass:normal[xref:#DelegationController-_calculateDelegationAmountAfterSlashing-uint256-[`++_calculateDelegationAmountAfterSlashing++`]]
+:_putToSlashingLog: pass:normal[xref:#DelegationController-_putToSlashingLog-struct-DelegationController-SlashingLog-struct-FractionUtils-Fraction-uint256-[`++_putToSlashingLog++`]]
+:_processSlashesWithoutSignals: pass:normal[xref:#DelegationController-_processSlashesWithoutSignals-address-uint256-[`++_processSlashesWithoutSignals++`]]
+:_processAllSlashesWithoutSignals: pass:normal[xref:#DelegationController-_processAllSlashesWithoutSignals-address-[`++_processAllSlashesWithoutSignals++`]]
+:_sendSlashingSignals: pass:normal[xref:#DelegationController-_sendSlashingSignals-struct-DelegationController-SlashingSignal---[`++_sendSlashingSignals++`]]
+:_addToAllStatistics: pass:normal[xref:#DelegationController-_addToAllStatistics-uint256-[`++_addToAllStatistics++`]]
+:DelegationProposed: pass:normal[xref:#DelegationController-DelegationProposed-uint256-[`++DelegationProposed++`]]
+:DelegationAccepted: pass:normal[xref:#DelegationController-DelegationAccepted-uint256-[`++DelegationAccepted++`]]
+:DelegationRequestCanceledByUser: pass:normal[xref:#DelegationController-DelegationRequestCanceledByUser-uint256-[`++DelegationRequestCanceledByUser++`]]
+:UndelegationRequested: pass:normal[xref:#DelegationController-UndelegationRequested-uint256-[`++UndelegationRequested++`]]
+
+[.contract]
+[[DelegationController]]
+=== `++DelegationController++`
+
+This contract performs all delegation functions including delegation
+requests, undelegation, slashing, etc.
+
+Delegators and validators may both perform delegations. Validators who perform
+delegations to themselves are effectively self-delegating or self-bonding.
+
+Delegated tokens may be in one of several states:
+
+- PROPOSED: token holder proposes tokens to delegate to a validator
+- ACCEPTED: token delegations are accepted by a validator and are locked-by-delegation
+- CANCELED: token holder cancels delegation proposal. Only allowed before the proposal is accepted by the validator
+- REJECTED: token proposal expires at the UTC start of the next month
+- DELEGATED: accepted delegations are delegated at the UTC start of the month
+- UNDELEGATION_REQUESTED: token holder requests delegations to undelegate from the validator
+- COMPLETED: undelegation request is completed at the end of the delegation period
+
+[.contract-index]
+.Modifiers
+--
+* {xref-DelegationController-checkDelegationExists-uint256-}[`++checkDelegationExists(delegationId)++`]
+
+[.contract-subindex-inherited]
+.ILocker
+
+[.contract-subindex-inherited]
+.Permissions
+* {xref-Permissions-allow-string-}[`++allow(contractName)++`]
+* {xref-Permissions-allowTwo-string-string-}[`++allowTwo(contractName1, contractName2)++`]
+* {xref-Permissions-allowThree-string-string-string-}[`++allowThree(contractName1, contractName2, contractName3)++`]
+
+[.contract-subindex-inherited]
+.OwnableUpgradeSafe
+* {xref-OwnableUpgradeSafe-onlyOwner--}[`++onlyOwner()++`]
+
+[.contract-subindex-inherited]
+.ContextUpgradeSafe
+
+[.contract-subindex-inherited]
+.Initializable
+* {xref-Initializable-initializer--}[`++initializer()++`]
+
+--
+
+[.contract-index]
+.Functions
+--
+* {xref-DelegationController-getAndUpdateDelegatedToValidatorNow-uint256-}[`++getAndUpdateDelegatedToValidatorNow(validatorId)++`]
+* {xref-DelegationController-getAndUpdateDelegatedAmount-address-}[`++getAndUpdateDelegatedAmount(holder)++`]
+* {xref-DelegationController-getAndUpdateEffectiveDelegatedByHolderToValidator-address-uint256-uint256-}[`++getAndUpdateEffectiveDelegatedByHolderToValidator(holder, validatorId, month)++`]
+* {xref-DelegationController-delegate-uint256-uint256-uint256-string-}[`++delegate(validatorId, amount, delegationPeriod, info)++`]
+* {xref-DelegationController-getAndUpdateLockedAmount-address-}[`++getAndUpdateLockedAmount(wallet)++`]
+* {xref-DelegationController-getAndUpdateForbiddenForDelegationAmount-address-}[`++getAndUpdateForbiddenForDelegationAmount(wallet)++`]
+* {xref-DelegationController-cancelPendingDelegation-uint256-}[`++cancelPendingDelegation(delegationId)++`]
+* {xref-DelegationController-acceptPendingDelegation-uint256-}[`++acceptPendingDelegation(delegationId)++`]
+* {xref-DelegationController-requestUndelegation-uint256-}[`++requestUndelegation(delegationId)++`]
+* {xref-DelegationController-confiscate-uint256-uint256-}[`++confiscate(validatorId, amount)++`]
+* {xref-DelegationController-getAndUpdateEffectiveDelegatedToValidator-uint256-uint256-}[`++getAndUpdateEffectiveDelegatedToValidator(validatorId, month)++`]
+* {xref-DelegationController-getDelegation-uint256-}[`++getDelegation(delegationId)++`]
+* {xref-DelegationController-getFirstDelegationMonth-address-uint256-}[`++getFirstDelegationMonth(holder, validatorId)++`]
+* {xref-DelegationController-getDelegationsByValidatorLength-uint256-}[`++getDelegationsByValidatorLength(validatorId)++`]
+* {xref-DelegationController-getDelegationsByHolderLength-address-}[`++getDelegationsByHolderLength(holder)++`]
+* {xref-DelegationController-initialize-address-}[`++initialize(_contractsAddress)++`]
+* {xref-DelegationController-getAndUpdateDelegatedToValidator-uint256-uint256-}[`++getAndUpdateDelegatedToValidator(validatorId, month)++`]
+* {xref-DelegationController-processSlashes-address-uint256-}[`++processSlashes(holder, limit)++`]
+* {xref-DelegationController-processAllSlashes-address-}[`++processAllSlashes(holder)++`]
+* {xref-DelegationController-getState-uint256-}[`++getState(delegationId)++`]
+* {xref-DelegationController-getLockedInPendingDelegations-address-}[`++getLockedInPendingDelegations(holder)++`]
+* {xref-DelegationController-hasUnprocessedSlashes-address-}[`++hasUnprocessedSlashes(holder)++`]
+* {xref-DelegationController-_addDelegation-address-uint256-uint256-uint256-string-}[`++_addDelegation(holder, validatorId, amount, delegationPeriod, info)++`]
+* {xref-DelegationController-_isTerminated-enum-DelegationController-State-}[`++_isTerminated(state)++`]
+* {xref-DelegationController-_isLocked-enum-DelegationController-State-}[`++_isLocked(state)++`]
+* {xref-DelegationController-_isDelegated-enum-DelegationController-State-}[`++_isDelegated(state)++`]
+* {xref-DelegationController-_calculateDelegationEndMonth-uint256-}[`++_calculateDelegationEndMonth(delegationId)++`]
+* {xref-DelegationController-_addToDelegatedToValidator-uint256-uint256-uint256-}[`++_addToDelegatedToValidator(validatorId, amount, month)++`]
+* {xref-DelegationController-_addToEffectiveDelegatedToValidator-uint256-uint256-uint256-}[`++_addToEffectiveDelegatedToValidator(validatorId, effectiveAmount, month)++`]
+* {xref-DelegationController-_addToDelegatedByHolder-address-uint256-uint256-}[`++_addToDelegatedByHolder(holder, amount, month)++`]
+* {xref-DelegationController-_addToDelegatedByHolderToValidator-address-uint256-uint256-uint256-}[`++_addToDelegatedByHolderToValidator(holder, validatorId, amount, month)++`]
+* {xref-DelegationController-_removeFromDelegatedByHolder-address-uint256-uint256-}[`++_removeFromDelegatedByHolder(holder, amount, month)++`]
+* {xref-DelegationController-_removeFromDelegatedByHolderToValidator-address-uint256-uint256-uint256-}[`++_removeFromDelegatedByHolderToValidator(holder, validatorId, amount, month)++`]
+* {xref-DelegationController-_addToEffectiveDelegatedByHolderToValidator-address-uint256-uint256-uint256-}[`++_addToEffectiveDelegatedByHolderToValidator(holder, validatorId, effectiveAmount, month)++`]
+* {xref-DelegationController-_removeFromEffectiveDelegatedByHolderToValidator-address-uint256-uint256-uint256-}[`++_removeFromEffectiveDelegatedByHolderToValidator(holder, validatorId, effectiveAmount, month)++`]
+* {xref-DelegationController-_getAndUpdateDelegatedByHolder-address-}[`++_getAndUpdateDelegatedByHolder(holder)++`]
+* {xref-DelegationController-_getAndUpdateDelegatedByHolderToValidator-address-uint256-uint256-}[`++_getAndUpdateDelegatedByHolderToValidator(holder, validatorId, month)++`]
+* {xref-DelegationController-_addToLockedInPendingDelegations-address-uint256-}[`++_addToLockedInPendingDelegations(holder, amount)++`]
+* {xref-DelegationController-_subtractFromLockedInPendingDelegations-address-uint256-}[`++_subtractFromLockedInPendingDelegations(holder, amount)++`]
+* {xref-DelegationController-_getCurrentMonth--}[`++_getCurrentMonth()++`]
+* {xref-DelegationController-_getAndUpdateLockedAmount-address-}[`++_getAndUpdateLockedAmount(wallet)++`]
+* {xref-DelegationController-_updateFirstDelegationMonth-address-uint256-uint256-}[`++_updateFirstDelegationMonth(holder, validatorId, month)++`]
+* {xref-DelegationController-_everDelegated-address-}[`++_everDelegated(holder)++`]
+* {xref-DelegationController-_removeFromDelegatedToValidator-uint256-uint256-uint256-}[`++_removeFromDelegatedToValidator(validatorId, amount, month)++`]
+* {xref-DelegationController-_removeFromEffectiveDelegatedToValidator-uint256-uint256-uint256-}[`++_removeFromEffectiveDelegatedToValidator(validatorId, effectiveAmount, month)++`]
+* {xref-DelegationController-_calculateDelegationAmountAfterSlashing-uint256-}[`++_calculateDelegationAmountAfterSlashing(delegationId)++`]
+* {xref-DelegationController-_putToSlashingLog-struct-DelegationController-SlashingLog-struct-FractionUtils-Fraction-uint256-}[`++_putToSlashingLog(log, coefficient, month)++`]
+* {xref-DelegationController-_processSlashesWithoutSignals-address-uint256-}[`++_processSlashesWithoutSignals(holder, limit)++`]
+* {xref-DelegationController-_processAllSlashesWithoutSignals-address-}[`++_processAllSlashesWithoutSignals(holder)++`]
+* {xref-DelegationController-_sendSlashingSignals-struct-DelegationController-SlashingSignal---}[`++_sendSlashingSignals(slashingSignals)++`]
+* {xref-DelegationController-_addToAllStatistics-uint256-}[`++_addToAllStatistics(delegationId)++`]
+
+[.contract-subindex-inherited]
+.ILocker
+
+[.contract-subindex-inherited]
+.Permissions
+* {xref-Permissions-_isOwner--}[`++_isOwner()++`]
+
+[.contract-subindex-inherited]
+.OwnableUpgradeSafe
+* {xref-OwnableUpgradeSafe-__Ownable_init--}[`++__Ownable_init()++`]
+* {xref-OwnableUpgradeSafe-__Ownable_init_unchained--}[`++__Ownable_init_unchained()++`]
+* {xref-OwnableUpgradeSafe-owner--}[`++owner()++`]
+* {xref-OwnableUpgradeSafe-renounceOwnership--}[`++renounceOwnership()++`]
+* {xref-OwnableUpgradeSafe-transferOwnership-address-}[`++transferOwnership(newOwner)++`]
+
+[.contract-subindex-inherited]
+.ContextUpgradeSafe
+* {xref-ContextUpgradeSafe-__Context_init--}[`++__Context_init()++`]
+* {xref-ContextUpgradeSafe-__Context_init_unchained--}[`++__Context_init_unchained()++`]
+* {xref-ContextUpgradeSafe-_msgSender--}[`++_msgSender()++`]
+* {xref-ContextUpgradeSafe-_msgData--}[`++_msgData()++`]
+
+[.contract-subindex-inherited]
+.Initializable
+
+--
+
+[.contract-index]
+.Events
+--
+* {xref-DelegationController-DelegationProposed-uint256-}[`++DelegationProposed(delegationId)++`]
+* {xref-DelegationController-DelegationAccepted-uint256-}[`++DelegationAccepted(delegationId)++`]
+* {xref-DelegationController-DelegationRequestCanceledByUser-uint256-}[`++DelegationRequestCanceledByUser(delegationId)++`]
+* {xref-DelegationController-UndelegationRequested-uint256-}[`++UndelegationRequested(delegationId)++`]
+
+[.contract-subindex-inherited]
+.ILocker
+
+[.contract-subindex-inherited]
+.Permissions
+
+[.contract-subindex-inherited]
+.OwnableUpgradeSafe
+* {xref-OwnableUpgradeSafe-OwnershipTransferred-address-address-}[`++OwnershipTransferred(previousOwner, newOwner)++`]
+
+[.contract-subindex-inherited]
+.ContextUpgradeSafe
+
+[.contract-subindex-inherited]
+.Initializable
+
+--
+
+[.contract-item]
+[[DelegationController-checkDelegationExists-uint256-]]
+==== `++checkDelegationExists(++[.var-type]#++uint256++#++ ++[.var-name]#++delegationId++#++)++` [.item-kind]#modifier#
+
+Modifier to make a function callable only if delegation exists.
+
+
+[.contract-item]
+[[DelegationController-getAndUpdateDelegatedToValidatorNow-uint256-]]
+==== `++getAndUpdateDelegatedToValidatorNow(++[.var-type]#++uint256++#++ ++[.var-name]#++validatorId++#++) → ++[.var-type]#++uint256++#++++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[DelegationController-getAndUpdateDelegatedAmount-address-]]
+==== `++getAndUpdateDelegatedAmount(++[.var-type]#++address++#++ ++[.var-name]#++holder++#++) → ++[.var-type]#++uint256++#++++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[DelegationController-getAndUpdateEffectiveDelegatedByHolderToValidator-address-uint256-uint256-]]
+==== `++getAndUpdateEffectiveDelegatedByHolderToValidator(++[.var-type]#++address++#++ ++[.var-name]#++holder++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++validatorId++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++month++#++) → ++[.var-type]#++uint256++#++ ++[.var-name]#++effectiveDelegated++#++++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[DelegationController-delegate-uint256-uint256-uint256-string-]]
+==== `++delegate(++[.var-type]#++uint256++#++ ++[.var-name]#++validatorId++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++amount++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++delegationPeriod++#++, ++[.var-type]#++string++#++ ++[.var-name]#++info++#++)++` [.item-kind]#external#
+
+Allows a token holder to create a delegation proposal of an `amount`
+and `delegationPeriod` to a `validatorId`. Delegation must be accepted
+by the validator before the UTC start of the month, otherwise the
+delegation will be rejected.
+
+The token holder may add additional information in each proposal.
+
+
+
+[.contract-item]
+[[DelegationController-getAndUpdateLockedAmount-address-]]
+==== `++getAndUpdateLockedAmount(++[.var-type]#++address++#++ ++[.var-name]#++wallet++#++) → ++[.var-type]#++uint256++#++++` [.item-kind]#external#
+
+See ILocker.
+
+[.contract-item]
+[[DelegationController-getAndUpdateForbiddenForDelegationAmount-address-]]
+==== `++getAndUpdateForbiddenForDelegationAmount(++[.var-type]#++address++#++ ++[.var-name]#++wallet++#++) → ++[.var-type]#++uint256++#++++` [.item-kind]#external#
+
+See ILocker.
+
+[.contract-item]
+[[DelegationController-cancelPendingDelegation-uint256-]]
+==== `++cancelPendingDelegation(++[.var-type]#++uint256++#++ ++[.var-name]#++delegationId++#++)++` [.item-kind]#external#
+
+Allows a token holder to cancel a delegation proposal.
+
+Requirements:
+
+- the sender must be the token holder of the delegation proposal.
+- the delegation must still be in a PROPOSED state.
+
+Emits a DelegationRequestCanceledByUser event.
+
+
+
+[.contract-item]
+[[DelegationController-acceptPendingDelegation-uint256-]]
+==== `++acceptPendingDelegation(++[.var-type]#++uint256++#++ ++[.var-name]#++delegationId++#++)++` [.item-kind]#external#
+
+Allows a validator to accept a proposed delegation.
+Successful acceptance of delegations transition the tokens from a
+PROPOSED state to ACCEPTED, and tokens are locked for the remainder of the
+delegation period.
+
+Emits a DelegationAccepted event.
+
+
+
+[.contract-item]
+[[DelegationController-requestUndelegation-uint256-]]
+==== `++requestUndelegation(++[.var-type]#++uint256++#++ ++[.var-name]#++delegationId++#++)++` [.item-kind]#external#
+
+Allows a delegator to undelegate a specific delegation.
+
+Requirements:
+
+- the sender must be the delegator.
+- the delegation must be in DELEGATED state.
+
+Emits an UndelegationRequested event.
+
+
+
+[.contract-item]
+[[DelegationController-confiscate-uint256-uint256-]]
+==== `++confiscate(++[.var-type]#++uint256++#++ ++[.var-name]#++validatorId++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++amount++#++)++` [.item-kind]#external#
+
+Allows the Punisher to confiscate an `amount` of stake from
+`validatorId` by slashing. This slashes all delegations of the validator,
+which reduces the amount that the validator has staked. This consequence
+may force the SKALE Manger to reduce the number of nodes a validator is
+operating so the validator can meet the Minimum Staking Requirement.
+
+See Punisher.
+
+Emits a SlashingEvent.
+
+
+
+[.contract-item]
+[[DelegationController-getAndUpdateEffectiveDelegatedToValidator-uint256-uint256-]]
+==== `++getAndUpdateEffectiveDelegatedToValidator(++[.var-type]#++uint256++#++ ++[.var-name]#++validatorId++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++month++#++) → ++[.var-type]#++uint256++#++++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[DelegationController-getDelegation-uint256-]]
+==== `++getDelegation(++[.var-type]#++uint256++#++ ++[.var-name]#++delegationId++#++) → ++[.var-type]#++struct DelegationController.Delegation++#++++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[DelegationController-getFirstDelegationMonth-address-uint256-]]
+==== `++getFirstDelegationMonth(++[.var-type]#++address++#++ ++[.var-name]#++holder++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++validatorId++#++) → ++[.var-type]#++uint256++#++++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[DelegationController-getDelegationsByValidatorLength-uint256-]]
+==== `++getDelegationsByValidatorLength(++[.var-type]#++uint256++#++ ++[.var-name]#++validatorId++#++) → ++[.var-type]#++uint256++#++++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[DelegationController-getDelegationsByHolderLength-address-]]
+==== `++getDelegationsByHolderLength(++[.var-type]#++address++#++ ++[.var-name]#++holder++#++) → ++[.var-type]#++uint256++#++++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[DelegationController-initialize-address-]]
+==== `++initialize(++[.var-type]#++address++#++ ++[.var-name]#++_contractsAddress++#++)++` [.item-kind]#public#
+
+
+
+[.contract-item]
+[[DelegationController-getAndUpdateDelegatedToValidator-uint256-uint256-]]
+==== `++getAndUpdateDelegatedToValidator(++[.var-type]#++uint256++#++ ++[.var-name]#++validatorId++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++month++#++) → ++[.var-type]#++uint256++#++++` [.item-kind]#public#
+
+
+
+[.contract-item]
+[[DelegationController-processSlashes-address-uint256-]]
+==== `++processSlashes(++[.var-type]#++address++#++ ++[.var-name]#++holder++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++limit++#++)++` [.item-kind]#public#
+
+
+
+[.contract-item]
+[[DelegationController-processAllSlashes-address-]]
+==== `++processAllSlashes(++[.var-type]#++address++#++ ++[.var-name]#++holder++#++)++` [.item-kind]#public#
+
+
+
+[.contract-item]
+[[DelegationController-getState-uint256-]]
+==== `++getState(++[.var-type]#++uint256++#++ ++[.var-name]#++delegationId++#++) → ++[.var-type]#++enum DelegationController.State++#++ ++[.var-name]#++state++#++++` [.item-kind]#public#
+
+Returns the token state of a given delegation.
+
+
+
+[.contract-item]
+[[DelegationController-getLockedInPendingDelegations-address-]]
+==== `++getLockedInPendingDelegations(++[.var-type]#++address++#++ ++[.var-name]#++holder++#++) → ++[.var-type]#++uint256++#++++` [.item-kind]#public#
+
+
+
+[.contract-item]
+[[DelegationController-hasUnprocessedSlashes-address-]]
+==== `++hasUnprocessedSlashes(++[.var-type]#++address++#++ ++[.var-name]#++holder++#++) → ++[.var-type]#++bool++#++++` [.item-kind]#public#
+
+
+
+[.contract-item]
+[[DelegationController-_addDelegation-address-uint256-uint256-uint256-string-]]
+==== `++_addDelegation(++[.var-type]#++address++#++ ++[.var-name]#++holder++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++validatorId++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++amount++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++delegationPeriod++#++, ++[.var-type]#++string++#++ ++[.var-name]#++info++#++) → ++[.var-type]#++uint256++#++ ++[.var-name]#++delegationId++#++++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[DelegationController-_isTerminated-enum-DelegationController-State-]]
+==== `++_isTerminated(++[.var-type]#++enum DelegationController.State++#++ ++[.var-name]#++state++#++) → ++[.var-type]#++bool++#++++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[DelegationController-_isLocked-enum-DelegationController-State-]]
+==== `++_isLocked(++[.var-type]#++enum DelegationController.State++#++ ++[.var-name]#++state++#++) → ++[.var-type]#++bool++#++++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[DelegationController-_isDelegated-enum-DelegationController-State-]]
+==== `++_isDelegated(++[.var-type]#++enum DelegationController.State++#++ ++[.var-name]#++state++#++) → ++[.var-type]#++bool++#++++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[DelegationController-_calculateDelegationEndMonth-uint256-]]
+==== `++_calculateDelegationEndMonth(++[.var-type]#++uint256++#++ ++[.var-name]#++delegationId++#++) → ++[.var-type]#++uint256++#++++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[DelegationController-_addToDelegatedToValidator-uint256-uint256-uint256-]]
+==== `++_addToDelegatedToValidator(++[.var-type]#++uint256++#++ ++[.var-name]#++validatorId++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++amount++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++month++#++)++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[DelegationController-_addToEffectiveDelegatedToValidator-uint256-uint256-uint256-]]
+==== `++_addToEffectiveDelegatedToValidator(++[.var-type]#++uint256++#++ ++[.var-name]#++validatorId++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++effectiveAmount++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++month++#++)++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[DelegationController-_addToDelegatedByHolder-address-uint256-uint256-]]
+==== `++_addToDelegatedByHolder(++[.var-type]#++address++#++ ++[.var-name]#++holder++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++amount++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++month++#++)++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[DelegationController-_addToDelegatedByHolderToValidator-address-uint256-uint256-uint256-]]
+==== `++_addToDelegatedByHolderToValidator(++[.var-type]#++address++#++ ++[.var-name]#++holder++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++validatorId++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++amount++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++month++#++)++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[DelegationController-_removeFromDelegatedByHolder-address-uint256-uint256-]]
+==== `++_removeFromDelegatedByHolder(++[.var-type]#++address++#++ ++[.var-name]#++holder++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++amount++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++month++#++)++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[DelegationController-_removeFromDelegatedByHolderToValidator-address-uint256-uint256-uint256-]]
+==== `++_removeFromDelegatedByHolderToValidator(++[.var-type]#++address++#++ ++[.var-name]#++holder++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++validatorId++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++amount++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++month++#++)++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[DelegationController-_addToEffectiveDelegatedByHolderToValidator-address-uint256-uint256-uint256-]]
+==== `++_addToEffectiveDelegatedByHolderToValidator(++[.var-type]#++address++#++ ++[.var-name]#++holder++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++validatorId++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++effectiveAmount++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++month++#++)++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[DelegationController-_removeFromEffectiveDelegatedByHolderToValidator-address-uint256-uint256-uint256-]]
+==== `++_removeFromEffectiveDelegatedByHolderToValidator(++[.var-type]#++address++#++ ++[.var-name]#++holder++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++validatorId++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++effectiveAmount++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++month++#++)++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[DelegationController-_getAndUpdateDelegatedByHolder-address-]]
+==== `++_getAndUpdateDelegatedByHolder(++[.var-type]#++address++#++ ++[.var-name]#++holder++#++) → ++[.var-type]#++uint256++#++++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[DelegationController-_getAndUpdateDelegatedByHolderToValidator-address-uint256-uint256-]]
+==== `++_getAndUpdateDelegatedByHolderToValidator(++[.var-type]#++address++#++ ++[.var-name]#++holder++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++validatorId++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++month++#++) → ++[.var-type]#++uint256++#++++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[DelegationController-_addToLockedInPendingDelegations-address-uint256-]]
+==== `++_addToLockedInPendingDelegations(++[.var-type]#++address++#++ ++[.var-name]#++holder++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++amount++#++) → ++[.var-type]#++uint256++#++++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[DelegationController-_subtractFromLockedInPendingDelegations-address-uint256-]]
+==== `++_subtractFromLockedInPendingDelegations(++[.var-type]#++address++#++ ++[.var-name]#++holder++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++amount++#++) → ++[.var-type]#++uint256++#++++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[DelegationController-_getCurrentMonth--]]
+==== `++_getCurrentMonth() → ++[.var-type]#++uint256++#++++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[DelegationController-_getAndUpdateLockedAmount-address-]]
+==== `++_getAndUpdateLockedAmount(++[.var-type]#++address++#++ ++[.var-name]#++wallet++#++) → ++[.var-type]#++uint256++#++++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[DelegationController-_updateFirstDelegationMonth-address-uint256-uint256-]]
+==== `++_updateFirstDelegationMonth(++[.var-type]#++address++#++ ++[.var-name]#++holder++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++validatorId++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++month++#++)++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[DelegationController-_everDelegated-address-]]
+==== `++_everDelegated(++[.var-type]#++address++#++ ++[.var-name]#++holder++#++) → ++[.var-type]#++bool++#++++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[DelegationController-_removeFromDelegatedToValidator-uint256-uint256-uint256-]]
+==== `++_removeFromDelegatedToValidator(++[.var-type]#++uint256++#++ ++[.var-name]#++validatorId++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++amount++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++month++#++)++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[DelegationController-_removeFromEffectiveDelegatedToValidator-uint256-uint256-uint256-]]
+==== `++_removeFromEffectiveDelegatedToValidator(++[.var-type]#++uint256++#++ ++[.var-name]#++validatorId++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++effectiveAmount++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++month++#++)++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[DelegationController-_calculateDelegationAmountAfterSlashing-uint256-]]
+==== `++_calculateDelegationAmountAfterSlashing(++[.var-type]#++uint256++#++ ++[.var-name]#++delegationId++#++) → ++[.var-type]#++uint256++#++++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[DelegationController-_putToSlashingLog-struct-DelegationController-SlashingLog-struct-FractionUtils-Fraction-uint256-]]
+==== `++_putToSlashingLog(++[.var-type]#++struct DelegationController.SlashingLog++#++ ++[.var-name]#++log++#++, ++[.var-type]#++struct FractionUtils.Fraction++#++ ++[.var-name]#++coefficient++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++month++#++)++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[DelegationController-_processSlashesWithoutSignals-address-uint256-]]
+==== `++_processSlashesWithoutSignals(++[.var-type]#++address++#++ ++[.var-name]#++holder++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++limit++#++) → ++[.var-type]#++struct DelegationController.SlashingSignal[]++#++ ++[.var-name]#++slashingSignals++#++++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[DelegationController-_processAllSlashesWithoutSignals-address-]]
+==== `++_processAllSlashesWithoutSignals(++[.var-type]#++address++#++ ++[.var-name]#++holder++#++) → ++[.var-type]#++struct DelegationController.SlashingSignal[]++#++ ++[.var-name]#++slashingSignals++#++++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[DelegationController-_sendSlashingSignals-struct-DelegationController-SlashingSignal---]]
+==== `++_sendSlashingSignals(++[.var-type]#++struct DelegationController.SlashingSignal[]++#++ ++[.var-name]#++slashingSignals++#++)++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[DelegationController-_addToAllStatistics-uint256-]]
+==== `++_addToAllStatistics(++[.var-type]#++uint256++#++ ++[.var-name]#++delegationId++#++)++` [.item-kind]#internal#
+
+
+
+
+[.contract-item]
+[[DelegationController-DelegationProposed-uint256-]]
+==== `++DelegationProposed(++[.var-type]#++uint256++#++ ++[.var-name]#++delegationId++#++)++` [.item-kind]#event#
+
+Emitted when a delegation is proposed to a validator.
+
+[.contract-item]
+[[DelegationController-DelegationAccepted-uint256-]]
+==== `++DelegationAccepted(++[.var-type]#++uint256++#++ ++[.var-name]#++delegationId++#++)++` [.item-kind]#event#
+
+Emitted when a delegation is accepted by a validator.
+
+[.contract-item]
+[[DelegationController-DelegationRequestCanceledByUser-uint256-]]
+==== `++DelegationRequestCanceledByUser(++[.var-type]#++uint256++#++ ++[.var-name]#++delegationId++#++)++` [.item-kind]#event#
+
+Emitted when a delegation is cancelled by the delegator.
+
+[.contract-item]
+[[DelegationController-UndelegationRequested-uint256-]]
+==== `++UndelegationRequested(++[.var-type]#++uint256++#++ ++[.var-name]#++delegationId++#++)++` [.item-kind]#event#
+
+Emitted when a delegation is requested to undelegate.
+

@@ -1,0 +1,491 @@
+:ValidatorService: pass:normal[xref:#ValidatorService[`++ValidatorService++`]]
+:checkValidatorExists: pass:normal[xref:#ValidatorService-checkValidatorExists-uint256-[`++checkValidatorExists++`]]
+:validators: pass:normal[xref:#ValidatorService-validators-mapping-uint256----struct-ValidatorService-Validator-[`++validators++`]]
+:trustedValidators: pass:normal[xref:#ValidatorService-trustedValidators-mapping-uint256----bool-[`++trustedValidators++`]]
+:numberOfValidators: pass:normal[xref:#ValidatorService-numberOfValidators-uint256[`++numberOfValidators++`]]
+:useWhitelist: pass:normal[xref:#ValidatorService-useWhitelist-bool[`++useWhitelist++`]]
+:registerValidator: pass:normal[xref:#ValidatorService-registerValidator-string-string-uint256-uint256-[`++registerValidator++`]]
+:enableValidator: pass:normal[xref:#ValidatorService-enableValidator-uint256-[`++enableValidator++`]]
+:disableValidator: pass:normal[xref:#ValidatorService-disableValidator-uint256-[`++disableValidator++`]]
+:disableWhitelist: pass:normal[xref:#ValidatorService-disableWhitelist--[`++disableWhitelist++`]]
+:requestForNewAddress: pass:normal[xref:#ValidatorService-requestForNewAddress-address-[`++requestForNewAddress++`]]
+:confirmNewAddress: pass:normal[xref:#ValidatorService-confirmNewAddress-uint256-[`++confirmNewAddress++`]]
+:linkNodeAddress: pass:normal[xref:#ValidatorService-linkNodeAddress-address-bytes-[`++linkNodeAddress++`]]
+:unlinkNodeAddress: pass:normal[xref:#ValidatorService-unlinkNodeAddress-address-[`++unlinkNodeAddress++`]]
+:pushNode: pass:normal[xref:#ValidatorService-pushNode-address-uint256-[`++pushNode++`]]
+:deleteNode: pass:normal[xref:#ValidatorService-deleteNode-uint256-uint256-[`++deleteNode++`]]
+:checkPossibilityCreatingNode: pass:normal[xref:#ValidatorService-checkPossibilityCreatingNode-address-[`++checkPossibilityCreatingNode++`]]
+:checkPossibilityToMaintainNode: pass:normal[xref:#ValidatorService-checkPossibilityToMaintainNode-uint256-uint256-[`++checkPossibilityToMaintainNode++`]]
+:setValidatorMDA: pass:normal[xref:#ValidatorService-setValidatorMDA-uint256-[`++setValidatorMDA++`]]
+:getAndUpdateBondAmount: pass:normal[xref:#ValidatorService-getAndUpdateBondAmount-uint256-[`++getAndUpdateBondAmount++`]]
+:setValidatorName: pass:normal[xref:#ValidatorService-setValidatorName-string-[`++setValidatorName++`]]
+:setValidatorDescription: pass:normal[xref:#ValidatorService-setValidatorDescription-string-[`++setValidatorDescription++`]]
+:startAcceptingNewRequests: pass:normal[xref:#ValidatorService-startAcceptingNewRequests--[`++startAcceptingNewRequests++`]]
+:stopAcceptingNewRequests: pass:normal[xref:#ValidatorService-stopAcceptingNewRequests--[`++stopAcceptingNewRequests++`]]
+:getMyNodesAddresses: pass:normal[xref:#ValidatorService-getMyNodesAddresses--[`++getMyNodesAddresses++`]]
+:getTrustedValidators: pass:normal[xref:#ValidatorService-getTrustedValidators--[`++getTrustedValidators++`]]
+:checkMinimumDelegation: pass:normal[xref:#ValidatorService-checkMinimumDelegation-uint256-uint256-[`++checkMinimumDelegation++`]]
+:checkValidatorAddressToId: pass:normal[xref:#ValidatorService-checkValidatorAddressToId-address-uint256-[`++checkValidatorAddressToId++`]]
+:getValidatorNodeIndexes: pass:normal[xref:#ValidatorService-getValidatorNodeIndexes-uint256-[`++getValidatorNodeIndexes++`]]
+:initialize: pass:normal[xref:#ValidatorService-initialize-address-[`++initialize++`]]
+:getValidatorIdByNodeAddress: pass:normal[xref:#ValidatorService-getValidatorIdByNodeAddress-address-[`++getValidatorIdByNodeAddress++`]]
+:getNodeAddresses: pass:normal[xref:#ValidatorService-getNodeAddresses-uint256-[`++getNodeAddresses++`]]
+:validatorExists: pass:normal[xref:#ValidatorService-validatorExists-uint256-[`++validatorExists++`]]
+:validatorAddressExists: pass:normal[xref:#ValidatorService-validatorAddressExists-address-[`++validatorAddressExists++`]]
+:checkIfValidatorAddressExists: pass:normal[xref:#ValidatorService-checkIfValidatorAddressExists-address-[`++checkIfValidatorAddressExists++`]]
+:getValidator: pass:normal[xref:#ValidatorService-getValidator-uint256-[`++getValidator++`]]
+:getValidatorId: pass:normal[xref:#ValidatorService-getValidatorId-address-[`++getValidatorId++`]]
+:isAcceptingNewRequests: pass:normal[xref:#ValidatorService-isAcceptingNewRequests-uint256-[`++isAcceptingNewRequests++`]]
+:_findNode: pass:normal[xref:#ValidatorService-_findNode-uint256---uint256-[`++_findNode++`]]
+:_setValidatorAddress: pass:normal[xref:#ValidatorService-_setValidatorAddress-uint256-address-[`++_setValidatorAddress++`]]
+:_addNodeAddress: pass:normal[xref:#ValidatorService-_addNodeAddress-uint256-address-[`++_addNodeAddress++`]]
+:_removeNodeAddress: pass:normal[xref:#ValidatorService-_removeNodeAddress-uint256-address-[`++_removeNodeAddress++`]]
+:ValidatorRegistered: pass:normal[xref:#ValidatorService-ValidatorRegistered-uint256-[`++ValidatorRegistered++`]]
+:ValidatorAddressChanged: pass:normal[xref:#ValidatorService-ValidatorAddressChanged-uint256-address-[`++ValidatorAddressChanged++`]]
+:ValidatorWasEnabled: pass:normal[xref:#ValidatorService-ValidatorWasEnabled-uint256-[`++ValidatorWasEnabled++`]]
+:ValidatorWasDisabled: pass:normal[xref:#ValidatorService-ValidatorWasDisabled-uint256-[`++ValidatorWasDisabled++`]]
+:NodeAddressWasAdded: pass:normal[xref:#ValidatorService-NodeAddressWasAdded-uint256-address-[`++NodeAddressWasAdded++`]]
+:NodeAddressWasRemoved: pass:normal[xref:#ValidatorService-NodeAddressWasRemoved-uint256-address-[`++NodeAddressWasRemoved++`]]
+
+[.contract]
+[[ValidatorService]]
+=== `++ValidatorService++`
+
+This contract handles all validator operations including registration,
+node management, validator-specific delegation parameters, and more.
+
+Validators register an address, and use this address to accept delegations and
+register nodes.
+
+
+[.contract-index]
+.Modifiers
+--
+* {xref-ValidatorService-checkValidatorExists-uint256-}[`++checkValidatorExists(validatorId)++`]
+
+[.contract-subindex-inherited]
+.Permissions
+* {xref-Permissions-allow-string-}[`++allow(contractName)++`]
+* {xref-Permissions-allowTwo-string-string-}[`++allowTwo(contractName1, contractName2)++`]
+* {xref-Permissions-allowThree-string-string-string-}[`++allowThree(contractName1, contractName2, contractName3)++`]
+
+[.contract-subindex-inherited]
+.OwnableUpgradeSafe
+* {xref-OwnableUpgradeSafe-onlyOwner--}[`++onlyOwner()++`]
+
+[.contract-subindex-inherited]
+.ContextUpgradeSafe
+
+[.contract-subindex-inherited]
+.Initializable
+* {xref-Initializable-initializer--}[`++initializer()++`]
+
+--
+
+[.contract-index]
+.Functions
+--
+* {xref-ValidatorService-registerValidator-string-string-uint256-uint256-}[`++registerValidator(name, description, feeRate, minimumDelegationAmount)++`]
+* {xref-ValidatorService-enableValidator-uint256-}[`++enableValidator(validatorId)++`]
+* {xref-ValidatorService-disableValidator-uint256-}[`++disableValidator(validatorId)++`]
+* {xref-ValidatorService-disableWhitelist--}[`++disableWhitelist()++`]
+* {xref-ValidatorService-requestForNewAddress-address-}[`++requestForNewAddress(newValidatorAddress)++`]
+* {xref-ValidatorService-confirmNewAddress-uint256-}[`++confirmNewAddress(validatorId)++`]
+* {xref-ValidatorService-linkNodeAddress-address-bytes-}[`++linkNodeAddress(nodeAddress, sig)++`]
+* {xref-ValidatorService-unlinkNodeAddress-address-}[`++unlinkNodeAddress(nodeAddress)++`]
+* {xref-ValidatorService-pushNode-address-uint256-}[`++pushNode(nodeAddress, nodeIndex)++`]
+* {xref-ValidatorService-deleteNode-uint256-uint256-}[`++deleteNode(validatorId, nodeIndex)++`]
+* {xref-ValidatorService-checkPossibilityCreatingNode-address-}[`++checkPossibilityCreatingNode(nodeAddress)++`]
+* {xref-ValidatorService-checkPossibilityToMaintainNode-uint256-uint256-}[`++checkPossibilityToMaintainNode(validatorId, nodeIndex)++`]
+* {xref-ValidatorService-setValidatorMDA-uint256-}[`++setValidatorMDA(minimumDelegationAmount)++`]
+* {xref-ValidatorService-getAndUpdateBondAmount-uint256-}[`++getAndUpdateBondAmount(validatorId)++`]
+* {xref-ValidatorService-setValidatorName-string-}[`++setValidatorName(newName)++`]
+* {xref-ValidatorService-setValidatorDescription-string-}[`++setValidatorDescription(newDescription)++`]
+* {xref-ValidatorService-startAcceptingNewRequests--}[`++startAcceptingNewRequests()++`]
+* {xref-ValidatorService-stopAcceptingNewRequests--}[`++stopAcceptingNewRequests()++`]
+* {xref-ValidatorService-getMyNodesAddresses--}[`++getMyNodesAddresses()++`]
+* {xref-ValidatorService-getTrustedValidators--}[`++getTrustedValidators()++`]
+* {xref-ValidatorService-checkMinimumDelegation-uint256-uint256-}[`++checkMinimumDelegation(validatorId, amount)++`]
+* {xref-ValidatorService-checkValidatorAddressToId-address-uint256-}[`++checkValidatorAddressToId(validatorAddress, validatorId)++`]
+* {xref-ValidatorService-getValidatorNodeIndexes-uint256-}[`++getValidatorNodeIndexes(validatorId)++`]
+* {xref-ValidatorService-initialize-address-}[`++initialize(contractManager)++`]
+* {xref-ValidatorService-getValidatorIdByNodeAddress-address-}[`++getValidatorIdByNodeAddress(nodeAddress)++`]
+* {xref-ValidatorService-getNodeAddresses-uint256-}[`++getNodeAddresses(validatorId)++`]
+* {xref-ValidatorService-validatorExists-uint256-}[`++validatorExists(validatorId)++`]
+* {xref-ValidatorService-validatorAddressExists-address-}[`++validatorAddressExists(validatorAddress)++`]
+* {xref-ValidatorService-checkIfValidatorAddressExists-address-}[`++checkIfValidatorAddressExists(validatorAddress)++`]
+* {xref-ValidatorService-getValidator-uint256-}[`++getValidator(validatorId)++`]
+* {xref-ValidatorService-getValidatorId-address-}[`++getValidatorId(validatorAddress)++`]
+* {xref-ValidatorService-isAcceptingNewRequests-uint256-}[`++isAcceptingNewRequests(validatorId)++`]
+* {xref-ValidatorService-_findNode-uint256---uint256-}[`++_findNode(nodeIndexes, nodeIndex)++`]
+* {xref-ValidatorService-_setValidatorAddress-uint256-address-}[`++_setValidatorAddress(validatorId, validatorAddress)++`]
+* {xref-ValidatorService-_addNodeAddress-uint256-address-}[`++_addNodeAddress(validatorId, nodeAddress)++`]
+* {xref-ValidatorService-_removeNodeAddress-uint256-address-}[`++_removeNodeAddress(validatorId, nodeAddress)++`]
+
+[.contract-subindex-inherited]
+.Permissions
+* {xref-Permissions-_isOwner--}[`++_isOwner()++`]
+
+[.contract-subindex-inherited]
+.OwnableUpgradeSafe
+* {xref-OwnableUpgradeSafe-__Ownable_init--}[`++__Ownable_init()++`]
+* {xref-OwnableUpgradeSafe-__Ownable_init_unchained--}[`++__Ownable_init_unchained()++`]
+* {xref-OwnableUpgradeSafe-owner--}[`++owner()++`]
+* {xref-OwnableUpgradeSafe-renounceOwnership--}[`++renounceOwnership()++`]
+* {xref-OwnableUpgradeSafe-transferOwnership-address-}[`++transferOwnership(newOwner)++`]
+
+[.contract-subindex-inherited]
+.ContextUpgradeSafe
+* {xref-ContextUpgradeSafe-__Context_init--}[`++__Context_init()++`]
+* {xref-ContextUpgradeSafe-__Context_init_unchained--}[`++__Context_init_unchained()++`]
+* {xref-ContextUpgradeSafe-_msgSender--}[`++_msgSender()++`]
+* {xref-ContextUpgradeSafe-_msgData--}[`++_msgData()++`]
+
+[.contract-subindex-inherited]
+.Initializable
+
+--
+
+[.contract-index]
+.Events
+--
+* {xref-ValidatorService-ValidatorRegistered-uint256-}[`++ValidatorRegistered(validatorId)++`]
+* {xref-ValidatorService-ValidatorAddressChanged-uint256-address-}[`++ValidatorAddressChanged(validatorId, newAddress)++`]
+* {xref-ValidatorService-ValidatorWasEnabled-uint256-}[`++ValidatorWasEnabled(validatorId)++`]
+* {xref-ValidatorService-ValidatorWasDisabled-uint256-}[`++ValidatorWasDisabled(validatorId)++`]
+* {xref-ValidatorService-NodeAddressWasAdded-uint256-address-}[`++NodeAddressWasAdded(validatorId, nodeAddress)++`]
+* {xref-ValidatorService-NodeAddressWasRemoved-uint256-address-}[`++NodeAddressWasRemoved(validatorId, nodeAddress)++`]
+
+[.contract-subindex-inherited]
+.Permissions
+
+[.contract-subindex-inherited]
+.OwnableUpgradeSafe
+* {xref-OwnableUpgradeSafe-OwnershipTransferred-address-address-}[`++OwnershipTransferred(previousOwner, newOwner)++`]
+
+[.contract-subindex-inherited]
+.ContextUpgradeSafe
+
+[.contract-subindex-inherited]
+.Initializable
+
+--
+
+[.contract-item]
+[[ValidatorService-checkValidatorExists-uint256-]]
+==== `++checkValidatorExists(++[.var-type]#++uint256++#++ ++[.var-name]#++validatorId++#++)++` [.item-kind]#modifier#
+
+
+
+
+[.contract-item]
+[[ValidatorService-registerValidator-string-string-uint256-uint256-]]
+==== `++registerValidator(++[.var-type]#++string++#++ ++[.var-name]#++name++#++, ++[.var-type]#++string++#++ ++[.var-name]#++description++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++feeRate++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++minimumDelegationAmount++#++) → ++[.var-type]#++uint256++#++ ++[.var-name]#++validatorId++#++++` [.item-kind]#external#
+
+Creates a new validator Id.
+
+Requirements:
+
+- sender must not already have registered a validator Id.
+- fee rate must be between 0 - 1000‰. Note: per mille!
+
+Emits ValidatorRegistered event.
+
+
+
+[.contract-item]
+[[ValidatorService-enableValidator-uint256-]]
+==== `++enableValidator(++[.var-type]#++uint256++#++ ++[.var-name]#++validatorId++#++)++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[ValidatorService-disableValidator-uint256-]]
+==== `++disableValidator(++[.var-type]#++uint256++#++ ++[.var-name]#++validatorId++#++)++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[ValidatorService-disableWhitelist--]]
+==== `++disableWhitelist()++` [.item-kind]#external#
+
+Owner can disable the validator whitelist. Once turned off the
+whitelist cannot be re-enabled.
+
+[.contract-item]
+[[ValidatorService-requestForNewAddress-address-]]
+==== `++requestForNewAddress(++[.var-type]#++address++#++ ++[.var-name]#++newValidatorAddress++#++)++` [.item-kind]#external#
+
+Allows a validator to request a new address.
+
+Requirements:
+
+- new address must not be null
+- new address must not be already registered as a validator
+
+
+
+[.contract-item]
+[[ValidatorService-confirmNewAddress-uint256-]]
+==== `++confirmNewAddress(++[.var-type]#++uint256++#++ ++[.var-name]#++validatorId++#++)++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[ValidatorService-linkNodeAddress-address-bytes-]]
+==== `++linkNodeAddress(++[.var-type]#++address++#++ ++[.var-name]#++nodeAddress++#++, ++[.var-type]#++bytes++#++ ++[.var-name]#++sig++#++)++` [.item-kind]#external#
+
+Links a given node address.
+
+Requirements:
+
+- the given signature must be valid.
+- the address must not be assigned to a validator.
+
+Emits NodeAddressWasAdded event.
+
+
+
+[.contract-item]
+[[ValidatorService-unlinkNodeAddress-address-]]
+==== `++unlinkNodeAddress(++[.var-type]#++address++#++ ++[.var-name]#++nodeAddress++#++)++` [.item-kind]#external#
+
+Unlinks a given node address from a validator.
+
+Emits NodeAddressWasRemoved event.
+
+
+
+[.contract-item]
+[[ValidatorService-pushNode-address-uint256-]]
+==== `++pushNode(++[.var-type]#++address++#++ ++[.var-name]#++nodeAddress++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++)++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[ValidatorService-deleteNode-uint256-uint256-]]
+==== `++deleteNode(++[.var-type]#++uint256++#++ ++[.var-name]#++validatorId++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++)++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[ValidatorService-checkPossibilityCreatingNode-address-]]
+==== `++checkPossibilityCreatingNode(++[.var-type]#++address++#++ ++[.var-name]#++nodeAddress++#++)++` [.item-kind]#external#
+
+Allows SKALE Manager to check whether a validator has sufficient
+stake to add a node.
+
+
+
+[.contract-item]
+[[ValidatorService-checkPossibilityToMaintainNode-uint256-uint256-]]
+==== `++checkPossibilityToMaintainNode(++[.var-type]#++uint256++#++ ++[.var-name]#++validatorId++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++) → ++[.var-type]#++bool++#++++` [.item-kind]#external#
+
+Allows SKALE Manager to check whether a validator can maintain a node
+per minimum stake requirement (MSR).
+
+Requirements:
+
+- node must exist on the given validator
+
+
+
+[.contract-item]
+[[ValidatorService-setValidatorMDA-uint256-]]
+==== `++setValidatorMDA(++[.var-type]#++uint256++#++ ++[.var-name]#++minimumDelegationAmount++#++)++` [.item-kind]#external#
+
+Allows a validator to set the minimum delegation amount.
+
+
+
+[.contract-item]
+[[ValidatorService-getAndUpdateBondAmount-uint256-]]
+==== `++getAndUpdateBondAmount(++[.var-type]#++uint256++#++ ++[.var-name]#++validatorId++#++) → ++[.var-type]#++uint256++#++ ++[.var-name]#++delegatedAmount++#++++` [.item-kind]#external#
+
+Returns the amount of validator bond.
+
+
+
+[.contract-item]
+[[ValidatorService-setValidatorName-string-]]
+==== `++setValidatorName(++[.var-type]#++string++#++ ++[.var-name]#++newName++#++)++` [.item-kind]#external#
+
+Allows a validator to set a new validator name.
+
+
+
+[.contract-item]
+[[ValidatorService-setValidatorDescription-string-]]
+==== `++setValidatorDescription(++[.var-type]#++string++#++ ++[.var-name]#++newDescription++#++)++` [.item-kind]#external#
+
+Allows a validator to set a new validator description.
+
+
+
+[.contract-item]
+[[ValidatorService-startAcceptingNewRequests--]]
+==== `++startAcceptingNewRequests()++` [.item-kind]#external#
+
+Allows a validator to start accepting new delegation requests.
+
+Requirements:
+
+- validator must not have already enabled accepting new requests
+
+[.contract-item]
+[[ValidatorService-stopAcceptingNewRequests--]]
+==== `++stopAcceptingNewRequests()++` [.item-kind]#external#
+
+Allows a validator to stop accepting new delegation requests.
+
+Requirements:
+
+- validator must not have already stopped accepting new requests
+
+[.contract-item]
+[[ValidatorService-getMyNodesAddresses--]]
+==== `++getMyNodesAddresses() → ++[.var-type]#++address[]++#++++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[ValidatorService-getTrustedValidators--]]
+==== `++getTrustedValidators() → ++[.var-type]#++uint256[]++#++++` [.item-kind]#external#
+
+Returns a list of trusted validators.
+
+
+
+[.contract-item]
+[[ValidatorService-checkMinimumDelegation-uint256-uint256-]]
+==== `++checkMinimumDelegation(++[.var-type]#++uint256++#++ ++[.var-name]#++validatorId++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++amount++#++) → ++[.var-type]#++bool++#++++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[ValidatorService-checkValidatorAddressToId-address-uint256-]]
+==== `++checkValidatorAddressToId(++[.var-type]#++address++#++ ++[.var-name]#++validatorAddress++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++validatorId++#++) → ++[.var-type]#++bool++#++++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[ValidatorService-getValidatorNodeIndexes-uint256-]]
+==== `++getValidatorNodeIndexes(++[.var-type]#++uint256++#++ ++[.var-name]#++validatorId++#++) → ++[.var-type]#++uint256[]++#++++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[ValidatorService-initialize-address-]]
+==== `++initialize(++[.var-type]#++address++#++ ++[.var-name]#++contractManager++#++)++` [.item-kind]#public#
+
+
+
+[.contract-item]
+[[ValidatorService-getValidatorIdByNodeAddress-address-]]
+==== `++getValidatorIdByNodeAddress(++[.var-type]#++address++#++ ++[.var-name]#++nodeAddress++#++) → ++[.var-type]#++uint256++#++ ++[.var-name]#++validatorId++#++++` [.item-kind]#public#
+
+
+
+[.contract-item]
+[[ValidatorService-getNodeAddresses-uint256-]]
+==== `++getNodeAddresses(++[.var-type]#++uint256++#++ ++[.var-name]#++validatorId++#++) → ++[.var-type]#++address[]++#++++` [.item-kind]#public#
+
+
+
+[.contract-item]
+[[ValidatorService-validatorExists-uint256-]]
+==== `++validatorExists(++[.var-type]#++uint256++#++ ++[.var-name]#++validatorId++#++) → ++[.var-type]#++bool++#++++` [.item-kind]#public#
+
+
+
+[.contract-item]
+[[ValidatorService-validatorAddressExists-address-]]
+==== `++validatorAddressExists(++[.var-type]#++address++#++ ++[.var-name]#++validatorAddress++#++) → ++[.var-type]#++bool++#++++` [.item-kind]#public#
+
+
+
+[.contract-item]
+[[ValidatorService-checkIfValidatorAddressExists-address-]]
+==== `++checkIfValidatorAddressExists(++[.var-type]#++address++#++ ++[.var-name]#++validatorAddress++#++)++` [.item-kind]#public#
+
+
+
+[.contract-item]
+[[ValidatorService-getValidator-uint256-]]
+==== `++getValidator(++[.var-type]#++uint256++#++ ++[.var-name]#++validatorId++#++) → ++[.var-type]#++struct ValidatorService.Validator++#++++` [.item-kind]#public#
+
+
+
+[.contract-item]
+[[ValidatorService-getValidatorId-address-]]
+==== `++getValidatorId(++[.var-type]#++address++#++ ++[.var-name]#++validatorAddress++#++) → ++[.var-type]#++uint256++#++++` [.item-kind]#public#
+
+
+
+[.contract-item]
+[[ValidatorService-isAcceptingNewRequests-uint256-]]
+==== `++isAcceptingNewRequests(++[.var-type]#++uint256++#++ ++[.var-name]#++validatorId++#++) → ++[.var-type]#++bool++#++++` [.item-kind]#public#
+
+
+
+[.contract-item]
+[[ValidatorService-_findNode-uint256---uint256-]]
+==== `++_findNode(++[.var-type]#++uint256[]++#++ ++[.var-name]#++nodeIndexes++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++) → ++[.var-type]#++uint256++#++++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[ValidatorService-_setValidatorAddress-uint256-address-]]
+==== `++_setValidatorAddress(++[.var-type]#++uint256++#++ ++[.var-name]#++validatorId++#++, ++[.var-type]#++address++#++ ++[.var-name]#++validatorAddress++#++)++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[ValidatorService-_addNodeAddress-uint256-address-]]
+==== `++_addNodeAddress(++[.var-type]#++uint256++#++ ++[.var-name]#++validatorId++#++, ++[.var-type]#++address++#++ ++[.var-name]#++nodeAddress++#++)++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[ValidatorService-_removeNodeAddress-uint256-address-]]
+==== `++_removeNodeAddress(++[.var-type]#++uint256++#++ ++[.var-name]#++validatorId++#++, ++[.var-type]#++address++#++ ++[.var-name]#++nodeAddress++#++)++` [.item-kind]#internal#
+
+
+
+
+[.contract-item]
+[[ValidatorService-ValidatorRegistered-uint256-]]
+==== `++ValidatorRegistered(++[.var-type]#++uint256++#++ ++[.var-name]#++validatorId++#++)++` [.item-kind]#event#
+
+Emitted when a validator registers.
+
+[.contract-item]
+[[ValidatorService-ValidatorAddressChanged-uint256-address-]]
+==== `++ValidatorAddressChanged(++[.var-type]#++uint256++#++ ++[.var-name]#++validatorId++#++, ++[.var-type]#++address++#++ ++[.var-name]#++newAddress++#++)++` [.item-kind]#event#
+
+Emitted when a validator address changes.
+
+[.contract-item]
+[[ValidatorService-ValidatorWasEnabled-uint256-]]
+==== `++ValidatorWasEnabled(++[.var-type]#++uint256++#++ ++[.var-name]#++validatorId++#++)++` [.item-kind]#event#
+
+
+
+[.contract-item]
+[[ValidatorService-ValidatorWasDisabled-uint256-]]
+==== `++ValidatorWasDisabled(++[.var-type]#++uint256++#++ ++[.var-name]#++validatorId++#++)++` [.item-kind]#event#
+
+
+
+[.contract-item]
+[[ValidatorService-NodeAddressWasAdded-uint256-address-]]
+==== `++NodeAddressWasAdded(++[.var-type]#++uint256++#++ ++[.var-name]#++validatorId++#++, ++[.var-type]#++address++#++ ++[.var-name]#++nodeAddress++#++)++` [.item-kind]#event#
+
+Emitted when a node address is linked to a validator.
+
+[.contract-item]
+[[ValidatorService-NodeAddressWasRemoved-uint256-address-]]
+==== `++NodeAddressWasRemoved(++[.var-type]#++uint256++#++ ++[.var-name]#++validatorId++#++, ++[.var-type]#++address++#++ ++[.var-name]#++nodeAddress++#++)++` [.item-kind]#event#
+
+Emitted when a node address is unlinked from a validator.
+

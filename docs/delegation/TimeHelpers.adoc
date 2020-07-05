@@ -1,0 +1,60 @@
+:TimeHelpers: pass:normal[xref:#TimeHelpers[`++TimeHelpers++`]]
+:calculateProofOfUseLockEndTime: pass:normal[xref:#TimeHelpers-calculateProofOfUseLockEndTime-uint256-uint256-[`++calculateProofOfUseLockEndTime++`]]
+:addMonths: pass:normal[xref:#TimeHelpers-addMonths-uint256-uint256-[`++addMonths++`]]
+:getCurrentMonth: pass:normal[xref:#TimeHelpers-getCurrentMonth--[`++getCurrentMonth++`]]
+:timestampToMonth: pass:normal[xref:#TimeHelpers-timestampToMonth-uint256-[`++timestampToMonth++`]]
+:monthToTimestamp: pass:normal[xref:#TimeHelpers-monthToTimestamp-uint256-[`++monthToTimestamp++`]]
+
+[.contract]
+[[TimeHelpers]]
+=== `++TimeHelpers++`
+
+The contract performs time operations.
+
+These functions are used to calculate monthly and Proof of Use epochs.
+
+
+[.contract-index]
+.Functions
+--
+* {xref-TimeHelpers-calculateProofOfUseLockEndTime-uint256-uint256-}[`++calculateProofOfUseLockEndTime(month, lockUpPeriodDays)++`]
+* {xref-TimeHelpers-addMonths-uint256-uint256-}[`++addMonths(fromTimestamp, n)++`]
+* {xref-TimeHelpers-getCurrentMonth--}[`++getCurrentMonth()++`]
+* {xref-TimeHelpers-timestampToMonth-uint256-}[`++timestampToMonth(timestamp)++`]
+* {xref-TimeHelpers-monthToTimestamp-uint256-}[`++monthToTimestamp(_month)++`]
+
+--
+
+
+
+[.contract-item]
+[[TimeHelpers-calculateProofOfUseLockEndTime-uint256-uint256-]]
+==== `++calculateProofOfUseLockEndTime(++[.var-type]#++uint256++#++ ++[.var-name]#++month++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++lockUpPeriodDays++#++) → ++[.var-type]#++uint256++#++ ++[.var-name]#++timestamp++#++++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[TimeHelpers-addMonths-uint256-uint256-]]
+==== `++addMonths(++[.var-type]#++uint256++#++ ++[.var-name]#++fromTimestamp++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++n++#++) → ++[.var-type]#++uint256++#++++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[TimeHelpers-getCurrentMonth--]]
+==== `++getCurrentMonth() → ++[.var-type]#++uint256++#++++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[TimeHelpers-timestampToMonth-uint256-]]
+==== `++timestampToMonth(++[.var-type]#++uint256++#++ ++[.var-name]#++timestamp++#++) → ++[.var-type]#++uint256++#++++` [.item-kind]#public#
+
+
+
+[.contract-item]
+[[TimeHelpers-monthToTimestamp-uint256-]]
+==== `++monthToTimestamp(++[.var-type]#++uint256++#++ ++[.var-name]#++_month++#++) → ++[.var-type]#++uint256++#++ ++[.var-name]#++timestamp++#++++` [.item-kind]#public#
+
+
+
+

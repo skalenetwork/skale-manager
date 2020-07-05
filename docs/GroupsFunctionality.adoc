@@ -1,0 +1,198 @@
+:GroupsFunctionality: pass:normal[xref:#GroupsFunctionality[`++GroupsFunctionality++`]]
+:_executorName: pass:normal[xref:#GroupsFunctionality-_executorName-string[`++_executorName++`]]
+:_dataName: pass:normal[xref:#GroupsFunctionality-_dataName-string[`++_dataName++`]]
+:verifySignature: pass:normal[xref:#GroupsFunctionality-verifySignature-bytes32-uint256-uint256-uint256-uint256-[`++verifySignature++`]]
+:initialize: pass:normal[xref:#GroupsFunctionality-initialize-string-string-address-[`++initialize++`]]
+:addGroup: pass:normal[xref:#GroupsFunctionality-addGroup-bytes32-uint256-bytes32-[`++addGroup++`]]
+:deleteGroup: pass:normal[xref:#GroupsFunctionality-deleteGroup-bytes32-[`++deleteGroup++`]]
+:upgradeGroup: pass:normal[xref:#GroupsFunctionality-upgradeGroup-bytes32-uint256-bytes32-[`++upgradeGroup++`]]
+:_findNode: pass:normal[xref:#GroupsFunctionality-_findNode-bytes32-uint256-[`++_findNode++`]]
+:_generateGroup: pass:normal[xref:#GroupsFunctionality-_generateGroup-bytes32-[`++_generateGroup++`]]
+:_swap: pass:normal[xref:#GroupsFunctionality-_swap-uint256---uint256-uint256-[`++_swap++`]]
+:GroupAdded: pass:normal[xref:#GroupsFunctionality-GroupAdded-bytes32-bytes32-uint32-uint256-[`++GroupAdded++`]]
+:ExceptionSet: pass:normal[xref:#GroupsFunctionality-ExceptionSet-bytes32-uint256-uint32-uint256-[`++ExceptionSet++`]]
+:GroupDeleted: pass:normal[xref:#GroupsFunctionality-GroupDeleted-bytes32-uint32-uint256-[`++GroupDeleted++`]]
+:GroupUpgraded: pass:normal[xref:#GroupsFunctionality-GroupUpgraded-bytes32-bytes32-uint32-uint256-[`++GroupUpgraded++`]]
+:GroupGenerated: pass:normal[xref:#GroupsFunctionality-GroupGenerated-bytes32-uint256---uint32-uint256-[`++GroupGenerated++`]]
+
+[.contract]
+[[GroupsFunctionality]]
+=== `++GroupsFunctionality++`
+
+
+
+[.contract-index]
+.Modifiers
+--
+
+[.contract-subindex-inherited]
+.Permissions
+* {xref-Permissions-allow-string-}[`++allow(contractName)++`]
+* {xref-Permissions-allowTwo-string-string-}[`++allowTwo(contractName1, contractName2)++`]
+* {xref-Permissions-allowThree-string-string-string-}[`++allowThree(contractName1, contractName2, contractName3)++`]
+
+[.contract-subindex-inherited]
+.OwnableUpgradeSafe
+* {xref-OwnableUpgradeSafe-onlyOwner--}[`++onlyOwner()++`]
+
+[.contract-subindex-inherited]
+.ContextUpgradeSafe
+
+[.contract-subindex-inherited]
+.Initializable
+* {xref-Initializable-initializer--}[`++initializer()++`]
+
+--
+
+[.contract-index]
+.Functions
+--
+* {xref-GroupsFunctionality-verifySignature-bytes32-uint256-uint256-uint256-uint256-}[`++verifySignature(groupIndex, signatureX, signatureY, hashX, hashY)++`]
+* {xref-GroupsFunctionality-initialize-string-string-address-}[`++initialize(newExecutorName, newDataName, newContractsAddress)++`]
+* {xref-GroupsFunctionality-addGroup-bytes32-uint256-bytes32-}[`++addGroup(groupIndex, newRecommendedNumberOfNodes, data)++`]
+* {xref-GroupsFunctionality-deleteGroup-bytes32-}[`++deleteGroup(groupIndex)++`]
+* {xref-GroupsFunctionality-upgradeGroup-bytes32-uint256-bytes32-}[`++upgradeGroup(groupIndex, newRecommendedNumberOfNodes, data)++`]
+* {xref-GroupsFunctionality-_findNode-bytes32-uint256-}[`++_findNode(groupIndex, nodeIndex)++`]
+* {xref-GroupsFunctionality-_generateGroup-bytes32-}[`++_generateGroup(groupIndex)++`]
+* {xref-GroupsFunctionality-_swap-uint256---uint256-uint256-}[`++_swap(array, index1, index2)++`]
+
+[.contract-subindex-inherited]
+.Permissions
+* {xref-Permissions-initialize-address-}[`++initialize(contractManager)++`]
+* {xref-Permissions-_isOwner--}[`++_isOwner()++`]
+
+[.contract-subindex-inherited]
+.OwnableUpgradeSafe
+* {xref-OwnableUpgradeSafe-__Ownable_init--}[`++__Ownable_init()++`]
+* {xref-OwnableUpgradeSafe-__Ownable_init_unchained--}[`++__Ownable_init_unchained()++`]
+* {xref-OwnableUpgradeSafe-owner--}[`++owner()++`]
+* {xref-OwnableUpgradeSafe-renounceOwnership--}[`++renounceOwnership()++`]
+* {xref-OwnableUpgradeSafe-transferOwnership-address-}[`++transferOwnership(newOwner)++`]
+
+[.contract-subindex-inherited]
+.ContextUpgradeSafe
+* {xref-ContextUpgradeSafe-__Context_init--}[`++__Context_init()++`]
+* {xref-ContextUpgradeSafe-__Context_init_unchained--}[`++__Context_init_unchained()++`]
+* {xref-ContextUpgradeSafe-_msgSender--}[`++_msgSender()++`]
+* {xref-ContextUpgradeSafe-_msgData--}[`++_msgData()++`]
+
+[.contract-subindex-inherited]
+.Initializable
+
+--
+
+[.contract-index]
+.Events
+--
+* {xref-GroupsFunctionality-GroupAdded-bytes32-bytes32-uint32-uint256-}[`++GroupAdded(groupIndex, groupData, time, gasSpend)++`]
+* {xref-GroupsFunctionality-ExceptionSet-bytes32-uint256-uint32-uint256-}[`++ExceptionSet(groupIndex, exceptionNodeIndex, time, gasSpend)++`]
+* {xref-GroupsFunctionality-GroupDeleted-bytes32-uint32-uint256-}[`++GroupDeleted(groupIndex, time, gasSpend)++`]
+* {xref-GroupsFunctionality-GroupUpgraded-bytes32-bytes32-uint32-uint256-}[`++GroupUpgraded(groupIndex, groupData, time, gasSpend)++`]
+* {xref-GroupsFunctionality-GroupGenerated-bytes32-uint256---uint32-uint256-}[`++GroupGenerated(groupIndex, nodesInGroup, time, gasSpend)++`]
+
+[.contract-subindex-inherited]
+.Permissions
+
+[.contract-subindex-inherited]
+.OwnableUpgradeSafe
+* {xref-OwnableUpgradeSafe-OwnershipTransferred-address-address-}[`++OwnershipTransferred(previousOwner, newOwner)++`]
+
+[.contract-subindex-inherited]
+.ContextUpgradeSafe
+
+[.contract-subindex-inherited]
+.Initializable
+
+--
+
+
+[.contract-item]
+[[GroupsFunctionality-verifySignature-bytes32-uint256-uint256-uint256-uint256-]]
+==== `++verifySignature(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++signatureX++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++signatureY++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++hashX++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++hashY++#++) → ++[.var-type]#++bool++#++++` [.item-kind]#external#
+
+verifySignature - verify signature which create Group by Groups BLS master public key
+
+
+[.contract-item]
+[[GroupsFunctionality-initialize-string-string-address-]]
+==== `++initialize(++[.var-type]#++string++#++ ++[.var-name]#++newExecutorName++#++, ++[.var-type]#++string++#++ ++[.var-name]#++newDataName++#++, ++[.var-type]#++address++#++ ++[.var-name]#++newContractsAddress++#++)++` [.item-kind]#public#
+
+contructor in Permissions approach
+
+
+[.contract-item]
+[[GroupsFunctionality-addGroup-bytes32-uint256-bytes32-]]
+==== `++addGroup(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++newRecommendedNumberOfNodes++#++, ++[.var-type]#++bytes32++#++ ++[.var-name]#++data++#++)++` [.item-kind]#public#
+
+addGroup - creates and adds new Group to Data contract
+function could be run only by executor
+
+
+[.contract-item]
+[[GroupsFunctionality-deleteGroup-bytes32-]]
+==== `++deleteGroup(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++)++` [.item-kind]#public#
+
+deleteGroup - delete Group from Data contract
+function could be run only by executor
+
+
+[.contract-item]
+[[GroupsFunctionality-upgradeGroup-bytes32-uint256-bytes32-]]
+==== `++upgradeGroup(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++newRecommendedNumberOfNodes++#++, ++[.var-type]#++bytes32++#++ ++[.var-name]#++data++#++)++` [.item-kind]#public#
+
+upgradeGroup - upgrade Group at Data contract
+function could be run only by executor
+
+
+[.contract-item]
+[[GroupsFunctionality-_findNode-bytes32-uint256-]]
+==== `++_findNode(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++) → ++[.var-type]#++uint256++#++ ++[.var-name]#++index++#++++` [.item-kind]#internal#
+
+_findNode - find local index of Node in Schain
+
+
+[.contract-item]
+[[GroupsFunctionality-_generateGroup-bytes32-]]
+==== `++_generateGroup(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++) → ++[.var-type]#++uint256[]++#++++` [.item-kind]#internal#
+
+_generateGroup - abstract method which would be implemented in inherited contracts
+function generates group of Nodes
+
+
+[.contract-item]
+[[GroupsFunctionality-_swap-uint256---uint256-uint256-]]
+==== `++_swap(++[.var-type]#++uint256[]++#++ ++[.var-name]#++array++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++index1++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++index2++#++)++` [.item-kind]#internal#
+
+
+
+
+[.contract-item]
+[[GroupsFunctionality-GroupAdded-bytes32-bytes32-uint32-uint256-]]
+==== `++GroupAdded(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++, ++[.var-type]#++bytes32++#++ ++[.var-name]#++groupData++#++, ++[.var-type]#++uint32++#++ ++[.var-name]#++time++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++gasSpend++#++)++` [.item-kind]#event#
+
+
+
+[.contract-item]
+[[GroupsFunctionality-ExceptionSet-bytes32-uint256-uint32-uint256-]]
+==== `++ExceptionSet(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++exceptionNodeIndex++#++, ++[.var-type]#++uint32++#++ ++[.var-name]#++time++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++gasSpend++#++)++` [.item-kind]#event#
+
+
+
+[.contract-item]
+[[GroupsFunctionality-GroupDeleted-bytes32-uint32-uint256-]]
+==== `++GroupDeleted(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++, ++[.var-type]#++uint32++#++ ++[.var-name]#++time++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++gasSpend++#++)++` [.item-kind]#event#
+
+
+
+[.contract-item]
+[[GroupsFunctionality-GroupUpgraded-bytes32-bytes32-uint32-uint256-]]
+==== `++GroupUpgraded(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++, ++[.var-type]#++bytes32++#++ ++[.var-name]#++groupData++#++, ++[.var-type]#++uint32++#++ ++[.var-name]#++time++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++gasSpend++#++)++` [.item-kind]#event#
+
+
+
+[.contract-item]
+[[GroupsFunctionality-GroupGenerated-bytes32-uint256---uint32-uint256-]]
+==== `++GroupGenerated(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++, ++[.var-type]#++uint256[]++#++ ++[.var-name]#++nodesInGroup++#++, ++[.var-type]#++uint32++#++ ++[.var-name]#++time++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++gasSpend++#++)++` [.item-kind]#event#
+
+
+

@@ -1,0 +1,114 @@
+:SkaleManagerMock: pass:normal[xref:#SkaleManagerMock[`++SkaleManagerMock++`]]
+:constructor: pass:normal[xref:#SkaleManagerMock-constructor-address-[`++constructor++`]]
+:payBounty: pass:normal[xref:#SkaleManagerMock-payBounty-uint256-uint256-[`++payBounty++`]]
+:tokensReceived: pass:normal[xref:#SkaleManagerMock-tokensReceived-address-address-address-uint256-bytes-bytes-[`++tokensReceived++`]]
+
+[.contract]
+[[SkaleManagerMock]]
+=== `++SkaleManagerMock++`
+
+
+
+[.contract-index]
+.Modifiers
+--
+
+[.contract-subindex-inherited]
+.IERC777Recipient
+
+[.contract-subindex-inherited]
+.Permissions
+* {xref-Permissions-allow-string-}[`++allow(contractName)++`]
+* {xref-Permissions-allowTwo-string-string-}[`++allowTwo(contractName1, contractName2)++`]
+* {xref-Permissions-allowThree-string-string-string-}[`++allowThree(contractName1, contractName2, contractName3)++`]
+
+[.contract-subindex-inherited]
+.OwnableUpgradeSafe
+* {xref-OwnableUpgradeSafe-onlyOwner--}[`++onlyOwner()++`]
+
+[.contract-subindex-inherited]
+.ContextUpgradeSafe
+
+[.contract-subindex-inherited]
+.Initializable
+* {xref-Initializable-initializer--}[`++initializer()++`]
+
+--
+
+[.contract-index]
+.Functions
+--
+* {xref-SkaleManagerMock-constructor-address-}[`++constructor(contractManager)++`]
+* {xref-SkaleManagerMock-payBounty-uint256-uint256-}[`++payBounty(validatorId, amount)++`]
+* {xref-SkaleManagerMock-tokensReceived-address-address-address-uint256-bytes-bytes-}[`++tokensReceived(operator, from, to, amount, userData, operatorData)++`]
+
+[.contract-subindex-inherited]
+.IERC777Recipient
+
+[.contract-subindex-inherited]
+.Permissions
+* {xref-Permissions-initialize-address-}[`++initialize(contractManager)++`]
+* {xref-Permissions-_isOwner--}[`++_isOwner()++`]
+
+[.contract-subindex-inherited]
+.OwnableUpgradeSafe
+* {xref-OwnableUpgradeSafe-__Ownable_init--}[`++__Ownable_init()++`]
+* {xref-OwnableUpgradeSafe-__Ownable_init_unchained--}[`++__Ownable_init_unchained()++`]
+* {xref-OwnableUpgradeSafe-owner--}[`++owner()++`]
+* {xref-OwnableUpgradeSafe-renounceOwnership--}[`++renounceOwnership()++`]
+* {xref-OwnableUpgradeSafe-transferOwnership-address-}[`++transferOwnership(newOwner)++`]
+
+[.contract-subindex-inherited]
+.ContextUpgradeSafe
+* {xref-ContextUpgradeSafe-__Context_init--}[`++__Context_init()++`]
+* {xref-ContextUpgradeSafe-__Context_init_unchained--}[`++__Context_init_unchained()++`]
+* {xref-ContextUpgradeSafe-_msgSender--}[`++_msgSender()++`]
+* {xref-ContextUpgradeSafe-_msgData--}[`++_msgData()++`]
+
+[.contract-subindex-inherited]
+.Initializable
+
+--
+
+[.contract-index]
+.Events
+--
+
+[.contract-subindex-inherited]
+.IERC777Recipient
+
+[.contract-subindex-inherited]
+.Permissions
+
+[.contract-subindex-inherited]
+.OwnableUpgradeSafe
+* {xref-OwnableUpgradeSafe-OwnershipTransferred-address-address-}[`++OwnershipTransferred(previousOwner, newOwner)++`]
+
+[.contract-subindex-inherited]
+.ContextUpgradeSafe
+
+[.contract-subindex-inherited]
+.Initializable
+
+--
+
+
+[.contract-item]
+[[SkaleManagerMock-constructor-address-]]
+==== `++constructor(++[.var-type]#++address++#++ ++[.var-name]#++contractManager++#++)++` [.item-kind]#public#
+
+
+
+[.contract-item]
+[[SkaleManagerMock-payBounty-uint256-uint256-]]
+==== `++payBounty(++[.var-type]#++uint256++#++ ++[.var-name]#++validatorId++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++amount++#++)++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[SkaleManagerMock-tokensReceived-address-address-address-uint256-bytes-bytes-]]
+==== `++tokensReceived(++[.var-type]#++address++#++ ++[.var-name]#++operator++#++, ++[.var-type]#++address++#++ ++[.var-name]#++from++#++, ++[.var-type]#++address++#++ ++[.var-name]#++to++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++amount++#++, ++[.var-type]#++bytes++#++ ++[.var-name]#++userData++#++, ++[.var-type]#++bytes++#++ ++[.var-name]#++operatorData++#++)++` [.item-kind]#external#
+
+
+
+

@@ -1,0 +1,98 @@
+:ECDH: pass:normal[xref:#ECDH[`++ECDH++`]]
+:publicKey: pass:normal[xref:#ECDH-publicKey-uint256-[`++publicKey++`]]
+:deriveKey: pass:normal[xref:#ECDH-deriveKey-uint256-uint256-uint256-[`++deriveKey++`]]
+:jAdd: pass:normal[xref:#ECDH-jAdd-uint256-uint256-uint256-uint256-[`++jAdd++`]]
+:jSub: pass:normal[xref:#ECDH-jSub-uint256-uint256-uint256-uint256-[`++jSub++`]]
+:jMul: pass:normal[xref:#ECDH-jMul-uint256-uint256-uint256-uint256-[`++jMul++`]]
+:jDiv: pass:normal[xref:#ECDH-jDiv-uint256-uint256-uint256-uint256-[`++jDiv++`]]
+:inverse: pass:normal[xref:#ECDH-inverse-uint256-[`++inverse++`]]
+:ecAdd: pass:normal[xref:#ECDH-ecAdd-uint256-uint256-uint256-uint256-uint256-uint256-[`++ecAdd++`]]
+:ecDouble: pass:normal[xref:#ECDH-ecDouble-uint256-uint256-uint256-[`++ecDouble++`]]
+:ecMul: pass:normal[xref:#ECDH-ecMul-uint256-uint256-uint256-uint256-[`++ecMul++`]]
+
+[.contract]
+[[ECDH]]
+=== `++ECDH++`
+
+
+
+
+[.contract-index]
+.Functions
+--
+* {xref-ECDH-publicKey-uint256-}[`++publicKey(privKey)++`]
+* {xref-ECDH-deriveKey-uint256-uint256-uint256-}[`++deriveKey(privKey, pubX, pubY)++`]
+* {xref-ECDH-jAdd-uint256-uint256-uint256-uint256-}[`++jAdd(x1, z1, x2, z2)++`]
+* {xref-ECDH-jSub-uint256-uint256-uint256-uint256-}[`++jSub(x1, z1, x2, z2)++`]
+* {xref-ECDH-jMul-uint256-uint256-uint256-uint256-}[`++jMul(x1, z1, x2, z2)++`]
+* {xref-ECDH-jDiv-uint256-uint256-uint256-uint256-}[`++jDiv(x1, z1, x2, z2)++`]
+* {xref-ECDH-inverse-uint256-}[`++inverse(a)++`]
+* {xref-ECDH-ecAdd-uint256-uint256-uint256-uint256-uint256-uint256-}[`++ecAdd(x1, y1, z1, x2, y2, z2)++`]
+* {xref-ECDH-ecDouble-uint256-uint256-uint256-}[`++ecDouble(x1, y1, z1)++`]
+* {xref-ECDH-ecMul-uint256-uint256-uint256-uint256-}[`++ecMul(d, x1, y1, z1)++`]
+
+--
+
+
+
+[.contract-item]
+[[ECDH-publicKey-uint256-]]
+==== `++publicKey(++[.var-type]#++uint256++#++ ++[.var-name]#++privKey++#++) → ++[.var-type]#++uint256++#++ ++[.var-name]#++qx++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++qy++#++++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[ECDH-deriveKey-uint256-uint256-uint256-]]
+==== `++deriveKey(++[.var-type]#++uint256++#++ ++[.var-name]#++privKey++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++pubX++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++pubY++#++) → ++[.var-type]#++uint256++#++ ++[.var-name]#++qx++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++qy++#++++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[ECDH-jAdd-uint256-uint256-uint256-uint256-]]
+==== `++jAdd(++[.var-type]#++uint256++#++ ++[.var-name]#++x1++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++z1++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++x2++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++z2++#++) → ++[.var-type]#++uint256++#++ ++[.var-name]#++x3++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++z3++#++++` [.item-kind]#public#
+
+
+
+[.contract-item]
+[[ECDH-jSub-uint256-uint256-uint256-uint256-]]
+==== `++jSub(++[.var-type]#++uint256++#++ ++[.var-name]#++x1++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++z1++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++x2++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++z2++#++) → ++[.var-type]#++uint256++#++ ++[.var-name]#++x3++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++z3++#++++` [.item-kind]#public#
+
+
+
+[.contract-item]
+[[ECDH-jMul-uint256-uint256-uint256-uint256-]]
+==== `++jMul(++[.var-type]#++uint256++#++ ++[.var-name]#++x1++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++z1++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++x2++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++z2++#++) → ++[.var-type]#++uint256++#++ ++[.var-name]#++x3++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++z3++#++++` [.item-kind]#public#
+
+
+
+[.contract-item]
+[[ECDH-jDiv-uint256-uint256-uint256-uint256-]]
+==== `++jDiv(++[.var-type]#++uint256++#++ ++[.var-name]#++x1++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++z1++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++x2++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++z2++#++) → ++[.var-type]#++uint256++#++ ++[.var-name]#++x3++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++z3++#++++` [.item-kind]#public#
+
+
+
+[.contract-item]
+[[ECDH-inverse-uint256-]]
+==== `++inverse(++[.var-type]#++uint256++#++ ++[.var-name]#++a++#++) → ++[.var-type]#++uint256++#++ ++[.var-name]#++invA++#++++` [.item-kind]#public#
+
+
+
+[.contract-item]
+[[ECDH-ecAdd-uint256-uint256-uint256-uint256-uint256-uint256-]]
+==== `++ecAdd(++[.var-type]#++uint256++#++ ++[.var-name]#++x1++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++y1++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++z1++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++x2++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++y2++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++z2++#++) → ++[.var-type]#++uint256++#++ ++[.var-name]#++x3++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++y3++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++z3++#++++` [.item-kind]#public#
+
+
+
+[.contract-item]
+[[ECDH-ecDouble-uint256-uint256-uint256-]]
+==== `++ecDouble(++[.var-type]#++uint256++#++ ++[.var-name]#++x1++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++y1++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++z1++#++) → ++[.var-type]#++uint256++#++ ++[.var-name]#++x3++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++y3++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++z3++#++++` [.item-kind]#public#
+
+
+
+[.contract-item]
+[[ECDH-ecMul-uint256-uint256-uint256-uint256-]]
+==== `++ecMul(++[.var-type]#++uint256++#++ ++[.var-name]#++d++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++x1++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++y1++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++z1++#++) → ++[.var-type]#++uint256++#++ ++[.var-name]#++x3++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++y3++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++z3++#++++` [.item-kind]#public#
+
+
+
+

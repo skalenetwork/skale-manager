@@ -1,0 +1,261 @@
+:MonitorsFunctionality: pass:normal[xref:#MonitorsFunctionality[`++MonitorsFunctionality++`]]
+:addMonitor: pass:normal[xref:#MonitorsFunctionality-addMonitor-uint256-[`++addMonitor++`]]
+:upgradeMonitor: pass:normal[xref:#MonitorsFunctionality-upgradeMonitor-uint256-[`++upgradeMonitor++`]]
+:deleteMonitor: pass:normal[xref:#MonitorsFunctionality-deleteMonitor-uint256-[`++deleteMonitor++`]]
+:sendVerdict: pass:normal[xref:#MonitorsFunctionality-sendVerdict-uint256-struct-MonitorsData-Verdict-[`++sendVerdict++`]]
+:calculateMetrics: pass:normal[xref:#MonitorsFunctionality-calculateMetrics-uint256-[`++calculateMetrics++`]]
+:initialize: pass:normal[xref:#MonitorsFunctionality-initialize-address-[`++initialize++`]]
+:_generateGroup: pass:normal[xref:#MonitorsFunctionality-_generateGroup-bytes32-[`++_generateGroup++`]]
+:_median: pass:normal[xref:#MonitorsFunctionality-_median-uint256---[`++_median++`]]
+:_setMonitors: pass:normal[xref:#MonitorsFunctionality-_setMonitors-bytes32-uint256-[`++_setMonitors++`]]
+:_find: pass:normal[xref:#MonitorsFunctionality-_find-bytes32-uint256-[`++_find++`]]
+:_quickSort: pass:normal[xref:#MonitorsFunctionality-_quickSort-uint256---uint256-uint256-[`++_quickSort++`]]
+:_getDataFromBytes: pass:normal[xref:#MonitorsFunctionality-_getDataFromBytes-bytes32-[`++_getDataFromBytes++`]]
+:_getDataToBytes: pass:normal[xref:#MonitorsFunctionality-_getDataToBytes-uint256-[`++_getDataToBytes++`]]
+:MonitorCreated: pass:normal[xref:#MonitorsFunctionality-MonitorCreated-uint256-bytes32-uint256-uint32-uint256-[`++MonitorCreated++`]]
+:MonitorUpgraded: pass:normal[xref:#MonitorsFunctionality-MonitorUpgraded-uint256-bytes32-uint256-uint32-uint256-[`++MonitorUpgraded++`]]
+:MonitorsArray: pass:normal[xref:#MonitorsFunctionality-MonitorsArray-uint256-bytes32-uint256---uint32-uint256-[`++MonitorsArray++`]]
+:VerdictWasSent: pass:normal[xref:#MonitorsFunctionality-VerdictWasSent-uint256-uint256-uint32-uint32-bool-uint256-uint32-uint256-[`++VerdictWasSent++`]]
+:MetricsWereCalculated: pass:normal[xref:#MonitorsFunctionality-MetricsWereCalculated-uint256-uint32-uint32-uint32-uint256-[`++MetricsWereCalculated++`]]
+:PeriodsWereSet: pass:normal[xref:#MonitorsFunctionality-PeriodsWereSet-uint256-uint256-uint32-uint256-[`++PeriodsWereSet++`]]
+:MonitorRotated: pass:normal[xref:#MonitorsFunctionality-MonitorRotated-bytes32-uint256-[`++MonitorRotated++`]]
+
+[.contract]
+[[MonitorsFunctionality]]
+=== `++MonitorsFunctionality++`
+
+
+
+[.contract-index]
+.Modifiers
+--
+
+[.contract-subindex-inherited]
+.GroupsFunctionality
+
+[.contract-subindex-inherited]
+.Permissions
+* {xref-Permissions-allow-string-}[`++allow(contractName)++`]
+* {xref-Permissions-allowTwo-string-string-}[`++allowTwo(contractName1, contractName2)++`]
+* {xref-Permissions-allowThree-string-string-string-}[`++allowThree(contractName1, contractName2, contractName3)++`]
+
+[.contract-subindex-inherited]
+.OwnableUpgradeSafe
+* {xref-OwnableUpgradeSafe-onlyOwner--}[`++onlyOwner()++`]
+
+[.contract-subindex-inherited]
+.ContextUpgradeSafe
+
+[.contract-subindex-inherited]
+.Initializable
+* {xref-Initializable-initializer--}[`++initializer()++`]
+
+--
+
+[.contract-index]
+.Functions
+--
+* {xref-MonitorsFunctionality-addMonitor-uint256-}[`++addMonitor(nodeIndex)++`]
+* {xref-MonitorsFunctionality-upgradeMonitor-uint256-}[`++upgradeMonitor(nodeIndex)++`]
+* {xref-MonitorsFunctionality-deleteMonitor-uint256-}[`++deleteMonitor(nodeIndex)++`]
+* {xref-MonitorsFunctionality-sendVerdict-uint256-struct-MonitorsData-Verdict-}[`++sendVerdict(fromMonitorIndex, verdict)++`]
+* {xref-MonitorsFunctionality-calculateMetrics-uint256-}[`++calculateMetrics(nodeIndex)++`]
+* {xref-MonitorsFunctionality-initialize-address-}[`++initialize(contractManager)++`]
+* {xref-MonitorsFunctionality-_generateGroup-bytes32-}[`++_generateGroup(groupIndex)++`]
+* {xref-MonitorsFunctionality-_median-uint256---}[`++_median(values)++`]
+* {xref-MonitorsFunctionality-_setMonitors-bytes32-uint256-}[`++_setMonitors(groupIndex, nodeIndex)++`]
+* {xref-MonitorsFunctionality-_find-bytes32-uint256-}[`++_find(monitorIndex, nodeIndex)++`]
+* {xref-MonitorsFunctionality-_quickSort-uint256---uint256-uint256-}[`++_quickSort(array, left, right)++`]
+* {xref-MonitorsFunctionality-_getDataFromBytes-bytes32-}[`++_getDataFromBytes(data)++`]
+* {xref-MonitorsFunctionality-_getDataToBytes-uint256-}[`++_getDataToBytes(nodeIndex)++`]
+
+[.contract-subindex-inherited]
+.GroupsFunctionality
+* {xref-GroupsFunctionality-verifySignature-bytes32-uint256-uint256-uint256-uint256-}[`++verifySignature(groupIndex, signatureX, signatureY, hashX, hashY)++`]
+* {xref-GroupsFunctionality-initialize-string-string-address-}[`++initialize(newExecutorName, newDataName, newContractsAddress)++`]
+* {xref-GroupsFunctionality-addGroup-bytes32-uint256-bytes32-}[`++addGroup(groupIndex, newRecommendedNumberOfNodes, data)++`]
+* {xref-GroupsFunctionality-deleteGroup-bytes32-}[`++deleteGroup(groupIndex)++`]
+* {xref-GroupsFunctionality-upgradeGroup-bytes32-uint256-bytes32-}[`++upgradeGroup(groupIndex, newRecommendedNumberOfNodes, data)++`]
+* {xref-GroupsFunctionality-_findNode-bytes32-uint256-}[`++_findNode(groupIndex, nodeIndex)++`]
+* {xref-GroupsFunctionality-_swap-uint256---uint256-uint256-}[`++_swap(array, index1, index2)++`]
+
+[.contract-subindex-inherited]
+.Permissions
+* {xref-Permissions-_isOwner--}[`++_isOwner()++`]
+
+[.contract-subindex-inherited]
+.OwnableUpgradeSafe
+* {xref-OwnableUpgradeSafe-__Ownable_init--}[`++__Ownable_init()++`]
+* {xref-OwnableUpgradeSafe-__Ownable_init_unchained--}[`++__Ownable_init_unchained()++`]
+* {xref-OwnableUpgradeSafe-owner--}[`++owner()++`]
+* {xref-OwnableUpgradeSafe-renounceOwnership--}[`++renounceOwnership()++`]
+* {xref-OwnableUpgradeSafe-transferOwnership-address-}[`++transferOwnership(newOwner)++`]
+
+[.contract-subindex-inherited]
+.ContextUpgradeSafe
+* {xref-ContextUpgradeSafe-__Context_init--}[`++__Context_init()++`]
+* {xref-ContextUpgradeSafe-__Context_init_unchained--}[`++__Context_init_unchained()++`]
+* {xref-ContextUpgradeSafe-_msgSender--}[`++_msgSender()++`]
+* {xref-ContextUpgradeSafe-_msgData--}[`++_msgData()++`]
+
+[.contract-subindex-inherited]
+.Initializable
+
+--
+
+[.contract-index]
+.Events
+--
+* {xref-MonitorsFunctionality-MonitorCreated-uint256-bytes32-uint256-uint32-uint256-}[`++MonitorCreated(nodeIndex, groupIndex, numberOfMonitors, time, gasSpend)++`]
+* {xref-MonitorsFunctionality-MonitorUpgraded-uint256-bytes32-uint256-uint32-uint256-}[`++MonitorUpgraded(nodeIndex, groupIndex, numberOfMonitors, time, gasSpend)++`]
+* {xref-MonitorsFunctionality-MonitorsArray-uint256-bytes32-uint256---uint32-uint256-}[`++MonitorsArray(nodeIndex, groupIndex, nodesInGroup, time, gasSpend)++`]
+* {xref-MonitorsFunctionality-VerdictWasSent-uint256-uint256-uint32-uint32-bool-uint256-uint32-uint256-}[`++VerdictWasSent(fromMonitorIndex, toNodeIndex, downtime, latency, status, previousBlockEvent, time, gasSpend)++`]
+* {xref-MonitorsFunctionality-MetricsWereCalculated-uint256-uint32-uint32-uint32-uint256-}[`++MetricsWereCalculated(forNodeIndex, averageDowntime, averageLatency, time, gasSpend)++`]
+* {xref-MonitorsFunctionality-PeriodsWereSet-uint256-uint256-uint32-uint256-}[`++PeriodsWereSet(rewardPeriod, deltaPeriod, time, gasSpend)++`]
+* {xref-MonitorsFunctionality-MonitorRotated-bytes32-uint256-}[`++MonitorRotated(groupIndex, newNode)++`]
+
+[.contract-subindex-inherited]
+.GroupsFunctionality
+* {xref-GroupsFunctionality-GroupAdded-bytes32-bytes32-uint32-uint256-}[`++GroupAdded(groupIndex, groupData, time, gasSpend)++`]
+* {xref-GroupsFunctionality-ExceptionSet-bytes32-uint256-uint32-uint256-}[`++ExceptionSet(groupIndex, exceptionNodeIndex, time, gasSpend)++`]
+* {xref-GroupsFunctionality-GroupDeleted-bytes32-uint32-uint256-}[`++GroupDeleted(groupIndex, time, gasSpend)++`]
+* {xref-GroupsFunctionality-GroupUpgraded-bytes32-bytes32-uint32-uint256-}[`++GroupUpgraded(groupIndex, groupData, time, gasSpend)++`]
+* {xref-GroupsFunctionality-GroupGenerated-bytes32-uint256---uint32-uint256-}[`++GroupGenerated(groupIndex, nodesInGroup, time, gasSpend)++`]
+
+[.contract-subindex-inherited]
+.Permissions
+
+[.contract-subindex-inherited]
+.OwnableUpgradeSafe
+* {xref-OwnableUpgradeSafe-OwnershipTransferred-address-address-}[`++OwnershipTransferred(previousOwner, newOwner)++`]
+
+[.contract-subindex-inherited]
+.ContextUpgradeSafe
+
+[.contract-subindex-inherited]
+.Initializable
+
+--
+
+
+[.contract-item]
+[[MonitorsFunctionality-addMonitor-uint256-]]
+==== `++addMonitor(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++)++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[MonitorsFunctionality-upgradeMonitor-uint256-]]
+==== `++upgradeMonitor(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++)++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[MonitorsFunctionality-deleteMonitor-uint256-]]
+==== `++deleteMonitor(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++)++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[MonitorsFunctionality-sendVerdict-uint256-struct-MonitorsData-Verdict-]]
+==== `++sendVerdict(++[.var-type]#++uint256++#++ ++[.var-name]#++fromMonitorIndex++#++, ++[.var-type]#++struct MonitorsData.Verdict++#++ ++[.var-name]#++verdict++#++)++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[MonitorsFunctionality-calculateMetrics-uint256-]]
+==== `++calculateMetrics(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++) → ++[.var-type]#++uint256++#++ ++[.var-name]#++averageDowntime++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++averageLatency++#++++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[MonitorsFunctionality-initialize-address-]]
+==== `++initialize(++[.var-type]#++address++#++ ++[.var-name]#++contractManager++#++)++` [.item-kind]#public#
+
+
+
+[.contract-item]
+[[MonitorsFunctionality-_generateGroup-bytes32-]]
+==== `++_generateGroup(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++) → ++[.var-type]#++uint256[]++#++++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[MonitorsFunctionality-_median-uint256---]]
+==== `++_median(++[.var-type]#++uint256[]++#++ ++[.var-name]#++values++#++) → ++[.var-type]#++uint256++#++++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[MonitorsFunctionality-_setMonitors-bytes32-uint256-]]
+==== `++_setMonitors(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++) → ++[.var-type]#++uint256++#++++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[MonitorsFunctionality-_find-bytes32-uint256-]]
+==== `++_find(++[.var-type]#++bytes32++#++ ++[.var-name]#++monitorIndex++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++) → ++[.var-type]#++uint256++#++ ++[.var-name]#++index++#++, ++[.var-type]#++uint32++#++ ++[.var-name]#++time++#++++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[MonitorsFunctionality-_quickSort-uint256---uint256-uint256-]]
+==== `++_quickSort(++[.var-type]#++uint256[]++#++ ++[.var-name]#++array++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++left++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++right++#++)++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[MonitorsFunctionality-_getDataFromBytes-bytes32-]]
+==== `++_getDataFromBytes(++[.var-type]#++bytes32++#++ ++[.var-name]#++data++#++) → ++[.var-type]#++uint256++#++ ++[.var-name]#++index++#++, ++[.var-type]#++uint32++#++ ++[.var-name]#++time++#++++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[MonitorsFunctionality-_getDataToBytes-uint256-]]
+==== `++_getDataToBytes(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++) → ++[.var-type]#++bytes32++#++ ++[.var-name]#++bytesParameters++#++++` [.item-kind]#internal#
+
+
+
+
+[.contract-item]
+[[MonitorsFunctionality-MonitorCreated-uint256-bytes32-uint256-uint32-uint256-]]
+==== `++MonitorCreated(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++, ++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++numberOfMonitors++#++, ++[.var-type]#++uint32++#++ ++[.var-name]#++time++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++gasSpend++#++)++` [.item-kind]#event#
+
+
+
+[.contract-item]
+[[MonitorsFunctionality-MonitorUpgraded-uint256-bytes32-uint256-uint32-uint256-]]
+==== `++MonitorUpgraded(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++, ++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++numberOfMonitors++#++, ++[.var-type]#++uint32++#++ ++[.var-name]#++time++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++gasSpend++#++)++` [.item-kind]#event#
+
+
+
+[.contract-item]
+[[MonitorsFunctionality-MonitorsArray-uint256-bytes32-uint256---uint32-uint256-]]
+==== `++MonitorsArray(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++, ++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++, ++[.var-type]#++uint256[]++#++ ++[.var-name]#++nodesInGroup++#++, ++[.var-type]#++uint32++#++ ++[.var-name]#++time++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++gasSpend++#++)++` [.item-kind]#event#
+
+
+
+[.contract-item]
+[[MonitorsFunctionality-VerdictWasSent-uint256-uint256-uint32-uint32-bool-uint256-uint32-uint256-]]
+==== `++VerdictWasSent(++[.var-type]#++uint256++#++ ++[.var-name]#++fromMonitorIndex++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++toNodeIndex++#++, ++[.var-type]#++uint32++#++ ++[.var-name]#++downtime++#++, ++[.var-type]#++uint32++#++ ++[.var-name]#++latency++#++, ++[.var-type]#++bool++#++ ++[.var-name]#++status++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++previousBlockEvent++#++, ++[.var-type]#++uint32++#++ ++[.var-name]#++time++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++gasSpend++#++)++` [.item-kind]#event#
+
+
+
+[.contract-item]
+[[MonitorsFunctionality-MetricsWereCalculated-uint256-uint32-uint32-uint32-uint256-]]
+==== `++MetricsWereCalculated(++[.var-type]#++uint256++#++ ++[.var-name]#++forNodeIndex++#++, ++[.var-type]#++uint32++#++ ++[.var-name]#++averageDowntime++#++, ++[.var-type]#++uint32++#++ ++[.var-name]#++averageLatency++#++, ++[.var-type]#++uint32++#++ ++[.var-name]#++time++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++gasSpend++#++)++` [.item-kind]#event#
+
+
+
+[.contract-item]
+[[MonitorsFunctionality-PeriodsWereSet-uint256-uint256-uint32-uint256-]]
+==== `++PeriodsWereSet(++[.var-type]#++uint256++#++ ++[.var-name]#++rewardPeriod++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++deltaPeriod++#++, ++[.var-type]#++uint32++#++ ++[.var-name]#++time++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++gasSpend++#++)++` [.item-kind]#event#
+
+
+
+[.contract-item]
+[[MonitorsFunctionality-MonitorRotated-bytes32-uint256-]]
+==== `++MonitorRotated(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++newNode++#++)++` [.item-kind]#event#
+
+
+

@@ -1,0 +1,50 @@
+:MathUtilsTester: pass:normal[xref:#MathUtilsTester[`++MathUtilsTester++`]]
+:boundedSub: pass:normal[xref:#MathUtilsTester-boundedSub-uint256-uint256-[`++boundedSub++`]]
+:boundedSubWithoutEvent: pass:normal[xref:#MathUtilsTester-boundedSubWithoutEvent-uint256-uint256-[`++boundedSubWithoutEvent++`]]
+:muchGreater: pass:normal[xref:#MathUtilsTester-muchGreater-uint256-uint256-[`++muchGreater++`]]
+:approximatelyEqual: pass:normal[xref:#MathUtilsTester-approximatelyEqual-uint256-uint256-[`++approximatelyEqual++`]]
+
+[.contract]
+[[MathUtilsTester]]
+=== `++MathUtilsTester++`
+
+
+
+
+[.contract-index]
+.Functions
+--
+* {xref-MathUtilsTester-boundedSub-uint256-uint256-}[`++boundedSub(a, b)++`]
+* {xref-MathUtilsTester-boundedSubWithoutEvent-uint256-uint256-}[`++boundedSubWithoutEvent(a, b)++`]
+* {xref-MathUtilsTester-muchGreater-uint256-uint256-}[`++muchGreater(a, b)++`]
+* {xref-MathUtilsTester-approximatelyEqual-uint256-uint256-}[`++approximatelyEqual(a, b)++`]
+
+--
+
+
+
+[.contract-item]
+[[MathUtilsTester-boundedSub-uint256-uint256-]]
+==== `++boundedSub(++[.var-type]#++uint256++#++ ++[.var-name]#++a++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++b++#++) → ++[.var-type]#++uint256++#++++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[MathUtilsTester-boundedSubWithoutEvent-uint256-uint256-]]
+==== `++boundedSubWithoutEvent(++[.var-type]#++uint256++#++ ++[.var-name]#++a++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++b++#++) → ++[.var-type]#++uint256++#++++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[MathUtilsTester-muchGreater-uint256-uint256-]]
+==== `++muchGreater(++[.var-type]#++uint256++#++ ++[.var-name]#++a++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++b++#++) → ++[.var-type]#++bool++#++++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[MathUtilsTester-approximatelyEqual-uint256-uint256-]]
+==== `++approximatelyEqual(++[.var-type]#++uint256++#++ ++[.var-name]#++a++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++b++#++) → ++[.var-type]#++bool++#++++` [.item-kind]#external#
+
+
+
+

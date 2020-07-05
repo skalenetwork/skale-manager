@@ -1,0 +1,232 @@
+:SchainsFunctionality: pass:normal[xref:#SchainsFunctionality[`++SchainsFunctionality++`]]
+:addSchain: pass:normal[xref:#SchainsFunctionality-addSchain-address-uint256-bytes-[`++addSchain++`]]
+:deleteSchain: pass:normal[xref:#SchainsFunctionality-deleteSchain-address-string-[`++deleteSchain++`]]
+:deleteSchainByRoot: pass:normal[xref:#SchainsFunctionality-deleteSchainByRoot-string-[`++deleteSchainByRoot++`]]
+:exitFromSchain: pass:normal[xref:#SchainsFunctionality-exitFromSchain-uint256-[`++exitFromSchain++`]]
+:rotateNode: pass:normal[xref:#SchainsFunctionality-rotateNode-uint256-bytes32-[`++rotateNode++`]]
+:freezeSchains: pass:normal[xref:#SchainsFunctionality-freezeSchains-uint256-[`++freezeSchains++`]]
+:restartSchainCreation: pass:normal[xref:#SchainsFunctionality-restartSchainCreation-string-[`++restartSchainCreation++`]]
+:checkRotation: pass:normal[xref:#SchainsFunctionality-checkRotation-bytes32-[`++checkRotation++`]]
+:initialize: pass:normal[xref:#SchainsFunctionality-initialize-address-[`++initialize++`]]
+:getSchainPrice: pass:normal[xref:#SchainsFunctionality-getSchainPrice-uint256-uint256-[`++getSchainPrice++`]]
+:_initializeSchainInSchainsData: pass:normal[xref:#SchainsFunctionality-_initializeSchainInSchainsData-string-address-uint256-uint256-[`++_initializeSchainInSchainsData++`]]
+:_fallbackSchainParametersDataConverter: pass:normal[xref:#SchainsFunctionality-_fallbackSchainParametersDataConverter-bytes-[`++_fallbackSchainParametersDataConverter++`]]
+:_addSpace: pass:normal[xref:#SchainsFunctionality-_addSpace-uint256-uint8-[`++_addSpace++`]]
+:SchainCreated: pass:normal[xref:#SchainsFunctionality-SchainCreated-string-address-uint256-uint256-uint256-uint256-uint16-bytes32-uint32-uint256-[`++SchainCreated++`]]
+:SchainDeleted: pass:normal[xref:#SchainsFunctionality-SchainDeleted-address-string-bytes32-[`++SchainDeleted++`]]
+:NodeRotated: pass:normal[xref:#SchainsFunctionality-NodeRotated-bytes32-uint256-uint256-[`++NodeRotated++`]]
+:NodeAdded: pass:normal[xref:#SchainsFunctionality-NodeAdded-bytes32-uint256-[`++NodeAdded++`]]
+
+[.contract]
+[[SchainsFunctionality]]
+=== `++SchainsFunctionality++`
+
+
+
+[.contract-index]
+.Modifiers
+--
+
+[.contract-subindex-inherited]
+.ISchainsFunctionality
+
+[.contract-subindex-inherited]
+.Permissions
+* {xref-Permissions-allow-string-}[`++allow(contractName)++`]
+* {xref-Permissions-allowTwo-string-string-}[`++allowTwo(contractName1, contractName2)++`]
+* {xref-Permissions-allowThree-string-string-string-}[`++allowThree(contractName1, contractName2, contractName3)++`]
+
+[.contract-subindex-inherited]
+.OwnableUpgradeSafe
+* {xref-OwnableUpgradeSafe-onlyOwner--}[`++onlyOwner()++`]
+
+[.contract-subindex-inherited]
+.ContextUpgradeSafe
+
+[.contract-subindex-inherited]
+.Initializable
+* {xref-Initializable-initializer--}[`++initializer()++`]
+
+--
+
+[.contract-index]
+.Functions
+--
+* {xref-SchainsFunctionality-addSchain-address-uint256-bytes-}[`++addSchain(from, deposit, data)++`]
+* {xref-SchainsFunctionality-deleteSchain-address-string-}[`++deleteSchain(from, name)++`]
+* {xref-SchainsFunctionality-deleteSchainByRoot-string-}[`++deleteSchainByRoot(name)++`]
+* {xref-SchainsFunctionality-exitFromSchain-uint256-}[`++exitFromSchain(nodeIndex)++`]
+* {xref-SchainsFunctionality-rotateNode-uint256-bytes32-}[`++rotateNode(nodeIndex, schainId)++`]
+* {xref-SchainsFunctionality-freezeSchains-uint256-}[`++freezeSchains(nodeIndex)++`]
+* {xref-SchainsFunctionality-restartSchainCreation-string-}[`++restartSchainCreation(name)++`]
+* {xref-SchainsFunctionality-checkRotation-bytes32-}[`++checkRotation(schainId)++`]
+* {xref-SchainsFunctionality-initialize-address-}[`++initialize(newContractsAddress)++`]
+* {xref-SchainsFunctionality-getSchainPrice-uint256-uint256-}[`++getSchainPrice(typeOfSchain, lifetime)++`]
+* {xref-SchainsFunctionality-_initializeSchainInSchainsData-string-address-uint256-uint256-}[`++_initializeSchainInSchainsData(name, from, deposit, lifetime)++`]
+* {xref-SchainsFunctionality-_fallbackSchainParametersDataConverter-bytes-}[`++_fallbackSchainParametersDataConverter(data)++`]
+* {xref-SchainsFunctionality-_addSpace-uint256-uint8-}[`++_addSpace(nodeIndex, partOfNode)++`]
+
+[.contract-subindex-inherited]
+.ISchainsFunctionality
+
+[.contract-subindex-inherited]
+.Permissions
+* {xref-Permissions-_isOwner--}[`++_isOwner()++`]
+
+[.contract-subindex-inherited]
+.OwnableUpgradeSafe
+* {xref-OwnableUpgradeSafe-__Ownable_init--}[`++__Ownable_init()++`]
+* {xref-OwnableUpgradeSafe-__Ownable_init_unchained--}[`++__Ownable_init_unchained()++`]
+* {xref-OwnableUpgradeSafe-owner--}[`++owner()++`]
+* {xref-OwnableUpgradeSafe-renounceOwnership--}[`++renounceOwnership()++`]
+* {xref-OwnableUpgradeSafe-transferOwnership-address-}[`++transferOwnership(newOwner)++`]
+
+[.contract-subindex-inherited]
+.ContextUpgradeSafe
+* {xref-ContextUpgradeSafe-__Context_init--}[`++__Context_init()++`]
+* {xref-ContextUpgradeSafe-__Context_init_unchained--}[`++__Context_init_unchained()++`]
+* {xref-ContextUpgradeSafe-_msgSender--}[`++_msgSender()++`]
+* {xref-ContextUpgradeSafe-_msgData--}[`++_msgData()++`]
+
+[.contract-subindex-inherited]
+.Initializable
+
+--
+
+[.contract-index]
+.Events
+--
+* {xref-SchainsFunctionality-SchainCreated-string-address-uint256-uint256-uint256-uint256-uint16-bytes32-uint32-uint256-}[`++SchainCreated(name, owner, partOfNode, lifetime, numberOfNodes, deposit, nonce, groupIndex, time, gasSpend)++`]
+* {xref-SchainsFunctionality-SchainDeleted-address-string-bytes32-}[`++SchainDeleted(owner, name, schainId)++`]
+* {xref-SchainsFunctionality-NodeRotated-bytes32-uint256-uint256-}[`++NodeRotated(groupIndex, oldNode, newNode)++`]
+* {xref-SchainsFunctionality-NodeAdded-bytes32-uint256-}[`++NodeAdded(groupIndex, newNode)++`]
+
+[.contract-subindex-inherited]
+.ISchainsFunctionality
+
+[.contract-subindex-inherited]
+.Permissions
+
+[.contract-subindex-inherited]
+.OwnableUpgradeSafe
+* {xref-OwnableUpgradeSafe-OwnershipTransferred-address-address-}[`++OwnershipTransferred(previousOwner, newOwner)++`]
+
+[.contract-subindex-inherited]
+.ContextUpgradeSafe
+
+[.contract-subindex-inherited]
+.Initializable
+
+--
+
+
+[.contract-item]
+[[SchainsFunctionality-addSchain-address-uint256-bytes-]]
+==== `++addSchain(++[.var-type]#++address++#++ ++[.var-name]#++from++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++deposit++#++, ++[.var-type]#++bytes++#++ ++[.var-name]#++data++#++)++` [.item-kind]#external#
+
+addSchain - create Schain in the system
+function could be run only by executor
+
+
+[.contract-item]
+[[SchainsFunctionality-deleteSchain-address-string-]]
+==== `++deleteSchain(++[.var-type]#++address++#++ ++[.var-name]#++from++#++, ++[.var-type]#++string++#++ ++[.var-name]#++name++#++)++` [.item-kind]#external#
+
+deleteSchain - removes Schain from the system
+function could be run only by executor
+
+
+[.contract-item]
+[[SchainsFunctionality-deleteSchainByRoot-string-]]
+==== `++deleteSchainByRoot(++[.var-type]#++string++#++ ++[.var-name]#++name++#++)++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[SchainsFunctionality-exitFromSchain-uint256-]]
+==== `++exitFromSchain(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++) → ++[.var-type]#++bool++#++++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[SchainsFunctionality-rotateNode-uint256-bytes32-]]
+==== `++rotateNode(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++, ++[.var-type]#++bytes32++#++ ++[.var-name]#++schainId++#++) → ++[.var-type]#++uint256++#++++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[SchainsFunctionality-freezeSchains-uint256-]]
+==== `++freezeSchains(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++)++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[SchainsFunctionality-restartSchainCreation-string-]]
+==== `++restartSchainCreation(++[.var-type]#++string++#++ ++[.var-name]#++name++#++)++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[SchainsFunctionality-checkRotation-bytes32-]]
+==== `++checkRotation(++[.var-type]#++bytes32++#++ ++[.var-name]#++schainId++#++) → ++[.var-type]#++bool++#++++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[SchainsFunctionality-initialize-address-]]
+==== `++initialize(++[.var-type]#++address++#++ ++[.var-name]#++newContractsAddress++#++)++` [.item-kind]#public#
+
+
+
+[.contract-item]
+[[SchainsFunctionality-getSchainPrice-uint256-uint256-]]
+==== `++getSchainPrice(++[.var-type]#++uint256++#++ ++[.var-name]#++typeOfSchain++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++lifetime++#++) → ++[.var-type]#++uint256++#++++` [.item-kind]#public#
+
+getSchainPrice - returns current price for given Schain
+
+
+[.contract-item]
+[[SchainsFunctionality-_initializeSchainInSchainsData-string-address-uint256-uint256-]]
+==== `++_initializeSchainInSchainsData(++[.var-type]#++string++#++ ++[.var-name]#++name++#++, ++[.var-type]#++address++#++ ++[.var-name]#++from++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++deposit++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++lifetime++#++)++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[SchainsFunctionality-_fallbackSchainParametersDataConverter-bytes-]]
+==== `++_fallbackSchainParametersDataConverter(++[.var-type]#++bytes++#++ ++[.var-name]#++data++#++) → ++[.var-type]#++struct SchainsFunctionality.SchainParameters++#++ ++[.var-name]#++schainParameters++#++++` [.item-kind]#internal#
+
+fallbackSchainParameterDataConverter - converts data from bytes to normal parameters
+
+
+[.contract-item]
+[[SchainsFunctionality-_addSpace-uint256-uint8-]]
+==== `++_addSpace(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++, ++[.var-type]#++uint8++#++ ++[.var-name]#++partOfNode++#++)++` [.item-kind]#internal#
+
+_addSpace - return occupied space to Node
+
+
+
+[.contract-item]
+[[SchainsFunctionality-SchainCreated-string-address-uint256-uint256-uint256-uint256-uint16-bytes32-uint32-uint256-]]
+==== `++SchainCreated(++[.var-type]#++string++#++ ++[.var-name]#++name++#++, ++[.var-type]#++address++#++ ++[.var-name]#++owner++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++partOfNode++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++lifetime++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++numberOfNodes++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++deposit++#++, ++[.var-type]#++uint16++#++ ++[.var-name]#++nonce++#++, ++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++, ++[.var-type]#++uint32++#++ ++[.var-name]#++time++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++gasSpend++#++)++` [.item-kind]#event#
+
+
+
+[.contract-item]
+[[SchainsFunctionality-SchainDeleted-address-string-bytes32-]]
+==== `++SchainDeleted(++[.var-type]#++address++#++ ++[.var-name]#++owner++#++, ++[.var-type]#++string++#++ ++[.var-name]#++name++#++, ++[.var-type]#++bytes32++#++ ++[.var-name]#++schainId++#++)++` [.item-kind]#event#
+
+
+
+[.contract-item]
+[[SchainsFunctionality-NodeRotated-bytes32-uint256-uint256-]]
+==== `++NodeRotated(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++oldNode++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++newNode++#++)++` [.item-kind]#event#
+
+
+
+[.contract-item]
+[[SchainsFunctionality-NodeAdded-bytes32-uint256-]]
+==== `++NodeAdded(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++newNode++#++)++` [.item-kind]#event#
+
+
+

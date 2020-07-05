@@ -1,0 +1,126 @@
+:Pricing: pass:normal[xref:#Pricing[`++Pricing++`]]
+:OPTIMAL_LOAD_PERCENTAGE: pass:normal[xref:#Pricing-OPTIMAL_LOAD_PERCENTAGE-uint256[`++OPTIMAL_LOAD_PERCENTAGE++`]]
+:ADJUSTMENT_SPEED: pass:normal[xref:#Pricing-ADJUSTMENT_SPEED-uint256[`++ADJUSTMENT_SPEED++`]]
+:COOLDOWN_TIME: pass:normal[xref:#Pricing-COOLDOWN_TIME-uint256[`++COOLDOWN_TIME++`]]
+:MIN_PRICE: pass:normal[xref:#Pricing-MIN_PRICE-uint256[`++MIN_PRICE++`]]
+:price: pass:normal[xref:#Pricing-price-uint256[`++price++`]]
+:totalNodes: pass:normal[xref:#Pricing-totalNodes-uint256[`++totalNodes++`]]
+:initNodes: pass:normal[xref:#Pricing-initNodes--[`++initNodes++`]]
+:adjustPrice: pass:normal[xref:#Pricing-adjustPrice--[`++adjustPrice++`]]
+:initialize: pass:normal[xref:#Pricing-initialize-address-[`++initialize++`]]
+:checkAllNodes: pass:normal[xref:#Pricing-checkAllNodes--[`++checkAllNodes++`]]
+:getTotalLoadPercentage: pass:normal[xref:#Pricing-getTotalLoadPercentage--[`++getTotalLoadPercentage++`]]
+
+[.contract]
+[[Pricing]]
+=== `++Pricing++`
+
+
+
+[.contract-index]
+.Modifiers
+--
+
+[.contract-subindex-inherited]
+.Permissions
+* {xref-Permissions-allow-string-}[`++allow(contractName)++`]
+* {xref-Permissions-allowTwo-string-string-}[`++allowTwo(contractName1, contractName2)++`]
+* {xref-Permissions-allowThree-string-string-string-}[`++allowThree(contractName1, contractName2, contractName3)++`]
+
+[.contract-subindex-inherited]
+.OwnableUpgradeSafe
+* {xref-OwnableUpgradeSafe-onlyOwner--}[`++onlyOwner()++`]
+
+[.contract-subindex-inherited]
+.ContextUpgradeSafe
+
+[.contract-subindex-inherited]
+.Initializable
+* {xref-Initializable-initializer--}[`++initializer()++`]
+
+--
+
+[.contract-index]
+.Functions
+--
+* {xref-Pricing-initNodes--}[`++initNodes()++`]
+* {xref-Pricing-adjustPrice--}[`++adjustPrice()++`]
+* {xref-Pricing-initialize-address-}[`++initialize(newContractsAddress)++`]
+* {xref-Pricing-checkAllNodes--}[`++checkAllNodes()++`]
+* {xref-Pricing-getTotalLoadPercentage--}[`++getTotalLoadPercentage()++`]
+
+[.contract-subindex-inherited]
+.Permissions
+* {xref-Permissions-_isOwner--}[`++_isOwner()++`]
+
+[.contract-subindex-inherited]
+.OwnableUpgradeSafe
+* {xref-OwnableUpgradeSafe-__Ownable_init--}[`++__Ownable_init()++`]
+* {xref-OwnableUpgradeSafe-__Ownable_init_unchained--}[`++__Ownable_init_unchained()++`]
+* {xref-OwnableUpgradeSafe-owner--}[`++owner()++`]
+* {xref-OwnableUpgradeSafe-renounceOwnership--}[`++renounceOwnership()++`]
+* {xref-OwnableUpgradeSafe-transferOwnership-address-}[`++transferOwnership(newOwner)++`]
+
+[.contract-subindex-inherited]
+.ContextUpgradeSafe
+* {xref-ContextUpgradeSafe-__Context_init--}[`++__Context_init()++`]
+* {xref-ContextUpgradeSafe-__Context_init_unchained--}[`++__Context_init_unchained()++`]
+* {xref-ContextUpgradeSafe-_msgSender--}[`++_msgSender()++`]
+* {xref-ContextUpgradeSafe-_msgData--}[`++_msgData()++`]
+
+[.contract-subindex-inherited]
+.Initializable
+
+--
+
+[.contract-index]
+.Events
+--
+
+[.contract-subindex-inherited]
+.Permissions
+
+[.contract-subindex-inherited]
+.OwnableUpgradeSafe
+* {xref-OwnableUpgradeSafe-OwnershipTransferred-address-address-}[`++OwnershipTransferred(previousOwner, newOwner)++`]
+
+[.contract-subindex-inherited]
+.ContextUpgradeSafe
+
+[.contract-subindex-inherited]
+.Initializable
+
+--
+
+
+[.contract-item]
+[[Pricing-initNodes--]]
+==== `++initNodes()++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[Pricing-adjustPrice--]]
+==== `++adjustPrice()++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[Pricing-initialize-address-]]
+==== `++initialize(++[.var-type]#++address++#++ ++[.var-name]#++newContractsAddress++#++)++` [.item-kind]#public#
+
+
+
+[.contract-item]
+[[Pricing-checkAllNodes--]]
+==== `++checkAllNodes()++` [.item-kind]#public#
+
+
+
+[.contract-item]
+[[Pricing-getTotalLoadPercentage--]]
+==== `++getTotalLoadPercentage() → ++[.var-type]#++uint256++#++++` [.item-kind]#public#
+
+
+
+

@@ -1,0 +1,438 @@
+:Nodes: pass:normal[xref:#Nodes[`++Nodes++`]]
+:nodes: pass:normal[xref:#Nodes-nodes-struct-Nodes-Node--[`++nodes++`]]
+:spaceOfNodes: pass:normal[xref:#Nodes-spaceOfNodes-struct-Nodes-SpaceManaging--[`++spaceOfNodes++`]]
+:nodeIndexes: pass:normal[xref:#Nodes-nodeIndexes-mapping-address----struct-Nodes-CreatedNodes-[`++nodeIndexes++`]]
+:nodesIPCheck: pass:normal[xref:#Nodes-nodesIPCheck-mapping-bytes4----bool-[`++nodesIPCheck++`]]
+:nodesNameCheck: pass:normal[xref:#Nodes-nodesNameCheck-mapping-bytes32----bool-[`++nodesNameCheck++`]]
+:nodesNameToIndex: pass:normal[xref:#Nodes-nodesNameToIndex-mapping-bytes32----uint256-[`++nodesNameToIndex++`]]
+:spaceToNodes: pass:normal[xref:#Nodes-spaceToNodes-mapping-uint8----uint256---[`++spaceToNodes++`]]
+:numberOfActiveNodes: pass:normal[xref:#Nodes-numberOfActiveNodes-uint256[`++numberOfActiveNodes++`]]
+:numberOfLeavingNodes: pass:normal[xref:#Nodes-numberOfLeavingNodes-uint256[`++numberOfLeavingNodes++`]]
+:numberOfLeftNodes: pass:normal[xref:#Nodes-numberOfLeftNodes-uint256[`++numberOfLeftNodes++`]]
+:addNode: pass:normal[xref:#Nodes-addNode-address-string-bytes4-bytes4-uint16-bytes-uint256-[`++addNode++`]]
+:removeSpaceFromNode: pass:normal[xref:#Nodes-removeSpaceFromNode-uint256-uint8-[`++removeSpaceFromNode++`]]
+:addSpaceToNode: pass:normal[xref:#Nodes-addSpaceToNode-uint256-uint8-[`++addSpaceToNode++`]]
+:changeNodeLastRewardDate: pass:normal[xref:#Nodes-changeNodeLastRewardDate-uint256-[`++changeNodeLastRewardDate++`]]
+:changeNodeFinishTime: pass:normal[xref:#Nodes-changeNodeFinishTime-uint256-uint32-[`++changeNodeFinishTime++`]]
+:createNode: pass:normal[xref:#Nodes-createNode-address-struct-Nodes-NodeCreationParams-[`++createNode++`]]
+:removeNode: pass:normal[xref:#Nodes-removeNode-address-uint256-[`++removeNode++`]]
+:removeNodeByRoot: pass:normal[xref:#Nodes-removeNodeByRoot-uint256-[`++removeNodeByRoot++`]]
+:initExit: pass:normal[xref:#Nodes-initExit-address-uint256-[`++initExit++`]]
+:completeExit: pass:normal[xref:#Nodes-completeExit-address-uint256-[`++completeExit++`]]
+:deleteNode: pass:normal[xref:#Nodes-deleteNode-uint256-[`++deleteNode++`]]
+:setNodeLeft: pass:normal[xref:#Nodes-setNodeLeft-uint256-[`++setNodeLeft++`]]
+:setNodeLeaving: pass:normal[xref:#Nodes-setNodeLeaving-uint256-[`++setNodeLeaving++`]]
+:getNodesWithFreeSpace: pass:normal[xref:#Nodes-getNodesWithFreeSpace-uint8-[`++getNodesWithFreeSpace++`]]
+:countNodesWithFreeSpace: pass:normal[xref:#Nodes-countNodesWithFreeSpace-uint8-[`++countNodesWithFreeSpace++`]]
+:isTimeForReward: pass:normal[xref:#Nodes-isTimeForReward-uint256-[`++isTimeForReward++`]]
+:getNodeIP: pass:normal[xref:#Nodes-getNodeIP-uint256-[`++getNodeIP++`]]
+:getNodePort: pass:normal[xref:#Nodes-getNodePort-uint256-[`++getNodePort++`]]
+:getNodePublicKey: pass:normal[xref:#Nodes-getNodePublicKey-uint256-[`++getNodePublicKey++`]]
+:getNodeValidatorId: pass:normal[xref:#Nodes-getNodeValidatorId-uint256-[`++getNodeValidatorId++`]]
+:getNodeFinishTime: pass:normal[xref:#Nodes-getNodeFinishTime-uint256-[`++getNodeFinishTime++`]]
+:isNodeLeft: pass:normal[xref:#Nodes-isNodeLeft-uint256-[`++isNodeLeft++`]]
+:getNodeLastRewardDate: pass:normal[xref:#Nodes-getNodeLastRewardDate-uint256-[`++getNodeLastRewardDate++`]]
+:getNodeNextRewardDate: pass:normal[xref:#Nodes-getNodeNextRewardDate-uint256-[`++getNodeNextRewardDate++`]]
+:getNumberOfNodes: pass:normal[xref:#Nodes-getNumberOfNodes--[`++getNumberOfNodes++`]]
+:getNumberOnlineNodes: pass:normal[xref:#Nodes-getNumberOnlineNodes--[`++getNumberOnlineNodes++`]]
+:getActiveNodeIPs: pass:normal[xref:#Nodes-getActiveNodeIPs--[`++getActiveNodeIPs++`]]
+:getActiveNodesByAddress: pass:normal[xref:#Nodes-getActiveNodesByAddress--[`++getActiveNodesByAddress++`]]
+:getActiveNodeIds: pass:normal[xref:#Nodes-getActiveNodeIds--[`++getActiveNodeIds++`]]
+:getValidatorId: pass:normal[xref:#Nodes-getValidatorId-uint256-[`++getValidatorId++`]]
+:getNodeStatus: pass:normal[xref:#Nodes-getNodeStatus-uint256-[`++getNodeStatus++`]]
+:initialize: pass:normal[xref:#Nodes-initialize-address-[`++initialize++`]]
+:isNodeExist: pass:normal[xref:#Nodes-isNodeExist-address-uint256-[`++isNodeExist++`]]
+:isNodeActive: pass:normal[xref:#Nodes-isNodeActive-uint256-[`++isNodeActive++`]]
+:isNodeLeaving: pass:normal[xref:#Nodes-isNodeLeaving-uint256-[`++isNodeLeaving++`]]
+:_moveNodeToNewSpaceMap: pass:normal[xref:#Nodes-_moveNodeToNewSpaceMap-uint256-uint8-[`++_moveNodeToNewSpaceMap++`]]
+:NodeCreated: pass:normal[xref:#Nodes-NodeCreated-uint256-address-string-bytes4-bytes4-uint16-uint16-uint32-uint256-[`++NodeCreated++`]]
+:ExitCompleted: pass:normal[xref:#Nodes-ExitCompleted-uint256-address-uint32-uint256-[`++ExitCompleted++`]]
+:ExitInited: pass:normal[xref:#Nodes-ExitInited-uint256-address-uint32-uint32-uint256-[`++ExitInited++`]]
+
+[.contract]
+[[Nodes]]
+=== `++Nodes++`
+
+
+
+[.contract-index]
+.Modifiers
+--
+
+[.contract-subindex-inherited]
+.Permissions
+* {xref-Permissions-allow-string-}[`++allow(contractName)++`]
+* {xref-Permissions-allowTwo-string-string-}[`++allowTwo(contractName1, contractName2)++`]
+* {xref-Permissions-allowThree-string-string-string-}[`++allowThree(contractName1, contractName2, contractName3)++`]
+
+[.contract-subindex-inherited]
+.OwnableUpgradeSafe
+* {xref-OwnableUpgradeSafe-onlyOwner--}[`++onlyOwner()++`]
+
+[.contract-subindex-inherited]
+.ContextUpgradeSafe
+
+[.contract-subindex-inherited]
+.Initializable
+* {xref-Initializable-initializer--}[`++initializer()++`]
+
+--
+
+[.contract-index]
+.Functions
+--
+* {xref-Nodes-addNode-address-string-bytes4-bytes4-uint16-bytes-uint256-}[`++addNode(from, name, ip, publicIP, port, publicKey, validatorId)++`]
+* {xref-Nodes-removeSpaceFromNode-uint256-uint8-}[`++removeSpaceFromNode(nodeIndex, space)++`]
+* {xref-Nodes-addSpaceToNode-uint256-uint8-}[`++addSpaceToNode(nodeIndex, space)++`]
+* {xref-Nodes-changeNodeLastRewardDate-uint256-}[`++changeNodeLastRewardDate(nodeIndex)++`]
+* {xref-Nodes-changeNodeFinishTime-uint256-uint32-}[`++changeNodeFinishTime(nodeIndex, time)++`]
+* {xref-Nodes-createNode-address-struct-Nodes-NodeCreationParams-}[`++createNode(from, params)++`]
+* {xref-Nodes-removeNode-address-uint256-}[`++removeNode(from, nodeIndex)++`]
+* {xref-Nodes-removeNodeByRoot-uint256-}[`++removeNodeByRoot(nodeIndex)++`]
+* {xref-Nodes-initExit-address-uint256-}[`++initExit(from, nodeIndex)++`]
+* {xref-Nodes-completeExit-address-uint256-}[`++completeExit(from, nodeIndex)++`]
+* {xref-Nodes-deleteNode-uint256-}[`++deleteNode(nodeIndex)++`]
+* {xref-Nodes-setNodeLeft-uint256-}[`++setNodeLeft(nodeIndex)++`]
+* {xref-Nodes-setNodeLeaving-uint256-}[`++setNodeLeaving(nodeIndex)++`]
+* {xref-Nodes-getNodesWithFreeSpace-uint8-}[`++getNodesWithFreeSpace(freeSpace)++`]
+* {xref-Nodes-countNodesWithFreeSpace-uint8-}[`++countNodesWithFreeSpace(freeSpace)++`]
+* {xref-Nodes-isTimeForReward-uint256-}[`++isTimeForReward(nodeIndex)++`]
+* {xref-Nodes-getNodeIP-uint256-}[`++getNodeIP(nodeIndex)++`]
+* {xref-Nodes-getNodePort-uint256-}[`++getNodePort(nodeIndex)++`]
+* {xref-Nodes-getNodePublicKey-uint256-}[`++getNodePublicKey(nodeIndex)++`]
+* {xref-Nodes-getNodeValidatorId-uint256-}[`++getNodeValidatorId(nodeIndex)++`]
+* {xref-Nodes-getNodeFinishTime-uint256-}[`++getNodeFinishTime(nodeIndex)++`]
+* {xref-Nodes-isNodeLeft-uint256-}[`++isNodeLeft(nodeIndex)++`]
+* {xref-Nodes-getNodeLastRewardDate-uint256-}[`++getNodeLastRewardDate(nodeIndex)++`]
+* {xref-Nodes-getNodeNextRewardDate-uint256-}[`++getNodeNextRewardDate(nodeIndex)++`]
+* {xref-Nodes-getNumberOfNodes--}[`++getNumberOfNodes()++`]
+* {xref-Nodes-getNumberOnlineNodes--}[`++getNumberOnlineNodes()++`]
+* {xref-Nodes-getActiveNodeIPs--}[`++getActiveNodeIPs()++`]
+* {xref-Nodes-getActiveNodesByAddress--}[`++getActiveNodesByAddress()++`]
+* {xref-Nodes-getActiveNodeIds--}[`++getActiveNodeIds()++`]
+* {xref-Nodes-getValidatorId-uint256-}[`++getValidatorId(nodeIndex)++`]
+* {xref-Nodes-getNodeStatus-uint256-}[`++getNodeStatus(nodeIndex)++`]
+* {xref-Nodes-initialize-address-}[`++initialize(_contractsAddress)++`]
+* {xref-Nodes-isNodeExist-address-uint256-}[`++isNodeExist(from, nodeIndex)++`]
+* {xref-Nodes-isNodeActive-uint256-}[`++isNodeActive(nodeIndex)++`]
+* {xref-Nodes-isNodeLeaving-uint256-}[`++isNodeLeaving(nodeIndex)++`]
+* {xref-Nodes-_moveNodeToNewSpaceMap-uint256-uint8-}[`++_moveNodeToNewSpaceMap(nodeIndex, newSpace)++`]
+
+[.contract-subindex-inherited]
+.Permissions
+* {xref-Permissions-_isOwner--}[`++_isOwner()++`]
+
+[.contract-subindex-inherited]
+.OwnableUpgradeSafe
+* {xref-OwnableUpgradeSafe-__Ownable_init--}[`++__Ownable_init()++`]
+* {xref-OwnableUpgradeSafe-__Ownable_init_unchained--}[`++__Ownable_init_unchained()++`]
+* {xref-OwnableUpgradeSafe-owner--}[`++owner()++`]
+* {xref-OwnableUpgradeSafe-renounceOwnership--}[`++renounceOwnership()++`]
+* {xref-OwnableUpgradeSafe-transferOwnership-address-}[`++transferOwnership(newOwner)++`]
+
+[.contract-subindex-inherited]
+.ContextUpgradeSafe
+* {xref-ContextUpgradeSafe-__Context_init--}[`++__Context_init()++`]
+* {xref-ContextUpgradeSafe-__Context_init_unchained--}[`++__Context_init_unchained()++`]
+* {xref-ContextUpgradeSafe-_msgSender--}[`++_msgSender()++`]
+* {xref-ContextUpgradeSafe-_msgData--}[`++_msgData()++`]
+
+[.contract-subindex-inherited]
+.Initializable
+
+--
+
+[.contract-index]
+.Events
+--
+* {xref-Nodes-NodeCreated-uint256-address-string-bytes4-bytes4-uint16-uint16-uint32-uint256-}[`++NodeCreated(nodeIndex, owner, name, ip, publicIP, port, nonce, time, gasSpend)++`]
+* {xref-Nodes-ExitCompleted-uint256-address-uint32-uint256-}[`++ExitCompleted(nodeIndex, owner, time, gasSpend)++`]
+* {xref-Nodes-ExitInited-uint256-address-uint32-uint32-uint256-}[`++ExitInited(nodeIndex, owner, startLeavingPeriod, time, gasSpend)++`]
+
+[.contract-subindex-inherited]
+.Permissions
+
+[.contract-subindex-inherited]
+.OwnableUpgradeSafe
+* {xref-OwnableUpgradeSafe-OwnershipTransferred-address-address-}[`++OwnershipTransferred(previousOwner, newOwner)++`]
+
+[.contract-subindex-inherited]
+.ContextUpgradeSafe
+
+[.contract-subindex-inherited]
+.Initializable
+
+--
+
+
+[.contract-item]
+[[Nodes-addNode-address-string-bytes4-bytes4-uint16-bytes-uint256-]]
+==== `++addNode(++[.var-type]#++address++#++ ++[.var-name]#++from++#++, ++[.var-type]#++string++#++ ++[.var-name]#++name++#++, ++[.var-type]#++bytes4++#++ ++[.var-name]#++ip++#++, ++[.var-type]#++bytes4++#++ ++[.var-name]#++publicIP++#++, ++[.var-type]#++uint16++#++ ++[.var-name]#++port++#++, ++[.var-type]#++bytes++#++ ++[.var-name]#++publicKey++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++validatorId++#++) → ++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++++` [.item-kind]#external#
+
+addNode - adds Node to array
+function could be run only by executor
+
+
+[.contract-item]
+[[Nodes-removeSpaceFromNode-uint256-uint8-]]
+==== `++removeSpaceFromNode(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++, ++[.var-type]#++uint8++#++ ++[.var-name]#++space++#++) → ++[.var-type]#++bool++#++++` [.item-kind]#external#
+
+removeSpaceFromFractionalNode - occupies space from Fractional Node
+function could be run only by SchainsFunctionality
+
+
+[.contract-item]
+[[Nodes-addSpaceToNode-uint256-uint8-]]
+==== `++addSpaceToNode(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++, ++[.var-type]#++uint8++#++ ++[.var-name]#++space++#++)++` [.item-kind]#external#
+
+adSpaceToFractionalNode - returns space to Fractional Node
+function could be run only be SchainsFunctionality
+
+
+[.contract-item]
+[[Nodes-changeNodeLastRewardDate-uint256-]]
+==== `++changeNodeLastRewardDate(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++)++` [.item-kind]#external#
+
+changeNodeLastRewardDate - changes Node's last reward date
+function could be run only by SkaleManager
+
+
+[.contract-item]
+[[Nodes-changeNodeFinishTime-uint256-uint32-]]
+==== `++changeNodeFinishTime(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++, ++[.var-type]#++uint32++#++ ++[.var-name]#++time++#++)++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[Nodes-createNode-address-struct-Nodes-NodeCreationParams-]]
+==== `++createNode(++[.var-type]#++address++#++ ++[.var-name]#++from++#++, ++[.var-type]#++struct Nodes.NodeCreationParams++#++ ++[.var-name]#++params++#++) → ++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++++` [.item-kind]#external#
+
+createNode - creates new Node and add it to the Nodes contract
+function could be only run by SkaleManager
+
+
+[.contract-item]
+[[Nodes-removeNode-address-uint256-]]
+==== `++removeNode(++[.var-type]#++address++#++ ++[.var-name]#++from++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++)++` [.item-kind]#external#
+
+removeNode - delete Node
+function could be only run by SkaleManager
+
+
+[.contract-item]
+[[Nodes-removeNodeByRoot-uint256-]]
+==== `++removeNodeByRoot(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++)++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[Nodes-initExit-address-uint256-]]
+==== `++initExit(++[.var-type]#++address++#++ ++[.var-name]#++from++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++) → ++[.var-type]#++bool++#++++` [.item-kind]#external#
+
+initExit - initiate a procedure of quitting the system
+function could be only run by SkaleManager
+
+
+[.contract-item]
+[[Nodes-completeExit-address-uint256-]]
+==== `++completeExit(++[.var-type]#++address++#++ ++[.var-name]#++from++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++) → ++[.var-type]#++bool++#++++` [.item-kind]#external#
+
+completeExit - finish a procedure of quitting the system
+function could be run only by SkaleMManager
+
+
+[.contract-item]
+[[Nodes-deleteNode-uint256-]]
+==== `++deleteNode(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++)++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[Nodes-setNodeLeft-uint256-]]
+==== `++setNodeLeft(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++)++` [.item-kind]#external#
+
+setNodeLeft - set Node Left
+function could be run only by Nodes
+
+
+[.contract-item]
+[[Nodes-setNodeLeaving-uint256-]]
+==== `++setNodeLeaving(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++)++` [.item-kind]#external#
+
+setNodeLeaving - set Node Leaving
+function could be run only by Nodes
+
+
+[.contract-item]
+[[Nodes-getNodesWithFreeSpace-uint8-]]
+==== `++getNodesWithFreeSpace(++[.var-type]#++uint8++#++ ++[.var-name]#++freeSpace++#++) → ++[.var-type]#++uint256[]++#++++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[Nodes-countNodesWithFreeSpace-uint8-]]
+==== `++countNodesWithFreeSpace(++[.var-type]#++uint8++#++ ++[.var-name]#++freeSpace++#++) → ++[.var-type]#++uint256++#++ ++[.var-name]#++count++#++++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[Nodes-isTimeForReward-uint256-]]
+==== `++isTimeForReward(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++) → ++[.var-type]#++bool++#++++` [.item-kind]#external#
+
+isTimeForReward - checks if time for reward has come
+
+
+[.contract-item]
+[[Nodes-getNodeIP-uint256-]]
+==== `++getNodeIP(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++) → ++[.var-type]#++bytes4++#++++` [.item-kind]#external#
+
+getNodeIP - get ip address of Node
+
+
+[.contract-item]
+[[Nodes-getNodePort-uint256-]]
+==== `++getNodePort(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++) → ++[.var-type]#++uint16++#++++` [.item-kind]#external#
+
+getNodePort - get Node's port
+
+
+[.contract-item]
+[[Nodes-getNodePublicKey-uint256-]]
+==== `++getNodePublicKey(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++) → ++[.var-type]#++bytes++#++++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[Nodes-getNodeValidatorId-uint256-]]
+==== `++getNodeValidatorId(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++) → ++[.var-type]#++uint256++#++++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[Nodes-getNodeFinishTime-uint256-]]
+==== `++getNodeFinishTime(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++) → ++[.var-type]#++uint32++#++++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[Nodes-isNodeLeft-uint256-]]
+==== `++isNodeLeft(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++) → ++[.var-type]#++bool++#++++` [.item-kind]#external#
+
+isNodeLeft - checks if Node status Left
+
+
+[.contract-item]
+[[Nodes-getNodeLastRewardDate-uint256-]]
+==== `++getNodeLastRewardDate(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++) → ++[.var-type]#++uint32++#++++` [.item-kind]#external#
+
+getNodeLastRewardDate - get Node last reward date
+
+
+[.contract-item]
+[[Nodes-getNodeNextRewardDate-uint256-]]
+==== `++getNodeNextRewardDate(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++) → ++[.var-type]#++uint32++#++++` [.item-kind]#external#
+
+getNodeNextRewardDate - get Node next reward date
+
+
+[.contract-item]
+[[Nodes-getNumberOfNodes--]]
+==== `++getNumberOfNodes() → ++[.var-type]#++uint256++#++++` [.item-kind]#external#
+
+getNumberOfNodes - get number of Nodes
+
+
+[.contract-item]
+[[Nodes-getNumberOnlineNodes--]]
+==== `++getNumberOnlineNodes() → ++[.var-type]#++uint256++#++++` [.item-kind]#external#
+
+getNumberOfFullNodes - get number Online Nodes
+
+
+[.contract-item]
+[[Nodes-getActiveNodeIPs--]]
+==== `++getActiveNodeIPs() → ++[.var-type]#++bytes4[]++#++ ++[.var-name]#++activeNodeIPs++#++++` [.item-kind]#external#
+
+getActiveNodeIPs - get array of ips of Active Nodes
+
+
+[.contract-item]
+[[Nodes-getActiveNodesByAddress--]]
+==== `++getActiveNodesByAddress() → ++[.var-type]#++uint256[]++#++ ++[.var-name]#++activeNodesByAddress++#++++` [.item-kind]#external#
+
+getActiveNodesByAddress - get array of indexes of Active Nodes, which were
+created by msg.sender
+
+
+[.contract-item]
+[[Nodes-getActiveNodeIds--]]
+==== `++getActiveNodeIds() → ++[.var-type]#++uint256[]++#++ ++[.var-name]#++activeNodeIds++#++++` [.item-kind]#external#
+
+getActiveNodeIds - get array of indexes of Active Nodes
+
+
+[.contract-item]
+[[Nodes-getValidatorId-uint256-]]
+==== `++getValidatorId(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++) → ++[.var-type]#++uint256++#++++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[Nodes-getNodeStatus-uint256-]]
+==== `++getNodeStatus(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++) → ++[.var-type]#++enum Nodes.NodeStatus++#++++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[Nodes-initialize-address-]]
+==== `++initialize(++[.var-type]#++address++#++ ++[.var-name]#++_contractsAddress++#++)++` [.item-kind]#public#
+
+constructor in Permissions approach
+
+
+[.contract-item]
+[[Nodes-isNodeExist-address-uint256-]]
+==== `++isNodeExist(++[.var-type]#++address++#++ ++[.var-name]#++from++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++) → ++[.var-type]#++bool++#++++` [.item-kind]#public#
+
+isNodeExist - checks existence of Node at this address
+
+
+[.contract-item]
+[[Nodes-isNodeActive-uint256-]]
+==== `++isNodeActive(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++) → ++[.var-type]#++bool++#++++` [.item-kind]#public#
+
+isNodeActive - checks if Node status Active
+
+
+[.contract-item]
+[[Nodes-isNodeLeaving-uint256-]]
+==== `++isNodeLeaving(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++) → ++[.var-type]#++bool++#++++` [.item-kind]#public#
+
+isNodeLeaving - checks if Node status Leaving
+
+
+[.contract-item]
+[[Nodes-_moveNodeToNewSpaceMap-uint256-uint8-]]
+==== `++_moveNodeToNewSpaceMap(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++, ++[.var-type]#++uint8++#++ ++[.var-name]#++newSpace++#++)++` [.item-kind]#internal#
+
+
+
+
+[.contract-item]
+[[Nodes-NodeCreated-uint256-address-string-bytes4-bytes4-uint16-uint16-uint32-uint256-]]
+==== `++NodeCreated(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++, ++[.var-type]#++address++#++ ++[.var-name]#++owner++#++, ++[.var-type]#++string++#++ ++[.var-name]#++name++#++, ++[.var-type]#++bytes4++#++ ++[.var-name]#++ip++#++, ++[.var-type]#++bytes4++#++ ++[.var-name]#++publicIP++#++, ++[.var-type]#++uint16++#++ ++[.var-name]#++port++#++, ++[.var-type]#++uint16++#++ ++[.var-name]#++nonce++#++, ++[.var-type]#++uint32++#++ ++[.var-name]#++time++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++gasSpend++#++)++` [.item-kind]#event#
+
+
+
+[.contract-item]
+[[Nodes-ExitCompleted-uint256-address-uint32-uint256-]]
+==== `++ExitCompleted(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++, ++[.var-type]#++address++#++ ++[.var-name]#++owner++#++, ++[.var-type]#++uint32++#++ ++[.var-name]#++time++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++gasSpend++#++)++` [.item-kind]#event#
+
+
+
+[.contract-item]
+[[Nodes-ExitInited-uint256-address-uint32-uint32-uint256-]]
+==== `++ExitInited(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++, ++[.var-type]#++address++#++ ++[.var-name]#++owner++#++, ++[.var-type]#++uint32++#++ ++[.var-name]#++startLeavingPeriod++#++, ++[.var-type]#++uint32++#++ ++[.var-name]#++time++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++gasSpend++#++)++` [.item-kind]#event#
+
+
+

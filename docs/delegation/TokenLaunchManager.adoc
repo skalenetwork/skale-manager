@@ -1,0 +1,233 @@
+:TokenLaunchManager: pass:normal[xref:#TokenLaunchManager[`++TokenLaunchManager++`]]
+:onlySeller: pass:normal[xref:#TokenLaunchManager-onlySeller--[`++onlySeller++`]]
+:seller: pass:normal[xref:#TokenLaunchManager-seller-address[`++seller++`]]
+:approved: pass:normal[xref:#TokenLaunchManager-approved-mapping-address----uint256-[`++approved++`]]
+:approveBatchOfTransfers: pass:normal[xref:#TokenLaunchManager-approveBatchOfTransfers-address---uint256---[`++approveBatchOfTransfers++`]]
+:changeApprovalAddress: pass:normal[xref:#TokenLaunchManager-changeApprovalAddress-address-address-[`++changeApprovalAddress++`]]
+:changeApprovalValue: pass:normal[xref:#TokenLaunchManager-changeApprovalValue-address-uint256-[`++changeApprovalValue++`]]
+:retrieve: pass:normal[xref:#TokenLaunchManager-retrieve--[`++retrieve++`]]
+:registerSeller: pass:normal[xref:#TokenLaunchManager-registerSeller-address-[`++registerSeller++`]]
+:tokensReceived: pass:normal[xref:#TokenLaunchManager-tokensReceived-address-address-address-uint256-bytes-bytes-[`++tokensReceived++`]]
+:initialize: pass:normal[xref:#TokenLaunchManager-initialize-address-[`++initialize++`]]
+:approveTransfer: pass:normal[xref:#TokenLaunchManager-approveTransfer-address-uint256-[`++approveTransfer++`]]
+:_getBalance: pass:normal[xref:#TokenLaunchManager-_getBalance--[`++_getBalance++`]]
+:_setApprovedAmount: pass:normal[xref:#TokenLaunchManager-_setApprovedAmount-address-uint256-[`++_setApprovedAmount++`]]
+:Approved: pass:normal[xref:#TokenLaunchManager-Approved-address-uint256-[`++Approved++`]]
+:TokensRetrieved: pass:normal[xref:#TokenLaunchManager-TokensRetrieved-address-uint256-[`++TokensRetrieved++`]]
+:SellerWasRegistered: pass:normal[xref:#TokenLaunchManager-SellerWasRegistered-address-[`++SellerWasRegistered++`]]
+
+[.contract]
+[[TokenLaunchManager]]
+=== `++TokenLaunchManager++`
+
+This contract manages functions for the Token Launch event.
+
+The seller is an entity who distributes tokens through a Launch process.
+
+[.contract-index]
+.Modifiers
+--
+* {xref-TokenLaunchManager-onlySeller--}[`++onlySeller()++`]
+
+[.contract-subindex-inherited]
+.IERC777Recipient
+
+[.contract-subindex-inherited]
+.Permissions
+* {xref-Permissions-allow-string-}[`++allow(contractName)++`]
+* {xref-Permissions-allowTwo-string-string-}[`++allowTwo(contractName1, contractName2)++`]
+* {xref-Permissions-allowThree-string-string-string-}[`++allowThree(contractName1, contractName2, contractName3)++`]
+
+[.contract-subindex-inherited]
+.OwnableUpgradeSafe
+* {xref-OwnableUpgradeSafe-onlyOwner--}[`++onlyOwner()++`]
+
+[.contract-subindex-inherited]
+.ContextUpgradeSafe
+
+[.contract-subindex-inherited]
+.Initializable
+* {xref-Initializable-initializer--}[`++initializer()++`]
+
+--
+
+[.contract-index]
+.Functions
+--
+* {xref-TokenLaunchManager-approveBatchOfTransfers-address---uint256---}[`++approveBatchOfTransfers(walletAddress, value)++`]
+* {xref-TokenLaunchManager-changeApprovalAddress-address-address-}[`++changeApprovalAddress(oldAddress, newAddress)++`]
+* {xref-TokenLaunchManager-changeApprovalValue-address-uint256-}[`++changeApprovalValue(wallet, newValue)++`]
+* {xref-TokenLaunchManager-retrieve--}[`++retrieve()++`]
+* {xref-TokenLaunchManager-registerSeller-address-}[`++registerSeller(_seller)++`]
+* {xref-TokenLaunchManager-tokensReceived-address-address-address-uint256-bytes-bytes-}[`++tokensReceived(operator, from, to, amount, userData, operatorData)++`]
+* {xref-TokenLaunchManager-initialize-address-}[`++initialize(contractManager)++`]
+* {xref-TokenLaunchManager-approveTransfer-address-uint256-}[`++approveTransfer(walletAddress, value)++`]
+* {xref-TokenLaunchManager-_getBalance--}[`++_getBalance()++`]
+* {xref-TokenLaunchManager-_setApprovedAmount-address-uint256-}[`++_setApprovedAmount(wallet, value)++`]
+
+[.contract-subindex-inherited]
+.IERC777Recipient
+
+[.contract-subindex-inherited]
+.Permissions
+* {xref-Permissions-_isOwner--}[`++_isOwner()++`]
+
+[.contract-subindex-inherited]
+.OwnableUpgradeSafe
+* {xref-OwnableUpgradeSafe-__Ownable_init--}[`++__Ownable_init()++`]
+* {xref-OwnableUpgradeSafe-__Ownable_init_unchained--}[`++__Ownable_init_unchained()++`]
+* {xref-OwnableUpgradeSafe-owner--}[`++owner()++`]
+* {xref-OwnableUpgradeSafe-renounceOwnership--}[`++renounceOwnership()++`]
+* {xref-OwnableUpgradeSafe-transferOwnership-address-}[`++transferOwnership(newOwner)++`]
+
+[.contract-subindex-inherited]
+.ContextUpgradeSafe
+* {xref-ContextUpgradeSafe-__Context_init--}[`++__Context_init()++`]
+* {xref-ContextUpgradeSafe-__Context_init_unchained--}[`++__Context_init_unchained()++`]
+* {xref-ContextUpgradeSafe-_msgSender--}[`++_msgSender()++`]
+* {xref-ContextUpgradeSafe-_msgData--}[`++_msgData()++`]
+
+[.contract-subindex-inherited]
+.Initializable
+
+--
+
+[.contract-index]
+.Events
+--
+* {xref-TokenLaunchManager-Approved-address-uint256-}[`++Approved(holder, amount)++`]
+* {xref-TokenLaunchManager-TokensRetrieved-address-uint256-}[`++TokensRetrieved(holder, amount)++`]
+* {xref-TokenLaunchManager-SellerWasRegistered-address-}[`++SellerWasRegistered(seller)++`]
+
+[.contract-subindex-inherited]
+.IERC777Recipient
+
+[.contract-subindex-inherited]
+.Permissions
+
+[.contract-subindex-inherited]
+.OwnableUpgradeSafe
+* {xref-OwnableUpgradeSafe-OwnershipTransferred-address-address-}[`++OwnershipTransferred(previousOwner, newOwner)++`]
+
+[.contract-subindex-inherited]
+.ContextUpgradeSafe
+
+[.contract-subindex-inherited]
+.Initializable
+
+--
+
+[.contract-item]
+[[TokenLaunchManager-onlySeller--]]
+==== `++onlySeller()++` [.item-kind]#modifier#
+
+
+
+
+[.contract-item]
+[[TokenLaunchManager-approveBatchOfTransfers-address---uint256---]]
+==== `++approveBatchOfTransfers(++[.var-type]#++address[]++#++ ++[.var-name]#++walletAddress++#++, ++[.var-type]#++uint256[]++#++ ++[.var-name]#++value++#++)++` [.item-kind]#external#
+
+Allocates values for `walletAddresses`
+
+Requirements:
+
+- the input arrays must be equal in size.
+- the total approved must be less than or equal to the seller balance.
+
+Emits an Approved event.
+
+
+
+[.contract-item]
+[[TokenLaunchManager-changeApprovalAddress-address-address-]]
+==== `++changeApprovalAddress(++[.var-type]#++address++#++ ++[.var-name]#++oldAddress++#++, ++[.var-type]#++address++#++ ++[.var-name]#++newAddress++#++)++` [.item-kind]#external#
+
+Allows the seller to update a purchaser's address in case of an error.
+
+Requirements:
+
+- the updated address must not already be in use.
+
+Emits an Approved event.
+
+
+
+[.contract-item]
+[[TokenLaunchManager-changeApprovalValue-address-uint256-]]
+==== `++changeApprovalValue(++[.var-type]#++address++#++ ++[.var-name]#++wallet++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++newValue++#++)++` [.item-kind]#external#
+
+Allows the seller to update a purchaser's amount in case of an error.
+
+
+
+[.contract-item]
+[[TokenLaunchManager-retrieve--]]
+==== `++retrieve()++` [.item-kind]#external#
+
+Transfers the entire value to the sender's address. Transferred tokens
+are locked for Proof-of-Use.
+
+Requirements:
+
+- token transfer must be approved.
+
+[.contract-item]
+[[TokenLaunchManager-registerSeller-address-]]
+==== `++registerSeller(++[.var-type]#++address++#++ ++[.var-name]#++_seller++#++)++` [.item-kind]#external#
+
+Allows the Owner to register a Seller.
+
+Emits a SellerWasRegistered event.
+
+
+
+[.contract-item]
+[[TokenLaunchManager-tokensReceived-address-address-address-uint256-bytes-bytes-]]
+==== `++tokensReceived(++[.var-type]#++address++#++ ++[.var-name]#++operator++#++, ++[.var-type]#++address++#++ ++[.var-name]#++from++#++, ++[.var-type]#++address++#++ ++[.var-name]#++to++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++amount++#++, ++[.var-type]#++bytes++#++ ++[.var-name]#++userData++#++, ++[.var-type]#++bytes++#++ ++[.var-name]#++operatorData++#++)++` [.item-kind]#external#
+
+A required callback for ERC777.
+
+[.contract-item]
+[[TokenLaunchManager-initialize-address-]]
+==== `++initialize(++[.var-type]#++address++#++ ++[.var-name]#++contractManager++#++)++` [.item-kind]#public#
+
+
+
+[.contract-item]
+[[TokenLaunchManager-approveTransfer-address-uint256-]]
+==== `++approveTransfer(++[.var-type]#++address++#++ ++[.var-name]#++walletAddress++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++value++#++)++` [.item-kind]#public#
+
+
+
+[.contract-item]
+[[TokenLaunchManager-_getBalance--]]
+==== `++_getBalance() → ++[.var-type]#++uint256++#++ ++[.var-name]#++balance++#++++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[TokenLaunchManager-_setApprovedAmount-address-uint256-]]
+==== `++_setApprovedAmount(++[.var-type]#++address++#++ ++[.var-name]#++wallet++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++value++#++)++` [.item-kind]#internal#
+
+
+
+
+[.contract-item]
+[[TokenLaunchManager-Approved-address-uint256-]]
+==== `++Approved(++[.var-type]#++address++#++ ++[.var-name]#++holder++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++amount++#++)++` [.item-kind]#event#
+
+
+
+[.contract-item]
+[[TokenLaunchManager-TokensRetrieved-address-uint256-]]
+==== `++TokensRetrieved(++[.var-type]#++address++#++ ++[.var-name]#++holder++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++amount++#++)++` [.item-kind]#event#
+
+Emitted when a `holder` retrieves `amount`.
+
+[.contract-item]
+[[TokenLaunchManager-SellerWasRegistered-address-]]
+==== `++SellerWasRegistered(++[.var-type]#++address++#++ ++[.var-name]#++seller++#++)++` [.item-kind]#event#
+
+Emitted when a `seller` is registered.
+

@@ -1,0 +1,287 @@
+:GroupsData: pass:normal[xref:#GroupsData[`++GroupsData++`]]
+:groups: pass:normal[xref:#GroupsData-groups-mapping-bytes32----struct-GroupsData-Group-[`++groups++`]]
+:previousPublicKeys: pass:normal[xref:#GroupsData-previousPublicKeys-mapping-bytes32----uint256-4----[`++previousPublicKeys++`]]
+:_executorName: pass:normal[xref:#GroupsData-_executorName-string[`++_executorName++`]]
+:addGroup: pass:normal[xref:#GroupsData-addGroup-bytes32-uint256-bytes32-[`++addGroup++`]]
+:setException: pass:normal[xref:#GroupsData-setException-bytes32-uint256-[`++setException++`]]
+:setPublicKey: pass:normal[xref:#GroupsData-setPublicKey-bytes32-uint256-uint256-uint256-uint256-[`++setPublicKey++`]]
+:setNodeInGroup: pass:normal[xref:#GroupsData-setNodeInGroup-bytes32-uint256-[`++setNodeInGroup++`]]
+:removeNodeFromGroup: pass:normal[xref:#GroupsData-removeNodeFromGroup-uint256-bytes32-[`++removeNodeFromGroup++`]]
+:removeAllNodesInGroup: pass:normal[xref:#GroupsData-removeAllNodesInGroup-bytes32-[`++removeAllNodesInGroup++`]]
+:setNodesInGroup: pass:normal[xref:#GroupsData-setNodesInGroup-bytes32-uint256---[`++setNodesInGroup++`]]
+:setGroupFailedDKG: pass:normal[xref:#GroupsData-setGroupFailedDKG-bytes32-[`++setGroupFailedDKG++`]]
+:removeGroup: pass:normal[xref:#GroupsData-removeGroup-bytes32-[`++removeGroup++`]]
+:removeExceptionNode: pass:normal[xref:#GroupsData-removeExceptionNode-bytes32-uint256-[`++removeExceptionNode++`]]
+:isGroupActive: pass:normal[xref:#GroupsData-isGroupActive-bytes32-[`++isGroupActive++`]]
+:isExceptionNode: pass:normal[xref:#GroupsData-isExceptionNode-bytes32-uint256-[`++isExceptionNode++`]]
+:getGroupsPublicKey: pass:normal[xref:#GroupsData-getGroupsPublicKey-bytes32-[`++getGroupsPublicKey++`]]
+:getPreviousGroupsPublicKey: pass:normal[xref:#GroupsData-getPreviousGroupsPublicKey-bytes32-[`++getPreviousGroupsPublicKey++`]]
+:isGroupFailedDKG: pass:normal[xref:#GroupsData-isGroupFailedDKG-bytes32-[`++isGroupFailedDKG++`]]
+:getNodesInGroup: pass:normal[xref:#GroupsData-getNodesInGroup-bytes32-[`++getNodesInGroup++`]]
+:getGroupData: pass:normal[xref:#GroupsData-getGroupData-bytes32-[`++getGroupData++`]]
+:getRecommendedNumberOfNodes: pass:normal[xref:#GroupsData-getRecommendedNumberOfNodes-bytes32-[`++getRecommendedNumberOfNodes++`]]
+:getNumberOfNodesInGroup: pass:normal[xref:#GroupsData-getNumberOfNodesInGroup-bytes32-[`++getNumberOfNodesInGroup++`]]
+:initialize: pass:normal[xref:#GroupsData-initialize-string-address-[`++initialize++`]]
+:_isPublicKeyZero: pass:normal[xref:#GroupsData-_isPublicKeyZero-bytes32-[`++_isPublicKeyZero++`]]
+
+[.contract]
+[[GroupsData]]
+=== `++GroupsData++`
+
+
+
+[.contract-index]
+.Modifiers
+--
+
+[.contract-subindex-inherited]
+.Permissions
+* {xref-Permissions-allow-string-}[`++allow(contractName)++`]
+* {xref-Permissions-allowTwo-string-string-}[`++allowTwo(contractName1, contractName2)++`]
+* {xref-Permissions-allowThree-string-string-string-}[`++allowThree(contractName1, contractName2, contractName3)++`]
+
+[.contract-subindex-inherited]
+.OwnableUpgradeSafe
+* {xref-OwnableUpgradeSafe-onlyOwner--}[`++onlyOwner()++`]
+
+[.contract-subindex-inherited]
+.ContextUpgradeSafe
+
+[.contract-subindex-inherited]
+.Initializable
+* {xref-Initializable-initializer--}[`++initializer()++`]
+
+[.contract-subindex-inherited]
+.IGroupsData
+
+--
+
+[.contract-index]
+.Functions
+--
+* {xref-GroupsData-addGroup-bytes32-uint256-bytes32-}[`++addGroup(groupIndex, amountOfNodes, data)++`]
+* {xref-GroupsData-setException-bytes32-uint256-}[`++setException(groupIndex, nodeIndex)++`]
+* {xref-GroupsData-setPublicKey-bytes32-uint256-uint256-uint256-uint256-}[`++setPublicKey(groupIndex, publicKeyx1, publicKeyy1, publicKeyx2, publicKeyy2)++`]
+* {xref-GroupsData-setNodeInGroup-bytes32-uint256-}[`++setNodeInGroup(groupIndex, nodeIndex)++`]
+* {xref-GroupsData-removeNodeFromGroup-uint256-bytes32-}[`++removeNodeFromGroup(indexOfNode, groupIndex)++`]
+* {xref-GroupsData-removeAllNodesInGroup-bytes32-}[`++removeAllNodesInGroup(groupIndex)++`]
+* {xref-GroupsData-setNodesInGroup-bytes32-uint256---}[`++setNodesInGroup(groupIndex, nodesInGroup)++`]
+* {xref-GroupsData-setGroupFailedDKG-bytes32-}[`++setGroupFailedDKG(groupIndex)++`]
+* {xref-GroupsData-removeGroup-bytes32-}[`++removeGroup(groupIndex)++`]
+* {xref-GroupsData-removeExceptionNode-bytes32-uint256-}[`++removeExceptionNode(groupIndex, nodeIndex)++`]
+* {xref-GroupsData-isGroupActive-bytes32-}[`++isGroupActive(groupIndex)++`]
+* {xref-GroupsData-isExceptionNode-bytes32-uint256-}[`++isExceptionNode(groupIndex, nodeIndex)++`]
+* {xref-GroupsData-getGroupsPublicKey-bytes32-}[`++getGroupsPublicKey(groupIndex)++`]
+* {xref-GroupsData-getPreviousGroupsPublicKey-bytes32-}[`++getPreviousGroupsPublicKey(groupIndex)++`]
+* {xref-GroupsData-isGroupFailedDKG-bytes32-}[`++isGroupFailedDKG(groupIndex)++`]
+* {xref-GroupsData-getNodesInGroup-bytes32-}[`++getNodesInGroup(groupIndex)++`]
+* {xref-GroupsData-getGroupData-bytes32-}[`++getGroupData(groupIndex)++`]
+* {xref-GroupsData-getRecommendedNumberOfNodes-bytes32-}[`++getRecommendedNumberOfNodes(groupIndex)++`]
+* {xref-GroupsData-getNumberOfNodesInGroup-bytes32-}[`++getNumberOfNodesInGroup(groupIndex)++`]
+* {xref-GroupsData-initialize-string-address-}[`++initialize(newExecutorName, newContractsAddress)++`]
+* {xref-GroupsData-_isPublicKeyZero-bytes32-}[`++_isPublicKeyZero(groupIndex)++`]
+
+[.contract-subindex-inherited]
+.Permissions
+* {xref-Permissions-initialize-address-}[`++initialize(contractManager)++`]
+* {xref-Permissions-_isOwner--}[`++_isOwner()++`]
+
+[.contract-subindex-inherited]
+.OwnableUpgradeSafe
+* {xref-OwnableUpgradeSafe-__Ownable_init--}[`++__Ownable_init()++`]
+* {xref-OwnableUpgradeSafe-__Ownable_init_unchained--}[`++__Ownable_init_unchained()++`]
+* {xref-OwnableUpgradeSafe-owner--}[`++owner()++`]
+* {xref-OwnableUpgradeSafe-renounceOwnership--}[`++renounceOwnership()++`]
+* {xref-OwnableUpgradeSafe-transferOwnership-address-}[`++transferOwnership(newOwner)++`]
+
+[.contract-subindex-inherited]
+.ContextUpgradeSafe
+* {xref-ContextUpgradeSafe-__Context_init--}[`++__Context_init()++`]
+* {xref-ContextUpgradeSafe-__Context_init_unchained--}[`++__Context_init_unchained()++`]
+* {xref-ContextUpgradeSafe-_msgSender--}[`++_msgSender()++`]
+* {xref-ContextUpgradeSafe-_msgData--}[`++_msgData()++`]
+
+[.contract-subindex-inherited]
+.Initializable
+
+[.contract-subindex-inherited]
+.IGroupsData
+
+--
+
+[.contract-index]
+.Events
+--
+
+[.contract-subindex-inherited]
+.Permissions
+
+[.contract-subindex-inherited]
+.OwnableUpgradeSafe
+* {xref-OwnableUpgradeSafe-OwnershipTransferred-address-address-}[`++OwnershipTransferred(previousOwner, newOwner)++`]
+
+[.contract-subindex-inherited]
+.ContextUpgradeSafe
+
+[.contract-subindex-inherited]
+.Initializable
+
+[.contract-subindex-inherited]
+.IGroupsData
+
+--
+
+
+[.contract-item]
+[[GroupsData-addGroup-bytes32-uint256-bytes32-]]
+==== `++addGroup(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++amountOfNodes++#++, ++[.var-type]#++bytes32++#++ ++[.var-name]#++data++#++)++` [.item-kind]#external#
+
+addGroup - creates and adds new Group to mapping
+function could be run only by executor
+
+
+[.contract-item]
+[[GroupsData-setException-bytes32-uint256-]]
+==== `++setException(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++)++` [.item-kind]#external#
+
+setException - sets a Node like exception
+function could be run only by executor
+
+
+[.contract-item]
+[[GroupsData-setPublicKey-bytes32-uint256-uint256-uint256-uint256-]]
+==== `++setPublicKey(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++publicKeyx1++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++publicKeyy1++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++publicKeyx2++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++publicKeyy2++#++)++` [.item-kind]#external#
+
+setPublicKey - sets BLS master public key
+function could be run only by SkaleDKG
+
+
+[.contract-item]
+[[GroupsData-setNodeInGroup-bytes32-uint256-]]
+==== `++setNodeInGroup(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++)++` [.item-kind]#external#
+
+setNodeInGroup - adds Node to Group
+function could be run only by executor
+
+
+[.contract-item]
+[[GroupsData-removeNodeFromGroup-uint256-bytes32-]]
+==== `++removeNodeFromGroup(++[.var-type]#++uint256++#++ ++[.var-name]#++indexOfNode++#++, ++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++)++` [.item-kind]#external#
+
+removeNodeFromGroup - removes Node out of the Group
+function could be run only by executor
+
+
+[.contract-item]
+[[GroupsData-removeAllNodesInGroup-bytes32-]]
+==== `++removeAllNodesInGroup(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++)++` [.item-kind]#external#
+
+removeAllNodesInGroup - removes all added Nodes out the Group
+function could be run only by executor
+
+
+[.contract-item]
+[[GroupsData-setNodesInGroup-bytes32-uint256---]]
+==== `++setNodesInGroup(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++, ++[.var-type]#++uint256[]++#++ ++[.var-name]#++nodesInGroup++#++)++` [.item-kind]#external#
+
+setNodesInGroup - adds Nodes to Group
+function could be run only by executor
+
+
+[.contract-item]
+[[GroupsData-setGroupFailedDKG-bytes32-]]
+==== `++setGroupFailedDKG(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++)++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[GroupsData-removeGroup-bytes32-]]
+==== `++removeGroup(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++)++` [.item-kind]#external#
+
+removeGroup - remove Group from storage
+function could be run only be executor
+
+
+[.contract-item]
+[[GroupsData-removeExceptionNode-bytes32-uint256-]]
+==== `++removeExceptionNode(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++)++` [.item-kind]#external#
+
+removeExceptionNode - remove exception Node from Group
+function could be run only by executor
+
+
+[.contract-item]
+[[GroupsData-isGroupActive-bytes32-]]
+==== `++isGroupActive(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++) → ++[.var-type]#++bool++#++++` [.item-kind]#external#
+
+isGroupActive - checks is Group active
+
+
+[.contract-item]
+[[GroupsData-isExceptionNode-bytes32-uint256-]]
+==== `++isExceptionNode(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++) → ++[.var-type]#++bool++#++++` [.item-kind]#external#
+
+isExceptionNode - checks is Node - exception at given Group
+
+
+[.contract-item]
+[[GroupsData-getGroupsPublicKey-bytes32-]]
+==== `++getGroupsPublicKey(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++) → ++[.var-type]#++uint256++#++, ++[.var-type]#++uint256++#++, ++[.var-type]#++uint256++#++, ++[.var-type]#++uint256++#++++` [.item-kind]#external#
+
+getGroupsPublicKey - shows Groups public key
+
+
+[.contract-item]
+[[GroupsData-getPreviousGroupsPublicKey-bytes32-]]
+==== `++getPreviousGroupsPublicKey(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++) → ++[.var-type]#++uint256++#++, ++[.var-type]#++uint256++#++, ++[.var-type]#++uint256++#++, ++[.var-type]#++uint256++#++++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[GroupsData-isGroupFailedDKG-bytes32-]]
+==== `++isGroupFailedDKG(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++) → ++[.var-type]#++bool++#++++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[GroupsData-getNodesInGroup-bytes32-]]
+==== `++getNodesInGroup(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++) → ++[.var-type]#++uint256[]++#++++` [.item-kind]#external#
+
+getNodesInGroup - shows Nodes in Group
+
+
+[.contract-item]
+[[GroupsData-getGroupData-bytes32-]]
+==== `++getGroupData(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++) → ++[.var-type]#++bytes32++#++++` [.item-kind]#external#
+
+getGroupsData - shows Groups extra data
+
+
+[.contract-item]
+[[GroupsData-getRecommendedNumberOfNodes-bytes32-]]
+==== `++getRecommendedNumberOfNodes(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++) → ++[.var-type]#++uint256++#++++` [.item-kind]#external#
+
+getRecommendedNumberOfNodes - shows recommended number of Nodes
+
+
+[.contract-item]
+[[GroupsData-getNumberOfNodesInGroup-bytes32-]]
+==== `++getNumberOfNodesInGroup(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++) → ++[.var-type]#++uint256++#++++` [.item-kind]#external#
+
+getNumberOfNodesInGroup - shows number of Nodes in Group
+
+
+[.contract-item]
+[[GroupsData-initialize-string-address-]]
+==== `++initialize(++[.var-type]#++string++#++ ++[.var-name]#++newExecutorName++#++, ++[.var-type]#++address++#++ ++[.var-name]#++newContractsAddress++#++)++` [.item-kind]#public#
+
+constructor in Permissions approach
+
+
+[.contract-item]
+[[GroupsData-_isPublicKeyZero-bytes32-]]
+==== `++_isPublicKeyZero(++[.var-type]#++bytes32++#++ ++[.var-name]#++groupIndex++#++) → ++[.var-type]#++bool++#++++` [.item-kind]#internal#
+
+
+
+

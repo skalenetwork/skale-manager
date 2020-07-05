@@ -1,0 +1,127 @@
+:TimeHelpersWithDebug: pass:normal[xref:#TimeHelpersWithDebug[`++TimeHelpersWithDebug++`]]
+:skipTime: pass:normal[xref:#TimeHelpersWithDebug-skipTime-uint256-[`++skipTime++`]]
+:initialize: pass:normal[xref:#TimeHelpersWithDebug-initialize--[`++initialize++`]]
+:timestampToMonth: pass:normal[xref:#TimeHelpersWithDebug-timestampToMonth-uint256-[`++timestampToMonth++`]]
+:monthToTimestamp: pass:normal[xref:#TimeHelpersWithDebug-monthToTimestamp-uint256-[`++monthToTimestamp++`]]
+:_getTimeShift: pass:normal[xref:#TimeHelpersWithDebug-_getTimeShift-uint256-[`++_getTimeShift++`]]
+:_findTimeBeforeTimeShift: pass:normal[xref:#TimeHelpersWithDebug-_findTimeBeforeTimeShift-uint256-[`++_findTimeBeforeTimeShift++`]]
+
+[.contract]
+[[TimeHelpersWithDebug]]
+=== `++TimeHelpersWithDebug++`
+
+
+
+[.contract-index]
+.Modifiers
+--
+
+[.contract-subindex-inherited]
+.OwnableUpgradeSafe
+* {xref-OwnableUpgradeSafe-onlyOwner--}[`++onlyOwner()++`]
+
+[.contract-subindex-inherited]
+.ContextUpgradeSafe
+
+[.contract-subindex-inherited]
+.Initializable
+* {xref-Initializable-initializer--}[`++initializer()++`]
+
+[.contract-subindex-inherited]
+.TimeHelpers
+
+--
+
+[.contract-index]
+.Functions
+--
+* {xref-TimeHelpersWithDebug-skipTime-uint256-}[`++skipTime(sec)++`]
+* {xref-TimeHelpersWithDebug-initialize--}[`++initialize()++`]
+* {xref-TimeHelpersWithDebug-timestampToMonth-uint256-}[`++timestampToMonth(timestamp)++`]
+* {xref-TimeHelpersWithDebug-monthToTimestamp-uint256-}[`++monthToTimestamp(_month)++`]
+* {xref-TimeHelpersWithDebug-_getTimeShift-uint256-}[`++_getTimeShift(timestamp)++`]
+* {xref-TimeHelpersWithDebug-_findTimeBeforeTimeShift-uint256-}[`++_findTimeBeforeTimeShift(shiftedTimestamp)++`]
+
+[.contract-subindex-inherited]
+.OwnableUpgradeSafe
+* {xref-OwnableUpgradeSafe-__Ownable_init--}[`++__Ownable_init()++`]
+* {xref-OwnableUpgradeSafe-__Ownable_init_unchained--}[`++__Ownable_init_unchained()++`]
+* {xref-OwnableUpgradeSafe-owner--}[`++owner()++`]
+* {xref-OwnableUpgradeSafe-renounceOwnership--}[`++renounceOwnership()++`]
+* {xref-OwnableUpgradeSafe-transferOwnership-address-}[`++transferOwnership(newOwner)++`]
+
+[.contract-subindex-inherited]
+.ContextUpgradeSafe
+* {xref-ContextUpgradeSafe-__Context_init--}[`++__Context_init()++`]
+* {xref-ContextUpgradeSafe-__Context_init_unchained--}[`++__Context_init_unchained()++`]
+* {xref-ContextUpgradeSafe-_msgSender--}[`++_msgSender()++`]
+* {xref-ContextUpgradeSafe-_msgData--}[`++_msgData()++`]
+
+[.contract-subindex-inherited]
+.Initializable
+
+[.contract-subindex-inherited]
+.TimeHelpers
+* {xref-TimeHelpers-calculateProofOfUseLockEndTime-uint256-uint256-}[`++calculateProofOfUseLockEndTime(month, lockUpPeriodDays)++`]
+* {xref-TimeHelpers-addMonths-uint256-uint256-}[`++addMonths(fromTimestamp, n)++`]
+* {xref-TimeHelpers-getCurrentMonth--}[`++getCurrentMonth()++`]
+
+--
+
+[.contract-index]
+.Events
+--
+
+[.contract-subindex-inherited]
+.OwnableUpgradeSafe
+* {xref-OwnableUpgradeSafe-OwnershipTransferred-address-address-}[`++OwnershipTransferred(previousOwner, newOwner)++`]
+
+[.contract-subindex-inherited]
+.ContextUpgradeSafe
+
+[.contract-subindex-inherited]
+.Initializable
+
+[.contract-subindex-inherited]
+.TimeHelpers
+
+--
+
+
+[.contract-item]
+[[TimeHelpersWithDebug-skipTime-uint256-]]
+==== `++skipTime(++[.var-type]#++uint256++#++ ++[.var-name]#++sec++#++)++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[TimeHelpersWithDebug-initialize--]]
+==== `++initialize()++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[TimeHelpersWithDebug-timestampToMonth-uint256-]]
+==== `++timestampToMonth(++[.var-type]#++uint256++#++ ++[.var-name]#++timestamp++#++) → ++[.var-type]#++uint256++#++++` [.item-kind]#public#
+
+
+
+[.contract-item]
+[[TimeHelpersWithDebug-monthToTimestamp-uint256-]]
+==== `++monthToTimestamp(++[.var-type]#++uint256++#++ ++[.var-name]#++_month++#++) → ++[.var-type]#++uint256++#++++` [.item-kind]#public#
+
+
+
+[.contract-item]
+[[TimeHelpersWithDebug-_getTimeShift-uint256-]]
+==== `++_getTimeShift(++[.var-type]#++uint256++#++ ++[.var-name]#++timestamp++#++) → ++[.var-type]#++uint256++#++++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[TimeHelpersWithDebug-_findTimeBeforeTimeShift-uint256-]]
+==== `++_findTimeBeforeTimeShift(++[.var-type]#++uint256++#++ ++[.var-name]#++shiftedTimestamp++#++) → ++[.var-type]#++uint256++#++++` [.item-kind]#internal#
+
+
+
+

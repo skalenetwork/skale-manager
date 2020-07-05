@@ -1,0 +1,66 @@
+:FractionUtils: pass:normal[xref:#FractionUtils[`++FractionUtils++`]]
+:createFraction: pass:normal[xref:#FractionUtils-createFraction-uint256-uint256-[`++createFraction++`]]
+:createFraction: pass:normal[xref:#FractionUtils-createFraction-uint256-[`++createFraction++`]]
+:reduceFraction: pass:normal[xref:#FractionUtils-reduceFraction-struct-FractionUtils-Fraction-[`++reduceFraction++`]]
+:multiplyFraction: pass:normal[xref:#FractionUtils-multiplyFraction-struct-FractionUtils-Fraction-struct-FractionUtils-Fraction-[`++multiplyFraction++`]]
+:gcd: pass:normal[xref:#FractionUtils-gcd-uint256-uint256-[`++gcd++`]]
+:swap: pass:normal[xref:#FractionUtils-swap-uint256-uint256-[`++swap++`]]
+
+[.contract]
+[[FractionUtils]]
+=== `++FractionUtils++`
+
+
+
+
+[.contract-index]
+.Functions
+--
+* {xref-FractionUtils-createFraction-uint256-uint256-}[`++createFraction(numerator, denominator)++`]
+* {xref-FractionUtils-createFraction-uint256-}[`++createFraction(value)++`]
+* {xref-FractionUtils-reduceFraction-struct-FractionUtils-Fraction-}[`++reduceFraction(fraction)++`]
+* {xref-FractionUtils-multiplyFraction-struct-FractionUtils-Fraction-struct-FractionUtils-Fraction-}[`++multiplyFraction(a, b)++`]
+* {xref-FractionUtils-gcd-uint256-uint256-}[`++gcd(_a, _b)++`]
+* {xref-FractionUtils-swap-uint256-uint256-}[`++swap(a, b)++`]
+
+--
+
+
+
+[.contract-item]
+[[FractionUtils-createFraction-uint256-uint256-]]
+==== `++createFraction(++[.var-type]#++uint256++#++ ++[.var-name]#++numerator++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++denominator++#++) → ++[.var-type]#++struct FractionUtils.Fraction++#++++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[FractionUtils-createFraction-uint256-]]
+==== `++createFraction(++[.var-type]#++uint256++#++ ++[.var-name]#++value++#++) → ++[.var-type]#++struct FractionUtils.Fraction++#++++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[FractionUtils-reduceFraction-struct-FractionUtils-Fraction-]]
+==== `++reduceFraction(++[.var-type]#++struct FractionUtils.Fraction++#++ ++[.var-name]#++fraction++#++)++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[FractionUtils-multiplyFraction-struct-FractionUtils-Fraction-struct-FractionUtils-Fraction-]]
+==== `++multiplyFraction(++[.var-type]#++struct FractionUtils.Fraction++#++ ++[.var-name]#++a++#++, ++[.var-type]#++struct FractionUtils.Fraction++#++ ++[.var-name]#++b++#++) → ++[.var-type]#++struct FractionUtils.Fraction++#++++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[FractionUtils-gcd-uint256-uint256-]]
+==== `++gcd(++[.var-type]#++uint256++#++ ++[.var-name]#++_a++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++_b++#++) → ++[.var-type]#++uint256++#++++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[FractionUtils-swap-uint256-uint256-]]
+==== `++swap(++[.var-type]#++uint256++#++ ++[.var-name]#++a++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++b++#++) → ++[.var-type]#++uint256++#++, ++[.var-type]#++uint256++#++++` [.item-kind]#internal#
+
+
+
+

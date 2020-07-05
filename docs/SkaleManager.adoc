@@ -1,0 +1,205 @@
+:SkaleManager: pass:normal[xref:#SkaleManager[`++SkaleManager++`]]
+:minersCap: pass:normal[xref:#SkaleManager-minersCap-uint256[`++minersCap++`]]
+:startTime: pass:normal[xref:#SkaleManager-startTime-uint32[`++startTime++`]]
+:stageTime: pass:normal[xref:#SkaleManager-stageTime-uint32[`++stageTime++`]]
+:stageNodes: pass:normal[xref:#SkaleManager-stageNodes-uint256[`++stageNodes++`]]
+:tokensReceived: pass:normal[xref:#SkaleManager-tokensReceived-address-address-address-uint256-bytes-bytes-[`++tokensReceived++`]]
+:createNode: pass:normal[xref:#SkaleManager-createNode-uint16-uint16-bytes4-bytes4-bytes-string-[`++createNode++`]]
+:nodeExit: pass:normal[xref:#SkaleManager-nodeExit-uint256-[`++nodeExit++`]]
+:deleteNode: pass:normal[xref:#SkaleManager-deleteNode-uint256-[`++deleteNode++`]]
+:deleteNodeByRoot: pass:normal[xref:#SkaleManager-deleteNodeByRoot-uint256-[`++deleteNodeByRoot++`]]
+:deleteSchain: pass:normal[xref:#SkaleManager-deleteSchain-string-[`++deleteSchain++`]]
+:deleteSchainByRoot: pass:normal[xref:#SkaleManager-deleteSchainByRoot-string-[`++deleteSchainByRoot++`]]
+:sendVerdict: pass:normal[xref:#SkaleManager-sendVerdict-uint256-struct-MonitorsData-Verdict-[`++sendVerdict++`]]
+:sendVerdicts: pass:normal[xref:#SkaleManager-sendVerdicts-uint256-struct-MonitorsData-Verdict---[`++sendVerdicts++`]]
+:getBounty: pass:normal[xref:#SkaleManager-getBounty-uint256-[`++getBounty++`]]
+:initialize: pass:normal[xref:#SkaleManager-initialize-address-[`++initialize++`]]
+:_manageBounty: pass:normal[xref:#SkaleManager-_manageBounty-address-uint256-uint256-uint256-[`++_manageBounty++`]]
+:_payBounty: pass:normal[xref:#SkaleManager-_payBounty-uint256-address-uint256-[`++_payBounty++`]]
+:BountyGot: pass:normal[xref:#SkaleManager-BountyGot-uint256-address-uint256-uint256-uint256-uint256-uint32-uint256-[`++BountyGot++`]]
+
+[.contract]
+[[SkaleManager]]
+=== `++SkaleManager++`
+
+
+
+[.contract-index]
+.Modifiers
+--
+
+[.contract-subindex-inherited]
+.Permissions
+* {xref-Permissions-allow-string-}[`++allow(contractName)++`]
+* {xref-Permissions-allowTwo-string-string-}[`++allowTwo(contractName1, contractName2)++`]
+* {xref-Permissions-allowThree-string-string-string-}[`++allowThree(contractName1, contractName2, contractName3)++`]
+
+[.contract-subindex-inherited]
+.OwnableUpgradeSafe
+* {xref-OwnableUpgradeSafe-onlyOwner--}[`++onlyOwner()++`]
+
+[.contract-subindex-inherited]
+.ContextUpgradeSafe
+
+[.contract-subindex-inherited]
+.Initializable
+* {xref-Initializable-initializer--}[`++initializer()++`]
+
+[.contract-subindex-inherited]
+.IERC777Recipient
+
+--
+
+[.contract-index]
+.Functions
+--
+* {xref-SkaleManager-tokensReceived-address-address-address-uint256-bytes-bytes-}[`++tokensReceived(_, from, to, value, userData, _)++`]
+* {xref-SkaleManager-createNode-uint16-uint16-bytes4-bytes4-bytes-string-}[`++createNode(port, nonce, ip, publicIp, publicKey, name)++`]
+* {xref-SkaleManager-nodeExit-uint256-}[`++nodeExit(nodeIndex)++`]
+* {xref-SkaleManager-deleteNode-uint256-}[`++deleteNode(nodeIndex)++`]
+* {xref-SkaleManager-deleteNodeByRoot-uint256-}[`++deleteNodeByRoot(nodeIndex)++`]
+* {xref-SkaleManager-deleteSchain-string-}[`++deleteSchain(name)++`]
+* {xref-SkaleManager-deleteSchainByRoot-string-}[`++deleteSchainByRoot(name)++`]
+* {xref-SkaleManager-sendVerdict-uint256-struct-MonitorsData-Verdict-}[`++sendVerdict(fromMonitorIndex, verdict)++`]
+* {xref-SkaleManager-sendVerdicts-uint256-struct-MonitorsData-Verdict---}[`++sendVerdicts(fromMonitorIndex, verdicts)++`]
+* {xref-SkaleManager-getBounty-uint256-}[`++getBounty(nodeIndex)++`]
+* {xref-SkaleManager-initialize-address-}[`++initialize(newContractsAddress)++`]
+* {xref-SkaleManager-_manageBounty-address-uint256-uint256-uint256-}[`++_manageBounty(from, nodeIndex, downtime, latency)++`]
+* {xref-SkaleManager-_payBounty-uint256-address-uint256-}[`++_payBounty(bountyForMiner, miner, nodeIndex)++`]
+
+[.contract-subindex-inherited]
+.Permissions
+* {xref-Permissions-_isOwner--}[`++_isOwner()++`]
+
+[.contract-subindex-inherited]
+.OwnableUpgradeSafe
+* {xref-OwnableUpgradeSafe-__Ownable_init--}[`++__Ownable_init()++`]
+* {xref-OwnableUpgradeSafe-__Ownable_init_unchained--}[`++__Ownable_init_unchained()++`]
+* {xref-OwnableUpgradeSafe-owner--}[`++owner()++`]
+* {xref-OwnableUpgradeSafe-renounceOwnership--}[`++renounceOwnership()++`]
+* {xref-OwnableUpgradeSafe-transferOwnership-address-}[`++transferOwnership(newOwner)++`]
+
+[.contract-subindex-inherited]
+.ContextUpgradeSafe
+* {xref-ContextUpgradeSafe-__Context_init--}[`++__Context_init()++`]
+* {xref-ContextUpgradeSafe-__Context_init_unchained--}[`++__Context_init_unchained()++`]
+* {xref-ContextUpgradeSafe-_msgSender--}[`++_msgSender()++`]
+* {xref-ContextUpgradeSafe-_msgData--}[`++_msgData()++`]
+
+[.contract-subindex-inherited]
+.Initializable
+
+[.contract-subindex-inherited]
+.IERC777Recipient
+
+--
+
+[.contract-index]
+.Events
+--
+* {xref-SkaleManager-BountyGot-uint256-address-uint256-uint256-uint256-uint256-uint32-uint256-}[`++BountyGot(nodeIndex, owner, averageDowntime, averageLatency, bounty, previousBlockEvent, time, gasSpend)++`]
+
+[.contract-subindex-inherited]
+.Permissions
+
+[.contract-subindex-inherited]
+.OwnableUpgradeSafe
+* {xref-OwnableUpgradeSafe-OwnershipTransferred-address-address-}[`++OwnershipTransferred(previousOwner, newOwner)++`]
+
+[.contract-subindex-inherited]
+.ContextUpgradeSafe
+
+[.contract-subindex-inherited]
+.Initializable
+
+[.contract-subindex-inherited]
+.IERC777Recipient
+
+--
+
+
+[.contract-item]
+[[SkaleManager-tokensReceived-address-address-address-uint256-bytes-bytes-]]
+==== `++tokensReceived(++[.var-type]#++address++#++, ++[.var-type]#++address++#++ ++[.var-name]#++from++#++, ++[.var-type]#++address++#++ ++[.var-name]#++to++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++value++#++, ++[.var-type]#++bytes++#++ ++[.var-name]#++userData++#++, ++[.var-type]#++bytes++#++)++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[SkaleManager-createNode-uint16-uint16-bytes4-bytes4-bytes-string-]]
+==== `++createNode(++[.var-type]#++uint16++#++ ++[.var-name]#++port++#++, ++[.var-type]#++uint16++#++ ++[.var-name]#++nonce++#++, ++[.var-type]#++bytes4++#++ ++[.var-name]#++ip++#++, ++[.var-type]#++bytes4++#++ ++[.var-name]#++publicIp++#++, ++[.var-type]#++bytes++#++ ++[.var-name]#++publicKey++#++, ++[.var-type]#++string++#++ ++[.var-name]#++name++#++)++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[SkaleManager-nodeExit-uint256-]]
+==== `++nodeExit(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++)++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[SkaleManager-deleteNode-uint256-]]
+==== `++deleteNode(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++)++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[SkaleManager-deleteNodeByRoot-uint256-]]
+==== `++deleteNodeByRoot(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++)++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[SkaleManager-deleteSchain-string-]]
+==== `++deleteSchain(++[.var-type]#++string++#++ ++[.var-name]#++name++#++)++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[SkaleManager-deleteSchainByRoot-string-]]
+==== `++deleteSchainByRoot(++[.var-type]#++string++#++ ++[.var-name]#++name++#++)++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[SkaleManager-sendVerdict-uint256-struct-MonitorsData-Verdict-]]
+==== `++sendVerdict(++[.var-type]#++uint256++#++ ++[.var-name]#++fromMonitorIndex++#++, ++[.var-type]#++struct MonitorsData.Verdict++#++ ++[.var-name]#++verdict++#++)++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[SkaleManager-sendVerdicts-uint256-struct-MonitorsData-Verdict---]]
+==== `++sendVerdicts(++[.var-type]#++uint256++#++ ++[.var-name]#++fromMonitorIndex++#++, ++[.var-type]#++struct MonitorsData.Verdict[]++#++ ++[.var-name]#++verdicts++#++)++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[SkaleManager-getBounty-uint256-]]
+==== `++getBounty(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++)++` [.item-kind]#external#
+
+
+
+[.contract-item]
+[[SkaleManager-initialize-address-]]
+==== `++initialize(++[.var-type]#++address++#++ ++[.var-name]#++newContractsAddress++#++)++` [.item-kind]#public#
+
+
+
+[.contract-item]
+[[SkaleManager-_manageBounty-address-uint256-uint256-uint256-]]
+==== `++_manageBounty(++[.var-type]#++address++#++ ++[.var-name]#++from++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++downtime++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++latency++#++) → ++[.var-type]#++uint256++#++++` [.item-kind]#internal#
+
+
+
+[.contract-item]
+[[SkaleManager-_payBounty-uint256-address-uint256-]]
+==== `++_payBounty(++[.var-type]#++uint256++#++ ++[.var-name]#++bountyForMiner++#++, ++[.var-type]#++address++#++ ++[.var-name]#++miner++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++) → ++[.var-type]#++bool++#++++` [.item-kind]#internal#
+
+
+
+
+[.contract-item]
+[[SkaleManager-BountyGot-uint256-address-uint256-uint256-uint256-uint256-uint32-uint256-]]
+==== `++BountyGot(++[.var-type]#++uint256++#++ ++[.var-name]#++nodeIndex++#++, ++[.var-type]#++address++#++ ++[.var-name]#++owner++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++averageDowntime++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++averageLatency++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++bounty++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++previousBlockEvent++#++, ++[.var-type]#++uint32++#++ ++[.var-name]#++time++#++, ++[.var-type]#++uint256++#++ ++[.var-name]#++gasSpend++#++)++` [.item-kind]#event#
+
+
+
