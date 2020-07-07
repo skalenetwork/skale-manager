@@ -11,6 +11,7 @@ GANACHE_PID=$!
 
 cd $DEPLOYED_DIR
 yarn install
+npx oz push --network test --force || exit $?
 npx truffle migrate --network test || exit $?
 cp .openzeppelin/dev-*.json $TRAVIS_BUILD_DIR/.openzeppelin
 cd $TRAVIS_BUILD_DIR
