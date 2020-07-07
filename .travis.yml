@@ -39,6 +39,7 @@ jobs:
         - slither --version
         - yarn fullcheck || travis_terminate 1
         - bash scripts/test_deploy.sh || travis_terminate 2
+        - bash scripts/test_upgrade.sh || travis_terminate 3
 
     - stage: test
       env:
