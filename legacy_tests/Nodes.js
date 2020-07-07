@@ -57,12 +57,32 @@ async function setSuccesfulDKGPublic(schainId) {
 
 
 
+async function nodeExitFull(nodeIndex) {
+        console.log("Schains on node ", nodeIndex, " BEFORE rotation:")
+        const schainsForNode = await schains.getSchainsForNode(nodeIndex);
+    for (let i = 0; i < schainsForNode.length; i++) {
+        let abi = await init.SkaleManager.methods.nodeExit(nodeIndex).encodeABI();
+        let privateKeyB = Buffer.from(init.privateKey, "hex");
+        let contractAddress = init.jsonData['skale_manager_address'];
+        console.log("------------------------------");
+        console.log("NodeExit");
+        await sendTransaction(init.web3, init.mainAccount, privateKeyB, abi, contractAddress);
+        console.log("Schains on node ", nodeIndex, " AFTER rotation:")
+        const schainsForNodeAfterRotation = await schains.getSchainsForNode(nodeIndex);
+        let schainId = schainsForNode.filter(x => schainsForNodeAfterRotation.indexOf(x) == -1);
+        await skipRotationDelay(schainId[0]);
+        await setSuccesfulDKGPublic(schainId[0]);
+    }
+    process.exit();
+}
+
+
 async function nodeExit(nodeIndex) {
+    console.log("Schains on node ", nodeIndex, " BEFORE rotation:")
+    const schainsForNode = await schains.getSchainsForNode(nodeIndex);
     let abi = await init.SkaleManager.methods.nodeExit(nodeIndex).encodeABI();
     let privateKeyB = Buffer.from(init.privateKey, "hex");
     let contractAddress = init.jsonData['skale_manager_address'];
-    console.log("Schains on node ", nodeIndex, " BEFORE rotation:")
-    const schainsForNode = await schains.getSchainsForNode(nodeIndex);
     console.log("------------------------------");
     console.log("NodeExit");
     await sendTransaction(init.web3, init.mainAccount, privateKeyB, abi, contractAddress);
@@ -73,6 +93,7 @@ async function nodeExit(nodeIndex) {
     await setSuccesfulDKGPublic(schainId[0]);
     process.exit();
 }
+
 
 async function getFreeSpace(nodes) {
     for (let i = 0; i < nodes.length; i++) {
@@ -250,6 +271,8 @@ if (process.argv[2] == 'getFreeSpace') {
     getNode(process.argv[3]);
 } else if (process.argv[2] == 'r') {
     registerValidator();
+} else if (process.argv[2] == 'nodeExitFull') {
+    nodeExitFull(process.argv[3]);
 } else if (process.argv[2] == 'nodeExit') {
     nodeExit(process.argv[3]);
 } 

@@ -74,7 +74,7 @@ async function getSchainName(schainId) {
 }
 
 async function getSchainsForNode(nodeIndex) {
-    let res = await init.SchainsInternal.methods.getSchainIdsForNode(nodeIndex).call();
+    let res = await init.SchainsInternal.methods.getActiveSchains(nodeIndex).call();
     // console.log(res);
     let res1;
     for (let i = 0; i < res.length; i++) {
