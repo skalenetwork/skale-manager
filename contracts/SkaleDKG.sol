@@ -35,11 +35,18 @@ contract SkaleDKG is Permissions, ISkaleDKG {
 
     struct Channel {
         bool active;
-        bool[] broadcasted;
+        uint n;
+        uint startedBlockTimestamp;
+    }
+
+    struct ProcessDKG {
         uint numberOfBroadcasted;
         uint numberOfCompleted;
+        bool[] broadcasted;
         bool[] completed;
-        uint startedBlockTimestamp;
+    }
+
+    struct ComplaintData {
         uint nodeToComplaint;
         uint fromNodeToComplaint;
         uint startComplaintBlockTimestamp;
@@ -48,6 +55,10 @@ contract SkaleDKG is Permissions, ISkaleDKG {
     uint public constant COMPLAINT_TIMELIMIT = 1800;
 
     mapping(bytes32 => Channel) public channels;
+
+    mapping(bytes32 => ProcessDKG) public dkgProcess;
+
+    mapping(bytes32 => ComplaintData) public complaints;
 
     mapping(bytes32 => uint) public lastSuccesfulDKG;
 
@@ -78,8 +89,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
     modifier correctNode(bytes32 groupIndex, uint nodeIndex) {
         uint index = _nodeIndexInSchain(groupIndex, nodeIndex);
         require(
-            index < SchainsInternal(contractManager.getContract("SchainsInternal"))
-                .getNumberOfNodesInGroup(groupIndex),
+            index < channels[groupIndex].n,
             "Node is not in this group");
         _;
     }
@@ -93,6 +103,8 @@ contract SkaleDKG is Permissions, ISkaleDKG {
     function deleteChannel(bytes32 groupIndex) external override allow("SchainsInternal") {
         require(channels[groupIndex].active, "Channel is not created");
         delete channels[groupIndex];
+        delete dkgProcess[groupIndex];
+        delete complaints[groupIndex];
         KeyStorage(contractManager.getContract("KeyStorage")).deleteKey(groupIndex);
     }
 
@@ -106,14 +118,13 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         correctGroup(groupIndex)
         correctNode(groupIndex, nodeIndex)
     {
-        SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
         require(_isNodeByMessageSender(nodeIndex, msg.sender), "Node does not exist for message sender");
-        require(verificationVector.length >= 1, "VerificationVector is empty");
+        uint n = channels[groupIndex].n;
+        require(verificationVector.length == getT(n), "Incorrect number of verification vectors");
         require(
-            secretKeyContribution.length == schainsInternal.getNumberOfNodesInGroup(groupIndex),
+            secretKeyContribution.length == n,
             "Incorrect number of secret key shares"
         );
-
 
         _isBroadcast(
             groupIndex,
@@ -140,10 +151,10 @@ contract SkaleDKG is Permissions, ISkaleDKG {
     {
         require(_isNodeByMessageSender(fromNodeIndex, msg.sender), "Node does not exist for message sender");
         bool broadcasted = _isBroadcasted(groupIndex, toNodeIndex);
-        if (broadcasted && channels[groupIndex].nodeToComplaint == uint(-1)) {
-            channels[groupIndex].nodeToComplaint = toNodeIndex;
-            channels[groupIndex].fromNodeToComplaint = fromNodeIndex;
-            channels[groupIndex].startComplaintBlockTimestamp = block.timestamp;
+        if (broadcasted && complaints[groupIndex].nodeToComplaint == uint(-1)) {
+            complaints[groupIndex].nodeToComplaint = toNodeIndex;
+            complaints[groupIndex].fromNodeToComplaint = fromNodeIndex;
+            complaints[groupIndex].startComplaintBlockTimestamp = block.timestamp;
             emit ComplaintSent(groupIndex, fromNodeIndex, toNodeIndex);
         } else if (broadcasted && channels[groupIndex].nodeToComplaint != toNodeIndex) {
             emit ComplaintError("One complaint is already sent");
@@ -172,17 +183,17 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         correctGroup(groupIndex)
         correctNode(groupIndex, fromNodeIndex)
     {
-        require(channels[groupIndex].nodeToComplaint == fromNodeIndex, "Not this Node");
+        require(complaints[groupIndex].nodeToComplaint == fromNodeIndex, "Not this Node");
         require(_isNodeByMessageSender(fromNodeIndex, msg.sender), "Node does not exist for message sender");
         bool verificationResult = KeyStorage(contractManager.getContract("KeyStorage")).verify(
             groupIndex,
-            channels[groupIndex].nodeToComplaint,
-            channels[groupIndex].fromNodeToComplaint,
+            complaints[groupIndex].nodeToComplaint,
+            complaints[groupIndex].fromNodeToComplaint,
             secretNumber,
             multipliedShare
         );
         uint badNode = (verificationResult ?
-            channels[groupIndex].fromNodeToComplaint : channels[groupIndex].nodeToComplaint);
+            complaints[groupIndex].fromNodeToComplaint : complaints[groupIndex].nodeToComplaint);
         _finalizeSlashing(groupIndex, badNode);
     }
 
@@ -193,21 +204,31 @@ contract SkaleDKG is Permissions, ISkaleDKG {
     {
         require(_isNodeByMessageSender(fromNodeIndex, msg.sender), "Node does not exist for message sender");
         uint index = _nodeIndexInSchain(groupIndex, fromNodeIndex);
-        uint numberOfParticipant = SchainsInternal(
-            contractManager.getContract("SchainsInternal")
-        ).getNumberOfNodesInGroup(groupIndex);
-        require(numberOfParticipant == channels[groupIndex].numberOfBroadcasted, "Still Broadcasting phase");
-        require(!channels[groupIndex].completed[index], "Node is already alright");
-        channels[groupIndex].completed[index] = true;
-        channels[groupIndex].numberOfCompleted++;
+        uint numberOfParticipant = channels[groupIndex].n;
+        require(numberOfParticipant == dkgProcess[groupIndex].numberOfBroadcasted, "Still Broadcasting phase");
+        require(!dkgProcess[groupIndex].completed[index], "Node is already alright");
+        dkgProcess[groupIndex].completed[index] = true;
+        dkgProcess[groupIndex].numberOfCompleted++;
         emit AllDataReceived(groupIndex, fromNodeIndex);
-        if (channels[groupIndex].numberOfCompleted == numberOfParticipant) {
+        if (dkgProcess[groupIndex].numberOfCompleted == numberOfParticipant) {
             _setSuccesfulDKG(groupIndex);
         }
     }
 
     function reopenChannel(bytes32 groupIndex) external override allow("NodeRotation") {
         _reopenChannel(groupIndex);
+    }
+
+    function getChannelStartedTime(bytes32 groupIndex) external view returns (uint) {
+        return channels[groupIndex].startedBlockTimestamp;
+    }
+
+    function getNumberOfBroadcasted(bytes32 groupIndex) external view returns (uint) {
+        return dkgProcess[groupIndex].numberOfBroadcasted;
+    }
+
+    function getNumberOfCompleted(bytes32 groupIndex) external view returns (uint) {
+        return dkgProcess[groupIndex].numberOfCompleted;
     }
 
     function isChannelOpened(bytes32 groupIndex) external override view returns (bool) {
@@ -224,11 +245,10 @@ contract SkaleDKG is Permissions, ISkaleDKG {
 
     function isBroadcastPossible(bytes32 groupIndex, uint nodeIndex) external view returns (bool) {
         uint index = _nodeIndexInSchain(groupIndex, nodeIndex);
-        SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
         return channels[groupIndex].active &&
-            index < schainsInternal.getNumberOfNodesInGroup(groupIndex) &&
+            index <  channels[groupIndex].n &&
             _isNodeByMessageSender(nodeIndex, msg.sender) &&
-            !channels[groupIndex].broadcasted[index];
+            !dkgProcess[groupIndex].broadcasted[index];
     }
 
     function isComplaintPossible(
@@ -247,53 +267,54 @@ contract SkaleDKG is Permissions, ISkaleDKG {
                 channels[groupIndex].broadcasted[indexTo]
             ) ||
             (
-                channels[groupIndex].broadcasted[indexTo] &&
-                channels[groupIndex].startComplaintBlockTimestamp.add(COMPLAINT_TIMELIMIT) <= block.timestamp &&
-                channels[groupIndex].nodeToComplaint == toNodeIndex
+                dkgProcess[groupIndex].broadcasted[indexTo] &&
+                complaints[groupIndex].startComplaintBlockTimestamp.add(COMPLAINT_TIMELIMIT) <= block.timestamp &&
+                complaints[groupIndex].nodeToComplaint == toNodeIndex
             ) ||
             (
                 !channels[groupIndex].broadcasted[indexTo] &&
                 channels[groupIndex].nodeToComplaint == uint(-1) &&
                 channels[groupIndex].startedBlockTimestamp.add(COMPLAINT_TIMELIMIT) <= block.timestamp
             );
-        SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
         return channels[groupIndex].active &&
-            indexFrom < schainsInternal.getNumberOfNodesInGroup(groupIndex) &&
-            indexTo < schainsInternal.getNumberOfNodesInGroup(groupIndex) &&
+            indexFrom < channels[groupIndex].n &&
+            indexTo < channels[groupIndex].n &&
             _isNodeByMessageSender(fromNodeIndex, msg.sender) &&
             complaintSending;
     }
 
     function isAlrightPossible(bytes32 groupIndex, uint nodeIndex) external view returns (bool) {
         uint index = _nodeIndexInSchain(groupIndex, nodeIndex);
-        SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
         return channels[groupIndex].active &&
-            index < schainsInternal.getNumberOfNodesInGroup(groupIndex) &&
+            index < channels[groupIndex].n &&
             _isNodeByMessageSender(nodeIndex, msg.sender) &&
-            schainsInternal.getNumberOfNodesInGroup(groupIndex) == channels[groupIndex].numberOfBroadcasted &&
-            !channels[groupIndex].completed[index];
+            channels[groupIndex].n == dkgProcess[groupIndex].numberOfBroadcasted &&
+            !dkgProcess[groupIndex].completed[index];
     }
 
     function isResponsePossible(bytes32 groupIndex, uint nodeIndex) external view returns (bool) {
         uint index = _nodeIndexInSchain(groupIndex, nodeIndex);
-        SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
         return channels[groupIndex].active &&
-            index < schainsInternal.getNumberOfNodesInGroup(groupIndex) &&
+            index < channels[groupIndex].n &&
             _isNodeByMessageSender(nodeIndex, msg.sender) &&
-            channels[groupIndex].nodeToComplaint == nodeIndex;
+            complaints[groupIndex].nodeToComplaint == nodeIndex;
     }
 
     function isAllDataReceived(bytes32 groupIndex, uint nodeIndex) external view returns (bool) {
         uint index = _nodeIndexInSchain(groupIndex, nodeIndex);
-        return channels[groupIndex].completed[index];
+        return dkgProcess[groupIndex].completed[index];
     }
 
     function getComplaintData(bytes32 groupIndex) external view returns (uint, uint) {
-        return (channels[groupIndex].fromNodeToComplaint, channels[groupIndex].nodeToComplaint);
+        return (complaints[groupIndex].fromNodeToComplaint, complaints[groupIndex].nodeToComplaint);
     }
 
     function initialize(address contractsAddress) public override initializer {
         Permissions.initialize(contractsAddress);
+    }
+
+    function getT(uint n) public pure returns (uint) {
+        return n.mul(2).add(1).div(3);
     }
 
     function _setSuccesfulDKG(bytes32 groupIndex) internal {
@@ -308,18 +329,20 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             contractManager.getContract("SchainsInternal")
         );
 
+        uint len = schainsInternal.getNumberOfNodesInGroup(groupIndex);
         channels[groupIndex].active = true;
-        delete channels[groupIndex].completed;
-        delete channels[groupIndex].broadcasted;
-        channels[groupIndex].broadcasted = new bool[](schainsInternal.getNumberOfNodesInGroup(groupIndex));
-        channels[groupIndex].completed = new bool[](schainsInternal.getNumberOfNodesInGroup(groupIndex));
-        KeyStorage(contractManager.getContract("KeyStorage")).initPublicKeyInProgress(groupIndex);
-        channels[groupIndex].fromNodeToComplaint = uint(-1);
-        channels[groupIndex].nodeToComplaint = uint(-1);
-        delete channels[groupIndex].numberOfBroadcasted;
-        delete channels[groupIndex].numberOfCompleted;
-        delete channels[groupIndex].startComplaintBlockTimestamp;
+        channels[groupIndex].n = len;
+        delete dkgProcess[groupIndex].completed;
+        delete dkgProcess[groupIndex].broadcasted;
+        dkgProcess[groupIndex].broadcasted = new bool[](len);
+        dkgProcess[groupIndex].completed = new bool[](len);
+        complaints[groupIndex].fromNodeToComplaint = uint(-1);
+        complaints[groupIndex].nodeToComplaint = uint(-1);
+        delete complaints[groupIndex].startComplaintBlockTimestamp;
+        delete dkgProcess[groupIndex].numberOfBroadcasted;
+        delete dkgProcess[groupIndex].numberOfCompleted;
         channels[groupIndex].startedBlockTimestamp = now;
+        KeyStorage(contractManager.getContract("KeyStorage")).initPublicKeyInProgress(groupIndex, len);
 
         emit ChannelOpened(groupIndex);
     }
@@ -363,9 +386,9 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         private
     {
         uint index = _nodeIndexInSchain(groupIndex, nodeIndex);
-        require(!channels[groupIndex].broadcasted[index], "This node is already broadcasted");
-        channels[groupIndex].broadcasted[index] = true;
-        channels[groupIndex].numberOfBroadcasted++;
+        require(!dkgProcess[groupIndex].broadcasted[index], "This node is already broadcasted");
+        dkgProcess[groupIndex].broadcasted[index] = true;
+        dkgProcess[groupIndex].numberOfBroadcasted++;
         KeyStorage(contractManager.getContract("KeyStorage")).addBroadcastedData(
             groupIndex,
             index,
@@ -376,7 +399,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
 
     function _isBroadcasted(bytes32 groupIndex, uint nodeIndex) private view returns (bool) {
         uint index = _nodeIndexInSchain(groupIndex, nodeIndex);
-        return channels[groupIndex].broadcasted[index];
+        return dkgProcess[groupIndex].broadcasted[index];
     }
 
     function _nodeIndexInSchain(bytes32 schainId, uint nodeIndex) private view returns (uint) {

@@ -85,18 +85,9 @@ contract KeyStorage is Permissions {
         delete _schainsPublicKeys[groupIndex];
     }
 
-    function initPublicKeyInProgress(bytes32 groupIndex) external allow("SkaleDKG") {
-        _publicKeysInProgress[groupIndex] = G2Operations.G2Point({
-            x: Fp2Operations.Fp2Point({
-                a: 0,
-                b: 0
-            }),
-            y: Fp2Operations.Fp2Point({
-                a: 1,
-                b: 0
-            })
-        });
-        _removeAllBroadcastedData(groupIndex);
+    function initPublicKeyInProgress(bytes32 groupIndex, uint n) external allow("SkaleDKG") {
+        _publicKeysInProgress[groupIndex] = G2Operations.getG2Zero();
+        _removeAllBroadcastedData(groupIndex, n);
         delete _schainsNodesPublicKeys[groupIndex];
     }
 
@@ -118,18 +109,33 @@ contract KeyStorage is Permissions {
         allow("SkaleDKG")
     {
         if (_schainsNodesPublicKeys[groupIndex].length == 0) {
+
             for (uint i = 0; i < verificationVector.length; ++i) {
-                require(verificationVector[i].isG2(), "Incorrect g2 point");
+                require(verificationVector[i].isG2(), "Incorrect g2 point verVec 1");
+
                 G2Operations.G2Point memory tmp = verificationVector[i];
                 _schainsNodesPublicKeys[groupIndex].push(tmp);
+
+                require(_schainsNodesPublicKeys[groupIndex][i].isG2(), "Incorrect g2 point schainNodesPubKey 1");
+            }
+
+            while (_schainsNodesPublicKeys[groupIndex].length > verificationVector.length) {
+                _schainsNodesPublicKeys[groupIndex].pop();
             }
         } else {
+            require(_schainsNodesPublicKeys[groupIndex].length == verificationVector.length, "Incorrect length");
+
             for (uint i = 0; i < _schainsNodesPublicKeys[groupIndex].length; ++i) {
-                require(verificationVector[i].isG2(), "Incorrect g2 point");
+                require(verificationVector[i].isG2(), "Incorrect g2 point verVec 2");
+                require(_schainsNodesPublicKeys[groupIndex][i].isG2(), "Incorrect g2 point schainNodesPubKey 2");
+
                 _schainsNodesPublicKeys[groupIndex][i] = verificationVector[i].addG2(
                     _schainsNodesPublicKeys[groupIndex][i]
                 );
+
+                require(_schainsNodesPublicKeys[groupIndex][i].isG2(), "Incorrect g2 point addition");
             }
+
         }
     }
 
@@ -148,36 +154,21 @@ contract KeyStorage is Permissions {
         uint index = schainsInternal.getNodeIndexInGroup(groupIndex, nodeToComplaint);
         uint secret = _decryptMessage(groupIndex, secretNumber, nodeToComplaint, fromNodeToComplaint);
         G2Operations.G2Point[] memory verificationVector = _data[groupIndex][index].verificationVector;
-        G2Operations.G2Point memory value = G2Operations.G2Point({
-            x: Fp2Operations.Fp2Point({
-                a: 0,
-                b: 0
-            }),
-            y: Fp2Operations.Fp2Point({
-                a: 1,
-                b: 0
-            })
-        });
-        G2Operations.G2Point memory tmp = G2Operations.G2Point({
-            x: Fp2Operations.Fp2Point({
-                a: 0,
-                b: 0
-            }),
-            y: Fp2Operations.Fp2Point({
-                a: 1,
-                b: 0
-            })
-        });
-        for (uint i = 0; i < verificationVector.length; i++) {
-            G2Operations.G2Point memory verificationVectorComponent = G2Operations.G2Point({
-                x: _swapCoordinates(verificationVector[i].x),
-                y: _swapCoordinates(verificationVector[i].y)
-            });
-            tmp = verificationVectorComponent.mulG2(Precompiled.bigModExp(index.add(1), i, Fp2Operations.P));
-            value = tmp.addG2(value);
+        G2Operations.G2Point memory value = G2Operations.getG2Zero();
+        G2Operations.G2Point memory tmp = G2Operations.getG2Zero();
+        
+        if (multipliedShare.isG2()) {
+            for (uint i = 0; i < verificationVector.length; i++) {
+                require(verificationVector[i].isG2(), "Incorrect g2 point verificationVectorComponent");
+                tmp = verificationVector[i].mulG2(Precompiled.bigModExp(index.add(1), i, Fp2Operations.P));
+                require(tmp.isG2(), "Incorrect g2 point tmp");
+                value = tmp.addG2(value);
+                require(value.isG2(), "Incorrect g2 point value");
+            }
+            return value.isEqual(multipliedShare) &&
+                _checkCorrectMultipliedShare(multipliedShare, secret);
         }
-        return _checkDKGVerification(value, multipliedShare) &&
-            _checkCorrectMultipliedShare(multipliedShare, secret);
+        return false;
     }
 
     function getBroadcastedData(bytes32 groupIndex, uint nodeIndex)
@@ -234,16 +225,7 @@ contract KeyStorage is Permissions {
     function getPreviousPublicKey(bytes32 groupIndex) external view returns (G2Operations.G2Point memory) {
         uint length = _previousSchainsPublicKeys[groupIndex].length;
         if (length == 0) {
-            return G2Operations.G2Point({
-                x: Fp2Operations.Fp2Point({
-                    a: 0,
-                    b: 0
-                }),
-                y: Fp2Operations.Fp2Point({
-                    a: 0,
-                    b: 0
-                })
-            });
+            return G2Operations.getG2Zero();
         }
         return _previousSchainsPublicKeys[groupIndex][length - 1];
     }
@@ -264,11 +246,8 @@ contract KeyStorage is Permissions {
         Permissions.initialize(contractsAddress);
     }
 
-    function _removeAllBroadcastedData(bytes32 groupIndex) internal {
-        uint length = SchainsInternal(
-            contractManager.getContract("SchainsInternal")
-        ).getNumberOfNodesInGroup(groupIndex);
-        for (uint i = 0; i < length; i++) {
+    function _removeAllBroadcastedData(bytes32 groupIndex, uint n) internal {
+        for (uint i = 0; i < n; i++) {
             delete _data[groupIndex][i];
         }
     }
@@ -278,34 +257,15 @@ contract KeyStorage is Permissions {
         view
         returns (G2Operations.G2Point memory)
     {
-        G2Operations.G2Point memory publicKey = G2Operations.G2Point({
-            x: Fp2Operations.Fp2Point({
-                a: 0,
-                b: 0
-            }),
-            y: Fp2Operations.Fp2Point({
-                a: 1,
-                b: 0
-            })
-        });
-        G2Operations.G2Point memory tmp = G2Operations.G2Point({
-            x: Fp2Operations.Fp2Point({
-                a: 0,
-                b: 0
-            }),
-            y: Fp2Operations.Fp2Point({
-                a: 1,
-                b: 0
-            })
-        });
+        G2Operations.G2Point memory publicKey = G2Operations.getG2Zero();
+        G2Operations.G2Point memory tmp = G2Operations.getG2Zero();
         G2Operations.G2Point[] memory publicValues = _schainsNodesPublicKeys[groupIndex];
         for (uint i = 0; i < publicValues.length; ++i) {
-            G2Operations.G2Point memory publicValuesComponent = G2Operations.G2Point({
-                x: _swapCoordinates(publicValues[i].x),
-                y: _swapCoordinates(publicValues[i].y)
-            });
-            tmp = publicValuesComponent.mulG2(Precompiled.bigModExp(index.add(1), i, Fp2Operations.P));
+            require(publicValues[i].isG2(), "Incorrect g2 point publicValuesComponent");
+            tmp = publicValues[i].mulG2(Precompiled.bigModExp(index.add(1), i, Fp2Operations.P));
+            require(tmp.isG2(), "Incorrect g2 point tmp");
             publicKey = tmp.addG2(publicKey);
+            require(publicKey.isG2(), "Incorrect g2 point publicKey");
         }
         return publicKey;
     }
@@ -387,27 +347,6 @@ contract KeyStorage is Permissions {
             g2.x.b, g2.x.a, g2.y.b, g2.y.a,
             g1.a, g1.b,
             tmp.x.b, tmp.x.a, tmp.y.b, tmp.y.a);
-    }
-
-    function _checkDKGVerification(
-        G2Operations.G2Point memory value,
-        G2Operations.G2Point memory multipliedShare)
-        private pure returns (bool)
-    {
-        return value.x.a == multipliedShare.x.b &&
-            value.x.b == multipliedShare.x.a &&
-            value.y.a == multipliedShare.y.b &&
-            value.y.b == multipliedShare.y.a;
-    }
-
-    function _swapCoordinates(
-        Fp2Operations.Fp2Point memory value
-    )
-        private
-        pure
-        returns (Fp2Operations.Fp2Point memory)
-    {
-        return Fp2Operations.Fp2Point({a: value.b, b: value.a});
     }
 
 }
