@@ -22,8 +22,8 @@
 pragma solidity 0.6.10;
 pragma experimental ABIEncoderV2;
 
-import "@openzeppelin/contracts/introspection/IERC1820Registry.sol";
-import "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/introspection/IERC1820Registry.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC777/IERC777Recipient.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/IERC20.sol";
 
 import "../Permissions.sol";
