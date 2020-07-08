@@ -509,6 +509,103 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                 assert(res.should.be.false);
             });
 
+            it("should send complaint after missing alright", async () => {
+                let res = await skaleDKG.isBroadcastPossible(
+                    web3.utils.soliditySha3(schainName),
+                    0,
+                    {from: validatorsAccount[0]},
+                );
+                assert(res.should.be.true);
+                await skaleDKG.broadcast(
+                    web3.utils.soliditySha3(schainName),
+                    0,
+                    verificationVectors[indexes[0]],
+                    encryptedSecretKeyContributions[indexes[0]],
+                    {from: validatorsAccount[0]},
+                );
+                res = await skaleDKG.isBroadcastPossible(
+                    web3.utils.soliditySha3(schainName),
+                    0,
+                    {from: validatorsAccount[0]},
+                );
+                assert(res.should.be.false);
+                res = await skaleDKG.isBroadcastPossible(
+                    web3.utils.soliditySha3(schainName),
+                    1,
+                    {from: validatorsAccount[1]},
+                );
+                assert(res.should.be.true);
+                await skaleDKG.broadcast(
+                    web3.utils.soliditySha3(schainName),
+                    1,
+                    verificationVectors[indexes[1]],
+                    encryptedSecretKeyContributions[indexes[1]],
+                    {from: validatorsAccount[1]},
+                );
+                res = await skaleDKG.isBroadcastPossible(
+                    web3.utils.soliditySha3(schainName),
+                    1,
+                    {from: validatorsAccount[1]},
+                );
+                assert(res.should.be.false);
+
+                let resAlr = await skaleDKG.isAlrightPossible(
+                    web3.utils.soliditySha3(schainName),
+                    0,
+                    {from: validatorsAccount[0]},
+                );
+                assert(resAlr.should.be.true);
+                const result = await skaleDKG.alright(
+                    web3.utils.soliditySha3(schainName),
+                    0,
+                    {from: validatorsAccount[0]},
+                );
+                resAlr = await skaleDKG.isAlrightPossible(
+                    web3.utils.soliditySha3(schainName),
+                    0,
+                    {from: validatorsAccount[0]},
+                );
+                assert(resAlr.should.be.false);
+                resAlr = await skaleDKG.isAlrightPossible(
+                    web3.utils.soliditySha3(schainName),
+                    1,
+                    {from: validatorsAccount[1]},
+                );
+                assert(resAlr.should.be.true);
+                skipTime(web3, 1800);
+                let resCompl = await skaleDKG.isComplaintPossible(
+                    web3.utils.soliditySha3(schainName),
+                    0,
+                    1,
+                    {from: validatorsAccount[0]},
+                );
+                assert(resCompl.should.be.true);
+                await skaleDKG.complaint(
+                    web3.utils.soliditySha3(schainName),
+                    0,
+                    1,
+                    {from: validatorsAccount[0]},
+                );
+                res = await skaleDKG.isAlrightPossible(
+                    web3.utils.soliditySha3(schainName),
+                    1,
+                    {from: validatorsAccount[1]},
+                );
+                assert(res.should.be.false);
+                resCompl = await skaleDKG.isComplaintPossible(
+                    web3.utils.soliditySha3(schainName),
+                    0,
+                    1,
+                    {from: validatorsAccount[0]},
+                );
+                assert(resCompl.should.be.false);
+                res = await skaleDKG.isChannelOpened(
+                    web3.utils.soliditySha3(schainName),
+                    {from: validatorsAccount[1]},
+                );
+                assert(res.should.be.false);
+            });
+
             describe("after sending complaint after missing broadcast", async () => {
                 beforeEach(async () => {
                     await skaleDKG.broadcast(

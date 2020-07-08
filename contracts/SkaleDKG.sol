@@ -44,6 +44,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         uint numberOfCompleted;
         bool[] broadcasted;
         bool[] completed;
+        uint startAlrightTimestamp;
     }
 
     struct ComplaintData {
@@ -52,7 +53,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         uint startComplaintBlockTimestamp;
     }
 
-    uint public constant COMPLAINT_TIMELIMIT = 1800;
+    uint public complaintTimelimit;
 
     mapping(bytes32 => Channel) public channels;
 
@@ -108,6 +109,10 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         KeyStorage(contractManager.getContract("KeyStorage")).deleteKey(groupIndex);
     }
 
+    function setComplaintTimelimit(uint newComplaintTimelimit) external onlyOwner {
+        complaintTimelimit = newComplaintTimelimit;
+    }
+
     function broadcast(
         bytes32 groupIndex,
         uint nodeIndex,
@@ -152,24 +157,36 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         require(_isNodeByMessageSender(fromNodeIndex, msg.sender), "Node does not exist for message sender");
         bool broadcasted = _isBroadcasted(groupIndex, toNodeIndex);
         if (broadcasted && complaints[groupIndex].nodeToComplaint == uint(-1)) {
-            complaints[groupIndex].nodeToComplaint = toNodeIndex;
-            complaints[groupIndex].fromNodeToComplaint = fromNodeIndex;
-            complaints[groupIndex].startComplaintBlockTimestamp = block.timestamp;
-            emit ComplaintSent(groupIndex, fromNodeIndex, toNodeIndex);
-        } else if (broadcasted && channels[groupIndex].nodeToComplaint != toNodeIndex) {
-            emit ComplaintError("One complaint is already sent");
-        } else if (broadcasted && channels[groupIndex].nodeToComplaint == toNodeIndex) {
-            if (channels[groupIndex].startComplaintBlockTimestamp.add(COMPLAINT_TIMELIMIT) <= block.timestamp) {
-                _finalizeSlashing(groupIndex, channels[groupIndex].nodeToComplaint);
+            // incorrect data or missing alright
+            if (
+                isEveryoneBroadcasted(groupIndex) &&
+                dkgProcess[groupIndex].startAlrightTimestamp.add(complaintTimelimit) <= block.timestamp
+            ) {
+                // missing alright
+                _finalizeSlashing(groupIndex, toNodeIndex);
+            } else {
+                // incorrect data
+                complaints[groupIndex].nodeToComplaint = toNodeIndex;
+                complaints[groupIndex].fromNodeToComplaint = fromNodeIndex;
+                complaints[groupIndex].startComplaintBlockTimestamp = block.timestamp;
+                emit ComplaintSent(groupIndex, fromNodeIndex, toNodeIndex);
+            }
+        } else if (broadcasted && complaints[groupIndex].nodeToComplaint == toNodeIndex) {
+            // 30 min after incorrect data complaint
+            if (complaints[groupIndex].startComplaintBlockTimestamp.add(complaintTimelimit) <= block.timestamp) {
+                _finalizeSlashing(groupIndex, complaints[groupIndex].nodeToComplaint);
             } else {
                 emit ComplaintError("The same complaint rejected");
             }
         } else if (!broadcasted) {
-            if (channels[groupIndex].startedBlockTimestamp.add(COMPLAINT_TIMELIMIT) <= block.timestamp) {
+            // not broadcasted in 30 min
+            if (channels[groupIndex].startedBlockTimestamp.add(complaintTimelimit) <= block.timestamp) {
                 _finalizeSlashing(groupIndex, toNodeIndex);
             } else {
                 emit ComplaintError("Complaint sent too early");
             }
+        } else {
+            emit ComplaintError("One complaint is already sent");
         }
     }
 
@@ -263,18 +280,18 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         uint indexFrom = _nodeIndexInSchain(groupIndex, fromNodeIndex);
         uint indexTo = _nodeIndexInSchain(groupIndex, toNodeIndex);
         bool complaintSending = (
-                channels[groupIndex].nodeToComplaint == uint(-1) &&
-                channels[groupIndex].broadcasted[indexTo]
+                complaints[groupIndex].nodeToComplaint == uint(-1) &&
+                dkgProcess[groupIndex].broadcasted[indexTo]
             ) ||
             (
                 dkgProcess[groupIndex].broadcasted[indexTo] &&
-                complaints[groupIndex].startComplaintBlockTimestamp.add(COMPLAINT_TIMELIMIT) <= block.timestamp &&
+                complaints[groupIndex].startComplaintBlockTimestamp.add(complaintTimelimit) <= block.timestamp &&
                 complaints[groupIndex].nodeToComplaint == toNodeIndex
             ) ||
             (
-                !channels[groupIndex].broadcasted[indexTo] &&
-                channels[groupIndex].nodeToComplaint == uint(-1) &&
-                channels[groupIndex].startedBlockTimestamp.add(COMPLAINT_TIMELIMIT) <= block.timestamp
+                !dkgProcess[groupIndex].broadcasted[indexTo] &&
+                complaints[groupIndex].nodeToComplaint == uint(-1) &&
+                channels[groupIndex].startedBlockTimestamp.add(complaintTimelimit) <= block.timestamp
             );
         return channels[groupIndex].active &&
             indexFrom < channels[groupIndex].n &&
@@ -311,6 +328,11 @@ contract SkaleDKG is Permissions, ISkaleDKG {
 
     function initialize(address contractsAddress) public override initializer {
         Permissions.initialize(contractsAddress);
+        complaintTimelimit = 1800;
+    }
+
+    function isEveryoneBroadcasted(bytes32 groupIndex) public view returns (bool) {
+        return channels[groupIndex].n == dkgProcess[groupIndex].numberOfBroadcasted;
     }
 
     function getT(uint n) public pure returns (uint) {
@@ -389,6 +411,9 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         require(!dkgProcess[groupIndex].broadcasted[index], "This node is already broadcasted");
         dkgProcess[groupIndex].broadcasted[index] = true;
         dkgProcess[groupIndex].numberOfBroadcasted++;
+        if (dkgProcess[groupIndex].numberOfBroadcasted == channels[groupIndex].n) {
+            dkgProcess[groupIndex].startAlrightTimestamp = now;
+        }
         KeyStorage(contractManager.getContract("KeyStorage")).addBroadcastedData(
             groupIndex,
             index,
