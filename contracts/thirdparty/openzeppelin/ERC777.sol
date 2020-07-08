@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/token/ERC777/IERC777.sol";
 import "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
 import "@openzeppelin/contracts/token/ERC777/IERC777Sender.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/math/SafeMath.sol";
+// import "@openzeppelin/contracts/math/SafeMath.sol"; Removed by SKALE
 // import "@openzeppelin/contracts/utils/Address.sol"; Removed by SKALE
 import "@openzeppelin/contracts/introspection/IERC1820Registry.sol";
 

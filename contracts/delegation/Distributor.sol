@@ -24,10 +24,9 @@ pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/introspection/IERC1820Registry.sol";
 import "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
-import "@openzeppelin/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/IERC20.sol";
 
 import "../Permissions.sol";
-import "../SkaleToken.sol";
 import "../ConstantsHolder.sol";
 import "../utils/MathUtils.sol";
 
@@ -97,7 +96,7 @@ contract Distributor is Permissions, IERC777Recipient {
 
         _firstUnwithdrawnMonth[msg.sender][validatorId] = endMonth;
 
-        SkaleToken skaleToken = SkaleToken(contractManager.getContract("SkaleToken"));
+        IERC20 skaleToken = IERC20(contractManager.getContract("SkaleToken"));
         require(skaleToken.transfer(to, bounty), "Failed to transfer tokens");
 
         emit WithdrawBounty(
@@ -110,7 +109,7 @@ contract Distributor is Permissions, IERC777Recipient {
 
     function withdrawFee(address to) external {
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
-        SkaleToken skaleToken = SkaleToken(contractManager.getContract("SkaleToken"));
+        IERC20 skaleToken = IERC20(contractManager.getContract("SkaleToken"));
         TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
         ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
 

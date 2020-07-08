@@ -21,7 +21,6 @@
 
 pragma solidity 0.6.10;
 
-import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 import "./thirdparty/openzeppelin/ERC777.sol";
