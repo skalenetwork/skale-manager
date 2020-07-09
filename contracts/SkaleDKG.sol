@@ -57,11 +57,11 @@ contract SkaleDKG is Permissions, ISkaleDKG {
 
     mapping(bytes32 => Channel) public channels;
 
+    mapping(bytes32 => uint) public lastSuccesfulDKG;
+
     mapping(bytes32 => ProcessDKG) public dkgProcess;
 
     mapping(bytes32 => ComplaintData) public complaints;
-
-    mapping(bytes32 => uint) public lastSuccesfulDKG;
 
     event ChannelOpened(bytes32 groupIndex);
 
