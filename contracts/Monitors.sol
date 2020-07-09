@@ -22,7 +22,7 @@
 pragma solidity 0.6.10;
 pragma experimental ABIEncoderV2;
 
-import "@openzeppelin/contracts/utils/SafeCast.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/utils/SafeCast.sol";
 
 import "./ConstantsHolder.sol";
 import "./Nodes.sol";

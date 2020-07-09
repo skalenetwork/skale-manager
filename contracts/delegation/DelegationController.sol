@@ -23,10 +23,9 @@
 pragma solidity 0.6.10;
 pragma experimental ABIEncoderV2;
 
-import "@openzeppelin/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC777/IERC777.sol";
 
 import "../Permissions.sol";
-import "../SkaleToken.sol";
 import "../Nodes.sol";
 import "../utils/MathUtils.sol";
 import "../utils/FractionUtils.sol";
@@ -237,7 +236,7 @@ contract DelegationController is Permissions, ILocker {
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
         DelegationPeriodManager delegationPeriodManager = DelegationPeriodManager(
             contractManager.getContract("DelegationPeriodManager"));
-        SkaleToken skaleToken = SkaleToken(contractManager.getContract("SkaleToken"));
+        IERC777 skaleToken = IERC777(contractManager.getContract("SkaleToken"));
         TokenState tokenState = TokenState(contractManager.getContract("TokenState"));
 
         require(

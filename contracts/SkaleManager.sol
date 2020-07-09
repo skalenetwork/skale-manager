@@ -22,16 +22,16 @@
 pragma solidity 0.6.10;
 pragma experimental ABIEncoderV2;
 
+import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC777/IERC777Recipient.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/introspection/IERC1820Registry.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC777/IERC777.sol";
+
 import "./Permissions.sol";
 import "./ConstantsHolder.sol";
-import "./SkaleToken.sol";
 import "./delegation/Distributor.sol";
 import "./delegation/ValidatorService.sol";
 import "./Monitors.sol";
 import "./Schains.sol";
-import "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
-import "@openzeppelin/contracts/introspection/IERC1820Registry.sol";
-import "@openzeppelin/contracts/math/SafeMath.sol";
 import "./NodeRotation.sol";
 import "./Bounty.sol";
 
@@ -201,7 +201,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
     }
 
     function _payBounty(uint bounty, uint validatorId) private returns (bool) {        
-        SkaleToken skaleToken = SkaleToken(contractManager.getContract("SkaleToken"));
+        IERC777 skaleToken = IERC777(contractManager.getContract("SkaleToken"));
         Distributor distributor = Distributor(contractManager.getContract("Distributor"));
         
         // solhint-disable-next-line check-send-result
