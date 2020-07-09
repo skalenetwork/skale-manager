@@ -69,7 +69,7 @@
     "elliptic": "^6.5.2",
     "ganache-cli": "^6.9.1",
     "solhint": "^3.0.0",
-    "solidity-coverage": "^0.7.5",
+    "solidity-coverage": "^0.7.9",
     "tslint": "^6.1.2",
     "tslint-no-unused-expression-chai": "^0.1.4",
     "typescript": "3.9.5"
