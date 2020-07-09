@@ -20,6 +20,10 @@
 pragma solidity 0.6.6;
 pragma experimental ABIEncoderV2;
 
+// import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/IERC20.sol";
+// import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC777/IERC777Recipient.sol";
+// import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC777/IERC777Sender.sol";
+// import "@openzeppelin/contracts-ethereum-package/contracts/introspection/IERC1820Registry.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
 import "@openzeppelin/contracts/token/ERC777/IERC777Sender.sol";
@@ -64,12 +68,12 @@ contract VestingEscrow is IERC777Recipient, IERC777Sender, Permissions {
     }
 
     function tokensToSend(
-        address operator,
-        address from,
+        address,
+        address,
         address to,
-        uint256 amount,
-        bytes calldata userData,
-        bytes calldata operatorData
+        uint256,
+        bytes calldata,
+        bytes calldata
     )
         external override
         allow("SkaleToken")

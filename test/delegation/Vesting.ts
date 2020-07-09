@@ -38,8 +38,8 @@ contract("Vesting", ([owner, holder, holder1, holder2, holder3, hacker]) => {
 
     it("should register SAFT investor", async () => {
         (await Vesting.isSAFTRegistered(holder)).should.be.eq(false);
-        await Vesting.addSAFTRound(6, 36,  6, false, {from: owner});
-        await Vesting.connectHolderToSAFT(holder, 1, getTimeAtDate(1, 6, 2020), 1e6, 1e5, {from: owner});
+        await Vesting.addSAFTRound(6, 36, 2, 6, {from: owner});
+        await Vesting.connectHolderToPlan(holder, 1, getTimeAtDate(1, 6, 2020), 1e6, 1e5, {from: owner});
         (await Vesting.isSAFTRegistered(holder)).should.be.eq(true);
         (await Vesting.isApprovedSAFT(holder)).should.be.eq(false);
         (await Vesting.isActiveVestingTerm(holder)).should.be.eq(false);
@@ -47,8 +47,8 @@ contract("Vesting", ([owner, holder, holder1, holder2, holder3, hacker]) => {
 
     it("should get SAFT data", async () => {
         (await Vesting.isSAFTRegistered(holder)).should.be.eq(false);
-        await Vesting.addSAFTRound(6, 36,  6, false, {from: owner});
-        await Vesting.connectHolderToSAFT(holder, 1, getTimeAtDate(1, 6, 2020), 1e6, 1e5, {from: owner});
+        await Vesting.addSAFTRound(6, 36, 2, 6, {from: owner});
+        await Vesting.connectHolderToPlan(holder, 1, getTimeAtDate(1, 6, 2020), 1e6, 1e5, {from: owner});
         (await Vesting.isSAFTRegistered(holder)).should.be.eq(true);
         ((await Vesting.getStartVestingTime(holder)).toNumber()).should.be.equal(getTimeAtDate(1, 6, 2020));
         ((await Vesting.getLockupPeriodInMonth(holder)).toNumber()).should.be.equal(6);
@@ -59,8 +59,8 @@ contract("Vesting", ([owner, holder, holder1, holder2, holder3, hacker]) => {
 
     it("should approve SAFT", async () => {
         (await Vesting.isSAFTRegistered(holder)).should.be.eq(false);
-        await Vesting.addSAFTRound(6, 36,  6, false, {from: owner});
-        await Vesting.connectHolderToSAFT(holder, 1, getTimeAtDate(1, 6, 2020), 1e6, 1e5, {from: owner});
+        await Vesting.addSAFTRound(6, 36, 2, 6, {from: owner});
+        await Vesting.connectHolderToPlan(holder, 1, getTimeAtDate(1, 6, 2020), 1e6, 1e5, {from: owner});
         (await Vesting.isSAFTRegistered(holder)).should.be.eq(true);
         (await Vesting.isApprovedSAFT(holder)).should.be.eq(false);
         await Vesting.approveSAFTHolder({from: holder});
@@ -70,8 +70,8 @@ contract("Vesting", ([owner, holder, holder1, holder2, holder3, hacker]) => {
 
     it("should not approve SAFT from hacker", async () => {
         (await Vesting.isSAFTRegistered(holder)).should.be.eq(false);
-        await Vesting.addSAFTRound(6, 36,  6, false, {from: owner});
-        await Vesting.connectHolderToSAFT(holder, 1, getTimeAtDate(1, 6, 2020), 1e6, 1e5, {from: owner});
+        await Vesting.addSAFTRound(6, 36, 2, 6, {from: owner});
+        await Vesting.connectHolderToPlan(holder, 1, getTimeAtDate(1, 6, 2020), 1e6, 1e5, {from: owner});
         (await Vesting.isSAFTRegistered(holder)).should.be.eq(true);
         (await Vesting.isApprovedSAFT(holder)).should.be.eq(false);
         await Vesting.approveSAFTHolder({from: hacker}).should.be.eventually.rejectedWith("SAFT is not registered");
@@ -81,8 +81,8 @@ contract("Vesting", ([owner, holder, holder1, holder2, holder3, hacker]) => {
 
     it("should not approve SAFT twice", async () => {
         (await Vesting.isSAFTRegistered(holder)).should.be.eq(false);
-        await Vesting.addSAFTRound(6, 36,  6, false, {from: owner});
-        await Vesting.connectHolderToSAFT(holder, 1, getTimeAtDate(1, 6, 2020), 1e6, 1e5, {from: owner});
+        await Vesting.addSAFTRound(6, 36, 2, 6, {from: owner});
+        await Vesting.connectHolderToPlan(holder, 1, getTimeAtDate(1, 6, 2020), 1e6, 1e5, {from: owner});
         (await Vesting.isSAFTRegistered(holder)).should.be.eq(true);
         (await Vesting.isApprovedSAFT(holder)).should.be.eq(false);
         await Vesting.approveSAFTHolder({from: holder});
@@ -93,8 +93,8 @@ contract("Vesting", ([owner, holder, holder1, holder2, holder3, hacker]) => {
 
     it("should not start vesting without approve SAFT", async () => {
         (await Vesting.isSAFTRegistered(holder)).should.be.eq(false);
-        await Vesting.addSAFTRound(6, 36,  6, false, {from: owner});
-        await Vesting.connectHolderToSAFT(holder, 1, getTimeAtDate(1, 6, 2020), 1e6, 1e5, {from: owner});
+        await Vesting.addSAFTRound(6, 36, 2, 6, {from: owner});
+        await Vesting.connectHolderToPlan(holder, 1, getTimeAtDate(1, 6, 2020), 1e6, 1e5, {from: owner});
         (await Vesting.isSAFTRegistered(holder)).should.be.eq(true);
         (await Vesting.isApprovedSAFT(holder)).should.be.eq(false);
         await Vesting.startVesting(holder, {from: owner}).should.be.eventually.rejectedWith("SAFT is not approved");
@@ -112,8 +112,8 @@ contract("Vesting", ([owner, holder, holder1, holder2, holder3, hacker]) => {
 
     it("should start vesting with register & approve SAFT", async () => {
         (await Vesting.isSAFTRegistered(holder)).should.be.eq(false);
-        await Vesting.addSAFTRound(6, 36,  6, false, {from: owner});
-        await Vesting.connectHolderToSAFT(holder, 1, getTimeAtDate(1, 6, 2020), 1e6, 1e5, {from: owner});
+        await Vesting.addSAFTRound(6, 36, 2, 6, {from: owner});
+        await Vesting.connectHolderToPlan(holder, 1, getTimeAtDate(1, 6, 2020), 1e6, 1e5, {from: owner});
         (await Vesting.isSAFTRegistered(holder)).should.be.eq(true);
         (await Vesting.isApprovedSAFT(holder)).should.be.eq(false);
         await Vesting.approveSAFTHolder({from: holder});
@@ -180,52 +180,52 @@ contract("Vesting", ([owner, holder, holder1, holder2, holder3, hacker]) => {
     // });
 
     it("should not register SAFT Round if sender is not owner", async () => {
-        await Vesting.addSAFTRound(6, 36,  6, false, {from: hacker}).should.be.eventually.rejectedWith("Ownable: caller is not the owner");
-        // await Vesting.connectHolderToSAFT(holder, 1, getTimeAtDate(1, 6, 2020), 1e6, 1e5, {from: owner});
+        await Vesting.addSAFTRound(6, 36, 2, 6, {from: hacker}).should.be.eventually.rejectedWith("Ownable: caller is not the owner");
+        // await Vesting.connectHolderToPlan(holder, 1, getTimeAtDate(1, 6, 2020), 1e6, 1e5, {from: owner});
         // await Vesting.addVestingTerm(holder, getTimeAtDate(1, 6, 2020), 6, 36, 1e6, 1e5, 6, false, {from: hacker}).should.be.eventually.rejectedWith("Ownable: caller is not the owner");
     });
 
     it("should not connect holder to SAFT if sender is not owner", async () => {
-        await Vesting.addSAFTRound(6, 36,  6, false, {from: owner});
-        await Vesting.connectHolderToSAFT(holder, 1, getTimeAtDate(1, 6, 2020), 1e6, 1e5, {from: hacker}).should.be.eventually.rejectedWith("Ownable: caller is not the owner");
+        await Vesting.addSAFTRound(6, 36, 2, 6, {from: owner});
+        await Vesting.connectHolderToPlan(holder, 1, getTimeAtDate(1, 6, 2020), 1e6, 1e5, {from: hacker}).should.be.eventually.rejectedWith("Ownable: caller is not the owner");
         // await Vesting.addVestingTerm(holder, getTimeAtDate(1, 6, 2020), 6, 36, 1e6, 1e5, 6, false, {from: hacker}).should.be.eventually.rejectedWith("Ownable: caller is not the owner");
     });
 
     it("should not register already registered SAFT investor", async () => {
-        await Vesting.addSAFTRound(6, 36,  6, false, {from: owner});
-        await Vesting.connectHolderToSAFT(holder, 1, getTimeAtDate(1, 6, 2020), 1e6, 1e5, {from: owner});
-        await Vesting.connectHolderToSAFT(holder, 1, getTimeAtDate(1, 6, 2020), 1e6, 1e5, {from: owner}).should.be.eventually.rejectedWith("SAFT holder is already added");
-        await Vesting.addSAFTRound(6, 36,  6, false, {from: owner});
-        await Vesting.connectHolderToSAFT(holder, 2, getTimeAtDate(1, 6, 2020), 1e6, 1e5, {from: owner}).should.be.eventually.rejectedWith("SAFT holder is already added");
+        await Vesting.addSAFTRound(6, 36, 2, 6, {from: owner});
+        await Vesting.connectHolderToPlan(holder, 1, getTimeAtDate(1, 6, 2020), 1e6, 1e5, {from: owner});
+        await Vesting.connectHolderToPlan(holder, 1, getTimeAtDate(1, 6, 2020), 1e6, 1e5, {from: owner}).should.be.eventually.rejectedWith("SAFT holder is already added");
+        await Vesting.addSAFTRound(6, 36, 2, 6, {from: owner});
+        await Vesting.connectHolderToPlan(holder, 2, getTimeAtDate(1, 6, 2020), 1e6, 1e5, {from: owner}).should.be.eventually.rejectedWith("SAFT holder is already added");
         // await Vesting.addVestingTerm(holder, getTimeAtDate(1, 6, 2020), 6, 36, 1e6, 1e5, 6, false, {from: owner});
         // await Vesting.addVestingTerm(holder, getTimeAtDate(1, 6, 2020), 6, 36, 1e6, 1e5, 6, false, {from: owner}).should.be.eventually.rejectedWith("SAFT holder is already added");
     });
 
     it("should not register SAFT Round if periods incorrect", async () => {
-        await Vesting.addSAFTRound(37, 36,  6, false, {from: owner}).should.be.eventually.rejectedWith("Incorrect periods");
+        await Vesting.addSAFTRound(37, 36, 2, 6, {from: owner}).should.be.eventually.rejectedWith("Incorrect periods");
     });
 
     it("should not register SAFT Round if vesting times incorrect", async () => {
-        await Vesting.addSAFTRound(6, 36,  7, false, {from: owner}).should.be.eventually.rejectedWith("Incorrect vesting times");
+        await Vesting.addSAFTRound(6, 36, 2, 7, {from: owner}).should.be.eventually.rejectedWith("Incorrect vesting times");
     });
 
     it("should not connect holder to SAFT Round if amounts incorrect", async () => {
-        await Vesting.addSAFTRound(6, 36,  6, false, {from: owner});
-        await Vesting.connectHolderToSAFT(holder, 1, getTimeAtDate(1, 6, 2020), 1e5, 1e6, {from: owner}).should.be.eventually.rejectedWith("Incorrect amounts");
+        await Vesting.addSAFTRound(6, 36, 2, 6, {from: owner});
+        await Vesting.connectHolderToPlan(holder, 1, getTimeAtDate(1, 6, 2020), 1e5, 1e6, {from: owner}).should.be.eventually.rejectedWith("Incorrect amounts");
     });
 
     it("should not connect holder to SAFT Round if period starts incorrect", async () => {
         const time = await currentTime(web3);
         const currentDate = new Date(time * 1000);
         const nextYear = currentDate.getFullYear() + 1;
-        await Vesting.addSAFTRound(6, 36,  6, false, {from: owner});
-        await Vesting.connectHolderToSAFT(holder, 1, getTimeAtDate(1, 6, nextYear), 1e6, 1e5, {from: owner}).should.be.eventually.rejectedWith("Incorrect period starts");
+        await Vesting.addSAFTRound(6, 36, 2, 6, {from: owner});
+        await Vesting.connectHolderToPlan(holder, 1, getTimeAtDate(1, 6, nextYear), 1e6, 1e5, {from: owner}).should.be.eventually.rejectedWith("Incorrect period starts");
         // await Vesting.addVestingTerm(holder, getTimeAtDate(1, 6, nextYear), 6, 36, 1e6, 1e5, 6, false, {from: owner}).should.be.eventually.rejectedWith("Incorrect period starts");
     });
 
     it("should be possible to delegate SAFT tokens", async () => {
-        await Vesting.addSAFTRound(6, 36, 6, false, {from: owner});
-        await Vesting.connectHolderToSAFT(holder, 1, getTimeAtDate(1, 6, 2020), 1e6, 1e5, {from: owner})
+        await Vesting.addSAFTRound(6, 36, 2, 6, {from: owner});
+        await Vesting.connectHolderToPlan(holder, 1, getTimeAtDate(1, 6, 2020), 1e6, 1e5, {from: owner})
         // await Vesting.addVestingTerm(holder, getTimeAtDate(1, 6, 2020), 6, 36, 1e6, 1e5, 6, false, {from: owner});
         await Vesting.approveSAFTHolder({from: holder});
         await Vesting.startVesting(holder, {from: owner});
@@ -246,13 +246,14 @@ contract("Vesting", ([owner, holder, holder1, holder2, holder3, hacker]) => {
         const fullPeriod = 15;
         const fullAmount = 4e6;
         const lockupAmount = 1e6;
-        const vestPeriod = 3;
+        const vestPeriod = 2;
+        const vestTime = 3;
         const startDate = getTimeAtDate(1, 9, 2018);
         const isCancelable = false;
         const saftRound = 1;
         // await Vesting.addVestingTerm(holder, startDate, lockupPeriod, fullPeriod, fullAmount, lockupAmount, vestPeriod, isCancelable, {from: owner});
-        await Vesting.addSAFTRound(lockupPeriod, fullPeriod, vestPeriod, isCancelable, {from: owner});
-        await Vesting.connectHolderToSAFT(holder, saftRound, startDate, fullAmount, lockupAmount, {from: owner});
+        await Vesting.addSAFTRound(lockupPeriod, fullPeriod, vestPeriod, vestTime, {from: owner});
+        await Vesting.connectHolderToPlan(holder, saftRound, startDate, fullAmount, lockupAmount, {from: owner});
         await Vesting.approveSAFTHolder({from: holder});
         await Vesting.startVesting(holder, {from: owner});
         // await Vesting.retrieve({from: holder});
@@ -264,12 +265,13 @@ contract("Vesting", ([owner, holder, holder1, holder2, holder3, hacker]) => {
         const fullPeriod = 4;
         const fullAmount = 2e6;
         const lockupAmount = 1e6;
-        const vestPeriod = 1;
+        const vestPeriod = 2;
+        const vestTime = 1;
         const startDate = await currentTime(web3);
         const isCancelable = false;
         const saftRound = 1;
-        await Vesting.addSAFTRound(lockupPeriod, fullPeriod, vestPeriod, isCancelable, {from: owner});
-        await Vesting.connectHolderToSAFT(holder, saftRound, startDate, fullAmount, lockupAmount, {from: owner});
+        await Vesting.addSAFTRound(lockupPeriod, fullPeriod, vestPeriod, vestTime, {from: owner});
+        await Vesting.connectHolderToPlan(holder, saftRound, startDate, fullAmount, lockupAmount, {from: owner});
         // await Vesting.addVestingTerm(holder, startDate, lockupPeriod, fullPeriod, fullAmount, lockupAmount, vestPeriod, isCancelable, {from: owner});
         await Vesting.approveSAFTHolder({from: holder});
         await Vesting.startVesting(holder, {from: owner});
@@ -300,12 +302,13 @@ contract("Vesting", ([owner, holder, holder1, holder2, holder3, hacker]) => {
         const fullPeriod = 10;
         const fullAmount = 2e6;
         const lockupAmount = 2e6;
-        const vestPeriod = 0;
+        const vestPeriod = 2;
+        const vestTime = 0;
         const startDate = await currentTime(web3);
         const isCancelable = false;
         const saftRound = 1;
-        await Vesting.addSAFTRound(lockupPeriod, fullPeriod, vestPeriod, isCancelable, {from: owner});
-        await Vesting.connectHolderToSAFT(holder, saftRound, startDate, fullAmount, lockupAmount, {from: owner});
+        await Vesting.addSAFTRound(lockupPeriod, fullPeriod, vestPeriod, vestTime, {from: owner});
+        await Vesting.connectHolderToPlan(holder, saftRound, startDate, fullAmount, lockupAmount, {from: owner});
         // await Vesting.addVestingTerm(holder, startDate, lockupPeriod, fullPeriod, fullAmount, lockupAmount, vestPeriod, isCancelable, {from: owner});
         await Vesting.approveSAFTHolder({from: holder});
         await Vesting.startVesting(holder, {from: owner});
@@ -366,12 +369,13 @@ contract("Vesting", ([owner, holder, holder1, holder2, holder3, hacker]) => {
         const fullPeriod = 10;
         const fullAmount = 2e6;
         const lockupAmount = 2e5;
-        const vestPeriod = 1;
+        const vestPeriod = 2;
+        const vestTime = 1;
         const startDate = await currentTime(web3);
         const isCancelable = false;
         const saftRound = 1;
-        await Vesting.addSAFTRound(lockupPeriod, fullPeriod, vestPeriod, isCancelable, {from: owner});
-        await Vesting.connectHolderToSAFT(holder, saftRound, startDate, fullAmount, lockupAmount, {from: owner});
+        await Vesting.addSAFTRound(lockupPeriod, fullPeriod, vestPeriod, vestTime, {from: owner});
+        await Vesting.connectHolderToPlan(holder, saftRound, startDate, fullAmount, lockupAmount, {from: owner});
         // await Vesting.addVestingTerm(holder, startDate, lockupPeriod, fullPeriod, fullAmount, lockupAmount, vestPeriod, isCancelable, {from: owner});
         await Vesting.approveSAFTHolder({from: holder});
         await Vesting.startVesting(holder, {from: owner});
@@ -434,12 +438,13 @@ contract("Vesting", ([owner, holder, holder1, holder2, holder3, hacker]) => {
         const fullPeriod = 0;
         const fullAmount = 2e6;
         const lockupAmount = 2e6;
-        const vestPeriod = 0;
+        const vestPeriod = 2;
+        const vestTime = 0;
         const startDate = await currentTime(web3);
         const isCancelable = false;
         const saftRound = 1;
-        await Vesting.addSAFTRound(lockupPeriod, fullPeriod, vestPeriod, isCancelable, {from: owner});
-        await Vesting.connectHolderToSAFT(holder, saftRound, startDate, fullAmount, lockupAmount, {from: owner});
+        await Vesting.addSAFTRound(lockupPeriod, fullPeriod, vestPeriod, vestTime, {from: owner});
+        await Vesting.connectHolderToPlan(holder, saftRound, startDate, fullAmount, lockupAmount, {from: owner});
         // await Vesting.addVestingTerm(holder, startDate, lockupPeriod, fullPeriod, fullAmount, lockupAmount, vestPeriod, isCancelable, {from: owner});
         await Vesting.approveSAFTHolder({from: holder});
         await Vesting.startVesting(holder, {from: owner});
@@ -453,7 +458,8 @@ contract("Vesting", ([owner, holder, holder1, holder2, holder3, hacker]) => {
         const fullPeriod = 36;
         const fullAmount = 6e6;
         const lockupAmount = 1e6;
-        const vestPeriod = 6;
+        const vestTime = 6;
+        const vestPeriod = 2;
         const isCancelable = false;
 
         let startDate: number;
@@ -465,8 +471,8 @@ contract("Vesting", ([owner, holder, holder1, holder2, holder3, hacker]) => {
             startDate = getTimeAtDate(1, 9, previousYear)
             // SAFT example 0
             const saftRound = 1;
-            await Vesting.addSAFTRound(lockupPeriod, fullPeriod, vestPeriod, isCancelable, {from: owner});
-            await Vesting.connectHolderToSAFT(holder, saftRound, startDate, fullAmount, lockupAmount, {from: owner});
+            await Vesting.addSAFTRound(lockupPeriod, fullPeriod, vestPeriod, vestTime, {from: owner});
+            await Vesting.connectHolderToPlan(holder, saftRound, startDate, fullAmount, lockupAmount, {from: owner});
             // await Vesting.addVestingTerm(holder, startDate, lockupPeriod, fullPeriod, fullAmount, lockupAmount, vestPeriod, isCancelable, {from: owner});
             await Vesting.approveSAFTHolder({from: holder});
             await Vesting.startVesting(holder, {from: owner});
@@ -506,7 +512,8 @@ contract("Vesting", ([owner, holder, holder1, holder2, holder3, hacker]) => {
         const fullPeriod = 36;
         const fullAmount = 6e6;
         const lockupAmount = 1e6;
-        const vestPeriod = 6;
+        const vestTime = 6;
+        const vestPeriod = 2; // month
         const isCancelable = false;
         const saftRound = 1;
 
@@ -514,7 +521,8 @@ contract("Vesting", ([owner, holder, holder1, holder2, holder3, hacker]) => {
         const fullPeriod1 = 15;
         const fullAmount1 = 1e6;
         const lockupAmount1 = 5e5;
-        const vestPeriod1 = 3;
+        const vestTime1 = 3;
+        const vestPeriod1 = 2; // month
         const isCancelable1 = false;
         const saftRound1 = 2;
 
@@ -522,7 +530,8 @@ contract("Vesting", ([owner, holder, holder1, holder2, holder3, hacker]) => {
         const fullPeriod2 = 15;
         const fullAmount2 = 1e6;
         const lockupAmount2 = 5e5;
-        const vestPeriod2 = 6;
+        const vestTime2 = 6;
+        const vestPeriod2 = 2; // month
         const isCancelable2 = false;
         const saftRound2 = 3;
 
@@ -530,7 +539,8 @@ contract("Vesting", ([owner, holder, holder1, holder2, holder3, hacker]) => {
         const fullPeriod3 = 36;
         const fullAmount3 = 36e6;
         const lockupAmount3 = 12e6;
-        const vestPeriod3 = 1;
+        const vestTime3 = 1;
+        const vestPeriod3 = 2; // month
         const isCancelable3 = false;
         const saftRound3 = 4;
 
@@ -540,25 +550,25 @@ contract("Vesting", ([owner, holder, holder1, holder2, holder3, hacker]) => {
             startDate = await currentTime(web3);
             // SAFT example 0
             // await Vesting.addVestingTerm(holder, startDate, lockupPeriod, fullPeriod, fullAmount, lockupAmount, vestPeriod, isCancelable, {from: owner});
-            await Vesting.addSAFTRound(lockupPeriod, fullPeriod,  vestPeriod, isCancelable, {from: owner});
-            await Vesting.connectHolderToSAFT(holder, saftRound, startDate, fullAmount, lockupAmount, {from: owner});
+            await Vesting.addSAFTRound(lockupPeriod, fullPeriod, vestPeriod, vestTime, {from: owner});
+            await Vesting.connectHolderToPlan(holder, saftRound, startDate, fullAmount, lockupAmount, {from: owner});
             await Vesting.approveSAFTHolder({from: holder});
             await Vesting.startVesting(holder, {from: owner});
             // SAFT example 1
             // await Vesting.addVestingTerm(holder1, startDate, lockupPeriod1, fullPeriod1, fullAmount1, lockupAmount1, vestPeriod1, isCancelable1, {from: owner});
-            await Vesting.addSAFTRound(lockupPeriod1, fullPeriod1,  vestPeriod1, isCancelable1, {from: owner});
-            await Vesting.connectHolderToSAFT(holder1, saftRound1, startDate, fullAmount1, lockupAmount1, {from: owner});
+            await Vesting.addSAFTRound(lockupPeriod1, fullPeriod1, vestPeriod1, vestTime1, {from: owner});
+            await Vesting.connectHolderToPlan(holder1, saftRound1, startDate, fullAmount1, lockupAmount1, {from: owner});
             await Vesting.approveSAFTHolder({from: holder1});
             await Vesting.startVesting(holder1, {from: owner});
             // SAFT example 2
             // await Vesting.addVestingTerm(holder2, startDate, lockupPeriod2, fullPeriod2, fullAmount2, lockupAmount2, vestPeriod2, isCancelable2, {from: owner});
-            await Vesting.addSAFTRound(lockupPeriod2, fullPeriod2,  vestPeriod2, isCancelable2, {from: owner});
-            await Vesting.connectHolderToSAFT(holder2, saftRound2, startDate, fullAmount2, lockupAmount2, {from: owner});
+            await Vesting.addSAFTRound(lockupPeriod2, fullPeriod2, vestPeriod2, vestTime2, {from: owner});
+            await Vesting.connectHolderToPlan(holder2, saftRound2, startDate, fullAmount2, lockupAmount2, {from: owner});
             await Vesting.approveSAFTHolder({from: holder2});
             await Vesting.startVesting(holder2, {from: owner});
             // SAFT example 3
-            await Vesting.addSAFTRound(lockupPeriod3, fullPeriod3,  vestPeriod3, isCancelable3, {from: owner});
-            await Vesting.connectHolderToSAFT(holder3, saftRound3, startDate, fullAmount3, lockupAmount3, {from: owner});
+            await Vesting.addSAFTRound(lockupPeriod3, fullPeriod3, vestPeriod3, vestTime3, {from: owner});
+            await Vesting.connectHolderToPlan(holder3, saftRound3, startDate, fullAmount3, lockupAmount3, {from: owner});
             await Vesting.approveSAFTHolder({from: holder3});
             await Vesting.startVesting(holder3, {from: owner});
         });
