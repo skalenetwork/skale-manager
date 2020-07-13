@@ -8,7 +8,8 @@ import { ConstantsHolderInstance,
          SchainsInstance,
          SkaleDKGTesterInstance,
          SkaleManagerInstance,
-         ValidatorServiceInstance } from "../types/truffle-contracts";
+         ValidatorServiceInstance,
+         NodeRotationInstance} from "../types/truffle-contracts";
 
 import BigNumber from "bignumber.js";
 import { skipTime } from "./tools/time";
@@ -22,6 +23,7 @@ import { deploySchainsInternal } from "./tools/deploy/schainsInternal";
 import { deploySchains } from "./tools/deploy/schains";
 import { deploySkaleDKGTester } from "./tools/deploy/test/skaleDKGTester";
 import { deploySkaleManager } from "./tools/deploy/skaleManager";
+import { deployNodeRotation } from "./tools/deploy/nodeRotation";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -36,6 +38,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
     let skaleDKG: SkaleDKGTesterInstance;
     let skaleManager: SkaleManagerInstance;
     let keyStorage: KeyStorageInstance;
+    let nodeRotation: NodeRotationInstance;
 
     beforeEach(async () => {
         contractManager = await deployContractManager();
@@ -49,6 +52,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
         await contractManager.setContractsAddress("SkaleDKG", skaleDKG.address);
         keyStorage = await deployKeyStorage(contractManager);
         skaleManager = await deploySkaleManager(contractManager);
+        nodeRotation = await deployNodeRotation(contractManager);
 
         await validatorService.registerValidator("D2", "D2 is even", 0, 0, {from: validator});
         const validatorIndex = await validatorService.getValidatorId(validator);
@@ -853,6 +857,20 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
             const res1 = await schainsInternal.getNodesInGroup(web3.utils.soliditySha3("d2"));
             const res2 = await schainsInternal.getNodesInGroup(web3.utils.soliditySha3("d3"));
             await skaleManager.nodeExit(0, {from: nodeAddress});
+
+            const rotatedSchain = (await nodeRotation.getLeavingHistory(0))[0].schainIndex;
+            const rotationForRotatedSchain = await nodeRotation.getRotation(rotatedSchain);
+            assert.notEqual(rotationForRotatedSchain.newNodeIndex, new BigNumber(0));
+            assert.notEqual(rotationForRotatedSchain.freezeUntil, new BigNumber(0));
+            assert.notEqual(rotationForRotatedSchain.rotationCounter, new BigNumber(0));
+
+            const activeSchain = await schainsInternal.getActiveSchain(0);
+            const rotationForActiveSchain = await nodeRotation.getRotation(activeSchain);
+            assert.equal(rotationForActiveSchain.nodeIndex, new BigNumber(0));
+            assert.equal(rotationForActiveSchain.newNodeIndex, new BigNumber(0));
+            assert.equal(rotationForActiveSchain.freezeUntil, new BigNumber(0));
+            assert.equal(rotationForActiveSchain.rotationCounter, new BigNumber(0));
+
             const nodeRot = res1[3];
             const res = await skaleDKG.isBroadcastPossible(
                 web3.utils.soliditySha3("d3"), nodeRot);
@@ -865,6 +883,12 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
             await skaleDKG.setSuccesfulDKGPublic(
                 web3.utils.soliditySha3("d2"),
             );
+
+            const rotationForSecondRotatedSchain = await nodeRotation.getRotation(activeSchain);
+            assert.notEqual(rotationForSecondRotatedSchain.newNodeIndex, new BigNumber(0));
+            assert.notEqual(rotationForSecondRotatedSchain.freezeUntil, new BigNumber(0));
+            assert.notEqual(rotationForSecondRotatedSchain.rotationCounter, new BigNumber(0));
+
             nodeStatus = (await nodes.getNodeStatus(0)).toNumber();
             assert.equal(nodeStatus, LEFT);
             await skaleManager.nodeExit(0, {from: nodeAddress})
