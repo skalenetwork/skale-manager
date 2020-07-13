@@ -32,11 +32,11 @@ export async function skipTimeToDate(web3: Web3, day: number, monthIndex: number
     const timestamp = await currentTime(web3);
     const now = new Date(timestamp * 1000);
     const targetTime = new Date(now);
-    if (day !== undefined) {
-        targetTime.setDate(day);
+    if (monthIndex !== undefined) {
+        targetTime.setMonth(monthIndex);
     }
     if (day !== undefined) {
-        targetTime.setMonth(monthIndex);
+        targetTime.setDate(day);
     }
     if (targetTime < now) {
         targetTime.setFullYear(now.getFullYear() + 1);

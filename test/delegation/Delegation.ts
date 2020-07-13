@@ -3,12 +3,15 @@ import { ConstantsHolderInstance,
     DelegationControllerInstance,
     DelegationPeriodManagerInstance,
     DistributorInstance,
+    LockerMockContract,
     PunisherInstance,
     SkaleManagerMockContract,
     SkaleManagerMockInstance,
     SkaleTokenInstance,
     TokenStateInstance,
-    ValidatorServiceInstance} from "../../types/truffle-contracts";
+    ValidatorServiceInstance,
+    NodesInstance,
+    SlashingTableInstance} from "../../types/truffle-contracts";
 
 const SkaleManagerMock: SkaleManagerMockContract = artifacts.require("./SkaleManagerMock");
 
@@ -26,7 +29,11 @@ import { deployPunisher } from "../tools/deploy/delegation/punisher";
 import { deployTokenState } from "../tools/deploy/delegation/tokenState";
 import { deployValidatorService } from "../tools/deploy/delegation/validatorService";
 import { deploySkaleToken } from "../tools/deploy/skaleToken";
-import { Delegation } from "../tools/types";
+import { Delegation, State } from "../tools/types";
+import { deployNodes } from "../tools/deploy/nodes";
+import { deploySlashingTable } from "../tools/deploy/slashingTable";
+import { deployTimeHelpersWithDebug } from "../tools/deploy/test/timeHelpersWithDebug";
+import { deploySkaleManager } from "../tools/deploy/skaleManager";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -49,6 +56,7 @@ contract("Delegation", ([owner,
     let tokenState: TokenStateInstance;
     let distributor: DistributorInstance;
     let punisher: PunisherInstance;
+    let nodes: NodesInstance;
 
     const defaultAmount = 100 * 1e18;
     const month = 60 * 60 * 24 * 31;
@@ -67,9 +75,33 @@ contract("Delegation", ([owner,
         tokenState = await deployTokenState(contractManager);
         distributor = await deployDistributor(contractManager);
         punisher = await deployPunisher(contractManager);
+        nodes = await deployNodes(contractManager);
 
         // each test will start from Nov 10
         await skipTimeToDate(web3, 10, 10);
+    });
+
+    it("should allow owner to remove locker", async () => {
+        const LockerMock: LockerMockContract = artifacts.require("./LockerMock");
+        const lockerMock = await LockerMock.new();
+        await contractManager.setContractsAddress("D2", lockerMock.address);
+
+        await tokenState.addLocker("D2", {from: validator})
+            .should.be.eventually.rejectedWith("Caller is not the owner");
+        await tokenState.addLocker("D2");
+        (await tokenState.getAndUpdateLockedAmount.call(owner)).toNumber().should.be.equal(13);
+        await tokenState.removeLocker("D2", {from: validator})
+            .should.be.eventually.rejectedWith("Caller is not the owner");
+        await tokenState.removeLocker("D2");
+        (await tokenState.getAndUpdateLockedAmount.call(owner)).toNumber().should.be.equal(0);
+    });
+
+    it("should allow owner to set new delegation period", async () => {
+        await delegationPeriodManager.setDelegationPeriod(13, 13, {from: validator})
+            .should.be.eventually.rejectedWith("Caller is not the owner");
+        await delegationPeriodManager.setDelegationPeriod(13, 13);
+        (await delegationPeriodManager.stakeMultipliers(13)).toNumber()
+            .should.be.equal(13);
     });
 
     describe("when holders have tokens and validator is registered", async () => {
@@ -217,7 +249,7 @@ contract("Delegation", ([owner,
                 .should.be.eventually.rejectedWith("Validator with such ID does not exist");
         });
 
-        it("should return bond amount if validator delegated to itself", async () => {
+        it("should calculate bond amount if validator delegated to itself", async () => {
             await skaleToken.mint(validator, defaultAmount.toString(), "0x", "0x");
             await delegationController.delegate(
                 validatorId, defaultAmount.toString(), 3, "D2 is even", {from: validator});
@@ -225,9 +257,119 @@ contract("Delegation", ([owner,
                 validatorId, defaultAmount.toString(), 3, "D2 is even", {from: holder1});
             await delegationController.acceptPendingDelegation(0, {from: validator});
             await delegationController.acceptPendingDelegation(1, {from: validator});
+
             skipTime(web3, month);
+
             const bondAmount = await validatorService.getAndUpdateBondAmount.call(validatorId);
             assert.equal(defaultAmount.toString(), bondAmount.toString());
+        });
+
+        it("should calculate bond amount if validator delegated to itself using different periods", async () => {
+            await skaleToken.mint(validator, defaultAmount.toString(), "0x", "0x");
+            await delegationController.delegate(
+                validatorId, 5, 3, "D2 is even", {from: validator});
+            await delegationController.delegate(
+                validatorId, 13, 12, "D2 is even", {from: validator});
+            await delegationController.acceptPendingDelegation(0, {from: validator});
+            await delegationController.acceptPendingDelegation(1, {from: validator});
+
+            skipTime(web3, month);
+
+            const bondAmount = await validatorService.getAndUpdateBondAmount.call(validatorId);
+            assert.equal(18, bondAmount.toNumber());
+        });
+
+        it("should bond equals zero for validator if she delegated to another validator", async () =>{
+            const validator1 = validator;
+            const validator2 = holder1;
+            const validator1Id = 1;
+            const validator2Id = 2;
+            await validatorService.registerValidator(
+                "Second validator", "Super-pooper validator", 150, 0, {from: validator2});
+            await validatorService.enableValidator(validator2Id, {from: owner});
+            await delegationController.delegate(
+                validator1Id, 200, 3, "D2 is even", {from: validator2});
+            await delegationController.delegate(
+                validator2Id, 200, 3, "D2 is even", {from: validator2});
+            await delegationController.acceptPendingDelegation(0, {from: validator1});
+            await delegationController.acceptPendingDelegation(1, {from: validator2});
+            skipTime(web3, month);
+
+            const bondAmount1 = await validatorService.getAndUpdateBondAmount.call(validator1Id);
+            let bondAmount2 = await validatorService.getAndUpdateBondAmount.call(validator2Id);
+            assert.equal(bondAmount1.toNumber(), 0);
+            assert.equal(bondAmount2.toNumber(), 200);
+            await delegationController.delegate(
+                validator2Id, 200, 3, "D2 is even", {from: validator2});
+            await delegationController.acceptPendingDelegation(2, {from: validator2});
+
+            skipTime(web3, month);
+            bondAmount2 = await validatorService.getAndUpdateBondAmount.call(validator2Id);
+            assert.equal(bondAmount2.toNumber(), 400);
+        });
+
+        it("should not pay bounty for slashed tokens", async () => {
+            const ten18 = web3.utils.toBN(10).pow(web3.utils.toBN(18));
+            const timeHelpersWithDebug = await deployTimeHelpersWithDebug(contractManager);
+            await contractManager.setContractsAddress("TimeHelpers", timeHelpersWithDebug.address);
+            await skaleToken.mint(holder1, ten18.muln(10000).toString(10), "0x", "0x");
+            await skaleToken.mint(holder2, ten18.muln(10000).toString(10), "0x", "0x");
+
+            await constantsHolder.setMSR(ten18.muln(2000).toString(10));
+
+            const slashingTable: SlashingTableInstance = await deploySlashingTable(contractManager);
+            slashingTable.setPenalty("FailedDKG", ten18.muln(10000).toString(10));
+
+            await constantsHolder.setLaunchTimestamp((await currentTime(web3)) - 4 * month);
+
+            await delegationController.delegate(validatorId, ten18.muln(10000).toString(10), 3, "First delegation", {from: holder1});
+            const delegationId1 = 0;
+            await delegationController.acceptPendingDelegation(delegationId1, {from: validator});
+
+            await timeHelpersWithDebug.skipTime(month);
+            (await delegationController.getState(delegationId1)).toNumber().should.be.equal(State.DELEGATED);
+
+            const bounty = ten18;
+            for (let i = 0; i < 5; ++i) {
+                skaleManagerMock.payBounty(validatorId, bounty.toString(10));
+            }
+
+            await timeHelpersWithDebug.skipTime(month);
+
+            await distributor.withdrawBounty(validatorId, bountyAddress, {from: holder1});
+            let balance = (await skaleToken.balanceOf(bountyAddress)).toString(10);
+            balance.should.be.equal(bounty.muln(5).muln(85).divn(100).toString(10));
+            await skaleToken.transfer(holder1, balance, {from: bountyAddress});
+
+            await punisher.slash(validatorId, ten18.muln(10000).toString(10));
+
+            (await skaleToken.getAndUpdateSlashedAmount.call(holder1)).toString(10)
+                .should.be.equal(ten18.muln(10000).toString(10));
+            (await skaleToken.getAndUpdateDelegatedAmount.call(holder1)).toString(10)
+                .should.be.equal("0");
+
+            await delegationController.delegate(validatorId, ten18.muln(10000).toString(10), 3, "Second delegation", {from: holder2});
+            const delegationId2 = 1;
+            await delegationController.acceptPendingDelegation(delegationId2, {from: validator});
+
+            await timeHelpersWithDebug.skipTime(month);
+            (await delegationController.getState(delegationId2)).toNumber().should.be.equal(State.DELEGATED);
+
+            for (let i = 0; i < 5; ++i) {
+                skaleManagerMock.payBounty(validatorId, bounty.toString(10));
+            }
+
+            await timeHelpersWithDebug.skipTime(month);
+
+            await distributor.withdrawBounty(validatorId, bountyAddress, {from: holder1});
+            balance = (await skaleToken.balanceOf(bountyAddress)).toString(10);
+            balance.should.be.equal("0");
+            await skaleToken.transfer(holder1, balance, {from: bountyAddress});
+
+            await distributor.withdrawBounty(validatorId, bountyAddress, {from: holder2});
+            balance = (await skaleToken.balanceOf(bountyAddress)).toString(10);
+            balance.should.be.equal(bounty.muln(5).muln(85).divn(100).toString(10));
+            await skaleToken.transfer(holder2, balance, {from: bountyAddress});
         });
 
         describe("when 3 holders delegated", async () => {
@@ -376,6 +518,18 @@ contract("Delegation", ([owner,
                         holder3)).toNumber().should.be.equal(delegatedAmount3 - 5);
                 });
 
+                it("should allow only ADMIN to return slashed tokens", async() => {
+                    const skaleManager = await deploySkaleManager(contractManager);
+
+                    await punisher.slash(validatorId, 10);
+                    await delegationController.processAllSlashes(holder3);
+
+                    await punisher.forgive(holder3, 3, {from: holder1})
+                        .should.be.eventually.rejectedWith("Caller is not an admin");
+                    skaleManager.grantRole(await skaleManager.ADMIN_ROLE(), holder1);
+                    await punisher.forgive(holder3, 3, {from: holder1});
+                });
+
                 it("should not pay bounty for slashed tokens", async () => {
                     // slash everything
                     await punisher.slash(validatorId, delegatedAmount1 + delegatedAmount2 + delegatedAmount3);
@@ -434,7 +588,7 @@ contract("Delegation", ([owner,
             signature = (signature.slice(130) === "00" ? signature.slice(0, 130) + "1b" :
                 (signature.slice(130) === "01" ? signature.slice(0, 130) + "1c" : signature));
             await validatorService.linkNodeAddress(bountyAddress, signature, {from: validator});
-            await validatorService.checkPossibilityCreatingNode(bountyAddress);
+            await nodes.checkPossibilityCreatingNode(bountyAddress);
         });
 
         it("should be possible to distribute bounty accross thousands of holders", async () => {

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 /*
     PartialDifferences.sol - SKALE Manager
     Copyright (C) 2018-Present SKALE Labs
@@ -17,12 +19,27 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.6;
+pragma solidity 0.6.10;
 
 import "../utils/MathUtils.sol";
 import "../utils/FractionUtils.sol";
 
-
+/**
+ * @title Partial Differences Library
+ * @dev This library contains functions to manage Partial Differences data
+ * structure. Partial Differences is an array of value differences over time.
+ *
+ * For example: assuming an array [3, 6, 3, 1, 2], partial differences can
+ * represent this array as [_, 3, -3, -2, 1].
+ *
+ * This data structure allows adding values on an open interval with O(1)
+ * complexity.
+ *
+ * For example: add +5 to [3, 6, 3, 1, 2] starting from the second element (3),
+ * instead of performing [3, 6, 3+5, 1+5, 2+5] partial differences allows
+ * performing [_, 3, -3+5, -2, 1]. The original array can be restored by
+ * adding values from partial differences.
+ */
 library PartialDifferences {
     using SafeMath for uint;
     using MathUtils for uint;
@@ -81,7 +98,7 @@ library PartialDifferences {
 
         if (sequence.firstUnprocessedMonth <= month) {
             for (uint i = sequence.firstUnprocessedMonth; i <= month; ++i) {
-                uint nextValue = sequence.value[i - 1].add(sequence.addDiff[i]).boundedSub(sequence.subtractDiff[i]);
+                uint nextValue = sequence.value[i.sub(1)].add(sequence.addDiff[i]).boundedSub(sequence.subtractDiff[i]);
                 if (sequence.value[i] != nextValue) {
                     sequence.value[i] = nextValue;
                 }

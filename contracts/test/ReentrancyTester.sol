@@ -1,12 +1,33 @@
-pragma solidity 0.6.6;
+// SPDX-License-Identifier: AGPL-3.0-only
 
-import "@openzeppelin/contracts/introspection/IERC1820Registry.sol";
-import "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
-import "@openzeppelin/contracts/token/ERC777/IERC777Sender.sol";
-import "@openzeppelin/contracts/math/SafeMath.sol";
+/*
+    ReentrancyTester.sol - SKALE Manager
+    Copyright (C) 2018-Present SKALE Labs
+    @author Dmytro Stebaiev
+
+    SKALE Manager is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as published
+    by the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    SKALE Manager is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
+pragma solidity 0.6.10;
+
+import "@openzeppelin/contracts-ethereum-package/contracts/introspection/IERC1820Registry.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC777/IERC777Recipient.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC777/IERC777Sender.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC777/IERC777.sol";
 
 import "../Permissions.sol";
-import "../SkaleToken.sol";
 import "../delegation/DelegationController.sol";
 
 
@@ -17,8 +38,8 @@ contract ReentrancyTester is Permissions, IERC777Recipient, IERC777Sender {
     bool private _burningAttack = false;
     uint private _amount = 0;
 
-    constructor (address contractManager) public {
-        Permissions.initialize(contractManager);
+    constructor (address contractManagerAddress) public {
+        Permissions.initialize(contractManagerAddress);
         _erc1820.setInterfaceImplementer(address(this), keccak256("ERC777TokensRecipient"), address(this));
         _erc1820.setInterfaceImplementer(address(this), keccak256("ERC777TokensSender"), address(this));
     }
@@ -34,10 +55,10 @@ contract ReentrancyTester is Permissions, IERC777Recipient, IERC777Sender {
         external override
     {
         if (_reentrancyCheck) {
-            SkaleToken skaleToken = SkaleToken(_contractManager.getContract("SkaleToken"));
+            IERC20 skaleToken = IERC20(contractManager.getContract("SkaleToken"));
 
             require(
-                skaleToken.transfer(_contractManager.getContract("SkaleToken"), amount),
+                skaleToken.transfer(contractManager.getContract("SkaleToken"), amount),
                 "Transfer is not successful");
         }
     }
@@ -53,7 +74,7 @@ contract ReentrancyTester is Permissions, IERC777Recipient, IERC777Sender {
     {
         if (_burningAttack) {
             DelegationController delegationController = DelegationController(
-                _contractManager.getContract("DelegationController"));
+                contractManager.getContract("DelegationController"));
             delegationController.delegate(
                 1,
                 _amount,
@@ -71,7 +92,7 @@ contract ReentrancyTester is Permissions, IERC777Recipient, IERC777Sender {
     }
 
     function burningAttack() external {
-        SkaleToken skaleToken = SkaleToken(_contractManager.getContract("SkaleToken"));
+        IERC777 skaleToken = IERC777(contractManager.getContract("SkaleToken"));
 
         _amount = skaleToken.balanceOf(address(this));
 

@@ -7,10 +7,10 @@ group1=(
    SkaleManager.ts 
 )
 group2=(
-    SchainsFunctionality.ts
+    Schains.ts
     SkaleDKG.ts
-    MonitorsFunctionality.spec.ts
-    SchainsData.ts
+    Monitors.ts
+    SchainsInternal.ts
     ECDH.ts
     Decryption.ts
     ContractManager.ts

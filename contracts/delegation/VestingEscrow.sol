@@ -17,17 +17,10 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.6;
+pragma solidity 0.6.10;
 pragma experimental ABIEncoderV2;
 
-// import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/IERC20.sol";
-// import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC777/IERC777Recipient.sol";
-// import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC777/IERC777Sender.sol";
-// import "@openzeppelin/contracts-ethereum-package/contracts/introspection/IERC1820Registry.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
-import "@openzeppelin/contracts/token/ERC777/IERC777Sender.sol";
-import "@openzeppelin/contracts/introspection/IERC1820Registry.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC777/IERC777Sender.sol";
 import "../interfaces/delegation/ILocker.sol";
 import "./Vesting.sol";
 import "./DelegationController.sol";
@@ -35,6 +28,7 @@ import "./Distributor.sol";
 import "./TokenState.sol";
 
 contract VestingEscrow is IERC777Recipient, IERC777Sender, Permissions {
+
     address private _holder;
 
     IERC1820Registry private _erc1820;
@@ -44,8 +38,8 @@ contract VestingEscrow is IERC777Recipient, IERC777Sender, Permissions {
         _;
     }
 
-    constructor(address contractManager, address newHolder) public {
-        Permissions.initialize(contractManager);
+    constructor(address contractManagerAddress, address newHolder) public {
+        Permissions.initialize(contractManagerAddress);
         _holder = newHolder;
         _erc1820 = IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
         _erc1820.setInterfaceImplementer(address(this), keccak256("ERC777TokensRecipient"), address(this));
@@ -78,21 +72,21 @@ contract VestingEscrow is IERC777Recipient, IERC777Sender, Permissions {
         external override
         allow("SkaleToken")
     {
-        require(to == _holder || to == owner(), "Not authorized transfer");
+        require(to == _holder || hasRole(DEFAULT_ADMIN_ROLE, to), "Not authorized transfer");
     }
 
     function retrieve() external onlyHolder {
-        Vesting vesting = Vesting(_contractManager.getContract("Vesting"));
-        TokenState tokenState = TokenState(_contractManager.getContract("TokenState"));
+        Vesting vesting = Vesting(contractManager.getContract("Vesting"));
+        TokenState tokenState = TokenState(contractManager.getContract("TokenState"));
         require(vesting.isActiveVestingTerm(_holder), "Vesting term is not Active");
         uint availableAmount = vesting.calculateAvailableAmount(_holder);
-        uint escrowBalance = IERC20(_contractManager.getContract("SkaleToken")).balanceOf(address(this));
+        uint escrowBalance = IERC20(contractManager.getContract("SkaleToken")).balanceOf(address(this));
         uint fullAmount = vesting.getFullAmount(_holder);
         uint forbiddenToSend = tokenState.getAndUpdateLockedAmount(address(this));
         if (availableAmount > fullAmount.sub(escrowBalance)) {
             if (availableAmount.sub(fullAmount.sub(escrowBalance)) > forbiddenToSend)
             require(
-                IERC20(_contractManager.getContract("SkaleToken")).transfer(
+                IERC20(contractManager.getContract("SkaleToken")).transfer(
                     _holder,
                     availableAmount
                         .sub(
@@ -104,9 +98,9 @@ contract VestingEscrow is IERC777Recipient, IERC777Sender, Permissions {
                 "Error of token send"
             );
         }
-        if (IERC20(_contractManager.getContract("SkaleToken")).balanceOf(address(this)) == 0) {
-            selfdestruct(payable(owner()));
-        }
+        // if (IERC20(contractManager.getContract("SkaleToken")).balanceOf(address(this)) == 0) {
+        //     selfdestruct(payable(vesting.vestingManager()));
+        // }
     }
 
     function delegate(
@@ -118,41 +112,42 @@ contract VestingEscrow is IERC777Recipient, IERC777Sender, Permissions {
         external
     {
         require(
-            IERC20(_contractManager.getContract("SkaleToken")).balanceOf(address(this)) >= amount,
+            IERC20(contractManager.getContract("SkaleToken")).balanceOf(address(this)) >= amount,
             "Not enough balance"
         );
         DelegationController delegationController = DelegationController(
-            _contractManager.getContract("DelegationController")
+            contractManager.getContract("DelegationController")
         );
         delegationController.delegate(validatorId, amount, delegationPeriod, info);
     }
 
     function requestUndelegation(uint delegationId) external {
         DelegationController delegationController = DelegationController(
-            _contractManager.getContract("DelegationController")
+            contractManager.getContract("DelegationController")
         );
         delegationController.requestUndelegation(delegationId);
     }
 
     function withdrawBounty(uint validatorId, address to) external {
-        Distributor distributor = Distributor(_contractManager.getContract("Distributor"));
+        Distributor distributor = Distributor(contractManager.getContract("Distributor"));
         distributor.withdrawBounty(validatorId, to);
     }
 
     function cancelVesting() external allow("Vesting") {
-        TokenState tokenState = TokenState(_contractManager.getContract("TokenState"));
-        uint escrowBalance = IERC20(_contractManager.getContract("SkaleToken")).balanceOf(address(this));
+        Vesting vesting = Vesting(contractManager.getContract("Vesting"));
+        TokenState tokenState = TokenState(contractManager.getContract("TokenState"));
+        uint escrowBalance = IERC20(contractManager.getContract("SkaleToken")).balanceOf(address(this));
         uint forbiddenToSend = tokenState.getAndUpdateLockedAmount(address(this));
         require(
-            IERC20(_contractManager.getContract("SkaleToken")).transfer(
-                owner(),
+            IERC20(contractManager.getContract("SkaleToken")).transfer(
+                vesting.vestingManager(),
                 escrowBalance - forbiddenToSend
             ),
             "Error of token send"
         );
-        if (IERC20(_contractManager.getContract("SkaleToken")).balanceOf(address(this)) == 0) {
-            selfdestruct(payable(owner()));
-        }
+        // if (IERC20(contractManager.getContract("SkaleToken")).balanceOf(address(this)) == 0) {
+        //     selfdestruct(payable(vesting.vestingManager()));
+        // }
         // should request undelegation of all delegations
     }
 

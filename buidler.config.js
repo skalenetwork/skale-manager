@@ -10,10 +10,18 @@ task("erc", "Deploy erc1820", async () => {
 });
 
 
+task("accounts", "Prints the list of accounts", async () => {
+  const accounts = await web3.eth.getAccounts();
+
+   for (const account of accounts) {
+    console.log(account);
+  }
+});
+
 module.exports = {
   defaultNetwork: "buidlerevm",
   solc: {
-    version: '0.6.6',
+    version: '0.6.10',
     evmVersion: 'petersburg',
     optimizer:{
       enabled: true,

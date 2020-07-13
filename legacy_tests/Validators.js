@@ -20,14 +20,14 @@ async function getBounty(nodeIndex) {
 }
 
 async function getMonitorsForNode(nodeIndex) {
-    let res = await init.MonitorsData.methods.getNodesInGroup(init.web3.utils.soliditySha3(nodeIndex)).call();
+    let res = await init.Monitors.methods.getNodesInGroup(init.web3.utils.soliditySha3(nodeIndex)).call();
     console.log("Node index:", nodeIndex);
     console.log("Monitors for this Node", res);
     return res;
 }
 
 async function getValidatedArray(nodeIndex) {
-    let res = await init.MonitorsData.methods.getValidatedArray(init.web3.utils.soliditySha3(nodeIndex)).call();
+    let res = await init.Monitors.methods.getValidatedArray(init.web3.utils.soliditySha3(nodeIndex)).call();
     let result = {
         ids: new Array(res.length),
         times: new Array(res.length)

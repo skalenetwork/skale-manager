@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 /*
     SkaleToken.sol - SKALE Manager
     Copyright (C) 2018-Present SKALE Labs
@@ -17,9 +19,8 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.6;
+pragma solidity 0.6.10;
 
-import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 import "./thirdparty/openzeppelin/ERC777.sol";
@@ -81,19 +82,19 @@ contract SkaleToken is ERC777, Permissions, ReentrancyGuard, IDelegatableToken {
     }
 
     function getAndUpdateDelegatedAmount(address wallet) external override returns (uint) {
-        return DelegationController(_contractManager.getContract("DelegationController"))
+        return DelegationController(contractManager.getContract("DelegationController"))
             .getAndUpdateDelegatedAmount(wallet);
     }
 
     function getAndUpdateSlashedAmount(address wallet) external override returns (uint) {
-        return Punisher(_contractManager.getContract("Punisher")).getAndUpdateLockedAmount(wallet);
+        return Punisher(contractManager.getContract("Punisher")).getAndUpdateLockedAmount(wallet);
     }
 
     function getAndUpdateLockedAmount(address wallet) public override returns (uint) {
-        return TokenState(_contractManager.getContract("TokenState")).getAndUpdateLockedAmount(wallet);
+        return TokenState(contractManager.getContract("TokenState")).getAndUpdateLockedAmount(wallet);
     }
 
-    // private
+    // internal
 
     function _beforeTokenTransfer(
         address, // operator

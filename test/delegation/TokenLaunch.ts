@@ -43,16 +43,18 @@ contract("TokenLaunchManager", ([owner, holder, delegation, validator, seller, h
     });
 
     it("should register seller", async () => {
-        await TokenLaunchManager.registerSeller(seller);
+        await TokenLaunchManager.grantRole(await TokenLaunchManager.SELLER_ROLE(), seller);
+        await TokenLaunchManager.hasRole(await TokenLaunchManager.SELLER_ROLE(), seller).should.be.eventually.true;
     });
 
     it("should not register seller if sender is not owner", async () => {
-        await TokenLaunchManager.registerSeller(seller, {from: hacker}).should.be.eventually.rejectedWith("Ownable: caller is not the owner");
+        await TokenLaunchManager.grantRole(await TokenLaunchManager.SELLER_ROLE(), seller, {from: hacker})
+            .should.be.eventually.rejectedWith("sender must be an admin to grant");
     });
 
     describe("when seller is registered", async () => {
         beforeEach(async () => {
-            await TokenLaunchManager.registerSeller(seller);
+            await TokenLaunchManager.grantRole(await TokenLaunchManager.SELLER_ROLE(), seller);
         });
 
         it("should not allow to approve transfer if sender is not seller", async () => {
@@ -71,12 +73,20 @@ contract("TokenLaunchManager", ([owner, holder, delegation, validator, seller, h
         });
 
         it("should not allow to retrieve funds if it was not approved", async () => {
+            await TokenLaunchManager.completeTokenLaunch({from: seller});
             await TokenLaunchManager.retrieve({from: hacker})
                 .should.be.eventually.rejectedWith("Transfer is not approved");
         });
 
+        it("should not allow to retrieve funds if launch is not completed", async () => {
+            await TokenLaunchManager.approveBatchOfTransfers([holder], [10], {from: seller});
+            await TokenLaunchManager.retrieve({from: holder})
+                .should.be.eventually.rejectedWith("Can't retrive tokens because token launch is not completed");
+        });
+
         it("should allow seller to approve transfer to buyer", async () => {
             await TokenLaunchManager.approveBatchOfTransfers([holder], [10], {from: seller});
+            await TokenLaunchManager.completeTokenLaunch({from: seller});
             await TokenLaunchManager.retrieve({from: holder});
             (await skaleToken.balanceOf(holder)).toNumber().should.be.equal(10);
             await skaleToken.transfer(hacker, "1", {from: holder}).should.be.eventually.rejectedWith("Token should be unlocked for transferring");
@@ -85,6 +95,7 @@ contract("TokenLaunchManager", ([owner, holder, delegation, validator, seller, h
         it("should allow seller to change address of approval", async () => {
             await TokenLaunchManager.approveTransfer(hacker, 10, {from: seller});
             await TokenLaunchManager.changeApprovalAddress(hacker, holder, {from: seller});
+            await TokenLaunchManager.completeTokenLaunch({from: seller});
             await TokenLaunchManager.retrieve({from: hacker})
                 .should.be.eventually.rejectedWith("Transfer is not approved");
             await TokenLaunchManager.retrieve({from: holder});
@@ -95,6 +106,7 @@ contract("TokenLaunchManager", ([owner, holder, delegation, validator, seller, h
         it("should allow seller to change value of approval", async () => {
             await TokenLaunchManager.approveTransfer(holder, 10, {from: seller});
             await TokenLaunchManager.changeApprovalValue(holder, 5, {from: seller});
+            await TokenLaunchManager.completeTokenLaunch({from: seller});
             await TokenLaunchManager.retrieve({from: holder});
             (await skaleToken.balanceOf(holder)).toNumber().should.be.equal(5);
         })
@@ -106,6 +118,7 @@ contract("TokenLaunchManager", ([owner, holder, delegation, validator, seller, h
 
             beforeEach(async () => {
                 await TokenLaunchManager.approveTransfer(holder, totalAmount, {from: seller});
+                await TokenLaunchManager.completeTokenLaunch({from: seller});
                 await TokenLaunchManager.retrieve({from: holder});
             });
 

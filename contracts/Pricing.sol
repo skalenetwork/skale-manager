@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 /*
     Pricing.sol - SKALE Manager
     Copyright (C) 2018-Present SKALE Labs
@@ -18,78 +20,106 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.6;
+pragma solidity 0.6.10;
 
 import "./Permissions.sol";
-import "./interfaces/IGroupsData.sol";
-import "./SchainsData.sol";
+import "./SchainsInternal.sol";
 import "./Nodes.sol";
 
 
 contract Pricing is Permissions {
-    uint public constant OPTIMAL_LOAD_PERCENTAGE = 80;
-    uint public constant ADJUSTMENT_SPEED = 1000;
-    uint public constant COOLDOWN_TIME = 60;
-    uint public constant MIN_PRICE = 10**6;
+
+    uint public constant INITIAL_PRICE = 5 * 10**6;
+
     uint public price;
     uint public totalNodes;
-    uint private _lastUpdated;
+    uint public lastUpdated;
 
     function initNodes() external {
-        Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
+        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
         totalNodes = nodes.getNumberOnlineNodes();
     }
 
     function adjustPrice() external {
-        require(now > _lastUpdated.add(COOLDOWN_TIME), "It's not a time to update a price");
+        ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
+        require(now > lastUpdated.add(constantsHolder.COOLDOWN_TIME()), "It's not a time to update a price");
         checkAllNodes();
-        uint loadPercentage = getTotalLoadPercentage();
-        uint priceChange;
-        uint timeSkipped;
+        uint load = _getTotalLoad();
+        uint capacity = _getTotalCapacity();
 
-        if (loadPercentage < OPTIMAL_LOAD_PERCENTAGE) {
-            priceChange = (ADJUSTMENT_SPEED.mul(price)).mul((OPTIMAL_LOAD_PERCENTAGE.sub(loadPercentage))) / 10**6;
-            timeSkipped = (now.sub(_lastUpdated)).div(COOLDOWN_TIME);
-            price = price.sub(priceChange.mul(timeSkipped));
-            if (price < MIN_PRICE) {
-                price = MIN_PRICE;
-            }
+        bool networkIsOverloaded = load.mul(100) > constantsHolder.OPTIMAL_LOAD_PERCENTAGE().mul(capacity);
+        uint loadDiff;
+        if (networkIsOverloaded) {
+            loadDiff = load.mul(100).sub(constantsHolder.OPTIMAL_LOAD_PERCENTAGE().mul(capacity));
         } else {
-            priceChange = (ADJUSTMENT_SPEED.mul(price)).mul((loadPercentage.sub(OPTIMAL_LOAD_PERCENTAGE))) / 10**6;
-            timeSkipped = (now.sub(_lastUpdated)).div(COOLDOWN_TIME);
-            require(price.add(priceChange.mul(timeSkipped)) > price, "New price should be greater than old price");
-            price = price.add(priceChange.mul(timeSkipped));
+            loadDiff = constantsHolder.OPTIMAL_LOAD_PERCENTAGE().mul(capacity).sub(load.mul(100));
         }
-        _lastUpdated = now;
+
+        uint priceChangeSpeedMultipliedByCapacityAndMinPrice =
+            constantsHolder.ADJUSTMENT_SPEED().mul(loadDiff).mul(price);
+        
+        uint timeSkipped = now.sub(lastUpdated);
+        
+        uint priceChange = priceChangeSpeedMultipliedByCapacityAndMinPrice
+            .mul(timeSkipped)
+            .div(constantsHolder.COOLDOWN_TIME())
+            .div(capacity)
+            .div(constantsHolder.MIN_PRICE());
+
+        if (networkIsOverloaded) {
+            assert(priceChange > 0);
+            price = price.add(priceChange);
+        } else {
+            if (priceChange > price) {
+                price = constantsHolder.MIN_PRICE();
+            } else {
+                price = price.sub(priceChange);
+                if (price < constantsHolder.MIN_PRICE()) {
+                    price = constantsHolder.MIN_PRICE();
+                }
+            }
+        }
+        lastUpdated = now;
+    }
+
+    function getTotalLoadPercentage() external view returns (uint) {
+        return _getTotalLoad().mul(100).div(_getTotalCapacity());
     }
 
     function initialize(address newContractsAddress) public override initializer {
         Permissions.initialize(newContractsAddress);
-        _lastUpdated = now;
-        price = 5*10**6;
+        lastUpdated = now;
+        price = INITIAL_PRICE;
     }
 
     function checkAllNodes() public {
-        Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
+        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
         uint numberOfActiveNodes = nodes.getNumberOnlineNodes();
 
         require(totalNodes != numberOfActiveNodes, "No any changes on nodes");
         totalNodes = numberOfActiveNodes;
-
     }
 
-    function getTotalLoadPercentage() public view returns (uint) {
-        address schainsDataAddress = _contractManager.getContract("SchainsData");
-        uint64 numberOfSchains = SchainsData(schainsDataAddress).numberOfSchains();
-        Nodes nodes = Nodes(_contractManager.getContract("Nodes"));
-        uint numberOfNodes = nodes.getNumberOnlineNodes();
-        uint sumLoadSchain = 0;
+    function _getTotalLoad() private view returns (uint) {
+        SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
+
+        uint load = 0;
+        uint numberOfSchains = schainsInternal.numberOfSchains();
         for (uint i = 0; i < numberOfSchains; i++) {
-            bytes32 schain = SchainsData(schainsDataAddress).schainsAtSystem(i);
-            uint numberOfNodesInGroup = IGroupsData(schainsDataAddress).getNumberOfNodesInGroup(schain);
-            uint part = SchainsData(schainsDataAddress).getSchainsPartOfNode(schain);
-            sumLoadSchain = sumLoadSchain.add((numberOfNodesInGroup*10**7).div(part));
+            bytes32 schain = schainsInternal.schainsAtSystem(i);
+            uint numberOfNodesInSchain = schainsInternal.getNumberOfNodesInGroup(schain);
+            uint part = schainsInternal.getSchainsPartOfNode(schain);
+            load = load.add(
+                numberOfNodesInSchain.mul(part)
+            );
         }
-        return uint(sumLoadSchain.div(10**5*numberOfNodes));
+        return load;
+    }
+
+    function _getTotalCapacity() private view returns (uint) {
+        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
+        ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
+
+        return nodes.getNumberOnlineNodes().mul(constantsHolder.TOTAL_SPACE_ON_NODE());
     }
 }

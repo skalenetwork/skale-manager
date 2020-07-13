@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 /*
     TokenLaunchLocker.sol - SKALE Manager
     Copyright (C) 2019-Present SKALE Labs
@@ -17,9 +19,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.6;
-
-import "@openzeppelin/contracts/math/SafeMath.sol";
+pragma solidity 0.6.10;
 
 import "../Permissions.sol";
 import "../interfaces/delegation/ILocker.sol";
@@ -35,11 +35,17 @@ contract TokenLaunchLocker is Permissions, ILocker {
     using MathUtils for uint;
     using PartialDifferences for PartialDifferences.Value;
 
+    /**
+     * @dev Emitted when an `amount` is unlocked.
+     */
     event Unlocked(
         address holder,
         uint amount
     );
 
+    /**
+     * @dev Emitted when an `amount` is locked.
+     */
     event Locked(
         address holder,
         uint amount
@@ -72,7 +78,7 @@ contract TokenLaunchLocker is Permissions, ILocker {
         external allow("DelegationController")
     {
         if (_locked[holder] > 0) {
-            TimeHelpers timeHelpers = TimeHelpers(_contractManager.getContract("TimeHelpers"));
+            TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
 
             uint currentMonth = timeHelpers.getCurrentMonth();
             uint fromLocked = amount;
@@ -81,7 +87,7 @@ contract TokenLaunchLocker is Permissions, ILocker {
                 fromLocked = locked;
             }
             if (fromLocked > 0) {
-                require(_delegationAmount[delegationId] == 0, "Delegation already was added");
+                require(_delegationAmount[delegationId] == 0, "Delegation was already added");
                 _addToDelegatedAmount(holder, fromLocked, month);
                 _addToTotalDelegatedAmount(holder, fromLocked, month);
                 _delegationAmount[delegationId] = fromLocked;
@@ -106,12 +112,12 @@ contract TokenLaunchLocker is Permissions, ILocker {
     function getAndUpdateLockedAmount(address wallet) external override returns (uint) {
         if (_locked[wallet] > 0) {
             DelegationController delegationController = DelegationController(
-                _contractManager.getContract("DelegationController"));
-            TimeHelpers timeHelpers = TimeHelpers(_contractManager.getContract("TimeHelpers"));
-            ConstantsHolder constantsHolder = ConstantsHolder(_contractManager.getContract("ConstantsHolder"));
+                contractManager.getContract("DelegationController"));
+            TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
+            ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
 
             uint currentMonth = timeHelpers.getCurrentMonth();
-            if (_totalDelegatedAmount[wallet].delegated.mul(2) >= _locked[wallet] &&
+            if (_totalDelegatedSatisfiesProofOfUserCondition(wallet) &&
                 timeHelpers.calculateProofOfUseLockEndTime(
                     _totalDelegatedAmount[wallet].month,
                     constantsHolder.proofOfUseLockUpPeriodDays()
@@ -136,50 +142,57 @@ contract TokenLaunchLocker is Permissions, ILocker {
         return 0;
     }
 
-    function initialize(address contractManager) public override initializer {
-        Permissions.initialize(contractManager);
+    function initialize(address contractManagerAddress) public override initializer {
+        Permissions.initialize(contractManagerAddress);
     }
 
     // private
 
-    function _getAndUpdateDelegatedAmount(address holder, uint currentMonth) internal returns (uint) {
+    function _getAndUpdateDelegatedAmount(address holder, uint currentMonth) private returns (uint) {
         return _delegatedAmount[holder].getAndUpdateValue(currentMonth);
     }
 
-    function _addToDelegatedAmount(address holder, uint amount, uint month) internal {
+    function _addToDelegatedAmount(address holder, uint amount, uint month) private {
         _delegatedAmount[holder].addToValue(amount, month);
     }
 
-    function _removeFromDelegatedAmount(address holder, uint amount, uint month) internal {
+    function _removeFromDelegatedAmount(address holder, uint amount, uint month) private {
         _delegatedAmount[holder].subtractFromValue(amount, month);
     }
 
-    function _addToTotalDelegatedAmount(address holder, uint amount, uint month) internal {
+    function _addToTotalDelegatedAmount(address holder, uint amount, uint month) private {
         require(
             _totalDelegatedAmount[holder].month == 0 || _totalDelegatedAmount[holder].month <= month,
             "Can't add to total delegated in the past");
 
         // do not update counter if it is big enough
         // because it will override month value
-        if (_totalDelegatedAmount[holder].delegated.mul(2) < _locked[holder]) {
+        if (!_totalDelegatedSatisfiesProofOfUserCondition(holder)) {
             _totalDelegatedAmount[holder].delegated = _totalDelegatedAmount[holder].delegated.add(amount);
             _totalDelegatedAmount[holder].month = month;
         }
     }
 
-    function _unlock(address holder) internal {
+    function _unlock(address holder) private {
         emit Unlocked(holder, _locked[holder]);
         delete _locked[holder];
         _deleteDelegatedAmount(holder);
         _deleteTotalDelegatedAmount(holder);
     }
 
-    function _deleteDelegatedAmount(address holder) internal {
+    function _deleteDelegatedAmount(address holder) private {
         _delegatedAmount[holder].clear();
     }
 
-    function _deleteTotalDelegatedAmount(address holder) internal {
+    function _deleteTotalDelegatedAmount(address holder) private {
         delete _totalDelegatedAmount[holder].delegated;
         delete _totalDelegatedAmount[holder].month;
+    }
+
+    function _totalDelegatedSatisfiesProofOfUserCondition(address holder) private view returns (bool) {
+        ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
+
+        return _totalDelegatedAmount[holder].delegated.mul(100) >=
+            _locked[holder].mul(constantsHolder.proofOfUseDelegationPercentage());
     }
 }

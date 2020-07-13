@@ -1,5 +1,7 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 /*
-    TimeHellpersWithDebug.sol - SKALE Manager
+    TimeHelpersWithDebug.sol - SKALE Manager
     Copyright (C) 2019-Present SKALE Labs
     @author Dmytro Stebaiev
 
@@ -17,7 +19,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.6;
+pragma solidity 0.6.10;
 
 import "@openzeppelin/contracts-ethereum-package/contracts/access/Ownable.sol";
 
@@ -34,7 +36,7 @@ contract TimeHelpersWithDebug is TimeHelpers, OwnableUpgradeSafe {
 
     function skipTime(uint sec) external onlyOwner {
         if (_timeShift.length > 0) {
-            _timeShift.push(TimeShift({pointInTime: now, shift: _timeShift[_timeShift.length - 1].shift.add(sec)}));
+            _timeShift.push(TimeShift({pointInTime: now, shift: _timeShift[_timeShift.length.sub(1)].shift.add(sec)}));
         } else {
             _timeShift.push(TimeShift({pointInTime: now, shift: sec}));
         }
@@ -48,8 +50,8 @@ contract TimeHelpersWithDebug is TimeHelpers, OwnableUpgradeSafe {
         return super.timestampToMonth(timestamp.add(_getTimeShift(timestamp)));
     }
 
-    function monthToTimestamp(uint _month) public view override returns (uint) {
-        uint shiftedTimestamp = super.monthToTimestamp(_month);
+    function monthToTimestamp(uint month) public view override returns (uint) {
+        uint shiftedTimestamp = super.monthToTimestamp(month);
         if (_timeShift.length > 0) {
             _findTimeBeforeTimeShift(shiftedTimestamp);
         } else {
@@ -59,15 +61,15 @@ contract TimeHelpersWithDebug is TimeHelpers, OwnableUpgradeSafe {
 
     // private
 
-    function _getTimeShift(uint timestamp) internal view returns (uint) {
+    function _getTimeShift(uint timestamp) private view returns (uint) {
         if (_timeShift.length > 0) {
             if (timestamp < _timeShift[0].pointInTime) {
                 return 0;
-            } else if (timestamp >= _timeShift[_timeShift.length - 1].pointInTime) {
-                return _timeShift[_timeShift.length - 1].shift;
+            } else if (timestamp >= _timeShift[_timeShift.length.sub(1)].pointInTime) {
+                return _timeShift[_timeShift.length.sub(1)].shift;
             } else {
                 uint left = 0;
-                uint right = _timeShift.length - 1;
+                uint right = _timeShift.length.sub(1);
                 while (left + 1 < right) {
                     uint middle = left.add(right).div(2);
                     if (timestamp < _timeShift[middle].pointInTime) {
@@ -83,8 +85,8 @@ contract TimeHelpersWithDebug is TimeHelpers, OwnableUpgradeSafe {
         }
     }
 
-    function _findTimeBeforeTimeShift(uint shiftedTimestamp) internal view returns (uint) {
-        uint lastTimeShiftIndex = _timeShift.length - 1;
+    function _findTimeBeforeTimeShift(uint shiftedTimestamp) private view returns (uint) {
+        uint lastTimeShiftIndex = _timeShift.length.sub(1);
         if (_timeShift[lastTimeShiftIndex].pointInTime.add(_timeShift[lastTimeShiftIndex].shift)
             < shiftedTimestamp) {
             if (_timeShift[0].pointInTime.add(_timeShift[0].shift) < shiftedTimestamp) {

@@ -1,4 +1,4 @@
-import { ContractManagerInstance, NodesContract, NodesInstance } from "../../../types/truffle-contracts";
+import { ContractManagerInstance, NodesInstance } from "../../../types/truffle-contracts";
 import { deployConstantsHolder } from "./constantsHolder";
 import { deployValidatorService } from "./delegation/validatorService";
 import { deployFunctionFactory } from "./factory";

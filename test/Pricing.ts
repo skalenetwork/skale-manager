@@ -5,44 +5,111 @@ import * as chaiAsPromised from "chai-as-promised";
 import { ContractManagerInstance,
          NodesInstance,
          PricingInstance,
-         SchainsDataInstance } from "../types/truffle-contracts";
+         SchainsInternalInstance,
+         ValidatorServiceInstance,
+         SchainsInstance,
+         ConstantsHolderInstance,
+         NodeRotationInstance } from "../types/truffle-contracts";
+
 import { deployContractManager } from "./tools/deploy/contractManager";
 import { deployNodes } from "./tools/deploy/nodes";
 import { deployPricing } from "./tools/deploy/pricing";
-import { deploySchainsData } from "./tools/deploy/schainsData";
-import { skipTime } from "./tools/time";
+import { deploySchainsInternal } from "./tools/deploy/schainsInternal";
+import { skipTime, currentTime } from "./tools/time";
+import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
+import { deploySchains } from "./tools/deploy/schains";
+import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
+import { deployNodeRotation } from "./tools/deploy/nodeRotation";
 
 chai.should();
 chai.use(chaiAsPromised);
 
-contract("Pricing", ([owner, holder]) => {
+contract("Pricing", ([owner, holder, validator, nodeAddress]) => {
     let contractManager: ContractManagerInstance;
     let pricing: PricingInstance;
-    let schainsData: SchainsDataInstance;
+    let schainsInternal: SchainsInternalInstance;
+    let schains: SchainsInstance;
     let nodes: NodesInstance;
+    let validatorService: ValidatorServiceInstance;
+    let constants: ConstantsHolderInstance;
+    let nodeRotation: NodeRotationInstance;
 
     beforeEach(async () => {
         contractManager = await deployContractManager();
 
         nodes = await deployNodes(contractManager);
-        schainsData = await deploySchainsData(contractManager);
+        schainsInternal = await deploySchainsInternal(contractManager);
+        schains = await deploySchains(contractManager);
         pricing = await deployPricing(contractManager);
+        validatorService = await deployValidatorService(contractManager);
+        constants = await deployConstantsHolder(contractManager);
+        nodeRotation = await deployNodeRotation(contractManager);
+
+        await validatorService.registerValidator("Validator", "D2", 0, 0, {from: validator});
+        const validatorIndex = await validatorService.getValidatorId(validator);
+        let signature1 = await web3.eth.sign(web3.utils.soliditySha3(validatorIndex.toString()), nodeAddress);
+        signature1 = (signature1.slice(130) === "00" ? signature1.slice(0, 130) + "1b" :
+                (signature1.slice(130) === "01" ? signature1.slice(0, 130) + "1c" : signature1));
+        await validatorService.linkNodeAddress(nodeAddress, signature1, {from: validator});
     });
 
     describe("on initialized contracts", async () => {
         beforeEach(async () => {
-            await schainsData.initializeSchain("BobSchain", holder, 10, 2);
-            await schainsData.initializeSchain("DavidSchain", holder, 10, 4);
-            await schainsData.initializeSchain("JacobSchain", holder, 10, 8);
-            await nodes.addNode(holder, "John", "0x7f000001", "0x7f000002", 8545, "0x1122334455", 0);
-            await nodes.addNode(holder, "Michael", "0x7f000003", "0x7f000004", 8545, "0x1122334455", 0);
-            await nodes.addNode(holder, "Daniel", "0x7f000005", "0x7f000006", 8545, "0x1122334455", 0);
-            await nodes.addNode(holder, "Steven", "0x7f000007", "0x7f000008", 8545, "0x1122334455", 0);
+            await schainsInternal.initializeSchain("BobSchain", holder, 10, 2);
+            await schainsInternal.initializeSchain("DavidSchain", holder, 10, 4);
+            await schainsInternal.initializeSchain("JacobSchain", holder, 10, 8);
+            await nodes.createNode(
+                nodeAddress,
+                {
+                    port: 8545,
+                    nonce: 0,
+                    ip: "0x7f000001",
+                    publicIp: "0x7f000001",
+                    publicKey: ["0x1122334455667788990011223344556677889900112233445566778899001122",
+                                "0x1122334455667788990011223344556677889900112233445566778899001122"],
+                    name: "elvis1"
+                });
+
+            await nodes.createNode(
+                nodeAddress,
+                {
+                    port: 8545,
+                    nonce: 0,
+                    ip: "0x7f000003",
+                    publicIp: "0x7f000003",
+                    publicKey: ["0x1122334455667788990011223344556677889900112233445566778899001122",
+                                "0x1122334455667788990011223344556677889900112233445566778899001122"],
+                    name: "elvis2"
+                });
+
+            await nodes.createNode(
+                nodeAddress,
+                {
+                    port: 8545,
+                    nonce: 0,
+                    ip: "0x7f000005",
+                    publicIp: "0x7f000005",
+                    publicKey: ["0x1122334455667788990011223344556677889900112233445566778899001122",
+                                "0x1122334455667788990011223344556677889900112233445566778899001122"],
+                    name: "elvis3"
+                });
+
+            await nodes.createNode(
+                nodeAddress,
+                {
+                    port: 8545,
+                    nonce: 0,
+                    ip: "0x7f000007",
+                    publicIp: "0x7f000007",
+                    publicKey: ["0x1122334455667788990011223344556677889900112233445566778899001122",
+                                "0x1122334455667788990011223344556677889900112233445566778899001122"],
+                    name: "elvis4"
+                });
 
         });
 
         it("should increase number of schains", async () => {
-            const numberOfSchains = new BigNumber(await schainsData.numberOfSchains());
+            const numberOfSchains = new BigNumber(await schainsInternal.numberOfSchains());
             assert(numberOfSchains.isEqualTo(3));
         });
 
@@ -62,47 +129,35 @@ contract("Pricing", ([owner, holder]) => {
             const stevenNodeHash = web3.utils.soliditySha3("Steven");
 
             beforeEach(async () => {
-                const johnNodeIndex = new BigNumber(await nodes.nodesNameToIndex(johnNodeHash)).toNumber();
-                const michaelNodeIndex = new BigNumber(await nodes.nodesNameToIndex(michaelNodeHash)).toNumber();
-                const danielNodeIndex = new BigNumber(await nodes.nodesNameToIndex(danielNodeHash)).toNumber();
-                const stevenNodeIndex = new BigNumber(await nodes.nodesNameToIndex(stevenNodeHash)).toNumber();
 
-                await schainsData.addGroup(bobSchainHash, 1, bobSchainHash);
-                await schainsData.addGroup(davidSchainHash, 1, davidSchainHash);
-                await schainsData.addGroup(jacobSchainHash, 2, jacobSchainHash);
-
-                await schainsData.setNodeInGroup(bobSchainHash, johnNodeIndex);
-                await schainsData.setNodeInGroup(davidSchainHash, michaelNodeIndex);
-                await schainsData.setNodeInGroup(jacobSchainHash, danielNodeIndex);
-                await schainsData.setNodeInGroup(jacobSchainHash, stevenNodeIndex);
-
-                await schainsData.addSchainForNode(johnNodeIndex, bobSchainHash);
-                await schainsData.addSchainForNode(michaelNodeIndex, davidSchainHash);
-                await schainsData.addSchainForNode(danielNodeIndex, jacobSchainHash);
-                await schainsData.addSchainForNode(stevenNodeIndex, jacobSchainHash);
-
-                await schainsData.setSchainPartOfNode(bobSchainHash, 4);
-                await schainsData.setSchainPartOfNode(davidSchainHash, 4);
-                await schainsData.setSchainPartOfNode(jacobSchainHash, 1);
+                await schainsInternal.createGroupForSchain(bobSchainHash, 1, 32);
+                await schainsInternal.createGroupForSchain(davidSchainHash, 1, 32);
+                await schainsInternal.createGroupForSchain(jacobSchainHash, 2, 128);
 
             });
 
-            it("should check load percentage of network", async () => {
-                const numberOfNodes = new BigNumber(await nodes.getNumberOfNodes()).toNumber();
+            async function getLoadCoefficient() {
+                const numberOfNodes = (await nodes.getNumberOfNodes()).toNumber();
                 let sumNode = 0;
                 for (let i = 0; i < numberOfNodes; i++) {
-                    const getSchainIdsForNode = await schainsData.getSchainIdsForNode(i);
-                    for (const schain of getSchainIdsForNode) {
-                        const partOfNode = new BigNumber(await schainsData.getSchainsPartOfNode(schain)).toNumber();
-                        const isNodeLeft = await nodes.isNodeLeft(i);
-                        if (partOfNode !== 0  && !isNodeLeft) {
-                            sumNode += 128 / partOfNode;
+                    if (await nodes.isNodeActive(i)) {
+                        const getSchainIdsForNode = await schainsInternal.getSchainIdsForNode(i);
+                        for (const schain of getSchainIdsForNode) {
+                            const partOfNode = (await schainsInternal.getSchainsPartOfNode(schain)).toNumber();
+                            const isNodeLeft = await nodes.isNodeLeft(i);
+                            if (partOfNode !== 0  && !isNodeLeft) {
+                                sumNode += partOfNode;
+                            }
                         }
                     }
                 }
-                const newLoadPercentage = Math.floor((sumNode * 100) / (128 * numberOfNodes));
+                return sumNode / (128 * (await nodes.getNumberOnlineNodes()).toNumber());
+            }
+
+            it("should check load percentage of network", async () => {
+                const newLoadPercentage = Math.floor(await getLoadCoefficient() * 100);
                 const loadPercentage = new BigNumber(await pricing.getTotalLoadPercentage()).toNumber();
-                newLoadPercentage.should.be.equal(loadPercentage);
+                loadPercentage.should.be.equal(newLoadPercentage);
             });
 
             it("should check total number of nodes", async () => {
@@ -124,69 +179,116 @@ contract("Pricing", ([owner, holder]) => {
                     .should.be.eventually.rejectedWith("It's not a time to update a price");
             });
 
-            it("should rejected if price - priceChange overflowed price", async () => {
-                await nodes.addNode(holder, "vadim", "0x7f000010", "0x7f000011", 8545, "0x1122334455", 0);
-                skipTime(web3, 10 ** 6);
-                await pricing.adjustPrice()
-                    .should.be.eventually.rejectedWith("SafeMath: subtraction overflow");
-            });
-
             describe("change price when changing the number of nodes", async () => {
                 let oldPrice: number;
+                let lastUpdated: number;
 
                 beforeEach(async () => {
                     await pricing.initNodes();
-                    oldPrice = new BigNumber(await pricing.price()).toNumber();
+                    oldPrice = (await pricing.price()).toNumber();
+                    lastUpdated = (await pricing.lastUpdated()).toNumber()
                 });
 
-                async function getPrice(MINUTES_PASSED: number) {
-                    const MIN_PRICE = new BigNumber(await pricing.MIN_PRICE()).toNumber();
-                    const ADJUSTMENT_SPEED = new BigNumber(await pricing.ADJUSTMENT_SPEED()).toNumber();
-                    const OPTIMAL_LOAD_PERCENTAGE = new BigNumber(await pricing.OPTIMAL_LOAD_PERCENTAGE()).toNumber();
-                    const COOLDOWN_TIME = new BigNumber(await pricing.COOLDOWN_TIME()).toNumber();
-                    skipTime(web3, MINUTES_PASSED * COOLDOWN_TIME);
-                    await pricing.adjustPrice();
+                async function getPrice(secondSincePreviousUpdate: number) {
+                    const MIN_PRICE = (await constants.MIN_PRICE()).toNumber();
+                    const ADJUSTMENT_SPEED = (await constants.ADJUSTMENT_SPEED()).toNumber();
+                    const OPTIMAL_LOAD_PERCENTAGE = (await constants.OPTIMAL_LOAD_PERCENTAGE()).toNumber();
+                    const COOLDOWN_TIME = (await constants.COOLDOWN_TIME()).toNumber();
 
-                    const loadPercentage = new BigNumber(await pricing.getTotalLoadPercentage()).toNumber();
-                    let priceChange: number;
-                    if (loadPercentage < OPTIMAL_LOAD_PERCENTAGE) {
-                        priceChange = (-1) * (ADJUSTMENT_SPEED * oldPrice)
-                                      * (OPTIMAL_LOAD_PERCENTAGE - loadPercentage) / 10 ** 6;
-                    } else {
-                        priceChange = (ADJUSTMENT_SPEED * oldPrice)
-                                      * (loadPercentage - OPTIMAL_LOAD_PERCENTAGE) / 10 ** 6;
-                    }
-                    let price = oldPrice + priceChange * MINUTES_PASSED;
+                    const priceChangeSpeed = ADJUSTMENT_SPEED * (oldPrice / MIN_PRICE) * (await getLoadCoefficient() * 100 - OPTIMAL_LOAD_PERCENTAGE);
+                    let price = oldPrice + priceChangeSpeed * secondSincePreviousUpdate / COOLDOWN_TIME;
                     if (price < MIN_PRICE) {
                         price = MIN_PRICE;
                     }
-                    return price;
+                    return Math.floor(price);
                 }
 
                 it("should change price when new active node has been added", async () => {
-                    await nodes.addNode(holder, "vadim", "0x7f000010", "0x7f000011", 8545, "0x1122334455", 0);
+                    await nodes.createNode(
+                        nodeAddress,
+                        {
+                            port: 8545,
+                            nonce: 0,
+                            ip: "0x7f000010",
+                            publicIp: "0x7f000011",
+                            publicKey: ["0x1122334455667788990011223344556677889900112233445566778899001122",
+                                        "0x1122334455667788990011223344556677889900112233445566778899001122"],
+                            name: "vadim"
+                        });
                     const MINUTES_PASSED = 2;
-                    const price = await getPrice(MINUTES_PASSED);
-                    const newPrice = new BigNumber(await pricing.price()).toNumber();
-                    price.should.be.equal(newPrice);
-                    oldPrice.should.be.above(price);
+                    skipTime(web3, lastUpdated + MINUTES_PASSED * 60 - await currentTime(web3));
+
+                    await pricing.adjustPrice();
+                    const receivedPrice = (await pricing.price()).toNumber();
+
+                    const correctPrice = await getPrice((await pricing.lastUpdated()).toNumber() - lastUpdated);
+
+                    receivedPrice.should.be.equal(correctPrice);
+                    oldPrice.should.be.above(receivedPrice);
                 });
 
                 it("should change price when active node has been removed", async () => {
-                    await nodes.setNodeLeft(0);
+                    // search non full node to rotate
+                    let nodeToExit = -1;
+                    let numberOfSchains = 0;
+                    for (let i = 0; i < (await nodes.getNumberOfNodes()).toNumber(); i++) {
+                        if (await nodes.isNodeActive(i)) {
+                            const getSchainIdsForNode = await schainsInternal.getSchainIdsForNode(i);
+                            let totalPartOfNode = 0;
+                            numberOfSchains = 0;
+                            for (const schain of getSchainIdsForNode) {
+                                const partOfNode = (await schainsInternal.getSchainsPartOfNode(schain)).toNumber();
+                                ++numberOfSchains;
+                                totalPartOfNode += partOfNode;
+                            }
+                            if (totalPartOfNode < 100) {
+                                nodeToExit = i;
+                                break;
+                            }
+                        }
+                    }
+
+                    await nodes.initExit(nodeToExit);
+                    for(let i = 0; i < numberOfSchains; ++i) {
+                        await nodeRotation.exitFromSchain(nodeToExit);
+                    }
+                    await nodes.completeExit(nodeToExit);
+
                     const MINUTES_PASSED = 2;
-                    const price = await getPrice(MINUTES_PASSED);
-                    const newPrice = new BigNumber(await pricing.price()).toNumber();
-                    price.should.be.equal(newPrice);
-                    price.should.be.above(oldPrice);
+                    skipTime(web3, lastUpdated + MINUTES_PASSED * 60 - await currentTime(web3));
+
+                    await pricing.adjustPrice();
+                    const receivedPrice = (await pricing.price()).toNumber();
+
+                    const correctPrice = await getPrice((await pricing.lastUpdated()).toNumber() - lastUpdated);
+
+                    receivedPrice.should.be.equal(correctPrice);
+                    oldPrice.should.be.below(receivedPrice);
                 });
 
                 it("should set price to min of too many minutes passed and price is less than min", async () => {
-                    await nodes.addNode(holder, "vadim", "0x7f000010", "0x7f000011", 8545, "0x1122334455", 0);
+                    await nodes.createNode(
+                        nodeAddress,
+                        {
+                            port: 8545,
+                            nonce: 0,
+                            ip: "0x7f000010",
+                            publicIp: "0x7f000011",
+                            publicKey: ["0x1122334455667788990011223344556677889900112233445566778899001122",
+                                        "0x1122334455667788990011223344556677889900112233445566778899001122"],
+                            name: "vadim"
+                        });
+
                     const MINUTES_PASSED = 30;
-                    const price = await getPrice(MINUTES_PASSED);
-                    const MIN_PRICE = new BigNumber(await pricing.MIN_PRICE()).toNumber();
-                    price.should.be.equal(MIN_PRICE);
+                    skipTime(web3, lastUpdated + MINUTES_PASSED * 60 - await currentTime(web3));
+
+                    await pricing.adjustPrice();
+                    const receivedPrice = (await pricing.price()).toNumber();
+
+                    const correctPrice = await getPrice((await pricing.lastUpdated()).toNumber() - lastUpdated);
+
+                    receivedPrice.should.be.equal(correctPrice);
+                    oldPrice.should.be.above(receivedPrice);
                 });
             });
         });
