@@ -1,13 +1,13 @@
 import { ContractManagerInstance, PricingInstance } from "../../../types/truffle-contracts";
 import { deployFunctionFactory } from "./factory";
-import { deployNodesData } from "./nodesData";
-import { deploySchainsData } from "./schainsData";
+import { deployNodes } from "./nodes";
+import { deploySchainsInternal } from "./schainsInternal";
 
 const deployPricing: (contractManager: ContractManagerInstance) => Promise<PricingInstance>
     = deployFunctionFactory("Pricing",
                             async (contractManager: ContractManagerInstance) => {
-                                await deployNodesData(contractManager);
-                                await deploySchainsData(contractManager);
+                                await deployNodes(contractManager);
+                                await deploySchainsInternal(contractManager);
                             });
 
 export { deployPricing };

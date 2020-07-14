@@ -1,32 +1,31 @@
 {
   "manifestVersion": "2.2",
   "contracts": {
+    "ContractManager": "ContractManager",
     "DelegationController": "DelegationController",
     "DelegationPeriodManager": "DelegationPeriodManager",
     "Distributor": "Distributor",
+    "Punisher": "Punisher",
+    "SlashingTable": "SlashingTable",
     "TimeHelpers": "TimeHelpers",
+    "TokenLaunchLocker": "TokenLaunchLocker",
     "TokenLaunchManager": "TokenLaunchManager",
     "TokenState": "TokenState",
     "ValidatorService": "ValidatorService",
-    "ContractManager": "ContractManager",
     "ConstantsHolder": "ConstantsHolder",
-    "NodesData": "NodesData",
-    "NodesFunctionality": "NodesFunctionality",
-    "MonitorsData": "MonitorsData",
-    "MonitorsFunctionality": "MonitorsFunctionality",
-    "SchainsData": "SchainsData",
-    "SchainsFunctionality": "SchainsFunctionality",
-    "SchainsFunctionalityInternal": "SchainsFunctionalityInternal",
+    "Nodes": "Nodes",
+    "NodeRotation": "NodeRotation",
+    "Monitors": "Monitors",
+    "SchainsInternal": "SchainsInternal",
+    "Schains": "Schains",
     "Decryption": "Decryption",
     "ECDH": "ECDH",
+    "KeyStorage": "KeyStorage",
     "SkaleDKG": "SkaleDKG",
     "SkaleVerifier": "SkaleVerifier",
-    "ManagerData": "ManagerData",
     "SkaleManager": "SkaleManager",
     "Pricing": "Pricing",
-    "SlashingTable": "SlashingTable",
-    "Punisher": "Punisher",
-    "TokenLaunchLocker": "TokenLaunchLocker"
+    "Bounty": "Bounty"
   },
   "dependencies": {},
   "name": "skale-manager",
@@ -39,7 +38,7 @@
         "runs": "200"
       }
     },
-    "solcVersion": "0.5.16"
+    "solcVersion": "0.6.10"
   },
   "telemetryOptIn": true
 }

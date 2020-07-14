@@ -17,14 +17,26 @@ const { add, push, create } = scripts;
 let privateKey = process.env.PRIVATE_KEY;
 
 let SkaleToken = artifacts.require('./SkaleToken.sol');
+let ConstantsHolder = artifacts.require('./ConstantsHolder.sol');
 
-let gasLimit = 6900000;
+let gasLimit = 8000000;
 
 let erc1820Contract = erc1820Params.contractAddress;
 let erc1820Sender = erc1820Params.senderAddress;
 let erc1820Bytecode = erc1820Params.bytecode;
 let erc1820Amount = "80000000000000000";
-const production = false; // TODO: change to true before launch
+
+let production;
+
+if (process.env.PRODUCTION === "true") {
+    production = true;
+} else if (process.env.PRODUCTION === "false") {
+    production = false;
+} else {
+    console.log("Recheck Production variable in .env");
+    console.log("Set Production as false");
+    production = false;
+}
 
 async function deploy(deployer, networkName, accounts) {
     if (configFile.networks[networkName].host !== "" && configFile.networks[networkName].host !== undefined && configFile.networks[networkName].port !== "" && configFile.networks[networkName].port !== undefined) {
@@ -82,20 +94,19 @@ async function deploy(deployer, networkName, accounts) {
         "ValidatorService",
 
         "ConstantsHolder",
-        "NodesData",
-        "NodesFunctionality",
-        "MonitorsData",
-        "MonitorsFunctionality",
-        "SchainsData",
-        "SchainsFunctionality",
-        "SchainsFunctionalityInternal",
+        "Nodes",
+        "NodeRotation",
+        "Monitors",
+        "SchainsInternal",
+        "Schains",
         "Decryption",
         "ECDH",
+        "KeyStorage",
         "SkaleDKG",
         "SkaleVerifier",
-        "ManagerData",
         "SkaleManager",
-        "Pricing"
+        "Pricing",
+        "Bounty"
     ]
     if (!production) {
         contracts.push("TimeHelpersWithDebug");
@@ -150,11 +161,18 @@ async function deploy(deployer, networkName, accounts) {
         console.log("Contract Skale Token with address", SkaleToken.address, "registred in Contract Manager");
     });
 
-    // TODO: Remove after testing
-    const skaleToken = await SkaleToken.deployed();
-    await skaleToken.transfer(
-        deployed.get("SkaleManager").address,
-        "1000000000000000000000000000");
+    if (!production) {
+        // TODO: Remove after testing
+        const constants = await ConstantsHolder.at(deployed.get("ConstantsHolder").address);
+        await constants.setPeriods(3600, 300);
+        await constants.setCheckTime(120);
+        const skaleToken = await SkaleToken.deployed();
+        const money = "5000000000000000000000000000"; // 5e9 * 1e18
+        await skaleToken.mint(deployAccount, money, "0x", "0x");
+        await skaleToken.transfer(
+            deployed.get("SkaleManager").address,
+            "1000000000000000000000000000");
+    }
     
     console.log('Deploy done, writing results...');
 
@@ -169,12 +187,7 @@ async function deploy(deployer, networkName, accounts) {
     }
 
     await fsPromises.writeFile(`data/${networkName}.json`, JSON.stringify(jsonObject));
-    await sleep(10000);
     console.log(`Done, check ${networkName}.json file in data folder.`);
-}
-
-function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 module.exports = deploy;

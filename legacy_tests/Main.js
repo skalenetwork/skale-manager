@@ -29,9 +29,9 @@ async function validationPart(nodeIndex) {
 async function validationForAllNodes() {
     //console.log(numberOfNodes);
     for (let i = 0; i < numberOfNodes; i++) {
-        if (await init.NodesData.methods.isNodeActive(i)) {
+        if (await init.Nodes.methods.isNodeActive(i)) {
             await validationPart(i);
-            //await init.SchainsData.methods,getNodesInGroup()
+            //await init.SchainsInternal.methods,getNodesInGroup()
         }
     }
     //setTimeout(function(){validationForAllNodes()}, 10000);
@@ -39,11 +39,11 @@ async function validationForAllNodes() {
 
 let allActiveNodes = new Array();
 async function showActiveNodes(secondRandomNumber, rotated) {
-    let schainsForNode = await init.SchainsData.methods.getSchainIdsForNode(secondRandomNumber).call();
-    let activeFullNodes = await init.NodesData.methods.getActiveFullNodes().call();
+    let schainsForNode = await init.SchainsInternal.methods.getSchainIdsForNode(secondRandomNumber).call();
+    let activeFullNodes = await init.Nodes.methods.getActiveFullNodes().call();
     for (let i = 0; i < schainsForNode.length; i++) {
         let activeNodesInGroup = new Array();
-        let nodesInGroup = await init.SchainsData.methods.getNodesInGroup(schainsForNode[i]).call();
+        let nodesInGroup = await init.SchainsInternal.methods.getNodesInGroup(schainsForNode[i]).call();
         for (let j = 0; j < nodesInGroup.length; j++) {
             if (activeFullNodes.includes(nodesInGroup[j]) || nodesInGroup[j] == secondRandomNumber && !rotated) {
                 process.stdout.write(nodesInGroup[j] + ' ');
@@ -59,13 +59,13 @@ async function rotationNode(secondRandomNumber) {
     console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
     await showActiveNodes(secondRandomNumber, false);
     console.log('<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<')
-    let schainIds = await init.SchainsData.methods.getSchainIdsForNode(secondRandomNumber).call();
+    let schainIds = await init.SchainsInternal.methods.getSchainIdsForNode(secondRandomNumber).call();
     let nodeRotated = new Array();
     for (let i = 0; i < schainIds.length; i++) {
-        // await schainsFunctionality.rotateNode(schainIds[i]);
-        let tx_hash = await init.SchainsFunctionality.methods.rotateNode(schainIds[i]).send({from: init.mainAccount, gas: 6900000});
+        // await schains.rotateNode(schainIds[i]);
+        let tx_hash = await init.Schains.methods.rotateNode(schainIds[i]).send({from: init.mainAccount, gas: 6900000});
         let blockNumber = tx_hash.blockNumber;
-        await init.SchainsFunctionality.getPastEvents('NodeRotated', {fromBlock: blockNumber, toBlock: blockNumber}).then(
+        await init.Schains.getPastEvents('NodeRotated', {fromBlock: blockNumber, toBlock: blockNumber}).then(
             function(events) {
                 for (let i = 0; i < events.length; i++) {
                     // console.log(events[i].returnValues);
@@ -135,8 +135,8 @@ async function main(numberOfIterations) {
     let iter = 0;
     while (iter < 40) {
         let secondRandomNumber = Math.floor(Math.random() * numberOfNodes);
-        let schainIds = await init.SchainsData.methods.getSchainIdsForNode(secondRandomNumber).call();
-        if (await init.NodesData.methods.isNodeActive(secondRandomNumber).call() && schainIds.length) {
+        let schainIds = await init.SchainsInternal.methods.getSchainIdsForNode(secondRandomNumber).call();
+        if (await init.Nodes.methods.isNodeActive(secondRandomNumber).call() && schainIds.length) {
             console.log("Delete node", secondRandomNumber);
             await rotationValidator(secondRandomNumber);
             await nodes.deleteNode(secondRandomNumber);

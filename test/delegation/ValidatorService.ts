@@ -14,6 +14,7 @@ import { deployContractManager } from "../tools/deploy/contractManager";
 import { deployDelegationController } from "../tools/deploy/delegation/delegationController";
 import { deployValidatorService } from "../tools/deploy/delegation/validatorService";
 import { deploySkaleToken } from "../tools/deploy/skaleToken";
+
 chai.should();
 chai.use(chaiAsPromised);
 
@@ -25,8 +26,9 @@ class Validator {
     public feeRate: BigNumber;
     public registrationTime: BigNumber;
     public minimumDelegationAmount: BigNumber;
+    public acceptNewRequests: boolean;
 
-    constructor(arrayData: [string, string, string, string, BigNumber, BigNumber, BigNumber]) {
+    constructor(arrayData: [string, string, string, string, BigNumber, BigNumber, BigNumber, boolean]) {
         this.name = arrayData[0];
         this.validatorAddress = arrayData[1];
         this.requestedAddress = arrayData[2];
@@ -34,6 +36,7 @@ class Validator {
         this.feeRate = new BigNumber(arrayData[4]);
         this.registrationTime = new BigNumber(arrayData[5]);
         this.minimumDelegationAmount = new BigNumber(arrayData[6]);
+        this.acceptNewRequests = arrayData[7];
     }
 }
 
@@ -137,7 +140,7 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
                 (signature.slice(130) === "01" ? signature.slice(0, 130) + "1c" : signature));
             await validatorService.linkNodeAddress(nodeAddress, signature, {from: validator1});
             await validatorService.unlinkNodeAddress(validator1, {from: nodeAddress})
-                .should.be.eventually.rejectedWith("Validator with such address does not exist");
+                .should.be.eventually.rejectedWith("Validator with given address does not exist");
         });
 
         it("should reject if validator tried to override node address of another validator", async () => {
@@ -190,13 +193,13 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
                 100,
                 {from: validator2});
             await validatorService.unlinkNodeAddress(nodeAddress, {from: validator2})
-                .should.be.eventually.rejectedWith("Validator hasn't permissions to unlink node");
+                .should.be.eventually.rejectedWith("Validator does not have permissions to unlink node");
             const id = new BigNumber(await validatorService.getValidatorIdByNodeAddress(nodeAddress)).toNumber();
             assert.equal(id, validatorId.toNumber());
 
             await validatorService.unlinkNodeAddress(nodeAddress, {from: validator1});
             await validatorService.getValidatorId(nodeAddress, {from: validator1})
-                .should.be.eventually.rejectedWith("Validator with such address does not exist");
+                .should.be.eventually.rejectedWith("Validator with given address does not exist");
         });
 
         it("should not allow changing the address to the address of an existing validator", async () => {
@@ -227,14 +230,14 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
                 await validatorService.confirmNewAddress(validatorId, {from: validator3});
                 assert.deepEqual(validatorId, new BigNumber(await validatorService.getValidatorId(validator3)));
                 await validatorService.getValidatorId(validator1)
-                    .should.be.eventually.rejectedWith("Validator with such address does not exist");
+                    .should.be.eventually.rejectedWith("Validator with given address does not exist");
 
             });
         });
 
         it("should reject when someone tries to set new address for validator that doesn't exist", async () => {
             await validatorService.requestForNewAddress(validator2)
-                .should.be.eventually.rejectedWith("Validator with such address does not exist");
+                .should.be.eventually.rejectedWith("Validator with given address does not exist");
         });
 
         it("should reject if validator tries to set new address as null", async () => {
@@ -267,7 +270,12 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
             whitelist.push(validatorId1);
             await validatorService.enableValidator(validatorId3, {from: owner});
             whitelist.push(validatorId3);
-            const trustedList = (await validatorService.getTrustedValidators()).map(Number);
+            let trustedList = (await validatorService.getTrustedValidators()).map(Number);
+            assert.deepEqual(whitelist, trustedList);
+
+            await validatorService.disableValidator(validatorId3, {from: owner});
+            whitelist.pop();
+            trustedList = (await validatorService.getTrustedValidators()).map(Number);
             assert.deepEqual(whitelist, trustedList);
         });
 
@@ -282,25 +290,31 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
                 amount = 100;
                 delegationPeriod = 3;
                 info = "NICE";
-                await skaleToken.mint(owner, holder, 200, "0x", "0x");
-                await skaleToken.mint(owner, validator3, 200, "0x", "0x");
+                await skaleToken.mint(holder, 200, "0x", "0x");
+                await skaleToken.mint(validator3, 200, "0x", "0x");
             });
 
             it("should allow to enable validator in whitelist", async () => {
                 await validatorService.enableValidator(validatorId, {from: validator1})
-                    .should.be.eventually.rejectedWith("Ownable: caller is not the owner");
+                    .should.be.eventually.rejectedWith("Caller is not an admin");
                 await validatorService.enableValidator(validatorId, {from: owner});
             });
 
             it("should allow to disable validator from whitelist", async () => {
                 await validatorService.disableValidator(validatorId, {from: validator1})
-                    .should.be.eventually.rejectedWith("Ownable: caller is not the owner");
+                    .should.be.eventually.rejectedWith("Caller is not an admin");
+                await validatorService.disableValidator(validatorId, {from: owner})
+                    .should.be.eventually.rejectedWith("Validator is already disabled");
+
+                await validatorService.enableValidator(validatorId, {from: owner});
+                await validatorService.isAuthorizedValidator(validatorId).should.eventually.be.true;
                 await validatorService.disableValidator(validatorId, {from: owner});
+                await validatorService.isAuthorizedValidator(validatorId).should.eventually.be.false;
             });
 
             it("should not allow to send delegation request if validator isn't authorized", async () => {
                 await delegationController.delegate(validatorId, amount, delegationPeriod, info, {from: holder})
-                    .should.be.eventually.rejectedWith("Validator is not authorized to accept request");
+                    .should.be.eventually.rejectedWith("Validator is not authorized to accept delegation request");
             });
 
             it("should allow to send delegation request if validator is authorized", async () => {
@@ -308,65 +322,21 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
                 await delegationController.delegate(validatorId, amount, delegationPeriod, info, {from: holder});
             });
 
-            it("should not allow to create node if new epoch isn't started", async () => {
-                await validatorService.enableValidator(validatorId, {from: owner});
+            it("should be possible for the validator to enable and disable new delegation requests", async () => {
+                await validatorService.enableValidator(validatorId);
+                // should be enabled by default
                 await delegationController.delegate(validatorId, amount, delegationPeriod, info, {from: holder});
-                const delegationId = 0;
-                await delegationController.acceptPendingDelegation(delegationId, {from: validator1});
 
-                await validatorService.checkPossibilityCreatingNode(nodeAddress)
-                    .should.be.eventually.rejectedWith("Validator must meet Minimum Staking Requirement");
-            });
+                await validatorService.stopAcceptingNewRequests({from: holder})
+                    .should.be.eventually.rejectedWith("Validator with given address does not exist");
 
-            it("should allow to create node if new epoch is started", async () => {
-                await validatorService.enableValidator(validatorId, {from: owner});
+                await validatorService.stopAcceptingNewRequests({from: validator1})
+                await delegationController.delegate(validatorId, amount, delegationPeriod, info, {from: holder})
+                    .should.be.eventually.rejectedWith("The validator is not currently accepting new requests");
+
+                await validatorService.startAcceptingNewRequests({from: validator1});
                 await delegationController.delegate(validatorId, amount, delegationPeriod, info, {from: holder});
-                const delegationId = 0;
-                await delegationController.acceptPendingDelegation(delegationId, {from: validator1});
-                skipTime(web3, month);
-
-                await validatorService.checkPossibilityCreatingNode(nodeAddress)
-                    .should.be.eventually.rejectedWith("Validator must meet Minimum Staking Requirement");
-
-                await constantsHolder.setMSR(amount);
-
-                // now it should not reject
-                await validatorService.checkPossibilityCreatingNode(nodeAddress);
-
-                await validatorService.pushNode(nodeAddress, 0);
-                const nodeIndexBN = (await validatorService.getValidatorNodeIndexes(validatorId))[0];
-                const nodeIndex = new BigNumber(nodeIndexBN).toNumber();
-                assert.equal(nodeIndex, 0);
-            });
-
-            it("should allow to create 2 nodes", async () => {
-                await validatorService.enableValidator(validatorId, {from: owner});
-                await delegationController.delegate(validatorId, amount, delegationPeriod, info, {from: holder});
-                const delegationId1 = 0;
-                await delegationController.acceptPendingDelegation(delegationId1, {from: validator1});
-                await delegationController.delegate(validatorId, amount, delegationPeriod, info, {from: validator3});
-                const delegationId2 = 1;
-                await delegationController.acceptPendingDelegation(delegationId2, {from: validator1});
-
-                skipTime(web3, 2678400); // 31 days
-                await validatorService.checkPossibilityCreatingNode(nodeAddress)
-                    .should.be.eventually.rejectedWith("Validator must meet Minimum Staking Requirement");
-
-                await constantsHolder.setMSR(amount);
-
-                await validatorService.checkPossibilityCreatingNode(nodeAddress);
-                await validatorService.pushNode(nodeAddress, 0);
-
-                await validatorService.checkPossibilityCreatingNode(nodeAddress);
-                await validatorService.pushNode(nodeAddress, 1);
-
-                const nodeIndexesBN = (await validatorService.getValidatorNodeIndexes(validatorId));
-                for (let i = 0; i < nodeIndexesBN.length; i++) {
-                    const nodeIndexBN = (await validatorService.getValidatorNodeIndexes(validatorId))[i];
-                    const nodeIndex = new BigNumber(nodeIndexBN).toNumber();
-                    assert.equal(nodeIndex, i);
-                }
-            });
+            })
         });
     });
 });

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 /*
     ConstantsHolder.sol - SKALE Manager
     Copyright (C) 2018-Present SKALE Labs
@@ -17,29 +19,30 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.5.16;
+pragma solidity 0.6.10;
 
 import "./Permissions.sol";
-import "./interfaces/IConstants.sol";
 
 
 /**
  * @title Contains constants and common variables for Skale Manager system
  * @author Artem Payvin
  */
-contract ConstantsHolder is IConstants, Permissions {
+contract ConstantsHolder is Permissions {
 
     // initial price for creating Node (100 SKL)
     uint public constant NODE_DEPOSIT = 100 * 1e18;
 
-    // part of Node for Tiny Skale-chain (1/128 of Node)
-    uint8 public constant TINY_DIVISOR = 128;
+    uint8 public constant TOTAL_SPACE_ON_NODE = 128;
 
-    // part of Node for Small Skale-chain (1/8 of Node)
-    uint8 public constant SMALL_DIVISOR = 8;
+    // part of Node for Small Skale-chain (1/128 of Node)
+    uint8 public constant SMALL_DIVISOR = 128;
 
-    // part of Node for Medium Skale-chain (full Node)
-    uint8 public constant MEDIUM_DIVISOR = 1;
+    // part of Node for Medium Skale-chain (1/8 of Node)
+    uint8 public constant MEDIUM_DIVISOR = 8;
+
+    // part of Node for Large Skale-chain (full Node)
+    uint8 public constant LARGE_DIVISOR = 1;
 
     // part of Node for Medium Test Skale-chain (1/4 of Node)
     uint8 public constant MEDIUM_TEST_DIVISOR = 4;
@@ -51,28 +54,27 @@ contract ConstantsHolder is IConstants, Permissions {
     uint public constant NUMBER_OF_NODES_FOR_TEST_SCHAIN = 2;
 
     // number of Nodes for Test Skale-chain (4 Nodes)
-    uint public constant NUMBER_OF_NODES_FOR_MEDIUM_TEST_SCHAIN = 4;
-
-    // 'Fractional' Part of ratio for create Fractional or Full Node
-    uint public constant FRACTIONAL_FACTOR = 128;
-
-    // 'Full' part of ratio for create Fractional or Full Node
-    uint public constant FULL_FACTOR = 17;
-
-    // number of second in one day
-    uint32 public constant SECONDS_TO_DAY = 86400;
-
-    // number of seconds in one month
-    uint32 public constant SECONDS_TO_MONTH = 2592000;
+    uint public constant NUMBER_OF_NODES_FOR_MEDIUM_TEST_SCHAIN = 4;    
 
     // number of seconds in one year
     uint32 public constant SECONDS_TO_YEAR = 31622400;
 
-    // number of seconds in six years
-    uint32 public constant SIX_YEARS = 186624000;
-
     // initial number of monitors
     uint public constant NUMBER_OF_MONITORS = 24;
+
+    uint public constant OPTIMAL_LOAD_PERCENTAGE = 80;
+
+    uint public constant ADJUSTMENT_SPEED = 1000;
+
+    uint public constant COOLDOWN_TIME = 60;
+
+    uint public constant MIN_PRICE = 10**6;
+
+    uint public constant MSR_REDUCING_COEFFICIENT = 2;
+
+    uint public constant DOWNTIME_THRESHOLD_PART = 30;
+
+    uint public constant BOUNTY_LOCKUP_MONTHS = 3;
 
     // MSR - Minimum staking requirement
     uint public msr;
@@ -94,19 +96,7 @@ contract ConstantsHolder is IConstants, Permissions {
      * Check time - 2 minutes (every 2 minutes monitors should check metrics
      * from checked nodes)
      */
-    uint8 public checkTime;
-
-    /**
-     * Last time when system was underloaded
-     * (allocations on Skale-chain / allocations on Nodes < 75%)
-     */
-    uint public lastTimeUnderloaded;
-
-    /**
-     * Last time when system was overloaded
-     * (allocations on Skale-chain / allocations on Nodes > 85%)
-     */
-    uint public lastTimeOverloaded;
+    uint public checkTime;
 
     //Need to add minimal allowed parameters for verdicts
 
@@ -116,6 +106,8 @@ contract ConstantsHolder is IConstants, Permissions {
 
     uint public proofOfUseLockUpPeriodDays;
 
+    uint public proofOfUseDelegationPercentage;
+
     /**
      * Set reward and delta periods to new one, run only by owner. This function
      * only for tests.
@@ -123,6 +115,10 @@ contract ConstantsHolder is IConstants, Permissions {
      * @param newDeltaPeriod - new Delta period
      */
     function setPeriods(uint32 newRewardPeriod, uint32 newDeltaPeriod) external onlyOwner {
+        require(
+            newRewardPeriod >= newDeltaPeriod && newRewardPeriod - newDeltaPeriod >= checkTime,
+            "Incorrect Periods"
+        );
         rewardPeriod = newRewardPeriod;
         deltaPeriod = newDeltaPeriod;
     }
@@ -131,23 +127,10 @@ contract ConstantsHolder is IConstants, Permissions {
      * Set new check time. This function only for tests.
      * @param newCheckTime - new check time
      */
-    function setCheckTime(uint8 newCheckTime) external onlyOwner {
+    function setCheckTime(uint newCheckTime) external onlyOwner {
+        require(rewardPeriod - deltaPeriod >= checkTime, "Incorrect check time");
         checkTime = newCheckTime;
-    }
-
-    /**
-     * Set time if system underloaded, run only by NodesFunctionality contract
-     */
-    function setLastTimeUnderloaded() external allow("NodesFunctionality") {
-        lastTimeUnderloaded = now;
-    }
-
-    /**
-     * Set time if system iverloaded, run only by SchainsFunctionality contract
-     */
-    function setLastTimeOverloaded() external allow("SchainsFunctionality") {
-        lastTimeOverloaded = now;
-    }
+    }    
 
     /**
      * Set latency new one in ms, run only by owner. This function
@@ -163,6 +146,7 @@ contract ConstantsHolder is IConstants, Permissions {
     }
 
     function setLaunchTimestamp(uint timestamp) external onlyOwner {
+        require(now < launchTimestamp, "Can't set network launch timestamp because network is already launched");
         launchTimestamp = timestamp;
     }
 
@@ -174,22 +158,26 @@ contract ConstantsHolder is IConstants, Permissions {
         proofOfUseLockUpPeriodDays = periodDays;
     }
 
+    function setProofOfUseDelegationPercentage(uint percentage) external onlyOwner {
+        require(percentage <= 100, "Percentage value is incorrect");
+        proofOfUseDelegationPercentage = percentage;
+    }
+
     /**
      * @dev constructor in Permissions approach
      * @param contractsAddress needed in Permissions constructor
      */
-    function initialize(address contractsAddress) public initializer {
+    function initialize(address contractsAddress) public override initializer {
         Permissions.initialize(contractsAddress);
 
-        msr = 5e6 * 1e18;
-        rewardPeriod = 3600; // Test parameters
-        allowableLatency = 150000; // Test parameters
-        deltaPeriod = 300;  // Test parameters
-        checkTime = 120; // Test parameters
-        lastTimeUnderloaded = 0;
-        lastTimeOverloaded = 0;
-        launchTimestamp = now;
+        msr = 0;
+        rewardPeriod = 86400;
+        allowableLatency = 150000;
+        deltaPeriod = 3600;
+        checkTime = 300;
+        launchTimestamp = uint(-1);
         rotationDelay = 12 hours;
         proofOfUseLockUpPeriodDays = 90;
+        proofOfUseDelegationPercentage = 50;
     }
 }

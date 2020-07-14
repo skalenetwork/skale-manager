@@ -37,50 +37,79 @@ contract("TokenLaunchManager", ([owner, holder, delegation, validator, seller, h
 
         // each test will start from Nov 10
         await skipTimeToDate(web3, 10, 11);
-        await skaleToken.mint(owner, TokenLaunchManager.address, 1e9, "0x", "0x");
+        await skaleToken.mint(TokenLaunchManager.address, 1e9, "0x", "0x");
         await validatorService.registerValidator("Validator", "D2 is even", 150, 0, {from: validator});
         await validatorService.enableValidator(1, {from: owner});
     });
 
     it("should register seller", async () => {
-        await TokenLaunchManager.registerSeller(seller);
+        await TokenLaunchManager.grantRole(await TokenLaunchManager.SELLER_ROLE(), seller);
+        await TokenLaunchManager.hasRole(await TokenLaunchManager.SELLER_ROLE(), seller).should.be.eventually.true;
     });
 
     it("should not register seller if sender is not owner", async () => {
-        await TokenLaunchManager.registerSeller(seller, {from: hacker}).should.be.eventually.rejectedWith("Ownable: caller is not the owner");
+        await TokenLaunchManager.grantRole(await TokenLaunchManager.SELLER_ROLE(), seller, {from: hacker})
+            .should.be.eventually.rejectedWith("sender must be an admin to grant");
     });
 
     describe("when seller is registered", async () => {
         beforeEach(async () => {
-            await TokenLaunchManager.registerSeller(seller);
+            await TokenLaunchManager.grantRole(await TokenLaunchManager.SELLER_ROLE(), seller);
         });
 
         it("should not allow to approve transfer if sender is not seller", async () => {
-            await TokenLaunchManager.approve([holder], [10], {from: hacker})
+            await TokenLaunchManager.approveTransfer(holder, 10, {from: hacker})
                 .should.be.eventually.rejectedWith("Not authorized");
         });
 
         it("should fail if parameter arrays are with different lengths", async () => {
-            await TokenLaunchManager.approve([holder, hacker], [10], {from: seller})
+            await TokenLaunchManager.approveBatchOfTransfers([holder, hacker], [10], {from: seller})
                 .should.be.eventually.rejectedWith("Wrong input arrays length");
         });
 
         it("should not allow to approve transfers with more then total money amount in sum", async () => {
-            await TokenLaunchManager.approve([holder, hacker], [5e8, 5e8 + 1], {from: seller})
+            await TokenLaunchManager.approveBatchOfTransfers([holder, hacker], [5e8, 5e8 + 1], {from: seller})
                 .should.be.eventually.rejectedWith("Balance is too low");
         });
 
         it("should not allow to retrieve funds if it was not approved", async () => {
+            await TokenLaunchManager.completeTokenLaunch({from: seller});
             await TokenLaunchManager.retrieve({from: hacker})
                 .should.be.eventually.rejectedWith("Transfer is not approved");
         });
 
+        it("should not allow to retrieve funds if launch is not completed", async () => {
+            await TokenLaunchManager.approveBatchOfTransfers([holder], [10], {from: seller});
+            await TokenLaunchManager.retrieve({from: holder})
+                .should.be.eventually.rejectedWith("Can't retrive tokens because token launch is not completed");
+        });
+
         it("should allow seller to approve transfer to buyer", async () => {
-            await TokenLaunchManager.approve([holder], [10], {from: seller});
+            await TokenLaunchManager.approveBatchOfTransfers([holder], [10], {from: seller});
+            await TokenLaunchManager.completeTokenLaunch({from: seller});
             await TokenLaunchManager.retrieve({from: holder});
             (await skaleToken.balanceOf(holder)).toNumber().should.be.equal(10);
             await skaleToken.transfer(hacker, "1", {from: holder}).should.be.eventually.rejectedWith("Token should be unlocked for transferring");
         });
+
+        it("should allow seller to change address of approval", async () => {
+            await TokenLaunchManager.approveTransfer(hacker, 10, {from: seller});
+            await TokenLaunchManager.changeApprovalAddress(hacker, holder, {from: seller});
+            await TokenLaunchManager.completeTokenLaunch({from: seller});
+            await TokenLaunchManager.retrieve({from: hacker})
+                .should.be.eventually.rejectedWith("Transfer is not approved");
+            await TokenLaunchManager.retrieve({from: holder});
+            (await skaleToken.balanceOf(hacker)).toNumber().should.be.equal(0);
+            (await skaleToken.balanceOf(holder)).toNumber().should.be.equal(10);
+        })
+
+        it("should allow seller to change value of approval", async () => {
+            await TokenLaunchManager.approveTransfer(holder, 10, {from: seller});
+            await TokenLaunchManager.changeApprovalValue(holder, 5, {from: seller});
+            await TokenLaunchManager.completeTokenLaunch({from: seller});
+            await TokenLaunchManager.retrieve({from: holder});
+            (await skaleToken.balanceOf(holder)).toNumber().should.be.equal(5);
+        })
 
         describe("when holder bought tokens", async () => {
             const validatorId = 1;
@@ -88,7 +117,8 @@ contract("TokenLaunchManager", ([owner, holder, delegation, validator, seller, h
             const month = 60 * 60 * 24 * 31;
 
             beforeEach(async () => {
-                await TokenLaunchManager.approve([holder], [totalAmount], {from: seller});
+                await TokenLaunchManager.approveTransfer(holder, totalAmount, {from: seller});
+                await TokenLaunchManager.completeTokenLaunch({from: seller});
                 await TokenLaunchManager.retrieve({from: holder});
             });
 
@@ -346,7 +376,7 @@ contract("TokenLaunchManager", ([owner, holder, delegation, validator, seller, h
                 const purchasedAmount = totalAmount;
                 const period = 12;
 
-                await skaleToken.mint(owner, holder, freeAmount, "0x", "0x");
+                await skaleToken.mint(holder, freeAmount, "0x", "0x");
 
                 (await skaleToken.getAndUpdateLockedAmount.call(holder)).toNumber().should.be.equal(purchasedAmount);
 

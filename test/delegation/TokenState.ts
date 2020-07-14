@@ -37,7 +37,7 @@ contract("DelegationController", ([owner, holder, validator]) => {
         await validatorService.registerValidator("Validator", "D2 is even", 150, 0, {from: validator});
         validatorId = 1;
         await validatorService.enableValidator(validatorId, {from: owner});
-        await skaleToken.mint(owner, holder, 1000, "0x", "0x");
+        await skaleToken.mint(holder, 1000, "0x", "0x");
     });
 
     it("should not lock tokens by default", async () => {
@@ -95,7 +95,7 @@ contract("DelegationController", ([owner, holder, validator]) => {
             skipTime(web3, month);
 
             await delegationController.acceptPendingDelegation(delegationId, {from: validator})
-                .should.eventually.be.rejectedWith("Cannot set state to accepted");
+                .should.eventually.be.rejectedWith("The delegation request is outdated");
 
             const state = await delegationController.getState(delegationId);
             state.toNumber().should.be.equal(State.REJECTED);
@@ -126,7 +126,7 @@ contract("DelegationController", ([owner, holder, validator]) => {
 
             it("should not allow to cancel accepted request", async () => {
                 await delegationController.cancelPendingDelegation(delegationId, {from: holder})
-                    .should.be.eventually.rejectedWith("Token holders able to cancel only PROPOSED delegations");
+                    .should.be.eventually.rejectedWith("Token holders are only able to cancel PROPOSED delegations");
             });
 
             describe("when 1 month was passed", async () => {

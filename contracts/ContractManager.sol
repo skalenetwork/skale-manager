@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 /*
     ContractManager.sol - SKALE Manager
     Copyright (C) 2018-Present SKALE Labs
@@ -17,10 +19,11 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.5.16;
+pragma solidity 0.6.10;
 
-import "@openzeppelin/contracts-ethereum-package/contracts/ownership/Ownable.sol";
-import "@openzeppelin/upgrades/contracts/Initializable.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
+
 import "./utils/StringUtils.sol";
 
 
@@ -29,8 +32,9 @@ import "./utils/StringUtils.sol";
  * current mapping from contract IDs (in the form of human-readable strings) to addresses.
  * @author Artem Payvin
  */
-contract ContractManager is Initializable, Ownable {
+contract ContractManager is OwnableUpgradeSafe {
     using StringUtils for string;
+    using Address for address;
 
     // mapping of actual smart contracts addresses
     mapping (bytes32 => address) public contracts;
@@ -38,7 +42,7 @@ contract ContractManager is Initializable, Ownable {
     event ContractUpgraded(string contractsName, address contractsAddress);
 
     function initialize() external initializer {
-        Ownable.initialize(msg.sender);
+        OwnableUpgradeSafe.__Ownable_init();
     }
 
     /**
@@ -53,12 +57,7 @@ contract ContractManager is Initializable, Ownable {
         bytes32 contractId = keccak256(abi.encodePacked(contractsName));
         // check newContractsAddress is not equal the previous contract's address
         require(contracts[contractId] != newContractsAddress, "Contract is already added");
-        uint length;
-        assembly {
-            length := extcodesize(newContractsAddress)
-        }
-        // check newContractsAddress contains code
-        require(length > 0, "Given contracts address does not contain code");
+        require(newContractsAddress.isContract(), "Given contracts address does not contain code");
         // add newContractsAddress to mapping of actual contract addresses
         contracts[contractId] = newContractsAddress;
         emit ContractUpgraded(contractsName, newContractsAddress);

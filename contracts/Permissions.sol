@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 /*
     Permissions.sol - SKALE Manager
     Copyright (C) 2018-Present SKALE Labs
@@ -17,25 +19,35 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.5.16;
+pragma solidity 0.6.10;
+
+import "@openzeppelin/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/access/AccessControl.sol";
 
 import "./ContractManager.sol";
-import "@openzeppelin/contracts/math/SafeMath.sol";
 
 
 /**
  * @title Permissions - connected module for Upgradeable approach, knows ContractManager
  * @author Artem Payvin
  */
-contract Permissions is Ownable {
+contract Permissions is AccessControlUpgradeSafe {
     using SafeMath for uint;
-    using SafeMath for uint32;
+    using Address for address;
+    
+    ContractManager public contractManager;
 
-    ContractManager contractManager;
+    /**
+     * @dev Throws if called by any account other than the owner.
+     */
+    modifier onlyOwner() {
+        require(_isOwner(), "Caller is not the owner");
+        _;
+    }
 
-    function initialize(address _contractManager) public initializer {
-        Ownable.initialize(msg.sender);
-        contractManager = ContractManager(_contractManager);
+    modifier onlyAdmin() {
+        require(_isAdmin(msg.sender), "Caller is not an admin");
+        _;
     }
 
     /**
@@ -45,7 +57,7 @@ contract Permissions is Ownable {
      */
     modifier allow(string memory contractName) {
         require(
-            contractManager.contracts(keccak256(abi.encodePacked(contractName))) == msg.sender || isOwner(),
+            contractManager.contracts(keccak256(abi.encodePacked(contractName))) == msg.sender || _isOwner(),
             "Message sender is invalid");
         _;
     }
@@ -54,7 +66,7 @@ contract Permissions is Ownable {
         require(
             contractManager.contracts(keccak256(abi.encodePacked(contractName1))) == msg.sender ||
             contractManager.contracts(keccak256(abi.encodePacked(contractName2))) == msg.sender ||
-            isOwner(),
+            _isOwner(),
             "Message sender is invalid");
         _;
     }
@@ -64,8 +76,34 @@ contract Permissions is Ownable {
             contractManager.contracts(keccak256(abi.encodePacked(contractName1))) == msg.sender ||
             contractManager.contracts(keccak256(abi.encodePacked(contractName2))) == msg.sender ||
             contractManager.contracts(keccak256(abi.encodePacked(contractName3))) == msg.sender ||
-            isOwner(),
+            _isOwner(),
             "Message sender is invalid");
         _;
+    }
+
+    function initialize(address contractManagerAddress) public virtual initializer {
+        AccessControlUpgradeSafe.__AccessControl_init();
+        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _setContractManager(contractManagerAddress);
+    }
+
+    function _isOwner() internal view returns (bool) {
+        return hasRole(DEFAULT_ADMIN_ROLE, msg.sender);
+    }
+
+    function _isAdmin(address account) internal view returns (bool) {
+        address skaleManagerAddress = contractManager.contracts(keccak256(abi.encodePacked("SkaleManager")));
+        if (skaleManagerAddress != address(0)) {
+            AccessControlUpgradeSafe skaleManager = AccessControlUpgradeSafe(skaleManagerAddress);
+            return skaleManager.hasRole(keccak256("ADMIN_ROLE"), account) || _isOwner();
+        } else {
+            return _isOwner();
+        }
+    }
+
+    function _setContractManager(address contractManagerAddress) private {
+        require(contractManagerAddress != address(0), "ContractManager address is not set");
+        require(contractManagerAddress.isContract(), "Address is not contract");
+        contractManager = ContractManager(contractManagerAddress);
     }
 }

@@ -10,20 +10,20 @@ function generateRandomName() {
 async function createSchain(typeOfSchain, lifetime) {
     let account = init.mainAccount;
     let schainName = generateRandomName();
-    let k = await init.SchainsData.methods.isSchainNameAvailable(schainName).call();
+    let k = await init.SchainsInternal.methods.isSchainNameAvailable(schainName).call();
     while (!k) {
         schainName = generateRandomName();
-        k = await init.SchainsData.methods.isSchainNameAvailable(schainName).call();
+        k = await init.SchainsInternal.methods.isSchainNameAvailable(schainName).call();
     }
     let data = await GenerateBytesData.generateBytesForSchain(lifetime, typeOfSchain, schainName);
     console.log("Generated data:", data);
-    let res = await init.SchainsFunctionality.methods.getSchainPrice(typeOfSchain, lifetime).call();
+    let res = await init.Schains.methods.getSchainPrice(typeOfSchain, lifetime).call();
     console.log("Schain Price:", res);
 	let deposit = res;
 	let accountDeposit = await init.SkaleToken.methods.balanceOf(account).call();
-    let numberOfFullNodes = await init.NodesData.methods.getNumberOfFullNodes().call();
-    let numberOfFractionalNodes = await init.NodesData.methods.getNumberOfFractionalNodes().call();
-    let numberOfNodes = await init.NodesData.methods.getNumberOfNodes().call();
+    let numberOfFullNodes = await init.Nodes.methods.getNumberOfFullNodes().call();
+    let numberOfFractionalNodes = await init.Nodes.methods.getNumberOfFractionalNodes().call();
+    let numberOfNodes = await init.Nodes.methods.getNumberOfNodes().call();
 	console.log("Account:                    ", account);
 	console.log("Data:                       ", data);
 	console.log("Deposit:                    ", deposit);
@@ -33,8 +33,8 @@ async function createSchain(typeOfSchain, lifetime) {
     console.log("NUmber of fractional nodes: ", numberOfFractionalNodes);
 	res = await init.SkaleToken.methods.transfer(init.jsonData['skale_manager_address'], deposit, data).send({from: account, gas: 6900000});
     let blockNumber = res.blockNumber;
-    //init.SchainsFunctionality.getPastEvents("GroupGenerated", {fromBlock: blockNumber, toBlock:blockNumber}).then(function(events) {console.log(events)});
-    //init.SchainsFunctionality.getPastEvents("SchainCreated", {fromBlock: blockNumber, toBlock:blockNumber}).then(function(events) {console.log(events)});
+    //init.Schains.getPastEvents("GroupGenerated", {fromBlock: blockNumber, toBlock:blockNumber}).then(function(events) {console.log(events)});
+    //init.Schains.getPastEvents("SchainCreated", {fromBlock: blockNumber, toBlock:blockNumber}).then(function(events) {console.log(events)});
     //console.log(schainName);
     console.log("Schain", schainName, "created with", res.gasUsed, "gas comsumption");
     return schainName;
@@ -46,24 +46,24 @@ async function deleteSchain(schainName) {
 }
 
 async function getSchain(schainName) {
-    let res = await init.SchainsData.methods.schains(init.web3.utils.soliditySha3(schainName)).call();
+    let res = await init.SchainsInternal.methods.schains(init.web3.utils.soliditySha3(schainName)).call();
     console.log(res);
     return res;
 }
 
 async function getSchainNodes(schainName) {
-    let res = await init.SchainsData.methods.getNodesInGroup(init.web3.utils.soliditySha3(schainName)).call();
+    let res = await init.SchainsInternal.methods.getNodesInGroup(init.web3.utils.soliditySha3(schainName)).call();
     console.log("Schain name:", schainName);
     console.log("Nodes in Schain", res);
     return res;
 }
 
 async function getSchainsForNode(nodeIndex) {
-    let res = await init.SchainsData.methods.getSchainIdsForNode(nodeIndex).call();
+    let res = await init.SchainsInternal.methods.getSchainIdsForNode(nodeIndex).call();
     console.log(res);
     let res1;
     for (let i = 0; i < res.length; i++) {
-        res1 = await init.SchainsData.methods.schains(res[i]).call();
+        res1 = await init.SchainsInternal.methods.schains(res[i]).call();
         console.log(res1);
     }
     return res;

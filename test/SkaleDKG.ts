@@ -2,9 +2,10 @@ import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
 import { ContractManagerInstance,
          DelegationControllerInstance,
-         NodesFunctionalityInstance,
-         SchainsDataInstance,
-         SchainsFunctionalityInstance,
+         KeyStorageInstance,
+         NodesInstance,
+         SchainsInternalInstance,
+         SchainsInstance,
          SkaleDKGInstance,
          SkaleTokenInstance,
          SlashingTableInstance,
@@ -15,10 +16,11 @@ import { skipTime } from "./tools/time";
 import BigNumber from "bignumber.js";
 import { deployContractManager } from "./tools/deploy/contractManager";
 import { deployDelegationController } from "./tools/deploy/delegation/delegationController";
+import { deployKeyStorage } from "./tools/deploy/keyStorage";
 import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
-import { deployNodesFunctionality } from "./tools/deploy/nodesFunctionality";
-import { deploySchainsData } from "./tools/deploy/schainsData";
-import { deploySchainsFunctionality } from "./tools/deploy/schainsFunctionality";
+import { deployNodes } from "./tools/deploy/nodes";
+import { deploySchainsInternal } from "./tools/deploy/schainsInternal";
+import { deploySchains } from "./tools/deploy/schains";
 import { deploySkaleDKG } from "./tools/deploy/skaleDKG";
 import { deploySkaleToken } from "./tools/deploy/skaleToken";
 import { deploySlashingTable } from "./tools/deploy/slashingTable";
@@ -28,51 +30,46 @@ chai.use(chaiAsPromised);
 
 class Channel {
     public active: boolean;
-    public dataAddress: string;
     public numberOfBroadcasted: BigNumber;
-    public publicKeyx: object;
-    public publicKeyy: object;
     public numberOfCompleted: BigNumber;
-    public startedBlockNumber: BigNumber;
+    public startedBlockTimestamp: BigNumber;
     public nodeToComplaint: BigNumber;
     public fromNodeToComplaint: BigNumber;
-    public startedComplaintBlockNumber: BigNumber;
+    public startedComplaintBlockTimestamp: BigNumber;
 
-    constructor(arrayData: [boolean, string, BigNumber, object, object, BigNumber, BigNumber, BigNumber,
-        BigNumber, BigNumber]) {
+    constructor(arrayData: [boolean, BigNumber, BigNumber, BigNumber, BigNumber, BigNumber, BigNumber]) {
         this.active = arrayData[0];
-        this.dataAddress = arrayData[1];
-        this.numberOfBroadcasted = new BigNumber(arrayData[2]);
-        this.publicKeyx = arrayData[3];
-        this.publicKeyy = arrayData[4];
-        this.numberOfCompleted = new BigNumber(arrayData[5]);
-        this.startedBlockNumber = new BigNumber(arrayData[6]);
-        this.nodeToComplaint = new BigNumber(arrayData[7]);
-        this.fromNodeToComplaint = new BigNumber(arrayData[8]);
-        this.startedComplaintBlockNumber = new BigNumber(arrayData[9]);
+        this.numberOfBroadcasted = new BigNumber(arrayData[1]);
+        this.numberOfCompleted = new BigNumber(arrayData[2]);
+        this.startedBlockTimestamp = new BigNumber(arrayData[3]);
+        this.nodeToComplaint = new BigNumber(arrayData[4]);
+        this.fromNodeToComplaint = new BigNumber(arrayData[5]);
+        this.startedComplaintBlockTimestamp = new BigNumber(arrayData[6]);
     }
 }
 
 contract("SkaleDKG", ([owner, validator1, validator2]) => {
     let contractManager: ContractManagerInstance;
-    let nodesFunctionality: NodesFunctionalityInstance;
-    let schainsData: SchainsDataInstance;
-    let schainsFunctionality: SchainsFunctionalityInstance;
+    let keyStorage: KeyStorageInstance
+    let schainsInternal: SchainsInternalInstance;
+    let schains: SchainsInstance;
     let skaleDKG: SkaleDKGInstance;
     let skaleToken: SkaleTokenInstance;
     let validatorService: ValidatorServiceInstance;
     let slashingTable: SlashingTableInstance;
     let delegationController: DelegationControllerInstance;
+    let nodes: NodesInstance;
 
     const failedDkgPenalty = 5;
 
     beforeEach(async () => {
         contractManager = await deployContractManager();
 
-        nodesFunctionality = await deployNodesFunctionality(contractManager);
-        schainsData = await deploySchainsData(contractManager);
-        schainsFunctionality = await deploySchainsFunctionality(contractManager);
+        nodes = await deployNodes(contractManager);
+        schainsInternal = await deploySchainsInternal(contractManager);
+        schains = await deploySchains(contractManager);
         skaleDKG = await deploySkaleDKG(contractManager);
+        keyStorage = await deployKeyStorage(contractManager);
         skaleToken = await deploySkaleToken(contractManager);
         validatorService = await deployValidatorService(contractManager);
         slashingTable = await deploySlashingTable(contractManager);
@@ -91,10 +88,10 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
             "0xe7af72d241d4dd77bc080ce9234d742f6b22e35b3a660e8c197517b909f63ca8",
         ];
         const validatorsPublicKey = [
-            "8f163316925bf2e12a30832dee812f6ff60bf872171a84d9091672dd3848be9fc0b7bd257fbb038019c41f055e81736d8116b83" +
-            "e9ac59a1407aa6ea804ec88a8",
-            "307654b2716eb09f01f33115173867611d403424586357226515ae6a92774b10d168ab741e8f7650116d0677fddc1aea8dc86a0" +
-            "0747e7224d2bf36e0ea3dd62c",
+            ["0x8f163316925bf2e12a30832dee812f6ff60bf872171a84d9091672dd3848be9f",
+             "0xc0b7bd257fbb038019c41f055e81736d8116b83e9ac59a1407aa6ea804ec88a8"],
+            ["0x307654b2716eb09f01f33115173867611d403424586357226515ae6a92774b10",
+             "0xd168ab741e8f7650116d0677fddc1aea8dc86a00747e7224d2bf36e0ea3dd62c"]
         ];
 
         const secretNumbers = [
@@ -102,66 +99,158 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
             "111405529669975789441427095287571197384937932095062249739044064944770017976403",
         ];
 
-        const secretNumberSecond = new BigNumber(
-            "111405529669975789441427095287571197384937932095062249739044064944770017976403",
-        );
-
         const encryptedSecretKeyContributions = [
-            "0x937c9c846a6fa7fd1984fe82e739ae37fcaa555c1dc0e8597c9f81b6a12f232f04fdf8101e91bd658fa1cea6fdd75adb85429" +
-            "51ce3d251cdaa78f43493dad730b59d32d2e872b36aa70cdce544b550ebe96994de860b6f6ebb7d0b4d4e6724b4bf7232f27fdf" +
-            "e521f3c7997dbb1c15452b7f196bd119d915ce76af3d1a008e181004086ff076abe442563ae9b8938d483ae581f4de2ee54298b" +
-            "3078289bbd85250c8df956450d32f671e4a8ec1e584119753ff171e80a61465246bfd291e8dac3d77",
-            "0xe371b8589b56d29e43ad703fa42666c02d0fb6144ec12962d2532560af3cc72e046b0a8bce07bd18f50e4c5b7ebe2f9e17a31" +
-            "7b91c64926bf2d46a8f1ff58acbeba17652e16f18345856a148a2730a83760a181eb129e0c6059091ab11aa3fc5b899b9787530" +
-            "3f76ad5dcf51d300d152958e063d4099e564bcc9e33bd6d351b1bf04e081fec066435a30e875ced147985c35ecba48407c550ba" +
-            "d42fc652366d9731c707f24d4865584868154798d727237aea2ad3c086c5f41b85d7eb697bb8fec5e",
+            [
+                {
+                    share: "0x937c9c846a6fa7fd1984fe82e739ae37fcaa555c1dc0e8597c9f81b6a12f232f",
+                    publicKey: [
+                        "0xfdf8101e91bd658fa1cea6fdd75adb8542951ce3d251cdaa78f43493dad730b5",
+                        "0x9d32d2e872b36aa70cdce544b550ebe96994de860b6f6ebb7d0b4d4e6724b4bf"
+                    ]
+                },
+                {
+                    share: "0x7232f27fdfe521f3c7997dbb1c15452b7f196bd119d915ce76af3d1a008e1810",
+                    publicKey: [
+                        "0x086ff076abe442563ae9b8938d483ae581f4de2ee54298b3078289bbd85250c8",
+                        "0xdf956450d32f671e4a8ec1e584119753ff171e80a61465246bfd291e8dac3d77"
+                    ]
+                }
+            ],
+            [
+                {
+                    share: "0xe371b8589b56d29e43ad703fa42666c02d0fb6144ec12962d2532560af3cc72e",
+                    publicKey: [
+                        "0x6b0a8bce07bd18f50e4c5b7ebe2f9e17a317b91c64926bf2d46a8f1ff58acbeb",
+                        "0xa17652e16f18345856a148a2730a83760a181eb129e0c6059091ab11aa3fc5b8"
+                    ]
+                },
+                {
+                    share: "0x99b97875303f76ad5dcf51d300d152958e063d4099e564bcc9e33bd6d351b1bf",
+                    publicKey: [
+                        "0xe081fec066435a30e875ced147985c35ecba48407c550bad42fc652366d9731c",
+                        "0x707f24d4865584868154798d727237aea2ad3c086c5f41b85d7eb697bb8fec5e"
+                    ]
+                }
+            ]
         ];
 
         const badEncryptedSecretKeyContributions = [
-            "0x937c9c846a6fa7fd1984fe82e739ae37f444444444444444444441b6a12f232f04fdf8101e91bd658fa1cea6fdd75adb85429" +
-            "51ce3d251cdaa78f43493dad730b59d32d24444444444444444444450ebe96994de860b6f6ebb7d0b4d4e6724b4c07232f27fdf" +
-            "e521f3c7997dbb1c15452b7f196bd119d91444444444444444444444086ff076abe442563ae9b8938d483ae581f4de2ee54298b" +
-            "3078289bbd85250c8df956450d32f671e4a4444444444444444444480a61465246bfd291e8dac3d78",
-            "0xe371b8589b56d29e43ad703fa42666c0244444444444444444444560af3cc72e046b0a8bce07bd18f50e4c5b7ebe2f9e17a31" +
-            "7b91c64926bf2d46a8f1ff58acbeba17652444444444444444444440a83760a181eb129e0c6059091ab11aa3fc5b999b9787530" +
-            "3f76ad5dcf51d300d152958e063d4099e56444444444444444444444e081fec066435a30e875ced147985c35ecba48407c550ba" +
-            "d42fc652366d9731c707f24d4865584868144444444444444444444086c5f41b85d7eb697bb8fec5f",
+            [
+                {
+                    share: "0x937c9c846a6fa7fd1984fe82e739ae37f444444444444444444441b6a12f232f",
+                    publicKey: [
+                        "0xfdf8101e91bd658fa1cea6fdd75adb8542951ce3d251cdaa78f43493dad730b5",
+                        "0x9d32d24444444444444444444450ebe96994de860b6f6ebb7d0b4d4e6724b4c0"
+                    ]
+                },
+                {
+                    share: "0x7232f27fdfe521f3c7997dbb1c15452b7f196bd119d914444444444444444444",
+                    publicKey: [
+                        "0x086ff076abe442563ae9b8938d483ae581f4de2ee54298b3078289bbd85250c8",
+                        "0xdf956450d32f671e4a4444444444444444444480a61465246bfd291e8dac3d78"
+                    ]
+                }
+            ],
+            [
+                {
+                    share: "0xe371b8589b56d29e43ad703fa42666c0244444444444444444444560af3cc72e",
+                    publicKey: [
+                        "0x6b0a8bce07bd18f50e4c5b7ebe2f9e17a317b91c64926bf2d46a8f1ff58acbeb",
+                        "0xa17652444444444444444444440a83760a181eb129e0c6059091ab11aa3fc5b9"
+                    ]
+                },
+                {
+                    share: "0x99b97875303f76ad5dcf51d300d152958e063d4099e564444444444444444444",
+                    publicKey: [
+                        "0xe081fec066435a30e875ced147985c35ecba48407c550bad42fc652366d9731c",
+                        "0x707f24d4865584868144444444444444444444086c5f41b85d7eb697bb8fec5f"
+                    ]
+                }
+            ]
         ];
+
+        const blsPublicKey = {
+            x: {
+                a: "19575648972062104039156457944800096485192277725771522457821135495599016919475",
+                b: "10461414583903273397964170863293307257793164852201073648813106332646797608431"
+            },
+            y: {
+                a: "9987791793343586452762678914063017437446978276276947139413192800155919071920",
+                b: "14950268549909528666366175582391711509445871373604198590837458858258893860219"
+            }
+        }
 
         const verificationVectors = [
-            "0x02c2b888a23187f22195eadadbc05847a00dc59c913d465dbc4dfac9cfab437d2695832627b9081e77da7a3fc4d574363bf05" +
-            "1700055822f3d394dc3d9ff741724727c45f9322be756fbec6514525cbbfa27ef1951d3fed10f483c23f921879d03a7a3e6f3b5" +
-            "39dad43c0eca46e3f889b2b2300815ffc4633e26e64406625a99",
-            "0x2b61d71274e46235006128f6383539fa58ccf40c832fb1e81f3554c20efecbe4019708db3cb154aed20b0dba21505fac4e065" +
-            "93f353a8339fddaa21d2a43a5d91fed922c1955704caa85cdbcc7f33d24046362c635163e0e08bda8446c46699424d9e95c8cfa" +
-            "056db786176b84f9f8657a9cc8044855d43f1f088a515ed02af7",
-        ];
-
-        const badVerificationVectors = [
-            "0x02c2b888a23187f22195eadadbc05847a00dc59c913d465dbc4dfac9cfab437d2695832627b9081e77da7a3fc4d574363bf05" +
-            "1700055822f3d394dc3d9ff741724727c45f9322be756fbec6514525cbbfa27ef1951d3fed10f483c23f921879d03a7a3e6f3b5" +
-            "39dad43c0eca46e3f889b2b2300815ffc4633e26e64406625a9a",
-            "0x2b61d71274e46235006128f6383539fa58ccf40c832fb1e81f3554c20efecbe4019708db3cb154aed20b0dba21505fac4e065" +
-            "93f353a8339fddaa21d2a43a5d91fed922c1955704caa85cdbcc7f33d24046362c635163e0e08bda8446c46699424d9e95c8cfa" +
-            "056db786176b84f9f8657a9cc8044855d43f1f088a515ed02af8",
+            [
+                {
+                    x: {
+                        a: "0x02c2b888a23187f22195eadadbc05847a00dc59c913d465dbc4dfac9cfab437d",
+                        b: "0x2695832627b9081e77da7a3fc4d574363bf051700055822f3d394dc3d9ff7417"
+                    },
+                    y: {
+                        a: "0x24727c45f9322be756fbec6514525cbbfa27ef1951d3fed10f483c23f921879d",
+                        b: "0x03a7a3e6f3b539dad43c0eca46e3f889b2b2300815ffc4633e26e64406625a99"
+                    }
+                }
+            ],
+            [
+                {
+                    x: {
+                        a: "0x2b61d71274e46235006128f6383539fa58ccf40c832fb1e81f3554c20efecbe4",
+                        b: "0x019708db3cb154aed20b0dba21505fac4e06593f353a8339fddaa21d2a43a5d9",
+                    },
+                    y: {
+                        a: "0x1fed922c1955704caa85cdbcc7f33d24046362c635163e0e08bda8446c466994",
+                        b: "0x24d9e95c8cfa056db786176b84f9f8657a9cc8044855d43f1f088a515ed02af7"
+                    }
+                }
+            ]
         ];
 
         const multipliedShares = [
-            "0x02c2b888a23187f22195eadadbc05847a00dc59c913d465dbc4dfac9cfab437d2695832627b9081e77da7a3fc4d574363bf05" +
-            "1700055822f3d394dc3d9ff741724727c45f9322be756fbec6514525cbbfa27ef1951d3fed10f483c23f921879d03a7a3e6f3b5" +
-            "39dad43c0eca46e3f889b2b2300815ffc4633e26e64406625a99",
-            "0x2b61d71274e46235006128f6383539fa58ccf40c832fb1e81f3554c20efecbe4019708db3cb154aed20b0dba21505fac4e065" +
-            "93f353a8339fddaa21d2a43a5d91fed922c1955704caa85cdbcc7f33d24046362c635163e0e08bda8446c46699424d9e95c8cfa" +
-            "056db786176b84f9f8657a9cc8044855d43f1f088a515ed02af7",
+            {
+                x: {
+                    a: "0x02c2b888a23187f22195eadadbc05847a00dc59c913d465dbc4dfac9cfab437d",
+                    b: "0x2695832627b9081e77da7a3fc4d574363bf051700055822f3d394dc3d9ff7417"
+                },
+                y: {
+                    a: "0x24727c45f9322be756fbec6514525cbbfa27ef1951d3fed10f483c23f921879d",
+                    b: "0x03a7a3e6f3b539dad43c0eca46e3f889b2b2300815ffc4633e26e64406625a99"
+                }
+            },
+            {
+                x: {
+                    a: "0x2b61d71274e46235006128f6383539fa58ccf40c832fb1e81f3554c20efecbe4",
+                    b: "0x019708db3cb154aed20b0dba21505fac4e06593f353a8339fddaa21d2a43a5d9"
+                },
+                y: {
+                    a: "0x1fed922c1955704caa85cdbcc7f33d24046362c635163e0e08bda8446c466994",
+                    b: "0x24d9e95c8cfa056db786176b84f9f8657a9cc8044855d43f1f088a515ed02af7"
+                }
+            }
         ];
 
         const badMultipliedShares = [
-            "0x02c2b888a23187f22195eadadbc05847a00dc59c913d465dbc4dfac9cfab437d2695832627b9081e77da7a3fc4d574363bf05" +
-            "1700055822f3d394dc3d9ff741824727c45f9322be756fbec6514525cbbfa27ef1951d3fed10f483c23f921879d03a7a3e6f3b5" +
-            "39dad43c0eca46e3f889b2b2300815ffc4633e26e64406625a9b",
-            "0x2b61d71274e46235006128f6383539fa58ccf40c832fb1e81f3554c20efecbe4019708db3cb154aed20b0dba21505fac4e065" +
-            "93f353a8339fddaa21d2a43a5da1fed922c1955704caa85cdbcc7f33d24046362c635163e0e08bda8446c46699424d9e95c8cfa" +
-            "056db786176b84f9f8657a9cc8044855d43f1f088a515ed02af9",
+            {
+                x: {
+                    a: "0x02c2b888a23187f22195eadadbc05847a00dc59c913d465dbc4dfac9cfab437d",
+                    b: "0x2695832627b9081e77da7a3fc4d574363bf051700055822f3d394dc3d9ff7418"
+                },
+                y: {
+                    a: "0x24727c45f9322be756fbec6514525cbbfa27ef1951d3fed10f483c23f921879d",
+                    b: "0x03a7a3e6f3b539dad43c0eca46e3f889b2b2300815ffc4633e26e64406625a9b"
+                }
+            },
+            {
+                x: {
+                    a: "0x2b61d71274e46235006128f6383539fa58ccf40c832fb1e81f3554c20efecbe4",
+                    b: "0x019708db3cb154aed20b0dba21505fac4e06593f353a8339fddaa21d2a43a5da"
+                },
+                y: {
+                    a: "0x1fed922c1955704caa85cdbcc7f33d24046362c635163e0e08bda8446c466994",
+                    b: "0x24d9e95c8cfa056db786176b84f9f8657a9cc8044855d43f1f088a515ed02af9"
+                }
+            }
         ];
 
         const indexes = [0, 1];
@@ -173,8 +262,8 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
             const validator1Id = await validatorService.getValidatorId(validator1);
             await validatorService.registerValidator("Validator2", "D2 is even more even", 0, 0, {from: validator2});
             const validator2Id = await validatorService.getValidatorId(validator2);
-            await skaleToken.mint(owner, validator1, delegatedAmount, "0x", "0x");
-            await skaleToken.mint(owner, validator2, delegatedAmount, "0x", "0x");
+            await skaleToken.mint(validator1, delegatedAmount, "0x", "0x");
+            await skaleToken.mint(validator2, delegatedAmount, "0x", "0x");
             await validatorService.enableValidator(validator1Id, {from: owner});
             await validatorService.enableValidator(validator2Id, {from: owner});
             await delegationController.delegate(validator1Id, delegatedAmount, 3, "D2 is even", {from: validator1});
@@ -188,79 +277,76 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
             const nodesCount = 2;
             for (const index of Array.from(Array(nodesCount).keys())) {
                 const hexIndex = ("0" + index.toString(16)).slice(-2);
-                await nodesFunctionality.createNode(validatorsAccount[index],
-                    "0x00" +
-                    "2161" +
-                    "0000" +
-                    "7f0000" + hexIndex +
-                    "7f0000" + hexIndex +
-                    validatorsPublicKey[index] +
-                    "d2" + hexIndex);
+                await nodes.createNode(validatorsAccount[index],
+                    {
+                        port: 8545,
+                        nonce: 0,
+                        ip: "0x7f0000" + hexIndex,
+                        publicIp: "0x7f0000" + hexIndex,
+                        publicKey: validatorsPublicKey[index],
+                        name: "d2" + hexIndex
+                    });
             }
         });
 
         it("should create schain and open a DKG channel", async () => {
-            const deposit = await schainsFunctionality.getSchainPrice(4, 5);
+            const deposit = await schains.getSchainPrice(4, 5);
 
-            await schainsFunctionality.addSchain(
+            await schains.addSchain(
                 validator1,
                 deposit,
-                "0x10" +
-                "0000000000000000000000000000000000000000000000000000000000000005" +
-                "04" +
-                "0000" +
-                "6432");
+                web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, "d2"]));
+
+            const channel: Channel = new Channel(await skaleDKG.channels(web3.utils.soliditySha3("d2")));
+            assert(channel.active.should.be.true);
+        });
+
+        it("should create schain and reopen a DKG channel", async () => {
+            const deposit = await schains.getSchainPrice(4, 5);
+
+            await schains.addSchain(
+                validator1,
+                deposit,
+                web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, "d2"]));
 
             const channel: Channel = new Channel(await skaleDKG.channels(web3.utils.soliditySha3("d2")));
             assert(channel.active.should.be.true);
         });
 
         it("should create & delete schain and open & close a DKG channel", async () => {
-            const deposit = await schainsFunctionality.getSchainPrice(4, 5);
+            const deposit = await schains.getSchainPrice(4, 5);
 
-            await schainsFunctionality.addSchain(
+            await schains.addSchain(
                 validator1,
                 deposit,
-                "0x10" +
-                "0000000000000000000000000000000000000000000000000000000000000005" +
-                "04" +
-                "0000" +
-                "6432");
+                web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, "d2"]));
 
             let channel: Channel = new Channel(await skaleDKG.channels(web3.utils.soliditySha3("d2")));
             assert(channel.active.should.be.true);
 
-            await schainsFunctionality.deleteSchainByRoot("d2");
+            await schains.deleteSchainByRoot("d2");
             channel = new Channel(await skaleDKG.channels(web3.utils.soliditySha3("d2")));
             assert(channel.active.should.be.false);
         });
 
         describe("when 2-node schain is created", async () => {
             beforeEach(async () => {
-                const deposit = await schainsFunctionality.getSchainPrice(4, 5);
+                const deposit = await schains.getSchainPrice(4, 5);
 
-                await schainsFunctionality.addSchain(
+                await schains.addSchain(
                     validator1,
                     deposit,
-                    "0x10" +
-                    "0000000000000000000000000000000000000000000000000000000000000005" +
-                    "04" +
-                    "0000" +
-                    "6432");
+                    web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, "d2"]));
 
-                let nodes = await schainsData.getNodesInGroup(web3.utils.soliditySha3("d2"));
+                let nodesInGroup = await schainsInternal.getNodesInGroup(web3.utils.soliditySha3("d2"));
                 schainName = "d2";
-                while ((new BigNumber(nodes[0])).toFixed() === "1") {
-                    await schainsFunctionality.deleteSchainByRoot(schainName);
-                    await schainsFunctionality.addSchain(
+                while ((new BigNumber(nodesInGroup[0])).toFixed() === "1") {
+                    await schains.deleteSchainByRoot(schainName);
+                    await schains.addSchain(
                         validator1,
                         deposit,
-                        "0x10" +
-                        "0000000000000000000000000000000000000000000000000000000000000005" +
-                        "04" +
-                        "0000" +
-                        "6432");
-                    nodes = await schainsData.getNodesInGroup(web3.utils.soliditySha3(schainName));
+                        web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, "d2"]));
+                    nodesInGroup = await schainsInternal.getNodesInGroup(web3.utils.soliditySha3(schainName));
                 }
             });
 
@@ -275,6 +361,24 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                 assert.equal(result.logs[0].event, "BroadcastAndKeyShare");
                 assert.equal(result.logs[0].args.groupIndex, web3.utils.soliditySha3(schainName));
                 assert.equal(result.logs[0].args.fromNode.toString(), "0");
+                const res = await keyStorage.getBroadcastedData(web3.utils.soliditySha3(schainName), 0);
+
+                encryptedSecretKeyContributions[indexes[0]].forEach( (keyShare, i) => {
+                    keyShare.share.should.be.equal(res[0][i].share);
+                    keyShare.publicKey[0].should.be.equal(res[0][i].publicKey[0]);
+                    keyShare.publicKey[1].should.be.equal(res[0][i].publicKey[1]);
+                });
+
+                verificationVectors[indexes[0]].forEach((point, i) => {
+                    ("0x" + ("00" + new BigNumber(res[1][i].x.a).toString(16)).slice(-2 * 32))
+                        .should.be.equal(point.x.a);
+                    ("0x" + ("00" + new BigNumber(res[1][i].x.b).toString(16)).slice(-2 * 32))
+                        .should.be.equal(point.x.b);
+                    ("0x" + ("00" + new BigNumber(res[1][i].y.a).toString(16)).slice(-2 * 32))
+                        .should.be.equal(point.y.a);
+                    ("0x" + ("00" + new BigNumber(res[1][i].y.b).toString(16)).slice(-2 * 32))
+                        .should.be.equal(point.y.b);
+                });
             });
 
             it("should broadcast data from 1 node & check", async () => {
@@ -345,6 +449,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                         0,
                         {from: validatorsAccount[0]},
                     );
+                    assert.equal(await skaleDKG.isAllDataReceived(web3.utils.soliditySha3(schainName), 0), true);
                     assert.equal(result.logs[0].event, "AllDataReceived");
                     assert.equal(result.logs[0].args.groupIndex, web3.utils.soliditySha3(schainName));
                     assert.equal(result.logs[0].args.nodeIndex.toString(), "0");
@@ -396,6 +501,27 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                     );
                     assert.equal(result.logs[1].event, "SuccessfulDKG");
                     assert.equal(result.logs[1].args.groupIndex, web3.utils.soliditySha3(schainName));
+                });
+
+                it("should calculate BLS public key ", async () => {
+                    await skaleDKG.alright(web3.utils.soliditySha3(schainName), 0, {from: validatorsAccount[0]});
+                    const result = await skaleDKG.alright(
+                        web3.utils.soliditySha3(schainName),
+                        1,
+                        {from: validatorsAccount[1]},
+                    );
+                    assert.equal(result.logs[1].event, "SuccessfulDKG");
+                    assert.equal(result.logs[1].args.groupIndex, web3.utils.soliditySha3(schainName));
+                    const key1 = await keyStorage.getBLSPublicKey(web3.utils.soliditySha3(schainName), 0);
+                    const key2 = await keyStorage.getBLSPublicKey(web3.utils.soliditySha3(schainName), 1);
+                    assert.equal(key1.x.a.toString(), blsPublicKey.x.a);
+                    assert.equal(key1.x.b.toString(), blsPublicKey.x.b);
+                    assert.equal(key1.y.a.toString(), blsPublicKey.y.a);
+                    assert.equal(key1.y.b.toString(), blsPublicKey.y.b);
+                    assert.equal(key2.x.a.toString(), blsPublicKey.x.a);
+                    assert.equal(key2.x.b.toString(), blsPublicKey.x.b);
+                    assert.equal(key2.y.a.toString(), blsPublicKey.y.a);
+                    assert.equal(key2.y.b.toString(), blsPublicKey.y.b);
                 });
 
                 describe("when 2 node sent incorrect complaint", async () => {
@@ -473,6 +599,9 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                         0,
                         {from: validatorsAccount[1]},
                     );
+                    const res = await skaleDKG.getComplaintData(web3.utils.soliditySha3(schainName));
+                    assert.equal(res[0].toString(), "1");
+                    assert.equal(res[1].toString(), "0");
                     assert.equal(result.logs[0].event, "ComplaintSent");
                     assert.equal(result.logs[0].args.groupIndex, web3.utils.soliditySha3(schainName));
                     assert.equal(result.logs[0].args.fromNodeIndex.toString(), "1");
@@ -534,6 +663,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                         );
                         assert.equal(result.logs[0].event, "BadGuy");
                         assert.equal(result.logs[0].args.nodeIndex.toString(), "0");
+                        assert.equal(result.logs.length, 3);
 
                         (await skaleToken.getAndUpdateLockedAmount.call(validator1)).toNumber()
                             .should.be.equal(delegatedAmount);
@@ -544,6 +674,150 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                     });
                 });
             });
+        });
+
+        it("should reopen channel correctly", async () => {
+            const deposit = await schains.getSchainPrice(4, 5);
+
+            await schains.addSchain(
+                validator1,
+                deposit,
+                web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, "d2"]));
+
+            let nodesInGroup = await schainsInternal.getNodesInGroup(web3.utils.soliditySha3("d2"));
+            schainName = "d2";
+            while ((new BigNumber(nodesInGroup[0])).toFixed() === "1") {
+                await schains.deleteSchainByRoot(schainName);
+                await schains.addSchain(
+                    validator1,
+                    deposit,
+                    web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, "d2"]));
+                nodesInGroup = await schainsInternal.getNodesInGroup(web3.utils.soliditySha3(schainName));
+            }
+
+            await nodes.createNode(validatorsAccount[0],
+                {
+                    port: 8545,
+                    nonce: 0,
+                    ip: "0x7f000003",
+                    publicIp: "0x7f000003",
+                    publicKey: validatorsPublicKey[0],
+                    name: "d203"
+                });
+
+            await skaleDKG.broadcast(
+                web3.utils.soliditySha3(schainName),
+                0,
+                verificationVectors[indexes[0]],
+                // the last symbol is spoiled in parameter below
+                badEncryptedSecretKeyContributions[indexes[0]],
+                {from: validatorsAccount[0]},
+            );
+
+            await skaleDKG.broadcast(
+                web3.utils.soliditySha3(schainName),
+                1,
+                verificationVectors[indexes[1]],
+                encryptedSecretKeyContributions[indexes[1]],
+                {from: validatorsAccount[1]},
+            );
+
+            await skaleDKG.complaint(
+                web3.utils.soliditySha3(schainName),
+                1,
+                0,
+                {from: validatorsAccount[1]},
+            );
+
+            let channel: Channel = new Channel(await skaleDKG.channels(web3.utils.soliditySha3(schainName)));
+
+            const result = await skaleDKG.response(
+                web3.utils.soliditySha3(schainName),
+                0,
+                secretNumbers[indexes[0]],
+                badMultipliedShares[indexes[0]],
+                {from: validatorsAccount[0]},
+            );
+            assert.equal(result.logs[0].event, "BadGuy");
+            assert.equal(result.logs[0].args.nodeIndex.toString(), "0");
+
+            assert.equal(result.logs[2].event, "ChannelOpened");
+            assert.equal(result.logs[2].args.groupIndex, web3.utils.soliditySha3(schainName));
+            const blockNumber = result.receipt.blockNumber;
+            const timestamp = (await web3.eth.getBlock(blockNumber)).timestamp;
+
+            channel = new Channel(await skaleDKG.channels(web3.utils.soliditySha3(schainName)));
+            assert.equal(channel.numberOfBroadcasted.toString(), "0");
+            assert.equal(channel.startedBlockTimestamp.toString(), timestamp.toString());
+            // console.log(channel);
+
+            let res = await skaleDKG.isBroadcastPossible(
+                    web3.utils.soliditySha3(schainName),
+                    2,
+                    {from: validatorsAccount[0]},
+                );
+
+            assert.equal(res, true);
+
+            const broadcastedDataFrom2 = await keyStorage.getBroadcastedData(web3.utils.soliditySha3(schainName), 2);
+            assert(broadcastedDataFrom2[0].length.toString(), "0");
+            assert(broadcastedDataFrom2[1].length.toString(), "0");
+
+            await skaleDKG.broadcast(
+                web3.utils.soliditySha3(schainName),
+                2,
+                verificationVectors[indexes[0]],
+                // the last symbol is spoiled in parameter below
+                badEncryptedSecretKeyContributions[indexes[0]],
+                {from: validatorsAccount[0]},
+            );
+
+            res = await skaleDKG.isBroadcastPossible(
+                    web3.utils.soliditySha3(schainName),
+                    1,
+                    {from: validatorsAccount[1]},
+                );
+            assert.equal(res, true);
+
+            const broadcastedDataFrom1 = await keyStorage.getBroadcastedData(web3.utils.soliditySha3(schainName), 1);
+            assert(broadcastedDataFrom1[0].length.toString(), "0");
+            assert(broadcastedDataFrom1[1].length.toString(), "0");
+
+            await skaleDKG.broadcast(
+                web3.utils.soliditySha3(schainName),
+                1,
+                verificationVectors[indexes[1]],
+                encryptedSecretKeyContributions[indexes[1]],
+                {from: validatorsAccount[1]},
+            );
+
+            channel = new Channel(await skaleDKG.channels(web3.utils.soliditySha3(schainName)));
+
+            res = await skaleDKG.isAlrightPossible(
+                        web3.utils.soliditySha3(schainName),
+                        2,
+                        {from: validatorsAccount[0]},
+                    );
+            assert.equal(res, true);
+
+            await skaleDKG.alright(
+                        web3.utils.soliditySha3(schainName),
+                        2,
+                        {from: validatorsAccount[0]},
+                    );
+
+            res = await skaleDKG.isAlrightPossible(
+                        web3.utils.soliditySha3(schainName),
+                        1,
+                        {from: validatorsAccount[1]},
+                    );
+            assert.equal(res, true);
+
+            await skaleDKG.alright(
+                        web3.utils.soliditySha3(schainName),
+                        1,
+                        {from: validatorsAccount[1]},
+                    );
         });
     });
 });
