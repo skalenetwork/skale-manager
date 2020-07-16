@@ -5,7 +5,7 @@ const Web3 = require('web3');
 const GenerateBytesData = require("./GenerateBytesData.js");
 
 async function sendTransaction(web3Inst, account, privateKey, data, receiverContract) {
-    console.log("Transaction generating started!");
+    // console.log("Transaction generating started!");
     const nonce = await web3Inst.eth.getTransactionCount(account);
     const rawTx = {
         from: web3Inst.utils.toChecksumAddress(account),
@@ -29,7 +29,7 @@ async function sendTransaction(web3Inst, account, privateKey, data, receiverCont
     console.log("Transaction done!");
     console.log("Gas used: ", txReceipt.gasUsed);
     console.log('------------------------------');
-    return true;
+    return txReceipt.gasUsed;
 }
 
 
@@ -43,6 +43,14 @@ async function skipRotationDelay(schainId) {
     await sendTransaction(init.web3, init.mainAccount, privateKeyB, abi, contractAddress);
 }
 
+async function getRotation(name) {
+    let schainIndex = init.web3.utils.soliditySha3(name);
+    let res = await init.NodeRotation.methods.getRotation(schainIndex).call();
+    console.log(res);
+     console.log("Did everything!");
+    return res;
+}
+
 async function setSuccesfulDKGPublic(schainId) {
     // set successful dkg for schain
     schainName = await schains.getSchainName(schainId);
@@ -54,12 +62,9 @@ async function setSuccesfulDKGPublic(schainId) {
     await sendTransaction(init.web3, init.mainAccount, privateKeyB, abi, contractAddress);
 }
 
-
-
-
 async function nodeExitFull(nodeIndex) {
-        console.log("Schains on node ", nodeIndex, " BEFORE rotation:")
-        const schainsForNode = await schains.getSchainsForNode(nodeIndex);
+    console.log("Schains on node ", nodeIndex, " BEFORE rotation:")
+    const schainsForNode = await schains.getSchainsForNode(nodeIndex);
     for (let i = 0; i < schainsForNode.length; i++) {
         let abi = await init.SkaleManager.methods.nodeExit(nodeIndex).encodeABI();
         let privateKeyB = Buffer.from(init.privateKey, "hex");
@@ -89,11 +94,21 @@ async function nodeExit(nodeIndex) {
     console.log("Schains on node ", nodeIndex, " AFTER rotation:")
     const schainsForNodeAfterRotation = await schains.getSchainsForNode(nodeIndex);
     let schainId = schainsForNode.filter(x => schainsForNodeAfterRotation.indexOf(x) == -1);
-    await skipRotationDelay(schainId[0]);
-    await setSuccesfulDKGPublic(schainId[0]);
+    // await skipRotationDelay(schainId[0]);
+    // await setSuccesfulDKGPublic(schainId[0]);
     process.exit();
 }
 
+
+async function changeReward(nodeIndex) {
+    // console.log(await init.Nodes.methods.getNodeLastRewardDate(nodeIndex).call());
+    let privateKeyB = Buffer.from(init.privateKey, "hex");
+    abi = await init.Nodes.methods.skipNodeLastRewardDate(nodeIndex).encodeABI();
+    contractAddress = init.jsonData['nodes_address'];
+    await sendTransaction(init.web3, init.mainAccount, privateKeyB, abi, contractAddress);
+    // console.log(await init.Nodes.methods.getNodeLastRewardDate(nodeIndex).call());
+    // process.exit();
+}
 
 async function getFreeSpace(nodes) {
     for (let i = 0; i < nodes.length; i++) {
@@ -101,19 +116,6 @@ async function getFreeSpace(nodes) {
         console.log(nodes[i], ':', freeSpace.freeSpace);
     }
     process.exit();
-}
-
-async function generateRandomIP() {
-    let ip1 = Math.floor(Math.random() * 255);
-    let ip2 = Math.floor(Math.random() * 255);
-    let ip3 = Math.floor(Math.random() * 255);
-    let ip4 = Math.floor(Math.random() * 255);
-    return "" + ip1 + "." + ip2 + "." + ip3 + "." + ip4 + "";
-}
-
-async function generateRandomName() {
-	let number = Math.floor(Math.random() * 100000);
-	return "Node" + number;
 }
 
 async function registerValidator() {
@@ -135,22 +137,87 @@ async function createNodes(nodesCount) {
         const abi = await init.SkaleManager.methods.createNode(
             8545, // port
             0, // nonce
-            "0x7f0000" + hexIndex, // ip
-            "0x7f0000" + hexIndex, // public ip
+            "0x7f0003" + hexIndex, // ip
+            "0x7f0003" + hexIndex, // public ip
             ["0x1122334455667788990011223344556677889900112233445566778899001122",
                 "0x1122334455667788990011223344556677889900112233445566778899001122"], // public key
-            "D2-" + hexIndex, // name
+            "D2-3" + hexIndex, // name
         ).encodeABI();
         const privateKeyB = Buffer.from(init.privateKey, "hex");
         const contractAddress = init.jsonData['skale_manager_address'];
 
-        await sendTransaction(init.web3, init.mainAccount, privateKeyB, abi, contractAddress);
+        const gasUsed = await sendTransaction(init.web3, init.mainAccount, privateKeyB, abi, contractAddress);
+        console.log("Node ", index, " ", gasUsed);
     }
     process.exit();
 }
 
 
+async function deleteNode(nodeIndex) {
+    let res = await init.SkaleManager.methods.deleteNode(nodeIndex).send({from: init.mainAccount, gas: 6900000});
+    console.log("Node:", nodeIndex, "deleted with", res.gasUsed, "gas consumption");
+}
 
+async function getNode(nodeIndex) {
+    let res = await init.Nodes.methods.nodes(nodeIndex).call({from: init.mainAccount});
+    console.log("Node index:", nodeIndex);
+    console.log("Node name:", res.name);
+    res = await init.Nodes.methods.getNodeIP(nodeIndex).call({from: init.mainAccount});
+    console.log("Node IP:", res);
+    return res;
+}
+
+async function getNodeNextRewardDate(nodeIndex) {
+    let res = await init.Nodes.methods.nodes(nodeIndex).call();
+    console.log(res);
+    let res1 = await init.Nodes.methods.getNodeNextRewardDate(nodeIndex).call();
+    console.log(res1);
+    console.log("Did everything!");
+    return res;
+}
+
+
+
+
+async function createNodes1(n) {
+    let nodeIndexes = new Array(n);
+    for (let i = 0; i < n; i++) {
+        nodeIndexes[i] = await createNode();
+    }
+    return nodeIndexes;
+}
+
+// createNodes(1);
+// getNodeNextRewardDate(0)
+
+// module.exports.createNode = createNode;
+module.exports.createNodes = createNodes;
+module.exports.getNode = getNode;
+module.exports.deleteNode = deleteNode;
+module.exports.getNodeNextRewardDate = getNodeNextRewardDate;
+module.exports.changeReward = changeReward;
+
+if (process.argv[2] == 'getFreeSpace') {
+    nodes = (process.argv);
+    nodes.shift();
+    nodes.shift();
+    nodes.shift();
+    getFreeSpace(nodes);
+} else if (process.argv[2] == 'createNodes') {
+    createNodes(process.argv[3]);
+} else if (process.argv[2] == 'getNode') {
+    getNode(process.argv[3]);
+} else if (process.argv[2] == 'r') {
+    registerValidator();
+} else if (process.argv[2] == 'nodeExitFull') {
+    nodeExitFull(process.argv[3]);
+} else if (process.argv[2] == 'nodeExit') {
+    nodeExit(process.argv[3]);
+} else if (process.argv[2] == 'changeReward') {
+    changeReward(process.argv[3]);
+} else if (process.argv[2] == 'getRotation') {
+    getRotation(process.argv[3]);
+} 
 
 
 
@@ -218,61 +285,16 @@ async function createNode_legacy() {
     //return nodeIndex;
 }
 
-async function deleteNode(nodeIndex) {
-    let res = await init.SkaleManager.methods.deleteNode(nodeIndex).send({from: init.mainAccount, gas: 6900000});
-    console.log("Node:", nodeIndex, "deleted with", res.gasUsed, "gas consumption");
+
+async function generateRandomIP() {
+    let ip1 = Math.floor(Math.random() * 255);
+    let ip2 = Math.floor(Math.random() * 255);
+    let ip3 = Math.floor(Math.random() * 255);
+    let ip4 = Math.floor(Math.random() * 255);
+    return "" + ip1 + "." + ip2 + "." + ip3 + "." + ip4 + "";
 }
 
-async function getNode(nodeIndex) {
-    let res = await init.Nodes.methods.nodes(nodeIndex).call({from: init.mainAccount});
-    console.log("Node index:", nodeIndex);
-    console.log("Node name:", res.name);
-    return res;
+async function generateRandomName() {
+	let number = Math.floor(Math.random() * 100000);
+	return "Node" + number;
 }
-
-async function getNodeNextRewardDate(nodeIndex) {
-    let res = await init.Nodes.methods.nodes(nodeIndex).call();
-    console.log(res);
-    let res1 = await init.Nodes.methods.getNodeNextRewardDate(nodeIndex).call();
-    console.log(res1);
-    console.log("Did everything!");
-    return res;
-}
-
-
-
-
-async function createNodes1(n) {
-    let nodeIndexes = new Array(n);
-    for (let i = 0; i < n; i++) {
-        nodeIndexes[i] = await createNode();
-    }
-    return nodeIndexes;
-}
-
-// createNodes(1);
-// getNodeNextRewardDate(0)
-
-// module.exports.createNode = createNode;
-module.exports.createNodes = createNodes;
-module.exports.getNode = getNode;
-module.exports.deleteNode = deleteNode;
-module.exports.getNodeNextRewardDate = getNodeNextRewardDate;
-
-if (process.argv[2] == 'getFreeSpace') {
-    nodes = (process.argv);
-    nodes.shift();
-    nodes.shift();
-    nodes.shift();
-    getFreeSpace(nodes);
-} else if (process.argv[2] == 'createNodes') {
-    createNodes(process.argv[3]);
-} else if (process.argv[2] == 'getNode') {
-    getNode(process.argv[3]);
-} else if (process.argv[2] == 'r') {
-    registerValidator();
-} else if (process.argv[2] == 'nodeExitFull') {
-    nodeExitFull(process.argv[3]);
-} else if (process.argv[2] == 'nodeExit') {
-    nodeExit(process.argv[3]);
-} 

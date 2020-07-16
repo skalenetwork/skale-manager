@@ -1,25 +1,32 @@
 const init = require("./Init.js");
+const nodes = require("./Nodes.js");
 const Tx = require("ethereumjs-tx").Transaction;
 async function sendTransaction(web3Inst, account, privateKey, data, receiverContract) {
-    console.log("Transaction generating started!");
+    // console.log("Transaction generating started!");
     const nonce = await web3Inst.eth.getTransactionCount(account);
     const rawTx = {
         from: web3Inst.utils.toChecksumAddress(account),
         nonce: "0x" + nonce.toString(16),
         data: data,
         to: receiverContract,
-        gasPrice: 10000000000,
+        gasPrice: 100000000000,
         gas: 8000000
-        // chainId: await web3Inst.eth.getChainId()
     };
-    const tx = new Tx(rawTx, {chain: "rinkeby"});
+    let tx;
+    if (init.network === "unique") {
+        console.log('RINKEBY')
+        tx = new Tx(rawTx, {chain: "rinkeby"});
+    } else {
+        tx = new Tx(rawTx);
+    }
     tx.sign(privateKey);
     const serializedTx = tx.serialize();
+    // console.log("Transaction sent!")
     const txReceipt = await web3Inst.eth.sendSignedTransaction('0x' + serializedTx.toString('hex')); //.on('receipt', receipt => {
-    console.log("Transaction receipt is - ");
-    console.log(txReceipt);
-    console.log();
-    return true;
+    // console.log("Transaction done!");
+    // console.log("Gas used: ", txReceipt.gasUsed);
+    // console.log('------------------------------');
+    return txReceipt.gasUsed;
 }
 
 async function grantRole(address) {
@@ -59,6 +66,15 @@ async function calculateNormalBounty(nodeIndex) {
     process.exit();
 }
 
+async function getBounty(nodeIndex) {
+    await nodes.changeReward(nodeIndex);
+    let privateKeyB = Buffer.from(init.privateKey, "hex");
+    abi = await init.SkaleManager.methods.getBounty(nodeIndex).encodeABI();
+    contractAddress = init.jsonData['skale_manager_address'];
+    const gasUsed = await sendTransaction(init.web3, init.mainAccount, privateKeyB, abi, contractAddress);
+    console.log(gasUsed);
+    // process.exit();
+}
 
 if (process.argv[2] == 'grantRole') {
     grantRole(process.argv[3]);
@@ -66,8 +82,8 @@ if (process.argv[2] == 'grantRole') {
     deleteSchain(process.argv[3]);
 } else if (process.argv[2] == 'calculateNormalBounty') {
     calculateNormalBounty(process.argv[3]);
-} else {
-    console.log("Recheck name of function");
-    process.exit();
+} else if (process.argv[2] == 'getBounty') {
+    getBounty(process.argv[3]);
+} else if (process.argv[2] == 'getBountyForNodes') {
+    getBountyForNodes();
 }
-

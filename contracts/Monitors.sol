@@ -124,9 +124,10 @@ contract Monitors is Permissions {
 
     function deleteMonitor(uint nodeIndex) external allow("SkaleManager") {
         bytes32 monitorIndex = keccak256(abi.encodePacked(nodeIndex));
-        while (verdicts[keccak256(abi.encodePacked(nodeIndex))].length > 0) {
-            verdicts[keccak256(abi.encodePacked(nodeIndex))].pop();
-        }
+        // while (verdicts[keccak256(abi.encodePacked(nodeIndex))].length > 0) {
+        //     verdicts[keccak256(abi.encodePacked(nodeIndex))].pop();
+        // }
+        delete verdicts[monitorIndex];
         uint[] memory nodesInGroup = groupsForMonitors[monitorIndex];
         uint index;
         bytes32 monitoringIndex;

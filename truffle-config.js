@@ -28,7 +28,6 @@ module.exports = {
             provider: () => { 
                 return new hdwalletProvider(mnemonicOrPrivateKey, uniqueEndpoint); 
             },
-            gasPrice: 1000000000,
             gas: 8000000,
             gasPrice: gasprice,
             network_id: "*"
@@ -37,7 +36,6 @@ module.exports = {
             provider: () => { 
                 return new hdwalletProvider(mnemonicOrPrivateKey, uniqueEndpoint); 
             },
-            gasPrice: 10000000000,
             gas: 8000000,
             gasPrice: gasprice,
             network_id: "*",

@@ -41,9 +41,9 @@ async function createSchain(typeOfSchain, schainName) {
     abi = await init.Schains.methods.addSchainByFoundation(5, typeOfSchain, 1, schainName).encodeABI();
     await sendTransaction(init.web3, init.mainAccount, privateKeyB, abi, contractAddress);
 
-    abi = await init.SkaleDKG.methods.setSuccesfulDKGPublic(init.web3.utils.soliditySha3(schainName)).encodeABI();
-    contractAddress = init.jsonData['skale_d_k_g_tester_address'];
-    await sendTransaction(init.web3, init.mainAccount, privateKeyB, abi, contractAddress);
+    // abi = await init.SkaleDKG.methods.setSuccesfulDKGPublic(init.web3.utils.soliditySha3(schainName)).encodeABI();
+    // contractAddress = init.jsonData['skale_d_k_g_tester_address'];
+    // await sendTransaction(init.web3, init.mainAccount, privateKeyB, abi, contractAddress);
     process.exit();
 }
 
@@ -65,6 +65,79 @@ async function getSchainNodes(schainName) {
     console.log("Schain name:", schainName);
     console.log("Nodes in Schain", res);
     process.exit();
+    // return res;
+}
+
+async function getSchainIdsForNode(nodeIndex) {
+    let res = await init.SchainsInternal.methods.getSchainIdsForNode(nodeIndex).call();
+    console.log(res);
+    process.exit();
+    // return res;
+}
+
+async function getActiveSchain(nodeIndex) {
+    let res = await init.SchainsInternal.methods.getActiveSchain(nodeIndex).call();
+    console.log(res);
+    process.exit();
+    // return res;
+}
+
+async function isLastDKGSuccesful(name) {
+    let groupIndex = init.web3.utils.soliditySha3(name);
+    let res = await init.SkaleDKG.methods.isLastDKGSuccesful(groupIndex).call();
+    console.log(res);
+    console.log("Did everything!");
+    process.exit();
+
+    // return res;
+}
+
+async function isAllDataReceived(name, nodeIndex) {
+    let groupIndex = init.web3.utils.soliditySha3(name);
+    let res = await init.SkaleDKG.methods.isAllDataReceived(groupIndex, nodeIndex).call();
+    console.log(res);
+    console.log("Did everything!");
+    process.exit();
+
+    // return res;
+}
+
+async function getChannels(name) {
+    let groupIndex = init.web3.utils.soliditySha3(name);
+    let res = await init.SkaleDKG.methods.dkgProcess(groupIndex).call();
+    console.log(res);
+    console.log("Did everything!");
+    process.exit();
+
+    // return res;
+}
+
+async function getBroadcastedData(name, nodeIndex) {
+    let groupIndex = init.web3.utils.soliditySha3(name);
+    let res = await init.KeyStorage.methods.getBroadcastedData(groupIndex, nodeIndex).call();
+    console.log(res);
+    // console.log("Did everything!");
+    process.exit();
+
+    // return res;
+}
+
+async function getComplaintData(name) {
+    let groupIndex = init.web3.utils.soliditySha3(name);
+    let res = await init.SkaleDKG.methods.getComplaintData(groupIndex).call();
+    console.log(res);
+    // console.log("Did everything!");getComplaintData
+    process.exit();
+
+    // return res;getComplaintData
+}
+
+async function isNodeLeft(nodeIndex) {
+    let res = await init.Nodes.methods.isNodeLeft(nodeIndex).call();
+    console.log(res);
+    console.log("Did everything!");
+    process.exit();
+
     // return res;
 }
 
@@ -103,10 +176,28 @@ if (process.argv[2] == 'getSchainNodes') {
     deleteSchain(process.argv[3]);
 } else if (process.argv[2] == 'getSchainsForNode') {
     getSchainsForNode(process.argv[3]);
+} else if (process.argv[2] == 'getSchainIdsForNode') {
+    getSchainIdsForNode(process.argv[3]);
+} else if (process.argv[2] == 'getActiveSchain') {
+    getActiveSchain(process.argv[3]);
+} else if (process.argv[2] == 'isLastDKGSuccesful') {
+    isLastDKGSuccesful(process.argv[3]);
+} else if (process.argv[2] == 'isNodeLeft') {
+    isNodeLeft(process.argv[3]);
+} else if (process.argv[2] == 'isAllDataReceived') {
+    isAllDataReceived(process.argv[3], process.argv[4]);
+} else if (process.argv[2] == 'getChannels') {
+    getChannels(process.argv[3]);
+} else if (process.argv[2] == 'getBroadcastedData') {
+    getBroadcastedData(process.argv[3], process.argv[4]);
+} else if (process.argv[2] == 'getComplaintData') {
+    getComplaintData(process.argv[3]);
 }
 
 
 
+
+// getChannels
 
 
 
