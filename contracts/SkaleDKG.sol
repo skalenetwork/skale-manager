@@ -150,17 +150,27 @@ contract SkaleDKG is Permissions, ISkaleDKG {
 
     function complaint(bytes32 groupIndex, uint fromNodeIndex, uint toNodeIndex)
         external
-        correctGroup(groupIndex)
-        correctNode(groupIndex, fromNodeIndex)
-        correctNode(groupIndex, toNodeIndex)
     {
+        if (!channels[groupIndex].active) {
+            emit ComplaintError("Group is not created");
+            return;
+        }
+        if (!_nodeIndexInSchain(groupIndex, fromNodeIndex) < channels[groupIndex].n) {
+            emit ComplaintError("Accuser Node is not in this group");
+            return;
+        }
+        if (!_nodeIndexInSchain(groupIndex, toNodeIndex) < channels[groupIndex].n) {
+            emit ComplaintError("Accused Node is not in this group");
+            return;
+        }
         require(_isNodeByMessageSender(fromNodeIndex, msg.sender), "Node does not exist for message sender");
         bool broadcasted = _isBroadcasted(groupIndex, toNodeIndex);
         if (broadcasted && complaints[groupIndex].nodeToComplaint == uint(-1)) {
             // incorrect data or missing alright
             if (
                 isEveryoneBroadcasted(groupIndex) &&
-                dkgProcess[groupIndex].startAlrightTimestamp.add(complaintTimelimit) <= block.timestamp
+                dkgProcess[groupIndex].startAlrightTimestamp.add(complaintTimelimit) <= block.timestamp &&
+                !isAllDataReceived(groupIndex, toNodeIndex)
             ) {
                 // missing alright
                 _finalizeSlashing(groupIndex, toNodeIndex);
@@ -317,11 +327,6 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             complaints[groupIndex].nodeToComplaint == nodeIndex;
     }
 
-    function isAllDataReceived(bytes32 groupIndex, uint nodeIndex) external view returns (bool) {
-        uint index = _nodeIndexInSchain(groupIndex, nodeIndex);
-        return dkgProcess[groupIndex].completed[index];
-    }
-
     function getComplaintData(bytes32 groupIndex) external view returns (uint, uint) {
         return (complaints[groupIndex].fromNodeToComplaint, complaints[groupIndex].nodeToComplaint);
     }
@@ -333,6 +338,11 @@ contract SkaleDKG is Permissions, ISkaleDKG {
 
     function isEveryoneBroadcasted(bytes32 groupIndex) public view returns (bool) {
         return channels[groupIndex].n == dkgProcess[groupIndex].numberOfBroadcasted;
+    }
+
+    function isAllDataReceived(bytes32 groupIndex, uint nodeIndex) public view returns (bool) {
+        uint index = _nodeIndexInSchain(groupIndex, nodeIndex);
+        return dkgProcess[groupIndex].completed[index];
     }
 
     function getT(uint n) public pure returns (uint) {
