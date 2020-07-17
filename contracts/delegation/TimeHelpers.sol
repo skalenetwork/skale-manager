@@ -40,12 +40,36 @@ contract TimeHelpers {
         timestamp = BokkyPooBahsDateTimeLibrary.addDays(monthToTimestamp(month), lockUpPeriodDays);
     }
 
+    function addDays(uint fromTimestamp, uint n) external pure returns (uint) {
+        return BokkyPooBahsDateTimeLibrary.addDays(fromTimestamp, n);
+    }
+
     function addMonths(uint fromTimestamp, uint n) external pure returns (uint) {
         return BokkyPooBahsDateTimeLibrary.addMonths(fromTimestamp, n);
     }
 
+    function addYears(uint fromTimestamp, uint n) external pure returns (uint) {
+        return BokkyPooBahsDateTimeLibrary.addYears(fromTimestamp, n);
+    }
+
     function getCurrentMonth() external view virtual returns (uint) {
         return timestampToMonth(now);
+    }
+
+    function timestampToDay(uint timestamp) external view virtual returns (uint) {
+        uint wholeDays = timestamp / BokkyPooBahsDateTimeLibrary.SECONDS_PER_DAY;
+        uint zeroDay = BokkyPooBahsDateTimeLibrary.timestampFromDate(_ZERO_YEAR, 1, 1);
+        uint day;
+        (, , day) = BokkyPooBahsDateTimeLibrary.timestampToDate(timestamp);
+        require(wholeDays >= zeroDay, "Timestamp is too far in the past");
+        return wholeDays - zeroDay;
+    }
+
+    function timestampToYear(uint timestamp) external view virtual returns (uint) {
+        uint year;
+        (year, , ) = BokkyPooBahsDateTimeLibrary.timestampToDate(timestamp);
+        require(year >= _ZERO_YEAR, "Timestamp is too far in the past");
+        return year - _ZERO_YEAR;
     }
 
     function timestampToMonth(uint timestamp) public view virtual returns (uint) {
