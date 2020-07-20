@@ -33,6 +33,7 @@ module.exports.KeyStorage = new web3.eth.Contract(jsonData['key_storage_abi'], j
 module.exports.SkaleDKG = new web3.eth.Contract(jsonData['skale_d_k_g_abi'], jsonData['skale_d_k_g_address']);
 // module.exports.SkaleDKG = new web3.eth.Contract(jsonData['skale_d_k_g_tester_abi'], jsonData['skale_d_k_g_tester_address']);
 module.exports.NodeRotation = new web3.eth.Contract(jsonData['node_rotation_abi'], jsonData['node_rotation_address']);
+module.exports.TokenLaunchManager = new web3.eth.Contract(jsonData['token_launch_manager_abi'], jsonData['token_launch_manager_address']);
 module.exports.web3 = web3;
 module.exports.mainAccount = mainAccount;
 module.exports.jsonData = jsonData;

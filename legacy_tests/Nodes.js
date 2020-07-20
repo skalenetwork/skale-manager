@@ -178,6 +178,17 @@ async function getNodeNextRewardDate(nodeIndex) {
 
 
 
+async function getActiveNodeIPs() {
+    let res = await init.Nodes.methods.getActiveNodeIPs().call();
+    console.log(res);
+    process.exit();
+}
+
+async function getActiveNodeIds() {
+    let res = await init.Nodes.methods.getActiveNodeIds().call();
+    console.log(res);
+    process.exit();
+}
 
 async function createNodes1(n) {
     let nodeIndexes = new Array(n);
@@ -217,6 +228,10 @@ if (process.argv[2] == 'getFreeSpace') {
     changeReward(process.argv[3]);
 } else if (process.argv[2] == 'getRotation') {
     getRotation(process.argv[3]);
+} else if (process.argv[2] == 'getActiveNodeIPs') {
+    getActiveNodeIPs(process.argv[3]);
+} else if (process.argv[2] == 'getActiveNodeIds') {
+    getActiveNodeIds(process.argv[3]);
 } 
 
 
