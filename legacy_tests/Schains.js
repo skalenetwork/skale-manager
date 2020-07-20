@@ -29,8 +29,6 @@ async function sendTransaction(web3Inst, account, privateKey, data, receiverCont
     return true;
 }
 
-
-
 async function createSchain(typeOfSchain, schainName) {
     const scr = await init.Schains.methods.SCHAIN_CREATOR_ROLE().call({from: init.mainAccount});
     let abi = await init.Schains.methods.grantRole(scr, init.mainAccount).encodeABI();
