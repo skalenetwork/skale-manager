@@ -100,6 +100,27 @@ contract KeyStorage is Permissions {
         delete _schainsNodesPublicKeys[groupIndex];
     }
 
+    function initPublicKeysInProgressTest(bytes32 groupIndex) external {
+        _publicKeysInProgress[groupIndex] = G2Operations.G2Point({
+            x: Fp2Operations.Fp2Point({
+                a: 0,
+                b: 0
+            }),
+            y: Fp2Operations.Fp2Point({
+                a: 1,
+                b: 0
+            })
+        });
+    }
+    
+    function removeAllBroadcastedDataExternalTest(bytes32 groupIndex) external {
+        _removeAllBroadcastedData(groupIndex);
+    }
+
+    function deleteSchainsNodesPublicKeysExternalTest(bytes32 groupIndex) external {
+        delete _schainsNodesPublicKeys[groupIndex];
+    }
+
     function adding(bytes32 groupIndex, G2Operations.G2Point memory value) external allow("SkaleDKG") {
         require(value.isG2(), "Incorrect g2 point");
         _publicKeysInProgress[groupIndex] = value.addG2(_publicKeysInProgress[groupIndex]);

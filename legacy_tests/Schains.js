@@ -45,12 +45,12 @@ async function createSchain(typeOfSchain, schainName) {
     process.exit();
 }
 
-async function deleteSchain(schainName) {
-    let abi = await init.SkaleManager.methods.deleteSchain(schainName).encodeABI();
-    let privateKeyB = Buffer.from(init.privateKey, "hex");
-    let contractAddress = init.jsonData['schains_address'];
-    await sendTransaction(init.web3, init.mainAccount, privateKeyB, abi, contractAddress);
-}
+// async function deleteSchain(schainName) {
+//     let abi = await init.SkaleManager.methods.deleteSchain(schainName).encodeABI();
+//     let privateKeyB = Buffer.from(init.privateKey, "hex");
+//     let contractAddress = init.jsonData['schains_address'];
+//     await sendTransaction(init.web3, init.mainAccount, privateKeyB, abi, contractAddress);
+// }
 
 async function getSchain(schainName) {
     let res = await init.SchainsInternal.methods.schains(init.web3.utils.soliditySha3(schainName)).call();
@@ -159,7 +159,7 @@ async function getSchainsForNode(nodeIndex) {
 // createSchain(4, 'ouue');
 
 module.exports.createSchain = createSchain;
-module.exports.deleteSchain = deleteSchain;
+// module.exports.deleteSchain = deleteSchain;
 module.exports.getSchain = getSchain;
 module.exports.getSchainNodes = getSchainNodes;
 module.exports.getSchainName = getSchainName;
