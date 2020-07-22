@@ -3,6 +3,7 @@
 /*
     FieldOperations.sol - SKALE Manager
     Copyright (C) 2018-Present SKALE Labs
+
     @author Dmytro Stebaiev
 
     SKALE Manager is free software: you can redistribute it and/or modify
@@ -21,7 +22,7 @@
 
 pragma solidity 0.6.10;
 
-import "@openzeppelin/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
 
 import "./Precompiled.sol";
 
@@ -158,6 +159,21 @@ library G2Operations {
         });
     }
 
+    function getG2Zero() internal pure returns (G2Point memory) {
+        // Current solidity version does not support Constants of non-value type
+        // so we implemented this function
+        return G2Point({
+            x: Fp2Operations.Fp2Point({
+                a: 0,
+                b: 0
+            }),
+            y: Fp2Operations.Fp2Point({
+                a: 1,
+                b: 0
+            })
+        });
+    }
+
     function isG1Point(uint x, uint y) internal pure returns (bool) {
         return mulmod(y, y, Fp2Operations.P) == 
             addmod(mulmod(mulmod(x, x, Fp2Operations.P), x, Fp2Operations.P), 3, Fp2Operations.P);
@@ -211,7 +227,7 @@ library G2Operations {
             return value1;
         }
         if (isEqual(toUS(value1),toUS(value2))) {
-            sum = doubleG2(value1);
+            return doubleG2(value1);
         }
 
         Fp2Operations.Fp2Point memory s = value2.y.minusFp2(value1.y).mulFp2(value2.x.minusFp2(value1.x).inverseFp2());
@@ -251,7 +267,7 @@ library G2Operations {
         } else {
             Fp2Operations.Fp2Point memory s =
                 value.x.squaredFp2().scalarMulFp2(3).mulFp2(value.y.scalarMulFp2(2).inverseFp2());
-            result.x = s.squaredFp2().minusFp2(value.x.scalarMulFp2(2));
+            result.x = s.squaredFp2().minusFp2(value.x.addFp2(value.x));
             result.y = value.y.addFp2(s.mulFp2(result.x.minusFp2(value.x)));
             result.y.a = Fp2Operations.P.sub(result.y.a % Fp2Operations.P);
             result.y.b = Fp2Operations.P.sub(result.y.b % Fp2Operations.P);

@@ -97,7 +97,10 @@ contract NodeRotation is Permissions {
     }
 
     function getRotation(bytes32 schainIndex) external view returns (Rotation memory) {
-        return rotations[schainIndex];
+        if (rotations[schainIndex].nodeIndex != rotations[schainIndex].newNodeIndex) {
+            return rotations[schainIndex];
+        }
+        return Rotation(0, 0, 0, 0);
     }
 
     function getLeavingHistory(uint nodeIndex) external view returns (LeavingHistory[] memory) {
@@ -156,6 +159,7 @@ contract NodeRotation is Permissions {
     function _startRotation(bytes32 schainIndex, uint nodeIndex) private {
         ConstantsHolder constants = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
         rotations[schainIndex].nodeIndex = nodeIndex;
+        rotations[schainIndex].newNodeIndex = nodeIndex;
         rotations[schainIndex].freezeUntil = now.add(constants.rotationDelay());
     }
 

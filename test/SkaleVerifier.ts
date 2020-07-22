@@ -212,7 +212,7 @@ contract("SkaleVerifier", ([validator1, owner, developer, hacker]) => {
                 web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, "Bob"]),
                 {from: validator1});
 
-            await keyStorage.initPublicKeyInProgress(web3.utils.soliditySha3("Bob"));
+            await keyStorage.initPublicKeyInProgress(web3.utils.soliditySha3("Bob"), 2);
 
             await keyStorage.adding(
                 web3.utils.soliditySha3("Bob"),
