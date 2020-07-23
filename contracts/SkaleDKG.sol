@@ -166,7 +166,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             // incorrect data or missing alright
             if (
                 isEveryoneBroadcasted(groupIndex) &&
-                startAlrightTimestamp[groupIndex].add(complaintTimelimit) <= block.timestamp &&
+                startAlrightTimestamp[groupIndex].add(COMPLAINT_TIMELIMIT) <= block.timestamp &&
                 !isAllDataReceived(groupIndex, toNodeIndex)
             ) {
                 // missing alright
@@ -180,14 +180,14 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             }
         } else if (broadcasted && complaints[groupIndex].nodeToComplaint == toNodeIndex) {
             // 30 min after incorrect data complaint
-            if (complaints[groupIndex].startComplaintBlockTimestamp.add(complaintTimelimit) <= block.timestamp) {
+            if (complaints[groupIndex].startComplaintBlockTimestamp.add(COMPLAINT_TIMELIMIT) <= block.timestamp) {
                 _finalizeSlashing(groupIndex, complaints[groupIndex].nodeToComplaint);
             } else {
                 emit ComplaintError("The same complaint rejected");
             }
         } else if (!broadcasted) {
             // not broadcasted in 30 min
-            if (channels[groupIndex].startedBlockTimestamp.add(complaintTimelimit) <= block.timestamp) {
+            if (channels[groupIndex].startedBlockTimestamp.add(COMPLAINT_TIMELIMIT) <= block.timestamp) {
                 _finalizeSlashing(groupIndex, toNodeIndex);
             } else {
                 emit ComplaintError("Complaint sent too early");
@@ -304,13 +304,13 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             ) ||
             (
                 dkgProcess[groupIndex].broadcasted[indexTo] &&
-                complaints[groupIndex].startComplaintBlockTimestamp.add(complaintTimelimit) <= block.timestamp &&
+                complaints[groupIndex].startComplaintBlockTimestamp.add(COMPLAINT_TIMELIMIT) <= block.timestamp &&
                 complaints[groupIndex].nodeToComplaint == toNodeIndex
             ) ||
             (
                 !dkgProcess[groupIndex].broadcasted[indexTo] &&
                 complaints[groupIndex].nodeToComplaint == uint(-1) &&
-                channels[groupIndex].startedBlockTimestamp.add(complaintTimelimit) <= block.timestamp
+                channels[groupIndex].startedBlockTimestamp.add(COMPLAINT_TIMELIMIT) <= block.timestamp
             );
         return channels[groupIndex].active &&
             indexFrom < channels[groupIndex].n &&
