@@ -659,6 +659,14 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                         {from: validatorsAccount[1]},
                     );
                     assert(res.should.be.false);
+                    const resCompl = await skaleDKG.complaint(
+                        web3.utils.soliditySha3(schainName),
+                        0,
+                        1,
+                        {from: validatorsAccount[0]},
+                    );
+                    assert.equal(resCompl.logs[0].event, "ComplaintError");
+                    assert.equal(resCompl.logs[0].args.error, "Group is not created");
                 });
 
                 it("should be unpossible send response", async () => {

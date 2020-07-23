@@ -87,6 +87,14 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         _;
     }
 
+    modifier correctGroupWithoutRevert(bytes32 groupIndex) {
+        if (!channels[groupIndex].active) {
+            emit ComplaintError("Group is not created");
+        } else {
+            _;
+        }
+    }
+
     modifier correctNode(bytes32 groupIndex, uint nodeIndex) {
         uint index = _nodeIndexInSchain(groupIndex, nodeIndex);
         require(
@@ -150,19 +158,10 @@ contract SkaleDKG is Permissions, ISkaleDKG {
 
     function complaint(bytes32 groupIndex, uint fromNodeIndex, uint toNodeIndex)
         external
+        correctGroupWithoutRevert(groupIndex)
+        correctNode(groupIndex, fromNodeIndex)
+        correctNode(groupIndex, toNodeIndex)
     {
-        if (!channels[groupIndex].active) {
-            emit ComplaintError("Group is not created");
-            return;
-        }
-        if (!_nodeIndexInSchain(groupIndex, fromNodeIndex) < channels[groupIndex].n) {
-            emit ComplaintError("Accuser Node is not in this group");
-            return;
-        }
-        if (!_nodeIndexInSchain(groupIndex, toNodeIndex) < channels[groupIndex].n) {
-            emit ComplaintError("Accused Node is not in this group");
-            return;
-        }
         require(_isNodeByMessageSender(fromNodeIndex, msg.sender), "Node does not exist for message sender");
         bool broadcasted = _isBroadcasted(groupIndex, toNodeIndex);
         if (broadcasted && complaints[groupIndex].nodeToComplaint == uint(-1)) {
@@ -258,12 +257,24 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         return dkgProcess[groupIndex].numberOfCompleted;
     }
 
-    function isChannelOpened(bytes32 groupIndex) external override view returns (bool) {
-        return channels[groupIndex].active;
-    }
-
     function getTimeOfLastSuccesfulDKG(bytes32 groupIndex) external view returns (uint) {
         return lastSuccesfulDKG[groupIndex];
+    }
+
+    function getComplaintData(bytes32 groupIndex) external view returns (uint, uint) {
+        return (complaints[groupIndex].fromNodeToComplaint, complaints[groupIndex].nodeToComplaint);
+    }
+
+    function getComplaintStartedTime(bytes32 groupIndex) external view returns (uint) {
+        return complaints[groupIndex].startComplaintBlockTimestamp;
+    }
+
+    function getAlrightStartedTime(bytes32 groupIndex) external view returns (uint) {
+        return dkgProcess[groupIndex].startAlrightTimestamp;
+    }
+
+    function isChannelOpened(bytes32 groupIndex) external override view returns (bool) {
+        return channels[groupIndex].active;
     }
 
     function isLastDKGSuccesful(bytes32 groupIndex) external override view returns (bool) {
@@ -325,10 +336,6 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             index < channels[groupIndex].n &&
             _isNodeByMessageSender(nodeIndex, msg.sender) &&
             complaints[groupIndex].nodeToComplaint == nodeIndex;
-    }
-
-    function getComplaintData(bytes32 groupIndex) external view returns (uint, uint) {
-        return (complaints[groupIndex].fromNodeToComplaint, complaints[groupIndex].nodeToComplaint);
     }
 
     function initialize(address contractsAddress) public override initializer {
