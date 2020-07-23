@@ -31,7 +31,6 @@ import "./NodeRotation.sol";
 import "./KeyStorage.sol";
 import "./interfaces/ISkaleDKG.sol";
 
-
 contract SkaleDKG is Permissions, ISkaleDKG {
 
     struct Channel {
@@ -45,6 +44,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         uint numberOfCompleted;
         bool[] broadcasted;
         bool[] completed;
+        uint startAlrightTimestamp;
     }
 
     struct ComplaintData {
@@ -63,6 +63,8 @@ contract SkaleDKG is Permissions, ISkaleDKG {
 
     mapping(bytes32 => ComplaintData) public complaints;
 
+    mapping(bytes32 => uint) public startAlrightTimestamp;
+
     event ChannelOpened(bytes32 groupIndex);
 
     event ChannelClosed(bytes32 groupIndex);
@@ -80,10 +82,19 @@ contract SkaleDKG is Permissions, ISkaleDKG {
     event FailedDKG(bytes32 indexed groupIndex);
     event ComplaintSent(bytes32 indexed groupIndex, uint indexed fromNodeIndex, uint indexed toNodeIndex);
     event NewGuy(uint nodeIndex);
+    event ComplaintError(string error);
 
     modifier correctGroup(bytes32 groupIndex) {
         require(channels[groupIndex].active, "Group is not created");
         _;
+    }
+
+    modifier correctGroupWithoutRevert(bytes32 groupIndex) {
+        if (!channels[groupIndex].active) {
+            emit ComplaintError("Group is not created");
+        } else {
+            _;
+        }
     }
 
     modifier correctNode(bytes32 groupIndex, uint nodeIndex) {
@@ -145,30 +156,44 @@ contract SkaleDKG is Permissions, ISkaleDKG {
 
     function complaint(bytes32 groupIndex, uint fromNodeIndex, uint toNodeIndex)
         external
-        correctGroup(groupIndex)
+        correctGroupWithoutRevert(groupIndex)
         correctNode(groupIndex, fromNodeIndex)
         correctNode(groupIndex, toNodeIndex)
     {
         require(_isNodeByMessageSender(fromNodeIndex, msg.sender), "Node does not exist for message sender");
         bool broadcasted = _isBroadcasted(groupIndex, toNodeIndex);
         if (broadcasted && complaints[groupIndex].nodeToComplaint == uint(-1)) {
-            complaints[groupIndex].nodeToComplaint = toNodeIndex;
-            complaints[groupIndex].fromNodeToComplaint = fromNodeIndex;
-            complaints[groupIndex].startComplaintBlockTimestamp = block.timestamp;
-            emit ComplaintSent(groupIndex, fromNodeIndex, toNodeIndex);
-        } else if (broadcasted && complaints[groupIndex].nodeToComplaint != toNodeIndex) {
-            return;
+            // incorrect data or missing alright
+            if (
+                isEveryoneBroadcasted(groupIndex) &&
+                startAlrightTimestamp[groupIndex].add(COMPLAINT_TIMELIMIT) <= block.timestamp &&
+                !isAllDataReceived(groupIndex, toNodeIndex)
+            ) {
+                // missing alright
+                _finalizeSlashing(groupIndex, toNodeIndex);
+            } else {
+                // incorrect data
+                complaints[groupIndex].nodeToComplaint = toNodeIndex;
+                complaints[groupIndex].fromNodeToComplaint = fromNodeIndex;
+                complaints[groupIndex].startComplaintBlockTimestamp = block.timestamp;
+                emit ComplaintSent(groupIndex, fromNodeIndex, toNodeIndex);
+            }
         } else if (broadcasted && complaints[groupIndex].nodeToComplaint == toNodeIndex) {
-            require(
-                complaints[groupIndex].startComplaintBlockTimestamp.add(COMPLAINT_TIMELIMIT) <= block.timestamp,
-                "One more complaint rejected");
-            _finalizeSlashing(groupIndex, complaints[groupIndex].nodeToComplaint);
+            // 30 min after incorrect data complaint
+            if (complaints[groupIndex].startComplaintBlockTimestamp.add(COMPLAINT_TIMELIMIT) <= block.timestamp) {
+                _finalizeSlashing(groupIndex, complaints[groupIndex].nodeToComplaint);
+            } else {
+                emit ComplaintError("The same complaint rejected");
+            }
         } else if (!broadcasted) {
-            require(
-                channels[groupIndex].startedBlockTimestamp.add(COMPLAINT_TIMELIMIT) <= block.timestamp,
-                "Complaint rejected"
-            );
-            _finalizeSlashing(groupIndex, toNodeIndex);
+            // not broadcasted in 30 min
+            if (channels[groupIndex].startedBlockTimestamp.add(COMPLAINT_TIMELIMIT) <= block.timestamp) {
+                _finalizeSlashing(groupIndex, toNodeIndex);
+            } else {
+                emit ComplaintError("Complaint sent too early");
+            }
+        } else {
+            emit ComplaintError("One complaint is already sent");
         }
     }
 
@@ -230,12 +255,24 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         return dkgProcess[groupIndex].numberOfCompleted;
     }
 
-    function isChannelOpened(bytes32 groupIndex) external override view returns (bool) {
-        return channels[groupIndex].active;
-    }
-
     function getTimeOfLastSuccesfulDKG(bytes32 groupIndex) external view returns (uint) {
         return lastSuccesfulDKG[groupIndex];
+    }
+
+    function getComplaintData(bytes32 groupIndex) external view returns (uint, uint) {
+        return (complaints[groupIndex].fromNodeToComplaint, complaints[groupIndex].nodeToComplaint);
+    }
+
+    function getComplaintStartedTime(bytes32 groupIndex) external view returns (uint) {
+        return complaints[groupIndex].startComplaintBlockTimestamp;
+    }
+
+    function getAlrightStartedTime(bytes32 groupIndex) external view returns (uint) {
+        return startAlrightTimestamp[groupIndex];
+    }
+
+    function isChannelOpened(bytes32 groupIndex) external override view returns (bool) {
+        return channels[groupIndex].active;
     }
 
     function isLastDKGSuccesful(bytes32 groupIndex) external override view returns (bool) {
@@ -261,7 +298,10 @@ contract SkaleDKG is Permissions, ISkaleDKG {
     {
         uint indexFrom = _nodeIndexInSchain(groupIndex, fromNodeIndex);
         uint indexTo = _nodeIndexInSchain(groupIndex, toNodeIndex);
-        bool complaintSending = complaints[groupIndex].nodeToComplaint == uint(-1) ||
+        bool complaintSending = (
+                complaints[groupIndex].nodeToComplaint == uint(-1) &&
+                dkgProcess[groupIndex].broadcasted[indexTo]
+            ) ||
             (
                 dkgProcess[groupIndex].broadcasted[indexTo] &&
                 complaints[groupIndex].startComplaintBlockTimestamp.add(COMPLAINT_TIMELIMIT) <= block.timestamp &&
@@ -269,7 +309,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             ) ||
             (
                 !dkgProcess[groupIndex].broadcasted[indexTo] &&
-                complaints[groupIndex].nodeToComplaint == toNodeIndex &&
+                complaints[groupIndex].nodeToComplaint == uint(-1) &&
                 channels[groupIndex].startedBlockTimestamp.add(COMPLAINT_TIMELIMIT) <= block.timestamp
             );
         return channels[groupIndex].active &&
@@ -296,17 +336,17 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             complaints[groupIndex].nodeToComplaint == nodeIndex;
     }
 
-    function isAllDataReceived(bytes32 groupIndex, uint nodeIndex) external view returns (bool) {
-        uint index = _nodeIndexInSchain(groupIndex, nodeIndex);
-        return dkgProcess[groupIndex].completed[index];
-    }
-
-    function getComplaintData(bytes32 groupIndex) external view returns (uint, uint) {
-        return (complaints[groupIndex].fromNodeToComplaint, complaints[groupIndex].nodeToComplaint);
-    }
-
     function initialize(address contractsAddress) public override initializer {
         Permissions.initialize(contractsAddress);
+    }
+
+    function isEveryoneBroadcasted(bytes32 groupIndex) public view returns (bool) {
+        return channels[groupIndex].n == dkgProcess[groupIndex].numberOfBroadcasted;
+    }
+
+    function isAllDataReceived(bytes32 groupIndex, uint nodeIndex) public view returns (bool) {
+        uint index = _nodeIndexInSchain(groupIndex, nodeIndex);
+        return dkgProcess[groupIndex].completed[index];
     }
 
     function getT(uint n) public pure returns (uint) {
@@ -385,6 +425,9 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         require(!dkgProcess[groupIndex].broadcasted[index], "This node is already broadcasted");
         dkgProcess[groupIndex].broadcasted[index] = true;
         dkgProcess[groupIndex].numberOfBroadcasted++;
+        if (dkgProcess[groupIndex].numberOfBroadcasted == channels[groupIndex].n) {
+            startAlrightTimestamp[groupIndex] = now;
+        }
         KeyStorage(contractManager.getContract("KeyStorage")).addBroadcastedData(
             groupIndex,
             index,
