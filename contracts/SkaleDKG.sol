@@ -53,7 +53,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         uint startComplaintBlockTimestamp;
     }
 
-    uint public complaintTimelimit;
+    uint public constant COMPLAINT_TIMELIMIT = 1800;
 
     mapping(bytes32 => Channel) public channels;
 
@@ -62,6 +62,8 @@ contract SkaleDKG is Permissions, ISkaleDKG {
     mapping(bytes32 => ProcessDKG) public dkgProcess;
 
     mapping(bytes32 => ComplaintData) public complaints;
+
+    mapping(bytes32 => uint) public startAlrightTimestamp;
 
     event ChannelOpened(bytes32 groupIndex);
 
@@ -117,10 +119,6 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         KeyStorage(contractManager.getContract("KeyStorage")).deleteKey(groupIndex);
     }
 
-    function setComplaintTimelimit(uint newComplaintTimelimit) external onlyOwner {
-        complaintTimelimit = newComplaintTimelimit;
-    }
-
     function broadcast(
         bytes32 groupIndex,
         uint nodeIndex,
@@ -168,7 +166,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             // incorrect data or missing alright
             if (
                 isEveryoneBroadcasted(groupIndex) &&
-                dkgProcess[groupIndex].startAlrightTimestamp.add(complaintTimelimit) <= block.timestamp &&
+                startAlrightTimestamp[groupIndex].add(complaintTimelimit) <= block.timestamp &&
                 !isAllDataReceived(groupIndex, toNodeIndex)
             ) {
                 // missing alright
@@ -270,7 +268,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
     }
 
     function getAlrightStartedTime(bytes32 groupIndex) external view returns (uint) {
-        return dkgProcess[groupIndex].startAlrightTimestamp;
+        return startAlrightTimestamp[groupIndex];
     }
 
     function isChannelOpened(bytes32 groupIndex) external override view returns (bool) {
@@ -340,7 +338,6 @@ contract SkaleDKG is Permissions, ISkaleDKG {
 
     function initialize(address contractsAddress) public override initializer {
         Permissions.initialize(contractsAddress);
-        complaintTimelimit = 1800;
     }
 
     function isEveryoneBroadcasted(bytes32 groupIndex) public view returns (bool) {
@@ -429,7 +426,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         dkgProcess[groupIndex].broadcasted[index] = true;
         dkgProcess[groupIndex].numberOfBroadcasted++;
         if (dkgProcess[groupIndex].numberOfBroadcasted == channels[groupIndex].n) {
-            dkgProcess[groupIndex].startAlrightTimestamp = now;
+            startAlrightTimestamp[groupIndex] = now;
         }
         KeyStorage(contractManager.getContract("KeyStorage")).addBroadcastedData(
             groupIndex,
