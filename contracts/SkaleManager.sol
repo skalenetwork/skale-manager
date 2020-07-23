@@ -94,10 +94,10 @@ contract SkaleManager is IERC777Recipient, Permissions {
             port: port,
             publicKey: publicKey,
             nonce: nonce});
-        uint nodeIndex = nodes.createNode(msg.sender, params);
-
-        Monitors monitors = Monitors(contractManager.getContract("Monitors"));
-        monitors.addMonitor(nodeIndex);
+        nodes.createNode(msg.sender, params);
+        // uint nodeIndex = nodes.createNode(msg.sender, params);
+        // Monitors monitors = Monitors(contractManager.getContract("Monitors"));
+        // monitors.addMonitor(nodeIndex);
     }
 
     function nodeExit(uint nodeIndex) external {
@@ -127,9 +127,9 @@ contract SkaleManager is IERC777Recipient, Permissions {
         if (completed) {
             require(nodes.completeExit(nodeIndex), "Finishing of node exit is failed");
             nodes.changeNodeFinishTime(nodeIndex, now.add(isSchains ? constants.rotationDelay() : 0));
-            Monitors monitors = Monitors(contractManager.getContract("Monitors"));
-            monitors.removeCheckedNodes(nodeIndex);
-            monitors.deleteMonitor(nodeIndex);
+            // Monitors monitors = Monitors(contractManager.getContract("Monitors"));
+            // monitors.removeCheckedNodes(nodeIndex);
+            // monitors.deleteMonitor(nodeIndex);
             nodes.deleteNodeForValidator(validatorId, nodeIndex);
         }
     }
@@ -145,25 +145,25 @@ contract SkaleManager is IERC777Recipient, Permissions {
         schains.deleteSchainByRoot(name);
     }
 
-    function sendVerdict(uint fromMonitorIndex, Monitors.Verdict calldata verdict) external {
-        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
-        require(nodes.isNodeExist(msg.sender, fromMonitorIndex), "Node does not exist for Message sender");
+    // function sendVerdict(uint fromMonitorIndex, Monitors.Verdict calldata verdict) external {
+    //     Nodes nodes = Nodes(contractManager.getContract("Nodes"));
+    //     require(nodes.isNodeExist(msg.sender, fromMonitorIndex), "Node does not exist for Message sender");
 
-        Monitors monitors = Monitors(contractManager.getContract("Monitors"));
-        // additional checks for monitoring inside sendVerdict
-        monitors.sendVerdict(fromMonitorIndex, verdict);
-    }
+    //     Monitors monitors = Monitors(contractManager.getContract("Monitors"));
+    //     // additional checks for monitoring inside sendVerdict
+    //     monitors.sendVerdict(fromMonitorIndex, verdict);
+    // }
 
-    function sendVerdicts(uint fromMonitorIndex, Monitors.Verdict[] calldata verdicts) external {
-        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
-        require(nodes.isNodeExist(msg.sender, fromMonitorIndex), "Node does not exist for Message sender");
+    // function sendVerdicts(uint fromMonitorIndex, Monitors.Verdict[] calldata verdicts) external {
+    //     Nodes nodes = Nodes(contractManager.getContract("Nodes"));
+    //     require(nodes.isNodeExist(msg.sender, fromMonitorIndex), "Node does not exist for Message sender");
 
-        Monitors monitors = Monitors(contractManager.getContract("Monitors"));
-        for (uint i = 0; i < verdicts.length; i++) {
-            // additional checks for monitoring inside sendVerdict
-            monitors.sendVerdict(fromMonitorIndex, verdicts[i]);
-        }
-    }
+    //     Monitors monitors = Monitors(contractManager.getContract("Monitors"));
+    //     for (uint i = 0; i < verdicts.length; i++) {
+    //         // additional checks for monitoring inside sendVerdict
+    //         monitors.sendVerdict(fromMonitorIndex, verdicts[i]);
+    //     }
+    // }
 
     function getBounty(uint nodeIndex) external {
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));
@@ -177,15 +177,15 @@ contract SkaleManager is IERC777Recipient, Permissions {
         uint averageLatency;
         Monitors monitors = Monitors(contractManager.getContract("Monitors"));
         (averageDowntime, averageLatency) = monitors.calculateMetrics(nodeIndex);
-        
+
         uint bounty = bountyContract.getBounty(
             nodeIndex,
             averageDowntime,
-            averageLatency);            
-        
+            averageLatency);
+
         nodes.changeNodeLastRewardDate(nodeIndex);
-        monitors.deleteMonitor(nodeIndex);
-        monitors.addMonitor(nodeIndex);
+        // monitors.deleteMonitor(nodeIndex);
+        // monitors.addMonitor(nodeIndex);
 
         if (bounty > 0) {
             _payBounty(bounty, nodes.getValidatorId(nodeIndex));
