@@ -179,12 +179,12 @@ contract Nodes is Permissions {
      * @dev createNode - creates new Node and add it to the Nodes contract
      * function could be only run by SkaleManager
      * @param from - owner of Node
-     * @return nodeIndex - index of Node
      */
+    //  * @return nodeIndex - index of Node
     function createNode(address from, NodeCreationParams calldata params)
         external
         allow("SkaleManager")
-        returns (uint nodeIndex)
+        // returns (uint nodeIndex)
     {
         // checks that Node has correct data
         require(params.ip != 0x0 && !nodesIPCheck[params.ip], "IP address is zero or is not available");
@@ -195,7 +195,7 @@ contract Nodes is Permissions {
             contractManager.getContract("ValidatorService")).getValidatorIdByNodeAddress(from);
 
         // adds Node to Nodes contract
-        nodeIndex = _addNode(
+        uint nodeIndex = _addNode(
             from,
             params.name,
             params.ip,
