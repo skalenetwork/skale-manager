@@ -30,6 +30,7 @@ import "./SkaleVerifier.sol";
 import "./utils/FieldOperations.sol";
 import "./NodeRotation.sol";
 import "./interfaces/ISkaleDKG.sol";
+import "@nomiclabs/buidler/console.sol";
 
 // interface ISkaleDKGCheck {
 //     function isLastDKGSuccesful(bytes32 groupIndex) external view returns (bool);
@@ -117,7 +118,7 @@ contract Schains is Permissions {
         external
     {
         require(hasRole(SCHAIN_CREATOR_ROLE, msg.sender), "Sender is not authorized to create schian");
-
+        console.log(111111111111111);
         SchainParameters memory schainParameters = SchainParameters({
             lifetime: lifetime,
             typeOfSchain: typeOfSchain,

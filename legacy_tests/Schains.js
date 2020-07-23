@@ -3,7 +3,7 @@ const Tx = require("ethereumjs-tx").Transaction;
 const GenerateBytesData = require("./GenerateBytesData.js");
 
 async function sendTransaction(web3Inst, account, privateKey, data, receiverContract) {
-    console.log("Transaction generating started!");
+    // console.log("Transaction generating started!");
     const nonce = await web3Inst.eth.getTransactionCount(account);
     const rawTx = {
         from: web3Inst.utils.toChecksumAddress(account),
@@ -15,6 +15,7 @@ async function sendTransaction(web3Inst, account, privateKey, data, receiverCont
     };
     let tx;
     if (init.network === "unique") {
+        console.log('RINKEBY')
         tx = new Tx(rawTx, {chain: "rinkeby"});
     } else {
         tx = new Tx(rawTx);
@@ -24,9 +25,9 @@ async function sendTransaction(web3Inst, account, privateKey, data, receiverCont
     console.log("Transaction sent!")
     const txReceipt = await web3Inst.eth.sendSignedTransaction('0x' + serializedTx.toString('hex')); //.on('receipt', receipt => {
     console.log("Transaction done!");
-    console.log("Transaction receipt is - ");
-    console.log(txReceipt);
-    return true;
+    console.log("Gas used: ", txReceipt.gasUsed);
+    console.log('------------------------------');
+    return txReceipt.gasUsed;
 }
 
 async function createSchain(typeOfSchain, schainName) {
@@ -130,6 +131,38 @@ async function getComplaintData(name) {
     // return res;getComplaintData
 }
 
+
+async function getTimeOfLastSuccesfulDKG(name) {
+    let groupIndex = init.web3.utils.soliditySha3(name);
+    let res = await init.SkaleDKG.methods.getTimeOfLastSuccesfulDKG(groupIndex).call();
+    console.log(res);
+    console.log("Did everything!");
+    process.exit();
+
+    // return res;
+}
+
+async function getChannelStartedTime(name) {
+    let groupIndex = init.web3.utils.soliditySha3(name);
+    let res = await init.SkaleDKG.methods.getChannelStartedTime(groupIndex).call();
+    console.log(res);
+    console.log("Did everything!");
+    process.exit();
+
+    // return res;
+}
+
+async function channels(name) {
+    let groupIndex = init.web3.utils.soliditySha3(name);
+    let res = await init.SkaleDKG.methods.channels(groupIndex).call();
+    console.log(res);
+    console.log("Did everything!");
+    process.exit();
+
+    // return res;
+}
+
+
 async function isNodeLeft(nodeIndex) {
     let res = await init.Nodes.methods.isNodeLeft(nodeIndex).call();
     console.log(res);
@@ -170,8 +203,6 @@ if (process.argv[2] == 'getSchainNodes') {
     getSchainNodes(process.argv[3]);
 } else if (process.argv[2] == 'createSchain') {
     createSchain(process.argv[3], process.argv[4]);
-} else if (process.argv[2] == 'deleteSchain') {
-    deleteSchain(process.argv[3]);
 } else if (process.argv[2] == 'getSchainsForNode') {
     getSchainsForNode(process.argv[3]);
 } else if (process.argv[2] == 'getSchainIdsForNode') {
@@ -190,7 +221,16 @@ if (process.argv[2] == 'getSchainNodes') {
     getBroadcastedData(process.argv[3], process.argv[4]);
 } else if (process.argv[2] == 'getComplaintData') {
     getComplaintData(process.argv[3]);
+} else if (process.argv[2] == 'getTimeOfLastSuccesfulDKG') {
+    getTimeOfLastSuccesfulDKG(process.argv[3]);
+} else if (process.argv[2] == 'channels') {
+    channels(process.argv[3]);
+} else if (process.argv[2] == 'getChannelStartedTime') {
+    getChannelStartedTime(process.argv[3]);
 }
+
+
+
 
 
 

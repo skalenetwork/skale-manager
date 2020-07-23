@@ -30,6 +30,7 @@ import "./utils/FieldOperations.sol";
 import "./NodeRotation.sol";
 import "./KeyStorage.sol";
 import "./interfaces/ISkaleDKG.sol";
+import "@nomiclabs/buidler/console.sol";
 
 
 contract SkaleDKG is Permissions, ISkaleDKG {
@@ -324,7 +325,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         SchainsInternal schainsInternal = SchainsInternal(
             contractManager.getContract("SchainsInternal")
         );
-
+        console.log("openchannel");
         uint len = schainsInternal.getNumberOfNodesInGroup(groupIndex);
         channels[groupIndex].active = true;
         channels[groupIndex].n = len;

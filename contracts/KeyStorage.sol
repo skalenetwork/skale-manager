@@ -92,20 +92,11 @@ contract KeyStorage is Permissions {
     }
 
     function initPublicKeysInProgressTest(bytes32 groupIndex) external {
-        _publicKeysInProgress[groupIndex] = G2Operations.G2Point({
-            x: Fp2Operations.Fp2Point({
-                a: 0,
-                b: 0
-            }),
-            y: Fp2Operations.Fp2Point({
-                a: 1,
-                b: 0
-            })
-        });
+        _publicKeysInProgress[groupIndex] = G2Operations.getG2Zero();
     }
     
-    function removeAllBroadcastedDataExternalTest(bytes32 groupIndex) external {
-        _removeAllBroadcastedData(groupIndex);
+    function removeAllBroadcastedDataExternalTest(bytes32 groupIndex, uint n) external {
+        _removeAllBroadcastedData(groupIndex, n);
     }
 
     function deleteSchainsNodesPublicKeysExternalTest(bytes32 groupIndex) external {
