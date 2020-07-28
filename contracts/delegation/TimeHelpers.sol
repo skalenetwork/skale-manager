@@ -56,9 +56,10 @@ contract TimeHelpers {
         return timestampToMonth(now);
     }
 
-    function timestampToDay(uint timestamp) external view override returns (uint) {
+    function timestampToDay(uint timestamp) external view returns (uint) {
         uint wholeDays = timestamp / BokkyPooBahsDateTimeLibrary.SECONDS_PER_DAY;
-        uint zeroDay = BokkyPooBahsDateTimeLibrary.timestampFromDate(_ZERO_YEAR, 1, 1) / BokkyPooBahsDateTimeLibrary.SECONDS_PER_DAY;
+        uint zeroDay = BokkyPooBahsDateTimeLibrary.timestampFromDate(_ZERO_YEAR, 1, 1) /
+            BokkyPooBahsDateTimeLibrary.SECONDS_PER_DAY;
         require(wholeDays >= zeroDay, "Timestamp is too far in the past");
         return wholeDays - zeroDay;
     }
