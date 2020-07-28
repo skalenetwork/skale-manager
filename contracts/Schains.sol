@@ -118,7 +118,6 @@ contract Schains is Permissions {
         external
     {
         require(hasRole(SCHAIN_CREATOR_ROLE, msg.sender), "Sender is not authorized to create schian");
-        console.log(111111111111111);
         SchainParameters memory schainParameters = SchainParameters({
             lifetime: lifetime,
             typeOfSchain: typeOfSchain,

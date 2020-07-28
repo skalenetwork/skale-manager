@@ -26,6 +26,7 @@ async function sendTransaction(web3Inst, account, privateKey, data, receiverCont
     const txReceipt = await web3Inst.eth.sendSignedTransaction('0x' + serializedTx.toString('hex')); //.on('receipt', receipt => {
     console.log("Transaction done!");
     console.log("Gas used: ", txReceipt.gasUsed);
+    console.log("Block number: ", txReceipt.blockNumber);
     console.log('------------------------------');
     return txReceipt.gasUsed;
 }
@@ -174,6 +175,7 @@ async function isNodeLeft(nodeIndex) {
 
 async function getSchainName(schainId) {
      const schainName = await init.SchainsInternal.methods.getSchainName(schainId).call();
+     console.log(schainName);
      return schainName;
 }
 
@@ -188,6 +190,22 @@ async function getSchainsForNode(nodeIndex) {
     }
     return res;
 }
+
+async function getEvent(blockNumber) {
+    await init.SkaleDKG.getPastEvents('ChannelOpened', {fromBlock: blockNumber, toBlock: blockNumber}).then(
+        function(events) {
+            for (let i = 0; i < events.length; i++) {
+                console.log(events[i].returnValues);
+            }
+    });
+    process.exit();
+    
+}
+
+// before reopenChannel gas used 2386464
+// before initPublicKeysInProgress 2602197
+
+
 
 // createSchain(4, 'ouue');
 
@@ -227,7 +245,12 @@ if (process.argv[2] == 'getSchainNodes') {
     channels(process.argv[3]);
 } else if (process.argv[2] == 'getChannelStartedTime') {
     getChannelStartedTime(process.argv[3]);
+} else if (process.argv[2] == 'e') {
+    getEvent(process.argv[3]);
+} else if (process.argv[2] == 'getSchainName') {
+    getSchainName(process.argv[3]);
 }
+
 
 
 

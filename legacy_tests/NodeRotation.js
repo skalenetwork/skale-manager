@@ -107,14 +107,6 @@ async function selectNodeToGroup(schainId) {
     await sendTransaction(init.web3, init.mainAccount, privateKeyB, abi, contractAddress);
 }
 
-async function reopenChannel(schainId) {
-    let privateKeyB = Buffer.from(init.privateKey, "hex");
-    abi = await init.SkaleDKG.methods.reopenChannel(schainId).encodeABI();
-    contractAddress = init.jsonData['skale_d_k_g_address'];
-    console.log("------------------------------");
-    console.log("reopenChannel");
-    await sendTransaction(init.web3, init.mainAccount, privateKeyB, abi, contractAddress);
-}
 
 if (process.argv[2] == 'freezeSchains') {
     freezeSchains(process.argv[3]);
@@ -144,7 +136,7 @@ if (process.argv[2] == 'freezeSchains') {
     selectNodeToGroup(process.argv[3]);
 } else if (process.argv[2] == 'reopenChannel') {
     reopenChannel(process.argv[3]);
-} 
+}
 
 
 

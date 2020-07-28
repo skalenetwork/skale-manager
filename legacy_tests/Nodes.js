@@ -15,6 +15,15 @@ async function sendTransaction(web3Inst, account, privateKey, data, receiverCont
         gasPrice: 10000000000,
         gas: 8000000,
     };
+    // const rawTx = {
+    //     from: web3Inst.utils.toChecksumAddress(account),
+    //     nonce: 398,
+    //     data: "0x056ba37b0000000000000000000000000000000000000000000000000000000000000000",
+    //     to: "0x9f34bd4f0cbda521384809d09969398f47223ca7",
+    //     gasPrice: 10000000000,
+    //     gas: 800000000,
+    //     chainId: 1337
+    // };
     let tx;
     if (init.network === "unique") {
         console.log('RINKEBY')
@@ -100,15 +109,7 @@ async function nodeExit(nodeIndex) {
 }
 
 
-async function changeReward(nodeIndex) {
-    // console.log(await init.Nodes.methods.getNodeLastRewardDate(nodeIndex).call());
-    let privateKeyB = Buffer.from(init.privateKey, "hex");
-    abi = await init.Nodes.methods.skipNodeLastRewardDate(nodeIndex).encodeABI();
-    contractAddress = init.jsonData['nodes_address'];
-    await sendTransaction(init.web3, init.mainAccount, privateKeyB, abi, contractAddress);
-    // console.log(await init.Nodes.methods.getNodeLastRewardDate(nodeIndex).call());
-    // process.exit();
-}
+
 
 async function getFreeSpace(nodes) {
     for (let i = 0; i < nodes.length; i++) {
@@ -124,7 +125,7 @@ async function registerValidator() {
     let contractAddress = init.jsonData['validator_service_address'];
     await sendTransaction(init.web3, init.mainAccount, privateKeyB, abi, contractAddress);
 
-    abi = await init.ValidatorService.methods.enableValidator(1).encodeABI();
+    abi = await init.ValidatorService.methods.enableValidator(2).encodeABI();
     await sendTransaction(init.web3, init.mainAccount, privateKeyB, abi, contractAddress);
     process.exit();
 }
@@ -206,7 +207,6 @@ module.exports.createNodes = createNodes;
 module.exports.getNode = getNode;
 module.exports.deleteNode = deleteNode;
 module.exports.getNodeNextRewardDate = getNodeNextRewardDate;
-module.exports.changeReward = changeReward;
 
 if (process.argv[2] == 'getFreeSpace') {
     nodes = (process.argv);

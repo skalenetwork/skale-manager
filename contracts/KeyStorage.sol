@@ -260,8 +260,13 @@ contract KeyStorage is Permissions {
 
     function _removeAllBroadcastedData(bytes32 groupIndex, uint n) internal {
         for (uint i = 0; i < n; i++) {
-            delete _data[groupIndex][i];
+            destructBroadcastedData(_data[groupIndex][i]);
         }
+    }
+
+    function destructBroadcastedData(BroadcastedData storage data) internal {
+        delete data.secretKeyContribution;
+        delete data.verificationVector;
     }
 
     function _calculateBlsPublicKey(bytes32 groupIndex, uint index)

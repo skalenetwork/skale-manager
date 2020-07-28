@@ -58,6 +58,16 @@ async function deleteSchain(schainName) {
     process.exit()
 }
 
+async function changeReward(nodeIndex) {
+    console.log(await init.Nodes.methods.getNodeLastRewardDate(nodeIndex).call());
+    let privateKeyB = Buffer.from(init.privateKey, "hex");
+    abi = await init.Nodes.methods.skipNodeLastRewardDate(nodeIndex).encodeABI();
+    contractAddress = init.jsonData['nodes_address'];
+    await sendTransaction(init.web3, init.mainAccount, privateKeyB, abi, contractAddress);
+    console.log(await init.Nodes.methods.getNodeLastRewardDate(nodeIndex).call());
+    process.exit();
+}
+
 async function calculateNormalBounty(nodeIndex) {
     console.log();
     console.log("Should show normal bounty for ", nodeIndex, " node");
@@ -67,7 +77,6 @@ async function calculateNormalBounty(nodeIndex) {
 }
 
 async function getBounty(nodeIndex) {
-    await nodes.changeReward(nodeIndex);
     let privateKeyB = Buffer.from(init.privateKey, "hex");
     abi = await init.SkaleManager.methods.getBounty(nodeIndex).encodeABI();
     contractAddress = init.jsonData['skale_manager_address'];
@@ -86,4 +95,26 @@ if (process.argv[2] == 'grantRole') {
     getBounty(process.argv[3]);
 } else if (process.argv[2] == 'getBountyForNodes') {
     getBountyForNodes();
+} else if (process.argv[2] == 'balanceOf') {
+    balanceOf(process.argv[3]);
+} else if (process.argv[2] == 'test') {
+    test();
+} else if (process.argv[2] == 'c') {
+    changeReward(process.argv[3]);
+}
+
+
+async function test() {
+    for (let i = 0; i < 100; i++) {
+        await changeReward(i);
+        await getBounty(i);
+    }
+    
+}
+
+
+
+async function balanceOf(address) {
+    console.log(await init.SkaleToken.methods.balanceOf(address).call());
+
 }
