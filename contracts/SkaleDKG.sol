@@ -105,8 +105,12 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         _;
     }
 
-    function openChannel(bytes32 groupIndex) external override allowTwo("Schains", "NodeRotation") {
+    function openChannel(bytes32 groupIndex) external override allow("Schains") {
         require(!channels[groupIndex].active, "Channel already is created");
+        _reopenChannel(groupIndex);
+    }
+
+    function reopenChannel(bytes32 groupIndex) external override allow("NodeRotation") {
         _reopenChannel(groupIndex);
     }
 
