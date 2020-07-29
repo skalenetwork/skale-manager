@@ -27,6 +27,7 @@ import "./SchainsInternal.sol";
 import "./ECDH.sol";
 import "./utils/Precompiled.sol";
 import "./utils/FieldOperations.sol";
+// import "@nomiclabs/buidler/console.sol";
 
 contract KeyStorage is Permissions {
     using Fp2Operations for Fp2Operations.Fp2Point;
@@ -87,7 +88,10 @@ contract KeyStorage is Permissions {
 
     function initPublicKeyInProgress(bytes32 groupIndex, uint n) external allow("SkaleDKG") {
         _publicKeysInProgress[groupIndex] = G2Operations.getG2Zero();
-        _removeAllBroadcastedData(groupIndex, n);
+        uint gasL = gasleft();
+        // console.log("Before remove data:", gasleft());
+        // _removeAllBroadcastedData(groupIndex, n);
+        // console.log("After remove data:", gasleft());
         delete _schainsNodesPublicKeys[groupIndex];
     }
 
@@ -152,18 +156,20 @@ contract KeyStorage is Permissions {
     {
         SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
         uint index = schainsInternal.getNodeIndexInGroup(groupIndex, nodeToComplaint);
+        // uint index2 = schainsInternal.getNodeIndexInGroup(groupIndex, fromNodeToComplaint);
         uint secret = _decryptMessage(groupIndex, secretNumber, nodeToComplaint, fromNodeToComplaint);
+        
         G2Operations.G2Point[] memory verificationVector = _data[groupIndex][index].verificationVector;
         G2Operations.G2Point memory value = G2Operations.getG2Zero();
         G2Operations.G2Point memory tmp = G2Operations.getG2Zero();
         
         if (multipliedShare.isG2()) {
             for (uint i = 0; i < verificationVector.length; i++) {
-                require(verificationVector[i].isG2(), "Incorrect g2 point verificationVectorComponent");
-                tmp = verificationVector[i].mulG2(Precompiled.bigModExp(index.add(1), i, Fp2Operations.P));
-                require(tmp.isG2(), "Incorrect g2 point tmp");
+                // require(verificationVector[i].isG2(), "Incorrect g2 point verificationVectorComponent");
+                tmp = verificationVector[i].mulG2(index.add(1)**i/*Precompiled.bigModExp(index.add(1), i, Fp2Operations.P)*/);
+                // require(tmp.isG2(), "Incorrect g2 point tmp");
                 value = tmp.addG2(value);
-                require(value.isG2(), "Incorrect g2 point value");
+                // require(value.isG2(), "Incorrect g2 point value");
             }
             return value.isEqual(multipliedShare) &&
                 _checkCorrectMultipliedShare(multipliedShare, secret);
@@ -283,17 +289,17 @@ contract KeyStorage is Permissions {
     )
         private
         view
-        returns (bytes32 key)
+        returns (bytes32)
     {
-        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
-        ECDH ecdh = ECDH(contractManager.getContract("ECDH"));
-        bytes32[2] memory publicKey = nodes.getNodePublicKey(fromNodeToComplaint);
+        // Nodes nodes = Nodes(contractManager.getContract("Nodes"));
+        // ECDH ecdh = ECDH(contractManager.getContract("ECDH"));
+        bytes32[2] memory publicKey = Nodes(contractManager.getContract("Nodes")).getNodePublicKey(fromNodeToComplaint);
         uint256 pkX = uint(publicKey[0]);
-        uint256 pkY = uint(publicKey[1]);
+        // uint256 pkY = uint(publicKey[1]);
 
-        (pkX, pkY) = ecdh.deriveKey(secretNumber, pkX, pkY);
+        (pkX, ) = ECDH(contractManager.getContract("ECDH")).deriveKey(secretNumber, pkX, uint(publicKey[1]));
 
-        key = bytes32(pkX);
+        return bytes32(pkX);
     }
 
     function _decryptMessage(
@@ -301,12 +307,14 @@ contract KeyStorage is Permissions {
         uint secretNumber,
         uint nodeToComplaint,
         uint fromNodeToComplaint
+        // uint indexNodeToComplaint,
+        // uint indexFromNodeToComplaint
     )
         private
         view
         returns (uint)
     {
-        Decryption decryption = Decryption(contractManager.getContract("Decryption"));
+        // Decryption decryption = Decryption(contractManager.getContract("Decryption"));
 
         bytes32 key = _getCommonPublicKey(secretNumber, fromNodeToComplaint);
 
@@ -314,7 +322,7 @@ contract KeyStorage is Permissions {
         SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
         uint index = schainsInternal.getNodeIndexInGroup(groupIndex, fromNodeToComplaint);
         uint indexOfNode = schainsInternal.getNodeIndexInGroup(groupIndex, nodeToComplaint);
-        uint secret = decryption.decrypt(
+        uint secret = Decryption(contractManager.getContract("Decryption")).decrypt(
             _data[groupIndex][indexOfNode].secretKeyContribution[index].share,
             key
         );
@@ -335,11 +343,9 @@ contract KeyStorage is Permissions {
             share.b = Fp2Operations.P.sub((share.b % Fp2Operations.P));
         }
 
-        require(G2Operations.isG1(g1), "G1.one not in G1");
         require(G2Operations.isG1(share), "mulShare not in G1");
 
         G2Operations.G2Point memory g2 = G2Operations.getG2();
-        require(G2Operations.isG2(g2), "g2.one not in g2");
         require(G2Operations.isG2(tmp), "tmp not in g2");
 
         return Precompiled.bn256Pairing(
