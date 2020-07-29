@@ -810,7 +810,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
 
                         const result = await skaleDKG.response(
                             web3.utils.soliditySha3(schainName),
-                            9,
+                            0,
                             secretNumbers[indexes[0]],
                             multipliedShares[indexes[0]],
                             {from: validatorsAccount[0]},
@@ -1270,14 +1270,14 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
             // console.log(secretKeyContributions, verificationVectorNew);
 
             for (let i = 0; i < 16; i++) {
-                let broadData = await keyStorage.getBroadcastedData(web3.utils.soliditySha3("New16NodeSchain"), i);
+                const broadData = await keyStorage.getBroadcastedData(web3.utils.soliditySha3("New16NodeSchain"), i);
                 assert(broadData[0].length.toString(), "0");
                 assert(broadData[1].length.toString(), "0");
                 let index = 0;
                 if (i === 1) {
                     index = 1;
                 }
-                let broadPoss = await skaleDKG.isBroadcastPossible(
+                const broadPoss = await skaleDKG.isBroadcastPossible(
                     web3.utils.soliditySha3("New16NodeSchain"),
                     i,
                     {from: validatorsAccount[index]},
@@ -1315,9 +1315,8 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                 {from: validatorsAccount[indexToSend], gas: 12500000},
             );
             assert.equal(resResp.logs[0].event, "BadGuy");
-            assert.equal(resResp.logs[0].args.nodeIndex.toString(), complaintNode.toString());
+            assert.equal(resResp.logs[0].args.nodeIndex.toString(), accusedNode);
             // console.log("Response gas usage", resResp.receipt.gasUsed);
-
         });
 
         it("should take correct BLS keys for 2 nodes schain", async () => {

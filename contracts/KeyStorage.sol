@@ -27,7 +27,6 @@ import "./SchainsInternal.sol";
 import "./ECDH.sol";
 import "./utils/Precompiled.sol";
 import "./utils/FieldOperations.sol";
-// import "@nomiclabs/buidler/console.sol";
 
 contract KeyStorage is Permissions {
     using Fp2Operations for Fp2Operations.Fp2Point;
@@ -86,12 +85,9 @@ contract KeyStorage is Permissions {
         delete _schainsPublicKeys[groupIndex];
     }
 
-    function initPublicKeyInProgress(bytes32 groupIndex, uint n) external allow("SkaleDKG") {
+    function initPublicKeyInProgress(bytes32 groupIndex, uint) external allow("SkaleDKG") {
         _publicKeysInProgress[groupIndex] = G2Operations.getG2Zero();
-        uint gasL = gasleft();
-        // console.log("Before remove data:", gasleft());
         // _removeAllBroadcastedData(groupIndex, n);
-        // console.log("After remove data:", gasleft());
         delete _schainsNodesPublicKeys[groupIndex];
     }
 
@@ -156,20 +152,16 @@ contract KeyStorage is Permissions {
     {
         SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
         uint index = schainsInternal.getNodeIndexInGroup(groupIndex, nodeToComplaint);
-        // uint index2 = schainsInternal.getNodeIndexInGroup(groupIndex, fromNodeToComplaint);
         uint secret = _decryptMessage(groupIndex, secretNumber, nodeToComplaint, fromNodeToComplaint);
-        
+
         G2Operations.G2Point[] memory verificationVector = _data[groupIndex][index].verificationVector;
         G2Operations.G2Point memory value = G2Operations.getG2Zero();
         G2Operations.G2Point memory tmp = G2Operations.getG2Zero();
-        
+
         if (multipliedShare.isG2()) {
             for (uint i = 0; i < verificationVector.length; i++) {
-                // require(verificationVector[i].isG2(), "Incorrect g2 point verificationVectorComponent");
-                tmp = verificationVector[i].mulG2(index.add(1)**i/*Precompiled.bigModExp(index.add(1), i, Fp2Operations.P)*/);
-                // require(tmp.isG2(), "Incorrect g2 point tmp");
+                tmp = verificationVector[i].mulG2(index.add(1) ** i);
                 value = tmp.addG2(value);
-                // require(value.isG2(), "Incorrect g2 point value");
             }
             return value.isEqual(multipliedShare) &&
                 _checkCorrectMultipliedShare(multipliedShare, secret);
@@ -291,11 +283,8 @@ contract KeyStorage is Permissions {
         view
         returns (bytes32)
     {
-        // Nodes nodes = Nodes(contractManager.getContract("Nodes"));
-        // ECDH ecdh = ECDH(contractManager.getContract("ECDH"));
         bytes32[2] memory publicKey = Nodes(contractManager.getContract("Nodes")).getNodePublicKey(fromNodeToComplaint);
         uint256 pkX = uint(publicKey[0]);
-        // uint256 pkY = uint(publicKey[1]);
 
         (pkX, ) = ECDH(contractManager.getContract("ECDH")).deriveKey(secretNumber, pkX, uint(publicKey[1]));
 
@@ -307,14 +296,11 @@ contract KeyStorage is Permissions {
         uint secretNumber,
         uint nodeToComplaint,
         uint fromNodeToComplaint
-        // uint indexNodeToComplaint,
-        // uint indexFromNodeToComplaint
     )
         private
         view
         returns (uint)
     {
-        // Decryption decryption = Decryption(contractManager.getContract("Decryption"));
 
         bytes32 key = _getCommonPublicKey(secretNumber, fromNodeToComplaint);
 
