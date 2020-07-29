@@ -105,9 +105,12 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         _;
     }
 
-    function openChannel(bytes32 groupIndex) external override allow("SchainsInternal") {
+    function openChannel(bytes32 groupIndex) external override allow("Schains") {
         require(!channels[groupIndex].active, "Channel already is created");
+        _reopenChannel(groupIndex);
+    }
 
+    function reopenChannel(bytes32 groupIndex) external override allow("NodeRotation") {
         _reopenChannel(groupIndex);
     }
 
@@ -237,10 +240,6 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         if (dkgProcess[groupIndex].numberOfCompleted == numberOfParticipant) {
             _setSuccesfulDKG(groupIndex);
         }
-    }
-
-    function reopenChannel(bytes32 groupIndex) external override allow("NodeRotation") {
-        _reopenChannel(groupIndex);
     }
 
     function getChannelStartedTime(bytes32 groupIndex) external view returns (uint) {
@@ -378,7 +377,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         delete dkgProcess[groupIndex].numberOfBroadcasted;
         delete dkgProcess[groupIndex].numberOfCompleted;
         channels[groupIndex].startedBlockTimestamp = now;
-        KeyStorage(contractManager.getContract("KeyStorage")).initPublicKeyInProgress(groupIndex, len);
+        KeyStorage(contractManager.getContract("KeyStorage")).initPublicKeyInProgress(groupIndex);
 
         emit ChannelOpened(groupIndex);
     }
