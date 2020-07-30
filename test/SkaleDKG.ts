@@ -12,7 +12,7 @@ import { ContractManagerInstance,
          SlashingTableInstance,
          ValidatorServiceInstance} from "../types/truffle-contracts";
 
-import { skipTime } from "./tools/time";
+import { skipTime, currentTime } from "./tools/time";
 
 import BigNumber from "bignumber.js";
 import { deployContractManager } from "./tools/deploy/contractManager";
@@ -925,6 +925,15 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                     });
 
                     it("accused node should send correct response", async () => {
+                        await nodes.createNode(validatorsAccount[0],
+                            {
+                                port: 8545,
+                                nonce: 0,
+                                ip: "0x7f000002",
+                                publicIp: "0x7f000002",
+                                publicKey: validatorsPublicKey[0],
+                                name: "d202"
+                        });
                         const result = await skaleDKG.response(
                             web3.utils.soliditySha3(schainName),
                             0,
@@ -932,6 +941,10 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                             multipliedShares[indexes[0]],
                             {from: validatorsAccount[0]},
                         );
+                        const leavingTimeOfNode = new BigNumber(
+                            (await nodeRotation.getLeavingHistory(0))[0].finishedRotation
+                        ).toNumber();
+                        assert.equal(await currentTime(web3), leavingTimeOfNode);
                         assert.equal(result.logs[0].event, "BadGuy");
                         assert.equal(result.logs[0].args.nodeIndex.toString(), "0");
 
