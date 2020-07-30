@@ -1235,88 +1235,270 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
 
         });
 
-        it("16 nodes schain test with incorrect complaint and response", async () => {
+        // it("16 nodes schain test with incorrect complaint and response", async () => {
 
-            for (let i = 3; i <= 16; i++) {
-                const hexIndex = ("0" + i.toString(16)).slice(-2);
+        //     for (let i = 3; i <= 16; i++) {
+        //         const hexIndex = ("0" + i.toString(16)).slice(-2);
+        //         await nodes.createNode(validatorsAccount[0],
+        //             {
+        //                 port: 8545,
+        //                 nonce: 0,
+        //                 ip: "0x7f0000" + hexIndex,
+        //                 publicIp: "0x7f0000" + hexIndex,
+        //                 publicKey: validatorsPublicKey[0],
+        //                 name: "d2" + hexIndex
+        //             });
+        //     }
+
+        //     const deposit = await schains.getSchainPrice(3, 5);
+
+        //     await schains.addSchain(
+        //         validator1,
+        //         deposit,
+        //         web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 3, 0, "New16NodeSchain"]));
+
+            // await nodes.createNode(validatorsAccount[0],
+            //     {
+            //         port: 8545,
+            //         nonce: 0,
+            //         ip: "0x7f0000ff",
+            //         publicIp: "0x7f0000ff",
+            //         publicKey: validatorsPublicKey[0],
+            //         name: "d2ff"
+            //     });
+
+        //     const secretKeyContributions = [];
+        //     for (let i = 0; i < 16; i++) {
+        //         secretKeyContributions[i] = encryptedSecretKeyContributions[0][0];
+        //     }
+
+        //     const verificationVectorNew = [];
+        //     for (let i = 0; i < 11; i++) {
+        //         verificationVectorNew[i] = verificationVectors[i % 2][0];
+        //     }
+
+        //     // console.log(secretKeyContributions, verificationVectorNew);
+
+        //     for (let i = 0; i < 16; i++) {
+        //         const broadData = await keyStorage.getBroadcastedData(web3.utils.soliditySha3("New16NodeSchain"), i);
+        //         assert(broadData[0].length.toString(), "0");
+        //         assert(broadData[1].length.toString(), "0");
+        //         let index = 0;
+        //         if (i === 1) {
+        //             index = 1;
+        //         }
+        //         const broadPoss = await skaleDKG.isBroadcastPossible(
+        //             web3.utils.soliditySha3("New16NodeSchain"),
+        //             i,
+        //             {from: validatorsAccount[index]},
+        //         );
+        //         assert.equal(broadPoss, true);
+        //         await skaleDKG.broadcast(
+        //             web3.utils.soliditySha3("New16NodeSchain"),
+        //             i,
+        //             verificationVectorNew,
+        //             secretKeyContributions,
+        //             {from: validatorsAccount[index]},
+        //         );
+        //     }
+        //     const nodesInGroup = await schainsInternal.getNodesInGroup(web3.utils.soliditySha3("New16NodeSchain"));
+        //     const accusedNode = nodesInGroup[14].toString();
+        //     let complaintNode = "7";
+        //     let indexToSend = 0;
+        //     if (accusedNode === "1") {
+        //         indexToSend = 1;
+        //     }
+        //     if (accusedNode === "7") {
+        //         complaintNode = "9";
+        //     }
+        //     await skaleDKG.complaint(
+        //         web3.utils.soliditySha3("New16NodeSchain"),
+        //         complaintNode,
+        //         accusedNode,
+        //         {from: validatorsAccount[0]}
+        //     );
+        //     const resResp = await skaleDKG.response(
+        //         web3.utils.soliditySha3("New16NodeSchain"),
+        //         accusedNode,
+        //         secretNumbers[indexes[indexToSend]],
+        //         multipliedShares[indexes[indexToSend]],
+        //         {from: validatorsAccount[indexToSend], gas: 12500000},
+        //     );
+        //     assert.equal(resResp.logs[0].event, "BadGuy");
+        //     assert.equal(resResp.logs[0].args.nodeIndex.toString(), accusedNode);
+        //     console.log("Response gas usage", resResp.receipt.gasUsed);
+        // });
+
+        describe("should send response from each node in schain without new node", async () => {
+
+            beforeEach(async () => {
+                for (let i = 3; i <= 16; i++) {
+                    const hexIndex = ("0" + i.toString(16)).slice(-2);
+                    await nodes.createNode(validatorsAccount[0],
+                        {
+                            port: 8545,
+                            nonce: 0,
+                            ip: "0x7f0000" + hexIndex,
+                            publicIp: "0x7f0000" + hexIndex,
+                            publicKey: validatorsPublicKey[0],
+                            name: "d2" + hexIndex
+                        });
+                }
+
+                const deposit = await schains.getSchainPrice(3, 5);
+
+                await schains.addSchain(
+                    validator1,
+                    deposit,
+                    web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 3, 0, "New16NodeSchain"]));
+
+                const secretKeyContributions = [];
+                for (let i = 0; i < 16; i++) {
+                    secretKeyContributions[i] = encryptedSecretKeyContributions[0][0];
+                }
+
+                const verificationVectorNew = [];
+                for (let i = 0; i < 11; i++) {
+                    verificationVectorNew[i] = verificationVectors[i % 2][0];
+                }
+
+                for (let i = 0; i < 16; i++) {
+                    let index = 0;
+                    if (i === 1) {
+                        index = 1;
+                    }
+                    await skaleDKG.broadcast(
+                        web3.utils.soliditySha3("New16NodeSchain"),
+                        i,
+                        verificationVectorNew,
+                        secretKeyContributions,
+                        {from: validatorsAccount[index]},
+                    );
+                }
+            });
+
+            for (let index = 0; index <= 15; index++) {
+                it("should run response for " + index + " node in schain", async () => {
+                    const nodesInGroup = await schainsInternal.getNodesInGroup(web3.utils.soliditySha3("New16NodeSchain"));
+                    const accusedNode = nodesInGroup[index].toString();
+                    let complaintNode = "7";
+                    let indexToSend = 0;
+                    if (accusedNode === "1") {
+                        indexToSend = 1;
+                    }
+                    if (accusedNode === "7") {
+                        complaintNode = "9";
+                    }
+                    await skaleDKG.complaint(
+                        web3.utils.soliditySha3("New16NodeSchain"),
+                        complaintNode,
+                        accusedNode,
+                        {from: validatorsAccount[0]}
+                    );
+                    const resResp = await skaleDKG.response(
+                        web3.utils.soliditySha3("New16NodeSchain"),
+                        accusedNode,
+                        secretNumbers[indexes[indexToSend]],
+                        multipliedShares[indexes[indexToSend]],
+                        {from: validatorsAccount[indexToSend], gas: 12500000},
+                    );
+                    assert.equal(resResp.logs[0].event, "BadGuy");
+                    assert.equal(resResp.logs[0].args.nodeIndex.toString(), accusedNode);
+                    console.log("\n Response from " + index + " node gas usage without new node", resResp.receipt.gasUsed);
+                });
+            }
+
+        });
+
+        describe("should send response from each node in schain with new node", async () => {
+
+            beforeEach(async () => {
+                for (let i = 3; i <= 16; i++) {
+                    const hexIndex = ("0" + i.toString(16)).slice(-2);
+                    await nodes.createNode(validatorsAccount[0],
+                        {
+                            port: 8545,
+                            nonce: 0,
+                            ip: "0x7f0000" + hexIndex,
+                            publicIp: "0x7f0000" + hexIndex,
+                            publicKey: validatorsPublicKey[0],
+                            name: "d2" + hexIndex
+                        });
+                }
+
+                const deposit = await schains.getSchainPrice(3, 5);
+
+                await schains.addSchain(
+                    validator1,
+                    deposit,
+                    web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 3, 0, "New16NodeSchain"]));
+
                 await nodes.createNode(validatorsAccount[0],
                     {
                         port: 8545,
                         nonce: 0,
-                        ip: "0x7f0000" + hexIndex,
-                        publicIp: "0x7f0000" + hexIndex,
+                        ip: "0x7f0000ff",
+                        publicIp: "0x7f0000ff",
                         publicKey: validatorsPublicKey[0],
-                        name: "d2" + hexIndex
+                        name: "d2ff"
                     });
-            }
 
-            const deposit = await schains.getSchainPrice(3, 5);
-
-            await schains.addSchain(
-                validator1,
-                deposit,
-                web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 3, 0, "New16NodeSchain"]));
-
-            const secretKeyContributions = [];
-            for (let i = 0; i < 16; i++) {
-                secretKeyContributions[i] = encryptedSecretKeyContributions[0][0];
-            }
-
-            const verificationVectorNew = [];
-            for (let i = 0; i < 11; i++) {
-                verificationVectorNew[i] = verificationVectors[i % 2][0];
-            }
-
-            // console.log(secretKeyContributions, verificationVectorNew);
-
-            for (let i = 0; i < 16; i++) {
-                const broadData = await keyStorage.getBroadcastedData(web3.utils.soliditySha3("New16NodeSchain"), i);
-                assert(broadData[0].length.toString(), "0");
-                assert(broadData[1].length.toString(), "0");
-                let index = 0;
-                if (i === 1) {
-                    index = 1;
+                const secretKeyContributions = [];
+                for (let i = 0; i < 16; i++) {
+                    secretKeyContributions[i] = encryptedSecretKeyContributions[0][0];
                 }
-                const broadPoss = await skaleDKG.isBroadcastPossible(
-                    web3.utils.soliditySha3("New16NodeSchain"),
-                    i,
-                    {from: validatorsAccount[index]},
-                );
-                assert.equal(broadPoss, true);
-                await skaleDKG.broadcast(
-                    web3.utils.soliditySha3("New16NodeSchain"),
-                    i,
-                    verificationVectorNew,
-                    secretKeyContributions,
-                    {from: validatorsAccount[index]},
-                );
+
+                const verificationVectorNew = [];
+                for (let i = 0; i < 11; i++) {
+                    verificationVectorNew[i] = verificationVectors[i % 2][0];
+                }
+
+                for (let i = 0; i < 16; i++) {
+                    let index = 0;
+                    if (i === 1) {
+                        index = 1;
+                    }
+                    await skaleDKG.broadcast(
+                        web3.utils.soliditySha3("New16NodeSchain"),
+                        i,
+                        verificationVectorNew,
+                        secretKeyContributions,
+                        {from: validatorsAccount[index]},
+                    );
+                }
+            });
+
+            for (let index = 0; index <= 15; index++) {
+                it("should run response for " + index + " node in schain", async () => {
+                    const nodesInGroup = await schainsInternal.getNodesInGroup(web3.utils.soliditySha3("New16NodeSchain"));
+                    const accusedNode = nodesInGroup[index].toString();
+                    let complaintNode = "7";
+                    let indexToSend = 0;
+                    if (accusedNode === "1") {
+                        indexToSend = 1;
+                    }
+                    if (accusedNode === "7") {
+                        complaintNode = "9";
+                    }
+                    await skaleDKG.complaint(
+                        web3.utils.soliditySha3("New16NodeSchain"),
+                        complaintNode,
+                        accusedNode,
+                        {from: validatorsAccount[0]}
+                    );
+                    const resResp = await skaleDKG.response(
+                        web3.utils.soliditySha3("New16NodeSchain"),
+                        accusedNode,
+                        secretNumbers[indexes[indexToSend]],
+                        multipliedShares[indexes[indexToSend]],
+                        {from: validatorsAccount[indexToSend], gas: 12500000},
+                    );
+                    assert.equal(resResp.logs[0].event, "BadGuy");
+                    assert.equal(resResp.logs[0].args.nodeIndex.toString(), accusedNode);
+                    console.log("\n Response from " + index + " node gas usage with new node", resResp.receipt.gasUsed);
+                });
             }
-            const nodesInGroup = await schainsInternal.getNodesInGroup(web3.utils.soliditySha3("New16NodeSchain"));
-            const accusedNode = nodesInGroup[14].toString();
-            let complaintNode = "7";
-            let indexToSend = 0;
-            if (accusedNode === "1") {
-                indexToSend = 1;
-            }
-            if (accusedNode === "7") {
-                complaintNode = "9";
-            }
-            await skaleDKG.complaint(
-                web3.utils.soliditySha3("New16NodeSchain"),
-                complaintNode,
-                accusedNode,
-                {from: validatorsAccount[0]}
-            );
-            const resResp = await skaleDKG.response(
-                web3.utils.soliditySha3("New16NodeSchain"),
-                accusedNode,
-                secretNumbers[indexes[indexToSend]],
-                multipliedShares[indexes[indexToSend]],
-                {from: validatorsAccount[indexToSend], gas: 12500000},
-            );
-            assert.equal(resResp.logs[0].event, "BadGuy");
-            assert.equal(resResp.logs[0].args.nodeIndex.toString(), accusedNode);
-            // console.log("Response gas usage", resResp.receipt.gasUsed);
+
         });
 
         it("should take correct BLS keys for 2 nodes schain", async () => {

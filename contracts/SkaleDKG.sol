@@ -53,7 +53,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         uint startComplaintBlockTimestamp;
     }
 
-    uint public constant COMPLAINT_TIMELIMIT = 1800;
+    uint public complaintTimelimit;
 
     mapping(bytes32 => Channel) public channels;
 
@@ -62,8 +62,6 @@ contract SkaleDKG is Permissions, ISkaleDKG {
     mapping(bytes32 => ProcessDKG) public dkgProcess;
 
     mapping(bytes32 => ComplaintData) public complaints;
-
-    mapping(bytes32 => uint) public startAlrightTimestamp;
 
     event ChannelOpened(bytes32 groupIndex);
 
@@ -89,14 +87,6 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         _;
     }
 
-    modifier correctGroupWithoutRevert(bytes32 groupIndex) {
-        if (!channels[groupIndex].active) {
-            emit ComplaintError("Group is not created");
-        } else {
-            _;
-        }
-    }
-
     modifier correctNode(bytes32 groupIndex, uint nodeIndex) {
         uint index = _nodeIndexInSchain(groupIndex, nodeIndex);
         require(
@@ -117,6 +107,10 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         delete dkgProcess[groupIndex];
         delete complaints[groupIndex];
         KeyStorage(contractManager.getContract("KeyStorage")).deleteKey(groupIndex);
+    }
+
+    function setComplaintTimelimit(uint newComplaintTimelimit) external onlyOwner {
+        complaintTimelimit = newComplaintTimelimit;
     }
 
     function broadcast(
@@ -156,17 +150,26 @@ contract SkaleDKG is Permissions, ISkaleDKG {
 
     function complaint(bytes32 groupIndex, uint fromNodeIndex, uint toNodeIndex)
         external
-        correctGroupWithoutRevert(groupIndex)
-        correctNode(groupIndex, fromNodeIndex)
-        correctNode(groupIndex, toNodeIndex)
     {
+        if (!channels[groupIndex].active) {
+            emit ComplaintError("Group is not created");
+            return;
+        }
+        if (!(_nodeIndexInSchain(groupIndex, fromNodeIndex) < channels[groupIndex].n)) {
+            emit ComplaintError("Accuser Node is not in this group");
+            return;
+        }
+        if (!(_nodeIndexInSchain(groupIndex, toNodeIndex) < channels[groupIndex].n)) {
+            emit ComplaintError("Accused Node is not in this group");
+            return;
+        }
         require(_isNodeByMessageSender(fromNodeIndex, msg.sender), "Node does not exist for message sender");
         bool broadcasted = _isBroadcasted(groupIndex, toNodeIndex);
         if (broadcasted && complaints[groupIndex].nodeToComplaint == uint(-1)) {
             // incorrect data or missing alright
             if (
                 isEveryoneBroadcasted(groupIndex) &&
-                startAlrightTimestamp[groupIndex].add(COMPLAINT_TIMELIMIT) <= block.timestamp &&
+                dkgProcess[groupIndex].startAlrightTimestamp.add(complaintTimelimit) <= block.timestamp &&
                 !isAllDataReceived(groupIndex, toNodeIndex)
             ) {
                 // missing alright
@@ -180,14 +183,14 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             }
         } else if (broadcasted && complaints[groupIndex].nodeToComplaint == toNodeIndex) {
             // 30 min after incorrect data complaint
-            if (complaints[groupIndex].startComplaintBlockTimestamp.add(COMPLAINT_TIMELIMIT) <= block.timestamp) {
+            if (complaints[groupIndex].startComplaintBlockTimestamp.add(complaintTimelimit) <= block.timestamp) {
                 _finalizeSlashing(groupIndex, complaints[groupIndex].nodeToComplaint);
             } else {
                 emit ComplaintError("The same complaint rejected");
             }
         } else if (!broadcasted) {
             // not broadcasted in 30 min
-            if (channels[groupIndex].startedBlockTimestamp.add(COMPLAINT_TIMELIMIT) <= block.timestamp) {
+            if (channels[groupIndex].startedBlockTimestamp.add(complaintTimelimit) <= block.timestamp) {
                 _finalizeSlashing(groupIndex, toNodeIndex);
             } else {
                 emit ComplaintError("Complaint sent too early");
@@ -255,24 +258,12 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         return dkgProcess[groupIndex].numberOfCompleted;
     }
 
-    function getTimeOfLastSuccesfulDKG(bytes32 groupIndex) external view returns (uint) {
-        return lastSuccesfulDKG[groupIndex];
-    }
-
-    function getComplaintData(bytes32 groupIndex) external view returns (uint, uint) {
-        return (complaints[groupIndex].fromNodeToComplaint, complaints[groupIndex].nodeToComplaint);
-    }
-
-    function getComplaintStartedTime(bytes32 groupIndex) external view returns (uint) {
-        return complaints[groupIndex].startComplaintBlockTimestamp;
-    }
-
-    function getAlrightStartedTime(bytes32 groupIndex) external view returns (uint) {
-        return startAlrightTimestamp[groupIndex];
-    }
-
     function isChannelOpened(bytes32 groupIndex) external override view returns (bool) {
         return channels[groupIndex].active;
+    }
+
+    function getTimeOfLastSuccesfulDKG(bytes32 groupIndex) external view returns (uint) {
+        return lastSuccesfulDKG[groupIndex];
     }
 
     function isLastDKGSuccesful(bytes32 groupIndex) external override view returns (bool) {
@@ -304,13 +295,13 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             ) ||
             (
                 dkgProcess[groupIndex].broadcasted[indexTo] &&
-                complaints[groupIndex].startComplaintBlockTimestamp.add(COMPLAINT_TIMELIMIT) <= block.timestamp &&
+                complaints[groupIndex].startComplaintBlockTimestamp.add(complaintTimelimit) <= block.timestamp &&
                 complaints[groupIndex].nodeToComplaint == toNodeIndex
             ) ||
             (
                 !dkgProcess[groupIndex].broadcasted[indexTo] &&
                 complaints[groupIndex].nodeToComplaint == uint(-1) &&
-                channels[groupIndex].startedBlockTimestamp.add(COMPLAINT_TIMELIMIT) <= block.timestamp
+                channels[groupIndex].startedBlockTimestamp.add(complaintTimelimit) <= block.timestamp
             );
         return channels[groupIndex].active &&
             indexFrom < channels[groupIndex].n &&
@@ -336,8 +327,13 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             complaints[groupIndex].nodeToComplaint == nodeIndex;
     }
 
+    function getComplaintData(bytes32 groupIndex) external view returns (uint, uint) {
+        return (complaints[groupIndex].fromNodeToComplaint, complaints[groupIndex].nodeToComplaint);
+    }
+
     function initialize(address contractsAddress) public override initializer {
         Permissions.initialize(contractsAddress);
+        complaintTimelimit = 1800;
     }
 
     function isEveryoneBroadcasted(bytes32 groupIndex) public view returns (bool) {
@@ -406,11 +402,14 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             channels[groupIndex].active = false;
         }
 
-        Punisher punisher = Punisher(contractManager.getContract("Punisher"));
-        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
-        SlashingTable slashingTable = SlashingTable(contractManager.getContract("SlashingTable"));
+        // Punisher punisher = Punisher(contractManager.getContract("Punisher"));
+        // Nodes nodes = Nodes(contractManager.getContract("Nodes"));
+        // SlashingTable slashingTable = SlashingTable(contractManager.getContract("SlashingTable"));
 
-        punisher.slash(nodes.getValidatorId(badNode), slashingTable.getPenalty("FailedDKG"));
+        Punisher(contractManager.getContract("Punisher")).slash(
+            Nodes(contractManager.getContract("Nodes")).getValidatorId(badNode),
+            SlashingTable(contractManager.getContract("SlashingTable")).getPenalty("FailedDKG")
+        );
     }
 
     function _isBroadcast(
@@ -426,7 +425,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         dkgProcess[groupIndex].broadcasted[index] = true;
         dkgProcess[groupIndex].numberOfBroadcasted++;
         if (dkgProcess[groupIndex].numberOfBroadcasted == channels[groupIndex].n) {
-            startAlrightTimestamp[groupIndex] = now;
+            dkgProcess[groupIndex].startAlrightTimestamp = now;
         }
         KeyStorage(contractManager.getContract("KeyStorage")).addBroadcastedData(
             groupIndex,
