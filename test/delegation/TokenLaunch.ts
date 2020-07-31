@@ -84,6 +84,14 @@ contract("TokenLaunchManager", ([owner, holder, delegation, validator, seller, h
                 .should.be.eventually.rejectedWith("Can't retrive tokens because token launch is not completed");
         });
 
+        it("should not allow to approve transfers if launch is completed", async () => {
+            await TokenLaunchManager.completeTokenLaunch({from: seller});
+            await TokenLaunchManager.approveTransfer(holder, 10, {from: seller})
+                .should.be.eventually.rejectedWith("Can't approve because token launch is completed");
+            await TokenLaunchManager.approveBatchOfTransfers([holder], [10], {from: seller})
+                .should.be.eventually.rejectedWith("Can't approve because token launch is completed");
+        });
+
         it("should allow seller to approve transfer to buyer", async () => {
             await TokenLaunchManager.approveBatchOfTransfers([holder], [10], {from: seller});
             await TokenLaunchManager.completeTokenLaunch({from: seller});
