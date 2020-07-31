@@ -372,7 +372,7 @@ contract Schains is Permissions {
     {
         SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
         uint[] memory nodesInGroup = schainsInternal.createGroupForSchain(schainId, numberOfNodes, partOfNode);
-        schainsInternal.redirectOpenChannel(schainId);
+        ISkaleDKG(contractManager.getContract("SkaleDKG")).openChannel(schainId);
 
         emit SchainNodes(
             schainName,
