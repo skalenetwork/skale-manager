@@ -393,7 +393,8 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         if (schainsInternal.isAnyFreeNode(groupIndex)) {
             uint newNode = nodeRotation.rotateNode(
                 badNode,
-                groupIndex
+                groupIndex,
+                false
             );
             emit NewGuy(newNode);
         } else {

@@ -12,7 +12,7 @@ import { ConstantsHolderInstance,
          NodeRotationInstance} from "../types/truffle-contracts";
 
 import BigNumber from "bignumber.js";
-import { skipTime } from "./tools/time";
+import { skipTime, currentTime } from "./tools/time";
 
 import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
 import { deployContractManager } from "./tools/deploy/contractManager";
@@ -857,7 +857,11 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
             const res1 = await schainsInternal.getNodesInGroup(web3.utils.soliditySha3("d2"));
             const res2 = await schainsInternal.getNodesInGroup(web3.utils.soliditySha3("d3"));
             await skaleManager.nodeExit(0, {from: nodeAddress});
-
+            const leavingTimeOfNode = new BigNumber(
+                (await nodeRotation.getLeavingHistory(0))[0].finishedRotation
+            ).toNumber();
+            const _12hours = 43200;
+            assert.equal(await currentTime(web3), leavingTimeOfNode-_12hours);
             const rotatedSchain = (await nodeRotation.getLeavingHistory(0))[0].schainIndex;
             const rotationForRotatedSchain = await nodeRotation.getRotation(rotatedSchain);
             assert.notEqual(rotationForRotatedSchain.newNodeIndex, new BigNumber(0));
