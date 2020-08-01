@@ -60,7 +60,7 @@ contract NodeRotation is Permissions {
         SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
         bytes32 schainId = schainsInternal.getActiveSchain(nodeIndex);
         require(_checkRotation(schainId), "No any free Nodes for rotating");
-        rotateNode(nodeIndex, schainId);
+        rotateNode(nodeIndex, schainId, true);
         return schainsInternal.getActiveSchain(nodeIndex) == bytes32(0) ? true : false;
     }
 
@@ -97,7 +97,10 @@ contract NodeRotation is Permissions {
     }
 
     function getRotation(bytes32 schainIndex) external view returns (Rotation memory) {
-        return rotations[schainIndex];
+        if (rotations[schainIndex].nodeIndex != rotations[schainIndex].newNodeIndex) {
+            return rotations[schainIndex];
+        }
+        return Rotation(0, 0, 0, 0);
     }
 
     function getLeavingHistory(uint nodeIndex) external view returns (LeavingHistory[] memory) {
@@ -110,7 +113,8 @@ contract NodeRotation is Permissions {
 
     function rotateNode(
         uint nodeIndex,
-        bytes32 schainId
+        bytes32 schainId,
+        bool shouldDelay
     )
         public
         allowTwo("SkaleDKG", "SkaleManager")
@@ -119,7 +123,7 @@ contract NodeRotation is Permissions {
         SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
         schainsInternal.removeNodeFromSchain(nodeIndex, schainId);
         newNode = selectNodeToGroup(schainId);
-        _finishRotation(schainId, nodeIndex, newNode);
+        _finishRotation(schainId, nodeIndex, newNode, shouldDelay);
     }
 
     /**
@@ -156,21 +160,24 @@ contract NodeRotation is Permissions {
     function _startRotation(bytes32 schainIndex, uint nodeIndex) private {
         ConstantsHolder constants = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
         rotations[schainIndex].nodeIndex = nodeIndex;
+        rotations[schainIndex].newNodeIndex = nodeIndex;
         rotations[schainIndex].freezeUntil = now.add(constants.rotationDelay());
     }
 
     function _finishRotation(
         bytes32 schainIndex,
         uint nodeIndex,
-        uint newNodeIndex)
+        uint newNodeIndex,
+        bool shouldDelay)
         private
     {
         ConstantsHolder constants = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
-        leavingHistory[nodeIndex].push(LeavingHistory(schainIndex, now.add(constants.rotationDelay())));
+        leavingHistory[nodeIndex].push(
+            LeavingHistory(schainIndex, shouldDelay ? now.add(constants.rotationDelay()) : now)
+        );
         rotations[schainIndex].newNodeIndex = newNodeIndex;
         rotations[schainIndex].rotationCounter++;
-        ISkaleDKG skaleDKG = ISkaleDKG(contractManager.getContract("SkaleDKG"));
-        skaleDKG.reopenChannel(schainIndex);
+        ISkaleDKG(contractManager.getContract("SkaleDKG")).reopenChannel(schainIndex);
     }
 
     function _checkRotation(bytes32 schainId ) private view returns (bool) {
