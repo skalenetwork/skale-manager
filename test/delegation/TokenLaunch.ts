@@ -12,7 +12,7 @@ import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
 import { deployContractManager } from "../tools/deploy/contractManager";
 import { deployDelegationController } from "../tools/deploy/delegation/delegationController";
-import { deployDelegationPeriodManager } from "./tools/deploy/delegation/delegationPeriodManager";
+import { deployDelegationPeriodManager } from "../tools/deploy/delegation/delegationPeriodManager";
 import { deployPunisher } from "../tools/deploy/delegation/punisher";
 import { deployTokenLaunchManager } from "../tools/deploy/delegation/tokenLaunchManager";
 import { deployValidatorService } from "../tools/deploy/delegation/validatorService";
@@ -392,7 +392,7 @@ contract("TokenLaunchManager", ([owner, holder, delegation, validator, seller, h
                 await skaleToken.mint(holder, freeAmount, "0x", "0x");
 
                 (await skaleToken.getAndUpdateLockedAmount.call(holder)).toNumber().should.be.equal(purchasedAmount);
-                
+
                 await delegationPeriodManager.setDelegationPeriod(12, 200);
                 await delegationController.delegate(
                     validatorId, freeAmount + purchasedAmount, period, "D2 is even", {from: holder});
