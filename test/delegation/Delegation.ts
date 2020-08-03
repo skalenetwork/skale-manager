@@ -268,6 +268,7 @@ contract("Delegation", ([owner,
             await skaleToken.mint(validator, defaultAmount.toString(), "0x", "0x");
             await delegationController.delegate(
                 validatorId, 5, 3, "D2 is even", {from: validator});
+            await delegationPeriodManager.setDelegationPeriod(12, 200);
             await delegationController.delegate(
                 validatorId, 13, 12, "D2 is even", {from: validator});
             await delegationController.acceptPendingDelegation(0, {from: validator});
@@ -377,7 +378,9 @@ contract("Delegation", ([owner,
             const delegatedAmount2 = 3e6;
             const delegatedAmount3 = 5e6;
             beforeEach(async () => {
+                await delegationPeriodManager.setDelegationPeriod(12, 200);
                 delegationController.delegate(validatorId, delegatedAmount1, 12, "D2 is even", {from: holder1});
+                await delegationPeriodManager.setDelegationPeriod(6, 150);
                 delegationController.delegate(validatorId, delegatedAmount2, 6,
                     "D2 is even more even", {from: holder2});
                 delegationController.delegate(validatorId, delegatedAmount3, 3, "D2 is the evenest", {from: holder3});
