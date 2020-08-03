@@ -132,6 +132,8 @@ contract("TokenLaunchManager", ([owner, holder, delegation, validator, seller, h
                 await TokenLaunchManager.approveTransfer(holder, totalAmount, {from: seller});
                 await TokenLaunchManager.completeTokenLaunch({from: seller});
                 await TokenLaunchManager.retrieve({from: holder});
+                await delegationPeriodManager.setDelegationPeriod(6, 150);
+                await delegationPeriodManager.setDelegationPeriod(12, 200);
             });
 
             it("should lock tokens", async () => {
@@ -322,7 +324,6 @@ contract("TokenLaunchManager", ([owner, holder, delegation, validator, seller, h
                 // delegate 50%
                 let amount = Math.ceil(totalAmount * 0.5);
                 const period = 6;
-                await delegationPeriodManager.setDelegationPeriod(6, 150);
                 await delegationController.delegate(validatorId, amount, period, "INFO", {from: holder});
                 let delegationId = 0;
 
@@ -393,7 +394,6 @@ contract("TokenLaunchManager", ([owner, holder, delegation, validator, seller, h
 
                 (await skaleToken.getAndUpdateLockedAmount.call(holder)).toNumber().should.be.equal(purchasedAmount);
 
-                await delegationPeriodManager.setDelegationPeriod(12, 200);
                 await delegationController.delegate(
                     validatorId, freeAmount + purchasedAmount, period, "D2 is even", {from: holder});
                 const delegationId = 0;
