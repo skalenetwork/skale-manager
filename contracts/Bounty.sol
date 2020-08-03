@@ -41,6 +41,8 @@ contract Bounty is Permissions {
     uint private _stagePool;
     bool public bountyReduction;
 
+    uint private _remainingPool;
+
     function getBounty(
         uint nodeIndex,
         uint downtime,
@@ -54,7 +56,7 @@ contract Bounty is Permissions {
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));
 
         _refillStagePool(constantsHolder);
-        
+
         uint bounty = _calculateMaximumBountyAmount(_stagePool, _nextStage, nodeIndex, constantsHolder, nodes);
 
         bounty = _reduceBounty(
@@ -66,7 +68,7 @@ contract Bounty is Permissions {
             constantsHolder
         );
 
-        _stagePool = _stagePool.sub(bounty);
+        _remainingPool = _remainingPool.sub(bounty);
 
         return bounty;
     }
@@ -85,8 +87,8 @@ contract Bounty is Permissions {
 
         uint stagePoolSize;
         uint nextStage;
-        (stagePoolSize, nextStage) = _getStagePoolSize(constantsHolder);
-        
+        (stagePoolSize, , nextStage) = _getStagePoolSize(constantsHolder);
+
         return _calculateMaximumBountyAmount(
             stagePoolSize,
             nextStage,
@@ -94,7 +96,7 @@ contract Bounty is Permissions {
             constantsHolder,
             nodes
         );
-    }    
+    }
 
     function initialize(address contractManagerAddress) public override initializer {
         Permissions.initialize(contractManagerAddress);
@@ -139,15 +141,21 @@ contract Bounty is Permissions {
         return constantsHolder.launchTimestamp().add(stage.mul(STAGE_LENGTH));
     }
 
-    function _getStagePoolSize(ConstantsHolder constantsHolder) private view returns (uint stagePool, uint nextStage) {
+    function _getStagePoolSize(ConstantsHolder constantsHolder) private view returns (
+        uint stagePool,
+        uint remainingPool,
+        uint nextStage
+    ) {
         stagePool = _stagePool;
+        remainingPool = _remainingPool;
         for (nextStage = _nextStage; now >= _getStageBeginningTimestamp(nextStage, constantsHolder); ++nextStage) {
-            stagePool += _getStageReward(_nextStage);
+            stagePool = _getStageReward(_nextStage) + remainingPool;
+            remainingPool = stagePool;
         }
     }
 
     function _refillStagePool(ConstantsHolder constantsHolder) private {
-        (_stagePool, _nextStage) = _getStagePoolSize(constantsHolder);
+        (_stagePool, _remainingPool, _nextStage) = _getStagePoolSize(constantsHolder);
     }
 
     function _getStageReward(uint stage) private pure returns (uint) {
