@@ -59,6 +59,12 @@ jobs:
       script:
         - bash scripts/move.sh
         - bash scripts/coverage.sh
+    - stage: test
+      env:
+        - TESTFOLDERS=4
+      script:
+        - bash scripts/move.sh
+        - bash scripts/coverage.sh
 
     - stage: deploy
       script:
