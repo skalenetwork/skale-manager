@@ -41,7 +41,9 @@ contract Bounty is Permissions {
     uint private _stagePool;
     bool public bountyReduction;
 
-    uint private _remainingPool;
+    uint private _nodesPerRewardPeriod;
+    uint private _nodesRemainingPerRewardPeriod;
+    uint private _rewardPeriodFinished;
 
     function getBounty(
         uint nodeIndex,
@@ -57,6 +59,10 @@ contract Bounty is Permissions {
 
         _refillStagePool(constantsHolder);
 
+        if (_rewardPeriodFinished < now) {
+            _updateNodesPerRewardPeriod(constantsHolder, nodes);
+        }
+
         uint bounty = _calculateMaximumBountyAmount(_stagePool, _nextStage, nodeIndex, constantsHolder, nodes);
 
         bounty = _reduceBounty(
@@ -68,7 +74,8 @@ contract Bounty is Permissions {
             constantsHolder
         );
 
-        _remainingPool = _remainingPool.sub(bounty);
+        _stagePool = _stagePool.sub(bounty);
+        _nodesRemainingPerRewardPeriod = _nodesRemainingPerRewardPeriod.sub(1);
 
         return bounty;
     }
@@ -87,7 +94,7 @@ contract Bounty is Permissions {
 
         uint stagePoolSize;
         uint nextStage;
-        (stagePoolSize, , nextStage) = _getStagePoolSize(constantsHolder);
+        (stagePoolSize, nextStage) = _getStagePoolSize(constantsHolder);
 
         return _calculateMaximumBountyAmount(
             stagePoolSize,
@@ -102,6 +109,7 @@ contract Bounty is Permissions {
         Permissions.initialize(contractManagerAddress);
         _nextStage = 0;
         _stagePool = 0;
+        _rewardPeriodFinished = 0;
         bountyReduction = false;
     }
 
@@ -128,34 +136,37 @@ contract Bounty is Permissions {
             return 0;
         }
 
-        uint numberOfNodes = nodes.getNumberOnlineNodes();
         uint numberOfRewards = _getStageBeginningTimestamp(nextStage, constantsHolder)
             .sub(now)
-            .div(constantsHolder.rewardPeriod())
-            .add(1);
+            .div(constantsHolder.rewardPeriod());
 
-        return stagePoolSize.div(numberOfNodes).div(numberOfRewards);
+        uint numberOfRewardsPerAllNodes = numberOfRewards.mul(_nodesPerRewardPeriod);
+
+
+        return stagePoolSize.div(
+            numberOfRewardsPerAllNodes.add(_nodesRemainingPerRewardPeriod)
+        );
     }
 
     function _getStageBeginningTimestamp(uint stage, ConstantsHolder constantsHolder) private view returns (uint) {
         return constantsHolder.launchTimestamp().add(stage.mul(STAGE_LENGTH));
     }
 
-    function _getStagePoolSize(ConstantsHolder constantsHolder) private view returns (
-        uint stagePool,
-        uint remainingPool,
-        uint nextStage
-    ) {
+    function _getStagePoolSize(ConstantsHolder constantsHolder) private view returns (uint stagePool, uint nextStage) {
         stagePool = _stagePool;
-        remainingPool = _remainingPool;
         for (nextStage = _nextStage; now >= _getStageBeginningTimestamp(nextStage, constantsHolder); ++nextStage) {
-            stagePool = _getStageReward(_nextStage) + remainingPool;
-            remainingPool = stagePool;
+            stagePool += _getStageReward(_nextStage);
         }
     }
 
     function _refillStagePool(ConstantsHolder constantsHolder) private {
-        (_stagePool, _remainingPool, _nextStage) = _getStagePoolSize(constantsHolder);
+        (_stagePool, _nextStage) = _getStagePoolSize(constantsHolder);
+    }
+
+    function _updateNodesPerRewardPeriod(ConstantsHolder constantsHolder, Nodes nodes) private {
+        _nodesPerRewardPeriod = nodes.getNumberOnlineNodes();
+        _nodesRemainingPerRewardPeriod = _nodesPerRewardPeriod;
+        _rewardPeriodFinished = now.add(constantsHolder.rewardPeriod()).add(constantsHolder.deltaPeriod());
     }
 
     function _getStageReward(uint stage) private pure returns (uint) {
@@ -199,7 +210,7 @@ contract Bounty is Permissions {
             // reduce bounty because latency is too big
             reducedBounty = reducedBounty.mul(constants.allowableLatency()).div(latency);
         }
-        
+
         if (!nodes.checkPossibilityToMaintainNode(nodes.getValidatorId(nodeIndex), nodeIndex)) {
             reducedBounty = reducedBounty.div(constants.MSR_REDUCING_COEFFICIENT());
         }
