@@ -166,7 +166,7 @@ contract Bounty is Permissions {
     function _updateNodesPerRewardPeriod(ConstantsHolder constantsHolder, Nodes nodes) private {
         _nodesPerRewardPeriod = nodes.getNumberOnlineNodes();
         _nodesRemainingPerRewardPeriod = _nodesPerRewardPeriod;
-        _rewardPeriodFinished = now.add(constantsHolder.rewardPeriod()).add(constantsHolder.deltaPeriod());
+        _rewardPeriodFinished = now.add(uint(constantsHolder.rewardPeriod())).add(uint(constantsHolder.deltaPeriod()));
     }
 
     function _getStageReward(uint stage) private pure returns (uint) {
