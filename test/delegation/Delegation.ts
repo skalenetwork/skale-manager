@@ -115,6 +115,8 @@ contract("Delegation", ([owner,
             await validatorService.registerValidator(
                 "First validator", "Super-pooper validator", 150, 0, {from: validator});
             await validatorService.enableValidator(validatorId, {from: owner});
+            await delegationPeriodManager.setDelegationPeriod(12, 200);
+            await delegationPeriodManager.setDelegationPeriod(6, 150);
         });
 
         for (let delegationPeriod = 1; delegationPeriod <= 18; ++delegationPeriod) {
