@@ -1,5 +1,6 @@
 import { ContractManagerInstance,
          DelegationControllerInstance,
+         DelegationPeriodManagerInstance,
          PunisherInstance,
          SkaleTokenInstance,
          TokenLaunchManagerInstance,
@@ -11,6 +12,7 @@ import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
 import { deployContractManager } from "../tools/deploy/contractManager";
 import { deployDelegationController } from "../tools/deploy/delegation/delegationController";
+import { deployDelegationPeriodManager } from "../tools/deploy/delegation/delegationPeriodManager";
 import { deployPunisher } from "../tools/deploy/delegation/punisher";
 import { deployTokenLaunchManager } from "../tools/deploy/delegation/tokenLaunchManager";
 import { deployValidatorService } from "../tools/deploy/delegation/validatorService";
@@ -25,6 +27,7 @@ contract("TokenLaunchManager", ([owner, holder, delegation, validator, seller, h
     let TokenLaunchManager: TokenLaunchManagerInstance;
     let validatorService: ValidatorServiceInstance;
     let delegationController: DelegationControllerInstance;
+    let delegationPeriodManager: DelegationPeriodManagerInstance;
     let punisher: PunisherInstance;
 
     beforeEach(async () => {
@@ -33,6 +36,7 @@ contract("TokenLaunchManager", ([owner, holder, delegation, validator, seller, h
         TokenLaunchManager = await deployTokenLaunchManager(contractManager);
         validatorService = await deployValidatorService(contractManager);
         delegationController = await deployDelegationController(contractManager);
+        delegationPeriodManager = await deployDelegationPeriodManager(contractManager);
         punisher = await deployPunisher(contractManager);
 
         // each test will start from Nov 10
@@ -128,6 +132,8 @@ contract("TokenLaunchManager", ([owner, holder, delegation, validator, seller, h
                 await TokenLaunchManager.approveTransfer(holder, totalAmount, {from: seller});
                 await TokenLaunchManager.completeTokenLaunch({from: seller});
                 await TokenLaunchManager.retrieve({from: holder});
+                await delegationPeriodManager.setDelegationPeriod(6, 150);
+                await delegationPeriodManager.setDelegationPeriod(12, 200);
             });
 
             it("should lock tokens", async () => {

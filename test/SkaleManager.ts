@@ -3,6 +3,7 @@ import * as chaiAsPromised from "chai-as-promised";
 import { ConstantsHolderInstance,
          ContractManagerInstance,
          DelegationControllerInstance,
+         DelegationPeriodManagerInstance,
          DistributorInstance,
          MonitorsInstance,
          NodesInstance,
@@ -20,6 +21,7 @@ import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
 import { deployContractManager } from "./tools/deploy/contractManager";
 import { deploySkaleDKGTester } from "./tools/deploy/test/skaleDKGTester";
 import { deployDelegationController } from "./tools/deploy/delegation/delegationController";
+import { deployDelegationPeriodManager } from "./tools/deploy/delegation/delegationPeriodManager";
 import { deployDistributor } from "./tools/deploy/delegation/distributor";
 import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
 import { deployMonitors } from "./tools/deploy/monitors";
@@ -45,6 +47,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
     let schains: SchainsInstance;
     let validatorService: ValidatorServiceInstance;
     let delegationController: DelegationControllerInstance;
+    let delegationPeriodManager: DelegationPeriodManagerInstance;
     let distributor: DistributorInstance;
     let skaleDKG: SkaleDKGTesterInstance;
     let bountyContract: BountyInstance;
@@ -61,6 +64,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
         skaleManager = await deploySkaleManager(contractManager);
         validatorService = await deployValidatorService(contractManager);
         delegationController = await deployDelegationController(contractManager);
+        delegationPeriodManager = await deployDelegationPeriodManager(contractManager);
         distributor = await deployDistributor(contractManager);
         skaleDKG = await deploySkaleDKGTester(contractManager);
         await contractManager.setContractsAddress("SkaleDKG", skaleDKG.address);
@@ -104,6 +108,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
 
             await skaleToken.transfer(validator, 10 * delegatedAmount, {from: owner});
             await validatorService.enableValidator(validatorId, {from: owner});
+            await delegationPeriodManager.setDelegationPeriod(12, 200);
             await delegationController.delegate(validatorId, delegatedAmount, 12, "Hello from D2", {from: validator});
             const delegationId = 0;
             await delegationController.acceptPendingDelegation(delegationId, {from: validator});
