@@ -177,15 +177,8 @@ contract SchainsInternal is Permissions {
         external 
         allowThree("NodeRotation", "SkaleDKG", "Schains")
     {
-        uint schainId = findSchainAtSchainsForNode(nodeIndex, schainHash);
         uint indexOfNode = _findNode(schainHash, nodeIndex);
-        delete schainsGroups[schainHash][indexOfNode];
-
-        uint length = schainsGroups[schainHash].length;
-        if (indexOfNode == length.sub(1)) {
-            schainsGroups[schainHash].pop();
-        } else {
-            delete schainsGroups[schainHash][indexOfNode];
+        if (indexOfNode < schainsGroups[schainHash].length.sub(1)) {
             if (holesForSchains[schainHash].length > 0 && holesForSchains[schainHash][0] > indexOfNode) {
                 uint hole = holesForSchains[schainHash][0];
                 holesForSchains[schainHash][0] = indexOfNode;
@@ -194,7 +187,8 @@ contract SchainsInternal is Permissions {
                 holesForSchains[schainHash].push(indexOfNode);
             }
         }
-
+        _removeNodeFromGroup(schainHash, indexOfNode);
+        uint schainId = findSchainAtSchainsForNode(nodeIndex, schainHash);
         removeSchainForNode(nodeIndex, schainId);
     }
 
@@ -554,6 +548,14 @@ contract SchainsInternal is Permissions {
 
         // set generated group
         schainsGroups[schainId] = nodesInGroup;
+    }
+
+    function _removeNodeFromGroup(bytes32 schainHash, uint indexOfNode) private {
+        if (indexOfNode != schainsGroups[schainHash].length.sub(1)) {
+            schainsGroups[schainHash][indexOfNode] =
+                schainsGroups[schainHash][schainsGroups[schainHash].length.sub(1)];
+        }
+        schainsGroups[schainHash].pop();
     }
 
     function _isCorrespond(bytes32 schainId, uint nodeIndex) private view returns (bool) {

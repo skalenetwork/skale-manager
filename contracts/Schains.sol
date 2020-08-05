@@ -205,6 +205,7 @@ contract Schains is Permissions {
             contractManager.getContract("SchainsInternal"));
         require(schainsInternal.isAnyFreeNode(schainId), "No any free Nodes for rotation");
         uint newNodeIndex = nodeRotation.selectNodeToGroup(schainId);
+        skaleDKG.openChannel(schainId);
         emit NodeAdded(schainId, newNodeIndex);
     }
 

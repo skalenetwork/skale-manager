@@ -177,7 +177,7 @@ contract NodeRotation is Permissions {
         );
         rotations[schainIndex].newNodeIndex = newNodeIndex;
         rotations[schainIndex].rotationCounter++;
-        ISkaleDKG(contractManager.getContract("SkaleDKG")).reopenChannel(schainIndex);
+        ISkaleDKG(contractManager.getContract("SkaleDKG")).openChannel(schainIndex);
     }
 
     function _checkRotation(bytes32 schainId ) private view returns (bool) {
