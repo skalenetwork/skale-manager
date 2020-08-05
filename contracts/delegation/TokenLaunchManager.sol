@@ -70,10 +70,30 @@ contract TokenLaunchManager is Permissions, IERC777Recipient {
     }
 
     /**
+     * @dev Allocates values for `walletAddress`
+     *
+     * Requirements:
+     *
+     * - token launch must not be completed
+     * - the total approved must be less than or equal to the seller balance.
+     *
+     * Emits an Approved event.
+     *
+     * @param walletAddress address wallet address to approve transfers to
+     * @param value uint token amount to approve transfer to
+     */
+    function approveTransfer(address walletAddress, uint value) external onlySeller {
+        require(!tokenLaunchIsCompleted, "Can't approve because token launch is completed");
+        _approveTransfer(walletAddress, value);
+        require(_totalApproved <= _getBalance(), "Balance is too low");
+    }
+
+    /**
      * @dev Allocates values for `walletAddresses`
      *
      * Requirements:
      *
+     * - token launch must not be completed
      * - the input arrays must be equal in size.
      * - the total approved must be less than or equal to the seller balance.
      *
@@ -86,7 +106,7 @@ contract TokenLaunchManager is Permissions, IERC777Recipient {
         require(!tokenLaunchIsCompleted, "Can't approve because token launch is completed");
         require(walletAddress.length == value.length, "Wrong input arrays length");
         for (uint i = 0; i < walletAddress.length; ++i) {
-            approveTransfer(walletAddress[i], value[i]);
+            _approveTransfer(walletAddress[i], value[i]);
         }
         require(_totalApproved <= _getBalance(), "Balance is too low");
     }
@@ -124,7 +144,7 @@ contract TokenLaunchManager is Permissions, IERC777Recipient {
         uint oldValue = approved[oldAddress];
         if (oldValue > 0) {
             _setApprovedAmount(oldAddress, 0);
-            approveTransfer(newAddress, oldValue);
+            _approveTransfer(newAddress, oldValue);
         }
     }
 
@@ -182,15 +202,15 @@ contract TokenLaunchManager is Permissions, IERC777Recipient {
         tokenLaunchIsCompleted = false;
         _erc1820 = IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
         _erc1820.setInterfaceImplementer(address(this), keccak256("ERC777TokensRecipient"), address(this));
-    }
+    }    
 
-    function approveTransfer(address walletAddress, uint value) public onlySeller {
+    // private
+
+    function _approveTransfer(address walletAddress, uint value) internal onlySeller {
         require(value > 0, "Value must be greater than zero");
         _setApprovedAmount(walletAddress, approved[walletAddress].add(value));
         emit Approved(walletAddress, value);
     }
-
-    // private
 
     function _getBalance() private view returns(uint balance) {
         return IERC20(contractManager.getContract("SkaleToken")).balanceOf(address(this));

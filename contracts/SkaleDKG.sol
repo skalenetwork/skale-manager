@@ -400,12 +400,10 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             );
             channels[groupIndex].active = false;
         }
-
-        Punisher punisher = Punisher(contractManager.getContract("Punisher"));
-        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
-        SlashingTable slashingTable = SlashingTable(contractManager.getContract("SlashingTable"));
-
-        punisher.slash(nodes.getValidatorId(badNode), slashingTable.getPenalty("FailedDKG"));
+        Punisher(contractManager.getContract("Punisher")).slash(
+            Nodes(contractManager.getContract("Nodes")).getValidatorId(badNode),
+            SlashingTable(contractManager.getContract("SlashingTable")).getPenalty("FailedDKG")
+        );
     }
 
     function _isBroadcast(
