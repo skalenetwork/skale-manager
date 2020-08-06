@@ -153,6 +153,8 @@ contract Schains is Permissions {
                 schainId
             );
             if (schainsInternal.checkHoleForSchain(schainId, nodesInGroup[i])) {
+                schainsInternal.removeNodeFromExceptions(schainId, nodesInGroup[i]);
+                _addSpace(nodesInGroup[i], partOfNode);
                 continue;
             }
             require(
@@ -166,6 +168,7 @@ contract Schains is Permissions {
         }
         schainsInternal.deleteGroup(schainId);
         schainsInternal.removeSchain(schainId, from);
+        schainsInternal.removeHolesForSchain(schainId);
         nodeRotation.removeRotation(schainId);
         emit SchainDeleted(from, name, schainId);
     }
@@ -186,6 +189,8 @@ contract Schains is Permissions {
                 schainId
             );
             if (schainsInternal.checkHoleForSchain(schainId, nodesInGroup[i])) {
+                schainsInternal.removeNodeFromExceptions(schainId, nodesInGroup[i]);
+                _addSpace(nodesInGroup[i], partOfNode);
                 continue;
             }
             require(
@@ -198,6 +203,7 @@ contract Schains is Permissions {
         schainsInternal.deleteGroup(schainId);
         address from = schainsInternal.getSchainOwner(schainId);
         schainsInternal.removeSchain(schainId, from);
+        schainsInternal.removeHolesForSchain(schainId);
         nodeRotation.removeRotation(schainId);
         emit SchainDeleted(from, name, schainId);
     }

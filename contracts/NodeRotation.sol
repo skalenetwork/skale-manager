@@ -178,7 +178,7 @@ contract NodeRotation is Permissions {
 
     function _checkRotation(bytes32 schainId ) private view returns (bool) {
         SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
-        require(schainsInternal.isSchainExist(schainId), "Schain does not exist");
+        require(schainsInternal.isSchainExist(schainId), "Schain does not exist for rotation");
         return schainsInternal.isAnyFreeNode(schainId);
     }
 
