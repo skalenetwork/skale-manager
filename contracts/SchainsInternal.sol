@@ -174,11 +174,16 @@ contract SchainsInternal is Permissions {
         uint nodeIndex,
         bytes32 schainHash
     )
-        external 
+        external
         allowThree("NodeRotation", "SkaleDKG", "Schains")
     {
         uint indexOfNode = _findNode(schainHash, nodeIndex);
-        if (indexOfNode < schainsGroups[schainHash].length.sub(1)) {
+        uint indexOfLastNode = schainsGroups[schainHash].length.sub(1);
+
+        if (indexOfNode == indexOfLastNode) {
+            schainsGroups[schainHash].pop();
+        } else {
+            delete schainsGroups[schainHash][indexOfNode];
             if (holesForSchains[schainHash].length > 0 && holesForSchains[schainHash][0] > indexOfNode) {
                 uint hole = holesForSchains[schainHash][0];
                 holesForSchains[schainHash][0] = indexOfNode;
@@ -187,7 +192,7 @@ contract SchainsInternal is Permissions {
                 holesForSchains[schainHash].push(indexOfNode);
             }
         }
-        _removeNodeFromGroup(schainHash, indexOfNode);
+
         uint schainId = findSchainAtSchainsForNode(nodeIndex, schainHash);
         removeSchainForNode(nodeIndex, schainId);
     }
@@ -413,6 +418,15 @@ contract SchainsInternal is Permissions {
         return _exceptionsForGroups[schainId][nodeIndex];
     }
 
+    function checkHoleForSchain(bytes32 schainHash, uint indexOfNode) external view returns (bool) {
+        for (uint i = 0; i < holesForSchains[schainHash].length; i++) {
+            if (holesForSchains[schainHash][i] == indexOfNode) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     function initialize(address newContractsAddress) public override initializer {
         Permissions.initialize(newContractsAddress);
 
@@ -548,14 +562,6 @@ contract SchainsInternal is Permissions {
 
         // set generated group
         schainsGroups[schainId] = nodesInGroup;
-    }
-
-    function _removeNodeFromGroup(bytes32 schainHash, uint indexOfNode) private {
-        if (indexOfNode != schainsGroups[schainHash].length.sub(1)) {
-            schainsGroups[schainHash][indexOfNode] =
-                schainsGroups[schainHash][schainsGroups[schainHash].length.sub(1)];
-        }
-        schainsGroups[schainHash].pop();
     }
 
     function _isCorrespond(bytes32 schainId, uint nodeIndex) private view returns (bool) {

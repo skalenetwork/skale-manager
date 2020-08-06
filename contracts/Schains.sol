@@ -152,6 +152,9 @@ contract Schains is Permissions {
                 nodesInGroup[i],
                 schainId
             );
+            if (schainsInternal.checkHoleForSchain(schainId, nodesInGroup[i])) {
+                continue;
+            }
             require(
                 schainIndex < schainsInternal.getLengthOfSchainsForNode(nodesInGroup[i]),
                 "Some Node does not contain given Schain");
@@ -182,6 +185,9 @@ contract Schains is Permissions {
                 nodesInGroup[i],
                 schainId
             );
+            if (schainsInternal.checkHoleForSchain(schainId, nodesInGroup[i])) {
+                continue;
+            }
             require(
                 schainIndex < schainsInternal.getLengthOfSchainsForNode(nodesInGroup[i]),
                 "Some Node does not contain given Schain");
