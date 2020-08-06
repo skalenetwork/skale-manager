@@ -212,10 +212,6 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         }
     }
 
-    function reopenChannel(bytes32 groupIndex) external override allow("NodeRotation") {
-        _reopenChannel(groupIndex);
-    }
-
     function getChannelStartedTime(bytes32 groupIndex) external view returns (uint) {
         return channels[groupIndex].startedBlockTimestamp;
     }
