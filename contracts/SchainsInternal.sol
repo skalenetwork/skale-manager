@@ -256,6 +256,10 @@ contract SchainsInternal is Permissions {
         }
     }
 
+    function removeHolesForSchain(bytes32 schainHash) external allow("Schains") {
+        delete holesForSchains[schainHash];
+    }
+
     /**
      * @dev getSchains - gets all Schains at the system
      * @return array of hashes by Schain names
