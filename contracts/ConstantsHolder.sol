@@ -171,7 +171,7 @@ contract ConstantsHolder is Permissions {
         Permissions.initialize(contractsAddress);
 
         msr = 0;
-        rewardPeriod = 86400;
+        rewardPeriod = 2592000;
         allowableLatency = 150000;
         deltaPeriod = 3600;
         checkTime = 300;

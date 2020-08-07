@@ -41,6 +41,10 @@ contract Bounty is Permissions {
     uint private _stagePool;
     bool public bountyReduction;
 
+    uint private _nodesPerRewardPeriod;
+    uint private _nodesRemainingPerRewardPeriod;
+    uint private _rewardPeriodFinished;
+
     function getBounty(
         uint nodeIndex,
         uint downtime,
@@ -54,7 +58,11 @@ contract Bounty is Permissions {
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));
 
         _refillStagePool(constantsHolder);
-        
+
+        if (_rewardPeriodFinished <= now) {
+            _updateNodesPerRewardPeriod(constantsHolder, nodes);
+        }
+
         uint bounty = _calculateMaximumBountyAmount(_stagePool, _nextStage, nodeIndex, constantsHolder, nodes);
 
         bounty = _reduceBounty(
@@ -67,6 +75,7 @@ contract Bounty is Permissions {
         );
 
         _stagePool = _stagePool.sub(bounty);
+        _nodesRemainingPerRewardPeriod = _nodesRemainingPerRewardPeriod.sub(1);
 
         return bounty;
     }
@@ -86,7 +95,7 @@ contract Bounty is Permissions {
         uint stagePoolSize;
         uint nextStage;
         (stagePoolSize, nextStage) = _getStagePoolSize(constantsHolder);
-        
+
         return _calculateMaximumBountyAmount(
             stagePoolSize,
             nextStage,
@@ -94,12 +103,13 @@ contract Bounty is Permissions {
             constantsHolder,
             nodes
         );
-    }    
+    }
 
     function initialize(address contractManagerAddress) public override initializer {
         Permissions.initialize(contractManagerAddress);
         _nextStage = 0;
         _stagePool = 0;
+        _rewardPeriodFinished = 0;
         bountyReduction = false;
     }
 
@@ -126,13 +136,15 @@ contract Bounty is Permissions {
             return 0;
         }
 
-        uint numberOfNodes = nodes.getNumberOnlineNodes();
         uint numberOfRewards = _getStageBeginningTimestamp(nextStage, constantsHolder)
             .sub(now)
-            .div(constantsHolder.rewardPeriod())
-            .add(1);
+            .div(constantsHolder.rewardPeriod());
 
-        return stagePoolSize.div(numberOfNodes).div(numberOfRewards);
+        uint numberOfRewardsPerAllNodes = numberOfRewards.mul(_nodesPerRewardPeriod);
+
+        return stagePoolSize.div(
+            numberOfRewardsPerAllNodes.add(_nodesRemainingPerRewardPeriod)
+        );
     }
 
     function _getStageBeginningTimestamp(uint stage, ConstantsHolder constantsHolder) private view returns (uint) {
@@ -148,6 +160,12 @@ contract Bounty is Permissions {
 
     function _refillStagePool(ConstantsHolder constantsHolder) private {
         (_stagePool, _nextStage) = _getStagePoolSize(constantsHolder);
+    }
+
+    function _updateNodesPerRewardPeriod(ConstantsHolder constantsHolder, Nodes nodes) private {
+        _nodesPerRewardPeriod = nodes.getNumberOnlineNodes();
+        _nodesRemainingPerRewardPeriod = _nodesPerRewardPeriod;
+        _rewardPeriodFinished = now.add(uint(constantsHolder.rewardPeriod()));
     }
 
     function _getStageReward(uint stage) private pure returns (uint) {
@@ -191,7 +209,7 @@ contract Bounty is Permissions {
             // reduce bounty because latency is too big
             reducedBounty = reducedBounty.mul(constants.allowableLatency()).div(latency);
         }
-        
+
         if (!nodes.checkPossibilityToMaintainNode(nodes.getValidatorId(nodeIndex), nodeIndex)) {
             reducedBounty = reducedBounty.div(constants.MSR_REDUCING_COEFFICIENT());
         }
@@ -230,7 +248,7 @@ contract Bounty is Permissions {
                 .div(
                     uint(constants.rewardPeriod()).sub(constants.deltaPeriod())
                         .div(constants.checkTime())
-                );            
+                );
             if (bounty > penalty) {
                 reducedBounty = bounty.sub(penalty);
             } else {
