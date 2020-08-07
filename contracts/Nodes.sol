@@ -333,7 +333,7 @@ contract Nodes is Permissions {
         return position.add(1).mul(msr) <= delegationsTotal;
     }
 
-    function setNodeInMaintence(uint nodeIndex) external {
+    function setNodeInMaintenance(uint nodeIndex) external {
         require(nodes[nodeIndex].status == NodeStatus.Active, "Node is not Active");
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
         uint validatorId = getValidatorId(nodeIndex);
@@ -345,7 +345,7 @@ contract Nodes is Permissions {
         nodes[nodeIndex].status = NodeStatus.In_Maintenance;
     }
 
-    function removeNodeFromInMaintence(uint nodeIndex) external {
+    function removeNodeFromInMaintenance(uint nodeIndex) external {
         require(nodes[nodeIndex].status == NodeStatus.In_Maintenance, "Node is not In Maintence");
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
         uint validatorId = getValidatorId(nodeIndex);
