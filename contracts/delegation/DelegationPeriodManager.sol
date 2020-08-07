@@ -73,7 +73,7 @@ contract DelegationPeriodManager is Permissions {
     function initialize(address contractsAddress) public override initializer {
         Permissions.initialize(contractsAddress);
         stakeMultipliers[3] = 100;  // 3 months at 100
-        stakeMultipliers[6] = 150;  // 6 months at 150
-        stakeMultipliers[12] = 200; // 12 months at 200
+        // stakeMultipliers[6] = 150;  // 6 months at 150
+        // stakeMultipliers[12] = 200; // 12 months at 200
     }
 }

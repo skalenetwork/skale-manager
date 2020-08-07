@@ -12,7 +12,7 @@ import { ConstantsHolderInstance,
          NodeRotationInstance} from "../types/truffle-contracts";
 
 import BigNumber from "bignumber.js";
-import { skipTime } from "./tools/time";
+import { skipTime, currentTime } from "./tools/time";
 
 import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
 import { deployContractManager } from "./tools/deploy/contractManager";
@@ -395,6 +395,44 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
                     deposit,
                     web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d2"]),
                     {from: owner}).should.be.eventually.rejectedWith("Not enough nodes to create Schain");
+            });
+
+            it("should not create 4 node schain with 1 In Maintenance node", async () => {
+                await nodes.setNodeInMaintenance(2);
+
+                const deposit = await schains.getSchainPrice(5, 5);
+
+                await schains.addSchain(
+                    holder,
+                    deposit,
+                    web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d2"]),
+                    {from: owner}).should.be.eventually.rejectedWith("Not enough nodes to create Schain");
+            });
+
+            it("should create 4 node schain with 1 From In Maintenance node", async () => {
+                await nodes.setNodeInMaintenance(2);
+
+                const deposit = await schains.getSchainPrice(5, 5);
+
+                await schains.addSchain(
+                    holder,
+                    deposit,
+                    web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d2"]),
+                    {from: owner}).should.be.eventually.rejectedWith("Not enough nodes to create Schain");
+
+                await nodes.removeNodeFromInMaintenance(2);
+
+                await schains.addSchain(
+                    holder,
+                    deposit,
+                    web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d2"]),
+                    {from: owner});
+
+                const sChains = await schainsInternal.getSchains();
+                sChains.length.should.be.equal(1);
+                const schainId = sChains[0];
+
+                await schainsInternal.isOwnerAddress(holder, schainId).should.be.eventually.true;
             });
 
             it("should not create 4 node schain on deleted node", async () => {
@@ -857,7 +895,11 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
             const res1 = await schainsInternal.getNodesInGroup(web3.utils.soliditySha3("d2"));
             const res2 = await schainsInternal.getNodesInGroup(web3.utils.soliditySha3("d3"));
             await skaleManager.nodeExit(0, {from: nodeAddress});
-
+            const leavingTimeOfNode = new BigNumber(
+                (await nodeRotation.getLeavingHistory(0))[0].finishedRotation
+            ).toNumber();
+            const _12hours = 43200;
+            assert.equal(await currentTime(web3), leavingTimeOfNode-_12hours);
             const rotatedSchain = (await nodeRotation.getLeavingHistory(0))[0].schainIndex;
             const rotationForRotatedSchain = await nodeRotation.getRotation(rotatedSchain);
             assert.notEqual(rotationForRotatedSchain.newNodeIndex, new BigNumber(0));

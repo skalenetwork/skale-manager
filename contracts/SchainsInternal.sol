@@ -174,15 +174,13 @@ contract SchainsInternal is Permissions {
         uint nodeIndex,
         bytes32 schainHash
     )
-        external 
+        external
         allowThree("NodeRotation", "SkaleDKG", "Schains")
     {
-        uint schainId = findSchainAtSchainsForNode(nodeIndex, schainHash);
         uint indexOfNode = _findNode(schainHash, nodeIndex);
-        delete schainsGroups[schainHash][indexOfNode];
+        uint indexOfLastNode = schainsGroups[schainHash].length.sub(1);
 
-        uint length = schainsGroups[schainHash].length;
-        if (indexOfNode == length.sub(1)) {
+        if (indexOfNode == indexOfLastNode) {
             schainsGroups[schainHash].pop();
         } else {
             delete schainsGroups[schainHash][indexOfNode];
@@ -195,15 +193,12 @@ contract SchainsInternal is Permissions {
             }
         }
 
+        uint schainId = findSchainAtSchainsForNode(nodeIndex, schainHash);
         removeSchainForNode(nodeIndex, schainId);
     }
 
     function removeNodeFromExceptions(bytes32 schainHash, uint nodeIndex) external allow("Schains") {
         _exceptionsForGroups[schainHash][nodeIndex] = false;
-    }
-
-    function redirectOpenChannel(bytes32 schainId) external allow("Schains") {
-        ISkaleDKG(contractManager.getContract("SkaleDKG")).openChannel(schainId);
     }
 
     /**
@@ -259,6 +254,10 @@ contract SchainsInternal is Permissions {
                 holesForSchains[schainId].pop();
             }
         }
+    }
+
+    function removeHolesForSchain(bytes32 schainHash) external allow("Schains") {
+        delete holesForSchains[schainHash];
     }
 
     /**
@@ -421,6 +420,15 @@ contract SchainsInternal is Permissions {
 
     function checkException(bytes32 schainId, uint nodeIndex) external view returns (bool) {
         return _exceptionsForGroups[schainId][nodeIndex];
+    }
+
+    function checkHoleForSchain(bytes32 schainHash, uint indexOfNode) external view returns (bool) {
+        for (uint i = 0; i < holesForSchains[schainHash].length; i++) {
+            if (holesForSchains[schainHash][i] == indexOfNode) {
+                return true;
+            }
+        }
+        return false;
     }
 
     function initialize(address newContractsAddress) public override initializer {

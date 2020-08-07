@@ -106,10 +106,8 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         _;
     }
 
-    function openChannel(bytes32 groupIndex) external override allow("SchainsInternal") {
-        require(!channels[groupIndex].active, "Channel already is created");
-
-        _reopenChannel(groupIndex);
+    function openChannel(bytes32 groupIndex) external override allowTwo("Schains","NodeRotation") {
+        _openChannel(groupIndex);
     }
 
     function deleteChannel(bytes32 groupIndex) external override allow("SchainsInternal") {
@@ -240,10 +238,6 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         }
     }
 
-    function reopenChannel(bytes32 groupIndex) external override allow("NodeRotation") {
-        _reopenChannel(groupIndex);
-    }
-
     function getChannelStartedTime(bytes32 groupIndex) external view returns (uint) {
         return channels[groupIndex].startedBlockTimestamp;
     }
@@ -361,11 +355,10 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         emit SuccessfulDKG(groupIndex);
     }
 
-    function _reopenChannel(bytes32 groupIndex) private {
+    function _openChannel(bytes32 groupIndex) private {
         SchainsInternal schainsInternal = SchainsInternal(
             contractManager.getContract("SchainsInternal")
         );
-        console.log("openchannel");
         uint len = schainsInternal.getNumberOfNodesInGroup(groupIndex);
         channels[groupIndex].active = true;
         channels[groupIndex].n = len;
@@ -379,7 +372,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         delete dkgProcess[groupIndex].numberOfBroadcasted;
         delete dkgProcess[groupIndex].numberOfCompleted;
         channels[groupIndex].startedBlockTimestamp = now;
-        KeyStorage(contractManager.getContract("KeyStorage")).initPublicKeyInProgress(groupIndex, len);
+        KeyStorage(contractManager.getContract("KeyStorage")).initPublicKeyInProgress(groupIndex);
 
         emit ChannelOpened(groupIndex);
     }
@@ -395,23 +388,22 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         if (schainsInternal.isAnyFreeNode(groupIndex)) {
             uint newNode = nodeRotation.rotateNode(
                 badNode,
-                groupIndex
+                groupIndex,
+                false
             );
             emit NewGuy(newNode);
         } else {
-            _reopenChannel(groupIndex);
+            _openChannel(groupIndex);
             schainsInternal.removeNodeFromSchain(
                 badNode,
                 groupIndex
             );
             channels[groupIndex].active = false;
         }
-
-        Punisher punisher = Punisher(contractManager.getContract("Punisher"));
-        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
-        SlashingTable slashingTable = SlashingTable(contractManager.getContract("SlashingTable"));
-
-        punisher.slash(nodes.getValidatorId(badNode), slashingTable.getPenalty("FailedDKG"));
+        Punisher(contractManager.getContract("Punisher")).slash(
+            Nodes(contractManager.getContract("Nodes")).getValidatorId(badNode),
+            SlashingTable(contractManager.getContract("SlashingTable")).getPenalty("FailedDKG")
+        );
     }
 
     function _isBroadcast(
