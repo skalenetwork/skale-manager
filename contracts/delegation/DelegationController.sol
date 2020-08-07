@@ -125,7 +125,7 @@ contract DelegationController is Permissions, ILocker {
         // number of validators
         uint number;
         //validatorId => bool - is Delegated or not
-        mapping (uint => bool) delegated;
+        mapping (uint => uint) delegated;
     }
 
     /**
@@ -545,9 +545,9 @@ contract DelegationController is Permissions, ILocker {
 
     function isPossibleToDelegate(address holder, uint validatorId) public view returns (bool) {
         ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
-        return _numberOfValidatorsPerDelegator[holder].delegated[validatorId] ||
+        return _numberOfValidatorsPerDelegator[holder].delegated[validatorId] > 0 ||
             (
-                !_numberOfValidatorsPerDelegator[holder].delegated[validatorId] &&
+                _numberOfValidatorsPerDelegator[holder].delegated[validatorId] == 0 &&
                 _numberOfValidatorsPerDelegator[holder].number < constantsHolder.limitValidatorsPerDelegator()
             );
     }
@@ -611,8 +611,11 @@ contract DelegationController is Permissions, ILocker {
     }
 
     function _addValidatorToValidatorsPerDelegators(address holder, uint validatorId) private {
-        _numberOfValidatorsPerDelegator[holder].number = _numberOfValidatorsPerDelegator[holder].number.add(1);
-        _numberOfValidatorsPerDelegator[holder].delegated[validatorId] = true;
+        if (_numberOfValidatorsPerDelegator[holder].delegated[validatorId] == 0) {
+            _numberOfValidatorsPerDelegator[holder].number = _numberOfValidatorsPerDelegator[holder].number.add(1);
+        }
+        _numberOfValidatorsPerDelegator[holder].
+            delegated[validatorId] = _numberOfValidatorsPerDelegator[holder].delegated[validatorId].add(1);
     }
 
     function _removeFromDelegatedByHolder(address holder, uint amount, uint month) private {
@@ -626,8 +629,11 @@ contract DelegationController is Permissions, ILocker {
     }
 
     function _removeValidatorFromValidatorsPerDelegators(address holder, uint validatorId) private {
-        _numberOfValidatorsPerDelegator[holder].number = _numberOfValidatorsPerDelegator[holder].number.sub(1);
-        _numberOfValidatorsPerDelegator[holder].delegated[validatorId] = false;
+        if (_numberOfValidatorsPerDelegator[holder].delegated[validatorId] == 1) {
+            _numberOfValidatorsPerDelegator[holder].number = _numberOfValidatorsPerDelegator[holder].number.sub(1);
+        }
+        _numberOfValidatorsPerDelegator[holder].
+            delegated[validatorId] = _numberOfValidatorsPerDelegator[holder].delegated[validatorId].sub(1);
     }
 
     function _addToEffectiveDelegatedByHolderToValidator(
