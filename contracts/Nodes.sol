@@ -38,7 +38,7 @@ contract Nodes is Permissions {
     using SafeCast for uint;
 
     // All Nodes states
-    enum NodeStatus {Active, Leaving, Left, In_Maintance}
+    enum NodeStatus {Active, Leaving, Left, In_Maintenance}
 
     struct Node {
         string name;
@@ -342,11 +342,11 @@ contract Nodes is Permissions {
             permitted = validatorService.getValidatorId(msg.sender) == validatorId;
         }
         require(permitted, "Sender is not permitted to call this function");
-        nodes[nodeIndex].status = NodeStatus.In_Maintance;
+        nodes[nodeIndex].status = NodeStatus.In_Maintenance;
     }
 
     function removeNodeFromInMaintence(uint nodeIndex) external {
-        require(nodes[nodeIndex].status == NodeStatus.In_Maintance, "Node is not In Maintence");
+        require(nodes[nodeIndex].status == NodeStatus.In_Maintenance, "Node is not In Maintence");
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
         uint validatorId = getValidatorId(nodeIndex);
         bool permitted = (_isOwner() || isNodeExist(msg.sender, nodeIndex));
@@ -447,13 +447,13 @@ contract Nodes is Permissions {
         return nodes[nodeIndex].status == NodeStatus.Left;
     }
 
-    function isNodeInMaintance(uint nodeIndex)
+    function isNodeInMaintenance(uint nodeIndex)
         external
         view
         checkNodeExists(nodeIndex)
         returns (bool)
     {
-        return nodes[nodeIndex].status == NodeStatus.In_Maintance;
+        return nodes[nodeIndex].status == NodeStatus.In_Maintenance;
     }
 
     /**
