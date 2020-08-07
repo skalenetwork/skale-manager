@@ -152,6 +152,11 @@ contract Schains is Permissions {
                 nodesInGroup[i],
                 schainId
             );
+            if (schainsInternal.checkHoleForSchain(schainId, nodesInGroup[i])) {
+                schainsInternal.removeNodeFromExceptions(schainId, nodesInGroup[i]);
+                _addSpace(nodesInGroup[i], partOfNode);
+                continue;
+            }
             require(
                 schainIndex < schainsInternal.getLengthOfSchainsForNode(nodesInGroup[i]),
                 "Some Node does not contain given Schain");
@@ -163,6 +168,7 @@ contract Schains is Permissions {
         }
         schainsInternal.deleteGroup(schainId);
         schainsInternal.removeSchain(schainId, from);
+        schainsInternal.removeHolesForSchain(schainId);
         nodeRotation.removeRotation(schainId);
         emit SchainDeleted(from, name, schainId);
     }
@@ -182,6 +188,11 @@ contract Schains is Permissions {
                 nodesInGroup[i],
                 schainId
             );
+            if (schainsInternal.checkHoleForSchain(schainId, nodesInGroup[i])) {
+                schainsInternal.removeNodeFromExceptions(schainId, nodesInGroup[i]);
+                _addSpace(nodesInGroup[i], partOfNode);
+                continue;
+            }
             require(
                 schainIndex < schainsInternal.getLengthOfSchainsForNode(nodesInGroup[i]),
                 "Some Node does not contain given Schain");
@@ -192,6 +203,7 @@ contract Schains is Permissions {
         schainsInternal.deleteGroup(schainId);
         address from = schainsInternal.getSchainOwner(schainId);
         schainsInternal.removeSchain(schainId, from);
+        schainsInternal.removeHolesForSchain(schainId);
         nodeRotation.removeRotation(schainId);
         emit SchainDeleted(from, name, schainId);
     }
@@ -205,6 +217,7 @@ contract Schains is Permissions {
             contractManager.getContract("SchainsInternal"));
         require(schainsInternal.isAnyFreeNode(schainId), "No any free Nodes for rotation");
         uint newNodeIndex = nodeRotation.selectNodeToGroup(schainId);
+        skaleDKG.openChannel(schainId);
         emit NodeAdded(schainId, newNodeIndex);
     }
 
