@@ -90,14 +90,14 @@ contract TimeHelpers {
     function monthToTimestamp(uint month) public view virtual returns (uint timestamp) {
         uint year = _ZERO_YEAR;
         uint _month = month;
-        year = year.add(_month.div(12));
-        _month = _month.mod(12);
-        _month = _month.add(1);
         if (_month == 10) {
             return _FIRST_DELEGATION_MONTH_FINISH + 1;
         } else if (_month > 10) {
             _month = _month.sub(1);
         }
+        year = year.add(_month.div(12));
+        _month = _month.mod(12);
+        _month = _month.add(1);
         return BokkyPooBahsDateTimeLibrary.timestampFromDate(year, _month, 1);
     }
 }
