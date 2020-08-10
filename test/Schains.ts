@@ -397,6 +397,44 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
                     {from: owner}).should.be.eventually.rejectedWith("Not enough nodes to create Schain");
             });
 
+            it("should not create 4 node schain with 1 In Maintenance node", async () => {
+                await nodes.setNodeInMaintenance(2);
+
+                const deposit = await schains.getSchainPrice(5, 5);
+
+                await schains.addSchain(
+                    holder,
+                    deposit,
+                    web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d2"]),
+                    {from: owner}).should.be.eventually.rejectedWith("Not enough nodes to create Schain");
+            });
+
+            it("should create 4 node schain with 1 From In Maintenance node", async () => {
+                await nodes.setNodeInMaintenance(2);
+
+                const deposit = await schains.getSchainPrice(5, 5);
+
+                await schains.addSchain(
+                    holder,
+                    deposit,
+                    web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d2"]),
+                    {from: owner}).should.be.eventually.rejectedWith("Not enough nodes to create Schain");
+
+                await nodes.removeNodeFromInMaintenance(2);
+
+                await schains.addSchain(
+                    holder,
+                    deposit,
+                    web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d2"]),
+                    {from: owner});
+
+                const sChains = await schainsInternal.getSchains();
+                sChains.length.should.be.equal(1);
+                const schainId = sChains[0];
+
+                await schainsInternal.isOwnerAddress(holder, schainId).should.be.eventually.true;
+            });
+
             it("should not create 4 node schain on deleted node", async () => {
                 let data = await nodes.getNodesWithFreeSpace(32);
                 const removedNode = 1;

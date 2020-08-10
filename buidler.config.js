@@ -29,7 +29,7 @@ module.exports = {
     }
   },
   mocha: {
-    timeout: 300000
+    timeout: 500000
   },
   networks: {
     buidlerevm: {
