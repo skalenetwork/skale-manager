@@ -86,21 +86,23 @@ jobs:
         - provider: releases
           api_key: "$GITHUB_OAUTH_TOKEN"
           skip_cleanup: true
-          name: $VERSION @ $(date +'%d.%m.%Y %R')
+          name: $VERSION
           on:
             repo: $TRAVIS_REPO_SLUG
-            branch: master
+            branch:
+              - stable
+              - master
         - provider: releases
           api_key: "$GITHUB_OAUTH_TOKEN"
           skip_cleanup: true
           prerelease: true
-          name: $VERSION @ $(date +'%d.%m.%Y %R')
+          name: $VERSION
           on:
             repo: $TRAVIS_REPO_SLUG
             branch:
               - develop
               - beta
-              - stable
+              
         - provider: script
           skip_cleanup: true
           script: bash $TRAVIS_BUILD_DIR/scripts/build_and_publish.sh
