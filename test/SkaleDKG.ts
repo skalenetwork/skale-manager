@@ -336,6 +336,11 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
             });
 
             it("should broadcast data from 1 node", async () => {
+                let isBroadcasted = await skaleDKG.isNodeBroadcasted(
+                    web3.utils.soliditySha3(schainName),
+                    0
+                );
+                assert(isBroadcasted.should.be.false);
                 const result = await skaleDKG.broadcast(
                     web3.utils.soliditySha3(schainName),
                     0,
@@ -343,6 +348,11 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                     encryptedSecretKeyContributions[indexes[0]],
                     {from: validatorsAccount[0]},
                 );
+                isBroadcasted = await skaleDKG.isNodeBroadcasted(
+                    web3.utils.soliditySha3(schainName),
+                    0
+                );
+                assert(isBroadcasted.should.be.true);
                 assert.equal(result.logs[0].event, "BroadcastAndKeyShare");
                 assert.equal(result.logs[0].args.groupIndex, web3.utils.soliditySha3(schainName));
                 assert.equal(result.logs[0].args.fromNode.toString(), "0");
@@ -387,6 +397,11 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
             });
 
             it("should broadcast data from 2 node", async () => {
+                let isBroadcasted = await skaleDKG.isNodeBroadcasted(
+                    web3.utils.soliditySha3(schainName),
+                    1
+                );
+                assert(isBroadcasted.should.be.false);
                 const result = await skaleDKG.broadcast(
                     web3.utils.soliditySha3(schainName),
                     1,
@@ -394,6 +409,11 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                     encryptedSecretKeyContributions[indexes[1]],
                     {from: validatorsAccount[1]},
                 );
+                isBroadcasted = await skaleDKG.isNodeBroadcasted(
+                    web3.utils.soliditySha3(schainName),
+                    1
+                );
+                assert(isBroadcasted.should.be.true);
                 assert.equal(result.logs[0].event, "BroadcastAndKeyShare");
                 assert.equal(result.logs[0].args.groupIndex, web3.utils.soliditySha3(schainName));
                 assert.equal(result.logs[0].args.fromNode.toString(), "1");
