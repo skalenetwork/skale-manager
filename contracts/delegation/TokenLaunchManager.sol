@@ -56,7 +56,7 @@ contract TokenLaunchManager is Permissions, IERC777Recipient {
         uint timestamp
     );
 
-    bytes32 public constant SELLER_ROLE = keccak256("SCHAIN_CREATOR_ROLE");
+    bytes32 public constant SELLER_ROLE = keccak256("SELLER_ROLE");
 
     IERC1820Registry private _erc1820;
 
