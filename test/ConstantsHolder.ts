@@ -181,4 +181,16 @@ contract("ConstantsHolder", ([deployer, user]) => {
     expect(parseInt(res.toString(), 10)).to.be.equal(period);
   });
 
+  it("should set limit of validators per delegators", async () => {
+    const newLimit = 30;
+    await constantsHolder.setLimitValidatorsPerDelegator(newLimit, {from: user})
+      .should.be.eventually.rejectedWith("Caller is not the owner");
+
+    await constantsHolder.setLimitValidatorsPerDelegator(newLimit, {from: deployer});
+    // expectation
+    const res = new BigNumber(await constantsHolder.limitValidatorsPerDelegator());
+    // parseInt(bn.toString(), 10).should.be.equal(0)
+    expect(parseInt(res.toString(), 10)).to.be.equal(newLimit);
+  });
+
 });

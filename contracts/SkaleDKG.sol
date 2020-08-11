@@ -105,13 +105,8 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         _;
     }
 
-    function openChannel(bytes32 groupIndex) external override allow("Schains") {
-        require(!channels[groupIndex].active, "Channel already is created");
-        _reopenChannel(groupIndex);
-    }
-
-    function reopenChannel(bytes32 groupIndex) external override allow("NodeRotation") {
-        _reopenChannel(groupIndex);
+    function openChannel(bytes32 groupIndex) external override allowTwo("Schains","NodeRotation") {
+        _openChannel(groupIndex);
     }
 
     function deleteChannel(bytes32 groupIndex) external override allow("SchainsInternal") {
@@ -364,7 +359,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         emit SuccessfulDKG(groupIndex);
     }
 
-    function _reopenChannel(bytes32 groupIndex) private {
+    function _openChannel(bytes32 groupIndex) private {
         SchainsInternal schainsInternal = SchainsInternal(
             contractManager.getContract("SchainsInternal")
         );
@@ -403,7 +398,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             );
             emit NewGuy(newNode);
         } else {
-            _reopenChannel(groupIndex);
+            _openChannel(groupIndex);
             schainsInternal.removeNodeFromSchain(
                 badNode,
                 groupIndex
