@@ -335,6 +335,11 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             complaints[groupIndex].nodeToComplaint == nodeIndex;
     }
 
+    function isNodeBroadcasted(bytes32 groupIndex, uint nodeIndex) external view returns (bool) {
+        uint index = _nodeIndexInSchain(groupIndex, nodeIndex);
+        return index < channels[groupIndex].n && dkgProcess[groupIndex].broadcasted[index];
+    }
+
     function initialize(address contractsAddress) public override initializer {
         Permissions.initialize(contractsAddress);
     }
