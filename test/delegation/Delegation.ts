@@ -717,14 +717,12 @@ contract("Delegation", ([owner,
                 newValidatorId++;
             }
 
-            for (let i = 1; i < 21; i++) {
+            for (let i = 1; i < 22; i++) {
                 await delegationController.delegate(i, 100, 3, "OK delegation", {from: holder1});
             }
-            await delegationController.delegate(21, 100, 3, "OK delegation", {from: holder1})
-                .should.be.eventually.rejectedWith("Limit of validators is reached");
 
             let delegationId = 1;
-            for (let i = 2; i < 21; i++) {
+            for (let i = 2; i < 22; i++) {
                 const callData = web3DelegationController.methods.acceptPendingDelegation(delegationId++).encodeABI();
                 const AcceptTX = {
                     data: callData,
@@ -737,9 +735,8 @@ contract("Delegation", ([owner,
                 await web3.eth.sendSignedTransaction(signedAcceptTX.rawTransaction);
             }
 
-            await delegationController.cancelPendingDelegation(0, {from: holder1});
-
-            await delegationController.delegate(21, 100, 3, "OK delegation", {from: holder1});
+            await delegationController.acceptPendingDelegation(0, {from: validator})
+                .should.be.eventually.rejectedWith("Limit of validators is reached");
 
             // could send delegation request to already delegated validator
             await delegationController.delegate(2, 100, 3, "OK delegation", {from: holder1});
@@ -758,8 +755,8 @@ contract("Delegation", ([owner,
             // console.log("Delegated to 2");
 
             skipTime(web3, 60 * 60 * 24 * 31);
-            // could send undelegation request from 2 delegationId (3 validatorId)
-            await delegationController.requestUndelegation(2, {from: holder1});
+            // could send undelegation request from 1 delegationId (2 validatorId)
+            await delegationController.requestUndelegation(1, {from: holder1});
 
             // console.log("Request undelegation from 3");
 
@@ -770,12 +767,12 @@ contract("Delegation", ([owner,
 
             // could send delegation request to new validator
             const res = await delegationController.delegate(1, 100, 3, "OK delegation", {from: holder1});
-            // await delegationController.acceptPendingDelegation(24, {from: validator});
+            await delegationController.acceptPendingDelegation(24, {from: validator});
 
             // console.log("Delegated to 1");
 
             // could not send delegation request to previously delegated validator
-            await delegationController.delegate(3, 100, 3, "OK delegation", {from: holder1})
+            await delegationController.delegate(2, 100, 3, "OK delegation", {from: holder1})
                 .should.be.eventually.rejectedWith("Limit of validators is reached");
 
             // console.log("Not delegated to 3");
