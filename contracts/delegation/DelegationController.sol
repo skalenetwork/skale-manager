@@ -331,6 +331,7 @@ contract DelegationController is Permissions, ILocker {
         require(
             validatorService.checkValidatorAddressToId(msg.sender, delegations[delegationId].validatorId),
             "No permissions to accept request");
+        _checkIfDelegationIsAllowed(delegations[delegationId].holder, delegations[delegationId].validatorId);
         
         State currentState = getState(delegationId);
         if (currentState != State.PROPOSED) {
@@ -875,7 +876,7 @@ contract DelegationController is Permissions, ILocker {
         );
         require(
             _getCurrentMonth() >= constantsHolder.firstDelegationsMonth(),
-            "Delegations are not allowed before network launch"
+            "Delegations are not allowed"
         );
     }
 }
