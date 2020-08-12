@@ -11,7 +11,8 @@ import { ContractManagerInstance,
          SkaleTokenInstance,
          SlashingTableInstance,
          ValidatorServiceInstance,
-         SkaleManagerInstance} from "../types/truffle-contracts";
+         SkaleManagerInstance,
+         ConstantsHolderInstance} from "../types/truffle-contracts";
 
 import { skipTime, currentTime } from "./tools/time";
 
@@ -28,6 +29,7 @@ import { deploySkaleToken } from "./tools/deploy/skaleToken";
 import { deploySlashingTable } from "./tools/deploy/slashingTable";
 import { deployNodeRotation } from "./tools/deploy/nodeRotation";
 import { deploySkaleManager } from "./tools/deploy/skaleManager";
+import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -45,6 +47,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
     let nodes: NodesInstance;
     let nodeRotation: NodeRotationInstance;
     let skaleManager: SkaleManagerInstance;
+    let constantsHolder: ConstantsHolderInstance;
 
     const failedDkgPenalty = 5;
 
@@ -62,8 +65,10 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
         delegationController = await deployDelegationController(contractManager);
         nodeRotation = await deployNodeRotation(contractManager);
         skaleManager = await deploySkaleManager(contractManager);
+        constantsHolder = await deployConstantsHolder(contractManager);
 
         await slashingTable.setPenalty("FailedDKG", failedDkgPenalty);
+        await constantsHolder.setFirstDelegationsMonth(0);
     });
 
     describe("when 2 nodes are created", async () => {

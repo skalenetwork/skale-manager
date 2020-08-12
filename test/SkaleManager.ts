@@ -77,6 +77,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
         await constantsHolder.setMSR(5);
         await constantsHolder.setLaunchTimestamp(await currentTime(web3)); // to allow bounty withdrawing
         await bountyContract.enableBountyReduction();
+        await constantsHolder.setFirstDelegationsMonth(0);
     });
 
     it("should fail to process token fallback if sent not from SkaleToken", async () => {

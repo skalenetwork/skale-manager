@@ -110,6 +110,8 @@ contract ConstantsHolder is Permissions {
 
     uint public limitValidatorsPerDelegator;
 
+    uint public firstDelegationsMonth;
+
     /**
      * Set reward and delta periods to new one, run only by owner. This function
      * only for tests.
@@ -169,6 +171,10 @@ contract ConstantsHolder is Permissions {
         limitValidatorsPerDelegator = newLimit;
     }
 
+    function setFirstDelegationsMonth(uint month) external onlyOwner {
+        firstDelegationsMonth = month;
+    }
+
     /**
      * @dev constructor in Permissions approach
      * @param contractsAddress needed in Permissions constructor
@@ -186,5 +192,6 @@ contract ConstantsHolder is Permissions {
         proofOfUseLockUpPeriodDays = 90;
         proofOfUseDelegationPercentage = 50;
         limitValidatorsPerDelegator = 20;
+        firstDelegationsMonth = 8;
     }
 }
