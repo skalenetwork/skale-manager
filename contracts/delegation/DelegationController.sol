@@ -278,6 +278,10 @@ contract DelegationController is Permissions, ILocker {
         emit DelegationProposed(delegationId);
 
         _sendSlashingSignals(slashingSignals);
+        _addValidatorToValidatorsPerDelegators(
+            msg.sender,
+            validatorId
+        );
     }
 
     /**
@@ -312,6 +316,10 @@ contract DelegationController is Permissions, ILocker {
 
         delegations[delegationId].finished = _getCurrentMonth();
         _subtractFromLockedInPendingDelegations(delegations[delegationId].holder, delegations[delegationId].amount);
+        _removeValidatorFromValidatorsPerDelegators(
+            delegations[delegationId].holder,
+            delegations[delegationId].validatorId
+        );
 
         emit DelegationRequestCanceledByUser(delegationId);
     }
@@ -858,10 +866,6 @@ contract DelegationController is Permissions, ILocker {
             delegations[delegationId].validatorId,
             effectiveAmount,
             currentMonth.add(1));
-        _addValidatorToValidatorsPerDelegators(
-            delegations[delegationId].holder,
-            delegations[delegationId].validatorId
-        );
     }
 
     function _checkIfDelegationIsAllowed(address holder, uint validatorId) private view returns (bool) {
