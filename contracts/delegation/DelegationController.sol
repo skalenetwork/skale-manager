@@ -259,7 +259,7 @@ contract DelegationController is Permissions, ILocker {
         require(
             validatorService.isAcceptingNewRequests(validatorId),
             "The validator is not currently accepting new requests");
-        require(isPossibleToDelegate(msg.sender, validatorId), "Limit of validators is reached");
+        _checkIfDelegationIsAllowed(msg.sender, validatorId);
 
         SlashingSignal[] memory slashingSignals = _processAllSlashesWithoutSignals(msg.sender);
 
@@ -541,16 +541,7 @@ contract DelegationController is Permissions, ILocker {
 
     function hasUnprocessedSlashes(address holder) public view returns (bool) {
         return _everDelegated(holder) && _firstUnprocessedSlashByHolder[holder] < _slashes.length;
-    }
-
-    function isPossibleToDelegate(address holder, uint validatorId) public view returns (bool) {
-        ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
-        return _numberOfValidatorsPerDelegator[holder].delegated[validatorId] > 0 ||
-            (
-                _numberOfValidatorsPerDelegator[holder].delegated[validatorId] == 0 &&
-                _numberOfValidatorsPerDelegator[holder].number < constantsHolder.limitValidatorsPerDelegator()
-            );
-    }
+    }    
 
     // private
 
@@ -869,6 +860,22 @@ contract DelegationController is Permissions, ILocker {
         _addValidatorToValidatorsPerDelegators(
             delegations[delegationId].holder,
             delegations[delegationId].validatorId
+        );
+    }
+
+    function _checkIfDelegationIsAllowed(address holder, uint validatorId) private view returns (bool) {
+        ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
+        require(
+            _numberOfValidatorsPerDelegator[holder].delegated[validatorId] > 0 ||
+                (
+                    _numberOfValidatorsPerDelegator[holder].delegated[validatorId] == 0 &&
+                    _numberOfValidatorsPerDelegator[holder].number < constantsHolder.limitValidatorsPerDelegator()
+                ),
+            "Limit of validators is reached"
+        );
+        require(
+            _getCurrentMonth() >= constantsHolder.firstDelegationsMonth(),
+            "Delegations are not allowed before network launch"
         );
     }
 }

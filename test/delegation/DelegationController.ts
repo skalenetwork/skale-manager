@@ -1,8 +1,8 @@
 import { ContractManagerInstance,
     DelegationControllerInstance,
     SkaleTokenInstance,
-    TokenStateInstance,
-    ValidatorServiceInstance } from "../../types/truffle-contracts";
+    ValidatorServiceInstance,
+    ConstantsHolderInstance} from "../../types/truffle-contracts";
 
 import { skipTime } from "../tools/time";
 
@@ -10,11 +10,12 @@ import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
 import { deployContractManager } from "../tools/deploy/contractManager";
 import { deployDelegationController } from "../tools/deploy/delegation/delegationController";
-import { deployTokenState } from "../tools/deploy/delegation/tokenState";
 import { deployValidatorService } from "../tools/deploy/delegation/validatorService";
 import { deploySkaleToken } from "../tools/deploy/skaleToken";
 import { deployTimeHelpersWithDebug } from "../tools/deploy/test/timeHelpersWithDebug";
 import { Delegation, State } from "../tools/types";
+import { deployTimeHelpers } from "../tools/deploy/delegation/timeHelpers";
+import { deployConstantsHolder } from "../tools/deploy/constantsHolder";
 chai.should();
 chai.use(chaiAsPromised);
 
@@ -22,10 +23,9 @@ contract("DelegationController", ([owner, holder1, holder2, validator, validator
     let contractManager: ContractManagerInstance;
     let skaleToken: SkaleTokenInstance;
     let delegationController: DelegationControllerInstance;
-    let tokenState: TokenStateInstance;
     let validatorService: ValidatorServiceInstance;
+    let constantsHolder: ConstantsHolderInstance;
 
-    const defaultAmount = 100 * 1e18;
     const month = 60 * 60 * 24 * 31;
 
     beforeEach(async () => {
@@ -33,8 +33,10 @@ contract("DelegationController", ([owner, holder1, holder2, validator, validator
 
         skaleToken = await deploySkaleToken(contractManager);
         delegationController = await deployDelegationController(contractManager);
-        tokenState = await deployTokenState(contractManager);
         validatorService = await deployValidatorService(contractManager);
+        constantsHolder = await deployConstantsHolder(contractManager);
+
+        await constantsHolder.setFirstDelegationsMonth(0);
     });
 
     describe("when arguments for delegation initialized", async () => {
@@ -79,6 +81,14 @@ contract("DelegationController", ([owner, holder1, holder2, validator, validator
             amount = 101;
             await delegationController.delegate(validatorId, amount, delegationPeriod, info, {from: holder1})
                 .should.be.eventually.rejectedWith("Token holder does not have enough tokens to delegate");
+        });
+
+        it("should reject delegation if it is sent before network launch", async () => {
+            const timeHelpers = await deployTimeHelpers(contractManager);
+            const currentMonth = (await timeHelpers.getCurrentMonth()).toNumber();
+            await constantsHolder.setFirstDelegationsMonth(currentMonth + 1);
+            await delegationController.delegate(validatorId, amount, delegationPeriod, info, {from: holder1})
+                .should.be.eventually.rejectedWith("Delegations are not allowed before network launch");
         });
 
         it("should send request for delegation", async () => {
