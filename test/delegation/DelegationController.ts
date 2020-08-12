@@ -88,7 +88,7 @@ contract("DelegationController", ([owner, holder1, holder2, validator, validator
             const currentMonth = (await timeHelpers.getCurrentMonth()).toNumber();
             await constantsHolder.setFirstDelegationsMonth(currentMonth + 1);
             await delegationController.delegate(validatorId, amount, delegationPeriod, info, {from: holder1})
-                .should.be.eventually.rejectedWith("Delegations are not allowed before network launch");
+                .should.be.eventually.rejectedWith("Delegations are not allowed");
         });
 
         it("should send request for delegation", async () => {
