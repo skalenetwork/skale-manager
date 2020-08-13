@@ -35,9 +35,9 @@ contract TimeHelpers {
     using SafeMath for uint;
 
     uint constant private _ZERO_YEAR = 2020;
-
-    // uint constant private _first_delegation_month_start = 1598918400;
-    uint constant private _FIRST_DELEGATION_MONTH_FINISH = 1599523200;
+    
+    uint constant private _FICTIOUS_MONTH_START = 1599523200;
+    uint constant private _FICTIOUS_MONTH_NUMBER = 9;
 
     function calculateProofOfUseLockEndTime(uint month, uint lockUpPeriodDays) external view returns (uint timestamp) {
         timestamp = BokkyPooBahsDateTimeLibrary.addDays(monthToTimestamp(month), lockUpPeriodDays);
@@ -81,7 +81,7 @@ contract TimeHelpers {
         require(year >= _ZERO_YEAR, "Timestamp is too far in the past");
         month = month.sub(1).add(year.sub(_ZERO_YEAR).mul(12));
         require(month > 0, "Timestamp is too far in the past");
-        if (timestamp > _FIRST_DELEGATION_MONTH_FINISH) {
+        if (timestamp >= _FICTIOUS_MONTH_START) {
             month = month.add(1);
         }
         return month;
@@ -90,10 +90,10 @@ contract TimeHelpers {
     function monthToTimestamp(uint month) public view virtual returns (uint timestamp) {
         uint year = _ZERO_YEAR;
         uint _month = month;
-        if (_month == 10) {
-            return _FIRST_DELEGATION_MONTH_FINISH + 1;
-        } else if (_month > 10) {
+        if (_month > _FICTIOUS_MONTH_NUMBER) {
             _month = _month.sub(1);
+        } else if (_month == _FICTIOUS_MONTH_NUMBER) {
+            return _FICTIOUS_MONTH_START;
         }
         year = year.add(_month.div(12));
         _month = _month.mod(12);

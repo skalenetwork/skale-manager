@@ -11,7 +11,8 @@ import { ContractManagerInstance,
          SkaleTokenInstance,
          SlashingTableInstance,
          ValidatorServiceInstance,
-         SkaleManagerInstance} from "../types/truffle-contracts";
+         SkaleManagerInstance,
+         ConstantsHolderInstance} from "../types/truffle-contracts";
 
 import { skipTime, currentTime } from "./tools/time";
 
@@ -28,6 +29,7 @@ import { deploySkaleToken } from "./tools/deploy/skaleToken";
 import { deploySlashingTable } from "./tools/deploy/slashingTable";
 import { deployNodeRotation } from "./tools/deploy/nodeRotation";
 import { deploySkaleManager } from "./tools/deploy/skaleManager";
+import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -45,6 +47,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
     let nodes: NodesInstance;
     let nodeRotation: NodeRotationInstance;
     let skaleManager: SkaleManagerInstance;
+    let constantsHolder: ConstantsHolderInstance;
 
     const failedDkgPenalty = 5;
 
@@ -62,8 +65,10 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
         delegationController = await deployDelegationController(contractManager);
         nodeRotation = await deployNodeRotation(contractManager);
         skaleManager = await deploySkaleManager(contractManager);
+        constantsHolder = await deployConstantsHolder(contractManager);
 
         await slashingTable.setPenalty("FailedDKG", failedDkgPenalty);
+        await constantsHolder.setFirstDelegationsMonth(0);
     });
 
     describe("when 2 nodes are created", async () => {
@@ -336,6 +341,11 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
             });
 
             it("should broadcast data from 1 node", async () => {
+                let isBroadcasted = await skaleDKG.isNodeBroadcasted(
+                    web3.utils.soliditySha3(schainName),
+                    0
+                );
+                assert(isBroadcasted.should.be.false);
                 const result = await skaleDKG.broadcast(
                     web3.utils.soliditySha3(schainName),
                     0,
@@ -343,6 +353,11 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                     encryptedSecretKeyContributions[indexes[0]],
                     {from: validatorsAccount[0]},
                 );
+                isBroadcasted = await skaleDKG.isNodeBroadcasted(
+                    web3.utils.soliditySha3(schainName),
+                    0
+                );
+                assert(isBroadcasted.should.be.true);
                 assert.equal(result.logs[0].event, "BroadcastAndKeyShare");
                 assert.equal(result.logs[0].args.groupIndex, web3.utils.soliditySha3(schainName));
                 assert.equal(result.logs[0].args.fromNode.toString(), "0");
@@ -387,6 +402,11 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
             });
 
             it("should broadcast data from 2 node", async () => {
+                let isBroadcasted = await skaleDKG.isNodeBroadcasted(
+                    web3.utils.soliditySha3(schainName),
+                    1
+                );
+                assert(isBroadcasted.should.be.false);
                 const result = await skaleDKG.broadcast(
                     web3.utils.soliditySha3(schainName),
                     1,
@@ -394,6 +414,11 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                     encryptedSecretKeyContributions[indexes[1]],
                     {from: validatorsAccount[1]},
                 );
+                isBroadcasted = await skaleDKG.isNodeBroadcasted(
+                    web3.utils.soliditySha3(schainName),
+                    1
+                );
+                assert(isBroadcasted.should.be.true);
                 assert.equal(result.logs[0].event, "BroadcastAndKeyShare");
                 assert.equal(result.logs[0].args.groupIndex, web3.utils.soliditySha3(schainName));
                 assert.equal(result.logs[0].args.fromNode.toString(), "1");
