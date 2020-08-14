@@ -14,6 +14,7 @@ import { deployContractManager } from "../tools/deploy/contractManager";
 import { deployDelegationController } from "../tools/deploy/delegation/delegationController";
 import { deployValidatorService } from "../tools/deploy/delegation/validatorService";
 import { deploySkaleToken } from "../tools/deploy/skaleToken";
+import { deploySkaleManager } from "../tools/deploy/skaleManager";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -43,16 +44,12 @@ class Validator {
 contract("ValidatorService", ([owner, holder, validator1, validator2, validator3, nodeAddress]) => {
     let contractManager: ContractManagerInstance;
     let validatorService: ValidatorServiceInstance;
-    let constantsHolder: ConstantsHolderInstance;
     let skaleToken: SkaleTokenInstance;
     let delegationController: DelegationControllerInstance;
-
-    const defaultAmount = 100 * 1e18;
 
     beforeEach(async () => {
         contractManager = await deployContractManager();
 
-        constantsHolder = await deployConstantsHolder(contractManager);
         skaleToken = await deploySkaleToken(contractManager);
         validatorService = await deployValidatorService(contractManager);
         delegationController = await deployDelegationController(contractManager);
@@ -84,6 +81,12 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
             100,
             {from: validator1})
             .should.be.eventually.rejectedWith("Fee rate of validator should be lower than 100%");
+    });
+
+    it("should allow only owner to call disableWhitelits", async() => {
+        await validatorService.disableWhitelist({from: validator1})
+            .should.be.eventually.rejectedWith("Caller is not the owner");
+        await validatorService.disableWhitelist({from: owner});
     });
 
     describe("when validator registered", async () => {
@@ -248,6 +251,23 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
         it("should reject if provided validatorId equals zero", async () => {
             await validatorService.enableValidator(0)
                 .should.be.eventually.rejectedWith("Validator with such ID does not exist");
+        });
+
+        it("should allow only admin to enable validator", async () => {
+            await validatorService.enableValidator(1, {from: holder})
+                .should.be.eventually.rejectedWith("Caller is not an admin");
+            const skaleManager = await deploySkaleManager(contractManager);
+            await skaleManager.grantRole(await skaleManager.ADMIN_ROLE(), holder);
+            await validatorService.enableValidator(1, {from: holder});
+        });
+
+        it("should allow only admin to disable validator", async () => {
+            await validatorService.enableValidator(1);
+            await validatorService.disableValidator(1, {from: holder})
+                .should.be.eventually.rejectedWith("Caller is not an admin");
+            const skaleManager = await deploySkaleManager(contractManager);
+            await skaleManager.grantRole(await skaleManager.ADMIN_ROLE(), holder);
+            await validatorService.disableValidator(1, {from: holder});
         });
 
         it("should return list of trusted validators", async () => {

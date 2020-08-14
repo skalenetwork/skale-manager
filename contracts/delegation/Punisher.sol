@@ -21,8 +21,6 @@
 
 pragma solidity 0.6.10;
 
-import "@openzeppelin/contracts/math/SafeMath.sol";
-
 import "../Permissions.sol";
 import "../interfaces/delegation/ILocker.sol";
 

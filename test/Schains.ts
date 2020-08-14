@@ -8,10 +8,11 @@ import { ConstantsHolderInstance,
          SchainsInstance,
          SkaleDKGTesterInstance,
          SkaleManagerInstance,
-         ValidatorServiceInstance } from "../types/truffle-contracts";
+         ValidatorServiceInstance,
+         NodeRotationInstance} from "../types/truffle-contracts";
 
 import BigNumber from "bignumber.js";
-import { skipTime } from "./tools/time";
+import { skipTime, currentTime } from "./tools/time";
 
 import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
 import { deployContractManager } from "./tools/deploy/contractManager";
@@ -22,6 +23,7 @@ import { deploySchainsInternal } from "./tools/deploy/schainsInternal";
 import { deploySchains } from "./tools/deploy/schains";
 import { deploySkaleDKGTester } from "./tools/deploy/test/skaleDKGTester";
 import { deploySkaleManager } from "./tools/deploy/skaleManager";
+import { deployNodeRotation } from "./tools/deploy/nodeRotation";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -36,6 +38,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
     let skaleDKG: SkaleDKGTesterInstance;
     let skaleManager: SkaleManagerInstance;
     let keyStorage: KeyStorageInstance;
+    let nodeRotation: NodeRotationInstance;
 
     beforeEach(async () => {
         contractManager = await deployContractManager();
@@ -49,6 +52,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
         await contractManager.setContractsAddress("SkaleDKG", skaleDKG.address);
         keyStorage = await deployKeyStorage(contractManager);
         skaleManager = await deploySkaleManager(contractManager);
+        nodeRotation = await deployNodeRotation(contractManager);
 
         await validatorService.registerValidator("D2", "D2 is even", 0, 0, {from: validator});
         const validatorIndex = await validatorService.getValidatorId(validator);
@@ -393,6 +397,44 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
                     {from: owner}).should.be.eventually.rejectedWith("Not enough nodes to create Schain");
             });
 
+            it("should not create 4 node schain with 1 In Maintenance node", async () => {
+                await nodes.setNodeInMaintenance(2);
+
+                const deposit = await schains.getSchainPrice(5, 5);
+
+                await schains.addSchain(
+                    holder,
+                    deposit,
+                    web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d2"]),
+                    {from: owner}).should.be.eventually.rejectedWith("Not enough nodes to create Schain");
+            });
+
+            it("should create 4 node schain with 1 From In Maintenance node", async () => {
+                await nodes.setNodeInMaintenance(2);
+
+                const deposit = await schains.getSchainPrice(5, 5);
+
+                await schains.addSchain(
+                    holder,
+                    deposit,
+                    web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d2"]),
+                    {from: owner}).should.be.eventually.rejectedWith("Not enough nodes to create Schain");
+
+                await nodes.removeNodeFromInMaintenance(2);
+
+                await schains.addSchain(
+                    holder,
+                    deposit,
+                    web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d2"]),
+                    {from: owner});
+
+                const sChains = await schainsInternal.getSchains();
+                sChains.length.should.be.equal(1);
+                const schainId = sChains[0];
+
+                await schainsInternal.isOwnerAddress(holder, schainId).should.be.eventually.true;
+            });
+
             it("should not create 4 node schain on deleted node", async () => {
                 let data = await nodes.getNodesWithFreeSpace(32);
                 const removedNode = 1;
@@ -494,14 +536,15 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
             });
 
             it("should allow the foundation to create schain without tokens", async () => {
-                await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), owner);
-                await schains.addSchainByFoundation(5, 5, 0, "d2", {from: owner});
+                const schainCreator = holder;
+                await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), schainCreator);
+                await schains.addSchainByFoundation(5, 5, 0, "d2", {from: schainCreator});
 
                 const sChains = await schainsInternal.getSchains();
                 sChains.length.should.be.equal(1);
                 const schainId = sChains[0];
 
-                await schainsInternal.isOwnerAddress(owner, schainId).should.be.eventually.true;
+                await schainsInternal.isOwnerAddress(schainCreator, schainId).should.be.eventually.true;
             });
 
             it("should assign schain creator on different address", async () => {
@@ -852,6 +895,24 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
             const res1 = await schainsInternal.getNodesInGroup(web3.utils.soliditySha3("d2"));
             const res2 = await schainsInternal.getNodesInGroup(web3.utils.soliditySha3("d3"));
             await skaleManager.nodeExit(0, {from: nodeAddress});
+            const leavingTimeOfNode = new BigNumber(
+                (await nodeRotation.getLeavingHistory(0))[0].finishedRotation
+            ).toNumber();
+            const _12hours = 43200;
+            assert.equal(await currentTime(web3), leavingTimeOfNode-_12hours);
+            const rotatedSchain = (await nodeRotation.getLeavingHistory(0))[0].schainIndex;
+            const rotationForRotatedSchain = await nodeRotation.getRotation(rotatedSchain);
+            assert.notEqual(rotationForRotatedSchain.newNodeIndex, new BigNumber(0));
+            assert.notEqual(rotationForRotatedSchain.freezeUntil, new BigNumber(0));
+            assert.notEqual(rotationForRotatedSchain.rotationCounter, new BigNumber(0));
+
+            const activeSchain = await schainsInternal.getActiveSchain(0);
+            const rotationForActiveSchain = await nodeRotation.getRotation(activeSchain);
+            assert.equal(rotationForActiveSchain.nodeIndex, new BigNumber(0));
+            assert.equal(rotationForActiveSchain.newNodeIndex, new BigNumber(0));
+            assert.equal(rotationForActiveSchain.freezeUntil, new BigNumber(0));
+            assert.equal(rotationForActiveSchain.rotationCounter, new BigNumber(0));
+
             const nodeRot = res1[3];
             const res = await skaleDKG.isBroadcastPossible(
                 web3.utils.soliditySha3("d3"), nodeRot);
@@ -864,6 +925,12 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
             await skaleDKG.setSuccesfulDKGPublic(
                 web3.utils.soliditySha3("d2"),
             );
+
+            const rotationForSecondRotatedSchain = await nodeRotation.getRotation(activeSchain);
+            assert.notEqual(rotationForSecondRotatedSchain.newNodeIndex, new BigNumber(0));
+            assert.notEqual(rotationForSecondRotatedSchain.freezeUntil, new BigNumber(0));
+            assert.notEqual(rotationForSecondRotatedSchain.rotationCounter, new BigNumber(0));
+
             nodeStatus = (await nodes.getNodeStatus(0)).toNumber();
             assert.equal(nodeStatus, LEFT);
             await skaleManager.nodeExit(0, {from: nodeAddress})
@@ -1054,8 +1121,11 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
             await skaleDKG.setSuccesfulDKGPublic(
                 web3.utils.soliditySha3("d2"),
             );
-            await skaleManager.deleteSchainByRoot("d2", {from: owner});
-            await skaleManager.deleteSchainByRoot("d3", {from: owner});
+            await skaleManager.deleteSchainByRoot("d2", {from: holder})
+                .should.be.eventually.rejectedWith("Caller is not an admin");
+            await skaleManager.grantRole(await skaleManager.ADMIN_ROLE(), holder);
+            await skaleManager.deleteSchainByRoot("d2", {from: holder});
+            await skaleManager.deleteSchainByRoot("d3", {from: holder});
             await schains.addSchain(
                 holder,
                 deposit,
@@ -1153,16 +1223,38 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
             res = await skaleDKG.isBroadcastPossible(web3.utils.soliditySha3("d3"), nodeRot, {from: nodeAddress});
             assert.equal(res, true);
 
-            const verificationVector = [{
-                x: {
-                    a: "0x02c2b888a23187f22195eadadbc05847a00dc59c913d465dbc4dfac9cfab437d",
-                    b: "0x2695832627b9081e77da7a3fc4d574363bf051700055822f3d394dc3d9ff7417",
+            const verificationVector = [
+                {
+                    x: {
+                        a: "0x02c2b888a23187f22195eadadbc05847a00dc59c913d465dbc4dfac9cfab437d",
+                        b: "0x2695832627b9081e77da7a3fc4d574363bf051700055822f3d394dc3d9ff7417",
+                    },
+                    y: {
+                        a: "0x24727c45f9322be756fbec6514525cbbfa27ef1951d3fed10f483c23f921879d",
+                        b: "0x03a7a3e6f3b539dad43c0eca46e3f889b2b2300815ffc4633e26e64406625a99"
+                    }
                 },
-                y: {
-                    a: "0x24727c45f9322be756fbec6514525cbbfa27ef1951d3fed10f483c23f921879d",
-                    b: "0x03a7a3e6f3b539dad43c0eca46e3f889b2b2300815ffc4633e26e64406625a99"
+                {
+                    x: {
+                        a: "0x02c2b888a23187f22195eadadbc05847a00dc59c913d465dbc4dfac9cfab437d",
+                        b: "0x2695832627b9081e77da7a3fc4d574363bf051700055822f3d394dc3d9ff7417",
+                    },
+                    y: {
+                        a: "0x24727c45f9322be756fbec6514525cbbfa27ef1951d3fed10f483c23f921879d",
+                        b: "0x03a7a3e6f3b539dad43c0eca46e3f889b2b2300815ffc4633e26e64406625a99"
+                    }
+                },
+                {
+                    x: {
+                        a: "0x02c2b888a23187f22195eadadbc05847a00dc59c913d465dbc4dfac9cfab437d",
+                        b: "0x2695832627b9081e77da7a3fc4d574363bf051700055822f3d394dc3d9ff7417",
+                    },
+                    y: {
+                        a: "0x24727c45f9322be756fbec6514525cbbfa27ef1951d3fed10f483c23f921879d",
+                        b: "0x03a7a3e6f3b539dad43c0eca46e3f889b2b2300815ffc4633e26e64406625a99"
+                    }
                 }
-            }];
+            ];
 
             const encryptedSecretKeyContribution = [
                 {

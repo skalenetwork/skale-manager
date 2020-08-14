@@ -21,13 +21,13 @@
 
 pragma solidity 0.6.10;
 
-import "@openzeppelin/contracts/introspection/IERC1820Registry.sol";
-import "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/introspection/IERC1820Registry.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC777/IERC777Recipient.sol";
 import "@openzeppelin/contracts/token/ERC777/IERC777Sender.sol";
-import "@openzeppelin/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC777/IERC777.sol";
 
 import "../Permissions.sol";
-import "../SkaleToken.sol";
 import "../delegation/DelegationController.sol";
 
 
@@ -55,7 +55,7 @@ contract ReentrancyTester is Permissions, IERC777Recipient, IERC777Sender {
         external override
     {
         if (_reentrancyCheck) {
-            SkaleToken skaleToken = SkaleToken(contractManager.getContract("SkaleToken"));
+            IERC20 skaleToken = IERC20(contractManager.getContract("SkaleToken"));
 
             require(
                 skaleToken.transfer(contractManager.getContract("SkaleToken"), amount),
@@ -92,7 +92,7 @@ contract ReentrancyTester is Permissions, IERC777Recipient, IERC777Sender {
     }
 
     function burningAttack() external {
-        SkaleToken skaleToken = SkaleToken(contractManager.getContract("SkaleToken"));
+        IERC777 skaleToken = IERC777(contractManager.getContract("SkaleToken"));
 
         _amount = skaleToken.balanceOf(address(this));
 
