@@ -23,10 +23,9 @@
 pragma solidity 0.6.10;
 pragma experimental ABIEncoderV2;
 
-import "@openzeppelin/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC777/IERC777.sol";
 
 import "../Permissions.sol";
-import "../SkaleToken.sol";
 import "../Nodes.sol";
 import "../utils/MathUtils.sol";
 import "../utils/FractionUtils.sol";
@@ -122,6 +121,13 @@ contract DelegationController is Permissions, ILocker {
         mapping (uint => uint) byValidator;
     }
 
+    struct ValidatorsStatistics {
+        // number of validators
+        uint number;
+        //validatorId => bool - is Delegated or not
+        mapping (uint => uint) delegated;
+    }
+
     /**
      * @dev Emitted when a delegation is proposed to a validator.
      */
@@ -187,6 +193,8 @@ contract DelegationController is Permissions, ILocker {
     //        holder => locked in pending
     mapping (address => LockedInPending) private _lockedInPendingDelegations;
 
+    mapping (address => ValidatorsStatistics) private _numberOfValidatorsPerDelegator;
+
     /**
      * @dev Modifier to make a function callable only if delegation exists.
      */
@@ -247,18 +255,17 @@ contract DelegationController is Permissions, ILocker {
     )
         external
     {
-
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
         DelegationPeriodManager delegationPeriodManager = DelegationPeriodManager(
             contractManager.getContract("DelegationPeriodManager"));
-        SkaleToken skaleToken = SkaleToken(contractManager.getContract("SkaleToken"));
+        IERC777 skaleToken = IERC777(contractManager.getContract("SkaleToken"));
         TokenState tokenState = TokenState(contractManager.getContract("TokenState"));
 
         require(
             validatorService.checkMinimumDelegation(validatorId, amount),
             "Amount does not meet the validator's minimum delegation amount");
         require(
-            validatorService.trustedValidators(validatorId) || !validatorService.useWhitelist(),
+            validatorService.isAuthorizedValidator(validatorId),
             "Validator is not authorized to accept delegation request");
         require(
             delegationPeriodManager.isDelegationPeriodAllowed(delegationPeriod),
@@ -266,6 +273,7 @@ contract DelegationController is Permissions, ILocker {
         require(
             validatorService.isAcceptingNewRequests(validatorId),
             "The validator is not currently accepting new requests");
+        _checkIfDelegationIsAllowed(msg.sender, validatorId);
 
         SlashingSignal[] memory slashingSignals = _processAllSlashesWithoutSignals(msg.sender);
 
@@ -339,6 +347,7 @@ contract DelegationController is Permissions, ILocker {
         require(
             validatorService.checkValidatorAddressToId(msg.sender, delegations[delegationId].validatorId),
             "No permissions to accept request");
+        _checkIfDelegationIsAllowed(delegations[delegationId].holder, delegations[delegationId].validatorId);
         
         State currentState = getState(delegationId);
         if (currentState != State.PROPOSED) {
@@ -385,22 +394,22 @@ contract DelegationController is Permissions, ILocker {
      */
     function requestUndelegation(uint delegationId) external checkDelegationExists(delegationId) {
         require(getState(delegationId) == State.DELEGATED, "Cannot request undelegation");
-
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
         require(
             delegations[delegationId].holder == msg.sender ||
             (validatorService.validatorAddressExists(msg.sender) &&
             delegations[delegationId].validatorId == validatorService.getValidatorId(msg.sender)),
             "Permission denied to request undelegation");
-
         TokenLaunchLocker tokenLaunchLocker = TokenLaunchLocker(contractManager.getContract("TokenLaunchLocker"));
         DelegationPeriodManager delegationPeriodManager = DelegationPeriodManager(
             contractManager.getContract("DelegationPeriodManager"));
-
+        _removeValidatorFromValidatorsPerDelegators(
+            delegations[delegationId].holder,
+            delegations[delegationId].validatorId
+        );
         processAllSlashes(msg.sender);
         delegations[delegationId].finished = _calculateDelegationEndMonth(delegationId);
         uint amountAfterSlashing = _calculateDelegationAmountAfterSlashing(delegationId);
-
         _removeFromDelegatedToValidator(
             delegations[delegationId].validatorId,
             amountAfterSlashing,
@@ -425,12 +434,10 @@ contract DelegationController is Permissions, ILocker {
             delegations[delegationId].validatorId,
             effectiveAmount,
             delegations[delegationId].finished);
-
         tokenLaunchLocker.handleDelegationRemoving(
             delegations[delegationId].holder,
             delegationId,
             delegations[delegationId].finished);
-
         emit UndelegationRequested(delegationId);
     }
 
@@ -578,7 +585,7 @@ contract DelegationController is Permissions, ILocker {
      */
     function hasUnprocessedSlashes(address holder) public view returns (bool) {
         return _everDelegated(holder) && _firstUnprocessedSlashByHolder[holder] < _slashes.length;
-    }
+    }    
 
     // private
 
@@ -638,6 +645,14 @@ contract DelegationController is Permissions, ILocker {
         _delegatedByHolderToValidator[holder][validatorId].addToValue(amount, month);
     }
 
+    function _addValidatorToValidatorsPerDelegators(address holder, uint validatorId) private {
+        if (_numberOfValidatorsPerDelegator[holder].delegated[validatorId] == 0) {
+            _numberOfValidatorsPerDelegator[holder].number = _numberOfValidatorsPerDelegator[holder].number.add(1);
+        }
+        _numberOfValidatorsPerDelegator[holder].
+            delegated[validatorId] = _numberOfValidatorsPerDelegator[holder].delegated[validatorId].add(1);
+    }
+
     function _removeFromDelegatedByHolder(address holder, uint amount, uint month) private {
         _delegatedByHolder[holder].subtractFromValue(amount, month);
     }
@@ -646,6 +661,14 @@ contract DelegationController is Permissions, ILocker {
         address holder, uint validatorId, uint amount, uint month) private
     {
         _delegatedByHolderToValidator[holder][validatorId].subtractFromValue(amount, month);
+    }
+
+    function _removeValidatorFromValidatorsPerDelegators(address holder, uint validatorId) private {
+        if (_numberOfValidatorsPerDelegator[holder].delegated[validatorId] == 1) {
+            _numberOfValidatorsPerDelegator[holder].number = _numberOfValidatorsPerDelegator[holder].number.sub(1);
+        }
+        _numberOfValidatorsPerDelegator[holder].
+            delegated[validatorId] = _numberOfValidatorsPerDelegator[holder].delegated[validatorId].sub(1);
     }
 
     function _addToEffectiveDelegatedByHolderToValidator(
@@ -878,5 +901,25 @@ contract DelegationController is Permissions, ILocker {
             delegations[delegationId].validatorId,
             effectiveAmount,
             currentMonth.add(1));
+        _addValidatorToValidatorsPerDelegators(
+            delegations[delegationId].holder,
+            delegations[delegationId].validatorId
+        );
+    }
+
+    function _checkIfDelegationIsAllowed(address holder, uint validatorId) private view returns (bool) {
+        ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
+        require(
+            _numberOfValidatorsPerDelegator[holder].delegated[validatorId] > 0 ||
+                (
+                    _numberOfValidatorsPerDelegator[holder].delegated[validatorId] == 0 &&
+                    _numberOfValidatorsPerDelegator[holder].number < constantsHolder.limitValidatorsPerDelegator()
+                ),
+            "Limit of validators is reached"
+        );
+        require(
+            _getCurrentMonth() >= constantsHolder.firstDelegationsMonth(),
+            "Delegations are not allowed"
+        );
     }
 }

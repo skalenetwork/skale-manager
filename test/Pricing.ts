@@ -8,7 +8,8 @@ import { ContractManagerInstance,
          SchainsInternalInstance,
          ValidatorServiceInstance,
          SchainsInstance,
-         ConstantsHolderInstance} from "../types/truffle-contracts";
+         ConstantsHolderInstance,
+         NodeRotationInstance } from "../types/truffle-contracts";
 
 import { deployContractManager } from "./tools/deploy/contractManager";
 import { deployNodes } from "./tools/deploy/nodes";
@@ -18,6 +19,7 @@ import { skipTime, currentTime } from "./tools/time";
 import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
 import { deploySchains } from "./tools/deploy/schains";
 import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
+import { deployNodeRotation } from "./tools/deploy/nodeRotation";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -30,6 +32,7 @@ contract("Pricing", ([owner, holder, validator, nodeAddress]) => {
     let nodes: NodesInstance;
     let validatorService: ValidatorServiceInstance;
     let constants: ConstantsHolderInstance;
+    let nodeRotation: NodeRotationInstance;
 
     beforeEach(async () => {
         contractManager = await deployContractManager();
@@ -40,6 +43,7 @@ contract("Pricing", ([owner, holder, validator, nodeAddress]) => {
         pricing = await deployPricing(contractManager);
         validatorService = await deployValidatorService(contractManager);
         constants = await deployConstantsHolder(contractManager);
+        nodeRotation = await deployNodeRotation(contractManager);
 
         await validatorService.registerValidator("Validator", "D2", 0, 0, {from: validator});
         const validatorIndex = await validatorService.getValidatorId(validator);
@@ -246,7 +250,7 @@ contract("Pricing", ([owner, holder, validator, nodeAddress]) => {
 
                     await nodes.initExit(nodeToExit);
                     for(let i = 0; i < numberOfSchains; ++i) {
-                        await schains.exitFromSchain(nodeToExit);
+                        await nodeRotation.exitFromSchain(nodeToExit);
                     }
                     await nodes.completeExit(nodeToExit);
 

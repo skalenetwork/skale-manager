@@ -26,9 +26,9 @@
     }
   ],
   "scripts": {
-    "compile": "rm -r ./build && ./node_modules/.bin/truffle compile",
+    "compile": "rm -rf ./build && npx truffle compile",
     "deploy": "bash ./scripts/deploy.sh",
-    "generate": "npx truffle compile && typechain --target truffle './build/**/*.json'",
+    "generate": "yarn compile && typechain --target truffle './build/**/*.json'",
     "hooks": "git config core.hooksPath .githooks || true",
     "lint": "npx solhint \"contracts/**/*.sol\"",
     "prepare": "yarn generate && yarn hooks",
@@ -39,20 +39,20 @@
     "fullcheck": "yarn lint && yarn tsc && yarn tslint && yarn slither"
   },
   "dependencies": {
-    "@openzeppelin/cli": "^2.6.0",
-    "@openzeppelin/contracts": "^3.0.2",
+    "@openzeppelin/cli": "^2.8.2",
+    "@openzeppelin/contracts": "^3.1.0",
     "@openzeppelin/contracts-ethereum-package": "^3.0.0",
     "@openzeppelin/upgrades": "^2.8.0",
     "@truffle/hdwallet-provider": "^1.0.28",
     "@types/chai": "^4.2.11",
-    "@types/chai-as-promised": "^7.1.0",
+    "@types/chai-as-promised": "^7.1.3",
     "@types/minimist": "^1.2.0",
     "bignumber.js": "^9.0.0",
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
     "ethereumjs-tx": "2.1.2",
     "solc": "^0.6.10",
-    "truffle": "5.1.31",
+    "truffle": "5.1.39",
     "truffle-typings": "^1.0.8",
     "ts-node": "8.10.2",
     "typechain": "^1.0.5",
@@ -60,18 +60,18 @@
     "web3": "^1.2.1"
   },
   "devDependencies": {
-    "@nomiclabs/buidler": "^1.3.7",
+    "@nomiclabs/buidler": "^1.4.3",
     "@nomiclabs/buidler-truffle5": "^1.3.4",
     "@nomiclabs/buidler-web3": "^1.3.4",
     "@types/web3": "^1.0.19",
-    "codecov": "^3.7.0",
+    "codecov": "^3.7.2",
     "dotenv": "^8.2.0",
-    "elliptic": "^6.5.2",
+    "elliptic": "^6.5.3",
     "ganache-cli": "^6.9.1",
-    "solhint": "^3.0.0",
+    "solhint": "^3.1.0",
     "solidity-coverage": "^0.7.5",
-    "tslint": "^6.1.2",
+    "tslint": "^6.1.3",
     "tslint-no-unused-expression-chai": "^0.1.4",
-    "typescript": "3.9.5"
+    "typescript": "3.9.7"
   }
 }

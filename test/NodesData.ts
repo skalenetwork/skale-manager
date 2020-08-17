@@ -164,12 +164,31 @@ contract("NodesData", ([owner, validator, nodeAddress]) => {
         });
 
         it("should calculate node next reward date", async () => {
-            const currentTimeValue = web3.utils.toBN(await currentTime(web3));
+            let currentTimeValue = web3.utils.toBN(await currentTime(web3));
             const rewardPeriod = web3.utils.toBN(3600);
-            const nextRewardTime = currentTimeValue.add(rewardPeriod);
-            const obtainedNextRewardTime = web3.utils.toBN(await nodes.getNodeNextRewardDate(0));
+            let nextRewardTime = currentTimeValue.add(rewardPeriod);
+            let obtainedNextRewardTime = web3.utils.toBN(await nodes.getNodeNextRewardDate(0));
 
             obtainedNextRewardTime.should.be.deep.equal(nextRewardTime);
+
+            // test if we OK with time in the far future
+            skipTime(web3, 100 * 365 * 24 * 60 * 60);
+            await nodes.createNode(
+                nodeAddress,
+                {
+                    port: 8545,
+                    nonce: 0,
+                    ip: "0x7f000002",
+                    publicIp: "0x7f000002",
+                    publicKey: ["0x1122334455667788990011223344556677889900112233445566778899001122",
+                                "0x1122334455667788990011223344556677889900112233445566778899001122"],
+                    name: "d3"
+                });
+             currentTimeValue = web3.utils.toBN(await currentTime(web3));
+             nextRewardTime = currentTimeValue.add(rewardPeriod);
+             obtainedNextRewardTime = web3.utils.toBN(await nodes.getNodeNextRewardDate(1));
+
+             obtainedNextRewardTime.toString(10).should.be.equal(nextRewardTime.toString(10));
         });
 
         it("should get array of ips of active nodes", async () => {
@@ -202,6 +221,42 @@ contract("NodesData", ([owner, validator, nodeAddress]) => {
             status = await nodes.getNodeStatus(0);
             assert.equal(status.toNumber(), 1);
         });
+
+        it("should set node status In Maintenance", async () => {
+            let status = await nodes.getNodeStatus(0);
+            assert.equal(status.toNumber(), 0);
+            await nodes.setNodeInMaintenance(0);
+            status = await nodes.getNodeStatus(0);
+            assert.equal(status.toNumber(), 3);
+            const boolStatus = await nodes.isNodeInMaintenance(0);
+            assert.equal(boolStatus, true);
+        });
+
+        it("should set node status From In Maintenance", async () => {
+            let status = await nodes.getNodeStatus(0);
+            assert.equal(status.toNumber(), 0);
+            await nodes.setNodeInMaintenance(0);
+            status = await nodes.getNodeStatus(0);
+            assert.equal(status.toNumber(), 3);
+            const boolStatus = await nodes.isNodeInMaintenance(0);
+            assert.equal(boolStatus, true);
+
+            await nodes.removeNodeFromInMaintenance(0);
+            status = await nodes.getNodeStatus(0);
+            assert.equal(status.toNumber(), 0);
+        });
+
+        it("should node set node status In Maintenance from Leaving or Left", async () => {
+            let status = await nodes.getNodeStatus(0);
+            assert.equal(status.toNumber(), 0);
+            await nodes.initExit(0);
+            status = await nodes.getNodeStatus(0);
+            assert.equal(status.toNumber(), 1);
+            await nodes.setNodeInMaintenance(0).should.be.eventually.rejectedWith("Node is not Active");
+            await nodes.completeExit(0);
+            await nodes.setNodeInMaintenance(0).should.be.eventually.rejectedWith("Node is not Active");
+        });
+
 
         // describe("when node is registered as fractional", async () => {
         //     beforeEach(async () => {

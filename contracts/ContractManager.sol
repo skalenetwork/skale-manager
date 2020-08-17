@@ -22,6 +22,7 @@
 pragma solidity 0.6.10;
 
 import "@openzeppelin/contracts-ethereum-package/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/utils/Address.sol";
 
 import "./utils/StringUtils.sol";
 
@@ -33,6 +34,7 @@ import "./utils/StringUtils.sol";
  */
 contract ContractManager is OwnableUpgradeSafe {
     using StringUtils for string;
+    using Address for address;
 
     // mapping of actual smart contracts addresses
     mapping (bytes32 => address) public contracts;
@@ -64,7 +66,7 @@ contract ContractManager is OwnableUpgradeSafe {
         bytes32 contractId = keccak256(abi.encodePacked(contractsName));
         // check newContractsAddress is not equal the previous contract's address
         require(contracts[contractId] != newContractsAddress, "Contract is already added");
-        require(_containsCode(newContractsAddress), "Given contract address does not contain code");
+        require(newContractsAddress.isContract(), "Given contract address does not contain code");
         // add newContractsAddress to mapping of actual contract addresses
         contracts[contractId] = newContractsAddress;
         emit ContractUpgraded(contractsName, newContractsAddress);
@@ -80,17 +82,5 @@ contract ContractManager is OwnableUpgradeSafe {
     function getContract(string calldata name) external view returns (address contractAddress) {
         contractAddress = contracts[keccak256(abi.encodePacked(name))];
         require(contractAddress != address(0), name.strConcat(" contract has not been found"));
-    }
-
-    /**
-     * @dev Performs check on whether contract address contains code.
-     */
-    function _containsCode(address account) private view returns (bool) {
-        uint length;
-        // solhint-disable-next-line no-inline-assembly
-        assembly {
-            length := extcodesize(account)
-        }
-        return length > 0;
     }
 }

@@ -22,7 +22,7 @@
 pragma solidity 0.6.10;
 pragma experimental ABIEncoderV2;
 
-import "@openzeppelin/contracts/utils/SafeCast.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/utils/SafeCast.sol";
 
 import "./ConstantsHolder.sol";
 import "./Nodes.sol";
@@ -45,12 +45,12 @@ contract Monitors is Permissions {
 
     struct CheckedNode {
         uint nodeIndex;
-        uint32 time;
+        uint time;
     }
 
     struct CheckedNodeWithIp {
         uint nodeIndex;
-        uint32 time;
+        uint time;
         bytes4 ip;
     }
 
@@ -70,7 +70,7 @@ contract Monitors is Permissions {
         bytes32 monitorIndex,
         uint numberOfMonitors,
         uint[] nodesInGroup,
-        uint32 time,
+        uint time,
         uint gasSpend
     );
 
@@ -84,7 +84,7 @@ contract Monitors is Permissions {
         uint32 latency,
         bool status,
         uint previousBlockEvent,
-        uint32 time,
+        uint time,
         uint gasSpend
     );
 
@@ -95,7 +95,7 @@ contract Monitors is Permissions {
         uint forNodeIndex,
         uint32 averageDowntime,
         uint32 averageLatency,
-        uint32 time,
+        uint time,
         uint gasSpend
     );
 
@@ -105,7 +105,7 @@ contract Monitors is Permissions {
     event PeriodsWereSet(
         uint rewardPeriod,
         uint deltaPeriod,
-        uint32 time,
+        uint time,
         uint gasSpend
     );
 
@@ -138,7 +138,8 @@ contract Monitors is Permissions {
             monitorIndex,
             groupsForMonitors[monitorIndex].length,
             groupsForMonitors[monitorIndex],
-            uint32(block.timestamp), gasleft()
+            block.timestamp,
+            gasleft()
         );
     }
 
@@ -186,7 +187,7 @@ contract Monitors is Permissions {
      */
     function sendVerdict(uint fromMonitorIndex, Verdict calldata verdict) external allow("SkaleManager") {
         uint index;
-        uint32 time;
+        uint time;
         bytes32 monitorIndex = keccak256(abi.encodePacked(fromMonitorIndex));
         (index, time) = _find(monitorIndex, verdict.toNodeIndex);
         require(time > 0, "Checked Node does not exist in MonitorsArray");
@@ -198,7 +199,7 @@ contract Monitors is Permissions {
             delete checkedNodes[monitorIndex][checkedNodes[monitorIndex].length.sub(1)];
             checkedNodes[monitorIndex].pop();
             ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
-            bool receiveVerdict = uint(time).add(constantsHolder.deltaPeriod()) > uint32(block.timestamp);
+            bool receiveVerdict = time.add(constantsHolder.deltaPeriod()) > block.timestamp;
             if (receiveVerdict) {
                 verdicts[keccak256(abi.encodePacked(verdict.toNodeIndex))].push(
                     [uint(verdict.downtime), uint(verdict.latency)]
@@ -314,7 +315,6 @@ contract Monitors is Permissions {
      */
     function _generateGroup(bytes32 monitorIndex, uint nodeIndex, uint numberOfNodes)
         private
-        allow("SkaleManager")
     {
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));
         uint[] memory activeNodes = nodes.getActiveNodeIds();
@@ -360,12 +360,12 @@ contract Monitors is Permissions {
         array[index2] = buffer;
     }
 
-    function _find(bytes32 monitorIndex, uint nodeIndex) private view returns (uint index, uint32 time) {
+    function _find(bytes32 monitorIndex, uint nodeIndex) private view returns (uint index, uint time) {
         index = checkedNodes[monitorIndex].length;
         time = 0;
         for (uint i = 0; i < checkedNodes[monitorIndex].length; i++) {
             uint checkedNodeNodeIndex;
-            uint32 checkedNodeTime;
+            uint checkedNodeTime;
             checkedNodeNodeIndex = checkedNodes[monitorIndex][i].nodeIndex;
             checkedNodeTime = checkedNodes[monitorIndex][i].time;
             if (checkedNodeNodeIndex == nodeIndex && (time == 0 || checkedNodeTime < time))
@@ -410,9 +410,7 @@ contract Monitors is Permissions {
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));
 
         checkedNode.nodeIndex = nodeIndex;
-        // Cannot use SafeMath because we subtract uint32
-        assert(nodes.getNodeNextRewardDate(nodeIndex) >= constantsHolder.deltaPeriod());
-        checkedNode.time = uint(nodes.getNodeNextRewardDate(nodeIndex)).sub(constantsHolder.deltaPeriod()).toUint32();
+        checkedNode.time = nodes.getNodeNextRewardDate(nodeIndex).sub(constantsHolder.deltaPeriod());
     }
 
     /**
@@ -437,7 +435,7 @@ contract Monitors is Permissions {
                 verdict.latency,
                 receiveVerdict,
                 previousBlockEvent,
-                uint32(block.timestamp),
+                block.timestamp,
                 gasleft()
             );
     }

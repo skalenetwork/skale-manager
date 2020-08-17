@@ -117,7 +117,8 @@ contract Pricing is Permissions {
         SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
 
         uint load = 0;
-        for (uint i = 0; i < schainsInternal.numberOfSchains(); i++) {
+        uint numberOfSchains = schainsInternal.numberOfSchains();
+        for (uint i = 0; i < numberOfSchains; i++) {
             bytes32 schain = schainsInternal.schainsAtSystem(i);
             uint numberOfNodesInSchain = schainsInternal.getNumberOfNodesInGroup(schain);
             uint part = schainsInternal.getSchainsPartOfNode(schain);

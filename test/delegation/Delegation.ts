@@ -3,13 +3,15 @@ import { ConstantsHolderInstance,
     DelegationControllerInstance,
     DelegationPeriodManagerInstance,
     DistributorInstance,
+    LockerMockContract,
     PunisherInstance,
     SkaleManagerMockContract,
     SkaleManagerMockInstance,
     SkaleTokenInstance,
     TokenStateInstance,
     ValidatorServiceInstance,
-    NodesInstance} from "../../types/truffle-contracts";
+    NodesInstance,
+    SlashingTableInstance} from "../../types/truffle-contracts";
 
 const SkaleManagerMock: SkaleManagerMockContract = artifacts.require("./SkaleManagerMock");
 
@@ -27,8 +29,11 @@ import { deployPunisher } from "../tools/deploy/delegation/punisher";
 import { deployTokenState } from "../tools/deploy/delegation/tokenState";
 import { deployValidatorService } from "../tools/deploy/delegation/validatorService";
 import { deploySkaleToken } from "../tools/deploy/skaleToken";
-import { Delegation } from "../tools/types";
+import { Delegation, State } from "../tools/types";
 import { deployNodes } from "../tools/deploy/nodes";
+import { deploySlashingTable } from "../tools/deploy/slashingTable";
+import { deployTimeHelpersWithDebug } from "../tools/deploy/test/timeHelpersWithDebug";
+import { deploySkaleManager } from "../tools/deploy/skaleManager";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -76,6 +81,29 @@ contract("Delegation", ([owner,
         await skipTimeToDate(web3, 10, 10);
     });
 
+    it("should allow owner to remove locker", async () => {
+        const LockerMock: LockerMockContract = artifacts.require("./LockerMock");
+        const lockerMock = await LockerMock.new();
+        await contractManager.setContractsAddress("D2", lockerMock.address);
+
+        await tokenState.addLocker("D2", {from: validator})
+            .should.be.eventually.rejectedWith("Caller is not the owner");
+        await tokenState.addLocker("D2");
+        (await tokenState.getAndUpdateLockedAmount.call(owner)).toNumber().should.be.equal(13);
+        await tokenState.removeLocker("D2", {from: validator})
+            .should.be.eventually.rejectedWith("Caller is not the owner");
+        await tokenState.removeLocker("D2");
+        (await tokenState.getAndUpdateLockedAmount.call(owner)).toNumber().should.be.equal(0);
+    });
+
+    it("should allow owner to set new delegation period", async () => {
+        await delegationPeriodManager.setDelegationPeriod(13, 13, {from: validator})
+            .should.be.eventually.rejectedWith("Caller is not the owner");
+        await delegationPeriodManager.setDelegationPeriod(13, 13);
+        (await delegationPeriodManager.stakeMultipliers(13)).toNumber()
+            .should.be.equal(13);
+    });
+
     describe("when holders have tokens and validator is registered", async () => {
         let validatorId: number;
         beforeEach(async () => {
@@ -87,6 +115,8 @@ contract("Delegation", ([owner,
             await validatorService.registerValidator(
                 "First validator", "Super-pooper validator", 150, 0, {from: validator});
             await validatorService.enableValidator(validatorId, {from: owner});
+            await delegationPeriodManager.setDelegationPeriod(12, 200);
+            await delegationPeriodManager.setDelegationPeriod(6, 150);
         });
 
         for (let delegationPeriod = 1; delegationPeriod <= 18; ++delegationPeriod) {
@@ -240,6 +270,7 @@ contract("Delegation", ([owner,
             await skaleToken.mint(validator, defaultAmount.toString(), "0x", "0x");
             await delegationController.delegate(
                 validatorId, 5, 3, "D2 is even", {from: validator});
+            await delegationPeriodManager.setDelegationPeriod(12, 200);
             await delegationController.delegate(
                 validatorId, 13, 12, "D2 is even", {from: validator});
             await delegationController.acceptPendingDelegation(0, {from: validator});
@@ -280,12 +311,78 @@ contract("Delegation", ([owner,
             assert.equal(bondAmount2.toNumber(), 400);
         });
 
+        it("should not pay bounty for slashed tokens", async () => {
+            const ten18 = web3.utils.toBN(10).pow(web3.utils.toBN(18));
+            const timeHelpersWithDebug = await deployTimeHelpersWithDebug(contractManager);
+            await contractManager.setContractsAddress("TimeHelpers", timeHelpersWithDebug.address);
+            await skaleToken.mint(holder1, ten18.muln(10000).toString(10), "0x", "0x");
+            await skaleToken.mint(holder2, ten18.muln(10000).toString(10), "0x", "0x");
+
+            await constantsHolder.setMSR(ten18.muln(2000).toString(10));
+
+            const slashingTable: SlashingTableInstance = await deploySlashingTable(contractManager);
+            slashingTable.setPenalty("FailedDKG", ten18.muln(10000).toString(10));
+
+            await constantsHolder.setLaunchTimestamp((await currentTime(web3)) - 4 * month);
+
+            await delegationController.delegate(validatorId, ten18.muln(10000).toString(10), 3, "First delegation", {from: holder1});
+            const delegationId1 = 0;
+            await delegationController.acceptPendingDelegation(delegationId1, {from: validator});
+
+            await timeHelpersWithDebug.skipTime(month);
+            (await delegationController.getState(delegationId1)).toNumber().should.be.equal(State.DELEGATED);
+
+            const bounty = ten18;
+            for (let i = 0; i < 5; ++i) {
+                skaleManagerMock.payBounty(validatorId, bounty.toString(10));
+            }
+
+            await timeHelpersWithDebug.skipTime(month);
+
+            await distributor.withdrawBounty(validatorId, bountyAddress, {from: holder1});
+            let balance = (await skaleToken.balanceOf(bountyAddress)).toString(10);
+            balance.should.be.equal(bounty.muln(5).muln(85).divn(100).toString(10));
+            await skaleToken.transfer(holder1, balance, {from: bountyAddress});
+
+            await punisher.slash(validatorId, ten18.muln(10000).toString(10));
+
+            (await skaleToken.getAndUpdateSlashedAmount.call(holder1)).toString(10)
+                .should.be.equal(ten18.muln(10000).toString(10));
+            (await skaleToken.getAndUpdateDelegatedAmount.call(holder1)).toString(10)
+                .should.be.equal("0");
+
+            await delegationController.delegate(validatorId, ten18.muln(10000).toString(10), 3, "Second delegation", {from: holder2});
+            const delegationId2 = 1;
+            await delegationController.acceptPendingDelegation(delegationId2, {from: validator});
+
+            await timeHelpersWithDebug.skipTime(month);
+            (await delegationController.getState(delegationId2)).toNumber().should.be.equal(State.DELEGATED);
+
+            for (let i = 0; i < 5; ++i) {
+                skaleManagerMock.payBounty(validatorId, bounty.toString(10));
+            }
+
+            await timeHelpersWithDebug.skipTime(month);
+
+            await distributor.withdrawBounty(validatorId, bountyAddress, {from: holder1});
+            balance = (await skaleToken.balanceOf(bountyAddress)).toString(10);
+            balance.should.be.equal("0");
+            await skaleToken.transfer(holder1, balance, {from: bountyAddress});
+
+            await distributor.withdrawBounty(validatorId, bountyAddress, {from: holder2});
+            balance = (await skaleToken.balanceOf(bountyAddress)).toString(10);
+            balance.should.be.equal(bounty.muln(5).muln(85).divn(100).toString(10));
+            await skaleToken.transfer(holder2, balance, {from: bountyAddress});
+        });
+
         describe("when 3 holders delegated", async () => {
             const delegatedAmount1 = 2e6;
             const delegatedAmount2 = 3e6;
             const delegatedAmount3 = 5e6;
             beforeEach(async () => {
+                await delegationPeriodManager.setDelegationPeriod(12, 200);
                 delegationController.delegate(validatorId, delegatedAmount1, 12, "D2 is even", {from: holder1});
+                await delegationPeriodManager.setDelegationPeriod(6, 150);
                 delegationController.delegate(validatorId, delegatedAmount2, 6,
                     "D2 is even more even", {from: holder2});
                 delegationController.delegate(validatorId, delegatedAmount3, 3, "D2 is the evenest", {from: holder3});
@@ -426,6 +523,18 @@ contract("Delegation", ([owner,
                         holder3)).toNumber().should.be.equal(delegatedAmount3 - 5);
                 });
 
+                it("should allow only ADMIN to return slashed tokens", async() => {
+                    const skaleManager = await deploySkaleManager(contractManager);
+
+                    await punisher.slash(validatorId, 10);
+                    await delegationController.processAllSlashes(holder3);
+
+                    await punisher.forgive(holder3, 3, {from: holder1})
+                        .should.be.eventually.rejectedWith("Caller is not an admin");
+                    skaleManager.grantRole(await skaleManager.ADMIN_ROLE(), holder1);
+                    await punisher.forgive(holder3, 3, {from: holder1});
+                });
+
                 it("should not pay bounty for slashed tokens", async () => {
                     // slash everything
                     await punisher.slash(validatorId, delegatedAmount1 + delegatedAmount2 + delegatedAmount3);
@@ -487,7 +596,189 @@ contract("Delegation", ([owner,
             await nodes.checkPossibilityCreatingNode(bountyAddress);
         });
 
-        it("should be possible to distribute bounty across thousands of holders", async () => {
+        it("should check limit of validators", async () => {
+            const validatorsAmount = 20;
+            const validators = [];
+            for (let i = 0; i < validatorsAmount; ++i) {
+                validators.push(web3.eth.accounts.create());
+            }
+            const etherAmount = 5 * 1e18;
+
+            const web3ValidatorService = new web3.eth.Contract(
+                artifacts.require("./ValidatorService").abi,
+                validatorService.address);
+            const web3DelegationController = new web3.eth.Contract(
+                artifacts.require("./DelegationController").abi,
+                delegationController.address);
+            let newValidatorId = 2;
+            for (const newValidator of validators) {
+                await web3.eth.sendTransaction({from: holder1, to: newValidator.address, value: etherAmount});
+
+                const callData = web3ValidatorService.methods.registerValidator("Validator", "Good Validator", 150, 0).encodeABI();
+
+                const registerTX = {
+                    data: callData,
+                    from: newValidator.address,
+                    gas: 1e6,
+                    to: validatorService.address,
+                };
+
+                const signedRegisterTx = await newValidator.signTransaction(registerTX);
+                await web3.eth.sendSignedTransaction(signedRegisterTx.rawTransaction);
+                await validatorService.enableValidator(newValidatorId, {from: owner});
+                newValidatorId++;
+            }
+
+            let delegationId = 0;
+            for (let i = 2; i < 22; i++) {
+                await delegationController.delegate(i, 100, 3, "OK delegation", {from: holder1});
+                const callData = web3DelegationController.methods.acceptPendingDelegation(delegationId++).encodeABI();
+                const AcceptTX = {
+                    data: callData,
+                    from: validators[i - 2].address,
+                    gas: 1e6,
+                    to: delegationController.address,
+                };
+
+                const signedAcceptTX = await validators[i - 2].signTransaction(AcceptTX);
+                await web3.eth.sendSignedTransaction(signedAcceptTX.rawTransaction);
+            }
+
+            // could send delegation request to already delegated validator
+            await delegationController.delegate(2, 100, 3, "OK delegation", {from: holder1});
+
+            // console.log("Delegated to 2");
+
+            // could not send delegation request to new validator
+            await delegationController.delegate(1, 100, 3, "OK delegation", {from: holder1})
+                .should.be.eventually.rejectedWith("Limit of validators is reached");
+
+            // console.log("Not delegated to 1");
+
+            // still could send delegation request to already delegated validator
+            await delegationController.delegate(2, 100, 3, "OK delegation", {from: holder1});
+
+            // console.log("Delegated to 2");
+
+            skipTime(web3, 60 * 60 * 24 * 31);
+            // could send undelegation request from 1 delegationId (3 validatorId)
+            await delegationController.requestUndelegation(1, {from: holder1});
+
+            // console.log("Request undelegation from 3");
+
+            // still could send delegation request to already delegated validator
+            await delegationController.delegate(2, 100, 3, "OK delegation", {from: holder1});
+
+            // console.log("Delegated to 2");
+
+            // could send delegation request to new validator
+            await delegationController.delegate(1, 100, 3, "OK delegation", {from: holder1});
+            await delegationController.acceptPendingDelegation(23, {from: validator});
+
+            // console.log("Delegated to 1");
+
+            // could not send delegation request to previously delegated validator
+            await delegationController.delegate(3, 100, 3, "OK delegation", {from: holder1})
+                .should.be.eventually.rejectedWith("Limit of validators is reached");
+
+            // console.log("Not delegated to 3");
+        });
+
+        it("should check limit of validators when delegations was not accepted", async () => {
+            const validatorsAmount = 20;
+            const validators = [];
+            for (let i = 0; i < validatorsAmount; ++i) {
+                validators.push(web3.eth.accounts.create());
+            }
+            const etherAmount = 5 * 1e18;
+
+            const web3ValidatorService = new web3.eth.Contract(
+                artifacts.require("./ValidatorService").abi,
+                validatorService.address);
+            const web3DelegationController = new web3.eth.Contract(
+                artifacts.require("./DelegationController").abi,
+                delegationController.address);
+            let newValidatorId = 2;
+            for (const newValidator of validators) {
+                await web3.eth.sendTransaction({from: holder1, to: newValidator.address, value: etherAmount});
+
+                const callData = web3ValidatorService.methods.registerValidator("Validator", "Good Validator", 150, 0).encodeABI();
+
+                const registerTX = {
+                    data: callData,
+                    from: newValidator.address,
+                    gas: 1e6,
+                    to: validatorService.address,
+                };
+
+                const signedRegisterTx = await newValidator.signTransaction(registerTX);
+                await web3.eth.sendSignedTransaction(signedRegisterTx.rawTransaction);
+                await validatorService.enableValidator(newValidatorId, {from: owner});
+                newValidatorId++;
+            }
+
+            for (let i = 1; i < 22; i++) {
+                await delegationController.delegate(i, 100, 3, "OK delegation", {from: holder1});
+            }
+
+            let delegationId = 1;
+            for (let i = 2; i < 22; i++) {
+                const callData = web3DelegationController.methods.acceptPendingDelegation(delegationId++).encodeABI();
+                const AcceptTX = {
+                    data: callData,
+                    from: validators[i - 2].address,
+                    gas: 1e6,
+                    to: delegationController.address,
+                };
+
+                const signedAcceptTX = await validators[i - 2].signTransaction(AcceptTX);
+                await web3.eth.sendSignedTransaction(signedAcceptTX.rawTransaction);
+            }
+
+            await delegationController.acceptPendingDelegation(0, {from: validator})
+                .should.be.eventually.rejectedWith("Limit of validators is reached");
+
+            // could send delegation request to already delegated validator
+            await delegationController.delegate(2, 100, 3, "OK delegation", {from: holder1});
+
+            // console.log("Delegated to 2");
+
+            // could not send delegation request to new validator
+            await delegationController.delegate(1, 100, 3, "OK delegation", {from: holder1})
+                .should.be.eventually.rejectedWith("Limit of validators is reached");
+
+            // console.log("Not delegated to 1");
+
+            // still could send delegation request to already delegated validator
+            await delegationController.delegate(2, 100, 3, "OK delegation", {from: holder1});
+
+            // console.log("Delegated to 2");
+
+            skipTime(web3, 60 * 60 * 24 * 31);
+            // could send undelegation request from 1 delegationId (2 validatorId)
+            await delegationController.requestUndelegation(1, {from: holder1});
+
+            // console.log("Request undelegation from 3");
+
+            // still could send delegation request to already delegated validator
+            await delegationController.delegate(2, 100, 3, "OK delegation", {from: holder1});
+
+            // console.log("Delegated to 2");
+
+            // could send delegation request to new validator
+            const res = await delegationController.delegate(1, 100, 3, "OK delegation", {from: holder1});
+            await delegationController.acceptPendingDelegation(24, {from: validator});
+
+            // console.log("Delegated to 1");
+
+            // could not send delegation request to previously delegated validator
+            await delegationController.delegate(2, 100, 3, "OK delegation", {from: holder1})
+                .should.be.eventually.rejectedWith("Limit of validators is reached");
+
+            // console.log("Not delegated to 3");
+        });
+
+        it("should be possible to distribute bounty accross thousands of holders", async () => {
             let holdersAmount = 1000;
             if (process.env.TRAVIS) {
                 console.log("Reduce holders amount to fit Travis timelimit");

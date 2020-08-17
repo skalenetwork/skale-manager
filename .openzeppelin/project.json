@@ -11,6 +11,7 @@
     "ContractManager": "ContractManager",
     "ConstantsHolder": "ConstantsHolder",
     "Nodes": "Nodes",
+    "NodeRotation": "NodeRotation",
     "Monitors": "Monitors",
     "Schains": "Schains",
     "SchainsInternal": "SchainsInternal",
@@ -23,7 +24,8 @@
     "SlashingTable": "SlashingTable",
     "Punisher": "Punisher",
     "TokenLaunchLocker": "TokenLaunchLocker",
-    "TimeHelpersWithDebug": "TimeHelpersWithDebug"
+    "KeyStorage": "KeyStorage",
+    "Bounty": "Bounty"
   },
   "dependencies": {},
   "name": "skale-manager",
@@ -36,7 +38,12 @@
         "runs": "200"
       }
     },
-    "solcVersion": "0.6.10"
+    "solcVersion": "0.6.10",
+    "artifactsDir": "build/contracts",
+    "contractsDir": "contracts",
+    "typechain": {
+      "enabled": false
+    }
   },
   "telemetryOptIn": true
 }

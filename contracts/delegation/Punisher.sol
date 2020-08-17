@@ -21,8 +21,6 @@
 
 pragma solidity 0.6.10;
 
-import "@openzeppelin/contracts/math/SafeMath.sol";
-
 import "../Permissions.sol";
 import "../interfaces/delegation/ILocker.sol";
 
@@ -85,7 +83,7 @@ contract Punisher is Permissions, ILocker {
      *
      * - All slashes must have been processed.
      */
-    function forgive(address holder, uint amount) external onlyOwner {
+    function forgive(address holder, uint amount) external onlyAdmin {
         DelegationController delegationController = DelegationController(
             contractManager.getContract("DelegationController"));
 

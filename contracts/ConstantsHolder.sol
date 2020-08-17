@@ -54,25 +54,10 @@ contract ConstantsHolder is Permissions {
     uint public constant NUMBER_OF_NODES_FOR_TEST_SCHAIN = 2;
 
     // number of Nodes for Test Skale-chain (4 Nodes)
-    uint public constant NUMBER_OF_NODES_FOR_MEDIUM_TEST_SCHAIN = 4;
-
-    // 'Fractional' Part of ratio for create Fractional or Full Node
-    uint public constant FRACTIONAL_FACTOR = 128;
-
-    // 'Full' part of ratio for create Fractional or Full Node
-    uint public constant FULL_FACTOR = 17;
-
-    // number of second in one day
-    uint32 public constant SECONDS_TO_DAY = 86400;
-
-    // number of seconds in one month
-    uint32 public constant SECONDS_TO_MONTH = 2592000;
+    uint public constant NUMBER_OF_NODES_FOR_MEDIUM_TEST_SCHAIN = 4;    
 
     // number of seconds in one year
     uint32 public constant SECONDS_TO_YEAR = 31622400;
-
-    // number of seconds in six years
-    uint32 public constant SIX_YEARS = 186624000;
 
     // initial number of monitors
     uint public constant NUMBER_OF_MONITORS = 24;
@@ -86,8 +71,6 @@ contract ConstantsHolder is Permissions {
     uint public constant MIN_PRICE = 10**6;
 
     uint public constant MSR_REDUCING_COEFFICIENT = 2;
-
-    uint public constant BOUNTY_POOL_PART = 3;
 
     uint public constant DOWNTIME_THRESHOLD_PART = 30;
 
@@ -113,19 +96,7 @@ contract ConstantsHolder is Permissions {
      * Check time - 2 minutes (every 2 minutes monitors should check metrics
      * from checked nodes)
      */
-    uint8 public checkTime;
-
-    /**
-     * Last time when system was underloaded (excess supply)
-     * (allocations on Skale-chain / allocations on Nodes < 75%)
-     */
-    uint public lastTimeUnderloaded;
-
-    /**
-     * Last time when system was overloaded (excess demand)
-     * (allocations on Skale-chain / allocations on Nodes > 85%)
-     */
-    uint public lastTimeOverloaded;
+    uint public checkTime;
 
     //Need to add minimal allowed parameters for verdicts
 
@@ -137,11 +108,19 @@ contract ConstantsHolder is Permissions {
 
     uint public proofOfUseDelegationPercentage;
 
+    uint public limitValidatorsPerDelegator;
+
+    uint public firstDelegationsMonth;
+
     /**
      * @dev Allows the Owner to set new reward and delta periods
      * This function is only for tests.
      */
     function setPeriods(uint32 newRewardPeriod, uint32 newDeltaPeriod) external onlyOwner {
+        require(
+            newRewardPeriod >= newDeltaPeriod && newRewardPeriod - newDeltaPeriod >= checkTime,
+            "Incorrect Periods"
+        );
         rewardPeriod = newRewardPeriod;
         deltaPeriod = newDeltaPeriod;
     }
@@ -150,25 +129,10 @@ contract ConstantsHolder is Permissions {
      * @dev Allows the Owner to set the new check time.
      * This function only for tests.
      */
-    function setCheckTime(uint8 newCheckTime) external onlyOwner {
+    function setCheckTime(uint newCheckTime) external onlyOwner {
+        require(rewardPeriod - deltaPeriod >= checkTime, "Incorrect check time");
         checkTime = newCheckTime;
-    }
-
-    /**
-     * @dev Allows Nodes contract to set the time when the SKALE network has
-     * excess supply.
-     */
-    function setLastTimeUnderloaded() external allow("Nodes") {
-        lastTimeUnderloaded = now;
-    }
-
-    /**
-     * @dev Allows Schain contract to set the time when the SKALE network is
-     * excess demand.
-     */
-    function setLastTimeOverloaded() external allow("Schains") {
-        lastTimeOverloaded = now;
-    }
+    }    
 
     /**
      * @dev Allows the Owner to set the allowable latency in milliseconds.
@@ -212,22 +176,30 @@ contract ConstantsHolder is Permissions {
         proofOfUseDelegationPercentage = percentage;
     }
 
+    function setLimitValidatorsPerDelegator(uint newLimit) external onlyOwner {
+        limitValidatorsPerDelegator = newLimit;
+    }
+
+    function setFirstDelegationsMonth(uint month) external onlyOwner {
+        firstDelegationsMonth = month;
+    }
+
     /**
      * @dev constructor in Permissions approach
      */
     function initialize(address contractsAddress) public override initializer {
         Permissions.initialize(contractsAddress);
 
-        msr = 5e6 * 1e18;
-        rewardPeriod = 3600; // Test parameters
-        allowableLatency = 150000; // Test parameters
-        deltaPeriod = 300;  // Test parameters
-        checkTime = 120; // Test parameters
-        lastTimeUnderloaded = 0;
-        lastTimeOverloaded = 0;
+        msr = 0;
+        rewardPeriod = 2592000;
+        allowableLatency = 150000;
+        deltaPeriod = 3600;
+        checkTime = 300;
         launchTimestamp = uint(-1);
         rotationDelay = 12 hours;
         proofOfUseLockUpPeriodDays = 90;
         proofOfUseDelegationPercentage = 50;
+        limitValidatorsPerDelegator = 20;
+        firstDelegationsMonth = 8;
     }
 }

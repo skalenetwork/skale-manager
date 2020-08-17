@@ -21,17 +21,18 @@
 
 pragma solidity 0.6.10;
 
-import "@openzeppelin/contracts/introspection/IERC1820Registry.sol";
-import "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/introspection/IERC1820Registry.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC777/IERC777Recipient.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC777/IERC777.sol";
 
-import "../SkaleToken.sol";
 import "../Permissions.sol";
-import "../SkaleToken.sol";
 
 
 contract SkaleManagerMock is Permissions, IERC777Recipient {
 
     IERC1820Registry private _erc1820 = IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
+
+    bytes32 constant public ADMIN_ROLE = keccak256("ADMIN_ROLE");
 
     constructor (address contractManagerAddress) public {
         Permissions.initialize(contractManagerAddress);
@@ -39,7 +40,7 @@ contract SkaleManagerMock is Permissions, IERC777Recipient {
     }
 
     function payBounty(uint validatorId, uint amount) external {
-        SkaleToken skaleToken = SkaleToken(contractManager.getContract("SkaleToken"));
+        IERC777 skaleToken = IERC777(contractManager.getContract("SkaleToken"));
         // solhint-disable-next-line check-send-result
         skaleToken.send(contractManager.getContract("Distributor"), amount, abi.encode(validatorId));
     }

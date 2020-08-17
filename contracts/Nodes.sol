@@ -24,7 +24,7 @@
 pragma solidity 0.6.10;
 pragma experimental ABIEncoderV2;
 
-import "@openzeppelin/contracts/utils/SafeCast.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/utils/SafeCast.sol";
 
 import "./Permissions.sol";
 import "./ConstantsHolder.sol";
@@ -50,7 +50,7 @@ contract Nodes is Permissions {
     using SafeCast for uint;
 
     // All Nodes states
-    enum NodeStatus {Active, Leaving, Left}
+    enum NodeStatus {Active, Leaving, Left, In_Maintenance}
 
     struct Node {
         string name;
@@ -59,8 +59,8 @@ contract Nodes is Permissions {
         uint16 port;
         bytes32[2] publicKey;
         uint startBlock;
-        uint32 lastRewardDate;
-        uint32 finishTime;
+        uint lastRewardDate;
+        uint finishTime;
         NodeStatus status;
         uint validatorId;
     }
@@ -119,7 +119,7 @@ contract Nodes is Permissions {
         bytes4 publicIP,
         uint16 port,
         uint16 nonce,
-        uint32 time,
+        uint time,
         uint gasSpend
     );
 
@@ -128,7 +128,7 @@ contract Nodes is Permissions {
      */
     event ExitCompleted(
         uint nodeIndex,
-        uint32 time,
+        uint time,
         uint gasSpend
     );
 
@@ -137,10 +137,15 @@ contract Nodes is Permissions {
      */
     event ExitInitialized(
         uint nodeIndex,
-        uint32 startLeavingPeriod,
-        uint32 time,
+        uint startLeavingPeriod,
+        uint time,
         uint gasSpend
     );
+
+    modifier checkNodeExists(uint nodeIndex) {
+        require(nodeIndex < nodes.length, "Node with such index does not exist");
+        _;
+    }
 
     /**
      * @dev Allows Schains and SchainsInternal contracts to occupy available
@@ -150,7 +155,8 @@ contract Nodes is Permissions {
      */
     function removeSpaceFromNode(uint nodeIndex, uint8 space)
         external
-        allowTwo("Schains", "SchainsInternal")
+        checkNodeExists(nodeIndex)
+        allowTwo("NodeRotation", "SchainsInternal")
         returns (bool)
     {
         if (spaceOfNodes[nodeIndex].freeSpace < space) {
@@ -170,7 +176,11 @@ contract Nodes is Permissions {
      *
      * Returns boolean whether operation is successful.
      */
-    function addSpaceToNode(uint nodeIndex, uint8 space) external allow("Schains") {
+    function addSpaceToNode(uint nodeIndex, uint8 space)
+        external
+        checkNodeExists(nodeIndex)
+        allow("Schains")
+    {
         if (space > 0) {
             _moveNodeToNewSpaceMap(
                 nodeIndex,
@@ -182,11 +192,19 @@ contract Nodes is Permissions {
     /**
      * @dev Allows SkaleManager to change a node's last reward date.
      */
-    function changeNodeLastRewardDate(uint nodeIndex) external allow("SkaleManager") {
-        nodes[nodeIndex].lastRewardDate = uint32(block.timestamp);
+    function changeNodeLastRewardDate(uint nodeIndex)
+        external
+        checkNodeExists(nodeIndex)
+        allow("SkaleManager")
+    {
+        nodes[nodeIndex].lastRewardDate = block.timestamp;
     }
 
-    function changeNodeFinishTime(uint nodeIndex, uint32 time) external allow("SkaleManager") {
+    function changeNodeFinishTime(uint nodeIndex, uint time)
+        external
+        checkNodeExists(nodeIndex)
+        allow("SkaleManager")
+    {
         nodes[nodeIndex].finishTime = time;
     }
 
@@ -206,7 +224,7 @@ contract Nodes is Permissions {
     function createNode(address from, NodeCreationParams calldata params)
         external
         allow("SkaleManager")
-        returns (uint nodeIndex)
+        // returns (uint nodeIndex)
     {
         // checks that Node has correct data
         require(params.ip != 0x0 && !nodesIPCheck[params.ip], "IP address is zero or is not available");
@@ -217,7 +235,7 @@ contract Nodes is Permissions {
             contractManager.getContract("ValidatorService")).getValidatorIdByNodeAddress(from);
 
         // adds Node to Nodes contract
-        nodeIndex = _addNode(
+        uint nodeIndex = _addNode(
             from,
             params.name,
             params.ip,
@@ -234,7 +252,7 @@ contract Nodes is Permissions {
             params.publicIp,
             params.port,
             params.nonce,
-            uint32(block.timestamp),
+            block.timestamp,
             gasleft());
     }
 
@@ -245,14 +263,18 @@ contract Nodes is Permissions {
      *
      * Emits ExitInitialized event.
      */
-    function initExit(uint nodeIndex) external allow("SkaleManager") returns (bool) {
-
+    function initExit(uint nodeIndex)
+        external
+        checkNodeExists(nodeIndex)
+        allow("SkaleManager")
+        returns (bool)
+    {
         _setNodeLeaving(nodeIndex);
 
         emit ExitInitialized(
             nodeIndex,
-            uint32(block.timestamp),
-            uint32(block.timestamp),
+            block.timestamp,
+            block.timestamp,
             gasleft());
         return true;
     }
@@ -268,7 +290,12 @@ contract Nodes is Permissions {
      *
      * - Node must have already initialized a node exit procedure.
      */
-    function completeExit(uint nodeIndex) external allow("SkaleManager") returns (bool) {
+    function completeExit(uint nodeIndex)
+        external
+        checkNodeExists(nodeIndex)
+        allow("SkaleManager")
+        returns (bool)
+    {
         require(isNodeLeaving(nodeIndex), "Node is not Leaving");
 
         _setNodeLeft(nodeIndex);
@@ -276,7 +303,7 @@ contract Nodes is Permissions {
 
         emit ExitCompleted(
             nodeIndex,
-            uint32(block.timestamp),
+            block.timestamp,
             gasleft());
         return true;
     }
@@ -288,7 +315,11 @@ contract Nodes is Permissions {
      *
      * - Validator ID must exist.
      */
-    function deleteNodeForValidator(uint validatorId, uint nodeIndex) external allow("SkaleManager") {
+    function deleteNodeForValidator(uint validatorId, uint nodeIndex)
+        external
+        checkNodeExists(nodeIndex)
+        allow("SkaleManager")
+    {
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
         require(validatorService.validatorExists(validatorId), "Validator ID does not exist");
         uint[] memory validatorNodes = validatorToNodeIndexes[validatorId];
@@ -315,7 +346,7 @@ contract Nodes is Permissions {
             contractManager.getContract("DelegationController")
         );
         uint validatorId = validatorService.getValidatorIdByNodeAddress(nodeAddress);
-        require(validatorService.trustedValidators(validatorId), "Validator is not authorized to create a node");
+        require(validatorService.isAuthorizedValidator(validatorId), "Validator is not authorized to create a node");
         uint[] memory validatorNodes = validatorToNodeIndexes[validatorId];
         uint delegationsTotal = delegationController.getAndUpdateDelegatedToValidatorNow(validatorId);
         uint msr = ConstantsHolder(contractManager.getContract("ConstantsHolder")).msr();
@@ -328,14 +359,20 @@ contract Nodes is Permissions {
      * @dev Allows SkaleManager contract to check whether a validator has
      * sufficient stake to maintain a node.
      *
-     * Returns boolean whether validator can maintain node with current stake.
+     * Returns whether validator can maintain node with current stake.
      *
      * Requirements:
      *
      * - Validator ID and nodeIndex must both exist.
      */
-    function checkPossibilityToMaintainNode(uint validatorId, uint nodeIndex)
-        external allow("SkaleManager") returns (bool)
+    function checkPossibilityToMaintainNode(
+        uint validatorId,
+        uint nodeIndex
+    )
+        external
+        checkNodeExists(nodeIndex)
+        allow("Bounty")
+        returns (bool)
     {
         DelegationController delegationController = DelegationController(
             contractManager.getContract("DelegationController")
@@ -350,6 +387,30 @@ contract Nodes is Permissions {
         return position.add(1).mul(msr) <= delegationsTotal;
     }
 
+    function setNodeInMaintenance(uint nodeIndex) external {
+        require(nodes[nodeIndex].status == NodeStatus.Active, "Node is not Active");
+        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
+        uint validatorId = getValidatorId(nodeIndex);
+        bool permitted = (_isOwner() || isNodeExist(msg.sender, nodeIndex));
+        if (!permitted) {
+            permitted = validatorService.getValidatorId(msg.sender) == validatorId;
+        }
+        require(permitted, "Sender is not permitted to call this function");
+        nodes[nodeIndex].status = NodeStatus.In_Maintenance;
+    }
+
+    function removeNodeFromInMaintenance(uint nodeIndex) external {
+        require(nodes[nodeIndex].status == NodeStatus.In_Maintenance, "Node is not In Maintence");
+        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
+        uint validatorId = getValidatorId(nodeIndex);
+        bool permitted = (_isOwner() || isNodeExist(msg.sender, nodeIndex));
+        if (!permitted) {
+            permitted = validatorService.getValidatorId(msg.sender) == validatorId;
+        }
+        require(permitted, "Sender is not permitted to call this function");
+        nodes[nodeIndex].status = NodeStatus.Active;
+    }
+
     /**
      * @dev Returns nodes with resource availability.
      */
@@ -357,7 +418,8 @@ contract Nodes is Permissions {
         ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
         uint[] memory nodesWithFreeSpace = new uint[](countNodesWithFreeSpace(freeSpace));
         uint cursor = 0;
-        for (uint8 i = freeSpace; i <= constantsHolder.TOTAL_SPACE_ON_NODE(); ++i) {
+        uint totalSpace = constantsHolder.TOTAL_SPACE_ON_NODE();
+        for (uint8 i = freeSpace; i <= totalSpace; ++i) {
             for (uint j = 0; j < spaceToNodes[i].length; j++) {
                 nodesWithFreeSpace[cursor] = spaceToNodes[i][j];
                 ++cursor;
@@ -369,16 +431,14 @@ contract Nodes is Permissions {
     /**
      * @dev Checks whether time for a node's reward has come.
      */
-    function isTimeForReward(uint nodeIndex) external view returns (bool) {
+    function isTimeForReward(uint nodeIndex)
+        external
+        view
+        checkNodeExists(nodeIndex)
+        returns (bool)
+    {
         ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
         return uint(nodes[nodeIndex].lastRewardDate).add(constantsHolder.rewardPeriod()) <= block.timestamp;
-    }
-
-    /**
-     * @dev Checks whether node at a given address exists.
-     */
-    function isNodeExist(address from, uint nodeIndex) external view returns (bool) {
-        return nodeIndexes[from].isNodeExist[nodeIndex];
     }
 
     /**
@@ -388,7 +448,12 @@ contract Nodes is Permissions {
      *
      * - Node must exist.
      */
-    function getNodeIP(uint nodeIndex) external view returns (bytes4) {
+    function getNodeIP(uint nodeIndex)
+        external
+        view
+        checkNodeExists(nodeIndex)
+        returns (bytes4)
+    {
         require(nodeIndex < nodes.length, "Node does not exist");
         return nodes[nodeIndex].ip;
     }
@@ -396,41 +461,80 @@ contract Nodes is Permissions {
     /**
      * @dev Returns the port of a given node.
      */
-    function getNodePort(uint nodeIndex) external view returns (uint16) {
+    function getNodePort(uint nodeIndex)
+        external
+        view
+        checkNodeExists(nodeIndex)
+        returns (uint16)
+    {
         return nodes[nodeIndex].port;
     }
 
     /**
      * @dev Returns the public key of a given node.
      */
-    function getNodePublicKey(uint nodeIndex) external view returns (bytes32[2] memory) {
+    function getNodePublicKey(uint nodeIndex)
+        external
+        view
+        checkNodeExists(nodeIndex)
+        returns (bytes32[2] memory)
+    {
         return nodes[nodeIndex].publicKey;
     }
 
-    function getNodeFinishTime(uint nodeIndex) external view returns (uint32) {
+    function getNodeFinishTime(uint nodeIndex)
+        external
+        view
+        checkNodeExists(nodeIndex)
+        returns (uint)
+    {
         return nodes[nodeIndex].finishTime;
     }
 
     /**
      * @dev Checks whether a node has left the network.
      */
-    function isNodeLeft(uint nodeIndex) external view returns (bool) {
+    function isNodeLeft(uint nodeIndex)
+        external
+        view
+        checkNodeExists(nodeIndex)
+        returns (bool)
+    {
         return nodes[nodeIndex].status == NodeStatus.Left;
+    }
+
+    function isNodeInMaintenance(uint nodeIndex)
+        external
+        view
+        checkNodeExists(nodeIndex)
+        returns (bool)
+    {
+        return nodes[nodeIndex].status == NodeStatus.In_Maintenance;
     }
 
     /**
      * @dev Returns a given node's last reward date.
      */
-    function getNodeLastRewardDate(uint nodeIndex) external view returns (uint32) {
+    function getNodeLastRewardDate(uint nodeIndex)
+        external
+        view
+        checkNodeExists(nodeIndex)
+        returns (uint)
+    {
         return nodes[nodeIndex].lastRewardDate;
     }
 
     /**
      * @dev Returns a given node's next reward date.
      */
-    function getNodeNextRewardDate(uint nodeIndex) external view returns (uint32) {
+    function getNodeNextRewardDate(uint nodeIndex)
+        external
+        view
+        checkNodeExists(nodeIndex)
+        returns (uint)
+    {
         ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
-        return uint(nodes[nodeIndex].lastRewardDate).add(constantsHolder.rewardPeriod()).toUint32();
+        return nodes[nodeIndex].lastRewardDate.add(constantsHolder.rewardPeriod());
     }
 
     /**
@@ -491,21 +595,14 @@ contract Nodes is Permissions {
     }
 
     /**
-     * @dev Return validator ID linked to a given node.
-     *
-     * Requirements:
-     *
-     * - Node must exist.
-     */
-    function getValidatorId(uint nodeIndex) external view returns (uint) {
-        require(nodeIndex < nodes.length, "Node does not exist");
-        return nodes[nodeIndex].validatorId;
-    }
-
-    /**
      * @dev Return a given node's current status.
      */
-    function getNodeStatus(uint nodeIndex) external view returns (NodeStatus) {
+    function getNodeStatus(uint nodeIndex)
+        external
+        view
+        checkNodeExists(nodeIndex)
+        returns (NodeStatus)
+    {
         return nodes[nodeIndex].status;
     }
 
@@ -533,17 +630,51 @@ contract Nodes is Permissions {
         numberOfLeftNodes = 0;
     }
 
+    function getValidatorId(uint nodeIndex)
+        public
+        view
+        checkNodeExists(nodeIndex)
+        returns (uint)
+    {
+        return nodes[nodeIndex].validatorId;
+    }
+
+    /**
+     * @dev isNodeExist - checks existence of Node at this address
+     * @param from - account address
+     * @param nodeIndex - index of Node
+     * @return if exist - true, else - false
+     */
+    function isNodeExist(address from, uint nodeIndex)
+        public
+        view
+        checkNodeExists(nodeIndex)
+        returns (bool)
+    {
+        return nodeIndexes[from].isNodeExist[nodeIndex];
+    }
+
     /**
      * @dev Checks whether a node's status is Active.
      */
-    function isNodeActive(uint nodeIndex) public view returns (bool) {
+    function isNodeActive(uint nodeIndex)
+        public
+        view
+        checkNodeExists(nodeIndex)
+        returns (bool)
+    {
         return nodes[nodeIndex].status == NodeStatus.Active;
     }
 
     /**
      * @dev Checks whether a node's status is Leaving.
      */
-    function isNodeLeaving(uint nodeIndex) public view returns (bool) {
+    function isNodeLeaving(uint nodeIndex)
+        public
+        view
+        checkNodeExists(nodeIndex)
+        returns (bool)
+    {
         return nodes[nodeIndex].status == NodeStatus.Leaving;
     }
 
@@ -553,7 +684,8 @@ contract Nodes is Permissions {
     function countNodesWithFreeSpace(uint8 freeSpace) public view returns (uint count) {
         ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
         count = 0;
-        for (uint8 i = freeSpace; i <= constantsHolder.TOTAL_SPACE_ON_NODE(); ++i) {
+        uint totalSpace = constantsHolder.TOTAL_SPACE_ON_NODE();
+        for (uint8 i = freeSpace; i <= totalSpace; ++i) {
             count = count.add(spaceToNodes[i].length);
         }
     }
@@ -639,7 +771,7 @@ contract Nodes is Permissions {
             //owner: from,
             publicKey: publicKey,
             startBlock: block.number,
-            lastRewardDate: uint32(block.timestamp),
+            lastRewardDate: block.timestamp,
             finishTime: 0,
             status: NodeStatus.Active,
             validatorId: validatorId
