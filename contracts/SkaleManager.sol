@@ -51,7 +51,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
     /**
      * @dev Emitted when bounty is received.
      */
-    event BountyGot(
+    event BountyReceived(
         uint indexed nodeIndex,
         address owner,
         uint averageDowntime,
