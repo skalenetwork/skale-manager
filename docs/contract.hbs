@@ -16,15 +16,8 @@
 [.contract-index]
 .Modifiers
 --
-{{#each inheritedItems}}
-{{#unless @first}}
-[.contract-subindex-inherited]
-.{{contract.name}}
-{{/unless}}
-{{#each modifiers}}
+{{#each ownModifiers}}
 * {xref-{{slug anchor~}} }[`++{{name}}({{args.names}})++`]
-{{/each}}
-
 {{/each}}
 --
 {{/if}}
@@ -33,15 +26,8 @@
 [.contract-index]
 .Functions
 --
-{{#each inheritedItems}}
-{{#unless @first}}
-[.contract-subindex-inherited]
-.{{contract.name}}
-{{/unless}}
-{{#each functions}}
+{{#each ownFunctions}}
 * {xref-{{slug anchor~}} }[`++{{name}}({{args.names}})++`]
-{{/each}}
-
 {{/each}}
 --
 {{/if}}
@@ -50,15 +36,8 @@
 [.contract-index]
 .Events
 --
-{{#each inheritedItems}}
-{{#unless @first}}
-[.contract-subindex-inherited]
-.{{contract.name}}
-{{/unless}}
-{{#each events}}
+{{#each ownEvents}}
 * {xref-{{slug anchor~}} }[`++{{name}}({{args.names}})++`]
-{{/each}}
-
 {{/each}}
 --
 {{/if}}
