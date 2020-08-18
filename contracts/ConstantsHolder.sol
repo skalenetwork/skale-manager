@@ -115,6 +115,8 @@ contract ConstantsHolder is Permissions {
     // date when schains will be allowed for creation
     uint public schainCreationTimeStamp;
 
+    uint public minimalSchainLifetime;
+
     /**
      * Set reward and delta periods to new one, run only by owner. This function
      * only for tests.
@@ -180,6 +182,10 @@ contract ConstantsHolder is Permissions {
 
     function setSchainCreationTimeStamp(uint timestamp) external onlyOwner {
         schainCreationTimeStamp = timestamp;
+    }
+
+    function setMinimalSchainLifetime(uint lifetime) external onlyOwner {
+        minimalSchainLifetime = lifetime;
     }
 
     /**

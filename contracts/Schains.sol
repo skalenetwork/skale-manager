@@ -102,10 +102,11 @@ contract Schains is Permissions {
         SchainParameters memory schainParameters = _fallbackSchainParametersDataConverter(data);
         ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
         uint schainCreationTimeStamp = constantsHolder.schainCreationTimeStamp();
-        require(now > schainCreationTimeStamp, "It is not a time for creating schain");
+        uint minSchainLifetime = constantsHolder.minimalSchainLifetime();
+        require(now > schainCreationTimeStamp, "It is not a time for creating Schain");
         require(
-            schainParameters.lifetime > constantsHolder.SECONDS_TO_YEAR(),
-            "Schain lifetime should be at least a year"
+            schainParameters.lifetime > minSchainLifetime,
+            "Minimal schain lifetime should be satisfied"
         );
         require(
             getSchainPrice(schainParameters.typeOfSchain, schainParameters.lifetime) <= deposit,
