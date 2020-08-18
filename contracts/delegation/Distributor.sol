@@ -91,11 +91,11 @@ contract Distributor is Permissions, IERC777Recipient {
     /**
      * @dev Allows msg.sender to withdraw earned bounty. Bounties are locked
      * until launchTimestamp has passed.
-     *
-     * Emits WithdrawBounty event.
-     *
+     * 
+     * Emits a {WithdrawBounty} event.
+     * 
      * Requirements:
-     *
+     * 
      * - Bounty must be unlocked.
      */
     function withdrawBounty(uint validatorId, address to) external {
@@ -127,11 +127,11 @@ contract Distributor is Permissions, IERC777Recipient {
     /**
      * @dev Allows msg.sender to withdraw earned validator fees. Fees are locked
      * until launchTimestamp has passed.
-     *
-     * Emits WithdrawFee event.
-     *
+     * 
+     * Emits a {WithdrawFee} event.
+     * 
      * Requirements:
-     *
+     * 
      * - Fee must be unlocked.
      */
     function withdrawFee(address to) external {
@@ -258,8 +258,8 @@ contract Distributor is Permissions, IERC777Recipient {
 
     /**
      * @dev Distributes bounties to delegators.
-     *
-     * Emits BountyWasPaid event.
+     * 
+     * Emits a {BountyWasPaid} event.
      */
     function _distributeBounty(uint amount, uint validatorId) private {
         TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));

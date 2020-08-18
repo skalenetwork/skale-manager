@@ -35,7 +35,10 @@ import "./DelegationController.sol";
  * @title ValidatorService
  * @dev This contract handles all validator operations including registration,
  * node management, validator-specific delegation parameters, and more.
- *
+ * 
+ * TIP: For more information see our main instructions
+ * https://forum.skale.network/t/skale-mainnet-launch-faq/182[SKALE MainNet Launch FAQ].
+ * 
  * Validators register an address, and use this address to accept delegations and
  * register nodes.
  */

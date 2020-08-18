@@ -41,12 +41,15 @@ import "./PartialDifferences.sol";
  * @title Delegation Controller
  * @dev This contract performs all delegation functions including delegation
  * requests, undelegation, slashing, etc.
- *
+ * 
  * Delegators and validators may both perform delegations. Validators who perform
  * delegations to themselves are effectively self-delegating or self-bonding.
- *
+ * 
+ * IMPORTANT: Undelegation may be requested at any time, but undelegation is only
+ * performed at the completion of the current delegation period.
+ * 
  * Delegated tokens may be in one of several states:
- *
+ * 
  * - PROPOSED: token holder proposes tokens to delegate to a validator
  * - ACCEPTED: token delegations are accepted by a validator and are locked-by-delegation
  * - CANCELED: token holder cancels delegation proposal. Only allowed before the proposal is accepted by the validator
@@ -234,11 +237,11 @@ contract DelegationController is Permissions, ILocker {
      * and `delegationPeriod` to a `validatorId`. Delegation must be accepted
      * by the validator before the UTC start of the month, otherwise the
      * delegation will be rejected.
-     *
+     * 
      * The token holder may add additional information in each proposal.
-     *
-     * Emits DelegationProposed event.
-     *
+     * 
+     * Emits a {DelegationProposed} event.
+     * 
      * Requirements:
      *
      * - Holder must have sufficient delegatable tokens.
@@ -311,12 +314,12 @@ contract DelegationController is Permissions, ILocker {
 
     /**
      * @dev Allows token holder to cancel a delegation proposal.
-     *
-     * Emits DelegationRequestCanceledByUser event.
+     * 
+     * Emits a {DelegationRequestCanceledByUser} event.
      * 
      * Requirements:
-     *
-     * - msg.sender must be the token holder of the delegation proposal.
+     * 
+     * - `msg.sender` must be the token holder of the delegation proposal.
      * - Delegation state must be PROPOSED.
      */
     function cancelPendingDelegation(uint delegationId) external checkDelegationExists(delegationId) {
@@ -334,11 +337,11 @@ contract DelegationController is Permissions, ILocker {
      * Successful acceptance of delegations transition the tokens from a
      * PROPOSED state to ACCEPTED, and tokens are locked for the remainder of the
      * delegation period.
-     *
-     * Emits DelegationAccepted event.
-     *
+     * 
+     * Emits a {DelegationAccepted} event.
+     * 
      * Requirements:
-     *
+     * 
      * - Validator must be recipient of proposal.
      * - Delegation state must be PROPOSED.
      */
@@ -384,12 +387,12 @@ contract DelegationController is Permissions, ILocker {
 
     /**
      * @dev Allows delegator to undelegate a specific delegation.
-     *
+     * 
      * Emits UndelegationRequested event.
-     *
+     * 
      * Requirements:
-     *
-     * - msg.sender must be the delegator.
+     * 
+     * - `msg.sender` must be the delegator.
      * - Delegation state must be DELEGATED.
      */
     function requestUndelegation(uint delegationId) external checkDelegationExists(delegationId) {
@@ -447,10 +450,10 @@ contract DelegationController is Permissions, ILocker {
      * which reduces the amount that the validator has staked. This consequence
      * may force the SKALE Manager to reduce the number of nodes a validator is
      * operating so the validator can meet the Minimum Staking Requirement.
-     *
+     * 
+     * Emits a {SlashingEvent}.
+     * 
      * See Punisher.
-     *
-     * Emits SlashingEvent.
      */
     function confiscate(uint validatorId, uint amount) external allow("Punisher") {
         uint currentMonth = _getCurrentMonth();
