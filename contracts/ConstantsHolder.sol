@@ -112,6 +112,9 @@ contract ConstantsHolder is Permissions {
 
     uint public firstDelegationsMonth;
 
+    // date when schains will be allowed for creation
+    uint public schainCreationTimeStamp;
+
     /**
      * Set reward and delta periods to new one, run only by owner. This function
      * only for tests.
@@ -173,6 +176,10 @@ contract ConstantsHolder is Permissions {
 
     function setFirstDelegationsMonth(uint month) external onlyOwner {
         firstDelegationsMonth = month;
+    }
+
+    function setSchainCreationTimeStamp(uint timestamp) external onlyOwner {
+        schainCreationTimeStamp = timestamp;
     }
 
     /**

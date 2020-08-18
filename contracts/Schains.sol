@@ -100,7 +100,13 @@ contract Schains is Permissions {
      */
     function addSchain(address from, uint deposit, bytes calldata data) external allow("SkaleManager") {
         SchainParameters memory schainParameters = _fallbackSchainParametersDataConverter(data);
-        
+        ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
+        uint schainCreationTimeStamp = constantsHolder.schainCreationTimeStamp();
+        require(now > schainCreationTimeStamp, "It is not a time for creating schain");
+        require(
+            schainParameters.lifetime > constantsHolder.SECONDS_TO_YEAR(),
+            "Schain lifetime should be at least a year"
+        );
         require(
             getSchainPrice(schainParameters.typeOfSchain, schainParameters.lifetime) <= deposit,
             "Not enough money to create Schain");
