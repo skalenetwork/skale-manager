@@ -28,7 +28,7 @@
   "scripts": {
     "compile": "rm -rf ./build && npx truffle compile",
     "deploy": "bash ./scripts/deploy.sh",
-    "docs": "solidity-docgen --solc-module=./node_modules/solc -t docs/ --extension=adoc",
+    "docs": "scripts/prepare-docs.sh",
     "generate": "yarn compile && typechain --target truffle './build/**/*.json'",
     "hooks": "git config core.hooksPath .githooks || true",
     "lint": "npx solhint \"contracts/**/*.sol\"",
@@ -69,6 +69,7 @@
     "dotenv": "^8.2.0",
     "elliptic": "^6.5.3",
     "ganache-cli": "^6.9.1",
+    "lodash.startcase": "^4.4.0",
     "solhint": "^3.1.0",
     "solidity-coverage": "^0.7.5",
     "solidity-docgen": "^0.5.4",
