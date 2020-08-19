@@ -32,6 +32,7 @@ import { deploySkaleManager } from "./tools/deploy/skaleManager";
 import { deploySkaleToken } from "./tools/deploy/skaleToken";
 import { skipTime, currentTime } from "./tools/time";
 import { deployBounty } from "./tools/deploy/bounty";
+import BigNumber from "bignumber.js";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -904,9 +905,9 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                 });
 
 
-                it("should not allow to create schain if it certain date has not reached", async () => {
-                    const DECEMBER_7 = 1607299200;
-                    await constantsHolder.setSchainCreationTimeStamp(DECEMBER_7);
+                it("should not allow to create schain if certain date has not reached", async () => {
+                    const unreacheableDate = new BigNumber(Math.pow(2,256)-1);
+                    await constantsHolder.setSchainCreationTimeStamp(unreacheableDate);
                     await skaleToken.send(
                         skaleManager.address,
                         "0x1cc2d6d04a2ca",
