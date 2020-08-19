@@ -103,9 +103,9 @@ contract Schains is Permissions {
         ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
         uint schainCreationTimeStamp = constantsHolder.schainCreationTimeStamp();
         uint minSchainLifetime = constantsHolder.minimalSchainLifetime();
-        require(now > schainCreationTimeStamp, "It is not a time for creating Schain");
+        require(now >= schainCreationTimeStamp, "It is not a time for creating Schain");
         require(
-            schainParameters.lifetime > minSchainLifetime,
+            schainParameters.lifetime >= minSchainLifetime,
             "Minimal schain lifetime should be satisfied"
         );
         require(
