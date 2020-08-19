@@ -32,6 +32,7 @@ import { deploySkaleManager } from "./tools/deploy/skaleManager";
 import { deploySkaleToken } from "./tools/deploy/skaleToken";
 import { skipTime, currentTime } from "./tools/time";
 import { deployBounty } from "./tools/deploy/bounty";
+import BigNumber from "bignumber.js";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -872,6 +873,51 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
 
                     const schain = await schainsInternal.schains(web3.utils.soliditySha3("d2"));
                     schain[0].should.be.equal("d2");
+                });
+
+                it("should not create schain if schain admin set too low schain lifetime", async () => {
+                    const SECONDS_TO_YEAR = 31622400;
+                    constantsHolder.setMinimalSchainLifetime(SECONDS_TO_YEAR);
+                    await skaleToken.send(
+                        skaleManager.address,
+                        "0x1cc2d6d04a2ca",
+                        web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [
+                            0, // lifetime
+                            3, // type of schain
+                            0, // nonce
+                            "d2"]), // name
+                        {from: developer})
+                        .should.be.eventually.rejectedWith("Minimal schain lifetime should be satisfied");
+
+                    constantsHolder.setMinimalSchainLifetime(4);
+                    await skaleToken.send(
+                        skaleManager.address,
+                        "0x1cc2d6d04a2ca",
+                        web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [
+                            5, // lifetime
+                            3, // type of schain
+                            0, // nonce
+                            "d2"]), // name
+                        {from: developer});
+
+                    const schain = await schainsInternal.schains(web3.utils.soliditySha3("d2"));
+                    schain[0].should.be.equal("d2");
+                });
+
+
+                it("should not allow to create schain if certain date has not reached", async () => {
+                    const unreacheableDate = new BigNumber(Math.pow(2,256)-1);
+                    await constantsHolder.setSchainCreationTimeStamp(unreacheableDate);
+                    await skaleToken.send(
+                        skaleManager.address,
+                        "0x1cc2d6d04a2ca",
+                        web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [
+                            4, // lifetime
+                            3, // type of schain
+                            0, // nonce
+                            "d2"]), // name
+                        {from: developer})
+                        .should.be.eventually.rejectedWith("It is not a time for creating Schain");
                 });
 
                 describe("when schain is created", async () => {
