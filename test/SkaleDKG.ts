@@ -842,6 +842,8 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                             0,
                             secretNumbers[indexes[0]],
                             multipliedShares[indexes[0]],
+                            verificationVectors[indexes[0]],
+                            encryptedSecretKeyContributions[indexes[0]],
                             {from: validatorsAccount[0]},
                         );
                         assert.equal(result.logs[0].event, "BadGuy");
@@ -960,6 +962,8 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                             0,
                             secretNumbers[indexes[0]],
                             multipliedShares[indexes[0]],
+                            verificationVectors[indexes[0]],
+                            encryptedSecretKeyContributions[indexes[0]],
                             {from: validatorsAccount[0]},
                         );
                         const leavingTimeOfNode = new BigNumber(
@@ -983,6 +987,8 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                             0,
                             secretNumbers[indexes[0]],
                             multipliedShares[indexes[1]],
+                            verificationVectors[indexes[0]],
+                            encryptedSecretKeyContributions[indexes[0]],
                             {from: validatorsAccount[0]},
                         );
                         assert.equal(result.logs[0].event, "BadGuy");
@@ -1061,6 +1067,8 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                 0,
                 secretNumbers[indexes[0]],
                 multipliedShares[indexes[1]],
+                verificationVectors[indexes[0]],
+                encryptedSecretKeyContributions[indexes[0]],
                 {from: validatorsAccount[0]},
             );
             assert.equal(result.logs[0].event, "BadGuy");
@@ -1364,6 +1372,8 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
         //         accusedNode,
         //         secretNumbers[indexes[indexToSend]],
         //         multipliedShares[indexes[indexToSend]],
+        //         verificationVectors[indexes[indexToSend]],
+        //         encryptedSecretKeyContributions[indexes[indexToSend]],
         //         {from: validatorsAccount[indexToSend], gas: 12500000},
         //     );
         //     assert.equal(resResp.logs[0].event, "BadGuy");
@@ -1503,13 +1513,15 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
         //                 accusedNode,
         //                 {from: validatorsAccount[0]}
         //             );
-        //             const resResp = await skaleDKG.response(
-        //                 web3.utils.soliditySha3("New16NodeSchain"),
-        //                 accusedNode,
-        //                 secretNumbers[indexes[indexToSend]],
-        //                 multipliedShares[indexes[indexToSend]],
-        //                 {from: validatorsAccount[indexToSend], gas: 12500000},
-        //             );
+                    // const resResp = await skaleDKG.response(
+                    //     web3.utils.soliditySha3("New16NodeSchain"),
+                    //     accusedNode,
+                    //     secretNumbers[indexes[indexToSend]],
+                    //     multipliedShares[indexes[indexToSend]],
+                    //     verificationVectors[indexes[indexToSend]],
+                    //     encryptedSecretKeyContributions[indexes[indexToSend]],
+                    //     {from: validatorsAccount[indexToSend], gas: 12500000},
+                    // );
         //             assert.equal(resResp.logs[0].event, "BadGuy");
         //             assert.equal(resResp.logs[0].args.nodeIndex.toString(), accusedNode);
         //             console.log("\n Response from " + index + " node gas usage without new node", resResp.receipt.gasUsed);
@@ -1599,6 +1611,8 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
         //                 accusedNode,
         //                 secretNumbers[indexes[indexToSend]],
         //                 multipliedShares[indexes[indexToSend]],
+        //                 verificationVectors[indexes[indexToSend]],
+        //                 encryptedSecretKeyContributions[indexes[indexToSend]],
         //                 {from: validatorsAccount[indexToSend], gas: 12500000},
         //             );
         //             assert.equal(resResp.logs[0].event, "BadGuy");
