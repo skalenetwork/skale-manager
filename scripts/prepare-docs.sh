@@ -9,5 +9,5 @@ if [ ! -d node_modules ]; then
 fi
 
 rm -rf "$OUTDIR"
-solidity-docgen --solc-module=./node_modules/solc -t docs -o "$OUTDIR" --extension=adoc
+solidity-docgen -H docs/helpers.js --solc-module=./node_modules/solc -t docs -o "$OUTDIR" --extension=adoc
 node scripts/gen-nav.js "$OUTDIR" > "$OUTDIR/../nav.adoc"

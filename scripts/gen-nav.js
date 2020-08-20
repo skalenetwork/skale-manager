@@ -5,20 +5,19 @@ const proc = require('child_process');
 const startCase = require('lodash.startcase');
 
 const baseDir = process.argv[2];
+const PREFIX = "/technology/skale-manager/"
 
 const files = proc.execFileSync(
   'find', [baseDir, '-type', 'f'], { encoding: 'utf8' }
 ).split('\n').filter(s => s !== '');
 
-console.log('.API');
-
 const links = files.map((file) => {
-  const doc = file.replace(baseDir, '');
-  const title = path.parse(file).name;
-
+  const doc = file.replace(baseDir + "/", '');
+  const { dir, name } = path.parse(doc);
   return {
-    xref: `* xref:${doc}[${startCase(title)}]`,
-    title,
+    title: name,
+    link: `${PREFIX}${dir ? dir + '/' : ''}${name}`.toLowerCase(),
+    links: []
   };
 });
 
@@ -27,6 +26,4 @@ const sortedLinks = links.sort(function (a, b) {
   return a.title.toLowerCase().localeCompare(b.title.toLowerCase(), undefined, { numeric: true });
 });
 
-for (const link of sortedLinks) {
-  console.log(link.xref);
-}
+console.log(JSON.stringify(sortedLinks))
