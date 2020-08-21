@@ -152,13 +152,6 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         if (dkgProcess[groupIndex].numberOfBroadcasted == channels[groupIndex].n) {
             startAlrightTimestamp[groupIndex] = now;
         }
-
-        // _saveBroadcast(
-        //     groupIndex,
-        //     nodeIndex,
-        //     secretKeyContribution,
-        //     verificationVector
-        // );
         hashedData[groupIndex][index] = _hashData(secretKeyContribution, verificationVector);
         KeyStorage keyStorage = KeyStorage(contractManager.getContract("KeyStorage"));
         keyStorage.adding(groupIndex, verificationVector[0]);
