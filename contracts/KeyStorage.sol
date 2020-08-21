@@ -161,4 +161,8 @@ contract KeyStorage is Permissions {
             _schainsPublicKeys[schainId].y.a == 0 &&
             _schainsPublicKeys[schainId].y.b == 0;
     }
+
+    function getData() private view returns (BroadcastedData memory) {
+        return _data[keccak256(abi.encodePacked("UnusedFunction"))][0]
+    }
 }
