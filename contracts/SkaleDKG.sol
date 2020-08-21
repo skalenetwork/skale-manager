@@ -41,6 +41,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         bool active;
         uint n;
         uint startedBlockTimestamp;
+        uint startedBlock;
     }
 
     struct ProcessDKG {
@@ -259,6 +260,10 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         return channels[groupIndex].startedBlockTimestamp;
     }
 
+    function getChannelStartedBlock(bytes32 groupIndex) external view returns (uint) {
+        return channels[groupIndex].startedBlock;
+    }
+
     function getNumberOfBroadcasted(bytes32 groupIndex) external view returns (uint) {
         return dkgProcess[groupIndex].numberOfBroadcasted;
     }
@@ -466,6 +471,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         delete dkgProcess[groupIndex].numberOfBroadcasted;
         delete dkgProcess[groupIndex].numberOfCompleted;
         channels[groupIndex].startedBlockTimestamp = now;
+        channels[groupIndex].startedBlock = block.number;
         KeyStorage(contractManager.getContract("KeyStorage")).initPublicKeyInProgress(groupIndex);
 
         emit ChannelOpened(groupIndex);
