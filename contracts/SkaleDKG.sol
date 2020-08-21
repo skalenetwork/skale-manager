@@ -520,7 +520,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         G2Operations.G2Point[] memory verificationVector
     )
         private
-        view
+        pure
         returns (bytes32)
     {
         bytes memory data;

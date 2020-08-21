@@ -32,6 +32,20 @@ contract KeyStorage is Permissions {
     using Fp2Operations for Fp2Operations.Fp2Point;
     using G2Operations for G2Operations.G2Point;
 
+    struct BroadcastedData {
+        KeyShare[] secretKeyContribution;
+        G2Operations.G2Point[] verificationVector;
+    }
+
+    struct KeyShare {
+        bytes32[2] publicKey;
+        bytes32 share;
+    }
+
+    // Unused variable!!
+    mapping(bytes32 => mapping(uint => BroadcastedData)) private _data;
+    // 
+    
     mapping(bytes32 => G2Operations.G2Point) private _publicKeysInProgress;
     mapping(bytes32 => G2Operations.G2Point) private _schainsPublicKeys;
     mapping(bytes32 => G2Operations.G2Point[]) private _schainsNodesPublicKeys;
