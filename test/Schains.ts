@@ -1295,7 +1295,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
                 }
             ];
 
-            let res10 = await keyStorage.getBroadcastedData(web3.utils.soliditySha3("d3"), res1[0]);
+            // let res10 = await keyStorage.getBroadcastedData(web3.utils.soliditySha3("d3"), res1[0]);
             res = await skaleDKG.isBroadcastPossible(web3.utils.soliditySha3("d3"), res1[0], {from: nodeAddress});
             assert.equal(res, true);
             await skaleDKG.broadcast(
@@ -1306,7 +1306,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
                 encryptedSecretKeyContribution,
                 {from: nodeAddress},
             );
-            res10 = await keyStorage.getBroadcastedData(web3.utils.soliditySha3("d3"), res1[1]);
+            // res10 = await keyStorage.getBroadcastedData(web3.utils.soliditySha3("d3"), res1[1]);
             res = await skaleDKG.isBroadcastPossible(web3.utils.soliditySha3("d3"), res1[1], {from: nodeAddress});
             assert.equal(res, true);
             await skaleDKG.broadcast(
