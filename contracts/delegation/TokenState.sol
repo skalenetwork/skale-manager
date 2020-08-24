@@ -31,15 +31,15 @@ import "../interfaces/delegation/ILocker.sol";
 /**
  * @title Token State
  * @dev This contract manages lockers to control token transferability.
- *
+ * 
  * The SKALE Network has three types of locked tokens:
- *
+ * 
  * - Tokens that are transferrable but are currently locked into delegation with
- * a validator. See `DelegationController`;
- *
+ * a validator.
+ * 
  * - Tokens that are not transferable from one address to another, but may be
  * delegated to a validator `getAndUpdateLockedAmount`. This lock enforces
- * Proof-of-Use requirements. See `TokenLaunchLocker`; and,
+ * Proof-of-Use requirements.
  *
  * - Tokens that are neither transferable nor delegatable
  * `getAndUpdateForbiddenForDelegationAmount`. This lock enforces slashing.
