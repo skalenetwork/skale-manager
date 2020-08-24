@@ -172,6 +172,8 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         correctNode(groupIndex, toNodeIndex)
     {
         require(_isNodeByMessageSender(fromNodeIndex, msg.sender), "Node does not exist for message sender");
+        require(isNodeBroadcasted(groupIndex, fromNodeIndex), "Node has not broadcasted");
+        require(!isAllDataReceived(groupIndex, fromNodeIndex), "Node has already sent alright");
         bool broadcasted = _isBroadcasted(groupIndex, toNodeIndex);
         if (broadcasted && complaints[groupIndex].nodeToComplaint == uint(-1)) {
             // incorrect data or missing alright
@@ -247,6 +249,11 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         uint index = _nodeIndexInSchain(groupIndex, fromNodeIndex);
         uint numberOfParticipant = channels[groupIndex].n;
         require(numberOfParticipant == dkgProcess[groupIndex].numberOfBroadcasted, "Still Broadcasting phase");
+        require(
+            complaints[groupIndex].fromNodeToComplaint != fromNodeIndex &&
+            complaints[groupIndex].startComplaintBlockTimestamp == 0,
+            "Node has already sent complaint"
+        );
         require(!dkgProcess[groupIndex].completed[index], "Node is already alright");
         dkgProcess[groupIndex].completed[index] = true;
         dkgProcess[groupIndex].numberOfCompleted++;
@@ -353,13 +360,13 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             complaints[groupIndex].nodeToComplaint == nodeIndex;
     }
 
-    function isNodeBroadcasted(bytes32 groupIndex, uint nodeIndex) external view returns (bool) {
-        uint index = _nodeIndexInSchain(groupIndex, nodeIndex);
-        return index < channels[groupIndex].n && dkgProcess[groupIndex].broadcasted[index];
-    }
-
     function initialize(address contractsAddress) public override initializer {
         Permissions.initialize(contractsAddress);
+    }
+
+    function isNodeBroadcasted(bytes32 groupIndex, uint nodeIndex) public view returns (bool) {
+        uint index = _nodeIndexInSchain(groupIndex, nodeIndex);
+        return index < channels[groupIndex].n && dkgProcess[groupIndex].broadcasted[index];
     }
 
     function isEveryoneBroadcasted(bytes32 groupIndex) public view returns (bool) {
