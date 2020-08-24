@@ -147,7 +147,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         );
         uint index = _nodeIndexInSchain(groupIndex, nodeIndex);
         require(index < channels[groupIndex].n, "Node is not in this group");
-        require(!dkgProcess[groupIndex].broadcasted[index], "This node is already broadcasted");
+        require(!dkgProcess[groupIndex].broadcasted[index], "This node has already broadcasted");
         dkgProcess[groupIndex].broadcasted[index] = true;
         dkgProcess[groupIndex].numberOfBroadcasted++;
         if (dkgProcess[groupIndex].numberOfBroadcasted == channels[groupIndex].n) {
