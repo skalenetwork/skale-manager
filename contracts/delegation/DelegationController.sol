@@ -243,7 +243,7 @@ contract DelegationController is Permissions, ILocker {
      * Emits a {DelegationProposed} event.
      * 
      * Requirements:
-     *
+     * 
      * - Holder must have sufficient delegatable tokens.
      * - Delegation must be above the validator's minimum delegation amount.
      * - Delegation period must be allowed.
@@ -298,15 +298,14 @@ contract DelegationController is Permissions, ILocker {
     }
 
     /**
-     * @dev See ILocker.
+     * @dev See {ILocker-getAndUpdateLockedAmount}.
      */
     function getAndUpdateLockedAmount(address wallet) external override returns (uint) {
         return _getAndUpdateLockedAmount(wallet);
     }
 
     /**
-     * @dev Return and update the total non-transferrable and un-delegatable
-     * amount of a given `holder`.
+     * @dev See {ILocker-getAndUpdateForbiddenForDelegationAmount}.
      */
     function getAndUpdateForbiddenForDelegationAmount(address wallet) external override returns (uint) {
         return _getAndUpdateLockedAmount(wallet);

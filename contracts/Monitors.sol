@@ -119,9 +119,9 @@ contract Monitors is Permissions {
     );
 
     /**
-     * @dev Allows SkaleManager to create a monitoring group.
-     *
-     * Emits MonitorCreated event.
+     * @dev Allows SkaleManager contract to create a monitoring group.
+     * 
+     * Emits a {MonitorCreated} event.
      */
     function addMonitor(uint nodeIndex) external allow("SkaleManager") {
         ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
@@ -144,7 +144,7 @@ contract Monitors is Permissions {
     }
 
     /**
-     * @dev Allows SkaleManager to delete a monitoring group.
+     * @dev Allows SkaleManager contract to delete a monitoring group.
      */
     function deleteMonitor(uint nodeIndex) external allow("SkaleManager") {
         bytes32 monitorIndex = keccak256(abi.encodePacked(nodeIndex));
@@ -178,11 +178,11 @@ contract Monitors is Permissions {
 
     /**
      * @dev Allows SkaleManager contract to send a monitoring verdict.
-     *
-     * Emits VerdictWasSent event.
-     *
+     * 
+     * Emits a {VerdictWasSent} event.
+     * 
      * Requirements:
-     *
+     * 
      * - Node must exist in the monitor group.
      */
     function sendVerdict(uint fromMonitorIndex, Verdict calldata verdict) external allow("SkaleManager") {
@@ -210,7 +210,7 @@ contract Monitors is Permissions {
     }
 
     /**
-     * @dev Allows SkaleManager to calculate median statistics of downtime
+     * @dev Allows SkaleManager contract to calculate median statistics of downtime
      * and latency.
      */
     function calculateMetrics(uint nodeIndex)
@@ -234,7 +234,7 @@ contract Monitors is Permissions {
     }
 
     /**
-     * @dev Allows SkaleManager to set a node's last bounty block.
+     * @dev Allows SkaleManager contract to set a node's last bounty block.
      */
     function setLastBountyBlock(uint nodeIndex) external allow("SkaleManager") {
         lastBountyBlocks[keccak256(abi.encodePacked(nodeIndex))] = block.number;
@@ -283,7 +283,8 @@ contract Monitors is Permissions {
     }
 
     /**
-     * @dev Allows SkaleManager to add checked node or update existing one if it is already exits
+     * @dev Allows SkaleManager contract to add checked node or update existing
+     * one if it is already exits.
      */
     function addCheckedNode(bytes32 monitorIndex, CheckedNode memory checkedNode) public allow("SkaleManager") {
         for (uint i = 0; i < checkedNodes[monitorIndex].length; ++i) {
@@ -360,6 +361,9 @@ contract Monitors is Permissions {
         array[index2] = buffer;
     }
 
+    /**
+     * @dev Performs find functions for monitoring indexes.
+     */
     function _find(bytes32 monitorIndex, uint nodeIndex) private view returns (uint index, uint time) {
         index = checkedNodes[monitorIndex].length;
         time = 0;
@@ -415,8 +419,8 @@ contract Monitors is Permissions {
 
     /**
      * @dev Performs emission of VerdictWasSent.
-     *
-     * Emits VerdictWasSent event.
+     * 
+     * Emits a {VerdictWasSent} event.
      */
     function _emitVerdictsEvent(
         uint fromMonitorIndex,

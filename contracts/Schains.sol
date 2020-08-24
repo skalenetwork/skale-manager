@@ -32,7 +32,7 @@ import "./NodeRotation.sol";
 import "./interfaces/ISkaleDKG.sol";
 
 // interface ISkaleDKGCheck {
-//     function isLastDKGSuccesful(bytes32 groupIndex) external view returns (bool);
+//     function isLastDKGSuccessful(bytes32 groupIndex) external view returns (bool);
 // }
 
 /**
@@ -108,11 +108,11 @@ contract Schains is Permissions {
 
     /**
      * @dev Allows SkaleManager contract to create an Schain.
-     *
-     * Emits SchainCreated event.
-     *
+     * 
+     * Emits a {SchainCreated} event.
+     * 
      * Requirements:
-     *
+     * 
      * - Schain type is valid.
      * - There is sufficient deposit to create type of schain.
      */
@@ -149,11 +149,11 @@ contract Schains is Permissions {
     /**
      * @dev Allows SkaleManager to remove an schain from the network.
      * Upon removal, the space availability of each node is updated.
-     *
-     * Emits SchainDeleted event.
-     *
+     * 
+     * Emits a {SchainDeleted} event.
+     * 
      * Requirements:
-     *
+     * 
      * - Executed by schain owner.
      */
     function deleteSchain(address from, string calldata name) external allow("SkaleManager") {
@@ -198,11 +198,11 @@ contract Schains is Permissions {
     /**
      * @dev Allows SkaleManager to delete a root owned schain.
      * Upon removal, the space availability of each node is updated.
-     *
-     * Emits SchainDeleted event.
-     *
+     * 
+     * Emits a {SchainDeleted} event.
+     * 
      * Requirements:
-     *
+     * 
      * - Schain exists.
      */
     function deleteSchainByRoot(string calldata name) external allow("SkaleManager") {
@@ -243,11 +243,11 @@ contract Schains is Permissions {
     /**
      * @dev Allows SkaleManager contract to restart schain creation by forming a
      * new schain group.
-     *
-     * Emits NodeAdded event.
-     *
+     * 
+     * Emits a {NodeAdded} event.
+     * 
      * Requirements:
-     *
+     * 
      * - Schain group must pass DKG.
      * - Free nodes must be available in the network.
      */
@@ -255,7 +255,7 @@ contract Schains is Permissions {
         NodeRotation nodeRotation = NodeRotation(contractManager.getContract("NodeRotation"));
         bytes32 schainId = keccak256(abi.encodePacked(name));
         ISkaleDKG skaleDKG = ISkaleDKG(contractManager.getContract("SkaleDKG"));
-        require(!skaleDKG.isLastDKGSuccesful(schainId), "DKG success");
+        require(!skaleDKG.isLastDKGSuccessful(schainId), "DKG success");
         SchainsInternal schainsInternal = SchainsInternal(
             contractManager.getContract("SchainsInternal"));
         require(schainsInternal.isAnyFreeNode(schainId), "No free Nodes for new group formation");
@@ -355,9 +355,9 @@ contract Schains is Permissions {
 
     /**
      * @dev Initializes an schain in the SchainsInternal contract.
-     *
+     * 
      * Requirements:
-     *
+     * 
      * - Schain name is not already in use.
      */
     function _initializeSchainInSchainsInternal(
@@ -403,8 +403,8 @@ contract Schains is Permissions {
 
     /**
      * @dev Allows SkaleManager to create group of nodes for Schain.
-     *
-     * Emits SchainNodes event.
+     * 
+     * Emits a {SchainNodes} event.
      */
     function _createGroupForSchain(
         string memory schainName,
@@ -428,11 +428,11 @@ contract Schains is Permissions {
 
     /**
      * @dev Creates an schain.
-     *
-     * Emits SchainCreated event.
-     *
+     * 
+     * Emits a {SchainCreated} event.
+     * 
      * Requirements:
-     *
+     * 
      * - Schain type must be valid.
      */
     function _addSchain(address from, uint deposit, SchainParameters memory schainParameters) private {

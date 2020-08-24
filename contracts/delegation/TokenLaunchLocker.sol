@@ -33,8 +33,6 @@ import "./PartialDifferences.sol";
 /**
  * @title TokenLaunchLocker
  * @dev This contract manages lockers applied to the launch process.
- *
- * See ILocker.
  */
 contract TokenLaunchLocker is Permissions, ILocker {
     using MathUtils for uint;
@@ -74,8 +72,8 @@ contract TokenLaunchLocker is Permissions, ILocker {
 
     /**
      * @dev Allows TokenLaunchManager contract to lock an amount of tokens.
-     *
-     * Emits Locked event.
+     * 
+     * Emits a {Locked} event.
      */
     function lock(address holder, uint amount) external allow("TokenLaunchManager") {
         _locked[holder] = _locked[holder].add(amount);
@@ -128,7 +126,7 @@ contract TokenLaunchLocker is Permissions, ILocker {
     }
 
     /**
-     * @dev Returns and updates the locked amount of tokens.
+     * @dev See {ILocker-getAndUpdateLockedAmount}.
      */
     function getAndUpdateLockedAmount(address wallet) external override returns (uint) {
         if (_locked[wallet] > 0) {
@@ -160,7 +158,7 @@ contract TokenLaunchLocker is Permissions, ILocker {
     }
 
     /**
-     * @dev See ILocker.
+     * @dev See {ILocker-getAndUpdateForbiddenForDelegationAmount}.
      */
     function getAndUpdateForbiddenForDelegationAmount(address) external override returns (uint) {
         return 0;
@@ -211,8 +209,8 @@ contract TokenLaunchLocker is Permissions, ILocker {
 
     /**
      * @dev Unlocks tokens. TODO: confirm?
-     *
-     * Emits Unlocked event.
+     * 
+     * Emits an {Unlocked} event.
      */
     function _unlock(address holder) private {
         emit Unlocked(holder, _locked[holder]);

@@ -37,9 +37,9 @@ contract SkaleVerifier is Permissions {
 
     /**
     * @dev Verifies TODO: confirm
-    *
+    * 
     * Requirements:
-    *
+    * 
     * - Signature is in G1.
     * - Hash is in G1.
     * - G2.one in G2.
@@ -96,7 +96,7 @@ contract SkaleVerifier is Permissions {
         Permissions.initialize(newContractsAddress);
     }
 
-        function _checkHashToGroupWithHelper(
+    function _checkHashToGroupWithHelper(
         bytes32 hash,
         uint counter,
         uint hashA,

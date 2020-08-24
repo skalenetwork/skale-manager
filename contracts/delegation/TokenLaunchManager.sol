@@ -33,7 +33,7 @@ import "./TokenLaunchLocker.sol";
 /**
  * @title Token Launch Manager
  * @dev This contract manages functions for the Token Launch event.
- *
+ * 
  * The Seller is an entity who distributes tokens through a Launch process.
  */
 contract TokenLaunchManager is Permissions, IERC777Recipient {
@@ -77,15 +77,12 @@ contract TokenLaunchManager is Permissions, IERC777Recipient {
     /**
      * @dev Allocates values for `walletAddress`
      *
+     * Emits an {Approved} event.
+     *
      * Requirements:
      *
-     * - token launch must not be completed
-     * - the total approved must be less than or equal to the seller balance.
-     *
-     * Emits an Approved event.
-     *
-     * @param walletAddress address wallet address to approve transfers to
-     * @param value uint token amount to approve transfer to
+     * - Token launch must not be completed.
+     * - The total approved must be less than or equal to the seller balance.
      */
     function approveTransfer(address walletAddress, uint value) external onlySeller {
         require(!tokenLaunchIsCompleted, "Can't approve because token launch is completed");
@@ -95,9 +92,9 @@ contract TokenLaunchManager is Permissions, IERC777Recipient {
 
     /**
      * @dev Allocates values for `walletAddresses`
-     *
-     * Emits an Approved event.
-     *
+     * 
+     * Emits an {Approved} event.
+     * 
      * - Token launch must not have already completed.
      * - Input arrays must be equal in size.
      * - Total approved must be less than or equal to the Seller balance.
@@ -115,11 +112,11 @@ contract TokenLaunchManager is Permissions, IERC777Recipient {
      * @dev Allows the Seller to complete the token launch process.
      * This then allows participants to retrieve tokens and this disallows
      * any further approval changes.
-     *
-     * Emits TokenLaunchIsCompleted event.
-     *
+     * 
+     * Emits a {TokenLaunchIsCompleted} event.
+     * 
      * Requirements:
-     *
+     * 
      * - Token launch must not already be completed.
      */
     function completeTokenLaunch() external onlySeller {
@@ -130,11 +127,11 @@ contract TokenLaunchManager is Permissions, IERC777Recipient {
 
     /**
      * @dev Allows the Seller to correct a participant's address.
-     *
-     * Emits Approved event.
-     *
+     * 
+     * Emits an {Approved} event.
+     * 
      * Requirements:
-     *
+     * 
      * - Updated address must not already be in use.
      * - Token launch must not have already completed.
      */
@@ -150,9 +147,9 @@ contract TokenLaunchManager is Permissions, IERC777Recipient {
 
     /**
      * @dev Allows the Seller to correct a participant's amount.
-     *
+     * 
      * Requirements:
-     *
+     * 
      * - Token launch must not have already completed.
      */
     function changeApprovalValue(address wallet, uint newValue) external onlySeller {
@@ -164,11 +161,11 @@ contract TokenLaunchManager is Permissions, IERC777Recipient {
      * @dev Allows a token launch participant to retrieve the entire amount to
      * the msg.sender's address. Retrieved tokens are locked for Proof-of-Use
      * requirements.
-     *
-     * Emits TokensRetrieved event.
-     *
+     * 
+     * Emits a {TokensRetrieved} event.
+     * 
      * Requirements:
-     *
+     * 
      * - Token transfer must be approved.
      * - Token launch must have completed.
      */
@@ -213,11 +210,11 @@ contract TokenLaunchManager is Permissions, IERC777Recipient {
 
     /**
      * @dev Allows the Seller to approve transfer of tokens to a wallet address.
-     *
-     * Emits Approved event.
-     *
+     * 
+     * Emits an {Approved} event.
+     * 
      * Requirements:
-     *
+     * 
      * - Value must be greater than zero.
      */
     function _approveTransfer(address walletAddress, uint value) internal onlySeller {
@@ -235,9 +232,9 @@ contract TokenLaunchManager is Permissions, IERC777Recipient {
 
     /**
      * @dev Approves an amount of tokens for a wallet address.
-     *
+     * 
      * Requirements:
-     *
+     * 
      * - Address must be non-zero.
      */
     function _setApprovedAmount(address wallet, uint value) private {

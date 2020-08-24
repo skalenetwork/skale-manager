@@ -55,11 +55,11 @@ contract Punisher is Permissions, ILocker {
     /**
      * @dev Allows SkaleDKG contract to execute slashing on a validator and
      * validator's delegations by an `amount` of tokens.
-     *
-     * Emits Slash event.
-     *
+     * 
+     * Emits a {Slash} event.
+     * 
      * Requirements:
-     *
+     * 
      * - Validator must exist.
      */
     function slash(uint validatorId, uint amount) external allow("SkaleDKG") {
@@ -76,11 +76,11 @@ contract Punisher is Permissions, ILocker {
 
     /**
      * @dev Allows the Owner to forgive a slashing condition.
-     *
-     * Emits Forgive event.
-     *
+     * 
+     * Emits a {Forgive} event.
+     * 
      * Requirements:
-     *
+     * 
      * - All slashes must have been processed.
      */
     function forgive(address holder, uint amount) external onlyAdmin {
@@ -99,14 +99,14 @@ contract Punisher is Permissions, ILocker {
     }
 
     /**
-     * @dev See ILocker-getAndUpdateLockedAmount
+     * @dev See {ILocker-getAndUpdateLockedAmount}.
      */
     function getAndUpdateLockedAmount(address wallet) external override returns (uint) {
         return _getAndUpdateLockedAmount(wallet);
     }
 
     /**
-     * @dev See ILocker-getAndUpdateForbiddenForDelegationAmount
+     * @dev See {ILocker-getAndUpdateForbiddenForDelegationAmount}.
      */
     function getAndUpdateForbiddenForDelegationAmount(address wallet) external override returns (uint) {
         return _getAndUpdateLockedAmount(wallet);
@@ -127,7 +127,7 @@ contract Punisher is Permissions, ILocker {
     // private
 
     /**
-     * @dev Returns and updates a holder's locked amount.
+     * @dev See {ILocker-getAndUpdateLockedAmount}.
      */
     function _getAndUpdateLockedAmount(address wallet) private returns (uint) {
         DelegationController delegationController = DelegationController(

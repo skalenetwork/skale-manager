@@ -171,22 +171,30 @@ contract ConstantsHolder is Permissions {
         proofOfUseLockUpPeriodDays = periodDays;
     }
 
+    /**
+     * @dev Allows the Owner to set the proof-of-use delegation percentage
+     * requirement.
+     */
     function setProofOfUseDelegationPercentage(uint percentage) external onlyOwner {
         require(percentage <= 100, "Percentage value is incorrect");
         proofOfUseDelegationPercentage = percentage;
     }
 
+    /**
+     * @dev Allows the Owner to set the maximum number of validators that a
+     * single delegator can delegate to.
+     */
     function setLimitValidatorsPerDelegator(uint newLimit) external onlyOwner {
         limitValidatorsPerDelegator = newLimit;
     }
 
+    /**
+     * @dev Allows the Owner to set the initial delegation month for the network.
+     */
     function setFirstDelegationsMonth(uint month) external onlyOwner {
         firstDelegationsMonth = month;
     }
 
-    /**
-     * @dev constructor in Permissions approach
-     */
     function initialize(address contractsAddress) public override initializer {
         Permissions.initialize(contractsAddress);
 

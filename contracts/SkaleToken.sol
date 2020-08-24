@@ -56,11 +56,11 @@ contract SkaleToken is ERC777, Permissions, ReentrancyGuard, IDelegatableToken {
     /**
      * @dev Allows SkaleManager to mint an amount of tokens and transfer minted
      * tokens to a specified address.
-     *
-     * Returns a boolean whether the operation is successful.
-     *
+     * 
+     * Returns whether the operation is successful.
+     * 
      * Requirements:
-     *
+     * 
      * - Mint must not exceed the total supply.
      */
     function mint(
@@ -86,7 +86,7 @@ contract SkaleToken is ERC777, Permissions, ReentrancyGuard, IDelegatableToken {
     }
 
     /**
-     * @dev Returns and updates the delegated amount in SKL tokens for a given wallet.
+     * @dev See {IDelegatableToken-getAndUpdateDelegatedAmount}.
      */
     function getAndUpdateDelegatedAmount(address wallet) external override returns (uint) {
         return DelegationController(contractManager.getContract("DelegationController"))
@@ -94,14 +94,14 @@ contract SkaleToken is ERC777, Permissions, ReentrancyGuard, IDelegatableToken {
     }
 
     /**
-     * @dev Returns and updates the slashed amount in SKL tokens for a given wallet.
+     * @dev See {IDelegatableToken-getAndUpdateSlashedAmount}.
      */
     function getAndUpdateSlashedAmount(address wallet) external override returns (uint) {
         return Punisher(contractManager.getContract("Punisher")).getAndUpdateLockedAmount(wallet);
     }
 
     /**
-     * @dev Returns and updates the locked amount in SKL tokens for a given wallet.
+     * @dev See {IDelegatableToken-getAndUpdateLockedAmount}.
      */
     function getAndUpdateLockedAmount(address wallet) public override returns (uint) {
         return TokenState(contractManager.getContract("TokenState")).getAndUpdateLockedAmount(wallet);

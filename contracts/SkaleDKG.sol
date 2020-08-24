@@ -144,11 +144,11 @@ contract SkaleDKG is Permissions, ISkaleDKG {
 
     /**
      * @dev Allows Schains and NodeRotation contracts to open a channel.
-     *
-     * Emits ChannelOpened event.
-     *
+     * 
+     * Emits a {ChannelOpened} event.
+     * 
      * Requirements:
-     *
+     * 
      * - Channel is not already created.
      */
     function openChannel(bytes32 groupIndex) external override allowTwo("Schains","NodeRotation") {
@@ -352,7 +352,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         return channels[groupIndex].active;
     }
 
-    function isLastDKGSuccesful(bytes32 groupIndex) external override view returns (bool) {
+    function isLastDKGSuccessful(bytes32 groupIndex) external override view returns (bool) {
         return channels[groupIndex].startedBlockTimestamp <= lastSuccesfulDKG[groupIndex];
     }
 

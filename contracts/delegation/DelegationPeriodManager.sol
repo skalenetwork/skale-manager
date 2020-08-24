@@ -45,7 +45,7 @@ contract DelegationPeriodManager is Permissions {
     /**
      * @dev Allows the Owner to create a new available delegation period and
      * return in the network.
-     *
+     * 
      * Emits DelegationPeriodWasSet event.
      */
     function setDelegationPeriod(uint monthsCount, uint stakeMultiplier) external onlyOwner {

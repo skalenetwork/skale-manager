@@ -38,7 +38,7 @@ import "./Bounty.sol";
 /**
  * @title SkaleManager
  * @dev Contract contains functions for node registration and exit, bounty
- * management, and monitoring verdicts. TODO: confirm
+ * management, and monitoring verdicts.
  */
 contract SkaleManager is IERC777Recipient, Permissions {
     IERC1820Registry private _erc1820;

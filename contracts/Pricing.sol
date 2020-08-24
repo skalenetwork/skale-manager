@@ -45,9 +45,9 @@ contract Pricing is Permissions {
 
     /**
      * @dev Adjust the schain price based on network capacity and demand.
-     *
+     * 
      * Requirements:
-     *
+     * 
      * - Cooldown time has exceeded. TODO: confirm
      */
     function adjustPrice() external {

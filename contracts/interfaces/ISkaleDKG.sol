@@ -21,9 +21,28 @@
 
 pragma solidity 0.6.10;
 
+/**
+ * @dev Interface to {SkaleDKG}.
+ */
 interface ISkaleDKG {
+
+    /**
+     * @dev See {SkaleDKG-openChannel}.
+     */
     function openChannel(bytes32 schainId) external;
+
+    /**
+     * @dev See {SkaleDKG-deleteChannel}.
+     */
     function deleteChannel(bytes32 schainId) external;
-    function isLastDKGSuccesful(bytes32 groupIndex) external view returns (bool);
+
+    /**
+     * @dev See {SkaleDKG-isLastDKGSuccessful}.
+     */
+    function isLastDKGSuccessful(bytes32 groupIndex) external view returns (bool);
+    
+    /**
+     * @dev See {SkaleDKG-isChannelOpened}.
+     */
     function isChannelOpened(bytes32 schainId) external view returns (bool);
 }

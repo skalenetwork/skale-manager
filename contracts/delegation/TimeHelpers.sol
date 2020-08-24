@@ -28,7 +28,7 @@ import "../thirdparty/BokkyPooBahsDateTimeLibrary.sol";
 /**
  * @title TimeHelpers
  * @dev The contract performs time operations.
- *
+ * 
  * These functions are used to calculate monthly and Proof of Use epochs.
  */
 contract TimeHelpers {

@@ -386,9 +386,8 @@ contract SchainsInternal is Permissions {
         return schainsGroups[schainId].length;
     }
 
-    /*
+    /**
      * @dev Checks whether there are any schain nodes with free resources.
-     * TODO: confirm
      */
     function isAnyFreeNode(bytes32 schainId) external view returns (bool) {
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));
@@ -402,7 +401,7 @@ contract SchainsInternal is Permissions {
         return false;
     }
 
-    /*
+    /**
      * @dev Returns whether any exceptions exist for node in a schain group. TODO: confirm
      */
     function checkException(bytes32 schainId, uint nodeIndex) external view returns (bool) {

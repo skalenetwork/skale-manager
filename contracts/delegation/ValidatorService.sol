@@ -122,11 +122,11 @@ contract ValidatorService is Permissions {
     /**
      * @dev Creates a new validator ID that includes a validator name, description,
      * commission or fee rate, and a minimum delegation amount accepted by the validator.
-     *
-     * Emits ValidatorRegistered event.
-     *
+     * 
+     * Emits a {ValidatorRegistered} event.
+     * 
      * Requirements:
-     *
+     * 
      * - Sender must not already have registered a validator ID.
      * - Fee rate must be between 0 - 1000‰. Note: in per mille.
      */
@@ -160,11 +160,11 @@ contract ValidatorService is Permissions {
     /**
      * @dev Allows Admin to enable a validator by adding their ID to the
      * trusted list.
-     *
-     * Emits ValidatorWasEnabled event.
-     *
+     * 
+     * Emits a {ValidatorWasEnabled} event.
+     * 
      * Requirements:
-     *
+     * 
      * - Validator must not already be enabled.
      */
     function enableValidator(uint validatorId) external checkValidatorExists(validatorId) onlyAdmin {
@@ -177,11 +177,11 @@ contract ValidatorService is Permissions {
     /**
      * @dev Allows Admin to disable a validator by removing their ID from
      * the trusted list.
-     *
-     * Emits ValidatorWasDisabled event.
-     *
+     * 
+     * Emits a {ValidatorWasDisabled} event.
+     * 
      * Requirements:
-     *
+     * 
      * - Validator must not already be disabled.
      */
     function disableValidator(uint validatorId) external checkValidatorExists(validatorId) onlyAdmin {
@@ -205,10 +205,10 @@ contract ValidatorService is Permissions {
     }
 
     /**
-     * @dev Allows msg.sender to request a new address.
-     *
+     * @dev Allows `msg.sender` to request a new address.
+     * 
      * Requirements:
-     *
+     * 
      * - New address must not be null.
      * - New address must not be already registered as a validator.
      */
@@ -223,11 +223,11 @@ contract ValidatorService is Permissions {
 
     /**
      * @dev Allows msg.sender to confirm an address change.
-     *
-     * Emits ValidatorAddressChanged event.
-     *
+     * 
+     * Emits a {ValidatorAddressChanged} event.
+     * 
      * Requirements:
-     *
+     * 
      * - Must be owner of new address.
      */
     function confirmNewAddress(uint validatorId)
@@ -247,9 +247,9 @@ contract ValidatorService is Permissions {
     /**
      * @dev Links a validator ID to a node address. Validator must present
      * the node signature of the validator ID.
-     *
+     * 
      * Requirements:
-     *
+     * 
      * - Signature must be valid.
      * - Address must not be assigned to a validator.
      */
@@ -268,8 +268,8 @@ contract ValidatorService is Permissions {
 
     /**
      * @dev Unlinks a node address from a validator.
-     *
-     * Emits NodeAddressWasRemoved event.
+     * 
+     * Emits a {NodeAddressWasRemoved} event.
      */
     function unlinkNodeAddress(address nodeAddress) external {
         // check Validator Exist inside getValidatorId
@@ -311,9 +311,9 @@ contract ValidatorService is Permissions {
 
     /**
      * @dev Allows a validator to start accepting new delegation requests.
-     *
+     * 
      * Requirements:
-     *
+     * 
      * - Must not have already enabled accepting new requests.
      */
     function startAcceptingNewRequests() external {
@@ -326,9 +326,9 @@ contract ValidatorService is Permissions {
 
     /**
      * @dev Allows a validator to stop accepting new delegation requests.
-     *
+     * 
      * Requirements:
-     *
+     * 
      * - Must not have already stopped accepting new requests.
      */
     function stopAcceptingNewRequests() external {
@@ -396,9 +396,9 @@ contract ValidatorService is Permissions {
 
     /**
      * @dev Returns the validator ID linked to a node address.
-     *
+     * 
      * Requirements:
-     *
+     * 
      * - Node address must be linked to a validator.
      */
     function getValidatorIdByNodeAddress(address nodeAddress) external view returns (uint validatorId) {
@@ -470,9 +470,9 @@ contract ValidatorService is Permissions {
 
     /**
      * @dev Links a validator address to a validator ID.
-     *
+     * 
      * Requirements:
-     *
+     * 
      * - Address is not already in use by another validator.
      */
     function _setValidatorAddress(uint validatorId, address validatorAddress) private {
@@ -489,9 +489,9 @@ contract ValidatorService is Permissions {
 
     /**
      * @dev Links a node address to a validator ID.
-     *
+     * 
      * Requirements:
-     *
+     * 
      * - Node address must not be already linked to a validator.
      */
     function _addNodeAddress(uint validatorId, address nodeAddress) private {
@@ -505,9 +505,9 @@ contract ValidatorService is Permissions {
 
     /**
      * @dev Unlinks a node address from a validator ID.
-     *
+     * 
      * Requirements:
-     *
+     * 
      * - Node must be linked to the validator.
      */
     function _removeNodeAddress(uint validatorId, address nodeAddress) private {
