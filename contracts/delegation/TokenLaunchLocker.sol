@@ -83,7 +83,7 @@ contract TokenLaunchLocker is Permissions, ILocker {
 
     /**
      * @dev Allows DelegationController contract to add locked tokens to
-     * a delegation. TODO: confirm
+     * a delegation.
      */
     function handleDelegationAdd(
         address holder, uint delegationId, uint amount, uint month)
@@ -109,7 +109,7 @@ contract TokenLaunchLocker is Permissions, ILocker {
 
     /**
      * @dev Allows DelegationController contract to remove locked tokens from
-     * a delegation. TODO: confirm
+     * a delegation.
      */
     function handleDelegationRemoving(
         address holder,
@@ -178,21 +178,21 @@ contract TokenLaunchLocker is Permissions, ILocker {
     }
 
     /**
-     * @dev Adds a delegated amount to the current month. TODO: confirm?
+     * @dev Adds a delegated amount to the current month.
      */
     function _addToDelegatedAmount(address holder, uint amount, uint month) private {
         _delegatedAmount[holder].addToValue(amount, month);
     }
 
     /**
-     * @dev Removes a delegated amount from the current month. TODO: confirm?
+     * @dev Removes a delegated amount from the current month.
      */
     function _removeFromDelegatedAmount(address holder, uint amount, uint month) private {
         _delegatedAmount[holder].subtractFromValue(amount, month);
     }
 
     /**
-     * @dev Adds the amount to the total delegated for the current month. TODO: confirm?
+     * @dev Adds the amount to the total delegated for the current month.
      */
     function _addToTotalDelegatedAmount(address holder, uint amount, uint month) private {
         require(
@@ -208,7 +208,7 @@ contract TokenLaunchLocker is Permissions, ILocker {
     }
 
     /**
-     * @dev Unlocks tokens. TODO: confirm?
+     * @dev Unlocks tokens.
      * 
      * Emits an {Unlocked} event.
      */
@@ -220,14 +220,14 @@ contract TokenLaunchLocker is Permissions, ILocker {
     }
 
     /**
-     * @dev Deletes the delegated amount. TODO: confirm?
+     * @dev Deletes the delegated amount.
      */
     function _deleteDelegatedAmount(address holder) private {
         _delegatedAmount[holder].clear();
     }
 
     /**
-     * @dev Deletes the total delegated amount. TODO: confirm?
+     * @dev Deletes the total delegated amount.
      */
     function _deleteTotalDelegatedAmount(address holder) private {
         delete _totalDelegatedAmount[holder].delegated;

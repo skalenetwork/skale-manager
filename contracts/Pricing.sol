@@ -48,7 +48,7 @@ contract Pricing is Permissions {
      * 
      * Requirements:
      * 
-     * - Cooldown time has exceeded. TODO: confirm
+     * - Cooldown time has exceeded.
      */
     function adjustPrice() external {
         ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));

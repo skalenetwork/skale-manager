@@ -50,13 +50,13 @@ import "./PartialDifferences.sol";
  * 
  * Delegated tokens may be in one of several states:
  * 
- * - PROPOSED: token holder proposes tokens to delegate to a validator
- * - ACCEPTED: token delegations are accepted by a validator and are locked-by-delegation
- * - CANCELED: token holder cancels delegation proposal. Only allowed before the proposal is accepted by the validator
- * - REJECTED: token proposal expires at the UTC start of the next month
- * - DELEGATED: accepted delegations are delegated at the UTC start of the month
- * - UNDELEGATION_REQUESTED: token holder requests delegations to undelegate from the validator
- * - COMPLETED: undelegation request is completed at the end of the delegation period
+ * - PROPOSED: token holder proposes tokens to delegate to a validator.
+ * - ACCEPTED: token delegations are accepted by a validator and are locked-by-delegation.
+ * - CANCELED: token holder cancels delegation proposal. Only allowed before the proposal is accepted by the .
+ * - REJECTED: token proposal expires at the UTC start of the next month.
+ * - DELEGATED: accepted delegations are delegated at the UTC start of the month.
+ * - UNDELEGATION_REQUESTED: token holder requests delegations to undelegate from the validator.
+ * - COMPLETED: undelegation request is completed at the end of the delegation period.
  */
 contract DelegationController is Permissions, ILocker {
     using MathUtils for uint;
@@ -452,7 +452,7 @@ contract DelegationController is Permissions, ILocker {
      * 
      * Emits a {SlashingEvent}.
      * 
-     * See Punisher.
+     * See {Punisher}.
      */
     function confiscate(uint validatorId, uint amount) external allow("Punisher") {
         uint currentMonth = _getCurrentMonth();
@@ -591,6 +591,9 @@ contract DelegationController is Permissions, ILocker {
 
     // private
 
+    /**
+     * @dev Adds a new delegation proposal.
+     */
     function _addDelegation(
         address holder,
         uint validatorId,
@@ -617,6 +620,9 @@ contract DelegationController is Permissions, ILocker {
         _addToLockedInPendingDelegations(delegations[delegationId].holder, delegations[delegationId].amount);
     }
 
+    /**
+     * @dev Returns the month when a delegation ends.
+     */
     function _calculateDelegationEndMonth(uint delegationId) private view returns (uint) {
         uint currentMonth = _getCurrentMonth();
         uint started = delegations[delegationId].started;
@@ -733,6 +739,9 @@ contract DelegationController is Permissions, ILocker {
         return timeHelpers.getCurrentMonth();
     }
 
+    /**
+     * @dev See {ILocker-getAndUpdateLockedAmount}.
+     */
     function _getAndUpdateLockedAmount(address wallet) private returns (uint) {
         return _getAndUpdateDelegatedByHolder(wallet).add(getLockedInPendingDelegations(wallet));
     }
@@ -747,6 +756,9 @@ contract DelegationController is Permissions, ILocker {
         }
     }
 
+    /**
+     * @dev Checks whether the holder has performed a delegation.
+     */
     function _everDelegated(address holder) private view returns (bool) {
         return _firstDelegationMonth[holder].value > 0;
     }
@@ -759,6 +771,9 @@ contract DelegationController is Permissions, ILocker {
         _effectiveDelegatedToValidator[validatorId].subtractFromSequence(effectiveAmount, month);
     }
 
+    /**
+     * @dev Returns the delegated amount after a slashing event.
+     */
     function _calculateDelegationAmountAfterSlashing(uint delegationId) private view returns (uint) {
         uint startMonth = _delegationExtras[delegationId].lastSlashingMonthBeforeDelegation;
         uint validatorId = delegations[delegationId].validatorId;
@@ -909,6 +924,14 @@ contract DelegationController is Permissions, ILocker {
         );
     }
 
+    /**
+     * @dev Checks whether delegation to a validator is allowed.
+     * 
+     * Requirements:
+     * 
+     * - Delegator must not have reached the validator limit.
+     * - Delegation must be made in or after the first delegation month.
+     */
     function _checkIfDelegationIsAllowed(address holder, uint validatorId) private view returns (bool) {
         ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
         require(

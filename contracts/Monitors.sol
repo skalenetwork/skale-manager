@@ -241,7 +241,7 @@ contract Monitors is Permissions {
     }
 
     /**
-     * @dev Returns node IPs that were last checked. TODO
+     * @dev Returns node IPs that were last checked.
      */
     function getCheckedArray(bytes32 monitorIndex)
         external
@@ -304,7 +304,7 @@ contract Monitors is Permissions {
     }
 
     /**
-     * @dev Returns a count of metric data available for a node. TODO
+     * @dev Returns a count of metric data available for a node.
      */
     function getLengthOfMetrics(bytes32 monitorIndex) public view returns (uint) {
         return verdicts[monitorIndex].length;
@@ -407,7 +407,7 @@ contract Monitors is Permissions {
     }
 
     /**
-     * @dev Returns monitoring data for a node. TODO
+     * @dev Returns monitoring data for a node.
      */
     function _getCheckedNodeData(uint nodeIndex) private view returns (CheckedNode memory checkedNode) {
         ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));

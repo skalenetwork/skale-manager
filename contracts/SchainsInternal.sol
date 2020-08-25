@@ -329,7 +329,7 @@ contract SchainsInternal is Permissions {
     }
 
     /**
-     * @dev Returns active schains of a node. TODO: confirm
+     * @dev Returns active schains of a node.
      */
     function getActiveSchain(uint nodeIndex) external view returns (bytes32) {
         for (uint i = schainsForNodes[nodeIndex].length; i > 0; i--) {
@@ -341,7 +341,7 @@ contract SchainsInternal is Permissions {
     }
 
     /**
-     * @dev Returns active schains of a node. TODO: confirm
+     * @dev Returns active schains of a node.
      */
     function getActiveSchains(uint nodeIndex) external view returns (bytes32[] memory activeSchains) {
         uint activeAmount = 0;
@@ -402,7 +402,7 @@ contract SchainsInternal is Permissions {
     }
 
     /**
-     * @dev Returns whether any exceptions exist for node in a schain group. TODO: confirm
+     * @dev Returns whether any exceptions exist for node in a schain group.
      */
     function checkException(bytes32 schainId, uint nodeIndex) external view returns (bool) {
         return _exceptionsForGroups[schainId][nodeIndex];
@@ -481,7 +481,7 @@ contract SchainsInternal is Permissions {
     }
 
     /**
-     * @dev Returns index of Schain in schainsForNode array. TODO: confirm
+     * @dev Returns index of Schain in schainsForNode array.
      */
     function findSchainAtSchainsForNode(uint nodeIndex, bytes32 schainId) public view returns (uint) {
         uint length = getLengthOfSchainsForNode(nodeIndex);
@@ -493,9 +493,6 @@ contract SchainsInternal is Permissions {
         return length;
     }
 
-    /**
-     * @dev TODO: confirm
-     */
     function isEnoughNodes(bytes32 schainId) public view returns (uint[] memory result) {
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));
         uint8 space = schains[schainId].partOfNode;
@@ -546,9 +543,6 @@ contract SchainsInternal is Permissions {
         schainsGroups[schainId] = nodesInGroup;
     }
 
-    /**
-     * @dev TODO: confirm
-     */
     function _isCorrespond(bytes32 schainId, uint nodeIndex) private view returns (bool) {
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));
         return !_exceptionsForGroups[schainId][nodeIndex] && nodes.isNodeActive(nodeIndex);

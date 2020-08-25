@@ -36,7 +36,7 @@ contract SkaleVerifier is Permissions {
 
 
     /**
-    * @dev Verifies TODO: confirm
+    * @dev Verifies a BLS signature.
     * 
     * Requirements:
     * 

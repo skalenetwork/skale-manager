@@ -109,7 +109,7 @@ contract Schains is Permissions {
     /**
      * @dev Allows SkaleManager contract to create an Schain.
      * 
-     * Emits a {SchainCreated} event.
+     * Emits an {SchainCreated} event.
      * 
      * Requirements:
      * 
@@ -150,7 +150,7 @@ contract Schains is Permissions {
      * @dev Allows SkaleManager to remove an schain from the network.
      * Upon removal, the space availability of each node is updated.
      * 
-     * Emits a {SchainDeleted} event.
+     * Emits an {SchainDeleted} event.
      * 
      * Requirements:
      * 
@@ -199,7 +199,7 @@ contract Schains is Permissions {
      * @dev Allows SkaleManager to delete a root owned schain.
      * Upon removal, the space availability of each node is updated.
      * 
-     * Emits a {SchainDeleted} event.
+     * Emits an {SchainDeleted} event.
      * 
      * Requirements:
      * 
@@ -404,7 +404,7 @@ contract Schains is Permissions {
     /**
      * @dev Allows SkaleManager to create group of nodes for Schain.
      * 
-     * Emits a {SchainNodes} event.
+     * Emits an {SchainNodes} event.
      */
     function _createGroupForSchain(
         string memory schainName,
@@ -429,7 +429,7 @@ contract Schains is Permissions {
     /**
      * @dev Creates an schain.
      * 
-     * Emits a {SchainCreated} event.
+     * Emits an {SchainCreated} event.
      * 
      * Requirements:
      * 

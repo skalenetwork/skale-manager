@@ -76,11 +76,11 @@ contract TokenLaunchManager is Permissions, IERC777Recipient {
 
     /**
      * @dev Allocates values for `walletAddress`
-     *
+     * 
      * Emits an {Approved} event.
-     *
+     * 
      * Requirements:
-     *
+     * 
      * - Token launch must not be completed.
      * - The total approved must be less than or equal to the seller balance.
      */

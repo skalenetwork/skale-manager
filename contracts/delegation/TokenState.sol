@@ -40,7 +40,7 @@ import "../interfaces/delegation/ILocker.sol";
  * - Tokens that are not transferable from one address to another, but may be
  * delegated to a validator `getAndUpdateLockedAmount`. This lock enforces
  * Proof-of-Use requirements.
- *
+ * 
  * - Tokens that are neither transferable nor delegatable
  * `getAndUpdateForbiddenForDelegationAmount`. This lock enforces slashing.
  */

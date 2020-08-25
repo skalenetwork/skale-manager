@@ -81,7 +81,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
     event ChannelClosed(bytes32 groupIndex);
 
     /**
-     * @dev Emitted when a node broadcasts keyshare. TODO: confirm
+     * @dev Emitted when a node broadcasts keyshare.
      */
     event BroadcastAndKeyShare(
         bytes32 indexed groupIndex,
@@ -269,9 +269,6 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         }
     }
 
-    /**
-     * @dev TODO: confirm
-     */
     function response(
         bytes32 groupIndex,
         uint fromNodeIndex,
@@ -296,9 +293,6 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         _finalizeSlashing(groupIndex, badNode);
     }
 
-    /**
-     * @dev TODO: confirm
-     */
     function alright(bytes32 groupIndex, uint fromNodeIndex)
         external
         correctGroup(groupIndex)
@@ -365,7 +359,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
     }
 
     /**
-     * @dev Checks whether complaint is possible.  TODO: confirm
+     * @dev Checks whether complaint is possible.
      */
     function isComplaintPossible(
         bytes32 groupIndex,
@@ -400,7 +394,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
     }
 
     /**
-     * @dev Checks whether sending Alright response is possible.  TODO: confirm
+     * @dev Checks whether sending Alright response is possible.
      */
     function isAlrightPossible(bytes32 groupIndex, uint nodeIndex) external view returns (bool) {
         uint index = _nodeIndexInSchain(groupIndex, nodeIndex);
@@ -412,7 +406,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
     }
 
     /**
-     * @dev Checks whether sending a response is possible.  TODO: confirm
+     * @dev Checks whether sending a response is possible.
      */
     function isResponsePossible(bytes32 groupIndex, uint nodeIndex) external view returns (bool) {
         uint index = _nodeIndexInSchain(groupIndex, nodeIndex);
@@ -436,7 +430,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
     }
 
     /**
-     * @dev Checks whether all data has been received.  TODO: confirm
+     * @dev Checks whether all data has been received.
      */
     function isAllDataReceived(bytes32 groupIndex, uint nodeIndex) public view returns (bool) {
         uint index = _nodeIndexInSchain(groupIndex, nodeIndex);

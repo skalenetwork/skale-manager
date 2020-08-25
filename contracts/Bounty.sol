@@ -45,6 +45,10 @@ contract Bounty is Permissions {
     uint private _nodesRemainingPerRewardPeriod;
     uint private _rewardPeriodFinished;
 
+    /**
+     * @dev Allows SkaleManager contract to execute getBounty. This function
+     * pulls bounty from the stage pool and distributes it to the SKALE Nodes.
+     */
     function getBounty(
         uint nodeIndex,
         uint downtime,
@@ -80,10 +84,16 @@ contract Bounty is Permissions {
         return bounty;
     }
 
+    /**
+     * @dev Allows Owner to enable bounty reduction.
+     */
     function enableBountyReduction() external onlyOwner {
         bountyReduction = true;
     }
 
+    /**
+     * @dev Allows Owner to disable bounty reduction.
+     */
     function disableBountyReduction() external onlyOwner {
         bountyReduction = false;
     }
@@ -158,16 +168,25 @@ contract Bounty is Permissions {
         }
     }
 
+    /**
+     * @dev Refills the bounty pool with the next stage of bounty rewards.
+     */
     function _refillStagePool(ConstantsHolder constantsHolder) private {
         (_stagePool, _nextStage) = _getStagePoolSize(constantsHolder);
     }
 
+    /**
+     * @dev Updates the number of nodes available for the current reward period.
+     */
     function _updateNodesPerRewardPeriod(ConstantsHolder constantsHolder, Nodes nodes) private {
         _nodesPerRewardPeriod = nodes.getNumberOnlineNodes();
         _nodesRemainingPerRewardPeriod = _nodesPerRewardPeriod;
         _rewardPeriodFinished = now.add(uint(constantsHolder.rewardPeriod()));
     }
 
+    /**
+     * @dev Returns the total available bounty pool a given stage.
+     */
     function _getStageReward(uint stage) private pure returns (uint) {
         if (stage >= 6) {
             return BOUNTY.div(2 ** stage.sub(6).div(3));
@@ -188,6 +207,11 @@ contract Bounty is Permissions {
         }
     }
 
+    /**
+     * @dev Reduces the received bounty for validators operating specific nodes.
+     * Bounty can be reduced because of downtime, operating beyond the allowable
+     * latency, or not meeting node MSR requirement.
+     */
     function _reduceBounty(
         uint bounty,
         uint nodeIndex,
@@ -215,6 +239,9 @@ contract Bounty is Permissions {
         }
     }
 
+    /**
+     * @dev Calculates the bounty reduction from node downtime.
+     */
     function _reduceBountyByDowntime(
         uint bounty,
         uint nodeIndex,
