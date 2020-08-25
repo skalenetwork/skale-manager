@@ -54,3 +54,6 @@ types/
 # OpenZeppelin
 .openzeppelin/dev-*.json
 .openzeppelin/.session
+
+# docs
+docs/api/*
