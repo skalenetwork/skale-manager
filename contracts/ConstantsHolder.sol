@@ -112,6 +112,11 @@ contract ConstantsHolder is Permissions {
 
     uint public firstDelegationsMonth;
 
+    // date when schains will be allowed for creation
+    uint public schainCreationTimeStamp;
+
+    uint public minimalSchainLifetime;
+
     /**
      * @dev Allows the Owner to set new reward and delta periods
      * This function is only for tests.
@@ -193,6 +198,14 @@ contract ConstantsHolder is Permissions {
      */
     function setFirstDelegationsMonth(uint month) external onlyOwner {
         firstDelegationsMonth = month;
+    }
+
+    function setSchainCreationTimeStamp(uint timestamp) external onlyOwner {
+        schainCreationTimeStamp = timestamp;
+    }
+
+    function setMinimalSchainLifetime(uint lifetime) external onlyOwner {
+        minimalSchainLifetime = lifetime;
     }
 
     function initialize(address contractsAddress) public override initializer {

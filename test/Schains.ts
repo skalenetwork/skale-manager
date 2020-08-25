@@ -146,6 +146,8 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
                     owner,
                     "d3",
                     {from: owner});
+                await schainsInternal.getActiveSchains(0).should.be.eventually.empty;
+                await schainsInternal.getActiveSchains(1).should.be.eventually.empty;
 
                 await nodes.initExit(0, {from: owner});
                 await nodes.completeExit(0, {from: owner});
@@ -1126,6 +1128,12 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
             await skaleManager.grantRole(await skaleManager.ADMIN_ROLE(), holder);
             await skaleManager.deleteSchainByRoot("d2", {from: holder});
             await skaleManager.deleteSchainByRoot("d3", {from: holder});
+            await schainsInternal.getActiveSchains(0).should.be.eventually.empty;
+            await schainsInternal.getActiveSchains(1).should.be.eventually.empty;
+            await schainsInternal.getActiveSchains(2).should.be.eventually.empty;
+            await schainsInternal.getActiveSchains(3).should.be.eventually.empty;
+            await schainsInternal.getActiveSchains(4).should.be.eventually.empty;
+            await schainsInternal.getActiveSchains(5).should.be.eventually.empty;
             await schains.addSchain(
                 holder,
                 deposit,
@@ -1287,7 +1295,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
                 }
             ];
 
-            let res10 = await keyStorage.getBroadcastedData(web3.utils.soliditySha3("d3"), res1[0]);
+            // let res10 = await keyStorage.getBroadcastedData(web3.utils.soliditySha3("d3"), res1[0]);
             res = await skaleDKG.isBroadcastPossible(web3.utils.soliditySha3("d3"), res1[0], {from: nodeAddress});
             assert.equal(res, true);
             await skaleDKG.broadcast(
@@ -1298,7 +1306,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
                 encryptedSecretKeyContribution,
                 {from: nodeAddress},
             );
-            res10 = await keyStorage.getBroadcastedData(web3.utils.soliditySha3("d3"), res1[1]);
+            // res10 = await keyStorage.getBroadcastedData(web3.utils.soliditySha3("d3"), res1[1]);
             res = await skaleDKG.isBroadcastPossible(web3.utils.soliditySha3("d3"), res1[1], {from: nodeAddress});
             assert.equal(res, true);
             await skaleDKG.broadcast(

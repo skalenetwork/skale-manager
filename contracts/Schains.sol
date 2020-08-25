@@ -118,7 +118,14 @@ contract Schains is Permissions {
      */
     function addSchain(address from, uint deposit, bytes calldata data) external allow("SkaleManager") {
         SchainParameters memory schainParameters = _fallbackSchainParametersDataConverter(data);
-        
+        ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
+        uint schainCreationTimeStamp = constantsHolder.schainCreationTimeStamp();
+        uint minSchainLifetime = constantsHolder.minimalSchainLifetime();
+        require(now >= schainCreationTimeStamp, "It is not a time for creating Schain");
+        require(
+            schainParameters.lifetime >= minSchainLifetime,
+            "Minimal schain lifetime should be satisfied"
+        );
         require(
             getSchainPrice(schainParameters.typeOfSchain, schainParameters.lifetime) <= deposit,
             "Not enough money to create Schain");
@@ -174,7 +181,7 @@ contract Schains is Permissions {
                 nodesInGroup[i],
                 schainId
             );
-            if (schainsInternal.checkHoleForSchain(schainId, nodesInGroup[i])) {
+            if (schainsInternal.checkHoleForSchain(schainId, i)) {
                 schainsInternal.removeNodeFromExceptions(schainId, nodesInGroup[i]);
                 _addSpace(nodesInGroup[i], partOfNode);
                 continue;
@@ -220,7 +227,7 @@ contract Schains is Permissions {
                 nodesInGroup[i],
                 schainId
             );
-            if (schainsInternal.checkHoleForSchain(schainId, nodesInGroup[i])) {
+            if (schainsInternal.checkHoleForSchain(schainId, i)) {
                 schainsInternal.removeNodeFromExceptions(schainId, nodesInGroup[i]);
                 _addSpace(nodesInGroup[i], partOfNode);
                 continue;
