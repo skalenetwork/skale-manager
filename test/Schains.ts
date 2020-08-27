@@ -1177,7 +1177,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
             skipTime(web3, 43260);
 
             await skaleManager.nodeExit(1, {from: nodeAddress})
-                .should.be.eventually.rejectedWith("DKG process did not complete on schain d3");
+                .should.be.eventually.rejectedWith("DKG process did not finish on schain d3");
         });
 
         it("should be possible to send broadcast", async () => {

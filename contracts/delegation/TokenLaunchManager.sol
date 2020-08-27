@@ -85,7 +85,7 @@ contract TokenLaunchManager is Permissions, IERC777Recipient {
      * - The total approved must be less than or equal to the seller balance.
      */
     function approveTransfer(address walletAddress, uint value) external onlySeller {
-        require(!tokenLaunchIsCompleted, "Can't approve because token launch is completed");
+        require(!tokenLaunchIsCompleted, "Cannot approve because token launch is completed");
         _approveTransfer(walletAddress, value);
         require(_totalApproved <= _getBalance(), "Balance is too low");
     }
