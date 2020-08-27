@@ -143,7 +143,7 @@ contract Distributor is Permissions, IERC777Recipient {
         require(now >= timeHelpers.addMonths(
                 constantsHolder.launchTimestamp(),
                 constantsHolder.BOUNTY_LOCKUP_MONTHS()
-            ), "Bounty is locked");
+            ), "Fee is locked");
         // check Validator Exist inside getValidatorId
         uint validatorId = validatorService.getValidatorId(msg.sender);
 
