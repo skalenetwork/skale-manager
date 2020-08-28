@@ -30,6 +30,7 @@ import "./SkaleVerifier.sol";
 import "./utils/FieldOperations.sol";
 import "./NodeRotation.sol";
 import "./interfaces/ISkaleDKG.sol";
+import "@nomiclabs/buidler/console.sol";
 
 // interface ISkaleDKGCheck {
 //     function isLastDKGSuccesful(bytes32 groupIndex) external view returns (bool);
@@ -160,8 +161,6 @@ contract Schains is Permissions {
                 schainId
             );
             if (schainsInternal.checkHoleForSchain(schainId, i)) {
-                schainsInternal.removeNodeFromExceptions(schainId, nodesInGroup[i]);
-                _addSpace(nodesInGroup[i], partOfNode);
                 continue;
             }
             require(
@@ -170,7 +169,7 @@ contract Schains is Permissions {
             schainsInternal.removeNodeFromSchain(nodesInGroup[i], schainId);
             schainsInternal.removeNodeFromExceptions(schainId, nodesInGroup[i]);
             if (!Nodes(nodesAddress).isNodeLeft(nodesInGroup[i])) {
-                _addSpace(nodesInGroup[i], partOfNode);
+                this.addSpace(nodesInGroup[i], partOfNode);
             }
         }
         schainsInternal.deleteGroup(schainId);
@@ -196,8 +195,6 @@ contract Schains is Permissions {
                 schainId
             );
             if (schainsInternal.checkHoleForSchain(schainId, i)) {
-                schainsInternal.removeNodeFromExceptions(schainId, nodesInGroup[i]);
-                _addSpace(nodesInGroup[i], partOfNode);
                 continue;
             }
             require(
@@ -205,7 +202,7 @@ contract Schains is Permissions {
                 "Some Node does not contain given Schain");
             schainsInternal.removeNodeFromSchain(nodesInGroup[i], schainId);
             schainsInternal.removeNodeFromExceptions(schainId, nodesInGroup[i]);
-            _addSpace(nodesInGroup[i], partOfNode);
+            this.addSpace(nodesInGroup[i], partOfNode);
         }
         schainsInternal.deleteGroup(schainId);
         address from = schainsInternal.getSchainOwner(schainId);
@@ -226,6 +223,16 @@ contract Schains is Permissions {
         uint newNodeIndex = nodeRotation.selectNodeToGroup(schainId);
         skaleDKG.openChannel(schainId);
         emit NodeAdded(schainId, newNodeIndex);
+    }
+
+    /**
+     * @dev addSpace - return occupied space to Node
+     * @param nodeIndex - index of Node at common array of Nodes
+     * @param partOfNode - divisor of given type of Schain
+     */
+    function addSpace(uint nodeIndex, uint8 partOfNode) external allowTwo("Schains", "NodeRotation") {
+        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
+        nodes.addSpaceToNode(nodeIndex, partOfNode);
     }
 
     /**
@@ -273,7 +280,6 @@ contract Schains is Permissions {
     function initialize(address newContractsAddress) public override initializer {
         Permissions.initialize(newContractsAddress);
     }
-
 
     /**
      * @dev getSchainPrice - returns current price for given Schain
@@ -363,16 +369,6 @@ contract Schains is Permissions {
         schainParameters.typeOfSchain,
         schainParameters.nonce,
         schainParameters.name) = abi.decode(data, (uint, uint8, uint16, string));
-    }
-
-    /**
-     * @dev _addSpace - return occupied space to Node
-     * @param nodeIndex - index of Node at common array of Nodes
-     * @param partOfNode - divisor of given type of Schain
-     */
-    function _addSpace(uint nodeIndex, uint8 partOfNode) private {
-        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
-        nodes.addSpaceToNode(nodeIndex, partOfNode);
     }
 
     /**

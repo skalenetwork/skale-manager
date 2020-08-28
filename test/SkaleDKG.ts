@@ -583,8 +583,23 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                     {from: validatorsAccount[1]},
                 );
                 assert(resAlr.should.be.true);
-                skipTime(web3, 1800);
                 let resCompl = await skaleDKG.isComplaintPossible(
+                    web3.utils.soliditySha3(schainName),
+                    0,
+                    1,
+                    {from: validatorsAccount[0]},
+                );
+                assert(resCompl.should.be.false);
+                const resComplErr = await skaleDKG.complaint(
+                    web3.utils.soliditySha3(schainName),
+                    0,
+                    1,
+                    {from: validatorsAccount[0]},
+                );
+                assert.equal(resComplErr.logs[0].event, "ComplaintError");
+                assert.equal(resComplErr.logs[0].args.error, "Has already sent alright");
+                skipTime(web3, 1800);
+                resCompl = await skaleDKG.isComplaintPossible(
                     web3.utils.soliditySha3(schainName),
                     0,
                     1,
@@ -756,7 +771,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                         web3.utils.soliditySha3(schainName),
                         1,
                         {from: validatorsAccount[0]},
-                    ).should.be.eventually.rejectedWith(" Node does not exist for message sender");
+                    ).should.be.eventually.rejectedWith("Node does not exist for message sender");
                 });
 
                 it("should catch successful DKG event", async () => {
@@ -885,6 +900,26 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                     assert.equal(result.logs[0].args.groupIndex, web3.utils.soliditySha3(schainName));
                     assert.equal(result.logs[0].args.fromNodeIndex.toString(), "1");
                     assert.equal(result.logs[0].args.toNodeIndex.toString(), "0");
+                });
+
+                it("should not send alright after complaint from 2 node", async () => {
+                    const result = await skaleDKG.complaint(
+                        web3.utils.soliditySha3(schainName),
+                        1,
+                        0,
+                        {from: validatorsAccount[1]},
+                    );
+                    const res = await skaleDKG.isAlrightPossible(
+                        web3.utils.soliditySha3(schainName),
+                        1,
+                        {from: validatorsAccount[1]},
+                    );
+                    assert(res.should.be.false);
+                    await skaleDKG.alright(
+                        web3.utils.soliditySha3(schainName),
+                        1,
+                        {from: validatorsAccount[1]},
+                    ).should.be.eventually.rejectedWith("Node has already sent complaint");
                 });
 
                 it("should not send 2 complaints from 1 node", async () => {
@@ -1076,6 +1111,15 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
 
             rotCounter = await nodeRotation.getRotation(web3.utils.soliditySha3("d2"));
             assert.equal(rotCounter.rotationCounter.toString(), "1");
+
+            const failCompl = await skaleDKG.complaint(
+                web3.utils.soliditySha3(schainName),
+                2,
+                0,
+                {from: validatorsAccount[0]}
+            );
+            assert.equal(failCompl.logs[0].event, "ComplaintError");
+            assert.equal(failCompl.logs[0].args.error, "Node is not in this group");
 
             let res = await skaleDKG.isBroadcastPossible(
                     web3.utils.soliditySha3(schainName),
@@ -1375,12 +1419,21 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
             }
             const accusedNode = "15";
             const complaintNode = "7";
-            await skaleDKG.complaint(
+            skipTime(web3, 1800);
+            const resC = await skaleDKG.complaint(
                 web3.utils.soliditySha3("New16NodeSchain"),
                 complaintNode,
                 accusedNode,
                 {from: validatorsAccount[0]}
             );
+            const failCompl = await skaleDKG.complaint(
+                web3.utils.soliditySha3("New16NodeSchain"),
+                8,
+                accusedNode,
+                {from: validatorsAccount[0]}
+            );
+            assert.equal(failCompl.logs[0].event, "ComplaintError");
+            assert.equal(failCompl.logs[0].args.error, "Group is not created");
             await skaleManager.deleteSchain("New16NodeSchain", {from: validator1});
         });
 
@@ -1450,15 +1503,15 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
         //                 accusedNode,
         //                 {from: validatorsAccount[0]}
         //             );
-                    // const resResp = await skaleDKG.response(
-                    //     web3.utils.soliditySha3("New16NodeSchain"),
-                    //     accusedNode,
-                    //     secretNumbers[indexes[indexToSend]],
-                    //     multipliedShares[indexes[indexToSend]],
-                    //     verificationVectors[indexes[indexToSend]],
-                    //     encryptedSecretKeyContributions[indexes[indexToSend]],
-                    //     {from: validatorsAccount[indexToSend], gas: 12500000},
-                    // );
+        //             const resResp = await skaleDKG.response(
+        //                 web3.utils.soliditySha3("New16NodeSchain"),
+        //                 accusedNode,
+        //                 secretNumbers[indexes[indexToSend]],
+        //                 multipliedShares[indexes[indexToSend]],
+        //                 verificationVectors[indexes[indexToSend]],
+        //                 encryptedSecretKeyContributions[indexes[indexToSend]],
+        //                 {from: validatorsAccount[indexToSend], gas: 12500000},
+        //             );
         //             assert.equal(resResp.logs[0].event, "BadGuy");
         //             assert.equal(resResp.logs[0].args.nodeIndex.toString(), accusedNode);
         //             console.log("\n Response from " + index + " node gas usage without new node", resResp.receipt.gasUsed);

@@ -25,6 +25,7 @@ pragma experimental ABIEncoderV2;
 import "./Permissions.sol";
 import "./ConstantsHolder.sol";
 import "./SchainsInternal.sol";
+import "./Schains.sol";
 import "./Nodes.sol";
 import "./interfaces/ISkaleDKG.sol";
 
@@ -121,8 +122,11 @@ contract NodeRotation is Permissions {
         returns (uint newNode)
     {
         SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
+        Schains schains = Schains(contractManager.getContract("Schains"));
         schainsInternal.removeNodeFromSchain(nodeIndex, schainId);
         newNode = selectNodeToGroup(schainId);
+        uint8 space = schainsInternal.getSchainsPartOfNode(schainId);
+        schains.addSpace(nodeIndex, space);
         _finishRotation(schainId, nodeIndex, newNode, shouldDelay);
     }
 
