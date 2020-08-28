@@ -161,8 +161,6 @@ contract Schains is Permissions {
                 schainId
             );
             if (schainsInternal.checkHoleForSchain(schainId, i)) {
-                // schainsInternal.removeNodeFromExceptions(schainId, nodesInGroup[i]);
-                // addSpace(nodesInGroup[i], partOfNode);
                 continue;
             }
             require(
@@ -197,8 +195,6 @@ contract Schains is Permissions {
                 schainId
             );
             if (schainsInternal.checkHoleForSchain(schainId, i)) {
-                // schainsInternal.removeNodeFromExceptions(schainId, nodesInGroup[i]);
-                // addSpace(nodesInGroup[i], partOfNode);
                 continue;
             }
             require(

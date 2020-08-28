@@ -1426,7 +1426,6 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                 accusedNode,
                 {from: validatorsAccount[0]}
             );
-            console.log(resC.logs);
             const failCompl = await skaleDKG.complaint(
                 web3.utils.soliditySha3("New16NodeSchain"),
                 8,
