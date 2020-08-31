@@ -152,7 +152,7 @@ contract Schains is Permissions {
                 nodesInGroup[i],
                 schainId
             );
-            if (schainsInternal.checkHoleForSchain(schainId, nodesInGroup[i])) {
+            if (schainsInternal.checkHoleForSchain(schainId, i)) {
                 schainsInternal.removeNodeFromExceptions(schainId, nodesInGroup[i]);
                 _addSpace(nodesInGroup[i], partOfNode);
                 continue;
@@ -188,7 +188,7 @@ contract Schains is Permissions {
                 nodesInGroup[i],
                 schainId
             );
-            if (schainsInternal.checkHoleForSchain(schainId, nodesInGroup[i])) {
+            if (schainsInternal.checkHoleForSchain(schainId, i)) {
                 schainsInternal.removeNodeFromExceptions(schainId, nodesInGroup[i]);
                 _addSpace(nodesInGroup[i], partOfNode);
                 continue;
