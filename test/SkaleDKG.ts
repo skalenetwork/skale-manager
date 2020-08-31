@@ -330,12 +330,15 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
 
                 let nodesInGroup = await schainsInternal.getNodesInGroup(web3.utils.soliditySha3("d2"));
                 schainName = "d2";
+                let index = 3;
                 while ((new BigNumber(nodesInGroup[0])).toFixed() === "1") {
                     await schains.deleteSchainByRoot(schainName);
+                    schainName = "d" + index;
+                    index++;
                     await schains.addSchain(
                         validator1,
                         deposit,
-                        web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, "d2"]));
+                        web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, schainName]));
                     nodesInGroup = await schainsInternal.getNodesInGroup(web3.utils.soliditySha3(schainName));
                 }
             });
@@ -1043,16 +1046,19 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
 
             let nodesInGroup = await schainsInternal.getNodesInGroup(web3.utils.soliditySha3("d2"));
             schainName = "d2";
+            let index = 3;
             while ((new BigNumber(nodesInGroup[0])).toFixed() === "1") {
                 await schains.deleteSchainByRoot(schainName);
+                schainName = "d" + index;
+                index++;
                 await schains.addSchain(
                     validator1,
                     deposit,
-                    web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, "d2"]));
+                    web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, schainName]));
                 nodesInGroup = await schainsInternal.getNodesInGroup(web3.utils.soliditySha3(schainName));
             }
 
-            let rotCounter = await nodeRotation.getRotation(web3.utils.soliditySha3("d2"));
+            let rotCounter = await nodeRotation.getRotation(web3.utils.soliditySha3(schainName));
             assert.equal(rotCounter.rotationCounter.toString(), "0");
 
             await nodes.createNode(validatorsAccount[0],
@@ -1109,7 +1115,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
             assert.equal((await skaleDKG.getNumberOfBroadcasted(web3.utils.soliditySha3(schainName))).toString(), "0");
             assert.equal((await skaleDKG.getChannelStartedTime(web3.utils.soliditySha3(schainName))).toString(), timestamp.toString());
 
-            rotCounter = await nodeRotation.getRotation(web3.utils.soliditySha3("d2"));
+            rotCounter = await nodeRotation.getRotation(web3.utils.soliditySha3(schainName));
             assert.equal(rotCounter.rotationCounter.toString(), "1");
 
             const failCompl = await skaleDKG.complaint(
