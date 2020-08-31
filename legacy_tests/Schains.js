@@ -82,87 +82,6 @@ async function getActiveSchain(nodeIndex) {
     // return res;
 }
 
-async function isLastDKGSuccesful(name) {
-    let groupIndex = init.web3.utils.soliditySha3(name);
-    let res = await init.SkaleDKG.methods.isLastDKGSuccesful(groupIndex).call();
-    console.log(res);
-    console.log("Did everything!");
-    process.exit();
-
-    // return res;
-}
-
-async function isAllDataReceived(name, nodeIndex) {
-    let groupIndex = init.web3.utils.soliditySha3(name);
-    let res = await init.SkaleDKG.methods.isAllDataReceived(groupIndex, nodeIndex).call();
-    console.log(res);
-    console.log("Did everything!");
-    process.exit();
-
-    // return res;
-}
-
-async function getChannels(name) {
-    let groupIndex = init.web3.utils.soliditySha3(name);
-    let res = await init.SkaleDKG.methods.dkgProcess(groupIndex).call();
-    console.log(res);
-    console.log("Did everything!");
-    process.exit();
-
-    // return res;
-}
-
-async function getBroadcastedData(name, nodeIndex) {
-    let groupIndex = init.web3.utils.soliditySha3(name);
-    let res = await init.KeyStorage.methods.getBroadcastedData(groupIndex, nodeIndex).call();
-    console.log(res);
-    // console.log("Did everything!");
-    process.exit();
-
-    // return res;
-}
-
-async function getComplaintData(name) {
-    let groupIndex = init.web3.utils.soliditySha3(name);
-    let res = await init.SkaleDKG.methods.getComplaintData(groupIndex).call();
-    console.log(res);
-    // console.log("Did everything!");getComplaintData
-    process.exit();
-
-    // return res;getComplaintData
-}
-
-
-async function getTimeOfLastSuccesfulDKG(name) {
-    let groupIndex = init.web3.utils.soliditySha3(name);
-    let res = await init.SkaleDKG.methods.getTimeOfLastSuccesfulDKG(groupIndex).call();
-    console.log(res);
-    console.log("Did everything!");
-    process.exit();
-
-    // return res;
-}
-
-async function getChannelStartedTime(name) {
-    let groupIndex = init.web3.utils.soliditySha3(name);
-    let res = await init.SkaleDKG.methods.getChannelStartedTime(groupIndex).call();
-    console.log(res);
-    console.log("Did everything!");
-    process.exit();
-
-    // return res;
-}
-
-async function channels(name) {
-    let groupIndex = init.web3.utils.soliditySha3(name);
-    let res = await init.SkaleDKG.methods.channels(groupIndex).call();
-    console.log(res);
-    console.log("Did everything!");
-    process.exit();
-
-    // return res;
-}
-
 
 async function isNodeLeft(nodeIndex) {
     let res = await init.Nodes.methods.isNodeLeft(nodeIndex).call();
@@ -191,15 +110,32 @@ async function getSchainsForNode(nodeIndex) {
     return res;
 }
 
-async function getEvent(blockNumber) {
-    await init.SkaleDKG.getPastEvents('ChannelOpened', {fromBlock: blockNumber, toBlock: blockNumber}).then(
-        function(events) {
-            for (let i = 0; i < events.length; i++) {
-                console.log(events[i].returnValues);
-            }
-    });
-    process.exit();
-    
+
+async function rinkebyMock() {
+        const rawTx = {
+            from: "0x32cb9412bbfd21184e14f84f0fa449d94555b180",
+            nonce: 609,
+            data: "0x82dc27d70000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000a647261622d686f6d616d00000000000000000000000000000000000000000000",
+            to: "0x139360fc743b1da2adb43f5999e28998da3b6285",
+            gasPrice: 10000000000,
+            gas: 800000000,
+            chainId: 1337,
+        };
+        let tx;
+        if (init.network === "unique") {
+            console.log('RINKEBY')
+            tx = new Tx(rawTx, {chain: "rinkeby"});
+        } else {
+            tx = new Tx(rawTx);
+        }
+        tx.sign(Buffer.from("068f982ef83c69caf22026d38dfe5943950c11dfb3df2f7ec0a444dc97ed8253", "hex"));
+        const serializedTx = tx.serialize();
+        console.log("Transaction sent!")
+        const txReceipt = await init.web3.eth.sendSignedTransaction('0x' + serializedTx.toString('hex')); //.on('receipt', receipt => {
+        console.log("Transaction done!");
+        console.log("Gas used: ", txReceipt.gasUsed);
+        console.log('------------------------------');
+        return txReceipt.gasUsed;
 }
 
 // before reopenChannel gas used 2386464
@@ -249,6 +185,8 @@ if (process.argv[2] == 'getSchainNodes') {
     getEvent(process.argv[3]);
 } else if (process.argv[2] == 'getSchainName') {
     getSchainName(process.argv[3]);
+} else if (process.argv[2] == 'mock') {
+    rinkebyMock();
 }
 
 

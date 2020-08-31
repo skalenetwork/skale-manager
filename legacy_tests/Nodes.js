@@ -15,15 +15,6 @@ async function sendTransaction(web3Inst, account, privateKey, data, receiverCont
         gasPrice: 10000000000,
         gas: 8000000,
     };
-    // const rawTx = {
-    //     from: web3Inst.utils.toChecksumAddress(account),
-    //     nonce: 398,
-    //     data: "0x056ba37b0000000000000000000000000000000000000000000000000000000000000000",
-    //     to: "0x9f34bd4f0cbda521384809d09969398f47223ca7",
-    //     gasPrice: 10000000000,
-    //     gas: 800000000,
-    //     chainId: 1337
-    // };
     let tx;
     if (init.network === "unique") {
         console.log('RINKEBY')
