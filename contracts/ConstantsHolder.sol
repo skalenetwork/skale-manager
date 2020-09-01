@@ -74,7 +74,7 @@ contract ConstantsHolder is Permissions {
 
     uint public constant DOWNTIME_THRESHOLD_PART = 30;
 
-    uint public constant BOUNTY_LOCKUP_MONTHS = 3;
+    uint public constant BOUNTY_LOCKUP_MONTHS = 2;
 
     // MSR - Minimum staking requirement
     uint public msr;
