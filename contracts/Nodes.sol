@@ -302,7 +302,7 @@ contract Nodes is Permissions {
         return position.add(1).mul(msr) <= delegationsTotal;
     }
 
-    //remove after fix
+    // remove after fix
     function dirtyHackSpace(uint nodeIndex) external onlyOwner {
         ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
         spaceToNodes[constantsHolder.TOTAL_SPACE_ON_NODE()].push(nodeIndex);
@@ -310,7 +310,7 @@ contract Nodes is Permissions {
         spaceOfNodes[nodeIndex].indexInSpaceMap = spaceToNodes[constantsHolder.TOTAL_SPACE_ON_NODE()].length;
     }
 
-    //remove after fix
+    // remove after fix
     function fixSpace() external onlyOwner {
         ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
         SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
@@ -325,7 +325,7 @@ contract Nodes is Permissions {
         }
     }
 
-    //remove after fix
+    // remove after fix
     function setNumberOfLeftNodes(uint numberOfNodes) external onlyOwner {
         numberOfLeftNodes = numberOfNodes;
     }
