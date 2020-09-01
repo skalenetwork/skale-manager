@@ -164,7 +164,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         hashedData[groupIndex][index] = _hashData(secretKeyContribution, verificationVector);
         KeyStorage keyStorage = KeyStorage(contractManager.getContract("KeyStorage"));
         keyStorage.adding(groupIndex, verificationVector[0]);
-        keyStorage.computePublicValues(groupIndex, verificationVector);
+        // keyStorage.computePublicValues(groupIndex, verificationVector);
         emit BroadcastAndKeyShare(
             groupIndex,
             nodeIndex,
