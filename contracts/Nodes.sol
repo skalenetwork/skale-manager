@@ -28,6 +28,7 @@ import "./Permissions.sol";
 import "./ConstantsHolder.sol";
 import "./delegation/ValidatorService.sol";
 import "./delegation/DelegationController.sol";
+import "./SchainsInternal.sol";
 
 
 /**
@@ -299,6 +300,34 @@ contract Nodes is Permissions {
         uint delegationsTotal = delegationController.getAndUpdateDelegatedToValidatorNow(validatorId);
         uint msr = ConstantsHolder(contractManager.getContract("ConstantsHolder")).msr();
         return position.add(1).mul(msr) <= delegationsTotal;
+    }
+
+    //remove after fix
+    function dirtyHackSpace(uint nodeIndex) external onlyOwner {
+        ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
+        spaceToNodes[constantsHolder.TOTAL_SPACE_ON_NODE()].push(nodeIndex);
+        spaceOfNodes[nodeIndex].freeSpace = 128;
+        spaceOfNodes[nodeIndex].indexInSpaceMap = spaceToNodes[constantsHolder.TOTAL_SPACE_ON_NODE()].length;
+    }
+
+    //remove after fix
+    function fixSpace() external onlyOwner {
+        ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
+        SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
+        for (uint i = 1; i < nodes.length; i++) {
+            bytes32[] memory activeSchains = schainsInternal.getActiveSchains(i);
+            uint newSpace = 0;
+            for (uint j = 0; j < activeSchains.length; j++) {
+                newSpace += uint(schainsInternal.getSchainsPartOfNode(activeSchains[j]));
+                 
+            }
+            _moveNodeToNewSpaceMap(i, uint8(constantsHolder.TOTAL_SPACE_ON_NODE() - newSpace));
+        }
+    }
+
+    //remove after fix
+    function setNumberOfLeftNodes(uint numberOfNodes) external onlyOwner {
+        numberOfLeftNodes = numberOfNodes;
     }
 
     function getNodesWithFreeSpace(uint8 freeSpace) external view returns (uint[] memory) {
@@ -628,5 +657,4 @@ contract Nodes is Permissions {
         delete spaceOfNodes[nodeIndex].freeSpace;
         delete spaceOfNodes[nodeIndex].indexInSpaceMap;
     }
-
 }

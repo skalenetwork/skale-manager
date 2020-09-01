@@ -315,11 +315,6 @@ contract SkaleDKG is Permissions, ISkaleDKG {
     }
 
     function _openChannel(bytes32 groupIndex) private {
-        SchainsInternal schainsInternal = SchainsInternal(
-            contractManager.getContract("SchainsInternal")
-        );
-
-        uint len = schainsInternal.getNumberOfNodesInGroup(groupIndex);
         channels[groupIndex].active = true;
         channels[groupIndex].n = len;
         delete dkgProcess[groupIndex].completed;
@@ -332,7 +327,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         delete dkgProcess[groupIndex].numberOfBroadcasted;
         delete dkgProcess[groupIndex].numberOfCompleted;
         channels[groupIndex].startedBlockTimestamp = now;
-        KeyStorage(contractManager.getContract("KeyStorage")).initPublicKeyInProgress(groupIndex, len);
+        KeyStorage(contractManager.getContract("KeyStorage")).initPublicKeyInProgress(groupIndex);
 
         emit ChannelOpened(groupIndex);
     }
