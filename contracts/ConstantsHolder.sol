@@ -110,7 +110,7 @@ contract ConstantsHolder is Permissions {
 
     uint public limitValidatorsPerDelegator;
 
-    uint256 public deprecated;
+    uint256 public firstDelegationsMonth; // deprecated
 
     // date when schains will be allowed for creation
     uint public schainCreationTimeStamp;
@@ -201,6 +201,6 @@ contract ConstantsHolder is Permissions {
         proofOfUseLockUpPeriodDays = 90;
         proofOfUseDelegationPercentage = 50;
         limitValidatorsPerDelegator = 20;
-        deprecated = 0;
+        firstDelegationsMonth = 0;
     }
 }
