@@ -110,8 +110,6 @@ contract ConstantsHolder is Permissions {
 
     uint public limitValidatorsPerDelegator;
 
-    uint public firstDelegationsMonth;
-
     // date when schains will be allowed for creation
     uint public schainCreationTimeStamp;
 
@@ -176,10 +174,6 @@ contract ConstantsHolder is Permissions {
         limitValidatorsPerDelegator = newLimit;
     }
 
-    function setFirstDelegationsMonth(uint month) external onlyOwner {
-        firstDelegationsMonth = month;
-    }
-
     function setSchainCreationTimeStamp(uint timestamp) external onlyOwner {
         schainCreationTimeStamp = timestamp;
     }
@@ -205,6 +199,5 @@ contract ConstantsHolder is Permissions {
         proofOfUseLockUpPeriodDays = 90;
         proofOfUseDelegationPercentage = 50;
         limitValidatorsPerDelegator = 20;
-        firstDelegationsMonth = 8;
     }
 }
