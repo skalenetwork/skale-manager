@@ -52,7 +52,7 @@ contract KeyStorage is Permissions {
     // Unused variable
     mapping(bytes32 => G2Operations.G2Point[]) private _schainsNodesPublicKeys;
     //
-    
+
     mapping(bytes32 => G2Operations.G2Point[]) private _previousSchainsPublicKeys;
 
     function deleteKey(bytes32 groupIndex) external allow("SkaleDKG") {
@@ -105,7 +105,6 @@ contract KeyStorage is Permissions {
     }
 
     function _getData() private view returns (BroadcastedData memory) {
-        G2Operations.G2Point memory data = _schainsNodesPublicKeys[keccak256(abi.encodePacked("UnusedFunction"))][0];
         return _data[keccak256(abi.encodePacked("UnusedFunction"))][0];
     }
 
