@@ -315,6 +315,11 @@ contract SkaleDKG is Permissions, ISkaleDKG {
     }
 
     function _openChannel(bytes32 groupIndex) private {
+        SchainsInternal schainsInternal = SchainsInternal(
+            contractManager.getContract("SchainsInternal")
+        );
+
+        uint len = schainsInternal.getNumberOfNodesInGroup(groupIndex);
         channels[groupIndex].active = true;
         channels[groupIndex].n = len;
         delete dkgProcess[groupIndex].completed;
