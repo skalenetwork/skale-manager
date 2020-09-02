@@ -63,13 +63,14 @@ contract SchainsInternal is Permissions {
     mapping (bytes32 => uint[]) public holesForSchains;
 
 
-
     // array which contain all schains
     bytes32[] public schainsAtSystem;
 
     uint64 public numberOfSchains;
     // total resources that schains occupied
     uint public sumOfSchainsResources;
+
+    mapping (bytes32 => bool) public usedSchainNames;
 
     /**
      * @dev Allows Schain contract to initialize an schain.
@@ -91,6 +92,7 @@ contract SchainsInternal is Permissions {
         isSchainActive[schainId] = true;
         numberOfSchains++;
         schainsAtSystem.push(schainId);
+        usedSchainNames[schainId] = true;
     }
 
     /**
@@ -297,7 +299,7 @@ contract SchainsInternal is Permissions {
      */
     function isSchainNameAvailable(string calldata name) external view returns (bool) {
         bytes32 schainId = keccak256(abi.encodePacked(name));
-        return schains[schainId].owner == address(0);
+        return schains[schainId].owner == address(0) && !usedSchainNames[schainId];
     }
 
     /**
