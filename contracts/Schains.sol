@@ -30,11 +30,7 @@ import "./SkaleVerifier.sol";
 import "./utils/FieldOperations.sol";
 import "./NodeRotation.sol";
 import "./interfaces/ISkaleDKG.sol";
-import "@nomiclabs/buidler/console.sol";
 
-// interface ISkaleDKGCheck {
-//     function isLastDKGSuccesful(bytes32 groupIndex) external view returns (bool);
-// }
 
 /**
  * @title Schains - contract contains all functionality logic to manage Schains
