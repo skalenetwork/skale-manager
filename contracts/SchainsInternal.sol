@@ -201,10 +201,6 @@ contract SchainsInternal is Permissions {
         _exceptionsForGroups[schainHash][nodeIndex] = false;
     }
 
-    function redirectOpenChannel(bytes32 schainId) external allow("Schains") {
-        ISkaleDKG(contractManager.getContract("SkaleDKG")).openChannel(schainId);
-    }
-
     /**
      * @dev deleteGroup - delete Group from Data contract
      * function could be run only by executor
