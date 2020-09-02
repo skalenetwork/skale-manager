@@ -48,7 +48,11 @@ contract KeyStorage is Permissions {
     
     mapping(bytes32 => G2Operations.G2Point) private _publicKeysInProgress;
     mapping(bytes32 => G2Operations.G2Point) private _schainsPublicKeys;
+
+    // Unused variable
     mapping(bytes32 => G2Operations.G2Point[]) private _schainsNodesPublicKeys;
+    //
+
     mapping(bytes32 => G2Operations.G2Point[]) private _previousSchainsPublicKeys;
 
     function deleteKey(bytes32 groupIndex) external allow("SkaleDKG") {
@@ -58,7 +62,6 @@ contract KeyStorage is Permissions {
 
     function initPublicKeyInProgress(bytes32 groupIndex) external allow("SkaleDKG") {
         _publicKeysInProgress[groupIndex] = G2Operations.getG2Zero();
-        delete _schainsNodesPublicKeys[groupIndex];
     }
 
     function adding(bytes32 groupIndex, G2Operations.G2Point memory value) external allow("SkaleDKG") {
@@ -72,41 +75,6 @@ contract KeyStorage is Permissions {
         }
         _schainsPublicKeys[groupIndex] = _publicKeysInProgress[groupIndex];
         delete _publicKeysInProgress[groupIndex];
-    }
-
-    function computePublicValues(bytes32 groupIndex, G2Operations.G2Point[] calldata verificationVector)
-        external
-        allow("SkaleDKG")
-    {
-        if (_schainsNodesPublicKeys[groupIndex].length == 0) {
-
-            for (uint i = 0; i < verificationVector.length; ++i) {
-                require(verificationVector[i].isG2(), "Incorrect g2 point verVec 1");
-
-                G2Operations.G2Point memory tmp = verificationVector[i];
-                _schainsNodesPublicKeys[groupIndex].push(tmp);
-
-                require(_schainsNodesPublicKeys[groupIndex][i].isG2(), "Incorrect g2 point schainNodesPubKey 1");
-            }
-
-            while (_schainsNodesPublicKeys[groupIndex].length > verificationVector.length) {
-                _schainsNodesPublicKeys[groupIndex].pop();
-            }
-        } else {
-            require(_schainsNodesPublicKeys[groupIndex].length == verificationVector.length, "Incorrect length");
-
-            for (uint i = 0; i < _schainsNodesPublicKeys[groupIndex].length; ++i) {
-                require(verificationVector[i].isG2(), "Incorrect g2 point verVec 2");
-                require(_schainsNodesPublicKeys[groupIndex][i].isG2(), "Incorrect g2 point schainNodesPubKey 2");
-
-                _schainsNodesPublicKeys[groupIndex][i] = verificationVector[i].addG2(
-                    _schainsNodesPublicKeys[groupIndex][i]
-                );
-
-                require(_schainsNodesPublicKeys[groupIndex][i].isG2(), "Incorrect g2 point addition");
-            }
-
-        }
     }
 
     function getCommonPublicKey(bytes32 groupIndex) external view returns (G2Operations.G2Point memory) {
@@ -125,34 +93,8 @@ contract KeyStorage is Permissions {
         return _previousSchainsPublicKeys[groupIndex];
     }
 
-    function getBLSPublicKey(bytes32 groupIndex, uint nodeIndex) external view returns (G2Operations.G2Point memory) {
-        uint index = SchainsInternal(contractManager.getContract("SchainsInternal")).getNodeIndexInGroup(
-            groupIndex,
-            nodeIndex
-        );
-        return _calculateBlsPublicKey(groupIndex, index);
-    }
-
     function initialize(address contractsAddress) public override initializer {
         Permissions.initialize(contractsAddress);
-    }
-
-    function _calculateBlsPublicKey(bytes32 groupIndex, uint index)
-        private
-        view
-        returns (G2Operations.G2Point memory)
-    {
-        G2Operations.G2Point memory publicKey = G2Operations.getG2Zero();
-        G2Operations.G2Point memory tmp = G2Operations.getG2Zero();
-        G2Operations.G2Point[] memory publicValues = _schainsNodesPublicKeys[groupIndex];
-        for (uint i = 0; i < publicValues.length; ++i) {
-            require(publicValues[i].isG2(), "Incorrect g2 point publicValuesComponent");
-            tmp = publicValues[i].mulG2(Precompiled.bigModExp(index.add(1), i, Fp2Operations.P));
-            require(tmp.isG2(), "Incorrect g2 point tmp");
-            publicKey = tmp.addG2(publicKey);
-            require(publicKey.isG2(), "Incorrect g2 point publicKey");
-        }
-        return publicKey;
     }
 
     function _isSchainsPublicKeyZero(bytes32 schainId) private view returns (bool) {
@@ -164,5 +106,9 @@ contract KeyStorage is Permissions {
 
     function _getData() private view returns (BroadcastedData memory) {
         return _data[keccak256(abi.encodePacked("UnusedFunction"))][0];
+    }
+
+    function _getNodesPublicKey() private view returns (G2Operations.G2Point memory) {
+        return _schainsNodesPublicKeys[keccak256(abi.encodePacked("UnusedFunction"))][0];
     }
 }
