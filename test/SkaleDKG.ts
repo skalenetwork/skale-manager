@@ -68,7 +68,6 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
         constantsHolder = await deployConstantsHolder(contractManager);
 
         await slashingTable.setPenalty("FailedDKG", failedDkgPenalty);
-        await constantsHolder.setFirstDelegationsMonth(0);
     });
 
     describe("when 2 nodes are created", async () => {

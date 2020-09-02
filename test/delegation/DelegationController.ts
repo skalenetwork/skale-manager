@@ -35,8 +35,6 @@ contract("DelegationController", ([owner, holder1, holder2, validator, validator
         delegationController = await deployDelegationController(contractManager);
         validatorService = await deployValidatorService(contractManager);
         constantsHolder = await deployConstantsHolder(contractManager);
-
-        await constantsHolder.setFirstDelegationsMonth(0);
     });
 
     describe("when arguments for delegation initialized", async () => {
@@ -81,14 +79,6 @@ contract("DelegationController", ([owner, holder1, holder2, validator, validator
             amount = 101;
             await delegationController.delegate(validatorId, amount, delegationPeriod, info, {from: holder1})
                 .should.be.eventually.rejectedWith("Token holder does not have enough tokens to delegate");
-        });
-
-        it("should reject delegation if it is sent before network launch", async () => {
-            const timeHelpers = await deployTimeHelpers(contractManager);
-            const currentMonth = (await timeHelpers.getCurrentMonth()).toNumber();
-            await constantsHolder.setFirstDelegationsMonth(currentMonth + 1);
-            await delegationController.delegate(validatorId, amount, delegationPeriod, info, {from: holder1})
-                .should.be.eventually.rejectedWith("Delegations are not allowed");
         });
 
         it("should send request for delegation", async () => {
