@@ -72,8 +72,6 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
 	bountyContract = await deployBounty(contractManager);
 
         const premined = "100000000000000000000000000";
-        const bountyPoolSize = "2310000000" + "0".repeat(18);
-        await skaleToken.mint(skaleManager.address, bountyPoolSize, "0x", "0x");
         await skaleToken.mint(owner, premined, "0x", "0x");
         await constantsHolder.setMSR(5);
         await constantsHolder.setLaunchTimestamp(await currentTime(web3)); // to allow bounty withdrawing
