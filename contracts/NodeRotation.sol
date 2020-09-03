@@ -98,14 +98,19 @@ contract NodeRotation is Permissions {
     }
 
     function getRotation(bytes32 schainIndex) external view returns (Rotation memory) {
-        if (rotations[schainIndex].nodeIndex != rotations[schainIndex].newNodeIndex) {
-            return rotations[schainIndex];
-        }
-        return Rotation(0, 0, 0, 0);
+        return rotations[schainIndex];
+    }
+
+    function getRotationCounter(bytes32 schainIndex) external view returns (uint) {
+        return rotations[schainIndex].rotationCounter;
     }
 
     function getLeavingHistory(uint nodeIndex) external view returns (LeavingHistory[] memory) {
         return leavingHistory[nodeIndex];
+    }
+
+    function isRotationInProgress(bytes32 schainIndex) external view returns (bool) {
+        return rotations[schainIndex].freezeUntil >= now;
     }
 
     function initialize(address newContractsAddress) public override initializer {
