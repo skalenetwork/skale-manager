@@ -294,7 +294,7 @@ contract Nodes is Permissions {
                 validatorToNodeIndexes[validatorId][validatorNodes.length.sub(1)];
         }
         validatorToNodeIndexes[validatorId].pop();
-        validatorService.removeNodeAddress(validatorId, publicKeyToAddress(nodes[nodeIndex].publicKey));
+        validatorService.removeNodeAddress(validatorId, _publicKeyToAddress(nodes[nodeIndex].publicKey));
     }
 
     function checkPossibilityCreatingNode(address nodeAddress) external allow("SkaleManager") {
@@ -759,7 +759,7 @@ contract Nodes is Permissions {
         delete spaceOfNodes[nodeIndex].indexInSpaceMap;
     }
 
-    function publicKeyToAddress(bytes32[2] memory pubKey) private pure returns (address) {
+    function _publicKeyToAddress(bytes32[2] memory pubKey) private pure returns (address) {
         bytes32 hash = keccak256(abi.encodePacked(pubKey[0], pubKey[1]));
         bytes20 addr;
         for (uint8 i = 12; i < 32; i++) {
