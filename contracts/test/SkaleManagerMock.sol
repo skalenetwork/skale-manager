@@ -25,6 +25,7 @@ import "@openzeppelin/contracts-ethereum-package/contracts/introspection/IERC182
 import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC777/IERC777Recipient.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC777/IERC777.sol";
 
+import "../interfaces/IMintableToken.sol";
 import "../Permissions.sol";
 
 
@@ -41,6 +42,7 @@ contract SkaleManagerMock is Permissions, IERC777Recipient {
 
     function payBounty(uint validatorId, uint amount) external {
         IERC777 skaleToken = IERC777(contractManager.getContract("SkaleToken"));
+        require(IMintableToken(address(skaleToken)).mint(address(this), amount, "", ""), "Token was not minted");
         // solhint-disable-next-line check-send-result
         skaleToken.send(contractManager.getContract("Distributor"), amount, abi.encode(validatorId));
     }
