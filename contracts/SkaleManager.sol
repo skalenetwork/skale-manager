@@ -205,9 +205,10 @@ contract SkaleManager is IERC777Recipient, Permissions {
         IERC777 skaleToken = IERC777(contractManager.getContract("SkaleToken"));
         Distributor distributor = Distributor(contractManager.getContract("Distributor"));
         
-        require(IMintableToken(address(skaleToken)).mint(address(this), bounty, "", ""), "Token was not minted");
-        // solhint-disable-next-line check-send-result
-        skaleToken.send(address(distributor), bounty, abi.encode(validatorId));
+        require(
+            IMintableToken(address(skaleToken)).mint(address(distributor), bounty, abi.encode(validatorId), ""),
+            "Token was not minted"
+        );
     }
 
     function _emitBountyEvent(

@@ -43,8 +43,11 @@ contract SkaleManagerMock is Permissions, IERC777Recipient {
     function payBounty(uint validatorId, uint amount) external {
         IERC777 skaleToken = IERC777(contractManager.getContract("SkaleToken"));
         require(IMintableToken(address(skaleToken)).mint(address(this), amount, "", ""), "Token was not minted");
-        // solhint-disable-next-line check-send-result
-        skaleToken.send(contractManager.getContract("Distributor"), amount, abi.encode(validatorId));
+        require(
+            IMintableToken(address(skaleToken))
+                .mint(contractManager.getContract("Distributor"), amount, abi.encode(validatorId), ""),
+            "Token was not minted"
+        );
     }
 
     function tokensReceived(
