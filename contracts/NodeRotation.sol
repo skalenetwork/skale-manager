@@ -185,7 +185,7 @@ contract NodeRotation is Permissions {
         );
         rotations[schainIndex].newNodeIndex = newNodeIndex;
         rotations[schainIndex].rotationCounter++;
-        waitForNewNode[schainIndex] = false;
+        delete waitForNewNode[schainIndex];
         ISkaleDKG(contractManager.getContract("SkaleDKG")).openChannel(schainIndex);
     }
 
