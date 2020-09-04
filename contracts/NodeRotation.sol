@@ -56,7 +56,7 @@ contract NodeRotation is Permissions {
 
     mapping (uint => LeavingHistory[]) public leavingHistory;
 
-    mapping (bytes32 => bool) public rotationStarted;
+    mapping (bytes32 => bool) public waitForNewNode;
 
 
     function exitFromSchain(uint nodeIndex) external allow("SkaleManager") returns (bool) {
@@ -103,16 +103,12 @@ contract NodeRotation is Permissions {
         return rotations[schainIndex];
     }
 
-    function getRotationCounter(bytes32 schainIndex) external view returns (uint) {
-        return rotations[schainIndex].rotationCounter;
-    }
-
     function getLeavingHistory(uint nodeIndex) external view returns (LeavingHistory[] memory) {
         return leavingHistory[nodeIndex];
     }
 
     function isRotationInProgress(bytes32 schainIndex) external view returns (bool) {
-        return rotations[schainIndex].freezeUntil >= now && !rotationStarted[schainIndex];
+        return rotations[schainIndex].freezeUntil >= now && !waitForNewNode[schainIndex];
     }
 
     function initialize(address newContractsAddress) public override initializer {
@@ -173,7 +169,7 @@ contract NodeRotation is Permissions {
         rotations[schainIndex].nodeIndex = nodeIndex;
         rotations[schainIndex].newNodeIndex = nodeIndex;
         rotations[schainIndex].freezeUntil = now.add(constants.rotationDelay());
-        rotationStarted[schainIndex] = true;
+        waitForNewNode[schainIndex] = true;
     }
 
     function _finishRotation(
@@ -189,7 +185,7 @@ contract NodeRotation is Permissions {
         );
         rotations[schainIndex].newNodeIndex = newNodeIndex;
         rotations[schainIndex].rotationCounter++;
-        rotationStarted[schainIndex] = false;
+        waitForNewNode[schainIndex] = false;
         ISkaleDKG(contractManager.getContract("SkaleDKG")).openChannel(schainIndex);
     }
 
