@@ -912,7 +912,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
             const rotationForActiveSchain = await nodeRotation.getRotation(activeSchain);
             assert.equal(rotationForActiveSchain.nodeIndex, new BigNumber(0));
             assert.equal(rotationForActiveSchain.newNodeIndex, new BigNumber(0));
-            assert.equal(rotationForActiveSchain.freezeUntil, new BigNumber(0));
+            assert.notEqual(rotationForActiveSchain.freezeUntil, new BigNumber(0));
             assert.equal(rotationForActiveSchain.rotationCounter, new BigNumber(0));
 
             const nodeRot = res1[3];
