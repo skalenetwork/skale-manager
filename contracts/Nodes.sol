@@ -208,6 +208,7 @@ contract Nodes is Permissions {
         require(params.ip != 0x0 && !nodesIPCheck[params.ip], "IP address is zero or is not available");
         require(!nodesNameCheck[keccak256(abi.encodePacked(params.name))], "Name has already registered");
         require(params.port > 0, "Port is zero");
+        require(from == _publicKeyToAddress(params.publicKey), "Public Key is incorrect");
 
         uint validatorId = ValidatorService(
             contractManager.getContract("ValidatorService")).getValidatorIdByNodeAddress(from);
@@ -294,7 +295,12 @@ contract Nodes is Permissions {
                 validatorToNodeIndexes[validatorId][validatorNodes.length.sub(1)];
         }
         validatorToNodeIndexes[validatorId].pop();
-        validatorService.removeNodeAddress(validatorId, _publicKeyToAddress(nodes[nodeIndex].publicKey));
+        address nodeOwner = _publicKeyToAddress(nodes[nodeIndex].publicKey);
+        if (validatorService.getValidatorIdByNodeAddress(nodeOwner) == validatorId) {
+            validatorService.removeNodeAddress(validatorId, nodeOwner);
+            nodeIndexes[nodeOwner].isNodeExist[nodeIndex] = false;
+            nodeIndexes[nodeOwner].numberOfNodes--;
+        }
     }
 
     function checkPossibilityCreatingNode(address nodeAddress) external allow("SkaleManager") {
