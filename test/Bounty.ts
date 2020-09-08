@@ -85,26 +85,19 @@ contract("Bounty", ([owner, admin, hacker, validator]) => {
             const nodesCount = 10;
             for (const index of Array.from(Array(nodesCount).keys())) {
                 const hexIndex = ("0" + index.toString(16)).slice(-2);
-                const privateKey: string = String(privateKeys[3]);
-                console.log(privateKey);
-                console.log(ec);
-                const pubKey = ec.keyFromPrivate(privateKey).getPublic('hex');
-                console.log(pubKey);
-                console.log("0x" + pubKey.slice(32), "0x" + pubKey.slice(33, 64));
+                const pubKey = ec.keyFromPrivate(String(privateKeys[3]).slice(2)).getPublic();
                 await nodesContract.createNode(validator,
                     {
                         port: 8545,
                         nonce: 0,
                         ip: "0x7f0000" + hexIndex,
                         publicIp: "0x7f0000" + hexIndex,
-                        publicKey: ["0x" + pubKey.getX('hex'), "0x" + pubKey.getY('hex')],
+                        publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
                         // "0x1122334455667788990011223344556677889900112233445566778899001122"],
                         name: "d2" + hexIndex
                     });
             }
         });
-        04219f2ae658cd9971c853e36df8ca6721924487f4d375b8944b549b9e707051ffe76826be6c4d02b959453dac3eb45e56f3334ca04a930170e1416fefe5a8e91c
-        // 0x15207548770033912924190699228234554789106459798809276107850447879998649946623
 
         it("should get bounty after reward period", async() => {
             await skaleManager.getBounty(0, {from: validator}).should.be.eventually.rejectedWith("Not time for bounty");
