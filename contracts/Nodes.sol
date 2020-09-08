@@ -343,6 +343,7 @@ contract Nodes is Permissions {
         }
         require(permitted, "Sender is not permitted to call this function");
         nodes[nodeIndex].status = NodeStatus.In_Maintenance;
+        numberOfActiveNodes--;
     }
 
     function removeNodeFromInMaintenance(uint nodeIndex) external {
@@ -355,6 +356,7 @@ contract Nodes is Permissions {
         }
         require(permitted, "Sender is not permitted to call this function");
         nodes[nodeIndex].status = NodeStatus.Active;
+        numberOfActiveNodes++;
     }
 
     function getNodesWithFreeSpace(uint8 freeSpace) external view returns (uint[] memory) {
