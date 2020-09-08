@@ -22,7 +22,6 @@ module.exports = {
   defaultNetwork: "buidlerevm",
   solc: {
     version: '0.6.10',
-    evmVersion: 'petersburg',
     optimizer:{
       enabled: true,
       runs: 200

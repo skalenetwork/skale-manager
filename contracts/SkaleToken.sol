@@ -27,6 +27,7 @@ import "./thirdparty/openzeppelin/ERC777.sol";
 
 import "./Permissions.sol";
 import "./interfaces/delegation/IDelegatableToken.sol";
+import "./interfaces/IMintableToken.sol";
 import "./delegation/Punisher.sol";
 import "./delegation/TokenState.sol";
 
@@ -35,7 +36,7 @@ import "./delegation/TokenState.sol";
  * @title SkaleToken is ERC777 Token implementation, also this contract in skale
  * manager system
  */
-contract SkaleToken is ERC777, Permissions, ReentrancyGuard, IDelegatableToken {
+contract SkaleToken is ERC777, Permissions, ReentrancyGuard, IDelegatableToken, IMintableToken {
     using SafeMath for uint;
 
     string public constant NAME = "SKALE";
@@ -67,6 +68,7 @@ contract SkaleToken is ERC777, Permissions, ReentrancyGuard, IDelegatableToken {
         bytes calldata operatorData
     )
         external
+        override
         allow("SkaleManager")
         //onlyAuthorized
         returns (bool)

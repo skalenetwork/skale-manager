@@ -193,4 +193,26 @@ contract("ConstantsHolder", ([deployer, user]) => {
     expect(parseInt(res.toString(), 10)).to.be.equal(newLimit);
   });
 
+  it("should set schain creation timestamp", async () => {
+    const timeStamp = 100;
+    await constantsHolder.setSchainCreationTimeStamp(timeStamp, {from: user})
+      .should.be.eventually.rejectedWith("Caller is not the owner");
+    await constantsHolder.setSchainCreationTimeStamp(timeStamp, {from: deployer});
+    // expectation
+    const res = new BigNumber(await constantsHolder.schainCreationTimeStamp());
+    // parseInt(bn.toString(), 10).should.be.equal(0)
+    expect(parseInt(res.toString(), 10)).to.be.equal(timeStamp);
+  });
+
+  it("should set minimal schain lifetime", async () => {
+    const lifetime = 100;
+    await constantsHolder.setMinimalSchainLifetime(lifetime, {from: user})
+      .should.be.eventually.rejectedWith("Caller is not the owner");
+    await constantsHolder.setMinimalSchainLifetime(lifetime, {from: deployer});
+    // expectation
+    const res = new BigNumber(await constantsHolder.minimalSchainLifetime());
+    // parseInt(bn.toString(), 10).should.be.equal(0)
+    expect(parseInt(res.toString(), 10)).to.be.equal(lifetime);
+  });
+
 });
