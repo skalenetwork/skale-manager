@@ -1257,6 +1257,22 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
             assert.equal(comPubKey.y.a.toString() !== "0", true);
             assert.equal(comPubKey.y.b.toString() !== "0", true);
 
+            const hashName = web3.utils.soliditySha3("New16NodeSchain");
+            (await skaleDKG.channels(hashName))[1].toNumber().should.be.equal(16);
+            (await skaleDKG.channels(hashName))[2].toNumber().should.not.be.equal(0);
+            (await keyStorage.getCommonPublicKey(hashName)).x.a.should.not.be.equal('0');
+            (await keyStorage.getCommonPublicKey(hashName)).x.a.should.not.be.equal('0');
+            (await keyStorage.getCommonPublicKey(hashName)).y.b.should.not.be.equal('0');
+            (await keyStorage.getCommonPublicKey(hashName)).y.b.should.not.be.equal('0');
+
+            await skaleManager.deleteSchain("New16NodeSchain", {from: validator1});
+
+            (await skaleDKG.channels(hashName))[1].toNumber().should.be.equal(0);
+            (await skaleDKG.channels(hashName))[2].toNumber().should.be.equal(0);
+            (await keyStorage.getCommonPublicKey(hashName)).x.a.should.be.equal('0');
+            (await keyStorage.getCommonPublicKey(hashName)).x.a.should.be.equal('0');
+            (await keyStorage.getCommonPublicKey(hashName)).y.b.should.be.equal('0');
+            (await keyStorage.getCommonPublicKey(hashName)).y.b.should.be.equal('0');
         });
 
         // it("16 nodes schain test with incorrect complaint and response", async () => {

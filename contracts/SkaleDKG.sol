@@ -130,7 +130,6 @@ contract SkaleDKG is Permissions, ISkaleDKG {
     }
 
     function deleteChannel(bytes32 groupIndex) external override allow("SchainsInternal") {
-        require(channels[groupIndex].active, "Channel is not created");
         delete channels[groupIndex];
         delete dkgProcess[groupIndex];
         delete complaints[groupIndex];
