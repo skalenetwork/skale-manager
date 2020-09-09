@@ -73,7 +73,6 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
         constantsHolder = await deployConstantsHolder(contractManager);
 
         await slashingTable.setPenalty("FailedDKG", failedDkgPenalty);
-        await constantsHolder.setFirstDelegationsMonth(0);
     });
 
     describe("when 2 nodes are created", async () => {
@@ -336,12 +335,15 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
 
                 let nodesInGroup = await schainsInternal.getNodesInGroup(web3.utils.soliditySha3("d2"));
                 schainName = "d2";
+                let index = 3;
                 while ((new BigNumber(nodesInGroup[0])).toFixed() === "1") {
                     await schains.deleteSchainByRoot(schainName);
+                    schainName = "d" + index;
+                    index++;
                     await schains.addSchain(
                         validator1,
                         deposit,
-                        web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, "d2"]));
+                        web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, schainName]));
                     nodesInGroup = await schainsInternal.getNodesInGroup(web3.utils.soliditySha3(schainName));
                 }
             });
@@ -791,27 +793,6 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                     assert.equal(result.logs[1].args.groupIndex, web3.utils.soliditySha3(schainName));
                 });
 
-                it("should calculate BLS public key ", async () => {
-                    await skaleDKG.alright(web3.utils.soliditySha3(schainName), 0, {from: validatorsAccount[0]});
-                    const result = await skaleDKG.alright(
-                        web3.utils.soliditySha3(schainName),
-                        1,
-                        {from: validatorsAccount[1]},
-                    );
-                    assert.equal(result.logs[1].event, "SuccessfulDKG");
-                    assert.equal(result.logs[1].args.groupIndex, web3.utils.soliditySha3(schainName));
-                    const key1 = await keyStorage.getBLSPublicKey(web3.utils.soliditySha3(schainName), 0);
-                    const key2 = await keyStorage.getBLSPublicKey(web3.utils.soliditySha3(schainName), 1);
-                    assert.equal(key1.x.a.toString(), blsPublicKey.x.a);
-                    assert.equal(key1.x.b.toString(), blsPublicKey.x.b);
-                    assert.equal(key1.y.a.toString(), blsPublicKey.y.a);
-                    assert.equal(key1.y.b.toString(), blsPublicKey.y.b);
-                    assert.equal(key2.x.a.toString(), blsPublicKey.x.a);
-                    assert.equal(key2.x.b.toString(), blsPublicKey.x.b);
-                    assert.equal(key2.y.a.toString(), blsPublicKey.y.a);
-                    assert.equal(key2.y.b.toString(), blsPublicKey.y.b);
-                });
-
                 describe("when 2 node sent incorrect complaint", async () => {
                     beforeEach(async () => {
                         await skaleDKG.complaint(
@@ -1049,16 +1030,19 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
 
             let nodesInGroup = await schainsInternal.getNodesInGroup(web3.utils.soliditySha3("d2"));
             schainName = "d2";
+            let index = 3;
             while ((new BigNumber(nodesInGroup[0])).toFixed() === "1") {
                 await schains.deleteSchainByRoot(schainName);
+                schainName = "d" + index;
+                index++;
                 await schains.addSchain(
                     validator1,
                     deposit,
-                    web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, "d2"]));
+                    web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, schainName]));
                 nodesInGroup = await schainsInternal.getNodesInGroup(web3.utils.soliditySha3(schainName));
             }
 
-            let rotCounter = await nodeRotation.getRotation(web3.utils.soliditySha3("d2"));
+            let rotCounter = await nodeRotation.getRotation(web3.utils.soliditySha3(schainName));
             assert.equal(rotCounter.rotationCounter.toString(), "0");
 
             await nodes.createNode(validatorsAccount[0],
@@ -1115,7 +1099,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
             assert.equal((await skaleDKG.getNumberOfBroadcasted(web3.utils.soliditySha3(schainName))).toString(), "0");
             assert.equal((await skaleDKG.getChannelStartedTime(web3.utils.soliditySha3(schainName))).toString(), timestamp.toString());
 
-            rotCounter = await nodeRotation.getRotation(web3.utils.soliditySha3("d2"));
+            rotCounter = await nodeRotation.getRotation(web3.utils.soliditySha3(schainName));
             assert.equal(rotCounter.rotationCounter.toString(), "1");
 
             const failCompl = await skaleDKG.complaint(
@@ -1618,379 +1602,5 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
         //     }
 
         // });
-
-        it("should take correct BLS keys for 2 nodes schain", async () => {
-            const verVecFor2 = [
-                [
-                    {
-                        x: {
-                            a: "17492274578600355891194795946925275177566546281080621460897407165524669389171",
-                            b: "12212127475052171902089797237561688847122922498668927197636222775103092168023"
-                        },
-                        y: {
-                            a: "7563883894682747393966302272534974125855153908848630024241020696067482762303",
-                            b: "21477418340153886229578812265388825603091448074970196711471309017002269602287"
-                        }
-                    }
-                ],
-                [
-                    {
-                        x: {
-                            a: "19455570214703536349873314107316760340340963939395022399518285340062114550390",
-                            b: "14077696141948256850006511616401411034604223866033133087438617061095163573909"
-                        },
-                        y: {
-                            a: "15095601243921248983283757213564324442809599865416053171896217043326580196972",
-                            b: "8771921477598314549280859157092178327203491786593224370775000175883868151292"
-                        }
-                    }
-                ]
-            ];
-
-            const numberOfNodes = 2;
-
-            const newSchainName = "New2NodeSchain";
-
-            const deposit = await schains.getSchainPrice(4, 5);
-
-            await schains.addSchain(
-                validator1,
-                deposit,
-                web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, newSchainName])
-            );
-
-            const secretKeyContributions = [];
-            for (let i = 0; i < numberOfNodes; i++) {
-                secretKeyContributions[i] = encryptedSecretKeyContributions[0][0];
-            }
-
-            for (let i = 0; i < numberOfNodes; i++) {
-                let index = 0;
-                if (i === 1) {
-                    index = 1;
-                }
-                let broadPoss = await skaleDKG.isBroadcastPossible(
-                    web3.utils.soliditySha3(newSchainName),
-                    i,
-                    {from: validatorsAccount[index]},
-                );
-                assert.equal(broadPoss, true);
-                await skaleDKG.broadcast(
-                    web3.utils.soliditySha3(newSchainName),
-                    i,
-                    verVecFor2[i],
-                    secretKeyContributions,
-                    {from: validatorsAccount[index]},
-                );
-                broadPoss = await skaleDKG.isBroadcastPossible(
-                    web3.utils.soliditySha3(newSchainName),
-                    i,
-                    {from: validatorsAccount[index]},
-                );
-                assert.equal(broadPoss, false);
-            }
-
-            const newBlsPublicKeys = [
-                {
-                    x: {
-                        b: "18455786117839290870216657486894354645699077803371423779775674796205715318648",
-                        a: "13631323048911964288262361757410368439401555203002045920531660027969376821938"
-                    },
-                    y: {
-                        b: "17088109708771381822666387486951400483339875687685316682796862170009987241589",
-                        a: "3092240288814317936282030765595713590845693394143253669109889732548463631463"
-                    }
-                },
-                {
-                    x: {
-                        b: "18455786117839290870216657486894354645699077803371423779775674796205715318648",
-                        a: "13631323048911964288262361757410368439401555203002045920531660027969376821938"
-                    },
-                    y: {
-                        b: "17088109708771381822666387486951400483339875687685316682796862170009987241589",
-                        a: "3092240288814317936282030765595713590845693394143253669109889732548463631463"
-                    }
-                }
-            ]
-
-            const key1 = await keyStorage.getBLSPublicKey(web3.utils.soliditySha3(newSchainName), 0);
-            const key2 = await keyStorage.getBLSPublicKey(web3.utils.soliditySha3(newSchainName), 1);
-
-            assert.equal(key1.x.a.toString(), newBlsPublicKeys[0].x.a);
-            assert.equal(key1.x.b.toString(), newBlsPublicKeys[0].x.b);
-            assert.equal(key1.y.a.toString(), newBlsPublicKeys[0].y.a);
-            assert.equal(key1.y.b.toString(), newBlsPublicKeys[0].y.b);
-
-            assert.equal(key2.x.a.toString(), newBlsPublicKeys[1].x.a);
-            assert.equal(key2.x.b.toString(), newBlsPublicKeys[1].x.b);
-            assert.equal(key2.y.a.toString(), newBlsPublicKeys[1].y.a);
-            assert.equal(key2.y.b.toString(), newBlsPublicKeys[1].y.b);
-        });
-
-        it("should take correct BLS keys for 4 nodes schain", async () => {
-            const verVecFor2 = [
-                [
-                    {
-                        x: {
-                            b: "10996849449472664113258166654358981611063715412769867689333640851839600671795",
-                            a: "6140745957435307466367119250574494313258606722381197819912939903986800208659"
-                        },
-                        y: {
-                            b: "3868838242238849187209048933611695499246526600194206120203659151441003700920",
-                            a: "16801142824839188507823943809801668392172826755438778176388140206421554775280"
-                        }
-                    },
-                    {
-                        x: {
-                            b: "13932500164725749864232999322119562257250975835810511649314245998181420269026",
-                            a: "18003005259832180834926474312079432853197828626088427700176708815092914639396"
-                        },
-                        y: {
-                            b: "5881383498900881428476489484803261117032276137928607985305173737698968235273",
-                            a: "8739194471739000716884710379004648005292498802722286635794778526124258694425"
-                        }
-                    },
-                    {
-                        x: {
-                            b: "13989328731008510536902496465869294788224123469011435740143811025345800554092",
-                            a: "19980588300811401185281646480530171168216833173352819617467506058861278953808"
-                        },
-                        y: {
-                            b: "7886345675958970512545111505763905336490737813723552503060086497621848931257",
-                            a: "14867367514048446324063031378253498769786154521318329739792458056307051999134"
-                        }
-                    }
-                ],
-                // 2 node
-                [
-                    {
-                        x: {
-                            b: "551963522314523275528227649663033589167494227615738653591910817541007342444",
-                            a: "16762202699341327146754445254409930824140070965806274267547086433093855042740"
-                        },
-                        y: {
-                            b: "2005676154603268819688232845891809597213296061146269237247996396907835890978",
-                            a: "13634776438847528677663533615212786579305567879155453153793066345779573493225"
-                        }
-                    },
-                    {
-                        x: {
-                            b: "7669277945580106853500329886148968026767412839365912461655186022448880065147",
-                            a: "17597078597944349916823086176304000881142876799476306217836648780820830533813"
-                        },
-                        y: {
-                            b: "7722442156811568450277333977674546467968382867359355281734651789317761984037",
-                            a: "18298977142812505702918672364540840739545917007633022360660778385293205190810"
-                        }
-                    },
-                    {
-                        x: {
-                            b: "6909765333213713528262128948237751680678220774640526829571911834464192003363",
-                            a: "17844410198928768940101964446302198881103832941131336982536172692160985800000"
-                        },
-                        y: {
-                            b: "5508425012931026983435470901308067755247348582319786547493241261883641173430",
-                            a: "20063316588843511199646076587438466601815101355998374029096987069349304193079"
-                        }
-                    }
-                ],
-                // 3 node
-                [
-                    {
-                        x: {
-                            b: "19232331178670754445667296756597922812400761809747150897168094837479454679487",
-                            a: "7478399315331222397227885418231031417246590321799093473436982977942954162639"
-                        },
-                        y: {
-                            b: "21619393068500662314385046625852031600663459430921726173489242059818797604587",
-                            a: "15323844542536139563876512047591650326501198284387977709436215791905556787218"
-                        }
-                    },
-                    {
-                        x: {
-                            b: "12129790409528211991026390001548117777892890113870338082099179986572890811765",
-                            a: "6379182619431838825635194097773773843053394070726395628116044910734273558992"
-                        },
-                        y: {
-                            b: "8625290259041806495080775268511515644448771538824795701250505428814550717838",
-                            a: "17078294413987139383293716278124134106797248121342672587624110182126733484673"
-                        }
-                    },
-                    {
-                        x: {
-                            b: "13651064748196748325906967763214999493446097651122033645914886302309715325625",
-                            a: "6799458325917281945858001049708608337146289011124046303772098804700194179953"
-                        },
-                        y: {
-                            b: "10248022647101093529495887695672463885862231969015233535737877624534391387151",
-                            a: "11425016784701423024398235876036051964632195809321049869081255662624859636713"
-                        }
-                    }
-                ],
-                // 4 node
-                [
-                    {
-                        x: {
-                            b: "1590216119087495148066966288018500792298079534170100009740438105738250960390",
-                            a: "10630856489361155574525767912391714053993415561204890521292399562559793094148"
-                        },
-                        y: {
-                            b: "12240543384010321180266688117258685696095657105295584780113329700752323580912",
-                            a: "13585235493818491560737283392200882323234422403104012128938991272661426578488"
-                        }
-                    },
-                    {
-                        x: {
-                            b: "20783105372769303773744556257284776921079244721017798973956690638476239861660",
-                            a: "19350907986237379246044309553988991414489904361096301724100440254966538661709"
-                        },
-                        y: {
-                            b: "4259281803896824558624335966045860325161825961394154378642233642790692301383",
-                            a: "11416231470223440150891044946991032165580685055501774177062516576136298171577"
-                        }
-                    },
-                    {
-                        x: {
-                            b: "2228051830667587495662830828307765783410318310071081346794910933769602653334",
-                            a: "7245192930757422196720922597945866703957767516104397729678743405854757364809"
-                        },
-                        y: {
-                            b: "9666440475527143220446634201405463845248561607345593371803104402784775710771",
-                            a: "21302406496717116889657303869339721229642857349368727053159398370015027562144"
-                        }
-                    }
-                ]
-            ];
-
-            const numberOfNodes = 4;
-
-            const newSchainName = "New4NodeSchain";
-
-            for (let i = 3; i <= numberOfNodes; i++) {
-                const hexIndex = ("0" + i.toString(16)).slice(-2);
-                await nodes.createNode(validatorsAccount[0],
-                    {
-                        port: 8545,
-                        nonce: 0,
-                        ip: "0x7f0000" + hexIndex,
-                        publicIp: "0x7f0000" + hexIndex,
-                        publicKey: validatorsPublicKey[0],
-                        name: "d2" + hexIndex
-                    }
-                );
-            }
-            const deposit = await schains.getSchainPrice(5, 5);
-
-            await schains.addSchain(
-                validator1,
-                deposit,
-                web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 5, 0, newSchainName])
-            );
-
-            const nodesInGroup = await schainsInternal.getNodesInGroup(web3.utils.soliditySha3(newSchainName));
-
-            const secretKeyContributions = [];
-            for (let i = 0; i < numberOfNodes; i++) {
-                secretKeyContributions[i] = encryptedSecretKeyContributions[0][0];
-            }
-
-            for (let i = 0; i < numberOfNodes; i++) {
-                const nodeIndex = nodesInGroup[i].toString();
-                let index = 0;
-                if (nodeIndex === "1") {
-                    index = 1;
-                }
-                let broadPoss = await skaleDKG.isBroadcastPossible(
-                    web3.utils.soliditySha3(newSchainName),
-                    nodeIndex,
-                    {from: validatorsAccount[index]},
-                );
-                assert.equal(broadPoss, true);
-                await skaleDKG.broadcast(
-                    web3.utils.soliditySha3(newSchainName),
-                    nodeIndex,
-                    verVecFor2[i],
-                    secretKeyContributions,
-                    {from: validatorsAccount[index]},
-                );
-                broadPoss = await skaleDKG.isBroadcastPossible(
-                    web3.utils.soliditySha3(newSchainName),
-                    nodeIndex,
-                    {from: validatorsAccount[index]},
-                );
-                assert.equal(broadPoss, false);
-            }
-
-            const newBlsPublicKeys = [
-                {
-                    x: {
-                        a: "17945245934172112720430606564971497509853214613861569656863106071068568253723",
-                        b: "7365539570896884237936399383009560079020428209504598034927226836959448281990"
-                    },
-                    y: {
-                        a: "328756406065900481141455427607662240753146186462209383165310531382712639488",
-                        b: "12396023648016274643661712758226227732541765987317826629989463402470034350085"
-                    }
-                },
-                // 2 node
-                {
-                    x: {
-                        a: "1445886288383119232860836986153651053796281365332916864782089846880141512144",
-                        b: "10553600839554651318567513403500033488246708292083711872298991829355668538168"
-                    },
-                    y: {
-                        a: "8969531490580165920116494456925233436129053776122269190773320733487965418156",
-                        b: "2134182532824397945972910300655031748052723368480421779361832118884704193190"
-                    }
-                },
-                // 3 node
-                {
-                    x: {
-                        a: "12011784688071615337531728975163527901337850783718139799543319364102099115988",
-                        b: "7191172423183142435771719315902242302090503182407848443277297718294975327102"
-                    },
-                    y: {
-                        a: "5681635636890558713111840746113474744709486043686600787107825609606002312504",
-                        b: "8795133914776911664871434131529229484570551353787244066377299576346011174240"
-                    }
-                },
-                // 4 node
-                {
-                    x: {
-                        a: "10455056727998322865946036086965550113207055958400651276429680068301388440824",
-                        b: "16399632585992986113889531984057584018202082523780198860571634172342249898427"
-                    },
-                    y: {
-                        a: "20975727804781043923479295002129978461350253091600848335667800040191266955860",
-                        b: "12438545441458779579423489236582196261771238101275308133996083192256807258310"
-                    }
-                }
-            ]
-
-            const key1 = await keyStorage.getBLSPublicKey(web3.utils.soliditySha3(newSchainName), nodesInGroup[0]);
-            const key2 = await keyStorage.getBLSPublicKey(web3.utils.soliditySha3(newSchainName), nodesInGroup[1]);
-            const key3 = await keyStorage.getBLSPublicKey(web3.utils.soliditySha3(newSchainName), nodesInGroup[2]);
-            const key4 = await keyStorage.getBLSPublicKey(web3.utils.soliditySha3(newSchainName), nodesInGroup[3]);
-
-            assert.equal(key1.x.a.toString(), newBlsPublicKeys[0].x.a);
-            assert.equal(key1.x.b.toString(), newBlsPublicKeys[0].x.b);
-            assert.equal(key1.y.a.toString(), newBlsPublicKeys[0].y.a);
-            assert.equal(key1.y.b.toString(), newBlsPublicKeys[0].y.b);
-
-            assert.equal(key2.x.a.toString(), newBlsPublicKeys[1].x.a);
-            assert.equal(key2.x.b.toString(), newBlsPublicKeys[1].x.b);
-            assert.equal(key2.y.a.toString(), newBlsPublicKeys[1].y.a);
-            assert.equal(key2.y.b.toString(), newBlsPublicKeys[1].y.b);
-
-            assert.equal(key3.x.a.toString(), newBlsPublicKeys[2].x.a);
-            assert.equal(key3.x.b.toString(), newBlsPublicKeys[2].x.b);
-            assert.equal(key3.y.a.toString(), newBlsPublicKeys[2].y.a);
-            assert.equal(key3.y.b.toString(), newBlsPublicKeys[2].y.b);
-
-            assert.equal(key4.x.a.toString(), newBlsPublicKeys[3].x.a);
-            assert.equal(key4.x.b.toString(), newBlsPublicKeys[3].x.b);
-            assert.equal(key4.y.a.toString(), newBlsPublicKeys[3].y.a);
-            assert.equal(key4.y.b.toString(), newBlsPublicKeys[3].y.b);
-        });
     });
 });

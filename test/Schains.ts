@@ -913,7 +913,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
             const rotationForActiveSchain = await nodeRotation.getRotation(activeSchain);
             assert.equal(rotationForActiveSchain.nodeIndex, new BigNumber(0));
             assert.equal(rotationForActiveSchain.newNodeIndex, new BigNumber(0));
-            assert.equal(rotationForActiveSchain.freezeUntil, new BigNumber(0));
+            assert.notEqual(rotationForActiveSchain.freezeUntil, new BigNumber(0));
             assert.equal(rotationForActiveSchain.rotationCounter, new BigNumber(0));
 
             const nodeRot = res1[3];
@@ -1114,7 +1114,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
             assert.equal(nodeStatus, LEFT);
         });
 
-        it("should rotate on schain that previously was deleted", async () => {
+        it("should not create schain with the same name after removing", async () => {
             const deposit = await schains.getSchainPrice(5, 5);
             await skaleManager.nodeExit(0, {from: nodeAddress});
             await skaleDKG.setSuccesfulDKGPublic(
@@ -1135,15 +1135,31 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
             await schainsInternal.getActiveSchains(3).should.be.eventually.empty;
             await schainsInternal.getActiveSchains(4).should.be.eventually.empty;
             await schainsInternal.getActiveSchains(5).should.be.eventually.empty;
+            let schainNameAvailable = await schainsInternal.isSchainNameAvailable("d2");
+            assert.equal(schainNameAvailable, false);
             await schains.addSchain(
                 holder,
                 deposit,
                 web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d2"]),
+                {from: owner}).should.be.eventually.rejectedWith("Schain name is not available");
+            schainNameAvailable = await schainsInternal.isSchainNameAvailable("d3");
+            assert.equal(schainNameAvailable, false);
+            await schains.addSchain(
+                holder,
+                deposit,
+                web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d3"]),
+                {from: owner}).should.be.eventually.rejectedWith("Schain name is not available");
+            schainNameAvailable = await schainsInternal.isSchainNameAvailable("d4");
+            assert.equal(schainNameAvailable, true);
+            await schains.addSchain(
+                holder,
+                deposit,
+                web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d4"]),
                 {from: owner});
             await skaleDKG.setSuccesfulDKGPublic(
-                web3.utils.soliditySha3("d2"),
+                web3.utils.soliditySha3("d4"),
             );
-            const nodesInGroupBN = await schainsInternal.getNodesInGroup(web3.utils.soliditySha3("d2"));
+            const nodesInGroupBN = await schainsInternal.getNodesInGroup(web3.utils.soliditySha3("d4"));
             const nodeInGroup = nodesInGroupBN.map((value: BigNumber) => value.toNumber())[0];
             await skaleManager.nodeExit(nodeInGroup, {from: nodeAddress});
         });
