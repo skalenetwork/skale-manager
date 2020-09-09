@@ -14,6 +14,11 @@ import { ConstantsHolderInstance,
 import BigNumber from "bignumber.js";
 import { skipTime, currentTime } from "./tools/time";
 
+import * as elliptic from "elliptic";
+const EC = elliptic.ec;
+const ec = new EC("secp256k1");
+import { privateKeys } from "./tools/private-keys";
+
 import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
 import { deployContractManager } from "./tools/deploy/contractManager";
 import { deployKeyStorage } from "./tools/deploy/keyStorage";
@@ -110,6 +115,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
         describe("when 2 nodes are registered (Ivan test)", async () => {
             it("should create 2 nodes, and play with schains", async () => {
                 const nodesCount = 2;
+                const pubKey = ec.keyFromPrivate(String(privateKeys[3]).slice(2)).getPublic();
                 for (const index of Array.from(Array(nodesCount).keys())) {
                     const hexIndex = ("0" + index.toString(16)).slice(-2);
                     await skaleManager.createNode(
@@ -117,8 +123,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
                         0, // nonce
                         "0x7f0000" + hexIndex, // ip
                         "0x7f0000" + hexIndex, // public ip
-                        ["0x1122334455667788990011223344556677889900112233445566778899001122",
-                            "0x1122334455667788990011223344556677889900112233445566778899001122"], // public key
+                        ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')], // public key
                         "D2-" + hexIndex, // name
                         {from: nodeAddress});
                 }
@@ -161,8 +166,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
                         0, // nonce
                         "0x7f0000" + hexIndex, // ip
                         "0x7f0000" + hexIndex, // public ip
-                        ["0x1122334455667788990011223344556677889900112233445566778899001122",
-                            "0x1122334455667788990011223344556677889900112233445566778899001122"], // public key
+                        ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')], // public key
                         "D2-" + hexIndex, // name
                         {from: nodeAddress});
                 }
@@ -178,6 +182,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
         describe("when 2 nodes are registered (Node rotation test)", async () => {
             it("should create 2 nodes, and play with schains", async () => {
                 const nodesCount = 2;
+                const pubKey = ec.keyFromPrivate(String(privateKeys[3]).slice(2)).getPublic();
                 for (const index of Array.from(Array(nodesCount).keys())) {
                     const hexIndex = ("0" + index.toString(16)).slice(-2);
                     await skaleManager.createNode(
@@ -185,8 +190,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
                         0, // nonce
                         "0x7f0000" + hexIndex, // ip
                         "0x7f0000" + hexIndex, // public ip
-                        ["0x1122334455667788990011223344556677889900112233445566778899001122",
-                            "0x1122334455667788990011223344556677889900112233445566778899001122"], // public key
+                        ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')], // public key
                         "D2-" + hexIndex, // name
                         {from: nodeAddress});
                 }
@@ -285,8 +289,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
                     0, // nonce
                     "0x7f000011", // ip
                     "0x7f000011", // public ip
-                    ["0x1122334455667788990011223344556677889900112233445566778899001122",
-                        "0x1122334455667788990011223344556677889900112233445566778899001122"], // public key
+                    ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')], // public key
                     "D2-11", // name
                     {from: nodeAddress});
 
@@ -356,6 +359,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
         describe("when 4 nodes are registered", async () => {
             beforeEach(async () => {
                 const nodesCount = 4;
+                const pubKey = ec.keyFromPrivate(String(privateKeys[3]).slice(2)).getPublic();
                 for (const index of Array.from(Array(nodesCount).keys())) {
                     const hexIndex = ("0" + index.toString(16)).slice(-2);
                     await skaleManager.createNode(
@@ -363,8 +367,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
                         0, // nonce
                         "0x7f0000" + hexIndex, // ip
                         "0x7f0000" + hexIndex, // public ip
-                        ["0x1122334455667788990011223344556677889900112233445566778899001122",
-                            "0x1122334455667788990011223344556677889900112233445566778899001122"], // public key
+                        ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')], // public key
                         "D2-" + hexIndex, // name
                         {from: nodeAddress});
                 }
@@ -445,13 +448,13 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
 
                 data = await nodes.getNodesWithFreeSpace(32);
 
+                const pubKey = ec.keyFromPrivate(String(privateKeys[3]).slice(2)).getPublic();
                 await skaleManager.createNode(
                     8545, // port
                     0, // nonce
                     "0x7f000028", // ip
                     "0x7f000028", // public ip
-                    ["0x1122334455667788990011223344556677889900112233445566778899001122",
-                        "0x1122334455667788990011223344556677889900112233445566778899001122"], // public key
+                    ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')], // public key
                     "D2-28", // name
                     {from: nodeAddress});
 
@@ -565,6 +568,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
         describe("when 20 nodes are registered", async () => {
             beforeEach(async () => {
                 const nodesCount = 20;
+                const pubKey = ec.keyFromPrivate(String(privateKeys[3]).slice(2)).getPublic();
                 for (const index of Array.from(Array(nodesCount).keys())) {
                     const hexIndex = ("0" + index.toString(16)).slice(-2);
                     await skaleManager.createNode(
@@ -572,8 +576,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
                         0, // nonce
                         "0x7f0000" + hexIndex, // ip
                         "0x7f0000" + hexIndex, // public ip
-                        ["0x1122334455667788990011223344556677889900112233445566778899001122",
-                            "0x1122334455667788990011223344556677889900112233445566778899001122"], // public key
+                        ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')], // public key
                         "D2-" + hexIndex, // name
                         {from: nodeAddress});
                 }
@@ -647,6 +650,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
 
             beforeEach(async () => {
                 const nodesCount = 16;
+                const pubKey = ec.keyFromPrivate(String(privateKeys[3]).slice(2)).getPublic();
                 for (const index of Array.from(Array(nodesCount).keys())) {
                     const hexIndex = ("0" + index.toString(16)).slice(-2);
                     await skaleManager.createNode(
@@ -654,8 +658,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
                         0, // nonce
                         "0x7f0000" + hexIndex, // ip
                         "0x7f0000" + hexIndex, // public ip
-                        ["0x1122334455667788990011223344556677889900112233445566778899001122",
-                            "0x1122334455667788990011223344556677889900112233445566778899001122"], // public key
+                        ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')], // public key
                         "D2-" + hexIndex, // name
                         {from: nodeAddress});
                 }
@@ -843,6 +846,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
         beforeEach(async () => {
             const deposit = await schains.getSchainPrice(5, 5);
             const nodesCount = 4;
+            const pubKey = ec.keyFromPrivate(String(privateKeys[3]).slice(2)).getPublic();
             for (const index of Array.from(Array(nodesCount).keys())) {
                 const hexIndex = ("0" + index.toString(16)).slice(-2);
                 await skaleManager.createNode(
@@ -850,8 +854,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
                     0, // nonce
                     "0x7f0000" + hexIndex, // ip
                     "0x7f0000" + hexIndex, // public ip
-                    ["0x1122334455667788990011223344556677889900112233445566778899001122",
-                        "0x1122334455667788990011223344556677889900112233445566778899001122"], // public key
+                    ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')], // public key
                     "D2-" + hexIndex, // name
                     {from: nodeAddress});
             }
@@ -877,8 +880,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
                 0, // nonce
                 "0x7f000010", // ip
                 "0x7f000010", // public ip
-                ["0x1122334455667788990011223344556677889900112233445566778899001122",
-                    "0x1122334455667788990011223344556677889900112233445566778899001122"], // public key
+                ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')], // public key
                 "D2-10", // name
                 {from: nodeAddress});
             await skaleManager.createNode(
@@ -886,8 +888,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
                 0, // nonce
                 "0x7f000011", // ip
                 "0x7f000011", // public ip
-                ["0x1122334455667788990011223344556677889900112233445566778899001122",
-                    "0x1122334455667788990011223344556677889900112233445566778899001122"], // public key
+                ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')], // public key
                 "D2-11", // name
                 {from: nodeAddress});
 
@@ -1406,6 +1407,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
         beforeEach(async () => {
             const deposit = await schains.getSchainPrice(5, 5);
             const nodesCount = 6;
+            const pubKey = ec.keyFromPrivate(String(privateKeys[3]).slice(2)).getPublic();
             for (const index of Array.from(Array(nodesCount).keys())) {
                 const hexIndex = ("0" + index.toString(16)).slice(-2);
                 await skaleManager.createNode(
@@ -1413,8 +1415,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
                     0, // nonce
                     "0x7f0000" + hexIndex, // ip
                     "0x7f0000" + hexIndex, // public ip
-                    ["0x1122334455667788990011223344556677889900112233445566778899001122",
-                        "0x1122334455667788990011223344556677889900112233445566778899001122"], // public key
+                    ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')], // public key
                     "D2-" + hexIndex, // name
                     {from: nodeAddress});
             }
@@ -1506,6 +1507,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
                     }
                 }
             }
+
             skipTime(web3, 43260);
             for (const schainId of schainIds2.reverse()) {
                 await skaleManager.nodeExit(rotIndex2, {from: nodeAddress});

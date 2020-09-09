@@ -70,7 +70,7 @@ contract("NodesFunctionality", ([owner, validator, nodeAddress, nodeAddress2, ho
     });
 
     it("should fail to create node if port is zero", async () => {
-        const pubKey = ec.keyFromPrivate(String(privateKeys[2]).slice(2)).getPublic();
+        const pubKey = ec.keyFromPrivate(String(privateKeys[1]).slice(2)).getPublic();
         await nodes.createNode(
             validator,
             {
@@ -84,7 +84,7 @@ contract("NodesFunctionality", ([owner, validator, nodeAddress, nodeAddress2, ho
     });
 
     it("should create node", async () => {
-        const pubKey = ec.keyFromPrivate(String(privateKeys[3]).slice(2)).getPublic();
+        const pubKey = ec.keyFromPrivate(String(privateKeys[2]).slice(2)).getPublic();
         await nodes.createNode(
             nodeAddress,
             {
@@ -107,7 +107,7 @@ contract("NodesFunctionality", ([owner, validator, nodeAddress, nodeAddress2, ho
 
     describe("when node is created", async () => {
         beforeEach(async () => {
-            const pubKey = ec.keyFromPrivate(String(privateKeys[3]).slice(2)).getPublic();
+            const pubKey = ec.keyFromPrivate(String(privateKeys[2]).slice(2)).getPublic();
             await nodes.createNode(
                 nodeAddress,
                 {
@@ -151,7 +151,7 @@ contract("NodesFunctionality", ([owner, validator, nodeAddress, nodeAddress2, ho
 
     describe("when two nodes are created", async () => {
         beforeEach(async () => {
-            const pubKey = ec.keyFromPrivate(String(privateKeys[3]).slice(2)).getPublic();
+            const pubKey = ec.keyFromPrivate(String(privateKeys[2]).slice(2)).getPublic();
             await nodes.createNode(
                 nodeAddress,
                 {

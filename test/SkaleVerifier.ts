@@ -8,6 +8,11 @@ import { ContractManagerInstance,
          SkaleVerifierInstance,
          ValidatorServiceInstance } from "../types/truffle-contracts";
 
+import * as elliptic from "elliptic";
+const EC = elliptic.ec;
+const ec = new EC("secp256k1");
+import { privateKeys } from "./tools/private-keys";
+
 import { deployContractManager } from "./tools/deploy/contractManager";
 import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
 import { deployNodes } from "./tools/deploy/nodes";
@@ -191,14 +196,14 @@ contract("SkaleVerifier", ([validator1, owner, developer, hacker]) => {
             const nodesCount = 2;
             for (const index of Array.from(Array(nodesCount).keys())) {
                 const hexIndex = ("0" + index.toString(16)).slice(-2);
+                const pubKey = ec.keyFromPrivate(String(privateKeys[0]).slice(2)).getPublic();
                 await nodes.createNode(validator1,
                     {
                         port: 8545,
                         nonce: 0,
                         ip: "0x7f0000" + hexIndex,
                         publicIp: "0x7f0000" + hexIndex,
-                        publicKey: ["0x1122334455667788990011223344556677889900112233445566778899001122",
-                                    "0x1122334455667788990011223344556677889900112233445566778899001122"],
+                        publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
                         name: "d2" + hexIndex
                     },
                     {from: validator1});
