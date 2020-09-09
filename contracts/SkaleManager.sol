@@ -106,7 +106,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));
         uint validatorId = nodes.getValidatorId(nodeIndex);
         bool permitted = (_isOwner() || nodes.isNodeExist(msg.sender, nodeIndex));
-        if (!permitted) {
+        if (!permitted && validatorService.validatorAddressExists(msg.sender)) {
             permitted = validatorService.getValidatorId(msg.sender) == validatorId;
         }
         require(permitted, "Sender is not permitted to call this function");

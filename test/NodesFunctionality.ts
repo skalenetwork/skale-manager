@@ -83,6 +83,20 @@ contract("NodesFunctionality", ([owner, validator, nodeAddress, nodeAddress2, ho
             }).should.be.eventually.rejectedWith("Port is zero");
     });
 
+    it("should fail to create node if public Key is incorrect", async () => {
+        const pubKey = ec.keyFromPrivate(String(privateKeys[1]).slice(2)).getPublic();
+        await nodes.createNode(
+            validator,
+            {
+                port: 8545,
+                nonce: 0,
+                ip: "0x7f000001",
+                publicIp: "0x7f000001",
+                publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex').slice(1) + "0"],
+                name: "D2"
+            }).should.be.eventually.rejectedWith("Public Key is incorrect");
+    });
+
     it("should create node", async () => {
         const pubKey = ec.keyFromPrivate(String(privateKeys[2]).slice(2)).getPublic();
         await nodes.createNode(
