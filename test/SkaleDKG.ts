@@ -81,8 +81,8 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
             validator2,
         ];
         const validatorsPrivateKey = [
-            "0xa15c19da241e5b1db20d8dd8ca4b5eeaee01c709b49ec57aa78c2133d3c1b3c9",
-            "0xe7af72d241d4dd77bc080ce9234d742f6b22e35b3a660e8c197517b909f63ca8",
+            privateKeys[1],
+            privateKeys[2],
         ];
         const pubKey1 = ec.keyFromPrivate(String(privateKeys[1]).slice(2)).getPublic();
         const pubKey2 = ec.keyFromPrivate(String(privateKeys[2]).slice(2)).getPublic();
@@ -1356,7 +1356,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
         //     assert.isAtMost(resResp.receipt.gasUsed, 10000000);
         // });
 
-        it("16 nodes schain test with incorrect complaint and response and deleting Schain", async () => {
+        it("16 nodes schain test with incorrect complaint and deleting Schain", async () => {
 
             for (let i = 3; i <= 16; i++) {
                 const hexIndex = ("0" + i.toString(16)).slice(-2);
