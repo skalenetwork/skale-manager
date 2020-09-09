@@ -124,7 +124,6 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
         });
 
         it("should create a node", async () => {
-            console.log(privateKeys[4]);
             const pubKey = ec.keyFromPrivate(String(privateKeys[4]).slice(2)).getPublic();
             await skaleManager.createNode(
                 8545, // port
@@ -181,7 +180,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
 
             it("should fail to init exiting of someone else's node", async () => {
                 await skaleManager.nodeExit(0, {from: hacker})
-                    .should.be.eventually.rejectedWith("Validator with given address does not exist");
+                    .should.be.eventually.rejectedWith("Sender is not permitted to call this function");
             });
 
             it("should initiate exiting", async () => {
@@ -283,12 +282,12 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
 
             it("should fail to initiate exiting of first node from another account", async () => {
                 await skaleManager.nodeExit(0, {from: hacker})
-                    .should.be.eventually.rejectedWith("Validator with given address does not exist");
+                    .should.be.eventually.rejectedWith("Sender is not permitted to call this function");
             });
 
             it("should fail to initiate exiting of second node from another account", async () => {
                 await skaleManager.nodeExit(1, {from: hacker})
-                    .should.be.eventually.rejectedWith("Validator with given address does not exist");
+                    .should.be.eventually.rejectedWith("Sender is not permitted to call this function");
             });
 
             it("should initiate exiting of first node", async () => {
