@@ -74,7 +74,7 @@ contract ConstantsHolder is Permissions {
 
     uint public constant DOWNTIME_THRESHOLD_PART = 30;
 
-    uint public constant BOUNTY_LOCKUP_MONTHS = 3;
+    uint public constant BOUNTY_LOCKUP_MONTHS = 2;
 
     // MSR - Minimum staking requirement
     uint public msr;
@@ -110,7 +110,7 @@ contract ConstantsHolder is Permissions {
 
     uint public limitValidatorsPerDelegator;
 
-    uint public firstDelegationsMonth;
+    uint256 public firstDelegationsMonth; // deprecated
 
     // date when schains will be allowed for creation
     uint public schainCreationTimeStamp;
@@ -176,10 +176,6 @@ contract ConstantsHolder is Permissions {
         limitValidatorsPerDelegator = newLimit;
     }
 
-    function setFirstDelegationsMonth(uint month) external onlyOwner {
-        firstDelegationsMonth = month;
-    }
-
     function setSchainCreationTimeStamp(uint timestamp) external onlyOwner {
         schainCreationTimeStamp = timestamp;
     }
@@ -205,6 +201,6 @@ contract ConstantsHolder is Permissions {
         proofOfUseLockUpPeriodDays = 90;
         proofOfUseDelegationPercentage = 50;
         limitValidatorsPerDelegator = 20;
-        firstDelegationsMonth = 8;
+        firstDelegationsMonth = 0;
     }
 }

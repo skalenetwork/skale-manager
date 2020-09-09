@@ -53,8 +53,6 @@ contract("Bounty", ([owner, admin, hacker, validator]) => {
         distributor = await deployDistributor(contractManager);
 
         await skaleManager.grantRole(await skaleManager.ADMIN_ROLE(), admin);
-        const bountyPoolSize = "2310000000" + "0".repeat(18);
-        await skaleToken.mint(skaleManager.address, bountyPoolSize, "0x", "0x");
         await validatorService.registerValidator("Validator1", "D2 is even", 0, 0, {from: validator});
         validator1Id = (await validatorService.getValidatorId(validator)).toNumber();
         await validatorService.enableValidator(validator1Id, {from: owner});
@@ -103,12 +101,9 @@ contract("Bounty", ([owner, admin, hacker, validator]) => {
             await skaleManager.getBounty(0, {from: validator}).should.be.eventually.rejectedWith("Not time for bounty");
             skipTime(web3, rewardPeriod);
             const balanceBefore = await skaleToken.balanceOf(validator);
-            console.log("Balance:", balanceBefore.toString());
             await skaleManager.getBounty(0, {from: validator});
-            console.log("Start");
             // await distributor.withdrawBounty(validator1Id, validator, {from: validator});
             const balanceAfter = await skaleToken.balanceOf(validator);
-            console.log("Balance after:", balanceAfter.toString());
         });
 
         it("5 year test for 10 nodes", async() => {
@@ -116,17 +111,12 @@ contract("Bounty", ([owner, admin, hacker, validator]) => {
                 skipTime(web3, rewardPeriod);
 
                 for (let nodeIndex = 0; nodeIndex < 10; nodeIndex++) {
-                    console.log("should " + nodeIndex + " node get bounty after " + month + " month ");
                     const time = await currentTime(web3);
                     const currentDate = new Date(time * 1000);
-                    console.log(currentDate.toString());
                     const balanceBefore = await skaleToken.balanceOf(validator);
-                    console.log("Balance:", balanceBefore.toString());
                     await skaleManager.getBounty(nodeIndex, {from: validator});
-                    console.log("Start");
                     // await distributor.withdrawBounty(0, validator, {from: validator});
                     const balanceAfter = await skaleToken.balanceOf(validator);
-                    console.log("Balance after:", balanceAfter.toString());
                 }
             }
         });
