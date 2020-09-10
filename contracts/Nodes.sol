@@ -246,6 +246,8 @@ contract Nodes is Permissions {
         allow("SkaleManager")
         returns (bool)
     {
+        require(isNodeActive(nodeIndex), "Node should be Active");
+    
         _setNodeLeaving(nodeIndex);
 
         emit ExitInited(
