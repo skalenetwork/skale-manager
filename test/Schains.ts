@@ -33,7 +33,7 @@ import { deployNodeRotation } from "./tools/deploy/nodeRotation";
 chai.should();
 chai.use(chaiAsPromised);
 
-contract("Schains", ([owner, holder, validator, nodeAddress]) => {
+contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2]) => {
     let constantsHolder: ConstantsHolderInstance;
     let contractManager: ContractManagerInstance;
     let schains: SchainsInstance;
@@ -66,6 +66,10 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
         signature = (signature.slice(130) === "00" ? signature.slice(0, 130) + "1b" :
             (signature.slice(130) === "01" ? signature.slice(0, 130) + "1c" : signature));
         await validatorService.linkNodeAddress(nodeAddress, signature, {from: validator});
+        let signature2 = await web3.eth.sign(web3.utils.soliditySha3(validatorIndex.toString()), nodeAddress2);
+        signature2 = (signature2.slice(130) === "00" ? signature2.slice(0, 130) + "1b" :
+            (signature2.slice(130) === "01" ? signature2.slice(0, 130) + "1c" : signature2));
+        await validatorService.linkNodeAddress(nodeAddress2, signature2, {from: validator});
         await constantsHolder.setMSR(0);
     });
 
@@ -1533,6 +1537,164 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
             }
             await schainsInternal.getSchainIdsForNode(rotIndex2).should.be.eventually.empty;
             await schainsInternal.getSchainIdsForNode(rotIndex1).should.be.eventually.empty;
+        });
+    });
+
+    describe("when 7 nodes, 4 schains and 2 rotations(Kavun test)", async () => {
+        beforeEach(async () => {
+            const deposit = await schains.getSchainPrice(5, 5);
+            const nodesCount = 6;
+            const pubKey = ec.keyFromPrivate(String(privateKeys[3]).slice(2)).getPublic();
+            for (const index of Array.from(Array(nodesCount).keys())) {
+                const hexIndex = ("0" + index.toString(16)).slice(-2);
+                await skaleManager.createNode(
+                    8545, // port
+                    0, // nonce
+                    "0x7f0000" + hexIndex, // ip
+                    "0x7f0000" + hexIndex, // public ip
+                    ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')], // public key
+                    "D2-" + hexIndex, // name
+                    {from: nodeAddress});
+            }
+            const pubKey2 = ec.keyFromPrivate(String(privateKeys[4]).slice(2)).getPublic();
+            await skaleManager.createNode(
+                8545, // port
+                0, // nonce
+                "0x7f0000ff", // ip
+                "0x7f0000ff", // public ip
+                ["0x" + pubKey2.x.toString('hex'), "0x" + pubKey2.y.toString('hex')], // public key
+                "D2-ff", // name
+                {from: nodeAddress2});
+            await schains.addSchain(
+                holder,
+                deposit,
+                web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d1"]),
+                {from: owner});
+            await skaleDKG.setSuccesfulDKGPublic(
+                web3.utils.soliditySha3("d1"),
+            );
+
+            await schains.addSchain(
+                holder,
+                deposit,
+                web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d2"]),
+                {from: owner});
+            await skaleDKG.setSuccesfulDKGPublic(
+                web3.utils.soliditySha3("d2"),
+            );
+
+            await schains.addSchain(
+                holder,
+                deposit,
+                web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d3"]),
+                {from: owner});
+            await skaleDKG.setSuccesfulDKGPublic(
+                web3.utils.soliditySha3("d3"),
+            );
+
+            await schains.addSchain(
+                holder,
+                deposit,
+                web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d4"]),
+                {from: owner});
+            await skaleDKG.setSuccesfulDKGPublic(
+                web3.utils.soliditySha3("d4"),
+            );
+
+        });
+
+        it("should rotate 1 node with 3 schains", async () => {
+            let rotIndex = 7;
+            let schainIds = await schainsInternal.getSchainIdsForNode(0);
+            for(const index of Array.from(Array(6).keys())) {
+                const res = await schainsInternal.getSchainIdsForNode(index);
+                if (res.length >= 3) {
+                    rotIndex = index;
+                    schainIds = res;
+                    break;
+                }
+            }
+            for (const schainId of schainIds.reverse()) {
+                if (rotIndex === 7) {
+                    await skaleManager.nodeExit(rotIndex, {from: nodeAddress2});
+                } else {
+                    await skaleManager.nodeExit(rotIndex, {from: nodeAddress});
+                }
+                await skaleDKG.setSuccesfulDKGPublic(
+                    schainId,
+                );
+            }
+            await schainsInternal.getSchainIdsForNode(rotIndex).should.be.eventually.empty;
+        });
+
+        it("should rotate another 1 node with 4 schains", async () => {
+            let rotIndex1 = 7;
+            let schainIds1 = await schainsInternal.getSchainIdsForNode(0);
+            for(const index of Array.from(Array(6).keys())) {
+                const res = await schainsInternal.getSchainIdsForNode(index);
+                if (res.length >= 3) {
+                    rotIndex1 = index;
+                    schainIds1 = res;
+                    break;
+                }
+            }
+            for (const schainId of schainIds1.reverse()) {
+                if (rotIndex1 === 6) {
+                    await skaleManager.nodeExit(rotIndex1, {from: nodeAddress2});
+                } else if (rotIndex1 < 6) {
+                    await skaleManager.nodeExit(rotIndex1, {from: nodeAddress});
+                } else {
+                    break;
+                }
+                await skaleDKG.setSuccesfulDKGPublic(
+                    schainId,
+                );
+            }
+            await schainsInternal.getSchainIdsForNode(rotIndex1).should.be.eventually.empty;
+            let rotIndex2 = 7;
+            let schainIds2 = await schainsInternal.getSchainIdsForNode(0);
+            for(const index of Array.from(Array(6).keys())) {
+                if (await nodes.isNodeActive(index)) {
+                    const res = await schainsInternal.getSchainIdsForNode(index);
+                    if (res.length === 4) {
+                        rotIndex2 = index;
+                        schainIds2 = res;
+                        break;
+                    }
+                }
+            }
+
+            skipTime(web3, 43260);
+            for (const schainId of schainIds2.reverse()) {
+                if (rotIndex2 === 6) {
+                    await skaleManager.nodeExit(rotIndex2, {from: nodeAddress2});
+                } else if (rotIndex2 < 6) {
+                    await skaleManager.nodeExit(rotIndex2, {from: nodeAddress});
+                } else {
+                    break;
+                }
+                await skaleDKG.setSuccesfulDKGPublic(
+                    schainId,
+                );
+            }
+            await schainsInternal.getSchainIdsForNode(rotIndex2).should.be.eventually.empty;
+            await schainsInternal.getSchainIdsForNode(rotIndex1).should.be.eventually.empty;
+        });
+
+        it("should rotate 7 node and unlink from Validator", async () => {
+            const rotIndex = 6;
+            const schainIds = await schainsInternal.getSchainIdsForNode(rotIndex);
+            for (const schainId of schainIds.reverse()) {
+                const valId = await validatorService.getValidatorIdByNodeAddress(nodeAddress2);
+                ((await validatorService.getValidatorIdByNodeAddress(nodeAddress2)).toString()).should.be.equal("1");
+                await skaleManager.nodeExit(rotIndex, {from: nodeAddress2});
+                await skaleDKG.setSuccesfulDKGPublic(
+                    schainId,
+                );
+            }
+            await validatorService.getValidatorIdByNodeAddress(nodeAddress2)
+            .should.be.eventually.rejectedWith("Node address is not assigned to a validator");
+            await schainsInternal.getSchainIdsForNode(rotIndex).should.be.eventually.empty;
         });
     });
 
