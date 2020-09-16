@@ -789,7 +789,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
 
                 describe("when 2 node sent incorrect complaint", async () => {
                     beforeEach(async () => {
-                        await skaleDKG.complaint(
+                        await skaleDKG.complaintBadData(
                             web3.utils.soliditySha3(schainName),
                             1,
                             0,
@@ -868,7 +868,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                 });
 
                 it("should send complaint from 2 node", async () => {
-                    const result = await skaleDKG.complaint(
+                    const result = await skaleDKG.complaintBadData(
                         web3.utils.soliditySha3(schainName),
                         1,
                         0,
@@ -884,7 +884,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                 });
 
                 it("should not send alright after complaint from 2 node", async () => {
-                    const result = await skaleDKG.complaint(
+                    const result = await skaleDKG.complaintBadData(
                         web3.utils.soliditySha3(schainName),
                         1,
                         0,
@@ -904,7 +904,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                 });
 
                 it("should not send 2 complaints from 1 node", async () => {
-                    await skaleDKG.complaint(
+                    await skaleDKG.complaintBadData(
                         web3.utils.soliditySha3(schainName),
                         1,
                         0,
@@ -917,37 +917,37 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                         {from: validatorsAccount[0]},
                     );
                     assert(resCompl.should.be.false);
-                    const res = await skaleDKG.complaint(
+                    const res = await skaleDKG.complaintBadData(
                         web3.utils.soliditySha3(schainName),
                         0,
                         1,
                         {from: validatorsAccount[0]},
                     );
                     assert.equal(res.logs[0].event, "ComplaintError");
-                    assert.equal(res.logs[0].args.error, "One complaint is already sent");
+                    assert.equal(res.logs[0].args.error, "First complaint has already been processed");
                 });
 
                 it("should not send 2 complaints from 2 node", async () => {
-                    await skaleDKG.complaint(
+                    await skaleDKG.complaintBadData(
                         web3.utils.soliditySha3(schainName),
                         1,
                         0,
                         {from: validatorsAccount[1]},
                     );
-                    const res = await skaleDKG.complaint(
+                    const res = await skaleDKG.complaintBadData(
                         web3.utils.soliditySha3(schainName),
                         1,
                         0,
                         {from: validatorsAccount[1]},
                     );
                     assert.equal(res.logs[0].event, "ComplaintError");
-                    assert.equal(res.logs[0].args.error, "The same complaint rejected");
+                    assert.equal(res.logs[0].args.error, "First complaint has already been processed");
                 });
 
                 describe("when complaint successfully sent", async () => {
 
                     beforeEach(async () => {
-                        const result = await skaleDKG.complaint(
+                        const result = await skaleDKG.complaintBadData(
                             web3.utils.soliditySha3(schainName),
                             1,
                             0,
@@ -1066,7 +1066,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                 {from: validatorsAccount[1]},
             );
 
-            await skaleDKG.complaint(
+            await skaleDKG.complaintBadData(
                 web3.utils.soliditySha3(schainName),
                 1,
                 0,
