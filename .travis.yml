@@ -39,6 +39,7 @@ jobs:
         - slither --version
         - yarn fullcheck || travis_terminate 1
         - bash scripts/test_deploy.sh || travis_terminate 2
+        - bash scripts/test_upgrade.sh || travis_terminate 3
 
     - stage: test
       env:
@@ -55,6 +56,12 @@ jobs:
     - stage: test
       env:
         - TESTFOLDERS=3
+      script:
+        - bash scripts/move.sh
+        - bash scripts/coverage.sh
+    - stage: test
+      env:
+        - TESTFOLDERS=4
       script:
         - bash scripts/move.sh
         - bash scripts/coverage.sh
@@ -79,21 +86,23 @@ jobs:
         - provider: releases
           api_key: "$GITHUB_OAUTH_TOKEN"
           skip_cleanup: true
-          name: $VERSION @ $(date +'%d.%m.%Y %R')
+          name: $VERSION
           on:
             repo: $TRAVIS_REPO_SLUG
-            branch: master
+            branch:
+              - stable
+              - master
         - provider: releases
           api_key: "$GITHUB_OAUTH_TOKEN"
           skip_cleanup: true
           prerelease: true
-          name: $VERSION @ $(date +'%d.%m.%Y %R')
+          name: $VERSION
           on:
             repo: $TRAVIS_REPO_SLUG
             branch:
               - develop
               - beta
-              - stable
+              
         - provider: script
           skip_cleanup: true
           script: bash $TRAVIS_BUILD_DIR/scripts/build_and_publish.sh

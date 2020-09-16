@@ -7,19 +7,21 @@ group1=(
    SkaleManager.ts 
 )
 group2=(
-    SchainsFunctionality.ts
-    SkaleDKG.ts
-    MonitorsFunctionality.spec.ts
-    SchainsData.ts
+    Schains.ts
+    Monitors.ts
+    SchainsInternal.ts
     ECDH.ts
     Decryption.ts
     ContractManager.ts
 )
 group3=()
+group4=(
+    SkaleDKG.ts
+)
 for file in "${all[@]}"
 do
     listed=false
-    for listedFile in "${group1[@]}" "${group2[@]}"
+    for listedFile in "${group1[@]}" "${group2[@]}" "${group4[@]}"
     do
         if [[ $file == $listedFile ]]
         then
@@ -38,14 +40,22 @@ if [ "$TESTFOLDERS" = 1 ]
 then
     removingFiles+=(${group2[@]})
     removingFiles+=(${group3[@]})
+    removingFiles+=(${group4[@]})
 elif [ "$TESTFOLDERS" = 2 ]
 then
     removingFiles+=(${group1[@]})
     removingFiles+=(${group3[@]})
+    removingFiles+=(${group4[@]})
 elif [ "$TESTFOLDERS" = 3 ]
 then
     removingFiles+=(${group1[@]})
     removingFiles+=(${group2[@]})
+    removingFiles+=(${group4[@]})
+elif [ "$TESTFOLDERS" = 4 ]
+then
+    removingFiles+=(${group1[@]})
+    removingFiles+=(${group2[@]})
+    removingFiles+=(${group3[@]})
 else
     echo "Testing group is not set"
     exit 1

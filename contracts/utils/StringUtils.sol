@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 /*
     StringUtils.sol - SKALE Manager
     Copyright (C) 2018-Present SKALE Labs
@@ -17,16 +19,19 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.6;
+pragma solidity 0.6.10;
+
+import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
 
 
 library StringUtils {
+    using SafeMath for uint;
 
-    function strConcat(string memory _a, string memory _b) internal pure returns (string memory) {
-        bytes memory _ba = bytes(_a);
-        bytes memory _bb = bytes(_b);
+    function strConcat(string memory a, string memory b) internal pure returns (string memory) {
+        bytes memory _ba = bytes(a);
+        bytes memory _bb = bytes(b);
 
-        string memory ab = new string(_ba.length + _bb.length);
+        string memory ab = new string(_ba.length.add(_bb.length));
         bytes memory strBytes = bytes(ab);
         uint k = 0;
         uint i = 0;
@@ -39,22 +44,22 @@ library StringUtils {
         return string(strBytes);
     }
 
-    function uint2str(uint _i) internal pure returns (string memory) {
-        if (_i == 0) {
+    function uint2str(uint i) internal pure returns (string memory) {
+        if (i == 0) {
             return "0";
         }
-        uint j = _i;
-        uint i = _i;
+        uint j = i;
+        uint _i = i;
         uint len;
         while (j != 0) {
             len++;
             j /= 10;
         }
         bytes memory bstr = new bytes(len);
-        uint k = len - 1;
-        while (i != 0) {
-            bstr[k--] = byte(uint8(48 + i % 10));
-            i /= 10;
+        uint k = len.sub(1);
+        while (_i != 0) {
+            bstr[k--] = byte(uint8(48 + _i % 10));
+            _i /= 10;
         }
         return string(bstr);
     }

@@ -1,8 +1,8 @@
 import { ContractManagerInstance,
     DelegationControllerInstance,
     SkaleTokenInstance,
-    TokenStateInstance,
-    ValidatorServiceInstance } from "../../types/truffle-contracts";
+    ValidatorServiceInstance,
+    ConstantsHolderInstance} from "../../types/truffle-contracts";
 
 import { skipTime } from "../tools/time";
 
@@ -10,11 +10,12 @@ import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
 import { deployContractManager } from "../tools/deploy/contractManager";
 import { deployDelegationController } from "../tools/deploy/delegation/delegationController";
-import { deployTokenState } from "../tools/deploy/delegation/tokenState";
 import { deployValidatorService } from "../tools/deploy/delegation/validatorService";
 import { deploySkaleToken } from "../tools/deploy/skaleToken";
 import { deployTimeHelpersWithDebug } from "../tools/deploy/test/timeHelpersWithDebug";
 import { Delegation, State } from "../tools/types";
+import { deployTimeHelpers } from "../tools/deploy/delegation/timeHelpers";
+import { deployConstantsHolder } from "../tools/deploy/constantsHolder";
 chai.should();
 chai.use(chaiAsPromised);
 
@@ -22,10 +23,9 @@ contract("DelegationController", ([owner, holder1, holder2, validator, validator
     let contractManager: ContractManagerInstance;
     let skaleToken: SkaleTokenInstance;
     let delegationController: DelegationControllerInstance;
-    let tokenState: TokenStateInstance;
     let validatorService: ValidatorServiceInstance;
+    let constantsHolder: ConstantsHolderInstance;
 
-    const defaultAmount = 100 * 1e18;
     const month = 60 * 60 * 24 * 31;
 
     beforeEach(async () => {
@@ -33,8 +33,8 @@ contract("DelegationController", ([owner, holder1, holder2, validator, validator
 
         skaleToken = await deploySkaleToken(contractManager);
         delegationController = await deployDelegationController(contractManager);
-        tokenState = await deployTokenState(contractManager);
         validatorService = await deployValidatorService(contractManager);
+        constantsHolder = await deployConstantsHolder(contractManager);
     });
 
     describe("when arguments for delegation initialized", async () => {
@@ -66,7 +66,7 @@ contract("DelegationController", ([owner, holder1, holder2, validator, validator
         it("should reject delegation if it doesn't meet minimum delegation amount", async () => {
             amount = 99;
             await delegationController.delegate(validatorId, amount, delegationPeriod, info, {from: holder1})
-                .should.be.eventually.rejectedWith("Amount does not meet minimum delegation amount");
+                .should.be.eventually.rejectedWith("Amount does not meet the validator's minimum delegation amount");
         });
 
         it("should reject delegation if request doesn't meet allowed delegation period", async () => {
@@ -78,7 +78,7 @@ contract("DelegationController", ([owner, holder1, holder2, validator, validator
         it("should reject delegation if holder doesn't have enough unlocked tokens for delegation", async () => {
             amount = 101;
             await delegationController.delegate(validatorId, amount, delegationPeriod, info, {from: holder1})
-                .should.be.eventually.rejectedWith("Delegator does not have enough tokens to delegate");
+                .should.be.eventually.rejectedWith("Token holder does not have enough tokens to delegate");
         });
 
         it("should send request for delegation", async () => {
@@ -100,7 +100,7 @@ contract("DelegationController", ([owner, holder1, holder2, validator, validator
             await skaleToken.mint(holder1, 2 * amount, "0x", "0x");
             await delegationController.delegate(validatorId, amount + 1, delegationPeriod, info, {from: holder1});
             await delegationController.delegate(validatorId, amount, delegationPeriod, info, {from: holder1})
-                .should.be.eventually.rejectedWith("Delegator does not have enough tokens to delegate");
+                .should.be.eventually.rejectedWith("Token holder does not have enough tokens to delegate");
 
         });
 
@@ -114,7 +114,7 @@ contract("DelegationController", ([owner, holder1, holder2, validator, validator
             await skaleToken.mint(holder1, amount, "0x", "0x");
             await validatorService.disableValidator(validatorId, {from: owner});
             await delegationController.delegate(validatorId, amount, delegationPeriod, info, {from: holder1})
-                .should.be.eventually.rejectedWith("Validator is not authorized to accept request");
+                .should.be.eventually.rejectedWith("Validator is not authorized to accept delegation request");
             await validatorService.disableWhitelist();
             await delegationController.delegate(validatorId, amount, delegationPeriod, info, {from: holder1});
         });
@@ -135,13 +135,13 @@ contract("DelegationController", ([owner, holder1, holder2, validator, validator
             it("should reject canceling request if validator already accepted it", async () => {
                 await delegationController.acceptPendingDelegation(delegationId, {from: validator});
                 await delegationController.cancelPendingDelegation(delegationId, {from: holder1})
-                    .should.be.rejectedWith("Token holders able to cancel only PROPOSED delegations");
+                    .should.be.rejectedWith("Token holders are only able to cancel PROPOSED delegations");
             });
 
             it("should reject canceling request if delegation request already rejected", async () => {
                 await delegationController.cancelPendingDelegation(delegationId, {from: holder1});
                 await delegationController.cancelPendingDelegation(delegationId, {from: holder1})
-                    .should.be.rejectedWith("Token holders able to cancel only PROPOSED delegations");
+                    .should.be.rejectedWith("Token holders are only able to cancel PROPOSED delegations");
             });
 
             it("should change state of tokens to CANCELED if delegation was cancelled", async () => {
@@ -153,19 +153,25 @@ contract("DelegationController", ([owner, holder1, holder2, validator, validator
 
             it("should reject accepting request if such validator doesn't exist", async () => {
                 await delegationController.acceptPendingDelegation(delegationId, {from: validator2})
-                    .should.be.rejectedWith("Validator with such address does not exist");
+                    .should.be.rejectedWith("Validator with given address does not exist");
             });
 
             it("should reject accepting request if validator already canceled it", async () => {
                 await delegationController.cancelPendingDelegation(delegationId, {from: holder1});
                 await delegationController.acceptPendingDelegation(delegationId, {from: validator})
-                    .should.be.rejectedWith("Cannot set state to accepted");
+                    .should.be.rejectedWith("The delegation has been cancelled by token holder");
             });
 
             it("should reject accepting request if validator already accepted it", async () => {
                 await delegationController.acceptPendingDelegation(delegationId, {from: validator});
                 await delegationController.acceptPendingDelegation(delegationId, {from: validator})
-                    .should.be.rejectedWith("Cannot set state to accepted");
+                    .should.be.rejectedWith("The delegation has been already accepted");
+            });
+
+            it("should reject accepting request if next month started", async () => {
+                skipTime(web3, month);
+                await delegationController.acceptPendingDelegation(delegationId, {from: validator})
+                    .should.be.rejectedWith("The delegation request is outdated");
             });
 
             it("should reject accepting request if validator tried to accept request not assigned to him", async () => {

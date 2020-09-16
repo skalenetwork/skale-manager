@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 /*
     Punisher.sol - SKALE Manager
     Copyright (C) 2019-Present SKALE Labs
@@ -17,9 +19,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.6;
-
-import "@openzeppelin/contracts/math/SafeMath.sol";
+pragma solidity 0.6.10;
 
 import "../Permissions.sol";
 import "../interfaces/delegation/ILocker.sol";
@@ -27,13 +27,23 @@ import "../interfaces/delegation/ILocker.sol";
 import "./ValidatorService.sol";
 import "./DelegationController.sol";
 
-
+/**
+ * @title Punisher
+ * @dev This contract handles all slashing and forgiving operations.
+ */
 contract Punisher is Permissions, ILocker {
+
+    /**
+     * @dev Emitted when a slashing condition occurs.
+     */
     event Slash(
         uint validatorId,
         uint amount
     );
 
+    /**
+     * @dev Emitted when a forgive condition occurs.
+     */
     event Forgive(
         address wallet,
         uint amount
@@ -42,11 +52,20 @@ contract Punisher is Permissions, ILocker {
     //        holder => tokens
     mapping (address => uint) private _locked;
 
-    /// @notice Allows service to slash `validator` by `amount` of tokens
+    /**
+     * @dev Executes slashing on a validator and its delegations by an `amount`
+     * of tokens. Currently, SkaleDKG is the only service allowed to execute
+     * slashing.
+     *
+     * Emits a Slash event.
+     *
+     * @param validatorId uint validator to be slashed
+     * @param amount uint slashed amount
+    */
     function slash(uint validatorId, uint amount) external allow("SkaleDKG") {
-        ValidatorService validatorService = ValidatorService(_contractManager.getContract("ValidatorService"));
+        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
         DelegationController delegationController = DelegationController(
-            _contractManager.getContract("DelegationController"));
+            contractManager.getContract("DelegationController"));
 
         require(validatorService.validatorExists(validatorId), "Validator does not exist");
 
@@ -55,9 +74,17 @@ contract Punisher is Permissions, ILocker {
         emit Slash(validatorId, amount);
     }
 
-    function forgive(address holder, uint amount) external onlyOwner {
+    /**
+     * @dev Allows the Owner to forgive a slashing condition.
+     *
+     * Emits a Forgive event.
+     *
+     * @param holder address of the slashed
+     * @param amount uint amount to be forgiven
+     */
+    function forgive(address holder, uint amount) external onlyAdmin {
         DelegationController delegationController = DelegationController(
-            _contractManager.getContract("DelegationController"));
+            contractManager.getContract("DelegationController"));
 
         require(!delegationController.hasUnprocessedSlashes(holder), "Not all slashes were calculated");
 
@@ -70,10 +97,16 @@ contract Punisher is Permissions, ILocker {
         emit Forgive(holder, amount);
     }
 
+    /**
+     * @dev See ILocker-getAndUpdateLockedAmount
+     */
     function getAndUpdateLockedAmount(address wallet) external override returns (uint) {
         return _getAndUpdateLockedAmount(wallet);
     }
 
+    /**
+     * @dev See ILocker-getAndUpdateForbiddenForDelegationAmount
+     */
     function getAndUpdateForbiddenForDelegationAmount(address wallet) external override returns (uint) {
         return _getAndUpdateLockedAmount(wallet);
     }
@@ -82,15 +115,15 @@ contract Punisher is Permissions, ILocker {
         _locked[holder] = _locked[holder].add(amount);
     }
 
-    function initialize(address contractManager) public override initializer {
-        Permissions.initialize(contractManager);
+    function initialize(address contractManagerAddress) public override initializer {
+        Permissions.initialize(contractManagerAddress);
     }
 
     // private
 
-    function _getAndUpdateLockedAmount(address wallet) internal returns (uint) {
+    function _getAndUpdateLockedAmount(address wallet) private returns (uint) {
         DelegationController delegationController = DelegationController(
-            _contractManager.getContract("DelegationController"));
+            contractManager.getContract("DelegationController"));
 
         delegationController.processAllSlashes(wallet);
         return _locked[wallet];

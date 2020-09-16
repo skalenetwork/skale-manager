@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 /*
     ECDH.sol - SKALE Manager
     Copyright (C) 2018-Present SKALE Labs
@@ -17,8 +19,8 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.6;
-import "@openzeppelin/contracts/math/SafeMath.sol";
+pragma solidity 0.6.10;
+import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
 
 
 contract ECDH {
@@ -128,7 +130,7 @@ contract ECDH {
         while (newR != 0) {
             q = r.div(newR);
             (t, newT) = (newT, addmod(t, (_N.sub(mulmod(q, newT, _N))), _N));
-            (r, newR) = (newR, r.sub(q.mul(newR)));
+            (r, newR) = (newR, r % newR);
         }
         return t;
     }
@@ -238,7 +240,7 @@ contract ECDH {
                     pz
                 );
             }
-            remaining = remaining / 2;
+            remaining = remaining.div(2);
             (px, py, pz) = ecDouble(px, py, pz);
         }
 

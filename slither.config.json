@@ -1,4 +1,4 @@
 {
-    "detectors_to_exclude": "unused-return,divide-before-multiply,uninitialized-state-variables,unused-state,reentrancy-events,naming-convention,solc-version,assembly,timestamp,calls-loop,incorrect-equality,reentrancy-no-eth,constant-function,pragma",
-    "filter_paths": "@openzeppelin/upgrades/contracts/|@openzeppelin/contracts-ethereum-package/contracts/|@nomiclabs/buidler/|@openzeppelin/contracts/|thirdparty"
+    "detectors_to_exclude": "uninitialized-state-variables,reentrancy-events,solc-version,assembly,timestamp,calls-loop,reentrancy-no-eth,divide-before-multiply",
+    "filter_paths": "@openzeppelin/upgrades/contracts/|@openzeppelin/contracts-ethereum-package/contracts/|@nomiclabs/buidler/|@openzeppelin/contracts/|thirdparty|Migrations.sol"
 }

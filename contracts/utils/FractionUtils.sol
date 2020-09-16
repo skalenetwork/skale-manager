@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
 /*
     FractionUtils.sol - SKALE Manager
     Copyright (C) 2018-Present SKALE Labs
@@ -17,9 +19,9 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.6;
+pragma solidity 0.6.10;
 
-import "@openzeppelin/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
 
 
 library FractionUtils {
@@ -51,17 +53,17 @@ library FractionUtils {
         return createFraction(a.numerator.mul(b.numerator), a.denominator.mul(b.denominator));
     }
 
-    function gcd(uint _a, uint _b) internal pure returns (uint) {
-        uint a = _a;
-        uint b = _b;
-        if (b > a) {
-            (a, b) = swap(a, b);
+    function gcd(uint a, uint b) internal pure returns (uint) {
+        uint _a = a;
+        uint _b = b;
+        if (_b > _a) {
+            (_a, _b) = swap(_a, _b);
         }
-        while (b > 0) {
-            a = a.mod(b);
-            (a, b) = swap (a, b);
+        while (_b > 0) {
+            _a = _a.mod(_b);
+            (_a, _b) = swap (_a, _b);
         }
-        return a;
+        return _a;
     }
 
     function swap(uint a, uint b) internal pure returns (uint, uint) {

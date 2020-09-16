@@ -1,12 +1,12 @@
 import { ContractManagerInstance,
          SkaleVerifierInstance } from "../../../types/truffle-contracts";
 import { deployFunctionFactory } from "./factory";
-import { deploySchainsData } from "./schainsData";
+import { deploySchainsInternal } from "./schainsInternal";
 
 const deploySkaleVerifier: (contractManager: ContractManagerInstance) => Promise<SkaleVerifierInstance>
     = deployFunctionFactory("SkaleVerifier",
                             async (contractManager: ContractManagerInstance) => {
-                                await deploySchainsData(contractManager);
+                                await deploySchainsInternal(contractManager);
                             });
 
 export { deploySkaleVerifier };
