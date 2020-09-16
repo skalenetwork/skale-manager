@@ -117,6 +117,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
         if (nodes.isNodeActive(nodeIndex)) {
             require(nodes.initExit(nodeIndex), "Initialization of node exit is failed");
         }
+        require(nodes.isNodeLeaving(nodeIndex), "Node should be Leaving");
         bool completed;
         bool isSchains = false;
         if (schainsInternal.getActiveSchain(nodeIndex) != bytes32(0)) {
