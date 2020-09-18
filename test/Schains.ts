@@ -893,6 +893,13 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
 
         });
 
+        it("should reject if node in maintenance call nodeExit", async () => {
+            await nodes.setNodeInMaintenance(0);
+            await skaleManager.nodeExit(0, {from: nodeAddress})
+                .should.be.eventually.rejectedWith("Node should be Leaving");
+
+        });
+
         it("should rotate 2 nodes consistently", async () => {
             const res1 = await schainsInternal.getNodesInGroup(web3.utils.soliditySha3("d2"));
             const res2 = await schainsInternal.getNodesInGroup(web3.utils.soliditySha3("d3"));
@@ -936,7 +943,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
             nodeStatus = (await nodes.getNodeStatus(0)).toNumber();
             assert.equal(nodeStatus, LEFT);
             await skaleManager.nodeExit(0, {from: nodeAddress})
-                .should.be.eventually.rejectedWith("Node is not Leaving");
+                .should.be.eventually.rejectedWith("Node should be Leaving");
 
             nodeStatus = (await nodes.getNodeStatus(1)).toNumber();
             assert.equal(nodeStatus, ACTIVE);
@@ -957,7 +964,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress]) => {
             nodeStatus = (await nodes.getNodeStatus(1)).toNumber();
             assert.equal(nodeStatus, LEFT);
             await skaleManager.nodeExit(1, {from: nodeAddress})
-                .should.be.eventually.rejectedWith("Node is not Leaving");
+                .should.be.eventually.rejectedWith("Node should be Leaving");
         });
 
         it("should rotate node on the same position", async () => {

@@ -176,6 +176,12 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                     .should.be.eventually.rejectedWith("Validator with given address does not exist");
             });
 
+            it("should reject if node in maintenance call nodeExit", async () => {
+                await nodesContract.setNodeInMaintenance(0);
+                await skaleManager.nodeExit(0, {from: nodeAddress})
+                    .should.be.eventually.rejectedWith("Node should be Leaving");
+            });
+
             it("should initiate exiting", async () => {
                 await skaleManager.nodeExit(0, {from: nodeAddress});
 
