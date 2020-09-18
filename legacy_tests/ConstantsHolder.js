@@ -117,6 +117,18 @@ async function getPeriodsAndCheckTime() {
     process.exit();
 }
 
+async function setLimitValidatorsPerDelegator(param) {
+    console.log("limitValidatorsPerDelegator: ", await init.ConstantsHolder.methods.limitValidatorsPerDelegator().call());
+    contractAddress = init.jsonData['constants_holder_address'];
+    const functionABI = init.ConstantsHolder.methods.setLimitValidatorsPerDelegator(param).encodeABI();
+    const privateKeyB = Buffer.from(init.privateKey, "hex");
+    const success = await sendTransaction(init.web3, init.mainAccount, privateKeyB, functionABI, contractAddress, "0");
+    // console.log("Transaction was successful:", success);
+    console.log("limitValidatorsPerDelegator: ", await init.ConstantsHolder.methods.limitValidatorsPerDelegator().call());
+    // console.log("Exiting...");
+    process.exit();
+}
+
 if (process.argv[2] == 'setCheckTime') {
     newCheckTime = process.argv[3];
     setCheckTime(newCheckTime);
@@ -134,6 +146,9 @@ if (process.argv[2] == 'setCheckTime') {
     setProofOfUseDelegationPercentage(param);
 } else if (process.argv[2] == 'getPeriodsAndCheckTime') {
     getPeriodsAndCheckTime();
+} else if (process.argv[2] == 'setLimitValidatorsPerDelegator') {
+    param = process.argv[3];
+    setLimitValidatorsPerDelegator(param);
 } else {
     console.log("Recheck name of function");
     process.exit();
