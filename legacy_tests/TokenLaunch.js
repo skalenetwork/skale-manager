@@ -30,6 +30,7 @@ async function sendTransaction(web3Inst, account, privateKey, data, receiverCont
     console.log("Transaction done!");
     console.log("Gas used: ", txReceipt.gasUsed);
     console.log('------------------------------');
+    return true;
 }
 
 async function approveBatchOfTransfers() {
@@ -58,6 +59,22 @@ async function getApproved(walletAddress) {
     process.exit();
 }
 
+async function grantSeller(address) {
+    console.log(init.mainAccount)
+    const seller_role = await init.TokenLaunchManager.methods.SELLER_ROLE().call();
+    console.log(seller_role);
+    console.log("Is this address has seller role: ",await init.TokenLaunchManager.methods.hasRole(seller_role, address).call());
+    const grantRoleABI = init.TokenLaunchManager.methods.grantRole(seller_role, address).encodeABI(); //.send({from: init.mainAccoun$
+    contractAddress = init.jsonData['token_launch_manager_address'];
+    let privateKeyB = Buffer.from(init.privateKey, "hex");
+    const success = await sendTransaction(init.web3, init.mainAccount, privateKeyB, grantRoleABI, contractAddress);
+    console.log("Is this address has seller role after transaction: ", await init.TokenLaunchManager.methods.hasRole(seller_role, address).call());
+    console.log();
+    console.log("Transaction was successful:", success);
+    console.log("Exiting...");
+    process.exit();
+}
+
 
 
 if (process.argv[2] == 'approveBatchOfTransfers') {
@@ -66,4 +83,9 @@ if (process.argv[2] == 'approveBatchOfTransfers') {
     getApproved(process.argv[3]);
 } else if (process.argv[2] == 'mint') {
     mint();
-} 
+} else if (process.argv[2] == 'grantSeller') {
+    grantSeller(process.argv[3]);
+} else {
+    console.log("Recheck name");
+    process.exit();
+}
