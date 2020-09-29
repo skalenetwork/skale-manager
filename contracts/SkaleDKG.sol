@@ -55,6 +55,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         uint nodeToComplaint;
         uint fromNodeToComplaint;
         uint startComplaintBlockTimestamp;
+        bool isResponse;
         bytes32 keyShare;
         G2Operations.G2Point sumOfVerVec;
     }
@@ -212,18 +213,24 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         uint indexOnSchain = _nodeIndexInSchain(groupIndex, fromNodeIndex);
         require(indexOnSchain < channels[groupIndex].n, "Node is not in this group");
         require(complaints[groupIndex].nodeToComplaint == fromNodeIndex, "Not this Node");
+        require(!complaints[groupIndex].isResponse, "Already submitted pre response data");
         require(_isNodeByMessageSender(fromNodeIndex, msg.sender), "Node does not exist for message sender");
         require(
             hashedData[groupIndex][indexOnSchain] == _hashData(secretKeyContribution, verificationVector),
             "Broadcasted Data is not correct"
         );
+        require(
+            verificationVector.length == verificationVectorMult.length,
+            "Incorrect multiplied verification vector"
+        );
         uint index = _nodeIndexInSchain(groupIndex, complaints[groupIndex].fromNodeToComplaint);
         require(
-            _checkCorrectVectorMultiplication(index, verificationVector, verificationVectorMult),
+            _checkCorrectVectorMultiplication(indexOnSchain, verificationVector, verificationVectorMult),
             "Multiplied verification vector is incorrect"
         );
         complaints[groupIndex].keyShare = secretKeyContribution[index].share;
         complaints[groupIndex].sumOfVerVec = _calculateSum(verificationVectorMult);
+        complaints[groupIndex].isResponse = true;
     }
 
     function response(
@@ -238,6 +245,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         uint indexOnSchain = _nodeIndexInSchain(groupIndex, fromNodeIndex);
         require(indexOnSchain < channels[groupIndex].n, "Node is not in this group");
         require(complaints[groupIndex].nodeToComplaint == fromNodeIndex, "Not this Node");
+        require(complaints[groupIndex].isResponse, "Have not submitted pre-response data");
         require(_isNodeByMessageSender(fromNodeIndex, msg.sender), "Node does not exist for message sender");
         // uint index = _nodeIndexInSchain(groupIndex, complaints[groupIndex].fromNodeToComplaint);
         _verifyDataAndSlash(
@@ -466,8 +474,12 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         view
         returns (bool)
     {
+        Fp2Operations.Fp2Point memory one = G2Operations.getG1();
+        if (!(g1Mul.a == 0 && g1Mul.b == 0)) {
+            g1Mul.b = Fp2Operations.P.sub((g1Mul.b % Fp2Operations.P));
+        }
         return Precompiled.bn256Pairing(
-            G2Operations.getG1().a, G2Operations.getG1().b,
+            one.a, one.b,
             verificationVectorMult.x.b, verificationVectorMult.x.a,
             verificationVectorMult.y.b, verificationVectorMult.y.a,
             g1Mul.a, g1Mul.b,
