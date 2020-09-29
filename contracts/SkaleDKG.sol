@@ -198,6 +198,26 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         }
     }
 
+    function complaintBadData(bytes32 groupIndex, uint fromNodeIndex, uint toNodeIndex)
+        external
+        correctGroupWithoutRevert(groupIndex)
+        correctNode(groupIndex, fromNodeIndex)
+        correctNodeWithoutRevert(groupIndex, toNodeIndex)
+    { 
+        require(_isNodeByMessageSender(fromNodeIndex, msg.sender), "Node does not exist for message sender");
+        require(isNodeBroadcasted(groupIndex, fromNodeIndex), "Node has not broadcasted");
+        require(isNodeBroadcasted(groupIndex, toNodeIndex), "Accused node has not broadcasted");
+        require(!isAllDataReceived(groupIndex, fromNodeIndex), "Node has already sent alright");
+        if (complaints[groupIndex].nodeToComplaint == uint(-1)) {
+            complaints[groupIndex].nodeToComplaint = toNodeIndex;
+            complaints[groupIndex].fromNodeToComplaint = fromNodeIndex;
+            complaints[groupIndex].startComplaintBlockTimestamp = block.timestamp;
+            emit ComplaintSent(groupIndex, fromNodeIndex, toNodeIndex);
+        } else {
+            emit ComplaintError("First complaint has already been processed");
+        }
+    }
+
     function preResponse(
         bytes32 groupIndex,
         uint fromNodeIndex,
@@ -556,7 +576,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
     }
 
     function _handleComplaintWhenBroadcasted(bytes32 groupIndex, uint fromNodeIndex, uint toNodeIndex) private {
-        // incorrect data or missing alright
+        // missing alright
         if (complaints[groupIndex].nodeToComplaint == uint(-1)) {
             if (
                 isEveryoneBroadcasted(groupIndex) &&
@@ -568,10 +588,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
                 return;
             } else if (!isAllDataReceived(groupIndex, fromNodeIndex)) {
                 // incorrect data
-                complaints[groupIndex].nodeToComplaint = toNodeIndex;
-                complaints[groupIndex].fromNodeToComplaint = fromNodeIndex;
-                complaints[groupIndex].startComplaintBlockTimestamp = block.timestamp;
-                emit ComplaintSent(groupIndex, fromNodeIndex, toNodeIndex);
+                _finalizeSlashing(groupIndex, fromNodeIndex);
                 return;
             }
             emit ComplaintError("Has already sent alright");
