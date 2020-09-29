@@ -78,8 +78,6 @@ contract SkaleDKG is Permissions, ISkaleDKG {
     mapping(bytes32 => uint) public startAlrightTimestamp;
 
     mapping(bytes32 => mapping(uint => bytes32)) public hashedData;
-    
-    G2Operations.G2Point[] private _verificationVectorMult;
 
     event ChannelOpened(bytes32 groupIndex);
 
