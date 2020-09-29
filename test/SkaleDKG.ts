@@ -1504,7 +1504,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
             if (accusedNode === "7") {
                 complaintNode = "9";
             }
-            await skaleDKG.complaint(
+            await skaleDKG.complaintBadData(
                 web3.utils.soliditySha3("New16NodeSchain"),
                 complaintNode,
                 accusedNode,
