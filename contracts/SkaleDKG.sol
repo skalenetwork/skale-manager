@@ -396,12 +396,22 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             !dkgProcess[groupIndex].completed[index];
     }
 
+    function isPreResponsePossible(bytes32 groupIndex, uint nodeIndex) external view returns (bool) {
+        uint index = _nodeIndexInSchain(groupIndex, nodeIndex);
+        return channels[groupIndex].active &&
+            index < channels[groupIndex].n &&
+            _isNodeByMessageSender(nodeIndex, msg.sender) &&
+            complaints[groupIndex].nodeToComplaint == nodeIndex &&
+            !complaints[groupIndex].isResponse;
+    }
+
     function isResponsePossible(bytes32 groupIndex, uint nodeIndex) external view returns (bool) {
         uint index = _nodeIndexInSchain(groupIndex, nodeIndex);
         return channels[groupIndex].active &&
             index < channels[groupIndex].n &&
             _isNodeByMessageSender(nodeIndex, msg.sender) &&
-            complaints[groupIndex].nodeToComplaint == nodeIndex;
+            complaints[groupIndex].nodeToComplaint == nodeIndex &&
+            complaints[groupIndex].isResponse;
     }
 
     function initialize(address contractsAddress) public override initializer {

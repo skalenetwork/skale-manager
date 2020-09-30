@@ -720,6 +720,24 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                     assert(res.should.be.false);
                 });
 
+                it("should be unpossible send preResponse", async () => {
+                    const res = await skaleDKG.isPreResponsePossible(
+                        web3.utils.soliditySha3(schainName),
+                        0,
+                        {from: validatorsAccount[0]},
+                    );
+                    assert(res.should.be.false);
+                });
+
+                it("should be unpossible send another preResponse", async () => {
+                    const res = await skaleDKG.isPreResponsePossible(
+                        web3.utils.soliditySha3(schainName),
+                        1,
+                        {from: validatorsAccount[1]},
+                    );
+                    assert(res.should.be.false);
+                });
+
                 it("should be unpossible send response", async () => {
                     const res = await skaleDKG.isResponsePossible(
                         web3.utils.soliditySha3(schainName),
@@ -818,6 +836,17 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                     assert.equal(result.logs[1].args.groupIndex, web3.utils.soliditySha3(schainName));
                 });
 
+                it("should complaint and be slashed", async () => {
+                    const resCompl = await skaleDKG.complaint(
+                        web3.utils.soliditySha3(schainName),
+                        1,
+                        0,
+                        {from: validatorsAccount[1]},
+                    );
+                    assert.equal(resCompl.logs[0].event, "BadGuy");
+                    assert.equal(resCompl.logs[0].args.nodeIndex, "1");
+                });
+
                 describe("when 2 node sent incorrect complaint", async () => {
                     beforeEach(async () => {
                         await skaleDKG.complaintBadData(
@@ -836,10 +865,85 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                             {from: validatorsAccount[1]},
                         );
                         assert(res.should.be.false);
+                        const resCompl = await skaleDKG.complaint(
+                            web3.utils.soliditySha3(schainName),
+                            1,
+                            0,
+                            {from: validatorsAccount[1]},
+                        );
+                        assert.equal(resCompl.logs[0].event, "ComplaintError");
+                        assert.equal(resCompl.logs[0].args.error, "The same complaint rejected");
+                    });
+
+                    it("should send complaint after missing preResponse", async () => {
+                        skipTime(web3, 1800);
+                        const res = await skaleDKG.isComplaintPossible(
+                            web3.utils.soliditySha3(schainName),
+                            1,
+                            0,
+                            {from: validatorsAccount[1]},
+                        );
+                        assert(res.should.be.true);
+                        const resCompl = await skaleDKG.complaint(
+                            web3.utils.soliditySha3(schainName),
+                            1,
+                            0,
+                            {from: validatorsAccount[1]},
+                        );
+                        assert.equal(resCompl.logs[0].event, "BadGuy");
+                        assert.equal(resCompl.logs[0].args.nodeIndex, "0");
+                    });
+
+                    it("should send complaint after missing response", async () => {
+                        let res = await skaleDKG.isComplaintPossible(
+                            web3.utils.soliditySha3(schainName),
+                            1,
+                            0,
+                            {from: validatorsAccount[1]},
+                        );
+                        assert(res.should.be.false);
+                        await skaleDKG.preResponse(
+                            web3.utils.soliditySha3(schainName),
+                            0,
+                            verificationVectors[indexes[0]],
+                            verificationVectorMult[indexes[0]],
+                            encryptedSecretKeyContributions[indexes[0]],
+                            {from: validatorsAccount[0]},
+                        );
+                        res = await skaleDKG.isComplaintPossible(
+                            web3.utils.soliditySha3(schainName),
+                            1,
+                            0,
+                            {from: validatorsAccount[1]},
+                        );
+                        assert(res.should.be.false);
+                        skipTime(web3, 1800);
+                        res = await skaleDKG.isComplaintPossible(
+                            web3.utils.soliditySha3(schainName),
+                            1,
+                            0,
+                            {from: validatorsAccount[1]},
+                        );
+                        assert(res.should.be.true);
+                        const resCompl = await skaleDKG.complaint(
+                            web3.utils.soliditySha3(schainName),
+                            1,
+                            0,
+                            {from: validatorsAccount[1]},
+                        );
+                        assert.equal(resCompl.logs[0].event, "BadGuy");
+                        assert.equal(resCompl.logs[0].args.nodeIndex, "0");
                     });
 
                     it("should send correct response", async () => {
-                        const res = await skaleDKG.isResponsePossible(
+                        let res = await skaleDKG.isResponsePossible(
+                            web3.utils.soliditySha3(schainName),
+                            0,
+                            {from: validatorsAccount[0]},
+                        );
+                        assert(res.should.be.false);
+
+                        res = await skaleDKG.isPreResponsePossible(
                             web3.utils.soliditySha3(schainName),
                             0,
                             {from: validatorsAccount[0]},
@@ -871,6 +975,20 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                             encryptedSecretKeyContributions[indexes[0]],
                             {from: validatorsAccount[0]},
                         );
+
+                        res = await skaleDKG.isResponsePossible(
+                            web3.utils.soliditySha3(schainName),
+                            0,
+                            {from: validatorsAccount[0]},
+                        );
+                        assert(res.should.be.true);
+
+                        res = await skaleDKG.isPreResponsePossible(
+                            web3.utils.soliditySha3(schainName),
+                            0,
+                            {from: validatorsAccount[0]},
+                        );
+                        assert(res.should.be.false);
 
                         const result = await skaleDKG.response(
                             web3.utils.soliditySha3(schainName),
