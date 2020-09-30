@@ -1225,6 +1225,183 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                     );
         });
 
+        it("should process nodeExit 2 times correctly", async () => {
+            const deposit = await schains.getSchainPrice(4, 5);
+
+            await schains.addSchain(
+                validator1,
+                deposit,
+                web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, "d2"]));
+
+            let nodesInGroup = await schainsInternal.getNodesInGroup(web3.utils.soliditySha3("d2"));
+            schainName = "d2";
+            let index = 3;
+            while ((new BigNumber(nodesInGroup[0])).toFixed() === "1") {
+                await schains.deleteSchainByRoot(schainName);
+                schainName = "d" + index;
+                index++;
+                await schains.addSchain(
+                    validator1,
+                    deposit,
+                    web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, schainName]));
+                nodesInGroup = await schainsInternal.getNodesInGroup(web3.utils.soliditySha3(schainName));
+            }
+
+            let rotCounter = await nodeRotation.getRotation(web3.utils.soliditySha3(schainName));
+            assert.equal(rotCounter.rotationCounter.toString(), "0");
+
+            await nodes.createNode(validatorsAccount[0],
+                {
+                    port: 8545,
+                    nonce: 0,
+                    ip: "0x7f000003",
+                    publicIp: "0x7f000003",
+                    publicKey: validatorsPublicKey[0],
+                    name: "d203"
+                });
+
+            await skaleDKG.broadcast(
+                web3.utils.soliditySha3(schainName),
+                0,
+                verificationVectors[indexes[0]],
+                // the last symbol is spoiled in parameter below
+                encryptedSecretKeyContributions[indexes[0]],
+                {from: validatorsAccount[0]},
+            );
+
+            await skaleDKG.broadcast(
+                web3.utils.soliditySha3(schainName),
+                1,
+                verificationVectors[indexes[1]],
+                encryptedSecretKeyContributions[indexes[1]],
+                {from: validatorsAccount[1]},
+            );
+
+            await skaleDKG.alright(
+                web3.utils.soliditySha3(schainName),
+                0,
+                {from: validatorsAccount[0]},
+            );
+
+            await skaleDKG.alright(
+                web3.utils.soliditySha3(schainName),
+                1,
+                {from: validatorsAccount[1]},
+            );
+
+            const comPubKey = await keyStorage.getCommonPublicKey(web3.utils.soliditySha3(schainName));
+            assert.equal(comPubKey.x.a.toString() !== "0", true);
+            assert.equal(comPubKey.x.b.toString() !== "0", true);
+            assert.equal(comPubKey.y.a.toString() !== "0", true);
+            assert.equal(comPubKey.y.b.toString() !== "0", true);
+
+            await skaleManager.nodeExit(1, {from: validatorsAccount[1]});
+
+            let prevPubKey = await keyStorage.getPreviousPublicKey(web3.utils.soliditySha3(schainName));
+            assert(prevPubKey.x.a, "0");
+            assert(prevPubKey.x.b, "0");
+            assert(prevPubKey.y.a, "0");
+            assert(prevPubKey.y.b, "0");
+
+            await nodes.createNode(validatorsAccount[0],
+                {
+                    port: 8545,
+                    nonce: 0,
+                    ip: "0x7f000004",
+                    publicIp: "0x7f000004",
+                    publicKey: validatorsPublicKey[0],
+                    name: "d204"
+                }
+            );
+
+            rotCounter = await nodeRotation.getRotation(web3.utils.soliditySha3(schainName));
+            assert.equal(rotCounter.rotationCounter.toString(), "1");
+
+            await skaleDKG.broadcast(
+                web3.utils.soliditySha3(schainName),
+                0,
+                verificationVectors[indexes[0]],
+                // the last symbol is spoiled in parameter below
+                encryptedSecretKeyContributions[indexes[0]],
+                {from: validatorsAccount[0]},
+            );
+
+            await skaleDKG.broadcast(
+                web3.utils.soliditySha3(schainName),
+                2,
+                verificationVectors[indexes[0]],
+                encryptedSecretKeyContributions[indexes[0]],
+                {from: validatorsAccount[0]},
+            );
+
+            await skaleDKG.alright(
+                web3.utils.soliditySha3(schainName),
+                0,
+                {from: validatorsAccount[0]},
+            );
+
+            await skaleDKG.alright(
+                web3.utils.soliditySha3(schainName),
+                2,
+                {from: validatorsAccount[0]},
+            );
+
+            prevPubKey = await keyStorage.getPreviousPublicKey(web3.utils.soliditySha3(schainName));
+            assert.equal(prevPubKey.x.a.toString() === comPubKey.x.a.toString(), true);
+            assert.equal(prevPubKey.x.b.toString() === comPubKey.x.b.toString(), true);
+            assert.equal(prevPubKey.y.a.toString() === comPubKey.y.a.toString(), true);
+            assert.equal(prevPubKey.y.b.toString() === comPubKey.y.b.toString(), true);
+
+            let allPrevPubKeys = await keyStorage.getAllPreviousPublicKeys(web3.utils.soliditySha3(schainName));
+            assert.equal(allPrevPubKeys.length === 1, true);
+            assert.equal(prevPubKey.x.a.toString() === allPrevPubKeys[0].x.a.toString(), true);
+            assert.equal(prevPubKey.x.b.toString() === allPrevPubKeys[0].x.b.toString(), true);
+            assert.equal(prevPubKey.y.a.toString() === allPrevPubKeys[0].y.a.toString(), true);
+            assert.equal(prevPubKey.y.b.toString() === allPrevPubKeys[0].y.b.toString(), true);
+
+            skipTime(web3, 43260);
+            await skaleManager.nodeExit(2, {from: validatorsAccount[0]});
+
+            rotCounter = await nodeRotation.getRotation(web3.utils.soliditySha3(schainName));
+            assert.equal(rotCounter.rotationCounter.toString(), "2");
+
+            await skaleDKG.broadcast(
+                web3.utils.soliditySha3(schainName),
+                0,
+                verificationVectors[indexes[0]],
+                // the last symbol is spoiled in parameter below
+                encryptedSecretKeyContributions[indexes[0]],
+                {from: validatorsAccount[0]},
+            );
+
+            await skaleDKG.broadcast(
+                web3.utils.soliditySha3(schainName),
+                3,
+                verificationVectors[indexes[0]],
+                encryptedSecretKeyContributions[indexes[0]],
+                {from: validatorsAccount[0]},
+            );
+
+            await skaleDKG.alright(
+                web3.utils.soliditySha3(schainName),
+                0,
+                {from: validatorsAccount[0]},
+            );
+
+            await skaleDKG.alright(
+                web3.utils.soliditySha3(schainName),
+                3,
+                {from: validatorsAccount[0]},
+            );
+
+            allPrevPubKeys = await keyStorage.getAllPreviousPublicKeys(web3.utils.soliditySha3(schainName));
+            assert.equal(allPrevPubKeys.length === 2, true);
+            assert.equal(prevPubKey.x.a.toString() === allPrevPubKeys[0].x.a.toString(), true);
+            assert.equal(prevPubKey.x.b.toString() === allPrevPubKeys[0].x.b.toString(), true);
+            assert.equal(prevPubKey.y.a.toString() === allPrevPubKeys[0].y.a.toString(), true);
+            assert.equal(prevPubKey.y.b.toString() === allPrevPubKeys[0].y.b.toString(), true);
+        });
+
         it("16 nodes schain test", async () => {
 
             for (let i = 3; i <= 16; i++) {
@@ -1317,6 +1494,12 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
             assert.equal(comPubKey.x.b.toString() !== "0", true);
             assert.equal(comPubKey.y.a.toString() !== "0", true);
             assert.equal(comPubKey.y.b.toString() !== "0", true);
+
+            const prevPubKey = await keyStorage.getPreviousPublicKey(web3.utils.soliditySha3("New16NodeSchain"));
+            assert(prevPubKey.x.a, "0");
+            assert(prevPubKey.x.b, "0");
+            assert(prevPubKey.y.a, "0");
+            assert(prevPubKey.y.b, "0");
 
         });
 

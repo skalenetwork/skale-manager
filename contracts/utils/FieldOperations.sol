@@ -281,35 +281,4 @@ library G2Operations {
             result.y.b = p - result.y.b;
         }
     }
-
-    function mulG2(
-        G2Point memory value,
-        uint scalar
-    )
-        internal
-        view
-        returns (G2Point memory result)
-    {
-        uint step = scalar;
-        result = G2Point({
-            x: Fp2Operations.Fp2Point({
-                a: 0,
-                b: 0
-            }),
-            y: Fp2Operations.Fp2Point({
-                a: 1,
-                b: 0
-            })
-        });
-        G2Point memory tmp = value;
-        uint gs = gasleft();
-        while (step > 0) {
-            if (step % 2 == 1) {
-                result = addG2(result, tmp);
-            }
-            gs = gasleft();
-            tmp = doubleG2(tmp);
-            step >>= 1;
-        }
-    }
 }
