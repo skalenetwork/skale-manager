@@ -311,12 +311,16 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
         it("should create schain and open a DKG channel", async () => {
             const deposit = await schains.getSchainPrice(4, 5);
 
-            await schains.addSchain(
+            const res = await schains.addSchain(
                 validator1,
                 deposit,
                 web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, "d2"]));
 
             assert((await skaleDKG.isChannelOpened(web3.utils.soliditySha3("d2"))).should.be.true);
+            assert(
+                await skaleDKG.getChannelStartedBlock(web3.utils.soliditySha3("d2")),
+                res.receipt.blockNumber
+            );
         });
 
         it("should create schain and reopen a DKG channel", async () => {
@@ -1120,11 +1124,16 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                 {from: validatorsAccount[1]},
             );
 
-            await skaleDKG.complaintBadData(
+            const resCompl = await skaleDKG.complaintBadData(
                 web3.utils.soliditySha3(schainName),
                 1,
                 0,
                 {from: validatorsAccount[1]},
+            );
+
+            assert(
+                await skaleDKG.getComplaintStartedTime(web3.utils.soliditySha3(schainName)),
+                resCompl.receipt.timestamp
             );
 
             await skaleDKG.preResponse(
@@ -1269,13 +1278,19 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                 {from: validatorsAccount[0]},
             );
 
-            await skaleDKG.broadcast(
+            const res = await skaleDKG.broadcast(
                 web3.utils.soliditySha3(schainName),
                 1,
                 verificationVectors[indexes[1]],
                 encryptedSecretKeyContributions[indexes[1]],
                 {from: validatorsAccount[1]},
             );
+            assert(
+                await skaleDKG.getAlrightStartedTime(web3.utils.soliditySha3(schainName)),
+                res.receipt.timestamp
+            );
+            let numOfCompl = await skaleDKG.getNumberOfCompleted(web3.utils.soliditySha3(schainName));
+            assert(numOfCompl, "0");
 
             await skaleDKG.alright(
                 web3.utils.soliditySha3(schainName),
@@ -1283,10 +1298,21 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                 {from: validatorsAccount[0]},
             );
 
-            await skaleDKG.alright(
+            numOfCompl = await skaleDKG.getNumberOfCompleted(web3.utils.soliditySha3(schainName));
+            assert(numOfCompl, "1");
+
+            const resSuccess = await skaleDKG.alright(
                 web3.utils.soliditySha3(schainName),
                 1,
                 {from: validatorsAccount[1]},
+            );
+
+            numOfCompl = await skaleDKG.getNumberOfCompleted(web3.utils.soliditySha3(schainName));
+            assert(numOfCompl, "2");
+
+            assert(
+                await skaleDKG.getTimeOfLastSuccesfulDKG(web3.utils.soliditySha3(schainName)),
+                resSuccess.receipt.timestamp
             );
 
             const comPubKey = await keyStorage.getCommonPublicKey(web3.utils.soliditySha3(schainName));
@@ -1338,6 +1364,11 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                 web3.utils.soliditySha3(schainName),
                 0,
                 {from: validatorsAccount[0]},
+            );
+
+            assert(
+                await skaleDKG.getTimeOfLastSuccesfulDKG(web3.utils.soliditySha3(schainName)),
+                resSuccess.receipt.timestamp
             );
 
             await skaleDKG.alright(
