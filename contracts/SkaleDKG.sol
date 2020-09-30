@@ -239,7 +239,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         );
         require(
             verificationVector.length == verificationVectorMult.length,
-            "Incorrect multiplied verification vector"
+            "Incorrect length of multiplied verification vector"
         );
         uint index = _nodeIndexInSchain(groupIndex, complaints[groupIndex].fromNodeToComplaint);
         require(

@@ -244,15 +244,6 @@ library G2Operations {
         sum.y.b = p - sum.y.b;
     }
 
-    function toUS(G2Point memory value) internal pure returns (G2Point memory) {
-        return G2Point({
-            x: value.x.mulFp2(Fp2Operations.Fp2Point({ a: 1, b: 0 }).squaredFp2()),
-            y: value.y.mulFp2(
-                Fp2Operations.Fp2Point({ a: 1, b: 0 }).mulFp2(Fp2Operations.Fp2Point({ a: 1, b: 0 }).squaredFp2())
-            )
-        });
-    }
-
     function isEqual(
         G2Point memory value1,
         G2Point memory value2
