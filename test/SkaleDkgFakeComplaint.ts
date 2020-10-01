@@ -893,7 +893,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
             });
 
             describe("when correct broadcasts sent", async () => {
-                let nodesCount = 4;
+                const nodesCount = 4;
                 beforeEach(async () => {
                     for (let i = 0; i < nodesCount; ++i) {
                         await skaleDKG.broadcast(
@@ -906,7 +906,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                     }
 
                     for (let i = 0; i < nodesCount; ++i) {
-                        if (i != 1) {
+                        if (i !== 1) {
                             const result = await skaleDKG.alright(
                                 web3.utils.soliditySha3(schainName),
                                 i,
@@ -915,14 +915,14 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                         }
                     }
 
-                    let result = await skaleDKG.complaint(
+                    const complaintResult = await skaleDKG.complaint(
                         web3.utils.soliditySha3(schainName),
                         1,
                         2,
                         {from: validatorsAccount[1]},
                     );
 
-                    result = await skaleDKG.response(
+                    const responseResult = await skaleDKG.response(
                         web3.utils.soliditySha3(schainName),
                         2,
                         secretNumbers[indexes[2]][1],
@@ -931,8 +931,8 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                         encryptedSecretKeyContributions[indexes[2]],
                         {from: validatorsAccount[0]},
                     );
-                    assert.equal(result.logs[0].event, "BadGuy");
-                    assert.equal(result.logs[0].args.nodeIndex.toString(), "1");
+                    assert.equal(responseResult.logs[0].event, "BadGuy");
+                    assert.equal(responseResult.logs[0].args.nodeIndex.toString(), "1");
                 });
             });
         });
