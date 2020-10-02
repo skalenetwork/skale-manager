@@ -16,6 +16,11 @@ import { ContractManagerInstance,
 
 import { skipTime, currentTime } from "./tools/time";
 
+import * as elliptic from "elliptic";
+const EC = elliptic.ec;
+const ec = new EC("secp256k1");
+import { privateKeys } from "./tools/private-keys";
+
 import BigNumber from "bignumber.js";
 import { deployContractManager } from "./tools/deploy/contractManager";
 import { deployDelegationController } from "./tools/deploy/delegation/delegationController";
@@ -76,14 +81,14 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
             validator2,
         ];
         const validatorsPrivateKey = [
-            "0xa15c19da241e5b1db20d8dd8ca4b5eeaee01c709b49ec57aa78c2133d3c1b3c9",
-            "0xe7af72d241d4dd77bc080ce9234d742f6b22e35b3a660e8c197517b909f63ca8",
+            privateKeys[1],
+            privateKeys[2],
         ];
+        const pubKey1 = ec.keyFromPrivate(String(privateKeys[1]).slice(2)).getPublic();
+        const pubKey2 = ec.keyFromPrivate(String(privateKeys[2]).slice(2)).getPublic();
         const validatorsPublicKey = [
-            ["0x8f163316925bf2e12a30832dee812f6ff60bf872171a84d9091672dd3848be9f",
-             "0xc0b7bd257fbb038019c41f055e81736d8116b83e9ac59a1407aa6ea804ec88a8"],
-            ["0x307654b2716eb09f01f33115173867611d403424586357226515ae6a92774b10",
-             "0xd168ab741e8f7650116d0677fddc1aea8dc86a00747e7224d2bf36e0ea3dd62c"]
+            ["0x" + pubKey1.x.toString('hex'), "0x" + pubKey1.y.toString('hex')],
+            ["0x" + pubKey2.x.toString('hex'), "0x" + pubKey2.y.toString('hex')]
         ];
 
         const secretNumbers = [
@@ -296,6 +301,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
             const nodesCount = 2;
             for (const index of Array.from(Array(nodesCount).keys())) {
                 const hexIndex = ("0" + index.toString(16)).slice(-2);
+                const pubKey = ec.keyFromPrivate(String(privateKeys[index + 1]).slice(2)).getPublic();
                 await nodes.createNode(validatorsAccount[index],
                     {
                         port: 8545,

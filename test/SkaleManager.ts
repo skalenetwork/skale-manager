@@ -17,6 +17,11 @@ import { ConstantsHolderInstance,
 
 // import BigNumber from "bignumber.js";
 
+import * as elliptic from "elliptic";
+const EC = elliptic.ec;
+const ec = new EC("secp256k1");
+import { privateKeys } from "./tools/private-keys";
+
 import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
 import { deployContractManager } from "./tools/deploy/contractManager";
 import { deploySkaleDKGTester } from "./tools/deploy/test/skaleDKGTester";
@@ -116,13 +121,13 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
         });
 
         it("should create a node", async () => {
+            const pubKey = ec.keyFromPrivate(String(privateKeys[4]).slice(2)).getPublic();
             await skaleManager.createNode(
                 8545, // port
                 0, // nonce
                 "0x7f000001", // ip
                 "0x7f000001", // public ip
-                ["0x1122334455667788990011223344556677889900112233445566778899001122",
-                 "0x1122334455667788990011223344556677889900112233445566778899001122"], // public key
+                ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')], // public key
                 "d2", // name
                 {from: nodeAddress});
 
@@ -135,13 +140,13 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
             await constantsHolder.setMSR(100);
 
             await validatorService.disableValidator(validatorId, {from: owner});
+            const pubKey = ec.keyFromPrivate(String(privateKeys[4]).slice(2)).getPublic();
             await skaleManager.createNode(
                 8545, // port
                 0, // nonce
                 "0x7f000001", // ip
                 "0x7f000001", // public ip
-                ["0x1122334455667788990011223344556677889900112233445566778899001122",
-                 "0x1122334455667788990011223344556677889900112233445566778899001122"], // public key
+                ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')], // public key
                 "d2", // name
                 {from: nodeAddress})
                 .should.be.eventually.rejectedWith("Validator is not authorized to create a node");
@@ -151,8 +156,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                 0, // nonce
                 "0x7f000001", // ip
                 "0x7f000001", // public ip
-                ["0x1122334455667788990011223344556677889900112233445566778899001122",
-                 "0x1122334455667788990011223344556677889900112233445566778899001122"], // public key
+                ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')], // public key
                 "d2", // name
                 {from: nodeAddress});
         });
@@ -160,20 +164,20 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
         describe("when node is created", async () => {
 
             beforeEach(async () => {
+                const pubKey = ec.keyFromPrivate(String(privateKeys[4]).slice(2)).getPublic();
                 await skaleManager.createNode(
                     8545, // port
                     0, // nonce
                     "0x7f000001", // ip
                     "0x7f000001", // public ip
-                    ["0x1122334455667788990011223344556677889900112233445566778899001122",
-                     "0x1122334455667788990011223344556677889900112233445566778899001122"], // public key
+                    ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')], // public key
                     "d2", // name
                     {from: nodeAddress});
             });
 
             it("should fail to init exiting of someone else's node", async () => {
                 await skaleManager.nodeExit(0, {from: hacker})
-                    .should.be.eventually.rejectedWith("Validator with given address does not exist");
+                    .should.be.eventually.rejectedWith("Sender is not permitted to call this function");
             });
 
             it("should reject if node in maintenance call nodeExit", async () => {
@@ -260,13 +264,13 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
         describe("when two nodes are created", async () => {
 
             beforeEach(async () => {
+                const pubKey = ec.keyFromPrivate(String(privateKeys[4]).slice(2)).getPublic();
                 await skaleManager.createNode(
                     8545, // port
                     0, // nonce
                     "0x7f000001", // ip
                     "0x7f000001", // public ip
-                    ["0x1122334455667788990011223344556677889900112233445566778899001122",
-                     "0x1122334455667788990011223344556677889900112233445566778899001122"], // public key
+                    ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')], // public key
                     "d2", // name
                     {from: nodeAddress});
                 await skaleManager.createNode(
@@ -274,20 +278,19 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                     0, // nonce
                     "0x7f000002", // ip
                     "0x7f000002", // public ip
-                    ["0x1122334455667788990011223344556677889900112233445566778899001122",
-                     "0x1122334455667788990011223344556677889900112233445566778899001122"], // public key
+                    ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')], // public key
                     "d3", // name
                     {from: nodeAddress});
             });
 
             it("should fail to initiate exiting of first node from another account", async () => {
                 await skaleManager.nodeExit(0, {from: hacker})
-                    .should.be.eventually.rejectedWith("Validator with given address does not exist");
+                    .should.be.eventually.rejectedWith("Sender is not permitted to call this function");
             });
 
             it("should fail to initiate exiting of second node from another account", async () => {
                 await skaleManager.nodeExit(1, {from: hacker})
-                    .should.be.eventually.rejectedWith("Validator with given address does not exist");
+                    .should.be.eventually.rejectedWith("Sender is not permitted to call this function");
             });
 
             it("should initiate exiting of first node", async () => {
@@ -447,15 +450,14 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
 
             beforeEach(async () => {
                 await skaleToken.transfer(validator, "0x3635c9adc5dea00000", {from: owner});
-
+                const pubKey = ec.keyFromPrivate(String(privateKeys[4]).slice(2)).getPublic();
                 for (let i = 0; i < 18; ++i) {
                     await skaleManager.createNode(
                         8545, // port
                         0, // nonce
                         "0x7f0000" + ("0" + (i + 1).toString(16)).slice(-2), // ip
                         "0x7f000001", // public ip
-                        ["0x1122334455667788990011223344556677889900112233445566778899001122",
-                         "0x1122334455667788990011223344556677889900112233445566778899001122"], // public key
+                        ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')], // public key
                         "d2-" + i, // name
                         {from: nodeAddress});
                 }
@@ -533,14 +535,13 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
 
             it("should fail to create schain if validator doesn't meet MSR", async () => {
                 await constantsHolder.setMSR(delegatedAmount + 1);
-
+                const pubKey = ec.keyFromPrivate(String(privateKeys[4]).slice(2)).getPublic();
                 await skaleManager.createNode(
                     8545, // port
                     0, // nonce
                     "0x7f000001", // ip
                     "0x7f000001", // public ip
-                    ["0x1122334455667788990011223344556677889900112233445566778899001122",
-                     "0x1122334455667788990011223344556677889900112233445566778899001122"], // public key
+                    ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')], // public key
                     "d2", // name
                     {from: nodeAddress}).should.be.eventually.rejectedWith("Validator must meet the Minimum Staking Requirement");
             });
@@ -991,14 +992,14 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
             beforeEach(async () => {
                 await constantsHolder.setMSR(3);
 
+                const pubKey = ec.keyFromPrivate(String(privateKeys[4]).slice(2)).getPublic();
                 for (let i = 0; i < 32; ++i) {
                     await skaleManager.createNode(
                         8545, // port
                         0, // nonce
                         "0x7f0000" + ("0" + (i + 1).toString(16)).slice(-2), // ip
                         "0x7f000001", // public ip
-                        ["0x1122334455667788990011223344556677889900112233445566778899001122",
-                         "0x1122334455667788990011223344556677889900112233445566778899001122"], // public key
+                        ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')], // public key
                         "d2-" + i, // name
                         {from: nodeAddress});
                 }
@@ -1080,14 +1081,14 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
 
                 await skaleToken.transfer(validator, "0x32D26D12E980B600000", {from: owner});
 
+                const pubKey = ec.keyFromPrivate(String(privateKeys[4]).slice(2)).getPublic();
                 for (let i = 0; i < 16; ++i) {
                     await skaleManager.createNode(
                         8545, // port
                         0, // nonce
                         "0x7f0000" + ("0" + (i + 1).toString(16)).slice(-2), // ip
                         "0x7f000001", // public ip
-                        ["0x1122334455667788990011223344556677889900112233445566778899001122",
-                         "0x1122334455667788990011223344556677889900112233445566778899001122"], // public key
+                        ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')], // public key
                         "d2-" + i, // name
                         {from: nodeAddress});
                     }
