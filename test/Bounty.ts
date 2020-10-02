@@ -1,3 +1,4 @@
+import * as elliptic from "elliptic";
 import {
     ContractManagerInstance,
     ConstantsHolderInstance,
@@ -8,6 +9,11 @@ import {
     SkaleTokenInstance,
     ValidatorServiceInstance,
 } from "../types/truffle-contracts";
+
+const EC = elliptic.ec;
+const ec = new EC("secp256k1");
+
+import { privateKeys } from "./tools/private-keys";
 
 import { deployContractManager } from "./tools/deploy/contractManager";
 import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
@@ -47,8 +53,6 @@ contract("Bounty", ([owner, admin, hacker, validator]) => {
         distributor = await deployDistributor(contractManager);
 
         await skaleManager.grantRole(await skaleManager.ADMIN_ROLE(), admin);
-        const bountyPoolSize = "2310000000" + "0".repeat(18);
-        await skaleToken.mint(skaleManager.address, bountyPoolSize, "0x", "0x");
         await validatorService.registerValidator("Validator1", "D2 is even", 0, 0, {from: validator});
         validator1Id = (await validatorService.getValidatorId(validator)).toNumber();
         await validatorService.enableValidator(validator1Id, {from: owner});
@@ -79,14 +83,15 @@ contract("Bounty", ([owner, admin, hacker, validator]) => {
             const nodesCount = 10;
             for (const index of Array.from(Array(nodesCount).keys())) {
                 const hexIndex = ("0" + index.toString(16)).slice(-2);
+                const pubKey = ec.keyFromPrivate(String(privateKeys[3]).slice(2)).getPublic();
                 await nodesContract.createNode(validator,
                     {
                         port: 8545,
                         nonce: 0,
                         ip: "0x7f0000" + hexIndex,
                         publicIp: "0x7f0000" + hexIndex,
-                        publicKey: ["0x1122334455667788990011223344556677889900112233445566778899001122",
-                        "0x1122334455667788990011223344556677889900112233445566778899001122"],
+                        publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
+                        // "0x1122334455667788990011223344556677889900112233445566778899001122"],
                         name: "d2" + hexIndex
                     });
             }
@@ -96,12 +101,9 @@ contract("Bounty", ([owner, admin, hacker, validator]) => {
             await skaleManager.getBounty(0, {from: validator}).should.be.eventually.rejectedWith("Not time for bounty");
             skipTime(web3, rewardPeriod);
             const balanceBefore = await skaleToken.balanceOf(validator);
-            console.log("Balance:", balanceBefore.toString());
             await skaleManager.getBounty(0, {from: validator});
-            console.log("Start");
             // await distributor.withdrawBounty(validator1Id, validator, {from: validator});
             const balanceAfter = await skaleToken.balanceOf(validator);
-            console.log("Balance after:", balanceAfter.toString());
         });
 
         it("5 year test for 10 nodes", async() => {
@@ -109,17 +111,12 @@ contract("Bounty", ([owner, admin, hacker, validator]) => {
                 skipTime(web3, rewardPeriod);
 
                 for (let nodeIndex = 0; nodeIndex < 10; nodeIndex++) {
-                    console.log("should " + nodeIndex + " node get bounty after " + month + " month ");
                     const time = await currentTime(web3);
                     const currentDate = new Date(time * 1000);
-                    console.log(currentDate.toString());
                     const balanceBefore = await skaleToken.balanceOf(validator);
-                    console.log("Balance:", balanceBefore.toString());
                     await skaleManager.getBounty(nodeIndex, {from: validator});
-                    console.log("Start");
                     // await distributor.withdrawBounty(0, validator, {from: validator});
                     const balanceAfter = await skaleToken.balanceOf(validator);
-                    console.log("Balance after:", balanceAfter.toString());
                 }
             }
         });

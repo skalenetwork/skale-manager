@@ -22,18 +22,19 @@
 pragma solidity 0.6.10;
 pragma experimental ABIEncoderV2;
 
-import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC777/IERC777Recipient.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/introspection/IERC1820Registry.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC777/IERC777.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC777/IERC777Recipient.sol";
 
-import "./Permissions.sol";
-import "./ConstantsHolder.sol";
 import "./delegation/Distributor.sol";
 import "./delegation/ValidatorService.sol";
-import "./Monitors.sol";
-import "./Schains.sol";
-import "./NodeRotation.sol";
+import "./interfaces/IMintableToken.sol";
 import "./Bounty.sol";
+import "./ConstantsHolder.sol";
+import "./Monitors.sol";
+import "./NodeRotation.sol";
+import "./Permissions.sol";
+import "./Schains.sol";
 
 /**
  * @title SkaleManager
@@ -113,7 +114,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));
         uint validatorId = nodes.getValidatorId(nodeIndex);
         bool permitted = (_isOwner() || nodes.isNodeExist(msg.sender, nodeIndex));
-        if (!permitted) {
+        if (!permitted && validatorService.validatorAddressExists(msg.sender)) {
             permitted = validatorService.getValidatorId(msg.sender) == validatorId;
         }
         require(permitted, "Sender is not permitted to call this function");
@@ -123,6 +124,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
         if (nodes.isNodeActive(nodeIndex)) {
             require(nodes.initExit(nodeIndex), "Initialization of node exit is failed");
         }
+        require(nodes.isNodeLeaving(nodeIndex), "Node should be Leaving");
         bool completed;
         bool isSchains = false;
         if (schainsInternal.getActiveSchain(nodeIndex) != bytes32(0)) {
@@ -211,8 +213,10 @@ contract SkaleManager is IERC777Recipient, Permissions {
         IERC777 skaleToken = IERC777(contractManager.getContract("SkaleToken"));
         Distributor distributor = Distributor(contractManager.getContract("Distributor"));
         
-        // solhint-disable-next-line check-send-result
-        skaleToken.send(address(distributor), bounty, abi.encode(validatorId));
+        require(
+            IMintableToken(address(skaleToken)).mint(address(distributor), bounty, abi.encode(validatorId), ""),
+            "Token was not minted"
+        );
     }
 
     function _emitBountyEvent(

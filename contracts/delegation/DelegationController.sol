@@ -944,9 +944,5 @@ contract DelegationController is Permissions, ILocker {
                 ),
             "Limit of validators is reached"
         );
-        require(
-            _getCurrentMonth() >= constantsHolder.firstDelegationsMonth(),
-            "Delegations are not allowed"
-        );
     }
 }

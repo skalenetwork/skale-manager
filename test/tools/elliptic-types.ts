@@ -13,6 +13,8 @@ declare module "elliptic" {
         constructor(preset: CurvePreset);
         public genKeyPair(): any;
         public keyFromPublic(publicKey: string, type: "hex"): any;
+        public keyFromPrivate(privateKey: string): any;
+        public getPublic(privateKey: string): any;
     }
 
     export { EllipticCurve as ec };

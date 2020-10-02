@@ -63,38 +63,33 @@ contract("TimeHelpers", ([owner]) => {
 
         (await timeHelpers.timestampToMonth((new Date("2020-09-01T00:00:00.000+00:00")).getTime() / 1000))
             .toNumber().should.be.equal(8);
-        (await timeHelpers.timestampToMonth((new Date("2020-09-07T23:59:59.000+00:00")).getTime() / 1000))
+        (await timeHelpers.timestampToMonth((new Date("2020-09-30T23:59:59.000+00:00")).getTime() / 1000))
             .toNumber().should.be.equal(8);
 
-        (await timeHelpers.timestampToMonth((new Date("2020-09-08T00:00:00.000+00:00")).getTime() / 1000))
-            .toNumber().should.be.equal(9);
-        (await timeHelpers.timestampToMonth((new Date("2020-09-30T23:59:59.000+00:00")).getTime() / 1000))
-            .toNumber().should.be.equal(9);
-
         (await timeHelpers.timestampToMonth((new Date("2020-10-01T00:00:00.000+00:00")).getTime() / 1000))
-            .toNumber().should.be.equal(10);
+            .toNumber().should.be.equal(9);
         (await timeHelpers.timestampToMonth((new Date("2020-10-31T23:59:59.000+00:00")).getTime() / 1000))
-            .toNumber().should.be.equal(10);
+            .toNumber().should.be.equal(9);
 
         (await timeHelpers.timestampToMonth((new Date("2020-11-01T00:00:00.000+00:00")).getTime() / 1000))
-            .toNumber().should.be.equal(11);
+            .toNumber().should.be.equal(10);
         (await timeHelpers.timestampToMonth((new Date("2020-11-30T23:59:59.000+00:00")).getTime() / 1000))
-            .toNumber().should.be.equal(11);
+            .toNumber().should.be.equal(10);
 
         (await timeHelpers.timestampToMonth((new Date("2020-12-01T00:00:00.000+00:00")).getTime() / 1000))
-            .toNumber().should.be.equal(12);
+            .toNumber().should.be.equal(11);
         (await timeHelpers.timestampToMonth((new Date("2020-12-31T23:59:59.000+00:00")).getTime() / 1000))
-            .toNumber().should.be.equal(12);
+            .toNumber().should.be.equal(11);
 
         (await timeHelpers.timestampToMonth((new Date("2021-01-01T00:00:00.000+00:00")).getTime() / 1000))
-            .toNumber().should.be.equal(13);
+            .toNumber().should.be.equal(12);
         (await timeHelpers.timestampToMonth((new Date("2021-01-31T23:59:59.000+00:00")).getTime() / 1000))
-            .toNumber().should.be.equal(13);
+            .toNumber().should.be.equal(12);
 
         (await timeHelpers.timestampToMonth((new Date("2021-02-01T00:00:00.000+00:00")).getTime() / 1000))
-            .toNumber().should.be.equal(14);
+            .toNumber().should.be.equal(13);
         (await timeHelpers.timestampToMonth((new Date("2021-02-28T23:59:59.000+00:00")).getTime() / 1000))
-            .toNumber().should.be.equal(14);
+            .toNumber().should.be.equal(13);
     })
 
     it("must convert months to timestamps correctly", async () => {
@@ -126,21 +121,18 @@ contract("TimeHelpers", ([owner]) => {
             .should.be.equal((new Date("2020-09-01T00:00:00.000+00:00")).getTime() / 1000);
 
         (await timeHelpers.monthToTimestamp(9)).toNumber()
-            .should.be.equal((new Date("2020-09-08T00:00:00.000+00:00")).getTime() / 1000);
-
-        (await timeHelpers.monthToTimestamp(10)).toNumber()
             .should.be.equal((new Date("2020-10-01T00:00:00.000+00:00")).getTime() / 1000);
 
-        (await timeHelpers.monthToTimestamp(11)).toNumber()
+        (await timeHelpers.monthToTimestamp(10)).toNumber()
             .should.be.equal((new Date("2020-11-01T00:00:00.000+00:00")).getTime() / 1000);
 
-        (await timeHelpers.monthToTimestamp(12)).toNumber()
+        (await timeHelpers.monthToTimestamp(11)).toNumber()
             .should.be.equal((new Date("2020-12-01T00:00:00.000+00:00")).getTime() / 1000);
 
-        (await timeHelpers.monthToTimestamp(13)).toNumber()
+        (await timeHelpers.monthToTimestamp(12)).toNumber()
             .should.be.equal((new Date("2021-01-01T00:00:00.000+00:00")).getTime() / 1000);
 
-        (await timeHelpers.monthToTimestamp(14)).toNumber()
+        (await timeHelpers.monthToTimestamp(13)).toNumber()
             .should.be.equal((new Date("2021-02-01T00:00:00.000+00:00")).getTime() / 1000);
     });
 });

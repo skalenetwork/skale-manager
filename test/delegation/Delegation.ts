@@ -111,7 +111,6 @@ contract("Delegation", ([owner,
             await skaleToken.mint(holder1, defaultAmount.toString(), "0x", "0x");
             await skaleToken.mint(holder2, defaultAmount.toString(), "0x", "0x");
             await skaleToken.mint(holder3, defaultAmount.toString(), "0x", "0x");
-            await skaleToken.mint(skaleManagerMock.address, defaultAmount.toString(), "0x", "0x");
             await validatorService.registerValidator(
                 "First validator", "Super-pooper validator", 150, 0, {from: validator});
             await validatorService.enableValidator(validatorId, {from: owner});

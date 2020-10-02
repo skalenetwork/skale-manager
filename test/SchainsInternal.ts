@@ -3,6 +3,11 @@ import { ContractManagerInstance,
          SchainsInternalInstance,
          ValidatorServiceInstance } from "../types/truffle-contracts";
 
+import * as elliptic from "elliptic";
+const EC = elliptic.ec;
+const ec = new EC("secp256k1");
+import { privateKeys } from "./tools/private-keys";
+
 import BigNumber from "bignumber.js";
 import chai = require("chai");
 import * as chaiAsPromised from "chai-as-promised";
@@ -71,14 +76,14 @@ contract("SchainsInternal", ([owner, holder]) => {
 
         beforeEach(async () => {
             await schainsInternal.initializeSchain("TestSchain", holder, 5, 5);
+            const pubKey = ec.keyFromPrivate(String(privateKeys[1]).slice(2)).getPublic();
             await nodes.createNode(holder,
                 {
                     port: 8545,
                     nonce: 0,
                     ip: "0x7f000001",
                     publicIp: "0x7f000001",
-                    publicKey: ["0x1122334455667788990011223344556677889900112233445566778899001122",
-                                "0x1122334455667788990011223344556677889900112233445566778899001122"],
+                    publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
                     name: "D2-01"
                 });
         });

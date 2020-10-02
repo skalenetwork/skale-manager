@@ -276,7 +276,7 @@ contract ValidatorService is Permissions {
         // check Validator Exist inside getValidatorId
         uint validatorId = getValidatorId(msg.sender);
 
-        _removeNodeAddress(validatorId, nodeAddress);
+        this.removeNodeAddress(validatorId, nodeAddress);
         emit NodeAddressWasRemoved(validatorId, nodeAddress);
     }
 
@@ -338,6 +338,23 @@ contract ValidatorService is Permissions {
         require(isAcceptingNewRequests(validatorId), "Accepting request is already disabled");
 
         validators[validatorId].acceptNewRequests = false;
+    }
+
+    function removeNodeAddress(uint validatorId, address nodeAddress) external allowTwo("ValidatorService", "Nodes") {
+        require(_nodeAddressToValidatorId[nodeAddress] == validatorId,
+            "Validator does not have permissions to unlink node");
+        delete _nodeAddressToValidatorId[nodeAddress];
+        for (uint i = 0; i < _nodeAddresses[validatorId].length; ++i) {
+            if (_nodeAddresses[validatorId][i] == nodeAddress) {
+                if (i + 1 < _nodeAddresses[validatorId].length) {
+                    _nodeAddresses[validatorId][i] =
+                        _nodeAddresses[validatorId][_nodeAddresses[validatorId].length.sub(1)];
+                }
+                delete _nodeAddresses[validatorId][_nodeAddresses[validatorId].length.sub(1)];
+                _nodeAddresses[validatorId].pop();
+                break;
+            }
+        }
     }
 
     /**
@@ -502,30 +519,6 @@ contract ValidatorService is Permissions {
         require(_nodeAddressToValidatorId[nodeAddress] == 0, "Validator cannot override node address");
         _nodeAddressToValidatorId[nodeAddress] = validatorId;
         _nodeAddresses[validatorId].push(nodeAddress);
-    }
-
-    /**
-     * @dev Unlinks a node address from a validator ID.
-     * 
-     * Requirements:
-     * 
-     * - Node must be linked to the validator.
-     */
-    function _removeNodeAddress(uint validatorId, address nodeAddress) private {
-        require(_nodeAddressToValidatorId[nodeAddress] == validatorId,
-            "Validator does not have permissions to unlink node");
-        delete _nodeAddressToValidatorId[nodeAddress];
-        for (uint i = 0; i < _nodeAddresses[validatorId].length; ++i) {
-            if (_nodeAddresses[validatorId][i] == nodeAddress) {
-                if (i + 1 < _nodeAddresses[validatorId].length) {
-                    _nodeAddresses[validatorId][i] =
-                        _nodeAddresses[validatorId][_nodeAddresses[validatorId].length.sub(1)];
-                }
-                delete _nodeAddresses[validatorId][_nodeAddresses[validatorId].length.sub(1)];
-                _nodeAddresses[validatorId].pop();
-                break;
-            }
-        }
     }
 
     function _find(uint[] memory array, uint index) private pure returns (uint) {
