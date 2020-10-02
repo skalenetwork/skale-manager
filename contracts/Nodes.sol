@@ -247,6 +247,8 @@ contract Nodes is Permissions {
         allow("SkaleManager")
         returns (bool)
     {
+        require(isNodeActive(nodeIndex), "Node should be Active");
+    
         _setNodeLeaving(nodeIndex);
 
         emit ExitInited(
@@ -351,7 +353,7 @@ contract Nodes is Permissions {
             permitted = validatorService.getValidatorId(msg.sender) == validatorId;
         }
         require(permitted, "Sender is not permitted to call this function");
-        nodes[nodeIndex].status = NodeStatus.In_Maintenance;
+        _setNodeInMaintenance(nodeIndex);
     }
 
     function removeNodeFromInMaintenance(uint nodeIndex) external {
@@ -363,7 +365,7 @@ contract Nodes is Permissions {
             permitted = validatorService.getValidatorId(msg.sender) == validatorId;
         }
         require(permitted, "Sender is not permitted to call this function");
-        nodes[nodeIndex].status = NodeStatus.Active;
+        _setNodeActive(nodeIndex);
     }
 
     function getNodesWithFreeSpace(uint8 freeSpace) external view returns (uint[] memory) {
@@ -668,6 +670,26 @@ contract Nodes is Permissions {
         spaceToNodes[newSpace].push(nodeIndex);
         spaceOfNodes[nodeIndex].freeSpace = newSpace;
         spaceOfNodes[nodeIndex].indexInSpaceMap = spaceToNodes[newSpace].length.sub(1);
+    }
+
+    /**
+     * @dev _setNodeActive - set Node Active
+     * function could be run only by Nodes
+     * @param nodeIndex - index of Node
+     */
+    function _setNodeActive(uint nodeIndex) private {
+        nodes[nodeIndex].status = NodeStatus.Active;
+        numberOfActiveNodes = numberOfActiveNodes.add(1);
+    }
+
+    /**
+     * @dev _setNodeInMaintenance - set Node in Maintenance
+     * function could be run only by Nodes
+     * @param nodeIndex - index of Node
+     */
+    function _setNodeInMaintenance(uint nodeIndex) private {
+        nodes[nodeIndex].status = NodeStatus.In_Maintenance;
+        numberOfActiveNodes = numberOfActiveNodes.sub(1);
     }
 
     /**

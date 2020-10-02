@@ -262,6 +262,12 @@ contract("NodesData", ([owner, validator, nodeAddress]) => {
             await nodes.setNodeInMaintenance(0).should.be.eventually.rejectedWith("Node is not Active");
         });
 
+        it("should decrease number of active nodes after setting node in maintenance", async () => {
+            const numberOfActiveNodes = await nodes.numberOfActiveNodes();
+            await nodes.setNodeInMaintenance(0);
+            const numberOfActiveNodesAfter = await nodes.numberOfActiveNodes();
+            assert.equal(numberOfActiveNodesAfter.toNumber(), numberOfActiveNodes.toNumber()-1);
+        });
 
         // describe("when node is registered as fractional", async () => {
         //     beforeEach(async () => {
