@@ -118,7 +118,7 @@ contract SchainsInternal is Permissions {
     }
 
     /**
-     * @dev Allows Schains contract to set schain index.
+     * @dev Allows Schains contract to set index in owner list.
      */
     function setSchainIndex(bytes32 schainId, address from) external allow("Schains") {
         schains[schainId].indexInOwnerList = schainIndexes[from].length;
@@ -213,15 +213,16 @@ contract SchainsInternal is Permissions {
     }
 
     /**
-     * @dev Allows Schain contract to set a Node like exception for a given
-     * schain and nodeIndex.
+     * @dev Allows Schain and NodeRotation contracts to set a Node like
+     * exception for a given schain and nodeIndex.
      */
     function setException(bytes32 schainId, uint nodeIndex) external allowTwo("Schains", "NodeRotation") {
         _exceptionsForGroups[schainId][nodeIndex] = true;
     }
 
     /**
-     * @dev Allows Schains contract to add node to an schain group.
+     * @dev Allows Schains and NodeRotation contracts to add node to an schain
+     * group.
      */
     function setNodeInGroup(bytes32 schainId, uint nodeIndex) external allowTwo("Schains", "NodeRotation") {
         if (holesForSchains[schainId].length == 0) {
@@ -259,7 +260,7 @@ contract SchainsInternal is Permissions {
     }
 
     /**
-     * @dev Returns all occupied resources for an Schain
+     * @dev Returns all occupied resources on one node for an Schain.
      */
     function getSchainsPartOfNode(bytes32 schainId) external view returns (uint8) {
         return schains[schainId].partOfNode;
@@ -331,7 +332,7 @@ contract SchainsInternal is Permissions {
     }
 
     /**
-     * @dev Returns active schains of a node.
+     * @dev Returns last active schain of a node.
      */
     function getActiveSchain(uint nodeIndex) external view returns (bytes32) {
         for (uint i = schainsForNodes[nodeIndex].length; i > 0; i--) {
@@ -389,7 +390,8 @@ contract SchainsInternal is Permissions {
     }
 
     /**
-     * @dev Checks whether there are any schain nodes with free resources.
+     * @dev Checks whether there are any nodes with free resources for given
+     * schain.
      */
     function isAnyFreeNode(bytes32 schainId) external view returns (bool) {
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));
@@ -427,7 +429,7 @@ contract SchainsInternal is Permissions {
     }
 
     /**
-     * @dev Allows Schain contract to add schain to node.
+     * @dev Allows Schains and NodeRotation contracts to add schain to node.
      */
     function addSchainForNode(uint nodeIndex, bytes32 schainId) public allowTwo("Schains", "NodeRotation") {
         if (holesForNodes[nodeIndex].length == 0) {
@@ -453,8 +455,8 @@ contract SchainsInternal is Permissions {
     }
 
     /**
-     * @dev Allows Schains and SkaleDKG contracts to remove an schain from a
-     * node.
+     * @dev Allows Schains, NodeRotation, and SkaleDKG contracts to remove an 
+     * schain from a node.
      */
     function removeSchainForNode(uint nodeIndex, uint schainIndex)
         public
@@ -483,7 +485,7 @@ contract SchainsInternal is Permissions {
     }
 
     /**
-     * @dev Returns index of Schain in schainsForNode array.
+     * @dev Returns index of Schain in list of schains for a given node.
      */
     function findSchainAtSchainsForNode(uint nodeIndex, bytes32 schainId) public view returns (uint) {
         uint length = getLengthOfSchainsForNode(nodeIndex);

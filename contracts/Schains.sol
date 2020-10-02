@@ -198,7 +198,7 @@ contract Schains is Permissions {
     }
 
     /**
-     * @dev Allows SkaleManager to delete a root owned schain.
+     * @dev Allows SkaleManager to delete any Schain.
      * Upon removal, the space availability of each node is updated.
      * 
      * Emits an {SchainDeleted} event.
@@ -242,14 +242,15 @@ contract Schains is Permissions {
 
     /**
      * @dev Allows SkaleManager contract to restart schain creation by forming a
-     * new schain group.
+     * new schain group. Executed when DKG procedure fails and becomes stuck.
      * 
      * Emits a {NodeAdded} event.
      * 
      * Requirements:
      * 
-     * - Schain group must pass DKG.
-     * - Free nodes must be available in the network.
+     * - Previous DKG procedure must have failed.
+     * - DKG failure got stuck because there were no free nodes to rotate in.
+     * - A free node must be released in the network.
      */
     function restartSchainCreation(string calldata name) external allow("SkaleManager") {
         NodeRotation nodeRotation = NodeRotation(contractManager.getContract("NodeRotation"));
@@ -403,7 +404,7 @@ contract Schains is Permissions {
     }
 
     /**
-     * @dev Allows SkaleManager to create group of nodes for Schain.
+     * @dev Allows creation of node group for Schain.
      * 
      * Emits an {SchainNodes} event.
      */

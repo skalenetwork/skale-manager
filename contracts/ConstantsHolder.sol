@@ -132,7 +132,7 @@ contract ConstantsHolder is Permissions {
 
     /**
      * @dev Allows the Owner to set the new check time.
-     * This function only for tests.
+     * This function is only for tests.
      */
     function setCheckTime(uint newCheckTime) external onlyOwner {
         require(rewardPeriod - deltaPeriod >= checkTime, "Incorrect check time");

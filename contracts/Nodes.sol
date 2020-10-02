@@ -42,7 +42,8 @@ import "./delegation/DelegationController.sol";
  * - Active:            Node is registered and is in network operation.
  * - Leaving:           Node has begun exiting from the network.
  * - Left:              Node has left the network.
- * - In_Maintenance:    Node is temporarily offline.
+ * - In_Maintenance:    Node is temporarily offline or undergoing infrastructure
+ * maintenance
  * 
  * Note: Online nodes contain both Active and Leaving states.
  */
@@ -173,7 +174,7 @@ contract Nodes is Permissions {
     }
 
     /**
-     * @dev Allows Schains contract to occupy available capacity on a node.
+     * @dev Allows Schains contract to occupy free space on a node.
      * 
      * Returns whether operation is successful.
      */
@@ -397,7 +398,7 @@ contract Nodes is Permissions {
      * Requirements:
      * 
      * - Node must already be Active.
-     * - `msg.sender` must be owner of Node.
+     * - `msg.sender` must be owner of Node, validator, or SkaleManager.
      */
     function setNodeInMaintenance(uint nodeIndex) external {
         require(nodes[nodeIndex].status == NodeStatus.Active, "Node is not Active");
@@ -417,7 +418,7 @@ contract Nodes is Permissions {
      * Requirements:
      * 
      * - Node must already be In Maintenance.
-     * - `msg.sender` must be owner of Node.
+     * - `msg.sender` must be owner of Node, validator, or SkaleManager.
      */
     function removeNodeFromInMaintenance(uint nodeIndex) external {
         require(nodes[nodeIndex].status == NodeStatus.In_Maintenance, "Node is not In Maintenance");
@@ -480,6 +481,10 @@ contract Nodes is Permissions {
 
     /**
      * @dev Returns the port of a given node.
+     *
+     * Requirements:
+     *
+     * - Node must exist.
      */
     function getNodePort(uint nodeIndex)
         external

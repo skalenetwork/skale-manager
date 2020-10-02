@@ -110,7 +110,7 @@ contract TokenLaunchManager is Permissions, IERC777Recipient {
 
     /**
      * @dev Allows the Seller to complete the token launch process.
-     * This then allows participants to retrieve tokens and this disallows
+     * This allows participants to retrieve tokens and this disallows
      * any further approval changes.
      * 
      * Emits a {TokenLaunchIsCompleted} event.

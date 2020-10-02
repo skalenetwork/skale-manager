@@ -54,8 +54,8 @@ contract SkaleToken is ERC777, Permissions, ReentrancyGuard, IDelegatableToken {
     }
 
     /**
-     * @dev Allows SkaleManager to mint an amount of tokens and transfer minted
-     * tokens to a specified address.
+     * @dev Allows Owner or SkaleManager to mint an amount of tokens and 
+     * transfer minted tokens to a specified address.
      * 
      * Returns whether the operation is successful.
      * 

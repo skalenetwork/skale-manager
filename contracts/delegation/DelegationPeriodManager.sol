@@ -44,7 +44,7 @@ contract DelegationPeriodManager is Permissions {
 
     /**
      * @dev Allows the Owner to create a new available delegation period and
-     * return in the network.
+     * stake multiplier in the network.
      * 
      * Emits a {DelegationPeriodWasSet} event.
      */

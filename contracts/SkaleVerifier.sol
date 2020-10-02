@@ -43,7 +43,7 @@ contract SkaleVerifier is Permissions {
     * - Signature is in G1.
     * - Hash is in G1.
     * - G2.one in G2.
-    * - Public Key in G1.
+    * - Public Key in G2.
     */
     function verify(
         Fp2Operations.Fp2Point calldata signature,

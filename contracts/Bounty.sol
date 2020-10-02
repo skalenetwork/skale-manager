@@ -185,7 +185,7 @@ contract Bounty is Permissions {
     }
 
     /**
-     * @dev Returns the total available bounty pool a given stage.
+     * @dev Returns the total available bounty pool for a given stage.
      */
     function _getStageReward(uint stage) private pure returns (uint) {
         if (stage >= 6) {

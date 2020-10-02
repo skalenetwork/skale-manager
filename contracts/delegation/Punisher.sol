@@ -75,7 +75,7 @@ contract Punisher is Permissions, ILocker {
     }
 
     /**
-     * @dev Allows the Owner to forgive a slashing condition.
+     * @dev Allows the Admin to forgive a slashing condition.
      * 
      * Emits a {Forgive} event.
      * 

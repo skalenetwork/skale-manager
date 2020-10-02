@@ -90,7 +90,7 @@ contract Distributor is Permissions, IERC777Recipient {
 
     /**
      * @dev Allows msg.sender to withdraw earned bounty. Bounties are locked
-     * until launchTimestamp has passed.
+     * until launchTimestamp and BOUNTY_LOCKUP_MONTHS have both passed.
      * 
      * Emits a {WithdrawBounty} event.
      * 
@@ -125,8 +125,8 @@ contract Distributor is Permissions, IERC777Recipient {
     }
 
     /**
-     * @dev Allows msg.sender to withdraw earned validator fees. Fees are locked
-     * until launchTimestamp has passed.
+     * @dev Allows `msg.sender` to withdraw earned validator fees. Fees are 
+     * locked until launchTimestamp and BOUNTY_LOCKUP_MONTHS both have passed.
      * 
      * Emits a {WithdrawFee} event.
      * 
@@ -180,7 +180,7 @@ contract Distributor is Permissions, IERC777Recipient {
     }
 
     /**
-     * @dev Return the amount of earned validator fees.
+     * @dev Return the amount of earned validator fees of `msg.sender`.
      */
     function getEarnedFeeAmount() external view returns (uint earned, uint endMonth) {
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
@@ -232,7 +232,7 @@ contract Distributor is Permissions, IERC777Recipient {
     }
 
     /**
-     * @dev Return the amount of earned fees.
+     * @dev Return the amount of earned fees by validator ID.
      */
     function getEarnedFeeAmountOf(uint validatorId) public view returns (uint earned, uint endMonth) {
         TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));

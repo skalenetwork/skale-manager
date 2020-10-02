@@ -102,7 +102,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
     );
 
     /**
-     * @dev Emitted when all group data is received.
+     * @dev Emitted when all group data is received by node.
      */
     event AllDataReceived(bytes32 indexed groupIndex, uint nodeIndex);
 
@@ -112,7 +112,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
     event SuccessfulDKG(bytes32 indexed groupIndex);
 
     /**
-     * @dev Emitted when a node is validated to be malicious.
+     * @dev Emitted when a complaint against a node is verified.
      */
     event BadGuy(uint nodeIndex);
 
@@ -127,9 +127,13 @@ contract SkaleDKG is Permissions, ISkaleDKG {
     event ComplaintSent(bytes32 indexed groupIndex, uint indexed fromNodeIndex, uint indexed toNodeIndex);
 
     /**
-     * @dev Emitted when a new node is rotated in to restart DKG.
+     * @dev Emitted when a new node is rotated in.
      */
     event NewGuy(uint nodeIndex);
+
+    /**
+     * @dev Emitted when an incorrect complaint is sent.
+     */
     event ComplaintError(string error);
 
     modifier correctGroup(bytes32 groupIndex) {
@@ -198,8 +202,9 @@ contract SkaleDKG is Permissions, ISkaleDKG {
      *
      * Requirements:
      *
-     * - msg.sender must have an associated node.
-     * - VerificationVector must not be empty.
+     * - `msg.sender` must have an associated node.
+     * - `verificationVector` must be a certain length.
+     * - `secretKeyContribution` length must be equal to number of nodes in group.
      */
     function broadcast(
         bytes32 groupIndex,
@@ -240,11 +245,11 @@ contract SkaleDKG is Permissions, ISkaleDKG {
      * @dev Creates a complaint from a node (accuser) to a given node.
      * The accusing node must broadcast additional parameters within 1800 blocks.
      *
-     * Emits BroadcastAndKeyShare event.
+     * Emits {ComplaintSent} or {ComplaintError} event.
      *
      * Requirements:
      *
-     * - msg.sender must have an associated node.
+     * - `msg.sender` must have an associated node.
      */
     function complaint(bytes32 groupIndex, uint fromNodeIndex, uint toNodeIndex)
         external
@@ -365,6 +370,9 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         return channels[groupIndex].startedBlockTimestamp <= lastSuccesfulDKG[groupIndex];
     }
 
+    /**
+     * @dev Checks whether broadcast is possible.
+     */
     function isBroadcastPossible(bytes32 groupIndex, uint nodeIndex) external view returns (bool) {
         uint index = _nodeIndexInSchain(groupIndex, nodeIndex);
         return channels[groupIndex].active &&
@@ -456,7 +464,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
     }
 
     /**
-     * @dev Checks whether all data has been received.
+     * @dev Checks whether all data has been received by node.
      */
     function isAllDataReceived(bytes32 groupIndex, uint nodeIndex) public view returns (bool) {
         uint index = _nodeIndexInSchain(groupIndex, nodeIndex);

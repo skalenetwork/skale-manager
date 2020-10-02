@@ -208,7 +208,8 @@ contract ValidatorService is Permissions {
      * @dev Allows `msg.sender` to request a new address.
      * 
      * Requirements:
-     * 
+     *
+     * - `msg.sender` must already be a validator.
      * - New address must not be null.
      * - New address must not be already registered as a validator.
      */
@@ -245,7 +246,7 @@ contract ValidatorService is Permissions {
     }
 
     /**
-     * @dev Links a validator ID to a node address. Validator must present
+     * @dev Links a node address to validator ID. Validator must present
      * the node signature of the validator ID.
      * 
      * Requirements:

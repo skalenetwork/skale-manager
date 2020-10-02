@@ -77,7 +77,7 @@ contract Monitors is Permissions {
     /**
      * @dev Emitted when a verdict is sent.
      */
-    event VerdictWasSent(
+    event VerdictSent(
         uint indexed fromMonitorIndex,
         uint indexed toNodeIndex,
         uint32 downtime,
@@ -91,7 +91,7 @@ contract Monitors is Permissions {
     /**
      * @dev Emitted when metrics are calculated.
      */
-    event MetricsWereCalculated(
+    event MetricsCalculated(
         uint forNodeIndex,
         uint32 averageDowntime,
         uint32 averageLatency,
@@ -102,7 +102,7 @@ contract Monitors is Permissions {
     /**
      * @dev Emitted when monitoring periods are set.
      */
-    event PeriodsWereSet(
+    event PeriodsSet(
         uint rewardPeriod,
         uint deltaPeriod,
         uint time,
@@ -169,7 +169,7 @@ contract Monitors is Permissions {
     }
 
     /**
-     * @dev Allows SkaleManager contract to remove a node from a monitor group.
+     * @dev Allows SkaleManager contract to remove nodes from a monitoring list.
      */
     function removeCheckedNodes(uint nodeIndex) external allow("SkaleManager") {
         bytes32 monitorIndex = keccak256(abi.encodePacked(nodeIndex));
@@ -179,7 +179,7 @@ contract Monitors is Permissions {
     /**
      * @dev Allows SkaleManager contract to send a monitoring verdict.
      * 
-     * Emits a {VerdictWasSent} event.
+     * Emits a {VerdictSent} event.
      * 
      * Requirements:
      * 
@@ -241,7 +241,9 @@ contract Monitors is Permissions {
     }
 
     /**
-     * @dev Returns node IPs that were last checked.
+     * @dev Returns node info of nodes in a monitoring list.
+     * Node info includes IPs, nodeIndex, and time to send verdict.
+     * 
      */
     function getCheckedArray(bytes32 monitorIndex)
         external
@@ -311,8 +313,7 @@ contract Monitors is Permissions {
     }
 
     /**
-     * @dev Allows SkaleManager contract to generate a monitoring group, using
-     * a pseudo-random number generator.
+     * @dev Generates a monitoring group, using a pseudo-random number generator.
      */
     function _generateGroup(bytes32 monitorIndex, uint nodeIndex, uint numberOfNodes)
         private
@@ -346,7 +347,7 @@ contract Monitors is Permissions {
      */
     function _median(uint[] memory values) private pure returns (uint) {
         if (values.length < 1) {
-            revert("Cannot calculate _median of empty array");
+            require("Cannot calculate _median of an empty array");
         }
         _quickSort(values, 0, values.length.sub(1));
         return values[values.length.div(2)];
@@ -418,9 +419,9 @@ contract Monitors is Permissions {
     }
 
     /**
-     * @dev Performs emission of VerdictWasSent.
+     * @dev Performs emission of VerdictSent.
      * 
-     * Emits a {VerdictWasSent} event.
+     * Emits a {VerdictSent} event.
      */
     function _emitVerdictsEvent(
         uint fromMonitorIndex,
@@ -432,7 +433,7 @@ contract Monitors is Permissions {
         uint previousBlockEvent = getLastReceivedVerdictBlock(verdict.toNodeIndex);
         lastVerdictBlocks[keccak256(abi.encodePacked(verdict.toNodeIndex))] = block.number;
 
-        emit VerdictWasSent(
+        emit VerdictSent(
                 fromMonitorIndex,
                 verdict.toNodeIndex,
                 verdict.downtime,

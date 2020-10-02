@@ -40,7 +40,7 @@ import "./PartialDifferences.sol";
 /**
  * @title Delegation Controller
  * @dev This contract performs all delegation functions including delegation
- * requests, undelegation, slashing, etc.
+ * requests, and undelegation, etc.
  * 
  * Delegators and validators may both perform delegations. Validators who perform
  * delegations to themselves are effectively self-delegating or self-bonding.
@@ -52,7 +52,7 @@ import "./PartialDifferences.sol";
  * 
  * - PROPOSED: token holder proposes tokens to delegate to a validator.
  * - ACCEPTED: token delegations are accepted by a validator and are locked-by-delegation.
- * - CANCELED: token holder cancels delegation proposal. Only allowed before the proposal is accepted by the .
+ * - CANCELED: token holder cancels delegation proposal. Only allowed before the proposal is accepted by the validator.
  * - REJECTED: token proposal expires at the UTC start of the next month.
  * - DELEGATED: accepted delegations are delegated at the UTC start of the month.
  * - UNDELEGATION_REQUESTED: token holder requests delegations to undelegate from the validator.
@@ -207,21 +207,22 @@ contract DelegationController is Permissions, ILocker {
     }
 
     /**
-     * @dev Return and update validator's delegations.
+     * @dev Update and return a validator's delegations.
      */
     function getAndUpdateDelegatedToValidatorNow(uint validatorId) external returns (uint) {
         return getAndUpdateDelegatedToValidator(validatorId, _getCurrentMonth());
     }
 
     /**
-     * @dev Return and update the amount delegated.
+     * @dev Update and return the amount delegated.
      */
     function getAndUpdateDelegatedAmount(address holder) external returns (uint) {
         return _getAndUpdateDelegatedByHolder(holder);
     }
 
     /**
-     * @dev Return and update the effective amount delegated (minus slash).
+     * @dev Update and return the effective amount delegated (minus slash) for
+     * the given month.
      */
     function getAndUpdateEffectiveDelegatedByHolderToValidator(address holder, uint validatorId, uint month) external
         allow("Distributor") returns (uint effectiveDelegated)
@@ -445,7 +446,7 @@ contract DelegationController is Permissions, ILocker {
 
     /**
      * @dev Allows Punisher contract to slash an `amount` of stake from
-     * a validator. This slashes all delegations of the validator,
+     * a validator. This slashes an amount of delegations of the validator,
      * which reduces the amount that the validator has staked. This consequence
      * may force the SKALE Manager to reduce the number of nodes a validator is
      * operating so the validator can meet the Minimum Staking Requirement.
@@ -465,7 +466,7 @@ contract DelegationController is Permissions, ILocker {
 
     /**
      * @dev Allows Distributor contract to return and update the effective 
-     * amount delegated (minus slash) to a validator.
+     * amount delegated (minus slash) to a validator for a given month.
      */
     function getAndUpdateEffectiveDelegatedToValidator(uint validatorId, uint month)
         external allow("Distributor") returns (uint)
@@ -474,7 +475,8 @@ contract DelegationController is Permissions, ILocker {
     }
 
     /**
-     * @dev Return and update the amount delegated to a validator.
+     * @dev Return and update the amount delegated to a validator for the
+     * current month.
      */
     function getAndUpdateDelegatedByHolderToValidatorNow(address holder, uint validatorId) external returns (uint) {
         return _getAndUpdateDelegatedByHolderToValidator(holder, validatorId, _getCurrentMonth());
@@ -516,7 +518,7 @@ contract DelegationController is Permissions, ILocker {
 
     /**
      * @dev Allows Nodes contract to get and update the amount delegated
-     * to validator.
+     * to validator for a given month.
      */
     function getAndUpdateDelegatedToValidator(uint validatorId, uint month)
         public allow("Nodes") returns (uint)
@@ -525,7 +527,7 @@ contract DelegationController is Permissions, ILocker {
     }
 
     /**
-     * @dev Process slashes.
+     * @dev Process slashes up to the given limit.
      */
     function processSlashes(address holder, uint limit) public {
         _sendSlashingSignals(_processSlashesWithoutSignals(holder, limit));

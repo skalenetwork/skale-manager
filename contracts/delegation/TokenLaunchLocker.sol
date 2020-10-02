@@ -71,7 +71,8 @@ contract TokenLaunchLocker is Permissions, ILocker {
     mapping (uint => uint) private _delegationAmount;
 
     /**
-     * @dev Allows TokenLaunchManager contract to lock an amount of tokens.
+     * @dev Allows TokenLaunchManager contract to lock an amount of tokens in a
+     * holder wallet.
      * 
      * Emits a {Locked} event.
      */
@@ -82,8 +83,8 @@ contract TokenLaunchLocker is Permissions, ILocker {
     }
 
     /**
-     * @dev Allows DelegationController contract to add locked tokens to
-     * a delegation.
+     * @dev Allows DelegationController contract to notify TokenLaunchLocker 
+     * about new delegations.
      */
     function handleDelegationAdd(
         address holder, uint delegationId, uint amount, uint month)
@@ -108,8 +109,8 @@ contract TokenLaunchLocker is Permissions, ILocker {
     }
 
     /**
-     * @dev Allows DelegationController contract to remove locked tokens from
-     * a delegation.
+     * @dev Allows DelegationController contract to notify TokenLaunchLocker 
+     * about new undelegation requests.
      */
     function handleDelegationRemoving(
         address holder,
@@ -178,21 +179,21 @@ contract TokenLaunchLocker is Permissions, ILocker {
     }
 
     /**
-     * @dev Adds a delegated amount to the current month.
+     * @dev Adds a delegated amount to the given month.
      */
     function _addToDelegatedAmount(address holder, uint amount, uint month) private {
         _delegatedAmount[holder].addToValue(amount, month);
     }
 
     /**
-     * @dev Removes a delegated amount from the current month.
+     * @dev Removes a delegated amount from the given month.
      */
     function _removeFromDelegatedAmount(address holder, uint amount, uint month) private {
         _delegatedAmount[holder].subtractFromValue(amount, month);
     }
 
     /**
-     * @dev Adds the amount to the total delegated for the current month.
+     * @dev Adds the amount to the total delegated for the given month.
      */
     function _addToTotalDelegatedAmount(address holder, uint amount, uint month) private {
         require(
