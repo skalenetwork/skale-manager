@@ -55,6 +55,9 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         uint nodeToComplaint;
         uint fromNodeToComplaint;
         uint startComplaintBlockTimestamp;
+        bool isResponse;
+        bytes32 keyShare;
+        G2Operations.G2Point sumOfVerVec;
     }
 
     struct KeyShare {
@@ -194,12 +197,31 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         }
     }
 
-    function response(
+    function complaintBadData(bytes32 schainId, uint fromNodeIndex, uint toNodeIndex)
+        external
+        correctGroupWithoutRevert(schainId)
+        correctNode(schainId, fromNodeIndex)
+        correctNodeWithoutRevert(schainId, toNodeIndex)
+    { 
+        require(_isNodeByMessageSender(fromNodeIndex, msg.sender), "Node does not exist for message sender");
+        require(isNodeBroadcasted(schainId, fromNodeIndex), "Node has not broadcasted");
+        require(isNodeBroadcasted(schainId, toNodeIndex), "Accused node has not broadcasted");
+        require(!isAllDataReceived(schainId, fromNodeIndex), "Node has already sent alright");
+        if (complaints[schainId].nodeToComplaint == uint(-1)) {
+            complaints[schainId].nodeToComplaint = toNodeIndex;
+            complaints[schainId].fromNodeToComplaint = fromNodeIndex;
+            complaints[schainId].startComplaintBlockTimestamp = block.timestamp;
+            emit ComplaintSent(schainId, fromNodeIndex, toNodeIndex);
+        } else {
+            emit ComplaintError("First complaint has already been processed");
+        }
+    }
+
+    function preResponse(
         bytes32 schainId,
         uint fromNodeIndex,
-        uint secretNumber,
-        G2Operations.G2Point calldata multipliedShare,
         G2Operations.G2Point[] calldata verificationVector,
+        G2Operations.G2Point[] calldata verificationVectorMult,
         KeyShare[] calldata secretKeyContribution
     )
         external
@@ -208,19 +230,45 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         uint indexOnSchain = _nodeIndexInSchain(schainId, fromNodeIndex);
         require(indexOnSchain < channels[schainId].n, "Node is not in this group");
         require(complaints[schainId].nodeToComplaint == fromNodeIndex, "Not this Node");
+        require(!complaints[schainId].isResponse, "Already submitted pre response data");
         require(_isNodeByMessageSender(fromNodeIndex, msg.sender), "Node does not exist for message sender");
         require(
             hashedData[schainId][indexOnSchain] == _hashData(secretKeyContribution, verificationVector),
             "Broadcasted Data is not correct"
         );
+        require(
+            verificationVector.length == verificationVectorMult.length,
+            "Incorrect length of multiplied verification vector"
+        );
         uint index = _nodeIndexInSchain(schainId, complaints[schainId].fromNodeToComplaint);
+        require(
+            _checkCorrectVectorMultiplication(indexOnSchain, verificationVector, verificationVectorMult),
+            "Multiplied verification vector is incorrect"
+        );
+        complaints[schainId].keyShare = secretKeyContribution[index].share;
+        complaints[schainId].sumOfVerVec = _calculateSum(verificationVectorMult);
+        complaints[schainId].isResponse = true;
+    }
+
+    function response(
+        bytes32 schainId,
+        uint fromNodeIndex,
+        uint secretNumber,
+        G2Operations.G2Point calldata multipliedShare
+    )
+        external
+        correctGroup(schainId)
+    {
+        uint indexOnSchain = _nodeIndexInSchain(schainId, fromNodeIndex);
+        require(indexOnSchain < channels[schainId].n, "Node is not in this group");
+        require(complaints[schainId].nodeToComplaint == fromNodeIndex, "Not this Node");
+        require(complaints[schainId].isResponse, "Have not submitted pre-response data");
+        require(_isNodeByMessageSender(fromNodeIndex, msg.sender), "Node does not exist for message sender");
+        // uint index = _nodeIndexInSchain(schainId, complaints[schainId].fromNodeToComplaint);
         _verifyDataAndSlash(
             schainId,
-            indexOnSchain,
             secretNumber,
-            multipliedShare,
-            verificationVector,
-            secretKeyContribution[index].share
+            multipliedShare
          );
     }
 
@@ -347,12 +395,22 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             !dkgProcess[schainId].completed[index];
     }
 
+    function isPreResponsePossible(bytes32 schainId, uint nodeIndex) external view returns (bool) {
+        uint index = _nodeIndexInSchain(schainId, nodeIndex);
+        return channels[schainId].active &&
+            index < channels[schainId].n &&
+            _isNodeByMessageSender(nodeIndex, msg.sender) &&
+            complaints[schainId].nodeToComplaint == nodeIndex &&
+            !complaints[schainId].isResponse;
+    }
+
     function isResponsePossible(bytes32 schainId, uint nodeIndex) external view returns (bool) {
         uint index = _nodeIndexInSchain(schainId, nodeIndex);
         return channels[schainId].active &&
             index < channels[schainId].n &&
             _isNodeByMessageSender(nodeIndex, msg.sender) &&
-            complaints[schainId].nodeToComplaint == nodeIndex;
+            complaints[schainId].nodeToComplaint == nodeIndex &&
+            complaints[schainId].isResponse;
     }
 
     function initialize(address contractsAddress) public override initializer {
@@ -386,11 +444,8 @@ contract SkaleDKG is Permissions, ISkaleDKG {
 
     function _verifyDataAndSlash(
         bytes32 schainId,
-        uint indexOnSchain,
         uint secretNumber,
-        G2Operations.G2Point calldata multipliedShare,
-        G2Operations.G2Point[] calldata verificationVector,
-        bytes32 share
+        G2Operations.G2Point calldata multipliedShare
     )
         internal
     {
@@ -404,20 +459,77 @@ contract SkaleDKG is Permissions, ISkaleDKG {
 
         // Decrypt secret key contribution
         uint secret = Decryption(contractManager.getContract("Decryption")).decrypt(
-            share,
+            complaints[schainId].keyShare,
             key
         );
 
-        uint badNode = (_checkCorrectMultipliedShare(multipliedShare, indexOnSchain, secret, verificationVector) ?
-            complaints[schainId].fromNodeToComplaint : complaints[schainId].nodeToComplaint);
+        uint badNode = (
+            _checkCorrectMultipliedShare(multipliedShare, secret) &&
+            multipliedShare.isEqual(complaints[schainId].sumOfVerVec) ?
+            complaints[schainId].fromNodeToComplaint :
+            complaints[schainId].nodeToComplaint
+        );
         _finalizeSlashing(schainId, badNode);
+    }
+
+    function _checkCorrectVectorMultiplication(
+        uint indexOnSchain,
+        G2Operations.G2Point[] memory verificationVector,
+        G2Operations.G2Point[] memory verificationVectorMult
+    )
+        private
+        view
+        returns (bool)
+    {
+        Fp2Operations.Fp2Point memory value = G2Operations.getG1();
+        Fp2Operations.Fp2Point memory tmp = G2Operations.getG1();
+        for (uint i = 0; i < verificationVector.length; i++) {
+            (tmp.a, tmp.b) = Precompiled.bn256ScalarMul(value.a, value.b, indexOnSchain.add(1) ** i);
+            if (!_checkPairing(tmp, verificationVector[i], verificationVectorMult[i])) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    function _checkPairing(
+        Fp2Operations.Fp2Point memory g1Mul,
+        G2Operations.G2Point memory verificationVector,
+        G2Operations.G2Point memory verificationVectorMult
+    )
+        private
+        view
+        returns (bool)
+    {
+        Fp2Operations.Fp2Point memory one = G2Operations.getG1();
+        if (!(g1Mul.a == 0 && g1Mul.b == 0)) {
+            g1Mul.b = Fp2Operations.P.sub((g1Mul.b % Fp2Operations.P));
+        }
+        return Precompiled.bn256Pairing(
+            one.a, one.b,
+            verificationVectorMult.x.b, verificationVectorMult.x.a,
+            verificationVectorMult.y.b, verificationVectorMult.y.a,
+            g1Mul.a, g1Mul.b,
+            verificationVector.x.b, verificationVector.x.a,
+            verificationVector.y.b, verificationVector.y.a
+        );
+    }
+
+    function _calculateSum(G2Operations.G2Point[] memory verificationVectorMult)
+        private
+        view
+        returns (G2Operations.G2Point memory)
+    {
+        G2Operations.G2Point memory value = G2Operations.getG2Zero();
+        for (uint i = 0; i < verificationVectorMult.length; i++) {
+            value = value.addG2(verificationVectorMult[i]);
+        }
+        return value;
     }
 
     function _checkCorrectMultipliedShare(
         G2Operations.G2Point memory multipliedShare,
-        uint indexOnSchain,
-        uint secret,
-        G2Operations.G2Point[] calldata verificationVector
+        uint secret
     )
         private
         view
@@ -426,13 +538,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         if (!multipliedShare.isG2()) {
             return false;
         }
-        G2Operations.G2Point memory value = G2Operations.getG2Zero();
-        G2Operations.G2Point memory tmp = G2Operations.getG2Zero();
-        for (uint i = 0; i < verificationVector.length; i++) {
-            tmp = verificationVector[i].mulG2(indexOnSchain.add(1) ** i);
-            value = tmp.addG2(value);
-        }
-        tmp = multipliedShare;
+        G2Operations.G2Point memory tmp = multipliedShare;
         Fp2Operations.Fp2Point memory g1 = G2Operations.getG1();
         Fp2Operations.Fp2Point memory share = Fp2Operations.Fp2Point({
             a: 0,
@@ -446,9 +552,8 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         require(G2Operations.isG1(share), "mulShare not in G1");
 
         G2Operations.G2Point memory g2 = G2Operations.getG2();
-        require(G2Operations.isG2(tmp), "tmp not in g2");
 
-        return value.isEqual(multipliedShare) && Precompiled.bn256Pairing(
+        return Precompiled.bn256Pairing(
             share.a, share.b,
             g2.x.b, g2.x.a, g2.y.b, g2.y.a,
             g1.a, g1.b,
@@ -480,7 +585,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
     }
 
     function _handleComplaintWhenBroadcasted(bytes32 schainId, uint fromNodeIndex, uint toNodeIndex) private {
-        // incorrect data or missing alright
+        // missing alright
         if (complaints[schainId].nodeToComplaint == uint(-1)) {
             if (
                 isEveryoneBroadcasted(schainId) &&
@@ -492,10 +597,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
                 return;
             } else if (!isAllDataReceived(schainId, fromNodeIndex)) {
                 // incorrect data
-                complaints[schainId].nodeToComplaint = toNodeIndex;
-                complaints[schainId].fromNodeToComplaint = fromNodeIndex;
-                complaints[schainId].startComplaintBlockTimestamp = block.timestamp;
-                emit ComplaintSent(schainId, fromNodeIndex, toNodeIndex);
+                _finalizeSlashing(schainId, fromNodeIndex);
                 return;
             }
             emit ComplaintError("Has already sent alright");
