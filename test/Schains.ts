@@ -1726,35 +1726,31 @@ contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeA
         });
 
         it("should rotate 7 node from validator address", async () => {
-            const rotIndex = 6;
-            const schainIds = await schainsInternal.getSchainIdsForNode(rotIndex);
+            const rotatedNodeIndex = 6;
+            const schainIds = await schainsInternal.getSchainIdsForNode(rotatedNodeIndex);
             for (const schainId of schainIds.reverse()) {
-                const valId = await validatorService.getValidatorIdByNodeAddress(nodeAddress2);
-                ((await validatorService.getValidatorIdByNodeAddress(nodeAddress2)).toString()).should.be.equal("1");
-                await skaleManager.nodeExit(rotIndex, {from: validator});
-                await skaleDKG.setSuccesfulDKGPublic(
-                    schainId,
-                );
+                const validatorId = await validatorService.getValidatorIdByNodeAddress(nodeAddress2);
+                validatorId.toString().should.be.equal("1");
+                await skaleManager.nodeExit(rotatedNodeIndex, {from: validator});
+                await skaleDKG.setSuccesfulDKGPublic(schainId);
             }
             await validatorService.getValidatorIdByNodeAddress(nodeAddress2)
-            .should.be.eventually.rejectedWith("Node address is not assigned to a validator");
-            await schainsInternal.getSchainIdsForNode(rotIndex).should.be.eventually.empty;
+                .should.be.eventually.rejectedWith("Node address is not assigned to a validator");
+            await schainsInternal.getSchainIdsForNode(rotatedNodeIndex).should.be.eventually.empty;
         });
 
         it("should rotate 7 node from contract owner address", async () => {
-            const rotIndex = 6;
-            const schainIds = await schainsInternal.getSchainIdsForNode(rotIndex);
+            const rotatedNodeIndex = 6;
+            const schainIds = await schainsInternal.getSchainIdsForNode(rotatedNodeIndex);
             for (const schainId of schainIds.reverse()) {
-                const valId = await validatorService.getValidatorIdByNodeAddress(nodeAddress2);
-                ((await validatorService.getValidatorIdByNodeAddress(nodeAddress2)).toString()).should.be.equal("1");
-                await skaleManager.nodeExit(rotIndex, {from: owner});
-                await skaleDKG.setSuccesfulDKGPublic(
-                    schainId,
-                );
+                const validatorId = await validatorService.getValidatorIdByNodeAddress(nodeAddress2);
+                validatorId.toString().should.be.equal("1");
+                await skaleManager.nodeExit(rotatedNodeIndex, {from: owner});
+                await skaleDKG.setSuccesfulDKGPublic(schainId);
             }
             await validatorService.getValidatorIdByNodeAddress(nodeAddress2)
-            .should.be.eventually.rejectedWith("Node address is not assigned to a validator");
-            await schainsInternal.getSchainIdsForNode(rotIndex).should.be.eventually.empty;
+                .should.be.eventually.rejectedWith("Node address is not assigned to a validator");
+            await schainsInternal.getSchainIdsForNode(rotatedNodeIndex).should.be.eventually.empty;
         });
 
         it("should rotate 8 node and unlink from Validator", async () => {
