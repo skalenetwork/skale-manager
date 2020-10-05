@@ -33,6 +33,11 @@ import "./interfaces/ISkaleDKG.sol";
 import "./ECDH.sol";
 import "./utils/Precompiled.sol";
 
+/**
+ * @title SkaleDKG
+ * @dev Contains functions to manage distributed key generation per
+ * Joint-Feldman protocol.
+ */
 contract SkaleDKG is Permissions, ISkaleDKG {
     using Fp2Operations for Fp2Operations.Fp2Point;
     using G2Operations for G2Operations.G2Point;
@@ -79,10 +84,19 @@ contract SkaleDKG is Permissions, ISkaleDKG {
 
     mapping(bytes32 => mapping(uint => bytes32)) public hashedData;
 
+    /**
+     * @dev Emitted when a channel is opened.
+     */
     event ChannelOpened(bytes32 schainId);
 
+    /**
+     * @dev Emitted when a channel is closed.
+     */
     event ChannelClosed(bytes32 schainId);
 
+    /**
+     * @dev Emitted when a node broadcasts keyshare.
+     */
     event BroadcastAndKeyShare(
         bytes32 indexed schainId,
         uint indexed fromNode,
@@ -90,12 +104,40 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         KeyShare[] secretKeyContribution
     );
 
+    /**
+     * @dev Emitted when all group data is received by node.
+     */
     event AllDataReceived(bytes32 indexed schainId, uint nodeIndex);
+
+    /**
+     * @dev Emitted when DKG is successful.
+     */
     event SuccessfulDKG(bytes32 indexed schainId);
+
+    /**
+     * @dev Emitted when a complaint against a node is verified.
+     */
     event BadGuy(uint nodeIndex);
+
+    /**
+     * @dev Emitted when DKG failed.
+     */
     event FailedDKG(bytes32 indexed schainId);
-    event ComplaintSent(bytes32 indexed schainId, uint indexed fromNodeIndex, uint indexed toNodeIndex);
+
+    /**
+     * @dev Emitted when a complaint is sent.
+     */
+    event ComplaintSent(
+        bytes32 indexed schainId, uint indexed fromNodeIndex, uint indexed toNodeIndex);
+
+    /**
+     * @dev Emitted when a new node is rotated in.
+     */
     event NewGuy(uint nodeIndex);
+
+    /**
+     * @dev Emitted when an incorrect complaint is sent.
+     */
     event ComplaintError(string error);
 
     modifier correctGroup(bytes32 schainId) {
@@ -128,17 +170,46 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         }
     }
 
+    /**
+     * @dev Allows Schains and NodeRotation contracts to open a channel.
+     * 
+     * Emits a {ChannelOpened} event.
+     * 
+     * Requirements:
+     * 
+     * - Channel is not already created.
+     */
     function openChannel(bytes32 schainId) external override allowTwo("Schains","NodeRotation") {
         _openChannel(schainId);
     }
 
+    /**
+     * @dev Allows SchainsInternal contract to delete a channel.
+     *
+     * Requirements:
+     *
+     * - Channel must exist.
+     */
     function deleteChannel(bytes32 schainId) external override allow("SchainsInternal") {
+        require(channels[schainId].active, "Channel is not created");
         delete channels[schainId];
         delete dkgProcess[schainId];
         delete complaints[schainId];
         KeyStorage(contractManager.getContract("KeyStorage")).deleteKey(schainId);
     }
 
+    /**
+     * @dev Broadcasts verification vector and secret key contribution to all
+     * other nodes in the group.
+     *
+     * Emits BroadcastAndKeyShare event.
+     *
+     * Requirements:
+     *
+     * - `msg.sender` must have an associated node.
+     * - `verificationVector` must be a certain length.
+     * - `secretKeyContribution` length must be equal to number of nodes in group.
+     */
     function broadcast(
         bytes32 schainId,
         uint nodeIndex,
@@ -174,6 +245,16 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         );
     }
 
+    /**
+     * @dev Creates a complaint from a node (accuser) to a given node.
+     * The accusing node must broadcast additional parameters within 1800 blocks.
+     *
+     * Emits {ComplaintSent} or {ComplaintError} event.
+     *
+     * Requirements:
+     *
+     * - `msg.sender` must have an associated node.
+     */
     function complaint(bytes32 schainId, uint fromNodeIndex, uint toNodeIndex)
         external
         correctGroupWithoutRevert(schainId)
@@ -327,14 +408,20 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         return startAlrightTimestamp[schainId];
     }
 
+    /**
+     * @dev Checks whether channel is opened.
+     */
     function isChannelOpened(bytes32 schainId) external override view returns (bool) {
         return channels[schainId].active;
     }
 
-    function isLastDKGSuccesful(bytes32 schainId) external override view returns (bool) {
+    function isLastDKGSuccessful(bytes32 schainId) external override view returns (bool) {
         return channels[schainId].startedBlockTimestamp <= lastSuccesfulDKG[schainId];
     }
 
+    /**
+     * @dev Checks whether broadcast is possible.
+     */
     function isBroadcastPossible(bytes32 schainId, uint nodeIndex) external view returns (bool) {
         uint index = _nodeIndexInSchain(schainId, nodeIndex);
         return channels[schainId].active &&
@@ -343,6 +430,9 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             !dkgProcess[schainId].broadcasted[index];
     }
 
+    /**
+     * @dev Checks whether complaint is possible.
+     */
     function isComplaintPossible(
         bytes32 schainId,
         uint fromNodeIndex,
@@ -384,6 +474,9 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             complaintSending;
     }
 
+    /**
+     * @dev Checks whether sending Alright response is possible.
+     */
     function isAlrightPossible(bytes32 schainId, uint nodeIndex) external view returns (bool) {
         uint index = _nodeIndexInSchain(schainId, nodeIndex);
         return channels[schainId].active &&
@@ -395,6 +488,9 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             !dkgProcess[schainId].completed[index];
     }
 
+    /**
+     * @dev Checks whether sending a pre-response is possible.
+     */
     function isPreResponsePossible(bytes32 schainId, uint nodeIndex) external view returns (bool) {
         uint index = _nodeIndexInSchain(schainId, nodeIndex);
         return channels[schainId].active &&
@@ -404,6 +500,9 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             !complaints[schainId].isResponse;
     }
 
+    /**
+     * @dev Checks whether sending a response is possible.
+     */
     function isResponsePossible(bytes32 schainId, uint nodeIndex) external view returns (bool) {
         uint index = _nodeIndexInSchain(schainId, nodeIndex);
         return channels[schainId].active &&
@@ -426,6 +525,9 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         return channels[schainId].n == dkgProcess[schainId].numberOfBroadcasted;
     }
 
+    /**
+     * @dev Checks whether all data has been received by node.
+     */
     function isAllDataReceived(bytes32 schainId, uint nodeIndex) public view returns (bool) {
         uint index = _nodeIndexInSchain(schainId, nodeIndex);
         return dkgProcess[schainId].completed[index];

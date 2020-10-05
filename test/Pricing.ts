@@ -172,7 +172,7 @@ contract("Pricing", ([owner, holder, validator, nodeAddress]) => {
                 await pricing.initNodes();
                 skipTime(web3, 61);
                 await pricing.adjustPrice()
-                    .should.be.eventually.rejectedWith("No any changes on nodes");
+                    .should.be.eventually.rejectedWith("No changes to node supply");
             });
 
             it("should not change price when the price is updated more often than necessary", async () => {

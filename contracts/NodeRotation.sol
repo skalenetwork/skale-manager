@@ -29,13 +29,16 @@ import "./Schains.sol";
 import "./Nodes.sol";
 import "./interfaces/ISkaleDKG.sol";
 
-
+/**
+ * @title NodeRotation
+ * @dev This contract handles all node rotation functionality.
+ */
 contract NodeRotation is Permissions {
     using StringUtils for string;
     using StringUtils for uint;
 
     /**
-     * nodeIndex - index of Node which is in process of rotation(left from schain)
+     * nodeIndex - index of Node which is in process of rotation (left from schain)
      * newNodeIndex - index of Node which is rotated(added to schain)
      * freezeUntil - time till which Node should be turned on
      * rotationCounter - how many rotations were on this schain
@@ -59,14 +62,25 @@ contract NodeRotation is Permissions {
     mapping (bytes32 => bool) public waitForNewNode;
 
 
+    /**
+     * @dev Allows SkaleManager to remove, find new node, and rotate node from 
+     * schain.
+     * 
+     * Requirements:
+     * 
+     * - A free node must exist.
+     */
     function exitFromSchain(uint nodeIndex) external allow("SkaleManager") returns (bool) {
         SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
         bytes32 schainId = schainsInternal.getActiveSchain(nodeIndex);
-        require(_checkRotation(schainId), "No any free Nodes for rotating");
+        require(_checkRotation(schainId), "No free Nodes available for rotating");
         rotateNode(nodeIndex, schainId, true);
         return schainsInternal.getActiveSchain(nodeIndex) == bytes32(0) ? true : false;
     }
 
+    /**
+     * @dev Allows SkaleManager contract to freeze all schains on a given node.
+     */
     function freezeSchains(uint nodeIndex) external allow("SkaleManager") {
         SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
         bytes32[] memory schains = schainsInternal.getActiveSchains(nodeIndex);
@@ -80,29 +94,40 @@ contract NodeRotation is Permissions {
             revertMessage = revertMessage.strConcat(schainName);
             revertMessage = revertMessage.strConcat(", occupied by Node ");
             revertMessage = revertMessage.strConcat(rotation.nodeIndex.uint2str());
-            string memory dkgRevert = "DKG proccess did not finish on schain ";
+            string memory dkgRevert = "DKG process did not finish on schain ";
             ISkaleDKG skaleDKG = ISkaleDKG(contractManager.getContract("SkaleDKG"));
             require(
-                skaleDKG.isLastDKGSuccesful(keccak256(abi.encodePacked(schainName))),
+                skaleDKG.isLastDKGSuccessful(keccak256(abi.encodePacked(schainName))),
                 dkgRevert.strConcat(schainName));
             require(rotation.freezeUntil < now, revertMessage);
             _startRotation(schains[i], nodeIndex);
         }
     }
 
-
+    /**
+     * @dev Allows Schains contract to remove a rotation from an schain.
+     */
     function removeRotation(bytes32 schainIndex) external allow("Schains") {
         delete rotations[schainIndex];
     }
 
+    /**
+     * @dev Allows Owner to immediately rotate an schain.
+     */
     function skipRotationDelay(bytes32 schainIndex) external onlyOwner {
         rotations[schainIndex].freezeUntil = now;
     }
 
+    /**
+     * @dev Returns rotation details for a given schain.
+     */
     function getRotation(bytes32 schainIndex) external view returns (Rotation memory) {
         return rotations[schainIndex];
     }
 
+    /**
+     * @dev Returns leaving history for a given node.
+     */
     function getLeavingHistory(uint nodeIndex) external view returns (LeavingHistory[] memory) {
         return leavingHistory[nodeIndex];
     }
@@ -115,6 +140,10 @@ contract NodeRotation is Permissions {
         Permissions.initialize(newContractsAddress);
     }
 
+    /**
+     * @dev Allows SkaleDKG and SkaleManager contracts to rotate a node from an
+     * schain.
+     */
     function rotateNode(
         uint nodeIndex,
         bytes32 schainId,
@@ -134,9 +163,14 @@ contract NodeRotation is Permissions {
     }
 
     /**
-     * @dev selectNodeToGroup - pseudo-randomly select new Node for Schain
-     * @param schainId - hash of name of Schain
-     * @return nodeIndex - global index of Node
+     * @dev Allows SkaleManager, Schains, and SkaleDKG contracts to 
+     * pseudo-randomly select a new Node for an Schain.
+     * 
+     * Requirements:
+     * 
+     * - Schain is active.
+     * - A free node already exists.
+     * - Free space can be allocated from the node.
      */
     function selectNodeToGroup(bytes32 schainId)
         public
@@ -148,7 +182,7 @@ contract NodeRotation is Permissions {
         require(schainsInternal.isSchainActive(schainId), "Group is not active");
         uint8 space = schainsInternal.getSchainsPartOfNode(schainId);
         uint[] memory possibleNodes = schainsInternal.isEnoughNodes(schainId);
-        require(possibleNodes.length > 0, "No any free Nodes for rotation");
+        require(possibleNodes.length > 0, "No free Nodes available for rotation");
         uint nodeIndex;
         uint random = uint(keccak256(abi.encodePacked(uint(blockhash(block.number - 1)), schainId)));
         do {
@@ -164,6 +198,9 @@ contract NodeRotation is Permissions {
     }
 
 
+    /**
+     * @dev Initiates rotation of a node from an schain.
+     */
     function _startRotation(bytes32 schainIndex, uint nodeIndex) private {
         ConstantsHolder constants = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
         rotations[schainIndex].nodeIndex = nodeIndex;
@@ -172,6 +209,9 @@ contract NodeRotation is Permissions {
         waitForNewNode[schainIndex] = true;
     }
 
+    /**
+     * @dev Completes rotation of a node from an schain.
+     */
     function _finishRotation(
         bytes32 schainIndex,
         uint nodeIndex,
@@ -189,6 +229,13 @@ contract NodeRotation is Permissions {
         ISkaleDKG(contractManager.getContract("SkaleDKG")).openChannel(schainIndex);
     }
 
+    /**
+     * @dev Checks whether a rotation can be performed.
+     * 
+     * Requirements:
+     * 
+     * - Schain must exist.
+     */
     function _checkRotation(bytes32 schainId ) private view returns (bool) {
         SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
         require(schainsInternal.isSchainExist(schainId), "Schain does not exist for rotation");

@@ -89,7 +89,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeA
 
         it("should not allow everyone to create schains as the foundation", async () => {
             await schains.addSchainByFoundation(5, 1, 0, "d2")
-                .should.be.eventually.rejectedWith("Sender is not authorized to create schian");
+                .should.be.eventually.rejectedWith("Sender is not authorized to create schain");
         })
 
         it("should fail when schain type is wrong", async () => {
@@ -756,7 +756,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeA
                         nodeAddress,
                         "D2",
                         {from: owner})
-                        .should.be.eventually.rejectedWith("Message sender is not an owner of Schain");
+                        .should.be.eventually.rejectedWith("Message sender is not the owner of the Schain");
                 });
 
             });
@@ -797,7 +797,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeA
                         nodeAddress,
                         "D2",
                         {from: owner})
-                        .should.be.eventually.rejectedWith("Message sender is not an owner of Schain");
+                        .should.be.eventually.rejectedWith("Message sender is not the owner of the Schain");
                 });
 
             });
@@ -1203,13 +1203,13 @@ contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeA
             assert.equal(res, true);
 
             await skaleManager.nodeExit(1, {from: nodeAddress})
-                .should.be.eventually.rejectedWith("DKG proccess did not finish on schain d3");
+                .should.be.eventually.rejectedWith("DKG process did not finish on schain d3");
             await skaleManager.nodeExit(0, {from: nodeAddress});
 
             skipTime(web3, 43260);
 
             await skaleManager.nodeExit(1, {from: nodeAddress})
-                .should.be.eventually.rejectedWith("DKG proccess did not finish on schain d3");
+                .should.be.eventually.rejectedWith("DKG process did not finish on schain d3");
         });
 
         it("should be possible to send broadcast", async () => {
@@ -1226,7 +1226,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeA
             await skaleManager.nodeExit(0, {from: nodeAddress});
 
             await skaleManager.nodeExit(1, {from: nodeAddress})
-                .should.be.eventually.rejectedWith("DKG proccess did not finish on schain d3");
+                .should.be.eventually.rejectedWith("DKG process did not finish on schain d3");
         });
 
         it("should be possible to send broadcast", async () => {
@@ -1726,35 +1726,31 @@ contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeA
         });
 
         it("should rotate 7 node from validator address", async () => {
-            const rotIndex = 6;
-            const schainIds = await schainsInternal.getSchainIdsForNode(rotIndex);
+            const rotatedNodeIndex = 6;
+            const schainIds = await schainsInternal.getSchainIdsForNode(rotatedNodeIndex);
             for (const schainId of schainIds.reverse()) {
-                const valId = await validatorService.getValidatorIdByNodeAddress(nodeAddress2);
-                ((await validatorService.getValidatorIdByNodeAddress(nodeAddress2)).toString()).should.be.equal("1");
-                await skaleManager.nodeExit(rotIndex, {from: validator});
-                await skaleDKG.setSuccesfulDKGPublic(
-                    schainId,
-                );
+                const validatorId = await validatorService.getValidatorIdByNodeAddress(nodeAddress2);
+                validatorId.toString().should.be.equal("1");
+                await skaleManager.nodeExit(rotatedNodeIndex, {from: validator});
+                await skaleDKG.setSuccesfulDKGPublic(schainId);
             }
             await validatorService.getValidatorIdByNodeAddress(nodeAddress2)
-            .should.be.eventually.rejectedWith("Node address is not assigned to a validator");
-            await schainsInternal.getSchainIdsForNode(rotIndex).should.be.eventually.empty;
+                .should.be.eventually.rejectedWith("Node address is not assigned to a validator");
+            await schainsInternal.getSchainIdsForNode(rotatedNodeIndex).should.be.eventually.empty;
         });
 
         it("should rotate 7 node from contract owner address", async () => {
-            const rotIndex = 6;
-            const schainIds = await schainsInternal.getSchainIdsForNode(rotIndex);
+            const rotatedNodeIndex = 6;
+            const schainIds = await schainsInternal.getSchainIdsForNode(rotatedNodeIndex);
             for (const schainId of schainIds.reverse()) {
-                const valId = await validatorService.getValidatorIdByNodeAddress(nodeAddress2);
-                ((await validatorService.getValidatorIdByNodeAddress(nodeAddress2)).toString()).should.be.equal("1");
-                await skaleManager.nodeExit(rotIndex, {from: owner});
-                await skaleDKG.setSuccesfulDKGPublic(
-                    schainId,
-                );
+                const validatorId = await validatorService.getValidatorIdByNodeAddress(nodeAddress2);
+                validatorId.toString().should.be.equal("1");
+                await skaleManager.nodeExit(rotatedNodeIndex, {from: owner});
+                await skaleDKG.setSuccesfulDKGPublic(schainId);
             }
             await validatorService.getValidatorIdByNodeAddress(nodeAddress2)
-            .should.be.eventually.rejectedWith("Node address is not assigned to a validator");
-            await schainsInternal.getSchainIdsForNode(rotIndex).should.be.eventually.empty;
+                .should.be.eventually.rejectedWith("Node address is not assigned to a validator");
+            await schainsInternal.getSchainIdsForNode(rotatedNodeIndex).should.be.eventually.empty;
         });
 
         it("should rotate 8 node and unlink from Validator", async () => {

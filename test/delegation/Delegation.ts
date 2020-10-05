@@ -428,7 +428,7 @@ contract("Delegation", ([owner,
                     validatorId, {from: holder3}))[0].toNumber().should.be.equal(31);
 
                 await distributor.withdrawFee(bountyAddress, {from: validator})
-                    .should.be.eventually.rejectedWith("Bounty is locked");
+                    .should.be.eventually.rejectedWith("Fee is locked");
                 await distributor.withdrawBounty(validatorId, bountyAddress, {from: holder1})
                     .should.be.eventually.rejectedWith("Bounty is locked");
 
@@ -459,7 +459,7 @@ contract("Delegation", ([owner,
             describe("Slashing", async () => {
 
                 it("should slash validator and lock delegators fund in proportion of delegation share", async () => {
-                    // do 5 seperate slashes to check aggregation
+                    // do 5 separate slashes to check aggregation
                     const slashesNumber = 5;
                     for (let i = 0; i < slashesNumber; ++i) {
                         await punisher.slash(validatorId, 5);

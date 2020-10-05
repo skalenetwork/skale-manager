@@ -942,7 +942,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
 
                     it("should fail to delete schain if sender is not owner of it", async () => {
                         await skaleManager.deleteSchain("d2", {from: hacker})
-                            .should.be.eventually.rejectedWith("Message sender is not an owner of Schain");
+                            .should.be.eventually.rejectedWith("Message sender is not the owner of the Schain");
                     });
 
                     it("should delete schain", async () => {
@@ -976,7 +976,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
 
                     it("should fail to delete schain if sender is not owner of it", async () => {
                         await skaleManager.deleteSchain("d3", {from: hacker})
-                            .should.be.eventually.rejectedWith("Message sender is not an owner of Schain");
+                            .should.be.eventually.rejectedWith("Message sender is not the owner of the Schain");
                     });
 
                     it("should delete schain by root", async () => {
