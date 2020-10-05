@@ -177,7 +177,17 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
 
             it("should fail to init exiting of someone else's node", async () => {
                 await skaleManager.nodeExit(0, {from: hacker})
+                    .should.be.eventually.rejectedWith("Sender is not permitted to call this function");
             });
+
+            it("should reject if node in maintenance call nodeExit", async () => {
+                await nodesContract.setNodeInMaintenance(0);
+                await skaleManager.nodeExit(0, {from: nodeAddress})
+                    .should.be.eventually.rejectedWith("Node should be Leaving");
+            });
+
+            it("should initiate exiting", async () => {
+                await skaleManager.nodeExit(0, {from: nodeAddress});
 
                 await nodesContract.isNodeLeft(0).should.be.eventually.true;
             });

@@ -346,9 +346,7 @@ contract Monitors is Permissions {
      * @dev Returns the median using the Quicksort algorithm.
      */
     function _median(uint[] memory values) private pure returns (uint) {
-        if (values.length < 1) {
-            require("Cannot calculate _median of an empty array");
-        }
+        require(values.length > 0, "Cannot calculate _median of an empty array");
         _quickSort(values, 0, values.length.sub(1));
         return values[values.length.div(2)];
     }
