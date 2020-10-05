@@ -29,7 +29,7 @@ import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC777/IERC777R
 import "./delegation/Distributor.sol";
 import "./delegation/ValidatorService.sol";
 import "./interfaces/IMintableToken.sol";
-import "./Bounty.sol";
+import "./BountyV2.sol";
 import "./ConstantsHolder.sol";
 import "./Monitors.sol";
 import "./NodeRotation.sol";
@@ -174,26 +174,17 @@ contract SkaleManager is IERC777Recipient, Permissions {
         require(
             nodes.isNodeActive(nodeIndex) || nodes.isNodeLeaving(nodeIndex), "Node is not Active and is not Leaving"
         );
-        Bounty bountyContract = Bounty(contractManager.getContract("Bounty"));
-        uint averageDowntime;
-        uint averageLatency;
-        Monitors monitors = Monitors(contractManager.getContract("Monitors"));
-        (averageDowntime, averageLatency) = monitors.calculateMetrics(nodeIndex);
+        BountyV2 bountyContract = BountyV2(contractManager.getContract("Bounty"));
 
-        uint bounty = bountyContract.getBounty(
-            nodeIndex,
-            averageDowntime,
-            averageLatency);
+        uint bounty = bountyContract.calculateBounty(nodeIndex);
 
         nodes.changeNodeLastRewardDate(nodeIndex);
-        // monitors.deleteMonitor(nodeIndex);
-        // monitors.addMonitor(nodeIndex);
 
         if (bounty > 0) {
             _payBounty(bounty, nodes.getValidatorId(nodeIndex));
         }
 
-        _emitBountyEvent(nodeIndex, msg.sender, averageDowntime, averageLatency, bounty);
+        _emitBountyEvent(nodeIndex, msg.sender, 0, 0, bounty);
     }
 
     function initialize(address newContractsAddress) public override initializer {
