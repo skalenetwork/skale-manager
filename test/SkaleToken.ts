@@ -50,7 +50,7 @@ contract("SkaleToken", ([owner, holder, receiver, nilAddress, accountWith99]) =>
     expect(decimals.toNumber()).to.be.equal(18);
   });
 
-  it("should return the сapitalization of tokens for the Contract", async () => {
+  it("should return the capitalization of tokens for the Contract", async () => {
     const cap = await skaleToken.CAP();
     assert(toWei(TOKEN_CAP).isEqualTo(cap));
   });

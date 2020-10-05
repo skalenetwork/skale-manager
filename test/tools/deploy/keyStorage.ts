@@ -1,5 +1,5 @@
 import { ContractManagerInstance, KeyStorageInstance } from "../../../types/truffle-contracts";
-import { deployDecryption } from "./dectyption";
+import { deployDecryption } from "./decryption";
 import { deployECDH } from "./ecdh";
 import { deployFunctionFactory } from "./factory";
 import { deploySchainsInternal } from "./schainsInternal";

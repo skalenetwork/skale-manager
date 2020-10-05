@@ -27,7 +27,8 @@ import "./Nodes.sol";
 import "./interfaces/ISkaleDKG.sol";
 
 /**
- * @title SchainsInternal - contract contains all functionality logic to manage Schains
+ * @title SchainsInternal
+ * @dev Contract contains all functionality logic to internally manage Schains.
  */
 contract SchainsInternal is Permissions {
 
@@ -72,12 +73,7 @@ contract SchainsInternal is Permissions {
     mapping (bytes32 => bool) public usedSchainNames;
 
     /**
-     * @dev initializeSchain - initializes Schain
-     * function could be run only by executor
-     * @param name - SChain name
-     * @param from - Schain owner
-     * @param lifetime - initial lifetime of Schain
-     * @param deposit - given amount of SKL
+     * @dev Allows Schain contract to initialize an schain.
      */
     function initializeSchain(
         string calldata name,
@@ -99,6 +95,9 @@ contract SchainsInternal is Permissions {
         usedSchainNames[schainId] = true;
     }
 
+    /**
+     * @dev Allows Schain contract to create a node group for an schain.
+     */
     function createGroupForSchain(
         bytes32 schainId,
         uint numberOfNodes,
@@ -119,10 +118,7 @@ contract SchainsInternal is Permissions {
     }
 
     /**
-     * @dev setSchainIndex - adds Schain's hash to owner
-     * function could be run only by executor
-     * @param schainId - hash by Schain name
-     * @param from - Schain owner
+     * @dev Allows Schains contract to set index in owner list.
      */
     function setSchainIndex(bytes32 schainId, address from) external allow("Schains") {
         schains[schainId].indexInOwnerList = schainIndexes[from].length;
@@ -130,11 +126,8 @@ contract SchainsInternal is Permissions {
     }
 
     /**
-     * @dev changeLifetime - changes Lifetime for Schain
-     * function could be run only by executor
-     * @param schainId - hash by Schain name
-     * @param lifetime - time which would be added to lifetime of Schain
-     * @param deposit - amount of SKL which payed for this time
+     * @dev Allows Schains contract to change the Schain lifetime through
+     * an additional SKL token deposit.
      */
     function changeLifetime(bytes32 schainId, uint lifetime, uint deposit) external allow("Schains") {
         schains[schainId].deposit = schains[schainId].deposit.add(deposit);
@@ -142,10 +135,9 @@ contract SchainsInternal is Permissions {
     }
 
     /**
-     * @dev removeSchain - removes Schain from the system
-     * function could be run only by executor
-     * @param schainId - hash by Schain name
-     * @param from - owner of Schain
+     * @dev Allows Schains contract to remove an schain from the network.
+     * Generally schains are not removed from the system; instead they are
+     * simply allowed to expire.
      */
     function removeSchain(bytes32 schainId, address from) external allow("Schains") {
         isSchainActive[schainId] = false;
@@ -172,6 +164,10 @@ contract SchainsInternal is Permissions {
         numberOfSchains--;
     }
 
+    /**
+     * @dev Allows Schains and SkaleDKG contracts to remove a node from an
+     * schain for node rotation or DKG failure.
+     */
     function removeNodeFromSchain(
         uint nodeIndex,
         bytes32 schainHash
@@ -204,9 +200,7 @@ contract SchainsInternal is Permissions {
     }
 
     /**
-     * @dev deleteGroup - delete Group from Data contract
-     * function could be run only by executor
-     * @param schainId - Groups identifier
+     * @dev Allows Schains contract to delete a group of schains
      */
     function deleteGroup(bytes32 schainId) external allow("Schains") {
         // delete channel
@@ -219,20 +213,16 @@ contract SchainsInternal is Permissions {
     }
 
     /**
-     * @dev setException - sets a Node like exception
-     * function could be run only by executor
-     * @param schainId - Groups identifier
-     * @param nodeIndex - index of Node which would be notes like exception
+     * @dev Allows Schain and NodeRotation contracts to set a Node like
+     * exception for a given schain and nodeIndex.
      */
     function setException(bytes32 schainId, uint nodeIndex) external allowTwo("Schains", "NodeRotation") {
         _exceptionsForGroups[schainId][nodeIndex] = true;
     }
 
     /**
-     * @dev setNodeInGroup - adds Node to Group
-     * function could be run only by executor
-     * @param schainId - Groups
-     * @param nodeIndex - index of Node which would be added to the Group
+     * @dev Allows Schains and NodeRotation contracts to add node to an schain
+     * group.
      */
     function setNodeInGroup(bytes32 schainId, uint nodeIndex) external allowTwo("Schains", "NodeRotation") {
         if (holesForSchains[schainId].length == 0) {
@@ -263,59 +253,50 @@ contract SchainsInternal is Permissions {
     }
 
     /**
-     * @dev getSchains - gets all Schains at the system
-     * @return array of hashes by Schain names
+     * @dev Returns all Schains in the network.
      */
     function getSchains() external view returns (bytes32[] memory) {
         return schainsAtSystem;
     }
 
     /**
-     * @dev getSchainsPartOfNode - gets occupied space for given Schain
-     * @param schainId - hash by Schain name
-     * @return occupied space
+     * @dev Returns all occupied resources on one node for an Schain.
      */
     function getSchainsPartOfNode(bytes32 schainId) external view returns (uint8) {
         return schains[schainId].partOfNode;
     }
 
     /**
-     * @dev getSchainListSize - gets number of created Schains at the system by owner
-     * @param from - owner of Schain
-     * return number of Schains
+     * @dev Returns number of schains by schain owner.
      */
     function getSchainListSize(address from) external view returns (uint) {
         return schainIndexes[from].length;
     }
 
     /**
-     * @dev getSchainIdsByAddress - gets array of hashes by Schain names which owned by `from`
-     * @param from - owner of some Schains
-     * @return array of hashes by Schain names
+     * @dev Returns hashes of schain names by schain owner.
      */
     function getSchainIdsByAddress(address from) external view returns (bytes32[] memory) {
         return schainIndexes[from];
     }
 
     /**
-     * @dev getSchainIdsForNode - returns array of hashes by Schain names,
-     * which given Node composed
-     * @param nodeIndex - index of Node
-     * @return array of hashes by Schain names
+     * @dev Returns hashes of schain names running on a node.
      */
     function getSchainIdsForNode(uint nodeIndex) external view returns (bytes32[] memory) {
         return schainsForNodes[nodeIndex];
     }
 
+    /**
+     * @dev Returns the owner of an schain.
+     */
     function getSchainOwner(bytes32 schainId) external view returns (address) {
         return schains[schainId].owner;
     }
 
     /**
-     * @dev isSchainNameAvailable - checks is given name available
-     * Need to delete - copy of web3.utils.soliditySha3
-     * @param name - possible new name of Schain
-     * @return if available - true, else - false
+     * @dev Checks whether schain name is available.
+     * TODO Need to delete - copy of web3.utils.soliditySha3
      */
     function isSchainNameAvailable(string calldata name) external view returns (bool) {
         bytes32 schainId = keccak256(abi.encodePacked(name));
@@ -323,32 +304,36 @@ contract SchainsInternal is Permissions {
     }
 
     /**
-     * @dev isTimeExpired - checks is Schain lifetime expired
-     * @param schainId - hash by Schain name
-     * @return if expired - true, else - false
+     * @dev Checks whether schain lifetime has expired.
      */
     function isTimeExpired(bytes32 schainId) external view returns (bool) {
         return uint(schains[schainId].startDate).add(schains[schainId].lifetime) < block.timestamp;
     }
 
     /**
-     * @dev isOwnerAddress - checks is `from` - owner of `schainId` Schain
-     * @param from - owner of Schain
-     * @param schainId - hash by Schain name
-     * @return if owner - true, else - false
+     * @dev Checks whether address is owner of schain.
      */
     function isOwnerAddress(address from, bytes32 schainId) external view returns (bool) {
         return schains[schainId].owner == from;
     }
 
+    /**
+     * @dev Checks whether schain exists.
+     */
     function isSchainExist(bytes32 schainId) external view returns (bool) {
         return keccak256(abi.encodePacked(schains[schainId].name)) != keccak256(abi.encodePacked(""));
     }
 
+    /**
+     * @dev Returns schain name.
+     */
     function getSchainName(bytes32 schainId) external view returns (string memory) {
         return schains[schainId].name;
     }
 
+    /**
+     * @dev Returns last active schain of a node.
+     */
     function getActiveSchain(uint nodeIndex) external view returns (bytes32) {
         for (uint i = schainsForNodes[nodeIndex].length; i > 0; i--) {
             if (schainsForNodes[nodeIndex][i - 1] != bytes32(0)) {
@@ -358,6 +343,9 @@ contract SchainsInternal is Permissions {
         return bytes32(0);
     }
 
+    /**
+     * @dev Returns active schains of a node.
+     */
     function getActiveSchains(uint nodeIndex) external view returns (bytes32[] memory activeSchains) {
         uint activeAmount = 0;
         for (uint i = 0; i < schainsForNodes[nodeIndex].length; i++) {
@@ -376,28 +364,21 @@ contract SchainsInternal is Permissions {
     }
 
     /**
-     * @dev getNumberOfNodesInGroup - shows number of Nodes in Group
-     * @param schainId - Groups identifier
-     * @return number of Nodes in Group
+     * @dev Returns number of nodes in an schain group.
      */
     function getNumberOfNodesInGroup(bytes32 schainId) external view returns (uint) {
         return schainsGroups[schainId].length;
     }
 
     /**
-     * @dev getNodesInGroup - shows Nodes in Group
-     * @param schainId - Groups identifier
-     * @return array of indexes of Nodes in Group
+     * @dev Returns nodes in an schain group.
      */
     function getNodesInGroup(bytes32 schainId) external view returns (uint[] memory) {
         return schainsGroups[schainId];
     }
 
     /**
-     * @dev getNodeIndexInGroup - looks for Node in Group
-     * @param schainId - Groups identifier
-     * @param nodeId - Nodes identifier
-     * @return index of Node in Group
+     * @dev Returns node index in schain group.
      */
     function getNodeIndexInGroup(bytes32 schainId, uint nodeId) external view returns (uint) {
         for (uint index = 0; index < schainsGroups[schainId].length; index++) {
@@ -408,6 +389,10 @@ contract SchainsInternal is Permissions {
         return schainsGroups[schainId].length;
     }
 
+    /**
+     * @dev Checks whether there are any nodes with free resources for given
+     * schain.
+     */
     function isAnyFreeNode(bytes32 schainId) external view returns (bool) {
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));
         uint8 space = schains[schainId].partOfNode;
@@ -420,6 +405,9 @@ contract SchainsInternal is Permissions {
         return false;
     }
 
+    /**
+     * @dev Returns whether any exceptions exist for node in a schain group.
+     */
     function checkException(bytes32 schainId, uint nodeIndex) external view returns (bool) {
         return _exceptionsForGroups[schainId][nodeIndex];
     }
@@ -441,10 +429,7 @@ contract SchainsInternal is Permissions {
     }
 
     /**
-     * @dev addSchainForNode - adds Schain hash to Node
-     * function could be run only by executor
-     * @param nodeIndex - index of Node
-     * @param schainId - hash by Schain name
+     * @dev Allows Schains and NodeRotation contracts to add schain to node.
      */
     function addSchainForNode(uint nodeIndex, bytes32 schainId) public allowTwo("Schains", "NodeRotation") {
         if (holesForNodes[nodeIndex].length == 0) {
@@ -470,10 +455,8 @@ contract SchainsInternal is Permissions {
     }
 
     /**
-     * @dev removesSchainForNode - clean given Node of Schain
-     * function could be run only by executor
-     * @param nodeIndex - index of Node
-     * @param schainIndex - index of Schain in schainsForNodes array by this Node
+     * @dev Allows Schains, NodeRotation, and SkaleDKG contracts to remove an 
+     * schain from a node.
      */
     function removeSchainForNode(uint nodeIndex, uint schainIndex)
         public
@@ -495,19 +478,14 @@ contract SchainsInternal is Permissions {
     }
 
     /**
-     * @dev getLengthOfSchainsForNode - returns number of Schains which contain given Node
-     * @param nodeIndex - index of Node
-     * @return number of Schains
+     * @dev Returns number of Schains on a node.
      */
     function getLengthOfSchainsForNode(uint nodeIndex) public view returns (uint) {
         return schainsForNodes[nodeIndex].length;
     }
 
     /**
-     * @dev findSchainAtSchainsForNode - finds index of Schain at schainsForNode array
-     * @param nodeIndex - index of Node at common array of Nodes
-     * @param schainId - hash of name of Schain
-     * @return index of Schain at schainsForNode array
+     * @dev Returns index of Schain in list of schains for a given node.
      */
     function findSchainAtSchainsForNode(uint nodeIndex, bytes32 schainId) public view returns (uint) {
         uint length = getLengthOfSchainsForNode(nodeIndex);
@@ -542,8 +520,7 @@ contract SchainsInternal is Permissions {
     }
 
     /**
-     * @dev _generateGroup - generates Group for Schain
-     * @param schainId - index of Group
+     * @dev Generates schain group using a pseudo-random generator.
      */
     function _generateGroup(bytes32 schainId, uint numberOfNodes) private returns (uint[] memory nodesInGroup) {
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));
@@ -575,6 +552,9 @@ contract SchainsInternal is Permissions {
         return !_exceptionsForGroups[schainId][nodeIndex] && nodes.isNodeActive(nodeIndex);
     }
 
+    /**
+     * @dev Swaps one index for another in an array.
+     */
     function _swap(uint[] memory array, uint index1, uint index2) private pure {
         uint buffer = array[index1];
         array[index1] = array[index2];
@@ -582,10 +562,7 @@ contract SchainsInternal is Permissions {
     }
 
     /**
-     * @dev findNode - find local index of Node in Schain
-     * @param schainId - Groups identifier
-     * @param nodeIndex - global index of Node
-     * @return local index of Node in Schain
+     * @dev Returns local index of node in schain group.
      */
     function _findNode(bytes32 schainId, uint nodeIndex) private view returns (uint) {
         uint[] memory nodesInGroup = schainsGroups[schainId];

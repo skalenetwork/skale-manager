@@ -150,7 +150,7 @@ contract("Monitors", ([owner, validator, nodeAddress]) => {
     const { logs } = await monitors
           .sendVerdict(0, verd, {from: owner});
     // assertion
-    assert.equal(logs[0].event, "VerdictWasSent");
+    assert.equal(logs[0].event, "VerdictSent");
   });
 
   it("should rejected with `Checked Node...` error when invoke sendVerdict", async () => {
