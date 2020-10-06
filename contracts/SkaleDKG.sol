@@ -191,7 +191,6 @@ contract SkaleDKG is Permissions, ISkaleDKG {
      * - Channel must exist.
      */
     function deleteChannel(bytes32 schainId) external override allow("SchainsInternal") {
-        require(channels[schainId].active, "Channel is not created");
         delete channels[schainId];
         delete dkgProcess[schainId];
         delete complaints[schainId];
