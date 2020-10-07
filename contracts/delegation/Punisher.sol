@@ -33,6 +33,9 @@ import "./DelegationController.sol";
  */
 contract Punisher is Permissions, ILocker {
 
+    //        holder => tokens
+    mapping (address => uint) private _locked;
+
     /**
      * @dev Emitted upon slashing condition.
      */
@@ -48,9 +51,6 @@ contract Punisher is Permissions, ILocker {
         address wallet,
         uint amount
     );
-
-    //        holder => tokens
-    mapping (address => uint) private _locked;
 
     /**
      * @dev Allows SkaleDKG contract to execute slashing on a validator and
