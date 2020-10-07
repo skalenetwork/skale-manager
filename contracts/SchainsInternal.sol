@@ -205,11 +205,8 @@ contract SchainsInternal is Permissions {
     function deleteGroup(bytes32 schainId) external allow("Schains") {
         // delete channel
         ISkaleDKG skaleDKG = ISkaleDKG(contractManager.getContract("SkaleDKG"));
-
         delete schainsGroups[schainId];
-        if (skaleDKG.isChannelOpened(schainId)) {
-            skaleDKG.deleteChannel(schainId);
-        }
+        skaleDKG.deleteChannel(schainId);
     }
 
     /**

@@ -398,7 +398,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                 );
                 assert(isBroadcasted.should.be.true);
                 assert.equal(result.logs[0].event, "BroadcastAndKeyShare");
-                assert.equal(result.logs[0].args.groupIndex, web3.utils.soliditySha3(schainName));
+                assert.equal(result.logs[0].args.schainId, web3.utils.soliditySha3(schainName));
                 assert.equal(result.logs[0].args.fromNode.toString(), "0");
             });
 
@@ -411,7 +411,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                     {from: validatorsAccount[0]},
                 );
                 assert.equal(result.logs[0].event, "BroadcastAndKeyShare");
-                assert.equal(result.logs[0].args.groupIndex, web3.utils.soliditySha3(schainName));
+                assert.equal(result.logs[0].args.schainId, web3.utils.soliditySha3(schainName));
                 assert.equal(result.logs[0].args.fromNode.toString(), "0");
 
                 const res = await skaleDKG.isBroadcastPossible(
@@ -441,7 +441,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                 );
                 assert(isBroadcasted.should.be.true);
                 assert.equal(result.logs[0].event, "BroadcastAndKeyShare");
-                assert.equal(result.logs[0].args.groupIndex, web3.utils.soliditySha3(schainName));
+                assert.equal(result.logs[0].args.schainId, web3.utils.soliditySha3(schainName));
                 assert.equal(result.logs[0].args.fromNode.toString(), "1");
             });
 
@@ -790,7 +790,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                     );
                     assert.equal(await skaleDKG.isAllDataReceived(web3.utils.soliditySha3(schainName), 0), true);
                     assert.equal(result.logs[0].event, "AllDataReceived");
-                    assert.equal(result.logs[0].args.groupIndex, web3.utils.soliditySha3(schainName));
+                    assert.equal(result.logs[0].args.schainId, web3.utils.soliditySha3(schainName));
                     assert.equal(result.logs[0].args.nodeIndex.toString(), "0");
                 });
 
@@ -801,7 +801,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                         {from: validatorsAccount[0]},
                     );
                     assert.equal(result.logs[0].event, "AllDataReceived");
-                    assert.equal(result.logs[0].args.groupIndex, web3.utils.soliditySha3(schainName));
+                    assert.equal(result.logs[0].args.schainId, web3.utils.soliditySha3(schainName));
                     assert.equal(result.logs[0].args.nodeIndex.toString(), "0");
 
                     const res = await skaleDKG.isAlrightPossible(
@@ -819,7 +819,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                         {from: validatorsAccount[1]},
                     );
                     assert.equal(result.logs[0].event, "AllDataReceived");
-                    assert.equal(result.logs[0].args.groupIndex, web3.utils.soliditySha3(schainName));
+                    assert.equal(result.logs[0].args.schainId, web3.utils.soliditySha3(schainName));
                     assert.equal(result.logs[0].args.nodeIndex.toString(), "1");
                 });
 
@@ -839,7 +839,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                         {from: validatorsAccount[1]},
                     );
                     assert.equal(result.logs[1].event, "SuccessfulDKG");
-                    assert.equal(result.logs[1].args.groupIndex, web3.utils.soliditySha3(schainName));
+                    assert.equal(result.logs[1].args.schainId, web3.utils.soliditySha3(schainName));
                 });
 
                 it("should complaint and be slashed", async () => {
@@ -1067,7 +1067,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                     assert.equal(res[0].toString(), "1");
                     assert.equal(res[1].toString(), "0");
                     assert.equal(result.logs[0].event, "ComplaintSent");
-                    assert.equal(result.logs[0].args.groupIndex, web3.utils.soliditySha3(schainName));
+                    assert.equal(result.logs[0].args.schainId, web3.utils.soliditySha3(schainName));
                     assert.equal(result.logs[0].args.fromNodeIndex.toString(), "1");
                     assert.equal(result.logs[0].args.toNodeIndex.toString(), "0");
                 });
@@ -1300,7 +1300,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
             assert.equal(result.logs[0].args.nodeIndex.toString(), "0");
 
             assert.equal(result.logs[2].event, "ChannelOpened");
-            assert.equal(result.logs[2].args.groupIndex, web3.utils.soliditySha3(schainName));
+            assert.equal(result.logs[2].args.schainId, web3.utils.soliditySha3(schainName));
             const blockNumber = result.receipt.blockNumber;
             const timestamp = (await web3.eth.getBlock(blockNumber)).timestamp;
 
