@@ -149,31 +149,31 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
             ],
             [
                 {
-                    share: "0xa4d8f409a1bf5be875a21d5f306316aeee0d925e8d077123ad5f105e0d2af285",
+                    share: "0x19780235eced16dca18162da3ad72d5faffea2de1664d7df5ed1d227b33c5124",
                     publicKey: [
-                        "0x9f40faf0b5c4febe44f8f788310e0b96df3ef5fa8af5963dcd7ecd91125d2bb1",
-                        "0xe170b69061ac1cc01f8ae81361966e12b121fe530f9b51021fedff3419cfc68b"
+                        "0xa6e6bd31cf1ff8cc0fcd15051117198e5b8041abb37151f3a8ac556becaecb4",
+                        "0x4ea6bee369ed06c9ec65e8d98ddc473a19211224fc0ba2035f736ee87885116"
                     ]
                 },
                 {
-                    share: "0x60c50389020b382db18ed7a20b597f58c5df71d1f8ae908ee98fd1d5af86ed00",
+                    share: "0x508881f21e9f98be77aa95859438d53964f763a17356b42a9ced4844a23dd8e7",
                     publicKey: [
-                        "0x3b198acf497a732fc56497480f26489e2443dd2839d5452708e3cff1137c56bc",
-                        "0xe39e8d5e0db1fe72e62d8377622afa59cca72549c77388c5be0ae63b9527be44"
+                        "0x34a009cfc8f7047160cdb28c2fc569e1cd5c0cb2dbe7bb40d2ab47b79411d2db",
+                        "0x8c856325ac5b4f928f0a112c20343ed7e770b63ce37891f8ee88b122961142c7"
                     ]
                 },
                 {
-                    share: "0x9957d2c926b64e07f375169c88436e361869b6839897a0852b14caab4eff0b41",
+                    share: "0xb00b16b37b6fefe05d901a75f60d94b9f126c5f14633c8257a346c0383867dde",
                     publicKey: [
-                        "0xdd6cc386fb0be53c87861fb8e1086e65ff99d9c50c41ef33b7c8b71b1d845e7",
-                        "0xcb65dad04f8422e100970098b566d9cb1cd039e3abb8372a38ad0eeff87b5b83"
+                        "0xd40d14add49505516e22fb273e333943de4351c0a5b3de9fca18b92308ce804a",
+                        "0x6089bd1d084cd14ee0e16131e527700f41b5b17aa577f82adcf882ac2cf62e22"
                     ]
                 },
                 {
-                    share: "0xd17bbcd4cf532d6dc14894d8b726d27708ca45fc43e79022152248e1f93b4991",
+                    share: "0x4c3b85cf9d4f911759940b11f126114a3fbb2f05af1e891ed3c8e41a1d8a47b2",
                     publicKey: [
-                        "0x46b4ab6abba2d8aba6bc1d71eac242492478f9b39036846cee89c4c5be24c69e",
-                        "0x3129ae5a9ecef92e318fde3d892acd2f77c2a4144207516185ed03e7bed555f0"
+                        "0xdfb6f000576625e9529714f3973aebcdde496810cd4dc4728ffd0c21b72c055e",
+                        "0xd983be5d5234aceb0f50c051bbc4faf557eeadec3b37747cc8894f67a1da584f"
                     ]
                 }
             ],
@@ -336,32 +336,32 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
             [
                 {
                     x: {
-                        a: "0x27356d029987176598fb69cf6f89e04950157d8aed38c76e126a0891816ec6a8",
-                        b: "0x2768fad48e8f96f24a93c2fe4e8b655a131ec9e2d6f43ac2f0951b5384d2afa2"
+                        a: "0x1e6e075338ec8cf604af22511625d5f9b184b462844fd0ccf301a198f5cb12a2",
+                        b: "0x1b85c72c39aa376df512ba5217376ec90c2492945a86139a136b35ff616f921e"
                     },
                     y: {
-                        a: "0x2c22f9be5d81dfaad482fe587a5e5e781047b558cda5b12d73908d95b4d2db05",
-                        b: "0xdcf944324b4c78cc897d55ca6c087a9f31ed76eda5e02ab3fd8fd36f1112c1e"
+                        a: "0x174265c0fc2ce359084b239ad9b703441998df7fee298741e52c2175a4a4adb2",
+                        b: "0xa1cd10cadd730b54ff21aed30be2dbdb315afe48b3d01c36a5301b0587c9350"
                     }
                 },
                 {
                     x: {
-                        a: "0x2a807b23ba42ec41def4716da240cbd2f6c52fc4b9aa6ef0ab4fce067b15bd5d",
-                        b: "0x2e5d304cc65568201b8001b1c45faa24dfb59cf630a07efbc39d206b2ff72047"
+                        a: "0x29b361184395f6fc0116eb3a6f7d7ebde8f30c6606d78d389fe1eea772057f59",
+                        b: "0xf51d5bfbfba84a92eab561f5c27ae31aef5f9231f64a416b4193a3026bd42c9"
                     },
                     y: {
-                        a: "0x1aa0dc6b67f271616d69745b9c358335e2c2a20e3e8972dea83a4848ac1bf139",
-                        b: "0x19db3d8c40147206b87694b0f84772d6195c7a91cdd4ddbec52cd027ed3d2c43"
+                        a: "0x2192c321f3856ccf0d75c1d705b06fce6839feffd8a08ca50999a6ac480039a5",
+                        b: "0x20e656db446c12ad9ea7430d62d54491aae1b72bbf545a89ac1b8f64ef44fb65"
                     }
                 },
                 {
                     x: {
-                        a: "0x11b4511035ee2862e2451b2a90075052490ba40c50b79a7b43ac19e8036b2832",
-                        b: "0x2cc3a29c0e6675840e841dd727a3d8d2bdafef1d2dc30ac0480cf2ede5fa60e7"
+                        a: "0x272f9995e067c924c4972f0987dcf18a8ce8c53364306cf5dca58eaf0875ac6c",
+                        b: "0x635b7c445eb73dd5631b8a9b43db49e64e53a12f99977a6c42c575056c95122"
                     },
                     y: {
-                        a: "0x21fd258abf673b0862475ef46df4e8ae3430b8216c30ccb5446a2e88a55df08c",
-                        b: "0x1751ebc874b5a0311f6f047164375079eb3d8d542f681a4ac5a898ebcb682653"
+                        a: "0x94c75cc853d4850b8ef04cef73de0fa2910c247d7575a326395e53dee2f857a",
+                        b: "0x1577eac1bd673048afd017c4775c9f961bb3a2bb3181e2774ad8d57c770cc63d"
                     }
                 }
             ],
@@ -477,7 +477,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                 "87035802346150256959954921838089338554139438678200281482565340882955317837440"
             ],
             [
-                "52760951572363637884576632369462256428263383005530402436315927162877694618616",
+                "16453446887538043236169806798141174646213966109417722116574477723475637798468",
                 "107425538236610365636158686998752459537356404578796428077151087250587855229110",
                 "53633258998111634407310735394354986951667439524299887834523809236870301151857",
                 "57841403597630604149087405235891030283727611511996352978764357539643972856616"
@@ -588,12 +588,12 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                 },
                 {
                     x: {
-                        a: "0xbd6f0723ca6228f8d5ffad4f6f5a4e7966dc8255472b3f55dfc14daad64a3bf",
-                        b: "0x1e81d1b67c8ca90a437bdeb1978209729b54254a737973e2eaf4e73136c2813c"
+                        a: "0xbb910b5f2b9c274c613666802fee4e69a31658b81e030954ee7929aa5f2c82b",
+                        b: "0x13eee8b46213a03fa424f2aa18ecfac1f55effeae5e089a9c83d3d7de10bee4"
                     },
                     y: {
-                        a: "0xa5ad172711988a23008e659298d1963c332bdaa582c46769d75b7a20c73ff32",
-                        b: "0x18fc529238da1e35671fd194326d1cc5dedc469e852ee2f7b879452e6656879b"
+                        a: "0x2ccb50fceedf3941218b8efcf03fdff44736d72968d8ff744ad3ef08f279d292",
+                        b: "0xc371936ee92a9e36def88442bfc1a6d9a3f50efafb7917e41d72067dcbafe39"
                     }
                 },
                 {
