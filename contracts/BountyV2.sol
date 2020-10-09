@@ -21,12 +21,16 @@
 
 pragma solidity 0.6.10;
 
+import "./delegation/PartialDifferences.sol";
+import "./delegation/TimeHelpers.sol";
+
 import "./ConstantsHolder.sol";
 import "./Nodes.sol";
 import "./Permissions.sol";
 
 
 contract BountyV2 is Permissions {
+    using PartialDifferences for PartialDifferences.Value;
     
     uint public constant YEAR1_BOUNTY = 3850e5 * 1e18;
     uint public constant YEAR2_BOUNTY = 3465e5 * 1e18;
@@ -41,6 +45,8 @@ contract BountyV2 is Permissions {
     uint private _nextEpoch;
     uint private _epochPool;
     bool public bountyReduction;
+
+    PartialDifferences.Value private _effectiveDelegatedSum;
 
     function calculateBounty(uint nodeIndex)
         external
@@ -85,6 +91,22 @@ contract BountyV2 is Permissions {
 
     function disableBountyReduction() external onlyOwner {
         bountyReduction = false;
+    }
+
+    function handleDelegationAdd(uint /*amount*/, uint /*month*/) external allow("DelegationController") {
+        revert("Not implemented");
+    }
+
+    function handleDelegationRemoving(uint /*amount*/, uint /*month*/) external allow("DelegationController") {
+        revert("Not implemented");
+    }
+
+    function handleNodeCreation(uint /*validatorId*/) external allow("Nodes") {
+        revert("Not implemented");
+    }
+
+    function handleNodeRemoving(uint /*validatorId*/) external allow("Nodes") {
+        revert("Not implemented");
     }
 
     function estimateBounty(uint nodeIndex) external view returns (uint) {

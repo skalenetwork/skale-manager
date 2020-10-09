@@ -25,17 +25,18 @@ pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC777/IERC777.sol";
 
-import "../Permissions.sol";
+import "../BountyV2.sol";
 import "../Nodes.sol";
-import "../utils/MathUtils.sol";
+import "../Permissions.sol";
 import "../utils/FractionUtils.sol";
+import "../utils/MathUtils.sol";
 
 import "./DelegationPeriodManager.sol";
+import "./PartialDifferences.sol";
 import "./Punisher.sol";
 import "./TokenLaunchLocker.sol";
 import "./TokenState.sol";
 import "./ValidatorService.sol";
-import "./PartialDifferences.sol";
 
 /**
  * @title Delegation Controller
@@ -348,18 +349,31 @@ contract DelegationController is Permissions, ILocker {
             }
         }
         require(currentState == State.PROPOSED, "Cannot set delegation state to accepted");
-        
-        TokenLaunchLocker tokenLaunchLocker = TokenLaunchLocker(contractManager.getContract("TokenLaunchLocker"));
 
         SlashingSignal[] memory slashingSignals = _processAllSlashesWithoutSignals(delegations[delegationId].holder);
 
         _addToAllStatistics(delegationId);
 
+        TokenLaunchLocker tokenLaunchLocker = TokenLaunchLocker(contractManager.getContract("TokenLaunchLocker"));
+        uint amount = delegations[delegationId].amount;
         tokenLaunchLocker.handleDelegationAdd(
             delegations[delegationId].holder,
             delegationId,
-            delegations[delegationId].amount,
-            delegations[delegationId].started);
+            amount,
+            delegations[delegationId].started
+        );
+
+        BountyV2 bounty = BountyV2(contractManager.getContract("Bounty"));
+        DelegationPeriodManager delegationPeriodManager = DelegationPeriodManager(
+            contractManager.getContract("DelegationPeriodManager")
+        );
+        uint effectiveAmount = amount.mul(
+            delegationPeriodManager.stakeMultipliers(delegations[delegationId].delegationPeriod)
+        );
+        bounty.handleDelegationAdd(
+            effectiveAmount,
+            delegations[delegationId].started
+        );
 
         _sendSlashingSignals(slashingSignals);
 
@@ -387,8 +401,10 @@ contract DelegationController is Permissions, ILocker {
             delegations[delegationId].validatorId == validatorService.getValidatorId(msg.sender)),
             "Permission denied to request undelegation");
         TokenLaunchLocker tokenLaunchLocker = TokenLaunchLocker(contractManager.getContract("TokenLaunchLocker"));
+        BountyV2 bounty = BountyV2(contractManager.getContract("Bounty"));
         DelegationPeriodManager delegationPeriodManager = DelegationPeriodManager(
-            contractManager.getContract("DelegationPeriodManager"));
+            contractManager.getContract("DelegationPeriodManager")
+        );
         _removeValidatorFromValidatorsPerDelegators(
             delegations[delegationId].holder,
             delegations[delegationId].validatorId
@@ -409,8 +425,9 @@ contract DelegationController is Permissions, ILocker {
             delegations[delegationId].validatorId,
             amountAfterSlashing,
             delegations[delegationId].finished);
-        uint effectiveAmount = amountAfterSlashing.mul(delegationPeriodManager.stakeMultipliers(
-            delegations[delegationId].delegationPeriod));
+        uint effectiveAmount = amountAfterSlashing.mul(
+                delegationPeriodManager.stakeMultipliers(delegations[delegationId].delegationPeriod)
+            );
         _removeFromEffectiveDelegatedToValidator(
             delegations[delegationId].validatorId,
             effectiveAmount,
@@ -424,6 +441,7 @@ contract DelegationController is Permissions, ILocker {
             delegations[delegationId].holder,
             delegationId,
             delegations[delegationId].finished);
+        bounty.handleDelegationRemoving(effectiveAmount, delegations[delegationId].finished);
         emit UndelegationRequested(delegationId);
     }
 
@@ -446,9 +464,19 @@ contract DelegationController is Permissions, ILocker {
         uint currentMonth = _getCurrentMonth();
         FractionUtils.Fraction memory coefficient =
             _delegatedToValidator[validatorId].reduceValue(amount, currentMonth);
+        uint initialEffectiveDelegated =
+            _effectiveDelegatedToValidator[validatorId].getAndUpdateValueInSequence(currentMonth);
         _effectiveDelegatedToValidator[validatorId].reduceSequence(coefficient, currentMonth);
         _putToSlashingLog(_slashesOfValidator[validatorId], coefficient, currentMonth);
         _slashes.push(SlashingEvent({reducingCoefficient: coefficient, validatorId: validatorId, month: currentMonth}));
+
+        BountyV2 bounty = BountyV2(contractManager.getContract("Bounty"));
+        bounty.handleDelegationRemoving(
+            initialEffectiveDelegated.sub(
+                _effectiveDelegatedToValidator[validatorId].getAndUpdateValueInSequence(currentMonth)
+            ),
+            currentMonth
+        );
     }
 
     function getAndUpdateEffectiveDelegatedToValidator(uint validatorId, uint month)

@@ -24,10 +24,12 @@ pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts-ethereum-package/contracts/utils/SafeCast.sol";
 
-import "./Permissions.sol";
-import "./ConstantsHolder.sol";
-import "./delegation/ValidatorService.sol";
 import "./delegation/DelegationController.sol";
+import "./delegation/ValidatorService.sol";
+
+import "./BountyV2.sol";
+import "./ConstantsHolder.sol";
+import "./Permissions.sol";
 
 
 /**
@@ -274,6 +276,9 @@ contract Nodes is Permissions {
 
         _setNodeLeft(nodeIndex);
         _deleteNode(nodeIndex);
+
+        BountyV2 bounty = BountyV2(contractManager.getContract("Bounty"));
+        bounty.handleNodeRemoving(nodes[nodeIndex].validatorId);
 
         emit ExitCompleted(
             nodeIndex,
@@ -763,6 +768,9 @@ contract Nodes is Permissions {
         }));
         spaceToNodes[constantsHolder.TOTAL_SPACE_ON_NODE()].push(nodeIndex);
         numberOfActiveNodes++;
+
+        BountyV2 bounty = BountyV2(contractManager.getContract("Bounty"));
+        bounty.handleNodeCreation(validatorId);
     }
 
     function _deleteNode(uint nodeIndex) private {
