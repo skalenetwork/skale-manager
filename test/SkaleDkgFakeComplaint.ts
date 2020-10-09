@@ -894,7 +894,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
 
             describe("when correct broadcasts sent", async () => {
                 const nodesCount = 4;
-                beforeEach(async () => {
+                it("should proceed reponse", async () => {
                     for (let i = 0; i < nodesCount; ++i) {
                         await skaleDKG.broadcast(
                             web3.utils.soliditySha3(schainName),
