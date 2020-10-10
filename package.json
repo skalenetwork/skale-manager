@@ -55,7 +55,7 @@
     "solc": "^0.6.10",
     "truffle": "5.1.39",
     "truffle-typings": "^1.0.8",
-    "ts-node": "8.10.2",
+    "ts-node": "9.0.0",
     "typechain": "^1.0.5",
     "typechain-target-truffle": "^1.0.2",
     "web3": "^1.2.1"
