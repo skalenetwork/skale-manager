@@ -23,9 +23,8 @@ function formTestAddresses() {
             json[splitted.join('_')] = unique[data];
         }
     }
-    json['skale_token'] = undefined;
     var jsonData = JSON.stringify(json);
-    fs.writeFileSync("scripts/form_json/ProxyAddresses.json", jsonData);
+    fs.writeFileSync("scripts/form_json/ContractAddresses.json", jsonData);
     process.exit();
 }
 
@@ -54,12 +53,31 @@ async function getLocalNetworkId() {
     return await web3.eth.net.getId();
 }
 
+async function getTestProxyAdminAddress() {
+    const networkId = await web3.eth.net.getId();
+    let ozJson = require(`../../.openzeppelin/dev-${networkId}.json`);
+    console.log(ozJson.proxyAdmin.address);
+    process.exit();
+}
+
+async function getProxyAdminAddress() {
+    const networkId = await web3.eth.net.getId();
+    let ozJson = require(`../../.openzeppelin/mainnet.json`);
+    console.log(ozJson.proxyAdmin.address);
+    process.exit();
+}
+
+
 
 async function adjustImplementations() {
+    console.log("PROXYADMIN",proxyAdminAdress);
     const networkId = await getLocalNetworkId();
     let ozJson = require(`../../.openzeppelin/dev-${networkId}.json`);
-    const contracts = require(`./ProxyAddresses.json`);
+    const contracts = require(`./ContractAddresses.json`);
     for (let contractName in contracts) {
+        if (contractName == "skale_token") {
+            continue;
+        }
         proxyAddress = contracts[contractName];
         contractNamePascalCase = snake2Pascal(contractName); 
         let implementationAddress = await ProxyAdmin.methods.getProxyImplementation(proxyAddress).call(); 
@@ -82,6 +100,10 @@ if (process.argv[2] == 'get') {
     getLocalNetworkId();
 } else if (process.argv[2] == 'form') {
     formTestAddresses();
+} else if (process.argv[2] == 'getTestProxyAdminAddress') {
+    getTestProxyAdminAddress();
+} else if (process.argv[2] == 'getProxyAdminAddress') {
+    getProxyAdminAddress();
 } else {
     adjustImplementations();
 }
