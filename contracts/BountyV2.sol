@@ -78,7 +78,7 @@ contract BountyV2 is Permissions {
 
         _refillEpochPool(currentMonth, timeHelpers, constantsHolder);
 
-        uint bounty = _calculateMaximumBountyAmount(_epochPool, _nextEpoch, nodeIndex, constantsHolder, nodes);
+        uint bounty = _calculateMaximumBountyAmount(_epochPool, currentMonth, nodeIndex, constantsHolder, nodes);
 
         bounty = _reduceBounty(
             bounty,
@@ -144,7 +144,7 @@ contract BountyV2 is Permissions {
 
         return _calculateMaximumBountyAmount(
             stagePoolSize,
-            nextStage,
+            nextStage.sub(1),
             nodeIndex,
             constantsHolder,
             nodes
@@ -162,14 +162,13 @@ contract BountyV2 is Permissions {
     // private
 
     function _calculateMaximumBountyAmount(
-        uint /* epochPoolSize */,
-        uint /* nextEpoch */,
+        uint epochPoolSize,
+        uint currentMonth,
         uint nodeIndex,
         ConstantsHolder constantsHolder,
         Nodes nodes
     )
         private
-        view
         returns (uint)
     {
         if (nodes.isNodeLeft(nodeIndex)) {
@@ -182,7 +181,14 @@ contract BountyV2 is Permissions {
             return 0;
         }
 
-        revert("Not implemented");
+        DelegationController delegationController = 
+            DelegationController(contractManager.getContract("DelegationController"));
+
+        return epochPoolSize
+            .mul(delegationController.getAndUpdateEffectiveDelegatedToValidator(
+                nodes.getValidatorId(nodeIndex), currentMonth)
+            )
+            .div(_effectiveDelegatedSum.getAndUpdateValue(currentMonth));
     }
 
     function _getFirstEpoch(TimeHelpers timeHelpers, ConstantsHolder constantsHolder) private view returns (uint) {
