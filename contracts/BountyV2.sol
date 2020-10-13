@@ -21,6 +21,7 @@
 
 pragma solidity 0.6.10;
 
+import "./delegation/DelegationController.sol";
 import "./delegation/PartialDifferences.sol";
 import "./delegation/TimeHelpers.sol";
 
@@ -31,6 +32,7 @@ import "./Permissions.sol";
 
 contract BountyV2 is Permissions {
     using PartialDifferences for PartialDifferences.Value;
+    using PartialDifferences for PartialDifferences.Sequence;
     
     uint public constant YEAR1_BOUNTY = 3850e5 * 1e18;
     uint public constant YEAR2_BOUNTY = 3465e5 * 1e18;
@@ -40,13 +42,18 @@ contract BountyV2 is Permissions {
     uint public constant YEAR6_BOUNTY = 1925e5 * 1e18;
     uint public constant EPOCHS_PER_YEAR = 12;
     uint public constant SECONDS_PER_DAY = 24 * 60 * 60;
-    uint public constant BOUNTY_WINDOW_DAYS = 5;
+    uint public constant BOUNTY_WINDOW_SECONDS = 3 * SECONDS_PER_DAY;
+    uint public constant NODE_CREATION_WINDOW_SECONDS = 3 * SECONDS_PER_DAY;
     
     uint private _nextEpoch;
     uint private _epochPool;
     bool public bountyReduction;
 
     PartialDifferences.Value private _effectiveDelegatedSum;
+    // validatorId   amount of nodes
+    mapping (uint => uint) public nodesByValidator;
+    // validatorId => sequence
+    mapping (uint => PartialDifferences.Value) private _effectiveDelegatedToValidator;
 
     function calculateBounty(uint nodeIndex)
         external
@@ -65,7 +72,7 @@ contract BountyV2 is Permissions {
         );
         require(
             timeHelpers.addMonths(lastRewardTimestamp, 1) <= now ||
-            timeHelpers.monthToTimestamp(currentMonth.add(1)).sub(BOUNTY_WINDOW_DAYS.mul(SECONDS_PER_DAY)) <= now,
+            timeHelpers.monthToTimestamp(currentMonth.add(1)).sub(BOUNTY_WINDOW_SECONDS) <= now,
             "Transaction is sent too early"
         );
 
@@ -93,20 +100,37 @@ contract BountyV2 is Permissions {
         bountyReduction = false;
     }
 
-    function handleDelegationAdd(uint /*amount*/, uint /*month*/) external allow("DelegationController") {
-        revert("Not implemented");
+    function handleDelegationAdd(uint validatorId, uint amount, uint month) external allow("DelegationController") {
+        if (nodesByValidator[validatorId] > 0) {
+            _effectiveDelegatedSum.addToValue(amount.mul(nodesByValidator[validatorId]), month);
+        }
+        _effectiveDelegatedToValidator[validatorId].addToValue(amount, month);
     }
 
-    function handleDelegationRemoving(uint /*amount*/, uint /*month*/) external allow("DelegationController") {
-        revert("Not implemented");
+    function handleDelegationRemoving(
+        uint validatorId,
+        uint amount,
+        uint month)
+        external
+        allow("DelegationController")
+    {
+        if (nodesByValidator[validatorId] > 0) {
+            _effectiveDelegatedSum.subtractFromValue(amount.mul(nodesByValidator[validatorId]), month);
+        }
+        _effectiveDelegatedToValidator[validatorId].subtractFromValue(amount, month);
     }
 
-    function handleNodeCreation(uint /*validatorId*/) external allow("Nodes") {
-        revert("Not implemented");
+    function handleNodeCreation(uint validatorId) external allow("Nodes") {
+        nodesByValidator[validatorId] = nodesByValidator[validatorId].add(1);
+
+        _changeEffectiveDelegatedSum(validatorId, true);
     }
 
-    function handleNodeRemoving(uint /*validatorId*/) external allow("Nodes") {
-        revert("Not implemented");
+    function handleNodeRemoving(uint validatorId) external allow("Nodes") {
+        require(nodesByValidator[validatorId] > 0, "All nodes have been already removed");
+        nodesByValidator[validatorId] = nodesByValidator[validatorId].sub(1);
+        
+        _changeEffectiveDelegatedSum(validatorId, false);
     }
 
     function estimateBounty(uint nodeIndex) external view returns (uint) {
@@ -132,6 +156,7 @@ contract BountyV2 is Permissions {
         _nextEpoch = 0;
         _epochPool = 0;
         bountyReduction = false;
+        revert("Load delegations");
     }
 
     // private
@@ -231,6 +256,49 @@ contract BountyV2 is Permissions {
 
         if (!nodes.checkPossibilityToMaintainNode(nodes.getValidatorId(nodeIndex), nodeIndex)) {
             reducedBounty = reducedBounty.div(constants.MSR_REDUCING_COEFFICIENT());
+        }
+    }
+
+    function _changeEffectiveDelegatedSum(uint validatorId, bool add) private {
+        TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
+        uint currentMonth = timeHelpers.getCurrentMonth();
+        
+        uint effectiveDelegated = _effectiveDelegatedToValidator[validatorId].getAndUpdateValue(currentMonth);
+        uint addedToStatistic = 0;
+        if (now < timeHelpers.monthToTimestamp(currentMonth).add(NODE_CREATION_WINDOW_SECONDS)) {
+            if (add) {
+                _effectiveDelegatedSum.addToValue(effectiveDelegated, currentMonth);
+            } else {
+                _effectiveDelegatedSum.subtractFromValue(effectiveDelegated, currentMonth);
+            }
+            addedToStatistic = effectiveDelegated;
+        }
+        for (
+            uint month = currentMonth.add(1);
+            month == currentMonth.add(1) || month <= _effectiveDelegatedToValidator[validatorId].lastChangedMonth;
+            ++month
+        )
+        {
+            effectiveDelegated = effectiveDelegated
+                .add(_effectiveDelegatedToValidator[validatorId].addDiff[month])
+                .sub(_effectiveDelegatedToValidator[validatorId].subtractDiff[month]);
+            if (effectiveDelegated != addedToStatistic) {
+                if (effectiveDelegated > addedToStatistic) {
+                    if (add) {
+                        _effectiveDelegatedSum.addToValue(effectiveDelegated.sub(addedToStatistic), month);
+                    } else {
+                        _effectiveDelegatedSum.subtractFromValue(effectiveDelegated.sub(addedToStatistic), month);
+                    }
+                }
+                if (effectiveDelegated < addedToStatistic) {
+                    if (add) {
+                        _effectiveDelegatedSum.subtractFromValue(addedToStatistic.sub(effectiveDelegated), month);
+                    } else {
+                        _effectiveDelegatedSum.addToValue(addedToStatistic.sub(effectiveDelegated), month);
+                    }
+                }
+                addedToStatistic = effectiveDelegated;
+            }
         }
     }
 }

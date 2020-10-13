@@ -371,6 +371,7 @@ contract DelegationController is Permissions, ILocker {
             delegationPeriodManager.stakeMultipliers(delegations[delegationId].delegationPeriod)
         );
         bounty.handleDelegationAdd(
+            delegations[delegationId].validatorId,
             effectiveAmount,
             delegations[delegationId].started
         );
@@ -441,7 +442,11 @@ contract DelegationController is Permissions, ILocker {
             delegations[delegationId].holder,
             delegationId,
             delegations[delegationId].finished);
-        bounty.handleDelegationRemoving(effectiveAmount, delegations[delegationId].finished);
+        bounty.handleDelegationRemoving(
+            delegations[delegationId].validatorId,
+            effectiveAmount,
+            delegations[delegationId].finished
+        );
         emit UndelegationRequested(delegationId);
     }
 
@@ -464,19 +469,41 @@ contract DelegationController is Permissions, ILocker {
         uint currentMonth = _getCurrentMonth();
         FractionUtils.Fraction memory coefficient =
             _delegatedToValidator[validatorId].reduceValue(amount, currentMonth);
+
         uint initialEffectiveDelegated =
             _effectiveDelegatedToValidator[validatorId].getAndUpdateValueInSequence(currentMonth);
+        uint[] memory initialSubtractions;
+        if (currentMonth < _effectiveDelegatedToValidator[validatorId].lastChangedMonth) {
+            initialSubtractions = new uint[](
+                _effectiveDelegatedToValidator[validatorId].lastChangedMonth.sub(currentMonth)
+            );
+            for (uint i = 0; i < initialSubtractions.length; ++i) {
+                initialSubtractions[i] = _effectiveDelegatedToValidator[validatorId]
+                    .subtractDiff[currentMonth.add(i).add(1)];
+            }
+        }
+
         _effectiveDelegatedToValidator[validatorId].reduceSequence(coefficient, currentMonth);
         _putToSlashingLog(_slashesOfValidator[validatorId], coefficient, currentMonth);
         _slashes.push(SlashingEvent({reducingCoefficient: coefficient, validatorId: validatorId, month: currentMonth}));
 
         BountyV2 bounty = BountyV2(contractManager.getContract("Bounty"));
         bounty.handleDelegationRemoving(
+            validatorId,
             initialEffectiveDelegated.sub(
                 _effectiveDelegatedToValidator[validatorId].getAndUpdateValueInSequence(currentMonth)
             ),
             currentMonth
         );
+        for (uint i = 0; i < initialSubtractions.length; ++i) {
+            bounty.handleDelegationAdd(
+                validatorId,
+                initialSubtractions[i].sub(
+                    _effectiveDelegatedToValidator[validatorId].subtractDiff[currentMonth.add(i).add(1)]
+                ),
+                currentMonth.add(i).add(1)
+            );
+        }
     }
 
     function getAndUpdateEffectiveDelegatedToValidator(uint validatorId, uint month)
