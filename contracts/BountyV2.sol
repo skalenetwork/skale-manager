@@ -101,10 +101,7 @@ contract BountyV2 is Permissions {
     }
 
     function handleDelegationAdd(uint validatorId, uint amount, uint month) external allow("DelegationController") {
-        if (nodesByValidator[validatorId] > 0) {
-            _effectiveDelegatedSum.addToValue(amount.mul(nodesByValidator[validatorId]), month);
-        }
-        _effectiveDelegatedToValidator[validatorId].addToValue(amount, month);
+        _handleDelegationAdd(validatorId, amount, month);
     }
 
     function handleDelegationRemoving(
@@ -114,10 +111,7 @@ contract BountyV2 is Permissions {
         external
         allow("DelegationController")
     {
-        if (nodesByValidator[validatorId] > 0) {
-            _effectiveDelegatedSum.subtractFromValue(amount.mul(nodesByValidator[validatorId]), month);
-        }
-        _effectiveDelegatedToValidator[validatorId].subtractFromValue(amount, month);
+        _handleDelegationRemoving(validatorId, amount, month);
     }
 
     function handleNodeCreation(uint validatorId) external allow("Nodes") {
@@ -133,30 +127,31 @@ contract BountyV2 is Permissions {
         _changeEffectiveDelegatedSum(validatorId, false);
     }
 
-    function estimateBounty(uint nodeIndex) external view returns (uint) {
-        ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
-        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
-        TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
+    function estimateBounty(uint /* nodeIndex */) external pure returns (uint) {
+        revert("Not implemented");
+        // ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
+        // Nodes nodes = Nodes(contractManager.getContract("Nodes"));
+        // TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
 
-        uint stagePoolSize;
-        uint nextStage;
-        (stagePoolSize, nextStage) = _getEpochPool(timeHelpers.getCurrentMonth(), timeHelpers, constantsHolder);
+        // uint stagePoolSize;
+        // uint nextStage;
+        // (stagePoolSize, nextStage) = _getEpochPool(timeHelpers.getCurrentMonth(), timeHelpers, constantsHolder);
 
-        return _calculateMaximumBountyAmount(
-            stagePoolSize,
-            nextStage.sub(1),
-            nodeIndex,
-            constantsHolder,
-            nodes
-        );
+        // return _calculateMaximumBountyAmount(
+        //     stagePoolSize,
+        //     nextStage.sub(1),
+        //     nodeIndex,
+        //     constantsHolder,
+        //     nodes
+        // );
     }
 
-    function initialize(address contractManagerAddress) public override initializer {
+    function initialize(address contractManagerAddress, uint validatorsAmount) public initializer {
         Permissions.initialize(contractManagerAddress);
         _nextEpoch = 0;
         _epochPool = 0;
         bountyReduction = false;
-        revert("Load delegations");
+        _loadDataFromDelegationController(validatorsAmount);
     }
 
     // private
@@ -304,6 +299,52 @@ contract BountyV2 is Permissions {
                     }
                 }
                 addedToStatistic = effectiveDelegated;
+            }
+        }
+    }
+
+    function _handleDelegationAdd(uint validatorId, uint amount, uint month) private {
+        if (nodesByValidator[validatorId] > 0) {
+            _effectiveDelegatedSum.addToValue(amount.mul(nodesByValidator[validatorId]), month);
+        }
+        _effectiveDelegatedToValidator[validatorId].addToValue(amount, month);
+    }
+
+    function _handleDelegationRemoving(uint validatorId, uint amount, uint month) private {
+        if (nodesByValidator[validatorId] > 0) {
+            _effectiveDelegatedSum.subtractFromValue(amount.mul(nodesByValidator[validatorId]), month);
+        }
+        _effectiveDelegatedToValidator[validatorId].subtractFromValue(amount, month);
+    }
+
+    function _loadDataFromDelegationController(uint validatorsAmount) private {
+        TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
+        ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
+        DelegationController delegationController = 
+            DelegationController(contractManager.getContract("DelegationController"));
+
+        uint startMonth = timeHelpers.timestampToMonth(constantsHolder.launchTimestamp());
+        uint currentMonth = timeHelpers.getCurrentMonth();
+        // 2 is a biggest delegation period when BountyV2 is deployed
+        uint endMonth = currentMonth.add(2);
+
+        for (uint validatorId = 1; validatorId <= validatorsAmount; ++validatorId) {
+            uint effectiveDelegated = 0;
+            for (uint month = startMonth; month < endMonth; ++month) {
+                uint currentEffectiveDelegated = 
+                    delegationController.getAndUpdateEffectiveDelegatedToValidator(validatorId, month);
+                if (currentEffectiveDelegated != effectiveDelegated) {
+                    if (currentEffectiveDelegated > effectiveDelegated) {
+                        _handleDelegationAdd(validatorId, currentEffectiveDelegated.sub(effectiveDelegated), month);
+                    } else {
+                        _handleDelegationRemoving(
+                            validatorId,
+                            effectiveDelegated.sub(currentEffectiveDelegated),
+                            month
+                        );
+                    }
+                    effectiveDelegated = currentEffectiveDelegated;
+                }
             }
         }
     }
