@@ -415,7 +415,7 @@ contract Nodes is Permissions {
         require(nodes[nodeIndex].status == NodeStatus.Active, "Node is not Active");
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
         uint validatorId = getValidatorId(nodeIndex);
-        bool permitted = (_isOwner() || isNodeExist(msg.sender, nodeIndex));
+        bool permitted = (_isAdmin(msg.sender) || isNodeExist(msg.sender, nodeIndex));
         if (!permitted) {
             permitted = validatorService.getValidatorId(msg.sender) == validatorId;
         }
@@ -435,7 +435,7 @@ contract Nodes is Permissions {
         require(nodes[nodeIndex].status == NodeStatus.In_Maintenance, "Node is not In Maintenance");
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
         uint validatorId = getValidatorId(nodeIndex);
-        bool permitted = (_isOwner() || isNodeExist(msg.sender, nodeIndex));
+        bool permitted = (_isAdmin(msg.sender) || isNodeExist(msg.sender, nodeIndex));
         if (!permitted) {
             permitted = validatorService.getValidatorId(msg.sender) == validatorId;
         }
