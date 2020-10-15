@@ -44,7 +44,6 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
     let schainsInternal: SchainsInternalInstance;
     let schains: SchainsInstance;
     let skaleDKG: SkaleDKGInstance;
-    let ecdh: ECDHInstance;
     let skaleToken: SkaleTokenInstance;
     let validatorService: ValidatorServiceInstance;
     let slashingTable: SlashingTableInstance;
@@ -837,7 +836,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
             ]
         ];
 
-        let indexes = [0, 1, 2, 3];
+        const indexes = [0, 1, 2, 3];
         let schainName = "";
         const delegatedAmount = 1e7;
 
