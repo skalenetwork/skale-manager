@@ -418,10 +418,10 @@
   dependencies:
     "@types/bignumber.js" "^5.0.0"
 
-"@nomiclabs/buidler@^1.4.3":
-  version "1.4.3"
-  resolved "https://registry.yarnpkg.com/@nomiclabs/buidler/-/buidler-1.4.3.tgz#4ac50d82830bd660fbd3b25ffd08e1d649da172e"
-  integrity sha512-EcUurzBFN9yJxoAzeKW+72NCyWa2WIe1pC0AOIapoUsIhElFy8OpIKERK28EWB2yuQlIxhI98hg5ieAWVg3qJw==
+"@nomiclabs/buidler@^1.4.7":
+  version "1.4.7"
+  resolved "https://registry.yarnpkg.com/@nomiclabs/buidler/-/buidler-1.4.7.tgz#88436ba53e0e830d37c16601df59da4dbffde524"
+  integrity sha512-TyJKwKyKwu82uYPneqLf5HKFr96QX7cHDT7O7Ro93zmk1b84+EH9tn3zNIO/+96DMGISp8cCRwZhct89OwblRA==
   dependencies:
     "@nomiclabs/ethereumjs-vm" "^4.1.1"
     "@sentry/node" "^5.18.1"
@@ -437,6 +437,7 @@
     deepmerge "^2.1.0"
     download "^7.1.0"
     enquirer "^2.3.0"
+    env-paths "^2.2.0"
     eth-sig-util "^2.5.2"
     ethereum-cryptography "^0.1.2"
     ethereumjs-abi "^0.6.8"
@@ -3720,28 +3721,7 @@ ethereum-common@^0.0.18:
   resolved "https://registry.yarnpkg.com/ethereum-common/-/ethereum-common-0.0.18.tgz#2fdc3576f232903358976eb39da783213ff9523f"
   integrity sha1-L9w1dvIykDNYl26znaeDIT/5Uj8=
 
-ethereum-cryptography@^0.1.2:
-  version "0.1.2"
-  resolved "https://registry.yarnpkg.com/ethereum-cryptography/-/ethereum-cryptography-0.1.2.tgz#81da0ba250a45f6de712b882026e911c496f7e72"
-  integrity sha512-VsGgeYGalsAjaDqvGYMDZnal1dMWVfsnRtUdMfqBjRK1p4dpJM4837DG7OKdgrP7hcAtz2jWfMC+bWj9O2xokQ==
-  dependencies:
-    "@types/pbkdf2" "^3.0.0"
-    "@types/secp256k1" "^4.0.1"
-    blakejs "^1.1.0"
-    browserify-aes "^1.2.0"
-    bs58check "^2.1.2"
-    create-hash "^1.2.0"
-    create-hmac "^1.1.7"
-    hash.js "^1.1.7"
-    keccak "^3.0.0"
-    pbkdf2 "^3.0.17"
-    randombytes "^2.1.0"
-    safe-buffer "^5.1.2"
-    scrypt-js "^3.0.0"
-    secp256k1 "^4.0.1"
-    setimmediate "^1.0.5"
-
-ethereum-cryptography@^0.1.3:
+ethereum-cryptography@^0.1.2, ethereum-cryptography@^0.1.3:
   version "0.1.3"
   resolved "https://registry.yarnpkg.com/ethereum-cryptography/-/ethereum-cryptography-0.1.3.tgz#8d6143cfc3d74bf79bbd8edecdf29e4ae20dd191"
   integrity sha512-w8/4x1SGGzc+tO97TASLja6SLd3fRIK2tLVcV2Gx4IB21hE19atll5Cq9o3d0ZmAYC/8aw0ipieTSiekAea4SQ==
@@ -7633,21 +7613,7 @@ solc@0.6.8:
     semver "^5.5.0"
     tmp "0.0.33"
 
-solc@^0.6.10:
-  version "0.6.10"
-  resolved "https://registry.yarnpkg.com/solc/-/solc-0.6.10.tgz#6e45b4f7013c7098fc1e31f7d86ce949e8c49e18"
-  integrity sha512-+oHwIvNjg3bxXvL9yua/Z4ZFEdkCkgRSh7aIGGb+mf/gzoA8PRKiKGYDsjMaj0CJLH1BTBOUpNFeYhhnUFfjRg==
-  dependencies:
-    command-exists "^1.2.8"
-    commander "3.0.2"
-    fs-extra "^0.30.0"
-    js-sha3 "0.8.0"
-    memorystream "^0.3.1"
-    require-from-string "^2.0.0"
-    semver "^5.5.0"
-    tmp "0.0.33"
-
-solc@^0.6.7:
+solc@^0.6.10, solc@^0.6.7:
   version "0.6.12"
   resolved "https://registry.yarnpkg.com/solc/-/solc-0.6.12.tgz#48ac854e0c729361b22a7483645077f58cba080e"
   integrity sha512-Lm0Ql2G9Qc7yPP2Ba+WNmzw2jwsrd3u4PobHYlSOxaut3TtUbj9+5ZrT6f4DUpNPEoBaFUOEg9Op9C0mk7ge9g==
