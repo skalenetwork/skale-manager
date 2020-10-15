@@ -217,7 +217,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         uint index = _nodeIndexInSchain(groupIndex, complaints[groupIndex].fromNodeToComplaint);
         _verifyDataAndSlash(
             groupIndex,
-            indexOnSchain,
+            index,
             secretNumber,
             multipliedShare,
             verificationVector,

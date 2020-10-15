@@ -12,8 +12,9 @@ import { ContractManagerInstance,
          SlashingTableInstance,
          ValidatorServiceInstance,
          SkaleManagerInstance,
-         ConstantsHolderInstance} from "../types/truffle-contracts";
+         ConstantsHolderInstance, ECDHInstance, ECDHContract} from "../types/truffle-contracts";
 
+import { gasMultiplier } from "./tools/command_line";
 import { skipTime, currentTime } from "./tools/time";
 
 import BigNumber from "bignumber.js";
@@ -30,6 +31,9 @@ import { deploySlashingTable } from "./tools/deploy/slashingTable";
 import { deployNodeRotation } from "./tools/deploy/nodeRotation";
 import { deploySkaleManager } from "./tools/deploy/skaleManager";
 import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
+import { deployECDH } from "./tools/deploy/ecdh";
+
+const ECDH: ECDHContract = artifacts.require("./ECDH");
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -40,6 +44,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
     let schainsInternal: SchainsInternalInstance;
     let schains: SchainsInstance;
     let skaleDKG: SkaleDKGInstance;
+    let ecdh: ECDHInstance;
     let skaleToken: SkaleTokenInstance;
     let validatorService: ValidatorServiceInstance;
     let slashingTable: SlashingTableInstance;
@@ -149,31 +154,31 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
             ],
             [
                 {
-                    share: "0x19780235eced16dca18162da3ad72d5faffea2de1664d7df5ed1d227b33c5124",
+                    share: "0x563766ad84daf3ae9a4872ac1152076068cb4ef63eb9ce701e48bf4bf3a192c7",
                     publicKey: [
-                        "0xa6e6bd31cf1ff8cc0fcd15051117198e5b8041abb37151f3a8ac556becaecb4",
-                        "0x4ea6bee369ed06c9ec65e8d98ddc473a19211224fc0ba2035f736ee87885116"
+                        "0xbd0cf6b8421861cbd011074816b0d3212a4f7395a42a1b22fd4379901aad9570",
+                        "0xb7b4b418b948bcc706ba5e1f86b47a6a6fd7bd6ecd1c4102b5e9d0388372df98"
                     ]
                 },
                 {
-                    share: "0x508881f21e9f98be77aa95859438d53964f763a17356b42a9ced4844a23dd8e7",
+                    share: "0x85c170752b2c12211dc010bfb6d7ed2d84a8457d595a1d8dee74304fe71f7242",
                     publicKey: [
-                        "0x34a009cfc8f7047160cdb28c2fc569e1cd5c0cb2dbe7bb40d2ab47b79411d2db",
-                        "0x8c856325ac5b4f928f0a112c20343ed7e770b63ce37891f8ee88b122961142c7"
+                        "0x71997650930dc42ee67d7bcfa78ee85ef961b1d3a00b06efbb4711875c5b8e3c",
+                        "0xfa8deb68dfa50f4795a3122b6b0b14bf1a2206f170fd7f2b3aa9aaa18ff12555"
                     ]
                 },
                 {
-                    share: "0xb00b16b37b6fefe05d901a75f60d94b9f126c5f14633c8257a346c0383867dde",
+                    share: "0x61e805815687fa253181aa9e4a3d96c27563a19612cca54ee0716bb47a327f6a",
                     publicKey: [
-                        "0xd40d14add49505516e22fb273e333943de4351c0a5b3de9fca18b92308ce804a",
-                        "0x6089bd1d084cd14ee0e16131e527700f41b5b17aa577f82adcf882ac2cf62e22"
+                        "0xae8a644e6a16849df625051e07a02893b290ffc9d3349aba4c4a167fc08ddc5c",
+                        "0xa1fe62edf1de1c93ec55b91989191217a383cfed5315ab4724f7bc307e4111d"
                     ]
                 },
                 {
-                    share: "0x4c3b85cf9d4f911759940b11f126114a3fbb2f05af1e891ed3c8e41a1d8a47b2",
+                    share: "0x194bae6cabf40f0ac935d157229f5cbc65766746efa9adc4ec0d22049d4ed8c0",
                     publicKey: [
-                        "0xdfb6f000576625e9529714f3973aebcdde496810cd4dc4728ffd0c21b72c055e",
-                        "0xd983be5d5234aceb0f50c051bbc4faf557eeadec3b37747cc8894f67a1da584f"
+                        "0xb17f1d87cafcb1c25b6d0d7c9b7bd9876a89dfaae095c89b3e6e8a64b42db840",
+                        "0xf18997fa13407d337bdb76a4b977c9c0eebfad48471973f35a49a7fbbb6057c7"
                     ]
                 }
             ],
@@ -400,32 +405,32 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
             [
                 {
                     x: {
-                        a: "0x1ffc3f11faba25697862afc95039e6c9a4f0a2b246ee0de1e550921d8a813854",
-                        b: "0x2e8794f90e2bcf91af4a571b6102b52ece27b15e41629173de3c4e166babeb2a"
+                        a: "0x2977d5b736016a91571f86fef1f2148a7362466f55bf217aaf8cf445416769c1",
+                        b: "0x22de89fe5bc828b3e840b7894c8c659a63f8243a4cd448a6473a96140e6d17d7"
                     },
                     y: {
-                        a: "0x26c5a718265bfbafaf78cb8e75e215d75593f101f8ea0c42f544d90b4c7f1800",
-                        b: "0xdf666060e653f150a00d6b6e7c865fd0ebabc12d149f827fe19f5e8e655cd47"
+                        a: "0x267050c045cb75f294e73bfb3abc06482d163bf4bfe02e8eee35a35a8a03965",
+                        b: "0x23e476d3e97b7939d56254baa86f930f915e769411690dba2766def855acf3ed"
                     }
                 },
                 {
                     x: {
-                        a: "0xa464898c2705c64b4ee071437110a9d6b84210c63a00bc0759dfb91fb34e87e",
-                        b: "0x2b2944e3bdea5e807ef01dede9284408c98a47655cac0cc401c0faf8058c6b53"
+                        a: "0xc6a0282256bf71e9ce380bf658aa60cf1d8f00d16c5d62d63d1a76589deffae",
+                        b: "0x27f106d03b70016cdfe68141e2cca2760d1281490ac1f9ca8ccac7de9a91b0a5"
                     },
                     y: {
-                        a: "0x7a8659d651537c6a446ea0bef2f6303e1aa662f90e05863b1a52f775801156",
-                        b: "0x18fa57054e5f94d3494b7740556d5cfb78ba2dcef1400b330a51808eb431eb11"
+                        a: "0x26b5a8f977373b383fd4be270a92191869ecd03789616520303a9903840846c",
+                        b: "0x15a561b160c3330aea31ccba8d71c77049714fe294ceb7c70600e53becbdf6ea"
                     }
                 },
                 {
                     x: {
-                        a: "0x23c378ec3ab6bc8983fe21d4bc34ae772fec994c4140d1f5fbe0c543b83277ab",
-                        b: "0x73db7dc566bafb369c2daf69a7b0403fceb686dd8371dc83251c99da381e42f"
+                        a: "0xc1a2c7b04c774e630876d2ddfe00b16ab83f138ebc1b2d8940760ae395d63dd",
+                        b: "0xcdb7f9b915cc5e899cf9b1378d7a17cb03add2286c0c721ac0dcc0f722203db"
                     },
                     y: {
-                        a: "0x1054b59bf3ca308126b73ca26e96a9000142fcd0fde6610289ad0ec5324a481f",
-                        b: "0x2df3f5f4058b172ff173abe036d1dfc221d0e3a3e9b4cca445b18b27e1b4a28e"
+                        a: "0xa758107babe35640e20d1a02d6eb0f07f6daec2a1b66f7d1b4af43686fae551",
+                        b: "0x193a5f27d1a98a340f61a6966f00360a49af565817691b0356908a3b8b66e2a6"
                     }
                 }
             ],
@@ -477,10 +482,10 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                 "87035802346150256959954921838089338554139438678200281482565340882955317837440"
             ],
             [
-                "16453446887538043236169806798141174646213966109417722116574477723475637798468",
-                "107425538236610365636158686998752459537356404578796428077151087250587855229110",
-                "53633258998111634407310735394354986951667439524299887834523809236870301151857",
-                "57841403597630604149087405235891030283727611511996352978764357539643972856616"
+                "95385063906629353324759087675762412288285322242894865555691694718118680541221",
+                "15371892495452349591571876553612985236762376939219890386117967875759475388194",
+                "98606488869146578356047332359863225003990433046672041097219494056477967255105",
+                "109983168375840474347309469001278580090134955697010326556657975859454391302403"
             ],
             [
                 "86679107239183479535035708093457752497085925931995915740769495134029368951159",
@@ -578,42 +583,42 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
             [
                 {
                     x: {
-                        a: "0x303fe88d1e8f326e5ecc9ff3e2e513c6b4c3e5f69ddfc099577dbc3c0fc8daad",
-                        b: "0x2174a06232840e3a84aca706fd7e0fa7a4a871f3244f0352862934b0f79bf342"
+                        a: "0x2889602cfa527d02433512a26f536fe37d9afc407d12031f1a6dfdfc6c378846",
+                        b: "0xf9cadbd606dc9b17b097c13206fa314363c3e801b4e02093bcd867ff42ad549"
                     },
                     y: {
-                        a: "0xdb23cb8d4ca2374acd233d69fe9213007d8df20241a87b817df7cde983f21e2",
-                        b: "0x1743b4392b827cf647e30214fb0f24920a5710fb13f30ec2d923837df9c9f40e"
+                        a: "0x892159a6bfe2e9a74910841c446386ce298c10c092ec7cd27d67880061088b7",
+                        b: "0x10424a478277e98f7ecd9fb584e6a9a3587e60b09fafe97f1f6a47c7ec107041"
                     }
                 },
                 {
                     x: {
-                        a: "0xbb910b5f2b9c274c613666802fee4e69a31658b81e030954ee7929aa5f2c82b",
-                        b: "0x13eee8b46213a03fa424f2aa18ecfac1f55effeae5e089a9c83d3d7de10bee4"
+                        a: "0x25f15ed6cafa9f4dd1fe3fd5364c8124e16ab64dcdda6e212119a36c6f57bd0a",
+                        b: "0x23c96384d2660b56264ce5b0dd9cf10afe3c1b55e628a2dfa5f91054e2c2b797"
                     },
                     y: {
-                        a: "0x2ccb50fceedf3941218b8efcf03fdff44736d72968d8ff744ad3ef08f279d292",
-                        b: "0xc371936ee92a9e36def88442bfc1a6d9a3f50efafb7917e41d72067dcbafe39"
+                        a: "0x1d9ca99f029bd79ac5c4e37a4db9e3d2664868a8013049c1d27dfc5deca38b2b",
+                        b: "0x1254cf7935eb00fb27f83ada3dcafc7806bf909e2deea51fcb4fb79f79b1680d"
                     }
                 },
                 {
                     x: {
-                        a: "0x12764ccf890e6fc2f4ff74bc7e0caeba4ccb1d98b04bd54f910764babbae2669",
-                        b: "0x15ba7ab3cab0ba3f8e1641d836e89fbc28c96d4a4054932425b42f0a590930ae"
+                        a: "0x20bb4b9362c69eac60d7369c202f87b3b971f74b36b70840e18dd8bce44a3740",
+                        b: "0x2e267a91eaf7930f464bae2bf920450825568bc709e44305a3573d573e831e06"
                     },
                     y: {
-                        a: "0x714d43bebfde6d1f4c157d963be0cf5626d466caab24a954ddb13bc7001b503",
-                        b: "0x24e248494595da23b1848a75590da93fe52ebab6213ddb085da4a894357059ab"
+                        a: "0x21e91f233efe3b6429b1cb9b7b097f38a31ce6bc428f29e946b2e776b371f257",
+                        b: "0x729e1621334029f3604ec479458ccdf3d4515a393d867d714dbff2f58a07ca7"
                     }
                 },
                 {
                     x: {
-                        a: "0xe25cd80c1ead8128a668533b7489aac88a0f6ed74d767a08601413c573e5699",
-                        b: "0x125d66ccc22bbb1bf5c1518b86eb075595809cb4866fb52adace89be28d2c48"
+                        a: "0x20d463b32b3a55991f5a9ab3d87f5bef790ed0ee9a8bed15e83f7fe2893257ce",
+                        b: "0x1e8ee30ecc2422210fb00cdfe8b94c3c2cc6e882d96a1b93f4145d6d00fb4d67"
                     },
                     y: {
-                        a: "0x18e7db1955e63ceea2ee6dce152aec7f2601b2a0174e0af7ec10359d1abcafb9",
-                        b: "0x22f57802ff1b5c4b5b7c31ff14aad018a741f9b58baace382aecb27c2cc36954"
+                        a: "0xd6db73a37f1b71b95b9ba743fc1a72113f7c3e7fb035b74f96092b5d35ca4bb",
+                        b: "0xb35ed49bc52f348cdb034317373cce8cf577189c60b074abf9f7cad1a1f3ce8"
                     }
                 }
             ],
@@ -832,7 +837,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
             ]
         ];
 
-        const indexes = [0, 1, 2, 3];
+        let indexes = [0, 1, 2, 3];
         let schainName = "";
         const delegatedAmount = 1e7;
 
@@ -880,7 +885,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                 let nodesInGroup = await schainsInternal.getNodesInGroup(web3.utils.soliditySha3("d2"));
                 schainName = "d2";
                 let index = 3;
-                while ((new BigNumber(nodesInGroup[0])).toFixed() === "1") {
+                while (!((new BigNumber(nodesInGroup[0])).toFixed() === "0" && (new BigNumber(nodesInGroup[1])).toFixed() === "1" && (new BigNumber(nodesInGroup[2])).toFixed() === "2")) {
                     await schains.deleteSchainByRoot(schainName);
                     schainName = "d" + index;
                     index++;
@@ -899,8 +904,8 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                         await skaleDKG.broadcast(
                             web3.utils.soliditySha3(schainName),
                             i,
-                            verificationVectors[indexes[i]],
-                            encryptedSecretKeyContributions[indexes[i]],
+                            verificationVectors[i],
+                            encryptedSecretKeyContributions[i],
                             {from: validatorsAccount[i % 2]},
                         );
                     }
@@ -925,10 +930,10 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                     const responseResult = await skaleDKG.response(
                         web3.utils.soliditySha3(schainName),
                         2,
-                        secretNumbers[indexes[2]][1],
-                        multipliedShares[indexes[2]][1],
-                        verificationVectors[indexes[2]],
-                        encryptedSecretKeyContributions[indexes[2]],
+                        secretNumbers[2][1],
+                        multipliedShares[2][1],
+                        verificationVectors[2],
+                        encryptedSecretKeyContributions[2],
                         {from: validatorsAccount[0]},
                     );
                     assert.equal(responseResult.logs[0].event, "BadGuy");

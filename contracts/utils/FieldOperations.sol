@@ -302,12 +302,10 @@ library G2Operations {
             })
         });
         G2Point memory tmp = value;
-        uint gs = gasleft();
         while (step > 0) {
             if (step % 2 == 1) {
                 result = addG2(result, tmp);
             }
-            gs = gasleft();
             tmp = doubleG2(tmp);
             step >>= 1;
         }
