@@ -7,6 +7,11 @@ import { ConstantsHolderInstance,
 
 import { currentTime, skipTime } from "./tools/time";
 
+import * as elliptic from "elliptic";
+const EC = elliptic.ec;
+const ec = new EC("secp256k1");
+import { privateKeys } from "./tools/private-keys";
+
 import chai = require("chai");
 import * as chaiAsPromised from "chai-as-promised";
 import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
@@ -41,6 +46,7 @@ contract("Monitors", ([owner, validator, nodeAddress]) => {
     await validatorService.linkNodeAddress(nodeAddress, signature1, {from: validator});
 
 
+    const pubKey = ec.keyFromPrivate(String(privateKeys[2]).slice(2)).getPublic();
     await nodes.createNode(
       nodeAddress,
       {
@@ -48,8 +54,7 @@ contract("Monitors", ([owner, validator, nodeAddress]) => {
           nonce: 0,
           ip: "0x7f000001",
           publicIp: "0x7f000001",
-          publicKey: ["0x1122334455667788990011223344556677889900112233445566778899001122",
-                      "0x1122334455667788990011223344556677889900112233445566778899001122"],
+          publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
           name: "elvis1"
       });
 
@@ -60,8 +65,7 @@ contract("Monitors", ([owner, validator, nodeAddress]) => {
           nonce: 0,
           ip: "0x7f000003",
           publicIp: "0x7f000003",
-          publicKey: ["0x1122334455667788990011223344556677889900112233445566778899001122",
-                      "0x1122334455667788990011223344556677889900112233445566778899001122"],
+          publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
           name: "elvis2"
       });
 
@@ -72,8 +76,7 @@ contract("Monitors", ([owner, validator, nodeAddress]) => {
           nonce: 0,
           ip: "0x7f000005",
           publicIp: "0x7f000005",
-          publicKey: ["0x1122334455667788990011223344556677889900112233445566778899001122",
-                      "0x1122334455667788990011223344556677889900112233445566778899001122"],
+          publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
           name: "elvis3"
       });
 
@@ -84,8 +87,7 @@ contract("Monitors", ([owner, validator, nodeAddress]) => {
           nonce: 0,
           ip: "0x7f000007",
           publicIp: "0x7f000007",
-          publicKey: ["0x1122334455667788990011223344556677889900112233445566778899001122",
-                      "0x1122334455667788990011223344556677889900112233445566778899001122"],
+          publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
           name: "elvis4"
       });
 
@@ -96,8 +98,7 @@ contract("Monitors", ([owner, validator, nodeAddress]) => {
           nonce: 0,
           ip: "0x7f000009",
           publicIp: "0x7f000009",
-          publicKey: ["0x1122334455667788990011223344556677889900112233445566778899001122",
-                      "0x1122334455667788990011223344556677889900112233445566778899001122"],
+          publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
           name: "elvis5"
       });
   });
@@ -149,7 +150,7 @@ contract("Monitors", ([owner, validator, nodeAddress]) => {
     const { logs } = await monitors
           .sendVerdict(0, verd, {from: owner});
     // assertion
-    assert.equal(logs[0].event, "VerdictWasSent");
+    assert.equal(logs[0].event, "VerdictSent");
   });
 
   it("should rejected with `Checked Node...` error when invoke sendVerdict", async () => {
@@ -365,6 +366,7 @@ contract("Monitors", ([owner, validator, nodeAddress]) => {
       for (let node = (await nodes.getNumberOfNodes()).toNumber(); node < nodesCount; ++node) {
         const address = ("0000" + node.toString(16)).slice(-4);
 
+        const pubKey = ec.keyFromPrivate(String(privateKeys[2]).slice(2)).getPublic();
         await nodes.createNode(
           nodeAddress,
           {
@@ -372,8 +374,7 @@ contract("Monitors", ([owner, validator, nodeAddress]) => {
               nonce: 0,
               ip: "0x7f" + address + "01",
               publicIp: "0x7f" + address + "02",
-              publicKey: ["0x1122334455667788990011223344556677889900112233445566778899001122",
-                          "0x1122334455667788990011223344556677889900112233445566778899001122"],
+              publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
               name: "d2_" + node
           });
       }

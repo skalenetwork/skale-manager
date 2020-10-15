@@ -23,13 +23,18 @@ pragma solidity 0.6.10;
 import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
 
 
+/**
+ * @title ECDH
+ * @dev This contract performs Elliptic-curve Diffie-Hellman key exchange to
+ * support the DKG process.
+ */
 contract ECDH {
     using SafeMath for uint256;
 
     uint256 constant private _GX = 0x79BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798;
     uint256 constant private _GY = 0x483ADA7726A3C4655DA4FBFC0E1108A8FD17B448A68554199C47D08FFB10D4B8;
-    uint256 constant private _N = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F;
-    uint256 constant private _A = 0;
+    uint256 constant private _N  = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F;
+    uint256 constant private _A  = 0;
 
     function publicKey(uint256 privKey) external pure returns (uint256 qx, uint256 qy) {
         uint256 x;

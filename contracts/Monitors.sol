@@ -27,6 +27,11 @@ import "@openzeppelin/contracts-ethereum-package/contracts/utils/SafeCast.sol";
 import "./ConstantsHolder.sol";
 import "./Nodes.sol";
 
+/**
+ * @title Monitors
+ * @dev This contract contains all logic to manage the Node Monitoring Service
+ * of the SKALE Network.
+ */
 contract Monitors is Permissions {
 
     using StringUtils for string;
@@ -57,7 +62,9 @@ contract Monitors is Permissions {
     mapping (bytes32 => uint) public lastVerdictBlocks;
     mapping (bytes32 => uint) public lastBountyBlocks;
 
-
+    /**
+     * @dev Emitted when a monitor group is created.
+     */
     event MonitorCreated(
         uint nodeIndex,
         bytes32 monitorIndex,
@@ -67,7 +74,10 @@ contract Monitors is Permissions {
         uint gasSpend
     );
 
-    event VerdictWasSent(
+    /**
+     * @dev Emitted when a verdict is sent.
+     */
+    event VerdictSent(
         uint indexed fromMonitorIndex,
         uint indexed toNodeIndex,
         uint32 downtime,
@@ -78,7 +88,10 @@ contract Monitors is Permissions {
         uint gasSpend
     );
 
-    event MetricsWereCalculated(
+    /**
+     * @dev Emitted when metrics are calculated.
+     */
+    event MetricsCalculated(
         uint forNodeIndex,
         uint32 averageDowntime,
         uint32 averageLatency,
@@ -86,7 +99,10 @@ contract Monitors is Permissions {
         uint gasSpend
     );
 
-    event PeriodsWereSet(
+    /**
+     * @dev Emitted when monitoring periods are set.
+     */
+    event PeriodsSet(
         uint rewardPeriod,
         uint deltaPeriod,
         uint time,
@@ -94,13 +110,18 @@ contract Monitors is Permissions {
     );
 
 
+    /**
+     * @dev Emitted when node rotation in a monitor group is performed.
+     */
     event MonitorRotated(
         bytes32 monitorIndex,
         uint newNode
     );
 
     /**
-     * addMonitor - setup monitors of node
+     * @dev Allows SkaleManager contract to create a monitoring group.
+     * 
+     * Emits a {MonitorCreated} event.
      */
     function addMonitor(uint nodeIndex) external allow("SkaleManager") {
         ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
@@ -122,6 +143,9 @@ contract Monitors is Permissions {
         );
     }
 
+    /**
+     * @dev Allows SkaleManager contract to delete a monitoring group.
+     */
     function deleteMonitor(uint nodeIndex) external allow("SkaleManager") {
         bytes32 monitorIndex = keccak256(abi.encodePacked(nodeIndex));
         while (verdicts[keccak256(abi.encodePacked(nodeIndex))].length > 0) {
@@ -144,11 +168,23 @@ contract Monitors is Permissions {
         delete groupsForMonitors[monitorIndex];
     }
 
+    /**
+     * @dev Allows SkaleManager contract to remove nodes from a monitoring list.
+     */
     function removeCheckedNodes(uint nodeIndex) external allow("SkaleManager") {
         bytes32 monitorIndex = keccak256(abi.encodePacked(nodeIndex));
         delete checkedNodes[monitorIndex];
     }
 
+    /**
+     * @dev Allows SkaleManager contract to send a monitoring verdict.
+     * 
+     * Emits a {VerdictSent} event.
+     * 
+     * Requirements:
+     * 
+     * - Node must exist in the monitor group.
+     */
     function sendVerdict(uint fromMonitorIndex, Verdict calldata verdict) external allow("SkaleManager") {
         uint index;
         uint time;
@@ -173,6 +209,10 @@ contract Monitors is Permissions {
         }
     }
 
+    /**
+     * @dev Allows SkaleManager contract to calculate median statistics of downtime
+     * and latency.
+     */
     function calculateMetrics(uint nodeIndex)
         external
         allow("SkaleManager")
@@ -193,10 +233,18 @@ contract Monitors is Permissions {
         delete verdicts[monitorIndex];
     }
 
+    /**
+     * @dev Allows SkaleManager contract to set a node's last bounty block.
+     */
     function setLastBountyBlock(uint nodeIndex) external allow("SkaleManager") {
         lastBountyBlocks[keccak256(abi.encodePacked(nodeIndex))] = block.number;
     }
 
+    /**
+     * @dev Returns node info of nodes in a monitoring list.
+     * Node info includes IPs, nodeIndex, and time to send verdict.
+     * 
+     */
     function getCheckedArray(bytes32 monitorIndex)
         external
         view
@@ -211,14 +259,23 @@ contract Monitors is Permissions {
         }
     }
 
+    /**
+     * @dev Returns the latest blocknumber when node received bounty.
+     */
     function getLastBountyBlock(uint nodeIndex) external view returns (uint) {
         return lastBountyBlocks[keccak256(abi.encodePacked(nodeIndex))];
     }
 
+    /**
+     * @dev Returns the nodes in a monitoring group.
+     */
     function getNodesInGroup(bytes32 monitorIndex) external view returns (uint[] memory) {
         return groupsForMonitors[monitorIndex];
     }
 
+    /**
+     * @dev Returns the number of nodes in a monitoring group.
+     */
     function getNumberOfNodesInGroup(bytes32 monitorIndex) external view returns (uint) {
         return groupsForMonitors[monitorIndex].length;
     }
@@ -228,7 +285,8 @@ contract Monitors is Permissions {
     }
 
     /**
-     *  Add checked node or update existing one if it is already exits
+     * @dev Allows SkaleManager contract to add checked node or update existing
+     * one if it is already exits.
      */
     function addCheckedNode(bytes32 monitorIndex, CheckedNode memory checkedNode) public allow("SkaleManager") {
         for (uint i = 0; i < checkedNodes[monitorIndex].length; ++i) {
@@ -240,14 +298,23 @@ contract Monitors is Permissions {
         checkedNodes[monitorIndex].push(checkedNode);
     }
 
+    /**
+     * @dev Returns the blocknumber when a node received its latest verdict.
+     */
     function getLastReceivedVerdictBlock(uint nodeIndex) public view returns (uint) {
         return lastVerdictBlocks[keccak256(abi.encodePacked(nodeIndex))];
     }
 
+    /**
+     * @dev Returns a count of metric data available for a node.
+     */
     function getLengthOfMetrics(bytes32 monitorIndex) public view returns (uint) {
         return verdicts[monitorIndex].length;
     }
 
+    /**
+     * @dev Generates a monitoring group, using a pseudo-random number generator.
+     */
     function _generateGroup(bytes32 monitorIndex, uint nodeIndex, uint numberOfNodes)
         private
     {
@@ -275,20 +342,27 @@ contract Monitors is Permissions {
         }
     }
 
+    /**
+     * @dev Returns the median using the Quicksort algorithm.
+     */
     function _median(uint[] memory values) private pure returns (uint) {
-        if (values.length < 1) {
-            revert("Can't calculate _median of empty array");
-        }
+        require(values.length > 0, "Cannot calculate _median of an empty array");
         _quickSort(values, 0, values.length.sub(1));
         return values[values.length.div(2)];
     }
 
+    /**
+     * @dev Performs swap functions for monitoring group generation.
+     */
     function _swap(uint[] memory array, uint index1, uint index2) private pure {
         uint buffer = array[index1];
         array[index1] = array[index2];
         array[index2] = buffer;
     }
 
+    /**
+     * @dev Performs find functions for monitoring indexes.
+     */
     function _find(bytes32 monitorIndex, uint nodeIndex) private view returns (uint index, uint time) {
         index = checkedNodes[monitorIndex].length;
         time = 0;
@@ -305,6 +379,9 @@ contract Monitors is Permissions {
         }
     }
 
+    /**
+     * @dev Performs Quicksort.
+     */
     function _quickSort(uint[] memory array, uint left, uint right) private pure {
         uint leftIndex = left;
         uint rightIndex = right;
@@ -328,6 +405,9 @@ contract Monitors is Permissions {
             _quickSort(array, leftIndex, right);
     }
 
+    /**
+     * @dev Returns monitoring data for a node.
+     */
     function _getCheckedNodeData(uint nodeIndex) private view returns (CheckedNode memory checkedNode) {
         ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));
@@ -336,6 +416,11 @@ contract Monitors is Permissions {
         checkedNode.time = nodes.getNodeNextRewardDate(nodeIndex).sub(constantsHolder.deltaPeriod());
     }
 
+    /**
+     * @dev Performs emission of VerdictSent.
+     * 
+     * Emits a {VerdictSent} event.
+     */
     function _emitVerdictsEvent(
         uint fromMonitorIndex,
         Verdict memory verdict,
@@ -346,7 +431,7 @@ contract Monitors is Permissions {
         uint previousBlockEvent = getLastReceivedVerdictBlock(verdict.toNodeIndex);
         lastVerdictBlocks[keccak256(abi.encodePacked(verdict.toNodeIndex))] = block.number;
 
-        emit VerdictWasSent(
+        emit VerdictSent(
                 fromMonitorIndex,
                 verdict.toNodeIndex,
                 verdict.downtime,

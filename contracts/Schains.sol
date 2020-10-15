@@ -33,7 +33,9 @@ import "./interfaces/ISkaleDKG.sol";
 
 
 /**
- * @title Schains - contract contains all functionality logic to manage Schains
+ * @title Schains
+ * @dev Contains functions to manage Schains such as Schain creation,
+ * deletion, and rotation.
  */
 contract Schains is Permissions {
     using StringUtils for string;
@@ -46,7 +48,9 @@ contract Schains is Permissions {
         string name;
     }
 
-    // informs that Schain is created
+    /**
+     * @dev Emitted when an schain is created.
+     */
     event SchainCreated(
         string name,
         address owner,
@@ -60,24 +64,35 @@ contract Schains is Permissions {
         uint gasSpend
     );
 
+    /**
+     * @dev Emitted when an schain is deleted.
+     */
     event SchainDeleted(
         address owner,
         string name,
         bytes32 indexed schainId
     );
 
+    /**
+     * @dev Emitted when a node in an schain is rotated.
+     */
     event NodeRotated(
         bytes32 schainId,
         uint oldNode,
         uint newNode
     );
 
+    /**
+     * @dev Emitted when a node is added to an schain.
+     */
     event NodeAdded(
         bytes32 schainId,
         uint newNode
     );
 
-    // informs that Schain based on some Nodes
+    /**
+     * @dev Emitted when a group of nodes is created for an schain.
+     */
     event SchainNodes(
         string name,
         bytes32 schainId,
@@ -89,11 +104,14 @@ contract Schains is Permissions {
     bytes32 public constant SCHAIN_CREATOR_ROLE = keccak256("SCHAIN_CREATOR_ROLE");
 
     /**
-     * @dev addSchain - create Schain in the system
-     * function could be run only by executor
-     * @param from - owner of Schain
-     * @param deposit - received amoung of SKL
-     * @param data - Schain's data
+     * @dev Allows SkaleManager contract to create an Schain.
+     * 
+     * Emits an {SchainCreated} event.
+     * 
+     * Requirements:
+     * 
+     * - Schain type is valid.
+     * - There is sufficient deposit to create type of schain.
      */
     function addSchain(address from, uint deposit, bytes calldata data) external allow("SkaleManager") {
         SchainParameters memory schainParameters = _fallbackSchainParametersDataConverter(data);
@@ -120,7 +138,7 @@ contract Schains is Permissions {
     )
         external
     {
-        require(hasRole(SCHAIN_CREATOR_ROLE, msg.sender), "Sender is not authorized to create schian");
+        require(hasRole(SCHAIN_CREATOR_ROLE, msg.sender), "Sender is not authorized to create schain");
 
         SchainParameters memory schainParameters = SchainParameters({
             lifetime: lifetime,
@@ -133,10 +151,14 @@ contract Schains is Permissions {
     }
 
     /**
-     * @dev deleteSchain - removes Schain from the system
-     * function could be run only by executor
-     * @param from - owner of Schain
-     * @param name - Schain name
+     * @dev Allows SkaleManager to remove an schain from the network.
+     * Upon removal, the space availability of each node is updated.
+     * 
+     * Emits an {SchainDeleted} event.
+     * 
+     * Requirements:
+     * 
+     * - Executed by schain owner.
      */
     function deleteSchain(address from, string calldata name) external allow("SkaleManager") {
         NodeRotation nodeRotation = NodeRotation(contractManager.getContract("NodeRotation"));
@@ -144,7 +166,7 @@ contract Schains is Permissions {
         bytes32 schainId = keccak256(abi.encodePacked(name));
         require(
             schainsInternal.isOwnerAddress(from, schainId),
-            "Message sender is not an owner of Schain"
+            "Message sender is not the owner of the Schain"
         );
         address nodesAddress = contractManager.getContract("Nodes");
 
@@ -175,6 +197,16 @@ contract Schains is Permissions {
         emit SchainDeleted(from, name, schainId);
     }
 
+    /**
+     * @dev Allows SkaleManager to delete any Schain.
+     * Upon removal, the space availability of each node is updated.
+     * 
+     * Emits an {SchainDeleted} event.
+     * 
+     * Requirements:
+     * 
+     * - Schain exists.
+     */
     function deleteSchainByRoot(string calldata name) external allow("SkaleManager") {
         NodeRotation nodeRotation = NodeRotation(contractManager.getContract("NodeRotation"));
         bytes32 schainId = keccak256(abi.encodePacked(name));
@@ -208,14 +240,26 @@ contract Schains is Permissions {
         emit SchainDeleted(from, name, schainId);
     }
 
+    /**
+     * @dev Allows SkaleManager contract to restart schain creation by forming a
+     * new schain group. Executed when DKG procedure fails and becomes stuck.
+     * 
+     * Emits a {NodeAdded} event.
+     * 
+     * Requirements:
+     * 
+     * - Previous DKG procedure must have failed.
+     * - DKG failure got stuck because there were no free nodes to rotate in.
+     * - A free node must be released in the network.
+     */
     function restartSchainCreation(string calldata name) external allow("SkaleManager") {
         NodeRotation nodeRotation = NodeRotation(contractManager.getContract("NodeRotation"));
         bytes32 schainId = keccak256(abi.encodePacked(name));
         ISkaleDKG skaleDKG = ISkaleDKG(contractManager.getContract("SkaleDKG"));
-        require(!skaleDKG.isLastDKGSuccesful(schainId), "DKG success");
+        require(!skaleDKG.isLastDKGSuccessful(schainId), "DKG success");
         SchainsInternal schainsInternal = SchainsInternal(
             contractManager.getContract("SchainsInternal"));
-        require(schainsInternal.isAnyFreeNode(schainId), "No any free Nodes for rotation");
+        require(schainsInternal.isAnyFreeNode(schainId), "No free Nodes for new group formation");
         uint newNodeIndex = nodeRotation.selectNodeToGroup(schainId);
         skaleDKG.openChannel(schainId);
         emit NodeAdded(schainId, newNodeIndex);
@@ -232,15 +276,7 @@ contract Schains is Permissions {
     }
 
     /**
-     * @dev verifySignature - verify signature which create Group by Groups BLS master public key     
-     * @param signatureA - first part of BLS signature
-     * @param signatureB - second part of BLS signature
-     * @param hash - hashed message
-     * @param counter - smallest sub from square
-     * @param hashA - first part of hashed message
-     * @param hashB - second part of hashed message
-     * @param schainName - name of the Schain
-     * @return true - if correct, false - if not
+     * @dev Checks whether schain group signature is valid.
      */
     function verifySchainSignature(
         uint signatureA,
@@ -278,10 +314,7 @@ contract Schains is Permissions {
     }
 
     /**
-     * @dev getSchainPrice - returns current price for given Schain
-     * @param typeOfSchain - type of Schain
-     * @param lifetime - lifetime of Schain
-     * @return current price for given Schain
+     * @dev Returns the current price in SKL tokens for given Schain type and lifetime.
      */
     function getSchainPrice(uint typeOfSchain, uint lifetime) public view returns (uint) {
         ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
@@ -303,11 +336,8 @@ contract Schains is Permissions {
     }
 
     /**
-     * @dev getNodesDataFromTypeOfSchain - returns number if Nodes
-     * and part of Node which needed to this Schain
-     * @param typeOfSchain - type of Schain
-     * @return numberOfNodes - number of Nodes needed to this Schain
-     * @return partOfNode - divisor of given type of Schain
+     * @dev Returns the number of Nodes and resource divisor that is needed for a
+     * given Schain type.
      */
     function getNodesDataFromTypeOfSchain(uint typeOfSchain)
         public
@@ -333,6 +363,13 @@ contract Schains is Permissions {
         }
     }
 
+    /**
+     * @dev Initializes an schain in the SchainsInternal contract.
+     * 
+     * Requirements:
+     * 
+     * - Schain name is not already in use.
+     */
     function _initializeSchainInSchainsInternal(
         string memory name,
         address from,
@@ -352,9 +389,8 @@ contract Schains is Permissions {
     }
 
     /**
-     * @dev fallbackSchainParameterDataConverter - converts data from bytes to normal parameters
-     * @param data - concatenated parameters
-     * @return schainParameters Parsed lifetime, typeOfSchain, nonce and name
+     * @dev Converts data from bytes to normal schain parameters of lifetime,
+     * type, nonce, and name.
      */
     function _fallbackSchainParametersDataConverter(bytes memory data)
         private
@@ -368,11 +404,9 @@ contract Schains is Permissions {
     }
 
     /**
-     * @dev _createGroupForSchain - creates Group for Schain
-     * @param schainName - name of Schain
-     * @param schainId - hash by name of Schain
-     * @param numberOfNodes - number of Nodes needed for this Schain
-     * @param partOfNode - divisor of given type of Schain
+     * @dev Allows creation of node group for Schain.
+     * 
+     * Emits an {SchainNodes} event.
      */
     function _createGroupForSchain(
         string memory schainName,
@@ -395,11 +429,13 @@ contract Schains is Permissions {
     }
 
     /**
-     * @dev _addSchain - create Schain in the system
-     * function could be run only by executor
-     * @param from - owner of Schain
-     * @param deposit - received amoung of SKL
-     * @param schainParameters - Schain's data
+     * @dev Creates an schain.
+     * 
+     * Emits an {SchainCreated} event.
+     * 
+     * Requirements:
+     * 
+     * - Schain type must be valid.
      */
     function _addSchain(address from, uint deposit, SchainParameters memory schainParameters) private {
         uint numberOfNodes;

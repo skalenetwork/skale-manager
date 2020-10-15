@@ -1,3 +1,4 @@
+import * as elliptic from "elliptic";
 import {
     ContractManagerInstance,
     ConstantsHolderInstance,
@@ -8,6 +9,11 @@ import {
     SkaleTokenInstance,
     ValidatorServiceInstance,
 } from "../types/truffle-contracts";
+
+const EC = elliptic.ec;
+const ec = new EC("secp256k1");
+
+import { privateKeys } from "./tools/private-keys";
 
 import { deployContractManager } from "./tools/deploy/contractManager";
 import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
@@ -77,14 +83,15 @@ contract("Bounty", ([owner, admin, hacker, validator]) => {
             const nodesCount = 10;
             for (const index of Array.from(Array(nodesCount).keys())) {
                 const hexIndex = ("0" + index.toString(16)).slice(-2);
+                const pubKey = ec.keyFromPrivate(String(privateKeys[3]).slice(2)).getPublic();
                 await nodesContract.createNode(validator,
                     {
                         port: 8545,
                         nonce: 0,
                         ip: "0x7f0000" + hexIndex,
                         publicIp: "0x7f0000" + hexIndex,
-                        publicKey: ["0x1122334455667788990011223344556677889900112233445566778899001122",
-                        "0x1122334455667788990011223344556677889900112233445566778899001122"],
+                        publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
+                        // "0x1122334455667788990011223344556677889900112233445566778899001122"],
                         name: "d2" + hexIndex
                     });
             }

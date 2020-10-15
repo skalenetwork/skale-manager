@@ -4,6 +4,11 @@ import { ContractManagerInstance,
          ValidatorServiceInstance} from "../types/truffle-contracts";
 import { currentTime, skipTime } from "./tools/time";
 
+import * as elliptic from "elliptic";
+const EC = elliptic.ec;
+const ec = new EC("secp256k1");
+import { privateKeys } from "./tools/private-keys";
+
 import chai = require("chai");
 import { deployContractManager } from "./tools/deploy/contractManager";
 import { deployNodes } from "./tools/deploy/nodes";
@@ -30,6 +35,7 @@ contract("NodesData", ([owner, validator, nodeAddress]) => {
     });
 
     it("should add node", async () => {
+        const pubKey = ec.keyFromPrivate(String(privateKeys[2]).slice(2)).getPublic();
         await nodes.createNode(
             nodeAddress,
             {
@@ -37,8 +43,7 @@ contract("NodesData", ([owner, validator, nodeAddress]) => {
                 nonce: 0,
                 ip: "0x7f000001",
                 publicIp: "0x7f000002",
-                publicKey: ["0x1122334455667788990011223344556677889900112233445566778899001122",
-                            "0x1122334455667788990011223344556677889900112233445566778899001122"],
+                publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
                 name: "d2"
             });
 
@@ -49,8 +54,8 @@ contract("NodesData", ([owner, validator, nodeAddress]) => {
         node[2].should.be.equal("0x7f000002");
         node[3].should.be.deep.eq(web3.utils.toBN(8545));
         (await nodes.getNodePublicKey(0)).should.be.deep.equal(
-            ["0x1122334455667788990011223344556677889900112233445566778899001122",
-             "0x1122334455667788990011223344556677889900112233445566778899001122"]);
+            ["0x" + pubKey.x.toString('hex'),
+            "0x" + pubKey.y.toString('hex')]);
         node[7].should.be.deep.eq(web3.utils.toBN(0));
 
         const nodeId = web3.utils.soliditySha3("d2");
@@ -67,6 +72,7 @@ contract("NodesData", ([owner, validator, nodeAddress]) => {
 
     describe("when a node is added", async () => {
         beforeEach(async () => {
+            const pubKey = ec.keyFromPrivate(String(privateKeys[2]).slice(2)).getPublic();
             await nodes.createNode(
                 nodeAddress,
                 {
@@ -74,8 +80,7 @@ contract("NodesData", ([owner, validator, nodeAddress]) => {
                     nonce: 0,
                     ip: "0x7f000001",
                     publicIp: "0x7f000002",
-                    publicKey: ["0x1122334455667788990011223344556677889900112233445566778899001122",
-                                "0x1122334455667788990011223344556677889900112233445566778899001122"],
+                    publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
                     name: "d2"
                 });
         });
@@ -173,6 +178,7 @@ contract("NodesData", ([owner, validator, nodeAddress]) => {
 
             // test if we OK with time in the far future
             skipTime(web3, 100 * 365 * 24 * 60 * 60);
+            const pubKey = ec.keyFromPrivate(String(privateKeys[2]).slice(2)).getPublic();
             await nodes.createNode(
                 nodeAddress,
                 {
@@ -180,8 +186,7 @@ contract("NodesData", ([owner, validator, nodeAddress]) => {
                     nonce: 0,
                     ip: "0x7f000002",
                     publicIp: "0x7f000002",
-                    publicKey: ["0x1122334455667788990011223344556677889900112233445566778899001122",
-                                "0x1122334455667788990011223344556677889900112233445566778899001122"],
+                    publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
                     name: "d3"
                 });
              currentTimeValue = web3.utils.toBN(await currentTime(web3));
@@ -322,6 +327,7 @@ contract("NodesData", ([owner, validator, nodeAddress]) => {
 
         describe("when node is registered", async () => {
             beforeEach(async () => {
+                const pubKey = ec.keyFromPrivate(String(privateKeys[2]).slice(2)).getPublic();
                 await nodes.createNode(
                     nodeAddress,
                     {
@@ -329,8 +335,7 @@ contract("NodesData", ([owner, validator, nodeAddress]) => {
                         nonce: 0,
                         ip: "0x7f000003",
                         publicIp: "0x7f000004",
-                        publicKey: ["0x1122334455667788990011223344556677889900112233445566778899001122",
-                                    "0x1122334455667788990011223344556677889900112233445566778899001122"],
+                        publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
                         name: "d3"
                     });
             });
@@ -363,6 +368,7 @@ contract("NodesData", ([owner, validator, nodeAddress]) => {
 
     describe("when two nodes are added", async () => {
         beforeEach(async () => {
+            const pubKey = ec.keyFromPrivate(String(privateKeys[2]).slice(2)).getPublic();
             await nodes.createNode(
                 nodeAddress,
                 {
@@ -370,8 +376,7 @@ contract("NodesData", ([owner, validator, nodeAddress]) => {
                     nonce: 0,
                     ip: "0x7f000001",
                     publicIp: "0x7f000001",
-                    publicKey: ["0x1122334455667788990011223344556677889900112233445566778899001122",
-                                "0x1122334455667788990011223344556677889900112233445566778899001122"],
+                    publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
                     name: "d1"
                 });
             await nodes.createNode(
@@ -381,8 +386,7 @@ contract("NodesData", ([owner, validator, nodeAddress]) => {
                     nonce: 0,
                     ip: "0x7f000002",
                     publicIp: "0x7f000002",
-                    publicKey: ["0x1122334455667788990011223344556677889900112233445566778899001122",
-                                "0x1122334455667788990011223344556677889900112233445566778899001122"],
+                    publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
                     name: "d2"
                 });
         });
@@ -417,6 +421,7 @@ contract("NodesData", ([owner, validator, nodeAddress]) => {
 
         describe("when nodes are registered", async () => {
             beforeEach(async () => {
+                const pubKey = ec.keyFromPrivate(String(privateKeys[2]).slice(2)).getPublic();
                 await nodes.createNode(
                     nodeAddress,
                     {
@@ -424,8 +429,7 @@ contract("NodesData", ([owner, validator, nodeAddress]) => {
                         nonce: 0,
                         ip: "0x7f000003",
                         publicIp: "0x7f000003",
-                        publicKey: ["0x1122334455667788990011223344556677889900112233445566778899001122",
-                                    "0x1122334455667788990011223344556677889900112233445566778899001122"],
+                        publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
                         name: "d3"
                     });
                 await nodes.createNode(
@@ -435,8 +439,7 @@ contract("NodesData", ([owner, validator, nodeAddress]) => {
                         nonce: 0,
                         ip: "0x7f000004",
                         publicIp: "0x7f000004",
-                        publicKey: ["0x1122334455667788990011223344556677889900112233445566778899001122",
-                                    "0x1122334455667788990011223344556677889900112233445566778899001122"],
+                        publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
                         name: "d4"
                     });
             });

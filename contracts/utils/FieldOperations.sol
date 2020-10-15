@@ -244,15 +244,6 @@ library G2Operations {
         sum.y.b = p - sum.y.b;
     }
 
-    function toUS(G2Point memory value) internal pure returns (G2Point memory) {
-        return G2Point({
-            x: value.x.mulFp2(Fp2Operations.Fp2Point({ a: 1, b: 0 }).squaredFp2()),
-            y: value.y.mulFp2(
-                Fp2Operations.Fp2Point({ a: 1, b: 0 }).mulFp2(Fp2Operations.Fp2Point({ a: 1, b: 0 }).squaredFp2())
-            )
-        });
-    }
-
     function isEqual(
         G2Point memory value1,
         G2Point memory value2
@@ -279,35 +270,6 @@ library G2Operations {
             uint p = Fp2Operations.P;
             result.y.a = p - result.y.a;
             result.y.b = p - result.y.b;
-        }
-    }
-
-    function mulG2(
-        G2Point memory value,
-        uint scalar
-    )
-        internal
-        view
-        returns (G2Point memory result)
-    {
-        uint step = scalar;
-        result = G2Point({
-            x: Fp2Operations.Fp2Point({
-                a: 0,
-                b: 0
-            }),
-            y: Fp2Operations.Fp2Point({
-                a: 1,
-                b: 0
-            })
-        });
-        G2Point memory tmp = value;
-        while (step > 0) {
-            if (step % 2 == 1) {
-                result = addG2(result, tmp);
-            }
-            tmp = doubleG2(tmp);
-            step >>= 1;
         }
     }
 }
