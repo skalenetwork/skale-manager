@@ -1720,6 +1720,9 @@ contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeA
                     schainId,
                 );
             }
+            if (!(await nodes.isNodeLeft(rotIndex))) {
+                await skaleManager.nodeExit(rotIndex, {from: nodeAddress3});
+            }
             await validatorService.getValidatorIdByNodeAddress(nodeAddress2)
             .should.be.eventually.rejectedWith("Node address is not assigned to a validator");
             await schainsInternal.getSchainIdsForNode(rotIndex).should.be.eventually.empty;
@@ -1734,6 +1737,9 @@ contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeA
                 await skaleManager.nodeExit(rotatedNodeIndex, {from: validator});
                 await skaleDKG.setSuccesfulDKGPublic(schainId);
             }
+            if (!(await nodes.isNodeLeft(rotatedNodeIndex))) {
+                await skaleManager.nodeExit(rotatedNodeIndex, {from: nodeAddress3});
+            }
             await validatorService.getValidatorIdByNodeAddress(nodeAddress2)
                 .should.be.eventually.rejectedWith("Node address is not assigned to a validator");
             await schainsInternal.getSchainIdsForNode(rotatedNodeIndex).should.be.eventually.empty;
@@ -1747,6 +1753,9 @@ contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeA
                 validatorId.toString().should.be.equal("1");
                 await skaleManager.nodeExit(rotatedNodeIndex, {from: owner});
                 await skaleDKG.setSuccesfulDKGPublic(schainId);
+            }
+            if (!(await nodes.isNodeLeft(rotatedNodeIndex))) {
+                await skaleManager.nodeExit(rotatedNodeIndex, {from: nodeAddress3});
             }
             await validatorService.getValidatorIdByNodeAddress(nodeAddress2)
                 .should.be.eventually.rejectedWith("Node address is not assigned to a validator");
@@ -1763,6 +1772,9 @@ contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeA
                 await skaleDKG.setSuccesfulDKGPublic(
                     schainId,
                 );
+            }
+            if (!(await nodes.isNodeLeft(rotIndex))) {
+                await skaleManager.nodeExit(rotIndex, {from: nodeAddress3});
             }
             await validatorService.getValidatorIdByNodeAddress(nodeAddress3)
             .should.be.eventually.rejectedWith("Node address is not assigned to a validator");
