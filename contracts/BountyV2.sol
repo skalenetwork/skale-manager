@@ -55,6 +55,14 @@ contract BountyV2 is Permissions {
     // validatorId => sequence
     mapping (uint => PartialDifferences.Value) private _effectiveDelegatedToValidator;
 
+    function initialize(address contractManagerAddress, uint validatorsAmount) external initializer {
+        Permissions.initialize(contractManagerAddress);
+        _nextEpoch = 0;
+        _epochPool = 0;
+        bountyReduction = false;
+        _loadDataFromDelegationController(validatorsAmount);
+    }
+
     function calculateBounty(uint nodeIndex)
         external
         allow("SkaleManager")
@@ -144,14 +152,6 @@ contract BountyV2 is Permissions {
         //     constantsHolder,
         //     nodes
         // );
-    }
-
-    function initialize(address contractManagerAddress, uint validatorsAmount) public initializer {
-        Permissions.initialize(contractManagerAddress);
-        _nextEpoch = 0;
-        _epochPool = 0;
-        bountyReduction = false;
-        _loadDataFromDelegationController(validatorsAmount);
     }
 
     // private
