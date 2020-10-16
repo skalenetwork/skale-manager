@@ -892,6 +892,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
         for (const index of Array.from(Array(nodesCount).keys())) {
             const hexIndex = ("0" + index.toString(16)).slice(-2);
             const pubKey = ec.keyFromPrivate(String(validatorsPrivateKey[index % 2]).slice(2)).getPublic();
+            console.log("PUBLIC KEY:", pubKey);
             await nodes.createNode(validatorsAccount[index % 2],
                 {
                     port: 8545,
@@ -926,7 +927,6 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                     web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 5, 0, schainName]));
                 nodesInGroup = await schainsInternal.getNodesInGroup(web3.utils.soliditySha3(schainName));
             }
-            console.log(nodesInGroup);
         });
 
         describe("when correct broadcasts sent", async () => {
