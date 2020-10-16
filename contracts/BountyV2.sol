@@ -284,21 +284,26 @@ contract BountyV2 is Permissions {
                 .add(_effectiveDelegatedToValidator[validatorId].addDiff[month])
                 .sub(_effectiveDelegatedToValidator[validatorId].subtractDiff[month]);
             if (effectiveDelegated != addedToStatistic) {
-                if (effectiveDelegated > addedToStatistic) {
-                    if (add) {
-                        _effectiveDelegatedSum.addToValue(effectiveDelegated.sub(addedToStatistic), month);
-                    } else {
-                        _effectiveDelegatedSum.subtractFromValue(effectiveDelegated.sub(addedToStatistic), month);
-                    }
-                }
-                if (effectiveDelegated < addedToStatistic) {
-                    if (add) {
-                        _effectiveDelegatedSum.subtractFromValue(addedToStatistic.sub(effectiveDelegated), month);
-                    } else {
-                        _effectiveDelegatedSum.addToValue(addedToStatistic.sub(effectiveDelegated), month);
-                    }
-                }
+                _addToEffectiveDelegatedSum(month, effectiveDelegated, addedToStatistic, add);
                 addedToStatistic = effectiveDelegated;
+            }
+        }
+    }
+
+    function _addToEffectiveDelegatedSum(uint month, uint newValue, uint oldValue, bool add) private {
+        if (newValue > oldValue) {
+            uint diff = newValue.sub(oldValue);
+            if (add) {
+                _effectiveDelegatedSum.addToValue(diff, month);
+            } else {
+                _effectiveDelegatedSum.subtractFromValue(diff, month);
+            }
+        } else if (newValue < oldValue) {
+            uint diff = oldValue.sub(newValue);
+            if (add) {
+                _effectiveDelegatedSum.subtractFromValue(diff, month);
+            } else {
+                _effectiveDelegatedSum.addToValue(diff, month);
             }
         }
     }

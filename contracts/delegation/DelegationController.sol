@@ -377,7 +377,6 @@ contract DelegationController is Permissions, ILocker {
         );
 
         _sendSlashingSignals(slashingSignals);
-
         emit DelegationAccepted(delegationId);
     }
 
@@ -404,12 +403,10 @@ contract DelegationController is Permissions, ILocker {
         TokenLaunchLocker tokenLaunchLocker = TokenLaunchLocker(contractManager.getContract("TokenLaunchLocker"));
         BountyV2 bounty = BountyV2(contractManager.getContract("Bounty"));
         DelegationPeriodManager delegationPeriodManager = DelegationPeriodManager(
-            contractManager.getContract("DelegationPeriodManager")
-        );
+            contractManager.getContract("DelegationPeriodManager"));
         _removeValidatorFromValidatorsPerDelegators(
             delegations[delegationId].holder,
-            delegations[delegationId].validatorId
-        );
+            delegations[delegationId].validatorId);
         processAllSlashes(msg.sender);
         delegations[delegationId].finished = _calculateDelegationEndMonth(delegationId);
         uint amountAfterSlashing = _calculateDelegationAmountAfterSlashing(delegationId);
@@ -427,8 +424,7 @@ contract DelegationController is Permissions, ILocker {
             amountAfterSlashing,
             delegations[delegationId].finished);
         uint effectiveAmount = amountAfterSlashing.mul(
-                delegationPeriodManager.stakeMultipliers(delegations[delegationId].delegationPeriod)
-            );
+                delegationPeriodManager.stakeMultipliers(delegations[delegationId].delegationPeriod));
         _removeFromEffectiveDelegatedToValidator(
             delegations[delegationId].validatorId,
             effectiveAmount,
@@ -445,8 +441,7 @@ contract DelegationController is Permissions, ILocker {
         bounty.handleDelegationRemoving(
             delegations[delegationId].validatorId,
             effectiveAmount,
-            delegations[delegationId].finished
-        );
+            delegations[delegationId].finished);
         emit UndelegationRequested(delegationId);
     }
 
