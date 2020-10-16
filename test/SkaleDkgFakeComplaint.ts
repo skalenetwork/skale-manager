@@ -17,6 +17,11 @@ import { ContractManagerInstance,
 import { gasMultiplier } from "./tools/command_line";
 import { skipTime, currentTime } from "./tools/time";
 
+import * as elliptic from "elliptic";
+const EC = elliptic.ec;
+const ec = new EC("secp256k1");
+import { privateKeys } from "./tools/private-keys";
+
 import BigNumber from "bignumber.js";
 import { deployContractManager } from "./tools/deploy/contractManager";
 import { deployDelegationController } from "./tools/deploy/delegation/delegationController";
@@ -80,14 +85,8 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
             validator2,
         ];
         const validatorsPrivateKey = [
-            "0xa15c19da241e5b1db20d8dd8ca4b5eeaee01c709b49ec57aa78c2133d3c1b3c9",
-            "0xe7af72d241d4dd77bc080ce9234d742f6b22e35b3a660e8c197517b909f63ca8",
-        ];
-        const validatorsPublicKey = [
-            ["0x8f163316925bf2e12a30832dee812f6ff60bf872171a84d9091672dd3848be9f",
-             "0xc0b7bd257fbb038019c41f055e81736d8116b83e9ac59a1407aa6ea804ec88a8"],
-            ["0x307654b2716eb09f01f33115173867611d403424586357226515ae6a92774b10",
-             "0xd168ab741e8f7650116d0677fddc1aea8dc86a00747e7224d2bf36e0ea3dd62c"]
+            privateKeys[1],
+            privateKeys[2]
         ];
 
         const encryptedSecretKeyContributions = [
@@ -153,31 +152,31 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
             ],
             [
                 {
-                    share: "0x563766ad84daf3ae9a4872ac1152076068cb4ef63eb9ce701e48bf4bf3a192c7",
+                    share: "0xa4fb06c39f1c614f39ef3c3647d9f65b5f881489f822b7551d88c504060eaa50",
                     publicKey: [
-                        "0xbd0cf6b8421861cbd011074816b0d3212a4f7395a42a1b22fd4379901aad9570",
-                        "0xb7b4b418b948bcc706ba5e1f86b47a6a6fd7bd6ecd1c4102b5e9d0388372df98"
+                        "0x14b44bf482f62a4451e01bfbd44d504994ecd1fd6852bffa30ce1d22aebe5a4b",
+                        "0x8cd1f57f0b75e8aeec3cdc900aa206e66877d346514e52041d190ebd3cbdf6f8"
                     ]
                 },
                 {
-                    share: "0x85c170752b2c12211dc010bfb6d7ed2d84a8457d595a1d8dee74304fe71f7242",
+                    share: "0x3ef5826e0dd233e2375ab7cdb211bbb8ee205de3064df559619c91244283a2c9",
                     publicKey: [
-                        "0x71997650930dc42ee67d7bcfa78ee85ef961b1d3a00b06efbb4711875c5b8e3c",
-                        "0xfa8deb68dfa50f4795a3122b6b0b14bf1a2206f170fd7f2b3aa9aaa18ff12555"
+                        "0xa3bdf65c98fa52489c80a07b5ed6a938714cb24ae27d6f17a90006d1a061b2df",
+                        "0x82fa92efe21dc1a5f113d50734c7c7a163d4ff335d8b3adf69cd3be2a31edc5e"
                     ]
                 },
                 {
-                    share: "0x61e805815687fa253181aa9e4a3d96c27563a19612cca54ee0716bb47a327f6a",
+                    share: "0x0d6fdbf63f62b4dc620c53c86cdfb39fc3a2767a02b83bd7b36bc580ab7a8b2e",
                     publicKey: [
-                        "0xae8a644e6a16849df625051e07a02893b290ffc9d3349aba4c4a167fc08ddc5c",
-                        "0xa1fe62edf1de1c93ec55b91989191217a383cfed5315ab4724f7bc307e4111d"
+                        "0x4873209fba96e37b36ca0bd79d8aeb4ff70dd2b036760727abe872fa045f99a5",
+                        "0xe7de3dd4b6cefca8c0eb1ca0329aa1abb88712aa88243c631f34b79a2514adff"
                     ]
                 },
                 {
-                    share: "0x194bae6cabf40f0ac935d157229f5cbc65766746efa9adc4ec0d22049d4ed8c0",
+                    share: "0x56a97c8d534ec59f4a66a1183a2c50876dff56cea8da87e9da67e7e60934664d",
                     publicKey: [
-                        "0xb17f1d87cafcb1c25b6d0d7c9b7bd9876a89dfaae095c89b3e6e8a64b42db840",
-                        "0xf18997fa13407d337bdb76a4b977c9c0eebfad48471973f35a49a7fbbb6057c7"
+                        "0x7b101d3fdd35682cc130cdd38275f4af7f5ced203e626645de3c06bb6cbe7c51",
+                        "0xa24c9bec58f52d77bf02255ffd269531510657001c594d49f57f72b683c9f9d8"
                     ]
                 }
             ],
@@ -404,32 +403,32 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
             [
                 {
                     x: {
-                        a: "0x2977d5b736016a91571f86fef1f2148a7362466f55bf217aaf8cf445416769c1",
-                        b: "0x22de89fe5bc828b3e840b7894c8c659a63f8243a4cd448a6473a96140e6d17d7"
+                        a: "0x82977d3decd6310d7c6b88fb199793d75a24a30c5360c19629bc894d987ebc7",
+                        b: "0x25965fba3727d9b4348e4282cb97a36f3d278bd7f50c38d643cfb3787f125de6"
                     },
                     y: {
-                        a: "0x267050c045cb75f294e73bfb3abc06482d163bf4bfe02e8eee35a35a8a03965",
-                        b: "0x23e476d3e97b7939d56254baa86f930f915e769411690dba2766def855acf3ed"
+                        a: "0xa41b22d0f1155e18b2ddf9402bbeb87f2c3a3eb68d044040a24d655c6a2f765",
+                        b: "0x3b8b2e2e5e07e531a42cbf7606eed379935c181502204650a6e896f5abcefe6"
                     }
                 },
                 {
                     x: {
-                        a: "0xc6a0282256bf71e9ce380bf658aa60cf1d8f00d16c5d62d63d1a76589deffae",
-                        b: "0x27f106d03b70016cdfe68141e2cca2760d1281490ac1f9ca8ccac7de9a91b0a5"
+                        a: "0x171d38b88b0c21cab623feff824672a473491dddd2799bbc2fa15f38db3266c8",
+                        b: "0xe4341d9612c4083e0fa8288c858fa3002ecf731569adcbaaf2eb1096b9d9ff5"
                     },
                     y: {
-                        a: "0x26b5a8f977373b383fd4be270a92191869ecd03789616520303a9903840846c",
-                        b: "0x15a561b160c3330aea31ccba8d71c77049714fe294ceb7c70600e53becbdf6ea"
+                        a: "0x580a8febdb45defa6082939dfe18d7db972bd2604e876c025480282ff55de51",
+                        b: "0x2cd819a133cfd7928489691e5d8beeb523fe8c85faa92ef9526b7aa025602b4a"
                     }
                 },
                 {
                     x: {
-                        a: "0xc1a2c7b04c774e630876d2ddfe00b16ab83f138ebc1b2d8940760ae395d63dd",
-                        b: "0xcdb7f9b915cc5e899cf9b1378d7a17cb03add2286c0c721ac0dcc0f722203db"
+                        a: "0x2801d3f4e9d428b8a15cb55d785b38e23ebbea113172fa9711ce605d461b6cfd",
+                        b: "0x272cd25c63150d48b7cdf76e9afd4f092cc7aeb9b496ee54099139498ac60d66"
                     },
                     y: {
-                        a: "0xa758107babe35640e20d1a02d6eb0f07f6daec2a1b66f7d1b4af43686fae551",
-                        b: "0x193a5f27d1a98a340f61a6966f00360a49af565817691b0356908a3b8b66e2a6"
+                        a: "0x239c34d400f69eaa1d0161248da69ff4cedd9bf471367528a2092ad3bda8a351",
+                        b: "0x25bd47bcdd4b7ecd6aeacd592b1ba3ccf60dcae9d929ec4cd1c460802fb204af"
                     }
                 }
             ],
@@ -481,10 +480,10 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                 "87035802346150256959954921838089338554139438678200281482565340882955317837440"
             ],
             [
-                "95385063906629353324759087675762412288285322242894865555691694718118680541221",
-                "15371892495452349591571876553612985236762376939219890386117967875759475388194",
-                "98606488869146578356047332359863225003990433046672041097219494056477967255105",
-                "109983168375840474347309469001278580090134955697010326556657975859454391302403"
+                "15579283261407006210884972998850254422238393571153457101146823167029330075004",
+                "53089022416812656991062139709531967185326478532400877083682827511474788031848",
+                "104938208076936620627560714046642820829237536516733385791054003172694686704057",
+                "46070293001803687040409172927134575077160760502919651026268459578821711893186"
             ],
             [
                 "86679107239183479535035708093457752497085925931995915740769495134029368951159",
@@ -582,42 +581,42 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
             [
                 {
                     x: {
-                        a: "0x2889602cfa527d02433512a26f536fe37d9afc407d12031f1a6dfdfc6c378846",
-                        b: "0xf9cadbd606dc9b17b097c13206fa314363c3e801b4e02093bcd867ff42ad549"
+                        a: "0x49fb56e6b0d10a86794ee4d68506337e73564175f776fbc1d61e40315739c01",
+                        b: "0x2f8f164ad324ad292c8a7f6fe74887f2c61efffb1e6544062c370210d75359be"
                     },
                     y: {
-                        a: "0x892159a6bfe2e9a74910841c446386ce298c10c092ec7cd27d67880061088b7",
-                        b: "0x10424a478277e98f7ecd9fb584e6a9a3587e60b09fafe97f1f6a47c7ec107041"
+                        a: "0x27a0bd4c95db902a953ba3b906cbe740e0051344224688fc704da5d98b85c96",
+                        b: "0x1052b00e3a57c34f1e26645e102b4628e004ea7a1f3053bcd4e9da1013fdcaf3"
                     }
                 },
                 {
                     x: {
-                        a: "0x25f15ed6cafa9f4dd1fe3fd5364c8124e16ab64dcdda6e212119a36c6f57bd0a",
-                        b: "0x23c96384d2660b56264ce5b0dd9cf10afe3c1b55e628a2dfa5f91054e2c2b797"
+                        a: "0xfcb28b04b458666bb40b3948d46b8481ac4ebac7f5f3a7a882c57f446689830",
+                        b: "0x2fa279f12d16764f418849a52a423fd6f19ceb75177b68b01f473b535b5db216"
                     },
                     y: {
-                        a: "0x1d9ca99f029bd79ac5c4e37a4db9e3d2664868a8013049c1d27dfc5deca38b2b",
-                        b: "0x1254cf7935eb00fb27f83ada3dcafc7806bf909e2deea51fcb4fb79f79b1680d"
+                        a: "0x21e60766f25f713f2938fc0048cb2ee710bbfbeee3f87ac46dd0379e975a465b",
+                        b: "0x2aceb017f026c0c0ed10ea988a8f79fbced8ae419d3effb80f5e2bbb99f88ab"
                     }
                 },
                 {
                     x: {
-                        a: "0x20bb4b9362c69eac60d7369c202f87b3b971f74b36b70840e18dd8bce44a3740",
-                        b: "0x2e267a91eaf7930f464bae2bf920450825568bc709e44305a3573d573e831e06"
+                        a: "0x565e09a610ce8c292f9ff1c9a70d565e6311aee657d95088e32dacb01004090",
+                        b: "0x2d6b006b8236156dcc33f89d07965d8218919ae8f3431c43529e2d5e5490ddc"
                     },
                     y: {
-                        a: "0x21e91f233efe3b6429b1cb9b7b097f38a31ce6bc428f29e946b2e776b371f257",
-                        b: "0x729e1621334029f3604ec479458ccdf3d4515a393d867d714dbff2f58a07ca7"
+                        a: "0x2d3862cb515a07cc0c8a04bd849aa6315eb0ce5c0bf9757692aba50a36f520da",
+                        b: "0x2774e285b8078c1e3b04e3f39dc6f360f6c9bfb5106a5640052b69f57e635ea5"
                     }
                 },
                 {
                     x: {
-                        a: "0x20d463b32b3a55991f5a9ab3d87f5bef790ed0ee9a8bed15e83f7fe2893257ce",
-                        b: "0x1e8ee30ecc2422210fb00cdfe8b94c3c2cc6e882d96a1b93f4145d6d00fb4d67"
+                        a: "0x2a0c1788cb0a79a0171850e95d5fe3789612f20aac32e6abd8309e35f5c08d2f",
+                        b: "0x130f76ce4f2cdf4a3ce841d84f9accdf0d5e33c4bc8d39d08720c09b9bc2aa5a"
                     },
                     y: {
-                        a: "0xd6db73a37f1b71b95b9ba743fc1a72113f7c3e7fb035b74f96092b5d35ca4bb",
-                        b: "0xb35ed49bc52f348cdb034317373cce8cf577189c60b074abf9f7cad1a1f3ce8"
+                        a: "0xa7db912aa01daa9e2862ce41bb2f0da9187ec6fdbbaaa8ac5b07a302ba560ea",
+                        b: "0x1a78630989d6fa5dd368360add9b4f30ba85a9bd065d30fe05fab736b65e9ad0"
                     }
                 }
             ],
@@ -836,6 +835,39 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
             ]
         ];
 
+        const verificationVectorMult = [
+            {
+                x: {
+                    a: "0x82977d3decd6310d7c6b88fb199793d75a24a30c5360c19629bc894d987ebc7",
+                    b: "0x25965fba3727d9b4348e4282cb97a36f3d278bd7f50c38d643cfb3787f125de6"
+                },
+                y: {
+                    a: "0xa41b22d0f1155e18b2ddf9402bbeb87f2c3a3eb68d044040a24d655c6a2f765",
+                    b: "0x3b8b2e2e5e07e531a42cbf7606eed379935c181502204650a6e896f5abcefe6"
+                }
+            },
+            {
+                x: {
+                    a: "0x2484c6b5b9e16e7d07a5041c9b6b36d06e4f85f28ef96208b3bff283e5bac54f",
+                    b: "0x14e367e1566214243ed5ee9e17eb8424d1181b3668bb211e4210f7004df982f2"
+                },
+                y: {
+                    a: "0x2b07919bdc570d8443a87ff6f149e7c3e52784321355eeddaf2479bdf5b182a5",
+                    b: "0x2f841542ec312cb67595a76b33bd78af7f2185b300287737dead051a11617174"
+                }
+            },
+            {
+                x: {
+                    a: "0x1b59dfe340d21c7e7ed3c09483ee698c4ebd5a6c04ddbd6b5ce2715600ac4399",
+                    b: "0x2c6747b71aa740c0f6184dd4d34971f0668cb04b5c550b7fee11bbe822a82d13"
+                },
+                y: {
+                    a: "0x1f7ab07fea9c963e0a4e75e27ccb0d9d7928595500ed7d5a0e840b34b3a0ac3",
+                    b: "0x25c0a27e9a5ad73d067afebcfc43d6ec43218acbe154871c5d3b256ae61f8cda"
+                }
+            }
+        ];
+
         const indexes = [0, 1, 2, 3];
         let schainName = "";
         const delegatedAmount = 1e7;
@@ -860,13 +892,14 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
             const nodesCount = 4;
             for (const index of Array.from(Array(nodesCount).keys())) {
                 const hexIndex = ("0" + index.toString(16)).slice(-2);
+                const pubKey = ec.keyFromPrivate(String(validatorsPrivateKey[index % 2]).slice(2)).getPublic();
                 await nodes.createNode(validatorsAccount[index % 2],
                     {
                         port: 8545,
                         nonce: 0,
                         ip: "0x7f0000" + hexIndex,
                         publicIp: "0x7f0000" + hexIndex,
-                        publicKey: validatorsPublicKey[index % 2],
+                        publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
                         name: "d2" + hexIndex
                     });
             }
@@ -919,11 +952,20 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                         }
                     }
 
-                    const complaintResult = await skaleDKG.complaint(
+                    const complaintResult = await skaleDKG.complaintBadData(
                         web3.utils.soliditySha3(schainName),
                         1,
                         2,
                         {from: validatorsAccount[1]},
+                    );
+
+                    const preResponseResult = await skaleDKG.preResponse(
+                        web3.utils.soliditySha3(schainName),
+                        2,
+                        verificationVectors[2],
+                        verificationVectorMult,
+                        encryptedSecretKeyContributions[2],
+                        {from: validatorsAccount[0]},
                     );
 
                     const responseResult = await skaleDKG.response(
@@ -931,8 +973,6 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                         2,
                         secretNumbers[2][1],
                         multipliedShares[2][1],
-                        verificationVectors[2],
-                        encryptedSecretKeyContributions[2],
                         {from: validatorsAccount[0]},
                     );
                     assert.equal(responseResult.logs[0].event, "BadGuy");
