@@ -488,8 +488,8 @@ contract Nodes is Permissions {
         checkNodeExists(nodeIndex)
         returns (uint)
     {
-        ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
-        return nodes[nodeIndex].lastRewardDate.add(constantsHolder.rewardPeriod());
+        BountyV2 bounty = BountyV2(contractManager.getContract("Bounty"));
+        return bounty.getNextRewardTimestamp(nodeIndex);
     }
 
     /**

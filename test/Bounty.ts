@@ -106,7 +106,7 @@ contract("Bounty", ([owner, admin, hacker, validator]) => {
                 result.get(nodeIndex)?.push({timestamp, bounty});
             }
         }
-        console.log(minBounty, maxBounty);
-        console.log(JSON.stringify(Array.from(result)));
+        // console.log(minBounty, maxBounty);
+        // console.log(JSON.stringify(Array.from(result)));
     })
 });

@@ -71,19 +71,13 @@ contract BountyV2 is Permissions {
         ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));
         TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
-
-        uint lastRewardTimestamp = nodes.getNodeLastRewardDate(nodeIndex);
-        uint currentMonth = timeHelpers.getCurrentMonth();
+        
         require(
-            timeHelpers.timestampToMonth(lastRewardTimestamp) < currentMonth,
-            "Bounty for this month has been already received"
-        );
-        require(
-            timeHelpers.addMonths(lastRewardTimestamp, 1) <= now ||
-            timeHelpers.monthToTimestamp(currentMonth.add(1)).sub(BOUNTY_WINDOW_SECONDS) <= now,
+            _getNextRewardTimestamp(nodeIndex, nodes, timeHelpers) <= now,
             "Transaction is sent too early"
         );
 
+        uint currentMonth = timeHelpers.getCurrentMonth();
         _refillEpochPool(currentMonth, timeHelpers, constantsHolder);
 
         uint bounty = _calculateMaximumBountyAmount(_epochPool, currentMonth, nodeIndex, constantsHolder, nodes);
@@ -152,6 +146,14 @@ contract BountyV2 is Permissions {
         //     constantsHolder,
         //     nodes
         // );
+    }
+
+    function getNextRewardTimestamp(uint nodeIndex) external view returns (uint) {
+        return _getNextRewardTimestamp(
+            nodeIndex,
+            Nodes(contractManager.getContract("Nodes")),
+            TimeHelpers(contractManager.getContract("TimeHelpers"))
+        );
     }
 
     // private
@@ -351,6 +353,51 @@ contract BountyV2 is Permissions {
                     effectiveDelegated = currentEffectiveDelegated;
                 }
             }
+        }
+    }
+
+    function _getNextRewardTimestamp(uint nodeIndex, Nodes nodes, TimeHelpers timeHelpers) private view returns (uint) {
+        uint lastRewardTimestamp = nodes.getNodeLastRewardDate(nodeIndex);
+        uint lastRewardMonth = timeHelpers.timestampToMonth(lastRewardTimestamp);
+        uint lastRewardMonthStart = timeHelpers.monthToTimestamp(lastRewardMonth);
+        uint timePassedAfterMonthStart = lastRewardTimestamp.sub(lastRewardMonthStart);
+        uint currentMonth = timeHelpers.getCurrentMonth();
+        assert(lastRewardMonth <= currentMonth);
+
+        if (lastRewardMonth == currentMonth) {
+            uint nextMonthStart = timeHelpers.monthToTimestamp(currentMonth.add(1));
+            uint nextMonthFinish = timeHelpers.monthToTimestamp(lastRewardMonth.add(2));
+            if (lastRewardTimestamp < lastRewardMonthStart.add(NODE_CREATION_WINDOW_SECONDS)) {
+                return nextMonthStart.sub(BOUNTY_WINDOW_SECONDS);
+            } else {
+                return _min(nextMonthStart.add(timePassedAfterMonthStart), nextMonthFinish.sub(BOUNTY_WINDOW_SECONDS));
+            }
+        } else if (lastRewardMonth.add(1) == currentMonth) {
+            uint currentMonthStart = timeHelpers.monthToTimestamp(currentMonth);
+            uint currentMonthFinish = timeHelpers.monthToTimestamp(lastRewardMonth.add(1));
+            return _min(
+                currentMonthStart.add(_max(timePassedAfterMonthStart, NODE_CREATION_WINDOW_SECONDS)),
+                currentMonthFinish.sub(BOUNTY_WINDOW_SECONDS)
+            );
+        } else {
+            uint currentMonthStart = timeHelpers.monthToTimestamp(currentMonth);
+            return currentMonthStart.add(NODE_CREATION_WINDOW_SECONDS);
+        }
+    }
+
+    function _min(uint a, uint b) private pure returns (uint) {
+        if (a < b) {
+            return a;
+        } else {
+            return b;
+        }
+    }
+
+    function _max(uint a, uint b) private pure returns (uint) {
+        if (a < b) {
+            return b;
+        } else {
+            return a;
         }
     }
 }
