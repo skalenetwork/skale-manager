@@ -1958,21 +1958,29 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
             const accusedNode = nodesInGroup[14].toString();
             const complaintNode = nodesInGroup[0].toString();
             const someNode = nodesInGroup[7].toString();
-            const indexToSend = 0;
+            let indexToSend = 0;
+            if (complaintNode === "1") {
+                indexToSend = 1;
+            }
             await skaleDKG.complaintBadData(
                 web3.utils.soliditySha3("New16NodeSchain"),
                 complaintNode,
                 accusedNode,
-                {from: validatorsAccount[0]}
+                {from: validatorsAccount[indexToSend]}
             );
             const resCompl = await skaleDKG.complaint(
                 web3.utils.soliditySha3("New16NodeSchain"),
                 complaintNode,
                 someNode,
-                {from: validatorsAccount[0]}
+                {from: validatorsAccount[indexToSend]}
             );
             assert.equal(resCompl.logs[0].event, "ComplaintError");
             assert.equal(resCompl.logs[0].args.error, "One complaint is already sent");
+            if (accusedNode === "1") {
+                indexToSend = 1;
+            } else {
+                indexToSend = 0;
+            }
             await skaleDKG.preResponse(
                 web3.utils.soliditySha3("New16NodeSchain"),
                 accusedNode,
