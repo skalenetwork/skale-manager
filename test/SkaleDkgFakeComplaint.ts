@@ -892,7 +892,6 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
         for (const index of Array.from(Array(nodesCount).keys())) {
             const hexIndex = ("0" + index.toString(16)).slice(-2);
             const pubKey = ec.keyFromPrivate(String(validatorsPrivateKey[index % 2]).slice(2)).getPublic();
-            console.log("PUBLIC KEY:", pubKey);
             await nodes.createNode(validatorsAccount[index % 2],
                 {
                     port: 8545,
