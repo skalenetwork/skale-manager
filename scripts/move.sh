@@ -17,6 +17,7 @@ group2=(
 group3=()
 group4=(
     SkaleDKG.ts
+    SkaleDkgFakeComplaint.ts
 )
 for file in "${all[@]}"
 do

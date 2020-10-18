@@ -321,7 +321,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         );
         uint index = _nodeIndexInSchain(schainId, complaints[schainId].fromNodeToComplaint);
         require(
-            _checkCorrectVectorMultiplication(indexOnSchain, verificationVector, verificationVectorMult),
+            _checkCorrectVectorMultiplication(index, verificationVector, verificationVectorMult),
             "Multiplied verification vector is incorrect"
         );
         complaints[schainId].keyShare = secretKeyContribution[index].share;
