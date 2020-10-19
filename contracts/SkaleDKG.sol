@@ -234,8 +234,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             startAlrightTimestamp[schainId] = now;
         }
         hashedData[schainId][index] = _hashData(secretKeyContribution, verificationVector);
-        KeyStorage keyStorage = KeyStorage(contractManager.getContract("KeyStorage"));
-        keyStorage.adding(schainId, verificationVector[0]);
+        KeyStorage(contractManager.getContract("KeyStorage")).adding(schainId, verificationVector[0]);
         emit BroadcastAndKeyShare(
             schainId,
             nodeIndex,
@@ -268,7 +267,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             return;
         } else {
             // not broadcasted in 30 min
-            if (channels[schainId].startedBlockTimestamp.add(COMPLAINT_TIMELIMIT) <= block.timestamp) {
+            if (channels[schainId].startedBlockTimestamp.add(_getComplaintTimelimit()) <= block.timestamp) {
                 _finalizeSlashing(schainId, toNodeIndex);
                 return;
             }
@@ -449,20 +448,20 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             ) ||
             (
                 dkgProcess[schainId].broadcasted[indexTo] &&
-                complaints[schainId].startComplaintBlockTimestamp.add(COMPLAINT_TIMELIMIT) <= block.timestamp &&
+                complaints[schainId].startComplaintBlockTimestamp.add(_getComplaintTimelimit()) <= block.timestamp &&
                 complaints[schainId].nodeToComplaint == toNodeIndex
             ) ||
             (
                 !dkgProcess[schainId].broadcasted[indexTo] &&
                 complaints[schainId].nodeToComplaint == uint(-1) &&
-                channels[schainId].startedBlockTimestamp.add(COMPLAINT_TIMELIMIT) <= block.timestamp
+                channels[schainId].startedBlockTimestamp.add(_getComplaintTimelimit()) <= block.timestamp
             ) ||
             (
                 complaints[schainId].nodeToComplaint == uint(-1) &&
                 isEveryoneBroadcasted(schainId) &&
                 dkgProcess[schainId].completed[indexFrom] &&
                 !dkgProcess[schainId].completed[indexTo] &&
-                startAlrightTimestamp[schainId].add(COMPLAINT_TIMELIMIT) <= block.timestamp
+                startAlrightTimestamp[schainId].add(_getComplaintTimelimit()) <= block.timestamp
             );
         return channels[schainId].active &&
             indexFrom < channels[schainId].n &&
@@ -690,7 +689,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             if (
                 isEveryoneBroadcasted(schainId) &&
                 !isAllDataReceived(schainId, toNodeIndex) &&
-                startAlrightTimestamp[schainId].add(COMPLAINT_TIMELIMIT) <= block.timestamp
+                startAlrightTimestamp[schainId].add(_getComplaintTimelimit()) <= block.timestamp
             ) {
                 // missing alright
                 _finalizeSlashing(schainId, toNodeIndex);
@@ -704,7 +703,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             return;
         } else if (complaints[schainId].nodeToComplaint == toNodeIndex) {
             // 30 min after incorrect data complaint
-            if (complaints[schainId].startComplaintBlockTimestamp.add(COMPLAINT_TIMELIMIT) <= block.timestamp) {
+            if (complaints[schainId].startComplaintBlockTimestamp.add(_getComplaintTimelimit()) <= block.timestamp) {
                 _finalizeSlashing(schainId, complaints[schainId].nodeToComplaint);
                 return;
             }
@@ -749,8 +748,11 @@ contract SkaleDKG is Permissions, ISkaleDKG {
     }
 
     function _isNodeByMessageSender(uint nodeIndex, address from) private view returns (bool) {
-        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
-        return nodes.isNodeExist(from, nodeIndex);
+        return Nodes(contractManager.getContract("Nodes")).isNodeExist(from, nodeIndex);
+    }
+
+    function _getComplaintTimelimit() private view returns (uint) {
+        return ConstantsHolder(contractManager.getContract("ConstantsHolder")).complaintTimelimit();
     }
 
     function _hashData(

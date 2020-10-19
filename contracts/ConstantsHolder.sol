@@ -117,6 +117,8 @@ contract ConstantsHolder is Permissions {
 
     uint public minimalSchainLifetime;
 
+    uint public complaintTimelimit;
+
     /**
      * @dev Allows the Owner to set new reward and delta periods
      * This function is only for tests.
@@ -201,6 +203,10 @@ contract ConstantsHolder is Permissions {
         minimalSchainLifetime = lifetime;
     }
 
+    function setComplaintTimelimit(uint timelimit) external onlyOwner {
+        complaintTimelimit = timelimit;
+    }
+
     function initialize(address contractsAddress) public override initializer {
         Permissions.initialize(contractsAddress);
 
@@ -215,5 +221,6 @@ contract ConstantsHolder is Permissions {
         proofOfUseDelegationPercentage = 50;
         limitValidatorsPerDelegator = 20;
         firstDelegationsMonth = 0;
+        complaintTimelimit = 1800;
     }
 }
