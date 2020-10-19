@@ -322,7 +322,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         );
         uint index = _nodeIndexInSchain(schainId, complaints[schainId].fromNodeToComplaint);
         require(
-            _checkCorrectVectorMultiplication(indexOnSchain, verificationVector, verificationVectorMult),
+            _checkCorrectVectorMultiplication(index, verificationVector, verificationVectorMult),
             "Multiplied verification vector is incorrect"
         );
         complaints[schainId].keyShare = secretKeyContribution[index].share;
@@ -344,7 +344,6 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         require(complaints[schainId].nodeToComplaint == fromNodeIndex, "Not this Node");
         require(complaints[schainId].isResponse, "Have not submitted pre-response data");
         require(_isNodeByMessageSender(fromNodeIndex, msg.sender), "Node does not exist for message sender");
-        // uint index = _nodeIndexInSchain(schainId, complaints[schainId].fromNodeToComplaint);
         _verifyDataAndSlash(
             schainId,
             secretNumber,
