@@ -1,7 +1,7 @@
 import {
     ContractManagerInstance,
     ConstantsHolderInstance,
-    BountyInstance,
+    BountyV2Instance,
     NodesMockInstance
 } from "../types/truffle-contracts";
 
@@ -19,7 +19,7 @@ chai.use(chaiAsPromised);
 contract("Bounty", ([owner, admin, hacker, validator]) => {
     let contractManager: ContractManagerInstance;
     let constantsHolder: ConstantsHolderInstance;
-    let bountyContract: BountyInstance;
+    let bountyContract: BountyV2Instance;
     let nodes: NodesMockInstance;
 
     const validatorId = 1;
@@ -95,9 +95,9 @@ contract("Bounty", ([owner, admin, hacker, validator]) => {
         let maxBounty = 0;
         for (let month = 0; month < 12; ++month) {
             for (let nodeIndex = 0; nodeIndex < nodesCount; ++nodeIndex) {
-                const bounty = web3.utils.toBN((await bountyContract.getBounty.call(nodeIndex, 0, 0))).div(ten18).toNumber();
+                const bounty = web3.utils.toBN((await bountyContract.calculateBounty.call(nodeIndex))).div(ten18).toNumber();
                 // total[nodeIndex] += bounty;
-                await bountyContract.getBounty(nodeIndex, 0, 0);
+                await bountyContract.calculateBounty(nodeIndex);
                 skipTime(web3, day);
 
                 minBounty = Math.min(minBounty, bounty);
