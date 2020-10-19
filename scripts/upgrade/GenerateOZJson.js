@@ -24,7 +24,7 @@ function formTestAddresses() {
         }
     }
     var jsonData = JSON.stringify(json);
-    fs.writeFileSync("scripts/form_json/ContractAddresses.json", jsonData);
+    fs.writeFileSync("scripts/upgrade/ContractAddresses.json", jsonData);
     process.exit();
 }
 
@@ -44,8 +44,8 @@ async function getProxyImplementation(address) {
 }
 
 async function getLocalNetworkId() {
-    const localPrivateKey = process.env.LOCAL_PRIVATE_KEY;
-    const localEndpoint = process.env.LOCAL_ENDPOINT;
+    const localEndpoint = "http://127.0.0.1:8545";
+    const localPrivateKey = "a15c19da241e5b1db20d8dd8ca4b5eeaee01c709b49ec57aa78c2133d3c1b3c9";
     const Web3 = require('web3');
     const PrivateKeyProvider = require("@truffle/hdwallet-provider");
     const provider = new PrivateKeyProvider(localPrivateKey, localEndpoint);
@@ -69,8 +69,7 @@ async function getProxyAdminAddress() {
 
 
 
-async function adjustImplementations() {
-    console.log("PROXYADMIN",proxyAdminAdress);
+async function replaceAdresses() {
     const networkId = await getLocalNetworkId();
     let ozJson = require(`../../.openzeppelin/dev-${networkId}.json`);
     const contracts = require(`./ContractAddresses.json`);
@@ -82,14 +81,13 @@ async function adjustImplementations() {
         contractNamePascalCase = snake2Pascal(contractName); 
         let implementationAddress = await ProxyAdmin.methods.getProxyImplementation(proxyAddress).call(); 
         ozJson.contracts[contractNamePascalCase].address =  implementationAddress;
-        console.log(contractNamePascalCase);
         ozJson.proxies[`skale-manager/${contractNamePascalCase}`][0].address = proxyAddress;
         ozJson.proxies[`skale-manager/${contractNamePascalCase}`][0].implementation = implementationAddress;
         ozJson.proxies[`skale-manager/${contractNamePascalCase}`][0].admin = proxyAdminAdress;
     }
     ozJson.proxyAdmin.address = proxyAdminAdress;
     var jsonData = JSON.stringify(ozJson);
-    fs.writeFileSync("scripts/form_json/network.json", jsonData);
+    fs.writeFileSync("scripts/upgrade/network.json", jsonData);
 
     process.exit();
 }
@@ -105,5 +103,5 @@ if (process.argv[2] == 'get') {
 } else if (process.argv[2] == 'getProxyAdminAddress') {
     getProxyAdminAddress();
 } else {
-    adjustImplementations();
+    replaceAdresses();
 }
