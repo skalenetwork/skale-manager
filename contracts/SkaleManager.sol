@@ -147,26 +147,6 @@ contract SkaleManager is IERC777Recipient, Permissions {
         schains.deleteSchainByRoot(name);
     }
 
-    // function sendVerdict(uint fromMonitorIndex, Monitors.Verdict calldata verdict) external {
-    //     Nodes nodes = Nodes(contractManager.getContract("Nodes"));
-    //     require(nodes.isNodeExist(msg.sender, fromMonitorIndex), "Node does not exist for Message sender");
-
-    //     Monitors monitors = Monitors(contractManager.getContract("Monitors"));
-    //     // additional checks for monitoring inside sendVerdict
-    //     monitors.sendVerdict(fromMonitorIndex, verdict);
-    // }
-
-    // function sendVerdicts(uint fromMonitorIndex, Monitors.Verdict[] calldata verdicts) external {
-    //     Nodes nodes = Nodes(contractManager.getContract("Nodes"));
-    //     require(nodes.isNodeExist(msg.sender, fromMonitorIndex), "Node does not exist for Message sender");
-
-    //     Monitors monitors = Monitors(contractManager.getContract("Monitors"));
-    //     for (uint i = 0; i < verdicts.length; i++) {
-    //         // additional checks for monitoring inside sendVerdict
-    //         monitors.sendVerdict(fromMonitorIndex, verdicts[i]);
-    //     }
-    // }
-
     function getBounty(uint nodeIndex) external {
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));
         require(nodes.isNodeExist(msg.sender, nodeIndex), "Node does not exist for Message sender");

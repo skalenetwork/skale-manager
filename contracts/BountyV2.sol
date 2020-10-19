@@ -21,6 +21,8 @@
 
 pragma solidity 0.6.10;
 
+import "@nomiclabs/buidler/console.sol";
+
 import "./delegation/DelegationController.sol";
 import "./delegation/PartialDifferences.sol";
 import "./delegation/TimeHelpers.sol";
@@ -220,12 +222,16 @@ contract BountyV2 is Permissions {
         view
         returns (uint)
     {
-        uint epochIndex = epoch.sub(_getFirstEpoch(timeHelpers, constantsHolder));
+        uint firstEpoch = _getFirstEpoch(timeHelpers, constantsHolder);
+        if (epoch < firstEpoch) {
+            return 0;
+        }
+        uint epochIndex = epoch.sub(firstEpoch);
         uint year = epochIndex.div(EPOCHS_PER_YEAR);
         if (year >= 6) {
             uint power = year.sub(6).div(3).add(1);
             if (power < 256) {
-                return YEAR6_BOUNTY.div(2 ** power);
+                return YEAR6_BOUNTY.div(2 ** power).div(EPOCHS_PER_YEAR);
             } else {
                 return 0;
             }
