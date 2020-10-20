@@ -68,7 +68,7 @@
     "codecov": "^3.7.2",
     "dotenv": "^8.2.0",
     "elliptic": "^6.5.3",
-    "ganache-cli": "^6.11.0",
+    "ganache-cli": "^6.12.0",
     "lodash.startcase": "^4.4.0",
     "solhint": "^3.2.1",
     "solidity-coverage": "^0.7.5",
