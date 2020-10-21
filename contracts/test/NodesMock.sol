@@ -23,12 +23,16 @@ pragma solidity 0.6.10;
 
 contract NodesMock {
     uint public nodesCount = 0;
+    //     nodeId => timestamp
+    mapping (uint => uint) public lastRewardDate;
     
     function registerNodes(uint amount) external {
+        lastRewardDate[nodesCount] = now;
         nodesCount += amount;
     }
-    function getNodeLastRewardDate(uint /* nodeIndex */) external pure returns (uint) {
-        revert("getNodeLastRewardDate is not implemented");
+    function getNodeLastRewardDate(uint nodeIndex) external view returns (uint) {
+        require(nodeIndex < nodesCount, "Node does not exist");
+        return lastRewardDate[nodeIndex];
     }
     function isNodeLeft(uint /* nodeIndex */) external pure returns (bool) {
         return false;
