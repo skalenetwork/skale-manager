@@ -1,7 +1,7 @@
 var fs = require('fs') ;
 
 async function main() {
-    const LIMIT = 10*1024 ;
+    const LIMIT = 24*1024 ;
 
     function sizes (name) {
         var abi = artifacts.require(name) ;
@@ -10,7 +10,7 @@ async function main() {
     }
 
     function fmt(obj) {
-        return `${ obj.deployedSize }\t${ obj.name }` ;
+        return `${ obj.deployedSize }\t${ obj.name }\t(${ obj.deployedSize - LIMIT} more than limit)`;
     }
 
     var l = fs.readdirSync("../build/contracts") ;
