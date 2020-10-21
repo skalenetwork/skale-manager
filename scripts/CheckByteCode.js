@@ -13,7 +13,7 @@ async function main() {
         return `${ obj.deployedSize }\t${ obj.name }` ;
     }
 
-    var l = fs.readdirSync("build/contracts") ;
+    var l = fs.readdirSync("../build/contracts") ;
     l.forEach(function (f) {
         var name = f.replace(/.json/, '') ;
         var sz = sizes(name) ;
