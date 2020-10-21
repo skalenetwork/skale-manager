@@ -26,7 +26,7 @@
     }
   ],
   "scripts": {
-    "compile": "rm -rf ./build && npx truffle compile",
+    "compile": "rm -rf ./build && NODE_OPTIONS=\"--max-old-space-size=4096\" npx truffle compile",
     "deploy": "bash ./scripts/deploy.sh",
     "generate": "yarn compile && typechain --target truffle './build/**/*.json'",
     "hooks": "git config core.hooksPath .githooks || true",
