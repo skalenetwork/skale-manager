@@ -19,16 +19,26 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+import "../BountyV2.sol";
+import "../Permissions.sol";
+
 pragma solidity 0.6.10;
 
-contract NodesMock {
+contract NodesMock is Permissions {
     uint public nodesCount = 0;
     //     nodeId => timestamp
     mapping (uint => uint) public lastRewardDate;
     
-    function registerNodes(uint amount) external {
-        lastRewardDate[nodesCount] = now;
+    function registerNodes(uint amount, uint validatorId) external {
+        BountyV2 bounty = BountyV2(contractManager.getBounty());
+        for (uint nodeId = nodesCount; nodeId < nodesCount + amount; ++nodeId) {
+            lastRewardDate[nodeId] = now;
+            bounty.handleNodeCreation(validatorId);
+        }
         nodesCount += amount;
+    }
+    function changeNodeLastRewardDate(uint nodeId) external {
+        lastRewardDate[nodeId] = now;
     }
     function getNodeLastRewardDate(uint nodeIndex) external view returns (uint) {
         require(nodeIndex < nodesCount, "Node does not exist");
