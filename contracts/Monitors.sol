@@ -333,7 +333,9 @@ contract Monitors is Permissions {
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));
 
         checkedNode.nodeIndex = nodeIndex;
-        checkedNode.time = nodes.getNodeNextRewardDate(nodeIndex).sub(constantsHolder.deltaPeriod());
+        checkedNode.time = nodes.getNodeLastRewardDate(nodeIndex)
+            .add(constantsHolder.rewardPeriod())
+            .sub(constantsHolder.deltaPeriod());
     }
 
     function _emitVerdictsEvent(
