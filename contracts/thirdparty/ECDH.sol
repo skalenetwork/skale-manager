@@ -1,9 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /*
+    Modifications Copyright (C) 2018 SKALE Labs
     ec.sol by @jbaylina under GPL-3.0 License
-    Modified and renamed to ECDH.sol by SKALE-Labs
 */
+/** @file ECDH.sol
+ * @author Jordi Baylina (@jbaylina)
+ * @date 2016
+ */
 
 pragma solidity 0.6.10;
 import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
