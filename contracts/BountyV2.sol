@@ -49,6 +49,7 @@ contract BountyV2 is Permissions {
     
     uint private _nextEpoch;
     uint private _epochPool;
+    uint private _bountyWasPaidInCurrentEpoch;
     bool public bountyReduction;
 
     PartialDifferences.Value private _effectiveDelegatedSum;
@@ -92,6 +93,7 @@ contract BountyV2 is Permissions {
         );
 
         _epochPool = _epochPool.sub(bounty);
+        _bountyWasPaidInCurrentEpoch = _bountyWasPaidInCurrentEpoch.add(bounty);
 
         return bounty;
     }
@@ -184,6 +186,7 @@ contract BountyV2 is Permissions {
             DelegationController(contractManager.getContract("DelegationController"));
 
         return epochPoolSize
+            .add(_bountyWasPaidInCurrentEpoch)
             .mul(delegationController.getAndUpdateEffectiveDelegatedToValidator(
                 nodes.getValidatorId(nodeIndex), currentMonth)
             )
@@ -210,7 +213,13 @@ contract BountyV2 is Permissions {
     }
 
     function _refillEpochPool(uint currentMonth, TimeHelpers timeHelpers, ConstantsHolder constantsHolder) private {
-        (_epochPool, _nextEpoch) = _getEpochPool(currentMonth, timeHelpers, constantsHolder);
+        uint epochPool;
+        uint nextEpoch;
+        (epochPool, nextEpoch) = _getEpochPool(currentMonth, timeHelpers, constantsHolder);
+        if (_nextEpoch < nextEpoch) {
+            (_epochPool, _nextEpoch) = (epochPool, nextEpoch);
+            _bountyWasPaidInCurrentEpoch = 0;
+        }
     }
 
     function _getEpochReward(
