@@ -10,7 +10,8 @@ async function main() {
     }
 
     function fmt(obj) {
-        return `${ obj.deployedSize }\t${ obj.name }\t(${ obj.deployedSize - LIMIT} more than limit)`;
+        return `${ obj.deployedSize }\t${ obj.name }\t\t(${ Math.abs(obj.deployedSize - LIMIT)} `
+            + (obj.deployedBytecode > LIMIT ? "more" : "less") + " than limit)";
     }
 
     var l = fs.readdirSync("../build/contracts") ;
@@ -21,6 +22,10 @@ async function main() {
             console.log(fmt(sz)) ;
         }
     });
+    l.map(f => sizes(f.replace(/.json/, '')))
+        .filter(contract => contract.deployedSize > 0)
+        .sort((a, b) => b.deployedSize - a.deployedSize)
+        .forEach(contract => console.log(fmt(contract)));
 }
 
 main()
