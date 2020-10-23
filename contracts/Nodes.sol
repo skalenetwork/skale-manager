@@ -276,9 +276,8 @@ contract Nodes is Permissions {
 
         _setNodeLeft(nodeIndex);
         _deleteNode(nodeIndex);
-
-        BountyV2 bounty = BountyV2(contractManager.getContract("Bounty"));
-        bounty.handleNodeRemoving(nodes[nodeIndex].validatorId);
+        
+        BountyV2(contractManager.getBounty()).handleNodeRemoving(nodes[nodeIndex].validatorId);
 
         emit ExitCompleted(
             nodeIndex,
@@ -362,6 +361,15 @@ contract Nodes is Permissions {
         }
         require(permitted, "Sender is not permitted to call this function");
         _setNodeActive(nodeIndex);
+    }
+
+    function populateBountyV2() external onlyOwner {
+        BountyV2 bounty = BountyV2(contractManager.getBounty());
+        for (uint nodeId = 0; nodeId < nodes.length; ++nodeId) {
+            if (nodes[nodeId].status != NodeStatus.Left) {
+                bounty.handleNodeCreation(nodes[nodeId].validatorId);
+            }
+        }
     }
 
     function getNodesWithFreeSpace(uint8 freeSpace) external view returns (uint[] memory) {
@@ -488,8 +496,7 @@ contract Nodes is Permissions {
         checkNodeExists(nodeIndex)
         returns (uint)
     {
-        BountyV2 bounty = BountyV2(contractManager.getContract("Bounty"));
-        return bounty.getNextRewardTimestamp(nodeIndex);
+        return BountyV2(contractManager.getBounty()).getNextRewardTimestamp(nodeIndex);
     }
 
     /**
@@ -768,9 +775,8 @@ contract Nodes is Permissions {
         }));
         spaceToNodes[constantsHolder.TOTAL_SPACE_ON_NODE()].push(nodeIndex);
         numberOfActiveNodes++;
-
-        BountyV2 bounty = BountyV2(contractManager.getContract("Bounty"));
-        bounty.handleNodeCreation(validatorId);
+        
+        BountyV2(contractManager.getBounty()).handleNodeCreation(validatorId);
     }
 
     function _deleteNode(uint nodeIndex) private {
