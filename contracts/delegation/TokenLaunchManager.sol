@@ -36,6 +36,15 @@ import "./TokenLaunchLocker.sol";
  * The seller is an entity who distributes tokens through a Launch process.
  */
 contract TokenLaunchManager is Permissions, IERC777Recipient {
+
+    bytes32 public constant SELLER_ROLE = keccak256("SELLER_ROLE");
+
+    IERC1820Registry private _erc1820;
+
+    mapping (address => uint) public approved;
+    bool public tokenLaunchIsCompleted;
+    uint private _totalApproved;
+
     event Approved(
         address holder,
         uint amount
@@ -55,14 +64,6 @@ contract TokenLaunchManager is Permissions, IERC777Recipient {
     event TokenLaunchIsCompleted(
         uint timestamp
     );
-
-    bytes32 public constant SELLER_ROLE = keccak256("SELLER_ROLE");
-
-    IERC1820Registry private _erc1820;
-
-    mapping (address => uint) public approved;
-    bool public tokenLaunchIsCompleted;
-    uint private _totalApproved;
 
     modifier onlySeller() {
         require(_isOwner() || hasRole(SELLER_ROLE, _msgSender()), "Not authorized");

@@ -32,6 +32,8 @@ import "../Permissions.sol";
  */
 contract DelegationPeriodManager is Permissions {
 
+    mapping (uint => uint) public stakeMultipliers;
+
     /**
      * @dev Emitted when a new delegation period is specified.
      */
@@ -39,8 +41,6 @@ contract DelegationPeriodManager is Permissions {
         uint length,
         uint stakeMultiplier
     );
-
-    mapping (uint => uint) public stakeMultipliers;
 
     /**
      * @dev Creates a new available delegation period and return in the network.

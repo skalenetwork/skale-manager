@@ -36,6 +36,8 @@ import "../interfaces/delegation/ILocker.sol";
  */
 contract TokenState is Permissions, ILocker {
 
+    string[] private _lockers;
+
     /**
      * @dev Emitted when a contract is added to the locker.
      */
@@ -49,8 +51,6 @@ contract TokenState is Permissions, ILocker {
     event LockerWasRemoved(
         string locker
     );
-
-    string[] private _lockers;
 
     /**
      *  @dev Return and update the total locked amount of a given `holder`.
