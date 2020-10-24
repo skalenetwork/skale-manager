@@ -7,7 +7,7 @@ import { ContractManagerInstance,
 import { skipTime } from "../tools/time";
 
 import * as chai from "chai";
-import * as chaiAsPromised from "chai-as-promised";
+import chaiAsPromised from "chai-as-promised";
 import { deployContractManager } from "../tools/deploy/contractManager";
 import { deployDelegationController } from "../tools/deploy/delegation/delegationController";
 import { deployValidatorService } from "../tools/deploy/delegation/validatorService";

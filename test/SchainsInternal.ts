@@ -5,7 +5,7 @@ import { ContractManagerInstance,
 
 import BigNumber from "bignumber.js";
 import chai = require("chai");
-import * as chaiAsPromised from "chai-as-promised";
+import chaiAsPromised from "chai-as-promised";
 import { deployContractManager } from "./tools/deploy/contractManager";
 import { deployNodes } from "./tools/deploy/nodes";
 import { deploySchainsInternal } from "./tools/deploy/schainsInternal";

@@ -1,4 +1,4 @@
-import * as chaiAsPromised from "chai-as-promised";
+import chaiAsPromised from "chai-as-promised";
 import { ContractManagerInstance,
          NodesInstance,
          ValidatorServiceInstance} from "../types/truffle-contracts";

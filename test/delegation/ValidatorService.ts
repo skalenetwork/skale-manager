@@ -8,7 +8,7 @@ import { skipTime } from "../tools/time";
 
 import BigNumber from "bignumber.js";
 import * as chai from "chai";
-import * as chaiAsPromised from "chai-as-promised";
+import chaiAsPromised from "chai-as-promised";
 import { deployConstantsHolder } from "../tools/deploy/constantsHolder";
 import { deployContractManager } from "../tools/deploy/contractManager";
 import { deployDelegationController } from "../tools/deploy/delegation/delegationController";

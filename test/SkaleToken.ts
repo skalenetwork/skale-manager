@@ -4,7 +4,7 @@ import { ContractManagerInstance,
          SkaleTokenInternalTesterInstance} from "../types/truffle-contracts";
 
 import * as chai from "chai";
-import * as chaiAsPromised from "chai-as-promised";
+import chaiAsPromised from "chai-as-promised";
 import { deployContractManager } from "./tools/deploy/contractManager";
 import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
 import { deploySkaleToken } from "./tools/deploy/skaleToken";

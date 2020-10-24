@@ -1,6 +1,6 @@
 import BigNumber from "bignumber.js";
 import * as chai from "chai";
-import * as chaiAsPromised from "chai-as-promised";
+import chaiAsPromised from "chai-as-promised";
 
 import { ContractManagerInstance,
          NodesInstance,

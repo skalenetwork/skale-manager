@@ -2,7 +2,7 @@ import { ContractManagerInstance, SkaleManagerInstance, SlashingTableInstance } 
 import { deployContractManager } from "./tools/deploy/contractManager";
 import { deploySkaleManager } from "./tools/deploy/skaleManager";
 import { deployBounty } from "./tools/deploy/bounty";
-import * as chaiAsPromised from "chai-as-promised";
+import chaiAsPromised from "chai-as-promised";
 import * as chai from "chai";
 import { deploySlashingTable } from "./tools/deploy/slashingTable";
 

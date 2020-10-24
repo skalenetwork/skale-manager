@@ -10,8 +10,9 @@ async function main() {
     }
 
     function fmt(obj) {
+        const tooBig = obj.deployedSize > LIMIT;
         return `${ obj.deployedSize }\t${ obj.name }\t\t(${ Math.abs(obj.deployedSize - LIMIT)} `
-            + (obj.deployedBytecode > LIMIT ? "more" : "less") + " than limit)";
+            + (tooBig ? "more" : "less") + " than limit)";
     }
 
     var l = fs.readdirSync("../build/contracts") ;
@@ -20,6 +21,7 @@ async function main() {
         var sz = sizes(name) ;
         if (sz.deployedSize >= LIMIT) {
             console.log(fmt(sz)) ;
+            console.log('='.repeat(70));
         }
     });
     l.map(f => sizes(f.replace(/.json/, '')))

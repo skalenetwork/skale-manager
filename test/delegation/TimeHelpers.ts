@@ -2,7 +2,7 @@ import { TimeHelpersInstance, ContractManagerInstance } from "../../types/truffl
 import { deployTimeHelpers } from "../tools/deploy/delegation/timeHelpers";
 import { deployContractManager } from "../tools/deploy/contractManager";
 import * as chai from "chai";
-import * as chaiAsPromised from "chai-as-promised";
+import chaiAsPromised from "chai-as-promised";
 import { deployTimeHelpersWithDebug } from "../tools/deploy/test/timeHelpersWithDebug";
 import { currentTime, skipTime } from "../tools/time";
 chai.should();

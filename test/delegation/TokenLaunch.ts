@@ -9,7 +9,7 @@ import { ContractManagerInstance,
 import { isLeapYear, skipTime, skipTimeToDate } from "../tools/time";
 
 import * as chai from "chai";
-import * as chaiAsPromised from "chai-as-promised";
+import chaiAsPromised from "chai-as-promised";
 import { deployContractManager } from "../tools/deploy/contractManager";
 import { deployDelegationController } from "../tools/deploy/delegation/delegationController";
 import { deployDelegationPeriodManager } from "../tools/deploy/delegation/delegationPeriodManager";
