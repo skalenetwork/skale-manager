@@ -26,16 +26,27 @@ pragma solidity 0.6.10;
 
 contract NodesMock is Permissions {
     uint public nodesCount = 0;
+    uint public nodesLeft = 0;
     //     nodeId => timestamp
     mapping (uint => uint) public lastRewardDate;
+    //     nodeId => left
+    mapping (uint => bool) public nodeLeft;
+    //     nodeId => validatorId
+    mapping (uint => uint) public owner;
     
     function registerNodes(uint amount, uint validatorId) external {
         BountyV2 bounty = BountyV2(contractManager.getBounty());
         for (uint nodeId = nodesCount; nodeId < nodesCount + amount; ++nodeId) {
             lastRewardDate[nodeId] = now;
+            owner[nodeId] = validatorId;
             bounty.handleNodeCreation(validatorId);
         }
         nodesCount += amount;
+    }
+    function removeNode(uint nodeId, uint validatorId) external {
+        ++nodesLeft;
+        nodeLeft[nodeId] = true;
+        BountyV2(contractManager.getBounty()).handleNodeRemoving(validatorId);
     }
     function changeNodeLastRewardDate(uint nodeId) external {
         lastRewardDate[nodeId] = now;
@@ -44,16 +55,16 @@ contract NodesMock is Permissions {
         require(nodeIndex < nodesCount, "Node does not exist");
         return lastRewardDate[nodeIndex];
     }
-    function isNodeLeft(uint /* nodeIndex */) external pure returns (bool) {
-        return false;
+    function isNodeLeft(uint nodeId) external view returns (bool) {
+        return nodeLeft[nodeId];
     }
     function getNumberOnlineNodes() external view returns (uint) {
-        return nodesCount;
+        return nodesCount.sub(nodesLeft);
     }
     function checkPossibilityToMaintainNode(uint /* validatorId */, uint /* nodeIndex */) external pure returns (bool) {
         return true;
     }
-    function getValidatorId(uint /* nodeIndex */) external pure returns (uint) {
-        return 1;
+    function getValidatorId(uint nodeId) external view returns (uint) {
+        return owner[nodeId];
     }
 }

@@ -127,6 +127,31 @@ contract("Bounty", ([owner, admin, hacker, validator, validator2]) => {
                 bounty0.should.be.equal(bounty1);
                 bounty0.should.be.almost(getBountyForEpoch(0) / 2);
             });
+
+            it("should process nodes adding and removing", async () => {
+                await nodes.registerNodes(1, validatorId);
+                skipTime(web3, 29 * day);
+                let bounty0 = await calculateBounty(0);
+                bounty0.should.be.almost(getBountyForEpoch(0));
+
+                skipTime(web3, 2 * day);
+                // February
+
+                await nodes.registerNodes(1, validator2Id);
+                skipTime(web3, 27 * day);
+                bounty0 = await calculateBounty(0);
+                let bounty1 = await calculateBounty(1);
+                bounty0.should.be.equal(bounty1);
+                bounty0.should.be.almost(getBountyForEpoch(1) / 2);
+                await nodes.removeNode(0, validatorId);
+
+                skipTime(web3, 3 * day);
+                // March
+
+                skipTime(web3, 28 * day);
+                bounty1 = await calculateBounty(1);
+                bounty1.should.be.almost(getBountyForEpoch(2));
+            });
         });
 
         describe("when 10 nodes registered", async() => {
