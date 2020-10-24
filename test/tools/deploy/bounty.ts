@@ -11,6 +11,12 @@ const deployBounty: (contractManager: ContractManagerInstance) => Promise<Bounty
                                 await deployConstantsHolder(contractManager);
                                 await deployNodes(contractManager);
                                 await deployTimeHelpers(contractManager);
+                            },
+                            async(contractManager: ContractManagerInstance) => {
+                                const BountyV2: BountyV2Contract = artifacts.require("./BountyV2");
+                                const instance = await BountyV2.new();
+                                await instance.initialize(contractManager.address);
+                                return instance;
                             });
 
 export { deployBounty };
