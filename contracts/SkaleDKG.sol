@@ -30,7 +30,7 @@ import "./utils/FieldOperations.sol";
 import "./NodeRotation.sol";
 import "./KeyStorage.sol";
 import "./interfaces/ISkaleDKG.sol";
-import "./ECDH.sol";
+import "./thirdparty/ECDH.sol";
 import "./utils/Precompiled.sol";
 
 /**
