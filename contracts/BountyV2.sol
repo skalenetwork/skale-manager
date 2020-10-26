@@ -49,6 +49,7 @@ contract BountyV2 is Permissions {
     
     uint private _nextEpoch;
     uint private _epochPool;
+    uint private _bountyWasPaidInCurrentEpoch;
     bool public bountyReduction;
 
     PartialDifferences.Value private _effectiveDelegatedSum;
@@ -56,14 +57,6 @@ contract BountyV2 is Permissions {
     mapping (uint => uint) public nodesByValidator;
     // validatorId => sequence
     mapping (uint => PartialDifferences.Value) private _effectiveDelegatedToValidator;
-
-    function initialize(address contractManagerAddress, uint validatorsAmount) external initializer {
-        Permissions.initialize(contractManagerAddress);
-        _nextEpoch = 0;
-        _epochPool = 0;
-        bountyReduction = false;
-        _loadDataFromDelegationController(validatorsAmount);
-    }
 
     function calculateBounty(uint nodeIndex)
         external
@@ -92,6 +85,7 @@ contract BountyV2 is Permissions {
         );
 
         _epochPool = _epochPool.sub(bounty);
+        _bountyWasPaidInCurrentEpoch = _bountyWasPaidInCurrentEpoch.add(bounty);
 
         return bounty;
     }
@@ -104,18 +98,32 @@ contract BountyV2 is Permissions {
         bountyReduction = false;
     }
 
-    function handleDelegationAdd(uint validatorId, uint amount, uint month) external allow("DelegationController") {
-        _handleDelegationAdd(validatorId, amount, month);
+    function handleDelegationAdd(
+        uint validatorId,
+        uint amount,
+        uint month
+    )
+        external
+        allowTwo("DelegationController", "ValidatorService")
+    {
+        if (nodesByValidator[validatorId] > 0) {
+            _effectiveDelegatedSum.addToValue(amount.mul(nodesByValidator[validatorId]), month);
+        }
+        _effectiveDelegatedToValidator[validatorId].addToValue(amount, month);
     }
 
     function handleDelegationRemoving(
         uint validatorId,
         uint amount,
-        uint month)
+        uint month
+    )
         external
-        allow("DelegationController")
+        allowTwo("DelegationController", "ValidatorService")
     {
-        _handleDelegationRemoving(validatorId, amount, month);
+        if (nodesByValidator[validatorId] > 0) {
+            _effectiveDelegatedSum.subtractFromValue(amount.mul(nodesByValidator[validatorId]), month);
+        }
+        _effectiveDelegatedToValidator[validatorId].subtractFromValue(amount, month);
     }
 
     function handleNodeCreation(uint validatorId) external allow("Nodes") {
@@ -158,6 +166,14 @@ contract BountyV2 is Permissions {
         );
     }
 
+    function initialize(address contractManagerAddress) public override initializer {
+        Permissions.initialize(contractManagerAddress);
+        _nextEpoch = 0;
+        _epochPool = 0;
+        _bountyWasPaidInCurrentEpoch = 0;
+        bountyReduction = false;
+    }
+
     // private
 
     function _calculateMaximumBountyAmount(
@@ -184,6 +200,7 @@ contract BountyV2 is Permissions {
             DelegationController(contractManager.getContract("DelegationController"));
 
         return epochPoolSize
+            .add(_bountyWasPaidInCurrentEpoch)
             .mul(delegationController.getAndUpdateEffectiveDelegatedToValidator(
                 nodes.getValidatorId(nodeIndex), currentMonth)
             )
@@ -210,7 +227,13 @@ contract BountyV2 is Permissions {
     }
 
     function _refillEpochPool(uint currentMonth, TimeHelpers timeHelpers, ConstantsHolder constantsHolder) private {
-        (_epochPool, _nextEpoch) = _getEpochPool(currentMonth, timeHelpers, constantsHolder);
+        uint epochPool;
+        uint nextEpoch;
+        (epochPool, nextEpoch) = _getEpochPool(currentMonth, timeHelpers, constantsHolder);
+        if (_nextEpoch < nextEpoch) {
+            (_epochPool, _nextEpoch) = (epochPool, nextEpoch);
+            _bountyWasPaidInCurrentEpoch = 0;
+        }
     }
 
     function _getEpochReward(
@@ -312,52 +335,6 @@ contract BountyV2 is Permissions {
                 _effectiveDelegatedSum.subtractFromValue(diff, month);
             } else {
                 _effectiveDelegatedSum.addToValue(diff, month);
-            }
-        }
-    }
-
-    function _handleDelegationAdd(uint validatorId, uint amount, uint month) private {
-        if (nodesByValidator[validatorId] > 0) {
-            _effectiveDelegatedSum.addToValue(amount.mul(nodesByValidator[validatorId]), month);
-        }
-        _effectiveDelegatedToValidator[validatorId].addToValue(amount, month);
-    }
-
-    function _handleDelegationRemoving(uint validatorId, uint amount, uint month) private {
-        if (nodesByValidator[validatorId] > 0) {
-            _effectiveDelegatedSum.subtractFromValue(amount.mul(nodesByValidator[validatorId]), month);
-        }
-        _effectiveDelegatedToValidator[validatorId].subtractFromValue(amount, month);
-    }
-
-    function _loadDataFromDelegationController(uint validatorsAmount) private {
-        TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
-        ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
-        DelegationController delegationController = 
-            DelegationController(contractManager.getContract("DelegationController"));
-
-        uint startMonth = timeHelpers.timestampToMonth(constantsHolder.launchTimestamp());
-        uint currentMonth = timeHelpers.getCurrentMonth();
-        // 2 is a biggest delegation period when BountyV2 is deployed
-        uint endMonth = currentMonth.add(2);
-
-        for (uint validatorId = 1; validatorId <= validatorsAmount; ++validatorId) {
-            uint effectiveDelegated = 0;
-            for (uint month = startMonth; month < endMonth; ++month) {
-                uint currentEffectiveDelegated = 
-                    delegationController.getAndUpdateEffectiveDelegatedToValidator(validatorId, month);
-                if (currentEffectiveDelegated != effectiveDelegated) {
-                    if (currentEffectiveDelegated > effectiveDelegated) {
-                        _handleDelegationAdd(validatorId, currentEffectiveDelegated.sub(effectiveDelegated), month);
-                    } else {
-                        _handleDelegationRemoving(
-                            validatorId,
-                            effectiveDelegated.sub(currentEffectiveDelegated),
-                            month
-                        );
-                    }
-                    effectiveDelegated = currentEffectiveDelegated;
-                }
             }
         }
     }

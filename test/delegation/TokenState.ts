@@ -8,7 +8,7 @@ import { deployContractManager } from "../tools/deploy/contractManager";
 import { currentTime, skipTime } from "../tools/time";
 
 import * as chai from "chai";
-import * as chaiAsPromised from "chai-as-promised";
+import chaiAsPromised from "chai-as-promised";
 import { deployDelegationController } from "../tools/deploy/delegation/delegationController";
 import { deployTokenState } from "../tools/deploy/delegation/tokenState";
 import { deployValidatorService } from "../tools/deploy/delegation/validatorService";

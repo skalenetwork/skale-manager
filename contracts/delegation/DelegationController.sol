@@ -490,7 +490,7 @@ contract DelegationController is Permissions, ILocker {
     }
 
     function getAndUpdateEffectiveDelegatedToValidator(uint validatorId, uint month)
-        external allowTwo("Distributor", "Bounty") returns (uint)
+        external allowThree("Bounty", "Distributor", "ValidatorService") returns (uint)
     {
         return _effectiveDelegatedToValidator[validatorId].getAndUpdateValueInSequence(month);
     }

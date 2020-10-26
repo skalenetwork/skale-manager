@@ -1,4 +1,4 @@
-import * as chaiAsPromised from "chai-as-promised";
+import chaiAsPromised from "chai-as-promised";
 import { ContractManagerInstance,
          NodesInstance,
          ValidatorServiceInstance} from "../types/truffle-contracts";
@@ -8,6 +8,7 @@ import chai = require("chai");
 import { deployContractManager } from "./tools/deploy/contractManager";
 import { deployNodes } from "./tools/deploy/nodes";
 import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
+import { deploySkaleManagerMock } from "./tools/deploy/test/skaleManagerMock";
 chai.should();
 chai.use(chaiAsPromised);
 
@@ -20,6 +21,13 @@ contract("NodesData", ([owner, validator, nodeAddress]) => {
         contractManager = await deployContractManager();
         nodes = await deployNodes(contractManager);
         validatorService = await deployValidatorService(contractManager);
+        const skaleManagerMock = await deploySkaleManagerMock(contractManager);
+        await contractManager.setContractsAddress("SkaleManager", skaleManagerMock.address);
+
+        // contract must be set in contractManager for proper work of allow modifier
+        await contractManager.setContractsAddress("NodeRotation", contractManager.address);
+        await contractManager.setContractsAddress("Schains", contractManager.address);
+        await contractManager.setContractsAddress("SchainsInternal", contractManager.address);
 
         await validatorService.registerValidator("Validator", "D2", 0, 0, {from: validator});
         const validatorIndex = await validatorService.getValidatorId(validator);

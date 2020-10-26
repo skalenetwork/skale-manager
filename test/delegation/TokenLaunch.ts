@@ -2,14 +2,13 @@ import { ContractManagerInstance,
          DelegationControllerInstance,
          DelegationPeriodManagerInstance,
          PunisherInstance,
+         SkaleManagerMockContract,
          SkaleTokenInstance,
          TokenLaunchManagerInstance,
          ValidatorServiceInstance} from "../../types/truffle-contracts";
-
 import { isLeapYear, skipTime, skipTimeToDate } from "../tools/time";
-
 import * as chai from "chai";
-import * as chaiAsPromised from "chai-as-promised";
+import chaiAsPromised from "chai-as-promised";
 import { deployContractManager } from "../tools/deploy/contractManager";
 import { deployDelegationController } from "../tools/deploy/delegation/delegationController";
 import { deployDelegationPeriodManager } from "../tools/deploy/delegation/delegationPeriodManager";
@@ -20,6 +19,8 @@ import { deploySkaleToken } from "../tools/deploy/skaleToken";
 import { State } from "../tools/types";
 chai.should();
 chai.use(chaiAsPromised);
+
+const SkaleManagerMock: SkaleManagerMockContract = artifacts.require("./SkaleManagerMock");
 
 contract("TokenLaunchManager", ([owner, holder, delegation, validator, seller, hacker]) => {
     let contractManager: ContractManagerInstance;
@@ -38,6 +39,9 @@ contract("TokenLaunchManager", ([owner, holder, delegation, validator, seller, h
         delegationController = await deployDelegationController(contractManager);
         delegationPeriodManager = await deployDelegationPeriodManager(contractManager);
         punisher = await deployPunisher(contractManager);
+
+        const skaleManagerMock = await SkaleManagerMock.new(contractManager.address);
+        await contractManager.setContractsAddress("SkaleManager", skaleManagerMock.address);
 
         // each test will start from Nov 10
         await skipTimeToDate(web3, 10, 11);

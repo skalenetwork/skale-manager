@@ -57,15 +57,15 @@ contract Permissions is AccessControlUpgradeSafe {
      */
     modifier allow(string memory contractName) {
         require(
-            contractManager.contracts(keccak256(abi.encodePacked(contractName))) == msg.sender || _isOwner(),
+            contractManager.getContract(contractName) == msg.sender || _isOwner(),
             "Message sender is invalid");
         _;
     }
 
     modifier allowTwo(string memory contractName1, string memory contractName2) {
         require(
-            contractManager.contracts(keccak256(abi.encodePacked(contractName1))) == msg.sender ||
-            contractManager.contracts(keccak256(abi.encodePacked(contractName2))) == msg.sender ||
+            contractManager.getContract(contractName1) == msg.sender ||
+            contractManager.getContract(contractName2) == msg.sender ||
             _isOwner(),
             "Message sender is invalid");
         _;
@@ -73,9 +73,9 @@ contract Permissions is AccessControlUpgradeSafe {
 
     modifier allowThree(string memory contractName1, string memory contractName2, string memory contractName3) {
         require(
-            contractManager.contracts(keccak256(abi.encodePacked(contractName1))) == msg.sender ||
-            contractManager.contracts(keccak256(abi.encodePacked(contractName2))) == msg.sender ||
-            contractManager.contracts(keccak256(abi.encodePacked(contractName3))) == msg.sender ||
+            contractManager.getContract(contractName1) == msg.sender ||
+            contractManager.getContract(contractName2) == msg.sender ||
+            contractManager.getContract(contractName3) == msg.sender ||
             _isOwner(),
             "Message sender is invalid");
         _;

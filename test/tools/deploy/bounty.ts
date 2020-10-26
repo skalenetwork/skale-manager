@@ -15,10 +15,7 @@ const deployBounty: (contractManager: ContractManagerInstance) => Promise<Bounty
                             async(contractManager: ContractManagerInstance) => {
                                 const BountyV2: BountyV2Contract = artifacts.require("./BountyV2");
                                 const instance = await BountyV2.new();
-                                // some contracts have to be deployed before BountyV2 initialization
-                                await deployTimeHelpers(contractManager);
-                                await deployDelegationController(contractManager);
-                                await instance.initialize(contractManager.address, 0);
+                                await instance.initialize(contractManager.address);
                                 return instance;
                             });
 

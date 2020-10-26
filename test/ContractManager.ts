@@ -12,10 +12,6 @@ contract("ContractManager", ([deployer, user]) => {
     constantsHolder = await deployConstantsHolder(contractManager);
   });
 
-  it("Should deploy", async () => {
-    assert(true);
-  });
-
   it("Should add a right contract address (ConstantsHolder) to the register", async () => {
     const simpleContractName: string = "Constants";
     await contractManager.setContractsAddress(simpleContractName, constantsHolder.address, {from: user})

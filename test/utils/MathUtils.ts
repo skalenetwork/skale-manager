@@ -1,11 +1,11 @@
 import chai = require("chai");
-import * as chaiAsPromised from "chai-as-promised";
+import chaiAsPromised from "chai-as-promised";
 import { MathUtilsTesterContract, MathUtilsTesterInstance } from "../../types/truffle-contracts";
 
 const MathUtils: MathUtilsTesterContract = artifacts.require("MathUtilsTester");
 
 chai.should();
-chai.use((chaiAsPromised as any));
+chai.use(chaiAsPromised);
 
 contract("MathUtils", ([owner]) => {
     let mathUtils: MathUtilsTesterInstance;

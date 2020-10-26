@@ -19,7 +19,7 @@ import { currentTime, skipTime, skipTimeToDate } from "../tools/time";
 
 import BigNumber from "bignumber.js";
 import * as chai from "chai";
-import * as chaiAsPromised from "chai-as-promised";
+import chaiAsPromised from "chai-as-promised";
 import { deployConstantsHolder } from "../tools/deploy/constantsHolder";
 import { deployContractManager } from "../tools/deploy/contractManager";
 import { deployDelegationController } from "../tools/deploy/delegation/delegationController";
@@ -76,6 +76,9 @@ contract("Delegation", ([owner,
         distributor = await deployDistributor(contractManager);
         punisher = await deployPunisher(contractManager);
         nodes = await deployNodes(contractManager);
+
+        // contract must be set in contractManager for proper work of allow modifier
+        await contractManager.setContractsAddress("SkaleDKG", nodes.address);
 
         // each test will start from Nov 10
         await skipTimeToDate(web3, 10, 10);

@@ -2,25 +2,31 @@ import {
     ContractManagerInstance,
     ConstantsHolderInstance,
     BountyV2Instance,
-    NodesMockInstance
+    NodesMockInstance,
+    SkaleTokenInstance,
+    DelegationControllerInstance,
+    ValidatorServiceInstance
 } from "../types/truffle-contracts";
 
 import { deployContractManager } from "./tools/deploy/contractManager";
 import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
 import { deployBounty } from "./tools/deploy/bounty";
-import { skipTime, currentTime, months } from "./tools/time";
-import * as chaiAsPromised from "chai-as-promised";
+import { skipTime, currentTime, months, skipTimeToDate } from "./tools/time";
+import chaiAsPromised from "chai-as-promised";
+import chaiAlmost from "chai-almost";
 import * as chai from "chai";
 import { deployNodesMock } from "./tools/deploy/test/nodesMock";
 import { deploySkaleToken } from "./tools/deploy/skaleToken";
 import { deployDelegationController } from "./tools/deploy/delegation/delegationController";
 import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
-import { createPrinter } from "typescript";
+import { deployTimeHelpers } from "./tools/deploy/delegation/timeHelpers";
+import { deployDelegationPeriodManager } from "./tools/deploy/delegation/delegationPeriodManager";
 
 chai.should();
 chai.use(chaiAsPromised);
+chai.use(chaiAlmost(1));
 
-contract("Bounty", ([owner, admin, hacker, validator]) => {
+contract("Bounty", ([owner, admin, hacker, validator, validator2]) => {
     let contractManager: ContractManagerInstance;
     let constantsHolder: ConstantsHolderInstance;
     let bountyContract: BountyV2Instance;
@@ -36,8 +42,8 @@ contract("Bounty", ([owner, admin, hacker, validator]) => {
         bountyContract = await deployBounty(contractManager);
         nodes = await deployNodesMock(contractManager);
         await contractManager.setContractsAddress("Nodes", nodes.address);
-
-        await constantsHolder.setLaunchTimestamp((await currentTime(web3)));
+        // contract must be set in contractManager for proper work of allow modifier
+        await contractManager.setContractsAddress("SkaleManager", nodes.address);
     });
 
     // it("should allow only owner to call enableBountyReduction", async() => {
@@ -56,109 +62,184 @@ contract("Bounty", ([owner, admin, hacker, validator]) => {
     //     await bountyContract.disableBountyReduction({from: owner});
     // });
 
-    // describe("when 10 nodes registered", async() => {
-    //     const maxRewardPeriod = 60 * 60 * 24 * 30 + 60 * 60;
-    //     const nodesCount = 10;
-
-    //     beforeEach(async() => {
-    //         await nodes.registerNodes(nodesCount);
-    //     });
-
-    //     it("5 year test for 10 nodes", async() => {
-    //         const years = 5;
-    //         const total = []
-    //         for (let nodeIndex = 0; nodeIndex < nodesCount; ++nodeIndex) {
-    //             total.push(0);
-    //         }
-    //         for (let month = 0; month < 12 * years; month++) {
-    //             skipTime(web3, maxRewardPeriod);
-
-    //             for (let nodeIndex = 0; nodeIndex < nodesCount; nodeIndex++) {
-    //                 const bounty = web3.utils.toBN((await bountyContract.getBounty.call(nodeIndex, 0, 0))).div(ten18).toNumber();
-    //                 total[nodeIndex] += bounty;
-    //                 await bountyContract.getBounty(nodeIndex, 0, 0);
-
-    //                 if (nodeIndex > 0) {
-    //                     total[nodeIndex].should.be.equal(total[nodeIndex - 1]);
-    //                 }
-    //             }
-    //         }
-    //     });
-    // });
-
     describe("when validator is registered and has active delegations", async () => {
+        let skaleToken: SkaleTokenInstance;
+        let delegationController: DelegationControllerInstance;
+        let validatorService: ValidatorServiceInstance;
+
         const validatorId = 1;
+        const validatorAmount = 1e6;
         beforeEach(async () => {
-            const skaleToken = await deploySkaleToken(contractManager);
-            const delegationController = await deployDelegationController(contractManager);
-            const validatorService = await deployValidatorService(contractManager);
-            await skaleToken.mint(validator, ten18.muln(1e6).toString(), "0x", "0x");
+            skaleToken = await deploySkaleToken(contractManager);
+            delegationController = await deployDelegationController(contractManager);
+            validatorService = await deployValidatorService(contractManager);
+
+            await skaleToken.mint(validator, ten18.muln(validatorAmount).toString(), "0x", "0x");
             await validatorService.registerValidator("Validator", "", 150, 1e6 + 1, {from: validator});
             await validatorService.enableValidator(validatorId);
-            await delegationController.delegate(validatorId, ten18.muln(1e6).toString(), 3, "", {from: validator});
+            await delegationController.delegate(validatorId, ten18.muln(validatorAmount).toString(), 3, "", {from: validator});
             await delegationController.acceptPendingDelegation(0, {from: validator});
             skipTime(web3, month);
         });
 
-        it("30 nodes by 1 each day", async () => {
-            const nodesCount = 3;
-            const result = new Map<number, object[]>();
-            const queue = []
-            for (let i = 0; i < nodesCount; ++i) {
-                await nodes.registerNodes(1, validatorId);
-                skipTime(web3, day);
-                result.set(i, []);
-                queue.push({nodeId: i, getBountyTimestamp: (await bountyContract.getNextRewardTimestamp(i)).toNumber()})
+        async function calculateBounty(nodeId: number) {
+            const bounty = web3.utils.toBN((await bountyContract.calculateBounty.call(nodeId))).div(ten18).toNumber();
+            await bountyContract.calculateBounty(nodeId);
+            await nodes.changeNodeLastRewardDate(nodeId);
+            return bounty;
+        }
+
+        function getBountyForEpoch(epoch: number) {
+            const bountyForFirst6Years = [385000000, 346500000, 308000000, 269500000, 231000000, 192500000];
+            const year = Math.floor(epoch / 12);
+            if (year < 6) {
+                return bountyForFirst6Years[year] / 12;
+            } else {
+                return bountyForFirst6Years[5] / 2 ** (Math.floor((year - 6) / 3) + 1);
             }
-            let minBounty = Infinity;
-            let maxBounty = 0;
-            const startTime = await currentTime(web3);
-            queue.sort((a, b) => {
-                return b.getBountyTimestamp - a.getBountyTimestamp;
+        }
+
+        describe("when second validator is registered and has active delegations", async () => {
+            const validator2Id = 2;
+            const validator2Amount = 0.5e6;
+            beforeEach(async () => {
+                const delegationPeriodManager = await deployDelegationPeriodManager(contractManager);
+
+                await skaleToken.mint(validator2, ten18.muln(validator2Amount).toString(), "0x", "0x");
+                await validatorService.registerValidator("Validator", "", 150, 1e6 + 1, {from: validator2});
+                await validatorService.enableValidator(validator2Id);
+                await delegationPeriodManager.setDelegationPeriod(12, 200);
+                await delegationController.delegate(validator2Id, ten18.muln(validator2Amount).toString(), 12, "", {from: validator2});
+                await delegationController.acceptPendingDelegation(1, {from: validator2});
+                skipTime(web3, month);
+
+                await skipTimeToDate(web3, 1, 0); // Jan 1st
+                await constantsHolder.setLaunchTimestamp(await currentTime(web3));
             });
-            for (let timestamp = startTime; timestamp < startTime + 365 * day; timestamp = await currentTime(web3)) {
-                const nodeInfo: {nodeId: number, getBountyTimestamp: number} | undefined = queue.pop();
-                assert(nodeInfo !== undefined);
-                if (nodeInfo) {
-                    const nodeId = nodeInfo.nodeId;
-                    if (timestamp < nodeInfo.getBountyTimestamp) {
-                        skipTime(web3, nodeInfo.getBountyTimestamp - timestamp);
-                    }
-                    const bounty = web3.utils.toBN((await bountyContract.calculateBounty.call(nodeId))).div(ten18).toNumber();
-                    // total[nodeIndex] += bounty;
-                    await bountyContract.calculateBounty(nodeId);
-                    await nodes.changeNodeLastRewardDate(nodeId);
 
-                    nodeInfo.getBountyTimestamp = (await bountyContract.getNextRewardTimestamp(nodeId)).toNumber();
-                    queue.push(nodeInfo)
-                    queue.sort((a, b) => {
-                        return b.getBountyTimestamp - a.getBountyTimestamp;
-                    });
+            it("should pay bounty proportionally to effective validator's stake", async () => {
+                await nodes.registerNodes(1, validatorId);
+                await nodes.registerNodes(1, validator2Id);
 
-                    minBounty = Math.min(minBounty, bounty);
-                    maxBounty = Math.max(maxBounty, bounty);
-                    result.get(nodeId)?.push({timestamp, bounty});
-                } else {
-                    assert(false, "Internal error");
-                }
+                skipTime(web3, 29 * day);
+                const bounty0 = await calculateBounty(0);
+                const bounty1 = await calculateBounty(1);
+                bounty0.should.be.equal(bounty1);
+                bounty0.should.be.almost(getBountyForEpoch(0) / 2);
+            });
 
-                // for (let nodeIndex = 0; nodeIndex < nodesCount; ++nodeIndex) {
-                //     if ((await bountyContract.getNextRewardTimestamp(nodeIndex)).toNumber() <= await currentTime(web3)) {
-                //         const bounty = web3.utils.toBN((await bountyContract.calculateBounty.call(nodeIndex))).div(ten18).toNumber();
-                //         // total[nodeIndex] += bounty;
-                //         await bountyContract.calculateBounty(nodeIndex);
-                //         await nodes.changeNodeLastRewardDate(nodeIndex);
+            it("should process nodes adding and removing", async () => {
+                await nodes.registerNodes(1, validatorId);
+                skipTime(web3, 29 * day);
+                let bounty0 = await calculateBounty(0);
+                bounty0.should.be.almost(getBountyForEpoch(0));
 
-                //         minBounty = Math.min(minBounty, bounty);
-                //         maxBounty = Math.max(maxBounty, bounty);
-                //         const timestamp = await currentTime(web3);
-                //         result.get(nodeIndex)?.push({timestamp, bounty});
-                //     }
-                // }
-                // skipTime(web3, day);
-            }
-            console.log(minBounty, maxBounty);
-            console.log(JSON.stringify(Array.from(result)));
-        })
+                skipTime(web3, 2 * day);
+                // February
+
+                await nodes.registerNodes(1, validator2Id);
+                skipTime(web3, 27 * day);
+                bounty0 = await calculateBounty(0);
+                let bounty1 = await calculateBounty(1);
+                bounty0.should.be.equal(bounty1);
+                bounty0.should.be.almost(getBountyForEpoch(1) / 2);
+                await nodes.removeNode(0, validatorId);
+
+                skipTime(web3, 3 * day);
+                // March
+
+                skipTime(web3, 28 * day);
+                bounty1 = await calculateBounty(1);
+                bounty1.should.be.almost(getBountyForEpoch(2));
+            });
+        });
+
+        describe("when 10 nodes registered", async() => {
+            const maxRewardPeriod = 60 * 60 * 24 * 30 + 60 * 60;
+            const nodesCount = 10;
+
+            beforeEach(async() => {
+                await nodes.registerNodes(nodesCount, validatorId);
+            });
+
+            // TODO: update
+            // it("5 year test for 10 nodes", async() => {
+            //     const years = 5;
+            //     const total = []
+            //     for (let nodeIndex = 0; nodeIndex < nodesCount; ++nodeIndex) {
+            //         total.push(0);
+            //     }
+            //     for (let currentMonth = 0; currentMonth < 12 * years; currentMonth++) {
+            //         skipTime(web3, maxRewardPeriod);
+
+            //         for (let nodeIndex = 0; nodeIndex < nodesCount; nodeIndex++) {
+            //             const bounty = web3.utils.toBN((await bountyContract.calculateBounty.call(nodeIndex))).div(ten18).toNumber();
+            //             total[nodeIndex] += bounty;
+            //             await bountyContract.calculateBounty(nodeIndex);
+
+            //             if (nodeIndex > 0) {
+            //                 total[nodeIndex].should.be.equal(total[nodeIndex - 1]);
+            //             }
+            //         }
+            //     }
+            // });
+        });
+
+        // this test was used to manually check bounty distribution
+
+        // it("30 nodes by 1 each day", async () => {
+        //     const nodesCount = 30;
+        //     const result = new Map<number, object[]>();
+        //     const queue = []
+        //     for (let i = 0; i < nodesCount; ++i) {
+        //         await nodes.registerNodes(1, validatorId);
+        //         console.log("Node", i, "is registered", new Date(await currentTime(web3) * 1000))
+        //         skipTime(web3, day);
+        //         result.set(i, []);
+        //         queue.push({nodeId: i, getBountyTimestamp: (await bountyContract.getNextRewardTimestamp(i)).toNumber()})
+        //     }
+        //     let minBounty = Infinity;
+        //     let maxBounty = 0;
+        //     const startTime = await currentTime(web3);
+        //     queue.sort((a, b) => {
+        //         return b.getBountyTimestamp - a.getBountyTimestamp;
+        //     });
+        //     for (let timestamp = startTime; timestamp < startTime + 365 * day; timestamp = await currentTime(web3)) {
+        //         const nodeInfo: {nodeId: number, getBountyTimestamp: number} | undefined = queue.pop();
+        //         assert(nodeInfo !== undefined);
+        //         if (nodeInfo) {
+        //             const nodeId = nodeInfo.nodeId;
+        //             if (timestamp < nodeInfo.getBountyTimestamp) {
+        //                 skipTime(web3, nodeInfo.getBountyTimestamp - timestamp);
+        //                 timestamp = await currentTime(web3)
+        //             }
+        //             console.log("Node", nodeId, new Date(await currentTime(web3) * 1000))
+        //             const bounty = web3.utils.toBN((await bountyContract.calculateBounty.call(nodeId))).div(ten18).toNumber();
+        //             // total[nodeIndex] += bounty;
+        //             await bountyContract.calculateBounty(nodeId);
+        //             await nodes.changeNodeLastRewardDate(nodeId);
+
+        //             nodeInfo.getBountyTimestamp = (await bountyContract.getNextRewardTimestamp(nodeId)).toNumber();
+        //             queue.push(nodeInfo)
+        //             queue.sort((a, b) => {
+        //                 return b.getBountyTimestamp - a.getBountyTimestamp;
+        //             });
+
+        //             minBounty = Math.min(minBounty, bounty);
+        //             maxBounty = Math.max(maxBounty, bounty);
+        //             result.get(nodeId)?.push({timestamp, bounty});
+        //         } else {
+        //             assert(false, "Internal error");
+        //         }
+        //     }
+        //     console.log(minBounty, maxBounty);
+        //     console.log(JSON.stringify(Array.from(result)));
+        //     const epochs = []
+        //     const timeHelpers = await deployTimeHelpers(contractManager);
+        //     for (let i = 0; i < 30; ++i) {
+        //         epochs.push((await timeHelpers.monthToTimestamp(i)).toNumber())
+        //     }
+        //     console.log(JSON.stringify(Array.from(epochs)));
+        // })
     });
 });
