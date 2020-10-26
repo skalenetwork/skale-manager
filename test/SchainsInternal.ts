@@ -55,6 +55,7 @@ contract("SchainsInternal", ([owner, holder]) => {
 
         // contract must be set in contractManager for proper work of allow modifier
         await contractManager.setContractsAddress("Schains", nodes.address);
+        await contractManager.setContractsAddress("SkaleManager", nodes.address);
 
         validatorService.registerValidator("D2", "D2 is even", 0, 0, {from: holder});
     });
