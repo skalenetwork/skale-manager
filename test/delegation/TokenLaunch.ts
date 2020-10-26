@@ -17,10 +17,9 @@ import { deployTokenLaunchManager } from "../tools/deploy/delegation/tokenLaunch
 import { deployValidatorService } from "../tools/deploy/delegation/validatorService";
 import { deploySkaleToken } from "../tools/deploy/skaleToken";
 import { State } from "../tools/types";
+import { deploySkaleManagerMock } from "../tools/deploy/test/skaleManagerMock";
 chai.should();
 chai.use(chaiAsPromised);
-
-const SkaleManagerMock: SkaleManagerMockContract = artifacts.require("./SkaleManagerMock");
 
 contract("TokenLaunchManager", ([owner, holder, delegation, validator, seller, hacker]) => {
     let contractManager: ContractManagerInstance;
@@ -40,8 +39,11 @@ contract("TokenLaunchManager", ([owner, holder, delegation, validator, seller, h
         delegationPeriodManager = await deployDelegationPeriodManager(contractManager);
         punisher = await deployPunisher(contractManager);
 
-        const skaleManagerMock = await SkaleManagerMock.new(contractManager.address);
+        const skaleManagerMock = await deploySkaleManagerMock(contractManager);
         await contractManager.setContractsAddress("SkaleManager", skaleManagerMock.address);
+
+        // contract must be set in contractManager for proper work of allow modifier
+        await contractManager.setContractsAddress("SkaleDKG", contractManager.address);
 
         // each test will start from Nov 10
         await skipTimeToDate(web3, 10, 11);

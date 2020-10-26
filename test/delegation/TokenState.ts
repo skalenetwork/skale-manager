@@ -14,6 +14,7 @@ import { deployTokenState } from "../tools/deploy/delegation/tokenState";
 import { deployValidatorService } from "../tools/deploy/delegation/validatorService";
 import { deploySkaleToken } from "../tools/deploy/skaleToken";
 import { State } from "../tools/types";
+import { deploySkaleManagerMock } from "../tools/deploy/test/skaleManagerMock";
 chai.should();
 chai.use(chaiAsPromised);
 
@@ -33,6 +34,9 @@ contract("DelegationController", ([owner, holder, validator]) => {
         tokenState = await deployTokenState(contractManager);
         validatorService = await deployValidatorService(contractManager);
         skaleToken = await deploySkaleToken(contractManager);
+
+        const skaleManagerMock = await deploySkaleManagerMock(contractManager);
+        await contractManager.setContractsAddress("SkaleManager", skaleManagerMock.address);
 
         await validatorService.registerValidator("Validator", "D2 is even", 150, 0, {from: validator});
         validatorId = 1;
