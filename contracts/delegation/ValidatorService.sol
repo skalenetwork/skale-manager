@@ -26,7 +26,6 @@ pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts-ethereum-package/contracts/cryptography/ECDSA.sol";
 
-import "../BountyV2.sol";
 import "../Permissions.sol";
 import "../ConstantsHolder.sol";
 
@@ -334,44 +333,6 @@ contract ValidatorService is Permissions {
             getValidator(validatorId).validatorAddress,
             validatorId
         );
-    }
-
-    function populateBountyV2() external onlyOwner {
-        TimeHelpers timeHelpers = TimeHelpers(contractManager.getTimeHelpers());
-        ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getConstantsHolder());
-        DelegationController delegationController = 
-            DelegationController(contractManager.getContract("DelegationController"));
-        BountyV2 bounty = BountyV2(contractManager.getBounty());
-
-        uint startMonth = timeHelpers.timestampToMonth(constantsHolder.launchTimestamp());
-        uint currentMonth = timeHelpers.getCurrentMonth();
-        // 2 is a biggest delegation period when BountyV2 is deployed
-        uint endMonth = currentMonth.add(2);
-
-        for (uint i = 1; i < trustedValidatorsList.length; ++i) {
-            uint validatorId = trustedValidatorsList[i];
-            uint effectiveDelegated = 0;
-            for (uint month = startMonth; month < endMonth; ++month) {
-                uint currentEffectiveDelegated = 
-                    delegationController.getAndUpdateEffectiveDelegatedToValidator(validatorId, month);
-                if (currentEffectiveDelegated != effectiveDelegated) {
-                    if (currentEffectiveDelegated > effectiveDelegated) {
-                        bounty.handleDelegationAdd(
-                            validatorId,
-                            currentEffectiveDelegated.sub(effectiveDelegated),
-                            month
-                        );
-                    } else {
-                        bounty.handleDelegationRemoving(
-                            validatorId,
-                            effectiveDelegated.sub(currentEffectiveDelegated),
-                            month
-                        );
-                    }
-                    effectiveDelegated = currentEffectiveDelegated;
-                }
-            }
-        }
     }
 
     function getMyNodesAddresses() external view returns (address[] memory) {

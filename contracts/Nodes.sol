@@ -363,13 +363,16 @@ contract Nodes is Permissions {
         _setNodeActive(nodeIndex);
     }
 
-    function populateBountyV2() external onlyOwner {
+    function populateBountyV2(uint from, uint to) external onlyOwner {
         BountyV2 bounty = BountyV2(contractManager.getBounty());
-        for (uint nodeId = 0; nodeId < nodes.length; ++nodeId) {
+        uint nodeCreationWindow = bounty.nodeCreationWindowSeconds();
+        bounty.setNodeCreationWindowSeconds(uint(-1) / 2);
+        for (uint nodeId = from; nodeId < _min(nodes.length, to); ++nodeId) {
             if (nodes[nodeId].status != NodeStatus.Left) {
                 bounty.handleNodeCreation(nodes[nodeId].validatorId);
             }
         }
+        bounty.setNodeCreationWindowSeconds(nodeCreationWindow);
     }
 
     function getNodesWithFreeSpace(uint8 freeSpace) external view returns (uint[] memory) {
@@ -397,8 +400,7 @@ contract Nodes is Permissions {
         checkNodeExists(nodeIndex)
         returns (bool)
     {
-        ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
-        return uint(nodes[nodeIndex].lastRewardDate).add(constantsHolder.rewardPeriod()) <= block.timestamp;
+        return BountyV2(contractManager.getBounty()).getNextRewardTimestamp(nodeIndex) <= now;
     }
 
     /**
@@ -794,4 +796,11 @@ contract Nodes is Permissions {
         delete spaceOfNodes[nodeIndex].indexInSpaceMap;
     }
 
+    function _min(uint a, uint b) private pure returns (uint) {
+        if (a < b) {
+            return a;
+        } else {
+            return b;
+        }
+    }
 }

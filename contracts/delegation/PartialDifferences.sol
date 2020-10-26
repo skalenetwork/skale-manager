@@ -115,6 +115,15 @@ library PartialDifferences {
         return sequence.value[month];
     }
 
+    function getValuesInSequence(Sequence storage sequence) internal view returns (uint[] memory values) {
+        values = new uint[](sequence.lastChangedMonth.add(2).sub(sequence.firstUnprocessedMonth));
+        values[0] = sequence.value[sequence.firstUnprocessedMonth.sub(1)];
+        for (uint i = 0; i.add(1) < values.length; ++i) {
+            uint month = sequence.firstUnprocessedMonth.add(i);
+            values[i.add(1)] = values[i].add(sequence.addDiff[month]).sub(sequence.subtractDiff[month]);
+        }
+    }
+
     function reduceSequence(
         Sequence storage sequence,
         FractionUtils.Fraction memory reducingCoefficient,

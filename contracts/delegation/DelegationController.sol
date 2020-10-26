@@ -243,15 +243,13 @@ contract DelegationController is Permissions, ILocker {
         external
     {
         ValidatorService validatorService = _getValidatorService();
-        IERC777 skaleToken = IERC777(contractManager.getContract("SkaleToken"));
-        TokenState tokenState = TokenState(contractManager.getContract("TokenState"));
 
         require(
             validatorService.checkMinimumDelegation(validatorId, amount),
-            "Amount does not meet the validator's minimum delegation amount");
+            "Amount is too low");
         require(
             validatorService.isAuthorizedValidator(validatorId),
-            "Validator is not authorized to accept delegation request");
+            "Validator is disabled");
         require(
             _getDelegationPeriodManager().isDelegationPeriodAllowed(delegationPeriod),
             "This delegation period is not allowed");
@@ -270,8 +268,9 @@ contract DelegationController is Permissions, ILocker {
             info);
 
         // check that there is enough money
-        uint holderBalance = skaleToken.balanceOf(msg.sender);
-        uint forbiddenForDelegation = tokenState.getAndUpdateForbiddenForDelegationAmount(msg.sender);
+        uint holderBalance = IERC777(contractManager.getSkaleToken()).balanceOf(msg.sender);
+        uint forbiddenForDelegation = TokenState(contractManager.getTokenState())
+            .getAndUpdateForbiddenForDelegationAmount(msg.sender);
         require(holderBalance >= forbiddenForDelegation, "Token holder does not have enough tokens to delegate");
 
         emit DelegationProposed(delegationId);
@@ -307,7 +306,7 @@ contract DelegationController is Permissions, ILocker {
      */
     function cancelPendingDelegation(uint delegationId) external checkDelegationExists(delegationId) {
         require(msg.sender == delegations[delegationId].holder, "Only token holders can cancel delegation request");
-        require(getState(delegationId) == State.PROPOSED, "Token holders are only able to cancel PROPOSED delegations");
+        require(getState(delegationId) == State.PROPOSED, "Wrong state");
 
         delegations[delegationId].finished = _getCurrentMonth();
         _subtractFromLockedInPendingDelegations(delegations[delegationId].holder, delegations[delegationId].amount);
@@ -490,13 +489,17 @@ contract DelegationController is Permissions, ILocker {
     }
 
     function getAndUpdateEffectiveDelegatedToValidator(uint validatorId, uint month)
-        external allowThree("Bounty", "Distributor", "ValidatorService") returns (uint)
+        external allowTwo("Bounty", "Distributor") returns (uint)
     {
         return _effectiveDelegatedToValidator[validatorId].getAndUpdateValueInSequence(month);
     }
 
     function getAndUpdateDelegatedByHolderToValidatorNow(address holder, uint validatorId) external returns (uint) {
         return _getAndUpdateDelegatedByHolderToValidator(holder, validatorId, _getCurrentMonth());
+    }
+
+    function getEffectiveDelegatedValuesByValidator(uint validatorId) external view returns (uint[] memory) {
+        return _effectiveDelegatedToValidator[validatorId].getValuesInSequence();
     }
 
     function getDelegation(uint delegationId)
@@ -836,7 +839,7 @@ contract DelegationController is Permissions, ILocker {
     }
 
     function _sendSlashingSignals(SlashingSignal[] memory slashingSignals) private {
-        Punisher punisher = Punisher(contractManager.getContract("Punisher"));
+        Punisher punisher = Punisher(contractManager.getPunisher());
         address previousHolder = address(0);
         uint accumulatedPenalty = 0;
         for (uint i = 0; i < slashingSignals.length; ++i) {

@@ -36,12 +36,15 @@ contract ContractManager is OwnableUpgradeSafe {
     using StringUtils for string;
     using Address for address;
 
-    string public constant DELEGATION_PERIOD_MANAGER = "DelegationPeriodManager";
     string public constant BOUNTY = "Bounty";
-    string public constant VALIDATOR_SERVICE = "ValidatorService";
+    string public constant CONSTANTS_HOLDER = "ConstantsHolder";
+    string public constant DELEGATION_PERIOD_MANAGER = "DelegationPeriodManager";
+    string public constant PUNISHER = "Punisher";
+    string public constant SKALE_TOKEN = "SkaleToken";
     string public constant TIME_HELPERS = "TimeHelpers";
     string public constant TOKEN_LAUNCH_LOCKER = "TokenLaunchLocker";
-    string public constant CONSTANTS_HOLDER = "ConstantsHolder";
+    string public constant TOKEN_STATE = "TokenState";
+    string public constant VALIDATOR_SERVICE = "ValidatorService";
 
     // mapping of actual smart contracts addresses
     mapping (bytes32 => address) public contracts;
@@ -92,6 +95,18 @@ contract ContractManager is OwnableUpgradeSafe {
 
     function getConstantsHolder() external view returns (address) {
         return getContract(CONSTANTS_HOLDER);
+    }
+
+    function getSkaleToken() external view returns (address) {
+        return getContract(SKALE_TOKEN);
+    }
+
+    function getTokenState() external view returns (address) {
+        return getContract(TOKEN_STATE);
+    }
+
+    function getPunisher() external view returns (address) {
+        return getContract(PUNISHER);
     }
 
     function getContract(string memory name) public view returns (address contractAddress) {

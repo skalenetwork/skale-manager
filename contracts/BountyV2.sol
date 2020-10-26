@@ -45,18 +45,16 @@ contract BountyV2 is Permissions {
     uint public constant EPOCHS_PER_YEAR = 12;
     uint public constant SECONDS_PER_DAY = 24 * 60 * 60;
     uint public constant BOUNTY_WINDOW_SECONDS = 3 * SECONDS_PER_DAY;
-    uint public constant NODE_CREATION_WINDOW_SECONDS = 3 * SECONDS_PER_DAY;
     
     uint private _nextEpoch;
     uint private _epochPool;
     uint private _bountyWasPaidInCurrentEpoch;
     bool public bountyReduction;
+    uint public nodeCreationWindowSeconds;
 
     PartialDifferences.Value private _effectiveDelegatedSum;
     // validatorId   amount of nodes
     mapping (uint => uint) public nodesByValidator;
-    // validatorId => sequence
-    mapping (uint => PartialDifferences.Value) private _effectiveDelegatedToValidator;
 
     function calculateBounty(uint nodeIndex)
         external
@@ -83,7 +81,7 @@ contract BountyV2 is Permissions {
             nodes,
             constantsHolder
         );
-
+        
         _epochPool = _epochPool.sub(bounty);
         _bountyWasPaidInCurrentEpoch = _bountyWasPaidInCurrentEpoch.add(bounty);
 
@@ -98,18 +96,21 @@ contract BountyV2 is Permissions {
         bountyReduction = false;
     }
 
+    function setNodeCreationWindowSeconds(uint window) external allow("Nodes") {
+        nodeCreationWindowSeconds = window;
+    }
+
     function handleDelegationAdd(
         uint validatorId,
         uint amount,
         uint month
     )
         external
-        allowTwo("DelegationController", "ValidatorService")
+        allow("DelegationController")
     {
         if (nodesByValidator[validatorId] > 0) {
             _effectiveDelegatedSum.addToValue(amount.mul(nodesByValidator[validatorId]), month);
         }
-        _effectiveDelegatedToValidator[validatorId].addToValue(amount, month);
     }
 
     function handleDelegationRemoving(
@@ -118,12 +119,11 @@ contract BountyV2 is Permissions {
         uint month
     )
         external
-        allowTwo("DelegationController", "ValidatorService")
+        allow("DelegationController")
     {
         if (nodesByValidator[validatorId] > 0) {
             _effectiveDelegatedSum.subtractFromValue(amount.mul(nodesByValidator[validatorId]), month);
         }
-        _effectiveDelegatedToValidator[validatorId].subtractFromValue(amount, month);
     }
 
     function handleNodeCreation(uint validatorId) external allow("Nodes") {
@@ -172,6 +172,7 @@ contract BountyV2 is Permissions {
         _epochPool = 0;
         _bountyWasPaidInCurrentEpoch = 0;
         bountyReduction = false;
+        nodeCreationWindowSeconds = 3 * SECONDS_PER_DAY;
     }
 
     // private
@@ -196,15 +197,24 @@ contract BountyV2 is Permissions {
             return 0;
         }
 
+        uint effectiveDelegatedSum = _effectiveDelegatedSum.getAndUpdateValue(currentMonth);
+        if (effectiveDelegatedSum == 0) {
+            // no delegations in the system
+            return 0;
+        }
+
         DelegationController delegationController = 
             DelegationController(contractManager.getContract("DelegationController"));
-
+        
         return epochPoolSize
             .add(_bountyWasPaidInCurrentEpoch)
-            .mul(delegationController.getAndUpdateEffectiveDelegatedToValidator(
-                nodes.getValidatorId(nodeIndex), currentMonth)
+            .mul(
+                delegationController.getAndUpdateEffectiveDelegatedToValidator(
+                    nodes.getValidatorId(nodeIndex),
+                    currentMonth
+                )
             )
-            .div(_effectiveDelegatedSum.getAndUpdateValue(currentMonth));
+            .div(effectiveDelegatedSum);
     }
 
     function _getFirstEpoch(TimeHelpers timeHelpers, ConstantsHolder constantsHolder) private view returns (uint) {
@@ -293,30 +303,21 @@ contract BountyV2 is Permissions {
 
     function _changeEffectiveDelegatedSum(uint validatorId, bool add) private {
         TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
+        DelegationController delegationController = 
+            DelegationController(contractManager.getContract("DelegationController"));
         uint currentMonth = timeHelpers.getCurrentMonth();
         
-        uint effectiveDelegated = _effectiveDelegatedToValidator[validatorId].getAndUpdateValue(currentMonth);
+        uint current = delegationController.getAndUpdateEffectiveDelegatedToValidator(validatorId, currentMonth);
+        uint[] memory effectiveDelegated = delegationController.getEffectiveDelegatedValuesByValidator(validatorId);
+        assert(current == effectiveDelegated[0]);
         uint addedToStatistic = 0;
-        if (now < timeHelpers.monthToTimestamp(currentMonth).add(NODE_CREATION_WINDOW_SECONDS)) {
-            if (add) {
-                _effectiveDelegatedSum.addToValue(effectiveDelegated, currentMonth);
-            } else {
-                _effectiveDelegatedSum.subtractFromValue(effectiveDelegated, currentMonth);
-            }
-            addedToStatistic = effectiveDelegated;
-        }
-        for (
-            uint month = currentMonth.add(1);
-            month == currentMonth.add(1) || month <= _effectiveDelegatedToValidator[validatorId].lastChangedMonth;
-            ++month
-        )
-        {
-            effectiveDelegated = effectiveDelegated
-                .add(_effectiveDelegatedToValidator[validatorId].addDiff[month])
-                .sub(_effectiveDelegatedToValidator[validatorId].subtractDiff[month]);
-            if (effectiveDelegated != addedToStatistic) {
-                _addToEffectiveDelegatedSum(month, effectiveDelegated, addedToStatistic, add);
-                addedToStatistic = effectiveDelegated;
+        bool addToCurrentMonth = now < timeHelpers.monthToTimestamp(currentMonth).add(nodeCreationWindowSeconds);
+        for (uint i = 0; i < effectiveDelegated.length; ++i) {
+            if (i > 0 || addToCurrentMonth) {
+                if (effectiveDelegated[i] != addedToStatistic) {
+                    _addToEffectiveDelegatedSum(currentMonth.add(i), effectiveDelegated[i], addedToStatistic, add);
+                    addedToStatistic = effectiveDelegated[i];
+                }
             }
         }
     }
@@ -350,7 +351,7 @@ contract BountyV2 is Permissions {
         if (lastRewardMonth == currentMonth) {
             uint nextMonthStart = timeHelpers.monthToTimestamp(currentMonth.add(1));
             uint nextMonthFinish = timeHelpers.monthToTimestamp(lastRewardMonth.add(2));
-            if (lastRewardTimestamp < lastRewardMonthStart.add(NODE_CREATION_WINDOW_SECONDS)) {
+            if (lastRewardTimestamp < lastRewardMonthStart.add(nodeCreationWindowSeconds)) {
                 return nextMonthStart.sub(BOUNTY_WINDOW_SECONDS);
             } else {
                 return _min(nextMonthStart.add(timePassedAfterMonthStart), nextMonthFinish.sub(BOUNTY_WINDOW_SECONDS));
@@ -359,12 +360,12 @@ contract BountyV2 is Permissions {
             uint currentMonthStart = timeHelpers.monthToTimestamp(currentMonth);
             uint currentMonthFinish = timeHelpers.monthToTimestamp(lastRewardMonth.add(1));
             return _min(
-                currentMonthStart.add(_max(timePassedAfterMonthStart, NODE_CREATION_WINDOW_SECONDS)),
+                currentMonthStart.add(_max(timePassedAfterMonthStart, nodeCreationWindowSeconds)),
                 currentMonthFinish.sub(BOUNTY_WINDOW_SECONDS)
             );
         } else {
             uint currentMonthStart = timeHelpers.monthToTimestamp(currentMonth);
-            return currentMonthStart.add(NODE_CREATION_WINDOW_SECONDS);
+            return currentMonthStart.add(nodeCreationWindowSeconds);
         }
     }
 
