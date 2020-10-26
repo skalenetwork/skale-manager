@@ -32,6 +32,9 @@ contract("Monitors", ([owner, validator, nodeAddress]) => {
     constantsHolder = await deployConstantsHolder(contractManager);
     validatorService = await deployValidatorService(contractManager);
 
+    // contract must be set in contractManager for proper work of allow modifier
+    await contractManager.setContractsAddress("SkaleManager", nodes.address);
+
     // create a node for monitors functions tests
     await validatorService.registerValidator("Validator", "D2", 0, 0, {from: validator});
     const validatorIndex = await validatorService.getValidatorId(validator);
