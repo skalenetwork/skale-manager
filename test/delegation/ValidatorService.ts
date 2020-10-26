@@ -15,6 +15,7 @@ import { deployDelegationController } from "../tools/deploy/delegation/delegatio
 import { deployValidatorService } from "../tools/deploy/delegation/validatorService";
 import { deploySkaleToken } from "../tools/deploy/skaleToken";
 import { deploySkaleManager } from "../tools/deploy/skaleManager";
+import { deploySkaleManagerMock } from "../tools/deploy/test/skaleManagerMock";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -53,6 +54,9 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
         skaleToken = await deploySkaleToken(contractManager);
         validatorService = await deployValidatorService(contractManager);
         delegationController = await deployDelegationController(contractManager);
+
+        const skaleManagerMock = await deploySkaleManagerMock(contractManager);
+        await contractManager.setContractsAddress("SkaleManager", skaleManagerMock.address);
     });
 
     it("should register new validator", async () => {

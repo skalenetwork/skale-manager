@@ -16,6 +16,7 @@ import { deployValidatorService } from "./tools/deploy/delegation/validatorServi
 import { deployNodes } from "./tools/deploy/nodes";
 import { deploySkaleToken } from "./tools/deploy/skaleToken";
 import { deployDelegationController } from "./tools/deploy/delegation/delegationController";
+import { deploySkaleManagerMock } from "./tools/deploy/test/skaleManagerMock";
 
 
 chai.should();
@@ -37,6 +38,8 @@ contract("NodesFunctionality", ([owner, validator, nodeAddress, nodeAddress2, ho
         skaleToken = await deploySkaleToken(contractManager);
         delegationController = await deployDelegationController(contractManager);
 
+        const skaleManagerMock = await deploySkaleManagerMock(contractManager);
+        await contractManager.setContractsAddress("SkaleManager", skaleManagerMock.address);
 
         await validatorService.registerValidator("Validator", "D2", 0, 0, {from: validator});
         const validatorIndex = await validatorService.getValidatorId(validator);

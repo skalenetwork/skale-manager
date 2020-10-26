@@ -9,6 +9,7 @@ import { deployContractManager } from "./tools/deploy/contractManager";
 import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
 import { deploySkaleToken } from "./tools/deploy/skaleToken";
 import { deployReentrancyTester } from "./tools/deploy/test/reentracyTester";
+import { deploySkaleManagerMock } from "./tools/deploy/test/skaleManagerMock";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -30,6 +31,9 @@ contract("SkaleToken", ([owner, holder, receiver, nilAddress, accountWith99]) =>
 
     contractManager = await deployContractManager();
     skaleToken = await deploySkaleToken(contractManager);
+
+    const skaleManagerMock = await deploySkaleManagerMock(contractManager);
+    await contractManager.setContractsAddress("SkaleManager", skaleManagerMock.address);
 
     const premined = "5000000000000000000000000000"; // 5e9 * 1e18
     await skaleToken.mint(owner, premined, "0x", "0x");

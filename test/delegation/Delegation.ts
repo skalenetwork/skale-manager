@@ -77,6 +77,9 @@ contract("Delegation", ([owner,
         punisher = await deployPunisher(contractManager);
         nodes = await deployNodes(contractManager);
 
+        // contract must be set in contractManager for proper work of allow modifier
+        await contractManager.setContractsAddress("SkaleDKG", nodes.address);
+
         // each test will start from Nov 10
         await skipTimeToDate(web3, 10, 10);
     });

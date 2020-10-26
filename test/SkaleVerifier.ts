@@ -14,6 +14,7 @@ import { deployNodes } from "./tools/deploy/nodes";
 import { deploySchains } from "./tools/deploy/schains";
 import { deploySkaleVerifier } from "./tools/deploy/skaleVerifier";
 import { deployKeyStorage } from "./tools/deploy/keyStorage";
+import { deploySkaleManagerMock } from "./tools/deploy/test/skaleManagerMock";
 chai.should();
 chai.use(chaiAsPromised);
 
@@ -33,6 +34,9 @@ contract("SkaleVerifier", ([validator1, owner, developer, hacker]) => {
         schains = await deploySchains(contractManager);
         skaleVerifier = await deploySkaleVerifier(contractManager);
         keyStorage = await deployKeyStorage(contractManager);
+
+        const skaleManagerMock = await deploySkaleManagerMock(contractManager);
+        await contractManager.setContractsAddress("SkaleManager", skaleManagerMock.address);
 
         await validatorService.registerValidator("D2", "D2 is even", 0, 0, {from: validator1});
     });

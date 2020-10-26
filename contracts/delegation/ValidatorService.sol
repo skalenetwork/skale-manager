@@ -138,7 +138,7 @@ contract ValidatorService is Permissions {
         returns (uint validatorId)
     {
         require(!validatorAddressExists(msg.sender), "Validator with such address already exists");
-        require(feeRate < 1000, "Fee rate of validator should be lower than 100%");
+        require(feeRate <= 1000, "Fee rate of validator should be lower than 100%");
         validatorId = ++numberOfValidators;
         validators[validatorId] = Validator(
             name,

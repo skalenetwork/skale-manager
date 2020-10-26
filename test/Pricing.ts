@@ -20,6 +20,7 @@ import { deployValidatorService } from "./tools/deploy/delegation/validatorServi
 import { deploySchains } from "./tools/deploy/schains";
 import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
 import { deployNodeRotation } from "./tools/deploy/nodeRotation";
+import { deploySkaleManagerMock } from "./tools/deploy/test/skaleManagerMock";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -44,6 +45,9 @@ contract("Pricing", ([owner, holder, validator, nodeAddress]) => {
         validatorService = await deployValidatorService(contractManager);
         constants = await deployConstantsHolder(contractManager);
         nodeRotation = await deployNodeRotation(contractManager);
+
+        const skaleManagerMock = await deploySkaleManagerMock(contractManager);
+        await contractManager.setContractsAddress("SkaleManager", skaleManagerMock.address);
 
         await validatorService.registerValidator("Validator", "D2", 0, 0, {from: validator});
         const validatorIndex = await validatorService.getValidatorId(validator);
