@@ -54,18 +54,15 @@ async function deploy(deployer, networkName, accounts) {
 
     for (const contract of contracts) {
         const address = deployed.get(contract).address;
-        await ContractManager.methods.setContractsAddress(contract, address).send({from: deployAccount}).then(function(res) {
+        await ContractManager.methods.setContractsAddress("Bounty", address).send({from: deployAccount}).then(function(res) {
             console.log("Contract", contract, "with address", address, "is registered in Contract Manager");
         });
     }
     
     console.log('Deploy done, writing results...');
 
-    for (const contractName of contracts) {
-        propertyName = contractName.replace(/([a-zA-Z])(?=[A-Z])/g, '$1_').toLowerCase();
-        jsonData[propertyName + "_address"] = deployed.get(contractName).address;
-        jsonData[propertyName + "_abi"] = artifacts.require("./" + contractName).abi;
-    }
+    jsonData["bounty_address"] = deployed.get("BountyV2").address;
+    jsonData["bounty_abi"] = artifacts.require("./" + "BountyV2").abi;
 
     await fsPromises.writeFile(`data/${networkName}.json`, JSON.stringify(jsonData));
     console.log(`Done, check ${networkName}.json file in data folder.`);
