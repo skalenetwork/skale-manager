@@ -78,7 +78,7 @@ contract SchainsInternal is Permissions {
     mapping (bytes32 => bool) public usedSchainNames;
 
     mapping (uint => SchainType) public schainTypes;
-    uint public numberOfSchainTypes = 5;
+    uint public numberOfSchainTypes;
 
     /**
      * @dev Allows Schain contract to initialize an schain.
@@ -442,6 +442,7 @@ contract SchainsInternal is Permissions {
 
         numberOfSchains = 0;
         sumOfSchainsResources = 0;
+        numberOfSchainTypes = 5;
     }
 
     /**

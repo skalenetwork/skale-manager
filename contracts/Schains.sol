@@ -367,6 +367,34 @@ contract Schains is Permissions {
         }
     }
 
+    // function getNodesDataFromTypeOfSchain(uint typeOfSchain)
+    //     public
+    //     view
+    //     returns (uint numberOfNodes, uint8 partOfNode)
+    // {
+    //     ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
+    //     numberOfNodes = constantsHolder.NUMBER_OF_NODES_FOR_SCHAIN();
+    //     if (typeOfSchain == 1) {
+    //         partOfNode = constantsHolder.SMALL_DIVISOR() / constantsHolder.SMALL_DIVISOR();
+    //     } else if (typeOfSchain == 2) {
+    //         partOfNode = constantsHolder.SMALL_DIVISOR() / constantsHolder.MEDIUM_DIVISOR();
+    //     } else if (typeOfSchain == 3) {
+    //         partOfNode = constantsHolder.SMALL_DIVISOR() / constantsHolder.LARGE_DIVISOR();
+    //     } else if (typeOfSchain == 4) {
+    //         partOfNode = 0;
+    //         numberOfNodes = constantsHolder.NUMBER_OF_NODES_FOR_TEST_SCHAIN();
+    //     } else if (typeOfSchain == 5) {
+    //         partOfNode = constantsHolder.SMALL_DIVISOR() / constantsHolder.MEDIUM_TEST_DIVISOR();
+    //         numberOfNodes = constantsHolder.NUMBER_OF_NODES_FOR_MEDIUM_TEST_SCHAIN();
+    //     } else if (typeOfSchain == 6) {
+    //         partOfNode = 8;
+    //     } else if (typeOfSchain == 7) {
+    //         partOfNode = 4;
+    //     } else {
+    //         revert("Bad schain type");
+    //     }
+    // }
+
     /**
      * @dev Initializes an schain in the SchainsInternal contract.
      * 
