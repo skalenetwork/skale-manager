@@ -38,7 +38,7 @@ import { deploySkaleManager } from "../tools/deploy/skaleManager";
 chai.should();
 chai.use(chaiAsPromised);
 
-const allowedDelegationPeriods = [3, 6, 12];
+const allowedDelegationPeriods = [2, 6, 12];
 
 contract("Delegation", ([owner,
                          holder1,
@@ -249,16 +249,16 @@ contract("Delegation", ([owner,
         }
 
         it("should not allow holder to delegate to unregistered validator", async () => {
-            await delegationController.delegate(13, 1,  3, "D2 is even", {from: holder1})
+            await delegationController.delegate(13, 1,  2, "D2 is even", {from: holder1})
                 .should.be.eventually.rejectedWith("Validator with such ID does not exist");
         });
 
         it("should calculate bond amount if validator delegated to itself", async () => {
             await skaleToken.mint(validator, defaultAmount.toString(), "0x", "0x");
             await delegationController.delegate(
-                validatorId, defaultAmount.toString(), 3, "D2 is even", {from: validator});
+                validatorId, defaultAmount.toString(), 2, "D2 is even", {from: validator});
             await delegationController.delegate(
-                validatorId, defaultAmount.toString(), 3, "D2 is even", {from: holder1});
+                validatorId, defaultAmount.toString(), 2, "D2 is even", {from: holder1});
             await delegationController.acceptPendingDelegation(0, {from: validator});
             await delegationController.acceptPendingDelegation(1, {from: validator});
 
@@ -271,8 +271,7 @@ contract("Delegation", ([owner,
         it("should calculate bond amount if validator delegated to itself using different periods", async () => {
             await skaleToken.mint(validator, defaultAmount.toString(), "0x", "0x");
             await delegationController.delegate(
-                validatorId, 5, 3, "D2 is even", {from: validator});
-            await delegationPeriodManager.setDelegationPeriod(12, 200);
+                validatorId, 5, 2, "D2 is even", {from: validator});
             await delegationController.delegate(
                 validatorId, 13, 12, "D2 is even", {from: validator});
             await delegationController.acceptPendingDelegation(0, {from: validator});
@@ -293,9 +292,9 @@ contract("Delegation", ([owner,
                 "Second validator", "Super-pooper validator", 150, 0, {from: validator2});
             await validatorService.enableValidator(validator2Id, {from: owner});
             await delegationController.delegate(
-                validator1Id, 200, 3, "D2 is even", {from: validator2});
+                validator1Id, 200, 2, "D2 is even", {from: validator2});
             await delegationController.delegate(
-                validator2Id, 200, 3, "D2 is even", {from: validator2});
+                validator2Id, 200, 2, "D2 is even", {from: validator2});
             await delegationController.acceptPendingDelegation(0, {from: validator1});
             await delegationController.acceptPendingDelegation(1, {from: validator2});
             skipTime(web3, month);
@@ -305,7 +304,7 @@ contract("Delegation", ([owner,
             assert.equal(bondAmount1.toNumber(), 0);
             assert.equal(bondAmount2.toNumber(), 200);
             await delegationController.delegate(
-                validator2Id, 200, 3, "D2 is even", {from: validator2});
+                validator2Id, 200, 2, "D2 is even", {from: validator2});
             await delegationController.acceptPendingDelegation(2, {from: validator2});
 
             skipTime(web3, month);
@@ -327,7 +326,7 @@ contract("Delegation", ([owner,
 
             await constantsHolder.setLaunchTimestamp((await currentTime(web3)) - 4 * month);
 
-            await delegationController.delegate(validatorId, ten18.muln(10000).toString(10), 3, "First delegation", {from: holder1});
+            await delegationController.delegate(validatorId, ten18.muln(10000).toString(10), 2, "First delegation", {from: holder1});
             const delegationId1 = 0;
             await delegationController.acceptPendingDelegation(delegationId1, {from: validator});
 
@@ -353,7 +352,7 @@ contract("Delegation", ([owner,
             (await skaleToken.getAndUpdateDelegatedAmount.call(holder1)).toString(10)
                 .should.be.equal("0");
 
-            await delegationController.delegate(validatorId, ten18.muln(10000).toString(10), 3, "Second delegation", {from: holder2});
+            await delegationController.delegate(validatorId, ten18.muln(10000).toString(10), 2, "Second delegation", {from: holder2});
             const delegationId2 = 1;
             await delegationController.acceptPendingDelegation(delegationId2, {from: validator});
 
@@ -382,12 +381,10 @@ contract("Delegation", ([owner,
             const delegatedAmount2 = 3e6;
             const delegatedAmount3 = 5e6;
             beforeEach(async () => {
-                await delegationPeriodManager.setDelegationPeriod(12, 200);
                 delegationController.delegate(validatorId, delegatedAmount1, 12, "D2 is even", {from: holder1});
-                await delegationPeriodManager.setDelegationPeriod(6, 150);
                 delegationController.delegate(validatorId, delegatedAmount2, 6,
                     "D2 is even more even", {from: holder2});
-                delegationController.delegate(validatorId, delegatedAmount3, 3, "D2 is the evenest", {from: holder3});
+                delegationController.delegate(validatorId, delegatedAmount3, 2, "D2 is the evenest", {from: holder3});
 
                 await delegationController.acceptPendingDelegation(0, {from: validator});
                 await delegationController.acceptPendingDelegation(1, {from: validator});
@@ -541,7 +538,7 @@ contract("Delegation", ([owner,
                     // slash everything
                     await punisher.slash(validatorId, delegatedAmount1 + delegatedAmount2 + delegatedAmount3);
 
-                    delegationController.delegate(validatorId, 1e7, 3, "D2 is the evenest", {from: holder1});
+                    delegationController.delegate(validatorId, 1e7, 2, "D2 is the evenest", {from: holder1});
                     const delegationId = 3;
                     await delegationController.acceptPendingDelegation(delegationId, {from: validator});
 
@@ -633,7 +630,7 @@ contract("Delegation", ([owner,
 
             let delegationId = 0;
             for (let i = 2; i < 22; i++) {
-                await delegationController.delegate(i, 100, 3, "OK delegation", {from: holder1});
+                await delegationController.delegate(i, 100, 2, "OK delegation", {from: holder1});
                 const callData = web3DelegationController.methods.acceptPendingDelegation(delegationId++).encodeABI();
                 const AcceptTX = {
                     data: callData,
@@ -647,18 +644,18 @@ contract("Delegation", ([owner,
             }
 
             // could send delegation request to already delegated validator
-            await delegationController.delegate(2, 100, 3, "OK delegation", {from: holder1});
+            await delegationController.delegate(2, 100, 2, "OK delegation", {from: holder1});
 
             // console.log("Delegated to 2");
 
             // could not send delegation request to new validator
-            await delegationController.delegate(1, 100, 3, "OK delegation", {from: holder1})
+            await delegationController.delegate(1, 100, 2, "OK delegation", {from: holder1})
                 .should.be.eventually.rejectedWith("Limit of validators is reached");
 
             // console.log("Not delegated to 1");
 
             // still could send delegation request to already delegated validator
-            await delegationController.delegate(2, 100, 3, "OK delegation", {from: holder1});
+            await delegationController.delegate(2, 100, 2, "OK delegation", {from: holder1});
 
             // console.log("Delegated to 2");
 
@@ -669,18 +666,18 @@ contract("Delegation", ([owner,
             // console.log("Request undelegation from 3");
 
             // still could send delegation request to already delegated validator
-            await delegationController.delegate(2, 100, 3, "OK delegation", {from: holder1});
+            await delegationController.delegate(2, 100, 2, "OK delegation", {from: holder1});
 
             // console.log("Delegated to 2");
 
             // could send delegation request to new validator
-            await delegationController.delegate(1, 100, 3, "OK delegation", {from: holder1});
+            await delegationController.delegate(1, 100, 2, "OK delegation", {from: holder1});
             await delegationController.acceptPendingDelegation(23, {from: validator});
 
             // console.log("Delegated to 1");
 
             // could not send delegation request to previously delegated validator
-            await delegationController.delegate(3, 100, 3, "OK delegation", {from: holder1})
+            await delegationController.delegate(3, 100, 2, "OK delegation", {from: holder1})
                 .should.be.eventually.rejectedWith("Limit of validators is reached");
 
             // console.log("Not delegated to 3");
@@ -720,7 +717,7 @@ contract("Delegation", ([owner,
             }
 
             for (let i = 1; i < 22; i++) {
-                await delegationController.delegate(i, 100, 3, "OK delegation", {from: holder1});
+                await delegationController.delegate(i, 100, 2, "OK delegation", {from: holder1});
             }
 
             let delegationId = 1;
@@ -741,18 +738,18 @@ contract("Delegation", ([owner,
                 .should.be.eventually.rejectedWith("Limit of validators is reached");
 
             // could send delegation request to already delegated validator
-            await delegationController.delegate(2, 100, 3, "OK delegation", {from: holder1});
+            await delegationController.delegate(2, 100, 2, "OK delegation", {from: holder1});
 
             // console.log("Delegated to 2");
 
             // could not send delegation request to new validator
-            await delegationController.delegate(1, 100, 3, "OK delegation", {from: holder1})
+            await delegationController.delegate(1, 100, 2, "OK delegation", {from: holder1})
                 .should.be.eventually.rejectedWith("Limit of validators is reached");
 
             // console.log("Not delegated to 1");
 
             // still could send delegation request to already delegated validator
-            await delegationController.delegate(2, 100, 3, "OK delegation", {from: holder1});
+            await delegationController.delegate(2, 100, 2, "OK delegation", {from: holder1});
 
             // console.log("Delegated to 2");
 
@@ -763,18 +760,18 @@ contract("Delegation", ([owner,
             // console.log("Request undelegation from 3");
 
             // still could send delegation request to already delegated validator
-            await delegationController.delegate(2, 100, 3, "OK delegation", {from: holder1});
+            await delegationController.delegate(2, 100, 2, "OK delegation", {from: holder1});
 
             // console.log("Delegated to 2");
 
             // could send delegation request to new validator
-            const res = await delegationController.delegate(1, 100, 3, "OK delegation", {from: holder1});
+            const res = await delegationController.delegate(1, 100, 2, "OK delegation", {from: holder1});
             await delegationController.acceptPendingDelegation(24, {from: validator});
 
             // console.log("Delegated to 1");
 
             // could not send delegation request to previously delegated validator
-            await delegationController.delegate(2, 100, 3, "OK delegation", {from: holder1})
+            await delegationController.delegate(2, 100, 2, "OK delegation", {from: holder1})
                 .should.be.eventually.rejectedWith("Limit of validators is reached");
 
             // console.log("Not delegated to 3");
@@ -808,7 +805,7 @@ contract("Delegation", ([owner,
                 await skaleToken.mint(holder.address, delegatedAmount, "0x", "0x");
 
                 const callData = web3DelegationController.methods.delegate(
-                    validatorId, delegatedAmount, 3, "D2 is even").encodeABI();
+                    validatorId, delegatedAmount, 2, "D2 is even").encodeABI();
 
                 const delegateTx = {
                     data: callData,

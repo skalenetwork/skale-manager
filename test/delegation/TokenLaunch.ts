@@ -18,6 +18,7 @@ import { deployValidatorService } from "../tools/deploy/delegation/validatorServ
 import { deploySkaleToken } from "../tools/deploy/skaleToken";
 import { State } from "../tools/types";
 import { deploySkaleManagerMock } from "../tools/deploy/test/skaleManagerMock";
+import { deployConstantsHolder } from "../tools/deploy/constantsHolder";
 chai.should();
 chai.use(chaiAsPromised);
 
@@ -150,7 +151,7 @@ contract("TokenLaunchManager", ([owner, holder, delegation, validator, seller, h
             });
 
             it("should not unlock purchased tokens if delegation request was cancelled", async () => {
-                const period = 3;
+                const period = 2;
                 await delegationController.delegate(validatorId, totalAmount, period, "INFO", {from: holder});
                 const delegationId = 0;
                 const createdDelegation = await delegationController.getDelegation(delegationId);
@@ -166,7 +167,7 @@ contract("TokenLaunchManager", ([owner, holder, delegation, validator, seller, h
 
             it("should be able to delegate part of tokens", async () => {
                 const amount = Math.ceil(totalAmount / 2);
-                const delegationPeriod = 3;
+                const delegationPeriod = 2;
                 await delegationController.delegate(
                     validatorId, amount, delegationPeriod, "D2 is even", {from: holder});
                 const delegationId = 0;
@@ -182,21 +183,23 @@ contract("TokenLaunchManager", ([owner, holder, delegation, validator, seller, h
 
                 skipTime(web3, month);
 
+                let state = (await delegationController.getState(delegationId)).toNumber();
+                state.should.be.equal(State.DELEGATED);
                 await delegationController.requestUndelegation(delegationId, {from: holder});
+                state = (await delegationController.getState(delegationId)).toNumber();
+                state.should.be.equal(State.UNDELEGATION_REQUESTED);
 
                 skipTime(web3, month * delegationPeriod);
 
-                await skaleToken.transfer(hacker, totalAmount - amount, {from: holder});
-                (await skaleToken.balanceOf(hacker)).toNumber().should.be.equal(totalAmount - amount);
-
-                // TODO: move undelegated tokens too
+                state = (await delegationController.getState(delegationId)).toNumber();
+                state.should.be.equal(State.COMPLETED);
             });
 
             it("should unlock all tokens if 50% was delegated for 90 days", async () => {
                 await skipTimeToDate(web3, 1, 0); // January
 
                 const amount = Math.ceil(totalAmount / 2);
-                const period = 3;
+                const period = 2;
                 await delegationController.delegate(validatorId, amount, period, "INFO", {from: holder});
                 const delegationId = 0;
 
@@ -247,7 +250,7 @@ contract("TokenLaunchManager", ([owner, holder, delegation, validator, seller, h
 
             it("should unlock no tokens if 40% was delegated", async () => {
                 const amount = Math.ceil(totalAmount * 0.4);
-                const period = 3;
+                const period = 2;
                 await delegationController.delegate(validatorId, amount, period, "INFO", {from: holder});
                 const delegationId = 0;
 
@@ -275,9 +278,11 @@ contract("TokenLaunchManager", ([owner, holder, delegation, validator, seller, h
             });
 
             it("should unlock all tokens if 40% was delegated and then 10% was delegated", async () => {
+                await (await deployConstantsHolder(contractManager)).setProofOfUseLockUpPeriod(50);
+
                 // delegate 40%
                 let amount = Math.ceil(totalAmount * 0.4);
-                const period = 3;
+                const period = 2;
                 await delegationController.delegate(validatorId, amount, period, "INFO", {from: holder});
                 let delegationId = 0;
 

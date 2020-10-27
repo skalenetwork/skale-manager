@@ -880,8 +880,8 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
         await skaleToken.mint(validator2, delegatedAmount, "0x", "0x");
         await validatorService.enableValidator(validator1Id, {from: owner});
         await validatorService.enableValidator(validator2Id, {from: owner});
-        await delegationController.delegate(validator1Id, delegatedAmount, 3, "D2 is even", {from: validator1});
-        await delegationController.delegate(validator2Id, delegatedAmount, 3, "D2 is even more even",
+        await delegationController.delegate(validator1Id, delegatedAmount, 2, "D2 is even", {from: validator1});
+        await delegationController.delegate(validator2Id, delegatedAmount, 2, "D2 is even more even",
             {from: validator2});
         await delegationController.acceptPendingDelegation(0, {from: validator1});
         await delegationController.acceptPendingDelegation(1, {from: validator2});

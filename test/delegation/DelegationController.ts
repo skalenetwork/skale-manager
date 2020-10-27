@@ -52,7 +52,7 @@ contract("DelegationController", ([owner, holder1, holder2, validator, validator
         beforeEach(async () => {
             validatorId = 1;
             amount = 100;
-            delegationPeriod = 3;
+            delegationPeriod = 2;
             info = "VERY NICE";
             await validatorService.registerValidator(
                 "ValidatorName",

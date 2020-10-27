@@ -245,7 +245,7 @@ contract("NodesFunctionality", ([owner, validator, nodeAddress, nodeAddress2, ho
         const month = 60 * 60 * 24 * 31;
         beforeEach(async () => {
             amount = 100;
-            delegationPeriod = 3;
+            delegationPeriod = 2;
             info = "NICE";
             await skaleToken.mint(holder, 200, "0x", "0x");
             await skaleToken.mint(nodeAddress, 200, "0x", "0x");

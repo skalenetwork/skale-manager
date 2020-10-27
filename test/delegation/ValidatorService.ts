@@ -312,7 +312,7 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
             beforeEach(async () => {
                 validatorId = 1;
                 amount = 100;
-                delegationPeriod = 3;
+                delegationPeriod = 2;
                 info = "NICE";
                 await skaleToken.mint(holder, 200, "0x", "0x");
                 await skaleToken.mint(validator3, 200, "0x", "0x");
