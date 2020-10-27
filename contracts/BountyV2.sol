@@ -306,10 +306,13 @@ contract BountyV2 is Permissions {
         DelegationController delegationController = 
             DelegationController(contractManager.getContract("DelegationController"));
         uint currentMonth = timeHelpers.getCurrentMonth();
+
         
         uint current = delegationController.getAndUpdateEffectiveDelegatedToValidator(validatorId, currentMonth);
         uint[] memory effectiveDelegated = delegationController.getEffectiveDelegatedValuesByValidator(validatorId);
-        assert(current == effectiveDelegated[0]);
+        if (effectiveDelegated.length > 0) {
+            assert(current == effectiveDelegated[0]);
+        }
         uint addedToStatistic = 0;
         bool addToCurrentMonth = now < timeHelpers.monthToTimestamp(currentMonth).add(nodeCreationWindowSeconds);
         for (uint i = 0; i < effectiveDelegated.length; ++i) {

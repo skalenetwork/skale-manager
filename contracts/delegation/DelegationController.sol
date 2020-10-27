@@ -242,20 +242,10 @@ contract DelegationController is Permissions, ILocker {
     )
         external
     {
-        ValidatorService validatorService = _getValidatorService();
-
-        require(
-            validatorService.checkMinimumDelegation(validatorId, amount),
-            "Amount is too low");
-        require(
-            validatorService.isAuthorizedValidator(validatorId),
-            "Validator is disabled");
         require(
             _getDelegationPeriodManager().isDelegationPeriodAllowed(delegationPeriod),
             "This delegation period is not allowed");
-        require(
-            validatorService.isAcceptingNewRequests(validatorId),
-            "The validator is not currently accepting new requests");
+        _getValidatorService().checkValidatorCanReceiveDelegation(validatorId, amount);        
         _checkIfDelegationIsAllowed(msg.sender, validatorId);
 
         SlashingSignal[] memory slashingSignals = _processAllSlashesWithoutSignals(msg.sender);

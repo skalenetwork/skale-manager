@@ -96,9 +96,6 @@ contract SkaleManager is IERC777Recipient, Permissions {
             publicKey: publicKey,
             nonce: nonce});
         nodes.createNode(msg.sender, params);
-        // uint nodeIndex = nodes.createNode(msg.sender, params);
-        // Monitors monitors = Monitors(contractManager.getContract("Monitors"));
-        // monitors.addMonitor(nodeIndex);
     }
 
     function nodeExit(uint nodeIndex) external {

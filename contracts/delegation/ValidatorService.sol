@@ -348,16 +348,6 @@ contract ValidatorService is Permissions {
         return trustedValidatorsList;
     }
 
-    function checkMinimumDelegation(uint validatorId, uint amount)
-        external
-        view
-        checkValidatorExists(validatorId)
-        allow("DelegationController")
-        returns (bool)
-    {
-        return validators[validatorId].minimumDelegationAmount <= amount ? true : false;
-    }
-
     function checkValidatorAddressToId(address validatorAddress, uint validatorId)
         external
         view
@@ -371,9 +361,10 @@ contract ValidatorService is Permissions {
         require(validatorId != 0, "Node address is not assigned to a validator");
     }
 
-
-    function isAuthorizedValidator(uint validatorId) external view checkValidatorExists(validatorId) returns (bool) {
-        return _trustedValidators[validatorId] || !useWhitelist;
+    function checkValidatorCanReceiveDelegation(uint validatorId, uint amount) external view {
+        require(isAuthorizedValidator(validatorId), "Validator is disabled");
+        require(isAcceptingNewRequests(validatorId), "The validator is not currently accepting new requests");
+        require(validators[validatorId].minimumDelegationAmount <= amount, "Amount is too low");
     }
 
     function initialize(address contractManagerAddress) public override initializer {
@@ -408,6 +399,10 @@ contract ValidatorService is Permissions {
 
     function isAcceptingNewRequests(uint validatorId) public view checkValidatorExists(validatorId) returns (bool) {
         return validators[validatorId].acceptNewRequests;
+    }
+
+    function isAuthorizedValidator(uint validatorId) public view checkValidatorExists(validatorId) returns (bool) {
+        return _trustedValidators[validatorId] || !useWhitelist;
     }
 
     // private

@@ -79,19 +79,19 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
         await bountyContract.enableBountyReduction();
     });
 
-    // it("should fail to process token fallback if sent not from SkaleToken", async () => {
-    //     await skaleManager.tokensReceived(hacker, validator, developer, 5, "0x11", "0x11", {from: validator}).
-    //         should.be.eventually.rejectedWith("Message sender is invalid");
-    // });
+    it("should fail to process token fallback if sent not from SkaleToken", async () => {
+        await skaleManager.tokensReceived(hacker, validator, developer, 5, "0x11", "0x11", {from: validator}).
+            should.be.eventually.rejectedWith("Message sender is invalid");
+    });
 
-    // it("should transfer ownership", async () => {
-    //     await skaleManager.grantRole(await skaleManager.DEFAULT_ADMIN_ROLE(), hacker , {from: hacker})
-    //         .should.be.eventually.rejectedWith("AccessControl: sender must be an admin to grant");
+    it("should transfer ownership", async () => {
+        await skaleManager.grantRole(await skaleManager.DEFAULT_ADMIN_ROLE(), hacker , {from: hacker})
+            .should.be.eventually.rejectedWith("AccessControl: sender must be an admin to grant");
 
-    //     await skaleManager.grantRole(await skaleManager.DEFAULT_ADMIN_ROLE(), hacker, {from: owner});
+        await skaleManager.grantRole(await skaleManager.DEFAULT_ADMIN_ROLE(), hacker, {from: owner});
 
-    //     await skaleManager.hasRole(await skaleManager.DEFAULT_ADMIN_ROLE(), hacker).should.be.eventually.true;
-    // });
+        await skaleManager.hasRole(await skaleManager.DEFAULT_ADMIN_ROLE(), hacker).should.be.eventually.true;
+    });
 
     describe("when validator has delegated SKALE tokens", async () => {
         const validatorId = 1;
@@ -228,9 +228,6 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                 const launchMonth = (await timeHelpers.timestampToMonth(launch)).toNumber();
                 const ten18 = web3.utils.toBN(10).pow(web3.utils.toBN(18));
 
-                console.log("Launch:\t", launch);
-                console.log("Current:\t", await currentTime(web3));
-
                 const schedule = [
                     385000000,
                     346500000,
@@ -356,8 +353,6 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                 expect(balanceAfter.sub(balanceBefore).eq(web3.utils.toBN("0"))).to.be.true;
             });
         });
-
-
 
         describe("when 18 nodes are in the system", async () => {
 

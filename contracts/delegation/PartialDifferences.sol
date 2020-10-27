@@ -116,7 +116,15 @@ library PartialDifferences {
     }
 
     function getValuesInSequence(Sequence storage sequence) internal view returns (uint[] memory values) {
-        values = new uint[](sequence.lastChangedMonth.add(2).sub(sequence.firstUnprocessedMonth));
+        if (sequence.firstUnprocessedMonth == 0) {
+            return values;
+        }
+        uint begin = sequence.firstUnprocessedMonth.sub(1);
+        uint end = sequence.lastChangedMonth.add(1);
+        if (end <= begin) {
+            end = begin.add(1);
+        }
+        values = new uint[](end.sub(begin));
         values[0] = sequence.value[sequence.firstUnprocessedMonth.sub(1)];
         for (uint i = 0; i.add(1) < values.length; ++i) {
             uint month = sequence.firstUnprocessedMonth.add(i);
