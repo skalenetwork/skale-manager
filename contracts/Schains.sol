@@ -359,7 +359,11 @@ contract Schains is Permissions {
             partOfNode = constantsHolder.SMALL_DIVISOR() / constantsHolder.MEDIUM_TEST_DIVISOR();
             numberOfNodes = constantsHolder.NUMBER_OF_NODES_FOR_MEDIUM_TEST_SCHAIN();
         } else {
-            revert("Bad schain type");
+            SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
+            (partOfNode, numberOfNodes) = schainsInternal.schainTypes(typeOfSchain);
+            if (numberOfNodes == 0) {
+                revert("Bad schain type");
+            }
         }
     }
 
