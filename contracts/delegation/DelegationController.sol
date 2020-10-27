@@ -296,7 +296,7 @@ contract DelegationController is Permissions, ILocker {
      */
     function cancelPendingDelegation(uint delegationId) external checkDelegationExists(delegationId) {
         require(msg.sender == delegations[delegationId].holder, "Only token holders can cancel delegation request");
-        require(getState(delegationId) == State.PROPOSED, "Wrong state");
+        require(getState(delegationId) == State.PROPOSED, "Token holders are only able to cancel PROPOSED delegations");
 
         delegations[delegationId].finished = _getCurrentMonth();
         _subtractFromLockedInPendingDelegations(delegations[delegationId].holder, delegations[delegationId].amount);

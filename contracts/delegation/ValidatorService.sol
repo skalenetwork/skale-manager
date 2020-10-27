@@ -362,9 +362,12 @@ contract ValidatorService is Permissions {
     }
 
     function checkValidatorCanReceiveDelegation(uint validatorId, uint amount) external view {
-        require(isAuthorizedValidator(validatorId), "Validator is disabled");
+        require(isAuthorizedValidator(validatorId), "Validator is not authorized to accept delegation request");
         require(isAcceptingNewRequests(validatorId), "The validator is not currently accepting new requests");
-        require(validators[validatorId].minimumDelegationAmount <= amount, "Amount is too low");
+        require(
+            validators[validatorId].minimumDelegationAmount <= amount,
+            "Amount does not meet the validator's minimum delegation amount"
+        );
     }
 
     function initialize(address contractManagerAddress) public override initializer {
