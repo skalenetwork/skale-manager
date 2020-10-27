@@ -1,8 +1,14 @@
 import chaiAsPromised from "chai-as-promised";
 import { ContractManagerInstance,
          NodesInstance,
+         SkaleManagerInstance,
          ValidatorServiceInstance} from "../types/truffle-contracts";
 import { currentTime, skipTime } from "./tools/time";
+
+import * as elliptic from "elliptic";
+const EC = elliptic.ec;
+const ec = new EC("secp256k1");
+import { privateKeys } from "./tools/private-keys";
 
 import chai = require("chai");
 import { deployContractManager } from "./tools/deploy/contractManager";
@@ -12,7 +18,7 @@ import { deploySkaleManagerMock } from "./tools/deploy/test/skaleManagerMock";
 chai.should();
 chai.use(chaiAsPromised);
 
-contract("NodesData", ([owner, validator, nodeAddress]) => {
+contract("NodesData", ([owner, validator, nodeAddress, admin]) => {
     let contractManager: ContractManagerInstance;
     let nodes: NodesInstance;
     let validatorService: ValidatorServiceInstance;
@@ -35,9 +41,11 @@ contract("NodesData", ([owner, validator, nodeAddress]) => {
         signature1 = (signature1.slice(130) === "00" ? signature1.slice(0, 130) + "1b" :
                 (signature1.slice(130) === "01" ? signature1.slice(0, 130) + "1c" : signature1));
         await validatorService.linkNodeAddress(nodeAddress, signature1, {from: validator});
+        await skaleManagerMock.grantRole(await web3.utils.soliditySha3("ADMIN_ROLE"), admin, {from: owner});
     });
 
     it("should add node", async () => {
+        const pubKey = ec.keyFromPrivate(String(privateKeys[2]).slice(2)).getPublic();
         await nodes.createNode(
             nodeAddress,
             {
@@ -45,8 +53,7 @@ contract("NodesData", ([owner, validator, nodeAddress]) => {
                 nonce: 0,
                 ip: "0x7f000001",
                 publicIp: "0x7f000002",
-                publicKey: ["0x1122334455667788990011223344556677889900112233445566778899001122",
-                            "0x1122334455667788990011223344556677889900112233445566778899001122"],
+                publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
                 name: "d2"
             });
 
@@ -57,8 +64,8 @@ contract("NodesData", ([owner, validator, nodeAddress]) => {
         node[2].should.be.equal("0x7f000002");
         node[3].should.be.deep.eq(web3.utils.toBN(8545));
         (await nodes.getNodePublicKey(0)).should.be.deep.equal(
-            ["0x1122334455667788990011223344556677889900112233445566778899001122",
-             "0x1122334455667788990011223344556677889900112233445566778899001122"]);
+            ["0x" + pubKey.x.toString('hex'),
+            "0x" + pubKey.y.toString('hex')]);
         node[7].should.be.deep.eq(web3.utils.toBN(0));
 
         const nodeId = web3.utils.soliditySha3("d2");
@@ -75,6 +82,7 @@ contract("NodesData", ([owner, validator, nodeAddress]) => {
 
     describe("when a node is added", async () => {
         beforeEach(async () => {
+            const pubKey = ec.keyFromPrivate(String(privateKeys[2]).slice(2)).getPublic();
             await nodes.createNode(
                 nodeAddress,
                 {
@@ -82,8 +90,7 @@ contract("NodesData", ([owner, validator, nodeAddress]) => {
                     nonce: 0,
                     ip: "0x7f000001",
                     publicIp: "0x7f000002",
-                    publicKey: ["0x1122334455667788990011223344556677889900112233445566778899001122",
-                                "0x1122334455667788990011223344556677889900112233445566778899001122"],
+                    publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
                     name: "d2"
                 });
         });
@@ -190,26 +197,98 @@ contract("NodesData", ([owner, validator, nodeAddress]) => {
             assert.equal(status.toNumber(), 1);
         });
 
-        it("should set node status In Maintenance", async () => {
+        it("should set node status In Maintenance from node address", async () => {
             let status = await nodes.getNodeStatus(0);
             assert.equal(status.toNumber(), 0);
-            await nodes.setNodeInMaintenance(0);
+            await nodes.setNodeInMaintenance(0, {from: nodeAddress});
             status = await nodes.getNodeStatus(0);
             assert.equal(status.toNumber(), 3);
             const boolStatus = await nodes.isNodeInMaintenance(0);
             assert.equal(boolStatus, true);
         });
 
-        it("should set node status From In Maintenance", async () => {
+        it("should set node status From In Maintenance from node address", async () => {
             let status = await nodes.getNodeStatus(0);
             assert.equal(status.toNumber(), 0);
-            await nodes.setNodeInMaintenance(0);
+            await nodes.setNodeInMaintenance(0, {from: nodeAddress});
             status = await nodes.getNodeStatus(0);
             assert.equal(status.toNumber(), 3);
             const boolStatus = await nodes.isNodeInMaintenance(0);
             assert.equal(boolStatus, true);
 
-            await nodes.removeNodeFromInMaintenance(0);
+            await nodes.removeNodeFromInMaintenance(0, {from: nodeAddress});
+            status = await nodes.getNodeStatus(0);
+            assert.equal(status.toNumber(), 0);
+        });
+
+        it("should set node status In Maintenance from validator address", async () => {
+            let status = await nodes.getNodeStatus(0);
+            assert.equal(status.toNumber(), 0);
+            await nodes.setNodeInMaintenance(0, {from: validator});
+            status = await nodes.getNodeStatus(0);
+            assert.equal(status.toNumber(), 3);
+            const boolStatus = await nodes.isNodeInMaintenance(0);
+            assert.equal(boolStatus, true);
+        });
+
+        it("should set node status From In Maintenance from validator address", async () => {
+            let status = await nodes.getNodeStatus(0);
+            assert.equal(status.toNumber(), 0);
+            await nodes.setNodeInMaintenance(0, {from: validator});
+            status = await nodes.getNodeStatus(0);
+            assert.equal(status.toNumber(), 3);
+            const boolStatus = await nodes.isNodeInMaintenance(0);
+            assert.equal(boolStatus, true);
+
+            await nodes.removeNodeFromInMaintenance(0, {from: validator});
+            status = await nodes.getNodeStatus(0);
+            assert.equal(status.toNumber(), 0);
+        });
+
+        it("should set node status In Maintenance from admin", async () => {
+            let status = await nodes.getNodeStatus(0);
+            assert.equal(status.toNumber(), 0);
+            await nodes.setNodeInMaintenance(0, {from: admin});
+            status = await nodes.getNodeStatus(0);
+            assert.equal(status.toNumber(), 3);
+            const boolStatus = await nodes.isNodeInMaintenance(0);
+            assert.equal(boolStatus, true);
+        });
+
+        it("should set node status From In Maintenance from admin", async () => {
+            let status = await nodes.getNodeStatus(0);
+            assert.equal(status.toNumber(), 0);
+            await nodes.setNodeInMaintenance(0, {from: admin});
+            status = await nodes.getNodeStatus(0);
+            assert.equal(status.toNumber(), 3);
+            const boolStatus = await nodes.isNodeInMaintenance(0);
+            assert.equal(boolStatus, true);
+
+            await nodes.removeNodeFromInMaintenance(0, {from: admin});
+            status = await nodes.getNodeStatus(0);
+            assert.equal(status.toNumber(), 0);
+        });
+
+        it("should set node status In Maintenance from owner", async () => {
+            let status = await nodes.getNodeStatus(0);
+            assert.equal(status.toNumber(), 0);
+            await nodes.setNodeInMaintenance(0, {from: owner});
+            status = await nodes.getNodeStatus(0);
+            assert.equal(status.toNumber(), 3);
+            const boolStatus = await nodes.isNodeInMaintenance(0);
+            assert.equal(boolStatus, true);
+        });
+
+        it("should set node status From In Maintenance from owner", async () => {
+            let status = await nodes.getNodeStatus(0);
+            assert.equal(status.toNumber(), 0);
+            await nodes.setNodeInMaintenance(0, {from: owner});
+            status = await nodes.getNodeStatus(0);
+            assert.equal(status.toNumber(), 3);
+            const boolStatus = await nodes.isNodeInMaintenance(0);
+            assert.equal(boolStatus, true);
+
+            await nodes.removeNodeFromInMaintenance(0, {from: owner});
             status = await nodes.getNodeStatus(0);
             assert.equal(status.toNumber(), 0);
         });
@@ -290,6 +369,7 @@ contract("NodesData", ([owner, validator, nodeAddress]) => {
 
         describe("when node is registered", async () => {
             beforeEach(async () => {
+                const pubKey = ec.keyFromPrivate(String(privateKeys[2]).slice(2)).getPublic();
                 await nodes.createNode(
                     nodeAddress,
                     {
@@ -297,8 +377,7 @@ contract("NodesData", ([owner, validator, nodeAddress]) => {
                         nonce: 0,
                         ip: "0x7f000003",
                         publicIp: "0x7f000004",
-                        publicKey: ["0x1122334455667788990011223344556677889900112233445566778899001122",
-                                    "0x1122334455667788990011223344556677889900112233445566778899001122"],
+                        publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
                         name: "d3"
                     });
             });
@@ -331,6 +410,7 @@ contract("NodesData", ([owner, validator, nodeAddress]) => {
 
     describe("when two nodes are added", async () => {
         beforeEach(async () => {
+            const pubKey = ec.keyFromPrivate(String(privateKeys[2]).slice(2)).getPublic();
             await nodes.createNode(
                 nodeAddress,
                 {
@@ -338,8 +418,7 @@ contract("NodesData", ([owner, validator, nodeAddress]) => {
                     nonce: 0,
                     ip: "0x7f000001",
                     publicIp: "0x7f000001",
-                    publicKey: ["0x1122334455667788990011223344556677889900112233445566778899001122",
-                                "0x1122334455667788990011223344556677889900112233445566778899001122"],
+                    publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
                     name: "d1"
                 });
             await nodes.createNode(
@@ -349,8 +428,7 @@ contract("NodesData", ([owner, validator, nodeAddress]) => {
                     nonce: 0,
                     ip: "0x7f000002",
                     publicIp: "0x7f000002",
-                    publicKey: ["0x1122334455667788990011223344556677889900112233445566778899001122",
-                                "0x1122334455667788990011223344556677889900112233445566778899001122"],
+                    publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
                     name: "d2"
                 });
         });
@@ -385,6 +463,7 @@ contract("NodesData", ([owner, validator, nodeAddress]) => {
 
         describe("when nodes are registered", async () => {
             beforeEach(async () => {
+                const pubKey = ec.keyFromPrivate(String(privateKeys[2]).slice(2)).getPublic();
                 await nodes.createNode(
                     nodeAddress,
                     {
@@ -392,8 +471,7 @@ contract("NodesData", ([owner, validator, nodeAddress]) => {
                         nonce: 0,
                         ip: "0x7f000003",
                         publicIp: "0x7f000003",
-                        publicKey: ["0x1122334455667788990011223344556677889900112233445566778899001122",
-                                    "0x1122334455667788990011223344556677889900112233445566778899001122"],
+                        publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
                         name: "d3"
                     });
                 await nodes.createNode(
@@ -403,8 +481,7 @@ contract("NodesData", ([owner, validator, nodeAddress]) => {
                         nonce: 0,
                         ip: "0x7f000004",
                         publicIp: "0x7f000004",
-                        publicKey: ["0x1122334455667788990011223344556677889900112233445566778899001122",
-                                    "0x1122334455667788990011223344556677889900112233445566778899001122"],
+                        publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
                         name: "d4"
                     });
             });

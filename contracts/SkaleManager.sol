@@ -36,7 +36,11 @@ import "./NodeRotation.sol";
 import "./Permissions.sol";
 import "./Schains.sol";
 
-
+/**
+ * @title SkaleManager
+ * @dev Contract contains functions for node registration and exit, bounty
+ * management, and monitoring verdicts.
+ */
 contract SkaleManager is IERC777Recipient, Permissions {
     IERC1820Registry private _erc1820;
 
@@ -45,7 +49,10 @@ contract SkaleManager is IERC777Recipient, Permissions {
 
     bytes32 constant public ADMIN_ROLE = keccak256("ADMIN_ROLE");
 
-    event BountyGot(
+    /**
+     * @dev Emitted when bounty is received.
+     */
+    event BountyReceived(
         uint indexed nodeIndex,
         address owner,
         uint averageDowntime,
@@ -104,7 +111,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));
         uint validatorId = nodes.getValidatorId(nodeIndex);
         bool permitted = (_isOwner() || nodes.isNodeExist(msg.sender, nodeIndex));
-        if (!permitted) {
+        if (!permitted && validatorService.validatorAddressExists(msg.sender)) {
             permitted = validatorService.getValidatorId(msg.sender) == validatorId;
         }
         require(permitted, "Sender is not permitted to call this function");
@@ -193,7 +200,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
         uint previousBlockEvent = monitors.getLastBountyBlock(nodeIndex);
         monitors.setLastBountyBlock(nodeIndex);
 
-        emit BountyGot(
+        emit BountyReceived(
             nodeIndex,
             from,
             averageDowntime,

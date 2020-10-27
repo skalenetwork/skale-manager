@@ -25,7 +25,7 @@ pragma experimental ABIEncoderV2;
 import "../SkaleDKG.sol";
 
 contract SkaleDKGTester is SkaleDKG {
-    function setSuccesfulDKGPublic(bytes32 groupIndex) external {
-        _setSuccesfulDKG(groupIndex);
+    function setSuccesfulDKGPublic(bytes32 schainId) external {
+        _setSuccesfulDKG(schainId);
     }
 }
