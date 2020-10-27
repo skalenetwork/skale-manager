@@ -18,7 +18,7 @@ import { deploySkaleManagerMock } from "../tools/deploy/test/skaleManagerMock";
 chai.should();
 chai.use(chaiAsPromised);
 
-contract("DelegationController", ([owner, holder, validator]) => {
+contract("DelegationController (token state)", ([owner, holder, validator]) => {
     let contractManager: ContractManagerInstance;
     let delegationController: DelegationControllerInstance;
     let tokenState: TokenStateInstance;
@@ -56,7 +56,7 @@ contract("DelegationController", ([owner, holder, validator]) => {
 
     describe("when delegation request is sent", async () => {
         const amount = 100;
-        const period = 3;
+        const period = 2;
         const delegationId = 0;
         beforeEach(async () => {
             await delegationController.delegate(validatorId, amount, period, "INFO", {from: holder});

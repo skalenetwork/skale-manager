@@ -27,10 +27,14 @@ import { deployDelegationPeriodManager } from "./tools/deploy/delegation/delegat
 import { deployMonitors } from "./tools/deploy/monitors";
 import { deployDistributor } from "./tools/deploy/delegation/distributor";
 import { deploySkaleManagerMock } from "./tools/deploy/test/skaleManagerMock";
+import { privateKeys } from "./tools/private-keys";
+import * as elliptic from "elliptic";
 
 chai.should();
 chai.use(chaiAsPromised);
 chai.use(chaiAlmost(1));
+const EC = elliptic.ec;
+const ec = new EC("secp256k1");
 
 contract("Bounty", ([owner, admin, hacker, validator, validator2]) => {
     let contractManager: ContractManagerInstance;
@@ -121,28 +125,28 @@ contract("Bounty", ([owner, admin, hacker, validator, validator2]) => {
         await skipTimeToDate(web3, 1, 9); // October 1st
 
         await constantsHolder.setLaunchTimestamp(await currentTime(web3));
+        let pubKey = ec.keyFromPrivate(String(privateKeys[3]).slice(2)).getPublic();
         for (let i = 0; i < nodesAmount; ++i) {
             await skaleManagerContract.createNode(
                 1, // port
                 0, // nonce
                 "0x7f" + ("000000" + i.toString(16)).slice(-6), // ip
                 "0x7f" + ("000000" + i.toString(16)).slice(-6), // public ip
-                ["0x1122334455667788990011223344556677889900112233445566778899001122",
-                "0x1122334455667788990011223344556677889900112233445566778899001122"], // public key
+                ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')], // public key
                 "d2-" + i, // name)
             {from: validator});
         }
 
         await skipTimeToDate(web3, 2, 9); // October 2nd
 
+        pubKey = ec.keyFromPrivate(String(privateKeys[4]).slice(2)).getPublic();
         for (let i = 0; i < nodesAmount; ++i) {
             await skaleManagerContract.createNode(
                 1, // port
                 0, // nonce
                 "0x7f" + ("000000" + (i + nodesAmount).toString(16)).slice(-6), // ip
                 "0x7f" + ("000000" + (i + nodesAmount).toString(16)).slice(-6), // public ip
-                ["0x1122334455667788990011223344556677889900112233445566778899001122",
-                "0x1122334455667788990011223344556677889900112233445566778899001122"], // public key
+                ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')], // public key
                 "d2-" + (i + nodesAmount), // name)
             {from: validator2});
         }
@@ -171,7 +175,7 @@ contract("Bounty", ([owner, admin, hacker, validator, validator2]) => {
         let bounty = 0;
         for (let i = 0; i < nodesAmount; ++i) {
             response = await skaleManagerContract.getBounty(i, {from: validator});
-            response.logs[0].event.should.be.equal("BountyGot");
+            response.logs[0].event.should.be.equal("BountyReceived");
             const _bounty = response.logs[0].args.bounty.div(ten18).toNumber();
             if (bounty > 0) {
                 bounty.should.be.equal(_bounty);
@@ -182,7 +186,7 @@ contract("Bounty", ([owner, admin, hacker, validator, validator2]) => {
 
         for (let i = 0; i < nodesAmount; ++i) {
             response = await skaleManagerContract.getBounty(nodesAmount + i, {from: validator2});
-            response.logs[0].event.should.be.equal("BountyGot");
+            response.logs[0].event.should.be.equal("BountyReceived");
             const _bounty = response.logs[0].args.bounty.div(ten18).toNumber();
             if (bounty > 0) {
                 bounty.should.be.equal(_bounty);
@@ -198,7 +202,7 @@ contract("Bounty", ([owner, admin, hacker, validator, validator2]) => {
         bounty = 0;
         for (let i = 0; i < nodesAmount; ++i) {
             response = await skaleManagerContract.getBounty(i, {from: validator});
-            response.logs[0].event.should.be.equal("BountyGot");
+            response.logs[0].event.should.be.equal("BountyReceived");
             const _bounty = response.logs[0].args.bounty.div(ten18).toNumber();
             if (bounty > 0) {
                 bounty.should.be.equal(_bounty);
@@ -209,7 +213,7 @@ contract("Bounty", ([owner, admin, hacker, validator, validator2]) => {
 
         for (let i = 0; i < nodesAmount; ++i) {
             response = await skaleManagerContract.getBounty(nodesAmount + i, {from: validator2});
-            response.logs[0].event.should.be.equal("BountyGot");
+            response.logs[0].event.should.be.equal("BountyReceived");
             const _bounty = response.logs[0].args.bounty.div(ten18).toNumber();
             if (bounty > 0) {
                 bounty.should.be.equal(_bounty);
@@ -224,7 +228,7 @@ contract("Bounty", ([owner, admin, hacker, validator, validator2]) => {
 
         for (let i = 0; i < nodesAmount; ++i) {
             response = await skaleManagerContract.getBounty(i, {from: validator});
-            response.logs[0].event.should.be.equal("BountyGot");
+            response.logs[0].event.should.be.equal("BountyReceived");
             const _bounty = response.logs[0].args.bounty.div(ten18).toNumber();
             _bounty.should.be.equal(0);
         }
@@ -232,7 +236,7 @@ contract("Bounty", ([owner, admin, hacker, validator, validator2]) => {
         bounty = 0;
         for (let i = 0; i < nodesAmount; ++i) {
             response = await skaleManagerContract.getBounty(nodesAmount + i, {from: validator2});
-            response.logs[0].event.should.be.equal("BountyGot");
+            response.logs[0].event.should.be.equal("BountyReceived");
             const _bounty = response.logs[0].args.bounty.div(ten18).toNumber();
             if (bounty > 0) {
                 bounty.should.be.equal(_bounty);
