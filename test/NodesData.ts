@@ -139,18 +139,6 @@ contract("NodesData", ([owner, validator, nodeAddress]) => {
             await nodes.getNodeLastRewardDate(0).should.be.eventually.deep.equal(web3.utils.toBN(currentTimeLocal));
         });
 
-        it("should check if time for reward has come", async () => {
-            // TODO: change reward period
-
-            skipTime(web3, 3590);
-
-            await nodes.isTimeForReward(0).should.be.eventually.false;
-
-            skipTime(web3, 20);
-
-            await nodes.isTimeForReward(0).should.be.eventually.true;
-        });
-
         it("should get ip address of Node", async () => {
             await nodes.getNodeIP(0).should.be.eventually.equal("0x7f000001");
         });

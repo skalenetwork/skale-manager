@@ -26,6 +26,7 @@ import { deployTimeHelpers } from "./tools/deploy/delegation/timeHelpers";
 import { deployDelegationPeriodManager } from "./tools/deploy/delegation/delegationPeriodManager";
 import { deployMonitors } from "./tools/deploy/monitors";
 import { deployDistributor } from "./tools/deploy/delegation/distributor";
+import { deploySkaleManagerMock } from "./tools/deploy/test/skaleManagerMock";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -47,8 +48,8 @@ contract("Bounty", ([owner, admin, hacker, validator, validator2]) => {
         bountyContract = await deployBounty(contractManager);
         nodes = await deployNodesMock(contractManager);
         await contractManager.setContractsAddress("Nodes", nodes.address);
-        // contract must be set in contractManager for proper work of allow modifier
-        await contractManager.setContractsAddress("SkaleManager", contractManager.address);
+        const skaleManagerMock = await deploySkaleManagerMock(contractManager);
+        await contractManager.setContractsAddress("SkaleManager", skaleManagerMock.address);
     });
 
     it("should allow only owner to call enableBountyReduction", async() => {
@@ -93,7 +94,6 @@ contract("Bounty", ([owner, admin, hacker, validator, validator2]) => {
         await skaleManagerContract.initialize(contractManager.address);
         await contractManager.setContractsAddress("SkaleManager", skaleManagerContract.address);
 
-        await delegationPeriodManager.setDelegationPeriod(2, 100);
         await delegationPeriodManager.setDelegationPeriod(12, 200);
 
         await skipTimeToDate(web3, 25, 8); // Sep 25th
@@ -158,7 +158,7 @@ contract("Bounty", ([owner, admin, hacker, validator, validator2]) => {
         const bounty2Contract = await BountyV2.new();
         await bounty2Contract.initialize(contractManager.address);
         await contractManager.setContractsAddress("Bounty", bounty2Contract.address);
-        const third = Math.ceil(nodesAmount / 3);
+        const third = Math.ceil(nodesAmount * 2 / 3);
         let response = await nodesContract.populateBountyV2(0, third);
         response.receipt.gasUsed.should.be.below(8e6);
         response = await nodesContract.populateBountyV2(third, 2 * third);
@@ -259,7 +259,7 @@ contract("Bounty", ([owner, admin, hacker, validator, validator2]) => {
             await skaleToken.mint(validator, ten18.muln(validatorAmount).toString(), "0x", "0x");
             await validatorService.registerValidator("Validator", "", 150, 1e6 + 1, {from: validator});
             await validatorService.enableValidator(validatorId);
-            await delegationController.delegate(validatorId, ten18.muln(validatorAmount).toString(), 3, "", {from: validator});
+            await delegationController.delegate(validatorId, ten18.muln(validatorAmount).toString(), 2, "", {from: validator});
             await delegationController.acceptPendingDelegation(0, {from: validator});
             skipTime(web3, month);
         });

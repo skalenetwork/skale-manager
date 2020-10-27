@@ -166,6 +166,10 @@ contract BountyV2 is Permissions {
         );
     }
 
+    function getEffectiveDelegatedSum() external view returns (uint[] memory) {
+        return _effectiveDelegatedSum.getValues();
+    }
+
     function initialize(address contractManagerAddress) public override initializer {
         Permissions.initialize(contractManagerAddress);
         _nextEpoch = 0;
@@ -312,14 +316,20 @@ contract BountyV2 is Permissions {
         uint[] memory effectiveDelegated = delegationController.getEffectiveDelegatedValuesByValidator(validatorId);
         if (effectiveDelegated.length > 0) {
             assert(current == effectiveDelegated[0]);
-        }
-        uint addedToStatistic = 0;
-        bool addToCurrentMonth = now < timeHelpers.monthToTimestamp(currentMonth).add(nodeCreationWindowSeconds);
-        for (uint i = 0; i < effectiveDelegated.length; ++i) {
-            if (i > 0 || addToCurrentMonth) {
-                if (effectiveDelegated[i] != addedToStatistic) {
-                    _addToEffectiveDelegatedSum(currentMonth.add(i), effectiveDelegated[i], addedToStatistic, add);
-                    addedToStatistic = effectiveDelegated[i];
+            uint addedToStatistic = 0;
+            bool addToCurrentMonth = now < timeHelpers.monthToTimestamp(currentMonth).add(nodeCreationWindowSeconds);
+            for (uint i = 0; i < _max(effectiveDelegated.length, 2); ++i) {
+                if (i > 0 || addToCurrentMonth) {
+                    uint _effectiveDelegated;
+                    if (i < effectiveDelegated.length) {
+                        _effectiveDelegated = effectiveDelegated[i];
+                    } else {
+                        _effectiveDelegated = effectiveDelegated[effectiveDelegated.length.sub(1)];
+                    }
+                    if (_effectiveDelegated != addedToStatistic) {
+                        _addToEffectiveDelegatedSum(currentMonth.add(i), _effectiveDelegated, addedToStatistic, add);
+                        addedToStatistic = _effectiveDelegated;
+                    }
                 }
             }
         }

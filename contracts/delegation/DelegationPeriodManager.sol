@@ -52,6 +52,7 @@ contract DelegationPeriodManager is Permissions {
      * @param stakeMultiplier uint return for delegation
      */
     function setDelegationPeriod(uint monthsCount, uint stakeMultiplier) external onlyOwner {
+        require(stakeMultipliers[monthsCount] == 0, "Delegation perios is already set");
         stakeMultipliers[monthsCount] = stakeMultiplier;
 
         emit DelegationPeriodWasSet(monthsCount, stakeMultiplier);
@@ -64,7 +65,7 @@ contract DelegationPeriodManager is Permissions {
      * @return bool True if delegation period is allowed
      */
     function isDelegationPeriodAllowed(uint monthsCount) external view returns (bool) {
-        return stakeMultipliers[monthsCount] != 0 ? true : false;
+        return stakeMultipliers[monthsCount] != 0;
     }
 
     /**
@@ -72,7 +73,7 @@ contract DelegationPeriodManager is Permissions {
      */
     function initialize(address contractsAddress) public override initializer {
         Permissions.initialize(contractsAddress);
-        stakeMultipliers[3] = 100;  // 3 months at 100
+        stakeMultipliers[2] = 100;  // 2 months at 100
         // stakeMultipliers[6] = 150;  // 6 months at 150
         // stakeMultipliers[12] = 200; // 12 months at 200
     }
