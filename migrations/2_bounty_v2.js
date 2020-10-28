@@ -4,20 +4,22 @@ const fsPromises = fs.promises;
 let Web3 = require('web3');
 const Tx = require('ethereumjs-tx');
 
-let configFile = require('../truffle-config.js');
-let erc1820Params = require('../scripts/erc1820.json');
-
-const gasMultiplierParameter = 'gas_multiplier';
-const argv = require('minimist')(process.argv.slice(2), {string: [gasMultiplierParameter]});
-const gas_multiplier = argv[gasMultiplierParameter] === undefined ? 1 : Number(argv[gasMultiplierParameter]);
 
 const { scripts, ConfigManager } = require('@openzeppelin/cli');
 const { add, push, create } = scripts;
 
-let privateKey = process.env.PRIVATE_KEY;
 
+let production;
 
-let gasLimit = 8000000;
+if (process.env.PRODUCTION === "true") {
+    production = true;
+} else if (process.env.PRODUCTION === "false") {
+    production = false;
+} else {
+    console.log("Recheck Production variable in .env");
+    console.log("Set Production as false");
+    production = false;
+}
 
 
 
@@ -50,13 +52,15 @@ async function deploy(deployer, networkName, accounts) {
         deployed.set(contractName, contract);
     }
 
-    console.log("Register contracts");
-
-    for (const contract of contracts) {
-        const address = deployed.get(contract).address;
-        await ContractManager.methods.setContractsAddress("Bounty", address).send({from: deployAccount}).then(function(res) {
-            console.log("Contract", contract, "with address", address, "is registered in Contract Manager");
-        });
+    
+    if (!production) {
+        console.log("Register contracts");
+        for (const contract of contracts) {
+            const address = deployed.get(contract).address;
+            await ContractManager.methods.setContractsAddress("Bounty", address).send({from: deployAccount}).then(function(res) {
+                console.log("Contract", contract, "with address", address, "is registered in Contract Manager");
+            });
+        }
     }
     
     console.log('Deploy done, writing results...');
