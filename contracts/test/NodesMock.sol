@@ -20,8 +20,6 @@
 */
 pragma solidity 0.6.10;
 
-pragma solidity 0.6.10;
-
 import "../BountyV2.sol";
 import "../Permissions.sol";
 
