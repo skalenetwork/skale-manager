@@ -11,12 +11,12 @@
     "check-send-result": "error",
     "private-vars-leading-underscore": "error",
     "code-complexity": "error",
-    "ordering": "error",
     "visibility-modifier-order": "error",
     "func-name-mixedcase": "error",
     "function-max-lines": "error",
     "no-unused-vars": "error",
     "no-inline-assembly": "error",
-    "contract-name-camelcase": "error"
+    "contract-name-camelcase": "error",
+    "ordering": "error"
   }
 }

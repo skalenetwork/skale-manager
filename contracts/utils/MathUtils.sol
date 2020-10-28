@@ -23,13 +23,13 @@ pragma solidity 0.6.10;
 
 
 library MathUtils {
-    
+
     uint constant private _EPS = 1e6;
-    
+
     event UnderflowError(
         uint a,
         uint b
-    );
+    );    
 
     function boundedSub(uint256 a, uint256 b) internal returns (uint256) {
         if (a >= b) {

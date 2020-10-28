@@ -52,7 +52,7 @@ contract("DelegationController", ([owner, holder1, holder2, validator, validator
         beforeEach(async () => {
             validatorId = 1;
             amount = 100;
-            delegationPeriod = 3;
+            delegationPeriod = 2;
             info = "VERY NICE";
             await validatorService.registerValidator(
                 "ValidatorName",
@@ -159,7 +159,7 @@ contract("DelegationController", ([owner, holder1, holder2, validator, validator
 
             it("should reject accepting request if such validator doesn't exist", async () => {
                 await delegationController.acceptPendingDelegation(delegationId, {from: validator2})
-                    .should.be.rejectedWith("Validator with given address does not exist");
+                    .should.be.rejectedWith("Validator address does not exist");
             });
 
             it("should reject accepting request if validator already canceled it", async () => {

@@ -215,4 +215,15 @@ contract("ConstantsHolder", ([deployer, user]) => {
     expect(parseInt(res.toString(), 10)).to.be.equal(lifetime);
   });
 
+  it("should set complaint timelimit", async () => {
+    const timelimit = 3600;
+    await constantsHolder.setComplaintTimelimit(timelimit, {from: user})
+      .should.be.eventually.rejectedWith("Caller is not the owner");
+    await constantsHolder.setComplaintTimelimit(timelimit, {from: deployer});
+    // expectation
+    const res = new BigNumber(await constantsHolder.complaintTimelimit());
+    // parseInt(bn.toString(), 10).should.be.equal(0)
+    expect(parseInt(res.toString(), 10)).to.be.equal(timelimit);
+  });
+
 });

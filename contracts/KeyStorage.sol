@@ -24,7 +24,7 @@ pragma experimental ABIEncoderV2;
 import "./Decryption.sol";
 import "./Permissions.sol";
 import "./SchainsInternal.sol";
-import "./ECDH.sol";
+import "./thirdparty/ECDH.sol";
 import "./utils/Precompiled.sol";
 import "./utils/FieldOperations.sol";
 
@@ -55,42 +55,42 @@ contract KeyStorage is Permissions {
 
     mapping(bytes32 => G2Operations.G2Point[]) private _previousSchainsPublicKeys;
 
-    function deleteKey(bytes32 groupIndex) external allow("SkaleDKG") {
-        _previousSchainsPublicKeys[groupIndex].push(_schainsPublicKeys[groupIndex]);
-        delete _schainsPublicKeys[groupIndex];
+    function deleteKey(bytes32 schainId) external allow("SkaleDKG") {
+        _previousSchainsPublicKeys[schainId].push(_schainsPublicKeys[schainId]);
+        delete _schainsPublicKeys[schainId];
     }
 
-    function initPublicKeyInProgress(bytes32 groupIndex) external allow("SkaleDKG") {
-        _publicKeysInProgress[groupIndex] = G2Operations.getG2Zero();
+    function initPublicKeyInProgress(bytes32 schainId) external allow("SkaleDKG") {
+        _publicKeysInProgress[schainId] = G2Operations.getG2Zero();
     }
 
-    function adding(bytes32 groupIndex, G2Operations.G2Point memory value) external allow("SkaleDKG") {
+    function adding(bytes32 schainId, G2Operations.G2Point memory value) external allow("SkaleDKG") {
         require(value.isG2(), "Incorrect g2 point");
-        _publicKeysInProgress[groupIndex] = value.addG2(_publicKeysInProgress[groupIndex]);
+        _publicKeysInProgress[schainId] = value.addG2(_publicKeysInProgress[schainId]);
     }
 
-    function finalizePublicKey(bytes32 groupIndex) external allow("SkaleDKG") {
-        if (!_isSchainsPublicKeyZero(groupIndex)) {
-            _previousSchainsPublicKeys[groupIndex].push(_schainsPublicKeys[groupIndex]);
+    function finalizePublicKey(bytes32 schainId) external allow("SkaleDKG") {
+        if (!_isSchainsPublicKeyZero(schainId)) {
+            _previousSchainsPublicKeys[schainId].push(_schainsPublicKeys[schainId]);
         }
-        _schainsPublicKeys[groupIndex] = _publicKeysInProgress[groupIndex];
-        delete _publicKeysInProgress[groupIndex];
+        _schainsPublicKeys[schainId] = _publicKeysInProgress[schainId];
+        delete _publicKeysInProgress[schainId];
     }
 
-    function getCommonPublicKey(bytes32 groupIndex) external view returns (G2Operations.G2Point memory) {
-        return _schainsPublicKeys[groupIndex];
+    function getCommonPublicKey(bytes32 schainId) external view returns (G2Operations.G2Point memory) {
+        return _schainsPublicKeys[schainId];
     }
 
-    function getPreviousPublicKey(bytes32 groupIndex) external view returns (G2Operations.G2Point memory) {
-        uint length = _previousSchainsPublicKeys[groupIndex].length;
+    function getPreviousPublicKey(bytes32 schainId) external view returns (G2Operations.G2Point memory) {
+        uint length = _previousSchainsPublicKeys[schainId].length;
         if (length == 0) {
             return G2Operations.getG2Zero();
         }
-        return _previousSchainsPublicKeys[groupIndex][length - 1];
+        return _previousSchainsPublicKeys[schainId][length - 1];
     }
 
-    function getAllPreviousPublicKeys(bytes32 groupIndex) external view returns (G2Operations.G2Point[] memory) {
-        return _previousSchainsPublicKeys[groupIndex];
+    function getAllPreviousPublicKeys(bytes32 schainId) external view returns (G2Operations.G2Point[] memory) {
+        return _previousSchainsPublicKeys[schainId];
     }
 
     function initialize(address contractsAddress) public override initializer {

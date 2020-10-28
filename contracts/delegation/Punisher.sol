@@ -37,7 +37,7 @@ contract Punisher is Permissions, ILocker {
     mapping (address => uint) private _locked;
 
     /**
-     * @dev Emitted when a slashing condition occurs.
+     * @dev Emitted upon slashing condition.
      */
     event Slash(
         uint validatorId,
@@ -45,7 +45,7 @@ contract Punisher is Permissions, ILocker {
     );
 
     /**
-     * @dev Emitted when a forgive condition occurs.
+     * @dev Emitted upon forgive condition.
      */
     event Forgive(
         address wallet,
@@ -53,15 +53,15 @@ contract Punisher is Permissions, ILocker {
     );
 
     /**
-     * @dev Executes slashing on a validator and its delegations by an `amount`
-     * of tokens. Currently, SkaleDKG is the only service allowed to execute
-     * slashing.
-     *
-     * Emits a Slash event.
-     *
-     * @param validatorId uint validator to be slashed
-     * @param amount uint slashed amount
-    */
+     * @dev Allows SkaleDKG contract to execute slashing on a validator and
+     * validator's delegations by an `amount` of tokens.
+     * 
+     * Emits a {Slash} event.
+     * 
+     * Requirements:
+     * 
+     * - Validator must exist.
+     */
     function slash(uint validatorId, uint amount) external allow("SkaleDKG") {
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
         DelegationController delegationController = DelegationController(
@@ -75,12 +75,13 @@ contract Punisher is Permissions, ILocker {
     }
 
     /**
-     * @dev Allows the Owner to forgive a slashing condition.
-     *
-     * Emits a Forgive event.
-     *
-     * @param holder address of the slashed
-     * @param amount uint amount to be forgiven
+     * @dev Allows the Admin to forgive a slashing condition.
+     * 
+     * Emits a {Forgive} event.
+     * 
+     * Requirements:
+     * 
+     * - All slashes must have been processed.
      */
     function forgive(address holder, uint amount) external onlyAdmin {
         DelegationController delegationController = DelegationController(
@@ -98,19 +99,23 @@ contract Punisher is Permissions, ILocker {
     }
 
     /**
-     * @dev See ILocker-getAndUpdateLockedAmount
+     * @dev See {ILocker-getAndUpdateLockedAmount}.
      */
     function getAndUpdateLockedAmount(address wallet) external override returns (uint) {
         return _getAndUpdateLockedAmount(wallet);
     }
 
     /**
-     * @dev See ILocker-getAndUpdateForbiddenForDelegationAmount
+     * @dev See {ILocker-getAndUpdateForbiddenForDelegationAmount}.
      */
     function getAndUpdateForbiddenForDelegationAmount(address wallet) external override returns (uint) {
         return _getAndUpdateLockedAmount(wallet);
     }
 
+    /**
+     * @dev Allows DelegationController contract to execute slashing of
+     * delegations.
+     */
     function handleSlash(address holder, uint amount) external allow("DelegationController") {
         _locked[holder] = _locked[holder].add(amount);
     }
@@ -121,6 +126,9 @@ contract Punisher is Permissions, ILocker {
 
     // private
 
+    /**
+     * @dev See {ILocker-getAndUpdateLockedAmount}.
+     */
     function _getAndUpdateLockedAmount(address wallet) private returns (uint) {
         DelegationController delegationController = DelegationController(
             contractManager.getContract("DelegationController"));

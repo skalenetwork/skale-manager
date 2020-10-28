@@ -31,8 +31,18 @@ import "../interfaces/delegation/ILocker.sol";
 /**
  * @title Token State
  * @dev This contract manages lockers to control token transferability.
- *
- * See ILocker.
+ * 
+ * The SKALE Network has three types of locked tokens:
+ * 
+ * - Tokens that are transferrable but are currently locked into delegation with
+ * a validator.
+ * 
+ * - Tokens that are not transferable from one address to another, but may be
+ * delegated to a validator `getAndUpdateLockedAmount`. This lock enforces
+ * Proof-of-Use requirements.
+ * 
+ * - Tokens that are neither transferable nor delegatable
+ * `getAndUpdateForbiddenForDelegationAmount`. This lock enforces slashing.
  */
 contract TokenState is Permissions, ILocker {
 
@@ -53,11 +63,8 @@ contract TokenState is Permissions, ILocker {
     );
 
     /**
-     *  @dev Return and update the total locked amount of a given `holder`.
-     *
-     *  @param holder address of the token holder
-     *  @return total locked amount
-    */
+     *  @dev See {ILocker-getAndUpdateLockedAmount}.
+     */
     function getAndUpdateLockedAmount(address holder) external override returns (uint) {
         uint locked = 0;
         for (uint i = 0; i < _lockers.length; ++i) {
@@ -68,11 +75,8 @@ contract TokenState is Permissions, ILocker {
     }
 
     /**
-     * @dev Return and update the total locked and un-delegatable amount of a given `holder`.
-     *
-     * @param holder address of the token holder
-     * @return amount total slashed amount (non-transferable and non-delegatable)
-    */
+     * @dev See {ILocker-getAndUpdateForbiddenForDelegationAmount}.
+     */
     function getAndUpdateForbiddenForDelegationAmount(address holder) external override returns (uint amount) {
         uint forbidden = 0;
         for (uint i = 0; i < _lockers.length; ++i) {
@@ -84,10 +88,8 @@ contract TokenState is Permissions, ILocker {
 
     /**
      * @dev Allows the Owner to remove a contract from the locker.
-     *
-     * Emits a LockerWasRemoved event.
-     *
-     * @param locker string name of contract to remove from locker
+     * 
+     * Emits a {LockerWasRemoved} event.
      */
     function removeLocker(string calldata locker) external onlyOwner {
         uint index;
@@ -116,10 +118,8 @@ contract TokenState is Permissions, ILocker {
 
     /**
      * @dev Allows the Owner to add a contract to the Locker.
-     *
-     * Emits a LockerWasAdded event.
-     *
-     * @param locker string name of contract to add to locker
+     * 
+     * Emits a {LockerWasAdded} event.
      */
     function addLocker(string memory locker) public onlyOwner {
         _lockers.push(locker);

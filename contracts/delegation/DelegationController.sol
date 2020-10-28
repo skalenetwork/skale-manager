@@ -41,20 +41,23 @@ import "./ValidatorService.sol";
 /**
  * @title Delegation Controller
  * @dev This contract performs all delegation functions including delegation
- * requests, undelegation, slashing, etc.
- *
+ * requests, and undelegation, etc.
+ * 
  * Delegators and validators may both perform delegations. Validators who perform
  * delegations to themselves are effectively self-delegating or self-bonding.
- *
+ * 
+ * IMPORTANT: Undelegation may be requested at any time, but undelegation is only
+ * performed at the completion of the current delegation period.
+ * 
  * Delegated tokens may be in one of several states:
- *
- * - PROPOSED: token holder proposes tokens to delegate to a validator
- * - ACCEPTED: token delegations are accepted by a validator and are locked-by-delegation
- * - CANCELED: token holder cancels delegation proposal. Only allowed before the proposal is accepted by the validator
- * - REJECTED: token proposal expires at the UTC start of the next month
- * - DELEGATED: accepted delegations are delegated at the UTC start of the month
- * - UNDELEGATION_REQUESTED: token holder requests delegations to undelegate from the validator
- * - COMPLETED: undelegation request is completed at the end of the delegation period
+ * 
+ * - PROPOSED: token holder proposes tokens to delegate to a validator.
+ * - ACCEPTED: token delegations are accepted by a validator and are locked-by-delegation.
+ * - CANCELED: token holder cancels delegation proposal. Only allowed before the proposal is accepted by the validator.
+ * - REJECTED: token proposal expires at the UTC start of the next month.
+ * - DELEGATED: accepted delegations are delegated at the UTC start of the month.
+ * - UNDELEGATION_REQUESTED: token holder requests delegations to undelegate from the validator.
+ * - COMPLETED: undelegation request is completed at the end of the delegation period.
  */
 contract DelegationController is Permissions, ILocker {
     using MathUtils for uint;
@@ -204,14 +207,24 @@ contract DelegationController is Permissions, ILocker {
         _;
     }
 
+    /**
+     * @dev Update and return a validator's delegations.
+     */
     function getAndUpdateDelegatedToValidatorNow(uint validatorId) external returns (uint) {
         return getAndUpdateDelegatedToValidator(validatorId, _getCurrentMonth());
     }
 
+    /**
+     * @dev Update and return the amount delegated.
+     */
     function getAndUpdateDelegatedAmount(address holder) external returns (uint) {
         return _getAndUpdateDelegatedByHolder(holder);
     }
 
+    /**
+     * @dev Update and return the effective amount delegated (minus slash) for
+     * the given month.
+     */
     function getAndUpdateEffectiveDelegatedByHolderToValidator(address holder, uint validatorId, uint month) external
         allow("Distributor") returns (uint effectiveDelegated)
     {
@@ -226,13 +239,18 @@ contract DelegationController is Permissions, ILocker {
      * and `delegationPeriod` to a `validatorId`. Delegation must be accepted
      * by the validator before the UTC start of the month, otherwise the
      * delegation will be rejected.
-     *
+     * 
      * The token holder may add additional information in each proposal.
-     *
-     * @param validatorId uint ID of validator to receive delegation proposal
-     * @param amount uint amount of proposed delegation
-     * @param delegationPeriod uint period of proposed delegation
-     * @param info string extra information provided by the token holder (if any)
+     * 
+     * Emits a {DelegationProposed} event.
+     * 
+     * Requirements:
+     * 
+     * - Holder must have sufficient delegatable tokens.
+     * - Delegation must be above the validator's minimum delegation amount.
+     * - Delegation period must be allowed.
+     * - Validator must be authorized if trusted list is enabled.
+     * - Validator must be accepting new delegation requests.
      */
     function delegate(
         uint validatorId,
@@ -242,22 +260,10 @@ contract DelegationController is Permissions, ILocker {
     )
         external
     {
-        ValidatorService validatorService = _getValidatorService();
-        IERC777 skaleToken = IERC777(contractManager.getContract("SkaleToken"));
-        TokenState tokenState = TokenState(contractManager.getContract("TokenState"));
-
-        require(
-            validatorService.checkMinimumDelegation(validatorId, amount),
-            "Amount does not meet the validator's minimum delegation amount");
-        require(
-            validatorService.isAuthorizedValidator(validatorId),
-            "Validator is not authorized to accept delegation request");
         require(
             _getDelegationPeriodManager().isDelegationPeriodAllowed(delegationPeriod),
             "This delegation period is not allowed");
-        require(
-            validatorService.isAcceptingNewRequests(validatorId),
-            "The validator is not currently accepting new requests");
+        _getValidatorService().checkValidatorCanReceiveDelegation(validatorId, amount);        
         _checkIfDelegationIsAllowed(msg.sender, validatorId);
 
         SlashingSignal[] memory slashingSignals = _processAllSlashesWithoutSignals(msg.sender);
@@ -270,8 +276,9 @@ contract DelegationController is Permissions, ILocker {
             info);
 
         // check that there is enough money
-        uint holderBalance = skaleToken.balanceOf(msg.sender);
-        uint forbiddenForDelegation = tokenState.getAndUpdateForbiddenForDelegationAmount(msg.sender);
+        uint holderBalance = IERC777(contractManager.getSkaleToken()).balanceOf(msg.sender);
+        uint forbiddenForDelegation = TokenState(contractManager.getTokenState())
+            .getAndUpdateForbiddenForDelegationAmount(msg.sender);
         require(holderBalance >= forbiddenForDelegation, "Token holder does not have enough tokens to delegate");
 
         emit DelegationProposed(delegationId);
@@ -280,30 +287,28 @@ contract DelegationController is Permissions, ILocker {
     }
 
     /**
-     * @dev See ILocker.
+     * @dev See {ILocker-getAndUpdateLockedAmount}.
      */
     function getAndUpdateLockedAmount(address wallet) external override returns (uint) {
         return _getAndUpdateLockedAmount(wallet);
     }
 
     /**
-     * @dev See ILocker.
+     * @dev See {ILocker-getAndUpdateForbiddenForDelegationAmount}.
      */
     function getAndUpdateForbiddenForDelegationAmount(address wallet) external override returns (uint) {
         return _getAndUpdateLockedAmount(wallet);
     }
 
     /**
-     * @dev Allows a token holder to cancel a delegation proposal.
-     *
+     * @dev Allows token holder to cancel a delegation proposal.
+     * 
+     * Emits a {DelegationRequestCanceledByUser} event.
+     * 
      * Requirements:
-     *
-     * - the sender must be the token holder of the delegation proposal.
-     * - the delegation must still be in a PROPOSED state.
-     *
-     * Emits a DelegationRequestCanceledByUser event.
-     *
-     * @param delegationId uint ID of delegation proposal
+     * 
+     * - `msg.sender` must be the token holder of the delegation proposal.
+     * - Delegation state must be PROPOSED.
      */
     function cancelPendingDelegation(uint delegationId) external checkDelegationExists(delegationId) {
         require(msg.sender == delegations[delegationId].holder, "Only token holders can cancel delegation request");
@@ -320,10 +325,13 @@ contract DelegationController is Permissions, ILocker {
      * Successful acceptance of delegations transition the tokens from a
      * PROPOSED state to ACCEPTED, and tokens are locked for the remainder of the
      * delegation period.
-     *
-     * Emits a DelegationAccepted event.
-     *
-     * @param delegationId uint ID of delegation proposal
+     * 
+     * Emits a {DelegationAccepted} event.
+     * 
+     * Requirements:
+     * 
+     * - Validator must be recipient of proposal.
+     * - Delegation state must be PROPOSED.
      */
     function acceptPendingDelegation(uint delegationId) external checkDelegationExists(delegationId) {
         require(
@@ -373,16 +381,14 @@ contract DelegationController is Permissions, ILocker {
     }
 
     /**
-     * @dev Allows a delegator to undelegate a specific delegation.
-     *
+     * @dev Allows delegator to undelegate a specific delegation.
+     * 
+     * Emits UndelegationRequested event.
+     * 
      * Requirements:
-     *
-     * - the sender must be the delegator.
-     * - the delegation must be in DELEGATED state.
-     *
-     * Emits an UndelegationRequested event.
-     *
-     * @param delegationId uint ID of delegation to undelegate
+     * 
+     * - `msg.sender` must be the delegator.
+     * - Delegation state must be DELEGATED.
      */
     function requestUndelegation(uint delegationId) external checkDelegationExists(delegationId) {
         require(getState(delegationId) == State.DELEGATED, "Cannot request undelegation");
@@ -434,19 +440,15 @@ contract DelegationController is Permissions, ILocker {
     }
 
     /**
-     * @dev Allows the Punisher to confiscate an `amount` of stake from
-     * `validatorId` by slashing. This slashes all delegations of the validator,
+     * @dev Allows Punisher contract to slash an `amount` of stake from
+     * a validator. This slashes an amount of delegations of the validator,
      * which reduces the amount that the validator has staked. This consequence
-     * may force the SKALE Manger to reduce the number of nodes a validator is
+     * may force the SKALE Manager to reduce the number of nodes a validator is
      * operating so the validator can meet the Minimum Staking Requirement.
-     *
-     * See Punisher.
-     *
-     * Emits a SlashingEvent.
-     *
-     * @param validatorId uint validator to slash
-     * @param amount uint amount to slash
-     *
+     * 
+     * Emits a {SlashingEvent}.
+     * 
+     * See {Punisher}.
      */
     function confiscate(uint validatorId, uint amount) external allow("Punisher") {
         uint currentMonth = _getCurrentMonth();
@@ -489,30 +491,54 @@ contract DelegationController is Permissions, ILocker {
         }
     }
 
+    /**
+     * @dev Allows Distributor contract to return and update the effective 
+     * amount delegated (minus slash) to a validator for a given month.
+     */
     function getAndUpdateEffectiveDelegatedToValidator(uint validatorId, uint month)
-        external allowThree("Bounty", "Distributor", "ValidatorService") returns (uint)
+        external allowTwo("Bounty", "Distributor") returns (uint)
     {
         return _effectiveDelegatedToValidator[validatorId].getAndUpdateValueInSequence(month);
     }
 
+    /**
+     * @dev Return and update the amount delegated to a validator for the
+     * current month.
+     */
     function getAndUpdateDelegatedByHolderToValidatorNow(address holder, uint validatorId) external returns (uint) {
         return _getAndUpdateDelegatedByHolderToValidator(holder, validatorId, _getCurrentMonth());
     }
 
+    function getEffectiveDelegatedValuesByValidator(uint validatorId) external view returns (uint[] memory) {
+        return _effectiveDelegatedToValidator[validatorId].getValuesInSequence();
+    }
+
+    /**
+     * @dev Return Delegation struct.
+     */
     function getDelegation(uint delegationId)
         external view checkDelegationExists(delegationId) returns (Delegation memory)
     {
         return delegations[delegationId];
     }
 
+    /**
+     * @dev Returns the first delegation month.
+     */
     function getFirstDelegationMonth(address holder, uint validatorId) external view returns(uint) {
         return _firstDelegationMonth[holder].byValidator[validatorId];
     }
 
+    /**
+     * @dev Returns a validator's total number of delegations.
+     */
     function getDelegationsByValidatorLength(uint validatorId) external view returns (uint) {
         return delegationsByValidator[validatorId].length;
     }
 
+    /**
+     * @dev Returns a holder's total number of delegations.
+     */
     function getDelegationsByHolderLength(address holder) external view returns (uint) {
         return delegationsByHolder[holder].length;
     }
@@ -521,24 +547,32 @@ contract DelegationController is Permissions, ILocker {
         Permissions.initialize(contractsAddress);
     }
 
+    /**
+     * @dev Allows Nodes contract to get and update the amount delegated
+     * to validator for a given month.
+     */
     function getAndUpdateDelegatedToValidator(uint validatorId, uint month)
         public allow("Nodes") returns (uint)
     {
         return _delegatedToValidator[validatorId].getAndUpdateValue(month);
     }
 
+    /**
+     * @dev Process slashes up to the given limit.
+     */
     function processSlashes(address holder, uint limit) public {
         _sendSlashingSignals(_processSlashesWithoutSignals(holder, limit));
     }
 
+    /**
+     * @dev Process all slashes.
+     */
     function processAllSlashes(address holder) public {
         processSlashes(holder, 0);
     }
 
     /**
      * @dev Returns the token state of a given delegation.
-     *
-     * @param delegationId uint ID of the delegation
      */
     function getState(uint delegationId) public view checkDelegationExists(delegationId) returns (State state) {
         if (delegations[delegationId].started == 0) {
@@ -568,6 +602,9 @@ contract DelegationController is Permissions, ILocker {
         }
     }
 
+    /**
+     * @dev Returns the amount of tokens in PENDING delegation state.
+     */
     function getLockedInPendingDelegations(address holder) public view returns (uint) {
         uint currentMonth = _getCurrentMonth();
         if (_lockedInPendingDelegations[holder].month < currentMonth) {
@@ -577,12 +614,18 @@ contract DelegationController is Permissions, ILocker {
         }
     }
 
+    /**
+     * @dev Checks whether there are any unprocessed slashes.
+     */
     function hasUnprocessedSlashes(address holder) public view returns (bool) {
         return _everDelegated(holder) && _firstUnprocessedSlashByHolder[holder] < _slashes.length;
     }    
 
     // private
 
+    /**
+     * @dev Adds a new delegation proposal.
+     */
     function _addDelegation(
         address holder,
         uint validatorId,
@@ -609,6 +652,9 @@ contract DelegationController is Permissions, ILocker {
         _addToLockedInPendingDelegations(delegations[delegationId].holder, delegations[delegationId].amount);
     }
 
+    /**
+     * @dev Returns the month when a delegation ends.
+     */
     function _calculateDelegationEndMonth(uint delegationId) private view returns (uint) {
         uint currentMonth = _getCurrentMonth();
         uint started = delegations[delegationId].started;
@@ -724,6 +770,9 @@ contract DelegationController is Permissions, ILocker {
         return _getTimeHelpers().getCurrentMonth();
     }
 
+    /**
+     * @dev See {ILocker-getAndUpdateLockedAmount}.
+     */
     function _getAndUpdateLockedAmount(address wallet) private returns (uint) {
         return _getAndUpdateDelegatedByHolder(wallet).add(getLockedInPendingDelegations(wallet));
     }
@@ -738,6 +787,9 @@ contract DelegationController is Permissions, ILocker {
         }
     }
 
+    /**
+     * @dev Checks whether the holder has performed a delegation.
+     */
     function _everDelegated(address holder) private view returns (bool) {
         return _firstDelegationMonth[holder].value > 0;
     }
@@ -750,6 +802,9 @@ contract DelegationController is Permissions, ILocker {
         _effectiveDelegatedToValidator[validatorId].subtractFromSequence(effectiveAmount, month);
     }
 
+    /**
+     * @dev Returns the delegated amount after a slashing event.
+     */
     function _calculateDelegationAmountAfterSlashing(uint delegationId) private view returns (uint) {
         uint startMonth = _delegationExtras[delegationId].lastSlashingMonthBeforeDelegation;
         uint validatorId = delegations[delegationId].validatorId;
@@ -836,7 +891,7 @@ contract DelegationController is Permissions, ILocker {
     }
 
     function _sendSlashingSignals(SlashingSignal[] memory slashingSignals) private {
-        Punisher punisher = Punisher(contractManager.getContract("Punisher"));
+        Punisher punisher = Punisher(contractManager.getPunisher());
         address previousHolder = address(0);
         uint accumulatedPenalty = 0;
         for (uint i = 0; i < slashingSignals.length; ++i) {
@@ -897,6 +952,14 @@ contract DelegationController is Permissions, ILocker {
         );
     }
 
+    /**
+     * @dev Checks whether delegation to a validator is allowed.
+     * 
+     * Requirements:
+     * 
+     * - Delegator must not have reached the validator limit.
+     * - Delegation must be made in or after the first delegation month.
+     */
     function _checkIfDelegationIsAllowed(address holder, uint validatorId) private view returns (bool) {
         require(
             _numberOfValidatorsPerDelegator[holder].delegated[validatorId] > 0 ||

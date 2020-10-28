@@ -43,15 +43,13 @@ contract DelegationPeriodManager is Permissions {
     );
 
     /**
-     * @dev Creates a new available delegation period and return in the network.
-     * Only the owner may set new delegation period and returns in the network.
-     *
-     * Emits a DelegationPeriodWasSet event.
-     *
-     * @param monthsCount uint delegation duration in months
-     * @param stakeMultiplier uint return for delegation
+     * @dev Allows the Owner to create a new available delegation period and
+     * stake multiplier in the network.
+     * 
+     * Emits a {DelegationPeriodWasSet} event.
      */
     function setDelegationPeriod(uint monthsCount, uint stakeMultiplier) external onlyOwner {
+        require(stakeMultipliers[monthsCount] == 0, "Delegation perios is already set");
         stakeMultipliers[monthsCount] = stakeMultiplier;
 
         emit DelegationPeriodWasSet(monthsCount, stakeMultiplier);
@@ -59,12 +57,9 @@ contract DelegationPeriodManager is Permissions {
 
     /**
      * @dev Checks whether given delegation period is allowed.
-     *
-     * @param monthsCount uint delegation duration in months
-     * @return bool True if delegation period is allowed
      */
     function isDelegationPeriodAllowed(uint monthsCount) external view returns (bool) {
-        return stakeMultipliers[monthsCount] != 0 ? true : false;
+        return stakeMultipliers[monthsCount] != 0;
     }
 
     /**
@@ -72,7 +67,7 @@ contract DelegationPeriodManager is Permissions {
      */
     function initialize(address contractsAddress) public override initializer {
         Permissions.initialize(contractsAddress);
-        stakeMultipliers[3] = 100;  // 3 months at 100
+        stakeMultipliers[2] = 100;  // 2 months at 100
         // stakeMultipliers[6] = 150;  // 6 months at 150
         // stakeMultipliers[12] = 200; // 12 months at 200
     }

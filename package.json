@@ -1,6 +1,6 @@
 {
   "name": "@skalenetwork/skale-manager",
-  "version": "1.5.2",
+  "version": "1.6.0",
   "private": true,
   "description": "SKALE Manager system, Decentralized task manager",
   "homepage": "https://github.com/skalenetwork/skale-manager#readme",
@@ -28,6 +28,7 @@
   "scripts": {
     "compile": "rm -rf ./build && NODE_OPTIONS=\"--max-old-space-size=4096\" npx truffle compile",
     "deploy": "bash ./scripts/deploy.sh",
+    "docs": "scripts/prepare-docs.sh",
     "generate": "yarn compile && typechain --target truffle './build/**/*.json'",
     "hooks": "git config core.hooksPath .githooks || true",
     "lint": "npx solhint \"contracts/**/*.sol\"",
@@ -44,7 +45,7 @@
     "@openzeppelin/contracts-ethereum-package": "^3.0.0",
     "@openzeppelin/upgrades": "^2.8.0",
     "@truffle/hdwallet-provider": "^1.0.28",
-    "@types/chai": "^4.2.11",
+    "@types/chai": "^4.2.13",
     "@types/chai-almost": "^1.0.1",
     "@types/chai-as-promised": "^7.1.3",
     "@types/minimist": "^1.2.0",
@@ -56,24 +57,26 @@
     "solc": "^0.6.10",
     "truffle": "5.1.39",
     "truffle-typings": "^1.0.8",
-    "ts-node": "8.10.2",
+    "ts-node": "9.0.0",
     "typechain": "^1.0.5",
     "typechain-target-truffle": "^1.0.2",
     "web3": "^1.2.1"
   },
   "devDependencies": {
-    "@nomiclabs/buidler": "^1.4.3",
+    "@nomiclabs/buidler": "^1.4.7",
     "@nomiclabs/buidler-truffle5": "^1.3.4",
     "@nomiclabs/buidler-web3": "^1.3.4",
     "@types/web3": "^1.0.19",
     "codecov": "^3.7.2",
     "dotenv": "^8.2.0",
     "elliptic": "^6.5.3",
-    "ganache-cli": "^6.9.1",
-    "solhint": "^3.1.0",
+    "ganache-cli": "^6.11.0",
+    "lodash.startcase": "^4.4.0",
+    "solhint": "^3.2.1",
     "solidity-coverage": "^0.7.5",
+    "solidity-docgen": "^0.5.7",
     "tslint": "^6.1.3",
     "tslint-no-unused-expression-chai": "^0.1.4",
-    "typescript": "3.9.7"
+    "typescript": "4.0.3"
   }
 }
