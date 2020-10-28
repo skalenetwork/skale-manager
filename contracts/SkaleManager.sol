@@ -62,6 +62,16 @@ contract SkaleManager is IERC777Recipient, Permissions {
         uint time,
         uint gasSpend
     );
+    event BountyGot(
+        uint indexed nodeIndex,
+        address owner,
+        uint averageDowntime,
+        uint averageLatency,
+        uint bounty,
+        uint previousBlockEvent,
+        uint time,
+        uint gasSpend
+    );
 
     function tokensReceived(
         address, // operator
@@ -201,6 +211,15 @@ contract SkaleManager is IERC777Recipient, Permissions {
         monitors.setLastBountyBlock(nodeIndex);
 
         emit BountyReceived(
+            nodeIndex,
+            from,
+            averageDowntime,
+            averageLatency,
+            bounty,
+            previousBlockEvent,
+            block.timestamp,
+            gasleft());
+        emit BountyGot(
             nodeIndex,
             from,
             averageDowntime,
