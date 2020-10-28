@@ -371,7 +371,7 @@ contract BountyV2 is Permissions {
             }
         } else if (lastRewardMonth.add(1) == currentMonth) {
             uint currentMonthStart = timeHelpers.monthToTimestamp(currentMonth);
-            uint currentMonthFinish = timeHelpers.monthToTimestamp(lastRewardMonth.add(1));
+            uint currentMonthFinish = timeHelpers.monthToTimestamp(currentMonth.add(1));
             return _min(
                 currentMonthStart.add(_max(timePassedAfterMonthStart, nodeCreationWindowSeconds)),
                 currentMonthFinish.sub(BOUNTY_WINDOW_SECONDS)

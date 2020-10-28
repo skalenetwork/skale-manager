@@ -29,10 +29,11 @@ import { deployDistributor } from "./tools/deploy/delegation/distributor";
 import { deploySkaleManagerMock } from "./tools/deploy/test/skaleManagerMock";
 import { privateKeys } from "./tools/private-keys";
 import * as elliptic from "elliptic";
+import { deployPunisher } from "./tools/deploy/delegation/punisher";
 
 chai.should();
 chai.use(chaiAsPromised);
-chai.use(chaiAlmost(1));
+chai.use(chaiAlmost(2));
 const EC = elliptic.ec;
 const ec = new EC("secp256k1");
 
@@ -327,6 +328,535 @@ contract("Bounty", ([owner, admin, hacker, validator, validator2]) => {
                 skipTime(web3, 28 * day);
                 bounty1 = await calculateBounty(1);
                 bounty1.should.be.almost(getBountyForEpoch(2));
+            });
+
+            it("should process nodes adding and removing, delegation and undelegation and slashing", async () => {
+                await skaleToken.mint(validator, ten18.muln(10e6).toString(), "0x", "0x");
+                await skaleToken.mint(validator2, ten18.muln(10e6).toString(), "0x", "0x");
+                const punisher = await deployPunisher(contractManager);
+                await contractManager.setContractsAddress("SkaleDKG", contractManager.address); // for testing
+                const million = ten18.muln(1e6).toString();
+
+                // Jan 1st
+                console.log("ts: current", new Date(await currentTime(web3) * 1000));
+
+                // validator1:
+                //     delegations:
+                //         0: 1M - 2 months - DELEGATED
+                //     nodes:
+
+                // validator2:
+                //     delegations:
+                //         1: 500K - 12 months - DELEGATED
+                //     nodes:
+
+                await delegationController.requestUndelegation(0, {from: validator});
+
+                await skipTimeToDate(web3, 15, 0);
+
+                // Jan 15th
+                console.log("ts: current", new Date(await currentTime(web3) * 1000));
+
+                // 1. validator1:
+                //     delegations:
+                //         0: 1M - 2 months - UNDELEGATION_REQUESTED
+                //     nodes:
+
+                // 2. validator2:
+                //     delegations:
+                //         1: 500K - 12 months - DELEGATED
+                //     nodes:
+
+                await delegationController.delegate(2, million, 2, "", {from: validator2});
+                await delegationController.acceptPendingDelegation(2, {from: validator2});
+
+                await skipTimeToDate(web3, 30, 0);
+
+                // Jan 30th
+                console.log("ts: current", new Date(await currentTime(web3) * 1000));
+
+                // 1. validator1:
+                //     delegations:
+                //         0: 1M - 2 months - UNDELEGATION_REQUESTED
+                //     nodes:
+
+                // 2. validator2:
+                //     delegations:
+                //         1: 500K - 12 months - DELEGATED
+                //         2: 1M - 2 months - ACCEPTED
+                //     nodes:
+
+                await punisher.slash(1, million);
+
+                await skipTimeToDate(web3, 1, 1);
+
+                // Feb 1st
+                console.log("ts: current", new Date(await currentTime(web3) * 1000));
+
+                // 1. validator1:
+                //     delegations:
+                //         0: 0 - 2 months - UNDELEGATION_REQUESTED
+                //     nodes:
+
+                // 2. validator2:
+                //     delegations:
+                //         1: 500K - 12 months - DELEGATED
+                //         2: 1M - 2 months - DELEGATED
+                //     nodes:
+
+                await nodes.registerNodes(1, validator2Id);
+
+                await bountyContract.calculateBounty(0)
+                    .should.be.eventually.rejectedWith("Transaction is sent too early");
+
+                await skipTimeToDate(web3, 15, 1);
+
+                // Feb 15th
+                console.log("ts: current", new Date(await currentTime(web3) * 1000));
+
+                // 1. validator1:
+                //     delegations:
+                //         0: 0 - 2 months (from Jan) - UNDELEGATION_REQUESTED
+                //     nodes:
+
+                // 2. validator2:
+                //     delegations:
+                //         1: 500K - 12 months (from Jan) - DELEGATED
+                //         2: 1M - 2 months (from Feb) - DELEGATED
+                //     nodes:
+                //         0: Feb 1st
+
+                await delegationController.delegate(validatorId, million, 12, "", {from: validator});
+                await delegationController.acceptPendingDelegation(3, {from: validator});
+
+                await bountyContract.calculateBounty(0)
+                    .should.be.eventually.rejectedWith("Transaction is sent too early");
+
+                await skipTimeToDate(web3, 27, 1);
+
+                // Feb 27th
+                console.log("ts: current", new Date(await currentTime(web3) * 1000));
+
+                // 1. validator1:
+                //     delegations:
+                //         0: 0 - 2 months (from Jan) - UNDELEGATION_REQUESTED
+                //         3: 1M - 12 months (from Mar) - ACCEPTED
+                //     nodes:
+
+                // 2. validator2:
+                //     delegations:
+                //         1: 500K - 12 months (from Jan) - DELEGATED
+                //         2: 1M - 2 months (from Feb) - DELEGATED
+                //     nodes:
+                //         0: Feb 1st
+
+                await delegationController.delegate(validatorId, million, 2, "", {from: validator});
+                await delegationController.acceptPendingDelegation(4, {from: validator});
+
+                let bounty = await calculateBounty(0);
+                bounty.should.be.almost(getBountyForEpoch(0) + getBountyForEpoch(1));
+
+                await skipTimeToDate(web3, 1, 2);
+
+                // March 1st
+                console.log("ts: current", new Date(await currentTime(web3) * 1000));
+
+                // 1. validator1:
+                //     delegations:
+                //         0: 0 - 2 months (from Jan) - COMPLETED
+                //         3: 1M - 12 months (from Mar) - DELEGATED
+                //         4: 1M - 2 months (from Mar) - DELEGATED
+                //     nodes:
+
+                // 2. validator2:
+                //     delegations:
+                //         1: 500K - 12 months (from Jan) - DELEGATED
+                //         2: 1M - 2 months (from Feb) - DELEGATED
+                //     nodes:
+                //         0: Feb 27th
+
+                await delegationController.requestUndelegation(3, {from: validator});
+
+                await bountyContract.calculateBounty(0)
+                    .should.be.eventually.rejectedWith("Transaction is sent too early");
+
+                await skipTimeToDate(web3, 15, 2);
+
+                // March 15th
+                console.log("ts: current", new Date(await currentTime(web3) * 1000));
+
+                // 1. validator1:
+                //     delegations:
+                //         0: 0 - 2 months (from Jan) - COMPLETED
+                //         3: 1M - 12 months (from Mar) - UNDELEGATION_REQUESTED
+                //         4: 1M - 2 months (from Mar) - DELEGATED
+                //     nodes:
+
+                // 2. validator2:
+                //     delegations:
+                //         1: 500K - 12 months (from Jan) - DELEGATED
+                //         2: 1M - 2 months (from Feb) - DELEGATED
+                //     nodes:
+                //         0: Feb 27th
+
+                await punisher.slash(validatorId, million);
+
+                await bountyContract.calculateBounty(0)
+                    .should.be.eventually.rejectedWith("Transaction is sent too early");
+
+                await skipTimeToDate(web3, 29, 2);
+
+                // March 29th
+                console.log("ts: current", new Date(await currentTime(web3) * 1000));
+
+                // 1. validator1:
+                //     delegations:
+                //         0: 0 - 2 months (from Jan) - COMPLETED
+                //         3: 500K - 12 months (from Mar) - UNDELEGATION_REQUESTED
+                //         4: 500K - 2 months (from Mar) - DELEGATED
+                //     nodes:
+
+                // 2. validator2:
+                //     delegations:
+                //         1: 500K - 12 months (from Jan) - DELEGATED
+                //         2: 1M - 2 months (from Feb) - DELEGATED
+                //     nodes:
+                //         0: Feb 27th
+
+                await delegationController.delegate(validatorId, million, 2, "", {from: validator});
+                await delegationController.acceptPendingDelegation(5, {from: validator});
+
+                bounty = await calculateBounty(0);
+                bounty.should.be.almost(getBountyForEpoch(2));
+
+                await skipTimeToDate(web3, 1, 3);
+
+                // April 1st
+                console.log("ts: current", new Date(await currentTime(web3) * 1000));
+
+                // 1. validator1:
+                //     delegations:
+                //         0: 0 - 2 months (from Jan) - COMPLETED
+                //         3: 500K - 12 months (from Mar) - UNDELEGATION_REQUESTED
+                //         4: 500K - 2 months (from Mar) - DELEGATED
+                //         5: 1M - 2 months (from Apr) - DELEGATED
+                //     nodes:
+
+                // 2. validator2:
+                //     delegations:
+                //         1: 500K - 12 months (from Jan) - DELEGATED
+                //         2: 1M - 2 months (from Feb) - DELEGATED
+                //     nodes:
+                //         0: Feb 27th
+
+                await nodes.registerNodes(1, validatorId);
+
+                await bountyContract.calculateBounty(0)
+                    .should.be.eventually.rejectedWith("Transaction is sent too early");
+                await bountyContract.calculateBounty(1)
+                    .should.be.eventually.rejectedWith("Transaction is sent too early");
+
+                await skipTimeToDate(web3, 15, 3);
+
+                // April 15th
+                console.log("ts: current", new Date(await currentTime(web3) * 1000));
+
+                // 1. validator1:
+                //     delegations:
+                //         0: 0 - 2 months (from Jan) - COMPLETED
+                //         3: 500K - 12 months (from Mar) - UNDELEGATION_REQUESTED
+                //         4: 500K - 2 months (from Mar) - DELEGATED
+                //         5: 1M - 2 months (from Apr) - DELEGATED
+                //     nodes:
+                //         1: Apr 1st
+
+                // 2. validator2:
+                //     delegations:
+                //         1: 500K - 12 months (from Jan) - DELEGATED
+                //         2: 1M - 2 months (from Feb) - DELEGATED
+                //     nodes:
+                //         0: Feb 27th
+
+                await nodes.registerNodes(1, validatorId);
+
+                await bountyContract.calculateBounty(0)
+                    .should.be.eventually.rejectedWith("Transaction is sent too early");
+                await bountyContract.calculateBounty(1)
+                    .should.be.eventually.rejectedWith("Transaction is sent too early");
+                await bountyContract.calculateBounty(2)
+                    .should.be.eventually.rejectedWith("Transaction is sent too early");
+
+                await skipTimeToDate(web3, 28, 3);
+
+                // April 28th
+                console.log("ts: current", new Date(await currentTime(web3) * 1000));
+
+                // 1. validator1:
+                //     delegations:
+                //         0: 0 - 2 months (from Jan) - COMPLETED
+                //         3: 500K - 12 months (from Mar) - UNDELEGATION_REQUESTED
+                //         4: 500K - 2 months (from Mar) - DELEGATED
+                //         5: 1M - 2 months (from Apr) - DELEGATED
+                //     nodes:
+                //         1: Apr 1st
+                //         2: Apr 15th
+
+                // 2. validator2:
+                //     delegations:
+                //         1: 500K - 12 months (from Jan) - DELEGATED
+                //         2: 1M - 2 months (from Feb) - DELEGATED
+                //     nodes:
+                //         0: Feb 27th
+
+                await delegationController.delegate(validator2Id, million, 2, "", {from: validator2});
+                await delegationController.acceptPendingDelegation(6, {from: validator2});
+
+                bounty = await calculateBounty(0);
+                bounty.should.be.almost(getBountyForEpoch(3) * (500e3 * 200 + 1e6 * 100) / (0.5e6 * 200 + 1e6 * 100 + 0.5e6 * 200 + 1.5e6 * 100));
+                bounty = await calculateBounty(1);
+                bounty.should.be.almost(getBountyForEpoch(3) * (0.5e6 * 200 + 1.5e6 * 100) / (0.5e6 * 200 + 1e6 * 100 + 0.5e6 * 200 + 1.5e6 * 100));
+                await bountyContract.calculateBounty(2)
+                    .should.be.eventually.rejectedWith("Transaction is sent too early");
+
+                await skipTimeToDate(web3, 1, 4);
+
+                // May 1st
+                console.log("ts: current", new Date(await currentTime(web3) * 1000));
+
+                // 1. validator1:
+                //     delegations:
+                //         0: 0 - 2 months (from Jan) - COMPLETED
+                //         3: 500K - 12 months (from Mar) - UNDELEGATION_REQUESTED
+                //         4: 500K - 2 months (from Mar) - DELEGATED
+                //         5: 1M - 2 months (from Apr) - DELEGATED
+                //     nodes:
+                //         1: Apr 28th
+                //         2: Apr 15th
+
+                // 2. validator2:
+                //     delegations:
+                //         1: 500K - 12 months (from Jan) - DELEGATED
+                //         2: 1M - 2 months (from Feb) - DELEGATED
+                //         6: 1M - 2 months (from May) - DELEGATED
+                //     nodes:
+                //         0: Apr 28th
+
+                let totalBounty = 0;
+
+                await nodes.registerNodes(1, validator2Id);
+
+                await bountyContract.calculateBounty(0)
+                    .should.be.eventually.rejectedWith("Transaction is sent too early");
+                await bountyContract.calculateBounty(1)
+                    .should.be.eventually.rejectedWith("Transaction is sent too early");
+                await bountyContract.calculateBounty(2)
+                    .should.be.eventually.rejectedWith("Transaction is sent too early");
+                await bountyContract.calculateBounty(3)
+                    .should.be.eventually.rejectedWith("Transaction is sent too early");
+
+                await skipTimeToDate(web3, 15, 4);
+
+                // May 15th
+                console.log("ts: current", new Date(await currentTime(web3) * 1000));
+
+                // 1. validator1:
+                //     delegations:
+                //         0: 0 - 2 months (from Jan) - COMPLETED
+                //         3: 500K - 12 months (from Mar) - UNDELEGATION_REQUESTED
+                //         4: 500K - 2 months (from Mar) - DELEGATED
+                //         5: 1M - 2 months (from Apr) - DELEGATED
+                //     nodes:
+                //         1: Apr 28th
+                //         2: Apr 15th
+
+                // 2. validator2:
+                //     delegations:
+                //         1: 500K - 12 months (from Jan) - DELEGATED
+                //         2: 1M - 2 months (from Feb) - DELEGATED
+                //         6: 1M - 2 months (from May) - DELEGATED
+                //     nodes:
+                //         0: Apr 28th
+                //         3: May 1st
+
+                await delegationController.requestUndelegation(1, {from: validator2});
+                const effectiveDelegated1 = 1.5e6 * 100 + 0.5e6 * 200;
+                let effectiveDelegated2 = 2e6 * 100 + 0.5e6 * 200;
+
+                effectiveDelegated1.should.be.almost(
+                    web3.utils.toBN((await delegationController.getEffectiveDelegatedValuesByValidator(validatorId))[0])
+                        .div(ten18)
+                        .toNumber());
+                effectiveDelegated2.should.be.almost(
+                    web3.utils.toBN((await delegationController.getEffectiveDelegatedValuesByValidator(validator2Id))[0])
+                        .div(ten18)
+                        .toNumber());
+
+                await bountyContract.calculateBounty(0)
+                    .should.be.eventually.rejectedWith("Transaction is sent too early");
+                await bountyContract.calculateBounty(1)
+                    .should.be.eventually.rejectedWith("Transaction is sent too early");
+                bounty = await calculateBounty(2);
+                bounty.should.be.almost(getBountyForEpoch(4) * (effectiveDelegated1) / (2 * effectiveDelegated1 + 2 * effectiveDelegated2));
+                totalBounty += bounty;
+                await bountyContract.calculateBounty(3)
+                    .should.be.eventually.rejectedWith("Transaction is sent too early");
+
+                await skipTimeToDate(web3, 29, 4);
+
+                // May 29th
+                console.log("ts: current", new Date(await currentTime(web3) * 1000));
+
+                // 1. validator1:
+                //     delegations:
+                //         0: 0 - 2 months (from Jan) - COMPLETED
+                //         3: 500K - 12 months (from Mar) - UNDELEGATION_REQUESTED
+                //         4: 500K - 2 months (from Mar) - DELEGATED
+                //         5: 1M - 2 months (from Apr) - DELEGATED
+                //     nodes:
+                //         1: Apr 28th
+                //         2: Apr 15th
+
+                // 2. validator2:
+                //     delegations:
+                //         1: 500K - 12 months (from Jan) - UNDELEGATION_REQUESTED
+                //         2: 1M - 2 months (from Feb) - DELEGATED
+                //         6: 1M - 2 months (from May) - DELEGATED
+                //     nodes:
+                //         0: Apr 28th
+                //         3: May 1st
+
+                await punisher.slash(validator2Id, ten18.muln(1.25e6).toString());
+                effectiveDelegated2 = 1e6 * 100 + 0.25e6 * 200;
+
+                effectiveDelegated1.should.be.almost(
+                    web3.utils.toBN((await delegationController.getEffectiveDelegatedValuesByValidator(validatorId))[0])
+                        .div(ten18)
+                        .toNumber());
+                effectiveDelegated2.should.be.almost(
+                    web3.utils.toBN((await delegationController.getEffectiveDelegatedValuesByValidator(validator2Id))[0])
+                        .div(ten18)
+                        .toNumber());
+
+                bounty = await calculateBounty(0);
+                bounty.should.be.almost(getBountyForEpoch(4) * (effectiveDelegated2) / (2 * effectiveDelegated1 + 2 * effectiveDelegated2));
+                totalBounty += bounty;
+                bounty = await calculateBounty(1);
+                bounty.should.be.almost(getBountyForEpoch(4) * (effectiveDelegated1) / (2 * effectiveDelegated1 + 2 * effectiveDelegated2));
+                totalBounty += bounty;
+                await bountyContract.calculateBounty(2)
+                    .should.be.eventually.rejectedWith("Transaction is sent too early");
+                bounty = await calculateBounty(3);
+                bounty.should.be.almost(getBountyForEpoch(4) * (effectiveDelegated2) / (2 * effectiveDelegated1 + 2 * effectiveDelegated2));
+                totalBounty += bounty;
+
+                totalBounty.should.be.lessThan(getBountyForEpoch(4));
+                let bountyLeft = getBountyForEpoch(4) - totalBounty;
+
+                await skipTimeToDate(web3, 16, 5);
+
+                // June 16th
+                console.log("ts: current", new Date(await currentTime(web3) * 1000));
+
+                // 1. validator1:
+                //     delegations:
+                //         0: 0 - 2 months (from Jan) - COMPLETED
+                //         3: 500K - 12 months (from Mar) - UNDELEGATION_REQUESTED
+                //         4: 500K - 2 months (from Mar) - DELEGATED
+                //         5: 1M - 2 months (from Apr) - DELEGATED
+                //     nodes:
+                //         1: May 29th
+                //         2: Apr 15th
+
+                // 2. validator2:
+                //     delegations:
+                //         1: 250K - 12 months (from Jan) - UNDELEGATION_REQUESTED
+                //         2: 0.5M - 2 months (from Feb) - DELEGATED
+                //         6: 0.5M - 2 months (from May) - DELEGATED
+                //     nodes:
+                //         0: May 29th
+                //         3: May 29th
+
+                totalBounty = 0;
+                await nodes.removeNode(0, validator2Id);
+
+                await bountyContract.calculateBounty(1)
+                    .should.be.eventually.rejectedWith("Transaction is sent too early");
+                bounty = await calculateBounty(2);
+                bounty.should.be.almost((getBountyForEpoch(5) + bountyLeft) * (effectiveDelegated1) / (2 * effectiveDelegated1 + 2 * effectiveDelegated2));
+                totalBounty += bounty;
+                await bountyContract.calculateBounty(3)
+                    .should.be.eventually.rejectedWith("Transaction is sent too early");
+
+                await skipTimeToDate(web3, 28, 5);
+
+                // June 28th
+                console.log("ts: current", new Date(await currentTime(web3) * 1000));
+
+                // 1. validator1:
+                //     delegations:
+                //         0: 0 - 2 months (from Jan) - COMPLETED
+                //         3: 500K - 12 months (from Mar) - UNDELEGATION_REQUESTED
+                //         4: 500K - 2 months (from Mar) - DELEGATED
+                //         5: 1M - 2 months (from Apr) - DELEGATED
+                //     nodes:
+                //         1: May 29th
+                //         2: June 16th
+
+                // 2. validator2:
+                //     delegations:
+                //         1: 250K - 12 months (from Jan) - UNDELEGATION_REQUESTED
+                //         2: 0.5M - 2 months (from Feb) - DELEGATED
+                //         6: 0.5M - 2 months (from May) - DELEGATED
+                //     nodes:
+                //         3: May 29th
+
+                await delegationController.requestUndelegation(6, {from: validator2});
+
+                bounty = await calculateBounty(1);
+                bounty.should.be.almost((getBountyForEpoch(5) + bountyLeft) * (effectiveDelegated1) / (2 * effectiveDelegated1 + 2 * effectiveDelegated2));
+                totalBounty += bounty;
+                await bountyContract.calculateBounty(2)
+                    .should.be.eventually.rejectedWith("Transaction is sent too early");
+                bounty = await calculateBounty(3);
+                bounty.should.be.almost((getBountyForEpoch(5) + bountyLeft) * (effectiveDelegated2) / (2 * effectiveDelegated1 + 2 * effectiveDelegated2));
+                totalBounty += bounty;
+
+                await skipTimeToDate(web3, 29, 6);
+
+                // July 29th
+                console.log("ts: current", new Date(await currentTime(web3) * 1000));
+
+                // 1. validator1:
+                //     delegations:
+                //         0: 0 - 2 months (from Jan) - COMPLETED
+                //         3: 500K - 12 months (from Mar) - UNDELEGATION_REQUESTED
+                //         4: 500K - 2 months (from Mar) - DELEGATED
+                //         5: 1M - 2 months (from Apr) - DELEGATED
+                //     nodes:
+                //         1: May 29th
+                //         2: June 16th
+
+                // 2. validator2:
+                //     delegations:
+                //         1: 250K - 12 months (from Jan) - UNDELEGATION_REQUESTED
+                //         2: 0.5M - 2 months (from Feb) - DELEGATED
+                //         6: 0.5M - 2 months (from May) - COMPLETED
+                //     nodes:
+                //         3: May 29th
+
+                effectiveDelegated2 = 0.5e6 * 100 + 0.25e6 * 200;
+                bountyLeft = getBountyForEpoch(5) + bountyLeft - totalBounty;
+                totalBounty = 0;
+
+                bounty = await calculateBounty(1);
+                bounty.should.be.almost((getBountyForEpoch(6) + bountyLeft) * (effectiveDelegated1) / (2 * effectiveDelegated1 + effectiveDelegated2));
+                totalBounty += bounty;
+                bounty = await calculateBounty(2);
+                bounty.should.be.almost((getBountyForEpoch(6) + bountyLeft) * (effectiveDelegated1) / (2 * effectiveDelegated1 + effectiveDelegated2));
+                totalBounty += bounty;
+                bounty = await calculateBounty(3);
+                bounty.should.be.almost((getBountyForEpoch(6) + bountyLeft) * (effectiveDelegated2) / (2 * effectiveDelegated1 + effectiveDelegated2));
+                totalBounty += bounty;
             });
         });
 
