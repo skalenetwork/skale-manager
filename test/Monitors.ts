@@ -13,7 +13,7 @@ const ec = new EC("secp256k1");
 import { privateKeys } from "./tools/private-keys";
 
 import chai = require("chai");
-import * as chaiAsPromised from "chai-as-promised";
+import chaiAsPromised from "chai-as-promised";
 import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
 import { deployContractManager } from "./tools/deploy/contractManager";
 import { deployMonitors } from "./tools/deploy/monitors";
@@ -36,6 +36,9 @@ contract("Monitors", ([owner, validator, nodeAddress]) => {
     monitors = await deployMonitors(contractManager);
     constantsHolder = await deployConstantsHolder(contractManager);
     validatorService = await deployValidatorService(contractManager);
+
+    // contract must be set in contractManager for proper work of allow modifier
+    await contractManager.setContractsAddress("SkaleManager", nodes.address);
 
     // create a node for monitors functions tests
     await validatorService.registerValidator("Validator", "D2", 0, 0, {from: validator});

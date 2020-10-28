@@ -2,7 +2,9 @@ import { TimeHelpersInstance, ContractManagerInstance } from "../../types/truffl
 import { deployTimeHelpers } from "../tools/deploy/delegation/timeHelpers";
 import { deployContractManager } from "../tools/deploy/contractManager";
 import * as chai from "chai";
-import * as chaiAsPromised from "chai-as-promised";
+import chaiAsPromised from "chai-as-promised";
+import { deployTimeHelpersWithDebug } from "../tools/deploy/test/timeHelpersWithDebug";
+import { currentTime, skipTime } from "../tools/time";
 chai.should();
 chai.use(chaiAsPromised);
 
@@ -135,4 +137,16 @@ contract("TimeHelpers", ([owner]) => {
         (await timeHelpers.monthToTimestamp(13)).toNumber()
             .should.be.equal((new Date("2021-02-01T00:00:00.000+00:00")).getTime() / 1000);
     });
+
+    it("should skip time in debug mode", async () => {
+        const timeHelpersWithDebug = await deployTimeHelpersWithDebug(contractManager);
+        const currentMonth = (await timeHelpersWithDebug.getCurrentMonth()).toNumber();
+        let nextMonthEndTimestamp = (await timeHelpersWithDebug.monthToTimestamp(currentMonth + 2)).toNumber();
+        const diff = 60 * 60 * 24;
+        await timeHelpersWithDebug.skipTime(nextMonthEndTimestamp - diff - await currentTime(web3));
+        (await timeHelpersWithDebug.getCurrentMonth()).toNumber()
+            .should.be.equal(currentMonth + 1);
+        nextMonthEndTimestamp = (await timeHelpersWithDebug.monthToTimestamp(currentMonth + 2)).toNumber();
+        Math.abs(await currentTime(web3) + diff - nextMonthEndTimestamp).should.be.lessThan(5);
+    })
 });

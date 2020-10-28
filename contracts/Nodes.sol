@@ -26,10 +26,12 @@ pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts-ethereum-package/contracts/utils/SafeCast.sol";
 
-import "./Permissions.sol";
-import "./ConstantsHolder.sol";
-import "./delegation/ValidatorService.sol";
 import "./delegation/DelegationController.sol";
+import "./delegation/ValidatorService.sol";
+
+import "./BountyV2.sol";
+import "./ConstantsHolder.sol";
+import "./Permissions.sol";
 
 
 /**
@@ -308,6 +310,8 @@ contract Nodes is Permissions {
 
         _setNodeLeft(nodeIndex);
         _deleteNode(nodeIndex);
+        
+        BountyV2(contractManager.getBounty()).handleNodeRemoving(nodes[nodeIndex].validatorId);
 
         emit ExitCompleted(
             nodeIndex,
@@ -443,6 +447,18 @@ contract Nodes is Permissions {
         _setNodeActive(nodeIndex);
     }
 
+    function populateBountyV2(uint from, uint to) external onlyOwner {
+        BountyV2 bounty = BountyV2(contractManager.getBounty());
+        uint nodeCreationWindow = bounty.nodeCreationWindowSeconds();
+        bounty.setNodeCreationWindowSeconds(uint(-1) / 2);
+        for (uint nodeId = from; nodeId < _min(nodes.length, to); ++nodeId) {
+            if (nodes[nodeId].status != NodeStatus.Left) {
+                bounty.handleNodeCreation(nodes[nodeId].validatorId);
+            }
+        }
+        bounty.setNodeCreationWindowSeconds(nodeCreationWindow);
+    }
+
     /**
      * @dev Returns nodes with space availability.
      */
@@ -469,8 +485,7 @@ contract Nodes is Permissions {
         checkNodeExists(nodeIndex)
         returns (bool)
     {
-        ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
-        return uint(nodes[nodeIndex].lastRewardDate).add(constantsHolder.rewardPeriod()) <= block.timestamp;
+        return BountyV2(contractManager.getBounty()).getNextRewardTimestamp(nodeIndex) <= now;
     }
 
     /**
@@ -569,8 +584,7 @@ contract Nodes is Permissions {
         checkNodeExists(nodeIndex)
         returns (uint)
     {
-        ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
-        return nodes[nodeIndex].lastRewardDate.add(constantsHolder.rewardPeriod());
+        return BountyV2(contractManager.getBounty()).getNextRewardTimestamp(nodeIndex);
     }
 
     /**
@@ -843,6 +857,8 @@ contract Nodes is Permissions {
         }));
         spaceToNodes[constantsHolder.TOTAL_SPACE_ON_NODE()].push(nodeIndex);
         numberOfActiveNodes++;
+        
+        BountyV2(contractManager.getBounty()).handleNodeCreation(validatorId);
     }
 
     /**
@@ -872,4 +888,11 @@ contract Nodes is Permissions {
         return address(addr);
     }
 
+    function _min(uint a, uint b) private pure returns (uint) {
+        if (a < b) {
+            return a;
+        } else {
+            return b;
+        }
+    }
 }

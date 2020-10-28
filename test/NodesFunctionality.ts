@@ -1,5 +1,5 @@
 import * as chai from "chai";
-import * as chaiAsPromised from "chai-as-promised";
+import chaiAsPromised from "chai-as-promised";
 import { ContractManagerInstance,
          NodesInstance,
          SkaleTokenInstance,
@@ -21,6 +21,7 @@ import { deployValidatorService } from "./tools/deploy/delegation/validatorServi
 import { deployNodes } from "./tools/deploy/nodes";
 import { deploySkaleToken } from "./tools/deploy/skaleToken";
 import { deployDelegationController } from "./tools/deploy/delegation/delegationController";
+import { deploySkaleManagerMock } from "./tools/deploy/test/skaleManagerMock";
 
 
 chai.should();
@@ -42,6 +43,8 @@ contract("NodesFunctionality", ([owner, validator, nodeAddress, nodeAddress2, ho
         skaleToken = await deploySkaleToken(contractManager);
         delegationController = await deployDelegationController(contractManager);
 
+        const skaleManagerMock = await deploySkaleManagerMock(contractManager);
+        await contractManager.setContractsAddress("SkaleManager", skaleManagerMock.address);
 
         await validatorService.registerValidator("Validator", "D2", 0, 0, {from: validator});
         const validatorIndex = await validatorService.getValidatorId(validator);
@@ -242,7 +245,7 @@ contract("NodesFunctionality", ([owner, validator, nodeAddress, nodeAddress2, ho
         const month = 60 * 60 * 24 * 31;
         beforeEach(async () => {
             amount = 100;
-            delegationPeriod = 3;
+            delegationPeriod = 2;
             info = "NICE";
             await skaleToken.mint(holder, 200, "0x", "0x");
             await skaleToken.mint(nodeAddress, 200, "0x", "0x");

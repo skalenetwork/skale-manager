@@ -10,7 +10,7 @@ import { privateKeys } from "./tools/private-keys";
 
 import BigNumber from "bignumber.js";
 import chai = require("chai");
-import * as chaiAsPromised from "chai-as-promised";
+import chaiAsPromised from "chai-as-promised";
 import { deployContractManager } from "./tools/deploy/contractManager";
 import { deployNodes } from "./tools/deploy/nodes";
 import { deploySchainsInternal } from "./tools/deploy/schainsInternal";
@@ -57,6 +57,10 @@ contract("SchainsInternal", ([owner, holder]) => {
         nodes = await deployNodes(contractManager);
         schainsInternal = await deploySchainsInternal(contractManager);
         validatorService = await deployValidatorService(contractManager);
+
+        // contract must be set in contractManager for proper work of allow modifier
+        await contractManager.setContractsAddress("Schains", nodes.address);
+        await contractManager.setContractsAddress("SkaleManager", nodes.address);
 
         validatorService.registerValidator("D2", "D2 is even", 0, 0, {from: holder});
     });

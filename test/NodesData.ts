@@ -1,4 +1,4 @@
-import * as chaiAsPromised from "chai-as-promised";
+import chaiAsPromised from "chai-as-promised";
 import { ContractManagerInstance,
          NodesInstance,
          SkaleManagerInstance,
@@ -14,7 +14,7 @@ import chai = require("chai");
 import { deployContractManager } from "./tools/deploy/contractManager";
 import { deployNodes } from "./tools/deploy/nodes";
 import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
-import { deploySkaleManager } from "./tools/deploy/skaleManager";
+import { deploySkaleManagerMock } from "./tools/deploy/test/skaleManagerMock";
 chai.should();
 chai.use(chaiAsPromised);
 
@@ -22,13 +22,18 @@ contract("NodesData", ([owner, validator, nodeAddress, admin]) => {
     let contractManager: ContractManagerInstance;
     let nodes: NodesInstance;
     let validatorService: ValidatorServiceInstance;
-    let skaleManager: SkaleManagerInstance;
 
     beforeEach(async () => {
         contractManager = await deployContractManager();
         nodes = await deployNodes(contractManager);
         validatorService = await deployValidatorService(contractManager);
-        skaleManager = await deploySkaleManager(contractManager);
+        const skaleManagerMock = await deploySkaleManagerMock(contractManager);
+        await contractManager.setContractsAddress("SkaleManager", skaleManagerMock.address);
+
+        // contract must be set in contractManager for proper work of allow modifier
+        await contractManager.setContractsAddress("NodeRotation", contractManager.address);
+        await contractManager.setContractsAddress("Schains", contractManager.address);
+        await contractManager.setContractsAddress("SchainsInternal", contractManager.address);
 
         await validatorService.registerValidator("Validator", "D2", 0, 0, {from: validator});
         const validatorIndex = await validatorService.getValidatorId(validator);
@@ -36,7 +41,7 @@ contract("NodesData", ([owner, validator, nodeAddress, admin]) => {
         signature1 = (signature1.slice(130) === "00" ? signature1.slice(0, 130) + "1b" :
                 (signature1.slice(130) === "01" ? signature1.slice(0, 130) + "1c" : signature1));
         await validatorService.linkNodeAddress(nodeAddress, signature1, {from: validator});
-        await skaleManager.grantRole(await web3.utils.soliditySha3("ADMIN_ROLE"), admin, {from: owner});
+        await skaleManagerMock.grantRole(await web3.utils.soliditySha3("ADMIN_ROLE"), admin, {from: owner});
     });
 
     it("should add node", async () => {
@@ -141,18 +146,6 @@ contract("NodesData", ([owner, validator, nodeAddress, admin]) => {
             await nodes.getNodeLastRewardDate(0).should.be.eventually.deep.equal(web3.utils.toBN(currentTimeLocal));
         });
 
-        it("should check if time for reward has come", async () => {
-            // TODO: change reward period
-
-            skipTime(web3, 3590);
-
-            await nodes.isTimeForReward(0).should.be.eventually.false;
-
-            skipTime(web3, 20);
-
-            await nodes.isTimeForReward(0).should.be.eventually.true;
-        });
-
         it("should get ip address of Node", async () => {
             await nodes.getNodeIP(0).should.be.eventually.equal("0x7f000001");
         });
@@ -171,34 +164,6 @@ contract("NodesData", ([owner, validator, nodeAddress, admin]) => {
 
         it("should check if node status is left", async () => {
             await nodes.isNodeLeft(0).should.be.eventually.false;
-        });
-
-        it("should calculate node next reward date", async () => {
-            let currentTimeValue = web3.utils.toBN(await currentTime(web3));
-            const rewardPeriod = web3.utils.toBN(3600);
-            let nextRewardTime = currentTimeValue.add(rewardPeriod);
-            let obtainedNextRewardTime = web3.utils.toBN(await nodes.getNodeNextRewardDate(0));
-
-            obtainedNextRewardTime.should.be.deep.equal(nextRewardTime);
-
-            // test if we OK with time in the far future
-            skipTime(web3, 100 * 365 * 24 * 60 * 60);
-            const pubKey = ec.keyFromPrivate(String(privateKeys[2]).slice(2)).getPublic();
-            await nodes.createNode(
-                nodeAddress,
-                {
-                    port: 8545,
-                    nonce: 0,
-                    ip: "0x7f000002",
-                    publicIp: "0x7f000002",
-                    publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
-                    name: "d3"
-                });
-             currentTimeValue = web3.utils.toBN(await currentTime(web3));
-             nextRewardTime = currentTimeValue.add(rewardPeriod);
-             obtainedNextRewardTime = web3.utils.toBN(await nodes.getNodeNextRewardDate(1));
-
-             obtainedNextRewardTime.toString(10).should.be.equal(nextRewardTime.toString(10));
         });
 
         it("should get array of ips of active nodes", async () => {
