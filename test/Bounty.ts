@@ -164,11 +164,11 @@ contract("Bounty", ([owner, admin, hacker, validator, validator2]) => {
         await contractManager.setContractsAddress("Bounty", bounty2Contract.address);
         const third = Math.ceil(nodesAmount * 2 / 3);
         let response = await nodesContract.populateBountyV2(0, third);
-        response.receipt.gasUsed.should.be.below(8e5);
+        response.receipt.gasUsed.should.be.below(9e5);
         response = await nodesContract.populateBountyV2(third, 2 * third);
-        response.receipt.gasUsed.should.be.below(8e5);
+        response.receipt.gasUsed.should.be.below(9e5);
         response = await nodesContract.populateBountyV2(2 * third, 3 * third);
-        response.receipt.gasUsed.should.be.below(8e5);
+        response.receipt.gasUsed.should.be.below(9e5);
 
         await skipTimeToDate(web3, 29, 9); // October 29th
 
