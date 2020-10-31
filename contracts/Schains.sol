@@ -276,6 +276,17 @@ contract Schains is Permissions {
     }
 
     /**
+     * @dev setSchainComplexity - set complexity for schain
+     * @param schainId - schain index
+     * @param complexity - complexity number
+     */
+    function setSchainComplexity(bytes32 schainId, uint complexity) external {
+        SchainsInternal schainsInternal = SchainsInternal(
+            contractManager.getContract("SchainsInternal"));
+        schainsInternal.setSchainComplexity(schainId, complexity);
+    }
+
+    /**
      * @dev Checks whether schain group signature is valid.
      */
     function verifySchainSignature(
@@ -307,6 +318,16 @@ contract Schains is Permissions {
             hashA, hashB,
             publicKey
         );
+    }
+
+    /**
+     * @dev getSchainComplexity - get complexity for schain
+     * @param schainId - schain index
+     */
+    function getSchainComplexity(bytes32 schainId) external view returns (uint) {
+        SchainsInternal schainsInternal = SchainsInternal(
+            contractManager.getContract("SchainsInternal"));
+        return schainsInternal.getSchainComplexity(schainId);
     }
 
     function initialize(address newContractsAddress) public override initializer {
