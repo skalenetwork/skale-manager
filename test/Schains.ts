@@ -1782,4 +1782,20 @@ contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeA
         });
     });
 
+    describe("schainComplexity", async () => {
+        it('should set schainComplexity by name', async () => {
+            const schainNameHash = web3.utils.soliditySha3("TestSchain1");
+            await schains.setSchainComplexity(schainNameHash, 100);
+            await schains.getSchainComplexity(schainNameHash).should.eventually.equal(100);
+        });
+
+        it('should fail to set schainComplexity again', async () => {
+            const schainNameHash = web3.utils.soliditySha3("TestSchain2");
+            await schains.setSchainComplexity(schainNameHash, 500);
+            await schains.setSchainComplexity(schainNameHash, 1000)
+                .should.be.eventually.rejectedWith("Complexity is already set");
+            await schains.getSchainComplexity(schainNameHash).should.eventually.equal(500);
+        });
+    })
+
 });

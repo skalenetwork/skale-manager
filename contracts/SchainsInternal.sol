@@ -164,6 +164,7 @@ contract SchainsInternal is Permissions {
         schainsAtSystem.pop();
 
         delete schains[schainId];
+        delete schainComplexities[schainId];
         numberOfSchains--;
     }
 
