@@ -62,6 +62,9 @@ contract SchainsInternal is Permissions {
 
     mapping (bytes32 => uint[]) public holesForSchains;
 
+    // mapping shows schains PoW complexity parameter
+    mapping (bytes32 => uint) public schainComplexities;
+
 
     // array which contain all schains
     bytes32[] public schainsAtSystem;
@@ -250,6 +253,14 @@ contract SchainsInternal is Permissions {
     }
 
     /**
+     * @dev Set complexity for Schain
+     */
+    function setSchainComplexity(bytes32 schainId, uint complexity) external allow("Schains") {
+        require(schainComplexities[schainId] == 0, "Complexity is already set");
+        schainComplexities[schainId] = complexity;
+    }
+
+    /**
      * @dev Returns all Schains in the network.
      */
     function getSchains() external view returns (bytes32[] memory) {
@@ -416,6 +427,13 @@ contract SchainsInternal is Permissions {
             }
         }
         return false;
+    }
+
+    /**
+     * @dev Get complexity for Schain
+     */
+    function getSchainComplexity(bytes32 schainId) external view returns (uint) {
+        return schainComplexities[schainId];
     }
 
     function initialize(address newContractsAddress) public override initializer {
