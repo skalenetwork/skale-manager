@@ -129,7 +129,9 @@ contract("SchainsInternal", ([owner, holder]) => {
             });
 
             it("should delete schain", async () => {
+                await schainsInternal.setSchainComplexity(schainNameHash, 100);
                 await schainsInternal.removeSchain(schainNameHash, holder);
+                await schainsInternal.getSchainComplexity(schainNameHash).should.be.equal(0);
                 const res = new Schain(await schainsInternal.schains(schainNameHash));
                 res.name.should.be.equal("");
             });
