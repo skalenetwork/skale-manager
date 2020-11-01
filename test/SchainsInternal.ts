@@ -131,7 +131,7 @@ contract("SchainsInternal", ([owner, holder]) => {
             it("should delete schain", async () => {
                 await schainsInternal.setSchainComplexity(schainNameHash, 100);
                 await schainsInternal.removeSchain(schainNameHash, holder);
-                await schainsInternal.getSchainComplexity(schainNameHash).should.be.equal(0);
+                assert(new BigNumber(await schainsInternal.getSchainComplexity(schainNameHash)).isEqualTo(0));
                 const res = new Schain(await schainsInternal.schains(schainNameHash));
                 res.name.should.be.equal("");
             });
@@ -285,5 +285,21 @@ contract("SchainsInternal", ([owner, holder]) => {
             await schainsInternal.isOwnerAddress(holder, schainNameHash).should.be.eventually.true;
         });
 
+    });
+
+    describe("schainComplexity", async () => {
+        it('should set schainComplexity by name', async () => {
+            const schainNameHash = web3.utils.soliditySha3("TestSchain1");
+            await schainsInternal.setSchainComplexity(schainNameHash, 100);
+            assert(new BigNumber(await schainsInternal.getSchainComplexity(schainNameHash)).isEqualTo(100));
+        });
+
+        it('should fail to set schainComplexity again', async () => {
+            const schainNameHash = web3.utils.soliditySha3("TestSchain2");
+            await schainsInternal.setSchainComplexity(schainNameHash, 500);
+            await schainsInternal.setSchainComplexity(schainNameHash, 1000)
+                .should.be.eventually.rejectedWith("Complexity is already set");
+            assert(new BigNumber(await schainsInternal.getSchainComplexity(schainNameHash)).isEqualTo(500));
+        });
     });
 });
