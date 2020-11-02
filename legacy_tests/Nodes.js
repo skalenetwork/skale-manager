@@ -168,6 +168,23 @@ async function getNodeNextRewardDate(nodeIndex) {
     return res;
 }
 
+async function nodesNameCheck(name) {
+    let res = await init.Nodes.methods.nodesNameCheck(await init.web3.utils.soliditySha3(name)).call();
+    console.log(res);
+    
+}
+
+async function nodesIpCheck(ip) {
+    let res = await init.Nodes.methods.nodesIPCheck(ip).call();
+    console.log(res);
+    
+}
+
+async function checkPossibilityCreatingNode(address) {
+    let res = await init.Nodes.methods.checkPossibilityCreatingNode(address).call();
+    console.log(res);
+    
+}
 
 
 async function getActiveNodeIPs() {
@@ -180,6 +197,22 @@ async function getActiveNodeIds() {
     let res = await init.Nodes.methods.getActiveNodeIds().call();
     console.log(res);
     process.exit();
+}
+
+async function getDelegationTotal(validatorId) {
+    let len = await init.DelegationController.methods.getDelegationsByValidatorLength(validatorId).call();
+    console.log(len);
+    let total = 0;
+    for (let i = 0; i < len; i++) {
+        let delId = await init.DelegationController.methods.delegationsByValidator(validatorId, i).call();
+        let delParam = await init.DelegationController.methods.getDelegation(delId).call();
+        if (delParam['created'] > 0) {
+            console.log(delParam['amount']);
+            let am = delParam['amount'];
+            total += Number(am);
+        }
+        console.log(total);
+    }
 }
 
 async function createNodes1(n) {
@@ -223,6 +256,14 @@ if (process.argv[2] == 'getFreeSpace') {
     getActiveNodeIPs(process.argv[3]);
 } else if (process.argv[2] == 'getActiveNodeIds') {
     getActiveNodeIds(process.argv[3]);
+} else if (process.argv[2] == 'nodesNameCheck') {
+    nodesNameCheck(process.argv[3]);
+} else if (process.argv[2] == 'nodesIpCheck') {
+    nodesIpCheck(process.argv[3]);
+} else if (process.argv[2] == 'checkPossibilityCreatingNode') {
+    checkPossibilityCreatingNode(process.argv[3]);
+} else if (process.argv[2] == 'getDelegationTotal') {
+    getDelegationTotal(process.argv[3]);
 } 
 
 
