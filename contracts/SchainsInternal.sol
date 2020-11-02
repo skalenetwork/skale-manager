@@ -62,10 +62,6 @@ contract SchainsInternal is Permissions {
 
     mapping (bytes32 => uint[]) public holesForSchains;
 
-    // mapping shows schains PoW complexity parameter
-    mapping (bytes32 => uint) public schainComplexities;
-
-
     // array which contain all schains
     bytes32[] public schainsAtSystem;
 
@@ -75,6 +71,8 @@ contract SchainsInternal is Permissions {
 
     mapping (bytes32 => bool) public usedSchainNames;
 
+    // mapping shows schains PoW complexity parameter
+    mapping (bytes32 => uint) public schainComplexities;
     /**
      * @dev Allows Schain contract to initialize an schain.
      */
