@@ -17,6 +17,7 @@ rm $TRAVIS_BUILD_DIR/.openzeppelin/dev-*.json
 cp .openzeppelin/dev-*.json $TRAVIS_BUILD_DIR/.openzeppelin
 cd $TRAVIS_BUILD_DIR
 
+npx oz push --network test
 npx oz upgrade --network test --all || exit $?
 
 kill $GANACHE_PID
