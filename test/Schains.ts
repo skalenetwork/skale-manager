@@ -1731,7 +1731,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeA
                 );
             }
             if (!(await nodes.isNodeLeft(rotIndex))) {
-                await skaleManager.nodeExit(rotIndex, {from: nodeAddress3});
+                await skaleManager.nodeExit(rotIndex, {from: nodeAddress2});
             }
             await validatorService.getValidatorIdByNodeAddress(nodeAddress2)
             .should.be.eventually.rejectedWith("Node address is not assigned to a validator");
@@ -1748,7 +1748,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeA
                 await skaleDKG.setSuccesfulDKGPublic(schainId);
             }
             if (!(await nodes.isNodeLeft(rotatedNodeIndex))) {
-                await skaleManager.nodeExit(rotatedNodeIndex, {from: nodeAddress3});
+                await skaleManager.nodeExit(rotatedNodeIndex, {from: validator});
             }
             await validatorService.getValidatorIdByNodeAddress(nodeAddress2)
                 .should.be.eventually.rejectedWith("Node address is not assigned to a validator");
@@ -1765,7 +1765,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeA
                 await skaleDKG.setSuccesfulDKGPublic(schainId);
             }
             if (!(await nodes.isNodeLeft(rotatedNodeIndex))) {
-                await skaleManager.nodeExit(rotatedNodeIndex, {from: nodeAddress3});
+                await skaleManager.nodeExit(rotatedNodeIndex, {from: owner});
             }
             await validatorService.getValidatorIdByNodeAddress(nodeAddress2)
                 .should.be.eventually.rejectedWith("Node address is not assigned to a validator");
