@@ -297,7 +297,9 @@ contract SchainsInternal is Permissions {
      */
     function isSchainNameAvailable(string calldata name) external view returns (bool) {
         bytes32 schainId = keccak256(abi.encodePacked(name));
-        return schains[schainId].owner == address(0) && !usedSchainNames[schainId];
+        return schains[schainId].owner == address(0) &&
+            !usedSchainNames[schainId] &&
+            keccak256(abi.encodePacked(name)) != keccak256(abi.encodePacked("Mainnet"));
     }
 
     /**
