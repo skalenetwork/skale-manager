@@ -533,6 +533,22 @@ contract Nodes is Permissions {
         return nodes[nodeIndex].publicKey;
     }
 
+    /**
+     * @dev Returns an address of a given node.
+     */
+    function getNodeAddress(uint nodeIndex)
+        external
+        view
+        checkNodeExists(nodeIndex)
+        returns (address)
+    {
+        return _publicKeyToAddress(nodes[nodeIndex].publicKey);
+    }
+
+
+    /**
+     * @dev Returns the finish exit time of a given node.
+     */
     function getNodeFinishTime(uint nodeIndex)
         external
         view

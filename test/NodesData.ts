@@ -154,6 +154,10 @@ contract("NodesData", ([owner, validator, nodeAddress, admin]) => {
             await nodes.getNodePort(0).should.be.eventually.deep.equal(web3.utils.toBN(8545));
         });
 
+        it("should get address of a node", async () => {
+            await nodes.getNodeAddress(0).should.be.eventually.deep.equal(nodeAddress);
+        });
+
         it("should check if node status is active", async () => {
             await nodes.isNodeActive(0).should.be.eventually.true;
         });
