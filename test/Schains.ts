@@ -754,6 +754,11 @@ contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeA
                     res.length.should.be.equal(16);
                 });
 
+                it("should check node addresses", async () => {
+                    expect(await schainsInternal.isNodeAddressesInGroup(web3.utils.soliditySha3("D2"), nodeAddress)).be.true;
+                    expect(await schainsInternal.isNodeAddressesInGroup(web3.utils.soliditySha3("D2"), nodeAddress2)).be.false;
+                });
+
                 it("should delete group", async () => {
                     await schainsInternal.deleteGroup(web3.utils.soliditySha3("D2"));
                     const res = await schainsInternal.getNodesInGroup(web3.utils.soliditySha3("D2"));
