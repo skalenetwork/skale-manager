@@ -377,7 +377,7 @@ contract SchainsInternal is Permissions {
     }
 
     /**
-     * @dev Checks whether sender is a node address from given schain group.
+     * @dev Checks whether sender is a node address from a given schain group.
      */
     function isNodeAddressesInGroup(bytes32 schainId, address sender) external view returns (bool) {
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));
