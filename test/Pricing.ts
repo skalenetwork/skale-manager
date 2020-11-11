@@ -1,6 +1,6 @@
 import BigNumber from "bignumber.js";
 import * as chai from "chai";
-import * as chaiAsPromised from "chai-as-promised";
+import chaiAsPromised from "chai-as-promised";
 
 import { ContractManagerInstance,
          NodesInstance,
@@ -11,6 +11,11 @@ import { ContractManagerInstance,
          ConstantsHolderInstance,
          NodeRotationInstance } from "../types/truffle-contracts";
 
+import * as elliptic from "elliptic";
+const EC = elliptic.ec;
+const ec = new EC("secp256k1");
+import { privateKeys } from "./tools/private-keys";
+
 import { deployContractManager } from "./tools/deploy/contractManager";
 import { deployNodes } from "./tools/deploy/nodes";
 import { deployPricing } from "./tools/deploy/pricing";
@@ -20,6 +25,7 @@ import { deployValidatorService } from "./tools/deploy/delegation/validatorServi
 import { deploySchains } from "./tools/deploy/schains";
 import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
 import { deployNodeRotation } from "./tools/deploy/nodeRotation";
+import { deploySkaleManagerMock } from "./tools/deploy/test/skaleManagerMock";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -45,6 +51,9 @@ contract("Pricing", ([owner, holder, validator, nodeAddress]) => {
         constants = await deployConstantsHolder(contractManager);
         nodeRotation = await deployNodeRotation(contractManager);
 
+        const skaleManagerMock = await deploySkaleManagerMock(contractManager);
+        await contractManager.setContractsAddress("SkaleManager", skaleManagerMock.address);
+
         await validatorService.registerValidator("Validator", "D2", 0, 0, {from: validator});
         const validatorIndex = await validatorService.getValidatorId(validator);
         let signature1 = await web3.eth.sign(web3.utils.soliditySha3(validatorIndex.toString()), nodeAddress);
@@ -58,6 +67,7 @@ contract("Pricing", ([owner, holder, validator, nodeAddress]) => {
             await schainsInternal.initializeSchain("BobSchain", holder, 10, 2);
             await schainsInternal.initializeSchain("DavidSchain", holder, 10, 4);
             await schainsInternal.initializeSchain("JacobSchain", holder, 10, 8);
+            const pubKey = ec.keyFromPrivate(String(privateKeys[3]).slice(2)).getPublic();
             await nodes.createNode(
                 nodeAddress,
                 {
@@ -65,8 +75,7 @@ contract("Pricing", ([owner, holder, validator, nodeAddress]) => {
                     nonce: 0,
                     ip: "0x7f000001",
                     publicIp: "0x7f000001",
-                    publicKey: ["0x1122334455667788990011223344556677889900112233445566778899001122",
-                                "0x1122334455667788990011223344556677889900112233445566778899001122"],
+                    publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
                     name: "elvis1"
                 });
 
@@ -77,8 +86,7 @@ contract("Pricing", ([owner, holder, validator, nodeAddress]) => {
                     nonce: 0,
                     ip: "0x7f000003",
                     publicIp: "0x7f000003",
-                    publicKey: ["0x1122334455667788990011223344556677889900112233445566778899001122",
-                                "0x1122334455667788990011223344556677889900112233445566778899001122"],
+                    publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
                     name: "elvis2"
                 });
 
@@ -89,8 +97,7 @@ contract("Pricing", ([owner, holder, validator, nodeAddress]) => {
                     nonce: 0,
                     ip: "0x7f000005",
                     publicIp: "0x7f000005",
-                    publicKey: ["0x1122334455667788990011223344556677889900112233445566778899001122",
-                                "0x1122334455667788990011223344556677889900112233445566778899001122"],
+                    publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
                     name: "elvis3"
                 });
 
@@ -101,8 +108,7 @@ contract("Pricing", ([owner, holder, validator, nodeAddress]) => {
                     nonce: 0,
                     ip: "0x7f000007",
                     publicIp: "0x7f000007",
-                    publicKey: ["0x1122334455667788990011223344556677889900112233445566778899001122",
-                                "0x1122334455667788990011223344556677889900112233445566778899001122"],
+                    publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
                     name: "elvis4"
                 });
 
@@ -170,7 +176,7 @@ contract("Pricing", ([owner, holder, validator, nodeAddress]) => {
                 await pricing.initNodes();
                 skipTime(web3, 61);
                 await pricing.adjustPrice()
-                    .should.be.eventually.rejectedWith("No any changes on nodes");
+                    .should.be.eventually.rejectedWith("No changes to node supply");
             });
 
             it("should not change price when the price is updated more often than necessary", async () => {
@@ -204,6 +210,7 @@ contract("Pricing", ([owner, holder, validator, nodeAddress]) => {
                 }
 
                 it("should change price when new active node has been added", async () => {
+                    const pubKey = ec.keyFromPrivate(String(privateKeys[3]).slice(2)).getPublic();
                     await nodes.createNode(
                         nodeAddress,
                         {
@@ -211,8 +218,7 @@ contract("Pricing", ([owner, holder, validator, nodeAddress]) => {
                             nonce: 0,
                             ip: "0x7f000010",
                             publicIp: "0x7f000011",
-                            publicKey: ["0x1122334455667788990011223344556677889900112233445566778899001122",
-                                        "0x1122334455667788990011223344556677889900112233445566778899001122"],
+                            publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
                             name: "vadim"
                         });
                     const MINUTES_PASSED = 2;
@@ -267,6 +273,7 @@ contract("Pricing", ([owner, holder, validator, nodeAddress]) => {
                 });
 
                 it("should set price to min of too many minutes passed and price is less than min", async () => {
+                    const pubKey = ec.keyFromPrivate(String(privateKeys[3]).slice(2)).getPublic();
                     await nodes.createNode(
                         nodeAddress,
                         {
@@ -274,8 +281,7 @@ contract("Pricing", ([owner, holder, validator, nodeAddress]) => {
                             nonce: 0,
                             ip: "0x7f000010",
                             publicIp: "0x7f000011",
-                            publicKey: ["0x1122334455667788990011223344556677889900112233445566778899001122",
-                                        "0x1122334455667788990011223344556677889900112233445566778899001122"],
+                            publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
                             name: "vadim"
                         });
 

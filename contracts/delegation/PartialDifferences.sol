@@ -28,13 +28,13 @@ import "../utils/FractionUtils.sol";
  * @title Partial Differences Library
  * @dev This library contains functions to manage Partial Differences data
  * structure. Partial Differences is an array of value differences over time.
- *
+ * 
  * For example: assuming an array [3, 6, 3, 1, 2], partial differences can
  * represent this array as [_, 3, -3, -2, 1].
- *
+ * 
  * This data structure allows adding values on an open interval with O(1)
  * complexity.
- *
+ * 
  * For example: add +5 to [3, 6, 3, 1, 2] starting from the second element (3),
  * instead of performing [3, 6, 3+5, 1+5, 2+5] partial differences allows
  * performing [_, 3, -3+5, -2, 1]. The original array can be restored by
@@ -115,12 +115,29 @@ library PartialDifferences {
         return sequence.value[month];
     }
 
+    function getValuesInSequence(Sequence storage sequence) internal view returns (uint[] memory values) {
+        if (sequence.firstUnprocessedMonth == 0) {
+            return values;
+        }
+        uint begin = sequence.firstUnprocessedMonth.sub(1);
+        uint end = sequence.lastChangedMonth.add(1);
+        if (end <= begin) {
+            end = begin.add(1);
+        }
+        values = new uint[](end.sub(begin));
+        values[0] = sequence.value[sequence.firstUnprocessedMonth.sub(1)];
+        for (uint i = 0; i.add(1) < values.length; ++i) {
+            uint month = sequence.firstUnprocessedMonth.add(i);
+            values[i.add(1)] = values[i].add(sequence.addDiff[month]).sub(sequence.subtractDiff[month]);
+        }
+    }
+
     function reduceSequence(
         Sequence storage sequence,
         FractionUtils.Fraction memory reducingCoefficient,
         uint month) internal
     {
-        require(month.add(1) >= sequence.firstUnprocessedMonth, "Can't reduce value in the past");
+        require(month.add(1) >= sequence.firstUnprocessedMonth, "Cannot reduce value in the past");
         require(
             reducingCoefficient.numerator <= reducingCoefficient.denominator,
             "Increasing of values is not implemented");
@@ -204,6 +221,23 @@ library PartialDifferences {
         }
 
         return sequence.value;
+    }
+
+    function getValues(Value storage sequence) internal view returns (uint[] memory values) {
+        if (sequence.firstUnprocessedMonth == 0) {
+            return values;
+        }
+        uint begin = sequence.firstUnprocessedMonth.sub(1);
+        uint end = sequence.lastChangedMonth.add(1);
+        if (end <= begin) {
+            end = begin.add(1);
+        }
+        values = new uint[](end.sub(begin));
+        values[0] = sequence.value;
+        for (uint i = 0; i.add(1) < values.length; ++i) {
+            uint month = sequence.firstUnprocessedMonth.add(i);
+            values[i.add(1)] = values[i].add(sequence.addDiff[month]).sub(sequence.subtractDiff[month]);
+        }
     }
 
     function reduceValue(

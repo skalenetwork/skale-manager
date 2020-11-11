@@ -4,19 +4,22 @@ cd test
 
 all=(*.ts delegation/*.ts utils/*.ts)
 group1=(
-   SkaleManager.ts 
+    Bounty.ts
+    SkaleManager.ts
+   
 )
 group2=(
-    Schains.ts
-    Monitors.ts
-    SchainsInternal.ts
-    ECDH.ts
-    Decryption.ts
     ContractManager.ts
+    Decryption.ts
+    ECDH.ts
+    Monitors.ts
+    Schains.ts
+    SchainsInternal.ts
 )
 group3=()
 group4=(
     SkaleDKG.ts
+    SkaleDkgFakeComplaint.ts
 )
 for file in "${all[@]}"
 do

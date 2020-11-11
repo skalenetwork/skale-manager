@@ -22,19 +22,22 @@
 pragma solidity 0.6.10;
 
 /**
- * @dev Interface of Delegatable Token operations.
+ * @dev Interface of the SkaleToken contract.
  */
 interface IDelegatableToken {
+    
     /**
-     * @dev Updates and returns the amount of locked tokens of a given account (`wallet`).
+     * @dev Returns and updates the amount of locked tokens of a given account `wallet`.
      */
     function getAndUpdateLockedAmount(address wallet) external returns (uint);
+    
     /**
-     * @dev Updates and returns the amount of delegated tokens of a given account (`wallet`).
+     * @dev Returns and updates the amount of delegated tokens of a given account `wallet`.
      */
     function getAndUpdateDelegatedAmount(address wallet) external returns (uint);
+    
     /**
-     * @dev Updates and returns the amount of slashed tokens of a given account (`wallet`).
+     * @dev Returns and updates the amount of slashed tokens of a given account `wallet`.
      */
     function getAndUpdateSlashedAmount(address wallet) external returns (uint);
 }
