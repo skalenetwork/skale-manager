@@ -686,7 +686,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                     assert(res.should.be.false);
                 });
 
-                it("should be unpossible send broadcast", async () => {
+                it("should be impossible send broadcast", async () => {
                     const res = await skaleDKG.isBroadcastPossible(
                         web3.utils.soliditySha3(schainName),
                         1,
@@ -695,7 +695,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                     assert(res.should.be.false);
                 });
 
-                it("should be unpossible send complaint", async () => {
+                it("should be impossible send complaint", async () => {
                     const res = await skaleDKG.isComplaintPossible(
                         web3.utils.soliditySha3(schainName),
                         0,
@@ -705,7 +705,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                     assert(res.should.be.false);
                 });
 
-                it("should be unpossible send another complaint", async () => {
+                it("should be impossible send another complaint", async () => {
                     const res = await skaleDKG.isComplaintPossible(
                         web3.utils.soliditySha3(schainName),
                         1,
@@ -715,7 +715,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                     assert(res.should.be.false);
                 });
 
-                it("should be unpossible send preResponse", async () => {
+                it("should be impossible send preResponse", async () => {
                     const res = await skaleDKG.isPreResponsePossible(
                         web3.utils.soliditySha3(schainName),
                         0,
@@ -724,7 +724,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                     assert(res.should.be.false);
                 });
 
-                it("should be unpossible send another preResponse", async () => {
+                it("should be impossible send another preResponse", async () => {
                     const res = await skaleDKG.isPreResponsePossible(
                         web3.utils.soliditySha3(schainName),
                         1,
@@ -733,7 +733,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                     assert(res.should.be.false);
                 });
 
-                it("should be unpossible send response", async () => {
+                it("should be impossible send response", async () => {
                     const res = await skaleDKG.isResponsePossible(
                         web3.utils.soliditySha3(schainName),
                         0,
@@ -742,7 +742,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                     assert(res.should.be.false);
                 });
 
-                it("should be unpossible send another response", async () => {
+                it("should be impossible send another response", async () => {
                     const res = await skaleDKG.isResponsePossible(
                         web3.utils.soliditySha3(schainName),
                         1,
@@ -1444,7 +1444,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
             assert(numOfCompl, "2");
 
             assert(
-                await skaleDKG.getTimeOfLastSuccesfulDKG(web3.utils.soliditySha3(schainName)),
+                await skaleDKG.getTimeOfLastSuccessfulDKG(web3.utils.soliditySha3(schainName)),
                 resSuccess.receipt.timestamp
             );
 
@@ -1500,7 +1500,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
             );
 
             assert(
-                await skaleDKG.getTimeOfLastSuccesfulDKG(web3.utils.soliditySha3(schainName)),
+                await skaleDKG.getTimeOfLastSuccessfulDKG(web3.utils.soliditySha3(schainName)),
                 resSuccess.receipt.timestamp
             );
 

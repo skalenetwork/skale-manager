@@ -74,7 +74,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
 
     mapping(bytes32 => Channel) public channels;
 
-    mapping(bytes32 => uint) public lastSuccesfulDKG;
+    mapping(bytes32 => uint) public lastSuccessfulDKG;
 
     mapping(bytes32 => ProcessDKG) public dkgProcess;
 
@@ -369,7 +369,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         dkgProcess[schainId].numberOfCompleted++;
         emit AllDataReceived(schainId, fromNodeIndex);
         if (dkgProcess[schainId].numberOfCompleted == numberOfParticipant) {
-            _setSuccesfulDKG(schainId);
+            _setSuccessfulDKG(schainId);
         }
     }
 
@@ -389,8 +389,8 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         return dkgProcess[schainId].numberOfCompleted;
     }
 
-    function getTimeOfLastSuccesfulDKG(bytes32 schainId) external view returns (uint) {
-        return lastSuccesfulDKG[schainId];
+    function getTimeOfLastSuccessfulDKG(bytes32 schainId) external view returns (uint) {
+        return lastSuccessfulDKG[schainId];
     }
 
     function getComplaintData(bytes32 schainId) external view returns (uint, uint) {
@@ -413,7 +413,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
     }
 
     function isLastDKGSuccessful(bytes32 schainId) external override view returns (bool) {
-        return channels[schainId].startedBlockTimestamp <= lastSuccesfulDKG[schainId];
+        return channels[schainId].startedBlockTimestamp <= lastSuccessfulDKG[schainId];
     }
 
     /**
@@ -534,8 +534,8 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         return n.mul(2).add(1).div(3);
     }
 
-    function _setSuccesfulDKG(bytes32 schainId) internal {
-        lastSuccesfulDKG[schainId] = now;
+    function _setSuccessfulDKG(bytes32 schainId) internal {
+        lastSuccessfulDKG[schainId] = now;
         channels[schainId].active = false;
         KeyStorage(contractManager.getContract("KeyStorage")).finalizePublicKey(schainId);
         emit SuccessfulDKG(schainId);

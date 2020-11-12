@@ -471,7 +471,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                                 0, // nonce
                                 "d2"]), // name
                             {from: developer});
-                        await skaleDKG.setSuccesfulDKGPublic(
+                        await skaleDKG.setSuccessfulDKGPublic(
                             web3.utils.soliditySha3("d2"),
                         );
                     });
@@ -490,7 +490,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                     it("should delete schain after deleting node", async () => {
                         const nodes = await schainsInternal.getNodesInGroup(web3.utils.soliditySha3("d2"));
                         await skaleManager.nodeExit(nodes[0], {from: nodeAddress});
-                        await skaleDKG.setSuccesfulDKGPublic(
+                        await skaleDKG.setSuccessfulDKGPublic(
                             web3.utils.soliditySha3("d2"),
                         );
                         await skaleManager.deleteSchain("d2", {from: developer});
