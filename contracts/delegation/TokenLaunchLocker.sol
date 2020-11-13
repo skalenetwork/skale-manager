@@ -30,7 +30,10 @@ import "./DelegationController.sol";
 import "./TimeHelpers.sol";
 import "./PartialDifferences.sol";
 
-
+/**
+ * @title TokenLaunchLocker
+ * @dev This contract manages lockers applied to the launch process.
+ */
 contract TokenLaunchLocker is Permissions, ILocker {
     using MathUtils for uint;
     using PartialDifferences for PartialDifferences.Value;
@@ -67,12 +70,22 @@ contract TokenLaunchLocker is Permissions, ILocker {
     // delegationId => tokens
     mapping (uint => uint) private _delegationAmount;
 
+    /**
+     * @dev Allows TokenLaunchManager contract to lock an amount of tokens in a
+     * holder wallet.
+     * 
+     * Emits a {Locked} event.
+     */
     function lock(address holder, uint amount) external allow("TokenLaunchManager") {
         _locked[holder] = _locked[holder].add(amount);
 
         emit Locked(holder, amount);
     }
 
+    /**
+     * @dev Allows DelegationController contract to notify TokenLaunchLocker 
+     * about new delegations.
+     */
     function handleDelegationAdd(
         address holder, uint delegationId, uint amount, uint month)
         external allow("DelegationController")
@@ -95,6 +108,10 @@ contract TokenLaunchLocker is Permissions, ILocker {
         }
     }
 
+    /**
+     * @dev Allows DelegationController contract to notify TokenLaunchLocker 
+     * about new undelegation requests.
+     */
     function handleDelegationRemoving(
         address holder,
         uint delegationId,
@@ -109,6 +126,9 @@ contract TokenLaunchLocker is Permissions, ILocker {
         }
     }
 
+    /**
+     * @dev See {ILocker-getAndUpdateLockedAmount}.
+     */
     function getAndUpdateLockedAmount(address wallet) external override returns (uint) {
         if (_locked[wallet] > 0) {
             DelegationController delegationController = DelegationController(
@@ -117,7 +137,7 @@ contract TokenLaunchLocker is Permissions, ILocker {
             ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
 
             uint currentMonth = timeHelpers.getCurrentMonth();
-            if (_totalDelegatedSatisfiesProofOfUserCondition(wallet) &&
+            if (_totalDelegatedSatisfiesProofOfUseCondition(wallet) &&
                 timeHelpers.calculateProofOfUseLockEndTime(
                     _totalDelegatedAmount[wallet].month,
                     constantsHolder.proofOfUseLockUpPeriodDays()
@@ -138,6 +158,9 @@ contract TokenLaunchLocker is Permissions, ILocker {
         }
     }
 
+    /**
+     * @dev See {ILocker-getAndUpdateForbiddenForDelegationAmount}.
+     */
     function getAndUpdateForbiddenForDelegationAmount(address) external override returns (uint) {
         return 0;
     }
@@ -148,31 +171,48 @@ contract TokenLaunchLocker is Permissions, ILocker {
 
     // private
 
+    /**
+     * @dev Returns and updates the current delegated amount.
+     */
     function _getAndUpdateDelegatedAmount(address holder, uint currentMonth) private returns (uint) {
         return _delegatedAmount[holder].getAndUpdateValue(currentMonth);
     }
 
+    /**
+     * @dev Adds a delegated amount to the given month.
+     */
     function _addToDelegatedAmount(address holder, uint amount, uint month) private {
         _delegatedAmount[holder].addToValue(amount, month);
     }
 
+    /**
+     * @dev Removes a delegated amount from the given month.
+     */
     function _removeFromDelegatedAmount(address holder, uint amount, uint month) private {
         _delegatedAmount[holder].subtractFromValue(amount, month);
     }
 
+    /**
+     * @dev Adds the amount to the total delegated for the given month.
+     */
     function _addToTotalDelegatedAmount(address holder, uint amount, uint month) private {
         require(
             _totalDelegatedAmount[holder].month == 0 || _totalDelegatedAmount[holder].month <= month,
-            "Can't add to total delegated in the past");
+            "Cannot add to total delegated in the past");
 
         // do not update counter if it is big enough
         // because it will override month value
-        if (!_totalDelegatedSatisfiesProofOfUserCondition(holder)) {
+        if (!_totalDelegatedSatisfiesProofOfUseCondition(holder)) {
             _totalDelegatedAmount[holder].delegated = _totalDelegatedAmount[holder].delegated.add(amount);
             _totalDelegatedAmount[holder].month = month;
         }
     }
 
+    /**
+     * @dev Unlocks tokens.
+     * 
+     * Emits an {Unlocked} event.
+     */
     function _unlock(address holder) private {
         emit Unlocked(holder, _locked[holder]);
         delete _locked[holder];
@@ -180,16 +220,25 @@ contract TokenLaunchLocker is Permissions, ILocker {
         _deleteTotalDelegatedAmount(holder);
     }
 
+    /**
+     * @dev Deletes the delegated amount.
+     */
     function _deleteDelegatedAmount(address holder) private {
         _delegatedAmount[holder].clear();
     }
 
+    /**
+     * @dev Deletes the total delegated amount.
+     */
     function _deleteTotalDelegatedAmount(address holder) private {
         delete _totalDelegatedAmount[holder].delegated;
         delete _totalDelegatedAmount[holder].month;
     }
 
-    function _totalDelegatedSatisfiesProofOfUserCondition(address holder) private view returns (bool) {
+    /**
+     * @dev Checks whether total delegated satisfies Proof-of-Use.
+     */
+    function _totalDelegatedSatisfiesProofOfUseCondition(address holder) private view returns (bool) {
         ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
 
         return _totalDelegatedAmount[holder].delegated.mul(100) >=

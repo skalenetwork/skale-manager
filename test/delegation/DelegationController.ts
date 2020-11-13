@@ -2,12 +2,13 @@ import { ContractManagerInstance,
     DelegationControllerInstance,
     SkaleTokenInstance,
     ValidatorServiceInstance,
-    ConstantsHolderInstance} from "../../types/truffle-contracts";
+    ConstantsHolderInstance,
+    SkaleManagerMockContract} from "../../types/truffle-contracts";
 
 import { skipTime } from "../tools/time";
 
 import * as chai from "chai";
-import * as chaiAsPromised from "chai-as-promised";
+import chaiAsPromised from "chai-as-promised";
 import { deployContractManager } from "../tools/deploy/contractManager";
 import { deployDelegationController } from "../tools/deploy/delegation/delegationController";
 import { deployValidatorService } from "../tools/deploy/delegation/validatorService";
@@ -18,6 +19,8 @@ import { deployTimeHelpers } from "../tools/deploy/delegation/timeHelpers";
 import { deployConstantsHolder } from "../tools/deploy/constantsHolder";
 chai.should();
 chai.use(chaiAsPromised);
+
+const SkaleManagerMock: SkaleManagerMockContract = artifacts.require("./SkaleManagerMock");
 
 contract("DelegationController", ([owner, holder1, holder2, validator, validator2]) => {
     let contractManager: ContractManagerInstance;
@@ -35,6 +38,9 @@ contract("DelegationController", ([owner, holder1, holder2, validator, validator
         delegationController = await deployDelegationController(contractManager);
         validatorService = await deployValidatorService(contractManager);
         constantsHolder = await deployConstantsHolder(contractManager);
+
+        const skaleManagerMock = await SkaleManagerMock.new(contractManager.address);
+        await contractManager.setContractsAddress("SkaleManager", skaleManagerMock.address);
     });
 
     describe("when arguments for delegation initialized", async () => {
@@ -46,7 +52,7 @@ contract("DelegationController", ([owner, holder1, holder2, validator, validator
         beforeEach(async () => {
             validatorId = 1;
             amount = 100;
-            delegationPeriod = 3;
+            delegationPeriod = 2;
             info = "VERY NICE";
             await validatorService.registerValidator(
                 "ValidatorName",
@@ -55,7 +61,7 @@ contract("DelegationController", ([owner, holder1, holder2, validator, validator
                 100,
                 {from: validator});
             await validatorService.enableValidator(validatorId, {from: owner});
-            });
+        });
 
         it("should reject delegation if validator with such id does not exist", async () => {
             const nonExistedValidatorId = 2;
@@ -153,7 +159,7 @@ contract("DelegationController", ([owner, holder1, holder2, validator, validator
 
             it("should reject accepting request if such validator doesn't exist", async () => {
                 await delegationController.acceptPendingDelegation(delegationId, {from: validator2})
-                    .should.be.rejectedWith("Validator with given address does not exist");
+                    .should.be.rejectedWith("Validator address does not exist");
             });
 
             it("should reject accepting request if validator already canceled it", async () => {

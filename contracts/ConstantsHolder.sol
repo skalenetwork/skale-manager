@@ -25,8 +25,8 @@ import "./Permissions.sol";
 
 
 /**
- * @title Contains constants and common variables for Skale Manager system
- * @author Artem Payvin
+ * @title ConstantsHolder
+ * @dev Contract contains constants and common variables for the SKALE Network.
  */
 contract ConstantsHolder is Permissions {
 
@@ -117,11 +117,11 @@ contract ConstantsHolder is Permissions {
 
     uint public minimalSchainLifetime;
 
+    uint public complaintTimelimit;
+
     /**
-     * Set reward and delta periods to new one, run only by owner. This function
-     * only for tests.
-     * @param newRewardPeriod - new Reward period
-     * @param newDeltaPeriod - new Delta period
+     * @dev Allows the Owner to set new reward and delta periods
+     * This function is only for tests.
      */
     function setPeriods(uint32 newRewardPeriod, uint32 newDeltaPeriod) external onlyOwner {
         require(
@@ -133,8 +133,8 @@ contract ConstantsHolder is Permissions {
     }
 
     /**
-     * Set new check time. This function only for tests.
-     * @param newCheckTime - new check time
+     * @dev Allows the Owner to set the new check time.
+     * This function is only for tests.
      */
     function setCheckTime(uint newCheckTime) external onlyOwner {
         require(rewardPeriod - deltaPeriod >= checkTime, "Incorrect check time");
@@ -142,36 +142,55 @@ contract ConstantsHolder is Permissions {
     }    
 
     /**
-     * Set latency new one in ms, run only by owner. This function
-     * only for tests.
-     * @param newAllowableLatency - new Allowable Latency
+     * @dev Allows the Owner to set the allowable latency in milliseconds.
+     * This function is only for testing purposes.
      */
     function setLatency(uint32 newAllowableLatency) external onlyOwner {
         allowableLatency = newAllowableLatency;
     }
 
+    /**
+     * @dev Allows the Owner to set the minimum stake requirement.
+     */
     function setMSR(uint newMSR) external onlyOwner {
         msr = newMSR;
     }
 
+    /**
+     * @dev Allows the Owner to set the launch timestamp.
+     */
     function setLaunchTimestamp(uint timestamp) external onlyOwner {
-        require(now < launchTimestamp, "Can't set network launch timestamp because network is already launched");
+        require(now < launchTimestamp, "Cannot set network launch timestamp because network is already launched");
         launchTimestamp = timestamp;
     }
 
+    /**
+     * @dev Allows the Owner to set the node rotation delay.
+     */
     function setRotationDelay(uint newDelay) external onlyOwner {
         rotationDelay = newDelay;
     }
 
+    /**
+     * @dev Allows the Owner to set the proof-of-use lockup period.
+     */
     function setProofOfUseLockUpPeriod(uint periodDays) external onlyOwner {
         proofOfUseLockUpPeriodDays = periodDays;
     }
 
+    /**
+     * @dev Allows the Owner to set the proof-of-use delegation percentage
+     * requirement.
+     */
     function setProofOfUseDelegationPercentage(uint percentage) external onlyOwner {
         require(percentage <= 100, "Percentage value is incorrect");
         proofOfUseDelegationPercentage = percentage;
     }
 
+    /**
+     * @dev Allows the Owner to set the maximum number of validators that a
+     * single delegator can delegate to.
+     */
     function setLimitValidatorsPerDelegator(uint newLimit) external onlyOwner {
         limitValidatorsPerDelegator = newLimit;
     }
@@ -184,10 +203,10 @@ contract ConstantsHolder is Permissions {
         minimalSchainLifetime = lifetime;
     }
 
-    /**
-     * @dev constructor in Permissions approach
-     * @param contractsAddress needed in Permissions constructor
-     */
+    function setComplaintTimelimit(uint timelimit) external onlyOwner {
+        complaintTimelimit = timelimit;
+    }
+
     function initialize(address contractsAddress) public override initializer {
         Permissions.initialize(contractsAddress);
 
@@ -202,5 +221,6 @@ contract ConstantsHolder is Permissions {
         proofOfUseDelegationPercentage = 50;
         limitValidatorsPerDelegator = 20;
         firstDelegationsMonth = 0;
+        complaintTimelimit = 1800;
     }
 }

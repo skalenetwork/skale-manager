@@ -3,9 +3,14 @@ import { ContractManagerInstance,
          SchainsInternalInstance,
          ValidatorServiceInstance } from "../types/truffle-contracts";
 
+import * as elliptic from "elliptic";
+const EC = elliptic.ec;
+const ec = new EC("secp256k1");
+import { privateKeys } from "./tools/private-keys";
+
 import BigNumber from "bignumber.js";
 import chai = require("chai");
-import * as chaiAsPromised from "chai-as-promised";
+import chaiAsPromised from "chai-as-promised";
 import { deployContractManager } from "./tools/deploy/contractManager";
 import { deployNodes } from "./tools/deploy/nodes";
 import { deploySchainsInternal } from "./tools/deploy/schainsInternal";
@@ -53,6 +58,10 @@ contract("SchainsInternal", ([owner, holder]) => {
         schainsInternal = await deploySchainsInternal(contractManager);
         validatorService = await deployValidatorService(contractManager);
 
+        // contract must be set in contractManager for proper work of allow modifier
+        await contractManager.setContractsAddress("Schains", nodes.address);
+        await contractManager.setContractsAddress("SkaleManager", nodes.address);
+
         validatorService.registerValidator("D2", "D2 is even", 0, 0, {from: holder});
     });
 
@@ -71,14 +80,14 @@ contract("SchainsInternal", ([owner, holder]) => {
 
         beforeEach(async () => {
             await schainsInternal.initializeSchain("TestSchain", holder, 5, 5);
+            const pubKey = ec.keyFromPrivate(String(privateKeys[1]).slice(2)).getPublic();
             await nodes.createNode(holder,
                 {
                     port: 8545,
                     nonce: 0,
                     ip: "0x7f000001",
                     publicIp: "0x7f000001",
-                    publicKey: ["0x1122334455667788990011223344556677889900112233445566778899001122",
-                                "0x1122334455667788990011223344556677889900112233445566778899001122"],
+                    publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
                     name: "D2-01"
                 });
         });

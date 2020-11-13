@@ -29,14 +29,18 @@ import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC777/IERC777R
 import "./delegation/Distributor.sol";
 import "./delegation/ValidatorService.sol";
 import "./interfaces/IMintableToken.sol";
-import "./Bounty.sol";
+import "./BountyV2.sol";
 import "./ConstantsHolder.sol";
 import "./Monitors.sol";
 import "./NodeRotation.sol";
 import "./Permissions.sol";
 import "./Schains.sol";
 
-
+/**
+ * @title SkaleManager
+ * @dev Contract contains functions for node registration and exit, bounty
+ * management, and monitoring verdicts.
+ */
 contract SkaleManager is IERC777Recipient, Permissions {
     IERC1820Registry private _erc1820;
 
@@ -45,6 +49,19 @@ contract SkaleManager is IERC777Recipient, Permissions {
 
     bytes32 constant public ADMIN_ROLE = keccak256("ADMIN_ROLE");
 
+    /**
+     * @dev Emitted when bounty is received.
+     */
+    event BountyReceived(
+        uint indexed nodeIndex,
+        address owner,
+        uint averageDowntime,
+        uint averageLatency,
+        uint bounty,
+        uint previousBlockEvent,
+        uint time,
+        uint gasSpend
+    );
     event BountyGot(
         uint indexed nodeIndex,
         address owner,
@@ -96,9 +113,6 @@ contract SkaleManager is IERC777Recipient, Permissions {
             publicKey: publicKey,
             nonce: nonce});
         nodes.createNode(msg.sender, params);
-        // uint nodeIndex = nodes.createNode(msg.sender, params);
-        // Monitors monitors = Monitors(contractManager.getContract("Monitors"));
-        // monitors.addMonitor(nodeIndex);
     }
 
     function nodeExit(uint nodeIndex) external {
@@ -107,7 +121,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));
         uint validatorId = nodes.getValidatorId(nodeIndex);
         bool permitted = (_isOwner() || nodes.isNodeExist(msg.sender, nodeIndex));
-        if (!permitted) {
+        if (!permitted && validatorService.validatorAddressExists(msg.sender)) {
             permitted = validatorService.getValidatorId(msg.sender) == validatorId;
         }
         require(permitted, "Sender is not permitted to call this function");
@@ -117,6 +131,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
         if (nodes.isNodeActive(nodeIndex)) {
             require(nodes.initExit(nodeIndex), "Initialization of node exit is failed");
         }
+        require(nodes.isNodeLeaving(nodeIndex), "Node should be Leaving");
         bool completed;
         bool isSchains = false;
         if (schainsInternal.getActiveSchain(nodeIndex) != bytes32(0)) {
@@ -146,26 +161,6 @@ contract SkaleManager is IERC777Recipient, Permissions {
         schains.deleteSchainByRoot(name);
     }
 
-    // function sendVerdict(uint fromMonitorIndex, Monitors.Verdict calldata verdict) external {
-    //     Nodes nodes = Nodes(contractManager.getContract("Nodes"));
-    //     require(nodes.isNodeExist(msg.sender, fromMonitorIndex), "Node does not exist for Message sender");
-
-    //     Monitors monitors = Monitors(contractManager.getContract("Monitors"));
-    //     // additional checks for monitoring inside sendVerdict
-    //     monitors.sendVerdict(fromMonitorIndex, verdict);
-    // }
-
-    // function sendVerdicts(uint fromMonitorIndex, Monitors.Verdict[] calldata verdicts) external {
-    //     Nodes nodes = Nodes(contractManager.getContract("Nodes"));
-    //     require(nodes.isNodeExist(msg.sender, fromMonitorIndex), "Node does not exist for Message sender");
-
-    //     Monitors monitors = Monitors(contractManager.getContract("Monitors"));
-    //     for (uint i = 0; i < verdicts.length; i++) {
-    //         // additional checks for monitoring inside sendVerdict
-    //         monitors.sendVerdict(fromMonitorIndex, verdicts[i]);
-    //     }
-    // }
-
     function getBounty(uint nodeIndex) external {
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));
         require(nodes.isNodeExist(msg.sender, nodeIndex), "Node does not exist for Message sender");
@@ -173,26 +168,17 @@ contract SkaleManager is IERC777Recipient, Permissions {
         require(
             nodes.isNodeActive(nodeIndex) || nodes.isNodeLeaving(nodeIndex), "Node is not Active and is not Leaving"
         );
-        Bounty bountyContract = Bounty(contractManager.getContract("Bounty"));
-        uint averageDowntime;
-        uint averageLatency;
-        Monitors monitors = Monitors(contractManager.getContract("Monitors"));
-        (averageDowntime, averageLatency) = monitors.calculateMetrics(nodeIndex);
+        BountyV2 bountyContract = BountyV2(contractManager.getContract("Bounty"));
 
-        uint bounty = bountyContract.getBounty(
-            nodeIndex,
-            averageDowntime,
-            averageLatency);
+        uint bounty = bountyContract.calculateBounty(nodeIndex);
 
         nodes.changeNodeLastRewardDate(nodeIndex);
-        // monitors.deleteMonitor(nodeIndex);
-        // monitors.addMonitor(nodeIndex);
 
         if (bounty > 0) {
             _payBounty(bounty, nodes.getValidatorId(nodeIndex));
         }
 
-        _emitBountyEvent(nodeIndex, msg.sender, averageDowntime, averageLatency, bounty);
+        _emitBountyEvent(nodeIndex, msg.sender, 0, 0, bounty);
     }
 
     function initialize(address newContractsAddress) public override initializer {
@@ -224,6 +210,15 @@ contract SkaleManager is IERC777Recipient, Permissions {
         uint previousBlockEvent = monitors.getLastBountyBlock(nodeIndex);
         monitors.setLastBountyBlock(nodeIndex);
 
+        emit BountyReceived(
+            nodeIndex,
+            from,
+            averageDowntime,
+            averageLatency,
+            bounty,
+            previousBlockEvent,
+            block.timestamp,
+            gasleft());
         emit BountyGot(
             nodeIndex,
             from,

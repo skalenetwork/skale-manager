@@ -8,13 +8,14 @@ import { skipTime } from "../tools/time";
 
 import BigNumber from "bignumber.js";
 import * as chai from "chai";
-import * as chaiAsPromised from "chai-as-promised";
+import chaiAsPromised from "chai-as-promised";
 import { deployConstantsHolder } from "../tools/deploy/constantsHolder";
 import { deployContractManager } from "../tools/deploy/contractManager";
 import { deployDelegationController } from "../tools/deploy/delegation/delegationController";
 import { deployValidatorService } from "../tools/deploy/delegation/validatorService";
 import { deploySkaleToken } from "../tools/deploy/skaleToken";
 import { deploySkaleManager } from "../tools/deploy/skaleManager";
+import { deploySkaleManagerMock } from "../tools/deploy/test/skaleManagerMock";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -53,6 +54,9 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
         skaleToken = await deploySkaleToken(contractManager);
         validatorService = await deployValidatorService(contractManager);
         delegationController = await deployDelegationController(contractManager);
+
+        const skaleManagerMock = await deploySkaleManagerMock(contractManager);
+        await contractManager.setContractsAddress("SkaleManager", skaleManagerMock.address);
     });
 
     it("should register new validator", async () => {
@@ -143,7 +147,7 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
                 (signature.slice(130) === "01" ? signature.slice(0, 130) + "1c" : signature));
             await validatorService.linkNodeAddress(nodeAddress, signature, {from: validator1});
             await validatorService.unlinkNodeAddress(validator1, {from: nodeAddress})
-                .should.be.eventually.rejectedWith("Validator with given address does not exist");
+                .should.be.eventually.rejectedWith("Validator address does not exist");
         });
 
         it("should reject if validator tried to override node address of another validator", async () => {
@@ -202,7 +206,7 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
 
             await validatorService.unlinkNodeAddress(nodeAddress, {from: validator1});
             await validatorService.getValidatorId(nodeAddress, {from: validator1})
-                .should.be.eventually.rejectedWith("Validator with given address does not exist");
+                .should.be.eventually.rejectedWith("Validator address does not exist");
         });
 
         it("should not allow changing the address to the address of an existing validator", async () => {
@@ -233,14 +237,14 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
                 await validatorService.confirmNewAddress(validatorId, {from: validator3});
                 assert.deepEqual(validatorId, new BigNumber(await validatorService.getValidatorId(validator3)));
                 await validatorService.getValidatorId(validator1)
-                    .should.be.eventually.rejectedWith("Validator with given address does not exist");
+                    .should.be.eventually.rejectedWith("Validator address does not exist");
 
             });
         });
 
         it("should reject when someone tries to set new address for validator that doesn't exist", async () => {
             await validatorService.requestForNewAddress(validator2)
-                .should.be.eventually.rejectedWith("Validator with given address does not exist");
+                .should.be.eventually.rejectedWith("Validator address does not exist");
         });
 
         it("should reject if validator tries to set new address as null", async () => {
@@ -308,7 +312,7 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
             beforeEach(async () => {
                 validatorId = 1;
                 amount = 100;
-                delegationPeriod = 3;
+                delegationPeriod = 2;
                 info = "NICE";
                 await skaleToken.mint(holder, 200, "0x", "0x");
                 await skaleToken.mint(validator3, 200, "0x", "0x");
@@ -348,7 +352,7 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
                 await delegationController.delegate(validatorId, amount, delegationPeriod, info, {from: holder});
 
                 await validatorService.stopAcceptingNewRequests({from: holder})
-                    .should.be.eventually.rejectedWith("Validator with given address does not exist");
+                    .should.be.eventually.rejectedWith("Validator address does not exist");
 
                 await validatorService.stopAcceptingNewRequests({from: validator1})
                 await delegationController.delegate(validatorId, amount, delegationPeriod, info, {from: holder})

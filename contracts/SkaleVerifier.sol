@@ -27,10 +27,24 @@ import "./SchainsInternal.sol";
 import "./utils/Precompiled.sol";
 import "./utils/FieldOperations.sol";
 
-
+/**
+ * @title SkaleVerifier
+ * @dev Contains verify function to perform BLS signature verification.
+ */
 contract SkaleVerifier is Permissions {  
     using Fp2Operations for Fp2Operations.Fp2Point;
 
+
+    /**
+    * @dev Verifies a BLS signature.
+    * 
+    * Requirements:
+    * 
+    * - Signature is in G1.
+    * - Hash is in G1.
+    * - G2.one in G2.
+    * - Public Key in G2.
+    */
     function verify(
         Fp2Operations.Fp2Point calldata signature,
         bytes32 hash,
@@ -92,6 +106,9 @@ contract SkaleVerifier is Permissions {
         pure
         returns (bool)
     {
+        if (counter > 100) {
+            return false;
+        }
         uint xCoord = uint(hash) % Fp2Operations.P;
         xCoord = (xCoord.add(counter)) % Fp2Operations.P;
 

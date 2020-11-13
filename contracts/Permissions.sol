@@ -28,8 +28,8 @@ import "./ContractManager.sol";
 
 
 /**
- * @title Permissions - connected module for Upgradeable approach, knows ContractManager
- * @author Artem Payvin
+ * @title Permissions
+ * @dev Contract is connected module for Upgradeable approach, knows ContractManager
  */
 contract Permissions is AccessControlUpgradeSafe {
     using SafeMath for uint;
@@ -38,44 +38,75 @@ contract Permissions is AccessControlUpgradeSafe {
     ContractManager public contractManager;
 
     /**
-     * @dev Throws if called by any account other than the owner.
+     * @dev Modifier to make a function callable only when caller is the Owner.
+     * 
+     * Requirements:
+     * 
+     * - The caller must be the owner.
      */
     modifier onlyOwner() {
         require(_isOwner(), "Caller is not the owner");
         _;
     }
 
+    /**
+     * @dev Modifier to make a function callable only when caller is an Admin.
+     * 
+     * Requirements:
+     * 
+     * - The caller must be an admin.
+     */
     modifier onlyAdmin() {
         require(_isAdmin(msg.sender), "Caller is not an admin");
         _;
     }
 
     /**
-     * @dev allow - throws if called by any account and contract other than the owner
-     * or `contractName` contract
-     * @param contractName - human readable name of contract
+     * @dev Modifier to make a function callable only when caller is the Owner 
+     * or `contractName` contract.
+     * 
+     * Requirements:
+     * 
+     * - The caller must be the owner or `contractName`.
      */
     modifier allow(string memory contractName) {
         require(
-            contractManager.contracts(keccak256(abi.encodePacked(contractName))) == msg.sender || _isOwner(),
+            contractManager.getContract(contractName) == msg.sender || _isOwner(),
             "Message sender is invalid");
         _;
     }
 
+    /**
+     * @dev Modifier to make a function callable only when caller is the Owner 
+     * or `contractName1` or `contractName2` contract.
+     * 
+     * Requirements:
+     * 
+     * - The caller must be the owner, `contractName1`, or `contractName2`.
+     */
     modifier allowTwo(string memory contractName1, string memory contractName2) {
         require(
-            contractManager.contracts(keccak256(abi.encodePacked(contractName1))) == msg.sender ||
-            contractManager.contracts(keccak256(abi.encodePacked(contractName2))) == msg.sender ||
+            contractManager.getContract(contractName1) == msg.sender ||
+            contractManager.getContract(contractName2) == msg.sender ||
             _isOwner(),
             "Message sender is invalid");
         _;
     }
 
+    /**
+     * @dev Modifier to make a function callable only when caller is the Owner 
+     * or `contractName1`, `contractName2`, or `contractName3` contract.
+     * 
+     * Requirements:
+     * 
+     * - The caller must be the owner, `contractName1`, `contractName2`, or 
+     * `contractName3`.
+     */
     modifier allowThree(string memory contractName1, string memory contractName2, string memory contractName3) {
         require(
-            contractManager.contracts(keccak256(abi.encodePacked(contractName1))) == msg.sender ||
-            contractManager.contracts(keccak256(abi.encodePacked(contractName2))) == msg.sender ||
-            contractManager.contracts(keccak256(abi.encodePacked(contractName3))) == msg.sender ||
+            contractManager.getContract(contractName1) == msg.sender ||
+            contractManager.getContract(contractName2) == msg.sender ||
+            contractManager.getContract(contractName3) == msg.sender ||
             _isOwner(),
             "Message sender is invalid");
         _;

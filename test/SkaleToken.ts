@@ -4,11 +4,12 @@ import { ContractManagerInstance,
          SkaleTokenInternalTesterInstance} from "../types/truffle-contracts";
 
 import * as chai from "chai";
-import * as chaiAsPromised from "chai-as-promised";
+import chaiAsPromised from "chai-as-promised";
 import { deployContractManager } from "./tools/deploy/contractManager";
 import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
 import { deploySkaleToken } from "./tools/deploy/skaleToken";
 import { deployReentrancyTester } from "./tools/deploy/test/reentracyTester";
+import { deploySkaleManagerMock } from "./tools/deploy/test/skaleManagerMock";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -31,6 +32,9 @@ contract("SkaleToken", ([owner, holder, receiver, nilAddress, accountWith99]) =>
     contractManager = await deployContractManager();
     skaleToken = await deploySkaleToken(contractManager);
 
+    const skaleManagerMock = await deploySkaleManagerMock(contractManager);
+    await contractManager.setContractsAddress("SkaleManager", skaleManagerMock.address);
+
     const premined = "5000000000000000000000000000"; // 5e9 * 1e18
     await skaleToken.mint(owner, premined, "0x", "0x");
   });
@@ -50,7 +54,7 @@ contract("SkaleToken", ([owner, holder, receiver, nilAddress, accountWith99]) =>
     expect(decimals.toNumber()).to.be.equal(18);
   });
 
-  it("should return the сapitalization of tokens for the Contract", async () => {
+  it("should return the capitalization of tokens for the Contract", async () => {
     const cap = await skaleToken.CAP();
     assert(toWei(TOKEN_CAP).isEqualTo(cap));
   });

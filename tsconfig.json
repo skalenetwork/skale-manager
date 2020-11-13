@@ -13,7 +13,7 @@
     "sourceMap": true,
     "typeRoots": ["./node_modules/@types", "./types"],
     "types": ["node", "truffle-contracts"],
-    "esModuleInterop": false
+    "esModuleInterop": true
   },
   "include": ["**/*.ts"],
   "exclude": ["node_modules", "example", "build"]
