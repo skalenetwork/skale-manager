@@ -48,7 +48,7 @@
     "dotenv": "^8.2.0",
     "ethereumjs-tx": "2.1.2",
     "solc": "^0.6.10",
-    "truffle": "5.1.39",
+    "truffle": "5.1.53",
     "web3": "^1.2.1"
   },
   "devDependencies": {
