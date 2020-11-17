@@ -195,6 +195,10 @@ contract BountyV2 is Permissions {
             // no delegations in the system
             return 0;
         }
+
+        if (constantsHolder.msr() == 0) {
+            return 0;
+        }
         
         uint validatorId = nodes.getValidatorId(nodeIndex);
         if (nodesByValidator[validatorId] > 0) {
@@ -224,10 +228,14 @@ contract BountyV2 is Permissions {
         pure
         returns (uint)
     {
-        return monthBounty
-            .mul(effectiveDelegated)
-            .div(effectiveDelegatedSum)
-            .div(maxNodesAmount);
+        if (maxNodesAmount > 0) {
+            return monthBounty
+                .mul(effectiveDelegated)
+                .div(effectiveDelegatedSum)
+                .div(maxNodesAmount);
+        } else {
+            return 0;
+        }
     }
 
     function _getFirstEpoch(TimeHelpers timeHelpers, ConstantsHolder constantsHolder) private view returns (uint) {

@@ -293,19 +293,19 @@ contract("Bounty", ([owner, admin, hacker, validator, validator2]) => {
 
                 await skipTimeToDate(web3, 1, 0); // Jan 1st
                 await constantsHolder.setLaunchTimestamp(await currentTime(web3));
+                await constantsHolder.setMSR(ten18.muln(validator2Amount).toString());
             });
 
-            // TODO: enable after the formula update
-            // it("should pay bounty proportionally to effective validator's stake", async () => {
-            //     await nodes.registerNodes(1, validatorId);
-            //     await nodes.registerNodes(1, validator2Id);
+            it("should pay bounty proportionally to effective validator's stake", async () => {
+                await nodes.registerNodes(2, validatorId);
+                await nodes.registerNodes(1, validator2Id);
 
-            //     skipTime(web3, 29 * day);
-            //     const bounty0 = await calculateBounty(0);
-            //     const bounty1 = await calculateBounty(1);
-            //     bounty0.should.be.equal(bounty1);
-            //     bounty0.should.be.almost(getBountyForEpoch(0) / 2);
-            // });
+                skipTime(web3, 29 * day);
+                const bounty0 = await calculateBounty(0) + await calculateBounty(1);
+                const bounty1 = await calculateBounty(2);
+                bounty0.should.be.equal(bounty1);
+                bounty0.should.be.almost(getBountyForEpoch(0) / 2);
+            });
 
             // TODO: enable after the formula update
             // it("should process nodes adding and removing", async () => {
