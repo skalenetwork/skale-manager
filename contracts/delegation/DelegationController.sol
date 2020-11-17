@@ -371,7 +371,6 @@ contract DelegationController is Permissions, ILocker {
             _getDelegationPeriodManager().stakeMultipliers(delegations[delegationId].delegationPeriod)
         );
         _getBounty().handleDelegationAdd(
-            delegations[delegationId].validatorId,
             effectiveAmount,
             delegations[delegationId].started
         );
@@ -433,7 +432,6 @@ contract DelegationController is Permissions, ILocker {
             delegationId,
             delegations[delegationId].finished);
         _getBounty().handleDelegationRemoving(
-            delegations[delegationId].validatorId,
             effectiveAmount,
             delegations[delegationId].finished);
         emit UndelegationRequested(delegationId);
@@ -474,7 +472,6 @@ contract DelegationController is Permissions, ILocker {
 
         BountyV2 bounty = _getBounty();
         bounty.handleDelegationRemoving(
-            validatorId,
             initialEffectiveDelegated.sub(
                 _effectiveDelegatedToValidator[validatorId].getAndUpdateValueInSequence(currentMonth)
             ),
@@ -482,7 +479,6 @@ contract DelegationController is Permissions, ILocker {
         );
         for (uint i = 0; i < initialSubtractions.length; ++i) {
             bounty.handleDelegationAdd(
-                validatorId,
                 initialSubtractions[i].sub(
                     _effectiveDelegatedToValidator[validatorId].subtractDiff[currentMonth.add(i).add(1)]
                 ),
