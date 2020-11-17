@@ -206,13 +206,20 @@ contract BountyV2 is Permissions {
             // no delegations in the system
             return 0;
         }
-
-        // DelegationController delegationController = 
-        //     DelegationController(contractManager.getContract("DelegationController"));
+        
+        uint effectiveDelegated = DelegationController(contractManager.getContract("DelegationController"))
+            .getAndUpdateEffectiveDelegatedToValidator(
+                nodes.getValidatorId(nodeIndex),
+                currentMonth
+            );
         
         return epochPoolSize
             .add(_bountyWasPaidInCurrentEpoch)
-            .div(133);
+            .mul(effectiveDelegated)
+            .div(effectiveDelegatedSum)
+            .div(
+                effectiveDelegated.div(constantsHolder.msr())
+            );
     }
 
     function _getFirstEpoch(TimeHelpers timeHelpers, ConstantsHolder constantsHolder) private view returns (uint) {
