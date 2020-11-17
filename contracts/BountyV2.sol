@@ -205,7 +205,7 @@ contract BountyV2 is Permissions {
                 validatorId,
                 currentMonth
             );
-        
+
         return _calculateBountyShare(
             epochPoolSize.add(_bountyWasPaidInCurrentEpoch),
             effectiveDelegated,

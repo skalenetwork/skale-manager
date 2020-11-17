@@ -211,7 +211,7 @@ contract DelegationController is Permissions, ILocker {
      * @dev Update and return a validator's delegations.
      */
     function getAndUpdateDelegatedToValidatorNow(uint validatorId) external returns (uint) {
-        return getAndUpdateDelegatedToValidator(validatorId, _getCurrentMonth());
+        return _getAndUpdateDelegatedToValidator(validatorId, _getCurrentMonth());
     }
 
     /**
@@ -544,16 +544,6 @@ contract DelegationController is Permissions, ILocker {
     }
 
     /**
-     * @dev Allows Nodes contract to get and update the amount delegated
-     * to validator for a given month.
-     */
-    function getAndUpdateDelegatedToValidator(uint validatorId, uint month)
-        public allow("Nodes") returns (uint)
-    {
-        return _delegatedToValidator[validatorId].getAndUpdateValue(month);
-    }
-
-    /**
      * @dev Process slashes up to the given limit.
      */
     function processSlashes(address holder, uint limit) public {
@@ -618,6 +608,16 @@ contract DelegationController is Permissions, ILocker {
     }    
 
     // private
+
+    /**
+     * @dev Allows Nodes contract to get and update the amount delegated
+     * to validator for a given month.
+     */
+    function _getAndUpdateDelegatedToValidator(uint validatorId, uint month)
+        private returns (uint)
+    {
+        return _delegatedToValidator[validatorId].getAndUpdateValue(month);
+    }
 
     /**
      * @dev Adds a new delegation proposal.
