@@ -908,7 +908,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeA
 
         it("of small schain", async () => {
             const price = web3.utils.toBN(await schains.getSchainPrice(2, 5));
-            const correctPrice = web3.utils.toBN(63246306415705);
+            const correctPrice = web3.utils.toBN(15811576603926);
 
             expect(price.eq(correctPrice)).to.be.true;
         });
