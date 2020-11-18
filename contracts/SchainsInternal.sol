@@ -267,8 +267,8 @@ contract SchainsInternal is Permissions {
      * @dev Allows Admin to add schain type
      */
     function addSchainType(uint8 partOfNode, uint numberOfNodes) external onlyAdmin {
-        schainTypes[numberOfSchainTypes].partOfNode = partOfNode;
-        schainTypes[numberOfSchainTypes].numberOfNodes = numberOfNodes;
+        schainTypes[numberOfSchainTypes + 1].partOfNode = partOfNode;
+        schainTypes[numberOfSchainTypes + 1].numberOfNodes = numberOfNodes;
         numberOfSchainTypes++;
     }
 

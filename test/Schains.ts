@@ -682,7 +682,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeA
                 }
             });
 
-            it("successfully", async () => {
+            it("successfully create 1 type Of Schain", async () => {
                 const deposit = await schains.getSchainPrice(1, 5);
 
                 await schains.addSchain(
@@ -716,6 +716,84 @@ contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeA
                 obtainedSchainName.should.be.equal("d2");
                 obtainedSchainOwner.should.be.equal(holder);
                 expect(obtainedPart.eq(web3.utils.toBN(1))).be.true;
+                expect(obtainedLifetime.eq(web3.utils.toBN(5))).be.true;
+                expect(obtainedDeposit.eq(web3.utils.toBN(deposit))).be.true;
+            });
+
+            it("should add new type of Schain and create Schain", async () => {
+                await schainsInternal.addSchainType(8, 16, {from: owner});
+                const deposit = await schains.getSchainPrice(6, 5);
+
+                await schains.addSchain(
+                    holder,
+                    deposit,
+                    web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 6, 0, "d2"]),
+                    {from: owner});
+
+                const sChains = await schainsInternal.getSchains();
+                sChains.length.should.be.equal(1);
+                const schainId = sChains[0];
+
+                await schainsInternal.isOwnerAddress(holder, schainId).should.be.eventually.true;
+
+                const obtainedSchains = await schainsInternal.schains(schainId);
+                const schainsArray = Array(8);
+                for (const index of Array.from(Array(8).keys())) {
+                    schainsArray[index] = obtainedSchains[index];
+                }
+
+                const [obtainedSchainName,
+                       obtainedSchainOwner,
+                       obtainedIndexInOwnerList,
+                       obtainedPart,
+                       obtainedLifetime,
+                       obtainedStartDate,
+                       obtainedBlock,
+                       obtainedDeposit,
+                       obtainedIndex] = schainsArray;
+
+                obtainedSchainName.should.be.equal("d2");
+                obtainedSchainOwner.should.be.equal(holder);
+                expect(obtainedPart.eq(web3.utils.toBN(8))).be.true;
+                expect(obtainedLifetime.eq(web3.utils.toBN(5))).be.true;
+                expect(obtainedDeposit.eq(web3.utils.toBN(deposit))).be.true;
+            });
+
+            it("should add another new type of Schain and create Schain", async () => {
+                await schainsInternal.addSchainType(32, 16, {from: owner});
+                const deposit = await schains.getSchainPrice(6, 5);
+
+                await schains.addSchain(
+                    holder,
+                    deposit,
+                    web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 6, 0, "d2"]),
+                    {from: owner});
+
+                const sChains = await schainsInternal.getSchains();
+                sChains.length.should.be.equal(1);
+                const schainId = sChains[0];
+
+                await schainsInternal.isOwnerAddress(holder, schainId).should.be.eventually.true;
+
+                const obtainedSchains = await schainsInternal.schains(schainId);
+                const schainsArray = Array(8);
+                for (const index of Array.from(Array(8).keys())) {
+                    schainsArray[index] = obtainedSchains[index];
+                }
+
+                const [obtainedSchainName,
+                       obtainedSchainOwner,
+                       obtainedIndexInOwnerList,
+                       obtainedPart,
+                       obtainedLifetime,
+                       obtainedStartDate,
+                       obtainedBlock,
+                       obtainedDeposit,
+                       obtainedIndex] = schainsArray;
+
+                obtainedSchainName.should.be.equal("d2");
+                obtainedSchainOwner.should.be.equal(holder);
+                expect(obtainedPart.eq(web3.utils.toBN(32))).be.true;
                 expect(obtainedLifetime.eq(web3.utils.toBN(5))).be.true;
                 expect(obtainedDeposit.eq(web3.utils.toBN(deposit))).be.true;
             });

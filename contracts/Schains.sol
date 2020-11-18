@@ -444,8 +444,9 @@ contract Schains is Permissions {
     function _addSchain(address from, uint deposit, SchainParameters memory schainParameters) private {
         uint numberOfNodes;
         uint8 partOfNode;
+        SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
 
-        require(schainParameters.typeOfSchain <= 5, "Invalid type of Schain");
+        require(schainParameters.typeOfSchain <= schainsInternal.numberOfSchainTypes(), "Invalid type of Schain");
 
         //initialize Schain
         _initializeSchainInSchainsInternal(

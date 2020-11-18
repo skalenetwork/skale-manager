@@ -295,46 +295,60 @@ contract("SchainsInternal", ([owner, holder]) => {
             await schainsInternal.addSchainType(8, 16, {from: holder}).should.be.eventually.rejectedWith("Caller is not an admin");
             await schainsInternal.addSchainType(8, 16, {from: owner});
             assert(new BigNumber(await schainsInternal.numberOfSchainTypes()).isEqualTo(6));
-            const resSchainType = await schainsInternal.schainTypes(5);
+            const resSchainType = await schainsInternal.schainTypes(6);
             assert(new BigNumber(resSchainType[0]).isEqualTo(8));
             assert(new BigNumber(resSchainType[1]).isEqualTo(16));
         });
 
         it("should remove type of schain", async () => {
             assert(new BigNumber(await schainsInternal.numberOfSchainTypes()).isEqualTo(5));
+
             await schainsInternal.addSchainType(8, 16, {from: holder}).should.be.eventually.rejectedWith("Caller is not an admin");
             await schainsInternal.addSchainType(8, 16, {from: owner});
             await schainsInternal.addSchainType(32, 16, {from: owner});
+
             assert(new BigNumber(await schainsInternal.numberOfSchainTypes()).isEqualTo(7));
-            let resSchainType = await schainsInternal.schainTypes(5);
+
+            let resSchainType = await schainsInternal.schainTypes(6);
             assert(new BigNumber(resSchainType[0]).isEqualTo(8));
             assert(new BigNumber(resSchainType[1]).isEqualTo(16));
-            resSchainType = await schainsInternal.schainTypes(6);
+
+            resSchainType = await schainsInternal.schainTypes(7);
             assert(new BigNumber(resSchainType[0]).isEqualTo(32));
             assert(new BigNumber(resSchainType[1]).isEqualTo(16));
-            await schainsInternal.removeSchainType(5, {from: holder}).should.be.eventually.rejectedWith("Caller is not an admin");
-            await schainsInternal.removeSchainType(5, {from: owner});
-            resSchainType = await schainsInternal.schainTypes(5);
-            assert(new BigNumber(resSchainType[0]).isEqualTo(0));
-            assert(new BigNumber(resSchainType[1]).isEqualTo(0));
-            resSchainType = await schainsInternal.schainTypes(6);
-            assert(new BigNumber(resSchainType[0]).isEqualTo(32));
-            assert(new BigNumber(resSchainType[1]).isEqualTo(16));
+
             await schainsInternal.removeSchainType(6, {from: holder}).should.be.eventually.rejectedWith("Caller is not an admin");
             await schainsInternal.removeSchainType(6, {from: owner});
-            resSchainType = await schainsInternal.schainTypes(5);
-            assert(new BigNumber(resSchainType[0]).isEqualTo(0));
-            assert(new BigNumber(resSchainType[1]).isEqualTo(0));
+
             resSchainType = await schainsInternal.schainTypes(6);
             assert(new BigNumber(resSchainType[0]).isEqualTo(0));
             assert(new BigNumber(resSchainType[1]).isEqualTo(0));
+
+            resSchainType = await schainsInternal.schainTypes(7);
+            assert(new BigNumber(resSchainType[0]).isEqualTo(32));
+            assert(new BigNumber(resSchainType[1]).isEqualTo(16));
+
+            await schainsInternal.removeSchainType(7, {from: holder}).should.be.eventually.rejectedWith("Caller is not an admin");
+            await schainsInternal.removeSchainType(7, {from: owner});
+
+            resSchainType = await schainsInternal.schainTypes(6);
+            assert(new BigNumber(resSchainType[0]).isEqualTo(0));
+            assert(new BigNumber(resSchainType[1]).isEqualTo(0));
+
+            resSchainType = await schainsInternal.schainTypes(7);
+            assert(new BigNumber(resSchainType[0]).isEqualTo(0));
+            assert(new BigNumber(resSchainType[1]).isEqualTo(0));
+
             await schainsInternal.addSchainType(8, 16, {from: owner});
             await schainsInternal.addSchainType(32, 16, {from: owner});
+
             assert(new BigNumber(await schainsInternal.numberOfSchainTypes()).isEqualTo(9));
-            resSchainType = await schainsInternal.schainTypes(7);
+
+            resSchainType = await schainsInternal.schainTypes(8);
             assert(new BigNumber(resSchainType[0]).isEqualTo(8));
             assert(new BigNumber(resSchainType[1]).isEqualTo(16));
-            resSchainType = await schainsInternal.schainTypes(8);
+
+            resSchainType = await schainsInternal.schainTypes(9);
             assert(new BigNumber(resSchainType[0]).isEqualTo(32));
             assert(new BigNumber(resSchainType[1]).isEqualTo(16));
         });
