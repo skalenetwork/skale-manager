@@ -547,9 +547,10 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                 });
 
                 it("should create 2 medium schains", async () => {
+                    const price = await schains.getSchainPrice(3, 5)
                     await skaleToken.send(
                         skaleManager.address,
-                        "0x1cc2d6d04a2ca",
+                        price,
                         web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [
                             5, // lifetime
                             3, // type of schain
@@ -562,7 +563,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
 
                     await skaleToken.send(
                         skaleManager.address,
-                        "0x1cc2d6d04a2ca",
+                        price,
                         web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [
                             5, // lifetime
                             3, // type of schain
