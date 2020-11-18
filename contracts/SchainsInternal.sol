@@ -203,6 +203,9 @@ contract SchainsInternal is Permissions {
         removeSchainForNode(nodeIndex, schainId);
     }
 
+    /**
+     * @dev Allows Schains contract to remove node from exceptions
+     */
     function removeNodeFromExceptions(bytes32 schainHash, uint nodeIndex) external allow("Schains") {
         _exceptionsForGroups[schainHash][nodeIndex] = false;
     }
@@ -253,21 +256,33 @@ contract SchainsInternal is Permissions {
         }
     }
 
+    /**
+     * @dev Allows Schains contract to remove holes for schains
+     */
     function removeHolesForSchain(bytes32 schainHash) external allow("Schains") {
         delete holesForSchains[schainHash];
     }
 
+    /**
+     * @dev Allows Admin to add schain type
+     */
     function addSchainType(uint8 partOfNode, uint numberOfNodes) external onlyAdmin {
         schainTypes[numberOfSchainTypes].partOfNode = partOfNode;
         schainTypes[numberOfSchainTypes].numberOfNodes = numberOfNodes;
         numberOfSchainTypes++;
     }
 
+    /**
+     * @dev Allows Admin to remove schain type
+     */
     function removeSchainType(uint typeOfSchain) external onlyAdmin {
         delete schainTypes[typeOfSchain].partOfNode;
         delete schainTypes[typeOfSchain].numberOfNodes;
     }
 
+    /**
+     * @dev Allows Admin to set number of schain types
+     */
     function setNumberOfSchainTypes(uint newNumberOfSchainTypes) external onlyAdmin {
         numberOfSchainTypes = newNumberOfSchainTypes;
     }
