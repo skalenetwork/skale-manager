@@ -268,6 +268,10 @@ contract SchainsInternal is Permissions {
         delete schainTypes[typeOfSchain].numberOfNodes;
     }
 
+    function setNumberOfSchainTypes(uint newNumberOfSchainTypes) external onlyAdmin {
+        numberOfSchainTypes = newNumberOfSchainTypes;
+    }
+
     /**
      * @dev Returns all Schains in the network.
      */
