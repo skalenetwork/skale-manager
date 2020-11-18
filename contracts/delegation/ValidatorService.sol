@@ -30,6 +30,7 @@ import "../Permissions.sol";
 import "../ConstantsHolder.sol";
 
 import "./DelegationController.sol";
+import "./TimeHelpers.sol";
 
 /**
  * @title ValidatorService
@@ -140,7 +141,7 @@ contract ValidatorService is Permissions {
         returns (uint validatorId)
     {
         require(!validatorAddressExists(msg.sender), "Validator with such address already exists");
-        require(feeRate < 1000, "Fee rate of validator should be lower than 100%");
+        require(feeRate <= 1000, "Fee rate of validator should be lower than 100%");
         validatorId = ++numberOfValidators;
         validators[validatorId] = Validator(
             name,
@@ -388,20 +389,6 @@ contract ValidatorService is Permissions {
     }
 
     /**
-     * @dev Checks whether the amount meets or exceeds the validator's minimum
-     * delegation amount.
-     */
-    function checkMinimumDelegation(uint validatorId, uint amount)
-        external
-        view
-        checkValidatorExists(validatorId)
-        allow("DelegationController")
-        returns (bool)
-    {
-        return validators[validatorId].minimumDelegationAmount <= amount ? true : false;
-    }
-
-    /**
      * @dev Checks whether the validator ID is linked to the validator address.
      */
     function checkValidatorAddressToId(address validatorAddress, uint validatorId)
@@ -424,9 +411,13 @@ contract ValidatorService is Permissions {
         require(validatorId != 0, "Node address is not assigned to a validator");
     }
 
-
-    function isAuthorizedValidator(uint validatorId) external view checkValidatorExists(validatorId) returns (bool) {
-        return _trustedValidators[validatorId] || !useWhitelist;
+    function checkValidatorCanReceiveDelegation(uint validatorId, uint amount) external view {
+        require(isAuthorizedValidator(validatorId), "Validator is not authorized to accept delegation request");
+        require(isAcceptingNewRequests(validatorId), "The validator is not currently accepting new requests");
+        require(
+            validators[validatorId].minimumDelegationAmount <= amount,
+            "Amount does not meet the validator's minimum delegation amount"
+        );
     }
 
     function initialize(address contractManagerAddress) public override initializer {
@@ -482,6 +473,10 @@ contract ValidatorService is Permissions {
      */
     function isAcceptingNewRequests(uint validatorId) public view checkValidatorExists(validatorId) returns (bool) {
         return validators[validatorId].acceptNewRequests;
+    }
+
+    function isAuthorizedValidator(uint validatorId) public view checkValidatorExists(validatorId) returns (bool) {
+        return _trustedValidators[validatorId] || !useWhitelist;
     }
 
     // private

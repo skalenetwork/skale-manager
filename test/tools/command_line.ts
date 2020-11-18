@@ -1,4 +1,4 @@
-import * as minimist from "minimist";
+import minimist from "minimist";
 
 const gasMultiplierParameter = "gas_multiplier";
 

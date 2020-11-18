@@ -1,5 +1,5 @@
 import * as chai from "chai";
-import * as chaiAsPromised from "chai-as-promised";
+import chaiAsPromised from "chai-as-promised";
 import { ConstantsHolderInstance,
          ContractManagerInstance,
          KeyStorageInstance,
@@ -108,6 +108,16 @@ contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeA
                 web3.eth.abi.encodeParameters(["uint", "uint8", "uint16"], [5, 6, 0]),
                 {from: owner}).
                 should.be.eventually.rejected;
+        });
+
+        it("should fail when schain name is Mainnet", async () => {
+            const price = new BigNumber(await schains.getSchainPrice(1, 5));
+            await schains.addSchain(
+                holder,
+                price.toString(),
+                web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 1, 0, "Mainnet"]),
+                {from: owner})
+                .should.be.eventually.rejectedWith("Schain name is not available");
         });
 
         it("should fail when nodes count is too low", async () => {
@@ -742,6 +752,11 @@ contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeA
                 it("should check group", async () => {
                     const res = await schainsInternal.getNodesInGroup(web3.utils.soliditySha3("D2"));
                     res.length.should.be.equal(16);
+                });
+
+                it("should check node addresses", async () => {
+                    expect(await schainsInternal.isNodeAddressesInGroup(web3.utils.soliditySha3("D2"), nodeAddress)).be.true;
+                    expect(await schainsInternal.isNodeAddressesInGroup(web3.utils.soliditySha3("D2"), nodeAddress2)).be.false;
                 });
 
                 it("should delete group", async () => {
@@ -1721,7 +1736,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeA
                 );
             }
             if (!(await nodes.isNodeLeft(rotIndex))) {
-                await skaleManager.nodeExit(rotIndex, {from: nodeAddress3});
+                await skaleManager.nodeExit(rotIndex, {from: nodeAddress2});
             }
             await validatorService.getValidatorIdByNodeAddress(nodeAddress2)
             .should.be.eventually.rejectedWith("Node address is not assigned to a validator");
@@ -1738,7 +1753,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeA
                 await skaleDKG.setSuccesfulDKGPublic(schainId);
             }
             if (!(await nodes.isNodeLeft(rotatedNodeIndex))) {
-                await skaleManager.nodeExit(rotatedNodeIndex, {from: nodeAddress3});
+                await skaleManager.nodeExit(rotatedNodeIndex, {from: validator});
             }
             await validatorService.getValidatorIdByNodeAddress(nodeAddress2)
                 .should.be.eventually.rejectedWith("Node address is not assigned to a validator");
@@ -1755,7 +1770,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeA
                 await skaleDKG.setSuccesfulDKGPublic(schainId);
             }
             if (!(await nodes.isNodeLeft(rotatedNodeIndex))) {
-                await skaleManager.nodeExit(rotatedNodeIndex, {from: nodeAddress3});
+                await skaleManager.nodeExit(rotatedNodeIndex, {from: owner});
             }
             await validatorService.getValidatorIdByNodeAddress(nodeAddress2)
                 .should.be.eventually.rejectedWith("Node address is not assigned to a validator");

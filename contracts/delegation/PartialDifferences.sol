@@ -115,6 +115,23 @@ library PartialDifferences {
         return sequence.value[month];
     }
 
+    function getValuesInSequence(Sequence storage sequence) internal view returns (uint[] memory values) {
+        if (sequence.firstUnprocessedMonth == 0) {
+            return values;
+        }
+        uint begin = sequence.firstUnprocessedMonth.sub(1);
+        uint end = sequence.lastChangedMonth.add(1);
+        if (end <= begin) {
+            end = begin.add(1);
+        }
+        values = new uint[](end.sub(begin));
+        values[0] = sequence.value[sequence.firstUnprocessedMonth.sub(1)];
+        for (uint i = 0; i.add(1) < values.length; ++i) {
+            uint month = sequence.firstUnprocessedMonth.add(i);
+            values[i.add(1)] = values[i].add(sequence.addDiff[month]).sub(sequence.subtractDiff[month]);
+        }
+    }
+
     function reduceSequence(
         Sequence storage sequence,
         FractionUtils.Fraction memory reducingCoefficient,
@@ -204,6 +221,23 @@ library PartialDifferences {
         }
 
         return sequence.value;
+    }
+
+    function getValues(Value storage sequence) internal view returns (uint[] memory values) {
+        if (sequence.firstUnprocessedMonth == 0) {
+            return values;
+        }
+        uint begin = sequence.firstUnprocessedMonth.sub(1);
+        uint end = sequence.lastChangedMonth.add(1);
+        if (end <= begin) {
+            end = begin.add(1);
+        }
+        values = new uint[](end.sub(begin));
+        values[0] = sequence.value;
+        for (uint i = 0; i.add(1) < values.length; ++i) {
+            uint month = sequence.firstUnprocessedMonth.add(i);
+            values[i.add(1)] = values[i].add(sequence.addDiff[month]).sub(sequence.subtractDiff[month]);
+        }
     }
 
     function reduceValue(

@@ -316,7 +316,9 @@ contract SchainsInternal is Permissions {
      */
     function isSchainNameAvailable(string calldata name) external view returns (bool) {
         bytes32 schainId = keccak256(abi.encodePacked(name));
-        return schains[schainId].owner == address(0) && !usedSchainNames[schainId];
+        return schains[schainId].owner == address(0) &&
+            !usedSchainNames[schainId] &&
+            keccak256(abi.encodePacked(name)) != keccak256(abi.encodePacked("Mainnet"));
     }
 
     /**
@@ -391,6 +393,19 @@ contract SchainsInternal is Permissions {
      */
     function getNodesInGroup(bytes32 schainId) external view returns (uint[] memory) {
         return schainsGroups[schainId];
+    }
+
+    /**
+     * @dev Checks whether sender is a node address from a given schain group.
+     */
+    function isNodeAddressesInGroup(bytes32 schainId, address sender) external view returns (bool) {
+        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
+        for (uint i = 0; i < schainsGroups[schainId].length; i++) {
+            if (nodes.getNodeAddress(schainsGroups[schainId][i]) == sender) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

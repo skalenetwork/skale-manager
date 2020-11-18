@@ -53,7 +53,7 @@ contract TimeHelpersWithDebug is TimeHelpers, OwnableUpgradeSafe {
     function monthToTimestamp(uint month) public view override returns (uint) {
         uint shiftedTimestamp = super.monthToTimestamp(month);
         if (_timeShift.length > 0) {
-            _findTimeBeforeTimeShift(shiftedTimestamp);
+            return _findTimeBeforeTimeShift(shiftedTimestamp);
         } else {
             return shiftedTimestamp;
         }
@@ -89,7 +89,9 @@ contract TimeHelpersWithDebug is TimeHelpers, OwnableUpgradeSafe {
         uint lastTimeShiftIndex = _timeShift.length.sub(1);
         if (_timeShift[lastTimeShiftIndex].pointInTime.add(_timeShift[lastTimeShiftIndex].shift)
             < shiftedTimestamp) {
-            if (_timeShift[0].pointInTime.add(_timeShift[0].shift) < shiftedTimestamp) {
+            return shiftedTimestamp.sub(_timeShift[lastTimeShiftIndex].shift);
+        } else {
+            if (shiftedTimestamp <= _timeShift[0].pointInTime.add(_timeShift[0].shift)) {
                 if (shiftedTimestamp < _timeShift[0].pointInTime) {
                     return shiftedTimestamp;
                 } else {
@@ -101,19 +103,17 @@ contract TimeHelpersWithDebug is TimeHelpers, OwnableUpgradeSafe {
                 while (left + 1 < right) {
                     uint middle = left.add(right).div(2);
                     if (_timeShift[middle].pointInTime.add(_timeShift[middle].shift) < shiftedTimestamp) {
-                        right = middle;
-                    } else {
                         left = middle;
+                    } else {
+                        right = middle;
                     }
                 }
-                if (shiftedTimestamp < _timeShift[right].pointInTime + _timeShift[left].shift) {
+                if (shiftedTimestamp < _timeShift[right].pointInTime.add(_timeShift[left].shift)) {
                     return shiftedTimestamp.sub(_timeShift[left].shift);
                 } else {
                     return _timeShift[right].pointInTime;
                 }
             }
-        } else {
-            return shiftedTimestamp.sub(_timeShift[lastTimeShiftIndex].shift);
         }
     }
 }
