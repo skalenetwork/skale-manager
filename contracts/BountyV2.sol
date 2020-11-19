@@ -26,6 +26,7 @@ import "@nomiclabs/buidler/console.sol";
 import "./delegation/DelegationController.sol";
 import "./delegation/PartialDifferences.sol";
 import "./delegation/TimeHelpers.sol";
+import "./delegation/ValidatorService.sol";
 
 import "./ConstantsHolder.sol";
 import "./Nodes.sol";
@@ -125,6 +126,52 @@ contract BountyV2 is Permissions {
         allow("DelegationController")
     {
         _effectiveDelegatedSum.subtractFromValue(amount, month);
+    }
+
+    function populate() external onlyOwner {
+        console.log("Populate");
+        ValidatorService validatorService = ValidatorService(contractManager.getValidatorService());
+        DelegationController delegationController = DelegationController(
+            contractManager.getContract("DelegationController")
+        );
+        TimeHelpers timeHelpers = TimeHelpers(contractManager.getTimeHelpers());
+
+        // clean existing data
+        for (
+            uint i = _effectiveDelegatedSum.firstUnprocessedMonth;
+            i < _effectiveDelegatedSum.lastChangedMonth.add(1);
+            ++i
+        )
+        {
+            delete _effectiveDelegatedSum.addDiff[i];
+            delete _effectiveDelegatedSum.subtractDiff[i];
+        }
+        delete _effectiveDelegatedSum.value;
+        delete _effectiveDelegatedSum.firstUnprocessedMonth;
+        delete _effectiveDelegatedSum.lastChangedMonth;
+
+        uint currentMonth = timeHelpers.getCurrentMonth();
+        uint[] memory validators = validatorService.getTrustedValidators();
+        for (uint i = 0; i < validators.length; ++i) {
+            uint validatorId = validators[i];
+            uint currentEffectiveDelegated = delegationController.getAndUpdateEffectiveDelegatedToValidator(validatorId, currentMonth);
+            uint[] memory effectiveDelegated = delegationController.getEffectiveDelegatedValuesByValidator(validatorId);
+            if (effectiveDelegated.length > 0) {
+                assert(currentEffectiveDelegated == effectiveDelegated[0]);
+            }
+            uint added = 0;
+            for (uint j = 0; j < effectiveDelegated.length; ++j) {
+                if (effectiveDelegated[j] != added) {
+                    if (effectiveDelegated[j] > added) {
+                        _effectiveDelegatedSum.addToValue(effectiveDelegated[j].sub(added), currentMonth + j);
+                    } else {
+                        _effectiveDelegatedSum.subtractFromValue(added.sub(effectiveDelegated[j]), currentMonth + j);
+                    }
+                    added = effectiveDelegated[j];
+                }
+            }
+            delete effectiveDelegated;
+        }
     }
 
     function estimateBounty(uint /* nodeIndex */) external pure returns (uint) {
