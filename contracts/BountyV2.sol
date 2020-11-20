@@ -260,7 +260,7 @@ contract BountyV2 is Permissions {
         if (nodesByValidator[validatorId] > 0) {
             delete nodesByValidator[validatorId];
         }
-        _updateBountyHistory(validatorId);
+        _updateBountyHistory(validatorId, currentMonth);
         uint effectiveDelegated = delegationController
             .getAndUpdateEffectiveDelegatedToValidator(validatorId, currentMonth);
 
@@ -385,7 +385,7 @@ contract BountyV2 is Permissions {
         }
     }
 
-    function _updateBountyHistory(uint validatorId) private {
+    function _updateBountyHistory(uint validatorId, uint currentMonth) private {
         if (_bountyHistory[validatorId].month < currentMonth) {
             _bountyHistory[validatorId].month = currentMonth;
             delete _bountyHistory[validatorId].bountyPaid;

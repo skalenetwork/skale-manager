@@ -83,172 +83,173 @@ contract("Bounty", ([owner, admin, hacker, validator, validator2]) => {
         }
     }
 
-    // TODO: enable after the formula update
-    // it("should allow to populate BountyV2 contract with data after upgrade", async () => {
-    //     const skaleToken = await deploySkaleToken(contractManager);
-    //     const delegationController = await deployDelegationController(contractManager);
-    //     const validatorService = await deployValidatorService(contractManager);
-    //     const delegationPeriodManager = await deployDelegationPeriodManager(contractManager);
-    //     await deployMonitors(contractManager);
-    //     await deployDistributor(contractManager);
-    //     const Nodes: NodesContract = artifacts.require("./Nodes");
-    //     const nodesContract = await Nodes.new();
-    //     await nodesContract.initialize(contractManager.address);
-    //     await contractManager.setContractsAddress("Nodes", nodesContract.address);
-    //     const SkaleManager: SkaleManagerContract = artifacts.require("./SkaleManager");
-    //     const skaleManagerContract = await SkaleManager.new();
-    //     await skaleManagerContract.initialize(contractManager.address);
-    //     await contractManager.setContractsAddress("SkaleManager", skaleManagerContract.address);
+    it("should allow to populate BountyV2 contract with data after upgrade", async () => {
+        const skaleToken = await deploySkaleToken(contractManager);
+        const delegationController = await deployDelegationController(contractManager);
+        const validatorService = await deployValidatorService(contractManager);
+        const delegationPeriodManager = await deployDelegationPeriodManager(contractManager);
+        await deployMonitors(contractManager);
+        await deployDistributor(contractManager);
+        const Nodes: NodesContract = artifacts.require("./Nodes");
+        const nodesContract = await Nodes.new();
+        await nodesContract.initialize(contractManager.address);
+        await contractManager.setContractsAddress("Nodes", nodesContract.address);
+        const SkaleManager: SkaleManagerContract = artifacts.require("./SkaleManager");
+        const skaleManagerContract = await SkaleManager.new();
+        await skaleManagerContract.initialize(contractManager.address);
+        await contractManager.setContractsAddress("SkaleManager", skaleManagerContract.address);
 
-    //     await delegationPeriodManager.setDelegationPeriod(12, 200);
+        await delegationPeriodManager.setDelegationPeriod(12, 200);
 
-    //     await skipTimeToDate(web3, 25, 8); // Sep 25th
+        await skipTimeToDate(web3, 25, 8); // Sep 25th
 
-    //     const nodesAmount = 7;
-    //     const validatorId = 1;
-    //     const validatorAmount = 1e6;
-    //     const validator2Id = 2;
-    //     const validator2Amount = 0.5e6;
+        const validatorId = 1;
+        const validatorAmount = 1e6;
+        const nodesAmount = 2;
+        const validator2Id = 2;
+        const validator2Amount = 0.5e6;
+        const nodesAmount2 = 2;
 
-    //     // register and delegate to validator
-    //     await skaleToken.mint(validator, ten18.muln(validatorAmount).toString(), "0x", "0x");
-    //     await validatorService.registerValidator("Validator", "", 150, 1e6 + 1, {from: validator});
-    //     await validatorService.enableValidator(validatorId);
-    //     await delegationController.delegate(validatorId, ten18.muln(validatorAmount).toString(), 2, "", {from: validator});
-    //     await delegationController.acceptPendingDelegation(0, {from: validator});
+        // register and delegate to validator
+        await skaleToken.mint(validator, ten18.muln(validatorAmount).toString(), "0x", "0x");
+        await validatorService.registerValidator("Validator", "", 150, 1e6 + 1, {from: validator});
+        await validatorService.enableValidator(validatorId);
+        await delegationController.delegate(validatorId, ten18.muln(validatorAmount).toString(), 2, "", {from: validator});
+        await delegationController.acceptPendingDelegation(0, {from: validator});
 
-    //     // register and delegate to validator2
-    //     await skaleToken.mint(validator2, ten18.muln(validator2Amount).toString(), "0x", "0x");
-    //     await validatorService.registerValidator("Validator", "", 150, 1e6 + 1, {from: validator2});
-    //     await validatorService.enableValidator(validator2Id);
-    //     await delegationController.delegate(validator2Id, ten18.muln(validator2Amount).toString(), 12, "", {from: validator2});
-    //     await delegationController.acceptPendingDelegation(1, {from: validator2});
+        // register and delegate to validator2
+        await skaleToken.mint(validator2, ten18.muln(validator2Amount).toString(), "0x", "0x");
+        await validatorService.registerValidator("Validator", "", 150, 1e6 + 1, {from: validator2});
+        await validatorService.enableValidator(validator2Id);
+        await delegationController.delegate(validator2Id, ten18.muln(validator2Amount).toString(), 12, "", {from: validator2});
+        await delegationController.acceptPendingDelegation(1, {from: validator2});
 
-    //     await skipTimeToDate(web3, 1, 9); // October 1st
+        await skipTimeToDate(web3, 1, 9); // October 1st
 
-    //     await constantsHolder.setLaunchTimestamp(await currentTime(web3));
-    //     let pubKey = ec.keyFromPrivate(String(privateKeys[3]).slice(2)).getPublic();
-    //     for (let i = 0; i < nodesAmount; ++i) {
-    //         await skaleManagerContract.createNode(
-    //             1, // port
-    //             0, // nonce
-    //             "0x7f" + ("000000" + i.toString(16)).slice(-6), // ip
-    //             "0x7f" + ("000000" + i.toString(16)).slice(-6), // public ip
-    //             ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')], // public key
-    //             "d2-" + i, // name)
-    //         {from: validator});
-    //     }
+        await constantsHolder.setLaunchTimestamp(await currentTime(web3));
+        let pubKey = ec.keyFromPrivate(String(privateKeys[3]).slice(2)).getPublic();
+        for (let i = 0; i < nodesAmount; ++i) {
+            await skaleManagerContract.createNode(
+                1, // port
+                0, // nonce
+                "0x7f" + ("000000" + i.toString(16)).slice(-6), // ip
+                "0x7f" + ("000000" + i.toString(16)).slice(-6), // public ip
+                ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')], // public key
+                "d2-" + i, // name)
+            {from: validator});
+        }
 
-    //     await skipTimeToDate(web3, 2, 9); // October 2nd
+        await skipTimeToDate(web3, 2, 9); // October 2nd
 
-    //     pubKey = ec.keyFromPrivate(String(privateKeys[4]).slice(2)).getPublic();
-    //     for (let i = 0; i < nodesAmount; ++i) {
-    //         await skaleManagerContract.createNode(
-    //             1, // port
-    //             0, // nonce
-    //             "0x7f" + ("000000" + (i + nodesAmount).toString(16)).slice(-6), // ip
-    //             "0x7f" + ("000000" + (i + nodesAmount).toString(16)).slice(-6), // public ip
-    //             ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')], // public key
-    //             "d2-" + (i + nodesAmount), // name)
-    //         {from: validator2});
-    //     }
+        pubKey = ec.keyFromPrivate(String(privateKeys[4]).slice(2)).getPublic();
+        for (let i = 0; i < nodesAmount2; ++i) {
+            await skaleManagerContract.createNode(
+                1, // port
+                0, // nonce
+                "0x7f" + ("000000" + (i + nodesAmount).toString(16)).slice(-6), // ip
+                "0x7f" + ("000000" + (i + nodesAmount).toString(16)).slice(-6), // public ip
+                ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')], // public key
+                "d2-" + (i + nodesAmount), // name)
+            {from: validator2});
+        }
 
-    //     await skipTimeToDate(web3, 15, 9); // October 15th
+        await skipTimeToDate(web3, 15, 9); // October 15th
 
-    //     await delegationController.requestUndelegation(0, {from: validator});
+        await delegationController.requestUndelegation(0, {from: validator});
 
-    //     await skipTimeToDate(web3, 28, 9); // October 28th
+        await skipTimeToDate(web3, 28, 9); // October 28th
 
-    //     // upgrade
-    //     const BountyV2: BountyV2Contract = artifacts.require("./BountyV2");
-    //     const bounty2Contract = await BountyV2.new();
-    //     await bounty2Contract.initialize(contractManager.address);
-    //     await contractManager.setContractsAddress("Bounty", bounty2Contract.address);
-    //     const third = Math.ceil(nodesAmount * 2 / 3);
-    //     let response = await nodesContract.populateBountyV2(0, third);
-    //     response.receipt.gasUsed.should.be.below(9e5);
-    //     response = await nodesContract.populateBountyV2(third, 2 * third);
-    //     response.receipt.gasUsed.should.be.below(9e5);
-    //     response = await nodesContract.populateBountyV2(2 * third, 3 * third);
-    //     response.receipt.gasUsed.should.be.below(9e5);
+        await constantsHolder.setMSR(ten18.muln(validator2Amount).toString());
 
-    //     await skipTimeToDate(web3, 29, 9); // October 29th
+        // upgrade
+        const BountyV2: BountyV2Contract = artifacts.require("./BountyV2");
+        const bounty2Contract = await BountyV2.new();
+        await bounty2Contract.initialize(contractManager.address);
+        await contractManager.setContractsAddress("Bounty", bounty2Contract.address);
+        let response = await bounty2Contract.populate();
+        response.receipt.gasUsed.should.be.below(12e6 / 25);
 
-    //     let bounty = 0;
-    //     for (let i = 0; i < nodesAmount; ++i) {
-    //         response = await skaleManagerContract.getBounty(i, {from: validator});
-    //         response.logs[0].event.should.be.equal("BountyReceived");
-    //         const _bounty = response.logs[0].args.bounty.div(ten18).toNumber();
-    //         if (bounty > 0) {
-    //             bounty.should.be.equal(_bounty);
-    //         } else {
-    //             bounty = _bounty;
-    //         }
-    //     }
+        await skipTimeToDate(web3, 29, 9); // October 29th
 
-    //     for (let i = 0; i < nodesAmount; ++i) {
-    //         response = await skaleManagerContract.getBounty(nodesAmount + i, {from: validator2});
-    //         response.logs[0].event.should.be.equal("BountyReceived");
-    //         const _bounty = response.logs[0].args.bounty.div(ten18).toNumber();
-    //         if (bounty > 0) {
-    //             bounty.should.be.equal(_bounty);
-    //         } else {
-    //             bounty = _bounty;
-    //         }
-    //     }
+        let bounty = 0;
+        for (let i = 0; i < nodesAmount; ++i) {
+            response = await skaleManagerContract.getBounty(i, {from: validator});
+            response.logs[0].event.should.be.equal("BountyReceived");
+            const _bounty = response.logs[0].args.bounty.div(ten18).toNumber();
+            if (bounty > 0) {
+                bounty.should.be.equal(_bounty);
+            } else {
+                bounty = _bounty;
+            }
+        }
 
-    //     bounty.should.be.almost(getBountyForEpoch(0) / (2 * nodesAmount));
+        let bounty2 = 0;
+        for (let i = 0; i < nodesAmount2; ++i) {
+            response = await skaleManagerContract.getBounty(nodesAmount + i, {from: validator2});
+            response.logs[0].event.should.be.equal("BountyReceived");
+            const _bounty = response.logs[0].args.bounty.div(ten18).toNumber();
+            if (i > 0) {
+                _bounty.should.be.equal(0);
+            } else {
+                bounty2 = _bounty;
+            }
+        }
 
-    //     await skipTimeToDate(web3, 29, 10); // November 29th
+        bounty.should.be.almost(getBountyForEpoch(0) / (2 * nodesAmount));
+        bounty2.should.be.almost(getBountyForEpoch(0) / 2);
 
-    //     bounty = 0;
-    //     for (let i = 0; i < nodesAmount; ++i) {
-    //         response = await skaleManagerContract.getBounty(i, {from: validator});
-    //         response.logs[0].event.should.be.equal("BountyReceived");
-    //         const _bounty = response.logs[0].args.bounty.div(ten18).toNumber();
-    //         if (bounty > 0) {
-    //             bounty.should.be.equal(_bounty);
-    //         } else {
-    //             bounty = _bounty;
-    //         }
-    //     }
+        await skipTimeToDate(web3, 29, 10); // November 29th
 
-    //     for (let i = 0; i < nodesAmount; ++i) {
-    //         response = await skaleManagerContract.getBounty(nodesAmount + i, {from: validator2});
-    //         response.logs[0].event.should.be.equal("BountyReceived");
-    //         const _bounty = response.logs[0].args.bounty.div(ten18).toNumber();
-    //         if (bounty > 0) {
-    //             bounty.should.be.equal(_bounty);
-    //         } else {
-    //             bounty = _bounty;
-    //         }
-    //     }
+        bounty = 0;
+        for (let i = 0; i < nodesAmount; ++i) {
+            response = await skaleManagerContract.getBounty(i, {from: validator});
+            response.logs[0].event.should.be.equal("BountyReceived");
+            const _bounty = response.logs[0].args.bounty.div(ten18).toNumber();
+            if (bounty > 0) {
+                bounty.should.be.equal(_bounty);
+            } else {
+                bounty = _bounty;
+            }
+        }
 
-    //     bounty.should.be.almost(getBountyForEpoch(1) / (2 * nodesAmount));
+        bounty2 = 0;
+        for (let i = 0; i < nodesAmount2; ++i) {
+            response = await skaleManagerContract.getBounty(nodesAmount + i, {from: validator2});
+            response.logs[0].event.should.be.equal("BountyReceived");
+            const _bounty = response.logs[0].args.bounty.div(ten18).toNumber();
+            if (i > 0) {
+                _bounty.should.be.equal(0);
+            } else {
+                bounty2 = _bounty;
+            }
+        }
 
-    //     await skipTimeToDate(web3, 29, 11); // December 29th
+        bounty.should.be.almost(getBountyForEpoch(1) / (2 * nodesAmount));
+        bounty2.should.be.almost(getBountyForEpoch(1) / 2);
 
-    //     for (let i = 0; i < nodesAmount; ++i) {
-    //         response = await skaleManagerContract.getBounty(i, {from: validator});
-    //         response.logs[0].event.should.be.equal("BountyReceived");
-    //         const _bounty = response.logs[0].args.bounty.div(ten18).toNumber();
-    //         _bounty.should.be.equal(0);
-    //     }
+        await skipTimeToDate(web3, 29, 11); // December 29th
 
-    //     bounty = 0;
-    //     for (let i = 0; i < nodesAmount; ++i) {
-    //         response = await skaleManagerContract.getBounty(nodesAmount + i, {from: validator2});
-    //         response.logs[0].event.should.be.equal("BountyReceived");
-    //         const _bounty = response.logs[0].args.bounty.div(ten18).toNumber();
-    //         if (bounty > 0) {
-    //             bounty.should.be.equal(_bounty);
-    //         } else {
-    //             bounty = _bounty;
-    //         }
-    //     }
+        for (let i = 0; i < nodesAmount; ++i) {
+            response = await skaleManagerContract.getBounty(i, {from: validator});
+            response.logs[0].event.should.be.equal("BountyReceived");
+            const _bounty = response.logs[0].args.bounty.div(ten18).toNumber();
+            _bounty.should.be.equal(0);
+        }
 
-    //     bounty.should.be.almost(getBountyForEpoch(2) / nodesAmount);
-    // });
+        bounty2 = 0;
+        for (let i = 0; i < nodesAmount; ++i) {
+            response = await skaleManagerContract.getBounty(nodesAmount + i, {from: validator2});
+            response.logs[0].event.should.be.equal("BountyReceived");
+            const _bounty = response.logs[0].args.bounty.div(ten18).toNumber();
+            if (i > 0) {
+                _bounty.should.be.equal(0);
+            } else {
+                bounty2 = _bounty;
+            }
+        }
+
+        bounty2.should.be.almost(getBountyForEpoch(2));
+    });
 
     describe("when validator is registered and has active delegations", async () => {
         let skaleToken: SkaleTokenInstance;
