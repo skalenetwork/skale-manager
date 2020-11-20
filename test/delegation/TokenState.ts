@@ -8,16 +8,17 @@ import { deployContractManager } from "../tools/deploy/contractManager";
 import { currentTime, skipTime } from "../tools/time";
 
 import * as chai from "chai";
-import * as chaiAsPromised from "chai-as-promised";
+import chaiAsPromised from "chai-as-promised";
 import { deployDelegationController } from "../tools/deploy/delegation/delegationController";
 import { deployTokenState } from "../tools/deploy/delegation/tokenState";
 import { deployValidatorService } from "../tools/deploy/delegation/validatorService";
 import { deploySkaleToken } from "../tools/deploy/skaleToken";
 import { State } from "../tools/types";
+import { deploySkaleManagerMock } from "../tools/deploy/test/skaleManagerMock";
 chai.should();
 chai.use(chaiAsPromised);
 
-contract("DelegationController", ([owner, holder, validator]) => {
+contract("DelegationController (token state)", ([owner, holder, validator]) => {
     let contractManager: ContractManagerInstance;
     let delegationController: DelegationControllerInstance;
     let tokenState: TokenStateInstance;
@@ -33,6 +34,9 @@ contract("DelegationController", ([owner, holder, validator]) => {
         tokenState = await deployTokenState(contractManager);
         validatorService = await deployValidatorService(contractManager);
         skaleToken = await deploySkaleToken(contractManager);
+
+        const skaleManagerMock = await deploySkaleManagerMock(contractManager);
+        await contractManager.setContractsAddress("SkaleManager", skaleManagerMock.address);
 
         await validatorService.registerValidator("Validator", "D2 is even", 150, 0, {from: validator});
         validatorId = 1;
@@ -52,7 +56,7 @@ contract("DelegationController", ([owner, holder, validator]) => {
 
     describe("when delegation request is sent", async () => {
         const amount = 100;
-        const period = 3;
+        const period = 2;
         const delegationId = 0;
         beforeEach(async () => {
             await delegationController.delegate(validatorId, amount, period, "INFO", {from: holder});

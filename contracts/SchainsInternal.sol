@@ -44,6 +44,11 @@ contract SchainsInternal is Permissions {
         uint64 index;
     }
 
+    struct SchainType {
+        uint8 partOfNode;
+        uint numberOfNodes;
+    }
+
 
     // mapping which contain all schains
     mapping (bytes32 => Schain) public schains;
@@ -71,6 +76,9 @@ contract SchainsInternal is Permissions {
     uint public sumOfSchainsResources;
 
     mapping (bytes32 => bool) public usedSchainNames;
+
+    mapping (uint => SchainType) public schainTypes;
+    uint public numberOfSchainTypes;
 
     /**
      * @dev Allows Schain contract to initialize an schain.
@@ -195,6 +203,9 @@ contract SchainsInternal is Permissions {
         removeSchainForNode(nodeIndex, schainId);
     }
 
+    /**
+     * @dev Allows Schains contract to remove node from exceptions
+     */
     function removeNodeFromExceptions(bytes32 schainHash, uint nodeIndex) external allow("Schains") {
         _exceptionsForGroups[schainHash][nodeIndex] = false;
     }
@@ -245,8 +256,35 @@ contract SchainsInternal is Permissions {
         }
     }
 
+    /**
+     * @dev Allows Schains contract to remove holes for schains
+     */
     function removeHolesForSchain(bytes32 schainHash) external allow("Schains") {
         delete holesForSchains[schainHash];
+    }
+
+    /**
+     * @dev Allows Admin to add schain type
+     */
+    function addSchainType(uint8 partOfNode, uint numberOfNodes) external onlyAdmin {
+        schainTypes[numberOfSchainTypes + 1].partOfNode = partOfNode;
+        schainTypes[numberOfSchainTypes + 1].numberOfNodes = numberOfNodes;
+        numberOfSchainTypes++;
+    }
+
+    /**
+     * @dev Allows Admin to remove schain type
+     */
+    function removeSchainType(uint typeOfSchain) external onlyAdmin {
+        delete schainTypes[typeOfSchain].partOfNode;
+        delete schainTypes[typeOfSchain].numberOfNodes;
+    }
+
+    /**
+     * @dev Allows Admin to set number of schain types
+     */
+    function setNumberOfSchainTypes(uint newNumberOfSchainTypes) external onlyAdmin {
+        numberOfSchainTypes = newNumberOfSchainTypes;
     }
 
     /**
@@ -297,7 +335,9 @@ contract SchainsInternal is Permissions {
      */
     function isSchainNameAvailable(string calldata name) external view returns (bool) {
         bytes32 schainId = keccak256(abi.encodePacked(name));
-        return schains[schainId].owner == address(0) && !usedSchainNames[schainId];
+        return schains[schainId].owner == address(0) &&
+            !usedSchainNames[schainId] &&
+            keccak256(abi.encodePacked(name)) != keccak256(abi.encodePacked("Mainnet"));
     }
 
     /**
@@ -375,6 +415,19 @@ contract SchainsInternal is Permissions {
     }
 
     /**
+     * @dev Checks whether sender is a node address from a given schain group.
+     */
+    function isNodeAddressesInGroup(bytes32 schainId, address sender) external view returns (bool) {
+        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
+        for (uint i = 0; i < schainsGroups[schainId].length; i++) {
+            if (nodes.getNodeAddress(schainsGroups[schainId][i]) == sender) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
      * @dev Returns node index in schain group.
      */
     function getNodeIndexInGroup(bytes32 schainId, uint nodeId) external view returns (uint) {
@@ -423,6 +476,7 @@ contract SchainsInternal is Permissions {
 
         numberOfSchains = 0;
         sumOfSchainsResources = 0;
+        numberOfSchainTypes = 5;
     }
 
     /**

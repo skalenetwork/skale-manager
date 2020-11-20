@@ -78,7 +78,7 @@ contract ReentrancyTester is Permissions, IERC777Recipient, IERC777Sender {
             delegationController.delegate(
                 1,
                 _amount,
-                3,
+                2,
                 "D2 is even");
         }
     }
