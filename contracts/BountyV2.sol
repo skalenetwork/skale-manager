@@ -36,6 +36,11 @@ import "./Permissions.sol";
 contract BountyV2 is Permissions {
     using PartialDifferences for PartialDifferences.Value;
     using PartialDifferences for PartialDifferences.Sequence;
+
+    struct BountyHistory {
+        uint month;
+        uint bountyPaid;
+    }
     
     uint public constant YEAR1_BOUNTY = 3850e5 * 1e18;
     uint public constant YEAR2_BOUNTY = 3465e5 * 1e18;
@@ -56,6 +61,9 @@ contract BountyV2 is Permissions {
     PartialDifferences.Value private _effectiveDelegatedSum;
     // validatorId   amount of nodes
     mapping (uint => uint) public nodesByValidator; // deprecated
+
+    // validatorId => BountyHistory
+    mapping (uint => BountyHistory) private _bountyHistory;
 
     function calculateBounty(uint nodeIndex)
         external
@@ -154,7 +162,8 @@ contract BountyV2 is Permissions {
         uint[] memory validators = validatorService.getTrustedValidators();
         for (uint i = 0; i < validators.length; ++i) {
             uint validatorId = validators[i];
-            uint currentEffectiveDelegated = delegationController.getAndUpdateEffectiveDelegatedToValidator(validatorId, currentMonth);
+            uint currentEffectiveDelegated =
+                delegationController.getAndUpdateEffectiveDelegatedToValidator(validatorId, currentMonth);
             uint[] memory effectiveDelegated = delegationController.getEffectiveDelegatedValuesByValidator(validatorId);
             if (effectiveDelegated.length > 0) {
                 assert(currentEffectiveDelegated == effectiveDelegated[0]);
@@ -251,35 +260,42 @@ contract BountyV2 is Permissions {
         if (nodesByValidator[validatorId] > 0) {
             delete nodesByValidator[validatorId];
         }
+        _updateBountyHistory(validatorId);
         uint effectiveDelegated = delegationController
-            .getAndUpdateEffectiveDelegatedToValidator(
-                validatorId,
-                currentMonth
-            );
+            .getAndUpdateEffectiveDelegatedToValidator(validatorId, currentMonth);
 
-        return _calculateBountyShare(
+        uint bounty = _calculateBountyShare(
             epochPoolSize.add(_bountyWasPaidInCurrentEpoch),
             effectiveDelegated,
             effectiveDelegatedSum,
-            delegationController.getAndUpdateDelegatedToValidatorNow(validatorId).div(constantsHolder.msr())
+            delegationController.getAndUpdateDelegatedToValidatorNow(validatorId).div(constantsHolder.msr()),
+            _bountyHistory[validatorId].bountyPaid
         );
+
+        _bountyHistory[validatorId].bountyPaid = _bountyHistory[validatorId].bountyPaid.add(bounty);
+
+        return bounty;
     }
 
     function _calculateBountyShare(
         uint monthBounty,
         uint effectiveDelegated,
         uint effectiveDelegatedSum,
-        uint maxNodesAmount
+        uint maxNodesAmount,
+        uint paidToValidator
     )
         private
         pure
         returns (uint)
     {
         if (maxNodesAmount > 0) {
-            return monthBounty
+            uint totalBountyShare = monthBounty
                 .mul(effectiveDelegated)
-                .div(effectiveDelegatedSum)
-                .div(maxNodesAmount);
+                .div(effectiveDelegatedSum);
+            return _min(
+                totalBountyShare.div(maxNodesAmount),
+                totalBountyShare.sub(paidToValidator)
+            );
         } else {
             return 0;
         }
@@ -366,6 +382,13 @@ contract BountyV2 is Permissions {
 
         if (!nodes.checkPossibilityToMaintainNode(nodes.getValidatorId(nodeIndex), nodeIndex)) {
             reducedBounty = reducedBounty.div(constants.MSR_REDUCING_COEFFICIENT());
+        }
+    }
+
+    function _updateBountyHistory(uint validatorId) private {
+        if (_bountyHistory[validatorId].month < currentMonth) {
+            _bountyHistory[validatorId].month = currentMonth;
+            delete _bountyHistory[validatorId].bountyPaid;
         }
     }
 
