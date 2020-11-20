@@ -251,6 +251,207 @@ contract("Bounty", ([owner, admin, hacker, validator, validator2]) => {
         bounty2.should.be.almost(getBountyForEpoch(2));
     });
 
+    it("should allow to populate BountyV2 contract with data after upgrade when there is a big amount of validators", async () => {
+        const skaleToken = await deploySkaleToken(contractManager);
+        const delegationController = await deployDelegationController(contractManager);
+        const validatorService = await deployValidatorService(contractManager);
+        const delegationPeriodManager = await deployDelegationPeriodManager(contractManager);
+        await deployMonitors(contractManager);
+        await deployDistributor(contractManager);
+        const Nodes: NodesContract = artifacts.require("./Nodes");
+        const nodesContract = await Nodes.new();
+        await nodesContract.initialize(contractManager.address);
+        await contractManager.setContractsAddress("Nodes", nodesContract.address);
+        const SkaleManager: SkaleManagerContract = artifacts.require("./SkaleManager");
+        const skaleManagerContract = await SkaleManager.new();
+        await skaleManagerContract.initialize(contractManager.address);
+        await contractManager.setContractsAddress("SkaleManager", skaleManagerContract.address);
+
+        await skipTimeToDate(web3, 25, 8); // Sep 25th
+
+        const validatorsAmount = 50;
+        const validators = [];
+        for (let i = 0; i < validatorsAmount; ++i) {
+            validators.push(web3.eth.accounts.create());
+        }
+
+        const etherAmount = 5 * 1e18;
+        const delegationAmount = ten18.muln(1e6);
+
+        const web3DelegationController = new web3.eth.Contract(
+            artifacts.require("./DelegationController").abi,
+            delegationController.address);
+        const web3ValidatorService = new web3.eth.Contract(
+                artifacts.require("./ValidatorService").abi,
+                validatorService.address);
+
+        let delegationId = 0;
+        let validatorId = 1;
+        for (const validatorAccount of validators) {
+            await web3.eth.sendTransaction({from: owner, to: validatorAccount.address, value: etherAmount});
+            await skaleToken.mint(validatorAccount.address, delegationAmount.muln(10).toString(), "0x", "0x");
+
+            // register the validator
+            let callData = web3ValidatorService.methods.registerValidator(
+                "Validator", "", 150, 1e6 + 1).encodeABI();
+            let tx = {
+                data: callData,
+                from: validatorAccount.address,
+                gas: 1e6,
+                to: validatorService.address,
+            };
+            let signedTx = await validatorAccount.signTransaction(tx);
+            await web3.eth.sendSignedTransaction(signedTx.rawTransaction);
+
+            // enable the validator
+            await validatorService.enableValidator(validatorId);
+
+            // delegate to the validator
+            callData = web3DelegationController.methods.delegate(
+                validatorId, delegationAmount.toString(), 2, "D2 is even").encodeABI();
+            tx = {
+                data: callData,
+                from: validatorAccount.address,
+                gas: 1e6,
+                to: delegationController.address,
+            };
+            signedTx = await validatorAccount.signTransaction(tx);
+            await web3.eth.sendSignedTransaction(signedTx.rawTransaction);
+
+            // accept the delegation request
+            callData = web3DelegationController.methods.acceptPendingDelegation(
+                delegationId).encodeABI();
+            tx = {
+                data: callData,
+                from: validatorAccount.address,
+                gas: 1e6,
+                to: delegationController.address,
+            };
+            signedTx = await validatorAccount.signTransaction(tx);
+            await web3.eth.sendSignedTransaction(signedTx.rawTransaction);
+
+            ++delegationId;
+            ++validatorId;
+        }
+
+        await skipTimeToDate(web3, 1, 9); // October 1st
+        await constantsHolder.setLaunchTimestamp(await currentTime(web3));
+
+        let undelegatedId = 0;
+        validatorId = 1;
+        for (const validatorAccount of validators) {
+            // delegate to the validator
+            let callData = web3DelegationController.methods.delegate(
+                validatorId, delegationAmount.toString(), 2, "D2 is even").encodeABI();
+            let tx = {
+                data: callData,
+                from: validatorAccount.address,
+                gas: 1e6,
+                to: delegationController.address,
+            };
+            let signedTx = await validatorAccount.signTransaction(tx);
+            await web3.eth.sendSignedTransaction(signedTx.rawTransaction);
+
+            // accept the delegation request
+            callData = web3DelegationController.methods.acceptPendingDelegation(
+                delegationId).encodeABI();
+            tx = {
+                data: callData,
+                from: validatorAccount.address,
+                gas: 1e6,
+                to: delegationController.address,
+            };
+            signedTx = await validatorAccount.signTransaction(tx);
+            await web3.eth.sendSignedTransaction(signedTx.rawTransaction);
+
+            // request undelegation
+            callData = web3DelegationController.methods.requestUndelegation(
+                undelegatedId).encodeABI();
+            tx = {
+                data: callData,
+                from: validatorAccount.address,
+                gas: 1e6,
+                to: delegationController.address,
+            };
+            signedTx = await validatorAccount.signTransaction(tx);
+            await web3.eth.sendSignedTransaction(signedTx.rawTransaction);
+
+            ++delegationId;
+            ++validatorId;
+            ++undelegatedId;
+        }
+
+        await skipTimeToDate(web3, 25, 10); // November 25th
+
+        validatorId = 1;
+        for (const validatorAccount of validators) {
+            // delegate to the validator
+            let callData = web3DelegationController.methods.delegate(
+                validatorId, delegationAmount.toString(), 2, "D2 is even").encodeABI();
+            let tx = {
+                data: callData,
+                from: validatorAccount.address,
+                gas: 1e6,
+                to: delegationController.address,
+            };
+            let signedTx = await validatorAccount.signTransaction(tx);
+            await web3.eth.sendSignedTransaction(signedTx.rawTransaction);
+
+            // accept the delegation request
+            callData = web3DelegationController.methods.acceptPendingDelegation(
+                delegationId).encodeABI();
+            tx = {
+                data: callData,
+                from: validatorAccount.address,
+                gas: 1e6,
+                to: delegationController.address,
+            };
+            signedTx = await validatorAccount.signTransaction(tx);
+            await web3.eth.sendSignedTransaction(signedTx.rawTransaction);
+
+            // request undelegation
+            callData = web3DelegationController.methods.requestUndelegation(
+                undelegatedId).encodeABI();
+            tx = {
+                data: callData,
+                from: validatorAccount.address,
+                gas: 1e6,
+                to: delegationController.address,
+            };
+            signedTx = await validatorAccount.signTransaction(tx);
+            await web3.eth.sendSignedTransaction(signedTx.rawTransaction);
+
+            ++delegationId;
+            ++validatorId;
+            ++undelegatedId;
+        }
+
+        // upgrade
+        const BountyV2: BountyV2Contract = artifacts.require("./BountyV2");
+        const bounty2Contract = await BountyV2.new();
+        await bounty2Contract.initialize(contractManager.address);
+        await contractManager.setContractsAddress("Bounty", bounty2Contract.address);
+        const response = await bounty2Contract.populate();
+        response.receipt.gasUsed.should.be.below(5e6);
+
+        // return ETH
+        for (const validatorAccount of validators) {
+            const balance = Number.parseInt(await web3.eth.getBalance(validatorAccount.address), 10);
+            const gas = 21 * 1e3;
+            const gasPrice = 20 * 1e9;
+            const sendTx = {
+                from: validatorAccount.address,
+                gas,
+                gasPrice,
+                to: owner,
+                value: balance - gas * gasPrice,
+            };
+            const signedSendTx = await validatorAccount.signTransaction(sendTx);
+            await web3.eth.sendSignedTransaction(signedSendTx.rawTransaction);
+            await web3.eth.getBalance(validatorAccount.address).should.be.eventually.equal("0");
+        }
+    });
+
     describe("when validator is registered and has active delegations", async () => {
         let skaleToken: SkaleTokenInstance;
         let delegationController: DelegationControllerInstance;

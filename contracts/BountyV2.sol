@@ -137,7 +137,6 @@ contract BountyV2 is Permissions {
     }
 
     function populate() external onlyOwner {
-        console.log("Populate");
         ValidatorService validatorService = ValidatorService(contractManager.getValidatorService());
         DelegationController delegationController = DelegationController(
             contractManager.getContract("DelegationController")
