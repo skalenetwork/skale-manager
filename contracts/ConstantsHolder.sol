@@ -38,8 +38,8 @@ contract ConstantsHolder is Permissions {
     // part of Node for Small Skale-chain (1/128 of Node)
     uint8 public constant SMALL_DIVISOR = 128;
 
-    // part of Node for Medium Skale-chain (1/8 of Node)
-    uint8 public constant MEDIUM_DIVISOR = 8;
+    // part of Node for Medium Skale-chain (1/32 of Node)
+    uint8 public constant MEDIUM_DIVISOR = 32;
 
     // part of Node for Large Skale-chain (full Node)
     uint8 public constant LARGE_DIVISOR = 1;
