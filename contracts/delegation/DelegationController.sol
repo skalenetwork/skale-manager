@@ -509,6 +509,14 @@ contract DelegationController is Permissions, ILocker {
         return _effectiveDelegatedToValidator[validatorId].getValuesInSequence();
     }
 
+    function getEffectiveDelegatedToValidator(uint validatorId, uint month) external view returns (uint) {
+        return _effectiveDelegatedToValidator[validatorId].getValueInSequence(month);
+    }
+
+    function getDelegatedToValidator(uint validatorId, uint month) external view returns (uint) {
+        return _delegatedToValidator[validatorId].getValue(month);
+    }
+
     /**
      * @dev Return Delegation struct.
      */

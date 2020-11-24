@@ -73,23 +73,36 @@ contract BountyV2 is Permissions {
         ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));
         TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
+        DelegationController delegationController = DelegationController(
+            contractManager.getContract("DelegationController")
+        );
         
         require(
             _getNextRewardTimestamp(nodeIndex, nodes, timeHelpers) <= now,
             "Transaction is sent too early"
         );
 
+        uint validatorId = nodes.getValidatorId(nodeIndex);
+        if (nodesByValidator[validatorId] > 0) {
+            delete nodesByValidator[validatorId];
+        }
+
         uint currentMonth = timeHelpers.getCurrentMonth();
         _refillEpochPool(currentMonth, timeHelpers, constantsHolder);
+        _prepareBountyHistory(validatorId, currentMonth);
 
         uint bounty = _calculateMaximumBountyAmount(
             _epochPool,
-            currentMonth,
+            _effectiveDelegatedSum.getAndUpdateValue(currentMonth),
+            _bountyWasPaidInCurrentEpoch,
             nodeIndex,
+            _bountyHistory[validatorId].bountyPaid,
+            delegationController.getAndUpdateEffectiveDelegatedToValidator(validatorId, currentMonth),
+            delegationController.getAndUpdateDelegatedToValidatorNow(validatorId),
             constantsHolder,
-            nodes,
-            DelegationController(contractManager.getContract("DelegationController"))
+            nodes
         );
+        _bountyHistory[validatorId].bountyPaid = _bountyHistory[validatorId].bountyPaid.add(bounty);
 
         bounty = _reduceBounty(
             bounty,
@@ -182,23 +195,31 @@ contract BountyV2 is Permissions {
         }
     }
 
-    function estimateBounty(uint /* nodeIndex */) external pure returns (uint) {
-        revert("Not implemented");
-        // ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
-        // Nodes nodes = Nodes(contractManager.getContract("Nodes"));
-        // TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
+    function estimateBounty(uint nodeIndex) external view returns (uint) {
+        ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
+        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
+        TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
+        DelegationController delegationController = DelegationController(
+            contractManager.getContract("DelegationController")
+        );
 
-        // uint stagePoolSize;
-        // uint nextStage;
-        // (stagePoolSize, nextStage) = _getEpochPool(timeHelpers.getCurrentMonth(), timeHelpers, constantsHolder);
+        uint currentMonth = timeHelpers.getCurrentMonth();
+        uint validatorId = nodes.getValidatorId(nodeIndex);
 
-        // return _calculateMaximumBountyAmount(
-        //     stagePoolSize,
-        //     nextStage.sub(1),
-        //     nodeIndex,
-        //     constantsHolder,
-        //     nodes
-        // );
+        uint stagePoolSize;
+        (stagePoolSize, ) = _getEpochPool(currentMonth, timeHelpers, constantsHolder);
+
+        return _calculateMaximumBountyAmount(
+            stagePoolSize,
+            _effectiveDelegatedSum.getValue(currentMonth),
+            _nextEpoch == currentMonth.add(1) ? _bountyWasPaidInCurrentEpoch : 0,
+            nodeIndex,
+            _getBountyPaid(validatorId, currentMonth),
+            delegationController.getEffectiveDelegatedToValidator(validatorId, currentMonth),
+            delegationController.getDelegatedToValidator(validatorId, currentMonth),
+            constantsHolder,
+            nodes
+        );
     }
 
     function getNextRewardTimestamp(uint nodeIndex) external view returns (uint) {
@@ -226,13 +247,17 @@ contract BountyV2 is Permissions {
 
     function _calculateMaximumBountyAmount(
         uint epochPoolSize,
-        uint currentMonth,
+        uint effectiveDelegatedSum,
+        uint bountyWasPaidInCurrentEpoch,
         uint nodeIndex,
+        uint bountyPaidToTheValidator,
+        uint effectiveDelegated,
+        uint delegated,
         ConstantsHolder constantsHolder,
-        Nodes nodes,
-        DelegationController delegationController
+        Nodes nodes
     )
         private
+        view
         returns (uint)
     {
         if (nodes.isNodeLeft(nodeIndex)) {
@@ -244,8 +269,7 @@ contract BountyV2 is Permissions {
             // bounty is turned off
             return 0;
         }
-
-        uint effectiveDelegatedSum = _effectiveDelegatedSum.getAndUpdateValue(currentMonth);
+        
         if (effectiveDelegatedSum == 0) {
             // no delegations in the system
             return 0;
@@ -254,24 +278,14 @@ contract BountyV2 is Permissions {
         if (constantsHolder.msr() == 0) {
             return 0;
         }
-        
-        uint validatorId = nodes.getValidatorId(nodeIndex);
-        if (nodesByValidator[validatorId] > 0) {
-            delete nodesByValidator[validatorId];
-        }
-        _updateBountyHistory(validatorId, currentMonth);
-        uint effectiveDelegated = delegationController
-            .getAndUpdateEffectiveDelegatedToValidator(validatorId, currentMonth);
 
         uint bounty = _calculateBountyShare(
-            epochPoolSize.add(_bountyWasPaidInCurrentEpoch),
+            epochPoolSize.add(bountyWasPaidInCurrentEpoch),
             effectiveDelegated,
             effectiveDelegatedSum,
-            delegationController.getAndUpdateDelegatedToValidatorNow(validatorId).div(constantsHolder.msr()),
-            _bountyHistory[validatorId].bountyPaid
+            delegated.div(constantsHolder.msr()),
+            bountyPaidToTheValidator
         );
-
-        _bountyHistory[validatorId].bountyPaid = _bountyHistory[validatorId].bountyPaid.add(bounty);
 
         return bounty;
     }
@@ -384,10 +398,19 @@ contract BountyV2 is Permissions {
         }
     }
 
-    function _updateBountyHistory(uint validatorId, uint currentMonth) private {
+    function _prepareBountyHistory(uint validatorId, uint currentMonth) private {
         if (_bountyHistory[validatorId].month < currentMonth) {
             _bountyHistory[validatorId].month = currentMonth;
             delete _bountyHistory[validatorId].bountyPaid;
+        }
+    }
+
+    function _getBountyPaid(uint validatorId, uint month) private view returns (uint) {
+        require(_bountyHistory[validatorId].month <= month, "Can't get bounty paid");
+        if (_bountyHistory[validatorId].month == month) {
+            return _bountyHistory[validatorId].bountyPaid;
+        } else {
+            return 0;
         }
     }
 

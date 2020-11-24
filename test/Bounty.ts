@@ -473,7 +473,9 @@ contract("Bounty", ([owner, admin, hacker, validator, validator2]) => {
         });
 
         async function calculateBounty(nodeId: number) {
+            const estimate = web3.utils.toBN(await bountyContract.estimateBounty(nodeId)).div(ten18).toNumber();
             const bounty = web3.utils.toBN((await bountyContract.calculateBounty.call(nodeId))).div(ten18).toNumber();
+            bounty.should.be.almost(estimate);
             await bountyContract.calculateBounty(nodeId);
             await nodes.changeNodeLastRewardDate(nodeId);
             return bounty;
