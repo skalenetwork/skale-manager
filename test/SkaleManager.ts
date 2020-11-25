@@ -221,48 +221,48 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                 expect(balanceAfter.sub(balanceBefore).eq(web3.utils.toBN("0"))).to.be.true;
             });
 
-            // TODO: IMPORTANT! Enable after the formula update
-            // it("should pay bounty according to the schedule", async () => {
-            //     const timeHelpers = await deployTimeHelpers(contractManager);
+            it("should pay bounty according to the schedule", async () => {
+                const timeHelpers = await deployTimeHelpers(contractManager);
 
-            //     await bountyContract.disableBountyReduction();
+                await bountyContract.disableBountyReduction();
+                await constantsHolder.setMSR(delegatedAmount);
 
-            //     const timelimit = 300 * 1000;
-            //     const start = Date.now();
-            //     const launch = (await constantsHolder.launchTimestamp()).toNumber();
-            //     const launchMonth = (await timeHelpers.timestampToMonth(launch)).toNumber();
-            //     const ten18 = web3.utils.toBN(10).pow(web3.utils.toBN(18));
+                const timelimit = 300 * 1000;
+                const start = Date.now();
+                const launch = (await constantsHolder.launchTimestamp()).toNumber();
+                const launchMonth = (await timeHelpers.timestampToMonth(launch)).toNumber();
+                const ten18 = web3.utils.toBN(10).pow(web3.utils.toBN(18));
 
-            //     const schedule = [
-            //         385000000,
-            //         346500000,
-            //         308000000,
-            //         269500000,
-            //         231000000,
-            //         192500000
-            //     ]
-            //     for (let bounty = schedule[schedule.length - 1] / 2; bounty > 1; bounty /= 2) {
-            //         for (let i = 0; i < 3; ++i) {
-            //             schedule.push(bounty);
-            //         }
-            //     }
+                const schedule = [
+                    385000000,
+                    346500000,
+                    308000000,
+                    269500000,
+                    231000000,
+                    192500000
+                ]
+                for (let bounty = schedule[schedule.length - 1] / 2; bounty > 1; bounty /= 2) {
+                    for (let i = 0; i < 3; ++i) {
+                        schedule.push(bounty);
+                    }
+                }
 
-            //     let mustBePaid = web3.utils.toBN(0);
-            //     skipTime(web3, month);
-            //     for (let year = 0; year < schedule.length && (Date.now() - start) < 0.9 * timelimit; ++year) {
-            //         for (let monthIndex = 0; monthIndex < 12; ++monthIndex) {
-            //             const monthEnd = (await timeHelpers.monthToTimestamp(launchMonth + 12 * year + monthIndex + 1)).toNumber();
-            //             if (await currentTime(web3) < monthEnd) {
-            //                 skipTime(web3, monthEnd - await currentTime(web3) - day);
-            //                 await skaleManager.getBounty(0, {from: nodeAddress});
-            //             }
-            //         }
-            //         const bountyWasPaid = web3.utils.toBN(await skaleToken.balanceOf(distributor.address));
-            //         mustBePaid = mustBePaid.add(web3.utils.toBN(Math.floor(schedule[year])));
+                let mustBePaid = web3.utils.toBN(0);
+                skipTime(web3, month);
+                for (let year = 0; year < schedule.length && (Date.now() - start) < 0.9 * timelimit; ++year) {
+                    for (let monthIndex = 0; monthIndex < 12; ++monthIndex) {
+                        const monthEnd = (await timeHelpers.monthToTimestamp(launchMonth + 12 * year + monthIndex + 1)).toNumber();
+                        if (await currentTime(web3) < monthEnd) {
+                            skipTime(web3, monthEnd - await currentTime(web3) - day);
+                            await skaleManager.getBounty(0, {from: nodeAddress});
+                        }
+                    }
+                    const bountyWasPaid = web3.utils.toBN(await skaleToken.balanceOf(distributor.address));
+                    mustBePaid = mustBePaid.add(web3.utils.toBN(Math.floor(schedule[year])));
 
-            //         bountyWasPaid.div(ten18).sub(mustBePaid).abs().toNumber().should.be.lessThan(35); // 35 because of rounding errors in JS
-            //     }
-            // });
+                    bountyWasPaid.div(ten18).sub(mustBePaid).abs().toNumber().should.be.lessThan(35); // 35 because of rounding errors in JS
+                }
+            });
         });
 
         describe("when two nodes are created", async () => {
