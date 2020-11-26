@@ -156,6 +156,8 @@ contract BountyV2 is Permissions {
         );
         TimeHelpers timeHelpers = TimeHelpers(contractManager.getTimeHelpers());
 
+        uint currentMonth = timeHelpers.getCurrentMonth();
+
         // clean existing data
         for (
             uint i = _effectiveDelegatedSum.firstUnprocessedMonth;
@@ -167,10 +169,9 @@ contract BountyV2 is Permissions {
             delete _effectiveDelegatedSum.subtractDiff[i];
         }
         delete _effectiveDelegatedSum.value;
-        delete _effectiveDelegatedSum.firstUnprocessedMonth;
         delete _effectiveDelegatedSum.lastChangedMonth;
-
-        uint currentMonth = timeHelpers.getCurrentMonth();
+        _effectiveDelegatedSum.firstUnprocessedMonth = currentMonth;
+        
         uint[] memory validators = validatorService.getTrustedValidators();
         for (uint i = 0; i < validators.length; ++i) {
             uint validatorId = validators[i];
