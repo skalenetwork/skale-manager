@@ -67,9 +67,6 @@ contract SchainsInternal is Permissions {
 
     mapping (bytes32 => uint[]) public holesForSchains;
 
-    mapping (bytes32 => mapping (uint => uint)) public placeOfSchainOnNode;
-
-
     // array which contain all schains
     bytes32[] public schainsAtSystem;
 
@@ -81,6 +78,8 @@ contract SchainsInternal is Permissions {
 
     mapping (uint => SchainType) public schainTypes;
     uint public numberOfSchainTypes;
+
+    mapping (bytes32 => mapping (uint => uint)) public placeOfSchainOnNode;
 
     /**
      * @dev Allows Schain contract to initialize an schain.
