@@ -1,4 +1,5 @@
 import { ContractManagerInstance, DelegationControllerInstance } from "../../../../types/truffle-contracts";
+import { deployBounty } from "../bounty";
 import { deployFunctionFactory } from "../factory";
 import { deploySkaleToken } from "../skaleToken";
 import { deployDelegationPeriodManager } from "./delegationPeriodManager";
@@ -14,6 +15,7 @@ const deployDelegationController: (contractManager: ContractManagerInstance) => 
                                 await deployDelegationPeriodManager(contractManager);
                                 await deployTokenLaunchLocker(contractManager);
                                 await deploySkaleToken(contractManager);
+                                await deployBounty(contractManager);
                             });
 
 export { deployDelegationController };

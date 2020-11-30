@@ -24,7 +24,7 @@ pragma experimental ABIEncoderV2;
 import "./Decryption.sol";
 import "./Permissions.sol";
 import "./SchainsInternal.sol";
-import "./ECDH.sol";
+import "./thirdparty/ECDH.sol";
 import "./utils/Precompiled.sol";
 import "./utils/FieldOperations.sol";
 

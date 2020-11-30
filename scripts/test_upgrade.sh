@@ -14,9 +14,10 @@ yarn install
 npx oz push --network test --force || exit $?
 NODE_OPTIONS="--max-old-space-size=4096" PRODUCTION=true npx truffle migrate --network test || exit $?
 rm $TRAVIS_BUILD_DIR/.openzeppelin/dev-*.json
-cp .openzeppelin/dev-*.json $TRAVIS_BUILD_DIR/.openzeppelin
+cp .openzeppelin/dev-*.json $TRAVIS_BUILD_DIR/.openzeppelin || exit $?
 cd $TRAVIS_BUILD_DIR
 
+npx oz push --network test
 npx oz upgrade --network test --all || exit $?
 
 kill $GANACHE_PID

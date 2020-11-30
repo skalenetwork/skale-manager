@@ -31,14 +31,8 @@ export function skipTime(web3: Web3, seconds: number) {
 export async function skipTimeToDate(web3: Web3, day: number, monthIndex: number) {
     const timestamp = await currentTime(web3);
     const now = new Date(timestamp * 1000);
-    const targetTime = new Date(now);
-    if (monthIndex !== undefined) {
-        targetTime.setMonth(monthIndex);
-    }
-    if (day !== undefined) {
-        targetTime.setDate(day);
-    }
-    if (targetTime < now) {
+    const targetTime = new Date(Date.UTC(now.getFullYear(), monthIndex, day));
+    while (targetTime < now) {
         targetTime.setFullYear(now.getFullYear() + 1);
     }
     const diffInSeconds = Math.round(targetTime.getTime() / 1000) - timestamp;

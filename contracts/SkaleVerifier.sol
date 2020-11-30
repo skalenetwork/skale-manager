@@ -106,6 +106,9 @@ contract SkaleVerifier is Permissions {
         pure
         returns (bool)
     {
+        if (counter > 100) {
+            return false;
+        }
         uint xCoord = uint(hash) % Fp2Operations.P;
         xCoord = (xCoord.add(counter)) % Fp2Operations.P;
 

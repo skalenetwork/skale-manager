@@ -38,8 +38,8 @@ contract ConstantsHolder is Permissions {
     // part of Node for Small Skale-chain (1/128 of Node)
     uint8 public constant SMALL_DIVISOR = 128;
 
-    // part of Node for Medium Skale-chain (1/8 of Node)
-    uint8 public constant MEDIUM_DIVISOR = 8;
+    // part of Node for Medium Skale-chain (1/32 of Node)
+    uint8 public constant MEDIUM_DIVISOR = 32;
 
     // part of Node for Large Skale-chain (full Node)
     uint8 public constant LARGE_DIVISOR = 1;
@@ -116,6 +116,8 @@ contract ConstantsHolder is Permissions {
     uint public schainCreationTimeStamp;
 
     uint public minimalSchainLifetime;
+
+    uint public complaintTimelimit;
 
     /**
      * @dev Allows the Owner to set new reward and delta periods
@@ -201,6 +203,10 @@ contract ConstantsHolder is Permissions {
         minimalSchainLifetime = lifetime;
     }
 
+    function setComplaintTimelimit(uint timelimit) external onlyOwner {
+        complaintTimelimit = timelimit;
+    }
+
     function initialize(address contractsAddress) public override initializer {
         Permissions.initialize(contractsAddress);
 
@@ -215,5 +221,6 @@ contract ConstantsHolder is Permissions {
         proofOfUseDelegationPercentage = 50;
         limitValidatorsPerDelegator = 20;
         firstDelegationsMonth = 0;
+        complaintTimelimit = 1800;
     }
 }

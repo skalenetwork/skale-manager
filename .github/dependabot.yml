@@ -1,8 +1,9 @@
 version: 2
 updates:
-- package-ecosystem: npm
+- package-ecosystem: "npm"
   directory: "/"
   schedule:
-    interval: weekly
-    day: saturday
-  open-pull-requests-limit: 10
+    interval: "weekly"
+    day: "saturday"
+  allow:
+    - dependency-type: "production"

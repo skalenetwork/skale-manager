@@ -1,5 +1,5 @@
 import * as chai from "chai";
-import * as chaiAsPromised from "chai-as-promised";
+import chaiAsPromised from "chai-as-promised";
 import { ConstantsHolderInstance,
          ContractManagerInstance,
          DelegationControllerInstance,
@@ -13,7 +13,7 @@ import { ConstantsHolderInstance,
          SkaleManagerInstance,
          SkaleTokenInstance,
          ValidatorServiceInstance,
-         BountyInstance} from "../types/truffle-contracts";
+         BountyV2Instance} from "../types/truffle-contracts";
 
 // import BigNumber from "bignumber.js";
 
@@ -38,6 +38,7 @@ import { deploySkaleToken } from "./tools/deploy/skaleToken";
 import { skipTime, currentTime } from "./tools/time";
 import { deployBounty } from "./tools/deploy/bounty";
 import BigNumber from "bignumber.js";
+import { deployTimeHelpers } from "./tools/deploy/delegation/timeHelpers";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -56,7 +57,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
     let delegationPeriodManager: DelegationPeriodManagerInstance;
     let distributor: DistributorInstance;
     let skaleDKG: SkaleDKGTesterInstance;
-    let bountyContract: BountyInstance;
+    let bountyContract: BountyV2Instance;
 
     beforeEach(async () => {
         contractManager = await deployContractManager();
@@ -74,7 +75,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
         distributor = await deployDistributor(contractManager);
         skaleDKG = await deploySkaleDKGTester(contractManager);
         await contractManager.setContractsAddress("SkaleDKG", skaleDKG.address);
-	bountyContract = await deployBounty(contractManager);
+	    bountyContract = await deployBounty(contractManager);
 
         const premined = "100000000000000000000000000";
         await skaleToken.mint(owner, premined, "0x", "0x");
@@ -99,7 +100,8 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
 
     describe("when validator has delegated SKALE tokens", async () => {
         const validatorId = 1;
-        const month = 60 * 60 * 24 * 31;
+        const day = 60 * 60 * 24;
+        const month = 31 * day;
         const delegatedAmount = 1e7;
 
         beforeEach(async () => {
@@ -220,16 +222,15 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
             });
 
             it("should pay bounty according to the schedule", async () => {
+                const timeHelpers = await deployTimeHelpers(contractManager);
+
                 await bountyContract.disableBountyReduction();
-                let rewardPeriod = (await constantsHolder.rewardPeriod()).toNumber();
-                if (rewardPeriod < month) {
-                    await constantsHolder.setPeriods(month, 300);
-                    rewardPeriod = (await constantsHolder.rewardPeriod()).toNumber();
-                }
-                const timelimit = 300;
+                await constantsHolder.setMSR(delegatedAmount);
+
+                const timelimit = 300 * 1000;
                 const start = Date.now();
                 const launch = (await constantsHolder.launchTimestamp()).toNumber();
-                const yearLength = (await bountyContract.STAGE_LENGTH()).toNumber();
+                const launchMonth = (await timeHelpers.timestampToMonth(launch)).toNumber();
                 const ten18 = web3.utils.toBN(10).pow(web3.utils.toBN(18));
 
                 const schedule = [
@@ -247,12 +248,15 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                 }
 
                 let mustBePaid = web3.utils.toBN(0);
-                for (let year = 0; year < schedule.length && Date.now() < 0.9 * timelimit; ++year) {
-                    do {
-                        skipTime(web3, rewardPeriod);
-                        await skaleManager.getBounty(0, {from: nodeAddress});
-                    } while (await currentTime(web3) + rewardPeriod < launch + (year + 1) * yearLength);
-
+                skipTime(web3, month);
+                for (let year = 0; year < schedule.length && (Date.now() - start) < 0.9 * timelimit; ++year) {
+                    for (let monthIndex = 0; monthIndex < 12; ++monthIndex) {
+                        const monthEnd = (await timeHelpers.monthToTimestamp(launchMonth + 12 * year + monthIndex + 1)).toNumber();
+                        if (await currentTime(web3) < monthEnd) {
+                            skipTime(web3, monthEnd - await currentTime(web3) - day);
+                            await skaleManager.getBounty(0, {from: nodeAddress});
+                        }
+                    }
                     const bountyWasPaid = web3.utils.toBN(await skaleToken.balanceOf(distributor.address));
                     mustBePaid = mustBePaid.add(web3.utils.toBN(Math.floor(schedule[year])));
 
@@ -352,93 +356,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
 
                 expect(balanceAfter.sub(balanceBefore).eq(web3.utils.toBN("0"))).to.be.true;
             });
-
-            // it("should check several monitoring periods", async () => {
-            //     const verdict1 = {
-            //         toNodeIndex: 1,
-            //         downtime: 0,
-            //         latency: 50
-            //     };
-            //     const verdict2 = {
-            //         toNodeIndex: 0,
-            //         downtime: 0,
-            //         latency: 50
-            //     };
-            //     skipTime(web3, 3400);
-            //     let txSendVerdict1 = await skaleManager.sendVerdict(0, verdict1, {from: nodeAddress});
-
-            //     let blocks = await monitors.getLastReceivedVerdictBlock(1);
-            //     txSendVerdict1.receipt.blockNumber.should.be.equal(blocks.toNumber());
-
-            //     skipTime(web3, 200);
-            //     let txGetBounty1 = await skaleManager.getBounty(0, {from: nodeAddress});
-            //     let txGetBounty2 = await skaleManager.getBounty(1, {from: nodeAddress});
-
-            //     blocks = await monitors.getLastBountyBlock(0);
-            //     txGetBounty1.receipt.blockNumber.should.be.equal(blocks.toNumber());
-            //     blocks = await monitors.getLastBountyBlock(1);
-            //     txGetBounty2.receipt.blockNumber.should.be.equal(blocks.toNumber());
-
-            //     skipTime(web3, 3400);
-            //     txSendVerdict1 = await skaleManager.sendVerdict(0, verdict1, {from: nodeAddress});
-            //     const txSendVerdict2 = await skaleManager.sendVerdict(1, verdict2, {from: nodeAddress});
-
-            //     blocks = await monitors.getLastReceivedVerdictBlock(1);
-            //     txSendVerdict1.receipt.blockNumber.should.be.equal(blocks.toNumber());
-            //     blocks = await monitors.getLastReceivedVerdictBlock(0);
-            //     txSendVerdict2.receipt.blockNumber.should.be.equal(blocks.toNumber());
-
-            //     skipTime(web3, 200);
-            //     txGetBounty1 = await skaleManager.getBounty(0, {from: nodeAddress});
-            //     txGetBounty2 = await skaleManager.getBounty(1, {from: nodeAddress});
-
-            //     blocks = await monitors.getLastBountyBlock(0);
-            //     txGetBounty1.receipt.blockNumber.should.be.equal(blocks.toNumber());
-            //     blocks = await monitors.getLastBountyBlock(1);
-            //     txGetBounty2.receipt.blockNumber.should.be.equal(blocks.toNumber());
-            // });
-
-            // it("Alex test", async () => {
-            //     skipTime(web3, 3600);
-            //     let txGetBounty1 = await skaleManager.getBounty(0, {from: nodeAddress});
-            //     let txGetBounty2 = await skaleManager.getBounty(1, {from: nodeAddress});
-
-            //     (await monitors.getNodesInGroup(web3.utils.soliditySha3(0))).length.should.be.equal(1);
-            //     (await monitors.getNodesInGroup(web3.utils.soliditySha3(0)))[0].toNumber().should.be.equal(1);
-            //     (await monitors.getNodesInGroup(web3.utils.soliditySha3(1))).length.should.be.equal(1);
-            //     (await monitors.getNodesInGroup(web3.utils.soliditySha3(1)))[0].toNumber().should.be.equal(0);
-
-            //     skipTime(web3, 3600);
-            //     txGetBounty1 = await skaleManager.getBounty(0, {from: nodeAddress});
-            //     txGetBounty2 = await skaleManager.getBounty(1, {from: nodeAddress});
-
-            //     (await monitors.getNodesInGroup(web3.utils.soliditySha3(0))).length.should.be.equal(1);
-            //     (await monitors.getNodesInGroup(web3.utils.soliditySha3(0)))[0].toNumber().should.be.equal(1);
-            //     (await monitors.getNodesInGroup(web3.utils.soliditySha3(1))).length.should.be.equal(1);
-            //     (await monitors.getNodesInGroup(web3.utils.soliditySha3(1)))[0].toNumber().should.be.equal(0);
-
-            //     skipTime(web3, 3600);
-            //     txGetBounty1 = await skaleManager.getBounty(0, {from: nodeAddress});
-            //     txGetBounty2 = await skaleManager.getBounty(1, {from: nodeAddress});
-
-            //     (await monitors.getNodesInGroup(web3.utils.soliditySha3(0))).length.should.be.equal(1);
-            //     (await monitors.getNodesInGroup(web3.utils.soliditySha3(0)))[0].toNumber().should.be.equal(1);
-            //     (await monitors.getNodesInGroup(web3.utils.soliditySha3(1))).length.should.be.equal(1);
-            //     (await monitors.getNodesInGroup(web3.utils.soliditySha3(1)))[0].toNumber().should.be.equal(0);
-
-            //     skipTime(web3, 3600);
-            //     txGetBounty1 = await skaleManager.getBounty(0, {from: nodeAddress});
-            //     txGetBounty2 = await skaleManager.getBounty(1, {from: nodeAddress});
-
-            //     (await monitors.getNodesInGroup(web3.utils.soliditySha3(0))).length.should.be.equal(1);
-            //     (await monitors.getNodesInGroup(web3.utils.soliditySha3(0)))[0].toNumber().should.be.equal(1);
-            //     (await monitors.getNodesInGroup(web3.utils.soliditySha3(1))).length.should.be.equal(1);
-            //     (await monitors.getNodesInGroup(web3.utils.soliditySha3(1)))[0].toNumber().should.be.equal(0);
-
-            // });
         });
-
-
 
         describe("when 18 nodes are in the system", async () => {
 
@@ -464,75 +382,6 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
 
             });
 
-            async function getMaximumBountyAmount(timestamp: number, nodesAmount: number) {
-                const ten18 = web3.utils.toBN("1" + "0".repeat(18));
-                const bountyPoolSize = web3.utils.toBN("2310000000" + "0".repeat(18));
-                const yearLength = (await bountyContract.STAGE_LENGTH()).toNumber();
-                const rewardPeriod = (await constantsHolder.rewardPeriod()).toNumber();
-
-                const networkLaunchTimestamp = (await constantsHolder.launchTimestamp()).toNumber();
-                if (timestamp < networkLaunchTimestamp) {
-                    return web3.utils.toBN(0);
-                }
-
-                function getBountyForYear(yearIndex: number) {
-                    const schedule = [
-                        385000000,
-                        346500000,
-                        308000000,
-                        269500000,
-                        231000000,
-                        192500000
-                    ]
-                    if (yearIndex < schedule.length) {
-                        return web3.utils.toBN(schedule[yearIndex]).mul(ten18);
-                    } else {
-                        let bounty = web3.utils.toBN(schedule[schedule.length - 1]).mul(ten18);
-                        for (let i = 0; i < Math.floor((yearIndex - schedule.length) / 3) + 1; ++i) {
-                            bounty = bounty.divn(2);
-                        }
-                        return bounty;
-                    }
-                }
-
-                const year = Math.floor((timestamp - networkLaunchTimestamp) / yearLength);
-                const yearEnd = networkLaunchTimestamp + (year + 1) * yearLength;
-                const rewardsAmount = Math.floor((yearEnd - timestamp) / rewardPeriod) + 1;
-
-                return getBountyForYear(year).divn(nodesAmount).divn(rewardsAmount);
-            }
-
-            async function calculateBounty(timestamp: number, nodesAmount: number, nodeId: number, metrics: {downtime: number, latency: number}) {
-                let bounty = await getMaximumBountyAmount(timestamp, nodesAmount);
-                if (!await bountyContract.bountyReduction()) {
-                    return bounty;
-                }
-                const checkTime = (await constantsHolder.checkTime()).toNumber();
-                const rewardPeriod = (await constantsHolder.rewardPeriod()).toNumber();
-                const deltaPeriod = (await constantsHolder.deltaPeriod()).toNumber();
-                const bountyDeadlineTimestamp = (await nodesContract.getNodeLastRewardDate(nodeId)).toNumber() + rewardPeriod + deltaPeriod;
-                let downtime = checkTime * metrics.downtime;
-                if (timestamp > bountyDeadlineTimestamp) {
-                    downtime += timestamp - bountyDeadlineTimestamp;
-                }
-                const downtimeThreshold = Math.floor((rewardPeriod - deltaPeriod) / 30 / checkTime) * checkTime;
-                const latencyThreshold = (await constantsHolder.allowableLatency()).toNumber();
-
-                if (downtime > downtimeThreshold) {
-                    const penalty = bounty
-                        .muln(Math.floor(downtime / checkTime))
-                        .divn(Math.floor((rewardPeriod - deltaPeriod) / checkTime));
-
-                    bounty = bounty.sub(penalty);
-                }
-
-                if (metrics.latency > latencyThreshold) {
-                    bounty = bounty.muln(latencyThreshold).divn(metrics.latency);
-                }
-
-                return bounty;
-            }
-
             it("should fail to create schain if validator doesn't meet MSR", async () => {
                 await constantsHolder.setMSR(delegatedAmount + 1);
                 const pubKey = ec.keyFromPrivate(String(privateKeys[4]).slice(2)).getPublic();
@@ -545,319 +394,6 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                     "d2", // name
                     {from: nodeAddress}).should.be.eventually.rejectedWith("Validator must meet the Minimum Staking Requirement");
             });
-
-            // it("should fail to send monitor verdict from not node owner", async () => {
-            //     await skaleManager.sendVerdict(0, verdict, {from: hacker})
-            //         .should.be.eventually.rejectedWith("Node does not exist for Message sender");
-            // });
-
-            // it("should fail to send monitor verdict if send it too early", async () => {
-            //     await skaleManager.sendVerdict(0, verdict, {from: nodeAddress});
-            //     const lengthOfMetrics = await monitors.getLengthOfMetrics(web3.utils.soliditySha3(1), {from: owner});
-            //     lengthOfMetrics.toNumber().should.be.equal(0);
-            // });
-
-            // it("should fail to send monitor verdict if sender node does not exist", async () => {
-            //     await skaleManager.sendVerdict(18, verdict, {from: nodeAddress})
-            //         .should.be.eventually.rejectedWith("Node does not exist for Message sender");
-            // });
-
-            // it("should send monitor verdict", async () => {
-            //     skipTime(web3, 3400);
-            //     await skaleManager.sendVerdict(0, verdict, {from: nodeAddress});
-
-            //     await monitors.verdicts(web3.utils.soliditySha3(1), 0, 0)
-            //         .should.be.eventually.deep.equal(web3.utils.toBN(0));
-            //     await monitors.verdicts(web3.utils.soliditySha3(1), 0, 1)
-            //         .should.be.eventually.deep.equal(web3.utils.toBN(50));
-            // });
-
-            // it("should send monitor verdicts", async () => {
-            //     skipTime(web3, 3400);
-            //     const arr = [
-            //         {
-            //             toNodeIndex: 1,
-            //             downtime: 0,
-            //             latency: 50
-            //         },
-            //         {
-            //             toNodeIndex: 2,
-            //             downtime: 0,
-            //             latency: 50
-            //         },
-            //     ]
-            //     const txSendVerdict = await skaleManager.sendVerdicts(0, arr, {from: nodeAddress});
-
-            //     let blocks = await monitors.getLastReceivedVerdictBlock(1);
-            //     txSendVerdict.receipt.blockNumber.should.be.equal(blocks.toNumber());
-
-            //     blocks = await monitors.getLastReceivedVerdictBlock(2);
-            //     txSendVerdict.receipt.blockNumber.should.be.equal(blocks.toNumber());
-
-            //     await monitors.verdicts(web3.utils.soliditySha3(1), 0, 0)
-            //         .should.be.eventually.deep.equal(web3.utils.toBN(0));
-            //     await monitors.verdicts(web3.utils.soliditySha3(1), 0, 1)
-            //         .should.be.eventually.deep.equal(web3.utils.toBN(50));
-            //     await monitors.verdicts(web3.utils.soliditySha3(2), 0, 0)
-            //         .should.be.eventually.deep.equal(web3.utils.toBN(0));
-            //     await monitors.verdicts(web3.utils.soliditySha3(2), 0, 1)
-            //         .should.be.eventually.deep.equal(web3.utils.toBN(50));
-            // });
-
-            // describe("when monitor verdict is received", async () => {
-            //     let blockNum: number;
-            //     beforeEach(async () => {
-            //         skipTime(web3, 3400);
-            //         const txSendVerdict = await skaleManager.sendVerdict(0, verdict, {from: nodeAddress});
-            //         blockNum = txSendVerdict.receipt.blockNumber;
-            //     });
-
-            //     it("should store verdict block", async () => {
-            //         const blocks = await monitors.getLastReceivedVerdictBlock(1);
-            //         blockNum.should.be.equal(blocks.toNumber());
-            //     })
-
-            //     it("should fail to get bounty if sender is not owner of the node", async () => {
-            //         await skaleManager.getBounty(1, {from: hacker})
-            //             .should.be.eventually.rejectedWith("Node does not exist for Message sender");
-            //     });
-
-            //     it("should estimate bounty", async () => {
-            //         const estimatedBounty = web3.utils.toBN(await bountyContract.calculateNormalBounty(0));
-            //         const bounty = await getMaximumBountyAmount(await currentTime(web3), 18);
-            //         estimatedBounty.toString(10).should.be.equal(bounty.toString(10));
-            //     });
-
-            //     it("should get bounty", async () => {
-            //         skipTime(web3, 200);
-            //         const balanceBefore = web3.utils.toBN(await skaleToken.balanceOf(validator));
-
-            //         const txGetBounty = await skaleManager.getBounty(1, {from: nodeAddress});
-            //         const blocks = await monitors.getLastBountyBlock(1);
-            //         txGetBounty.receipt.blockNumber.should.be.equal(blocks.toNumber());
-            //         const estimatedBounty = await calculateBounty(
-            //             (await web3.eth.getBlock(txGetBounty.receipt.blockNumber)).timestamp,
-            //             18,
-            //             0,
-            //             verdict
-            //         );
-
-            //         skipTime(web3, month); // can withdraw bounty only next month
-            //         skipTime(web3, 3 * month); // bounty is locked for 3 months after network launch
-
-            //         await distributor.withdrawBounty(validatorId, validator, {from: validator});
-            //         await distributor.withdrawFee(validator, {from: validator});
-
-            //         const balanceAfter = web3.utils.toBN(await skaleToken.balanceOf(validator));
-
-            //         const bountyPaid = balanceAfter.sub(balanceBefore);
-            //         bountyPaid.toString(16).should.be.equal(estimatedBounty.toString(16));
-            //     });
-            // });
-
-            // describe("when monitor verdict with downtime is received", async () => {
-            //     let blockNum: number;
-            //     const verdictWithDowntime = {
-            //         toNodeIndex: 1,
-            //         downtime: 1,
-            //         latency: 50,
-            //     };
-            //     beforeEach(async () => {
-            //         skipTime(web3, 3400);
-            //         const txSendVerdict = await skaleManager.sendVerdict(0, verdictWithDowntime, {from: nodeAddress});
-            //         blockNum = txSendVerdict.receipt.blockNumber;
-            //     });
-
-            //     it("should store verdict block", async () => {
-            //         const blocks = await monitors.getLastReceivedVerdictBlock(1);
-            //         blockNum.should.be.equal(blocks.toNumber());
-            //     });
-
-            //     it("should fail to get bounty if sender is not owner of the node", async () => {
-            //         await skaleManager.getBounty(1, {from: hacker})
-            //             .should.be.eventually.rejectedWith("Node does not exist for Message sender");
-            //     });
-
-            //     it("should get bounty", async () => {
-            //         skipTime(web3, 200);
-            //         const balanceBefore = web3.utils.toBN(await skaleToken.balanceOf(validator));
-
-            //         const txGetBounty = await skaleManager.getBounty(1, {from: nodeAddress});
-
-            //         const blocks = await monitors.getLastBountyBlock(1);
-            //         txGetBounty.receipt.blockNumber.should.be.equal(blocks.toNumber());
-            //         const estimatedBounty = await calculateBounty(
-            //             (await web3.eth.getBlock(txGetBounty.receipt.blockNumber)).timestamp,
-            //             18,
-            //             0,
-            //             verdictWithDowntime
-            //         );
-
-            //         skipTime(web3, month); // can withdraw bounty only next month
-            //         skipTime(web3, 3 * month); // bounty is locked for 3 months after network launch
-
-            //         await distributor.withdrawBounty(validatorId, validator, {from: validator});
-            //         await distributor.withdrawFee(validator, {from: validator});
-
-            //         const balanceAfter = web3.utils.toBN(await skaleToken.balanceOf(validator));
-
-            //         balanceAfter.sub(balanceBefore).toString(10).should.be.equal(estimatedBounty.toString(10));
-            //     });
-
-            //     it("should get bounty after break", async () => {
-            //         skipTime(web3, 500);
-            //         const balanceBefore = web3.utils.toBN(await skaleToken.balanceOf(validator));
-
-            //         const txGetBounty = await skaleManager.getBounty(1, {from: nodeAddress});
-
-            //         const blocks = await monitors.getLastBountyBlock(1);
-            //         txGetBounty.receipt.blockNumber.should.be.equal(blocks.toNumber());
-            //         const estimatedBounty = await calculateBounty(
-            //             (await web3.eth.getBlock(txGetBounty.receipt.blockNumber)).timestamp,
-            //             18,
-            //             0,
-            //             verdictWithDowntime
-            //         );
-
-            //         skipTime(web3, month); // can withdraw bounty only next month
-            //         skipTime(web3, 3 * month); // bounty is locked for 3 months after network launch
-
-            //         await distributor.withdrawBounty(validatorId, validator, {from: validator});
-            //         await distributor.withdrawFee(validator, {from: validator});
-
-            //         const balanceAfter = web3.utils.toBN(await skaleToken.balanceOf(validator));
-
-            //         balanceAfter.sub(balanceBefore).toString(16).should.be.equal(estimatedBounty.toString(16));
-            //     });
-
-            //     it("should get bounty after big break", async () => {
-            //         skipTime(web3, 800);
-            //         const balanceBefore = web3.utils.toBN(await skaleToken.balanceOf(validator));
-
-            //         const txGetBounty = await skaleManager.getBounty(1, {from: nodeAddress});
-
-            //         const blocks = await monitors.getLastBountyBlock(1);
-            //         txGetBounty.receipt.blockNumber.should.be.equal(blocks.toNumber());
-            //         const estimatedBounty = await calculateBounty(
-            //             (await web3.eth.getBlock(txGetBounty.receipt.blockNumber)).timestamp,
-            //             18,
-            //             0,
-            //             verdictWithDowntime
-            //         );
-
-            //         skipTime(web3, month); // can withdraw bounty only next month
-            //         skipTime(web3, 3 * month); // bounty is locked for 3 months after network launch
-
-            //         await distributor.withdrawBounty(validatorId, validator, {from: validator});
-            //         await distributor.withdrawFee(validator, {from: validator});
-
-            //         const balanceAfter = web3.utils.toBN(await skaleToken.balanceOf(validator));
-
-            //         balanceAfter.sub(balanceBefore).toString(10).should.be.equal(estimatedBounty.toString(10));
-            //     });
-            // });
-
-            // describe("when monitor verdict with latency is received", async () => {
-            //     let blockNum: number;
-            //     const verdictWithLatency = {
-            //         toNodeIndex: 1,
-            //         downtime: 0,
-            //         latency: 200000,
-            //     };
-            //     beforeEach(async () => {
-            //         skipTime(web3, 3400);
-            //         const txSendverdict = await skaleManager.sendVerdict(0, verdictWithLatency, {from: nodeAddress});
-            //         blockNum = txSendverdict.receipt.blockNumber;
-            //     });
-
-            //     it("should store verdict block", async () => {
-            //         const blocks = await monitors.getLastReceivedVerdictBlock(1);
-            //         blockNum.should.be.equal(blocks.toNumber());
-            //     });
-
-            //     it("should fail to get bounty if sender is not owner of the node", async () => {
-            //         await skaleManager.getBounty(1, {from: hacker})
-            //             .should.be.eventually.rejectedWith("Node does not exist for Message sender");
-            //     });
-
-            //     it("should get bounty", async () => {
-            //         skipTime(web3, 200);
-            //         const balanceBefore = web3.utils.toBN(await skaleToken.balanceOf(validator));
-
-            //         const txGetBounty = await skaleManager.getBounty(1, {from: nodeAddress});
-
-            //         const blocks = await monitors.getLastBountyBlock(1);
-            //         txGetBounty.receipt.blockNumber.should.be.equal(blocks.toNumber());
-            //         const estimatedBounty = await calculateBounty(
-            //             (await web3.eth.getBlock(txGetBounty.receipt.blockNumber)).timestamp,
-            //             18,
-            //             0,
-            //             verdictWithLatency
-            //         );
-
-            //         skipTime(web3, month); // can withdraw bounty only next month
-            //         skipTime(web3, 3 * month); // bounty is locked for 3 months after network launch
-
-            //         await distributor.withdrawBounty(validatorId, validator, {from: validator});
-            //         await distributor.withdrawFee(validator, {from: validator});
-
-            //         const balanceAfter = web3.utils.toBN(await skaleToken.balanceOf(validator));
-
-            //         balanceAfter.sub(balanceBefore).toString(10).should.be.equal(estimatedBounty.toString(10));
-            //     });
-
-            //     it("should get bounty after break", async () => {
-            //         skipTime(web3, 500);
-            //         const balanceBefore = web3.utils.toBN(await skaleToken.balanceOf(validator));
-
-            //         const txGetBounty = await skaleManager.getBounty(1, {from: nodeAddress});
-
-            //         const blocks = await monitors.getLastBountyBlock(1);
-            //         txGetBounty.receipt.blockNumber.should.be.equal(blocks.toNumber());
-            //         const estimatedBounty = await calculateBounty(
-            //             (await web3.eth.getBlock(txGetBounty.receipt.blockNumber)).timestamp,
-            //             18,
-            //             0,
-            //             verdictWithLatency
-            //         );
-
-            //         skipTime(web3, month); // can withdraw bounty only next month
-            //         skipTime(web3, 3 * month); // bounty is locked for 3 months after network launch
-
-            //         await distributor.withdrawBounty(validatorId, validator, {from: validator});
-            //         await distributor.withdrawFee(validator, {from: validator});
-
-            //         const balanceAfter = web3.utils.toBN(await skaleToken.balanceOf(validator));
-
-            //         balanceAfter.sub(balanceBefore).toString(10).should.be.equal(estimatedBounty.toString(10));
-            //     });
-
-            //     it("should get bounty after big break", async () => {
-            //         skipTime(web3, 800);
-            //         const balanceBefore = web3.utils.toBN(await skaleToken.balanceOf(validator));
-
-            //         const txGetBounty = await skaleManager.getBounty(1, {from: nodeAddress});
-
-            //         const blocks = await monitors.getLastBountyBlock(1);
-            //         txGetBounty.receipt.blockNumber.should.be.equal(blocks.toNumber());
-            //         const estimatedBounty = await calculateBounty(
-            //             (await web3.eth.getBlock(txGetBounty.receipt.blockNumber)).timestamp,
-            //             18,
-            //             0,
-            //             verdictWithLatency
-            //         );
-
-            //         skipTime(web3, month); // can withdraw bounty only next month
-            //         skipTime(web3, 3 * month); // bounty is locked for 3 months after network launch
-
-            //         await distributor.withdrawBounty(validatorId, validator, {from: validator});
-            //         await distributor.withdrawFee(validator, {from: validator});
-
-            //         const balanceAfter = web3.utils.toBN(await skaleToken.balanceOf(validator));
-
-            //         balanceAfter.sub(balanceBefore).toString(10).should.be.equal(estimatedBounty.toString(10));
-            //     });
-            // });
 
             describe("when developer has SKALE tokens", async () => {
                 beforeEach(async () => {
@@ -1011,9 +547,10 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                 });
 
                 it("should create 2 medium schains", async () => {
+                    const price = await schains.getSchainPrice(3, 5)
                     await skaleToken.send(
                         skaleManager.address,
-                        "0x1cc2d6d04a2ca",
+                        price,
                         web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [
                             5, // lifetime
                             3, // type of schain
@@ -1026,7 +563,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
 
                     await skaleToken.send(
                         skaleManager.address,
-                        "0x1cc2d6d04a2ca",
+                        price,
                         web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [
                             5, // lifetime
                             3, // type of schain
