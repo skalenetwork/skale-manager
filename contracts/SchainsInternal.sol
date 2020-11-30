@@ -474,6 +474,13 @@ contract SchainsInternal is Permissions {
         return false;
     }
 
+    /**
+     * @dev Returns number of Schains on a node.
+     */
+    function getLengthOfSchainsForNode(uint nodeIndex) external view returns (uint) {
+        return schainsForNodes[nodeIndex].length;
+    }
+
     function initialize(address newContractsAddress) public override initializer {
         Permissions.initialize(newContractsAddress);
 
@@ -522,22 +529,9 @@ contract SchainsInternal is Permissions {
     }
 
     /**
-     * @dev Returns number of Schains on a node.
-     */
-    function getLengthOfSchainsForNode(uint nodeIndex) public view returns (uint) {
-        return schainsForNodes[nodeIndex].length;
-    }
-
-    /**
      * @dev Returns index of Schain in list of schains for a given node.
      */
     function findSchainAtSchainsForNode(uint nodeIndex, bytes32 schainId) public view returns (uint) {
-        // uint length = getLengthOfSchainsForNode(nodeIndex);
-        // for (uint i = 0; i < length; i++) {
-        //     if (schainsForNodes[nodeIndex][i] == schainId) {
-        //         return i;
-        //     }
-        // }
         if (placeOfSchainOnNode[schainId][nodeIndex] == 0)
             return schainsForNodes[nodeIndex].length;
         return placeOfSchainOnNode[schainId][nodeIndex] - 1;
