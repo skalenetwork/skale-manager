@@ -1,5 +1,5 @@
 import { BigNumber } from "bignumber.js";
-import * as chaiAsPromised from "chai-as-promised";
+import chaiAsPromised from "chai-as-promised";
 import { ConstantsHolderInstance,
          ContractManagerInstance } from "../types/truffle-contracts";
 import { skipTime } from "./tools/time";
@@ -9,7 +9,7 @@ import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
 import { deployContractManager } from "./tools/deploy/contractManager";
 
 chai.should();
-chai.use((chaiAsPromised as any));
+chai.use(chaiAsPromised);
 
 contract("ConstantsHolder", ([deployer, user]) => {
   let contractManager: ContractManagerInstance;
@@ -31,9 +31,9 @@ contract("ConstantsHolder", ([deployer, user]) => {
     parseInt(bn.toString(), 10).should.be.equal(128);
   });
 
-  it("MEDIUM_DIVISOR should be equal 8", async () => {
+  it("MEDIUM_DIVISOR should be equal 32", async () => {
     const bn = new BigNumber(await constantsHolder.MEDIUM_DIVISOR());
-    parseInt(bn.toString(), 10).should.be.equal(8);
+    parseInt(bn.toString(), 10).should.be.equal(32);
   });
 
   it("LARGE_DIVISOR should be equal 1", async () => {
@@ -213,6 +213,17 @@ contract("ConstantsHolder", ([deployer, user]) => {
     const res = new BigNumber(await constantsHolder.minimalSchainLifetime());
     // parseInt(bn.toString(), 10).should.be.equal(0)
     expect(parseInt(res.toString(), 10)).to.be.equal(lifetime);
+  });
+
+  it("should set complaint timelimit", async () => {
+    const timelimit = 3600;
+    await constantsHolder.setComplaintTimelimit(timelimit, {from: user})
+      .should.be.eventually.rejectedWith("Caller is not the owner");
+    await constantsHolder.setComplaintTimelimit(timelimit, {from: deployer});
+    // expectation
+    const res = new BigNumber(await constantsHolder.complaintTimelimit());
+    // parseInt(bn.toString(), 10).should.be.equal(0)
+    expect(parseInt(res.toString(), 10)).to.be.equal(timelimit);
   });
 
 });

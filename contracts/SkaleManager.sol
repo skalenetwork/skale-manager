@@ -29,7 +29,7 @@ import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC777/IERC777R
 import "./delegation/Distributor.sol";
 import "./delegation/ValidatorService.sol";
 import "./interfaces/IMintableToken.sol";
-import "./Bounty.sol";
+import "./BountyV2.sol";
 import "./ConstantsHolder.sol";
 import "./Monitors.sol";
 import "./NodeRotation.sol";
@@ -53,6 +53,16 @@ contract SkaleManager is IERC777Recipient, Permissions {
      * @dev Emitted when bounty is received.
      */
     event BountyReceived(
+        uint indexed nodeIndex,
+        address owner,
+        uint averageDowntime,
+        uint averageLatency,
+        uint bounty,
+        uint previousBlockEvent,
+        uint time,
+        uint gasSpend
+    );
+    event BountyGot(
         uint indexed nodeIndex,
         address owner,
         uint averageDowntime,
@@ -103,9 +113,6 @@ contract SkaleManager is IERC777Recipient, Permissions {
             publicKey: publicKey,
             nonce: nonce});
         nodes.createNode(msg.sender, params);
-        // uint nodeIndex = nodes.createNode(msg.sender, params);
-        // Monitors monitors = Monitors(contractManager.getContract("Monitors"));
-        // monitors.addMonitor(nodeIndex);
     }
 
     function nodeExit(uint nodeIndex) external {
@@ -154,26 +161,6 @@ contract SkaleManager is IERC777Recipient, Permissions {
         schains.deleteSchainByRoot(name);
     }
 
-    // function sendVerdict(uint fromMonitorIndex, Monitors.Verdict calldata verdict) external {
-    //     Nodes nodes = Nodes(contractManager.getContract("Nodes"));
-    //     require(nodes.isNodeExist(msg.sender, fromMonitorIndex), "Node does not exist for Message sender");
-
-    //     Monitors monitors = Monitors(contractManager.getContract("Monitors"));
-    //     // additional checks for monitoring inside sendVerdict
-    //     monitors.sendVerdict(fromMonitorIndex, verdict);
-    // }
-
-    // function sendVerdicts(uint fromMonitorIndex, Monitors.Verdict[] calldata verdicts) external {
-    //     Nodes nodes = Nodes(contractManager.getContract("Nodes"));
-    //     require(nodes.isNodeExist(msg.sender, fromMonitorIndex), "Node does not exist for Message sender");
-
-    //     Monitors monitors = Monitors(contractManager.getContract("Monitors"));
-    //     for (uint i = 0; i < verdicts.length; i++) {
-    //         // additional checks for monitoring inside sendVerdict
-    //         monitors.sendVerdict(fromMonitorIndex, verdicts[i]);
-    //     }
-    // }
-
     function getBounty(uint nodeIndex) external {
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));
         require(nodes.isNodeExist(msg.sender, nodeIndex), "Node does not exist for Message sender");
@@ -181,26 +168,17 @@ contract SkaleManager is IERC777Recipient, Permissions {
         require(
             nodes.isNodeActive(nodeIndex) || nodes.isNodeLeaving(nodeIndex), "Node is not Active and is not Leaving"
         );
-        Bounty bountyContract = Bounty(contractManager.getContract("Bounty"));
-        uint averageDowntime;
-        uint averageLatency;
-        Monitors monitors = Monitors(contractManager.getContract("Monitors"));
-        (averageDowntime, averageLatency) = monitors.calculateMetrics(nodeIndex);
+        BountyV2 bountyContract = BountyV2(contractManager.getContract("Bounty"));
 
-        uint bounty = bountyContract.getBounty(
-            nodeIndex,
-            averageDowntime,
-            averageLatency);
+        uint bounty = bountyContract.calculateBounty(nodeIndex);
 
         nodes.changeNodeLastRewardDate(nodeIndex);
-        // monitors.deleteMonitor(nodeIndex);
-        // monitors.addMonitor(nodeIndex);
 
         if (bounty > 0) {
             _payBounty(bounty, nodes.getValidatorId(nodeIndex));
         }
 
-        _emitBountyEvent(nodeIndex, msg.sender, averageDowntime, averageLatency, bounty);
+        _emitBountyEvent(nodeIndex, msg.sender, 0, 0, bounty);
     }
 
     function initialize(address newContractsAddress) public override initializer {
@@ -233,6 +211,15 @@ contract SkaleManager is IERC777Recipient, Permissions {
         monitors.setLastBountyBlock(nodeIndex);
 
         emit BountyReceived(
+            nodeIndex,
+            from,
+            averageDowntime,
+            averageLatency,
+            bounty,
+            previousBlockEvent,
+            block.timestamp,
+            gasleft());
+        emit BountyGot(
             nodeIndex,
             from,
             averageDowntime,

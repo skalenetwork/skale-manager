@@ -26,10 +26,12 @@ pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts-ethereum-package/contracts/utils/SafeCast.sol";
 
-import "./Permissions.sol";
-import "./ConstantsHolder.sol";
-import "./delegation/ValidatorService.sol";
 import "./delegation/DelegationController.sol";
+import "./delegation/ValidatorService.sol";
+
+import "./BountyV2.sol";
+import "./ConstantsHolder.sol";
+import "./Permissions.sol";
 
 
 /**
@@ -469,8 +471,7 @@ contract Nodes is Permissions {
         checkNodeExists(nodeIndex)
         returns (bool)
     {
-        ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
-        return uint(nodes[nodeIndex].lastRewardDate).add(constantsHolder.rewardPeriod()) <= block.timestamp;
+        return BountyV2(contractManager.getBounty()).getNextRewardTimestamp(nodeIndex) <= now;
     }
 
     /**
@@ -518,6 +519,22 @@ contract Nodes is Permissions {
         return nodes[nodeIndex].publicKey;
     }
 
+    /**
+     * @dev Returns an address of a given node.
+     */
+    function getNodeAddress(uint nodeIndex)
+        external
+        view
+        checkNodeExists(nodeIndex)
+        returns (address)
+    {
+        return _publicKeyToAddress(nodes[nodeIndex].publicKey);
+    }
+
+
+    /**
+     * @dev Returns the finish exit time of a given node.
+     */
     function getNodeFinishTime(uint nodeIndex)
         external
         view
@@ -569,8 +586,7 @@ contract Nodes is Permissions {
         checkNodeExists(nodeIndex)
         returns (uint)
     {
-        ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
-        return nodes[nodeIndex].lastRewardDate.add(constantsHolder.rewardPeriod());
+        return BountyV2(contractManager.getBounty()).getNextRewardTimestamp(nodeIndex);
     }
 
     /**
@@ -872,4 +888,11 @@ contract Nodes is Permissions {
         return address(addr);
     }
 
+    function _min(uint a, uint b) private pure returns (uint) {
+        if (a < b) {
+            return a;
+        } else {
+            return b;
+        }
+    }
 }
