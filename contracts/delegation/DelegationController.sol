@@ -211,7 +211,7 @@ contract DelegationController is Permissions, ILocker {
      * @dev Update and return a validator's delegations.
      */
     function getAndUpdateDelegatedToValidatorNow(uint validatorId) external returns (uint) {
-        return getAndUpdateDelegatedToValidator(validatorId, _getCurrentMonth());
+        return _getAndUpdateDelegatedToValidator(validatorId, _getCurrentMonth());
     }
 
     /**
@@ -371,7 +371,6 @@ contract DelegationController is Permissions, ILocker {
             _getDelegationPeriodManager().stakeMultipliers(delegations[delegationId].delegationPeriod)
         );
         _getBounty().handleDelegationAdd(
-            delegations[delegationId].validatorId,
             effectiveAmount,
             delegations[delegationId].started
         );
@@ -433,7 +432,6 @@ contract DelegationController is Permissions, ILocker {
             delegationId,
             delegations[delegationId].finished);
         _getBounty().handleDelegationRemoving(
-            delegations[delegationId].validatorId,
             effectiveAmount,
             delegations[delegationId].finished);
         emit UndelegationRequested(delegationId);
@@ -474,7 +472,6 @@ contract DelegationController is Permissions, ILocker {
 
         BountyV2 bounty = _getBounty();
         bounty.handleDelegationRemoving(
-            validatorId,
             initialEffectiveDelegated.sub(
                 _effectiveDelegatedToValidator[validatorId].getAndUpdateValueInSequence(currentMonth)
             ),
@@ -482,7 +479,6 @@ contract DelegationController is Permissions, ILocker {
         );
         for (uint i = 0; i < initialSubtractions.length; ++i) {
             bounty.handleDelegationAdd(
-                validatorId,
                 initialSubtractions[i].sub(
                     _effectiveDelegatedToValidator[validatorId].subtractDiff[currentMonth.add(i).add(1)]
                 ),
@@ -511,6 +507,14 @@ contract DelegationController is Permissions, ILocker {
 
     function getEffectiveDelegatedValuesByValidator(uint validatorId) external view returns (uint[] memory) {
         return _effectiveDelegatedToValidator[validatorId].getValuesInSequence();
+    }
+
+    function getEffectiveDelegatedToValidator(uint validatorId, uint month) external view returns (uint) {
+        return _effectiveDelegatedToValidator[validatorId].getValueInSequence(month);
+    }
+
+    function getDelegatedToValidator(uint validatorId, uint month) external view returns (uint) {
+        return _delegatedToValidator[validatorId].getValue(month);
     }
 
     /**
@@ -545,16 +549,6 @@ contract DelegationController is Permissions, ILocker {
 
     function initialize(address contractsAddress) public override initializer {
         Permissions.initialize(contractsAddress);
-    }
-
-    /**
-     * @dev Allows Nodes contract to get and update the amount delegated
-     * to validator for a given month.
-     */
-    function getAndUpdateDelegatedToValidator(uint validatorId, uint month)
-        public allow("Nodes") returns (uint)
-    {
-        return _delegatedToValidator[validatorId].getAndUpdateValue(month);
     }
 
     /**
@@ -622,6 +616,16 @@ contract DelegationController is Permissions, ILocker {
     }    
 
     // private
+
+    /**
+     * @dev Allows Nodes contract to get and update the amount delegated
+     * to validator for a given month.
+     */
+    function _getAndUpdateDelegatedToValidator(uint validatorId, uint month)
+        private returns (uint)
+    {
+        return _delegatedToValidator[validatorId].getAndUpdateValue(month);
+    }
 
     /**
      * @dev Adds a new delegation proposal.

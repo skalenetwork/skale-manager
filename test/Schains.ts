@@ -110,6 +110,16 @@ contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeA
                 should.be.eventually.rejected;
         });
 
+        it("should fail when schain name is Mainnet", async () => {
+            const price = new BigNumber(await schains.getSchainPrice(1, 5));
+            await schains.addSchain(
+                holder,
+                price.toString(),
+                web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 1, 0, "Mainnet"]),
+                {from: owner})
+                .should.be.eventually.rejectedWith("Schain name is not available");
+        });
+
         it("should fail when nodes count is too low", async () => {
             const price = new BigNumber(await schains.getSchainPrice(1, 5));
             await schains.addSchain(
@@ -672,7 +682,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeA
                 }
             });
 
-            it("successfully", async () => {
+            it("successfully create 1 type Of Schain", async () => {
                 const deposit = await schains.getSchainPrice(1, 5);
 
                 await schains.addSchain(
@@ -710,6 +720,84 @@ contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeA
                 expect(obtainedDeposit.eq(web3.utils.toBN(deposit))).be.true;
             });
 
+            it("should add new type of Schain and create Schain", async () => {
+                await schainsInternal.addSchainType(8, 16, {from: owner});
+                const deposit = await schains.getSchainPrice(6, 5);
+
+                await schains.addSchain(
+                    holder,
+                    deposit,
+                    web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 6, 0, "d2"]),
+                    {from: owner});
+
+                const sChains = await schainsInternal.getSchains();
+                sChains.length.should.be.equal(1);
+                const schainId = sChains[0];
+
+                await schainsInternal.isOwnerAddress(holder, schainId).should.be.eventually.true;
+
+                const obtainedSchains = await schainsInternal.schains(schainId);
+                const schainsArray = Array(8);
+                for (const index of Array.from(Array(8).keys())) {
+                    schainsArray[index] = obtainedSchains[index];
+                }
+
+                const [obtainedSchainName,
+                       obtainedSchainOwner,
+                       obtainedIndexInOwnerList,
+                       obtainedPart,
+                       obtainedLifetime,
+                       obtainedStartDate,
+                       obtainedBlock,
+                       obtainedDeposit,
+                       obtainedIndex] = schainsArray;
+
+                obtainedSchainName.should.be.equal("d2");
+                obtainedSchainOwner.should.be.equal(holder);
+                expect(obtainedPart.eq(web3.utils.toBN(8))).be.true;
+                expect(obtainedLifetime.eq(web3.utils.toBN(5))).be.true;
+                expect(obtainedDeposit.eq(web3.utils.toBN(deposit))).be.true;
+            });
+
+            it("should add another new type of Schain and create Schain", async () => {
+                await schainsInternal.addSchainType(32, 16, {from: owner});
+                const deposit = await schains.getSchainPrice(6, 5);
+
+                await schains.addSchain(
+                    holder,
+                    deposit,
+                    web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 6, 0, "d2"]),
+                    {from: owner});
+
+                const sChains = await schainsInternal.getSchains();
+                sChains.length.should.be.equal(1);
+                const schainId = sChains[0];
+
+                await schainsInternal.isOwnerAddress(holder, schainId).should.be.eventually.true;
+
+                const obtainedSchains = await schainsInternal.schains(schainId);
+                const schainsArray = Array(8);
+                for (const index of Array.from(Array(8).keys())) {
+                    schainsArray[index] = obtainedSchains[index];
+                }
+
+                const [obtainedSchainName,
+                       obtainedSchainOwner,
+                       obtainedIndexInOwnerList,
+                       obtainedPart,
+                       obtainedLifetime,
+                       obtainedStartDate,
+                       obtainedBlock,
+                       obtainedDeposit,
+                       obtainedIndex] = schainsArray;
+
+                obtainedSchainName.should.be.equal("d2");
+                obtainedSchainOwner.should.be.equal(holder);
+                expect(obtainedPart.eq(web3.utils.toBN(32))).be.true;
+                expect(obtainedLifetime.eq(web3.utils.toBN(5))).be.true;
+                expect(obtainedDeposit.eq(web3.utils.toBN(deposit))).be.true;
+            });
+
             describe("when schain is created", async () => {
 
                 beforeEach(async () => {
@@ -742,6 +830,11 @@ contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeA
                 it("should check group", async () => {
                     const res = await schainsInternal.getNodesInGroup(web3.utils.soliditySha3("D2"));
                     res.length.should.be.equal(16);
+                });
+
+                it("should check node addresses", async () => {
+                    expect(await schainsInternal.isNodeAddressesInGroup(web3.utils.soliditySha3("D2"), nodeAddress)).be.true;
+                    expect(await schainsInternal.isNodeAddressesInGroup(web3.utils.soliditySha3("D2"), nodeAddress2)).be.false;
                 });
 
                 it("should delete group", async () => {
@@ -815,7 +908,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeA
 
         it("of small schain", async () => {
             const price = web3.utils.toBN(await schains.getSchainPrice(2, 5));
-            const correctPrice = web3.utils.toBN(63246306415705);
+            const correctPrice = web3.utils.toBN(15811576603926);
 
             expect(price.eq(correctPrice)).to.be.true;
         });
@@ -1721,7 +1814,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeA
                 );
             }
             if (!(await nodes.isNodeLeft(rotIndex))) {
-                await skaleManager.nodeExit(rotIndex, {from: nodeAddress3});
+                await skaleManager.nodeExit(rotIndex, {from: nodeAddress2});
             }
             await validatorService.getValidatorIdByNodeAddress(nodeAddress2)
             .should.be.eventually.rejectedWith("Node address is not assigned to a validator");
@@ -1738,7 +1831,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeA
                 await skaleDKG.setSuccesfulDKGPublic(schainId);
             }
             if (!(await nodes.isNodeLeft(rotatedNodeIndex))) {
-                await skaleManager.nodeExit(rotatedNodeIndex, {from: nodeAddress3});
+                await skaleManager.nodeExit(rotatedNodeIndex, {from: validator});
             }
             await validatorService.getValidatorIdByNodeAddress(nodeAddress2)
                 .should.be.eventually.rejectedWith("Node address is not assigned to a validator");
@@ -1755,7 +1848,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeA
                 await skaleDKG.setSuccesfulDKGPublic(schainId);
             }
             if (!(await nodes.isNodeLeft(rotatedNodeIndex))) {
-                await skaleManager.nodeExit(rotatedNodeIndex, {from: nodeAddress3});
+                await skaleManager.nodeExit(rotatedNodeIndex, {from: owner});
             }
             await validatorService.getValidatorIdByNodeAddress(nodeAddress2)
                 .should.be.eventually.rejectedWith("Node address is not assigned to a validator");

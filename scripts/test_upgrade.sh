@@ -17,10 +17,7 @@ rm $TRAVIS_BUILD_DIR/.openzeppelin/dev-*.json
 cp .openzeppelin/dev-*.json $TRAVIS_BUILD_DIR/.openzeppelin || exit $?
 cd $TRAVIS_BUILD_DIR
 
-npx oz push --network test || exit $?
-npx oz deploy BountyV2 --network test --kind upgradable --no-interactive || exit $?
-# TODO: register in the ContractManager
-
+npx oz push --network test
 npx oz upgrade --network test --all || exit $?
 
 kill $GANACHE_PID

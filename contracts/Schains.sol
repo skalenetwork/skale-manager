@@ -359,7 +359,11 @@ contract Schains is Permissions {
             partOfNode = constantsHolder.SMALL_DIVISOR() / constantsHolder.MEDIUM_TEST_DIVISOR();
             numberOfNodes = constantsHolder.NUMBER_OF_NODES_FOR_MEDIUM_TEST_SCHAIN();
         } else {
-            revert("Bad schain type");
+            SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
+            (partOfNode, numberOfNodes) = schainsInternal.schainTypes(typeOfSchain);
+            if (numberOfNodes == 0) {
+                revert("Bad schain type");
+            }
         }
     }
 
@@ -440,8 +444,9 @@ contract Schains is Permissions {
     function _addSchain(address from, uint deposit, SchainParameters memory schainParameters) private {
         uint numberOfNodes;
         uint8 partOfNode;
+        SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
 
-        require(schainParameters.typeOfSchain <= 5, "Invalid type of Schain");
+        require(schainParameters.typeOfSchain <= schainsInternal.numberOfSchainTypes(), "Invalid type of Schain");
 
         //initialize Schain
         _initializeSchainInSchainsInternal(

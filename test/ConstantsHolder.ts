@@ -31,9 +31,9 @@ contract("ConstantsHolder", ([deployer, user]) => {
     parseInt(bn.toString(), 10).should.be.equal(128);
   });
 
-  it("MEDIUM_DIVISOR should be equal 8", async () => {
+  it("MEDIUM_DIVISOR should be equal 32", async () => {
     const bn = new BigNumber(await constantsHolder.MEDIUM_DIVISOR());
-    parseInt(bn.toString(), 10).should.be.equal(8);
+    parseInt(bn.toString(), 10).should.be.equal(32);
   });
 
   it("LARGE_DIVISOR should be equal 1", async () => {

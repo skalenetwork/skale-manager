@@ -310,8 +310,6 @@ contract Nodes is Permissions {
 
         _setNodeLeft(nodeIndex);
         _deleteNode(nodeIndex);
-        
-        BountyV2(contractManager.getBounty()).handleNodeRemoving(nodes[nodeIndex].validatorId);
 
         emit ExitCompleted(
             nodeIndex,
@@ -447,18 +445,6 @@ contract Nodes is Permissions {
         _setNodeActive(nodeIndex);
     }
 
-    function populateBountyV2(uint from, uint to) external onlyOwner {
-        BountyV2 bounty = BountyV2(contractManager.getBounty());
-        uint nodeCreationWindow = bounty.nodeCreationWindowSeconds();
-        bounty.setNodeCreationWindowSeconds(uint(-1) / 2);
-        for (uint nodeId = from; nodeId < _min(nodes.length, to); ++nodeId) {
-            if (nodes[nodeId].status != NodeStatus.Left) {
-                bounty.handleNodeCreation(nodes[nodeId].validatorId);
-            }
-        }
-        bounty.setNodeCreationWindowSeconds(nodeCreationWindow);
-    }
-
     /**
      * @dev Returns nodes with space availability.
      */
@@ -533,6 +519,22 @@ contract Nodes is Permissions {
         return nodes[nodeIndex].publicKey;
     }
 
+    /**
+     * @dev Returns an address of a given node.
+     */
+    function getNodeAddress(uint nodeIndex)
+        external
+        view
+        checkNodeExists(nodeIndex)
+        returns (address)
+    {
+        return _publicKeyToAddress(nodes[nodeIndex].publicKey);
+    }
+
+
+    /**
+     * @dev Returns the finish exit time of a given node.
+     */
     function getNodeFinishTime(uint nodeIndex)
         external
         view
@@ -857,8 +859,6 @@ contract Nodes is Permissions {
         }));
         spaceToNodes[constantsHolder.TOTAL_SPACE_ON_NODE()].push(nodeIndex);
         numberOfActiveNodes++;
-        
-        BountyV2(contractManager.getBounty()).handleNodeCreation(validatorId);
     }
 
     /**
