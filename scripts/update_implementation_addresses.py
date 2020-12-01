@@ -4,11 +4,6 @@ import os
 import sys
 import json
 
-CONTRACT_MANAGER_ABI = [{
-    "inputs": [{"internalType": "string", "name": "name", "type": "string"}],
-    "outputs": [{"internalType": "address", "name": "contractAddress", "type": "address"}],
-    "stateMutability": "view", "type": "function", "name": "getContract"}]
-
 PROXY_ADMIN_ABI = [{"constant": True, "inputs": [{"name": "proxy", "type": "address"}],
                     "name": "getProxyImplementation", "outputs": [{"name": "", "type": "address"}],
                     "payable": False, "stateMutability": "view", "type": "function"}]
@@ -16,15 +11,6 @@ PROXY_ADMIN_ABI = [{"constant": True, "inputs": [{"name": "proxy", "type": "addr
 
 def proxy_to_contract(name):
     return name.split('/')[-1]
-
-
-def contract_to_key(name):
-    key = name
-    if key == 'BountyV2':
-        key = 'Bounty'
-    elif key == 'Bounty':
-        key = None
-    return key
 
 
 def main():
