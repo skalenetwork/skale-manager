@@ -221,6 +221,25 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                 expect(balanceAfter.sub(balanceBefore).eq(web3.utils.toBN("0"))).to.be.true;
             });
 
+            it("should create and remove node from validator address", async () => {
+                expect(web3.utils.toBN(await validatorService.getValidatorIdByNodeAddress(validator)).eq(web3.utils.toBN("1"))).to.be.true;
+                const pubKey = ec.keyFromPrivate(String(privateKeys[1]).slice(2)).getPublic();
+                await skaleManager.createNode(
+                    8545, // port
+                    0, // nonce
+                    "0x7f000002", // ip
+                    "0x7f000002", // public ip
+                    ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')], // public key
+                    "d3", // name
+                    {from: validator}
+                );
+                
+                await skaleManager.nodeExit(1, {from: validator});
+
+                await nodesContract.isNodeLeft(1).should.be.eventually.true;
+                expect(web3.utils.toBN(await validatorService.getValidatorIdByNodeAddress(validator)).eq(web3.utils.toBN("1"))).to.be.true;
+            });
+
             it("should pay bounty according to the schedule", async () => {
                 const timeHelpers = await deployTimeHelpers(contractManager);
 
