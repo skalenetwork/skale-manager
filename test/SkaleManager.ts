@@ -233,7 +233,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                     "d3", // name
                     {from: validator}
                 );
-                
+
                 await skaleManager.nodeExit(1, {from: validator});
 
                 await nodesContract.isNodeLeft(1).should.be.eventually.true;
