@@ -192,11 +192,11 @@ contract("SchainsInternal", ([owner, holder]) => {
                 await schainsInternal.removeSchainForNode(nodeIndex, 0);
                 await schainsInternal.removeSchainForNode(nodeIndex, 1);
                 await schainsInternal.addSchainForNode(nodeIndex, web3.utils.soliditySha3("NewSchain2"));
-                assert(new BigNumber(await schainsInternal.holesForNodes(nodeIndex, 0)).isEqualTo(1));
+                assert(new BigNumber(await schainsInternal.holesForNodes(nodeIndex, 0)).isEqualTo(0));
                 await schainsInternal.getSchainIdsForNode(nodeIndex).should.eventually.be.deep.equal(
                     [
-                        web3.utils.soliditySha3("NewSchain2"),
                         "0x0000000000000000000000000000000000000000000000000000000000000000",
+                        web3.utils.soliditySha3("NewSchain2"),
                         web3.utils.soliditySha3("NewSchain1"),
                     ],
                 );
@@ -211,8 +211,8 @@ contract("SchainsInternal", ([owner, holder]) => {
                 await schainsInternal.addSchainForNode(nodeIndex, web3.utils.soliditySha3("NewSchain3"));
                 await schainsInternal.getSchainIdsForNode(nodeIndex).should.eventually.be.deep.equal(
                     [
-                        web3.utils.soliditySha3("NewSchain2"),
                         web3.utils.soliditySha3("NewSchain3"),
+                        web3.utils.soliditySha3("NewSchain2"),
                         web3.utils.soliditySha3("NewSchain1"),
                     ],
                 );
@@ -228,8 +228,8 @@ contract("SchainsInternal", ([owner, holder]) => {
                 await schainsInternal.addSchainForNode(nodeIndex, web3.utils.soliditySha3("NewSchain4"));
                 await schainsInternal.getSchainIdsForNode(nodeIndex).should.eventually.be.deep.equal(
                     [
-                        web3.utils.soliditySha3("NewSchain2"),
                         web3.utils.soliditySha3("NewSchain3"),
+                        web3.utils.soliditySha3("NewSchain2"),
                         web3.utils.soliditySha3("NewSchain1"),
                         web3.utils.soliditySha3("NewSchain4"),
                     ],
