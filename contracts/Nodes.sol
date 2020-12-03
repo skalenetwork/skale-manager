@@ -341,7 +341,7 @@ contract Nodes is Permissions {
         validatorToNodeIndexes[validatorId].pop();
         address nodeOwner = _publicKeyToAddress(nodes[nodeIndex].publicKey);
         if (validatorService.getValidatorIdByNodeAddress(nodeOwner) == validatorId) {
-            if (nodeIndexes[nodeOwner].numberOfNodes == 1) {
+            if (nodeIndexes[nodeOwner].numberOfNodes == 1 && !validatorService.validatorAddressExists(nodeOwner)) {
                 validatorService.removeNodeAddress(validatorId, nodeOwner);
             }
             nodeIndexes[nodeOwner].isNodeExist[nodeIndex] = false;
