@@ -559,7 +559,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         // Decrypt secret key contribution
         uint secret = Decryption(contractManager.getContract("Decryption")).decrypt(
             complaints[schainId].keyShare,
-            keccak256(abi.encodePacked(key))
+            sha256(abi.encodePacked(key))
         );
 
         uint badNode = (
