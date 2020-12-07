@@ -291,6 +291,9 @@ contract SchainsInternal is Permissions {
         numberOfSchainTypes = newNumberOfSchainTypes;
     }
 
+    /**
+     * @dev Allows Admin to move schain to placeOfSchainOnNode map
+     */
     function moveToPlaceOfSchainOnNode(bytes32 schainHash) external onlyAdmin {
         for (uint i = 0; i < schainsGroups[schainHash].length; i++) {
             uint nodeIndex = schainsGroups[schainHash][i];
