@@ -79,6 +79,8 @@ contract SchainsInternal is Permissions {
     mapping (uint => SchainType) public schainTypes;
     uint public numberOfSchainTypes;
 
+    //   schain hash =>   node index  => index of place
+    // index of place is a number from 1 to max number of slots on node(128)
     mapping (bytes32 => mapping (uint => uint)) public placeOfSchainOnNode;
 
     /**
@@ -200,8 +202,8 @@ contract SchainsInternal is Permissions {
             }
         }
 
-        uint schainId = findSchainAtSchainsForNode(nodeIndex, schainHash);
-        removeSchainForNode(nodeIndex, schainId);
+        uint schainIndexOnNode = findSchainAtSchainsForNode(nodeIndex, schainHash);
+        removeSchainForNode(nodeIndex, schainIndexOnNode);
         delete placeOfSchainOnNode[schainHash][nodeIndex];
     }
 
@@ -496,9 +498,9 @@ contract SchainsInternal is Permissions {
             schainsForNodes[nodeIndex].push(schainId);
             placeOfSchainOnNode[schainId][nodeIndex] = schainsForNodes[nodeIndex].length;
         } else {
-            schainsForNodes[nodeIndex][holesForNodes[nodeIndex][holesForNodes[nodeIndex].length - 1]] = schainId;
-            placeOfSchainOnNode[schainId][nodeIndex] =
-                holesForNodes[nodeIndex][holesForNodes[nodeIndex].length - 1] + 1;
+            uint lastHoleOfNode = holesForNodes[nodeIndex][holesForNodes[nodeIndex].length - 1];
+            schainsForNodes[nodeIndex][lastHoleOfNode] = schainId;
+            placeOfSchainOnNode[schainId][nodeIndex] = lastHoleOfNode + 1;
             holesForNodes[nodeIndex].pop();
         }
     }
