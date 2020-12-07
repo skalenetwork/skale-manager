@@ -291,6 +291,17 @@ contract SchainsInternal is Permissions {
         numberOfSchainTypes = newNumberOfSchainTypes;
     }
 
+    function moveToPlaceOfSchainOnNode(bytes32 schainHash) external onlyAdmin {
+        for (uint i = 0; i < schainsGroups[schainHash].length; i++) {
+            uint nodeIndex = schainsGroups[schainHash][i];
+            for (uint j = 0; j < schainsForNodes[nodeIndex].length; j++) {
+                if (schainsForNodes[nodeIndex][j] == schainHash) {
+                    placeOfSchainOnNode[schainHash][nodeIndex] = j + 1;
+                }
+            }
+        }
+    }
+
     /**
      * @dev Returns all Schains in the network.
      */
