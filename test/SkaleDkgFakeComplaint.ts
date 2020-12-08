@@ -158,7 +158,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                 ]
             },
             {
-                share: "0x3ef5826e0dd233e2375ab7cdb211bbb8ee205de3064df559619c91244283a2c9",
+                share: "0xa7ebaee6cd94de57e1967d1146cbc87f44a90c992af1fbe5ef74d20c779169ce",
                 publicKey: [
                     "0xa3bdf65c98fa52489c80a07b5ed6a938714cb24ae27d6f17a90006d1a061b2df",
                     "0x82fa92efe21dc1a5f113d50734c7c7a163d4ff335d8b3adf69cd3be2a31edc5e"
