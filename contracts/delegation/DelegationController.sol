@@ -282,8 +282,8 @@ contract DelegationController is Permissions, ILocker {
         require(holderBalance >= forbiddenForDelegation, "Token holder does not have enough tokens to delegate");
 
         emit DelegationProposed(delegationId);
-
-        if (ValidatorService(contractManager.getValidatorService()).isAutoAcceptingEnabled(validatorId)) {
+        
+        if (_getValidatorService().isAutoAcceptingEnabled(validatorId)) {
             _accept(delegationId);
         }
 
@@ -338,6 +338,9 @@ contract DelegationController is Permissions, ILocker {
      * - Delegation state must be PROPOSED.
      */
     function acceptPendingDelegation(uint delegationId) external checkDelegationExists(delegationId) {
+        require(
+            _getValidatorService().checkValidatorAddressToId(msg.sender, delegations[delegationId].validatorId),
+            "No permissions to accept request");
         _accept(delegationId);
     }
 
@@ -962,9 +965,6 @@ contract DelegationController is Permissions, ILocker {
     }
 
     function _accept(uint delegationId) private {
-        require(
-            _getValidatorService().checkValidatorAddressToId(msg.sender, delegations[delegationId].validatorId),
-            "No permissions to accept request");
         _checkIfDelegationIsAllowed(delegations[delegationId].holder, delegations[delegationId].validatorId);
         
         State currentState = getState(delegationId);
