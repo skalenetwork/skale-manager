@@ -282,6 +282,10 @@ contract DelegationController is Permissions, ILocker {
         require(holderBalance >= forbiddenForDelegation, "Token holder does not have enough tokens to delegate");
 
         emit DelegationProposed(delegationId);
+        
+        if (_getValidatorService().isAutoAcceptingEnabled(validatorId)) {
+            _accept(delegationId);
+        }
 
         _sendSlashingSignals(slashingSignals);
     }
@@ -337,46 +341,7 @@ contract DelegationController is Permissions, ILocker {
         require(
             _getValidatorService().checkValidatorAddressToId(msg.sender, delegations[delegationId].validatorId),
             "No permissions to accept request");
-        _checkIfDelegationIsAllowed(delegations[delegationId].holder, delegations[delegationId].validatorId);
-        
-        State currentState = getState(delegationId);
-        if (currentState != State.PROPOSED) {
-            if (currentState == State.ACCEPTED ||
-                currentState == State.DELEGATED ||
-                currentState == State.UNDELEGATION_REQUESTED ||
-                currentState == State.COMPLETED)
-            {
-                revert("The delegation has been already accepted");
-            } else if (currentState == State.CANCELED) {
-                revert("The delegation has been cancelled by token holder");
-            } else if (currentState == State.REJECTED) {
-                revert("The delegation request is outdated");
-            }
-        }
-        require(currentState == State.PROPOSED, "Cannot set delegation state to accepted");
-
-        SlashingSignal[] memory slashingSignals = _processAllSlashesWithoutSignals(delegations[delegationId].holder);
-
-        _addToAllStatistics(delegationId);
-        
-        uint amount = delegations[delegationId].amount;
-        _getTokenLaunchLocker().handleDelegationAdd(
-            delegations[delegationId].holder,
-            delegationId,
-            amount,
-            delegations[delegationId].started
-        );
-
-        uint effectiveAmount = amount.mul(
-            _getDelegationPeriodManager().stakeMultipliers(delegations[delegationId].delegationPeriod)
-        );
-        _getBounty().handleDelegationAdd(
-            effectiveAmount,
-            delegations[delegationId].started
-        );
-
-        _sendSlashingSignals(slashingSignals);
-        emit DelegationAccepted(delegationId);
+        _accept(delegationId);
     }
 
     /**
@@ -997,5 +962,48 @@ contract DelegationController is Permissions, ILocker {
 
     function _getConstantsHolder() private view returns (ConstantsHolder) {
         return ConstantsHolder(contractManager.getConstantsHolder());
+    }
+
+    function _accept(uint delegationId) private {
+        _checkIfDelegationIsAllowed(delegations[delegationId].holder, delegations[delegationId].validatorId);
+        
+        State currentState = getState(delegationId);
+        if (currentState != State.PROPOSED) {
+            if (currentState == State.ACCEPTED ||
+                currentState == State.DELEGATED ||
+                currentState == State.UNDELEGATION_REQUESTED ||
+                currentState == State.COMPLETED)
+            {
+                revert("The delegation has been already accepted");
+            } else if (currentState == State.CANCELED) {
+                revert("The delegation has been cancelled by token holder");
+            } else if (currentState == State.REJECTED) {
+                revert("The delegation request is outdated");
+            }
+        }
+        require(currentState == State.PROPOSED, "Cannot set delegation state to accepted");
+
+        SlashingSignal[] memory slashingSignals = _processAllSlashesWithoutSignals(delegations[delegationId].holder);
+
+        _addToAllStatistics(delegationId);
+        
+        uint amount = delegations[delegationId].amount;
+        _getTokenLaunchLocker().handleDelegationAdd(
+            delegations[delegationId].holder,
+            delegationId,
+            amount,
+            delegations[delegationId].started
+        );
+
+        uint effectiveAmount = amount.mul(
+            _getDelegationPeriodManager().stakeMultipliers(delegations[delegationId].delegationPeriod)
+        );
+        _getBounty().handleDelegationAdd(
+            effectiveAmount,
+            delegations[delegationId].started
+        );
+
+        _sendSlashingSignals(slashingSignals);
+        emit DelegationAccepted(delegationId);
     }
 }

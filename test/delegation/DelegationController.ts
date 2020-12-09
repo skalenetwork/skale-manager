@@ -125,6 +125,31 @@ contract("DelegationController", ([owner, holder1, holder2, validator, validator
             await delegationController.delegate(validatorId, amount, delegationPeriod, info, {from: holder1});
         });
 
+        it("should automatically accept delegation request if corresponding setting is enabled", async () => {
+            await skaleToken.mint(holder1, 2 * amount, "0x", "0x");
+
+            await validatorService.isAutoAcceptingEnabled(validatorId).should.be.eventually.false;
+
+            await validatorService.enableAutoAccepting({from: holder1}).should.be.eventually.rejected;
+            await validatorService.enableAutoAccepting({from: validator});
+            await validatorService.isAutoAcceptingEnabled(validatorId).should.be.eventually.true;
+
+            await delegationController.delegate(
+                validatorId, amount, 2, "D2 is even", {from: holder1});
+            delegationId = 0;
+
+            (await delegationController.getState(delegationId)).toNumber().should.be.equal(State.ACCEPTED);
+
+            await validatorService.disableAutoAccepting({from: validator});
+            await validatorService.isAutoAcceptingEnabled(validatorId).should.be.eventually.false;
+
+            await delegationController.delegate(
+                validatorId, amount, 2, "D2 is even", {from: holder1});
+            delegationId = 1;
+
+            (await delegationController.getState(delegationId)).toNumber().should.be.equal(State.PROPOSED);
+        });
+
         describe("when delegation request was created", async () => {
             beforeEach(async () => {
                 await skaleToken.mint(holder1, amount, "0x", "0x");
