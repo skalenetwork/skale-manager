@@ -373,7 +373,7 @@ contract DelegationController is Permissions, ILocker {
         require(
             now.add(UNDELEGATION_PROHIBITION_WINDOW_SECONDS)
                 < _getTimeHelpers().monthToTimestamp(delegations[delegationId].finished),
-            "Unelegtion requests must be sent 3 days before the end of delegation period"
+            "Undelegation requests must be sent 3 days before the end of delegation period"
         );
 
         _subtractFromAllStatistics(delegationId);
