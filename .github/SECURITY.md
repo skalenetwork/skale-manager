@@ -14,3 +14,7 @@ SKALE Manager contracts are periodically audited by third parties, and have been
 ## Code Coverage
 
 All production smart contracts are tested and have >93% line and branch coverage.
+
+## Bug Reporting Bounty
+
+Please see the SKALE Network's HackerOne program for any bug bounties related to SKALE Manager: <https://hackerone.com/skale_network>
