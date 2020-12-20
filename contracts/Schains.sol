@@ -291,8 +291,8 @@ contract Schains is Permissions {
         view
         returns (bool)
     {
+        require(signatureA < Fp2Operations.P && signatureB < Fp2Operations.P, "Signature is not valid");
         SkaleVerifier skaleVerifier = SkaleVerifier(contractManager.getContract("SkaleVerifier"));
-
         G2Operations.G2Point memory publicKey = KeyStorage(
             contractManager.getContract("KeyStorage")
         ).getCommonPublicKey(
