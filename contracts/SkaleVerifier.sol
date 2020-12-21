@@ -79,7 +79,7 @@ contract SkaleVerifier is Permissions {
         require(G2Operations.isG1Point(signature.a, newSignB), "Sign not in G1");
         require(G2Operations.isG1Point(hashA, hashB), "Hash not in G1");
 
-        G2Operations.G2Point memory g2 = G2Operations.getG2();
+        G2Operations.G2Point memory g2 = G2Operations.getG2Generator();
         require(
             G2Operations.isG2(publicKey),
             "Public Key not in G2"
