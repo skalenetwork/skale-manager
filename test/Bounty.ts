@@ -982,6 +982,10 @@ contract("Bounty", ([owner, admin, hacker, validator, validator2]) => {
                 await bountyContract.calculateBounty(3)
                     .should.be.eventually.rejectedWith("Transaction is sent too early");
 
+                await skipTimeToDate(web3, 27, 5);
+
+                await delegationController.requestUndelegation(6, {from: validator2});
+
                 await skipTimeToDate(web3, 28, 5);
 
                 // June 28th
@@ -1001,11 +1005,9 @@ contract("Bounty", ([owner, admin, hacker, validator, validator2]) => {
                 //     delegations:
                 //         1: 250K - 12 months (from Jan) - UNDELEGATION_REQUESTED
                 //         2: 0.5M - 2 months (from Feb) - DELEGATED
-                //         6: 0.5M - 2 months (from May) - DELEGATED
+                //         6: 0.5M - 2 months (from May) - UNDELEGATION_REQUESTED
                 //     nodes:
                 //         3: May 29th
-
-                await delegationController.requestUndelegation(6, {from: validator2});
 
                 bounty = await calculateBounty(1);
                 bounty.should.be.almost(0); // stake is too low
