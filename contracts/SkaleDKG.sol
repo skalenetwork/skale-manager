@@ -644,7 +644,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             b: 0
         });
         (share.a, share.b) = Precompiled.bn256ScalarMul(g1.a, g1.b, secret);
-        if (!(share.a == 0 && share.b == 0)) {
+        if (share.b != 0) {
             share.b = Fp2Operations.P.sub((share.b % Fp2Operations.P));
         }
 
