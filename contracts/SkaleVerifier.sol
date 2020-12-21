@@ -57,6 +57,7 @@ contract SkaleVerifier is Permissions {
         view
         returns (bool)
     {
+        require(signature.a < Fp2Operations.P && signature.b < Fp2Operations.P, "Signature is not valid");
         if (!_checkHashToGroupWithHelper(
             hash,
             counter,
@@ -69,7 +70,7 @@ contract SkaleVerifier is Permissions {
         }
 
         uint newSignB;
-        if (!(signature.a == 0 && signature.b == 0)) {
+        if (signature.b != 0) {
             newSignB = Fp2Operations.P.sub((signature.b % Fp2Operations.P));
         } else {
             newSignB = signature.b;
