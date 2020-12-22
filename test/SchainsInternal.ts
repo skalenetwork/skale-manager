@@ -1,6 +1,6 @@
 import { ContractManagerInstance,
          NodesInstance,
-         SchainsInternalInstance,
+         SchainsInternalMockInstance,
          ValidatorServiceInstance } from "../types/truffle-contracts";
 
 import * as elliptic from "elliptic";
@@ -14,6 +14,7 @@ import chaiAsPromised from "chai-as-promised";
 import { deployContractManager } from "./tools/deploy/contractManager";
 import { deployNodes } from "./tools/deploy/nodes";
 import { deploySchainsInternal } from "./tools/deploy/schainsInternal";
+import { deploySchainsInternalMock } from "./tools/deploy/test/schainsInternalMock";
 import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
 import { skipTime } from "./tools/time";
 
@@ -49,17 +50,18 @@ class Schain {
 contract("SchainsInternal", ([owner, holder]) => {
     let contractManager: ContractManagerInstance;
     let nodes: NodesInstance;
-    let schainsInternal: SchainsInternalInstance;
+    let schainsInternal: SchainsInternalMockInstance;
     let validatorService: ValidatorServiceInstance;
 
     beforeEach(async () => {
         contractManager = await deployContractManager();
         nodes = await deployNodes(contractManager);
-        schainsInternal = await deploySchainsInternal(contractManager);
+        schainsInternal = await deploySchainsInternalMock(contractManager);
         validatorService = await deployValidatorService(contractManager);
 
         // contract must be set in contractManager for proper work of allow modifier
         await contractManager.setContractsAddress("Schains", nodes.address);
+        await contractManager.setContractsAddress("SchainsInternal", schainsInternal.address);
         await contractManager.setContractsAddress("SkaleManager", nodes.address);
 
         validatorService.registerValidator("D2", "D2 is even", 0, 0, {from: holder});
@@ -192,11 +194,11 @@ contract("SchainsInternal", ([owner, holder]) => {
                 await schainsInternal.removeSchainForNode(nodeIndex, 0);
                 await schainsInternal.removeSchainForNode(nodeIndex, 1);
                 await schainsInternal.addSchainForNode(nodeIndex, web3.utils.soliditySha3("NewSchain2"));
-                assert(new BigNumber(await schainsInternal.holesForNodes(nodeIndex, 0)).isEqualTo(1));
+                assert(new BigNumber(await schainsInternal.holesForNodes(nodeIndex, 0)).isEqualTo(0));
                 await schainsInternal.getSchainIdsForNode(nodeIndex).should.eventually.be.deep.equal(
                     [
-                        web3.utils.soliditySha3("NewSchain2"),
                         "0x0000000000000000000000000000000000000000000000000000000000000000",
+                        web3.utils.soliditySha3("NewSchain2"),
                         web3.utils.soliditySha3("NewSchain1"),
                     ],
                 );
@@ -211,8 +213,8 @@ contract("SchainsInternal", ([owner, holder]) => {
                 await schainsInternal.addSchainForNode(nodeIndex, web3.utils.soliditySha3("NewSchain3"));
                 await schainsInternal.getSchainIdsForNode(nodeIndex).should.eventually.be.deep.equal(
                     [
-                        web3.utils.soliditySha3("NewSchain2"),
                         web3.utils.soliditySha3("NewSchain3"),
+                        web3.utils.soliditySha3("NewSchain2"),
                         web3.utils.soliditySha3("NewSchain1"),
                     ],
                 );
@@ -228,8 +230,8 @@ contract("SchainsInternal", ([owner, holder]) => {
                 await schainsInternal.addSchainForNode(nodeIndex, web3.utils.soliditySha3("NewSchain4"));
                 await schainsInternal.getSchainIdsForNode(nodeIndex).should.eventually.be.deep.equal(
                     [
-                        web3.utils.soliditySha3("NewSchain2"),
                         web3.utils.soliditySha3("NewSchain3"),
+                        web3.utils.soliditySha3("NewSchain2"),
                         web3.utils.soliditySha3("NewSchain1"),
                         web3.utils.soliditySha3("NewSchain4"),
                     ],
@@ -259,6 +261,44 @@ contract("SchainsInternal", ([owner, holder]) => {
                 assert (count.isEqualTo(1));
             });
 
+            it("should succesfully move to placeOfSchainOnNode", async () => {
+                await schainsInternal.removeSchainForNode(nodeIndex, 0);
+                const pubKey = ec.keyFromPrivate(String(privateKeys[1]).slice(2)).getPublic();
+                const nodesCount = 15;
+                for (const index of Array.from(Array(nodesCount).keys())) {
+                    const hexIndex = ("2" + index.toString(16)).slice(-2);
+                    await nodes.createNode(holder,
+                        {
+                            port: 8545,
+                            nonce: 0,
+                            ip: "0x7f0000" + hexIndex,
+                            publicIp: "0x7f0000" + hexIndex,
+                            publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
+                            name: "D2-" + hexIndex
+                        }
+                    );
+                }
+                const schainName2 = "TestSchain2";
+                const schainNameHash2 = web3.utils.soliditySha3(schainName2);
+                await schainsInternal.initializeSchain(schainName2, holder, 5, 5);
+                await schainsInternal.setSchainIndex(schainNameHash2, holder);
+                await schainsInternal.createGroupForSchain(schainNameHash2, 16, 32);
+                const res = await schainsInternal.getNodesInGroup(schainNameHash2);
+                for (const index of res) {
+                    await schainsInternal.removePlaceOfSchainOnNode(schainNameHash2, index);
+                }
+                for (const index of res) {
+                    const place = await schainsInternal.findSchainAtSchainsForNode(index, schainNameHash2);
+                    const lengthOfSchainsForNode = await schainsInternal.getLengthOfSchainsForNode(index);
+                    place.toString().should.be.equal(lengthOfSchainsForNode.toString());
+                }
+                await schainsInternal.moveToPlaceOfSchainOnNode(schainNameHash2);
+                for (const index of res) {
+                    const place = await schainsInternal.findSchainAtSchainsForNode(index, schainNameHash2);
+                    place.toString().should.be.equal("0");
+                }
+            });
+
         });
 
         it("should return list of schains", async () => {
@@ -281,6 +321,76 @@ contract("SchainsInternal", ([owner, holder]) => {
         it("should check if user is an owner of schain", async () => {
             await schainsInternal.isOwnerAddress(owner, schainNameHash).should.be.eventually.false;
             await schainsInternal.isOwnerAddress(holder, schainNameHash).should.be.eventually.true;
+        });
+
+        it("should set new number of schain types", async () => {
+            assert(new BigNumber(await schainsInternal.numberOfSchainTypes()).isEqualTo(5));
+            await schainsInternal.setNumberOfSchainTypes(6, {from: holder}).should.be.eventually.rejectedWith("Caller is not an admin");
+            await schainsInternal.setNumberOfSchainTypes(6, {from: owner});
+            assert(new BigNumber(await schainsInternal.numberOfSchainTypes()).isEqualTo(6));
+        });
+
+        it("should add new type of schain", async () => {
+            assert(new BigNumber(await schainsInternal.numberOfSchainTypes()).isEqualTo(5));
+            await schainsInternal.addSchainType(8, 16, {from: holder}).should.be.eventually.rejectedWith("Caller is not an admin");
+            await schainsInternal.addSchainType(8, 16, {from: owner});
+            assert(new BigNumber(await schainsInternal.numberOfSchainTypes()).isEqualTo(6));
+            const resSchainType = await schainsInternal.schainTypes(6);
+            assert(new BigNumber(resSchainType[0]).isEqualTo(8));
+            assert(new BigNumber(resSchainType[1]).isEqualTo(16));
+        });
+
+        it("should remove type of schain", async () => {
+            assert(new BigNumber(await schainsInternal.numberOfSchainTypes()).isEqualTo(5));
+
+            await schainsInternal.addSchainType(8, 16, {from: holder}).should.be.eventually.rejectedWith("Caller is not an admin");
+            await schainsInternal.addSchainType(8, 16, {from: owner});
+            await schainsInternal.addSchainType(32, 16, {from: owner});
+
+            assert(new BigNumber(await schainsInternal.numberOfSchainTypes()).isEqualTo(7));
+
+            let resSchainType = await schainsInternal.schainTypes(6);
+            assert(new BigNumber(resSchainType[0]).isEqualTo(8));
+            assert(new BigNumber(resSchainType[1]).isEqualTo(16));
+
+            resSchainType = await schainsInternal.schainTypes(7);
+            assert(new BigNumber(resSchainType[0]).isEqualTo(32));
+            assert(new BigNumber(resSchainType[1]).isEqualTo(16));
+
+            await schainsInternal.removeSchainType(6, {from: holder}).should.be.eventually.rejectedWith("Caller is not an admin");
+            await schainsInternal.removeSchainType(6, {from: owner});
+
+            resSchainType = await schainsInternal.schainTypes(6);
+            assert(new BigNumber(resSchainType[0]).isEqualTo(0));
+            assert(new BigNumber(resSchainType[1]).isEqualTo(0));
+
+            resSchainType = await schainsInternal.schainTypes(7);
+            assert(new BigNumber(resSchainType[0]).isEqualTo(32));
+            assert(new BigNumber(resSchainType[1]).isEqualTo(16));
+
+            await schainsInternal.removeSchainType(7, {from: holder}).should.be.eventually.rejectedWith("Caller is not an admin");
+            await schainsInternal.removeSchainType(7, {from: owner});
+
+            resSchainType = await schainsInternal.schainTypes(6);
+            assert(new BigNumber(resSchainType[0]).isEqualTo(0));
+            assert(new BigNumber(resSchainType[1]).isEqualTo(0));
+
+            resSchainType = await schainsInternal.schainTypes(7);
+            assert(new BigNumber(resSchainType[0]).isEqualTo(0));
+            assert(new BigNumber(resSchainType[1]).isEqualTo(0));
+
+            await schainsInternal.addSchainType(8, 16, {from: owner});
+            await schainsInternal.addSchainType(32, 16, {from: owner});
+
+            assert(new BigNumber(await schainsInternal.numberOfSchainTypes()).isEqualTo(9));
+
+            resSchainType = await schainsInternal.schainTypes(8);
+            assert(new BigNumber(resSchainType[0]).isEqualTo(8));
+            assert(new BigNumber(resSchainType[1]).isEqualTo(16));
+
+            resSchainType = await schainsInternal.schainTypes(9);
+            assert(new BigNumber(resSchainType[0]).isEqualTo(32));
+            assert(new BigNumber(resSchainType[1]).isEqualTo(16));
         });
 
     });

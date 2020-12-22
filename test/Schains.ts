@@ -682,7 +682,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeA
                 }
             });
 
-            it("successfully", async () => {
+            it("successfully create 1 type Of Schain", async () => {
                 const deposit = await schains.getSchainPrice(1, 5);
 
                 await schains.addSchain(
@@ -716,6 +716,84 @@ contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeA
                 obtainedSchainName.should.be.equal("d2");
                 obtainedSchainOwner.should.be.equal(holder);
                 expect(obtainedPart.eq(web3.utils.toBN(1))).be.true;
+                expect(obtainedLifetime.eq(web3.utils.toBN(5))).be.true;
+                expect(obtainedDeposit.eq(web3.utils.toBN(deposit))).be.true;
+            });
+
+            it("should add new type of Schain and create Schain", async () => {
+                await schainsInternal.addSchainType(8, 16, {from: owner});
+                const deposit = await schains.getSchainPrice(6, 5);
+
+                await schains.addSchain(
+                    holder,
+                    deposit,
+                    web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 6, 0, "d2"]),
+                    {from: owner});
+
+                const sChains = await schainsInternal.getSchains();
+                sChains.length.should.be.equal(1);
+                const schainId = sChains[0];
+
+                await schainsInternal.isOwnerAddress(holder, schainId).should.be.eventually.true;
+
+                const obtainedSchains = await schainsInternal.schains(schainId);
+                const schainsArray = Array(8);
+                for (const index of Array.from(Array(8).keys())) {
+                    schainsArray[index] = obtainedSchains[index];
+                }
+
+                const [obtainedSchainName,
+                       obtainedSchainOwner,
+                       obtainedIndexInOwnerList,
+                       obtainedPart,
+                       obtainedLifetime,
+                       obtainedStartDate,
+                       obtainedBlock,
+                       obtainedDeposit,
+                       obtainedIndex] = schainsArray;
+
+                obtainedSchainName.should.be.equal("d2");
+                obtainedSchainOwner.should.be.equal(holder);
+                expect(obtainedPart.eq(web3.utils.toBN(8))).be.true;
+                expect(obtainedLifetime.eq(web3.utils.toBN(5))).be.true;
+                expect(obtainedDeposit.eq(web3.utils.toBN(deposit))).be.true;
+            });
+
+            it("should add another new type of Schain and create Schain", async () => {
+                await schainsInternal.addSchainType(32, 16, {from: owner});
+                const deposit = await schains.getSchainPrice(6, 5);
+
+                await schains.addSchain(
+                    holder,
+                    deposit,
+                    web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 6, 0, "d2"]),
+                    {from: owner});
+
+                const sChains = await schainsInternal.getSchains();
+                sChains.length.should.be.equal(1);
+                const schainId = sChains[0];
+
+                await schainsInternal.isOwnerAddress(holder, schainId).should.be.eventually.true;
+
+                const obtainedSchains = await schainsInternal.schains(schainId);
+                const schainsArray = Array(8);
+                for (const index of Array.from(Array(8).keys())) {
+                    schainsArray[index] = obtainedSchains[index];
+                }
+
+                const [obtainedSchainName,
+                       obtainedSchainOwner,
+                       obtainedIndexInOwnerList,
+                       obtainedPart,
+                       obtainedLifetime,
+                       obtainedStartDate,
+                       obtainedBlock,
+                       obtainedDeposit,
+                       obtainedIndex] = schainsArray;
+
+                obtainedSchainName.should.be.equal("d2");
+                obtainedSchainOwner.should.be.equal(holder);
+                expect(obtainedPart.eq(web3.utils.toBN(32))).be.true;
                 expect(obtainedLifetime.eq(web3.utils.toBN(5))).be.true;
                 expect(obtainedDeposit.eq(web3.utils.toBN(deposit))).be.true;
             });
@@ -830,7 +908,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeA
 
         it("of small schain", async () => {
             const price = web3.utils.toBN(await schains.getSchainPrice(2, 5));
-            const correctPrice = web3.utils.toBN(63246306415705);
+            const correctPrice = web3.utils.toBN(15811576603926);
 
             expect(price.eq(correctPrice)).to.be.true;
         });
@@ -1796,5 +1874,169 @@ contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeA
             await schainsInternal.getSchainIdsForNode(rotIndex).should.be.eventually.empty;
         });
     });
+
+    // describe("when 16 nodes, 32 schains(Kavun test)", async () => {
+    //     beforeEach(async () => {
+    //         const deposit = await schains.getSchainPrice(2, 5);
+    //         const nodesCount = 16;
+    //         const pubKey = ec.keyFromPrivate(String(privateKeys[3]).slice(2)).getPublic();
+    //         for (const index of Array.from(Array(nodesCount).keys())) {
+    //             const hexIndex = ("0" + index.toString(16)).slice(-2);
+    //             await skaleManager.createNode(
+    //                 8545, // port
+    //                 0, // nonce
+    //                 "0x7f0000" + hexIndex, // ip
+    //                 "0x7f0000" + hexIndex, // public ip
+    //                 ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')], // public key
+    //                 "D2-" + hexIndex, // name
+    //                 {from: nodeAddress});
+    //         }
+
+    //     });
+
+    //     it("should will remove all schains frontward and create Medium Schain", async () => {
+    //         const schainsCount = 32;
+    //         const deposit = await schains.getSchainPrice(2, 5);
+    //         for (const index of Array.from(Array(schainsCount).keys())) {
+    //             const hexIndex = ("0" + index.toString(16)).slice(-2);
+    //             await schains.addSchain(
+    //                 holder,
+    //                 deposit,
+    //                 web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 2, 0, "d" + hexIndex]),
+    //                 {from: owner}
+    //             );
+    //             await skaleDKG.setSuccesfulDKGPublic(
+    //                 web3.utils.soliditySha3("d" + hexIndex),
+    //             );
+    //         }
+    //         for (const index of Array.from(Array(schainsCount).keys())) {
+    //             const hexIndex = ("0" + index.toString(16)).slice(-2);
+    //             await skaleManager.deleteSchain(
+    //                 "d" + hexIndex,
+    //                 {from: holder}
+    //             );
+    //         }
+    //         const res = await schains.addSchain(
+    //             holder,
+    //             deposit,
+    //             web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 2, 0, "a1"]),
+    //             {from: owner});
+    //         res.receipt.gasUsed.should.be.lessThan(5000000);
+    //         await skaleDKG.setSuccesfulDKGPublic(
+    //             web3.utils.soliditySha3("a1"),
+    //         );
+    //     });
+
+    //     it("should will remove all schains backward and create Medium Schain", async () => {
+    //         const schainsCount = 32;
+    //         const deposit = await schains.getSchainPrice(2, 5);
+    //         for (const index of Array.from(Array(schainsCount).keys())) {
+    //             const hexIndex = ("0" + index.toString(16)).slice(-2);
+    //             await schains.addSchain(
+    //                 holder,
+    //                 deposit,
+    //                 web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 2, 0, "d" + hexIndex]),
+    //                 {from: owner}
+    //             );
+    //             await skaleDKG.setSuccesfulDKGPublic(
+    //                 web3.utils.soliditySha3("d" + hexIndex),
+    //             );
+    //         }
+    //         for (const index of Array.from(Array(schainsCount).keys()).reverse()) {
+    //             const hexIndex = ("0" + index.toString(16)).slice(-2);
+    //             await skaleManager.deleteSchain(
+    //                 "d" + hexIndex,
+    //                 {from: holder}
+    //             );
+    //         }
+    //         const res = await schains.addSchain(
+    //             holder,
+    //             deposit,
+    //             web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 2, 0, "a1"]),
+    //             {from: owner});
+    //         res.receipt.gasUsed.should.be.lessThan(5000000);
+    //         await skaleDKG.setSuccesfulDKGPublic(
+    //             web3.utils.soliditySha3("a1"),
+    //         );
+    //     });
+
+    //     it("should will remove all schains frontward and create Small Schain", async () => {
+    //         const schainsCount = 128;
+    //         const deposit = await schains.getSchainPrice(1, 5);
+    //         for (const index of Array.from(Array(schainsCount).keys())) {
+    //             const hexIndex = ("0" + index.toString(16)).slice(-2);
+    //             const res = await schains.addSchain(
+    //                 holder,
+    //                 deposit,
+    //                 web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 1, 0, "d" + hexIndex]),
+    //                 {from: owner});
+    //             console.log("Schain d" + hexIndex, "was created with gas", res.receipt.gasUsed);
+    //             await skaleDKG.setSuccesfulDKGPublic(
+    //                 web3.utils.soliditySha3("d" + hexIndex),
+    //             );
+    //         }
+    //         for (const index of Array.from(Array(schainsCount).keys())) {
+    //             const hexIndex = ("0" + index.toString(16)).slice(-2);
+    //             const res = await skaleManager.deleteSchain(
+    //                 "d" + hexIndex,
+    //                 {from: holder});
+    //             console.log("Schain d" + hexIndex, "was deleted with gas", res.receipt.gasUsed);
+    //         }
+    //         // console.log("----------------------------------------------------------")
+    //         // console.log(await schainsInternal.getSchainIdsForNode(0));
+    //         // console.log(await schainsInternal.holesForNodes(0));
+    //         // console.log(await schainsInternal.holesForSchains(web3.utils.soliditySha3("d01")));
+    //         const res = await schains.addSchain(
+    //             holder,
+    //             deposit,
+    //             web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 1, 0, "a1"]),
+    //             {from: owner});
+    //         console.log("Frontward");
+    //         console.log("Schain a1 with gas", res.receipt.gasUsed);
+    //         await skaleDKG.setSuccesfulDKGPublic(
+    //             web3.utils.soliditySha3("a1"),
+    //         );
+    //         // console.log("----------------------------------------------------------")
+    //         // console.log(await schainsInternal.getSchainIdsForNode(0));
+    //         // console.log(await schainsInternal.holesForNodes(0));
+    //         // console.log(await schainsInternal.holesForSchains(web3.utils.soliditySha3("d01")));
+    //     });
+
+    //     it("should will remove all schains backward and create Small Schain", async () => {
+    //         const schainsCount = 128;
+    //         const deposit = await schains.getSchainPrice(1, 5);
+    //         for (const index of Array.from(Array(schainsCount).keys())) {
+    //             const hexIndex = ("0" + index.toString(16)).slice(-2);
+    //             const res = await schains.addSchain(
+    //                 holder,
+    //                 deposit,
+    //                 web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 1, 0, "d" + hexIndex]),
+    //                 {from: owner});
+    //             console.log("Schain d" + hexIndex, "was created with gas", res.receipt.gasUsed);
+    //             await skaleDKG.setSuccesfulDKGPublic(
+    //                 web3.utils.soliditySha3("d" + hexIndex),
+    //             );
+    //         }
+    //         for (const index of Array.from(Array(schainsCount).keys()).reverse()) {
+    //             const hexIndex = ("0" + index.toString(16)).slice(-2);
+    //             const res = await skaleManager.deleteSchain(
+    //                 "d" + hexIndex,
+    //                 {from: holder});
+    //             console.log("Schain d" + hexIndex, "was deleted with gas", res.receipt.gasUsed);
+    //         }
+    //         // console.log("----------------------------------------------------------")
+    //         // console.log(await schainsInternal.getSchainIdsForNode(0));
+    //         // console.log(await schainsInternal.holesForNodes(0));
+    //         // console.log(await schainsInternal.holesForSchains(web3.utils.soliditySha3("d01")));
+    //         const res = await schains.addSchain(
+    //             holder,
+    //             deposit,
+    //             web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 1, 0, "a1"]),
+    //             {from: owner});
+    //         await skaleDKG.setSuccesfulDKGPublic(
+    //             web3.utils.soliditySha3("a1"),
+    //         );
+    //     });
+    // });
 
 });

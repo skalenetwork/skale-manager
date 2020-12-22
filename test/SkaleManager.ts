@@ -221,48 +221,67 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                 expect(balanceAfter.sub(balanceBefore).eq(web3.utils.toBN("0"))).to.be.true;
             });
 
-            // TODO: IMPORTANT! Enable after the formula update
-            // it("should pay bounty according to the schedule", async () => {
-            //     const timeHelpers = await deployTimeHelpers(contractManager);
+            it("should create and remove node from validator address", async () => {
+                expect(web3.utils.toBN(await validatorService.getValidatorIdByNodeAddress(validator)).eq(web3.utils.toBN("1"))).to.be.true;
+                const pubKey = ec.keyFromPrivate(String(privateKeys[1]).slice(2)).getPublic();
+                await skaleManager.createNode(
+                    8545, // port
+                    0, // nonce
+                    "0x7f000002", // ip
+                    "0x7f000002", // public ip
+                    ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')], // public key
+                    "d3", // name
+                    {from: validator}
+                );
 
-            //     await bountyContract.disableBountyReduction();
+                await skaleManager.nodeExit(1, {from: validator});
 
-            //     const timelimit = 300 * 1000;
-            //     const start = Date.now();
-            //     const launch = (await constantsHolder.launchTimestamp()).toNumber();
-            //     const launchMonth = (await timeHelpers.timestampToMonth(launch)).toNumber();
-            //     const ten18 = web3.utils.toBN(10).pow(web3.utils.toBN(18));
+                await nodesContract.isNodeLeft(1).should.be.eventually.true;
+                expect(web3.utils.toBN(await validatorService.getValidatorIdByNodeAddress(validator)).eq(web3.utils.toBN("1"))).to.be.true;
+            });
 
-            //     const schedule = [
-            //         385000000,
-            //         346500000,
-            //         308000000,
-            //         269500000,
-            //         231000000,
-            //         192500000
-            //     ]
-            //     for (let bounty = schedule[schedule.length - 1] / 2; bounty > 1; bounty /= 2) {
-            //         for (let i = 0; i < 3; ++i) {
-            //             schedule.push(bounty);
-            //         }
-            //     }
+            it("should pay bounty according to the schedule", async () => {
+                const timeHelpers = await deployTimeHelpers(contractManager);
 
-            //     let mustBePaid = web3.utils.toBN(0);
-            //     skipTime(web3, month);
-            //     for (let year = 0; year < schedule.length && (Date.now() - start) < 0.9 * timelimit; ++year) {
-            //         for (let monthIndex = 0; monthIndex < 12; ++monthIndex) {
-            //             const monthEnd = (await timeHelpers.monthToTimestamp(launchMonth + 12 * year + monthIndex + 1)).toNumber();
-            //             if (await currentTime(web3) < monthEnd) {
-            //                 skipTime(web3, monthEnd - await currentTime(web3) - day);
-            //                 await skaleManager.getBounty(0, {from: nodeAddress});
-            //             }
-            //         }
-            //         const bountyWasPaid = web3.utils.toBN(await skaleToken.balanceOf(distributor.address));
-            //         mustBePaid = mustBePaid.add(web3.utils.toBN(Math.floor(schedule[year])));
+                await bountyContract.disableBountyReduction();
+                await constantsHolder.setMSR(delegatedAmount);
 
-            //         bountyWasPaid.div(ten18).sub(mustBePaid).abs().toNumber().should.be.lessThan(35); // 35 because of rounding errors in JS
-            //     }
-            // });
+                const timelimit = 300 * 1000;
+                const start = Date.now();
+                const launch = (await constantsHolder.launchTimestamp()).toNumber();
+                const launchMonth = (await timeHelpers.timestampToMonth(launch)).toNumber();
+                const ten18 = web3.utils.toBN(10).pow(web3.utils.toBN(18));
+
+                const schedule = [
+                    385000000,
+                    346500000,
+                    308000000,
+                    269500000,
+                    231000000,
+                    192500000
+                ]
+                for (let bounty = schedule[schedule.length - 1] / 2; bounty > 1; bounty /= 2) {
+                    for (let i = 0; i < 3; ++i) {
+                        schedule.push(bounty);
+                    }
+                }
+
+                let mustBePaid = web3.utils.toBN(0);
+                skipTime(web3, month);
+                for (let year = 0; year < schedule.length && (Date.now() - start) < 0.9 * timelimit; ++year) {
+                    for (let monthIndex = 0; monthIndex < 12; ++monthIndex) {
+                        const monthEnd = (await timeHelpers.monthToTimestamp(launchMonth + 12 * year + monthIndex + 1)).toNumber();
+                        if (await currentTime(web3) < monthEnd) {
+                            skipTime(web3, monthEnd - await currentTime(web3) - day);
+                            await skaleManager.getBounty(0, {from: nodeAddress});
+                        }
+                    }
+                    const bountyWasPaid = web3.utils.toBN(await skaleToken.balanceOf(distributor.address));
+                    mustBePaid = mustBePaid.add(web3.utils.toBN(Math.floor(schedule[year])));
+
+                    bountyWasPaid.div(ten18).sub(mustBePaid).abs().toNumber().should.be.lessThan(35); // 35 because of rounding errors in JS
+                }
+            });
         });
 
         describe("when two nodes are created", async () => {
@@ -547,9 +566,10 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                 });
 
                 it("should create 2 medium schains", async () => {
+                    const price = await schains.getSchainPrice(3, 5)
                     await skaleToken.send(
                         skaleManager.address,
-                        "0x1cc2d6d04a2ca",
+                        price,
                         web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [
                             5, // lifetime
                             3, // type of schain
@@ -562,7 +582,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
 
                     await skaleToken.send(
                         skaleManager.address,
-                        "0x1cc2d6d04a2ca",
+                        price,
                         web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [
                             5, // lifetime
                             3, // type of schain

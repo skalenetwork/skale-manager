@@ -44,6 +44,11 @@ contract SchainsInternal is Permissions {
         uint64 index;
     }
 
+    struct SchainType {
+        uint8 partOfNode;
+        uint numberOfNodes;
+    }
+
 
     // mapping which contain all schains
     mapping (bytes32 => Schain) public schains;
@@ -62,7 +67,6 @@ contract SchainsInternal is Permissions {
 
     mapping (bytes32 => uint[]) public holesForSchains;
 
-
     // array which contain all schains
     bytes32[] public schainsAtSystem;
 
@@ -71,6 +75,13 @@ contract SchainsInternal is Permissions {
     uint public sumOfSchainsResources;
 
     mapping (bytes32 => bool) public usedSchainNames;
+
+    mapping (uint => SchainType) public schainTypes;
+    uint public numberOfSchainTypes;
+
+    //   schain hash =>   node index  => index of place
+    // index of place is a number from 1 to max number of slots on node(128)
+    mapping (bytes32 => mapping (uint => uint)) public placeOfSchainOnNode;
 
     /**
      * @dev Allows Schain contract to initialize an schain.
@@ -191,10 +202,14 @@ contract SchainsInternal is Permissions {
             }
         }
 
-        uint schainId = findSchainAtSchainsForNode(nodeIndex, schainHash);
-        removeSchainForNode(nodeIndex, schainId);
+        uint schainIndexOnNode = findSchainAtSchainsForNode(nodeIndex, schainHash);
+        removeSchainForNode(nodeIndex, schainIndexOnNode);
+        delete placeOfSchainOnNode[schainHash][nodeIndex];
     }
 
+    /**
+     * @dev Allows Schains contract to remove node from exceptions
+     */
     function removeNodeFromExceptions(bytes32 schainHash, uint nodeIndex) external allow("Schains") {
         _exceptionsForGroups[schainHash][nodeIndex] = false;
     }
@@ -245,8 +260,49 @@ contract SchainsInternal is Permissions {
         }
     }
 
+    /**
+     * @dev Allows Schains contract to remove holes for schains
+     */
     function removeHolesForSchain(bytes32 schainHash) external allow("Schains") {
         delete holesForSchains[schainHash];
+    }
+
+    /**
+     * @dev Allows Admin to add schain type
+     */
+    function addSchainType(uint8 partOfNode, uint numberOfNodes) external onlyAdmin {
+        schainTypes[numberOfSchainTypes + 1].partOfNode = partOfNode;
+        schainTypes[numberOfSchainTypes + 1].numberOfNodes = numberOfNodes;
+        numberOfSchainTypes++;
+    }
+
+    /**
+     * @dev Allows Admin to remove schain type
+     */
+    function removeSchainType(uint typeOfSchain) external onlyAdmin {
+        delete schainTypes[typeOfSchain].partOfNode;
+        delete schainTypes[typeOfSchain].numberOfNodes;
+    }
+
+    /**
+     * @dev Allows Admin to set number of schain types
+     */
+    function setNumberOfSchainTypes(uint newNumberOfSchainTypes) external onlyAdmin {
+        numberOfSchainTypes = newNumberOfSchainTypes;
+    }
+
+    /**
+     * @dev Allows Admin to move schain to placeOfSchainOnNode map
+     */
+    function moveToPlaceOfSchainOnNode(bytes32 schainHash) external onlyAdmin {
+        for (uint i = 0; i < schainsGroups[schainHash].length; i++) {
+            uint nodeIndex = schainsGroups[schainHash][i];
+            for (uint j = 0; j < schainsForNodes[nodeIndex].length; j++) {
+                if (schainsForNodes[nodeIndex][j] == schainHash) {
+                    placeOfSchainOnNode[schainHash][nodeIndex] = j + 1;
+                }
+            }
+        }
     }
 
     /**
@@ -433,11 +489,19 @@ contract SchainsInternal is Permissions {
         return false;
     }
 
+    /**
+     * @dev Returns number of Schains on a node.
+     */
+    function getLengthOfSchainsForNode(uint nodeIndex) external view returns (uint) {
+        return schainsForNodes[nodeIndex].length;
+    }
+
     function initialize(address newContractsAddress) public override initializer {
         Permissions.initialize(newContractsAddress);
 
         numberOfSchains = 0;
         sumOfSchainsResources = 0;
+        numberOfSchainTypes = 5;
     }
 
     /**
@@ -446,23 +510,12 @@ contract SchainsInternal is Permissions {
     function addSchainForNode(uint nodeIndex, bytes32 schainId) public allowTwo("Schains", "NodeRotation") {
         if (holesForNodes[nodeIndex].length == 0) {
             schainsForNodes[nodeIndex].push(schainId);
+            placeOfSchainOnNode[schainId][nodeIndex] = schainsForNodes[nodeIndex].length;
         } else {
-            schainsForNodes[nodeIndex][holesForNodes[nodeIndex][0]] = schainId;
-            uint min = uint(-1);
-            uint index = 0;
-            for (uint i = 1; i < holesForNodes[nodeIndex].length; i++) {
-                if (min > holesForNodes[nodeIndex][i]) {
-                    min = holesForNodes[nodeIndex][i];
-                    index = i;
-                }
-            }
-            if (min == uint(-1)) {
-                delete holesForNodes[nodeIndex];
-            } else {
-                holesForNodes[nodeIndex][0] = min;
-                holesForNodes[nodeIndex][index] = holesForNodes[nodeIndex][holesForNodes[nodeIndex].length - 1];
-                holesForNodes[nodeIndex].pop();
-            }
+            uint lastHoleOfNode = holesForNodes[nodeIndex][holesForNodes[nodeIndex].length - 1];
+            schainsForNodes[nodeIndex][lastHoleOfNode] = schainId;
+            placeOfSchainOnNode[schainId][nodeIndex] = lastHoleOfNode + 1;
+            holesForNodes[nodeIndex].pop();
         }
     }
 
@@ -477,6 +530,7 @@ contract SchainsInternal is Permissions {
         uint length = schainsForNodes[nodeIndex].length;
         if (schainIndex == length.sub(1)) {
             schainsForNodes[nodeIndex].pop();
+
         } else {
             schainsForNodes[nodeIndex][schainIndex] = bytes32(0);
             if (holesForNodes[nodeIndex].length > 0 && holesForNodes[nodeIndex][0] > schainIndex) {
@@ -490,23 +544,12 @@ contract SchainsInternal is Permissions {
     }
 
     /**
-     * @dev Returns number of Schains on a node.
-     */
-    function getLengthOfSchainsForNode(uint nodeIndex) public view returns (uint) {
-        return schainsForNodes[nodeIndex].length;
-    }
-
-    /**
      * @dev Returns index of Schain in list of schains for a given node.
      */
     function findSchainAtSchainsForNode(uint nodeIndex, bytes32 schainId) public view returns (uint) {
-        uint length = getLengthOfSchainsForNode(nodeIndex);
-        for (uint i = 0; i < length; i++) {
-            if (schainsForNodes[nodeIndex][i] == schainId) {
-                return i;
-            }
-        }
-        return length;
+        if (placeOfSchainOnNode[schainId][nodeIndex] == 0)
+            return schainsForNodes[nodeIndex].length;
+        return placeOfSchainOnNode[schainId][nodeIndex] - 1;
     }
 
     function isEnoughNodes(bytes32 schainId) public view returns (uint[] memory result) {
