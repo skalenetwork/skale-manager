@@ -117,6 +117,7 @@ contract ECDH {
     }
 
     function inverse(uint256 a) public pure returns (uint256 invA) {
+        require(a > 0 && a < _N, "Input is incorrect");
         uint256 t = 0;
         uint256 newT = 1;
         uint256 r = _N;
