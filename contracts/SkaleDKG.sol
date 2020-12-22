@@ -600,10 +600,9 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         view
         returns (bool)
     {
+        require(g1Mul.a < Fp2Operations.P && g1Mul.b < Fp2Operations.P, "g1Mul is not valid");
         Fp2Operations.Fp2Point memory one = G2Operations.getG1Generator();
-        if (!(g1Mul.a == 0 && g1Mul.b == 0)) {
-            g1Mul.b = Fp2Operations.P.sub((g1Mul.b % Fp2Operations.P));
-        }
+        g1Mul.b = (Fp2Operations.P - g1Mul.b) % Fp2Operations.P;
         return Precompiled.bn256Pairing(
             one.a, one.b,
             verificationVectorMult.x.b, verificationVectorMult.x.a,
@@ -644,9 +643,8 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             b: 0
         });
         (share.a, share.b) = Precompiled.bn256ScalarMul(g1.a, g1.b, secret);
-        if (share.b != 0) {
-            share.b = Fp2Operations.P.sub((share.b % Fp2Operations.P));
-        }
+        require(share.a < Fp2Operations.P && share.b < Fp2Operations.P, "share is not valid");
+        share.b = (Fp2Operations.P - share.b) % Fp2Operations.P;
 
         require(G2Operations.isG1(share), "mulShare not in G1");
 
