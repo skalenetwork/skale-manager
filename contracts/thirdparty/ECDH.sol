@@ -146,11 +146,12 @@ contract ECDH {
         uint256 lz;
         uint256 da;
         uint256 db;
-
+        // we use (0 0 1) as zero point, z always equal 1
         if ((x1 == 0) && (y1 == 0)) {
             return (x2, y2, z2);
         }
 
+        // we use (0 0 1) as zero point, z always equal 1
         if ((x2 == 0) && (y2 == 0)) {
             return (x1, y1, z1);
         }
