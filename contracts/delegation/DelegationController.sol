@@ -284,10 +284,6 @@ contract DelegationController is Permissions, ILocker {
         require(holderBalance >= forbiddenForDelegation, "Token holder does not have enough tokens to delegate");
 
         emit DelegationProposed(delegationId);
-        
-        if (_getValidatorService().isAutoAcceptingEnabled(validatorId)) {
-            _accept(delegationId);
-        }
 
         _sendSlashingSignals(slashingSignals);
     }
