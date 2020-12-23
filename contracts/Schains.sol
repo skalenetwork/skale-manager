@@ -292,7 +292,6 @@ contract Schains is Permissions {
         returns (bool)
     {
         SkaleVerifier skaleVerifier = SkaleVerifier(contractManager.getContract("SkaleVerifier"));
-
         G2Operations.G2Point memory publicKey = KeyStorage(
             contractManager.getContract("KeyStorage")
         ).getCommonPublicKey(
