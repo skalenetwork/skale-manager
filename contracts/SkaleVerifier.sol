@@ -69,7 +69,7 @@ contract SkaleVerifier is Permissions {
             return false;
         }
 
-        uint newSignB = (Fp2Operations.P.sub(signature.b)) % Fp2Operations.P;
+        uint newSignB = Fp2Operations.P.sub(signature.b).mod(Fp2Operations.P);
         require(G2Operations.isG1Point(signature.a, newSignB), "Sign not in G1");
         require(G2Operations.isG1Point(hashA, hashB), "Hash not in G1");
 
