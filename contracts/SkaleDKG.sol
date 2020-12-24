@@ -580,8 +580,8 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         view
         returns (bool)
     {
-        Fp2Operations.Fp2Point memory value = G2Operations.getG1Generator();
-        Fp2Operations.Fp2Point memory tmp = G2Operations.getG1Generator();
+        Fp2Operations.Fp2Point memory value = G1Operations.getG1Generator();
+        Fp2Operations.Fp2Point memory tmp = G1Operations.getG1Generator();
         for (uint i = 0; i < verificationVector.length; i++) {
             (tmp.a, tmp.b) = Precompiled.bn256ScalarMul(value.a, value.b, indexOnSchain.add(1) ** i);
             if (!_checkPairing(tmp, verificationVector[i], verificationVectorMult[i])) {
@@ -600,7 +600,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         view
         returns (bool)
     {
-        Fp2Operations.Fp2Point memory one = G2Operations.getG1Generator();
+        Fp2Operations.Fp2Point memory one = G1Operations.getG1Generator();
         if (!(g1Mul.a == 0 && g1Mul.b == 0)) {
             g1Mul.b = Fp2Operations.P.sub((g1Mul.b % Fp2Operations.P));
         }
@@ -638,7 +638,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             return false;
         }
         G2Operations.G2Point memory tmp = multipliedShare;
-        Fp2Operations.Fp2Point memory g1 = G2Operations.getG1Generator();
+        Fp2Operations.Fp2Point memory g1 = G1Operations.getG1Generator();
         Fp2Operations.Fp2Point memory share = Fp2Operations.Fp2Point({
             a: 0,
             b: 0
@@ -648,7 +648,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             share.b = Fp2Operations.P.sub((share.b % Fp2Operations.P));
         }
 
-        require(G2Operations.isG1(share), "mulShare not in G1");
+        require(G1Operations.isG1(share), "mulShare not in G1");
 
         G2Operations.G2Point memory g2 = G2Operations.getG2Generator();
 

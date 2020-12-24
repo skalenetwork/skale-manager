@@ -189,7 +189,7 @@ contract("ECDH", ([owner, validator, developer, hacker]) => {
 
     it("Inverse of 0", async () => {
         const d = new BigNumber(0);
-        const result = await ecdh.inverse(d);
+        const result = await ecdh.inverse(d).should.be.eventually.rejectedWith("Input is incorrect");
         assert.equal(result.toString(10), "0");
     });
 
