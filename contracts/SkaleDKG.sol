@@ -600,9 +600,8 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         view
         returns (bool)
     {
-        require(g1Mul.a < Fp2Operations.P && g1Mul.b < Fp2Operations.P, "g1Mul is not valid");
+        g1Mul.b = _checkRange(g1Mul.a, g1Mul.b, "g1Mul is not valid");
         Fp2Operations.Fp2Point memory one = G2Operations.getG1Generator();
-        g1Mul.b = Fp2Operations.P.sub(g1Mul.b).mod(Fp2Operations.P);
         return Precompiled.bn256Pairing(
             one.a, one.b,
             verificationVectorMult.x.b, verificationVectorMult.x.a,
@@ -643,8 +642,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             b: 0
         });
         (share.a, share.b) = Precompiled.bn256ScalarMul(g1.a, g1.b, secret);
-        require(share.a < Fp2Operations.P && share.b < Fp2Operations.P, "share is not valid");
-        share.b = Fp2Operations.P.sub(share.b).mod(Fp2Operations.P);
+        share.b = _checkRange(share.a, share.b, "share is not valid");
 
         require(G2Operations.isG1(share), "mulShare not in G1");
 
@@ -775,5 +773,10 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             );
         }
         return keccak256(data);
+    }
+
+    function _checkRange(uint x, uint y, string memory message) private view returns (uint) {
+        require(x < Fp2Operations.P && y < Fp2Operations.P, message);
+        return Fp2Operations.P.sub(y).mod(Fp2Operations.P);
     }
 }
