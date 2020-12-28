@@ -52,12 +52,16 @@ library Fp2Operations {
         if (diminished.a >= subtracted.a) {
             difference.a = addmod(diminished.a, p - (subtracted.a), p);
         } else {
-            difference.a = p - (addmod(subtracted.a, p - (diminished.a), p));
+            difference.a = addmod(subtracted.a, p - (diminished.a), p) == 0 ?
+            0 :
+            p - (addmod(subtracted.a, p - (diminished.a), p));
         }
         if (diminished.b >= subtracted.b) {
             difference.b = addmod(diminished.b, p - (subtracted.b), p);
         } else {
-            difference.b = p - (addmod(subtracted.b, p - (diminished.b), p));
+            difference.b = addmod(subtracted.b, p - (diminished.b), p) == 0 ?
+            0 :
+            p - (addmod(subtracted.b, p - (diminished.b), p));
         }
     }
 
@@ -101,11 +105,11 @@ library Fp2Operations {
         if (t0 >= t2) {
             t2 = addmod(t0, p - t2, p);
         } else {
-            t2 = p - addmod(t2, p - t0, p);
+            t2 = addmod(t2, p - t0, p) == 0 ? 0 : p - addmod(t2, p - t0, p);
         }
         uint t3 = Precompiled.bigModExp(t2, p - 2, p);
         result.a = mulmod(value.a, t3, p);
-        result.b = p - mulmod(value.b, t3, p);
+        result.b = mulmod(value.b, t3, p) == 0 ? 0 : p - mulmod(value.b, t3, p);
     }
 
     function isEqual(
@@ -247,8 +251,8 @@ library G2Operations {
         sum.x = s.squaredFp2().minusFp2(value1.x.addFp2(value2.x));
         sum.y = value1.y.addFp2(s.mulFp2(sum.x.minusFp2(value1.x)));
         uint p = Fp2Operations.P;
-        sum.y.a = p - sum.y.a;
-        sum.y.b = p - sum.y.b;
+        sum.y.a = sum.y.a == 0 ? 0 : p - sum.y.a;
+        sum.y.b = sum.y.b == 0 ? 0 : p - sum.y.b;
     }
 
     function isEqual(
@@ -275,8 +279,8 @@ library G2Operations {
             result.x = s.squaredFp2().minusFp2(value.x.addFp2(value.x));
             result.y = value.y.addFp2(s.mulFp2(result.x.minusFp2(value.x)));
             uint p = Fp2Operations.P;
-            result.y.a = p - result.y.a;
-            result.y.b = p - result.y.b;
+            result.y.a = result.y.a == 0 ? 0 : p - result.y.a;
+            result.y.b = result.y.b == 0 ? 0 : p - result.y.b;
         }
     }
 }
