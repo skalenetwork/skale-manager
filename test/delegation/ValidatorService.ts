@@ -29,9 +29,8 @@ class Validator {
     public registrationTime: BigNumber;
     public minimumDelegationAmount: BigNumber;
     public acceptNewRequests: boolean;
-    public autoAcceptDelegations: boolean;
 
-    constructor(arrayData: [string, string, string, string, BigNumber, BigNumber, BigNumber, boolean, boolean]) {
+    constructor(arrayData: [string, string, string, string, BigNumber, BigNumber, BigNumber, boolean]) {
         this.name = arrayData[0];
         this.validatorAddress = arrayData[1];
         this.requestedAddress = arrayData[2];
@@ -40,7 +39,6 @@ class Validator {
         this.registrationTime = new BigNumber(arrayData[5]);
         this.minimumDelegationAmount = new BigNumber(arrayData[6]);
         this.acceptNewRequests = arrayData[7];
-        this.autoAcceptDelegations = arrayData[8];
     }
 }
 

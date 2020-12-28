@@ -56,7 +56,6 @@ contract ValidatorService is Permissions {
         uint registrationTime;
         uint minimumDelegationAmount;
         bool acceptNewRequests;
-        bool autoAcceptDelegations;
     }
 
     /**
@@ -152,8 +151,7 @@ contract ValidatorService is Permissions {
             feeRate,
             now,
             minimumDelegationAmount,
-            true,
-            false
+            true
         );
         _setValidatorAddress(validatorId, msg.sender);
 
@@ -343,36 +341,6 @@ contract ValidatorService is Permissions {
         validators[validatorId].acceptNewRequests = false;
     }
 
-    /**
-     * @dev Allows a validator to automatically accept all new delegation requests.
-     * 
-     * Requirements:
-     * 
-     * - Must not have already enabled automatic accepting.
-     */
-    function enableAutoAccepting() external {
-        // check Validator Exist is inside getValidatorId
-        uint validatorId = getValidatorId(msg.sender);
-        require(!isAutoAcceptingEnabled(validatorId), "Auto accepting is already enabled");
-
-        validators[validatorId].autoAcceptDelegations = true;
-    }
-
-    /**
-     * @dev Allows a validator to stop automatic accepting of all new delegation requests.
-     * 
-     * Requirements:
-     * 
-     * - Must not have already disabled automatic accepting of new requests.
-     */
-    function disableAutoAccepting() external {
-        // check Validator Exist is inside getValidatorId
-        uint validatorId = getValidatorId(msg.sender);
-        require(isAutoAcceptingEnabled(validatorId), "Auto accepting is already disabled");
-
-        validators[validatorId].autoAcceptDelegations = false;
-    }
-
     function removeNodeAddress(uint validatorId, address nodeAddress) external allowTwo("ValidatorService", "Nodes") {
         require(_nodeAddressToValidatorId[nodeAddress] == validatorId,
             "Validator does not have permissions to unlink node");
@@ -505,13 +473,6 @@ contract ValidatorService is Permissions {
      */
     function isAcceptingNewRequests(uint validatorId) public view checkValidatorExists(validatorId) returns (bool) {
         return validators[validatorId].acceptNewRequests;
-    }
-
-    /**
-     * @dev Checks whether the validator is currently automatically accept all new delegation requests.
-     */
-    function isAutoAcceptingEnabled(uint validatorId) public view checkValidatorExists(validatorId) returns (bool) {
-        return validators[validatorId].autoAcceptDelegations;
     }
 
     function isAuthorizedValidator(uint validatorId) public view checkValidatorExists(validatorId) returns (bool) {
