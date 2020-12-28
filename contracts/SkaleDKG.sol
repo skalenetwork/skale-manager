@@ -218,16 +218,16 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         external
         correctGroup(schainId)
     {
-        require(_isNodeByMessageSender(nodeIndex, msg.sender), "Node does not exist for message sender");
+        require(_isNodeByMessageSender(nodeIndex, msg.sender), "Node doesnt exist for msg sender");
         uint n = channels[schainId].n;
-        require(verificationVector.length == getT(n), "Incorrect number of verification vectors");
+        require(verificationVector.length == getT(n), "Incorrect number of ver vectors");
         require(
             secretKeyContribution.length == n,
             "Incorrect number of secret key shares"
         );
         uint index = _nodeIndexInSchain(schainId, nodeIndex);
         require(index < channels[schainId].n, "Node is not in this group");
-        require(!dkgProcess[schainId].broadcasted[index], "This node has already broadcasted");
+        require(!dkgProcess[schainId].broadcasted[index], "Node has already broadcasted");
         dkgProcess[schainId].broadcasted[index] = true;
         dkgProcess[schainId].numberOfBroadcasted++;
         if (dkgProcess[schainId].numberOfBroadcasted == channels[schainId].n) {
@@ -259,7 +259,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         correctNode(schainId, fromNodeIndex)
         correctNodeWithoutRevert(schainId, toNodeIndex)
     {
-        require(_isNodeByMessageSender(fromNodeIndex, msg.sender), "Node does not exist for message sender");
+        require(_isNodeByMessageSender(fromNodeIndex, msg.sender), "Node doesnt exist for msg sender");
         require(isNodeBroadcasted(schainId, fromNodeIndex), "Node has not broadcasted");
         bool broadcasted = isNodeBroadcasted(schainId, toNodeIndex);
         if (broadcasted) {
@@ -282,7 +282,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         correctNode(schainId, fromNodeIndex)
         correctNodeWithoutRevert(schainId, toNodeIndex)
     { 
-        require(_isNodeByMessageSender(fromNodeIndex, msg.sender), "Node does not exist for message sender");
+        require(_isNodeByMessageSender(fromNodeIndex, msg.sender), "Node doesnt exist for msg sender");
         require(isNodeBroadcasted(schainId, fromNodeIndex), "Node has not broadcasted");
         require(isNodeBroadcasted(schainId, toNodeIndex), "Accused node has not broadcasted");
         require(!isAllDataReceived(schainId, fromNodeIndex), "Node has already sent alright");
@@ -292,7 +292,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             complaints[schainId].startComplaintBlockTimestamp = block.timestamp;
             emit ComplaintSent(schainId, fromNodeIndex, toNodeIndex);
         } else {
-            emit ComplaintError("First complaint has already been processed");
+            emit ComplaintError("1 complaint has been processed");
         }
     }
 
@@ -309,20 +309,20 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         uint indexOnSchain = _nodeIndexInSchain(schainId, fromNodeIndex);
         require(indexOnSchain < channels[schainId].n, "Node is not in this group");
         require(complaints[schainId].nodeToComplaint == fromNodeIndex, "Not this Node");
-        require(!complaints[schainId].isResponse, "Already submitted pre response data");
-        require(_isNodeByMessageSender(fromNodeIndex, msg.sender), "Node does not exist for message sender");
+        require(!complaints[schainId].isResponse, "Already submitted pre response");
+        require(_isNodeByMessageSender(fromNodeIndex, msg.sender), "Node doesnt exist for msg sender");
         require(
             hashedData[schainId][indexOnSchain] == _hashData(secretKeyContribution, verificationVector),
             "Broadcasted Data is not correct"
         );
         require(
             verificationVector.length == verificationVectorMult.length,
-            "Incorrect length of multiplied verification vector"
+            "Wrong len of multiplied ver vec"
         );
         uint index = _nodeIndexInSchain(schainId, complaints[schainId].fromNodeToComplaint);
         require(
             _checkCorrectVectorMultiplication(index, verificationVector, verificationVectorMult),
-            "Multiplied verification vector is incorrect"
+            "Mul ver vector is incorrect"
         );
         complaints[schainId].keyShare = secretKeyContribution[index].share;
         complaints[schainId].sumOfVerVec = _calculateSum(verificationVectorMult);
@@ -341,8 +341,8 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         uint indexOnSchain = _nodeIndexInSchain(schainId, fromNodeIndex);
         require(indexOnSchain < channels[schainId].n, "Node is not in this group");
         require(complaints[schainId].nodeToComplaint == fromNodeIndex, "Not this Node");
-        require(complaints[schainId].isResponse, "Have not submitted pre-response data");
-        require(_isNodeByMessageSender(fromNodeIndex, msg.sender), "Node does not exist for message sender");
+        require(complaints[schainId].isResponse, "Have not submitted pre-response");
+        require(_isNodeByMessageSender(fromNodeIndex, msg.sender), "Node doesnt exist for msg sender");
         _verifyDataAndSlash(
             schainId,
             secretNumber,
@@ -355,7 +355,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         correctGroup(schainId)
         correctNode(schainId, fromNodeIndex)
     {
-        require(_isNodeByMessageSender(fromNodeIndex, msg.sender), "Node does not exist for message sender");
+        require(_isNodeByMessageSender(fromNodeIndex, msg.sender), "Node doesnt exist for msg sender");
         uint index = _nodeIndexInSchain(schainId, fromNodeIndex);
         uint numberOfParticipant = channels[schainId].n;
         require(numberOfParticipant == dkgProcess[schainId].numberOfBroadcasted, "Still Broadcasting phase");
@@ -734,7 +734,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             );
             channels[schainId].active = false;
         }
-        Punisher(contractManager.getContract("Punisher")).slash(
+        Punisher(contractManager.getPunisher()).slash(
             Nodes(contractManager.getContract("Nodes")).getValidatorId(badNode),
             SlashingTable(contractManager.getContract("SlashingTable")).getPenalty("FailedDKG")
         );
@@ -750,7 +750,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
     }
 
     function _getComplaintTimelimit() private view returns (uint) {
-        return ConstantsHolder(contractManager.getContract("ConstantsHolder")).complaintTimelimit();
+        return ConstantsHolder(contractManager.getConstantsHolder()).complaintTimelimit();
     }
 
     function _hashData(
