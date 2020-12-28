@@ -143,6 +143,14 @@ library G1Operations {
         return isG1Point(point.a, point.b);
     }
 
+    function checkRange(Fp2Operations.Fp2Point memory point) internal view returns (bool) {
+        return point.a < Fp2Operations.P && point.b < Fp2Operations.P;
+    }
+
+    function negate(uint y) internal view returns (uint) {
+        return Fp2Operations.P.sub(y).mod(Fp2Operations.P);
+    }
+
 }
 
 

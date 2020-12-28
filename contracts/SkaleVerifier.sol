@@ -57,7 +57,7 @@ contract SkaleVerifier is Permissions {
         view
         returns (bool)
     {
-        require(signature.a < Fp2Operations.P && signature.b < Fp2Operations.P, "Signature is not valid");
+        require(G1Operations.checkRange(signature), "Signature is not valid");
         if (!_checkHashToGroupWithHelper(
             hash,
             counter,
@@ -69,7 +69,7 @@ contract SkaleVerifier is Permissions {
             return false;
         }
 
-        uint newSignB = Fp2Operations.P.sub(signature.b).mod(Fp2Operations.P);
+        uint newSignB = G1Operations.negate(signature.b);
         require(G1Operations.isG1Point(signature.a, newSignB), "Sign not in G1");
         require(G1Operations.isG1Point(hashA, hashB), "Hash not in G1");
 
