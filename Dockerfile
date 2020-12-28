@@ -10,4 +10,6 @@ COPY truffle-config.js ./
 COPY yarn.lock ./
 RUN yarn install
 
+ENV NODE_OPTIONS="--max-old-space-size=2048"
+
 COPY . .
