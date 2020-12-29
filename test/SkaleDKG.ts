@@ -106,7 +106,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                     ]
                 },
                 {
-                    share: "0x6f45cd29a1d8dc0ed266f77329996b7772cbfdac9f3b097174c19ae07be758fb",
+                    share: "0xdb68ca3cb297158e493e137ce0ab5fddd2cec34b3a15a4ee1aec9dfcc61dfd15",
                     publicKey: [
                         "0xdc1282664acf84218bf29112357c78f46766c783e7b7ead43db07d5d9fd74ca9",
                         "0x85569644dc1a5bc374d3833a5c5ff3aaa26fa4050ff738d442b34087d4d8f3aa"
@@ -115,7 +115,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
             ],
             [
                 {
-                    share: "0x27e843adca1fc8386df497e45ddb4350d1df0790c753705cfe7d1ff248425297",
+                    share: "0x7bb14ad459adba781466c3441e10eeb3148c152b4919b126a0166fd1dac824ba",
                     publicKey: [
                         "0x89051df58e7d7cec9c6816d65a17f068409aa37200cd544d263104c1b9dbd037",
                         "0x435e1a25c9b9f95627ec141e14826f0d0e798c793d470388865dccb461c19773"

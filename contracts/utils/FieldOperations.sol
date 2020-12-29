@@ -139,7 +139,7 @@ library G2Operations {
         });
     }
 
-    function getG2() internal pure returns (G2Point memory) {
+    function getG2Generator() internal pure returns (G2Point memory) {
         // Current solidity version does not support Constants of non-value type
         // so we implemented this function
         return G2Point({
@@ -154,7 +154,7 @@ library G2Operations {
         });
     }
 
-    function getG1() internal pure returns (Fp2Operations.Fp2Point memory) {
+    function getG1Generator() internal pure returns (Fp2Operations.Fp2Point memory) {
         // Current solidity version does not support Constants of non-value type
         // so we implemented this function
         return Fp2Operations.Fp2Point({

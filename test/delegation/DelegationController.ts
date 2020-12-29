@@ -5,7 +5,7 @@ import { ContractManagerInstance,
     ConstantsHolderInstance,
     SkaleManagerMockContract} from "../../types/truffle-contracts";
 
-import { skipTime } from "../tools/time";
+import { currentTime, skipTime } from "../tools/time";
 
 import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
@@ -248,6 +248,30 @@ contract("DelegationController", ([owner, holder1, holder2, validator, validator
 
                     (await delegationController.getState(delegationId)).toNumber().should.be.equal(State.DELEGATED);
                     (await skaleToken.getAndUpdateDelegatedAmount.call(holder1)).toNumber().should.be.equal(amount);
+                });
+
+                it("should not allow holder to request undelegation at the last moment", async () => {
+                    const timeHelpers = await deployTimeHelpers(contractManager);
+                    const currentEpoch = (await timeHelpers.getCurrentMonth()).toNumber();
+                    const delegationEndTimestamp = (await timeHelpers.monthToTimestamp(currentEpoch + delegationPeriod)).toNumber();
+                    const twoDays = 2 * 24 * 60 * 60;
+
+                    // skip time 2 days before delegation end
+                    skipTime(web3, delegationEndTimestamp - twoDays - await currentTime(web3));
+
+                    await delegationController.requestUndelegation(delegationId, {from: validator})
+                        .should.be.eventually.rejectedWith("Undelegation requests must be sent 3 days before the end of delegation period");
+                    (await delegationController.getState(delegationId)).toNumber().should.be.equal(State.DELEGATED);
+
+                    skipTime(web3, twoDays * 2);
+
+                    await delegationController.requestUndelegation(delegationId, {from: validator});
+                    (await delegationController.getState(delegationId)).toNumber().should.be.equal(State.UNDELEGATION_REQUESTED);
+
+                    skipTime(web3, delegationPeriod * month);
+
+                    (await delegationController.getState(delegationId)).toNumber().should.be.equal(State.COMPLETED);
+                    (await skaleToken.getAndUpdateDelegatedAmount.call(holder1)).toNumber().should.be.equal(0);
                 });
             });
         });
