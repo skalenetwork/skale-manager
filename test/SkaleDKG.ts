@@ -441,7 +441,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                     verificationVectors[indexes[1]],
                     encryptedSecretKeyContributions[indexes[1]],
                     {from: validatorsAccount[0]},
-                ).should.be.eventually.rejectedWith("Node doesnt exist for msg sender");
+                ).should.be.eventually.rejectedWith("Node does not exist for msg sender");
             });
 
             it("should rejected early complaint after missing broadcast", async () => {
@@ -817,7 +817,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                         web3.utils.soliditySha3(schainName),
                         1,
                         {from: validatorsAccount[0]},
-                    ).should.be.eventually.rejectedWith("Node doesnt exist for msg sender");
+                    ).should.be.eventually.rejectedWith("Node does not exist for msg sender");
                 });
 
                 it("should catch successful DKG event", async () => {
@@ -1102,7 +1102,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                         {from: validatorsAccount[0]},
                     );
                     assert.equal(res.logs[0].event, "ComplaintError");
-                    assert.equal(res.logs[0].args.error, "1 complaint has been processed");
+                    assert.equal(res.logs[0].args.error, "First complaint has been processed");
                 });
 
                 it("should not send 2 complaints from 2 node", async () => {
@@ -1119,7 +1119,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                         {from: validatorsAccount[1]},
                     );
                     assert.equal(res.logs[0].event, "ComplaintError");
-                    assert.equal(res.logs[0].args.error, "1 complaint has been processed");
+                    assert.equal(res.logs[0].args.error, "First complaint has been processed");
                 });
 
                 describe("when complaint successfully sent", async () => {
@@ -1988,7 +1988,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                 verificationVectorMult[indexes[indexToSend]],
                 secretKeyContributions,
                 {from: validatorsAccount[indexToSend]},
-            ).should.be.eventually.rejectedWith("Wrong len of multiplied ver vec");
+            ).should.be.eventually.rejectedWith("Incorrect length of multiplied verification vector");
             await skaleDKG.preResponse(
                 web3.utils.soliditySha3("New16NodeSchain"),
                 accusedNode,
@@ -1996,7 +1996,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                 badVerificationVectorMultNew,
                 secretKeyContributions,
                 {from: validatorsAccount[indexToSend]},
-            ).should.be.eventually.rejectedWith("Mul ver vector is incorrect");
+            ).should.be.eventually.rejectedWith("Multiplied verification vector is incorrect");
             const resPreResp = await skaleDKG.preResponse(
                 web3.utils.soliditySha3("New16NodeSchain"),
                 accusedNode,
