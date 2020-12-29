@@ -441,7 +441,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                     verificationVectors[indexes[1]],
                     encryptedSecretKeyContributions[indexes[1]],
                     {from: validatorsAccount[0]},
-                ).should.be.eventually.rejectedWith("Node does not exist for msg sender");
+                ).should.be.eventually.rejectedWith("Node does not exist for message sender");
             });
 
             it("should rejected early complaint after missing broadcast", async () => {
@@ -817,7 +817,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                         web3.utils.soliditySha3(schainName),
                         1,
                         {from: validatorsAccount[0]},
-                    ).should.be.eventually.rejectedWith("Node does not exist for msg sender");
+                    ).should.be.eventually.rejectedWith("Node does not exist for message sender");
                 });
 
                 it("should catch successful DKG event", async () => {
@@ -951,7 +951,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                             secretNumbers[indexes[0]],
                             multipliedShares[indexes[0]],
                             {from: validatorsAccount[0]},
-                        ).should.be.eventually.rejectedWith("Have not submitted pre-response");
+                        ).should.be.eventually.rejectedWith("Have not submitted pre-response data");
 
                         await skaleDKG.preResponse(
                             web3.utils.soliditySha3(schainName),
@@ -1102,7 +1102,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                         {from: validatorsAccount[0]},
                     );
                     assert.equal(res.logs[0].event, "ComplaintError");
-                    assert.equal(res.logs[0].args.error, "First complaint has been processed");
+                    assert.equal(res.logs[0].args.error, "First complaint has already been processed");
                 });
 
                 it("should not send 2 complaints from 2 node", async () => {
@@ -1119,7 +1119,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                         {from: validatorsAccount[1]},
                     );
                     assert.equal(res.logs[0].event, "ComplaintError");
-                    assert.equal(res.logs[0].args.error, "First complaint has been processed");
+                    assert.equal(res.logs[0].args.error, "First complaint has already been processed");
                 });
 
                 describe("when complaint successfully sent", async () => {
