@@ -441,7 +441,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                     verificationVectors[indexes[1]],
                     encryptedSecretKeyContributions[indexes[1]],
                     {from: validatorsAccount[0]},
-                ).should.be.eventually.rejectedWith(" Node does not exist for message sender");
+                ).should.be.eventually.rejectedWith("Node does not exist for message sender");
             });
 
             it("should rejected early complaint after missing broadcast", async () => {
