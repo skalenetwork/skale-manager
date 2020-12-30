@@ -1002,11 +1002,11 @@
             }
         },
         "DelegationController": {
-            "address": "0x368E41A003249270ac26Db71ee1535F679187B42",
-            "bodyBytecodeHash": "45cf64544978b456e54563f70a31dddd219efdef64a427f645561cace5612d01",
-            "constructorCode": "608060405234801561001057600080fd5b50615e9b80620000216000396000f3fe",
-            "deployedBytecodeHash": "fc34fdc3623b49e6930387c67b373e04ed6e191b78b13e749b542794f76ca69f",
-            "localBytecodeHash": "fc34fdc3623b49e6930387c67b373e04ed6e191b78b13e749b542794f76ca69f",
+            "address": "0x5089D6BB87e87ee34B00a92ddb48D1DcdfD3cB3E",
+            "bodyBytecodeHash": "ad33448fa599a0e1c902b94137f948acbf6add2d259fcd615ff1c4c9904e7521",
+            "constructorCode": "608060405234801561001057600080fd5b50615f3d80620000216000396000f3fe",
+            "deployedBytecodeHash": "a2f62accc9db43286da6789e23e6f217be695140fa2b2c1344205a4f8ec54f15",
+            "localBytecodeHash": "a2f62accc9db43286da6789e23e6f217be695140fa2b2c1344205a4f8ec54f15",
             "storage": [
                 {
                     "astId": 8128,
@@ -1057,7 +1057,7 @@
                     "type": "t_array:49<t_uint256>"
                 },
                 {
-                    "astId": 17301,
+                    "astId": 17309,
                     "contract": "Permissions",
                     "label": "contractManager",
                     "path": "contracts/Permissions.sol",
@@ -1065,123 +1065,123 @@
                     "type": "t_address"
                 },
                 {
-                    "astId": 25216,
+                    "astId": 25249,
                     "contract": "DelegationController",
                     "label": "delegations",
                     "path": "contracts/delegation/DelegationController.sol",
-                    "src": "5006:31:36",
+                    "src": "5096:31:36",
                     "type": "t_array:dyn<t_struct<DelegationController.Delegation>>"
                 },
                 {
-                    "astId": 25221,
+                    "astId": 25254,
                     "contract": "DelegationController",
                     "label": "delegationsByValidator",
                     "path": "contracts/delegation/DelegationController.sol",
-                    "src": "5081:54:36",
+                    "src": "5171:54:36",
                     "type": "t_mapping<t_array:dyn<t_uint256>>"
                 },
                 {
-                    "astId": 25226,
+                    "astId": 25259,
                     "contract": "DelegationController",
                     "label": "delegationsByHolder",
                     "path": "contracts/delegation/DelegationController.sol",
-                    "src": "5181:54:36",
+                    "src": "5271:54:36",
                     "type": "t_mapping<t_array:dyn<t_uint256>>"
                 },
                 {
-                    "astId": 25230,
+                    "astId": 25263,
                     "contract": "DelegationController",
                     "label": "_delegationExtras",
                     "path": "contracts/delegation/DelegationController.sol",
-                    "src": "5272:59:36",
+                    "src": "5362:59:36",
                     "type": "t_mapping<t_struct<DelegationController.DelegationExtras>>"
                 },
                 {
-                    "astId": 25234,
+                    "astId": 25267,
                     "contract": "DelegationController",
                     "label": "_delegatedToValidator",
                     "path": "contracts/delegation/DelegationController.sol",
-                    "src": "5369:72:36",
+                    "src": "5459:72:36",
                     "type": "t_mapping<t_struct<PartialDifferences.Value>>"
                 },
                 {
-                    "astId": 25238,
+                    "astId": 25271,
                     "contract": "DelegationController",
                     "label": "_effectiveDelegatedToValidator",
                     "path": "contracts/delegation/DelegationController.sol",
-                    "src": "5478:84:36",
+                    "src": "5568:84:36",
                     "type": "t_mapping<t_struct<PartialDifferences.Sequence>>"
                 },
                 {
-                    "astId": 25242,
+                    "astId": 25275,
                     "contract": "DelegationController",
                     "label": "_slashesOfValidator",
                     "path": "contracts/delegation/DelegationController.sol",
-                    "src": "5604:57:36",
+                    "src": "5694:57:36",
                     "type": "t_mapping<t_struct<DelegationController.SlashingLog>>"
                 },
                 {
-                    "astId": 25246,
+                    "astId": 25279,
                     "contract": "DelegationController",
                     "label": "_delegatedByHolder",
                     "path": "contracts/delegation/DelegationController.sol",
-                    "src": "5701:72:36",
+                    "src": "5791:72:36",
                     "type": "t_mapping<t_struct<PartialDifferences.Value>>"
                 },
                 {
-                    "astId": 25252,
+                    "astId": 25285,
                     "contract": "DelegationController",
                     "label": "_delegatedByHolderToValidator",
                     "path": "contracts/delegation/DelegationController.sol",
-                    "src": "5829:101:36",
+                    "src": "5919:101:36",
                     "type": "t_mapping<t_struct<PartialDifferences.Value>>"
                 },
                 {
-                    "astId": 25258,
+                    "astId": 25291,
                     "contract": "DelegationController",
                     "label": "_effectiveDelegatedByHolderToValidator",
                     "path": "contracts/delegation/DelegationController.sol",
-                    "src": "5986:113:36",
+                    "src": "6076:113:36",
                     "type": "t_mapping<t_struct<PartialDifferences.Sequence>>"
                 },
                 {
-                    "astId": 25261,
+                    "astId": 25294,
                     "contract": "DelegationController",
                     "label": "_slashes",
                     "path": "contracts/delegation/DelegationController.sol",
-                    "src": "6106:32:36",
+                    "src": "6196:32:36",
                     "type": "t_array:dyn<t_struct<DelegationController.SlashingEvent>>"
                 },
                 {
-                    "astId": 25265,
+                    "astId": 25298,
                     "contract": "DelegationController",
                     "label": "_firstUnprocessedSlashByHolder",
                     "path": "contracts/delegation/DelegationController.sol",
-                    "src": "6187:64:36",
+                    "src": "6277:64:36",
                     "type": "t_mapping<t_uint256>"
                 },
                 {
-                    "astId": 25269,
+                    "astId": 25302,
                     "contract": "DelegationController",
                     "label": "_firstDelegationMonth",
                     "path": "contracts/delegation/DelegationController.sol",
-                    "src": "6305:71:36",
+                    "src": "6395:71:36",
                     "type": "t_mapping<t_struct<DelegationController.FirstDelegationMonth>>"
                 },
                 {
-                    "astId": 25273,
+                    "astId": 25306,
                     "contract": "DelegationController",
                     "label": "_lockedInPendingDelegations",
                     "path": "contracts/delegation/DelegationController.sol",
-                    "src": "6425:72:36",
+                    "src": "6515:72:36",
                     "type": "t_mapping<t_struct<DelegationController.LockedInPending>>"
                 },
                 {
-                    "astId": 25277,
+                    "astId": 25310,
                     "contract": "DelegationController",
                     "label": "_numberOfValidatorsPerDelegator",
                     "path": "contracts/delegation/DelegationController.sol",
-                    "src": "6504:81:36",
+                    "src": "6594:81:36",
                     "type": "t_mapping<t_struct<DelegationController.ValidatorsStatistics>>"
                 }
             ],
@@ -1339,51 +1339,51 @@
                     "label": "DelegationController.Delegation",
                     "members": [
                         {
-                            "astId": 25129,
+                            "astId": 25162,
                             "label": "holder",
-                            "src": "2969:14:36",
+                            "src": "3059:14:36",
                             "type": "t_address"
                         },
                         {
-                            "astId": 25131,
+                            "astId": 25164,
                             "label": "validatorId",
-                            "src": "3019:16:36",
+                            "src": "3109:16:36",
                             "type": "t_uint256"
                         },
                         {
-                            "astId": 25133,
+                            "astId": 25166,
                             "label": "amount",
-                            "src": "3045:11:36",
+                            "src": "3135:11:36",
                             "type": "t_uint256"
                         },
                         {
-                            "astId": 25135,
+                            "astId": 25168,
                             "label": "delegationPeriod",
-                            "src": "3066:21:36",
+                            "src": "3156:21:36",
                             "type": "t_uint256"
                         },
                         {
-                            "astId": 25137,
+                            "astId": 25170,
                             "label": "created",
-                            "src": "3097:12:36",
+                            "src": "3187:12:36",
                             "type": "t_uint256"
                         },
                         {
-                            "astId": 25139,
+                            "astId": 25172,
                             "label": "started",
-                            "src": "3150:12:36",
+                            "src": "3240:12:36",
                             "type": "t_uint256"
                         },
                         {
-                            "astId": 25141,
+                            "astId": 25174,
                             "label": "finished",
-                            "src": "3214:13:36",
+                            "src": "3304:13:36",
                             "type": "t_uint256"
                         },
                         {
-                            "astId": 25143,
+                            "astId": 25176,
                             "label": "info",
-                            "src": "3276:11:36",
+                            "src": "3366:11:36",
                             "type": "t_string"
                         }
                     ]
@@ -1394,9 +1394,9 @@
                     "label": "DelegationController.DelegationExtras",
                     "members": [
                         {
-                            "astId": 25160,
+                            "astId": 25193,
                             "label": "lastSlashingMonthBeforeDelegation",
-                            "src": "3620:38:36",
+                            "src": "3710:38:36",
                             "type": "t_uint256"
                         }
                     ]
@@ -1407,15 +1407,15 @@
                     "label": "DelegationController.FirstDelegationMonth",
                     "members": [
                         {
-                            "astId": 25180,
+                            "astId": 25213,
                             "label": "value",
-                            "src": "4016:10:36",
+                            "src": "4106:10:36",
                             "type": "t_uint256"
                         },
                         {
-                            "astId": 25184,
+                            "astId": 25217,
                             "label": "byValidator",
-                            "src": "4067:34:36",
+                            "src": "4157:34:36",
                             "type": "t_mapping<t_uint256>"
                         }
                     ]
@@ -1426,15 +1426,15 @@
                     "label": "DelegationController.LockedInPending",
                     "members": [
                         {
-                            "astId": 25175,
+                            "astId": 25208,
                             "label": "amount",
-                            "src": "3917:11:36",
+                            "src": "4007:11:36",
                             "type": "t_uint256"
                         },
                         {
-                            "astId": 25177,
+                            "astId": 25210,
                             "label": "month",
-                            "src": "3938:10:36",
+                            "src": "4028:10:36",
                             "type": "t_uint256"
                         }
                     ]
@@ -1445,21 +1445,21 @@
                     "label": "DelegationController.SlashingEvent",
                     "members": [
                         {
-                            "astId": 25163,
+                            "astId": 25196,
                             "label": "reducingCoefficient",
-                            "src": "3702:42:36",
+                            "src": "3792:42:36",
                             "type": "t_struct<FractionUtils.Fraction>"
                         },
                         {
-                            "astId": 25165,
+                            "astId": 25198,
                             "label": "validatorId",
-                            "src": "3754:16:36",
+                            "src": "3844:16:36",
                             "type": "t_uint256"
                         },
                         {
-                            "astId": 25167,
+                            "astId": 25200,
                             "label": "month",
-                            "src": "3780:10:36",
+                            "src": "3870:10:36",
                             "type": "t_uint256"
                         }
                     ]
@@ -1470,21 +1470,21 @@
                     "label": "DelegationController.SlashingLog",
                     "members": [
                         {
-                            "astId": 25153,
+                            "astId": 25186,
                             "label": "slashes",
-                            "src": "3482:42:36",
+                            "src": "3572:42:36",
                             "type": "t_mapping<t_struct<DelegationController.SlashingLogEvent>>"
                         },
                         {
-                            "astId": 25155,
+                            "astId": 25188,
                             "label": "firstMonth",
-                            "src": "3534:15:36",
+                            "src": "3624:15:36",
                             "type": "t_uint256"
                         },
                         {
-                            "astId": 25157,
+                            "astId": 25190,
                             "label": "lastMonth",
-                            "src": "3559:14:36",
+                            "src": "3649:14:36",
                             "type": "t_uint256"
                         }
                     ]
@@ -1495,15 +1495,15 @@
                     "label": "DelegationController.SlashingLogEvent",
                     "members": [
                         {
-                            "astId": 25146,
+                            "astId": 25179,
                             "label": "reducingCoefficient",
-                            "src": "3334:42:36",
+                            "src": "3424:42:36",
                             "type": "t_struct<FractionUtils.Fraction>"
                         },
                         {
-                            "astId": 25148,
+                            "astId": 25181,
                             "label": "nextMonth",
-                            "src": "3386:14:36",
+                            "src": "3476:14:36",
                             "type": "t_uint256"
                         }
                     ]
@@ -1514,15 +1514,15 @@
                     "label": "DelegationController.ValidatorsStatistics",
                     "members": [
                         {
-                            "astId": 25187,
+                            "astId": 25220,
                             "label": "number",
-                            "src": "4184:11:36",
+                            "src": "4274:11:36",
                             "type": "t_uint256"
                         },
                         {
-                            "astId": 25191,
+                            "astId": 25224,
                             "label": "delegated",
-                            "src": "4257:32:36",
+                            "src": "4347:32:36",
                             "type": "t_mapping<t_uint256>"
                         }
                     ]
@@ -1565,15 +1565,15 @@
                     "label": "FractionUtils.Fraction",
                     "members": [
                         {
-                            "astId": 38593,
+                            "astId": 38674,
                             "label": "numerator",
-                            "src": "1026:14:63",
+                            "src": "1026:14:64",
                             "type": "t_uint256"
                         },
                         {
-                            "astId": 38595,
+                            "astId": 38676,
                             "label": "denominator",
-                            "src": "1050:16:63",
+                            "src": "1050:16:64",
                             "type": "t_uint256"
                         }
                     ]
@@ -1584,31 +1584,31 @@
                     "label": "PartialDifferences.Sequence",
                     "members": [
                         {
-                            "astId": 28712,
+                            "astId": 28771,
                             "label": "addDiff",
                             "src": "1777:30:39",
                             "type": "t_mapping<t_uint256>"
                         },
                         {
-                            "astId": 28716,
+                            "astId": 28775,
                             "label": "subtractDiff",
                             "src": "1847:35:39",
                             "type": "t_mapping<t_uint256>"
                         },
                         {
-                            "astId": 28720,
+                            "astId": 28779,
                             "label": "value",
                             "src": "1923:28:39",
                             "type": "t_mapping<t_uint256>"
                         },
                         {
-                            "astId": 28722,
+                            "astId": 28781,
                             "label": "firstUnprocessedMonth",
                             "src": "1962:26:39",
                             "type": "t_uint256"
                         },
                         {
-                            "astId": 28724,
+                            "astId": 28783,
                             "label": "lastChangedMonth",
                             "src": "1998:21:39",
                             "type": "t_uint256"
@@ -1621,31 +1621,31 @@
                     "label": "PartialDifferences.Value",
                     "members": [
                         {
-                            "astId": 28729,
+                            "astId": 28788,
                             "label": "addDiff",
                             "src": "2085:30:39",
                             "type": "t_mapping<t_uint256>"
                         },
                         {
-                            "astId": 28733,
+                            "astId": 28792,
                             "label": "subtractDiff",
                             "src": "2155:35:39",
                             "type": "t_mapping<t_uint256>"
                         },
                         {
-                            "astId": 28735,
+                            "astId": 28794,
                             "label": "value",
                             "src": "2201:10:39",
                             "type": "t_uint256"
                         },
                         {
-                            "astId": 28737,
+                            "astId": 28796,
                             "label": "firstUnprocessedMonth",
                             "src": "2221:26:39",
                             "type": "t_uint256"
                         },
                         {
-                            "astId": 28739,
+                            "astId": 28798,
                             "label": "lastChangedMonth",
                             "src": "2257:21:39",
                             "type": "t_uint256"
@@ -1674,99 +1674,99 @@
                         "type": "t_mapping<t_struct<AccessControlUpgradeSafe.RoleData>>"
                     },
                     {
-                        "astId": 25216,
+                        "astId": 25249,
                         "contract": "DelegationController",
                         "label": "delegations",
                         "path": "contracts/delegation/DelegationController.sol",
-                        "src": "5006:31:36",
+                        "src": "5096:31:36",
                         "type": "t_array:dyn<t_struct<DelegationController.Delegation>>"
                     },
                     {
-                        "astId": 25230,
+                        "astId": 25263,
                         "contract": "DelegationController",
                         "label": "_delegationExtras",
                         "path": "contracts/delegation/DelegationController.sol",
-                        "src": "5272:59:36",
+                        "src": "5362:59:36",
                         "type": "t_mapping<t_struct<DelegationController.DelegationExtras>>"
                     },
                     {
-                        "astId": 25234,
+                        "astId": 25267,
                         "contract": "DelegationController",
                         "label": "_delegatedToValidator",
                         "path": "contracts/delegation/DelegationController.sol",
-                        "src": "5369:72:36",
+                        "src": "5459:72:36",
                         "type": "t_mapping<t_struct<PartialDifferences.Value>>"
                     },
                     {
-                        "astId": 25238,
+                        "astId": 25271,
                         "contract": "DelegationController",
                         "label": "_effectiveDelegatedToValidator",
                         "path": "contracts/delegation/DelegationController.sol",
-                        "src": "5478:84:36",
+                        "src": "5568:84:36",
                         "type": "t_mapping<t_struct<PartialDifferences.Sequence>>"
                     },
                     {
-                        "astId": 25242,
+                        "astId": 25275,
                         "contract": "DelegationController",
                         "label": "_slashesOfValidator",
                         "path": "contracts/delegation/DelegationController.sol",
-                        "src": "5604:57:36",
+                        "src": "5694:57:36",
                         "type": "t_mapping<t_struct<DelegationController.SlashingLog>>"
                     },
                     {
-                        "astId": 25246,
+                        "astId": 25279,
                         "contract": "DelegationController",
                         "label": "_delegatedByHolder",
                         "path": "contracts/delegation/DelegationController.sol",
-                        "src": "5701:72:36",
+                        "src": "5791:72:36",
                         "type": "t_mapping<t_struct<PartialDifferences.Value>>"
                     },
                     {
-                        "astId": 25252,
+                        "astId": 25285,
                         "contract": "DelegationController",
                         "label": "_delegatedByHolderToValidator",
                         "path": "contracts/delegation/DelegationController.sol",
-                        "src": "5829:101:36",
+                        "src": "5919:101:36",
                         "type": "t_mapping<t_struct<PartialDifferences.Value>>"
                     },
                     {
-                        "astId": 25258,
+                        "astId": 25291,
                         "contract": "DelegationController",
                         "label": "_effectiveDelegatedByHolderToValidator",
                         "path": "contracts/delegation/DelegationController.sol",
-                        "src": "5986:113:36",
+                        "src": "6076:113:36",
                         "type": "t_mapping<t_struct<PartialDifferences.Sequence>>"
                     },
                     {
-                        "astId": 25261,
+                        "astId": 25294,
                         "contract": "DelegationController",
                         "label": "_slashes",
                         "path": "contracts/delegation/DelegationController.sol",
-                        "src": "6106:32:36",
+                        "src": "6196:32:36",
                         "type": "t_array:dyn<t_struct<DelegationController.SlashingEvent>>"
                     },
                     {
-                        "astId": 25269,
+                        "astId": 25302,
                         "contract": "DelegationController",
                         "label": "_firstDelegationMonth",
                         "path": "contracts/delegation/DelegationController.sol",
-                        "src": "6305:71:36",
+                        "src": "6395:71:36",
                         "type": "t_mapping<t_struct<DelegationController.FirstDelegationMonth>>"
                     },
                     {
-                        "astId": 25273,
+                        "astId": 25306,
                         "contract": "DelegationController",
                         "label": "_lockedInPendingDelegations",
                         "path": "contracts/delegation/DelegationController.sol",
-                        "src": "6425:72:36",
+                        "src": "6515:72:36",
                         "type": "t_mapping<t_struct<DelegationController.LockedInPending>>"
                     },
                     {
-                        "astId": 25277,
+                        "astId": 25310,
                         "contract": "DelegationController",
                         "label": "_numberOfValidatorsPerDelegator",
                         "path": "contracts/delegation/DelegationController.sol",
-                        "src": "6504:81:36",
+                        "src": "6594:81:36",
                         "type": "t_mapping<t_struct<DelegationController.ValidatorsStatistics>>"
                     }
                 ],
@@ -3199,11 +3199,11 @@
             }
         },
         "Nodes": {
-            "address": "0x6E8220868245Ee00e4F9Ef66ED5775eC70B41423",
-            "bodyBytecodeHash": "dfc83457a6a853c399b59411f0bf289d4e3833b218a2662c868b78522737bf5c",
-            "constructorCode": "608060405234801561001057600080fd5b50615a2180620000216000396000f3fe",
-            "deployedBytecodeHash": "573bbc93e6076562c2b4b4a542f36da403457ff4586502356c823023dee6cc7a",
-            "localBytecodeHash": "573bbc93e6076562c2b4b4a542f36da403457ff4586502356c823023dee6cc7a",
+            "address": "0xb227366403320953145c92ddd13893438B5F5D9E",
+            "bodyBytecodeHash": "bb8facb99367c742581357ed3b1597b5d34867643d52c295f7a7c2d885b9eca6",
+            "constructorCode": "608060405234801561001057600080fd5b50615a9a80620000216000396000f3fe",
+            "deployedBytecodeHash": "0c1e287f380f988058517eb132c31640779ae63df5a98347d31d07fd31ac4edd",
+            "localBytecodeHash": "0c1e287f380f988058517eb132c31640779ae63df5a98347d31d07fd31ac4edd",
             "storage": [
                 {
                     "astId": 8128,
@@ -3254,7 +3254,7 @@
                     "type": "t_array:49<t_uint256>"
                 },
                 {
-                    "astId": 17301,
+                    "astId": 17309,
                     "contract": "Permissions",
                     "label": "contractManager",
                     "path": "contracts/Permissions.sol",
@@ -3262,7 +3262,7 @@
                     "type": "t_address"
                 },
                 {
-                    "astId": 15191,
+                    "astId": 15193,
                     "contract": "Nodes",
                     "label": "nodes",
                     "path": "contracts/Nodes.sol",
@@ -3270,7 +3270,7 @@
                     "type": "t_array:dyn<t_struct<Nodes.Node>>"
                 },
                 {
-                    "astId": 15194,
+                    "astId": 15196,
                     "contract": "Nodes",
                     "label": "spaceOfNodes",
                     "path": "contracts/Nodes.sol",
@@ -3278,7 +3278,7 @@
                     "type": "t_array:dyn<t_struct<Nodes.SpaceManaging>>"
                 },
                 {
-                    "astId": 15198,
+                    "astId": 15200,
                     "contract": "Nodes",
                     "label": "nodeIndexes",
                     "path": "contracts/Nodes.sol",
@@ -3286,7 +3286,7 @@
                     "type": "t_mapping<t_struct<Nodes.CreatedNodes>>"
                 },
                 {
-                    "astId": 15202,
+                    "astId": 15204,
                     "contract": "Nodes",
                     "label": "nodesIPCheck",
                     "path": "contracts/Nodes.sol",
@@ -3294,7 +3294,7 @@
                     "type": "t_mapping<t_bool>"
                 },
                 {
-                    "astId": 15206,
+                    "astId": 15208,
                     "contract": "Nodes",
                     "label": "nodesNameCheck",
                     "path": "contracts/Nodes.sol",
@@ -3302,7 +3302,7 @@
                     "type": "t_mapping<t_bool>"
                 },
                 {
-                    "astId": 15210,
+                    "astId": 15212,
                     "contract": "Nodes",
                     "label": "nodesNameToIndex",
                     "path": "contracts/Nodes.sol",
@@ -3310,7 +3310,7 @@
                     "type": "t_mapping<t_uint256>"
                 },
                 {
-                    "astId": 15215,
+                    "astId": 15217,
                     "contract": "Nodes",
                     "label": "spaceToNodes",
                     "path": "contracts/Nodes.sol",
@@ -3318,7 +3318,7 @@
                     "type": "t_mapping<t_array:dyn<t_uint256>>"
                 },
                 {
-                    "astId": 15220,
+                    "astId": 15222,
                     "contract": "Nodes",
                     "label": "validatorToNodeIndexes",
                     "path": "contracts/Nodes.sol",
@@ -3326,7 +3326,7 @@
                     "type": "t_mapping<t_array:dyn<t_uint256>>"
                 },
                 {
-                    "astId": 15222,
+                    "astId": 15224,
                     "contract": "Nodes",
                     "label": "numberOfActiveNodes",
                     "path": "contracts/Nodes.sol",
@@ -3334,7 +3334,7 @@
                     "type": "t_uint256"
                 },
                 {
-                    "astId": 15224,
+                    "astId": 15226,
                     "contract": "Nodes",
                     "label": "numberOfLeavingNodes",
                     "path": "contracts/Nodes.sol",
@@ -3342,7 +3342,7 @@
                     "type": "t_uint256"
                 },
                 {
-                    "astId": 15226,
+                    "astId": 15228,
                     "contract": "Nodes",
                     "label": "numberOfLeftNodes",
                     "path": "contracts/Nodes.sol",
@@ -3523,13 +3523,13 @@
                     "label": "Nodes.CreatedNodes",
                     "members": [
                         {
-                            "astId": 15165,
+                            "astId": 15167,
                             "label": "isNodeExist",
                             "src": "2305:34:26",
                             "type": "t_mapping<t_bool>"
                         },
                         {
-                            "astId": 15167,
+                            "astId": 15169,
                             "label": "numberOfNodes",
                             "src": "2349:18:26",
                             "type": "t_uint256"
@@ -3542,61 +3542,61 @@
                     "label": "Nodes.Node",
                     "members": [
                         {
-                            "astId": 15140,
+                            "astId": 15142,
                             "label": "name",
                             "src": "1950:11:26",
                             "type": "t_string"
                         },
                         {
-                            "astId": 15142,
+                            "astId": 15144,
                             "label": "ip",
                             "src": "1971:9:26",
                             "type": "t_bytes4"
                         },
                         {
-                            "astId": 15144,
+                            "astId": 15146,
                             "label": "publicIP",
                             "src": "1990:15:26",
                             "type": "t_bytes4"
                         },
                         {
-                            "astId": 15146,
+                            "astId": 15148,
                             "label": "port",
                             "src": "2015:11:26",
                             "type": "t_uint16"
                         },
                         {
-                            "astId": 15150,
+                            "astId": 15152,
                             "label": "publicKey",
                             "src": "2036:20:26",
                             "type": "t_array:2<t_bytes32>"
                         },
                         {
-                            "astId": 15152,
+                            "astId": 15154,
                             "label": "startBlock",
                             "src": "2066:15:26",
                             "type": "t_uint256"
                         },
                         {
-                            "astId": 15154,
+                            "astId": 15156,
                             "label": "lastRewardDate",
                             "src": "2091:19:26",
                             "type": "t_uint256"
                         },
                         {
-                            "astId": 15156,
+                            "astId": 15158,
                             "label": "finishTime",
                             "src": "2120:15:26",
                             "type": "t_uint256"
                         },
                         {
-                            "astId": 15158,
+                            "astId": 15160,
                             "label": "status",
                             "src": "2145:17:26",
                             "type": "t_enum<Nodes.NodeStatus>"
                         },
                         {
-                            "astId": 15160,
+                            "astId": 15162,
                             "label": "validatorId",
                             "src": "2172:16:26",
                             "type": "t_uint256"
@@ -3609,13 +3609,13 @@
                     "label": "Nodes.SpaceManaging",
                     "members": [
                         {
-                            "astId": 15170,
+                            "astId": 15172,
                             "label": "freeSpace",
                             "src": "2411:15:26",
                             "type": "t_uint8"
                         },
                         {
-                            "astId": 15172,
+                            "astId": 15174,
                             "label": "indexInSpaceMap",
                             "src": "2436:20:26",
                             "type": "t_uint256"
@@ -3654,7 +3654,7 @@
                         "type": "t_mapping<t_struct<AccessControlUpgradeSafe.RoleData>>"
                     },
                     {
-                        "astId": 15191,
+                        "astId": 15193,
                         "contract": "Nodes",
                         "label": "nodes",
                         "path": "contracts/Nodes.sol",
@@ -3662,7 +3662,7 @@
                         "type": "t_array:dyn<t_struct<Nodes.Node>>"
                     },
                     {
-                        "astId": 15194,
+                        "astId": 15196,
                         "contract": "Nodes",
                         "label": "spaceOfNodes",
                         "path": "contracts/Nodes.sol",
@@ -3670,7 +3670,7 @@
                         "type": "t_array:dyn<t_struct<Nodes.SpaceManaging>>"
                     },
                     {
-                        "astId": 15198,
+                        "astId": 15200,
                         "contract": "Nodes",
                         "label": "nodeIndexes",
                         "path": "contracts/Nodes.sol",
@@ -4281,11 +4281,11 @@
             }
         },
         "SchainsInternal": {
-            "address": "0x72bF8EaeB6f46865E093638FE6117CD8ae45121c",
-            "bodyBytecodeHash": "4853d6e6cf06092a456bc9dc7b1cfa8296c7e06b0c92108a80aac46d82d190bd",
-            "constructorCode": "608060405234801561001057600080fd5b50614e96806100206000396000f3fe",
-            "deployedBytecodeHash": "159335f5e1365a2389de7b1ca39683f232b4b6e477b5e65c25b335c04aa1fd02",
-            "localBytecodeHash": "159335f5e1365a2389de7b1ca39683f232b4b6e477b5e65c25b335c04aa1fd02",
+            "address": "0x612280023ecfF4F83E7Ac8b6902EFBB6f3998349",
+            "bodyBytecodeHash": "6e988b85ebe6f54daaad58496097922f653f90a37e2e87b734cc15e55a58e2fd",
+            "constructorCode": "608060405234801561001057600080fd5b50614f15806100206000396000f3fe",
+            "deployedBytecodeHash": "900322d8d5951c13db1e484c6dc463ff731f85c5055379b5643fb0aa55b33389",
+            "localBytecodeHash": "900322d8d5951c13db1e484c6dc463ff731f85c5055379b5643fb0aa55b33389",
             "storage": [
                 {
                     "astId": 8128,
@@ -4336,7 +4336,7 @@
                     "type": "t_array:49<t_uint256>"
                 },
                 {
-                    "astId": 17301,
+                    "astId": 17309,
                     "contract": "Permissions",
                     "label": "contractManager",
                     "path": "contracts/Permissions.sol",
@@ -4344,7 +4344,7 @@
                     "type": "t_address"
                 },
                 {
-                    "astId": 19172,
+                    "astId": 19180,
                     "contract": "SchainsInternal",
                     "label": "schains",
                     "path": "contracts/SchainsInternal.sol",
@@ -4352,7 +4352,7 @@
                     "type": "t_mapping<t_struct<SchainsInternal.Schain>>"
                 },
                 {
-                    "astId": 19176,
+                    "astId": 19184,
                     "contract": "SchainsInternal",
                     "label": "isSchainActive",
                     "path": "contracts/SchainsInternal.sol",
@@ -4360,7 +4360,7 @@
                     "type": "t_mapping<t_bool>"
                 },
                 {
-                    "astId": 19181,
+                    "astId": 19189,
                     "contract": "SchainsInternal",
                     "label": "schainsGroups",
                     "path": "contracts/SchainsInternal.sol",
@@ -4368,7 +4368,7 @@
                     "type": "t_mapping<t_array:dyn<t_uint256>>"
                 },
                 {
-                    "astId": 19187,
+                    "astId": 19195,
                     "contract": "SchainsInternal",
                     "label": "_exceptionsForGroups",
                     "path": "contracts/SchainsInternal.sol",
@@ -4376,7 +4376,7 @@
                     "type": "t_mapping<t_bool>"
                 },
                 {
-                    "astId": 19192,
+                    "astId": 19200,
                     "contract": "SchainsInternal",
                     "label": "schainIndexes",
                     "path": "contracts/SchainsInternal.sol",
@@ -4384,7 +4384,7 @@
                     "type": "t_mapping<t_array:dyn<t_bytes32>>"
                 },
                 {
-                    "astId": 19197,
+                    "astId": 19205,
                     "contract": "SchainsInternal",
                     "label": "schainsForNodes",
                     "path": "contracts/SchainsInternal.sol",
@@ -4392,7 +4392,7 @@
                     "type": "t_mapping<t_array:dyn<t_bytes32>>"
                 },
                 {
-                    "astId": 19202,
+                    "astId": 19210,
                     "contract": "SchainsInternal",
                     "label": "holesForNodes",
                     "path": "contracts/SchainsInternal.sol",
@@ -4400,7 +4400,7 @@
                     "type": "t_mapping<t_array:dyn<t_uint256>>"
                 },
                 {
-                    "astId": 19207,
+                    "astId": 19215,
                     "contract": "SchainsInternal",
                     "label": "holesForSchains",
                     "path": "contracts/SchainsInternal.sol",
@@ -4408,52 +4408,60 @@
                     "type": "t_mapping<t_array:dyn<t_uint256>>"
                 },
                 {
-                    "astId": 19210,
+                    "astId": 19218,
                     "contract": "SchainsInternal",
                     "label": "schainsAtSystem",
                     "path": "contracts/SchainsInternal.sol",
-                    "src": "2117:32:30",
+                    "src": "2116:32:30",
                     "type": "t_array:dyn<t_bytes32>"
                 },
                 {
-                    "astId": 19212,
+                    "astId": 19220,
                     "contract": "SchainsInternal",
                     "label": "numberOfSchains",
                     "path": "contracts/SchainsInternal.sol",
-                    "src": "2156:29:30",
+                    "src": "2155:29:30",
                     "type": "t_uint64"
-                },
-                {
-                    "astId": 19214,
-                    "contract": "SchainsInternal",
-                    "label": "sumOfSchainsResources",
-                    "path": "contracts/SchainsInternal.sol",
-                    "src": "2236:33:30",
-                    "type": "t_uint256"
-                },
-                {
-                    "astId": 19218,
-                    "contract": "SchainsInternal",
-                    "label": "usedSchainNames",
-                    "path": "contracts/SchainsInternal.sol",
-                    "src": "2276:48:30",
-                    "type": "t_mapping<t_bool>"
                 },
                 {
                     "astId": 19222,
                     "contract": "SchainsInternal",
+                    "label": "sumOfSchainsResources",
+                    "path": "contracts/SchainsInternal.sol",
+                    "src": "2235:33:30",
+                    "type": "t_uint256"
+                },
+                {
+                    "astId": 19226,
+                    "contract": "SchainsInternal",
+                    "label": "usedSchainNames",
+                    "path": "contracts/SchainsInternal.sol",
+                    "src": "2275:48:30",
+                    "type": "t_mapping<t_bool>"
+                },
+                {
+                    "astId": 19230,
+                    "contract": "SchainsInternal",
                     "label": "schainTypes",
                     "path": "contracts/SchainsInternal.sol",
-                    "src": "2331:47:30",
+                    "src": "2330:47:30",
                     "type": "t_mapping<t_struct<SchainsInternal.SchainType>>"
                 },
                 {
-                    "astId": 19224,
+                    "astId": 19232,
                     "contract": "SchainsInternal",
                     "label": "numberOfSchainTypes",
                     "path": "contracts/SchainsInternal.sol",
-                    "src": "2384:31:30",
+                    "src": "2383:31:30",
                     "type": "t_uint256"
+                },
+                {
+                    "astId": 19238,
+                    "contract": "SchainsInternal",
+                    "label": "placeOfSchainOnNode",
+                    "path": "contracts/SchainsInternal.sol",
+                    "src": "2554:70:30",
+                    "type": "t_mapping<t_uint256>"
                 }
             ],
             "types": {
@@ -4604,55 +4612,55 @@
                     "label": "SchainsInternal.Schain",
                     "members": [
                         {
-                            "astId": 19146,
+                            "astId": 19154,
                             "label": "name",
                             "src": "1171:11:30",
                             "type": "t_string"
                         },
                         {
-                            "astId": 19148,
+                            "astId": 19156,
                             "label": "owner",
                             "src": "1192:13:30",
                             "type": "t_address"
                         },
                         {
-                            "astId": 19150,
+                            "astId": 19158,
                             "label": "indexInOwnerList",
                             "src": "1215:21:30",
                             "type": "t_uint256"
                         },
                         {
-                            "astId": 19152,
+                            "astId": 19160,
                             "label": "partOfNode",
                             "src": "1246:16:30",
                             "type": "t_uint8"
                         },
                         {
-                            "astId": 19154,
+                            "astId": 19162,
                             "label": "lifetime",
                             "src": "1272:13:30",
                             "type": "t_uint256"
                         },
                         {
-                            "astId": 19156,
+                            "astId": 19164,
                             "label": "startDate",
                             "src": "1295:14:30",
                             "type": "t_uint256"
                         },
                         {
-                            "astId": 19158,
+                            "astId": 19166,
                             "label": "startBlock",
                             "src": "1319:15:30",
                             "type": "t_uint256"
                         },
                         {
-                            "astId": 19160,
+                            "astId": 19168,
                             "label": "deposit",
                             "src": "1344:12:30",
                             "type": "t_uint256"
                         },
                         {
-                            "astId": 19162,
+                            "astId": 19170,
                             "label": "index",
                             "src": "1366:12:30",
                             "type": "t_uint64"
@@ -4665,13 +4673,13 @@
                     "label": "SchainsInternal.SchainType",
                     "members": [
                         {
-                            "astId": 19165,
+                            "astId": 19173,
                             "label": "partOfNode",
                             "src": "1419:16:30",
                             "type": "t_uint8"
                         },
                         {
-                            "astId": 19167,
+                            "astId": 19175,
                             "label": "numberOfNodes",
                             "src": "1445:18:30",
                             "type": "t_uint256"
@@ -4703,25 +4711,13 @@
                     {
                         "action": "append",
                         "updated": {
-                            "astId": 19222,
+                            "astId": 19238,
                             "contract": "SchainsInternal",
-                            "index": 19,
-                            "label": "schainTypes",
+                            "index": 21,
+                            "label": "placeOfSchainOnNode",
                             "path": "contracts/SchainsInternal.sol",
-                            "src": "2331:47:30",
-                            "type": "t_mapping<t_struct<SchainsInternal.SchainType>>"
-                        }
-                    },
-                    {
-                        "action": "append",
-                        "updated": {
-                            "astId": 19224,
-                            "contract": "SchainsInternal",
-                            "index": 20,
-                            "label": "numberOfSchainTypes",
-                            "path": "contracts/SchainsInternal.sol",
-                            "src": "2384:31:30",
-                            "type": "t_uint256"
+                            "src": "2554:70:30",
+                            "type": "t_mapping<t_uint256>"
                         }
                     }
                 ],
@@ -4735,7 +4731,7 @@
                         "type": "t_mapping<t_struct<AccessControlUpgradeSafe.RoleData>>"
                     },
                     {
-                        "astId": 19172,
+                        "astId": 19180,
                         "contract": "SchainsInternal",
                         "label": "schains",
                         "path": "contracts/SchainsInternal.sol",
@@ -4743,11 +4739,11 @@
                         "type": "t_mapping<t_struct<SchainsInternal.Schain>>"
                     },
                     {
-                        "astId": 19222,
+                        "astId": 19230,
                         "contract": "SchainsInternal",
                         "label": "schainTypes",
                         "path": "contracts/SchainsInternal.sol",
-                        "src": "2331:47:30",
+                        "src": "2330:47:30",
                         "type": "t_mapping<t_struct<SchainsInternal.SchainType>>"
                     }
                 ],
@@ -4755,11 +4751,11 @@
             }
         },
         "SkaleDKG": {
-            "address": "0x46baF37b504e24DB0Edd92Cdd5089f737c759a3C",
-            "bodyBytecodeHash": "41dc8b6f1ea40aefbcc2c157ee60e7f3757bbddc117cdb33570b6b0931ad80f5",
-            "constructorCode": "608060405234801561001057600080fd5b50615e3a80620000216000396000f3fe",
-            "deployedBytecodeHash": "f85eaffb1678428e9c3301c9c6e98238a9ebcef24cd136b935511a8c6dba5998",
-            "localBytecodeHash": "f85eaffb1678428e9c3301c9c6e98238a9ebcef24cd136b935511a8c6dba5998",
+            "address": "0x22BA5c387D97c4a9E07E3A4069164f4c1B7f535B",
+            "bodyBytecodeHash": "bf45e6af6bf34ca162d4ab68c49087de59fca3d429bd832bb56be307fed78bfc",
+            "constructorCode": "608060405234801561001057600080fd5b50615ed180620000216000396000f3fe",
+            "deployedBytecodeHash": "2bb97e15d658aa216366a03dadf2323723b93ae2c052b0ba466a1a677c22a74e",
+            "localBytecodeHash": "2bb97e15d658aa216366a03dadf2323723b93ae2c052b0ba466a1a677c22a74e",
             "storage": [
                 {
                     "astId": 8128,
@@ -4810,7 +4806,7 @@
                     "type": "t_array:49<t_uint256>"
                 },
                 {
-                    "astId": 17301,
+                    "astId": 17309,
                     "contract": "Permissions",
                     "label": "contractManager",
                     "path": "contracts/Permissions.sol",
@@ -4818,7 +4814,7 @@
                     "type": "t_address"
                 },
                 {
-                    "astId": 21333,
+                    "astId": 21352,
                     "contract": "SkaleDKG",
                     "label": "channels",
                     "path": "contracts/SkaleDKG.sol",
@@ -4826,7 +4822,7 @@
                     "type": "t_mapping<t_struct<SkaleDKG.Channel>>"
                 },
                 {
-                    "astId": 21337,
+                    "astId": 21356,
                     "contract": "SkaleDKG",
                     "label": "lastSuccesfulDKG",
                     "path": "contracts/SkaleDKG.sol",
@@ -4834,7 +4830,7 @@
                     "type": "t_mapping<t_uint256>"
                 },
                 {
-                    "astId": 21341,
+                    "astId": 21360,
                     "contract": "SkaleDKG",
                     "label": "dkgProcess",
                     "path": "contracts/SkaleDKG.sol",
@@ -4842,7 +4838,7 @@
                     "type": "t_mapping<t_struct<SkaleDKG.ProcessDKG>>"
                 },
                 {
-                    "astId": 21345,
+                    "astId": 21364,
                     "contract": "SkaleDKG",
                     "label": "complaints",
                     "path": "contracts/SkaleDKG.sol",
@@ -4850,7 +4846,7 @@
                     "type": "t_mapping<t_struct<SkaleDKG.ComplaintData>>"
                 },
                 {
-                    "astId": 21349,
+                    "astId": 21368,
                     "contract": "SkaleDKG",
                     "label": "startAlrightTimestamp",
                     "path": "contracts/SkaleDKG.sol",
@@ -4858,7 +4854,7 @@
                     "type": "t_mapping<t_uint256>"
                 },
                 {
-                    "astId": 21355,
+                    "astId": 21374,
                     "contract": "SkaleDKG",
                     "label": "hashedData",
                     "path": "contracts/SkaleDKG.sol",
@@ -5003,15 +4999,15 @@
                     "label": "Fp2Operations.Fp2Point",
                     "members": [
                         {
-                            "astId": 37664,
+                            "astId": 37745,
                             "label": "a",
-                            "src": "1058:6:62",
+                            "src": "1058:6:63",
                             "type": "t_uint256"
                         },
                         {
-                            "astId": 37666,
+                            "astId": 37747,
                             "label": "b",
-                            "src": "1074:6:62",
+                            "src": "1074:6:63",
                             "type": "t_uint256"
                         }
                     ]
@@ -5022,15 +5018,15 @@
                     "label": "G2Operations.G2Point",
                     "members": [
                         {
-                            "astId": 38096,
+                            "astId": 38177,
                             "label": "x",
-                            "src": "4104:24:62",
+                            "src": "4104:24:63",
                             "type": "t_struct<Fp2Operations.Fp2Point>"
                         },
                         {
-                            "astId": 38098,
+                            "astId": 38179,
                             "label": "y",
-                            "src": "4138:24:62",
+                            "src": "4138:24:63",
                             "type": "t_struct<Fp2Operations.Fp2Point>"
                         }
                     ]
@@ -5041,25 +5037,25 @@
                     "label": "SkaleDKG.Channel",
                     "members": [
                         {
-                            "astId": 21288,
+                            "astId": 21307,
                             "label": "active",
                             "src": "1533:11:31",
                             "type": "t_bool"
                         },
                         {
-                            "astId": 21290,
+                            "astId": 21309,
                             "label": "n",
                             "src": "1554:6:31",
                             "type": "t_uint256"
                         },
                         {
-                            "astId": 21292,
+                            "astId": 21311,
                             "label": "startedBlockTimestamp",
                             "src": "1570:26:31",
                             "type": "t_uint256"
                         },
                         {
-                            "astId": 21294,
+                            "astId": 21313,
                             "label": "startedBlock",
                             "src": "1606:17:31",
                             "type": "t_uint256"
@@ -5072,37 +5068,37 @@
                     "label": "SkaleDKG.ComplaintData",
                     "members": [
                         {
-                            "astId": 21308,
+                            "astId": 21327,
                             "label": "nodeToComplaint",
                             "src": "1818:20:31",
                             "type": "t_uint256"
                         },
                         {
-                            "astId": 21310,
+                            "astId": 21329,
                             "label": "fromNodeToComplaint",
                             "src": "1848:24:31",
                             "type": "t_uint256"
                         },
                         {
-                            "astId": 21312,
+                            "astId": 21331,
                             "label": "startComplaintBlockTimestamp",
                             "src": "1882:33:31",
                             "type": "t_uint256"
                         },
                         {
-                            "astId": 21314,
+                            "astId": 21333,
                             "label": "isResponse",
                             "src": "1925:15:31",
                             "type": "t_bool"
                         },
                         {
-                            "astId": 21316,
+                            "astId": 21335,
                             "label": "keyShare",
                             "src": "1950:16:31",
                             "type": "t_bytes32"
                         },
                         {
-                            "astId": 21318,
+                            "astId": 21337,
                             "label": "sumOfVerVec",
                             "src": "1976:32:31",
                             "type": "t_struct<G2Operations.G2Point>"
@@ -5115,25 +5111,25 @@
                     "label": "SkaleDKG.ProcessDKG",
                     "members": [
                         {
-                            "astId": 21297,
+                            "astId": 21316,
                             "label": "numberOfBroadcasted",
                             "src": "1664:24:31",
                             "type": "t_uint256"
                         },
                         {
-                            "astId": 21299,
+                            "astId": 21318,
                             "label": "numberOfCompleted",
                             "src": "1698:22:31",
                             "type": "t_uint256"
                         },
                         {
-                            "astId": 21302,
+                            "astId": 21321,
                             "label": "broadcasted",
                             "src": "1730:18:31",
                             "type": "t_array:dyn<t_bool>"
                         },
                         {
-                            "astId": 21305,
+                            "astId": 21324,
                             "label": "completed",
                             "src": "1758:16:31",
                             "type": "t_array:dyn<t_bool>"
@@ -5162,7 +5158,7 @@
                         "type": "t_mapping<t_struct<AccessControlUpgradeSafe.RoleData>>"
                     },
                     {
-                        "astId": 21333,
+                        "astId": 21352,
                         "contract": "SkaleDKG",
                         "label": "channels",
                         "path": "contracts/SkaleDKG.sol",
@@ -5170,7 +5166,7 @@
                         "type": "t_mapping<t_struct<SkaleDKG.Channel>>"
                     },
                     {
-                        "astId": 21341,
+                        "astId": 21360,
                         "contract": "SkaleDKG",
                         "label": "dkgProcess",
                         "path": "contracts/SkaleDKG.sol",
@@ -5178,7 +5174,7 @@
                         "type": "t_mapping<t_struct<SkaleDKG.ProcessDKG>>"
                     },
                     {
-                        "astId": 21345,
+                        "astId": 21364,
                         "contract": "SkaleDKG",
                         "label": "complaints",
                         "path": "contracts/SkaleDKG.sol",
@@ -6502,11 +6498,11 @@
             }
         },
         "ValidatorService": {
-            "address": "0x5F906a6AF3f5d52DC84e0E472E95501F24EBAEF0",
-            "bodyBytecodeHash": "9bc7d63e4423aa0905743deccb974eb77eb19278b688f7e82d1e193c36c3f860",
-            "constructorCode": "608060405234801561001057600080fd5b5061351d806100206000396000f3fe",
-            "deployedBytecodeHash": "062aa71d2fc0323955ab281b10248beb5463436c28fe81b27123c264ad1af539",
-            "localBytecodeHash": "062aa71d2fc0323955ab281b10248beb5463436c28fe81b27123c264ad1af539",
+            "address": "0xAE8E7E9aAca9eA5E1868b4EA1D9fe3fb716132cd",
+            "bodyBytecodeHash": "c86a431f87cab445d6147fd9d169e6ded08849b85b46ff7aae6e5bd4b9407782",
+            "constructorCode": "608060405234801561001057600080fd5b5061351e806100206000396000f3fe",
+            "deployedBytecodeHash": "7d92aae0e19751202f19671ac04d2df2e6c6549cd7c81469eb95e6881633f58a",
+            "localBytecodeHash": "7d92aae0e19751202f19671ac04d2df2e6c6549cd7c81469eb95e6881633f58a",
             "storage": [
                 {
                     "astId": 8128,
@@ -6557,7 +6553,7 @@
                     "type": "t_array:49<t_uint256>"
                 },
                 {
-                    "astId": 17201,
+                    "astId": 17309,
                     "contract": "Permissions",
                     "label": "contractManager",
                     "path": "contracts/Permissions.sol",
@@ -6565,7 +6561,7 @@
                     "type": "t_address"
                 },
                 {
-                    "astId": 31505,
+                    "astId": 32025,
                     "contract": "ValidatorService",
                     "label": "validators",
                     "path": "contracts/delegation/ValidatorService.sol",
@@ -6573,7 +6569,7 @@
                     "type": "t_mapping<t_struct<ValidatorService.Validator>>"
                 },
                 {
-                    "astId": 31509,
+                    "astId": 32029,
                     "contract": "ValidatorService",
                     "label": "_trustedValidators",
                     "path": "contracts/delegation/ValidatorService.sol",
@@ -6581,7 +6577,7 @@
                     "type": "t_mapping<t_bool>"
                 },
                 {
-                    "astId": 31512,
+                    "astId": 32032,
                     "contract": "ValidatorService",
                     "label": "trustedValidatorsList",
                     "path": "contracts/delegation/ValidatorService.sol",
@@ -6589,7 +6585,7 @@
                     "type": "t_array:dyn<t_uint256>"
                 },
                 {
-                    "astId": 31516,
+                    "astId": 32036,
                     "contract": "ValidatorService",
                     "label": "_validatorAddressToId",
                     "path": "contracts/delegation/ValidatorService.sol",
@@ -6597,7 +6593,7 @@
                     "type": "t_mapping<t_uint256>"
                 },
                 {
-                    "astId": 31520,
+                    "astId": 32040,
                     "contract": "ValidatorService",
                     "label": "_nodeAddressToValidatorId",
                     "path": "contracts/delegation/ValidatorService.sol",
@@ -6605,7 +6601,7 @@
                     "type": "t_mapping<t_uint256>"
                 },
                 {
-                    "astId": 31525,
+                    "astId": 32045,
                     "contract": "ValidatorService",
                     "label": "_nodeAddresses",
                     "path": "contracts/delegation/ValidatorService.sol",
@@ -6613,7 +6609,7 @@
                     "type": "t_mapping<t_array:dyn<t_address>>"
                 },
                 {
-                    "astId": 31527,
+                    "astId": 32047,
                     "contract": "ValidatorService",
                     "label": "numberOfValidators",
                     "path": "contracts/delegation/ValidatorService.sol",
@@ -6621,7 +6617,7 @@
                     "type": "t_uint256"
                 },
                 {
-                    "astId": 31529,
+                    "astId": 32049,
                     "contract": "ValidatorService",
                     "label": "useWhitelist",
                     "path": "contracts/delegation/ValidatorService.sol",
@@ -6772,49 +6768,49 @@
                     "label": "ValidatorService.Validator",
                     "members": [
                         {
-                            "astId": 31450,
+                            "astId": 31970,
                             "label": "name",
                             "src": "1708:11:45",
                             "type": "t_string"
                         },
                         {
-                            "astId": 31452,
+                            "astId": 31972,
                             "label": "validatorAddress",
                             "src": "1729:24:45",
                             "type": "t_address"
                         },
                         {
-                            "astId": 31454,
+                            "astId": 31974,
                             "label": "requestedAddress",
                             "src": "1763:24:45",
                             "type": "t_address"
                         },
                         {
-                            "astId": 31456,
+                            "astId": 31976,
                             "label": "description",
                             "src": "1797:18:45",
                             "type": "t_string"
                         },
                         {
-                            "astId": 31458,
+                            "astId": 31978,
                             "label": "feeRate",
                             "src": "1825:12:45",
                             "type": "t_uint256"
                         },
                         {
-                            "astId": 31460,
+                            "astId": 31980,
                             "label": "registrationTime",
                             "src": "1847:21:45",
                             "type": "t_uint256"
                         },
                         {
-                            "astId": 31462,
+                            "astId": 31982,
                             "label": "minimumDelegationAmount",
                             "src": "1878:28:45",
                             "type": "t_uint256"
                         },
                         {
-                            "astId": 31464,
+                            "astId": 31984,
                             "label": "acceptNewRequests",
                             "src": "1916:22:45",
                             "type": "t_bool"
@@ -6843,7 +6839,7 @@
                         "type": "t_mapping<t_struct<AccessControlUpgradeSafe.RoleData>>"
                     },
                     {
-                        "astId": 31505,
+                        "astId": 32025,
                         "contract": "ValidatorService",
                         "label": "validators",
                         "path": "contracts/delegation/ValidatorService.sol",
@@ -6906,7 +6902,7 @@
             {
                 "address": "0x06dD71dAb27C1A3e0B172d53735f00Bf1a66Eb79",
                 "admin": "0xf3F8B7594Bf20A0e9502B3191cd4C2B90A1aB4F7",
-                "implementation": "0x368E41A003249270ac26Db71ee1535F679187B42",
+                "implementation": "0x5089D6BB87e87ee34B00a92ddb48D1DcdfD3cB3E",
                 "kind": "Upgradeable",
                 "version": "1.0.0"
             }
@@ -6969,7 +6965,7 @@
             {
                 "address": "0xD489665414D051336CE2F2C6e4184De0409e40ba",
                 "admin": "0xf3F8B7594Bf20A0e9502B3191cd4C2B90A1aB4F7",
-                "implementation": "0x6E8220868245Ee00e4F9Ef66ED5775eC70B41423",
+                "implementation": "0xb227366403320953145c92ddd13893438B5F5D9E",
                 "kind": "Upgradeable",
                 "version": "1.0.0"
             }
@@ -7005,7 +7001,7 @@
             {
                 "address": "0x836Df73065Cb143bdDF3106e46783d43C12C6012",
                 "admin": "0xf3F8B7594Bf20A0e9502B3191cd4C2B90A1aB4F7",
-                "implementation": "0x72bF8EaeB6f46865E093638FE6117CD8ae45121c",
+                "implementation": "0x612280023ecfF4F83E7Ac8b6902EFBB6f3998349",
                 "kind": "Upgradeable",
                 "version": "1.0.0"
             }
@@ -7014,7 +7010,7 @@
             {
                 "address": "0xfcc84F7b6d88d671C6a1841549c0b2E70110884f",
                 "admin": "0xf3F8B7594Bf20A0e9502B3191cd4C2B90A1aB4F7",
-                "implementation": "0x46baF37b504e24DB0Edd92Cdd5089f737c759a3C",
+                "implementation": "0x22BA5c387D97c4a9E07E3A4069164f4c1B7f535B",
                 "kind": "Upgradeable",
                 "version": "1.0.0"
             }
@@ -7086,7 +7082,7 @@
             {
                 "address": "0x840C8122433A5AA7ad60C1Bcdc36AB9DcCF761a5",
                 "admin": "0xf3F8B7594Bf20A0e9502B3191cd4C2B90A1aB4F7",
-                "implementation": "0x5F906a6AF3f5d52DC84e0E472E95501F24EBAEF0",
+                "implementation": "0xAE8E7E9aAca9eA5E1868b4EA1D9fe3fb716132cd",
                 "kind": "Upgradeable",
                 "version": "1.0.0"
             }
