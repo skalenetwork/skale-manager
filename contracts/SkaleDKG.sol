@@ -445,6 +445,8 @@ contract SkaleDKG is Permissions, ISkaleDKG {
     {
         uint indexFrom = _nodeIndexInSchain(schainId, fromNodeIndex);
         uint indexTo = _nodeIndexInSchain(schainId, toNodeIndex);
+        if (indexFrom >= channels[schainId].n || indexTo >= channels[schainId].n)
+            return false;
         bool complaintSending = (
                 complaints[schainId].nodeToComplaint == uint(-1) &&
                 dkgProcess[schainId].broadcasted[indexTo] &&
@@ -468,8 +470,6 @@ contract SkaleDKG is Permissions, ISkaleDKG {
                 startAlrightTimestamp[schainId].add(_getComplaintTimelimit()) <= block.timestamp
             );
         return channels[schainId].active &&
-            indexFrom < channels[schainId].n &&
-            indexTo < channels[schainId].n &&
             dkgProcess[schainId].broadcasted[indexFrom] &&
             _isNodeOwnedByMessageSender(fromNodeIndex, msg.sender) &&
             complaintSending;
