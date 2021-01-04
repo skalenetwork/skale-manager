@@ -40,6 +40,9 @@ jobs:
       with:
         python-version: 3.8
 
+    - name: Check keys
+      run: test -n "$PRIVATE_KEY_1"
+
     - name: Install project
       run: yarn install
 
