@@ -338,7 +338,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         correctGroup(schainId)
         onlyNodeOwner(fromNodeIndex)
     {
-        (uint indexOnSchain, ) = _checkAndReturnIndexInGroup(schainId, fromNodeIndex, true);
+        _checkAndReturnIndexInGroup(schainId, fromNodeIndex, true);
         require(complaints[schainId].nodeToComplaint == fromNodeIndex, "Not this Node");
         require(complaints[schainId].isResponse, "Have not submitted pre-response data");
         _verifyDataAndSlash(
@@ -498,7 +498,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
      * @dev Checks whether sending a response is possible.
      */
     function isResponsePossible(bytes32 schainId, uint nodeIndex) external view returns (bool) {
-        (uint index, bool check) = _checkAndReturnIndexInGroup(schainId, nodeIndex, false);
+        (, bool check) = _checkAndReturnIndexInGroup(schainId, nodeIndex, false);
         return channels[schainId].active &&
             check &&
             _isNodeOwnedByMessageSender(nodeIndex, msg.sender) &&
@@ -754,7 +754,15 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         require(_isNodeOwnedByMessageSender(nodeIndex, msg.sender), "Node does not exist for message sender");
     }
 
-    function _checkAndReturnIndexInGroup(bytes32 schainId, uint nodeIndex, bool revertCheck) private view returns (uint, bool) {
+    function _checkAndReturnIndexInGroup(
+        bytes32 schainId,
+        uint nodeIndex,
+        bool revertCheck
+    )
+        private
+        view
+        returns (uint, bool)
+    {
         uint index = _nodeIndexInSchain(schainId, nodeIndex);
         if (index >= channels[schainId].n && revertCheck) {
             revert("Node is not in this group");
