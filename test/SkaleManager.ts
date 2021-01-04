@@ -240,6 +240,30 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                 expect(web3.utils.toBN(await validatorService.getValidatorIdByNodeAddress(validator)).eq(web3.utils.toBN("1"))).to.be.true;
             });
 
+            it("should pay bounty if Node is In Active state", async () => {
+                skipTime(web3, month);
+                await skaleManager.getBounty(0, {from: nodeAddress});
+            });
+
+            it("should pay bounty if Node is In Leaving state", async () => {
+                await nodesContract.initExit(0, {from: owner});
+                skipTime(web3, month);
+                await skaleManager.getBounty(0, {from: nodeAddress});
+            });
+
+            it("should pay bounty if Node is In Maintenance state", async () => {
+                await nodesContract.setNodeInMaintenance(0, {from: validator});
+                skipTime(web3, month);
+                await skaleManager.getBounty(0, {from: nodeAddress});
+            });
+
+            it("should not pay bounty if Node is In Left state", async () => {
+                await nodesContract.initExit(0, {from: owner});
+                await nodesContract.completeExit(0, {from: owner});
+                skipTime(web3, month);
+                await skaleManager.getBounty(0, {from: nodeAddress}).should.be.eventually.rejectedWith("The node must not be in Left state");
+            });
+
             it("should pay bounty according to the schedule", async () => {
                 const timeHelpers = await deployTimeHelpers(contractManager);
 
