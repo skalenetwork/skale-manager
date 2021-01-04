@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-VERSION=$(cat VERSION)
 DEPLOYED_VERSION=$(cat $GITHUB_WORKSPACE/DEPLOYED)
 DEPLOYED_DIR=$GITHUB_WORKSPACE/deployed-skale-manager/
 
@@ -16,8 +15,9 @@ NODE_OPTIONS="--max-old-space-size=4096" PRODUCTION=true npx truffle migrate --n
 rm $GITHUB_WORKSPACE/.openzeppelin/dev-*.json
 cp .openzeppelin/dev-*.json $GITHUB_WORKSPACE/.openzeppelin || exit $?
 cd $GITHUB_WORKSPACE
+rm -r --interactive=never $DEPLOYED_DIR
 
-npx oz push --network test
+npx oz push --network test || exit $?
 npx oz upgrade --network test --all || exit $?
 
 kill $GANACHE_PID
