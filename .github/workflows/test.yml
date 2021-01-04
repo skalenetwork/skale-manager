@@ -7,6 +7,12 @@ jobs:
 
     env:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      PRIVATE_KEY_1: ${{ secrets.PRIVATE_KEY_1 }}
+      PRIVATE_KEY_2: ${{ secrets.PRIVATE_KEY_2 }}
+      PRIVATE_KEY_3: ${{ secrets.PRIVATE_KEY_3 }}
+      PRIVATE_KEY_4: ${{ secrets.PRIVATE_KEY_4 }}
+      PRIVATE_KEY_5: ${{ secrets.PRIVATE_KEY_5 }}
+      PRIVATE_KEY_6: ${{ secrets.PRIVATE_KEY_6 }}
 
     steps:
     - uses: actions/checkout@v2
@@ -39,9 +45,6 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: 3.8
-
-    - name: Check keys
-      run: test -n "$PRIVATE_KEY_1"
 
     - name: Install project
       run: yarn install
