@@ -930,6 +930,55 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
 
         describe("when correct broadcasts sent", async () => {
             const nodesCount = 4;
+            it("should not revert after successfull complaint", async () => {
+                for (let i = 0; i < nodesCount; ++i) {
+                    await skaleDKG.broadcast(
+                        web3.utils.soliditySha3(schainName),
+                        i,
+                        verificationVectors[i],
+                        encryptedSecretKeyContributions[i],
+                        {from: validatorsAccount[i % 2]},
+                    );
+                }
+
+                for (let i = 0; i < nodesCount; ++i) {
+                    if (i !== 1) {
+                        const result = await skaleDKG.alright(
+                            web3.utils.soliditySha3(schainName),
+                            i,
+                            {from: validatorsAccount[i % 2]},
+                        );
+                    }
+                }
+
+                skipTime(web3, 1800);
+
+                let isComplPossible = await skaleDKG.isComplaintPossible(
+                    web3.utils.soliditySha3(schainName),
+                    0,
+                    1,
+                    {from: validatorsAccount[0]},
+                );
+
+                assert(isComplPossible.should.be.true);
+
+                await skaleDKG.complaint(
+                    web3.utils.soliditySha3(schainName),
+                    0,
+                    1,
+                    {from: validatorsAccount[0]},
+                );
+
+                isComplPossible = await skaleDKG.isComplaintPossible(
+                    web3.utils.soliditySha3(schainName),
+                    2,
+                    1,
+                    {from: validatorsAccount[0]},
+                );
+
+                assert(isComplPossible.should.be.false);
+            });
+
             it("should proceed reponse", async () => {
                 for (let i = 0; i < nodesCount; ++i) {
                     await skaleDKG.broadcast(
