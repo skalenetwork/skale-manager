@@ -67,6 +67,7 @@ contract Nodes is Permissions {
         uint finishTime;
         NodeStatus status;
         uint validatorId;
+        string domainName;
     }
 
     // struct to note which Nodes and which number of Nodes owned by user
@@ -88,6 +89,7 @@ contract Nodes is Permissions {
         uint16 port;
         bytes32[2] publicKey;
         uint16 nonce;
+        string domainName;
     }
 
     // array which contain all Nodes
@@ -123,6 +125,7 @@ contract Nodes is Permissions {
         bytes4 publicIP,
         uint16 port,
         uint16 nonce,
+        string domainName,
         uint time,
         uint gasSpend
     );
@@ -148,6 +151,17 @@ contract Nodes is Permissions {
 
     modifier checkNodeExists(uint nodeIndex) {
         require(nodeIndex < nodes.length, "Node with such index does not exist");
+        _;
+    }
+
+    modifier checkAuthorizedCaller(address sender, uint nodeIndex) {
+        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
+        uint validatorId = getValidatorId(nodeIndex);
+        bool permitted = (_isAdmin(msg.sender) || isNodeExist(msg.sender, nodeIndex));
+        if (!permitted) {
+            permitted = validatorService.getValidatorId(msg.sender) == validatorId;
+        }
+        require(permitted, "Sender is not permitted to call this function");
         _;
     }
 
@@ -250,6 +264,7 @@ contract Nodes is Permissions {
             params.publicIp,
             params.port,
             params.publicKey,
+            params.domainName,
             validatorId);
 
         emit NodeCreated(
@@ -260,6 +275,7 @@ contract Nodes is Permissions {
             params.publicIp,
             params.port,
             params.nonce,
+            params.domainName,
             block.timestamp,
             gasleft());
     }
@@ -413,15 +429,8 @@ contract Nodes is Permissions {
      * - Node must already be Active.
      * - `msg.sender` must be owner of Node, validator, or SkaleManager.
      */
-    function setNodeInMaintenance(uint nodeIndex) external {
+    function setNodeInMaintenance(uint nodeIndex) external checkAuthorizedCaller(msg.sender, nodeIndex) {
         require(nodes[nodeIndex].status == NodeStatus.Active, "Node is not Active");
-        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
-        uint validatorId = getValidatorId(nodeIndex);
-        bool permitted = (_isAdmin(msg.sender) || isNodeExist(msg.sender, nodeIndex));
-        if (!permitted) {
-            permitted = validatorService.getValidatorId(msg.sender) == validatorId;
-        }
-        require(permitted, "Sender is not permitted to call this function");
         _setNodeInMaintenance(nodeIndex);
     }
 
@@ -433,16 +442,13 @@ contract Nodes is Permissions {
      * - Node must already be In Maintenance.
      * - `msg.sender` must be owner of Node, validator, or SkaleManager.
      */
-    function removeNodeFromInMaintenance(uint nodeIndex) external {
+    function removeNodeFromInMaintenance(uint nodeIndex) external checkAuthorizedCaller(msg.sender, nodeIndex) {
         require(nodes[nodeIndex].status == NodeStatus.In_Maintenance, "Node is not In Maintenance");
-        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
-        uint validatorId = getValidatorId(nodeIndex);
-        bool permitted = (_isAdmin(msg.sender) || isNodeExist(msg.sender, nodeIndex));
-        if (!permitted) {
-            permitted = validatorService.getValidatorId(msg.sender) == validatorId;
-        }
-        require(permitted, "Sender is not permitted to call this function");
         _setNodeActive(nodeIndex);
+    }
+
+    function modifyDomainName(uint nodeIndex, string memory domainName) external checkAuthorizedCaller(msg.sender, nodeIndex) {
+        nodes[nodeIndex].domainName = domainName;
     }
 
     /**
@@ -826,6 +832,7 @@ contract Nodes is Permissions {
         bytes4 publicIP,
         uint16 port,
         bytes32[2] memory publicKey,
+        string memory domainName,
         uint validatorId
     )
         private
@@ -843,7 +850,8 @@ contract Nodes is Permissions {
             lastRewardDate: block.timestamp,
             finishTime: 0,
             status: NodeStatus.Active,
-            validatorId: validatorId
+            validatorId: validatorId,
+            domainName: domainName
         }));
         nodeIndex = nodes.length.sub(1);
         validatorToNodeIndexes[validatorId].push(nodeIndex);
