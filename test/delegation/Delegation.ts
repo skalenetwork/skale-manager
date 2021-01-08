@@ -779,7 +779,7 @@ contract("Delegation", ([owner,
 
         it("should be possible to distribute bounty accross thousands of holders", async () => {
             let holdersAmount = 1000;
-            if (process.env.TRAVIS) {
+            if (process.env.CI) {
                 console.log("Reduce holders amount to fit Travis timelimit");
                 holdersAmount = 10;
             }
