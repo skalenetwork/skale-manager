@@ -154,14 +154,13 @@ contract Nodes is Permissions {
         _;
     }
 
-    modifier checkAuthorizedCaller(address sender, uint nodeIndex) {
+    modifier onlyValidatorOrAdmin(uint nodeIndex) {
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
-        uint validatorId = getValidatorId(nodeIndex);
-        bool permitted = (_isAdmin(msg.sender) || isNodeExist(msg.sender, nodeIndex));
-        if (!permitted) {
-            permitted = validatorService.getValidatorId(msg.sender) == validatorId;
-        }
-        require(permitted, "Sender is not permitted to call this function");
+
+        require(
+            getValidatorId(nodeIndex) == validatorService.getValidatorId(msg.sender) || _isAdmin(msg.sender),
+            "Sender is not permitted to call this function"
+        );
         _;
     }
 
@@ -429,7 +428,7 @@ contract Nodes is Permissions {
      * - Node must already be Active.
      * - `msg.sender` must be owner of Node, validator, or SkaleManager.
      */
-    function setNodeInMaintenance(uint nodeIndex) external checkAuthorizedCaller(msg.sender, nodeIndex) {
+    function setNodeInMaintenance(uint nodeIndex) external onlyValidatorOrAdmin(nodeIndex) {
         require(nodes[nodeIndex].status == NodeStatus.Active, "Node is not Active");
         _setNodeInMaintenance(nodeIndex);
     }
@@ -442,14 +441,14 @@ contract Nodes is Permissions {
      * - Node must already be In Maintenance.
      * - `msg.sender` must be owner of Node, validator, or SkaleManager.
      */
-    function removeNodeFromInMaintenance(uint nodeIndex) external checkAuthorizedCaller(msg.sender, nodeIndex) {
+    function removeNodeFromInMaintenance(uint nodeIndex) external onlyValidatorOrAdmin(nodeIndex) {
         require(nodes[nodeIndex].status == NodeStatus.In_Maintenance, "Node is not In Maintenance");
         _setNodeActive(nodeIndex);
     }
 
-    function modifyDomainName(uint nodeIndex, string memory domainName)
+    function setDomainName(uint nodeIndex, string memory domainName)
         external
-        checkAuthorizedCaller(msg.sender, nodeIndex)
+        onlyValidatorOrAdmin(nodeIndex)
     {
         nodes[nodeIndex].domainName = domainName;
     }
@@ -513,7 +512,6 @@ contract Nodes is Permissions {
         checkNodeExists(nodeIndex)
         returns (string memory)
     {
-        require(nodeIndex < nodes.length, "Node does not exist");
         return nodes[nodeIndex].domainName;
     }
 
@@ -652,7 +650,7 @@ contract Nodes is Permissions {
         activeNodesByAddress = new uint[](nodeIndexes[msg.sender].numberOfNodes);
         uint indexOfActiveNodesByAddress = 0;
         for (uint indexOfNodes = 0; indexOfNodes < nodes.length; indexOfNodes++) {
-            if (nodeIndexes[msg.sender].isNodeExist[indexOfNodes] && isNodeActive(indexOfNodes)) {
+            if (isNodeExist(msg.sender, indexOfNodes) && isNodeActive(indexOfNodes)) {
                 activeNodesByAddress[indexOfActiveNodesByAddress] = indexOfNodes;
                 indexOfActiveNodesByAddress++;
             }
