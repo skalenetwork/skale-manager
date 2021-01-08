@@ -178,31 +178,31 @@ contract("NodesData", ([owner, validator, nodeAddress, admin, hacker]) => {
         });
 
         it("should modify node domain name by node owner", async () => {
-            await nodes.modifyDomainName(0, "newdomain.name", {from: nodeAddress});
+            await nodes.setDomainName(0, "newdomain.name", {from: nodeAddress});
             const nodeDomainName = await nodes.getNodeDomainName(0);
             nodeDomainName.should.be.equal("newdomain.name");
         });
 
         it("should modify node domain name by validator", async () => {
-            await nodes.modifyDomainName(0, "newdomain.name", {from: validator});
+            await nodes.setDomainName(0, "newdomain.name", {from: validator});
             const nodeDomainName = await nodes.getNodeDomainName(0);
             nodeDomainName.should.be.equal("newdomain.name");
         });
 
         it("should modify node domain name by contract owner", async () => {
-            await nodes.modifyDomainName(0, "newdomain.name", {from: owner});
+            await nodes.setDomainName(0, "newdomain.name", {from: owner});
             const nodeDomainName = await nodes.getNodeDomainName(0);
             nodeDomainName.should.be.equal("newdomain.name");
         });
 
         it("should modify node domain name by contract admin", async () => {
-            await nodes.modifyDomainName(0, "newdomain.name", {from: admin});
+            await nodes.setDomainName(0, "newdomain.name", {from: admin});
             const nodeDomainName = await nodes.getNodeDomainName(0);
             nodeDomainName.should.be.equal("newdomain.name");
         });
 
         it("should not modify node domain name by hacker", async () => {
-            await nodes.modifyDomainName(0, "newdomain.name", {from: hacker})
+            await nodes.setDomainName(0, "newdomain.name", {from: hacker})
                 .should.be.eventually.rejectedWith("Validator address does not exist");
         });
 
