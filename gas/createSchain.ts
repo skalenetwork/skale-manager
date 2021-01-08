@@ -35,7 +35,7 @@ contract("createSchains", ([owner, validator, node]) => {
         await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), owner);
 
         const maxNodesAmount = 1000;
-        const gasLimit = 11.5e6;
+        const gasLimit = 12e6;
         const measurements = []
         const publicKey = ec.keyFromPrivate(String(privateKeys[2]).slice(2)).getPublic();
         for (let nodeId = 0; nodeId < maxNodesAmount; ++nodeId) {
