@@ -37,20 +37,20 @@ contract("createSchains", ([owner, validator, node]) => {
         const maxNodesAmount = 1000;
         const gasLimit = 11.5e6;
         const measurements = []
-        let pubKey = ec.keyFromPrivate(String(privateKeys[2]).slice(2)).getPublic();
+        const publicKey = ec.keyFromPrivate(String(privateKeys[2]).slice(2)).getPublic();
         for (let nodeId = 0; nodeId < maxNodesAmount; ++nodeId) {
             await skaleManager.createNode(
                 1, // port
                 0, // nonce
                 "0x7f" + ("000000" + nodeId.toString(16)).slice(-6), // ip
                 "0x7f" + ("000000" + nodeId.toString(16)).slice(-6), // public ip
-                ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')], // public key
+                ["0x" + publicKey.x.toString('hex'), "0x" + publicKey.y.toString('hex')], // public key
                 "d2-" + nodeId, // name)
             {from: node});
 
             const nodesAmount = nodeId + 1;
             if (nodesAmount >= 16) {
-                const result = await schains.addSchainByFoundation(0, 1, 0, "schain-" + nodeId);                
+                const result = await schains.addSchainByFoundation(0, 1, 0, "schain-" + nodeId);
                 measurements.push({nodesAmount, gasUsed: result.receipt.gasUsed});
                 console.log("create schain on", nodesAmount, "nodes:\t", result.receipt.gasUsed, "gu");
                 if (result.receipt.gasUsed > gasLimit) {
