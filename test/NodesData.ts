@@ -54,7 +54,8 @@ contract("NodesData", ([owner, validator, nodeAddress, admin]) => {
                 ip: "0x7f000001",
                 publicIp: "0x7f000002",
                 publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
-                name: "d2"
+                name: "d2",
+                domainName: "somedomain.name"
             });
 
         const node = await nodes.nodes(0);
@@ -91,7 +92,8 @@ contract("NodesData", ([owner, validator, nodeAddress, admin]) => {
                     ip: "0x7f000001",
                     publicIp: "0x7f000002",
                     publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
-                    name: "d2"
+                    name: "d2",
+                    domainName: "somedomain.name"
                 });
         });
 
@@ -382,7 +384,8 @@ contract("NodesData", ([owner, validator, nodeAddress, admin]) => {
                         ip: "0x7f000003",
                         publicIp: "0x7f000004",
                         publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
-                        name: "d3"
+                        name: "d3",
+                        domainName: "somedomain.name"
                     });
             });
 
@@ -423,7 +426,8 @@ contract("NodesData", ([owner, validator, nodeAddress, admin]) => {
                     ip: "0x7f000001",
                     publicIp: "0x7f000001",
                     publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
-                    name: "d1"
+                    name: "d1",
+                    domainName: "somedomain.name"
                 });
             await nodes.createNode(
                 nodeAddress,
@@ -433,7 +437,8 @@ contract("NodesData", ([owner, validator, nodeAddress, admin]) => {
                     ip: "0x7f000002",
                     publicIp: "0x7f000002",
                     publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
-                    name: "d2"
+                    name: "d2",
+                    domainName: "somedomain.name"
                 });
         });
 
@@ -476,7 +481,8 @@ contract("NodesData", ([owner, validator, nodeAddress, admin]) => {
                         ip: "0x7f000003",
                         publicIp: "0x7f000003",
                         publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
-                        name: "d3"
+                        name: "d3",
+                        domainName: "somedomain.name"
                     });
                 await nodes.createNode(
                     nodeAddress,
@@ -486,7 +492,8 @@ contract("NodesData", ([owner, validator, nodeAddress, admin]) => {
                         ip: "0x7f000004",
                         publicIp: "0x7f000004",
                         publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
-                        name: "d4"
+                        name: "d4",
+                        domainName: "somedomain.name"
                     });
             });
 

@@ -136,6 +136,7 @@ contract("Bounty", ([owner, admin, hacker, validator, validator2]) => {
                 "0x7f" + ("000000" + i.toString(16)).slice(-6), // public ip
                 ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')], // public key
                 "d2-" + i, // name)
+                "somedomain.name",
             {from: validator});
         }
 
@@ -150,6 +151,7 @@ contract("Bounty", ([owner, admin, hacker, validator, validator2]) => {
                 "0x7f" + ("000000" + (i + nodesAmount).toString(16)).slice(-6), // public ip
                 ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')], // public key
                 "d2-" + (i + nodesAmount), // name)
+                "somedomain.name",
             {from: validator2});
         }
 

@@ -298,7 +298,8 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                         ip: "0x7f0000" + hexIndex,
                         publicIp: "0x7f0000" + hexIndex,
                         publicKey: validatorsPublicKey[index],
-                        name: "d2" + hexIndex
+                        name: "d2" + hexIndex,
+                        domainName: "somedomain.name"
                     });
             }
         });
@@ -1141,7 +1142,8 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                                 ip: "0x7f000002",
                                 publicIp: "0x7f000002",
                                 publicKey: validatorsPublicKey[0],
-                                name: "d202"
+                                name: "d202",
+                                domainName: "somedomain.name"
                         });
 
                         await skaleDKG.preResponse(
@@ -1237,7 +1239,8 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                     ip: "0x7f000003",
                     publicIp: "0x7f000003",
                     publicKey: validatorsPublicKey[0],
-                    name: "d203"
+                    name: "d203",
+                    domainName: "somedomain.name"
                 });
 
             await skaleDKG.broadcast(
@@ -1399,7 +1402,8 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                     ip: "0x7f000003",
                     publicIp: "0x7f000003",
                     publicKey: validatorsPublicKey[0],
-                    name: "d203"
+                    name: "d203",
+                    domainName: "somedomain.name"
                 });
 
             await skaleDKG.broadcast(
@@ -1469,7 +1473,8 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                     ip: "0x7f000004",
                     publicIp: "0x7f000004",
                     publicKey: validatorsPublicKey[0],
-                    name: "d204"
+                    name: "d204",
+                    domainName: "somedomain.name"
                 }
             );
 
@@ -1577,7 +1582,8 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                         ip: "0x7f0000" + hexIndex,
                         publicIp: "0x7f0000" + hexIndex,
                         publicKey: validatorsPublicKey[0],
-                        name: "d2" + hexIndex
+                        name: "d2" + hexIndex,
+                        domainName: "somedomain.name"
                     });
             }
 
@@ -1678,7 +1684,8 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                         ip: "0x7f0000" + hexIndex,
                         publicIp: "0x7f0000" + hexIndex,
                         publicKey: validatorsPublicKey[0],
-                        name: "d2" + hexIndex
+                        name: "d2" + hexIndex,
+                        domainName: "somedomain.name"
                     });
             }
 
@@ -1696,7 +1703,8 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                     ip: "0x7f0000ff",
                     publicIp: "0x7f0000ff",
                     publicKey: validatorsPublicKey[0],
-                    name: "d2ff"
+                    name: "d2ff",
+                    domainName: "somedomain.name"
                 });
 
             const secretKeyContributions = [];
@@ -2028,7 +2036,8 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                         ip: "0x7f0000" + hexIndex,
                         publicIp: "0x7f0000" + hexIndex,
                         publicKey: validatorsPublicKey[0],
-                        name: "d2" + hexIndex
+                        name: "d2" + hexIndex,
+                        domainName: "somedomain.name"
                     });
             }
 
@@ -2099,7 +2108,8 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                         ip: "0x7f0000" + hexIndex,
                         publicIp: "0x7f0000" + hexIndex,
                         publicKey: validatorsPublicKey[0],
-                        name: "d2" + hexIndex
+                        name: "d2" + hexIndex,
+                        domainName: "somedomain.name"
                     });
             }
 
@@ -2163,7 +2173,8 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                     ip: "0x7f0000ff",
                     publicIp: "0x7f0000ff",
                     publicKey: validatorsPublicKey[0],
-                    name: "d2ff"
+                    name: "d2ff",
+                    domainName: "somedomain.name"
                 }
             );
             await schains.restartSchainCreation("New16NodeSchain");
@@ -2224,7 +2235,8 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
         //                     ip: "0x7f0000" + hexIndex,
         //                     publicIp: "0x7f0000" + hexIndex,
         //                     publicKey: validatorsPublicKey[0],
-        //                     name: "d2" + hexIndex
+        //                     name: "d2" + hexIndex,
+        //                     domainName: "somedomain.name"
         //                 });
         //         }
 
@@ -2313,7 +2325,8 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
         //                     ip: "0x7f0000" + hexIndex,
         //                     publicIp: "0x7f0000" + hexIndex,
         //                     publicKey: validatorsPublicKey[0],
-        //                     name: "d2" + hexIndex
+        //                     name: "d2" + hexIndex,
+        //                     domainName: "somedomain.name"
         //                 });
         //         }
 
@@ -2331,7 +2344,8 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
         //                 ip: "0x7f0000ff",
         //                 publicIp: "0x7f0000ff",
         //                 publicKey: validatorsPublicKey[0],
-        //                 name: "d2ff"
+        //                 name: "d2ff",
+        //                 domainName: "somedomain.name"
         //             });
 
         //         const secretKeyContributions = [];
