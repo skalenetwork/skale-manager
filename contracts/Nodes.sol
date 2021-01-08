@@ -447,7 +447,10 @@ contract Nodes is Permissions {
         _setNodeActive(nodeIndex);
     }
 
-    function modifyDomainName(uint nodeIndex, string memory domainName) external checkAuthorizedCaller(msg.sender, nodeIndex) {
+    function modifyDomainName(uint nodeIndex, string memory domainName)
+        external
+        checkAuthorizedCaller(msg.sender, nodeIndex)
+    {
         nodes[nodeIndex].domainName = domainName;
     }
 
