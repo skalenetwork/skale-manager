@@ -18,7 +18,7 @@ import { deploySkaleManagerMock } from "./tools/deploy/test/skaleManagerMock";
 chai.should();
 chai.use(chaiAsPromised);
 
-contract("NodesData", ([owner, validator, nodeAddress, admin]) => {
+contract("NodesData", ([owner, validator, nodeAddress, admin, hacker]) => {
     let contractManager: ContractManagerInstance;
     let nodes: NodesInstance;
     let validatorService: ValidatorServiceInstance;
@@ -170,6 +170,40 @@ contract("NodesData", ([owner, validator, nodeAddress, admin]) => {
 
         it("should check if node status is left", async () => {
             await nodes.isNodeLeft(0).should.be.eventually.false;
+        });
+
+        it("should check node domain name", async () => {
+            const nodeDomainName = await nodes.getNodeDomainName(0);
+            nodeDomainName.should.be.equal("somedomain.name");
+        });
+
+        it("should modify node domain name by node owner", async () => {
+            await nodes.modifyDomainName(0, "newdomain.name", {from: nodeAddress});
+            const nodeDomainName = await nodes.getNodeDomainName(0);
+            nodeDomainName.should.be.equal("newdomain.name");
+        });
+
+        it("should modify node domain name by validator", async () => {
+            await nodes.modifyDomainName(0, "newdomain.name", {from: validator});
+            const nodeDomainName = await nodes.getNodeDomainName(0);
+            nodeDomainName.should.be.equal("newdomain.name");
+        });
+
+        it("should modify node domain name by contract owner", async () => {
+            await nodes.modifyDomainName(0, "newdomain.name", {from: owner});
+            const nodeDomainName = await nodes.getNodeDomainName(0);
+            nodeDomainName.should.be.equal("newdomain.name");
+        });
+
+        it("should modify node domain name by contract admin", async () => {
+            await nodes.modifyDomainName(0, "newdomain.name", {from: admin});
+            const nodeDomainName = await nodes.getNodeDomainName(0);
+            nodeDomainName.should.be.equal("newdomain.name");
+        });
+
+        it("should not modify node domain name by hacker", async () => {
+            await nodes.modifyDomainName(0, "newdomain.name", {from: hacker})
+                .should.be.eventually.rejectedWith("Validator address does not exist");
         });
 
         it("should get array of ips of active nodes", async () => {

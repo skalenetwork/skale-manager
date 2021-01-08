@@ -501,6 +501,23 @@ contract Nodes is Permissions {
     }
 
     /**
+     * @dev Returns domain name of a given node.
+     * 
+     * Requirements:
+     * 
+     * - Node must exist.
+     */
+    function getNodeDomainName(uint nodeIndex)
+        external
+        view
+        checkNodeExists(nodeIndex)
+        returns (string memory)
+    {
+        require(nodeIndex < nodes.length, "Node does not exist");
+        return nodes[nodeIndex].domainName;
+    }
+
+    /**
      * @dev Returns the port of a given node.
      *
      * Requirements:
