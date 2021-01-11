@@ -43,10 +43,10 @@ jobs:
         export BRANCH=${GITHUB_REF##*/}
         echo "Branch $BRANCH"
         export VERSION=$(bash ./scripts/calculate_version.sh)
-        echo "::set-env name=VERSION::$VERSION"
         echo "Version $VERSION"
+        echo "VERSION=$VERSION" >> $GITHUB_ENV
         ( test $BRANCH = "stable" || test $BRANCH = "master" && export PRERELEASE=true ) || export PRERELEASE=false
-        echo "::set-env name=PRERELEASE::$PRERELEASE"
+        echo "PRERELEASE=$PRERELEASE" >> $GITHUB_ENV
         bash ./scripts/build_and_publish.sh
     
     - name: Create Release
