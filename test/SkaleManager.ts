@@ -131,6 +131,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                 "0x7f000001", // public ip
                 ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')], // public key
                 "d2", // name
+                "somedomain.name",
                 {from: nodeAddress});
 
             await nodesContract.numberOfActiveNodes().should.be.eventually.deep.equal(web3.utils.toBN(1));
@@ -150,6 +151,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                 "0x7f000001", // public ip
                 ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')], // public key
                 "d2", // name
+                "somedomain.name",
                 {from: nodeAddress})
                 .should.be.eventually.rejectedWith("Validator is not authorized to create a node");
             await validatorService.enableValidator(validatorId, {from: owner});
@@ -160,6 +162,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                 "0x7f000001", // public ip
                 ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')], // public key
                 "d2", // name
+                "somedomain.name",
                 {from: nodeAddress});
         });
 
@@ -174,6 +177,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                     "0x7f000001", // public ip
                     ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')], // public key
                     "d2", // name
+                    "somedomain.name",
                     {from: nodeAddress});
             });
 
@@ -231,6 +235,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                     "0x7f000002", // public ip
                     ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')], // public key
                     "d3", // name
+                    "somedomain.name",
                     {from: validator}
                 );
 
@@ -319,6 +324,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                     "0x7f000001", // public ip
                     ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')], // public key
                     "d2", // name
+                    "somedomain.name",
                     {from: nodeAddress});
                 await skaleManager.createNode(
                     8545, // port
@@ -327,6 +333,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                     "0x7f000002", // public ip
                     ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')], // public key
                     "d3", // name
+                    "somedomain.name",
                     {from: nodeAddress});
             });
 
@@ -420,6 +427,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                         "0x7f000001", // public ip
                         ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')], // public key
                         "d2-" + i, // name
+                        "somedomain.name",
                         {from: nodeAddress});
                 }
 
@@ -435,6 +443,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                     "0x7f000001", // public ip
                     ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')], // public key
                     "d2", // name
+                    "somedomain.name",
                     {from: nodeAddress}).should.be.eventually.rejectedWith("Validator must meet the Minimum Staking Requirement");
             });
 
@@ -580,6 +589,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                         "0x7f000001", // public ip
                         ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')], // public key
                         "d2-" + i, // name
+                        "somedomain.name",
                         {from: nodeAddress});
                 }
             });
@@ -670,6 +680,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                         "0x7f000001", // public ip
                         ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')], // public key
                         "d2-" + i, // name
+                        "somedomain.name",
                         {from: nodeAddress});
                     }
 

@@ -58,7 +58,8 @@ contract("Monitors", ([owner, validator, nodeAddress]) => {
           ip: "0x7f000001",
           publicIp: "0x7f000001",
           publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
-          name: "elvis1"
+          name: "elvis1",
+          domainName: "somedomain.name"
       });
 
     await nodes.createNode(
@@ -69,7 +70,8 @@ contract("Monitors", ([owner, validator, nodeAddress]) => {
           ip: "0x7f000003",
           publicIp: "0x7f000003",
           publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
-          name: "elvis2"
+          name: "elvis2",
+          domainName: "somedomain.name"
       });
 
     await nodes.createNode(
@@ -80,7 +82,8 @@ contract("Monitors", ([owner, validator, nodeAddress]) => {
           ip: "0x7f000005",
           publicIp: "0x7f000005",
           publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
-          name: "elvis3"
+          name: "elvis3",
+          domainName: "somedomain.name"
       });
 
     await nodes.createNode(
@@ -91,7 +94,8 @@ contract("Monitors", ([owner, validator, nodeAddress]) => {
           ip: "0x7f000007",
           publicIp: "0x7f000007",
           publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
-          name: "elvis4"
+          name: "elvis4",
+          domainName: "somedomain.name"
       });
 
     await nodes.createNode(
@@ -102,7 +106,8 @@ contract("Monitors", ([owner, validator, nodeAddress]) => {
           ip: "0x7f000009",
           publicIp: "0x7f000009",
           publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
-          name: "elvis5"
+          name: "elvis5",
+          domainName: "somedomain.name"
       });
   });
   // nodeIndex = 0 because we add one node and her index in array is 0
@@ -378,7 +383,8 @@ contract("Monitors", ([owner, validator, nodeAddress]) => {
               ip: "0x7f" + address + "01",
               publicIp: "0x7f" + address + "02",
               publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
-              name: "d2_" + node
+              name: "d2_" + node,
+              domainName: "somedomain.name"
           });
       }
 

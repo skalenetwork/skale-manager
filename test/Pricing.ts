@@ -76,7 +76,8 @@ contract("Pricing", ([owner, holder, validator, nodeAddress]) => {
                     ip: "0x7f000001",
                     publicIp: "0x7f000001",
                     publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
-                    name: "elvis1"
+                    name: "elvis1",
+                    domainName: "somedomain.name"
                 });
 
             await nodes.createNode(
@@ -87,7 +88,8 @@ contract("Pricing", ([owner, holder, validator, nodeAddress]) => {
                     ip: "0x7f000003",
                     publicIp: "0x7f000003",
                     publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
-                    name: "elvis2"
+                    name: "elvis2",
+                    domainName: "somedomain.name"
                 });
 
             await nodes.createNode(
@@ -98,7 +100,8 @@ contract("Pricing", ([owner, holder, validator, nodeAddress]) => {
                     ip: "0x7f000005",
                     publicIp: "0x7f000005",
                     publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
-                    name: "elvis3"
+                    name: "elvis3",
+                    domainName: "somedomain.name"
                 });
 
             await nodes.createNode(
@@ -109,7 +112,8 @@ contract("Pricing", ([owner, holder, validator, nodeAddress]) => {
                     ip: "0x7f000007",
                     publicIp: "0x7f000007",
                     publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
-                    name: "elvis4"
+                    name: "elvis4",
+                    domainName: "somedomain.name"
                 });
 
         });
@@ -219,7 +223,8 @@ contract("Pricing", ([owner, holder, validator, nodeAddress]) => {
                             ip: "0x7f000010",
                             publicIp: "0x7f000011",
                             publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
-                            name: "vadim"
+                            name: "vadim",
+                            domainName: "somedomain.name"
                         });
                     const MINUTES_PASSED = 2;
                     skipTime(web3, lastUpdated + MINUTES_PASSED * 60 - await currentTime(web3));
@@ -282,7 +287,8 @@ contract("Pricing", ([owner, holder, validator, nodeAddress]) => {
                             ip: "0x7f000010",
                             publicIp: "0x7f000011",
                             publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
-                            name: "vadim"
+                            name: "vadim",
+                            domainName: "somedomain.name"
                         });
 
                     const MINUTES_PASSED = 30;
