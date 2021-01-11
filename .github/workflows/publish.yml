@@ -7,6 +7,7 @@ on:
       - develop
       - beta
       - stable
+      - enhancement/SKALE-2958-github-actions
 
 jobs:
   build:
