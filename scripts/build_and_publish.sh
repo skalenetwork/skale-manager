@@ -21,10 +21,10 @@ echo "Built $IMAGE_NAME"
 
 # Publish image
 
-: "${USERNAME?Need to set USERNAME}"
-: "${PASSWORD?Need to set PASSWORD}"
+: "${DOCKER_USERNAME?Need to set DOCKER_USERNAME}"
+: "${DOCKER_PASSWORD?Need to set DOCKER_PASSWORD}"
 
-echo "$PASSWORD" | docker login --username $USERNAME --password-stdin
+echo "$DOCKER_PASSWORD" | docker login --username $DOCKER_USERNAME --password-stdin
 
 docker push $IMAGE_NAME || exit $?
 docker push $LATEST_IMAGE_NAME || exit $?
