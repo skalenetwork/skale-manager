@@ -7,14 +7,11 @@ on:
       - develop
       - beta
       - stable
-  push:
-    branches:
-      - enhancement/SKALE-2958-github-actions
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    # if: github.event.pull_request.merged
+    if: github.event.pull_request.merged
     env:
       DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
       DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
