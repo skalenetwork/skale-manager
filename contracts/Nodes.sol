@@ -154,11 +154,13 @@ contract Nodes is Permissions {
         _;
     }
 
-    modifier onlyValidatorOrAdmin(uint nodeIndex) {
+    modifier onlyNodeOrAdmin(uint nodeIndex) {
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
 
         require(
-            getValidatorId(nodeIndex) == validatorService.getValidatorId(msg.sender) || _isAdmin(msg.sender),
+            isNodeExist(msg.sender, nodeIndex) ||
+            _isAdmin(msg.sender) ||
+            getValidatorId(nodeIndex) == validatorService.getValidatorId(msg.sender),
             "Sender is not permitted to call this function"
         );
         _;
@@ -428,7 +430,7 @@ contract Nodes is Permissions {
      * - Node must already be Active.
      * - `msg.sender` must be owner of Node, validator, or SkaleManager.
      */
-    function setNodeInMaintenance(uint nodeIndex) external onlyValidatorOrAdmin(nodeIndex) {
+    function setNodeInMaintenance(uint nodeIndex) external onlyNodeOrAdmin(nodeIndex) {
         require(nodes[nodeIndex].status == NodeStatus.Active, "Node is not Active");
         _setNodeInMaintenance(nodeIndex);
     }
@@ -441,14 +443,14 @@ contract Nodes is Permissions {
      * - Node must already be In Maintenance.
      * - `msg.sender` must be owner of Node, validator, or SkaleManager.
      */
-    function removeNodeFromInMaintenance(uint nodeIndex) external onlyValidatorOrAdmin(nodeIndex) {
+    function removeNodeFromInMaintenance(uint nodeIndex) external onlyNodeOrAdmin(nodeIndex) {
         require(nodes[nodeIndex].status == NodeStatus.In_Maintenance, "Node is not In Maintenance");
         _setNodeActive(nodeIndex);
     }
 
     function setDomainName(uint nodeIndex, string memory domainName)
         external
-        onlyValidatorOrAdmin(nodeIndex)
+        onlyNodeOrAdmin(nodeIndex)
     {
         nodes[nodeIndex].domainName = domainName;
     }
