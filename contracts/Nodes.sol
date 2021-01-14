@@ -110,6 +110,8 @@ contract Nodes is Permissions {
 
     mapping (uint => uint[]) public validatorToNodeIndexes;
 
+    uint[255] public cutTree;
+
     uint public numberOfActiveNodes;
     uint public numberOfLeavingNodes;
     uint public numberOfLeftNodes;
@@ -164,6 +166,13 @@ contract Nodes is Permissions {
             "Sender is not permitted to call this function"
         );
         _;
+    }
+
+    function buildZeroCutTree(uint8 v, uint tl, uint tr) external {
+        uint len = spaceToNodes[128].length;
+        for (uint i = 1; i <= 8; i++) {
+            cutTree[2 ** i - 2] = len;
+        }
     }
 
     /**
@@ -763,10 +772,28 @@ contract Nodes is Permissions {
     function countNodesWithFreeSpace(uint8 freeSpace) public view returns (uint count) {
         ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
         count = 0;
-        uint totalSpace = constantsHolder.TOTAL_SPACE_ON_NODE();
-        for (uint8 i = freeSpace; i <= totalSpace; ++i) {
-            count = count.add(spaceToNodes[i].length);
+        uint8 rightSpace = constantsHolder.TOTAL_SPACE_ON_NODE();
+        uint8 leftSpace = 0;
+        uint index = 1;
+        while(leftSpace < rightSpace) {
+            uint8 tm = (leftSpace + rightSpace) / 2;
+            if (freeSpace > tm) {
+                leftSpace = tm + 1;
+                index += index + 1;
+            } else {
+                rightSpace = tm;
+                index += index;
+                count += cutTree[index + 1];
+            }
         }
+        count += spaceToNodes[leftSpace].length;
+    }
+
+    function _countNodesWithSpace(uint8 lspace, uint8 rspace) private view returns (uint) {
+        if (lspace == rspace) {
+            return spaceToNodes[lspace].length;
+        }
+
     }
 
     /**
