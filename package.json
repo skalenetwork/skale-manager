@@ -70,6 +70,7 @@
     "solhint": "^3.2.1",
     "solidity-coverage": "^0.7.5",
     "solidity-docgen": "^0.5.7",
+    "truffle-plugin-verify": "^0.5.4",
     "truffle-typings": "^1.0.8",
     "ts-node": "9.0.0",
     "tslint": "^6.1.3",

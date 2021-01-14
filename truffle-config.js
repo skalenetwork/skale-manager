@@ -63,7 +63,7 @@ module.exports = {
             },
             gasPrice: gasprice,
             gas: 8000000,
-            network_id: "*",
+            network_id: "1",
             skipDryRun: true
         }
     },
@@ -81,5 +81,8 @@ module.exports = {
             }
         }
     },
-    plugins: ["solidity-coverage"]
+    plugins: ["solidity-coverage", "truffle-plugin-verify"],
+    api_keys: {
+        etherscan: 'QSW5NZN9RCYXSZWVB32DMUN83UZ5EJUREI'
+    }
 };
