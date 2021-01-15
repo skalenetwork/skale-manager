@@ -44,7 +44,7 @@ library SegmentTree {
     }
 
     function addToPlace(SegmentTree storage self, uint8 place, uint delta) internal {
-        require(correctSpace(place), "Incorrect place");
+        require(_correctSpace(place), "Incorrect place");
         uint8 leftBound = _FIRST;
         uint8 rightBound = _LAST;
         uint step = 1;
@@ -53,19 +53,17 @@ library SegmentTree {
             uint8 middle = (leftBound + rightBound) / 2;
             if (place > middle) {
                 leftBound = middle + 1;
-                self.tree[step + 1] += delta;
                 step += step + 1;
             } else {
                 rightBound = middle;
-                self.tree[step] += delta;
                 step += step;
             }
+            self.tree[step - 1] += delta;
         }
-        self.tree[leftBound] += delta;
     }
 
     function removeFromPlace(SegmentTree storage self, uint8 place, uint delta) internal {
-        require(correctSpace(place), "Incorrect place");
+        require(_correctSpace(place), "Incorrect place");
         uint8 leftBound = _FIRST;
         uint8 rightBound = _LAST;
         uint step = 1;
@@ -74,25 +72,21 @@ library SegmentTree {
             uint8 middle = (leftBound + rightBound) / 2;
             if (place > middle) {
                 leftBound = middle + 1;
-                self.tree[step + 1] += delta;
                 step += step + 1;
             } else {
                 rightBound = middle;
-                self.tree[step] -= delta;
                 step += step;
             }
+            self.tree[step - 1] -= delta;
         }
-        self.tree[leftBound] -= delta;
     }
 
     // function optimizedMoveFromPlaceToPlace(SegmentTree storage self, uint8 fromPlace, uint8 toPlace) internal {}
 
     function sumFromPlaceToLast(SegmentTree storage self, uint8 place) internal view returns (uint sum) {
-        require(correctSpace(place), "Incorrect place");
+        require(_correctSpace(place), "Incorrect place");
         if (place == _FIRST) {
             return self.tree[0];
-        } else if (place == _LAST) {
-            return 0;
         }
         uint8 leftBound = _FIRST;
         uint8 rightBound = _LAST;
@@ -104,11 +98,11 @@ library SegmentTree {
                 step += step + 1;
             } else {
                 rightBound = middle;
-                sum += self.tree[step + 1];
                 step += step;
+                sum += self.tree[step];
             }
         }
-        sum += self.tree[step];
+        sum += self.tree[step - 1];
     }
 
     function randomNonZeroFromPlaceToLast(
@@ -120,7 +114,7 @@ library SegmentTree {
         view
         returns (uint8)
     {
-        require(correctSpace(place), "Incorrect place");
+        require(_correctSpace(place), "Incorrect place");
         uint8 leftBound = _FIRST;
         uint8 rightBound = _LAST;
         uint step = 1;
@@ -142,7 +136,7 @@ library SegmentTree {
                     step += step;
                 } else {
                     (bool isLeftWay, uint randomBeakon2) =
-                        randomWay(randomBeakon, self.tree[step], self.tree[step + 1]);
+                        _randomWay(randomBeakon, self.tree[step], self.tree[step + 1]);
                     if (isLeftWay) {
                         rightBound = middle;
                         step += step;
@@ -157,16 +151,16 @@ library SegmentTree {
         return leftBound;
     }
 
-    function getElemFromTree(SegmentTree storage self, uint index) public view returns (uint) {
+    function getElemFromTree(SegmentTree storage self, uint index) internal view returns (uint) {
         require(index < 255, "Incorrect index");
         return self.tree[index];
     }
 
-    function correctSpace(uint8 place) private pure returns (bool) {
+    function _correctSpace(uint8 place) private pure returns (bool) {
         return place >= _FIRST && place <= _LAST;
     }
 
-    function randomWay(
+    function _randomWay(
         uint salt,
         uint priorityA,
         uint priorityB
