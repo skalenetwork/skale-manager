@@ -33,6 +33,8 @@ import "./BountyV2.sol";
 import "./ConstantsHolder.sol";
 import "./Permissions.sol";
 
+import "./utils/SegmentTree.sol";
+
 
 /**
  * @title Nodes
@@ -52,6 +54,7 @@ import "./Permissions.sol";
 contract Nodes is Permissions {
     
     using SafeCast for uint;
+    using SegmentTree for SegmentTree.SegmentTree;
 
     // All Nodes states
     enum NodeStatus {Active, Leaving, Left, In_Maintenance}
@@ -110,11 +113,11 @@ contract Nodes is Permissions {
 
     mapping (uint => uint[]) public validatorToNodeIndexes;
 
-    uint[255] public cutTree;
-
     uint public numberOfActiveNodes;
     uint public numberOfLeavingNodes;
     uint public numberOfLeftNodes;
+
+    SegmentTree.SegmentTree private _tree;
 
     /**
      * @dev Emitted when a node is created.
@@ -168,11 +171,8 @@ contract Nodes is Permissions {
         _;
     }
 
-    function buildZeroCutTree(uint8 v, uint tl, uint tr) external {
-        uint len = spaceToNodes[128].length;
-        for (uint i = 1; i <= 8; i++) {
-            cutTree[2 ** i - 2] = len;
-        }
+    function buildZeroSegmentTree() external {
+        _tree.initLast(spaceToNodes[128].length);
     }
 
     /**
@@ -770,23 +770,7 @@ contract Nodes is Permissions {
      * @dev Returns number of nodes with available space.
      */
     function countNodesWithFreeSpace(uint8 freeSpace) public view returns (uint count) {
-        ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
-        count = 0;
-        uint8 rightSpace = constantsHolder.TOTAL_SPACE_ON_NODE();
-        uint8 leftSpace = 0;
-        uint index = 1;
-        while(leftSpace < rightSpace) {
-            uint8 tm = (leftSpace + rightSpace) / 2;
-            if (freeSpace > tm) {
-                leftSpace = tm + 1;
-                index += index + 1;
-            } else {
-                rightSpace = tm;
-                index += index;
-                count += cutTree[index + 1];
-            }
-        }
-        count += spaceToNodes[leftSpace].length;
+        return _tree.sumFromPlaceToLast(freeSpace);
     }
 
     function _countNodesWithSpace(uint8 lspace, uint8 rspace) private view returns (uint) {
