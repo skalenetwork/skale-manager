@@ -21,7 +21,7 @@
 
 pragma solidity 0.6.10;
 
-import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
+// import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
 
 library SegmentTree {
 
@@ -157,7 +157,12 @@ library SegmentTree {
         return leftBound;
     }
 
-    function correctSpace(uint8 place) internal pure returns (bool) {
+    function getElemFromTree(SegmentTree storage self, uint index) public view returns (uint) {
+        require(index < 255, "Incorrect index");
+        return self.tree[index];
+    }
+
+    function correctSpace(uint8 place) private pure returns (bool) {
         return place >= _FIRST && place <= _LAST;
     }
 
@@ -166,7 +171,7 @@ library SegmentTree {
         uint priorityA,
         uint priorityB
     )
-        internal
+        private
         pure
         returns (bool isLeftWay, uint newSalt)
     {
