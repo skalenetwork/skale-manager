@@ -32,7 +32,7 @@ contract("SegmentTree", ([owner]) => {
             for(let j = 1; j <= 253; j++) {
                 let isRightLeaf = false;
                 for(let i = 1; i <= 8; i++) {
-                    if (j == 2 ** i - 2) {
+                    if (j === 2 ** i - 2) {
                         isRightLeaf = true;
                     }
                 }
@@ -45,7 +45,7 @@ contract("SegmentTree", ([owner]) => {
             for(let j = 1; j <= 253; j++) {
                 let isRightLeaf = false;
                 for(let i = 1; i <= 8; i++) {
-                    if (j == 2 ** i - 2) {
+                    if (j === 2 ** i - 2) {
                         isRightLeaf = true;
                     }
                 }
@@ -176,6 +176,81 @@ contract("SegmentTree", ([owner]) => {
     });
 
     describe("random elem", async () => {
+        it("should return last place", async () => {
+            (await segmentTree.sumFromPlaceToLast(100)).toNumber().should.be.equal(150);
+            (await segmentTree.getRandomElem(100)).toNumber().should.be.equal(128);
+        });
 
+        it("should return zero if no place", async () => {
+            (await segmentTree.sumFromPlaceToLast(100)).toNumber().should.be.equal(150);
+            (await segmentTree.getRandomElem(100)).toNumber().should.be.equal(128);
+            await segmentTree.removeFromPlace(128, 150);
+            (await segmentTree.sumFromPlaceToLast(1)).toNumber().should.be.equal(0);
+            (await segmentTree.getRandomElem(1)).toNumber().should.be.equal(0);
+            await segmentTree.addToPlace(99, 150);
+            (await segmentTree.sumFromPlaceToLast(100)).toNumber().should.be.equal(0);
+            (await segmentTree.getRandomElem(100)).toNumber().should.be.equal(0);
+            (await segmentTree.sumFromPlaceToLast(99)).toNumber().should.be.equal(150);
+            (await segmentTree.getRandomElem(99)).toNumber().should.be.equal(99);
+        });
+
+        it("should reject if place is incorrect", async () => {
+            (await segmentTree.sumFromPlaceToLast(100)).toNumber().should.be.equal(150);
+            (await segmentTree.getRandomElem(100)).toNumber().should.be.equal(128);
+            await segmentTree.removeFromPlace(128, 150);
+            (await segmentTree.sumFromPlaceToLast(1)).toNumber().should.be.equal(0);
+            (await segmentTree.getRandomElem(1)).toNumber().should.be.equal(0);
+            await segmentTree.addToPlace(99, 150);
+            (await segmentTree.sumFromPlaceToLast(100)).toNumber().should.be.equal(0);
+            (await segmentTree.getRandomElem(100)).toNumber().should.be.equal(0);
+            (await segmentTree.sumFromPlaceToLast(99)).toNumber().should.be.equal(150);
+            (await segmentTree.getRandomElem(99)).toNumber().should.be.equal(99);
+            await segmentTree.getRandomElem(0).should.be.rejectedWith("Incorrect place");
+            (await segmentTree.getRandomElem(128)).toNumber().should.be.equal(0);
+            await segmentTree.addToPlace(128, 1000);
+            (await segmentTree.getRandomElem(128)).toNumber().should.be.equal(128);
+            (await segmentTree.getRandomElem(127)).toNumber().should.be.equal(128);
+            await segmentTree.removeFromPlace(128, 1000);
+            (await segmentTree.getRandomElem(128)).toNumber().should.be.equal(0);
+            (await segmentTree.getRandomElem(127)).toNumber().should.be.equal(0);
+            await segmentTree.addToPlace(127, 1000);
+            (await segmentTree.getRandomElem(128)).toNumber().should.be.equal(0);
+            (await segmentTree.getRandomElem(127)).toNumber().should.be.equal(127);
+            await segmentTree.getRandomElem(129).should.be.rejectedWith("Incorrect place");
+            await segmentTree.getRandomElem(100000).should.be.rejectedWith("Incorrect place");
+
+
+        });
+
+        it("should return and remove random places", async () => {
+            await segmentTree.addToPlace(127, 5);
+            await segmentTree.addToPlace(54, 50);
+            await segmentTree.addToPlace(106, 25);
+            await segmentTree.addToPlace(77, 509);
+            for(let i = 0; i < 180; i++) {
+                const place = (await segmentTree.getRandomElem(78)).toNumber();
+                await segmentTree.removeFromPlace(place, 1);
+                // console.log("Place found!!!!!!!!!!!!")
+                // console.log(place);
+            }
+            (await segmentTree.getRandomElem(78)).toNumber().should.be.equal(0);
+            (await segmentTree.getRandomElem(77)).toNumber().should.be.equal(77);
+        });
+
+        it("random stress simulating large schains test", async () => {
+            const schainPlace = 32; // 1/4 of node
+            await segmentTree.removeFromPlace(128, 100); // make 50 nodes
+            for(let i = 0; i < 200; i++) { // 200 times we could repeat removing
+                const place = (await segmentTree.getRandomElem(schainPlace)).toNumber();
+                // console.log("New place ", place);
+                await segmentTree.removeFromPlace(place, 1);
+                if (place - schainPlace > 0) {
+                    // console.log(place - schainPlace);
+                    await segmentTree.addToPlace(place - schainPlace, 1);
+                }
+            }
+            // 201 time should be no nodes
+            (await segmentTree.getRandomElem(schainPlace)).toNumber().should.be.equal(0);
+        });
     });
 });

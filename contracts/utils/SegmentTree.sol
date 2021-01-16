@@ -125,18 +125,21 @@ library SegmentTree {
                 leftBound = middle + 1;
                 step += step + 1;
             } else {
-                if (self.tree[step] == 0) {
+                uint priorityA = place <= leftBound ?
+                    self.tree[2 * step - 1] :
+                    rightBound == _LAST ?
+                    sumFromPlaceToLast(self, place) - self.tree[2 * step] :
+                    sumFromPlaceToLast(self, place) - sumFromPlaceToLast(self, middle + 1);
+                if (priorityA == 0) {
                     leftBound = middle + 1;
                     step += step + 1;
-                    if (self.tree[step + 1] == 0) {
-                        return 0;
-                    }
-                } else if (self.tree[step + 1] == 0) {
+                } else if (self.tree[2 * step] == 0) {
                     rightBound = middle;
                     step += step;
                 } else {
+                    
                     (bool isLeftWay, uint randomBeakon2) =
-                        _randomWay(randomBeakon, self.tree[step], self.tree[step + 1]);
+                        _randomWay(randomBeakon, priorityA, self.tree[2 * step]);
                     if (isLeftWay) {
                         rightBound = middle;
                         step += step;
@@ -147,6 +150,9 @@ library SegmentTree {
                     randomBeakon = randomBeakon2;
                 }
             }
+        }
+        if (self.tree[step - 1] == 0) {
+            return 0;
         }
         return leftBound;
     }
@@ -166,11 +172,10 @@ library SegmentTree {
         uint priorityB
     )
         private
-        pure
+        view
         returns (bool isLeftWay, uint newSalt)
     {
         newSalt = uint(keccak256(abi.encodePacked(salt, priorityA, priorityB)));
-        isLeftWay = newSalt % (priorityA + priorityB) < priorityA;
-
+        isLeftWay = (newSalt % (priorityA + priorityB)) < priorityA;
     }
 }
