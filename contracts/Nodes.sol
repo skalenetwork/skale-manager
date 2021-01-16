@@ -386,16 +386,11 @@ contract Nodes is Permissions {
      */
     function checkPossibilityCreatingNode(address nodeAddress) external allow("SkaleManager") {
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
-        DelegationController delegationController = DelegationController(
-            contractManager.getContract("DelegationController")
-        );
         uint validatorId = validatorService.getValidatorIdByNodeAddress(nodeAddress);
         require(validatorService.isAuthorizedValidator(validatorId), "Validator is not authorized to create a node");
-        uint[] memory validatorNodes = validatorToNodeIndexes[validatorId];
-        uint delegationsTotal = delegationController.getAndUpdateDelegatedToValidatorNow(validatorId);
-        uint msr = ConstantsHolder(contractManager.getContract("ConstantsHolder")).msr();
+        // uint[] memory validatorNodes = validatorToNodeIndexes[validatorId];
         require(
-            validatorNodes.length.add(1).mul(msr) <= delegationsTotal,
+            _checkValidatorPositionToMaintainNode(validatorId, validatorToNodeIndexes[validatorId].length),
             "Validator must meet the Minimum Staking Requirement");
     }
 
@@ -418,17 +413,12 @@ contract Nodes is Permissions {
         allow("Bounty")
         returns (bool)
     {
-        DelegationController delegationController = DelegationController(
-            contractManager.getContract("DelegationController")
-        );
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
         require(validatorService.validatorExists(validatorId), "Validator ID does not exist");
         uint[] memory validatorNodes = validatorToNodeIndexes[validatorId];
         uint position = _findNode(validatorNodes, nodeIndex);
         require(position < validatorNodes.length, "Node does not exist for this Validator");
-        uint delegationsTotal = delegationController.getAndUpdateDelegatedToValidatorNow(validatorId);
-        uint msr = ConstantsHolder(contractManager.getContract("ConstantsHolder")).msr();
-        return position.add(1).mul(msr) <= delegationsTotal;
+        return _checkValidatorPositionToMaintainNode(validatorId, position);
     }
 
     /**
@@ -464,24 +454,6 @@ contract Nodes is Permissions {
         nodes[nodeIndex].domainName = domainName;
     }
 
-    /**
-     * @dev Returns nodes with space availability.
-     * TODO: REMOVE!!!!
-     */
-    // function getNodesWithFreeSpace(uint8 freeSpace) external view returns (uint[] memory) {
-    //     ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
-    //     uint[] memory nodesWithFreeSpace = new uint[](countNodesWithFreeSpace(freeSpace));
-    //     uint cursor = 0;
-    //     uint totalSpace = constantsHolder.TOTAL_SPACE_ON_NODE();
-    //     for (uint8 i = freeSpace; i <= totalSpace; ++i) {
-    //         for (uint j = 0; j < spaceToNodes[i].length; j++) {
-    //             nodesWithFreeSpace[cursor] = spaceToNodes[i][j];
-    //             ++cursor;
-    //         }
-    //     }
-    //     return nodesWithFreeSpace;
-    // }
-
     function getRandomNodeWithFreeSpace(uint8 freeSpace, uint salt) external view returns (uint) {
         (uint8 place, uint random) = _tree.randomNonZeroFromPlaceToLast(
             freeSpace,
@@ -490,7 +462,6 @@ contract Nodes is Permissions {
         require(place > 0, "Node not found");
         random = uint(keccak256(abi.encodePacked(random, salt))) % spaceToNodes[place].length;
         return spaceToNodes[place][random]; 
-        
     }
 
     /**
@@ -720,6 +691,13 @@ contract Nodes is Permissions {
     }
 
     /**
+     * @dev Returns number of nodes with available space.
+     */
+    function countNodesWithFreeSpace(uint8 freeSpace) external view returns (uint count) {
+        return _tree.sumFromPlaceToLast(freeSpace);
+    }
+
+    /**
      * @dev constructor in Permissions approach.
      */
     function initialize(address contractsAddress) public override initializer {
@@ -779,13 +757,6 @@ contract Nodes is Permissions {
     }
 
     /**
-     * @dev Returns number of nodes with available space.
-     */
-    function countNodesWithFreeSpace(uint8 freeSpace) public view returns (uint count) {
-        return _tree.sumFromPlaceToLast(freeSpace);
-    }
-
-    /**
      * @dev Returns the index of a given node within the validator's node index.
      */
     function _findNode(uint[] memory validatorNodeIndexes, uint nodeIndex) private pure returns (uint) {
@@ -802,20 +773,10 @@ contract Nodes is Permissions {
      * @dev Moves a node to a new space mapping.
      */
     function _moveNodeToNewSpaceMap(uint nodeIndex, uint8 newSpace) private {
-        uint8 previousSpace = spaceOfNodes[nodeIndex].freeSpace;
-        uint indexInArray = spaceOfNodes[nodeIndex].indexInSpaceMap;
-        if (indexInArray < spaceToNodes[previousSpace].length.sub(1)) {
-            uint shiftedIndex = spaceToNodes[previousSpace][spaceToNodes[previousSpace].length.sub(1)];
-            spaceToNodes[previousSpace][indexInArray] = shiftedIndex;
-            spaceOfNodes[shiftedIndex].indexInSpaceMap = indexInArray;
-            spaceToNodes[previousSpace].pop();
-        } else {
-            spaceToNodes[previousSpace].pop();
-        }
+        _removeNodeFromSpaceOfNodes(nodeIndex);
         spaceToNodes[newSpace].push(nodeIndex);
         spaceOfNodes[nodeIndex].freeSpace = newSpace;
         spaceOfNodes[nodeIndex].indexInSpaceMap = spaceToNodes[newSpace].length.sub(1);
-        _tree.removeFromPlace(previousSpace, 1);
         if (newSpace > 0) {
             _tree.addToPlace(newSpace, 1);
         }
@@ -914,21 +875,33 @@ contract Nodes is Permissions {
      * @dev Deletes node from array.
      */
     function _deleteNode(uint nodeIndex) private {
+        _removeNodeFromSpaceOfNodes(nodeIndex);
+        delete spaceOfNodes[nodeIndex].freeSpace;
+        delete spaceOfNodes[nodeIndex].indexInSpaceMap;
+    }
+
+    function _removeNodeFromSpaceOfNodes(uint nodeIndex) private {
         uint8 space = spaceOfNodes[nodeIndex].freeSpace;
         uint indexInArray = spaceOfNodes[nodeIndex].indexInSpaceMap;
-        if (indexInArray < spaceToNodes[space].length.sub(1)) {
-            uint shiftedIndex = spaceToNodes[space][spaceToNodes[space].length.sub(1)];
+        uint len = spaceToNodes[space].length.sub(1);
+        if (indexInArray < len) {
+            uint shiftedIndex = spaceToNodes[space][len];
             spaceToNodes[space][indexInArray] = shiftedIndex;
             spaceOfNodes[shiftedIndex].indexInSpaceMap = indexInArray;
-            spaceToNodes[space].pop();
-        } else {
-            spaceToNodes[space].pop();
         }
+        spaceToNodes[space].pop();
         if (spaceOfNodes[nodeIndex].freeSpace > 0) {
             _tree.removeFromPlace(spaceOfNodes[nodeIndex].freeSpace, 1);
         }
-        delete spaceOfNodes[nodeIndex].freeSpace;
-        delete spaceOfNodes[nodeIndex].indexInSpaceMap;
+    }
+
+    function _checkValidatorPositionToMaintainNode(uint validatorId, uint position) private returns (bool) {
+        DelegationController delegationController = DelegationController(
+            contractManager.getContract("DelegationController")
+        );
+        uint delegationsTotal = delegationController.getAndUpdateDelegatedToValidatorNow(validatorId);
+        uint msr = ConstantsHolder(contractManager.getContract("ConstantsHolder")).msr();
+        return position.add(1).mul(msr) <= delegationsTotal;
     }
 
     function _publicKeyToAddress(bytes32[2] memory pubKey) private pure returns (address) {
