@@ -112,7 +112,7 @@ library SegmentTree {
     )
         internal
         view
-        returns (uint8)
+        returns (uint8, uint)
     {
         require(_correctSpace(place), "Incorrect place");
         uint8 leftBound = _FIRST;
@@ -152,9 +152,9 @@ library SegmentTree {
             }
         }
         if (self.tree[step - 1] == 0) {
-            return 0;
+            return (0, 0);
         }
-        return leftBound;
+        return (leftBound, randomBeakon);
     }
 
     function getElemFromTree(SegmentTree storage self, uint index) internal view returns (uint) {
@@ -172,7 +172,7 @@ library SegmentTree {
         uint priorityB
     )
         private
-        view
+        pure
         returns (bool isLeftWay, uint newSalt)
     {
         newSalt = uint(keccak256(abi.encodePacked(salt, priorityA, priorityB)));

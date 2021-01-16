@@ -464,12 +464,9 @@ contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeA
             });
 
             it("should not create 4 node schain on deleted node", async () => {
-                let data = await nodes.getNodesWithFreeSpace(32);
                 const removedNode = 1;
                 await nodes.initExit(removedNode);
                 await nodes.completeExit(removedNode);
-
-                data = await nodes.getNodesWithFreeSpace(32);
 
                 const pubKey = ec.keyFromPrivate(String(privateKeys[3]).slice(2)).getPublic();
                 await skaleManager.createNode(
@@ -484,8 +481,6 @@ contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeA
 
                 const deposit = await schains.getSchainPrice(5, 5);
 
-                data = await nodes.getNodesWithFreeSpace(32);
-
                 await schains.addSchain(
                     holder,
                     deposit,
@@ -497,8 +492,6 @@ contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeA
                 for (const node of nodesInGroup) {
                     expect(web3.utils.toBN(node).toNumber()).to.be.not.equal(removedNode);
                 }
-
-                data = await nodes.getNodesWithFreeSpace(32);
 
                 await schains.addSchain(
                     holder,
@@ -512,8 +505,6 @@ contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeA
                     expect(web3.utils.toBN(node).toNumber()).to.be.not.equal(removedNode);
                 }
 
-                data = await nodes.getNodesWithFreeSpace(32);
-
                 await schains.addSchain(
                     holder,
                     deposit,
@@ -525,8 +516,6 @@ contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeA
                 for (const node of nodesInGroup) {
                     expect(web3.utils.toBN(node).toNumber()).to.be.not.equal(removedNode);
                 }
-
-                data = await nodes.getNodesWithFreeSpace(32);
 
                 await schains.addSchain(
                     holder,

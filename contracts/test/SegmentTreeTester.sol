@@ -30,34 +30,34 @@ contract SegmentTreeTester {
 
     SegmentTree.SegmentTree private _tree;
 
-    function initTree(uint elem) public {
+    function initTree(uint elem) external {
         _tree.initLast(elem);
     }
 
-    function addToLast(uint elem) public {
+    function addToLast(uint elem) external {
         _tree.addToLast(elem);
     }
 
-    function addToPlace(uint8 place, uint elem) public {
+    function addToPlace(uint8 place, uint elem) external {
         _tree.addToPlace(place, elem);
     }
 
-    function removeFromPlace(uint8 place, uint elem) public {
+    function removeFromPlace(uint8 place, uint elem) external {
         _tree.removeFromPlace(place, elem);
     }
 
-    function sumFromPlaceToLast(uint8 place) public view returns (uint) {
+    function sumFromPlaceToLast(uint8 place) external view returns (uint) {
         return _tree.sumFromPlaceToLast(place);
     }
 
-    function getRandomElem(uint8 place) public view returns (uint8) {
-        return _tree.randomNonZeroFromPlaceToLast(
+    function getRandomElem(uint8 place) external view returns (uint8 foundPlace) {
+        (foundPlace, ) = _tree.randomNonZeroFromPlaceToLast(
             place,
             uint(keccak256(abi.encodePacked(uint(blockhash(block.number - 1)), place)))
         );
     }
 
-    function getElem(uint index) public view returns (uint) {
+    function getElem(uint index) external view returns (uint) {
         return _tree.getElemFromTree(index);
     }
 }

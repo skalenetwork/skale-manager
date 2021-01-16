@@ -466,19 +466,31 @@ contract Nodes is Permissions {
 
     /**
      * @dev Returns nodes with space availability.
+     * TODO: REMOVE!!!!
      */
-    function getNodesWithFreeSpace(uint8 freeSpace) external view returns (uint[] memory) {
-        ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
-        uint[] memory nodesWithFreeSpace = new uint[](countNodesWithFreeSpace(freeSpace));
-        uint cursor = 0;
-        uint totalSpace = constantsHolder.TOTAL_SPACE_ON_NODE();
-        for (uint8 i = freeSpace; i <= totalSpace; ++i) {
-            for (uint j = 0; j < spaceToNodes[i].length; j++) {
-                nodesWithFreeSpace[cursor] = spaceToNodes[i][j];
-                ++cursor;
-            }
-        }
-        return nodesWithFreeSpace;
+    // function getNodesWithFreeSpace(uint8 freeSpace) external view returns (uint[] memory) {
+    //     ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
+    //     uint[] memory nodesWithFreeSpace = new uint[](countNodesWithFreeSpace(freeSpace));
+    //     uint cursor = 0;
+    //     uint totalSpace = constantsHolder.TOTAL_SPACE_ON_NODE();
+    //     for (uint8 i = freeSpace; i <= totalSpace; ++i) {
+    //         for (uint j = 0; j < spaceToNodes[i].length; j++) {
+    //             nodesWithFreeSpace[cursor] = spaceToNodes[i][j];
+    //             ++cursor;
+    //         }
+    //     }
+    //     return nodesWithFreeSpace;
+    // }
+
+    function getRandomNodeWithFreeSpace(uint8 freeSpace, uint salt) external view returns (uint) {
+        (uint8 place, uint random) = _tree.randomNonZeroFromPlaceToLast(
+            freeSpace,
+            salt
+        );
+        require(place > 0, "Node not found");
+        random = uint(keccak256(abi.encodePacked(random, salt))) % spaceToNodes[place].length;
+        return spaceToNodes[place][random]; 
+        
     }
 
     /**
@@ -773,13 +785,6 @@ contract Nodes is Permissions {
         return _tree.sumFromPlaceToLast(freeSpace);
     }
 
-    function _countNodesWithSpace(uint8 lspace, uint8 rspace) private view returns (uint) {
-        if (lspace == rspace) {
-            return spaceToNodes[lspace].length;
-        }
-
-    }
-
     /**
      * @dev Returns the index of a given node within the validator's node index.
      */
@@ -810,6 +815,10 @@ contract Nodes is Permissions {
         spaceToNodes[newSpace].push(nodeIndex);
         spaceOfNodes[nodeIndex].freeSpace = newSpace;
         spaceOfNodes[nodeIndex].indexInSpaceMap = spaceToNodes[newSpace].length.sub(1);
+        _tree.removeFromPlace(previousSpace, 1);
+        if (newSpace > 0) {
+            _tree.addToPlace(newSpace, 1);
+        }
     }
 
     /**
@@ -897,6 +906,7 @@ contract Nodes is Permissions {
             indexInSpaceMap: spaceToNodes[constantsHolder.TOTAL_SPACE_ON_NODE()].length
         }));
         spaceToNodes[constantsHolder.TOTAL_SPACE_ON_NODE()].push(nodeIndex);
+        _tree.addToLast(1);
         numberOfActiveNodes++;
     }
 
@@ -913,6 +923,9 @@ contract Nodes is Permissions {
             spaceToNodes[space].pop();
         } else {
             spaceToNodes[space].pop();
+        }
+        if (spaceOfNodes[nodeIndex].freeSpace > 0) {
+            _tree.removeFromPlace(spaceOfNodes[nodeIndex].freeSpace, 1);
         }
         delete spaceOfNodes[nodeIndex].freeSpace;
         delete spaceOfNodes[nodeIndex].indexInSpaceMap;

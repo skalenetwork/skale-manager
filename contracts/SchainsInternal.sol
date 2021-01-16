@@ -83,6 +83,8 @@ contract SchainsInternal is Permissions {
     // index of place is a number from 1 to max number of slots on node(128)
     mapping (bytes32 => mapping (uint => uint)) public placeOfSchainOnNode;
 
+    mapping (bytes32 => uint) private _lengthOfExceptionsForGroups;
+
     /**
      * @dev Allows Schain contract to initialize an schain.
      */
@@ -212,6 +214,7 @@ contract SchainsInternal is Permissions {
      */
     function removeNodeFromExceptions(bytes32 schainHash, uint nodeIndex) external allow("Schains") {
         _exceptionsForGroups[schainHash][nodeIndex] = false;
+        _lengthOfExceptionsForGroups[schainHash].sub(1);
     }
 
     /**
@@ -230,6 +233,7 @@ contract SchainsInternal is Permissions {
      */
     function setException(bytes32 schainId, uint nodeIndex) external allowTwo("Schains", "NodeRotation") {
         _exceptionsForGroups[schainId][nodeIndex] = true;
+        _lengthOfExceptionsForGroups[schainId].add(1);
     }
 
     /**
@@ -464,13 +468,8 @@ contract SchainsInternal is Permissions {
     function isAnyFreeNode(bytes32 schainId) external view returns (bool) {
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));
         uint8 space = schains[schainId].partOfNode;
-        uint[] memory nodesWithFreeSpace = nodes.getNodesWithFreeSpace(space);
-        for (uint i = 0; i < nodesWithFreeSpace.length; i++) {
-            if (_isCorrespond(schainId, nodesWithFreeSpace[i])) {
-                return true;
-            }
-        }
-        return false;
+        return nodes.countNodesWithFreeSpace(space) >
+            _lengthOfExceptionsForGroups[schainId] + schainsGroups[schainId].length;
     }
 
     /**
@@ -552,27 +551,27 @@ contract SchainsInternal is Permissions {
         return placeOfSchainOnNode[schainId][nodeIndex] - 1;
     }
 
-    function isEnoughNodes(bytes32 schainId) public view returns (uint[] memory result) {
-        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
-        uint8 space = schains[schainId].partOfNode;
-        uint[] memory nodesWithFreeSpace = nodes.getNodesWithFreeSpace(space);
-        uint counter = 0;
-        for (uint i = 0; i < nodesWithFreeSpace.length; i++) {
-            if (!_isCorrespond(schainId, nodesWithFreeSpace[i])) {
-                counter++;
-            }
-        }
-        if (counter < nodesWithFreeSpace.length) {
-            result = new uint[](nodesWithFreeSpace.length.sub(counter));
-            counter = 0;
-            for (uint i = 0; i < nodesWithFreeSpace.length; i++) {
-                if (_isCorrespond(schainId, nodesWithFreeSpace[i])) {
-                    result[counter] = nodesWithFreeSpace[i];
-                    counter++;
-                }
-            }
-        }
-    }
+    // function isEnoughNodes(bytes32 schainId) public view returns (uint[] memory result) {
+    //     Nodes nodes = Nodes(contractManager.getContract("Nodes"));
+    //     uint8 space = schains[schainId].partOfNode;
+    //     uint[] memory nodesWithFreeSpace = nodes.getNodesWithFreeSpace(space);
+    //     uint counter = 0;
+    //     for (uint i = 0; i < nodesWithFreeSpace.length; i++) {
+    //         if (!_isCorrespond(schainId, nodesWithFreeSpace[i])) {
+    //             counter++;
+    //         }
+    //     }
+    //     if (counter < nodesWithFreeSpace.length) {
+    //         result = new uint[](nodesWithFreeSpace.length.sub(counter));
+    //         counter = 0;
+    //         for (uint i = 0; i < nodesWithFreeSpace.length; i++) {
+    //             if (_isCorrespond(schainId, nodesWithFreeSpace[i])) {
+    //                 result[counter] = nodesWithFreeSpace[i];
+    //                 counter++;
+    //             }
+    //         }
+    //     }
+    // }
 
     /**
      * @dev Generates schain group using a pseudo-random generator.
@@ -582,21 +581,21 @@ contract SchainsInternal is Permissions {
         uint8 space = schains[schainId].partOfNode;
         nodesInGroup = new uint[](numberOfNodes);
 
-        uint[] memory possibleNodes = isEnoughNodes(schainId);
-        require(possibleNodes.length >= nodesInGroup.length, "Not enough nodes to create Schain");
-        uint ignoringTail = 0;
+        require(nodes.countNodesWithFreeSpace(space) >= nodesInGroup.length, "Not enough nodes to create Schain");
         uint random = uint(keccak256(abi.encodePacked(uint(blockhash(block.number.sub(1))), schainId)));
-        for (uint i = 0; i < nodesInGroup.length; ++i) {
-            uint index = random % (possibleNodes.length.sub(ignoringTail));
-            uint node = possibleNodes[index];
-            nodesInGroup[i] = node;
-            _swap(possibleNodes, index, possibleNodes.length.sub(ignoringTail).sub(1));
-            ++ignoringTail;
-
-            _exceptionsForGroups[schainId][node] = true;
-            addSchainForNode(node, schainId);
-            require(nodes.removeSpaceFromNode(node, space), "Could not remove space from Node");
-        }
+        uint i = 0;
+        do {
+            uint node = nodes.getRandomNodeWithFreeSpace(space, random);
+            if (!_exceptionsForGroups[schainId][node]) {
+                nodesInGroup[i] = node;
+                _exceptionsForGroups[schainId][node] = true;
+                _lengthOfExceptionsForGroups[schainId].add(1);
+                addSchainForNode(node, schainId);
+                require(nodes.removeSpaceFromNode(node, space), "Could not remove space from Node");
+                i++;
+            }
+            random = uint(keccak256(abi.encodePacked(random, node)));
+        } while (i < nodesInGroup.length);
 
         // set generated group
         schainsGroups[schainId] = nodesInGroup;
