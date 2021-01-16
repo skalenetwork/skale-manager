@@ -214,7 +214,7 @@ contract SchainsInternal is Permissions {
      */
     function removeNodeFromExceptions(bytes32 schainHash, uint nodeIndex) external allow("Schains") {
         _exceptionsForGroups[schainHash][nodeIndex] = false;
-        _lengthOfExceptionsForGroups[schainHash].sub(1);
+        _lengthOfExceptionsForGroups[schainHash] = _lengthOfExceptionsForGroups[schainHash].sub(1);
     }
 
     /**
@@ -233,7 +233,7 @@ contract SchainsInternal is Permissions {
      */
     function setException(bytes32 schainId, uint nodeIndex) external allowTwo("Schains", "NodeRotation") {
         _exceptionsForGroups[schainId][nodeIndex] = true;
-        _lengthOfExceptionsForGroups[schainId].add(1);
+        _lengthOfExceptionsForGroups[schainId] = _lengthOfExceptionsForGroups[schainId].add(1);
     }
 
     /**
@@ -589,7 +589,7 @@ contract SchainsInternal is Permissions {
             if (!_exceptionsForGroups[schainId][node]) {
                 nodesInGroup[i] = node;
                 _exceptionsForGroups[schainId][node] = true;
-                _lengthOfExceptionsForGroups[schainId].add(1);
+                _lengthOfExceptionsForGroups[schainId] = _lengthOfExceptionsForGroups[schainId].add(1);
                 addSchainForNode(node, schainId);
                 require(nodes.removeSpaceFromNode(node, space), "Could not remove space from Node");
                 i++;
