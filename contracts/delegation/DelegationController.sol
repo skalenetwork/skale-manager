@@ -230,7 +230,7 @@ contract DelegationController is Permissions, ILocker {
     function getAndUpdateEffectiveDelegatedByHolderToValidator(address holder, uint validatorId, uint month) external
         allow("Distributor") returns (uint effectiveDelegated)
     {
-        SlashingSignal[] memory slashingSignals = _processAllSlashesWithoutSignals(holder);
+        // SlashingSignal[] memory slashingSignals = _processAllSlashesWithoutSignals(holder);
         effectiveDelegated = _effectiveDelegatedByHolderToValidator[holder][validatorId]
             .getAndUpdateValueInSequence(month);
         _sendSlashingSignals(slashingSignals);
@@ -268,7 +268,7 @@ contract DelegationController is Permissions, ILocker {
         _getValidatorService().checkValidatorCanReceiveDelegation(validatorId, amount);        
         _checkIfDelegationIsAllowed(msg.sender, validatorId);
 
-        SlashingSignal[] memory slashingSignals = _processAllSlashesWithoutSignals(msg.sender);
+        // SlashingSignal[] memory slashingSignals = _processAllSlashesWithoutSignals(msg.sender);
 
         uint delegationId = _addDelegation(
             msg.sender,
@@ -363,7 +363,6 @@ contract DelegationController is Permissions, ILocker {
         _removeValidatorFromValidatorsPerDelegators(
             delegations[delegationId].holder,
             delegations[delegationId].validatorId);
-        processAllSlashes(msg.sender);
         delegations[delegationId].finished = _calculateDelegationEndMonth(delegationId);
 
         require(
