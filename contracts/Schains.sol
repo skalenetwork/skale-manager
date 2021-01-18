@@ -134,7 +134,8 @@ contract Schains is Permissions {
         uint lifetime,
         uint8 typeOfSchain,
         uint16 nonce,
-        string calldata name
+        string calldata name,
+        address schainOwner
     )
         external
     {
@@ -147,7 +148,14 @@ contract Schains is Permissions {
             name: name
         });
 
-        _addSchain(msg.sender, 0, schainParameters);
+        address _schainOwner;
+        if (schainOwner != address(0)) {
+            _schainOwner = schainOwner;
+        } else {
+            _schainOwner = msg.sender;
+        }
+
+        _addSchain(_schainOwner, 0, schainParameters);
     }
 
     /**
