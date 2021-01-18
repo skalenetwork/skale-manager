@@ -133,7 +133,7 @@ contract Punisher is Permissions, ILocker {
         DelegationController delegationController = DelegationController(
             contractManager.getContract("DelegationController"));
 
-        delegationController.processAllSlashes(wallet);
+        / * delegationController.processAllSlashes(wallet); */
         return _locked[wallet];
     }
 
