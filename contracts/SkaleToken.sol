@@ -118,6 +118,10 @@ contract SkaleToken is ERC777, Permissions, ReentrancyGuard, IDelegatableToken, 
         uint256 tokenId)
         internal override
     {
+    
+        if (!_everDelegated(from))
+            return;
+    
         uint locked = getAndUpdateLockedAmount(from);
         if (locked > 0) {
             require(balanceOf(from) >= locked.add(tokenId), "Token should be unlocked for transferring");
