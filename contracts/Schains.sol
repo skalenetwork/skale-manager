@@ -130,6 +130,16 @@ contract Schains is Permissions {
         _addSchain(from, deposit, schainParameters);
     }
 
+    /**
+     * @dev Allows the foundation to create an Schain without tokens.
+     * 
+     * Emits an {SchainCreated} event.
+     * 
+     * Requirements:
+     * 
+     * - sender is granted with SCHAIN_CREATOR_ROLE
+     * - Schain type is valid.
+     */
     function addSchainByFoundation(
         uint lifetime,
         uint8 typeOfSchain,
