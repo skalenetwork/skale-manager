@@ -15,7 +15,7 @@ const web3 = new Web3(provider);
 
 const mainAccount = process.env.ACCOUNT;
 
-const jsonData = require(`../data/${networkName}.json`);
+const jsonData = require(`../data/unique.json`);
 // const updatedData = require("../data/updated.json");
 module.exports.SkaleManager = new web3.eth.Contract(jsonData['skale_manager_abi'], jsonData['skale_manager_address']);
 module.exports.SkaleToken = new web3.eth.Contract(jsonData['skale_token_abi'], jsonData['skale_token_address']);
@@ -34,6 +34,7 @@ module.exports.SkaleDKG = new web3.eth.Contract(jsonData['skale_d_k_g_abi'], jso
 // module.exports.SkaleDKG = new web3.eth.Contract(jsonData['skale_d_k_g_tester_abi'], jsonData['skale_d_k_g_tester_address']);
 module.exports.NodeRotation = new web3.eth.Contract(jsonData['node_rotation_abi'], jsonData['node_rotation_address']);
 module.exports.TokenLaunchManager = new web3.eth.Contract(jsonData['token_launch_manager_abi'], jsonData['token_launch_manager_address']);
+module.exports.TokenLaunchLocker = new web3.eth.Contract(jsonData['token_launch_locker_abi'], jsonData['token_launch_locker_address']);
 module.exports.DelegationController = new web3.eth.Contract(jsonData['delegation_controller_abi'], jsonData['delegation_controller_address']);
 module.exports.web3 = web3;
 module.exports.mainAccount = mainAccount;

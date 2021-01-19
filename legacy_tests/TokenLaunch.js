@@ -75,7 +75,173 @@ async function grantSeller(address) {
     process.exit();
 }
 
+async function getApprovedEvents(blockNumber) {
+    const events = await init.TokenLaunchManager.getPastEvents("Approved", { fromBlock: blockNumber, toBlock: "latest"});
+    console.log(events.length);
+    return events;
+}
 
+async function getTokensRetrievedEvents(blockNumber) {
+    const events = await init.TokenLaunchManager.getPastEvents("TokensRetrieved", { fromBlock: blockNumber, toBlock: "latest"});
+    console.log(events.length);
+    return events;
+}
+
+async function getLockedEvents(blockNumber) {
+    const events = await init.TokenLaunchLocker.getPastEvents("Locked", { fromBlock: blockNumber, toBlock: "latest"});
+    console.log(events.length);
+    return events;
+}
+
+async function getUnlockedEvents(blockNumber) {
+    const events = await init.TokenLaunchLocker.getPastEvents("Unlocked", { fromBlock: blockNumber, toBlock: "latest"});
+    console.log(events.length);
+    return events;
+}
+
+async function getUnretrievedAddresses(blockNumber) {
+    const eventsApproved = await getApprovedEvents(blockNumber);
+    const approved = new Map();
+    for (let i = 0; i < eventsApproved.length; i++) {
+        if (approved.has(eventsApproved[i].returnValues[0])) {
+            approved.set(
+                eventsApproved[i].returnValues[0],
+                init.web3.utils.toBN(
+                    approved.get(eventsApproved[i].returnValues[0])
+                ).add(
+                    init.web3.utils.toBN(
+                        eventsApproved[i].returnValues[1]
+                    )
+                ).toString()
+            );
+        } else {
+            approved.set(eventsApproved[i].returnValues[0], eventsApproved[i].returnValues[1]);
+        }
+    }
+    console.log("Size of Map", approved.size);
+    const eventsRetrieved = await getTokensRetrievedEvents(blockNumber);
+    for (let i = 0; i < eventsRetrieved.length; i++) {
+        if (approved.has(eventsRetrieved[i].returnValues[0])) {
+            if (init.web3.utils.toBN(approved.get(eventsRetrieved[i].returnValues[0])).gt(init.web3.utils.toBN(eventsRetrieved[i].returnValues[1]))) {
+                approved.set(
+                    eventsRetrieved[i].returnValues[0],
+                    init.web3.utils.toBN(
+                        approved.get(eventsRetrieved[i].returnValues[0])
+                    ).sub(
+                        init.web3.utils.toBN(
+                            eventsRetrieved[i].returnValues[1]
+                        )
+                    ).toString()
+                );
+            } else if (init.web3.utils.toBN(approved.get(eventsRetrieved[i].returnValues[0])).eq(init.web3.utils.toBN(eventsRetrieved[i].returnValues[1]))) {
+                approved.delete(eventsRetrieved[i].returnValues[0]);
+            } else {
+                return 0;
+            }
+        } else {
+            return 0;
+        }
+    }
+    console.log("New size of Map", approved.size);
+    console.log("Map of unretrieved addresses: ", approved.keys());
+    // console.log(approved);
+    let sum = "0";
+    for (let value of approved.values()) {
+        sum = init.web3.utils.toBN(sum).add(init.web3.utils.toBN(value)).toString();
+    }
+    console.log("Amount of SKL in TokenLaunchManager:", sum);
+}
+
+async function getStillLockedAddresses(blockNumber) {
+    const eventsLocked = await getLockedEvents(blockNumber);
+    const approved = new Map();
+    for (let i = 0; i < eventsLocked.length; i++) {
+        if (approved.has(eventsLocked[i].returnValues[0])) {
+            approved.set(
+                eventsLocked[i].returnValues[0],
+                init.web3.utils.toBN(
+                    approved.get(eventsLocked[i].returnValues[0])
+                ).add(
+                    init.web3.utils.toBN(
+                        eventsLocked[i].returnValues[1]
+                    )
+                ).toString()
+            );
+        } else {
+            approved.set(eventsLocked[i].returnValues[0], eventsLocked[i].returnValues[1]);
+        }
+    }
+    console.log("Size of Map", approved.size);
+    const eventsUnlocked = await getUnlockedEvents(blockNumber);
+    for (let i = 0; i < eventsUnlocked.length; i++) {
+        if (approved.has(eventsUnlocked[i].returnValues[0])) {
+            if (init.web3.utils.toBN(approved.get(eventsUnlocked[i].returnValues[0])).gt(init.web3.utils.toBN(eventsUnlocked[i].returnValues[1]))) {
+                approved.set(
+                    eventsUnlocked[i].returnValues[0],
+                    init.web3.utils.toBN(
+                        approved.get(eventsUnlocked[i].returnValues[0])
+                    ).sub(
+                        init.web3.utils.toBN(
+                            eventsUnlocked[i].returnValues[1]
+                        )
+                    ).toString()
+                );
+            } else if (init.web3.utils.toBN(approved.get(eventsUnlocked[i].returnValues[0])).eq(init.web3.utils.toBN(eventsUnlocked[i].returnValues[1]))) {
+                approved.delete(eventsUnlocked[i].returnValues[0]);
+            } else {
+                return 0;
+            }
+        } else {
+            return 0;
+        }
+    }
+    console.log("New size of Map", approved.size);
+    const delegatedWPOU = new Map();
+    const delegatedWOPOU = new Map();
+    const notDelegatedAtAll = new Map();
+    for (let value of approved.keys()) {
+        console.log("Address:", value);
+        console.log("Locked:", approved.get(value));
+        const len = await init.DelegationController.methods.getDelegationsByHolderLength(value).call();
+        console.log(len);
+        let sum = "0";
+        let mintime = 1000000;
+        for (let i = 0; i < len; i++) {
+            const del = await init.DelegationController.methods.delegationsByHolder(value, i).call();
+            const delData = await init.DelegationController.methods.getDelegation(del).call();
+            const amount = delData[2];
+            const timeStarted = delData[5];
+            const timeCreated = delData[4];
+            console.log("Delegation: ", del, " with amount ", amount, " created at ", new Date(timeCreated * 1000), " and started at ", timeStarted);
+            if (Number(timeStarted) > 0) {
+                sum = init.web3.utils.toBN(sum).add(init.web3.utils.toBN(amount)).toString();
+                const sumx2 = init.web3.utils.toBN(sum).mul(init.web3.utils.toBN("2")).toString();
+                console.log(sumx2);
+                if (init.web3.utils.toBN(sumx2).gte(init.web3.utils.toBN(approved.get(value)))) {
+                    if (mintime > timeStarted) {
+                        mintime = timeStarted;
+                    }
+                }
+            }
+        }
+        console.log("Sum:", sum);
+        if (init.web3.utils.toBN(sum).gt(init.web3.utils.toBN("0"))) {
+            if (mintime < 1000000) {
+                console.log("Proof of use is started at", mintime, "month");
+                if (mintime <= 10) {
+                    delegatedWPOU.set(value, approved.get(value));
+                }
+            } else {
+                delegatedWOPOU.set(value, approved.get(value));
+            }
+        } else {
+            notDelegatedAtAll.set(value, approved.get(value));
+        }
+    }
+    console.log("Not delegated at all:", notDelegatedAtAll.size);
+    console.log("Delegated without POU:", delegatedWOPOU.size);
+    console.log("Delegated with POU:", delegatedWPOU.size);
+}
 
 if (process.argv[2] == 'approveBatchOfTransfers') {
     approveBatchOfTransfers();
@@ -85,6 +251,18 @@ if (process.argv[2] == 'approveBatchOfTransfers') {
     mint();
 } else if (process.argv[2] == 'grantSeller') {
     grantSeller(process.argv[3]);
+} else if (process.argv[2] == 'getApprovedEvents') {
+    getApprovedEvents(process.argv[3]);
+} else if (process.argv[2] == 'getTokensRetrievedEvents') {
+    getTokensRetrievedEvents(process.argv[3]);
+} else if (process.argv[2] == 'getUnretrievedAddresses') {
+    getUnretrievedAddresses(process.argv[3]);
+} else if (process.argv[2] == 'getLockedEvents') {
+    getLockedEvents(process.argv[3]);
+} else if (process.argv[2] == 'getUnlockedEvents') {
+    getUnlockedEvents(process.argv[3]);
+} else if (process.argv[2] == 'getStillLockedAddresses') {
+    getStillLockedAddresses(process.argv[3]);
 } else {
     console.log("Recheck name");
     process.exit();
