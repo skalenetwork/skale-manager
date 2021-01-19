@@ -44,6 +44,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeA
     let skaleManager: SkaleManagerInstance;
     let keyStorage: KeyStorageInstance;
     let nodeRotation: NodeRotationInstance;
+    const zeroAddress = "0x0000000000000000000000000000000000000000";
 
     beforeEach(async () => {
         contractManager = await deployContractManager();
@@ -88,7 +89,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeA
         });
 
         it("should not allow everyone to create schains as the foundation", async () => {
-            await schains.addSchainByFoundation(5, 1, 0, "d2")
+            await schains.addSchainByFoundation(5, 1, 0, "d2", zeroAddress)
                 .should.be.eventually.rejectedWith("Sender is not authorized to create schain");
         })
 
@@ -567,7 +568,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeA
             it("should allow the foundation to create schain without tokens", async () => {
                 const schainCreator = holder;
                 await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), schainCreator);
-                await schains.addSchainByFoundation(5, 5, 0, "d2", {from: schainCreator});
+                await schains.addSchainByFoundation(5, 5, 0, "d2", zeroAddress, {from: schainCreator});
 
                 const sChains = await schainsInternal.getSchains();
                 sChains.length.should.be.equal(1);
@@ -577,8 +578,8 @@ contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeA
             });
 
             it("should assign schain creator on different address", async () => {
-                await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), holder, {from: owner});
-                await schains.addSchainByFoundation(5, 5, 0, "d2", {from: holder});
+                await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), owner, {from: owner});
+                await schains.addSchainByFoundation(5, 5, 0, "d2", holder, {from: owner});
 
                 const sChains = await schainsInternal.getSchains();
                 sChains.length.should.be.equal(1);
@@ -639,7 +640,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeA
 
             it("should assign schain creator on different address and create small schain", async () => {
                 await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), holder, {from: owner});
-                await schains.addSchainByFoundation(5, 1, 0, "d2", {from: holder});
+                await schains.addSchainByFoundation(5, 1, 0, "d2", zeroAddress, {from: holder});
 
                 const sChains = await schainsInternal.getSchains();
                 sChains.length.should.be.equal(1);
@@ -650,7 +651,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeA
 
             it("should assign schain creator on different address and create medium schain", async () => {
                 await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), holder, {from: owner});
-                await schains.addSchainByFoundation(5, 2, 0, "d2", {from: holder});
+                await schains.addSchainByFoundation(5, 2, 0, "d2", zeroAddress, {from: holder});
 
                 const sChains = await schainsInternal.getSchains();
                 sChains.length.should.be.equal(1);
@@ -661,7 +662,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeA
 
             it("should assign schain creator on different address and create large schain", async () => {
                 await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), holder, {from: owner});
-                await schains.addSchainByFoundation(5, 3, 0, "d2", {from: holder});
+                await schains.addSchainByFoundation(5, 3, 0, "d2", zeroAddress, {from: holder});
 
                 const sChains = await schainsInternal.getSchains();
                 sChains.length.should.be.equal(1);
