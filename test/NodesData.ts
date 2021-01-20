@@ -437,9 +437,14 @@ contract("NodesData", ([owner, validator, nodeAddress, admin, hacker]) => {
             });
 
             it("should add space to full node", async () => {
+                await nodes.removeSpaceFromNode(0, 2);
+
+                (await nodes.spaceOfNodes(0))[0].should.be.deep.equal(web3.utils.toBN(126));
+
+                await nodes.addSpaceToNode(0, 3).should.be.eventually.rejectedWith("Incorrect place");
                 await nodes.addSpaceToNode(0, 2);
 
-                (await nodes.spaceOfNodes(0))[0].should.be.deep.equal(web3.utils.toBN(130));
+                (await nodes.spaceOfNodes(0))[0].should.be.deep.equal(web3.utils.toBN(128));
             });
 
             it("should get number of free full nodes", async () => {

@@ -25,6 +25,7 @@ import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts-ethereum-package/contracts/access/AccessControl.sol";
 
 import "./ContractManager.sol";
+import "@nomiclabs/buidler/console.sol";
 
 
 /**
@@ -103,6 +104,13 @@ contract Permissions is AccessControlUpgradeSafe {
      * `contractName3`.
      */
     modifier allowThree(string memory contractName1, string memory contractName2, string memory contractName3) {
+        // console.log(msg.sender);
+        // console.log(contractName1);
+        // console.log(contractManager.getContract(contractName1));
+        // console.log(contractName2);
+        // console.log(contractManager.getContract(contractName2));
+        // console.log(contractName3);
+        // console.log(contractManager.getContract(contractName3));
         require(
             contractManager.getContract(contractName1) == msg.sender ||
             contractManager.getContract(contractName2) == msg.sender ||

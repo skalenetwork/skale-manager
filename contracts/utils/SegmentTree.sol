@@ -3,7 +3,7 @@
 /*
     SegmentTree.sol - SKALE Manager
     Copyright (C) 2018-Present SKALE Labs
-    @author Aretm Payvin
+    @author Artem Payvin
 
     SKALE Manager is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as published
@@ -22,6 +22,8 @@
 pragma solidity 0.6.10;
 
 // import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
+
+import "@nomiclabs/buidler/console.sol";
 
 library SegmentTree {
 

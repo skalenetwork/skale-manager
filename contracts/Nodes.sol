@@ -82,6 +82,7 @@ contract Nodes is Permissions {
     struct SpaceManaging {
         uint8 freeSpace;
         uint indexInSpaceMap;
+        bool invisible;
     }
 
     // TODO: move outside the contract
@@ -456,7 +457,7 @@ contract Nodes is Permissions {
 
     function getRandomNodeWithFreeSpace(uint8 freeSpace, uint salt) external view returns (uint) {
         (uint8 place, uint random) = _tree.randomNonZeroFromPlaceToLast(
-            freeSpace,
+            freeSpace == 0 ? 1 : freeSpace,
             salt
         );
         require(place > 0, "Node not found");
@@ -694,6 +695,9 @@ contract Nodes is Permissions {
      * @dev Returns number of nodes with available space.
      */
     function countNodesWithFreeSpace(uint8 freeSpace) external view returns (uint count) {
+        if (freeSpace == 0) {
+            return _tree.sumFromPlaceToLast(1);
+        }
         return _tree.sumFromPlaceToLast(freeSpace);
     }
 
@@ -774,12 +778,14 @@ contract Nodes is Permissions {
      */
     function _moveNodeToNewSpaceMap(uint nodeIndex, uint8 newSpace) private {
         _removeNodeFromSpaceOfNodes(nodeIndex);
-        spaceToNodes[newSpace].push(nodeIndex);
-        spaceOfNodes[nodeIndex].freeSpace = newSpace;
-        spaceOfNodes[nodeIndex].indexInSpaceMap = spaceToNodes[newSpace].length.sub(1);
-        if (newSpace > 0) {
-            _tree.addToPlace(newSpace, 1);
+        if (!spaceOfNodes[nodeIndex].invisible) {
+            spaceToNodes[newSpace].push(nodeIndex);
+            spaceOfNodes[nodeIndex].indexInSpaceMap = spaceToNodes[newSpace].length.sub(1);
+            if (newSpace > 0) {
+                _tree.addToPlace(newSpace, 1);
+            }
         }
+        spaceOfNodes[nodeIndex].freeSpace = newSpace;
     }
 
     /**
@@ -788,6 +794,7 @@ contract Nodes is Permissions {
     function _setNodeActive(uint nodeIndex) private {
         nodes[nodeIndex].status = NodeStatus.Active;
         numberOfActiveNodes = numberOfActiveNodes.add(1);
+        _moveNodeFromInvisible(nodeIndex);
     }
 
     /**
@@ -796,6 +803,7 @@ contract Nodes is Permissions {
     function _setNodeInMaintenance(uint nodeIndex) private {
         nodes[nodeIndex].status = NodeStatus.In_Maintenance;
         numberOfActiveNodes = numberOfActiveNodes.sub(1);
+        _moveNodeToInvisible(nodeIndex);
     }
 
     /**
@@ -821,6 +829,7 @@ contract Nodes is Permissions {
         nodes[nodeIndex].status = NodeStatus.Leaving;
         numberOfActiveNodes--;
         numberOfLeavingNodes++;
+        _moveNodeToInvisible(nodeIndex);
     }
 
     /**
@@ -864,11 +873,10 @@ contract Nodes is Permissions {
         nodeIndexes[from].numberOfNodes++;
         spaceOfNodes.push(SpaceManaging({
             freeSpace: constantsHolder.TOTAL_SPACE_ON_NODE(),
-            indexInSpaceMap: spaceToNodes[constantsHolder.TOTAL_SPACE_ON_NODE()].length
+            indexInSpaceMap: spaceToNodes[constantsHolder.TOTAL_SPACE_ON_NODE()].length,
+            invisible: false
         }));
-        spaceToNodes[constantsHolder.TOTAL_SPACE_ON_NODE()].push(nodeIndex);
-        _tree.addToLast(1);
-        numberOfActiveNodes++;
+        _setNodeActive(nodeIndex);
     }
 
     /**
@@ -881,17 +889,35 @@ contract Nodes is Permissions {
     }
 
     function _removeNodeFromSpaceOfNodes(uint nodeIndex) private {
-        uint8 space = spaceOfNodes[nodeIndex].freeSpace;
-        uint indexInArray = spaceOfNodes[nodeIndex].indexInSpaceMap;
-        uint len = spaceToNodes[space].length.sub(1);
-        if (indexInArray < len) {
-            uint shiftedIndex = spaceToNodes[space][len];
-            spaceToNodes[space][indexInArray] = shiftedIndex;
-            spaceOfNodes[shiftedIndex].indexInSpaceMap = indexInArray;
+        if (!spaceOfNodes[nodeIndex].invisible) {
+            uint8 space = spaceOfNodes[nodeIndex].freeSpace;
+            uint indexInArray = spaceOfNodes[nodeIndex].indexInSpaceMap;
+            uint len = spaceToNodes[space].length.sub(1);
+            if (indexInArray < len) {
+                uint shiftedIndex = spaceToNodes[space][len];
+                spaceToNodes[space][indexInArray] = shiftedIndex;
+                spaceOfNodes[shiftedIndex].indexInSpaceMap = indexInArray;
+            }
+            spaceToNodes[space].pop();
+            if (space > 0) {
+                _tree.removeFromPlace(space, 1);
+            }
         }
-        spaceToNodes[space].pop();
-        if (spaceOfNodes[nodeIndex].freeSpace > 0) {
-            _tree.removeFromPlace(spaceOfNodes[nodeIndex].freeSpace, 1);
+    }
+
+    function _moveNodeToInvisible(uint nodeIndex) private {
+        _removeNodeFromSpaceOfNodes(nodeIndex);
+        spaceOfNodes[nodeIndex].invisible = true;
+        delete spaceOfNodes[nodeIndex].indexInSpaceMap;
+    }
+
+    function _moveNodeFromInvisible(uint nodeIndex) private {
+        uint8 space = spaceOfNodes[nodeIndex].freeSpace;
+        spaceToNodes[space].push(nodeIndex);
+        spaceOfNodes[nodeIndex].indexInSpaceMap = spaceToNodes[space].length.sub(1);
+        delete spaceOfNodes[nodeIndex].invisible;
+        if (space > 0) {
+            _tree.addToPlace(space, 1);
         }
     }
 

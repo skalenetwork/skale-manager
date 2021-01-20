@@ -720,7 +720,8 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             uint newNode = nodeRotation.rotateNode(
                 badNode,
                 schainId,
-                false
+                false,
+                true
             );
             emit NewGuy(newNode);
         } else {

@@ -36,6 +36,7 @@ import "./NodeRotation.sol";
 import "./Permissions.sol";
 import "./Schains.sol";
 
+import "@nomiclabs/buidler/console.sol";
 /**
  * @title SkaleManager
  * @dev Contract contains functions for node registration and exit, bounty
@@ -134,17 +135,23 @@ contract SkaleManager is IERC777Recipient, Permissions {
         nodeRotation.freezeSchains(nodeIndex);
         if (nodes.isNodeActive(nodeIndex)) {
             require(nodes.initExit(nodeIndex), "Initialization of node exit is failed");
+            console.log("Start removing");
+            schainsInternal.removeNodeFromAllExceptionSchains(nodeIndex);
+            console.log("Removed!!!!!!");
         }
         require(nodes.isNodeLeaving(nodeIndex), "Node should be Leaving");
         bool completed;
         bool isSchains = false;
         if (schainsInternal.getActiveSchain(nodeIndex) != bytes32(0)) {
+            console.log("Exit is starting");
             completed = nodeRotation.exitFromSchain(nodeIndex);
+            console.log("Exited");
             isSchains = true;
         } else {
             completed = true;
         }
         if (completed) {
+            // schainsInternal.removeNodeFromAllExceptionSchains(nodeIndex);
             require(nodes.completeExit(nodeIndex), "Finishing of node exit is failed");
             nodes.changeNodeFinishTime(nodeIndex, now.add(isSchains ? constants.rotationDelay() : 0));
             // Monitors monitors = Monitors(contractManager.getContract("Monitors"));

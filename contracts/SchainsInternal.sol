@@ -26,6 +26,8 @@ import "./ConstantsHolder.sol";
 import "./Nodes.sol";
 import "./interfaces/ISkaleDKG.sol";
 
+import "@nomiclabs/buidler/console.sol";
+
 /**
  * @title SchainsInternal
  * @dev Contract contains all functionality logic to internally manage Schains.
@@ -85,6 +87,8 @@ contract SchainsInternal is Permissions {
 
     mapping (bytes32 => uint) private _lengthOfExceptionsForGroups;
 
+    mapping (uint => bytes32[]) private _nodeToLockedSchains;
+
     /**
      * @dev Allows Schain contract to initialize an schain.
      */
@@ -120,6 +124,7 @@ contract SchainsInternal is Permissions {
         allow("Schains")
         returns (uint[] memory)
     {
+        // console.log("Creating group for schain");
         ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
         schains[schainId].partOfNode = partOfNode;
         if (partOfNode > 0) {
@@ -127,6 +132,7 @@ contract SchainsInternal is Permissions {
                 numberOfNodes.mul(constantsHolder.TOTAL_SPACE_ON_NODE()).div(partOfNode)
             );
         }
+        // console.log("Generate group");
         return _generateGroup(schainId, numberOfNodes);
     }
 
@@ -210,14 +216,6 @@ contract SchainsInternal is Permissions {
     }
 
     /**
-     * @dev Allows Schains contract to remove node from exceptions
-     */
-    function removeNodeFromExceptions(bytes32 schainHash, uint nodeIndex) external allow("Schains") {
-        _exceptionsForGroups[schainHash][nodeIndex] = false;
-        _lengthOfExceptionsForGroups[schainHash] = _lengthOfExceptionsForGroups[schainHash].sub(1);
-    }
-
-    /**
      * @dev Allows Schains contract to delete a group of schains
      */
     function deleteGroup(bytes32 schainId) external allow("Schains") {
@@ -234,6 +232,9 @@ contract SchainsInternal is Permissions {
     function setException(bytes32 schainId, uint nodeIndex) external allowTwo("Schains", "NodeRotation") {
         _exceptionsForGroups[schainId][nodeIndex] = true;
         _lengthOfExceptionsForGroups[schainId] = _lengthOfExceptionsForGroups[schainId].add(1);
+        _nodeToLockedSchains[nodeIndex].push(schainId);
+        console.log("Set exception", nodeIndex);
+        console.log("LENGTH OF EXCEPTIONS FOR GROUPS", _lengthOfExceptionsForGroups[schainId]);
     }
 
     /**
@@ -305,6 +306,16 @@ contract SchainsInternal is Permissions {
                 if (schainsForNodes[nodeIndex][j] == schainHash) {
                     placeOfSchainOnNode[schainHash][nodeIndex] = j + 1;
                 }
+            }
+        }
+    }
+
+    function removeNodeFromAllExceptionSchains(uint nodeIndex) external allow("SkaleManager") {
+        console.log("Will remove everything", nodeIndex);
+        uint len = _nodeToLockedSchains[nodeIndex].length;
+        if (len > 0) {
+            for (uint i = len; i > 0; i--) {
+                removeNodeFromExceptions(_nodeToLockedSchains[nodeIndex][i - 1], nodeIndex);
             }
         }
     }
@@ -469,7 +480,7 @@ contract SchainsInternal is Permissions {
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));
         uint8 space = schains[schainId].partOfNode;
         return nodes.countNodesWithFreeSpace(space) >
-            _lengthOfExceptionsForGroups[schainId] + schainsGroups[schainId].length;
+            _lengthOfExceptionsForGroups[schainId];
     }
 
     /**
@@ -543,6 +554,41 @@ contract SchainsInternal is Permissions {
     }
 
     /**
+     * @dev Allows Schains contract to remove node from exceptions
+     */
+    function removeNodeFromExceptions(
+        bytes32 schainHash,
+        uint nodeIndex
+    )
+        public
+        allowThree(
+            "Schains",
+            "NodeRotation",
+            "SkaleManager"
+        )
+    {
+        _exceptionsForGroups[schainHash][nodeIndex] = false;
+        console.log("Remove node from exceptions", nodeIndex);
+        console.log("LENGTH OF EXCEPTIONS FOR GROUPS", _lengthOfExceptionsForGroups[schainHash]);
+        _lengthOfExceptionsForGroups[schainHash] = _lengthOfExceptionsForGroups[schainHash].sub(1);
+        uint len = _nodeToLockedSchains[nodeIndex].length;
+        console.log(len);
+        if (len > 0) {
+            if (_nodeToLockedSchains[nodeIndex][len - 1] == schainHash) {
+                _nodeToLockedSchains[nodeIndex].pop();
+                return;
+            }
+            for (uint i = len; i > 0; i--) {
+                if (_nodeToLockedSchains[nodeIndex][i - 1] == schainHash) {
+                    _nodeToLockedSchains[nodeIndex][i - 1] = _nodeToLockedSchains[nodeIndex][len - 1];
+                    _nodeToLockedSchains[nodeIndex].pop();
+                    return;
+                }
+            }
+        }
+    }
+
+    /**
      * @dev Returns index of Schain in list of schains for a given node.
      */
     function findSchainAtSchainsForNode(uint nodeIndex, bytes32 schainId) public view returns (uint) {
@@ -581,16 +627,24 @@ contract SchainsInternal is Permissions {
         uint8 space = schains[schainId].partOfNode;
         nodesInGroup = new uint[](numberOfNodes);
 
+        // console.log("Will count nodes with free space");
         require(nodes.countNodesWithFreeSpace(space) >= nodesInGroup.length, "Not enough nodes to create Schain");
+        // console.log("Moving forward");
         uint random = uint(keccak256(abi.encodePacked(uint(blockhash(block.number.sub(1))), schainId)));
         uint i = 0;
         do {
+            // console.log("Will get random node");
             uint node = nodes.getRandomNodeWithFreeSpace(space, random);
             if (!_exceptionsForGroups[schainId][node]) {
+                // console.log(node);
                 nodesInGroup[i] = node;
                 _exceptionsForGroups[schainId][node] = true;
                 _lengthOfExceptionsForGroups[schainId] = _lengthOfExceptionsForGroups[schainId].add(1);
+                console.log("Generate group", node);
+                console.log("LENGTH OF EXCEPTIONS FOR GROUPS", _lengthOfExceptionsForGroups[schainId]);
+                _nodeToLockedSchains[node].push(schainId);
                 addSchainForNode(node, schainId);
+                // console.log(node);
                 require(nodes.removeSpaceFromNode(node, space), "Could not remove space from Node");
                 i++;
             }

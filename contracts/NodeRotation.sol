@@ -74,7 +74,7 @@ contract NodeRotation is Permissions {
         SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
         bytes32 schainId = schainsInternal.getActiveSchain(nodeIndex);
         require(_checkRotation(schainId), "No free Nodes available for rotating");
-        rotateNode(nodeIndex, schainId, true);
+        rotateNode(nodeIndex, schainId, true, false);
         return schainsInternal.getActiveSchain(nodeIndex) == bytes32(0) ? true : false;
     }
 
@@ -147,7 +147,8 @@ contract NodeRotation is Permissions {
     function rotateNode(
         uint nodeIndex,
         bytes32 schainId,
-        bool shouldDelay
+        bool shouldDelay,
+        bool isBadNode
     )
         public
         allowTwo("SkaleDKG", "SkaleManager")
@@ -156,6 +157,9 @@ contract NodeRotation is Permissions {
         SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
         Schains schains = Schains(contractManager.getContract("Schains"));
         schainsInternal.removeNodeFromSchain(nodeIndex, schainId);
+        if (!isBadNode) {
+            schainsInternal.removeNodeFromExceptions(schainId, nodeIndex);
+        }
         newNode = selectNodeToGroup(schainId);
         uint8 space = schainsInternal.getSchainsPartOfNode(schainId);
         schains.addSpace(nodeIndex, space);

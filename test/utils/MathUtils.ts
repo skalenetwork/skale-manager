@@ -26,8 +26,6 @@ contract("MathUtils", ([owner]) => {
             const log = response.receipt.rawLogs[0];
             log.topics.should.contain(web3.utils.keccak256("UnderflowError(uint256,uint256)"));
             const params = web3.eth.abi.decodeParameters(["uint256", "uint256"], log.data);
-            console.log(params[0]);
-            console.log(typeof params[0]);
             params[0].should.be.equal("3");
             params[1].should.be.equal("5");
         });
