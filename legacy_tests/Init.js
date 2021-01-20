@@ -36,6 +36,7 @@ module.exports.NodeRotation = new web3.eth.Contract(jsonData['node_rotation_abi'
 module.exports.TokenLaunchManager = new web3.eth.Contract(jsonData['token_launch_manager_abi'], jsonData['token_launch_manager_address']);
 module.exports.TokenLaunchLocker = new web3.eth.Contract(jsonData['token_launch_locker_abi'], jsonData['token_launch_locker_address']);
 module.exports.DelegationController = new web3.eth.Contract(jsonData['delegation_controller_abi'], jsonData['delegation_controller_address']);
+module.exports.DelegationPeriodManager = new web3.eth.Contract(jsonData['delegation_period_manager_abi'], jsonData['delegation_period_manager_address']);
 module.exports.web3 = web3;
 module.exports.mainAccount = mainAccount;
 module.exports.jsonData = jsonData;

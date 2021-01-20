@@ -15,6 +15,7 @@ async function sendTransaction(web3Inst, account, privateKey, data, receiverCont
         gasPrice: 10000000000,
         gas: 8000000,
     };
+    console.log("OK");
     let tx;
     if (init.network === "unique") {
         console.log('RINKEBY')
@@ -215,6 +216,25 @@ async function getDelegationTotal(validatorId) {
     }
 }
 
+async function setDelegationPeriod() {
+    let stakeMultipliers = await init.DelegationPeriodManager.methods.stakeMultipliers(3).call();
+    console.log("Delegation Period for 3", stakeMultipliers);
+    stakeMultipliers = await init.DelegationPeriodManager.methods.stakeMultipliers(2).call();
+    console.log("Delegation Period for 2", stakeMultipliers);
+    const setDelegationPeriod = await init.DelegationPeriodManager.methods.setDelegationPeriod(2, 100).encodeABI();
+    const privateKeyB = Buffer.from(init.privateKey, "hex");
+    const contractAddress = init.jsonData['delegation_period_manager_address'];
+    console.log(init.privateKey);
+    console.log(init.mainAccount);
+    console.log(contractAddress);
+
+    const gasUsed = await sendTransaction(init.web3, init.mainAccount, privateKeyB, setDelegationPeriod, contractAddress);
+    console.log("Transaction completed");
+    stakeMultipliers = await init.DelegationPeriodManager.methods.stakeMultipliers(2).call();
+    console.log("Delegation Period for 2", stakeMultipliers);
+    
+}
+
 async function createNodes1(n) {
     let nodeIndexes = new Array(n);
     for (let i = 0; i < n; i++) {
@@ -264,7 +284,9 @@ if (process.argv[2] == 'getFreeSpace') {
     checkPossibilityCreatingNode(process.argv[3]);
 } else if (process.argv[2] == 'getDelegationTotal') {
     getDelegationTotal(process.argv[3]);
-} 
+} else if (process.argv[2] == 'setDelegationPeriod') {
+    setDelegationPeriod();
+}
 
 
 
