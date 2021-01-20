@@ -198,12 +198,14 @@ async function getStillLockedAddresses(blockNumber) {
     console.log("New size of Map", approved.size);
     const delegatedWPOU = new Map();
     const delegatedWOPOU = new Map();
+    const delegatedWOPOUNS = new Map();
     const notDelegatedAtAll = new Map();
     for (let value of approved.keys()) {
+        console.log();
         console.log("Address:", value);
         console.log("Locked:", approved.get(value));
         const len = await init.DelegationController.methods.getDelegationsByHolderLength(value).call();
-        console.log(len);
+        console.log("Amount of delegations", len);
         let sum = "0";
         let mintime = 1000000;
         for (let i = 0; i < len; i++) {
@@ -216,7 +218,6 @@ async function getStillLockedAddresses(blockNumber) {
             if (Number(timeStarted) > 0) {
                 sum = init.web3.utils.toBN(sum).add(init.web3.utils.toBN(amount)).toString();
                 const sumx2 = init.web3.utils.toBN(sum).mul(init.web3.utils.toBN("2")).toString();
-                console.log(sumx2);
                 if (init.web3.utils.toBN(sumx2).gte(init.web3.utils.toBN(approved.get(value)))) {
                     if (mintime > timeStarted) {
                         mintime = timeStarted;
@@ -224,23 +225,33 @@ async function getStillLockedAddresses(blockNumber) {
                 }
             }
         }
-        console.log("Sum:", sum);
+        console.log("Sum of all delegations:", sum);
         if (init.web3.utils.toBN(sum).gt(init.web3.utils.toBN("0"))) {
             if (mintime < 1000000) {
                 console.log("Proof of use is started at", mintime, "month");
                 if (mintime <= 10) {
                     delegatedWPOU.set(value, approved.get(value));
+                    console.log("Address potentially unlocked");
+                } else {
+                    delegatedWOPOU.set(value, approved.get(value));
+                    console.log("Address still locked but will be unlock soon");
                 }
             } else {
-                delegatedWOPOU.set(value, approved.get(value));
+                delegatedWOPOUNS.set(value, approved.get(value));
+                console.log("Unlocking mechanism did not started");
             }
         } else {
             notDelegatedAtAll.set(value, approved.get(value));
+            console.log("Did not delegated at all");
         }
+        console.log();
     }
     console.log("Not delegated at all:", notDelegatedAtAll.size);
-    console.log("Delegated without POU:", delegatedWOPOU.size);
-    console.log("Delegated with POU:", delegatedWPOU.size);
+    console.log("Delegated with POU not started:", delegatedWOPOUNS.size);
+    console.log("Delegated with POU not Finished:", delegatedWOPOU.size);
+    console.log("Delegated with POU Finished:", delegatedWPOU.size);
+    console.log("All unlocked addresses:", approved.size);
+    process.exit();
 }
 
 if (process.argv[2] == 'approveBatchOfTransfers') {
