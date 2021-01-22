@@ -32,6 +32,7 @@ import "./KeyStorage.sol";
 import "./interfaces/ISkaleDKG.sol";
 import "./thirdparty/ECDH.sol";
 import "./utils/Precompiled.sol";
+import "./Wallets.sol";
 
 /**
  * @title SkaleDKG
@@ -172,6 +173,10 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         _;
     }
 
+    function _refundGasBySchain(bytes32 schainId, uint nodeIndex) private {
+        Wallets(contractManager.getContract("Wallets")).refundGasBySchain(schainId, nodeIndex);
+    }
+
     /**
      * @dev Allows Schains and NodeRotation contracts to open a channel.
      * 
@@ -242,6 +247,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             verificationVector,
             secretKeyContribution
         );
+        _refundGasBySchain(schainId, nodeIndex);
     }
 
     /**
@@ -264,7 +270,6 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         require(isNodeBroadcasted(schainId, fromNodeIndex), "Node has not broadcasted");
         if (isNodeBroadcasted(schainId, toNodeIndex)) {
             _handleComplaintWhenBroadcasted(schainId, fromNodeIndex, toNodeIndex);
-            return;
         } else {
             // not broadcasted in 30 min
             if (channels[schainId].startedBlockTimestamp.add(_getComplaintTimelimit()) <= block.timestamp) {
@@ -272,8 +277,8 @@ contract SkaleDKG is Permissions, ISkaleDKG {
                 return;
             }
             emit ComplaintError("Complaint sent too early");
-            return;
         }
+        _refundGasBySchain(schainId, fromNodeIndex);
     }
 
     function complaintBadData(bytes32 schainId, uint fromNodeIndex, uint toNodeIndex)
@@ -286,6 +291,11 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         require(isNodeBroadcasted(schainId, fromNodeIndex), "Node has not broadcasted");
         require(isNodeBroadcasted(schainId, toNodeIndex), "Accused node has not broadcasted");
         require(!isAllDataReceived(schainId, fromNodeIndex), "Node has already sent alright");
+        _processComplaint(schainId, fromNodeIndex, toNodeIndex);
+        _refundGasBySchain(schainId, fromNodeIndex);
+    }
+
+    function _processComplaint(bytes32 schainId, uint fromNodeIndex, uint toNodeIndex) private {
         if (complaints[schainId].nodeToComplaint == uint(-1)) {
             complaints[schainId].nodeToComplaint = toNodeIndex;
             complaints[schainId].fromNodeToComplaint = fromNodeIndex;
@@ -307,6 +317,28 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         correctGroup(schainId)
         onlyNodeOwner(fromNodeIndex)
     {
+        uint index = _preResponseCheck(
+            schainId,
+            fromNodeIndex,
+            verificationVector,
+            verificationVectorMult,
+            secretKeyContribution
+        );
+        _processPreResponse(secretKeyContribution[index].share, schainId, verificationVectorMult);
+        _refundGasBySchain(schainId, fromNodeIndex);
+    }
+
+    function _preResponseCheck(
+        bytes32 schainId,
+        uint fromNodeIndex,
+        G2Operations.G2Point[] calldata verificationVector,
+        G2Operations.G2Point[] calldata verificationVectorMult,
+        KeyShare[] calldata secretKeyContribution
+    )
+        private
+        view
+        returns (uint index)
+    {
         (uint indexOnSchain, ) = _checkAndReturnIndexInGroup(schainId, fromNodeIndex, true);
         require(complaints[schainId].nodeToComplaint == fromNodeIndex, "Not this Node");
         require(!complaints[schainId].isResponse, "Already submitted pre response data");
@@ -318,12 +350,20 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             verificationVector.length == verificationVectorMult.length,
             "Incorrect length of multiplied verification vector"
         );
-        (uint index, ) = _checkAndReturnIndexInGroup(schainId, complaints[schainId].fromNodeToComplaint, true);
+        (index, ) = _checkAndReturnIndexInGroup(schainId, complaints[schainId].fromNodeToComplaint, true);
         require(
             _checkCorrectVectorMultiplication(index, verificationVector, verificationVectorMult),
             "Multiplied verification vector is incorrect"
-        );
-        complaints[schainId].keyShare = secretKeyContribution[index].share;
+        ); 
+    }
+    function _processPreResponse(
+        bytes32 share,
+        bytes32 schainId,
+        G2Operations.G2Point[] calldata verificationVectorMult
+    )
+        private
+    {
+        complaints[schainId].keyShare = share;
         complaints[schainId].sumOfVerVec = _calculateSum(verificationVectorMult);
         complaints[schainId].isResponse = true;
     }
@@ -346,6 +386,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             secretNumber,
             multipliedShare
          );
+        _refundGasBySchain(schainId, fromNodeIndex);
     }
 
     function alright(bytes32 schainId, uint fromNodeIndex)
@@ -368,6 +409,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         if (dkgProcess[schainId].numberOfCompleted == numberOfParticipant) {
             _setSuccesfulDKG(schainId);
         }
+        _refundGasBySchain(schainId, fromNodeIndex);
     }
 
     function getChannelStartedTime(bytes32 schainId) external view returns (uint) {
@@ -737,11 +779,6 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         );
     }
 
-    function _nodeIndexInSchain(bytes32 schainId, uint nodeIndex) private view returns (uint) {
-        return SchainsInternal(contractManager.getContract("SchainsInternal"))
-            .getNodeIndexInGroup(schainId, nodeIndex);
-    }
-
     function _isNodeOwnedByMessageSender(uint nodeIndex, address from) private view returns (bool) {
         return Nodes(contractManager.getContract("Nodes")).isNodeExist(from, nodeIndex);
     }
@@ -763,7 +800,8 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         view
         returns (uint, bool)
     {
-        uint index = _nodeIndexInSchain(schainId, nodeIndex);
+        uint index = SchainsInternal(contractManager.getContract("SchainsInternal"))
+            .getNodeIndexInGroup(schainId, nodeIndex);
         if (index >= channels[schainId].n && revertCheck) {
             revert("Node is not in this group");
         }
