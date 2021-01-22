@@ -712,6 +712,22 @@ contract Nodes is Permissions {
         numberOfLeftNodes = 0;
     }
 
+    function makeNodeVisible(uint nodeIndex) public allow("SchainInternal") {
+        uint8 space = spaceOfNodes[nodeIndex].freeSpace;
+        spaceToNodes[space].push(nodeIndex);
+        spaceOfNodes[nodeIndex].indexInSpaceMap = spaceToNodes[space].length.sub(1);
+        delete spaceOfNodes[nodeIndex].invisible;
+        if (space > 0) {
+            _tree.addToPlace(space, 1);
+        }
+    }
+
+    function makeNodeInvisible(uint nodeIndex) public allow("SchainInternal") {
+        _removeNodeFromSpaceOfNodes(nodeIndex);
+        spaceOfNodes[nodeIndex].invisible = true;
+        delete spaceOfNodes[nodeIndex].indexInSpaceMap;
+    }
+
     /**
      * @dev Returns the Validator ID for a given node.
      */
@@ -794,7 +810,7 @@ contract Nodes is Permissions {
     function _setNodeActive(uint nodeIndex) private {
         nodes[nodeIndex].status = NodeStatus.Active;
         numberOfActiveNodes = numberOfActiveNodes.add(1);
-        _moveNodeFromInvisible(nodeIndex);
+        makeNodeVisible(nodeIndex);
     }
 
     /**
@@ -803,7 +819,7 @@ contract Nodes is Permissions {
     function _setNodeInMaintenance(uint nodeIndex) private {
         nodes[nodeIndex].status = NodeStatus.In_Maintenance;
         numberOfActiveNodes = numberOfActiveNodes.sub(1);
-        _moveNodeToInvisible(nodeIndex);
+        makeNodeInvisible(nodeIndex);
     }
 
     /**
@@ -829,7 +845,7 @@ contract Nodes is Permissions {
         nodes[nodeIndex].status = NodeStatus.Leaving;
         numberOfActiveNodes--;
         numberOfLeavingNodes++;
-        _moveNodeToInvisible(nodeIndex);
+        makeNodeInvisible(nodeIndex);
     }
 
     /**
@@ -902,22 +918,6 @@ contract Nodes is Permissions {
             if (space > 0) {
                 _tree.removeFromPlace(space, 1);
             }
-        }
-    }
-
-    function _moveNodeToInvisible(uint nodeIndex) private {
-        _removeNodeFromSpaceOfNodes(nodeIndex);
-        spaceOfNodes[nodeIndex].invisible = true;
-        delete spaceOfNodes[nodeIndex].indexInSpaceMap;
-    }
-
-    function _moveNodeFromInvisible(uint nodeIndex) private {
-        uint8 space = spaceOfNodes[nodeIndex].freeSpace;
-        spaceToNodes[space].push(nodeIndex);
-        spaceOfNodes[nodeIndex].indexInSpaceMap = spaceToNodes[space].length.sub(1);
-        delete spaceOfNodes[nodeIndex].invisible;
-        if (space > 0) {
-            _tree.addToPlace(space, 1);
         }
     }
 

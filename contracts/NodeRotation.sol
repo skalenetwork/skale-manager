@@ -156,11 +156,13 @@ contract NodeRotation is Permissions {
     {
         SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
         Schains schains = Schains(contractManager.getContract("Schains"));
+        schainsInternal.makeSchainNodesInvisible(schainId);
         schainsInternal.removeNodeFromSchain(nodeIndex, schainId);
         if (!isBadNode) {
             schainsInternal.removeNodeFromExceptions(schainId, nodeIndex);
         }
         newNode = selectNodeToGroup(schainId);
+        schainsInternal.makeSchainNodesVisible(schainId);
         uint8 space = schainsInternal.getSchainsPartOfNode(schainId);
         schains.addSpace(nodeIndex, space);
         _finishRotation(schainId, nodeIndex, newNode, shouldDelay);
