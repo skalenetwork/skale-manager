@@ -37,7 +37,7 @@ contract Wallets is Permissions {
     event NodeWalletReimbursed(address node, uint amount);
 
 
-    function rechargeValidatorWalllet(uint validatorId) external payable {
+    function rechargeValidatorWallet(uint validatorId) external payable {
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
         require(validatorService.validatorExists(validatorId), "Validator does not exists");
         validatorWallets[validatorId] = validatorWallets[validatorId].add(msg.value);

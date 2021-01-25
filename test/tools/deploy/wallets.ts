@@ -1,19 +1,16 @@
-import { ContractManagerInstance, WalletsContract } from "../../../types/truffle-contracts";
+import { ContractManagerInstance, WalletsInstance } from "../../../types/truffle-contracts";
+import { deployValidatorService } from "./delegation/validatorService";
+import { deployFunctionFactory } from "./factory";
+import { deployNodes } from "./nodes";
+import { deploySchainsInternal } from "./schainsInternal";
 
-const Wallets: WalletsContract = artifacts.require("./Wallets");
-const name = "Wallets";
+const deployWallets:
+    (contractManager: ContractManagerInstance) => Promise<WalletsInstance>
+    = deployFunctionFactory("Wallets",
+                            async (contractManager: ContractManagerInstance) => {
+                                await deployNodes(contractManager);
+                                await deployValidatorService(contractManager);
+                                await deploySchainsInternal(contractManager);
+                            });
 
-async function deploy(contractManager: ContractManagerInstance) {
-    const instance = await Wallets.new();
-    await instance.initialize(contractManager.address);
-    await contractManager.setContractsAddress(name, instance.address);
-    return instance;
-}
-
-export async function deployWallets(contractManager: ContractManagerInstance) {
-    try {
-        return Wallets.at(await contractManager.getContract(name));
-    } catch (e) {
-        return await deploy(contractManager);
-    }
-}
+export { deployWallets };

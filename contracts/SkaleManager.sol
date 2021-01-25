@@ -36,7 +36,7 @@ import "./NodeRotation.sol";
 import "./Permissions.sol";
 import "./Schains.sol";
 import "./Wallets.sol";
-
+import "@nomiclabs/buidler/console.sol";
 /**
  * @title SkaleManager
  * @dev Contract contains functions for node registration and exit, bounty
@@ -86,7 +86,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
         }
     }
 
-    function _reimburseGas(
+    function _reimburseGasDuringNodeExit(
         uint gasSpentOnNodeExit,
         uint gasSpentOnNodeRotation,
         bytes32 schainForRotation
@@ -150,6 +150,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
     }
 
     function nodeExit(uint nodeIndex) external {
+        console.log(msg.sender.balance);
         uint gasTotal = gasleft();
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
         SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
@@ -187,7 +188,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
             nodes.deleteNodeForValidator(validatorId, nodeIndex);
         }
         uint gasSpentOnNodeExit = gasTotal - gasSpentOnNodeRotation - gasleft();
-        _reimburseGas(gasSpentOnNodeExit, gasSpentOnNodeRotation, schainForRotation);
+        _reimburseGasDuringNodeExit(gasSpentOnNodeExit, gasSpentOnNodeRotation, schainForRotation);
     }
 
     function deleteSchain(string calldata name) external {
