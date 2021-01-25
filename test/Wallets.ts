@@ -66,16 +66,17 @@ contract("Wallets", ([owner, validator, node]) => {
                     "0x7f0000" + hexIndex, // public ip
                     ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')], // public key
                     "D2-" + hexIndex, // name
+                    "somedomain.name",
                     {from: node});
             }
 
             // create schain
-            await schains.addSchainByFoundation(0, 4, 0, "schain");
+            await schains.addSchainByFoundation(0, 4, 0, "schain", owner);
             schainId = web3.utils.soliditySha3("schain");
         });
 
         it("should recharge schain wallet", async() => {
-            const amount = 1e9.toString();;
+            const amount = 1e9.toString();
             const walletBeforeRecharging = await web3.eth.getBalance(wallets.address);
             assert.equal(walletBeforeRecharging, "0");
             await wallets.rechargeSchainWallet(schainId, {from: validator, value: amount});
