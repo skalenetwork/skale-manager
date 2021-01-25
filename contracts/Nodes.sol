@@ -156,19 +156,12 @@ contract Nodes is Permissions {
     );
 
     modifier checkNodeExists(uint nodeIndex) {
-        require(nodeIndex < nodes.length, "Node with such index does not exist");
+        _checkNodeIndex(nodeIndex);
         _;
     }
 
     modifier onlyNodeOrAdmin(uint nodeIndex) {
-        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
-
-        require(
-            isNodeExist(msg.sender, nodeIndex) ||
-            _isAdmin(msg.sender) ||
-            getValidatorId(nodeIndex) == validatorService.getValidatorId(msg.sender),
-            "Sender is not permitted to call this function"
-        );
+        _checkNodeOrAdmin(nodeIndex, msg.sender);
         _;
     }
 
@@ -928,6 +921,21 @@ contract Nodes is Permissions {
         uint delegationsTotal = delegationController.getAndUpdateDelegatedToValidatorNow(validatorId);
         uint msr = ConstantsHolder(contractManager.getContract("ConstantsHolder")).msr();
         return position.add(1).mul(msr) <= delegationsTotal;
+    }
+
+    function _checkNodeIndex(uint nodeIndex) private view {
+        require(nodeIndex < nodes.length, "Node with such index does not exist");
+    }
+
+    function _checkNodeOrAdmin(uint nodeIndex, address sender) private view {
+        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
+
+        require(
+            isNodeExist(sender, nodeIndex) ||
+            _isAdmin(sender) ||
+            getValidatorId(nodeIndex) == validatorService.getValidatorId(sender),
+            "Sender is not permitted to call this function"
+        );
     }
 
     function _publicKeyToAddress(bytes32[2] memory pubKey) private pure returns (address) {
