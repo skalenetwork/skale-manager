@@ -498,9 +498,7 @@ contract SchainsInternal is Permissions {
         uint8 space = schains[schainId].partOfNode;
         console.log("isAnyFreeNode: ");
         console.log(nodes.countNodesWithFreeSpace(space));
-        console.log(_lengthOfExceptionsForGroups[schainId]);
-        return nodes.countNodesWithFreeSpace(space) >
-            _lengthOfExceptionsForGroups[schainId];
+        return nodes.countNodesWithFreeSpace(space) > 0;
     }
 
     /**

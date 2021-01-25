@@ -705,7 +705,7 @@ contract Nodes is Permissions {
         numberOfLeftNodes = 0;
     }
 
-    function makeNodeVisible(uint nodeIndex) public allow("SchainInternal") {
+    function makeNodeVisible(uint nodeIndex) public allowThree("SchainsInternal", "Nodes", "SkaleManager") {
         uint8 space = spaceOfNodes[nodeIndex].freeSpace;
         spaceToNodes[space].push(nodeIndex);
         spaceOfNodes[nodeIndex].indexInSpaceMap = spaceToNodes[space].length.sub(1);
@@ -715,7 +715,7 @@ contract Nodes is Permissions {
         }
     }
 
-    function makeNodeInvisible(uint nodeIndex) public allow("SchainInternal") {
+    function makeNodeInvisible(uint nodeIndex) public allowThree("SchainsInternal", "Nodes", "SkaleManager") {
         _removeNodeFromSpaceOfNodes(nodeIndex);
         spaceOfNodes[nodeIndex].invisible = true;
         delete spaceOfNodes[nodeIndex].indexInSpaceMap;
