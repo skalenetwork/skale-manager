@@ -173,8 +173,9 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         _;
     }
 
-    function _refundGasBySchain(bytes32 schainId, uint nodeIndex) private {
-        Wallets(contractManager.getContract("Wallets")).refundGasBySchain(schainId, nodeIndex);
+    modifier refundGasBySchain(bytes32 schainId, uint nodeIndex) {
+        _;
+        _refundGasBySchain(schainId, nodeIndex);
     }
 
     /**
@@ -272,11 +273,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             _handleComplaintWhenBroadcasted(schainId, fromNodeIndex, toNodeIndex);
         } else {
             // not broadcasted in 30 min
-            if (channels[schainId].startedBlockTimestamp.add(_getComplaintTimelimit()) <= block.timestamp) {
-                _finalizeSlashing(schainId, toNodeIndex);
-                return;
-            }
-            emit ComplaintError("Complaint sent too early");
+            _handleComplaintWhenNotBroadcasted(schainId, toNodeIndex);
         }
         _refundGasBySchain(schainId, fromNodeIndex);
     }
@@ -293,17 +290,6 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         require(!isAllDataReceived(schainId, fromNodeIndex), "Node has already sent alright");
         _processComplaint(schainId, fromNodeIndex, toNodeIndex);
         _refundGasBySchain(schainId, fromNodeIndex);
-    }
-
-    function _processComplaint(bytes32 schainId, uint fromNodeIndex, uint toNodeIndex) private {
-        if (complaints[schainId].nodeToComplaint == uint(-1)) {
-            complaints[schainId].nodeToComplaint = toNodeIndex;
-            complaints[schainId].fromNodeToComplaint = fromNodeIndex;
-            complaints[schainId].startComplaintBlockTimestamp = block.timestamp;
-            emit ComplaintSent(schainId, fromNodeIndex, toNodeIndex);
-        } else {
-            emit ComplaintError("First complaint has already been processed");
-        }
     }
 
     function preResponse(
@@ -326,46 +312,6 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         );
         _processPreResponse(secretKeyContribution[index].share, schainId, verificationVectorMult);
         _refundGasBySchain(schainId, fromNodeIndex);
-    }
-
-    function _preResponseCheck(
-        bytes32 schainId,
-        uint fromNodeIndex,
-        G2Operations.G2Point[] calldata verificationVector,
-        G2Operations.G2Point[] calldata verificationVectorMult,
-        KeyShare[] calldata secretKeyContribution
-    )
-        private
-        view
-        returns (uint index)
-    {
-        (uint indexOnSchain, ) = _checkAndReturnIndexInGroup(schainId, fromNodeIndex, true);
-        require(complaints[schainId].nodeToComplaint == fromNodeIndex, "Not this Node");
-        require(!complaints[schainId].isResponse, "Already submitted pre response data");
-        require(
-            hashedData[schainId][indexOnSchain] == _hashData(secretKeyContribution, verificationVector),
-            "Broadcasted Data is not correct"
-        );
-        require(
-            verificationVector.length == verificationVectorMult.length,
-            "Incorrect length of multiplied verification vector"
-        );
-        (index, ) = _checkAndReturnIndexInGroup(schainId, complaints[schainId].fromNodeToComplaint, true);
-        require(
-            _checkCorrectVectorMultiplication(index, verificationVector, verificationVectorMult),
-            "Multiplied verification vector is incorrect"
-        ); 
-    }
-    function _processPreResponse(
-        bytes32 share,
-        bytes32 schainId,
-        G2Operations.G2Point[] calldata verificationVectorMult
-    )
-        private
-    {
-        complaints[schainId].keyShare = share;
-        complaints[schainId].sumOfVerVec = _calculateSum(verificationVectorMult);
-        complaints[schainId].isResponse = true;
     }
 
     function response(
@@ -831,4 +777,69 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         }
         return keccak256(data);
     }
+
+    function _refundGasBySchain(bytes32 schainId, uint nodeIndex) private {
+        Wallets(contractManager.getContract("Wallets")).refundGasBySchain(schainId, nodeIndex);
+    }
+
+    function _preResponseCheck(
+        bytes32 schainId,
+        uint fromNodeIndex,
+        G2Operations.G2Point[] calldata verificationVector,
+        G2Operations.G2Point[] calldata verificationVectorMult,
+        KeyShare[] calldata secretKeyContribution
+    )
+        private
+        view
+        returns (uint index)
+    {
+        (uint indexOnSchain, ) = _checkAndReturnIndexInGroup(schainId, fromNodeIndex, true);
+        require(complaints[schainId].nodeToComplaint == fromNodeIndex, "Not this Node");
+        require(!complaints[schainId].isResponse, "Already submitted pre response data");
+        require(
+            hashedData[schainId][indexOnSchain] == _hashData(secretKeyContribution, verificationVector),
+            "Broadcasted Data is not correct"
+        );
+        require(
+            verificationVector.length == verificationVectorMult.length,
+            "Incorrect length of multiplied verification vector"
+        );
+        (index, ) = _checkAndReturnIndexInGroup(schainId, complaints[schainId].fromNodeToComplaint, true);
+        require(
+            _checkCorrectVectorMultiplication(index, verificationVector, verificationVectorMult),
+            "Multiplied verification vector is incorrect"
+        ); 
+    }
+
+    function _processPreResponse(
+        bytes32 share,
+        bytes32 schainId,
+        G2Operations.G2Point[] calldata verificationVectorMult
+    )
+        private
+    {
+        complaints[schainId].keyShare = share;
+        complaints[schainId].sumOfVerVec = _calculateSum(verificationVectorMult);
+        complaints[schainId].isResponse = true;
+    }
+
+    function _processComplaint(bytes32 schainId, uint fromNodeIndex, uint toNodeIndex) private {
+        if (complaints[schainId].nodeToComplaint == uint(-1)) {
+            complaints[schainId].nodeToComplaint = toNodeIndex;
+            complaints[schainId].fromNodeToComplaint = fromNodeIndex;
+            complaints[schainId].startComplaintBlockTimestamp = block.timestamp;
+            emit ComplaintSent(schainId, fromNodeIndex, toNodeIndex);
+        } else {
+            emit ComplaintError("First complaint has already been processed");
+        }
+    }
+
+    function _handleComplaintWhenNotBroadcasted(bytes32 schainId, uint toNodeIndex) private {
+        if (channels[schainId].startedBlockTimestamp.add(_getComplaintTimelimit()) <= block.timestamp) {
+            _finalizeSlashing(schainId, toNodeIndex);
+            return;
+        }
+        emit ComplaintError("Complaint sent too early");
+    }
+
 }

@@ -75,34 +75,9 @@ contract SkaleManager is IERC777Recipient, Permissions {
     );
 
     modifier reimburseGasByValidator() {
-        uint senderBalance = msg.sender.balance + tx.gasprice * block.gaslimit;
-        if (senderBalance.div(tx.gasprice) < block.gaslimit) {
-            uint gasTotal = gasleft();
-            _;
-            gasTotal -= gasleft();
-            Wallets(contractManager.getContract("Wallets")).reimburseGasByValidator(msg.sender, tx.gasprice * gasTotal);
-        } else {
-            _;
-        }
-    }
+        _;
+        _reimburseGasByValidator();
 
-    function _reimburseGas(
-        uint gasSpentOnNodeExit,
-        uint gasSpentOnNodeRotation,
-        bytes32 schainForRotation
-    )
-        private
-    {
-        uint senderBalance = msg.sender.balance + tx.gasprice * block.gaslimit;
-        if (senderBalance.div(tx.gasprice) < block.gaslimit) {
-            Wallets wallets = Wallets(contractManager.getContract("Wallets"));
-            wallets.reimburseGasByValidator(msg.sender, tx.gasprice * gasSpentOnNodeExit);
-            wallets.reimburseGasBySchain(
-                msg.sender,
-                tx.gasprice * gasSpentOnNodeRotation,
-                schainForRotation
-            );
-        }
     }
 
     function tokensReceived(
@@ -150,7 +125,6 @@ contract SkaleManager is IERC777Recipient, Permissions {
     }
 
     function nodeExit(uint nodeIndex) external {
-        uint gasTotal = gasleft();
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
         SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
         ConstantsHolder constants = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
@@ -186,8 +160,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
             // monitors.deleteMonitor(nodeIndex);
             nodes.deleteNodeForValidator(validatorId, nodeIndex);
         }
-        uint gasSpentOnNodeExit = gasTotal - gasSpentOnNodeRotation - gasleft();
-        _reimburseGas(gasSpentOnNodeExit, gasSpentOnNodeRotation, schainForRotation);
+        _reimburseGasDuringNodeExit(gasSpentOnNodeRotation, schainForRotation);
     }
 
     function deleteSchain(string calldata name) external {
@@ -266,5 +239,26 @@ contract SkaleManager is IERC777Recipient, Permissions {
             previousBlockEvent,
             block.timestamp,
             gasleft());
+    }
+
+    function _reimburseGasByValidator() private {
+        uint weiSpent = tx.gasprice * (block.gaslimit - gasleft());
+        Wallets(contractManager.getContract("Wallets")).reimburseGasByValidator(msg.sender, weiSpent);
+    }
+
+    function _reimburseGasDuringNodeExit(
+        uint gasSpentOnNodeRotation,
+        bytes32 schainForRotation
+    )
+        private
+    {
+        Wallets wallets = Wallets(contractManager.getContract("Wallets"));
+        uint gasSpentOnNodeExit = block.gaslimit - gasSpentOnNodeRotation - gasleft();
+        wallets.reimburseGasByValidator(msg.sender, tx.gasprice * gasSpentOnNodeExit);
+        wallets.reimburseGasBySchain(
+            msg.sender,
+            tx.gasprice * gasSpentOnNodeRotation,
+            schainForRotation
+        );
     }
 }
