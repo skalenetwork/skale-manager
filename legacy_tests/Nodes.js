@@ -152,12 +152,26 @@ async function deleteNode(nodeIndex) {
 }
 
 async function getNode(nodeIndex) {
-    let res = await init.Nodes.methods.nodes(nodeIndex).call({from: init.mainAccount});
+    let res = await init.Nodes.methods.nodes(nodeIndex).call();
     console.log("Node index:", nodeIndex);
     console.log("Node name:", res.name);
-    res = await init.Nodes.methods.getNodeIP(nodeIndex).call({from: init.mainAccount});
+    console.log(res);
+    res = await init.Nodes.methods.getNodeIP(nodeIndex).call();
     console.log("Node IP:", res);
+
     return res;
+}
+
+async function getNodePublicKey(nodeIndex) {
+    let res = await init.Nodes.methods.getNodePublicKey(nodeIndex).call();
+    console.log(res);
+    process.exit();
+}
+
+async function getNumberOfNodes() {
+    let res = await init.Nodes.methods.getNumberOfNodes().call();
+    console.log(res);
+    process.exit();
 }
 
 async function getNodeNextRewardDate(nodeIndex) {
@@ -196,6 +210,12 @@ async function getActiveNodeIPs() {
 
 async function getActiveNodeIds() {
     let res = await init.Nodes.methods.getActiveNodeIds().call();
+    console.log(res);
+    process.exit();
+}
+
+async function getNodeAddress(nodeIndex) {
+    let res = await init.Nodes.methods.getNodeAddress(nodeIndex).call();
     console.log(res);
     process.exit();
 }
@@ -286,9 +306,13 @@ if (process.argv[2] == 'getFreeSpace') {
     getDelegationTotal(process.argv[3]);
 } else if (process.argv[2] == 'setDelegationPeriod') {
     setDelegationPeriod();
+} else if (process.argv[2] == 'getNodeAddress') {
+    getNodeAddress(process.argv[3]);
+} else if (process.argv[2] == 'getNodePublicKey') {
+    getNodePublicKey(process.argv[3]);
+} else if (process.argv[2] == 'getNumberOfNodes') {
+    getNumberOfNodes();
 }
-
-
 
 
 async function createNode_legacy() {
