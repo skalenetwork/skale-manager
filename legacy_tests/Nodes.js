@@ -3,6 +3,9 @@ const schains = require("./Schains.js");
 const Tx = require("ethereumjs-tx").Transaction;
 const Web3 = require('web3');
 const GenerateBytesData = require("./GenerateBytesData.js");
+const elliptic = require("elliptic");
+const EC = elliptic.ec;
+const ec = new EC("secp256k1");
 
 async function sendTransaction(web3Inst, account, privateKey, data, receiverContract) {
     // console.log("Transaction generating started!");
@@ -117,7 +120,7 @@ async function registerValidator() {
     let contractAddress = init.jsonData['validator_service_address'];
     await sendTransaction(init.web3, init.mainAccount, privateKeyB, abi, contractAddress);
 
-    abi = await init.ValidatorService.methods.enableValidator(2).encodeABI();
+    abi = await init.ValidatorService.methods.enableValidator(1).encodeABI();
     await sendTransaction(init.web3, init.mainAccount, privateKeyB, abi, contractAddress);
     process.exit();
 }
@@ -127,13 +130,13 @@ async function createNodes(nodesCount) {
     const numberOfNodes = await init.Nodes.methods.getNumberOfNodes().call();
     for (let index = parseInt(numberOfNodes)+1; index <= parseInt(nodesCount) + parseInt(numberOfNodes); index++) {
         const hexIndex = ("0" + index.toString(16)).slice(-2);
+        const pubKey = ec.keyFromPrivate(init.privateKey).getPublic();
         const abi = await init.SkaleManager.methods.createNode(
             8545, // port
             0, // nonce
             "0x7f0003" + hexIndex, // ip
             "0x7f0003" + hexIndex, // public ip
-            ["0x1122334455667788990011223344556677889900112233445566778899001122",
-                "0x1122334455667788990011223344556677889900112233445566778899001122"], // public key
+            ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
             "D2-3" + hexIndex, // name
         ).encodeABI();
         const privateKeyB = Buffer.from(init.privateKey, "hex");
