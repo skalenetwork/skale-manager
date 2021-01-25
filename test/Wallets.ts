@@ -1,4 +1,10 @@
-import { ContractManagerInstance, SchainsInstance, SchainsInternalContract, SkaleManagerInstance, ValidatorServiceInstance, WalletsInstance } from "../types/truffle-contracts";
+import { ContractManagerInstance,
+        SchainsInstance,
+        SchainsInternalInstance,
+        SkaleDKGTesterInstance,
+        SkaleManagerInstance,
+        ValidatorServiceInstance,
+        WalletsInstance } from "../types/truffle-contracts";
 import { deployContractManager } from "./tools/deploy/contractManager";
 import chaiAsPromised from "chai-as-promised";
 import * as chai from "chai";
@@ -6,11 +12,14 @@ import * as elliptic from "elliptic";
 const EC = elliptic.ec;
 const ec = new EC("secp256k1");
 import { privateKeys } from "./tools/private-keys";
+import BigNumber from "bignumber.js";
 
 import { deployWallets } from "./tools/deploy/wallets";
 import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
 import { deploySchains } from "./tools/deploy/schains";
 import { deploySkaleManager } from "./tools/deploy/skaleManager";
+import { deploySkaleDKGTester } from "./tools/deploy/test/skaleDKGTester";
+import { deploySchainsInternal } from "./tools/deploy/schainsInternal";
 chai.should();
 chai.use(chaiAsPromised);
 
@@ -20,6 +29,8 @@ contract("Wallets", ([owner, validator, node]) => {
     let validatorService: ValidatorServiceInstance
     let schains: SchainsInstance;
     let skaleManager: SkaleManagerInstance;
+    let skaleDKG: SkaleDKGTesterInstance;
+    let schainsInternal: SchainsInternalInstance;
 
     beforeEach(async () => {
         contractManager = await deployContractManager();
@@ -27,6 +38,9 @@ contract("Wallets", ([owner, validator, node]) => {
         validatorService = await deployValidatorService(contractManager);
         schains = await deploySchains(contractManager);
         skaleManager = await deploySkaleManager(contractManager);
+        schainsInternal = await deploySchainsInternal(contractManager);
+        skaleDKG = await deploySkaleDKGTester(contractManager);
+        await contractManager.setContractsAddress("SkaleDKG", skaleDKG.address);
 
         await validatorService.registerValidator("Validator", "", 0, 0, {from: validator});
 
@@ -41,7 +55,7 @@ contract("Wallets", ([owner, validator, node]) => {
         assert.equal(walletAfterRecharging, amount);
     });
 
-    describe("when schain has been created", async() => {
+    describe("when nodes have been created", async() => {
         let schainId: string;
         let validatorId: number;
 
@@ -55,7 +69,7 @@ contract("Wallets", ([owner, validator, node]) => {
             await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), owner)
 
             // create 2 nodes
-            const nodesCount = 2;
+            const nodesCount = 3;
             const pubKey = ec.keyFromPrivate(String(privateKeys[2]).slice(2)).getPublic();
             for (const index of Array.from(Array(nodesCount).keys())) {
                 const hexIndex = ("0" + index.toString(16)).slice(-2);
@@ -69,13 +83,13 @@ contract("Wallets", ([owner, validator, node]) => {
                     "somedomain.name",
                     {from: node});
             }
-
-            // create schain
-            await schains.addSchainByFoundation(0, 4, 0, "schain", owner);
-            schainId = web3.utils.soliditySha3("schain");
         });
 
         it("should recharge schain wallet", async() => {
+            // create schain
+            await schains.addSchainByFoundation(0, 4, 0, "schain", owner);
+            schainId = web3.utils.soliditySha3("schain");
+
             const amount = 1e9.toString();
             const walletBeforeRecharging = await web3.eth.getBalance(wallets.address);
             assert.equal(walletBeforeRecharging, "0");
@@ -83,6 +97,43 @@ contract("Wallets", ([owner, validator, node]) => {
             const walletAfterRecharging = await web3.eth.getBalance(wallets.address);
             assert.equal(walletAfterRecharging, amount);
         });
+
+        it("should refund gas for node when no schains", async() => {
+            const amount = 1e18.toString();
+            await wallets.rechargeValidatorWallet(1, {from: validator, value: amount});
+            const validatorWalletBefore = parseInt(await web3.eth.getBalance(wallets.address), 10);
+            const nodeBefore = parseInt(await web3.eth.getBalance(node), 10);
+            await skaleManager.nodeExit(0, {from: node});
+            const validatorWalletAfter = parseInt(await web3.eth.getBalance(wallets.address), 10);
+            const nodeAfter = parseInt(await web3.eth.getBalance(node), 10);
+            expect(validatorWalletBefore).greaterThan(validatorWalletAfter);
+            expect(nodeAfter).greaterThan(nodeBefore);
+        });
+
+        it("should refund gas for node when schain exists", async() => {
+            // creating schain
+            schainId = web3.utils.soliditySha3("schain");
+            await schains.addSchainByFoundation(0, 4, 0, "schain", owner);
+            await skaleDKG.setSuccesfulDKGPublic(schainId);
+            // recharging
+            const amount = 1e18.toString();
+            await wallets.rechargeValidatorWallet(1, {from: validator, value: amount});
+            await wallets.rechargeSchainWallet(schainId, {from: validator, value: amount});
+
+            const schainWalletBefore = new BigNumber(await wallets.getSchainBalance(schainId)).toNumber();
+            const validatorWalletBefore = new BigNumber(await wallets.getValidatorBalance(validatorId)).toNumber();
+            const nodeBefore = parseInt(await web3.eth.getBalance(node), 10);
+            const nodeInSchain = (await schainsInternal.getNodesInGroup(schainId))[0];
+            await skaleManager.nodeExit(nodeInSchain, {from: node});
+            const schainWalletAfter = new BigNumber(await wallets.getSchainBalance(schainId)).toNumber();
+            const validatorWalletAfter = new BigNumber(await wallets.getValidatorBalance(validatorId)).toNumber();
+            const nodeAfter = parseInt(await web3.eth.getBalance(node), 10);
+
+            expect(schainWalletBefore).greaterThan(schainWalletAfter);
+            expect(validatorWalletBefore).greaterThan(validatorWalletAfter);
+            expect(nodeAfter).greaterThan(nodeBefore);
+        });
+
     });
 
 

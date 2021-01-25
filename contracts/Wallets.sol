@@ -36,7 +36,6 @@ contract Wallets is Permissions {
     event SchainWalletRecharged(address sponsor, uint amount, bytes32 schainId);
     event NodeWalletReimbursed(address node, uint amount);
 
-
     function rechargeValidatorWallet(uint validatorId) external payable {
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
         require(validatorService.validatorExists(validatorId), "Validator does not exists");
@@ -73,6 +72,14 @@ contract Wallets is Permissions {
         }
     }
 
+    function getSchainBalance(bytes32 schainId) external view returns (uint) {
+        return schainWallets[schainId];
+    }
+
+    function getValidatorBalance(uint validatorId) external view returns (uint) {
+        return validatorWallets[validatorId];
+    }
+
     function reimburseGasBySchain(
         address payable node,
         uint amount,
@@ -81,6 +88,7 @@ contract Wallets is Permissions {
         public
         allowTwo("SkaleManager","SkaleDKG")
     {
+        require(schainId != bytes32(0), "SchainId cannot be null");
         if (amount <= schainWallets[schainId]) {
             schainWallets[schainId] = schainWallets[schainId].sub(amount);
             emit NodeWalletReimbursed(node, amount);

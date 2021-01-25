@@ -158,9 +158,6 @@ contract SkaleManager is IERC777Recipient, Permissions {
         if (completed) {
             require(nodes.completeExit(nodeIndex), "Finishing of node exit is failed");
             nodes.changeNodeFinishTime(nodeIndex, now.add(isSchains ? constants.rotationDelay() : 0));
-            // Monitors monitors = Monitors(contractManager.getContract("Monitors"));
-            // monitors.removeCheckedNodes(nodeIndex);
-            // monitors.deleteMonitor(nodeIndex);
             nodes.deleteNodeForValidator(validatorId, nodeIndex);
         }
         _reimburseGasDuringNodeExit(gasSpentOnNodeRotation, schainForRotation);
@@ -257,11 +254,21 @@ contract SkaleManager is IERC777Recipient, Permissions {
     {
         Wallets wallets = Wallets(contractManager.getContract("Wallets"));
         uint gasSpentOnNodeExit = block.gaslimit - gasSpentOnNodeRotation - gasleft();
-        wallets.reimburseGasByValidator(msg.sender, tx.gasprice * gasSpentOnNodeExit);
-        wallets.reimburseGasBySchain(
-            msg.sender,
-            tx.gasprice * gasSpentOnNodeRotation,
-            schainForRotation
-        );
+        if (schainForRotation == bytes32(0)) {
+            wallets.reimburseGasByValidator(
+                msg.sender,
+                tx.gasprice * (gasSpentOnNodeExit + gasSpentOnNodeRotation)
+            );
+        } else {
+            wallets.reimburseGasByValidator(
+                msg.sender,
+                tx.gasprice * gasSpentOnNodeExit
+            );
+            wallets.reimburseGasBySchain(
+                msg.sender,
+                tx.gasprice * gasSpentOnNodeRotation,
+                schainForRotation
+            );
+        }
     }
 }
