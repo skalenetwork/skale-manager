@@ -44,6 +44,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeA
     let skaleManager: SkaleManagerInstance;
     let keyStorage: KeyStorageInstance;
     let nodeRotation: NodeRotationInstance;
+    const zeroAddress = "0x0000000000000000000000000000000000000000";
 
     beforeEach(async () => {
         contractManager = await deployContractManager();
@@ -88,7 +89,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeA
         });
 
         it("should not allow everyone to create schains as the foundation", async () => {
-            await schains.addSchainByFoundation(5, 1, 0, "d2")
+            await schains.addSchainByFoundation(5, 1, 0, "d2", zeroAddress)
                 .should.be.eventually.rejectedWith("Sender is not authorized to create schain");
         })
 
@@ -143,6 +144,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeA
                         "0x7f0000" + hexIndex, // public ip
                         ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')], // public key
                         "D2-" + hexIndex, // name
+                        "somedomain.name",
                         {from: nodeAddress});
                 }
 
@@ -186,6 +188,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeA
                         "0x7f0000" + hexIndex, // public ip
                         ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')], // public key
                         "D2-" + hexIndex, // name
+                        "somedomain.name",
                         {from: nodeAddress});
                 }
 
@@ -210,6 +213,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeA
                         "0x7f0000" + hexIndex, // public ip
                         ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')], // public key
                         "D2-" + hexIndex, // name
+                        "somedomain.name",
                         {from: nodeAddress});
                 }
 
@@ -309,6 +313,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeA
                     "0x7f000011", // public ip
                     ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')], // public key
                     "D2-11", // name
+                    "somedomain.name",
                     {from: nodeAddress});
 
                 res = await skaleDKG.isChannelOpened(web3.utils.soliditySha3("d2"));
@@ -387,6 +392,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeA
                         "0x7f0000" + hexIndex, // public ip
                         ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')], // public key
                         "D2-" + hexIndex, // name
+                        "somedomain.name",
                         {from: nodeAddress});
                 }
             });
@@ -474,6 +480,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeA
                     "0x7f000028", // public ip
                     ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')], // public key
                     "D2-28", // name
+                    "somedomain.name",
                     {from: nodeAddress});
 
                 const deposit = await schains.getSchainPrice(5, 5);
@@ -561,7 +568,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeA
             it("should allow the foundation to create schain without tokens", async () => {
                 const schainCreator = holder;
                 await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), schainCreator);
-                await schains.addSchainByFoundation(5, 5, 0, "d2", {from: schainCreator});
+                await schains.addSchainByFoundation(5, 5, 0, "d2", zeroAddress, {from: schainCreator});
 
                 const sChains = await schainsInternal.getSchains();
                 sChains.length.should.be.equal(1);
@@ -571,8 +578,8 @@ contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeA
             });
 
             it("should assign schain creator on different address", async () => {
-                await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), holder, {from: owner});
-                await schains.addSchainByFoundation(5, 5, 0, "d2", {from: holder});
+                await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), owner, {from: owner});
+                await schains.addSchainByFoundation(5, 5, 0, "d2", holder, {from: owner});
 
                 const sChains = await schainsInternal.getSchains();
                 sChains.length.should.be.equal(1);
@@ -596,6 +603,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeA
                         "0x7f0000" + hexIndex, // public ip
                         ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')], // public key
                         "D2-" + hexIndex, // name
+                        "somedomain.name",
                         {from: nodeAddress});
                 }
             });
@@ -632,7 +640,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeA
 
             it("should assign schain creator on different address and create small schain", async () => {
                 await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), holder, {from: owner});
-                await schains.addSchainByFoundation(5, 1, 0, "d2", {from: holder});
+                await schains.addSchainByFoundation(5, 1, 0, "d2", zeroAddress, {from: holder});
 
                 const sChains = await schainsInternal.getSchains();
                 sChains.length.should.be.equal(1);
@@ -643,7 +651,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeA
 
             it("should assign schain creator on different address and create medium schain", async () => {
                 await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), holder, {from: owner});
-                await schains.addSchainByFoundation(5, 2, 0, "d2", {from: holder});
+                await schains.addSchainByFoundation(5, 2, 0, "d2", zeroAddress, {from: holder});
 
                 const sChains = await schainsInternal.getSchains();
                 sChains.length.should.be.equal(1);
@@ -654,7 +662,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeA
 
             it("should assign schain creator on different address and create large schain", async () => {
                 await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), holder, {from: owner});
-                await schains.addSchainByFoundation(5, 3, 0, "d2", {from: holder});
+                await schains.addSchainByFoundation(5, 3, 0, "d2", zeroAddress, {from: holder});
 
                 const sChains = await schainsInternal.getSchains();
                 sChains.length.should.be.equal(1);
@@ -678,6 +686,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeA
                         "0x7f0000" + hexIndex, // public ip
                         ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')], // public key
                         "D2-" + hexIndex, // name
+                        "somedomain.name",
                         {from: nodeAddress});
                 }
             });
@@ -957,6 +966,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeA
                     "0x7f0000" + hexIndex, // public ip
                     ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')], // public key
                     "D2-" + hexIndex, // name
+                    "somedomain.name",
                     {from: nodeAddress});
             }
             await schains.addSchain(
@@ -983,6 +993,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeA
                 "0x7f000010", // public ip
                 ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')], // public key
                 "D2-10", // name
+                "somedomain.name",
                 {from: nodeAddress});
             await skaleManager.createNode(
                 8545, // port
@@ -991,6 +1002,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeA
                 "0x7f000011", // public ip
                 ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')], // public key
                 "D2-11", // name
+                "somedomain.name",
                 {from: nodeAddress});
 
         });
@@ -1541,6 +1553,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeA
                     "0x7f0000" + hexIndex, // public ip
                     ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')], // public key
                     "D2-" + hexIndex, // name
+                    "somedomain.name",
                     {from: nodeAddress});
             }
             await schains.addSchain(
@@ -1658,6 +1671,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeA
                     "0x7f0000" + hexIndex, // public ip
                     ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')], // public key
                     "D2-" + hexIndex, // name
+                    "somedomain.name",
                     {from: nodeAddress});
             }
             const pubKey2 = ec.keyFromPrivate(String(privateKeys[4]).slice(2)).getPublic();
@@ -1668,6 +1682,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeA
                 "0x7f0000ff", // public ip
                 ["0x" + pubKey2.x.toString('hex'), "0x" + pubKey2.y.toString('hex')], // public key
                 "D2-ff", // name
+                "somedomain.name",
                 {from: nodeAddress2});
             const pubKey3 = ec.keyFromPrivate(String(privateKeys[5]).slice(2)).getPublic();
             await skaleManager.createNode(
@@ -1677,6 +1692,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeA
                 "0x7f0000fe", // public ip
                 ["0x" + pubKey3.x.toString('hex'), "0x" + pubKey3.y.toString('hex')], // public key
                 "D2-fe", // name
+                "somedomain.name",
                 {from: nodeAddress3});
             await schains.addSchain(
                 holder,
@@ -1889,6 +1905,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeA
     //                 "0x7f0000" + hexIndex, // public ip
     //                 ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')], // public key
     //                 "D2-" + hexIndex, // name
+    //                 "somedomain.name",
     //                 {from: nodeAddress});
     //         }
 

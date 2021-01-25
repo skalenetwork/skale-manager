@@ -90,7 +90,8 @@ contract("SchainsInternal", ([owner, holder]) => {
                     ip: "0x7f000001",
                     publicIp: "0x7f000001",
                     publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
-                    name: "D2-01"
+                    name: "D2-01",
+                    domainName: "somedomain.name"
                 });
         });
 
@@ -274,7 +275,8 @@ contract("SchainsInternal", ([owner, holder]) => {
                             ip: "0x7f0000" + hexIndex,
                             publicIp: "0x7f0000" + hexIndex,
                             publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
-                            name: "D2-" + hexIndex
+                            name: "D2-" + hexIndex,
+                            domainName: "somedomain.name"
                         }
                     );
                 }

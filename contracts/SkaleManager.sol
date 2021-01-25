@@ -105,7 +105,8 @@ contract SkaleManager is IERC777Recipient, Permissions {
         bytes4 ip,
         bytes4 publicIp,
         bytes32[2] calldata publicKey,
-        string calldata name
+        string calldata name,
+        string calldata domainName
     )
         external
         reimburseGasByValidator
@@ -120,7 +121,9 @@ contract SkaleManager is IERC777Recipient, Permissions {
             publicIp: publicIp,
             port: port,
             publicKey: publicKey,
-            nonce: nonce});
+            nonce: nonce,
+            domainName: domainName
+        });
         nodes.createNode(msg.sender, params);
     }
 

@@ -33,7 +33,6 @@ contract("Wallets", ([owner, validator, node]) => {
     });
 
     it("should recharge validator wallet", async() => {
-        const nodeBalance = (await wallets.nodeBalance(owner)).toString();
         const amount = 1e9.toString();
         const walletBeforeRecharging = await web3.eth.getBalance(wallets.address);
         assert.equal(walletBeforeRecharging, "0");
