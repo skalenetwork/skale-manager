@@ -58,7 +58,12 @@ contract Wallets is Permissions {
 
     function reimburseGasByValidator(address payable node, uint amount) external allow("SkaleManager") {
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
-        uint validatorId = validatorService.getValidatorIdByNodeAddress(node);
+        uint validatorId;
+        try validatorService.getValidatorIdByNodeAddress(node) returns (uint valId) {
+            validatorId = valId;
+        } catch {
+            return;
+        }
         if (amount <= validatorWallets[validatorId]) {
             validatorWallets[validatorId] = validatorWallets[validatorId].sub(amount);
             emit NodeWalletReimbursed(node, amount);
