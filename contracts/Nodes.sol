@@ -617,33 +617,33 @@ contract Nodes is Permissions {
         return numberOfActiveNodes.add(numberOfLeavingNodes);
     }
 
-    // /**
-    //  * @dev Returns IPs of active nodes.
-    //  */
-    // function getActiveNodeIPs() external view returns (bytes4[] memory activeNodeIPs) {
-    //     activeNodeIPs = new bytes4[](numberOfActiveNodes);
-    //     uint indexOfActiveNodeIPs = 0;
-    //     for (uint indexOfNodes = 0; indexOfNodes < nodes.length; indexOfNodes++) {
-    //         if (isNodeActive(indexOfNodes)) {
-    //             activeNodeIPs[indexOfActiveNodeIPs] = nodes[indexOfNodes].ip;
-    //             indexOfActiveNodeIPs++;
-    //         }
-    //     }
-    // }
+    /**
+     * @dev Returns IPs of active nodes.
+     */
+    function getActiveNodeIPs() external view returns (bytes4[] memory activeNodeIPs) {
+        activeNodeIPs = new bytes4[](numberOfActiveNodes);
+        uint indexOfActiveNodeIPs = 0;
+        for (uint indexOfNodes = 0; indexOfNodes < nodes.length; indexOfNodes++) {
+            if (isNodeActive(indexOfNodes)) {
+                activeNodeIPs[indexOfActiveNodeIPs] = nodes[indexOfNodes].ip;
+                indexOfActiveNodeIPs++;
+            }
+        }
+    }
 
-    // /**
-    //  * @dev Returns active nodes linked to the `msg.sender` (validator address).
-    //  */
-    // function getActiveNodesByAddress() external view returns (uint[] memory activeNodesByAddress) {
-    //     activeNodesByAddress = new uint[](nodeIndexes[msg.sender].numberOfNodes);
-    //     uint indexOfActiveNodesByAddress = 0;
-    //     for (uint indexOfNodes = 0; indexOfNodes < nodes.length; indexOfNodes++) {
-    //         if (isNodeExist(msg.sender, indexOfNodes) && isNodeActive(indexOfNodes)) {
-    //             activeNodesByAddress[indexOfActiveNodesByAddress] = indexOfNodes;
-    //             indexOfActiveNodesByAddress++;
-    //         }
-    //     }
-    // }
+    /**
+     * @dev Returns active nodes linked to the `msg.sender` (validator address).
+     */
+    function getActiveNodesByAddress() external view returns (uint[] memory activeNodesByAddress) {
+        activeNodesByAddress = new uint[](nodeIndexes[msg.sender].numberOfNodes);
+        uint indexOfActiveNodesByAddress = 0;
+        for (uint indexOfNodes = 0; indexOfNodes < nodes.length; indexOfNodes++) {
+            if (isNodeExist(msg.sender, indexOfNodes) && isNodeActive(indexOfNodes)) {
+                activeNodesByAddress[indexOfActiveNodesByAddress] = indexOfNodes;
+                indexOfActiveNodesByAddress++;
+            }
+        }
+    }
 
     /**
      * @dev Return active node IDs.
