@@ -56,13 +56,13 @@ contract Wallets is Permissions {
         reimburseGasBySchain(node, weiSpent, schainId);
     }
 
-    function reimburseGasByValidator(address payable node, uint amount) external allow("SkaleManager") {
+    function reimburseGasByValidator(address payable node, uint amount, uint valId) external allow("SkaleManager") {
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
         uint validatorId;
-        try validatorService.getValidatorIdByNodeAddress(node) returns (uint valId) {
+        if (valId != 0) {
             validatorId = valId;
-        } catch {
-            return;
+        } else {
+            validatorId = validatorService.getValidatorIdByNodeAddress(node);
         }
         if (amount <= validatorWallets[validatorId]) {
             validatorWallets[validatorId] = validatorWallets[validatorId].sub(amount);
