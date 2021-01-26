@@ -73,7 +73,7 @@ contract NodeRotation is Permissions {
     function exitFromSchain(uint nodeIndex) external allow("SkaleManager") returns (bool) {
         SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
         bytes32 schainId = schainsInternal.getActiveSchain(nodeIndex);
-        require(_checkRotation(schainId), "No free Nodes available for rotating");
+        // require(_checkRotation(schainId), "No free Nodes available for rotating");
         rotateNode(nodeIndex, schainId, true, false);
         return schainsInternal.getActiveSchain(nodeIndex) == bytes32(0) ? true : false;
     }

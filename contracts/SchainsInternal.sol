@@ -496,8 +496,8 @@ contract SchainsInternal is Permissions {
     function isAnyFreeNode(bytes32 schainId) external view returns (bool) {
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));
         uint8 space = schains[schainId].partOfNode;
-        console.log("isAnyFreeNode: ");
-        console.log(nodes.countNodesWithFreeSpace(space));
+        // console.log("isAnyFreeNode: ");
+        // console.log(nodes.countNodesWithFreeSpace(space));
         return nodes.countNodesWithFreeSpace(space) > 0;
     }
 
@@ -585,38 +585,35 @@ contract SchainsInternal is Permissions {
             "SkaleManager"
         )
     {
-        if (_exceptionsForGroups[schainHash][nodeIndex]) {
-            _exceptionsForGroups[schainHash][nodeIndex] = false;
-            // console.log("Remove node from exceptions", nodeIndex);
-            // console.log("LENGTH OF EXCEPTIONS FOR GROUPS", _lengthOfExceptionsForGroups[schainHash]);
-            _lengthOfExceptionsForGroups[schainHash] = _lengthOfExceptionsForGroups[schainHash].sub(1);
-            uint len = _nodeToLockedSchains[nodeIndex].length;
-            // console.log(len);
-            if (len > 0) {
-                if (_nodeToLockedSchains[nodeIndex][len - 1] == schainHash) {
+        console.log("Remove from exception", nodeIndex);
+        console.logBytes32(schainHash);
+        _exceptionsForGroups[schainHash][nodeIndex] = false;
+        _lengthOfExceptionsForGroups[schainHash] = _lengthOfExceptionsForGroups[schainHash].sub(1);
+        uint len = _nodeToLockedSchains[nodeIndex].length;
+        bool removed = false;
+        if (_nodeToLockedSchains[nodeIndex][len - 1] == schainHash) {
+            _nodeToLockedSchains[nodeIndex].pop();
+            removed = true;
+        } else {
+            for (uint i = len; i > 0 && !removed; i--) {
+                if (_nodeToLockedSchains[nodeIndex][i - 1] == schainHash) {
+                    _nodeToLockedSchains[nodeIndex][i - 1] = _nodeToLockedSchains[nodeIndex][len - 1];
                     _nodeToLockedSchains[nodeIndex].pop();
-                    return;
-                }
-                for (uint i = len; i > 0; i--) {
-                    if (_nodeToLockedSchains[nodeIndex][i - 1] == schainHash) {
-                        _nodeToLockedSchains[nodeIndex][i - 1] = _nodeToLockedSchains[nodeIndex][len - 1];
-                        _nodeToLockedSchains[nodeIndex].pop();
-                        return;
-                    }
+                    removed = true;
                 }
             }
-            len = _schainToExceptionNodes[schainHash].length;
-            if (len > 0) {
-                if (_schainToExceptionNodes[schainHash][len - 1] == nodeIndex) {
+        }
+        len = _schainToExceptionNodes[schainHash].length;
+        removed = false;
+        if (_schainToExceptionNodes[schainHash][len - 1] == nodeIndex) {
+            _schainToExceptionNodes[schainHash].pop();
+            removed = true;
+        } else {
+            for (uint i = len; i > 0 && !removed; i--) {
+                if (_schainToExceptionNodes[schainHash][i - 1] == nodeIndex) {
+                    _schainToExceptionNodes[schainHash][i - 1] = _schainToExceptionNodes[schainHash][len - 1];
                     _schainToExceptionNodes[schainHash].pop();
-                    return;
-                }
-                for (uint i = len; i > 0; i--) {
-                    if (_schainToExceptionNodes[schainHash][i - 1] == nodeIndex) {
-                        _schainToExceptionNodes[schainHash][i - 1] = _schainToExceptionNodes[schainHash][len - 1];
-                        _schainToExceptionNodes[schainHash].pop();
-                        return;
-                    }
+                    removed = true;
                 }
             }
         }

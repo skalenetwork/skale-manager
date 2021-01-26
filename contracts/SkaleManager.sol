@@ -133,7 +133,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
         SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
         ConstantsHolder constants = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
         nodeRotation.freezeSchains(nodeIndex);
-        console.log(nodes.countNodesWithFreeSpace(32));
+        // console.log(nodes.countNodesWithFreeSpace(32));
         if (nodes.isNodeActive(nodeIndex)) {
             require(nodes.initExit(nodeIndex), "Initialization of node exit is failed");
             // console.log("Start removing");

@@ -617,33 +617,33 @@ contract Nodes is Permissions {
         return numberOfActiveNodes.add(numberOfLeavingNodes);
     }
 
-    /**
-     * @dev Returns IPs of active nodes.
-     */
-    function getActiveNodeIPs() external view returns (bytes4[] memory activeNodeIPs) {
-        activeNodeIPs = new bytes4[](numberOfActiveNodes);
-        uint indexOfActiveNodeIPs = 0;
-        for (uint indexOfNodes = 0; indexOfNodes < nodes.length; indexOfNodes++) {
-            if (isNodeActive(indexOfNodes)) {
-                activeNodeIPs[indexOfActiveNodeIPs] = nodes[indexOfNodes].ip;
-                indexOfActiveNodeIPs++;
-            }
-        }
-    }
+    // /**
+    //  * @dev Returns IPs of active nodes.
+    //  */
+    // function getActiveNodeIPs() external view returns (bytes4[] memory activeNodeIPs) {
+    //     activeNodeIPs = new bytes4[](numberOfActiveNodes);
+    //     uint indexOfActiveNodeIPs = 0;
+    //     for (uint indexOfNodes = 0; indexOfNodes < nodes.length; indexOfNodes++) {
+    //         if (isNodeActive(indexOfNodes)) {
+    //             activeNodeIPs[indexOfActiveNodeIPs] = nodes[indexOfNodes].ip;
+    //             indexOfActiveNodeIPs++;
+    //         }
+    //     }
+    // }
 
-    /**
-     * @dev Returns active nodes linked to the `msg.sender` (validator address).
-     */
-    function getActiveNodesByAddress() external view returns (uint[] memory activeNodesByAddress) {
-        activeNodesByAddress = new uint[](nodeIndexes[msg.sender].numberOfNodes);
-        uint indexOfActiveNodesByAddress = 0;
-        for (uint indexOfNodes = 0; indexOfNodes < nodes.length; indexOfNodes++) {
-            if (isNodeExist(msg.sender, indexOfNodes) && isNodeActive(indexOfNodes)) {
-                activeNodesByAddress[indexOfActiveNodesByAddress] = indexOfNodes;
-                indexOfActiveNodesByAddress++;
-            }
-        }
-    }
+    // /**
+    //  * @dev Returns active nodes linked to the `msg.sender` (validator address).
+    //  */
+    // function getActiveNodesByAddress() external view returns (uint[] memory activeNodesByAddress) {
+    //     activeNodesByAddress = new uint[](nodeIndexes[msg.sender].numberOfNodes);
+    //     uint indexOfActiveNodesByAddress = 0;
+    //     for (uint indexOfNodes = 0; indexOfNodes < nodes.length; indexOfNodes++) {
+    //         if (isNodeExist(msg.sender, indexOfNodes) && isNodeActive(indexOfNodes)) {
+    //             activeNodesByAddress[indexOfActiveNodesByAddress] = indexOfNodes;
+    //             indexOfActiveNodesByAddress++;
+    //         }
+    //     }
+    // }
 
     /**
      * @dev Return active node IDs.
@@ -716,6 +716,7 @@ contract Nodes is Permissions {
     }
 
     function makeNodeInvisible(uint nodeIndex) public allowThree("SchainsInternal", "Nodes", "SkaleManager") {
+        // console.log("Make node invisible", nodeIndex);
         _removeNodeFromSpaceOfNodes(nodeIndex);
         spaceOfNodes[nodeIndex].invisible = true;
         delete spaceOfNodes[nodeIndex].indexInSpaceMap;
@@ -786,6 +787,8 @@ contract Nodes is Permissions {
      * @dev Moves a node to a new space mapping.
      */
     function _moveNodeToNewSpaceMap(uint nodeIndex, uint8 newSpace) private {
+        // console.log("Move node to new space", nodeIndex);
+        // console.log("Space", newSpace);
         _removeNodeFromSpaceOfNodes(nodeIndex);
         if (!spaceOfNodes[nodeIndex].invisible) {
             spaceToNodes[newSpace].push(nodeIndex);
@@ -892,6 +895,7 @@ contract Nodes is Permissions {
      * @dev Deletes node from array.
      */
     function _deleteNode(uint nodeIndex) private {
+        // console.log("Delete node", nodeIndex);
         _removeNodeFromSpaceOfNodes(nodeIndex);
         delete spaceOfNodes[nodeIndex].freeSpace;
         delete spaceOfNodes[nodeIndex].indexInSpaceMap;
@@ -901,6 +905,9 @@ contract Nodes is Permissions {
         if (!spaceOfNodes[nodeIndex].invisible) {
             uint8 space = spaceOfNodes[nodeIndex].freeSpace;
             uint indexInArray = spaceOfNodes[nodeIndex].indexInSpaceMap;
+            // console.log("Node ", nodeIndex);
+            // console.log(space);
+            // console.log(spaceToNodes[space].length);
             uint len = spaceToNodes[space].length.sub(1);
             if (indexInArray < len) {
                 uint shiftedIndex = spaceToNodes[space][len];

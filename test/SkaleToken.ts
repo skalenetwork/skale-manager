@@ -21,11 +21,6 @@ contract("SkaleToken", ([owner, holder, receiver, nilAddress, accountWith99]) =>
   const TOKEN_CAP: number = 7000000000;
   const TOTAL_SUPPLY = 5000000000;
 
-  console.log("Holder", holder);
-  console.log("Owner", owner);
-  console.log("NilAddress", nilAddress);
-  console.log("Receiver", receiver);
-
   beforeEach(async () => {
     contractManager = await deployContractManager();
 

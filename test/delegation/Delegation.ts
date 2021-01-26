@@ -780,7 +780,7 @@ contract("Delegation", ([owner,
         it("should be possible to distribute bounty accross thousands of holders", async () => {
             let holdersAmount = 1000;
             if (process.env.CI) {
-                console.log("Reduce holders amount to fit Travis timelimit");
+                console.log("Reduce holders amount to fit GitHub timelimit");
                 holdersAmount = 10;
             }
             const delegatedAmount = 1e7;
