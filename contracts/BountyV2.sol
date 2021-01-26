@@ -21,6 +21,8 @@
 
 pragma solidity 0.6.10;
 
+import "@nomiclabs/buidler/console.sol";
+
 import "./delegation/DelegationController.sol";
 import "./delegation/PartialDifferences.sol";
 import "./delegation/TimeHelpers.sol";
@@ -259,6 +261,7 @@ contract BountyV2 is Permissions {
         view
         returns (uint)
     {
+        console.log("In _calculateMaximumBountyAmount");
         if (nodes.isNodeLeft(nodeIndex)) {
             return 0;
         }
@@ -297,9 +300,20 @@ contract BountyV2 is Permissions {
         uint paidToValidator
     )
         private
-        pure
+        view
         returns (uint)
     {
+        console.log("In _calculateBountyShare");
+        console.log("monthBounty");
+        console.log(monthBounty);
+        console.log("effectiveDelegated");
+        console.log(effectiveDelegated);
+        console.log("effectiveDelegatedSum");
+        console.log(effectiveDelegatedSum);
+        console.log("maxNodesAmount");
+        console.log(maxNodesAmount);
+        console.log("paidToValidator");
+        console.log(paidToValidator);
         if (maxNodesAmount > 0) {
             uint totalBountyShare = monthBounty
                 .mul(effectiveDelegated)
@@ -417,28 +431,17 @@ contract BountyV2 is Permissions {
         uint lastRewardTimestamp = nodes.getNodeLastRewardDate(nodeIndex);
         uint lastRewardMonth = timeHelpers.timestampToMonth(lastRewardTimestamp);
         uint lastRewardMonthStart = timeHelpers.monthToTimestamp(lastRewardMonth);
-        uint timePassedAfterMonthStart = lastRewardTimestamp.sub(lastRewardMonthStart);
         uint currentMonth = timeHelpers.getCurrentMonth();
         assert(lastRewardMonth <= currentMonth);
 
-        if (lastRewardMonth == currentMonth) {
-            uint nextMonthStart = timeHelpers.monthToTimestamp(currentMonth.add(1));
+        if (lastRewardMonth == currentMonth &&
+            lastRewardMonthStart.add(nodeCreationWindowSeconds) <= lastRewardTimestamp)
+        {
             uint nextMonthFinish = timeHelpers.monthToTimestamp(lastRewardMonth.add(2));
-            if (lastRewardTimestamp < lastRewardMonthStart.add(nodeCreationWindowSeconds)) {
-                return nextMonthStart.sub(BOUNTY_WINDOW_SECONDS);
-            } else {
-                return _min(nextMonthStart.add(timePassedAfterMonthStart), nextMonthFinish.sub(BOUNTY_WINDOW_SECONDS));
-            }
-        } else if (lastRewardMonth.add(1) == currentMonth) {
-            uint currentMonthStart = timeHelpers.monthToTimestamp(currentMonth);
-            uint currentMonthFinish = timeHelpers.monthToTimestamp(currentMonth.add(1));
-            return _min(
-                currentMonthStart.add(_max(timePassedAfterMonthStart, nodeCreationWindowSeconds)),
-                currentMonthFinish.sub(BOUNTY_WINDOW_SECONDS)
-            );
+            return nextMonthFinish.sub(BOUNTY_WINDOW_SECONDS);
         } else {
-            uint currentMonthStart = timeHelpers.monthToTimestamp(currentMonth);
-            return currentMonthStart.add(nodeCreationWindowSeconds);
+            uint currentMonthFinish = timeHelpers.monthToTimestamp(currentMonth.add(1));
+            return currentMonthFinish.sub(BOUNTY_WINDOW_SECONDS);
         }
     }
 

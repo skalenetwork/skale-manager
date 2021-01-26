@@ -26,7 +26,8 @@
     "TokenLaunchLocker": "TokenLaunchLocker",
     "KeyStorage": "KeyStorage",
     "Bounty": "Bounty",
-    "BountyV2": "BountyV2"
+    "BountyV2": "BountyV2",
+    "TimeHelpersWithDebug": "TimeHelpersWithDebug"
   },
   "dependencies": {},
   "name": "skale-manager",
