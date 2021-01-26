@@ -67,7 +67,6 @@ contract Nodes is Permissions {
         uint finishTime;
         NodeStatus status;
         uint validatorId;
-        string domainName;
     }
 
     // struct to note which Nodes and which number of Nodes owned by user
@@ -113,6 +112,8 @@ contract Nodes is Permissions {
     uint public numberOfActiveNodes;
     uint public numberOfLeavingNodes;
     uint public numberOfLeftNodes;
+
+    mapping (uint => string) public domainNames;
 
     /**
      * @dev Emitted when a node is created.
@@ -452,7 +453,7 @@ contract Nodes is Permissions {
         external
         onlyNodeOrAdmin(nodeIndex)
     {
-        nodes[nodeIndex].domainName = domainName;
+        domainNames[nodeIndex] = domainName;
     }
 
     /**
@@ -514,7 +515,7 @@ contract Nodes is Permissions {
         checkNodeExists(nodeIndex)
         returns (string memory)
     {
-        return nodes[nodeIndex].domainName;
+        return domainNames[nodeIndex];
     }
 
     /**
@@ -870,8 +871,7 @@ contract Nodes is Permissions {
             lastRewardDate: block.timestamp,
             finishTime: 0,
             status: NodeStatus.Active,
-            validatorId: validatorId,
-            domainName: domainName
+            validatorId: validatorId
         }));
         nodeIndex = nodes.length.sub(1);
         validatorToNodeIndexes[validatorId].push(nodeIndex);
@@ -881,6 +881,7 @@ contract Nodes is Permissions {
         nodesNameToIndex[nodeId] = nodeIndex;
         nodeIndexes[from].isNodeExist[nodeIndex] = true;
         nodeIndexes[from].numberOfNodes++;
+        domainNames[nodeIndex] = domainName;
         spaceOfNodes.push(SpaceManaging({
             freeSpace: constantsHolder.TOTAL_SPACE_ON_NODE(),
             indexInSpaceMap: spaceToNodes[constantsHolder.TOTAL_SPACE_ON_NODE()].length
