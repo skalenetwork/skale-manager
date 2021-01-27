@@ -415,6 +415,13 @@ contract Nodes is Permissions {
         return _checkValidatorPositionToMaintainNode(validatorId, position);
     }
 
+    function setDomainName(uint nodeIndex, string memory domainName)
+        external
+        onlyNodeOrAdmin(nodeIndex)
+    {
+        nodes[nodeIndex].domainName = domainName;
+    }
+
     /**
      * @dev Allows Node to set In_Maintenance status.
      * 
@@ -441,11 +448,12 @@ contract Nodes is Permissions {
         _setNodeActive(nodeIndex);
     }
 
-    function setDomainName(uint nodeIndex, string memory domainName)
-        external
-        onlyNodeOrAdmin(nodeIndex)
-    {
-        nodes[nodeIndex].domainName = domainName;
+    function makeNodeVisible(uint nodeIndex) external allow("SchainsInternal") {
+        _makeNodeVisible(nodeIndex);
+    }
+
+    function makeNodeInvisible(uint nodeIndex) external allow("SchainsInternal") {
+        _makeNodeInvisible(nodeIndex);
     }
 
     function getRandomNodeWithFreeSpace(uint8 freeSpace, uint salt) external view returns (uint) {
@@ -705,23 +713,6 @@ contract Nodes is Permissions {
         numberOfLeftNodes = 0;
     }
 
-    function makeNodeVisible(uint nodeIndex) public allowThree("SchainsInternal", "Nodes", "SkaleManager") {
-        uint8 space = spaceOfNodes[nodeIndex].freeSpace;
-        spaceToNodes[space].push(nodeIndex);
-        spaceOfNodes[nodeIndex].indexInSpaceMap = spaceToNodes[space].length.sub(1);
-        delete spaceOfNodes[nodeIndex].invisible;
-        if (space > 0) {
-            _tree.addToPlace(space, 1);
-        }
-    }
-
-    function makeNodeInvisible(uint nodeIndex) public allowThree("SchainsInternal", "Nodes", "SkaleManager") {
-        // console.log("Make node invisible", nodeIndex);
-        _removeNodeFromSpaceOfNodes(nodeIndex);
-        spaceOfNodes[nodeIndex].invisible = true;
-        delete spaceOfNodes[nodeIndex].indexInSpaceMap;
-    }
-
     /**
      * @dev Returns the Validator ID for a given node.
      */
@@ -787,8 +778,6 @@ contract Nodes is Permissions {
      * @dev Moves a node to a new space mapping.
      */
     function _moveNodeToNewSpaceMap(uint nodeIndex, uint8 newSpace) private {
-        // console.log("Move node to new space", nodeIndex);
-        // console.log("Space", newSpace);
         _removeNodeFromSpaceOfNodes(nodeIndex);
         if (!spaceOfNodes[nodeIndex].invisible) {
             spaceToNodes[newSpace].push(nodeIndex);
@@ -806,7 +795,7 @@ contract Nodes is Permissions {
     function _setNodeActive(uint nodeIndex) private {
         nodes[nodeIndex].status = NodeStatus.Active;
         numberOfActiveNodes = numberOfActiveNodes.add(1);
-        makeNodeVisible(nodeIndex);
+        _makeNodeVisible(nodeIndex);
     }
 
     /**
@@ -815,7 +804,7 @@ contract Nodes is Permissions {
     function _setNodeInMaintenance(uint nodeIndex) private {
         nodes[nodeIndex].status = NodeStatus.In_Maintenance;
         numberOfActiveNodes = numberOfActiveNodes.sub(1);
-        makeNodeInvisible(nodeIndex);
+        _makeNodeInvisible(nodeIndex);
     }
 
     /**
@@ -841,7 +830,7 @@ contract Nodes is Permissions {
         nodes[nodeIndex].status = NodeStatus.Leaving;
         numberOfActiveNodes--;
         numberOfLeavingNodes++;
-        makeNodeInvisible(nodeIndex);
+        _makeNodeInvisible(nodeIndex);
     }
 
     /**
@@ -895,7 +884,6 @@ contract Nodes is Permissions {
      * @dev Deletes node from array.
      */
     function _deleteNode(uint nodeIndex) private {
-        // console.log("Delete node", nodeIndex);
         _removeNodeFromSpaceOfNodes(nodeIndex);
         delete spaceOfNodes[nodeIndex].freeSpace;
         delete spaceOfNodes[nodeIndex].indexInSpaceMap;
@@ -905,9 +893,6 @@ contract Nodes is Permissions {
         if (!spaceOfNodes[nodeIndex].invisible) {
             uint8 space = spaceOfNodes[nodeIndex].freeSpace;
             uint indexInArray = spaceOfNodes[nodeIndex].indexInSpaceMap;
-            // console.log("Node ", nodeIndex);
-            // console.log(space);
-            // console.log(spaceToNodes[space].length);
             uint len = spaceToNodes[space].length.sub(1);
             if (indexInArray < len) {
                 uint shiftedIndex = spaceToNodes[space][len];
@@ -918,6 +903,22 @@ contract Nodes is Permissions {
             if (space > 0) {
                 _tree.removeFromPlace(space, 1);
             }
+        }
+    }
+
+    function _makeNodeInvisible(uint nodeIndex) private {
+        _removeNodeFromSpaceOfNodes(nodeIndex);
+        spaceOfNodes[nodeIndex].invisible = true;
+        delete spaceOfNodes[nodeIndex].indexInSpaceMap;
+    }
+
+    function _makeNodeVisible(uint nodeIndex) private {
+        uint8 space = spaceOfNodes[nodeIndex].freeSpace;
+        spaceToNodes[space].push(nodeIndex);
+        spaceOfNodes[nodeIndex].indexInSpaceMap = spaceToNodes[space].length.sub(1);
+        delete spaceOfNodes[nodeIndex].invisible;
+        if (space > 0) {
+            _tree.addToPlace(space, 1);
         }
     }
 
