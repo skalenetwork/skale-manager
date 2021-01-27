@@ -229,9 +229,7 @@ contract Schains is Permissions {
                 schainIndex < schainsInternal.getLengthOfSchainsForNode(nodesInGroup[i]),
                 "Some Node does not contain given Schain");
             schainsInternal.removeNodeFromSchain(nodesInGroup[i], schainId);
-            // console.log("Will remove from exceptions", nodesInGroup[i]);
             schainsInternal.removeNodeFromExceptions(schainId, nodesInGroup[i]);
-            // console.log("Removed");
             this.addSpace(nodesInGroup[i], partOfNode);
         }
         schainsInternal.deleteGroup(schainId);

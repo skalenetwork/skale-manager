@@ -1594,9 +1594,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeA
                     break;
                 }
             }
-            console.log(schainIds.length);
             for (const schainId of schainIds.reverse()) {
-                console.log(schainId);
                 await skaleManager.nodeExit(rotIndex, {from: nodeAddress});
                 await skaleDKG.setSuccesfulDKGPublic(
                     schainId,
@@ -1638,7 +1636,6 @@ contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeA
 
             skipTime(web3, 43260);
             for (const schainId of schainIds2.reverse()) {
-                console.log(schainId);
                 await skaleManager.nodeExit(rotIndex2, {from: nodeAddress});
                 await skaleDKG.setSuccesfulDKGPublic(
                     schainId,
@@ -1777,7 +1774,6 @@ contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeA
                     schainId,
                 );
             }
-            console.log(await schainsInternal.getSchainIdsForNode(rotIndex1));
             await schainsInternal.getSchainIdsForNode(rotIndex1).should.be.eventually.empty;
             let rotIndex2 = 8;
             let schainIds2 = await schainsInternal.getSchainIdsForNode(0);

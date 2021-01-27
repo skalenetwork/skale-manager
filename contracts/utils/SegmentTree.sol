@@ -23,8 +23,6 @@ pragma solidity 0.6.10;
 
 // import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
 
-import "@nomiclabs/buidler/console.sol";
-
 library SegmentTree {
 
     struct SegmentTree {

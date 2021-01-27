@@ -249,7 +249,6 @@ contract Nodes is Permissions {
     function createNode(address from, NodeCreationParams calldata params)
         external
         allow("SkaleManager")
-        // returns (uint nodeIndex)
     {
         // checks that Node has correct data
         require(params.ip != 0x0 && !nodesIPCheck[params.ip], "IP address is zero or is not available");
@@ -382,7 +381,6 @@ contract Nodes is Permissions {
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
         uint validatorId = validatorService.getValidatorIdByNodeAddress(nodeAddress);
         require(validatorService.isAuthorizedValidator(validatorId), "Validator is not authorized to create a node");
-        // uint[] memory validatorNodes = validatorToNodeIndexes[validatorId];
         require(
             _checkValidatorPositionToMaintainNode(validatorId, validatorToNodeIndexes[validatorId].length),
             "Validator must meet the Minimum Staking Requirement");
@@ -855,7 +853,6 @@ contract Nodes is Permissions {
             ip: ip,
             publicIP: publicIP,
             port: port,
-            //owner: from,
             publicKey: publicKey,
             startBlock: block.number,
             lastRewardDate: block.timestamp,
