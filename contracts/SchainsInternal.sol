@@ -323,14 +323,14 @@ contract SchainsInternal is Permissions {
         }
     }
 
-    function makeSchainNodesInvisible(bytes32 schainId) external allow("NodeRotation") {
+    function makeSchainNodesInvisible(bytes32 schainId) external allowTwo("NodeRotation", "SkaleDKG") {
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));
         for (uint i = 0; i < _schainToExceptionNodes[schainId].length; i++) {
             nodes.makeNodeInvisible(_schainToExceptionNodes[schainId][i]);
         }
     }
 
-    function makeSchainNodesVisible(bytes32 schainId) external allow("NodeRotation") {
+    function makeSchainNodesVisible(bytes32 schainId) external allowTwo("NodeRotation", "SkaleDKG") {
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));
         for (uint i = 0; i < _schainToExceptionNodes[schainId].length; i++) {
             nodes.makeNodeVisible(_schainToExceptionNodes[schainId][i]);
@@ -585,8 +585,8 @@ contract SchainsInternal is Permissions {
             "SkaleManager"
         )
     {
-        console.log("Remove from exception", nodeIndex);
-        console.logBytes32(schainHash);
+        // console.log("Remove from exception", nodeIndex);
+        // console.logBytes32(schainHash);
         _exceptionsForGroups[schainHash][nodeIndex] = false;
         _lengthOfExceptionsForGroups[schainHash] = _lengthOfExceptionsForGroups[schainHash].sub(1);
         uint len = _nodeToLockedSchains[nodeIndex].length;
