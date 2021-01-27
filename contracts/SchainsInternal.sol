@@ -318,14 +318,14 @@ contract SchainsInternal is Permissions {
         }
     }
 
-    function makeSchainNodesInvisible(bytes32 schainId) external allow("NodeRotation") {
+    function makeSchainNodesInvisible(bytes32 schainId) external allowTwo("NodeRotation", "SkaleDKG") {
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));
         for (uint i = 0; i < _schainToExceptionNodes[schainId].length; i++) {
             nodes.makeNodeInvisible(_schainToExceptionNodes[schainId][i]);
         }
     }
 
-    function makeSchainNodesVisible(bytes32 schainId) external allow("NodeRotation") {
+    function makeSchainNodesVisible(bytes32 schainId) external allowTwo("NodeRotation", "SkaleDKG") {
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));
         for (uint i = 0; i < _schainToExceptionNodes[schainId].length; i++) {
             nodes.makeNodeVisible(_schainToExceptionNodes[schainId][i]);

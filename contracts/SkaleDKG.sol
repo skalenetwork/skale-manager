@@ -715,8 +715,9 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         );
         emit BadGuy(badNode);
         emit FailedDKG(schainId);
-
+        schainsInternal.makeSchainNodesInvisible(schainId);
         if (schainsInternal.isAnyFreeNode(schainId)) {
+            schainsInternal.makeSchainNodesVisible(schainId);
             uint newNode = nodeRotation.rotateNode(
                 badNode,
                 schainId,
@@ -725,6 +726,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             );
             emit NewGuy(newNode);
         } else {
+            schainsInternal.makeSchainNodesVisible(schainId);
             _openChannel(schainId);
             schainsInternal.removeNodeFromSchain(
                 badNode,
