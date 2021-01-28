@@ -6,6 +6,11 @@ import { deployNodes } from "./nodes";
 import { deploySchainsInternal } from "./schainsInternal";
 import { deploySlashingTable } from "./slashingTable";
 import { deployNodeRotation } from "./nodeRotation";
+import { deploySkaleDKGAlright } from "./dkg/skaleDKGAlright";
+import { deploySkaleDKGBroadcast } from "./dkg/skaleDKGBroadcast";
+import { deploySkaleDKGComplaint } from "./dkg/skaleDKGComplaint";
+import { deploySkaleDKGPreResponse } from "./dkg/skaleDKGPreResponse";
+import { deploySkaleDKGResponse } from "./dkg/skaleDKGResponse";
 
 const deploySkaleDKG: (contractManager: ContractManagerInstance) => Promise<SkaleDKGInstance>
     = deployFunctionFactory("SkaleDKG",
@@ -16,6 +21,11 @@ const deploySkaleDKG: (contractManager: ContractManagerInstance) => Promise<Skal
                                 await deploySlashingTable(contractManager);
                                 await deployNodeRotation(contractManager);
                                 await deployKeyStorage(contractManager);
+                                await deploySkaleDKGAlright(contractManager);
+                                await deploySkaleDKGBroadcast(contractManager);
+                                await deploySkaleDKGComplaint(contractManager);
+                                await deploySkaleDKGPreResponse(contractManager);
+                                await deploySkaleDKGResponse(contractManager);
                             });
 
 export { deploySkaleDKG };
