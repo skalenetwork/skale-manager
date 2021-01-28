@@ -50,20 +50,15 @@ contract Wallets is Permissions {
         emit SchainWalletRecharged(msg.sender, msg.value, schainId);
     }
 
-    function refundGasBySchain(bytes32 schainId, uint nodeIndex) external allow("SkaleDKG") {
-        address payable node = payable(Nodes(contractManager.getContract("Nodes")).getNodeAddress(nodeIndex));
-        uint weiSpent = tx.gasprice * (block.gaslimit - gasleft());
-        reimburseGasBySchain(node, weiSpent, schainId);
-    }
+    // function refundGasBySchain(bytes32 schainId, uint nodeIndex) external allow("SkaleDKG") {
+    //     address payable node = payable(Nodes(contractManager.getContract("Nodes")).getNodeAddress(nodeIndex));
+    //     uint weiSpent = tx.gasprice * (block.gaslimit - gasleft());
+    //     reimburseGasBySchain(node, weiSpent, schainId);
+    // }
 
-    function reimburseGasByValidator(address payable node, uint amount, uint valId) external allow("SkaleManager") {
-        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
-        uint validatorId;
-        if (valId != 0) {
-            validatorId = valId;
-        } else {
-            validatorId = validatorService.getValidatorIdByNodeAddress(node);
-        }
+    function reimburseGasByValidator(address payable node, uint gasTotal, uint validatorId) external allow("SkaleManager") {
+        require(validatorId != 0, "ValidatorId could not be zero");
+        uint amount = tx.gasprice * (gasTotal - gasleft());
         if (amount <= validatorWallets[validatorId]) {
             validatorWallets[validatorId] = validatorWallets[validatorId].sub(amount);
             emit NodeWalletReimbursed(node, amount);
@@ -85,26 +80,35 @@ contract Wallets is Permissions {
         return validatorWallets[validatorId];
     }
 
-    function reimburseGasBySchain(
-        address payable node,
-        uint amount,
-        bytes32 schainId
+    function refundGasBySchain(
+        uint gasTotal,
+        bytes32 schainId,
+        uint nodeIndex
     )
         public
-        allowTwo("SkaleManager","SkaleDKG")
+        allow("SkaleDKG")
     {
+        address payable node = payable(Nodes(contractManager.getContract("Nodes")).getNodeAddress(nodeIndex));
+        uint amount = tx.gasprice * (gasTotal - gasleft());
         require(schainId != bytes32(0), "SchainId cannot be null");
-        if (amount <= schainWallets[schainId]) {
-            schainWallets[schainId] = schainWallets[schainId].sub(amount);
-            emit NodeWalletReimbursed(node, amount);
-            node.transfer(amount);
-        } else {
-            uint wholeAmount = schainWallets[schainId];
-            // solhint-disable-next-line reentrancy
-            schainWallets[schainId] = 0;
-            emit NodeWalletReimbursed(node, wholeAmount);
-            node.transfer(wholeAmount);
-        }
+        require(amount <= schainWallets[schainId], "Schain wallet has not enough funds");
+        schainWallets[schainId] = schainWallets[schainId].sub(amount);
+        emit NodeWalletReimbursed(node, amount);
+        node.transfer(amount);
+    }
+
+    function withdrawFundsFromSchainWallet(address payable schainOwner, bytes32 schainId) external allow("Schains") {
+        uint amount = schainWallets[schainId];
+        delete schainWallets[schainId];
+        schainOwner.transfer(amount);
+    }
+
+    function withdrawFundsFromValidatorWallet(uint amount) external {
+        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
+        uint validatorId = validatorService.getValidatorId(msg.sender);
+        require(amount <= validatorWallets[validatorId], "Validator wallet has not enough funds");
+        validatorWallets[validatorId] = validatorWallets[validatorId].sub(amount);
+        msg.sender.transfer(amount);
     }
 
     function initialize(address contractsAddress) public override initializer {

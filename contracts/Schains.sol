@@ -30,6 +30,7 @@ import "./SkaleVerifier.sol";
 import "./utils/FieldOperations.sol";
 import "./NodeRotation.sol";
 import "./interfaces/ISkaleDKG.sol";
+import "./Wallets.sol";
 
 
 /**
@@ -179,7 +180,6 @@ contract Schains is Permissions {
      * - Executed by schain owner.
      */
     function deleteSchain(address from, string calldata name) external allow("SkaleManager") {
-        NodeRotation nodeRotation = NodeRotation(contractManager.getContract("NodeRotation"));
         SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
         bytes32 schainId = keccak256(abi.encodePacked(name));
         require(
@@ -211,7 +211,8 @@ contract Schains is Permissions {
         schainsInternal.deleteGroup(schainId);
         schainsInternal.removeSchain(schainId, from);
         schainsInternal.removeHolesForSchain(schainId);
-        nodeRotation.removeRotation(schainId);
+        NodeRotation(contractManager.getContract("NodeRotation")).removeRotation(schainId);
+        Wallets(contractManager.getContract("Wallets")).withdrawFundsFromSchainWallet(payable(from), schainId);
         emit SchainDeleted(from, name, schainId);
     }
 

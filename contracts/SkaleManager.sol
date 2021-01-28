@@ -74,12 +74,6 @@ contract SkaleManager is IERC777Recipient, Permissions {
         uint gasSpend
     );
 
-    modifier reimburseGasByValidator() {
-        _;
-        _reimburseGasByValidator();
-
-    }
-
     function tokensReceived(
         address, // operator
         address from,
@@ -109,7 +103,6 @@ contract SkaleManager is IERC777Recipient, Permissions {
         string calldata domainName
     )
         external
-        reimburseGasByValidator
     {
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));
         // validators checks inside checkPossibilityCreatingNode
@@ -128,6 +121,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
     }
 
     function nodeExit(uint nodeIndex) external {
+        uint gasTotal = gasleft();
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
         SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
         ConstantsHolder constants = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
@@ -143,7 +137,6 @@ contract SkaleManager is IERC777Recipient, Permissions {
             require(nodes.initExit(nodeIndex), "Initialization of node exit is failed");
         }
         require(nodes.isNodeLeaving(nodeIndex), "Node should be Leaving");
-        uint gasSpentOnNodeRotation = gasleft();
         nodeRotation.freezeSchains(nodeIndex);
         bool completed;
         bool isSchains = false;
@@ -154,16 +147,12 @@ contract SkaleManager is IERC777Recipient, Permissions {
         } else {
             completed = true;
         }
-        gasSpentOnNodeRotation -= gasleft();
         if (completed) {
             require(nodes.completeExit(nodeIndex), "Finishing of node exit is failed");
             nodes.changeNodeFinishTime(nodeIndex, now.add(isSchains ? constants.rotationDelay() : 0));
             nodes.deleteNodeForValidator(validatorId, nodeIndex);
         }
-        if(validatorService.validatorAddressExists(msg.sender) || _isOwner()) {
-            return;
-        }
-        _reimburseGasDuringNodeExit(gasSpentOnNodeRotation, schainForRotation, validatorId);
+        _reimburseGasByValidator(gasTotal, validatorId);
     }
 
     function deleteSchain(string calldata name) external {
@@ -177,7 +166,8 @@ contract SkaleManager is IERC777Recipient, Permissions {
         schains.deleteSchainByRoot(name);
     }
 
-    function getBounty(uint nodeIndex) external reimburseGasByValidator {
+    function getBounty(uint nodeIndex) external {
+        uint gasTotal = gasleft();
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));
         require(nodes.isNodeExist(msg.sender, nodeIndex), "Node does not exist for Message sender");
         require(nodes.isTimeForReward(nodeIndex), "Not time for bounty");
@@ -187,12 +177,13 @@ contract SkaleManager is IERC777Recipient, Permissions {
         uint bounty = bountyContract.calculateBounty(nodeIndex);
 
         nodes.changeNodeLastRewardDate(nodeIndex);
-
+        uint validatorId = nodes.getValidatorId(nodeIndex);
         if (bounty > 0) {
-            _payBounty(bounty, nodes.getValidatorId(nodeIndex));
+            _payBounty(bounty, validatorId);
         }
 
         _emitBountyEvent(nodeIndex, msg.sender, 0, 0, bounty);
+        _reimburseGasByValidator(gasTotal, validatorId);
     }
 
     function initialize(address newContractsAddress) public override initializer {
@@ -244,37 +235,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
             gasleft());
     }
 
-    function _reimburseGasByValidator() private {
-        uint weiSpent = tx.gasprice * (block.gaslimit - gasleft());
-        Wallets(contractManager.getContract("Wallets")).reimburseGasByValidator(msg.sender, weiSpent, 0);
-    }
-
-    function _reimburseGasDuringNodeExit(
-        uint gasSpentOnNodeRotation,
-        bytes32 schainForRotation,
-        uint validatorId
-    )
-        private
-    {
-        Wallets wallets = Wallets(contractManager.getContract("Wallets"));
-        uint gasSpentOnNodeExit = block.gaslimit - gasSpentOnNodeRotation - gasleft();
-        if (schainForRotation == bytes32(0)) {
-            wallets.reimburseGasByValidator(
-                msg.sender,
-                tx.gasprice * (gasSpentOnNodeExit + gasSpentOnNodeRotation),
-                validatorId
-            );
-        } else {
-            wallets.reimburseGasByValidator(
-                msg.sender,
-                tx.gasprice * gasSpentOnNodeExit,
-                validatorId
-            );
-            wallets.reimburseGasBySchain(
-                msg.sender,
-                tx.gasprice * gasSpentOnNodeRotation,
-                schainForRotation
-            );
-        }
+    function _reimburseGasByValidator(uint gasTotal, uint validatorId) private {
+        Wallets(contractManager.getContract("Wallets")).reimburseGasByValidator(msg.sender, gasTotal, validatorId);
     }
 }
