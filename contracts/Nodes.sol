@@ -82,7 +82,6 @@ contract Nodes is Permissions {
     struct SpaceManaging {
         uint8 freeSpace;
         uint indexInSpaceMap;
-        bool invisible;
     }
 
     // TODO: move outside the contract
@@ -117,6 +116,8 @@ contract Nodes is Permissions {
     uint public numberOfActiveNodes;
     uint public numberOfLeavingNodes;
     uint public numberOfLeftNodes;
+
+    mapping (uint => bool) private _visible;
 
     SegmentTree.SegmentTree private _tree;
 
@@ -777,7 +778,7 @@ contract Nodes is Permissions {
      */
     function _moveNodeToNewSpaceMap(uint nodeIndex, uint8 newSpace) private {
         _removeNodeFromSpaceOfNodes(nodeIndex);
-        if (!spaceOfNodes[nodeIndex].invisible) {
+        if (_visible[nodeIndex]) {
             spaceToNodes[newSpace].push(nodeIndex);
             spaceOfNodes[nodeIndex].indexInSpaceMap = spaceToNodes[newSpace].length.sub(1);
             if (newSpace > 0) {
@@ -871,8 +872,7 @@ contract Nodes is Permissions {
         nodeIndexes[from].numberOfNodes++;
         spaceOfNodes.push(SpaceManaging({
             freeSpace: constantsHolder.TOTAL_SPACE_ON_NODE(),
-            indexInSpaceMap: spaceToNodes[constantsHolder.TOTAL_SPACE_ON_NODE()].length,
-            invisible: false
+            indexInSpaceMap: spaceToNodes[constantsHolder.TOTAL_SPACE_ON_NODE()].length
         }));
         _setNodeActive(nodeIndex);
     }
@@ -884,10 +884,11 @@ contract Nodes is Permissions {
         _removeNodeFromSpaceOfNodes(nodeIndex);
         delete spaceOfNodes[nodeIndex].freeSpace;
         delete spaceOfNodes[nodeIndex].indexInSpaceMap;
+        delete _visible[nodeIndex];
     }
 
     function _removeNodeFromSpaceOfNodes(uint nodeIndex) private {
-        if (!spaceOfNodes[nodeIndex].invisible) {
+        if (_visible[nodeIndex]) {
             uint8 space = spaceOfNodes[nodeIndex].freeSpace;
             uint indexInArray = spaceOfNodes[nodeIndex].indexInSpaceMap;
             uint len = spaceToNodes[space].length.sub(1);
@@ -905,17 +906,19 @@ contract Nodes is Permissions {
 
     function _makeNodeInvisible(uint nodeIndex) private {
         _removeNodeFromSpaceOfNodes(nodeIndex);
-        spaceOfNodes[nodeIndex].invisible = true;
+        delete _visible[nodeIndex];
         delete spaceOfNodes[nodeIndex].indexInSpaceMap;
     }
 
     function _makeNodeVisible(uint nodeIndex) private {
-        uint8 space = spaceOfNodes[nodeIndex].freeSpace;
-        spaceToNodes[space].push(nodeIndex);
-        spaceOfNodes[nodeIndex].indexInSpaceMap = spaceToNodes[space].length.sub(1);
-        delete spaceOfNodes[nodeIndex].invisible;
-        if (space > 0) {
-            _tree.addToPlace(space, 1);
+        if (!_visible[nodeIndex]) {
+            uint8 space = spaceOfNodes[nodeIndex].freeSpace;
+            spaceToNodes[space].push(nodeIndex);
+            spaceOfNodes[nodeIndex].indexInSpaceMap = spaceToNodes[space].length.sub(1);
+            _visible[nodeIndex] = true;
+            if (space > 0) {
+                _tree.addToPlace(space, 1);
+            }
         }
     }
 

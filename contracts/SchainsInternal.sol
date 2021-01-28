@@ -26,7 +26,6 @@ import "./ConstantsHolder.sol";
 import "./Nodes.sol";
 import "./interfaces/ISkaleDKG.sol";
 
-import "@nomiclabs/buidler/console.sol";
 
 /**
  * @title SchainsInternal
@@ -84,8 +83,6 @@ contract SchainsInternal is Permissions {
     //   schain hash =>   node index  => index of place
     // index of place is a number from 1 to max number of slots on node(128)
     mapping (bytes32 => mapping (uint => uint)) public placeOfSchainOnNode;
-
-    mapping (bytes32 => uint) private _lengthOfExceptionsForGroups;
 
     mapping (uint => bytes32[]) private _nodeToLockedSchains;
 
@@ -231,7 +228,6 @@ contract SchainsInternal is Permissions {
      */
     function setException(bytes32 schainId, uint nodeIndex) external allowTwo("Schains", "NodeRotation") {
         _exceptionsForGroups[schainId][nodeIndex] = true;
-        _lengthOfExceptionsForGroups[schainId] = _lengthOfExceptionsForGroups[schainId].add(1);
         _nodeToLockedSchains[nodeIndex].push(schainId);
         _schainToExceptionNodes[schainId].push(nodeIndex);
     }
@@ -491,7 +487,6 @@ contract SchainsInternal is Permissions {
     function isAnyFreeNode(bytes32 schainId) external view returns (bool) {
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));
         uint8 space = schains[schainId].partOfNode;
-        console.log(nodes.countNodesWithFreeSpace(space));
         return nodes.countNodesWithFreeSpace(space) > 0;
     }
 
@@ -579,7 +574,6 @@ contract SchainsInternal is Permissions {
         )
     {
         _exceptionsForGroups[schainHash][nodeIndex] = false;
-        _lengthOfExceptionsForGroups[schainHash] = _lengthOfExceptionsForGroups[schainHash].sub(1);
         uint len = _nodeToLockedSchains[nodeIndex].length;
         bool removed = false;
         if (_nodeToLockedSchains[nodeIndex][len - 1] == schainHash) {
@@ -635,7 +629,6 @@ contract SchainsInternal is Permissions {
             if (!_exceptionsForGroups[schainId][node]) {
                 nodesInGroup[i] = node;
                 _exceptionsForGroups[schainId][node] = true;
-                _lengthOfExceptionsForGroups[schainId] = _lengthOfExceptionsForGroups[schainId].add(1);
                 _nodeToLockedSchains[node].push(schainId);
                 _schainToExceptionNodes[schainId].push(node);
                 addSchainForNode(node, schainId);
