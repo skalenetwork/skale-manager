@@ -181,7 +181,12 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         onlyNodeOwner(fromNodeIndex)
     {
         address skaleDKGAlright = contractManager.getContract("SkaleDKGAlright");
-        skaleDKGAlright.delegatecall(abi.encodeWithSignature("alright(bytes32,uint256)", schainId, fromNodeIndex));
+        (bool success, bytes memory result) = skaleDKGAlright.delegatecall(
+            abi.encodeWithSignature("alright(bytes32,uint256)",
+            schainId,
+            fromNodeIndex)
+        );
+        require(success, _getRevertMsg(result));
     }
 
     function broadcast(
@@ -196,9 +201,10 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         onlyNodeOwner(nodeIndex)
     {
         address skaleDKGBroadcast = contractManager.getContract("SkaleDKGBroadcast");
-        skaleDKGBroadcast.delegatecall(
+        (bool success, bytes memory result) = skaleDKGBroadcast.delegatecall(
             abi.encodeWithSignature("broadcast(bytes32,uint256,((uint256,uint256),(uint256,uint256))[],(bytes32[2],bytes32)[])",
          schainId, nodeIndex, verificationVector, secretKeyContribution));
+        require(success, _getRevertMsg(result));
     }
 
     function complaint(bytes32 schainId, uint fromNodeIndex, uint toNodeIndex)
@@ -210,8 +216,9 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         onlyNodeOwner(fromNodeIndex)
     {
         address skaleDKGComplaint = contractManager.getContract("SkaleDKGComplaint");
-        skaleDKGComplaint.delegatecall(abi.encodeWithSignature("complaint(bytes32,uint256,uint256)",
+        (bool success, bytes memory result) = skaleDKGComplaint.delegatecall(abi.encodeWithSignature("complaint(bytes32,uint256,uint256)",
          schainId, fromNodeIndex, toNodeIndex));
+        require(success, _getRevertMsg(result));
     }
 
     function complaintBadData(bytes32 schainId, uint fromNodeIndex, uint toNodeIndex)
@@ -223,8 +230,9 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         onlyNodeOwner(fromNodeIndex)
     { 
         address skaleDKGComplaint = contractManager.getContract("SkaleDKGComplaint");
-        skaleDKGComplaint.delegatecall(abi.encodeWithSignature("complaintBadData(bytes32,uint256,uint256)",
+        (bool success, bytes memory result) = skaleDKGComplaint.delegatecall(abi.encodeWithSignature("complaintBadData(bytes32,uint256,uint256)",
          schainId, fromNodeIndex, toNodeIndex));
+        require(success, _getRevertMsg(result));
     }
 
     function preResponse(
@@ -240,10 +248,11 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         onlyNodeOwner(fromNodeIndex)
     {
         address skaleDKGPreResponse = contractManager.getContract("SkaleDKGPreResponse");
-        skaleDKGPreResponse.delegatecall(
+        (bool success, bytes memory result) = skaleDKGPreResponse.delegatecall(
             abi.encodeWithSignature("preResponse(bytes32,uint256,((uint256,uint256),(uint256,uint256))[],((uint256,uint256),(uint256,uint256))[],(bytes32[2],bytes32)[])",
             schainId, fromNodeIndex, verificationVector, verificationVectorMult, secretKeyContribution)
         );
+        require(success, _getRevertMsg(result));
     }
 
     function response(
@@ -258,11 +267,24 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         onlyNodeOwner(fromNodeIndex)
     {
         address skaleDKGResponse = contractManager.getContract("SkaleDKGResponse");
-        skaleDKGResponse.delegatecall(
+        (bool success, bytes memory result) = skaleDKGResponse.delegatecall(
             abi.encodeWithSignature("response(bytes32,uint256,uint256,((uint256,uint256),(uint256,uint256)))",
             schainId, fromNodeIndex, secretNumber, multipliedShare)
         );
+        require(success, _getRevertMsg(result));
     }
+
+    function _getRevertMsg(bytes memory _returnData) private pure returns (string memory) {
+        // If the _res length is less than 68, then the transaction failed silently (without a revert message)
+        if (_returnData.length < 68) return "Transaction reverted silently";
+
+        assembly {
+            // Slice the sighash.
+            _returnData := add(_returnData, 0x04)
+        }
+        return abi.decode(_returnData, (string)); // All that remains is the revert string
+    }
+
 
     /**
      * @dev Allows Schains and NodeRotation contracts to open a channel.
