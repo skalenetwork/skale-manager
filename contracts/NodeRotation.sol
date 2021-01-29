@@ -189,10 +189,7 @@ contract NodeRotation is Permissions {
         require(schainsInternal.isAnyFreeNode(schainId), "No free Nodes available for rotation");
         uint nodeIndex;
         uint random = uint(keccak256(abi.encodePacked(uint(blockhash(block.number - 1)), schainId)));
-        do {
-            nodeIndex = nodes.getRandomNodeWithFreeSpace(space, random);
-            random = uint(keccak256(abi.encodePacked(random, nodeIndex)));
-        } while (schainsInternal.checkException(schainId, nodeIndex));
+        nodeIndex = nodes.getRandomNodeWithFreeSpace(space, random);
         require(nodes.removeSpaceFromNode(nodeIndex, space), "Could not remove space from nodeIndex");
         schainsInternal.addSchainForNode(nodeIndex, schainId);
         schainsInternal.setException(schainId, nodeIndex);
