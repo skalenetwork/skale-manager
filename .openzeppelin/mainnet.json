@@ -875,11 +875,11 @@
             }
         },
         "ContractManager": {
-            "address": "0xD27AEA9A507aA9a0CfcB0A5c066FB342eEDdcB69",
-            "bodyBytecodeHash": "98aff5a289e86a9e84bdb839e2019163359e8794f94ac9238cf3cf0cdf0601d7",
-            "constructorCode": "608060405234801561001057600080fd5b50611225806100206000396000f3fe",
-            "deployedBytecodeHash": "0cca5c1c364d4c560e03b0e425b40c08bcb0a109ce1bf060470379885ddddf99",
-            "localBytecodeHash": "0cca5c1c364d4c560e03b0e425b40c08bcb0a109ce1bf060470379885ddddf99",
+            "address": "0x0C76eF80e5387582b05F507Dbbb16Bd172C6B243",
+            "bodyBytecodeHash": "c3bb7abb8460c8d715a6dfaaa6efa5a574a89759989bcbdc4af3b484d2c4ca41",
+            "constructorCode": "608060405234801561001057600080fd5b50611227806100206000396000f3fe",
+            "deployedBytecodeHash": "688cc232209febd6ef94753631057e9117e0556c7082144093066082adce42c5",
+            "localBytecodeHash": "688cc232209febd6ef94753631057e9117e0556c7082144093066082adce42c5",
             "storage": [
                 {
                     "astId": 8128,
@@ -930,11 +930,11 @@
                     "type": "t_array:49<t_uint256>"
                 },
                 {
-                    "astId": 12203,
+                    "astId": 12469,
                     "contract": "ContractManager",
                     "label": "contracts",
                     "path": "contracts/ContractManager.sol",
-                    "src": "1936:45:20",
+                    "src": "1936:45:21",
                     "type": "t_mapping<t_address>"
                 }
             ],
@@ -2895,11 +2895,11 @@
             }
         },
         "NodeRotation": {
-            "address": "0x89335b025553848F282E8BE53060B16782A8813D",
-            "bodyBytecodeHash": "8787651939b4bf05b07a661f1e0fdc5a55d65ef6b2fe1c820653799bae6f98af",
-            "constructorCode": "608060405234801561001057600080fd5b5061318f806100206000396000f3fe",
-            "deployedBytecodeHash": "5e68e9ae2767581f853ca0c36c45ab51f3611a2236ce93137e71e406f7d9b5b0",
-            "localBytecodeHash": "5e68e9ae2767581f853ca0c36c45ab51f3611a2236ce93137e71e406f7d9b5b0",
+            "address": "0xB3D2BB8d9eE96800F6cE2dF4Df314148aA823A26",
+            "bodyBytecodeHash": "f00d03169f7c50d59ddb5b7354eb98ec70fd17e2ce1d0c9ea49f953a6205db7f",
+            "constructorCode": "608060405234801561001057600080fd5b50613109806100206000396000f3fe",
+            "deployedBytecodeHash": "e861a2de0c64bd6e3f04f0c890449ed819d83f86ed2b877ad7b648c0cf5771fc",
+            "localBytecodeHash": "e861a2de0c64bd6e3f04f0c890449ed819d83f86ed2b877ad7b648c0cf5771fc",
             "storage": [
                 {
                     "astId": 8128,
@@ -2950,35 +2950,35 @@
                     "type": "t_array:49<t_uint256>"
                 },
                 {
-                    "astId": 17201,
+                    "astId": 17402,
                     "contract": "Permissions",
                     "label": "contractManager",
                     "path": "contracts/Permissions.sol",
-                    "src": "1291:38:27",
+                    "src": "1291:38:28",
                     "type": "t_address"
                 },
                 {
-                    "astId": 14269,
+                    "astId": 14541,
                     "contract": "NodeRotation",
                     "label": "rotations",
                     "path": "contracts/NodeRotation.sol",
-                    "src": "1800:46:25",
+                    "src": "1908:46:26",
                     "type": "t_mapping<t_struct<NodeRotation.Rotation>>"
                 },
                 {
-                    "astId": 14274,
+                    "astId": 14546,
                     "contract": "NodeRotation",
                     "label": "leavingHistory",
                     "path": "contracts/NodeRotation.sol",
-                    "src": "1853:56:25",
+                    "src": "1961:56:26",
                     "type": "t_mapping<t_array:dyn<t_struct<NodeRotation.LeavingHistory>>>"
                 },
                 {
-                    "astId": 14278,
+                    "astId": 14550,
                     "contract": "NodeRotation",
                     "label": "waitForNewNode",
                     "path": "contracts/NodeRotation.sol",
-                    "src": "1916:47:25",
+                    "src": "2024:47:26",
                     "type": "t_mapping<t_bool>"
                 }
             ],
@@ -3113,15 +3113,15 @@
                     "label": "NodeRotation.LeavingHistory",
                     "members": [
                         {
-                            "astId": 14262,
+                            "astId": 14534,
                             "label": "schainIndex",
-                            "src": "1737:19:25",
+                            "src": "1845:19:26",
                             "type": "t_bytes32"
                         },
                         {
-                            "astId": 14264,
+                            "astId": 14536,
                             "label": "finishedRotation",
-                            "src": "1766:21:25",
+                            "src": "1874:21:26",
                             "type": "t_uint256"
                         }
                     ]
@@ -3132,27 +3132,27 @@
                     "label": "NodeRotation.Rotation",
                     "members": [
                         {
-                            "astId": 14253,
+                            "astId": 14525,
                             "label": "nodeIndex",
-                            "src": "1595:14:25",
+                            "src": "1703:14:26",
                             "type": "t_uint256"
                         },
                         {
-                            "astId": 14255,
+                            "astId": 14527,
                             "label": "newNodeIndex",
-                            "src": "1619:17:25",
+                            "src": "1727:17:26",
                             "type": "t_uint256"
                         },
                         {
-                            "astId": 14257,
+                            "astId": 14529,
                             "label": "freezeUntil",
-                            "src": "1646:16:25",
+                            "src": "1754:16:26",
                             "type": "t_uint256"
                         },
                         {
-                            "astId": 14259,
+                            "astId": 14531,
                             "label": "rotationCounter",
-                            "src": "1672:20:25",
+                            "src": "1780:20:26",
                             "type": "t_uint256"
                         }
                     ]
@@ -3179,19 +3179,19 @@
                         "type": "t_mapping<t_struct<AccessControlUpgradeSafe.RoleData>>"
                     },
                     {
-                        "astId": 14269,
+                        "astId": 14541,
                         "contract": "NodeRotation",
                         "label": "rotations",
                         "path": "contracts/NodeRotation.sol",
-                        "src": "1800:46:25",
+                        "src": "1908:46:26",
                         "type": "t_mapping<t_struct<NodeRotation.Rotation>>"
                     },
                     {
-                        "astId": 14274,
+                        "astId": 14546,
                         "contract": "NodeRotation",
                         "label": "leavingHistory",
                         "path": "contracts/NodeRotation.sol",
-                        "src": "1853:56:25",
+                        "src": "1961:56:26",
                         "type": "t_mapping<t_array:dyn<t_struct<NodeRotation.LeavingHistory>>>"
                     }
                 ],
@@ -3199,11 +3199,11 @@
             }
         },
         "Nodes": {
-            "address": "0xb227366403320953145c92ddd13893438B5F5D9E",
-            "bodyBytecodeHash": "bb8facb99367c742581357ed3b1597b5d34867643d52c295f7a7c2d885b9eca6",
-            "constructorCode": "608060405234801561001057600080fd5b50615a9a80620000216000396000f3fe",
-            "deployedBytecodeHash": "0c1e287f380f988058517eb132c31640779ae63df5a98347d31d07fd31ac4edd",
-            "localBytecodeHash": "0c1e287f380f988058517eb132c31640779ae63df5a98347d31d07fd31ac4edd",
+            "address": "0xf2b47D09D891eE730590Dbf8077212dE705b23fc",
+            "bodyBytecodeHash": "2246df4fda216a05299718ef9f049bd45042f55f9b4af4c0cb3a8ea06548c2ab",
+            "constructorCode": "608060405234801561001057600080fd5b50615aa080620000216000396000f3fe",
+            "deployedBytecodeHash": "c633c011283b79085816098669b2371a998eb7cb37852485e21af2bfd9ac5be1",
+            "localBytecodeHash": "c633c011283b79085816098669b2371a998eb7cb37852485e21af2bfd9ac5be1",
             "storage": [
                 {
                     "astId": 8128,
@@ -3254,99 +3254,99 @@
                     "type": "t_array:49<t_uint256>"
                 },
                 {
-                    "astId": 17309,
+                    "astId": 17402,
                     "contract": "Permissions",
                     "label": "contractManager",
                     "path": "contracts/Permissions.sol",
-                    "src": "1291:38:27",
+                    "src": "1291:38:28",
                     "type": "t_address"
                 },
                 {
-                    "astId": 15193,
+                    "astId": 15286,
                     "contract": "Nodes",
                     "label": "nodes",
                     "path": "contracts/Nodes.sol",
-                    "src": "2722:19:26",
+                    "src": "2722:19:27",
                     "type": "t_array:dyn<t_struct<Nodes.Node>>"
                 },
                 {
-                    "astId": 15196,
+                    "astId": 15289,
                     "contract": "Nodes",
                     "label": "spaceOfNodes",
                     "path": "contracts/Nodes.sol",
-                    "src": "2748:35:26",
+                    "src": "2748:35:27",
                     "type": "t_array:dyn<t_struct<Nodes.SpaceManaging>>"
                 },
                 {
-                    "astId": 15200,
+                    "astId": 15293,
                     "contract": "Nodes",
                     "label": "nodeIndexes",
                     "path": "contracts/Nodes.sol",
-                    "src": "2870:52:26",
+                    "src": "2870:52:27",
                     "type": "t_mapping<t_struct<Nodes.CreatedNodes>>"
                 },
                 {
-                    "astId": 15204,
+                    "astId": 15297,
                     "contract": "Nodes",
                     "label": "nodesIPCheck",
                     "path": "contracts/Nodes.sol",
-                    "src": "2975:44:26",
+                    "src": "2975:44:27",
                     "type": "t_mapping<t_bool>"
                 },
                 {
-                    "astId": 15208,
+                    "astId": 15301,
                     "contract": "Nodes",
                     "label": "nodesNameCheck",
                     "path": "contracts/Nodes.sol",
-                    "src": "3066:47:26",
+                    "src": "3066:47:27",
                     "type": "t_mapping<t_bool>"
                 },
                 {
-                    "astId": 15212,
+                    "astId": 15305,
                     "contract": "Nodes",
                     "label": "nodesNameToIndex",
                     "path": "contracts/Nodes.sol",
-                    "src": "3168:49:26",
+                    "src": "3168:49:27",
                     "type": "t_mapping<t_uint256>"
                 },
                 {
-                    "astId": 15217,
+                    "astId": 15310,
                     "contract": "Nodes",
                     "label": "spaceToNodes",
                     "path": "contracts/Nodes.sol",
-                    "src": "3273:45:26",
+                    "src": "3273:45:27",
                     "type": "t_mapping<t_array:dyn<t_uint256>>"
                 },
                 {
-                    "astId": 15222,
+                    "astId": 15315,
                     "contract": "Nodes",
                     "label": "validatorToNodeIndexes",
                     "path": "contracts/Nodes.sol",
-                    "src": "3325:54:26",
+                    "src": "3325:54:27",
                     "type": "t_mapping<t_array:dyn<t_uint256>>"
                 },
                 {
-                    "astId": 15224,
+                    "astId": 15317,
                     "contract": "Nodes",
                     "label": "numberOfActiveNodes",
                     "path": "contracts/Nodes.sol",
-                    "src": "3386:31:26",
+                    "src": "3386:31:27",
                     "type": "t_uint256"
                 },
                 {
-                    "astId": 15226,
+                    "astId": 15319,
                     "contract": "Nodes",
                     "label": "numberOfLeavingNodes",
                     "path": "contracts/Nodes.sol",
-                    "src": "3423:32:26",
+                    "src": "3423:32:27",
                     "type": "t_uint256"
                 },
                 {
-                    "astId": 15228,
+                    "astId": 15321,
                     "contract": "Nodes",
                     "label": "numberOfLeftNodes",
                     "path": "contracts/Nodes.sol",
-                    "src": "3461:29:26",
+                    "src": "3461:29:27",
                     "type": "t_uint256"
                 }
             ],
@@ -3523,15 +3523,15 @@
                     "label": "Nodes.CreatedNodes",
                     "members": [
                         {
-                            "astId": 15167,
+                            "astId": 15260,
                             "label": "isNodeExist",
-                            "src": "2305:34:26",
+                            "src": "2305:34:27",
                             "type": "t_mapping<t_bool>"
                         },
                         {
-                            "astId": 15169,
+                            "astId": 15262,
                             "label": "numberOfNodes",
-                            "src": "2349:18:26",
+                            "src": "2349:18:27",
                             "type": "t_uint256"
                         }
                     ]
@@ -3542,63 +3542,63 @@
                     "label": "Nodes.Node",
                     "members": [
                         {
-                            "astId": 15142,
+                            "astId": 15235,
                             "label": "name",
-                            "src": "1950:11:26",
+                            "src": "1950:11:27",
                             "type": "t_string"
                         },
                         {
-                            "astId": 15144,
+                            "astId": 15237,
                             "label": "ip",
-                            "src": "1971:9:26",
+                            "src": "1971:9:27",
                             "type": "t_bytes4"
                         },
                         {
-                            "astId": 15146,
+                            "astId": 15239,
                             "label": "publicIP",
-                            "src": "1990:15:26",
+                            "src": "1990:15:27",
                             "type": "t_bytes4"
                         },
                         {
-                            "astId": 15148,
+                            "astId": 15241,
                             "label": "port",
-                            "src": "2015:11:26",
+                            "src": "2015:11:27",
                             "type": "t_uint16"
                         },
                         {
-                            "astId": 15152,
+                            "astId": 15245,
                             "label": "publicKey",
-                            "src": "2036:20:26",
+                            "src": "2036:20:27",
                             "type": "t_array:2<t_bytes32>"
                         },
                         {
-                            "astId": 15154,
+                            "astId": 15247,
                             "label": "startBlock",
-                            "src": "2066:15:26",
+                            "src": "2066:15:27",
                             "type": "t_uint256"
                         },
                         {
-                            "astId": 15156,
+                            "astId": 15249,
                             "label": "lastRewardDate",
-                            "src": "2091:19:26",
+                            "src": "2091:19:27",
                             "type": "t_uint256"
                         },
                         {
-                            "astId": 15158,
+                            "astId": 15251,
                             "label": "finishTime",
-                            "src": "2120:15:26",
+                            "src": "2120:15:27",
                             "type": "t_uint256"
                         },
                         {
-                            "astId": 15160,
+                            "astId": 15253,
                             "label": "status",
-                            "src": "2145:17:26",
+                            "src": "2145:17:27",
                             "type": "t_enum<Nodes.NodeStatus>"
                         },
                         {
-                            "astId": 15162,
+                            "astId": 15255,
                             "label": "validatorId",
-                            "src": "2172:16:26",
+                            "src": "2172:16:27",
                             "type": "t_uint256"
                         }
                     ]
@@ -3609,15 +3609,15 @@
                     "label": "Nodes.SpaceManaging",
                     "members": [
                         {
-                            "astId": 15172,
+                            "astId": 15265,
                             "label": "freeSpace",
-                            "src": "2411:15:26",
+                            "src": "2411:15:27",
                             "type": "t_uint8"
                         },
                         {
-                            "astId": 15174,
+                            "astId": 15267,
                             "label": "indexInSpaceMap",
-                            "src": "2436:20:26",
+                            "src": "2436:20:27",
                             "type": "t_uint256"
                         }
                     ]
@@ -3654,27 +3654,27 @@
                         "type": "t_mapping<t_struct<AccessControlUpgradeSafe.RoleData>>"
                     },
                     {
-                        "astId": 15193,
+                        "astId": 15286,
                         "contract": "Nodes",
                         "label": "nodes",
                         "path": "contracts/Nodes.sol",
-                        "src": "2722:19:26",
+                        "src": "2722:19:27",
                         "type": "t_array:dyn<t_struct<Nodes.Node>>"
                     },
                     {
-                        "astId": 15196,
+                        "astId": 15289,
                         "contract": "Nodes",
                         "label": "spaceOfNodes",
                         "path": "contracts/Nodes.sol",
-                        "src": "2748:35:26",
+                        "src": "2748:35:27",
                         "type": "t_array:dyn<t_struct<Nodes.SpaceManaging>>"
                     },
                     {
-                        "astId": 15200,
+                        "astId": 15293,
                         "contract": "Nodes",
                         "label": "nodeIndexes",
                         "path": "contracts/Nodes.sol",
-                        "src": "2870:52:26",
+                        "src": "2870:52:27",
                         "type": "t_mapping<t_struct<Nodes.CreatedNodes>>"
                     }
                 ],
@@ -4751,11 +4751,11 @@
             }
         },
         "SkaleDKG": {
-            "address": "0x22BA5c387D97c4a9E07E3A4069164f4c1B7f535B",
-            "bodyBytecodeHash": "bf45e6af6bf34ca162d4ab68c49087de59fca3d429bd832bb56be307fed78bfc",
-            "constructorCode": "608060405234801561001057600080fd5b50615ed180620000216000396000f3fe",
-            "deployedBytecodeHash": "2bb97e15d658aa216366a03dadf2323723b93ae2c052b0ba466a1a677c22a74e",
-            "localBytecodeHash": "2bb97e15d658aa216366a03dadf2323723b93ae2c052b0ba466a1a677c22a74e",
+            "address": "0x15726707752841C583Cb12f6ab90021D03Ea7A64",
+            "bodyBytecodeHash": "9ec1cc459976e6bab3b8ea673fc0c61642101dbe170e576138e17217d840dbee",
+            "constructorCode": "608060405234801561001057600080fd5b50615ec280620000216000396000f3fe",
+            "deployedBytecodeHash": "70d8ae0259de0cfa0e0c007bab3eddb126a9adc11b74406dc2739d7fecb70c93",
+            "localBytecodeHash": "70d8ae0259de0cfa0e0c007bab3eddb126a9adc11b74406dc2739d7fecb70c93",
             "storage": [
                 {
                     "astId": 8128,
@@ -4806,59 +4806,59 @@
                     "type": "t_array:49<t_uint256>"
                 },
                 {
-                    "astId": 17309,
+                    "astId": 17402,
                     "contract": "Permissions",
                     "label": "contractManager",
                     "path": "contracts/Permissions.sol",
-                    "src": "1291:38:27",
+                    "src": "1291:38:28",
                     "type": "t_address"
                 },
                 {
-                    "astId": 21352,
+                    "astId": 21445,
                     "contract": "SkaleDKG",
                     "label": "channels",
                     "path": "contracts/SkaleDKG.sol",
-                    "src": "2157:43:31",
+                    "src": "2157:43:32",
                     "type": "t_mapping<t_struct<SkaleDKG.Channel>>"
                 },
                 {
-                    "astId": 21356,
+                    "astId": 21449,
                     "contract": "SkaleDKG",
                     "label": "lastSuccesfulDKG",
                     "path": "contracts/SkaleDKG.sol",
-                    "src": "2207:48:31",
+                    "src": "2207:48:32",
                     "type": "t_mapping<t_uint256>"
                 },
                 {
-                    "astId": 21360,
+                    "astId": 21453,
                     "contract": "SkaleDKG",
                     "label": "dkgProcess",
                     "path": "contracts/SkaleDKG.sol",
-                    "src": "2262:48:31",
+                    "src": "2262:48:32",
                     "type": "t_mapping<t_struct<SkaleDKG.ProcessDKG>>"
                 },
                 {
-                    "astId": 21364,
+                    "astId": 21457,
                     "contract": "SkaleDKG",
                     "label": "complaints",
                     "path": "contracts/SkaleDKG.sol",
-                    "src": "2317:51:31",
+                    "src": "2317:51:32",
                     "type": "t_mapping<t_struct<SkaleDKG.ComplaintData>>"
                 },
                 {
-                    "astId": 21368,
+                    "astId": 21461,
                     "contract": "SkaleDKG",
                     "label": "startAlrightTimestamp",
                     "path": "contracts/SkaleDKG.sol",
-                    "src": "2375:53:31",
+                    "src": "2375:53:32",
                     "type": "t_mapping<t_uint256>"
                 },
                 {
-                    "astId": 21374,
+                    "astId": 21467,
                     "contract": "SkaleDKG",
                     "label": "hashedData",
                     "path": "contracts/SkaleDKG.sol",
-                    "src": "2435:62:31",
+                    "src": "2435:62:32",
                     "type": "t_mapping<t_bytes32>"
                 }
             ],
@@ -4999,15 +4999,15 @@
                     "label": "Fp2Operations.Fp2Point",
                     "members": [
                         {
-                            "astId": 37745,
+                            "astId": 37868,
                             "label": "a",
-                            "src": "1058:6:63",
+                            "src": "1058:6:64",
                             "type": "t_uint256"
                         },
                         {
-                            "astId": 37747,
+                            "astId": 37870,
                             "label": "b",
-                            "src": "1074:6:63",
+                            "src": "1074:6:64",
                             "type": "t_uint256"
                         }
                     ]
@@ -5018,15 +5018,15 @@
                     "label": "G2Operations.G2Point",
                     "members": [
                         {
-                            "astId": 38177,
+                            "astId": 38300,
                             "label": "x",
-                            "src": "4104:24:63",
+                            "src": "4104:24:64",
                             "type": "t_struct<Fp2Operations.Fp2Point>"
                         },
                         {
-                            "astId": 38179,
+                            "astId": 38302,
                             "label": "y",
-                            "src": "4138:24:63",
+                            "src": "4138:24:64",
                             "type": "t_struct<Fp2Operations.Fp2Point>"
                         }
                     ]
@@ -5037,27 +5037,27 @@
                     "label": "SkaleDKG.Channel",
                     "members": [
                         {
-                            "astId": 21307,
+                            "astId": 21400,
                             "label": "active",
-                            "src": "1533:11:31",
+                            "src": "1533:11:32",
                             "type": "t_bool"
                         },
                         {
-                            "astId": 21309,
+                            "astId": 21402,
                             "label": "n",
-                            "src": "1554:6:31",
+                            "src": "1554:6:32",
                             "type": "t_uint256"
                         },
                         {
-                            "astId": 21311,
+                            "astId": 21404,
                             "label": "startedBlockTimestamp",
-                            "src": "1570:26:31",
+                            "src": "1570:26:32",
                             "type": "t_uint256"
                         },
                         {
-                            "astId": 21313,
+                            "astId": 21406,
                             "label": "startedBlock",
-                            "src": "1606:17:31",
+                            "src": "1606:17:32",
                             "type": "t_uint256"
                         }
                     ]
@@ -5068,39 +5068,39 @@
                     "label": "SkaleDKG.ComplaintData",
                     "members": [
                         {
-                            "astId": 21327,
+                            "astId": 21420,
                             "label": "nodeToComplaint",
-                            "src": "1818:20:31",
+                            "src": "1818:20:32",
                             "type": "t_uint256"
                         },
                         {
-                            "astId": 21329,
+                            "astId": 21422,
                             "label": "fromNodeToComplaint",
-                            "src": "1848:24:31",
+                            "src": "1848:24:32",
                             "type": "t_uint256"
                         },
                         {
-                            "astId": 21331,
+                            "astId": 21424,
                             "label": "startComplaintBlockTimestamp",
-                            "src": "1882:33:31",
+                            "src": "1882:33:32",
                             "type": "t_uint256"
                         },
                         {
-                            "astId": 21333,
+                            "astId": 21426,
                             "label": "isResponse",
-                            "src": "1925:15:31",
+                            "src": "1925:15:32",
                             "type": "t_bool"
                         },
                         {
-                            "astId": 21335,
+                            "astId": 21428,
                             "label": "keyShare",
-                            "src": "1950:16:31",
+                            "src": "1950:16:32",
                             "type": "t_bytes32"
                         },
                         {
-                            "astId": 21337,
+                            "astId": 21430,
                             "label": "sumOfVerVec",
-                            "src": "1976:32:31",
+                            "src": "1976:32:32",
                             "type": "t_struct<G2Operations.G2Point>"
                         }
                     ]
@@ -5111,27 +5111,27 @@
                     "label": "SkaleDKG.ProcessDKG",
                     "members": [
                         {
-                            "astId": 21316,
+                            "astId": 21409,
                             "label": "numberOfBroadcasted",
-                            "src": "1664:24:31",
+                            "src": "1664:24:32",
                             "type": "t_uint256"
                         },
                         {
-                            "astId": 21318,
+                            "astId": 21411,
                             "label": "numberOfCompleted",
-                            "src": "1698:22:31",
+                            "src": "1698:22:32",
                             "type": "t_uint256"
                         },
                         {
-                            "astId": 21321,
+                            "astId": 21414,
                             "label": "broadcasted",
-                            "src": "1730:18:31",
+                            "src": "1730:18:32",
                             "type": "t_array:dyn<t_bool>"
                         },
                         {
-                            "astId": 21324,
+                            "astId": 21417,
                             "label": "completed",
-                            "src": "1758:16:31",
+                            "src": "1758:16:32",
                             "type": "t_array:dyn<t_bool>"
                         }
                     ]
@@ -5158,27 +5158,27 @@
                         "type": "t_mapping<t_struct<AccessControlUpgradeSafe.RoleData>>"
                     },
                     {
-                        "astId": 21352,
+                        "astId": 21445,
                         "contract": "SkaleDKG",
                         "label": "channels",
                         "path": "contracts/SkaleDKG.sol",
-                        "src": "2157:43:31",
+                        "src": "2157:43:32",
                         "type": "t_mapping<t_struct<SkaleDKG.Channel>>"
                     },
                     {
-                        "astId": 21360,
+                        "astId": 21453,
                         "contract": "SkaleDKG",
                         "label": "dkgProcess",
                         "path": "contracts/SkaleDKG.sol",
-                        "src": "2262:48:31",
+                        "src": "2262:48:32",
                         "type": "t_mapping<t_struct<SkaleDKG.ProcessDKG>>"
                     },
                     {
-                        "astId": 21364,
+                        "astId": 21457,
                         "contract": "SkaleDKG",
                         "label": "complaints",
                         "path": "contracts/SkaleDKG.sol",
-                        "src": "2317:51:31",
+                        "src": "2317:51:32",
                         "type": "t_mapping<t_struct<SkaleDKG.ComplaintData>>"
                     }
                 ],
@@ -5186,11 +5186,11 @@
             }
         },
         "SkaleManager": {
-            "address": "0xe03022BD954dA652846a1f5Ad6c42F668D9e7743",
-            "bodyBytecodeHash": "6df4f986d27a460d23613c3ee6bad4465c5cec44db6bce2fe8731e11babf1695",
-            "constructorCode": "608060405234801561001057600080fd5b5061301f806100206000396000f3fe",
-            "deployedBytecodeHash": "2c2c3a93bffa815af1b40091b58b46a6434ef6af392d37701a6d5ed16eb42a17",
-            "localBytecodeHash": "2c2c3a93bffa815af1b40091b58b46a6434ef6af392d37701a6d5ed16eb42a17",
+            "address": "0xb86499D5E646BAE203FcaFae8f35AA70e91199D7",
+            "bodyBytecodeHash": "6d9262643e79db1f2b9b3dd74c27b5b8170b4b9e929869963a7665f11c496513",
+            "constructorCode": "608060405234801561001057600080fd5b5061302c806100206000396000f3fe",
+            "deployedBytecodeHash": "0bbb843c6dd9bf39f1ed0c38c284271621784b84b3c724ea5b98484e5a3f1376",
+            "localBytecodeHash": "0bbb843c6dd9bf39f1ed0c38c284271621784b84b3c724ea5b98484e5a3f1376",
             "storage": [
                 {
                     "astId": 8128,
@@ -5241,19 +5241,19 @@
                     "type": "t_array:49<t_uint256>"
                 },
                 {
-                    "astId": 17301,
+                    "astId": 17402,
                     "contract": "Permissions",
                     "label": "contractManager",
                     "path": "contracts/Permissions.sol",
-                    "src": "1291:38:27",
+                    "src": "1291:38:28",
                     "type": "t_address"
                 },
                 {
-                    "astId": 23846,
+                    "astId": 23963,
                     "contract": "SkaleManager",
                     "label": "_erc1820",
                     "path": "contracts/SkaleManager.sol",
-                    "src": "1665:33:32",
+                    "src": "1665:33:33",
                     "type": "t_address"
                 }
             ],
@@ -6300,11 +6300,11 @@
             }
         },
         "TokenState": {
-            "address": "0xc4a895B2c8e0B8CdF9422691fEb1D9D0054395Eb",
-            "bodyBytecodeHash": "53f480ff63d06457c689e732fc3095a0e985767b60cf859e1bc3ca14767b0eca",
-            "constructorCode": "608060405234801561001057600080fd5b5061179a806100206000396000f3fe",
-            "deployedBytecodeHash": "58c373e962b0c9b1c90c78d19f7605fb194e2082fdf855170c8cc03b36e2230c",
-            "localBytecodeHash": "58c373e962b0c9b1c90c78d19f7605fb194e2082fdf855170c8cc03b36e2230c",
+            "address": "0x83df7f07565D131B0794A4957aa1DD04A4F5D976",
+            "bodyBytecodeHash": "7f6ddf2feebe42b521291c5ac324446b5efedf6b187594ba8256d92b3bc64e90",
+            "constructorCode": "608060405234801561001057600080fd5b506117c1806100206000396000f3fe",
+            "deployedBytecodeHash": "da9465ecfae31e70ba2e7526703efd86cdabe1e3ec4aa61d75391500d840a442",
+            "localBytecodeHash": "da9465ecfae31e70ba2e7526703efd86cdabe1e3ec4aa61d75391500d840a442",
             "storage": [
                 {
                     "astId": 8128,
@@ -6355,20 +6355,28 @@
                     "type": "t_array:49<t_uint256>"
                 },
                 {
-                    "astId": 17309,
+                    "astId": 17402,
                     "contract": "Permissions",
                     "label": "contractManager",
                     "path": "contracts/Permissions.sol",
-                    "src": "1291:38:27",
+                    "src": "1291:38:28",
                     "type": "t_address"
                 },
                 {
-                    "astId": 31705,
+                    "astId": 31798,
                     "contract": "TokenState",
                     "label": "_lockers",
                     "path": "contracts/delegation/TokenState.sol",
-                    "src": "1673:25:44",
+                    "src": "1674:25:45",
                     "type": "t_array:dyn<t_string>"
+                },
+                {
+                    "astId": 31800,
+                    "contract": "TokenState",
+                    "label": "_delegationController",
+                    "path": "contracts/delegation/TokenState.sol",
+                    "src": "1706:50:45",
+                    "type": "t_address"
                 }
             ],
             "types": {
@@ -6494,7 +6502,20 @@
                 "hasDelegateCall": false,
                 "hasInitialValuesInDeclarations": false,
                 "hasSelfDestruct": false,
-                "storageDiff": [],
+                "storageDiff": [
+                    {
+                        "action": "append",
+                        "updated": {
+                            "astId": 31800,
+                            "contract": "TokenState",
+                            "index": 8,
+                            "label": "_delegationController",
+                            "path": "contracts/delegation/TokenState.sol",
+                            "src": "1706:50:45",
+                            "type": "t_address"
+                        }
+                    }
+                ],
                 "storageUncheckedVars": [
                     {
                         "astId": 8241,
@@ -6509,11 +6530,11 @@
             }
         },
         "ValidatorService": {
-            "address": "0xAE8E7E9aAca9eA5E1868b4EA1D9fe3fb716132cd",
-            "bodyBytecodeHash": "c86a431f87cab445d6147fd9d169e6ded08849b85b46ff7aae6e5bd4b9407782",
-            "constructorCode": "608060405234801561001057600080fd5b5061351e806100206000396000f3fe",
-            "deployedBytecodeHash": "7d92aae0e19751202f19671ac04d2df2e6c6549cd7c81469eb95e6881633f58a",
-            "localBytecodeHash": "7d92aae0e19751202f19671ac04d2df2e6c6549cd7c81469eb95e6881633f58a",
+            "address": "0xD9d6DE590A9aA4B6A6a9ee2EB106967a9E213683",
+            "bodyBytecodeHash": "9bc7d63e4423aa0905743deccb974eb77eb19278b688f7e82d1e193c36c3f860",
+            "constructorCode": "608060405234801561001057600080fd5b5061351d806100206000396000f3fe",
+            "deployedBytecodeHash": "062aa71d2fc0323955ab281b10248beb5463436c28fe81b27123c264ad1af539",
+            "localBytecodeHash": "062aa71d2fc0323955ab281b10248beb5463436c28fe81b27123c264ad1af539",
             "storage": [
                 {
                     "astId": 8128,
@@ -6564,75 +6585,75 @@
                     "type": "t_array:49<t_uint256>"
                 },
                 {
-                    "astId": 17309,
+                    "astId": 17402,
                     "contract": "Permissions",
                     "label": "contractManager",
                     "path": "contracts/Permissions.sol",
-                    "src": "1291:38:27",
+                    "src": "1291:38:28",
                     "type": "t_address"
                 },
                 {
-                    "astId": 32025,
+                    "astId": 32148,
                     "contract": "ValidatorService",
                     "label": "validators",
                     "path": "contracts/delegation/ValidatorService.sol",
-                    "src": "2861:45:45",
+                    "src": "2861:45:46",
                     "type": "t_mapping<t_struct<ValidatorService.Validator>>"
                 },
                 {
-                    "astId": 32029,
+                    "astId": 32152,
                     "contract": "ValidatorService",
                     "label": "_trustedValidators",
                     "path": "contracts/delegation/ValidatorService.sol",
-                    "src": "2912:49:45",
+                    "src": "2912:49:46",
                     "type": "t_mapping<t_bool>"
                 },
                 {
-                    "astId": 32032,
+                    "astId": 32155,
                     "contract": "ValidatorService",
                     "label": "trustedValidatorsList",
                     "path": "contracts/delegation/ValidatorService.sol",
-                    "src": "2967:35:45",
+                    "src": "2967:35:46",
                     "type": "t_array:dyn<t_uint256>"
                 },
                 {
-                    "astId": 32036,
+                    "astId": 32159,
                     "contract": "ValidatorService",
                     "label": "_validatorAddressToId",
                     "path": "contracts/delegation/ValidatorService.sol",
-                    "src": "3044:55:45",
+                    "src": "3044:55:46",
                     "type": "t_mapping<t_uint256>"
                 },
                 {
-                    "astId": 32040,
+                    "astId": 32163,
                     "contract": "ValidatorService",
                     "label": "_nodeAddressToValidatorId",
                     "path": "contracts/delegation/ValidatorService.sol",
-                    "src": "3141:59:45",
+                    "src": "3141:59:46",
                     "type": "t_mapping<t_uint256>"
                 },
                 {
-                    "astId": 32045,
+                    "astId": 32168,
                     "contract": "ValidatorService",
                     "label": "_nodeAddresses",
                     "path": "contracts/delegation/ValidatorService.sol",
-                    "src": "3242:50:45",
+                    "src": "3242:50:46",
                     "type": "t_mapping<t_array:dyn<t_address>>"
                 },
                 {
-                    "astId": 32047,
+                    "astId": 32170,
                     "contract": "ValidatorService",
                     "label": "numberOfValidators",
                     "path": "contracts/delegation/ValidatorService.sol",
-                    "src": "3298:30:45",
+                    "src": "3298:30:46",
                     "type": "t_uint256"
                 },
                 {
-                    "astId": 32049,
+                    "astId": 32172,
                     "contract": "ValidatorService",
                     "label": "useWhitelist",
                     "path": "contracts/delegation/ValidatorService.sol",
-                    "src": "3334:24:45",
+                    "src": "3334:24:46",
                     "type": "t_bool"
                 }
             ],
@@ -6779,51 +6800,51 @@
                     "label": "ValidatorService.Validator",
                     "members": [
                         {
-                            "astId": 31970,
+                            "astId": 32093,
                             "label": "name",
-                            "src": "1708:11:45",
+                            "src": "1708:11:46",
                             "type": "t_string"
                         },
                         {
-                            "astId": 31972,
+                            "astId": 32095,
                             "label": "validatorAddress",
-                            "src": "1729:24:45",
+                            "src": "1729:24:46",
                             "type": "t_address"
                         },
                         {
-                            "astId": 31974,
+                            "astId": 32097,
                             "label": "requestedAddress",
-                            "src": "1763:24:45",
+                            "src": "1763:24:46",
                             "type": "t_address"
                         },
                         {
-                            "astId": 31976,
+                            "astId": 32099,
                             "label": "description",
-                            "src": "1797:18:45",
+                            "src": "1797:18:46",
                             "type": "t_string"
                         },
                         {
-                            "astId": 31978,
+                            "astId": 32101,
                             "label": "feeRate",
-                            "src": "1825:12:45",
+                            "src": "1825:12:46",
                             "type": "t_uint256"
                         },
                         {
-                            "astId": 31980,
+                            "astId": 32103,
                             "label": "registrationTime",
-                            "src": "1847:21:45",
+                            "src": "1847:21:46",
                             "type": "t_uint256"
                         },
                         {
-                            "astId": 31982,
+                            "astId": 32105,
                             "label": "minimumDelegationAmount",
-                            "src": "1878:28:45",
+                            "src": "1878:28:46",
                             "type": "t_uint256"
                         },
                         {
-                            "astId": 31984,
+                            "astId": 32107,
                             "label": "acceptNewRequests",
-                            "src": "1916:22:45",
+                            "src": "1916:22:46",
                             "type": "t_bool"
                         }
                     ]
@@ -6850,11 +6871,11 @@
                         "type": "t_mapping<t_struct<AccessControlUpgradeSafe.RoleData>>"
                     },
                     {
-                        "astId": 32025,
+                        "astId": 32148,
                         "contract": "ValidatorService",
                         "label": "validators",
                         "path": "contracts/delegation/ValidatorService.sol",
-                        "src": "2861:45:45",
+                        "src": "2861:45:46",
                         "type": "t_mapping<t_struct<ValidatorService.Validator>>"
                     }
                 ],
@@ -6895,7 +6916,7 @@
             {
                 "address": "0xC04A10Fd5e6513242558f47331568aBD6185a310",
                 "admin": "0xf3F8B7594Bf20A0e9502B3191cd4C2B90A1aB4F7",
-                "implementation": "0xD27AEA9A507aA9a0CfcB0A5c066FB342eEDdcB69",
+                "implementation": "0x0C76eF80e5387582b05F507Dbbb16Bd172C6B243",
                 "kind": "Upgradeable",
                 "version": "1.0.0"
             }
@@ -6967,7 +6988,7 @@
             {
                 "address": "0xEC4EA4802Cb323645B87441AEB5622c800d72CCd",
                 "admin": "0xf3F8B7594Bf20A0e9502B3191cd4C2B90A1aB4F7",
-                "implementation": "0x89335b025553848F282E8BE53060B16782A8813D",
+                "implementation": "0xB3D2BB8d9eE96800F6cE2dF4Df314148aA823A26",
                 "kind": "Upgradeable",
                 "version": "1.0.0"
             }
@@ -6976,7 +6997,7 @@
             {
                 "address": "0xD489665414D051336CE2F2C6e4184De0409e40ba",
                 "admin": "0xf3F8B7594Bf20A0e9502B3191cd4C2B90A1aB4F7",
-                "implementation": "0xb227366403320953145c92ddd13893438B5F5D9E",
+                "implementation": "0xf2b47D09D891eE730590Dbf8077212dE705b23fc",
                 "kind": "Upgradeable",
                 "version": "1.0.0"
             }
@@ -7021,7 +7042,7 @@
             {
                 "address": "0xfcc84F7b6d88d671C6a1841549c0b2E70110884f",
                 "admin": "0xf3F8B7594Bf20A0e9502B3191cd4C2B90A1aB4F7",
-                "implementation": "0x22BA5c387D97c4a9E07E3A4069164f4c1B7f535B",
+                "implementation": "0x15726707752841C583Cb12f6ab90021D03Ea7A64",
                 "kind": "Upgradeable",
                 "version": "1.0.0"
             }
@@ -7030,7 +7051,7 @@
             {
                 "address": "0x8b32F750966273cb6D804C02360F3E2743E2B511",
                 "admin": "0xf3F8B7594Bf20A0e9502B3191cd4C2B90A1aB4F7",
-                "implementation": "0xe03022BD954dA652846a1f5Ad6c42F668D9e7743",
+                "implementation": "0xb86499D5E646BAE203FcaFae8f35AA70e91199D7",
                 "kind": "Upgradeable",
                 "version": "1.0.0"
             }
@@ -7084,7 +7105,7 @@
             {
                 "address": "0x4eE5F270572285776814e32952446e9B7Ee15C86",
                 "admin": "0xf3F8B7594Bf20A0e9502B3191cd4C2B90A1aB4F7",
-                "implementation": "0xc4a895B2c8e0B8CdF9422691fEb1D9D0054395Eb",
+                "implementation": "0x83df7f07565D131B0794A4957aa1DD04A4F5D976",
                 "kind": "Upgradeable",
                 "version": "1.0.0"
             }
@@ -7093,7 +7114,7 @@
             {
                 "address": "0x840C8122433A5AA7ad60C1Bcdc36AB9DcCF761a5",
                 "admin": "0xf3F8B7594Bf20A0e9502B3191cd4C2B90A1aB4F7",
-                "implementation": "0xAE8E7E9aAca9eA5E1868b4EA1D9fe3fb716132cd",
+                "implementation": "0xD9d6DE590A9aA4B6A6a9ee2EB106967a9E213683",
                 "kind": "Upgradeable",
                 "version": "1.0.0"
             }
