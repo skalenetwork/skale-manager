@@ -55,16 +55,11 @@ contract SkaleDKGBroadcast is SkaleDKG {
             verificationVector,
             secretKeyContribution
         );
-        _refundGasBySchain(gasTotal, schainId, nodeIndex);
+        _refundGasBySchain(schainId, nodeIndex, gasTotal - gasleft());
     }
-
-
 
     function getT(uint n) public pure returns (uint) {
         return n.mul(2).add(1).div(3);
     }
-
-
-
 
 }

@@ -56,9 +56,17 @@ contract Wallets is Permissions {
     //     reimburseGasBySchain(node, weiSpent, schainId);
     // }
 
-    function reimburseGasByValidator(address payable node, uint gasTotal, uint validatorId) external allow("SkaleManager") {
+    function refundGasByValidator(
+        uint validatorId,
+        uint nodeIndex,
+        uint gasSpent
+    )
+        external
+        allowTwo("SkaleManager", "SkaleDKG")
+    {
+        address payable node = payable(Nodes(contractManager.getContract("Nodes")).getNodeAddress(nodeIndex));
         require(validatorId != 0, "ValidatorId could not be zero");
-        uint amount = tx.gasprice * (gasTotal - gasleft());
+        uint amount = tx.gasprice * gasSpent;
         if (amount <= validatorWallets[validatorId]) {
             validatorWallets[validatorId] = validatorWallets[validatorId].sub(amount);
             emit NodeWalletReimbursed(node, amount);
@@ -72,24 +80,16 @@ contract Wallets is Permissions {
         }
     }
 
-    function getSchainBalance(bytes32 schainId) external view returns (uint) {
-        return schainWallets[schainId];
-    }
-
-    function getValidatorBalance(uint validatorId) external view returns (uint) {
-        return validatorWallets[validatorId];
-    }
-
     function refundGasBySchain(
-        uint gasTotal,
         bytes32 schainId,
-        uint nodeIndex
+        uint nodeIndex,
+        uint spentGas
     )
         public
         allow("SkaleDKG")
     {
         address payable node = payable(Nodes(contractManager.getContract("Nodes")).getNodeAddress(nodeIndex));
-        uint amount = tx.gasprice * (gasTotal - gasleft());
+        uint amount = tx.gasprice * spentGas;
         require(schainId != bytes32(0), "SchainId cannot be null");
         require(amount <= schainWallets[schainId], "Schain wallet has not enough funds");
         schainWallets[schainId] = schainWallets[schainId].sub(amount);
@@ -110,6 +110,16 @@ contract Wallets is Permissions {
         validatorWallets[validatorId] = validatorWallets[validatorId].sub(amount);
         msg.sender.transfer(amount);
     }
+
+
+    function getSchainBalance(bytes32 schainId) external view returns (uint) {
+        return schainWallets[schainId];
+    }
+
+    function getValidatorBalance(uint validatorId) external view returns (uint) {
+        return validatorWallets[validatorId];
+    }
+
 
     function initialize(address contractsAddress) public override initializer {
         Permissions.initialize(contractsAddress);
