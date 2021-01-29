@@ -36,6 +36,13 @@ contract Wallets is Permissions {
     event SchainWalletRecharged(address sponsor, uint amount, bytes32 schainId);
     event NodeWalletReimbursed(address node, uint amount);
 
+    /**
+     * @notice Recharge the validator wallet by id
+     * @param validatorId - id of existing validator
+     * @dev
+     * Requirements: 
+     * - Given validator must exist
+     */
     function rechargeValidatorWallet(uint validatorId) external payable {
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
         require(validatorService.validatorExists(validatorId), "Validator does not exists");
@@ -43,6 +50,13 @@ contract Wallets is Permissions {
         emit ValidatorWalletRecharged(msg.sender, msg.value, validatorId);
     }
 
+    /**
+     * @notice Recharge the schain wallet by schainId (hash of schain name)
+     * @param schainId - id of existing schain
+     * @dev
+     * Requirements: 
+     * - Given schain must be created
+     */
     function rechargeSchainWallet(bytes32 schainId) external payable {
         SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
         require(schainsInternal.isSchainActive(schainId), "Schain should be active for recharging");
@@ -50,12 +64,16 @@ contract Wallets is Permissions {
         emit SchainWalletRecharged(msg.sender, msg.value, schainId);
     }
 
-    // function refundGasBySchain(bytes32 schainId, uint nodeIndex) external allow("SkaleDKG") {
-    //     address payable node = payable(Nodes(contractManager.getContract("Nodes")).getNodeAddress(nodeIndex));
-    //     uint weiSpent = tx.gasprice * (block.gaslimit - gasleft());
-    //     reimburseGasBySchain(node, weiSpent, schainId);
-    // }
-
+    /**
+     * @notice Reimburse gas for node by validator wallet. If validator wallet has not enough funds 
+     * the node will receive the entire remaining amount in the validator's wallet
+     * @param node - address of node that will get refunding by validator
+     * @param gasTotal - all gas that was allocated at the beginning of the transaction
+     * @param validatorId - validator that will reimburse desired transaction
+     * @dev
+     * Requirements: 
+     * - Given validator should exist
+     */
     function reimburseGasByValidator(address payable node, uint gasTotal, uint validatorId) external allow("SkaleManager") {
         require(validatorId != 0, "ValidatorId could not be zero");
         uint amount = tx.gasprice * (gasTotal - gasleft());
@@ -72,20 +90,23 @@ contract Wallets is Permissions {
         }
     }
 
-    function getSchainBalance(bytes32 schainId) external view returns (uint) {
-        return schainWallets[schainId];
-    }
-
-    function getValidatorBalance(uint validatorId) external view returns (uint) {
-        return validatorWallets[validatorId];
-    }
-
+    /**
+     * @notice Reimburse gas for node by schain wallet. If schain wallet has not enough funds 
+     * than transaction will be reverted
+     * @param gasTotal - all gas that was allocated at the beginning of the transaction
+     * @param schainId - schain that will reimburse desired transaction
+     * @param nodeIndex - node that will get refunding by schain
+     * @dev
+     * Requirements: 
+     * - Given schain should exist
+     * - Schain wallet should have enough funds
+     */
     function refundGasBySchain(
         uint gasTotal,
         bytes32 schainId,
         uint nodeIndex
     )
-        public
+        external
         allow("SkaleDKG")
     {
         address payable node = payable(Nodes(contractManager.getContract("Nodes")).getNodeAddress(nodeIndex));
@@ -97,18 +118,42 @@ contract Wallets is Permissions {
         node.transfer(amount);
     }
 
+
+    /**
+     * @notice Withdraws money from schain wallet. Possible to execute only after deleting schain
+     * @param schainOwner - address of schain owner that will receive rest of the schain balance
+     * @param schainId - schain wallet from which money is withdrawn
+     * @dev
+     * Requirements: 
+     * - Executable only after initing delete schain
+     */
     function withdrawFundsFromSchainWallet(address payable schainOwner, bytes32 schainId) external allow("Schains") {
         uint amount = schainWallets[schainId];
         delete schainWallets[schainId];
         schainOwner.transfer(amount);
     }
-
+    
+    /**
+     * @notice Withdraws money from vaildator wallet
+     * @param amount - the amount of money in wei
+     * @dev
+     * Requirements: 
+     * - Validator must have sufficient withdrawal amount
+     */
     function withdrawFundsFromValidatorWallet(uint amount) external {
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
         uint validatorId = validatorService.getValidatorId(msg.sender);
         require(amount <= validatorWallets[validatorId], "Validator wallet has not enough funds");
         validatorWallets[validatorId] = validatorWallets[validatorId].sub(amount);
         msg.sender.transfer(amount);
+    }
+
+    function getSchainBalance(bytes32 schainId) external view returns (uint) {
+        return schainWallets[schainId];
+    }
+
+    function getValidatorBalance(uint validatorId) external view returns (uint) {
+        return validatorWallets[validatorId];
     }
 
     function initialize(address contractsAddress) public override initializer {
