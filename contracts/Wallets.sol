@@ -74,9 +74,17 @@ contract Wallets is Permissions {
      * Requirements: 
      * - Given validator should exist
      */
-    function reimburseGasByValidator(address payable node, uint gasTotal, uint validatorId) external allow("SkaleManager") {
+    function refundGasByValidator(
+        uint validatorId,
+        uint nodeIndex,
+        uint gasSpent
+    )
+        external
+        allowTwo("SkaleManager", "SkaleDKG")
+    {
+        address payable node = payable(Nodes(contractManager.getContract("Nodes")).getNodeAddress(nodeIndex));
         require(validatorId != 0, "ValidatorId could not be zero");
-        uint amount = tx.gasprice * (gasTotal - gasleft());
+        uint amount = tx.gasprice * gasSpent;
         if (amount <= validatorWallets[validatorId]) {
             validatorWallets[validatorId] = validatorWallets[validatorId].sub(amount);
             emit NodeWalletReimbursed(node, amount);
@@ -102,15 +110,15 @@ contract Wallets is Permissions {
      * - Schain wallet should have enough funds
      */
     function refundGasBySchain(
-        uint gasTotal,
         bytes32 schainId,
-        uint nodeIndex
+        uint nodeIndex,
+        uint spentGas
     )
         external
         allow("SkaleDKG")
     {
         address payable node = payable(Nodes(contractManager.getContract("Nodes")).getNodeAddress(nodeIndex));
-        uint amount = tx.gasprice * (gasTotal - gasleft());
+        uint amount = tx.gasprice * spentGas;
         require(schainId != bytes32(0), "SchainId cannot be null");
         require(amount <= schainWallets[schainId], "Schain wallet has not enough funds");
         schainWallets[schainId] = schainWallets[schainId].sub(amount);

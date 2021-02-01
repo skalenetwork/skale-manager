@@ -25,12 +25,13 @@ contract SkaleDKGResponse is SkaleDKG {
         _checkAndReturnIndexInGroup(schainId, fromNodeIndex, true);
         require(complaints[schainId].nodeToComplaint == fromNodeIndex, "Not this Node");
         require(complaints[schainId].isResponse, "Have not submitted pre-response data");
-        _verifyDataAndSlash(
+        uint badNode = _verifyDataAndSlash(
             schainId,
             secretNumber,
             multipliedShare
          );
-        _refundGasBySchain(gasTotal, schainId, fromNodeIndex);
+         uint validatorId = Nodes(contractManager.getContract("Nodes")).getValidatorId(badNode);
+        _refundGasByValidator(validatorId, badNode, gasTotal - gasleft());
     }
 
     function _verifyDataAndSlash(
@@ -39,6 +40,7 @@ contract SkaleDKGResponse is SkaleDKG {
         G2Operations.G2Point calldata multipliedShare
     )
         internal
+        returns (uint badNode)
     {
         bytes32[2] memory publicKey = Nodes(contractManager.getContract("Nodes")).getNodePublicKey(
             complaints[schainId].fromNodeToComplaint
@@ -54,7 +56,7 @@ contract SkaleDKGResponse is SkaleDKG {
             sha256(abi.encodePacked(key))
         );
 
-        uint badNode = (
+        badNode = (
             _checkCorrectMultipliedShare(multipliedShare, secret) &&
             multipliedShare.isEqual(complaints[schainId].sumOfVerVec) ?
             complaints[schainId].fromNodeToComplaint :
@@ -94,7 +96,5 @@ contract SkaleDKGResponse is SkaleDKG {
             g1.a, g1.b,
             tmp.x.b, tmp.x.a, tmp.y.b, tmp.y.a);
     }
-
-
 
 }

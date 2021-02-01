@@ -36,7 +36,8 @@ contract SkaleDKGComplaint is SkaleDKG {
             // not broadcasted in 30 min
             _handleComplaintWhenNotBroadcasted(schainId, toNodeIndex);
         }
-        _refundGasBySchain(gasTotal, schainId, fromNodeIndex);
+         uint validatorId = Nodes(contractManager.getContract("Nodes")).getValidatorId(toNodeIndex);
+        _refundGasByValidator(validatorId, toNodeIndex, gasTotal - gasleft());
     }
 
     function complaintBadData(bytes32 schainId, uint fromNodeIndex, uint toNodeIndex)
@@ -52,7 +53,7 @@ contract SkaleDKGComplaint is SkaleDKG {
         require(isNodeBroadcasted(schainId, toNodeIndex), "Accused node has not broadcasted");
         require(!isAllDataReceived(schainId, fromNodeIndex), "Node has already sent alright");
         _processComplaint(schainId, fromNodeIndex, toNodeIndex);
-        _refundGasBySchain(gasTotal, schainId, fromNodeIndex);
+        _refundGasBySchain(schainId, fromNodeIndex, gasTotal - gasleft());
     }
 
     function _handleComplaintWhenBroadcasted(bytes32 schainId, uint fromNodeIndex, uint toNodeIndex) private {

@@ -499,8 +499,12 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         );
     }
 
-    function _refundGasBySchain(uint gasTotal, bytes32 schainId, uint nodeIndex) internal {
-        Wallets(contractManager.getContract("Wallets")).refundGasBySchain(gasTotal, schainId, nodeIndex);
+    function _refundGasBySchain(bytes32 schainId, uint nodeIndex, uint gasSpent) internal {
+        Wallets(contractManager.getContract("Wallets")).refundGasBySchain(schainId, nodeIndex, gasSpent);
+    }
+
+    function _refundGasByValidator(uint validatorId, uint nodeIndex, uint gasTotal) internal {
+        Wallets(contractManager.getContract("Wallets")).refundGasByValidator(validatorId, nodeIndex, gasTotal);
     }
 
     function _getComplaintTimelimit() internal view returns (uint) {

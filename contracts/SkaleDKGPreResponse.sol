@@ -31,7 +31,7 @@ contract SkaleDKGPreResponse is SkaleDKG {
             secretKeyContribution
         );
         _processPreResponse(secretKeyContribution[index].share, schainId, verificationVectorMult);
-        _refundGasBySchain(gasTotal, schainId, fromNodeIndex);
+        _refundGasBySchain(schainId, fromNodeIndex, gasTotal - gasleft());
     }
 
     function _preResponseCheck(

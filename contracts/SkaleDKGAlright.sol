@@ -32,7 +32,7 @@ contract SkaleDKGAlright is SkaleDKG {
         if (dkgProcess[schainId].numberOfCompleted == numberOfParticipant) {
             _setSuccesfulDKG(schainId);
         }
-        _refundGasBySchain(gasTotal, schainId, fromNodeIndex);
+        _refundGasBySchain(schainId, fromNodeIndex, gasTotal - gasleft());
     }
 
     function _setSuccesfulDKG(bytes32 schainId) internal {
