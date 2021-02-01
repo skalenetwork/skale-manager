@@ -113,6 +113,27 @@ contract("SegmentTree", ([owner]) => {
             }
         });
 
+        it("should remove from one and move to another place optimized", async () => {
+            console.log("Will start test");
+            await segmentTree.moveFromPlaceToPlace(128, 127, 16);
+            (await segmentTree.getElem(0)).toNumber().should.be.equal(150);
+            let lastLeaf = 255;
+            (await segmentTree.getElem(lastLeaf)).toNumber().should.be.equal(134);
+            (await segmentTree.getElem(lastLeaf - 1)).toNumber().should.be.equal(16);
+            lastLeaf = Math.floor(lastLeaf / 2);
+            while (lastLeaf > 1) {
+                (await segmentTree.getElem(lastLeaf - 1)).toNumber().should.be.equal(150);
+                lastLeaf = Math.floor(lastLeaf / 2);
+            }
+            await segmentTree.moveFromPlaceToPlace(127, 128, 16);
+            (await segmentTree.getElem(0)).toNumber().should.be.equal(150);
+            lastLeaf = 255;
+            while (lastLeaf > 1) {
+                (await segmentTree.getElem(lastLeaf - 1)).toNumber().should.be.equal(150);
+                lastLeaf = Math.floor(lastLeaf / 2);
+            }
+        });
+
         it("should reject if place is incorrect", async () => {
             await segmentTree.addToPlace(38, 16);
             await segmentTree.removeFromPlace(99, 16);

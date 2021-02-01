@@ -23,6 +23,8 @@ pragma solidity 0.6.10;
 
 // import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
 
+import "@nomiclabs/buidler/console.sol";
+
 library SegmentTree {
 
     struct SegmentTree {
@@ -77,11 +79,75 @@ library SegmentTree {
                 rightBound = middle;
                 step += step;
             }
+            console.log("OKAY");
             self.tree[step - 1] -= delta;
         }
     }
 
-    // function optimizedMoveFromPlaceToPlace(SegmentTree storage self, uint8 fromPlace, uint8 toPlace) internal {}
+    function optimizedMoveFromPlaceToPlace(
+        SegmentTree storage self,
+        uint8 fromPlace,
+        uint8 toPlace,
+        uint delta
+    )
+        internal
+    {
+        require(_correctSpace(fromPlace), "Incorrect place");
+        require(_correctSpace(toPlace), "Incorrect place");
+        uint8 leftBound = _FIRST;
+        uint8 rightBound = _LAST;
+        uint step = 1;
+        uint8 middle = (leftBound + rightBound) / 2;
+        uint8 fromPlaceMove = fromPlace; 
+        uint8 toPlaceMove = toPlace;
+        if (fromPlace > toPlace) {
+            fromPlaceMove = toPlace;
+            toPlaceMove = fromPlace;
+        }
+        while (toPlaceMove <= middle || middle <= fromPlaceMove) {
+            if (middle <= fromPlaceMove) {
+                leftBound = middle + 1;
+                step += step + 1;
+            } else {
+                rightBound = middle;
+                step += step;
+            }
+            middle = (leftBound + rightBound) / 2;
+            console.log("FIRST", middle);
+        }
+
+        uint8 leftBoundMove = leftBound;
+        uint8 rightBoundMove = rightBound;
+        uint stepMove = step;
+        while(leftBoundMove < rightBoundMove) {
+            middle = (leftBoundMove + rightBoundMove) / 2;
+            if (fromPlace > middle) {
+                leftBoundMove = middle + 1;
+                stepMove += stepMove + 1;
+            } else {
+                rightBoundMove = middle;
+                stepMove += stepMove;
+            }
+            self.tree[stepMove - 1] -= delta;
+            console.log("SECOND", middle);
+        }
+
+        leftBoundMove = leftBound;
+        rightBoundMove = rightBound;
+        stepMove = step;
+        while(leftBoundMove < rightBoundMove) {
+            middle = (leftBoundMove + rightBoundMove) / 2;
+            if (toPlace > middle) {
+                leftBoundMove = middle + 1;
+                stepMove += stepMove + 1;
+            } else {
+                rightBoundMove = middle;
+                stepMove += stepMove;
+            }
+            self.tree[stepMove - 1] += delta;
+            console.log("THIRD", middle);
+        }
+    }
 
     function sumFromPlaceToLast(SegmentTree storage self, uint8 place) internal view returns (uint sum) {
         require(_correctSpace(place), "Incorrect place");
@@ -105,6 +171,60 @@ library SegmentTree {
         sum += self.tree[step - 1];
     }
 
+    // function optimizedRandomNonZeroFromPlaceToLast(
+    //     SegmentTree storage self,
+    //     uint8 place,
+    //     uint salt
+    // )
+    //     internal
+    //     view
+    //     returns (uint8, uint)
+    // {
+    //     require(_correctSpace(place), "Incorrect place");
+    //     uint8 leftBound = _FIRST;
+    //     uint8 rightBound = _LAST;
+    //     uint step = 1;
+    //     uint randomBeakon = salt;
+
+    //     while (place > (leftBound + rightBound) / 2) {
+    //         leftBound = (leftBound + rightBound) / 2 + 1;
+    //         step += step + 1;
+    //     }
+
+    //     uint priorityB = self.tree[2 * step];
+    //     uint priorityA = sumFromPlaceToLast(self, place) - priorityB;
+        
+    //     while(leftBound < rightBound) {
+    //         uint8 middle = (leftBound + rightBound) / 2;
+    //         if (priorityA == 0) {
+    //             leftBound = middle + 1;
+    //             step += step + 1;
+    //             priorityA = self.tree[2 * step - 1];
+    //             priotityB = self.tree[2 * step];
+    //         } else if (priorityB == 0) {
+    //             rightBound = middle;
+    //             step += step;
+    //             priorityA = priorityA - self.tree[2 * step];
+    //             priotityB = self.tree[2 * step];
+    //         } else {
+    //             (bool isLeftWay, uint randomBeakon2) =
+    //                 _randomWay(randomBeakon, priorityA, self.tree[2 * step]);
+    //             if (isLeftWay) {
+    //                 rightBound = middle;
+    //                 step += step;
+    //             } else {
+    //                 leftBound = middle + 1;
+    //                 step += step + 1;
+    //             }
+    //             randomBeakon = randomBeakon2;
+    //         }
+    //     }
+    //     if (self.tree[step - 1] == 0) {
+    //         return (0, 0);
+    //     }
+    //     return (leftBound, randomBeakon);
+    // }
+
     function randomNonZeroFromPlaceToLast(
         SegmentTree storage self,
         uint8 place,
@@ -119,6 +239,7 @@ library SegmentTree {
         uint8 rightBound = _LAST;
         uint step = 1;
         uint randomBeakon = salt;
+        
         while(leftBound < rightBound) {
             uint8 middle = (leftBound + rightBound) / 2;
             if (place > middle) {

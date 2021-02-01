@@ -46,6 +46,11 @@ contract SegmentTreeTester {
         _tree.removeFromPlace(place, elem);
     }
 
+    function moveFromPlaceToPlace(uint8 fromPlace, uint8 toPlace, uint elem) external {
+        console.log("Start");
+        _tree.optimizedMoveFromPlaceToPlace(fromPlace, toPlace, elem);
+    }
+
     function sumFromPlaceToLast(uint8 place) external view returns (uint) {
         return _tree.sumFromPlaceToLast(place);
     }
