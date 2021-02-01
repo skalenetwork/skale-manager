@@ -67,9 +67,9 @@ contract Wallets is Permissions {
     /**
      * @notice Reimburse gas for node by validator wallet. If validator wallet has not enough funds 
      * the node will receive the entire remaining amount in the validator's wallet
-     * @param node - address of node that will get refunding by validator
-     * @param gasTotal - all gas that was allocated at the beginning of the transaction
      * @param validatorId - validator that will reimburse desired transaction
+     * @param nodeIndex - index of node that will get refunding by validator
+     * @param spentGas - amount of spent gas that should be reimbursed to desired node
      * @dev
      * Requirements: 
      * - Given validator should exist
@@ -77,14 +77,14 @@ contract Wallets is Permissions {
     function refundGasByValidator(
         uint validatorId,
         uint nodeIndex,
-        uint gasSpent
+        uint spentGas
     )
         external
         allowTwo("SkaleManager", "SkaleDKG")
     {
         address payable node = payable(Nodes(contractManager.getContract("Nodes")).getNodeAddress(nodeIndex));
         require(validatorId != 0, "ValidatorId could not be zero");
-        uint amount = tx.gasprice * gasSpent;
+        uint amount = tx.gasprice * spentGas;
         if (amount <= validatorWallets[validatorId]) {
             validatorWallets[validatorId] = validatorWallets[validatorId].sub(amount);
             emit NodeWalletReimbursed(node, amount);
@@ -101,9 +101,9 @@ contract Wallets is Permissions {
     /**
      * @notice Reimburse gas for node by schain wallet. If schain wallet has not enough funds 
      * than transaction will be reverted
-     * @param gasTotal - all gas that was allocated at the beginning of the transaction
      * @param schainId - schain that will reimburse desired transaction
      * @param nodeIndex - node that will get refunding by schain
+     * @param spentGas - amount of spent gas that should be reimbursed to desired node
      * @dev
      * Requirements: 
      * - Given schain should exist
