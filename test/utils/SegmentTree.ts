@@ -136,7 +136,6 @@ contract("SegmentTree", ([owner]) => {
         it("should move from one to another place", async () => {
             await segmentTree.moveFromPlaceToPlace(128, 96, 16);
             (await segmentTree.getElem(0)).toNumber().should.be.equal(150);
-            
             await segmentTree.moveFromPlaceToPlace(96, 64, 16);
             (await segmentTree.getElem(0)).toNumber().should.be.equal(150);
             await segmentTree.moveFromPlaceToPlace(64, 32, 16);
