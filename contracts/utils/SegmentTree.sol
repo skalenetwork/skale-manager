@@ -23,8 +23,6 @@ pragma solidity 0.6.10;
 
 // import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
 
-import "@nomiclabs/buidler/console.sol";
-
 library SegmentTree {
 
     struct SegmentTree {
@@ -79,7 +77,6 @@ library SegmentTree {
                 rightBound = middle;
                 step += step;
             }
-            console.log("OKAY");
             self.tree[step - 1] -= delta;
         }
     }
@@ -92,20 +89,15 @@ library SegmentTree {
     )
         internal
     {
-        require(_correctSpace(fromPlace), "Incorrect place");
-        require(_correctSpace(toPlace), "Incorrect place");
+        require(_correctSpace(fromPlace) && _correctSpace(toPlace), "Incorrect place");
         uint8 leftBound = _FIRST;
         uint8 rightBound = _LAST;
         uint step = 1;
         uint8 middle = (leftBound + rightBound) / 2;
-        uint8 fromPlaceMove = fromPlace; 
-        uint8 toPlaceMove = toPlace;
-        if (fromPlace > toPlace) {
-            fromPlaceMove = toPlace;
-            toPlaceMove = fromPlace;
-        }
-        while (toPlaceMove <= middle || middle <= fromPlaceMove) {
-            if (middle <= fromPlaceMove) {
+        uint8 fromPlaceMove = fromPlace > toPlace ? toPlace : fromPlace;
+        uint8 toPlaceMove = fromPlace > toPlace ? fromPlace : toPlace;
+        while (toPlaceMove <= middle || middle < fromPlaceMove) {
+            if (middle < fromPlaceMove) {
                 leftBound = middle + 1;
                 step += step + 1;
             } else {
@@ -113,39 +105,30 @@ library SegmentTree {
                 step += step;
             }
             middle = (leftBound + rightBound) / 2;
-            console.log("FIRST", middle);
         }
 
         uint8 leftBoundMove = leftBound;
         uint8 rightBoundMove = rightBound;
         uint stepMove = step;
-        while(leftBoundMove < rightBoundMove) {
-            middle = (leftBoundMove + rightBoundMove) / 2;
-            if (fromPlace > middle) {
-                leftBoundMove = middle + 1;
+        while(leftBoundMove < rightBoundMove && leftBound < rightBound) {
+            uint8 middleMove = (leftBoundMove + rightBoundMove) / 2;
+            if (fromPlace > middleMove) {
+                leftBoundMove = middleMove + 1;
                 stepMove += stepMove + 1;
             } else {
-                rightBoundMove = middle;
+                rightBoundMove = middleMove;
                 stepMove += stepMove;
             }
             self.tree[stepMove - 1] -= delta;
-            console.log("SECOND", middle);
-        }
-
-        leftBoundMove = leftBound;
-        rightBoundMove = rightBound;
-        stepMove = step;
-        while(leftBoundMove < rightBoundMove) {
-            middle = (leftBoundMove + rightBoundMove) / 2;
+            middle = (leftBound + rightBound) / 2;
             if (toPlace > middle) {
-                leftBoundMove = middle + 1;
-                stepMove += stepMove + 1;
+                leftBound = middle + 1;
+                step += step + 1;
             } else {
-                rightBoundMove = middle;
-                stepMove += stepMove;
+                rightBound = middle;
+                step += step;
             }
-            self.tree[stepMove - 1] += delta;
-            console.log("THIRD", middle);
+            self.tree[step - 1] += delta;
         }
     }
 

@@ -114,10 +114,9 @@ contract("SegmentTree", ([owner]) => {
         });
 
         it("should remove from one and move to another place optimized", async () => {
-            console.log("Will start test");
             await segmentTree.moveFromPlaceToPlace(128, 127, 16);
             (await segmentTree.getElem(0)).toNumber().should.be.equal(150);
-            let lastLeaf = 255;
+            let lastLeaf = 254;
             (await segmentTree.getElem(lastLeaf)).toNumber().should.be.equal(134);
             (await segmentTree.getElem(lastLeaf - 1)).toNumber().should.be.equal(16);
             lastLeaf = Math.floor(lastLeaf / 2);
@@ -130,6 +129,27 @@ contract("SegmentTree", ([owner]) => {
             lastLeaf = 255;
             while (lastLeaf > 1) {
                 (await segmentTree.getElem(lastLeaf - 1)).toNumber().should.be.equal(150);
+                lastLeaf = Math.floor(lastLeaf / 2);
+            }
+        });
+
+        it("should move from one to another place", async () => {
+            await segmentTree.moveFromPlaceToPlace(128, 96, 16);
+            (await segmentTree.getElem(0)).toNumber().should.be.equal(150);
+            
+            await segmentTree.moveFromPlaceToPlace(96, 64, 16);
+            (await segmentTree.getElem(0)).toNumber().should.be.equal(150);
+            await segmentTree.moveFromPlaceToPlace(64, 32, 16);
+            (await segmentTree.getElem(0)).toNumber().should.be.equal(150);
+            await segmentTree.moveFromPlaceToPlace(32, 1, 16);
+            let lastLeaf = 255;
+            while (lastLeaf > 1) {
+                (await segmentTree.getElem(lastLeaf - 1)).toNumber().should.be.equal(134);
+                lastLeaf = Math.floor(lastLeaf / 2);
+            }
+            lastLeaf = 128;
+            while (lastLeaf > 1) {
+                (await segmentTree.getElem(lastLeaf - 1)).toNumber().should.be.equal(16);
                 lastLeaf = Math.floor(lastLeaf / 2);
             }
         });
@@ -193,6 +213,35 @@ contract("SegmentTree", ([owner]) => {
             (await segmentTree.sumFromPlaceToLast(128)).toNumber().should.be.equal(128);
             (await segmentTree.sumFromPlaceToLast(127)).toNumber().should.be.equal(128);
             (await segmentTree.sumFromPlaceToLast(126)).toNumber().should.be.equal(128);
+        });
+
+        it("should calculate correct sum after moving some elements", async () => {
+            (await segmentTree.sumFromPlaceToLast(100)).toNumber().should.be.equal(150);
+            await segmentTree.moveFromPlaceToPlace(128, 101, 5);
+            await segmentTree.moveFromPlaceToPlace(128, 31, 50);
+            await segmentTree.addToLast(8);
+            (await segmentTree.sumFromPlaceToLast(100)).toNumber().should.be.equal(108);
+            (await segmentTree.sumFromPlaceToLast(101)).toNumber().should.be.equal(108);
+            (await segmentTree.sumFromPlaceToLast(102)).toNumber().should.be.equal(103);
+            (await segmentTree.sumFromPlaceToLast(80)).toNumber().should.be.equal(108);
+            (await segmentTree.sumFromPlaceToLast(32)).toNumber().should.be.equal(108);
+            (await segmentTree.sumFromPlaceToLast(31)).toNumber().should.be.equal(158);
+            (await segmentTree.sumFromPlaceToLast(128)).toNumber().should.be.equal(103);
+            (await segmentTree.sumFromPlaceToLast(127)).toNumber().should.be.equal(103);
+            (await segmentTree.sumFromPlaceToLast(126)).toNumber().should.be.equal(103);
+            await segmentTree.moveFromPlaceToPlace(128, 80, 30);
+            await segmentTree.removeFromPlace(101, 5);
+            await segmentTree.moveFromPlaceToPlace(128, 31, 2);
+            (await segmentTree.sumFromPlaceToLast(100)).toNumber().should.be.equal(71);
+            (await segmentTree.sumFromPlaceToLast(101)).toNumber().should.be.equal(71);
+            (await segmentTree.sumFromPlaceToLast(102)).toNumber().should.be.equal(71);
+            (await segmentTree.sumFromPlaceToLast(81)).toNumber().should.be.equal(71);
+            (await segmentTree.sumFromPlaceToLast(80)).toNumber().should.be.equal(101);
+            (await segmentTree.sumFromPlaceToLast(32)).toNumber().should.be.equal(101);
+            (await segmentTree.sumFromPlaceToLast(31)).toNumber().should.be.equal(153);
+            (await segmentTree.sumFromPlaceToLast(128)).toNumber().should.be.equal(71);
+            (await segmentTree.sumFromPlaceToLast(127)).toNumber().should.be.equal(71);
+            (await segmentTree.sumFromPlaceToLast(126)).toNumber().should.be.equal(71);
         });
     });
 
@@ -268,6 +317,23 @@ contract("SegmentTree", ([owner]) => {
                 if (place - schainPlace > 0) {
                     // console.log(place - schainPlace);
                     await segmentTree.addToPlace(place - schainPlace, 1);
+                }
+            }
+            // 201 time should be no nodes
+            (await segmentTree.getRandomElem(schainPlace)).toNumber().should.be.equal(0);
+        });
+
+        it("random stress simulating large schains test moving elems", async () => {
+            const schainPlace = 32; // 1/4 of node
+            await segmentTree.removeFromPlace(128, 100); // make 50 nodes
+            for(let i = 0; i < 200; i++) { // 200 times we could repeat removing
+                const place = (await segmentTree.getRandomElem(schainPlace)).toNumber();
+                // console.log("New place ", place);
+                if (place - schainPlace > 0) {
+                    // console.log(place - schainPlace);
+                    await segmentTree.moveFromPlaceToPlace(place, place - schainPlace, 1);
+                } else {
+                    await segmentTree.removeFromPlace(place, 1);
                 }
             }
             // 201 time should be no nodes
