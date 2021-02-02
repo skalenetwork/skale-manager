@@ -4,6 +4,7 @@
     SegmentTree.sol - SKALE Manager
     Copyright (C) 2018-Present SKALE Labs
     @author Artem Payvin
+    @author Dmytro Stebaiev
 
     SKALE Manager is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as published
@@ -21,11 +22,17 @@
 
 pragma solidity 0.6.10;
 
-// import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
-
+import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/utils/SafeCast.sol";
 import "@nomiclabs/buidler/console.sol";
 
+import "./Random.sol";
+
+
 library SegmentTree {
+    using Random for Random.RandomGenerator;
+    using SafeCast for uint;
+    using SafeMath for uint;    
 
     struct SegmentTree {
         uint[255] tree;
@@ -104,6 +111,7 @@ library SegmentTree {
             fromPlaceMove = toPlace;
             toPlaceMove = fromPlace;
         }
+        revert("Infinite loop: if toPlaceMove is 1 middle is always >= toPlaceMove");
         while (toPlaceMove <= middle || middle <= fromPlaceMove) {
             if (middle <= fromPlaceMove) {
                 leftBound = middle + 1;
@@ -235,47 +243,16 @@ library SegmentTree {
         returns (uint8, uint)
     {
         require(_correctSpace(place), "Incorrect place");
-        uint8 leftBound = _FIRST;
-        uint8 rightBound = _LAST;
-        uint step = 1;
-        uint randomBeakon = salt;
-        
-        while(leftBound < rightBound) {
-            uint8 middle = (leftBound + rightBound) / 2;
-            if (place > middle) {
-                leftBound = middle + 1;
-                step += step + 1;
-            } else {
-                uint priorityA = place <= leftBound ?
-                    self.tree[2 * step - 1] :
-                    rightBound == _LAST ?
-                    sumFromPlaceToLast(self, place) - self.tree[2 * step] :
-                    sumFromPlaceToLast(self, place) - sumFromPlaceToLast(self, middle + 1);
-                if (priorityA == 0) {
-                    leftBound = middle + 1;
-                    step += step + 1;
-                } else if (self.tree[2 * step] == 0) {
-                    rightBound = middle;
-                    step += step;
-                } else {
-                    
-                    (bool isLeftWay, uint randomBeakon2) =
-                        _randomWay(randomBeakon, priorityA, self.tree[2 * step]);
-                    if (isLeftWay) {
-                        rightBound = middle;
-                        step += step;
-                    } else {
-                        leftBound = middle + 1;
-                        step += step + 1;
-                    }
-                    randomBeakon = randomBeakon2;
-                }
-            }
-        }
-        if (self.tree[step - 1] == 0) {
-            return (0, 0);
-        }
-        return (leftBound, randomBeakon);
+        Random.RandomGenerator memory randomGenerator = Random.create(salt);
+        return (
+            _getIndexOfRandomNonZeroElement(
+                self,
+                randomGenerator,
+                place - 1,
+                sumFromPlaceToLast(self, place)
+            ).toUint8(),
+            randomGenerator.seed
+        );
     }
 
     function getElemFromTree(SegmentTree storage self, uint index) internal view returns (uint) {
@@ -298,5 +275,56 @@ library SegmentTree {
     {
         newSalt = uint(keccak256(abi.encodePacked(salt, priorityA, priorityB)));
         isLeftWay = (newSalt % (priorityA + priorityB)) < priorityA;
+    }
+
+    function _left(uint v) private pure returns (uint) {
+        return v.mul(2);
+    }
+
+    function _right(uint v) private pure returns (uint) {
+        return v.mul(2).add(1);
+    }
+
+    function _middle(uint left, uint right) private pure returns (uint) {
+        return left.add(right).div(2);
+    }
+
+    function _getIndexOfRandomNonZeroElement(
+        SegmentTree storage self,
+        Random.RandomGenerator memory randomGenerator,
+        uint from,
+        uint sum
+    )
+        private
+        view
+        returns (uint)
+    {
+        uint vertex = 1;
+        uint leftBound = 0;
+        uint rightBound = _LAST;
+        uint currentFrom = from;
+        uint currentSum = sum;
+        while(leftBound.add(1) < rightBound) {
+            if (_middle(leftBound, rightBound) <= from) {
+                vertex = _right(vertex);
+                leftBound = _middle(leftBound, rightBound);
+            } else {
+                uint rightSum = self.tree[_right(vertex)];
+                uint leftSum = currentSum.sub(rightSum);
+                if (randomGenerator.random(currentSum) < leftSum) {
+                    // go left
+                    vertex = _left(vertex);
+                    rightBound = _middle(leftBound, rightBound);
+                    currentSum = leftSum;
+                } else {
+                    // go right
+                    vertex = _right(vertex);
+                    leftBound = _middle(leftBound, rightBound);
+                    currentFrom = leftBound;
+                    currentSum = rightSum;
+                }
+            }
+        }
+        return leftBound;
     }
 }
