@@ -39,9 +39,7 @@ library Random {
      * @dev Create an instance of RandomGenerator
      */
     function create(uint seed) internal pure returns (RandomGenerator memory) {
-        RandomGenerator memory randomGenerator;
-        randomGenerator.seed = seed;
-        return randomGenerator;
+        return RandomGenerator({seed: seed});
     }
 
     /**
