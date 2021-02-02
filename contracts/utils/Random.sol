@@ -47,6 +47,7 @@ library Random {
      */
     function random(RandomGenerator memory self) internal pure returns (uint) {
         self.seed = uint(sha256(abi.encodePacked(self.seed)));
+        return self.seed;
     }
 
     /**
