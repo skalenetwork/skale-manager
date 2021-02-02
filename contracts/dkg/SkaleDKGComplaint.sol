@@ -1,7 +1,30 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+
+/*
+    SkaleDKGComplaint.sol - SKALE Manager
+    Copyright (C) 2021-Present SKALE Labs
+    @author Dmytro Stebaiev
+    @author Artem Payvin
+    @author Vadim Yavorsky
+
+    SKALE Manager is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as published
+    by the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    SKALE Manager is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 pragma solidity 0.6.10;
 pragma experimental ABIEncoderV2;
 
-import "./SkaleDKG.sol";
+import "../SkaleDKG.sol";
 
 /**
  * @title SkaleDKG
@@ -37,7 +60,8 @@ contract SkaleDKGComplaint is SkaleDKG {
             _handleComplaintWhenNotBroadcasted(schainId, toNodeIndex);
         }
          uint validatorId = Nodes(contractManager.getContract("Nodes")).getValidatorId(toNodeIndex);
-        _refundGasByValidator(validatorId, toNodeIndex, gasTotal - gasleft());
+        _refundGasBySchain(schainId, fromNodeIndex, gasTotal - gasleft(), true);
+        _refundGasByValidatorToSchain(validatorId, schainId);
     }
 
     function complaintBadData(bytes32 schainId, uint fromNodeIndex, uint toNodeIndex)
@@ -53,7 +77,7 @@ contract SkaleDKGComplaint is SkaleDKG {
         require(isNodeBroadcasted(schainId, toNodeIndex), "Accused node has not broadcasted");
         require(!isAllDataReceived(schainId, fromNodeIndex), "Node has already sent alright");
         _processComplaint(schainId, fromNodeIndex, toNodeIndex);
-        _refundGasBySchain(schainId, fromNodeIndex, gasTotal - gasleft());
+        _refundGasBySchain(schainId, fromNodeIndex, gasTotal - gasleft(), true);
     }
 
     function _handleComplaintWhenBroadcasted(bytes32 schainId, uint fromNodeIndex, uint toNodeIndex) private {

@@ -181,6 +181,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         onlyNodeOwner(fromNodeIndex)
     {
         address skaleDKGAlright = contractManager.getContract("SkaleDKGAlright");
+        // solhint-disable-next-line avoid-low-level-calls
         (bool success, bytes memory result) = skaleDKGAlright.delegatecall(
             abi.encodeWithSignature("alright(bytes32,uint256)",
             schainId,
@@ -201,9 +202,11 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         onlyNodeOwner(nodeIndex)
     {
         address skaleDKGBroadcast = contractManager.getContract("SkaleDKGBroadcast");
-        (bool success, bytes memory result) = skaleDKGBroadcast.delegatecall(
-            abi.encodeWithSignature("broadcast(bytes32,uint256,((uint256,uint256),(uint256,uint256))[],(bytes32[2],bytes32)[])",
-         schainId, nodeIndex, verificationVector, secretKeyContribution));
+        // solhint-disable-next-line avoid-low-level-calls
+        (bool success, bytes memory result) = skaleDKGBroadcast.delegatecall(abi.encodeWithSignature(
+            "broadcast(bytes32,uint256,((uint256,uint256),(uint256,uint256))[],(bytes32[2],bytes32)[])",
+            schainId, nodeIndex, verificationVector, secretKeyContribution
+        ));
         require(success, _getRevertMsg(result));
     }
 
@@ -216,8 +219,11 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         onlyNodeOwner(fromNodeIndex)
     {
         address skaleDKGComplaint = contractManager.getContract("SkaleDKGComplaint");
-        (bool success, bytes memory result) = skaleDKGComplaint.delegatecall(abi.encodeWithSignature("complaint(bytes32,uint256,uint256)",
-         schainId, fromNodeIndex, toNodeIndex));
+        // solhint-disable-next-line avoid-low-level-calls
+        (bool success, bytes memory result) = skaleDKGComplaint.delegatecall(abi.encodeWithSignature(
+            "complaint(bytes32,uint256,uint256)",
+            schainId, fromNodeIndex, toNodeIndex
+        ));
         require(success, _getRevertMsg(result));
     }
 
@@ -230,8 +236,11 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         onlyNodeOwner(fromNodeIndex)
     { 
         address skaleDKGComplaint = contractManager.getContract("SkaleDKGComplaint");
-        (bool success, bytes memory result) = skaleDKGComplaint.delegatecall(abi.encodeWithSignature("complaintBadData(bytes32,uint256,uint256)",
-         schainId, fromNodeIndex, toNodeIndex));
+        // solhint-disable-next-line avoid-low-level-calls
+        (bool success, bytes memory result) = skaleDKGComplaint.delegatecall(abi.encodeWithSignature(
+            "complaintBadData(bytes32,uint256,uint256)",
+            schainId, fromNodeIndex, toNodeIndex
+        ));
         require(success, _getRevertMsg(result));
     }
 
@@ -248,8 +257,10 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         onlyNodeOwner(fromNodeIndex)
     {
         address skaleDKGPreResponse = contractManager.getContract("SkaleDKGPreResponse");
-        (bool success, bytes memory result) = skaleDKGPreResponse.delegatecall(
-            abi.encodeWithSignature("preResponse(bytes32,uint256,((uint256,uint256),(uint256,uint256))[],((uint256,uint256),(uint256,uint256))[],(bytes32[2],bytes32)[])",
+        // solhint-disable-next-line avoid-low-level-calls
+        (bool success, bytes memory result) = skaleDKGPreResponse.delegatecall(abi.encodeWithSignature(
+            "preResponse(bytes32,uint256,((uint256,uint256),(uint256,uint256))[],"
+            "((uint256,uint256),(uint256,uint256))[],(bytes32[2],bytes32)[])",
             schainId, fromNodeIndex, verificationVector, verificationVectorMult, secretKeyContribution)
         );
         require(success, _getRevertMsg(result));
@@ -267,8 +278,9 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         onlyNodeOwner(fromNodeIndex)
     {
         address skaleDKGResponse = contractManager.getContract("SkaleDKGResponse");
-        (bool success, bytes memory result) = skaleDKGResponse.delegatecall(
-            abi.encodeWithSignature("response(bytes32,uint256,uint256,((uint256,uint256),(uint256,uint256)))",
+        // solhint-disable-next-line avoid-low-level-calls
+        (bool success, bytes memory result) = skaleDKGResponse.delegatecall(abi.encodeWithSignature(
+            "response(bytes32,uint256,uint256,((uint256,uint256),(uint256,uint256)))",
             schainId, fromNodeIndex, secretNumber, multipliedShare)
         );
         require(success, _getRevertMsg(result));
@@ -277,6 +289,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
     function _getRevertMsg(bytes memory _returnData) private pure returns (string memory) {
         if (_returnData.length < 68) return "Transaction reverted silently";
 
+        // solhint-disable-next-line no-inline-assembly
         assembly {
             _returnData := add(_returnData, 0x04)
         }
@@ -497,12 +510,14 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         );
     }
 
-    function _refundGasBySchain(bytes32 schainId, uint nodeIndex, uint gasSpent) internal {
-        Wallets(contractManager.getContract("Wallets")).refundGasBySchain(schainId, nodeIndex, gasSpent);
+    function _refundGasBySchain(bytes32 schainId, uint nodeIndex, uint spentGas, bool isDebt) internal {
+        Wallets(payable(contractManager.getContract("Wallets")))
+        .refundGasBySchain(schainId, nodeIndex, spentGas, isDebt);
     }
 
-    function _refundGasByValidator(uint validatorId, uint nodeIndex, uint gasTotal) internal {
-        Wallets(contractManager.getContract("Wallets")).refundGasByValidator(validatorId, nodeIndex, gasTotal);
+    function _refundGasByValidatorToSchain(uint validatorId, bytes32 schainId) internal {
+        Wallets(payable(contractManager.getContract("Wallets")))
+        .refundGasByValidatorToSchain(validatorId, schainId);
     }
 
     function _getComplaintTimelimit() internal view returns (uint) {

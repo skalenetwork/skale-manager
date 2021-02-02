@@ -235,7 +235,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
             gasleft());
     }
 
-    function _refundGasByValidator(uint validatorId, uint nodeIndex, uint gasSpent) private {
-        Wallets(contractManager.getContract("Wallets")).refundGasByValidator(validatorId, nodeIndex, gasSpent);
+    function _refundGasByValidator(uint validatorId, uint nodeIndex, uint gasTotal) private {
+        Wallets(payable(contractManager.getContract("Wallets"))).refundGasByValidator(validatorId, nodeIndex, gasTotal);
     }
 }

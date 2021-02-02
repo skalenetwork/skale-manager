@@ -231,8 +231,8 @@ contract Schains is Permissions {
 
     /**
      * @dev addSpace - return occupied space to Node
-     * @param nodeIndex - index of Node at common array of Nodes
-     * @param partOfNode - divisor of given type of Schain
+     * nodeIndex - index of Node at common array of Nodes
+     * partOfNode - divisor of given type of Schain
      */
     function addSpace(uint nodeIndex, uint8 partOfNode) external allowTwo("Schains", "NodeRotation") {
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));
@@ -469,7 +469,7 @@ contract Schains is Permissions {
         schainsInternal.removeSchain(schainId, from);
         schainsInternal.removeHolesForSchain(schainId);
         nodeRotation.removeRotation(schainId);
-        Wallets(contractManager.getContract("Wallets")).withdrawFundsFromSchainWallet(payable(from), schainId);
+        Wallets(payable(contractManager.getContract("Wallets"))).withdrawFundsFromSchainWallet(payable(from), schainId);
         emit SchainDeleted(from, name, schainId);
     }
 }
