@@ -22,6 +22,8 @@
 pragma solidity 0.6.10;
 pragma experimental ABIEncoderV2;
 
+import "@openzeppelin/contracts-ethereum-package/contracts/utils/Strings.sol";
+
 import "./Permissions.sol";
 import "./ConstantsHolder.sol";
 import "./SchainsInternal.sol";
@@ -36,6 +38,7 @@ import "./interfaces/ISkaleDKG.sol";
 contract NodeRotation is Permissions {
     using StringUtils for string;
     using StringUtils for uint;
+    using Strings for uint;
 
     /**
      * nodeIndex - index of Node which is in process of rotation (left from schain)
@@ -93,7 +96,7 @@ contract NodeRotation is Permissions {
             string memory revertMessage = "Node cannot rotate on Schain ";
             revertMessage = revertMessage.strConcat(schainName);
             revertMessage = revertMessage.strConcat(", occupied by Node ");
-            revertMessage = revertMessage.strConcat(rotation.nodeIndex.uint2str());
+            revertMessage = revertMessage.strConcat(rotation.nodeIndex.toString());
             string memory dkgRevert = "DKG process did not finish on schain ";
             ISkaleDKG skaleDKG = ISkaleDKG(contractManager.getContract("SkaleDKG"));
             require(
