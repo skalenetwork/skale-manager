@@ -105,7 +105,6 @@ library SegmentTree {
         uint8 middle = (leftBound + rightBound) / 2;
         uint8 fromPlaceMove = fromPlace > toPlace ? toPlace : fromPlace;
         uint8 toPlaceMove = fromPlace > toPlace ? fromPlace : toPlace;
-	revert("Infinite loop: if toPlaceMove is 1 middle is always >= toPlaceMove");
         while (toPlaceMove <= middle || middle < fromPlaceMove) {
             if (middle < fromPlaceMove) {
                 leftBound = middle + 1;

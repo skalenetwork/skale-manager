@@ -155,13 +155,13 @@ contract NodeRotation is Permissions {
     {
         SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
         Schains schains = Schains(contractManager.getContract("Schains"));
-        schainsInternal.makeSchainNodesInvisible(schainId);
         schainsInternal.removeNodeFromSchain(nodeIndex, schainId);
-        newNode = selectNodeToGroup(schainId);
         if (!isBadNode) {
             schainsInternal.removeNodeFromExceptions(schainId, nodeIndex);
         }
-        schainsInternal.makeSchainNodesVisible(schainId);
+        // schainsInternal.makeSchainNodesInvisible(schainId);
+        newNode = selectNodeToGroup(schainId);
+        // schainsInternal.makeSchainNodesVisible(schainId);
         uint8 space = schainsInternal.getSchainsPartOfNode(schainId);
         schains.addSpace(nodeIndex, space);
         _finishRotation(schainId, nodeIndex, newNode, shouldDelay);
@@ -186,11 +186,13 @@ contract NodeRotation is Permissions {
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));
         require(schainsInternal.isSchainActive(schainId), "Group is not active");
         uint8 space = schainsInternal.getSchainsPartOfNode(schainId);
+        schainsInternal.makeSchainNodesInvisible(schainId);
         require(schainsInternal.isAnyFreeNode(schainId), "No free Nodes available for rotation");
         uint nodeIndex;
         uint random = uint(keccak256(abi.encodePacked(uint(blockhash(block.number - 1)), schainId)));
         nodeIndex = nodes.getRandomNodeWithFreeSpace(space, random);
         require(nodes.removeSpaceFromNode(nodeIndex, space), "Could not remove space from nodeIndex");
+        schainsInternal.makeSchainNodesVisible(schainId);
         schainsInternal.addSchainForNode(nodeIndex, schainId);
         schainsInternal.setException(schainId, nodeIndex);
         schainsInternal.setNodeInGroup(schainId, nodeIndex);

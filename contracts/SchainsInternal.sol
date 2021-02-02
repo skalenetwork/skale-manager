@@ -315,7 +315,10 @@ contract SchainsInternal is Permissions {
     function makeSchainNodesInvisible(bytes32 schainId) external allowTwo("NodeRotation", "SkaleDKG") {
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));
         for (uint i = 0; i < _schainToExceptionNodes[schainId].length; i++) {
-            nodes.makeNodeInvisible(_schainToExceptionNodes[schainId][i]);
+            uint nodeIndex = _schainToExceptionNodes[schainId][i];
+            if (nodes.isNodeActive(nodeIndex)) {
+                nodes.makeNodeInvisible(nodeIndex);
+            }
         }
     }
 
@@ -642,7 +645,10 @@ contract SchainsInternal is Permissions {
     function _makeSchainNodesVisible(bytes32 schainId) private {
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));
         for (uint i = 0; i < _schainToExceptionNodes[schainId].length; i++) {
-            nodes.makeNodeVisible(_schainToExceptionNodes[schainId][i]);
+            uint nodeIndex = _schainToExceptionNodes[schainId][i];
+            if (nodes.isNodeActive(nodeIndex)) {
+                nodes.makeNodeVisible(nodeIndex);
+            }
         }
     }
 

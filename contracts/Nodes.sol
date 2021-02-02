@@ -35,8 +35,6 @@ import "./Permissions.sol";
 
 import "./utils/SegmentTree.sol";
 
-import "@nomiclabs/buidler/console.sol";
-
 
 /**
  * @title Nodes
@@ -119,8 +117,6 @@ contract Nodes is Permissions {
     uint public numberOfLeftNodes;
 
     mapping (uint => string) public domainNames;
-
-    mapping (uint => bool) private _visible;
 
     SegmentTree.SegmentTree private _tree;
 
@@ -780,16 +776,16 @@ contract Nodes is Permissions {
      * @dev Moves a node to a new space mapping.
      */
     function _moveNodeToNewSpaceMap(uint nodeIndex, uint8 newSpace) private {
-        console.log("Move", _visible[nodeIndex]);
-        if (_visible[nodeIndex]) {
-            if (newSpace > 0) {
-                _tree.optimizedMoveFromPlaceToPlace(spaceOfNodes[nodeIndex].freeSpace, newSpace, 1);
-            }
-            _removeNodeFromSpaceOfNodes(nodeIndex, newSpace == 0);
-            spaceToNodes[newSpace].push(nodeIndex);
-            spaceOfNodes[nodeIndex].indexInSpaceMap = spaceToNodes[newSpace].length.sub(1);
+        if (newSpace > 0 && spaceOfNodes[nodeIndex].freeSpace > 0) {
+            _tree.optimizedMoveFromPlaceToPlace(spaceOfNodes[nodeIndex].freeSpace, newSpace, 1);
+        } else if (newSpace == 0) {
+            _tree.removeFromPlace(spaceOfNodes[nodeIndex].freeSpace, 1);
+        } else {
+            _tree.addToPlace(newSpace, 1);
         }
+        _removeNodeFromSpaceToNodes(nodeIndex);
         spaceOfNodes[nodeIndex].freeSpace = newSpace;
+        _addNodeToSpaceToNodes(nodeIndex);
     }
 
     /**
@@ -885,48 +881,44 @@ contract Nodes is Permissions {
      * @dev Deletes node from array.
      */
     function _deleteNode(uint nodeIndex) private {
-        _removeNodeFromSpaceOfNodes(nodeIndex, true);
+        // _makeNodeInvisible(nodeIndex);
         delete spaceOfNodes[nodeIndex].freeSpace;
-        delete spaceOfNodes[nodeIndex].indexInSpaceMap;
-        delete _visible[nodeIndex];
     }
 
-    function _removeNodeFromSpaceOfNodes(uint nodeIndex, bool remove) private {
-        console.log("Remove", _visible[nodeIndex]);
-        if (_visible[nodeIndex]) {
-            uint8 space = spaceOfNodes[nodeIndex].freeSpace;
-            uint indexInArray = spaceOfNodes[nodeIndex].indexInSpaceMap;
-            uint len = spaceToNodes[space].length.sub(1);
-            if (indexInArray < len) {
-                uint shiftedIndex = spaceToNodes[space][len];
-                spaceToNodes[space][indexInArray] = shiftedIndex;
-                spaceOfNodes[shiftedIndex].indexInSpaceMap = indexInArray;
-            }
-            delete spaceOfNodes[nodeIndex].indexInSpaceMap;
-            spaceToNodes[space].pop();
-            if (space > 0 && remove) {
-                _tree.removeFromPlace(space, 1);
-            }
-        }
-    }
 
     function _makeNodeInvisible(uint nodeIndex) private {
-        _removeNodeFromSpaceOfNodes(nodeIndex, true);
-        delete _visible[nodeIndex];
-        delete spaceOfNodes[nodeIndex].indexInSpaceMap;
+        _removeNodeFromSpaceToNodes(nodeIndex);
+        uint8 space = spaceOfNodes[nodeIndex].freeSpace;
+        if (space > 0) {
+            _tree.removeFromPlace(space, 1);
+        }
     }
 
     function _makeNodeVisible(uint nodeIndex) private {
-        console.log("Make visible", !_visible[nodeIndex]);
-        if (!_visible[nodeIndex]) {
-            uint8 space = spaceOfNodes[nodeIndex].freeSpace;
-            spaceToNodes[space].push(nodeIndex);
-            spaceOfNodes[nodeIndex].indexInSpaceMap = spaceToNodes[space].length.sub(1);
-            _visible[nodeIndex] = true;
-            if (space > 0) {
-                _tree.addToPlace(space, 1);
-            }
+        _addNodeToSpaceToNodes(nodeIndex);
+        uint8 space = spaceOfNodes[nodeIndex].freeSpace;
+        if (space > 0) {
+            _tree.addToPlace(space, 1);
         }
+    }
+
+    function _addNodeToSpaceToNodes(uint nodeIndex) private {
+        uint8 space = spaceOfNodes[nodeIndex].freeSpace;
+        spaceToNodes[space].push(nodeIndex);
+        spaceOfNodes[nodeIndex].indexInSpaceMap = spaceToNodes[space].length.sub(1);
+    }
+
+    function _removeNodeFromSpaceToNodes(uint nodeIndex) private {
+        uint8 space = spaceOfNodes[nodeIndex].freeSpace;
+        uint indexInArray = spaceOfNodes[nodeIndex].indexInSpaceMap;
+        uint len = spaceToNodes[space].length.sub(1);
+        if (indexInArray < len) {
+            uint shiftedIndex = spaceToNodes[space][len];
+            spaceToNodes[space][indexInArray] = shiftedIndex;
+            spaceOfNodes[shiftedIndex].indexInSpaceMap = indexInArray;
+        }
+        spaceToNodes[space].pop();
+        delete spaceOfNodes[nodeIndex].indexInSpaceMap;
     }
 
     function _checkValidatorPositionToMaintainNode(uint validatorId, uint position) private returns (bool) {
