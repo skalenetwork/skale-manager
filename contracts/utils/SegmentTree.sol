@@ -164,60 +164,6 @@ library SegmentTree {
         sum += self.tree[step - 1];
     }
 
-    // function optimizedRandomNonZeroFromPlaceToLast(
-    //     SegmentTree storage self,
-    //     uint8 place,
-    //     uint salt
-    // )
-    //     internal
-    //     view
-    //     returns (uint8, uint)
-    // {
-    //     require(_correctSpace(place), "Incorrect place");
-    //     uint8 leftBound = _FIRST;
-    //     uint8 rightBound = _LAST;
-    //     uint step = 1;
-    //     uint randomBeakon = salt;
-
-    //     while (place > (leftBound + rightBound) / 2) {
-    //         leftBound = (leftBound + rightBound) / 2 + 1;
-    //         step += step + 1;
-    //     }
-
-    //     uint priorityB = self.tree[2 * step];
-    //     uint priorityA = sumFromPlaceToLast(self, place) - priorityB;
-        
-    //     while(leftBound < rightBound) {
-    //         uint8 middle = (leftBound + rightBound) / 2;
-    //         if (priorityA == 0) {
-    //             leftBound = middle + 1;
-    //             step += step + 1;
-    //             priorityA = self.tree[2 * step - 1];
-    //             priotityB = self.tree[2 * step];
-    //         } else if (priorityB == 0) {
-    //             rightBound = middle;
-    //             step += step;
-    //             priorityA = priorityA - self.tree[2 * step];
-    //             priotityB = self.tree[2 * step];
-    //         } else {
-    //             (bool isLeftWay, uint randomBeakon2) =
-    //                 _randomWay(randomBeakon, priorityA, self.tree[2 * step]);
-    //             if (isLeftWay) {
-    //                 rightBound = middle;
-    //                 step += step;
-    //             } else {
-    //                 leftBound = middle + 1;
-    //                 step += step + 1;
-    //             }
-    //             randomBeakon = randomBeakon2;
-    //         }
-    //     }
-    //     if (self.tree[step - 1] == 0) {
-    //         return (0, 0);
-    //     }
-    //     return (leftBound, randomBeakon);
-    // }
-
     function randomNonZeroFromPlaceToLast(
         SegmentTree storage self,
         uint8 place,
@@ -233,8 +179,7 @@ library SegmentTree {
             _getIndexOfRandomNonZeroElement(
                 self,
                 randomGenerator,
-                place - 1,
-                sumFromPlaceToLast(self, place)
+                uint(place).sub(1)
             ).toUint8(),
             randomGenerator.seed
         );
@@ -247,19 +192,6 @@ library SegmentTree {
 
     function _correctSpace(uint8 place) private pure returns (bool) {
         return place >= _FIRST && place <= _LAST;
-    }
-
-    function _randomWay(
-        uint salt,
-        uint priorityA,
-        uint priorityB
-    )
-        private
-        pure
-        returns (bool isLeftWay, uint newSalt)
-    {
-        newSalt = uint(keccak256(abi.encodePacked(salt, priorityA, priorityB)));
-        isLeftWay = (newSalt % (priorityA + priorityB)) < priorityA;
     }
 
     function _left(uint v) private pure returns (uint) {
@@ -277,8 +209,7 @@ library SegmentTree {
     function _getIndexOfRandomNonZeroElement(
         SegmentTree storage self,
         Random.RandomGenerator memory randomGenerator,
-        uint from,
-        uint sum
+        uint from
     )
         private
         view
@@ -288,7 +219,7 @@ library SegmentTree {
         uint leftBound = 0;
         uint rightBound = _LAST;
         uint currentFrom = from;
-        uint currentSum = sum;
+        uint currentSum = sumFromPlaceToLast(self, from.add(1).toUint8());
         while(leftBound.add(1) < rightBound) {
             if (_middle(leftBound, rightBound) <= from) {
                 vertex = _right(vertex);
