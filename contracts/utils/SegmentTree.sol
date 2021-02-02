@@ -176,11 +176,11 @@ library SegmentTree {
         require(_correctSpace(place), "Incorrect place");
         Random.RandomGenerator memory randomGenerator = Random.create(salt);
         return (
-            _getIndexOfRandomNonZeroElement(
+            (_getIndexOfRandomNonZeroElement(
                 self,
                 randomGenerator,
                 uint(place).sub(1)
-            ).toUint8(),
+            ) + 1).toUint8(),
             randomGenerator.seed
         );
     }
@@ -220,12 +220,15 @@ library SegmentTree {
         uint rightBound = _LAST;
         uint currentFrom = from;
         uint currentSum = sumFromPlaceToLast(self, from.add(1).toUint8());
+        if (currentSum == 0) {
+            return uint(-1);
+        }
         while(leftBound.add(1) < rightBound) {
             if (_middle(leftBound, rightBound) <= from) {
                 vertex = _right(vertex);
                 leftBound = _middle(leftBound, rightBound);
             } else {
-                uint rightSum = self.tree[_right(vertex)];
+                uint rightSum = self.tree[_right(vertex).sub(1)];
                 uint leftSum = currentSum.sub(rightSum);
                 if (randomGenerator.random(currentSum) < leftSum) {
                     // go left

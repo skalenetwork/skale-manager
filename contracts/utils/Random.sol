@@ -42,6 +42,10 @@ library Random {
         return RandomGenerator({seed: seed});
     }
 
+    function createFromEntropy(bytes memory entropy) internal pure returns (RandomGenerator memory) {
+        return create(uint(keccak256(entropy)));
+    }
+
     /**
      * @dev Generates random value
      */
