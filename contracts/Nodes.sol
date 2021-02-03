@@ -167,6 +167,7 @@ contract Nodes is Permissions {
     }
 
     function buildZeroSegmentTree() external onlyOwner {
+        // TODO: Add proper initialization of the segment tree
         _tree.createWithLastElement(128, spaceToNodes[128].length);
     }
 
@@ -257,8 +258,7 @@ contract Nodes is Permissions {
         require(params.port > 0, "Port is zero");
         require(from == _publicKeyToAddress(params.publicKey), "Public Key is incorrect");
 
-        uint validatorId = ValidatorService(
-            contractManager.getContract("ValidatorService")).getValidatorIdByNodeAddress(from);
+        uint validatorId = ValidatorService(contractManager.getValidatorService()).getValidatorIdByNodeAddress(from);
 
         // adds Node to Nodes contract
         uint nodeIndex = _addNode(
@@ -350,7 +350,7 @@ contract Nodes is Permissions {
         checkNodeExists(nodeIndex)
         allow("SkaleManager")
     {
-        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
+        ValidatorService validatorService = ValidatorService(contractManager.getValidatorService());
         require(validatorService.validatorExists(validatorId), "Validator ID does not exist");
         uint[] memory validatorNodes = validatorToNodeIndexes[validatorId];
         uint position = _findNode(validatorNodes, nodeIndex);
@@ -379,7 +379,7 @@ contract Nodes is Permissions {
      * - Validator must have sufficient stake to operate an additional node.
      */
     function checkPossibilityCreatingNode(address nodeAddress) external allow("SkaleManager") {
-        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
+        ValidatorService validatorService = ValidatorService(contractManager.getValidatorService());
         uint validatorId = validatorService.getValidatorIdByNodeAddress(nodeAddress);
         require(validatorService.isAuthorizedValidator(validatorId), "Validator is not authorized to create a node");
         require(
@@ -406,7 +406,7 @@ contract Nodes is Permissions {
         allow("Bounty")
         returns (bool)
     {
-        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
+        ValidatorService validatorService = ValidatorService(contractManager.getValidatorService());
         require(validatorService.validatorExists(validatorId), "Validator ID does not exist");
         uint[] memory validatorNodes = validatorToNodeIndexes[validatorId];
         uint position = _findNode(validatorNodes, nodeIndex);
@@ -692,7 +692,7 @@ contract Nodes is Permissions {
      * - Validator ID must exist.
      */
     function getValidatorNodeIndexes(uint validatorId) external view returns (uint[] memory) {
-        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
+        ValidatorService validatorService = ValidatorService(contractManager.getValidatorService());
         require(validatorService.validatorExists(validatorId), "Validator ID does not exist");
         return validatorToNodeIndexes[validatorId];
     }
@@ -855,7 +855,7 @@ contract Nodes is Permissions {
         private
         returns (uint nodeIndex)
     {
-        ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
+        ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getConstantsHolder());
         nodes.push(Node({
             name: name,
             ip: ip,
@@ -933,7 +933,7 @@ contract Nodes is Permissions {
             contractManager.getContract("DelegationController")
         );
         uint delegationsTotal = delegationController.getAndUpdateDelegatedToValidatorNow(validatorId);
-        uint msr = ConstantsHolder(contractManager.getContract("ConstantsHolder")).msr();
+        uint msr = ConstantsHolder(contractManager.getConstantsHolder()).msr();
         return position.add(1).mul(msr) <= delegationsTotal;
     }
 
@@ -942,7 +942,7 @@ contract Nodes is Permissions {
     }
 
     function _checkNodeOrAdmin(uint nodeIndex, address sender) private view {
-        ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
+        ValidatorService validatorService = ValidatorService(contractManager.getValidatorService());
 
         require(
             isNodeExist(sender, nodeIndex) ||
