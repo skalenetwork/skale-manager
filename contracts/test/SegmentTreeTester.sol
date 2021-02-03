@@ -30,38 +30,42 @@ contract SegmentTreeTester {
 
     SegmentTree.SegmentTree private _tree;
 
-    function initTree(uint elem) external {
-        _tree.initLast(elem);
+    function initTree(uint size, uint elem) external {
+        _tree.createWithLastElement(size, elem);
     }
 
     function addToLast(uint elem) external {
-        _tree.addToLast(elem);
+        _tree.addToPlace(_tree.size(), elem);
     }
 
-    function addToPlace(uint8 place, uint elem) external {
+    function addToPlace(uint place, uint elem) external {
         _tree.addToPlace(place, elem);
     }
 
-    function removeFromPlace(uint8 place, uint elem) external {
+    function removeFromPlace(uint place, uint elem) external {
         _tree.removeFromPlace(place, elem);
     }
 
-    function moveFromPlaceToPlace(uint8 fromPlace, uint8 toPlace, uint elem) external {
-        _tree.optimizedMoveFromPlaceToPlace(fromPlace, toPlace, elem);
+    function moveFromPlaceToPlace(uint fromPlace, uint toPlace, uint elem) external {
+        _tree.moveFromPlaceToPlace(fromPlace, toPlace, elem);
     }
 
-    function sumFromPlaceToLast(uint8 place) external view returns (uint) {
+    function sumFromPlaceToLast(uint place) external view returns (uint) {
         return _tree.sumFromPlaceToLast(place);
     }
 
-    function getRandomElem(uint8 place) external view returns (uint8 foundPlace) {
-        (foundPlace, ) = _tree.randomNonZeroFromPlaceToLast(
-            place,
-            uint(keccak256(abi.encodePacked(uint(blockhash(block.number - 1)), place)))
+    function getRandomElem(uint place) external view returns (uint) {
+        Random.RandomGenerator memory randomGenerator = Random.createFromEntropy(
+            abi.encodePacked(uint(blockhash(block.number - 1)), place)
         );
+        return _tree.getRandomNonZeroElementFromPlaceToLast(place, randomGenerator);
     }
 
     function getElem(uint index) external view returns (uint) {
         return _tree.getElemFromTree(index);
+    }
+
+    function getSize() external view returns (uint) {
+        return _tree.size();
     }
 }

@@ -28,12 +28,12 @@ import "@openzeppelin/contracts-ethereum-package/contracts/utils/SafeCast.sol";
 
 import "./delegation/DelegationController.sol";
 import "./delegation/ValidatorService.sol";
+import "./utils/Random.sol";
+import "./utils/SegmentTree.sol";
 
 import "./BountyV2.sol";
 import "./ConstantsHolder.sol";
 import "./Permissions.sol";
-
-import "./utils/SegmentTree.sol";
 
 
 /**
@@ -53,6 +53,7 @@ import "./utils/SegmentTree.sol";
  */
 contract Nodes is Permissions {
     
+    using Random for Random.RandomGenerator;
     using SafeCast for uint;
     using SegmentTree for SegmentTree.SegmentTree;
 
@@ -165,8 +166,8 @@ contract Nodes is Permissions {
         _;
     }
 
-    function buildZeroSegmentTree() external {
-        _tree.initLast(spaceToNodes[128].length);
+    function buildZeroSegmentTree() external onlyOwner {
+        _tree.createWithLastElement(128, spaceToNodes[128].length);
     }
 
     /**
@@ -454,14 +455,20 @@ contract Nodes is Permissions {
         _makeNodeInvisible(nodeIndex);
     }
 
-    function getRandomNodeWithFreeSpace(uint8 freeSpace, uint salt) external view returns (uint) {
-        (uint8 place, uint random) = _tree.randomNonZeroFromPlaceToLast(
+    function getRandomNodeWithFreeSpace(
+        uint8 freeSpace,
+        Random.RandomGenerator memory randomGenerator
+    )
+        external
+        view
+        returns (uint)
+    {
+        uint8 place = _tree.getRandomNonZeroElementFromPlaceToLast(
             freeSpace == 0 ? 1 : freeSpace,
-            salt
-        );
+            randomGenerator
+        ).toUint8();
         require(place > 0, "Node not found");
-        random = uint(keccak256(abi.encodePacked(random, salt))) % spaceToNodes[place].length;
-        return spaceToNodes[place][random]; 
+        return spaceToNodes[place][randomGenerator.random(spaceToNodes[place].length)]; 
     }
 
     /**
@@ -777,7 +784,7 @@ contract Nodes is Permissions {
      */
     function _moveNodeToNewSpaceMap(uint nodeIndex, uint8 newSpace) private {
         if (newSpace > 0 && spaceOfNodes[nodeIndex].freeSpace > 0) {
-            _tree.optimizedMoveFromPlaceToPlace(spaceOfNodes[nodeIndex].freeSpace, newSpace, 1);
+            _tree.moveFromPlaceToPlace(spaceOfNodes[nodeIndex].freeSpace, newSpace, 1);
         } else if (newSpace == 0) {
             _tree.removeFromPlace(spaceOfNodes[nodeIndex].freeSpace, 1);
         } else {

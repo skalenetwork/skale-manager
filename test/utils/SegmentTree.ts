@@ -14,7 +14,7 @@ contract("SegmentTree", ([owner]) => {
     let segmentTree: SegmentTreeTesterInstance;
     beforeEach(async () => {
         segmentTree = await SegmentTree.new();
-        await segmentTree.initTree(150);
+        await segmentTree.initTree(128, 150);
     });
 
     describe("initialization", async () => {
@@ -155,6 +155,7 @@ contract("SegmentTree", ([owner]) => {
 
         it("should reject if place is incorrect", async () => {
             await segmentTree.addToPlace(38, 16);
+            await segmentTree.addToPlace(99, 16);
             await segmentTree.removeFromPlace(99, 16);
             await segmentTree.addToPlace(0, 16).should.be.eventually.rejectedWith("Incorrect place");
             await segmentTree.removeFromPlace(129, 16).should.be.eventually.rejectedWith("Incorrect place");

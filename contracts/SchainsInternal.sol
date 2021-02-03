@@ -22,9 +22,11 @@
 pragma solidity 0.6.10;
 pragma experimental ABIEncoderV2;
 
+import "./interfaces/ISkaleDKG.sol";
+import "./utils/Random.sol";
+
 import "./ConstantsHolder.sol";
 import "./Nodes.sol";
-import "./interfaces/ISkaleDKG.sol";
 
 
 /**
@@ -32,6 +34,8 @@ import "./interfaces/ISkaleDKG.sol";
  * @dev Contract contains all functionality logic to internally manage Schains.
  */
 contract SchainsInternal is Permissions {
+
+    using Random for Random.RandomGenerator;
 
     struct Schain {
         string name;
@@ -620,15 +624,16 @@ contract SchainsInternal is Permissions {
         nodesInGroup = new uint[](numberOfNodes);
 
         require(nodes.countNodesWithFreeSpace(space) >= nodesInGroup.length, "Not enough nodes to create Schain");
-        uint random = uint(keccak256(abi.encodePacked(uint(blockhash(block.number.sub(1))), schainId)));
+        Random.RandomGenerator memory randomGenerator = Random.createFromEntropy(
+            abi.encodePacked(uint(blockhash(block.number.sub(1))), schainId)
+        );
         for (uint i = 0; i < numberOfNodes; i++) {
-            uint node = nodes.getRandomNodeWithFreeSpace(space, random);
+            uint node = nodes.getRandomNodeWithFreeSpace(space, randomGenerator);
             nodesInGroup[i] = node;
             _setException(schainId, node);
             addSchainForNode(node, schainId);
             require(nodes.removeSpaceFromNode(node, space), "Could not remove space from Node");
             nodes.makeNodeInvisible(node);
-            random = uint(keccak256(abi.encodePacked(random, node)));
         }
         _makeSchainNodesVisible(schainId);
 
