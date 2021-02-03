@@ -632,8 +632,8 @@ contract SchainsInternal is Permissions {
             nodesInGroup[i] = node;
             _setException(schainId, node);
             addSchainForNode(node, schainId);
-            require(nodes.removeSpaceFromNode(node, space), "Could not remove space from Node");
             nodes.makeNodeInvisible(node);
+            require(nodes.changeSpaceOnInvisibleNode(node, space, false), "Could not remove space from Node");
         }
         _makeSchainNodesVisible(schainId);
 

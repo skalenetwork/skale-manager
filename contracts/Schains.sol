@@ -290,7 +290,7 @@ contract Schains is Permissions {
      */
     function addSpace(uint nodeIndex, uint8 partOfNode) external allowTwo("Schains", "NodeRotation") {
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));
-        nodes.addSpaceToNode(nodeIndex, partOfNode);
+        nodes.changeSpaceOnVisibleNode(nodeIndex, partOfNode, true);
     }
 
     /**
