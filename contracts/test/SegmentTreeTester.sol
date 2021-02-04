@@ -2,8 +2,9 @@
 
 /*
     SegmentTreeTester.sol - SKALE Manager
-    Copyright (C) 2018-Present SKALE Labs
+    Copyright (C) 2021-Present SKALE Labs
     @author Artem Payvin
+    @author Dmytro Stebaiev
 
     SKALE Manager is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as published
@@ -26,16 +27,16 @@ import "../utils/SegmentTree.sol";
 
 contract SegmentTreeTester {
 
-    using SegmentTree for SegmentTree.SegmentTree;
+    using SegmentTree for SegmentTree.Tree;
 
-    SegmentTree.SegmentTree private _tree;
+    SegmentTree.Tree private _tree;
 
     function initTree(uint size, uint elem) external {
         _tree.createWithLastElement(size, elem);
     }
 
     function addToLast(uint elem) external {
-        _tree.addToPlace(_tree.size(), elem);
+        _tree.addToPlace(_tree.getSize(), elem);
     }
 
     function addToPlace(uint place, uint elem) external {
@@ -62,10 +63,11 @@ contract SegmentTreeTester {
     }
 
     function getElem(uint index) external view returns (uint) {
-        return _tree.getElemFromTree(index);
+        require(index < _tree.tree.length, "Incorrect index");
+        return _tree.tree[index];
     }
 
     function getSize() external view returns (uint) {
-        return _tree.size();
+        return _tree.getSize();
     }
 }

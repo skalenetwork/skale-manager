@@ -55,7 +55,7 @@ contract Nodes is Permissions {
     
     using Random for Random.RandomGenerator;
     using SafeCast for uint;
-    using SegmentTree for SegmentTree.SegmentTree;
+    using SegmentTree for SegmentTree.Tree;
 
     // All Nodes states
     enum NodeStatus {Active, Leaving, Left, In_Maintenance}
@@ -119,7 +119,7 @@ contract Nodes is Permissions {
 
     mapping (uint => string) public domainNames;
 
-    SegmentTree.SegmentTree private _tree;
+    SegmentTree.Tree private _nodesAmountBySpace;
 
     /**
      * @dev Emitted when a node is created.
@@ -168,7 +168,7 @@ contract Nodes is Permissions {
 
     function buildZeroSegmentTree() external onlyOwner {
         // TODO: Add proper initialization of the segment tree
-        _tree.createWithLastElement(128, spaceToNodes[128].length);
+        _nodesAmountBySpace.createWithLastElement(128, spaceToNodes[128].length);
     }
 
     /**
@@ -463,7 +463,7 @@ contract Nodes is Permissions {
         view
         returns (uint)
     {
-        uint8 place = _tree.getRandomNonZeroElementFromPlaceToLast(
+        uint8 place = _nodesAmountBySpace.getRandomNonZeroElementFromPlaceToLast(
             freeSpace == 0 ? 1 : freeSpace,
             randomGenerator
         ).toUint8();
@@ -702,9 +702,9 @@ contract Nodes is Permissions {
      */
     function countNodesWithFreeSpace(uint8 freeSpace) external view returns (uint count) {
         if (freeSpace == 0) {
-            return _tree.sumFromPlaceToLast(1);
+            return _nodesAmountBySpace.sumFromPlaceToLast(1);
         }
-        return _tree.sumFromPlaceToLast(freeSpace);
+        return _nodesAmountBySpace.sumFromPlaceToLast(freeSpace);
     }
 
     /**
@@ -784,11 +784,11 @@ contract Nodes is Permissions {
      */
     function _moveNodeToNewSpaceMap(uint nodeIndex, uint8 newSpace) private {
         if (newSpace > 0 && spaceOfNodes[nodeIndex].freeSpace > 0) {
-            _tree.moveFromPlaceToPlace(spaceOfNodes[nodeIndex].freeSpace, newSpace, 1);
+            _nodesAmountBySpace.moveFromPlaceToPlace(spaceOfNodes[nodeIndex].freeSpace, newSpace, 1);
         } else if (newSpace == 0) {
-            _tree.removeFromPlace(spaceOfNodes[nodeIndex].freeSpace, 1);
+            _nodesAmountBySpace.removeFromPlace(spaceOfNodes[nodeIndex].freeSpace, 1);
         } else {
-            _tree.addToPlace(newSpace, 1);
+            _nodesAmountBySpace.addToPlace(newSpace, 1);
         }
         _removeNodeFromSpaceToNodes(nodeIndex);
         spaceOfNodes[nodeIndex].freeSpace = newSpace;
@@ -897,7 +897,7 @@ contract Nodes is Permissions {
         _removeNodeFromSpaceToNodes(nodeIndex);
         uint8 space = spaceOfNodes[nodeIndex].freeSpace;
         if (space > 0) {
-            _tree.removeFromPlace(space, 1);
+            _nodesAmountBySpace.removeFromPlace(space, 1);
         }
     }
 
@@ -905,7 +905,7 @@ contract Nodes is Permissions {
         _addNodeToSpaceToNodes(nodeIndex);
         uint8 space = spaceOfNodes[nodeIndex].freeSpace;
         if (space > 0) {
-            _tree.addToPlace(space, 1);
+            _nodesAmountBySpace.addToPlace(space, 1);
         }
     }
 

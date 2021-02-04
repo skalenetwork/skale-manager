@@ -27,36 +27,99 @@ import "@nomiclabs/buidler/console.sol";
 
 import "./Random.sol";
 
-
+/**
+ * @title SegmentTree
+ * @dev This library implements segment tree data structure
+ * 
+ * Segment tree allows effectively calculate sum of elements in sub arrays
+ * by storing some amount of additional data.
+ * 
+ * IMPORTANT: Provided implementation assumes that arrays is indexed from 1 to n.
+ * Size of initial array always must be power of 2
+ * 
+ * Example:
+ *
+ * Array:
+ * +---+---+---+---+---+---+---+---+
+ * | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 |
+ * +---+---+---+---+---+---+---+---+
+ *
+ * Segment tree structure:
+ * +-------------------------------+
+ * |               36              |
+ * +---------------+---------------+
+ * |       10      |       26      |
+ * +-------+-------+-------+-------+
+ * |   3   |   7   |   11  |   15  |
+ * +---+---+---+---+---+---+---+---+
+ * | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 |
+ * +---+---+---+---+---+---+---+---+
+ *
+ * How the segment tree is stored in an array:
+ * +----+----+----+---+---+----+----+---+---+---+---+---+---+---+---+
+ * | 36 | 10 | 26 | 3 | 7 | 11 | 15 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 |
+ * +----+----+----+---+---+----+----+---+---+---+---+---+---+---+---+
+ */
 library SegmentTree {
     using Random for Random.RandomGenerator;
     using SafeMath for uint;    
 
-    struct SegmentTree {
+    struct Tree {
         uint[] tree;
     }
 
-    function create(SegmentTree storage segmentTree, uint n) internal {
-        require(n > 0, "Size can't be 0");
-        require(n & n.sub(1) == 0, "Size is not power of 2");
-        segmentTree.tree = new uint[](n.mul(2).sub(1));
+    /**
+     * @dev Allocates storage for segment tree of `size` elements
+     * 
+     * Requirements:
+     * 
+     * - `size` must be greater than 0
+     * - `size` must be power of 2
+     */
+    function create(Tree storage segmentTree, uint size) internal {
+        require(size > 0, "Size can't be 0");
+        require(size & size.sub(1) == 0, "Size is not power of 2");
+        segmentTree.tree = new uint[](size.mul(2).sub(1));
     }
 
-    function createWithLastElement(SegmentTree storage segmentTree, uint n, uint lastElement) internal {
-        create(segmentTree, n);
-        for (uint vertex = 1; vertex < n.mul(2); vertex = _right(vertex)) {
+    /**
+     * @dev Allocates storage for segment tree of `size` elements
+     * and sets last element to `lastElement`
+     * 
+     * Requirements:
+     * 
+     * - `size` must be greater than 0
+     * - `size` must be power of 2
+     */
+    function createWithLastElement(Tree storage segmentTree, uint size, uint lastElement) internal {
+        create(segmentTree, size);
+        for (uint vertex = 1; vertex < size.mul(2); vertex = _right(vertex)) {
             segmentTree.tree[vertex.sub(1)] = lastElement;
         }
     }
 
-    function size(SegmentTree storage segmentTree) internal view returns (uint) {
-        return segmentTree.tree.length.div(2).add(1);
+    /**
+     * @dev Returns amount of elements in segment tree
+     */
+    function getSize(Tree storage segmentTree) internal view returns (uint) {
+        if (segmentTree.tree.length > 0) {
+            return segmentTree.tree.length.div(2).add(1);
+        } else {
+            return 0;
+        }
     }
 
-    function addToPlace(SegmentTree storage self, uint place, uint delta) internal {
+    /**
+     * @dev Adds `delta` to element of segment tree at `place`
+     * 
+     * Requirements:
+     * 
+     * - `place` must be in range [1, size]
+     */
+    function addToPlace(Tree storage self, uint place, uint delta) internal {
         require(_correctPlace(self, place), "Incorrect place");
         uint leftBound = 1;
-        uint rightBound = size(self);
+        uint rightBound = getSize(self);
         uint step = 1;
         self.tree[0] = self.tree[0].add(delta);
         while(leftBound < rightBound) {
@@ -72,10 +135,18 @@ library SegmentTree {
         }
     }
 
-    function removeFromPlace(SegmentTree storage self, uint place, uint delta) internal {
+    /**
+     * @dev Subtracts `delta` from element of segment tree at `place`
+     * 
+     * Requirements:
+     * 
+     * - `place` must be in range [1, size]
+     * - initial value of target element must be not less than `delta`
+     */
+    function removeFromPlace(Tree storage self, uint place, uint delta) internal {
         require(_correctPlace(self, place), "Incorrect place");
         uint leftBound = 1;
-        uint rightBound = size(self);
+        uint rightBound = getSize(self);
         uint step = 1;
         self.tree[0] = self.tree[0].sub(delta);
         while(leftBound < rightBound) {
@@ -91,8 +162,18 @@ library SegmentTree {
         }
     }
 
+    /**
+     * @dev Adds `delta` to element of segment tree at `toPlace`
+     * and subtracts `delta` from element at `fromPlace`
+     * 
+     * Requirements:
+     * 
+     * - `fromPlace` must be in range [1, size]
+     * - `toPlace` must be in range [1, size]
+     * - initial value of element at `fromPlace` must be not less than `delta`
+     */
     function moveFromPlaceToPlace(
-        SegmentTree storage self,
+        Tree storage self,
         uint fromPlace,
         uint toPlace,
         uint delta
@@ -101,7 +182,7 @@ library SegmentTree {
     {
         require(_correctPlace(self, fromPlace) && _correctPlace(self, toPlace), "Incorrect place");
         uint leftBound = 1;
-        uint rightBound = size(self);
+        uint rightBound = getSize(self);
         uint step = 1;
         uint middle = leftBound.add(rightBound).div(2);
         uint fromPlaceMove = fromPlace > toPlace ? toPlace : fromPlace;
@@ -142,13 +223,20 @@ library SegmentTree {
         }
     }
 
-    function sumFromPlaceToLast(SegmentTree storage self, uint place) internal view returns (uint sum) {
+    /**
+     * @dev Returns sum of elements in range [`place`, size]
+     * 
+     * Requirements:
+     * 
+     * - `place` must be in range [1, size]
+     */
+    function sumFromPlaceToLast(Tree storage self, uint place) internal view returns (uint sum) {
         require(_correctPlace(self, place), "Incorrect place");
         if (place == 1) {
             return self.tree[0];
         }
         uint leftBound = 1;
-        uint rightBound = size(self);
+        uint rightBound = getSize(self);
         uint step = 1;
         while(leftBound < rightBound) {
             uint middle = leftBound.add(rightBound).div(2);
@@ -164,8 +252,17 @@ library SegmentTree {
         sum = sum.add(self.tree[step.sub(1)]);
     }
 
+    /**
+     * @dev Returns random position in range [`place`, size]
+     * with probability proportional to value stored at this position.
+     * If all element in range are 0 returns 0
+     * 
+     * Requirements:
+     * 
+     * - `place` must be in range [1, size]
+     */
     function getRandomNonZeroElementFromPlaceToLast(
-        SegmentTree storage self,
+        Tree storage self,
         uint place,
         Random.RandomGenerator memory randomGenerator
     )
@@ -177,7 +274,7 @@ library SegmentTree {
 
         uint vertex = 1;
         uint leftBound = 0;
-        uint rightBound = size(self);
+        uint rightBound = getSize(self);
         uint currentFrom = place.sub(1);
         uint currentSum = sumFromPlaceToLast(self, place);
         if (currentSum == 0) {
@@ -207,23 +304,30 @@ library SegmentTree {
         return leftBound.add(1);
     }
 
-    function getElemFromTree(SegmentTree storage self, uint index) internal view returns (uint) {
-        require(index < 255, "Incorrect index");
-        return self.tree[index];
+    /**
+     * @dev Checks if `place` is valid position in segment tree
+     */
+    function _correctPlace(Tree storage self, uint place) private view returns (bool) {
+        return place >= 1 && place <= getSize(self);
     }
 
-    function _correctPlace(SegmentTree storage self, uint place) private view returns (bool) {
-        return place >= 1 && place <= size(self);
+    /**
+     * @dev Calculates index of left child of the vertex
+     */
+    function _left(uint vertex) private pure returns (uint) {
+        return vertex.mul(2);
     }
 
-    function _left(uint v) private pure returns (uint) {
-        return v.mul(2);
+    /**
+     * @dev Calculates index of right child of the vertex
+     */
+    function _right(uint vertex) private pure returns (uint) {
+        return vertex.mul(2).add(1);
     }
 
-    function _right(uint v) private pure returns (uint) {
-        return v.mul(2).add(1);
-    }
-
+    /**
+     * @dev Calculates arithmetical mean of 2 numbers
+     */
     function _middle(uint left, uint right) private pure returns (uint) {
         return left.add(right).div(2);
     }
