@@ -66,10 +66,15 @@ contract TokenState is Permissions, ILocker {
      *  @dev See {ILocker-getAndUpdateLockedAmount}.
      */
     function getAndUpdateLockedAmount(address holder) external override returns (uint) {
+        DelegationController delegationController =
+            DelegationController(contractManager.getContract("DelegationController"));
         uint locked = 0;
-        for (uint i = 0; i < _lockers.length; ++i) {
-            ILocker locker = ILocker(contractManager.getContract(_lockers[i]));
-            locked = locked.add(locker.getAndUpdateLockedAmount(holder));
+        if (delegationController.getDelegationsByHolderLength(holder) > 0) {
+            // the holder ever delegated
+            for (uint i = 0; i < _lockers.length; ++i) {
+                ILocker locker = ILocker(contractManager.getContract(_lockers[i]));
+                locked = locked.add(locker.getAndUpdateLockedAmount(holder));
+            }
         }
         return locked;
     }

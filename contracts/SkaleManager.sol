@@ -74,37 +74,6 @@ contract SkaleManager is IERC777Recipient, Permissions {
         uint gasSpend
     );
 
-    modifier reimburseGasByValidator() {
-        uint senderBalance = msg.sender.balance + tx.gasprice * block.gaslimit;
-        if (senderBalance.div(tx.gasprice) < block.gaslimit) {
-            uint gasTotal = gasleft();
-            _;
-            gasTotal -= gasleft();
-            Wallets(contractManager.getContract("Wallets")).reimburseGasByValidator(msg.sender, tx.gasprice * gasTotal);
-        } else {
-            _;
-        }
-    }
-
-    function _reimburseGasDuringNodeExit(
-        uint gasSpentOnNodeExit,
-        uint gasSpentOnNodeRotation,
-        bytes32 schainForRotation
-    )
-        private
-    {
-        uint senderBalance = msg.sender.balance + tx.gasprice * block.gaslimit;
-        if (senderBalance.div(tx.gasprice) < block.gaslimit) {
-            Wallets wallets = Wallets(contractManager.getContract("Wallets"));
-            wallets.reimburseGasByValidator(msg.sender, tx.gasprice * gasSpentOnNodeExit);
-            wallets.reimburseGasBySchain(
-                msg.sender,
-                tx.gasprice * gasSpentOnNodeRotation,
-                schainForRotation
-            );
-        }
-    }
-
     function tokensReceived(
         address, // operator
         address from,
@@ -130,10 +99,10 @@ contract SkaleManager is IERC777Recipient, Permissions {
         bytes4 ip,
         bytes4 publicIp,
         bytes32[2] calldata publicKey,
-        string calldata name
+        string calldata name,
+        string calldata domainName
     )
         external
-        reimburseGasByValidator
     {
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));
         // validators checks inside checkPossibilityCreatingNode
@@ -145,7 +114,9 @@ contract SkaleManager is IERC777Recipient, Permissions {
             publicIp: publicIp,
             port: port,
             publicKey: publicKey,
-            nonce: nonce});
+            nonce: nonce,
+            domainName: domainName
+        });
         nodes.createNode(msg.sender, params);
     }
 
@@ -167,7 +138,6 @@ contract SkaleManager is IERC777Recipient, Permissions {
             require(nodes.initExit(nodeIndex), "Initialization of node exit is failed");
         }
         require(nodes.isNodeLeaving(nodeIndex), "Node should be Leaving");
-        uint gasSpentOnNodeRotation = gasleft();
         nodeRotation.freezeSchains(nodeIndex);
         bool completed;
         bool isSchains = false;
@@ -178,17 +148,12 @@ contract SkaleManager is IERC777Recipient, Permissions {
         } else {
             completed = true;
         }
-        gasSpentOnNodeRotation -= gasleft();
         if (completed) {
             require(nodes.completeExit(nodeIndex), "Finishing of node exit is failed");
             nodes.changeNodeFinishTime(nodeIndex, now.add(isSchains ? constants.rotationDelay() : 0));
-            // Monitors monitors = Monitors(contractManager.getContract("Monitors"));
-            // monitors.removeCheckedNodes(nodeIndex);
-            // monitors.deleteMonitor(nodeIndex);
             nodes.deleteNodeForValidator(validatorId, nodeIndex);
         }
-        uint gasSpentOnNodeExit = gasTotal - gasSpentOnNodeRotation - gasleft();
-        _reimburseGasDuringNodeExit(gasSpentOnNodeExit, gasSpentOnNodeRotation, schainForRotation);
+        _refundGasByValidator(validatorId, nodeIndex, gasTotal - gasleft());
     }
 
     function deleteSchain(string calldata name) external {
@@ -202,7 +167,8 @@ contract SkaleManager is IERC777Recipient, Permissions {
         schains.deleteSchainByRoot(name);
     }
 
-    function getBounty(uint nodeIndex) external reimburseGasByValidator {
+    function getBounty(uint nodeIndex) external {
+        uint gasTotal = gasleft();
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));
         require(nodes.isNodeExist(msg.sender, nodeIndex), "Node does not exist for Message sender");
         require(nodes.isTimeForReward(nodeIndex), "Not time for bounty");
@@ -212,12 +178,13 @@ contract SkaleManager is IERC777Recipient, Permissions {
         uint bounty = bountyContract.calculateBounty(nodeIndex);
 
         nodes.changeNodeLastRewardDate(nodeIndex);
-
+        uint validatorId = nodes.getValidatorId(nodeIndex);
         if (bounty > 0) {
-            _payBounty(bounty, nodes.getValidatorId(nodeIndex));
+            _payBounty(bounty, validatorId);
         }
 
         _emitBountyEvent(nodeIndex, msg.sender, 0, 0, bounty);
+        _refundGasByValidator(validatorId, nodeIndex, gasTotal - gasleft());
     }
 
     function initialize(address newContractsAddress) public override initializer {
@@ -267,5 +234,9 @@ contract SkaleManager is IERC777Recipient, Permissions {
             previousBlockEvent,
             block.timestamp,
             gasleft());
+    }
+
+    function _refundGasByValidator(uint validatorId, uint nodeIndex, uint gasTotal) private {
+        Wallets(payable(contractManager.getContract("Wallets"))).refundGasByValidator(validatorId, nodeIndex, gasTotal);
     }
 }

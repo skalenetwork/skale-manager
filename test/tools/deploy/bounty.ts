@@ -3,7 +3,7 @@ import { ContractManagerInstance, BountyV2Instance, BountyV2Contract } from "../
 import { deployFunctionFactory } from "./factory";
 import { deployConstantsHolder } from "./constantsHolder";
 import { deployTimeHelpers } from "./delegation/timeHelpers";
-import { deployDelegationController } from "./delegation/delegationController";
+import { deployWallets } from "./wallets";
 
 const deployBounty: (contractManager: ContractManagerInstance) => Promise<BountyV2Instance>
     = deployFunctionFactory("Bounty",
@@ -11,6 +11,7 @@ const deployBounty: (contractManager: ContractManagerInstance) => Promise<Bounty
                                 await deployConstantsHolder(contractManager);
                                 await deployNodes(contractManager);
                                 await deployTimeHelpers(contractManager);
+                                await deployWallets(contractManager);
                             },
                             async(contractManager: ContractManagerInstance) => {
                                 const BountyV2: BountyV2Contract = artifacts.require("./BountyV2");

@@ -208,7 +208,8 @@ contract("SkaleVerifier", ([validator1, owner, developer, hacker]) => {
                         ip: "0x7f0000" + hexIndex,
                         publicIp: "0x7f0000" + hexIndex,
                         publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
-                        name: "d2" + hexIndex
+                        name: "d2" + hexIndex,
+                        domainName: "somedomain.name"
                     },
                     {from: validator1});
             }

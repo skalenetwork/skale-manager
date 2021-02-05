@@ -22,9 +22,9 @@
 pragma solidity 0.6.10;
 pragma experimental ABIEncoderV2;
 
-import "../SkaleDKG.sol";
+import "../dkg/SkaleDKGAlright.sol";
 
-contract SkaleDKGTester is SkaleDKG {
+contract SkaleDKGTester is SkaleDKGAlright {
     function setSuccesfulDKGPublic(bytes32 schainId) external {
         _setSuccesfulDKG(schainId);
     }

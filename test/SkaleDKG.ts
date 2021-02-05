@@ -12,7 +12,8 @@ import { ContractManagerInstance,
          SlashingTableInstance,
          ValidatorServiceInstance,
          SkaleManagerInstance,
-         ConstantsHolderInstance} from "../types/truffle-contracts";
+         ConstantsHolderInstance,
+         WalletsInstance} from "../types/truffle-contracts";
 
 import { skipTime, currentTime } from "./tools/time";
 
@@ -35,6 +36,7 @@ import { deploySlashingTable } from "./tools/deploy/slashingTable";
 import { deployNodeRotation } from "./tools/deploy/nodeRotation";
 import { deploySkaleManager } from "./tools/deploy/skaleManager";
 import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
+import { deployWallets } from "./tools/deploy/wallets";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -53,6 +55,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
     let nodeRotation: NodeRotationInstance;
     let skaleManager: SkaleManagerInstance;
     let constantsHolder: ConstantsHolderInstance;
+    let wallets: WalletsInstance;
 
     const failedDkgPenalty = 5;
 
@@ -71,6 +74,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
         nodeRotation = await deployNodeRotation(contractManager);
         skaleManager = await deploySkaleManager(contractManager);
         constantsHolder = await deployConstantsHolder(contractManager);
+        wallets = await deployWallets(contractManager);
 
         await slashingTable.setPenalty("FailedDKG", failedDkgPenalty);
     });
@@ -298,7 +302,8 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                         ip: "0x7f0000" + hexIndex,
                         publicIp: "0x7f0000" + hexIndex,
                         publicKey: validatorsPublicKey[index],
-                        name: "d2" + hexIndex
+                        name: "d2" + hexIndex,
+                        domainName: "somedomain.name"
                     });
             }
         });
@@ -355,6 +360,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
 
                 let nodesInGroup = await schainsInternal.getNodesInGroup(web3.utils.soliditySha3("d2"));
                 schainName = "d2";
+                await wallets.rechargeSchainWallet(web3.utils.soliditySha3(schainName), {from: owner, value: 1e20.toString()});
                 let index = 3;
                 while ((new BigNumber(nodesInGroup[0])).toFixed() === "1") {
                     await schains.deleteSchainByRoot(schainName);
@@ -365,7 +371,8 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                         deposit,
                         web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, schainName]));
                     nodesInGroup = await schainsInternal.getNodesInGroup(web3.utils.soliditySha3(schainName));
-                }
+                    await wallets.rechargeSchainWallet(web3.utils.soliditySha3(schainName), {from: owner, value: 1e20.toString()});
+            }
             });
 
             it("should broadcast data from 1 node", async () => {
@@ -1141,7 +1148,8 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                                 ip: "0x7f000002",
                                 publicIp: "0x7f000002",
                                 publicKey: validatorsPublicKey[0],
-                                name: "d202"
+                                name: "d202",
+                                domainName: "somedomain.name"
                         });
 
                         await skaleDKG.preResponse(
@@ -1237,9 +1245,11 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                     ip: "0x7f000003",
                     publicIp: "0x7f000003",
                     publicKey: validatorsPublicKey[0],
-                    name: "d203"
+                    name: "d203",
+                    domainName: "somedomain.name"
                 });
 
+            await wallets.rechargeSchainWallet(web3.utils.soliditySha3(schainName), {from: owner, value: 1e20.toString()});
             await skaleDKG.broadcast(
                 web3.utils.soliditySha3(schainName),
                 0,
@@ -1399,9 +1409,11 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                     ip: "0x7f000003",
                     publicIp: "0x7f000003",
                     publicKey: validatorsPublicKey[0],
-                    name: "d203"
+                    name: "d203",
+                    domainName: "somedomain.name"
                 });
 
+            await wallets.rechargeSchainWallet(web3.utils.soliditySha3(schainName), {from: owner, value: 1e20.toString()});
             await skaleDKG.broadcast(
                 web3.utils.soliditySha3(schainName),
                 0,
@@ -1469,7 +1481,8 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                     ip: "0x7f000004",
                     publicIp: "0x7f000004",
                     publicKey: validatorsPublicKey[0],
-                    name: "d204"
+                    name: "d204",
+                    domainName: "somedomain.name"
                 }
             );
 
@@ -1577,7 +1590,8 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                         ip: "0x7f0000" + hexIndex,
                         publicIp: "0x7f0000" + hexIndex,
                         publicKey: validatorsPublicKey[0],
-                        name: "d2" + hexIndex
+                        name: "d2" + hexIndex,
+                        domainName: "somedomain.name"
                     });
             }
 
@@ -1598,6 +1612,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                 verificationVectorNew[i] = verificationVectors[i % 2][0];
             }
 
+            await wallets.rechargeSchainWallet(web3.utils.soliditySha3("New16NodeSchain"), {from: owner, value: 1e20.toString()});
             for (let i = 0; i < 16; i++) {
                 let index = 0;
                 if (i === 1) {
@@ -1678,7 +1693,8 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                         ip: "0x7f0000" + hexIndex,
                         publicIp: "0x7f0000" + hexIndex,
                         publicKey: validatorsPublicKey[0],
-                        name: "d2" + hexIndex
+                        name: "d2" + hexIndex,
+                        domainName: "somedomain.name"
                     });
             }
 
@@ -1696,7 +1712,8 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                     ip: "0x7f0000ff",
                     publicIp: "0x7f0000ff",
                     publicKey: validatorsPublicKey[0],
-                    name: "d2ff"
+                    name: "d2ff",
+                    domainName: "somedomain.name"
                 });
 
             const secretKeyContributions = [];
@@ -1935,6 +1952,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                 }
             ];
 
+            await wallets.rechargeSchainWallet(web3.utils.soliditySha3("New16NodeSchain"), {from: owner, value: 1e20.toString()});
             for (let i = 0; i < 16; i++) {
                 let index = 0;
                 if (i === 1) {
@@ -2028,7 +2046,8 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                         ip: "0x7f0000" + hexIndex,
                         publicIp: "0x7f0000" + hexIndex,
                         publicKey: validatorsPublicKey[0],
-                        name: "d2" + hexIndex
+                        name: "d2" + hexIndex,
+                        domainName: "somedomain.name"
                     });
             }
 
@@ -2049,6 +2068,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                 verificationVectorNew[i] = verificationVectors[i % 2][0];
             }
 
+            await wallets.rechargeSchainWallet(web3.utils.soliditySha3("New16NodeSchain"), {from: owner, value: 1e20.toString()});
             for (let i = 0; i < 15; i++) {
                 let index = 0;
                 if (i === 1) {
@@ -2099,7 +2119,8 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                         ip: "0x7f0000" + hexIndex,
                         publicIp: "0x7f0000" + hexIndex,
                         publicKey: validatorsPublicKey[0],
-                        name: "d2" + hexIndex
+                        name: "d2" + hexIndex,
+                        domainName: "somedomain.name"
                     });
             }
 
@@ -2120,6 +2141,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                 verificationVectorNew[i] = verificationVectors[i % 2][0];
             }
 
+            await wallets.rechargeSchainWallet(web3.utils.soliditySha3("New16NodeSchain"), {from: owner, value: 1e20.toString()});
             for (let i = 0; i < 15; i++) {
                 let index = 0;
                 if (i === 1) {
@@ -2163,7 +2185,8 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
                     ip: "0x7f0000ff",
                     publicIp: "0x7f0000ff",
                     publicKey: validatorsPublicKey[0],
-                    name: "d2ff"
+                    name: "d2ff",
+                    domainName: "somedomain.name"
                 }
             );
             await schains.restartSchainCreation("New16NodeSchain");
@@ -2224,7 +2247,8 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
         //                     ip: "0x7f0000" + hexIndex,
         //                     publicIp: "0x7f0000" + hexIndex,
         //                     publicKey: validatorsPublicKey[0],
-        //                     name: "d2" + hexIndex
+        //                     name: "d2" + hexIndex,
+        //                     domainName: "somedomain.name"
         //                 });
         //         }
 
@@ -2313,7 +2337,8 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
         //                     ip: "0x7f0000" + hexIndex,
         //                     publicIp: "0x7f0000" + hexIndex,
         //                     publicKey: validatorsPublicKey[0],
-        //                     name: "d2" + hexIndex
+        //                     name: "d2" + hexIndex,
+        //                     domainName: "somedomain.name"
         //                 });
         //         }
 
@@ -2331,7 +2356,8 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
         //                 ip: "0x7f0000ff",
         //                 publicIp: "0x7f0000ff",
         //                 publicKey: validatorsPublicKey[0],
-        //                 name: "d2ff"
+        //                 name: "d2ff",
+        //                 domainName: "somedomain.name"
         //             });
 
         //         const secretKeyContributions = [];

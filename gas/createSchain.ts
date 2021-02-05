@@ -46,11 +46,12 @@ contract("createSchains", ([owner, validator, node]) => {
                 "0x7f" + ("000000" + nodeId.toString(16)).slice(-6), // public ip
                 ["0x" + publicKey.x.toString('hex'), "0x" + publicKey.y.toString('hex')], // public key
                 "d2-" + nodeId, // name)
+                "somedomain.name",
             {from: node});
 
             const nodesAmount = nodeId + 1;
             if (nodesAmount >= 16) {
-                const result = await schains.addSchainByFoundation(0, 1, 0, "schain-" + nodeId);
+                const result = await schains.addSchainByFoundation(0, 1, 0, "schain-" + nodeId, owner);
                 measurements.push({nodesAmount, gasUsed: result.receipt.gasUsed});
                 console.log("create schain on", nodesAmount, "nodes:\t", result.receipt.gasUsed, "gu");
                 if (result.receipt.gasUsed > gasLimit) {

@@ -68,7 +68,8 @@ contract("NodesFunctionality", ([owner, validator, nodeAddress, nodeAddress2, ho
                 ip: "0x00000000",
                 publicIp: "0x7f000001",
                 publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
-                name: "D2"
+                name: "D2",
+                domainName: "somedomain.name"
             }).should.be.eventually.rejectedWith("IP address is zero or is not available");
     });
 
@@ -82,7 +83,8 @@ contract("NodesFunctionality", ([owner, validator, nodeAddress, nodeAddress2, ho
                 ip: "0x7f000001",
                 publicIp: "0x7f000001",
                 publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
-                name: "D2"
+                name: "D2",
+                domainName: "somedomain.name"
             }).should.be.eventually.rejectedWith("Port is zero");
     });
 
@@ -96,7 +98,8 @@ contract("NodesFunctionality", ([owner, validator, nodeAddress, nodeAddress2, ho
                 ip: "0x7f000001",
                 publicIp: "0x7f000001",
                 publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex').slice(1) + "0"],
-                name: "D2"
+                name: "D2",
+                domainName: "somedomain.name"
             }).should.be.eventually.rejectedWith("Public Key is incorrect");
     });
 
@@ -110,7 +113,8 @@ contract("NodesFunctionality", ([owner, validator, nodeAddress, nodeAddress2, ho
                 ip: "0x7f000001",
                 publicIp: "0x7f000001",
                 publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
-                name: "D2"
+                name: "D2",
+                domainName: "somedomain.name"
             });
 
         const node = await nodes.nodes(0);
@@ -133,7 +137,8 @@ contract("NodesFunctionality", ([owner, validator, nodeAddress, nodeAddress2, ho
                     ip: "0x7f000001",
                     publicIp: "0x7f000001",
                     publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
-                    name: "D2"
+                    name: "D2",
+                    domainName: "somedomain.name"
                 });
         });
 
@@ -177,7 +182,8 @@ contract("NodesFunctionality", ([owner, validator, nodeAddress, nodeAddress2, ho
                     ip: "0x7f000001",
                     publicIp: "0x7f000001",
                     publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
-                    name: "D2"
+                    name: "D2",
+                    domainName: "somedomain.name"
                 }); // name
                 const pubKey2 = ec.keyFromPrivate(String(privateKeys[3]).slice(2)).getPublic();
             await nodes.createNode(
@@ -188,7 +194,8 @@ contract("NodesFunctionality", ([owner, validator, nodeAddress, nodeAddress2, ho
                     ip: "0x7f000002",
                     publicIp: "0x7f000002",
                     publicKey: ["0x" + pubKey2.x.toString('hex'), "0x" + pubKey2.y.toString('hex')],
-                    name: "D3"
+                    name: "D3",
+                    domainName: "somedomain.name"
                 }); // name
         });
 
@@ -286,7 +293,8 @@ contract("NodesFunctionality", ([owner, validator, nodeAddress, nodeAddress2, ho
                     ip: "0x7f000001",
                     publicIp: "0x7f000001",
                     publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
-                    name: "D2"
+                    name: "D2",
+                    domainName: "somedomain.name"
                 });
             const nodeIndexBN = (await nodes.getValidatorNodeIndexes(validatorId))[0];
             const nodeIndex = new BigNumber(nodeIndexBN).toNumber();
@@ -319,7 +327,8 @@ contract("NodesFunctionality", ([owner, validator, nodeAddress, nodeAddress2, ho
                     ip: "0x7f000001",
                     publicIp: "0x7f000001",
                     publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
-                    name: "D2"
+                    name: "D2",
+                    domainName: "somedomain.name"
                 });
 
             await nodes.checkPossibilityCreatingNode(nodeAddress);
@@ -331,7 +340,8 @@ contract("NodesFunctionality", ([owner, validator, nodeAddress, nodeAddress2, ho
                     ip: "0x7f000002",
                     publicIp: "0x7f000002",
                     publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
-                    name: "D3"
+                    name: "D3",
+                    domainName: "somedomain.name"
                 });
 
             const nodeIndexesBN = (await nodes.getValidatorNodeIndexes(validatorId));

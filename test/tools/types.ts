@@ -32,4 +32,12 @@ enum State {
     COMPLETED,
 }
 
-export { Delegation, State };
+enum SchainType {
+    SMALL = 1,
+    MEDIUM,
+    LARGE,
+    TEST,
+    MEDIUM_TEST
+}
+
+export { Delegation, State, SchainType };
