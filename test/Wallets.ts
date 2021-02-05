@@ -188,7 +188,7 @@ contract("Wallets", ([owner, validator1, validator2, node1, node2]) => {
                 const balance = await getBalance(web3, node1);
                 balance.should.not.be.lessThan(balanceBefore);
                 balance.should.be.almost(balanceBefore);
-                (initialBalance - fromWei(await wallets.getValidatorBalance(validator1)))
+                (initialBalance - fromWei(await wallets.getValidatorBalance(validator1Id)))
                     .should.be.almost(await ethSpent(web3, response));
             });
         });

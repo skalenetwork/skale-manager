@@ -313,7 +313,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
             });
         });
 
-        // describe("when two nodes are created", async () => {
+        describe("when two nodes are created", async () => {
 
             beforeEach(async () => {
                 const pubKey = ec.keyFromPrivate(String(privateKeys[4]).slice(2)).getPublic();
@@ -337,24 +337,24 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
                     {from: nodeAddress});
             });
 
-        //     it("should fail to initiate exiting of first node from another account", async () => {
-        //         await skaleManager.nodeExit(0, {from: hacker})
-        //             .should.be.eventually.rejectedWith("Sender is not permitted to call this function");
-        //     });
+            it("should fail to initiate exiting of first node from another account", async () => {
+                await skaleManager.nodeExit(0, {from: hacker})
+                    .should.be.eventually.rejectedWith("Sender is not permitted to call this function");
+            });
 
-        //     it("should fail to initiate exiting of second node from another account", async () => {
-        //         await skaleManager.nodeExit(1, {from: hacker})
-        //             .should.be.eventually.rejectedWith("Sender is not permitted to call this function");
-        //     });
+            it("should fail to initiate exiting of second node from another account", async () => {
+                await skaleManager.nodeExit(1, {from: hacker})
+                    .should.be.eventually.rejectedWith("Sender is not permitted to call this function");
+            });
 
-        //     it("should initiate exiting of first node", async () => {
-        //         await skaleManager.nodeExit(0, {from: nodeAddress});
+            it("should initiate exiting of first node", async () => {
+                await skaleManager.nodeExit(0, {from: nodeAddress});
 
-        //         await nodesContract.isNodeLeft(0).should.be.eventually.true;
-        //     });
+                await nodesContract.isNodeLeft(0).should.be.eventually.true;
+            });
 
-        //     it("should initiate exiting of second node", async () => {
-        //         await skaleManager.nodeExit(1, {from: nodeAddress});
+            it("should initiate exiting of second node", async () => {
+                await skaleManager.nodeExit(1, {from: nodeAddress});
 
                 await nodesContract.isNodeLeft(1).should.be.eventually.true;
             });

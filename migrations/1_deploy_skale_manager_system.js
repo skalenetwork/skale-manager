@@ -119,6 +119,7 @@ async function deploy(deployer, networkName, accounts) {
 
     add({ contractsData: contractsData });
 
+    Object.assign(options, {force: true});
     // Push implementation contracts to the network
     await push(options);
 
