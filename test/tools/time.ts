@@ -1,4 +1,4 @@
-import Web3 = require("web3");
+import Web3 from "web3";
 
 let requestId = 0xd2;
 
@@ -9,7 +9,7 @@ function responseCallback(error: Error | null, val?: any) {
 }
 
 export function skipTime(web3: Web3, seconds: number) {
-    web3.currentProvider.send(
+    web3.givenProvider.send(
         {
             id: requestId++,
             jsonrpc: "2.0",
@@ -18,7 +18,7 @@ export function skipTime(web3: Web3, seconds: number) {
         },
         responseCallback);
 
-    web3.currentProvider.send(
+    web3.givenProvider.send(
         {
             id: requestId++,
             jsonrpc: "2.0",
@@ -40,7 +40,7 @@ export async function skipTimeToDate(web3: Web3, day: number, monthIndex: number
 }
 
 export async function currentTime(web3: Web3) {
-    return (await web3.eth.getBlock("latest")).timestamp;
+    return parseInt((await web3.eth.getBlock("latest")).timestamp.toString());
 }
 
 export const months = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
