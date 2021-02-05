@@ -149,6 +149,7 @@ contract Schains is Permissions {
         address schainOwner
     )
         external
+        payable
     {
         require(hasRole(SCHAIN_CREATOR_ROLE, msg.sender), "Sender is not authorized to create schain");
 
@@ -167,6 +168,8 @@ contract Schains is Permissions {
         }
 
         _addSchain(_schainOwner, 0, schainParameters);
+        bytes32 schainId = keccak256(abi.encodePacked(name));
+        Wallets(payable(contractManager.getContract("Wallets"))).rechargeSchainWallet.value(msg.value)(schainId);
     }
 
     /**

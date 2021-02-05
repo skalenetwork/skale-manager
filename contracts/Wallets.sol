@@ -180,7 +180,7 @@ contract Wallets is Permissions {
     function withdrawFundsFromValidatorWallet(uint amount) external {
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
         uint validatorId = validatorService.getValidatorId(msg.sender);
-        require(amount <= _validatorWallets[validatorId], "Validator wallet has not enough funds");
+        require(amount <= _validatorWallets[validatorId], "Balance is too low");
         _validatorWallets[validatorId] = _validatorWallets[validatorId].sub(amount);
         msg.sender.transfer(amount);
     }

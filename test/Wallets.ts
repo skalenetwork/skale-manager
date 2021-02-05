@@ -51,14 +51,6 @@ contract("Wallets", ([owner, validator1, validator2, node1, node2]) => {
     const validator1Id = 1;
     const validator2Id = 2;
 
-    it("test", async () => {
-        console.log(new BigNumber(5).dividedBy(2).toString());
-        console.log(web3.utils.toBN(5).divn(2).toString());
-
-        console.log(web3.utils.fromWei("1500000000000000000"));
-        console.log(await getBalance(web3, owner));
-    });
-
     beforeEach(async () => {
         contractManager = await deployContractManager();
         wallets = await deployWallets(contractManager);
@@ -85,16 +77,18 @@ contract("Wallets", ([owner, validator1, validator2, node1, node2]) => {
     });
 
     it("should withdraw from validator wallet", async() => {
-        assert(false, "Not implemented");
-
         const amount = 1e9;
+        const gasPrice = 8*1e9;
         await wallets.rechargeValidatorWallet(validator1Id, {value: amount.toString()});
+        const validator1Balance = Number.parseInt(await web3.eth.getBalance(validator1), 10);
 
-        // await wallets.withdraw(amount).should.be.eventually.rejectedWith("Validator does not exists");
-        // const validator1Balance = Number.parseInt(await web3.eth.getBalance(validator1), 10);
-        // await wallets.withdraw(amount, {from: validator2}).should.be.eventually.rejectedWith("Balance is too low");
-        // await wallets.withdraw(amount, {from: validator1});
-        // await web3.eth.getBalance(validator1).should.be.eventually.equal((validator1Balance + amount).toString());
+        const tx = await wallets.withdrawFundsFromValidatorWallet(amount, {from: validator1});
+        let validator1BalanceAfterWithdraw = Number.parseInt(await web3.eth.getBalance(validator1), 10);
+        validator1BalanceAfterWithdraw += tx.receipt.gasUsed * gasPrice;
+        assert.equal(validator1BalanceAfterWithdraw, validator1Balance + amount);
+
+        await wallets.withdrawFundsFromValidatorWallet(amount, {from: validator2}).should.be.eventually.rejectedWith("Balance is too low");
+        await wallets.withdrawFundsFromValidatorWallet(amount).should.be.eventually.rejectedWith("Validator address does not exist");
     });
 
     describe("when nodes and schains have been created", async() => {
@@ -148,6 +142,13 @@ contract("Wallets", ([owner, validator1, validator2, node1, node2]) => {
 
             await schains.addSchainByFoundation(0, SchainType.TEST, 0, schain2Name, validator2);
             await skaleDKG.setSuccesfulDKGPublic(schain2Id);
+        });
+
+        it("should automatically recharge wallet after creating schain by foundation", async () => {
+            const amount = 1e9;
+            await schains.addSchainByFoundation(0, SchainType.TEST, 0, "schain-3", validator2, {value: amount.toString()});
+            const schainBalance = await wallets.getSchainBalance(web3.utils.soliditySha3("schain-3"));
+            amount.should.be.equal(schainBalance.toNumber());
         });
 
         it("should recharge schain wallet", async() => {
