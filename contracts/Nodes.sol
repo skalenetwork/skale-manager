@@ -121,6 +121,8 @@ contract Nodes is Permissions {
 
     mapping (uint => string) public domainNames;
 
+    mapping (uint => bool) private _visible;
+
     SegmentTree.Tree private _nodesAmountBySpace;
 
     /**
@@ -172,77 +174,50 @@ contract Nodes is Permissions {
         uint8 totalSpace = ConstantsHolder(contractManager.getContract("ConstantsHolder")).TOTAL_SPACE_ON_NODE();
         for (uint8 i = 1; i <= totalSpace; i++) {
             if (spaceToNodes[i].length > 0)
-                _tree.createWithLastElement(i, spaceToNodes[i].length);
+                _nodesAmountBySpace.createWithLastElement(i, spaceToNodes[i].length);
         }
     }
 
-    // /**
-    //  * @dev Allows Schains and SchainsInternal contracts to occupy available
-    //  * space on a node.
-    //  * 
-    //  * Returns whether operation is successful.
-    //  */
-    // function removeSpaceFromNode(uint nodeIndex, uint8 space)
-    //     external
-    //     checkNodeExists(nodeIndex)
-    //     allowTwo("NodeRotation", "SchainsInternal")
-    //     returns (bool)
-    // {
-    //     if (spaceOfNodes[nodeIndex].freeSpace < space) {
-    //         return false;
-    //     }
-    //     if (space > 0) {
-    //         _moveNodeToNewSpaceMap(
-    //             nodeIndex,
-    //             uint(spaceOfNodes[nodeIndex].freeSpace).sub(space).toUint8()
-    //         );
-    //     }
-    //     return true;
-    // }
-
-    // /**
-    //  * @dev Allows Schains contract to occupy free space on a node.
-    //  * 
-    //  * Returns whether operation is successful.
-    //  */
-    // function addSpaceToNode(uint nodeIndex, uint8 space)
-    //     external
-    //     checkNodeExists(nodeIndex)
-    //     allow("Schains")
-    // {
-    //     if (space > 0) {
-    //         _moveNodeToNewSpaceMap(
-    //             nodeIndex,
-    //             uint(spaceOfNodes[nodeIndex].freeSpace).add(space).toUint8()
-    //         );
-    //     }
-    // }
-
-    function changeSpaceOnVisibleNode(
-        uint nodeIndex,
-        uint8 space,
-        bool addition
-    )
+    /**
+     * @dev Allows Schains and SchainsInternal contracts to occupy available
+     * space on a node.
+     * 
+     * Returns whether operation is successful.
+     */
+    function removeSpaceFromNode(uint nodeIndex, uint8 space)
         external
-        allowTwo("SchainsInternal", "NodeRotation")
+        checkNodeExists(nodeIndex)
+        allowTwo("NodeRotation", "SchainsInternal")
         returns (bool)
     {
-        uint8 currentSpace = spaceOfNodes[nodeIndex].freeSpace;
-        if (addition) {
+        if (spaceOfNodes[nodeIndex].freeSpace < space) {
+            return false;
+        }
+        if (space > 0) {
             _moveNodeToNewSpaceMap(
                 nodeIndex,
-                uint(currentSpace).add(space).toUint8()
-            );
-        } else {
-            if (currentSpace < space) {
-                return false;
-            }
-            _moveNodeToNewSpaceMap(
-                nodeIndex,
-                uint(currentSpace).sub(space).toUint8()
+                uint(spaceOfNodes[nodeIndex].freeSpace).sub(space).toUint8()
             );
         }
         return true;
+    }
+
+    /**
+     * @dev Allows Schains contract to occupy free space on a node.
+     * 
+     * Returns whether operation is successful.
+     */
+    function addSpaceToNode(uint nodeIndex, uint8 space)
+        external
+        checkNodeExists(nodeIndex)
+        allow("Schains")
+    {
+        if (space > 0) {
+            _moveNodeToNewSpaceMap(
+                nodeIndex,
+                uint(spaceOfNodes[nodeIndex].freeSpace).add(space).toUint8()
+            );
+        }
     }
 
     /**
@@ -501,24 +476,6 @@ contract Nodes is Permissions {
         _makeNodeInvisible(nodeIndex);
     }
 
-    function changeSpaceOnInvisibleNode(
-        uint nodeIndex,
-        uint8 space,
-        bool addition
-    )
-        external
-        allowTwo("SchainsInternal", "NodeRotation")
-        returns (bool)
-    {
-        uint8 currentSpace = spaceOfNodes[nodeIndex].freeSpace;
-        if (addition) {
-            _changeSpaceInSpaceOfNode(nodeIndex, uint(currentSpace).add(space).toUint8());
-        } else {
-            _changeSpaceInSpaceOfNode(nodeIndex, uint(currentSpace).sub(space).toUint8());
-        }
-        return true;
-    }
-
     function getRandomNodeWithFreeSpace(
         uint8 freeSpace,
         Random.RandomGenerator memory randomGenerator
@@ -547,22 +504,22 @@ contract Nodes is Permissions {
         return BountyV2(contractManager.getBounty()).getNextRewardTimestamp(nodeIndex) <= now;
     }
 
-    // /**
-    //  * @dev Returns IP address of a given node.
-    //  * 
-    //  * Requirements:
-    //  * 
-    //  * - Node must exist.
-    //  */
-    // function getNodeIP(uint nodeIndex)
-    //     external
-    //     view
-    //     checkNodeExists(nodeIndex)
-    //     returns (bytes4)
-    // {
-    //     require(nodeIndex < nodes.length, "Node does not exist");
-    //     return nodes[nodeIndex].ip;
-    // }
+    /**
+     * @dev Returns IP address of a given node.
+     * 
+     * Requirements:
+     * 
+     * - Node must exist.
+     */
+    function getNodeIP(uint nodeIndex)
+        external
+        view
+        checkNodeExists(nodeIndex)
+        returns (bytes4)
+    {
+        require(nodeIndex < nodes.length, "Node does not exist");
+        return nodes[nodeIndex].ip;
+    }
 
     /**
      * @dev Returns domain name of a given node.
@@ -580,21 +537,21 @@ contract Nodes is Permissions {
         return domainNames[nodeIndex];
     }
 
-    // /**
-    //  * @dev Returns the port of a given node.
-    //  *
-    //  * Requirements:
-    //  *
-    //  * - Node must exist.
-    //  */
-    // function getNodePort(uint nodeIndex)
-    //     external
-    //     view
-    //     checkNodeExists(nodeIndex)
-    //     returns (uint16)
-    // {
-    //     return nodes[nodeIndex].port;
-    // }
+    /**
+     * @dev Returns the port of a given node.
+     *
+     * Requirements:
+     *
+     * - Node must exist.
+     */
+    function getNodePort(uint nodeIndex)
+        external
+        view
+        checkNodeExists(nodeIndex)
+        returns (uint16)
+    {
+        return nodes[nodeIndex].port;
+    }
 
     /**
      * @dev Returns the public key of a given node.
@@ -621,17 +578,17 @@ contract Nodes is Permissions {
     }
 
 
-    // /**
-    //  * @dev Returns the finish exit time of a given node.
-    //  */
-    // function getNodeFinishTime(uint nodeIndex)
-    //     external
-    //     view
-    //     checkNodeExists(nodeIndex)
-    //     returns (uint)
-    // {
-    //     return nodes[nodeIndex].finishTime;
-    // }
+    /**
+     * @dev Returns the finish exit time of a given node.
+     */
+    function getNodeFinishTime(uint nodeIndex)
+        external
+        view
+        checkNodeExists(nodeIndex)
+        returns (uint)
+    {
+        return nodes[nodeIndex].finishTime;
+    }
 
     /**
      * @dev Checks whether a node has left the network.
@@ -685,14 +642,14 @@ contract Nodes is Permissions {
         return nodes.length;
     }
 
-    // /**
-    //  * @dev Returns the total number of online nodes.
-    //  * 
-    //  * Note: Online nodes are equal to the number of active plus leaving nodes.
-    //  */
-    // function getNumberOnlineNodes() external view returns (uint) {
-    //     return numberOfActiveNodes.add(numberOfLeavingNodes);
-    // }
+    /**
+     * @dev Returns the total number of online nodes.
+     * 
+     * Note: Online nodes are equal to the number of active plus leaving nodes.
+     */
+    function getNumberOnlineNodes() external view returns (uint) {
+        return numberOfActiveNodes.add(numberOfLeavingNodes);
+    }
 
     // /**
     //  * @dev Returns IPs of active nodes.
@@ -780,6 +737,7 @@ contract Nodes is Permissions {
         numberOfActiveNodes = 0;
         numberOfLeavingNodes = 0;
         numberOfLeftNodes = 0;
+        _nodesAmountBySpace.create(128);
     }
 
     /**
@@ -847,19 +805,13 @@ contract Nodes is Permissions {
      * @dev Moves a node to a new space mapping.
      */
     function _moveNodeToNewSpaceMap(uint nodeIndex, uint8 newSpace) private {
-        if (newSpace > 0 && spaceOfNodes[nodeIndex].freeSpace > 0) {
-            _nodesAmountBySpace.moveFromPlaceToPlace(spaceOfNodes[nodeIndex].freeSpace, newSpace, 1);
-        } else if (newSpace == 0) {
-            _nodesAmountBySpace.removeFromPlace(spaceOfNodes[nodeIndex].freeSpace, 1);
-        } else {
-            _nodesAmountBySpace.addToPlace(newSpace, 1);
+        if (_visible[nodeIndex]) {
+            uint8 space = spaceOfNodes[nodeIndex].freeSpace;
+            _removeNodeFromSpaceToNodes(nodeIndex, space);
+            // _removeNodeFromTree(space);
+            _addNodeToSpaceToNodes(nodeIndex, newSpace);
+            // _addNodeToTree(newSpace);
         }
-        _removeNodeFromSpaceToNodes(nodeIndex);
-        _changeSpaceInSpaceOfNode(nodeIndex, newSpace);
-        _addNodeToSpaceToNodes(nodeIndex);
-    }
-
-    function _changeSpaceInSpaceOfNode(uint nodeIndex, uint8 newSpace) private {
         spaceOfNodes[nodeIndex].freeSpace = newSpace;
     }
 
@@ -908,85 +860,35 @@ contract Nodes is Permissions {
         _makeNodeInvisible(nodeIndex);
     }
 
-    // /**
-    //  * @dev Adds node to array.
-    //  */
-    // function _addNode(
-    //     address from,
-    //     string memory name,
-    //     bytes4 ip,
-    //     bytes4 publicIP,
-    //     uint16 port,
-    //     bytes32[2] memory publicKey,
-    //     string memory domainName,
-    //     uint validatorId
-    // )
-    //     private
-    //     returns (uint nodeIndex)
-    // {
-    //     ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
-    //     nodes.push(Node({
-    //         name: name,
-    //         ip: ip,
-    //         publicIP: publicIP,
-    //         port: port,
-    //         publicKey: publicKey,
-    //         startBlock: block.number,
-    //         lastRewardDate: block.timestamp,
-    //         finishTime: 0,
-    //         status: NodeStatus.Active,
-    //         validatorId: validatorId
-    //     }));
-    //     nodeIndex = nodes.length.sub(1);
-    //     validatorToNodeIndexes[validatorId].push(nodeIndex);
-    //     bytes32 nodeId = keccak256(abi.encodePacked(name));
-    //     nodesIPCheck[ip] = true;
-    //     nodesNameCheck[nodeId] = true;
-    //     nodesNameToIndex[nodeId] = nodeIndex;
-    //     nodeIndexes[from].isNodeExist[nodeIndex] = true;
-    //     nodeIndexes[from].numberOfNodes++;
-    //     domainNames[nodeIndex] = domainName;
-    //     spaceOfNodes.push(SpaceManaging({
-    //         freeSpace: constantsHolder.TOTAL_SPACE_ON_NODE(),
-    //         indexInSpaceMap: spaceToNodes[constantsHolder.TOTAL_SPACE_ON_NODE()].length
-    //     }));
-    //     _setNodeActive(nodeIndex);
-    // }
-
-    // /**
-    //  * @dev Deletes node from array.
-    //  */
-    // function _deleteNode(uint nodeIndex) private {
-    //     delete spaceOfNodes[nodeIndex].freeSpace;
-    // }
-
-
     function _makeNodeInvisible(uint nodeIndex) private {
-        console.log("Invisible", nodeIndex);
-        _removeNodeFromSpaceToNodes(nodeIndex);
-        uint8 space = spaceOfNodes[nodeIndex].freeSpace;
-        if (space > 0) {
-            _nodesAmountBySpace.removeFromPlace(space, 1);
+        if (_visible[nodeIndex]) {
+            // console.log("Invisible", nodeIndex);
+            uint8 space = spaceOfNodes[nodeIndex].freeSpace;
+            _removeNodeFromSpaceToNodes(nodeIndex, space);
+            // _removeNodeFromTree(space);
+            delete _visible[nodeIndex];
         }
     }
 
     function _makeNodeVisible(uint nodeIndex) private {
-        console.log("Visible", nodeIndex);
-        _addNodeToSpaceToNodes(nodeIndex);
-        uint8 space = spaceOfNodes[nodeIndex].freeSpace;
+        if (!_visible[nodeIndex]) {
+            // console.log("Visible", nodeIndex);
+            uint8 space = spaceOfNodes[nodeIndex].freeSpace;
+            _addNodeToSpaceToNodes(nodeIndex, space);
+            // _addNodeToTree(space);
+            _visible[nodeIndex] = true;
+        }
+    }
+
+    function _addNodeToSpaceToNodes(uint nodeIndex, uint8 space) private {
+        spaceToNodes[space].push(nodeIndex);
+        spaceOfNodes[nodeIndex].indexInSpaceMap = spaceToNodes[space].length.sub(1);
         if (space > 0) {
             _nodesAmountBySpace.addToPlace(space, 1);
         }
     }
 
-    function _addNodeToSpaceToNodes(uint nodeIndex) private {
-        uint8 space = spaceOfNodes[nodeIndex].freeSpace;
-        spaceToNodes[space].push(nodeIndex);
-        spaceOfNodes[nodeIndex].indexInSpaceMap = spaceToNodes[space].length.sub(1);
-    }
-
-    function _removeNodeFromSpaceToNodes(uint nodeIndex) private {
-        uint8 space = spaceOfNodes[nodeIndex].freeSpace;
+    function _removeNodeFromSpaceToNodes(uint nodeIndex, uint8 space) private {
         uint indexInArray = spaceOfNodes[nodeIndex].indexInSpaceMap;
         uint len = spaceToNodes[space].length.sub(1);
         if (indexInArray < len) {
@@ -996,6 +898,9 @@ contract Nodes is Permissions {
         }
         spaceToNodes[space].pop();
         delete spaceOfNodes[nodeIndex].indexInSpaceMap;
+        if (space > 0) {
+            _nodesAmountBySpace.removeFromPlace(space, 1);
+        }
     }
 
     function _checkValidatorPositionToMaintainNode(uint validatorId, uint position) private returns (bool) {

@@ -319,10 +319,7 @@ contract SchainsInternal is Permissions {
     function makeSchainNodesInvisible(bytes32 schainId) external allowTwo("NodeRotation", "SkaleDKG") {
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));
         for (uint i = 0; i < _schainToExceptionNodes[schainId].length; i++) {
-            uint nodeIndex = _schainToExceptionNodes[schainId][i];
-            if (nodes.isNodeActive(nodeIndex)) {
-                nodes.makeNodeInvisible(nodeIndex);
-            }
+            nodes.makeNodeInvisible(_schainToExceptionNodes[schainId][i]);
         }
     }
 
@@ -633,7 +630,7 @@ contract SchainsInternal is Permissions {
             _setException(schainId, node);
             addSchainForNode(node, schainId);
             nodes.makeNodeInvisible(node);
-            require(nodes.changeSpaceOnInvisibleNode(node, space, false), "Could not remove space from Node");
+            require(nodes.removeSpaceFromNode(node, space), "Could not remove space from Node");
         }
         _makeSchainNodesVisible(schainId);
 
@@ -650,10 +647,7 @@ contract SchainsInternal is Permissions {
     function _makeSchainNodesVisible(bytes32 schainId) private {
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));
         for (uint i = 0; i < _schainToExceptionNodes[schainId].length; i++) {
-            uint nodeIndex = _schainToExceptionNodes[schainId][i];
-            if (nodes.isNodeActive(nodeIndex)) {
-                nodes.makeNodeVisible(nodeIndex);
-            }
+            nodes.makeNodeVisible(_schainToExceptionNodes[schainId][i]);
         }
     }
 
