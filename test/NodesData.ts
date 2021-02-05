@@ -75,8 +75,8 @@ contract("NodesData", ([owner, validator, nodeAddress, admin, hacker]) => {
         const nodeByName = await nodes.nodes(await nodes.nodesNameToIndex(nodeId));
         node.should.be.deep.equal(nodeByName);
         await nodes.isNodeExist(nodeAddress, 0).should.be.eventually.true;
-        (await nodes.getActiveNodesByAddress({from: nodeAddress})).should.be.deep.equal([web3.utils.toBN(0)]);
-        expect(await nodes.getActiveNodesByAddress({from: owner})).to.be.empty;
+        // (await nodes.getActiveNodesByAddress({from: nodeAddress})).should.be.deep.equal([web3.utils.toBN(0)]);
+        // expect(await nodes.getActiveNodesByAddress({from: owner})).to.be.empty;
         await nodes.numberOfActiveNodes().should.be.eventually.deep.equal(web3.utils.toBN(1));
         await nodes.getNumberOfNodes().should.be.eventually.deep.equal(web3.utils.toBN(1));
     });
@@ -206,28 +206,28 @@ contract("NodesData", ([owner, validator, nodeAddress, admin, hacker]) => {
                 .should.be.eventually.rejectedWith("Validator address does not exist");
         });
 
-        it("should get array of ips of active nodes", async () => {
-            const activeNodes = await nodes.getActiveNodeIPs();
+        // it("should get array of ips of active nodes", async () => {
+        //     const activeNodes = await nodes.getActiveNodeIPs();
 
-            activeNodes.length.should.be.equal(1);
-            activeNodes[0].should.be.equal("0x7f000001");
-        });
+        //     activeNodes.length.should.be.equal(1);
+        //     activeNodes[0].should.be.equal("0x7f000001");
+        // });
 
-        it("should get array of indexes of active nodes", async () => {
-            const activeNodes = await nodes.getActiveNodeIds();
+        // it("should get array of indexes of active nodes", async () => {
+        //     const activeNodes = await nodes.getActiveNodeIds();
 
-            activeNodes.length.should.be.equal(1);
-            const nodeIndex = web3.utils.toBN(activeNodes[0]);
-            expect(nodeIndex.eq(web3.utils.toBN(0))).to.be.true;
-        });
+        //     activeNodes.length.should.be.equal(1);
+        //     const nodeIndex = web3.utils.toBN(activeNodes[0]);
+        //     expect(nodeIndex.eq(web3.utils.toBN(0))).to.be.true;
+        // });
 
-        it("should get array of indexes of active nodes of msg.sender", async () => {
-            const activeNodes = await nodes.getActiveNodesByAddress({from: nodeAddress});
+        // it("should get array of indexes of active nodes of msg.sender", async () => {
+        //     const activeNodes = await nodes.getActiveNodesByAddress({from: nodeAddress});
 
-            activeNodes.length.should.be.equal(1);
-            const nodeIndex = web3.utils.toBN(activeNodes[0]);
-            expect(nodeIndex.eq(web3.utils.toBN(0))).to.be.true;
-        });
+        //     activeNodes.length.should.be.equal(1);
+        //     const nodeIndex = web3.utils.toBN(activeNodes[0]);
+        //     expect(nodeIndex.eq(web3.utils.toBN(0))).to.be.true;
+        // });
 
         it("should return Node status", async () => {
             let status = await nodes.getNodeStatus(0);
