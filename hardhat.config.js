@@ -1,4 +1,3 @@
-require("@nomiclabs/buidler-truffle5");
 require("@nomiclabs/hardhat-etherscan");
 require('@openzeppelin/hardhat-upgrades');
 require("solidity-coverage");
