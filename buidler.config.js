@@ -60,7 +60,8 @@ module.exports = {
       ],
       gas: 0xfffffffffff,
       blockGasLimit: 0xfffffffffff,
-      port: 8555
+      port: 8555,
+      allowUnlimitedContractSize: true
     }
   }
 };

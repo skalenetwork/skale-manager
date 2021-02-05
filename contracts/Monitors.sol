@@ -318,6 +318,7 @@ contract Monitors is Permissions {
     function _generateGroup(bytes32 monitorIndex, uint nodeIndex, uint numberOfNodes)
         private
     {
+        // solhint-disable-previous-line no-empty-blocks
         // Nodes nodes = Nodes(contractManager.getContract("Nodes"));
         // uint[] memory activeNodes = nodes.getActiveNodeIds();
         // uint numberOfNodesInGroup;

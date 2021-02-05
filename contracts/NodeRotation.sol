@@ -23,7 +23,7 @@ pragma solidity 0.6.10;
 pragma experimental ABIEncoderV2;
 
 import "./interfaces/ISkaleDKG.sol";
-import "./utils/Random.sol";
+// import "./utils/Random.sol";
 
 import "./ConstantsHolder.sol";
 import "./Nodes.sol";
@@ -37,7 +37,7 @@ import "./Schains.sol";
  * @dev This contract handles all node rotation functionality.
  */
 contract NodeRotation is Permissions {
-    using Random for Random.RandomGenerator;
+    // using Random for Random.RandomGenerator;
     using StringUtils for string;    
     using StringUtils for uint;
 
@@ -184,7 +184,7 @@ contract NodeRotation is Permissions {
     function selectNodeToGroup(bytes32 schainId)
         public
         allowThree("SkaleManager", "Schains", "SkaleDKG")
-        returns (uint)
+        returns (uint nodeIndex)
     {
         SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));
@@ -192,17 +192,17 @@ contract NodeRotation is Permissions {
         uint8 space = schainsInternal.getSchainsPartOfNode(schainId);
         schainsInternal.makeSchainNodesInvisible(schainId);
         require(schainsInternal.isAnyFreeNode(schainId), "No free Nodes available for rotation");
-        uint nodeIndex;
-        Random.RandomGenerator memory randomGenerator = Random.createFromEntropy(
-            abi.encodePacked(uint(blockhash(block.number - 1)), schainId)
-        );
-        nodeIndex = nodes.getRandomNodeWithFreeSpace(space, randomGenerator);
-        schainsInternal.makeSchainNodesVisible(schainId);
+        // Random.RandomGenerator memory randomGenerator = Random.createFromEntropy(
+        //     abi.encodePacked(uint(blockhash(block.number - 1)), schainId)
+        // );
+        // uint random = uint(keccak256(abi.encodePacked(uint(blockhash(block.number - 1)), schainId)));
+        // nodeIndex = nodes.getRandomNodeWithFreeSpace(space, randomGenerator);
+        nodeIndex = nodes.getRandomNodeWithFreeSpace(space);
         require(nodes.removeSpaceFromNode(nodeIndex, space), "Could not remove space from nodeIndex");
+        schainsInternal.makeSchainNodesVisible(schainId);
         schainsInternal.addSchainForNode(nodeIndex, schainId);
         schainsInternal.setException(schainId, nodeIndex);
         schainsInternal.setNodeInGroup(schainId, nodeIndex);
-        return nodeIndex;
     }
 
 

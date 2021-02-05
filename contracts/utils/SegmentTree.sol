@@ -25,7 +25,7 @@ pragma solidity 0.6.10;
 import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
 import "@nomiclabs/buidler/console.sol";
 
-import "./Random.sol";
+// import "./Random.sol";
 
 /**
  * @title SegmentTree
@@ -61,7 +61,7 @@ import "./Random.sol";
  * +----+----+----+---+---+----+----+---+---+---+---+---+---+---+---+
  */
 library SegmentTree {
-    using Random for Random.RandomGenerator;
+    // using Random for Random.RandomGenerator;
     using SafeMath for uint;    
 
     struct Tree {
@@ -263,12 +263,12 @@ library SegmentTree {
      */
     function getRandomNonZeroElementFromPlaceToLast(
         Tree storage self,
-        uint place,
-        Random.RandomGenerator memory randomGenerator
+        uint place
+        // Random.RandomGenerator memory randomGenerator
     )
         internal
         view
-        returns (uint)
+        returns (uint, uint)
     {
         require(_correctPlace(self, place), "Incorrect place");
 
@@ -277,8 +277,9 @@ library SegmentTree {
         uint rightBound = getSize(self);
         uint currentFrom = place.sub(1);
         uint currentSum = sumFromPlaceToLast(self, place);
+        uint randomBeakon = uint(keccak256(abi.encodePacked(uint(blockhash(block.number.sub(1))), place, currentSum)));
         if (currentSum == 0) {
-            return 0;
+            return (0, 0);
         }
         while(leftBound.add(1) < rightBound) {
             if (_middle(leftBound, rightBound) <= currentFrom) {
@@ -287,7 +288,10 @@ library SegmentTree {
             } else {
                 uint rightSum = self.tree[_right(vertex).sub(1)];
                 uint leftSum = currentSum.sub(rightSum);
-                if (randomGenerator.random(currentSum) < leftSum) {
+                (bool isLeftWay, uint randomBeakon2) =
+                    _randomWay(randomBeakon, leftSum, rightSum);
+                randomBeakon = randomBeakon2;
+                if (isLeftWay) {
                     // go left
                     vertex = _left(vertex);
                     rightBound = _middle(leftBound, rightBound);
@@ -301,7 +305,60 @@ library SegmentTree {
                 }
             }
         }
-        return leftBound.add(1);
+        return (leftBound.add(1), randomBeakon);
+
+        // uint8 leftBound = 1;
+        // uint8 rightBound = 128;
+        // uint step = 1;
+        // uint currentSum = sumFromPlaceToLast(self, place);
+        // uint randomBeakon = uint(keccak256(abi.encodePacked(uint(blockhash(block.number.sub(1))), place, currentSum)));
+        // while(leftBound < rightBound) {
+        //     uint8 middle = (leftBound + rightBound) / 2;
+        //     if (place > middle) {
+        //         leftBound = middle + 1;
+        //         step += step + 1;
+        //     } else {
+        //         uint priorityB = self.tree[2 * step];
+        //         uint priorityA = currentSum - priorityB;
+        //         if (priorityA == 0) {
+        //             leftBound = middle + 1;
+        //             step += step + 1;
+        //         } else if (priorityB == 0) {
+        //             rightBound = middle;
+        //             step += step;
+        //         } else {
+        //             (bool isLeftWay, uint randomBeakon2) =
+        //                 _randomWay(randomBeakon, priorityA, priorityB);
+        //             if (isLeftWay) {
+        //                 rightBound = middle;
+        //                 step += step;
+        //                 currentSum = priorityA;
+        //             } else {
+        //                 leftBound = middle + 1;
+        //                 step += step + 1;
+        //                 currentSum = priorityB;
+        //             }
+        //             randomBeakon = randomBeakon2;
+        //         }
+        //     }
+        // }
+        // if (self.tree[step - 1] == 0) {
+        //     return (0, 0);
+        // }
+        // return (leftBound, randomBeakon);
+    }
+
+    function _randomWay(
+        uint salt,
+        uint priorityA,
+        uint priorityB
+    )
+        private
+        pure
+        returns (bool isLeftWay, uint newSalt)
+    {
+        newSalt = uint(keccak256(abi.encodePacked(salt, priorityA, priorityB)));
+        isLeftWay = (newSalt % (priorityA + priorityB)) < priorityA;
     }
 
     /**

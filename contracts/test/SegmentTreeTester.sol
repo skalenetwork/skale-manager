@@ -56,10 +56,13 @@ contract SegmentTreeTester {
     }
 
     function getRandomElem(uint place) external view returns (uint) {
-        Random.RandomGenerator memory randomGenerator = Random.createFromEntropy(
-            abi.encodePacked(uint(blockhash(block.number - 1)), place)
-        );
-        return _tree.getRandomNonZeroElementFromPlaceToLast(place, randomGenerator);
+        // Random.RandomGenerator memory randomGenerator = Random.createFromEntropy(
+        //     abi.encodePacked(uint(blockhash(block.number - 1)), place)
+        // );
+        // uint random = uint(keccak256(abi.encodePacked(uint(blockhash(block.number - 1)), place)));
+        (uint place1, ) = _tree.getRandomNonZeroElementFromPlaceToLast(place);
+        return place1;
+        // return _tree.getRandomNonZeroElementFromPlaceToLast(place, randomGenerator);
     }
 
     function getElem(uint index) external view returns (uint) {

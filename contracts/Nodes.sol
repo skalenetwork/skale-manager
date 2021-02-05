@@ -28,7 +28,7 @@ import "@openzeppelin/contracts-ethereum-package/contracts/utils/SafeCast.sol";
 
 import "./delegation/DelegationController.sol";
 import "./delegation/ValidatorService.sol";
-import "./utils/Random.sol";
+// import "./utils/Random.sol";
 import "./utils/SegmentTree.sol";
 
 import "./BountyV2.sol";
@@ -55,7 +55,7 @@ import "@nomiclabs/buidler/console.sol";
  */
 contract Nodes is Permissions {
     
-    using Random for Random.RandomGenerator;
+    // using Random for Random.RandomGenerator;
     using SafeCast for uint;
     using SegmentTree for SegmentTree.Tree;
 
@@ -477,19 +477,20 @@ contract Nodes is Permissions {
     }
 
     function getRandomNodeWithFreeSpace(
-        uint8 freeSpace,
-        Random.RandomGenerator memory randomGenerator
+        uint8 freeSpace
+        // Random.RandomGenerator memory randomGenerator
     )
         external
         view
         returns (uint)
     {
-        uint8 place = _nodesAmountBySpace.getRandomNonZeroElementFromPlaceToLast(
-            freeSpace == 0 ? 1 : freeSpace,
-            randomGenerator
-        ).toUint8();
+        (uint place, uint random) = _nodesAmountBySpace.getRandomNonZeroElementFromPlaceToLast(
+            freeSpace == 0 ? 1 : freeSpace
+        );
         require(place > 0, "Node not found");
-        return spaceToNodes[place][randomGenerator.random(spaceToNodes[place].length)]; 
+        random = uint(keccak256(abi.encodePacked(random, place))) % spaceToNodes[place.toUint8()].length;
+        return spaceToNodes[place.toUint8()][random]; 
+        // return spaceToNodes[place][randomGenerator.random(spaceToNodes[place].length)]; 
     }
 
     /**
@@ -807,10 +808,14 @@ contract Nodes is Permissions {
     function _moveNodeToNewSpaceMap(uint nodeIndex, uint8 newSpace) private {
         if (_visible[nodeIndex]) {
             uint8 space = spaceOfNodes[nodeIndex].freeSpace;
+            // if (space > 0 && newSpace > 0) {
+            //     _nodesAmountBySpace.moveFromPlaceToPlace(space, newSpace, 1);
+            // } else {
+                _removeNodeFromTree(space);
+                _addNodeToTree(newSpace);
+            // }
             _removeNodeFromSpaceToNodes(nodeIndex, space);
-            // _removeNodeFromTree(space);
             _addNodeToSpaceToNodes(nodeIndex, newSpace);
-            // _addNodeToTree(newSpace);
         }
         spaceOfNodes[nodeIndex].freeSpace = newSpace;
     }
@@ -865,7 +870,7 @@ contract Nodes is Permissions {
             // console.log("Invisible", nodeIndex);
             uint8 space = spaceOfNodes[nodeIndex].freeSpace;
             _removeNodeFromSpaceToNodes(nodeIndex, space);
-            // _removeNodeFromTree(space);
+            _removeNodeFromTree(space);
             delete _visible[nodeIndex];
         }
     }
@@ -875,7 +880,7 @@ contract Nodes is Permissions {
             // console.log("Visible", nodeIndex);
             uint8 space = spaceOfNodes[nodeIndex].freeSpace;
             _addNodeToSpaceToNodes(nodeIndex, space);
-            // _addNodeToTree(space);
+            _addNodeToTree(space);
             _visible[nodeIndex] = true;
         }
     }
@@ -883,9 +888,9 @@ contract Nodes is Permissions {
     function _addNodeToSpaceToNodes(uint nodeIndex, uint8 space) private {
         spaceToNodes[space].push(nodeIndex);
         spaceOfNodes[nodeIndex].indexInSpaceMap = spaceToNodes[space].length.sub(1);
-        if (space > 0) {
-            _nodesAmountBySpace.addToPlace(space, 1);
-        }
+        // if (space > 0) {
+        //     _nodesAmountBySpace.addToPlace(space, 1);
+        // }
     }
 
     function _removeNodeFromSpaceToNodes(uint nodeIndex, uint8 space) private {
@@ -898,6 +903,18 @@ contract Nodes is Permissions {
         }
         spaceToNodes[space].pop();
         delete spaceOfNodes[nodeIndex].indexInSpaceMap;
+        // if (space > 0) {
+        //     _nodesAmountBySpace.removeFromPlace(space, 1);
+        // }
+    }
+
+    function _addNodeToTree(uint8 space) private {
+        if (space > 0) {
+            _nodesAmountBySpace.addToPlace(space, 1);
+        }
+    }
+
+    function _removeNodeFromTree(uint8 space) private {
         if (space > 0) {
             _nodesAmountBySpace.removeFromPlace(space, 1);
         }

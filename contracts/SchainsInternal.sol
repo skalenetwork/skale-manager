@@ -23,7 +23,7 @@ pragma solidity 0.6.10;
 pragma experimental ABIEncoderV2;
 
 import "./interfaces/ISkaleDKG.sol";
-import "./utils/Random.sol";
+// import "./utils/Random.sol";
 
 import "./ConstantsHolder.sol";
 import "./Nodes.sol";
@@ -35,7 +35,7 @@ import "./Nodes.sol";
  */
 contract SchainsInternal is Permissions {
 
-    using Random for Random.RandomGenerator;
+    // using Random for Random.RandomGenerator;
 
     struct Schain {
         string name;
@@ -489,12 +489,12 @@ contract SchainsInternal is Permissions {
         return nodes.countNodesWithFreeSpace(space) > 0;
     }
 
-    /**
-     * @dev Returns whether any exceptions exist for node in a schain group.
-     */
-    function checkException(bytes32 schainId, uint nodeIndex) external view returns (bool) {
-        return _exceptionsForGroups[schainId][nodeIndex];
-    }
+    // /**
+    //  * @dev Returns whether any exceptions exist for node in a schain group.
+    //  */
+    // function checkException(bytes32 schainId, uint nodeIndex) external view returns (bool) {
+    //     return _exceptionsForGroups[schainId][nodeIndex];
+    // }
 
     function checkHoleForSchain(bytes32 schainHash, uint indexOfNode) external view returns (bool) {
         for (uint i = 0; i < holesForSchains[schainHash].length; i++) {
@@ -621,16 +621,19 @@ contract SchainsInternal is Permissions {
         nodesInGroup = new uint[](numberOfNodes);
 
         require(nodes.countNodesWithFreeSpace(space) >= nodesInGroup.length, "Not enough nodes to create Schain");
-        Random.RandomGenerator memory randomGenerator = Random.createFromEntropy(
-            abi.encodePacked(uint(blockhash(block.number.sub(1))), schainId)
-        );
+        // Random.RandomGenerator memory randomGenerator = Random.createFromEntropy(
+        //     abi.encodePacked(uint(blockhash(block.number.sub(1))), schainId)
+        // );
+        // uint random = uint(keccak256(abi.encodePacked(uint(blockhash(block.number.sub(1))), schainId)));
         for (uint i = 0; i < numberOfNodes; i++) {
-            uint node = nodes.getRandomNodeWithFreeSpace(space, randomGenerator);
+            // uint node = nodes.getRandomNodeWithFreeSpace(space, randomGenerator);
+            uint node = nodes.getRandomNodeWithFreeSpace(space);
             nodesInGroup[i] = node;
             _setException(schainId, node);
             addSchainForNode(node, schainId);
             nodes.makeNodeInvisible(node);
             require(nodes.removeSpaceFromNode(node, space), "Could not remove space from Node");
+            // random = uint(keccak256(abi.encodePacked(random, node)));
         }
         _makeSchainNodesVisible(schainId);
 
