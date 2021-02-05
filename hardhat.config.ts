@@ -34,9 +34,6 @@ const config: HardhatUserConfig = {
       }
     }
   },
-  typechain: {
-    target: "web3-v1",
-  },
   mocha: {
     timeout: 1000000
   },
@@ -68,8 +65,6 @@ const config: HardhatUserConfig = {
       //     balance: "0xd3c21bcecceda0000000"
       //   }
       // ],
-      gas: 0xfffffffffff,
-      blockGasLimit: 0xfffffffffff
     },
     mainnet: {
       url: "https://mainnet.infura.io/v3/ab63c5205de64b1182bcdd4339278be3"

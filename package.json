@@ -26,7 +26,7 @@
     }
   ],
   "scripts": {
-    "compile": "rm -rf ./artifacts/ && npx hardhat compile",
+    "compile": "rm -r ./artifacts/ && npx hardhat compile",
     "deploy": "bash ./scripts/deploy.sh",
     "docs": "scripts/prepare-docs.sh",
     "fullcheck": "yarn lint && yarn tsc && yarn tslint && yarn slither",
@@ -51,7 +51,7 @@
   },
   "devDependencies": {
     "@nomiclabs/hardhat-etherscan": "^2.1.1",
-    "@typechain/web3-v1": "^2.0.0",
+    "@typechain/ethers-v5": "^5.0.0",
     "@types/chai": "^4.2.14",
     "@types/chai-almost": "^1.0.1",
     "@types/chai-as-promised": "^7.1.3",
