@@ -1,11 +1,11 @@
-import { ContractManagerInstance, PricingInstance } from "../../../types/truffle-contracts";
+import { ContractManager, Pricing } from "../../../typechain";
 import { deployFunctionFactory } from "./factory";
 import { deployNodes } from "./nodes";
 import { deploySchainsInternal } from "./schainsInternal";
 
-const deployPricing: (contractManager: ContractManagerInstance) => Promise<PricingInstance>
+const deployPricing: (contractManager: ContractManager) => Promise<Pricing>
     = deployFunctionFactory("Pricing",
-                            async (contractManager: ContractManagerInstance) => {
+                            async (contractManager: ContractManager) => {
                                 await deployNodes(contractManager);
                                 await deploySchainsInternal(contractManager);
                             });

@@ -8,7 +8,7 @@ import { ContractManager, SkaleDKGTester } from "../../../../typechain";
 
 const deploySkaleDKGTester: (contractManager: ContractManager) => Promise<SkaleDKGTester>
     = deployFunctionFactory("SkaleDKGTester",
-                            async (contractManager: ContractManagerInstance) => {
+                            async (contractManager: ContractManager) => {
                                 await deploySchainsInternal(contractManager);
                                 await deployPunisher(contractManager);
                                 await deployNodes(contractManager);
