@@ -306,47 +306,70 @@ library SegmentTree {
             }
         }
         return (leftBound.add(1), randomBeakon);
-
-        // uint8 leftBound = 1;
-        // uint8 rightBound = 128;
-        // uint step = 1;
-        // uint currentSum = sumFromPlaceToLast(self, place);
-        // uint randomBeakon = uint(keccak256(abi.encodePacked(uint(blockhash(block.number.sub(1))), place, currentSum)));
-        // while(leftBound < rightBound) {
-        //     uint8 middle = (leftBound + rightBound) / 2;
-        //     if (place > middle) {
-        //         leftBound = middle + 1;
-        //         step += step + 1;
-        //     } else {
-        //         uint priorityB = self.tree[2 * step];
-        //         uint priorityA = currentSum - priorityB;
-        //         if (priorityA == 0) {
-        //             leftBound = middle + 1;
-        //             step += step + 1;
-        //         } else if (priorityB == 0) {
-        //             rightBound = middle;
-        //             step += step;
-        //         } else {
-        //             (bool isLeftWay, uint randomBeakon2) =
-        //                 _randomWay(randomBeakon, priorityA, priorityB);
-        //             if (isLeftWay) {
-        //                 rightBound = middle;
-        //                 step += step;
-        //                 currentSum = priorityA;
-        //             } else {
-        //                 leftBound = middle + 1;
-        //                 step += step + 1;
-        //                 currentSum = priorityB;
-        //             }
-        //             randomBeakon = randomBeakon2;
-        //         }
-        //     }
-        // }
-        // if (self.tree[step - 1] == 0) {
-        //     return (0, 0);
-        // }
-        // return (leftBound, randomBeakon);
     }
+
+    // /**
+    //  * @dev Returns random position in range [`place`, size]
+    //  * with probability proportional to value stored at this position.
+    //  * If all element in range are 0 returns 0
+    //  * 
+    //  * Requirements:
+    //  * 
+    //  * - `place` must be in range [1, size]
+    //  */
+    // function getRandomNonZeroElementFromPlaceToLast(
+    //     Tree storage self,
+    //     uint place
+    //     // Random.RandomGenerator memory randomGenerator
+    // )
+    //     internal
+    //     view
+    //     returns (uint, uint)
+    // {
+    //     require(_correctPlace(self, place), "Incorrect place");
+
+    //     uint8 leftBound = 1;
+    //     uint8 rightBound = 128;
+    //     uint step = 1;
+    //     uint currentSum = sumFromPlaceToLast(self, place);
+    //     uint randomBeakon = uint(
+    //         keccak256(abi.encodePacked(uint(blockhash(block.number.sub(1))), place, currentSum))
+    //     );
+    //     while(leftBound < rightBound) {
+    //         uint8 middle = (leftBound + rightBound) / 2;
+    //         if (place > middle) {
+    //             leftBound = middle + 1;
+    //             step += step + 1;
+    //         } else {
+    //             uint priorityB = self.tree[2 * step];
+    //             uint priorityA = currentSum - priorityB;
+    //             if (priorityA == 0) {
+    //                 leftBound = middle + 1;
+    //                 step += step + 1;
+    //             } else if (priorityB == 0) {
+    //                 rightBound = middle;
+    //                 step += step;
+    //             } else {
+    //                 (bool isLeftWay, uint randomBeakon2) =
+    //                     _randomWay(randomBeakon, priorityA, priorityB);
+    //                 if (isLeftWay) {
+    //                     rightBound = middle;
+    //                     step += step;
+    //                     currentSum = priorityA;
+    //                 } else {
+    //                     leftBound = middle + 1;
+    //                     step += step + 1;
+    //                     currentSum = priorityB;
+    //                 }
+    //                 randomBeakon = randomBeakon2;
+    //             }
+    //         }
+    //     }
+    //     if (self.tree[step - 1] == 0) {
+    //         return (0, 0);
+    //     }
+    //     return (leftBound, randomBeakon);
+    // }
 
     function _randomWay(
         uint salt,
