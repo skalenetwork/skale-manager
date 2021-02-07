@@ -318,29 +318,28 @@ contract Monitors is Permissions {
     function _generateGroup(bytes32 monitorIndex, uint nodeIndex, uint numberOfNodes)
         private
     {
-        // solhint-disable-previous-line no-empty-blocks
-        // Nodes nodes = Nodes(contractManager.getContract("Nodes"));
-        // uint[] memory activeNodes = nodes.getActiveNodeIds();
-        // uint numberOfNodesInGroup;
-        // uint availableAmount = activeNodes.length.sub((nodes.isNodeActive(nodeIndex)) ? 1 : 0);
-        // if (numberOfNodes > availableAmount) {
-        //     numberOfNodesInGroup = availableAmount;
-        // } else {
-        //     numberOfNodesInGroup = numberOfNodes;
-        // }
-        // uint ignoringTail = 0;
-        // uint random = uint(keccak256(abi.encodePacked(uint(blockhash(block.number.sub(1))), monitorIndex)));
-        // for (uint i = 0; i < numberOfNodesInGroup; ++i) {
-        //     uint index = random % (activeNodes.length.sub(ignoringTail));
-        //     if (activeNodes[index] == nodeIndex) {
-        //         _swap(activeNodes, index, activeNodes.length.sub(ignoringTail).sub(1));
-        //         ++ignoringTail;
-        //         index = random % (activeNodes.length.sub(ignoringTail));
-        //     }
-        //     groupsForMonitors[monitorIndex].push(activeNodes[index]);
-        //     _swap(activeNodes, index, activeNodes.length.sub(ignoringTail).sub(1));
-        //     ++ignoringTail;
-        // }
+        Nodes nodes = Nodes(contractManager.getContract("Nodes"));
+        uint[] memory activeNodes = nodes.getActiveNodeIds();
+        uint numberOfNodesInGroup;
+        uint availableAmount = activeNodes.length.sub((nodes.isNodeActive(nodeIndex)) ? 1 : 0);
+        if (numberOfNodes > availableAmount) {
+            numberOfNodesInGroup = availableAmount;
+        } else {
+            numberOfNodesInGroup = numberOfNodes;
+        }
+        uint ignoringTail = 0;
+        uint random = uint(keccak256(abi.encodePacked(uint(blockhash(block.number.sub(1))), monitorIndex)));
+        for (uint i = 0; i < numberOfNodesInGroup; ++i) {
+            uint index = random % (activeNodes.length.sub(ignoringTail));
+            if (activeNodes[index] == nodeIndex) {
+                _swap(activeNodes, index, activeNodes.length.sub(ignoringTail).sub(1));
+                ++ignoringTail;
+                index = random % (activeNodes.length.sub(ignoringTail));
+            }
+            groupsForMonitors[monitorIndex].push(activeNodes[index]);
+            _swap(activeNodes, index, activeNodes.length.sub(ignoringTail).sub(1));
+            ++ignoringTail;
+        }
     }
 
     /**

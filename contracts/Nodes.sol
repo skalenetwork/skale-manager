@@ -680,19 +680,19 @@ contract Nodes is Permissions {
     //     }
     // }
 
-    // /**
-    //  * @dev Return active node IDs.
-    //  */
-    // function getActiveNodeIds() external view returns (uint[] memory activeNodeIds) {
-    //     activeNodeIds = new uint[](numberOfActiveNodes);
-    //     uint indexOfActiveNodeIds = 0;
-    //     for (uint indexOfNodes = 0; indexOfNodes < nodes.length; indexOfNodes++) {
-    //         if (isNodeActive(indexOfNodes)) {
-    //             activeNodeIds[indexOfActiveNodeIds] = indexOfNodes;
-    //             indexOfActiveNodeIds++;
-    //         }
-    //     }
-    // }
+    /**
+     * @dev Return active node IDs.
+     */
+    function getActiveNodeIds() external view returns (uint[] memory activeNodeIds) {
+        activeNodeIds = new uint[](numberOfActiveNodes);
+        uint indexOfActiveNodeIds = 0;
+        for (uint indexOfNodes = 0; indexOfNodes < nodes.length; indexOfNodes++) {
+            if (isNodeActive(indexOfNodes)) {
+                activeNodeIds[indexOfActiveNodeIds] = indexOfNodes;
+                indexOfActiveNodeIds++;
+            }
+        }
+    }
 
     /**
      * @dev Return a given node's current status.
