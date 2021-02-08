@@ -8,7 +8,7 @@ import { ConstantsHolder,
     SkaleManagerMockContract,
     SkaleManagerMockInstance,
     SkaleToken,
-    TokenStateInstance,
+    TokenState,
     ValidatorService,
     NodesInstance,
     SlashingTableInstance} from "../../typechain";
@@ -53,7 +53,7 @@ contract("Delegation", ([owner,
     let skaleManagerMock: SkaleManagerMockInstance;
     let validatorService: ValidatorService;
     let constantsHolder: ConstantsHolder;
-    let tokenState: TokenStateInstance;
+    let tokenState: TokenState;
     let distributor: DistributorInstance;
     let punisher: PunisherInstance;
     let nodes: NodesInstance;
