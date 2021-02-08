@@ -1,5 +1,5 @@
 import BigNumber from "bignumber.js";
-import { ContractManagerInstance,
+import { ContractManager,
          SkaleTokenInstance,
          SkaleTokenInternalTesterInstance} from "../types/truffle-contracts";
 
@@ -16,7 +16,7 @@ chai.use(chaiAsPromised);
 
 contract("SkaleToken", ([owner, holder, receiver, nilAddress, accountWith99]) => {
   let skaleToken: SkaleTokenInstance;
-  let contractManager: ContractManagerInstance;
+  let contractManager: ContractManager;
 
   const TOKEN_CAP: number = 7000000000;
   const TOTAL_SUPPLY = 5000000000;

@@ -1,7 +1,7 @@
 import { deployContractManager } from "../test/tools/deploy/contractManager";
 import { deployValidatorService } from "../test/tools/deploy/delegation/validatorService";
 import { deploySkaleManager } from "../test/tools/deploy/skaleManager";
-import { ContractManagerInstance, SchainsInstance, SkaleManagerInstance, ValidatorServiceInstance } from "../types/truffle-contracts";
+import { ContractManager, SchainsInstance, SkaleManagerInstance, ValidatorServiceInstance } from "../types/truffle-contracts";
 import { privateKeys } from "../test/tools/private-keys";
 import * as elliptic from "elliptic";
 import { deploySchains } from "../test/tools/deploy/schains";
@@ -10,7 +10,7 @@ import fs from 'fs';
 const ec = new elliptic.ec("secp256k1");
 
 contract("createSchains", ([owner, validator, node]) => {
-    let contractManager: ContractManagerInstance;
+    let contractManager: ContractManager;
     let validatorService: ValidatorServiceInstance;
     let skaleManager: SkaleManagerInstance;
     let schains: SchainsInstance;

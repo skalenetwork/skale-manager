@@ -2,7 +2,7 @@ import BigNumber from "bignumber.js";
 import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 
-import { ContractManagerInstance,
+import { ContractManager,
          NodesInstance,
          PricingInstance,
          SchainsInternalInstance,
@@ -31,7 +31,7 @@ chai.should();
 chai.use(chaiAsPromised);
 
 contract("Pricing", ([owner, holder, validator, nodeAddress]) => {
-    let contractManager: ContractManagerInstance;
+    let contractManager: ContractManager;
     let pricing: PricingInstance;
     let schainsInternal: SchainsInternalInstance;
     let schains: SchainsInstance;

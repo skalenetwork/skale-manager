@@ -1,5 +1,5 @@
 import {
-    ContractManagerInstance,
+    ContractManager,
     ConstantsHolderInstance,
     BountyV2Instance,
     NodesMockInstance,
@@ -38,7 +38,7 @@ const EC = elliptic.ec;
 const ec = new EC("secp256k1");
 
 contract("Bounty", ([owner, admin, hacker, validator, validator2]) => {
-    let contractManager: ContractManagerInstance;
+    let contractManager: ContractManager;
     let constantsHolder: ConstantsHolderInstance;
     let bountyContract: BountyV2Instance;
     let nodes: NodesMockInstance;

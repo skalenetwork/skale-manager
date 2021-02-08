@@ -1,6 +1,6 @@
 import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
-import { ContractManagerInstance,
+import { ContractManager,
          KeyStorageInstance,
          NodesInstance,
         //  SchainsInternalInstance,
@@ -24,7 +24,7 @@ chai.should();
 chai.use(chaiAsPromised);
 
 contract("SkaleVerifier", ([validator1, owner, developer, hacker]) => {
-    let contractManager: ContractManagerInstance;
+    let contractManager: ContractManager;
     let schains: SchainsInstance;
     let skaleVerifier: SkaleVerifierInstance;
     let validatorService: ValidatorServiceInstance;

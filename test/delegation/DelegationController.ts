@@ -1,4 +1,4 @@
-import { ContractManagerInstance,
+import { ContractManager,
     DelegationControllerInstance,
     SkaleTokenInstance,
     ValidatorServiceInstance,
@@ -23,7 +23,7 @@ chai.use(chaiAsPromised);
 const SkaleManagerMock: SkaleManagerMockContract = artifacts.require("./SkaleManagerMock");
 
 contract("DelegationController", ([owner, holder1, holder2, validator, validator2]) => {
-    let contractManager: ContractManagerInstance;
+    let contractManager: ContractManager;
     let skaleToken: SkaleTokenInstance;
     let delegationController: DelegationControllerInstance;
     let validatorService: ValidatorServiceInstance;

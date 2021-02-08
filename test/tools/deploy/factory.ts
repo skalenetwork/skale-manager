@@ -58,4 +58,4 @@ function deployWithConstructorFunctionFactory(
                 deploy);
     }
 
-export { deployFunctionFactory, deployWithConstructorFunctionFactory, deployWithConstructor };
+export { deployFunctionFactory, deployWithConstructorFunctionFactory, deployWithConstructor, defaultDeploy };

@@ -1,6 +1,6 @@
 import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
-import { ContractManagerInstance,
+import { ContractManager,
          NodesInstance,
          SkaleTokenInstance,
          ValidatorServiceInstance,
@@ -28,7 +28,7 @@ chai.should();
 chai.use(chaiAsPromised);
 
 contract("NodesFunctionality", ([owner, validator, nodeAddress, nodeAddress2, holder, ]) => {
-    let contractManager: ContractManagerInstance;
+    let contractManager: ContractManager;
     let nodes: NodesInstance;
     let validatorService: ValidatorServiceInstance;
     let constantsHolder: ConstantsHolderInstance;

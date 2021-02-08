@@ -1,10 +1,10 @@
 import { ConstantsHolderInstance,
-         ContractManagerInstance } from "../types/truffle-contracts";
+         ContractManager } from "../types/truffle-contracts";
 import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
 import { deployContractManager } from "./tools/deploy/contractManager";
 
 contract("ContractManager", ([deployer, user]) => {
-  let contractManager: ContractManagerInstance;
+  let contractManager: ContractManager;
   let constantsHolder: ConstantsHolderInstance;
 
   beforeEach(async () => {

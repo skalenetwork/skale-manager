@@ -1,5 +1,5 @@
 import { ConstantsHolderInstance,
-    ContractManagerInstance,
+    ContractManager,
     DelegationControllerInstance,
     SkaleTokenInstance,
     ValidatorServiceInstance} from "../../types/truffle-contracts";
@@ -43,7 +43,7 @@ class Validator {
 }
 
 contract("ValidatorService", ([owner, holder, validator1, validator2, validator3, nodeAddress]) => {
-    let contractManager: ContractManagerInstance;
+    let contractManager: ContractManager;
     let validatorService: ValidatorServiceInstance;
     let skaleToken: SkaleTokenInstance;
     let delegationController: DelegationControllerInstance;

@@ -1,4 +1,4 @@
-import { TimeHelpersInstance, ContractManagerInstance } from "../../types/truffle-contracts";
+import { TimeHelpersInstance, ContractManager } from "../../types/truffle-contracts";
 import { deployTimeHelpers } from "../tools/deploy/delegation/timeHelpers";
 import { deployContractManager } from "../tools/deploy/contractManager";
 import * as chai from "chai";
@@ -9,7 +9,7 @@ chai.should();
 chai.use(chaiAsPromised);
 
 contract("TimeHelpers", ([owner]) => {
-    let contractManager: ContractManagerInstance;
+    let contractManager: ContractManager;
     let timeHelpers: TimeHelpersInstance;
 
     beforeEach(async () => {

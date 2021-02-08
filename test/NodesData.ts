@@ -1,5 +1,5 @@
 import chaiAsPromised from "chai-as-promised";
-import { ContractManagerInstance,
+import { ContractManager,
          NodesInstance,
          SkaleManagerInstance,
          ValidatorServiceInstance} from "../types/truffle-contracts";
@@ -19,7 +19,7 @@ chai.should();
 chai.use(chaiAsPromised);
 
 contract("NodesData", ([owner, validator, nodeAddress, admin, hacker]) => {
-    let contractManager: ContractManagerInstance;
+    let contractManager: ContractManager;
     let nodes: NodesInstance;
     let validatorService: ValidatorServiceInstance;
 

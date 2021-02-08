@@ -1,4 +1,4 @@
-import { ContractManagerInstance,
+import { ContractManager,
          DelegationControllerInstance,
          SkaleTokenInstance,
          TokenStateInstance,
@@ -19,7 +19,7 @@ chai.should();
 chai.use(chaiAsPromised);
 
 contract("DelegationController (token state)", ([owner, holder, validator]) => {
-    let contractManager: ContractManagerInstance;
+    let contractManager: ContractManager;
     let delegationController: DelegationControllerInstance;
     let tokenState: TokenStateInstance;
     let validatorService: ValidatorServiceInstance;

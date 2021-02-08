@@ -1,5 +1,5 @@
 import { ConstantsHolderInstance,
-    ContractManagerInstance,
+    ContractManager,
     DelegationControllerInstance,
     DelegationPeriodManagerInstance,
     DistributorInstance,
@@ -46,7 +46,7 @@ contract("Delegation", ([owner,
                          holder3,
                          validator,
                          bountyAddress]) => {
-    let contractManager: ContractManagerInstance;
+    let contractManager: ContractManager;
     let skaleToken: SkaleTokenInstance;
     let delegationController: DelegationControllerInstance;
     let delegationPeriodManager: DelegationPeriodManagerInstance;

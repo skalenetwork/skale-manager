@@ -1,6 +1,6 @@
 import { BigNumber } from "bignumber.js";
 import { ConstantsHolderInstance,
-         ContractManagerInstance,
+         ContractManager,
          MonitorsInstance,
         NodesInstance,
         ValidatorServiceInstance} from "../types/truffle-contracts";
@@ -23,7 +23,7 @@ chai.should();
 chai.use((chaiAsPromised));
 
 contract("Monitors", ([owner, validator, nodeAddress]) => {
-  let contractManager: ContractManagerInstance;
+  let contractManager: ContractManager;
   let constantsHolder: ConstantsHolderInstance;
   let monitors: MonitorsInstance;
   let nodes: NodesInstance;

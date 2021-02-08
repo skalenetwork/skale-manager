@@ -1,4 +1,4 @@
-import { ContractManagerInstance, SkaleManagerInstance, SlashingTableInstance } from "../types/truffle-contracts";
+import { ContractManager, SkaleManagerInstance, SlashingTableInstance } from "../types/truffle-contracts";
 import { deployContractManager } from "./tools/deploy/contractManager";
 import { deploySkaleManager } from "./tools/deploy/skaleManager";
 import { deployBounty } from "./tools/deploy/bounty";
@@ -10,7 +10,7 @@ chai.should();
 chai.use(chaiAsPromised);
 
 contract("SlashingTable", ([owner, admin, hacker]) => {
-    let contractManager: ContractManagerInstance;
+    let contractManager: ContractManager;
     let skaleManager: SkaleManagerInstance;
     let slashingTable: SlashingTableInstance;
 

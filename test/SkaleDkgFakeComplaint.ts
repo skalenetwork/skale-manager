@@ -1,6 +1,6 @@
 import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
-import { ContractManagerInstance,
+import { ContractManager,
          DelegationControllerInstance,
          KeyStorageInstance,
          NodesInstance,
@@ -44,7 +44,7 @@ chai.should();
 chai.use(chaiAsPromised);
 
 contract("SkaleDKG", ([owner, validator1, validator2]) => {
-    let contractManager: ContractManagerInstance;
+    let contractManager: ContractManager;
     let keyStorage: KeyStorageInstance
     let schainsInternal: SchainsInternalInstance;
     let schains: SchainsInstance;

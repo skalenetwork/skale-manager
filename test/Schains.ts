@@ -1,7 +1,7 @@
 import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { ConstantsHolderInstance,
-         ContractManagerInstance,
+         ContractManager,
          KeyStorageInstance,
          NodesInstance,
          SchainsInternalInstance,
@@ -35,7 +35,7 @@ chai.use(chaiAsPromised);
 
 contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeAddress3]) => {
     let constantsHolder: ConstantsHolderInstance;
-    let contractManager: ContractManagerInstance;
+    let contractManager: ContractManager;
     let schains: SchainsInstance;
     let schainsInternal: SchainsInternalInstance;
     let nodes: NodesInstance;
