@@ -25,45 +25,57 @@ pragma solidity 0.6.10;
 pragma experimental ABIEncoderV2;
 
 import "../SkaleDKG.sol";
+import "../Wallets.sol";
+import "../Decryption.sol";
+import "../Nodes.sol";
+import "../thirdparty/ECDH.sol";
+import "../utils/FieldOperations.sol";
 
 /**
  * @title SkaleDKGResponse
  * @dev Contains functions to manage distributed key generation per
  * Joint-Feldman protocol.
  */
-contract SkaleDKGResponse is SkaleDKG {
+library SkaleDKGResponse {
+    using G2Operations for G2Operations.G2Point;
 
     function response(
         bytes32 schainId,
         uint fromNodeIndex,
         uint secretNumber,
-        G2Operations.G2Point calldata multipliedShare
+        G2Operations.G2Point memory multipliedShare,
+        ContractManager contractManager,
+        mapping(bytes32 => SkaleDKG.ComplaintData) storage complaints
     )
         external
-        override
-        correctGroup(schainId)
-        onlyNodeOwner(fromNodeIndex)
     {
         uint gasTotal = gasleft();
-        _checkAndReturnIndexInGroup(schainId, fromNodeIndex, true);
+        SkaleDKG skaleDKG = SkaleDKG(contractManager.getContract("SkaleDKG"));
+        skaleDKG.checkAndReturnIndexInGroup(schainId, fromNodeIndex, true);
         require(complaints[schainId].nodeToComplaint == fromNodeIndex, "Not this Node");
         require(complaints[schainId].isResponse, "Have not submitted pre-response data");
         uint badNode = _verifyDataAndSlash(
             schainId,
             secretNumber,
-            multipliedShare
+            multipliedShare,
+            contractManager,
+            complaints
          );
          uint validatorId = Nodes(contractManager.getContract("Nodes")).getValidatorId(badNode);
-        _refundGasBySchain(schainId, fromNodeIndex, gasTotal - gasleft(), true);
-        _refundGasByValidatorToSchain(validatorId, schainId);
+        Wallets(payable(contractManager.getContract("Wallets")))
+        .refundGasBySchain(schainId, fromNodeIndex, gasTotal - gasleft(), true);
+        Wallets(payable(contractManager.getContract("Wallets")))
+        .refundGasByValidatorToSchain(validatorId, schainId);
     }
 
     function _verifyDataAndSlash(
         bytes32 schainId,
         uint secretNumber,
-        G2Operations.G2Point calldata multipliedShare
+        G2Operations.G2Point memory multipliedShare,
+        ContractManager contractManager,
+        mapping(bytes32 => SkaleDKG.ComplaintData) storage complaints
     )
-        internal
+        private
         returns (uint badNode)
     {
         bytes32[2] memory publicKey = Nodes(contractManager.getContract("Nodes")).getNodePublicKey(
@@ -86,7 +98,7 @@ contract SkaleDKGResponse is SkaleDKG {
             complaints[schainId].fromNodeToComplaint :
             complaints[schainId].nodeToComplaint
         );
-        _finalizeSlashing(schainId, badNode);
+        SkaleDKG(contractManager.getContract("SkaleDKG")).finalizeSlashing(schainId, badNode);
     }
 
     function _checkCorrectMultipliedShare(

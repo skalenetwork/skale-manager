@@ -35,6 +35,9 @@ import "./utils/Precompiled.sol";
 import "./Wallets.sol";
 import "./dkg/SkaleDKGAlright.sol";
 import "./dkg/SkaleDKGBroadcast.sol";
+import "./dkg/SkaleDKGComplaint.sol";
+import "./dkg/SkaleDKGPreResponse.sol";
+import "./dkg/SkaleDKGResponse.sol";
 
 /**
  * @title SkaleDKG
@@ -128,12 +131,6 @@ contract SkaleDKG is Permissions, ISkaleDKG {
     event FailedDKG(bytes32 indexed schainId);
 
     /**
-     * @dev Emitted when a complaint is sent.
-     */
-    event ComplaintSent(
-        bytes32 indexed schainId, uint indexed fromNodeIndex, uint indexed toNodeIndex);
-
-    /**
      * @dev Emitted when a new node is rotated in.
      */
     event NewGuy(uint nodeIndex);
@@ -192,115 +189,104 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         );
     }
 
-    // function broadcast(
-    //     bytes32 schainId,
-    //     uint nodeIndex,
-    //     G2Operations.G2Point[] memory verificationVector,
-    //     KeyShare[] memory secretKeyContribution
-    // )
-    //     external
-    //     correctGroup(schainId)
-    //     onlyNodeOwner(nodeIndex)
-    // {
-    //     SkaleDKGBroadcast.broadcast(
-    //         schainId,
-    //         nodeIndex,
-    //         verificationVector,
-    //         secretKeyContribution,
-    //         contractManager,
-    //         channels,
-    //         dkgProcess,
-    //         startAlrightTimestamp,
-    //         hashedData
-    //     );
-    // }
+    function broadcast(
+        bytes32 schainId,
+        uint nodeIndex,
+        G2Operations.G2Point[] memory verificationVector,
+        KeyShare[] memory secretKeyContribution
+    )
+        external
+        correctGroup(schainId)
+        onlyNodeOwner(nodeIndex)
+    {
+        SkaleDKGBroadcast.broadcast(
+            schainId,
+            nodeIndex,
+            verificationVector,
+            secretKeyContribution,
+            contractManager,
+            channels,
+            dkgProcess,
+            hashedData
+        );
+    }
 
-    // function complaint(bytes32 schainId, uint fromNodeIndex, uint toNodeIndex)
-    //     external
-    //     virtual
-    //     correctGroupWithoutRevert(schainId)
-    //     correctNode(schainId, fromNodeIndex)
-    //     correctNodeWithoutRevert(schainId, toNodeIndex)
-    //     onlyNodeOwner(fromNodeIndex)
-    // {
-    //     address skaleDKGComplaint = contractManager.getContract("SkaleDKGComplaint");
-    //     // solhint-disable-next-line avoid-low-level-calls
-    //     (bool success, bytes memory result) = skaleDKGComplaint.delegatecall(abi.encodeWithSignature(
-    //         "complaint(bytes32,uint256,uint256)",
-    //         schainId, fromNodeIndex, toNodeIndex
-    //     ));
-    //     require(success, _getRevertMsg(result));
-    // }
+    function complaint(bytes32 schainId, uint fromNodeIndex, uint toNodeIndex)
+        external
+        correctGroupWithoutRevert(schainId)
+        correctNode(schainId, fromNodeIndex)
+        correctNodeWithoutRevert(schainId, toNodeIndex)
+        onlyNodeOwner(fromNodeIndex)
+    {
+        SkaleDKGComplaint.complaint(
+            schainId,
+            fromNodeIndex,
+            toNodeIndex,
+            contractManager,
+            channels,
+            complaints,
+            startAlrightTimestamp
+        );
+    }
 
-    // function complaintBadData(bytes32 schainId, uint fromNodeIndex, uint toNodeIndex)
-    //     external
-    //     virtual
-    //     correctGroupWithoutRevert(schainId)
-    //     correctNode(schainId, fromNodeIndex)
-    //     correctNodeWithoutRevert(schainId, toNodeIndex)
-    //     onlyNodeOwner(fromNodeIndex)
-    // { 
-    //     address skaleDKGComplaint = contractManager.getContract("SkaleDKGComplaint");
-    //     // solhint-disable-next-line avoid-low-level-calls
-    //     (bool success, bytes memory result) = skaleDKGComplaint.delegatecall(abi.encodeWithSignature(
-    //         "complaintBadData(bytes32,uint256,uint256)",
-    //         schainId, fromNodeIndex, toNodeIndex
-    //     ));
-    //     require(success, _getRevertMsg(result));
-    // }
+    function complaintBadData(bytes32 schainId, uint fromNodeIndex, uint toNodeIndex)
+        external
+        correctGroupWithoutRevert(schainId)
+        correctNode(schainId, fromNodeIndex)
+        correctNodeWithoutRevert(schainId, toNodeIndex)
+        onlyNodeOwner(fromNodeIndex)
+    { 
+        SkaleDKGComplaint.complaintBadData(
+            schainId,
+            fromNodeIndex,
+            toNodeIndex,
+            contractManager,
+            complaints
+        );
+    }
 
-    // function preResponse(
-    //     bytes32 schainId,
-    //     uint fromNodeIndex,
-    //     G2Operations.G2Point[] calldata verificationVector,
-    //     G2Operations.G2Point[] calldata verificationVectorMult,
-    //     KeyShare[] calldata secretKeyContribution
-    // )
-    //     external
-    //     virtual
-    //     correctGroup(schainId)
-    //     onlyNodeOwner(fromNodeIndex)
-    // {
-    //     address skaleDKGPreResponse = contractManager.getContract("SkaleDKGPreResponse");
-    //     // solhint-disable-next-line avoid-low-level-calls
-    //     (bool success, bytes memory result) = skaleDKGPreResponse.delegatecall(abi.encodeWithSignature(
-    //         "preResponse(bytes32,uint256,((uint256,uint256),(uint256,uint256))[],"
-    //         "((uint256,uint256),(uint256,uint256))[],(bytes32[2],bytes32)[])",
-    //         schainId, fromNodeIndex, verificationVector, verificationVectorMult, secretKeyContribution)
-    //     );
-    //     require(success, _getRevertMsg(result));
-    // }
+    function preResponse(
+        bytes32 schainId,
+        uint fromNodeIndex,
+        G2Operations.G2Point[] memory verificationVector,
+        G2Operations.G2Point[] memory verificationVectorMult,
+        KeyShare[] memory secretKeyContribution
+    )
+        external
+        correctGroup(schainId)
+        onlyNodeOwner(fromNodeIndex)
+    {
+        SkaleDKGPreResponse.preResponse(
+            schainId,
+            fromNodeIndex,
+            verificationVector,
+            verificationVectorMult,
+            secretKeyContribution,
+            contractManager,
+            complaints,
+            hashedData
+        );
+    }
 
-    // function response(
-    //     bytes32 schainId,
-    //     uint fromNodeIndex,
-    //     uint secretNumber,
-    //     G2Operations.G2Point calldata multipliedShare
-    // )
-    //     external
-    //     virtual
-    //     correctGroup(schainId)
-    //     onlyNodeOwner(fromNodeIndex)
-    // {
-    //     address skaleDKGResponse = contractManager.getContract("SkaleDKGResponse");
-    //     // solhint-disable-next-line avoid-low-level-calls
-    //     (bool success, bytes memory result) = skaleDKGResponse.delegatecall(abi.encodeWithSignature(
-    //         "response(bytes32,uint256,uint256,((uint256,uint256),(uint256,uint256)))",
-    //         schainId, fromNodeIndex, secretNumber, multipliedShare)
-    //     );
-    //     require(success, _getRevertMsg(result));
-    // }
-
-    // function _getRevertMsg(bytes memory _returnData) private pure returns (string memory) {
-    //     if (_returnData.length < 68) return "Transaction reverted silently";
-
-    //     // solhint-disable-next-line no-inline-assembly
-    //     assembly {
-    //         _returnData := add(_returnData, 0x04)
-    //     }
-    //     return abi.decode(_returnData, (string));
-    // }
-
+    function response(
+        bytes32 schainId,
+        uint fromNodeIndex,
+        uint secretNumber,
+        G2Operations.G2Point memory multipliedShare
+    )
+        external
+        correctGroup(schainId)
+        onlyNodeOwner(fromNodeIndex)
+    {
+        SkaleDKGResponse.response(
+            schainId,
+            fromNodeIndex,
+            secretNumber,
+            multipliedShare,
+            contractManager,
+            complaints
+        );
+    }
 
     /**
      * @dev Allows Schains and NodeRotation contracts to open a channel.
@@ -490,7 +476,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         return channels[schainId].n == dkgProcess[schainId].numberOfBroadcasted;
     }
 
-    function _finalizeSlashing(bytes32 schainId, uint badNode) internal {
+    function finalizeSlashing(bytes32 schainId, uint badNode) external allow("SkaleDKGComplaint") {
         NodeRotation nodeRotation = NodeRotation(contractManager.getContract("NodeRotation"));
         SchainsInternal schainsInternal = SchainsInternal(
             contractManager.getContract("SchainsInternal")
