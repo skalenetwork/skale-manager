@@ -1,6 +1,6 @@
 import BigNumber from "bignumber.js";
 import { ContractManager,
-         SkaleTokenInstance,
+         SkaleToken,
          SkaleTokenInternalTesterInstance} from "../types/truffle-contracts";
 
 import * as chai from "chai";
@@ -15,7 +15,7 @@ chai.should();
 chai.use(chaiAsPromised);
 
 contract("SkaleToken", ([owner, holder, receiver, nilAddress, accountWith99]) => {
-  let skaleToken: SkaleTokenInstance;
+  let skaleToken: SkaleToken;
   let contractManager: ContractManager;
 
   const TOKEN_CAP: number = 7000000000;

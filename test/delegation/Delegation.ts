@@ -1,17 +1,17 @@
-import { ConstantsHolderInstance,
+import { ConstantsHolder,
     ContractManager,
-    DelegationControllerInstance,
+    DelegationController,
     DelegationPeriodManagerInstance,
     DistributorInstance,
     LockerMockContract,
     PunisherInstance,
     SkaleManagerMockContract,
     SkaleManagerMockInstance,
-    SkaleTokenInstance,
+    SkaleToken,
     TokenStateInstance,
-    ValidatorServiceInstance,
+    ValidatorService,
     NodesInstance,
-    SlashingTableInstance} from "../../types/truffle-contracts";
+    SlashingTableInstance} from "../../typechain";
 
 const SkaleManagerMock: SkaleManagerMockContract = artifacts.require("./SkaleManagerMock");
 
@@ -47,12 +47,12 @@ contract("Delegation", ([owner,
                          validator,
                          bountyAddress]) => {
     let contractManager: ContractManager;
-    let skaleToken: SkaleTokenInstance;
-    let delegationController: DelegationControllerInstance;
+    let skaleToken: SkaleToken;
+    let delegationController: DelegationController;
     let delegationPeriodManager: DelegationPeriodManagerInstance;
     let skaleManagerMock: SkaleManagerMockInstance;
-    let validatorService: ValidatorServiceInstance;
-    let constantsHolder: ConstantsHolderInstance;
+    let validatorService: ValidatorService;
+    let constantsHolder: ConstantsHolder;
     let tokenState: TokenStateInstance;
     let distributor: DistributorInstance;
     let punisher: PunisherInstance;

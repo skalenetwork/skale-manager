@@ -1,18 +1,18 @@
 import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { ContractManager,
-         DelegationControllerInstance,
+         DelegationController,
          KeyStorageInstance,
          NodesInstance,
          NodeRotationInstance,
          SchainsInternalInstance,
          SchainsInstance,
          SkaleDKGInstance,
-         SkaleTokenInstance,
+         SkaleToken,
          SlashingTableInstance,
-         ValidatorServiceInstance,
+         ValidatorService,
          SkaleManagerInstance,
-         ConstantsHolderInstance, ECDHInstance, ECDHContract} from "../types/truffle-contracts";
+         ConstantsHolder, ECDHInstance, ECDHContract} from "../types/truffle-contracts";
 
 import { gasMultiplier } from "./tools/command_line";
 import { skipTime, currentTime } from "./tools/time";
@@ -49,14 +49,14 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
     let schainsInternal: SchainsInternalInstance;
     let schains: SchainsInstance;
     let skaleDKG: SkaleDKGInstance;
-    let skaleToken: SkaleTokenInstance;
-    let validatorService: ValidatorServiceInstance;
+    let skaleToken: SkaleToken;
+    let validatorService: ValidatorService;
     let slashingTable: SlashingTableInstance;
-    let delegationController: DelegationControllerInstance;
+    let delegationController: DelegationController;
     let nodes: NodesInstance;
     let nodeRotation: NodeRotationInstance;
     let skaleManager: SkaleManagerInstance;
-    let constantsHolder: ConstantsHolderInstance;
+    let constantsHolder: ConstantsHolder;
 
     const failedDkgPenalty = 5;
 

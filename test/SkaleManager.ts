@@ -1,8 +1,8 @@
 import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
-import { ConstantsHolderInstance,
+import { ConstantsHolder,
          ContractManager,
-         DelegationControllerInstance,
+         DelegationController,
          DelegationPeriodManagerInstance,
          DistributorInstance,
          MonitorsInstance,
@@ -11,8 +11,8 @@ import { ConstantsHolderInstance,
          SchainsInstance,
          SkaleDKGTesterInstance,
          SkaleManagerInstance,
-         SkaleTokenInstance,
-         ValidatorServiceInstance,
+         SkaleToken,
+         ValidatorService,
          BountyV2Instance} from "../types/truffle-contracts";
 
 // import BigNumber from "bignumber.js";
@@ -45,15 +45,15 @@ chai.use(chaiAsPromised);
 
 contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) => {
     let contractManager: ContractManager;
-    let constantsHolder: ConstantsHolderInstance;
+    let constantsHolder: ConstantsHolder;
     let nodesContract: NodesInstance;
     let skaleManager: SkaleManagerInstance;
-    let skaleToken: SkaleTokenInstance;
+    let skaleToken: SkaleToken;
     let monitors: MonitorsInstance;
     let schainsInternal: SchainsInternalInstance;
     let schains: SchainsInstance;
-    let validatorService: ValidatorServiceInstance;
-    let delegationController: DelegationControllerInstance;
+    let validatorService: ValidatorService;
+    let delegationController: DelegationController;
     let delegationPeriodManager: DelegationPeriodManagerInstance;
     let distributor: DistributorInstance;
     let skaleDKG: SkaleDKGTesterInstance;

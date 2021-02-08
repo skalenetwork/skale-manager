@@ -1,9 +1,9 @@
 import { ContractManager,
-    DelegationControllerInstance,
-    SkaleTokenInstance,
-    ValidatorServiceInstance,
-    ConstantsHolderInstance,
-    SkaleManagerMockContract} from "../../types/truffle-contracts";
+    DelegationController,
+    SkaleToken,
+    ValidatorService,
+    ConstantsHolder,
+    SkaleManagerMockContract} from "../../typechain";
 
 import { currentTime, skipTime } from "../tools/time";
 
@@ -24,10 +24,10 @@ const SkaleManagerMock: SkaleManagerMockContract = artifacts.require("./SkaleMan
 
 contract("DelegationController", ([owner, holder1, holder2, validator, validator2]) => {
     let contractManager: ContractManager;
-    let skaleToken: SkaleTokenInstance;
-    let delegationController: DelegationControllerInstance;
-    let validatorService: ValidatorServiceInstance;
-    let constantsHolder: ConstantsHolderInstance;
+    let skaleToken: SkaleToken;
+    let delegationController: DelegationController;
+    let validatorService: ValidatorService;
+    let constantsHolder: ConstantsHolder;
 
     const month = 60 * 60 * 24 * 31;
 

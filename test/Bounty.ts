@@ -1,11 +1,11 @@
 import {
     ContractManager,
-    ConstantsHolderInstance,
+    ConstantsHolder,
     BountyV2Instance,
     NodesMockInstance,
-    SkaleTokenInstance,
-    DelegationControllerInstance,
-    ValidatorServiceInstance,
+    SkaleToken,
+    DelegationController,
+    ValidatorService,
     NodesContract,
     SkaleManagerContract,
     BountyV2Contract
@@ -39,7 +39,7 @@ const ec = new EC("secp256k1");
 
 contract("Bounty", ([owner, admin, hacker, validator, validator2]) => {
     let contractManager: ContractManager;
-    let constantsHolder: ConstantsHolderInstance;
+    let constantsHolder: ConstantsHolder;
     let bountyContract: BountyV2Instance;
     let nodes: NodesMockInstance;
 
@@ -455,9 +455,9 @@ contract("Bounty", ([owner, admin, hacker, validator, validator2]) => {
     });
 
     describe("when validator is registered and has active delegations", async () => {
-        let skaleToken: SkaleTokenInstance;
-        let delegationController: DelegationControllerInstance;
-        let validatorService: ValidatorServiceInstance;
+        let skaleToken: SkaleToken;
+        let delegationController: DelegationController;
+        let validatorService: ValidatorService;
 
         const validatorId = 1;
         const validatorAmount = 1e6;

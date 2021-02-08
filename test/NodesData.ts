@@ -2,7 +2,7 @@ import chaiAsPromised from "chai-as-promised";
 import { ContractManager,
          NodesInstance,
          SkaleManagerInstance,
-         ValidatorServiceInstance} from "../types/truffle-contracts";
+         ValidatorService} from "../types/truffle-contracts";
 import { currentTime, skipTime } from "./tools/time";
 
 import * as elliptic from "elliptic";
@@ -21,7 +21,7 @@ chai.use(chaiAsPromised);
 contract("NodesData", ([owner, validator, nodeAddress, admin, hacker]) => {
     let contractManager: ContractManager;
     let nodes: NodesInstance;
-    let validatorService: ValidatorServiceInstance;
+    let validatorService: ValidatorService;
 
     beforeEach(async () => {
         contractManager = await deployContractManager();

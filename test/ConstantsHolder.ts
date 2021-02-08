@@ -1,6 +1,6 @@
 import { BigNumber } from "bignumber.js";
 import chaiAsPromised from "chai-as-promised";
-import { ConstantsHolderInstance,
+import { ConstantsHolder,
          ContractManager } from "../types/truffle-contracts";
 import { skipTime } from "./tools/time";
 
@@ -13,7 +13,7 @@ chai.use(chaiAsPromised);
 
 contract("ConstantsHolder", ([deployer, user]) => {
   let contractManager: ContractManager;
-  let constantsHolder: ConstantsHolderInstance;
+  let constantsHolder: ConstantsHolder;
 
   before(async () => {
     contractManager = await deployContractManager();

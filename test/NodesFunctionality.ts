@@ -2,10 +2,10 @@ import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { ContractManager,
          NodesInstance,
-         SkaleTokenInstance,
-         ValidatorServiceInstance,
-         DelegationControllerInstance,
-         ConstantsHolderInstance} from "../types/truffle-contracts";
+         SkaleToken,
+         ValidatorService,
+         DelegationController,
+         ConstantsHolder} from "../types/truffle-contracts";
 
 import * as elliptic from "elliptic";
 const EC = elliptic.ec;
@@ -30,10 +30,10 @@ chai.use(chaiAsPromised);
 contract("NodesFunctionality", ([owner, validator, nodeAddress, nodeAddress2, holder, ]) => {
     let contractManager: ContractManager;
     let nodes: NodesInstance;
-    let validatorService: ValidatorServiceInstance;
-    let constantsHolder: ConstantsHolderInstance;
-    let skaleToken: SkaleTokenInstance;
-    let delegationController: DelegationControllerInstance;
+    let validatorService: ValidatorService;
+    let constantsHolder: ConstantsHolder;
+    let skaleToken: SkaleToken;
+    let delegationController: DelegationController;
 
     beforeEach(async () => {
         contractManager = await deployContractManager();

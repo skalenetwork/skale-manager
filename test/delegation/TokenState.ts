@@ -1,8 +1,8 @@
 import { ContractManager,
-         DelegationControllerInstance,
-         SkaleTokenInstance,
+         DelegationController,
+         SkaleToken,
          TokenStateInstance,
-         ValidatorServiceInstance} from "../../types/truffle-contracts";
+         ValidatorService} from "../../typechain";
 
 import { deployContractManager } from "../tools/deploy/contractManager";
 import { currentTime, skipTime } from "../tools/time";
@@ -20,10 +20,10 @@ chai.use(chaiAsPromised);
 
 contract("DelegationController (token state)", ([owner, holder, validator]) => {
     let contractManager: ContractManager;
-    let delegationController: DelegationControllerInstance;
+    let delegationController: DelegationController;
     let tokenState: TokenStateInstance;
-    let validatorService: ValidatorServiceInstance;
-    let skaleToken: SkaleTokenInstance;
+    let validatorService: ValidatorService;
+    let skaleToken: SkaleToken;
 
     let validatorId: number;
     const month = 60 * 60 * 24 * 31;

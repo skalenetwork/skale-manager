@@ -1,4 +1,4 @@
-import { TimeHelpersInstance, ContractManager } from "../../types/truffle-contracts";
+import { TimeHelpersInstance, ContractManager } from "../../typechain";
 import { deployTimeHelpers } from "../tools/deploy/delegation/timeHelpers";
 import { deployContractManager } from "../tools/deploy/contractManager";
 import * as chai from "chai";

@@ -6,7 +6,7 @@ import { ContractManager,
         //  SchainsInternalInstance,
          SchainsInstance,
          SkaleVerifierInstance,
-         ValidatorServiceInstance } from "../types/truffle-contracts";
+         ValidatorService } from "../types/truffle-contracts";
 
 import * as elliptic from "elliptic";
 const EC = elliptic.ec;
@@ -27,7 +27,7 @@ contract("SkaleVerifier", ([validator1, owner, developer, hacker]) => {
     let contractManager: ContractManager;
     let schains: SchainsInstance;
     let skaleVerifier: SkaleVerifierInstance;
-    let validatorService: ValidatorServiceInstance;
+    let validatorService: ValidatorService;
     let nodes: NodesInstance;
     let keyStorage: KeyStorageInstance;
 

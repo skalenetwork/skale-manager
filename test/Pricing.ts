@@ -6,9 +6,9 @@ import { ContractManager,
          NodesInstance,
          PricingInstance,
          SchainsInternalInstance,
-         ValidatorServiceInstance,
+         ValidatorService,
          SchainsInstance,
-         ConstantsHolderInstance,
+         ConstantsHolder,
          NodeRotationInstance } from "../types/truffle-contracts";
 
 import * as elliptic from "elliptic";
@@ -36,8 +36,8 @@ contract("Pricing", ([owner, holder, validator, nodeAddress]) => {
     let schainsInternal: SchainsInternalInstance;
     let schains: SchainsInstance;
     let nodes: NodesInstance;
-    let validatorService: ValidatorServiceInstance;
-    let constants: ConstantsHolderInstance;
+    let validatorService: ValidatorService;
+    let constants: ConstantsHolder;
     let nodeRotation: NodeRotationInstance;
 
     beforeEach(async () => {

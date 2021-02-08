@@ -1,54 +1,62 @@
-import { ConstantsHolderInstance,
-    ContractManager,
-    DelegationControllerInstance,
-    SkaleTokenInstance,
-    ValidatorServiceInstance} from "../../types/truffle-contracts";
+import { ContractManager,
+    DelegationController,
+    SkaleToken,
+    ValidatorService} from "../../typechain";
 
 import { skipTime } from "../tools/time";
 
-import BigNumber from "bignumber.js";
+import { BigNumber } from "ethers";
 import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
-import { deployConstantsHolder } from "../tools/deploy/constantsHolder";
 import { deployContractManager } from "../tools/deploy/contractManager";
 import { deployDelegationController } from "../tools/deploy/delegation/delegationController";
 import { deployValidatorService } from "../tools/deploy/delegation/validatorService";
 import { deploySkaleToken } from "../tools/deploy/skaleToken";
 import { deploySkaleManager } from "../tools/deploy/skaleManager";
 import { deploySkaleManagerMock } from "../tools/deploy/test/skaleManagerMock";
+import { ethers, web3 } from "hardhat";
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
+import { assert } from "chai";
+import { solidity } from "ethereum-waffle";
 
 chai.should();
 chai.use(chaiAsPromised);
+chai.use(solidity);
 
-class Validator {
-    public name: string;
-    public validatorAddress: string;
-    public requestedAddress: string;
-    public description: string;
-    public feeRate: BigNumber;
-    public registrationTime: BigNumber;
-    public minimumDelegationAmount: BigNumber;
-    public acceptNewRequests: boolean;
-
-    constructor(arrayData: [string, string, string, string, BigNumber, BigNumber, BigNumber, boolean]) {
-        this.name = arrayData[0];
-        this.validatorAddress = arrayData[1];
-        this.requestedAddress = arrayData[2];
-        this.description = arrayData[3];
-        this.feeRate = new BigNumber(arrayData[4]);
-        this.registrationTime = new BigNumber(arrayData[5]);
-        this.minimumDelegationAmount = new BigNumber(arrayData[6]);
-        this.acceptNewRequests = arrayData[7];
+async function getValidatorIdSignature(validatorId: BigNumber, signer: SignerWithAddress) {
+    const hash = web3.utils.soliditySha3(validatorId.toString());
+    if (hash) {
+        let signature = await web3.eth.sign(hash, signer.address);
+        signature = (
+            signature.slice(130) === "00" ?
+            signature.slice(0, 130) + "1b" :            
+            (
+                signature.slice(130) === "01" ?
+                signature.slice(0, 130) + "1c" :
+                signature
+            )
+        );
+        return signature;
+    } else {
+        return "";
     }
 }
 
-contract("ValidatorService", ([owner, holder, validator1, validator2, validator3, nodeAddress]) => {
+
+describe("ValidatorService", () => {
+    let owner: SignerWithAddress;
+    let holder: SignerWithAddress;
+    let validator1: SignerWithAddress;
+    let validator2: SignerWithAddress;
+    let validator3: SignerWithAddress;
+    let nodeAddress: SignerWithAddress;
     let contractManager: ContractManager;
-    let validatorService: ValidatorServiceInstance;
-    let skaleToken: SkaleTokenInstance;
-    let delegationController: DelegationControllerInstance;
+    let validatorService: ValidatorService;
+    let skaleToken: SkaleToken;
+    let delegationController: DelegationController;
 
     beforeEach(async () => {
+        [owner, holder, validator1, validator2, validator3, nodeAddress] = await ethers.getSigners();
         contractManager = await deployContractManager();
 
         skaleToken = await deploySkaleToken(contractManager);
@@ -60,190 +68,165 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
     });
 
     it("should register new validator", async () => {
-        await validatorService.registerValidator(
+        await validatorService.connect(validator1).registerValidator(
             "ValidatorName",
             "Really good validator",
             500,
-            100,
-            {from: validator1});
-        const validatorId = await validatorService.getValidatorId(validator1);
-        const validator: Validator = new Validator(
-            await validatorService.validators(validatorId));
+            100);
+        const validatorId = await validatorService.getValidatorId(validator1.address);
+        const validator = await validatorService.validators(validatorId);
         assert.equal(validator.name, "ValidatorName");
-        assert.equal(validator.validatorAddress, validator1);
+        assert.equal(validator.validatorAddress, validator1.address);
         assert.equal(validator.description, "Really good validator");
         assert.equal(validator.feeRate.toNumber(), 500);
         assert.equal(validator.minimumDelegationAmount.toNumber(), 100);
-        assert.isTrue(await validatorService.checkValidatorAddressToId(validator1, validatorId));
+        assert.isTrue(await validatorService.checkValidatorAddressToId(validator1.address, validatorId));
     });
 
     it("should reject if validator tried to register with a fee rate higher than 100 percent", async () => {
-        await validatorService.registerValidator(
+        await validatorService.connect(validator1).registerValidator(
             "ValidatorName",
             "Really good validator",
             1500,
-            100,
-            {from: validator1})
+            100)
             .should.be.eventually.rejectedWith("Fee rate of validator should be lower than 100%");
     });
 
     it("should allow only owner to call disableWhitelits", async() => {
-        await validatorService.disableWhitelist({from: validator1})
+        await validatorService.connect(validator1).disableWhitelist()
             .should.be.eventually.rejectedWith("Caller is not the owner");
-        await validatorService.disableWhitelist({from: owner});
+        await validatorService.connect(owner).disableWhitelist();
     });
 
     describe("when validator registered", async () => {
         beforeEach(async () => {
-            await validatorService.registerValidator(
+            await validatorService.connect(validator1).registerValidator(
                 "ValidatorName",
                 "Really good validator",
                 500,
-                100,
-                {from: validator1});
-            const validatorId = await validatorService.getValidatorId(validator1);
-            let signature = await web3.eth.sign(web3.utils.soliditySha3(validatorId.toString()), nodeAddress);
-            signature = (signature.slice(130) === "00" ? signature.slice(0, 130) + "1b" :
-                (signature.slice(130) === "01" ? signature.slice(0, 130) + "1c" : signature));
-            await validatorService.linkNodeAddress(nodeAddress, signature, {from: validator1});
+                100);
+            const validatorId = await validatorService.getValidatorId(validator1.address);
+            await validatorService.connect(validator1).linkNodeAddress(nodeAddress.address, await getValidatorIdSignature(validatorId, nodeAddress));
         });
 
         it("should reject when validator tried to register new one with the same address", async () => {
-            await validatorService.registerValidator(
+            await validatorService.connect(validator1).registerValidator(
                 "ValidatorName",
                 "Really good validator",
                 500,
-                100,
-                {from: validator1})
+                100)
                 .should.be.eventually.rejectedWith("Validator with such address already exists");
 
         });
 
         it("should reset name, description, minimum delegation amount", async () => {
             const validatorId = 1;
-            await validatorService.setValidatorName("Validator", {from: validator1});
-            await validatorService.setValidatorDescription("Good", {from: validator1});
-            await validatorService.setValidatorMDA(1, {from: validator1});
+            await validatorService.connect(validator1).setValidatorName("Validator");
+            await validatorService.connect(validator1).setValidatorDescription("Good");
+            await validatorService.connect(validator1).setValidatorMDA(1);
             const validator = await validatorService.getValidator(validatorId);
             assert.equal(validator.name, "Validator");
             assert.equal(validator.description, "Good");
-            assert.equal(validator.minimumDelegationAmount, new BigNumber(1));
+            validator.minimumDelegationAmount.should.be.equal(1);
         });
 
         it("should link new node address for validator", async () => {
-            const validatorId = await validatorService.getValidatorId(validator1);
-            let signature = await web3.eth.sign(web3.utils.soliditySha3(validatorId.toString()), nodeAddress);
-            signature = (signature.slice(130) === "00" ? signature.slice(0, 130) + "1b" :
-                (signature.slice(130) === "01" ? signature.slice(0, 130) + "1c" : signature));
-            await validatorService.linkNodeAddress(nodeAddress, signature, {from: validator1});
-            const id = new BigNumber(await validatorService.getValidatorIdByNodeAddress(nodeAddress)).toNumber();
-            assert.equal(id, validatorId.toNumber());
+            const validatorId = await validatorService.getValidatorId(validator1.address);
+            const signature = await getValidatorIdSignature(validatorId, nodeAddress);
+            await validatorService.connect(validator1).linkNodeAddress(nodeAddress.address, signature);
+            const id = await validatorService.getValidatorIdByNodeAddress(nodeAddress.address);
+            id.should.be.equal(validatorId);
         });
 
         it("should reject if linked node address tried to unlink validator address", async () => {
-            const validatorId = await validatorService.getValidatorId(validator1);
-            let signature = await web3.eth.sign(web3.utils.soliditySha3(validatorId.toString()), nodeAddress);
-            signature = (signature.slice(130) === "00" ? signature.slice(0, 130) + "1b" :
-                (signature.slice(130) === "01" ? signature.slice(0, 130) + "1c" : signature));
-            await validatorService.linkNodeAddress(nodeAddress, signature, {from: validator1});
-            await validatorService.unlinkNodeAddress(validator1, {from: nodeAddress})
+            const validatorId = await validatorService.getValidatorId(validator1.address);
+            const signature = await getValidatorIdSignature(validatorId, nodeAddress);
+            await validatorService.connect(validator1).linkNodeAddress(nodeAddress.address, signature);
+            await validatorService.connect(nodeAddress).unlinkNodeAddress(validator1.address)
                 .should.be.eventually.rejectedWith("Validator address does not exist");
         });
 
         it("should reject if validator tried to override node address of another validator", async () => {
-            await validatorService.registerValidator(
+            await validatorService.connect(validator2).registerValidator(
                 "Second Validator",
                 "Bad validator",
                 500,
-                100,
-                {from: validator2});
-            const validatorId1 = await validatorService.getValidatorId(validator1);
-            const validatorId2 = await validatorService.getValidatorId(validator2);
-            let signature1 = await web3.eth.sign(web3.utils.soliditySha3(validatorId1.toString()), nodeAddress);
-            signature1 = (signature1.slice(130) === "00" ? signature1.slice(0, 130) + "1b" :
-                (signature1.slice(130) === "01" ? signature1.slice(0, 130) + "1c" : signature1));
-            let signature2 = await web3.eth.sign(web3.utils.soliditySha3(validatorId2.toString()), nodeAddress);
-            signature2 = (signature2.slice(130) === "00" ? signature2.slice(0, 130) + "1b" :
-                (signature2.slice(130) === "01" ? signature2.slice(0, 130) + "1c" : signature2));
-            await validatorService.linkNodeAddress(nodeAddress, signature1, {from: validator1});
-            await validatorService.linkNodeAddress(nodeAddress, signature2, {from: validator2})
+                100);
+            const validatorId1 = await validatorService.getValidatorId(validator1.address);
+            const validatorId2 = await validatorService.getValidatorId(validator2.address);
+            const signature1 = await getValidatorIdSignature(validatorId1, nodeAddress);
+            const signature2 = await getValidatorIdSignature(validatorId2, nodeAddress);
+            await validatorService.connect(validator1).linkNodeAddress(nodeAddress.address, signature1);
+            await validatorService.connect(validator2).linkNodeAddress(nodeAddress.address, signature2)
                 .should.be.eventually.rejectedWith("Validator cannot override node address");
-            const id = new BigNumber(await validatorService.getValidatorIdByNodeAddress(nodeAddress)).toNumber();
-            assert.equal(id, validatorId1.toNumber());
+            const id = await validatorService.getValidatorIdByNodeAddress(nodeAddress.address);
+            id.should.be.equal(validatorId1);
         });
 
         it("should not link validator like node address", async () => {
-            await validatorService.registerValidator(
+            await validatorService.connect(validator2).registerValidator(
                 "Second Validator",
                 "Bad validator",
                 500,
-                100,
-                {from: validator2});
-            const validatorId = await validatorService.getValidatorId(validator1);
-            let signature = await web3.eth.sign(web3.utils.soliditySha3(validatorId.toString()), validator2);
-            signature = (signature.slice(130) === "00" ? signature.slice(0, 130) + "1b" :
-                (signature.slice(130) === "01" ? signature.slice(0, 130) + "1c" : signature));
-            await validatorService.linkNodeAddress(validator2, signature, {from: validator1})
+                100);
+            const validatorId = await validatorService.getValidatorId(validator1.address);
+            const signature = await getValidatorIdSignature(validatorId, validator2);
+            await validatorService.connect(validator1).linkNodeAddress(validator2.address, signature)
                 .should.be.eventually.rejectedWith("Node address is a validator");
         });
 
         it("should unlink node address for validator", async () => {
-            const validatorId = await validatorService.getValidatorId(validator1);
-            let signature = await web3.eth.sign(web3.utils.soliditySha3(validatorId.toString()), nodeAddress);
-            signature = (signature.slice(130) === "00" ? signature.slice(0, 130) + "1b" :
-                (signature.slice(130) === "01" ? signature.slice(0, 130) + "1c" : signature));
-            await validatorService.linkNodeAddress(nodeAddress, signature, {from: validator1});
-            await validatorService.registerValidator(
+            const validatorId = await validatorService.getValidatorId(validator1.address);
+            const signature = await getValidatorIdSignature(validatorId, nodeAddress);
+            await validatorService.connect(validator1).linkNodeAddress(nodeAddress.address, signature);
+            await validatorService.connect(validator2).registerValidator(
                 "Second Validator",
                 "Not bad validator",
                 500,
-                100,
-                {from: validator2});
-            await validatorService.unlinkNodeAddress(nodeAddress, {from: validator2})
+                100);
+            await validatorService.connect(validator2).unlinkNodeAddress(nodeAddress.address)
                 .should.be.eventually.rejectedWith("Validator does not have permissions to unlink node");
-            const id = new BigNumber(await validatorService.getValidatorIdByNodeAddress(nodeAddress)).toNumber();
-            assert.equal(id, validatorId.toNumber());
+            const id = await validatorService.getValidatorIdByNodeAddress(nodeAddress.address);
+            id.should.be.equal(validatorId);
 
-            await validatorService.unlinkNodeAddress(nodeAddress, {from: validator1});
-            await validatorService.getValidatorId(nodeAddress, {from: validator1})
+            await validatorService.connect(validator1).unlinkNodeAddress(nodeAddress.address);
+            await validatorService.connect(validator1).getValidatorId(nodeAddress.address)
                 .should.be.eventually.rejectedWith("Validator address does not exist");
         });
 
         it("should not allow changing the address to the address of an existing validator", async () => {
-            await validatorService.registerValidator(
+            await validatorService.connect(validator2).registerValidator(
                 "Doge",
                 "I'm a cat",
                 500,
-                100,
-                {from: validator2});
-            await validatorService.requestForNewAddress(validator1, {from: validator2})
+                100);
+            await validatorService.connect(validator2).requestForNewAddress(validator1.address)
                 .should.be.eventually.rejectedWith("Address already registered");
         });
 
         describe("when validator requests for a new address", async () => {
             beforeEach(async () => {
-                await validatorService.requestForNewAddress(validator3, {from: validator1});
+                await validatorService.connect(validator1).requestForNewAddress(validator3.address);
             });
 
             it("should reject when hacker tries to change validator address", async () => {
                 const validatorId = 1;
-                await validatorService.confirmNewAddress(validatorId, {from: validator2})
+                await validatorService.connect(validator2).confirmNewAddress(validatorId)
                     .should.be.eventually.rejectedWith("The validator address cannot be changed because it is not the actual owner");
             });
 
             it("should set new address for validator", async () => {
-                const validatorId = new BigNumber(1);
-                assert.deepEqual(validatorId, new BigNumber(await validatorService.getValidatorId(validator1)));
-                await validatorService.confirmNewAddress(validatorId, {from: validator3});
-                assert.deepEqual(validatorId, new BigNumber(await validatorService.getValidatorId(validator3)));
-                await validatorService.getValidatorId(validator1)
+                const validatorId = 1;
+                (await validatorService.getValidatorId(validator1.address)).should.be.equal(validatorId);
+                await validatorService.connect(validator3).confirmNewAddress(validatorId);
+                (await validatorService.getValidatorId(validator3.address)).should.be.equal(validatorId);
+                await validatorService.getValidatorId(validator1.address)
                     .should.be.eventually.rejectedWith("Validator address does not exist");
-
             });
         });
 
         it("should reject when someone tries to set new address for validator that doesn't exist", async () => {
-            await validatorService.requestForNewAddress(validator2)
+            await validatorService.requestForNewAddress(validator2.address)
                 .should.be.eventually.rejectedWith("Validator address does not exist");
         });
 
@@ -258,46 +241,44 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
         });
 
         it("should allow only admin to enable validator", async () => {
-            await validatorService.enableValidator(1, {from: holder})
+            await validatorService.connect(holder).enableValidator(1)
                 .should.be.eventually.rejectedWith("Caller is not an admin");
             const skaleManager = await deploySkaleManager(contractManager);
-            await skaleManager.grantRole(await skaleManager.ADMIN_ROLE(), holder);
-            await validatorService.enableValidator(1, {from: holder});
+            await skaleManager.grantRole(await skaleManager.ADMIN_ROLE(), holder.address);
+            await validatorService.connect(holder).enableValidator(1);
         });
 
         it("should allow only admin to disable validator", async () => {
             await validatorService.enableValidator(1);
-            await validatorService.disableValidator(1, {from: holder})
+            await validatorService.connect(holder).disableValidator(1)
                 .should.be.eventually.rejectedWith("Caller is not an admin");
             const skaleManager = await deploySkaleManager(contractManager);
-            await skaleManager.grantRole(await skaleManager.ADMIN_ROLE(), holder);
-            await validatorService.disableValidator(1, {from: holder});
+            await skaleManager.grantRole(await skaleManager.ADMIN_ROLE(), holder.address);
+            await validatorService.connect(holder).disableValidator(1);
         });
 
         it("should return list of trusted validators", async () => {
             const validatorId1 = 1;
             const validatorId3 = 3;
-            await validatorService.registerValidator(
+            await validatorService.connect(validator2).registerValidator(
                 "ValidatorName",
                 "Really good validator",
                 500,
-                100,
-                {from: validator2});
-            await validatorService.registerValidator(
+                100);
+            await validatorService.connect(validator3).registerValidator(
                 "ValidatorName",
                 "Really good validator",
                 500,
-                100,
-                {from: validator3});
+                100);
             const whitelist = [];
-            await validatorService.enableValidator(validatorId1, {from: owner});
+            await validatorService.enableValidator(validatorId1);
             whitelist.push(validatorId1);
-            await validatorService.enableValidator(validatorId3, {from: owner});
+            await validatorService.enableValidator(validatorId3);
             whitelist.push(validatorId3);
             let trustedList = (await validatorService.getTrustedValidators()).map(Number);
             assert.deepEqual(whitelist, trustedList);
 
-            await validatorService.disableValidator(validatorId3, {from: owner});
+            await validatorService.disableValidator(validatorId3);
             whitelist.pop();
             trustedList = (await validatorService.getTrustedValidators()).map(Number);
             assert.deepEqual(whitelist, trustedList);
@@ -314,52 +295,52 @@ contract("ValidatorService", ([owner, holder, validator1, validator2, validator3
                 amount = 100;
                 delegationPeriod = 2;
                 info = "NICE";
-                await skaleToken.mint(holder, 200, "0x", "0x");
-                await skaleToken.mint(validator3, 200, "0x", "0x");
+                await skaleToken.mint(holder.address, 200, "0x", "0x");
+                await skaleToken.mint(validator3.address, 200, "0x", "0x");
             });
 
             it("should allow to enable validator in whitelist", async () => {
-                await validatorService.enableValidator(validatorId, {from: validator1})
+                await validatorService.connect(validator1).enableValidator(validatorId)
                     .should.be.eventually.rejectedWith("Caller is not an admin");
-                await validatorService.enableValidator(validatorId, {from: owner});
+                await validatorService.enableValidator(validatorId);
             });
 
             it("should allow to disable validator from whitelist", async () => {
-                await validatorService.disableValidator(validatorId, {from: validator1})
+                await validatorService.connect(validator1).disableValidator(validatorId)
                     .should.be.eventually.rejectedWith("Caller is not an admin");
-                await validatorService.disableValidator(validatorId, {from: owner})
+                await validatorService.disableValidator(validatorId)
                     .should.be.eventually.rejectedWith("Validator is already disabled");
 
-                await validatorService.enableValidator(validatorId, {from: owner});
+                await validatorService.enableValidator(validatorId);
                 await validatorService.isAuthorizedValidator(validatorId).should.eventually.be.true;
-                await validatorService.disableValidator(validatorId, {from: owner});
+                await validatorService.disableValidator(validatorId);
                 await validatorService.isAuthorizedValidator(validatorId).should.eventually.be.false;
             });
 
             it("should not allow to send delegation request if validator isn't authorized", async () => {
-                await delegationController.delegate(validatorId, amount, delegationPeriod, info, {from: holder})
+                await delegationController.connect(holder).delegate(validatorId, amount, delegationPeriod, info)
                     .should.be.eventually.rejectedWith("Validator is not authorized to accept delegation request");
             });
 
             it("should allow to send delegation request if validator is authorized", async () => {
-                await validatorService.enableValidator(validatorId, {from: owner});
-                await delegationController.delegate(validatorId, amount, delegationPeriod, info, {from: holder});
+                await validatorService.enableValidator(validatorId);
+                await delegationController.connect(holder).delegate(validatorId, amount, delegationPeriod, info);
             });
 
             it("should be possible for the validator to enable and disable new delegation requests", async () => {
                 await validatorService.enableValidator(validatorId);
                 // should be enabled by default
-                await delegationController.delegate(validatorId, amount, delegationPeriod, info, {from: holder});
+                await delegationController.connect(holder).delegate(validatorId, amount, delegationPeriod, info);
 
-                await validatorService.stopAcceptingNewRequests({from: holder})
+                await validatorService.connect(holder).stopAcceptingNewRequests()
                     .should.be.eventually.rejectedWith("Validator address does not exist");
 
-                await validatorService.stopAcceptingNewRequests({from: validator1})
-                await delegationController.delegate(validatorId, amount, delegationPeriod, info, {from: holder})
+                await validatorService.connect(validator1).stopAcceptingNewRequests()
+                await delegationController.connect(holder).delegate(validatorId, amount, delegationPeriod, info)
                     .should.be.eventually.rejectedWith("The validator is not currently accepting new requests");
 
-                await validatorService.startAcceptingNewRequests({from: validator1});
-                await delegationController.delegate(validatorId, amount, delegationPeriod, info, {from: holder});
+                await validatorService.connect(validator1).startAcceptingNewRequests();
+                await delegationController.connect(holder).delegate(validatorId, amount, delegationPeriod, info);
             })
         });
     });

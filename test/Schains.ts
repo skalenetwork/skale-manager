@@ -1,6 +1,6 @@
 import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
-import { ConstantsHolderInstance,
+import { ConstantsHolder,
          ContractManager,
          KeyStorageInstance,
          NodesInstance,
@@ -8,7 +8,7 @@ import { ConstantsHolderInstance,
          SchainsInstance,
          SkaleDKGTesterInstance,
          SkaleManagerInstance,
-         ValidatorServiceInstance,
+         ValidatorService,
          NodeRotationInstance} from "../types/truffle-contracts";
 
 import BigNumber from "bignumber.js";
@@ -34,12 +34,12 @@ chai.should();
 chai.use(chaiAsPromised);
 
 contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeAddress3]) => {
-    let constantsHolder: ConstantsHolderInstance;
+    let constantsHolder: ConstantsHolder;
     let contractManager: ContractManager;
     let schains: SchainsInstance;
     let schainsInternal: SchainsInternalInstance;
     let nodes: NodesInstance;
-    let validatorService: ValidatorServiceInstance;
+    let validatorService: ValidatorService;
     let skaleDKG: SkaleDKGTesterInstance;
     let skaleManager: SkaleManagerInstance;
     let keyStorage: KeyStorageInstance;
