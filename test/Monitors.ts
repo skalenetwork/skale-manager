@@ -2,7 +2,7 @@ import { BigNumber } from "bignumber.js";
 import { ConstantsHolder,
          ContractManager,
          MonitorsInstance,
-        NodesInstance,
+        Nodes,
         ValidatorService} from "../types/truffle-contracts";
 
 import { currentTime, skipTime } from "./tools/time";
@@ -26,7 +26,7 @@ contract("Monitors", ([owner, validator, nodeAddress]) => {
   let contractManager: ContractManager;
   let constantsHolder: ConstantsHolder;
   let monitors: MonitorsInstance;
-  let nodes: NodesInstance;
+  let nodes: Nodes;
   let validatorService: ValidatorService;
 
   beforeEach(async () => {

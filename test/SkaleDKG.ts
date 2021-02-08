@@ -3,13 +3,13 @@ import chaiAsPromised from "chai-as-promised";
 import { ContractManager,
          DelegationController,
          KeyStorageInstance,
-         NodesInstance,
+         Nodes,
          NodeRotationInstance,
          SchainsInternalInstance,
          SchainsInstance,
          SkaleDKGInstance,
          SkaleToken,
-         SlashingTableInstance,
+         SlashingTable,
          ValidatorService,
          SkaleManagerInstance,
          ConstantsHolder} from "../types/truffle-contracts";
@@ -47,9 +47,9 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
     let skaleDKG: SkaleDKGInstance;
     let skaleToken: SkaleToken;
     let validatorService: ValidatorService;
-    let slashingTable: SlashingTableInstance;
+    let slashingTable: SlashingTable;
     let delegationController: DelegationController;
-    let nodes: NodesInstance;
+    let nodes: Nodes;
     let nodeRotation: NodeRotationInstance;
     let skaleManager: SkaleManagerInstance;
     let constantsHolder: ConstantsHolder;

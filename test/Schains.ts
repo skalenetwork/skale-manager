@@ -3,7 +3,7 @@ import chaiAsPromised from "chai-as-promised";
 import { ConstantsHolder,
          ContractManager,
          KeyStorageInstance,
-         NodesInstance,
+         Nodes,
          SchainsInternalInstance,
          SchainsInstance,
          SkaleDKGTesterInstance,
@@ -38,7 +38,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeA
     let contractManager: ContractManager;
     let schains: SchainsInstance;
     let schainsInternal: SchainsInternalInstance;
-    let nodes: NodesInstance;
+    let nodes: Nodes;
     let validatorService: ValidatorService;
     let skaleDKG: SkaleDKGTesterInstance;
     let skaleManager: SkaleManagerInstance;

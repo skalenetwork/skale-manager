@@ -3,10 +3,10 @@ import chaiAsPromised from "chai-as-promised";
 import { ConstantsHolder,
          ContractManager,
          DelegationController,
-         DelegationPeriodManagerInstance,
-         DistributorInstance,
+         DelegationPeriodManager,
+         Distributor,
          MonitorsInstance,
-         NodesInstance,
+         Nodes,
          SchainsInternalInstance,
          SchainsInstance,
          SkaleDKGTesterInstance,
@@ -46,7 +46,7 @@ chai.use(chaiAsPromised);
 contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) => {
     let contractManager: ContractManager;
     let constantsHolder: ConstantsHolder;
-    let nodesContract: NodesInstance;
+    let nodesContract: Nodes;
     let skaleManager: SkaleManagerInstance;
     let skaleToken: SkaleToken;
     let monitors: MonitorsInstance;
@@ -54,8 +54,8 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
     let schains: SchainsInstance;
     let validatorService: ValidatorService;
     let delegationController: DelegationController;
-    let delegationPeriodManager: DelegationPeriodManagerInstance;
-    let distributor: DistributorInstance;
+    let delegationPeriodManager: DelegationPeriodManager;
+    let distributor: Distributor;
     let skaleDKG: SkaleDKGTesterInstance;
     let bountyContract: BountyV2Instance;
 

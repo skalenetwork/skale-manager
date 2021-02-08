@@ -2,7 +2,7 @@ import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { ContractManager,
          KeyStorageInstance,
-         NodesInstance,
+         Nodes,
         //  SchainsInternalInstance,
          SchainsInstance,
          SkaleVerifierInstance,
@@ -28,7 +28,7 @@ contract("SkaleVerifier", ([validator1, owner, developer, hacker]) => {
     let schains: SchainsInstance;
     let skaleVerifier: SkaleVerifierInstance;
     let validatorService: ValidatorService;
-    let nodes: NodesInstance;
+    let nodes: Nodes;
     let keyStorage: KeyStorageInstance;
 
     beforeEach(async () => {

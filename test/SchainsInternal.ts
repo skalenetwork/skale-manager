@@ -1,5 +1,5 @@
 import { ContractManager,
-         NodesInstance,
+         Nodes,
          SchainsInternalMockInstance,
          ValidatorService } from "../types/truffle-contracts";
 
@@ -49,7 +49,7 @@ class Schain {
 
 contract("SchainsInternal", ([owner, holder]) => {
     let contractManager: ContractManager;
-    let nodes: NodesInstance;
+    let nodes: Nodes;
     let schainsInternal: SchainsInternalMockInstance;
     let validatorService: ValidatorService;
 
