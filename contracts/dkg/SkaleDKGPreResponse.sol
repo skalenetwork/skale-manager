@@ -25,61 +25,92 @@ pragma solidity 0.6.10;
 pragma experimental ABIEncoderV2;
 
 import "../SkaleDKG.sol";
+import "../Wallets.sol";
+import "../utils/FieldOperations.sol";
 
 /**
  * @title SkaleDKG
  * @dev Contains functions to manage distributed key generation per
  * Joint-Feldman protocol.
  */
-contract SkaleDKGPreResponse is SkaleDKG {
+library SkaleDKGPreResponse {
+    using SafeMath for uint;
+    using G2Operations for G2Operations.G2Point;
 
     function preResponse(
         bytes32 schainId,
         uint fromNodeIndex,
-        G2Operations.G2Point[] calldata verificationVector,
-        G2Operations.G2Point[] calldata verificationVectorMult,
-        KeyShare[] calldata secretKeyContribution
+        G2Operations.G2Point[] memory verificationVector,
+        G2Operations.G2Point[] memory verificationVectorMult,
+        SkaleDKG.KeyShare[] memory secretKeyContribution,
+        ContractManager contractManager,
+        mapping(bytes32 => SkaleDKG.ComplaintData) storage complaints,
+        mapping(bytes32 => mapping(uint => bytes32)) storage hashedData
     )
         external
-        override
-        correctGroup(schainId)
-        onlyNodeOwner(fromNodeIndex)
     {
         uint gasTotal = gasleft();
+        SkaleDKG skaleDKG = SkaleDKG(contractManager.getContract("SkaleDKG"));
         uint index = _preResponseCheck(
             schainId,
             fromNodeIndex,
             verificationVector,
             verificationVectorMult,
-            secretKeyContribution
+            secretKeyContribution,
+            skaleDKG,
+            complaints,
+            hashedData
         );
-        _processPreResponse(secretKeyContribution[index].share, schainId, verificationVectorMult);
-        _refundGasBySchain(schainId, fromNodeIndex, gasTotal - gasleft(), true);
+        // (uint indexOnSchain, ) = skaleDKG.checkAndReturnIndexInGroup(schainId, fromNodeIndex, true);
+        // require(complaints[schainId].nodeToComplaint == fromNodeIndex, "Not this Node");
+        // require(!complaints[schainId].isResponse, "Already submitted pre response data");
+        // require(
+        //     hashedData[schainId][indexOnSchain] == skaleDKG.hashData(secretKeyContribution, verificationVector),
+        //     "Broadcasted Data is not correct"
+        // );
+        // require(
+        //     verificationVector.length == verificationVectorMult.length,
+        //     "Incorrect length of multiplied verification vector"
+        // );
+        // (uint index, ) = skaleDKG.checkAndReturnIndexInGroup(schainId, complaints[schainId].fromNodeToComplaint, true);
+        // require(
+        //     _checkCorrectVectorMultiplication(index, verificationVector, verificationVectorMult),
+        //     "Multiplied verification vector is incorrect"
+        // ); 
+        _processPreResponse(secretKeyContribution[index].share, schainId, verificationVectorMult, complaints);
+        // complaints[schainId].keyShare = secretKeyContribution[index].share;
+        // complaints[schainId].sumOfVerVec = _calculateSum(verificationVectorMult);
+        // complaints[schainId].isResponse = true;
+        Wallets(payable(contractManager.getContract("Wallets")))
+        .refundGasBySchain(schainId, fromNodeIndex, gasTotal - gasleft(), true);
     }
 
     function _preResponseCheck(
         bytes32 schainId,
         uint fromNodeIndex,
-        G2Operations.G2Point[] calldata verificationVector,
-        G2Operations.G2Point[] calldata verificationVectorMult,
-        KeyShare[] calldata secretKeyContribution
+        G2Operations.G2Point[] memory verificationVector,
+        G2Operations.G2Point[] memory verificationVectorMult,
+        SkaleDKG.KeyShare[] memory secretKeyContribution,
+        SkaleDKG skaleDKG,
+        mapping(bytes32 => SkaleDKG.ComplaintData) storage complaints,
+        mapping(bytes32 => mapping(uint => bytes32)) storage hashedData
     )
         private
         view
         returns (uint index)
     {
-        (uint indexOnSchain, ) = _checkAndReturnIndexInGroup(schainId, fromNodeIndex, true);
+        (uint indexOnSchain, ) = skaleDKG.checkAndReturnIndexInGroup(schainId, fromNodeIndex, true);
         require(complaints[schainId].nodeToComplaint == fromNodeIndex, "Not this Node");
         require(!complaints[schainId].isResponse, "Already submitted pre response data");
         require(
-            hashedData[schainId][indexOnSchain] == _hashData(secretKeyContribution, verificationVector),
+            hashedData[schainId][indexOnSchain] == skaleDKG.hashData(secretKeyContribution, verificationVector),
             "Broadcasted Data is not correct"
         );
         require(
             verificationVector.length == verificationVectorMult.length,
             "Incorrect length of multiplied verification vector"
         );
-        (index, ) = _checkAndReturnIndexInGroup(schainId, complaints[schainId].fromNodeToComplaint, true);
+        (index, ) = skaleDKG.checkAndReturnIndexInGroup(schainId, complaints[schainId].fromNodeToComplaint, true);
         require(
             _checkCorrectVectorMultiplication(index, verificationVector, verificationVectorMult),
             "Multiplied verification vector is incorrect"
@@ -89,7 +120,8 @@ contract SkaleDKGPreResponse is SkaleDKG {
     function _processPreResponse(
         bytes32 share,
         bytes32 schainId,
-        G2Operations.G2Point[] calldata verificationVectorMult
+        G2Operations.G2Point[] memory verificationVectorMult,
+        mapping(bytes32 => SkaleDKG.ComplaintData) storage complaints
     )
         private
     {
@@ -151,7 +183,5 @@ contract SkaleDKGPreResponse is SkaleDKG {
             verificationVector.y.b, verificationVector.y.a
         );
     }
-
-
 
 }
