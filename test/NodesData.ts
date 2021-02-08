@@ -1,8 +1,8 @@
 import chaiAsPromised from "chai-as-promised";
-import { ContractManagerInstance,
-         NodesInstance,
-         SkaleManagerInstance,
-         ValidatorServiceInstance} from "../types/truffle-contracts";
+import { ContractManager,
+         Nodes,
+         SkaleManager,
+         ValidatorService} from "../typechain";
 import { currentTime, skipTime } from "./tools/time";
 
 import * as elliptic from "elliptic";
@@ -19,9 +19,9 @@ chai.should();
 chai.use(chaiAsPromised);
 
 contract("NodesData", ([owner, validator, nodeAddress, admin, hacker]) => {
-    let contractManager: ContractManagerInstance;
-    let nodes: NodesInstance;
-    let validatorService: ValidatorServiceInstance;
+    let contractManager: ContractManager;
+    let nodes: Nodes;
+    let validatorService: ValidatorService;
 
     beforeEach(async () => {
         contractManager = await deployContractManager();

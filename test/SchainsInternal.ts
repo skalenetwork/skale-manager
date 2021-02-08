@@ -1,7 +1,7 @@
-import { ContractManagerInstance,
-         NodesInstance,
+import { ContractManager,
+         Nodes,
          SchainsInternalMockInstance,
-         ValidatorServiceInstance } from "../types/truffle-contracts";
+         ValidatorService } from "../typechain";
 
 import * as elliptic from "elliptic";
 const EC = elliptic.ec;
@@ -48,10 +48,10 @@ class Schain {
 }
 
 contract("SchainsInternal", ([owner, holder]) => {
-    let contractManager: ContractManagerInstance;
-    let nodes: NodesInstance;
+    let contractManager: ContractManager;
+    let nodes: Nodes;
     let schainsInternal: SchainsInternalMockInstance;
-    let validatorService: ValidatorServiceInstance;
+    let validatorService: ValidatorService;
 
     beforeEach(async () => {
         contractManager = await deployContractManager();

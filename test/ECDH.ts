@@ -2,7 +2,7 @@ import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 import * as elliptic from "elliptic";
 import { ECDHContract,
-         ECDHInstance} from "../types/truffle-contracts";
+         ECDHInstance} from "../typechain";
 import "./tools/elliptic-types";
 
 import { gasMultiplier } from "./tools/command_line";

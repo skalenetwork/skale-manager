@@ -1,15 +1,15 @@
 import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
-import { ConstantsHolderInstance,
-         ContractManagerInstance,
-         KeyStorageInstance,
-         NodesInstance,
-         SchainsInternalInstance,
-         SchainsInstance,
-         SkaleDKGTesterInstance,
-         SkaleManagerInstance,
-         ValidatorServiceInstance,
-         NodeRotationInstance} from "../types/truffle-contracts";
+import { ConstantsHolder,
+         ContractManager,
+         KeyStorage,
+         Nodes,
+         SchainsInternal,
+         Schains,
+         SkaleDKGTester,
+         SkaleManager,
+         ValidatorService,
+         NodeRotation} from "../typechain";
 
 import BigNumber from "bignumber.js";
 import { skipTime, currentTime } from "./tools/time";
@@ -34,16 +34,16 @@ chai.should();
 chai.use(chaiAsPromised);
 
 contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeAddress3]) => {
-    let constantsHolder: ConstantsHolderInstance;
-    let contractManager: ContractManagerInstance;
-    let schains: SchainsInstance;
-    let schainsInternal: SchainsInternalInstance;
-    let nodes: NodesInstance;
-    let validatorService: ValidatorServiceInstance;
-    let skaleDKG: SkaleDKGTesterInstance;
-    let skaleManager: SkaleManagerInstance;
-    let keyStorage: KeyStorageInstance;
-    let nodeRotation: NodeRotationInstance;
+    let constantsHolder: ConstantsHolder;
+    let contractManager: ContractManager;
+    let schains: Schains;
+    let schainsInternal: SchainsInternal;
+    let nodes: Nodes;
+    let validatorService: ValidatorService;
+    let skaleDKG: SkaleDKGTester;
+    let skaleManager: SkaleManager;
+    let keyStorage: KeyStorage;
+    let nodeRotation: NodeRotation;
     const zeroAddress = "0x0000000000000000000000000000000000000000";
 
     beforeEach(async () => {

@@ -2,14 +2,14 @@ import BigNumber from "bignumber.js";
 import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 
-import { ContractManagerInstance,
-         NodesInstance,
+import { ContractManager,
+         Nodes,
          PricingInstance,
-         SchainsInternalInstance,
-         ValidatorServiceInstance,
-         SchainsInstance,
-         ConstantsHolderInstance,
-         NodeRotationInstance } from "../types/truffle-contracts";
+         SchainsInternal,
+         ValidatorService,
+         Schains,
+         ConstantsHolder,
+         NodeRotation } from "../typechain";
 
 import * as elliptic from "elliptic";
 const EC = elliptic.ec;
@@ -31,14 +31,14 @@ chai.should();
 chai.use(chaiAsPromised);
 
 contract("Pricing", ([owner, holder, validator, nodeAddress]) => {
-    let contractManager: ContractManagerInstance;
+    let contractManager: ContractManager;
     let pricing: PricingInstance;
-    let schainsInternal: SchainsInternalInstance;
-    let schains: SchainsInstance;
-    let nodes: NodesInstance;
-    let validatorService: ValidatorServiceInstance;
-    let constants: ConstantsHolderInstance;
-    let nodeRotation: NodeRotationInstance;
+    let schainsInternal: SchainsInternal;
+    let schains: Schains;
+    let nodes: Nodes;
+    let validatorService: ValidatorService;
+    let constants: ConstantsHolder;
+    let nodeRotation: NodeRotation;
 
     beforeEach(async () => {
         contractManager = await deployContractManager();

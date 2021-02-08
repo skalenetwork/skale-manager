@@ -1,23 +1,20 @@
 import { deployNodes } from "./nodes";
-import { ContractManagerInstance, BountyV2Instance, BountyV2Contract } from "../../../types/truffle-contracts";
-import { deployFunctionFactory } from "./factory";
+import { ContractManager, BountyV2 } from "../../../typechain";
+import { defaultDeploy, deployFunctionFactory } from "./factory";
 import { deployConstantsHolder } from "./constantsHolder";
 import { deployTimeHelpers } from "./delegation/timeHelpers";
 import { deployWallets } from "./wallets";
 
-const deployBounty: (contractManager: ContractManagerInstance) => Promise<BountyV2Instance>
+const deployBounty: (contractManager: ContractManager) => Promise<BountyV2>
     = deployFunctionFactory("Bounty",
-                            async (contractManager: ContractManagerInstance) => {
+                            async (contractManager: ContractManager) => {
                                 await deployConstantsHolder(contractManager);
                                 await deployNodes(contractManager);
                                 await deployTimeHelpers(contractManager);
                                 await deployWallets(contractManager);
                             },
-                            async(contractManager: ContractManagerInstance) => {
-                                const BountyV2: BountyV2Contract = artifacts.require("./BountyV2");
-                                const instance = await BountyV2.new();
-                                await instance.initialize(contractManager.address);
-                                return instance;
+                            async(contractManager: ContractManager) => {
+                                return await defaultDeploy("BountyV2", contractManager);
                             });
 
 export { deployBounty };

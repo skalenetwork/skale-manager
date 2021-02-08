@@ -1,14 +1,14 @@
-import { ContractManagerInstance, SchainsInstance } from "../../../types/truffle-contracts";
 import { deployConstantsHolder } from "./constantsHolder";
 import { deployFunctionFactory } from "./factory";
 import { deployNodes } from "./nodes";
 import { deploySchainsInternal } from "./schainsInternal";
 import { deploySkaleVerifier } from "./skaleVerifier";
 import { deployNodeRotation } from "./nodeRotation";
+import { ContractManager, Schains } from "../../../typechain";
 
-const deploySchains: (contractManager: ContractManagerInstance) => Promise<SchainsInstance>
+const deploySchains: (contractManager: ContractManager) => Promise<Schains>
     = deployFunctionFactory("Schains",
-                            async (contractManager: ContractManagerInstance) => {
+                            async (contractManager: ContractManager) => {
                                 await deploySchainsInternal(contractManager);
                                 await deploySchainsInternal(contractManager);
                                 await deployConstantsHolder(contractManager);

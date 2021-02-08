@@ -1,19 +1,19 @@
 import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
-import { ContractManagerInstance,
-         DelegationControllerInstance,
-         KeyStorageInstance,
-         NodesInstance,
-         NodeRotationInstance,
-         SchainsInternalInstance,
-         SchainsInstance,
-         SkaleDKGInstance,
-         SkaleTokenInstance,
-         SlashingTableInstance,
-         ValidatorServiceInstance,
-         SkaleManagerInstance,
-         ConstantsHolderInstance,
-         WalletsInstance} from "../types/truffle-contracts";
+import { ContractManager,
+         DelegationController,
+         KeyStorage,
+         Nodes,
+         NodeRotation,
+         SchainsInternal,
+         Schains,
+         SkaleDKG,
+         SkaleToken,
+         SlashingTable,
+         ValidatorService,
+         SkaleManager,
+         ConstantsHolder,
+         Wallets } from "../typechain";
 
 import { skipTime, currentTime } from "./tools/time";
 
@@ -42,20 +42,20 @@ chai.should();
 chai.use(chaiAsPromised);
 
 contract("SkaleDKG", ([owner, validator1, validator2]) => {
-    let contractManager: ContractManagerInstance;
-    let keyStorage: KeyStorageInstance
-    let schainsInternal: SchainsInternalInstance;
-    let schains: SchainsInstance;
-    let skaleDKG: SkaleDKGInstance;
-    let skaleToken: SkaleTokenInstance;
-    let validatorService: ValidatorServiceInstance;
-    let slashingTable: SlashingTableInstance;
-    let delegationController: DelegationControllerInstance;
-    let nodes: NodesInstance;
-    let nodeRotation: NodeRotationInstance;
-    let skaleManager: SkaleManagerInstance;
-    let constantsHolder: ConstantsHolderInstance;
-    let wallets: WalletsInstance;
+    let contractManager: ContractManager;
+    let keyStorage: KeyStorage
+    let schainsInternal: SchainsInternal;
+    let schains: Schains;
+    let skaleDKG: SkaleDKG;
+    let skaleToken: SkaleToken;
+    let validatorService: ValidatorService;
+    let slashingTable: SlashingTable;
+    let delegationController: DelegationController;
+    let nodes: Nodes;
+    let nodeRotation: NodeRotation;
+    let skaleManager: SkaleManager;
+    let constantsHolder: ConstantsHolder;
+    let wallets: Wallets;
 
     const failedDkgPenalty = 5;
 

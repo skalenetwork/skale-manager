@@ -1,15 +1,15 @@
 import {
-    ContractManagerInstance,
-    ConstantsHolderInstance,
-    BountyV2Instance,
+    ContractManager,
+    ConstantsHolder,
+    BountyV2,
     NodesMockInstance,
-    SkaleTokenInstance,
-    DelegationControllerInstance,
-    ValidatorServiceInstance,
+    SkaleToken,
+    DelegationController,
+    ValidatorService,
     NodesContract,
     SkaleManagerContract,
     BountyV2Contract
-} from "../types/truffle-contracts";
+} from "../typechain";
 
 import { deployContractManager } from "./tools/deploy/contractManager";
 import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
@@ -38,9 +38,9 @@ const EC = elliptic.ec;
 const ec = new EC("secp256k1");
 
 contract("Bounty", ([owner, admin, hacker, validator, validator2]) => {
-    let contractManager: ContractManagerInstance;
-    let constantsHolder: ConstantsHolderInstance;
-    let bountyContract: BountyV2Instance;
+    let contractManager: ContractManager;
+    let constantsHolder: ConstantsHolder;
+    let bountyContract: BountyV2;
     let nodes: NodesMockInstance;
 
     const ten18 = web3.utils.toBN(10).pow(web3.utils.toBN(18));
@@ -455,9 +455,9 @@ contract("Bounty", ([owner, admin, hacker, validator, validator2]) => {
     });
 
     describe("when validator is registered and has active delegations", async () => {
-        let skaleToken: SkaleTokenInstance;
-        let delegationController: DelegationControllerInstance;
-        let validatorService: ValidatorServiceInstance;
+        let skaleToken: SkaleToken;
+        let delegationController: DelegationController;
+        let validatorService: ValidatorService;
 
         const validatorId = 1;
         const validatorAmount = 1e6;

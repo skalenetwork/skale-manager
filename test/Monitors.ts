@@ -1,9 +1,9 @@
 import { BigNumber } from "bignumber.js";
-import { ConstantsHolderInstance,
-         ContractManagerInstance,
-         MonitorsInstance,
-        NodesInstance,
-        ValidatorServiceInstance} from "../types/truffle-contracts";
+import { ConstantsHolder,
+         ContractManager,
+         Monitors,
+        Nodes,
+        ValidatorService} from "../typechain";
 
 import { currentTime, skipTime } from "./tools/time";
 
@@ -23,11 +23,11 @@ chai.should();
 chai.use((chaiAsPromised));
 
 contract("Monitors", ([owner, validator, nodeAddress]) => {
-  let contractManager: ContractManagerInstance;
-  let constantsHolder: ConstantsHolderInstance;
-  let monitors: MonitorsInstance;
-  let nodes: NodesInstance;
-  let validatorService: ValidatorServiceInstance;
+  let contractManager: ContractManager;
+  let constantsHolder: ConstantsHolder;
+  let monitors: Monitors;
+  let nodes: Nodes;
+  let validatorService: ValidatorService;
 
   beforeEach(async () => {
     contractManager = await deployContractManager();

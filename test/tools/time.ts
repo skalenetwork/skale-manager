@@ -1,46 +1,25 @@
-import Web3 = require("web3");
+import Web3 from "web3";
+import { providers } from "ethers";
 
-let requestId = 0xd2;
 
-function responseCallback(error: Error | null, val?: any) {
-    if (error !== null) {
-        console.log(error, val);
-    }
+export async function skipTime(ethers: {provider: providers.JsonRpcProvider}, seconds: number) {
+    await ethers.provider.send("evm_increaseTime", [seconds]);
+    await ethers.provider.send("evm_mine", []);
 }
 
-export function skipTime(web3: Web3, seconds: number) {
-    web3.currentProvider.send(
-        {
-            id: requestId++,
-            jsonrpc: "2.0",
-            method: "evm_increaseTime",
-            params: [seconds],
-        },
-        responseCallback);
-
-    web3.currentProvider.send(
-        {
-            id: requestId++,
-            jsonrpc: "2.0",
-            method: "evm_mine",
-            params: [],
-        },
-        responseCallback);
-}
-
-export async function skipTimeToDate(web3: Web3, day: number, monthIndex: number) {
-    const timestamp = await currentTime(web3);
+export async function skipTimeToDate(ethers: {provider: providers.JsonRpcProvider}, day: number, monthIndex: number) {
+    const timestamp = (await ethers.provider.getBlock("latest")).timestamp;
     const now = new Date(timestamp * 1000);
     const targetTime = new Date(Date.UTC(now.getFullYear(), monthIndex, day));
     while (targetTime < now) {
         targetTime.setFullYear(now.getFullYear() + 1);
     }
     const diffInSeconds = Math.round(targetTime.getTime() / 1000) - timestamp;
-    skipTime(web3, diffInSeconds);
+    await skipTime(ethers, diffInSeconds);
 }
 
 export async function currentTime(web3: Web3) {
-    return (await web3.eth.getBlock("latest")).timestamp;
+    return parseInt((await web3.eth.getBlock("latest")).timestamp.toString());
 }
 
 export const months = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
