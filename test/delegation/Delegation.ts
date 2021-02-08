@@ -5,7 +5,7 @@ import { ConstantsHolder,
     DistributorInstance,
     LockerMockContract,
     PunisherInstance,
-    SkaleManagerMockContract,
+    SkaleManagerMock,
     SkaleManagerMockInstance,
     SkaleToken,
     TokenState,
@@ -13,7 +13,7 @@ import { ConstantsHolder,
     NodesInstance,
     SlashingTableInstance} from "../../typechain";
 
-const SkaleManagerMock: SkaleManagerMockContract = artifacts.require("./SkaleManagerMock");
+const SkaleManagerMock: SkaleManagerMock = artifacts.require("./SkaleManagerMock");
 
 import { currentTime, skipTime, skipTimeToDate } from "../tools/time";
 
