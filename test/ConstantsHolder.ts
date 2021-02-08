@@ -1,7 +1,7 @@
 import { BigNumber } from "bignumber.js";
 import chaiAsPromised from "chai-as-promised";
 import { ConstantsHolder,
-         ContractManager } from "../types/truffle-contracts";
+         ContractManager } from "../typechain";
 import { skipTime } from "./tools/time";
 
 import chai = require("chai");

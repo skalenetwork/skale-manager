@@ -9,7 +9,7 @@ import {
     NodesContract,
     SkaleManagerContract,
     BountyV2Contract
-} from "../types/truffle-contracts";
+} from "../typechain";
 
 import { deployContractManager } from "./tools/deploy/contractManager";
 import { deployConstantsHolder } from "./tools/deploy/constantsHolder";

@@ -5,7 +5,7 @@ import { ContractManager,
          SkaleToken,
          ValidatorService,
          DelegationController,
-         ConstantsHolder} from "../types/truffle-contracts";
+         ConstantsHolder} from "../typechain";
 
 import * as elliptic from "elliptic";
 const EC = elliptic.ec;

@@ -11,8 +11,8 @@ import { ContractManager,
          SkaleToken,
          SlashingTable,
          ValidatorService,
-         SkaleManagerInstance,
-         ConstantsHolder, ECDHInstance, ECDHContract} from "../types/truffle-contracts";
+         SkaleManager,
+         ConstantsHolder, ECDHInstance, ECDHContract} from "../typechain";
 
 import { gasMultiplier } from "./tools/command_line";
 import { skipTime, currentTime } from "./tools/time";
@@ -55,7 +55,7 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
     let delegationController: DelegationController;
     let nodes: Nodes;
     let nodeRotation: NodeRotationInstance;
-    let skaleManager: SkaleManagerInstance;
+    let skaleManager: SkaleManager;
     let constantsHolder: ConstantsHolder;
 
     const failedDkgPenalty = 5;

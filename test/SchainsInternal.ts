@@ -1,7 +1,7 @@
 import { ContractManager,
          Nodes,
          SchainsInternalMockInstance,
-         ValidatorService } from "../types/truffle-contracts";
+         ValidatorService } from "../typechain";
 
 import * as elliptic from "elliptic";
 const EC = elliptic.ec;

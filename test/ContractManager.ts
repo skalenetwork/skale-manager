@@ -1,5 +1,5 @@
 import { ConstantsHolder,
-         ContractManager } from "../types/truffle-contracts";
+         ContractManager } from "../typechain";
 import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
 import { deployContractManager } from "./tools/deploy/contractManager";
 

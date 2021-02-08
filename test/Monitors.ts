@@ -3,7 +3,7 @@ import { ConstantsHolder,
          ContractManager,
          MonitorsInstance,
         Nodes,
-        ValidatorService} from "../types/truffle-contracts";
+        ValidatorService} from "../typechain";
 
 import { currentTime, skipTime } from "./tools/time";
 

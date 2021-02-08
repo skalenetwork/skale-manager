@@ -1,7 +1,7 @@
 import BigNumber from "bignumber.js";
 import { ContractManager,
          SkaleToken,
-         SkaleTokenInternalTesterInstance} from "../types/truffle-contracts";
+         SkaleTokenInternalTesterInstance} from "../typechain";
 
 import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";

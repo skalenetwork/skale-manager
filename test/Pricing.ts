@@ -9,7 +9,7 @@ import { ContractManager,
          ValidatorService,
          SchainsInstance,
          ConstantsHolder,
-         NodeRotationInstance } from "../types/truffle-contracts";
+         NodeRotationInstance } from "../typechain";
 
 import * as elliptic from "elliptic";
 const EC = elliptic.ec;

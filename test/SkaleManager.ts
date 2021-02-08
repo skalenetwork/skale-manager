@@ -10,10 +10,10 @@ import { ConstantsHolder,
          SchainsInternalInstance,
          SchainsInstance,
          SkaleDKGTesterInstance,
-         SkaleManagerInstance,
+         SkaleManager,
          SkaleToken,
          ValidatorService,
-         BountyV2Instance} from "../types/truffle-contracts";
+         BountyV2Instance} from "../typechain";
 
 // import BigNumber from "bignumber.js";
 
@@ -47,7 +47,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
     let contractManager: ContractManager;
     let constantsHolder: ConstantsHolder;
     let nodesContract: Nodes;
-    let skaleManager: SkaleManagerInstance;
+    let skaleManager: SkaleManager;
     let skaleToken: SkaleToken;
     let monitors: MonitorsInstance;
     let schainsInternal: SchainsInternalInstance;

@@ -1,8 +1,8 @@
 import chaiAsPromised from "chai-as-promised";
 import { ContractManager,
          Nodes,
-         SkaleManagerInstance,
-         ValidatorService} from "../types/truffle-contracts";
+         SkaleManager,
+         ValidatorService} from "../typechain";
 import { currentTime, skipTime } from "./tools/time";
 
 import * as elliptic from "elliptic";

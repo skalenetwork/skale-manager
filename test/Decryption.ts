@@ -1,7 +1,7 @@
 import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { DecryptionContract,
-         DecryptionInstance} from "../types/truffle-contracts";
+         DecryptionInstance} from "../typechain";
 
 import { gasMultiplier } from "./tools/command_line";
 import { skipTime } from "./tools/time";

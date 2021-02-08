@@ -7,9 +7,9 @@ import { ConstantsHolder,
          SchainsInternalInstance,
          SchainsInstance,
          SkaleDKGTesterInstance,
-         SkaleManagerInstance,
+         SkaleManager,
          ValidatorService,
-         NodeRotationInstance} from "../types/truffle-contracts";
+         NodeRotationInstance} from "../typechain";
 
 import BigNumber from "bignumber.js";
 import { skipTime, currentTime } from "./tools/time";
@@ -41,7 +41,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeA
     let nodes: Nodes;
     let validatorService: ValidatorService;
     let skaleDKG: SkaleDKGTesterInstance;
-    let skaleManager: SkaleManagerInstance;
+    let skaleManager: SkaleManager;
     let keyStorage: KeyStorageInstance;
     let nodeRotation: NodeRotationInstance;
     const zeroAddress = "0x0000000000000000000000000000000000000000";
