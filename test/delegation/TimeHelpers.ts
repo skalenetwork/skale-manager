@@ -1,16 +1,17 @@
-import { TimeHelpersInstance, ContractManager } from "../../typechain";
+import { TimeHelpers, ContractManager } from "../../typechain";
 import { deployTimeHelpers } from "../tools/deploy/delegation/timeHelpers";
 import { deployContractManager } from "../tools/deploy/contractManager";
 import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { deployTimeHelpersWithDebug } from "../tools/deploy/test/timeHelpersWithDebug";
-import { currentTime, skipTime } from "../tools/time";
+import { currentTime } from "../tools/time";
+import { web3 } from "hardhat";
 chai.should();
 chai.use(chaiAsPromised);
 
-contract("TimeHelpers", ([owner]) => {
+describe("TimeHelpers", () => {
     let contractManager: ContractManager;
-    let timeHelpers: TimeHelpersInstance;
+    let timeHelpers: TimeHelpers;
 
     beforeEach(async () => {
         contractManager = await deployContractManager();
