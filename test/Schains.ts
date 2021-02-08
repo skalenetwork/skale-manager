@@ -2,10 +2,10 @@ import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { ConstantsHolder,
          ContractManager,
-         KeyStorageInstance,
+         KeyStorage,
          Nodes,
          SchainsInternalInstance,
-         SchainsInstance,
+         Schains,
          SkaleDKGTesterInstance,
          SkaleManager,
          ValidatorService,
@@ -36,13 +36,13 @@ chai.use(chaiAsPromised);
 contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeAddress3]) => {
     let constantsHolder: ConstantsHolder;
     let contractManager: ContractManager;
-    let schains: SchainsInstance;
+    let schains: Schains;
     let schainsInternal: SchainsInternalInstance;
     let nodes: Nodes;
     let validatorService: ValidatorService;
     let skaleDKG: SkaleDKGTesterInstance;
     let skaleManager: SkaleManager;
-    let keyStorage: KeyStorageInstance;
+    let keyStorage: KeyStorage;
     let nodeRotation: NodeRotationInstance;
     const zeroAddress = "0x0000000000000000000000000000000000000000";
 

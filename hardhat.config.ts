@@ -23,6 +23,24 @@ task("accounts", "Prints the list of accounts", async (_, { web3 }) => {
   }
 });
 
+const privateKeys: string[] = []
+
+function addKey(key: string | undefined) {
+  if (key) {
+    privateKeys.push(key);
+  } else {
+    console.log("Generation of private keys are not implemented");
+    process.exit(1);
+  }
+}
+
+addKey(process.env.PRIVATE_KEY_1);
+addKey(process.env.PRIVATE_KEY_2);
+addKey(process.env.PRIVATE_KEY_3);
+addKey(process.env.PRIVATE_KEY_4);
+addKey(process.env.PRIVATE_KEY_5);
+addKey(process.env.PRIVATE_KEY_6);
+
 const config: HardhatUserConfig = {
   defaultNetwork: "hardhat",
   solidity: {
@@ -39,32 +57,32 @@ const config: HardhatUserConfig = {
   },
   networks: {
     hardhat: {
-      // accounts: [
-      //   {
-      //     privateKey: process.env.PRIVATE_KEY_1,
-      //     balance: "0xd3c21bcecceda0000000"
-      //   },
-      //   {
-      //     privateKey: process.env.PRIVATE_KEY_2,
-      //     balance: "0xd3c21bcecceda0000000"
-      //   },
-      //   {
-      //     privateKey: process.env.PRIVATE_KEY_3,
-      //     balance: "0xd3c21bcecceda0000000"
-      //   },
-      //   {
-      //     privateKey: process.env.PRIVATE_KEY_4,
-      //     balance: "0xd3c21bcecceda0000000"
-      //   },
-      //   {
-      //     privateKey: process.env.PRIVATE_KEY_5,
-      //     balance: "0xd3c21bcecceda0000000"
-      //   },
-      //   {
-      //     privateKey: process.env.PRIVATE_KEY_6,
-      //     balance: "0xd3c21bcecceda0000000"
-      //   }
-      // ],
+      accounts: [
+        {
+          privateKey: privateKeys[0],
+          balance: "0xd3c21bcecceda0000000"
+        },
+        {
+          privateKey: privateKeys[1],
+          balance: "0xd3c21bcecceda0000000"
+        },
+        {
+          privateKey: privateKeys[2],
+          balance: "0xd3c21bcecceda0000000"
+        },
+        {
+          privateKey: privateKeys[3],
+          balance: "0xd3c21bcecceda0000000"
+        },
+        {
+          privateKey: privateKeys[4],
+          balance: "0xd3c21bcecceda0000000"
+        },
+        {
+          privateKey: privateKeys[5],
+          balance: "0xd3c21bcecceda0000000"
+        }
+      ],
     },
     mainnet: {
       url: "https://mainnet.infura.io/v3/ab63c5205de64b1182bcdd4339278be3"

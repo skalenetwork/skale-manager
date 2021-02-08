@@ -7,7 +7,7 @@ import { ContractManager,
          PricingInstance,
          SchainsInternalInstance,
          ValidatorService,
-         SchainsInstance,
+         Schains,
          ConstantsHolder,
          NodeRotationInstance } from "../typechain";
 
@@ -34,7 +34,7 @@ contract("Pricing", ([owner, holder, validator, nodeAddress]) => {
     let contractManager: ContractManager;
     let pricing: PricingInstance;
     let schainsInternal: SchainsInternalInstance;
-    let schains: SchainsInstance;
+    let schains: Schains;
     let nodes: Nodes;
     let validatorService: ValidatorService;
     let constants: ConstantsHolder;

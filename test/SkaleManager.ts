@@ -8,7 +8,7 @@ import { ConstantsHolder,
          MonitorsInstance,
          Nodes,
          SchainsInternalInstance,
-         SchainsInstance,
+         Schains,
          SkaleDKGTesterInstance,
          SkaleManager,
          SkaleToken,
@@ -51,7 +51,7 @@ contract("SkaleManager", ([owner, validator, developer, hacker, nodeAddress]) =>
     let skaleToken: SkaleToken;
     let monitors: MonitorsInstance;
     let schainsInternal: SchainsInternalInstance;
-    let schains: SchainsInstance;
+    let schains: Schains;
     let validatorService: ValidatorService;
     let delegationController: DelegationController;
     let delegationPeriodManager: DelegationPeriodManager;

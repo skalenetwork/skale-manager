@@ -1,7 +1,7 @@
 import { deployContractManager } from "../test/tools/deploy/contractManager";
 import { deployValidatorService } from "../test/tools/deploy/delegation/validatorService";
 import { deploySkaleManager } from "../test/tools/deploy/skaleManager";
-import { ContractManager, SchainsInstance, SkaleManager, ValidatorService } from "../typechain";
+import { ContractManager, Schains, SkaleManager, ValidatorService } from "../typechain";
 import { privateKeys } from "../test/tools/private-keys";
 import * as elliptic from "elliptic";
 import { deploySchains } from "../test/tools/deploy/schains";
@@ -13,7 +13,7 @@ contract("createSchains", ([owner, validator, node]) => {
     let contractManager: ContractManager;
     let validatorService: ValidatorService;
     let skaleManager: SkaleManager;
-    let schains: SchainsInstance;
+    let schains: Schains;
 
     beforeEach(async () => {
         contractManager = await deployContractManager();
