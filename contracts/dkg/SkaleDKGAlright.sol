@@ -25,22 +25,35 @@ pragma solidity 0.6.10;
 pragma experimental ABIEncoderV2;
 
 import "../SkaleDKG.sol";
+import "../ContractManager.sol";
+import "../Wallets.sol";
+import "../KeyStorage.sol";
 
 /**
  * @title SkaleDKG
  * @dev Contains functions to manage distributed key generation per
  * Joint-Feldman protocol.
  */
-contract SkaleDKGAlright is SkaleDKG {
+library SkaleDKGAlright {
 
-    function alright(bytes32 schainId, uint fromNodeIndex)
+    event AllDataReceived(bytes32 indexed schainId, uint nodeIndex);
+    event SuccessfulDKG(bytes32 indexed schainId);
+
+    function alright(
+        bytes32 schainId,
+        uint fromNodeIndex,
+        ContractManager contractManager,
+        mapping(bytes32 => SkaleDKG.Channel) storage channels,
+        mapping(bytes32 => SkaleDKG.ProcessDKG) storage dkgProcess,
+        mapping(bytes32 => SkaleDKG.ComplaintData) storage complaints,
+        mapping(bytes32 => uint) storage lastSuccesfulDKG
+        
+    )
         external
-        override
-        correctGroup(schainId)
-        onlyNodeOwner(fromNodeIndex)
     {
         uint gasTotal = gasleft();
-        (uint index, ) = _checkAndReturnIndexInGroup(schainId, fromNodeIndex, true);
+        SkaleDKG skaleDKG = SkaleDKG(contractManager.getContract("SkaleDKG"));
+        (uint index, ) = skaleDKG.checkAndReturnIndexInGroup(schainId, fromNodeIndex, true);
         uint numberOfParticipant = channels[schainId].n;
         require(numberOfParticipant == dkgProcess[schainId].numberOfBroadcasted, "Still Broadcasting phase");
         require(
@@ -53,18 +66,21 @@ contract SkaleDKGAlright is SkaleDKG {
         dkgProcess[schainId].numberOfCompleted++;
         emit AllDataReceived(schainId, fromNodeIndex);
         if (dkgProcess[schainId].numberOfCompleted == numberOfParticipant) {
-            _setSuccesfulDKG(schainId);
+            lastSuccesfulDKG[schainId] = now;
+            channels[schainId].active = false;
+            KeyStorage(contractManager.getContract("KeyStorage")).finalizePublicKey(schainId);
+            emit SuccessfulDKG(schainId);
         }
-        _refundGasBySchain(schainId, fromNodeIndex, gasTotal - gasleft(), false);
+        Wallets(payable(contractManager.getContract("Wallets")))
+        .refundGasBySchain(schainId, fromNodeIndex, gasTotal - gasleft(), false);
     }
 
-    function _setSuccesfulDKG(bytes32 schainId) internal {
-        lastSuccesfulDKG[schainId] = now;
-        channels[schainId].active = false;
-        KeyStorage(contractManager.getContract("KeyStorage")).finalizePublicKey(schainId);
-        emit SuccessfulDKG(schainId);
-    }
-
+    // function _setSuccesfulDKG(bytes32 schainId) internal {
+    //     lastSuccesfulDKG[schainId] = now;
+    //     channels[schainId].active = false;
+    //     KeyStorage(contractManager.getContract("KeyStorage")).finalizePublicKey(schainId);
+    //     emit SuccessfulDKG(schainId);
+    // }
 
 
 }
