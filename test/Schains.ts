@@ -4,9 +4,9 @@ import { ConstantsHolder,
          ContractManager,
          KeyStorage,
          Nodes,
-         SchainsInternalInstance,
+         SchainsInternal,
          Schains,
-         SkaleDKGTesterInstance,
+         SkaleDKGTester,
          SkaleManager,
          ValidatorService,
          NodeRotationInstance} from "../typechain";
@@ -37,10 +37,10 @@ contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeA
     let constantsHolder: ConstantsHolder;
     let contractManager: ContractManager;
     let schains: Schains;
-    let schainsInternal: SchainsInternalInstance;
+    let schainsInternal: SchainsInternal;
     let nodes: Nodes;
     let validatorService: ValidatorService;
-    let skaleDKG: SkaleDKGTesterInstance;
+    let skaleDKG: SkaleDKGTester;
     let skaleManager: SkaleManager;
     let keyStorage: KeyStorage;
     let nodeRotation: NodeRotationInstance;

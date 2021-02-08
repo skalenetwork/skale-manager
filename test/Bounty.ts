@@ -1,7 +1,7 @@
 import {
     ContractManager,
     ConstantsHolder,
-    BountyV2Instance,
+    BountyV2,
     NodesMockInstance,
     SkaleToken,
     DelegationController,
@@ -40,7 +40,7 @@ const ec = new EC("secp256k1");
 contract("Bounty", ([owner, admin, hacker, validator, validator2]) => {
     let contractManager: ContractManager;
     let constantsHolder: ConstantsHolder;
-    let bountyContract: BountyV2Instance;
+    let bountyContract: BountyV2;
     let nodes: NodesMockInstance;
 
     const ten18 = web3.utils.toBN(10).pow(web3.utils.toBN(18));

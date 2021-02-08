@@ -5,7 +5,7 @@ import { ContractManager,
          KeyStorage,
          Nodes,
          NodeRotationInstance,
-         SchainsInternalInstance,
+         SchainsInternal,
          Schains,
          SkaleDKGInstance,
          SkaleToken,
@@ -42,7 +42,7 @@ chai.use(chaiAsPromised);
 contract("SkaleDKG", ([owner, validator1, validator2]) => {
     let contractManager: ContractManager;
     let keyStorage: KeyStorage
-    let schainsInternal: SchainsInternalInstance;
+    let schainsInternal: SchainsInternal;
     let schains: Schains;
     let skaleDKG: SkaleDKGInstance;
     let skaleToken: SkaleToken;

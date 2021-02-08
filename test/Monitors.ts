@@ -1,7 +1,7 @@
 import { BigNumber } from "bignumber.js";
 import { ConstantsHolder,
          ContractManager,
-         MonitorsInstance,
+         Monitors,
         Nodes,
         ValidatorService} from "../typechain";
 
@@ -25,7 +25,7 @@ chai.use((chaiAsPromised));
 contract("Monitors", ([owner, validator, nodeAddress]) => {
   let contractManager: ContractManager;
   let constantsHolder: ConstantsHolder;
-  let monitors: MonitorsInstance;
+  let monitors: Monitors;
   let nodes: Nodes;
   let validatorService: ValidatorService;
 

@@ -5,7 +5,7 @@ import chaiAsPromised from "chai-as-promised";
 import { ContractManager,
          Nodes,
          PricingInstance,
-         SchainsInternalInstance,
+         SchainsInternal,
          ValidatorService,
          Schains,
          ConstantsHolder,
@@ -33,7 +33,7 @@ chai.use(chaiAsPromised);
 contract("Pricing", ([owner, holder, validator, nodeAddress]) => {
     let contractManager: ContractManager;
     let pricing: PricingInstance;
-    let schainsInternal: SchainsInternalInstance;
+    let schainsInternal: SchainsInternal;
     let schains: Schains;
     let nodes: Nodes;
     let validatorService: ValidatorService;

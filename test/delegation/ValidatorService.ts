@@ -23,7 +23,7 @@ chai.should();
 chai.use(chaiAsPromised);
 chai.use(solidity);
 
-export async function getValidatorIdSignature(validatorId: BigNumber, signer: SignerWithAddress) {
+async function getValidatorIdSignature(validatorId: BigNumber, signer: SignerWithAddress) {
     const hash = web3.utils.soliditySha3(validatorId.toString());
     if (hash) {
         let signature = await web3.eth.sign(hash, signer.address);
