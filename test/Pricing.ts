@@ -9,7 +9,7 @@ import { ContractManager,
          ValidatorService,
          Schains,
          ConstantsHolder,
-         NodeRotationInstance } from "../typechain";
+         NodeRotation } from "../typechain";
 
 import * as elliptic from "elliptic";
 const EC = elliptic.ec;
@@ -38,7 +38,7 @@ contract("Pricing", ([owner, holder, validator, nodeAddress]) => {
     let nodes: Nodes;
     let validatorService: ValidatorService;
     let constants: ConstantsHolder;
-    let nodeRotation: NodeRotationInstance;
+    let nodeRotation: NodeRotation;
 
     beforeEach(async () => {
         contractManager = await deployContractManager();

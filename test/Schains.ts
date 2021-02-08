@@ -9,7 +9,7 @@ import { ConstantsHolder,
          SkaleDKGTester,
          SkaleManager,
          ValidatorService,
-         NodeRotationInstance} from "../typechain";
+         NodeRotation} from "../typechain";
 
 import BigNumber from "bignumber.js";
 import { skipTime, currentTime } from "./tools/time";
@@ -43,7 +43,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeA
     let skaleDKG: SkaleDKGTester;
     let skaleManager: SkaleManager;
     let keyStorage: KeyStorage;
-    let nodeRotation: NodeRotationInstance;
+    let nodeRotation: NodeRotation;
     const zeroAddress = "0x0000000000000000000000000000000000000000";
 
     beforeEach(async () => {

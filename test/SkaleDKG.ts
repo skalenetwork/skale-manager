@@ -4,10 +4,10 @@ import { ContractManager,
          DelegationController,
          KeyStorage,
          Nodes,
-         NodeRotationInstance,
+         NodeRotation,
          SchainsInternal,
          Schains,
-         SkaleDKGInstance,
+         SkaleDKG,
          SkaleToken,
          SlashingTable,
          ValidatorService,
@@ -44,13 +44,13 @@ contract("SkaleDKG", ([owner, validator1, validator2]) => {
     let keyStorage: KeyStorage
     let schainsInternal: SchainsInternal;
     let schains: Schains;
-    let skaleDKG: SkaleDKGInstance;
+    let skaleDKG: SkaleDKG;
     let skaleToken: SkaleToken;
     let validatorService: ValidatorService;
     let slashingTable: SlashingTable;
     let delegationController: DelegationController;
     let nodes: Nodes;
-    let nodeRotation: NodeRotationInstance;
+    let nodeRotation: NodeRotation;
     let skaleManager: SkaleManager;
     let constantsHolder: ConstantsHolder;
 
