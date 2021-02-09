@@ -35,6 +35,23 @@ function addKey(key: string | undefined) {
   }
 }
 
+function getCustomPrivateKey(privateKey: string | undefined) {
+  if (privateKey) {
+    return privateKey;
+  } else {
+    console.log("Custom private key is not set");
+    return "";
+  }
+}
+
+function getGasPrice(gasPrice: string | undefined) {
+  if (gasPrice) {
+    return parseInt(gasPrice, 10);
+  } else {
+    return "auto";
+  }
+}
+
 addKey(process.env.PRIVATE_KEY_1);
 addKey(process.env.PRIVATE_KEY_2);
 addKey(process.env.PRIVATE_KEY_3);
@@ -85,8 +102,10 @@ const config: HardhatUserConfig = {
         }
       ],
     },
-    mainnet: {
-      url: "https://mainnet.infura.io/v3/ab63c5205de64b1182bcdd4339278be3"
+    custom: {
+      url: process.env.ENDPOINT,
+      accounts: [getCustomPrivateKey(process.env.PRIVATE_KEY)],
+      gasPrice: getGasPrice(process.env.GASPRICE)
     }
   },
   etherscan: {
