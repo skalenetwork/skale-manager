@@ -71,7 +71,7 @@ describe("SkaleDKG", () => {
     let nodes: Nodes;
     let nodeRotation: NodeRotation;
     let skaleManager: SkaleManager;
-    let constantsHolder: ConstantsHolder;    
+    let constantsHolder: ConstantsHolder;
 
     const failedDkgPenalty = 5;
 
@@ -96,7 +96,7 @@ describe("SkaleDKG", () => {
 
         await slashingTable.setPenalty("FailedDKG", failedDkgPenalty);
     });
-    
+
     const validatorsPrivateKey = [
         privateKeys[1],
         privateKeys[2]

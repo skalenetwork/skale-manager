@@ -4,8 +4,9 @@ import "@nomiclabs/hardhat-web3";
 import "@openzeppelin/hardhat-upgrades";
 import "hardhat-typechain";
 import "solidity-coverage";
+import * as dotenv from "dotenv"
 
-require('dotenv').config();
+dotenv.config();
 
 task("erc1820", "Deploy erc1820", async (_, { web3 }) => {
   if (await web3.eth.getCode("0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24") === "0x") {
@@ -29,8 +30,33 @@ function addKey(key: string | undefined) {
   if (key) {
     privateKeys.push(key);
   } else {
-    console.log("Generation of private keys are not implemented");
+    console.log("Generation of private keys is not implemented");
     process.exit(1);
+  }
+}
+
+function getCustomUrl(url: string | undefined) {
+  if (url) {
+    return url;
+  } else {
+    return "http://127.0.0.1:8545"
+  }
+}
+
+function getCustomPrivateKey(privateKey: string | undefined) {
+  if (privateKey) {
+    return [privateKey];
+  } else {
+    console.log("Custom private key is not set");
+    return [];
+  }
+}
+
+function getGasPrice(gasPrice: string | undefined) {
+  if (gasPrice) {
+    return parseInt(gasPrice, 10);
+  } else {
+    return "auto";
   }
 }
 
@@ -84,8 +110,10 @@ const config: HardhatUserConfig = {
         }
       ],
     },
-    mainnet: {
-      url: "https://mainnet.infura.io/v3/ab63c5205de64b1182bcdd4339278be3"
+    custom: {
+      url: getCustomUrl(process.env.ENDPOINT),
+      accounts: getCustomPrivateKey(process.env.PRIVATE_KEY),
+      gasPrice: getGasPrice(process.env.GASPRICE)
     }
   },
   etherscan: {

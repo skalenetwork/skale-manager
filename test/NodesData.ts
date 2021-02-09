@@ -15,15 +15,57 @@ import { deployContractManager } from "./tools/deploy/contractManager";
 import { deployNodes } from "./tools/deploy/nodes";
 import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
 import { deploySkaleManagerMock } from "./tools/deploy/test/skaleManagerMock";
+import { BigNumber } from "ethers";
+import { ethers, web3 } from "hardhat";
+import { solidity } from "ethereum-waffle";
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
+import { assert, expect } from "chai";
+
 chai.should();
 chai.use(chaiAsPromised);
+chai.use(solidity);
 
-contract("NodesData", ([owner, validator, nodeAddress, admin, hacker]) => {
+async function getValidatorIdSignature(validatorId: BigNumber, signer: SignerWithAddress) {
+    const hash = web3.utils.soliditySha3(validatorId.toString());
+    if (hash) {
+        let signature = await web3.eth.sign(hash, signer.address);
+        signature = (
+            signature.slice(130) === "00" ?
+            signature.slice(0, 130) + "1b" :
+            (
+                signature.slice(130) === "01" ?
+                signature.slice(0, 130) + "1c" :
+                signature
+            )
+        );
+        return signature;
+    } else {
+        return "";
+    }
+}
+
+function stringValue(value: string | null) {
+    if (value) {
+        return value;
+    } else {
+        return "";
+    }
+}
+
+describe("NodesData", () => {
+    let owner: SignerWithAddress;
+    let validator: SignerWithAddress;
+    let nodeAddress: SignerWithAddress;
+    let admin: SignerWithAddress;
+    let hacker: SignerWithAddress;
+
     let contractManager: ContractManager;
     let nodes: Nodes;
     let validatorService: ValidatorService;
 
     beforeEach(async () => {
+        [owner, validator, nodeAddress, admin, hacker] = await ethers.getSigners();
+
         contractManager = await deployContractManager();
         nodes = await deployNodes(contractManager);
         validatorService = await deployValidatorService(contractManager);
@@ -35,19 +77,17 @@ contract("NodesData", ([owner, validator, nodeAddress, admin, hacker]) => {
         await contractManager.setContractsAddress("Schains", contractManager.address);
         await contractManager.setContractsAddress("SchainsInternal", contractManager.address);
 
-        await validatorService.registerValidator("Validator", "D2", 0, 0, {from: validator});
-        const validatorIndex = await validatorService.getValidatorId(validator);
-        let signature1 = await web3.eth.sign(web3.utils.soliditySha3(validatorIndex.toString()), nodeAddress);
-        signature1 = (signature1.slice(130) === "00" ? signature1.slice(0, 130) + "1b" :
-                (signature1.slice(130) === "01" ? signature1.slice(0, 130) + "1c" : signature1));
-        await validatorService.linkNodeAddress(nodeAddress, signature1, {from: validator});
-        await skaleManagerMock.grantRole(await web3.utils.soliditySha3("ADMIN_ROLE"), admin, {from: owner});
+        await validatorService.connect(validator).registerValidator("Validator", "D2", 0, 0);
+        const validatorIndex = await validatorService.getValidatorId(validator.address);
+        const signature1 = await getValidatorIdSignature(validatorIndex, nodeAddress);
+        await validatorService.connect(validator).linkNodeAddress(nodeAddress.address, signature1);
+        await skaleManagerMock.grantRole(await skaleManagerMock.ADMIN_ROLE(), admin.address);
     });
 
     it("should add node", async () => {
         const pubKey = ec.keyFromPrivate(String(privateKeys[2]).slice(2)).getPublic();
         await nodes.createNode(
-            nodeAddress,
+            nodeAddress.address,
             {
                 port: 8545,
                 nonce: 0,
@@ -63,29 +103,30 @@ contract("NodesData", ([owner, validator, nodeAddress, admin, hacker]) => {
         node[0].should.be.equal("d2");
         node[1].should.be.equal("0x7f000001");
         node[2].should.be.equal("0x7f000002");
-        node[3].should.be.deep.eq(web3.utils.toBN(8545));
+        node[3].should.be.equal(8545);
         (await nodes.getNodePublicKey(0)).should.be.deep.equal(
             ["0x" + pubKey.x.toString('hex'),
             "0x" + pubKey.y.toString('hex')]);
-        node[7].should.be.deep.eq(web3.utils.toBN(0));
+        node[7].should.be.equal(0);
 
-        const nodeId = web3.utils.soliditySha3("d2");
+        const nodeId = stringValue(web3.utils.soliditySha3("d2"));
         await nodes.nodesIPCheck("0x7f000001").should.be.eventually.true;
         await nodes.nodesNameCheck(nodeId).should.be.eventually.true;
         const nodeByName = await nodes.nodes(await nodes.nodesNameToIndex(nodeId));
         node.should.be.deep.equal(nodeByName);
-        await nodes.isNodeExist(nodeAddress, 0).should.be.eventually.true;
-        (await nodes.getActiveNodesByAddress({from: nodeAddress})).should.be.deep.equal([web3.utils.toBN(0)]);
-        expect(await nodes.getActiveNodesByAddress({from: owner})).to.be.empty;
-        await nodes.numberOfActiveNodes().should.be.eventually.deep.equal(web3.utils.toBN(1));
-        await nodes.getNumberOfNodes().should.be.eventually.deep.equal(web3.utils.toBN(1));
+        await nodes.isNodeExist(nodeAddress.address, 0).should.be.eventually.true;
+        const activeNodes = await nodes.connect(nodeAddress).getActiveNodesByAddress();
+        activeNodes.should.be.deep.equal([BigNumber.from(0)]);
+        expect(await nodes.getActiveNodesByAddress()).to.be.empty;
+        (await nodes.numberOfActiveNodes()).should.be.equal(1);
+        (await nodes.getNumberOfNodes()).should.be.equal(1);
     });
 
     describe("when a node is added", async () => {
         beforeEach(async () => {
             const pubKey = ec.keyFromPrivate(String(privateKeys[2]).slice(2)).getPublic();
             await nodes.createNode(
-                nodeAddress,
+                nodeAddress.address,
                 {
                     port: 8545,
                     nonce: 0,
@@ -124,8 +165,8 @@ contract("NodesData", ([owner, validator, nodeAddress, admin, hacker]) => {
         it("should set node as leaving", async () => {
             await nodes.initExit(0);
 
-            await nodes.numberOfActiveNodes().should.be.eventually.deep.equal(web3.utils.toBN(0));
-            await nodes.numberOfLeavingNodes().should.be.eventually.deep.equal(web3.utils.toBN(1));
+            (await nodes.numberOfActiveNodes()).should.be.equal(0);
+            (await nodes.numberOfLeavingNodes()).should.be.equal(1);
         });
 
         it("should set node as left one", async () => {
@@ -133,19 +174,19 @@ contract("NodesData", ([owner, validator, nodeAddress, admin, hacker]) => {
             await nodes.completeExit(0);
 
             await nodes.nodesIPCheck("0x7f000001").should.be.eventually.false;
-            await nodes.nodesNameCheck(web3.utils.soliditySha3("d2")).should.be.eventually.false;
+            await nodes.nodesNameCheck(stringValue(web3.utils.soliditySha3("d2"))).should.be.eventually.false;
 
-            await nodes.numberOfActiveNodes().should.be.eventually.deep.equal(web3.utils.toBN(0));
-            await nodes.numberOfLeftNodes().should.be.eventually.deep.equal(web3.utils.toBN(1));
+            (await nodes.numberOfActiveNodes()).should.be.equal(0);
+            (await nodes.numberOfLeftNodes()).should.be.equal(1);
         });
 
         it("should change node last reward date", async () => {
-            skipTime(web3, 5);
-            const res = await nodes.changeNodeLastRewardDate(0);
-            const currentTimeLocal = (await web3.eth.getBlock(res.receipt.blockNumber)).timestamp;
+            await skipTime(ethers, 5);
+            const res = await(await nodes.changeNodeLastRewardDate(0)).wait();
+            const currentTimeLocal = BigNumber.from((await web3.eth.getBlock(res.blockNumber)).timestamp);
 
-            (await nodes.nodes(0))[5].should.be.deep.equal(web3.utils.toBN(currentTimeLocal));
-            await nodes.getNodeLastRewardDate(0).should.be.eventually.deep.equal(web3.utils.toBN(currentTimeLocal));
+            (await nodes.nodes(0))[5].should.be.equal(currentTimeLocal);
+            (await nodes.getNodeLastRewardDate(0)).should.be.equal(currentTimeLocal);
         });
 
         it("should get ip address of Node", async () => {
@@ -153,11 +194,11 @@ contract("NodesData", ([owner, validator, nodeAddress, admin, hacker]) => {
         });
 
         it("should get ip node's port", async () => {
-            await nodes.getNodePort(0).should.be.eventually.deep.equal(web3.utils.toBN(8545));
+            (await nodes.getNodePort(0)).should.be.equal(8545);
         });
 
         it("should get address of a node", async () => {
-            await nodes.getNodeAddress(0).should.be.eventually.deep.equal(nodeAddress);
+            (await nodes.getNodeAddress(0)).should.be.equal(nodeAddress.address);
         });
 
         it("should check if node status is active", async () => {
@@ -178,31 +219,31 @@ contract("NodesData", ([owner, validator, nodeAddress, admin, hacker]) => {
         });
 
         it("should modify node domain name by node owner", async () => {
-            await nodes.setDomainName(0, "newdomain.name", {from: nodeAddress});
+            await nodes.connect(nodeAddress).setDomainName(0, "newdomain.name");
             const nodeDomainName = await nodes.getNodeDomainName(0);
             nodeDomainName.should.be.equal("newdomain.name");
         });
 
         it("should modify node domain name by validator", async () => {
-            await nodes.setDomainName(0, "newdomain.name", {from: validator});
+            await nodes.connect(validator).setDomainName(0, "newdomain.name");
             const nodeDomainName = await nodes.getNodeDomainName(0);
             nodeDomainName.should.be.equal("newdomain.name");
         });
 
         it("should modify node domain name by contract owner", async () => {
-            await nodes.setDomainName(0, "newdomain.name", {from: owner});
+            await nodes.setDomainName(0, "newdomain.name");
             const nodeDomainName = await nodes.getNodeDomainName(0);
             nodeDomainName.should.be.equal("newdomain.name");
         });
 
         it("should modify node domain name by contract admin", async () => {
-            await nodes.setDomainName(0, "newdomain.name", {from: admin});
+            await nodes.connect(admin).setDomainName(0, "newdomain.name");
             const nodeDomainName = await nodes.getNodeDomainName(0);
             nodeDomainName.should.be.equal("newdomain.name");
         });
 
         it("should not modify node domain name by hacker", async () => {
-            await nodes.setDomainName(0, "newdomain.name", {from: hacker})
+            await nodes.connect(hacker).setDomainName(0, "newdomain.name")
                 .should.be.eventually.rejectedWith("Validator address does not exist");
         });
 
@@ -217,128 +258,128 @@ contract("NodesData", ([owner, validator, nodeAddress, admin, hacker]) => {
             const activeNodes = await nodes.getActiveNodeIds();
 
             activeNodes.length.should.be.equal(1);
-            const nodeIndex = web3.utils.toBN(activeNodes[0]);
-            expect(nodeIndex.eq(web3.utils.toBN(0))).to.be.true;
+            const nodeIndex = activeNodes[0];
+            nodeIndex.should.be.equal(0);
         });
 
         it("should get array of indexes of active nodes of msg.sender", async () => {
-            const activeNodes = await nodes.getActiveNodesByAddress({from: nodeAddress});
+            const activeNodes = await nodes.connect(nodeAddress).getActiveNodesByAddress();
 
             activeNodes.length.should.be.equal(1);
-            const nodeIndex = web3.utils.toBN(activeNodes[0]);
-            expect(nodeIndex.eq(web3.utils.toBN(0))).to.be.true;
+            const nodeIndex = activeNodes[0];
+            nodeIndex.should.be.equal(0);
         });
 
         it("should return Node status", async () => {
             let status = await nodes.getNodeStatus(0);
-            assert.equal(status.toNumber(), 0);
+            assert.equal(status, 0);
             await nodes.initExit(0);
             status = await nodes.getNodeStatus(0);
-            assert.equal(status.toNumber(), 1);
+            assert.equal(status, 1);
         });
 
         it("should set node status In Maintenance from node address", async () => {
             let status = await nodes.getNodeStatus(0);
-            assert.equal(status.toNumber(), 0);
-            await nodes.setNodeInMaintenance(0, {from: nodeAddress});
+            assert.equal(status, 0);
+            await nodes.connect(nodeAddress).setNodeInMaintenance(0);
             status = await nodes.getNodeStatus(0);
-            assert.equal(status.toNumber(), 3);
+            assert.equal(status, 3);
             const boolStatus = await nodes.isNodeInMaintenance(0);
             assert.equal(boolStatus, true);
         });
 
         it("should set node status From In Maintenance from node address", async () => {
             let status = await nodes.getNodeStatus(0);
-            assert.equal(status.toNumber(), 0);
-            await nodes.setNodeInMaintenance(0, {from: nodeAddress});
+            assert.equal(status, 0);
+            await nodes.connect(nodeAddress).setNodeInMaintenance(0);
             status = await nodes.getNodeStatus(0);
-            assert.equal(status.toNumber(), 3);
+            assert.equal(status, 3);
             const boolStatus = await nodes.isNodeInMaintenance(0);
             assert.equal(boolStatus, true);
 
-            await nodes.removeNodeFromInMaintenance(0, {from: nodeAddress});
+            await nodes.connect(nodeAddress).removeNodeFromInMaintenance(0);
             status = await nodes.getNodeStatus(0);
-            assert.equal(status.toNumber(), 0);
+            assert.equal(status, 0);
         });
 
         it("should set node status In Maintenance from validator address", async () => {
             let status = await nodes.getNodeStatus(0);
-            assert.equal(status.toNumber(), 0);
-            await nodes.setNodeInMaintenance(0, {from: validator});
+            assert.equal(status, 0);
+            await nodes.connect(validator).setNodeInMaintenance(0);
             status = await nodes.getNodeStatus(0);
-            assert.equal(status.toNumber(), 3);
+            assert.equal(status, 3);
             const boolStatus = await nodes.isNodeInMaintenance(0);
             assert.equal(boolStatus, true);
         });
 
         it("should set node status From In Maintenance from validator address", async () => {
             let status = await nodes.getNodeStatus(0);
-            assert.equal(status.toNumber(), 0);
-            await nodes.setNodeInMaintenance(0, {from: validator});
+            assert.equal(status, 0);
+            await nodes.connect(validator).setNodeInMaintenance(0);
             status = await nodes.getNodeStatus(0);
-            assert.equal(status.toNumber(), 3);
+            assert.equal(status, 3);
             const boolStatus = await nodes.isNodeInMaintenance(0);
             assert.equal(boolStatus, true);
 
-            await nodes.removeNodeFromInMaintenance(0, {from: validator});
+            await nodes.connect(validator).removeNodeFromInMaintenance(0);
             status = await nodes.getNodeStatus(0);
-            assert.equal(status.toNumber(), 0);
+            assert.equal(status, 0);
         });
 
         it("should set node status In Maintenance from admin", async () => {
             let status = await nodes.getNodeStatus(0);
-            assert.equal(status.toNumber(), 0);
-            await nodes.setNodeInMaintenance(0, {from: admin});
+            assert.equal(status, 0);
+            await nodes.connect(admin).setNodeInMaintenance(0);
             status = await nodes.getNodeStatus(0);
-            assert.equal(status.toNumber(), 3);
+            assert.equal(status, 3);
             const boolStatus = await nodes.isNodeInMaintenance(0);
             assert.equal(boolStatus, true);
         });
 
         it("should set node status From In Maintenance from admin", async () => {
             let status = await nodes.getNodeStatus(0);
-            assert.equal(status.toNumber(), 0);
-            await nodes.setNodeInMaintenance(0, {from: admin});
+            assert.equal(status, 0);
+            await nodes.connect(admin).setNodeInMaintenance(0);
             status = await nodes.getNodeStatus(0);
-            assert.equal(status.toNumber(), 3);
+            assert.equal(status, 3);
             const boolStatus = await nodes.isNodeInMaintenance(0);
             assert.equal(boolStatus, true);
 
-            await nodes.removeNodeFromInMaintenance(0, {from: admin});
+            await nodes.connect(admin).removeNodeFromInMaintenance(0);
             status = await nodes.getNodeStatus(0);
-            assert.equal(status.toNumber(), 0);
+            assert.equal(status, 0);
         });
 
         it("should set node status In Maintenance from owner", async () => {
             let status = await nodes.getNodeStatus(0);
-            assert.equal(status.toNumber(), 0);
-            await nodes.setNodeInMaintenance(0, {from: owner});
+            assert.equal(status, 0);
+            await nodes.setNodeInMaintenance(0);
             status = await nodes.getNodeStatus(0);
-            assert.equal(status.toNumber(), 3);
+            assert.equal(status, 3);
             const boolStatus = await nodes.isNodeInMaintenance(0);
             assert.equal(boolStatus, true);
         });
 
         it("should set node status From In Maintenance from owner", async () => {
             let status = await nodes.getNodeStatus(0);
-            assert.equal(status.toNumber(), 0);
-            await nodes.setNodeInMaintenance(0, {from: owner});
+            assert.equal(status, 0);
+            await nodes.setNodeInMaintenance(0);
             status = await nodes.getNodeStatus(0);
-            assert.equal(status.toNumber(), 3);
+            assert.equal(status, 3);
             const boolStatus = await nodes.isNodeInMaintenance(0);
             assert.equal(boolStatus, true);
 
-            await nodes.removeNodeFromInMaintenance(0, {from: owner});
+            await nodes.removeNodeFromInMaintenance(0);
             status = await nodes.getNodeStatus(0);
-            assert.equal(status.toNumber(), 0);
+            assert.equal(status, 0);
         });
 
         it("should node set node status In Maintenance from Leaving or Left", async () => {
             let status = await nodes.getNodeStatus(0);
-            assert.equal(status.toNumber(), 0);
+            assert.equal(status, 0);
             await nodes.initExit(0);
             status = await nodes.getNodeStatus(0);
-            assert.equal(status.toNumber(), 1);
+            assert.equal(status, 1);
             await nodes.setNodeInMaintenance(0).should.be.eventually.rejectedWith("Node is not Active");
             await nodes.completeExit(0);
             await nodes.setNodeInMaintenance(0).should.be.eventually.rejectedWith("Node is not Active");
@@ -411,7 +452,7 @@ contract("NodesData", ([owner, validator, nodeAddress, admin, hacker]) => {
             beforeEach(async () => {
                 const pubKey = ec.keyFromPrivate(String(privateKeys[2]).slice(2)).getPublic();
                 await nodes.createNode(
-                    nodeAddress,
+                    nodeAddress.address,
                     {
                         port: 8545,
                         nonce: 0,
@@ -424,26 +465,26 @@ contract("NodesData", ([owner, validator, nodeAddress, admin, hacker]) => {
             });
 
             it("should remove node", async () => {
-                await nodes.getNumberOnlineNodes().should.be.eventually.deep.equal(web3.utils.toBN(2));
+                (await nodes.getNumberOnlineNodes()).should.be.equal(2);
                 await nodes.initExit(0);
                 await nodes.completeExit(0);
-                await nodes.getNumberOnlineNodes().should.be.eventually.deep.equal(web3.utils.toBN(1));
+                (await nodes.getNumberOnlineNodes()).should.be.equal(1);
             });
 
             it("should remove space from node", async () => {
                 await nodes.removeSpaceFromNode(0, 2);
 
-                (await nodes.spaceOfNodes(0))[0].should.be.deep.equal(web3.utils.toBN(126));
+                (await nodes.spaceOfNodes(0))[0].should.be.equal(126);
             });
 
             it("should add space to full node", async () => {
                 await nodes.addSpaceToNode(0, 2);
 
-                (await nodes.spaceOfNodes(0))[0].should.be.deep.equal(web3.utils.toBN(130));
+                (await nodes.spaceOfNodes(0))[0].should.be.equal(130);
             });
 
             it("should get number of free full nodes", async () => {
-                await nodes.countNodesWithFreeSpace(1).should.be.eventually.deep.equal(web3.utils.toBN(2));
+                (await nodes.countNodesWithFreeSpace(1)).should.be.equal(2);
             });
         });
 
@@ -453,7 +494,7 @@ contract("NodesData", ([owner, validator, nodeAddress, admin, hacker]) => {
         beforeEach(async () => {
             const pubKey = ec.keyFromPrivate(String(privateKeys[2]).slice(2)).getPublic();
             await nodes.createNode(
-                nodeAddress,
+                nodeAddress.address,
                 {
                     port: 8545,
                     nonce: 0,
@@ -464,7 +505,7 @@ contract("NodesData", ([owner, validator, nodeAddress, admin, hacker]) => {
                     domainName: "somedomain.name"
                 });
             await nodes.createNode(
-                nodeAddress,
+                nodeAddress.address,
                 {
                     port: 8545,
                     nonce: 0,
@@ -508,7 +549,7 @@ contract("NodesData", ([owner, validator, nodeAddress, admin, hacker]) => {
             beforeEach(async () => {
                 const pubKey = ec.keyFromPrivate(String(privateKeys[2]).slice(2)).getPublic();
                 await nodes.createNode(
-                    nodeAddress,
+                    nodeAddress.address,
                     {
                         port: 8545,
                         nonce: 0,
@@ -519,7 +560,7 @@ contract("NodesData", ([owner, validator, nodeAddress, admin, hacker]) => {
                         domainName: "somedomain.name"
                     });
                 await nodes.createNode(
-                    nodeAddress,
+                    nodeAddress.address,
                     {
                         port: 8545,
                         nonce: 0,
@@ -534,13 +575,13 @@ contract("NodesData", ([owner, validator, nodeAddress, admin, hacker]) => {
             it("should remove first node", async () => {
                 await nodes.initExit(0);
                 await nodes.completeExit(0);
-                await nodes.getNumberOnlineNodes().should.be.eventually.deep.equal(web3.utils.toBN(3));
+                (await nodes.getNumberOnlineNodes()).should.be.equal(3);
             });
 
             it("should remove second node", async () => {
                 await nodes.initExit(1);
                 await nodes.completeExit(1);
-                await nodes.getNumberOnlineNodes().should.be.eventually.deep.equal(web3.utils.toBN(3));
+                (await nodes.getNumberOnlineNodes()).should.be.equal(3);
             });
 
             it("should not remove larger space from full node than its has", async () => {

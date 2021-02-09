@@ -19,7 +19,7 @@ export async function skipTimeToDate(ethers: {provider: providers.JsonRpcProvide
 }
 
 export async function currentTime(web3: Web3) {
-    return parseInt((await web3.eth.getBlock("latest")).timestamp.toString());
+    return parseInt((await web3.eth.getBlock("latest")).timestamp.toString(16), 16);
 }
 
 export const months = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];

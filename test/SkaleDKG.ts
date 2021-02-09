@@ -401,7 +401,7 @@ describe("SkaleDKG", () => {
                     verificationVectors[indexes[0]],
                     encryptedSecretKeyContributions[indexes[0]]
                 )).to.emit(skaleDKG, "BroadcastAndKeyShare");
-                        
+
                 isBroadcasted = await skaleDKG.isNodeBroadcasted(
                     stringValue(web3.utils.soliditySha3(schainName)),
                     0
@@ -1160,7 +1160,7 @@ describe("SkaleDKG", () => {
                 1,
                 0
             )).wait();
-                
+
             assert(
                 await skaleDKG.getComplaintStartedTime(stringValue(web3.utils.soliditySha3(schainName))),
                 (await web3.eth.getBlock(resCompl.blockNumber)).timestamp.toString()
@@ -1189,7 +1189,7 @@ describe("SkaleDKG", () => {
             } else {
                 assert(false, "No events were emitted");
             }
-            
+
             const blockNumber = result.blockNumber;
             const timestamp = (await web3.eth.getBlock(blockNumber)).timestamp;
 
@@ -1384,7 +1384,7 @@ describe("SkaleDKG", () => {
                 stringValue(web3.utils.soliditySha3(schainName)),
                 0
             );
-            
+
             assert(
                 await skaleDKG.getTimeOfLastSuccesfulDKG(stringValue(web3.utils.soliditySha3(schainName))),
                 (await web3.eth.getBlock(resSuccess.blockNumber)).timestamp.toString()

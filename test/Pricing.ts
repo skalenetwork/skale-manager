@@ -1,10 +1,10 @@
-import BigNumber from "bignumber.js";
+import { BigNumber } from "ethers";
 import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 
 import { ContractManager,
          Nodes,
-         PricingInstance,
+         Pricing,
          SchainsInternal,
          ValidatorService,
          Schains,
@@ -26,13 +26,50 @@ import { deploySchains } from "./tools/deploy/schains";
 import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
 import { deployNodeRotation } from "./tools/deploy/nodeRotation";
 import { deploySkaleManagerMock } from "./tools/deploy/test/skaleManagerMock";
+import { ethers, web3 } from "hardhat";
+import { solidity } from "ethereum-waffle";
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
+import { assert, expect } from "chai";
 
 chai.should();
 chai.use(chaiAsPromised);
+chai.use(solidity);
 
-contract("Pricing", ([owner, holder, validator, nodeAddress]) => {
+async function getValidatorIdSignature(validatorId: BigNumber, signer: SignerWithAddress) {
+    const hash = web3.utils.soliditySha3(validatorId.toString());
+    if (hash) {
+        let signature = await web3.eth.sign(hash, signer.address);
+        signature = (
+            signature.slice(130) === "00" ?
+            signature.slice(0, 130) + "1b" :
+            (
+                signature.slice(130) === "01" ?
+                signature.slice(0, 130) + "1c" :
+                signature
+            )
+        );
+        return signature;
+    } else {
+        return "";
+    }
+}
+
+function stringValue(value: string | null) {
+    if (value) {
+        return value;
+    } else {
+        return "";
+    }
+}
+
+describe("Pricing", () => {
+    let owner: SignerWithAddress;
+    let holder: SignerWithAddress;
+    let validator: SignerWithAddress;
+    let nodeAddress: SignerWithAddress;
+
     let contractManager: ContractManager;
-    let pricing: PricingInstance;
+    let pricing: Pricing;
     let schainsInternal: SchainsInternal;
     let schains: Schains;
     let nodes: Nodes;
@@ -41,6 +78,8 @@ contract("Pricing", ([owner, holder, validator, nodeAddress]) => {
     let nodeRotation: NodeRotation;
 
     beforeEach(async () => {
+        [owner, holder, validator, nodeAddress] = await ethers.getSigners();
+
         contractManager = await deployContractManager();
 
         nodes = await deployNodes(contractManager);
@@ -54,22 +93,20 @@ contract("Pricing", ([owner, holder, validator, nodeAddress]) => {
         const skaleManagerMock = await deploySkaleManagerMock(contractManager);
         await contractManager.setContractsAddress("SkaleManager", skaleManagerMock.address);
 
-        await validatorService.registerValidator("Validator", "D2", 0, 0, {from: validator});
-        const validatorIndex = await validatorService.getValidatorId(validator);
-        let signature1 = await web3.eth.sign(web3.utils.soliditySha3(validatorIndex.toString()), nodeAddress);
-        signature1 = (signature1.slice(130) === "00" ? signature1.slice(0, 130) + "1b" :
-                (signature1.slice(130) === "01" ? signature1.slice(0, 130) + "1c" : signature1));
-        await validatorService.linkNodeAddress(nodeAddress, signature1, {from: validator});
+        await validatorService.connect(validator).registerValidator("Validator", "D2", 0, 0);
+        const validatorIndex = await validatorService.getValidatorId(validator.address);
+        const signature1 = await getValidatorIdSignature(validatorIndex, nodeAddress);
+        await validatorService.connect(validator).linkNodeAddress(nodeAddress.address, signature1);
     });
 
     describe("on initialized contracts", async () => {
         beforeEach(async () => {
-            await schainsInternal.initializeSchain("BobSchain", holder, 10, 2);
-            await schainsInternal.initializeSchain("DavidSchain", holder, 10, 4);
-            await schainsInternal.initializeSchain("JacobSchain", holder, 10, 8);
+            await schainsInternal.initializeSchain("BobSchain", holder.address, 10, 2);
+            await schainsInternal.initializeSchain("DavidSchain", holder.address, 10, 4);
+            await schainsInternal.initializeSchain("JacobSchain", holder.address, 10, 8);
             const pubKey = ec.keyFromPrivate(String(privateKeys[3]).slice(2)).getPublic();
             await nodes.createNode(
-                nodeAddress,
+                nodeAddress.address,
                 {
                     port: 8545,
                     nonce: 0,
@@ -81,7 +118,7 @@ contract("Pricing", ([owner, holder, validator, nodeAddress]) => {
                 });
 
             await nodes.createNode(
-                nodeAddress,
+                nodeAddress.address,
                 {
                     port: 8545,
                     nonce: 0,
@@ -93,7 +130,7 @@ contract("Pricing", ([owner, holder, validator, nodeAddress]) => {
                 });
 
             await nodes.createNode(
-                nodeAddress,
+                nodeAddress.address,
                 {
                     port: 8545,
                     nonce: 0,
@@ -105,7 +142,7 @@ contract("Pricing", ([owner, holder, validator, nodeAddress]) => {
                 });
 
             await nodes.createNode(
-                nodeAddress,
+                nodeAddress.address,
                 {
                     port: 8545,
                     nonce: 0,
@@ -119,24 +156,24 @@ contract("Pricing", ([owner, holder, validator, nodeAddress]) => {
         });
 
         it("should increase number of schains", async () => {
-            const numberOfSchains = new BigNumber(await schainsInternal.numberOfSchains());
-            assert(numberOfSchains.isEqualTo(3));
+            const numberOfSchains = await schainsInternal.numberOfSchains();
+            numberOfSchains.should.be.equal(3);
         });
 
         it("should increase number of nodes", async () => {
-            const numberOfNodes = new BigNumber(await nodes.getNumberOfNodes());
-            assert(numberOfNodes.isEqualTo(4));
+            const numberOfNodes = await nodes.getNumberOfNodes();
+            numberOfNodes.should.be.equal(4);
         });
 
         describe("on existing nodes and schains", async () => {
-            const bobSchainHash = web3.utils.soliditySha3("BobSchain");
-            const davidSchainHash = web3.utils.soliditySha3("DavidSchain");
-            const jacobSchainHash = web3.utils.soliditySha3("JacobSchain");
+            const bobSchainHash = stringValue(web3.utils.soliditySha3("BobSchain"));
+            const davidSchainHash = stringValue(web3.utils.soliditySha3("DavidSchain"));
+            const jacobSchainHash = stringValue(web3.utils.soliditySha3("JacobSchain"));
 
-            const johnNodeHash = web3.utils.soliditySha3("John");
-            const michaelNodeHash = web3.utils.soliditySha3("Michael");
-            const danielNodeHash = web3.utils.soliditySha3("Daniel");
-            const stevenNodeHash = web3.utils.soliditySha3("Steven");
+            const johnNodeHash = stringValue(web3.utils.soliditySha3("John"));
+            const michaelNodeHash = stringValue(web3.utils.soliditySha3("Michael"));
+            const danielNodeHash = stringValue(web3.utils.soliditySha3("Daniel"));
+            const stevenNodeHash = stringValue(web3.utils.soliditySha3("Steven"));
 
             beforeEach(async () => {
 
@@ -153,7 +190,7 @@ contract("Pricing", ([owner, holder, validator, nodeAddress]) => {
                     if (await nodes.isNodeActive(i)) {
                         const getSchainIdsForNode = await schainsInternal.getSchainIdsForNode(i);
                         for (const schain of getSchainIdsForNode) {
-                            const partOfNode = (await schainsInternal.getSchainsPartOfNode(schain)).toNumber();
+                            const partOfNode = await schainsInternal.getSchainsPartOfNode(schain);
                             const isNodeLeft = await nodes.isNodeLeft(i);
                             if (partOfNode !== 0  && !isNodeLeft) {
                                 sumNode += partOfNode;
@@ -166,19 +203,19 @@ contract("Pricing", ([owner, holder, validator, nodeAddress]) => {
 
             it("should check load percentage of network", async () => {
                 const newLoadPercentage = Math.floor(await getLoadCoefficient() * 100);
-                const loadPercentage = new BigNumber(await pricing.getTotalLoadPercentage()).toNumber();
+                const loadPercentage = await pricing.getTotalLoadPercentage();
                 loadPercentage.should.be.equal(newLoadPercentage);
             });
 
             it("should check total number of nodes", async () => {
                 await pricing.initNodes();
-                const totalNodes = new BigNumber(await pricing.totalNodes());
-                assert(totalNodes.isEqualTo(4));
+                const totalNodes = await pricing.totalNodes();
+                totalNodes.should.be.equal(4);
             });
 
             it("should not change price when no any new nodes have been added", async () => {
                 await pricing.initNodes();
-                skipTime(web3, 61);
+                await skipTime(ethers, 61);
                 await pricing.adjustPrice()
                     .should.be.eventually.rejectedWith("No changes to node supply");
             });
@@ -216,7 +253,7 @@ contract("Pricing", ([owner, holder, validator, nodeAddress]) => {
                 it("should change price when new active node has been added", async () => {
                     const pubKey = ec.keyFromPrivate(String(privateKeys[3]).slice(2)).getPublic();
                     await nodes.createNode(
-                        nodeAddress,
+                        nodeAddress.address,
                         {
                             port: 8545,
                             nonce: 0,
@@ -227,7 +264,7 @@ contract("Pricing", ([owner, holder, validator, nodeAddress]) => {
                             domainName: "somedomain.name"
                         });
                     const MINUTES_PASSED = 2;
-                    skipTime(web3, lastUpdated + MINUTES_PASSED * 60 - await currentTime(web3));
+                    await skipTime(ethers, lastUpdated + MINUTES_PASSED * 60 - await currentTime(web3));
 
                     await pricing.adjustPrice();
                     const receivedPrice = (await pricing.price()).toNumber();
@@ -248,7 +285,7 @@ contract("Pricing", ([owner, holder, validator, nodeAddress]) => {
                             let totalPartOfNode = 0;
                             numberOfSchains = 0;
                             for (const schain of getSchainIdsForNode) {
-                                const partOfNode = (await schainsInternal.getSchainsPartOfNode(schain)).toNumber();
+                                const partOfNode = await schainsInternal.getSchainsPartOfNode(schain);
                                 ++numberOfSchains;
                                 totalPartOfNode += partOfNode;
                             }
@@ -266,7 +303,7 @@ contract("Pricing", ([owner, holder, validator, nodeAddress]) => {
                     await nodes.completeExit(nodeToExit);
 
                     const MINUTES_PASSED = 2;
-                    skipTime(web3, lastUpdated + MINUTES_PASSED * 60 - await currentTime(web3));
+                    await skipTime(ethers, lastUpdated + MINUTES_PASSED * 60 - await currentTime(web3));
 
                     await pricing.adjustPrice();
                     const receivedPrice = (await pricing.price()).toNumber();
@@ -280,7 +317,7 @@ contract("Pricing", ([owner, holder, validator, nodeAddress]) => {
                 it("should set price to min of too many minutes passed and price is less than min", async () => {
                     const pubKey = ec.keyFromPrivate(String(privateKeys[3]).slice(2)).getPublic();
                     await nodes.createNode(
-                        nodeAddress,
+                        nodeAddress.address,
                         {
                             port: 8545,
                             nonce: 0,
@@ -292,7 +329,7 @@ contract("Pricing", ([owner, holder, validator, nodeAddress]) => {
                         });
 
                     const MINUTES_PASSED = 30;
-                    skipTime(web3, lastUpdated + MINUTES_PASSED * 60 - await currentTime(web3));
+                    await skipTime(ethers, lastUpdated + MINUTES_PASSED * 60 - await currentTime(web3));
 
                     await pricing.adjustPrice();
                     const receivedPrice = (await pricing.price()).toNumber();

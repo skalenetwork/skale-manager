@@ -29,7 +29,7 @@ async function getValidatorIdSignature(validatorId: BigNumber, signer: SignerWit
         let signature = await web3.eth.sign(hash, signer.address);
         signature = (
             signature.slice(130) === "00" ?
-            signature.slice(0, 130) + "1b" :            
+            signature.slice(0, 130) + "1b" :
             (
                 signature.slice(130) === "01" ?
                 signature.slice(0, 130) + "1c" :
