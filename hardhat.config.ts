@@ -30,7 +30,7 @@ function addKey(key: string | undefined) {
   if (key) {
     privateKeys.push(key);
   } else {
-    console.log("Generation of private keys are not implemented");
+    console.log("Generation of private keys is not implemented");
     process.exit(1);
   }
 }
