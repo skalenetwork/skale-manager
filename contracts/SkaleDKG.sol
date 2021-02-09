@@ -321,6 +321,39 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         KeyStorage(contractManager.getContract("KeyStorage")).deleteKey(schainId);
     }
 
+    function setStartAlrightTimestamp(bytes32 schainId) external allow("SkaleDKG") {
+        startAlrightTimestamp[schainId] = now;
+    }
+
+    function finalizeSlashing(bytes32 schainId, uint badNode) external allow("SkaleDKG") {
+        NodeRotation nodeRotation = NodeRotation(contractManager.getContract("NodeRotation"));
+        SchainsInternal schainsInternal = SchainsInternal(
+            contractManager.getContract("SchainsInternal")
+        );
+        emit BadGuy(badNode);
+        emit FailedDKG(schainId);
+
+        if (schainsInternal.isAnyFreeNode(schainId)) {
+            uint newNode = nodeRotation.rotateNode(
+                badNode,
+                schainId,
+                false
+            );
+            emit NewGuy(newNode);
+        } else {
+            _openChannel(schainId);
+            schainsInternal.removeNodeFromSchain(
+                badNode,
+                schainId
+            );
+            channels[schainId].active = false;
+        }
+        Punisher(contractManager.getPunisher()).slash(
+            Nodes(contractManager.getContract("Nodes")).getValidatorId(badNode),
+            SlashingTable(contractManager.getContract("SlashingTable")).getPenalty("FailedDKG")
+        );
+    }
+
     function getChannelStartedTime(bytes32 schainId) external view returns (uint) {
         return channels[schainId].startedBlockTimestamp;
     }
@@ -362,10 +395,6 @@ contract SkaleDKG is Permissions, ISkaleDKG {
 
     function isLastDKGSuccessful(bytes32 schainId) external override view returns (bool) {
         return channels[schainId].startedBlockTimestamp <= lastSuccesfulDKG[schainId];
-    }
-
-    function setStartAlrightTimestamp(bytes32 schainId) external allow("SkaleDKG") {
-        startAlrightTimestamp[schainId] = now;
     }
 
     /**
@@ -461,11 +490,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             complaints[schainId].isResponse;
     }
 
-    function initialize(address contractsAddress) public override initializer {
-        Permissions.initialize(contractsAddress);
-    }
-
-    function isNodeBroadcasted(bytes32 schainId, uint nodeIndex) public view returns (bool) {
+    function isNodeBroadcasted(bytes32 schainId, uint nodeIndex) external view returns (bool) {
         (uint index, bool check) = checkAndReturnIndexInGroup(schainId, nodeIndex, false);
         return check && dkgProcess[schainId].broadcasted[index];
     }
@@ -473,73 +498,9 @@ contract SkaleDKG is Permissions, ISkaleDKG {
     /**
      * @dev Checks whether all data has been received by node.
      */
-    function isAllDataReceived(bytes32 schainId, uint nodeIndex) public view returns (bool) {
+    function isAllDataReceived(bytes32 schainId, uint nodeIndex) external view returns (bool) {
         (uint index, bool check) = checkAndReturnIndexInGroup(schainId, nodeIndex, false);
         return check && dkgProcess[schainId].completed[index];
-    }
-
-    function isEveryoneBroadcasted(bytes32 schainId) public view returns (bool) {
-        return channels[schainId].n == dkgProcess[schainId].numberOfBroadcasted;
-    }
-
-    function finalizeSlashing(bytes32 schainId, uint badNode) external allow("SkaleDKG") {
-        NodeRotation nodeRotation = NodeRotation(contractManager.getContract("NodeRotation"));
-        SchainsInternal schainsInternal = SchainsInternal(
-            contractManager.getContract("SchainsInternal")
-        );
-        emit BadGuy(badNode);
-        emit FailedDKG(schainId);
-
-        if (schainsInternal.isAnyFreeNode(schainId)) {
-            uint newNode = nodeRotation.rotateNode(
-                badNode,
-                schainId,
-                false
-            );
-            emit NewGuy(newNode);
-        } else {
-            _openChannel(schainId);
-            schainsInternal.removeNodeFromSchain(
-                badNode,
-                schainId
-            );
-            channels[schainId].active = false;
-        }
-        Punisher(contractManager.getPunisher()).slash(
-            Nodes(contractManager.getContract("Nodes")).getValidatorId(badNode),
-            SlashingTable(contractManager.getContract("SlashingTable")).getPenalty("FailedDKG")
-        );
-    }
-
-    function _refundGasBySchain(bytes32 schainId, uint nodeIndex, uint spentGas, bool isDebt) internal {
-        Wallets(payable(contractManager.getContract("Wallets")))
-        .refundGasBySchain(schainId, nodeIndex, spentGas, isDebt);
-    }
-
-    function _refundGasByValidatorToSchain(uint validatorId, bytes32 schainId) internal {
-        Wallets(payable(contractManager.getContract("Wallets")))
-        .refundGasByValidatorToSchain(validatorId, schainId);
-    }
-
-    function _getComplaintTimelimit() internal view returns (uint) {
-        return ConstantsHolder(contractManager.getConstantsHolder()).complaintTimelimit();
-    }
-
-    function checkAndReturnIndexInGroup(
-        bytes32 schainId,
-        uint nodeIndex,
-        bool revertCheck
-    )
-        public
-        view
-        returns (uint, bool)
-    {
-        uint index = SchainsInternal(contractManager.getContract("SchainsInternal"))
-            .getNodeIndexInGroup(schainId, nodeIndex);
-        if (index >= channels[schainId].n && revertCheck) {
-            revert("Node is not in this group");
-        }
-        return (index, index < channels[schainId].n);
     }
 
     function hashData(
@@ -564,6 +525,35 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             );
         }
         return keccak256(data);
+    }
+
+    function initialize(address contractsAddress) public override initializer {
+        Permissions.initialize(contractsAddress);
+    }
+
+    function isEveryoneBroadcasted(bytes32 schainId) public view returns (bool) {
+        return channels[schainId].n == dkgProcess[schainId].numberOfBroadcasted;
+    }
+
+    function checkAndReturnIndexInGroup(
+        bytes32 schainId,
+        uint nodeIndex,
+        bool revertCheck
+    )
+        public
+        view
+        returns (uint, bool)
+    {
+        uint index = SchainsInternal(contractManager.getContract("SchainsInternal"))
+            .getNodeIndexInGroup(schainId, nodeIndex);
+        if (index >= channels[schainId].n && revertCheck) {
+            revert("Node is not in this group");
+        }
+        return (index, index < channels[schainId].n);
+    }
+
+    function _getComplaintTimelimit() private view returns (uint) {
+        return ConstantsHolder(contractManager.getConstantsHolder()).complaintTimelimit();
     }
 
     function _openChannel(bytes32 schainId) private {

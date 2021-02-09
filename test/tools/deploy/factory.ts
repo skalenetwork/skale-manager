@@ -64,7 +64,7 @@ function deployWithConstructorFunctionFactory(
 
 function deployWithLibraryFunctionFactory(
     contractName: string,
-    libraryNames: Array<string>,
+    libraryNames: string[],
     deployDependencies: (contractManager: ContractManager) => Promise<void>
         = async (contractManager: ContractManager) => undefined
     ): any {
@@ -89,9 +89,9 @@ async function _getLinkedContractFactory(contractName: string, libraries: any) {
     return ContractFactory;
 }
 
-async function _deployLibraries(libraryNames: Array<string>) {
-    let libraries: any = {};
-    for (let libraryName of libraryNames) {
+async function _deployLibraries(libraryNames: string[]) {
+    const libraries: any = {};
+    for (const libraryName of libraryNames) {
         libraries[libraryName] = await _deployLibrary(libraryName);
     }
     return libraries;
@@ -103,7 +103,7 @@ async function _deployLibrary(libraryName: string) {
     await library.deployed();
     return library.address;
 }
-    
+
 function _linkBytecode(artifact: Artifact, libraries: { [x: string]: any }) {
     let bytecode = artifact.bytecode;
     for (const [, fileReferences] of Object.entries(artifact.linkReferences)) {
@@ -123,5 +123,5 @@ function _linkBytecode(artifact: Artifact, libraries: { [x: string]: any }) {
     return bytecode;
 }
 
-export { deployFunctionFactory, deployWithConstructorFunctionFactory, deployWithConstructor, 
+export { deployFunctionFactory, deployWithConstructorFunctionFactory, deployWithConstructor,
          defaultDeploy, deployWithLibraryFunctionFactory };

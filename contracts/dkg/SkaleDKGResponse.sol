@@ -51,6 +51,7 @@ library SkaleDKGResponse {
     {
         uint gasTotal = gasleft();
         SkaleDKG skaleDKG = SkaleDKG(contractManager.getContract("SkaleDKG"));
+        // slither-disable-next-line unused-return
         skaleDKG.checkAndReturnIndexInGroup(schainId, fromNodeIndex, true);
         require(complaints[schainId].nodeToComplaint == fromNodeIndex, "Not this Node");
         require(complaints[schainId].isResponse, "Have not submitted pre-response data");
