@@ -35,12 +35,20 @@ function addKey(key: string | undefined) {
   }
 }
 
+function getCustomUrl(url: string | undefined) {
+  if (url) {
+    return url;
+  } else {
+    return "http://127.0.0.1:8545"
+  }
+}
+
 function getCustomPrivateKey(privateKey: string | undefined) {
   if (privateKey) {
-    return privateKey;
+    return [privateKey];
   } else {
     console.log("Custom private key is not set");
-    return "";
+    return [];
   }
 }
 
@@ -103,8 +111,8 @@ const config: HardhatUserConfig = {
       ],
     },
     custom: {
-      url: process.env.ENDPOINT,
-      accounts: [getCustomPrivateKey(process.env.PRIVATE_KEY)],
+      url: getCustomUrl(process.env.ENDPOINT),
+      accounts: getCustomPrivateKey(process.env.PRIVATE_KEY),
       gasPrice: getGasPrice(process.env.GASPRICE)
     }
   },
