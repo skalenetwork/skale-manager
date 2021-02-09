@@ -4,7 +4,7 @@ import { deployWithConstructor, deployWithConstructorFunctionFactory } from "../
 
 const name = "TimeHelpers";
 
-export const deployTimeHelpers: (contractManager: ContractManager) => Promise<TimeHelpers> 
+export const deployTimeHelpers: (contractManager: ContractManager) => Promise<TimeHelpers>
     = deployWithConstructorFunctionFactory(
         name,
         async (_: ContractManager) => {

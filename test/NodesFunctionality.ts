@@ -38,7 +38,7 @@ async function getValidatorIdSignature(validatorId: BigNumber, signer: SignerWit
         let signature = await web3.eth.sign(hash, signer.address);
         signature = (
             signature.slice(130) === "00" ?
-            signature.slice(0, 130) + "1b" :            
+            signature.slice(0, 130) + "1b" :
             (
                 signature.slice(130) === "01" ?
                 signature.slice(0, 130) + "1c" :
@@ -80,8 +80,8 @@ describe("NodesFunctionality", () => {
 
         await validatorService.connect(validator).registerValidator("Validator", "D2", 0, 0);
         const validatorIndex = await validatorService.getValidatorId(validator.address);
-        let signature1 = await getValidatorIdSignature(validatorIndex, nodeAddress);
-        let signature2 = await getValidatorIdSignature(validatorIndex, nodeAddress2);
+        const signature1 = await getValidatorIdSignature(validatorIndex, nodeAddress);
+        const signature2 = await getValidatorIdSignature(validatorIndex, nodeAddress2);
         await validatorService.connect(validator).linkNodeAddress(nodeAddress.address, signature1);
         await validatorService.connect(validator).linkNodeAddress(nodeAddress2.address, signature2);
     });
@@ -230,7 +230,7 @@ describe("NodesFunctionality", () => {
         it("should delete first node", async () => {
             await nodes.initExit(0);
             await nodes.completeExit(0);
-            
+
             (await nodes.numberOfActiveNodes()).should.be.equal(1);
         });
 

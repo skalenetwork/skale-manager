@@ -18,7 +18,7 @@ async function getValidatorIdSignature(validatorId: BigNumberish, signer: Signer
         let signature = await web3.eth.sign(hash, signer.address);
         signature = (
             signature.slice(130) === "00" ?
-            signature.slice(0, 130) + "1b" :            
+            signature.slice(0, 130) + "1b" :
             (
                 signature.slice(130) === "01" ?
                 signature.slice(0, 130) + "1c" :
@@ -55,7 +55,7 @@ describe("createSchains", () => {
 
         await validatorService.connect(validator).registerValidator("Validator", "", 0, 0);
         await validatorService.disableWhitelist();
-        let signature = await getValidatorIdSignature(validatorId, node);
+        const signature = await getValidatorIdSignature(validatorId, node);
         await validatorService.connect(validator).linkNodeAddress(node.address, signature);
         await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), owner.address);
 

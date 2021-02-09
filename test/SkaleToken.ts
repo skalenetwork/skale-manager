@@ -70,7 +70,7 @@ describe("SkaleToken", () => {
   it("owner should be equal owner", async () => {
     await skaleToken.hasRole(await skaleToken.DEFAULT_ADMIN_ROLE(), owner.address).should.be.eventually.true;
   });
-  
+
   it("the owner should have all the tokens when the Contract is created", async () => {
     const balance = await skaleToken.balanceOf(owner.address);
     balance.should.be.equal(toWei(TOTAL_SUPPLY));

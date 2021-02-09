@@ -52,7 +52,7 @@ async function getValidatorIdSignature(validatorId: BigNumber, signer: SignerWit
         let signature = await web3.eth.sign(hash, signer.address);
         signature = (
             signature.slice(130) === "00" ?
-            signature.slice(0, 130) + "1b" :            
+            signature.slice(0, 130) + "1b" :
             (
                 signature.slice(130) === "01" ?
                 signature.slice(0, 130) + "1c" :
@@ -74,7 +74,7 @@ function stringValue(value: string | null) {
 }
 
 function hexValue(value: string) {
-    if (value.length % 2 == 0) {
+    if (value.length % 2 === 0) {
         return value;
     } else {
         return "0" + value;
@@ -500,8 +500,8 @@ describe("SkaleManager", () => {
                             5, // lifetime
                             3, // type of schain
                             0, // nonce
-                            "d2"])); // name                    
-                    
+                            "d2"])); // name
+
                     const schain = await schainsInternal.schains(d2SchainId);
                     schain[0].should.be.equal("d2");
                 });

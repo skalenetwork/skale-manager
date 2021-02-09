@@ -40,7 +40,7 @@ const EC = elliptic.ec;
 const ec = new EC("secp256k1");
 
 function hexValue(value: string) {
-    if (value.length % 2 == 0) {
+    if (value.length % 2 === 0) {
         return value;
     } else {
         return "0" + value;
@@ -49,14 +49,14 @@ function hexValue(value: string) {
 
 function findEvent(events: Event[] | undefined, eventName: string) {
     if (events) {
-        const target = events.find((event) => event.event == eventName);
+        const target = events.find((event) => event.event === eventName);
         if (target) {
             return target;
         } else {
-            throw "Event was not emitted";
+            throw new Error("Event was not emitted");
         }
     } else {
-        throw "Event was not emitted";
+        throw new Error("Event was not emitted");
     }
 }
 
@@ -201,12 +201,12 @@ describe("Bounty", () => {
         response.gasUsed.should.be.below(12e6 / 25);
 
         await skipTimeToDate(ethers, 29, 9); // October 29th
-        
+
         let bounty = 0;
         const bountyReceivedIndex = 3;
         for (let i = 0; i < nodesAmount; ++i) {
             response = await (await skaleManagerContract.connect(validator).getBounty(i)).wait();
-            const bountyReceivedEvent = findEvent(response.events, "BountyReceived");            
+            const bountyReceivedEvent = findEvent(response.events, "BountyReceived");
             bountyReceivedEvent.event?.should.be.equal("BountyReceived");
             const _bounty = bountyReceivedEvent.args?.bounty.div(ten18).toNumber();
             if (bounty > 0) {
@@ -219,7 +219,7 @@ describe("Bounty", () => {
         let bounty2 = 0;
         for (let i = 0; i < nodesAmount2; ++i) {
             response = await (await skaleManagerContract.connect(validator2).getBounty(nodesAmount + i)).wait();
-            const bountyReceivedEvent = findEvent(response.events, "BountyReceived");            
+            const bountyReceivedEvent = findEvent(response.events, "BountyReceived");
             bountyReceivedEvent.event?.should.be.equal("BountyReceived");
             const _bounty = bountyReceivedEvent.args?.bounty.div(ten18).toNumber();
             if (i > 0) {
@@ -233,24 +233,24 @@ describe("Bounty", () => {
         bounty2.should.be.almost(getBountyForEpoch(0) / 2);
 
         await skipTimeToDate(ethers, 29, 10); // November 29th
-        
+
         bounty = 0;
         for (let i = 0; i < nodesAmount; ++i) {
             response = await (await skaleManagerContract.connect(validator).getBounty(i)).wait();
-            const bountyReceivedEvent = findEvent(response.events, "BountyReceived");            
+            const bountyReceivedEvent = findEvent(response.events, "BountyReceived");
             bountyReceivedEvent.event?.should.be.equal("BountyReceived");
             const _bounty = bountyReceivedEvent.args?.bounty.div(ten18).toNumber();
             if (bounty > 0) {
                 bounty.should.be.equal(_bounty);
             } else {
-                bounty = _bounty;            
+                bounty = _bounty;
             }
         }
 
         bounty2 = 0;
         for (let i = 0; i < nodesAmount2; ++i) {
             response = await (await skaleManagerContract.connect(validator2).getBounty(nodesAmount + i)).wait();
-            const bountyReceivedEvent = findEvent(response.events, "BountyReceived");            
+            const bountyReceivedEvent = findEvent(response.events, "BountyReceived");
             bountyReceivedEvent.event?.should.be.equal("BountyReceived");
             const _bounty = bountyReceivedEvent.args?.bounty.div(ten18).toNumber();
             if (i > 0) {
@@ -267,7 +267,7 @@ describe("Bounty", () => {
 
         for (let i = 0; i < nodesAmount; ++i) {
             response = await (await skaleManagerContract.connect(validator).getBounty(i)).wait();
-            const bountyReceivedEvent = findEvent(response.events, "BountyReceived");            
+            const bountyReceivedEvent = findEvent(response.events, "BountyReceived");
             bountyReceivedEvent.event?.should.be.equal("BountyReceived");
             const _bounty = bountyReceivedEvent.args?.bounty.div(ten18).toNumber();
             _bounty.should.be.equal(0);
@@ -276,7 +276,7 @@ describe("Bounty", () => {
         bounty2 = 0;
         for (let i = 0; i < nodesAmount; ++i) {
             response = await (await skaleManagerContract.connect(validator2).getBounty(nodesAmount + i)).wait();
-            const bountyReceivedEvent = findEvent(response.events, "BountyReceived");            
+            const bountyReceivedEvent = findEvent(response.events, "BountyReceived");
             bountyReceivedEvent.event?.should.be.equal("BountyReceived");
             const _bounty = bountyReceivedEvent.args?.bounty.div(ten18).toNumber();
             if (i > 0) {

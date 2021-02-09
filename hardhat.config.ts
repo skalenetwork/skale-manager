@@ -4,8 +4,9 @@ import "@nomiclabs/hardhat-web3";
 import "@openzeppelin/hardhat-upgrades";
 import "hardhat-typechain";
 import "solidity-coverage";
+import * as dotenv from "dotenv"
 
-require('dotenv').config();
+dotenv.config();
 
 task("erc1820", "Deploy erc1820", async (_, { web3 }) => {
   if (await web3.eth.getCode("0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24") === "0x") {

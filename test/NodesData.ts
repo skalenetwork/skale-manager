@@ -31,7 +31,7 @@ async function getValidatorIdSignature(validatorId: BigNumber, signer: SignerWit
         let signature = await web3.eth.sign(hash, signer.address);
         signature = (
             signature.slice(130) === "00" ?
-            signature.slice(0, 130) + "1b" :            
+            signature.slice(0, 130) + "1b" :
             (
                 signature.slice(130) === "01" ?
                 signature.slice(0, 130) + "1c" :
@@ -79,7 +79,7 @@ describe("NodesData", () => {
 
         await validatorService.connect(validator).registerValidator("Validator", "D2", 0, 0);
         const validatorIndex = await validatorService.getValidatorId(validator.address);
-        let signature1 = await getValidatorIdSignature(validatorIndex, nodeAddress);
+        const signature1 = await getValidatorIdSignature(validatorIndex, nodeAddress);
         await validatorService.connect(validator).linkNodeAddress(nodeAddress.address, signature1);
         await skaleManagerMock.grantRole(await skaleManagerMock.ADMIN_ROLE(), admin.address);
     });
