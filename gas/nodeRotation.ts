@@ -38,7 +38,136 @@ contract("createSchains", ([owner, validator, node]) => {
         await contractManager.setContractsAddress("SkaleDKG", skaleDKG.address);
     });
 
-    it("gas based on nodes amount", async () => {
+    it("64 node rotations on 17 nodes", async () => {
+        const validatorId = 1;
+
+        await validatorService.registerValidator("Validator", "", 0, 0, {from: validator});
+        await validatorService.disableWhitelist();
+        let signature = await web3.eth.sign(web3.utils.soliditySha3(validatorId.toString()), node);
+        signature = (signature.slice(130) === "00" ? signature.slice(0, 130) + "1b" :
+                (signature.slice(130) === "01" ? signature.slice(0, 130) + "1c" : signature));
+        await validatorService.linkNodeAddress(node, signature, {from: validator});
+        await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), owner);
+
+        const nodesAmount = 16;
+        const publicKey = ec.keyFromPrivate(String(privateKeys[2]).slice(2)).getPublic();
+        for (let nodeId = 0; nodeId < nodesAmount; ++nodeId) {
+            await skaleManager.createNode(
+                1, // port
+                0, // nonce
+                "0x7f" + ("000000" + nodeId.toString(16)).slice(-6), // ip
+                "0x7f" + ("000000" + nodeId.toString(16)).slice(-6), // public ip
+                ["0x" + publicKey.x.toString('hex'), "0x" + publicKey.y.toString('hex')], // public key
+                "d2-" + nodeId, // name)
+                "somedomain.name",
+            {from: node});
+        }
+
+        const numberOfSchains = 64;
+        for (let schainNumber = 0; schainNumber < numberOfSchains; schainNumber++) {
+            const result = await schains.addSchainByFoundation(0, 1, 0, "schain-" + schainNumber, owner);
+            await skaleDKG.setSuccesfulDKGPublic(
+                web3.utils.soliditySha3("schain-" + schainNumber)
+            );
+            console.log("create", schainNumber + 1, "schain on", nodesAmount, "nodes:\t", result.receipt.gasUsed, "gu");
+        }
+
+        await skaleManager.createNode(
+            1, // port
+            0, // nonce
+            "0x7f" + ("000000" + Number(16).toString(16)).slice(-6), // ip
+            "0x7f" + ("000000" + Number(16).toString(16)).slice(-6), // public ip
+            ["0x" + publicKey.x.toString('hex'), "0x" + publicKey.y.toString('hex')], // public key
+            "d2-16", // name)
+            "somedomain.name",
+        {from: node});
+
+        const gasLimit = 12e6;
+        let rotIndex = Math.floor(Math.random() * nodesAmount);
+        const schainIds = await schainsInternal.getSchainIdsForNode(rotIndex);
+        console.log("Rotation for node", rotIndex);
+        console.log("Will process", schainIds.length, "rotations");
+        const gas = [];
+        for (let i = 0; i < schainIds.length; i++) {
+            const result = await skaleManager.nodeExit(rotIndex, {from: node});
+            console.log("" + (i + 1) + "", "Rotation on", nodesAmount, "nodes:\t", result.receipt.gasUsed, "gu");
+            gas.push(result.receipt.gasUsed);
+            if (result.receipt.gasUsed > gasLimit) {
+                break;
+            }
+            await skaleDKG.setSuccesfulDKGPublic(
+                schainIds[schainIds.length - i - 1]
+            );
+        }
+    });
+
+    it("max node rotation on 17 nodes", async () => {
+        const validatorId = 1;
+
+        await validatorService.registerValidator("Validator", "", 0, 0, {from: validator});
+        await validatorService.disableWhitelist();
+        let signature = await web3.eth.sign(web3.utils.soliditySha3(validatorId.toString()), node);
+        signature = (signature.slice(130) === "00" ? signature.slice(0, 130) + "1b" :
+                (signature.slice(130) === "01" ? signature.slice(0, 130) + "1c" : signature));
+        await validatorService.linkNodeAddress(node, signature, {from: validator});
+        await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), owner);
+
+        const nodesAmount = 16;
+        const publicKey = ec.keyFromPrivate(String(privateKeys[2]).slice(2)).getPublic();
+        for (let nodeId = 0; nodeId < nodesAmount; ++nodeId) {
+            await skaleManager.createNode(
+                1, // port
+                0, // nonce
+                "0x7f" + ("000000" + nodeId.toString(16)).slice(-6), // ip
+                "0x7f" + ("000000" + nodeId.toString(16)).slice(-6), // public ip
+                ["0x" + publicKey.x.toString('hex'), "0x" + publicKey.y.toString('hex')], // public key
+                "d2-" + nodeId, // name)
+                "somedomain.name",
+            {from: node});
+        }
+
+        const numberOfSchains = 128;
+        for (let schainNumber = 0; schainNumber < numberOfSchains; schainNumber++) {
+            const result = await schains.addSchainByFoundation(0, 1, 0, "schain-" + schainNumber, owner);
+            await skaleDKG.setSuccesfulDKGPublic(
+                web3.utils.soliditySha3("schain-" + schainNumber)
+            );
+            console.log("create", schainNumber + 1, "schain on", nodesAmount, "nodes:\t", result.receipt.gasUsed, "gu");
+        }
+
+        // await schains.addSchainByFoundation(0, 1, 0, "schain-128", owner)
+        //     .should.be.eventually.rejectedWith("Not enough nodes to create Schain");
+
+        await skaleManager.createNode(
+            1, // port
+            0, // nonce
+            "0x7f" + ("000000" + Number(16).toString(16)).slice(-6), // ip
+            "0x7f" + ("000000" + Number(16).toString(16)).slice(-6), // public ip
+            ["0x" + publicKey.x.toString('hex'), "0x" + publicKey.y.toString('hex')], // public key
+            "d2-16", // name)
+            "somedomain.name",
+        {from: node});
+
+        const gasLimit = 12e6;
+        let rotIndex = Math.floor(Math.random() * nodesAmount);
+        const schainIds = await schainsInternal.getSchainIdsForNode(rotIndex);
+        console.log("Rotation for node", rotIndex);
+        console.log("Will process", schainIds.length, "rotations");
+        const gas = [];
+        for (let i = 0; i < schainIds.length; i++) {
+            const result = await skaleManager.nodeExit(rotIndex, {from: node});
+            console.log("" + (i + 1) + "", "Rotation on", nodesAmount, "nodes:\t", result.receipt.gasUsed, "gu");
+            gas.push(result.receipt.gasUsed);
+            if (result.receipt.gasUsed > gasLimit) {
+                break;
+            }
+            await skaleDKG.setSuccesfulDKGPublic(
+                schainIds[schainIds.length - i - 1]
+            );
+        }
+    });
+
+    it("random rotation on dynamically creating schains", async () => {
         const validatorId = 1;
 
         await validatorService.registerValidator("Validator", "", 0, 0, {from: validator});

@@ -23,9 +23,8 @@
 pragma solidity 0.6.10;
 
 import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
-import "@nomiclabs/buidler/console.sol";
 
-// import "./Random.sol";
+import "./Random.sol";
 
 /**
  * @title SegmentTree
@@ -61,7 +60,7 @@ import "@nomiclabs/buidler/console.sol";
  * +----+----+----+---+---+----+----+---+---+---+---+---+---+---+---+
  */
 library SegmentTree {
-    // using Random for Random.RandomGenerator;
+    using Random for Random.RandomGenerator;
     using SafeMath for uint;    
 
     struct Tree {
@@ -263,12 +262,12 @@ library SegmentTree {
      */
     function getRandomNonZeroElementFromPlaceToLast(
         Tree storage self,
-        uint place
-        // Random.RandomGenerator memory randomGenerator
+        uint place,
+        Random.RandomGenerator memory randomGenerator
     )
         internal
         view
-        returns (uint, uint)
+        returns (uint)
     {
         require(_correctPlace(self, place), "Incorrect place");
 
@@ -277,9 +276,8 @@ library SegmentTree {
         uint rightBound = getSize(self);
         uint currentFrom = place.sub(1);
         uint currentSum = sumFromPlaceToLast(self, place);
-        uint randomBeakon = uint(keccak256(abi.encodePacked(uint(blockhash(block.number.sub(1))), place, currentSum)));
         if (currentSum == 0) {
-            return (0, 0);
+            return 0;
         }
         while(leftBound.add(1) < rightBound) {
             if (_middle(leftBound, rightBound) <= currentFrom) {
@@ -288,10 +286,7 @@ library SegmentTree {
             } else {
                 uint rightSum = self.tree[_right(vertex).sub(1)];
                 uint leftSum = currentSum.sub(rightSum);
-                (bool isLeftWay, uint randomBeakon2) =
-                    _randomWay(randomBeakon, leftSum, rightSum);
-                randomBeakon = randomBeakon2;
-                if (isLeftWay) {
+                if (randomGenerator.random(currentSum) < leftSum) {
                     // go left
                     vertex = _left(vertex);
                     rightBound = _middle(leftBound, rightBound);
@@ -305,7 +300,7 @@ library SegmentTree {
                 }
             }
         }
-        return (leftBound.add(1), randomBeakon);
+        return leftBound.add(1);
     }
 
     // /**

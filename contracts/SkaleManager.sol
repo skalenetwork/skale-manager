@@ -129,25 +129,25 @@ contract SkaleManager is IERC777Recipient, Permissions {
             permitted = validatorService.getValidatorId(msg.sender) == validatorId;
         }
         require(permitted, "Sender is not permitted to call this function");
-        SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
-        ConstantsHolder constants = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
         nodeRotation.freezeSchains(nodeIndex);
         if (nodes.isNodeActive(nodeIndex)) {
             require(nodes.initExit(nodeIndex), "Initialization of node exit is failed");
         }
         require(nodes.isNodeLeaving(nodeIndex), "Node should be Leaving");
-        bool completed;
-        bool isSchains = false;
-        if (schainsInternal.getActiveSchain(nodeIndex) != bytes32(0)) {
-            completed = nodeRotation.exitFromSchain(nodeIndex);
-            isSchains = true;
-        } else {
-            completed = true;
-        }
+        (bool completed, bool isSchains) = nodeRotation.exitFromSchain(nodeIndex);
         if (completed) {
-            schainsInternal.removeNodeFromAllExceptionSchains(nodeIndex);
+            SchainsInternal(
+                contractManager.getContract("SchainsInternal")
+            ).removeNodeFromAllExceptionSchains(nodeIndex);
             require(nodes.completeExit(nodeIndex), "Finishing of node exit is failed");
-            nodes.changeNodeFinishTime(nodeIndex, now.add(isSchains ? constants.rotationDelay() : 0));
+            nodes.changeNodeFinishTime(
+                nodeIndex,
+                now.add(
+                    isSchains ?
+                    ConstantsHolder(contractManager.getContract("ConstantsHolder")).rotationDelay() :
+                    0
+                )
+            );
             // Monitors monitors = Monitors(contractManager.getContract("Monitors"));
             // monitors.removeCheckedNodes(nodeIndex);
             // monitors.deleteMonitor(nodeIndex);
