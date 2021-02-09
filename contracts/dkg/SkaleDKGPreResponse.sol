@@ -61,26 +61,7 @@ library SkaleDKGPreResponse {
             complaints,
             hashedData
         );
-        // (uint indexOnSchain, ) = skaleDKG.checkAndReturnIndexInGroup(schainId, fromNodeIndex, true);
-        // require(complaints[schainId].nodeToComplaint == fromNodeIndex, "Not this Node");
-        // require(!complaints[schainId].isResponse, "Already submitted pre response data");
-        // require(
-        //     hashedData[schainId][indexOnSchain] == skaleDKG.hashData(secretKeyContribution, verificationVector),
-        //     "Broadcasted Data is not correct"
-        // );
-        // require(
-        //     verificationVector.length == verificationVectorMult.length,
-        //     "Incorrect length of multiplied verification vector"
-        // );
-        // (uint index, ) = skaleDKG.checkAndReturnIndexInGroup(schainId, complaints[schainId].fromNodeToComplaint, true);
-        // require(
-        //     _checkCorrectVectorMultiplication(index, verificationVector, verificationVectorMult),
-        //     "Multiplied verification vector is incorrect"
-        // ); 
         _processPreResponse(secretKeyContribution[index].share, schainId, verificationVectorMult, complaints);
-        // complaints[schainId].keyShare = secretKeyContribution[index].share;
-        // complaints[schainId].sumOfVerVec = _calculateSum(verificationVectorMult);
-        // complaints[schainId].isResponse = true;
         Wallets(payable(contractManager.getContract("Wallets")))
         .refundGasBySchain(schainId, fromNodeIndex, gasTotal - gasleft(), true);
     }

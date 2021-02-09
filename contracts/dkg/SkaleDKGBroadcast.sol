@@ -82,7 +82,9 @@ library SkaleDKGBroadcast {
             secretKeyContribution.length == n,
             "Incorrect number of secret key shares"
         );
-        (uint index, ) = SkaleDKG(contractManager.getContract("SkaleDKG")).checkAndReturnIndexInGroup(schainId, nodeIndex, true);
+        (uint index, ) = SkaleDKG(contractManager.getContract("SkaleDKG")).checkAndReturnIndexInGroup(
+            schainId, nodeIndex, true
+        );
         require(!dkgProcess[schainId].broadcasted[index], "This node has already broadcasted");
         dkgProcess[schainId].broadcasted[index] = true;
         dkgProcess[schainId].numberOfBroadcasted++;
@@ -90,7 +92,9 @@ library SkaleDKGBroadcast {
             // startAlrightTimestamp[schainId] = now;
             SkaleDKG(contractManager.getContract("SkaleDKG")).setStartAlrightTimestamp(schainId);
         }
-        hashedData[schainId][index] = SkaleDKG(contractManager.getContract("SkaleDKG")).hashData(secretKeyContribution, verificationVector);
+        hashedData[schainId][index] = SkaleDKG(contractManager.getContract("SkaleDKG")).hashData(
+            secretKeyContribution, verificationVector
+        );
         KeyStorage(contractManager.getContract("KeyStorage")).adding(schainId, verificationVector[0]);
         emit BroadcastAndKeyShare(
             schainId,

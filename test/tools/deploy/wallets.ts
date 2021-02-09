@@ -1,13 +1,13 @@
-import { ContractManagerInstance, WalletsInstance } from "../../../types/truffle-contracts";
+import { ContractManager, Wallets } from "../../../typechain";
 import { deployValidatorService } from "./delegation/validatorService";
 import { deployFunctionFactory } from "./factory";
 import { deployNodes } from "./nodes";
 import { deploySchainsInternal } from "./schainsInternal";
 
 const deployWallets:
-    (contractManager: ContractManagerInstance) => Promise<WalletsInstance>
+    (contractManager: ContractManager) => Promise<Wallets>
     = deployFunctionFactory("Wallets",
-                            async (contractManager: ContractManagerInstance) => {
+                            async (contractManager: ContractManager) => {
                                 await deployNodes(contractManager);
                                 await deployValidatorService(contractManager);
                                 await deploySchainsInternal(contractManager);

@@ -140,6 +140,12 @@ contract SkaleDKG is Permissions, ISkaleDKG {
      */
     event ComplaintError(string error);
 
+    /**
+     * @dev Emitted when a complaint is sent.
+     */
+    event ComplaintSent(
+        bytes32 indexed schainId, uint indexed fromNodeIndex, uint indexed toNodeIndex);
+
     modifier correctGroup(bytes32 schainId) {
         require(channels[schainId].active, "Group is not created");
         _;
@@ -358,7 +364,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         return channels[schainId].startedBlockTimestamp <= lastSuccesfulDKG[schainId];
     }
 
-    function setStartAlrightTimestamp(bytes32 schainId) external allow("SkaleDKGBroadcast") {
+    function setStartAlrightTimestamp(bytes32 schainId) external allow("SkaleDKG") {
         startAlrightTimestamp[schainId] = now;
     }
 
@@ -476,7 +482,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         return channels[schainId].n == dkgProcess[schainId].numberOfBroadcasted;
     }
 
-    function finalizeSlashing(bytes32 schainId, uint badNode) external allow("SkaleDKGComplaint") {
+    function finalizeSlashing(bytes32 schainId, uint badNode) external allow("SkaleDKG") {
         NodeRotation nodeRotation = NodeRotation(contractManager.getContract("NodeRotation"));
         SchainsInternal schainsInternal = SchainsInternal(
             contractManager.getContract("SchainsInternal")

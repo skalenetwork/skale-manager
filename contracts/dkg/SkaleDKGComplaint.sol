@@ -75,7 +75,14 @@ library SkaleDKGComplaint {
         SkaleDKG skaleDKG = SkaleDKG(contractManager.getContract("SkaleDKG"));
         require(skaleDKG.isNodeBroadcasted(schainId, fromNodeIndex), "Node has not broadcasted");
         if (skaleDKG.isNodeBroadcasted(schainId, toNodeIndex)) {
-            _handleComplaintWhenBroadcasted(schainId, fromNodeIndex, toNodeIndex, contractManager, complaints, startAlrightTimestamp);
+            _handleComplaintWhenBroadcasted(
+                schainId,
+                fromNodeIndex,
+                toNodeIndex,
+                contractManager,
+                complaints,
+                startAlrightTimestamp
+            );
         } else {
             // not broadcasted in 30 min
             _handleComplaintWhenNotBroadcasted(schainId, toNodeIndex, contractManager, channels);
@@ -101,7 +108,6 @@ library SkaleDKGComplaint {
         require(skaleDKG.isNodeBroadcasted(schainId, fromNodeIndex), "Node has not broadcasted");
         require(skaleDKG.isNodeBroadcasted(schainId, toNodeIndex), "Accused node has not broadcasted");
         require(!skaleDKG.isAllDataReceived(schainId, fromNodeIndex), "Node has already sent alright");
-        // _processComplaint(schainId, fromNodeIndex, toNodeIndex);
         if (complaints[schainId].nodeToComplaint == uint(-1)) {
             complaints[schainId].nodeToComplaint = toNodeIndex;
             complaints[schainId].fromNodeToComplaint = fromNodeIndex;
@@ -144,7 +150,9 @@ library SkaleDKGComplaint {
             return;
         } else if (complaints[schainId].nodeToComplaint == toNodeIndex) {
             // 30 min after incorrect data complaint
-            if (complaints[schainId].startComplaintBlockTimestamp.add(_getComplaintTimelimit(contractManager)) <= block.timestamp) {
+            if (complaints[schainId].startComplaintBlockTimestamp.add(
+                _getComplaintTimelimit(contractManager)
+            ) <= block.timestamp) {
                 skaleDKG.finalizeSlashing(schainId, complaints[schainId].nodeToComplaint);
                 return;
             }
@@ -163,24 +171,12 @@ library SkaleDKGComplaint {
     ) 
         private
     {
-
         if (channels[schainId].startedBlockTimestamp.add(_getComplaintTimelimit(contractManager)) <= block.timestamp) {
             SkaleDKG(contractManager.getContract("SkaleDKG")).finalizeSlashing(schainId, toNodeIndex);
             return;
         }
         emit ComplaintError("Complaint sent too early");
     }
-
-    // function _processComplaint(bytes32 schainId, uint fromNodeIndex, uint toNodeIndex) private {
-    //     if (complaints[schainId].nodeToComplaint == uint(-1)) {
-    //         complaints[schainId].nodeToComplaint = toNodeIndex;
-    //         complaints[schainId].fromNodeToComplaint = fromNodeIndex;
-    //         complaints[schainId].startComplaintBlockTimestamp = block.timestamp;
-    //         emit ComplaintSent(schainId, fromNodeIndex, toNodeIndex);
-    //     } else {
-    //         emit ComplaintError("First complaint has already been processed");
-    //     }
-    // }
 
     function _getComplaintTimelimit(ContractManager contractManager) private view returns (uint) {
         return ConstantsHolder(contractManager.getConstantsHolder()).complaintTimelimit();

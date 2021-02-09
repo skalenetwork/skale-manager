@@ -75,12 +75,4 @@ library SkaleDKGAlright {
         .refundGasBySchain(schainId, fromNodeIndex, gasTotal - gasleft(), false);
     }
 
-    // function _setSuccesfulDKG(bytes32 schainId) internal {
-    //     lastSuccesfulDKG[schainId] = now;
-    //     channels[schainId].active = false;
-    //     KeyStorage(contractManager.getContract("KeyStorage")).finalizePublicKey(schainId);
-    //     emit SuccessfulDKG(schainId);
-    // }
-
-
 }
