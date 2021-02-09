@@ -36,7 +36,7 @@ import "./NodeRotation.sol";
 import "./Permissions.sol";
 import "./Schains.sol";
 import "./Wallets.sol";
-import "@nomiclabs/buidler/console.sol";
+
 /**
  * @title SkaleManager
  * @dev Contract contains functions for node registration and exit, bounty
@@ -121,7 +121,6 @@ contract SkaleManager is IERC777Recipient, Permissions {
     }
 
     function nodeExit(uint nodeIndex) external {
-        console.log(msg.sender.balance);
         uint gasTotal = gasleft();
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
         SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
