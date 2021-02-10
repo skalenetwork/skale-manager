@@ -1,19 +1,18 @@
-import chai = require("chai");
+import chai from "chai";
 import chaiAsPromised from "chai-as-promised";
-import {
-    SegmentTreeTesterContract,
-    SegmentTreeTesterInstance
-} from "../../types/truffle-contracts";
-
-const SegmentTree: SegmentTreeTesterContract = artifacts.require("SegmentTreeTester");
+import { web3, ethers } from "hardhat"
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
+import { SegmentTreeTester } from "../../typechain/SegmentTreeTester";
 
 chai.should();
 chai.use(chaiAsPromised);
 
-contract("SegmentTree", ([owner]) => {
-    let segmentTree: SegmentTreeTesterInstance;
+describe("SegmentTree", () => {
+    let segmentTree: SegmentTreeTester;
     beforeEach(async () => {
-        segmentTree = await SegmentTree.new();
+        const SegmentTree = await ethers.getContractFactory("SegmentTreeTester");
+        segmentTree = (await SegmentTree.deploy()) as SegmentTreeTester;
+
         await segmentTree.initTree(128, 150);
     });
 
