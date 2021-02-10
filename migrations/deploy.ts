@@ -1,7 +1,9 @@
 import { promises as fs } from 'fs';
-import { Interface } from "ethers/lib/utils";
+import { Interface, splitSignature } from "ethers/lib/utils";
 import { ethers, upgrades, network } from "hardhat";
 import { ContractManager } from "../typechain";
+import { ContractFactory } from 'ethers';
+import { deployLibraries, getLinkedContractFactory } from "../test/tools/deploy/factory";
 
 function getInitializerParameters(contract: string, contractManagerAddress: string) {
     if (["TimeHelpers", "Decryption", "ECDH"].includes(contract)) {
@@ -20,6 +22,19 @@ function getNameInContractManager(contract: string) {
         return contract;
     }
 }
+
+async function getContractFactoryWithLibraries(e: any, contractName: string) {
+    const libraryNames = [];
+    for (const str of e.toString().split(".sol:")) {
+        const libraryName = str.split("\n")[0];
+        libraryNames.push(libraryName);
+    }
+    libraryNames.shift();
+    const libraries = await deployLibraries(libraryNames);
+    const contractFactory = await getLinkedContractFactory(contractName, libraries);
+    return contractFactory;
+}
+
 
 export function getContractKeyInAbiFile(contract: string) {
     return contract.replace(/([a-zA-Z])(?=[A-Z])/g, '$1_').toLowerCase();
@@ -78,6 +93,7 @@ async function main() {
 
     if (!production) {
         contracts.push("TimeHelpersWithDebug");
+        contracts.push("Wallets");
     }
 
     const artifacts: {address: string, interface: Interface, contract: string}[] = [];
@@ -91,9 +107,20 @@ async function main() {
     artifacts.push({address: contractManager.address, interface: contractManager.interface, contract: contractManagerName})
 
     for (const contract of contracts) {
-        const contractFactory = await ethers.getContractFactory(contract);
+        let contractFactory: ContractFactory;
+        try {
+            contractFactory = await ethers.getContractFactory(contract);
+        } catch (e) {
+            const errorMessage = "The contract " + contract + " is missing links for the following libraries";
+            const isLinkingLibraryError = e.toString().indexOf(errorMessage) + 1;
+            if (isLinkingLibraryError) {
+                contractFactory = await getContractFactoryWithLibraries(e, contract);
+            } else {
+                throw(e);
+            }
+        }
         console.log("Deploy", contract);
-        const proxy = await upgrades.deployProxy(contractFactory, getInitializerParameters(contract, contractManager.address));
+        const proxy = await upgrades.deployProxy(contractFactory, getInitializerParameters(contract, contractManager.address), { unsafeAllowLinkedLibraries: true });
         const contractName = getNameInContractManager(contract);
         console.log("Register", contract, "as", contractName, "=>", proxy.address);
         await contractManager.setContractsAddress(getNameInContractManager(contract), proxy.address);
