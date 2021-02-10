@@ -229,7 +229,6 @@ contract NodeRotation is Permissions {
         bool shouldDelay)
         private
     {
-        ConstantsHolder constants = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
         leavingHistory[nodeIndex].push(
             LeavingHistory(
                 schainIndex,

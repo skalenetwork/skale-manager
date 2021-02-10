@@ -83,7 +83,7 @@ contract("createSchains", ([owner, validator, node]) => {
         {from: node});
 
         const gasLimit = 12e6;
-        let rotIndex = Math.floor(Math.random() * nodesAmount);
+        const rotIndex = Math.floor(Math.random() * nodesAmount);
         const schainIds = await schainsInternal.getSchainIdsForNode(rotIndex);
         console.log("Rotation for node", rotIndex);
         console.log("Will process", schainIds.length, "rotations");
@@ -149,7 +149,7 @@ contract("createSchains", ([owner, validator, node]) => {
         {from: node});
 
         const gasLimit = 12e6;
-        let rotIndex = Math.floor(Math.random() * nodesAmount);
+        const rotIndex = Math.floor(Math.random() * nodesAmount);
         const schainIds = await schainsInternal.getSchainIdsForNode(rotIndex);
         console.log("Rotation for node", rotIndex);
         console.log("Will process", schainIds.length, "rotations");
