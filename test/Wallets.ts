@@ -30,6 +30,8 @@ import { ContractTransaction } from "ethers";
 
 chai.should();
 chai.use(chaiAsPromised);
+chai.use(solidity);
+chai.use(chaiAlmost(2));
 
 async function ethSpent(response: ContractTransaction) {
     return parseFloat(web3.utils.fromWei(new BigNumber(8*1e9).multipliedBy(((await response.wait()).gasUsed).toNumber()).toString()));
@@ -41,6 +43,14 @@ async function getBalance(address: string) {
 
 function fromWei(value: string) {
     return parseFloat(web3.utils.fromWei(value));
+}
+
+function hexValue(value: string) {
+    if (value.length % 2 === 0) {
+        return value;
+    } else {
+        return "0" + value;
+    }
 }
 
 async function getValidatorIdSignature(validatorId: BigNumber, signer: SignerWithAddress) {
@@ -161,7 +171,8 @@ describe("Wallets", () => {
                         0, // nonce
                         "0x7f0000" + hexIndex, // ip
                         "0x7f0000" + hexIndex, // public ip
-                        ["0x" + validator.nodePublicKey.x.toString('hex'), "0x" + validator.nodePublicKey.y.toString('hex')], // public key
+                        ["0x" + hexValue(validator.nodePublicKey.x.toString('hex')),
+                         "0x" + hexValue(validator.nodePublicKey.y.toString('hex'))], // public key
                         "D2-" + hexIndex, // name
                         "some.domain.name");
                 }
@@ -207,7 +218,8 @@ describe("Wallets", () => {
                 let balanceBefore = await getBalance(validator1.address);
                 const result = await skaleManager.connect(validator1).deleteSchain(schain1Name);
                 let balance = await getBalance(validator1.address);
-                balance.should.be.equal(balanceBefore - await ethSpent(result) + initialBalance);
+                const expectedBalance = balanceBefore - await ethSpent(result) + initialBalance;
+                balance.should.be.equal(Math.round(expectedBalance*1e9)/1e9);
 
                 balanceBefore = await getBalance(validator2.address);
                 await skaleManager.deleteSchainByRoot(schain2Name);
