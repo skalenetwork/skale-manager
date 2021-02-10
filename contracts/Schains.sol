@@ -46,6 +46,8 @@ contract Schains is Permissions {
         string name;
     }
 
+    bytes32 public constant SCHAIN_CREATOR_ROLE = keccak256("SCHAIN_CREATOR_ROLE");
+
     /**
      * @dev Emitted when an schain is created.
      */
@@ -98,8 +100,6 @@ contract Schains is Permissions {
         uint time,
         uint gasSpend
     );
-
-    bytes32 public constant SCHAIN_CREATOR_ROLE = keccak256("SCHAIN_CREATOR_ROLE");
 
     /**
      * @dev Allows SkaleManager contract to create an Schain.
