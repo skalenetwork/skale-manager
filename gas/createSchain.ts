@@ -77,7 +77,7 @@ describe("createSchains", () => {
             if (nodesAmount >= 16) {
                 const result = await (await schains.addSchainByFoundation(0, 1, 0, "schain-" + nodeId, owner.address)).wait();
                 measurements.push({nodesAmount, gasUsed: result.gasUsed});
-                console.log("create schain on", nodesAmount, "nodes:\t", result.gasUsed, "gu");
+                console.log("create schain on", nodesAmount, "nodes:\t", result.gasUsed.toNumber(), "gu");
                 if (result.gasUsed.toNumber() > gasLimit) {
                     break;
                 }

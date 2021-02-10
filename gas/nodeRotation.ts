@@ -104,7 +104,7 @@ describe("createSchains", () => {
             await skaleDKG.setSuccesfulDKGPublic(
                 stringValue(web3.utils.soliditySha3("schain-" + schainNumber))
             );
-            console.log("create", schainNumber + 1, "schain on", nodesAmount, "nodes:\t", result.gasUsed, "gu");
+            console.log("create", schainNumber + 1, "schain on", nodesAmount, "nodes:\t", result.gasUsed.toNumber(), "gu");
         }
 
         await skaleManager.connect(node).createNode(
@@ -125,7 +125,7 @@ describe("createSchains", () => {
         const gas = [];
         for (let i = 0; i < schainIds.length; i++) {
             const result = await (await skaleManager.connect(node).nodeExit(rotIndex)).wait();
-            console.log("" + (i + 1) + "", "Rotation on", nodesAmount, "nodes:\t", result.gasUsed, "gu");
+            console.log("" + (i + 1) + "", "Rotation on", nodesAmount, "nodes:\t", result.gasUsed.toNumber(), "gu");
             gas.push(result.gasUsed.toNumber());
             if (result.gasUsed.toNumber() > gasLimit) {
                 break;
@@ -165,7 +165,7 @@ describe("createSchains", () => {
             await skaleDKG.setSuccesfulDKGPublic(
                 stringValue(web3.utils.soliditySha3("schain-" + schainNumber))
             );
-            console.log("create", schainNumber + 1, "schain on", nodesAmount, "nodes:\t", result.gasUsed, "gu");
+            console.log("create", schainNumber + 1, "schain on", nodesAmount, "nodes:\t", result.gasUsed.toNumber(), "gu");
         }
 
         // await schains.addSchainByFoundation(0, 1, 0, "schain-128", owner)
@@ -189,7 +189,7 @@ describe("createSchains", () => {
         const gas = [];
         for (let i = 0; i < schainIds.length; i++) {
             const result = await (await skaleManager.connect(node).nodeExit(rotIndex)).wait();
-            console.log("" + (i + 1) + "", "Rotation on", nodesAmount, "nodes:\t", result.gasUsed, "gu");
+            console.log("" + (i + 1) + "", "Rotation on", nodesAmount, "nodes:\t", result.gasUsed.toNumber(), "gu");
             gas.push(result.gasUsed.toNumber());
             if (result.gasUsed.toNumber() > gasLimit) {
                 break;
@@ -232,7 +232,7 @@ describe("createSchains", () => {
                 await skaleDKG.setSuccesfulDKGPublic(
                     stringValue(web3.utils.soliditySha3("schain-" + nodeId))
                 );
-                console.log("create schain on", nodesAmount, "nodes:\t", result.gasUsed, "gu");
+                console.log("create schain on", nodesAmount, "nodes:\t", result.gasUsed.toNumber(), "gu");
 
                 measurementsSchainCreation.push({nodesAmount, gasUsed: result.gasUsed.toNumber()});
                 if (result.gasUsed.toNumber() > gasLimit) {
@@ -250,7 +250,7 @@ describe("createSchains", () => {
                 const gas = [];
                 for (let i = 0; i < schainIds.length; i++) {
                     const result = await (await skaleManager.connect(node).nodeExit(rotIndex)).wait();
-                    console.log("" + (i + 1) + "", "Rotation on", nodesAmount, "nodes:\t", result.gasUsed, "gu");
+                    console.log("" + (i + 1) + "", "Rotation on", nodesAmount, "nodes:\t", result.gasUsed.toNumber(), "gu");
                     gas.push(result.gasUsed.toNumber());
                     if (result.gasUsed.toNumber() > gasLimit) {
                         break;
