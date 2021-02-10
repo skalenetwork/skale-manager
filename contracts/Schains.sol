@@ -38,8 +38,6 @@ import "./interfaces/ISkaleDKG.sol";
  * deletion, and rotation.
  */
 contract Schains is Permissions {
-    using StringUtils for string;
-    using StringUtils for uint;
 
     struct SchainParameters {
         uint lifetime;

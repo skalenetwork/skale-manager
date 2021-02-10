@@ -34,9 +34,6 @@ import "./Nodes.sol";
  */
 contract Monitors is Permissions {
 
-    using StringUtils for string;
-    using SafeCast for uint;
-
     struct Verdict {
         uint toNodeIndex;
         uint32 downtime;
