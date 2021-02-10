@@ -13,11 +13,6 @@ function getInitializerParameters(contract: string, contractManagerAddress: stri
     }
 }
 
-const customNames: {[key: string]: string} = {
-    "TimeHelpersWithDebug": "TimeHelpers",
-    "BountyV2": "Bounty"
-}
-
 function getNameInContractManager(contract: string) {
     if (Object.keys(customNames).includes(contract)) {
         return customNames[contract];
@@ -25,6 +20,45 @@ function getNameInContractManager(contract: string) {
         return contract;
     }
 }
+
+export function getContractKeyInAbiFile(contract: string) {
+    return contract.replace(/([a-zA-Z])(?=[A-Z])/g, '$1_').toLowerCase();
+}
+
+const customNames: {[key: string]: string} = {
+    "TimeHelpersWithDebug": "TimeHelpers",
+    "BountyV2": "Bounty"
+}
+
+export const contracts = [
+    // "ContractManager", // it will be deployed explicitly
+
+    "DelegationController",
+    "DelegationPeriodManager",
+    "Distributor",
+    "Punisher",
+    "SlashingTable",
+    "TimeHelpers",
+    "TokenLaunchLocker",
+    "TokenLaunchManager",
+    "TokenState",
+    "ValidatorService",
+
+    "ConstantsHolder",
+    "Nodes",
+    "NodeRotation",
+    "Monitors",
+    "SchainsInternal",
+    "Schains",
+    "Decryption",
+    "ECDH",
+    "KeyStorage",
+    "SkaleDKG",
+    "SkaleVerifier",
+    "SkaleManager",
+    "Pricing",
+    "BountyV2"
+]
 
 async function main() {
     const [ owner,] = await ethers.getSigners();
@@ -42,35 +76,6 @@ async function main() {
         production = false;
     }
 
-    const contracts = [
-        // "ContractManager", // it will be deployed explicitly
-
-        "DelegationController",
-        "DelegationPeriodManager",
-        "Distributor",
-        "Punisher",
-        "SlashingTable",
-        "TimeHelpers",
-        "TokenLaunchLocker",
-        "TokenLaunchManager",
-        "TokenState",
-        "ValidatorService",
-
-        "ConstantsHolder",
-        "Nodes",
-        "NodeRotation",
-        "Monitors",
-        "SchainsInternal",
-        "Schains",
-        "Decryption",
-        "ECDH",
-        "KeyStorage",
-        "SkaleDKG",
-        "SkaleVerifier",
-        "SkaleManager",
-        "Pricing",
-        "BountyV2"
-    ]
     if (!production) {
         contracts.push("TimeHelpersWithDebug");
     }
@@ -82,7 +87,7 @@ async function main() {
     const contractManagerFactory = await ethers.getContractFactory(contractManagerName);
     const contractManager = (await upgrades.deployProxy(contractManagerFactory, [])) as ContractManager;
     console.log("Register", contractManagerName);
-    await contractManager.setContractsAddress("ContractManager", contractManager.address);
+    await contractManager.setContractsAddress(contractManagerName, contractManager.address);
     artifacts.push({address: contractManager.address, interface: contractManager.interface, contract: contractManagerName})
 
     for (const contract of contracts) {
@@ -113,9 +118,9 @@ async function main() {
 
     const outputObject: {[k: string]: any} = {};
     for (const artifact of artifacts) {
-        const contractName = artifact.contract.replace(/([a-zA-Z])(?=[A-Z])/g, '$1_').toLowerCase();
-        outputObject[contractName + "_address"] = artifact.address;
-        outputObject[contractName + "_abi"] = JSON.parse(artifact.interface.format("json") as string);
+        const contractKey = getContractKeyInAbiFile(artifact.contract);
+        outputObject[contractKey + "_address"] = artifact.address;
+        outputObject[contractKey + "_abi"] = JSON.parse(artifact.interface.format("json") as string);
     }
     const version = (await fs.readFile("VERSION", "utf-8")).trim();
     await fs.writeFile(`data/skale-manager-${version}-${network.name}-abi.json`, JSON.stringify(outputObject, null, 4));
@@ -123,9 +128,11 @@ async function main() {
     console.log("Done");
 }
 
-main()
-    .then(() => process.exit(0))
-    .catch(error => {
-        console.error(error);
-        process.exit(1);
-    });
+if (require.main === module) {
+    main()
+        .then(() => process.exit(0))
+        .catch(error => {
+            console.error(error);
+            process.exit(1);
+        });
+}
