@@ -290,6 +290,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             secretNumber,
             multipliedShare,
             contractManager,
+            channels,
             complaints
         );
     }

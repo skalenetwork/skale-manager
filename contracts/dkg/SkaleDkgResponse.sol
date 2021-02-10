@@ -45,14 +45,15 @@ library SkaleDkgResponse {
         uint secretNumber,
         G2Operations.G2Point memory multipliedShare,
         ContractManager contractManager,
+        mapping(bytes32 => SkaleDKG.Channel) storage channels,
         mapping(bytes32 => SkaleDKG.ComplaintData) storage complaints
     )
         external
     {
         uint gasTotal = gasleft();
-        SkaleDKG skaleDKG = SkaleDKG(contractManager.getContract("SkaleDKG"));
-        // slither-disable-next-line unused-return
-        skaleDKG.checkAndReturnIndexInGroup(schainId, fromNodeIndex, true);
+        uint index = SchainsInternal(contractManager.getContract("SchainsInternal"))
+            .getNodeIndexInGroup(schainId, fromNodeIndex);
+        require(index < channels[schainId].n, "Node is not in this group");
         require(complaints[schainId].nodeToComplaint == fromNodeIndex, "Not this Node");
         require(complaints[schainId].isResponse, "Have not submitted pre-response data");
         uint badNode = _verifyDataAndSlash(
