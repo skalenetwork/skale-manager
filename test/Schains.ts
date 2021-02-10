@@ -1007,7 +1007,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeA
         it("should rotate 2 nodes consistently", async () => {
             const res1 = await schainsInternal.getNodesInGroup(web3.utils.soliditySha3("d2"));
             const res2 = await schainsInternal.getNodesInGroup(web3.utils.soliditySha3("d3"));
-            await skaleManager.nodeExit(0, {from: nodeAddress});
+            await skaleManager.nodeExit(0, {from: nodeAddress, gas: "5000000"});
             const leavingTimeOfNode = new BigNumber(
                 (await nodeRotation.getLeavingHistory(0))[0].finishedRotation
             ).toNumber();
@@ -1033,7 +1033,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeA
                 web3.utils.soliditySha3("d3"),
             );
             await skaleManager.nodeExit(1, {from: nodeAddress})
-                .should.be.eventually.rejectedWith("Node cannot rotate on Schain d3, occupied by Node 0");
+                .should.be.eventually.rejectedWith("Occupied by rotation on Schain");
             await skaleManager.nodeExit(0, {from: nodeAddress});
             await skaleDKG.setSuccesfulDKGPublic(
                 web3.utils.soliditySha3("d2"),
@@ -1052,7 +1052,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeA
             nodeStatus = (await nodes.getNodeStatus(1)).toNumber();
             assert.equal(nodeStatus, ACTIVE);
             await skaleManager.nodeExit(1, {from: nodeAddress})
-                .should.be.eventually.rejectedWith("Node cannot rotate on Schain d3, occupied by Node 0");
+                .should.be.eventually.rejectedWith("Occupied by rotation on Schain");
             skipTime(web3, 43260);
 
             await skaleManager.nodeExit(1, {from: nodeAddress});
@@ -1207,7 +1207,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeA
                 web3.utils.soliditySha3("d3"),
             );
             await skaleManager.nodeExit(1, {from: nodeAddress})
-                .should.be.eventually.rejectedWith("Node cannot rotate on Schain d3, occupied by Node 0");
+                .should.be.eventually.rejectedWith("Occupied by rotation on Schain");
             skipTime(web3, 43260);
             await skaleManager.nodeExit(1, {from: nodeAddress});
             await skaleDKG.setSuccesfulDKGPublic(
@@ -1215,7 +1215,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeA
             );
 
             await skaleManager.nodeExit(0, {from: nodeAddress})
-                .should.be.eventually.rejectedWith("Node cannot rotate on Schain d2, occupied by Node 1");
+                .should.be.eventually.rejectedWith("Occupied by rotation on Schain");
 
             nodeStatus = (await nodes.getNodeStatus(1)).toNumber();
             assert.equal(nodeStatus, LEAVING);
@@ -1298,13 +1298,13 @@ contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeA
             assert.equal(res, true);
 
             await skaleManager.nodeExit(1, {from: nodeAddress})
-                .should.be.eventually.rejectedWith("DKG process did not finish on schain d3");
+                .should.be.eventually.rejectedWith("Occupied by rotation on Schain");
             await skaleManager.nodeExit(0, {from: nodeAddress});
 
             skipTime(web3, 43260);
 
             await skaleManager.nodeExit(1, {from: nodeAddress})
-                .should.be.eventually.rejectedWith("DKG process did not finish on schain d3");
+                .should.be.eventually.rejectedWith("DKG did not finish on Schain");
         });
 
         it("should be possible to send broadcast", async () => {
@@ -1321,7 +1321,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeA
             await skaleManager.nodeExit(0, {from: nodeAddress});
 
             await skaleManager.nodeExit(1, {from: nodeAddress})
-                .should.be.eventually.rejectedWith("DKG process did not finish on schain d3");
+                .should.be.eventually.rejectedWith("DKG did not finish on Schain");
         });
 
         it("should be possible to send broadcast", async () => {
@@ -1338,7 +1338,7 @@ contract("Schains", ([owner, holder, validator, nodeAddress, nodeAddress2, nodeA
                 web3.utils.soliditySha3("d3"),
             );
             await skaleManager.nodeExit(1, {from: nodeAddress})
-                .should.be.eventually.rejectedWith("Node cannot rotate on Schain d3, occupied by Node 0");
+                .should.be.eventually.rejectedWith("Occupied by rotation on Schain");
             await skaleManager.nodeExit(0, {from: nodeAddress});
             await skaleDKG.setSuccesfulDKGPublic(
                 web3.utils.soliditySha3("d2"),
