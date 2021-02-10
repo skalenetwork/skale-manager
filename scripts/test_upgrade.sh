@@ -13,6 +13,7 @@ GANACHE_PID=$!
 
 mv contracts contracts_new || exit $?
 cp -r $DEPLOYED_DIR/contracts ./ || exit $?
+sed -i '/buidler/d' contracts/BountyV2.sol
 
 PRODUCTION=true npx hardhat run migrations/deploy.ts --network localhost || exit $?
 
