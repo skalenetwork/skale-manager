@@ -20,10 +20,18 @@ cd $GITHUB_WORKSPACE
 rm -r --interactive=never $DEPLOYED_DIR
 
 NETWORK_ID=$(ls -a .openzeppelin | grep dev | cut -d '-' -f 2 | cut -d '.' -f 1)
+
+ls -a .openzeppelin
+echo $NETWORK_ID
+tail .openzeppelin/dev-$NETWORK_ID.json
+
 mv .openzeppelin/dev-$NETWORK_ID.json .openzeppelin/mainnet.json || exit $?
 
 npx migrate-oz-cli-project || exit $?
 mv .openzeppelin/mainnet.json .openzeppelin/unknown-$NETWORK_ID.json || exit $?
+
+tail .openzeppelin/unknown-$NETWORK_ID.json
+
 ABI=data/test.json npx hardhat run migrations/upgrade.ts --network localhost || exit $?
 
 kill $GANACHE_PID
