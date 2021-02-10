@@ -109,9 +109,7 @@ const config: HardhatUserConfig = {
           balance: "0xd3c21bcecceda0000000"
         }
       ],
-      gas: 0xfffffffffff,
       blockGasLimit: 0xfffffffffff,
-      port: 8555,
       allowUnlimitedContractSize: true
     },
     custom: {
