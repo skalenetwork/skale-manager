@@ -75,7 +75,6 @@ library SkaleDKGBroadcast {
         external
     {
         uint gasTotal = gasleft();
-        // SkaleDKG skaleDKG = SkaleDKG(contractManager.getContract("SkaleDKG"));
         uint n = channels[schainId].n;
         require(verificationVector.length == getT(n), "Incorrect number of verification vectors");
         require(
@@ -89,7 +88,6 @@ library SkaleDKGBroadcast {
         dkgProcess[schainId].broadcasted[index] = true;
         dkgProcess[schainId].numberOfBroadcasted++;
         if (dkgProcess[schainId].numberOfBroadcasted == channels[schainId].n) {
-            // startAlrightTimestamp[schainId] = now;
             SkaleDKG(contractManager.getContract("SkaleDKG")).setStartAlrightTimestamp(schainId);
         }
         hashedData[schainId][index] = SkaleDKG(contractManager.getContract("SkaleDKG")).hashData(
