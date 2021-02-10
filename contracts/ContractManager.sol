@@ -127,6 +127,8 @@ contract ContractManager is OwnableUpgradeSafe {
 
     function getContract(string memory name) public view returns (address contractAddress) {
         contractAddress = contracts[keccak256(abi.encodePacked(name))];
-        require(contractAddress != address(0), name.strConcat(" contract has not been found"));
+        if (contractAddress == address(0)) {
+            revert(name.strConcat(" contract has not been found"));
+        }
     }
 }
