@@ -8,11 +8,11 @@ import { deployNodeRotation } from "./nodeRotation";
 import { ContractManager, SkaleDKG } from "../../../typechain";
 
 const libraries = [
-    "SkaleDKGAlright",
-    "SkaleDKGBroadcast",
-    "SkaleDKGComplaint",
-    "SkaleDKGPreResponse",
-    "SkaleDKGResponse"
+    "SkaleDkgAlright",
+    "SkaleDkgBroadcast",
+    "SkaleDkgComplaint",
+    "SkaleDkgPreResponse",
+    "SkaleDkgResponse"
 ]
 
 const deploySkaleDKG: (contractManager: ContractManager) => Promise<SkaleDKG>

@@ -33,11 +33,11 @@ import "./interfaces/ISkaleDKG.sol";
 import "./thirdparty/ECDH.sol";
 import "./utils/Precompiled.sol";
 import "./Wallets.sol";
-import "./dkg/SkaleDKGAlright.sol";
-import "./dkg/SkaleDKGBroadcast.sol";
-import "./dkg/SkaleDKGComplaint.sol";
-import "./dkg/SkaleDKGPreResponse.sol";
-import "./dkg/SkaleDKGResponse.sol";
+import "./dkg/SkaleDkgAlright.sol";
+import "./dkg/SkaleDkgBroadcast.sol";
+import "./dkg/SkaleDkgComplaint.sol";
+import "./dkg/SkaleDkgPreResponse.sol";
+import "./dkg/SkaleDkgResponse.sol";
 
 /**
  * @title SkaleDKG
@@ -184,7 +184,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         correctGroup(schainId)
         onlyNodeOwner(fromNodeIndex)
     {
-        SkaleDKGAlright.alright(
+        SkaleDkgAlright.alright(
             schainId,
             fromNodeIndex,
             contractManager,
@@ -205,7 +205,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         correctGroup(schainId)
         onlyNodeOwner(nodeIndex)
     {
-        SkaleDKGBroadcast.broadcast(
+        SkaleDkgBroadcast.broadcast(
             schainId,
             nodeIndex,
             verificationVector,
@@ -224,7 +224,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         correctNodeWithoutRevert(schainId, toNodeIndex)
         onlyNodeOwner(fromNodeIndex)
     {
-        SkaleDKGComplaint.complaint(
+        SkaleDkgComplaint.complaint(
             schainId,
             fromNodeIndex,
             toNodeIndex,
@@ -242,7 +242,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         correctNodeWithoutRevert(schainId, toNodeIndex)
         onlyNodeOwner(fromNodeIndex)
     { 
-        SkaleDKGComplaint.complaintBadData(
+        SkaleDkgComplaint.complaintBadData(
             schainId,
             fromNodeIndex,
             toNodeIndex,
@@ -262,7 +262,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         correctGroup(schainId)
         onlyNodeOwner(fromNodeIndex)
     {
-        SkaleDKGPreResponse.preResponse(
+        SkaleDkgPreResponse.preResponse(
             schainId,
             fromNodeIndex,
             verificationVector,
@@ -284,7 +284,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         correctGroup(schainId)
         onlyNodeOwner(fromNodeIndex)
     {
-        SkaleDKGResponse.response(
+        SkaleDkgResponse.response(
             schainId,
             fromNodeIndex,
             secretNumber,

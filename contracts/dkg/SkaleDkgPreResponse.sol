@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /*
-    SkaleDKGPreResponse.sol - SKALE Manager
+    SkaleDkgPreResponse.sol - SKALE Manager
     Copyright (C) 2021-Present SKALE Labs
     @author Dmytro Stebaiev
     @author Artem Payvin
@@ -29,11 +29,11 @@ import "../Wallets.sol";
 import "../utils/FieldOperations.sol";
 
 /**
- * @title SkaleDKG
+ * @title SkaleDkgPreResponse
  * @dev Contains functions to manage distributed key generation per
  * Joint-Feldman protocol.
  */
-library SkaleDKGPreResponse {
+library SkaleDkgPreResponse {
     using SafeMath for uint;
     using G2Operations for G2Operations.G2Point;
 

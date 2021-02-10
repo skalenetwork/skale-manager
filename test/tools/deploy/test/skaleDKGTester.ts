@@ -7,11 +7,11 @@ import { deploySlashingTable } from "../slashingTable";
 import { ContractManager, SkaleDKGTester } from "../../../../typechain";
 
 const libraries = [
-    "SkaleDKGAlright",
-    "SkaleDKGBroadcast",
-    "SkaleDKGComplaint",
-    "SkaleDKGPreResponse",
-    "SkaleDKGResponse"
+    "SkaleDkgAlright",
+    "SkaleDkgBroadcast",
+    "SkaleDkgComplaint",
+    "SkaleDkgPreResponse",
+    "SkaleDkgResponse"
 ]
 
 const deploySkaleDKGTester: (contractManager: ContractManager) => Promise<SkaleDKGTester>

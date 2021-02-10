@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /*
-    SkaleDKGResponse.sol - SKALE Manager
+    SkaleDkgResponse.sol - SKALE Manager
     Copyright (C) 2021-Present SKALE Labs
     @author Dmytro Stebaiev
     @author Artem Payvin
@@ -32,11 +32,11 @@ import "../thirdparty/ECDH.sol";
 import "../utils/FieldOperations.sol";
 
 /**
- * @title SkaleDKGResponse
+ * @title SkaleDkgResponse
  * @dev Contains functions to manage distributed key generation per
  * Joint-Feldman protocol.
  */
-library SkaleDKGResponse {
+library SkaleDkgResponse {
     using G2Operations for G2Operations.G2Point;
 
     function response(

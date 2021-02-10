@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /*
-    SkaleDKGBroadcast.sol - SKALE Manager
+    SkaleDkgBroadcast.sol - SKALE Manager
     Copyright (C) 2021-Present SKALE Labs
     @author Dmytro Stebaiev
     @author Artem Payvin
@@ -32,11 +32,11 @@ import "../Wallets.sol";
 
 
 /**
- * @title SkaleDKG
+ * @title SkaleDkgBroadcast
  * @dev Contains functions to manage distributed key generation per
  * Joint-Feldman protocol.
  */
-library SkaleDKGBroadcast {
+library SkaleDkgBroadcast {
     using SafeMath for uint;
 
     /**
