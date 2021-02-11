@@ -51,9 +51,9 @@ async function main() {
         const proxyAddress = abi[getContractKeyInAbiFile(_contract) + "_address"];
         console.log(`Upgrade ${contract} at ${proxyAddress}`);
         if (multisig) {
-            await upgrades.prepareUpgrade(proxyAddress, contractFactory);
+            await upgrades.prepareUpgrade(proxyAddress, contractFactory, { unsafeAllowLinkedLibraries: true });
         } else {
-            await upgrades.upgradeProxy(proxyAddress, contractFactory);
+            await upgrades.upgradeProxy(proxyAddress, contractFactory, { unsafeAllowLinkedLibraries: true });
         }
     }
 
