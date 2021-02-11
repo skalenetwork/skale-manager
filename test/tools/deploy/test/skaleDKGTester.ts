@@ -1,14 +1,14 @@
-import { ContractManagerInstance, SkaleDKGTesterInstance } from "../../../../types/truffle-contracts";
 import { deployPunisher } from "../delegation/punisher";
 import { deployKeyStorage } from "../keyStorage";
 import { deployFunctionFactory } from "../factory";
 import { deployNodes } from "../nodes";
 import { deploySchainsInternal } from "../schainsInternal";
 import { deploySlashingTable } from "../slashingTable";
+import { ContractManager, SkaleDKGTester } from "../../../../typechain";
 
-const deploySkaleDKGTester: (contractManager: ContractManagerInstance) => Promise<SkaleDKGTesterInstance>
+const deploySkaleDKGTester: (contractManager: ContractManager) => Promise<SkaleDKGTester>
     = deployFunctionFactory("SkaleDKGTester",
-                            async (contractManager: ContractManagerInstance) => {
+                            async (contractManager: ContractManager) => {
                                 await deploySchainsInternal(contractManager);
                                 await deployPunisher(contractManager);
                                 await deployNodes(contractManager);

@@ -1,11 +1,11 @@
 import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
-import { ContractManagerInstance,
-         NodesInstance,
-         SkaleTokenInstance,
-         ValidatorServiceInstance,
-         DelegationControllerInstance,
-         ConstantsHolderInstance} from "../types/truffle-contracts";
+import { ContractManager,
+         Nodes,
+         SkaleToken,
+         ValidatorService,
+         DelegationController,
+         ConstantsHolder} from "../typechain";
 
 import * as elliptic from "elliptic";
 const EC = elliptic.ec;
@@ -14,7 +14,7 @@ import { privateKeys } from "./tools/private-keys";
 
 import { skipTime } from "./tools/time";
 
-import BigNumber from "bignumber.js";
+import { BigNumber } from "ethers";
 import { deployContractManager } from "./tools/deploy/contractManager";
 import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
 import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
@@ -22,20 +22,52 @@ import { deployNodes } from "./tools/deploy/nodes";
 import { deploySkaleToken } from "./tools/deploy/skaleToken";
 import { deployDelegationController } from "./tools/deploy/delegation/delegationController";
 import { deploySkaleManagerMock } from "./tools/deploy/test/skaleManagerMock";
+import { ethers, web3 } from "hardhat";
+import { solidity } from "ethereum-waffle";
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
+import { assert, expect } from "chai";
 
 
 chai.should();
 chai.use(chaiAsPromised);
+chai.use(solidity);
 
-contract("NodesFunctionality", ([owner, validator, nodeAddress, nodeAddress2, holder, ]) => {
-    let contractManager: ContractManagerInstance;
-    let nodes: NodesInstance;
-    let validatorService: ValidatorServiceInstance;
-    let constantsHolder: ConstantsHolderInstance;
-    let skaleToken: SkaleTokenInstance;
-    let delegationController: DelegationControllerInstance;
+async function getValidatorIdSignature(validatorId: BigNumber, signer: SignerWithAddress) {
+    const hash = web3.utils.soliditySha3(validatorId.toString());
+    if (hash) {
+        let signature = await web3.eth.sign(hash, signer.address);
+        signature = (
+            signature.slice(130) === "00" ?
+            signature.slice(0, 130) + "1b" :
+            (
+                signature.slice(130) === "01" ?
+                signature.slice(0, 130) + "1c" :
+                signature
+            )
+        );
+        return signature;
+    } else {
+        return "";
+    }
+}
+
+describe("NodesFunctionality", () => {
+    let owner: SignerWithAddress;
+    let validator: SignerWithAddress;
+    let nodeAddress: SignerWithAddress;
+    let nodeAddress2: SignerWithAddress;
+    let holder: SignerWithAddress;
+
+    let contractManager: ContractManager;
+    let nodes: Nodes;
+    let validatorService: ValidatorService;
+    let constantsHolder: ConstantsHolder;
+    let skaleToken: SkaleToken;
+    let delegationController: DelegationController;
 
     beforeEach(async () => {
+        [owner, validator, nodeAddress, nodeAddress2, holder] = await ethers.getSigners();
+
         contractManager = await deployContractManager();
         nodes = await deployNodes(contractManager);
         validatorService = await deployValidatorService(contractManager);
@@ -46,22 +78,18 @@ contract("NodesFunctionality", ([owner, validator, nodeAddress, nodeAddress2, ho
         const skaleManagerMock = await deploySkaleManagerMock(contractManager);
         await contractManager.setContractsAddress("SkaleManager", skaleManagerMock.address);
 
-        await validatorService.registerValidator("Validator", "D2", 0, 0, {from: validator});
-        const validatorIndex = await validatorService.getValidatorId(validator);
-        let signature1 = await web3.eth.sign(web3.utils.soliditySha3(validatorIndex.toString()), nodeAddress);
-        signature1 = (signature1.slice(130) === "00" ? signature1.slice(0, 130) + "1b" :
-                (signature1.slice(130) === "01" ? signature1.slice(0, 130) + "1c" : signature1));
-        let signature2 = await web3.eth.sign(web3.utils.soliditySha3(validatorIndex.toString()), nodeAddress2);
-        signature2 = (signature2.slice(130) === "00" ? signature2.slice(0, 130) + "1b" :
-                (signature2.slice(130) === "01" ? signature2.slice(0, 130) + "1c" : signature2));
-        await validatorService.linkNodeAddress(nodeAddress, signature1, {from: validator});
-        await validatorService.linkNodeAddress(nodeAddress2, signature2, {from: validator});
+        await validatorService.connect(validator).registerValidator("Validator", "D2", 0, 0);
+        const validatorIndex = await validatorService.getValidatorId(validator.address);
+        const signature1 = await getValidatorIdSignature(validatorIndex, nodeAddress);
+        const signature2 = await getValidatorIdSignature(validatorIndex, nodeAddress2);
+        await validatorService.connect(validator).linkNodeAddress(nodeAddress.address, signature1);
+        await validatorService.connect(validator).linkNodeAddress(nodeAddress2.address, signature2);
     });
 
     it("should fail to create node if ip is zero", async () => {
         const pubKey = ec.keyFromPrivate(String(privateKeys[1]).slice(2)).getPublic();
         await nodes.createNode(
-            validator,
+            validator.address,
             {
                 port: 8545,
                 nonce: 0,
@@ -76,7 +104,7 @@ contract("NodesFunctionality", ([owner, validator, nodeAddress, nodeAddress2, ho
     it("should fail to create node if port is zero", async () => {
         const pubKey = ec.keyFromPrivate(String(privateKeys[1]).slice(2)).getPublic();
         await nodes.createNode(
-            validator,
+            validator.address,
             {
                 port: 0,
                 nonce: 0,
@@ -91,7 +119,7 @@ contract("NodesFunctionality", ([owner, validator, nodeAddress, nodeAddress2, ho
     it("should fail to create node if public Key is incorrect", async () => {
         const pubKey = ec.keyFromPrivate(String(privateKeys[1]).slice(2)).getPublic();
         await nodes.createNode(
-            validator,
+            validator.address,
             {
                 port: 8545,
                 nonce: 0,
@@ -106,7 +134,7 @@ contract("NodesFunctionality", ([owner, validator, nodeAddress, nodeAddress2, ho
     it("should create node", async () => {
         const pubKey = ec.keyFromPrivate(String(privateKeys[2]).slice(2)).getPublic();
         await nodes.createNode(
-            nodeAddress,
+            nodeAddress.address,
             {
                 port: 8545,
                 nonce: 0,
@@ -121,7 +149,7 @@ contract("NodesFunctionality", ([owner, validator, nodeAddress, nodeAddress2, ho
         node[0].should.be.equal("D2");
         node[1].should.be.equal("0x7f000001");
         node[2].should.be.equal("0x7f000001");
-        node[3].should.be.deep.equal(web3.utils.toBN(8545));
+        node[3].should.be.equal(8545);
         (await nodes.getNodePublicKey(0))
             .should.be.deep.equal(["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')]);
     });
@@ -130,7 +158,7 @@ contract("NodesFunctionality", ([owner, validator, nodeAddress, nodeAddress2, ho
         beforeEach(async () => {
             const pubKey = ec.keyFromPrivate(String(privateKeys[2]).slice(2)).getPublic();
             await nodes.createNode(
-                nodeAddress,
+                nodeAddress.address,
                 {
                     port: 8545,
                     nonce: 0,
@@ -151,13 +179,13 @@ contract("NodesFunctionality", ([owner, validator, nodeAddress, nodeAddress2, ho
             await nodes.initExit(0);
             await nodes.completeExit(0);
 
-            await nodes.numberOfActiveNodes().should.be.eventually.deep.equal(web3.utils.toBN(0));
+            (await nodes.numberOfActiveNodes()).should.be.equal(0);
         });
 
         it("should initiate exiting", async () => {
             await nodes.initExit(0);
 
-            await nodes.numberOfActiveNodes().should.be.eventually.deep.equal(web3.utils.toBN(0));
+            (await nodes.numberOfActiveNodes()).should.be.equal(0);
         });
 
         it("should complete exiting", async () => {
@@ -175,7 +203,7 @@ contract("NodesFunctionality", ([owner, validator, nodeAddress, nodeAddress2, ho
         beforeEach(async () => {
             const pubKey = ec.keyFromPrivate(String(privateKeys[2]).slice(2)).getPublic();
             await nodes.createNode(
-                nodeAddress,
+                nodeAddress.address,
                 {
                     port: 8545,
                     nonce: 0,
@@ -187,7 +215,7 @@ contract("NodesFunctionality", ([owner, validator, nodeAddress, nodeAddress2, ho
                 }); // name
                 const pubKey2 = ec.keyFromPrivate(String(privateKeys[3]).slice(2)).getPublic();
             await nodes.createNode(
-                nodeAddress2,
+                nodeAddress2.address,
                 {
                     port: 8545,
                     nonce: 0,
@@ -203,26 +231,26 @@ contract("NodesFunctionality", ([owner, validator, nodeAddress, nodeAddress2, ho
             await nodes.initExit(0);
             await nodes.completeExit(0);
 
-            await nodes.numberOfActiveNodes().should.be.eventually.deep.equal(web3.utils.toBN(1));
+            (await nodes.numberOfActiveNodes()).should.be.equal(1);
         });
 
         it("should delete second node", async () => {
             await nodes.initExit(1);
             await nodes.completeExit(1);
 
-            await nodes.numberOfActiveNodes().should.be.eventually.deep.equal(web3.utils.toBN(1));
+            (await nodes.numberOfActiveNodes()).should.be.equal(1);
         });
 
         it("should initiate exit from first node", async () => {
             await nodes.initExit(0);
 
-            await nodes.numberOfActiveNodes().should.be.eventually.deep.equal(web3.utils.toBN(1));
+            (await nodes.numberOfActiveNodes()).should.be.equal(1);
         });
 
         it("should initiate exit from second node", async () => {
             await nodes.initExit(1);
 
-            await nodes.numberOfActiveNodes().should.be.eventually.deep.equal(web3.utils.toBN(1));
+            (await nodes.numberOfActiveNodes()).should.be.equal(1);
         });
 
         it("should complete exiting from first node", async () => {
@@ -254,39 +282,39 @@ contract("NodesFunctionality", ([owner, validator, nodeAddress, nodeAddress2, ho
             amount = 100;
             delegationPeriod = 2;
             info = "NICE";
-            await skaleToken.mint(holder, 200, "0x", "0x");
-            await skaleToken.mint(nodeAddress, 200, "0x", "0x");
+            await skaleToken.mint(holder.address, 200, "0x", "0x");
+            await skaleToken.mint(nodeAddress.address, 200, "0x", "0x");
             await constantsHolder.setMSR(amount * 5);
         });
 
         it("should not allow to create node if new epoch isn't started", async () => {
-            await validatorService.enableValidator(validatorId, {from: owner});
-            await delegationController.delegate(validatorId, amount, delegationPeriod, info, {from: holder});
+            await validatorService.enableValidator(validatorId);
+            await delegationController.connect(holder).delegate(validatorId, amount, delegationPeriod, info);
             const delegationId = 0;
-            await delegationController.acceptPendingDelegation(delegationId, {from: validator});
+            await delegationController.connect(validator).acceptPendingDelegation(delegationId);
 
-            await nodes.checkPossibilityCreatingNode(nodeAddress)
+            await nodes.checkPossibilityCreatingNode(nodeAddress.address)
                 .should.be.eventually.rejectedWith("Validator must meet the Minimum Staking Requirement");
         });
 
         it("should allow to create node if new epoch is started", async () => {
-            await validatorService.enableValidator(validatorId, {from: owner});
-            await delegationController.delegate(validatorId, amount, delegationPeriod, info, {from: holder});
+            await validatorService.enableValidator(validatorId);
+            await delegationController.connect(holder).delegate(validatorId, amount, delegationPeriod, info);
             const delegationId = 0;
-            await delegationController.acceptPendingDelegation(delegationId, {from: validator});
-            skipTime(web3, month);
+            await delegationController.connect(validator).acceptPendingDelegation(delegationId);
+            await skipTime(ethers, month);
 
-            await nodes.checkPossibilityCreatingNode(nodeAddress)
+            await nodes.checkPossibilityCreatingNode(nodeAddress.address)
                 .should.be.eventually.rejectedWith("Validator must meet the Minimum Staking Requirement");
 
             await constantsHolder.setMSR(amount);
 
             // now it should not reject
-            await nodes.checkPossibilityCreatingNode(nodeAddress);
+            await nodes.checkPossibilityCreatingNode(nodeAddress.address);
 
             const pubKey = ec.keyFromPrivate(String(privateKeys[2]).slice(2)).getPublic();
             await nodes.createNode(
-                nodeAddress,
+                nodeAddress.address,
                 {
                     port: 8545,
                     nonce: 0,
@@ -296,31 +324,30 @@ contract("NodesFunctionality", ([owner, validator, nodeAddress, nodeAddress2, ho
                     name: "D2",
                     domainName: "somedomain.name"
                 });
-            const nodeIndexBN = (await nodes.getValidatorNodeIndexes(validatorId))[0];
-            const nodeIndex = new BigNumber(nodeIndexBN).toNumber();
-            assert.equal(nodeIndex, 0);
+            const nodeIndex = (await nodes.getValidatorNodeIndexes(validatorId))[0];
+            nodeIndex.should.be.equal(0);
         });
 
         it("should allow to create 2 nodes", async () => {
             const validator3 = nodeAddress;
-            await validatorService.enableValidator(validatorId, {from: owner});
-            await delegationController.delegate(validatorId, amount, delegationPeriod, info, {from: holder});
+            await validatorService.enableValidator(validatorId);
+            await delegationController.connect(holder).delegate(validatorId, amount, delegationPeriod, info);
             const delegationId1 = 0;
-            await delegationController.acceptPendingDelegation(delegationId1, {from: validator});
-            await delegationController.delegate(validatorId, amount, delegationPeriod, info, {from: validator3});
+            await delegationController.connect(validator).acceptPendingDelegation(delegationId1);
+            await delegationController.connect(validator3).delegate(validatorId, amount, delegationPeriod, info);
             const delegationId2 = 1;
-            await delegationController.acceptPendingDelegation(delegationId2, {from: validator});
+            await delegationController.connect(validator).acceptPendingDelegation(delegationId2);
 
-            skipTime(web3, 2678400); // 31 days
-            await nodes.checkPossibilityCreatingNode(nodeAddress)
+            await skipTime(ethers, 2678400); // 31 days
+            await nodes.checkPossibilityCreatingNode(nodeAddress.address)
                 .should.be.eventually.rejectedWith("Validator must meet the Minimum Staking Requirement");
 
             await constantsHolder.setMSR(amount);
 
-            await nodes.checkPossibilityCreatingNode(nodeAddress);
+            await nodes.checkPossibilityCreatingNode(nodeAddress.address);
             const pubKey = ec.keyFromPrivate(String(privateKeys[2]).slice(2)).getPublic();
             await nodes.createNode(
-                nodeAddress,
+                nodeAddress.address,
                 {
                     port: 8545,
                     nonce: 0,
@@ -331,9 +358,9 @@ contract("NodesFunctionality", ([owner, validator, nodeAddress, nodeAddress2, ho
                     domainName: "somedomain.name"
                 });
 
-            await nodes.checkPossibilityCreatingNode(nodeAddress);
+            await nodes.checkPossibilityCreatingNode(nodeAddress.address);
             await nodes.createNode(
-                nodeAddress,
+                nodeAddress.address,
                 {
                     port: 8545,
                     nonce: 0,
@@ -346,9 +373,8 @@ contract("NodesFunctionality", ([owner, validator, nodeAddress, nodeAddress2, ho
 
             const nodeIndexesBN = (await nodes.getValidatorNodeIndexes(validatorId));
             for (let i = 0; i < nodeIndexesBN.length; i++) {
-                const nodeIndexBN = (await nodes.getValidatorNodeIndexes(validatorId))[i];
-                const nodeIndex = new BigNumber(nodeIndexBN).toNumber();
-                assert.equal(nodeIndex, i);
+                const nodeIndex = (await nodes.getValidatorNodeIndexes(validatorId))[i];
+                nodeIndex.should.be.equal(i);
             }
         });
     });

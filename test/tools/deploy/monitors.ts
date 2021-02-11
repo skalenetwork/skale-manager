@@ -1,13 +1,13 @@
-import { ContractManagerInstance, MonitorsInstance } from "../../../types/truffle-contracts";
+import { ContractManager, Monitors } from "../../../typechain";
 import { deployConstantsHolder } from "./constantsHolder";
 import { deployFunctionFactory } from "./factory";
 import { deployNodes } from "./nodes";
 import { deploySkaleDKG } from "./skaleDKG";
 import { deploySkaleVerifier } from "./skaleVerifier";
 
-const deployMonitors: (contractManager: ContractManagerInstance) => Promise<MonitorsInstance>
+const deployMonitors: (contractManager: ContractManager) => Promise<Monitors>
     = deployFunctionFactory("Monitors",
-                            async (contractManager: ContractManagerInstance) => {
+                            async (contractManager: ContractManager) => {
                                 await deployConstantsHolder(contractManager);
                                 await deployNodes(contractManager);
                                 await deploySkaleVerifier(contractManager);

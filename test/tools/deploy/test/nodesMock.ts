@@ -1,8 +1,8 @@
-import { ContractManagerInstance, NodesMockInstance } from "../../../../types/truffle-contracts";
+import { ContractManager, NodesMock } from "../../../../typechain";
 import { deployFunctionFactory } from "../factory";
 
-export const deployNodesMock: (contractManager: ContractManagerInstance) => Promise<NodesMockInstance>
+export const deployNodesMock: (contractManager: ContractManager) => Promise<NodesMock>
     = deployFunctionFactory("NodesMock",
-                            async (contractManager: ContractManagerInstance) => {
+                            async (contractManager: ContractManager) => {
                                 return undefined;
                             });

@@ -1,7 +1,7 @@
-import { ContractManagerInstance, SkaleManagerMockInstance } from "../../../../types/truffle-contracts";
+import { ContractManager, SkaleManagerMock } from "../../../../typechain";
 import { deployWithConstructorFunctionFactory } from "../factory";
 
-const deploySkaleManagerMock: (contractManager: ContractManagerInstance) => Promise<SkaleManagerMockInstance>
+const deploySkaleManagerMock: (contractManager: ContractManager) => Promise<SkaleManagerMock>
     = deployWithConstructorFunctionFactory("SkaleManagerMock");
 
 export { deploySkaleManagerMock };
