@@ -21,6 +21,7 @@
 */
 
 pragma solidity 0.6.10;
+pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
 

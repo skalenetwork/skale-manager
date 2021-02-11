@@ -21,6 +21,7 @@
 */
 
 pragma solidity 0.6.10;
+pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
 
@@ -75,7 +76,7 @@ library SegmentTree {
      * - `size` must be greater than 0
      * - `size` must be power of 2
      */
-    function create(Tree storage segmentTree, uint size) internal {
+    function create(Tree storage segmentTree, uint size) public {
         require(size > 0, "Size can't be 0");
         require(size & size.sub(1) == 0, "Size is not power of 2");
         segmentTree.tree = new uint[](size.mul(2).sub(1));
@@ -90,21 +91,10 @@ library SegmentTree {
      * - `size` must be greater than 0
      * - `size` must be power of 2
      */
-    function createWithLastElement(Tree storage segmentTree, uint size, uint lastElement) internal {
+    function createWithLastElement(Tree storage segmentTree, uint size, uint lastElement) external {
         create(segmentTree, size);
         for (uint vertex = 1; vertex < size.mul(2); vertex = _right(vertex)) {
             segmentTree.tree[vertex.sub(1)] = lastElement;
-        }
-    }
-
-    /**
-     * @dev Returns amount of elements in segment tree
-     */
-    function getSize(Tree storage segmentTree) internal view returns (uint) {
-        if (segmentTree.tree.length > 0) {
-            return segmentTree.tree.length.div(2).add(1);
-        } else {
-            return 0;
         }
     }
 
@@ -115,7 +105,7 @@ library SegmentTree {
      * 
      * - `place` must be in range [1, size]
      */
-    function addToPlace(Tree storage self, uint place, uint delta) internal {
+    function addToPlace(Tree storage self, uint place, uint delta) external {
         require(_correctPlace(self, place), "Incorrect place");
         uint leftBound = 1;
         uint rightBound = getSize(self);
@@ -142,7 +132,7 @@ library SegmentTree {
      * - `place` must be in range [1, size]
      * - initial value of target element must be not less than `delta`
      */
-    function removeFromPlace(Tree storage self, uint place, uint delta) internal {
+    function removeFromPlace(Tree storage self, uint place, uint delta) external {
         require(_correctPlace(self, place), "Incorrect place");
         uint leftBound = 1;
         uint rightBound = getSize(self);
@@ -177,7 +167,7 @@ library SegmentTree {
         uint toPlace,
         uint delta
     )
-        internal
+        external
     {
         require(_correctPlace(self, fromPlace) && _correctPlace(self, toPlace), "Incorrect place");
         uint leftBound = 1;
@@ -229,7 +219,7 @@ library SegmentTree {
      * 
      * - `place` must be in range [1, size]
      */
-    function sumFromPlaceToLast(Tree storage self, uint place) internal view returns (uint sum) {
+    function sumFromPlaceToLast(Tree storage self, uint place) public view returns (uint sum) {
         require(_correctPlace(self, place), "Incorrect place");
         if (place == 1) {
             return self.tree[0];
@@ -265,7 +255,7 @@ library SegmentTree {
         uint place,
         Random.RandomGenerator memory randomGenerator
     )
-        internal
+        external
         view
         returns (uint)
     {
@@ -286,7 +276,7 @@ library SegmentTree {
             } else {
                 uint rightSum = self.tree[_right(vertex).sub(1)];
                 uint leftSum = currentSum.sub(rightSum);
-                if (randomGenerator.random(currentSum) < leftSum) {
+                if (Random.random(randomGenerator, currentSum) < leftSum) {
                     // go left
                     vertex = _left(vertex);
                     rightBound = _middle(leftBound, rightBound);
@@ -301,6 +291,17 @@ library SegmentTree {
             }
         }
         return leftBound.add(1);
+    }
+
+    /**
+     * @dev Returns amount of elements in segment tree
+     */
+    function getSize(Tree storage segmentTree) internal view returns (uint) {
+        if (segmentTree.tree.length > 0) {
+            return segmentTree.tree.length.div(2).add(1);
+        } else {
+            return 0;
+        }
     }
 
     // /**
@@ -366,18 +367,18 @@ library SegmentTree {
     //     return (leftBound, randomBeakon);
     // }
 
-    function _randomWay(
-        uint salt,
-        uint priorityA,
-        uint priorityB
-    )
-        private
-        pure
-        returns (bool isLeftWay, uint newSalt)
-    {
-        newSalt = uint(keccak256(abi.encodePacked(salt, priorityA, priorityB)));
-        isLeftWay = (newSalt % (priorityA + priorityB)) < priorityA;
-    }
+    // function _randomWay(
+    //     uint salt,
+    //     uint priorityA,
+    //     uint priorityB
+    // )
+    //     private
+    //     pure
+    //     returns (bool isLeftWay, uint newSalt)
+    // {
+    //     newSalt = uint(keccak256(abi.encodePacked(salt, priorityA, priorityB)));
+    //     isLeftWay = (newSalt % (priorityA + priorityB)) < priorityA;
+    // }
 
     /**
      * @dev Checks if `place` is valid position in segment tree

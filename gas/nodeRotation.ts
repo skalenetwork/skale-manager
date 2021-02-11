@@ -124,7 +124,13 @@ describe("createSchains", () => {
         console.log("Will process", schainIds.length, "rotations");
         const gas = [];
         for (let i = 0; i < schainIds.length; i++) {
-            const result = await (await skaleManager.connect(node).nodeExit(rotIndex)).wait();
+            const estimatedGas = await skaleManager.estimateGas.nodeExit(rotIndex);
+            console.log("Estimated gas on nodeExit", estimatedGas.toNumber());
+            const overrides = {
+                gasLimit: estimatedGas.toNumber()
+            }
+            const result = await (await skaleManager.connect(node).nodeExit(rotIndex, overrides)).wait();
+            // console.log("Gas limit was:", result);
             console.log("" + (i + 1) + "", "Rotation on", nodesAmount, "nodes:\t", result.gasUsed.toNumber(), "gu");
             gas.push(result.gasUsed.toNumber());
             if (result.gasUsed.toNumber() > gasLimit) {
@@ -188,7 +194,13 @@ describe("createSchains", () => {
         console.log("Will process", schainIds.length, "rotations");
         const gas = [];
         for (let i = 0; i < schainIds.length; i++) {
-            const result = await (await skaleManager.connect(node).nodeExit(rotIndex)).wait();
+            const estimatedGas = await skaleManager.estimateGas.nodeExit(rotIndex);
+            console.log("Estimated gas on nodeExit", estimatedGas.toNumber());
+            const overrides = {
+                gasLimit: estimatedGas.toNumber()
+            }
+            const result = await (await skaleManager.connect(node).nodeExit(rotIndex, overrides)).wait();
+            // console.log("Gas limit was:", result);
             console.log("" + (i + 1) + "", "Rotation on", nodesAmount, "nodes:\t", result.gasUsed.toNumber(), "gu");
             gas.push(result.gasUsed.toNumber());
             if (result.gasUsed.toNumber() > gasLimit) {
@@ -249,7 +261,13 @@ describe("createSchains", () => {
                 console.log("Will process", schainIds.length, "rotations");
                 const gas = [];
                 for (let i = 0; i < schainIds.length; i++) {
-                    const result = await (await skaleManager.connect(node).nodeExit(rotIndex)).wait();
+                    const estimatedGas = await skaleManager.estimateGas.nodeExit(rotIndex);
+                    console.log("Estimated gas on nodeExit", estimatedGas.toNumber());
+                    const overrides = {
+                        gasLimit: estimatedGas.toNumber()
+                    }
+                    const result = await (await skaleManager.connect(node).nodeExit(rotIndex, overrides)).wait();
+                    // console.log("Gas limit was:", result);
                     console.log("" + (i + 1) + "", "Rotation on", nodesAmount, "nodes:\t", result.gasUsed.toNumber(), "gu");
                     gas.push(result.gasUsed.toNumber());
                     if (result.gasUsed.toNumber() > gasLimit) {

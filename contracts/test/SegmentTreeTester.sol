@@ -21,6 +21,7 @@
 */
 
 pragma solidity 0.6.10;
+pragma experimental ABIEncoderV2;
 
 import "../utils/SegmentTree.sol";
 
