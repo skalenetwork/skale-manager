@@ -72,7 +72,8 @@ export const contracts = [
     "SkaleVerifier",
     "SkaleManager",
     "Pricing",
-    "BountyV2"
+    "BountyV2",
+    "Wallets"
 ]
 
 async function main() {
@@ -93,7 +94,6 @@ async function main() {
 
     if (!production) {
         contracts.push("TimeHelpersWithDebug");
-        contracts.push("Wallets");
     }
 
     const artifacts: {address: string, interface: Interface, contract: string}[] = [];

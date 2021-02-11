@@ -44,6 +44,10 @@ async function main() {
                 throw(e);
             }
         }
+        let _contract = contract;
+        if (contract === "BountyV2") {
+            _contract = "Bounty";
+        }
         const proxyAddress = abi[getContractKeyInAbiFile(contract) + "_address"];
         console.log(`Upgrade ${contract} at ${proxyAddress}`);
         if (multisig) {
