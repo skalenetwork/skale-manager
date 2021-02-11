@@ -67,7 +67,7 @@ library SkaleDkgBroadcast {
         uint nodeIndex,
         G2Operations.G2Point[] memory verificationVector,
         SkaleDKG.KeyShare[] memory secretKeyContribution,
-        ContractManager contractManager,
+        SkaleDKG.Context memory context,
         mapping(bytes32 => SkaleDKG.Channel) storage channels,
         mapping(bytes32 => SkaleDKG.ProcessDKG) storage dkgProcess,
         mapping(bytes32 => mapping(uint => bytes32)) storage hashedData
@@ -81,27 +81,27 @@ library SkaleDkgBroadcast {
             secretKeyContribution.length == n,
             "Incorrect number of secret key shares"
         );
-        (uint index, ) = SkaleDKG(contractManager.getContract("SkaleDKG")).checkAndReturnIndexInGroup(
+        (uint index, ) = SkaleDKG(context.contractManager.getContract("SkaleDKG")).checkAndReturnIndexInGroup(
             schainId, nodeIndex, true
         );
         require(!dkgProcess[schainId].broadcasted[index], "This node has already broadcasted");
         dkgProcess[schainId].broadcasted[index] = true;
         dkgProcess[schainId].numberOfBroadcasted++;
         if (dkgProcess[schainId].numberOfBroadcasted == channels[schainId].n) {
-            SkaleDKG(contractManager.getContract("SkaleDKG")).setStartAlrightTimestamp(schainId);
+            SkaleDKG(context.contractManager.getContract("SkaleDKG")).setStartAlrightTimestamp(schainId);
         }
-        hashedData[schainId][index] = SkaleDKG(contractManager.getContract("SkaleDKG")).hashData(
+        hashedData[schainId][index] = SkaleDKG(context.contractManager.getContract("SkaleDKG")).hashData(
             secretKeyContribution, verificationVector
         );
-        KeyStorage(contractManager.getContract("KeyStorage")).adding(schainId, verificationVector[0]);
+        KeyStorage(context.contractManager.getContract("KeyStorage")).adding(schainId, verificationVector[0]);
         emit BroadcastAndKeyShare(
             schainId,
             nodeIndex,
             verificationVector,
             secretKeyContribution
         );
-        Wallets(payable(contractManager.getContract("Wallets")))
-        .refundGasBySchain(schainId, gasTotal - gasleft(), false);
+        Wallets(payable(context.contractManager.getContract("Wallets")))
+        .refundGasBySchain(schainId, context.spender, gasTotal - gasleft(), false);
     }
 
     function getT(uint n) public pure returns (uint) {

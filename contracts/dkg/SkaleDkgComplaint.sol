@@ -64,6 +64,7 @@ library SkaleDkgComplaint {
         bytes32 schainId,
         uint fromNodeIndex,
         uint toNodeIndex,
+        address payable spender,
         ContractManager contractManager,
         mapping(bytes32 => SkaleDKG.Channel) storage channels,
         mapping(bytes32 => SkaleDKG.ComplaintData) storage complaints,
@@ -89,7 +90,7 @@ library SkaleDkgComplaint {
         }
          uint validatorId = Nodes(contractManager.getContract("Nodes")).getValidatorId(toNodeIndex);
          Wallets(payable(contractManager.getContract("Wallets")))
-         .refundGasBySchain(schainId, gasTotal - gasleft(), true);
+         .refundGasBySchain(schainId, spender, gasTotal - gasleft(), true);
          Wallets(payable(contractManager.getContract("Wallets")))
          .refundGasByValidatorToSchain(validatorId, schainId);
     }
@@ -98,6 +99,7 @@ library SkaleDkgComplaint {
         bytes32 schainId,
         uint fromNodeIndex,
         uint toNodeIndex,
+        address payable spender,
         ContractManager contractManager,
         mapping(bytes32 => SkaleDKG.ComplaintData) storage complaints
     )
@@ -117,7 +119,7 @@ library SkaleDkgComplaint {
             emit ComplaintError("First complaint has already been processed");
         }
          Wallets(payable(contractManager.getContract("Wallets")))
-        .refundGasBySchain(schainId, gasTotal - gasleft(), true);
+        .refundGasBySchain(schainId, spender, gasTotal - gasleft(), true);
     }
 
     function _handleComplaintWhenBroadcasted(

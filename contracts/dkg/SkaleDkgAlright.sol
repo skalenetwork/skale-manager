@@ -42,6 +42,7 @@ library SkaleDkgAlright {
     function alright(
         bytes32 schainId,
         uint fromNodeIndex,
+        address payable spender,
         ContractManager contractManager,
         mapping(bytes32 => SkaleDKG.Channel) storage channels,
         mapping(bytes32 => SkaleDKG.ProcessDKG) storage dkgProcess,
@@ -72,7 +73,7 @@ library SkaleDkgAlright {
             emit SuccessfulDKG(schainId);
         }
         Wallets(payable(contractManager.getContract("Wallets")))
-        .refundGasBySchain(schainId, gasTotal - gasleft(), false);
+        .refundGasBySchain(schainId, spender, gasTotal - gasleft(), false);
     }
 
 }

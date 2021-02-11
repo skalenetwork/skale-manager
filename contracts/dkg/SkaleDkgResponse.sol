@@ -44,6 +44,7 @@ library SkaleDkgResponse {
         uint fromNodeIndex,
         uint secretNumber,
         G2Operations.G2Point memory multipliedShare,
+        address payable spender,
         ContractManager contractManager,
         mapping(bytes32 => SkaleDKG.Channel) storage channels,
         mapping(bytes32 => SkaleDKG.ComplaintData) storage complaints
@@ -65,7 +66,7 @@ library SkaleDkgResponse {
          );
          uint validatorId = Nodes(contractManager.getContract("Nodes")).getValidatorId(badNode);
         Wallets(payable(contractManager.getContract("Wallets")))
-        .refundGasBySchain(schainId, gasTotal - gasleft(), true);
+        .refundGasBySchain(schainId, spender, gasTotal - gasleft(), true);
         Wallets(payable(contractManager.getContract("Wallets")))
         .refundGasByValidatorToSchain(validatorId, schainId);
     }

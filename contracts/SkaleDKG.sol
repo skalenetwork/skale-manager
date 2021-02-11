@@ -76,6 +76,11 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         bytes32 share;
     }
 
+    struct Context {
+        address payable spender;
+        ContractManager contractManager;
+    }
+
     uint public constant COMPLAINT_TIMELIMIT = 1800;
 
     mapping(bytes32 => Channel) public channels;
@@ -187,6 +192,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         SkaleDkgAlright.alright(
             schainId,
             fromNodeIndex,
+            msg.sender,
             contractManager,
             channels,
             dkgProcess,
@@ -210,7 +216,10 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             nodeIndex,
             verificationVector,
             secretKeyContribution,
-            contractManager,
+            Context({
+                spender: msg.sender,
+                contractManager: contractManager
+            }),
             channels,
             dkgProcess,
             hashedData
@@ -228,6 +237,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             schainId,
             fromNodeIndex,
             toNodeIndex,
+            msg.sender,
             contractManager,
             channels,
             complaints,
@@ -246,6 +256,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             schainId,
             fromNodeIndex,
             toNodeIndex,
+            msg.sender,
             contractManager,
             complaints
         );
@@ -268,6 +279,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             verificationVector,
             verificationVectorMult,
             secretKeyContribution,
+            msg.sender,
             contractManager,
             complaints,
             hashedData
@@ -289,6 +301,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             fromNodeIndex,
             secretNumber,
             multipliedShare,
+            msg.sender,
             contractManager,
             channels,
             complaints

@@ -74,6 +74,7 @@ contract Wallets is Permissions {
      * @dev Reimburse gas for node by validator wallet. If validator wallet has not enough funds 
      * the node will receive the entire remaining amount in the validator's wallet.
      * `validatorId` - validator that will reimburse desired transaction
+     * `spender` - address to send reimbursed funds
      * `spentGas` - amount of spent gas that should be reimbursed to desired node
      * 
      * Emits a {NodeWalletRefunded} event.
@@ -83,6 +84,7 @@ contract Wallets is Permissions {
      */
     function refundGasByValidator(
         uint validatorId,
+        address payable spender,
         uint spentGas
     )
         external
@@ -92,14 +94,14 @@ contract Wallets is Permissions {
         uint amount = tx.gasprice * (spentGas + 28258);
         if (amount <= _validatorWallets[validatorId]) {
             _validatorWallets[validatorId] = _validatorWallets[validatorId].sub(amount);
-            emit NodeWalletRefunded(tx.origin, amount);
-            tx.origin.transfer(amount);
+            emit NodeWalletRefunded(spender, amount);
+            spender.transfer(amount);
         } else {
             uint wholeAmount = _validatorWallets[validatorId];
             // solhint-disable-next-line reentrancy
             _validatorWallets[validatorId] = 0;
-            emit NodeWalletRefunded(tx.origin, wholeAmount);
-            tx.origin.transfer(wholeAmount);
+            emit NodeWalletRefunded(spender, wholeAmount);
+            spender.transfer(wholeAmount);
         }
     }
 
@@ -125,6 +127,7 @@ contract Wallets is Permissions {
      * @dev Reimburse gas for node by schain wallet. If schain wallet has not enough funds 
      * than transaction will be reverted.
      * `schainId` - schain that will reimburse desired transaction
+     * `spender` - address to send reimbursed funds
      * `spentGas` - amount of spent gas that should be reimbursed to desired node
      * 
      * Requirements: 
@@ -133,6 +136,7 @@ contract Wallets is Permissions {
      */
     function refundGasBySchain(
         bytes32 schainId,
+        address payable spender,
         uint spentGas,
         bool isDebt
     )
@@ -146,8 +150,8 @@ contract Wallets is Permissions {
         require(schainId != bytes32(0), "SchainId cannot be null");
         require(amount <= _schainWallets[schainId], "Schain wallet has not enough funds");
         _schainWallets[schainId] = _schainWallets[schainId].sub(amount);
-        emit NodeWalletRefunded(tx.origin, amount);
-        tx.origin.transfer(amount);
+        emit NodeWalletRefunded(spender, amount);
+        spender.transfer(amount);
     }
 
     /**
