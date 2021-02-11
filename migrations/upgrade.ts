@@ -31,6 +31,8 @@ async function main() {
     const abiFilename = process.env.ABI;
     const abi = JSON.parse(await fs.readFile(abiFilename, "utf-8"));
 
+    // remove Wallets from list
+    contracts.pop();
     for (const contract of ["ContractManager"].concat(contracts)) {
         let contractFactory: ContractFactory;
         try {
