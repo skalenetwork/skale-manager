@@ -5,7 +5,7 @@ DEPLOYED_DIR=$GITHUB_WORKSPACE/deployed-skale-manager/
 
 git clone --branch $DEPLOYED_VERSION https://github.com/$GITHUB_REPOSITORY.git $DEPLOYED_DIR
 
-npx ganache-cli --gasLimit 8000000 --quiet --allowUnlimitedContractSize &
+npx ganache-cli --gasLimit 8000000 --quiet &
 GANACHE_PID=$!
 
 # TODO:
