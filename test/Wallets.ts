@@ -34,7 +34,9 @@ chai.use(solidity);
 chai.use(chaiAlmost(2));
 
 async function ethSpent(response: ContractTransaction) {
-    return parseFloat(web3.utils.fromWei(new BigNumber(8*1e9).multipliedBy(((await response.wait()).gasUsed).toNumber()).toString()));
+    const gasUsed = (await response.wait()).gasUsed;
+    const cost = response.gasPrice.toNumber() * gasUsed.toNumber();
+    return parseFloat(web3.utils.fromWei(cost.toString()));
 }
 
 async function getBalance(address: string) {
