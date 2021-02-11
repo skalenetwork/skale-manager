@@ -120,6 +120,19 @@ describe("Wallets", () => {
 
     });
 
+    it("should revert if someone sends ETH to contract Wallets", async() => {
+        const amount = ethers.utils.parseEther("1.0");
+        await owner.sendTransaction({to: wallets.address, value: amount})
+        .should.be.eventually.rejectedWith("Validator address does not exist");
+    });
+
+    it("should recharge validator wallet sending ETH to contract Wallets", async() => {
+        const amount = ethers.utils.parseEther("1.0");
+        (await wallets.getValidatorBalance(validator1Id)).toNumber().should.be.equal(0);
+        await validator1.sendTransaction({to: wallets.address, value: amount});
+        (await wallets.getValidatorBalance(validator1Id)).should.be.equal(amount);
+    });
+
     it("should recharge validator wallet", async() => {
         const amount = 1e9;
         (await wallets.getValidatorBalance(validator1Id)).toNumber().should.be.equal(0);
@@ -206,6 +219,13 @@ describe("Wallets", () => {
             await wallets.rechargeSchainWallet(stringValue(schain1Id), {value: amount.toString()});
             (await wallets.getSchainBalance(stringValue(schain1Id))).toNumber().should.be.equal(amount);
             (await wallets.getSchainBalance(stringValue(schain2Id))).toNumber().should.be.equal(0);
+        });
+
+        it("should recharge schain wallet sending ETH to contract Wallets", async() => {
+            const amount = ethers.utils.parseEther("1.0");
+            (await wallets.getSchainBalance(stringValue(schain1Id))).toNumber().should.be.equal(0);
+            await validator1.sendTransaction({to: wallets.address, value: amount});
+            (await wallets.getSchainBalance(stringValue(schain1Id))).should.be.equal(amount);
         });
 
         describe("when validators and schains wallets are recharged", async () => {
