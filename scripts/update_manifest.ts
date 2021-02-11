@@ -32,6 +32,7 @@ async function main() {
     await exec(`rm -r --interactive=never ${deployedDir}`)
     console.log("Prepare contracts");
     await exec("sed -i '/buidler/d' contracts/BountyV2.sol");
+    await exec("cp contracts_tmp/Wallets.sol contracts");
 
     console.log("Deploy contracts");
     await exec(`rm .openzeppelin/unknown-31337.json || rm .openzeppelin/unknown-1337.json || true`);
