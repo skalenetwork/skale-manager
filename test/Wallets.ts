@@ -31,7 +31,7 @@ import { ContractTransaction } from "ethers";
 chai.should();
 chai.use(chaiAsPromised);
 chai.use(solidity);
-chai.use(chaiAlmost(2));
+chai.use(chaiAlmost(0.002));
 
 async function ethSpent(response: ContractTransaction) {
     const gasUsed = (await response.wait()).gasUsed;
