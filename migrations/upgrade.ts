@@ -19,7 +19,11 @@ async function main() {
 
     for (const contract of ["ContractManager"].concat(contracts)) {
         const contractFactory = await ethers.getContractFactory(contract);
-        const proxyAddress = abi[getContractKeyInAbiFile(contract) + "_address"];
+        let _contract = contract;
+        if (contract === "BountyV2") {
+            _contract = "Bounty";
+        }
+        const proxyAddress = abi[getContractKeyInAbiFile(_contract) + "_address"];
         console.log(`Upgrade ${contract} at ${proxyAddress}`);
         if (multisig) {
             await upgrades.prepareUpgrade(proxyAddress, contractFactory);
