@@ -65,7 +65,7 @@ library SkaleDkgResponse {
          );
          uint validatorId = Nodes(contractManager.getContract("Nodes")).getValidatorId(badNode);
         Wallets(payable(contractManager.getContract("Wallets")))
-        .refundGasBySchain(schainId, fromNodeIndex, gasTotal - gasleft(), true);
+        .refundGasBySchain(schainId, gasTotal - gasleft(), true);
         Wallets(payable(contractManager.getContract("Wallets")))
         .refundGasByValidatorToSchain(validatorId, schainId);
     }

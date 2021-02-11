@@ -152,7 +152,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
             nodes.changeNodeFinishTime(nodeIndex, now.add(isSchains ? constants.rotationDelay() : 0));
             nodes.deleteNodeForValidator(validatorId, nodeIndex);
         }
-        _refundGasByValidator(validatorId, nodeIndex, gasTotal - gasleft());
+        _refundGasByValidator(validatorId, gasTotal - gasleft());
     }
 
     function deleteSchain(string calldata name) external {
@@ -183,7 +183,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
         }
 
         _emitBountyEvent(nodeIndex, msg.sender, 0, 0, bounty);
-        _refundGasByValidator(validatorId, nodeIndex, gasTotal - gasleft());
+        _refundGasByValidator(validatorId, gasTotal - gasleft());
     }
 
     function initialize(address newContractsAddress) public override initializer {
@@ -235,7 +235,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
             gasleft());
     }
 
-    function _refundGasByValidator(uint validatorId, uint nodeIndex, uint gasTotal) private {
-        Wallets(payable(contractManager.getContract("Wallets"))).refundGasByValidator(validatorId, nodeIndex, gasTotal);
+    function _refundGasByValidator(uint validatorId, uint spentGas) private {
+        Wallets(payable(contractManager.getContract("Wallets"))).refundGasByValidator(validatorId, spentGas);
     }
 }

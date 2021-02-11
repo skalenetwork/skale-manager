@@ -72,6 +72,10 @@ async function getValidatorIdSignature(validatorId: BigNumber, signer: SignerWit
     }
 }
 
+function getRound(value: number) {
+    return Math.round(value*1e9)/1e9;
+}
+
 function stringValue(value: string | null) {
     if (value) {
         return value;
@@ -126,14 +130,12 @@ describe("Wallets", () => {
 
     it("should withdraw from validator wallet", async() => {
         const amount = 1e9;
-        const gasPrice = 8*1e9;
         await wallets.rechargeValidatorWallet(validator1Id, {value: amount.toString()});
         const validator1Balance = Number.parseInt(await web3.eth.getBalance(validator1.address), 10);
 
-        const tx = await (await wallets.connect(validator1).withdrawFundsFromValidatorWallet(amount)).wait();
-        let validator1BalanceAfterWithdraw = Number.parseInt(await web3.eth.getBalance(validator1.address), 10);
-        validator1BalanceAfterWithdraw += tx.gasUsed.toNumber() * gasPrice;
-        assert.equal(validator1BalanceAfterWithdraw, validator1Balance + amount);
+        const tx = await wallets.connect(validator1).withdrawFundsFromValidatorWallet(amount);
+        const validator1BalanceAfterWithdraw = fromWei(await web3.eth.getBalance(validator1.address)) + await ethSpent(tx);
+        assert.equal(getRound(validator1BalanceAfterWithdraw), getRound((validator1Balance + amount)/1e18));
         await wallets.connect(validator2).withdrawFundsFromValidatorWallet(amount).should.be.eventually.rejectedWith("Balance is too low");
         await wallets.withdrawFundsFromValidatorWallet(amount).should.be.eventually.rejectedWith("Validator address does not exist");
     });
@@ -219,7 +221,7 @@ describe("Wallets", () => {
                 const result = await skaleManager.connect(validator1).deleteSchain(schain1Name);
                 let balance = await getBalance(validator1.address);
                 const expectedBalance = balanceBefore - await ethSpent(result) + initialBalance;
-                balance.should.be.equal(Math.round(expectedBalance*1e9)/1e9);
+                getRound(balance).should.be.equal(getRound(expectedBalance));
 
                 balanceBefore = await getBalance(validator2.address);
                 await skaleManager.deleteSchainByRoot(schain2Name);

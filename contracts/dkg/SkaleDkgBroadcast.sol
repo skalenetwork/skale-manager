@@ -101,7 +101,7 @@ library SkaleDkgBroadcast {
             secretKeyContribution
         );
         Wallets(payable(contractManager.getContract("Wallets")))
-        .refundGasBySchain(schainId, nodeIndex, gasTotal - gasleft(), false);
+        .refundGasBySchain(schainId, gasTotal - gasleft(), false);
     }
 
     function getT(uint n) public pure returns (uint) {

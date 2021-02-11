@@ -63,7 +63,7 @@ library SkaleDkgPreResponse {
         );
         _processPreResponse(secretKeyContribution[index].share, schainId, verificationVectorMult, complaints);
         Wallets(payable(contractManager.getContract("Wallets")))
-        .refundGasBySchain(schainId, fromNodeIndex, gasTotal - gasleft(), true);
+        .refundGasBySchain(schainId, gasTotal - gasleft(), true);
     }
 
     function _preResponseCheck(

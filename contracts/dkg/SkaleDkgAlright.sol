@@ -72,7 +72,7 @@ library SkaleDkgAlright {
             emit SuccessfulDKG(schainId);
         }
         Wallets(payable(contractManager.getContract("Wallets")))
-        .refundGasBySchain(schainId, fromNodeIndex, gasTotal - gasleft(), false);
+        .refundGasBySchain(schainId, gasTotal - gasleft(), false);
     }
 
 }

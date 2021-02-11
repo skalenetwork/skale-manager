@@ -74,7 +74,6 @@ contract Wallets is Permissions {
      * @dev Reimburse gas for node by validator wallet. If validator wallet has not enough funds 
      * the node will receive the entire remaining amount in the validator's wallet.
      * `validatorId` - validator that will reimburse desired transaction
-     * `nodeIndex` - index of node that will get refunding by validator
      * `spentGas` - amount of spent gas that should be reimbursed to desired node
      * 
      * Emits a {NodeWalletRefunded} event.
@@ -84,25 +83,23 @@ contract Wallets is Permissions {
      */
     function refundGasByValidator(
         uint validatorId,
-        uint nodeIndex,
         uint spentGas
     )
         external
         allowTwo("SkaleManager", "SkaleDKG")
     {
-        address payable node = payable(Nodes(contractManager.getContract("Nodes")).getNodeAddress(nodeIndex));
         require(validatorId != 0, "ValidatorId could not be zero");
-        uint amount = tx.gasprice * spentGas;
+        uint amount = tx.gasprice * (spentGas + 28258);
         if (amount <= _validatorWallets[validatorId]) {
             _validatorWallets[validatorId] = _validatorWallets[validatorId].sub(amount);
-            emit NodeWalletRefunded(node, amount);
-            node.transfer(amount);
+            emit NodeWalletRefunded(tx.origin, amount);
+            tx.origin.transfer(amount);
         } else {
             uint wholeAmount = _validatorWallets[validatorId];
             // solhint-disable-next-line reentrancy
             _validatorWallets[validatorId] = 0;
-            emit NodeWalletRefunded(node, wholeAmount);
-            node.transfer(wholeAmount);
+            emit NodeWalletRefunded(tx.origin, wholeAmount);
+            tx.origin.transfer(wholeAmount);
         }
     }
 
@@ -128,7 +125,6 @@ contract Wallets is Permissions {
      * @dev Reimburse gas for node by schain wallet. If schain wallet has not enough funds 
      * than transaction will be reverted.
      * `schainId` - schain that will reimburse desired transaction
-     * `nodeIndex` - node that will get refunding by schain
      * `spentGas` - amount of spent gas that should be reimbursed to desired node
      * 
      * Requirements: 
@@ -137,23 +133,21 @@ contract Wallets is Permissions {
      */
     function refundGasBySchain(
         bytes32 schainId,
-        uint nodeIndex,
         uint spentGas,
         bool isDebt
     )
         external
         allowTwo("SkaleDKG", "MessageProxyForMainnet")
     {
-        address payable node = payable(Nodes(contractManager.getContract("Nodes")).getNodeAddress(nodeIndex));
-        uint amount = tx.gasprice * spentGas;
+        uint amount = tx.gasprice * (spentGas + 26600);
         if (isDebt) {
             _schainDebts[schainId] = _schainDebts[schainId].add(amount);
         }
         require(schainId != bytes32(0), "SchainId cannot be null");
         require(amount <= _schainWallets[schainId], "Schain wallet has not enough funds");
         _schainWallets[schainId] = _schainWallets[schainId].sub(amount);
-        emit NodeWalletRefunded(node, amount);
-        node.transfer(amount);
+        emit NodeWalletRefunded(tx.origin, amount);
+        tx.origin.transfer(amount);
     }
 
     /**
