@@ -70,20 +70,6 @@ library SegmentTree {
 
     /**
      * @dev Allocates storage for segment tree of `size` elements
-     * 
-     * Requirements:
-     * 
-     * - `size` must be greater than 0
-     * - `size` must be power of 2
-     */
-    function create(Tree storage segmentTree, uint size) public {
-        require(size > 0, "Size can't be 0");
-        require(size & size.sub(1) == 0, "Size is not power of 2");
-        segmentTree.tree = new uint[](size.mul(2).sub(1));
-    }
-
-    /**
-     * @dev Allocates storage for segment tree of `size` elements
      * and sets last element to `lastElement`
      * 
      * Requirements:
@@ -213,35 +199,6 @@ library SegmentTree {
     }
 
     /**
-     * @dev Returns sum of elements in range [`place`, size]
-     * 
-     * Requirements:
-     * 
-     * - `place` must be in range [1, size]
-     */
-    function sumFromPlaceToLast(Tree storage self, uint place) public view returns (uint sum) {
-        require(_correctPlace(self, place), "Incorrect place");
-        if (place == 1) {
-            return self.tree[0];
-        }
-        uint leftBound = 1;
-        uint rightBound = getSize(self);
-        uint step = 1;
-        while(leftBound < rightBound) {
-            uint middle = leftBound.add(rightBound).div(2);
-            if (place > middle) {
-                leftBound = middle.add(1);
-                step = step.add(step).add(1);
-            } else {
-                rightBound = middle;
-                step = step.add(step);
-                sum = sum.add(self.tree[step]);
-            }
-        }
-        sum = sum.add(self.tree[step.sub(1)]);
-    }
-
-    /**
      * @dev Returns random position in range [`place`, size]
      * with probability proportional to value stored at this position.
      * If all element in range are 0 returns 0
@@ -291,6 +248,49 @@ library SegmentTree {
             }
         }
         return leftBound.add(1);
+    }
+
+    /**
+     * @dev Allocates storage for segment tree of `size` elements
+     * 
+     * Requirements:
+     * 
+     * - `size` must be greater than 0
+     * - `size` must be power of 2
+     */
+    function create(Tree storage segmentTree, uint size) public {
+        require(size > 0, "Size can't be 0");
+        require(size & size.sub(1) == 0, "Size is not power of 2");
+        segmentTree.tree = new uint[](size.mul(2).sub(1));
+    }
+
+    /**
+     * @dev Returns sum of elements in range [`place`, size]
+     * 
+     * Requirements:
+     * 
+     * - `place` must be in range [1, size]
+     */
+    function sumFromPlaceToLast(Tree storage self, uint place) public view returns (uint sum) {
+        require(_correctPlace(self, place), "Incorrect place");
+        if (place == 1) {
+            return self.tree[0];
+        }
+        uint leftBound = 1;
+        uint rightBound = getSize(self);
+        uint step = 1;
+        while(leftBound < rightBound) {
+            uint middle = leftBound.add(rightBound).div(2);
+            if (place > middle) {
+                leftBound = middle.add(1);
+                step = step.add(step).add(1);
+            } else {
+                rightBound = middle;
+                step = step.add(step);
+                sum = sum.add(self.tree[step]);
+            }
+        }
+        sum = sum.add(self.tree[step.sub(1)]);
     }
 
     /**

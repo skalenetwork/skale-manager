@@ -109,8 +109,7 @@ const config: HardhatUserConfig = {
           balance: "0xd3c21bcecceda0000000"
         }
       ],
-      blockGasLimit: 0xfffffffffff,
-      allowUnlimitedContractSize: true
+      blockGasLimit: 0xfffffffffff
     },
     custom: {
       url: getCustomUrl(process.env.ENDPOINT),
