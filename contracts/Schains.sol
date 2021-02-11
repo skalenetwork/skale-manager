@@ -169,7 +169,7 @@ contract Schains is Permissions {
 
         _addSchain(_schainOwner, 0, schainParameters);
         bytes32 schainId = keccak256(abi.encodePacked(name));
-        Wallets(payable(contractManager.getContract("Wallets"))).rechargeSchainWallet.value(msg.value)(schainId);
+        Wallets(payable(contractManager.getContract("Wallets"))).rechargeSchainWallet{value: msg.value}(schainId);
     }
 
     /**
