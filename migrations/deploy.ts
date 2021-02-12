@@ -51,7 +51,7 @@ export async function getContractFactory(contract: string) {
         contractFactory = await ethers.getContractFactory(contract);
     } catch (e) {
         const linkingErrorMessage = "The contract " + contract + " is missing links for the following libraries";
-        if (e.toString().contains(linkingErrorMessage)) {
+        if (e.toString().includes(linkingErrorMessage)) {
             contractFactory = await getContractFactoryWithLibraries(e, contract);
         } else {
             throw(e);
