@@ -44,14 +44,12 @@ library SkaleDkgResponse {
         uint fromNodeIndex,
         uint secretNumber,
         G2Operations.G2Point memory multipliedShare,
-        address payable spender,
         ContractManager contractManager,
         mapping(bytes32 => SkaleDKG.Channel) storage channels,
         mapping(bytes32 => SkaleDKG.ComplaintData) storage complaints
     )
         external
     {
-        uint gasTotal = gasleft();
         uint index = SchainsInternal(contractManager.getContract("SchainsInternal"))
             .getNodeIndexInGroup(schainId, fromNodeIndex);
         require(index < channels[schainId].n, "Node is not in this group");
@@ -64,11 +62,7 @@ library SkaleDkgResponse {
             contractManager,
             complaints
          );
-         uint validatorId = Nodes(contractManager.getContract("Nodes")).getValidatorId(badNode);
-        Wallets(payable(contractManager.getContract("Wallets")))
-        .refundGasBySchain(schainId, spender, gasTotal - gasleft(), true);
-        Wallets(payable(contractManager.getContract("Wallets")))
-        .refundGasByValidatorToSchain(validatorId, schainId);
+        SkaleDKG(contractManager.getContract("SkaleDKG")).setBadNode(schainId, badNode);
     }
 
     function _verifyDataAndSlash(

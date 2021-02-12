@@ -42,7 +42,6 @@ library SkaleDkgAlright {
     function alright(
         bytes32 schainId,
         uint fromNodeIndex,
-        address payable spender,
         ContractManager contractManager,
         mapping(bytes32 => SkaleDKG.Channel) storage channels,
         mapping(bytes32 => SkaleDKG.ProcessDKG) storage dkgProcess,
@@ -52,7 +51,6 @@ library SkaleDkgAlright {
     )
         external
     {
-        uint gasTotal = gasleft();
         SkaleDKG skaleDKG = SkaleDKG(contractManager.getContract("SkaleDKG"));
         (uint index, ) = skaleDKG.checkAndReturnIndexInGroup(schainId, fromNodeIndex, true);
         uint numberOfParticipant = channels[schainId].n;
@@ -72,8 +70,6 @@ library SkaleDkgAlright {
             KeyStorage(contractManager.getContract("KeyStorage")).finalizePublicKey(schainId);
             emit SuccessfulDKG(schainId);
         }
-        Wallets(payable(contractManager.getContract("Wallets")))
-        .refundGasBySchain(schainId, spender, gasTotal - gasleft(), false);
     }
 
 }

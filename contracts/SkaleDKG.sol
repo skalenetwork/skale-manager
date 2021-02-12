@@ -76,11 +76,6 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         bytes32 share;
     }
 
-    struct Context {
-        address payable spender;
-        ContractManager contractManager;
-    }
-
     uint public constant COMPLAINT_TIMELIMIT = 1800;
 
     mapping(bytes32 => Channel) public channels;
@@ -94,6 +89,8 @@ contract SkaleDKG is Permissions, ISkaleDKG {
     mapping(bytes32 => uint) public startAlrightTimestamp;
 
     mapping(bytes32 => mapping(uint => bytes32)) public hashedData;
+    
+    mapping(bytes32 => uint) private _badNodes;
 
     /**
      * @dev Emitted when a channel is opened.
@@ -182,17 +179,29 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         _checkMsgSenderIsNodeOwner(nodeIndex);
         _;
     }
+    
+    modifier refundGasBySchain(bytes32 schainId, bool isDebt) {
+        uint gasTotal = gasleft();
+        _;
+        _refundGasBySchain(schainId, msg.sender, gasTotal - gasleft() + 28000 + 21000 + 7700, isDebt);
+    }
 
+    modifier refundGasByValidatorToSchain(bytes32 schainId, bool isDebt) {
+        uint gasTotal = gasleft();
+        _;
+        _refundGasBySchain(schainId, msg.sender, gasTotal - gasleft() + 56000, isDebt);
+        _refundGasByValidatorToSchain(schainId);
+    }
 
     function alright(bytes32 schainId, uint fromNodeIndex)
         external
+        refundGasBySchain(schainId, false)
         correctGroup(schainId)
         onlyNodeOwner(fromNodeIndex)
     {
         SkaleDkgAlright.alright(
             schainId,
             fromNodeIndex,
-            msg.sender,
             contractManager,
             channels,
             dkgProcess,
@@ -208,6 +217,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         KeyShare[] memory secretKeyContribution
     )
         external
+        refundGasBySchain(schainId, false)
         correctGroup(schainId)
         onlyNodeOwner(nodeIndex)
     {
@@ -216,37 +226,17 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             nodeIndex,
             verificationVector,
             secretKeyContribution,
-            Context({
-                spender: msg.sender,
-                contractManager: contractManager
-            }),
+            contractManager,
             channels,
             dkgProcess,
             hashedData
         );
     }
 
-    function complaint(bytes32 schainId, uint fromNodeIndex, uint toNodeIndex)
-        external
-        correctGroupWithoutRevert(schainId)
-        correctNode(schainId, fromNodeIndex)
-        correctNodeWithoutRevert(schainId, toNodeIndex)
-        onlyNodeOwner(fromNodeIndex)
-    {
-        SkaleDkgComplaint.complaint(
-            schainId,
-            fromNodeIndex,
-            toNodeIndex,
-            msg.sender,
-            contractManager,
-            channels,
-            complaints,
-            startAlrightTimestamp
-        );
-    }
 
     function complaintBadData(bytes32 schainId, uint fromNodeIndex, uint toNodeIndex)
         external
+        refundGasBySchain(schainId, true)
         correctGroupWithoutRevert(schainId)
         correctNode(schainId, fromNodeIndex)
         correctNodeWithoutRevert(schainId, toNodeIndex)
@@ -256,7 +246,6 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             schainId,
             fromNodeIndex,
             toNodeIndex,
-            msg.sender,
             contractManager,
             complaints
         );
@@ -270,6 +259,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         KeyShare[] memory secretKeyContribution
     )
         external
+        refundGasBySchain(schainId, true)
         correctGroup(schainId)
         onlyNodeOwner(fromNodeIndex)
     {
@@ -279,10 +269,28 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             verificationVector,
             verificationVectorMult,
             secretKeyContribution,
-            msg.sender,
             contractManager,
             complaints,
             hashedData
+        );
+    }
+
+    function complaint(bytes32 schainId, uint fromNodeIndex, uint toNodeIndex)
+        external
+        refundGasByValidatorToSchain(schainId, true)
+        correctGroupWithoutRevert(schainId)
+        correctNode(schainId, fromNodeIndex)
+        correctNodeWithoutRevert(schainId, toNodeIndex)
+        onlyNodeOwner(fromNodeIndex)
+    {
+        SkaleDkgComplaint.complaint(
+            schainId,
+            fromNodeIndex,
+            toNodeIndex,
+            contractManager,
+            channels,
+            complaints,
+            startAlrightTimestamp
         );
     }
 
@@ -293,6 +301,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         G2Operations.G2Point memory multipliedShare
     )
         external
+        refundGasByValidatorToSchain(schainId, true)
         correctGroup(schainId)
         onlyNodeOwner(fromNodeIndex)
     {
@@ -301,7 +310,6 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             fromNodeIndex,
             secretNumber,
             multipliedShare,
-            msg.sender,
             contractManager,
             channels,
             complaints
@@ -337,6 +345,10 @@ contract SkaleDKG is Permissions, ISkaleDKG {
 
     function setStartAlrightTimestamp(bytes32 schainId) external allow("SkaleDKG") {
         startAlrightTimestamp[schainId] = now;
+    }
+
+    function setBadNode(bytes32 schainId, uint nodeIndex) external allow("SkaleDKG") {
+        _badNodes[schainId] = nodeIndex;
     }
 
     function finalizeSlashing(bytes32 schainId, uint badNode) external allow("SkaleDKG") {
@@ -545,10 +557,6 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         Permissions.initialize(contractsAddress);
     }
 
-    function isEveryoneBroadcasted(bytes32 schainId) public view returns (bool) {
-        return channels[schainId].n == dkgProcess[schainId].numberOfBroadcasted;
-    }
-
     function checkAndReturnIndexInGroup(
         bytes32 schainId,
         uint nodeIndex,
@@ -566,8 +574,17 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         return (index, index < channels[schainId].n);
     }
 
-    function _getComplaintTimelimit() private view returns (uint) {
-        return ConstantsHolder(contractManager.getConstantsHolder()).complaintTimelimit();
+    function _refundGasBySchain(bytes32 schainId, address spender, uint spentGas, bool isDebt) private {
+        Wallets(payable(contractManager.getContract("Wallets")))
+        .refundGasBySchain(schainId, payable(spender), spentGas, isDebt);
+    }
+
+    function _refundGasByValidatorToSchain(bytes32 schainId) private {
+        uint validatorId = Nodes(contractManager.getContract("Nodes"))
+         .getValidatorId(_badNodes[schainId]);
+         Wallets(payable(contractManager.getContract("Wallets")))
+         .refundGasByValidatorToSchain(validatorId, schainId);
+        delete _badNodes[schainId];
     }
 
     function _openChannel(bytes32 schainId) private {
@@ -592,6 +609,14 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         KeyStorage(contractManager.getContract("KeyStorage")).initPublicKeyInProgress(schainId);
 
         emit ChannelOpened(schainId);
+    }
+
+    function _getComplaintTimelimit() private view returns (uint) {
+        return ConstantsHolder(contractManager.getConstantsHolder()).complaintTimelimit();
+    }
+
+    function isEveryoneBroadcasted(bytes32 schainId) public view returns (bool) {
+        return channels[schainId].n == dkgProcess[schainId].numberOfBroadcasted;
     }
 
     function _isNodeOwnedByMessageSender(uint nodeIndex, address from) private view returns (bool) {

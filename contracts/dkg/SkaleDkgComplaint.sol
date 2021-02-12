@@ -64,7 +64,6 @@ library SkaleDkgComplaint {
         bytes32 schainId,
         uint fromNodeIndex,
         uint toNodeIndex,
-        address payable spender,
         ContractManager contractManager,
         mapping(bytes32 => SkaleDKG.Channel) storage channels,
         mapping(bytes32 => SkaleDKG.ComplaintData) storage complaints,
@@ -72,7 +71,6 @@ library SkaleDkgComplaint {
     )
         external
     {
-        uint gasTotal = gasleft();
         SkaleDKG skaleDKG = SkaleDKG(contractManager.getContract("SkaleDKG"));
         require(skaleDKG.isNodeBroadcasted(schainId, fromNodeIndex), "Node has not broadcasted");
         if (skaleDKG.isNodeBroadcasted(schainId, toNodeIndex)) {
@@ -88,24 +86,18 @@ library SkaleDkgComplaint {
             // not broadcasted in 30 min
             _handleComplaintWhenNotBroadcasted(schainId, toNodeIndex, contractManager, channels);
         }
-         uint validatorId = Nodes(contractManager.getContract("Nodes")).getValidatorId(toNodeIndex);
-         Wallets(payable(contractManager.getContract("Wallets")))
-         .refundGasBySchain(schainId, spender, gasTotal - gasleft(), true);
-         Wallets(payable(contractManager.getContract("Wallets")))
-         .refundGasByValidatorToSchain(validatorId, schainId);
+        skaleDKG.setBadNode(schainId, toNodeIndex);
     }
 
     function complaintBadData(
         bytes32 schainId,
         uint fromNodeIndex,
         uint toNodeIndex,
-        address payable spender,
         ContractManager contractManager,
         mapping(bytes32 => SkaleDKG.ComplaintData) storage complaints
     )
         external
     { 
-        uint gasTotal = gasleft();
         SkaleDKG skaleDKG = SkaleDKG(contractManager.getContract("SkaleDKG"));
         require(skaleDKG.isNodeBroadcasted(schainId, fromNodeIndex), "Node has not broadcasted");
         require(skaleDKG.isNodeBroadcasted(schainId, toNodeIndex), "Accused node has not broadcasted");
@@ -118,8 +110,6 @@ library SkaleDkgComplaint {
         } else {
             emit ComplaintError("First complaint has already been processed");
         }
-         Wallets(payable(contractManager.getContract("Wallets")))
-        .refundGasBySchain(schainId, spender, gasTotal - gasleft(), true);
     }
 
     function _handleComplaintWhenBroadcasted(

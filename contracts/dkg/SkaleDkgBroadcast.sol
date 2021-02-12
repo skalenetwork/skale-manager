@@ -28,7 +28,6 @@ import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
 import "../SkaleDKG.sol";
 import "../KeyStorage.sol";
 import "../utils/FieldOperations.sol";
-import "../Wallets.sol";
 
 
 /**
@@ -67,41 +66,38 @@ library SkaleDkgBroadcast {
         uint nodeIndex,
         G2Operations.G2Point[] memory verificationVector,
         SkaleDKG.KeyShare[] memory secretKeyContribution,
-        SkaleDKG.Context memory context,
+        ContractManager contractManager,
         mapping(bytes32 => SkaleDKG.Channel) storage channels,
         mapping(bytes32 => SkaleDKG.ProcessDKG) storage dkgProcess,
         mapping(bytes32 => mapping(uint => bytes32)) storage hashedData
     )
         external
     {
-        uint gasTotal = gasleft();
         uint n = channels[schainId].n;
         require(verificationVector.length == getT(n), "Incorrect number of verification vectors");
         require(
             secretKeyContribution.length == n,
             "Incorrect number of secret key shares"
         );
-        (uint index, ) = SkaleDKG(context.contractManager.getContract("SkaleDKG")).checkAndReturnIndexInGroup(
+        (uint index, ) = SkaleDKG(contractManager.getContract("SkaleDKG")).checkAndReturnIndexInGroup(
             schainId, nodeIndex, true
         );
         require(!dkgProcess[schainId].broadcasted[index], "This node has already broadcasted");
         dkgProcess[schainId].broadcasted[index] = true;
         dkgProcess[schainId].numberOfBroadcasted++;
         if (dkgProcess[schainId].numberOfBroadcasted == channels[schainId].n) {
-            SkaleDKG(context.contractManager.getContract("SkaleDKG")).setStartAlrightTimestamp(schainId);
+            SkaleDKG(contractManager.getContract("SkaleDKG")).setStartAlrightTimestamp(schainId);
         }
-        hashedData[schainId][index] = SkaleDKG(context.contractManager.getContract("SkaleDKG")).hashData(
+        hashedData[schainId][index] = SkaleDKG(contractManager.getContract("SkaleDKG")).hashData(
             secretKeyContribution, verificationVector
         );
-        KeyStorage(context.contractManager.getContract("KeyStorage")).adding(schainId, verificationVector[0]);
+        KeyStorage(contractManager.getContract("KeyStorage")).adding(schainId, verificationVector[0]);
         emit BroadcastAndKeyShare(
             schainId,
             nodeIndex,
             verificationVector,
             secretKeyContribution
         );
-        Wallets(payable(context.contractManager.getContract("Wallets")))
-        .refundGasBySchain(schainId, context.spender, gasTotal - gasleft(), false);
     }
 
     function getT(uint n) public pure returns (uint) {

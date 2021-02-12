@@ -91,7 +91,7 @@ contract Wallets is Permissions {
         allowTwo("SkaleManager", "SkaleDKG")
     {
         require(validatorId != 0, "ValidatorId could not be zero");
-        uint amount = tx.gasprice * (spentGas + 28258);
+        uint amount = tx.gasprice * spentGas;
         if (amount <= _validatorWallets[validatorId]) {
             _validatorWallets[validatorId] = _validatorWallets[validatorId].sub(amount);
             emit NodeWalletRefunded(spender, amount);
@@ -143,8 +143,9 @@ contract Wallets is Permissions {
         external
         allowTwo("SkaleDKG", "MessageProxyForMainnet")
     {
-        uint amount = tx.gasprice * (spentGas + 26600);
+        uint amount = tx.gasprice * spentGas;
         if (isDebt) {
+            amount += (_schainDebts[schainId] == 0 ? 21000 : 6000) * tx.gasprice;
             _schainDebts[schainId] = _schainDebts[schainId].add(amount);
         }
         require(schainId != bytes32(0), "SchainId cannot be null");

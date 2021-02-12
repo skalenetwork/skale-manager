@@ -22,7 +22,6 @@ const EC = elliptic.ec;
 const ec = new EC("secp256k1");
 import { privateKeys } from "./tools/private-keys";
 
-import { BigNumber } from "ethers";
 import { deployContractManager } from "./tools/deploy/contractManager";
 import { deployDelegationController } from "./tools/deploy/delegation/delegationController";
 import { deployKeyStorage } from "./tools/deploy/keyStorage";
@@ -41,6 +40,7 @@ import { ethers, web3 } from "hardhat";
 import { solidity } from "ethereum-waffle";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import { assert, expect } from "chai";
+import chaiAlmost from "chai-almost";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -52,6 +52,10 @@ function stringValue(value: string | null) {
     } else {
         return "";
     }
+}
+
+async function getBalance(address: string) {
+    return parseFloat(web3.utils.fromWei(await web3.eth.getBalance(address)));
 }
 
 describe("SkaleDKG", () => {
@@ -75,6 +79,11 @@ describe("SkaleDKG", () => {
     let wallets: Wallets;
 
     const failedDkgPenalty = 5;
+
+    before(async() => {
+        chai.use(chaiAlmost(0.002));
+        [owner, validator1, validator2] = await ethers.getSigners();
+    });
 
     beforeEach(async () => {
         [owner, validator1, validator2] = await ethers.getSigners();
@@ -580,10 +589,19 @@ describe("SkaleDKG", () => {
                     0
                 );
                 assert(resAlr.should.be.true);
+
+                let balanceBefore = await getBalance(validatorsAccount[0].address);
+
                 const result = await skaleDKG.connect(validatorsAccount[0]).alright(
                     stringValue(web3.utils.soliditySha3(schainName)),
                     0
                 );
+
+                let balance = await getBalance(validatorsAccount[0].address);
+                balance.should.not.be.lessThan(balanceBefore);
+                balance.should.be.almost(balanceBefore);
+
+
                 resAlr = await skaleDKG.connect(validatorsAccount[0]).isAlrightPossible(
                     stringValue(web3.utils.soliditySha3(schainName)),
                     0
@@ -600,12 +618,18 @@ describe("SkaleDKG", () => {
                     1,
                 );
                 assert(resCompl.should.be.false);
+
+                balanceBefore = await getBalance(validatorsAccount[0].address);
                 await expect(skaleDKG.connect(validatorsAccount[0]).complaint(
                     stringValue(web3.utils.soliditySha3(schainName)),
                     0,
                     1
                 )).to.emit(skaleDKG, "ComplaintError")
                     .withArgs("Has already sent alright");
+                balance = await getBalance(validatorsAccount[0].address);
+                balance.should.not.be.lessThan(balanceBefore);
+                balance.should.be.almost(balanceBefore);
+
                 await skipTime(ethers, 1800);
                 resCompl = await skaleDKG.connect(validatorsAccount[0]).isComplaintPossible(
                     stringValue(web3.utils.soliditySha3(schainName)),
@@ -792,11 +816,15 @@ describe("SkaleDKG", () => {
 
                 describe("when 2 node sent incorrect complaint", async () => {
                     beforeEach(async () => {
+                        const balanceBefore = await getBalance(validatorsAccount[1].address);
                         await skaleDKG.connect(validatorsAccount[1]).complaintBadData(
                             stringValue(web3.utils.soliditySha3(schainName)),
                             1,
                             0
                         );
+                        const balance = await getBalance(validatorsAccount[1].address);
+                        balance.should.not.be.lessThan(balanceBefore);
+                        balance.should.be.almost(balanceBefore);
                     });
 
                     it("should check is possible to send complaint", async () => {
@@ -913,6 +941,8 @@ describe("SkaleDKG", () => {
                         );
                         assert(res.should.be.false);
 
+                        const balanceBefore = await getBalance(validatorsAccount[0].address);
+
                         await expect(skaleDKG.connect(validatorsAccount[0]).response(
                             stringValue(web3.utils.soliditySha3(schainName)),
                             0,
@@ -920,6 +950,10 @@ describe("SkaleDKG", () => {
                             multipliedShares[indexes[0]]
                         )).to.emit(skaleDKG, "BadGuy")
                             .withArgs(1);
+
+                        const balance = await getBalance(validatorsAccount[0].address);
+                        balance.should.not.be.lessThan(balanceBefore);
+                        balance.should.be.almost(balanceBefore);
 
                         (await skaleToken.callStatic.getAndUpdateLockedAmount(validator2.address)).toNumber()
                             .should.be.equal(delegatedAmount);

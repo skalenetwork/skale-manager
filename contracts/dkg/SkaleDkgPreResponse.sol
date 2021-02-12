@@ -43,14 +43,12 @@ library SkaleDkgPreResponse {
         G2Operations.G2Point[] memory verificationVector,
         G2Operations.G2Point[] memory verificationVectorMult,
         SkaleDKG.KeyShare[] memory secretKeyContribution,
-        address payable spender,
         ContractManager contractManager,
         mapping(bytes32 => SkaleDKG.ComplaintData) storage complaints,
         mapping(bytes32 => mapping(uint => bytes32)) storage hashedData
     )
         external
     {
-        uint gasTotal = gasleft();
         SkaleDKG skaleDKG = SkaleDKG(contractManager.getContract("SkaleDKG"));
         uint index = _preResponseCheck(
             schainId,
@@ -63,8 +61,6 @@ library SkaleDkgPreResponse {
             hashedData
         );
         _processPreResponse(secretKeyContribution[index].share, schainId, verificationVectorMult, complaints);
-        Wallets(payable(contractManager.getContract("Wallets")))
-        .refundGasBySchain(schainId, spender, gasTotal - gasleft(), true);
     }
 
     function _preResponseCheck(
