@@ -40,7 +40,7 @@ async function main() {
         "SkaleDKG"
     ];
 
-    for (const contract of ["ContractManager"].concat(contractsToUpgrade)) {
+    for (const contract of contractsToUpgrade) {
         let contractFactory: ContractFactory;
         try {
             contractFactory = await ethers.getContractFactory(contract);
@@ -70,7 +70,19 @@ async function main() {
     // Initialize SegmentTree in Nodes
 
     const nodesName = "Nodes";
-    const nodesContractFactory = await ethers.getContractFactory(nodesName);
+
+    let nodesContractFactory: ContractFactory;
+    try {
+        nodesContractFactory = await ethers.getContractFactory(nodesName);
+    } catch (e) {
+        const errorMessage = "The contract " + nodesName + " is missing links for the following libraries";
+        const isLinkingLibraryError = e.toString().indexOf(errorMessage) + 1;
+        if (isLinkingLibraryError) {
+            nodesContractFactory = await getContractFactoryWithLibraries(e, nodesName);
+        } else {
+            throw(e);
+        }
+    }
     const nodesAddress = abi[getContractKeyInAbiFile(nodesName) + "_address"];
     if (nodesAddress) {
         const nodes = (nodesContractFactory.attach(nodesAddress)) as Nodes;
@@ -79,7 +91,7 @@ async function main() {
             // await nodes.prepareUpgrade(proxyAddress, contractFactory, { unsafeAllowLinkedLibraries: true });
         } else {
             const receipt = await(await nodes.initializeSegmentTree()).wait();
-            console.log("SegmentTree was initialized with", receipt.gasUsed, "gas used");
+            console.log("SegmentTree was initialized with", receipt.gasUsed.toNumber(), "gas used");
         }
     } else {
         console.log("Nodes address was not found!");
