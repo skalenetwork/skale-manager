@@ -524,6 +524,14 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         return check && dkgProcess[schainId].broadcasted[index];
     }
 
+     /**
+     * @dev Checks whether all data has been received by node.
+     */
+    function isAllDataReceived(bytes32 schainId, uint nodeIndex) external view returns (bool) {
+        (uint index, bool check) = checkAndReturnIndexInGroup(schainId, nodeIndex, false);
+        return check && dkgProcess[schainId].completed[index];
+    }
+
     function hashData(
         KeyShare[] memory secretKeyContribution,
         G2Operations.G2Point[] memory verificationVector
@@ -567,14 +575,6 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             revert("Node is not in this group");
         }
         return (index, index < channels[schainId].n);
-    }
-
-    /**
-     * @dev Checks whether all data has been received by node.
-     */
-    function isAllDataReceived(bytes32 schainId, uint nodeIndex) public view returns (bool) {
-        (uint index, bool check) = checkAndReturnIndexInGroup(schainId, nodeIndex, false);
-        return check && dkgProcess[schainId].completed[index];
     }
 
     function _refundGasBySchain(bytes32 schainId, address spender, uint spentGas, bool isDebt) private {
