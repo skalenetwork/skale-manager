@@ -613,9 +613,35 @@ contract SkaleDKG is Permissions, ISkaleDKG {
 
         emit ChannelOpened(schainId);
     }
-    
-    function _getComplaintTimelimit() private view returns (uint) {
-        return ConstantsHolder(contractManager.getConstantsHolder()).complaintTimelimit();
+
+    function _handleComplaintWhenBroadcasted(bytes32 schainId, uint fromNodeIndex, uint toNodeIndex) private {
+        // missing alright
+        if (complaints[schainId].nodeToComplaint == uint(-1)) {
+            if (
+                isEveryoneBroadcasted(schainId) &&
+                !isAllDataReceived(schainId, toNodeIndex) &&
+                startAlrightTimestamp[schainId].add(_getComplaintTimelimit()) <= block.timestamp
+            ) {
+                // missing alright
+                _finalizeSlashing(schainId, toNodeIndex);
+                return;
+            } else if (!isAllDataReceived(schainId, fromNodeIndex)) {
+                // incorrect data
+                _finalizeSlashing(schainId, fromNodeIndex);
+                return;
+            }
+            emit ComplaintError("Has already sent alright");
+            return;
+        } else if (complaints[schainId].nodeToComplaint == toNodeIndex) {
+            // 30 min after incorrect data complaint
+            if (complaints[schainId].startComplaintBlockTimestamp.add(_getComplaintTimelimit()) <= block.timestamp) {
+                _finalizeSlashing(schainId, complaints[schainId].nodeToComplaint);
+                return;
+            }
+            emit ComplaintError("The same complaint rejected");
+            return;
+        }
+        emit ComplaintError("One complaint is already sent");
     }
 
     function isEveryoneBroadcasted(bytes32 schainId) public view returns (bool) {
