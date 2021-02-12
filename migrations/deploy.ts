@@ -165,7 +165,7 @@ async function main() {
     console.log("Register", skaleTokenName);
     await (await contractManager.setContractsAddress(skaleTokenName, skaleToken.address)).wait();
     artifacts.push({address: skaleToken.address, interface: skaleToken.interface, contract: skaleTokenName});
-    await verify(skaleTokenName, await getImplementationAddress(network.provider, skaleToken.address));
+    await verify(skaleTokenName, skaleToken.address);
 
     if (!production) {
         console.log("Do actions for non production deployment");
