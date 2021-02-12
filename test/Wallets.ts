@@ -31,7 +31,6 @@ import { ContractTransaction } from "ethers";
 chai.should();
 chai.use(chaiAsPromised);
 chai.use(solidity);
-chai.use(chaiAlmost(0.002));
 
 async function ethSpent(response: ContractTransaction) {
     const gasUsed = (await response.wait()).gasUsed;
@@ -104,8 +103,12 @@ describe("Wallets", () => {
     const validator1Id = 1;
     const validator2Id = 2;
 
-    beforeEach(async () => {
+    before(async() => {
+        chai.use(chaiAlmost(0.002));
         [owner, validator1, validator2, node1, node2] = await ethers.getSigners();
+    });
+
+    beforeEach(async () => {
         contractManager = await deployContractManager();
         wallets = await deployWallets(contractManager);
         validatorService = await deployValidatorService(contractManager);
