@@ -35,13 +35,14 @@ async function main() {
             _contract = "Bounty";
         }
         const proxyAddress = abi[getContractKeyInAbiFile(_contract) + "_address"];
+        
 
         const newImplementationAddress = await upgrades.prepareUpgrade(proxyAddress, contractFactory, { unsafeAllowLinkedLibraries: true });
         const currentImplementationAddress = await getImplementationAddress(network.provider, proxyAddress);
         if (newImplementationAddress !== currentImplementationAddress)
         {
             contractsToUpgrade.push(contract);
-            await verify(contract, await getImplementationAddress(network.provider, newImplementationAddress));
+            await verify(contract, newImplementationAddress);
         } else {
             console.log(`Contract ${contract} is up to date`);
         }
@@ -73,14 +74,13 @@ async function main() {
 
     // Deploy Wallets
     const contractManagerName = "ContractManager";
-    console.log("Deploy", contractManagerName);
     const contractManagerFactory = await ethers.getContractFactory(contractManagerName);
     const contractManager = (contractManagerFactory.attach(abi[getContractKeyInAbiFile(contractManagerName) + "_address"])) as ContractManager;
 
     const walletsName = "Wallets";
     console.log("Deploy", walletsName);
     const walletsFactory = await ethers.getContractFactory(walletsName);
-    const wallets = await upgrades.deployProxy(walletsFactory, []);
+    const wallets = await upgrades.deployProxy(walletsFactory, [contractManager.address]);
     await wallets.deployTransaction.wait();
     console.log("Register", walletsName);
     await (await contractManager.setContractsAddress(walletsName, wallets.address)).wait();
