@@ -35,7 +35,7 @@ async function main() {
             _contract = "Bounty";
         }
         const proxyAddress = abi[getContractKeyInAbiFile(_contract) + "_address"];
-        
+
 
         const newImplementationAddress = await upgrades.prepareUpgrade(proxyAddress, contractFactory, { unsafeAllowLinkedLibraries: true });
         const currentImplementationAddress = await getImplementationAddress(network.provider, proxyAddress);
