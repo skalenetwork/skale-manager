@@ -8,6 +8,7 @@ import { deploySchains } from "./schains";
 import { deploySkaleToken } from "./skaleToken";
 import { deployNodeRotation } from "./nodeRotation";
 import { deployBounty } from "./bounty";
+import { deployWallets } from "./wallets";
 import { ContractManager, SkaleManager } from "../../../typechain";
 
 const deploySkaleManager: (contractManager: ContractManager) => Promise<SkaleManager>
@@ -22,6 +23,7 @@ const deploySkaleManager: (contractManager: ContractManager) => Promise<SkaleMan
                                 await deployDistributor(contractManager);
                                 await deployNodeRotation(contractManager);
                                 await deployBounty(contractManager);
+                                await deployWallets(contractManager);
                             });
 
 export { deploySkaleManager };

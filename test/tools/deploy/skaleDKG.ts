@@ -1,14 +1,22 @@
 import { deployPunisher } from "./delegation/punisher";
 import { deployKeyStorage } from "./keyStorage";
-import { deployFunctionFactory } from "./factory";
+import { deployWithLibraryFunctionFactory } from "./factory";
 import { deployNodes } from "./nodes";
 import { deploySchainsInternal } from "./schainsInternal";
 import { deploySlashingTable } from "./slashingTable";
 import { deployNodeRotation } from "./nodeRotation";
 import { ContractManager, SkaleDKG } from "../../../typechain";
 
+const libraries = [
+    "SkaleDkgAlright",
+    "SkaleDkgBroadcast",
+    "SkaleDkgComplaint",
+    "SkaleDkgPreResponse",
+    "SkaleDkgResponse"
+]
+
 const deploySkaleDKG: (contractManager: ContractManager) => Promise<SkaleDKG>
-    = deployFunctionFactory("SkaleDKG",
+    = deployWithLibraryFunctionFactory("SkaleDKG", libraries,
                             async (contractManager: ContractManager) => {
                                 await deploySchainsInternal(contractManager);
                                 await deployPunisher(contractManager);

@@ -1,7 +1,7 @@
-import { contracts, getContractKeyInAbiFile, getContractFactory } from "./deploy";
+import { contracts, getContractKeyInAbiFile, getContractFactory, verify } from "./deploy";
 import { ethers, network, upgrades, run } from "hardhat";
 import { promises as fs } from "fs";
-import { Nodes } from "../typechain";
+import { ContractManager, Nodes } from "../typechain";
 import { getImplementationAddress } from "@openzeppelin/upgrades-core";
 
 async function main() {
@@ -24,6 +24,9 @@ async function main() {
     const abiFilename = process.env.ABI;
     const abi = JSON.parse(await fs.readFile(abiFilename, "utf-8"));
 
+    // remove Wallets from list
+    contracts.pop();
+
     const contractsToUpgrade: string[] = [];
     for (const contract of ["ContractManager"].concat(contracts)) {
         const contractFactory = await getContractFactory(contract);
@@ -38,16 +41,7 @@ async function main() {
         if (newImplementationAddress !== currentImplementationAddress)
         {
             contractsToUpgrade.push(contract);
-            if (![1337, 31337].includes((await ethers.provider.getNetwork()).chainId)) {
-                try {
-                    await run("verify:verify", {
-                        address: newImplementationAddress,
-                        constructorArguments: []
-                    });
-                } catch (e) {
-                    console.log(`Contract ${contract} was not verified on etherscan`);
-                }
-            }
+            await verify(contract, await getImplementationAddress(network.provider, newImplementationAddress));
         } else {
             console.log(`Contract ${contract} is up to date`);
         }
@@ -63,21 +57,39 @@ async function main() {
             _contract = "Bounty";
         }
         const proxyAddress = abi[getContractKeyInAbiFile(_contract) + "_address"];
-
+        let contractInterface;
         if (multisig) {
             const newImplementationAddress =
                 await upgrades.prepareUpgrade(proxyAddress, contractFactory, { unsafeAllowLinkedLibraries: true });
+            contractInterface = contractFactory.attach(newImplementationAddress).interface;
             console.log(`Upgrade ${contract} at ${proxyAddress} to ${newImplementationAddress}`);
         } else {
             // TODO: initialize upgraded instance in the upgrade transaction
-            await upgrades.upgradeProxy(proxyAddress, contractFactory, { unsafeAllowLinkedLibraries: true });
+            console.log(`Upgrade ${contract} at ${proxyAddress}`);
+            contractInterface = (await upgrades.upgradeProxy(proxyAddress, contractFactory, { unsafeAllowLinkedLibraries: true })).interface;
         }
+        abi[getContractKeyInAbiFile(_contract) + "_abi"] = JSON.parse(contractInterface.format("json") as string)
     }
 
+    // Deploy Wallets
+    const contractManagerName = "ContractManager";
+    console.log("Deploy", contractManagerName);
+    const contractManagerFactory = await ethers.getContractFactory(contractManagerName);
+    const contractManager = (contractManagerFactory.attach(abi[getContractKeyInAbiFile(contractManagerName) + "_address"])) as ContractManager;
+
+    const walletsName = "Wallets";
+    console.log("Deploy", walletsName);
+    const walletsFactory = await ethers.getContractFactory(walletsName);
+    const wallets = await upgrades.deployProxy(walletsFactory, []);
+    await wallets.deployTransaction.wait();
+    console.log("Register", walletsName);
+    await (await contractManager.setContractsAddress(walletsName, wallets.address)).wait();
+    abi[getContractKeyInAbiFile(walletsName) + "_address"] = wallets.address;
+    abi[getContractKeyInAbiFile(walletsName) + "_abi"] = JSON.parse(wallets.interface.format("json") as string);
+    await verify(walletsName, await getImplementationAddress(network.provider, wallets.address));
+
     // Initialize SegmentTree in Nodes
-
     const nodesName = "Nodes";
-
     const nodesContractFactory = await getContractFactory(nodesName);
     const nodesAddress = abi[getContractKeyInAbiFile(nodesName) + "_address"];
     if (nodesAddress) {
@@ -93,6 +105,9 @@ async function main() {
         console.log("Check your abi!");
         process.exit(1);
     }
+
+    const version = (await fs.readFile("VERSION", "utf-8")).trim();
+    await fs.writeFile(`data/skale-manager-${version}-${network.name}-abi.json`, JSON.stringify(abi, null, 4));
 
     console.log("Done");
 }

@@ -60,7 +60,7 @@ export async function getContractFactory(contract: string) {
     return contractFactory;
 }
 
-async function verify(contractName: string, contractAddress: string) {
+export async function verify(contractName: string, contractAddress: string) {
     if (![1337, 31337].includes((await ethers.provider.getNetwork()).chainId)) {
         try {
             await run("verify:verify", {
@@ -100,7 +100,8 @@ export const contracts = [
     "SkaleVerifier",
     "SkaleManager",
     "Pricing",
-    "BountyV2"
+    "BountyV2",
+    "Wallets"
 ]
 
 async function main() {

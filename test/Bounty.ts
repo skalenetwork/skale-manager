@@ -36,7 +36,6 @@ import { deployLibraries, getLinkedContractFactory } from "../test/tools/deploy/
 
 chai.should();
 chai.use(chaiAsPromised);
-chai.use(chaiAlmost(2));
 chai.use(solidity);
 const EC = elliptic.ec;
 const ec = new EC("secp256k1");
@@ -100,9 +99,12 @@ describe("Bounty", () => {
     const day = 60 * 60 * 24;
     const month = 31 * day;
 
-    beforeEach(async () => {
+    before(async() => {
+        chai.use(chaiAlmost(2));
         [owner, admin, hacker, validator, validator2] = await ethers.getSigners();
+    });
 
+    beforeEach(async () => {
         contractManager = await deployContractManager();
         constantsHolder = await deployConstantsHolder(contractManager);
         bountyContract = await deployBounty(contractManager);

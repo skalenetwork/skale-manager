@@ -12,7 +12,8 @@ import { ContractManager,
          SlashingTable,
          ValidatorService,
          SkaleManager,
-         ConstantsHolder} from "../typechain";
+         ConstantsHolder,
+         Wallets} from "../typechain";
 
 import { skipTime, currentTime } from "./tools/time";
 
@@ -40,6 +41,7 @@ import { ethers, web3 } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import { assert } from "chai";
 import { solidity } from "ethereum-waffle";
+import { deployWallets } from "./tools/deploy/wallets";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -72,6 +74,7 @@ describe("SkaleDKG", () => {
     let nodeRotation: NodeRotation;
     let skaleManager: SkaleManager;
     let constantsHolder: ConstantsHolder;
+    let wallets: Wallets;
 
     const failedDkgPenalty = 5;
 
@@ -93,6 +96,7 @@ describe("SkaleDKG", () => {
         nodeRotation = await deployNodeRotation(contractManager);
         skaleManager = await deploySkaleManager(contractManager);
         constantsHolder = await deployConstantsHolder(contractManager);
+        wallets = await deployWallets(contractManager);
 
         await slashingTable.setPenalty("FailedDKG", failedDkgPenalty);
     });
@@ -929,7 +933,8 @@ describe("SkaleDKG", () => {
 
             let nodesInGroup = await schainsInternal.getNodesInGroup(stringValue(web3.utils.soliditySha3("d2")));
             schainName = "d2";
-            let index = 3;
+            await wallets.connect(owner).rechargeSchainWallet(stringValue(web3.utils.soliditySha3(schainName)), {value: 1e20.toString()});
+                let index = 3;
             while (!(nodesInGroup[0].eq(0) && nodesInGroup[1].eq(1) && nodesInGroup[2].eq(2))) {
                 await schains.deleteSchainByRoot(schainName);
                 schainName = "d" + index;
@@ -939,6 +944,7 @@ describe("SkaleDKG", () => {
                     deposit,
                     web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 5, 0, schainName]));
                 nodesInGroup = await schainsInternal.getNodesInGroup(stringValue(web3.utils.soliditySha3(schainName)));
+                await wallets.rechargeSchainWallet(stringValue(web3.utils.soliditySha3(schainName)), {value: 1e20.toString()});
             }
         });
 
