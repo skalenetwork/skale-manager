@@ -3,6 +3,8 @@ import chaiAsPromised from "chai-as-promised";
 import { web3, ethers } from "hardhat"
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import { SegmentTreeTester } from "../../typechain/SegmentTreeTester";
+import { deployContractManager } from "../tools/deploy/contractManager";
+import { deploySegmentTreeTester } from "../tools/deploy/test/segmentTreeTester";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -10,8 +12,8 @@ chai.use(chaiAsPromised);
 describe("SegmentTree", () => {
     let segmentTree: SegmentTreeTester;
     beforeEach(async () => {
-        const SegmentTree = await ethers.getContractFactory("SegmentTreeTester");
-        segmentTree = (await SegmentTree.deploy()) as SegmentTreeTester;
+        const contractManager = await deployContractManager();
+        segmentTree = await deploySegmentTreeTester(contractManager);
 
         await segmentTree.initTree(128, 150);
     });
