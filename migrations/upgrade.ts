@@ -1,23 +1,15 @@
-import { contracts, getContractKeyInAbiFile } from "./deploy";
-import { ethers, upgrades } from "hardhat";
+import { contracts, getContractKeyInAbiFile, getContractFactory } from "./deploy";
+import { ethers, network, upgrades, run } from "hardhat";
 import { promises as fs } from "fs";
-import { ContractManager, Nodes } from "../typechain";
-import { ContractFactory } from "ethers";
-import { deployLibraries, getLinkedContractFactory } from "../test/tools/deploy/factory";
-
-async function getContractFactoryWithLibraries(e: any, contractName: string) {
-    const libraryNames = [];
-    for (const str of e.toString().split(".sol:")) {
-        const libraryName = str.split("\n")[0];
-        libraryNames.push(libraryName);
-    }
-    libraryNames.shift();
-    const libraries = await deployLibraries(libraryNames);
-    const contractFactory = await getLinkedContractFactory(contractName, libraries);
-    return contractFactory;
-}
+import { Nodes } from "../typechain";
+import { getImplementationAddress } from "@openzeppelin/upgrades-core";
 
 async function main() {
+    if ((await fs.readFile("DEPLOYED", "utf-8")).trim() !== "1.7.2-stable.0") {
+        console.log("Upgrade script is not relevant");
+        process.exit(1);
+    }
+
     if (!process.env.ABI) {
         console.log("Set path to file with ABI and addresses to ABI environment variables");
         return;
@@ -32,37 +24,52 @@ async function main() {
     const abiFilename = process.env.ABI;
     const abi = JSON.parse(await fs.readFile(abiFilename, "utf-8"));
 
-    const contractsToUpgrade = [
-        "Nodes",
-        "NodeRotation",
-        "SchainsInternal",
-        "Schains",
-        "SkaleDKG"
-    ];
-
-    for (const contract of contractsToUpgrade) {
-        let contractFactory: ContractFactory;
-        try {
-            contractFactory = await ethers.getContractFactory(contract);
-        } catch (e) {
-            const errorMessage = "The contract " + contract + " is missing links for the following libraries";
-            const isLinkingLibraryError = e.toString().indexOf(errorMessage) + 1;
-            if (isLinkingLibraryError) {
-                contractFactory = await getContractFactoryWithLibraries(e, contract);
-            } else {
-                throw(e);
-            }
-        }
+    const contractsToUpgrade: string[] = [];
+    for (const contract of ["ContractManager"].concat(contracts)) {
+        const contractFactory = await getContractFactory(contract);
         let _contract = contract;
         if (contract === "BountyV2") {
             _contract = "Bounty";
         }
         const proxyAddress = abi[getContractKeyInAbiFile(_contract) + "_address"];
-        console.log(`Upgrade ${contract} at ${proxyAddress}`);
-        if (multisig) {
-            await upgrades.prepareUpgrade(proxyAddress, contractFactory, { unsafeAllowLinkedLibraries: true });
+
+        const newImplementationAddress = await upgrades.prepareUpgrade(proxyAddress, contractFactory, { unsafeAllowLinkedLibraries: true });
+        const currentImplementationAddress = await getImplementationAddress(network.provider, proxyAddress);
+        if (newImplementationAddress !== currentImplementationAddress)
+        {
+            contractsToUpgrade.push(contract);
+            if (![1337, 31337].includes((await ethers.provider.getNetwork()).chainId)) {
+                try {
+                    await run("verify:verify", {
+                        address: newImplementationAddress,
+                        constructorArguments: []
+                    });
+                } catch (e) {
+                    console.log(`Contract ${contract} was not verified on etherscan`);
+                }
+            }
         } else {
-            // TODO: initialize contract
+            console.log(`Contract ${contract} is up to date`);
+        }
+    }
+
+    if (multisig) {
+        console.log("Instructions for multisig:");
+    }
+    for (const contract of contractsToUpgrade) {
+        const contractFactory = await getContractFactory(contract);
+        let _contract = contract;
+        if (contract === "BountyV2") {
+            _contract = "Bounty";
+        }
+        const proxyAddress = abi[getContractKeyInAbiFile(_contract) + "_address"];
+
+        if (multisig) {
+            const newImplementationAddress =
+                await upgrades.prepareUpgrade(proxyAddress, contractFactory, { unsafeAllowLinkedLibraries: true });
+            console.log(`Upgrade ${contract} at ${proxyAddress} to ${newImplementationAddress}`);
+        } else {
+            // TODO: initialize upgraded instance in the upgrade transaction
             await upgrades.upgradeProxy(proxyAddress, contractFactory, { unsafeAllowLinkedLibraries: true });
         }
     }
@@ -71,24 +78,12 @@ async function main() {
 
     const nodesName = "Nodes";
 
-    let nodesContractFactory: ContractFactory;
-    try {
-        nodesContractFactory = await ethers.getContractFactory(nodesName);
-    } catch (e) {
-        const errorMessage = "The contract " + nodesName + " is missing links for the following libraries";
-        const isLinkingLibraryError = e.toString().indexOf(errorMessage) + 1;
-        if (isLinkingLibraryError) {
-            nodesContractFactory = await getContractFactoryWithLibraries(e, nodesName);
-        } else {
-            throw(e);
-        }
-    }
+    const nodesContractFactory = await getContractFactory(nodesName);
     const nodesAddress = abi[getContractKeyInAbiFile(nodesName) + "_address"];
     if (nodesAddress) {
         const nodes = (nodesContractFactory.attach(nodesAddress)) as Nodes;
         if (multisig) {
-            // TODO: Defender?
-            // await nodes.prepareUpgrade(proxyAddress, contractFactory, { unsafeAllowLinkedLibraries: true });
+            console.log(`Call ${nodesName}.initializeSegmentTree() at ${nodesAddress}`);
         } else {
             const receipt = await(await nodes.initializeSegmentTree()).wait();
             console.log("SegmentTree was initialized with", receipt.gasUsed.toNumber(), "gas used");
@@ -96,9 +91,8 @@ async function main() {
     } else {
         console.log("Nodes address was not found!");
         console.log("Check your abi!");
+        process.exit(1);
     }
-
-
 
     console.log("Done");
 }
