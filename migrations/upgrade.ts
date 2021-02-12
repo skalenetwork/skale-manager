@@ -1,6 +1,7 @@
 import { contracts, getContractKeyInAbiFile } from "./deploy";
 import { ethers, upgrades } from "hardhat";
 import { promises as fs } from "fs";
+import { ContractManager, Nodes } from "../typechain";
 import { ContractFactory } from "ethers";
 import { deployLibraries, getLinkedContractFactory } from "../test/tools/deploy/factory";
 
@@ -31,7 +32,15 @@ async function main() {
     const abiFilename = process.env.ABI;
     const abi = JSON.parse(await fs.readFile(abiFilename, "utf-8"));
 
-    for (const contract of ["ContractManager"].concat(contracts)) {
+    const contractsToUpgrade = [
+        "Nodes",
+        "NodeRotation",
+        "SchainsInternal",
+        "Schains",
+        "SkaleDKG"
+    ];
+
+    for (const contract of ["ContractManager"].concat(contractsToUpgrade)) {
         let contractFactory: ContractFactory;
         try {
             contractFactory = await ethers.getContractFactory(contract);
@@ -53,9 +62,31 @@ async function main() {
         if (multisig) {
             await upgrades.prepareUpgrade(proxyAddress, contractFactory, { unsafeAllowLinkedLibraries: true });
         } else {
+            // TODO: 
             await upgrades.upgradeProxy(proxyAddress, contractFactory, { unsafeAllowLinkedLibraries: true });
         }
     }
+
+    // Initialize SegmentTree in Nodes
+
+    const nodesName = "Nodes";
+    const nodesContractFactory = await ethers.getContractFactory(nodesName);
+    const nodesAddress = abi[getContractKeyInAbiFile(nodesName) + "_address"];
+    if (nodesAddress) {
+        const nodes = (nodesContractFactory.attach(nodesAddress)) as Nodes;
+        if (multisig) {
+            // TODO: Defender?
+            // await nodes.prepareUpgrade(proxyAddress, contractFactory, { unsafeAllowLinkedLibraries: true });
+        } else {
+            const receipt = await(await nodes.initializeSegmentTree()).wait();
+            console.log("SegmentTree was initialized with", receipt.gasUsed, "gas used");
+        }
+    } else {
+        console.log("Nodes address was not found!");
+        console.log("Check your abi!");
+    }
+
+
 
     console.log("Done");
 }

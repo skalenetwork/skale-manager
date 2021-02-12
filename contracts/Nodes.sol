@@ -168,11 +168,12 @@ contract Nodes is Permissions {
         _;
     }
 
-    function buildZeroSegmentTree() external onlyOwner {
+    function initializeSegmentTree() external onlyOwner {
         uint8 totalSpace = ConstantsHolder(contractManager.getContract("ConstantsHolder")).TOTAL_SPACE_ON_NODE();
+        _nodesAmountBySpace.create(totalSpace);
         for (uint8 i = 1; i <= totalSpace; i++) {
             if (spaceToNodes[i].length > 0)
-                _nodesAmountBySpace.createWithLastElement(i, spaceToNodes[i].length);
+                _nodesAmountBySpace.addToPlace(i, spaceToNodes[i].length);
         }
     }
 
