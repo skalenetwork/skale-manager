@@ -32,8 +32,18 @@ contract SegmentTreeTester {
 
     SegmentTree.Tree private _tree;
 
-    function initTree(uint size, uint elem) external {
-        _tree.createWithLastElement(size, elem);
+    uint[129] private places;
+
+    function initTree() external {
+        _tree.create(128);
+        for (uint8 i = 1; i <= 128; i++) {
+            if (places[i] > 0)
+                _tree.addToPlace(i, places[i]);
+        }
+    }
+
+    function addElemInPlaces(uint place, uint elem) external {
+        places[place] = elem;
     }
 
     function addToLast(uint elem) external {

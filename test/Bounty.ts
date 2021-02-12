@@ -29,8 +29,10 @@ import * as elliptic from "elliptic";
 import { ethers, web3 } from "hardhat";
 import { solidity } from "ethereum-waffle";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
-import { BigNumber, Event } from "ethers";
+import { BigNumber, Event, ContractFactory } from "ethers";
 import { deployPunisher } from "./tools/deploy/delegation/punisher";
+
+import { deployLibraries, getLinkedContractFactory } from "../test/tools/deploy/factory";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -68,6 +70,19 @@ function getBountyForEpoch(epoch: number) {
     } else {
         return bountyForFirst6Years[5] / 2 ** (Math.floor((year - 6) / 3) + 1);
     }
+}
+
+async function getContractFactoryWithLibraries(e: any, contractName: string) {
+    const libraryNames = [];
+    console.log("Contract", contractName);
+    for (const str of e.toString().split(".sol:")) {
+        const libraryName = str.split("\n")[0];
+        libraryNames.push(libraryName);
+    }
+    libraryNames.shift();
+    const libraries = await deployLibraries(libraryNames);
+    const contractFactory = await getLinkedContractFactory(contractName, libraries);
+    return contractFactory;
 }
 
 describe("Bounty", () => {
@@ -121,7 +136,21 @@ describe("Bounty", () => {
         const delegationPeriodManager = await deployDelegationPeriodManager(contractManager);
         await deployMonitors(contractManager);
         await deployDistributor(contractManager);
-        const nodesFactory = await ethers.getContractFactory("Nodes");
+
+        let nodesFactory: ContractFactory;
+        try {
+            nodesFactory = await ethers.getContractFactory("Nodes");
+        } catch (e) {
+            const errorMessage = "The contract Nodes is missing links for the following libraries";
+            const isLinkingLibraryError = e.toString().indexOf(errorMessage) + 1;
+            if (isLinkingLibraryError) {
+                nodesFactory = await getContractFactoryWithLibraries(e, "Nodes");
+            } else {
+                throw(e);
+            }
+        }
+
+        // const nodesFactory = await ethers.getContractFactory("Nodes");
         const nodesContract = await nodesFactory.deploy();
         await nodesContract.initialize(contractManager.address);
         await contractManager.setContractsAddress("Nodes", nodesContract.address);
@@ -296,7 +325,20 @@ describe("Bounty", () => {
         const delegationPeriodManager = await deployDelegationPeriodManager(contractManager);
         await deployMonitors(contractManager);
         await deployDistributor(contractManager);
-        const nodesFactory = await ethers.getContractFactory("Nodes");
+        
+        let nodesFactory: ContractFactory;
+        try {
+            nodesFactory = await ethers.getContractFactory("Nodes");
+        } catch (e) {
+            const errorMessage = "The contract Nodes is missing links for the following libraries";
+            const isLinkingLibraryError = e.toString().indexOf(errorMessage) + 1;
+            if (isLinkingLibraryError) {
+                nodesFactory = await getContractFactoryWithLibraries(e, "Nodes");
+            } else {
+                throw(e);
+            }
+        }
+
         const nodesContract = await nodesFactory.deploy();
         await nodesContract.initialize(contractManager.address);
         await contractManager.setContractsAddress("Nodes", nodesContract.address);

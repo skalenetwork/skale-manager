@@ -14,22 +14,26 @@ describe("SegmentTree", () => {
     beforeEach(async () => {
         const contractManager = await deployContractManager();
         segmentTree = await deploySegmentTreeTester(contractManager);
-
-        await segmentTree.initTree(128, 150);
     });
 
     describe("initialization", async () => {
         it("Should check last right leaf of segment tree", async () => {
+            await segmentTree.addElemInPlaces(128, 150);
+            await segmentTree.initTree();
             (await segmentTree.getElem(254)).toNumber().should.be.equal(150);
         });
 
         it("Should check all parents of last right leaf of segment tree", async () => {
+            await segmentTree.addElemInPlaces(128, 150);
+            await segmentTree.initTree();
             for(let i = 1; i <= 8; i++) {
                 (await segmentTree.getElem(2 ** i - 2)).toNumber().should.be.equal(150);
             }
         });
 
         it("Should check other elems", async () => {
+            await segmentTree.addElemInPlaces(128, 150);
+            await segmentTree.initTree();
             for(let j = 1; j <= 253; j++) {
                 let isRightLeaf = false;
                 for(let i = 1; i <= 8; i++) {
@@ -42,6 +46,8 @@ describe("SegmentTree", () => {
         });
 
         it("should check elems after adding to last", async () => {
+            await segmentTree.addElemInPlaces(128, 150);
+            await segmentTree.initTree();
             await segmentTree.addToLast(10);
             for(let j = 1; j <= 253; j++) {
                 let isRightLeaf = false;
@@ -55,13 +61,38 @@ describe("SegmentTree", () => {
         });
 
         it("should reject if index is incorrect", async () => {
+            await segmentTree.addElemInPlaces(128, 150);
+            await segmentTree.initTree();
             await segmentTree.getElem(254);
             await segmentTree.getElem(255).should.be.eventually.rejectedWith("Incorrect index");
             await segmentTree.getElem(100000000000).should.be.eventually.rejectedWith("Incorrect index");
         });
+
+        it("should initialize if elems not only at last place", async () => {
+            await segmentTree.addElemInPlaces(128, 150);
+            await segmentTree.addElemInPlaces(64, 50);
+            await segmentTree.addElemInPlaces(7, 34);
+            await segmentTree.initTree();
+            (await segmentTree.getElem(254)).toNumber().should.be.equal(150);
+            (await segmentTree.getElem(190)).toNumber().should.be.equal(50);
+            (await segmentTree.getElem(133)).toNumber().should.be.equal(34);
+            (await segmentTree.getElem(0)).toNumber().should.be.equal(234);
+            (await segmentTree.getElem(1)).toNumber().should.be.equal(84);
+            (await segmentTree.getElem(2)).toNumber().should.be.equal(150);
+            (await segmentTree.getElem(3)).toNumber().should.be.equal(34);
+            (await segmentTree.getElem(4)).toNumber().should.be.equal(50);
+            (await segmentTree.getElem(5)).toNumber().should.be.equal(0);
+            (await segmentTree.getElem(6)).toNumber().should.be.equal(150);
+        });
     });
 
     describe("move elements", async () => {
+
+        beforeEach(async () => {
+            await segmentTree.addElemInPlaces(128, 150);
+            await segmentTree.initTree();
+        });
+
         it("should add elem to some place", async () => {
             await segmentTree.addToPlace(53, 12);
             // let index = 0;
@@ -164,6 +195,12 @@ describe("SegmentTree", () => {
     });
 
     describe("calculating sum", async () => {
+
+        beforeEach(async () => {
+            await segmentTree.addElemInPlaces(128, 150);
+            await segmentTree.initTree();
+        });
+
         it("should calculate correct sum", async () => {
             (await segmentTree.sumFromPlaceToLast(100)).toNumber().should.be.equal(150);
             (await segmentTree.sumFromPlaceToLast(1)).toNumber().should.be.equal(150);
@@ -247,6 +284,12 @@ describe("SegmentTree", () => {
     });
 
     describe("random elem", async () => {
+
+        beforeEach(async () => {
+            await segmentTree.addElemInPlaces(128, 150);
+            await segmentTree.initTree();
+        });
+
         it("should return last place", async () => {
             (await segmentTree.sumFromPlaceToLast(100)).toNumber().should.be.equal(150);
             (await segmentTree.getRandomElem(100)).toNumber().should.be.equal(128);

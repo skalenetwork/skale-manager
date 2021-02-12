@@ -70,18 +70,16 @@ library SegmentTree {
 
     /**
      * @dev Allocates storage for segment tree of `size` elements
-     * and sets last element to `lastElement`
      * 
      * Requirements:
      * 
      * - `size` must be greater than 0
      * - `size` must be power of 2
      */
-    function createWithLastElement(Tree storage segmentTree, uint size, uint lastElement) external {
-        create(segmentTree, size);
-        for (uint vertex = 1; vertex < size.mul(2); vertex = _right(vertex)) {
-            segmentTree.tree[vertex.sub(1)] = lastElement;
-        }
+    function create(Tree storage segmentTree, uint size) external {
+        require(size > 0, "Size can't be 0");
+        require(size & size.sub(1) == 0, "Size is not power of 2");
+        segmentTree.tree = new uint[](size.mul(2).sub(1));
     }
 
     /**
@@ -248,20 +246,6 @@ library SegmentTree {
             }
         }
         return leftBound.add(1);
-    }
-
-    /**
-     * @dev Allocates storage for segment tree of `size` elements
-     * 
-     * Requirements:
-     * 
-     * - `size` must be greater than 0
-     * - `size` must be power of 2
-     */
-    function create(Tree storage segmentTree, uint size) public {
-        require(size > 0, "Size can't be 0");
-        require(size & size.sub(1) == 0, "Size is not power of 2");
-        segmentTree.tree = new uint[](size.mul(2).sub(1));
     }
 
     /**

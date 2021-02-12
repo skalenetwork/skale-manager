@@ -25,7 +25,6 @@ function getNameInContractManager(contract: string) {
 
 async function getContractFactoryWithLibraries(e: any, contractName: string) {
     const libraryNames = [];
-    console.log("Contract", contractName);
     for (const str of e.toString().split(".sol:")) {
         const libraryName = str.split("\n")[0];
         libraryNames.push(libraryName);
