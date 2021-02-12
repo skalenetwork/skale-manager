@@ -32,6 +32,12 @@ import "./KeyStorage.sol";
 import "./interfaces/ISkaleDKG.sol";
 import "./thirdparty/ECDH.sol";
 import "./utils/Precompiled.sol";
+import "./Wallets.sol";
+import "./dkg/SkaleDkgAlright.sol";
+import "./dkg/SkaleDkgBroadcast.sol";
+import "./dkg/SkaleDkgComplaint.sol";
+import "./dkg/SkaleDkgPreResponse.sol";
+import "./dkg/SkaleDkgResponse.sol";
 
 /**
  * @title SkaleDKG
@@ -83,6 +89,8 @@ contract SkaleDKG is Permissions, ISkaleDKG {
     mapping(bytes32 => uint) public startAlrightTimestamp;
 
     mapping(bytes32 => mapping(uint => bytes32)) public hashedData;
+    
+    mapping(bytes32 => uint) private _badNodes;
 
     /**
      * @dev Emitted when a channel is opened.
@@ -125,12 +133,6 @@ contract SkaleDKG is Permissions, ISkaleDKG {
     event FailedDKG(bytes32 indexed schainId);
 
     /**
-     * @dev Emitted when a complaint is sent.
-     */
-    event ComplaintSent(
-        bytes32 indexed schainId, uint indexed fromNodeIndex, uint indexed toNodeIndex);
-
-    /**
      * @dev Emitted when a new node is rotated in.
      */
     event NewGuy(uint nodeIndex);
@@ -139,6 +141,12 @@ contract SkaleDKG is Permissions, ISkaleDKG {
      * @dev Emitted when an incorrect complaint is sent.
      */
     event ComplaintError(string error);
+
+    /**
+     * @dev Emitted when a complaint is sent.
+     */
+    event ComplaintSent(
+        bytes32 indexed schainId, uint indexed fromNodeIndex, uint indexed toNodeIndex);
 
     modifier correctGroup(bytes32 schainId) {
         require(channels[schainId].active, "Group is not created");
@@ -154,12 +162,12 @@ contract SkaleDKG is Permissions, ISkaleDKG {
     }
 
     modifier correctNode(bytes32 schainId, uint nodeIndex) {
-        (uint index, ) = _checkAndReturnIndexInGroup(schainId, nodeIndex, true);
+        (uint index, ) = checkAndReturnIndexInGroup(schainId, nodeIndex, true);
         _;
     }
 
     modifier correctNodeWithoutRevert(bytes32 schainId, uint nodeIndex) {
-        (, bool check) = _checkAndReturnIndexInGroup(schainId, nodeIndex, false);
+        (, bool check) = checkAndReturnIndexInGroup(schainId, nodeIndex, false);
         if (!check) {
             emit ComplaintError("Node is not in this group");
         } else {
@@ -170,6 +178,142 @@ contract SkaleDKG is Permissions, ISkaleDKG {
     modifier onlyNodeOwner(uint nodeIndex) {
         _checkMsgSenderIsNodeOwner(nodeIndex);
         _;
+    }
+    
+    modifier refundGasBySchain(bytes32 schainId, bool isDebt) {
+        uint gasTotal = gasleft();
+        _;
+        _refundGasBySchain(schainId, msg.sender, gasTotal - gasleft() + 28000 + 21000 + 7700, isDebt);
+    }
+
+    modifier refundGasByValidatorToSchain(bytes32 schainId, bool isDebt) {
+        uint gasTotal = gasleft();
+        _;
+        _refundGasBySchain(schainId, msg.sender, gasTotal - gasleft() + 56000, isDebt);
+        _refundGasByValidatorToSchain(schainId);
+    }
+
+    function alright(bytes32 schainId, uint fromNodeIndex)
+        external
+        refundGasBySchain(schainId, false)
+        correctGroup(schainId)
+        onlyNodeOwner(fromNodeIndex)
+    {
+        SkaleDkgAlright.alright(
+            schainId,
+            fromNodeIndex,
+            contractManager,
+            channels,
+            dkgProcess,
+            complaints,
+            lastSuccesfulDKG
+        );
+    }
+
+    function broadcast(
+        bytes32 schainId,
+        uint nodeIndex,
+        G2Operations.G2Point[] memory verificationVector,
+        KeyShare[] memory secretKeyContribution
+    )
+        external
+        refundGasBySchain(schainId, false)
+        correctGroup(schainId)
+        onlyNodeOwner(nodeIndex)
+    {
+        SkaleDkgBroadcast.broadcast(
+            schainId,
+            nodeIndex,
+            verificationVector,
+            secretKeyContribution,
+            contractManager,
+            channels,
+            dkgProcess,
+            hashedData
+        );
+    }
+
+
+    function complaintBadData(bytes32 schainId, uint fromNodeIndex, uint toNodeIndex)
+        external
+        refundGasBySchain(schainId, true)
+        correctGroupWithoutRevert(schainId)
+        correctNode(schainId, fromNodeIndex)
+        correctNodeWithoutRevert(schainId, toNodeIndex)
+        onlyNodeOwner(fromNodeIndex)
+    { 
+        SkaleDkgComplaint.complaintBadData(
+            schainId,
+            fromNodeIndex,
+            toNodeIndex,
+            contractManager,
+            complaints
+        );
+    }
+
+    function preResponse(
+        bytes32 schainId,
+        uint fromNodeIndex,
+        G2Operations.G2Point[] memory verificationVector,
+        G2Operations.G2Point[] memory verificationVectorMult,
+        KeyShare[] memory secretKeyContribution
+    )
+        external
+        refundGasBySchain(schainId, true)
+        correctGroup(schainId)
+        onlyNodeOwner(fromNodeIndex)
+    {
+        SkaleDkgPreResponse.preResponse(
+            schainId,
+            fromNodeIndex,
+            verificationVector,
+            verificationVectorMult,
+            secretKeyContribution,
+            contractManager,
+            complaints,
+            hashedData
+        );
+    }
+
+    function complaint(bytes32 schainId, uint fromNodeIndex, uint toNodeIndex)
+        external
+        refundGasByValidatorToSchain(schainId, true)
+        correctGroupWithoutRevert(schainId)
+        correctNode(schainId, fromNodeIndex)
+        correctNodeWithoutRevert(schainId, toNodeIndex)
+        onlyNodeOwner(fromNodeIndex)
+    {
+        SkaleDkgComplaint.complaint(
+            schainId,
+            fromNodeIndex,
+            toNodeIndex,
+            contractManager,
+            channels,
+            complaints,
+            startAlrightTimestamp
+        );
+    }
+
+    function response(
+        bytes32 schainId,
+        uint fromNodeIndex,
+        uint secretNumber,
+        G2Operations.G2Point memory multipliedShare
+    )
+        external
+        refundGasByValidatorToSchain(schainId, true)
+        correctGroup(schainId)
+        onlyNodeOwner(fromNodeIndex)
+    {
+        SkaleDkgResponse.response(
+            schainId,
+            fromNodeIndex,
+            secretNumber,
+            multipliedShare,
+            contractManager,
+            channels,
+            complaints
+        );
     }
 
     /**
@@ -199,175 +343,41 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         KeyStorage(contractManager.getContract("KeyStorage")).deleteKey(schainId);
     }
 
-    /**
-     * @dev Broadcasts verification vector and secret key contribution to all
-     * other nodes in the group.
-     *
-     * Emits BroadcastAndKeyShare event.
-     *
-     * Requirements:
-     *
-     * - `msg.sender` must have an associated node.
-     * - `verificationVector` must be a certain length.
-     * - `secretKeyContribution` length must be equal to number of nodes in group.
-     */
-    function broadcast(
-        bytes32 schainId,
-        uint nodeIndex,
-        G2Operations.G2Point[] calldata verificationVector,
-        KeyShare[] calldata secretKeyContribution
-    )
-        external
-        correctGroup(schainId)
-        onlyNodeOwner(nodeIndex)
-    {
-        uint n = channels[schainId].n;
-        require(verificationVector.length == getT(n), "Incorrect number of verification vectors");
-        require(
-            secretKeyContribution.length == n,
-            "Incorrect number of secret key shares"
-        );
-        (uint index, ) = _checkAndReturnIndexInGroup(schainId, nodeIndex, true);
-        require(!dkgProcess[schainId].broadcasted[index], "This node has already broadcasted");
-        dkgProcess[schainId].broadcasted[index] = true;
-        dkgProcess[schainId].numberOfBroadcasted++;
-        if (dkgProcess[schainId].numberOfBroadcasted == channels[schainId].n) {
-            startAlrightTimestamp[schainId] = now;
-        }
-        hashedData[schainId][index] = _hashData(secretKeyContribution, verificationVector);
-        KeyStorage(contractManager.getContract("KeyStorage")).adding(schainId, verificationVector[0]);
-        emit BroadcastAndKeyShare(
-            schainId,
-            nodeIndex,
-            verificationVector,
-            secretKeyContribution
-        );
+    function setStartAlrightTimestamp(bytes32 schainId) external allow("SkaleDKG") {
+        startAlrightTimestamp[schainId] = now;
     }
 
-    /**
-     * @dev Creates a complaint from a node (accuser) to a given node.
-     * The accusing node must broadcast additional parameters within 1800 blocks.
-     *
-     * Emits {ComplaintSent} or {ComplaintError} event.
-     *
-     * Requirements:
-     *
-     * - `msg.sender` must have an associated node.
-     */
-    function complaint(bytes32 schainId, uint fromNodeIndex, uint toNodeIndex)
-        external
-        correctGroupWithoutRevert(schainId)
-        correctNode(schainId, fromNodeIndex)
-        correctNodeWithoutRevert(schainId, toNodeIndex)
-        onlyNodeOwner(fromNodeIndex)
-    {
-        require(isNodeBroadcasted(schainId, fromNodeIndex), "Node has not broadcasted");
-        if (isNodeBroadcasted(schainId, toNodeIndex)) {
-            _handleComplaintWhenBroadcasted(schainId, fromNodeIndex, toNodeIndex);
-            return;
+    function setBadNode(bytes32 schainId, uint nodeIndex) external allow("SkaleDKG") {
+        _badNodes[schainId] = nodeIndex;
+    }
+
+    function finalizeSlashing(bytes32 schainId, uint badNode) external allow("SkaleDKG") {
+        NodeRotation nodeRotation = NodeRotation(contractManager.getContract("NodeRotation"));
+        SchainsInternal schainsInternal = SchainsInternal(
+            contractManager.getContract("SchainsInternal")
+        );
+        emit BadGuy(badNode);
+        emit FailedDKG(schainId);
+
+        if (schainsInternal.isAnyFreeNode(schainId)) {
+            uint newNode = nodeRotation.rotateNode(
+                badNode,
+                schainId,
+                false
+            );
+            emit NewGuy(newNode);
         } else {
-            // not broadcasted in 30 min
-            if (channels[schainId].startedBlockTimestamp.add(_getComplaintTimelimit()) <= block.timestamp) {
-                _finalizeSlashing(schainId, toNodeIndex);
-                return;
-            }
-            emit ComplaintError("Complaint sent too early");
-            return;
+            _openChannel(schainId);
+            schainsInternal.removeNodeFromSchain(
+                badNode,
+                schainId
+            );
+            channels[schainId].active = false;
         }
-    }
-
-    function complaintBadData(bytes32 schainId, uint fromNodeIndex, uint toNodeIndex)
-        external
-        correctGroupWithoutRevert(schainId)
-        correctNode(schainId, fromNodeIndex)
-        correctNodeWithoutRevert(schainId, toNodeIndex)
-        onlyNodeOwner(fromNodeIndex)
-    { 
-        require(isNodeBroadcasted(schainId, fromNodeIndex), "Node has not broadcasted");
-        require(isNodeBroadcasted(schainId, toNodeIndex), "Accused node has not broadcasted");
-        require(!isAllDataReceived(schainId, fromNodeIndex), "Node has already sent alright");
-        if (complaints[schainId].nodeToComplaint == uint(-1)) {
-            complaints[schainId].nodeToComplaint = toNodeIndex;
-            complaints[schainId].fromNodeToComplaint = fromNodeIndex;
-            complaints[schainId].startComplaintBlockTimestamp = block.timestamp;
-            emit ComplaintSent(schainId, fromNodeIndex, toNodeIndex);
-        } else {
-            emit ComplaintError("First complaint has already been processed");
-        }
-    }
-
-    function preResponse(
-        bytes32 schainId,
-        uint fromNodeIndex,
-        G2Operations.G2Point[] calldata verificationVector,
-        G2Operations.G2Point[] calldata verificationVectorMult,
-        KeyShare[] calldata secretKeyContribution
-    )
-        external
-        correctGroup(schainId)
-        onlyNodeOwner(fromNodeIndex)
-    {
-        (uint indexOnSchain, ) = _checkAndReturnIndexInGroup(schainId, fromNodeIndex, true);
-        require(complaints[schainId].nodeToComplaint == fromNodeIndex, "Not this Node");
-        require(!complaints[schainId].isResponse, "Already submitted pre response data");
-        require(
-            hashedData[schainId][indexOnSchain] == _hashData(secretKeyContribution, verificationVector),
-            "Broadcasted Data is not correct"
+        Punisher(contractManager.getPunisher()).slash(
+            Nodes(contractManager.getContract("Nodes")).getValidatorId(badNode),
+            SlashingTable(contractManager.getContract("SlashingTable")).getPenalty("FailedDKG")
         );
-        require(
-            verificationVector.length == verificationVectorMult.length,
-            "Incorrect length of multiplied verification vector"
-        );
-        (uint index, ) = _checkAndReturnIndexInGroup(schainId, complaints[schainId].fromNodeToComplaint, true);
-        require(
-            _checkCorrectVectorMultiplication(index, verificationVector, verificationVectorMult),
-            "Multiplied verification vector is incorrect"
-        );
-        complaints[schainId].keyShare = secretKeyContribution[index].share;
-        complaints[schainId].sumOfVerVec = _calculateSum(verificationVectorMult);
-        complaints[schainId].isResponse = true;
-    }
-
-    function response(
-        bytes32 schainId,
-        uint fromNodeIndex,
-        uint secretNumber,
-        G2Operations.G2Point calldata multipliedShare
-    )
-        external
-        correctGroup(schainId)
-        onlyNodeOwner(fromNodeIndex)
-    {
-        _checkAndReturnIndexInGroup(schainId, fromNodeIndex, true);
-        require(complaints[schainId].nodeToComplaint == fromNodeIndex, "Not this Node");
-        require(complaints[schainId].isResponse, "Have not submitted pre-response data");
-        _verifyDataAndSlash(
-            schainId,
-            secretNumber,
-            multipliedShare
-         );
-    }
-
-    function alright(bytes32 schainId, uint fromNodeIndex)
-        external
-        correctGroup(schainId)
-        onlyNodeOwner(fromNodeIndex)
-    {
-        (uint index, ) = _checkAndReturnIndexInGroup(schainId, fromNodeIndex, true);
-        uint numberOfParticipant = channels[schainId].n;
-        require(numberOfParticipant == dkgProcess[schainId].numberOfBroadcasted, "Still Broadcasting phase");
-        require(
-            complaints[schainId].fromNodeToComplaint != fromNodeIndex ||
-            (fromNodeIndex == 0 && complaints[schainId].startComplaintBlockTimestamp == 0),
-            "Node has already sent complaint"
-        );
-        require(!dkgProcess[schainId].completed[index], "Node is already alright");
-        dkgProcess[schainId].completed[index] = true;
-        dkgProcess[schainId].numberOfCompleted++;
-        emit AllDataReceived(schainId, fromNodeIndex);
-        if (dkgProcess[schainId].numberOfCompleted == numberOfParticipant) {
-            _setSuccesfulDKG(schainId);
-        }
     }
 
     function getChannelStartedTime(bytes32 schainId) external view returns (uint) {
@@ -417,7 +427,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
      * @dev Checks whether broadcast is possible.
      */
     function isBroadcastPossible(bytes32 schainId, uint nodeIndex) external view returns (bool) {
-        (uint index, bool check) = _checkAndReturnIndexInGroup(schainId, nodeIndex, false);
+        (uint index, bool check) = checkAndReturnIndexInGroup(schainId, nodeIndex, false);
         return channels[schainId].active &&
             check &&
             _isNodeOwnedByMessageSender(nodeIndex, msg.sender) &&
@@ -436,8 +446,8 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         view
         returns (bool)
     {
-        (uint indexFrom, bool checkFrom) = _checkAndReturnIndexInGroup(schainId, fromNodeIndex, false);
-        (uint indexTo, bool checkTo) = _checkAndReturnIndexInGroup(schainId, toNodeIndex, false);
+        (uint indexFrom, bool checkFrom) = checkAndReturnIndexInGroup(schainId, fromNodeIndex, false);
+        (uint indexTo, bool checkTo) = checkAndReturnIndexInGroup(schainId, toNodeIndex, false);
         if (!checkFrom || !checkTo)
             return false;
         bool complaintSending = (
@@ -472,7 +482,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
      * @dev Checks whether sending Alright response is possible.
      */
     function isAlrightPossible(bytes32 schainId, uint nodeIndex) external view returns (bool) {
-        (uint index, bool check) = _checkAndReturnIndexInGroup(schainId, nodeIndex, false);
+        (uint index, bool check) = checkAndReturnIndexInGroup(schainId, nodeIndex, false);
         return channels[schainId].active &&
             check &&
             _isNodeOwnedByMessageSender(nodeIndex, msg.sender) &&
@@ -486,7 +496,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
      * @dev Checks whether sending a pre-response is possible.
      */
     function isPreResponsePossible(bytes32 schainId, uint nodeIndex) external view returns (bool) {
-        (, bool check) = _checkAndReturnIndexInGroup(schainId, nodeIndex, false);
+        (, bool check) = checkAndReturnIndexInGroup(schainId, nodeIndex, false);
         return channels[schainId].active &&
             check &&
             _isNodeOwnedByMessageSender(nodeIndex, msg.sender) &&
@@ -498,7 +508,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
      * @dev Checks whether sending a response is possible.
      */
     function isResponsePossible(bytes32 schainId, uint nodeIndex) external view returns (bool) {
-        (, bool check) = _checkAndReturnIndexInGroup(schainId, nodeIndex, false);
+        (, bool check) = checkAndReturnIndexInGroup(schainId, nodeIndex, false);
         return channels[schainId].active &&
             check &&
             _isNodeOwnedByMessageSender(nodeIndex, msg.sender) &&
@@ -506,152 +516,75 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             complaints[schainId].isResponse;
     }
 
-    function initialize(address contractsAddress) public override initializer {
-        Permissions.initialize(contractsAddress);
-    }
-
-    function isNodeBroadcasted(bytes32 schainId, uint nodeIndex) public view returns (bool) {
-        (uint index, bool check) = _checkAndReturnIndexInGroup(schainId, nodeIndex, false);
+    function isNodeBroadcasted(bytes32 schainId, uint nodeIndex) external view returns (bool) {
+        (uint index, bool check) = checkAndReturnIndexInGroup(schainId, nodeIndex, false);
         return check && dkgProcess[schainId].broadcasted[index];
-    }
-
-    function isEveryoneBroadcasted(bytes32 schainId) public view returns (bool) {
-        return channels[schainId].n == dkgProcess[schainId].numberOfBroadcasted;
     }
 
     /**
      * @dev Checks whether all data has been received by node.
      */
-    function isAllDataReceived(bytes32 schainId, uint nodeIndex) public view returns (bool) {
-        (uint index, bool check) = _checkAndReturnIndexInGroup(schainId, nodeIndex, false);
+    function isAllDataReceived(bytes32 schainId, uint nodeIndex) external view returns (bool) {
+        (uint index, bool check) = checkAndReturnIndexInGroup(schainId, nodeIndex, false);
         return check && dkgProcess[schainId].completed[index];
     }
 
-    function getT(uint n) public pure returns (uint) {
-        return n.mul(2).add(1).div(3);
-    }
-
-    function _setSuccesfulDKG(bytes32 schainId) internal {
-        lastSuccesfulDKG[schainId] = now;
-        channels[schainId].active = false;
-        KeyStorage(contractManager.getContract("KeyStorage")).finalizePublicKey(schainId);
-        emit SuccessfulDKG(schainId);
-    }
-
-    function _verifyDataAndSlash(
-        bytes32 schainId,
-        uint secretNumber,
-        G2Operations.G2Point calldata multipliedShare
+    function hashData(
+        KeyShare[] memory secretKeyContribution,
+        G2Operations.G2Point[] memory verificationVector
     )
-        internal
+        external
+        pure
+        returns (bytes32)
     {
-        bytes32[2] memory publicKey = Nodes(contractManager.getContract("Nodes")).getNodePublicKey(
-            complaints[schainId].fromNodeToComplaint
-        );
-        uint256 pkX = uint(publicKey[0]);
-
-        (pkX, ) = ECDH(contractManager.getContract("ECDH")).deriveKey(secretNumber, pkX, uint(publicKey[1]));
-        bytes32 key = bytes32(pkX);
-
-        // Decrypt secret key contribution
-        uint secret = Decryption(contractManager.getContract("Decryption")).decrypt(
-            complaints[schainId].keyShare,
-            sha256(abi.encodePacked(key))
-        );
-
-        uint badNode = (
-            _checkCorrectMultipliedShare(multipliedShare, secret) &&
-            multipliedShare.isEqual(complaints[schainId].sumOfVerVec) ?
-            complaints[schainId].fromNodeToComplaint :
-            complaints[schainId].nodeToComplaint
-        );
-        _finalizeSlashing(schainId, badNode);
-    }
-
-    function _checkCorrectVectorMultiplication(
-        uint indexOnSchain,
-        G2Operations.G2Point[] memory verificationVector,
-        G2Operations.G2Point[] memory verificationVectorMult
-    )
-        private
-        view
-        returns (bool)
-    {
-        Fp2Operations.Fp2Point memory value = G1Operations.getG1Generator();
-        Fp2Operations.Fp2Point memory tmp = G1Operations.getG1Generator();
+        bytes memory data;
+        for (uint i = 0; i < secretKeyContribution.length; i++) {
+            data = abi.encodePacked(data, secretKeyContribution[i].publicKey, secretKeyContribution[i].share);
+        }
         for (uint i = 0; i < verificationVector.length; i++) {
-            (tmp.a, tmp.b) = Precompiled.bn256ScalarMul(value.a, value.b, indexOnSchain.add(1) ** i);
-            if (!_checkPairing(tmp, verificationVector[i], verificationVectorMult[i])) {
-                return false;
-            }
+            data = abi.encodePacked(
+                data,
+                verificationVector[i].x.a,
+                verificationVector[i].x.b,
+                verificationVector[i].y.a,
+                verificationVector[i].y.b
+            );
         }
-        return true;
+        return keccak256(data);
     }
 
-    function _checkPairing(
-        Fp2Operations.Fp2Point memory g1Mul,
-        G2Operations.G2Point memory verificationVector,
-        G2Operations.G2Point memory verificationVectorMult
+    function initialize(address contractsAddress) public override initializer {
+        Permissions.initialize(contractsAddress);
+    }
+
+    function checkAndReturnIndexInGroup(
+        bytes32 schainId,
+        uint nodeIndex,
+        bool revertCheck
     )
-        private
+        public
         view
-        returns (bool)
+        returns (uint, bool)
     {
-        require(G1Operations.checkRange(g1Mul), "g1Mul is not valid");
-        g1Mul.b = G1Operations.negate(g1Mul.b);
-        Fp2Operations.Fp2Point memory one = G1Operations.getG1Generator();
-        return Precompiled.bn256Pairing(
-            one.a, one.b,
-            verificationVectorMult.x.b, verificationVectorMult.x.a,
-            verificationVectorMult.y.b, verificationVectorMult.y.a,
-            g1Mul.a, g1Mul.b,
-            verificationVector.x.b, verificationVector.x.a,
-            verificationVector.y.b, verificationVector.y.a
-        );
+        uint index = SchainsInternal(contractManager.getContract("SchainsInternal"))
+            .getNodeIndexInGroup(schainId, nodeIndex);
+        if (index >= channels[schainId].n && revertCheck) {
+            revert("Node is not in this group");
+        }
+        return (index, index < channels[schainId].n);
     }
 
-    function _calculateSum(G2Operations.G2Point[] memory verificationVectorMult)
-        private
-        view
-        returns (G2Operations.G2Point memory)
-    {
-        G2Operations.G2Point memory value = G2Operations.getG2Zero();
-        for (uint i = 0; i < verificationVectorMult.length; i++) {
-            value = value.addG2(verificationVectorMult[i]);
-        }
-        return value;
+    function _refundGasBySchain(bytes32 schainId, address spender, uint spentGas, bool isDebt) private {
+        Wallets(payable(contractManager.getContract("Wallets")))
+        .refundGasBySchain(schainId, payable(spender), spentGas, isDebt);
     }
 
-    function _checkCorrectMultipliedShare(
-        G2Operations.G2Point memory multipliedShare,
-        uint secret
-    )
-        private
-        view
-        returns (bool)
-    {
-        if (!multipliedShare.isG2()) {
-            return false;
-        }
-        G2Operations.G2Point memory tmp = multipliedShare;
-        Fp2Operations.Fp2Point memory g1 = G1Operations.getG1Generator();
-        Fp2Operations.Fp2Point memory share = Fp2Operations.Fp2Point({
-            a: 0,
-            b: 0
-        });
-        (share.a, share.b) = Precompiled.bn256ScalarMul(g1.a, g1.b, secret);
-        require(G1Operations.checkRange(share), "share is not valid");
-        share.b = G1Operations.negate(share.b);
-
-        require(G1Operations.isG1(share), "mulShare not in G1");
-
-        G2Operations.G2Point memory g2 = G2Operations.getG2Generator();
-
-        return Precompiled.bn256Pairing(
-            share.a, share.b,
-            g2.x.b, g2.x.a, g2.y.b, g2.y.a,
-            g1.a, g1.b,
-            tmp.x.b, tmp.x.a, tmp.y.b, tmp.y.a);
+    function _refundGasByValidatorToSchain(bytes32 schainId) private {
+        uint validatorId = Nodes(contractManager.getContract("Nodes"))
+         .getValidatorId(_badNodes[schainId]);
+         Wallets(payable(contractManager.getContract("Wallets")))
+         .refundGasByValidatorToSchain(validatorId, schainId);
+        delete _badNodes[schainId];
     }
 
     function _openChannel(bytes32 schainId) private {
@@ -678,119 +611,20 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         emit ChannelOpened(schainId);
     }
 
-    function _handleComplaintWhenBroadcasted(bytes32 schainId, uint fromNodeIndex, uint toNodeIndex) private {
-        // missing alright
-        if (complaints[schainId].nodeToComplaint == uint(-1)) {
-            if (
-                isEveryoneBroadcasted(schainId) &&
-                !isAllDataReceived(schainId, toNodeIndex) &&
-                startAlrightTimestamp[schainId].add(_getComplaintTimelimit()) <= block.timestamp
-            ) {
-                // missing alright
-                _finalizeSlashing(schainId, toNodeIndex);
-                return;
-            } else if (!isAllDataReceived(schainId, fromNodeIndex)) {
-                // incorrect data
-                _finalizeSlashing(schainId, fromNodeIndex);
-                return;
-            }
-            emit ComplaintError("Has already sent alright");
-            return;
-        } else if (complaints[schainId].nodeToComplaint == toNodeIndex) {
-            // 30 min after incorrect data complaint
-            if (complaints[schainId].startComplaintBlockTimestamp.add(_getComplaintTimelimit()) <= block.timestamp) {
-                _finalizeSlashing(schainId, complaints[schainId].nodeToComplaint);
-                return;
-            }
-            emit ComplaintError("The same complaint rejected");
-            return;
-        }
-        emit ComplaintError("One complaint is already sent");
+    function _getComplaintTimelimit() private view returns (uint) {
+        return ConstantsHolder(contractManager.getConstantsHolder()).complaintTimelimit();
     }
 
-    function _finalizeSlashing(bytes32 schainId, uint badNode) private {
-        NodeRotation nodeRotation = NodeRotation(contractManager.getContract("NodeRotation"));
-        SchainsInternal schainsInternal = SchainsInternal(
-            contractManager.getContract("SchainsInternal")
-        );
-        emit BadGuy(badNode);
-        emit FailedDKG(schainId);
-
-        if (schainsInternal.isAnyFreeNode(schainId)) {
-            uint newNode = nodeRotation.rotateNode(
-                badNode,
-                schainId,
-                false
-            );
-            emit NewGuy(newNode);
-        } else {
-            _openChannel(schainId);
-            schainsInternal.removeNodeFromSchain(
-                badNode,
-                schainId
-            );
-            channels[schainId].active = false;
-        }
-        Punisher(contractManager.getPunisher()).slash(
-            Nodes(contractManager.getContract("Nodes")).getValidatorId(badNode),
-            SlashingTable(contractManager.getContract("SlashingTable")).getPenalty("FailedDKG")
-        );
-    }
-
-    function _nodeIndexInSchain(bytes32 schainId, uint nodeIndex) private view returns (uint) {
-        return SchainsInternal(contractManager.getContract("SchainsInternal"))
-            .getNodeIndexInGroup(schainId, nodeIndex);
+    function isEveryoneBroadcasted(bytes32 schainId) public view returns (bool) {
+        return channels[schainId].n == dkgProcess[schainId].numberOfBroadcasted;
     }
 
     function _isNodeOwnedByMessageSender(uint nodeIndex, address from) private view returns (bool) {
         return Nodes(contractManager.getContract("Nodes")).isNodeExist(from, nodeIndex);
     }
 
-    function _getComplaintTimelimit() private view returns (uint) {
-        return ConstantsHolder(contractManager.getConstantsHolder()).complaintTimelimit();
-    }
-
     function _checkMsgSenderIsNodeOwner(uint nodeIndex) private view {
         require(_isNodeOwnedByMessageSender(nodeIndex, msg.sender), "Node does not exist for message sender");
     }
 
-    function _checkAndReturnIndexInGroup(
-        bytes32 schainId,
-        uint nodeIndex,
-        bool revertCheck
-    )
-        private
-        view
-        returns (uint, bool)
-    {
-        uint index = _nodeIndexInSchain(schainId, nodeIndex);
-        if (index >= channels[schainId].n && revertCheck) {
-            revert("Node is not in this group");
-        }
-        return (index, index < channels[schainId].n);
-    }
-
-    function _hashData(
-        KeyShare[] memory secretKeyContribution,
-        G2Operations.G2Point[] memory verificationVector
-    )
-        private
-        pure
-        returns (bytes32)
-    {
-        bytes memory data;
-        for (uint i = 0; i < secretKeyContribution.length; i++) {
-            data = abi.encodePacked(data, secretKeyContribution[i].publicKey, secretKeyContribution[i].share);
-        }
-        for (uint i = 0; i < verificationVector.length; i++) {
-            data = abi.encodePacked(
-                data,
-                verificationVector[i].x.a,
-                verificationVector[i].x.b,
-                verificationVector[i].y.a,
-                verificationVector[i].y.b
-            );
-        }
-        return keccak256(data);
-    }
 }

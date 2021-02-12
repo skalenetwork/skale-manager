@@ -9,7 +9,8 @@ import { ConstantsHolder,
          SkaleDKGTester,
          SkaleManager,
          ValidatorService,
-         NodeRotation} from "../typechain";
+         NodeRotation,
+         Wallets} from "../typechain";
 
 import { BigNumber } from "ethers";
 import { skipTime, currentTime } from "./tools/time";
@@ -33,6 +34,7 @@ import { ethers, web3 } from "hardhat";
 import { solidity } from "ethereum-waffle";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import { assert, expect } from "chai";
+import { deployWallets } from "./tools/deploy/wallets";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -91,6 +93,7 @@ describe("Schains", () => {
     let skaleManager: SkaleManager;
     let keyStorage: KeyStorage;
     let nodeRotation: NodeRotation;
+    let wallets: Wallets;
     const zeroAddress = "0x0000000000000000000000000000000000000000";
 
     beforeEach(async () => {
@@ -108,6 +111,7 @@ describe("Schains", () => {
         keyStorage = await deployKeyStorage(contractManager);
         skaleManager = await deploySkaleManager(contractManager);
         nodeRotation = await deployNodeRotation(contractManager);
+        wallets = await deployWallets(contractManager);
 
         await validatorService.connect(validator).registerValidator("D2", "D2 is even", 0, 0);
         const validatorIndex = await validatorService.getValidatorId(validator.address);
@@ -284,6 +288,7 @@ describe("Schains", () => {
                 let res1 = await schainsInternal.getNodesInGroup(stringValue(web3.utils.soliditySha3("d2")));
                 let res = await skaleDKG.connect(nodeAddress).isBroadcastPossible(stringValue(web3.utils.soliditySha3("d2")), res1[0]);
                 assert.equal(res, true);
+                await wallets.connect(owner).rechargeSchainWallet(stringValue(web3.utils.soliditySha3("d2")), {value: 1e20.toString()});
                 await skaleDKG.connect(nodeAddress).broadcast(
                     stringValue(web3.utils.soliditySha3("d2")),
                     res1[0],
@@ -1436,6 +1441,7 @@ describe("Schains", () => {
             // let res10 = await keyStorage.getBroadcastedData(stringValue(web3.utils.soliditySha3("d3")), res1[0]);
             res = await skaleDKG.connect(nodeAddress).isBroadcastPossible(stringValue(web3.utils.soliditySha3("d3")), res1[0]);
             assert.equal(res, true);
+            await wallets.connect(owner).rechargeSchainWallet(stringValue(web3.utils.soliditySha3("d3")), {value: 1e20.toString()});
             await skaleDKG.connect(nodeAddress).broadcast(
                 stringValue(web3.utils.soliditySha3("d3")),
                 res1[0],

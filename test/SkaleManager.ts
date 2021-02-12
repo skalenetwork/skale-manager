@@ -13,7 +13,8 @@ import { ConstantsHolder,
          SkaleManager,
          SkaleToken,
          ValidatorService,
-         BountyV2} from "../typechain";
+         BountyV2,
+         Wallets} from "../typechain";
 
 import * as elliptic from "elliptic";
 const EC = elliptic.ec;
@@ -41,6 +42,8 @@ import { ethers, web3 } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import { expect } from "chai";
 import { solidity } from "ethereum-waffle";
+import { deployWallets } from "./tools/deploy/wallets";
+import chaiAlmost from "chai-almost";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -81,6 +84,10 @@ function hexValue(value: string) {
     }
 }
 
+async function getBalance(address: string) {
+    return parseFloat(web3.utils.fromWei(await web3.eth.getBalance(address)));
+}
+
 describe("SkaleManager", () => {
     let owner: SignerWithAddress;
     let validator: SignerWithAddress
@@ -102,6 +109,12 @@ describe("SkaleManager", () => {
     let distributor: Distributor;
     let skaleDKG: SkaleDKGTester;
     let bountyContract: BountyV2;
+    let wallets: Wallets;
+
+    before(async() => {
+        chai.use(chaiAlmost(0.002));
+        [owner, validator, developer, hacker, nodeAddress] = await ethers.getSigners();
+    });
 
     beforeEach(async () => {
         [owner, validator, developer, hacker, nodeAddress] = await ethers.getSigners();
@@ -121,7 +134,8 @@ describe("SkaleManager", () => {
         distributor = await deployDistributor(contractManager);
         skaleDKG = await deploySkaleDKGTester(contractManager);
         await contractManager.setContractsAddress("SkaleDKG", skaleDKG.address);
-	    bountyContract = await deployBounty(contractManager);
+        bountyContract = await deployBounty(contractManager);
+        wallets = await deployWallets(contractManager);
 
         const premined = "100000000000000000000000000";
         await skaleToken.mint(owner.address, premined, "0x", "0x");
@@ -219,7 +233,8 @@ describe("SkaleManager", () => {
                     ["0x" + hexValue(pubKey.x.toString('hex')), "0x" + hexValue(pubKey.y.toString('hex'))], // public key
                     "d2", // name
                     "somedomain.name");
-            });
+                    await wallets.rechargeValidatorWallet(validatorId, {value: 1e18.toString()});
+                });
 
             it("should fail to init exiting of someone else's node", async () => {
                 await skaleManager.connect(hacker).nodeExit(0)
@@ -286,7 +301,11 @@ describe("SkaleManager", () => {
 
             it("should pay bounty if Node is In Active state", async () => {
                 await skipTime(ethers, month);
+                const balanceBefore = await getBalance(nodeAddress.address);
                 await skaleManager.connect(nodeAddress).getBounty(0);
+                const balance = await getBalance(nodeAddress.address);
+                balance.should.not.be.lessThan(balanceBefore);
+                balance.should.be.almost(balanceBefore);
             });
 
             it("should pay bounty if Node is In Leaving state", async () => {
