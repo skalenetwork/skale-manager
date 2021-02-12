@@ -74,7 +74,6 @@ function getBountyForEpoch(epoch: number) {
 
 async function getContractFactoryWithLibraries(e: any, contractName: string) {
     const libraryNames = [];
-    console.log("Contract", contractName);
     for (const str of e.toString().split(".sol:")) {
         const libraryName = str.split("\n")[0];
         libraryNames.push(libraryName);
@@ -325,7 +324,7 @@ describe("Bounty", () => {
         const delegationPeriodManager = await deployDelegationPeriodManager(contractManager);
         await deployMonitors(contractManager);
         await deployDistributor(contractManager);
-        
+
         let nodesFactory: ContractFactory;
         try {
             nodesFactory = await ethers.getContractFactory("Nodes");
