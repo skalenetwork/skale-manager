@@ -62,7 +62,7 @@ async function main() {
         if (multisig) {
             await upgrades.prepareUpgrade(proxyAddress, contractFactory, { unsafeAllowLinkedLibraries: true });
         } else {
-            // TODO: 
+            // TODO: initialize contract
             await upgrades.upgradeProxy(proxyAddress, contractFactory, { unsafeAllowLinkedLibraries: true });
         }
     }
