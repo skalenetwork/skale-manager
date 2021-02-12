@@ -148,9 +148,6 @@ contract SkaleManager is IERC777Recipient, Permissions {
                     0
                 )
             );
-            // Monitors monitors = Monitors(contractManager.getContract("Monitors"));
-            // monitors.removeCheckedNodes(nodeIndex);
-            // monitors.deleteMonitor(nodeIndex);
             nodes.deleteNodeForValidator(validatorId, nodeIndex);
         }
     }

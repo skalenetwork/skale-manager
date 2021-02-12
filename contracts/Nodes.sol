@@ -650,34 +650,6 @@ contract Nodes is Permissions {
         return numberOfActiveNodes.add(numberOfLeavingNodes);
     }
 
-    // /**
-    //  * @dev Returns IPs of active nodes.
-    //  */
-    // function getActiveNodeIPs() external view returns (bytes4[] memory activeNodeIPs) {
-    //     activeNodeIPs = new bytes4[](numberOfActiveNodes);
-    //     uint indexOfActiveNodeIPs = 0;
-    //     for (uint indexOfNodes = 0; indexOfNodes < nodes.length; indexOfNodes++) {
-    //         if (isNodeActive(indexOfNodes)) {
-    //             activeNodeIPs[indexOfActiveNodeIPs] = nodes[indexOfNodes].ip;
-    //             indexOfActiveNodeIPs++;
-    //         }
-    //     }
-    // }
-
-    // /**
-    //  * @dev Returns active nodes linked to the `msg.sender` (validator address).
-    //  */
-    // function getActiveNodesByAddress() external view returns (uint[] memory activeNodesByAddress) {
-    //     activeNodesByAddress = new uint[](nodeIndexes[msg.sender].numberOfNodes);
-    //     uint indexOfActiveNodesByAddress = 0;
-    //     for (uint indexOfNodes = 0; indexOfNodes < nodes.length; indexOfNodes++) {
-    //         if (isNodeExist(msg.sender, indexOfNodes) && isNodeActive(indexOfNodes)) {
-    //             activeNodesByAddress[indexOfActiveNodesByAddress] = indexOfNodes;
-    //             indexOfActiveNodesByAddress++;
-    //         }
-    //     }
-    // }
-
     /**
      * @dev Return active node IDs.
      */
@@ -806,12 +778,8 @@ contract Nodes is Permissions {
     function _moveNodeToNewSpaceMap(uint nodeIndex, uint8 newSpace) private {
         if (_visible[nodeIndex]) {
             uint8 space = spaceOfNodes[nodeIndex].freeSpace;
-            // if (space > 0 && newSpace > 0) {
-            //     _nodesAmountBySpace.moveFromPlaceToPlace(space, newSpace, 1);
-            // } else {
-                _removeNodeFromTree(space);
-                _addNodeToTree(newSpace);
-            // }
+            _removeNodeFromTree(space);
+            _addNodeToTree(newSpace);
             _removeNodeFromSpaceToNodes(nodeIndex, space);
             _addNodeToSpaceToNodes(nodeIndex, newSpace);
         }
@@ -865,7 +833,6 @@ contract Nodes is Permissions {
 
     function _makeNodeInvisible(uint nodeIndex) private {
         if (_visible[nodeIndex]) {
-            // console.log("Invisible", nodeIndex);
             uint8 space = spaceOfNodes[nodeIndex].freeSpace;
             _removeNodeFromSpaceToNodes(nodeIndex, space);
             _removeNodeFromTree(space);
@@ -875,7 +842,6 @@ contract Nodes is Permissions {
 
     function _makeNodeVisible(uint nodeIndex) private {
         if (!_visible[nodeIndex]) {
-            // console.log("Visible", nodeIndex);
             uint8 space = spaceOfNodes[nodeIndex].freeSpace;
             _addNodeToSpaceToNodes(nodeIndex, space);
             _addNodeToTree(space);
@@ -886,9 +852,6 @@ contract Nodes is Permissions {
     function _addNodeToSpaceToNodes(uint nodeIndex, uint8 space) private {
         spaceToNodes[space].push(nodeIndex);
         spaceOfNodes[nodeIndex].indexInSpaceMap = spaceToNodes[space].length.sub(1);
-        // if (space > 0) {
-        //     _nodesAmountBySpace.addToPlace(space, 1);
-        // }
     }
 
     function _removeNodeFromSpaceToNodes(uint nodeIndex, uint8 space) private {
@@ -901,9 +864,6 @@ contract Nodes is Permissions {
         }
         spaceToNodes[space].pop();
         delete spaceOfNodes[nodeIndex].indexInSpaceMap;
-        // if (space > 0) {
-        //     _nodesAmountBySpace.removeFromPlace(space, 1);
-        // }
     }
 
     function _addNodeToTree(uint8 space) private {
