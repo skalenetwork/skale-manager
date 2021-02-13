@@ -17,7 +17,7 @@ import { deploySkaleDKGTester } from "../test/tools/deploy/test/skaleDKGTester";
 import { skipTime, currentTime } from "../test/tools/time";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import { ethers, web3 } from "hardhat";
-import { BigNumberish } from "ethers";
+import { BigNumberish, Event } from "ethers";
 import fs from 'fs';
 
 const ec = new elliptic.ec("secp256k1");
@@ -46,6 +46,19 @@ function stringValue(value: string | null) {
         return value;
     } else {
         return "";
+    }
+}
+
+function findEvent(events: Event[] | undefined, eventName: string) {
+    if (events) {
+        const target = events.find((event) => event.event === eventName);
+        if (target) {
+            return target;
+        } else {
+            throw new Error("Event was not emitted");
+        }
+    } else {
+        throw new Error("Event was not emitted");
     }
 }
 
@@ -142,7 +155,7 @@ describe("createSchains", () => {
         }
     });
 
-    it("max node rotation on 17 nodes", async () => {
+    it.only("max node rotation on 17 nodes", async () => {
         const validatorId = 1;
 
         await validatorService.connect(validator).registerValidator("Validator", "", 0, 0);
@@ -168,6 +181,18 @@ describe("createSchains", () => {
         const numberOfSchains = 128;
         for (let schainNumber = 0; schainNumber < numberOfSchains; schainNumber++) {
             const result = await (await schains.addSchainByFoundation(0, 1, 0, "schain-" + schainNumber, owner.address)).wait();
+            const nodeInGroup = findEvent(result.events, "SchainNodes").args?.nodesInGroup;
+                console.log("Nodes in Schain:");
+                const setOfNodes = new Set();
+                for (const node of nodeInGroup) {
+                    if (!setOfNodes.has(node.toNumber())) {
+                        setOfNodes.add(node.toNumber());
+                    } else {
+                        console.log("Node", node.toNumber(), "already exist");
+                        process.exit();
+                    }
+                    console.log(node.toNumber());
+                }
             await skaleDKG.setSuccesfulDKGPublic(
                 stringValue(web3.utils.soliditySha3("schain-" + schainNumber))
             );
@@ -195,10 +220,10 @@ describe("createSchains", () => {
         const gas = [];
         for (let i = 0; i < schainIds.length; i++) {
             const estimatedGas = await skaleManager.estimateGas.nodeExit(rotIndex);
-            console.log("Estimated gas on nodeExit", estimatedGas.toNumber());
             const overrides = {
-                gasLimit: estimatedGas.toNumber()
+                gasLimit: Math.ceil(estimatedGas.toNumber() * 1.1)
             }
+            console.log("Estimated gas on nodeExit", overrides.gasLimit);
             const result = await (await skaleManager.connect(node).nodeExit(rotIndex, overrides)).wait();
             // console.log("Gas limit was:", result);
             console.log("" + (i + 1) + "", "Rotation on", nodesAmount, "nodes:\t", result.gasUsed.toNumber(), "gu");
