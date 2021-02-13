@@ -5,6 +5,11 @@ const GenerateBytesData = require("./GenerateBytesData.js");
 async function sendTransaction(web3Inst, account, privateKey, data, receiverContract) {
     // console.log("Transaction generating started!");
     const nonce = await web3Inst.eth.getTransactionCount(account);
+    console.log("Account", account);
+    console.log("Private key", privateKey);
+    console.log("Nonce", nonce);
+    console.log("Receiver contract", receiverContract);
+    console.log("Data", data);
     const rawTx = {
         from: web3Inst.utils.toChecksumAddress(account),
         nonce: "0x" + nonce.toString(16),
@@ -45,6 +50,15 @@ async function createSchain(typeOfSchain, schainName) {
     // contractAddress = init.jsonData['skale_d_k_g_tester_address'];
     // await sendTransaction(init.web3, init.mainAccount, privateKeyB, abi, contractAddress);
     process.exit();
+}
+
+async function grantSchainCreatorRole(address) {
+    const scr = await init.Schains.methods.SCHAIN_CREATOR_ROLE().call();
+    let abi = await init.Schains.methods.grantRole(scr, address).encodeABI();
+
+    let privateKeyB = Buffer.from(init.privateKey, "hex");
+    let contractAddress = init.jsonData['schains_address'];
+    await sendTransaction(init.web3, init.mainAccount, privateKeyB, abi, contractAddress);
 }
 
 // async function deleteSchain(schainName) {
@@ -185,6 +199,8 @@ if (process.argv[2] == 'getSchainNodes') {
     getEvent(process.argv[3]);
 } else if (process.argv[2] == 'getSchainName') {
     getSchainName(process.argv[3]);
+} else if (process.argv[2] == 'grantSchainCreatorRole') {
+    grantSchainCreatorRole(process.argv[3]);
 } else if (process.argv[2] == 'mock') {
     rinkebyMock();
 }
