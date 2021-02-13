@@ -12,7 +12,7 @@ export function getContractKeyInAbiFile(contract: string) {
 async function main() {
     if (!process.env.MANIFEST || !process.env.VERSION) {
         console.log("Example of usage:");
-        console.log("MANIFEST=.openzeppelin/mainnet.json VERSION=1.7.2-stable.0 npx hardhat run scripts/update_mainnet.json.ts --network localhost")
+        console.log("MANIFEST=.openzeppelin/mainnet.json VERSION=1.7.2-stable.0 npx hardhat run scripts/update_manifest.ts --network localhost")
         console.log();
         console.log("IMPORTANT! openzeppelin-cli-export.json must correspond the manifest file");
         process.exit(1);
