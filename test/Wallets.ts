@@ -27,6 +27,7 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-wit
 import { assert } from "chai";
 import { solidity } from "ethereum-waffle";
 import { ContractTransaction } from "ethers";
+import { getSnapshot, revertSnapshot } from "./tools/snapshot";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -102,13 +103,12 @@ describe("Wallets", () => {
 
     const validator1Id = 1;
     const validator2Id = 2;
+    let snapshot: any;
 
     before(async() => {
         chai.use(chaiAlmost(0.002));
         [owner, validator1, validator2, node1, node2] = await ethers.getSigners();
-    });
 
-    beforeEach(async () => {
         contractManager = await deployContractManager();
         wallets = await deployWallets(contractManager);
         validatorService = await deployValidatorService(contractManager);
@@ -121,6 +121,14 @@ describe("Wallets", () => {
         await validatorService.connect(validator1).registerValidator("Validator 1", "", 0, 0);
         await validatorService.connect(validator2).registerValidator("Validator 2", "", 0, 0);
 
+    });
+
+    beforeEach(async () => {
+        snapshot = await getSnapshot(ethers);
+    });
+
+    afterEach(async () => {
+        await revertSnapshot(ethers, snapshot);
     });
 
     it("should revert if someone sends ETH to contract Wallets", async() => {
@@ -165,7 +173,7 @@ describe("Wallets", () => {
         const schain2Id = web3.utils.soliditySha3(schain2Name);
 
 
-        beforeEach(async () => {
+        before(async () => {
             await validatorService.disableWhitelist();
             let signature = await getValidatorIdSignature(new BigNumber(validator1Id), node1);
             await validatorService.connect(validator1).linkNodeAddress(node1.address, signature);
@@ -207,6 +215,17 @@ describe("Wallets", () => {
             await skaleDKG.setSuccesfulDKGPublic(stringValue(schain2Id));
         });
 
+
+        beforeEach(async () => {
+            snapshot = await getSnapshot(ethers);
+    
+        });
+    
+        afterEach(async () => {
+            await revertSnapshot(ethers, snapshot);
+    
+        });
+
         it("should automatically recharge wallet after creating schain by foundation", async () => {
             const amount = 1e9;
             await schains.addSchainByFoundation(0, SchainType.TEST, 0, "schain-3", validator2.address, {value: amount.toString()});
@@ -234,11 +253,21 @@ describe("Wallets", () => {
         describe("when validators and schains wallets are recharged", async () => {
             const initialBalance = 1;
 
-            beforeEach(async () => {
+            before(async () => {
                 await wallets.rechargeValidatorWallet(validator1Id, {value: (initialBalance * 1e18).toString()});
                 await wallets.rechargeValidatorWallet(validator2Id, {value: (initialBalance * 1e18).toString()});
                 await wallets.rechargeSchainWallet(stringValue(schain1Id), {value: (initialBalance * 1e18).toString()});
                 await wallets.rechargeSchainWallet(stringValue(schain2Id), {value: (initialBalance * 1e18).toString()});
+            });
+
+            beforeEach(async () => {
+                snapshot = await getSnapshot(ethers);
+        
+            });
+        
+            afterEach(async () => {
+                await revertSnapshot(ethers, snapshot);
+        
             });
 
             it("should move ETH to schain owner after schain termination", async () => {
