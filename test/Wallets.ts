@@ -120,15 +120,14 @@ describe("Wallets", () => {
 
         await validatorService.connect(validator1).registerValidator("Validator 1", "", 0, 0);
         await validatorService.connect(validator2).registerValidator("Validator 2", "", 0, 0);
-
     });
 
     beforeEach(async () => {
-        snapshot = await getSnapshot(ethers);
+        snapshot = await getSnapshot();
     });
 
     afterEach(async () => {
-        await revertSnapshot(ethers, snapshot);
+        await revertSnapshot(snapshot);
     });
 
     it("should revert if someone sends ETH to contract Wallets", async() => {
@@ -172,8 +171,10 @@ describe("Wallets", () => {
         const schain1Id = web3.utils.soliditySha3(schain1Name);
         const schain2Id = web3.utils.soliditySha3(schain2Name);
 
+        let snapshot: any;
 
         before(async () => {
+            snapshot = await getSnapshot();
             await validatorService.disableWhitelist();
             let signature = await getValidatorIdSignature(new BigNumber(validator1Id), node1);
             await validatorService.connect(validator1).linkNodeAddress(node1.address, signature);
@@ -215,15 +216,8 @@ describe("Wallets", () => {
             await skaleDKG.setSuccesfulDKGPublic(stringValue(schain2Id));
         });
 
-
-        beforeEach(async () => {
-            snapshot = await getSnapshot(ethers);
-    
-        });
-    
-        afterEach(async () => {
-            await revertSnapshot(ethers, snapshot);
-    
+        after(async () => {
+            await revertSnapshot(snapshot);
         });
 
         it("should automatically recharge wallet after creating schain by foundation", async () => {
@@ -254,20 +248,15 @@ describe("Wallets", () => {
             const initialBalance = 1;
 
             before(async () => {
+                snapshot = await getSnapshot();
                 await wallets.rechargeValidatorWallet(validator1Id, {value: (initialBalance * 1e18).toString()});
                 await wallets.rechargeValidatorWallet(validator2Id, {value: (initialBalance * 1e18).toString()});
                 await wallets.rechargeSchainWallet(stringValue(schain1Id), {value: (initialBalance * 1e18).toString()});
                 await wallets.rechargeSchainWallet(stringValue(schain2Id), {value: (initialBalance * 1e18).toString()});
             });
 
-            beforeEach(async () => {
-                snapshot = await getSnapshot(ethers);
-        
-            });
-        
-            afterEach(async () => {
-                await revertSnapshot(ethers, snapshot);
-        
+            after(async () => {
+                await revertSnapshot(snapshot);
             });
 
             it("should move ETH to schain owner after schain termination", async () => {

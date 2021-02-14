@@ -35,6 +35,7 @@ import { solidity } from "ethereum-waffle";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import { assert, expect } from "chai";
 import { deployWallets } from "./tools/deploy/wallets";
+import { getSnapshot, revertSnapshot } from "./tools/snapshot";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -95,8 +96,9 @@ describe("Schains", () => {
     let nodeRotation: NodeRotation;
     let wallets: Wallets;
     const zeroAddress = "0x0000000000000000000000000000000000000000";
+    let snapshot: any;
 
-    beforeEach(async () => {
+    before(async () => {
         [owner, holder, validator, nodeAddress, nodeAddress2, nodeAddress3] = await ethers.getSigners();
 
         contractManager = await deployContractManager();
@@ -123,6 +125,14 @@ describe("Schains", () => {
         const signature3 = await getValidatorIdSignature(validatorIndex, nodeAddress3);
         await validatorService.connect(validator).linkNodeAddress(nodeAddress3.address, signature3);
         await constantsHolder.setMSR(0);
+    });
+
+    beforeEach(async () => {
+        snapshot = await getSnapshot();
+    });
+
+    afterEach(async () => {
+        await revertSnapshot(snapshot);
     });
 
     describe("should add schain", async () => {
@@ -401,7 +411,9 @@ describe("Schains", () => {
         });
 
         describe("when 4 nodes are registered", async () => {
-            beforeEach(async () => {
+            let snapshot: any;
+            before(async () => {
+                snapshot = await getSnapshot();
                 const nodesCount = 4;
                 const pubKey = ec.keyFromPrivate(String(privateKeys[3]).slice(2)).getPublic();
                 for (const index of Array.from(Array(nodesCount).keys())) {
@@ -415,6 +427,10 @@ describe("Schains", () => {
                         "D2-" + hexIndex, // name
                         "somedomain.name");
                 }
+            });
+
+            after(async () => {
+                await revertSnapshot(snapshot);
             });
 
             it("should create 4 node schain", async () => {
@@ -598,7 +614,10 @@ describe("Schains", () => {
         });
 
         describe("when 20 nodes are registered", async () => {
-            beforeEach(async () => {
+            let snapshot: any;
+
+            before(async () => {
+                snapshot = await getSnapshot();
                 const nodesCount = 20;
                 const pubKey = ec.keyFromPrivate(String(privateKeys[3]).slice(2)).getPublic();
                 for (const index of Array.from(Array(nodesCount).keys())) {
@@ -612,6 +631,10 @@ describe("Schains", () => {
                         "D2-" + hexIndex, // name
                         "somedomain.name");
                 }
+            });
+
+            after(async () => {
+                await revertSnapshot(snapshot);
             });
 
             it("should create Medium schain", async () => {
@@ -678,8 +701,10 @@ describe("Schains", () => {
         });
 
         describe("when nodes are registered", async () => {
+            let snapshot: any;
 
-            beforeEach(async () => {
+            before(async () => {
+                snapshot = await getSnapshot();
                 const nodesCount = 16;
                 const pubKey = ec.keyFromPrivate(String(privateKeys[3]).slice(2)).getPublic();
                 for (const index of Array.from(Array(nodesCount).keys())) {
@@ -693,6 +718,10 @@ describe("Schains", () => {
                         "D2-" + hexIndex, // name
                         "somedomain.name");
                 }
+            });
+
+            after(async () => {
+                await revertSnapshot(snapshot);
             });
 
             it("successfully create 1 type Of Schain", async () => {
@@ -812,14 +841,20 @@ describe("Schains", () => {
             });
 
             describe("when schain is created", async () => {
+                let snapshot: any;
 
-                beforeEach(async () => {
+                before(async () => {
+                    snapshot = await getSnapshot();
                     const deposit = await schains.getSchainPrice(1, 5);
                     await schains.addSchain(
                         holder.address,
                         deposit,
                         web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 1, 0, "D2"]),
                     );
+                });
+
+                after(async () => {
+                    await revertSnapshot(snapshot);
                 });
 
                 it("should failed when create another schain with the same name", async () => {
@@ -866,14 +901,20 @@ describe("Schains", () => {
             });
 
             describe("when test schain is created", async () => {
+                let snapshot: any;
 
-                beforeEach(async () => {
+                before(async () => {
+                    snapshot = await getSnapshot();
                     const deposit = await schains.getSchainPrice(4, 5);
                     await schains.addSchain(
                         holder.address,
                         deposit,
                         web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, "D2"]),
                     );
+                });
+
+                after(async () => {
+                    await revertSnapshot(snapshot);
                 });
 
                 it("should failed when create another schain with the same name", async () => {
@@ -953,7 +994,10 @@ describe("Schains", () => {
         const LEAVING = 1;
         const LEFT = 2;
         let nodeStatus;
-        beforeEach(async () => {
+        let snapshot: any;
+
+        before(async () => {
+            snapshot = await getSnapshot();
             const deposit = await schains.getSchainPrice(5, 5);
             const nodesCount = 4;
             const pubKey = ec.keyFromPrivate(String(privateKeys[3]).slice(2)).getPublic();
@@ -1004,11 +1048,14 @@ describe("Schains", () => {
 
         });
 
+        after(async () => {
+            await revertSnapshot(snapshot);
+        });
+
         it("should reject if node in maintenance call nodeExit", async () => {
             await nodes.setNodeInMaintenance(0);
             await skaleManager.connect(nodeAddress).nodeExit(0)
                 .should.be.eventually.rejectedWith("Node should be Leaving");
-
         });
 
         it("should rotate 2 nodes consistently", async () => {
@@ -1524,7 +1571,10 @@ describe("Schains", () => {
     });
 
     describe("when 6 nodes, 4 schains and 2 rotations(Kavun test)", async () => {
-        beforeEach(async () => {
+        let snapshot: any;
+
+        before(async () => {
+            snapshot = await getSnapshot();
             const deposit = await schains.getSchainPrice(5, 5);
             const nodesCount = 6;
             const pubKey = ec.keyFromPrivate(String(privateKeys[3]).slice(2)).getPublic();
@@ -1575,6 +1625,10 @@ describe("Schains", () => {
                 stringValue(web3.utils.soliditySha3("d4")),
             );
 
+        });
+
+        after(async () => {
+            await revertSnapshot(snapshot);
         });
 
         it("should rotate 1 node with 3 schains", async () => {
@@ -1639,7 +1693,10 @@ describe("Schains", () => {
     });
 
     describe("when 8 nodes, 4 schains and 2 rotations(Kavun test)", async () => {
-        beforeEach(async () => {
+        let snapshot: any;
+
+        before(async () => {
+            snapshot = await getSnapshot();
             const deposit = await schains.getSchainPrice(5, 5);
             const nodesCount = 6;
             const pubKey = ec.keyFromPrivate(String(privateKeys[3]).slice(2)).getPublic();
@@ -1708,6 +1765,10 @@ describe("Schains", () => {
                 stringValue(web3.utils.soliditySha3("d4")),
             );
 
+        });
+
+        after(async () => {
+            await revertSnapshot(snapshot);
         });
 
         it("should rotate 1 node with 3 schains", async () => {
