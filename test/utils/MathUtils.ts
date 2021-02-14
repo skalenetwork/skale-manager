@@ -2,15 +2,25 @@ import chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 import { web3, ethers } from "hardhat"
 import { MathUtilsTester } from "../../typechain/MathUtilsTester";
+import { makeSnapshot, applySnapshot } from "../tools/snapshot";
 
 chai.should();
 chai.use(chaiAsPromised);
 
 describe("MathUtils", () => {
     let mathUtils: MathUtilsTester;
+    let snapshot: number;
     before(async () => {
         const MathUtils = await ethers.getContractFactory("MathUtilsTester");
         mathUtils = (await MathUtils.deploy()) as MathUtilsTester;
+    });
+
+    beforeEach(async () => {
+        snapshot = await makeSnapshot();
+    });
+
+    afterEach(async () => {
+        await applySnapshot(snapshot);
     });
 
     describe("in transaction", async () => {
