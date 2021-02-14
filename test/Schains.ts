@@ -35,7 +35,7 @@ import { solidity } from "ethereum-waffle";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import { assert, expect } from "chai";
 import { deployWallets } from "./tools/deploy/wallets";
-import { getSnapshot, revertSnapshot } from "./tools/snapshot";
+import { makeSnapshot, applySnapshot } from "./tools/snapshot";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -96,7 +96,8 @@ describe("Schains", () => {
     let nodeRotation: NodeRotation;
     let wallets: Wallets;
     const zeroAddress = "0x0000000000000000000000000000000000000000";
-    let snapshot: any;
+    let snapshot: number;
+    let cleanContracts: number;
 
     before(async () => {
         [owner, holder, validator, nodeAddress, nodeAddress2, nodeAddress3] = await ethers.getSigners();
@@ -128,11 +129,11 @@ describe("Schains", () => {
     });
 
     beforeEach(async () => {
-        snapshot = await getSnapshot();
+        snapshot = await makeSnapshot();
     });
 
     afterEach(async () => {
-        await revertSnapshot(snapshot);
+        await applySnapshot(snapshot);
     });
 
     describe("should add schain", async () => {
@@ -411,9 +412,8 @@ describe("Schains", () => {
         });
 
         describe("when 4 nodes are registered", async () => {
-            let snapshot: any;
             before(async () => {
-                snapshot = await getSnapshot();
+                cleanContracts = await makeSnapshot();
                 const nodesCount = 4;
                 const pubKey = ec.keyFromPrivate(String(privateKeys[3]).slice(2)).getPublic();
                 for (const index of Array.from(Array(nodesCount).keys())) {
@@ -430,7 +430,7 @@ describe("Schains", () => {
             });
 
             after(async () => {
-                await revertSnapshot(snapshot);
+                await applySnapshot(cleanContracts);
             });
 
             it("should create 4 node schain", async () => {
@@ -614,10 +614,8 @@ describe("Schains", () => {
         });
 
         describe("when 20 nodes are registered", async () => {
-            let snapshot: any;
-
             before(async () => {
-                snapshot = await getSnapshot();
+                cleanContracts = await makeSnapshot();
                 const nodesCount = 20;
                 const pubKey = ec.keyFromPrivate(String(privateKeys[3]).slice(2)).getPublic();
                 for (const index of Array.from(Array(nodesCount).keys())) {
@@ -634,7 +632,7 @@ describe("Schains", () => {
             });
 
             after(async () => {
-                await revertSnapshot(snapshot);
+                await applySnapshot(cleanContracts);
             });
 
             it("should create Medium schain", async () => {
@@ -701,10 +699,9 @@ describe("Schains", () => {
         });
 
         describe("when nodes are registered", async () => {
-            let snapshot: any;
-
+            let nodesAreRegistered: number;
             before(async () => {
-                snapshot = await getSnapshot();
+                cleanContracts = await makeSnapshot();
                 const nodesCount = 16;
                 const pubKey = ec.keyFromPrivate(String(privateKeys[3]).slice(2)).getPublic();
                 for (const index of Array.from(Array(nodesCount).keys())) {
@@ -721,7 +718,7 @@ describe("Schains", () => {
             });
 
             after(async () => {
-                await revertSnapshot(snapshot);
+                await applySnapshot(cleanContracts);
             });
 
             it("successfully create 1 type Of Schain", async () => {
@@ -841,10 +838,8 @@ describe("Schains", () => {
             });
 
             describe("when schain is created", async () => {
-                let snapshot: any;
-
                 before(async () => {
-                    snapshot = await getSnapshot();
+                    nodesAreRegistered = await makeSnapshot();
                     const deposit = await schains.getSchainPrice(1, 5);
                     await schains.addSchain(
                         holder.address,
@@ -854,7 +849,7 @@ describe("Schains", () => {
                 });
 
                 after(async () => {
-                    await revertSnapshot(snapshot);
+                    await applySnapshot(nodesAreRegistered);
                 });
 
                 it("should failed when create another schain with the same name", async () => {
@@ -901,10 +896,9 @@ describe("Schains", () => {
             });
 
             describe("when test schain is created", async () => {
-                let snapshot: any;
 
                 before(async () => {
-                    snapshot = await getSnapshot();
+                    nodesAreRegistered = await makeSnapshot();
                     const deposit = await schains.getSchainPrice(4, 5);
                     await schains.addSchain(
                         holder.address,
@@ -914,7 +908,7 @@ describe("Schains", () => {
                 });
 
                 after(async () => {
-                    await revertSnapshot(snapshot);
+                    await applySnapshot(nodesAreRegistered);
                 });
 
                 it("should failed when create another schain with the same name", async () => {
@@ -994,10 +988,9 @@ describe("Schains", () => {
         const LEAVING = 1;
         const LEFT = 2;
         let nodeStatus;
-        let snapshot: any;
 
         before(async () => {
-            snapshot = await getSnapshot();
+            cleanContracts = await makeSnapshot();
             const deposit = await schains.getSchainPrice(5, 5);
             const nodesCount = 4;
             const pubKey = ec.keyFromPrivate(String(privateKeys[3]).slice(2)).getPublic();
@@ -1049,7 +1042,7 @@ describe("Schains", () => {
         });
 
         after(async () => {
-            await revertSnapshot(snapshot);
+            await applySnapshot(cleanContracts);
         });
 
         it("should reject if node in maintenance call nodeExit", async () => {
@@ -1571,10 +1564,9 @@ describe("Schains", () => {
     });
 
     describe("when 6 nodes, 4 schains and 2 rotations(Kavun test)", async () => {
-        let snapshot: any;
 
         before(async () => {
-            snapshot = await getSnapshot();
+            cleanContracts = await makeSnapshot();
             const deposit = await schains.getSchainPrice(5, 5);
             const nodesCount = 6;
             const pubKey = ec.keyFromPrivate(String(privateKeys[3]).slice(2)).getPublic();
@@ -1628,7 +1620,7 @@ describe("Schains", () => {
         });
 
         after(async () => {
-            await revertSnapshot(snapshot);
+            await applySnapshot(cleanContracts);
         });
 
         it("should rotate 1 node with 3 schains", async () => {
@@ -1693,10 +1685,9 @@ describe("Schains", () => {
     });
 
     describe("when 8 nodes, 4 schains and 2 rotations(Kavun test)", async () => {
-        let snapshot: any;
 
         before(async () => {
-            snapshot = await getSnapshot();
+            cleanContracts = await makeSnapshot();
             const deposit = await schains.getSchainPrice(5, 5);
             const nodesCount = 6;
             const pubKey = ec.keyFromPrivate(String(privateKeys[3]).slice(2)).getPublic();
@@ -1768,7 +1759,7 @@ describe("Schains", () => {
         });
 
         after(async () => {
-            await revertSnapshot(snapshot);
+            await applySnapshot(cleanContracts);
         });
 
         it("should rotate 1 node with 3 schains", async () => {

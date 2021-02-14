@@ -1,10 +1,9 @@
-import { providers } from "ethers";
 import { ethers } from "hardhat";
 
-export async function getSnapshot() {
-    return await ethers.provider.send("evm_snapshot", []);
+export async function makeSnapshot() {
+    return parseInt(await ethers.provider.send("evm_snapshot", []), 16);
 }
 
-export async function revertSnapshot(snapshotId: any) {
-    await ethers.provider.send("evm_revert", [snapshotId]);
+export async function applySnapshot(snapshot: number) {
+    await ethers.provider.send("evm_revert", ["0x" + snapshot.toString(16)]);
 }

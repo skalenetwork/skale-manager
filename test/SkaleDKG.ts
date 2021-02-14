@@ -41,7 +41,7 @@ import { solidity } from "ethereum-waffle";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import { assert, expect } from "chai";
 import chaiAlmost from "chai-almost";
-import { getSnapshot, revertSnapshot } from "./tools/snapshot";
+import { makeSnapshot, applySnapshot } from "./tools/snapshot";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -104,11 +104,11 @@ describe("SkaleDKG", () => {
     });
 
     beforeEach(async () => {
-        snapshot = await getSnapshot();
+        snapshot = await makeSnapshot();
     });
 
     afterEach(async () => {
-        await revertSnapshot(snapshot);
+        await applySnapshot(snapshot);
     });
 
     describe("when 2 nodes are created", async () => {
@@ -303,9 +303,9 @@ describe("SkaleDKG", () => {
         let schainName = "";
         const delegatedAmount = 1e7;
 
-        let snapshot: any;
+        let cleanContracts: number;
         before(async () => {
-            snapshot = await getSnapshot();
+            cleanContracts = await makeSnapshot();
             validatorsAccount = [validator1, validator2];
 
             await validatorService.connect(validator1).registerValidator("Validator1", "D2 is even", 0, 0);
@@ -341,7 +341,7 @@ describe("SkaleDKG", () => {
         });
 
         after(async () => {
-            await revertSnapshot(snapshot);
+            await applySnapshot(cleanContracts);
         });
 
         it("should create schain and open a DKG channel", async () => {
@@ -383,9 +383,10 @@ describe("SkaleDKG", () => {
         });
 
         describe("when 2-node schain is created", async () => {
-            let snapshot: any;
+            let twoNodesAreCreated: number;
+            let twoSchainAreCreated: number;
             before(async () => {
-                snapshot = await getSnapshot();
+                twoNodesAreCreated = await makeSnapshot();
                 const deposit = await schains.getSchainPrice(4, 5);
 
                 await schains.addSchain(
@@ -411,7 +412,7 @@ describe("SkaleDKG", () => {
             });
 
             after(async () => {
-                await revertSnapshot(snapshot);
+                await applySnapshot(twoNodesAreCreated);
             });
 
             it("should broadcast data from 1 node", async () => {
@@ -676,9 +677,8 @@ describe("SkaleDKG", () => {
             });
 
             describe("after sending complaint after missing broadcast", async () => {
-                let snapshot: any;
                 before(async () => {
-                    snapshot = await getSnapshot();
+                    twoSchainAreCreated = await makeSnapshot();
                     await skaleDKG.connect(validatorsAccount[0]).broadcast(
                         stringValue(web3.utils.soliditySha3(schainName)),
                         0,
@@ -694,7 +694,7 @@ describe("SkaleDKG", () => {
                 });
 
                 after(async () => {
-                    await revertSnapshot(snapshot);
+                    await applySnapshot(twoSchainAreCreated);
                 });
 
                 it("channel should be closed", async () => {
@@ -764,9 +764,8 @@ describe("SkaleDKG", () => {
             });
 
             describe("when correct broadcasts sent", async () => {
-                let snapshot: any;
                 before(async () => {
-                    snapshot = await getSnapshot();
+                    twoSchainAreCreated = await makeSnapshot();
                     await skaleDKG.connect(validatorsAccount[0]).broadcast(
                         stringValue(web3.utils.soliditySha3(schainName)),
                         0,
@@ -783,7 +782,7 @@ describe("SkaleDKG", () => {
                 });
 
                 after(async () => {
-                    await revertSnapshot(snapshot);
+                    await applySnapshot(twoSchainAreCreated);
                 });
                 it("should send alright from 1 node", async () => {
                     await expect(skaleDKG.connect(validatorsAccount[0]).alright(
@@ -842,9 +841,9 @@ describe("SkaleDKG", () => {
                 });
 
                 describe("when 2 node sent incorrect complaint", async () => {
-                    let snapshot: any;
+                    let correctBroadcastIsSent: number;
                     before(async () => {
-                        snapshot = await getSnapshot();
+                        correctBroadcastIsSent = await makeSnapshot();
                         const balanceBefore = await getBalance(validatorsAccount[1].address);
                         await skaleDKG.connect(validatorsAccount[1]).complaintBadData(
                             stringValue(web3.utils.soliditySha3(schainName)),
@@ -857,7 +856,7 @@ describe("SkaleDKG", () => {
                     });
 
                     after(async () => {
-                        await revertSnapshot(snapshot);
+                        await applySnapshot(correctBroadcastIsSent);
                     });
 
                     it("should check is possible to send complaint", async () => {
@@ -1015,9 +1014,8 @@ describe("SkaleDKG", () => {
             });
 
             describe("when 1 node sent bad data", async () => {
-                let snapshot: any;
                 before(async () => {
-                    snapshot = await getSnapshot();
+                    twoSchainAreCreated = await makeSnapshot();
                     await skaleDKG.connect(validatorsAccount[0]).broadcast(
                         stringValue(web3.utils.soliditySha3(schainName)),
                         0,
@@ -1035,7 +1033,7 @@ describe("SkaleDKG", () => {
                 });
 
                 after(async () => {
-                    await revertSnapshot(snapshot);
+                    await applySnapshot(twoSchainAreCreated);
                 });
 
                 it("should send complaint from 2 node", async () => {
@@ -1103,9 +1101,9 @@ describe("SkaleDKG", () => {
 
                 describe("when complaint successfully sent", async () => {
 
-                    let snapshot: any;
+                    let nodeSentBadData: number;
                     before(async () => {
-                        snapshot = await getSnapshot();
+                        nodeSentBadData = await makeSnapshot();
                         const result = await skaleDKG.connect(validatorsAccount[1]).complaintBadData(
                             stringValue(web3.utils.soliditySha3(schainName)),
                             1,
@@ -1114,7 +1112,7 @@ describe("SkaleDKG", () => {
                     });
 
                     after(async () => {
-                        await revertSnapshot(snapshot);
+                        await applySnapshot(nodeSentBadData);
                     });
 
                     it("accused node should send correct response", async () => {
