@@ -35,6 +35,7 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-wit
 import { deploySkaleManagerMock } from "../tools/deploy/test/skaleManagerMock";
 import { solidity } from "ethereum-waffle"
 import { assert, expect } from "chai";
+import { makeSnapshot, applySnapshot } from "../tools/snapshot";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -84,7 +85,10 @@ describe("Delegation", () => {
     const defaultAmount = 100 * 1e18;
     const month = 60 * 60 * 24 * 31;
 
-    beforeEach(async () => {
+    let snapshot: number;
+    let cleanContracts: number;
+
+    before(async () => {
         [owner, holder1, holder2, holder3, validator, bountyAddress] = await ethers.getSigners();
 
         contractManager = await deployContractManager();
@@ -107,6 +111,14 @@ describe("Delegation", () => {
 
         // each test will start from Nov 10
         await skipTimeToDate(ethers, 10, 10);
+    });
+
+    beforeEach(async () => {
+        snapshot = await makeSnapshot();
+    });
+
+    afterEach(async () => {
+        await applySnapshot(snapshot);
     });
 
     it("should allow owner to remove locker", async () => {
@@ -135,7 +147,9 @@ describe("Delegation", () => {
 
     describe("when holders have tokens and validator is registered", async () => {
         let validatorId: number;
-        beforeEach(async () => {
+        let holderCouldMakeDelegation: number;
+        before(async () => {
+            cleanContracts = await makeSnapshot();
             validatorId = 1;
             await skaleToken.mint(holder1.address, defaultAmount.toString(), "0x", "0x");
             await skaleToken.mint(holder2.address, defaultAmount.toString(), "0x", "0x");
@@ -146,6 +160,10 @@ describe("Delegation", () => {
             await delegationPeriodManager.setDelegationPeriod(12, 200);
             await delegationPeriodManager.setDelegationPeriod(6, 150);
         });
+
+        after(async () => {
+            await applySnapshot(cleanContracts);
+        })
 
         for (let delegationPeriod = 1; delegationPeriod <= 18; ++delegationPeriod) {
             it("should check " + delegationPeriod + " month" + (delegationPeriod > 1 ? "s" : "")
@@ -172,11 +190,17 @@ describe("Delegation", () => {
                     });
 
                     describe("when delegation request is sent", async () => {
+                        let holder1DelegatedToValidator: number;
 
-                        beforeEach(async () => {
+                        before(async () => {
+                            holderCouldMakeDelegation = await makeSnapshot();
                             await delegationController.connect(holder1).delegate(
                                 validatorId, defaultAmount.toString(), delegationPeriod, "D2 is even");
                             requestId = 0;
+                        });
+
+                        after(async () => {
+                            await applySnapshot(holderCouldMakeDelegation);
                         });
 
                         it("should not allow to burn locked tokens", async () => {
@@ -219,8 +243,13 @@ describe("Delegation", () => {
                         });
 
                         describe("when delegation request is accepted", async () => {
-                            beforeEach(async () => {
+                            before(async () => {
+                                holder1DelegatedToValidator = await makeSnapshot();
                                 await delegationController.connect(validator).acceptPendingDelegation(requestId);
+                            });
+
+                            after(async () => {
+                                await applySnapshot(holder1DelegatedToValidator);
                             });
 
                             it("should extend delegation period if undelegation request was not sent",
@@ -402,7 +431,8 @@ describe("Delegation", () => {
             const delegatedAmount1 = 2e6;
             const delegatedAmount2 = 3e6;
             const delegatedAmount3 = 5e6;
-            beforeEach(async () => {
+            before(async () => {
+                holderCouldMakeDelegation = await makeSnapshot();
                 delegationController.connect(holder1).delegate(validatorId, delegatedAmount1, 12, "D2 is even");
                 delegationController.connect(holder2).delegate(validatorId, delegatedAmount2, 6,
                     "D2 is even more even");
@@ -413,6 +443,10 @@ describe("Delegation", () => {
                 await delegationController.connect(validator).acceptPendingDelegation(2);
 
                 await skipTime(ethers, month);
+            });
+
+            after(async () => {
+                await applySnapshot(holderCouldMakeDelegation);
             });
 
             it("should distribute funds sent to Distributor across delegators", async () => {
