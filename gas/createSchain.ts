@@ -8,7 +8,7 @@ import { deploySchains } from "../test/tools/deploy/schains";
 import fs from 'fs';
 import { ethers, web3 } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
-import { BigNumberish } from "ethers";
+import { BigNumberish, Event } from "ethers";
 
 const ec = new elliptic.ec("secp256k1");
 
@@ -28,6 +28,19 @@ async function getValidatorIdSignature(validatorId: BigNumberish, signer: Signer
         return signature;
     } else {
         return "";
+    }
+}
+
+function findEvent(events: Event[] | undefined, eventName: string) {
+    if (events) {
+        const target = events.find((event) => event.event === eventName);
+        if (target) {
+            return target;
+        } else {
+            throw new Error("Event was not emitted");
+        }
+    } else {
+        throw new Error("Event was not emitted");
     }
 }
 
@@ -76,6 +89,19 @@ describe("createSchains", () => {
             const nodesAmount = nodeId + 1;
             if (nodesAmount >= 16) {
                 const result = await (await schains.addSchainByFoundation(0, 1, 0, "schain-" + nodeId, owner.address)).wait();
+                const nodeInGroup = findEvent(result.events, "SchainNodes").args?.nodesInGroup;
+                console.log("Nodes in Schain:");
+                const setOfNodes = new Set();
+                for (const node of nodeInGroup) {
+                    if (!setOfNodes.has(node.toNumber())) {
+                        setOfNodes.add(node.toNumber());
+                    } else {
+                        console.log("Node", node.toNumber(), "already exist");
+                        process.exit();
+                    }
+                    console.log(node.toNumber());
+                }
+
                 measurements.push({nodesAmount, gasUsed: result.gasUsed});
                 console.log("create schain on", nodesAmount, "nodes:\t", result.gasUsed.toNumber(), "gu");
                 if (result.gasUsed.toNumber() > gasLimit) {

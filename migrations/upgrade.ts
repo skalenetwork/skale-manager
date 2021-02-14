@@ -95,9 +95,9 @@ async function main() {
     if (nodesAddress) {
         const nodes = (nodesContractFactory.attach(nodesAddress)) as Nodes;
         if (multisig) {
-            console.log(`Call ${nodesName}.initializeSegmentTree() at ${nodesAddress}`);
+            console.log(`Call ${nodesName}.initializeSegmentTreeAndInvisibleNodes() at ${nodesAddress}`);
         } else {
-            const receipt = await(await nodes.initializeSegmentTree()).wait();
+            const receipt = await(await nodes.initializeSegmentTreeAndInvisibleNodes()).wait();
             console.log("SegmentTree was initialized with", receipt.gasUsed.toNumber(), "gas used");
         }
     } else {

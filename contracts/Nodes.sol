@@ -119,7 +119,7 @@ contract Nodes is Permissions {
 
     mapping (uint => string) public domainNames;
 
-    mapping (uint => bool) private _visible;
+    mapping (uint => bool) private _invisible;
 
     SegmentTree.Tree private _nodesAmountBySpace;
 
@@ -168,12 +168,19 @@ contract Nodes is Permissions {
         _;
     }
 
-    function initializeSegmentTree() external onlyOwner {
+    function initializeSegmentTreeAndInvisibleNodes() external onlyOwner {
+        uint[128] memory diff;
+        for (uint i = 0; i < nodes.length; i++) {
+            if (nodes[i].status != NodeStatus.Active) {
+                _invisible[i] = true;
+                diff[spaceOfNodes[i].freeSpace] = diff[spaceOfNodes[i].freeSpace].add(1);
+            }
+        }
         uint8 totalSpace = ConstantsHolder(contractManager.getContract("ConstantsHolder")).TOTAL_SPACE_ON_NODE();
         _nodesAmountBySpace.create(totalSpace);
         for (uint8 i = 1; i <= totalSpace; i++) {
             if (spaceToNodes[i].length > 0)
-                _nodesAmountBySpace.addToPlace(i, spaceToNodes[i].length);
+                _nodesAmountBySpace.addToPlace(i, spaceToNodes[i].length.sub(diff[i - 1]));
         }
     }
 
@@ -776,7 +783,7 @@ contract Nodes is Permissions {
      * @dev Moves a node to a new space mapping.
      */
     function _moveNodeToNewSpaceMap(uint nodeIndex, uint8 newSpace) private {
-        if (_visible[nodeIndex]) {
+        if (!_invisible[nodeIndex]) {
             uint8 space = spaceOfNodes[nodeIndex].freeSpace;
             _removeNodeFromTree(space);
             _addNodeToTree(newSpace);
@@ -792,7 +799,13 @@ contract Nodes is Permissions {
     function _setNodeActive(uint nodeIndex) private {
         nodes[nodeIndex].status = NodeStatus.Active;
         numberOfActiveNodes = numberOfActiveNodes.add(1);
-        _makeNodeVisible(nodeIndex);
+        if (_invisible[nodeIndex]) {
+            _makeNodeVisible(nodeIndex);
+        } else {
+            uint8 space = spaceOfNodes[nodeIndex].freeSpace;
+            _addNodeToSpaceToNodes(nodeIndex, space);
+            _addNodeToTree(space);
+        }
     }
 
     /**
@@ -832,20 +845,20 @@ contract Nodes is Permissions {
     }
 
     function _makeNodeInvisible(uint nodeIndex) private {
-        if (_visible[nodeIndex]) {
+        if (!_invisible[nodeIndex]) {
             uint8 space = spaceOfNodes[nodeIndex].freeSpace;
             _removeNodeFromSpaceToNodes(nodeIndex, space);
             _removeNodeFromTree(space);
-            delete _visible[nodeIndex];
+            _invisible[nodeIndex] = true;
         }
     }
 
     function _makeNodeVisible(uint nodeIndex) private {
-        if (!_visible[nodeIndex]) {
+        if (_invisible[nodeIndex]) {
             uint8 space = spaceOfNodes[nodeIndex].freeSpace;
             _addNodeToSpaceToNodes(nodeIndex, space);
             _addNodeToTree(space);
-            _visible[nodeIndex] = true;
+            delete _invisible[nodeIndex];
         }
     }
 
