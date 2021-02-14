@@ -169,7 +169,7 @@ contract Nodes is Permissions {
     }
 
     function initializeSegmentTreeAndInvisibleNodes() external onlyOwner {
-        uint[128] memory diff;
+        uint[] memory diff = new uint[](128);
         for (uint i = 0; i < nodes.length; i++) {
             if (nodes[i].status != NodeStatus.Active) {
                 _invisible[i] = true;

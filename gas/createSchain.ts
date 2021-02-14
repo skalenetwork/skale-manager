@@ -92,14 +92,14 @@ describe("createSchains", () => {
                 const nodeInGroup = findEvent(result.events, "SchainNodes").args?.nodesInGroup;
                 console.log("Nodes in Schain:");
                 const setOfNodes = new Set();
-                for (const node of nodeInGroup) {
-                    if (!setOfNodes.has(node.toNumber())) {
-                        setOfNodes.add(node.toNumber());
+                for (const nodeOfSchain of nodeInGroup) {
+                    if (!setOfNodes.has(nodeOfSchain.toNumber())) {
+                        setOfNodes.add(nodeOfSchain.toNumber());
                     } else {
-                        console.log("Node", node.toNumber(), "already exist");
+                        console.log("Node", nodeOfSchain.toNumber(), "already exist");
                         process.exit();
                     }
-                    console.log(node.toNumber());
+                    console.log(nodeOfSchain.toNumber());
                 }
 
                 measurements.push({nodesAmount, gasUsed: result.gasUsed});
