@@ -22,6 +22,8 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-wit
 import { deploySkaleManagerMock } from "../tools/deploy/test/skaleManagerMock";
 import { solidity } from "ethereum-waffle";
 import { expect, assert } from "chai";
+import { makeSnapshot, applySnapshot } from "../tools/snapshot";
+
 chai.should();
 chai.use(chaiAsPromised);
 chai.use(solidity);
@@ -42,7 +44,9 @@ describe("DelegationController", () => {
 
     const month = 60 * 60 * 24 * 31;
 
-    beforeEach(async () => {
+    let snapshot: number;
+
+    before(async () => {
         [owner, holder1, holder2, validator, validator2] = await ethers.getSigners();
         contractManager = await deployContractManager();
 
@@ -55,13 +59,24 @@ describe("DelegationController", () => {
         await contractManager.setContractsAddress("SkaleManager", skaleManagerMock.address);
     });
 
+    beforeEach(async () => {
+        snapshot = await makeSnapshot();
+    });
+
+    afterEach(async () => {
+        await applySnapshot(snapshot);
+    });
+
     describe("when arguments for delegation initialized", async () => {
         let validatorId: number;
         let amount: number;
         let delegationPeriod: number;
         let info: string;
         let delegationId: number;
-        beforeEach(async () => {
+        let cleanContracts: number;
+
+        before(async () => {
+            cleanContracts = await makeSnapshot();
             validatorId = 1;
             amount = 100;
             delegationPeriod = 2;
@@ -72,6 +87,10 @@ describe("DelegationController", () => {
                 500,
                 100);
             await validatorService.enableValidator(validatorId);
+        });
+
+        after(async () => {
+            await applySnapshot(cleanContracts);
         });
 
         it("should reject delegation if validator with such id does not exist", async () => {
@@ -93,12 +112,14 @@ describe("DelegationController", () => {
         });
 
         it("should reject delegation if holder doesn't have enough unlocked tokens for delegation", async () => {
+            delegationPeriod = 2;
             amount = 101;
             await delegationController.connect(holder1).delegate(validatorId, amount, delegationPeriod, info)
                 .should.be.eventually.rejectedWith("Token holder does not have enough tokens to delegate");
         });
 
         it("should send request for delegation", async () => {
+            amount = 100;
             await skaleToken.mint(holder1.address, amount, "0x", "0x");
             // const { logs } = await delegationController.connect(holder1).delegate(
             //     validatorId, amount, delegationPeriod, info);
@@ -141,11 +162,17 @@ describe("DelegationController", () => {
         });
 
         describe("when delegation request was created", async () => {
-            beforeEach(async () => {
+            let validatorEnabled: number;
+            before(async () => {
+                validatorEnabled = await makeSnapshot();
                 await skaleToken.mint(holder1.address, amount, "0x", "0x");
                 await delegationController.connect(holder1).delegate(
                     validatorId, amount, delegationPeriod, info);
                 delegationId = 0;
+            });
+
+            after(async () => {
+                await applySnapshot(validatorEnabled);
             });
 
             it("should reject canceling request if it isn't actually holder of tokens", async () => {
@@ -230,10 +257,17 @@ describe("DelegationController", () => {
             });
 
             describe("when delegation is accepted", async () => {
-                beforeEach(async () => {
+                let holder1DelegatedToValidator: number;
+                before(async () => {
+                    delegationId = 0;
+                    holder1DelegatedToValidator = await makeSnapshot();
                     await delegationController.connect(validator).acceptPendingDelegation(delegationId);
 
                     await skipTime(ethers, month);
+                });
+
+                after(async () => {
+                    await applySnapshot(holder1DelegatedToValidator);
                 });
 
                 it("should allow validator to request undelegation", async () => {
