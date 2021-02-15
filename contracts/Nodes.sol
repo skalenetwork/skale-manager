@@ -705,10 +705,6 @@ contract Nodes is Permissions {
         return _nodesAmountBySpace.sumFromPlaceToLast(freeSpace);
     }
 
-    function _getNodesAmountBySpace() internal view returns (SegmentTree.Tree storage) {
-        return _nodesAmountBySpace;
-    }
-
     /**
      * @dev constructor in Permissions approach.
      */
@@ -767,6 +763,22 @@ contract Nodes is Permissions {
         returns (bool)
     {
         return nodes[nodeIndex].status == NodeStatus.Leaving;
+    }
+
+    function _removeNodeFromSpaceToNodes(uint nodeIndex, uint8 space) internal {
+        uint indexInArray = spaceOfNodes[nodeIndex].indexInSpaceMap;
+        uint len = spaceToNodes[space].length.sub(1);
+        if (indexInArray < len) {
+            uint shiftedIndex = spaceToNodes[space][len];
+            spaceToNodes[space][indexInArray] = shiftedIndex;
+            spaceOfNodes[shiftedIndex].indexInSpaceMap = indexInArray;
+        }
+        spaceToNodes[space].pop();
+        delete spaceOfNodes[nodeIndex].indexInSpaceMap;
+    }
+
+    function _getNodesAmountBySpace() internal view returns (SegmentTree.Tree storage) {
+        return _nodesAmountBySpace;
     }
 
     /**
@@ -868,18 +880,6 @@ contract Nodes is Permissions {
     function _addNodeToSpaceToNodes(uint nodeIndex, uint8 space) private {
         spaceToNodes[space].push(nodeIndex);
         spaceOfNodes[nodeIndex].indexInSpaceMap = spaceToNodes[space].length.sub(1);
-    }
-
-    function _removeNodeFromSpaceToNodes(uint nodeIndex, uint8 space) internal {
-        uint indexInArray = spaceOfNodes[nodeIndex].indexInSpaceMap;
-        uint len = spaceToNodes[space].length.sub(1);
-        if (indexInArray < len) {
-            uint shiftedIndex = spaceToNodes[space][len];
-            spaceToNodes[space][indexInArray] = shiftedIndex;
-            spaceOfNodes[shiftedIndex].indexInSpaceMap = indexInArray;
-        }
-        spaceToNodes[space].pop();
-        delete spaceOfNodes[nodeIndex].indexInSpaceMap;
     }
 
     function _addNodeToTree(uint8 space) private {
