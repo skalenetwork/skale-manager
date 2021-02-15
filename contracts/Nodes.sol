@@ -169,19 +169,17 @@ contract Nodes is Permissions {
     }
 
     function initializeSegmentTreeAndInvisibleNodes() external onlyOwner {
-        uint[] memory diff = new uint[](129);
         for (uint i = 0; i < nodes.length; i++) {
-            if (nodes[i].status != NodeStatus.Active) {
+            if (nodes[i].status != NodeStatus.Active && nodes[i].status != NodeStatus.Left) {
                 _invisible[i] = true;
-                if (nodes[i].status != NodeStatus.Left)
-                    diff[spaceOfNodes[i].freeSpace] = diff[spaceOfNodes[i].freeSpace].add(1);
+                _removeNodeFromSpaceToNodes(i, spaceOfNodes[i].freeSpace);
             }
         }
         uint8 totalSpace = ConstantsHolder(contractManager.getContract("ConstantsHolder")).TOTAL_SPACE_ON_NODE();
         _nodesAmountBySpace.create(totalSpace);
         for (uint8 i = 1; i <= totalSpace; i++) {
             if (spaceToNodes[i].length > 0)
-                _nodesAmountBySpace.addToPlace(i, spaceToNodes[i].length.sub(diff[i]));
+                _nodesAmountBySpace.addToPlace(i, spaceToNodes[i].length);
         }
     }
 
@@ -767,6 +765,22 @@ contract Nodes is Permissions {
         return nodes[nodeIndex].status == NodeStatus.Leaving;
     }
 
+    function _removeNodeFromSpaceToNodes(uint nodeIndex, uint8 space) internal {
+        uint indexInArray = spaceOfNodes[nodeIndex].indexInSpaceMap;
+        uint len = spaceToNodes[space].length.sub(1);
+        if (indexInArray < len) {
+            uint shiftedIndex = spaceToNodes[space][len];
+            spaceToNodes[space][indexInArray] = shiftedIndex;
+            spaceOfNodes[shiftedIndex].indexInSpaceMap = indexInArray;
+        }
+        spaceToNodes[space].pop();
+        delete spaceOfNodes[nodeIndex].indexInSpaceMap;
+    }
+
+    function _getNodesAmountBySpace() internal view returns (SegmentTree.Tree storage) {
+        return _nodesAmountBySpace;
+    }
+
     /**
      * @dev Returns the index of a given node within the validator's node index.
      */
@@ -866,18 +880,6 @@ contract Nodes is Permissions {
     function _addNodeToSpaceToNodes(uint nodeIndex, uint8 space) private {
         spaceToNodes[space].push(nodeIndex);
         spaceOfNodes[nodeIndex].indexInSpaceMap = spaceToNodes[space].length.sub(1);
-    }
-
-    function _removeNodeFromSpaceToNodes(uint nodeIndex, uint8 space) private {
-        uint indexInArray = spaceOfNodes[nodeIndex].indexInSpaceMap;
-        uint len = spaceToNodes[space].length.sub(1);
-        if (indexInArray < len) {
-            uint shiftedIndex = spaceToNodes[space][len];
-            spaceToNodes[space][indexInArray] = shiftedIndex;
-            spaceOfNodes[shiftedIndex].indexInSpaceMap = indexInArray;
-        }
-        spaceToNodes[space].pop();
-        delete spaceOfNodes[nodeIndex].indexInSpaceMap;
     }
 
     function _addNodeToTree(uint8 space) private {

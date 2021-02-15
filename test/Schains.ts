@@ -24,7 +24,7 @@ import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
 import { deployContractManager } from "./tools/deploy/contractManager";
 import { deployKeyStorage } from "./tools/deploy/keyStorage";
 import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
-import { deployNodes } from "./tools/deploy/nodes";
+import { deployNodesTester } from "./tools/deploy/test/nodesTester";
 import { deploySchainsInternal } from "./tools/deploy/schainsInternal";
 import { deploySchains } from "./tools/deploy/schains";
 import { deploySkaleDKGTester } from "./tools/deploy/test/skaleDKGTester";
@@ -105,7 +105,8 @@ describe("Schains", () => {
         contractManager = await deployContractManager();
 
         constantsHolder = await deployConstantsHolder(contractManager);
-        nodes = await deployNodes(contractManager);
+        nodes = await deployNodesTester(contractManager);
+        await contractManager.setContractsAddress("Nodes", nodes.address);
         schainsInternal = await deploySchainsInternal(contractManager);
         schains = await deploySchains(contractManager);
         validatorService = await deployValidatorService(contractManager);
@@ -695,6 +696,46 @@ describe("Schains", () => {
                 const schainId = sChains[0];
 
                 await schainsInternal.isOwnerAddress(holder.address, schainId).should.be.eventually.true;
+            });
+
+            it("should be possible to create schain after initialization", async () => {
+                await nodes.setNodeInMaintenance(0);
+                await nodes.setNodeInMaintenance(1);
+                await nodes.initExit(2);
+                await nodes.completeExit(2);
+                await nodes.initExit(3);
+                await nodes.completeExit(3);
+
+                await nodes.makeNodeVisible(0);
+                await nodes.makeNodeVisible(1);
+                await nodes.makeNodeVisible(2);
+                await nodes.makeNodeVisible(3);
+
+                await nodes.removeNodeFromSpaceToNodes(2);
+                await nodes.removeNodeFromSpaceToNodes(3);
+
+                const nodesInTree = await nodes.amountOfNodesInTree();
+                nodesInTree.should.be.equal(18);
+
+                await nodes.removeNodesFromTree(nodesInTree.toNumber());
+
+                await nodes.initializeSegmentTreeAndInvisibleNodes();
+
+                await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), holder.address);
+                await schains.connect(holder).addSchainByFoundation(5, 1, 0, "d2", zeroAddress);
+
+                const nodesOfSchain = new Set();
+
+                const nodesInGroup = await schainsInternal.getNodesInGroup(stringValue(web3.utils.soliditySha3("d2")));
+
+                for(const nodeIn of nodesInGroup) {
+                    if (!nodesOfSchain.has(nodeIn.toNumber())) {
+                        nodesOfSchain.add(nodeIn.toNumber());
+                    } else {
+                        console.log("Node is already in set");
+                        assert.fail("node is in set", "node should not be in set", "Schain created with on the same node at least 2 times");
+                    }
+                }
             });
         });
 
