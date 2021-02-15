@@ -5,6 +5,8 @@ import "@openzeppelin/hardhat-upgrades";
 import "hardhat-typechain";
 import "solidity-coverage";
 import * as dotenv from "dotenv"
+import { utils, Wallet } from "ethers";
+import { HardhatNetworkAccountUserConfig } from "hardhat/types/config";
 
 dotenv.config();
 
@@ -28,15 +30,35 @@ task("accounts", "Prints the list of accounts", async (_, { web3 }) => {
   }
 });
 
-const privateKeys: string[] = []
+function getAccounts() {
+  const accounts: HardhatNetworkAccountUserConfig[] = [];
+  const defaultBalance = utils.parseEther("1000000").toString();
 
-function addKey(key: string | undefined) {
-  if (key) {
-    privateKeys.push(key);
-  } else {
-    console.log("Generation of private keys is not implemented");
-    process.exit(1);
+  [
+    process.env.PRIVATE_KEY_1,
+    process.env.PRIVATE_KEY_2,
+    process.env.PRIVATE_KEY_3,
+    process.env.PRIVATE_KEY_4,
+    process.env.PRIVATE_KEY_5,
+    process.env.PRIVATE_KEY_6
+  ].forEach( (key) => {
+    if (key) {
+      accounts.push({
+        privateKey: key,
+        balance: defaultBalance
+      });
+    }
+  });
+
+  const n = 10;
+  for (let i = 0; i < n; ++i) {
+    accounts.push({
+      privateKey: Wallet.createRandom().privateKey,
+      balance: defaultBalance
+    })
   }
+
+  return accounts;
 }
 
 function getCustomUrl(url: string | undefined) {
@@ -51,7 +73,6 @@ function getCustomPrivateKey(privateKey: string | undefined) {
   if (privateKey) {
     return [privateKey];
   } else {
-    console.log("Custom private key is not set");
     return [];
   }
 }
@@ -63,13 +84,6 @@ function getGasPrice(gasPrice: string | undefined) {
     return "auto";
   }
 }
-
-addKey(process.env.PRIVATE_KEY_1);
-addKey(process.env.PRIVATE_KEY_2);
-addKey(process.env.PRIVATE_KEY_3);
-addKey(process.env.PRIVATE_KEY_4);
-addKey(process.env.PRIVATE_KEY_5);
-addKey(process.env.PRIVATE_KEY_6);
 
 const config: HardhatUserConfig = {
   defaultNetwork: "hardhat",
@@ -87,32 +101,7 @@ const config: HardhatUserConfig = {
   },
   networks: {
     hardhat: {
-      accounts: [
-        {
-          privateKey: privateKeys[0],
-          balance: "0xd3c21bcecceda0000000"
-        },
-        {
-          privateKey: privateKeys[1],
-          balance: "0xd3c21bcecceda0000000"
-        },
-        {
-          privateKey: privateKeys[2],
-          balance: "0xd3c21bcecceda0000000"
-        },
-        {
-          privateKey: privateKeys[3],
-          balance: "0xd3c21bcecceda0000000"
-        },
-        {
-          privateKey: privateKeys[4],
-          balance: "0xd3c21bcecceda0000000"
-        },
-        {
-          privateKey: privateKeys[5],
-          balance: "0xd3c21bcecceda0000000"
-        }
-      ],
+      accounts: getAccounts(),
       blockGasLimit: 12000000
     },
     custom: {
