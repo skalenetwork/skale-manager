@@ -121,7 +121,7 @@ contract Nodes is Permissions {
 
     mapping (uint => bool) private _invisible;
 
-    SegmentTree.Tree private _nodesAmountBySpace;
+    SegmentTree.Tree internal _nodesAmountBySpace;
 
     /**
      * @dev Emitted when a node is created.
@@ -169,19 +169,18 @@ contract Nodes is Permissions {
     }
 
     function initializeSegmentTreeAndInvisibleNodes() external onlyOwner {
-        uint[] memory diff = new uint[](129);
         for (uint i = 0; i < nodes.length; i++) {
             if (nodes[i].status != NodeStatus.Active) {
                 _invisible[i] = true;
                 if (nodes[i].status != NodeStatus.Left)
-                    diff[spaceOfNodes[i].freeSpace] = diff[spaceOfNodes[i].freeSpace].add(1);
+                    _removeNodeFromSpaceToNodes(i, spaceOfNodes[i].freeSpace);
             }
         }
         uint8 totalSpace = ConstantsHolder(contractManager.getContract("ConstantsHolder")).TOTAL_SPACE_ON_NODE();
         _nodesAmountBySpace.create(totalSpace);
         for (uint8 i = 1; i <= totalSpace; i++) {
             if (spaceToNodes[i].length > 0)
-                _nodesAmountBySpace.addToPlace(i, spaceToNodes[i].length.sub(diff[i]));
+                _nodesAmountBySpace.addToPlace(i, spaceToNodes[i].length);
         }
     }
 
@@ -868,7 +867,7 @@ contract Nodes is Permissions {
         spaceOfNodes[nodeIndex].indexInSpaceMap = spaceToNodes[space].length.sub(1);
     }
 
-    function _removeNodeFromSpaceToNodes(uint nodeIndex, uint8 space) private {
+    function _removeNodeFromSpaceToNodes(uint nodeIndex, uint8 space) internal {
         uint indexInArray = spaceOfNodes[nodeIndex].indexInSpaceMap;
         uint len = spaceToNodes[space].length.sub(1);
         if (indexInArray < len) {
