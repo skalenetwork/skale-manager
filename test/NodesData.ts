@@ -115,9 +115,9 @@ describe("NodesData", () => {
         const nodeByName = await nodes.nodes(await nodes.nodesNameToIndex(nodeId));
         node.should.be.deep.equal(nodeByName);
         await nodes.isNodeExist(nodeAddress.address, 0).should.be.eventually.true;
-        const activeNodes = await nodes.connect(nodeAddress).getActiveNodesByAddress();
-        activeNodes.should.be.deep.equal([BigNumber.from(0)]);
-        expect(await nodes.getActiveNodesByAddress()).to.be.empty;
+        // const activeNodes = await nodes.connect(nodeAddress).getActiveNodesByAddress();
+        // activeNodes.should.be.deep.equal([BigNumber.from(0)]);
+        // expect(await nodes.getActiveNodesByAddress()).to.be.empty;
         (await nodes.numberOfActiveNodes()).should.be.equal(1);
         (await nodes.getNumberOfNodes()).should.be.equal(1);
     });
@@ -247,28 +247,28 @@ describe("NodesData", () => {
                 .should.be.eventually.rejectedWith("Validator address does not exist");
         });
 
-        it("should get array of ips of active nodes", async () => {
-            const activeNodes = await nodes.getActiveNodeIPs();
+        // it("should get array of ips of active nodes", async () => {
+        //     const activeNodes = await nodes.getActiveNodeIPs();
 
-            activeNodes.length.should.be.equal(1);
-            activeNodes[0].should.be.equal("0x7f000001");
-        });
+        //     activeNodes.length.should.be.equal(1);
+        //     activeNodes[0].should.be.equal("0x7f000001");
+        // });
 
-        it("should get array of indexes of active nodes", async () => {
-            const activeNodes = await nodes.getActiveNodeIds();
+        // it("should get array of indexes of active nodes", async () => {
+        //     const activeNodes = await nodes.getActiveNodeIds();
 
-            activeNodes.length.should.be.equal(1);
-            const nodeIndex = activeNodes[0];
-            nodeIndex.should.be.equal(0);
-        });
+        //     activeNodes.length.should.be.equal(1);
+        //     const nodeIndex = activeNodes[0];
+        //     nodeIndex.should.be.equal(0);
+        // });
 
-        it("should get array of indexes of active nodes of msg.sender", async () => {
-            const activeNodes = await nodes.connect(nodeAddress).getActiveNodesByAddress();
+        // it("should get array of indexes of active nodes of msg.sender", async () => {
+        //     const activeNodes = await nodes.connect(nodeAddress).getActiveNodesByAddress();
 
-            activeNodes.length.should.be.equal(1);
-            const nodeIndex = activeNodes[0];
-            nodeIndex.should.be.equal(0);
-        });
+        //     activeNodes.length.should.be.equal(1);
+        //     const nodeIndex = activeNodes[0];
+        //     nodeIndex.should.be.equal(0);
+        // });
 
         it("should return Node status", async () => {
             let status = await nodes.getNodeStatus(0);
@@ -478,9 +478,14 @@ describe("NodesData", () => {
             });
 
             it("should add space to full node", async () => {
+                await nodes.removeSpaceFromNode(0, 2);
+
+                (await nodes.spaceOfNodes(0))[0].should.be.equal(126);
+
+                await nodes.addSpaceToNode(0, 3).should.be.eventually.rejectedWith("Incorrect place");
                 await nodes.addSpaceToNode(0, 2);
 
-                (await nodes.spaceOfNodes(0))[0].should.be.equal(130);
+                (await nodes.spaceOfNodes(0))[0].should.be.equal(128);
             });
 
             it("should get number of free full nodes", async () => {

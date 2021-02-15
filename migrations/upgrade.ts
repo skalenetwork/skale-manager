@@ -1,22 +1,15 @@
-import { contracts, getContractKeyInAbiFile } from "./deploy";
-import { ethers, upgrades } from "hardhat";
+import { contracts, getContractKeyInAbiFile, getContractFactory, verify } from "./deploy";
+import { ethers, network, upgrades, run } from "hardhat";
 import { promises as fs } from "fs";
-import { ContractFactory } from "ethers";
-import { deployLibraries, getLinkedContractFactory } from "../test/tools/deploy/factory";
-
-async function getContractFactoryWithLibraries(e: any, contractName: string) {
-    const libraryNames = [];
-    for (const str of e.toString().split(".sol:")) {
-        const libraryName = str.split("\n")[0];
-        libraryNames.push(libraryName);
-    }
-    libraryNames.shift();
-    const libraries = await deployLibraries(libraryNames);
-    const contractFactory = await getLinkedContractFactory(contractName, libraries);
-    return contractFactory;
-}
+import { ContractManager, Nodes } from "../typechain";
+import { getImplementationAddress } from "@openzeppelin/upgrades-core";
 
 async function main() {
+    if ((await fs.readFile("DEPLOYED", "utf-8")).trim() !== "1.7.2-stable.0") {
+        console.log("Upgrade script is not relevant");
+        process.exit(1);
+    }
+
     if (!process.env.ABI) {
         console.log("Set path to file with ABI and addresses to ABI environment variables");
         return;
@@ -33,31 +26,88 @@ async function main() {
 
     // remove Wallets from list
     contracts.pop();
+
+    const contractsToUpgrade: string[] = [];
     for (const contract of ["ContractManager"].concat(contracts)) {
-        let contractFactory: ContractFactory;
-        try {
-            contractFactory = await ethers.getContractFactory(contract);
-        } catch (e) {
-            const errorMessage = "The contract " + contract + " is missing links for the following libraries";
-            const isLinkingLibraryError = e.toString().indexOf(errorMessage) + 1;
-            if (isLinkingLibraryError) {
-                contractFactory = await getContractFactoryWithLibraries(e, contract);
-            } else {
-                throw(e);
-            }
-        }
+        const contractFactory = await getContractFactory(contract);
         let _contract = contract;
         if (contract === "BountyV2") {
             _contract = "Bounty";
         }
         const proxyAddress = abi[getContractKeyInAbiFile(_contract) + "_address"];
-        console.log(`Upgrade ${contract} at ${proxyAddress}`);
-        if (multisig) {
-            await upgrades.prepareUpgrade(proxyAddress, contractFactory, { unsafeAllowLinkedLibraries: true });
+
+
+        const newImplementationAddress = await upgrades.prepareUpgrade(proxyAddress, contractFactory, { unsafeAllowLinkedLibraries: true });
+        const currentImplementationAddress = await getImplementationAddress(network.provider, proxyAddress);
+        if (newImplementationAddress !== currentImplementationAddress)
+        {
+            contractsToUpgrade.push(contract);
+            await verify(contract, newImplementationAddress);
         } else {
-            await upgrades.upgradeProxy(proxyAddress, contractFactory, { unsafeAllowLinkedLibraries: true });
+            console.log(`Contract ${contract} is up to date`);
         }
     }
+
+    if (multisig) {
+        console.log("Instructions for multisig:");
+    }
+    for (const contract of contractsToUpgrade) {
+        const contractFactory = await getContractFactory(contract);
+        let _contract = contract;
+        if (contract === "BountyV2") {
+            _contract = "Bounty";
+        }
+        const proxyAddress = abi[getContractKeyInAbiFile(_contract) + "_address"];
+        let contractInterface;
+        if (multisig) {
+            const newImplementationAddress =
+                await upgrades.prepareUpgrade(proxyAddress, contractFactory, { unsafeAllowLinkedLibraries: true });
+            contractInterface = contractFactory.attach(newImplementationAddress).interface;
+            console.log(`Upgrade ${contract} at ${proxyAddress} to ${newImplementationAddress}`);
+        } else {
+            // TODO: initialize upgraded instance in the upgrade transaction
+            console.log(`Upgrade ${contract} at ${proxyAddress}`);
+            contractInterface = (await upgrades.upgradeProxy(proxyAddress, contractFactory, { unsafeAllowLinkedLibraries: true })).interface;
+        }
+        abi[getContractKeyInAbiFile(_contract) + "_abi"] = JSON.parse(contractInterface.format("json") as string)
+    }
+
+    // Deploy Wallets
+    const contractManagerName = "ContractManager";
+    const contractManagerFactory = await ethers.getContractFactory(contractManagerName);
+    const contractManager = (contractManagerFactory.attach(abi[getContractKeyInAbiFile(contractManagerName) + "_address"])) as ContractManager;
+
+    const walletsName = "Wallets";
+    console.log("Deploy", walletsName);
+    const walletsFactory = await ethers.getContractFactory(walletsName);
+    const wallets = await upgrades.deployProxy(walletsFactory, [contractManager.address]);
+    await wallets.deployTransaction.wait();
+    console.log("Register", walletsName);
+    await (await contractManager.setContractsAddress(walletsName, wallets.address)).wait();
+    abi[getContractKeyInAbiFile(walletsName) + "_address"] = wallets.address;
+    abi[getContractKeyInAbiFile(walletsName) + "_abi"] = JSON.parse(wallets.interface.format("json") as string);
+    await verify(walletsName, await getImplementationAddress(network.provider, wallets.address));
+
+    // Initialize SegmentTree in Nodes
+    const nodesName = "Nodes";
+    const nodesContractFactory = await getContractFactory(nodesName);
+    const nodesAddress = abi[getContractKeyInAbiFile(nodesName) + "_address"];
+    if (nodesAddress) {
+        const nodes = (nodesContractFactory.attach(nodesAddress)) as Nodes;
+        if (multisig) {
+            console.log(`Call ${nodesName}.initializeSegmentTreeAndInvisibleNodes() at ${nodesAddress}`);
+        } else {
+            const receipt = await(await nodes.initializeSegmentTreeAndInvisibleNodes()).wait();
+            console.log("SegmentTree was initialized with", receipt.gasUsed.toNumber(), "gas used");
+        }
+    } else {
+        console.log("Nodes address was not found!");
+        console.log("Check your abi!");
+        process.exit(1);
+    }
+
+    const version = (await fs.readFile("VERSION", "utf-8")).trim();
+    await fs.writeFile(`data/skale-manager-${version}-${network.name}-abi.json`, JSON.stringify(abi, null, 4));
 
     console.log("Done");
 }

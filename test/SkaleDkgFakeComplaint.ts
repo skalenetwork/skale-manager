@@ -42,6 +42,7 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-wit
 import { assert } from "chai";
 import { solidity } from "ethereum-waffle";
 import { deployWallets } from "./tools/deploy/wallets";
+import { makeSnapshot, applySnapshot } from "./tools/snapshot";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -78,28 +79,7 @@ describe("SkaleDKG", () => {
 
     const failedDkgPenalty = 5;
 
-    beforeEach(async () => {
-        [owner, validator1, validator2] = await ethers.getSigners();
-        validatorsAccount = [ validator1, validator2 ];
-
-        contractManager = await deployContractManager();
-
-        nodes = await deployNodes(contractManager);
-        schainsInternal = await deploySchainsInternal(contractManager);
-        schains = await deploySchains(contractManager);
-        skaleDKG = await deploySkaleDKG(contractManager);
-        keyStorage = await deployKeyStorage(contractManager);
-        skaleToken = await deploySkaleToken(contractManager);
-        validatorService = await deployValidatorService(contractManager);
-        slashingTable = await deploySlashingTable(contractManager);
-        delegationController = await deployDelegationController(contractManager);
-        nodeRotation = await deployNodeRotation(contractManager);
-        skaleManager = await deploySkaleManager(contractManager);
-        constantsHolder = await deployConstantsHolder(contractManager);
-        wallets = await deployWallets(contractManager);
-
-        await slashingTable.setPenalty("FailedDKG", failedDkgPenalty);
-    });
+    let snapshot: number;
 
     const validatorsPrivateKey = [
         privateKeys[1],
@@ -889,7 +869,28 @@ describe("SkaleDKG", () => {
     let schainName = "";
     const delegatedAmount = 1e7;
 
-    beforeEach(async () => {
+    before(async () => {
+        [owner, validator1, validator2] = await ethers.getSigners();
+        validatorsAccount = [ validator1, validator2 ];
+
+        contractManager = await deployContractManager();
+
+        nodes = await deployNodes(contractManager);
+        schainsInternal = await deploySchainsInternal(contractManager);
+        schains = await deploySchains(contractManager);
+        skaleDKG = await deploySkaleDKG(contractManager);
+        keyStorage = await deployKeyStorage(contractManager);
+        skaleToken = await deploySkaleToken(contractManager);
+        validatorService = await deployValidatorService(contractManager);
+        slashingTable = await deploySlashingTable(contractManager);
+        delegationController = await deployDelegationController(contractManager);
+        nodeRotation = await deployNodeRotation(contractManager);
+        skaleManager = await deploySkaleManager(contractManager);
+        constantsHolder = await deployConstantsHolder(contractManager);
+        wallets = await deployWallets(contractManager);
+
+        await slashingTable.setPenalty("FailedDKG", failedDkgPenalty);
+
         await validatorService.connect(validator1).registerValidator("Validator1", "D2 is even", 0, 0);
         const validator1Id = await validatorService.getValidatorId(validator1.address);
         await validatorService.connect(validator2).registerValidator("Validator2", "D2 is even more even", 0, 0);
@@ -922,8 +923,18 @@ describe("SkaleDKG", () => {
         }
     });
 
+    beforeEach(async () => {
+        snapshot = await makeSnapshot();
+    });
+
+    afterEach(async () => {
+        await applySnapshot(snapshot);
+    });
+
     describe("when 4-node schain is created", async () => {
-        beforeEach(async () => {
+        let cleanContracts: number;
+        before(async () => {
+            cleanContracts = await makeSnapshot();
             const deposit = await schains.getSchainPrice(5, 5);
 
             await schains.addSchain(
@@ -946,6 +957,10 @@ describe("SkaleDKG", () => {
                 nodesInGroup = await schainsInternal.getNodesInGroup(stringValue(web3.utils.soliditySha3(schainName)));
                 await wallets.rechargeSchainWallet(stringValue(web3.utils.soliditySha3(schainName)), {value: 1e20.toString()});
             }
+        });
+
+        after(async () => {
+            await applySnapshot(cleanContracts);
         });
 
         describe("when correct broadcasts sent", async () => {

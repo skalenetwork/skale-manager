@@ -4,6 +4,7 @@ import { ethers, upgrades, network, run } from "hardhat";
 import { ContractManager } from "../typechain";
 import { ContractFactory } from 'ethers';
 import { deployLibraries, getLinkedContractFactory } from "../test/tools/deploy/factory";
+import { getImplementationAddress } from "@openzeppelin/upgrades-core";
 
 function getInitializerParameters(contract: string, contractManagerAddress: string) {
     if (["TimeHelpers", "Decryption", "ECDH"].includes(contract)) {
@@ -35,7 +36,6 @@ async function getContractFactoryWithLibraries(e: any, contractName: string) {
     return contractFactory;
 }
 
-
 export function getContractKeyInAbiFile(contract: string) {
     return contract.replace(/([a-zA-Z])(?=[A-Z])/g, '$1_').toLowerCase();
 }
@@ -43,6 +43,34 @@ export function getContractKeyInAbiFile(contract: string) {
 const customNames: {[key: string]: string} = {
     "TimeHelpersWithDebug": "TimeHelpers",
     "BountyV2": "Bounty"
+}
+
+export async function getContractFactory(contract: string) {
+    let contractFactory: ContractFactory;
+    try {
+        contractFactory = await ethers.getContractFactory(contract);
+    } catch (e) {
+        const linkingErrorMessage = "The contract " + contract + " is missing links for the following libraries";
+        if (e.toString().includes(linkingErrorMessage)) {
+            contractFactory = await getContractFactoryWithLibraries(e, contract);
+        } else {
+            throw(e);
+        }
+    }
+    return contractFactory;
+}
+
+export async function verify(contractName: string, contractAddress: string) {
+    if (![1337, 31337].includes((await ethers.provider.getNetwork()).chainId)) {
+        try {
+            await run("verify:verify", {
+                address: contractAddress,
+                constructorArguments: []
+            });
+        } catch (e) {
+            console.log(`Contract ${contractName} was not verified on etherscan`);
+        }
+    }
 }
 
 export const contracts = [
@@ -104,6 +132,7 @@ async function main() {
     console.log("Register", contractManagerName);
     await (await contractManager.setContractsAddress(contractManagerName, contractManager.address)).wait();
     artifacts.push({address: contractManager.address, interface: contractManager.interface, contract: contractManagerName})
+    await verify(contractManagerName, await getImplementationAddress(network.provider, contractManager.address));
 
     for (const contract of contracts) {
         let contractFactory: ContractFactory;
@@ -126,6 +155,7 @@ async function main() {
         const transaction = await contractManager.setContractsAddress(getNameInContractManager(contract), proxy.address);
         await transaction.wait();
         artifacts.push({address: proxy.address, interface: proxy.interface, contract});
+        await verify(contract, await getImplementationAddress(network.provider, proxy.address));
     }
 
     const skaleTokenName = "SkaleToken";
@@ -136,6 +166,7 @@ async function main() {
     console.log("Register", skaleTokenName);
     await (await contractManager.setContractsAddress(skaleTokenName, skaleToken.address)).wait();
     artifacts.push({address: skaleToken.address, interface: skaleToken.interface, contract: skaleTokenName});
+    await verify(skaleTokenName, skaleToken.address);
 
     if (!production) {
         console.log("Do actions for non production deployment");

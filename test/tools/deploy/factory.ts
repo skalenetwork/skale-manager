@@ -54,12 +54,12 @@ function deployWithConstructorFunctionFactory(
         = async ( contractManager: ContractManager) => {
             return await defaultDeployWithConstructor(contractName, contractManager);
         }
-    ): any {
-            return deployFunctionFactory(
-                contractName,
-                deployDependencies,
-                deploy);
-    }
+): any {
+    return deployFunctionFactory(
+        contractName,
+        deployDependencies,
+        deploy);
+}
 
 
 function deployWithLibraryFunctionFactory(
@@ -67,20 +67,40 @@ function deployWithLibraryFunctionFactory(
     libraryNames: string[],
     deployDependencies: (contractManager: ContractManager) => Promise<void>
         = async (contractManager: ContractManager) => undefined
-    ): any {
-        return async (contractManager: ContractManager) => {
-            const libraries = await deployLibraries(libraryNames);
-            const contractFactory = await getLinkedContractFactory(contractName, libraries);
-            try {
-                return contractFactory.attach(await contractManager.getContract(contractName));
-            } catch (e) {
-                const instance = await upgrades.deployProxy(contractFactory, [contractManager.address], { unsafeAllowLinkedLibraries: true });
-                await contractManager.setContractsAddress(contractName, instance.address);
-                await deployDependencies(contractManager);
-                return instance;
-            }
+): any {
+    return async (contractManager: ContractManager) => {
+        const libraries = await deployLibraries(libraryNames);
+        const contractFactory = await getLinkedContractFactory(contractName, libraries);
+        try {
+            return contractFactory.attach(await contractManager.getContract(contractName));
+        } catch (e) {
+            const instance = await upgrades.deployProxy(contractFactory, [contractManager.address], { unsafeAllowLinkedLibraries: true });
+            await contractManager.setContractsAddress(contractName, instance.address);
+            await deployDependencies(contractManager);
+            return instance;
         }
     }
+}
+
+function deployWithLibraryWithConstructor(
+    contractName: string,
+    libraryNames: string[],
+    deployDependencies: (contractManager: ContractManager) => Promise<void>
+        = async (contractManager: ContractManager) => undefined
+): any {
+    return async (contractManager: ContractManager) => {
+        const libraries = await deployLibraries(libraryNames);
+        const contractFactory = await getLinkedContractFactory(contractName, libraries);
+        try {
+            return contractFactory.attach(await contractManager.getContract(contractName));
+        } catch (e) {
+            const instance = await upgrades.deployProxy(contractFactory, { unsafeAllowLinkedLibraries: true });
+            await contractManager.setContractsAddress(contractName, instance.address);
+            await deployDependencies(contractManager);
+            return instance;
+        }
+    }
+}
 
 async function getLinkedContractFactory(contractName: string, libraries: any) {
     const cArtifact = await hre.artifacts.readArtifact(contractName);
@@ -123,5 +143,13 @@ function _linkBytecode(artifact: Artifact, libraries: { [x: string]: any }) {
     return bytecode;
 }
 
-export { deployFunctionFactory, deployWithConstructorFunctionFactory, deployWithConstructor,
-         defaultDeploy, deployWithLibraryFunctionFactory, deployLibraries, getLinkedContractFactory};
+export {
+    deployFunctionFactory,
+    deployWithConstructorFunctionFactory,
+    deployWithConstructor,
+    defaultDeploy,
+    deployWithLibraryFunctionFactory,
+    deployLibraries,
+    getLinkedContractFactory,
+    deployWithLibraryWithConstructor
+};

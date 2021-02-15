@@ -123,8 +123,6 @@ contract SkaleManager is IERC777Recipient, Permissions {
     function nodeExit(uint nodeIndex) external {
         uint gasTotal = gasleft();
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
-        SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
-        ConstantsHolder constants = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
         NodeRotation nodeRotation = NodeRotation(contractManager.getContract("NodeRotation"));
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));
         uint validatorId = nodes.getValidatorId(nodeIndex);
@@ -133,23 +131,25 @@ contract SkaleManager is IERC777Recipient, Permissions {
             permitted = validatorService.getValidatorId(msg.sender) == validatorId;
         }
         require(permitted, "Sender is not permitted to call this function");
+        nodeRotation.freezeSchains(nodeIndex);
         if (nodes.isNodeActive(nodeIndex)) {
             require(nodes.initExit(nodeIndex), "Initialization of node exit is failed");
         }
         require(nodes.isNodeLeaving(nodeIndex), "Node should be Leaving");
-        nodeRotation.freezeSchains(nodeIndex);
-        bool completed;
-        bool isSchains = false;
-        bytes32 schainForRotation = schainsInternal.getActiveSchain(nodeIndex);
-        if (schainForRotation != bytes32(0)) {
-            completed = nodeRotation.exitFromSchain(nodeIndex);
-            isSchains = true;
-        } else {
-            completed = true;
-        }
+        (bool completed, bool isSchains) = nodeRotation.exitFromSchain(nodeIndex);
         if (completed) {
+            SchainsInternal(
+                contractManager.getContract("SchainsInternal")
+            ).removeNodeFromAllExceptionSchains(nodeIndex);
             require(nodes.completeExit(nodeIndex), "Finishing of node exit is failed");
-            nodes.changeNodeFinishTime(nodeIndex, now.add(isSchains ? constants.rotationDelay() : 0));
+            nodes.changeNodeFinishTime(
+                nodeIndex,
+                now.add(
+                    isSchains ?
+                    ConstantsHolder(contractManager.getContract("ConstantsHolder")).rotationDelay() :
+                    0
+                )
+            );
             nodes.deleteNodeForValidator(validatorId, nodeIndex);
         }
         _refundGasByValidator(validatorId, msg.sender, gasTotal - gasleft());

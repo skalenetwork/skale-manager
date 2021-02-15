@@ -6,16 +6,27 @@ import chaiAsPromised from "chai-as-promised";
 import { deployTimeHelpersWithDebug } from "../tools/deploy/test/timeHelpersWithDebug";
 import { currentTime } from "../tools/time";
 import { web3 } from "hardhat";
+import { makeSnapshot, applySnapshot } from "../tools/snapshot";
+
 chai.should();
 chai.use(chaiAsPromised);
 
 describe("TimeHelpers", () => {
     let contractManager: ContractManager;
     let timeHelpers: TimeHelpers;
+    let snapshot: number;
 
-    beforeEach(async () => {
+    before(async () => {
         contractManager = await deployContractManager();
         timeHelpers = await deployTimeHelpers(contractManager);
+    });
+
+    beforeEach(async () => {
+        snapshot = await makeSnapshot();
+    });
+
+    afterEach(async () => {
+        await applySnapshot(snapshot);
     });
 
     it("must convert timestamps to months correctly", async () => {

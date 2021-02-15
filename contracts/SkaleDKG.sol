@@ -359,11 +359,14 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         emit BadGuy(badNode);
         emit FailedDKG(schainId);
 
+        schainsInternal.makeSchainNodesInvisible(schainId);
         if (schainsInternal.isAnyFreeNode(schainId)) {
+            schainsInternal.makeSchainNodesVisible(schainId);
             uint newNode = nodeRotation.rotateNode(
                 badNode,
                 schainId,
-                false
+                false,
+                true
             );
             emit NewGuy(newNode);
         } else {
@@ -521,7 +524,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         return check && dkgProcess[schainId].broadcasted[index];
     }
 
-    /**
+     /**
      * @dev Checks whether all data has been received by node.
      */
     function isAllDataReceived(bytes32 schainId, uint nodeIndex) external view returns (bool) {
@@ -611,10 +614,6 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         emit ChannelOpened(schainId);
     }
 
-    function _getComplaintTimelimit() private view returns (uint) {
-        return ConstantsHolder(contractManager.getConstantsHolder()).complaintTimelimit();
-    }
-
     function isEveryoneBroadcasted(bytes32 schainId) public view returns (bool) {
         return channels[schainId].n == dkgProcess[schainId].numberOfBroadcasted;
     }
@@ -625,6 +624,10 @@ contract SkaleDKG is Permissions, ISkaleDKG {
 
     function _checkMsgSenderIsNodeOwner(uint nodeIndex) private view {
         require(_isNodeOwnedByMessageSender(nodeIndex, msg.sender), "Node does not exist for message sender");
+    }
+
+    function _getComplaintTimelimit() private view returns (uint) {
+        return ConstantsHolder(contractManager.getConstantsHolder()).complaintTimelimit();
     }
 
 }

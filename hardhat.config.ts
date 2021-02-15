@@ -113,6 +113,7 @@ const config: HardhatUserConfig = {
           balance: "0xd3c21bcecceda0000000"
         }
       ],
+      blockGasLimit: 12000000
     },
     custom: {
       url: getCustomUrl(process.env.ENDPOINT),

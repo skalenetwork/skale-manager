@@ -39,8 +39,6 @@ import "./Wallets.sol";
  * deletion, and rotation.
  */
 contract Schains is Permissions {
-    using StringUtils for string;
-    using StringUtils for uint;
 
     struct SchainParameters {
         uint lifetime;
@@ -48,6 +46,8 @@ contract Schains is Permissions {
         uint16 nonce;
         string name;
     }
+
+    bytes32 public constant SCHAIN_CREATOR_ROLE = keccak256("SCHAIN_CREATOR_ROLE");
 
     /**
      * @dev Emitted when an schain is created.
@@ -101,8 +101,6 @@ contract Schains is Permissions {
         uint time,
         uint gasSpend
     );
-
-    bytes32 public constant SCHAIN_CREATOR_ROLE = keccak256("SCHAIN_CREATOR_ROLE");
 
     /**
      * @dev Allows SkaleManager contract to create an Schain.
