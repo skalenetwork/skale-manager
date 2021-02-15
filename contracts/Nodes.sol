@@ -170,10 +170,9 @@ contract Nodes is Permissions {
 
     function initializeSegmentTreeAndInvisibleNodes() external onlyOwner {
         for (uint i = 0; i < nodes.length; i++) {
-            if (nodes[i].status != NodeStatus.Active) {
+            if (nodes[i].status != NodeStatus.Active && nodes[i].status != NodeStatus.Left) {
                 _invisible[i] = true;
-                if (nodes[i].status != NodeStatus.Left)
-                    _removeNodeFromSpaceToNodes(i, spaceOfNodes[i].freeSpace);
+                _removeNodeFromSpaceToNodes(i, spaceOfNodes[i].freeSpace);
             }
         }
         uint8 totalSpace = ConstantsHolder(contractManager.getContract("ConstantsHolder")).TOTAL_SPACE_ON_NODE();
