@@ -32,10 +32,12 @@ contract NodesTester is Nodes {
     }
 
     function removeNodesFromTree(uint nodesAmount) external {
-        _nodesAmountBySpace.removeFromPlace(128, nodesAmount);
+        SegmentTree.Tree storage tree = _getNodesAmountBySpace();
+        tree.removeFromPlace(128, nodesAmount);
     }
 
     function amountOfNodesInTree() external view returns (uint) {
-        return _nodesAmountBySpace.sumFromPlaceToLast(1);
+        SegmentTree.Tree storage tree = _getNodesAmountBySpace();
+        return tree.sumFromPlaceToLast(1);
     }
 }

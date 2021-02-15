@@ -121,7 +121,7 @@ contract Nodes is Permissions {
 
     mapping (uint => bool) private _invisible;
 
-    SegmentTree.Tree internal _nodesAmountBySpace;
+    SegmentTree.Tree private _nodesAmountBySpace;
 
     /**
      * @dev Emitted when a node is created.
@@ -703,6 +703,10 @@ contract Nodes is Permissions {
             return _nodesAmountBySpace.sumFromPlaceToLast(1);
         }
         return _nodesAmountBySpace.sumFromPlaceToLast(freeSpace);
+    }
+
+    function _getNodesAmountBySpace() internal view returns (SegmentTree.Tree storage) {
+        return _nodesAmountBySpace;
     }
 
     /**
