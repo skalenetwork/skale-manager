@@ -92,8 +92,15 @@ contract SkaleDKG is Permissions, ISkaleDKG {
     
     mapping(bytes32 => uint) private _badNodes;
 
+    mapping(DkgFunction => uint) private _gasDelta;
+
     enum DkgFunction {Broadcast, Alright, ComplaintBadData, PreResponse, Complaint, Response}
-    
+
+    struct Context {
+        bool isDebt;
+        DkgFunction dkgFunction;
+    }
+
     /**
      * @dev Emitted when a channel is opened.
      */
@@ -177,12 +184,6 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         }
     }
 
-    struct Context {
-        bool isDebt;
-        uint delta;
-        DkgFunction dkgFunction;
-    }
-
     modifier onlyNodeOwner(uint nodeIndex) {
         _checkMsgSenderIsNodeOwner(nodeIndex);
         _;
@@ -194,10 +195,18 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         bool isLastNode = channels[schainId].n == dkgProcess[schainId].numberOfCompleted;
         if (context.dkgFunction == DkgFunction.Alright && isLastNode) {
             _refundGasBySchain(
-                schainId, msg.sender, gasTotal.sub(gasleft()).add(context.delta).sub(74800), context.isDebt
+                schainId,
+                msg.sender,
+                gasTotal.sub(gasleft()).add(_gasDelta[context.dkgFunction]).sub(74800),
+                context.isDebt
             );
         } else {
-            _refundGasBySchain(schainId, msg.sender, gasTotal.sub(gasleft()).add(context.delta), context.isDebt);
+            _refundGasBySchain(
+                schainId,
+                msg.sender,
+                gasTotal.sub(gasleft()).add(_gasDelta[context.dkgFunction]),
+                context.isDebt
+            );
         }
     }
 
@@ -205,18 +214,34 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         uint gasTotal = gasleft();
         _;
         if (context.dkgFunction == DkgFunction.Response) {
-            _refundGasBySchain(schainId, msg.sender, gasTotal.sub(gasleft()).sub(context.delta), context.isDebt);
+            _refundGasBySchain(
+                schainId,
+                msg.sender,
+                gasTotal.sub(gasleft()).sub(_gasDelta[context.dkgFunction]),
+                context.isDebt
+            );
         } else {
             if (gasTotal - gasleft() > 2000000) {
                 _refundGasBySchain(
-                    schainId, msg.sender, gasTotal.sub(gasleft()).add(context.delta).sub(640000), context.isDebt
+                    schainId,
+                    msg.sender,
+                    gasTotal.sub(gasleft()).add(_gasDelta[context.dkgFunction]).sub(640000),
+                    context.isDebt
                 );
             } else if (gasTotal - gasleft() > 1000000) {
                 _refundGasBySchain(
-                    schainId, msg.sender, gasTotal.sub(gasleft()).add(context.delta).sub(270000), context.isDebt
+                    schainId,
+                    msg.sender,
+                    gasTotal.sub(gasleft()).add(_gasDelta[context.dkgFunction]).sub(270000),
+                    context.isDebt
                 );
             } else {
-                _refundGasBySchain(schainId, msg.sender, gasTotal.sub(gasleft()).add(context.delta), context.isDebt);
+                _refundGasBySchain(
+                    schainId,
+                    msg.sender,
+                    gasTotal.sub(gasleft()).add(_gasDelta[context.dkgFunction]),
+                    context.isDebt
+                );
             }
         }
         _refundGasByValidatorToSchain(schainId);
@@ -224,7 +249,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
 
     function alright(bytes32 schainId, uint fromNodeIndex)
         external
-        refundGasBySchain(schainId, Context({isDebt: false, delta: 52640, dkgFunction: DkgFunction.Alright}))
+        refundGasBySchain(schainId, Context({isDebt: false, dkgFunction: DkgFunction.Alright}))
         correctGroup(schainId)
         onlyNodeOwner(fromNodeIndex)
     {
@@ -246,7 +271,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         KeyShare[] memory secretKeyContribution
     )
         external
-        refundGasBySchain(schainId, Context({isDebt: false, delta: 120660, dkgFunction: DkgFunction.Broadcast}))
+        refundGasBySchain(schainId, Context({isDebt: false, dkgFunction: DkgFunction.Broadcast}))
         correctGroup(schainId)
         onlyNodeOwner(nodeIndex)
     {
@@ -265,7 +290,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
 
     function complaintBadData(bytes32 schainId, uint fromNodeIndex, uint toNodeIndex)
         external
-        refundGasBySchain(schainId, Context({isDebt: true, delta: 38720, dkgFunction: DkgFunction.ComplaintBadData}))
+        refundGasBySchain(schainId, Context({isDebt: true, dkgFunction: DkgFunction.ComplaintBadData}))
         correctGroupWithoutRevert(schainId)
         correctNode(schainId, fromNodeIndex)
         correctNodeWithoutRevert(schainId, toNodeIndex)
@@ -288,7 +313,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         KeyShare[] memory secretKeyContribution
     )
         external
-        refundGasBySchain(schainId, Context({isDebt: true, delta: 65780, dkgFunction: DkgFunction.PreResponse}))
+        refundGasBySchain(schainId, Context({isDebt: true, dkgFunction: DkgFunction.PreResponse}))
         correctGroup(schainId)
         onlyNodeOwner(fromNodeIndex)
     {
@@ -308,7 +333,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         external
         refundGasByValidatorToSchain(
             schainId,
-            Context({isDebt: true, delta: 65100, dkgFunction: DkgFunction.Complaint})
+            Context({isDebt: true, dkgFunction: DkgFunction.Complaint})
         )
         correctGroupWithoutRevert(schainId)
         correctNode(schainId, fromNodeIndex)
@@ -335,7 +360,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         external
         refundGasByValidatorToSchain(
             schainId,
-            Context({isDebt: true, delta: 215000, dkgFunction: DkgFunction.Response})
+            Context({isDebt: true, dkgFunction: DkgFunction.Response})
         )
         correctGroup(schainId)
         onlyNodeOwner(fromNodeIndex)
@@ -384,6 +409,14 @@ contract SkaleDKG is Permissions, ISkaleDKG {
 
     function setBadNode(bytes32 schainId, uint nodeIndex) external allow("SkaleDKG") {
         _badNodes[schainId] = nodeIndex;
+    }
+
+    function setGasDelta(DkgFunction dkgFunction, uint delta) external onlyOwner {
+        _gasDelta[dkgFunction] = delta;
+    }
+
+    function getGasDelta(DkgFunction dkgFunction) external view returns (uint) {
+        return _gasDelta[dkgFunction];
     }
 
     function finalizeSlashing(bytes32 schainId, uint badNode) external allow("SkaleDKG") {
@@ -593,6 +626,12 @@ contract SkaleDKG is Permissions, ISkaleDKG {
 
     function initialize(address contractsAddress) public override initializer {
         Permissions.initialize(contractsAddress);
+        _gasDelta[DkgFunction.Alright] = 52640;
+        _gasDelta[DkgFunction.Broadcast] = 120660;
+        _gasDelta[DkgFunction.ComplaintBadData] = 38720;
+        _gasDelta[DkgFunction.PreResponse] = 65780;
+        _gasDelta[DkgFunction.Complaint] = 65100;
+        _gasDelta[DkgFunction.Response] = 215000;
     }
 
     function checkAndReturnIndexInGroup(
