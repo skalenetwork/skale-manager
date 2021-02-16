@@ -361,7 +361,6 @@ contract SkaleDKG is Permissions, ISkaleDKG {
 
         schainsInternal.makeSchainNodesInvisible(schainId);
         if (schainsInternal.isAnyFreeNode(schainId)) {
-            schainsInternal.makeSchainNodesVisible(schainId);
             uint newNode = nodeRotation.rotateNode(
                 badNode,
                 schainId,
@@ -375,9 +374,9 @@ contract SkaleDKG is Permissions, ISkaleDKG {
                 badNode,
                 schainId
             );
-            schainsInternal.makeSchainNodesVisible(schainId);
             channels[schainId].active = false;
         }
+        schainsInternal.makeSchainNodesVisible(schainId);
         Punisher(contractManager.getPunisher()).slash(
             Nodes(contractManager.getContract("Nodes")).getValidatorId(badNode),
             SlashingTable(contractManager.getContract("SlashingTable")).getPenalty("FailedDKG")
