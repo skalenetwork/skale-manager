@@ -92,6 +92,8 @@ contract SkaleDKG is Permissions, ISkaleDKG {
     
     mapping(bytes32 => uint) private _badNodes;
 
+    enum DkgFunction {Broadcast, Alright, ComplaintBadData, PreResponse, Complaint, Response}
+    
     /**
      * @dev Emitted when a channel is opened.
      */
@@ -175,27 +177,54 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         }
     }
 
+    struct Context {
+        bool isDebt;
+        uint delta;
+        DkgFunction dkgFunction;
+    }
+
     modifier onlyNodeOwner(uint nodeIndex) {
         _checkMsgSenderIsNodeOwner(nodeIndex);
         _;
     }
     
-    modifier refundGasBySchain(bytes32 schainId, bool isDebt) {
+    modifier refundGasBySchain(bytes32 schainId, Context memory context) {
         uint gasTotal = gasleft();
         _;
-        _refundGasBySchain(schainId, msg.sender, gasTotal - gasleft() + 28000 + 21000 + 7700, isDebt);
+        bool isLastNode = channels[schainId].n == dkgProcess[schainId].numberOfCompleted;
+        if (context.dkgFunction == DkgFunction.Alright && isLastNode) {
+            _refundGasBySchain(
+                schainId, msg.sender, gasTotal.sub(gasleft()).add(context.delta).sub(74800), context.isDebt
+            );
+        } else {
+            _refundGasBySchain(schainId, msg.sender, gasTotal.sub(gasleft()).add(context.delta), context.isDebt);
+        }
     }
 
-    modifier refundGasByValidatorToSchain(bytes32 schainId, bool isDebt) {
+    modifier refundGasByValidatorToSchain(bytes32 schainId, Context memory context) {
         uint gasTotal = gasleft();
         _;
-        _refundGasBySchain(schainId, msg.sender, gasTotal - gasleft() + 56000, isDebt);
+        if (context.dkgFunction == DkgFunction.Response) {
+            _refundGasBySchain(schainId, msg.sender, gasTotal.sub(gasleft()).sub(context.delta), context.isDebt);
+        } else {
+            if (gasTotal - gasleft() > 2000000) {
+                _refundGasBySchain(
+                    schainId, msg.sender, gasTotal.sub(gasleft()).add(context.delta).sub(640000), context.isDebt
+                );
+            } else if (gasTotal - gasleft() > 1000000) {
+                _refundGasBySchain(
+                    schainId, msg.sender, gasTotal.sub(gasleft()).add(context.delta).sub(270000), context.isDebt
+                );
+            } else {
+                _refundGasBySchain(schainId, msg.sender, gasTotal.sub(gasleft()).add(context.delta), context.isDebt);
+            }
+        }
         _refundGasByValidatorToSchain(schainId);
     }
 
     function alright(bytes32 schainId, uint fromNodeIndex)
         external
-        refundGasBySchain(schainId, false)
+        refundGasBySchain(schainId, Context({isDebt: false, delta: 52640, dkgFunction: DkgFunction.Alright}))
         correctGroup(schainId)
         onlyNodeOwner(fromNodeIndex)
     {
@@ -217,7 +246,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         KeyShare[] memory secretKeyContribution
     )
         external
-        refundGasBySchain(schainId, false)
+        refundGasBySchain(schainId, Context({isDebt: false, delta: 120660, dkgFunction: DkgFunction.Broadcast}))
         correctGroup(schainId)
         onlyNodeOwner(nodeIndex)
     {
@@ -236,7 +265,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
 
     function complaintBadData(bytes32 schainId, uint fromNodeIndex, uint toNodeIndex)
         external
-        refundGasBySchain(schainId, true)
+        refundGasBySchain(schainId, Context({isDebt: true, delta: 38720, dkgFunction: DkgFunction.ComplaintBadData}))
         correctGroupWithoutRevert(schainId)
         correctNode(schainId, fromNodeIndex)
         correctNodeWithoutRevert(schainId, toNodeIndex)
@@ -259,7 +288,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         KeyShare[] memory secretKeyContribution
     )
         external
-        refundGasBySchain(schainId, true)
+        refundGasBySchain(schainId, Context({isDebt: true, delta: 65780, dkgFunction: DkgFunction.PreResponse}))
         correctGroup(schainId)
         onlyNodeOwner(fromNodeIndex)
     {
@@ -277,7 +306,10 @@ contract SkaleDKG is Permissions, ISkaleDKG {
 
     function complaint(bytes32 schainId, uint fromNodeIndex, uint toNodeIndex)
         external
-        refundGasByValidatorToSchain(schainId, true)
+        refundGasByValidatorToSchain(
+            schainId,
+            Context({isDebt: true, delta: 65100, dkgFunction: DkgFunction.Complaint})
+        )
         correctGroupWithoutRevert(schainId)
         correctNode(schainId, fromNodeIndex)
         correctNodeWithoutRevert(schainId, toNodeIndex)
@@ -301,7 +333,10 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         G2Operations.G2Point memory multipliedShare
     )
         external
-        refundGasByValidatorToSchain(schainId, true)
+        refundGasByValidatorToSchain(
+            schainId,
+            Context({isDebt: true, delta: 215000, dkgFunction: DkgFunction.Response})
+        )
         correctGroup(schainId)
         onlyNodeOwner(fromNodeIndex)
     {
