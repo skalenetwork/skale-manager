@@ -375,6 +375,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
                 badNode,
                 schainId
             );
+            schainsInternal.makeSchainNodesVisible(schainId);
             channels[schainId].active = false;
         }
         Punisher(contractManager.getPunisher()).slash(
