@@ -27,7 +27,6 @@ import { ethers, web3 } from "hardhat";
 import { solidity } from "ethereum-waffle";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import { assert, expect } from "chai";
-import { getAbi } from "../migrations/tools";
 
 
 chai.should();
@@ -89,36 +88,19 @@ describe("NodesFunctionality", () => {
         await validatorService.connect(validator).linkNodeAddress(nodeAddress2.address, signature2);
     });
 
-    it.only("should fail to create node if ip is zero", async () => {
+    it("should fail to create node if ip is zero", async () => {
         const pubKey = ec.keyFromPrivate(String(privateKeys[1]).slice(2)).getPublic();
-
-        const abi = getAbi(nodes.interface);
-        const nodesWeb3 = new web3.eth.Contract(abi, nodes.address);
-        await nodesWeb3.methods.nodesNameCheck("0x5").call();
-
-        // await nodesWeb3.methods.createNode(
-        //     validator.address,
-        //     {
-        //         port: 8545,
-        //         nonce: 0,
-        //         ip: "0x00000000",
-        //         publicIp: "0x7f000001",
-        //         publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
-        //         name: "D2",
-        //         domainName: "somedomain.name"
-        //     }).send({from: owner.address});
-
-        // await nodes.createNode(
-        //     validator.address,
-        //     {
-        //         port: 8545,
-        //         nonce: 0,
-        //         ip: "0x00000000",
-        //         publicIp: "0x7f000001",
-        //         publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
-        //         name: "D2",
-        //         domainName: "somedomain.name"
-        //     }).should.be.eventually.rejectedWith("IP address is zero or is not available");
+        await nodes.createNode(
+            validator.address,
+            {
+                port: 8545,
+                nonce: 0,
+                ip: "0x00000000",
+                publicIp: "0x7f000001",
+                publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
+                name: "D2",
+                domainName: "somedomain.name"
+            }).should.be.eventually.rejectedWith("IP address is zero or is not available");
     });
 
     it("should fail to create node if port is zero", async () => {
