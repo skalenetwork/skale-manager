@@ -50,9 +50,11 @@ coverage.json
 
 # Typescript staff
 types/
+typechain/
 
 # OpenZeppelin
 .openzeppelin/dev-*.json
+.openzeppelin/unknown-*.json
 .openzeppelin/.session
 
 # docs

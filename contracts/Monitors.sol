@@ -22,8 +22,6 @@
 pragma solidity 0.6.10;
 pragma experimental ABIEncoderV2;
 
-import "@openzeppelin/contracts-ethereum-package/contracts/utils/SafeCast.sol";
-
 import "./ConstantsHolder.sol";
 import "./Nodes.sol";
 
@@ -33,9 +31,6 @@ import "./Nodes.sol";
  * of the SKALE Network.
  */
 contract Monitors is Permissions {
-
-    using StringUtils for string;
-    using SafeCast for uint;
 
     struct Verdict {
         uint toNodeIndex;

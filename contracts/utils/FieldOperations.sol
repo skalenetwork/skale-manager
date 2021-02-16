@@ -50,14 +50,14 @@ library Fp2Operations {
     {
         uint p = P;
         if (diminished.a >= subtracted.a) {
-            difference.a = addmod(diminished.a, p - (subtracted.a), p);
+            difference.a = addmod(diminished.a, p - subtracted.a, p);
         } else {
-            difference.a = p - (addmod(subtracted.a, p - (diminished.a), p));
+            difference.a = (p - addmod(subtracted.a, p - diminished.a, p)).mod(p);
         }
         if (diminished.b >= subtracted.b) {
-            difference.b = addmod(diminished.b, p - (subtracted.b), p);
+            difference.b = addmod(diminished.b, p - subtracted.b, p);
         } else {
-            difference.b = p - (addmod(subtracted.b, p - (diminished.b), p));
+            difference.b = (p - addmod(subtracted.b, p - diminished.b, p)).mod(p);
         }
     }
 
@@ -101,11 +101,11 @@ library Fp2Operations {
         if (t0 >= t2) {
             t2 = addmod(t0, p - t2, p);
         } else {
-            t2 = p - addmod(t2, p - t0, p);
+            t2 = (p - addmod(t2, p - t0, p)).mod(p);
         }
         uint t3 = Precompiled.bigModExp(t2, p - 2, p);
         result.a = mulmod(value.a, t3, p);
-        result.b = p - mulmod(value.b, t3, p);
+        result.b = (p - mulmod(value.b, t3, p)).mod(p);
     }
 
     function isEqual(
@@ -118,6 +118,39 @@ library Fp2Operations {
     {
         return value1.a == value2.a && value1.b == value2.b;
     }
+}
+
+library G1Operations {
+    using SafeMath for uint;
+    using Fp2Operations for Fp2Operations.Fp2Point;
+
+    function getG1Generator() internal pure returns (Fp2Operations.Fp2Point memory) {
+        // Current solidity version does not support Constants of non-value type
+        // so we implemented this function
+        return Fp2Operations.Fp2Point({
+            a: 1,
+            b: 2
+        });
+    }
+
+    function isG1Point(uint x, uint y) internal pure returns (bool) {
+        uint p = Fp2Operations.P;
+        return mulmod(y, y, p) == 
+            addmod(mulmod(mulmod(x, x, p), x, p), 3, p);
+    }
+
+    function isG1(Fp2Operations.Fp2Point memory point) internal pure returns (bool) {
+        return isG1Point(point.a, point.b);
+    }
+
+    function checkRange(Fp2Operations.Fp2Point memory point) internal pure returns (bool) {
+        return point.a < Fp2Operations.P && point.b < Fp2Operations.P;
+    }
+
+    function negate(uint y) internal pure returns (uint) {
+        return Fp2Operations.P.sub(y).mod(Fp2Operations.P);
+    }
+
 }
 
 
@@ -154,15 +187,6 @@ library G2Operations {
         });
     }
 
-    function getG1Generator() internal pure returns (Fp2Operations.Fp2Point memory) {
-        // Current solidity version does not support Constants of non-value type
-        // so we implemented this function
-        return Fp2Operations.Fp2Point({
-            a: 1,
-            b: 2
-        });
-    }
-
     function getG2Zero() internal pure returns (G2Point memory) {
         // Current solidity version does not support Constants of non-value type
         // so we implemented this function
@@ -176,15 +200,6 @@ library G2Operations {
                 b: 0
             })
         });
-    }
-
-    function isG1Point(uint x, uint y) internal pure returns (bool) {
-        uint p = Fp2Operations.P;
-        return mulmod(y, y, p) == 
-            addmod(mulmod(mulmod(x, x, p), x, p), 3, p);
-    }
-    function isG1(Fp2Operations.Fp2Point memory point) internal pure returns (bool) {
-        return isG1Point(point.a, point.b);
     }
 
     function isG2Point(Fp2Operations.Fp2Point memory x, Fp2Operations.Fp2Point memory y) internal pure returns (bool) {
@@ -240,8 +255,8 @@ library G2Operations {
         sum.x = s.squaredFp2().minusFp2(value1.x.addFp2(value2.x));
         sum.y = value1.y.addFp2(s.mulFp2(sum.x.minusFp2(value1.x)));
         uint p = Fp2Operations.P;
-        sum.y.a = p - sum.y.a;
-        sum.y.b = p - sum.y.b;
+        sum.y.a = (p - sum.y.a).mod(p);
+        sum.y.b = (p - sum.y.b).mod(p);
     }
 
     function isEqual(
@@ -268,8 +283,8 @@ library G2Operations {
             result.x = s.squaredFp2().minusFp2(value.x.addFp2(value.x));
             result.y = value.y.addFp2(s.mulFp2(result.x.minusFp2(value.x)));
             uint p = Fp2Operations.P;
-            result.y.a = p - result.y.a;
-            result.y.b = p - result.y.b;
+            result.y.a = (p - result.y.a).mod(p);
+            result.y.b = (p - result.y.b).mod(p);
         }
     }
 }

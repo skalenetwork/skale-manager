@@ -1,12 +1,11 @@
 import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
-import { ContractManagerInstance,
-         KeyStorageInstance,
-         NodesInstance,
-        //  SchainsInternalInstance,
-         SchainsInstance,
-         SkaleVerifierInstance,
-         ValidatorServiceInstance } from "../types/truffle-contracts";
+import { ContractManager,
+         KeyStorage,
+         Nodes,
+         Schains,
+         SkaleVerifier,
+         ValidatorService } from "../typechain";
 
 import * as elliptic from "elliptic";
 const EC = elliptic.ec;
@@ -20,18 +19,29 @@ import { deploySchains } from "./tools/deploy/schains";
 import { deploySkaleVerifier } from "./tools/deploy/skaleVerifier";
 import { deployKeyStorage } from "./tools/deploy/keyStorage";
 import { deploySkaleManagerMock } from "./tools/deploy/test/skaleManagerMock";
+import { ethers, web3 } from "hardhat";
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
+import { assert } from "chai";
+
 chai.should();
 chai.use(chaiAsPromised);
 
-contract("SkaleVerifier", ([validator1, owner, developer, hacker]) => {
-    let contractManager: ContractManagerInstance;
-    let schains: SchainsInstance;
-    let skaleVerifier: SkaleVerifierInstance;
-    let validatorService: ValidatorServiceInstance;
-    let nodes: NodesInstance;
-    let keyStorage: KeyStorageInstance;
+describe("SkaleVerifier", () => {
+    let validator1: SignerWithAddress;
+    let owner: SignerWithAddress;
+    let developer: SignerWithAddress;
+    let hacker: SignerWithAddress;
+
+    let contractManager: ContractManager;
+    let schains: Schains;
+    let skaleVerifier: SkaleVerifier;
+    let validatorService: ValidatorService;
+    let nodes: Nodes;
+    let keyStorage: KeyStorage;
 
     beforeEach(async () => {
+        [validator1, owner, developer, hacker] = await ethers.getSigners();
+
         contractManager = await deployContractManager();
 
         nodes = await deployNodes(contractManager);
@@ -43,7 +53,7 @@ contract("SkaleVerifier", ([validator1, owner, developer, hacker]) => {
         const skaleManagerMock = await deploySkaleManagerMock(contractManager);
         await contractManager.setContractsAddress("SkaleManager", skaleManagerMock.address);
 
-        await validatorService.registerValidator("D2", "D2 is even", 0, 0, {from: validator1});
+        await validatorService.connect(validator1).registerValidator("D2", "D2 is even", 0, 0);
     });
 
     describe("when skaleVerifier contract is activated", async () => {
@@ -201,53 +211,57 @@ contract("SkaleVerifier", ([validator1, owner, developer, hacker]) => {
             for (const index of Array.from(Array(nodesCount).keys())) {
                 const hexIndex = ("0" + index.toString(16)).slice(-2);
                 const pubKey = ec.keyFromPrivate(String(privateKeys[0]).slice(2)).getPublic();
-                await nodes.createNode(validator1,
+                await nodes.connect(validator1).createNode(validator1.address,
                     {
                         port: 8545,
                         nonce: 0,
                         ip: "0x7f0000" + hexIndex,
                         publicIp: "0x7f0000" + hexIndex,
                         publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
-                        name: "d2" + hexIndex
-                    },
-                    {from: validator1});
+                        name: "d2" + hexIndex,
+                        domainName: "somedomain.name"
+                    });
             }
 
             const deposit = await schains.getSchainPrice(4, 5);
 
-            await schains.addSchain(
-                validator1,
+            await schains.connect(validator1).addSchain(
+                validator1.address,
                 deposit,
-                web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, "Bob"]),
-                {from: validator1});
+                web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, "Bob"]));
 
-            await keyStorage.initPublicKeyInProgress(web3.utils.soliditySha3("Bob"));
+            const bobHash = web3.utils.soliditySha3("Bob");
+            if (bobHash) {
+                await keyStorage.initPublicKeyInProgress(bobHash);
 
-            await keyStorage.adding(
-                web3.utils.soliditySha3("Bob"),
-                {
-                    x: {
-                        a: "14175454883274808069161681493814261634483894346393730614200347712729091773660",
-                        b: "8121803279407808453525231194818737640175140181756432249172777264745467034059"
-                    },
-                    y: {
-                        a: "16178065340009269685389392150337552967996679485595319920657702232801180488250",
-                        b: "1719704957996939304583832799986884557051828342008506223854783585686652272013"
+                await keyStorage.adding(
+                    bobHash,
+                    {
+                        x: {
+                            a: "14175454883274808069161681493814261634483894346393730614200347712729091773660",
+                            b: "8121803279407808453525231194818737640175140181756432249172777264745467034059"
+                        },
+                        y: {
+                            a: "16178065340009269685389392150337552967996679485595319920657702232801180488250",
+                            b: "1719704957996939304583832799986884557051828342008506223854783585686652272013"
+                        }
                     }
-                }
-            );
+                );
 
-            await keyStorage.finalizePublicKey(web3.utils.soliditySha3("Bob"));
-            const res = await schains.verifySchainSignature(
-                "2968563502518615975252640488966295157676313493262034332470965194448741452860",
-                "16493689853238003409059452483538012733393673636730410820890208241342865935903",
-                "0x243b6ce34e3c772e4e01685954b027e691f67622d21d261ae0b324c78b315fc3",
-                "1",
-                "16388258042572094315763275220684810298941672685551867426142229042700479455172",
-                "16728155475357375553025720334221543875807222325459385994874825666479685652110",
-                "Bob",
-            );
-            assert(res.should.be.true);
+                await keyStorage.finalizePublicKey(bobHash);
+                const res = await schains.verifySchainSignature(
+                    "2968563502518615975252640488966295157676313493262034332470965194448741452860",
+                    "16493689853238003409059452483538012733393673636730410820890208241342865935903",
+                    "0x243b6ce34e3c772e4e01685954b027e691f67622d21d261ae0b324c78b315fc3",
+                    "1",
+                    "16388258042572094315763275220684810298941672685551867426142229042700479455172",
+                    "16728155475357375553025720334221543875807222325459385994874825666479685652110",
+                    "Bob",
+                );
+                assert(res.should.be.true);
+            } else {
+                assert(false);
+            }
         });
     });
 });

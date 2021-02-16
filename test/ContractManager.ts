@@ -1,24 +1,36 @@
-import { ConstantsHolderInstance,
-         ContractManagerInstance } from "../types/truffle-contracts";
+import { ConstantsHolder,
+         ContractManager } from "../typechain";
 import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
 import { deployContractManager } from "./tools/deploy/contractManager";
+import { ethers } from "hardhat";
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
+import chai from "chai";
+import chaiAsPromised from "chai-as-promised";
+import { solidity } from "ethereum-waffle";
 
-contract("ContractManager", ([deployer, user]) => {
-  let contractManager: ContractManagerInstance;
-  let constantsHolder: ConstantsHolderInstance;
+chai.should();
+chai.use(chaiAsPromised);
+chai.use(solidity);
+
+describe("ContractManager", () => {
+  let user: SignerWithAddress;
+
+  let contractManager: ContractManager;
+  let constantsHolder: ConstantsHolder;
 
   beforeEach(async () => {
+    [, user] = await ethers.getSigners();
+
     contractManager = await deployContractManager();
     constantsHolder = await deployConstantsHolder(contractManager);
   });
 
   it("Should add a right contract address (ConstantsHolder) to the register", async () => {
     const simpleContractName: string = "Constants";
-    await contractManager.setContractsAddress(simpleContractName, constantsHolder.address, {from: user})
+    await contractManager.connect(user).setContractsAddress(simpleContractName, constantsHolder.address)
       .should.be.eventually.rejectedWith("Ownable: caller is not the owner");
     await contractManager.setContractsAddress(simpleContractName, constantsHolder.address);
 
-    const hash: string = web3.utils.soliditySha3(simpleContractName);
-    assert.equal(await contractManager.contracts(hash), constantsHolder.address, "Address should be equal");
+    (await contractManager.getContract("ConstantsHolder")).should.be.equal(constantsHolder.address);
   });
 });

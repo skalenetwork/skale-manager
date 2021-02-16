@@ -6,7 +6,7 @@ WORKDIR /usr/src/manager
 RUN apt-get update && apt-get install build-essential
 
 COPY package.json ./
-COPY truffle-config.js ./
+COPY hardhat.config.ts ./
 COPY yarn.lock ./
 RUN yarn install
 
