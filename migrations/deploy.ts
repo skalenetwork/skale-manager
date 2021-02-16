@@ -5,6 +5,7 @@ import { ContractManager } from "../typechain";
 import { ContractFactory } from 'ethers';
 import { deployLibraries, getLinkedContractFactory } from "../test/tools/deploy/factory";
 import { getImplementationAddress } from "@openzeppelin/upgrades-core";
+import { getAbi } from './tools';
 
 function getInitializerParameters(contract: string, contractManagerAddress: string) {
     if (["TimeHelpers", "Decryption", "ECDH"].includes(contract)) {
@@ -180,7 +181,7 @@ async function main() {
     for (const artifact of artifacts) {
         const contractKey = getContractKeyInAbiFile(artifact.contract);
         outputObject[contractKey + "_address"] = artifact.address;
-        outputObject[contractKey + "_abi"] = JSON.parse(artifact.interface.format("json") as string);
+        outputObject[contractKey + "_abi"] = getAbi(artifact.interface);
     }
     const version = (await fs.readFile("VERSION", "utf-8")).trim();
     await fs.writeFile(`data/skale-manager-${version}-${network.name}-abi.json`, JSON.stringify(outputObject, null, 4));
