@@ -125,6 +125,13 @@ async function registerValidator() {
     process.exit();
 }
 
+async function makeNodeVisible(nodeIndex) {
+    let abi = await init.Nodes.methods.makeNodeVisible(nodeIndex).encodeABI();
+    let privateKeyB = Buffer.from(init.privateKey, "hex");
+    let contractAddress = init.jsonData['nodes_address'];
+    await sendTransaction(init.web3, init.mainAccount, privateKeyB, abi, contractAddress);
+}
+
 
 async function createNodes(nodesCount) {
     const numberOfNodes = await init.Nodes.methods.getNumberOfNodes().call();
@@ -266,6 +273,14 @@ async function createNodes1(n) {
     return nodeIndexes;
 }
 
+async function makeNodesVisible() {
+    await makeNodeVisible(20);
+    await makeNodeVisible(19);
+    await makeNodeVisible(18);
+    await makeNodeVisible(17);
+    await makeNodeVisible(16);
+}
+
 // createNodes(1);
 // getNodeNextRewardDate(0)
 
@@ -313,6 +328,8 @@ if (process.argv[2] == 'getFreeSpace') {
     getNodeAddress(process.argv[3]);
 } else if (process.argv[2] == 'getNodePublicKey') {
     getNodePublicKey(process.argv[3]);
+} else if (process.argv[2] == 'makeNodeVisible') {
+    makeNodeVisible(process.argv[3]);
 } else if (process.argv[2] == 'getNumberOfNodes') {
     getNumberOfNodes();
 }

@@ -50,9 +50,17 @@ async function setContractsAddress(contractName, newAddress) {
     process.exit()
 }
 
+async function getContract(contractName) {
+    let address = await init.ContractManager.methods.getContract(contractName).call();
+    console.log(contractName, " address is", address);
+    process.exit();
+}
+
 
 if (process.argv[2] == 'setContractsAddress') {
     setContractsAddress(process.argv[3], process.argv[4]);
+} else if (process.argv[2] == 'getContract') {
+    getContract(process.argv[3]);
 } else {
     console.log("Recheck name of function");
     process.exit();

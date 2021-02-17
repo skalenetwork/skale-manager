@@ -61,12 +61,12 @@ async function grantSchainCreatorRole(address) {
     await sendTransaction(init.web3, init.mainAccount, privateKeyB, abi, contractAddress);
 }
 
-// async function deleteSchain(schainName) {
-//     let abi = await init.SkaleManager.methods.deleteSchain(schainName).encodeABI();
-//     let privateKeyB = Buffer.from(init.privateKey, "hex");
-//     let contractAddress = init.jsonData['schains_address'];
-//     await sendTransaction(init.web3, init.mainAccount, privateKeyB, abi, contractAddress);
-// }
+async function makeSchainNodesVisible(schainName) {
+    let abi = await init.SchainsInternal.methods.makeSchainNodesVisible(init.web3.utils.soliditySha3(schainName)).encodeABI();
+    let privateKeyB = Buffer.from(init.privateKey, "hex");
+    let contractAddress = init.jsonData['schains_internal_address'];
+    await sendTransaction(init.web3, init.mainAccount, privateKeyB, abi, contractAddress);
+}
 
 async function getSchain(schainName) {
     let res = await init.SchainsInternal.methods.schains(init.web3.utils.soliditySha3(schainName)).call();
@@ -201,10 +201,13 @@ if (process.argv[2] == 'getSchainNodes') {
     getSchainName(process.argv[3]);
 } else if (process.argv[2] == 'grantSchainCreatorRole') {
     grantSchainCreatorRole(process.argv[3]);
+} else if (process.argv[2] == 'makeSchainNodesVisible') {
+    makeSchainNodesVisible(process.argv[3]);
 } else if (process.argv[2] == 'mock') {
     rinkebyMock();
 }
 
+// makeSchainNodesVisible
 
 
 
