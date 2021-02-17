@@ -1646,13 +1646,15 @@ describe("SkaleDKG", () => {
                 );
                 assert.equal(broadPoss, true);
                 const balanceBefore = await getBalance(validatorsAccount[index].address);
-                const broadTx = await skaleDKG.connect(validatorsAccount[index]).broadcast(
+                await skaleDKG.connect(validatorsAccount[index]).broadcast(
                     stringValue(web3.utils.soliditySha3("New16NodeSchain")),
                     i,
                     verificationVectorNew,
                     secretKeyContributions
                 );
                 const balance = await getBalance(validatorsAccount[index].address);
+                balance.should.not.be.lessThan(balanceBefore);
+                balance.should.be.almost(balanceBefore);
                 broadPoss = await skaleDKG.connect(validatorsAccount[index]).isBroadcastPossible(
                     stringValue(web3.utils.soliditySha3("New16NodeSchain")),
                     i
