@@ -172,7 +172,7 @@ describe("NodesFunctionality", () => {
                 });
         }
 
-        let nodesInTree = await nodes.amountOfNodesInTree();
+        let nodesInTree = await nodes.amountOfNodesFromPlaceInTree(128);
         nodesInTree.should.be.equal(20);
 
         await nodes.setNodeInMaintenance(0);
@@ -191,17 +191,17 @@ describe("NodesFunctionality", () => {
         await nodes.removeNodeFromSpaceToNodes(2);
         await nodes.removeNodeFromSpaceToNodes(3);
 
-        nodesInTree = await nodes.amountOfNodesInTree();
+        nodesInTree = await nodes.amountOfNodesFromPlaceInTree(128);
         nodesInTree.should.be.equal(18);
 
-        await nodes.removeNodesFromTree(nodesInTree.toNumber());
+        await nodes.removeNodesFromPlace(128, nodesInTree.toNumber());
 
-        nodesInTree = await nodes.amountOfNodesInTree();
+        nodesInTree = await nodes.amountOfNodesFromPlaceInTree(128);
         nodesInTree.should.be.equal(0);
 
         await nodes.initializeSegmentTreeAndInvisibleNodes();
 
-        nodesInTree = await nodes.amountOfNodesInTree();
+        nodesInTree = await nodes.amountOfNodesFromPlaceInTree(128);
         nodesInTree.should.be.equal(16);
 
         await (await nodes.spaceOfNodes(0)).freeSpace.should.be.equal(128);
