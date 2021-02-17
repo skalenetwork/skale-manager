@@ -31,13 +31,13 @@ contract NodesTester is Nodes {
         _removeNodeFromSpaceToNodes(nodeIndex, space);
     }
 
-    function removeNodesFromTree(uint nodesAmount) external {
+    function removeNodesFromPlace(uint place, uint nodesAmount) external {
         SegmentTree.Tree storage tree = _getNodesAmountBySpace();
-        tree.removeFromPlace(128, nodesAmount);
+        tree.removeFromPlace(place, nodesAmount);
     }
 
-    function amountOfNodesInTree() external view returns (uint) {
+    function amountOfNodesFromPlaceInTree(uint place) external view returns (uint) {
         SegmentTree.Tree storage tree = _getNodesAmountBySpace();
-        return tree.sumFromPlaceToLast(1);
+        return tree.sumFromPlaceToLast(place);
     }
 }
