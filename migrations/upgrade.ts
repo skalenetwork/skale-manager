@@ -3,6 +3,7 @@ import { ethers, network, upgrades, run } from "hardhat";
 import { promises as fs } from "fs";
 import { ContractManager, Nodes } from "../typechain";
 import { getImplementationAddress } from "@openzeppelin/upgrades-core";
+import { getAbi } from "./tools";
 
 async function main() {
     if ((await fs.readFile("DEPLOYED", "utf-8")).trim() !== "1.7.2-stable.0") {
@@ -69,7 +70,7 @@ async function main() {
             console.log(`Upgrade ${contract} at ${proxyAddress}`);
             contractInterface = (await upgrades.upgradeProxy(proxyAddress, contractFactory, { unsafeAllowLinkedLibraries: true })).interface;
         }
-        abi[getContractKeyInAbiFile(_contract) + "_abi"] = JSON.parse(contractInterface.format("json") as string)
+        abi[getContractKeyInAbiFile(_contract) + "_abi"] = getAbi(contractInterface);
     }
 
     // Deploy Wallets
@@ -85,7 +86,7 @@ async function main() {
     console.log("Register", walletsName);
     await (await contractManager.setContractsAddress(walletsName, wallets.address)).wait();
     abi[getContractKeyInAbiFile(walletsName) + "_address"] = wallets.address;
-    abi[getContractKeyInAbiFile(walletsName) + "_abi"] = JSON.parse(wallets.interface.format("json") as string);
+    abi[getContractKeyInAbiFile(walletsName) + "_abi"] = getAbi(wallets.interface);
     await verify(walletsName, await getImplementationAddress(network.provider, wallets.address));
 
     // Initialize SegmentTree in Nodes
