@@ -317,9 +317,11 @@ contract Schains is Permissions {
         } else if (typeOfSchain == 3) {
             partOfNode = constantsHolder.SMALL_DIVISOR() / constantsHolder.LARGE_DIVISOR();
         } else if (typeOfSchain == 4) {
+            require(_getChainID() != 1, "Test schain type");
             partOfNode = 0;
             numberOfNodes = constantsHolder.NUMBER_OF_NODES_FOR_TEST_SCHAIN();
         } else if (typeOfSchain == 5) {
+            require(_getChainID() != 1, "Test schain type");
             partOfNode = constantsHolder.SMALL_DIVISOR() / constantsHolder.MEDIUM_TEST_DIVISOR();
             numberOfNodes = constantsHolder.NUMBER_OF_NODES_FOR_MEDIUM_TEST_SCHAIN();
         } else {
@@ -472,5 +474,12 @@ contract Schains is Permissions {
         nodeRotation.removeRotation(schainId);
         Wallets(payable(contractManager.getContract("Wallets"))).withdrawFundsFromSchainWallet(payable(from), schainId);
         emit SchainDeleted(from, name, schainId);
+    }
+
+    function _getChainID() private view returns (uint cid) {
+        // solhint-disable-next-line no-inline-assembly
+        assembly {
+            cid := chainid()
+        }
     }
 }
