@@ -48,6 +48,8 @@ contract SkaleDKG is Permissions, ISkaleDKG {
     using Fp2Operations for Fp2Operations.Fp2Point;
     using G2Operations for G2Operations.G2Point;
 
+    enum DkgFunction {Broadcast, Alright, ComplaintBadData, PreResponse, Complaint, Response}
+
     struct Channel {
         bool active;
         uint n;
@@ -76,6 +78,12 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         bytes32 share;
     }
 
+    struct Context {
+        bool isDebt;
+        uint delta;
+        DkgFunction dkgFunction;
+    }
+
     uint public constant COMPLAINT_TIMELIMIT = 1800;
 
     mapping(bytes32 => Channel) public channels;
@@ -91,8 +99,6 @@ contract SkaleDKG is Permissions, ISkaleDKG {
     mapping(bytes32 => mapping(uint => bytes32)) public hashedData;
     
     mapping(bytes32 => uint) private _badNodes;
-
-    enum DkgFunction {Broadcast, Alright, ComplaintBadData, PreResponse, Complaint, Response}
     
     /**
      * @dev Emitted when a channel is opened.
@@ -175,12 +181,6 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         } else {
             _;
         }
-    }
-
-    struct Context {
-        bool isDebt;
-        uint delta;
-        DkgFunction dkgFunction;
     }
 
     modifier onlyNodeOwner(uint nodeIndex) {
