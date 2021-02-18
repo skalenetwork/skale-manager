@@ -118,7 +118,9 @@ async function main() {
             console.log(`Call ${schainsInternalName}.addSchainType(4, 16) at ${schainsInternalAddress}`);
             console.log(`Call ${schainsInternalName}.addSchainType(128, 16) at ${schainsInternalAddress}`);
         } else {
-            let receipt = await(await schainsInternal.addSchainType(1, 16)).wait();
+            let receipt = await(await schainsInternal.setNumberOfSchainTypes(1)).wait();
+            console.log("Number of Schain types were set to 1 with", receipt.gasUsed.toNumber(), "gas used");
+            receipt = await(await schainsInternal.addSchainType(1, 16)).wait();
             console.log("Schain Type Small was added with", receipt.gasUsed.toNumber(), "gas used");
             receipt = await(await schainsInternal.addSchainType(4, 16)).wait();
             console.log("Schain Type Medium was added with", receipt.gasUsed.toNumber(), "gas used");

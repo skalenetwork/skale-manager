@@ -517,7 +517,7 @@ contract SchainsInternal is Permissions {
 
         numberOfSchains = 0;
         sumOfSchainsResources = 0;
-        numberOfSchainTypes = 0;
+        numberOfSchainTypes = 1;
     }
 
     /**
