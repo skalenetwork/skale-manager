@@ -48,6 +48,8 @@ contract SkaleDKG is Permissions, ISkaleDKG {
     using Fp2Operations for Fp2Operations.Fp2Point;
     using G2Operations for G2Operations.G2Point;
 
+    enum DkgFunction {Broadcast, Alright, ComplaintBadData, PreResponse, Complaint, Response}
+
     struct Channel {
         bool active;
         uint n;
@@ -76,6 +78,12 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         bytes32 share;
     }
 
+    struct Context {
+        bool isDebt;
+        uint delta;
+        DkgFunction dkgFunction;
+    }
+
     uint public constant COMPLAINT_TIMELIMIT = 1800;
 
     mapping(bytes32 => Channel) public channels;
@@ -91,7 +99,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
     mapping(bytes32 => mapping(uint => bytes32)) public hashedData;
     
     mapping(bytes32 => uint) private _badNodes;
-
+    
     /**
      * @dev Emitted when a channel is opened.
      */
@@ -180,22 +188,27 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         _;
     }
     
-    modifier refundGasBySchain(bytes32 schainId, bool isDebt) {
+    modifier refundGasBySchain(bytes32 schainId, Context memory context) {
         uint gasTotal = gasleft();
         _;
-        _refundGasBySchain(schainId, msg.sender, gasTotal - gasleft() + 28000 + 21000 + 7700, isDebt);
+        _refundGasBySchain(schainId, gasTotal, context);
     }
 
-    modifier refundGasByValidatorToSchain(bytes32 schainId, bool isDebt) {
+    modifier refundGasByValidatorToSchain(bytes32 schainId, Context memory context) {
         uint gasTotal = gasleft();
         _;
-        _refundGasBySchain(schainId, msg.sender, gasTotal - gasleft() + 56000, isDebt);
+        _refundGasBySchain(schainId, gasTotal, context);
         _refundGasByValidatorToSchain(schainId);
     }
 
     function alright(bytes32 schainId, uint fromNodeIndex)
         external
-        refundGasBySchain(schainId, false)
+        refundGasBySchain(schainId, 
+            Context({
+                isDebt: false,
+                delta: ConstantsHolder(contractManager.getConstantsHolder()).ALRIGHT_DELTA(), 
+                dkgFunction: DkgFunction.Alright
+        }))
         correctGroup(schainId)
         onlyNodeOwner(fromNodeIndex)
     {
@@ -217,7 +230,12 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         KeyShare[] memory secretKeyContribution
     )
         external
-        refundGasBySchain(schainId, false)
+        refundGasBySchain(schainId,
+            Context({
+                isDebt: false,
+                delta: ConstantsHolder(contractManager.getConstantsHolder()).BROADCAST_DELTA(),
+                dkgFunction: DkgFunction.Broadcast
+        }))
         correctGroup(schainId)
         onlyNodeOwner(nodeIndex)
     {
@@ -236,7 +254,13 @@ contract SkaleDKG is Permissions, ISkaleDKG {
 
     function complaintBadData(bytes32 schainId, uint fromNodeIndex, uint toNodeIndex)
         external
-        refundGasBySchain(schainId, true)
+        refundGasBySchain(
+            schainId,
+            Context({
+                isDebt: true,
+                delta: ConstantsHolder(contractManager.getConstantsHolder()).COMPLAINT_BAD_DATA_DELTA(),
+                dkgFunction: DkgFunction.ComplaintBadData
+        }))
         correctGroupWithoutRevert(schainId)
         correctNode(schainId, fromNodeIndex)
         correctNodeWithoutRevert(schainId, toNodeIndex)
@@ -259,7 +283,13 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         KeyShare[] memory secretKeyContribution
     )
         external
-        refundGasBySchain(schainId, true)
+        refundGasBySchain(
+            schainId,
+            Context({
+                isDebt: true,
+                delta: ConstantsHolder(contractManager.getConstantsHolder()).PRE_RESPONSE_DELTA(),
+                dkgFunction: DkgFunction.PreResponse
+        }))
         correctGroup(schainId)
         onlyNodeOwner(fromNodeIndex)
     {
@@ -277,7 +307,13 @@ contract SkaleDKG is Permissions, ISkaleDKG {
 
     function complaint(bytes32 schainId, uint fromNodeIndex, uint toNodeIndex)
         external
-        refundGasByValidatorToSchain(schainId, true)
+        refundGasByValidatorToSchain(
+            schainId,
+            Context({
+                isDebt: true,
+                delta: ConstantsHolder(contractManager.getConstantsHolder()).COMPLAINT_DELTA(),
+                dkgFunction: DkgFunction.Complaint
+        }))
         correctGroupWithoutRevert(schainId)
         correctNode(schainId, fromNodeIndex)
         correctNodeWithoutRevert(schainId, toNodeIndex)
@@ -301,7 +337,12 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         G2Operations.G2Point memory multipliedShare
     )
         external
-        refundGasByValidatorToSchain(schainId, true)
+        refundGasByValidatorToSchain(
+            schainId,
+            Context({isDebt: true,
+                delta: ConstantsHolder(contractManager.getConstantsHolder()).RESPONSE_DELTA(),
+                dkgFunction: DkgFunction.Response
+        }))
         correctGroup(schainId)
         onlyNodeOwner(fromNodeIndex)
     {
@@ -577,9 +618,30 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         return (index, index < channels[schainId].n);
     }
 
-    function _refundGasBySchain(bytes32 schainId, address spender, uint spentGas, bool isDebt) private {
-        Wallets(payable(contractManager.getContract("Wallets")))
-        .refundGasBySchain(schainId, payable(spender), spentGas, isDebt);
+    function _refundGasBySchain(bytes32 schainId, uint gasTotal, Context memory context) private {
+        Wallets wallets = Wallets(payable(contractManager.getContract("Wallets")));
+        bool isLastNode = channels[schainId].n == dkgProcess[schainId].numberOfCompleted;
+        if (context.dkgFunction == DkgFunction.Alright && isLastNode) {
+            wallets.refundGasBySchain(
+                schainId, msg.sender, gasTotal.sub(gasleft()).add(context.delta).sub(74800), context.isDebt
+            );
+        } else if (context.dkgFunction == DkgFunction.Complaint && gasTotal.sub(gasleft()) > 2e6) {
+            wallets.refundGasBySchain(
+                schainId, msg.sender, gasTotal.sub(gasleft()).add(context.delta).sub(640000), context.isDebt
+            );
+        } else if (context.dkgFunction == DkgFunction.Complaint && gasTotal.sub(gasleft()) > 1e6) {
+            wallets.refundGasBySchain(
+                schainId, msg.sender, gasTotal.sub(gasleft()).add(context.delta).sub(270000), context.isDebt
+            );
+        } else if (context.dkgFunction == DkgFunction.Response){
+            wallets.refundGasBySchain(
+                schainId, msg.sender, gasTotal.sub(gasleft()).sub(context.delta), context.isDebt
+            );
+        } else {
+            wallets.refundGasBySchain(
+                schainId, msg.sender, gasTotal.sub(gasleft()).add(context.delta), context.isDebt
+            );
+        }
     }
 
     function _refundGasByValidatorToSchain(bytes32 schainId) private {
