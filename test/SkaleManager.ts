@@ -140,6 +140,12 @@ describe("SkaleManager", () => {
         await constantsHolder.setMSR(5);
         await constantsHolder.setLaunchTimestamp(await currentTime(web3)); // to allow bounty withdrawing
         await bountyContract.enableBountyReduction();
+
+        await schainsInternal.addSchainType(1, 16);
+        await schainsInternal.addSchainType(4, 16);
+        await schainsInternal.addSchainType(128, 16);
+        await schainsInternal.addSchainType(0, 2);
+        await schainsInternal.addSchainType(32, 4);
     });
 
     beforeEach(async () => {

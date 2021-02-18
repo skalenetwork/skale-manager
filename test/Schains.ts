@@ -128,6 +128,12 @@ describe("Schains", () => {
         const signature3 = await getValidatorIdSignature(validatorIndex, nodeAddress3);
         await validatorService.connect(validator).linkNodeAddress(nodeAddress3.address, signature3);
         await constantsHolder.setMSR(0);
+
+        await schainsInternal.addSchainType(1, 16);
+        await schainsInternal.addSchainType(4, 16);
+        await schainsInternal.addSchainType(128, 16);
+        await schainsInternal.addSchainType(0, 2);
+        await schainsInternal.addSchainType(32, 4);
     });
 
     beforeEach(async () => {
