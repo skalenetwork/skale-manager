@@ -206,7 +206,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         refundGasBySchain(schainId, 
             Context({
                 isDebt: false,
-                delta: ConstantsHolder(contractManager.getContract("ConstantsHolder")).ALRIGHT_DELTA(), 
+                delta: ConstantsHolder(contractManager.getConstantsHolder()).ALRIGHT_DELTA(), 
                 dkgFunction: DkgFunction.Alright
         }))
         correctGroup(schainId)
@@ -233,7 +233,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         refundGasBySchain(schainId,
             Context({
                 isDebt: false,
-                delta: ConstantsHolder(contractManager.getContract("ConstantsHolder")).BROADCAST_DELTA(),
+                delta: ConstantsHolder(contractManager.getConstantsHolder()).BROADCAST_DELTA(),
                 dkgFunction: DkgFunction.Broadcast
         }))
         correctGroup(schainId)
@@ -258,7 +258,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             schainId,
             Context({
                 isDebt: true,
-                delta: ConstantsHolder(contractManager.getContract("ConstantsHolder")).COMPLAINT_BAD_DATA_DELTA(),
+                delta: ConstantsHolder(contractManager.getConstantsHolder()).COMPLAINT_BAD_DATA_DELTA(),
                 dkgFunction: DkgFunction.ComplaintBadData
         }))
         correctGroupWithoutRevert(schainId)
@@ -287,7 +287,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             schainId,
             Context({
                 isDebt: true,
-                delta: ConstantsHolder(contractManager.getContract("ConstantsHolder")).PRE_RESPONSE_DELTA(),
+                delta: ConstantsHolder(contractManager.getConstantsHolder()).PRE_RESPONSE_DELTA(),
                 dkgFunction: DkgFunction.PreResponse
         }))
         correctGroup(schainId)
@@ -311,7 +311,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             schainId,
             Context({
                 isDebt: true,
-                delta: ConstantsHolder(contractManager.getContract("ConstantsHolder")).COMPLAINT_DELTA(),
+                delta: ConstantsHolder(contractManager.getConstantsHolder()).COMPLAINT_DELTA(),
                 dkgFunction: DkgFunction.Complaint
         }))
         correctGroupWithoutRevert(schainId)
@@ -340,7 +340,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         refundGasByValidatorToSchain(
             schainId,
             Context({isDebt: true,
-                delta: ConstantsHolder(contractManager.getContract("ConstantsHolder")).RESPONSE_DELTA(),
+                delta: ConstantsHolder(contractManager.getConstantsHolder()).RESPONSE_DELTA(),
                 dkgFunction: DkgFunction.Response
         }))
         correctGroup(schainId)
