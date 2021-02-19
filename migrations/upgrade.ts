@@ -1,9 +1,38 @@
-import { contracts, getContractKeyInAbiFile, getContractFactory, verify } from "./deploy";
-import { ethers, network, upgrades, run } from "hardhat";
+import { contracts, getContractKeyInAbiFile, getContractFactory, verify, hashBytecode } from "./deploy";
+import { ethers, network, upgrades, run, artifacts } from "hardhat";
 import { promises as fs } from "fs";
 import { ContractManager, Nodes } from "../typechain";
 import { getImplementationAddress } from "@openzeppelin/upgrades-core";
 import { getAbi } from "./tools";
+import { deployLibraries, getLinkedContractFactory } from "../test/tools/deploy/factory";
+
+export async function getAndUpgradeContractFactory(contract: string, abi: any) {
+    const { linkReferences } = await artifacts.readArtifact(contract);
+    if (!Object.keys(linkReferences).length)
+        return await ethers.getContractFactory(contract);
+
+    const librariesToUpgrade = [];
+    const oldLibraries: {[k: string]: string} = {};
+    for (const key of Object.keys(linkReferences)) {
+        const libraryName = Object.keys(linkReferences[key])[0];
+        const { bytecode } = await artifacts.readArtifact(libraryName);
+        const libraryBytecodeHash = abi[getContractKeyInAbiFile(libraryName) + "_hashed_bytecode"];
+        if (hashBytecode(bytecode) !== libraryBytecodeHash) {
+            librariesToUpgrade.push(libraryName);
+        } else {
+            oldLibraries[libraryName] = abi[getContractKeyInAbiFile(libraryName) + "_address"];
+        }
+    }
+
+    const libraries = await deployLibraries(librariesToUpgrade);
+    for (const libraryName of Object.keys(libraries)) {
+        const { bytecode } = await artifacts.readArtifact(libraryName);
+        abi[getContractKeyInAbiFile(libraryName) + "_address"] =  libraries[libraryName];
+        abi[getContractKeyInAbiFile(libraryName) + "_hashed_bytecode"] = hashBytecode(bytecode);
+    }
+    Object.assign(libraries, oldLibraries);
+    return await getLinkedContractFactory(contract, libraries);
+}
 
 async function main() {
     if ((await fs.readFile("DEPLOYED", "utf-8")).trim() !== "1.7.2-stable.0") {
@@ -30,7 +59,7 @@ async function main() {
 
     const contractsToUpgrade: string[] = [];
     for (const contract of ["ContractManager"].concat(contracts)) {
-        const contractFactory = await getContractFactory(contract);
+        const contractFactory = await getAndUpgradeContractFactory(contract, abi);
         let _contract = contract;
         if (contract === "BountyV2") {
             _contract = "Bounty";
@@ -53,7 +82,7 @@ async function main() {
         console.log("Instructions for multisig:");
     }
     for (const contract of contractsToUpgrade) {
-        const contractFactory = await getContractFactory(contract);
+        const contractFactory = await getAndUpgradeContractFactory(contract, abi);
         let _contract = contract;
         if (contract === "BountyV2") {
             _contract = "Bounty";
@@ -91,7 +120,7 @@ async function main() {
 
     // Initialize SegmentTree in Nodes
     const nodesName = "Nodes";
-    const nodesContractFactory = await getContractFactory(nodesName);
+    const nodesContractFactory = await getAndUpgradeContractFactory(nodesName, abi);
     const nodesAddress = abi[getContractKeyInAbiFile(nodesName) + "_address"];
     if (nodesAddress) {
         const nodes = (nodesContractFactory.attach(nodesAddress)) as Nodes;
