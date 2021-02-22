@@ -1,7 +1,7 @@
 import { contracts, getContractKeyInAbiFile, getContractFactory, verify } from "./deploy";
 import { ethers, network, upgrades, run } from "hardhat";
 import { promises as fs } from "fs";
-import { ContractManager, Nodes } from "../typechain";
+import { ContractManager, Nodes, SchainsInternal } from "../typechain";
 import { getImplementationAddress } from "@openzeppelin/upgrades-core";
 import { getAbi } from "./tools";
 
@@ -105,6 +105,28 @@ async function main() {
         console.log("Nodes address was not found!");
         console.log("Check your abi!");
         process.exit(1);
+    }
+
+    // Initialize schain types
+    const schainsInternalName = "SchainsInternal";
+    const schainsInternalFactory = await getContractFactory(schainsInternalName);
+    const schainsInternalAddress = abi[getContractKeyInAbiFile(schainsInternalName) + "_address"];
+    if (schainsInternalAddress) {
+        const schainsInternal = (schainsInternalFactory.attach(schainsInternalAddress)) as SchainsInternal;
+        if (multisig) {
+            console.log(`Call ${schainsInternalName}.addSchainType(1, 16) at ${schainsInternalAddress}`);
+            console.log(`Call ${schainsInternalName}.addSchainType(4, 16) at ${schainsInternalAddress}`);
+            console.log(`Call ${schainsInternalName}.addSchainType(128, 16) at ${schainsInternalAddress}`);
+        } else {
+            let receipt = await(await schainsInternal.setNumberOfSchainTypes(0)).wait();
+            console.log("Number of Schain types were set to 0 with", receipt.gasUsed.toNumber(), "gas used");
+            receipt = await(await schainsInternal.addSchainType(1, 16)).wait();
+            console.log("Schain Type Small was added with", receipt.gasUsed.toNumber(), "gas used");
+            receipt = await(await schainsInternal.addSchainType(4, 16)).wait();
+            console.log("Schain Type Medium was added with", receipt.gasUsed.toNumber(), "gas used");
+            receipt = await(await schainsInternal.addSchainType(128, 16)).wait();
+            console.log("Schain Type Large was added with", receipt.gasUsed.toNumber(), "gas used");
+        }
     }
 
     const version = (await fs.readFile("VERSION", "utf-8")).trim();

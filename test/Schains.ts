@@ -128,6 +128,12 @@ describe("Schains", () => {
         const signature3 = await getValidatorIdSignature(validatorIndex, nodeAddress3);
         await validatorService.connect(validator).linkNodeAddress(nodeAddress3.address, signature3);
         await constantsHolder.setMSR(0);
+
+        await schainsInternal.addSchainType(1, 16);
+        await schainsInternal.addSchainType(4, 16);
+        await schainsInternal.addSchainType(128, 16);
+        await schainsInternal.addSchainType(0, 2);
+        await schainsInternal.addSchainType(32, 4);
     });
 
     beforeEach(async () => {
@@ -157,7 +163,7 @@ describe("Schains", () => {
                 holder.address,
                 5,
                 web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 6, 0, "d2"]),
-            ).should.be.eventually.rejectedWith("Bad schain type");
+            ).should.be.eventually.rejectedWith("Invalid type of schain");
         });
 
         it("should fail when data parameter is too short", async () => {
@@ -1072,7 +1078,7 @@ describe("Schains", () => {
         });
 
         it("should revert on wrong schain type", async () => {
-            await schains.getSchainPrice(6, 5).should.be.eventually.rejectedWith("Bad schain type");
+            await schains.getSchainPrice(6, 5).should.be.eventually.rejectedWith("Invalid type of schain");
         });
     });
 
