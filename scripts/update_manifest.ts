@@ -96,7 +96,7 @@ async function main() {
                     throw Error(`There is no implementation for ${contractName} contract`);
                 }
             } else {
-                if (["Bounty", "TokenLaunchManager"].includes(contractName)) {
+                if (["Bounty", "TokenLaunchManager", "TokenLaunchLocker"].includes(contractName)) {
                     console.log(`Skip update for ${contractName}`);
                 } else {
                     throw Error(`Contract ${contractName} was not deployed`);
