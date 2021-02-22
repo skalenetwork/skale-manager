@@ -24,6 +24,16 @@ export function getSafeTransactionUrl(chainId: number) {
     }
 }
 
+export function getSafeRelayUrl(chainId: number) {
+    if (chainId === 1) {
+        return "https://safe-relay.mainnet.gnosis.io";
+    } else if (chainId === 4) {
+        return "https://safe-relay.rinkeby.gnosis.io";
+    } else {
+        throw Error("Can't get safe-relay url at network with chainId = " + chainId);
+    }
+}
+
 function concatTransactions(transactions: string[]) {
     return "0x" + transactions.map( (transaction) => {
         if (transaction.startsWith("0x")) {

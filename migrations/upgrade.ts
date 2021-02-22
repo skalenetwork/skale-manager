@@ -8,7 +8,7 @@ import { getAbi } from "./tools/abi";
 import { getManifestAdmin } from "@openzeppelin/hardhat-upgrades/dist/admin";
 import { SafeMock } from "../typechain/SafeMock";
 import { encodeTransaction } from "./tools/multiSend";
-import { createMultiSendTransaction, getSafeTransactionUrl } from "./tools/gnosis-safe";
+import { createMultiSendTransaction, getSafeRelayUrl, getSafeTransactionUrl } from "./tools/gnosis-safe";
 import axios from "axios";
 import chalk from "chalk";
 
@@ -149,6 +149,27 @@ async function main() {
     if (!safeMock) {
         try {
             const chainId = (await ethers.provider.getNetwork()).chainId;
+
+            console.log("Estimate gas");
+            const estimateRequest = (({
+                to,
+                value,
+                data,
+                operation,
+                gasToken
+            }) => ({ to, value, data, operation, gasToken }))(safeTx);
+
+            try {
+                const estimateResponse = await axios.post(
+                    `${getSafeRelayUrl(chainId)}/api/v2/safes/${safe}/transactions/estimate/`,
+                    estimateRequest
+                );
+                console.log(chalk.cyan(`Recommend to set gas limit to ${estimateResponse.data.safeTxGas + estimateResponse.data.baseGas}`));
+            } catch (e) {
+                console.log(chalk.red("Failed to estimate gas"));
+                console.log(e.toString());
+            }
+
             console.log(chalk.green("Send transaction to gnosis safe"));
             console.log(JSON.stringify(safeTx, null, 4));
             await axios.post(`${getSafeTransactionUrl(chainId)}/api/v1/safes/${safe}/transactions/`, safeTx)
