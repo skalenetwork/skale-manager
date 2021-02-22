@@ -26,6 +26,7 @@ import "@openzeppelin/contracts-ethereum-package/contracts/access/Ownable.sol";
 contract SafeMock is OwnableUpgradeSafe {
     constructor() public {
         OwnableUpgradeSafe.__Ownable_init();
+        multiSend(""); // this is needed to remove slither warning
     }
 
     function transferProxyAdminOwnership(OwnableUpgradeSafe proxyAdmin, address newOwner) external onlyOwner {
