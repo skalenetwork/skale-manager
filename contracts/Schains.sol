@@ -114,7 +114,7 @@ contract Schains is Permissions {
      */
     function addSchain(address from, uint deposit, bytes calldata data) external allow("SkaleManager") {
         SchainParameters memory schainParameters = _fallbackSchainParametersDataConverter(data);
-        ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
+        ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getConstantsHolder());
         uint schainCreationTimeStamp = constantsHolder.schainCreationTimeStamp();
         uint minSchainLifetime = constantsHolder.minimalSchainLifetime();
         require(now >= schainCreationTimeStamp, "It is not a time for creating Schain");
@@ -281,7 +281,7 @@ contract Schains is Permissions {
      * @dev Returns the current price in SKL tokens for given Schain type and lifetime.
      */
     function getSchainPrice(uint typeOfSchain, uint lifetime) public view returns (uint) {
-        ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
+        ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getConstantsHolder());
         SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
         uint nodeDeposit = constantsHolder.NODE_DEPOSIT();
         uint numberOfNodes;
@@ -312,18 +312,16 @@ contract Schains is Permissions {
         string memory name,
         address from,
         uint deposit,
-        uint lifetime) private
+        uint lifetime,
+        SchainsInternal schainsInternal
+    )
+        private
     {
-        address dataAddress = contractManager.getContract("SchainsInternal");
-        require(SchainsInternal(dataAddress).isSchainNameAvailable(name), "Schain name is not available");
+        require(schainsInternal.isSchainNameAvailable(name), "Schain name is not available");
 
         // initialize Schain
-        SchainsInternal(dataAddress).initializeSchain(
-            name,
-            from,
-            lifetime,
-            deposit);
-        SchainsInternal(dataAddress).setSchainIndex(keccak256(abi.encodePacked(name)), from);
+        schainsInternal.initializeSchain(name, from, lifetime, deposit);
+        schainsInternal.setSchainIndex(keccak256(abi.encodePacked(name)), from);
     }
 
     /**
@@ -350,11 +348,11 @@ contract Schains is Permissions {
         string memory schainName,
         bytes32 schainId,
         uint numberOfNodes,
-        uint8 partOfNode
+        uint8 partOfNode,
+        SchainsInternal schainsInternal
     )
         private
     {
-        SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
         uint[] memory nodesInGroup = schainsInternal.createGroupForSchain(schainId, numberOfNodes, partOfNode);
         ISkaleDKG(contractManager.getContract("SkaleDKG")).openChannel(schainId);
 
@@ -376,26 +374,28 @@ contract Schains is Permissions {
      * - Schain type must be valid.
      */
     function _addSchain(address from, uint deposit, SchainParameters memory schainParameters) private {
+        SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
 
         //initialize Schain
         _initializeSchainInSchainsInternal(
             schainParameters.name,
             from,
             deposit,
-            schainParameters.lifetime);
+            schainParameters.lifetime,
+            schainsInternal
+        );
 
         // create a group for Schain
         uint numberOfNodes;
         uint8 partOfNode;
-        (partOfNode, numberOfNodes) = SchainsInternal(contractManager.getContract("SchainsInternal")).getSchainType(
-            schainParameters.typeOfSchain
-        );
+        (partOfNode, numberOfNodes) = schainsInternal.getSchainType(schainParameters.typeOfSchain);
 
         _createGroupForSchain(
             schainParameters.name,
             keccak256(abi.encodePacked(schainParameters.name)),
             numberOfNodes,
-            partOfNode
+            partOfNode,
+            schainsInternal
         );
 
         emit SchainCreated(

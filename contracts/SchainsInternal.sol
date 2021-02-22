@@ -277,7 +277,7 @@ contract SchainsInternal is Permissions {
      * @dev Allows Admin to add schain type
      */
     function addSchainType(uint8 partOfNode, uint numberOfNodes) external onlyAdmin {
-        _keysOfSchainTypes.add(numberOfSchainTypes + 1);
+        require(_keysOfSchainTypes.add(numberOfSchainTypes + 1), "Schain type is already added");
         schainTypes[numberOfSchainTypes + 1].partOfNode = partOfNode;
         schainTypes[numberOfSchainTypes + 1].numberOfNodes = numberOfNodes;
         numberOfSchainTypes++;
@@ -287,7 +287,7 @@ contract SchainsInternal is Permissions {
      * @dev Allows Admin to remove schain type
      */
     function removeSchainType(uint typeOfSchain) external onlyAdmin {
-        _keysOfSchainTypes.remove(typeOfSchain);
+        require(_keysOfSchainTypes.remove(typeOfSchain), "Schain type is already removed");
         delete schainTypes[typeOfSchain].partOfNode;
         delete schainTypes[typeOfSchain].numberOfNodes;
     }
