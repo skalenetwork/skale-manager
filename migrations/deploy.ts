@@ -5,7 +5,7 @@ import { ContractManager } from "../typechain";
 import { ContractFactory } from 'ethers';
 import { deployLibraries, getLinkedContractFactory } from "../test/tools/deploy/factory";
 import { getImplementationAddress } from "@openzeppelin/upgrades-core";
-import { getAbi } from './tools';
+import { getAbi } from './tools/abi';
 
 function getInitializerParameters(contract: string, contractManagerAddress: string) {
     if (["TimeHelpers", "Decryption", "ECDH"].includes(contract)) {
