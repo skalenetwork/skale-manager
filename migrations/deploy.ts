@@ -83,8 +83,6 @@ export const contracts = [
     "Punisher",
     "SlashingTable",
     "TimeHelpers",
-    "TokenLaunchLocker",
-    "TokenLaunchManager",
     "TokenState",
     "ValidatorService",
 
