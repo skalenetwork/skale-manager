@@ -50,6 +50,7 @@ async function main() {
         console.log(chalk.blue("Transfer ownership to SafeMock"));
         safe = safeMock.address;
         await (await proxyAdmin.transferOwnership(safe)).wait();
+        await (await contractManager.transferOwnership(safe)).wait();
     }
 
     // Deploy Wallets
@@ -121,6 +122,10 @@ async function main() {
     if (nodesAddress) {
         console.log(chalk.yellowBright("Prepare transaction to initialize Nodes", walletsName));
         const nodes = (nodesContractFactory.attach(nodesAddress)) as Nodes;
+        if (safeMock) {
+            console.log(chalk.blue("Grant access to initialize nodes"));
+            await (await nodes.grantRole(await nodes.DEFAULT_ADMIN_ROLE(), safe)).wait();
+        }
         safeTransactions.push(encodeTransaction(
             0,
             nodes.address,
@@ -166,6 +171,7 @@ async function main() {
             })).wait();
         } finally {
             console.log(chalk.blue("Return ownership to wallet"));
+            await (await safeMock.transferProxyAdminOwnership(contractManager.address, deployer.address)).wait();
             await (await safeMock.transferProxyAdminOwnership(proxyAdmin.address, deployer.address)).wait();
             if (await proxyAdmin.owner() === deployer.address) {
                 await (await safeMock.destroy()).wait();
