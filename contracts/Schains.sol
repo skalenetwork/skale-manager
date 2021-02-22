@@ -376,11 +376,6 @@ contract Schains is Permissions {
      * - Schain type must be valid.
      */
     function _addSchain(address from, uint deposit, SchainParameters memory schainParameters) private {
-        uint numberOfNodes;
-        uint8 partOfNode;
-        SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
-
-        require(schainParameters.typeOfSchain <= schainsInternal.numberOfSchainTypes(), "Invalid type of Schain");
 
         //initialize Schain
         _initializeSchainInSchainsInternal(
@@ -390,7 +385,11 @@ contract Schains is Permissions {
             schainParameters.lifetime);
 
         // create a group for Schain
-        (partOfNode, numberOfNodes) = schainsInternal.getSchainType(schainParameters.typeOfSchain);
+        uint numberOfNodes;
+        uint8 partOfNode;
+        (partOfNode, numberOfNodes) = SchainsInternal(contractManager.getContract("SchainsInternal")).getSchainType(
+            schainParameters.typeOfSchain
+        );
 
         _createGroupForSchain(
             schainParameters.name,
