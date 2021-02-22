@@ -28,6 +28,7 @@ import "./utils/Random.sol";
 import "./ConstantsHolder.sol";
 import "./Nodes.sol";
 
+import "@openzeppelin/contracts-ethereum-package/contracts/utils/EnumerableSet.sol";
 
 /**
  * @title SchainsInternal
@@ -36,6 +37,7 @@ import "./Nodes.sol";
 contract SchainsInternal is Permissions {
 
     using Random for Random.RandomGenerator;
+    using EnumerableSet for EnumerableSet.UintSet;
 
     struct Schain {
         string name;
@@ -91,6 +93,8 @@ contract SchainsInternal is Permissions {
     mapping (uint => bytes32[]) private _nodeToLockedSchains;
 
     mapping (bytes32 => uint[]) private _schainToExceptionNodes;
+
+    EnumerableSet.UintSet private _keysOfSchainTypes;
 
     /**
      * @dev Allows Schain contract to initialize an schain.
@@ -273,6 +277,7 @@ contract SchainsInternal is Permissions {
      * @dev Allows Admin to add schain type
      */
     function addSchainType(uint8 partOfNode, uint numberOfNodes) external onlyAdmin {
+        _keysOfSchainTypes.add(numberOfSchainTypes + 1);
         schainTypes[numberOfSchainTypes + 1].partOfNode = partOfNode;
         schainTypes[numberOfSchainTypes + 1].numberOfNodes = numberOfNodes;
         numberOfSchainTypes++;
@@ -282,6 +287,7 @@ contract SchainsInternal is Permissions {
      * @dev Allows Admin to remove schain type
      */
     function removeSchainType(uint typeOfSchain) external onlyAdmin {
+        _keysOfSchainTypes.remove(typeOfSchain);
         delete schainTypes[typeOfSchain].partOfNode;
         delete schainTypes[typeOfSchain].numberOfNodes;
     }
@@ -510,6 +516,11 @@ contract SchainsInternal is Permissions {
      */
     function getLengthOfSchainsForNode(uint nodeIndex) external view returns (uint) {
         return schainsForNodes[nodeIndex].length;
+    }
+
+    function getSchainType(uint typeOfSchain) external view returns(uint8, uint) {
+        require(_keysOfSchainTypes.contains(typeOfSchain), "Invalid type of schain");
+        return (schainTypes[typeOfSchain].partOfNode, schainTypes[typeOfSchain].numberOfNodes);
     }
 
     function initialize(address newContractsAddress) public override initializer {

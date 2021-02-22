@@ -282,10 +282,11 @@ contract Schains is Permissions {
      */
     function getSchainPrice(uint typeOfSchain, uint lifetime) public view returns (uint) {
         ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
+        SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
         uint nodeDeposit = constantsHolder.NODE_DEPOSIT();
         uint numberOfNodes;
         uint8 divisor;
-        (numberOfNodes, divisor) = getNodesDataFromTypeOfSchain(typeOfSchain);
+        (divisor, numberOfNodes) = schainsInternal.getSchainType(typeOfSchain);
         if (divisor == 0) {
             return 1e18;
         } else {
@@ -299,21 +300,6 @@ contract Schains is Permissions {
         }
     }
 
-    /**
-     * @dev Returns the number of Nodes and resource divisor that is needed for a
-     * given Schain type.
-     */
-    function getNodesDataFromTypeOfSchain(uint typeOfSchain)
-        public
-        view
-        returns (uint numberOfNodes, uint8 partOfNode)
-    {
-            SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
-            (partOfNode, numberOfNodes) = schainsInternal.schainTypes(typeOfSchain);
-            if (numberOfNodes == 0) {
-                revert("Bad schain type");
-            }
-    }
 
     /**
      * @dev Initializes an schain in the SchainsInternal contract.
@@ -404,7 +390,7 @@ contract Schains is Permissions {
             schainParameters.lifetime);
 
         // create a group for Schain
-        (numberOfNodes, partOfNode) = getNodesDataFromTypeOfSchain(schainParameters.typeOfSchain);
+        (partOfNode, numberOfNodes) = schainsInternal.getSchainType(schainParameters.typeOfSchain);
 
         _createGroupForSchain(
             schainParameters.name,

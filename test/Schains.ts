@@ -163,7 +163,7 @@ describe("Schains", () => {
                 holder.address,
                 5,
                 web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 6, 0, "d2"]),
-            ).should.be.eventually.rejectedWith("Bad schain type");
+            ).should.be.eventually.rejectedWith("Invalid type of schain");
         });
 
         it("should fail when data parameter is too short", async () => {
@@ -1078,7 +1078,7 @@ describe("Schains", () => {
         });
 
         it("should revert on wrong schain type", async () => {
-            await schains.getSchainPrice(6, 5).should.be.eventually.rejectedWith("Bad schain type");
+            await schains.getSchainPrice(6, 5).should.be.eventually.rejectedWith("Invalid type of schain");
         });
     });
 
