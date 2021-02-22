@@ -1,4 +1,4 @@
 {
-    "detectors_to_exclude": "reentrancy-events,solc-version,assembly,timestamp,calls-loop,reentrancy-no-eth,divide-before-multiply",
+    "detectors_to_exclude": "reentrancy-events,solc-version,assembly,timestamp,calls-loop,reentrancy-no-eth",
     "filter_paths": "@openzeppelin/upgrades/contracts/|@openzeppelin/contracts-ethereum-package/contracts/|@openzeppelin/contracts/|thirdparty|Migrations.sol"
 }
