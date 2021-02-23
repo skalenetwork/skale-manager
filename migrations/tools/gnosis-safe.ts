@@ -138,7 +138,8 @@ export async function createMultiSendTransaction(ethers: any, safeAddress: strin
     const txToSend = {
         ...tx,
         "contractTransactionHash": digestHex,  // Contract transaction hash calculated from all the field
-        "sender": ethUtil.bufferToHex(ethUtil.privateToAddress(privateKeyBuffer)),  // Owner of the Safe proposing the transaction. Must match one of the signatures
+        // Owner of the Safe proposing the transaction. Must match one of the signatures
+        "sender": ethers.utils.getAddress(ethUtil.bufferToHex(ethUtil.privateToAddress(privateKeyBuffer))),
         "signature": signature,  // One or more ethereum ECDSA signatures of the `contractTransactionHash` as an hex string
         "origin": "Upgrade skale-manager"  // Give more information about the transaction, e.g. "My Custom Safe app"
     }
