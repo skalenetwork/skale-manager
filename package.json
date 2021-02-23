@@ -26,7 +26,7 @@
     }
   ],
   "scripts": {
-    "compile": "(rm -r ./artifacts/ || true) && npx hardhat compile",
+    "compile": "npx hardhat clean && npx hardhat compile",
     "deploy": "bash ./scripts/deploy.sh",
     "docs": "scripts/prepare-docs.sh",
     "fullcheck": "yarn lint && yarn tsc && yarn tslint && yarn slither",

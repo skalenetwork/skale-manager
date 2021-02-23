@@ -4,8 +4,8 @@ import { ethers, upgrades, network, run } from "hardhat";
 import { ContractManager } from "../typechain";
 import { ContractFactory } from 'ethers';
 import { deployLibraries, getLinkedContractFactory } from "../test/tools/deploy/factory";
-import { getImplementationAddress } from "@openzeppelin/upgrades-core";
 import { getAbi } from './tools/abi';
+import { verify, verifyProxy } from './tools/verification';
 
 function getInitializerParameters(contract: string, contractManagerAddress: string) {
     if (["TimeHelpers", "Decryption", "ECDH"].includes(contract)) {
@@ -59,19 +59,6 @@ export async function getContractFactory(contract: string) {
         }
     }
     return contractFactory;
-}
-
-export async function verify(contractName: string, contractAddress: string) {
-    if (![1337, 31337].includes((await ethers.provider.getNetwork()).chainId)) {
-        try {
-            await run("verify:verify", {
-                address: contractAddress,
-                constructorArguments: []
-            });
-        } catch (e) {
-            console.log(`Contract ${contractName} was not verified on etherscan`);
-        }
-    }
 }
 
 export const contracts = [
@@ -130,7 +117,7 @@ async function main() {
     console.log("Register", contractManagerName);
     await (await contractManager.setContractsAddress(contractManagerName, contractManager.address)).wait();
     artifacts.push({address: contractManager.address, interface: contractManager.interface, contract: contractManagerName})
-    await verify(contractManagerName, await getImplementationAddress(network.provider, contractManager.address));
+    await verifyProxy(contractManagerName, contractManager.address);
 
     for (const contract of contracts) {
         let contractFactory: ContractFactory;
@@ -153,7 +140,7 @@ async function main() {
         const transaction = await contractManager.setContractsAddress(getNameInContractManager(contract), proxy.address);
         await transaction.wait();
         artifacts.push({address: proxy.address, interface: proxy.interface, contract});
-        await verify(contract, await getImplementationAddress(network.provider, proxy.address));
+        await verifyProxy(contract, proxy.address);
     }
 
     const skaleTokenName = "SkaleToken";

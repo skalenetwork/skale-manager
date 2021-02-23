@@ -1,4 +1,4 @@
-import { contracts, getContractKeyInAbiFile, getContractFactory, verify } from "./deploy";
+import { contracts, getContractKeyInAbiFile, getContractFactory } from "./deploy";
 import { ethers, network, upgrades, run } from "hardhat";
 import hre from "hardhat";
 import { promises as fs } from "fs";
@@ -11,6 +11,7 @@ import { encodeTransaction } from "./tools/multiSend";
 import { createMultiSendTransaction, getSafeRelayUrl, getSafeTransactionUrl } from "./tools/gnosis-safe";
 import axios from "axios";
 import chalk from "chalk";
+import { verify, verifyProxy } from "./tools/verification";
 
 
 async function main() {
@@ -71,7 +72,7 @@ async function main() {
     ));
     abi[getContractKeyInAbiFile(walletsName) + "_address"] = wallets.address;
     abi[getContractKeyInAbiFile(walletsName) + "_abi"] = getAbi(wallets.interface);
-    await verify(walletsName, await getImplementationAddress(network.provider, wallets.address));
+    await verifyProxy(walletsName, wallets.address);
 
     // remove Wallets from list
     contracts.pop();
