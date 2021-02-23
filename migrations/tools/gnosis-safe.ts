@@ -2,23 +2,50 @@ import axios from "axios";
 import { TypedDataUtils } from "ethers-eip712";
 import * as ethUtil from 'ethereumjs-util';
 
+enum Network {
+    MAINNET = 1,
+    RINKEBY = 4,
+    GANACHE = 1337,
+    HARDHAT = 31337,
+}
+
+const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
+
+const ADDRESSES = {
+    multiSend: {
+        [Network.MAINNET]: "0x8D29bE29923b68abfDD21e541b9374737B49cdAD",
+        [Network.RINKEBY]: "0x8D29bE29923b68abfDD21e541b9374737B49cdAD",
+    },
+}
+
+const URLS = {
+    safe_transaction: {
+        [Network.MAINNET]: "https://safe-transaction.mainnet.gnosis.io",
+        [Network.RINKEBY]: "https://safe-transaction.rinkeby.gnosis.io",
+    },
+    safe_relay: {
+        [Network.MAINNET]: "https://safe-relay.mainnet.gnosis.io",
+        [Network.RINKEBY]: "https://safe-relay.rinkeby.gnosis.io",
+    }
+}
+
 function getMultiSendAddress(chainId: number) {
-    if (chainId === 1) {
-        return "0x8D29bE29923b68abfDD21e541b9374737B49cdAD";
-    } else if (chainId === 4) {
-        return "0xB522a9f781924eD250A11C54105E51840B138AdD";
-    } else if ([1337, 31337].includes(chainId)) {
-        return "0x0000000000000000000000000000000000000000";
+    if (chainId === Network.MAINNET) {
+        return ADDRESSES.multiSend[chainId];
+    } else if (chainId === Network.RINKEBY) {
+        return ADDRESSES.multiSend[chainId];
+    } else if ([Network.GANACHE, Network.HARDHAT].includes(chainId)) {
+        return ZERO_ADDRESS;
     } else {
         throw Error("Can't get multiSend contract at network with chainId = " + chainId);
     }
 }
 
 export function getSafeTransactionUrl(chainId: number) {
-    if (chainId === 1) {
-        return "https://safe-transaction.mainnet.gnosis.io";
+    if (chainId === Network.MAINNET) {
+        return URLS.safe_transaction[chainId];
     } else if (chainId === 4) {
-        return "https://safe-transaction.rinkeby.gnosis.io";
+        return URLS.safe_transaction[chainId];
     } else {
         throw Error("Can't get safe-transaction url at network with chainId = " + chainId);
     }
@@ -26,9 +53,9 @@ export function getSafeTransactionUrl(chainId: number) {
 
 export function getSafeRelayUrl(chainId: number) {
     if (chainId === 1) {
-        return "https://safe-relay.mainnet.gnosis.io";
+        return URLS.safe_relay[chainId];
     } else if (chainId === 4) {
-        return "https://safe-relay.rinkeby.gnosis.io";
+        return URLS.safe_relay[chainId];
     } else {
         throw Error("Can't get safe-relay url at network with chainId = " + chainId);
     }
@@ -65,11 +92,11 @@ export async function createMultiSendTransaction(ethers: any, safeAddress: strin
         "value": 0, // Value in wei
         "data": multiSend.interface.encodeFunctionData("multiSend", [ concatTransactions(transactions) ]),
         "operation": 1,  // 0 CALL, 1 DELEGATE_CALL
-        "gasToken": "0x0000000000000000000000000000000000000000", // Token address (hold by the Safe) to be used as a refund to the sender, if `null` is Ether
+        "gasToken": ZERO_ADDRESS, // Token address (hold by the Safe) to be used as a refund to the sender, if `null` is Ether
         "safeTxGas": 0,  // Max gas to use in the transaction
         "baseGas": 0,  // Gas costs not related to the transaction execution (signature check, refund payment...)
         "gasPrice": 0,  // Gas price used for the refund calculation
-        "refundReceiver": "0x0000000000000000000000000000000000000000", // Address of receiver of gas payment (or `null` if tx.origin)
+        "refundReceiver": ZERO_ADDRESS, // Address of receiver of gas payment (or `null` if tx.origin)
         "nonce": nonce,  // Nonce of the Safe, transaction cannot be executed until Safe's nonce is not equal to this nonce
     }
 
