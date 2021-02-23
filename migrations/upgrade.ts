@@ -209,14 +209,14 @@ async function main() {
                     `${getSafeRelayUrl(chainId)}/api/v2/safes/${safe}/transactions/estimate/`,
                     estimateRequest
                 );
-                console.log(chalk.cyan(`Recommend to set gas limit to ${estimateResponse.data.safeTxGas + estimateResponse.data.baseGas}`));
+                console.log(chalk.cyan(`Recommend to set gas limit to ${
+                    parseInt(estimateResponse.data.safeTxGas, 10) + parseInt(estimateResponse.data.baseGas, 10)}`));
             } catch (e) {
                 console.log(chalk.red("Failed to estimate gas"));
                 console.log(e.toString());
             }
 
             console.log(chalk.green("Send transaction to gnosis safe"));
-            console.log(JSON.stringify(safeTx, null, 4));
             await axios.post(`${getSafeTransactionUrl(chainId)}/api/v1/safes/${safe}/transactions/`, safeTx)
         } catch (e) {
             if (e.response) {
