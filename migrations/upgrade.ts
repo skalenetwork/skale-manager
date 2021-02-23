@@ -2,7 +2,7 @@ import { contracts, getContractKeyInAbiFile, getContractFactory, verify } from "
 import { ethers, network, upgrades, run } from "hardhat";
 import hre from "hardhat";
 import { promises as fs } from "fs";
-import { ContractManager, Nodes, Wallets } from "../typechain";
+import { ContractManager, Nodes, SchainsInternal, Wallets } from "../typechain";
 import { getImplementationAddress } from "@openzeppelin/upgrades-core";
 import { getAbi } from "./tools/abi";
 import { getManifestAdmin } from "@openzeppelin/hardhat-upgrades/dist/admin";
@@ -120,7 +120,7 @@ async function main() {
     const nodesContractFactory = await getContractFactory(nodesName);
     const nodesAddress = abi[getContractKeyInAbiFile(nodesName) + "_address"];
     if (nodesAddress) {
-        console.log(chalk.yellowBright("Prepare transaction to initialize Nodes", walletsName));
+        console.log(chalk.yellowBright("Prepare transaction to initialize", nodesName));
         const nodes = (nodesContractFactory.attach(nodesAddress)) as Nodes;
         if (safeMock) {
             console.log(chalk.blue("Grant access to initialize nodes"));
@@ -136,6 +136,50 @@ async function main() {
         console.log(chalk.red("Nodes address was not found!"));
         console.log(chalk.red("Check your abi!"));
         process.exit(1);
+    }
+
+    // Initialize schain types
+    const schainsInternalName = "SchainsInternal";
+    const schainsInternalFactory = await getContractFactory(schainsInternalName);
+    const schainsInternalAddress = abi[getContractKeyInAbiFile(schainsInternalName) + "_address"];
+    if (schainsInternalAddress) {
+        console.log(chalk.yellowBright("Prepare transactions to initialize schains types"));
+        const schainsInternal = (schainsInternalFactory.attach(schainsInternalAddress)) as SchainsInternal;
+        if (safeMock) {
+            console.log(chalk.blue("Grant access to initialize schains types"));
+            await (await schainsInternal.grantRole(await schainsInternal.DEFAULT_ADMIN_ROLE(), safe)).wait();
+        }
+        console.log(chalk.yellowBright("Number of Schain types will be set to 0"));
+        safeTransactions.push(encodeTransaction(
+            0,
+            schainsInternal.address,
+            0,
+            schainsInternal.interface.encodeFunctionData("setNumberOfSchainTypes", [0]),
+        ));
+
+        console.log(chalk.yellowBright("Schain Type Small will be added"));
+        safeTransactions.push(encodeTransaction(
+            0,
+            schainsInternal.address,
+            0,
+            schainsInternal.interface.encodeFunctionData("addSchainType", [1, 16]),
+        ));
+
+        console.log(chalk.yellowBright("Schain Type Medium will be added"));
+        safeTransactions.push(encodeTransaction(
+            0,
+            schainsInternal.address,
+            0,
+            schainsInternal.interface.encodeFunctionData("addSchainType", [4, 16]),
+        ));
+
+        console.log(chalk.yellowBright("Schain Type Large will be added"));
+        safeTransactions.push(encodeTransaction(
+            0,
+            schainsInternal.address,
+            0,
+            schainsInternal.interface.encodeFunctionData("addSchainType", [128, 16]),
+        ));
     }
 
     let privateKey = (network.config.accounts as string[])[0];

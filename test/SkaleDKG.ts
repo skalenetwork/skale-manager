@@ -338,6 +338,11 @@ describe("SkaleDKG", () => {
                         domainName: "somedomain.name"
                     });
             }
+            await schainsInternal.addSchainType(1, 16);
+            await schainsInternal.addSchainType(4, 16);
+            await schainsInternal.addSchainType(128, 16);
+            await schainsInternal.addSchainType(0, 2);
+            await schainsInternal.addSchainType(32, 4);
         });
 
         after(async () => {

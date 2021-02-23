@@ -4,6 +4,7 @@ import { ContractManager,
          KeyStorage,
          Nodes,
          Schains,
+         SchainsInternal,
          SkaleVerifier,
          ValidatorService } from "../typechain";
 
@@ -22,6 +23,7 @@ import { deploySkaleManagerMock } from "./tools/deploy/test/skaleManagerMock";
 import { ethers, web3 } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import { assert } from "chai";
+import { deploySchainsInternal } from "./tools/deploy/schainsInternal";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -38,6 +40,7 @@ describe("SkaleVerifier", () => {
     let validatorService: ValidatorService;
     let nodes: Nodes;
     let keyStorage: KeyStorage;
+    let schainsInternal: SchainsInternal;
 
     beforeEach(async () => {
         [validator1, owner, developer, hacker] = await ethers.getSigners();
@@ -49,11 +52,17 @@ describe("SkaleVerifier", () => {
         schains = await deploySchains(contractManager);
         skaleVerifier = await deploySkaleVerifier(contractManager);
         keyStorage = await deployKeyStorage(contractManager);
-
+        schainsInternal = await deploySchainsInternal(contractManager);
         const skaleManagerMock = await deploySkaleManagerMock(contractManager);
         await contractManager.setContractsAddress("SkaleManager", skaleManagerMock.address);
 
         await validatorService.connect(validator1).registerValidator("D2", "D2 is even", 0, 0);
+
+        await schainsInternal.addSchainType(1, 16);
+        await schainsInternal.addSchainType(4, 16);
+        await schainsInternal.addSchainType(128, 16);
+        await schainsInternal.addSchainType(0, 2);
+        await schainsInternal.addSchainType(32, 4);
     });
 
     describe("when skaleVerifier contract is activated", async () => {
