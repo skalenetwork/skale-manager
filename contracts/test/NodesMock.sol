@@ -35,18 +35,15 @@ contract NodesMock is Permissions {
     mapping (uint => uint) public owner;
     
     function registerNodes(uint amount, uint validatorId) external {
-        BountyV2 bounty = BountyV2(contractManager.getBounty());
         for (uint nodeId = nodesCount; nodeId < nodesCount + amount; ++nodeId) {
             lastRewardDate[nodeId] = now;
             owner[nodeId] = validatorId;
-            bounty.handleNodeCreation(validatorId);
         }
         nodesCount += amount;
     }
-    function removeNode(uint nodeId, uint validatorId) external {
+    function removeNode(uint nodeId) external {
         ++nodesLeft;
         nodeLeft[nodeId] = true;
-        BountyV2(contractManager.getBounty()).handleNodeRemoving(validatorId);
     }
     function changeNodeLastRewardDate(uint nodeId) external {
         lastRewardDate[nodeId] = now;

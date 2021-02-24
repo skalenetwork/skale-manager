@@ -26,6 +26,9 @@ import "../SkaleDKG.sol";
 
 contract SkaleDKGTester is SkaleDKG {
     function setSuccessfulDKGPublic(bytes32 schainId) external {
-        _setSuccessfulDKG(schainId);
+        lastSuccesfulDKG[schainId] = now;
+        channels[schainId].active = false;
+        KeyStorage(contractManager.getContract("KeyStorage")).finalizePublicKey(schainId);
+        emit SuccessfulDKG(schainId);
     }
 }

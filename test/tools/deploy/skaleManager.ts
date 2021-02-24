@@ -1,4 +1,3 @@
-import { ContractManagerInstance, SkaleManagerInstance } from "../../../types/truffle-contracts";
 import { deployConstantsHolder } from "./constantsHolder";
 import { deployDistributor } from "./delegation/distributor";
 import { deployValidatorService } from "./delegation/validatorService";
@@ -9,10 +8,12 @@ import { deploySchains } from "./schains";
 import { deploySkaleToken } from "./skaleToken";
 import { deployNodeRotation } from "./nodeRotation";
 import { deployBounty } from "./bounty";
+import { deployWallets } from "./wallets";
+import { ContractManager, SkaleManager } from "../../../typechain";
 
-const deploySkaleManager: (contractManager: ContractManagerInstance) => Promise<SkaleManagerInstance>
+const deploySkaleManager: (contractManager: ContractManager) => Promise<SkaleManager>
     = deployFunctionFactory("SkaleManager",
-                            async (contractManager: ContractManagerInstance) => {
+                            async (contractManager: ContractManager) => {
                                 await deploySchains(contractManager);
                                 await deployValidatorService(contractManager);
                                 await deployMonitors(contractManager);
@@ -22,6 +23,7 @@ const deploySkaleManager: (contractManager: ContractManagerInstance) => Promise<
                                 await deployDistributor(contractManager);
                                 await deployNodeRotation(contractManager);
                                 await deployBounty(contractManager);
+                                await deployWallets(contractManager);
                             });
 
 export { deploySkaleManager };

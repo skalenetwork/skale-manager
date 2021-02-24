@@ -38,8 +38,8 @@ contract ConstantsHolder is Permissions {
     // part of Node for Small Skale-chain (1/128 of Node)
     uint8 public constant SMALL_DIVISOR = 128;
 
-    // part of Node for Medium Skale-chain (1/8 of Node)
-    uint8 public constant MEDIUM_DIVISOR = 8;
+    // part of Node for Medium Skale-chain (1/32 of Node)
+    uint8 public constant MEDIUM_DIVISOR = 32;
 
     // part of Node for Large Skale-chain (full Node)
     uint8 public constant LARGE_DIVISOR = 1;
@@ -75,6 +75,13 @@ contract ConstantsHolder is Permissions {
     uint public constant DOWNTIME_THRESHOLD_PART = 30;
 
     uint public constant BOUNTY_LOCKUP_MONTHS = 2;
+
+    uint public constant ALRIGHT_DELTA = 54640;
+    uint public constant BROADCAST_DELTA = 122660;
+    uint public constant COMPLAINT_BAD_DATA_DELTA = 40720;
+    uint public constant PRE_RESPONSE_DELTA = 67780;
+    uint public constant COMPLAINT_DELTA = 67100;
+    uint public constant RESPONSE_DELTA = 215000;
 
     // MSR - Minimum staking requirement
     uint public msr;

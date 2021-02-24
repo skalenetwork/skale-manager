@@ -1,124 +1,109 @@
-import { BigNumber } from "bignumber.js";
+import { BigNumber } from "ethers";
 import chaiAsPromised from "chai-as-promised";
-import { ConstantsHolderInstance,
-         ContractManagerInstance } from "../types/truffle-contracts";
+import { ConstantsHolder,
+         ContractManager } from "../typechain";
 import { skipTime } from "./tools/time";
 
 import chai = require("chai");
 import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
 import { deployContractManager } from "./tools/deploy/contractManager";
+import { ethers } from "hardhat";
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
+import { solidity } from "ethereum-waffle";
 
 chai.should();
 chai.use(chaiAsPromised);
+chai.use(solidity);
 
-contract("ConstantsHolder", ([deployer, user]) => {
-  let contractManager: ContractManagerInstance;
-  let constantsHolder: ConstantsHolderInstance;
+describe("ConstantsHolder", () => {
+  let user: SignerWithAddress;
+
+  let contractManager: ContractManager;
+  let constantsHolder: ConstantsHolder;
 
   before(async () => {
+    [, user] = await ethers.getSigners();
+
     contractManager = await deployContractManager();
     constantsHolder = await deployConstantsHolder(contractManager);
   });
 
   it("NODE_DEPOSIT should be equal 100000000000000000000", async () => {
-    const bn = new BigNumber(await constantsHolder.NODE_DEPOSIT());
-    // convert Big Number to string and then string to number and compare with
-    parseInt(bn.toString(), 10).should.be.equal(100000000000000000000);
+    (await constantsHolder.NODE_DEPOSIT()).should.be.equal("100000000000000000000");
   });
 
   it("SMALL_DIVISOR should be equal 128", async () => {
-    const bn = new BigNumber(await constantsHolder.SMALL_DIVISOR());
-    parseInt(bn.toString(), 10).should.be.equal(128);
+    (await constantsHolder.SMALL_DIVISOR()).should.be.equal(128);
   });
 
-  it("MEDIUM_DIVISOR should be equal 8", async () => {
-    const bn = new BigNumber(await constantsHolder.MEDIUM_DIVISOR());
-    parseInt(bn.toString(), 10).should.be.equal(8);
+  it("MEDIUM_DIVISOR should be equal 32", async () => {
+    (await constantsHolder.MEDIUM_DIVISOR()).should.be.equal(32);
   });
 
   it("LARGE_DIVISOR should be equal 1", async () => {
-    const bn = new BigNumber(await constantsHolder.LARGE_DIVISOR());
-    parseInt(bn.toString(), 10).should.be.equal(1);
+    (await constantsHolder.LARGE_DIVISOR()).should.be.equal(1);
   });
 
   it("MEDIUM_TEST_DIVISOR should be equal 4", async () => {
-    const bn = new BigNumber(await constantsHolder.MEDIUM_TEST_DIVISOR());
-    parseInt(bn.toString(), 10).should.be.equal(4);
+    (await constantsHolder.MEDIUM_TEST_DIVISOR()).should.be.equal(4);
   });
 
   it("NUMBER_OF_NODES_FOR_SCHAIN should be equal 16", async () => {
-    const bn = new BigNumber(await constantsHolder.NUMBER_OF_NODES_FOR_SCHAIN());
-    parseInt(bn.toString(), 10).should.be.equal(16);
+    (await constantsHolder.NUMBER_OF_NODES_FOR_SCHAIN()).should.be.equal(16);
   });
 
   it("NUMBER_OF_NODES_FOR_TEST_SCHAIN should be equal 2", async () => {
-    const bn = new BigNumber(await constantsHolder.NUMBER_OF_NODES_FOR_TEST_SCHAIN());
-    parseInt(bn.toString(), 10).should.be.equal(2);
+    (await constantsHolder.NUMBER_OF_NODES_FOR_TEST_SCHAIN()).should.be.equal(2);
   });
 
   it("NUMBER_OF_NODES_FOR_MEDIUM_TEST_SCHAIN should be equal 4", async () => {
-    const bn = new BigNumber(await constantsHolder.NUMBER_OF_NODES_FOR_MEDIUM_TEST_SCHAIN());
-    parseInt(bn.toString(), 10).should.be.equal(4);
+    (await constantsHolder.NUMBER_OF_NODES_FOR_MEDIUM_TEST_SCHAIN()).should.be.equal(4);
   });
 
   it("SECONDS_TO_YEAR should be equal 31622400", async () => {
-    const bn = new BigNumber(await constantsHolder.SECONDS_TO_YEAR());
-    parseInt(bn.toString(), 10).should.be.equal(31622400);
+    (await constantsHolder.SECONDS_TO_YEAR()).should.be.equal(31622400);
   });
 
   it("NUMBER_OF_MONITORS should be equal 24", async () => {
-    const bn = new BigNumber(await constantsHolder.NUMBER_OF_MONITORS());
-    parseInt(bn.toString(), 10).should.be.equal(24);
+    (await constantsHolder.NUMBER_OF_MONITORS()).should.be.equal(24);
   });
 
-  it("rewardPeriod should be equal 3600", async () => {
-    const bn = new BigNumber(await constantsHolder.rewardPeriod());
-    parseInt(bn.toString(), 10).should.be.equal(3600);
+  it("rewardPeriod should be 30 days", async () => {
+    (await constantsHolder.rewardPeriod()).should.be.equal(60 * 60 * 24 * 30);
   });
 
-  it("deltaPeriod should be equal 300", async () => {
-    const bn = new BigNumber(await constantsHolder.deltaPeriod());
-    parseInt(bn.toString(), 10).should.be.equal(300);
+  it("deltaPeriod should be 1 hour", async () => {
+    (await constantsHolder.deltaPeriod()).should.be.equal(60 * 60);
   });
 
-  it("checkTime should be equal 120", async () => {
-    const bn = new BigNumber(await constantsHolder.checkTime());
-    parseInt(bn.toString(), 10).should.be.equal(120);
+  it("checkTime should be equal 5 minutes", async () => {
+    (await constantsHolder.checkTime()).should.be.equal(5 * 60);
   });
 
   it("should invoke setPeriods function and change rewardPeriod and deltaPeriod", async () => {
-    await constantsHolder.setPeriods(555, 333, {from: deployer});
-    const rewardPeriod = new BigNumber(await constantsHolder.rewardPeriod());
-    parseInt(rewardPeriod.toString(), 10).should.be.equal(555);
-
-    const deltaPeriod = new BigNumber(await constantsHolder.deltaPeriod());
-    parseInt(deltaPeriod.toString(), 10).should.be.equal(333);
+    await constantsHolder.setPeriods(5555, 333);
+    (await constantsHolder.rewardPeriod()).should.be.equal(5555);
+    (await constantsHolder.deltaPeriod()).should.be.equal(333);
   });
 
   it("should Set latency", async () => {
     const miliSec = 100;
-    await constantsHolder.setLatency(miliSec, {from: user})
+    await constantsHolder.connect(user).setLatency(miliSec)
       .should.be.eventually.rejectedWith("Caller is not the owner");
-    await constantsHolder.setLatency(miliSec, {from: deployer});
-    // expectation
-    const res = new BigNumber(await constantsHolder.allowableLatency());
-    // parseInt(bn.toString(), 10).should.be.equal(0)
-    expect(parseInt(res.toString(), 10)).to.be.equal(miliSec);
+    await constantsHolder.setLatency(miliSec);
+    (await constantsHolder.allowableLatency()).should.be.equal(miliSec);
   });
 
   it("should Set checkTime", async () => {
     const sec = 240;
-    await constantsHolder.setCheckTime(sec, {from: user})
+    await constantsHolder.connect(user).setCheckTime(sec)
       .should.be.eventually.rejectedWith("Caller is not the owner");
-    await constantsHolder.setCheckTime(sec, {from: deployer});
-    // expectation
-    const res = new BigNumber(await constantsHolder.checkTime());
-    // parseInt(bn.toString(), 10).should.be.equal(0)
-    expect(parseInt(res.toString(), 10)).to.be.equal(sec);
+    await constantsHolder.setCheckTime(sec);
+    (await constantsHolder.checkTime()).should.be.equal(sec);
   });
 
   it("should set rotation delay", async () => {
-    await constantsHolder.setRotationDelay(13, {from: user})
+    await constantsHolder.connect(user).setRotationDelay(13)
       .should.be.eventually.rejectedWith("Caller is not the owner");
     await constantsHolder.setRotationDelay(13);
     (await constantsHolder.rotationDelay()).toNumber()
@@ -139,91 +124,67 @@ contract("ConstantsHolder", ([deployer, user]) => {
 
   it("should set MSR", async () => {
     const msr = 100;
-    await constantsHolder.setMSR(msr, {from: user})
+    await constantsHolder.connect(user).setMSR(msr)
       .should.be.eventually.rejectedWith("Caller is not the owner");
-    await constantsHolder.setMSR(msr, {from: deployer});
-    // expectation
-    const res = new BigNumber(await constantsHolder.msr());
-    // parseInt(bn.toString(), 10).should.be.equal(0)
-    expect(parseInt(res.toString(), 10)).to.be.equal(msr);
+    await constantsHolder.setMSR(msr);
+    (await constantsHolder.msr()).should.be.equal(msr);
   });
 
   it("should set launch timestamp", async () => {
     const launch = 100;
-    await constantsHolder.setLaunchTimestamp(launch, {from: user})
+    await constantsHolder.connect(user).setLaunchTimestamp(launch)
       .should.be.eventually.rejectedWith("Caller is not the owner");
-    await constantsHolder.setLaunchTimestamp(launch, {from: deployer});
-    // expectation
-    const res = new BigNumber(await constantsHolder.launchTimestamp());
-    // parseInt(bn.toString(), 10).should.be.equal(0)
-    expect(parseInt(res.toString(), 10)).to.be.equal(launch);
+    await constantsHolder.setLaunchTimestamp(launch);
+    (await constantsHolder.launchTimestamp()).should.be.equal(launch);
   });
 
   it("should set PoU delegation percentage", async () => {
     const percentage = 100;
-    await constantsHolder.setProofOfUseDelegationPercentage(percentage, {from: user})
+    await constantsHolder.connect(user).setProofOfUseDelegationPercentage(percentage)
       .should.be.eventually.rejectedWith("Caller is not the owner");
-    await constantsHolder.setProofOfUseDelegationPercentage(percentage, {from: deployer});
-    // expectation
-    const res = new BigNumber(await constantsHolder.proofOfUseDelegationPercentage());
-    // parseInt(bn.toString(), 10).should.be.equal(0)
-    expect(parseInt(res.toString(), 10)).to.be.equal(percentage);
+    await constantsHolder.setProofOfUseDelegationPercentage(percentage);
+    (await constantsHolder.proofOfUseDelegationPercentage()).should.be.equal(percentage);
   });
 
   it("should set PoU delegation time", async () => {
     const period = 180;
-    await constantsHolder.setProofOfUseLockUpPeriod(period, {from: user})
+    await constantsHolder.connect(user).setProofOfUseLockUpPeriod(period)
       .should.be.eventually.rejectedWith("Caller is not the owner");
-    await constantsHolder.setProofOfUseLockUpPeriod(period, {from: deployer});
-    // expectation
-    const res = new BigNumber(await constantsHolder.proofOfUseLockUpPeriodDays());
-    // parseInt(bn.toString(), 10).should.be.equal(0)
-    expect(parseInt(res.toString(), 10)).to.be.equal(period);
+    await constantsHolder.setProofOfUseLockUpPeriod(period);
+    (await constantsHolder.proofOfUseLockUpPeriodDays()).should.be.equal(period);
   });
 
   it("should set limit of validators per delegators", async () => {
     const newLimit = 30;
-    await constantsHolder.setLimitValidatorsPerDelegator(newLimit, {from: user})
+    await constantsHolder.connect(user).setLimitValidatorsPerDelegator(newLimit)
       .should.be.eventually.rejectedWith("Caller is not the owner");
 
-    await constantsHolder.setLimitValidatorsPerDelegator(newLimit, {from: deployer});
-    // expectation
-    const res = new BigNumber(await constantsHolder.limitValidatorsPerDelegator());
-    // parseInt(bn.toString(), 10).should.be.equal(0)
-    expect(parseInt(res.toString(), 10)).to.be.equal(newLimit);
+    await constantsHolder.setLimitValidatorsPerDelegator(newLimit);
+    (await constantsHolder.limitValidatorsPerDelegator()).should.be.equal(newLimit);
   });
 
   it("should set schain creation timestamp", async () => {
     const timeStamp = 100;
-    await constantsHolder.setSchainCreationTimeStamp(timeStamp, {from: user})
+    await constantsHolder.connect(user).setSchainCreationTimeStamp(timeStamp)
       .should.be.eventually.rejectedWith("Caller is not the owner");
-    await constantsHolder.setSchainCreationTimeStamp(timeStamp, {from: deployer});
-    // expectation
-    const res = new BigNumber(await constantsHolder.schainCreationTimeStamp());
-    // parseInt(bn.toString(), 10).should.be.equal(0)
-    expect(parseInt(res.toString(), 10)).to.be.equal(timeStamp);
+    await constantsHolder.setSchainCreationTimeStamp(timeStamp);
+    (await constantsHolder.schainCreationTimeStamp()).should.be.equal(timeStamp);
   });
 
   it("should set minimal schain lifetime", async () => {
     const lifetime = 100;
-    await constantsHolder.setMinimalSchainLifetime(lifetime, {from: user})
+    await constantsHolder.connect(user).setMinimalSchainLifetime(lifetime)
       .should.be.eventually.rejectedWith("Caller is not the owner");
-    await constantsHolder.setMinimalSchainLifetime(lifetime, {from: deployer});
-    // expectation
-    const res = new BigNumber(await constantsHolder.minimalSchainLifetime());
-    // parseInt(bn.toString(), 10).should.be.equal(0)
-    expect(parseInt(res.toString(), 10)).to.be.equal(lifetime);
+    await constantsHolder.setMinimalSchainLifetime(lifetime);
+    (await constantsHolder.minimalSchainLifetime()).should.be.equal(lifetime);
   });
 
   it("should set complaint timelimit", async () => {
     const timelimit = 3600;
-    await constantsHolder.setComplaintTimelimit(timelimit, {from: user})
+    await constantsHolder.connect(user).setComplaintTimelimit(timelimit)
       .should.be.eventually.rejectedWith("Caller is not the owner");
-    await constantsHolder.setComplaintTimelimit(timelimit, {from: deployer});
-    // expectation
-    const res = new BigNumber(await constantsHolder.complaintTimelimit());
-    // parseInt(bn.toString(), 10).should.be.equal(0)
-    expect(parseInt(res.toString(), 10)).to.be.equal(timelimit);
+    await constantsHolder.setComplaintTimelimit(timelimit);
+    (await constantsHolder.complaintTimelimit()).should.be.equal(timelimit);
   });
 
 });

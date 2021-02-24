@@ -1,10 +1,10 @@
-import { ContractManagerInstance, ReentrancyTesterInstance } from "../../../../types/truffle-contracts";
+import { ContractManager, ReentrancyTester } from "../../../../typechain";
 import { deployWithConstructorFunctionFactory } from "../factory";
 import { deploySkaleToken } from "../skaleToken";
 
-const deployReentrancyTester: (contractManager: ContractManagerInstance) => Promise<ReentrancyTesterInstance>
+const deployReentrancyTester: (contractManager: ContractManager) => Promise<ReentrancyTester>
     = deployWithConstructorFunctionFactory("ReentrancyTester",
-                            async (contractManager: ContractManagerInstance) => {
+                            async (contractManager: ContractManager) => {
                                 await deploySkaleToken(contractManager);
                             });
 

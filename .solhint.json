@@ -17,6 +17,7 @@
     "no-unused-vars": "error",
     "no-inline-assembly": "error",
     "contract-name-camelcase": "error",
-    "ordering": "error"
+    "ordering": "error",
+    "avoid-tx-origin": "error"
   }
 }

@@ -1,11 +1,11 @@
-import { ContractManagerInstance, PunisherInstance } from "../../../../types/truffle-contracts";
+import { ContractManager, Punisher } from "../../../../typechain";
 import { deployFunctionFactory } from "../factory";
 import { deployDelegationController } from "./delegationController";
 import { deployValidatorService } from "./validatorService";
 
-const deployPunisher: (contractManager: ContractManagerInstance) => Promise<PunisherInstance>
+const deployPunisher: (contractManager: ContractManager) => Promise<Punisher>
     = deployFunctionFactory("Punisher",
-                            async (contractManager: ContractManagerInstance) => {
+                            async (contractManager: ContractManager) => {
                                 await deployDelegationController(contractManager);
                                 await deployValidatorService(contractManager);
                             });

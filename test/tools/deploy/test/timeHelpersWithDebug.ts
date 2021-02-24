@@ -1,12 +1,13 @@
-import { ContractManagerInstance, TimeHelpersWithDebugInstance } from "../../../../types/truffle-contracts";
 import { deployFunctionFactory } from "../factory";
+import { ethers } from "hardhat";
+import { ContractManager, TimeHelpersWithDebug } from "../../../../typechain";
 
-const deployTimeHelpersWithDebug: (contractManager: ContractManagerInstance) => Promise<TimeHelpersWithDebugInstance>
+const deployTimeHelpersWithDebug: (contractManager: ContractManager) => Promise<TimeHelpersWithDebug>
     = deployFunctionFactory("TimeHelpersWithDebug",
                             undefined,
-                            async (contractManager: ContractManagerInstance) => {
-                                const TimeHelpersWithDebug = artifacts.require("./TimeHelpersWithDebug");
-                                const instance = await TimeHelpersWithDebug.new();
+                            async (contractManager: ContractManager) => {
+                                const factory = await ethers.getContractFactory("TimeHelpersWithDebug");
+                                const instance = await factory.deploy();
                                 await instance.initialize();
                                 return instance;
                             });
