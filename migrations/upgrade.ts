@@ -8,7 +8,7 @@ import { getAbi } from "./tools/abi";
 import { getManifestAdmin } from "@openzeppelin/hardhat-upgrades/dist/admin";
 import { SafeMock } from "../typechain/SafeMock";
 import { encodeTransaction } from "./tools/multiSend";
-import { createMultiSendTransaction, getSafeRelayUrl, getSafeTransactionUrl } from "./tools/gnosis-safe";
+import { createMultiSendTransaction, getSafeRelayUrl, getSafeTransactionUrl, sendSafeTransaction } from "./tools/gnosis-safe";
 import axios from "axios";
 import chalk from "chalk";
 import { verify, verifyProxy } from "./tools/verification";
@@ -190,43 +190,13 @@ async function main() {
         privateKey = ethers.Wallet.createRandom().privateKey;
     }
 
+    const version = (await fs.readFile("VERSION", "utf-8")).trim();
+    await fs.writeFile(`data/transactions-${version}-${network.name}.json`, JSON.stringify(safeTransactions, null, 4));
+
     const safeTx = await createMultiSendTransaction(ethers, safe, privateKey, safeTransactions);
     if (!safeMock) {
-        try {
-            const chainId = (await ethers.provider.getNetwork()).chainId;
-
-            console.log("Estimate gas");
-            const estimateRequest = (({
-                to,
-                value,
-                data,
-                operation,
-                gasToken
-            }) => ({ to, value, data, operation, gasToken }))(safeTx);
-
-            try {
-                const estimateResponse = await axios.post(
-                    `${getSafeRelayUrl(chainId)}/api/v2/safes/${safe}/transactions/estimate/`,
-                    estimateRequest
-                );
-                console.log(chalk.cyan(`Recommend to set gas limit to ${
-                    parseInt(estimateResponse.data.safeTxGas, 10) + parseInt(estimateResponse.data.baseGas, 10)}`));
-            } catch (e) {
-                console.log(chalk.red("Failed to estimate gas"));
-                console.log(e.toString());
-            }
-
-            console.log(chalk.green("Send transaction to gnosis safe"));
-            await axios.post(`${getSafeTransactionUrl(chainId)}/api/v1/safes/${safe}/transactions/`, safeTx)
-        } catch (e) {
-            if (e.response) {
-                console.log(JSON.stringify(e.response.data, null, 4))
-                console.log(chalk.red(`Request failed with ${e.response.status} code`));
-            } else {
-                console.log(chalk.red("Request failed with unknown reason"));
-            }
-            throw e;
-        }
+        const chainId = (await ethers.provider.getNetwork()).chainId;
+        await sendSafeTransaction(safe, chainId, safeTx);
     } else {
         console.log(chalk.blue("Send upgrade transactions to safe mock"));
         try {
@@ -248,7 +218,6 @@ async function main() {
         }
     }
 
-    const version = (await fs.readFile("VERSION", "utf-8")).trim();
     await fs.writeFile(`data/skale-manager-${version}-${network.name}-abi.json`, JSON.stringify(abi, null, 4));
 
     console.log("Done");
