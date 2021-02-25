@@ -34,7 +34,6 @@ import "../utils/MathUtils.sol";
 import "./DelegationPeriodManager.sol";
 import "./PartialDifferences.sol";
 import "./Punisher.sol";
-import "./TokenLaunchLocker.sol";
 import "./TokenState.sol";
 import "./ValidatorService.sol";
 
@@ -919,10 +918,6 @@ contract DelegationController is Permissions, ILocker {
             delegations[delegationId].validatorId,
             effectiveAmount,
             delegations[delegationId].finished);
-        _getTokenLaunchLocker().handleDelegationRemoving(
-            delegations[delegationId].holder,
-            delegationId,
-            delegations[delegationId].finished);
         _getBounty().handleDelegationRemoving(
             effectiveAmount,
             delegations[delegationId].finished);
@@ -963,10 +958,6 @@ contract DelegationController is Permissions, ILocker {
         return TimeHelpers(contractManager.getTimeHelpers());
     }
 
-    function _getTokenLaunchLocker() private view returns (TokenLaunchLocker) {
-        return TokenLaunchLocker(contractManager.getTokenLaunchLocker());
-    }
-
     function _getConstantsHolder() private view returns (ConstantsHolder) {
         return ConstantsHolder(contractManager.getConstantsHolder());
     }
@@ -995,12 +986,6 @@ contract DelegationController is Permissions, ILocker {
         _addToAllStatistics(delegationId);
         
         uint amount = delegations[delegationId].amount;
-        _getTokenLaunchLocker().handleDelegationAdd(
-            delegations[delegationId].holder,
-            delegationId,
-            amount,
-            delegations[delegationId].started
-        );
 
         uint effectiveAmount = amount.mul(
             _getDelegationPeriodManager().stakeMultipliers(delegations[delegationId].delegationPeriod)

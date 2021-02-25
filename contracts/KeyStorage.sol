@@ -58,6 +58,8 @@ contract KeyStorage is Permissions {
     function deleteKey(bytes32 schainId) external allow("SkaleDKG") {
         _previousSchainsPublicKeys[schainId].push(_schainsPublicKeys[schainId]);
         delete _schainsPublicKeys[schainId];
+        delete _data[schainId][0];
+        delete _schainsNodesPublicKeys[schainId];
     }
 
     function initPublicKeyInProgress(bytes32 schainId) external allow("SkaleDKG") {
@@ -102,13 +104,5 @@ contract KeyStorage is Permissions {
             _schainsPublicKeys[schainId].x.b == 0 &&
             _schainsPublicKeys[schainId].y.a == 0 &&
             _schainsPublicKeys[schainId].y.b == 0;
-    }
-
-    function _getData() private view returns (BroadcastedData memory) {
-        return _data[keccak256(abi.encodePacked("UnusedFunction"))][0];
-    }
-
-    function _getNodesPublicKey() private view returns (G2Operations.G2Point memory) {
-        return _schainsNodesPublicKeys[keccak256(abi.encodePacked("UnusedFunction"))][0];
     }
 }

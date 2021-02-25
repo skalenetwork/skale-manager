@@ -31,7 +31,6 @@ import "./delegation/ValidatorService.sol";
 import "./interfaces/IMintableToken.sol";
 import "./BountyV2.sol";
 import "./ConstantsHolder.sol";
-import "./Monitors.sol";
 import "./NodeRotation.sol";
 import "./Permissions.sol";
 import "./Schains.sol";
@@ -54,16 +53,6 @@ contract SkaleManager is IERC777Recipient, Permissions {
      * @dev Emitted when bounty is received.
      */
     event BountyReceived(
-        uint indexed nodeIndex,
-        address owner,
-        uint averageDowntime,
-        uint averageLatency,
-        uint bounty,
-        uint previousBlockEvent,
-        uint time,
-        uint gasSpend
-    );
-    event BountyGot(
         uint indexed nodeIndex,
         address owner,
         uint averageDowntime,
@@ -182,7 +171,16 @@ contract SkaleManager is IERC777Recipient, Permissions {
             _payBounty(bounty, validatorId);
         }
 
-        _emitBountyEvent(nodeIndex, msg.sender, 0, 0, bounty);
+        emit BountyReceived(
+            nodeIndex,
+            msg.sender,
+            0,
+            0,
+            bounty,
+            uint(-1),
+            block.timestamp,
+            gasleft());
+        
         _refundGasByValidator(validatorId, msg.sender, gasTotal - gasleft());
     }
 
@@ -200,39 +198,6 @@ contract SkaleManager is IERC777Recipient, Permissions {
             IMintableToken(address(skaleToken)).mint(address(distributor), bounty, abi.encode(validatorId), ""),
             "Token was not minted"
         );
-    }
-
-    function _emitBountyEvent(
-        uint nodeIndex,
-        address from,
-        uint averageDowntime,
-        uint averageLatency,
-        uint bounty
-    )
-        private
-    {
-        Monitors monitors = Monitors(contractManager.getContract("Monitors"));
-        uint previousBlockEvent = monitors.getLastBountyBlock(nodeIndex);
-        monitors.setLastBountyBlock(nodeIndex);
-
-        emit BountyReceived(
-            nodeIndex,
-            from,
-            averageDowntime,
-            averageLatency,
-            bounty,
-            previousBlockEvent,
-            block.timestamp,
-            gasleft());
-        emit BountyGot(
-            nodeIndex,
-            from,
-            averageDowntime,
-            averageLatency,
-            bounty,
-            previousBlockEvent,
-            block.timestamp,
-            gasleft());
     }
 
     function _refundGasByValidator(uint validatorId, address payable spender, uint spentGas) private {
