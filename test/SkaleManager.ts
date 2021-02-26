@@ -166,6 +166,14 @@ describe("SkaleManager", () => {
         await skaleManager.hasRole(await skaleManager.DEFAULT_ADMIN_ROLE(), hacker.address).should.be.eventually.true;
     });
 
+    it("should allow only owner to set a version", async () => {
+        await skaleManager.connect(hacker).setVersion("bad")
+            .should.be.eventually.rejectedWith("Caller is not the owner");
+
+        await skaleManager.setVersion("good");
+        (await skaleManager.version()).should.be.equal("good");
+    });
+
     describe("when validator has delegated SKALE tokens", async () => {
         const validatorId = 1;
         const day = 60 * 60 * 24;
