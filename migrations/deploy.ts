@@ -144,8 +144,12 @@ async function main() {
         await verifyProxy(contract, proxy.address);
 
         if (contract === "SkaleManager") {
-            console.log(`Set version ${version}`)
-            await (await (proxy as SkaleManager).setVersion(version)).wait();
+            try {
+                console.log(`Set version ${version}`)
+                await (await (proxy as SkaleManager).setVersion(version)).wait();
+            } catch {
+                console.log("Failed to set skale-manager version");
+            }
         }
     }
 

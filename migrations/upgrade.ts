@@ -32,7 +32,12 @@ async function main() {
         abi[getContractKeyInAbiFile(skaleManagerName) + "_address"]
     )) as SkaleManager;
 
-    const deployedVersion = await skaleManager.version();
+    let deployedVersion = "";
+    try {
+        deployedVersion = await skaleManager.version();
+    } catch {
+        console.log("Can't read deployed version");
+    };
     const version = (await fs.readFile("VERSION", "utf-8")).trim();
     if (deployedVersion) {
         if (deployedVersion !== "1.7.2-stable.0") {
