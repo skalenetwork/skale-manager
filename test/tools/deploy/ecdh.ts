@@ -1,14 +1,14 @@
-import { ContractManagerInstance, ECDHContract, ECDHInstance } from "../../../types/truffle-contracts";
-import { deployFunctionFactory } from "./factory";
+import { artifacts } from "hardhat";
+import { ContractManager, ECDH } from "../../../typechain";
+import { deployFunctionFactory, deployWithConstructor } from "./factory";
 
-const deployECDH: (contractManager: ContractManagerInstance) => Promise<ECDHInstance>
+const deployECDH: (contractManager: ContractManager) => Promise<ECDH>
     = deployFunctionFactory("ECDH",
-                            async (contractManager: ContractManagerInstance) => {
+                            async (contractManager: ContractManager) => {
                                 return undefined;
                             },
-                            async (contractManager: ContractManagerInstance) => {
-                                const ECDH: ECDHContract = artifacts.require("./ECDH");
-                                return await ECDH.new();
+                            async (contractManager: ContractManager) => {
+                                return await deployWithConstructor("ECDH");
                             });
 
 export { deployECDH };

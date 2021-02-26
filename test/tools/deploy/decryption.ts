@@ -1,14 +1,13 @@
-import { ContractManagerInstance, DecryptionContract, DecryptionInstance } from "../../../types/truffle-contracts";
-import { deployFunctionFactory } from "./factory";
+import { ContractManager, Decryption } from "../../../typechain";
+import { deployFunctionFactory, deployWithConstructor } from "./factory";
 
-const deployDecryption: (contractManager: ContractManagerInstance) => Promise<DecryptionInstance>
+const deployDecryption: (contractManager: ContractManager) => Promise<Decryption>
     = deployFunctionFactory("Decryption",
-                            async (contractManager: ContractManagerInstance) => {
+                            async (_: ContractManager) => {
                                 return undefined;
                             },
-                            async (contractManager: ContractManagerInstance) => {
-                                const Decryption: DecryptionContract = artifacts.require("./Decryption");
-                                return await Decryption.new();
+                            async (_: ContractManager) => {
+                                return await deployWithConstructor("Decryption");
                             });
 
 export { deployDecryption };

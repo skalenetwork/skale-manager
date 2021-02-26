@@ -1,16 +1,15 @@
-import { ContractManagerInstance,
-    TimeHelpersContract } from "../../../../types/truffle-contracts";
+import { ContractManager,
+    TimeHelpers } from "../../../../typechain";
+import { deployWithConstructor, deployWithConstructorFunctionFactory } from "../factory";
 
-const TimeHelpers: TimeHelpersContract = artifacts.require("./TimeHelpers");
 const name = "TimeHelpers";
 
-export async function deployTimeHelpers(contractManager: ContractManagerInstance) {
-    try {
-        const address = await contractManager.getContract(name);
-        return TimeHelpers.at(address);
-    } catch (e) {
-        const timeHelpers = await TimeHelpers.new();
-        await contractManager.setContractsAddress(name, timeHelpers.address);
-        return timeHelpers;
-    }
-}
+export const deployTimeHelpers: (contractManager: ContractManager) => Promise<TimeHelpers>
+    = deployWithConstructorFunctionFactory(
+        name,
+        async (_: ContractManager) => {
+            return undefined;
+        },
+        async (_: ContractManager) => {
+            return await deployWithConstructor(name);
+        });

@@ -42,7 +42,6 @@ contract ContractManager is OwnableUpgradeSafe {
     string public constant PUNISHER = "Punisher";
     string public constant SKALE_TOKEN = "SkaleToken";
     string public constant TIME_HELPERS = "TimeHelpers";
-    string public constant TOKEN_LAUNCH_LOCKER = "TokenLaunchLocker";
     string public constant TOKEN_STATE = "TokenState";
     string public constant VALIDATOR_SERVICE = "ValidatorService";
 
@@ -105,10 +104,6 @@ contract ContractManager is OwnableUpgradeSafe {
         return getContract(TIME_HELPERS);
     }
 
-    function getTokenLaunchLocker() external view returns (address) {
-        return getContract(TOKEN_LAUNCH_LOCKER);
-    }
-
     function getConstantsHolder() external view returns (address) {
         return getContract(CONSTANTS_HOLDER);
     }
@@ -127,6 +122,8 @@ contract ContractManager is OwnableUpgradeSafe {
 
     function getContract(string memory name) public view returns (address contractAddress) {
         contractAddress = contracts[keccak256(abi.encodePacked(name))];
-        require(contractAddress != address(0), name.strConcat(" contract has not been found"));
+        if (contractAddress == address(0)) {
+            revert(name.strConcat(" contract has not been found"));
+        }
     }
 }

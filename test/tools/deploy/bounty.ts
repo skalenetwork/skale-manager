@@ -1,22 +1,22 @@
 import { deployNodes } from "./nodes";
-import { ContractManagerInstance, BountyV2Instance, BountyV2Contract } from "../../../types/truffle-contracts";
-import { deployFunctionFactory } from "./factory";
+import { ContractManager, BountyV2 } from "../../../typechain";
+import { defaultDeploy, deployFunctionFactory } from "./factory";
 import { deployConstantsHolder } from "./constantsHolder";
 import { deployTimeHelpers } from "./delegation/timeHelpers";
-import { deployDelegationController } from "./delegation/delegationController";
+import { deployWallets } from "./wallets";
 
-const deployBounty: (contractManager: ContractManagerInstance) => Promise<BountyV2Instance>
-    = deployFunctionFactory("Bounty",
-                            async (contractManager: ContractManagerInstance) => {
+const deployBounty: (contractManager: ContractManager) => Promise<BountyV2>
+    = deployFunctionFactory("BountyV2",
+                            async (contractManager: ContractManager) => {
                                 await deployConstantsHolder(contractManager);
                                 await deployNodes(contractManager);
                                 await deployTimeHelpers(contractManager);
+                                await deployWallets(contractManager);
                             },
-                            async(contractManager: ContractManagerInstance) => {
-                                const BountyV2: BountyV2Contract = artifacts.require("./BountyV2");
-                                const instance = await BountyV2.new();
-                                await instance.initialize(contractManager.address);
-                                return instance;
+                            async(contractManager: ContractManager) => {
+                                const bounty = await defaultDeploy("BountyV2", contractManager);
+                                await contractManager.setContractsAddress("Bounty", bounty.address);
+                                return bounty;
                             });
 
 export { deployBounty };

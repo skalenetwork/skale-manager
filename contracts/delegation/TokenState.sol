@@ -22,10 +22,11 @@
 pragma solidity 0.6.10;
 pragma experimental ABIEncoderV2;
 
+import "../interfaces/delegation/ILocker.sol";
 import "../Permissions.sol";
+
 import "./DelegationController.sol";
 import "./TimeHelpers.sol";
-import "../interfaces/delegation/ILocker.sol";
 
 
 /**
@@ -48,6 +49,8 @@ contract TokenState is Permissions, ILocker {
 
     string[] private _lockers;
 
+    DelegationController private _delegationController;
+
     /**
      * @dev Emitted when a contract is added to the locker.
      */
@@ -66,10 +69,12 @@ contract TokenState is Permissions, ILocker {
      *  @dev See {ILocker-getAndUpdateLockedAmount}.
      */
     function getAndUpdateLockedAmount(address holder) external override returns (uint) {
-        DelegationController delegationController =
-            DelegationController(contractManager.getContract("DelegationController"));
+        if (address(_delegationController) == address(0)) {
+            _delegationController =
+                DelegationController(contractManager.getContract("DelegationController"));
+        }
         uint locked = 0;
-        if (delegationController.getDelegationsByHolderLength(holder) > 0) {
+        if (_delegationController.getDelegationsByHolderLength(holder) > 0) {
             // the holder ever delegated
             for (uint i = 0; i < _lockers.length; ++i) {
                 ILocker locker = ILocker(contractManager.getContract(_lockers[i]));
@@ -118,7 +123,6 @@ contract TokenState is Permissions, ILocker {
         Permissions.initialize(contractManagerAddress);
         addLocker("DelegationController");
         addLocker("Punisher");
-        addLocker("TokenLaunchLocker");
     }
 
     /**
