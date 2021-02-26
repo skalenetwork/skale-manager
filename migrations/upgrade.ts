@@ -2,7 +2,7 @@ import { contracts, getContractKeyInAbiFile, getContractFactory } from "./deploy
 import { ethers, network, upgrades, run } from "hardhat";
 import hre from "hardhat";
 import { promises as fs } from "fs";
-import { ContractManager, Nodes, SchainsInternal, Wallets } from "../typechain";
+import { ContractManager, Nodes, SchainsInternal, SkaleManager, Wallets } from "../typechain";
 import { getImplementationAddress } from "@openzeppelin/upgrades-core";
 import { getAbi } from "./tools/abi";
 import { getManifestAdmin } from "@openzeppelin/hardhat-upgrades/dist/admin";
@@ -15,11 +15,6 @@ import { verify, verifyProxy } from "./tools/verification";
 
 
 async function main() {
-    if ((await fs.readFile("DEPLOYED", "utf-8")).trim() !== "1.7.2-stable.0") {
-        console.log(chalk.red("Upgrade script is not relevant"));
-        process.exit(1);
-    }
-
     if (!process.env.ABI) {
         console.log(chalk.red("Set path to file with ABI and addresses to ABI environment variables"));
         return;
@@ -32,6 +27,21 @@ async function main() {
     const contractManagerName = "ContractManager";
     const contractManagerFactory = await ethers.getContractFactory(contractManagerName);
     const contractManager = (contractManagerFactory.attach(abi[getContractKeyInAbiFile(contractManagerName) + "_address"])) as ContractManager;
+    const skaleManagerName = "SkaleManager";
+    const skaleManager = ((await ethers.getContractFactory(skaleManagerName)).attach(
+        abi[getContractKeyInAbiFile(skaleManagerName) + "_address"]
+    )) as SkaleManager;
+
+    const deployedVersion = await skaleManager.version();
+    const version = (await fs.readFile("VERSION", "utf-8")).trim();
+    if (deployedVersion) {
+        if (deployedVersion !== "1.7.2-stable.0") {
+            console.log(chalk.red(`This script can't upgrade version ${deployedVersion} to ${version}`));
+            process.exit(1);
+        }
+    } else {
+        console.log(chalk.yellow("Can't check currently deployed version of skale-manager"));
+    }
 
     const [ deployer ] = await ethers.getSigners();
     let safe = await proxyAdmin.owner();
@@ -183,15 +193,22 @@ async function main() {
         ));
     }
 
+    // write version
+    safeTransactions.push(encodeTransaction(
+        0,
+        skaleManager.address,
+        0,
+        skaleManager.interface.encodeFunctionData("setVersion", [version]),
+    ));
+
+    await fs.writeFile(`data/transactions-${version}-${network.name}.json`, JSON.stringify(safeTransactions, null, 4));
+
     let privateKey = (network.config.accounts as string[])[0];
     if (network.config.accounts === "remote") {
         // Don't have an information about private key
         // Use random one because we most probable run tests
         privateKey = ethers.Wallet.createRandom().privateKey;
     }
-
-    const version = (await fs.readFile("VERSION", "utf-8")).trim();
-    await fs.writeFile(`data/transactions-${version}-${network.name}.json`, JSON.stringify(safeTransactions, null, 4));
 
     const safeTx = await createMultiSendTransaction(ethers, safe, privateKey, safeTransactions);
     if (!safeMock) {
