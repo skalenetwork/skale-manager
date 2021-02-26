@@ -614,7 +614,7 @@ describe("SkaleManager", () => {
                                 0, // nonce
                                 "d2"]), // name
                             );
-                        await skaleDKG.setSuccesfulDKGPublic(
+                        await skaleDKG.setSuccessfulDKGPublic(
                             d2SchainId
                         );
                     });
@@ -637,7 +637,7 @@ describe("SkaleManager", () => {
                     it("should delete schain after deleting node", async () => {
                         const nodes = await schainsInternal.getNodesInGroup(d2SchainId);
                         await skaleManager.connect(nodeAddress).nodeExit(nodes[0]);
-                        await skaleDKG.setSuccesfulDKGPublic(
+                        await skaleDKG.setSuccessfulDKGPublic(
                             d2SchainId,
                         );
                         await skaleManager.connect(developer).deleteSchain("d2");
