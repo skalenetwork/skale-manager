@@ -215,10 +215,10 @@ describe("Wallets", () => {
             await schainsInternal.addSchainType(32, 4);
 
             await schains.addSchainByFoundation(0, SchainType.TEST, 0, schain1Name, validator1.address);
-            await skaleDKG.setSuccesfulDKGPublic(stringValue(schain1Id));
+            await skaleDKG.setSuccessfulDKGPublic(stringValue(schain1Id));
 
             await schains.addSchainByFoundation(0, SchainType.TEST, 0, schain2Name, validator2.address);
-            await skaleDKG.setSuccesfulDKGPublic(stringValue(schain2Id));
+            await skaleDKG.setSuccessfulDKGPublic(stringValue(schain2Id));
         });
 
         after(async () => {
