@@ -21,7 +21,6 @@ import { deploySkaleToken } from "./tools/deploy/skaleToken";
 import { deployDelegationController } from "./tools/deploy/delegation/delegationController";
 import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
 import { deployDelegationPeriodManager } from "./tools/deploy/delegation/delegationPeriodManager";
-import { deployMonitors } from "./tools/deploy/monitors";
 import { deployDistributor } from "./tools/deploy/delegation/distributor";
 import { deploySkaleManagerMock } from "./tools/deploy/test/skaleManagerMock";
 import { privateKeys } from "./tools/private-keys";
@@ -135,7 +134,6 @@ describe("Bounty", () => {
         const delegationController = await deployDelegationController(contractManager);
         const validatorService = await deployValidatorService(contractManager);
         const delegationPeriodManager = await deployDelegationPeriodManager(contractManager);
-        await deployMonitors(contractManager);
         await deployDistributor(contractManager);
 
         let nodesFactory: ContractFactory;
@@ -324,7 +322,6 @@ describe("Bounty", () => {
         const delegationController = await deployDelegationController(contractManager);
         const validatorService = await deployValidatorService(contractManager);
         const delegationPeriodManager = await deployDelegationPeriodManager(contractManager);
-        await deployMonitors(contractManager);
         await deployDistributor(contractManager);
 
         let nodesFactory: ContractFactory;

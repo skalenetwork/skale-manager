@@ -2,7 +2,6 @@ import { deployConstantsHolder } from "./constantsHolder";
 import { deployDistributor } from "./delegation/distributor";
 import { deployValidatorService } from "./delegation/validatorService";
 import { deployFunctionFactory } from "./factory";
-import { deployMonitors } from "./monitors";
 import { deployNodes } from "./nodes";
 import { deploySchains } from "./schains";
 import { deploySkaleToken } from "./skaleToken";
@@ -16,7 +15,6 @@ const deploySkaleManager: (contractManager: ContractManager) => Promise<SkaleMan
                             async (contractManager: ContractManager) => {
                                 await deploySchains(contractManager);
                                 await deployValidatorService(contractManager);
-                                await deployMonitors(contractManager);
                                 await deployNodes(contractManager);
                                 await deployConstantsHolder(contractManager);
                                 await deploySkaleToken(contractManager);
