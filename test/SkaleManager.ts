@@ -5,7 +5,6 @@ import { ConstantsHolder,
          DelegationController,
          DelegationPeriodManager,
          Distributor,
-         Monitors,
          Nodes,
          SchainsInternal,
          Schains,
@@ -28,7 +27,6 @@ import { deployDelegationController } from "./tools/deploy/delegation/delegation
 import { deployDelegationPeriodManager } from "./tools/deploy/delegation/delegationPeriodManager";
 import { deployDistributor } from "./tools/deploy/delegation/distributor";
 import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
-import { deployMonitors } from "./tools/deploy/monitors";
 import { deployNodes } from "./tools/deploy/nodes";
 import { deploySchainsInternal } from "./tools/deploy/schainsInternal";
 import { deploySchains } from "./tools/deploy/schains";
@@ -101,7 +99,6 @@ describe("SkaleManager", () => {
     let nodesContract: Nodes;
     let skaleManager: SkaleManager;
     let skaleToken: SkaleToken;
-    let monitors: Monitors;
     let schainsInternal: SchainsInternal;
     let schains: Schains;
     let validatorService: ValidatorService;
@@ -122,7 +119,6 @@ describe("SkaleManager", () => {
         skaleToken = await deploySkaleToken(contractManager);
         constantsHolder = await deployConstantsHolder(contractManager);
         nodesContract = await deployNodes(contractManager);
-        monitors = await deployMonitors(contractManager);
         schainsInternal = await deploySchainsInternal(contractManager);
         schains = await deploySchains(contractManager);
         skaleManager = await deploySkaleManager(contractManager);
@@ -140,6 +136,12 @@ describe("SkaleManager", () => {
         await constantsHolder.setMSR(5);
         await constantsHolder.setLaunchTimestamp(await currentTime(web3)); // to allow bounty withdrawing
         await bountyContract.enableBountyReduction();
+
+        await schainsInternal.addSchainType(1, 16);
+        await schainsInternal.addSchainType(4, 16);
+        await schainsInternal.addSchainType(128, 16);
+        await schainsInternal.addSchainType(0, 2);
+        await schainsInternal.addSchainType(32, 4);
     });
 
     beforeEach(async () => {
@@ -271,13 +273,10 @@ describe("SkaleManager", () => {
 
             it("should remove the node", async () => {
                 const balanceBefore = await skaleToken.balanceOf(validator.address);
-                const lastBlock = await monitors.getLastBountyBlock(0);
 
                 await skaleManager.connect(nodeAddress).nodeExit(0);
 
                 await nodesContract.isNodeLeft(0).should.be.eventually.true;
-
-                expect((await monitors.getLastBountyBlock(0)).eq(lastBlock)).to.be.true;
 
                 const balanceAfter = await skaleToken.balanceOf(validator.address);
 
@@ -615,7 +614,7 @@ describe("SkaleManager", () => {
                                 0, // nonce
                                 "d2"]), // name
                             );
-                        await skaleDKG.setSuccesfulDKGPublic(
+                        await skaleDKG.setSuccessfulDKGPublic(
                             d2SchainId
                         );
                     });
@@ -638,7 +637,7 @@ describe("SkaleManager", () => {
                     it("should delete schain after deleting node", async () => {
                         const nodes = await schainsInternal.getNodesInGroup(d2SchainId);
                         await skaleManager.connect(nodeAddress).nodeExit(nodes[0]);
-                        await skaleDKG.setSuccesfulDKGPublic(
+                        await skaleDKG.setSuccessfulDKGPublic(
                             d2SchainId,
                         );
                         await skaleManager.connect(developer).deleteSchain("d2");

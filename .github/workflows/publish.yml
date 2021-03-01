@@ -45,7 +45,7 @@ jobs:
         export VERSION=$(bash ./scripts/calculate_version.sh)
         echo "Version $VERSION"
         echo "VERSION=$VERSION" >> $GITHUB_ENV
-        ( test $BRANCH = "stable" || test $BRANCH = "master" && export PRERELEASE=true ) || export PRERELEASE=false
+        ( test $BRANCH = "stable" || test $BRANCH = "master" && export PRERELEASE=false ) || export PRERELEASE=true
         echo "PRERELEASE=$PRERELEASE" >> $GITHUB_ENV
         bash ./scripts/build_and_publish.sh
     

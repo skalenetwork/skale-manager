@@ -128,6 +128,12 @@ describe("Schains", () => {
         const signature3 = await getValidatorIdSignature(validatorIndex, nodeAddress3);
         await validatorService.connect(validator).linkNodeAddress(nodeAddress3.address, signature3);
         await constantsHolder.setMSR(0);
+
+        await schainsInternal.addSchainType(1, 16);
+        await schainsInternal.addSchainType(4, 16);
+        await schainsInternal.addSchainType(128, 16);
+        await schainsInternal.addSchainType(0, 2);
+        await schainsInternal.addSchainType(32, 4);
     });
 
     beforeEach(async () => {
@@ -157,7 +163,7 @@ describe("Schains", () => {
                 holder.address,
                 5,
                 web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 6, 0, "d2"]),
-            ).should.be.eventually.rejectedWith("Bad schain type");
+            ).should.be.eventually.rejectedWith("Invalid type of schain");
         });
 
         it("should fail when data parameter is too short", async () => {
@@ -1072,7 +1078,7 @@ describe("Schains", () => {
         });
 
         it("should revert on wrong schain type", async () => {
-            await schains.getSchainPrice(6, 5).should.be.eventually.rejectedWith("Bad schain type");
+            await schains.getSchainPrice(6, 5).should.be.eventually.rejectedWith("Invalid type of schain");
         });
     });
 
@@ -1103,7 +1109,7 @@ describe("Schains", () => {
                 deposit,
                 web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d2"]),
             );
-            await skaleDKG.setSuccesfulDKGPublic(
+            await skaleDKG.setSuccessfulDKGPublic(
                 stringValue(web3.utils.soliditySha3("d2")),
             );
 
@@ -1112,7 +1118,7 @@ describe("Schains", () => {
                 deposit,
                 web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d3"]),
             );
-            await skaleDKG.setSuccesfulDKGPublic(
+            await skaleDKG.setSuccessfulDKGPublic(
                 stringValue(web3.utils.soliditySha3("d3")),
             );
             await skaleManager.connect(nodeAddress).createNode(
@@ -1167,13 +1173,13 @@ describe("Schains", () => {
             const nodeRot = res1[3];
             const res = await skaleDKG.isBroadcastPossible(
                 stringValue(web3.utils.soliditySha3("d3")), nodeRot);
-            await skaleDKG.setSuccesfulDKGPublic(
+            await skaleDKG.setSuccessfulDKGPublic(
                 stringValue(web3.utils.soliditySha3("d3")),
             );
             await skaleManager.connect(nodeAddress).nodeExit(1)
                 .should.be.eventually.rejectedWith("Occupied by rotation on Schain");
             await skaleManager.connect(nodeAddress).nodeExit(0);
-            await skaleDKG.setSuccesfulDKGPublic(
+            await skaleDKG.setSuccessfulDKGPublic(
                 stringValue(web3.utils.soliditySha3("d2")),
             );
 
@@ -1194,13 +1200,13 @@ describe("Schains", () => {
             await skipTime(ethers, 43260);
 
             await skaleManager.connect(nodeAddress).nodeExit(1);
-            await skaleDKG.setSuccesfulDKGPublic(
+            await skaleDKG.setSuccessfulDKGPublic(
                 stringValue(web3.utils.soliditySha3("d3")),
             );
             nodeStatus = await nodes.getNodeStatus(1);
             assert.equal(nodeStatus, LEAVING);
             await skaleManager.connect(nodeAddress).nodeExit(1);
-            await skaleDKG.setSuccesfulDKGPublic(
+            await skaleDKG.setSuccessfulDKGPublic(
                 stringValue(web3.utils.soliditySha3("d2")),
             );
             nodeStatus = await nodes.getNodeStatus(1);
@@ -1240,7 +1246,7 @@ describe("Schains", () => {
                 (exist4 && newArrayD3[zeroPositionD3].toNumber() === 4),
                 true
             );
-            await skaleDKG.setSuccesfulDKGPublic(
+            await skaleDKG.setSuccessfulDKGPublic(
                 stringValue(web3.utils.soliditySha3("d3")),
             );
             await skaleManager.connect(nodeAddress).nodeExit(0);
@@ -1271,7 +1277,7 @@ describe("Schains", () => {
                 (exist4 && newArrayD2[zeroPositionD2].toNumber() === 4),
                 true
             );
-            await skaleDKG.setSuccesfulDKGPublic(
+            await skaleDKG.setSuccessfulDKGPublic(
                 stringValue(web3.utils.soliditySha3("d2")),
             );
             await skipTime(ethers, 43260);
@@ -1303,7 +1309,7 @@ describe("Schains", () => {
                 (exist4 && newNewArrayD3[onePositionD3].toNumber() === 4),
                 true
             );
-            await skaleDKG.setSuccesfulDKGPublic(
+            await skaleDKG.setSuccessfulDKGPublic(
                 stringValue(web3.utils.soliditySha3("d3")),
             );
             await skaleManager.connect(nodeAddress).nodeExit(1);
@@ -1334,21 +1340,21 @@ describe("Schains", () => {
                 (exist4 && newNewArrayD2[onePositionD2].toNumber() === 4),
                 true
             );
-            await skaleDKG.setSuccesfulDKGPublic(
+            await skaleDKG.setSuccessfulDKGPublic(
                 stringValue(web3.utils.soliditySha3("d2")),
             );
         });
 
         it("should allow to rotate if occupied node didn't rotated for 12 hours", async () => {
             await skaleManager.connect(nodeAddress).nodeExit(0);
-            await skaleDKG.setSuccesfulDKGPublic(
+            await skaleDKG.setSuccessfulDKGPublic(
                 stringValue(web3.utils.soliditySha3("d3")),
             );
             await skaleManager.connect(nodeAddress).nodeExit(1)
                 .should.be.eventually.rejectedWith("Occupied by rotation on Schain");
             await skipTime(ethers, 43260);
             await skaleManager.connect(nodeAddress).nodeExit(1);
-            await skaleDKG.setSuccesfulDKGPublic(
+            await skaleDKG.setSuccessfulDKGPublic(
                 stringValue(web3.utils.soliditySha3("d3")),
             );
 
@@ -1365,11 +1371,11 @@ describe("Schains", () => {
         it("should not create schain with the same name after removing", async () => {
             const deposit = await schains.getSchainPrice(5, 5);
             await skaleManager.connect(nodeAddress).nodeExit(0);
-            await skaleDKG.setSuccesfulDKGPublic(
+            await skaleDKG.setSuccessfulDKGPublic(
                 stringValue(web3.utils.soliditySha3("d3")),
             );
             await skaleManager.connect(nodeAddress).nodeExit(0);
-            await skaleDKG.setSuccesfulDKGPublic(
+            await skaleDKG.setSuccessfulDKGPublic(
                 stringValue(web3.utils.soliditySha3("d2")),
             );
             await skaleManager.connect(holder).deleteSchainByRoot("d2")
@@ -1404,7 +1410,7 @@ describe("Schains", () => {
                 deposit,
                 web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d4"]),
             );
-            await skaleDKG.setSuccesfulDKGPublic(
+            await skaleDKG.setSuccessfulDKGPublic(
                 stringValue(web3.utils.soliditySha3("d4")),
             );
             const nodesInGroupBN = await schainsInternal.getNodesInGroup(stringValue(web3.utils.soliditySha3("d4")));
@@ -1472,13 +1478,13 @@ describe("Schains", () => {
             assert.equal(res, true);
             res = await skaleDKG.connect(nodeAddress).isBroadcastPossible(stringValue(web3.utils.soliditySha3("d3")), nodeRot);
             assert.equal(res, true);
-            await skaleDKG.setSuccesfulDKGPublic(
+            await skaleDKG.setSuccessfulDKGPublic(
                 stringValue(web3.utils.soliditySha3("d3")),
             );
             await skaleManager.connect(nodeAddress).nodeExit(1)
                 .should.be.eventually.rejectedWith("Occupied by rotation on Schain");
             await skaleManager.connect(nodeAddress).nodeExit(0);
-            await skaleDKG.setSuccesfulDKGPublic(
+            await skaleDKG.setSuccessfulDKGPublic(
                 stringValue(web3.utils.soliditySha3("d2")),
             );
 
@@ -1679,7 +1685,7 @@ describe("Schains", () => {
                 deposit,
                 web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d1"]),
             );
-            await skaleDKG.setSuccesfulDKGPublic(
+            await skaleDKG.setSuccessfulDKGPublic(
                 stringValue(web3.utils.soliditySha3("d1")),
             );
 
@@ -1688,7 +1694,7 @@ describe("Schains", () => {
                 deposit,
                 web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d2"]),
             );
-            await skaleDKG.setSuccesfulDKGPublic(
+            await skaleDKG.setSuccessfulDKGPublic(
                 stringValue(web3.utils.soliditySha3("d2")),
             );
 
@@ -1697,7 +1703,7 @@ describe("Schains", () => {
                 deposit,
                 web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d3"]),
             );
-            await skaleDKG.setSuccesfulDKGPublic(
+            await skaleDKG.setSuccessfulDKGPublic(
                 stringValue(web3.utils.soliditySha3("d3")),
             );
 
@@ -1706,7 +1712,7 @@ describe("Schains", () => {
                 deposit,
                 web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d4"]),
             );
-            await skaleDKG.setSuccesfulDKGPublic(
+            await skaleDKG.setSuccessfulDKGPublic(
                 stringValue(web3.utils.soliditySha3("d4")),
             );
 
@@ -1729,7 +1735,7 @@ describe("Schains", () => {
             }
             for (const schainId of Array.from(schainIds).reverse()) {
                 await skaleManager.connect(nodeAddress).nodeExit(rotIndex);
-                await skaleDKG.setSuccesfulDKGPublic(schainId);
+                await skaleDKG.setSuccessfulDKGPublic(schainId);
             }
             await schainsInternal.getSchainIdsForNode(rotIndex).should.be.eventually.empty;
         });
@@ -1747,7 +1753,7 @@ describe("Schains", () => {
             }
             for (const schainId of Array.from(schainIds1).reverse()) {
                 await skaleManager.connect(nodeAddress).nodeExit(rotIndex1);
-                await skaleDKG.setSuccesfulDKGPublic(
+                await skaleDKG.setSuccessfulDKGPublic(
                     schainId,
                 );
             }
@@ -1768,7 +1774,7 @@ describe("Schains", () => {
             await skipTime(ethers, 43260);
             for (const schainId of Array.from(schainIds2).reverse()) {
                 await skaleManager.connect(nodeAddress).nodeExit(rotIndex2);
-                await skaleDKG.setSuccesfulDKGPublic(
+                await skaleDKG.setSuccessfulDKGPublic(
                     schainId,
                 );
             }
@@ -1818,7 +1824,7 @@ describe("Schains", () => {
                 deposit,
                 web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d1"]),
             );
-            await skaleDKG.setSuccesfulDKGPublic(
+            await skaleDKG.setSuccessfulDKGPublic(
                 stringValue(web3.utils.soliditySha3("d1")),
             );
 
@@ -1827,7 +1833,7 @@ describe("Schains", () => {
                 deposit,
                 web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d2"]),
             );
-            await skaleDKG.setSuccesfulDKGPublic(
+            await skaleDKG.setSuccessfulDKGPublic(
                 stringValue(web3.utils.soliditySha3("d2")),
             );
 
@@ -1836,7 +1842,7 @@ describe("Schains", () => {
                 deposit,
                 web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d3"]),
             );
-            await skaleDKG.setSuccesfulDKGPublic(
+            await skaleDKG.setSuccessfulDKGPublic(
                 stringValue(web3.utils.soliditySha3("d3")),
             );
 
@@ -1845,7 +1851,7 @@ describe("Schains", () => {
                 deposit,
                 web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d4"]),
             );
-            await skaleDKG.setSuccesfulDKGPublic(
+            await skaleDKG.setSuccessfulDKGPublic(
                 stringValue(web3.utils.soliditySha3("d4")),
             );
 
@@ -1876,7 +1882,7 @@ describe("Schains", () => {
                 } else {
                     break;
                 }
-                await skaleDKG.setSuccesfulDKGPublic(
+                await skaleDKG.setSuccessfulDKGPublic(
                     schainId,
                 );
             }
@@ -1904,7 +1910,7 @@ describe("Schains", () => {
                 } else {
                     break;
                 }
-                await skaleDKG.setSuccesfulDKGPublic(
+                await skaleDKG.setSuccessfulDKGPublic(
                     schainId,
                 );
             }
@@ -1933,7 +1939,7 @@ describe("Schains", () => {
                 } else {
                     break;
                 }
-                await skaleDKG.setSuccesfulDKGPublic(
+                await skaleDKG.setSuccessfulDKGPublic(
                     schainId,
                 );
             }
@@ -1948,7 +1954,7 @@ describe("Schains", () => {
                 const valId = await validatorService.getValidatorIdByNodeAddress(nodeAddress2.address);
                 ((await validatorService.getValidatorIdByNodeAddress(nodeAddress2.address)).toString()).should.be.equal("1");
                 await skaleManager.connect(nodeAddress2).nodeExit(rotIndex);
-                await skaleDKG.setSuccesfulDKGPublic(
+                await skaleDKG.setSuccessfulDKGPublic(
                     schainId,
                 );
             }
@@ -1967,7 +1973,7 @@ describe("Schains", () => {
                 const validatorId = await validatorService.getValidatorIdByNodeAddress(nodeAddress2.address);
                 validatorId.toString().should.be.equal("1");
                 await skaleManager.connect(validator).nodeExit(rotatedNodeIndex);
-                await skaleDKG.setSuccesfulDKGPublic(schainId);
+                await skaleDKG.setSuccessfulDKGPublic(schainId);
             }
             if (!(await nodes.isNodeLeft(rotatedNodeIndex))) {
                 await skaleManager.connect(validator).nodeExit(rotatedNodeIndex);
@@ -1984,7 +1990,7 @@ describe("Schains", () => {
                 const validatorId = await validatorService.getValidatorIdByNodeAddress(nodeAddress2.address);
                 validatorId.toString().should.be.equal("1");
                 await skaleManager.nodeExit(rotatedNodeIndex);
-                await skaleDKG.setSuccesfulDKGPublic(schainId);
+                await skaleDKG.setSuccessfulDKGPublic(schainId);
             }
             if (!(await nodes.isNodeLeft(rotatedNodeIndex))) {
                 await skaleManager.nodeExit(rotatedNodeIndex);
@@ -2001,7 +2007,7 @@ describe("Schains", () => {
                 const valId = await validatorService.getValidatorIdByNodeAddress(nodeAddress3.address);
                 ((await validatorService.getValidatorIdByNodeAddress(nodeAddress3.address)).toString()).should.be.equal("1");
                 await skaleManager.connect(nodeAddress3).nodeExit(rotIndex);
-                await skaleDKG.setSuccesfulDKGPublic(
+                await skaleDKG.setSuccessfulDKGPublic(
                     schainId,
                 );
             }

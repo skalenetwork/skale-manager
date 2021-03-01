@@ -338,6 +338,11 @@ describe("SkaleDKG", () => {
                         domainName: "somedomain.name"
                     });
             }
+            await schainsInternal.addSchainType(1, 16);
+            await schainsInternal.addSchainType(4, 16);
+            await schainsInternal.addSchainType(128, 16);
+            await schainsInternal.addSchainType(0, 2);
+            await schainsInternal.addSchainType(32, 4);
         });
 
         after(async () => {
@@ -722,7 +727,7 @@ describe("SkaleDKG", () => {
                     assert(res.should.be.false);
                 });
 
-                it("should be unpossible send broadcast", async () => {
+                it("should be impossible send broadcast", async () => {
                     const res = await skaleDKG.connect(validatorsAccount[1]).isBroadcastPossible(
                         stringValue(web3.utils.soliditySha3(schainName)),
                         1
@@ -730,7 +735,7 @@ describe("SkaleDKG", () => {
                     assert(res.should.be.false);
                 });
 
-                it("should be unpossible send complaint", async () => {
+                it("should be impossible send complaint", async () => {
                     const res = await skaleDKG.connect(validatorsAccount[0]).isComplaintPossible(
                         stringValue(web3.utils.soliditySha3(schainName)),
                         0,
@@ -739,7 +744,7 @@ describe("SkaleDKG", () => {
                     assert(res.should.be.false);
                 });
 
-                it("should be unpossible send another complaint", async () => {
+                it("should be impossible send another complaint", async () => {
                     const res = await skaleDKG.connect(validatorsAccount[1]).isComplaintPossible(
                         stringValue(web3.utils.soliditySha3(schainName)),
                         1,
@@ -748,7 +753,7 @@ describe("SkaleDKG", () => {
                     assert(res.should.be.false);
                 });
 
-                it("should be unpossible send preResponse", async () => {
+                it("should be impossible send preResponse", async () => {
                     const res = await skaleDKG.connect(validatorsAccount[0]).isPreResponsePossible(
                         stringValue(web3.utils.soliditySha3(schainName)),
                         0
@@ -756,7 +761,7 @@ describe("SkaleDKG", () => {
                     assert(res.should.be.false);
                 });
 
-                it("should be unpossible send another preResponse", async () => {
+                it("should be impossible send another preResponse", async () => {
                     const res = await skaleDKG.connect(validatorsAccount[1]).isPreResponsePossible(
                         stringValue(web3.utils.soliditySha3(schainName)),
                         1
@@ -764,7 +769,7 @@ describe("SkaleDKG", () => {
                     assert(res.should.be.false);
                 });
 
-                it("should be unpossible send response", async () => {
+                it("should be impossible send response", async () => {
                     const res = await skaleDKG.connect(validatorsAccount[0]).isResponsePossible(
                         stringValue(web3.utils.soliditySha3(schainName)),
                         0
@@ -772,7 +777,7 @@ describe("SkaleDKG", () => {
                     assert(res.should.be.false);
                 });
 
-                it("should be unpossible send another response", async () => {
+                it("should be impossible send another response", async () => {
                     const res = await skaleDKG.connect(validatorsAccount[1]).isResponsePossible(
                         stringValue(web3.utils.soliditySha3(schainName)),
                         1
@@ -1486,7 +1491,7 @@ describe("SkaleDKG", () => {
             assert(numOfCompl, "2");
 
             assert(
-                await skaleDKG.getTimeOfLastSuccesfulDKG(stringValue(web3.utils.soliditySha3(schainName))),
+                await skaleDKG.getTimeOfLastSuccessfulDKG(stringValue(web3.utils.soliditySha3(schainName))),
                 (await web3.eth.getBlock(resSuccess.blockNumber)).timestamp.toString()
             );
 
@@ -1540,7 +1545,7 @@ describe("SkaleDKG", () => {
             );
 
             assert(
-                await skaleDKG.getTimeOfLastSuccesfulDKG(stringValue(web3.utils.soliditySha3(schainName))),
+                await skaleDKG.getTimeOfLastSuccessfulDKG(stringValue(web3.utils.soliditySha3(schainName))),
                 (await web3.eth.getBlock(resSuccess.blockNumber)).timestamp.toString()
             );
 
