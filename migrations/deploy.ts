@@ -27,7 +27,7 @@ function getNameInContractManager(contract: string) {
 export function hashBytecode(bytecode: string): string {
     const buf = Buffer.from(bytecode.replace(/^0x/, ''), 'hex');
     return ethers.utils.keccak256(buf);
-  }
+}
 
 export function getContractKeyInAbiFile(contract: string) {
     return contract.replace(/([a-zA-Z])(?=[A-Z])/g, '$1_').toLowerCase();
@@ -38,15 +38,16 @@ const customNames: {[key: string]: string} = {
     "BountyV2": "Bounty"
 }
 
-export async function getContractFactory(
-    contract: string,
-    libraryArtifacts: {
-        address: string,
-        hashedBytecode: string,
-        contract: string
-    }[]
-)
-{
+export async function getManifestName(): Promise<string> {
+    const networkName = (await ethers.provider.getNetwork()).name;
+    if (networkName === "unknown") {
+        return "unknown-" + (await ethers.provider.getNetwork()).chainId;
+    } else {
+        return networkName;
+    }
+}
+
+export async function getContractFactory(contract: string) {
     const { linkReferences } = await artifacts.readArtifact(contract);
     if (!Object.keys(linkReferences).length)
         return await ethers.getContractFactory(contract);
@@ -58,10 +59,18 @@ export async function getContractFactory(
     }
 
     const libraries = await deployLibraries(libraryNames);
-    for (const libraryName of libraryNames) {
-        const libraryAddress = libraries[libraryName];
+    const libraryArtifacts: {[key: string]: any} = {};
+    for (const libraryName of Object.keys(libraries)) {
         const { bytecode } = await artifacts.readArtifact(libraryName);
-        libraryArtifacts.push({address: libraryAddress, hashedBytecode: hashBytecode(bytecode),  contract: libraryName});
+        libraryArtifacts[libraryName] = {"address": libraries[libraryName], "bytecodeHash": hashBytecode(bytecode)};
+    }
+    let manifest: any;
+    try {
+        manifest = JSON.parse(await fs.readFile(`.openzeppelin/${await getManifestName()}.json`, "utf-8"));
+        Object.assign(libraryArtifacts, manifest.libraries);
+    } finally {
+        Object.assign(manifest, {libraries: libraryArtifacts});
+        await fs.writeFile(`.openzeppelin/${await getManifestName()}.json`, JSON.stringify(manifest, null, 4));
     }
     return await getLinkedContractFactory(contract, libraries);
 }
@@ -113,7 +122,6 @@ async function main() {
     }
 
     const contractArtifacts: {address: string, interface: Interface, contract: string}[] = [];
-    const libraryArtifacts: {address: string, hashedBytecode: string, contract: string}[] = [];
 
     const contractManagerName = "ContractManager";
     console.log("Deploy", contractManagerName);
@@ -126,7 +134,7 @@ async function main() {
     await verifyProxy(contractManagerName, contractManager.address);
 
     for (const contract of contracts) {
-        const contractFactory = await getContractFactory(contract, libraryArtifacts);
+        const contractFactory = await getContractFactory(contract);
         console.log("Deploy", contract);
         const proxy = await upgrades.deployProxy(contractFactory, getInitializerParameters(contract, contractManager.address), { unsafeAllowLinkedLibraries: true });
         await proxy.deployTransaction.wait();
@@ -161,12 +169,6 @@ async function main() {
         const contractKey = getContractKeyInAbiFile(artifact.contract);
         outputObject[contractKey + "_address"] = artifact.address;
         outputObject[contractKey + "_abi"] = getAbi(artifact.interface);
-    }
-
-    for (const libraryArtifact of libraryArtifacts) {
-        const contractKey = getContractKeyInAbiFile(libraryArtifact.contract);
-        outputObject[contractKey + "_address"] = libraryArtifact.address;
-        outputObject[contractKey + "_hashed_bytecode"] = libraryArtifact.hashedBytecode;
     }
 
     const version = (await fs.readFile("VERSION", "utf-8")).trim();

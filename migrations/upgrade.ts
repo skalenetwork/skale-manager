@@ -1,4 +1,4 @@
-import { contracts, getContractKeyInAbiFile, getContractFactory, hashBytecode } from "./deploy";
+import { contracts, getContractKeyInAbiFile, hashBytecode, getManifestName } from "./deploy";
 import { ethers, network, upgrades, run, artifacts } from "hardhat";
 import hre from "hardhat";
 import { promises as fs } from "fs";
@@ -9,12 +9,12 @@ import { getAbi } from "./tools/abi";
 import { getManifestAdmin } from "@openzeppelin/hardhat-upgrades/dist/admin";
 import { SafeMock } from "../typechain/SafeMock";
 import { encodeTransaction } from "./tools/multiSend";
-import { createMultiSendTransaction, getSafeRelayUrl, getSafeTransactionUrl, sendSafeTransaction } from "./tools/gnosis-safe";
-import axios from "axios";
+import { createMultiSendTransaction, sendSafeTransaction } from "./tools/gnosis-safe";
 import chalk from "chalk";
 import { verify, verifyProxy } from "./tools/verification";
 
-export async function getAndUpgradeContractFactory(contract: string, abi: any) {
+export async function getAndUpgradeContractFactory(contract: string) {
+    const manifest = JSON.parse(await fs.readFile(`.openzeppelin/${await getManifestName()}.json`, "utf-8"));
     const { linkReferences } = await artifacts.readArtifact(contract);
     if (!Object.keys(linkReferences).length)
         return await ethers.getContractFactory(contract);
@@ -24,22 +24,20 @@ export async function getAndUpgradeContractFactory(contract: string, abi: any) {
     for (const key of Object.keys(linkReferences)) {
         const libraryName = Object.keys(linkReferences[key])[0];
         const { bytecode } = await artifacts.readArtifact(libraryName);
-        const libraryBytecodeHash = abi[getContractKeyInAbiFile(libraryName) + "_hashed_bytecode"];
+        const libraryBytecodeHash = manifest.libraries[libraryName].bytecodeHash;
         if (hashBytecode(bytecode) !== libraryBytecodeHash) {
             librariesToUpgrade.push(libraryName);
-            console.log(hashBytecode(bytecode));
-            console.log(libraryBytecodeHash);
         } else {
-            oldLibraries[libraryName] = abi[getContractKeyInAbiFile(libraryName) + "_address"];
+            oldLibraries[libraryName] = manifest.libraries[libraryName].address;;
         }
     }
     const libraries = await deployLibraries(librariesToUpgrade);
     for (const libraryName of Object.keys(libraries)) {
         const { bytecode } = await artifacts.readArtifact(libraryName);
-        abi[getContractKeyInAbiFile(libraryName) + "_address"] =  libraries[libraryName];
-        abi[getContractKeyInAbiFile(libraryName) + "_hashed_bytecode"] = hashBytecode(bytecode);
+        manifest.libraries[libraryName] = {"address": libraries[libraryName], "bytecodeHash": hashBytecode(bytecode)};
     }
     Object.assign(libraries, oldLibraries);
+    await fs.writeFile(`.openzeppelin/${await getManifestName()}.json`, JSON.stringify(manifest, null, 4));
     return await getLinkedContractFactory(contract, libraries);
 }
 
@@ -109,7 +107,7 @@ async function main() {
     // deploy new implementations
     const contractsToUpgrade: {proxyAddress: string, implementationAddress: string, name: string, abi: any}[] = [];
     for (const contract of ["ContractManager"].concat(contracts)) {
-        const contractFactory = await getAndUpgradeContractFactory(contract, abi);
+        const contractFactory = await getAndUpgradeContractFactory(contract);
         let _contract = contract;
         if (contract === "BountyV2") {
             if (!abi[getContractKeyInAbiFile(contract) + "_address"])
@@ -147,7 +145,7 @@ async function main() {
 
     // Initialize SegmentTree in Nodes
     const nodesName = "Nodes";
-    const nodesContractFactory = await getAndUpgradeContractFactory(nodesName, abi);
+    const nodesContractFactory = await getAndUpgradeContractFactory(nodesName);
     const nodesAddress = abi[getContractKeyInAbiFile(nodesName) + "_address"];
     if (nodesAddress) {
         console.log(chalk.yellowBright("Prepare transaction to initialize", nodesName));
@@ -170,7 +168,7 @@ async function main() {
 
     // Initialize schain types
     const schainsInternalName = "SchainsInternal";
-    const schainsInternalFactory = await getAndUpgradeContractFactory(schainsInternalName, abi);
+    const schainsInternalFactory = await getAndUpgradeContractFactory(schainsInternalName);
     const schainsInternalAddress = abi[getContractKeyInAbiFile(schainsInternalName) + "_address"];
     if (schainsInternalAddress) {
         console.log(chalk.yellowBright("Prepare transactions to initialize schains types"));
