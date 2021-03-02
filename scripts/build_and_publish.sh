@@ -25,7 +25,7 @@ docker tag $IMAGE_NAME $LATEST_IMAGE_NAME
 echo "========================================================================================="
 echo "Built $IMAGE_NAME"
 
-Restore version
+# Restore version
 
 echo $MAIN_VERSION > VERSION
 
