@@ -61,7 +61,7 @@ async function main() {
         console.log(chalk.blue("Deploy SafeMock to simulate upgrade via multisig"));
         const safeMockFactory = await ethers.getContractFactory("SafeMock");
         safeMock = (await safeMockFactory.deploy()) as SafeMock;
-        safeMock.deployTransaction.wait();
+        await safeMock.deployTransaction.wait();
 
         console.log(chalk.blue("Transfer ownership to SafeMock"));
         safe = safeMock.address;
@@ -199,6 +199,10 @@ async function main() {
     }
 
     // write version
+    if (safeMock) {
+        console.log(chalk.blue("Grant access to set version"));
+        await (await skaleManager.grantRole(await skaleManager.DEFAULT_ADMIN_ROLE(), safe)).wait();
+    }
     safeTransactions.push(encodeTransaction(
         0,
         skaleManager.address,
