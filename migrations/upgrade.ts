@@ -21,14 +21,21 @@ export async function getAndUpgradeContractFactory(contract: string) {
 
     const librariesToUpgrade = [];
     const oldLibraries: {[k: string]: string} = {};
+    if (manifest.libraries === undefined) {
+        Object.assign(manifest, {libraries: {}});
+    }
     for (const key of Object.keys(linkReferences)) {
         const libraryName = Object.keys(linkReferences[key])[0];
         const { bytecode } = await artifacts.readArtifact(libraryName);
+        if (manifest.libraries[libraryName] === undefined) {
+            librariesToUpgrade.push(libraryName);
+            continue;
+        }
         const libraryBytecodeHash = manifest.libraries[libraryName].bytecodeHash;
         if (hashBytecode(bytecode) !== libraryBytecodeHash) {
             librariesToUpgrade.push(libraryName);
         } else {
-            oldLibraries[libraryName] = manifest.libraries[libraryName].address;;
+            oldLibraries[libraryName] = manifest.libraries[libraryName].address;
         }
     }
     const libraries = await deployLibraries(librariesToUpgrade);
