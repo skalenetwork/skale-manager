@@ -6,6 +6,8 @@ import { ContractFactory } from 'ethers';
 import { deployLibraries, getLinkedContractFactory } from "../test/tools/deploy/factory";
 import { getAbi } from './tools/abi';
 import { verify, verifyProxy } from './tools/verification';
+import { getVersion } from './tools/version';
+
 
 function getInitializerParameters(contract: string, contractManagerAddress: string) {
     if (["TimeHelpers", "Decryption", "ECDH"].includes(contract)) {
@@ -107,7 +109,7 @@ async function main() {
         contracts.push("TimeHelpersWithDebug");
     }
 
-    const version = (await fs.readFile("VERSION", "utf-8")).trim();
+    const version = await getVersion();
     const artifacts: {address: string, interface: Interface, contract: string}[] = [];
 
     const contractManagerName = "ContractManager";

@@ -12,6 +12,7 @@ import { createMultiSendTransaction, getSafeRelayUrl, getSafeTransactionUrl, sen
 import axios from "axios";
 import chalk from "chalk";
 import { verify, verifyProxy } from "./tools/verification";
+import { getVersion } from "./tools/version";
 
 
 async function main() {
@@ -38,7 +39,7 @@ async function main() {
     } catch {
         console.log("Can't read deployed version");
     };
-    const version = (await fs.readFile("VERSION", "utf-8")).trim();
+    const version = await getVersion();
     if (deployedVersion) {
         if (deployedVersion !== "1.7.2-stable.0") {
             console.log(chalk.red(`This script can't upgrade version ${deployedVersion} to ${version}`));
@@ -47,6 +48,7 @@ async function main() {
     } else {
         console.log(chalk.yellow("Can't check currently deployed version of skale-manager"));
     }
+    console.log(`Will mark updated version as ${version}`);
 
     const [ deployer ] = await ethers.getSigners();
     let safe = await proxyAdmin.owner();
