@@ -35,7 +35,7 @@ const customNames: {[key: string]: string} = {
 }
 
 export async function getManifestFile(): Promise<string> {
-    return new Manifest((await ethers.provider.getNetwork()).chainId).file;
+    return (await Manifest.forNetwork(ethers.provider)).file;;
 }
 
 export async function getContractFactory(contract: string) {
