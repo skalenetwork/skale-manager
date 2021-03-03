@@ -60,7 +60,7 @@ library Random {
      */
     function random(RandomGenerator memory self, uint max) internal pure returns (uint) {
         assert(max > 0);
-        uint maxRand = uint(-1).div(max).mul(max);
+        uint maxRand = uint(-1).sub(uint(-1).mod(max));
         if (uint(-1).sub(maxRand) == max.sub(1)) {
             return random(self).mod(max);
         } else {

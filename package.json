@@ -26,7 +26,7 @@
     }
   ],
   "scripts": {
-    "compile": "(rm -r ./artifacts/ || true) && npx hardhat compile",
+    "compile": "npx hardhat clean && npx hardhat compile",
     "deploy": "bash ./scripts/deploy.sh",
     "docs": "scripts/prepare-docs.sh",
     "fullcheck": "yarn lint && yarn tsc && yarn tslint && yarn slither",
@@ -44,9 +44,12 @@
     "@openzeppelin/contracts": "^3.4.0",
     "@openzeppelin/contracts-ethereum-package": "^3.0.0",
     "@openzeppelin/hardhat-upgrades": "^1.6.0",
+    "axios": "^0.21.1",
     "dotenv": "^8.2.0",
+    "ethereumjs-util": "^7.0.8",
     "ethers": "^5.0.31",
-    "hardhat": "^2.0.8",
+    "ethers-eip712": "^0.2.0",
+    "hardhat": "^2.0.11",
     "web3": "^1.3.4"
   },
   "devDependencies": {

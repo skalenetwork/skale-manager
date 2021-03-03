@@ -123,7 +123,6 @@ contract TokenState is Permissions, ILocker {
         Permissions.initialize(contractManagerAddress);
         addLocker("DelegationController");
         addLocker("Punisher");
-        addLocker("TokenLaunchLocker");
     }
 
     /**

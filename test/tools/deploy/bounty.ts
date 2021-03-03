@@ -6,7 +6,7 @@ import { deployTimeHelpers } from "./delegation/timeHelpers";
 import { deployWallets } from "./wallets";
 
 const deployBounty: (contractManager: ContractManager) => Promise<BountyV2>
-    = deployFunctionFactory("Bounty",
+    = deployFunctionFactory("BountyV2",
                             async (contractManager: ContractManager) => {
                                 await deployConstantsHolder(contractManager);
                                 await deployNodes(contractManager);
@@ -14,7 +14,9 @@ const deployBounty: (contractManager: ContractManager) => Promise<BountyV2>
                                 await deployWallets(contractManager);
                             },
                             async(contractManager: ContractManager) => {
-                                return await defaultDeploy("BountyV2", contractManager);
+                                const bounty = await defaultDeploy("BountyV2", contractManager);
+                                await contractManager.setContractsAddress("Bounty", bounty.address);
+                                return bounty;
                             });
 
 export { deployBounty };

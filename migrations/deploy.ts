@@ -1,11 +1,13 @@
 import { promises as fs } from 'fs';
 import { Interface } from "ethers/lib/utils";
-import { ethers, upgrades, network, run } from "hardhat";
-import { ContractManager } from "../typechain";
-import { ContractFactory } from 'ethers';
+import { ethers, upgrades, network, run, artifacts } from "hardhat";
+import { ContractManager, SkaleManager } from "../typechain";
 import { deployLibraries, getLinkedContractFactory } from "../test/tools/deploy/factory";
-import { getImplementationAddress } from "@openzeppelin/upgrades-core";
-import { getAbi } from './tools';
+import { getAbi } from './tools/abi';
+import { verify, verifyProxy } from './tools/verification';
+import { Manifest, hashBytecode } from "@openzeppelin/upgrades-core";
+import { getVersion } from './tools/version';
+
 
 function getInitializerParameters(contract: string, contractManagerAddress: string) {
     if (["TimeHelpers", "Decryption", "ECDH"].includes(contract)) {
@@ -25,18 +27,6 @@ function getNameInContractManager(contract: string) {
     }
 }
 
-async function getContractFactoryWithLibraries(e: any, contractName: string) {
-    const libraryNames = [];
-    for (const str of e.toString().split(".sol:")) {
-        const libraryName = str.split("\n")[0];
-        libraryNames.push(libraryName);
-    }
-    libraryNames.shift();
-    const libraries = await deployLibraries(libraryNames);
-    const contractFactory = await getLinkedContractFactory(contractName, libraries);
-    return contractFactory;
-}
-
 export function getContractKeyInAbiFile(contract: string) {
     return contract.replace(/([a-zA-Z])(?=[A-Z])/g, '$1_').toLowerCase();
 }
@@ -46,32 +36,36 @@ const customNames: {[key: string]: string} = {
     "BountyV2": "Bounty"
 }
 
-export async function getContractFactory(contract: string) {
-    let contractFactory: ContractFactory;
-    try {
-        contractFactory = await ethers.getContractFactory(contract);
-    } catch (e) {
-        const linkingErrorMessage = "The contract " + contract + " is missing links for the following libraries";
-        if (e.toString().includes(linkingErrorMessage)) {
-            contractFactory = await getContractFactoryWithLibraries(e, contract);
-        } else {
-            throw(e);
-        }
-    }
-    return contractFactory;
+export async function getManifestFile(): Promise<string> {
+    return (await Manifest.forNetwork(ethers.provider)).file;;
 }
 
-export async function verify(contractName: string, contractAddress: string) {
-    if (![1337, 31337].includes((await ethers.provider.getNetwork()).chainId)) {
-        try {
-            await run("verify:verify", {
-                address: contractAddress,
-                constructorArguments: []
-            });
-        } catch (e) {
-            console.log(`Contract ${contractName} was not verified on etherscan`);
-        }
+export async function getContractFactory(contract: string) {
+    const { linkReferences } = await artifacts.readArtifact(contract);
+    if (!Object.keys(linkReferences).length)
+        return await ethers.getContractFactory(contract);
+
+    const libraryNames = [];
+    for (const key of Object.keys(linkReferences)) {
+        const libraryName = Object.keys(linkReferences[key])[0];
+        libraryNames.push(libraryName);
     }
+
+    const libraries = await deployLibraries(libraryNames);
+    const libraryArtifacts: {[key: string]: any} = {};
+    for (const libraryName of Object.keys(libraries)) {
+        const { bytecode } = await artifacts.readArtifact(libraryName);
+        libraryArtifacts[libraryName] = {"address": libraries[libraryName], "bytecodeHash": hashBytecode(bytecode)};
+    }
+    let manifest: any;
+    try {
+        manifest = JSON.parse(await fs.readFile(await getManifestFile(), "utf-8"));
+        Object.assign(libraryArtifacts, manifest.libraries);
+    } finally {
+        Object.assign(manifest, {libraries: libraryArtifacts});
+        await fs.writeFile(await getManifestFile(), JSON.stringify(manifest, null, 4));
+    }
+    return await getLinkedContractFactory(contract, libraries);
 }
 
 export const contracts = [
@@ -83,15 +77,12 @@ export const contracts = [
     "Punisher",
     "SlashingTable",
     "TimeHelpers",
-    "TokenLaunchLocker",
-    "TokenLaunchManager",
     "TokenState",
     "ValidatorService",
 
     "ConstantsHolder",
     "Nodes",
     "NodeRotation",
-    "Monitors",
     "SchainsInternal",
     "Schains",
     "Decryption",
@@ -123,7 +114,8 @@ async function main() {
         contracts.push("TimeHelpersWithDebug");
     }
 
-    const artifacts: {address: string, interface: Interface, contract: string}[] = [];
+    const version = await getVersion();
+    const contractArtifacts: {address: string, interface: Interface, contract: string}[] = [];
 
     const contractManagerName = "ContractManager";
     console.log("Deploy", contractManagerName);
@@ -132,31 +124,29 @@ async function main() {
     await contractManager.deployTransaction.wait();
     console.log("Register", contractManagerName);
     await (await contractManager.setContractsAddress(contractManagerName, contractManager.address)).wait();
-    artifacts.push({address: contractManager.address, interface: contractManager.interface, contract: contractManagerName})
-    await verify(contractManagerName, await getImplementationAddress(network.provider, contractManager.address));
+    contractArtifacts.push({address: contractManager.address, interface: contractManager.interface, contract: contractManagerName})
+    await verifyProxy(contractManagerName, contractManager.address);
 
     for (const contract of contracts) {
-        let contractFactory: ContractFactory;
-        try {
-            contractFactory = await ethers.getContractFactory(contract);
-        } catch (e) {
-            const errorMessage = "The contract " + contract + " is missing links for the following libraries";
-            const isLinkingLibraryError = e.toString().indexOf(errorMessage) + 1;
-            if (isLinkingLibraryError) {
-                contractFactory = await getContractFactoryWithLibraries(e, contract);
-            } else {
-                throw(e);
-            }
-        }
+        const contractFactory = await getContractFactory(contract);
         console.log("Deploy", contract);
         const proxy = await upgrades.deployProxy(contractFactory, getInitializerParameters(contract, contractManager.address), { unsafeAllowLinkedLibraries: true });
         await proxy.deployTransaction.wait();
         const contractName = getNameInContractManager(contract);
         console.log("Register", contract, "as", contractName, "=>", proxy.address);
-        const transaction = await contractManager.setContractsAddress(getNameInContractManager(contract), proxy.address);
+        const transaction = await contractManager.setContractsAddress(contractName, proxy.address);
         await transaction.wait();
-        artifacts.push({address: proxy.address, interface: proxy.interface, contract});
-        await verify(contract, await getImplementationAddress(network.provider, proxy.address));
+        contractArtifacts.push({address: proxy.address, interface: proxy.interface, contract});
+        await verifyProxy(contract, proxy.address);
+
+        if (contract === "SkaleManager") {
+            try {
+                console.log(`Set version ${version}`)
+                await (await (proxy as SkaleManager).setVersion(version)).wait();
+            } catch {
+                console.log("Failed to set skale-manager version");
+            }
+        }
     }
 
     const skaleTokenName = "SkaleToken";
@@ -166,7 +156,7 @@ async function main() {
     await skaleToken.deployTransaction.wait();
     console.log("Register", skaleTokenName);
     await (await contractManager.setContractsAddress(skaleTokenName, skaleToken.address)).wait();
-    artifacts.push({address: skaleToken.address, interface: skaleToken.interface, contract: skaleTokenName});
+    contractArtifacts.push({address: skaleToken.address, interface: skaleToken.interface, contract: skaleTokenName});
     await verify(skaleTokenName, skaleToken.address);
 
     if (!production) {
@@ -178,12 +168,12 @@ async function main() {
     console.log("Store ABIs");
 
     const outputObject: {[k: string]: any} = {};
-    for (const artifact of artifacts) {
+    for (const artifact of contractArtifacts) {
         const contractKey = getContractKeyInAbiFile(artifact.contract);
         outputObject[contractKey + "_address"] = artifact.address;
         outputObject[contractKey + "_abi"] = getAbi(artifact.interface);
     }
-    const version = (await fs.readFile("VERSION", "utf-8")).trim();
+
     await fs.writeFile(`data/skale-manager-${version}-${network.name}-abi.json`, JSON.stringify(outputObject, null, 4));
 
     console.log("Done");

@@ -57,6 +57,11 @@ describe("SchainsInternal", () => {
         await contractManager.setContractsAddress("SkaleManager", nodes.address);
 
         validatorService.connect(holder).registerValidator("D2", "D2 is even", 0, 0);
+        await schainsInternal.addSchainType(1, 16);
+        await schainsInternal.addSchainType(4, 16);
+        await schainsInternal.addSchainType(128, 16);
+        await schainsInternal.addSchainType(0, 2);
+        await schainsInternal.addSchainType(32, 4);
     });
 
     it("should initialize schain", async () => {

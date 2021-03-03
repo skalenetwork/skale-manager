@@ -28,6 +28,7 @@ import "./utils/Random.sol";
 import "./ConstantsHolder.sol";
 import "./Nodes.sol";
 
+import "@openzeppelin/contracts-ethereum-package/contracts/utils/EnumerableSet.sol";
 
 /**
  * @title SchainsInternal
@@ -36,6 +37,7 @@ import "./Nodes.sol";
 contract SchainsInternal is Permissions {
 
     using Random for Random.RandomGenerator;
+    using EnumerableSet for EnumerableSet.UintSet;
 
     struct Schain {
         string name;
@@ -91,6 +93,8 @@ contract SchainsInternal is Permissions {
     mapping (uint => bytes32[]) private _nodeToLockedSchains;
 
     mapping (bytes32 => uint[]) private _schainToExceptionNodes;
+
+    EnumerableSet.UintSet private _keysOfSchainTypes;
 
     /**
      * @dev Allows Schain contract to initialize an schain.
@@ -273,6 +277,7 @@ contract SchainsInternal is Permissions {
      * @dev Allows Admin to add schain type
      */
     function addSchainType(uint8 partOfNode, uint numberOfNodes) external onlyAdmin {
+        require(_keysOfSchainTypes.add(numberOfSchainTypes + 1), "Schain type is already added");
         schainTypes[numberOfSchainTypes + 1].partOfNode = partOfNode;
         schainTypes[numberOfSchainTypes + 1].numberOfNodes = numberOfNodes;
         numberOfSchainTypes++;
@@ -282,6 +287,7 @@ contract SchainsInternal is Permissions {
      * @dev Allows Admin to remove schain type
      */
     function removeSchainType(uint typeOfSchain) external onlyAdmin {
+        require(_keysOfSchainTypes.remove(typeOfSchain), "Schain type is already removed");
         delete schainTypes[typeOfSchain].partOfNode;
         delete schainTypes[typeOfSchain].numberOfNodes;
     }
@@ -512,12 +518,17 @@ contract SchainsInternal is Permissions {
         return schainsForNodes[nodeIndex].length;
     }
 
+    function getSchainType(uint typeOfSchain) external view returns(uint8, uint) {
+        require(_keysOfSchainTypes.contains(typeOfSchain), "Invalid type of schain");
+        return (schainTypes[typeOfSchain].partOfNode, schainTypes[typeOfSchain].numberOfNodes);
+    }
+
     function initialize(address newContractsAddress) public override initializer {
         Permissions.initialize(newContractsAddress);
 
         numberOfSchains = 0;
         sumOfSchainsResources = 0;
-        numberOfSchainTypes = 5;
+        numberOfSchainTypes = 0;
     }
 
     /**
@@ -561,21 +572,14 @@ contract SchainsInternal is Permissions {
     /**
      * @dev Allows Schains contract to remove node from exceptions
      */
-    function removeNodeFromExceptions(
-        bytes32 schainHash,
-        uint nodeIndex
-    )
+    function removeNodeFromExceptions(bytes32 schainHash, uint nodeIndex)
         public
-        allowThree(
-            "Schains",
-            "NodeRotation",
-            "SkaleManager"
-        )
+        allowThree("Schains", "NodeRotation", "SkaleManager")
     {
         _exceptionsForGroups[schainHash][nodeIndex] = false;
         uint len = _nodeToLockedSchains[nodeIndex].length;
         bool removed = false;
-        if (_nodeToLockedSchains[nodeIndex][len - 1] == schainHash) {
+        if (len > 0 && _nodeToLockedSchains[nodeIndex][len - 1] == schainHash) {
             _nodeToLockedSchains[nodeIndex].pop();
             removed = true;
         } else {
@@ -589,7 +593,7 @@ contract SchainsInternal is Permissions {
         }
         len = _schainToExceptionNodes[schainHash].length;
         removed = false;
-        if (_schainToExceptionNodes[schainHash][len - 1] == nodeIndex) {
+        if (len > 0 && _schainToExceptionNodes[schainHash][len - 1] == nodeIndex) {
             _schainToExceptionNodes[schainHash].pop();
             removed = true;
         } else {
@@ -610,6 +614,14 @@ contract SchainsInternal is Permissions {
         if (placeOfSchainOnNode[schainId][nodeIndex] == 0)
             return schainsForNodes[nodeIndex].length;
         return placeOfSchainOnNode[schainId][nodeIndex] - 1;
+    }
+
+    function _getNodeToLockedSchains() internal view returns (mapping(uint => bytes32[]) storage) {
+        return _nodeToLockedSchains;
+    }
+
+    function _getSchainToExceptionNodes() internal view returns (mapping(bytes32 => uint[]) storage) {
+        return _schainToExceptionNodes;
     }
 
     /**

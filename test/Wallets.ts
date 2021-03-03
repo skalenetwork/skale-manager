@@ -208,12 +208,17 @@ describe("Wallets", () => {
             }
 
             await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), owner.address)
+            await schainsInternal.addSchainType(1, 16);
+            await schainsInternal.addSchainType(4, 16);
+            await schainsInternal.addSchainType(128, 16);
+            await schainsInternal.addSchainType(0, 2);
+            await schainsInternal.addSchainType(32, 4);
 
             await schains.addSchainByFoundation(0, SchainType.TEST, 0, schain1Name, validator1.address);
-            await skaleDKG.setSuccesfulDKGPublic(stringValue(schain1Id));
+            await skaleDKG.setSuccessfulDKGPublic(stringValue(schain1Id));
 
             await schains.addSchainByFoundation(0, SchainType.TEST, 0, schain2Name, validator2.address);
-            await skaleDKG.setSuccesfulDKGPublic(stringValue(schain2Id));
+            await skaleDKG.setSuccessfulDKGPublic(stringValue(schain2Id));
         });
 
         after(async () => {
