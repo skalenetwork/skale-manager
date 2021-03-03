@@ -1,9 +1,10 @@
-import { contracts, getContractKeyInAbiFile, getContractFactory } from "./deploy";
-import { ethers, network, upgrades, run } from "hardhat";
+import { contracts, getContractKeyInAbiFile, hashBytecode, getManifestName, getContractFactory } from "./deploy";
+import { ethers, network, upgrades, run, artifacts } from "hardhat";
 import hre from "hardhat";
 import { promises as fs } from "fs";
 import { ContractManager, Nodes, SchainsInternal, SkaleManager, Wallets } from "../typechain";
 import { getImplementationAddress } from "@openzeppelin/upgrades-core";
+import { deployLibraries, getLinkedContractFactory } from "../test/tools/deploy/factory";
 import { getAbi } from "./tools/abi";
 import { getManifestAdmin } from "@openzeppelin/hardhat-upgrades/dist/admin";
 import { SafeMock } from "../typechain/SafeMock";
@@ -13,6 +14,40 @@ import chalk from "chalk";
 import { verify, verifyProxy } from "./tools/verification";
 import { getVersion } from "./tools/version";
 
+export async function getAndUpgradeContractFactory(contract: string) {
+    const manifest = JSON.parse(await fs.readFile(`.openzeppelin/${await getManifestName()}.json`, "utf-8"));
+    const { linkReferences } = await artifacts.readArtifact(contract);
+    if (!Object.keys(linkReferences).length)
+        return await ethers.getContractFactory(contract);
+
+    const librariesToUpgrade = [];
+    const oldLibraries: {[k: string]: string} = {};
+    if (manifest.libraries === undefined) {
+        Object.assign(manifest, {libraries: {}});
+    }
+    for (const key of Object.keys(linkReferences)) {
+        const libraryName = Object.keys(linkReferences[key])[0];
+        const { bytecode } = await artifacts.readArtifact(libraryName);
+        if (manifest.libraries[libraryName] === undefined) {
+            librariesToUpgrade.push(libraryName);
+            continue;
+        }
+        const libraryBytecodeHash = manifest.libraries[libraryName].bytecodeHash;
+        if (hashBytecode(bytecode) !== libraryBytecodeHash) {
+            librariesToUpgrade.push(libraryName);
+        } else {
+            oldLibraries[libraryName] = manifest.libraries[libraryName].address;
+        }
+    }
+    const libraries = await deployLibraries(librariesToUpgrade);
+    for (const libraryName of Object.keys(libraries)) {
+        const { bytecode } = await artifacts.readArtifact(libraryName);
+        manifest.libraries[libraryName] = {"address": libraries[libraryName], "bytecodeHash": hashBytecode(bytecode)};
+    }
+    Object.assign(libraries, oldLibraries);
+    await fs.writeFile(`.openzeppelin/${await getManifestName()}.json`, JSON.stringify(manifest, null, 4));
+    return await getLinkedContractFactory(contract, libraries);
+}
 
 type DeploymentAction = (safeTransactions: string[], abi: any, contractManager: ContractManager) => Promise<void>;
 
@@ -97,7 +132,7 @@ export async function upgrade(
     // deploy new implementations
     const contractsToUpgrade: {proxyAddress: string, implementationAddress: string, name: string, abi: any}[] = [];
     for (const contract of contractNamesToUpgrade) {
-        const contractFactory = await getContractFactory(contract);
+        const contractFactory = await getAndUpgradeContractFactory(contract);
         let _contract = contract;
         if (contract === "BountyV2") {
             if (!abi[getContractKeyInAbiFile(contract) + "_address"])
