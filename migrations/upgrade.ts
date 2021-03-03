@@ -77,7 +77,7 @@ export async function upgrade(
         await (await contractManager.transferOwnership(safe)).wait();
         for (const contractName of
             ["SkaleToken"].concat(contractNamesToUpgrade
-                .filter(name => !['TimeHelpers', 'Decryption', 'ECDH', 'Wallets'].includes(name)))) {
+                .filter(name => !['ContractManager', 'TimeHelpers', 'Decryption', 'ECDH', 'Wallets'].includes(name)))) {
                     const contractFactory = await getContractFactory(contractName);
                     let _contract = contractName;
                     if (contractName === "BountyV2") {
