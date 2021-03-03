@@ -1,10 +1,12 @@
 import { promises as fs } from 'fs';
 import { Interface } from "ethers/lib/utils";
 import { ethers, upgrades, network, run, artifacts } from "hardhat";
-import { ContractManager } from "../typechain";
+import { ContractManager, SkaleManager } from "../typechain";
 import { deployLibraries, getLinkedContractFactory } from "../test/tools/deploy/factory";
 import { getAbi } from './tools/abi';
 import { verify, verifyProxy } from './tools/verification';
+import { getVersion } from './tools/version';
+
 
 function getInitializerParameters(contract: string, contractManagerAddress: string) {
     if (["TimeHelpers", "Decryption", "ECDH"].includes(contract)) {
@@ -121,6 +123,7 @@ async function main() {
         contracts.push("TimeHelpersWithDebug");
     }
 
+    const version = await getVersion();
     const contractArtifacts: {address: string, interface: Interface, contract: string}[] = [];
 
     const contractManagerName = "ContractManager";
@@ -144,6 +147,15 @@ async function main() {
         await transaction.wait();
         contractArtifacts.push({address: proxy.address, interface: proxy.interface, contract});
         await verifyProxy(contract, proxy.address);
+
+        if (contract === "SkaleManager") {
+            try {
+                console.log(`Set version ${version}`)
+                await (await (proxy as SkaleManager).setVersion(version)).wait();
+            } catch {
+                console.log("Failed to set skale-manager version");
+            }
+        }
     }
 
     const skaleTokenName = "SkaleToken";
@@ -171,7 +183,6 @@ async function main() {
         outputObject[contractKey + "_abi"] = getAbi(artifact.interface);
     }
 
-    const version = (await fs.readFile("VERSION", "utf-8")).trim();
     await fs.writeFile(`data/skale-manager-${version}-${network.name}-abi.json`, JSON.stringify(outputObject, null, 4));
 
     console.log("Done");
