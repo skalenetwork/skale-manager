@@ -69,29 +69,29 @@ export async function getContractFactory(contract: string) {
 export const contracts = [
     // "ContractManager", // it will be deployed explicitly
 
-    // "DelegationController",
-    // "DelegationPeriodManager",
-    // "Distributor",
-    // "Punisher",
-    // "SlashingTable",
-    // "TimeHelpers",
-    // "TokenState",
-    // "ValidatorService",
+    "DelegationController",
+    "DelegationPeriodManager",
+    "Distributor",
+    "Punisher",
+    "SlashingTable",
+    "TimeHelpers",
+    "TokenState",
+    "ValidatorService",
 
-    // "ConstantsHolder",
+    "ConstantsHolder",
     "Nodes",
-    // "NodeRotation",
-    // "SchainsInternal",
-    // "Schains",
-    // "Decryption",
-    // "ECDH",
-    // "KeyStorage",
+    "NodeRotation",
+    "SchainsInternal",
+    "Schains",
+    "Decryption",
+    "ECDH",
+    "KeyStorage",
     "SkaleDKG",
-    // "SkaleVerifier",
-    // "SkaleManager",
-    // "Pricing",
-    // "BountyV2",
-    // "Wallets"
+    "SkaleVerifier",
+    "SkaleManager",
+    "Pricing",
+    "BountyV2",
+    "Wallets"
 ]
 
 async function main() {
@@ -136,7 +136,7 @@ async function main() {
         contractArtifacts.push({address: proxy.address, interface: proxy.interface, contract});
         await verifyProxy(contract, proxy.address);
     }
-    return;
+
     const skaleTokenName = "SkaleToken";
     console.log("Deploy", skaleTokenName);
     const skaleTokenFactory = await ethers.getContractFactory(skaleTokenName);
