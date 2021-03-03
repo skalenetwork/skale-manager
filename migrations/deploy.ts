@@ -5,6 +5,7 @@ import { ContractManager } from "../typechain";
 import { deployLibraries, getLinkedContractFactory } from "../test/tools/deploy/factory";
 import { getAbi } from './tools/abi';
 import { verify, verifyProxy } from './tools/verification';
+import { Manifest, hashBytecode } from "@openzeppelin/upgrades-core";
 
 function getInitializerParameters(contract: string, contractManagerAddress: string) {
     if (["TimeHelpers", "Decryption", "ECDH"].includes(contract)) {
@@ -24,11 +25,6 @@ function getNameInContractManager(contract: string) {
     }
 }
 
-export function hashBytecode(bytecode: string): string {
-    const buf = Buffer.from(bytecode.replace(/^0x/, ''), 'hex');
-    return ethers.utils.keccak256(buf);
-}
-
 export function getContractKeyInAbiFile(contract: string) {
     return contract.replace(/([a-zA-Z])(?=[A-Z])/g, '$1_').toLowerCase();
 }
@@ -38,13 +34,8 @@ const customNames: {[key: string]: string} = {
     "BountyV2": "Bounty"
 }
 
-export async function getManifestName(): Promise<string> {
-    const networkName = (await ethers.provider.getNetwork()).name;
-    if (networkName === "unknown") {
-        return "unknown-" + (await ethers.provider.getNetwork()).chainId;
-    } else {
-        return networkName;
-    }
+export async function getManifestFile(): Promise<string> {
+    return new Manifest((await ethers.provider.getNetwork()).chainId).file;
 }
 
 export async function getContractFactory(contract: string) {
@@ -66,11 +57,11 @@ export async function getContractFactory(contract: string) {
     }
     let manifest: any;
     try {
-        manifest = JSON.parse(await fs.readFile(`.openzeppelin/${await getManifestName()}.json`, "utf-8"));
+        manifest = JSON.parse(await fs.readFile(await getManifestFile(), "utf-8"));
         Object.assign(libraryArtifacts, manifest.libraries);
     } finally {
         Object.assign(manifest, {libraries: libraryArtifacts});
-        await fs.writeFile(`.openzeppelin/${await getManifestName()}.json`, JSON.stringify(manifest, null, 4));
+        await fs.writeFile(await getManifestFile(), JSON.stringify(manifest, null, 4));
     }
     return await getLinkedContractFactory(contract, libraries);
 }
@@ -78,29 +69,29 @@ export async function getContractFactory(contract: string) {
 export const contracts = [
     // "ContractManager", // it will be deployed explicitly
 
-    "DelegationController",
-    "DelegationPeriodManager",
-    "Distributor",
-    "Punisher",
-    "SlashingTable",
-    "TimeHelpers",
-    "TokenState",
-    "ValidatorService",
+    // "DelegationController",
+    // "DelegationPeriodManager",
+    // "Distributor",
+    // "Punisher",
+    // "SlashingTable",
+    // "TimeHelpers",
+    // "TokenState",
+    // "ValidatorService",
 
-    "ConstantsHolder",
+    // "ConstantsHolder",
     "Nodes",
-    "NodeRotation",
-    "SchainsInternal",
-    "Schains",
-    "Decryption",
-    "ECDH",
-    "KeyStorage",
+    // "NodeRotation",
+    // "SchainsInternal",
+    // "Schains",
+    // "Decryption",
+    // "ECDH",
+    // "KeyStorage",
     "SkaleDKG",
-    "SkaleVerifier",
-    "SkaleManager",
-    "Pricing",
-    "BountyV2",
-    "Wallets"
+    // "SkaleVerifier",
+    // "SkaleManager",
+    // "Pricing",
+    // "BountyV2",
+    // "Wallets"
 ]
 
 async function main() {
@@ -145,7 +136,7 @@ async function main() {
         contractArtifacts.push({address: proxy.address, interface: proxy.interface, contract});
         await verifyProxy(contract, proxy.address);
     }
-
+    return;
     const skaleTokenName = "SkaleToken";
     console.log("Deploy", skaleTokenName);
     const skaleTokenFactory = await ethers.getContractFactory(skaleTokenName);

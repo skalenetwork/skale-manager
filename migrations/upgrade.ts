@@ -1,9 +1,9 @@
-import { contracts, getContractKeyInAbiFile, hashBytecode, getManifestName } from "./deploy";
+import { contracts, getContractKeyInAbiFile, getManifestFile } from "./deploy";
 import { ethers, network, upgrades, run, artifacts } from "hardhat";
 import hre from "hardhat";
 import { promises as fs } from "fs";
 import { ContractManager, Nodes, SchainsInternal, Wallets } from "../typechain";
-import { getImplementationAddress } from "@openzeppelin/upgrades-core";
+import { getImplementationAddress, hashBytecode } from "@openzeppelin/upgrades-core";
 import { deployLibraries, getLinkedContractFactory } from "../test/tools/deploy/factory";
 import { getAbi } from "./tools/abi";
 import { getManifestAdmin } from "@openzeppelin/hardhat-upgrades/dist/admin";
@@ -14,7 +14,7 @@ import chalk from "chalk";
 import { verify, verifyProxy } from "./tools/verification";
 
 export async function getAndUpgradeContractFactory(contract: string) {
-    const manifest = JSON.parse(await fs.readFile(`.openzeppelin/${await getManifestName()}.json`, "utf-8"));
+    const manifest = JSON.parse(await fs.readFile(await getManifestFile(), "utf-8"));
     const { linkReferences } = await artifacts.readArtifact(contract);
     if (!Object.keys(linkReferences).length)
         return await ethers.getContractFactory(contract);
@@ -44,7 +44,7 @@ export async function getAndUpgradeContractFactory(contract: string) {
         manifest.libraries[libraryName] = {"address": libraries[libraryName], "bytecodeHash": hashBytecode(bytecode)};
     }
     Object.assign(libraries, oldLibraries);
-    await fs.writeFile(`.openzeppelin/${await getManifestName()}.json`, JSON.stringify(manifest, null, 4));
+    await fs.writeFile(await getManifestFile(), JSON.stringify(manifest, null, 4));
     return await getLinkedContractFactory(contract, libraries);
 }
 
