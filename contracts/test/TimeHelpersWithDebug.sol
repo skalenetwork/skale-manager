@@ -19,14 +19,17 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.10;
+pragma solidity 0.8.2;
 
-import "@openzeppelin/contracts-ethereum-package/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 import "../delegation/TimeHelpers.sol";
 
 
-contract TimeHelpersWithDebug is TimeHelpers, OwnableUpgradeSafe {
+contract TimeHelpersWithDebug is TimeHelpers, OwnableUpgradeable {
+
+    using SafeMath for uint;
+
     struct TimeShift {
         uint pointInTime;
         uint shift;
@@ -36,14 +39,17 @@ contract TimeHelpersWithDebug is TimeHelpers, OwnableUpgradeSafe {
 
     function skipTime(uint sec) external onlyOwner {
         if (_timeShift.length > 0) {
-            _timeShift.push(TimeShift({pointInTime: now, shift: _timeShift[_timeShift.length.sub(1)].shift.add(sec)}));
+            _timeShift.push(TimeShift({
+                pointInTime: block.timestamp,
+                shift: _timeShift[_timeShift.length.sub(1)].shift.add(sec)
+            }));
         } else {
-            _timeShift.push(TimeShift({pointInTime: now, shift: sec}));
+            _timeShift.push(TimeShift({pointInTime: block.timestamp, shift: sec}));
         }
     }
 
     function initialize() external initializer {
-        OwnableUpgradeSafe.__Ownable_init();
+        OwnableUpgradeable.__Ownable_init();
     }
 
     function timestampToMonth(uint timestamp) public view override returns (uint) {

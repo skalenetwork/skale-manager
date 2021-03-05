@@ -19,9 +19,9 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.10;
+pragma solidity 0.8.2;
 
-import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 import "../thirdparty/BokkyPooBahsDateTimeLibrary.sol";
 
@@ -53,7 +53,7 @@ contract TimeHelpers {
     }
 
     function getCurrentMonth() external view virtual returns (uint) {
-        return timestampToMonth(now);
+        return timestampToMonth(block.timestamp);
     }
 
     function timestampToDay(uint timestamp) external view returns (uint) {

@@ -21,10 +21,11 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.10;
+pragma solidity 0.8.2;
 pragma experimental ABIEncoderV2;
 
-import "@openzeppelin/contracts-ethereum-package/contracts/utils/SafeCast.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "@openzeppelin/contracts-upgradeable/utils/math/SafeCastUpgradeable.sol";
 
 import "./delegation/DelegationController.sol";
 import "./delegation/ValidatorService.sol";
@@ -53,8 +54,9 @@ import "./Permissions.sol";
  */
 contract Nodes is Permissions {
     
+    using SafeMath for uint;
     using Random for Random.RandomGenerator;
-    using SafeCast for uint;
+    using SafeCastUpgradeable for uint;
     using SegmentTree for SegmentTree.Tree;
 
     // All Nodes states
@@ -506,7 +508,7 @@ contract Nodes is Permissions {
         checkNodeExists(nodeIndex)
         returns (bool)
     {
-        return BountyV2(contractManager.getBounty()).getNextRewardTimestamp(nodeIndex) <= now;
+        return BountyV2(contractManager.getBounty()).getNextRewardTimestamp(nodeIndex) <= block.timestamp;
     }
 
     /**

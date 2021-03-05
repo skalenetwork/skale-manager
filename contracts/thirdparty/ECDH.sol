@@ -9,8 +9,9 @@
  * @date 2016
  */
 
-pragma solidity 0.6.10;
-import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
+pragma solidity 0.8.2;
+
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 
 /**
@@ -19,7 +20,8 @@ import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
  * support the DKG process.
  */
 contract ECDH {
-    using SafeMath for uint256;
+
+    using SafeMath for uint;
 
     uint256 constant private _GX = 0x79BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798;
     uint256 constant private _GY = 0x483ADA7726A3C4655DA4FBFC0E1108A8FD17B448A68554199C47D08FFB10D4B8;

@@ -19,7 +19,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.10;
+pragma solidity 0.8.2;
 pragma experimental ABIEncoderV2;
 
 import "./Permissions.sol";
@@ -33,6 +33,7 @@ import "./utils/FieldOperations.sol";
  */
 contract SkaleVerifier is Permissions {  
     using Fp2Operations for Fp2Operations.Fp2Point;
+    using SafeMath for uint;
 
 
     /**

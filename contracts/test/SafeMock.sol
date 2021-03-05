@@ -19,22 +19,22 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.10;
+pragma solidity 0.8.2;
 
-import "@openzeppelin/contracts-ethereum-package/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
-contract SafeMock is OwnableUpgradeSafe {
+contract SafeMock is OwnableUpgradeable {
     constructor() public {
-        OwnableUpgradeSafe.__Ownable_init();
+        OwnableUpgradeable.__Ownable_init();
         multiSend(""); // this is needed to remove slither warning
     }
 
-    function transferProxyAdminOwnership(OwnableUpgradeSafe proxyAdmin, address newOwner) external onlyOwner {
+    function transferProxyAdminOwnership(OwnableUpgradeable proxyAdmin, address newOwner) external onlyOwner {
         proxyAdmin.transferOwnership(newOwner);
     }
 
     function destroy() external onlyOwner {
-        selfdestruct(msg.sender);
+        selfdestruct(payable(msg.sender));
     }
 
     /// @dev Sends multiple transactions and reverts all if one fails.

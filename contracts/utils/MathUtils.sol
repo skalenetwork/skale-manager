@@ -19,7 +19,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.10;
+pragma solidity 0.8.2;
 
 
 library MathUtils {
@@ -49,7 +49,7 @@ library MathUtils {
     }
 
     function muchGreater(uint256 a, uint256 b) internal pure returns (bool) {
-        assert(uint(-1) - _EPS > b);
+        assert(type(uint).max - _EPS > b);
         return a > b + _EPS;
     }
 

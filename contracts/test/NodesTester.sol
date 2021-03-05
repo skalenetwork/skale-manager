@@ -18,13 +18,15 @@
     You should have received a copy of the GNU Affero General Public License
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
-pragma solidity 0.6.10;
+pragma solidity 0.8.2;
 pragma experimental ABIEncoderV2;
 
 import "../Nodes.sol";
 
 
 contract NodesTester is Nodes {
+
+    using SegmentTree for SegmentTree.Tree;
     
     function removeNodeFromSpaceToNodes(uint nodeIndex) external {
         uint8 space = spaceOfNodes[nodeIndex].freeSpace;

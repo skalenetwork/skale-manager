@@ -19,12 +19,12 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.10;
+pragma solidity 0.8.2;
 pragma experimental ABIEncoderV2;
 
-import "@openzeppelin/contracts-ethereum-package/contracts/introspection/IERC1820Registry.sol";
-import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC777/IERC777.sol";
-import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC777/IERC777Recipient.sol";
+import "@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol";
+import "@openzeppelin/contracts/token/ERC777/IERC777.sol";
+import "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
 
 import "./delegation/Distributor.sol";
 import "./delegation/ValidatorService.sol";
@@ -42,6 +42,9 @@ import "./Wallets.sol";
  * management, and monitoring verdicts.
  */
 contract SkaleManager is IERC777Recipient, Permissions {
+
+    using SafeMath for uint;
+
     IERC1820Registry private _erc1820;
 
     bytes32 constant private _TOKENS_RECIPIENT_INTERFACE_HASH =
@@ -135,7 +138,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
             require(nodes.completeExit(nodeIndex), "Finishing of node exit is failed");
             nodes.changeNodeFinishTime(
                 nodeIndex,
-                now.add(
+                block.timestamp.add(
                     isSchains ?
                     ConstantsHolder(contractManager.getContract("ConstantsHolder")).rotationDelay() :
                     0
@@ -143,7 +146,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
             );
             nodes.deleteNodeForValidator(validatorId, nodeIndex);
         }
-        _refundGasByValidator(validatorId, msg.sender, gasTotal - gasleft());
+        _refundGasByValidator(validatorId, payable(msg.sender), gasTotal - gasleft());
     }
 
     function deleteSchain(string calldata name) external {
@@ -179,11 +182,11 @@ contract SkaleManager is IERC777Recipient, Permissions {
             0,
             0,
             bounty,
-            uint(-1),
+            type(uint).max,
             block.timestamp,
             gasleft());
         
-        _refundGasByValidator(validatorId, msg.sender, gasTotal - gasleft());
+        _refundGasByValidator(validatorId, payable(msg.sender), gasTotal - gasleft());
     }
 
     function setVersion(string calldata newVersion) external onlyOwner {

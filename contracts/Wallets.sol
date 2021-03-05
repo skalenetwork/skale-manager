@@ -21,7 +21,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.10;
+pragma solidity 0.8.2;
 
 import "./Permissions.sol";
 import "./delegation/ValidatorService.sol";
@@ -33,6 +33,8 @@ import "./Nodes.sol";
  * @dev Contract contains logic to perform automatic self-recharging ether for nodes
  */
 contract Wallets is Permissions {
+
+    using SafeMath for uint;
 
     mapping (uint => uint) private _validatorWallets;
     mapping (bytes32 => uint) private _schainWallets;
@@ -189,7 +191,7 @@ contract Wallets is Permissions {
         uint validatorId = validatorService.getValidatorId(msg.sender);
         require(amount <= _validatorWallets[validatorId], "Balance is too low");
         _validatorWallets[validatorId] = _validatorWallets[validatorId].sub(amount);
-        msg.sender.transfer(amount);
+        payable(msg.sender).transfer(amount);
     }
 
     function getSchainBalance(bytes32 schainId) external view returns (uint) {

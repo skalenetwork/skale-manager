@@ -19,7 +19,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.10;
+pragma solidity 0.8.2;
 
 import "./Permissions.sol";
 
@@ -167,7 +167,10 @@ contract ConstantsHolder is Permissions {
      * @dev Allows the Owner to set the launch timestamp.
      */
     function setLaunchTimestamp(uint timestamp) external onlyOwner {
-        require(now < launchTimestamp, "Cannot set network launch timestamp because network is already launched");
+        require(
+            block.timestamp < launchTimestamp,
+            "Cannot set network launch timestamp because network is already launched"
+        );
         launchTimestamp = timestamp;
     }
 
@@ -222,7 +225,7 @@ contract ConstantsHolder is Permissions {
         allowableLatency = 150000;
         deltaPeriod = 3600;
         checkTime = 300;
-        launchTimestamp = uint(-1);
+        launchTimestamp = type(uint).max;
         rotationDelay = 12 hours;
         proofOfUseLockUpPeriodDays = 90;
         proofOfUseDelegationPercentage = 50;

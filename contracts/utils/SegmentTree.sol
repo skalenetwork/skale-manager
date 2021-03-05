@@ -20,10 +20,8 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.10;
+pragma solidity 0.8.2;
 pragma experimental ABIEncoderV2;
-
-import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
 
 import "./Random.sol";
 
@@ -61,8 +59,8 @@ import "./Random.sol";
  * +----+----+----+---+---+----+----+---+---+---+---+---+---+---+---+
  */
 library SegmentTree {
-    using Random for Random.RandomGenerator;
-    using SafeMath for uint;    
+    using SafeMath for uint;
+    using Random for Random.RandomGenerator;   
 
     struct Tree {
         uint[] tree;

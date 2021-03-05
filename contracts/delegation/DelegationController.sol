@@ -20,10 +20,11 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.10;
+pragma solidity 0.8.2;
 pragma experimental ABIEncoderV2;
 
-import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC777/IERC777.sol";
+import "@openzeppelin/contracts/token/ERC777/IERC777.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 import "../BountyV2.sol";
 import "../Nodes.sol";
@@ -59,6 +60,7 @@ import "./ValidatorService.sol";
  * - COMPLETED: undelegation request is completed at the end of the delegation period.
  */
 contract DelegationController is Permissions, ILocker {
+    using SafeMath for uint;
     using MathUtils for uint;
     using PartialDifferences for PartialDifferences.Sequence;
     using PartialDifferences for PartialDifferences.Value;
@@ -366,7 +368,7 @@ contract DelegationController is Permissions, ILocker {
         delegations[delegationId].finished = _calculateDelegationEndMonth(delegationId);
 
         require(
-            now.add(UNDELEGATION_PROHIBITION_WINDOW_SECONDS)
+            block.timestamp.add(UNDELEGATION_PROHIBITION_WINDOW_SECONDS)
                 < _getTimeHelpers().monthToTimestamp(delegations[delegationId].finished),
             "Undelegation requests must be sent 3 days before the end of delegation period"
         );
@@ -585,7 +587,7 @@ contract DelegationController is Permissions, ILocker {
             validatorId,
             amount,
             delegationPeriod,
-            now,
+            block.timestamp,
             0,
             0,
             info

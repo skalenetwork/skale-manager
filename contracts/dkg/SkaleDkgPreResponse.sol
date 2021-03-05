@@ -21,7 +21,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.10;
+pragma solidity 0.8.2;
 pragma experimental ABIEncoderV2;
 
 import "../SkaleDKG.sol";
@@ -34,8 +34,8 @@ import "../utils/FieldOperations.sol";
  * Joint-Feldman protocol.
  */
 library SkaleDkgPreResponse {
-    using SafeMath for uint;
     using G2Operations for G2Operations.G2Point;
+    using SafeMath for uint;
 
     function preResponse(
         bytes32 schainId,

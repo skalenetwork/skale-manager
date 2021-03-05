@@ -21,10 +21,9 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.10;
+pragma solidity 0.8.2;
 pragma experimental ABIEncoderV2;
 
-import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
 import "../SkaleDKG.sol";
 import "../ConstantsHolder.sol";
 import "../Wallets.sol";
@@ -36,6 +35,7 @@ import "../Nodes.sol";
  * Joint-Feldman protocol.
  */
 library SkaleDkgComplaint {
+
     using SafeMath for uint;
 
     /**
@@ -102,7 +102,7 @@ library SkaleDkgComplaint {
         require(skaleDKG.isNodeBroadcasted(schainId, fromNodeIndex), "Node has not broadcasted");
         require(skaleDKG.isNodeBroadcasted(schainId, toNodeIndex), "Accused node has not broadcasted");
         require(!skaleDKG.isAllDataReceived(schainId, fromNodeIndex), "Node has already sent alright");
-        if (complaints[schainId].nodeToComplaint == uint(-1)) {
+        if (complaints[schainId].nodeToComplaint == type(uint).max) {
             complaints[schainId].nodeToComplaint = toNodeIndex;
             complaints[schainId].fromNodeToComplaint = fromNodeIndex;
             complaints[schainId].startComplaintBlockTimestamp = block.timestamp;
@@ -124,7 +124,7 @@ library SkaleDkgComplaint {
     {
         SkaleDKG skaleDKG = SkaleDKG(contractManager.getContract("SkaleDKG"));
         // missing alright
-        if (complaints[schainId].nodeToComplaint == uint(-1)) {
+        if (complaints[schainId].nodeToComplaint == type(uint).max) {
             if (
                 skaleDKG.isEveryoneBroadcasted(schainId) &&
                 !skaleDKG.isAllDataReceived(schainId, toNodeIndex) &&

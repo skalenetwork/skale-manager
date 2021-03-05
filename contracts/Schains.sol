@@ -19,7 +19,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.10;
+pragma solidity 0.8.2;
 pragma experimental ABIEncoderV2;
 
 import "./Permissions.sol";
@@ -39,6 +39,8 @@ import "./Wallets.sol";
  * deletion, and rotation.
  */
 contract Schains is Permissions {
+
+    using SafeMath for uint;
 
     struct SchainParameters {
         uint lifetime;
@@ -117,7 +119,7 @@ contract Schains is Permissions {
         ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getConstantsHolder());
         uint schainCreationTimeStamp = constantsHolder.schainCreationTimeStamp();
         uint minSchainLifetime = constantsHolder.minimalSchainLifetime();
-        require(now >= schainCreationTimeStamp, "It is not a time for creating Schain");
+        require(block.timestamp >= schainCreationTimeStamp, "It is not a time for creating Schain");
         require(
             schainParameters.lifetime >= minSchainLifetime,
             "Minimal schain lifetime should be satisfied"

@@ -21,10 +21,11 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.10;
+pragma solidity 0.8.2;
 pragma experimental ABIEncoderV2;
 
-import "@openzeppelin/contracts-ethereum-package/contracts/cryptography/ECDSA.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "@openzeppelin/contracts-upgradeable/utils/cryptography/ECDSAUpgradeable.sol";
 
 import "../Permissions.sol";
 import "../ConstantsHolder.sol";
@@ -45,7 +46,8 @@ import "./TimeHelpers.sol";
  */
 contract ValidatorService is Permissions {
 
-    using ECDSA for bytes32;
+    using SafeMath for uint;
+    using ECDSAUpgradeable for bytes32;
 
     struct Validator {
         string name;
@@ -149,7 +151,7 @@ contract ValidatorService is Permissions {
             address(0),
             description,
             feeRate,
-            now,
+            block.timestamp,
             minimumDelegationAmount,
             true
         );

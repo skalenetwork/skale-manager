@@ -19,9 +19,9 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.10;
+pragma solidity 0.8.2;
 
-import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts-upgradeable/utils/math/SafeMathUpgradeable.sol";
 
 import "../delegation/PartialDifferences.sol";
 
@@ -29,13 +29,13 @@ import "../delegation/PartialDifferences.sol";
 contract PartialDifferencesTester {
     using PartialDifferences for PartialDifferences.Sequence;
     using PartialDifferences for PartialDifferences.Value;
-    using SafeMath for uint;
+    using SafeMathUpgradeable for uint;
 
     PartialDifferences.Sequence[] private _sequences;
     // PartialDifferences.Value[] private _values;
 
     function createSequence() external {
-        _sequences.push(PartialDifferences.Sequence({firstUnprocessedMonth: 0, lastChangedMonth: 0}));
+        _sequences.push();
     }
 
     function addToSequence(uint sequence, uint diff, uint month) external {

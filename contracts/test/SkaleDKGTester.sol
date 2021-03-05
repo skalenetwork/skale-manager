@@ -19,14 +19,14 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.10;
+pragma solidity 0.8.2;
 pragma experimental ABIEncoderV2;
 
 import "../SkaleDKG.sol";
 
 contract SkaleDKGTester is SkaleDKG {
     function setSuccessfulDKGPublic(bytes32 schainId) external {
-        lastSuccesfulDKG[schainId] = now;
+        lastSuccesfulDKG[schainId] = block.timestamp;
         channels[schainId].active = false;
         KeyStorage(contractManager.getContract("KeyStorage")).finalizePublicKey(schainId);
         emit SuccessfulDKG(schainId);

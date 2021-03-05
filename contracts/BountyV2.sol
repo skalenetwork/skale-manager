@@ -19,7 +19,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.10;
+pragma solidity 0.8.2;
 
 import "./delegation/DelegationController.sol";
 import "./delegation/PartialDifferences.sol";
@@ -34,6 +34,7 @@ import "./Permissions.sol";
 contract BountyV2 is Permissions {
     using PartialDifferences for PartialDifferences.Value;
     using PartialDifferences for PartialDifferences.Sequence;
+    using SafeMath for uint;
 
     struct BountyHistory {
         uint month;
@@ -76,7 +77,7 @@ contract BountyV2 is Permissions {
         );
         
         require(
-            _getNextRewardTimestamp(nodeIndex, nodes, timeHelpers) <= now,
+            _getNextRewardTimestamp(nodeIndex, nodes, timeHelpers) <= block.timestamp,
             "Transaction is sent too early"
         );
 
@@ -263,7 +264,7 @@ contract BountyV2 is Permissions {
             return 0;
         }
 
-        if (now < constantsHolder.launchTimestamp()) {
+        if (block.timestamp < constantsHolder.launchTimestamp()) {
             // network is not launched
             // bounty is turned off
             return 0;

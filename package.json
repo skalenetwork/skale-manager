@@ -33,7 +33,7 @@
     "hooks": "git config core.hooksPath .githooks || true",
     "lint": "npx solhint \"contracts/**/*.sol\"",
     "prepare": "yarn compile && yarn hooks",
-    "slither": "slither .",
+    "slither": "echo 'Disable slither because it does not support solidity 0.8' || slither .",
     "test": "npx buidler test && yarn tsc",
     "tsc": "tsc --noEmit",
     "tslint": "npx tslint --project ."
@@ -41,8 +41,8 @@
   "dependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.1",
     "@nomiclabs/hardhat-web3": "^2.0.0",
-    "@openzeppelin/contracts": "^3.4.0",
-    "@openzeppelin/contracts-ethereum-package": "^3.0.0",
+    "@openzeppelin/contracts": "^4.0.0-beta.1",
+    "@openzeppelin/contracts-upgradeable": "^4.0.0-beta.0",
     "@openzeppelin/hardhat-upgrades": "^1.6.0",
     "axios": "^0.21.1",
     "dotenv": "^8.2.0",

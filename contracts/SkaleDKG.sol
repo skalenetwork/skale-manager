@@ -19,7 +19,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.10;
+pragma solidity 0.8.2;
 pragma experimental ABIEncoderV2;
 import "./Permissions.sol";
 import "./delegation/Punisher.sol";
@@ -47,6 +47,7 @@ import "./dkg/SkaleDkgResponse.sol";
 contract SkaleDKG is Permissions, ISkaleDKG {
     using Fp2Operations for Fp2Operations.Fp2Point;
     using G2Operations for G2Operations.G2Point;
+    using SafeMath for uint;
 
     enum DkgFunction {Broadcast, Alright, ComplaintBadData, PreResponse, Complaint, Response}
 
@@ -385,7 +386,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
     }
 
     function setStartAlrightTimestamp(bytes32 schainId) external allow("SkaleDKG") {
-        startAlrightTimestamp[schainId] = now;
+        startAlrightTimestamp[schainId] = block.timestamp;
     }
 
     function setBadNode(bytes32 schainId, uint nodeIndex) external allow("SkaleDKG") {
@@ -495,7 +496,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         if (!checkFrom || !checkTo)
             return false;
         bool complaintSending = (
-                complaints[schainId].nodeToComplaint == uint(-1) &&
+                complaints[schainId].nodeToComplaint == type(uint).max &&
                 dkgProcess[schainId].broadcasted[indexTo] &&
                 !dkgProcess[schainId].completed[indexFrom]
             ) ||
@@ -506,11 +507,11 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             ) ||
             (
                 !dkgProcess[schainId].broadcasted[indexTo] &&
-                complaints[schainId].nodeToComplaint == uint(-1) &&
+                complaints[schainId].nodeToComplaint == type(uint).max &&
                 channels[schainId].startedBlockTimestamp.add(_getComplaintTimelimit()) <= block.timestamp
             ) ||
             (
-                complaints[schainId].nodeToComplaint == uint(-1) &&
+                complaints[schainId].nodeToComplaint == type(uint).max &&
                 isEveryoneBroadcasted(schainId) &&
                 dkgProcess[schainId].completed[indexFrom] &&
                 !dkgProcess[schainId].completed[indexTo] &&
@@ -623,23 +624,23 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         bool isLastNode = channels[schainId].n == dkgProcess[schainId].numberOfCompleted;
         if (context.dkgFunction == DkgFunction.Alright && isLastNode) {
             wallets.refundGasBySchain(
-                schainId, msg.sender, gasTotal.sub(gasleft()).add(context.delta).sub(74800), context.isDebt
+                schainId, payable(msg.sender), gasTotal.sub(gasleft()).add(context.delta).sub(74800), context.isDebt
             );
         } else if (context.dkgFunction == DkgFunction.Complaint && gasTotal.sub(gasleft()) > 2e6) {
             wallets.refundGasBySchain(
-                schainId, msg.sender, gasTotal.sub(gasleft()).add(context.delta).sub(640000), context.isDebt
+                schainId, payable(msg.sender), gasTotal.sub(gasleft()).add(context.delta).sub(640000), context.isDebt
             );
         } else if (context.dkgFunction == DkgFunction.Complaint && gasTotal.sub(gasleft()) > 1e6) {
             wallets.refundGasBySchain(
-                schainId, msg.sender, gasTotal.sub(gasleft()).add(context.delta).sub(270000), context.isDebt
+                schainId, payable(msg.sender), gasTotal.sub(gasleft()).add(context.delta).sub(270000), context.isDebt
             );
         } else if (context.dkgFunction == DkgFunction.Response){
             wallets.refundGasBySchain(
-                schainId, msg.sender, gasTotal.sub(gasleft()).sub(context.delta), context.isDebt
+                schainId, payable(msg.sender), gasTotal.sub(gasleft()).sub(context.delta), context.isDebt
             );
         } else {
             wallets.refundGasBySchain(
-                schainId, msg.sender, gasTotal.sub(gasleft()).add(context.delta), context.isDebt
+                schainId, payable(msg.sender), gasTotal.sub(gasleft()).add(context.delta), context.isDebt
             );
         }
     }
@@ -664,12 +665,12 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         delete dkgProcess[schainId].broadcasted;
         dkgProcess[schainId].broadcasted = new bool[](len);
         dkgProcess[schainId].completed = new bool[](len);
-        complaints[schainId].fromNodeToComplaint = uint(-1);
-        complaints[schainId].nodeToComplaint = uint(-1);
+        complaints[schainId].fromNodeToComplaint = type(uint).max;
+        complaints[schainId].nodeToComplaint = type(uint).max;
         delete complaints[schainId].startComplaintBlockTimestamp;
         delete dkgProcess[schainId].numberOfBroadcasted;
         delete dkgProcess[schainId].numberOfCompleted;
-        channels[schainId].startedBlockTimestamp = now;
+        channels[schainId].startedBlockTimestamp = block.timestamp;
         channels[schainId].startedBlock = block.number;
         KeyStorage(contractManager.getContract("KeyStorage")).initPublicKeyInProgress(schainId);
 

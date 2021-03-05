@@ -20,7 +20,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.10;
+pragma solidity 0.8.2;
 
 import "./Permissions.sol";
 import "./SchainsInternal.sol";
@@ -31,6 +31,8 @@ import "./Nodes.sol";
  * @dev Contains pricing operations for SKALE network.
  */
 contract Pricing is Permissions {
+
+    using SafeMath for uint;
 
     uint public constant INITIAL_PRICE = 5 * 10**6;
 
@@ -52,7 +54,10 @@ contract Pricing is Permissions {
      */
     function adjustPrice() external {
         ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
-        require(now > lastUpdated.add(constantsHolder.COOLDOWN_TIME()), "It's not a time to update a price");
+        require(
+            block.timestamp > lastUpdated.add(constantsHolder.COOLDOWN_TIME()),
+            "It's not a time to update a price"
+        );
         checkAllNodes();
         uint load = _getTotalLoad();
         uint capacity = _getTotalCapacity();
@@ -68,7 +73,7 @@ contract Pricing is Permissions {
         uint priceChangeSpeedMultipliedByCapacityAndMinPrice =
             constantsHolder.ADJUSTMENT_SPEED().mul(loadDiff).mul(price);
         
-        uint timeSkipped = now.sub(lastUpdated);
+        uint timeSkipped = block.timestamp.sub(lastUpdated);
         
         uint priceChange = priceChangeSpeedMultipliedByCapacityAndMinPrice
             .mul(timeSkipped)
@@ -89,7 +94,7 @@ contract Pricing is Permissions {
                 }
             }
         }
-        lastUpdated = now;
+        lastUpdated = block.timestamp;
     }
 
     /**
@@ -101,7 +106,7 @@ contract Pricing is Permissions {
 
     function initialize(address newContractsAddress) public override initializer {
         Permissions.initialize(newContractsAddress);
-        lastUpdated = now;
+        lastUpdated = block.timestamp;
         price = INITIAL_PRICE;
     }
 

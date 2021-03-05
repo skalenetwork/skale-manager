@@ -19,7 +19,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.10;
+pragma solidity 0.8.2;
 pragma experimental ABIEncoderV2;
 
 import "./interfaces/ISkaleDKG.sol";
@@ -28,7 +28,7 @@ import "./utils/Random.sol";
 import "./ConstantsHolder.sol";
 import "./Nodes.sol";
 
-import "@openzeppelin/contracts-ethereum-package/contracts/utils/EnumerableSet.sol";
+import "@openzeppelin/contracts-upgradeable/utils/structs/EnumerableSetUpgradeable.sol";
 
 /**
  * @title SchainsInternal
@@ -37,7 +37,8 @@ import "@openzeppelin/contracts-ethereum-package/contracts/utils/EnumerableSet.s
 contract SchainsInternal is Permissions {
 
     using Random for Random.RandomGenerator;
-    using EnumerableSet for EnumerableSet.UintSet;
+    using SafeMath for uint;
+    using EnumerableSetUpgradeable for EnumerableSetUpgradeable.UintSet;
 
     struct Schain {
         string name;
@@ -94,7 +95,7 @@ contract SchainsInternal is Permissions {
 
     mapping (bytes32 => uint[]) private _schainToExceptionNodes;
 
-    EnumerableSet.UintSet private _keysOfSchainTypes;
+    EnumerableSetUpgradeable.UintSet private _keysOfSchainTypes;
 
     /**
      * @dev Allows Schain contract to initialize an schain.
@@ -247,7 +248,7 @@ contract SchainsInternal is Permissions {
             schainsGroups[schainId].push(nodeIndex);
         } else {
             schainsGroups[schainId][holesForSchains[schainId][0]] = nodeIndex;
-            uint min = uint(-1);
+            uint min = type(uint).max;
             uint index = 0;
             for (uint i = 1; i < holesForSchains[schainId].length; i++) {
                 if (min > holesForSchains[schainId][i]) {
@@ -255,7 +256,7 @@ contract SchainsInternal is Permissions {
                     index = i;
                 }
             }
-            if (min == uint(-1)) {
+            if (min == type(uint).max) {
                 delete holesForSchains[schainId];
             } else {
                 holesForSchains[schainId][0] = min;

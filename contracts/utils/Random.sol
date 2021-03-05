@@ -20,10 +20,11 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.10;
+pragma solidity 0.8.2;
 pragma experimental ABIEncoderV2;
 
-import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+
 
 /**
  * @title Random
@@ -60,8 +61,8 @@ library Random {
      */
     function random(RandomGenerator memory self, uint max) internal pure returns (uint) {
         assert(max > 0);
-        uint maxRand = uint(-1).sub(uint(-1).mod(max));
-        if (uint(-1).sub(maxRand) == max.sub(1)) {
+        uint maxRand = type(uint).max.sub(type(uint).max.mod(max));
+        if (type(uint).max.sub(maxRand) == max.sub(1)) {
             return random(self).mod(max);
         } else {
             uint rand = random(self);

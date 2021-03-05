@@ -21,7 +21,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.10;
+pragma solidity 0.8.2;
 pragma experimental ABIEncoderV2;
 
 import "../SkaleDKG.sol";
@@ -35,6 +35,8 @@ import "../KeyStorage.sol";
  * Joint-Feldman protocol.
  */
 library SkaleDkgAlright {
+
+    using SafeMath for uint;
 
     event AllDataReceived(bytes32 indexed schainId, uint nodeIndex);
     event SuccessfulDKG(bytes32 indexed schainId);
@@ -65,7 +67,7 @@ library SkaleDkgAlright {
         dkgProcess[schainId].numberOfCompleted++;
         emit AllDataReceived(schainId, fromNodeIndex);
         if (dkgProcess[schainId].numberOfCompleted == numberOfParticipant) {
-            lastSuccesfulDKG[schainId] = now;
+            lastSuccesfulDKG[schainId] = block.timestamp;
             channels[schainId].active = false;
             KeyStorage(contractManager.getContract("KeyStorage")).finalizePublicKey(schainId);
             emit SuccessfulDKG(schainId);

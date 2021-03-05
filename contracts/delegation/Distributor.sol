@@ -19,12 +19,12 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.10;
+pragma solidity 0.8.2;
 pragma experimental ABIEncoderV2;
 
-import "@openzeppelin/contracts-ethereum-package/contracts/introspection/IERC1820Registry.sol";
-import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC777/IERC777Recipient.sol";
-import "@openzeppelin/contracts-ethereum-package/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol";
+import "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import "../Permissions.sol";
 import "../ConstantsHolder.sol";
@@ -42,6 +42,7 @@ import "./TimeHelpers.sol";
  */
 contract Distributor is Permissions, IERC777Recipient {
     using MathUtils for uint;
+    using SafeMath for uint;
 
     /**
      * @dev Emitted when bounty is withdrawn.
@@ -102,7 +103,7 @@ contract Distributor is Permissions, IERC777Recipient {
         TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
         ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
 
-        require(now >= timeHelpers.addMonths(
+        require(block.timestamp >= timeHelpers.addMonths(
                 constantsHolder.launchTimestamp(),
                 constantsHolder.BOUNTY_LOCKUP_MONTHS()
             ), "Bounty is locked");
@@ -140,7 +141,7 @@ contract Distributor is Permissions, IERC777Recipient {
         TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
         ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
 
-        require(now >= timeHelpers.addMonths(
+        require(block.timestamp >= timeHelpers.addMonths(
                 constantsHolder.launchTimestamp(),
                 constantsHolder.BOUNTY_LOCKUP_MONTHS()
             ), "Fee is locked");

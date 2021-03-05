@@ -19,7 +19,7 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.10;
+pragma solidity 0.8.2;
 pragma experimental ABIEncoderV2;
 
 import "../interfaces/delegation/ILocker.sol";
@@ -46,6 +46,8 @@ import "./TimeHelpers.sol";
  * `getAndUpdateForbiddenForDelegationAmount`. This lock enforces slashing.
  */
 contract TokenState is Permissions, ILocker {
+
+    using SafeMath for uint;
 
     string[] private _lockers;
 

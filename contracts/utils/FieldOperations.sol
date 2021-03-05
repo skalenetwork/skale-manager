@@ -20,9 +20,9 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.10;
+pragma solidity 0.8.2;
 
-import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 import "./Precompiled.sol";
 
@@ -121,8 +121,8 @@ library Fp2Operations {
 }
 
 library G1Operations {
-    using SafeMath for uint;
     using Fp2Operations for Fp2Operations.Fp2Point;
+    using SafeMath for uint;
 
     function getG1Generator() internal pure returns (Fp2Operations.Fp2Point memory) {
         // Current solidity version does not support Constants of non-value type
@@ -155,8 +155,8 @@ library G1Operations {
 
 
 library G2Operations {
-    using SafeMath for uint;
     using Fp2Operations for Fp2Operations.Fp2Point;
+    using SafeMath for uint;
 
     struct G2Point {
         Fp2Operations.Fp2Point x;

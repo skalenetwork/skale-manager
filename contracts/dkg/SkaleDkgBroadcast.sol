@@ -21,10 +21,9 @@
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity 0.6.10;
+pragma solidity 0.8.2;
 pragma experimental ABIEncoderV2;
 
-import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
 import "../SkaleDKG.sol";
 import "../KeyStorage.sol";
 import "../utils/FieldOperations.sol";
@@ -36,6 +35,7 @@ import "../utils/FieldOperations.sol";
  * Joint-Feldman protocol.
  */
 library SkaleDkgBroadcast {
+    
     using SafeMath for uint;
 
     /**

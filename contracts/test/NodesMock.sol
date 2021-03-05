@@ -18,13 +18,16 @@
     You should have received a copy of the GNU Affero General Public License
     along with SKALE Manager.  If not, see <https://www.gnu.org/licenses/>.
 */
-pragma solidity 0.6.10;
+pragma solidity 0.8.2;
 
 import "../BountyV2.sol";
 import "../Permissions.sol";
 
 
 contract NodesMock is Permissions {
+
+    using SafeMath for uint;
+
     uint public nodesCount = 0;
     uint public nodesLeft = 0;
     //     nodeId => timestamp
@@ -36,7 +39,7 @@ contract NodesMock is Permissions {
     
     function registerNodes(uint amount, uint validatorId) external {
         for (uint nodeId = nodesCount; nodeId < nodesCount + amount; ++nodeId) {
-            lastRewardDate[nodeId] = now;
+            lastRewardDate[nodeId] = block.timestamp;
             owner[nodeId] = validatorId;
         }
         nodesCount += amount;
@@ -46,7 +49,7 @@ contract NodesMock is Permissions {
         nodeLeft[nodeId] = true;
     }
     function changeNodeLastRewardDate(uint nodeId) external {
-        lastRewardDate[nodeId] = now;
+        lastRewardDate[nodeId] = block.timestamp;
     }
     function getNodeLastRewardDate(uint nodeIndex) external view returns (uint) {
         require(nodeIndex < nodesCount, "Node does not exist");
