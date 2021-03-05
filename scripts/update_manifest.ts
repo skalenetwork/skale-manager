@@ -33,6 +33,7 @@ async function main() {
     console.log("Prepare contracts");
     await exec("sed -i '/buidler/d' contracts/BountyV2.sol");
     await exec("cp contracts_tmp/Wallets.sol contracts");
+    await exec("sed -i 's/0.8.2/0.6.10/g' contracts/Wallets.sol");
     await exec("yarn add @openzeppelin/contracts-ethereum-package --ignore-scripts");
     await exec("yarn remove @openzeppelin/contracts --ignore-scripts");
     await exec("yarn add @openzeppelin/contracts --ignore-scripts");
