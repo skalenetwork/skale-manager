@@ -28,7 +28,7 @@ import "./utils/Random.sol";
 import "./ConstantsHolder.sol";
 import "./Nodes.sol";
 
-import "@openzeppelin/contracts-upgradeable/utils/structs/EnumerableSetUpgradeable.sol";
+import "openzeppelin-solidity/contracts/utils/structs/EnumerableSetUpgradeable.sol";
 
 /**
  * @title SchainsInternal

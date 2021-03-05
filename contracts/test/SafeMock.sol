@@ -21,7 +21,7 @@
 
 pragma solidity 0.8.2;
 
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "openzeppelin-solidity/contracts/access/OwnableUpgradeable.sol";
 
 contract SafeMock is OwnableUpgradeable {
     constructor() public {

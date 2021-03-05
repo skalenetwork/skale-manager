@@ -21,7 +21,7 @@
 
 pragma solidity 0.8.2;
 
-import "@openzeppelin/contracts-upgradeable/utils/math/SafeMathUpgradeable.sol";
+import "openzeppelin-solidity/contracts/utils/math/SafeMathUpgradeable.sol";
 
 import "../delegation/PartialDifferences.sol";
 

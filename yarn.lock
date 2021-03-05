@@ -582,11 +582,6 @@
     widest-line "^3.1.0"
     wrap-ansi "^4.0.0"
 
-"@openzeppelin/contracts-upgradeable@^4.0.0-beta.0":
-  version "4.0.0-beta.0"
-  resolved "https://registry.yarnpkg.com/@openzeppelin/contracts-upgradeable/-/contracts-upgradeable-4.0.0-beta.0.tgz#f4d4eafa44837c5c4570afc4da9f064c7c15a00c"
-  integrity sha512-bVk/SK6911W0bUVygpqblaJRTij9GpZ+3mn/tW/H2nLl2yz83cvw/e8sXgYJBhClhWL/JlX6FmXmaim877Mr9w==
-
 "@openzeppelin/contracts@^4.0.0-beta.1":
   version "4.0.0-beta.1"
   resolved "https://registry.yarnpkg.com/@openzeppelin/contracts/-/contracts-4.0.0-beta.1.tgz#23476cf3e4e3fdd9deb246457e7edea4aebe7228"
@@ -6430,6 +6425,10 @@ onetime@^2.0.0:
   integrity sha1-BnQoIw/WdEOyeUsiu6UotoZ5YtQ=
   dependencies:
     mimic-fn "^1.0.0"
+
+"openzeppelin-solidity@https://github.com/DimaStebaev/openzeppelin-contracts-upgradeable.git#debug":
+  version "3.4.0"
+  resolved "https://github.com/DimaStebaev/openzeppelin-contracts-upgradeable.git#d967fca65affd09897f7519ff68d7e8d5c7a9524"
 
 optionator@^0.8.1, optionator@^0.8.2:
   version "0.8.3"

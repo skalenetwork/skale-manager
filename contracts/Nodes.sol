@@ -25,7 +25,7 @@ pragma solidity 0.8.2;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import "@openzeppelin/contracts-upgradeable/utils/math/SafeCastUpgradeable.sol";
+import "openzeppelin-solidity/contracts/utils/math/SafeCastUpgradeable.sol";
 
 import "./delegation/DelegationController.sol";
 import "./delegation/ValidatorService.sol";

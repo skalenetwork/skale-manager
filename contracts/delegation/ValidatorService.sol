@@ -25,7 +25,7 @@ pragma solidity 0.8.2;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import "@openzeppelin/contracts-upgradeable/utils/cryptography/ECDSAUpgradeable.sol";
+import "openzeppelin-solidity/contracts/utils/cryptography/ECDSAUpgradeable.sol";
 
 import "../Permissions.sol";
 import "../ConstantsHolder.sol";

@@ -21,8 +21,8 @@
 
 pragma solidity 0.8.2;
 
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
+import "openzeppelin-solidity/contracts/access/OwnableUpgradeable.sol";
+import "openzeppelin-solidity/contracts/utils/AddressUpgradeable.sol";
 
 import "./utils/StringUtils.sol";
 
