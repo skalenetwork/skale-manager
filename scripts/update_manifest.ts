@@ -33,7 +33,7 @@ async function main() {
     console.log("Prepare contracts");
     await exec("sed -i '/buidler/d' contracts/BountyV2.sol");
     await exec("cp contracts_tmp/Wallets.sol contracts");
-    await exec("yarn install @openzeppelin/contracts-ethereum-package");
+    await exec("yarn add @openzeppelin/contracts-ethereum-package");
 
     console.log("Deploy contracts");
     await exec(`rm .openzeppelin/unknown-31337.json || rm .openzeppelin/unknown-1337.json || true`);
