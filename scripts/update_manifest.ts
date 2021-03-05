@@ -33,9 +33,9 @@ async function main() {
     console.log("Prepare contracts");
     await exec("sed -i '/buidler/d' contracts/BountyV2.sol");
     await exec("cp contracts_tmp/Wallets.sol contracts");
-    await exec("yarn add @openzeppelin/contracts-ethereum-package");
-    await exec("yarn remove @openzeppelin/contracts");
-    await exec("yarn add @openzeppelin/contracts");
+    await exec("yarn add @openzeppelin/contracts-ethereum-package --ignore-scripts");
+    await exec("yarn remove @openzeppelin/contracts --ignore-scripts");
+    await exec("yarn add @openzeppelin/contracts --ignore-scripts");
 
     console.log("Deploy contracts");
     await exec(`rm .openzeppelin/unknown-31337.json || rm .openzeppelin/unknown-1337.json || true`);
@@ -44,8 +44,8 @@ async function main() {
     console.log("Clean up");
     await exec("rm -r contracts");
     await exec("mv contracts_tmp contracts");
-    await exec("yarn remove @openzeppelin/contracts-ethereum-package");
-    await exec("yarn remove @openzeppelin/contracts");
+    await exec("yarn remove @openzeppelin/contracts-ethereum-package --ignore-scripts");
+    await exec("yarn remove @openzeppelin/contracts --ignore-scripts");
     await exec("yarn add @openzeppelin/contracts@next");
 
     console.log("Apply generated data");
