@@ -47,7 +47,7 @@ async function main() {
     await exec("mv contracts_tmp contracts");
     await exec("yarn remove @openzeppelin/contracts-ethereum-package --ignore-scripts");
     await exec("yarn remove @openzeppelin/contracts --ignore-scripts");
-    await exec("yarn add @openzeppelin/contracts@next");
+    await exec("yarn add @openzeppelin/contracts@next --ignore-scripts");
 
     console.log("Apply generated data");
     let newManifestFilename;
