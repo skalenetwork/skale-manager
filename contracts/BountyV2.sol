@@ -21,8 +21,6 @@
 
 pragma solidity 0.6.10;
 
-import "@nomiclabs/buidler/console.sol";
-
 import "./delegation/DelegationController.sol";
 import "./delegation/PartialDifferences.sol";
 import "./delegation/TimeHelpers.sol";
@@ -261,7 +259,6 @@ contract BountyV2 is Permissions {
         view
         returns (uint)
     {
-        console.log("In _calculateMaximumBountyAmount");
         if (nodes.isNodeLeft(nodeIndex)) {
             return 0;
         }
@@ -303,17 +300,6 @@ contract BountyV2 is Permissions {
         view
         returns (uint)
     {
-        console.log("In _calculateBountyShare");
-        console.log("monthBounty");
-        console.log(monthBounty);
-        console.log("effectiveDelegated");
-        console.log(effectiveDelegated);
-        console.log("effectiveDelegatedSum");
-        console.log(effectiveDelegatedSum);
-        console.log("maxNodesAmount");
-        console.log(maxNodesAmount);
-        console.log("paidToValidator");
-        console.log(paidToValidator);
         if (maxNodesAmount > 0) {
             uint totalBountyShare = monthBounty
                 .mul(effectiveDelegated)
