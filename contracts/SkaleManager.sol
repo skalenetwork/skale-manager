@@ -49,6 +49,8 @@ contract SkaleManager is IERC777Recipient, Permissions {
 
     bytes32 constant public ADMIN_ROLE = keccak256("ADMIN_ROLE");
 
+    string public version;
+
     /**
      * @dev Emitted when bounty is received.
      */
@@ -182,6 +184,10 @@ contract SkaleManager is IERC777Recipient, Permissions {
             gasleft());
         
         _refundGasByValidator(validatorId, msg.sender, gasTotal - gasleft());
+    }
+
+    function setVersion(string calldata newVersion) external onlyOwner {
+        version = newVersion;
     }
 
     function initialize(address newContractsAddress) public override initializer {

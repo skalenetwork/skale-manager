@@ -440,7 +440,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         return dkgProcess[schainId].numberOfCompleted;
     }
 
-    function getTimeOfLastSuccesfulDKG(bytes32 schainId) external view returns (uint) {
+    function getTimeOfLastSuccessfulDKG(bytes32 schainId) external view returns (uint) {
         return lastSuccesfulDKG[schainId];
     }
 

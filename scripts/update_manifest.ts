@@ -36,11 +36,12 @@ async function main() {
 
     console.log("Deploy contracts");
     await exec(`rm .openzeppelin/unknown-31337.json || rm .openzeppelin/unknown-1337.json || true`);
-    await exec("npx hardhat run migrations/deploy.ts --network localhost");
+    await exec(`VERSION=${version} npx hardhat run migrations/deploy.ts --network localhost`);
 
     await exec("rm -r contracts");
     await exec("mv contracts_tmp contracts");
 
+    console.log("Apply generated data");
     let newManifestFilename;
     if (syncFs.existsSync(".openzeppelin/unknown-31337.json")) {
         newManifestFilename = ".openzeppelin/unknown-31337.json";
@@ -53,7 +54,7 @@ async function main() {
     const manifest = JSON.parse(await fs.readFile(manifestFilename, "utf-8"));
     const newManifest = JSON.parse(await fs.readFile(newManifestFilename, "utf-8"));
     const cliExport = JSON.parse(await fs.readFile(exportFilename, "utf-8"));
-    const artifacts = JSON.parse(await fs.readFile(`data/skale-manager-${(await fs.readFile("VERSION", "utf-8")).trim()}-localhost-abi.json`, "utf-8"));
+    const artifacts = JSON.parse(await fs.readFile(`data/skale-manager-${version}-localhost-abi.json`, "utf-8"));
     const network = manifestFilename.substr(0, manifestFilename.lastIndexOf(".")).split("/").pop() as string;
 
     interface ImplementationInterface {
