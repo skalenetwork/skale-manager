@@ -21,6 +21,8 @@
 
 pragma solidity 0.6.10;
 
+import "@openzeppelin/contracts-ethereum-package/contracts/math/Math.sol";
+
 import "./delegation/DelegationController.sol";
 import "./delegation/PartialDifferences.sol";
 import "./delegation/TimeHelpers.sol";
@@ -257,7 +259,7 @@ contract BountyV2 is Permissions {
             uint totalBountyShare = monthBounty
                 .mul(effectiveDelegated)
                 .div(effectiveDelegatedSum);
-            return _min(
+            return Math.min(
                 totalBountyShare.div(maxNodesAmount),
                 totalBountyShare.sub(paidToValidator)
             );
@@ -381,22 +383,6 @@ contract BountyV2 is Permissions {
         } else {
             uint currentMonthFinish = timeHelpers.monthToTimestamp(currentMonth.add(1));
             return currentMonthFinish.sub(BOUNTY_WINDOW_SECONDS);
-        }
-    }
-
-    function _min(uint a, uint b) private pure returns (uint) {
-        if (a < b) {
-            return a;
-        } else {
-            return b;
-        }
-    }
-
-    function _max(uint a, uint b) private pure returns (uint) {
-        if (a < b) {
-            return b;
-        } else {
-            return a;
         }
     }
 }

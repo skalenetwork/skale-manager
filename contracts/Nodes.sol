@@ -926,12 +926,4 @@ contract Nodes is Permissions {
         }
         return address(addr);
     }
-
-    function _min(uint a, uint b) private pure returns (uint) {
-        if (a < b) {
-            return a;
-        } else {
-            return b;
-        }
-    }
 }
