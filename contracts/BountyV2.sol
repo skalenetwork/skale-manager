@@ -147,53 +147,6 @@ contract BountyV2 is Permissions {
         _effectiveDelegatedSum.subtractFromValue(amount, month);
     }
 
-    function populate() external onlyOwner {
-        ValidatorService validatorService = ValidatorService(contractManager.getValidatorService());
-        DelegationController delegationController = DelegationController(
-            contractManager.getContract("DelegationController")
-        );
-        TimeHelpers timeHelpers = TimeHelpers(contractManager.getTimeHelpers());
-
-        uint currentMonth = timeHelpers.getCurrentMonth();
-
-        // clean existing data
-        for (
-            uint i = _effectiveDelegatedSum.firstUnprocessedMonth;
-            i < _effectiveDelegatedSum.lastChangedMonth.add(1);
-            ++i
-        )
-        {
-            delete _effectiveDelegatedSum.addDiff[i];
-            delete _effectiveDelegatedSum.subtractDiff[i];
-        }
-        delete _effectiveDelegatedSum.value;
-        delete _effectiveDelegatedSum.lastChangedMonth;
-        _effectiveDelegatedSum.firstUnprocessedMonth = currentMonth;
-        
-        uint[] memory validators = validatorService.getTrustedValidators();
-        for (uint i = 0; i < validators.length; ++i) {
-            uint validatorId = validators[i];
-            uint currentEffectiveDelegated =
-                delegationController.getAndUpdateEffectiveDelegatedToValidator(validatorId, currentMonth);
-            uint[] memory effectiveDelegated = delegationController.getEffectiveDelegatedValuesByValidator(validatorId);
-            if (effectiveDelegated.length > 0) {
-                assert(currentEffectiveDelegated == effectiveDelegated[0]);
-            }
-            uint added = 0;
-            for (uint j = 0; j < effectiveDelegated.length; ++j) {
-                if (effectiveDelegated[j] != added) {
-                    if (effectiveDelegated[j] > added) {
-                        _effectiveDelegatedSum.addToValue(effectiveDelegated[j].sub(added), currentMonth + j);
-                    } else {
-                        _effectiveDelegatedSum.subtractFromValue(added.sub(effectiveDelegated[j]), currentMonth + j);
-                    }
-                    added = effectiveDelegated[j];
-                }
-            }
-            delete effectiveDelegated;
-        }
-    }
-
     function estimateBounty(uint nodeIndex) external view returns (uint) {
         ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));
