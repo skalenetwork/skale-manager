@@ -608,21 +608,14 @@ describe("Bounty", () => {
                         .div(ten18)
                         .toNumber());
 
-                console.log("Calculate bounty");
-
-                console.log("Node 0");
                 bounty = await calculateBounty(0);
                 bounty.should.be.almost(0); // stake is too small
                 totalBounty += bounty;
-                console.log("Node 1");
                 bounty = await calculateBounty(1);
                 bounty.should.be.almost(bountyLeft * effectiveDelegated1 / (effectiveDelegated1 + effectiveDelegated2BeforeSlashing));
                 totalBounty += bounty;
-                console.log("Node 2");
                 bounty = await calculateBounty(2);
-                console.log("Bounty:", bounty);
                 bounty.should.be.almost(0); // bounty was claimed by node #1
-                return; // TODO: remove
                 totalBounty += bounty;
                 bounty = await calculateBounty(3);
                 bounty.should.be.almost(0); // stake is too small
@@ -631,8 +624,6 @@ describe("Bounty", () => {
                 totalBounty.should.be.lessThan(getBountyForEpoch(4));
 
                 await skipTimeToDate(ethers, 16, 5);
-
-                return; // TODO: remove
 
                 // June 16th
                 // console.log("ts: current", new Date(await currentTime(web3) * 1000));
@@ -662,9 +653,8 @@ describe("Bounty", () => {
 
                 await bountyContract.calculateBounty(1)
                     .should.be.eventually.rejectedWith("Transaction is sent too early");
-                bounty = await calculateBounty(2);
-                bounty.should.be.almost(bountyLeft * effectiveDelegated1 / (effectiveDelegated1 + effectiveDelegated2));
-                totalBounty += bounty;
+                await bountyContract.calculateBounty(2)
+                    .should.be.eventually.rejectedWith("Transaction is sent too early");
                 await bountyContract.calculateBounty(3)
                     .should.be.eventually.rejectedWith("Transaction is sent too early");
 
@@ -685,7 +675,7 @@ describe("Bounty", () => {
                 //         5: 1M - 2 months (from Apr) - DELEGATED
                 //     nodes:
                 //         1: May 29th
-                //         2: June 16th
+                //         2: Apr 15th
 
                 // 2. validator2:
                 //     delegations:
@@ -696,10 +686,11 @@ describe("Bounty", () => {
                 //         3: May 29th
 
                 bounty = await calculateBounty(1);
-                bounty.should.be.almost(0); // stake is too low
+                bounty.should.be.almost(bountyLeft * effectiveDelegated1 / (effectiveDelegated1 + effectiveDelegated2)); // stake is too low
                 totalBounty += bounty;
-                await bountyContract.calculateBounty(2)
-                    .should.be.eventually.rejectedWith("Transaction is sent too early");
+                bounty = await calculateBounty(2);
+                bounty.should.be.almost(0); // bounty was claimed by node #1
+                totalBounty += bounty;
                 bounty = await calculateBounty(3);
                 bounty.should.be.almost(0); // stake is too low
                 totalBounty += bounty;
@@ -716,8 +707,8 @@ describe("Bounty", () => {
                 //         4: 500K - 2 months (from Mar) - DELEGATED
                 //         5: 1M - 2 months (from Apr) - DELEGATED
                 //     nodes:
-                //         1: May 29th
-                //         2: June 16th
+                //         1: June 28th
+                //         2: June 28th
 
                 // 2. validator2:
                 //     delegations:
@@ -725,7 +716,7 @@ describe("Bounty", () => {
                 //         2: 0.5M - 2 months (from Feb) - DELEGATED
                 //         6: 0.5M - 2 months (from May) - COMPLETED
                 //     nodes:
-                //         3: May 29th
+                //         3: June 28th
 
                 effectiveDelegated2 = 0.5e6 * 100 + 0.25e6 * 200;
                 bountyLeft += getBountyForEpoch(5) - totalBounty;
@@ -735,7 +726,7 @@ describe("Bounty", () => {
                 bounty.should.be.almost(bountyLeft * effectiveDelegated1 / (effectiveDelegated1 + effectiveDelegated2), 3);
                 totalBounty += bounty;
                 bounty = await calculateBounty(2);
-                bounty.should.be.almost(0); // stake is too low
+                bounty.should.be.almost(0); // bounty was claimed by node #1
                 totalBounty += bounty;
                 bounty = await calculateBounty(3);
                 bounty.should.be.almost(0); // stake is too low

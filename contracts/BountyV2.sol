@@ -149,6 +149,24 @@ contract BountyV2 is Permissions {
         _effectiveDelegatedSum.subtractFromValue(amount, month);
     }
 
+    function handleSlash(
+        uint amount
+    )
+        external
+        allow("DelegationController")
+    {
+        TimeHelpers timeHelpers = TimeHelpers(contractManager.getContract("TimeHelpers"));
+
+        uint month = timeHelpers.getCurrentMonth();
+        // if bounty window is now
+        // update effectiveDelegatedSum starting next month
+        // to avoid miscalculations caused by already claimed bounty
+        if ( timeHelpers.monthToTimestamp(month.add(1)).sub(BOUNTY_WINDOW_SECONDS) <= now) {
+            month = month.add(1);
+        }
+        _effectiveDelegatedSum.subtractFromValue(amount, month);
+    }
+
     function estimateBounty(uint nodeIndex) external view returns (uint) {
         ConstantsHolder constantsHolder = ConstantsHolder(contractManager.getContract("ConstantsHolder"));
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));

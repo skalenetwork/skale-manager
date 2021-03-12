@@ -409,13 +409,11 @@ contract DelegationController is Permissions, ILocker {
         _putToSlashingLog(_slashesOfValidator[validatorId], coefficient, currentMonth);
         _slashes.push(SlashingEvent({reducingCoefficient: coefficient, validatorId: validatorId, month: currentMonth}));
 
-        // TODO: remove delegations from next month if there is bounty window now
         BountyV2 bounty = _getBounty();
-        bounty.handleDelegationRemoving(
+        bounty.handleSlash(
             initialEffectiveDelegated.sub(
                 _effectiveDelegatedToValidator[validatorId].getAndUpdateValueInSequence(currentMonth)
-            ),
-            currentMonth
+            )
         );
         for (uint i = 0; i < initialSubtractions.length; ++i) {
             bounty.handleDelegationAdd(
