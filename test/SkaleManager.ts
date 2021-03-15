@@ -32,7 +32,7 @@ import { deploySchainsInternal } from "./tools/deploy/schainsInternal";
 import { deploySchains } from "./tools/deploy/schains";
 import { deploySkaleManager } from "./tools/deploy/skaleManager";
 import { deploySkaleToken } from "./tools/deploy/skaleToken";
-import { skipTime, currentTime } from "./tools/time";
+import { skipTime, currentTime, skipTimeToLastDayOfMonth } from "./tools/time";
 import { deployBounty } from "./tools/deploy/bounty";
 import { BigNumber } from "ethers";
 import { deployTimeHelpers } from "./tools/deploy/delegation/timeHelpers";
@@ -323,7 +323,7 @@ describe("SkaleManager", () => {
             });
 
             it("should pay bounty if Node is In Active state", async () => {
-                await skipTime(ethers, month);
+                await skipTimeToLastDayOfMonth(ethers);
                 const balanceBefore = await getBalance(nodeAddress.address);
                 await skaleManager.connect(nodeAddress).getBounty(0);
                 const balance = await getBalance(nodeAddress.address);

@@ -18,6 +18,14 @@ export async function skipTimeToDate(ethers: {provider: providers.JsonRpcProvide
     await skipTime(ethers, diffInSeconds);
 }
 
+export async function skipTimeToLastDayOfMonth(ethers: {provider: providers.JsonRpcProvider}) {
+    const timestamp = (await ethers.provider.getBlock("latest")).timestamp;
+    const now = new Date(timestamp * 1000);
+    const targetTime = new Date(Date.UTC(now.getFullYear(), now.getMonth() + 1, 0))
+    const diffInSeconds = Math.round(targetTime.getTime() / 1000) - timestamp;
+    await skipTime(ethers, diffInSeconds);
+}
+
 export async function currentTime(web3: Web3) {
     return parseInt((await web3.eth.getBlock("latest")).timestamp.toString(16), 16);
 }
