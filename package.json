@@ -39,7 +39,7 @@
     "tslint": "npx tslint --project ."
   },
   "dependencies": {
-    "@nomiclabs/hardhat-ethers": "^2.0.1",
+    "@nomiclabs/hardhat-ethers": "^2.0.2",
     "@nomiclabs/hardhat-web3": "^2.0.0",
     "@openzeppelin/contracts": "^3.4.1",
     "@openzeppelin/contracts-ethereum-package": "^3.0.0",
