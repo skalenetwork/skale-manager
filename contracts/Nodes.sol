@@ -481,6 +481,36 @@ contract Nodes is Permissions {
         _makeNodeInvisible(nodeIndex);
     }
 
+    function removeNodeFromSpaceToNodes(uint nodeIndex) external virtual onlyOwner {
+        uint8 space = spaceOfNodes[nodeIndex].freeSpace;
+        _removeNodeFromSpaceToNodes(nodeIndex, space);
+    }
+
+    function addNodeToSpaceToNodes(uint nodeIndex) external onlyOwner {
+        uint8 space = spaceOfNodes[nodeIndex].freeSpace;
+        _addNodeToSpaceToNodes(nodeIndex, space);
+    }
+
+    function removeNodeFromTree(uint8 space) external onlyOwner {
+        _removeNodeFromTree(space);
+    }
+
+    function addNodeToSpaceToNodes(uint8 space) external onlyOwner {
+         _addNodeToTree(space);
+    }
+
+    function setNodeVisible(uint nodeIndex) external onlyOwner {
+        delete _invisible[nodeIndex];
+    }
+
+    function setNodeInvisible(uint nodeIndex) external onlyOwner {
+        _invisible[nodeIndex] = true;
+    }
+
+    function isNodeInvisible(uint nodeIndex) external returns (bool) {
+        return _invisible[nodeIndex];
+    }
+
     function getRandomNodeWithFreeSpace(
         uint8 freeSpace,
         Random.RandomGenerator memory randomGenerator

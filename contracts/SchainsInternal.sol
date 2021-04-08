@@ -612,7 +612,10 @@ contract SchainsInternal is Permissions {
      */
     function findSchainAtSchainsForNode(uint nodeIndex, bytes32 schainId) public view returns (uint) {
         if (placeOfSchainOnNode[schainId][nodeIndex] == 0)
-            return schainsForNodes[nodeIndex].length;
+            if (schainsForNodes[nodeIndex][schainsForNodes[nodeIndex].length - 1] == schainId)
+                return schainsForNodes[nodeIndex].length - 1;
+            else
+                return schainsForNodes[nodeIndex].length;
         return placeOfSchainOnNode[schainId][nodeIndex] - 1;
     }
 

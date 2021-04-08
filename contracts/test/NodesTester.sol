@@ -26,7 +26,7 @@ import "../Nodes.sol";
 
 contract NodesTester is Nodes {
     
-    function removeNodeFromSpaceToNodes(uint nodeIndex) external {
+    function removeNodeFromSpaceToNodes(uint nodeIndex) external override {
         uint8 space = spaceOfNodes[nodeIndex].freeSpace;
         _removeNodeFromSpaceToNodes(nodeIndex, space);
     }
