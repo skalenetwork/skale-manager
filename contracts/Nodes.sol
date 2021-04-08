@@ -481,24 +481,6 @@ contract Nodes is Permissions {
         _makeNodeInvisible(nodeIndex);
     }
 
-    function removeNodeFromSpaceToNodes(uint nodeIndex) external virtual onlyOwner {
-        uint8 space = spaceOfNodes[nodeIndex].freeSpace;
-        _removeNodeFromSpaceToNodes(nodeIndex, space);
-    }
-
-    function addNodeToSpaceToNodes(uint nodeIndex) external onlyOwner {
-        uint8 space = spaceOfNodes[nodeIndex].freeSpace;
-        _addNodeToSpaceToNodes(nodeIndex, space);
-    }
-
-    function removeNodeFromTree(uint8 space) external onlyOwner {
-        _removeNodeFromTree(space);
-    }
-
-    function addNodeToSpaceToNodes(uint8 space) external onlyOwner {
-         _addNodeToTree(space);
-    }
-
     function setNodeVisible(uint nodeIndex) external onlyOwner {
         delete _invisible[nodeIndex];
     }
@@ -507,7 +489,17 @@ contract Nodes is Permissions {
         _invisible[nodeIndex] = true;
     }
 
-    function isNodeInvisible(uint nodeIndex) external returns (bool) {
+    function removeNodeFromSpaceToNodesDirect(uint8 place, uint index) external onlyOwner {
+        uint len = spaceToNodes[place].length.sub(1);
+        if (index < len) {
+            uint shiftedIndex = spaceToNodes[place][len];
+            spaceToNodes[place][index] = shiftedIndex;
+            spaceOfNodes[shiftedIndex].indexInSpaceMap = index;
+        }
+        spaceToNodes[place].pop();
+    }
+
+    function isNodeInvisible(uint nodeIndex) external view returns (bool) {
         return _invisible[nodeIndex];
     }
 

@@ -315,8 +315,8 @@ async function main() {
     //         }
     //     });
     await upgrade(
-        "1.8.0-beta.1",
-        ["Nodes", "SchainsInternal"],
+        "1.8.0-beta.1-testnet-workaround",
+        ["Nodes"],
         async (safeTransactions, abi, contractManager) => {},
         async (safeTransactions, abi) => {}
     )
