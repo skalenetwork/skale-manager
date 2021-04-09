@@ -22,6 +22,8 @@
 pragma solidity 0.6.10;
 pragma experimental ABIEncoderV2;
 
+import "@skalenetwork/skale-manager-interfaces/ISchains.sol";
+
 import "./Permissions.sol";
 import "./SchainsInternal.sol";
 import "./ConstantsHolder.sol";
@@ -38,7 +40,7 @@ import "./Wallets.sol";
  * @dev Contains functions to manage Schains such as Schain creation,
  * deletion, and rotation.
  */
-contract Schains is Permissions {
+contract Schains is Permissions, ISchains {
 
     struct SchainParameters {
         uint lifetime;
@@ -254,6 +256,7 @@ contract Schains is Permissions {
     )
         external
         view
+        override
         returns (bool)
     {
         SkaleVerifier skaleVerifier = SkaleVerifier(contractManager.getContract("SkaleVerifier"));

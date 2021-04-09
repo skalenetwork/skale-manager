@@ -44,6 +44,7 @@
     "@openzeppelin/contracts": "^3.4.1",
     "@openzeppelin/contracts-ethereum-package": "^3.0.0",
     "@openzeppelin/hardhat-upgrades": "^1.6.0",
+    "@skalenetwork/skale-manager-interfaces": "^0.1.0",
     "axios": "^0.21.1",
     "dotenv": "^8.2.0",
     "ethereumjs-util": "^7.0.9",
