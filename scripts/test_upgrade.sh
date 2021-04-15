@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 DEPLOYED_TAG=$(cat $GITHUB_WORKSPACE/DEPLOYED)
-DEPLOYED_VERSION=$(echo $DEPLOYED_VERSION | cut -d '-' -f 1)
+DEPLOYED_VERSION=$(echo $DEPLOYED_TAG | cut -d '-' -f 1)
 DEPLOYED_DIR=$GITHUB_WORKSPACE/deployed-skale-manager/
 
 git clone --branch $DEPLOYED_TAG https://github.com/$GITHUB_REPOSITORY.git $DEPLOYED_DIR
