@@ -1,16 +1,17 @@
 #!/usr/bin/env bash
 
-DEPLOYED_VERSION=$(cat $GITHUB_WORKSPACE/DEPLOYED)
+DEPLOYED_TAG=$(cat $GITHUB_WORKSPACE/DEPLOYED)
+DEPLOYED_VERSION=$(echo $DEPLOYED_VERSION | cut -d '-' -f 1)
 DEPLOYED_DIR=$GITHUB_WORKSPACE/deployed-skale-manager/
 
-git clone --branch $DEPLOYED_VERSION https://github.com/$GITHUB_REPOSITORY.git $DEPLOYED_DIR
+git clone --branch $DEPLOYED_TAG https://github.com/$GITHUB_REPOSITORY.git $DEPLOYED_DIR
 
 npx ganache-cli --gasLimit 8000000 --quiet &
 GANACHE_PID=$!
 
 cd $DEPLOYED_DIR
 yarn install || exit $?
-PRODUCTION=true VERSION=$(echo $DEPLOYED_VERSION | cut -d '-' -f 1) npx hardhat run migrations/deploy.ts --network localhost || exit $?
+PRODUCTION=true VERSION=$DEPLOYED_VERSION npx hardhat run migrations/deploy.ts --network localhost || exit $?
 rm $GITHUB_WORKSPACE/.openzeppelin/unknown-*.json
 cp .openzeppelin/unknown-*.json $GITHUB_WORKSPACE/.openzeppelin || exit $?
 ABI_FILENAME="skale-manager-$DEPLOYED_VERSION-localhost-abi.json"
