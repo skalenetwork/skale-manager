@@ -13,7 +13,7 @@ yarn install || exit $?
 PRODUCTION=true npx hardhat run migrations/deploy.ts --network localhost || exit $?
 rm $GITHUB_WORKSPACE/.openzeppelin/unknown-*.json
 cp .openzeppelin/unknown-*.json $GITHUB_WORKSPACE/.openzeppelin || exit $?
-ABI_FILENAME="skale-manager-$DEPLOYED_VERSION-localhost.json"
+ABI_FILENAME="skale-manager-$DEPLOYED_VERSION-localhost-abi.json"
 cp "data/$ABI_FILENAME" "$GITHUB_WORKSPACE/data" || exit $?
 cd $GITHUB_WORKSPACE
 rm -r --interactive=never $DEPLOYED_DIR
