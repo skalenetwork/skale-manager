@@ -10,7 +10,7 @@ GANACHE_PID=$!
 
 cd $DEPLOYED_DIR
 yarn install || exit $?
-PRODUCTION=true npx hardhat run migrations/deploy.ts --network localhost || exit $?
+PRODUCTION=true VERSION=$(echo $DEPLOYED_VERSION | cut -d '-' -f 1) npx hardhat run migrations/deploy.ts --network localhost || exit $?
 rm $GITHUB_WORKSPACE/.openzeppelin/unknown-*.json
 cp .openzeppelin/unknown-*.json $GITHUB_WORKSPACE/.openzeppelin || exit $?
 ABI_FILENAME="skale-manager-$DEPLOYED_VERSION-localhost-abi.json"
