@@ -117,6 +117,7 @@ contract ECDH {
     }
 
     function inverse(uint256 a) public pure returns (uint256 invA) {
+        require(a > 0 && a < _N, "Input is incorrect");
         uint256 t = 0;
         uint256 newT = 1;
         uint256 r = _N;
@@ -146,11 +147,12 @@ contract ECDH {
         uint256 lz;
         uint256 da;
         uint256 db;
-
+        // we use (0 0 1) as zero point, z always equal 1
         if ((x1 == 0) && (y1 == 0)) {
             return (x2, y2, z2);
         }
 
+        // we use (0 0 1) as zero point, z always equal 1
         if ((x2 == 0) && (y2 == 0)) {
             return (x1, y1, z1);
         }

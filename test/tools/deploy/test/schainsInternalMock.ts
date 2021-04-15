@@ -1,13 +1,13 @@
-import { ContractManagerInstance, SchainsInternalMockInstance } from "../../../../types/truffle-contracts";
+import { ContractManager, SchainsInternalMock } from "../../../../typechain";
 import { deployConstantsHolder } from "../constantsHolder";
 import { deployFunctionFactory } from "../factory";
 import { deployNodes } from "../nodes";
 import { deploySkaleDKG } from "../skaleDKG";
 
 const deploySchainsInternalMock:
-    (contractManager: ContractManagerInstance) => Promise<SchainsInternalMockInstance>
+    (contractManager: ContractManager) => Promise<SchainsInternalMock>
     = deployFunctionFactory("SchainsInternalMock",
-                            async (contractManager: ContractManagerInstance) => {
+                            async (contractManager: ContractManager) => {
                                 await deployConstantsHolder(contractManager);
                                 await deploySkaleDKG(contractManager);
                                 await deployNodes(contractManager);

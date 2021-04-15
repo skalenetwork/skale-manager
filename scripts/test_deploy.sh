@@ -2,6 +2,5 @@
 
 npx ganache-cli --gasLimit 8000000 --quiet &
 GANACHE_PID=$!
-NODE_OPTIONS="--max-old-space-size=4096" PRODUCTION=true npx truffle migrate --network test || exit $?
-sleep 5
+PRODUCTION=true npx hardhat run migrations/deploy.ts --network localhost || exit $?
 kill $GANACHE_PID

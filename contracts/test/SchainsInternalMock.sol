@@ -25,7 +25,18 @@ pragma experimental ABIEncoderV2;
 import "../SchainsInternal.sol";
 
 contract SchainsInternalMock is SchainsInternal {
+
     function removePlaceOfSchainOnNode(bytes32 schainHash, uint nodeIndex) external {
         delete placeOfSchainOnNode[schainHash][nodeIndex];
+    }
+
+    function removeNodeToLocked(uint nodeIndex) external {
+        mapping(uint => bytes32[]) storage nodeToLocked = _getNodeToLockedSchains();
+        delete nodeToLocked[nodeIndex];
+    }
+
+    function removeSchainToExceptionNode(bytes32 schainHash) external {
+        mapping(bytes32 => uint[]) storage schainToException = _getSchainToExceptionNodes();
+        delete schainToException[schainHash];
     }
 }

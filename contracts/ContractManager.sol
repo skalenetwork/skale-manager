@@ -42,7 +42,6 @@ contract ContractManager is OwnableUpgradeSafe {
     string public constant PUNISHER = "Punisher";
     string public constant SKALE_TOKEN = "SkaleToken";
     string public constant TIME_HELPERS = "TimeHelpers";
-    string public constant TOKEN_LAUNCH_LOCKER = "TokenLaunchLocker";
     string public constant TOKEN_STATE = "TokenState";
     string public constant VALIDATOR_SERVICE = "ValidatorService";
 
@@ -103,10 +102,6 @@ contract ContractManager is OwnableUpgradeSafe {
 
     function getTimeHelpers() external view returns (address) {
         return getContract(TIME_HELPERS);
-    }
-
-    function getTokenLaunchLocker() external view returns (address) {
-        return getContract(TOKEN_LAUNCH_LOCKER);
     }
 
     function getConstantsHolder() external view returns (address) {

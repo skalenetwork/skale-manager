@@ -57,6 +57,7 @@ contract SkaleVerifier is Permissions {
         view
         returns (bool)
     {
+        require(G1Operations.checkRange(signature), "Signature is not valid");
         if (!_checkHashToGroupWithHelper(
             hash,
             counter,
@@ -68,15 +69,9 @@ contract SkaleVerifier is Permissions {
             return false;
         }
 
-        uint newSignB;
-        if (!(signature.a == 0 && signature.b == 0)) {
-            newSignB = Fp2Operations.P.sub((signature.b % Fp2Operations.P));
-        } else {
-            newSignB = signature.b;
-        }
-
-        require(G2Operations.isG1Point(signature.a, newSignB), "Sign not in G1");
-        require(G2Operations.isG1Point(hashA, hashB), "Hash not in G1");
+        uint newSignB = G1Operations.negate(signature.b);
+        require(G1Operations.isG1Point(signature.a, newSignB), "Sign not in G1");
+        require(G1Operations.isG1Point(hashA, hashB), "Hash not in G1");
 
         G2Operations.G2Point memory g2 = G2Operations.getG2Generator();
         require(

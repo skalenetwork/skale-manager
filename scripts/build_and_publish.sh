@@ -10,6 +10,12 @@ REPO_NAME=skalenetwork/$NAME
 IMAGE_NAME=$REPO_NAME:$VERSION
 LATEST_IMAGE_NAME=$REPO_NAME:$BRANCH-latest
 
+# Write version
+
+MAIN_VERSION=$(cat VERSION | xargs)
+echo $VERSION > VERSION
+echo $(cat VERSION | xargs)
+
 # Build image
 
 echo "Building $IMAGE_NAME..."
@@ -19,12 +25,16 @@ docker tag $IMAGE_NAME $LATEST_IMAGE_NAME
 echo "========================================================================================="
 echo "Built $IMAGE_NAME"
 
+# Restore version
+
+echo $MAIN_VERSION > VERSION
+
 # Publish image
 
-: "${USERNAME?Need to set USERNAME}"
-: "${PASSWORD?Need to set PASSWORD}"
+: "${DOCKER_USERNAME?Need to set DOCKER_USERNAME}"
+: "${DOCKER_PASSWORD?Need to set DOCKER_PASSWORD}"
 
-echo "$PASSWORD" | docker login --username $USERNAME --password-stdin
+echo "$DOCKER_PASSWORD" | docker login --username $DOCKER_USERNAME --password-stdin
 
 docker push $IMAGE_NAME || exit $?
 docker push $LATEST_IMAGE_NAME || exit $?

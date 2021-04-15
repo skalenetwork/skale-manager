@@ -11,8 +11,8 @@
     "forceConsistentCasingInFileNames": true,    
     "lib": ["es2015", "esnext.asynciterable"],
     "sourceMap": true,
-    "typeRoots": ["./node_modules/@types", "./types"],
-    "types": ["node", "truffle-contracts"],
+    "typeRoots": ["./node_modules/@types", "./typechain"],
+    "types": ["node"],
     "esModuleInterop": true
   },
   "include": ["**/*.ts"],

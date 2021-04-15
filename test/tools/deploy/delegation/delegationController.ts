@@ -1,19 +1,17 @@
-import { ContractManagerInstance, DelegationControllerInstance } from "../../../../types/truffle-contracts";
+import { ContractManager, DelegationController } from "../../../../typechain";
 import { deployBounty } from "../bounty";
 import { deployFunctionFactory } from "../factory";
 import { deploySkaleToken } from "../skaleToken";
 import { deployDelegationPeriodManager } from "./delegationPeriodManager";
 import { deployTimeHelpers } from "./timeHelpers";
-import { deployTokenLaunchLocker } from "./tokenLaunchLocker";
 import { deployValidatorService } from "./validatorService";
 
-const deployDelegationController: (contractManager: ContractManagerInstance) => Promise<DelegationControllerInstance>
+const deployDelegationController: (contractManager: ContractManager) => Promise<DelegationController>
     = deployFunctionFactory("DelegationController",
-                            async (contractManager: ContractManagerInstance) => {
+                            async (contractManager: ContractManager) => {
                                 await deployValidatorService(contractManager);
                                 await deployTimeHelpers(contractManager);
                                 await deployDelegationPeriodManager(contractManager);
-                                await deployTokenLaunchLocker(contractManager);
                                 await deploySkaleToken(contractManager);
                                 await deployBounty(contractManager);
                             });

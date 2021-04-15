@@ -25,7 +25,10 @@ pragma experimental ABIEncoderV2;
 import "../SkaleDKG.sol";
 
 contract SkaleDKGTester is SkaleDKG {
-    function setSuccesfulDKGPublic(bytes32 schainId) external {
-        _setSuccesfulDKG(schainId);
+    function setSuccessfulDKGPublic(bytes32 schainId) external {
+        lastSuccesfulDKG[schainId] = now;
+        channels[schainId].active = false;
+        KeyStorage(contractManager.getContract("KeyStorage")).finalizePublicKey(schainId);
+        emit SuccessfulDKG(schainId);
     }
 }
