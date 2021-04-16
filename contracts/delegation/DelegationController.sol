@@ -342,38 +342,36 @@ contract DelegationController is Permissions, ILocker {
     }
 
     /**
-     * @dev Allows delegator to undelegate a specific delegation.
+     * @dev Allows holder to request partial undelegation.
      * 
-     * Emits UndelegationRequested event.
+     * Emits a {UndelegationRequested} event.
+     * Emits a {DelegationProposed} event.
+     * Emits a {DelegationAccepted} event.
      * 
      * Requirements:
      * 
-     * - `msg.sender` must be the delegator.
+     * - `msg.sender` must be the token holder of the delegation proposal.
      * - Delegation state must be DELEGATED.
      */
-    function requestUndelegation(uint delegationId) external checkDelegationExists(delegationId) {
-        require(getState(delegationId) == State.DELEGATED, "Cannot request undelegation");
-        ValidatorService validatorService = _getValidatorService();
+    function requestPartialUndelegation(uint delegationId, uint amount) external {
         require(
-            delegations[delegationId].holder == msg.sender ||
-            (validatorService.validatorAddressExists(msg.sender) &&
-            delegations[delegationId].validatorId == validatorService.getValidatorId(msg.sender)),
-            "Permission denied to request undelegation");
-        _removeValidatorFromValidatorsPerDelegators(
-            delegations[delegationId].holder,
-            delegations[delegationId].validatorId);
-        processAllSlashes(msg.sender);
-        delegations[delegationId].finished = _calculateDelegationEndMonth(delegationId);
-
-        require(
-            now.add(UNDELEGATION_PROHIBITION_WINDOW_SECONDS)
-                < _getTimeHelpers().monthToTimestamp(delegations[delegationId].finished),
-            "Undelegation requests must be sent 3 days before the end of delegation period"
+            msg.sender == delegations[delegationId].holder,
+            "Only token holders can request partial undelegation request"
         );
-
-        _subtractFromAllStatistics(delegationId);
-        
-        emit UndelegationRequested(delegationId);
+        // check that amount less than delegated
+        Delegation memory delegation = getDelegation(delegationId);
+        require(amount < delegation.amount, "Incorrect amount");
+        // requestUndelegation
+        requestUndelegation(delegationId);
+        // delegate without check
+        uint newDelegationId = _addDelegation(
+            msg.sender,
+            delegation.validatorId,
+            delegation.amount.sub(amount),
+            delegation.delegationPeriod,
+            delegation.info);
+        emit DelegationProposed(newDelegationId);
+        _accept(newDelegationId);
     }
 
     /**
@@ -457,15 +455,6 @@ contract DelegationController is Permissions, ILocker {
     }
 
     /**
-     * @dev Return Delegation struct.
-     */
-    function getDelegation(uint delegationId)
-        external view checkDelegationExists(delegationId) returns (Delegation memory)
-    {
-        return delegations[delegationId];
-    }
-
-    /**
      * @dev Returns the first delegation month.
      */
     function getFirstDelegationMonth(address holder, uint validatorId) external view returns(uint) {
@@ -488,6 +477,41 @@ contract DelegationController is Permissions, ILocker {
 
     function initialize(address contractsAddress) public override initializer {
         Permissions.initialize(contractsAddress);
+    }
+
+    /**
+     * @dev Allows delegator to undelegate a specific delegation.
+     * 
+     * Emits UndelegationRequested event.
+     * 
+     * Requirements:
+     * 
+     * - `msg.sender` must be the delegator.
+     * - Delegation state must be DELEGATED.
+     */
+    function requestUndelegation(uint delegationId) public checkDelegationExists(delegationId) {
+        require(getState(delegationId) == State.DELEGATED, "Cannot request undelegation");
+        ValidatorService validatorService = _getValidatorService();
+        require(
+            delegations[delegationId].holder == msg.sender ||
+            (validatorService.validatorAddressExists(msg.sender) &&
+            delegations[delegationId].validatorId == validatorService.getValidatorId(msg.sender)),
+            "Permission denied to request undelegation");
+        _removeValidatorFromValidatorsPerDelegators(
+            delegations[delegationId].holder,
+            delegations[delegationId].validatorId);
+        processAllSlashes(msg.sender);
+        delegations[delegationId].finished = _calculateDelegationEndMonth(delegationId);
+
+        require(
+            now.add(UNDELEGATION_PROHIBITION_WINDOW_SECONDS)
+                < _getTimeHelpers().monthToTimestamp(delegations[delegationId].finished),
+            "Undelegation requests must be sent 3 days before the end of delegation period"
+        );
+
+        _subtractFromAllStatistics(delegationId);
+        
+        emit UndelegationRequested(delegationId);
     }
 
     /**
@@ -533,6 +557,15 @@ contract DelegationController is Permissions, ILocker {
                 }
             }
         }
+    }
+
+    /**
+     * @dev Return Delegation struct.
+     */
+    function getDelegation(uint delegationId)
+        public view checkDelegationExists(delegationId) returns (Delegation memory)
+    {
+        return delegations[delegationId];
     }
 
     /**

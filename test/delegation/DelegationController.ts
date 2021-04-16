@@ -279,6 +279,21 @@ describe("DelegationController", () => {
                     (await skaleToken.callStatic.getAndUpdateDelegatedAmount(holder1.address)).toNumber().should.be.equal(0);
                 });
 
+                it("should allow holder to request partial undelegation", async () => {
+                    await delegationController.connect(holder1).requestPartialUndelegation(delegationId, amount - 10);
+
+                    await skipTime(ethers, delegationPeriod * month);
+
+                    (await delegationController.getState(delegationId)).should.be.equal(State.COMPLETED);
+                    (await delegationController.getState(delegationId + 1)).should.be.equal(State.DELEGATED);
+                    (await skaleToken.callStatic.getAndUpdateDelegatedAmount(holder1.address)).toNumber().should.be.equal(10);
+                });
+
+                it("should not allow everyone to request partial undelegation", async () => {
+                    await delegationController.connect(validator).requestPartialUndelegation(delegationId, amount - 10)
+                        .should.be.eventually.rejectedWith("Only token holders can request partial undelegation request");
+                });
+
                 it("should not allow everyone to request undelegation", async () => {
                     await delegationController.connect(holder2).requestUndelegation(delegationId)
                         .should.be.eventually.rejectedWith("Permission denied to request undelegation");
@@ -290,6 +305,24 @@ describe("DelegationController", () => {
                         100);
                     await delegationController.connect(validator2).requestUndelegation(delegationId)
                         .should.be.eventually.rejectedWith("Permission denied to request undelegation");
+
+                    await skipTime(ethers, delegationPeriod * month);
+
+                    (await delegationController.getState(delegationId)).should.be.equal(State.DELEGATED);
+                    (await skaleToken.callStatic.getAndUpdateDelegatedAmount(holder1.address)).toNumber().should.be.equal(amount);
+                });
+
+                it("should not allow everyone to request partial undelegation", async () => {
+                    await delegationController.connect(holder2).requestPartialUndelegation(delegationId, amount - 10)
+                        .should.be.eventually.rejectedWith("Only token holders can request partial undelegation request");
+
+                    await validatorService.connect(validator2).registerValidator(
+                        "ValidatorName",
+                        "Really good validator",
+                        500,
+                        100);
+                    await delegationController.connect(validator2).requestPartialUndelegation(delegationId, amount - 10)
+                        .should.be.eventually.rejectedWith("Only token holders can request partial undelegation request");
 
                     await skipTime(ethers, delegationPeriod * month);
 
@@ -319,6 +352,34 @@ describe("DelegationController", () => {
 
                     (await delegationController.getState(delegationId)).should.be.equal(State.COMPLETED);
                     (await skaleToken.callStatic.getAndUpdateDelegatedAmount(holder1.address)).toNumber().should.be.equal(0);
+                });
+
+                it("should not allow holder to request partial undelegation at the last moment", async () => {
+                    const timeHelpers = await deployTimeHelpers(contractManager);
+                    const currentEpoch = (await timeHelpers.getCurrentMonth()).toNumber();
+                    const delegationEndTimestamp = (await timeHelpers.monthToTimestamp(currentEpoch + delegationPeriod)).toNumber();
+                    const twoDays = 2 * 24 * 60 * 60;
+
+                    // skip time 2 days before delegation end
+                    await skipTime(ethers, delegationEndTimestamp - twoDays - await currentTime(web3));
+
+                    await delegationController.connect(validator).requestPartialUndelegation(delegationId, amount - 10)
+                        .should.be.eventually.rejectedWith("Only token holders can request partial undelegation request");
+                    (await delegationController.getState(delegationId)).should.be.equal(State.DELEGATED);
+
+                    await skipTime(ethers, twoDays * 2);
+
+                    await delegationController.connect(validator).requestPartialUndelegation(delegationId, amount - 10)
+                        .should.be.eventually.rejectedWith("Only token holders can request partial undelegation request");
+                    await delegationController.connect(holder1).requestPartialUndelegation(delegationId, amount - 10);
+                    (await delegationController.getState(delegationId)).should.be.equal(State.UNDELEGATION_REQUESTED);
+                    (await delegationController.getState(delegationId + 1)).should.be.equal(State.ACCEPTED);
+
+                    await skipTime(ethers, delegationPeriod * month);
+
+                    (await delegationController.getState(delegationId)).should.be.equal(State.COMPLETED);
+                    (await delegationController.getState(delegationId + 1)).should.be.equal(State.DELEGATED);
+                    (await skaleToken.callStatic.getAndUpdateDelegatedAmount(holder1.address)).toNumber().should.be.equal(10);
                 });
             });
         });
