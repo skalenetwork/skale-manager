@@ -18,6 +18,11 @@
     esutils "^2.0.2"
     js-tokens "^4.0.0"
 
+"@cto.af/textdecoder@^0.0.0":
+  version "0.0.0"
+  resolved "https://registry.yarnpkg.com/@cto.af/textdecoder/-/textdecoder-0.0.0.tgz#e1e8d84c936c30a0f4619971f19ca41941af9fdc"
+  integrity sha512-sJpx3F5xcVV/9jNYJQtvimo4Vfld/nD3ph+ZWtQzZ03Zo8rJC7QKQTRcIGS13Rcz80DwFNthCWMrd58vpY4ZAQ==
+
 "@ensdomains/ens@^0.4.4":
   version "0.4.5"
   resolved "https://registry.yarnpkg.com/@ensdomains/ens/-/ens-0.4.5.tgz#e0aebc005afdc066447c6e22feb4eda89a5edbfc"
@@ -643,20 +648,20 @@
   resolved "https://registry.yarnpkg.com/@openzeppelin/contracts/-/contracts-3.4.1.tgz#03c891fec7f93be0ae44ed74e57a122a38732ce7"
   integrity sha512-cUriqMauq1ylzP2TxePNdPqkwI7Le3Annh4K9rrpvKfSBB/bdW+Iu1ihBaTIABTAAJ85LmKL5SSPPL9ry8d1gQ==
 
-"@openzeppelin/hardhat-upgrades@^1.6.0":
-  version "1.6.0"
-  resolved "https://registry.yarnpkg.com/@openzeppelin/hardhat-upgrades/-/hardhat-upgrades-1.6.0.tgz#735e1c70aea859e284937995e238fcfdea7b69d7"
-  integrity sha512-4oRB5lH3d5RAUIWKX5wuJvgo06IOgndUoPKYUuLTKW2BmyrMTPc6GZycKf7UCxU0GYeUC9BjsohUAIjqJwMnww==
+"@openzeppelin/hardhat-upgrades@^1.7.0":
+  version "1.7.0"
+  resolved "https://registry.yarnpkg.com/@openzeppelin/hardhat-upgrades/-/hardhat-upgrades-1.7.0.tgz#3086273b477818822b889ced9b4bd6d431c35e33"
+  integrity sha512-fInSIsIu2jYOqMzw0uQF6cBB0xDDUl7YSKEGU3Jp31UGe4jQg11d/echw0gc4BvLvxWEzhMpmqwDqV1KJPqNyQ==
   dependencies:
-    "@openzeppelin/upgrades-core" "^1.5.0"
+    "@openzeppelin/upgrades-core" "^1.7.0"
 
-"@openzeppelin/upgrades-core@^1.5.0":
-  version "1.5.0"
-  resolved "https://registry.yarnpkg.com/@openzeppelin/upgrades-core/-/upgrades-core-1.5.0.tgz#0dc3ddc5386dfd769b46713c902de9f0e8a59d5d"
-  integrity sha512-0i9SmLHD2+Ni+CWg8HRjnPRzOBbEWdSwfIbAnzXwxQBf9m6PsvJIY8+3hUkW5aYogrVET08tsK/DCdTXpJyBtg==
+"@openzeppelin/upgrades-core@^1.7.0":
+  version "1.7.1"
+  resolved "https://registry.yarnpkg.com/@openzeppelin/upgrades-core/-/upgrades-core-1.7.1.tgz#a63f06a6a904dcf543eb9fca32a127ec8e92fcad"
+  integrity sha512-il1BrWOmYGxhtmq0hEG4oXlCvcyCrKQzCgmFiv2lqM+qLhp3C/JaXSysVHLohKXrb3XLPNP0pC39KrMDzPW70Q==
   dependencies:
     bn.js "^5.1.2"
-    cbor "^5.0.2"
+    cbor "^7.0.0"
     chalk "^4.1.0"
     compare-versions "^3.6.0"
     debug "^4.1.1"
@@ -2342,6 +2347,14 @@ cbor@^5.0.2:
   dependencies:
     bignumber.js "^9.0.1"
     nofilter "^1.0.4"
+
+cbor@^7.0.0:
+  version "7.0.5"
+  resolved "https://registry.yarnpkg.com/cbor/-/cbor-7.0.5.tgz#ed54cdbc19fa7352bb328d00a5393aa7ce45a10f"
+  integrity sha512-0aaAPgW92lLmypb9iCd22k7tSD1FbF6dps8VQzmIBKY6ych2gO09b2vo/SbaLTmezJuB8Kh88Rvpl/Uq52mNZg==
+  dependencies:
+    "@cto.af/textdecoder" "^0.0.0"
+    nofilter "^2.0.3"
 
 chai-almost@^1.0.1:
   version "1.0.1"
@@ -6477,6 +6490,13 @@ nofilter@^1.0.4:
   version "1.0.4"
   resolved "https://registry.yarnpkg.com/nofilter/-/nofilter-1.0.4.tgz#78d6f4b6a613e7ced8b015cec534625f7667006e"
   integrity sha512-N8lidFp+fCz+TD51+haYdbDGrcBWwuHX40F5+z0qkUjMJ5Tp+rdSuAkMJ9N9eoolDlEVTf6u5icM+cNKkKW2mA==
+
+nofilter@^2.0.3:
+  version "2.0.3"
+  resolved "https://registry.yarnpkg.com/nofilter/-/nofilter-2.0.3.tgz#f5460f3cb33147005883e3f5d4476239501fa187"
+  integrity sha512-FbuXC+lK+GU2+63D1kC1ETiZo+Z7SIi7B+mxKTCH1byrh6WFvfBCN/wpherFz0a0bjGd7EKTst/cz0yLeNngug==
+  dependencies:
+    "@cto.af/textdecoder" "^0.0.0"
 
 nopt@3.x:
   version "3.0.6"
