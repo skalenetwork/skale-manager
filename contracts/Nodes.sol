@@ -173,22 +173,6 @@ contract Nodes is Permissions {
         _;
     }
 
-    // commented it - already executed
-    // function initializeSegmentTreeAndInvisibleNodes() external onlyOwner {
-    //     for (uint i = 0; i < nodes.length; i++) {
-    //         if (nodes[i].status != NodeStatus.Active && nodes[i].status != NodeStatus.Left) {
-    //             _invisible[i] = true;
-    //             _removeNodeFromSpaceToNodes(i, spaceOfNodes[i].freeSpace);
-    //         }
-    //     }
-    //     uint8 totalSpace = ConstantsHolder(contractManager.getContract("ConstantsHolder")).TOTAL_SPACE_ON_NODE();
-    //     _nodesAmountBySpace.create(totalSpace);
-    //     for (uint8 i = 1; i <= totalSpace; i++) {
-    //         if (spaceToNodes[i].length > 0)
-    //             _nodesAmountBySpace.addToPlace(i, spaceToNodes[i].length);
-    //     }
-    // }
-
     /**
      * @dev Allows Schains and SchainsInternal contracts to occupy available
      * space on a node.
