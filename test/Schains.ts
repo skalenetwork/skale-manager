@@ -25,6 +25,7 @@ import { deployContractManager } from "./tools/deploy/contractManager";
 import { deployKeyStorage } from "./tools/deploy/keyStorage";
 import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
 import { deployNodesTester } from "./tools/deploy/test/nodesTester";
+import { deployNodes } from "./tools/deploy/nodes";
 import { deploySchainsInternalMock } from "./tools/deploy/test/schainsInternalMock";
 import { deploySchains } from "./tools/deploy/schains";
 import { deploySkaleDKGTester } from "./tools/deploy/test/skaleDKGTester";
@@ -105,8 +106,8 @@ describe("Schains", () => {
         contractManager = await deployContractManager();
 
         constantsHolder = await deployConstantsHolder(contractManager);
-        nodes = await deployNodesTester(contractManager);
-        await contractManager.setContractsAddress("Nodes", nodes.address);
+        nodes = await deployNodes(contractManager);
+        // await contractManager.setContractsAddress("Nodes", nodes.address);
         schainsInternal = await deploySchainsInternalMock(contractManager);
         await contractManager.setContractsAddress("SchainsInternal", schainsInternal.address);
         schains = await deploySchains(contractManager);
@@ -705,96 +706,96 @@ describe("Schains", () => {
                 await schainsInternal.isOwnerAddress(holder.address, schainId).should.be.eventually.true;
             });
 
-            it("should be possible to create schain after initialization", async () => {
-                await nodes.setNodeInMaintenance(0);
-                await nodes.setNodeInMaintenance(1);
-                await nodes.initExit(2);
-                await nodes.completeExit(2);
-                await nodes.initExit(3);
-                await nodes.completeExit(3);
+            // it("should be possible to create schain after initialization", async () => {
+            //     await nodes.setNodeInMaintenance(0);
+            //     await nodes.setNodeInMaintenance(1);
+            //     await nodes.initExit(2);
+            //     await nodes.completeExit(2);
+            //     await nodes.initExit(3);
+            //     await nodes.completeExit(3);
 
-                await nodes.makeNodeVisible(0);
-                await nodes.makeNodeVisible(1);
-                await nodes.makeNodeVisible(2);
-                await nodes.makeNodeVisible(3);
+            //     await nodes.makeNodeVisible(0);
+            //     await nodes.makeNodeVisible(1);
+            //     await nodes.makeNodeVisible(2);
+            //     await nodes.makeNodeVisible(3);
 
-                await nodes.removeNodeFromSpaceToNodes(2);
-                await nodes.removeNodeFromSpaceToNodes(3);
+            //     await nodes.removeNodeFromSpaceToNodes(2);
+            //     await nodes.removeNodeFromSpaceToNodes(3);
 
-                const nodesInTree = await nodes.amountOfNodesFromPlaceInTree(128);
-                nodesInTree.should.be.equal(18);
+            //     const nodesInTree = await nodes.amountOfNodesFromPlaceInTree(128);
+            //     nodesInTree.should.be.equal(18);
 
-                await nodes.removeNodesFromPlace(128, nodesInTree.toNumber());
+            //     await nodes.removeNodesFromPlace(128, nodesInTree.toNumber());
 
-                await nodes.initializeSegmentTreeAndInvisibleNodes();
+            //     await nodes.initializeSegmentTreeAndInvisibleNodes();
 
-                await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), holder.address);
-                await schains.connect(holder).addSchainByFoundation(5, 1, 0, "d2", zeroAddress);
+            //     await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), holder.address);
+            //     await schains.connect(holder).addSchainByFoundation(5, 1, 0, "d2", zeroAddress);
 
-                const nodesOfSchain = new Set();
+            //     const nodesOfSchain = new Set();
 
-                const nodesInGroup = await schainsInternal.getNodesInGroup(stringValue(web3.utils.soliditySha3("d2")));
+            //     const nodesInGroup = await schainsInternal.getNodesInGroup(stringValue(web3.utils.soliditySha3("d2")));
 
-                for(const nodeIn of nodesInGroup) {
-                    if (!nodesOfSchain.has(nodeIn.toNumber())) {
-                        nodesOfSchain.add(nodeIn.toNumber());
-                    } else {
-                        console.log("Node is already in set");
-                        assert.fail("node is in set", "node should not be in set", "Schain created with on the same node at least 2 times");
-                    }
-                }
-            });
+            //     for(const nodeIn of nodesInGroup) {
+            //         if (!nodesOfSchain.has(nodeIn.toNumber())) {
+            //             nodesOfSchain.add(nodeIn.toNumber());
+            //         } else {
+            //             console.log("Node is already in set");
+            //             assert.fail("node is in set", "node should not be in set", "Schain created with on the same node at least 2 times");
+            //         }
+            //     }
+            // });
 
-            it("should be possible to delete schain after initialization", async () => {
-                await nodes.setNodeInMaintenance(0);
-                await nodes.setNodeInMaintenance(1);
-                await nodes.initExit(2);
-                await nodes.completeExit(2);
-                await nodes.initExit(3);
-                await nodes.completeExit(3);
+            // it("should be possible to delete schain after initialization", async () => {
+            //     await nodes.setNodeInMaintenance(0);
+            //     await nodes.setNodeInMaintenance(1);
+            //     await nodes.initExit(2);
+            //     await nodes.completeExit(2);
+            //     await nodes.initExit(3);
+            //     await nodes.completeExit(3);
 
-                await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), holder.address);
-                await schains.connect(holder).addSchainByFoundation(5, 1, 0, "d2", holder.address);
+            //     await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), holder.address);
+            //     await schains.connect(holder).addSchainByFoundation(5, 1, 0, "d2", holder.address);
 
-                const nodesOfSchain = new Set();
+            //     const nodesOfSchain = new Set();
 
-                const nodesInGroup = await schainsInternal.getNodesInGroup(stringValue(web3.utils.soliditySha3("d2")));
+            //     const nodesInGroup = await schainsInternal.getNodesInGroup(stringValue(web3.utils.soliditySha3("d2")));
 
-                for(const nodeIn of nodesInGroup) {
-                    if (!nodesOfSchain.has(nodeIn.toNumber())) {
-                        nodesOfSchain.add(nodeIn.toNumber());
-                    } else {
-                        console.log("Node is already in set");
-                        assert.fail("node is in set", "node should not be in set", "Schain created with on the same node at least 2 times");
-                    }
-                }
+            //     for(const nodeIn of nodesInGroup) {
+            //         if (!nodesOfSchain.has(nodeIn.toNumber())) {
+            //             nodesOfSchain.add(nodeIn.toNumber());
+            //         } else {
+            //             console.log("Node is already in set");
+            //             assert.fail("node is in set", "node should not be in set", "Schain created with on the same node at least 2 times");
+            //         }
+            //     }
 
-                await nodes.makeNodeVisible(0);
-                await nodes.makeNodeVisible(1);
-                await nodes.makeNodeVisible(2);
-                await nodes.makeNodeVisible(3);
+            //     await nodes.makeNodeVisible(0);
+            //     await nodes.makeNodeVisible(1);
+            //     await nodes.makeNodeVisible(2);
+            //     await nodes.makeNodeVisible(3);
 
-                await nodes.removeNodeFromSpaceToNodes(2);
-                await nodes.removeNodeFromSpaceToNodes(3);
+            //     await nodes.removeNodeFromSpaceToNodes(2);
+            //     await nodes.removeNodeFromSpaceToNodes(3);
 
-                let nodesInTree = await nodes.amountOfNodesFromPlaceInTree(128);
-                nodesInTree.should.be.equal(2);
-                await nodes.removeNodesFromPlace(128, nodesInTree.toNumber());
+            //     let nodesInTree = await nodes.amountOfNodesFromPlaceInTree(128);
+            //     nodesInTree.should.be.equal(2);
+            //     await nodes.removeNodesFromPlace(128, nodesInTree.toNumber());
 
-                nodesInTree = await nodes.amountOfNodesFromPlaceInTree(127);
-                nodesInTree.should.be.equal(16);
-                await nodes.removeNodesFromPlace(127, nodesInTree.toNumber());
+            //     nodesInTree = await nodes.amountOfNodesFromPlaceInTree(127);
+            //     nodesInTree.should.be.equal(16);
+            //     await nodes.removeNodesFromPlace(127, nodesInTree.toNumber());
 
-                await schainsInternal.removeSchainToExceptionNode(stringValue(web3.utils.soliditySha3("d2")));
+            //     await schainsInternal.removeSchainToExceptionNode(stringValue(web3.utils.soliditySha3("d2")));
 
-                for(const nodeIn of nodesInGroup) {
-                    await schainsInternal.removeNodeToLocked(nodeIn.toNumber());
-                }
+            //     for(const nodeIn of nodesInGroup) {
+            //         await schainsInternal.removeNodeToLocked(nodeIn.toNumber());
+            //     }
 
-                await nodes.initializeSegmentTreeAndInvisibleNodes();
+            //     await nodes.initializeSegmentTreeAndInvisibleNodes();
 
-                const res = await skaleManager.connect(holder).deleteSchain("d2");
-            });
+            //     const res = await skaleManager.connect(holder).deleteSchain("d2");
+            // });
         });
 
         describe("when nodes are registered", async () => {

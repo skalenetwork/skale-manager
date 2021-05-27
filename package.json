@@ -34,7 +34,7 @@
     "lint": "npx solhint \"contracts/**/*.sol\"",
     "prepare": "yarn compile && yarn hooks",
     "slither": "slither .",
-    "test": "npx buidler test && yarn tsc",
+    "test": "npx hardhat test && yarn tsc",
     "tsc": "tsc --noEmit",
     "tslint": "npx tslint --project ."
   },
