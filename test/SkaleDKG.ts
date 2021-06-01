@@ -100,6 +100,12 @@ describe("SkaleDKG", () => {
         constantsHolder = await deployConstantsHolder(contractManager);
         wallets = await deployWallets(contractManager);
 
+        const VALIDATOR_MANAGER_ROLE = await validatorService.VALIDATOR_MANAGER_ROLE();
+        await validatorService.grantRole(VALIDATOR_MANAGER_ROLE, owner.address);
+        const SCHAIN_TYPE_MANAGER_ROLE = await schainsInternal.SCHAIN_TYPE_MANAGER_ROLE();
+        await schainsInternal.grantRole(SCHAIN_TYPE_MANAGER_ROLE, owner.address);
+        const PENALTY_SETTER_ROLE = await slashingTable.PENALTY_SETTER_ROLE();
+        await slashingTable.grantRole(PENALTY_SETTER_ROLE, owner.address);
         await slashingTable.setPenalty("FailedDKG", failedDkgPenalty);
     });
 

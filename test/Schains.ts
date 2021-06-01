@@ -118,6 +118,15 @@ describe("Schains", () => {
         nodeRotation = await deployNodeRotation(contractManager);
         wallets = await deployWallets(contractManager);
 
+        const VALIDATOR_MANAGER_ROLE = await validatorService.VALIDATOR_MANAGER_ROLE();
+        await validatorService.grantRole(VALIDATOR_MANAGER_ROLE, owner.address);
+        const CONSTANTS_HOLDER_MANAGER_ROLE = await constantsHolder.CONSTANTS_HOLDER_MANAGER_ROLE();
+        await constantsHolder.grantRole(CONSTANTS_HOLDER_MANAGER_ROLE, owner.address);
+        const SCHAIN_TYPE_MANAGER_ROLE = await schainsInternal.SCHAIN_TYPE_MANAGER_ROLE();
+        await schainsInternal.grantRole(SCHAIN_TYPE_MANAGER_ROLE, owner.address);
+        const NODE_MANAGER_ROLE = await nodes.NODE_MANAGER_ROLE();
+        await nodes.grantRole(NODE_MANAGER_ROLE, owner.address);
+
         await validatorService.connect(validator).registerValidator("D2", "D2 is even", 0, 0);
         const validatorIndex = await validatorService.getValidatorId(validator.address);
         await validatorService.enableValidator(validatorIndex);
@@ -704,97 +713,6 @@ describe("Schains", () => {
 
                 await schainsInternal.isOwnerAddress(holder.address, schainId).should.be.eventually.true;
             });
-
-            it("should be possible to create schain after initialization", async () => {
-                await nodes.setNodeInMaintenance(0);
-                await nodes.setNodeInMaintenance(1);
-                await nodes.initExit(2);
-                await nodes.completeExit(2);
-                await nodes.initExit(3);
-                await nodes.completeExit(3);
-
-                await nodes.makeNodeVisible(0);
-                await nodes.makeNodeVisible(1);
-                await nodes.makeNodeVisible(2);
-                await nodes.makeNodeVisible(3);
-
-                await nodes.removeNodeFromSpaceToNodes(2);
-                await nodes.removeNodeFromSpaceToNodes(3);
-
-                const nodesInTree = await nodes.amountOfNodesFromPlaceInTree(128);
-                nodesInTree.should.be.equal(18);
-
-                await nodes.removeNodesFromPlace(128, nodesInTree.toNumber());
-
-                await nodes.initializeSegmentTreeAndInvisibleNodes();
-
-                await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), holder.address);
-                await schains.connect(holder).addSchainByFoundation(5, 1, 0, "d2", zeroAddress);
-
-                const nodesOfSchain = new Set();
-
-                const nodesInGroup = await schainsInternal.getNodesInGroup(stringValue(web3.utils.soliditySha3("d2")));
-
-                for(const nodeIn of nodesInGroup) {
-                    if (!nodesOfSchain.has(nodeIn.toNumber())) {
-                        nodesOfSchain.add(nodeIn.toNumber());
-                    } else {
-                        console.log("Node is already in set");
-                        assert.fail("node is in set", "node should not be in set", "Schain created with on the same node at least 2 times");
-                    }
-                }
-            });
-
-            it("should be possible to delete schain after initialization", async () => {
-                await nodes.setNodeInMaintenance(0);
-                await nodes.setNodeInMaintenance(1);
-                await nodes.initExit(2);
-                await nodes.completeExit(2);
-                await nodes.initExit(3);
-                await nodes.completeExit(3);
-
-                await schains.grantRole(await schains.SCHAIN_CREATOR_ROLE(), holder.address);
-                await schains.connect(holder).addSchainByFoundation(5, 1, 0, "d2", holder.address);
-
-                const nodesOfSchain = new Set();
-
-                const nodesInGroup = await schainsInternal.getNodesInGroup(stringValue(web3.utils.soliditySha3("d2")));
-
-                for(const nodeIn of nodesInGroup) {
-                    if (!nodesOfSchain.has(nodeIn.toNumber())) {
-                        nodesOfSchain.add(nodeIn.toNumber());
-                    } else {
-                        console.log("Node is already in set");
-                        assert.fail("node is in set", "node should not be in set", "Schain created with on the same node at least 2 times");
-                    }
-                }
-
-                await nodes.makeNodeVisible(0);
-                await nodes.makeNodeVisible(1);
-                await nodes.makeNodeVisible(2);
-                await nodes.makeNodeVisible(3);
-
-                await nodes.removeNodeFromSpaceToNodes(2);
-                await nodes.removeNodeFromSpaceToNodes(3);
-
-                let nodesInTree = await nodes.amountOfNodesFromPlaceInTree(128);
-                nodesInTree.should.be.equal(2);
-                await nodes.removeNodesFromPlace(128, nodesInTree.toNumber());
-
-                nodesInTree = await nodes.amountOfNodesFromPlaceInTree(127);
-                nodesInTree.should.be.equal(16);
-                await nodes.removeNodesFromPlace(127, nodesInTree.toNumber());
-
-                await schainsInternal.removeSchainToExceptionNode(stringValue(web3.utils.soliditySha3("d2")));
-
-                for(const nodeIn of nodesInGroup) {
-                    await schainsInternal.removeNodeToLocked(nodeIn.toNumber());
-                }
-
-                await nodes.initializeSegmentTreeAndInvisibleNodes();
-
-                const res = await skaleManager.connect(holder).deleteSchain("d2");
-            });
         });
 
         describe("when nodes are registered", async () => {
@@ -1379,8 +1297,9 @@ describe("Schains", () => {
                 stringValue(web3.utils.soliditySha3("d2")),
             );
             await skaleManager.connect(holder).deleteSchainByRoot("d2")
-                .should.be.eventually.rejectedWith("Caller is not an admin");
-            await skaleManager.grantRole(await skaleManager.ADMIN_ROLE(), holder.address);
+                .should.be.eventually.rejectedWith("SCHAIN_DELETER_ROLE is required");
+            const SCHAIN_DELETER_ROLE = await skaleManager.SCHAIN_DELETER_ROLE();
+            await skaleManager.grantRole(SCHAIN_DELETER_ROLE, holder.address);
             await skaleManager.connect(holder).deleteSchainByRoot("d2");
             await skaleManager.connect(holder).deleteSchainByRoot("d3");
             await schainsInternal.getActiveSchains(0).should.be.eventually.empty;
