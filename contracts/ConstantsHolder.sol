@@ -22,6 +22,8 @@
 pragma solidity 0.6.10;
 
 import "./Permissions.sol";
+import "./SlashingTable.sol";
+import "./delegation/DelegationPeriodManager.sol";
 
 
 /**
@@ -76,12 +78,12 @@ contract ConstantsHolder is Permissions {
 
     uint public constant BOUNTY_LOCKUP_MONTHS = 2;
 
-    uint public constant ALRIGHT_DELTA = 54640;
-    uint public constant BROADCAST_DELTA = 122660;
-    uint public constant COMPLAINT_BAD_DATA_DELTA = 40720;
-    uint public constant PRE_RESPONSE_DELTA = 67780;
-    uint public constant COMPLAINT_DELTA = 67100;
-    uint public constant RESPONSE_DELTA = 215000;
+    uint public constant ALRIGHT_DELTA = 62880;
+    uint public constant BROADCAST_DELTA = 130180;
+    uint public constant COMPLAINT_BAD_DATA_DELTA = 49500;
+    uint public constant PRE_RESPONSE_DELTA = 74400;
+    uint public constant COMPLAINT_DELTA = 76100;
+    uint public constant RESPONSE_DELTA = 183000;
 
     // MSR - Minimum staking requirement
     uint public msr;
@@ -126,11 +128,18 @@ contract ConstantsHolder is Permissions {
 
     uint public complaintTimelimit;
 
+    bytes32 public constant CONSTANTS_HOLDER_MANAGER_ROLE = keccak256("CONSTANTS_HOLDER_MANAGER_ROLE");
+
+    modifier onlyConstantsHolderManager() {
+        require(hasRole(CONSTANTS_HOLDER_MANAGER_ROLE, msg.sender), "CONSTANTS_HOLDER_MANAGER_ROLE is required");
+        _;
+    }
+
     /**
      * @dev Allows the Owner to set new reward and delta periods
      * This function is only for tests.
      */
-    function setPeriods(uint32 newRewardPeriod, uint32 newDeltaPeriod) external onlyOwner {
+    function setPeriods(uint32 newRewardPeriod, uint32 newDeltaPeriod) external onlyConstantsHolderManager {
         require(
             newRewardPeriod >= newDeltaPeriod && newRewardPeriod - newDeltaPeriod >= checkTime,
             "Incorrect Periods"
@@ -143,7 +152,7 @@ contract ConstantsHolder is Permissions {
      * @dev Allows the Owner to set the new check time.
      * This function is only for tests.
      */
-    function setCheckTime(uint newCheckTime) external onlyOwner {
+    function setCheckTime(uint newCheckTime) external onlyConstantsHolderManager {
         require(rewardPeriod - deltaPeriod >= checkTime, "Incorrect check time");
         checkTime = newCheckTime;
     }    
@@ -152,21 +161,21 @@ contract ConstantsHolder is Permissions {
      * @dev Allows the Owner to set the allowable latency in milliseconds.
      * This function is only for testing purposes.
      */
-    function setLatency(uint32 newAllowableLatency) external onlyOwner {
+    function setLatency(uint32 newAllowableLatency) external onlyConstantsHolderManager {
         allowableLatency = newAllowableLatency;
     }
 
     /**
      * @dev Allows the Owner to set the minimum stake requirement.
      */
-    function setMSR(uint newMSR) external onlyOwner {
+    function setMSR(uint newMSR) external onlyConstantsHolderManager {
         msr = newMSR;
     }
 
     /**
      * @dev Allows the Owner to set the launch timestamp.
      */
-    function setLaunchTimestamp(uint timestamp) external onlyOwner {
+    function setLaunchTimestamp(uint timestamp) external onlyConstantsHolderManager {
         require(now < launchTimestamp, "Cannot set network launch timestamp because network is already launched");
         launchTimestamp = timestamp;
     }
@@ -174,14 +183,14 @@ contract ConstantsHolder is Permissions {
     /**
      * @dev Allows the Owner to set the node rotation delay.
      */
-    function setRotationDelay(uint newDelay) external onlyOwner {
+    function setRotationDelay(uint newDelay) external onlyConstantsHolderManager {
         rotationDelay = newDelay;
     }
 
     /**
      * @dev Allows the Owner to set the proof-of-use lockup period.
      */
-    function setProofOfUseLockUpPeriod(uint periodDays) external onlyOwner {
+    function setProofOfUseLockUpPeriod(uint periodDays) external onlyConstantsHolderManager {
         proofOfUseLockUpPeriodDays = periodDays;
     }
 
@@ -189,7 +198,7 @@ contract ConstantsHolder is Permissions {
      * @dev Allows the Owner to set the proof-of-use delegation percentage
      * requirement.
      */
-    function setProofOfUseDelegationPercentage(uint percentage) external onlyOwner {
+    function setProofOfUseDelegationPercentage(uint percentage) external onlyConstantsHolderManager {
         require(percentage <= 100, "Percentage value is incorrect");
         proofOfUseDelegationPercentage = percentage;
     }
@@ -198,19 +207,19 @@ contract ConstantsHolder is Permissions {
      * @dev Allows the Owner to set the maximum number of validators that a
      * single delegator can delegate to.
      */
-    function setLimitValidatorsPerDelegator(uint newLimit) external onlyOwner {
+    function setLimitValidatorsPerDelegator(uint newLimit) external onlyConstantsHolderManager {
         limitValidatorsPerDelegator = newLimit;
     }
 
-    function setSchainCreationTimeStamp(uint timestamp) external onlyOwner {
+    function setSchainCreationTimeStamp(uint timestamp) external onlyConstantsHolderManager {
         schainCreationTimeStamp = timestamp;
     }
 
-    function setMinimalSchainLifetime(uint lifetime) external onlyOwner {
+    function setMinimalSchainLifetime(uint lifetime) external onlyConstantsHolderManager {
         minimalSchainLifetime = lifetime;
     }
 
-    function setComplaintTimelimit(uint timelimit) external onlyOwner {
+    function setComplaintTimelimit(uint timelimit) external onlyConstantsHolderManager {
         complaintTimelimit = timelimit;
     }
 

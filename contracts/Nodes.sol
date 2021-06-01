@@ -123,6 +123,8 @@ contract Nodes is Permissions {
 
     SegmentTree.Tree private _nodesAmountBySpace;
 
+    bytes32 public constant NODE_MANAGER_ROLE = keccak256("NODE_MANAGER_ROLE");
+
     /**
      * @dev Emitted when a node is created.
      */
@@ -163,24 +165,9 @@ contract Nodes is Permissions {
         _;
     }
 
-    modifier onlyNodeOrAdmin(uint nodeIndex) {
-        _checkNodeOrAdmin(nodeIndex, msg.sender);
+    modifier onlyNodeOrNodeManager(uint nodeIndex) {
+        _checkNodeOrNodeManager(nodeIndex, msg.sender);
         _;
-    }
-
-    function initializeSegmentTreeAndInvisibleNodes() external onlyOwner {
-        for (uint i = 0; i < nodes.length; i++) {
-            if (nodes[i].status != NodeStatus.Active && nodes[i].status != NodeStatus.Left) {
-                _invisible[i] = true;
-                _removeNodeFromSpaceToNodes(i, spaceOfNodes[i].freeSpace);
-            }
-        }
-        uint8 totalSpace = ConstantsHolder(contractManager.getContract("ConstantsHolder")).TOTAL_SPACE_ON_NODE();
-        _nodesAmountBySpace.create(totalSpace);
-        for (uint8 i = 1; i <= totalSpace; i++) {
-            if (spaceToNodes[i].length > 0)
-                _nodesAmountBySpace.addToPlace(i, spaceToNodes[i].length);
-        }
     }
 
     /**
@@ -448,7 +435,7 @@ contract Nodes is Permissions {
      * - Node must already be Active.
      * - `msg.sender` must be owner of Node, validator, or SkaleManager.
      */
-    function setNodeInMaintenance(uint nodeIndex) external onlyNodeOrAdmin(nodeIndex) {
+    function setNodeInMaintenance(uint nodeIndex) external onlyNodeOrNodeManager(nodeIndex) {
         require(nodes[nodeIndex].status == NodeStatus.Active, "Node is not Active");
         _setNodeInMaintenance(nodeIndex);
     }
@@ -461,14 +448,14 @@ contract Nodes is Permissions {
      * - Node must already be In Maintenance.
      * - `msg.sender` must be owner of Node, validator, or SkaleManager.
      */
-    function removeNodeFromInMaintenance(uint nodeIndex) external onlyNodeOrAdmin(nodeIndex) {
+    function removeNodeFromInMaintenance(uint nodeIndex) external onlyNodeOrNodeManager(nodeIndex) {
         require(nodes[nodeIndex].status == NodeStatus.In_Maintenance, "Node is not In Maintenance");
         _setNodeActive(nodeIndex);
     }
 
     function setDomainName(uint nodeIndex, string memory domainName)
         external
-        onlyNodeOrAdmin(nodeIndex)
+        onlyNodeOrNodeManager(nodeIndex)
     {
         domainNames[nodeIndex] = domainName;
     }
@@ -907,12 +894,12 @@ contract Nodes is Permissions {
         require(nodeIndex < nodes.length, "Node with such index does not exist");
     }
 
-    function _checkNodeOrAdmin(uint nodeIndex, address sender) private view {
+    function _checkNodeOrNodeManager(uint nodeIndex, address sender) private view {
         ValidatorService validatorService = ValidatorService(contractManager.getValidatorService());
 
         require(
             isNodeExist(sender, nodeIndex) ||
-            _isAdmin(sender) ||
+            hasRole(NODE_MANAGER_ROLE, msg.sender) ||
             getValidatorId(nodeIndex) == validatorService.getValidatorId(sender),
             "Sender is not permitted to call this function"
         );
