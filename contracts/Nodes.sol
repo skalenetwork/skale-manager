@@ -95,6 +95,9 @@ contract Nodes is Permissions {
         string domainName;
     }
 
+    bytes32 constant public COMPLIANCE_ROLE = keccak256("COMPLIANCE_ROLE");
+    bytes32 public constant NODE_MANAGER_ROLE = keccak256("NODE_MANAGER_ROLE");
+
     // array which contain all Nodes
     Node[] public nodes;
 
@@ -123,7 +126,7 @@ contract Nodes is Permissions {
 
     SegmentTree.Tree private _nodesAmountBySpace;
 
-    bytes32 public constant NODE_MANAGER_ROLE = keccak256("NODE_MANAGER_ROLE");
+    mapping (uint => bool) public incompliant;
 
     /**
      * @dev Emitted when a node is created.
@@ -167,6 +170,11 @@ contract Nodes is Permissions {
 
     modifier onlyNodeOrNodeManager(uint nodeIndex) {
         _checkNodeOrNodeManager(nodeIndex, msg.sender);
+        _;
+    }
+
+    modifier onlyCompliance() {
+        require(hasRole(COMPLIANCE_ROLE, msg.sender), "COMPLIANCE_ROLE is required");
         _;
     }
 
@@ -458,6 +466,25 @@ contract Nodes is Permissions {
         _setNodeActive(nodeIndex);
     }
 
+    /**
+     * @dev Marks the node as incompliant
+     * 
+     */
+    function setNodeIncompliant(uint nodeIndex) external onlyCompliance checkNodeExists(nodeIndex) {
+        if (!incompliant[nodeIndex]) {
+            incompliant[nodeIndex] = true;
+            _makeNodeInvisible(nodeIndex);
+        }
+    }
+
+    /**
+     * @dev Marks the node as compliant
+     * 
+     */
+    function setNodeCompliant(uint nodeIndex) external onlyCompliance checkNodeExists(nodeIndex) {
+        revert("Not implemented");
+    }
+
     function setDomainName(uint nodeIndex, string memory domainName)
         external
         onlyNodeOrNodeManager(nodeIndex)
@@ -466,7 +493,7 @@ contract Nodes is Permissions {
     }
     
     function makeNodeVisible(uint nodeIndex) external allow("SchainsInternal") {
-        _makeNodeVisible(nodeIndex);
+        _tryToMakeNodeVisible(nodeIndex);
     }
 
     function makeNodeInvisible(uint nodeIndex) external allow("SchainsInternal") {
@@ -813,7 +840,7 @@ contract Nodes is Permissions {
         nodes[nodeIndex].status = NodeStatus.Active;
         numberOfActiveNodes = numberOfActiveNodes.add(1);
         if (_invisible[nodeIndex]) {
-            _makeNodeVisible(nodeIndex);
+            _tryToMakeNodeVisible(nodeIndex);
         } else {
             uint8 space = spaceOfNodes[nodeIndex].freeSpace;
             _addNodeToSpaceToNodes(nodeIndex, space);
@@ -863,6 +890,12 @@ contract Nodes is Permissions {
             _removeNodeFromSpaceToNodes(nodeIndex, space);
             _removeNodeFromTree(space);
             _invisible[nodeIndex] = true;
+        }
+    }
+
+    function _tryToMakeNodeVisible(uint nodeIndex) private {
+        if (_invisible[nodeIndex] && _canBeVisible(nodeIndex)) {
+            _makeNodeVisible(nodeIndex);
         }
     }
 
@@ -925,11 +958,7 @@ contract Nodes is Permissions {
         return address(addr);
     }
 
-    function _min(uint a, uint b) private pure returns (uint) {
-        if (a < b) {
-            return a;
-        } else {
-            return b;
-        }
+    function _canBeVisible(uint nodeIndex) private view returns (bool) {
+        return !incompliant[nodeIndex] && nodes[nodeIndex].status == NodeStatus.Active;
     }
 }
