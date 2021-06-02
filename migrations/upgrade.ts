@@ -151,7 +151,7 @@ export async function upgrade(
                 name: contract,
                 abi: getAbi(contractFactory.interface)
             });
-            await verify(contract, newImplementationAddress);
+            await verify(contract, newImplementationAddress, []);
         } else {
             console.log(chalk.gray(`Contract ${contract} is up to date`));
         }
