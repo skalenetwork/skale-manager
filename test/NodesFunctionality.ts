@@ -19,7 +19,6 @@ import { deployContractManager } from "./tools/deploy/contractManager";
 import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
 import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
 import { deployNodes } from "./tools/deploy/nodes";
-import { deployNodesTester } from "./tools/deploy/test/nodesTester";
 import { deploySkaleToken } from "./tools/deploy/skaleToken";
 import { deployDelegationController } from "./tools/deploy/delegation/delegationController";
 import { deploySkaleManagerMock } from "./tools/deploy/test/skaleManagerMock";
@@ -70,7 +69,7 @@ describe("NodesFunctionality", () => {
         [owner, validator, nodeAddress, nodeAddress2, holder] = await ethers.getSigners();
 
         contractManager = await deployContractManager();
-        nodes = await deployNodesTester(contractManager);
+        nodes = await deployNodes(contractManager);
         validatorService = await deployValidatorService(contractManager);
         constantsHolder = await deployConstantsHolder(contractManager);
         skaleToken = await deploySkaleToken(contractManager);
@@ -78,7 +77,7 @@ describe("NodesFunctionality", () => {
 
         const skaleManagerMock = await deploySkaleManagerMock(contractManager);
         await contractManager.setContractsAddress("SkaleManager", skaleManagerMock.address);
-        await contractManager.setContractsAddress("Nodes", nodes.address);
+        // await contractManager.setContractsAddress("Nodes", nodes.address);
 
         await validatorService.connect(validator).registerValidator("Validator", "D2", 0, 0);
         const validatorIndex = await validatorService.getValidatorId(validator.address);
@@ -203,6 +202,30 @@ describe("NodesFunctionality", () => {
 
             await nodes.completeExit(0);
         });
+
+        it("should change IP", async () => {
+            await nodes.connect(holder).changeIP(0, "0x7f000001").should.be.eventually.rejectedWith("Caller is not an admin");
+            await nodes.connect(owner).changeIP(0, "0x7f000001").should.be.eventually.rejectedWith("IP address is zero or is not available");
+            await nodes.connect(owner).changeIP(0, "0x00000000").should.be.eventually.rejectedWith("IP address is zero or is not available");
+            expect(await nodes.getNodeIP(0)).to.equal("0x7f000001");
+            expect(await nodes.nodesIPCheck("0x7f000001")).to.equal(true);
+            expect(await nodes.nodesIPCheck("0x7f000002")).to.equal(false);
+            await nodes.connect(owner).changeIP(0, "0x7f000002");
+            expect(await nodes.getNodeIP(0)).to.equal("0x7f000002");
+            expect(await nodes.nodesIPCheck("0x7f000001")).to.equal(false);
+            expect(await nodes.nodesIPCheck("0x7f000002")).to.equal(true);
+            expect(await nodes.nodesIPCheck("0x7f000003")).to.equal(false);
+            await nodes.connect(owner).changeIP(0, "0x7f000003");
+            expect(await nodes.getNodeIP(0)).to.equal("0x7f000003");
+            expect(await nodes.nodesIPCheck("0x7f000001")).to.equal(false);
+            expect(await nodes.nodesIPCheck("0x7f000002")).to.equal(false);
+            expect(await nodes.nodesIPCheck("0x7f000003")).to.equal(true);
+            await nodes.connect(owner).changeIP(0, "0x7f000001");
+            expect(await nodes.getNodeIP(0)).to.equal("0x7f000001");
+            expect(await nodes.nodesIPCheck("0x7f000001")).to.equal(true);
+            expect(await nodes.nodesIPCheck("0x7f000002")).to.equal(false);
+            expect(await nodes.nodesIPCheck("0x7f000003")).to.equal(false);
+        });
     });
 
     describe("when two nodes are created", async () => {
@@ -275,6 +298,36 @@ describe("NodesFunctionality", () => {
             await nodes.initExit(1);
 
             await nodes.completeExit(1);
+        });
+
+        it("should change IP", async () => {
+            await nodes.connect(holder).changeIP(0, "0x7f000001").should.be.eventually.rejectedWith("Caller is not an admin");
+            await nodes.connect(owner).changeIP(0, "0x7f000001").should.be.eventually.rejectedWith("IP address is zero or is not available");
+            await nodes.connect(owner).changeIP(0, "0x00000000").should.be.eventually.rejectedWith("IP address is zero or is not available");
+            await nodes.connect(owner).changeIP(0, "0x7f000002").should.be.eventually.rejectedWith("IP address is zero or is not available");
+            await nodes.connect(holder).changeIP(1, "0x7f000002").should.be.eventually.rejectedWith("Caller is not an admin");
+            await nodes.connect(owner).changeIP(1, "0x7f000002").should.be.eventually.rejectedWith("IP address is zero or is not available");
+            await nodes.connect(owner).changeIP(1, "0x00000000").should.be.eventually.rejectedWith("IP address is zero or is not available");
+            await nodes.connect(owner).changeIP(1, "0x7f000001").should.be.eventually.rejectedWith("IP address is zero or is not available");
+            expect(await nodes.getNodeIP(0)).to.equal("0x7f000001");
+            expect(await nodes.nodesIPCheck("0x7f000001")).to.equal(true);
+            expect(await nodes.nodesIPCheck("0x7f000002")).to.equal(true);
+            expect(await nodes.nodesIPCheck("0x7f000003")).to.equal(false);
+            await nodes.connect(owner).changeIP(0, "0x7f000003");
+            expect(await nodes.getNodeIP(0)).to.equal("0x7f000003");
+            expect(await nodes.nodesIPCheck("0x7f000001")).to.equal(false);
+            expect(await nodes.nodesIPCheck("0x7f000002")).to.equal(true);
+            expect(await nodes.nodesIPCheck("0x7f000003")).to.equal(true);
+            await nodes.connect(owner).changeIP(1, "0x7f000001");
+            expect(await nodes.getNodeIP(1)).to.equal("0x7f000001");
+            expect(await nodes.nodesIPCheck("0x7f000001")).to.equal(true);
+            expect(await nodes.nodesIPCheck("0x7f000002")).to.equal(false);
+            expect(await nodes.nodesIPCheck("0x7f000003")).to.equal(true);
+            await nodes.connect(owner).changeIP(0, "0x7f000002");
+            expect(await nodes.getNodeIP(0)).to.equal("0x7f000002");
+            expect(await nodes.nodesIPCheck("0x7f000001")).to.equal(true);
+            expect(await nodes.nodesIPCheck("0x7f000002")).to.equal(true);
+            expect(await nodes.nodesIPCheck("0x7f000003")).to.equal(false);
         });
     });
 

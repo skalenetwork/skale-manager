@@ -170,6 +170,11 @@ contract Nodes is Permissions {
         _;
     }
 
+    modifier nonZeroIP(bytes4 ip) {
+        require(ip != 0x0 && !nodesIPCheck[ip], "IP address is zero or is not available");
+        _;
+    }
+
     /**
      * @dev Allows Schains and SchainsInternal contracts to occupy available
      * space on a node.
@@ -250,9 +255,9 @@ contract Nodes is Permissions {
     function createNode(address from, NodeCreationParams calldata params)
         external
         allow("SkaleManager")
+        nonZeroIP(params.ip)
     {
         // checks that Node has correct data
-        require(params.ip != 0x0 && !nodesIPCheck[params.ip], "IP address is zero or is not available");
         require(!nodesNameCheck[keccak256(abi.encodePacked(params.name))], "Name is already registered");
         require(params.port > 0, "Port is zero");
         require(from == _publicKeyToAddress(params.publicKey), "Public Key is incorrect");
@@ -466,6 +471,12 @@ contract Nodes is Permissions {
 
     function makeNodeInvisible(uint nodeIndex) external allow("SchainsInternal") {
         _makeNodeInvisible(nodeIndex);
+    }
+
+    function changeIP(uint nodeIndex, bytes4 newIP) external onlyAdmin checkNodeExists(nodeIndex) nonZeroIP(newIP) {
+        nodesIPCheck[nodes[nodeIndex].ip] = false;
+        nodesIPCheck[newIP] = true;
+        nodes[nodeIndex].ip = newIP;
     }
 
     function getRandomNodeWithFreeSpace(

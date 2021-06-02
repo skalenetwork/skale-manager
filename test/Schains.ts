@@ -24,7 +24,7 @@ import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
 import { deployContractManager } from "./tools/deploy/contractManager";
 import { deployKeyStorage } from "./tools/deploy/keyStorage";
 import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
-import { deployNodesTester } from "./tools/deploy/test/nodesTester";
+import { deployNodes } from "./tools/deploy/nodes";
 import { deploySchainsInternalMock } from "./tools/deploy/test/schainsInternalMock";
 import { deploySchains } from "./tools/deploy/schains";
 import { deploySkaleDKGTester } from "./tools/deploy/test/skaleDKGTester";
@@ -105,8 +105,8 @@ describe("Schains", () => {
         contractManager = await deployContractManager();
 
         constantsHolder = await deployConstantsHolder(contractManager);
-        nodes = await deployNodesTester(contractManager);
-        await contractManager.setContractsAddress("Nodes", nodes.address);
+        nodes = await deployNodes(contractManager);
+        // await contractManager.setContractsAddress("Nodes", nodes.address);
         schainsInternal = await deploySchainsInternalMock(contractManager);
         await contractManager.setContractsAddress("SchainsInternal", schainsInternal.address);
         schains = await deploySchains(contractManager);
