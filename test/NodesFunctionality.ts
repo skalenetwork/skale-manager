@@ -85,6 +85,10 @@ describe("NodesFunctionality", () => {
         const signature2 = await getValidatorIdSignature(validatorIndex, nodeAddress2);
         await validatorService.connect(validator).linkNodeAddress(nodeAddress.address, signature1);
         await validatorService.connect(validator).linkNodeAddress(nodeAddress2.address, signature2);
+
+        const NODE_MANAGER_ROLE = await nodes.NODE_MANAGER_ROLE();
+        await nodes.grantRole(NODE_MANAGER_ROLE, owner.address);
+
     });
 
     it("should fail to create node if ip is zero", async () => {
@@ -339,7 +343,11 @@ describe("NodesFunctionality", () => {
             info = "NICE";
             await skaleToken.mint(holder.address, 200, "0x", "0x");
             await skaleToken.mint(nodeAddress.address, 200, "0x", "0x");
+            const CONSTANTS_HOLDER_MANAGER_ROLE = await constantsHolder.CONSTANTS_HOLDER_MANAGER_ROLE();
+            await constantsHolder.grantRole(CONSTANTS_HOLDER_MANAGER_ROLE, owner.address);
             await constantsHolder.setMSR(amount * 5);
+            const VALIDATOR_MANAGER_ROLE = await validatorService.VALIDATOR_MANAGER_ROLE();
+            await validatorService.grantRole(VALIDATOR_MANAGER_ROLE, owner.address);
         });
 
         it("should not allow to create node if new epoch isn't started", async () => {
