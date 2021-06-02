@@ -4,18 +4,21 @@ import { getImplementationAddress } from "@openzeppelin/upgrades-core";
 
 export async function verify(contractName: string, contractAddress: string) {
     if (![1337, 31337].includes((await ethers.provider.getNetwork()).chainId)) {
-        try {
-            await run("verify:verify", {
-                address: contractAddress,
-                constructorArguments: []
-            });
-        } catch (e) {
-            if (e.toString().includes("Contract source code already verified")) {
-                console.log(chalk.grey(`${contractName} is already verified`));
-                return;
+        for (let retry = 0; retry <= 5; ++retry) {
+            try {
+                await run("verify:verify", {
+                    address: contractAddress,
+                    constructorArguments: []
+                });
+                break;
+            } catch (e) {
+                if (e.toString().includes("Contract source code already verified")) {
+                    console.log(chalk.grey(`${contractName} is already verified`));
+                    return;
+                }
+                console.log(chalk.red(`Contract ${contractName} was not verified on etherscan`));
+                console.log(e.toString());
             }
-            console.log(chalk.red(`Contract ${contractName} was not verified on etherscan`));
-            console.log(e.toString());
         }
     }
 }
