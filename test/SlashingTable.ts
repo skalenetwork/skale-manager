@@ -26,14 +26,15 @@ describe("SlashingTable", () => {
         skaleManager = await deploySkaleManager(contractManager);
         slashingTable = await deploySlashingTable(contractManager);
 
-        await skaleManager.grantRole(await skaleManager.ADMIN_ROLE(), admin.address);
+        const PENALTY_SETTER_ROLE = await slashingTable.PENALTY_SETTER_ROLE();
+        await slashingTable.grantRole(PENALTY_SETTER_ROLE, owner.address);
     });
 
     it("should allow only owner to call setPenalty", async() => {
         await slashingTable.connect(hacker).setPenalty("Bad D2", 5)
-            .should.be.eventually.rejectedWith("Caller is not the owner");
+            .should.be.eventually.rejectedWith("PENALTY_SETTER_ROLE is required");
         await slashingTable.connect(admin).setPenalty("Bad D2", 5)
-            .should.be.eventually.rejectedWith("Caller is not the owner");
+            .should.be.eventually.rejectedWith("PENALTY_SETTER_ROLE is required");
         await slashingTable.setPenalty("Bad D2", 5);
     });
 });

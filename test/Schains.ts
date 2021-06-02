@@ -118,6 +118,15 @@ describe("Schains", () => {
         nodeRotation = await deployNodeRotation(contractManager);
         wallets = await deployWallets(contractManager);
 
+        const VALIDATOR_MANAGER_ROLE = await validatorService.VALIDATOR_MANAGER_ROLE();
+        await validatorService.grantRole(VALIDATOR_MANAGER_ROLE, owner.address);
+        const CONSTANTS_HOLDER_MANAGER_ROLE = await constantsHolder.CONSTANTS_HOLDER_MANAGER_ROLE();
+        await constantsHolder.grantRole(CONSTANTS_HOLDER_MANAGER_ROLE, owner.address);
+        const SCHAIN_TYPE_MANAGER_ROLE = await schainsInternal.SCHAIN_TYPE_MANAGER_ROLE();
+        await schainsInternal.grantRole(SCHAIN_TYPE_MANAGER_ROLE, owner.address);
+        const NODE_MANAGER_ROLE = await nodes.NODE_MANAGER_ROLE();
+        await nodes.grantRole(NODE_MANAGER_ROLE, owner.address);
+
         await validatorService.connect(validator).registerValidator("D2", "D2 is even", 0, 0);
         const validatorIndex = await validatorService.getValidatorId(validator.address);
         await validatorService.enableValidator(validatorIndex);
@@ -704,7 +713,6 @@ describe("Schains", () => {
 
                 await schainsInternal.isOwnerAddress(holder.address, schainHash).should.be.eventually.true;
             });
-
         });
 
         describe("when nodes are registered", async () => {
@@ -1289,8 +1297,9 @@ describe("Schains", () => {
                 stringValue(web3.utils.soliditySha3("d2")),
             );
             await skaleManager.connect(holder).deleteSchainByRoot("d2")
-                .should.be.eventually.rejectedWith("Caller is not an admin");
-            await skaleManager.grantRole(await skaleManager.ADMIN_ROLE(), holder.address);
+                .should.be.eventually.rejectedWith("SCHAIN_DELETER_ROLE is required");
+            const SCHAIN_DELETER_ROLE = await skaleManager.SCHAIN_DELETER_ROLE();
+            await skaleManager.grantRole(SCHAIN_DELETER_ROLE, holder.address);
             await skaleManager.connect(holder).deleteSchainByRoot("d2");
             await skaleManager.connect(holder).deleteSchainByRoot("d3");
             await schainsInternal.getActiveSchains(0).should.be.eventually.empty;

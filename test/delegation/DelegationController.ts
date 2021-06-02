@@ -57,6 +57,8 @@ describe("DelegationController", () => {
 
         const skaleManagerMock = await deploySkaleManagerMock(contractManager);
         await contractManager.setContractsAddress("SkaleManager", skaleManagerMock.address);
+        const VALIDATOR_MANAGER_ROLE = await validatorService.VALIDATOR_MANAGER_ROLE();
+        await validatorService.grantRole(VALIDATOR_MANAGER_ROLE, owner.address);
     });
 
     beforeEach(async () => {

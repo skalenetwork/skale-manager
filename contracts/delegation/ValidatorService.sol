@@ -115,6 +115,13 @@ contract ValidatorService is Permissions {
     uint public numberOfValidators;
     bool public useWhitelist;
 
+    bytes32 public constant VALIDATOR_MANAGER_ROLE = keccak256("VALIDATOR_MANAGER_ROLE");
+
+    modifier onlyValidatorManager() {
+        require(hasRole(VALIDATOR_MANAGER_ROLE, msg.sender), "VALIDATOR_MANAGER_ROLE is required");
+        _;
+    }
+
     modifier checkValidatorExists(uint validatorId) {
         require(validatorExists(validatorId), "Validator with such ID does not exist");
         _;
@@ -168,7 +175,7 @@ contract ValidatorService is Permissions {
      * 
      * - Validator must not already be enabled.
      */
-    function enableValidator(uint validatorId) external checkValidatorExists(validatorId) onlyAdmin {
+    function enableValidator(uint validatorId) external checkValidatorExists(validatorId) onlyValidatorManager {
         require(!_trustedValidators[validatorId], "Validator is already enabled");
         _trustedValidators[validatorId] = true;
         trustedValidatorsList.push(validatorId);
@@ -185,7 +192,7 @@ contract ValidatorService is Permissions {
      * 
      * - Validator must not already be disabled.
      */
-    function disableValidator(uint validatorId) external checkValidatorExists(validatorId) onlyAdmin {
+    function disableValidator(uint validatorId) external checkValidatorExists(validatorId) onlyValidatorManager {
         require(_trustedValidators[validatorId], "Validator is already disabled");
         _trustedValidators[validatorId] = false;
         uint position = _find(trustedValidatorsList, validatorId);
@@ -201,7 +208,7 @@ contract ValidatorService is Permissions {
      * @dev Owner can disable the trusted validator list. Once turned off, the
      * trusted list cannot be re-enabled.
      */
-    function disableWhitelist() external onlyOwner {
+    function disableWhitelist() external onlyValidatorManager {
         useWhitelist = false;
     }
 

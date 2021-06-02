@@ -35,6 +35,7 @@ contract Punisher is Permissions, ILocker {
 
     //        holder => tokens
     mapping (address => uint) private _locked;
+    bytes32 public constant FORGIVER_ROLE = keccak256("FORGIVER_ROLE");
 
     /**
      * @dev Emitted upon slashing condition.
@@ -83,7 +84,8 @@ contract Punisher is Permissions, ILocker {
      * 
      * - All slashes must have been processed.
      */
-    function forgive(address holder, uint amount) external onlyAdmin {
+    function forgive(address holder, uint amount) external {
+        require(hasRole(FORGIVER_ROLE, msg.sender), "FORGIVER_ROLE is required");
         DelegationController delegationController = DelegationController(
             contractManager.getContract("DelegationController"));
 
