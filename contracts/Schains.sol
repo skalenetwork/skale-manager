@@ -62,7 +62,7 @@ contract Schains is Permissions, ISchains {
         uint numberOfNodes,
         uint deposit,
         uint16 nonce,
-        bytes32 schainId,
+        bytes32 schainHash,
         uint time,
         uint gasSpend
     );
@@ -73,14 +73,14 @@ contract Schains is Permissions, ISchains {
     event SchainDeleted(
         address owner,
         string name,
-        bytes32 indexed schainId
+        bytes32 indexed schainHash
     );
 
     /**
      * @dev Emitted when a node in an schain is rotated.
      */
     event NodeRotated(
-        bytes32 schainId,
+        bytes32 schainHash,
         uint oldNode,
         uint newNode
     );
@@ -89,7 +89,7 @@ contract Schains is Permissions, ISchains {
      * @dev Emitted when a node is added to an schain.
      */
     event NodeAdded(
-        bytes32 schainId,
+        bytes32 schainHash,
         uint newNode
     );
 
@@ -98,7 +98,7 @@ contract Schains is Permissions, ISchains {
      */
     event SchainNodes(
         string name,
-        bytes32 schainId,
+        bytes32 schainHash,
         uint[] nodesInGroup,
         uint time,
         uint gasSpend
@@ -168,8 +168,8 @@ contract Schains is Permissions, ISchains {
         }
 
         _addSchain(_schainOwner, 0, schainParameters);
-        bytes32 schainId = keccak256(abi.encodePacked(name));
-        Wallets(payable(contractManager.getContract("Wallets"))).rechargeSchainWallet{value: msg.value}(schainId);
+        bytes32 schainHash = keccak256(abi.encodePacked(name));
+        Wallets(payable(contractManager.getContract("Wallets"))).rechargeSchainWallet{value: msg.value}(schainHash);
     }
 
     /**
@@ -184,9 +184,9 @@ contract Schains is Permissions, ISchains {
      */
     function deleteSchain(address from, string calldata name) external allow("SkaleManager") {
         SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
-        bytes32 schainId = keccak256(abi.encodePacked(name));
+        bytes32 schainHash = keccak256(abi.encodePacked(name));
         require(
-            schainsInternal.isOwnerAddress(from, schainId),
+            schainsInternal.isOwnerAddress(from, schainHash),
             "Message sender is not the owner of the Schain"
         );
 
@@ -221,15 +221,15 @@ contract Schains is Permissions, ISchains {
      */
     function restartSchainCreation(string calldata name) external allow("SkaleManager") {
         NodeRotation nodeRotation = NodeRotation(contractManager.getContract("NodeRotation"));
-        bytes32 schainId = keccak256(abi.encodePacked(name));
+        bytes32 schainHash = keccak256(abi.encodePacked(name));
         ISkaleDKG skaleDKG = ISkaleDKG(contractManager.getContract("SkaleDKG"));
-        require(!skaleDKG.isLastDKGSuccessful(schainId), "DKG success");
+        require(!skaleDKG.isLastDKGSuccessful(schainHash), "DKG success");
         SchainsInternal schainsInternal = SchainsInternal(
             contractManager.getContract("SchainsInternal"));
-        require(schainsInternal.isAnyFreeNode(schainId), "No free Nodes for new group formation");
-        uint newNodeIndex = nodeRotation.selectNodeToGroup(schainId);
-        skaleDKG.openChannel(schainId);
-        emit NodeAdded(schainId, newNodeIndex);
+        require(schainsInternal.isAnyFreeNode(schainHash), "No free Nodes for new group formation");
+        uint newNodeIndex = nodeRotation.selectNodeToGroup(schainHash);
+        skaleDKG.openChannel(schainHash);
+        emit NodeAdded(schainHash, newNodeIndex);
     }
 
     /**
@@ -349,19 +349,19 @@ contract Schains is Permissions, ISchains {
      */
     function _createGroupForSchain(
         string memory schainName,
-        bytes32 schainId,
+        bytes32 schainHash,
         uint numberOfNodes,
         uint8 partOfNode,
         SchainsInternal schainsInternal
     )
         private
     {
-        uint[] memory nodesInGroup = schainsInternal.createGroupForSchain(schainId, numberOfNodes, partOfNode);
-        ISkaleDKG(contractManager.getContract("SkaleDKG")).openChannel(schainId);
+        uint[] memory nodesInGroup = schainsInternal.createGroupForSchain(schainHash, numberOfNodes, partOfNode);
+        ISkaleDKG(contractManager.getContract("SkaleDKG")).openChannel(schainHash);
 
         emit SchainNodes(
             schainName,
-            schainId,
+            schainHash,
             nodesInGroup,
             block.timestamp,
             gasleft());
@@ -417,32 +417,34 @@ contract Schains is Permissions, ISchains {
     function _deleteSchain(string calldata name, SchainsInternal schainsInternal) private {
         NodeRotation nodeRotation = NodeRotation(contractManager.getContract("NodeRotation"));
 
-        bytes32 schainId = keccak256(abi.encodePacked(name));
-        require(schainsInternal.isSchainExist(schainId), "Schain does not exist");
+        bytes32 schainHash = keccak256(abi.encodePacked(name));
+        require(schainsInternal.isSchainExist(schainHash), "Schain does not exist");
 
-        uint[] memory nodesInGroup = schainsInternal.getNodesInGroup(schainId);
-        uint8 partOfNode = schainsInternal.getSchainsPartOfNode(schainId);
+        uint[] memory nodesInGroup = schainsInternal.getNodesInGroup(schainHash);
+        uint8 partOfNode = schainsInternal.getSchainsPartOfNode(schainHash);
         for (uint i = 0; i < nodesInGroup.length; i++) {
             uint schainIndex = schainsInternal.findSchainAtSchainsForNode(
                 nodesInGroup[i],
-                schainId
+                schainHash
             );
-            if (schainsInternal.checkHoleForSchain(schainId, i)) {
+            if (schainsInternal.checkHoleForSchain(schainHash, i)) {
                 continue;
             }
             require(
                 schainIndex < schainsInternal.getLengthOfSchainsForNode(nodesInGroup[i]),
                 "Some Node does not contain given Schain");
-            schainsInternal.removeNodeFromSchain(nodesInGroup[i], schainId);
-            schainsInternal.removeNodeFromExceptions(schainId, nodesInGroup[i]);
+            schainsInternal.removeNodeFromSchain(nodesInGroup[i], schainHash);
+            schainsInternal.removeNodeFromExceptions(schainHash, nodesInGroup[i]);
             this.addSpace(nodesInGroup[i], partOfNode);
         }
-        schainsInternal.deleteGroup(schainId);
-        address from = schainsInternal.getSchainOwner(schainId);
-        schainsInternal.removeSchain(schainId, from);
-        schainsInternal.removeHolesForSchain(schainId);
-        nodeRotation.removeRotation(schainId);
-        Wallets(payable(contractManager.getContract("Wallets"))).withdrawFundsFromSchainWallet(payable(from), schainId);
-        emit SchainDeleted(from, name, schainId);
+        schainsInternal.deleteGroup(schainHash);
+        address from = schainsInternal.getSchainOwner(schainHash);
+        schainsInternal.removeSchain(schainHash, from);
+        schainsInternal.removeHolesForSchain(schainHash);
+        nodeRotation.removeRotation(schainHash);
+        Wallets(
+            payable(contractManager.getContract("Wallets"))
+        ).withdrawFundsFromSchainWallet(payable(from), schainHash);
+        emit SchainDeleted(from, name, schainHash);
     }
 }

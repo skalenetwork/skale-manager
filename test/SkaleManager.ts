@@ -506,7 +506,7 @@ describe("SkaleManager", () => {
         });
 
         describe("when 18 nodes are in the system", async () => {
-            let d2SchainId: string
+            let d2SchainHash: string
 
             const verdict = {
                 toNodeIndex: 1,
@@ -529,9 +529,9 @@ describe("SkaleManager", () => {
                         "somedomain.name");
                 }
 
-                const schainId = web3.utils.soliditySha3("d2");
-                if (schainId) {
-                    d2SchainId = schainId;
+                const schainHash = web3.utils.soliditySha3("d2");
+                if (schainHash) {
+                    d2SchainHash = schainHash;
                 }
             });
 
@@ -573,7 +573,7 @@ describe("SkaleManager", () => {
                             0, // nonce
                             "d2"])); // name
 
-                    const schain = await schainsInternal.schains(d2SchainId);
+                    const schain = await schainsInternal.schains(d2SchainHash);
                     schain[0].should.be.equal("d2");
                 });
 
@@ -602,7 +602,7 @@ describe("SkaleManager", () => {
                             "d2"]), // name
                         );
 
-                    const schain = await schainsInternal.schains(d2SchainId);
+                    const schain = await schainsInternal.schains(d2SchainHash);
                     schain[0].should.be.equal("d2");
                 });
 
@@ -636,7 +636,7 @@ describe("SkaleManager", () => {
                                 "d2"]), // name
                             );
                         await skaleDKG.setSuccessfulDKGPublic(
-                            d2SchainId
+                            d2SchainHash
                         );
                     });
 
@@ -656,10 +656,10 @@ describe("SkaleManager", () => {
                     });
 
                     it("should delete schain after deleting node", async () => {
-                        const nodes = await schainsInternal.getNodesInGroup(d2SchainId);
+                        const nodes = await schainsInternal.getNodesInGroup(d2SchainHash);
                         await skaleManager.connect(nodeAddress).nodeExit(nodes[0]);
                         await skaleDKG.setSuccessfulDKGPublic(
-                            d2SchainId,
+                            d2SchainHash,
                         );
                         await skaleManager.connect(developer).deleteSchain("d2");
                     });
@@ -701,8 +701,8 @@ describe("SkaleManager", () => {
         });
 
         describe("when 32 nodes are in the system", async () => {
-            let d2SchainId: string;
-            let d3SchainId: string;
+            let d2SchainHash: string;
+            let d3SchainHash: string;
             let when32Nodes: number;
 
             before(async () => {
@@ -721,13 +721,13 @@ describe("SkaleManager", () => {
                         "somedomain.name");
                 }
 
-                let schainId = web3.utils.soliditySha3("d2");
-                if (schainId) {
-                    d2SchainId = schainId;
+                let schainHash = web3.utils.soliditySha3("d2");
+                if (schainHash) {
+                    d2SchainHash = schainHash;
                 }
-                schainId = web3.utils.soliditySha3("d3");
-                if (schainId) {
-                    d3SchainId = schainId;
+                schainHash = web3.utils.soliditySha3("d3");
+                if (schainHash) {
+                    d3SchainHash = schainHash;
                 }
             });
 
@@ -758,7 +758,7 @@ describe("SkaleManager", () => {
                             "d2"]), // name
                         );
 
-                    const schain1 = await schainsInternal.schains(d2SchainId);
+                    const schain1 = await schainsInternal.schains(d2SchainHash);
                     schain1[0].should.be.equal("d2");
 
                     await skaleToken.connect(developer).send(
@@ -771,7 +771,7 @@ describe("SkaleManager", () => {
                             "d3"]), // name
                         );
 
-                    const schain2 = await schainsInternal.schains(d3SchainId);
+                    const schain2 = await schainsInternal.schains(d3SchainHash);
                     schain2[0].should.be.equal("d3");
                 });
 

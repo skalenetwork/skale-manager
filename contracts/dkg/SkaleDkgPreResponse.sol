@@ -38,7 +38,7 @@ library SkaleDkgPreResponse {
     using G2Operations for G2Operations.G2Point;
 
     function preResponse(
-        bytes32 schainId,
+        bytes32 schainHash,
         uint fromNodeIndex,
         G2Operations.G2Point[] memory verificationVector,
         G2Operations.G2Point[] memory verificationVectorMult,
@@ -51,7 +51,7 @@ library SkaleDkgPreResponse {
     {
         SkaleDKG skaleDKG = SkaleDKG(contractManager.getContract("SkaleDKG"));
         uint index = _preResponseCheck(
-            schainId,
+            schainHash,
             fromNodeIndex,
             verificationVector,
             verificationVectorMult,
@@ -60,11 +60,11 @@ library SkaleDkgPreResponse {
             complaints,
             hashedData
         );
-        _processPreResponse(secretKeyContribution[index].share, schainId, verificationVectorMult, complaints);
+        _processPreResponse(secretKeyContribution[index].share, schainHash, verificationVectorMult, complaints);
     }
 
     function _preResponseCheck(
-        bytes32 schainId,
+        bytes32 schainHash,
         uint fromNodeIndex,
         G2Operations.G2Point[] memory verificationVector,
         G2Operations.G2Point[] memory verificationVectorMult,
@@ -77,18 +77,18 @@ library SkaleDkgPreResponse {
         view
         returns (uint index)
     {
-        (uint indexOnSchain, ) = skaleDKG.checkAndReturnIndexInGroup(schainId, fromNodeIndex, true);
-        require(complaints[schainId].nodeToComplaint == fromNodeIndex, "Not this Node");
-        require(!complaints[schainId].isResponse, "Already submitted pre response data");
+        (uint indexOnSchain, ) = skaleDKG.checkAndReturnIndexInGroup(schainHash, fromNodeIndex, true);
+        require(complaints[schainHash].nodeToComplaint == fromNodeIndex, "Not this Node");
+        require(!complaints[schainHash].isResponse, "Already submitted pre response data");
         require(
-            hashedData[schainId][indexOnSchain] == skaleDKG.hashData(secretKeyContribution, verificationVector),
+            hashedData[schainHash][indexOnSchain] == skaleDKG.hashData(secretKeyContribution, verificationVector),
             "Broadcasted Data is not correct"
         );
         require(
             verificationVector.length == verificationVectorMult.length,
             "Incorrect length of multiplied verification vector"
         );
-        (index, ) = skaleDKG.checkAndReturnIndexInGroup(schainId, complaints[schainId].fromNodeToComplaint, true);
+        (index, ) = skaleDKG.checkAndReturnIndexInGroup(schainHash, complaints[schainHash].fromNodeToComplaint, true);
         require(
             _checkCorrectVectorMultiplication(index, verificationVector, verificationVectorMult),
             "Multiplied verification vector is incorrect"
@@ -97,15 +97,15 @@ library SkaleDkgPreResponse {
 
     function _processPreResponse(
         bytes32 share,
-        bytes32 schainId,
+        bytes32 schainHash,
         G2Operations.G2Point[] memory verificationVectorMult,
         mapping(bytes32 => SkaleDKG.ComplaintData) storage complaints
     )
         private
     {
-        complaints[schainId].keyShare = share;
-        complaints[schainId].sumOfVerVec = _calculateSum(verificationVectorMult);
-        complaints[schainId].isResponse = true;
+        complaints[schainHash].keyShare = share;
+        complaints[schainHash].sumOfVerVec = _calculateSum(verificationVectorMult);
+        complaints[schainHash].isResponse = true;
     }
 
     function _calculateSum(G2Operations.G2Point[] memory verificationVectorMult)

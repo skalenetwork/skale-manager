@@ -188,8 +188,8 @@ describe("Pricing", () => {
                 let sumNode = 0;
                 for (let i = 0; i < numberOfNodes; i++) {
                     if (await nodes.isNodeActive(i)) {
-                        const getSchainIdsForNode = await schainsInternal.getSchainIdsForNode(i);
-                        for (const schain of getSchainIdsForNode) {
+                        const getSchainHashsForNode = await schainsInternal.getSchainHashsForNode(i);
+                        for (const schain of getSchainHashsForNode) {
                             const partOfNode = await schainsInternal.getSchainsPartOfNode(schain);
                             const isNodeLeft = await nodes.isNodeLeft(i);
                             if (partOfNode !== 0  && !isNodeLeft) {
@@ -281,10 +281,10 @@ describe("Pricing", () => {
                     let numberOfSchains = 0;
                     for (let i = 0; i < (await nodes.getNumberOfNodes()).toNumber(); i++) {
                         if (await nodes.isNodeActive(i)) {
-                            const getSchainIdsForNode = await schainsInternal.getSchainIdsForNode(i);
+                            const getSchainHashsForNode = await schainsInternal.getSchainHashsForNode(i);
                             let totalPartOfNode = 0;
                             numberOfSchains = 0;
-                            for (const schain of getSchainIdsForNode) {
+                            for (const schain of getSchainHashsForNode) {
                                 const partOfNode = await schainsInternal.getSchainsPartOfNode(schain);
                                 ++numberOfSchains;
                                 totalPartOfNode += partOfNode;

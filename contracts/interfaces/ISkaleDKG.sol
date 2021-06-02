@@ -29,12 +29,12 @@ interface ISkaleDKG {
     /**
      * @dev See {SkaleDKG-openChannel}.
      */
-    function openChannel(bytes32 schainId) external;
+    function openChannel(bytes32 schainHash) external;
 
     /**
      * @dev See {SkaleDKG-deleteChannel}.
      */
-    function deleteChannel(bytes32 schainId) external;
+    function deleteChannel(bytes32 schainHash) external;
 
     /**
      * @dev See {SkaleDKG-isLastDKGSuccessful}.
@@ -44,5 +44,5 @@ interface ISkaleDKG {
     /**
      * @dev See {SkaleDKG-isChannelOpened}.
      */
-    function isChannelOpened(bytes32 schainId) external view returns (bool);
+    function isChannelOpened(bytes32 schainHash) external view returns (bool);
 }
