@@ -22,8 +22,6 @@
 pragma solidity 0.6.10;
 
 import "./Permissions.sol";
-import "./SlashingTable.sol";
-import "./delegation/DelegationPeriodManager.sol";
 
 
 /**
