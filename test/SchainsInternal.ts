@@ -57,6 +57,10 @@ describe("SchainsInternal", () => {
         await contractManager.setContractsAddress("SkaleManager", nodes.address);
 
         validatorService.connect(holder).registerValidator("D2", "D2 is even", 0, 0);
+
+        const SCHAIN_TYPE_MANAGER_ROLE = await schainsInternal.SCHAIN_TYPE_MANAGER_ROLE();
+        await schainsInternal.grantRole(SCHAIN_TYPE_MANAGER_ROLE, owner.address);
+
         await schainsInternal.addSchainType(1, 16);
         await schainsInternal.addSchainType(4, 16);
         await schainsInternal.addSchainType(128, 16);
@@ -260,6 +264,8 @@ describe("SchainsInternal", () => {
             });
 
             it("should succesfully move to placeOfSchainOnNode", async () => {
+                const DEBUGGER_ROLE = await schainsInternal.DEBUGGER_ROLE();
+                await schainsInternal.grantRole(DEBUGGER_ROLE, owner.address);
                 await schainsInternal.removeSchainForNode(nodeIndex, 0);
                 const pubKey = ec.keyFromPrivate(String(privateKeys[1]).slice(2)).getPublic();
                 const nodesCount = 15;
@@ -324,14 +330,14 @@ describe("SchainsInternal", () => {
 
         it("should set new number of schain types", async () => {
             (await schainsInternal.numberOfSchainTypes()).should.be.equal(5);
-            await schainsInternal.connect(holder).setNumberOfSchainTypes(6).should.be.eventually.rejectedWith("Caller is not an admin");
+            await schainsInternal.connect(holder).setNumberOfSchainTypes(6).should.be.eventually.rejectedWith("SCHAIN_TYPE_MANAGER_ROLE is required");
             await schainsInternal.setNumberOfSchainTypes(6);
             (await schainsInternal.numberOfSchainTypes()).should.be.equal(6);
         });
 
         it("should add new type of schain", async () => {
             (await schainsInternal.numberOfSchainTypes()).should.be.equal(5);
-            await schainsInternal.connect(holder).addSchainType(8, 16).should.be.eventually.rejectedWith("Caller is not an admin");
+            await schainsInternal.connect(holder).addSchainType(8, 16).should.be.eventually.rejectedWith("SCHAIN_TYPE_MANAGER_ROLE is required");
             await schainsInternal.addSchainType(8, 16);
             (await schainsInternal.numberOfSchainTypes()).should.be.equal(6);
             const resSchainType = await schainsInternal.schainTypes(6);
@@ -342,7 +348,7 @@ describe("SchainsInternal", () => {
         it("should remove type of schain", async () => {
             (await schainsInternal.numberOfSchainTypes()).should.be.equal(5);
 
-            await schainsInternal.connect(holder).addSchainType(8, 16).should.be.eventually.rejectedWith("Caller is not an admin");
+            await schainsInternal.connect(holder).addSchainType(8, 16).should.be.eventually.rejectedWith("SCHAIN_TYPE_MANAGER_ROLE is required");
             await schainsInternal.addSchainType(8, 16);
             await schainsInternal.addSchainType(32, 16);
 
@@ -356,7 +362,7 @@ describe("SchainsInternal", () => {
             resSchainType.partOfNode.should.be.equal(32);
             resSchainType.numberOfNodes.should.be.equal(16);
 
-            await schainsInternal.connect(holder).removeSchainType(6).should.be.eventually.rejectedWith("Caller is not an admin");
+            await schainsInternal.connect(holder).removeSchainType(6).should.be.eventually.rejectedWith("SCHAIN_TYPE_MANAGER_ROLE is required");
             await schainsInternal.removeSchainType(6);
 
             resSchainType = await schainsInternal.schainTypes(6);
@@ -367,7 +373,7 @@ describe("SchainsInternal", () => {
             resSchainType.partOfNode.should.be.equal(32);
             resSchainType.numberOfNodes.should.be.equal(16);
 
-            await schainsInternal.connect(holder).removeSchainType(7).should.be.eventually.rejectedWith("Caller is not an admin");
+            await schainsInternal.connect(holder).removeSchainType(7).should.be.eventually.rejectedWith("SCHAIN_TYPE_MANAGER_ROLE is required");
             await schainsInternal.removeSchainType(7);
 
             resSchainType = await schainsInternal.schainTypes(6);

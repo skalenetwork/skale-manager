@@ -98,6 +98,19 @@ contract SchainsInternal is Permissions, ISchainsInternal {
 
     EnumerableSet.UintSet private _keysOfSchainTypes;
 
+    bytes32 public constant SCHAIN_TYPE_MANAGER_ROLE = keccak256("SCHAIN_TYPE_MANAGER_ROLE");
+    bytes32 public constant DEBUGGER_ROLE = keccak256("DEBUGGER_ROLE");
+
+    modifier onlySchainTypeManager() {
+        require(hasRole(SCHAIN_TYPE_MANAGER_ROLE, msg.sender), "SCHAIN_TYPE_MANAGER_ROLE is required");
+        _;
+    }
+
+    modifier onlyDebugger() {
+        require(hasRole(DEBUGGER_ROLE, msg.sender), "DEBUGGER_ROLE is required");
+        _;
+    }
+
     /**
      * @dev Allows Schain contract to initialize an schain.
      */
@@ -278,7 +291,7 @@ contract SchainsInternal is Permissions, ISchainsInternal {
     /**
      * @dev Allows Admin to add schain type
      */
-    function addSchainType(uint8 partOfNode, uint numberOfNodes) external onlyAdmin {
+    function addSchainType(uint8 partOfNode, uint numberOfNodes) external onlySchainTypeManager {
         require(_keysOfSchainTypes.add(numberOfSchainTypes + 1), "Schain type is already added");
         schainTypes[numberOfSchainTypes + 1].partOfNode = partOfNode;
         schainTypes[numberOfSchainTypes + 1].numberOfNodes = numberOfNodes;
@@ -288,7 +301,7 @@ contract SchainsInternal is Permissions, ISchainsInternal {
     /**
      * @dev Allows Admin to remove schain type
      */
-    function removeSchainType(uint typeOfSchain) external onlyAdmin {
+    function removeSchainType(uint typeOfSchain) external onlySchainTypeManager {
         require(_keysOfSchainTypes.remove(typeOfSchain), "Schain type is already removed");
         delete schainTypes[typeOfSchain].partOfNode;
         delete schainTypes[typeOfSchain].numberOfNodes;
@@ -297,14 +310,14 @@ contract SchainsInternal is Permissions, ISchainsInternal {
     /**
      * @dev Allows Admin to set number of schain types
      */
-    function setNumberOfSchainTypes(uint newNumberOfSchainTypes) external onlyAdmin {
+    function setNumberOfSchainTypes(uint newNumberOfSchainTypes) external onlySchainTypeManager {
         numberOfSchainTypes = newNumberOfSchainTypes;
     }
 
     /**
      * @dev Allows Admin to move schain to placeOfSchainOnNode map
      */
-    function moveToPlaceOfSchainOnNode(bytes32 schainHash) external onlyAdmin {
+    function moveToPlaceOfSchainOnNode(bytes32 schainHash) external onlyDebugger {
         for (uint i = 0; i < schainsGroups[schainHash].length; i++) {
             uint nodeIndex = schainsGroups[schainHash][i];
             for (uint j = 0; j < schainsForNodes[nodeIndex].length; j++) {

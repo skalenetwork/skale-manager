@@ -52,8 +52,10 @@ describe("DelegationController (token state)", () => {
 
         await validatorService.connect(validator).registerValidator("Validator", "D2 is even", 150, 0);
         validatorId = 1;
-        await validatorService.enableValidator(validatorId);
         await skaleToken.mint(holder.address, 1000, "0x", "0x");
+        const VALIDATOR_MANAGER_ROLE = await validatorService.VALIDATOR_MANAGER_ROLE();
+        await validatorService.grantRole(VALIDATOR_MANAGER_ROLE, owner.address);
+        await validatorService.enableValidator(validatorId);
     });
 
     beforeEach(async () => {

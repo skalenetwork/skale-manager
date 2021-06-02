@@ -16,16 +16,19 @@ chai.use(chaiAsPromised);
 chai.use(solidity);
 
 describe("ConstantsHolder", () => {
+  let owner: SignerWithAddress;
   let user: SignerWithAddress;
 
   let contractManager: ContractManager;
   let constantsHolder: ConstantsHolder;
 
   before(async () => {
-    [, user] = await ethers.getSigners();
+    [owner, user] = await ethers.getSigners();
 
     contractManager = await deployContractManager();
     constantsHolder = await deployConstantsHolder(contractManager);
+    const CONSTANTS_HOLDER_MANAGER_ROLE = await constantsHolder.CONSTANTS_HOLDER_MANAGER_ROLE();
+    await constantsHolder.grantRole(CONSTANTS_HOLDER_MANAGER_ROLE, owner.address);
   });
 
   it("NODE_DEPOSIT should be equal 100000000000000000000", async () => {
@@ -89,7 +92,7 @@ describe("ConstantsHolder", () => {
   it("should Set latency", async () => {
     const miliSec = 100;
     await constantsHolder.connect(user).setLatency(miliSec)
-      .should.be.eventually.rejectedWith("Caller is not the owner");
+      .should.be.eventually.rejectedWith("CONSTANTS_HOLDER_MANAGER_ROLE is required");
     await constantsHolder.setLatency(miliSec);
     (await constantsHolder.allowableLatency()).should.be.equal(miliSec);
   });
@@ -97,14 +100,14 @@ describe("ConstantsHolder", () => {
   it("should Set checkTime", async () => {
     const sec = 240;
     await constantsHolder.connect(user).setCheckTime(sec)
-      .should.be.eventually.rejectedWith("Caller is not the owner");
+      .should.be.eventually.rejectedWith("CONSTANTS_HOLDER_MANAGER_ROLE is required");
     await constantsHolder.setCheckTime(sec);
     (await constantsHolder.checkTime()).should.be.equal(sec);
   });
 
   it("should set rotation delay", async () => {
     await constantsHolder.connect(user).setRotationDelay(13)
-      .should.be.eventually.rejectedWith("Caller is not the owner");
+      .should.be.eventually.rejectedWith("CONSTANTS_HOLDER_MANAGER_ROLE is required");
     await constantsHolder.setRotationDelay(13);
     (await constantsHolder.rotationDelay()).toNumber()
       .should.be.equal(13);
@@ -125,7 +128,7 @@ describe("ConstantsHolder", () => {
   it("should set MSR", async () => {
     const msr = 100;
     await constantsHolder.connect(user).setMSR(msr)
-      .should.be.eventually.rejectedWith("Caller is not the owner");
+      .should.be.eventually.rejectedWith("CONSTANTS_HOLDER_MANAGER_ROLE is required");
     await constantsHolder.setMSR(msr);
     (await constantsHolder.msr()).should.be.equal(msr);
   });
@@ -133,7 +136,7 @@ describe("ConstantsHolder", () => {
   it("should set launch timestamp", async () => {
     const launch = 100;
     await constantsHolder.connect(user).setLaunchTimestamp(launch)
-      .should.be.eventually.rejectedWith("Caller is not the owner");
+      .should.be.eventually.rejectedWith("CONSTANTS_HOLDER_MANAGER_ROLE is required");
     await constantsHolder.setLaunchTimestamp(launch);
     (await constantsHolder.launchTimestamp()).should.be.equal(launch);
   });
@@ -141,7 +144,7 @@ describe("ConstantsHolder", () => {
   it("should set PoU delegation percentage", async () => {
     const percentage = 100;
     await constantsHolder.connect(user).setProofOfUseDelegationPercentage(percentage)
-      .should.be.eventually.rejectedWith("Caller is not the owner");
+      .should.be.eventually.rejectedWith("CONSTANTS_HOLDER_MANAGER_ROLE is required");
     await constantsHolder.setProofOfUseDelegationPercentage(percentage);
     (await constantsHolder.proofOfUseDelegationPercentage()).should.be.equal(percentage);
   });
@@ -149,7 +152,7 @@ describe("ConstantsHolder", () => {
   it("should set PoU delegation time", async () => {
     const period = 180;
     await constantsHolder.connect(user).setProofOfUseLockUpPeriod(period)
-      .should.be.eventually.rejectedWith("Caller is not the owner");
+      .should.be.eventually.rejectedWith("CONSTANTS_HOLDER_MANAGER_ROLE is required");
     await constantsHolder.setProofOfUseLockUpPeriod(period);
     (await constantsHolder.proofOfUseLockUpPeriodDays()).should.be.equal(period);
   });
@@ -157,7 +160,7 @@ describe("ConstantsHolder", () => {
   it("should set limit of validators per delegators", async () => {
     const newLimit = 30;
     await constantsHolder.connect(user).setLimitValidatorsPerDelegator(newLimit)
-      .should.be.eventually.rejectedWith("Caller is not the owner");
+      .should.be.eventually.rejectedWith("CONSTANTS_HOLDER_MANAGER_ROLE is required");
 
     await constantsHolder.setLimitValidatorsPerDelegator(newLimit);
     (await constantsHolder.limitValidatorsPerDelegator()).should.be.equal(newLimit);
@@ -166,7 +169,7 @@ describe("ConstantsHolder", () => {
   it("should set schain creation timestamp", async () => {
     const timeStamp = 100;
     await constantsHolder.connect(user).setSchainCreationTimeStamp(timeStamp)
-      .should.be.eventually.rejectedWith("Caller is not the owner");
+      .should.be.eventually.rejectedWith("CONSTANTS_HOLDER_MANAGER_ROLE is required");
     await constantsHolder.setSchainCreationTimeStamp(timeStamp);
     (await constantsHolder.schainCreationTimeStamp()).should.be.equal(timeStamp);
   });
@@ -174,7 +177,7 @@ describe("ConstantsHolder", () => {
   it("should set minimal schain lifetime", async () => {
     const lifetime = 100;
     await constantsHolder.connect(user).setMinimalSchainLifetime(lifetime)
-      .should.be.eventually.rejectedWith("Caller is not the owner");
+      .should.be.eventually.rejectedWith("CONSTANTS_HOLDER_MANAGER_ROLE is required");
     await constantsHolder.setMinimalSchainLifetime(lifetime);
     (await constantsHolder.minimalSchainLifetime()).should.be.equal(lifetime);
   });
@@ -182,7 +185,7 @@ describe("ConstantsHolder", () => {
   it("should set complaint timelimit", async () => {
     const timelimit = 3600;
     await constantsHolder.connect(user).setComplaintTimelimit(timelimit)
-      .should.be.eventually.rejectedWith("Caller is not the owner");
+      .should.be.eventually.rejectedWith("CONSTANTS_HOLDER_MANAGER_ROLE is required");
     await constantsHolder.setComplaintTimelimit(timelimit);
     (await constantsHolder.complaintTimelimit()).should.be.equal(timelimit);
   });
