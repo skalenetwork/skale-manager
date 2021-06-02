@@ -63,6 +63,12 @@ contract NodeRotation is Permissions {
 
     mapping (bytes32 => bool) public waitForNewNode;
 
+    bytes32 public constant DEBUGGER_ROLE = keccak256("DEBUGGER_ROLE");
+
+    modifier onlyDebugger() {
+        require(hasRole(DEBUGGER_ROLE, msg.sender), "DEBUGGER_ROLE is required");
+        _;
+    }
 
     /**
      * @dev Allows SkaleManager to remove, find new node, and rotate node from 
@@ -117,7 +123,7 @@ contract NodeRotation is Permissions {
     /**
      * @dev Allows Owner to immediately rotate an schain.
      */
-    function skipRotationDelay(bytes32 schainIndex) external onlyOwner {
+    function skipRotationDelay(bytes32 schainIndex) external onlyDebugger {
         rotations[schainIndex].freezeUntil = now;
     }
 

@@ -58,6 +58,9 @@ describe("SkaleVerifier", () => {
 
         await validatorService.connect(validator1).registerValidator("D2", "D2 is even", 0, 0);
 
+        const SCHAIN_TYPE_MANAGER_ROLE = await schainsInternal.SCHAIN_TYPE_MANAGER_ROLE();
+        await schainsInternal.grantRole(SCHAIN_TYPE_MANAGER_ROLE, validator1.address);
+
         await schainsInternal.addSchainType(1, 16);
         await schainsInternal.addSchainType(4, 16);
         await schainsInternal.addSchainType(128, 16);

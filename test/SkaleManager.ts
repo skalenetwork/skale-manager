@@ -131,6 +131,19 @@ describe("SkaleManager", () => {
         bountyContract = await deployBounty(contractManager);
         wallets = await deployWallets(contractManager);
 
+        const CONSTANTS_HOLDER_MANAGER_ROLE = await constantsHolder.CONSTANTS_HOLDER_MANAGER_ROLE();
+        await constantsHolder.grantRole(CONSTANTS_HOLDER_MANAGER_ROLE, owner.address);
+        const SCHAIN_TYPE_MANAGER_ROLE = await schainsInternal.SCHAIN_TYPE_MANAGER_ROLE();
+        await schainsInternal.grantRole(SCHAIN_TYPE_MANAGER_ROLE, owner.address);
+        const BOUNTY_REDUCTION_MANAGER_ROLE = await bountyContract.BOUNTY_REDUCTION_MANAGER_ROLE();
+        await bountyContract.grantRole(BOUNTY_REDUCTION_MANAGER_ROLE, owner.address);
+        const VALIDATOR_MANAGER_ROLE = await validatorService.VALIDATOR_MANAGER_ROLE();
+        await validatorService.grantRole(VALIDATOR_MANAGER_ROLE, owner.address);
+        const NODE_MANAGER_ROLE = await nodesContract.NODE_MANAGER_ROLE();
+        await nodesContract.grantRole(NODE_MANAGER_ROLE, owner.address);
+        const DELEGATION_PERIOD_SETTER_ROLE = await delegationPeriodManager.DELEGATION_PERIOD_SETTER_ROLE();
+        await delegationPeriodManager.grantRole(DELEGATION_PERIOD_SETTER_ROLE, owner.address);
+
         const premined = "100000000000000000000000000";
         await skaleToken.mint(owner.address, premined, "0x", "0x");
         await constantsHolder.setMSR(5);
@@ -677,6 +690,8 @@ describe("SkaleManager", () => {
                     });
 
                     it("should delete schain by root", async () => {
+                        const SCHAIN_DELETER_ROLE = await skaleManager.SCHAIN_DELETER_ROLE();
+                        await skaleManager.grantRole(SCHAIN_DELETER_ROLE, owner.address);
                         await skaleManager.deleteSchainByRoot("d3");
 
                         await schainsInternal.getSchains().should.be.eventually.empty;
