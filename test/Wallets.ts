@@ -289,7 +289,6 @@ describe("Wallets", () => {
                 const balanceBefore = await getBalance(node1.address);
                 const response = await skaleManager.connect(node1).nodeExit(0);
                 const balance = await getBalance(node1.address);
-                console.log((balance-balanceBefore)*1e18/8e9)
                 balance.should.not.be.lessThan(balanceBefore);
                 balance.should.be.almost(balanceBefore);
                 const validatorBalance = await wallets.getValidatorBalance(validator1Id);
