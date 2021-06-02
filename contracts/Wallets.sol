@@ -23,6 +23,8 @@
 
 pragma solidity 0.6.10;
 
+import "@skalenetwork/skale-manager-interfaces/IWallets.sol";
+
 import "./Permissions.sol";
 import "./delegation/ValidatorService.sol";
 import "./SchainsInternal.sol";
@@ -32,7 +34,7 @@ import "./Nodes.sol";
  * @title Wallets
  * @dev Contract contains logic to perform automatic self-recharging ether for nodes
  */
-contract Wallets is Permissions {
+contract Wallets is Permissions, IWallets {
 
     mapping (uint => uint) private _validatorWallets;
     mapping (bytes32 => uint) private _schainWallets;
@@ -149,6 +151,7 @@ contract Wallets is Permissions {
         bool isDebt
     )
         external
+        override
         allowTwo("SkaleDKG", "MessageProxyForMainnet")
     {
         uint amount = tx.gasprice * spentGas;
@@ -225,7 +228,7 @@ contract Wallets is Permissions {
      * Requirements: 
      * - Given schain must be created
      */
-    function rechargeSchainWallet(bytes32 schainId) public payable {
+    function rechargeSchainWallet(bytes32 schainId) public payable override {
         SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
         require(schainsInternal.isSchainActive(schainId), "Schain should be active for recharging");
         _schainWallets[schainId] = _schainWallets[schainId].add(msg.value);

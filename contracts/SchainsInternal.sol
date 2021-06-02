@@ -22,19 +22,21 @@
 pragma solidity 0.6.10;
 pragma experimental ABIEncoderV2;
 
+import "@openzeppelin/contracts-ethereum-package/contracts/utils/EnumerableSet.sol";
+import "@skalenetwork/skale-manager-interfaces/ISchainsInternal.sol";
+
 import "./interfaces/ISkaleDKG.sol";
 import "./utils/Random.sol";
 
 import "./ConstantsHolder.sol";
 import "./Nodes.sol";
 
-import "@openzeppelin/contracts-ethereum-package/contracts/utils/EnumerableSet.sol";
 
 /**
  * @title SchainsInternal
  * @dev Contract contains all functionality logic to internally manage Schains.
  */
-contract SchainsInternal is Permissions {
+contract SchainsInternal is Permissions, ISchainsInternal {
 
     using Random for Random.RandomGenerator;
     using EnumerableSet for EnumerableSet.UintSet;
@@ -396,7 +398,7 @@ contract SchainsInternal is Permissions {
     /**
      * @dev Checks whether address is owner of schain.
      */
-    function isOwnerAddress(address from, bytes32 schainId) external view returns (bool) {
+    function isOwnerAddress(address from, bytes32 schainId) external view override returns (bool) {
         return schains[schainId].owner == from;
     }
 
@@ -463,7 +465,7 @@ contract SchainsInternal is Permissions {
     /**
      * @dev Checks whether sender is a node address from a given schain group.
      */
-    function isNodeAddressesInGroup(bytes32 schainId, address sender) external view returns (bool) {
+    function isNodeAddressesInGroup(bytes32 schainId, address sender) external view override returns (bool) {
         Nodes nodes = Nodes(contractManager.getContract("Nodes"));
         for (uint i = 0; i < schainsGroups[schainId].length; i++) {
             if (nodes.getNodeAddress(schainsGroups[schainId][i]) == sender) {
