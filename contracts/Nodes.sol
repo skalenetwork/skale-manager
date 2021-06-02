@@ -168,19 +168,9 @@ contract Nodes is Permissions {
         _;
     }
 
-    function initializeSegmentTreeAndInvisibleNodes() external onlyOwner {
-        for (uint i = 0; i < nodes.length; i++) {
-            if (nodes[i].status != NodeStatus.Active && nodes[i].status != NodeStatus.Left) {
-                _invisible[i] = true;
-                _removeNodeFromSpaceToNodes(i, spaceOfNodes[i].freeSpace);
-            }
-        }
-        uint8 totalSpace = ConstantsHolder(contractManager.getContract("ConstantsHolder")).TOTAL_SPACE_ON_NODE();
-        _nodesAmountBySpace.create(totalSpace);
-        for (uint8 i = 1; i <= totalSpace; i++) {
-            if (spaceToNodes[i].length > 0)
-                _nodesAmountBySpace.addToPlace(i, spaceToNodes[i].length);
-        }
+    modifier nonZeroIP(bytes4 ip) {
+        require(ip != 0x0 && !nodesIPCheck[ip], "IP address is zero or is not available");
+        _;
     }
 
     /**
@@ -263,9 +253,9 @@ contract Nodes is Permissions {
     function createNode(address from, NodeCreationParams calldata params)
         external
         allow("SkaleManager")
+        nonZeroIP(params.ip)
     {
         // checks that Node has correct data
-        require(params.ip != 0x0 && !nodesIPCheck[params.ip], "IP address is zero or is not available");
         require(!nodesNameCheck[keccak256(abi.encodePacked(params.name))], "Name is already registered");
         require(params.port > 0, "Port is zero");
         require(from == _publicKeyToAddress(params.publicKey), "Public Key is incorrect");
@@ -479,6 +469,12 @@ contract Nodes is Permissions {
 
     function makeNodeInvisible(uint nodeIndex) external allow("SchainsInternal") {
         _makeNodeInvisible(nodeIndex);
+    }
+
+    function changeIP(uint nodeIndex, bytes4 newIP) external onlyAdmin checkNodeExists(nodeIndex) nonZeroIP(newIP) {
+        nodesIPCheck[nodes[nodeIndex].ip] = false;
+        nodesIPCheck[newIP] = true;
+        nodes[nodeIndex].ip = newIP;
     }
 
     function getRandomNodeWithFreeSpace(
