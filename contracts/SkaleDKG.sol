@@ -625,11 +625,11 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             wallets.refundGasBySchain(
                 schainId, msg.sender, gasTotal.sub(gasleft()).add(context.delta).sub(74800), context.isDebt
             );
-        } else if (context.dkgFunction == DkgFunction.Complaint && gasTotal.sub(gasleft()) > 1400000) {
+        } else if (context.dkgFunction == DkgFunction.Complaint && gasTotal.sub(gasleft()) > 14e5) {
             wallets.refundGasBySchain(
                 schainId, msg.sender, gasTotal.sub(gasleft()).add(context.delta).sub(590000), context.isDebt
             );
-        } else if (context.dkgFunction == DkgFunction.Complaint && gasTotal.sub(gasleft()) > 700000) {
+        } else if (context.dkgFunction == DkgFunction.Complaint && gasTotal.sub(gasleft()) > 7e5) {
             wallets.refundGasBySchain(
                 schainId, msg.sender, gasTotal.sub(gasleft()).add(context.delta).sub(250000), context.isDebt
             );
