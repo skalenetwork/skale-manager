@@ -36,11 +36,11 @@ import "../KeyStorage.sol";
  */
 library SkaleDkgAlright {
 
-    event AllDataReceived(bytes32 indexed schainId, uint nodeIndex);
-    event SuccessfulDKG(bytes32 indexed schainId);
+    event AllDataReceived(bytes32 indexed schainHash, uint nodeIndex);
+    event SuccessfulDKG(bytes32 indexed schainHash);
 
     function alright(
-        bytes32 schainId,
+        bytes32 schainHash,
         uint fromNodeIndex,
         ContractManager contractManager,
         mapping(bytes32 => SkaleDKG.Channel) storage channels,
@@ -52,23 +52,23 @@ library SkaleDkgAlright {
         external
     {
         SkaleDKG skaleDKG = SkaleDKG(contractManager.getContract("SkaleDKG"));
-        (uint index, ) = skaleDKG.checkAndReturnIndexInGroup(schainId, fromNodeIndex, true);
-        uint numberOfParticipant = channels[schainId].n;
-        require(numberOfParticipant == dkgProcess[schainId].numberOfBroadcasted, "Still Broadcasting phase");
+        (uint index, ) = skaleDKG.checkAndReturnIndexInGroup(schainHash, fromNodeIndex, true);
+        uint numberOfParticipant = channels[schainHash].n;
+        require(numberOfParticipant == dkgProcess[schainHash].numberOfBroadcasted, "Still Broadcasting phase");
         require(
-            complaints[schainId].fromNodeToComplaint != fromNodeIndex ||
-            (fromNodeIndex == 0 && complaints[schainId].startComplaintBlockTimestamp == 0),
+            complaints[schainHash].fromNodeToComplaint != fromNodeIndex ||
+            (fromNodeIndex == 0 && complaints[schainHash].startComplaintBlockTimestamp == 0),
             "Node has already sent complaint"
         );
-        require(!dkgProcess[schainId].completed[index], "Node is already alright");
-        dkgProcess[schainId].completed[index] = true;
-        dkgProcess[schainId].numberOfCompleted++;
-        emit AllDataReceived(schainId, fromNodeIndex);
-        if (dkgProcess[schainId].numberOfCompleted == numberOfParticipant) {
-            lastSuccesfulDKG[schainId] = now;
-            channels[schainId].active = false;
-            KeyStorage(contractManager.getContract("KeyStorage")).finalizePublicKey(schainId);
-            emit SuccessfulDKG(schainId);
+        require(!dkgProcess[schainHash].completed[index], "Node is already alright");
+        dkgProcess[schainHash].completed[index] = true;
+        dkgProcess[schainHash].numberOfCompleted++;
+        emit AllDataReceived(schainHash, fromNodeIndex);
+        if (dkgProcess[schainHash].numberOfCompleted == numberOfParticipant) {
+            lastSuccesfulDKG[schainHash] = now;
+            channels[schainHash].active = false;
+            KeyStorage(contractManager.getContract("KeyStorage")).finalizePublicKey(schainHash);
+            emit SuccessfulDKG(schainHash);
         }
     }
 

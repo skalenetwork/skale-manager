@@ -1346,7 +1346,7 @@ describe("SkaleDKG", () => {
                 assert.equal(result.events[0].args?.nodeIndex.toString(), "0");
 
                 assert.equal(result.events[2].event, "ChannelOpened");
-                assert.equal(result.events[2].args?.schainId, stringValue(web3.utils.soliditySha3(schainName)));
+                assert.equal(result.events[2].args?.schainHash, stringValue(web3.utils.soliditySha3(schainName)));
             } else {
                 assert(false, "No events were emitted");
             }

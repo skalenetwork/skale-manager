@@ -40,7 +40,7 @@ library SkaleDkgResponse {
     using G2Operations for G2Operations.G2Point;
 
     function response(
-        bytes32 schainId,
+        bytes32 schainHash,
         uint fromNodeIndex,
         uint secretNumber,
         G2Operations.G2Point memory multipliedShare,
@@ -51,22 +51,22 @@ library SkaleDkgResponse {
         external
     {
         uint index = SchainsInternal(contractManager.getContract("SchainsInternal"))
-            .getNodeIndexInGroup(schainId, fromNodeIndex);
-        require(index < channels[schainId].n, "Node is not in this group");
-        require(complaints[schainId].nodeToComplaint == fromNodeIndex, "Not this Node");
-        require(complaints[schainId].isResponse, "Have not submitted pre-response data");
+            .getNodeIndexInGroup(schainHash, fromNodeIndex);
+        require(index < channels[schainHash].n, "Node is not in this group");
+        require(complaints[schainHash].nodeToComplaint == fromNodeIndex, "Not this Node");
+        require(complaints[schainHash].isResponse, "Have not submitted pre-response data");
         uint badNode = _verifyDataAndSlash(
-            schainId,
+            schainHash,
             secretNumber,
             multipliedShare,
             contractManager,
             complaints
          );
-        SkaleDKG(contractManager.getContract("SkaleDKG")).setBadNode(schainId, badNode);
+        SkaleDKG(contractManager.getContract("SkaleDKG")).setBadNode(schainHash, badNode);
     }
 
     function _verifyDataAndSlash(
-        bytes32 schainId,
+        bytes32 schainHash,
         uint secretNumber,
         G2Operations.G2Point memory multipliedShare,
         ContractManager contractManager,
@@ -76,7 +76,7 @@ library SkaleDkgResponse {
         returns (uint badNode)
     {
         bytes32[2] memory publicKey = Nodes(contractManager.getContract("Nodes")).getNodePublicKey(
-            complaints[schainId].fromNodeToComplaint
+            complaints[schainHash].fromNodeToComplaint
         );
         uint256 pkX = uint(publicKey[0]);
 
@@ -85,17 +85,17 @@ library SkaleDkgResponse {
 
         // Decrypt secret key contribution
         uint secret = Decryption(contractManager.getContract("Decryption")).decrypt(
-            complaints[schainId].keyShare,
+            complaints[schainHash].keyShare,
             sha256(abi.encodePacked(key))
         );
 
         badNode = (
             _checkCorrectMultipliedShare(multipliedShare, secret) &&
-            multipliedShare.isEqual(complaints[schainId].sumOfVerVec) ?
-            complaints[schainId].fromNodeToComplaint :
-            complaints[schainId].nodeToComplaint
+            multipliedShare.isEqual(complaints[schainHash].sumOfVerVec) ?
+            complaints[schainHash].fromNodeToComplaint :
+            complaints[schainHash].nodeToComplaint
         );
-        SkaleDKG(contractManager.getContract("SkaleDKG")).finalizeSlashing(schainId, badNode);
+        SkaleDKG(contractManager.getContract("SkaleDKG")).finalizeSlashing(schainHash, badNode);
     }
 
     function _checkCorrectMultipliedShare(

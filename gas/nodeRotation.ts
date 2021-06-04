@@ -132,11 +132,11 @@ describe("createSchains", () => {
 
         const gasLimit = 12e6;
         const rotIndex = Math.floor(Math.random() * nodesAmount);
-        const schainIds = await schainsInternal.getSchainIdsForNode(rotIndex);
+        const schainHashs = await schainsInternal.getSchainHashsForNode(rotIndex);
         console.log("Rotation for node", rotIndex);
-        console.log("Will process", schainIds.length, "rotations");
+        console.log("Will process", schainHashs.length, "rotations");
         const gas = [];
-        for (let i = 0; i < schainIds.length; i++) {
+        for (let i = 0; i < schainHashs.length; i++) {
             const estimatedGas = await skaleManager.estimateGas.nodeExit(rotIndex);
             console.log("Estimated gas on nodeExit", estimatedGas.toNumber());
             const overrides = {
@@ -150,7 +150,7 @@ describe("createSchains", () => {
                 break;
             }
             await skaleDKG.setSuccesfulDKGPublic(
-                schainIds[schainIds.length - i - 1]
+                schainHashs[schainHashs.length - i - 1]
             );
         }
     });
@@ -214,11 +214,11 @@ describe("createSchains", () => {
 
         const gasLimit = 12e6;
         const rotIndex = Math.floor(Math.random() * nodesAmount);
-        const schainIds = await schainsInternal.getSchainIdsForNode(rotIndex);
+        const schainHashs = await schainsInternal.getSchainHashsForNode(rotIndex);
         console.log("Rotation for node", rotIndex);
-        console.log("Will process", schainIds.length, "rotations");
+        console.log("Will process", schainHashs.length, "rotations");
         const gas = [];
-        for (let i = 0; i < schainIds.length; i++) {
+        for (let i = 0; i < schainHashs.length; i++) {
             const estimatedGas = await skaleManager.estimateGas.nodeExit(rotIndex);
             const overrides = {
                 gasLimit: Math.ceil(estimatedGas.toNumber() * 1.1)
@@ -232,7 +232,7 @@ describe("createSchains", () => {
                 break;
             }
             await skaleDKG.setSuccesfulDKGPublic(
-                schainIds[schainIds.length - i - 1]
+                schainHashs[schainHashs.length - i - 1]
             );
         }
     });
@@ -281,11 +281,11 @@ describe("createSchains", () => {
                 while (exitedNode.has(rotIndex)) {
                     rotIndex = Math.floor(Math.random() * nodesAmount);
                 }
-                const schainIds = await schainsInternal.getSchainIdsForNode(rotIndex);
+                const schainHashs = await schainsInternal.getSchainHashsForNode(rotIndex);
                 console.log("Rotation for node", rotIndex);
-                console.log("Will process", schainIds.length, "rotations");
+                console.log("Will process", schainHashs.length, "rotations");
                 const gas = [];
-                for (let i = 0; i < schainIds.length; i++) {
+                for (let i = 0; i < schainHashs.length; i++) {
                     const estimatedGas = await skaleManager.estimateGas.nodeExit(rotIndex);
                     console.log("Estimated gas on nodeExit", estimatedGas.toNumber());
                     const overrides = {
@@ -299,7 +299,7 @@ describe("createSchains", () => {
                         break;
                     }
                     await skaleDKG.setSuccesfulDKGPublic(
-                        schainIds[schainIds.length - i - 1]
+                        schainHashs[schainHashs.length - i - 1]
                     );
                 }
                 skipTime(ethers, 43260);
