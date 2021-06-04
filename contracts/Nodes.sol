@@ -482,7 +482,10 @@ contract Nodes is Permissions {
      * 
      */
     function setNodeCompliant(uint nodeIndex) external onlyCompliance checkNodeExists(nodeIndex) {
-        revert("Not implemented");
+        if (incompliant[nodeIndex]) {
+            incompliant[nodeIndex] = false;
+            _tryToMakeNodeVisible(nodeIndex);
+        }
     }
 
     function setDomainName(uint nodeIndex, string memory domainName)

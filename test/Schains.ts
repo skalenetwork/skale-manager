@@ -490,6 +490,22 @@ describe("Schains", () => {
                 ).should.be.eventually.rejectedWith("Not enough nodes to create Schain");
             });
 
+            it("should not create 4 node schain with 1 incompliant node", async () => {
+                await nodes.grantRole(await nodes.COMPLIANCE_ROLE(), owner.address);
+                await nodes.setNodeCompliant(2);
+
+                await nodes.setNodeInMaintenance(2);
+                await nodes.removeNodeFromInMaintenance(2);
+
+                const deposit = await schains.getSchainPrice(5, 5);
+
+                await schains.addSchain(
+                    holder.address,
+                    deposit,
+                    web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 5, 0, "d2"]),
+                ).should.be.eventually.rejectedWith("Not enough nodes to create Schain");
+            });
+
             it("should create 4 node schain with 1 From In Maintenance node", async () => {
                 await nodes.setNodeInMaintenance(2);
 
