@@ -492,7 +492,7 @@ describe("Schains", () => {
 
             it("should not create 4 node schain with 1 incompliant node", async () => {
                 await nodes.grantRole(await nodes.COMPLIANCE_ROLE(), owner.address);
-                await nodes.setNodeCompliant(2);
+                await nodes.setNodeIncompliant(2);
 
                 await nodes.setNodeInMaintenance(2);
                 await nodes.removeNodeFromInMaintenance(2);
