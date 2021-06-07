@@ -263,7 +263,7 @@ describe("SchainsInternal", () => {
                 count.should.be.equal(1);
             });
 
-            it("should succesfully move to placeOfSchainOnNode", async () => {
+            it("should successfully move to placeOfSchainOnNode", async () => {
                 const DEBUGGER_ROLE = await schainsInternal.DEBUGGER_ROLE();
                 await schainsInternal.grantRole(DEBUGGER_ROLE, owner.address);
                 await schainsInternal.removeSchainForNode(nodeIndex, 0);

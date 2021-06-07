@@ -88,7 +88,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
 
     mapping(bytes32 => Channel) public channels;
 
-    mapping(bytes32 => uint) public lastSuccesfulDKG;
+    mapping(bytes32 => uint) public lastSuccessfulDKG;
 
     mapping(bytes32 => ProcessDKG) public dkgProcess;
 
@@ -219,7 +219,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             channels,
             dkgProcess,
             complaints,
-            lastSuccesfulDKG
+            lastSuccessfulDKG
         );
     }
 
@@ -441,7 +441,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
     }
 
     function getTimeOfLastSuccessfulDKG(bytes32 schainHash) external view returns (uint) {
-        return lastSuccesfulDKG[schainHash];
+        return lastSuccessfulDKG[schainHash];
     }
 
     function getComplaintData(bytes32 schainHash) external view returns (uint, uint) {
@@ -464,7 +464,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
     }
 
     function isLastDKGSuccessful(bytes32 schainHash) external override view returns (bool) {
-        return channels[schainHash].startedBlockTimestamp <= lastSuccesfulDKG[schainHash];
+        return channels[schainHash].startedBlockTimestamp <= lastSuccessfulDKG[schainHash];
     }
 
     /**

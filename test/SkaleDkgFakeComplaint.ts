@@ -977,7 +977,7 @@ describe("SkaleDKG", () => {
 
         describe("when correct broadcasts sent", async () => {
             const nodesCount = 4;
-            it("should not revert after successfull complaint", async () => {
+            it("should not revert after successful complaint", async () => {
                 for (let i = 0; i < nodesCount; ++i) {
                     await skaleDKG.connect(validatorsAccount[i % 2]).broadcast(
                         stringValue(web3.utils.soliditySha3(schainName)),
@@ -1018,7 +1018,7 @@ describe("SkaleDKG", () => {
                 assert(isComplPossible.should.be.false);
             });
 
-            it("should proceed reponse", async () => {
+            it("should proceed response", async () => {
                 for (let i = 0; i < nodesCount; ++i) {
                     await skaleDKG.connect(validatorsAccount[i % 2]).broadcast(
                         stringValue(web3.utils.soliditySha3(schainName)),

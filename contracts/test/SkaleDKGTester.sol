@@ -26,7 +26,7 @@ import "../SkaleDKG.sol";
 
 contract SkaleDKGTester is SkaleDKG {
     function setSuccessfulDKGPublic(bytes32 schainHash) external {
-        lastSuccesfulDKG[schainHash] = now;
+        lastSuccessfulDKG[schainHash] = now;
         channels[schainHash].active = false;
         KeyStorage(contractManager.getContract("KeyStorage")).finalizePublicKey(schainHash);
         emit SuccessfulDKG(schainHash);
