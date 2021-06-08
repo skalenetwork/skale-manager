@@ -228,10 +228,10 @@ async function main() {
 
     await upgrade(
         "1.8.0-beta.1",
-        ["Nodes"], //.concat(contracts),
-        async (safeTransactions, abi, contractManager) => {},
-        //     const safe = await contractManager.owner();
-        //     const [ deployer ] = await ethers.getSigners();
+        ["Nodes"], // .concat(contracts),
+        async (safeTransactions, abi, contractManager) => {
+            const safe = await contractManager.owner();
+            const [ deployer ] = await ethers.getSigners();
 
         //     // Deploy Wallets
         //     const walletsName = "Wallets";
@@ -252,7 +252,7 @@ async function main() {
         //     abi[getContractKeyInAbiFile(walletsName) + "_address"] = wallets.address;
         //     abi[getContractKeyInAbiFile(walletsName) + "_abi"] = getAbi(wallets.interface);
         //     await verifyProxy(walletsName, wallets.address);
-        // },
+        },
         async (safeTransactions, abi) => {
 
             // Initialize SegmentTree in Nodes
