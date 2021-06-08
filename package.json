@@ -1,6 +1,6 @@
 {
   "name": "@skalenetwork/skale-manager",
-  "version": "1.8.0",
+  "version": "1.8.1",
   "private": true,
   "description": "SKALE Manager system, Decentralized task manager",
   "homepage": "https://github.com/skalenetwork/skale-manager#readme",
