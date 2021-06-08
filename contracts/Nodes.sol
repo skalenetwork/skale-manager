@@ -168,6 +168,17 @@ contract Nodes is Permissions {
         _;
     }
 
+    function removeFromTree(uint8 space, uint index) external onlyOwner {
+        uint len = spaceToNodes[space].length.sub(1);
+        if (index < len) {
+            uint shiftedIndex = spaceToNodes[space][len];
+            spaceToNodes[space][index] = shiftedIndex;
+            spaceOfNodes[shiftedIndex].indexInSpaceMap = index;
+        }
+        spaceToNodes[space].pop();
+        _removeNodeFromTree(space);
+    }
+
     function initializeSegmentTreeAndInvisibleNodes() external onlyOwner {
         for (uint i = 0; i < nodes.length; i++) {
             if (nodes[i].status != NodeStatus.Active && nodes[i].status != NodeStatus.Left) {

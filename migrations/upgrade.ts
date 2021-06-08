@@ -227,32 +227,32 @@ async function main() {
     contracts.pop();
 
     await upgrade(
-        "1.7.2-stable.0",
-        ["ContractManager"].concat(contracts),
-        async (safeTransactions, abi, contractManager) => {
-            const safe = await contractManager.owner();
-            const [ deployer ] = await ethers.getSigners();
+        "1.8.0-beta.1",
+        ["Nodes"], //.concat(contracts),
+        async (safeTransactions, abi, contractManager) => {},
+        //     const safe = await contractManager.owner();
+        //     const [ deployer ] = await ethers.getSigners();
 
-            // Deploy Wallets
-            const walletsName = "Wallets";
-            console.log(chalk.green("Deploy", walletsName));
-            const walletsFactory = await ethers.getContractFactory(walletsName);
-            const wallets = (await upgrades.deployProxy(walletsFactory, [contractManager.address])) as Wallets;
-            await wallets.deployTransaction.wait();
-            console.log(chalk.green("Transfer ownership"));
-            await (await wallets.grantRole(await wallets.DEFAULT_ADMIN_ROLE(), safe)).wait();
-            await (await wallets.revokeRole(await wallets.DEFAULT_ADMIN_ROLE(), deployer.address)).wait();
-            console.log(chalk.yellowBright("Prepare transaction to register", walletsName));
-            safeTransactions.push(encodeTransaction(
-                0,
-                contractManager.address,
-                0,
-                contractManager.interface.encodeFunctionData("setContractsAddress", [walletsName, wallets.address])
-            ));
-            abi[getContractKeyInAbiFile(walletsName) + "_address"] = wallets.address;
-            abi[getContractKeyInAbiFile(walletsName) + "_abi"] = getAbi(wallets.interface);
-            await verifyProxy(walletsName, wallets.address);
-        },
+        //     // Deploy Wallets
+        //     const walletsName = "Wallets";
+        //     console.log(chalk.green("Deploy", walletsName));
+        //     const walletsFactory = await ethers.getContractFactory(walletsName);
+        //     const wallets = (await upgrades.deployProxy(walletsFactory, [contractManager.address])) as Wallets;
+        //     await wallets.deployTransaction.wait();
+        //     console.log(chalk.green("Transfer ownership"));
+        //     await (await wallets.grantRole(await wallets.DEFAULT_ADMIN_ROLE(), safe)).wait();
+        //     await (await wallets.revokeRole(await wallets.DEFAULT_ADMIN_ROLE(), deployer.address)).wait();
+        //     console.log(chalk.yellowBright("Prepare transaction to register", walletsName));
+        //     safeTransactions.push(encodeTransaction(
+        //         0,
+        //         contractManager.address,
+        //         0,
+        //         contractManager.interface.encodeFunctionData("setContractsAddress", [walletsName, wallets.address])
+        //     ));
+        //     abi[getContractKeyInAbiFile(walletsName) + "_address"] = wallets.address;
+        //     abi[getContractKeyInAbiFile(walletsName) + "_abi"] = getAbi(wallets.interface);
+        //     await verifyProxy(walletsName, wallets.address);
+        // },
         async (safeTransactions, abi) => {
 
             // Initialize SegmentTree in Nodes
@@ -260,13 +260,14 @@ async function main() {
             const nodesContractFactory = await getContractFactoryAndUpdateManifest(nodesName);
             const nodesAddress = abi[getContractKeyInAbiFile(nodesName) + "_address"];
             if (nodesAddress) {
-                console.log(chalk.yellowBright("Prepare transaction to initialize", nodesName));
+                console.log(chalk.yellowBright("Prepare transaction to removeFromTree", nodesName));
                 const nodes = (nodesContractFactory.attach(nodesAddress)) as Nodes;
+                console.log(chalk.yellowBright("Will execute removeFromTree(116, 0)"));
                 safeTransactions.push(encodeTransaction(
                     0,
                     nodes.address,
                     0,
-                    nodes.interface.encodeFunctionData("initializeSegmentTreeAndInvisibleNodes")
+                    nodes.interface.encodeFunctionData("removeFromTree", [116, 0])
                 ));
             } else {
                 console.log(chalk.red("Nodes address was not found!"));
@@ -274,45 +275,45 @@ async function main() {
                 process.exit(1);
             }
 
-            // Initialize schain types
-            const schainsInternalName = "SchainsInternal";
-            const schainsInternalFactory = await getContractFactoryAndUpdateManifest(schainsInternalName);
-            const schainsInternalAddress = abi[getContractKeyInAbiFile(schainsInternalName) + "_address"];
-            if (schainsInternalAddress) {
-                console.log(chalk.yellowBright("Prepare transactions to initialize schains types"));
-                const schainsInternal = (schainsInternalFactory.attach(schainsInternalAddress)) as SchainsInternal;
-                console.log(chalk.yellowBright("Number of Schain types will be set to 0"));
-                safeTransactions.push(encodeTransaction(
-                    0,
-                    schainsInternal.address,
-                    0,
-                    schainsInternal.interface.encodeFunctionData("setNumberOfSchainTypes", [0]),
-                ));
+            // // Initialize schain types
+            // const schainsInternalName = "SchainsInternal";
+            // const schainsInternalFactory = await getContractFactoryAndUpdateManifest(schainsInternalName);
+            // const schainsInternalAddress = abi[getContractKeyInAbiFile(schainsInternalName) + "_address"];
+            // if (schainsInternalAddress) {
+            //     console.log(chalk.yellowBright("Prepare transactions to initialize schains types"));
+            //     const schainsInternal = (schainsInternalFactory.attach(schainsInternalAddress)) as SchainsInternal;
+            //     console.log(chalk.yellowBright("Number of Schain types will be set to 0"));
+            //     safeTransactions.push(encodeTransaction(
+            //         0,
+            //         schainsInternal.address,
+            //         0,
+            //         schainsInternal.interface.encodeFunctionData("setNumberOfSchainTypes", [0]),
+            //     ));
 
-                console.log(chalk.yellowBright("Schain Type Small will be added"));
-                safeTransactions.push(encodeTransaction(
-                    0,
-                    schainsInternal.address,
-                    0,
-                    schainsInternal.interface.encodeFunctionData("addSchainType", [1, 16]),
-                ));
+            //     console.log(chalk.yellowBright("Schain Type Small will be added"));
+            //     safeTransactions.push(encodeTransaction(
+            //         0,
+            //         schainsInternal.address,
+            //         0,
+            //         schainsInternal.interface.encodeFunctionData("addSchainType", [1, 16]),
+            //     ));
 
-                console.log(chalk.yellowBright("Schain Type Medium will be added"));
-                safeTransactions.push(encodeTransaction(
-                    0,
-                    schainsInternal.address,
-                    0,
-                    schainsInternal.interface.encodeFunctionData("addSchainType", [4, 16]),
-                ));
+            //     console.log(chalk.yellowBright("Schain Type Medium will be added"));
+            //     safeTransactions.push(encodeTransaction(
+            //         0,
+            //         schainsInternal.address,
+            //         0,
+            //         schainsInternal.interface.encodeFunctionData("addSchainType", [4, 16]),
+            //     ));
 
-                console.log(chalk.yellowBright("Schain Type Large will be added"));
-                safeTransactions.push(encodeTransaction(
-                    0,
-                    schainsInternal.address,
-                    0,
-                    schainsInternal.interface.encodeFunctionData("addSchainType", [128, 16]),
-                ));
-            }
+            //     console.log(chalk.yellowBright("Schain Type Large will be added"));
+            //     safeTransactions.push(encodeTransaction(
+            //         0,
+            //         schainsInternal.address,
+            //         0,
+            //         schainsInternal.interface.encodeFunctionData("addSchainType", [128, 16]),
+            //     ));
+            // }
         });
 }
 
