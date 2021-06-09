@@ -166,6 +166,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
         require(nodes.isNodeExist(msg.sender, nodeIndex), "Node does not exist for Message sender");
         require(nodes.isTimeForReward(nodeIndex), "Not time for bounty");
         require(!nodes.isNodeLeft(nodeIndex), "The node must not be in Left state");
+        require(!nodes.incompliant(nodeIndex), "The node is incompliant");
         BountyV2 bountyContract = BountyV2(contractManager.getContract("Bounty"));
 
         uint bounty = bountyContract.calculateBounty(nodeIndex);

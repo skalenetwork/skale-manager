@@ -363,6 +363,16 @@ describe("SkaleManager", () => {
                 await skaleManager.connect(nodeAddress).getBounty(0).should.be.eventually.rejectedWith("The node must not be in Left state");
             });
 
+            it("should not pay bounty if Node is incompliant", async () => {
+                const nodeIndex = 0;
+                await nodesContract.grantRole(await nodesContract.COMPLIANCE_ROLE(), owner.address);
+                await nodesContract.setNodeIncompliant(nodeIndex);
+
+                await skipTime(ethers, month);
+                await skaleManager.connect(nodeAddress).getBounty(nodeIndex)
+                    .should.be.eventually.rejectedWith("The node is incompliant");
+            });
+
             it("should pay bounty according to the schedule", async () => {
                 const timeHelpers = await deployTimeHelpers(contractManager);
 

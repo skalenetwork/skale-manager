@@ -1,6 +1,6 @@
 {
   "name": "@skalenetwork/skale-manager",
-  "version": "1.8.0",
+  "version": "1.8.1",
   "private": true,
   "description": "SKALE Manager system, Decentralized task manager",
   "homepage": "https://github.com/skalenetwork/skale-manager#readme",
@@ -34,7 +34,7 @@
     "lint": "npx solhint \"contracts/**/*.sol\"",
     "prepare": "yarn compile && yarn hooks",
     "slither": "slither .",
-    "test": "npx hardhat test && yarn tsc",
+    "test": "yarn tsc && npx hardhat test",
     "tsc": "tsc --noEmit",
     "tslint": "npx tslint --project ."
   },
@@ -44,7 +44,7 @@
     "@openzeppelin/contracts": "^3.4.1",
     "@openzeppelin/contracts-ethereum-package": "^3.0.0",
     "@openzeppelin/hardhat-upgrades": "^1.8.2",
-    "@skalenetwork/skale-manager-interfaces": "^0.1.0",
+    "@skalenetwork/skale-manager-interfaces": "^0.1.1",
     "axios": "^0.21.1",
     "dotenv": "^10.0.0",
     "ethereumjs-util": "^7.0.10",

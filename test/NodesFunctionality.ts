@@ -160,6 +160,7 @@ describe("NodesFunctionality", () => {
     });
 
     describe("when node is created", async () => {
+        const nodeId = 0;
         beforeEach(async () => {
             const pubKey = ec.keyFromPrivate(String(privateKeys[2]).slice(2)).getPublic();
             await nodes.createNode(
@@ -225,6 +226,25 @@ describe("NodesFunctionality", () => {
             expect(await nodes.nodesIPCheck("0x7f000001")).to.equal(true);
             expect(await nodes.nodesIPCheck("0x7f000002")).to.equal(false);
             expect(await nodes.nodesIPCheck("0x7f000003")).to.equal(false);
+        });
+
+        it("should mark node as incompliant", async () => {
+            await nodes.setNodeIncompliant(nodeId)
+                .should.be.eventually.rejectedWith("COMPLIANCE_ROLE is required");
+            await nodes.grantRole(await nodes.COMPLIANCE_ROLE(), owner.address);
+
+            (await nodes.incompliant(nodeId)).should.be.equal(false);
+            await nodes.setNodeIncompliant(nodeId);
+            (await nodes.incompliant(nodeId)).should.be.equal(true);
+        });
+
+        it("should mark node as compliant", async () => {
+            await nodes.grantRole(await nodes.COMPLIANCE_ROLE(), owner.address);
+            await nodes.setNodeIncompliant(nodeId);
+
+            (await nodes.incompliant(nodeId)).should.be.equal(true);
+            await nodes.setNodeCompliant(nodeId);
+            (await nodes.incompliant(nodeId)).should.be.equal(false);
         });
     });
 
