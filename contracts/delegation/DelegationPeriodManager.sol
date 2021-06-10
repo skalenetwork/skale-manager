@@ -53,7 +53,7 @@ contract DelegationPeriodManager is Permissions {
      */
     function setDelegationPeriod(uint monthsCount, uint stakeMultiplier) external {
         require(hasRole(DELEGATION_PERIOD_SETTER_ROLE, msg.sender), "DELEGATION_PERIOD_SETTER_ROLE is required");
-        require(stakeMultipliers[monthsCount] == 0, "Delegation perios is already set");
+        require(stakeMultipliers[monthsCount] == 0, "Delegation period is already set");
         stakeMultipliers[monthsCount] = stakeMultiplier;
 
         emit DelegationPeriodWasSet(monthsCount, stakeMultiplier);

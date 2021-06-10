@@ -13,6 +13,9 @@ import { createMultiSendTransaction, sendSafeTransaction } from "./tools/gnosis-
 import chalk from "chalk";
 import { verify, verifyProxy } from "./tools/verification";
 import { getVersion } from "./tools/version";
+import util from 'util';
+import { exec as execSync } from 'child_process';
+const exec = util.promisify(execSync);
 
 export async function getContractFactoryAndUpdateManifest(contract: string) {
     const manifest = JSON.parse(await fs.readFile(await getManifestFile(), "utf-8"));
@@ -225,7 +228,9 @@ async function main() {
     await upgrade(
         "1.8.0",
         ["ContractManager"].concat(contracts),
-        async (safeTransactions, abi, contractManager) => undefined,
+        async (safeTransactions, abi, contractManager) => {
+            await exec("sed -i 's/lastSuccesfulDKG/lastSuccessfulDKG/g' .openzeppelin/*.json");
+        },
         async (safeTransactions, abi) => undefined
     );
 }

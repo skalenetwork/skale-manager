@@ -104,7 +104,7 @@ describe("ValidatorService", () => {
             .should.be.eventually.rejectedWith("Fee rate of validator should be lower than 100%");
     });
 
-    it("should allow only owner to call disableWhitelits", async() => {
+    it("should allow only owner to call disableWhitelist", async() => {
         await validatorService.connect(validator1).disableWhitelist()
             .should.be.eventually.rejectedWith("VALIDATOR_MANAGER_ROLE is required");
         await validatorService.connect(owner).disableWhitelist();

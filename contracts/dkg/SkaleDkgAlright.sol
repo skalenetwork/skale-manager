@@ -46,7 +46,7 @@ library SkaleDkgAlright {
         mapping(bytes32 => SkaleDKG.Channel) storage channels,
         mapping(bytes32 => SkaleDKG.ProcessDKG) storage dkgProcess,
         mapping(bytes32 => SkaleDKG.ComplaintData) storage complaints,
-        mapping(bytes32 => uint) storage lastSuccesfulDKG
+        mapping(bytes32 => uint) storage lastSuccessfulDKG
         
     )
         external
@@ -65,7 +65,7 @@ library SkaleDkgAlright {
         dkgProcess[schainHash].numberOfCompleted++;
         emit AllDataReceived(schainHash, fromNodeIndex);
         if (dkgProcess[schainHash].numberOfCompleted == numberOfParticipant) {
-            lastSuccesfulDKG[schainHash] = now;
+            lastSuccessfulDKG[schainHash] = now;
             channels[schainHash].active = false;
             KeyStorage(contractManager.getContract("KeyStorage")).finalizePublicKey(schainHash);
             emit SuccessfulDKG(schainHash);
