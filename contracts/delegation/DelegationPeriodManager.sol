@@ -23,6 +23,7 @@
 pragma solidity 0.6.10;
 
 import "../Permissions.sol";
+import "../ConstantsHolder.sol";
 
 /**
  * @title Delegation Period Manager
@@ -33,6 +34,8 @@ import "../Permissions.sol";
 contract DelegationPeriodManager is Permissions {
 
     mapping (uint => uint) public stakeMultipliers;
+
+    bytes32 public constant DELEGATION_PERIOD_SETTER_ROLE = keccak256("DELEGATION_PERIOD_SETTER_ROLE");
 
     /**
      * @dev Emitted when a new delegation period is specified.
@@ -48,8 +51,9 @@ contract DelegationPeriodManager is Permissions {
      * 
      * Emits a {DelegationPeriodWasSet} event.
      */
-    function setDelegationPeriod(uint monthsCount, uint stakeMultiplier) external onlyOwner {
-        require(stakeMultipliers[monthsCount] == 0, "Delegation perios is already set");
+    function setDelegationPeriod(uint monthsCount, uint stakeMultiplier) external {
+        require(hasRole(DELEGATION_PERIOD_SETTER_ROLE, msg.sender), "DELEGATION_PERIOD_SETTER_ROLE is required");
+        require(stakeMultipliers[monthsCount] == 0, "Delegation period is already set");
         stakeMultipliers[monthsCount] = stakeMultiplier;
 
         emit DelegationPeriodWasSet(monthsCount, stakeMultiplier);

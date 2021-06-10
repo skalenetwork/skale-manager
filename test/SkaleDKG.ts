@@ -100,6 +100,12 @@ describe("SkaleDKG", () => {
         constantsHolder = await deployConstantsHolder(contractManager);
         wallets = await deployWallets(contractManager);
 
+        const VALIDATOR_MANAGER_ROLE = await validatorService.VALIDATOR_MANAGER_ROLE();
+        await validatorService.grantRole(VALIDATOR_MANAGER_ROLE, owner.address);
+        const SCHAIN_TYPE_MANAGER_ROLE = await schainsInternal.SCHAIN_TYPE_MANAGER_ROLE();
+        await schainsInternal.grantRole(SCHAIN_TYPE_MANAGER_ROLE, owner.address);
+        const PENALTY_SETTER_ROLE = await slashingTable.PENALTY_SETTER_ROLE();
+        await slashingTable.grantRole(PENALTY_SETTER_ROLE, owner.address);
         await slashingTable.setPenalty("FailedDKG", failedDkgPenalty);
     });
 
@@ -1340,7 +1346,7 @@ describe("SkaleDKG", () => {
                 assert.equal(result.events[0].args?.nodeIndex.toString(), "0");
 
                 assert.equal(result.events[2].event, "ChannelOpened");
-                assert.equal(result.events[2].args?.schainId, stringValue(web3.utils.soliditySha3(schainName)));
+                assert.equal(result.events[2].args?.schainHash, stringValue(web3.utils.soliditySha3(schainName)));
             } else {
                 assert(false, "No events were emitted");
             }

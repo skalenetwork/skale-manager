@@ -23,6 +23,7 @@
 pragma solidity 0.6.10;
 
 import "./Permissions.sol";
+import "./ConstantsHolder.sol";
 
 /**
  * @title Slashing Table
@@ -31,11 +32,14 @@ import "./Permissions.sol";
 contract SlashingTable is Permissions {
     mapping (uint => uint) private _penalties;
 
+    bytes32 public constant PENALTY_SETTER_ROLE = keccak256("PENALTY_SETTER_ROLE");
+    
     /**
      * @dev Allows the Owner to set a slashing penalty in SKL tokens for a
      * given offense.
      */
-    function setPenalty(string calldata offense, uint penalty) external onlyOwner {
+    function setPenalty(string calldata offense, uint penalty) external {
+        require(hasRole(PENALTY_SETTER_ROLE, msg.sender), "PENALTY_SETTER_ROLE is required");
         _penalties[uint(keccak256(abi.encodePacked(offense)))] = penalty;
     }
 

@@ -131,6 +131,19 @@ describe("SkaleManager", () => {
         bountyContract = await deployBounty(contractManager);
         wallets = await deployWallets(contractManager);
 
+        const CONSTANTS_HOLDER_MANAGER_ROLE = await constantsHolder.CONSTANTS_HOLDER_MANAGER_ROLE();
+        await constantsHolder.grantRole(CONSTANTS_HOLDER_MANAGER_ROLE, owner.address);
+        const SCHAIN_TYPE_MANAGER_ROLE = await schainsInternal.SCHAIN_TYPE_MANAGER_ROLE();
+        await schainsInternal.grantRole(SCHAIN_TYPE_MANAGER_ROLE, owner.address);
+        const BOUNTY_REDUCTION_MANAGER_ROLE = await bountyContract.BOUNTY_REDUCTION_MANAGER_ROLE();
+        await bountyContract.grantRole(BOUNTY_REDUCTION_MANAGER_ROLE, owner.address);
+        const VALIDATOR_MANAGER_ROLE = await validatorService.VALIDATOR_MANAGER_ROLE();
+        await validatorService.grantRole(VALIDATOR_MANAGER_ROLE, owner.address);
+        const NODE_MANAGER_ROLE = await nodesContract.NODE_MANAGER_ROLE();
+        await nodesContract.grantRole(NODE_MANAGER_ROLE, owner.address);
+        const DELEGATION_PERIOD_SETTER_ROLE = await delegationPeriodManager.DELEGATION_PERIOD_SETTER_ROLE();
+        await delegationPeriodManager.grantRole(DELEGATION_PERIOD_SETTER_ROLE, owner.address);
+
         const premined = "100000000000000000000000000";
         await skaleToken.mint(owner.address, premined, "0x", "0x");
         await constantsHolder.setMSR(5);
@@ -350,6 +363,16 @@ describe("SkaleManager", () => {
                 await skaleManager.connect(nodeAddress).getBounty(0).should.be.eventually.rejectedWith("The node must not be in Left state");
             });
 
+            it("should not pay bounty if Node is incompliant", async () => {
+                const nodeIndex = 0;
+                await nodesContract.grantRole(await nodesContract.COMPLIANCE_ROLE(), owner.address);
+                await nodesContract.setNodeIncompliant(nodeIndex);
+
+                await skipTime(ethers, month);
+                await skaleManager.connect(nodeAddress).getBounty(nodeIndex)
+                    .should.be.eventually.rejectedWith("The node is incompliant");
+            });
+
             it("should pay bounty according to the schedule", async () => {
                 const timeHelpers = await deployTimeHelpers(contractManager);
 
@@ -493,7 +516,7 @@ describe("SkaleManager", () => {
         });
 
         describe("when 18 nodes are in the system", async () => {
-            let d2SchainId: string
+            let d2SchainHash: string
 
             const verdict = {
                 toNodeIndex: 1,
@@ -516,9 +539,9 @@ describe("SkaleManager", () => {
                         "somedomain.name");
                 }
 
-                const schainId = web3.utils.soliditySha3("d2");
-                if (schainId) {
-                    d2SchainId = schainId;
+                const schainHash = web3.utils.soliditySha3("d2");
+                if (schainHash) {
+                    d2SchainHash = schainHash;
                 }
             });
 
@@ -560,7 +583,7 @@ describe("SkaleManager", () => {
                             0, // nonce
                             "d2"])); // name
 
-                    const schain = await schainsInternal.schains(d2SchainId);
+                    const schain = await schainsInternal.schains(d2SchainHash);
                     schain[0].should.be.equal("d2");
                 });
 
@@ -589,7 +612,7 @@ describe("SkaleManager", () => {
                             "d2"]), // name
                         );
 
-                    const schain = await schainsInternal.schains(d2SchainId);
+                    const schain = await schainsInternal.schains(d2SchainHash);
                     schain[0].should.be.equal("d2");
                 });
 
@@ -623,7 +646,7 @@ describe("SkaleManager", () => {
                                 "d2"]), // name
                             );
                         await skaleDKG.setSuccessfulDKGPublic(
-                            d2SchainId
+                            d2SchainHash
                         );
                     });
 
@@ -643,10 +666,10 @@ describe("SkaleManager", () => {
                     });
 
                     it("should delete schain after deleting node", async () => {
-                        const nodes = await schainsInternal.getNodesInGroup(d2SchainId);
+                        const nodes = await schainsInternal.getNodesInGroup(d2SchainHash);
                         await skaleManager.connect(nodeAddress).nodeExit(nodes[0]);
                         await skaleDKG.setSuccessfulDKGPublic(
-                            d2SchainId,
+                            d2SchainHash,
                         );
                         await skaleManager.connect(developer).deleteSchain("d2");
                     });
@@ -677,6 +700,8 @@ describe("SkaleManager", () => {
                     });
 
                     it("should delete schain by root", async () => {
+                        const SCHAIN_DELETER_ROLE = await skaleManager.SCHAIN_DELETER_ROLE();
+                        await skaleManager.grantRole(SCHAIN_DELETER_ROLE, owner.address);
                         await skaleManager.deleteSchainByRoot("d3");
 
                         await schainsInternal.getSchains().should.be.eventually.empty;
@@ -686,8 +711,8 @@ describe("SkaleManager", () => {
         });
 
         describe("when 32 nodes are in the system", async () => {
-            let d2SchainId: string;
-            let d3SchainId: string;
+            let d2SchainHash: string;
+            let d3SchainHash: string;
             let when32Nodes: number;
 
             before(async () => {
@@ -706,13 +731,13 @@ describe("SkaleManager", () => {
                         "somedomain.name");
                 }
 
-                let schainId = web3.utils.soliditySha3("d2");
-                if (schainId) {
-                    d2SchainId = schainId;
+                let schainHash = web3.utils.soliditySha3("d2");
+                if (schainHash) {
+                    d2SchainHash = schainHash;
                 }
-                schainId = web3.utils.soliditySha3("d3");
-                if (schainId) {
-                    d3SchainId = schainId;
+                schainHash = web3.utils.soliditySha3("d3");
+                if (schainHash) {
+                    d3SchainHash = schainHash;
                 }
             });
 
@@ -743,7 +768,7 @@ describe("SkaleManager", () => {
                             "d2"]), // name
                         );
 
-                    const schain1 = await schainsInternal.schains(d2SchainId);
+                    const schain1 = await schainsInternal.schains(d2SchainHash);
                     schain1[0].should.be.equal("d2");
 
                     await skaleToken.connect(developer).send(
@@ -756,7 +781,7 @@ describe("SkaleManager", () => {
                             "d3"]), // name
                         );
 
-                    const schain2 = await schainsInternal.schains(d3SchainId);
+                    const schain2 = await schainsInternal.schains(d3SchainHash);
                     schain2[0].should.be.equal("d3");
                 });
 

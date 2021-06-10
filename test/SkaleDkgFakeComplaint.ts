@@ -889,6 +889,13 @@ describe("SkaleDKG", () => {
         constantsHolder = await deployConstantsHolder(contractManager);
         wallets = await deployWallets(contractManager);
 
+        const PENALTY_SETTER_ROLE = await slashingTable.PENALTY_SETTER_ROLE();
+        await slashingTable.grantRole(PENALTY_SETTER_ROLE, owner.address);
+        const VALIDATOR_MANAGER_ROLE = await validatorService.VALIDATOR_MANAGER_ROLE();
+        await validatorService.grantRole(VALIDATOR_MANAGER_ROLE, owner.address);
+        const SCHAIN_TYPE_MANAGER_ROLE = await schainsInternal.SCHAIN_TYPE_MANAGER_ROLE();
+        await schainsInternal.grantRole(SCHAIN_TYPE_MANAGER_ROLE, owner.address);
+
         await slashingTable.setPenalty("FailedDKG", failedDkgPenalty);
 
         await validatorService.connect(validator1).registerValidator("Validator1", "D2 is even", 0, 0);
@@ -970,7 +977,7 @@ describe("SkaleDKG", () => {
 
         describe("when correct broadcasts sent", async () => {
             const nodesCount = 4;
-            it("should not revert after successfull complaint", async () => {
+            it("should not revert after successful complaint", async () => {
                 for (let i = 0; i < nodesCount; ++i) {
                     await skaleDKG.connect(validatorsAccount[i % 2]).broadcast(
                         stringValue(web3.utils.soliditySha3(schainName)),
@@ -1011,7 +1018,7 @@ describe("SkaleDKG", () => {
                 assert(isComplPossible.should.be.false);
             });
 
-            it("should proceed reponse", async () => {
+            it("should proceed response", async () => {
                 for (let i = 0; i < nodesCount; ++i) {
                     await skaleDKG.connect(validatorsAccount[i % 2]).broadcast(
                         stringValue(web3.utils.soliditySha3(schainName)),
