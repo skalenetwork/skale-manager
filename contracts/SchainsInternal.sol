@@ -377,9 +377,23 @@ contract SchainsInternal is Permissions, ISchainsInternal {
     }
 
     /**
+     * @dev Returns hashes of schain names by schain owner.
+     */
+    function getSchainIdsByAddress(address from) external view returns (bytes32[] memory) {
+        return schainIndexes[from];
+    }
+
+    /**
      * @dev Returns hashes of schain names running on a node.
      */
     function getSchainHashsForNode(uint nodeIndex) external view returns (bytes32[] memory) {
+        return schainsForNodes[nodeIndex];
+    }
+
+    /**
+     * @dev Returns hashes of schain names running on a node.
+     */
+    function getSchainIdsForNode(uint nodeIndex) external view returns (bytes32[] memory) {
         return schainsForNodes[nodeIndex];
     }
 
