@@ -276,7 +276,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
     }
 
     function preResponse(
-        bytes32 schainHash,
+        bytes32 schainId,
         uint fromNodeIndex,
         G2Operations.G2Point[] memory verificationVector,
         G2Operations.G2Point[] memory verificationVectorMult,
