@@ -284,17 +284,17 @@ contract SkaleDKG is Permissions, ISkaleDKG {
     )
         external
         refundGasBySchain(
-            schainHash,
+            schainId,
             Context({
                 isDebt: true,
                 delta: ConstantsHolder(contractManager.getConstantsHolder()).PRE_RESPONSE_DELTA(),
                 dkgFunction: DkgFunction.PreResponse
         }))
-        correctGroup(schainHash)
+        correctGroup(schainId)
         onlyNodeOwner(fromNodeIndex)
     {
         SkaleDkgPreResponse.preResponse(
-            schainHash,
+            schainId,
             fromNodeIndex,
             verificationVector,
             verificationVectorMult,
