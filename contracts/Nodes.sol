@@ -503,7 +503,20 @@ contract Nodes is Permissions {
         _makeNodeInvisible(nodeIndex);
     }
 
-    function changeIP(uint nodeIndex, bytes4 newIP) external onlyAdmin checkNodeExists(nodeIndex) nonZeroIP(newIP) {
+    function changeIP(
+        uint nodeIndex,
+        bytes4 newIP,
+        bytes4 newPublicIP
+    )
+        external
+        onlyAdmin
+        checkNodeExists(nodeIndex)
+        nonZeroIP(newIP)
+    {
+        if (newPublicIP != 0x0) {
+            require(newIP == newPublicIP, "IP address is not the same");
+            nodes[nodeIndex].publicIP = newPublicIP;
+        }
         nodesIPCheck[nodes[nodeIndex].ip] = false;
         nodesIPCheck[newIP] = true;
         nodes[nodeIndex].ip = newIP;
