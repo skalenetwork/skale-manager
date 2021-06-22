@@ -226,7 +226,7 @@ export async function upgrade(
 
 async function main() {
     await upgrade(
-        "1.8.0",
+        "1.8.1",
         ["ContractManager"].concat(contracts),
         async (safeTransactions, abi, contractManager) => {
             await exec("sed -i 's/lastSuccesfulDKG/lastSuccessfulDKG/g' .openzeppelin/*.json");
