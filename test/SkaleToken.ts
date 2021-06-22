@@ -223,6 +223,9 @@ describe("SkaleToken", () => {
     const reentrancyTester = await deployReentrancyTester(contractManager);
     const validatorService = await deployValidatorService(contractManager);
 
+    const VALIDATOR_MANAGER_ROLE = await validatorService.VALIDATOR_MANAGER_ROLE();
+    await validatorService.grantRole(VALIDATOR_MANAGER_ROLE, owner.address);
+
     await validatorService.registerValidator("Regular validator", "I love D2", 0, 0);
     const validatorId = 1;
     await validatorService.enableValidator(validatorId);

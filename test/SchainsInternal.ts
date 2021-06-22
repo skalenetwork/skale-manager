@@ -57,6 +57,10 @@ describe("SchainsInternal", () => {
         await contractManager.setContractsAddress("SkaleManager", nodes.address);
 
         validatorService.connect(holder).registerValidator("D2", "D2 is even", 0, 0);
+
+        const SCHAIN_TYPE_MANAGER_ROLE = await schainsInternal.SCHAIN_TYPE_MANAGER_ROLE();
+        await schainsInternal.grantRole(SCHAIN_TYPE_MANAGER_ROLE, owner.address);
+
         await schainsInternal.addSchainType(1, 16);
         await schainsInternal.addSchainType(4, 16);
         await schainsInternal.addSchainType(128, 16);
@@ -103,6 +107,7 @@ describe("SchainsInternal", () => {
 
         it("should be able to add schain to node", async () => {
             await schainsInternal.addSchainForNode(5, schainNameHash);
+            await schainsInternal.getSchainHashsForNode(5).should.eventually.deep.equal([schainNameHash]);
             await schainsInternal.getSchainIdsForNode(5).should.eventually.deep.equal([schainNameHash]);
         });
 
@@ -156,7 +161,7 @@ describe("SchainsInternal", () => {
                 await schainsInternal.addSchainForNode(nodeIndex, stringValue(web3.utils.soliditySha3("NewSchain")));
                 await schainsInternal.removeSchainForNode(nodeIndex, 0);
                 await schainsInternal.addSchainForNode(nodeIndex, stringValue(web3.utils.soliditySha3("NewSchain1")));
-                await schainsInternal.getSchainIdsForNode(nodeIndex).should.eventually.be.deep.equal(
+                await schainsInternal.getSchainHashsForNode(nodeIndex).should.eventually.be.deep.equal(
                     [stringValue(web3.utils.soliditySha3("NewSchain1")), stringValue(web3.utils.soliditySha3("NewSchain"))],
                 );
             });
@@ -193,7 +198,7 @@ describe("SchainsInternal", () => {
                 await schainsInternal.removeSchainForNode(nodeIndex, 1);
                 await schainsInternal.addSchainForNode(nodeIndex, stringValue(web3.utils.soliditySha3("NewSchain2")));
                 (await schainsInternal.holesForNodes(nodeIndex, 0)).should.be.equal(0);
-                await schainsInternal.getSchainIdsForNode(nodeIndex).should.eventually.be.deep.equal(
+                await schainsInternal.getSchainHashsForNode(nodeIndex).should.eventually.be.deep.equal(
                     [
                         "0x0000000000000000000000000000000000000000000000000000000000000000",
                         stringValue(web3.utils.soliditySha3("NewSchain2")),
@@ -209,7 +214,7 @@ describe("SchainsInternal", () => {
                 await schainsInternal.removeSchainForNode(nodeIndex, 1);
                 await schainsInternal.addSchainForNode(nodeIndex, stringValue(web3.utils.soliditySha3("NewSchain2")));
                 await schainsInternal.addSchainForNode(nodeIndex, stringValue(web3.utils.soliditySha3("NewSchain3")));
-                await schainsInternal.getSchainIdsForNode(nodeIndex).should.eventually.be.deep.equal(
+                await schainsInternal.getSchainHashsForNode(nodeIndex).should.eventually.be.deep.equal(
                     [
                         stringValue(web3.utils.soliditySha3("NewSchain3")),
                         stringValue(web3.utils.soliditySha3("NewSchain2")),
@@ -226,7 +231,7 @@ describe("SchainsInternal", () => {
                 await schainsInternal.addSchainForNode(nodeIndex, stringValue(web3.utils.soliditySha3("NewSchain2")));
                 await schainsInternal.addSchainForNode(nodeIndex, stringValue(web3.utils.soliditySha3("NewSchain3")));
                 await schainsInternal.addSchainForNode(nodeIndex, stringValue(web3.utils.soliditySha3("NewSchain4")));
-                await schainsInternal.getSchainIdsForNode(nodeIndex).should.eventually.be.deep.equal(
+                await schainsInternal.getSchainHashsForNode(nodeIndex).should.eventually.be.deep.equal(
                     [
                         stringValue(web3.utils.soliditySha3("NewSchain3")),
                         stringValue(web3.utils.soliditySha3("NewSchain2")),
@@ -247,11 +252,12 @@ describe("SchainsInternal", () => {
             });
 
             it("should get schains ids by user", async () => {
+                await schainsInternal.getSchainHashsByAddress(holder.address).should.eventually.be.deep.equal([schainNameHash]);
                 await schainsInternal.getSchainIdsByAddress(holder.address).should.eventually.be.deep.equal([schainNameHash]);
             });
 
             it("should return schains by node", async () => {
-                await schainsInternal.getSchainIdsForNode(nodeIndex).should.eventually.be.deep.equal([schainNameHash]);
+                await schainsInternal.getSchainHashsForNode(nodeIndex).should.eventually.be.deep.equal([schainNameHash]);
             });
 
             it("should return number of schains per node", async () => {
@@ -259,7 +265,9 @@ describe("SchainsInternal", () => {
                 count.should.be.equal(1);
             });
 
-            it("should succesfully move to placeOfSchainOnNode", async () => {
+            it("should successfully move to placeOfSchainOnNode", async () => {
+                const DEBUGGER_ROLE = await schainsInternal.DEBUGGER_ROLE();
+                await schainsInternal.grantRole(DEBUGGER_ROLE, owner.address);
                 await schainsInternal.removeSchainForNode(nodeIndex, 0);
                 const pubKey = ec.keyFromPrivate(String(privateKeys[1]).slice(2)).getPublic();
                 const nodesCount = 15;
@@ -324,14 +332,14 @@ describe("SchainsInternal", () => {
 
         it("should set new number of schain types", async () => {
             (await schainsInternal.numberOfSchainTypes()).should.be.equal(5);
-            await schainsInternal.connect(holder).setNumberOfSchainTypes(6).should.be.eventually.rejectedWith("Caller is not an admin");
+            await schainsInternal.connect(holder).setNumberOfSchainTypes(6).should.be.eventually.rejectedWith("SCHAIN_TYPE_MANAGER_ROLE is required");
             await schainsInternal.setNumberOfSchainTypes(6);
             (await schainsInternal.numberOfSchainTypes()).should.be.equal(6);
         });
 
         it("should add new type of schain", async () => {
             (await schainsInternal.numberOfSchainTypes()).should.be.equal(5);
-            await schainsInternal.connect(holder).addSchainType(8, 16).should.be.eventually.rejectedWith("Caller is not an admin");
+            await schainsInternal.connect(holder).addSchainType(8, 16).should.be.eventually.rejectedWith("SCHAIN_TYPE_MANAGER_ROLE is required");
             await schainsInternal.addSchainType(8, 16);
             (await schainsInternal.numberOfSchainTypes()).should.be.equal(6);
             const resSchainType = await schainsInternal.schainTypes(6);
@@ -342,7 +350,7 @@ describe("SchainsInternal", () => {
         it("should remove type of schain", async () => {
             (await schainsInternal.numberOfSchainTypes()).should.be.equal(5);
 
-            await schainsInternal.connect(holder).addSchainType(8, 16).should.be.eventually.rejectedWith("Caller is not an admin");
+            await schainsInternal.connect(holder).addSchainType(8, 16).should.be.eventually.rejectedWith("SCHAIN_TYPE_MANAGER_ROLE is required");
             await schainsInternal.addSchainType(8, 16);
             await schainsInternal.addSchainType(32, 16);
 
@@ -356,7 +364,7 @@ describe("SchainsInternal", () => {
             resSchainType.partOfNode.should.be.equal(32);
             resSchainType.numberOfNodes.should.be.equal(16);
 
-            await schainsInternal.connect(holder).removeSchainType(6).should.be.eventually.rejectedWith("Caller is not an admin");
+            await schainsInternal.connect(holder).removeSchainType(6).should.be.eventually.rejectedWith("SCHAIN_TYPE_MANAGER_ROLE is required");
             await schainsInternal.removeSchainType(6);
 
             resSchainType = await schainsInternal.schainTypes(6);
@@ -367,7 +375,7 @@ describe("SchainsInternal", () => {
             resSchainType.partOfNode.should.be.equal(32);
             resSchainType.numberOfNodes.should.be.equal(16);
 
-            await schainsInternal.connect(holder).removeSchainType(7).should.be.eventually.rejectedWith("Caller is not an admin");
+            await schainsInternal.connect(holder).removeSchainType(7).should.be.eventually.rejectedWith("SCHAIN_TYPE_MANAGER_ROLE is required");
             await schainsInternal.removeSchainType(7);
 
             resSchainType = await schainsInternal.schainTypes(6);

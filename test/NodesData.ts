@@ -82,6 +82,9 @@ describe("NodesData", () => {
         const signature1 = await getValidatorIdSignature(validatorIndex, nodeAddress);
         await validatorService.connect(validator).linkNodeAddress(nodeAddress.address, signature1);
         await skaleManagerMock.grantRole(await skaleManagerMock.ADMIN_ROLE(), admin.address);
+
+        const NODE_MANAGER_ROLE = await nodes.NODE_MANAGER_ROLE();
+        await nodes.grantRole(NODE_MANAGER_ROLE, owner.address);
     });
 
     it("should add node", async () => {
@@ -236,7 +239,9 @@ describe("NodesData", () => {
             nodeDomainName.should.be.equal("newdomain.name");
         });
 
-        it("should modify node domain name by contract admin", async () => {
+        it("should modify node domain name by NODE_MANAGER_ROLE", async () => {
+            const NODE_MANAGER_ROLE = await nodes.NODE_MANAGER_ROLE();
+            await nodes.grantRole(NODE_MANAGER_ROLE, admin.address);
             await nodes.connect(admin).setDomainName(0, "newdomain.name");
             const nodeDomainName = await nodes.getNodeDomainName(0);
             nodeDomainName.should.be.equal("newdomain.name");
@@ -326,7 +331,9 @@ describe("NodesData", () => {
             assert.equal(status, 0);
         });
 
-        it("should set node status In Maintenance from admin", async () => {
+        it("should set node status In Maintenance from NODE_MANAGER_ROLE", async () => {
+            const NODE_MANAGER_ROLE = await nodes.NODE_MANAGER_ROLE();
+            await nodes.grantRole(NODE_MANAGER_ROLE, admin.address);
             let status = await nodes.getNodeStatus(0);
             assert.equal(status, 0);
             await nodes.connect(admin).setNodeInMaintenance(0);
@@ -336,7 +343,9 @@ describe("NodesData", () => {
             assert.equal(boolStatus, true);
         });
 
-        it("should set node status From In Maintenance from admin", async () => {
+        it("should set node status From In Maintenance from NODE_MANAGER_ROLE", async () => {
+            const NODE_MANAGER_ROLE = await nodes.NODE_MANAGER_ROLE();
+            await nodes.grantRole(NODE_MANAGER_ROLE, admin.address);
             let status = await nodes.getNodeStatus(0);
             assert.equal(status, 0);
             await nodes.connect(admin).setNodeInMaintenance(0);

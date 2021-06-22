@@ -120,6 +120,12 @@ describe("Wallets", () => {
 
         await validatorService.connect(validator1).registerValidator("Validator 1", "", 0, 0);
         await validatorService.connect(validator2).registerValidator("Validator 2", "", 0, 0);
+        const VALIDATOR_MANAGER_ROLE = await validatorService.VALIDATOR_MANAGER_ROLE();
+        await validatorService.grantRole(VALIDATOR_MANAGER_ROLE, owner.address);
+        const SCHAIN_TYPE_MANAGER_ROLE = await schainsInternal.SCHAIN_TYPE_MANAGER_ROLE();
+        await schainsInternal.grantRole(SCHAIN_TYPE_MANAGER_ROLE, owner.address);
+        const SCHAIN_DELETER_ROLE = await skaleManager.SCHAIN_DELETER_ROLE();
+        await skaleManager.grantRole(SCHAIN_DELETER_ROLE, owner.address);
     });
 
     beforeEach(async () => {

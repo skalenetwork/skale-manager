@@ -19,7 +19,6 @@ import { deployContractManager } from "./tools/deploy/contractManager";
 import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
 import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
 import { deployNodes } from "./tools/deploy/nodes";
-import { deployNodesTester } from "./tools/deploy/test/nodesTester";
 import { deploySkaleToken } from "./tools/deploy/skaleToken";
 import { deployDelegationController } from "./tools/deploy/delegation/delegationController";
 import { deploySkaleManagerMock } from "./tools/deploy/test/skaleManagerMock";
@@ -70,7 +69,7 @@ describe("NodesFunctionality", () => {
         [owner, validator, nodeAddress, nodeAddress2, holder] = await ethers.getSigners();
 
         contractManager = await deployContractManager();
-        nodes = await deployNodesTester(contractManager);
+        nodes = await deployNodes(contractManager);
         validatorService = await deployValidatorService(contractManager);
         constantsHolder = await deployConstantsHolder(contractManager);
         skaleToken = await deploySkaleToken(contractManager);
@@ -78,7 +77,7 @@ describe("NodesFunctionality", () => {
 
         const skaleManagerMock = await deploySkaleManagerMock(contractManager);
         await contractManager.setContractsAddress("SkaleManager", skaleManagerMock.address);
-        await contractManager.setContractsAddress("Nodes", nodes.address);
+        // await contractManager.setContractsAddress("Nodes", nodes.address);
 
         await validatorService.connect(validator).registerValidator("Validator", "D2", 0, 0);
         const validatorIndex = await validatorService.getValidatorId(validator.address);
@@ -86,6 +85,10 @@ describe("NodesFunctionality", () => {
         const signature2 = await getValidatorIdSignature(validatorIndex, nodeAddress2);
         await validatorService.connect(validator).linkNodeAddress(nodeAddress.address, signature1);
         await validatorService.connect(validator).linkNodeAddress(nodeAddress2.address, signature2);
+
+        const NODE_MANAGER_ROLE = await nodes.NODE_MANAGER_ROLE();
+        await nodes.grantRole(NODE_MANAGER_ROLE, owner.address);
+
     });
 
     it("should fail to create node if ip is zero", async () => {
@@ -156,70 +159,8 @@ describe("NodesFunctionality", () => {
             .should.be.deep.equal(["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')]);
     });
 
-    it("should test initialize function", async () => {
-        const pubKey = ec.keyFromPrivate(String(privateKeys[2]).slice(2)).getPublic();
-        for(let i = 0; i < 20; i++) {
-            await nodes.createNode(
-                nodeAddress.address,
-                {
-                    port: 8545,
-                    nonce: 0,
-                    ip: "0x7f" + ("000000" + i.toString(16)).slice(-6),
-                    publicIp: "0x7f" + ("000000" + i.toString(16)).slice(-6),
-                    publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
-                    name: "D2" + i,
-                    domainName: "somedomain.name"
-                });
-        }
-
-        let nodesInTree = await nodes.amountOfNodesFromPlaceInTree(128);
-        nodesInTree.should.be.equal(20);
-
-        await nodes.setNodeInMaintenance(0);
-        await nodes.setNodeInMaintenance(1);
-        await nodes.initExit(2);
-        await nodes.completeExit(2);
-        await nodes.initExit(3);
-        await nodes.completeExit(3);
-
-        // remove nodes from invisible map and from tree
-        await nodes.makeNodeVisible(0);
-        await nodes.makeNodeVisible(1);
-        await nodes.makeNodeVisible(2);
-        await nodes.makeNodeVisible(3);
-
-        await nodes.removeNodeFromSpaceToNodes(2);
-        await nodes.removeNodeFromSpaceToNodes(3);
-
-        nodesInTree = await nodes.amountOfNodesFromPlaceInTree(128);
-        nodesInTree.should.be.equal(18);
-
-        await nodes.removeNodesFromPlace(128, nodesInTree.toNumber());
-
-        nodesInTree = await nodes.amountOfNodesFromPlaceInTree(128);
-        nodesInTree.should.be.equal(0);
-
-        await nodes.initializeSegmentTreeAndInvisibleNodes();
-
-        nodesInTree = await nodes.amountOfNodesFromPlaceInTree(128);
-        nodesInTree.should.be.equal(16);
-
-        await (await nodes.spaceOfNodes(0)).freeSpace.should.be.equal(128);
-        await (await nodes.spaceOfNodes(1)).freeSpace.should.be.equal(128);
-        await (await nodes.spaceOfNodes(2)).freeSpace.should.be.equal(0);
-        await (await nodes.spaceOfNodes(3)).freeSpace.should.be.equal(0);
-
-        for (let i = 4; i < 16; i++) {
-            await (await nodes.spaceToNodes(128, i)).toNumber().should.be.equal(i);
-        }
-
-        await (await nodes.spaceToNodes(128, 0)).toNumber().should.be.equal(19);
-        await (await nodes.spaceToNodes(128, 1)).toNumber().should.be.equal(18);
-        await (await nodes.spaceToNodes(128, 2)).toNumber().should.be.equal(17);
-        await (await nodes.spaceToNodes(128, 3)).toNumber().should.be.equal(16);
-    });
-
     describe("when node is created", async () => {
+        const nodeId = 0;
         beforeEach(async () => {
             const pubKey = ec.keyFromPrivate(String(privateKeys[2]).slice(2)).getPublic();
             await nodes.createNode(
@@ -261,6 +202,57 @@ describe("NodesFunctionality", () => {
             await nodes.initExit(0);
 
             await nodes.completeExit(0);
+        });
+
+        it("should change IP", async () => {
+            await nodes.connect(holder).changeIP(0, "0x7f000001", "0x00000000").should.be.eventually.rejectedWith("Caller is not an admin");
+            await nodes.connect(owner).changeIP(0, "0x7f000001", "0x00000000").should.be.eventually.rejectedWith("IP address is zero or is not available");
+            await nodes.connect(owner).changeIP(0, "0x00000000", "0x00000000").should.be.eventually.rejectedWith("IP address is zero or is not available");
+            await nodes.connect(owner).changeIP(0, "0x7f000002", "0x7f000001").should.be.eventually.rejectedWith("IP address is not the same");
+            expect(await nodes.getNodeIP(0)).to.equal("0x7f000001");
+            expect(await nodes.nodesIPCheck("0x7f000001")).to.equal(true);
+            expect(await nodes.nodesIPCheck("0x7f000002")).to.equal(false);
+            await nodes.connect(owner).changeIP(0, "0x7f000002", "0x00000000");
+            expect(await nodes.getNodeIP(0)).to.equal("0x7f000002");
+            expect(await nodes.nodesIPCheck("0x7f000001")).to.equal(false);
+            expect(await nodes.nodesIPCheck("0x7f000002")).to.equal(true);
+            expect(await nodes.nodesIPCheck("0x7f000003")).to.equal(false);
+            await nodes.connect(owner).changeIP(0, "0x7f000003", "0x00000000");
+            expect(await nodes.getNodeIP(0)).to.equal("0x7f000003");
+            expect(await nodes.nodesIPCheck("0x7f000001")).to.equal(false);
+            expect(await nodes.nodesIPCheck("0x7f000002")).to.equal(false);
+            expect(await nodes.nodesIPCheck("0x7f000003")).to.equal(true);
+            await nodes.connect(owner).changeIP(0, "0x7f000001", "0x00000000");
+            expect(await nodes.getNodeIP(0)).to.equal("0x7f000001");
+            expect(await nodes.nodesIPCheck("0x7f000001")).to.equal(true);
+            expect(await nodes.nodesIPCheck("0x7f000002")).to.equal(false);
+            expect(await nodes.nodesIPCheck("0x7f000003")).to.equal(false);
+            await nodes.connect(owner).changeIP(0, "0x7f000002", "0x7f000002");
+            expect(await nodes.getNodeIP(0)).to.equal("0x7f000002");
+            const res = await nodes.nodes(0);
+            expect(res.publicIP).to.equal("0x7f000002");
+            expect(await nodes.nodesIPCheck("0x7f000001")).to.equal(false);
+            expect(await nodes.nodesIPCheck("0x7f000002")).to.equal(true);
+            expect(await nodes.nodesIPCheck("0x7f000003")).to.equal(false);
+        });
+
+        it("should mark node as incompliant", async () => {
+            await nodes.setNodeIncompliant(nodeId)
+                .should.be.eventually.rejectedWith("COMPLIANCE_ROLE is required");
+            await nodes.grantRole(await nodes.COMPLIANCE_ROLE(), owner.address);
+
+            (await nodes.incompliant(nodeId)).should.be.equal(false);
+            await nodes.setNodeIncompliant(nodeId);
+            (await nodes.incompliant(nodeId)).should.be.equal(true);
+        });
+
+        it("should mark node as compliant", async () => {
+            await nodes.grantRole(await nodes.COMPLIANCE_ROLE(), owner.address);
+            await nodes.setNodeIncompliant(nodeId);
+
+            (await nodes.incompliant(nodeId)).should.be.equal(true);
+            await nodes.setNodeCompliant(nodeId);
+            (await nodes.incompliant(nodeId)).should.be.equal(false);
         });
     });
 
@@ -335,6 +327,45 @@ describe("NodesFunctionality", () => {
 
             await nodes.completeExit(1);
         });
+
+        it("should change IP", async () => {
+            await nodes.connect(holder).changeIP(0, "0x7f000001", "0x00000000").should.be.eventually.rejectedWith("Caller is not an admin");
+            await nodes.connect(owner).changeIP(0, "0x7f000001", "0x00000000").should.be.eventually.rejectedWith("IP address is zero or is not available");
+            await nodes.connect(owner).changeIP(0, "0x00000000", "0x00000000").should.be.eventually.rejectedWith("IP address is zero or is not available");
+            await nodes.connect(owner).changeIP(0, "0x7f000002", "0x00000000").should.be.eventually.rejectedWith("IP address is zero or is not available");
+            await nodes.connect(owner).changeIP(0, "0x7f000003", "0x7f000002").should.be.eventually.rejectedWith("IP address is not the same");
+            await nodes.connect(holder).changeIP(1, "0x7f000002", "0x00000000").should.be.eventually.rejectedWith("Caller is not an admin");
+            await nodes.connect(owner).changeIP(1, "0x7f000002", "0x00000000").should.be.eventually.rejectedWith("IP address is zero or is not available");
+            await nodes.connect(owner).changeIP(1, "0x00000000", "0x00000000").should.be.eventually.rejectedWith("IP address is zero or is not available");
+            await nodes.connect(owner).changeIP(1, "0x7f000001", "0x00000000").should.be.eventually.rejectedWith("IP address is zero or is not available");
+            await nodes.connect(owner).changeIP(0, "0x7f000004", "0x7f000002").should.be.eventually.rejectedWith("IP address is not the same");
+            expect(await nodes.getNodeIP(0)).to.equal("0x7f000001");
+            expect(await nodes.nodesIPCheck("0x7f000001")).to.equal(true);
+            expect(await nodes.nodesIPCheck("0x7f000002")).to.equal(true);
+            expect(await nodes.nodesIPCheck("0x7f000003")).to.equal(false);
+            await nodes.connect(owner).changeIP(0, "0x7f000003", "0x00000000");
+            expect(await nodes.getNodeIP(0)).to.equal("0x7f000003");
+            expect(await nodes.nodesIPCheck("0x7f000001")).to.equal(false);
+            expect(await nodes.nodesIPCheck("0x7f000002")).to.equal(true);
+            expect(await nodes.nodesIPCheck("0x7f000003")).to.equal(true);
+            await nodes.connect(owner).changeIP(1, "0x7f000001", "0x00000000");
+            expect(await nodes.getNodeIP(1)).to.equal("0x7f000001");
+            expect(await nodes.nodesIPCheck("0x7f000001")).to.equal(true);
+            expect(await nodes.nodesIPCheck("0x7f000002")).to.equal(false);
+            expect(await nodes.nodesIPCheck("0x7f000003")).to.equal(true);
+            await nodes.connect(owner).changeIP(0, "0x7f000002", "0x00000000");
+            expect(await nodes.getNodeIP(0)).to.equal("0x7f000002");
+            expect(await nodes.nodesIPCheck("0x7f000001")).to.equal(true);
+            expect(await nodes.nodesIPCheck("0x7f000002")).to.equal(true);
+            expect(await nodes.nodesIPCheck("0x7f000003")).to.equal(false);
+            await nodes.connect(owner).changeIP(1, "0x7f000003", "0x7f000003");
+            expect(await nodes.getNodeIP(1)).to.equal("0x7f000003");
+            const res = await nodes.nodes(1);
+            expect(res.publicIP).to.equal("0x7f000003");
+            expect(await nodes.nodesIPCheck("0x7f000001")).to.equal(false);
+            expect(await nodes.nodesIPCheck("0x7f000002")).to.equal(true);
+            expect(await nodes.nodesIPCheck("0x7f000003")).to.equal(true);
+        });
     });
 
     describe("when holder has enough tokens", async () => {
@@ -349,7 +380,11 @@ describe("NodesFunctionality", () => {
             info = "NICE";
             await skaleToken.mint(holder.address, 200, "0x", "0x");
             await skaleToken.mint(nodeAddress.address, 200, "0x", "0x");
+            const CONSTANTS_HOLDER_MANAGER_ROLE = await constantsHolder.CONSTANTS_HOLDER_MANAGER_ROLE();
+            await constantsHolder.grantRole(CONSTANTS_HOLDER_MANAGER_ROLE, owner.address);
             await constantsHolder.setMSR(amount * 5);
+            const VALIDATOR_MANAGER_ROLE = await validatorService.VALIDATOR_MANAGER_ROLE();
+            await validatorService.grantRole(VALIDATOR_MANAGER_ROLE, owner.address);
         });
 
         it("should not allow to create node if new epoch isn't started", async () => {
