@@ -1956,6 +1956,70 @@ describe("Schains", () => {
     });
 
     describe("when 17 nodes, 1 schain and remove schain type", async () => {
+
+        const encryptedSecretKeyContributions: {share: string, publicKey: [string, string]}[][] = [
+            [
+                {
+                    share: "0xc54860dc759e1c6095dfaa33e0b045fc102551e654cec47c7e1e9e2b33354ca6",
+                    publicKey: [
+                        "0xf676847eeff8f52b6f22c8b590aed7f80c493dfa2b7ec1cff3ae3049ed15c767",
+                        "0xe5c51a3f401c127bde74fefce07ed225b45e7975fccf4a10c12557ae8036653b"
+                    ]
+                },
+                {
+                    share: "0xdb68ca3cb297158e493e137ce0ab5fddd2cec34b3a15a4ee1aec9dfcc61dfd15",
+                    publicKey: [
+                        "0xdc1282664acf84218bf29112357c78f46766c783e7b7ead43db07d5d9fd74ca9",
+                        "0x85569644dc1a5bc374d3833a5c5ff3aaa26fa4050ff738d442b34087d4d8f3aa"
+                    ]
+                }
+            ],
+            [
+                {
+                    share: "0x7bb14ad459adba781466c3441e10eeb3148c152b4919b126a0166fd1dac824ba",
+                    publicKey: [
+                        "0x89051df58e7d7cec9c6816d65a17f068409aa37200cd544d263104c1b9dbd037",
+                        "0x435e1a25c9b9f95627ec141e14826f0d0e798c793d470388865dccb461c19773"
+                    ]
+                },
+                {
+                    share: "0xa6b44d487799470fc5da3e359d21b976a146d7345ed90782c1d034d1ceef53bf",
+                    publicKey: [
+                        "0x78b59fd523f23097483958ec5cd4308e5805a261961fe629bf7dc9674ed2ec94",
+                        "0xaa4244b53891263f79f6df64a82592dab46a6be903c29c15170d785e493ff9c2"
+                    ]
+                }
+            ]
+        ];
+        const verificationVectors: {x: {a: string, b: string}, y: {a: string, b: string}}[][] = [
+            [
+                {
+                    x: {
+                        a: "0x2603b519d8eacb84244da4f264a888b292214ed2d2fad9368bc12c2a9a5a5f25",
+                        b: "0x2d8b197411929589919db23a989c1fd619a53a47db14dab3fd952490c7bf0615"
+                    },
+                    y: {
+                        a: "0x2e99d40faf53cc640065fa674948a0a9b169c303afc5d061bac6ef4c7c1fc400",
+                        b: "0x1b9afd2c7c3aeb9ef31f357491d4f1c2b889796297460facaa81ce8c15c3680"
+                    }
+                }
+            ],
+            [
+                {
+                    x: {
+                        a: "0x2a21918482ff2503b08a38dd5bf119b1a0a6bca910dfd9052fa6792f01624f20",
+                        b: "0xa55dec4eb79493ec63aed84aebbc016c2ab11e335d3d465519ffbfa15416ced",
+                    },
+                    y: {
+                        a: "0x13b919159469023fad82fedae095a2359f600f0a8a09f32bab6250e1688f0852",
+                        b: "0x269279ef4c2fcd6ca475c522406444ee79ffa796a645f9953b3d4d003f8f7294"
+                    }
+                }
+            ]
+        ];
+        const secretKeyContributions: {share: string, publicKey: [string, string]}[] = [];
+        const verificationVectorNew: any = [];
+
         before(async () => {
             cleanContracts = await makeSnapshot();
             const deposit = await schains.getSchainPrice(2, 5);
@@ -1990,6 +2054,13 @@ describe("Schains", () => {
                 ["0x" + hexValue(pubKey.x.toString('hex')), "0x" + hexValue(pubKey.y.toString('hex'))], // public key
                 "D2-ff", // name
                 "somedomain.name");
+
+            for (let i = 0; i < 16; i++) {
+                secretKeyContributions[i] = encryptedSecretKeyContributions[0][0];
+            }
+            for (let i = 0; i < 11; i++) {
+                verificationVectorNew[i] = verificationVectors[i % 2][0];
+            }
         });
 
         after(async () => {
@@ -2006,10 +2077,37 @@ describe("Schains", () => {
         it("should make a node rotation", async () => {
             const rotIndex = 0;
             await skaleManager.connect(nodeAddress).nodeExit(rotIndex);
-            for(let i = 1; i < 17; i++) {
-                expect((await nodes.spaceOfNodes(i)).freeSpace).to.be.equal(124)
+            const pubKey = ec.keyFromPrivate(String(privateKeys[3]).slice(2)).getPublic();
+            await skaleManager.connect(nodeAddress).createNode(
+                8545, // port
+                0, // nonce
+                "0x7f0000fe", // ip
+                "0x7f0000fe", // public ip
+                ["0x" + hexValue(pubKey.x.toString('hex')), "0x" + hexValue(pubKey.y.toString('hex'))], // public key
+                "D2-fe", // name
+                "somedomain.name");
+            await skaleDKG.connect(nodeAddress).broadcast(
+                stringValue(web3.utils.soliditySha3("d1")),
+                1,
+                verificationVectorNew,
+                secretKeyContributions
+            );
+            await skipTime(ethers, 1800);
+            await skaleDKG.connect(nodeAddress).complaint(
+                stringValue(web3.utils.soliditySha3("d1")),
+                1,
+                16
+            );
+            await skaleDKG.setSuccessfulDKGPublic(
+                stringValue(web3.utils.soliditySha3("d1")),
+            );
+
+            for(let i = 1; i < 18; i++) {
+                if (i !== 16) {
+                    expect((await nodes.spaceOfNodes(i)).freeSpace).to.be.equal(124);
+                }
             }
-            expect((await nodes.spaceOfNodes(0)).freeSpace).to.be.equal(0)
+            expect((await nodes.spaceOfNodes(16)).freeSpace).to.be.equal(128)
         });
 
         it("should make a node rotation after removing schain type", async () => {
@@ -2026,75 +2124,6 @@ describe("Schains", () => {
                 "D2-fe", // name
                 "somedomain.name");
 
-            const encryptedSecretKeyContributions: {share: string, publicKey: [string, string]}[][] = [
-                [
-                    {
-                        share: "0xc54860dc759e1c6095dfaa33e0b045fc102551e654cec47c7e1e9e2b33354ca6",
-                        publicKey: [
-                            "0xf676847eeff8f52b6f22c8b590aed7f80c493dfa2b7ec1cff3ae3049ed15c767",
-                            "0xe5c51a3f401c127bde74fefce07ed225b45e7975fccf4a10c12557ae8036653b"
-                        ]
-                    },
-                    {
-                        share: "0xdb68ca3cb297158e493e137ce0ab5fddd2cec34b3a15a4ee1aec9dfcc61dfd15",
-                        publicKey: [
-                            "0xdc1282664acf84218bf29112357c78f46766c783e7b7ead43db07d5d9fd74ca9",
-                            "0x85569644dc1a5bc374d3833a5c5ff3aaa26fa4050ff738d442b34087d4d8f3aa"
-                        ]
-                    }
-                ],
-                [
-                    {
-                        share: "0x7bb14ad459adba781466c3441e10eeb3148c152b4919b126a0166fd1dac824ba",
-                        publicKey: [
-                            "0x89051df58e7d7cec9c6816d65a17f068409aa37200cd544d263104c1b9dbd037",
-                            "0x435e1a25c9b9f95627ec141e14826f0d0e798c793d470388865dccb461c19773"
-                        ]
-                    },
-                    {
-                        share: "0xa6b44d487799470fc5da3e359d21b976a146d7345ed90782c1d034d1ceef53bf",
-                        publicKey: [
-                            "0x78b59fd523f23097483958ec5cd4308e5805a261961fe629bf7dc9674ed2ec94",
-                            "0xaa4244b53891263f79f6df64a82592dab46a6be903c29c15170d785e493ff9c2"
-                        ]
-                    }
-                ]
-            ];
-            const verificationVectors = [
-                [
-                    {
-                        x: {
-                            a: "0x2603b519d8eacb84244da4f264a888b292214ed2d2fad9368bc12c2a9a5a5f25",
-                            b: "0x2d8b197411929589919db23a989c1fd619a53a47db14dab3fd952490c7bf0615"
-                        },
-                        y: {
-                            a: "0x2e99d40faf53cc640065fa674948a0a9b169c303afc5d061bac6ef4c7c1fc400",
-                            b: "0x1b9afd2c7c3aeb9ef31f357491d4f1c2b889796297460facaa81ce8c15c3680"
-                        }
-                    }
-                ],
-                [
-                    {
-                        x: {
-                            a: "0x2a21918482ff2503b08a38dd5bf119b1a0a6bca910dfd9052fa6792f01624f20",
-                            b: "0xa55dec4eb79493ec63aed84aebbc016c2ab11e335d3d465519ffbfa15416ced",
-                        },
-                        y: {
-                            a: "0x13b919159469023fad82fedae095a2359f600f0a8a09f32bab6250e1688f0852",
-                            b: "0x269279ef4c2fcd6ca475c522406444ee79ffa796a645f9953b3d4d003f8f7294"
-                        }
-                    }
-                ]
-            ];
-            const secretKeyContributions = [];
-            for (let i = 0; i < 16; i++) {
-                secretKeyContributions[i] = encryptedSecretKeyContributions[0][0];
-            }
-
-            const verificationVectorNew = [];
-            for (let i = 0; i < 11; i++) {
-                verificationVectorNew[i] = verificationVectors[i % 2][0];
-            }
             await skaleDKG.connect(nodeAddress).broadcast(
                 stringValue(web3.utils.soliditySha3("d1")),
                 1,
@@ -2124,10 +2153,107 @@ describe("Schains", () => {
             await schainsInternal.addSchainType(32, 16);
             const rotIndex = 0;
             await skaleManager.connect(nodeAddress).nodeExit(rotIndex);
-            for(let i = 1; i < 17; i++) {
-                expect((await nodes.spaceOfNodes(i)).freeSpace).to.be.equal(124)
+            const pubKey = ec.keyFromPrivate(String(privateKeys[3]).slice(2)).getPublic();
+            await skaleManager.connect(nodeAddress).createNode(
+                8545, // port
+                0, // nonce
+                "0x7f0000fe", // ip
+                "0x7f0000fe", // public ip
+                ["0x" + hexValue(pubKey.x.toString('hex')), "0x" + hexValue(pubKey.y.toString('hex'))], // public key
+                "D2-fe", // name
+                "somedomain.name");
+
+            await skaleDKG.connect(nodeAddress).broadcast(
+                stringValue(web3.utils.soliditySha3("d1")),
+                1,
+                verificationVectorNew,
+                secretKeyContributions
+            );
+            await skipTime(ethers, 1800);
+            await skaleDKG.connect(nodeAddress).complaint(
+                stringValue(web3.utils.soliditySha3("d1")),
+                1,
+                16
+            );
+            await skaleDKG.setSuccessfulDKGPublic(
+                stringValue(web3.utils.soliditySha3("d1")),
+            );
+
+            for(let i = 1; i < 18; i++) {
+                if (i !== 16) {
+                    expect((await nodes.spaceOfNodes(i)).freeSpace).to.be.equal(124);
+                }
             }
-            expect((await nodes.spaceOfNodes(0)).freeSpace).to.be.equal(0)
+            expect((await nodes.spaceOfNodes(16)).freeSpace).to.be.equal(128)
+        });
+
+        it("should make a node rotation creating an schain of new schain type", async () => {
+            await schainsInternal.removeSchainType(1);
+            await schainsInternal.addSchainType(32, 16);
+            const deposit = await schains.getSchainPrice(6, 5);
+            const rotIndex = 0;
+            await skaleManager.connect(nodeAddress).nodeExit(rotIndex);
+            await skaleDKG.setSuccessfulDKGPublic(
+                stringValue(web3.utils.soliditySha3("d1")),
+            );
+            await skipTime(ethers, 46200);
+            await schains.addSchain(
+                holder.address,
+                deposit,
+                web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 6, 0, "d2"]),
+            );
+            await wallets.rechargeSchainWallet(stringValue(web3.utils.soliditySha3("d2")), {value: 1e20.toString()});
+            await skaleDKG.setSuccessfulDKGPublic(
+                stringValue(web3.utils.soliditySha3("d2")),
+            );
+            const pubKey = ec.keyFromPrivate(String(privateKeys[3]).slice(2)).getPublic();
+            await skaleManager.connect(nodeAddress).createNode(
+                8545, // port
+                0, // nonce
+                "0x7f0000fe", // ip
+                "0x7f0000fe", // public ip
+                ["0x" + hexValue(pubKey.x.toString('hex')), "0x" + hexValue(pubKey.y.toString('hex'))], // public key
+                "D2-fe", // name
+                "somedomain.name");
+            const rotIndex2 = 1;
+            while(await nodes.getNodeStatus(rotIndex2) !== 2) {
+                await skaleManager.connect(nodeAddress).nodeExit(rotIndex2);
+            }
+            await skaleDKG.setSuccessfulDKGPublic(
+                stringValue(web3.utils.soliditySha3("d2")),
+            );
+            await skaleManager.connect(nodeAddress).createNode(
+                8545, // port
+                0, // nonce
+                "0x7f0000fd", // ip
+                "0x7f0000fd", // public ip
+                ["0x" + hexValue(pubKey.x.toString('hex')), "0x" + hexValue(pubKey.y.toString('hex'))], // public key
+                "D2-fd", // name
+                "somedomain.name");
+
+            await skaleDKG.connect(nodeAddress).broadcast(
+                stringValue(web3.utils.soliditySha3("d1")),
+                2,
+                verificationVectorNew,
+                secretKeyContributions
+            );
+            await skipTime(ethers, 1800);
+            await skaleDKG.connect(nodeAddress).complaint(
+                stringValue(web3.utils.soliditySha3("d1")),
+                2,
+                16
+            );
+            await skaleDKG.setSuccessfulDKGPublic(
+                stringValue(web3.utils.soliditySha3("d1")),
+            );
+
+            for(let i = 2; i < 18; i++) {
+                if (i !== 16) {
+                    expect((await nodes.spaceOfNodes(i)).freeSpace).to.be.equal(92);
+                }
+            }
+            expect((await nodes.spaceOfNodes(18)).freeSpace).to.be.equal(124);
+            expect((await nodes.spaceOfNodes(16)).freeSpace).to.be.equal(96);
         });
     });
 });
