@@ -24,6 +24,7 @@
 pragma solidity 0.6.10;
 pragma experimental ABIEncoderV2;
 
+import "@openzeppelin/contracts-ethereum-package/contracts/math/SafeMath.sol";
 import "../SkaleDKG.sol";
 import "../Wallets.sol";
 import "../Decryption.sol";
@@ -37,6 +38,7 @@ import "../utils/FieldOperations.sol";
  * Joint-Feldman protocol.
  */
 library SkaleDkgResponse {
+    using SafeMath for uint;
     using G2Operations for G2Operations.G2Point;
 
     function response(
@@ -54,6 +56,12 @@ library SkaleDkgResponse {
             .getNodeIndexInGroup(schainHash, fromNodeIndex);
         require(index < channels[schainHash].n, "Node is not in this group");
         require(complaints[schainHash].nodeToComplaint == fromNodeIndex, "Not this Node");
+        require(
+            complaints[schainHash].startComplaintBlockTimestamp.add(
+                _getComplaintTimelimit(contractManager)
+            ) > block.timestamp,
+            "Incorrect time for response"
+        );
         require(complaints[schainHash].isResponse, "Have not submitted pre-response data");
         uint badNode = _verifyDataAndSlash(
             schainHash,
@@ -128,6 +136,10 @@ library SkaleDkgResponse {
             g2.x.b, g2.x.a, g2.y.b, g2.y.a,
             g1.a, g1.b,
             tmp.x.b, tmp.x.a, tmp.y.b, tmp.y.a);
+    }
+
+    function _getComplaintTimelimit(ContractManager contractManager) private view returns (uint) {
+        return ConstantsHolder(contractManager.getConstantsHolder()).complaintTimelimit();
     }
 
 }
