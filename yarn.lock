@@ -780,10 +780,10 @@
   resolved "https://registry.yarnpkg.com/@sindresorhus/is/-/is-0.14.0.tgz#9fb3a3cf3132328151f353de4632e01e52102bea"
   integrity sha512-9NET910DNaIPngYnLLPeg+Ogzqsi9uM4mSboU5y6p8S5DzMTVEsJZrawi+BoDNUVBa2DhJqQYUFvMDfgU062LQ==
 
-"@skalenetwork/skale-manager-interfaces@^0.1.1":
-  version "0.1.1"
-  resolved "https://registry.yarnpkg.com/@skalenetwork/skale-manager-interfaces/-/skale-manager-interfaces-0.1.1.tgz#4684bdcc80516ef1b986003c6a513e1af3e4e21a"
-  integrity sha512-3/yLV82VQCBt69XXDlUcxlkQRV4GSWHPTl9kcJqunqiFmYnICKYQVj0EDdrOs9EY3X0hFqPQVcapcBjzx1BE0g==
+"@skalenetwork/skale-manager-interfaces@^0.1.2":
+  version "0.1.2"
+  resolved "https://registry.yarnpkg.com/@skalenetwork/skale-manager-interfaces/-/skale-manager-interfaces-0.1.2.tgz#88e543c8cc298cd0cc9559892d746d2d74786da8"
+  integrity sha512-gapSQJahwWMlTB/xp/kMzB6k+9+Skx/N0fvEloiW4CUrkGkSa8+fj16YmUXX45p1hOc45W+JydiJPNgZtx32Dg==
 
 "@solidity-parser/parser@^0.11.0":
   version "0.11.1"
