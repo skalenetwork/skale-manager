@@ -57,7 +57,9 @@ library SkaleDkgResponse {
         require(index < channels[schainHash].n, "Node is not in this group");
         require(complaints[schainHash].nodeToComplaint == fromNodeIndex, "Not this Node");
         require(
-            complaints[schainHash].startComplaintBlockTimestamp.add(_getComplaintTimelimit(contractManager)) > block.timestamp,
+            complaints[schainHash].startComplaintBlockTimestamp.add(
+                _getComplaintTimelimit(contractManager)
+            ) > block.timestamp,
             "Incorrect time for response"
         );
         require(complaints[schainHash].isResponse, "Have not submitted pre-response data");

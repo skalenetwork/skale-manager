@@ -702,9 +702,7 @@ describe("SkaleDKG", () => {
             });
 
             describe("should not front run complaint with missing broadcast", async () => {
-                var resResp: any;
-                var complainerIndex = 0;
-                var accusedIndex = 1;
+                let resResp: any;
                 before(async () => {
                     twoSchainAreCreated = await makeSnapshot();
                     await skaleDKG.connect(validatorsAccount[0]).broadcast(
@@ -749,9 +747,7 @@ describe("SkaleDKG", () => {
             });
 
             describe("should not front run complaint with missing alright", async () => {
-                var resResp: any;
-                var complainerIndex = 0;
-                var accusedIndex = 1;
+                let resResp: any;
                 before(async () => {
                     twoSchainAreCreated = await makeSnapshot();
                     await skaleDKG.connect(validatorsAccount[0]).broadcast(
@@ -804,9 +800,7 @@ describe("SkaleDKG", () => {
             });
 
             describe("should not front run complaint with missing response", async () => {
-                var resResp: any;
-                var complainerIndex = 0;
-                var accusedIndex = 1;
+                let resResp: any;
                 before(async () => {
                     twoSchainAreCreated = await makeSnapshot();
                     await skaleDKG.connect(validatorsAccount[0]).broadcast(
