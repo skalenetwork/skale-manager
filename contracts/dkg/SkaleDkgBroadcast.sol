@@ -79,6 +79,10 @@ library SkaleDkgBroadcast {
             secretKeyContribution.length == n,
             "Incorrect number of secret key shares"
         );
+        require(
+            channels[schainHash].startedBlockTimestamp.add(_getComplaintTimelimit(contractManager)) > block.timestamp,
+            "Incorrect time for broadcast"
+        );
         (uint index, ) = SkaleDKG(contractManager.getContract("SkaleDKG")).checkAndReturnIndexInGroup(
             schainHash, nodeIndex, true
         );
@@ -102,6 +106,10 @@ library SkaleDkgBroadcast {
 
     function getT(uint n) public pure returns (uint) {
         return n.mul(2).add(1).div(3);
+    }
+
+    function _getComplaintTimelimit(ContractManager contractManager) private view returns (uint) {
+        return ConstantsHolder(contractManager.getConstantsHolder()).complaintTimelimit();
     }
 
 }
