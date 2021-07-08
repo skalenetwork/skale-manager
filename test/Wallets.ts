@@ -35,8 +35,12 @@ chai.use(solidity);
 
 async function ethSpent(response: ContractTransaction) {
     const gasUsed = (await response.wait()).gasUsed;
-    const cost = response.gasPrice.toNumber() * gasUsed.toNumber();
-    return parseFloat(web3.utils.fromWei(cost.toString()));
+    if (response.gasPrice) {
+        const cost = response.gasPrice.toNumber() * gasUsed.toNumber();
+        return parseFloat(web3.utils.fromWei(cost.toString()));
+    } else {
+        throw new ReferenceError("gasPrice is undefined");
+    }
 }
 
 async function getBalance(address: string) {
