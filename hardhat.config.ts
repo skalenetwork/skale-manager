@@ -35,12 +35,12 @@ function getAccounts() {
   const defaultBalance = utils.parseEther("1000000").toString();
 
   [
-    process.env.PRIVATE_KEY_1,
-    process.env.PRIVATE_KEY_2,
-    process.env.PRIVATE_KEY_3,
-    process.env.PRIVATE_KEY_4,
-    process.env.PRIVATE_KEY_5,
-    process.env.PRIVATE_KEY_6
+    process.env.INSECURE_PRIVATE_KEY_1,
+    process.env.INSECURE_PRIVATE_KEY_2,
+    process.env.INSECURE_PRIVATE_KEY_3,
+    process.env.INSECURE_PRIVATE_KEY_4,
+    process.env.INSECURE_PRIVATE_KEY_5,
+    process.env.INSECURE_PRIVATE_KEY_6
   ].forEach( (key) => {
     if (key) {
       accounts.push({
@@ -111,7 +111,7 @@ const config: HardhatUserConfig = {
     }
   },
   etherscan: {
-    apiKey: "QSW5NZN9RCYXSZWVB32DMUN83UZ5EJUREI"
+    apiKey: process.env.ETHERSCAN
   }
 };
 
