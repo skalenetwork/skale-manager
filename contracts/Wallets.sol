@@ -61,6 +61,15 @@ contract Wallets is Permissions, IWallets {
     event NodeRefundedBySchain(address node, bytes32 schainHash, uint amount);
 
     /**
+     * @dev Emitted when the validator withdrawn funds from validator wallet
+     */
+    event WithdrawFromValidatorWallet(uint indexed validatorId, uint amount);
+    /**
+     * @dev Emitted when the validator withdrawn funds from validator wallet
+     */
+    event WithdrawFromSchainWallet(bytes32 indexed schainHash, uint amount);
+
+    /**
      * @dev Is executed on a call to the contract with empty calldata. 
      * This is the function that is executed on plain Ether transfers,
      * so validator or schain owner can use usual transfer ether to recharge wallet.
@@ -177,6 +186,7 @@ contract Wallets is Permissions, IWallets {
     function withdrawFundsFromSchainWallet(address payable schainOwner, bytes32 schainHash) external allow("Schains") {
         uint amount = _schainWallets[schainHash];
         delete _schainWallets[schainHash];
+        emit WithdrawFromSchainWallet(schainHash, amount);
         schainOwner.transfer(amount);
     }
     
@@ -192,6 +202,7 @@ contract Wallets is Permissions, IWallets {
         uint validatorId = validatorService.getValidatorId(msg.sender);
         require(amount <= _validatorWallets[validatorId], "Balance is too low");
         _validatorWallets[validatorId] = _validatorWallets[validatorId].sub(amount);
+        emit WithdrawFromValidatorWallet(validatorId, amount);
         msg.sender.transfer(amount);
     }
 
