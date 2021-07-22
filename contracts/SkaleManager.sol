@@ -54,6 +54,11 @@ contract SkaleManager is IERC777Recipient, Permissions {
     bytes32 public constant SCHAIN_DELETER_ROLE = keccak256("SCHAIN_DELETER_ROLE");
 
     /**
+     * @dev Emitted when the version was updated
+     */
+    event VersionUpdated(string oldVersion, string newVersion);
+
+    /**
      * @dev Emitted when bounty is received.
      */
     event BountyReceived(
@@ -191,6 +196,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
     }
 
     function setVersion(string calldata newVersion) external onlyOwner {
+        emit VersionUpdated(version, newVersion);
         version = newVersion;
     }
 

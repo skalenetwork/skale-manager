@@ -33,6 +33,11 @@ contract SlashingTable is Permissions {
     mapping (uint => uint) private _penalties;
 
     bytes32 public constant PENALTY_SETTER_ROLE = keccak256("PENALTY_SETTER_ROLE");
+
+    /**
+     * @dev Emitted when penalty was added
+     */
+    event PenaltyAdded(uint indexed offenseHash, string offense, uint penalty);
     
     /**
      * @dev Allows the Owner to set a slashing penalty in SKL tokens for a
@@ -40,7 +45,9 @@ contract SlashingTable is Permissions {
      */
     function setPenalty(string calldata offense, uint penalty) external {
         require(hasRole(PENALTY_SETTER_ROLE, msg.sender), "PENALTY_SETTER_ROLE is required");
-        _penalties[uint(keccak256(abi.encodePacked(offense)))] = penalty;
+        uint offenseHash = uint(keccak256(abi.encodePacked(offense)));
+        _penalties[offenseHash] = penalty;
+        emit PenaltyAdded(offenseHash, offense, penalty);
     }
 
     /**

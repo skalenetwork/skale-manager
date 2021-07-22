@@ -64,8 +64,9 @@ contract Wallets is Permissions, IWallets {
      * @dev Emitted when the validator withdrawn funds from validator wallet
      */
     event WithdrawFromValidatorWallet(uint indexed validatorId, uint amount);
+
     /**
-     * @dev Emitted when the validator withdrawn funds from validator wallet
+     * @dev Emitted when the schain owner withdrawn funds from schain wallet
      */
     event WithdrawFromSchainWallet(bytes32 indexed schainHash, uint amount);
 
