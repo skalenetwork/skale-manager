@@ -31,6 +31,7 @@
     "docs": "scripts/prepare-docs.sh",
     "fullcheck": "yarn lint && yarn tsc && yarn tslint && yarn slither",
     "hooks": "git config core.hooksPath .githooks || true",
+    "no-hooks": "git config core.hooksPath .git/hooks",
     "lint": "npx solhint \"contracts/**/*.sol\"",
     "prepare": "yarn compile && yarn hooks",
     "slither": "slither .",
