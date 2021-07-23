@@ -1,3 +1,12 @@
 #!/bin/bash
 
+set -e
+
+GPG_SIGN_ENABLED=$(git config commit.gpgsign || true)
+if ! [[ "$GPG_SIGN_ENABLED" == "true" ]]
+then
+    echo "Enable GPG signature for new commits";
+    exit 1;
+fi
+
 yarn fullcheck
