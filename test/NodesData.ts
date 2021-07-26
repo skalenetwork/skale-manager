@@ -98,7 +98,7 @@ describe("NodesData", () => {
                 publicIp: "0x7f000002",
                 publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
                 name: "d2",
-                domainName: "somedomain.name"
+                domainName: "some.domain.name"
             });
 
         const node = await nodes.nodes(0);
@@ -137,7 +137,7 @@ describe("NodesData", () => {
                     publicIp: "0x7f000002",
                     publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
                     name: "d2",
-                    domainName: "somedomain.name"
+                    domainName: "some.domain.name"
                 });
         });
 
@@ -218,37 +218,37 @@ describe("NodesData", () => {
 
         it("should check node domain name", async () => {
             const nodeDomainName = await nodes.getNodeDomainName(0);
-            nodeDomainName.should.be.equal("somedomain.name");
+            nodeDomainName.should.be.equal("some.domain.name");
         });
 
         it("should modify node domain name by node owner", async () => {
-            await nodes.connect(nodeAddress).setDomainName(0, "newdomain.name");
+            await nodes.connect(nodeAddress).setDomainName(0, "new.domain.name");
             const nodeDomainName = await nodes.getNodeDomainName(0);
-            nodeDomainName.should.be.equal("newdomain.name");
+            nodeDomainName.should.be.equal("new.domain.name");
         });
 
         it("should modify node domain name by validator", async () => {
-            await nodes.connect(validator).setDomainName(0, "newdomain.name");
+            await nodes.connect(validator).setDomainName(0, "new.domain.name");
             const nodeDomainName = await nodes.getNodeDomainName(0);
-            nodeDomainName.should.be.equal("newdomain.name");
+            nodeDomainName.should.be.equal("new.domain.name");
         });
 
         it("should modify node domain name by contract owner", async () => {
-            await nodes.setDomainName(0, "newdomain.name");
+            await nodes.setDomainName(0, "new.domain.name");
             const nodeDomainName = await nodes.getNodeDomainName(0);
-            nodeDomainName.should.be.equal("newdomain.name");
+            nodeDomainName.should.be.equal("new.domain.name");
         });
 
         it("should modify node domain name by NODE_MANAGER_ROLE", async () => {
             const NODE_MANAGER_ROLE = await nodes.NODE_MANAGER_ROLE();
             await nodes.grantRole(NODE_MANAGER_ROLE, admin.address);
-            await nodes.connect(admin).setDomainName(0, "newdomain.name");
+            await nodes.connect(admin).setDomainName(0, "new.domain.name");
             const nodeDomainName = await nodes.getNodeDomainName(0);
-            nodeDomainName.should.be.equal("newdomain.name");
+            nodeDomainName.should.be.equal("new.domain.name");
         });
 
         it("should not modify node domain name by hacker", async () => {
-            await nodes.connect(hacker).setDomainName(0, "newdomain.name")
+            await nodes.connect(hacker).setDomainName(0, "new.domain.name")
                 .should.be.eventually.rejectedWith("Validator address does not exist");
         });
 
@@ -469,7 +469,7 @@ describe("NodesData", () => {
                         publicIp: "0x7f000004",
                         publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
                         name: "d3",
-                        domainName: "somedomain.name"
+                        domainName: "some.domain.name"
                     });
             });
 
@@ -516,7 +516,7 @@ describe("NodesData", () => {
                     publicIp: "0x7f000001",
                     publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
                     name: "d1",
-                    domainName: "somedomain.name"
+                    domainName: "some.domain.name"
                 });
             await nodes.createNode(
                 nodeAddress.address,
@@ -527,7 +527,7 @@ describe("NodesData", () => {
                     publicIp: "0x7f000002",
                     publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
                     name: "d2",
-                    domainName: "somedomain.name"
+                    domainName: "some.domain.name"
                 });
         });
 
@@ -571,7 +571,7 @@ describe("NodesData", () => {
                         publicIp: "0x7f000003",
                         publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
                         name: "d3",
-                        domainName: "somedomain.name"
+                        domainName: "some.domain.name"
                     });
                 await nodes.createNode(
                     nodeAddress.address,
@@ -582,7 +582,7 @@ describe("NodesData", () => {
                         publicIp: "0x7f000004",
                         publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
                         name: "d4",
-                        domainName: "somedomain.name"
+                        domainName: "some.domain.name"
                     });
             });
 

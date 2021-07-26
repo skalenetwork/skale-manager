@@ -68,9 +68,9 @@ contract Wallets is Permissions, IWallets {
     receive() external payable {
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
         SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
-        bytes32[] memory schainHashs = schainsInternal.getSchainHashsByAddress(msg.sender);
-        if (schainHashs.length == 1) {
-            rechargeSchainWallet(schainHashs[0]);
+        bytes32[] memory schainHashes = schainsInternal.getSchainHashesByAddress(msg.sender);
+        if (schainHashes.length == 1) {
+            rechargeSchainWallet(schainHashes[0]);
         } else {
             uint validatorId = validatorService.getValidatorId(msg.sender);
             rechargeValidatorWallet(validatorId);
@@ -172,7 +172,7 @@ contract Wallets is Permissions, IWallets {
      * `schainHash` - schain wallet from which money is withdrawn
      * 
      * Requirements: 
-     * - Executable only after initing delete schain
+     * - Executable only after initializing delete schain
      */
     function withdrawFundsFromSchainWallet(address payable schainOwner, bytes32 schainHash) external allow("Schains") {
         uint amount = _schainWallets[schainHash];
@@ -181,7 +181,7 @@ contract Wallets is Permissions, IWallets {
     }
     
     /**
-     * @dev Withdraws money from vaildator wallet.
+     * @dev Withdraws money from validator wallet.
      * `amount` - the amount of money in wei
      * 
      * Requirements: 

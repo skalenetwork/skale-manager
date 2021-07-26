@@ -84,7 +84,7 @@ describe("createSchains", () => {
                 "0x7f" + ("000000" + nodeId.toString(16)).slice(-6), // public ip
                 ["0x" + publicKey.x.toString('hex'), "0x" + publicKey.y.toString('hex')], // public key
                 "d2-" + nodeId, // name)
-                "somedomain.name");
+                "some.domain.name");
 
             const nodesAmount = nodeId + 1;
             if (nodesAmount >= 16) {

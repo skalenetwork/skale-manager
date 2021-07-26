@@ -1,0 +1,12 @@
+agpl
+ecdh
+IERC1820
+IERC20
+IERC777
+mintable
+keccak256
+precompiled
+premined
+reentrancy
+secp256k1
+untrusted

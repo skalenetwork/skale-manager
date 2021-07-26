@@ -95,7 +95,7 @@ contract NodeRotation is Permissions {
     function freezeSchains(uint nodeIndex) external allow("SkaleManager") {
         bytes32[] memory schains = SchainsInternal(
             contractManager.getContract("SchainsInternal")
-        ).getSchainHashsForNode(nodeIndex);
+        ).getSchainHashesForNode(nodeIndex);
         for (uint i = 0; i < schains.length; i++) {
             if (schains[i] != bytes32(0)) {
                 require(

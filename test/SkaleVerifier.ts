@@ -231,7 +231,7 @@ describe("SkaleVerifier", () => {
                         publicIp: "0x7f0000" + hexIndex,
                         publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
                         name: "d2" + hexIndex,
-                        domainName: "somedomain.name"
+                        domainName: "some.domain.name"
                     });
             }
 

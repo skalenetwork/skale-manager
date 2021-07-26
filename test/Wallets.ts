@@ -128,8 +128,8 @@ describe("Wallets", () => {
         await validatorService.grantRole(VALIDATOR_MANAGER_ROLE, owner.address);
         const SCHAIN_TYPE_MANAGER_ROLE = await schainsInternal.SCHAIN_TYPE_MANAGER_ROLE();
         await schainsInternal.grantRole(SCHAIN_TYPE_MANAGER_ROLE, owner.address);
-        const SCHAIN_DELETER_ROLE = await skaleManager.SCHAIN_DELETER_ROLE();
-        await skaleManager.grantRole(SCHAIN_DELETER_ROLE, owner.address);
+        const SCHAIN_REMOVAL_ROLE = await skaleManager.SCHAIN_REMOVAL_ROLE();
+        await skaleManager.grantRole(SCHAIN_REMOVAL_ROLE, owner.address);
     });
 
     beforeEach(async () => {

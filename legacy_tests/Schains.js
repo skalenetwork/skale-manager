@@ -36,7 +36,7 @@ async function createSchain(typeOfSchain, lifetime) {
     //init.Schains.getPastEvents("GroupGenerated", {fromBlock: blockNumber, toBlock:blockNumber}).then(function(events) {console.log(events)});
     //init.Schains.getPastEvents("SchainCreated", {fromBlock: blockNumber, toBlock:blockNumber}).then(function(events) {console.log(events)});
     //console.log(schainName);
-    console.log("Schain", schainName, "created with", res.gasUsed, "gas comsumption");
+    console.log("Schain", schainName, "created with", res.gasUsed, "gas consumption");
     return schainName;
 }
 
@@ -59,7 +59,7 @@ async function getSchainNodes(schainName) {
 }
 
 async function getSchainsForNode(nodeIndex) {
-    let res = await init.SchainsInternal.methods.getSchainHashsForNode(nodeIndex).call();
+    let res = await init.SchainsInternal.methods.getSchainHashesForNode(nodeIndex).call();
     console.log(res);
     let res1;
     for (let i = 0; i < res.length; i++) {

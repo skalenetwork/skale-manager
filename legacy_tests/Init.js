@@ -8,7 +8,6 @@ let currentNetwork = networks['networks'][networkName];
 const LINE = '======================================';
 
 const Web3 = require('web3');
-// const PrivateKeyProvider = require("@truffle/hdwallet-provider");
 // const provider = new PrivateKeyProvider(privateKey, `http://${currentNetwork['host']}:${currentNetwork['port']}`);
 // const web3 = new Web3(provider);
 const web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));

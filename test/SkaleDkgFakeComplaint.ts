@@ -832,7 +832,7 @@ describe("SkaleDKG", () => {
         ]
     ];
 
-    const verificationVectorMult = [
+    const verificationVectorMultiplication = [
         {
             x: {
                 a: "0x82977d3decd6310d7c6b88fb199793d75a24a30c5360c19629bc894d987ebc7",
@@ -925,7 +925,7 @@ describe("SkaleDKG", () => {
                     publicIp: "0x7f0000" + hexIndex,
                     publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
                     name: "d2" + hexIndex,
-                    domainName: "somedomain.name"
+                    domainName: "some.domain.name"
                 });
         }
         await schainsInternal.addSchainType(1, 16);
@@ -996,12 +996,12 @@ describe("SkaleDKG", () => {
 
                 await skipTime(ethers, 1800);
 
-                let isComplPossible = await skaleDKG.connect(validatorsAccount[0]).isComplaintPossible(
+                let isComplaintPossible = await skaleDKG.connect(validatorsAccount[0]).isComplaintPossible(
                     stringValue(web3.utils.soliditySha3(schainName)),
                     0,
                     1);
 
-                assert(isComplPossible.should.be.true);
+                assert(isComplaintPossible.should.be.true);
 
                 await skaleDKG.connect(validatorsAccount[0]).complaint(
                     stringValue(web3.utils.soliditySha3(schainName)),
@@ -1009,13 +1009,13 @@ describe("SkaleDKG", () => {
                     1
                 );
 
-                isComplPossible = await skaleDKG.connect(validatorsAccount[0]).isComplaintPossible(
+                isComplaintPossible = await skaleDKG.connect(validatorsAccount[0]).isComplaintPossible(
                     stringValue(web3.utils.soliditySha3(schainName)),
                     2,
                     1
                 );
 
-                assert(isComplPossible.should.be.false);
+                assert(isComplaintPossible.should.be.false);
             });
 
             it("should proceed response", async () => {
@@ -1047,7 +1047,7 @@ describe("SkaleDKG", () => {
                     stringValue(web3.utils.soliditySha3(schainName)),
                     2,
                     verificationVectors[2],
-                    verificationVectorMult,
+                    verificationVectorMultiplication,
                     encryptedSecretKeyContributions[2]
                 );
 

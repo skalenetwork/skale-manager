@@ -5,11 +5,11 @@
 <!-- vscode-markdown-toc -->
 
 -   1.  [Overview](#Overview)
--   2.  [Smart contracts in SKALE Manager](#SmartcontractsinSKALEManager)
+-   2.  [Smart contracts in SKALE Manager](#SmartContractsInSKALEManager)
         	_ 2.1. [Schains](#Schains)
         	_ 2.2. [SchainsInternal](#SchainsInternal)
         	_ 2.3. [SkaleManager](#SkaleManager)
--   3.  [Schain functions](#Schainsfunctions)
+-   3.  [Schain functions](#SchainsFunctions)
         	_ 3.1. [Schains.addSchain](#Schains.addSchain)
         	_ 3.2. [Schains.addSchainByFoundation](#Schains.addSchainByFoundation)
         	_ 3.3. [Schains.deleteSchain](#Schains.deleteSchain)
@@ -33,7 +33,7 @@ Schain(SKALE-chain) - randomly generated set of nodes.
 
 Schains contract is responsible for managing schains(create or remove)
 
-## 2. <a name='SmartcontractsinSKALEManager'></a>Smart contracts in SKALE Manager
+## 2. <a name='SmartContractsInSKALEManager'></a>Smart contracts in SKALE Manager
 
 ### 2.1. <a name='Schains'></a>Schains
 
@@ -53,7 +53,7 @@ The main contract of the Schains logic
 -   Initial entry of Schain creation
 -   Initial entry of Schain removing
 
-## 3. <a name='Schainsfunctions'></a>Schains functions
+## 3. <a name='SchainsFunctions'></a>Schains functions
 
 ### 3.1. <a name='Schains.addSchain'></a>Schains.addSchain
 

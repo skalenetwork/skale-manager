@@ -92,7 +92,7 @@ describe("SchainsInternal", () => {
                     publicIp: "0x7f000001",
                     publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
                     name: "D2-01",
-                    domainName: "somedomain.name"
+                    domainName: "some.domain.name"
                 });
         });
 
@@ -107,7 +107,7 @@ describe("SchainsInternal", () => {
 
         it("should be able to add schain to node", async () => {
             await schainsInternal.addSchainForNode(5, schainNameHash);
-            await schainsInternal.getSchainHashsForNode(5).should.eventually.deep.equal([schainNameHash]);
+            await schainsInternal.getSchainHashesForNode(5).should.eventually.deep.equal([schainNameHash]);
             await schainsInternal.getSchainIdsForNode(5).should.eventually.deep.equal([schainNameHash]);
         });
 
@@ -161,7 +161,7 @@ describe("SchainsInternal", () => {
                 await schainsInternal.addSchainForNode(nodeIndex, stringValue(web3.utils.soliditySha3("NewSchain")));
                 await schainsInternal.removeSchainForNode(nodeIndex, 0);
                 await schainsInternal.addSchainForNode(nodeIndex, stringValue(web3.utils.soliditySha3("NewSchain1")));
-                await schainsInternal.getSchainHashsForNode(nodeIndex).should.eventually.be.deep.equal(
+                await schainsInternal.getSchainHashesForNode(nodeIndex).should.eventually.be.deep.equal(
                     [stringValue(web3.utils.soliditySha3("NewSchain1")), stringValue(web3.utils.soliditySha3("NewSchain"))],
                 );
             });
@@ -198,7 +198,7 @@ describe("SchainsInternal", () => {
                 await schainsInternal.removeSchainForNode(nodeIndex, 1);
                 await schainsInternal.addSchainForNode(nodeIndex, stringValue(web3.utils.soliditySha3("NewSchain2")));
                 (await schainsInternal.holesForNodes(nodeIndex, 0)).should.be.equal(0);
-                await schainsInternal.getSchainHashsForNode(nodeIndex).should.eventually.be.deep.equal(
+                await schainsInternal.getSchainHashesForNode(nodeIndex).should.eventually.be.deep.equal(
                     [
                         "0x0000000000000000000000000000000000000000000000000000000000000000",
                         stringValue(web3.utils.soliditySha3("NewSchain2")),
@@ -214,7 +214,7 @@ describe("SchainsInternal", () => {
                 await schainsInternal.removeSchainForNode(nodeIndex, 1);
                 await schainsInternal.addSchainForNode(nodeIndex, stringValue(web3.utils.soliditySha3("NewSchain2")));
                 await schainsInternal.addSchainForNode(nodeIndex, stringValue(web3.utils.soliditySha3("NewSchain3")));
-                await schainsInternal.getSchainHashsForNode(nodeIndex).should.eventually.be.deep.equal(
+                await schainsInternal.getSchainHashesForNode(nodeIndex).should.eventually.be.deep.equal(
                     [
                         stringValue(web3.utils.soliditySha3("NewSchain3")),
                         stringValue(web3.utils.soliditySha3("NewSchain2")),
@@ -231,7 +231,7 @@ describe("SchainsInternal", () => {
                 await schainsInternal.addSchainForNode(nodeIndex, stringValue(web3.utils.soliditySha3("NewSchain2")));
                 await schainsInternal.addSchainForNode(nodeIndex, stringValue(web3.utils.soliditySha3("NewSchain3")));
                 await schainsInternal.addSchainForNode(nodeIndex, stringValue(web3.utils.soliditySha3("NewSchain4")));
-                await schainsInternal.getSchainHashsForNode(nodeIndex).should.eventually.be.deep.equal(
+                await schainsInternal.getSchainHashesForNode(nodeIndex).should.eventually.be.deep.equal(
                     [
                         stringValue(web3.utils.soliditySha3("NewSchain3")),
                         stringValue(web3.utils.soliditySha3("NewSchain2")),
@@ -252,12 +252,12 @@ describe("SchainsInternal", () => {
             });
 
             it("should get schains ids by user", async () => {
-                await schainsInternal.getSchainHashsByAddress(holder.address).should.eventually.be.deep.equal([schainNameHash]);
+                await schainsInternal.getSchainHashesByAddress(holder.address).should.eventually.be.deep.equal([schainNameHash]);
                 await schainsInternal.getSchainIdsByAddress(holder.address).should.eventually.be.deep.equal([schainNameHash]);
             });
 
             it("should return schains by node", async () => {
-                await schainsInternal.getSchainHashsForNode(nodeIndex).should.eventually.be.deep.equal([schainNameHash]);
+                await schainsInternal.getSchainHashesForNode(nodeIndex).should.eventually.be.deep.equal([schainNameHash]);
             });
 
             it("should return number of schains per node", async () => {
@@ -281,7 +281,7 @@ describe("SchainsInternal", () => {
                             publicIp: "0x7f0000" + hexIndex,
                             publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
                             name: "D2-" + hexIndex,
-                            domainName: "somedomain.name"
+                            domainName: "some.domain.name"
                         }
                     );
                 }

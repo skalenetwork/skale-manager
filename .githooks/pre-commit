@@ -1,5 +1,7 @@
 #!/bin/bash
 
+// cSpell:words gpgsign fullcheck
+
 set -e
 
 GPG_SIGN_ENABLED=$(git config commit.gpgsign || true)
@@ -8,5 +10,8 @@ then
     echo "Enable GPG signature for new commits";
     exit 1;
 fi
+
+files=$(git diff --cached --name-only)
+exec npx cspell -- --no-summary $files
 
 yarn fullcheck
