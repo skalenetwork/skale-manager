@@ -139,18 +139,14 @@ contract Nodes is Permissions {
         bytes4 publicIP,
         uint16 port,
         uint16 nonce,
-        string domainName,
-        uint time,
-        uint gasSpend
+        string domainName
     );
 
     /**
      * @dev Emitted when a node completes a network exit.
      */
     event ExitCompleted(
-        uint nodeIndex,
-        uint time,
-        uint gasSpend
+        uint nodeIndex
     );
 
     /**
@@ -158,9 +154,32 @@ contract Nodes is Permissions {
      */
     event ExitInitialized(
         uint nodeIndex,
-        uint startLeavingPeriod,
-        uint time,
-        uint gasSpend
+        uint startLeavingPeriod
+    );
+
+    /**
+     * @dev Emitted when a node set to in compliant or compliant.
+     */
+    event IncompliantNode(
+        uint indexed nodeIndex,
+        bool status
+    );
+
+    /**
+     * @dev Emitted when a node set to in maintenance or from in maintenace.
+     */
+    event MaintenanceNode(
+        uint indexed nodeIndex,
+        bool status
+    );
+
+    /**
+     * @dev Emitted when a node status changed.
+     */
+    event IPChanged(
+        uint indexed nodeIndex,
+        bytes4 previousIP,
+        bytes4 newIP
     );
 
     modifier checkNodeExists(uint nodeIndex) {
@@ -306,9 +325,7 @@ contract Nodes is Permissions {
             params.publicIp,
             params.port,
             params.nonce,
-            params.domainName,
-            block.timestamp,
-            gasleft());
+            params.domainName);
     }
 
     /**
@@ -328,11 +345,7 @@ contract Nodes is Permissions {
     
         _setNodeLeaving(nodeIndex);
 
-        emit ExitInitialized(
-            nodeIndex,
-            block.timestamp,
-            block.timestamp,
-            gasleft());
+        emit ExitInitialized(nodeIndex, block.timestamp);
         return true;
     }
 
@@ -357,10 +370,7 @@ contract Nodes is Permissions {
 
         _setNodeLeft(nodeIndex);
 
-        emit ExitCompleted(
-            nodeIndex,
-            block.timestamp,
-            gasleft());
+        emit ExitCompleted(nodeIndex);
         return true;
     }
 
@@ -451,6 +461,7 @@ contract Nodes is Permissions {
     function setNodeInMaintenance(uint nodeIndex) external onlyNodeOrNodeManager(nodeIndex) {
         require(nodes[nodeIndex].status == NodeStatus.Active, "Node is not Active");
         _setNodeInMaintenance(nodeIndex);
+        emit MaintenanceNode(nodeIndex, true);
     }
 
     /**
@@ -464,6 +475,7 @@ contract Nodes is Permissions {
     function removeNodeFromInMaintenance(uint nodeIndex) external onlyNodeOrNodeManager(nodeIndex) {
         require(nodes[nodeIndex].status == NodeStatus.In_Maintenance, "Node is not In Maintenance");
         _setNodeActive(nodeIndex);
+        emit MaintenanceNode(nodeIndex, false);
     }
 
     /**
@@ -474,6 +486,7 @@ contract Nodes is Permissions {
         if (!incompliant[nodeIndex]) {
             incompliant[nodeIndex] = true;
             _makeNodeInvisible(nodeIndex);
+            emit IncompliantNode(nodeIndex, true);
         }
     }
 
@@ -485,6 +498,7 @@ contract Nodes is Permissions {
         if (incompliant[nodeIndex]) {
             incompliant[nodeIndex] = false;
             _tryToMakeNodeVisible(nodeIndex);
+            emit IncompliantNode(nodeIndex, false);
         }
     }
 
@@ -519,6 +533,7 @@ contract Nodes is Permissions {
         }
         nodesIPCheck[nodes[nodeIndex].ip] = false;
         nodesIPCheck[newIP] = true;
+        emit IPChanged(nodeIndex, nodes[nodeIndex].ip, newIP);
         nodes[nodeIndex].ip = newIP;
     }
 

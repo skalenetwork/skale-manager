@@ -67,9 +67,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
         uint averageDowntime,
         uint averageLatency,
         uint bounty,
-        uint previousBlockEvent,
-        uint time,
-        uint gasSpend
+        uint previousBlockEvent
     );
 
     function tokensReceived(
@@ -188,9 +186,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
             0,
             0,
             bounty,
-            uint(-1),
-            block.timestamp,
-            gasleft());
+            uint(-1));
         
         _refundGasByValidator(validatorId, msg.sender, gasTotal - gasleft());
     }
