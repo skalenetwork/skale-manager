@@ -60,7 +60,12 @@ library SkaleDkgPreResponse {
             complaints,
             hashedData
         );
-        _processPreResponse(secretKeyContribution[index].share, schainHash, verificationVectorMultiplication, complaints);
+        _processPreResponse(
+            secretKeyContribution[index].share,
+            schainHash,
+            verificationVectorMultiplication,
+            complaints
+        );
     }
 
     function _preResponseCheck(
