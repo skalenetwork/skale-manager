@@ -65,6 +65,11 @@ contract NodeRotation is Permissions {
 
     bytes32 public constant DEBUGGER_ROLE = keccak256("DEBUGGER_ROLE");
 
+    /**
+     * @dev Emitted when rotation delay skipped.
+     */
+    event RotationDelaySkipped(bytes32 indexed schainIndex);
+
     modifier onlyDebugger() {
         require(hasRole(DEBUGGER_ROLE, msg.sender), "DEBUGGER_ROLE is required");
         _;
@@ -125,6 +130,7 @@ contract NodeRotation is Permissions {
      */
     function skipRotationDelay(bytes32 schainIndex) external onlyDebugger {
         rotations[schainIndex].freezeUntil = now;
+        emit RotationDelaySkipped(schainIndex);
     }
 
     /**
