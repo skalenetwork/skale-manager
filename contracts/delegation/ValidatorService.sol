@@ -103,6 +103,37 @@ contract ValidatorService is Permissions {
         address nodeAddress
     );
 
+    /**
+     * @dev Emitted when whitelist disabled.
+     */
+    event WhitelistDisabled(bool status);
+
+    /**
+     * @dev Emitted when validator requested new address.
+     */
+    event RequestNewAddress(uint indexed validatorId, address previousAddress, address newAddress);
+
+    /**
+     * @dev Emitted when validator set new minimum delegation amount.
+     */
+    event SetMinimumDelegationAmount(uint indexed validatorId, uint previousMDA, uint newMDA);
+
+    /**
+     * @dev Emitted when validator set new name.
+     */
+    event SetValidatorName(uint indexed validatorId, string previousName, string newName);
+
+    /**
+     * @dev Emitted when validator set new description.
+     */
+    event SetValidatorDescription(uint indexed validatorId, string previousDescription, string newDescription);
+
+    /**
+     * @dev Emitted when validator start or stop accepting new delegation requests.
+     */
+    event AcceptingNewRequests(uint indexed validatorId, bool status);
+
+
     mapping (uint => Validator) public validators;
     mapping (uint => bool) private _trustedValidators;
     uint[] public trustedValidatorsList;
@@ -210,6 +241,7 @@ contract ValidatorService is Permissions {
      */
     function disableWhitelist() external onlyValidatorManager {
         useWhitelist = false;
+        emit WhitelistDisabled(false);
     }
 
     /**
@@ -228,6 +260,7 @@ contract ValidatorService is Permissions {
         uint validatorId = getValidatorId(msg.sender);
 
         validators[validatorId].requestedAddress = newValidatorAddress;
+        emit RequestNewAddress(validatorId, msg.sender, newValidatorAddress);
     }
 
     /**
@@ -294,7 +327,12 @@ contract ValidatorService is Permissions {
     function setValidatorMDA(uint minimumDelegationAmount) external {
         // check Validator Exist inside getValidatorId
         uint validatorId = getValidatorId(msg.sender);
-
+        
+        emit SetMinimumDelegationAmount(
+            validatorId,
+            validators[validatorId].minimumDelegationAmount,
+            minimumDelegationAmount
+        );
         validators[validatorId].minimumDelegationAmount = minimumDelegationAmount;
     }
 
@@ -305,6 +343,7 @@ contract ValidatorService is Permissions {
         // check Validator Exist inside getValidatorId
         uint validatorId = getValidatorId(msg.sender);
 
+        emit SetValidatorName(validatorId, validators[validatorId].name, newName);
         validators[validatorId].name = newName;
     }
 
@@ -315,6 +354,7 @@ contract ValidatorService is Permissions {
         // check Validator Exist inside getValidatorId
         uint validatorId = getValidatorId(msg.sender);
 
+        emit SetValidatorDescription(validatorId, validators[validatorId].description, newDescription);
         validators[validatorId].description = newDescription;
     }
 
@@ -331,6 +371,7 @@ contract ValidatorService is Permissions {
         require(!isAcceptingNewRequests(validatorId), "Accepting request is already enabled");
 
         validators[validatorId].acceptNewRequests = true;
+        emit AcceptingNewRequests(validatorId, true);
     }
 
     /**
@@ -346,6 +387,7 @@ contract ValidatorService is Permissions {
         require(isAcceptingNewRequests(validatorId), "Accepting request is already disabled");
 
         validators[validatorId].acceptNewRequests = false;
+        emit AcceptingNewRequests(validatorId, false);
     }
 
     function removeNodeAddress(uint validatorId, address nodeAddress) external allowTwo("ValidatorService", "Nodes") {

@@ -161,6 +161,22 @@ contract DelegationController is Permissions, ILocker {
         uint delegationId
     );
 
+    /**
+     * @dev Emitted when validator was confiscated.
+     */
+    event Confiscated(
+        uint indexed validatorId,
+        uint amount
+    );
+
+    /**
+     * @dev Emitted when validator was confiscated.
+     */
+    event SlashesProcessed(
+        address indexed holder,
+        uint limit
+    );
+
     /// @dev delegations will never be deleted to index in this array may be used like delegation id
     Delegation[] public delegations;
 
@@ -424,6 +440,7 @@ contract DelegationController is Permissions, ILocker {
                 currentMonth.add(i).add(1)
             );
         }
+        emit Confiscated(validatorId, amount);
     }
 
     /**
@@ -495,6 +512,7 @@ contract DelegationController is Permissions, ILocker {
      */
     function processSlashes(address holder, uint limit) public {
         _sendSlashingSignals(_processSlashesWithoutSignals(holder, limit));
+        emit SlashesProcessed(holder, limit);
     }
 
     /**

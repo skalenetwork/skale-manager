@@ -64,6 +64,11 @@ contract BountyV2 is Permissions {
     mapping (uint => BountyHistory) private _bountyHistory;
 
     bytes32 public constant BOUNTY_REDUCTION_MANAGER_ROLE = keccak256("BOUNTY_REDUCTION_MANAGER_ROLE");
+    
+    /**
+     * @dev Emitted when bounty reduction is turned on or turned off.
+     */
+    event BountyReduction(bool status);
 
     modifier onlyBountyReductionManager() {
         require(hasRole(BOUNTY_REDUCTION_MANAGER_ROLE, msg.sender), "BOUNTY_REDUCTION_MANAGER_ROLE is required");
@@ -124,10 +129,12 @@ contract BountyV2 is Permissions {
 
     function enableBountyReduction() external onlyBountyReductionManager {
         bountyReduction = true;
+        emit BountyReduction(true);
     }
 
     function disableBountyReduction() external onlyBountyReductionManager {
         bountyReduction = false;
+        emit BountyReduction(false);
     }
 
     function setNodeCreationWindowSeconds(uint window) external allow("Nodes") {
