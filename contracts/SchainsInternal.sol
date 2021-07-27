@@ -607,31 +607,23 @@ contract SchainsInternal is Permissions, ISchainsInternal {
     {
         _exceptionsForGroups[schainHash][nodeIndex] = false;
         uint len = _nodeToLockedSchains[nodeIndex].length;
-        bool removed = false;
-        if (len > 0 && _nodeToLockedSchains[nodeIndex][len - 1] == schainHash) {
-            _nodeToLockedSchains[nodeIndex].pop();
-            removed = true;
-        } else {
-            for (uint i = len; i > 0 && !removed; i--) {
-                if (_nodeToLockedSchains[nodeIndex][i - 1] == schainHash) {
+        for (uint i = len; i > 0; i--) {
+            if (_nodeToLockedSchains[nodeIndex][i - 1] == schainHash) {
+                if (i != len) {
                     _nodeToLockedSchains[nodeIndex][i - 1] = _nodeToLockedSchains[nodeIndex][len - 1];
-                    _nodeToLockedSchains[nodeIndex].pop();
-                    removed = true;
                 }
+                _nodeToLockedSchains[nodeIndex].pop();
+                break;
             }
         }
         len = _schainToExceptionNodes[schainHash].length;
-        removed = false;
-        if (len > 0 && _schainToExceptionNodes[schainHash][len - 1] == nodeIndex) {
-            _schainToExceptionNodes[schainHash].pop();
-            removed = true;
-        } else {
-            for (uint i = len; i > 0 && !removed; i--) {
-                if (_schainToExceptionNodes[schainHash][i - 1] == nodeIndex) {
+        for (uint i = len; i > 0; i--) {
+            if (_schainToExceptionNodes[schainHash][i - 1] == nodeIndex) {
+                if (i != len) {
                     _schainToExceptionNodes[schainHash][i - 1] = _schainToExceptionNodes[schainHash][len - 1];
-                    _schainToExceptionNodes[schainHash].pop();
-                    removed = true;
                 }
+                _schainToExceptionNodes[schainHash].pop();
+                break;
             }
         }
     }

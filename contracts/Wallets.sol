@@ -97,6 +97,7 @@ contract Wallets is Permissions, IWallets {
         external
         allowTwo("SkaleManager", "SkaleDKG")
     {
+        require(spender != address(0), "Spender must be specified");
         require(validatorId != 0, "ValidatorId could not be zero");
         uint amount = tx.gasprice * spentGas;
         if (amount <= _validatorWallets[validatorId]) {
@@ -154,6 +155,7 @@ contract Wallets is Permissions, IWallets {
         override
         allowTwo("SkaleDKG", "CommunityPool")
     {
+        require(spender != address(0), "Spender must be specified");
         uint amount = tx.gasprice * spentGas;
         if (isDebt) {
             amount += (_schainDebts[schainHash] == 0 ? 21000 : 6000) * tx.gasprice;
@@ -175,6 +177,7 @@ contract Wallets is Permissions, IWallets {
      * - Executable only after initializing delete schain
      */
     function withdrawFundsFromSchainWallet(address payable schainOwner, bytes32 schainHash) external allow("Schains") {
+        require(schainOwner != address(0), "Schain owner must be specified");
         uint amount = _schainWallets[schainHash];
         delete _schainWallets[schainHash];
         schainOwner.transfer(amount);

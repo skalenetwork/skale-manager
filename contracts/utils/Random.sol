@@ -71,12 +71,4 @@ library Random {
             return rand.mod(max);
         }
     }
-
-    /**
-     * @dev Generates random value in range [min, max)
-     */
-    function random(RandomGenerator memory self, uint min, uint max) internal pure returns (uint) {
-        assert(min < max);
-        return min.add(random(self, max.sub(min)));
-    }
 }

@@ -246,19 +246,4 @@ contract NodeRotation is Permissions {
         delete waitForNewNode[schainIndex];
         ISkaleDKG(contractManager.getContract("SkaleDKG")).openChannel(schainIndex);
     }
-
-    /**
-     * @dev Checks whether a rotation can be performed.
-     * 
-     * Requirements:
-     * 
-     * - Schain must exist.
-     */
-    function _checkRotation(bytes32 schainHash ) private view returns (bool) {
-        SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
-        require(schainsInternal.isSchainExist(schainHash), "Schain does not exist for rotation");
-        return schainsInternal.isAnyFreeNode(schainHash);
-    }
-
-
 }
