@@ -38,7 +38,7 @@
     "test": "yarn tsc && npx hardhat test",
     "tsc": "tsc --noEmit",
     "tslint": "npx tslint --project .",
-    "cspell": "npx cspell \"contracts/**/*\" \"docs/**/*\" \"gas/**/*\" \"legacy_tests/**/*\" \"migrations/**/*\" \"scripts/**/*\" \"test/**/*\""
+    "cspell": "npx cspell \"contracts/**/*\" \"docs/**/*\" \"gas/**/*\" \"migrations/**/*\" \"scripts/**/*\" \"test/**/*\""
   },
   "dependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.2",
