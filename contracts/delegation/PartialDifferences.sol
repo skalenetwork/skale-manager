@@ -368,25 +368,5 @@ library PartialDifferences {
             }
             sequence.subtractDiff[i] = newDiff;
         }
-    }
-
-    function clear(Value storage sequence) internal {
-        for (uint i = sequence.firstUnprocessedMonth; i <= sequence.lastChangedMonth; ++i) {
-            if (sequence.addDiff[i] > 0) {
-                delete sequence.addDiff[i];
-            }
-            if (sequence.subtractDiff[i] > 0) {
-                delete sequence.subtractDiff[i];
-            }
-        }
-        if (sequence.value > 0) {
-            delete sequence.value;
-        }
-        if (sequence.firstUnprocessedMonth > 0) {
-            delete sequence.firstUnprocessedMonth;
-        }
-        if (sequence.lastChangedMonth > 0) {
-            delete sequence.lastChangedMonth;
-        }
-    }
+    }        
 }

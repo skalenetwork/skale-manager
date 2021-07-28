@@ -51,7 +51,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
 
     string public version;
 
-    bytes32 public constant SCHAIN_DELETER_ROLE = keccak256("SCHAIN_DELETER_ROLE");
+    bytes32 public constant SCHAIN_REMOVAL_ROLE = keccak256("SCHAIN_REMOVAL_ROLE");
 
     /**
      * @dev Emitted when bounty is received.
@@ -155,7 +155,7 @@ contract SkaleManager is IERC777Recipient, Permissions {
     }
 
     function deleteSchainByRoot(string calldata name) external {
-        require(hasRole(SCHAIN_DELETER_ROLE, msg.sender), "SCHAIN_DELETER_ROLE is required");
+        require(hasRole(SCHAIN_REMOVAL_ROLE, msg.sender), "SCHAIN_REMOVAL_ROLE is required");
         Schains schains = Schains(contractManager.getContract("Schains"));
         schains.deleteSchainByRoot(name);
     }

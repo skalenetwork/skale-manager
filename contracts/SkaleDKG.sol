@@ -84,8 +84,6 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         DkgFunction dkgFunction;
     }
 
-    uint public constant COMPLAINT_TIMELIMIT = 1800;
-
     mapping(bytes32 => Channel) public channels;
 
     mapping(bytes32 => uint) public lastSuccessfulDKG;
@@ -111,7 +109,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
     event ChannelClosed(bytes32 schainHash);
 
     /**
-     * @dev Emitted when a node broadcasts keyshare.
+     * @dev Emitted when a node broadcasts key share.
      */
     event BroadcastAndKeyShare(
         bytes32 indexed schainHash,
@@ -280,7 +278,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         bytes32 schainId,
         uint fromNodeIndex,
         G2Operations.G2Point[] memory verificationVector,
-        G2Operations.G2Point[] memory verificationVectorMult,
+        G2Operations.G2Point[] memory verificationVectorMultiplication,
         KeyShare[] memory secretKeyContribution
     )
         external
@@ -298,7 +296,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             schainId,
             fromNodeIndex,
             verificationVector,
-            verificationVectorMult,
+            verificationVectorMultiplication,
             secretKeyContribution,
             contractManager,
             complaints,
@@ -476,7 +474,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         return channels[schainHash].active &&
             check &&
             _isNodeOwnedByMessageSender(nodeIndex, msg.sender) &&
-            channels[schainHash].startedBlockTimestamp.add(_getComplaintTimelimit()) > block.timestamp &&
+            channels[schainHash].startedBlockTimestamp.add(_getComplaintTimeLimit()) > block.timestamp &&
             !dkgProcess[schainHash].broadcasted[index];
     }
 
@@ -503,20 +501,20 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             ) ||
             (
                 dkgProcess[schainHash].broadcasted[indexTo] &&
-                complaints[schainHash].startComplaintBlockTimestamp.add(_getComplaintTimelimit()) <= block.timestamp &&
+                complaints[schainHash].startComplaintBlockTimestamp.add(_getComplaintTimeLimit()) <= block.timestamp &&
                 complaints[schainHash].nodeToComplaint == toNodeIndex
             ) ||
             (
                 !dkgProcess[schainHash].broadcasted[indexTo] &&
                 complaints[schainHash].nodeToComplaint == uint(-1) &&
-                channels[schainHash].startedBlockTimestamp.add(_getComplaintTimelimit()) <= block.timestamp
+                channels[schainHash].startedBlockTimestamp.add(_getComplaintTimeLimit()) <= block.timestamp
             ) ||
             (
                 complaints[schainHash].nodeToComplaint == uint(-1) &&
                 isEveryoneBroadcasted(schainHash) &&
                 dkgProcess[schainHash].completed[indexFrom] &&
                 !dkgProcess[schainHash].completed[indexTo] &&
-                startAlrightTimestamp[schainHash].add(_getComplaintTimelimit()) <= block.timestamp
+                startAlrightTimestamp[schainHash].add(_getComplaintTimeLimit()) <= block.timestamp
             );
         return channels[schainHash].active &&
             dkgProcess[schainHash].broadcasted[indexFrom] &&
@@ -535,7 +533,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             channels[schainHash].n == dkgProcess[schainHash].numberOfBroadcasted &&
             (complaints[schainHash].fromNodeToComplaint != nodeIndex ||
             (nodeIndex == 0 && complaints[schainHash].startComplaintBlockTimestamp == 0)) &&
-            startAlrightTimestamp[schainHash].add(_getComplaintTimelimit()) > block.timestamp &&
+            startAlrightTimestamp[schainHash].add(_getComplaintTimeLimit()) > block.timestamp &&
             !dkgProcess[schainHash].completed[index];
     }
 
@@ -548,7 +546,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             check &&
             _isNodeOwnedByMessageSender(nodeIndex, msg.sender) &&
             complaints[schainHash].nodeToComplaint == nodeIndex &&
-            complaints[schainHash].startComplaintBlockTimestamp.add(_getComplaintTimelimit()) > block.timestamp &&
+            complaints[schainHash].startComplaintBlockTimestamp.add(_getComplaintTimeLimit()) > block.timestamp &&
             !complaints[schainHash].isResponse;
     }
 
@@ -561,7 +559,7 @@ contract SkaleDKG is Permissions, ISkaleDKG {
             check &&
             _isNodeOwnedByMessageSender(nodeIndex, msg.sender) &&
             complaints[schainHash].nodeToComplaint == nodeIndex &&
-            complaints[schainHash].startComplaintBlockTimestamp.add(_getComplaintTimelimit()) > block.timestamp &&
+            complaints[schainHash].startComplaintBlockTimestamp.add(_getComplaintTimeLimit()) > block.timestamp &&
             complaints[schainHash].isResponse;
     }
 
@@ -693,8 +691,8 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         require(_isNodeOwnedByMessageSender(nodeIndex, msg.sender), "Node does not exist for message sender");
     }
 
-    function _getComplaintTimelimit() private view returns (uint) {
-        return ConstantsHolder(contractManager.getConstantsHolder()).complaintTimelimit();
+    function _getComplaintTimeLimit() private view returns (uint) {
+        return ConstantsHolder(contractManager.getConstantsHolder()).complaintTimeLimit();
     }
 
 }

@@ -102,7 +102,7 @@ describe("NodesFunctionality", () => {
                 publicIp: "0x7f000001",
                 publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
                 name: "D2",
-                domainName: "somedomain.name"
+                domainName: "some.domain.name"
             }).should.be.eventually.rejectedWith("IP address is zero or is not available");
     });
 
@@ -117,7 +117,7 @@ describe("NodesFunctionality", () => {
                 publicIp: "0x7f000001",
                 publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
                 name: "D2",
-                domainName: "somedomain.name"
+                domainName: "some.domain.name"
             }).should.be.eventually.rejectedWith("Port is zero");
     });
 
@@ -132,7 +132,7 @@ describe("NodesFunctionality", () => {
                 publicIp: "0x7f000001",
                 publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex').slice(1) + "0"],
                 name: "D2",
-                domainName: "somedomain.name"
+                domainName: "some.domain.name"
             }).should.be.eventually.rejectedWith("Public Key is incorrect");
     });
 
@@ -147,7 +147,7 @@ describe("NodesFunctionality", () => {
                 publicIp: "0x7f000001",
                 publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
                 name: "D2",
-                domainName: "somedomain.name"
+                domainName: "some.domain.name"
             });
 
         const node = await nodes.nodes(0);
@@ -172,7 +172,7 @@ describe("NodesFunctionality", () => {
                     publicIp: "0x7f000001",
                     publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
                     name: "D2",
-                    domainName: "somedomain.name"
+                    domainName: "some.domain.name"
                 });
         });
 
@@ -268,7 +268,7 @@ describe("NodesFunctionality", () => {
                     publicIp: "0x7f000001",
                     publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
                     name: "D2",
-                    domainName: "somedomain.name"
+                    domainName: "some.domain.name"
                 }); // name
                 const pubKey2 = ec.keyFromPrivate(String(privateKeys[3]).slice(2)).getPublic();
             await nodes.createNode(
@@ -280,7 +280,7 @@ describe("NodesFunctionality", () => {
                     publicIp: "0x7f000002",
                     publicKey: ["0x" + pubKey2.x.toString('hex'), "0x" + pubKey2.y.toString('hex')],
                     name: "D3",
-                    domainName: "somedomain.name"
+                    domainName: "some.domain.name"
                 }); // name
         });
 
@@ -422,7 +422,7 @@ describe("NodesFunctionality", () => {
                     publicIp: "0x7f000001",
                     publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
                     name: "D2",
-                    domainName: "somedomain.name"
+                    domainName: "some.domain.name"
                 });
             const nodeIndex = (await nodes.getValidatorNodeIndexes(validatorId))[0];
             nodeIndex.should.be.equal(0);
@@ -455,7 +455,7 @@ describe("NodesFunctionality", () => {
                     publicIp: "0x7f000001",
                     publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
                     name: "D2",
-                    domainName: "somedomain.name"
+                    domainName: "some.domain.name"
                 });
 
             await nodes.checkPossibilityCreatingNode(nodeAddress.address);
@@ -468,7 +468,7 @@ describe("NodesFunctionality", () => {
                     publicIp: "0x7f000002",
                     publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
                     name: "D3",
-                    domainName: "somedomain.name"
+                    domainName: "some.domain.name"
                 });
 
             const nodeIndexesBN = (await nodes.getValidatorNodeIndexes(validatorId));

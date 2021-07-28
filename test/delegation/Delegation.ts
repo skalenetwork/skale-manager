@@ -164,7 +164,7 @@ describe("Delegation", () => {
             await skaleToken.mint(holder2.address, defaultAmount.toString(), "0x", "0x");
             await skaleToken.mint(holder3.address, defaultAmount.toString(), "0x", "0x");
             await validatorService.connect(validator).registerValidator(
-                "First validator", "Super-pooper validator", 150, 0);
+                "First validator", "Super-duper validator", 150, 0);
             await validatorService.enableValidator(validatorId);
             await delegationPeriodManager.setDelegationPeriod(12, 200);
             await delegationPeriodManager.setDelegationPeriod(6, 150);
@@ -349,7 +349,7 @@ describe("Delegation", () => {
             const validator1Id = 1;
             const validator2Id = 2;
             await validatorService.connect(validator2).registerValidator(
-                "Second validator", "Super-pooper validator", 150, 0);
+                "Second validator", "Super-duper validator", 150, 0);
             await validatorService.enableValidator(validator2Id);
             await delegationController.connect(validator2).delegate(
                 validator1Id, 200, 2, "D2 is even");
@@ -858,7 +858,7 @@ describe("Delegation", () => {
         it("should be possible to distribute bounty across thousands of holders", async () => {
             let holdersAmount = 1000;
             if (process.env.CI) {
-                console.log("Reduce holders amount to fit GitHub timelimit");
+                console.log("Reduce holders amount to fit GitHub time limit");
                 holdersAmount = 10;
             }
             const delegatedAmount = 1e7;

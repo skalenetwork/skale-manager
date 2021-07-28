@@ -58,7 +58,7 @@ library SkaleDkgResponse {
         require(complaints[schainHash].nodeToComplaint == fromNodeIndex, "Not this Node");
         require(
             complaints[schainHash].startComplaintBlockTimestamp.add(
-                _getComplaintTimelimit(contractManager)
+                _getComplaintTimeLimit(contractManager)
             ) > block.timestamp,
             "Incorrect time for response"
         );
@@ -138,8 +138,8 @@ library SkaleDkgResponse {
             tmp.x.b, tmp.x.a, tmp.y.b, tmp.y.a);
     }
 
-    function _getComplaintTimelimit(ContractManager contractManager) private view returns (uint) {
-        return ConstantsHolder(contractManager.getConstantsHolder()).complaintTimelimit();
+    function _getComplaintTimeLimit(ContractManager contractManager) private view returns (uint) {
+        return ConstantsHolder(contractManager.getConstantsHolder()).complaintTimeLimit();
     }
 
 }
