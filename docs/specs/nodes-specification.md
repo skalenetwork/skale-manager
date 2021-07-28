@@ -8,7 +8,7 @@ The Nodes contract is responsible for:
 * Managing data about which validator each node is assigned to.
 
 ## Smart Contracts in SKALE Manager
-- ContantsHolder - defines space allocation for each node.
+- ConstantsHolder - defines space allocation for each node.
 - SkaleManager - the main contract is responsible for initializing the creation of a new node, as well as its removal from the network.
 - NodeRotation - manages node rotations in schains.
 
@@ -44,7 +44,7 @@ The process of exiting a node from all Schains that are located on it. The first
     -   NodeCreationParams
 
 * ### Nodes.removeSpaceFromNode
-    Executes by SchainsInternal contract, when new schain is created. That means that we should reserve desired resourses for schain that was just allocated on this node.
+    Executes by SchainsInternal contract, when new schain is created. That means that we should reserve desired resources for schain that was just allocated on this node.
     Also it executes by NodeRotation, when a node leaves, it is replaced with a new node. This implies that it takes a space in itself that was occupied by the proposed chain, but in return, a new node that came instead of the left node must allocate this space for itself.
 
     Input Params:

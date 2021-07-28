@@ -5,7 +5,7 @@
 <!-- vscode-markdown-toc -->
 
 -   1.  [Overview](#Overview)
--   2.  [Smart contracts in SKALE Manager](#SmartcontractsinSKALEManager)
+-   2.  [Smart contracts in SKALE Manager](#SmartContractsInSKALEManager)
         	_ 2.1. [SkaleDKG](#SkaleDKG)
         	_ 2.2. [ECDH (Elliptic Curve Diffie-Hellman)](#ECDHEllipticCurveDiffie-Hellman)
         	_ 2.3. [Decryption](#Decryption)
@@ -26,29 +26,29 @@
         	\* 3.9. [Schains.verifySchainSignature](#Schains.verifySchainSignature)
 -   4.  [DKG procedure](#DKGprocedure)
         	_ 4.1. [Definitions:](#Definitions:)
-        	_ 4.2. [Complaint types](#Complainttypes)
-        	_ 4.3. [Successful scenario](#Successfulscenario)
-        		_ 4.3.1. [Broadcast and Reading phase](#BroadcastandReadingphase)
-        		_ 4.3.2. [Alright phase](#Alrightphase)
+        	_ 4.2. [Complaint types](#ComplaintTypes)
+        	_ 4.3. [Successful scenario](#SuccessfulScenario)
+        		_ 4.3.1. [Broadcast and Reading phase](#BroadcastAndReadingPhase)
+        		_ 4.3.2. [Alright phase](#AlrightPhase)
         		_ 4.3.3. [Finish](#Finish)
-        	_ 4.4. [Alternative scenario (complaint type 1)](#Alternativescenariocomplainttype1)
-        		_ 4.4.1. [Broadcast and Reading phase](#BroadcastandReadingphase-1)
-        		_ 4.4.2. [Complaint phase](#Complaintphase)
+        	_ 4.4. [Alternative scenario (complaint type 1)](#AlternativeScenarioComplaintType1)
+        		_ 4.4.1. [Broadcast and Reading phase](#BroadcastAndReadingPhase-1)
+        		_ 4.4.2. [Complaint phase](#ComplaintPhase)
         		_ 4.4.3. [Finish](#Finish-1)
-        	_ 4.5. [Alternative scenario (complaint type 2)](#Alternativescenariocomplainttype2)
-        		_ 4.5.1. [Broadcast and Reading phase](#BroadcastandReadingphase-1)
-        		_ 4.5.2. [Alright phase](#Alrightphase-1)
-        		_ 4.5.3. [Complaint phase](#Complaintphase-1)
+        	_ 4.5. [Alternative scenario (complaint type 2)](#AlternativeScenarioComplaintType2)
+        		_ 4.5.1. [Broadcast and Reading phase](#BroadcastAndReadingPhase-1)
+        		_ 4.5.2. [Alright phase](#AlrightPhase-1)
+        		_ 4.5.3. [Complaint phase](#ComplaintPhase-1)
         		_ 4.5.4. [Finish](#Finish-1)
-        	_ 4.6. [Alternative scenario (complaint type 3)](#Alternativescenariocomplainttype3)
-        		_ 4.6.1. [Broadcast and Reading phase](#BroadcastandReadingphase-1)
-        		_ 4.6.2. [Complaint phase](#Complaintphase-1)
-        		_ 4.6.3. [Complaint phase](#Complaintphase-1)
+        	_ 4.6. [Alternative scenario (complaint type 3)](#AlternativeScenarioComplaintType3)
+        		_ 4.6.1. [Broadcast and Reading phase](#BroadcastAndReadingPhase-1)
+        		_ 4.6.2. [Complaint phase](#ComplaintPhase-1)
+        		_ 4.6.3. [Complaint phase](#ComplaintPhase-1)
         		_ 4.6.4. [Finish](#Finish-1)
-        	_ 4.7. [Alternative scenario (complaint type 4)](#Alternativescenariocomplainttype4)
-        		_ 4.7.1. [Broadcast and Reading phase](#BroadcastandReadingphase-1)
-        		_ 4.7.2. [Complaint phase](#Complaintphase-1)
-        		_ 4.7.3. [Response phase](#Responsephase)
+        	_ 4.7. [Alternative scenario (complaint type 4)](#AlternativeScenarioComplaintType4)
+        		_ 4.7.1. [Broadcast and Reading phase](#BroadcastAndReadingPhase-1)
+        		_ 4.7.2. [Complaint phase](#ComplaintPhase-1)
+        		_ 4.7.3. [Response phase](#ResponsePhase)
         		\* 4.7.4. [Finish](#Finish-1)
 
 <!-- vscode-markdown-toc-config
@@ -64,7 +64,7 @@ DKG (Distributed Key Generation) is a method to generate secret keys across seve
 
 In SKALE protocol we use DKG to distribute BLS keys across nodes which are connected to one SKALE-chain. Connected nodes should send generated data (by off-chain source) to SkaleDKG smart contract. Also each node should get data from every other node by reading events with data. If a node forgets to send data or additional required transactions, other nodes have responsibility to send a transaction to SkaleDKG smart contract and inform about malicious node(s). 
 
-## 2. <a name='SmartcontractsinSKALEManager'></a>Smart contracts in SKALE Manager
+## 2. <a name='SmartContractsInSKALEManager'></a>Smart contracts in SKALE Manager
 
 ### 2.1. <a name='SkaleDKG'></a>SkaleDKG
 
@@ -175,12 +175,12 @@ To derive common key for encrypting/decrypting
 
 Input params:
 
--   cyphertext - encrypted data(bytes32)
+-   cypherText - encrypted data(bytes32)
 -   Key - common key(number)
 
 Description:
 
-To decrypt ciphertext, XOR decryption
+To decrypt cipher text, XOR decryption
 
 ### 3.7. <a name='KeyStorage.adding'></a>KeyStorage.adding
 
@@ -241,7 +241,7 @@ Alright by node - when node A received and verified all data from other nodes - 
 
 Complaint by node - if node B does  not follow the rules node A can send a complaint on node B. 
 
-### 4.2. <a name='Complainttypes'></a>Complaint types
+### 4.2. <a name='ComplaintTypes'></a>Complaint types
 
 1.  Node B missing broadcast in 30 minutes.
 2.  Node B missing alright in 30 minutes.
@@ -250,15 +250,15 @@ Complaint by node - if node B does  not follow the rules node A can send a compl
 
 Response by node - when node A sends complaint of 4th type on node B. Node B should send a response to continue the dispute.
 
-### 4.3. <a name='Successfulscenario'></a>Successful scenario
+### 4.3. <a name='SuccessfulScenario'></a>Successful scenario
 
-#### 4.3.1. <a name='BroadcastandReadingphase'></a>Broadcast and Reading phase
+#### 4.3.1. <a name='BroadcastAndReadingPhase'></a>Broadcast and Reading phase
 
 -   Starts after group is generated and channel opened
 -   Every party should send broadcasts and read broadcasts from other parties.
 -   Duration: 30 min after group generated
 
-#### 4.3.2. <a name='Alrightphase'></a>Alright phase
+#### 4.3.2. <a name='AlrightPhase'></a>Alright phase
 
 -   Starts after last(16th) broadcast received
 -   Every party should send alright 
@@ -270,9 +270,9 @@ Response by node - when node A sends complaint of 4th type on node B. Node B sho
 -   Event SuccessfulDKG emits
 -   Channel closed
 
-### 4.4. <a name='Alternativescenariocomplainttype1'></a>Alternative scenario (complaint type 1)
+### 4.4. <a name='AlternativeScenarioComplaintType1'></a>Alternative scenario (complaint type 1)
 
-#### 4.4.1. <a name='BroadcastandReadingphase-1'></a>Broadcast and Reading phase
+#### 4.4.1. <a name='BroadcastAndReadingPhase-1'></a>Broadcast and Reading phase
 
 -   Starts after group generated and channel opened
 -   Every party should send broadcasts and read broadcasts from other parties.
@@ -280,7 +280,7 @@ Response by node - when node A sends complaint of 4th type on node B. Node B sho
 -   Node B missed broadcast phase:
     -   Node B did not send broadcast in 30 minutes
 
-#### 4.4.2. <a name='Complaintphase'></a>Complaint phase
+#### 4.4.2. <a name='ComplaintPhase'></a>Complaint phase
 
 -   Starts in 30 minutes after group generated and channel opened
 -   Node A should send complaint(any node)
@@ -295,15 +295,15 @@ Response by node - when node A sends complaint of 4th type on node B. Node B sho
 -   DKG starts with new group from starting point
 -   Node B will never include in the new group
 
-### 4.5. <a name='Alternativescenariocomplainttype2'></a>Alternative scenario (complaint type 2)
+### 4.5. <a name='AlternativeScenarioComplaintType2'></a>Alternative scenario (complaint type 2)
 
-#### 4.5.1. <a name='BroadcastandReadingphase-1'></a>Broadcast and Reading phase
+#### 4.5.1. <a name='BroadcastAndReadingPhase-1'></a>Broadcast and Reading phase
 
 -   Starts after group generated and channel opened
 -   Every party should send broadcasts and read broadcasts from other parties.
 -   Duration: 30 min after group generated
 
-#### 4.5.2. <a name='Alrightphase-1'></a>Alright phase
+#### 4.5.2. <a name='AlrightPhase-1'></a>Alright phase
 
 -   Starts after last(16th) broadcast received
 -   Every party should send alright 
@@ -311,7 +311,7 @@ Response by node - when node A sends complaint of 4th type on node B. Node B sho
 -   Node B missed alright phase:
     -   Node B did not send alright in 30 minutes
 
-#### 4.5.3. <a name='Complaintphase-1'></a>Complaint phase
+#### 4.5.3. <a name='ComplaintPhase-1'></a>Complaint phase
 
 -   Starts in 30 minutes after last(16th) broadcast received
 -   Node A should send complaint(any node)
@@ -326,9 +326,9 @@ Response by node - when node A sends complaint of 4th type on node B. Node B sho
 -   DKG starts with new group from starting point
 -   Node B will never include in the new group
 
-### 4.6. <a name='Alternativescenariocomplainttype3'></a>Alternative scenario (complaint type 3)
+### 4.6. <a name='AlternativeScenarioComplaintType3'></a>Alternative scenario (complaint type 3)
 
-#### 4.6.1. <a name='BroadcastandReadingphase-1'></a>Broadcast and Reading phase
+#### 4.6.1. <a name='BroadcastAndReadingPhase-1'></a>Broadcast and Reading phase
 
 -   Starts after group generated and channel opened
 -   Every party should send broadcasts and read broadcasts from other parties.
@@ -336,7 +336,7 @@ Response by node - when node A sends complaint of 4th type on node B. Node B sho
 -   Node A received bad data from node B:
     -   Node A can not verify data from Event by Node B
 
-#### 4.6.2. <a name='Complaintphase-1'></a>Complaint phase
+#### 4.6.2. <a name='ComplaintPhase-1'></a>Complaint phase
 
 -   Node A should send complaint(any node)
 -   During complaint store accuser and accused node identifiers
@@ -345,7 +345,7 @@ Response by node - when node A sends complaint of 4th type on node B. Node B sho
 -   Node B missed response phase:
     -   Node B did not send response in 30 minutes after complaint sent
 
-#### 4.6.3. <a name='Complaintphase-1'></a>Complaint phase
+#### 4.6.3. <a name='ComplaintPhase-1'></a>Complaint phase
 
 -   Starts in 30 minutes after complaint sent
 -   Node A should send complaint(any node)
@@ -359,9 +359,9 @@ Response by node - when node A sends complaint of 4th type on node B. Node B sho
 -   DKG starts with new group from starting point
 -   Node B will never include in the new group
 
-### 4.7. <a name='Alternativescenariocomplainttype4'></a>Alternative scenario (complaint type 4)
+### 4.7. <a name='AlternativeScenarioComplaintType4'></a>Alternative scenario (complaint type 4)
 
-#### 4.7.1. <a name='BroadcastandReadingphase-1'></a>Broadcast and Reading phase
+#### 4.7.1. <a name='BroadcastAndReadingPhase-1'></a>Broadcast and Reading phase
 
 -   Starts after group generated and channel opened
 -   Every party should send broadcasts and read broadcasts from other parties.
@@ -369,14 +369,14 @@ Response by node - when node A sends complaint of 4th type on node B. Node B sho
 -   Node A received bad data from node B
     -   Node A can not verify data from Event by Node B
 
-#### 4.7.2. <a name='Complaintphase-1'></a>Complaint phase
+#### 4.7.2. <a name='ComplaintPhase-1'></a>Complaint phase
 
 -   Node A should send complaint
 -   During complaint store accuser and accused node identifiers
 -   When Node C sends the same complaint - event ComplaintError should be emitted
 -   Every other complaint types would be rejected after executed complaint transaction
 
-#### 4.7.3. <a name='Responsephase'></a>Response phase
+#### 4.7.3. <a name='ResponsePhase'></a>Response phase
 
 -   Node B should send response
 -   During response every data should verified by smart contract

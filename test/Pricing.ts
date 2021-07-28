@@ -114,7 +114,7 @@ describe("Pricing", () => {
                     publicIp: "0x7f000001",
                     publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
                     name: "elvis1",
-                    domainName: "somedomain.name"
+                    domainName: "some.domain.name"
                 });
 
             await nodes.createNode(
@@ -126,7 +126,7 @@ describe("Pricing", () => {
                     publicIp: "0x7f000003",
                     publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
                     name: "elvis2",
-                    domainName: "somedomain.name"
+                    domainName: "some.domain.name"
                 });
 
             await nodes.createNode(
@@ -138,7 +138,7 @@ describe("Pricing", () => {
                     publicIp: "0x7f000005",
                     publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
                     name: "elvis3",
-                    domainName: "somedomain.name"
+                    domainName: "some.domain.name"
                 });
 
             await nodes.createNode(
@@ -150,7 +150,7 @@ describe("Pricing", () => {
                     publicIp: "0x7f000007",
                     publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
                     name: "elvis4",
-                    domainName: "somedomain.name"
+                    domainName: "some.domain.name"
                 });
 
         });
@@ -188,8 +188,8 @@ describe("Pricing", () => {
                 let sumNode = 0;
                 for (let i = 0; i < numberOfNodes; i++) {
                     if (await nodes.isNodeActive(i)) {
-                        const getSchainHashsForNode = await schainsInternal.getSchainHashsForNode(i);
-                        for (const schain of getSchainHashsForNode) {
+                        const getSchainHashesForNode = await schainsInternal.getSchainHashesForNode(i);
+                        for (const schain of getSchainHashesForNode) {
                             const partOfNode = await schainsInternal.getSchainsPartOfNode(schain);
                             const isNodeLeft = await nodes.isNodeLeft(i);
                             if (partOfNode !== 0  && !isNodeLeft) {
@@ -261,7 +261,7 @@ describe("Pricing", () => {
                             publicIp: "0x7f000011",
                             publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
                             name: "vadim",
-                            domainName: "somedomain.name"
+                            domainName: "some.domain.name"
                         });
                     const MINUTES_PASSED = 2;
                     await skipTime(ethers, lastUpdated + MINUTES_PASSED * 60 - await currentTime(web3));
@@ -281,10 +281,10 @@ describe("Pricing", () => {
                     let numberOfSchains = 0;
                     for (let i = 0; i < (await nodes.getNumberOfNodes()).toNumber(); i++) {
                         if (await nodes.isNodeActive(i)) {
-                            const getSchainHashsForNode = await schainsInternal.getSchainHashsForNode(i);
+                            const getSchainHashesForNode = await schainsInternal.getSchainHashesForNode(i);
                             let totalPartOfNode = 0;
                             numberOfSchains = 0;
-                            for (const schain of getSchainHashsForNode) {
+                            for (const schain of getSchainHashesForNode) {
                                 const partOfNode = await schainsInternal.getSchainsPartOfNode(schain);
                                 ++numberOfSchains;
                                 totalPartOfNode += partOfNode;
@@ -325,7 +325,7 @@ describe("Pricing", () => {
                             publicIp: "0x7f000011",
                             publicKey: ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')],
                             name: "vadim",
-                            domainName: "somedomain.name"
+                            domainName: "some.domain.name"
                         });
 
                     const MINUTES_PASSED = 30;

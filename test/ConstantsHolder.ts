@@ -90,11 +90,11 @@ describe("ConstantsHolder", () => {
   });
 
   it("should Set latency", async () => {
-    const miliSec = 100;
-    await constantsHolder.connect(user).setLatency(miliSec)
+    const latency = 100;
+    await constantsHolder.connect(user).setLatency(latency)
       .should.be.eventually.rejectedWith("CONSTANTS_HOLDER_MANAGER_ROLE is required");
-    await constantsHolder.setLatency(miliSec);
-    (await constantsHolder.allowableLatency()).should.be.equal(miliSec);
+    await constantsHolder.setLatency(latency);
+    (await constantsHolder.allowableLatency()).should.be.equal(latency);
   });
 
   it("should Set checkTime", async () => {
@@ -182,12 +182,12 @@ describe("ConstantsHolder", () => {
     (await constantsHolder.minimalSchainLifetime()).should.be.equal(lifetime);
   });
 
-  it("should set complaint timelimit", async () => {
-    const timelimit = 3600;
-    await constantsHolder.connect(user).setComplaintTimelimit(timelimit)
+  it("should set complaint timeLimit", async () => {
+    const timeLimit = 3600;
+    await constantsHolder.connect(user).setComplaintTimeLimit(timeLimit)
       .should.be.eventually.rejectedWith("CONSTANTS_HOLDER_MANAGER_ROLE is required");
-    await constantsHolder.setComplaintTimelimit(timelimit);
-    (await constantsHolder.complaintTimelimit()).should.be.equal(timelimit);
+    await constantsHolder.setComplaintTimeLimit(timeLimit);
+    (await constantsHolder.complaintTimeLimit()).should.be.equal(timeLimit);
   });
 
 });

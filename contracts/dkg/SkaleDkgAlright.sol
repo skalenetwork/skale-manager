@@ -59,7 +59,7 @@ library SkaleDkgAlright {
         uint numberOfParticipant = channels[schainHash].n;
         require(numberOfParticipant == dkgProcess[schainHash].numberOfBroadcasted, "Still Broadcasting phase");
         require(
-            startAlrightTimestamp[schainHash].add(_getComplaintTimelimit(contractManager)) > block.timestamp,
+            startAlrightTimestamp[schainHash].add(_getComplaintTimeLimit(contractManager)) > block.timestamp,
             "Incorrect time for alright"
         );
         require(
@@ -79,8 +79,8 @@ library SkaleDkgAlright {
         }
     }
 
-    function _getComplaintTimelimit(ContractManager contractManager) private view returns (uint) {
-        return ConstantsHolder(contractManager.getConstantsHolder()).complaintTimelimit();
+    function _getComplaintTimeLimit(ContractManager contractManager) private view returns (uint) {
+        return ConstantsHolder(contractManager.getConstantsHolder()).complaintTimeLimit();
     }
 
 }

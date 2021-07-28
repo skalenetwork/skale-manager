@@ -818,10 +818,6 @@ contract Nodes is Permissions {
         delete spaceOfNodes[nodeIndex].indexInSpaceMap;
     }
 
-    function _getNodesAmountBySpace() internal view returns (SegmentTree.Tree storage) {
-        return _nodesAmountBySpace;
-    }
-
     /**
      * @dev Moves a node to a new space mapping.
      */

@@ -1,0 +1,7 @@
+blockhash
+delegatecall
+gasleft
+mload
+selfdestruct
+staticcall
+struct

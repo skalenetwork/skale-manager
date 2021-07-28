@@ -232,7 +232,7 @@ describe("SkaleDKG", () => {
             ]
         ];
 
-        const verificationVectorMult = [
+        const verificationVectorMultiplication = [
             [
                 {
                     x: {
@@ -341,7 +341,7 @@ describe("SkaleDKG", () => {
                         publicIp: "0x7f0000" + hexIndex,
                         publicKey: validatorsPublicKey[index],
                         name: "d2" + hexIndex,
-                        domainName: "somedomain.name"
+                        domainName: "some.domain.name"
                     });
             }
             await schainsInternal.addSchainType(1, 16);
@@ -513,12 +513,12 @@ describe("SkaleDKG", () => {
                 );
                 assert(res.should.be.true);
                 await skipTime(ethers, 1700);
-                const resCompl = await skaleDKG.connect(validatorsAccount[0]).isComplaintPossible(
+                const resComplaint = await skaleDKG.connect(validatorsAccount[0]).isComplaintPossible(
                     stringValue(web3.utils.soliditySha3(schainName)),
                     0,
                     1,
                 );
-                assert(resCompl.should.be.false);
+                assert(resComplaint.should.be.false);
                 const balanceBefore = await getBalance(validatorsAccount[0].address);
                 await expect(skaleDKG.connect(validatorsAccount[0]).complaint(
                     stringValue(web3.utils.soliditySha3(schainName)),
@@ -554,12 +554,12 @@ describe("SkaleDKG", () => {
                 );
                 assert(res.should.be.true);
                 await skipTime(ethers, 1800);
-                let resCompl = await skaleDKG.connect(validatorsAccount[0]).isComplaintPossible(
+                let resComplaint = await skaleDKG.connect(validatorsAccount[0]).isComplaintPossible(
                     stringValue(web3.utils.soliditySha3(schainName)),
                     0,
                     1
                 );
-                assert(resCompl.should.be.true);
+                assert(resComplaint.should.be.true);
                 const balanceBefore = await getBalance(validatorsAccount[0].address);
                 await skaleDKG.connect(validatorsAccount[0]).complaint(
                     stringValue(web3.utils.soliditySha3(schainName)),
@@ -574,12 +574,12 @@ describe("SkaleDKG", () => {
                     1
                 );
                 assert(res.should.be.false);
-                resCompl = await skaleDKG.connect(validatorsAccount[0]).isComplaintPossible(
+                resComplaint = await skaleDKG.connect(validatorsAccount[0]).isComplaintPossible(
                     stringValue(web3.utils.soliditySha3(schainName)),
                     0,
                     1
                 );
-                assert(resCompl.should.be.false);
+                assert(resComplaint.should.be.false);
                 res = await skaleDKG.connect(validatorsAccount[1]).isChannelOpened(
                     stringValue(web3.utils.soliditySha3(schainName))
                 );
@@ -648,12 +648,12 @@ describe("SkaleDKG", () => {
                     1
                 );
                 assert(resAlr.should.be.true);
-                let resCompl = await skaleDKG.connect(validatorsAccount[0]).isComplaintPossible(
+                let resComplaint = await skaleDKG.connect(validatorsAccount[0]).isComplaintPossible(
                     stringValue(web3.utils.soliditySha3(schainName)),
                     0,
                     1,
                 );
-                assert(resCompl.should.be.false);
+                assert(resComplaint.should.be.false);
 
                 balanceBefore = await getBalance(validatorsAccount[0].address);
                 await expect(skaleDKG.connect(validatorsAccount[0]).complaint(
@@ -667,12 +667,12 @@ describe("SkaleDKG", () => {
                 balance.should.be.almost(balanceBefore);
 
                 await skipTime(ethers, 1800);
-                resCompl = await skaleDKG.connect(validatorsAccount[0]).isComplaintPossible(
+                resComplaint = await skaleDKG.connect(validatorsAccount[0]).isComplaintPossible(
                     stringValue(web3.utils.soliditySha3(schainName)),
                     0,
                     1
                 );
-                assert(resCompl.should.be.true);
+                assert(resComplaint.should.be.true);
 
                 balanceBefore = await getBalance(validatorsAccount[0].address);
                 await skaleDKG.connect(validatorsAccount[0]).complaint(
@@ -689,12 +689,12 @@ describe("SkaleDKG", () => {
                     1
                 );
                 assert(res.should.be.false);
-                resCompl = await skaleDKG.connect(validatorsAccount[0]).isComplaintPossible(
+                resComplaint = await skaleDKG.connect(validatorsAccount[0]).isComplaintPossible(
                     stringValue(web3.utils.soliditySha3(schainName)),
                     0,
                     1
                 );
-                assert(resCompl.should.be.false);
+                assert(resComplaint.should.be.false);
                 res = await skaleDKG.connect(validatorsAccount[1]).isChannelOpened(
                     stringValue(web3.utils.soliditySha3(schainName))
                 );
@@ -824,7 +824,7 @@ describe("SkaleDKG", () => {
                         stringValue(web3.utils.soliditySha3(schainName)),
                         0,
                         verificationVectors[indexes[0]],
-                        verificationVectorMult[indexes[0]],
+                        verificationVectorMultiplication[indexes[0]],
                         encryptedSecretKeyContributions[indexes[0]]
                     );
                     await skipTime(ethers, 1800);
@@ -1100,7 +1100,7 @@ describe("SkaleDKG", () => {
                             stringValue(web3.utils.soliditySha3(schainName)),
                             0,
                             verificationVectors[indexes[0]],
-                            verificationVectorMult[indexes[0]],
+                            verificationVectorMultiplication[indexes[0]],
                             encryptedSecretKeyContributions[indexes[0]]
                         );
                         res = await skaleDKG.connect(validatorsAccount[1]).isComplaintPossible(
@@ -1152,7 +1152,7 @@ describe("SkaleDKG", () => {
                             stringValue(web3.utils.soliditySha3(schainName)),
                             0,
                             verificationVectors[indexes[0]],
-                            verificationVectorMult[indexes[0]],
+                            verificationVectorMultiplication[indexes[0]],
                             badEncryptedSecretKeyContributions[indexes[0]]
                         ).should.be.eventually.rejectedWith("Broadcasted Data is not correct");
 
@@ -1160,7 +1160,7 @@ describe("SkaleDKG", () => {
                             stringValue(web3.utils.soliditySha3(schainName)),
                             0,
                             verificationVectors[indexes[0]],
-                            verificationVectorMult[indexes[0]],
+                            verificationVectorMultiplication[indexes[0]],
                             encryptedSecretKeyContributions[indexes[0]]
                         );
 
@@ -1202,7 +1202,7 @@ describe("SkaleDKG", () => {
                             stringValue(web3.utils.soliditySha3(schainName)),
                             0,
                             verificationVectors[indexes[0]],
-                            verificationVectorMult[indexes[0]],
+                            verificationVectorMultiplication[indexes[0]],
                             encryptedSecretKeyContributions[indexes[0]]
                         );
                         await expect(skaleDKG.connect(validatorsAccount[0]).response(
@@ -1278,12 +1278,12 @@ describe("SkaleDKG", () => {
                         1,
                         0
                     );
-                    const resCompl = await skaleDKG.connect(validatorsAccount[0]).isComplaintPossible(
+                    const resComplaint = await skaleDKG.connect(validatorsAccount[0]).isComplaintPossible(
                         stringValue(web3.utils.soliditySha3(schainName)),
                         0,
                         1
                     );
-                    assert(resCompl.should.be.false);
+                    assert(resComplaint.should.be.false);
                     await expect(skaleDKG.connect(validatorsAccount[0]).complaintBadData(
                         stringValue(web3.utils.soliditySha3(schainName)),
                         0,
@@ -1331,7 +1331,7 @@ describe("SkaleDKG", () => {
                                 publicIp: "0x7f000002",
                                 publicKey: validatorsPublicKey[0],
                                 name: "d202",
-                                domainName: "somedomain.name"
+                                domainName: "some.domain.name"
                         });
 
                         let balanceBefore = await getBalance(validatorsAccount[0].address);
@@ -1339,7 +1339,7 @@ describe("SkaleDKG", () => {
                             stringValue(web3.utils.soliditySha3(schainName)),
                             0,
                             verificationVectors[indexes[0]],
-                            verificationVectorMult[indexes[0]],
+                            verificationVectorMultiplication[indexes[0]],
                             badEncryptedSecretKeyContributions[indexes[0]]
                         );
                         let balance = await getBalance(validatorsAccount[0].address);
@@ -1375,7 +1375,7 @@ describe("SkaleDKG", () => {
                             stringValue(web3.utils.soliditySha3(schainName)),
                             0,
                             verificationVectors[indexes[0]],
-                            verificationVectorMult[indexes[0]],
+                            verificationVectorMultiplication[indexes[0]],
                             badEncryptedSecretKeyContributions[indexes[0]]
                         );
                         let balance = await getBalance(validatorsAccount[0].address);
@@ -1438,7 +1438,7 @@ describe("SkaleDKG", () => {
                     publicIp: "0x7f000003",
                     publicKey: validatorsPublicKey[0],
                     name: "d203",
-                    domainName: "somedomain.name"
+                    domainName: "some.domain.name"
                 });
 
             await wallets.connect(owner).rechargeSchainWallet(stringValue(web3.utils.soliditySha3(schainName)), {value: 1e20.toString()});
@@ -1466,7 +1466,7 @@ describe("SkaleDKG", () => {
             balance.should.be.almost(balanceBefore);
 
             balanceBefore = await getBalance(validatorsAccount[1].address);
-            const resCompl = await (await skaleDKG.connect(validatorsAccount[1]).complaintBadData(
+            const resComplaint = await (await skaleDKG.connect(validatorsAccount[1]).complaintBadData(
                 stringValue(web3.utils.soliditySha3(schainName)),
                 1,
                 0
@@ -1477,7 +1477,7 @@ describe("SkaleDKG", () => {
 
             assert(
                 await skaleDKG.getComplaintStartedTime(stringValue(web3.utils.soliditySha3(schainName))),
-                (await web3.eth.getBlock(resCompl.blockNumber)).timestamp.toString()
+                (await web3.eth.getBlock(resComplaint.blockNumber)).timestamp.toString()
             );
 
             balanceBefore = await getBalance(validatorsAccount[0].address);
@@ -1485,7 +1485,7 @@ describe("SkaleDKG", () => {
                 stringValue(web3.utils.soliditySha3(schainName)),
                 0,
                 verificationVectors[indexes[0]],
-                verificationVectorMult[indexes[0]],
+                verificationVectorMultiplication[indexes[0]],
                 badEncryptedSecretKeyContributions[indexes[0]]
             );
             balance = await getBalance(validatorsAccount[0].address);
@@ -1617,7 +1617,7 @@ describe("SkaleDKG", () => {
                     publicIp: "0x7f000003",
                     publicKey: validatorsPublicKey[0],
                     name: "d203",
-                    domainName: "somedomain.name"
+                    domainName: "some.domain.name"
                 });
 
             await wallets.connect(owner).rechargeSchainWallet(stringValue(web3.utils.soliditySha3(schainName)), {value: 1e20.toString()});
@@ -1639,24 +1639,24 @@ describe("SkaleDKG", () => {
                 await skaleDKG.getAlrightStartedTime(stringValue(web3.utils.soliditySha3(schainName))),
                 (await web3.eth.getBlock(res.blockNumber)).timestamp.toString()
             );
-            let numOfCompl = await skaleDKG.getNumberOfCompleted(stringValue(web3.utils.soliditySha3(schainName)));
-            assert(numOfCompl, "0");
+            let numOfCompleted = await skaleDKG.getNumberOfCompleted(stringValue(web3.utils.soliditySha3(schainName)));
+            assert(numOfCompleted, "0");
 
             await skaleDKG.connect(validatorsAccount[0]).alright(
                 stringValue(web3.utils.soliditySha3(schainName)),
                 0
             );
 
-            numOfCompl = await skaleDKG.getNumberOfCompleted(stringValue(web3.utils.soliditySha3(schainName)));
-            assert(numOfCompl, "1");
+            numOfCompleted = await skaleDKG.getNumberOfCompleted(stringValue(web3.utils.soliditySha3(schainName)));
+            assert(numOfCompleted, "1");
 
             const resSuccess = await (await skaleDKG.connect(validatorsAccount[1]).alright(
                 stringValue(web3.utils.soliditySha3(schainName)),
                 1
             )).wait();
 
-            numOfCompl = await skaleDKG.getNumberOfCompleted(stringValue(web3.utils.soliditySha3(schainName)));
-            assert(numOfCompl, "2");
+            numOfCompleted = await skaleDKG.getNumberOfCompleted(stringValue(web3.utils.soliditySha3(schainName)));
+            assert(numOfCompleted, "2");
 
             assert(
                 await skaleDKG.getTimeOfLastSuccessfulDKG(stringValue(web3.utils.soliditySha3(schainName))),
@@ -1685,7 +1685,7 @@ describe("SkaleDKG", () => {
                     publicIp: "0x7f000004",
                     publicKey: validatorsPublicKey[0],
                     name: "d204",
-                    domainName: "somedomain.name"
+                    domainName: "some.domain.name"
                 }
             );
 
@@ -1786,7 +1786,7 @@ describe("SkaleDKG", () => {
                         publicIp: "0x7f0000" + hexIndex,
                         publicKey: validatorsPublicKey[0],
                         name: "d2" + hexIndex,
-                        domainName: "somedomain.name"
+                        domainName: "some.domain.name"
                     });
             }
 
@@ -1893,7 +1893,7 @@ describe("SkaleDKG", () => {
                         publicIp: "0x7f0000" + hexIndex,
                         publicKey: validatorsPublicKey[0],
                         name: "d2" + hexIndex,
-                        domainName: "somedomain.name"
+                        domainName: "some.domain.name"
                     });
             }
 
@@ -1912,7 +1912,7 @@ describe("SkaleDKG", () => {
                     publicIp: "0x7f0000ff",
                     publicKey: validatorsPublicKey[0],
                     name: "d2ff",
-                    domainName: "somedomain.name"
+                    domainName: "some.domain.name"
                 });
 
             const secretKeyContributions = [];
@@ -1925,7 +1925,7 @@ describe("SkaleDKG", () => {
                 verificationVectorNew[i] = verificationVectors[i % 2][0];
             }
 
-            const verificationVectorMultNew = [
+            const verificationVectorMultiplicationNew = [
                 {
                     x: {
                         a: "17194438700289937736888799343771909433659280658838586817455546535714250972965",
@@ -2038,7 +2038,7 @@ describe("SkaleDKG", () => {
                 }
             ];
 
-            const badVerificationVectorMultNew = [
+            const badVerificationVectorMultiplicationNew = [
                 {
                     x: {
                         a: "10154228958897272268223398244445374804407241158746898754006080773714557731510",
@@ -2202,21 +2202,21 @@ describe("SkaleDKG", () => {
                 stringValue(web3.utils.soliditySha3("New16NodeSchain")),
                 accusedNode,
                 verificationVectorNew,
-                verificationVectorMult[indexes[indexToSend]],
+                verificationVectorMultiplication[indexes[indexToSend]],
                 secretKeyContributions
             ).should.be.eventually.rejectedWith("Incorrect length of multiplied verification vector");
             await skaleDKG.connect(validatorsAccount[indexToSend]).preResponse(
                 stringValue(web3.utils.soliditySha3("New16NodeSchain")),
                 accusedNode,
                 verificationVectorNew,
-                badVerificationVectorMultNew,
+                badVerificationVectorMultiplicationNew,
                 secretKeyContributions
             ).should.be.eventually.rejectedWith("Multiplied verification vector is incorrect");
             const resPreResp = await (await skaleDKG.connect(validatorsAccount[indexToSend]).preResponse(
                 stringValue(web3.utils.soliditySha3("New16NodeSchain")),
                 accusedNode,
                 verificationVectorNew,
-                verificationVectorMultNew,
+                verificationVectorMultiplicationNew,
                 secretKeyContributions
             )).wait();
             const resResp = await (await skaleDKG.connect(validatorsAccount[indexToSend]).response(
@@ -2246,7 +2246,7 @@ describe("SkaleDKG", () => {
                         publicIp: "0x7f0000" + hexIndex,
                         publicKey: validatorsPublicKey[0],
                         name: "d2" + hexIndex,
-                        domainName: "somedomain.name"
+                        domainName: "some.domain.name"
                     });
             }
 
@@ -2324,7 +2324,7 @@ describe("SkaleDKG", () => {
                         publicIp: "0x7f0000" + hexIndex,
                         publicKey: validatorsPublicKey[0],
                         name: "d2" + hexIndex,
-                        domainName: "somedomain.name"
+                        domainName: "some.domain.name"
                     });
             }
 
@@ -2395,7 +2395,7 @@ describe("SkaleDKG", () => {
                     publicIp: "0x7f0000ff",
                     publicKey: validatorsPublicKey[0],
                     name: "d2ff",
-                    domainName: "somedomain.name"
+                    domainName: "some.domain.name"
                 }
             );
             await schains.restartSchainCreation("New16NodeSchain");
@@ -2454,7 +2454,7 @@ describe("SkaleDKG", () => {
                         publicIp: "0x7f0000" + hexIndex,
                         publicKey: validatorsPublicKey[0],
                         name: "d2" + hexIndex,
-                        domainName: "somedomain.name"
+                        domainName: "some.domain.name"
                     });
             }
 
@@ -2524,7 +2524,7 @@ describe("SkaleDKG", () => {
             //         publicIp: "0x7f0000ff",
             //         publicKey: validatorsPublicKey[0],
             //         name: "d2ff",
-            //         domainName: "somedomain.name"
+            //         domainName: "some.domain.name"
             //     }
             // );
 

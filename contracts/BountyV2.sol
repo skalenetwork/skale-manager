@@ -40,6 +40,7 @@ contract BountyV2 is Permissions {
         uint bountyPaid;
     }
     
+    // TODO: replace with an array when solidity starts supporting it
     uint public constant YEAR1_BOUNTY = 3850e5 * 1e18;
     uint public constant YEAR2_BOUNTY = 3465e5 * 1e18;
     uint public constant YEAR3_BOUNTY = 3080e5 * 1e18;
@@ -49,6 +50,8 @@ contract BountyV2 is Permissions {
     uint public constant EPOCHS_PER_YEAR = 12;
     uint public constant SECONDS_PER_DAY = 24 * 60 * 60;
     uint public constant BOUNTY_WINDOW_SECONDS = 3 * SECONDS_PER_DAY;
+
+    bytes32 public constant BOUNTY_REDUCTION_MANAGER_ROLE = keccak256("BOUNTY_REDUCTION_MANAGER_ROLE");
     
     uint private _nextEpoch;
     uint private _epochPool;
@@ -63,7 +66,13 @@ contract BountyV2 is Permissions {
     // validatorId => BountyHistory
     mapping (uint => BountyHistory) private _bountyHistory;
 
-    bytes32 public constant BOUNTY_REDUCTION_MANAGER_ROLE = keccak256("BOUNTY_REDUCTION_MANAGER_ROLE");
+    /**
+     * @dev Emitted when a node creation window was changed.
+     */
+    event NodeCreationWindowWasChanged(
+        uint oldValue,
+        uint newValue
+    );
 
     modifier onlyBountyReductionManager() {
         require(hasRole(BOUNTY_REDUCTION_MANAGER_ROLE, msg.sender), "BOUNTY_REDUCTION_MANAGER_ROLE is required");
@@ -131,6 +140,7 @@ contract BountyV2 is Permissions {
     }
 
     function setNodeCreationWindowSeconds(uint window) external allow("Nodes") {
+        emit NodeCreationWindowWasChanged(nodeCreationWindowSeconds, window);
         nodeCreationWindowSeconds = window;
     }
 
