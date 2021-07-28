@@ -10,6 +10,7 @@ npx ganache-cli --gasLimit 8000000 --quiet &
 GANACHE_PID=$!
 
 cd $DEPLOYED_DIR
+./scrypt/get_scrypt_npm.sh
 yarn install || exit $?
 PRODUCTION=true VERSION=$DEPLOYED_VERSION npx hardhat run migrations/deploy.ts --network localhost || exit $?
 rm $GITHUB_WORKSPACE/.openzeppelin/unknown-*.json
