@@ -53,11 +53,6 @@ contract TokenState is Permissions, ILocker {
 
     bytes32 public constant LOCKER_MANAGER_ROLE = keccak256("LOCKER_MANAGER_ROLE");
 
-    modifier onlyLockerManager() {
-        require(hasRole(LOCKER_MANAGER_ROLE, msg.sender), "LOCKER_MANAGER_ROLE is required");
-        _;
-    }
-
     /**
      * @dev Emitted when a contract is added to the locker.
      */
@@ -71,6 +66,11 @@ contract TokenState is Permissions, ILocker {
     event LockerWasRemoved(
         string locker
     );
+
+    modifier onlyLockerManager() {
+        require(hasRole(LOCKER_MANAGER_ROLE, msg.sender), "LOCKER_MANAGER_ROLE is required");
+        _;
+    }
 
     /**
      *  @dev See {ILocker-getAndUpdateLockedAmount}.

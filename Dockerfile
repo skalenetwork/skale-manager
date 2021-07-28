@@ -1,4 +1,4 @@
-FROM node:12
+FROM node:14
 
 RUN mkdir /usr/src/manager
 WORKDIR /usr/src/manager

@@ -623,6 +623,10 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         return (index, index < channels[schainHash].n);
     }
 
+    function isEveryoneBroadcasted(bytes32 schainHash) public view returns (bool) {
+        return channels[schainHash].n == dkgProcess[schainHash].numberOfBroadcasted;
+    }
+
     function _refundGasBySchain(bytes32 schainHash, uint gasTotal, Context memory context) private {
         Wallets wallets = Wallets(payable(contractManager.getContract("Wallets")));
         bool isLastNode = channels[schainHash].n == dkgProcess[schainHash].numberOfCompleted;
@@ -681,10 +685,6 @@ contract SkaleDKG is Permissions, ISkaleDKG {
         emit ChannelOpened(schainHash);
     }
 
-    function isEveryoneBroadcasted(bytes32 schainHash) public view returns (bool) {
-        return channels[schainHash].n == dkgProcess[schainHash].numberOfBroadcasted;
-    }
-
     function _isNodeOwnedByMessageSender(uint nodeIndex, address from) private view returns (bool) {
         return Nodes(contractManager.getContract("Nodes")).isNodeExist(from, nodeIndex);
     }
@@ -696,5 +696,4 @@ contract SkaleDKG is Permissions, ISkaleDKG {
     function _getComplaintTimelimit() private view returns (uint) {
         return ConstantsHolder(contractManager.getConstantsHolder()).complaintTimelimit();
     }
-
 }

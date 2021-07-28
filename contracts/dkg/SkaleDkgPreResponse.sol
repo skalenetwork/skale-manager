@@ -63,6 +63,19 @@ library SkaleDkgPreResponse {
         _processPreResponse(secretKeyContribution[index].share, schainHash, verificationVectorMult, complaints);
     }
 
+    function _processPreResponse(
+        bytes32 share,
+        bytes32 schainHash,
+        G2Operations.G2Point[] memory verificationVectorMult,
+        mapping(bytes32 => SkaleDKG.ComplaintData) storage complaints
+    )
+        private
+    {
+        complaints[schainHash].keyShare = share;
+        complaints[schainHash].sumOfVerVec = _calculateSum(verificationVectorMult);
+        complaints[schainHash].isResponse = true;
+    }
+
     function _preResponseCheck(
         bytes32 schainHash,
         uint fromNodeIndex,
@@ -93,19 +106,6 @@ library SkaleDkgPreResponse {
             _checkCorrectVectorMultiplication(index, verificationVector, verificationVectorMult),
             "Multiplied verification vector is incorrect"
         ); 
-    }
-
-    function _processPreResponse(
-        bytes32 share,
-        bytes32 schainHash,
-        G2Operations.G2Point[] memory verificationVectorMult,
-        mapping(bytes32 => SkaleDKG.ComplaintData) storage complaints
-    )
-        private
-    {
-        complaints[schainHash].keyShare = share;
-        complaints[schainHash].sumOfVerVec = _calculateSum(verificationVectorMult);
-        complaints[schainHash].isResponse = true;
     }
 
     function _calculateSum(G2Operations.G2Point[] memory verificationVectorMult)

@@ -58,6 +58,20 @@ contract ValidatorService is Permissions {
         bool acceptNewRequests;
     }
 
+    mapping (uint => Validator) public validators;
+    mapping (uint => bool) private _trustedValidators;
+    uint[] public trustedValidatorsList;
+    //       address => validatorId
+    mapping (address => uint) private _validatorAddressToId;
+    //       address => validatorId
+    mapping (address => uint) private _nodeAddressToValidatorId;
+    // validatorId => nodeAddress[]
+    mapping (uint => address[]) private _nodeAddresses;
+    uint public numberOfValidators;
+    bool public useWhitelist;
+
+    bytes32 public constant VALIDATOR_MANAGER_ROLE = keccak256("VALIDATOR_MANAGER_ROLE");
+
     /**
      * @dev Emitted when a validator registers.
      */
@@ -102,20 +116,6 @@ contract ValidatorService is Permissions {
         uint validatorId,
         address nodeAddress
     );
-
-    mapping (uint => Validator) public validators;
-    mapping (uint => bool) private _trustedValidators;
-    uint[] public trustedValidatorsList;
-    //       address => validatorId
-    mapping (address => uint) private _validatorAddressToId;
-    //       address => validatorId
-    mapping (address => uint) private _nodeAddressToValidatorId;
-    // validatorId => nodeAddress[]
-    mapping (uint => address[]) private _nodeAddresses;
-    uint public numberOfValidators;
-    bool public useWhitelist;
-
-    bytes32 public constant VALIDATOR_MANAGER_ROLE = keccak256("VALIDATOR_MANAGER_ROLE");
 
     modifier onlyValidatorManager() {
         require(hasRole(VALIDATOR_MANAGER_ROLE, msg.sender), "VALIDATOR_MANAGER_ROLE is required");
