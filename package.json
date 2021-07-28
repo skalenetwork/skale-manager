@@ -1,91 +1,93 @@
 {
-    "name": "@skalenetwork/skale-manager",
-    "version": "1.8.1",
-    "private": true,
-    "description": "SKALE Manager system, Decentralized task manager",
-    "homepage": "https://github.com/skalenetwork/skale-manager#readme",
-    "bugs": {
-        "url": "https://github.com/skalenetwork/skale-manager/issues"
+  "name": "@skalenetwork/skale-manager",
+  "version": "1.8.1",
+  "private": true,
+  "description": "SKALE Manager system, Decentralized task manager",
+  "homepage": "https://github.com/skalenetwork/skale-manager#readme",
+  "bugs": {
+    "url": "https://github.com/skalenetwork/skale-manager/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/skalenetwork/skale-manager.git"
+  },
+  "license": "AGPL-3.0",
+  "author": "SKALE Labs",
+  "contributors": [
+    {
+      "name": "Artem Payvin <artem.payvin@skalelabs.com>",
+      "url": "https://github.com/payvint",
+      "githubUsername": "payvint"
     },
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/skalenetwork/skale-manager.git"
-    },
-    "license": "AGPL-3.0",
-    "author": "SKALE Labs",
-    "contributors": [
-        {
-            "name": "Artem Payvin <artem.payvin@skalelabs.com>",
-            "url": "https://github.com/payvint",
-            "githubUsername": "payvint"
-        },
-        {
-            "name": "Dmytro Stebaiev",
-            "url": "https://github.com/DimaStebaev",
-            "githubUsername": "DimaStebaev"
-        }
-    ],
-    "scripts": {
-        "preinstall": "./scrypt/get_scrypt_npm.sh",
-        "compile": "npx hardhat clean && npx hardhat compile",
-        "deploy": "bash ./scripts/deploy.sh",
-        "docs": "scripts/prepare-docs.sh",
-        "fullcheck": "yarn lint && yarn tsc && yarn tslint && yarn slither",
-        "hooks": "git config core.hooksPath .githooks || true",
-        "lint": "npx solhint \"contracts/**/*.sol\"",
-        "prepare": "yarn compile && yarn hooks",
-        "slither": "slither .",
-        "test": "yarn tsc && npx hardhat test",
-        "tsc": "tsc --noEmit",
-        "tslint": "npx tslint --project ."
-    },
-    "dependencies": {
-        "@nomiclabs/hardhat-ethers": "^2.0.2",
-        "@nomiclabs/hardhat-web3": "^2.0.0",
-        "@openzeppelin/contracts": "^3.4.1",
-        "@openzeppelin/contracts-ethereum-package": "^3.0.0",
-        "@openzeppelin/hardhat-upgrades": "^1.9.0",
-        "@skalenetwork/skale-manager-interfaces": "^0.1.2",
-        "axios": "^0.21.1",
-        "dotenv": "^10.0.0",
-        "ethereumjs-util": "^7.1.0",
-        "ethers": "^5.4.1",
-        "ethers-eip712": "^0.2.0",
-        "hardhat": "^2.4.3",
-        "web3": "^1.4.0"
-    },
-    "devDependencies": {
-        "@nomiclabs/hardhat-etherscan": "^2.1.1",
-        "@typechain/ethers-v5": "^5.0.0",
-        "@types/chai": "^4.2.14",
-        "@types/chai-almost": "^1.0.1",
-        "@types/chai-as-promised": "^7.1.3",
-        "@types/minimist": "^1.2.0",
-        "@types/mocha": "^8.2.0",
-        "@types/node": "^14.14.25",
-        "@types/sinon-chai": "^3.2.5",
-        "bignumber.js": "^9.0.0",
-        "chai": "^4.2.0",
-        "chai-almost": "^1.0.1",
-        "chai-as-promised": "^7.1.1",
-        "elliptic": "^6.5.3",
-        "ethereum-waffle": "^3.2.2",
-        "ganache-cli": "^6.11.0",
-        "hardhat-typechain": "^0.3.4",
-        "solhint": "^3.2.1",
-        "solidity-coverage": "^0.7.14",
-        "solidity-docgen": "^0.5.7",
-        "ts-generator": "^0.1.1",
-        "ts-node": "9.0.0",
-        "tslint": "^6.1.3",
-        "tslint-no-unused-expression-chai": "^0.1.4",
-        "typechain": "^4.0.1",
-        "typescript": "4.0.3"
-    },
-    "resolutions": {
-        "**/sqlite3": "5.0.2",
-        "web3/ethereumjs-**/scrypt": "file:./scrypt/node-scrypt",
-        "web3/**/scrypt": "file:./scrypt/node-scrypt",
-        "scrypt.js/scrypt": "file:./scrypt/node-scrypt"
+    {
+      "name": "Dmytro Stebaiev",
+      "url": "https://github.com/DimaStebaev",
+      "githubUsername": "DimaStebaev"
     }
+  ],
+  "scripts": {
+    "preinstall": "./scrypt/get_scrypt_npm.sh",
+    "compile": "npx hardhat clean && npx hardhat compile",
+    "docs": "scripts/prepare-docs.sh",
+    "fullcheck": "yarn lint && yarn tsc && yarn tslint && yarn cspell && yarn slither",
+    "hooks": "git config core.hooksPath .githooks || true",
+    "no-hooks": "git config core.hooksPath .git/hooks",
+    "lint": "npx solhint \"contracts/**/*.sol\"",
+    "prepare": "yarn compile && yarn hooks",
+    "slither": "slither .",
+    "test": "yarn tsc && npx hardhat test",
+    "tsc": "tsc --noEmit",
+    "tslint": "npx tslint --project .",
+    "cspell": "npx cspell \"contracts/**/*\" \"docs/**/*\" \"gas/**/*\" \"migrations/**/*\" \"scripts/**/*\" \"test/**/*\""
+  },
+  "dependencies": {
+    "@nomiclabs/hardhat-ethers": "^2.0.2",
+    "@nomiclabs/hardhat-web3": "^2.0.0",
+    "@openzeppelin/contracts": "^3.4.1",
+    "@openzeppelin/contracts-ethereum-package": "^3.0.0",
+    "@openzeppelin/hardhat-upgrades": "^1.9.0",
+    "@skalenetwork/skale-manager-interfaces": "^0.1.2",
+    "axios": "^0.21.1",
+    "dotenv": "^10.0.0",
+    "ethereumjs-util": "^7.1.0",
+    "ethers": "^5.4.1",
+    "ethers-eip712": "^0.2.0",
+    "hardhat": "^2.4.3",
+    "web3": "^1.4.0"
+  },
+  "devDependencies": {
+    "@nomiclabs/hardhat-etherscan": "^2.1.1",
+    "@typechain/ethers-v5": "^5.0.0",
+    "@types/chai": "^4.2.14",
+    "@types/chai-almost": "^1.0.1",
+    "@types/chai-as-promised": "^7.1.3",
+    "@types/minimist": "^1.2.0",
+    "@types/mocha": "^8.2.0",
+    "@types/node": "^14.14.25",
+    "@types/sinon-chai": "^3.2.5",
+    "bignumber.js": "^9.0.0",
+    "chai": "^4.2.0",
+    "chai-almost": "^1.0.1",
+    "chai-as-promised": "^7.1.1",
+    "cspell": "^5.6.6",
+    "elliptic": "^6.5.3",
+    "ethereum-waffle": "^3.2.2",
+    "ganache-cli": "^6.11.0",
+    "hardhat-typechain": "^0.3.4",
+    "solhint": "^3.2.1",
+    "solidity-coverage": "^0.7.14",
+    "solidity-docgen": "^0.5.7",
+    "ts-generator": "^0.1.1",
+    "ts-node": "9.0.0",
+    "tslint": "^6.1.3",
+    "tslint-no-unused-expression-chai": "^0.1.4",
+    "typechain": "^4.0.1",
+    "typescript": "4.0.3"
+  },
+  "resolutions": {
+    "**/sqlite3": "5.0.2",
+    "web3/ethereumjs-**/scrypt": "file:./scrypt/node-scrypt",
+    "web3/**/scrypt": "file:./scrypt/node-scrypt",
+    "scrypt.js/scrypt": "file:./scrypt/node-scrypt"
+  }
 }
