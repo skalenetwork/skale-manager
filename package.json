@@ -84,7 +84,6 @@
     },
     "resolutions": {
         "**/sqlite3": "5.0.2",
-        "**/sha3": "2.1.4",
         "web3/ethereumjs-**/scrypt": "file:./scrypt/node-scrypt",
         "web3/**/scrypt": "file:./scrypt/node-scrypt",
         "scrypt.js/scrypt": "file:./scrypt/node-scrypt"
