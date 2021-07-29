@@ -5,6 +5,10 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
+    strategy:
+      matrix:
+        node-version: [12.x, 14.x, 16.x]
+
     env:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
       INSECURE_PRIVATE_KEY_1: ${{ secrets.INSECURE_PRIVATE_KEY_1 }}
@@ -36,10 +40,10 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-pip-
 
-    - name: Set up Node
+    - name: Install NODE JS
       uses: actions/setup-node@v2
       with:
-        node-version: '12'
+        node-version: ${{ matrix.node-version }}
 
     - name: Set up Python
       uses: actions/setup-python@v2
@@ -62,6 +66,8 @@ jobs:
       run: ./scripts/test_deploy.sh
 
     - name: Test upgrade
+      env:
+        NODE_VERSION: ${{ matrix.node-version }}
       run: ./scripts/test_upgrade.sh
 
     - name: Run tests

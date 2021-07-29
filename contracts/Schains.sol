@@ -328,21 +328,6 @@ contract Schains is Permissions, ISchains {
     }
 
     /**
-     * @dev Converts data from bytes to normal schain parameters of lifetime,
-     * type, nonce, and name.
-     */
-    function _fallbackSchainParametersDataConverter(bytes memory data)
-        private
-        pure
-        returns (SchainParameters memory schainParameters)
-    {
-        (schainParameters.lifetime,
-        schainParameters.typeOfSchain,
-        schainParameters.nonce,
-        schainParameters.name) = abi.decode(data, (uint, uint8, uint16, string));
-    }
-
-    /**
      * @dev Allows creation of node group for Schain.
      * 
      * Emits an {SchainNodes} event.
@@ -446,5 +431,20 @@ contract Schains is Permissions, ISchains {
             payable(contractManager.getContract("Wallets"))
         ).withdrawFundsFromSchainWallet(payable(from), schainHash);
         emit SchainDeleted(from, name, schainHash);
+    }
+
+    /**
+     * @dev Converts data from bytes to normal schain parameters of lifetime,
+     * type, nonce, and name.
+     */
+    function _fallbackSchainParametersDataConverter(bytes memory data)
+        private
+        pure
+        returns (SchainParameters memory schainParameters)
+    {
+        (schainParameters.lifetime,
+        schainParameters.typeOfSchain,
+        schainParameters.nonce,
+        schainParameters.name) = abi.decode(data, (uint, uint8, uint16, string));
     }
 }

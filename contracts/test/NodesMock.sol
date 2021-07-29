@@ -58,10 +58,10 @@ contract NodesMock is Permissions {
     function getNumberOnlineNodes() external view returns (uint) {
         return nodesCount.sub(nodesLeft);
     }
-    function checkPossibilityToMaintainNode(uint /* validatorId */, uint /* nodeIndex */) external pure returns (bool) {
-        return true;
-    }
     function getValidatorId(uint nodeId) external view returns (uint) {
         return owner[nodeId];
+    }
+    function checkPossibilityToMaintainNode(uint /* validatorId */, uint /* nodeIndex */) external pure returns (bool) {
+        return true;
     }
 }
