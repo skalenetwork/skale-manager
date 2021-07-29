@@ -9,6 +9,7 @@ DEPLOYED_DIR=$GITHUB_WORKSPACE/deployed-skale-manager/
 if [[ $DEPLOYED_VERSION == "1.8.1" ]] && [[ $NODE_VERSION != "12.*" ]]
 then
     echo "Skip upgrade check because of incompatible node.js version"
+    exit 0
 fi
 
 git clone --branch $DEPLOYED_TAG https://github.com/$GITHUB_REPOSITORY.git $DEPLOYED_DIR
