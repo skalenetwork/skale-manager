@@ -13,12 +13,12 @@
     },
     "license": "AGPL-3.0",
     "author": "SKALE Labs",
-    "contributors": [
-        {
+    "contributors": [{
             "name": "Artem Payvin <artem.payvin@skalelabs.com>",
             "url": "https://github.com/payvint",
             "githubUsername": "payvint"
         },
+
         {
             "name": "Dmytro Stebaiev",
             "url": "https://github.com/DimaStebaev",
@@ -28,16 +28,17 @@
     "scripts": {
         "preinstall": "./scrypt/get_scrypt_npm.sh",
         "compile": "npx hardhat clean && npx hardhat compile",
-        "deploy": "bash ./scripts/deploy.sh",
         "docs": "scripts/prepare-docs.sh",
-        "fullcheck": "yarn lint && yarn tsc && yarn tslint && yarn slither",
+        "fullcheck": "yarn lint && yarn tsc && yarn tslint && yarn cspell && yarn slither",
         "hooks": "git config core.hooksPath .githooks || true",
+        "no-hooks": "git config core.hooksPath .git/hooks",
         "lint": "npx solhint \"contracts/**/*.sol\"",
         "prepare": "yarn compile && yarn hooks",
         "slither": "slither .",
         "test": "yarn tsc && npx hardhat test",
         "tsc": "tsc --noEmit",
-        "tslint": "npx tslint --project ."
+        "tslint": "npx tslint --project .",
+        "cspell": "npx cspell \"contracts/**/*\" \"docs/**/*\" \"gas/**/*\" \"migrations/**/*\" \"scripts/**/*\" \"test/**/*\""
     },
     "dependencies": {
         "@nomiclabs/hardhat-ethers": "^2.0.2",
@@ -68,6 +69,7 @@
         "chai": "^4.2.0",
         "chai-almost": "^1.0.1",
         "chai-as-promised": "^7.1.1",
+        "cspell": "^5.6.6",
         "elliptic": "^6.5.3",
         "ethereum-waffle": "^3.2.2",
         "ganache-cli": "^6.11.0",
@@ -84,7 +86,6 @@
     },
     "resolutions": {
         "**/sqlite3": "5.0.2",
-        "**/sha3": "2.1.4",
         "web3/ethereumjs-**/scrypt": "file:./scrypt/node-scrypt",
         "web3/**/scrypt": "file:./scrypt/node-scrypt",
         "scrypt.js/scrypt": "file:./scrypt/node-scrypt"
