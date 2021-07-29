@@ -59,6 +59,3 @@ typechain/
 
 # docs
 docs/api/*
-
-# scrypt downloaded source code
-scrypt/node-scrypt

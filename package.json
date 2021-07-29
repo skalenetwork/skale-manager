@@ -26,7 +26,6 @@
     }
   ],
   "scripts": {
-    "preinstall": "./scrypt/get_scrypt_npm.sh",
     "compile": "npx hardhat clean && npx hardhat compile",
     "docs": "scripts/prepare-docs.sh",
     "fullcheck": "yarn lint && yarn tsc && yarn tslint && yarn cspell && yarn slither",
@@ -83,11 +82,5 @@
     "tslint-no-unused-expression-chai": "^0.1.4",
     "typechain": "^4.0.1",
     "typescript": "4.0.3"
-  },
-  "resolutions": {
-    "**/sqlite3": "5.0.2",
-    "web3/ethereumjs-**/scrypt": "file:./scrypt/node-scrypt",
-    "web3/**/scrypt": "file:./scrypt/node-scrypt",
-    "scrypt.js/scrypt": "file:./scrypt/node-scrypt"
   }
 }
