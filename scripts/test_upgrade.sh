@@ -4,6 +4,13 @@ DEPLOYED_TAG=$(cat $GITHUB_WORKSPACE/DEPLOYED)
 DEPLOYED_VERSION=$(echo $DEPLOYED_TAG | cut -d '-' -f 1)
 DEPLOYED_DIR=$GITHUB_WORKSPACE/deployed-skale-manager/
 
+# TODO: remove when upgrade skale-manager with using new node js
+# or install old version of node
+if [[ $DEPLOYED_VERSION == "1.8.1" ]] && [[ $NODE_VERSION != "12.*" ]]
+then
+    echo "Skip upgrade check because of incompatible node.js version"
+fi
+
 git clone --branch $DEPLOYED_TAG https://github.com/$GITHUB_REPOSITORY.git $DEPLOYED_DIR
 
 npx ganache-cli --gasLimit 8000000 --quiet &
