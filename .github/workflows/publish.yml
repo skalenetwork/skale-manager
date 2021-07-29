@@ -36,9 +36,7 @@ jobs:
         node-version: '14'
 
     - name: Install project
-      run: |
-        ./scrypt/get_scrypt_npm.sh
-        yarn install
+      run: yarn install
     
     - name: Build and publish container
       run: |

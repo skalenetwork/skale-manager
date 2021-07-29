@@ -51,9 +51,7 @@ jobs:
         python-version: 3.8
 
     - name: Install project
-      run: |
-        ./scrypt/get_scrypt_npm.sh
-        yarn install
+      run: yarn install
 
     - name: Install slither
       run: pip3 install -r scripts/requirements.txt
