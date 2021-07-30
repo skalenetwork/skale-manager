@@ -101,7 +101,7 @@ const config: HardhatUserConfig = {
   },
   networks: {
     hardhat: {
-      accounts: getAccounts(),
+      // accounts: getAccounts(),
       blockGasLimit: 12000000
     },
     custom: {
