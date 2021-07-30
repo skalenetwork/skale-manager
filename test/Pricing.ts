@@ -1,4 +1,4 @@
-import { BigNumber } from "ethers";
+import { BigNumber, PopulatedTransaction, Wallet } from "ethers";
 import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 
@@ -35,23 +35,19 @@ chai.should();
 chai.use(chaiAsPromised);
 chai.use(solidity);
 
-async function getValidatorIdSignature(validatorId: BigNumber, signer: SignerWithAddress) {
+async function getValidatorIdSignature(validatorId: BigNumber, signer: Wallet) {
     const hash = web3.utils.soliditySha3(validatorId.toString());
     if (hash) {
-        let signature = await web3.eth.sign(hash, signer.address);
-        signature = (
-            signature.slice(130) === "00" ?
-            signature.slice(0, 130) + "1b" :
-            (
-                signature.slice(130) === "01" ?
-                signature.slice(0, 130) + "1c" :
-                signature
-            )
-        );
-        return signature;
+        const signature = await web3.eth.accounts.sign(hash, signer.privateKey);
+        return signature.signature;
     } else {
         return "";
     }
+}
+
+async function sendTransactionFromWallet(tx: PopulatedTransaction, signer: Wallet) {
+    await signer.signTransaction(tx);
+    return await signer.connect(ethers.provider).sendTransaction(tx);
 }
 
 function stringValue(value: string | null) {
@@ -66,7 +62,7 @@ describe("Pricing", () => {
     let owner: SignerWithAddress;
     let holder: SignerWithAddress;
     let validator: SignerWithAddress;
-    let nodeAddress: SignerWithAddress;
+    let nodeAddress: Wallet;
 
     let contractManager: ContractManager;
     let pricing: Pricing;
@@ -78,7 +74,11 @@ describe("Pricing", () => {
     let nodeRotation: NodeRotation;
 
     beforeEach(async () => {
-        [owner, holder, validator, nodeAddress] = await ethers.getSigners();
+        [owner, holder, validator] = await ethers.getSigners();
+
+        nodeAddress = new Wallet(String(privateKeys[3]));
+
+        await owner.sendTransaction({to: nodeAddress.address, value: ethers.utils.parseEther("1")});
 
         contractManager = await deployContractManager();
 
@@ -104,7 +104,7 @@ describe("Pricing", () => {
             await schainsInternal.initializeSchain("BobSchain", holder.address, 10, 2);
             await schainsInternal.initializeSchain("DavidSchain", holder.address, 10, 4);
             await schainsInternal.initializeSchain("JacobSchain", holder.address, 10, 8);
-            const pubKey = ec.keyFromPrivate(String(privateKeys[3]).slice(2)).getPublic();
+            const pubKey = ec.keyFromPrivate(String(nodeAddress.privateKey).slice(2)).getPublic();
             await nodes.createNode(
                 nodeAddress.address,
                 {
@@ -251,7 +251,7 @@ describe("Pricing", () => {
                 }
 
                 it("should change price when new active node has been added", async () => {
-                    const pubKey = ec.keyFromPrivate(String(privateKeys[3]).slice(2)).getPublic();
+                    const pubKey = ec.keyFromPrivate(String(nodeAddress.privateKey).slice(2)).getPublic();
                     await nodes.createNode(
                         nodeAddress.address,
                         {
@@ -315,7 +315,7 @@ describe("Pricing", () => {
                 });
 
                 it("should set price to min of too many minutes passed and price is less than min", async () => {
-                    const pubKey = ec.keyFromPrivate(String(privateKeys[3]).slice(2)).getPublic();
+                    const pubKey = ec.keyFromPrivate(String(nodeAddress.privateKey).slice(2)).getPublic();
                     await nodes.createNode(
                         nodeAddress.address,
                         {
