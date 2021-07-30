@@ -14,7 +14,7 @@ import { privateKeys } from "./tools/private-keys";
 
 import { skipTime } from "./tools/time";
 
-import { BigNumber } from "ethers";
+import { BigNumber, PopulatedTransaction, Wallet } from "ethers";
 import { deployContractManager } from "./tools/deploy/contractManager";
 import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
 import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
@@ -32,30 +32,26 @@ chai.should();
 chai.use(chaiAsPromised);
 chai.use(solidity);
 
-async function getValidatorIdSignature(validatorId: BigNumber, signer: SignerWithAddress) {
+async function getValidatorIdSignature(validatorId: BigNumber, signer: Wallet) {
     const hash = web3.utils.soliditySha3(validatorId.toString());
     if (hash) {
-        let signature = await web3.eth.sign(hash, signer.address);
-        signature = (
-            signature.slice(130) === "00" ?
-            signature.slice(0, 130) + "1b" :
-            (
-                signature.slice(130) === "01" ?
-                signature.slice(0, 130) + "1c" :
-                signature
-            )
-        );
-        return signature;
+        const signature = await web3.eth.accounts.sign(hash, signer.privateKey);
+        return signature.signature;
     } else {
         return "";
     }
 }
 
+async function sendTransactionFromWallet(tx: PopulatedTransaction, signer: Wallet) {
+    await signer.signTransaction(tx);
+    return await signer.connect(ethers.provider).sendTransaction(tx);
+}
+
 describe("NodesFunctionality", () => {
     let owner: SignerWithAddress;
     let validator: SignerWithAddress;
-    let nodeAddress: SignerWithAddress;
-    let nodeAddress2: SignerWithAddress;
+    let nodeAddress: Wallet;
+    let nodeAddress2: Wallet;
     let holder: SignerWithAddress;
 
     let contractManager: ContractManager;
@@ -66,7 +62,15 @@ describe("NodesFunctionality", () => {
     let delegationController: DelegationController;
 
     beforeEach(async () => {
-        [owner, validator, nodeAddress, nodeAddress2, holder] = await ethers.getSigners();
+        [owner, validator, holder] = await ethers.getSigners();
+
+        nodeAddress = new Wallet(String(privateKeys[2]));
+
+        await owner.sendTransaction({to: nodeAddress.address, value: ethers.utils.parseEther("1")});
+
+        nodeAddress2 = new Wallet(String(privateKeys[3]));
+
+        await owner.sendTransaction({to: nodeAddress2.address, value: ethers.utils.parseEther("1")});
 
         contractManager = await deployContractManager();
         nodes = await deployNodes(contractManager);
@@ -137,7 +141,7 @@ describe("NodesFunctionality", () => {
     });
 
     it("should create node", async () => {
-        const pubKey = ec.keyFromPrivate(String(privateKeys[2]).slice(2)).getPublic();
+        const pubKey = ec.keyFromPrivate(String(nodeAddress.privateKey).slice(2)).getPublic();
         await nodes.createNode(
             nodeAddress.address,
             {
@@ -162,7 +166,7 @@ describe("NodesFunctionality", () => {
     describe("when node is created", async () => {
         const nodeId = 0;
         beforeEach(async () => {
-            const pubKey = ec.keyFromPrivate(String(privateKeys[2]).slice(2)).getPublic();
+            const pubKey = ec.keyFromPrivate(String(nodeAddress.privateKey).slice(2)).getPublic();
             await nodes.createNode(
                 nodeAddress.address,
                 {
@@ -258,7 +262,7 @@ describe("NodesFunctionality", () => {
 
     describe("when two nodes are created", async () => {
         beforeEach(async () => {
-            const pubKey = ec.keyFromPrivate(String(privateKeys[2]).slice(2)).getPublic();
+            const pubKey = ec.keyFromPrivate(String(nodeAddress.privateKey).slice(2)).getPublic();
             await nodes.createNode(
                 nodeAddress.address,
                 {
@@ -270,7 +274,7 @@ describe("NodesFunctionality", () => {
                     name: "D2",
                     domainName: "some.domain.name"
                 }); // name
-                const pubKey2 = ec.keyFromPrivate(String(privateKeys[3]).slice(2)).getPublic();
+                const pubKey2 = ec.keyFromPrivate(String(nodeAddress2.privateKey).slice(2)).getPublic();
             await nodes.createNode(
                 nodeAddress2.address,
                 {
@@ -412,7 +416,7 @@ describe("NodesFunctionality", () => {
             // now it should not reject
             await nodes.checkPossibilityCreatingNode(nodeAddress.address);
 
-            const pubKey = ec.keyFromPrivate(String(privateKeys[2]).slice(2)).getPublic();
+            const pubKey = ec.keyFromPrivate(String(nodeAddress.privateKey).slice(2)).getPublic();
             await nodes.createNode(
                 nodeAddress.address,
                 {
@@ -434,7 +438,8 @@ describe("NodesFunctionality", () => {
             await delegationController.connect(holder).delegate(validatorId, amount, delegationPeriod, info);
             const delegationId1 = 0;
             await delegationController.connect(validator).acceptPendingDelegation(delegationId1);
-            await delegationController.connect(validator3).delegate(validatorId, amount, delegationPeriod, info);
+            const tx = await delegationController.connect(validator3).populateTransaction.delegate(validatorId, amount, delegationPeriod, info);
+            await sendTransactionFromWallet(tx, validator3);
             const delegationId2 = 1;
             await delegationController.connect(validator).acceptPendingDelegation(delegationId2);
 
@@ -445,7 +450,7 @@ describe("NodesFunctionality", () => {
             await constantsHolder.setMSR(amount);
 
             await nodes.checkPossibilityCreatingNode(nodeAddress.address);
-            const pubKey = ec.keyFromPrivate(String(privateKeys[2]).slice(2)).getPublic();
+            const pubKey = ec.keyFromPrivate(String(nodeAddress.privateKey).slice(2)).getPublic();
             await nodes.createNode(
                 nodeAddress.address,
                 {
