@@ -22,7 +22,7 @@ const EC = elliptic.ec;
 const ec = new EC("secp256k1");
 import { privateKeys } from "./tools/private-keys";
 
-import { BigNumber } from "ethers";
+import { BigNumber, PopulatedTransaction, Wallet } from "ethers";
 import { deployContractManager } from "./tools/deploy/contractManager";
 import { deployDelegationController } from "./tools/deploy/delegation/delegationController";
 import { deployKeyStorage } from "./tools/deploy/keyStorage";
@@ -48,6 +48,30 @@ chai.should();
 chai.use(chaiAsPromised);
 chai.use(solidity);
 
+async function getValidatorIdSignature(validatorId: BigNumber, signer: Wallet) {
+    const hash = web3.utils.soliditySha3(validatorId.toString());
+    if (hash) {
+        const signature = await web3.eth.accounts.sign(hash, signer.privateKey);
+        return signature.signature;
+    } else {
+        return "";
+    }
+}
+
+async function sendTransactionFromWallet(tx: PopulatedTransaction, signer: Wallet) {
+    await signer.signTransaction(tx);
+    return await signer.connect(ethers.provider).sendTransaction(tx);
+}
+
+function boolParser(res: string) {
+    return "" + (res === '0x0000000000000000000000000000000000000000000000000000000000000001');
+}
+
+async function callFromWallet(tx: PopulatedTransaction, signer: Wallet, parser: (a: string) => string): Promise<string> {
+    await signer.signTransaction(tx);
+    return parser(await signer.connect(ethers.provider).call(tx));
+}
+
 function stringValue(value: string | null) {
     if (value) {
         return value;
@@ -56,11 +80,12 @@ function stringValue(value: string | null) {
     }
 }
 
-describe("SkaleDKG", () => {
+describe("SkaleDkgFakeComplaint", () => {
     let owner: SignerWithAddress;
     let validator1: SignerWithAddress;
     let validator2: SignerWithAddress;
-    let validatorsAccount: SignerWithAddress[];
+    let nodeAddress1: Wallet;
+    let nodeAddress2: Wallet;
 
     let contractManager: ContractManager;
     let keyStorage: KeyStorage
@@ -81,10 +106,10 @@ describe("SkaleDKG", () => {
 
     let snapshot: number;
 
-    const validatorsPrivateKey = [
-        privateKeys[1],
-        privateKeys[2]
-    ];
+    // const validatorsPrivateKey = [
+    //     privateKeys[1],
+    //     privateKeys[2]
+    // ];
 
     const encryptedSecretKeyContributions: {share: string, publicKey: [string, string]}[][] = [
         [
@@ -869,9 +894,27 @@ describe("SkaleDKG", () => {
     let schainName = "";
     const delegatedAmount = 1e7;
 
+    let validators: {nodePublicKey: string, nodeAddress: Wallet}[];
+
     before(async () => {
         [owner, validator1, validator2] = await ethers.getSigners();
-        validatorsAccount = [ validator1, validator2 ];
+
+        nodeAddress1 = new Wallet(String(privateKeys[1]));
+        nodeAddress2 = new Wallet(String(privateKeys[2]));
+
+        await owner.sendTransaction({to: nodeAddress1.address, value: ethers.utils.parseEther("1")});
+        await owner.sendTransaction({to: nodeAddress2.address, value: ethers.utils.parseEther("1")});
+
+        validators = [
+            {
+                nodePublicKey: ec.keyFromPrivate(String(nodeAddress1.privateKey).slice(2)).getPublic(),
+                nodeAddress: nodeAddress1
+            },
+            {
+                nodePublicKey: ec.keyFromPrivate(String(nodeAddress2.privateKey).slice(2)).getPublic(),
+                nodeAddress: nodeAddress2
+            }
+        ];
 
         contractManager = await deployContractManager();
 
@@ -910,14 +953,18 @@ describe("SkaleDKG", () => {
         await delegationController.connect(validator2).delegate(validator2Id, delegatedAmount, 2, "D2 is even more even");
         await delegationController.connect(validator1).acceptPendingDelegation(0);
         await delegationController.connect(validator2).acceptPendingDelegation(1);
+        const signature1 = await getValidatorIdSignature(validator1Id, nodeAddress1);
+        await validatorService.connect(validator1).linkNodeAddress(nodeAddress1.address, signature1);
+        const signature2 = await getValidatorIdSignature(validator2Id, nodeAddress2);
+        await validatorService.connect(validator2).linkNodeAddress(nodeAddress2.address, signature2);
 
         await skipTime(ethers, 60 * 60 * 24 * 31);
 
         const nodesCount = 4;
         for (const index of Array.from(Array(nodesCount).keys())) {
             const hexIndex = ("0" + index.toString(16)).slice(-2);
-            const pubKey = ec.keyFromPrivate(String(validatorsPrivateKey[index % 2]).slice(2)).getPublic();
-            await nodes.createNode(validatorsAccount[index % 2].address,
+            const pubKey = ec.keyFromPrivate(String(validators[index % 2].nodeAddress.privateKey).slice(2)).getPublic();
+            await nodes.createNode(validators[index % 2].nodeAddress.address,
                 {
                     port: 8545,
                     nonce: 0,
@@ -979,84 +1026,94 @@ describe("SkaleDKG", () => {
             const nodesCount = 4;
             it("should not revert after successful complaint", async () => {
                 for (let i = 0; i < nodesCount; ++i) {
-                    await skaleDKG.connect(validatorsAccount[i % 2]).broadcast(
+                    const tx = await skaleDKG.connect(validators[i % 2].nodeAddress).populateTransaction.broadcast(
                         stringValue(web3.utils.soliditySha3(schainName)),
                         i,
                         verificationVectors[i],
                         encryptedSecretKeyContributions[i]);
+                    await sendTransactionFromWallet(tx, validators[i % 2].nodeAddress);
                 }
 
                 for (let i = 0; i < nodesCount; ++i) {
                     if (i !== 1) {
-                        const result = await skaleDKG.connect(validatorsAccount[i % 2]).alright(
+                        const tx = await skaleDKG.connect(validators[i % 2].nodeAddress).populateTransaction.alright(
                             stringValue(web3.utils.soliditySha3(schainName)),
                             i);
+                        await sendTransactionFromWallet(tx, validators[i % 2].nodeAddress);
                     }
                 }
 
                 await skipTime(ethers, 1800);
 
-                let isComplaintPossible = await skaleDKG.connect(validatorsAccount[0]).isComplaintPossible(
+                let txx = await skaleDKG.connect(validators[0].nodeAddress).populateTransaction.isComplaintPossible(
                     stringValue(web3.utils.soliditySha3(schainName)),
                     0,
                     1);
+                let isComplaintPossible = await callFromWallet(txx, validators[0].nodeAddress, boolParser);
 
-                assert(isComplaintPossible.should.be.true);
+                assert((isComplaintPossible === 'true').should.be.true);
 
-                await skaleDKG.connect(validatorsAccount[0]).complaint(
+                txx = await skaleDKG.connect(validators[0].nodeAddress).populateTransaction.complaint(
                     stringValue(web3.utils.soliditySha3(schainName)),
                     0,
                     1
                 );
+                await sendTransactionFromWallet(txx, validators[0].nodeAddress);
 
-                isComplaintPossible = await skaleDKG.connect(validatorsAccount[0]).isComplaintPossible(
+                txx = await skaleDKG.connect(validators[0].nodeAddress).populateTransaction.isComplaintPossible(
                     stringValue(web3.utils.soliditySha3(schainName)),
                     2,
                     1
                 );
+                isComplaintPossible = await callFromWallet(txx, validators[0].nodeAddress, boolParser);
 
-                assert(isComplaintPossible.should.be.false);
+                assert((isComplaintPossible === 'true').should.be.false);
             });
 
             it("should proceed response", async () => {
                 for (let i = 0; i < nodesCount; ++i) {
-                    await skaleDKG.connect(validatorsAccount[i % 2]).broadcast(
+                    const tx = await skaleDKG.connect(validators[i % 2].nodeAddress).populateTransaction.broadcast(
                         stringValue(web3.utils.soliditySha3(schainName)),
                         i,
                         verificationVectors[i],
                         encryptedSecretKeyContributions[i]
                     );
+                    await sendTransactionFromWallet(tx, validators[i % 2].nodeAddress);
                 }
 
                 for (let i = 0; i < nodesCount; ++i) {
                     if (i !== 1) {
-                        const result = await skaleDKG.connect(validatorsAccount[i % 2]).alright(
+                        const tx = await skaleDKG.connect(validators[i % 2].nodeAddress).populateTransaction.alright(
                             stringValue(web3.utils.soliditySha3(schainName)),
                             i
                         );
+                        await sendTransactionFromWallet(tx, validators[i % 2].nodeAddress);
                     }
                 }
 
-                const complaintResult = await skaleDKG.connect(validatorsAccount[1]).complaintBadData(
+                let txx = await skaleDKG.connect(validators[1].nodeAddress).populateTransaction.complaintBadData(
                     stringValue(web3.utils.soliditySha3(schainName)),
                     1,
                     2
                 );
+                await sendTransactionFromWallet(txx, validators[1].nodeAddress);
 
-                const preResponseResult = await skaleDKG.connect(validatorsAccount[0]).preResponse(
+                txx = await skaleDKG.connect(validators[0].nodeAddress).populateTransaction.preResponse(
                     stringValue(web3.utils.soliditySha3(schainName)),
                     2,
                     verificationVectors[2],
                     verificationVectorMultiplication,
                     encryptedSecretKeyContributions[2]
                 );
+                await sendTransactionFromWallet(txx, validators[0].nodeAddress);
 
-                await skaleDKG.connect(validatorsAccount[0]).response(
+                txx = await skaleDKG.connect(validators[0].nodeAddress).populateTransaction.response(
                     stringValue(web3.utils.soliditySha3(schainName)),
                     2,
                     secretNumbers[2][1],
                     multipliedShares[2][1]
-                ).should.emit(skaleDKG, "BadGuy").withArgs(1);
+                );
+                await sendTransactionFromWallet(txx, validators[0].nodeAddress).should.emit(skaleDKG, "BadGuy").withArgs(1);
             });
         });
     });
