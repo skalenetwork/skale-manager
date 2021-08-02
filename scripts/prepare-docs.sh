@@ -4,12 +4,19 @@
 
 set -o errexit
 
-OUTPUT_DIR=docs/api/pages/
+OUTDIR=docs/modules/api/pages/
 
 if [ ! -d node_modules ]; then
   yarn install --frozen-lockfile
 fi
 
-rm -rf "$OUTPUT_DIR"
-solidity-docgen -H docs/helpers.js --solc-module=./node_modules/solc -t docs -o "$OUTPUT_DIR" --extension=adoc
-node scripts/gen-nav.js "$OUTPUT_DIR" > "$OUTPUT_DIR/../nav.adoc"
+rm -rf "$OUTDIR"
+
+solidity-docgen \
+  -H docs/helpers.js \
+  --solc-module=./scripts/prepare-docs-solc.js \
+  -t docs \
+  -o "$OUTDIR" \
+  --extension=adoc
+
+node scripts/gen-nav.js "$OUTDIR" > "$OUTDIR/../nav.adoc"
