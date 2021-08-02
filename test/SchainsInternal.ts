@@ -8,7 +8,7 @@ const EC = elliptic.ec;
 const ec = new EC("secp256k1");
 import { privateKeys } from "./tools/private-keys";
 
-import { BigNumber } from "ethers";
+import { BigNumber, PopulatedTransaction, Wallet } from "ethers";
 import chai = require("chai");
 import chaiAsPromised from "chai-as-promised";
 import { deployContractManager } from "./tools/deploy/contractManager";
@@ -26,6 +26,30 @@ chai.should();
 chai.use(chaiAsPromised);
 chai.use(solidity);
 
+async function getValidatorIdSignature(validatorId: BigNumber, signer: Wallet) {
+    const hash = web3.utils.soliditySha3(validatorId.toString());
+    if (hash) {
+        const signature = await web3.eth.accounts.sign(hash, signer.privateKey);
+        return signature.signature;
+    } else {
+        return "";
+    }
+}
+
+async function sendTransactionFromWallet(tx: PopulatedTransaction, signer: Wallet) {
+    await signer.signTransaction(tx);
+    return await signer.connect(ethers.provider).sendTransaction(tx);
+}
+
+function boolParser(res: string) {
+    return "" + (res === '0x0000000000000000000000000000000000000000000000000000000000000001');
+}
+
+async function callFromWallet(tx: PopulatedTransaction, signer: Wallet, parser: (a: string) => string): Promise<string> {
+    await signer.signTransaction(tx);
+    return parser(await signer.connect(ethers.provider).call(tx));
+}
+
 function stringValue(value: string | null) {
     if (value) {
         return value;
@@ -37,6 +61,7 @@ function stringValue(value: string | null) {
 describe("SchainsInternal", () => {
     let owner: SignerWithAddress;
     let holder: SignerWithAddress;
+    let nodeAddress: Wallet;
 
     let contractManager: ContractManager;
     let nodes: Nodes;
@@ -45,6 +70,9 @@ describe("SchainsInternal", () => {
 
     beforeEach(async () => {
         [owner, holder] = await ethers.getSigners();
+
+        nodeAddress = new Wallet(String(privateKeys[1]));
+        await owner.sendTransaction({to: nodeAddress.address, value: ethers.utils.parseEther("1")});
 
         contractManager = await deployContractManager();
         nodes = await deployNodes(contractManager);
@@ -57,6 +85,12 @@ describe("SchainsInternal", () => {
         await contractManager.setContractsAddress("SkaleManager", nodes.address);
 
         validatorService.connect(holder).registerValidator("D2", "D2 is even", 0, 0);
+        const VALIDATOR_MANAGER_ROLE = await validatorService.VALIDATOR_MANAGER_ROLE();
+        await validatorService.grantRole(VALIDATOR_MANAGER_ROLE, owner.address);
+        const validatorIndex = await validatorService.getValidatorId(holder.address);
+        await validatorService.enableValidator(validatorIndex);
+        const signature = await getValidatorIdSignature(validatorIndex, nodeAddress);
+        await validatorService.connect(holder).linkNodeAddress(nodeAddress.address, signature);
 
         const SCHAIN_TYPE_MANAGER_ROLE = await schainsInternal.SCHAIN_TYPE_MANAGER_ROLE();
         await schainsInternal.grantRole(SCHAIN_TYPE_MANAGER_ROLE, owner.address);
@@ -83,8 +117,8 @@ describe("SchainsInternal", () => {
 
         beforeEach(async () => {
             await schainsInternal.initializeSchain("TestSchain", holder.address, 5, 5);
-            const pubKey = ec.keyFromPrivate(String(privateKeys[1]).slice(2)).getPublic();
-            await nodes.createNode(holder.address,
+            const pubKey = ec.keyFromPrivate(String(nodeAddress.privateKey).slice(2)).getPublic();
+            await nodes.createNode(nodeAddress.address,
                 {
                     port: 8545,
                     nonce: 0,
@@ -269,11 +303,11 @@ describe("SchainsInternal", () => {
                 const DEBUGGER_ROLE = await schainsInternal.DEBUGGER_ROLE();
                 await schainsInternal.grantRole(DEBUGGER_ROLE, owner.address);
                 await schainsInternal.removeSchainForNode(nodeIndex, 0);
-                const pubKey = ec.keyFromPrivate(String(privateKeys[1]).slice(2)).getPublic();
+                const pubKey = ec.keyFromPrivate(String(nodeAddress.privateKey).slice(2)).getPublic();
                 const nodesCount = 15;
                 for (const index of Array.from(Array(nodesCount).keys())) {
                     const hexIndex = ("2" + index.toString(16)).slice(-2);
-                    await nodes.createNode(holder.address,
+                    await nodes.createNode(nodeAddress.address,
                         {
                             port: 8545,
                             nonce: 0,
