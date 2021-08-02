@@ -106,11 +106,6 @@ describe("SkaleDkgFakeComplaint", () => {
 
     let snapshot: number;
 
-    // const validatorsPrivateKey = [
-    //     privateKeys[1],
-    //     privateKeys[2]
-    // ];
-
     const encryptedSecretKeyContributions: {share: string, publicKey: [string, string]}[][] = [
         [
             {
