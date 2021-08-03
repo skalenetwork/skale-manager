@@ -2,4 +2,5 @@ name: skale-manager
 title: SKALE Manager
 version: 1.8.x
 nav: 
+  - modules/ROOT/nav.adoc
   - modules/api/nav.adoc
