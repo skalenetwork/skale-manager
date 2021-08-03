@@ -1443,102 +1443,105 @@ describe("SkaleDKG", () => {
                         .withArgs("First complaint has already been processed");
                 });
 
-                // describe("when complaint successfully sent", async () => {
+                describe("when complaint successfully sent", async () => {
 
-                //     let nodeSentBadData: number;
-                //     before(async () => {
-                //         nodeSentBadData = await makeSnapshot();
-                //         const result = await skaleDKG.connect(validators[1].nodeAddress.address).populateTransaction.complaintBadData(
-                //             stringValue(web3.utils.soliditySha3(schainName)),
-                //             1,
-                //             0
-                //         );
-                //     });
+                    let nodeSentBadData: number;
+                    before(async () => {
+                        nodeSentBadData = await makeSnapshot();
+                        const tx = await skaleDKG.connect(validators[1].nodeAddress.address).populateTransaction.complaintBadData(
+                            stringValue(web3.utils.soliditySha3(schainName)),
+                            1,
+                            0
+                        );
+                        await sendTransactionFromWallet(tx, validators[1].nodeAddress);
+                    });
 
-                //     after(async () => {
-                //         await applySnapshot(nodeSentBadData);
-                //     });
+                    after(async () => {
+                        await applySnapshot(nodeSentBadData);
+                    });
 
-                //     it("accused node should send correct response", async () => {
-                //         await nodes.createNode(validators[0].nodeAddress.address,
-                //             {
-                //                 port: 8545,
-                //                 nonce: 0,
-                //                 ip: "0x7f000002",
-                //                 publicIp: "0x7f000002",
-                //                 publicKey: validatorsPublicKey[0],
-                //                 name: "d202",
-                //                 domainName: "some.domain.name"
-                //         });
+                    it("accused node should send correct response", async () => {
+                        await nodes.createNode(validators[0].nodeAddress.address,
+                            {
+                                port: 8545,
+                                nonce: 0,
+                                ip: "0x7f000002",
+                                publicIp: "0x7f000002",
+                                publicKey: validatorsPublicKey[0],
+                                name: "d202",
+                                domainName: "some.domain.name"
+                        });
 
-                //         let balanceBefore = await getBalance(validators[0].nodeAddress.address);
-                //         await skaleDKG.connect(validators[0].nodeAddress.address).populateTransaction.preResponse(
-                //             stringValue(web3.utils.soliditySha3(schainName)),
-                //             0,
-                //             verificationVectors[indexes[0]],
-                //             verificationVectorMultiplication[indexes[0]],
-                //             badEncryptedSecretKeyContributions[indexes[0]]
-                //         );
-                //         let balance = await getBalance(validators[0].nodeAddress.address);
-                //         balance.should.not.be.lessThan(balanceBefore);
-                //         balance.should.be.almost(balanceBefore);
+                        let balanceBefore = await getBalance(validators[0].nodeAddress.address);
+                        let tx = await skaleDKG.connect(validators[0].nodeAddress.address).populateTransaction.preResponse(
+                            stringValue(web3.utils.soliditySha3(schainName)),
+                            0,
+                            verificationVectors[indexes[0]],
+                            verificationVectorMultiplication[indexes[0]],
+                            badEncryptedSecretKeyContributions[indexes[0]]
+                        );
+                        await sendTransactionFromWallet(tx, validators[0].nodeAddress);
+                        let balance = await getBalance(validators[0].nodeAddress.address);
+                        // balance.should.not.be.lessThan(balanceBefore);
+                        // balance.should.be.almost(balanceBefore);
 
-                //         balanceBefore = await getBalance(validators[0].nodeAddress.address);
-                //         await expect(skaleDKG.connect(validators[0].nodeAddress.address).response(
-                //             stringValue(web3.utils.soliditySha3(schainName)),
-                //             0,
-                //             secretNumbers[indexes[0]],
-                //             multipliedShares[indexes[0]]
-                //         )).to.emit(skaleDKG, "BadGuy")
-                //             .withArgs(0);
-                //         balance = await getBalance(validators[0].nodeAddress.address);
-                //         balance.should.not.be.lessThan(balanceBefore);
-                //         balance.should.be.almost(balanceBefore);
+                        balanceBefore = await getBalance(validators[0].nodeAddress.address);
+                        tx = await skaleDKG.connect(validators[0].nodeAddress.address).populateTransaction.response(
+                            stringValue(web3.utils.soliditySha3(schainName)),
+                            0,
+                            secretNumbers[indexes[0]],
+                            multipliedShares[indexes[0]]
+                        );
+                        await expect(sendTransactionFromWallet(tx, validators[0].nodeAddress)).to.emit(skaleDKG, "BadGuy").withArgs(0);
+                        balance = await getBalance(validators[0].nodeAddress.address);
+                        balance.should.not.be.lessThan(balanceBefore);
+                        balance.should.be.almost(balanceBefore);
 
-                //         const leavingTimeOfNode = (await nodeRotation.getLeavingHistory(0))[0].finishedRotation.toNumber();
-                //         assert.equal(await currentTime(web3), leavingTimeOfNode);
+                        const leavingTimeOfNode = (await nodeRotation.getLeavingHistory(0))[0].finishedRotation.toNumber();
+                        assert.equal(await currentTime(web3), leavingTimeOfNode);
 
-                //         (await skaleToken.callStatic.getAndUpdateLockedAmount(validator1.address)).toNumber()
-                //             .should.be.equal(delegatedAmount);
-                //         (await skaleToken.callStatic.getAndUpdateDelegatedAmount(validator1.address)).toNumber()
-                //             .should.be.equal(delegatedAmount - failedDkgPenalty);
-                //         (await skaleToken.callStatic.getAndUpdateSlashedAmount(validator1.address)).toNumber()
-                //             .should.be.equal(failedDkgPenalty);
-                //     });
+                        (await skaleToken.callStatic.getAndUpdateLockedAmount(validator1.address)).toNumber()
+                            .should.be.equal(delegatedAmount);
+                        (await skaleToken.callStatic.getAndUpdateDelegatedAmount(validator1.address)).toNumber()
+                            .should.be.equal(delegatedAmount - failedDkgPenalty);
+                        (await skaleToken.callStatic.getAndUpdateSlashedAmount(validator1.address)).toNumber()
+                            .should.be.equal(failedDkgPenalty);
+                    });
 
-                //     it("accused node should send incorrect response", async () => {
-                //         let balanceBefore = await getBalance(validators[0].nodeAddress.address);
-                //         await skaleDKG.connect(validators[0].nodeAddress.address).populateTransaction.preResponse(
-                //             stringValue(web3.utils.soliditySha3(schainName)),
-                //             0,
-                //             verificationVectors[indexes[0]],
-                //             verificationVectorMultiplication[indexes[0]],
-                //             badEncryptedSecretKeyContributions[indexes[0]]
-                //         );
-                //         let balance = await getBalance(validators[0].nodeAddress.address);
-                //         balance.should.not.be.lessThan(balanceBefore);
-                //         balance.should.be.almost(balanceBefore);
+                    it("accused node should send incorrect response", async () => {
+                        let balanceBefore = await getBalance(validators[0].nodeAddress.address);
+                        let tx = await skaleDKG.connect(validators[0].nodeAddress.address).populateTransaction.preResponse(
+                            stringValue(web3.utils.soliditySha3(schainName)),
+                            0,
+                            verificationVectors[indexes[0]],
+                            verificationVectorMultiplication[indexes[0]],
+                            badEncryptedSecretKeyContributions[indexes[0]]
+                        );
+                        await sendTransactionFromWallet(tx, validators[0].nodeAddress);
+                        let balance = await getBalance(validators[0].nodeAddress.address);
+                        // balance.should.not.be.lessThan(balanceBefore);
+                        // balance.should.be.almost(balanceBefore);
 
-                //         balanceBefore = await getBalance(validators[0].nodeAddress.address);
-                //         await expect(skaleDKG.connect(validators[0].nodeAddress.address).response(
-                //             stringValue(web3.utils.soliditySha3(schainName)),
-                //             0,
-                //             secretNumbers[indexes[0]],
-                //             multipliedShares[indexes[1]]
-                //         )).to.emit(skaleDKG, "BadGuy")
-                //             .withArgs(0);
-                //         balance = await getBalance(validators[0].nodeAddress.address);
-                //         balance.should.not.be.lessThan(balanceBefore);
-                //         balance.should.be.almost(balanceBefore);
+                        balanceBefore = await getBalance(validators[0].nodeAddress.address);
+                        tx = await skaleDKG.connect(validators[0].nodeAddress.address).populateTransaction.response(
+                            stringValue(web3.utils.soliditySha3(schainName)),
+                            0,
+                            secretNumbers[indexes[0]],
+                            multipliedShares[indexes[1]]
+                        );
+                        await expect(sendTransactionFromWallet(tx, validators[0].nodeAddress)).to.emit(skaleDKG, "BadGuy").withArgs(0);
+                        balance = await getBalance(validators[0].nodeAddress.address);
+                        balance.should.not.be.lessThan(balanceBefore);
+                        balance.should.be.almost(balanceBefore);
 
-                //         (await skaleToken.callStatic.getAndUpdateLockedAmount(validator1.address)).toNumber()
-                //             .should.be.equal(delegatedAmount);
-                //         (await skaleToken.callStatic.getAndUpdateDelegatedAmount(validator1.address)).toNumber()
-                //             .should.be.equal(delegatedAmount - failedDkgPenalty);
-                //         (await skaleToken.callStatic.getAndUpdateSlashedAmount(validator1.address)).toNumber()
-                //             .should.be.equal(failedDkgPenalty);
-                //     });
-                // });
+                        (await skaleToken.callStatic.getAndUpdateLockedAmount(validator1.address)).toNumber()
+                            .should.be.equal(delegatedAmount);
+                        (await skaleToken.callStatic.getAndUpdateDelegatedAmount(validator1.address)).toNumber()
+                            .should.be.equal(delegatedAmount - failedDkgPenalty);
+                        (await skaleToken.callStatic.getAndUpdateSlashedAmount(validator1.address)).toNumber()
+                            .should.be.equal(failedDkgPenalty);
+                    });
+                });
             });
         });
 
