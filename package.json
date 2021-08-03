@@ -73,6 +73,7 @@
     "ethereum-waffle": "^3.2.2",
     "ganache-cli": "^6.11.0",
     "hardhat-typechain": "^0.3.4",
+    "lodash.startcase": "^4.4.0",
     "solhint": "3.3.6",
     "solidity-coverage": "^0.7.14",
     "solidity-docgen": "^0.5.7",

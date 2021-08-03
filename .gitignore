@@ -59,3 +59,4 @@ typechain/
 
 # docs
 docs/api/*
+docs/modules/api/*

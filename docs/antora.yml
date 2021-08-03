@@ -1,0 +1,5 @@
+name: skale-manager
+title: SKALE Manager
+version: 1.8.x
+nav: 
+  - modules/api/nav.doc

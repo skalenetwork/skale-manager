@@ -10,6 +10,10 @@ const baseDir = process.argv[2];
 
 console.log('.API');
 
+function getPageTitle (directory) {
+  return startCase(directory);
+}
+
 const files = proc.execFileSync(
   'find', [baseDir, '-type', 'f'], { encoding: 'utf8' }
 ).split('\n').filter(s => s !== '');
