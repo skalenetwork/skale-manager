@@ -19,8 +19,9 @@ const files = proc.execFileSync(
 ).split('\n').filter(s => s !== '');
 
 const links = files.map((file) => {
-  const doc = file.replace(baseDir, '');
+  const doc = file.replace(baseDir, '').replace(/^\/|\/$/g, '');
   const title = path.parse(file).name;
+  // console.log(`* xref:${doc}[${getPageTitle(title)}]`);
 
   return {
     xref: `* xref:${doc}[${getPageTitle(title)}]`,
