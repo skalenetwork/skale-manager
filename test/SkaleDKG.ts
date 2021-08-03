@@ -1545,834 +1545,872 @@ describe("SkaleDKG", () => {
             });
         });
 
-        // it("should reopen channel correctly", async () => {
-        //     const deposit = await schains.getSchainPrice(4, 5);
-
-        //     await schains.addSchain(
-        //         validator1.address,
-        //         deposit,
-        //         web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, "d2"]));
-
-        //     let nodesInGroup = await schainsInternal.getNodesInGroup(stringValue(web3.utils.soliditySha3("d2")));
-        //     schainName = "d2";
-        //     let index = 3;
-        //     while (nodesInGroup[0].eq(1)) {
-        //         await schains.deleteSchainByRoot(schainName);
-        //         schainName = "d" + index;
-        //         index++;
-        //         await schains.addSchain(
-        //             validator1.address,
-        //             deposit,
-        //             web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, schainName]));
-        //         nodesInGroup = await schainsInternal.getNodesInGroup(stringValue(web3.utils.soliditySha3(schainName)));
-        //     }
-
-        //     let rotCounter = await nodeRotation.getRotation(stringValue(web3.utils.soliditySha3(schainName)));
-        //     assert.equal(rotCounter.rotationCounter.toString(), "0");
-
-        //     await nodes.createNode(validators[0].nodeAddress.address,
-        //         {
-        //             port: 8545,
-        //             nonce: 0,
-        //             ip: "0x7f000003",
-        //             publicIp: "0x7f000003",
-        //             publicKey: validatorsPublicKey[0],
-        //             name: "d203",
-        //             domainName: "some.domain.name"
-        //         });
-
-        //     await wallets.connect(owner).rechargeSchainWallet(stringValue(web3.utils.soliditySha3(schainName)), {value: 1e20.toString()});
-        //     let balanceBefore = await getBalance(validators[0].nodeAddress.address);
-        //     await skaleDKG.connect(validators[0].nodeAddress.address).populateTransaction.broadcast(
-        //         stringValue(web3.utils.soliditySha3(schainName)),
-        //         0,
-        //         verificationVectors[indexes[0]],
-        //         // the last symbol is spoiled in parameter below
-        //         badEncryptedSecretKeyContributions[indexes[0]]
-        //     );
-        //     let balance = await getBalance(validators[0].nodeAddress.address);
-        //     balance.should.not.be.lessThan(balanceBefore);
-        //     balance.should.be.almost(balanceBefore);
-
-        //     balanceBefore = await getBalance(validators[1].nodeAddress.address);
-        //     await skaleDKG.connect(validators[1].nodeAddress.address).populateTransaction.broadcast(
-        //         stringValue(web3.utils.soliditySha3(schainName)),
-        //         1,
-        //         verificationVectors[indexes[1]],
-        //         encryptedSecretKeyContributions[indexes[1]]
-        //     );
-        //     balance = await getBalance(validators[1].nodeAddress.address);
-        //     balance.should.not.be.lessThan(balanceBefore);
-        //     balance.should.be.almost(balanceBefore);
-
-        //     balanceBefore = await getBalance(validators[1].nodeAddress.address);
-        //     const resComplaint = await (await skaleDKG.connect(validators[1].nodeAddress.address).populateTransaction.complaintBadData(
-        //         stringValue(web3.utils.soliditySha3(schainName)),
-        //         1,
-        //         0
-        //     )).wait();
-        //     balance = await getBalance(validators[1].nodeAddress.address);
-        //     balance.should.not.be.lessThan(balanceBefore);
-        //     balance.should.be.almost(balanceBefore);
-
-        //     assert(
-        //         await skaleDKG.getComplaintStartedTime(stringValue(web3.utils.soliditySha3(schainName))),
-        //         (await web3.eth.getBlock((resComplaint === 'true').blockNumber)).timestamp.toString()
-        //     );
-
-        //     balanceBefore = await getBalance(validators[0].nodeAddress.address);
-        //     await skaleDKG.connect(validators[0].nodeAddress.address).populateTransaction.preResponse(
-        //         stringValue(web3.utils.soliditySha3(schainName)),
-        //         0,
-        //         verificationVectors[indexes[0]],
-        //         verificationVectorMultiplication[indexes[0]],
-        //         badEncryptedSecretKeyContributions[indexes[0]]
-        //     );
-        //     balance = await getBalance(validators[0].nodeAddress.address);
-        //     balance.should.not.be.lessThan(balanceBefore);
-        //     balance.should.be.almost(balanceBefore);
-
-        //     balanceBefore = await getBalance(validators[0].nodeAddress.address);
-        //     const result = await (await skaleDKG.connect(validators[0].nodeAddress.address).response(
-        //         stringValue(web3.utils.soliditySha3(schainName)),
-        //         0,
-        //         secretNumbers[indexes[0]],
-        //         multipliedShares[indexes[1]]
-        //     )).wait();
-        //     balance = await getBalance(validators[0].nodeAddress.address);
-        //     balance.should.not.be.lessThan(balanceBefore);
-        //     balance.should.be.almost(balanceBefore);
-
-        //     if (result.events) {
-        //         assert.equal(result.events[0].event, "BadGuy");
-        //         assert.equal(result.events[0].args?.nodeIndex.toString(), "0");
-
-        //         assert.equal(result.events[2].event, "ChannelOpened");
-        //         assert.equal(result.events[2].args?.schainHash, stringValue(web3.utils.soliditySha3(schainName)));
-        //     } else {
-        //         assert(false, "No events were emitted");
-        //     }
-
-        //     const blockNumber = result.blockNumber;
-        //     const timestamp = (await web3.eth.getBlock(blockNumber)).timestamp;
-
-        //     assert.equal((await skaleDKG.getNumberOfBroadcasted(stringValue(web3.utils.soliditySha3(schainName)))).toString(), "0");
-        //     assert.equal((await skaleDKG.getChannelStartedTime(stringValue(web3.utils.soliditySha3(schainName)))).toString(), timestamp.toString());
-
-        //     rotCounter = await nodeRotation.getRotation(stringValue(web3.utils.soliditySha3(schainName)));
-        //     assert.equal(rotCounter.rotationCounter.toString(), "1");
-
-        //     balanceBefore = await getBalance(validators[0].nodeAddress.address);
-        //     await expect(skaleDKG.connect(validators[0].nodeAddress.address).populateTransaction.complaint(
-        //         stringValue(web3.utils.soliditySha3(schainName)),
-        //         2,
-        //         0
-        //     )).to.emit(skaleDKG, "ComplaintError")
-        //         .withArgs("Node is not in this group");
-        //     balance = await getBalance(validators[0].nodeAddress.address);
-        //     balance.should.not.be.lessThan(balanceBefore);
-        //     balance.should.be.almost(balanceBefore);
-
-        //     let res = await skaleDKG.connect(validators[0].nodeAddress.address).populateTransaction.isBroadcastPossible(
-        //             stringValue(web3.utils.soliditySha3(schainName)),
-        //             2
-        //         );
-
-        //     assert.equal(res, true);
-
-        //     await skaleDKG.connect(validators[0].nodeAddress.address).populateTransaction.broadcast(
-        //         stringValue(web3.utils.soliditySha3(schainName)),
-        //         2,
-        //         verificationVectors[indexes[0]],
-        //         // the last symbol is spoiled in parameter below
-        //         badEncryptedSecretKeyContributions[indexes[0]]
-        //     );
-
-        //     res = await skaleDKG.connect(validators[1].nodeAddress.address).populateTransaction.isBroadcastPossible(
-        //             stringValue(web3.utils.soliditySha3(schainName)),
-        //             1
-        //         );
-        //     assert.equal(res, true);
-
-        //     await skaleDKG.connect(validators[1].nodeAddress.address).populateTransaction.broadcast(
-        //         stringValue(web3.utils.soliditySha3(schainName)),
-        //         1,
-        //         verificationVectors[indexes[1]],
-        //         encryptedSecretKeyContributions[indexes[1]]
-        //     );
-
-        //     res = await skaleDKG.connect(validators[0].nodeAddress.address).populateTransaction.isAlrightPossible(
-        //                 stringValue(web3.utils.soliditySha3(schainName)),
-        //                 2,
-        //             );
-        //     assert.equal(res, true);
-
-        //     await skaleDKG.connect(validators[0].nodeAddress.address).populateTransaction.alright(
-        //                 stringValue(web3.utils.soliditySha3(schainName)),
-        //                 2
-        //             );
-
-        //     res = await skaleDKG.connect(validators[1].nodeAddress.address).populateTransaction.isAlrightPossible(
-        //                 stringValue(web3.utils.soliditySha3(schainName)),
-        //                 1
-        //             );
-        //     assert.equal(res, true);
-
-        //     await skaleDKG.connect(validators[1].nodeAddress.address).populateTransaction.alright(
-        //                 stringValue(web3.utils.soliditySha3(schainName)),
-        //                 1
-        //             );
-        // });
-
-        // it("should process nodeExit 2 times correctly", async () => {
-        //     const deposit = await schains.getSchainPrice(4, 5);
-
-        //     await schains.addSchain(
-        //         validator1.address,
-        //         deposit,
-        //         web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, "d2"]));
-
-        //     let nodesInGroup = await schainsInternal.getNodesInGroup(stringValue(web3.utils.soliditySha3("d2")));
-        //     schainName = "d2";
-        //     let index = 3;
-        //     while (nodesInGroup[0].eq(1)) {
-        //         await schains.deleteSchainByRoot(schainName);
-        //         schainName = "d" + index;
-        //         index++;
-        //         await schains.addSchain(
-        //             validator1.address,
-        //             deposit,
-        //             web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, schainName]));
-        //         nodesInGroup = await schainsInternal.getNodesInGroup(stringValue(web3.utils.soliditySha3(schainName)));
-        //     }
-
-        //     let rotCounter = await nodeRotation.getRotation(stringValue(web3.utils.soliditySha3(schainName)));
-        //     assert.equal(rotCounter.rotationCounter.toString(), "0");
-
-        //     await nodes.createNode(validators[0].nodeAddress.address,
-        //         {
-        //             port: 8545,
-        //             nonce: 0,
-        //             ip: "0x7f000003",
-        //             publicIp: "0x7f000003",
-        //             publicKey: validatorsPublicKey[0],
-        //             name: "d203",
-        //             domainName: "some.domain.name"
-        //         });
-
-        //     await wallets.connect(owner).rechargeSchainWallet(stringValue(web3.utils.soliditySha3(schainName)), {value: 1e20.toString()});
-        //     await skaleDKG.connect(validators[0].nodeAddress.address).populateTransaction.broadcast(
-        //         stringValue(web3.utils.soliditySha3(schainName)),
-        //         0,
-        //         verificationVectors[indexes[0]],
-        //         // the last symbol is spoiled in parameter below
-        //         encryptedSecretKeyContributions[indexes[0]]
-        //     );
-
-        //     const res = await(await skaleDKG.connect(validators[1].nodeAddress.address).populateTransaction.broadcast(
-        //         stringValue(web3.utils.soliditySha3(schainName)),
-        //         1,
-        //         verificationVectors[indexes[1]],
-        //         encryptedSecretKeyContributions[indexes[1]]
-        //     )).wait();
-        //     assert(
-        //         await skaleDKG.getAlrightStartedTime(stringValue(web3.utils.soliditySha3(schainName))),
-        //         (await web3.eth.getBlock(res.blockNumber)).timestamp.toString()
-        //     );
-        //     let numOfCompleted = await skaleDKG.getNumberOfCompleted(stringValue(web3.utils.soliditySha3(schainName)));
-        //     assert(numOfCompleted, "0");
-
-        //     await skaleDKG.connect(validators[0].nodeAddress.address).populateTransaction.alright(
-        //         stringValue(web3.utils.soliditySha3(schainName)),
-        //         0
-        //     );
-
-        //     numOfCompleted = await skaleDKG.getNumberOfCompleted(stringValue(web3.utils.soliditySha3(schainName)));
-        //     assert(numOfCompleted, "1");
-
-        //     const resSuccess = await (await skaleDKG.connect(validators[1].nodeAddress.address).populateTransaction.alright(
-        //         stringValue(web3.utils.soliditySha3(schainName)),
-        //         1
-        //     )).wait();
-
-        //     numOfCompleted = await skaleDKG.getNumberOfCompleted(stringValue(web3.utils.soliditySha3(schainName)));
-        //     assert(numOfCompleted, "2");
-
-        //     assert(
-        //         await skaleDKG.getTimeOfLastSuccessfulDKG(stringValue(web3.utils.soliditySha3(schainName))),
-        //         (await web3.eth.getBlock(resSuccess.blockNumber)).timestamp.toString()
-        //     );
-
-        //     const comPubKey = await keyStorage.getCommonPublicKey(stringValue(web3.utils.soliditySha3(schainName)));
-        //     assert.equal(comPubKey.x.a.toString() !== "0", true);
-        //     assert.equal(comPubKey.x.b.toString() !== "0", true);
-        //     assert.equal(comPubKey.y.a.toString() !== "0", true);
-        //     assert.equal(comPubKey.y.b.toString() !== "0", true);
-
-        //     await skaleManager.connect(validators[1].nodeAddress.address).nodeExit(1);
-
-        //     let prevPubKey = await keyStorage.getPreviousPublicKey(stringValue(web3.utils.soliditySha3(schainName)));
-        //     assert(prevPubKey.x.a, "0");
-        //     assert(prevPubKey.x.b, "0");
-        //     assert(prevPubKey.y.a, "0");
-        //     assert(prevPubKey.y.b, "0");
-
-        //     await nodes.createNode(validators[0].nodeAddress.address,
-        //         {
-        //             port: 8545,
-        //             nonce: 0,
-        //             ip: "0x7f000004",
-        //             publicIp: "0x7f000004",
-        //             publicKey: validatorsPublicKey[0],
-        //             name: "d204",
-        //             domainName: "some.domain.name"
-        //         }
-        //     );
-
-        //     rotCounter = await nodeRotation.getRotation(stringValue(web3.utils.soliditySha3(schainName)));
-        //     assert.equal(rotCounter.rotationCounter.toString(), "1");
-
-        //     await skaleDKG.connect(validators[0].nodeAddress.address).populateTransaction.broadcast(
-        //         stringValue(web3.utils.soliditySha3(schainName)),
-        //         0,
-        //         verificationVectors[indexes[0]],
-        //         // the last symbol is spoiled in parameter below
-        //         encryptedSecretKeyContributions[indexes[0]]
-        //     );
-
-        //     await skaleDKG.connect(validators[0].nodeAddress.address).populateTransaction.broadcast(
-        //         stringValue(web3.utils.soliditySha3(schainName)),
-        //         2,
-        //         verificationVectors[indexes[0]],
-        //         encryptedSecretKeyContributions[indexes[0]],
-        //     );
-
-        //     await skaleDKG.connect(validators[0].nodeAddress.address).populateTransaction.alright(
-        //         stringValue(web3.utils.soliditySha3(schainName)),
-        //         0
-        //     );
-
-        //     assert(
-        //         await skaleDKG.getTimeOfLastSuccessfulDKG(stringValue(web3.utils.soliditySha3(schainName))),
-        //         (await web3.eth.getBlock(resSuccess.blockNumber)).timestamp.toString()
-        //     );
-
-        //     await skaleDKG.connect(validators[0].nodeAddress.address).populateTransaction.alright(
-        //         stringValue(web3.utils.soliditySha3(schainName)),
-        //         2
-        //     );
-
-        //     prevPubKey = await keyStorage.getPreviousPublicKey(stringValue(web3.utils.soliditySha3(schainName)));
-        //     assert.equal(prevPubKey.x.a.toString() === comPubKey.x.a.toString(), true);
-        //     assert.equal(prevPubKey.x.b.toString() === comPubKey.x.b.toString(), true);
-        //     assert.equal(prevPubKey.y.a.toString() === comPubKey.y.a.toString(), true);
-        //     assert.equal(prevPubKey.y.b.toString() === comPubKey.y.b.toString(), true);
-
-        //     let allPrevPubKeys = await keyStorage.getAllPreviousPublicKeys(stringValue(web3.utils.soliditySha3(schainName)));
-        //     assert.equal(allPrevPubKeys.length === 1, true);
-        //     assert.equal(prevPubKey.x.a.toString() === allPrevPubKeys[0].x.a.toString(), true);
-        //     assert.equal(prevPubKey.x.b.toString() === allPrevPubKeys[0].x.b.toString(), true);
-        //     assert.equal(prevPubKey.y.a.toString() === allPrevPubKeys[0].y.a.toString(), true);
-        //     assert.equal(prevPubKey.y.b.toString() === allPrevPubKeys[0].y.b.toString(), true);
-
-        //     await skipTime(ethers, 43260);
-        //     await skaleManager.connect(validators[0].nodeAddress.address).nodeExit(2);
-
-        //     rotCounter = await nodeRotation.getRotation(stringValue(web3.utils.soliditySha3(schainName)));
-        //     assert.equal(rotCounter.rotationCounter.toString(), "2");
-
-        //     await skaleDKG.connect(validators[0].nodeAddress.address).populateTransaction.broadcast(
-        //         stringValue(web3.utils.soliditySha3(schainName)),
-        //         0,
-        //         verificationVectors[indexes[0]],
-        //         // the last symbol is spoiled in parameter below
-        //         encryptedSecretKeyContributions[indexes[0]]
-        //     );
-
-        //     await skaleDKG.connect(validators[0].nodeAddress.address).populateTransaction.broadcast(
-        //         stringValue(web3.utils.soliditySha3(schainName)),
-        //         3,
-        //         verificationVectors[indexes[0]],
-        //         encryptedSecretKeyContributions[indexes[0]]
-        //     );
-
-        //     await skaleDKG.connect(validators[0].nodeAddress.address).populateTransaction.alright(
-        //         stringValue(web3.utils.soliditySha3(schainName)),
-        //         0
-        //     );
-
-        //     await skaleDKG.connect(validators[0].nodeAddress.address).populateTransaction.alright(
-        //         stringValue(web3.utils.soliditySha3(schainName)),
-        //         3
-        //     );
-
-        //     allPrevPubKeys = await keyStorage.getAllPreviousPublicKeys(stringValue(web3.utils.soliditySha3(schainName)));
-        //     assert.equal(allPrevPubKeys.length === 2, true);
-        //     assert.equal(prevPubKey.x.a.toString() === allPrevPubKeys[0].x.a.toString(), true);
-        //     assert.equal(prevPubKey.x.b.toString() === allPrevPubKeys[0].x.b.toString(), true);
-        //     assert.equal(prevPubKey.y.a.toString() === allPrevPubKeys[0].y.a.toString(), true);
-        //     assert.equal(prevPubKey.y.b.toString() === allPrevPubKeys[0].y.b.toString(), true);
-        // });
-
-        // it("16 nodes schain test", async () => {
-
-        //     for (let i = 3; i <= 16; i++) {
-        //         const hexIndex = ("0" + i.toString(16)).slice(-2);
-        //         await nodes.createNode(validators[0].nodeAddress.address,
-        //             {
-        //                 port: 8545,
-        //                 nonce: 0,
-        //                 ip: "0x7f0000" + hexIndex,
-        //                 publicIp: "0x7f0000" + hexIndex,
-        //                 publicKey: validatorsPublicKey[0],
-        //                 name: "d2" + hexIndex,
-        //                 domainName: "some.domain.name"
-        //             });
-        //     }
-
-        //     const deposit = await schains.getSchainPrice(3, 5);
-
-        //     await schains.addSchain(
-        //         validator1.address,
-        //         deposit,
-        //         web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 3, 0, "New16NodeSchain"]));
-
-        //     const secretKeyContributions = [];
-        //     for (let i = 0; i < 16; i++) {
-        //         secretKeyContributions[i] = encryptedSecretKeyContributions[0][0];
-        //     }
-
-        //     const verificationVectorNew = [];
-        //     for (let i = 0; i < 11; i++) {
-        //         verificationVectorNew[i] = verificationVectors[i % 2][0];
-        //     }
-
-        //     await wallets.connect(owner).rechargeSchainWallet(stringValue(web3.utils.soliditySha3("New16NodeSchain")), {value: 1e20.toString()});
-        //     for (let i = 0; i < 16; i++) {
-        //         let index = 0;
-        //         if (i === 1) {
-        //             index = 1;
-        //         }
-        //         let broadPoss = await skaleDKG.connect(validators[index]).populateTransaction.isBroadcastPossible(
-        //             stringValue(web3.utils.soliditySha3("New16NodeSchain")),
-        //             i
-        //         );
-        //         assert.equal(broadPoss, true);
-        //         const balanceBefore = await getBalance(validators[index].address);
-        //         await skaleDKG.connect(validators[index]).populateTransaction.broadcast(
-        //             stringValue(web3.utils.soliditySha3("New16NodeSchain")),
-        //             i,
-        //             verificationVectorNew,
-        //             secretKeyContributions
-        //         );
-        //         const balance = await getBalance(validators[index].address);
-        //         balance.should.not.be.lessThan(balanceBefore);
-        //         balance.should.be.almost(balanceBefore);
-        //         broadPoss = await skaleDKG.connect(validators[index]).populateTransaction.isBroadcastPossible(
-        //             stringValue(web3.utils.soliditySha3("New16NodeSchain")),
-        //             i
-        //         );
-        //         assert.equal(broadPoss, false);
-        //     }
-        //     let comPubKey;
-        //     for (let i = 0; i < 16; i++) {
-        //         comPubKey = await keyStorage.getCommonPublicKey(stringValue(web3.utils.soliditySha3("New16NodeSchain")));
-        //         assert(comPubKey.x.a, "0");
-        //         assert(comPubKey.x.b, "0");
-        //         assert(comPubKey.y.a, "0");
-        //         assert(comPubKey.y.b, "0");
-        //         let index = 0;
-        //         if (i === 1) {
-        //             index = 1;
-        //         }
-        //         let alrightPoss = await skaleDKG.connect(validators[index]).populateTransaction.isAlrightPossible(
-        //             stringValue(web3.utils.soliditySha3("New16NodeSchain")),
-        //             i
-        //         );
-        //         assert.equal(alrightPoss, true);
-
-        //         const balanceBefore = await getBalance(validators[index].address);
-        //         await skaleDKG.connect(validators[index]).populateTransaction.alright(
-        //             stringValue(web3.utils.soliditySha3("New16NodeSchain")),
-        //             i
-        //         );
-        //         const balance = await getBalance(validators[index].address);
-        //         balance.should.not.be.lessThan(balanceBefore);
-        //         balance.should.be.almost(balanceBefore);
-
-        //         alrightPoss = await skaleDKG.connect(validators[index]).populateTransaction.isAlrightPossible(
-        //             stringValue(web3.utils.soliditySha3("New16NodeSchain")),
-        //             i
-        //         );
-        //         assert.equal(alrightPoss, false);
-        //     }
-
-        //     comPubKey = await keyStorage.getCommonPublicKey(stringValue(web3.utils.soliditySha3("New16NodeSchain")));
-        //     assert.equal(comPubKey.x.a.toString() !== "0", true);
-        //     assert.equal(comPubKey.x.b.toString() !== "0", true);
-        //     assert.equal(comPubKey.y.a.toString() !== "0", true);
-        //     assert.equal(comPubKey.y.b.toString() !== "0", true);
-
-        //     const prevPubKey = await keyStorage.getPreviousPublicKey(stringValue(web3.utils.soliditySha3("New16NodeSchain")));
-        //     assert(prevPubKey.x.a, "0");
-        //     assert(prevPubKey.x.b, "0");
-        //     assert(prevPubKey.y.a, "0");
-        //     assert(prevPubKey.y.b, "0");
-
-        // });
-
-        // it("16 nodes schain test with incorrect complaint and response", async () => {
-
-        //     for (let i = 3; i <= 16; i++) {
-        //         const hexIndex = ("0" + i.toString(16)).slice(-2);
-        //         await nodes.createNode(validators[0].nodeAddress.address,
-        //             {
-        //                 port: 8545,
-        //                 nonce: 0,
-        //                 ip: "0x7f0000" + hexIndex,
-        //                 publicIp: "0x7f0000" + hexIndex,
-        //                 publicKey: validatorsPublicKey[0],
-        //                 name: "d2" + hexIndex,
-        //                 domainName: "some.domain.name"
-        //             });
-        //     }
-
-        //     const deposit = await schains.getSchainPrice(3, 5);
-
-        //     await schains.addSchain(
-        //         validator1.address,
-        //         deposit,
-        //         web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 3, 0, "New16NodeSchain"]));
-
-        //     await nodes.createNode(validators[0].nodeAddress.address,
-        //         {
-        //             port: 8545,
-        //             nonce: 0,
-        //             ip: "0x7f0000ff",
-        //             publicIp: "0x7f0000ff",
-        //             publicKey: validatorsPublicKey[0],
-        //             name: "d2ff",
-        //             domainName: "some.domain.name"
-        //         });
-
-        //     const secretKeyContributions = [];
-        //     for (let i = 0; i < 16; i++) {
-        //         secretKeyContributions[i] = encryptedSecretKeyContributions[0][0];
-        //     }
-
-        //     const verificationVectorNew = [];
-        //     for (let i = 0; i < 11; i++) {
-        //         verificationVectorNew[i] = verificationVectors[i % 2][0];
-        //     }
-
-        //     const verificationVectorMultiplicationNew = [
-        //         {
-        //             x: {
-        //                 a: "17194438700289937736888799343771909433659280658838586817455546535714250972965",
-        //                 b: "20599845601114276224190290094010139071928880374844902020405844010104675829269"
-        //             },
-        //             y: {
-        //                 a: "21078182228830189979024581609964511130944484501828138899170020075656894727168",
-        //                 b: "780393043804401103204250478988289933707327885740151238575348025052446340736"
-        //             }
-        //         },
-        //         {
-        //             x: {
-        //                 a: "19056449919363678002498844918597898897333951353086926304319833715542992244512",
-        //                 b: "4674847982975643573922066052993530659739521275327220373195818068694758681837"
-        //             },
-        //             y: {
-        //                 a: "8920983955513029529488328311353033907080303508488681579760788761713386129490",
-        //                 b: "17446689480380380927144149357400533537993350530713480927137321363016554345108"
-        //             }
-        //         },
-        //         {
-        //             x: {
-        //                 a: "17194438700289937736888799343771909433659280658838586817455546535714250972965",
-        //                 b: "20599845601114276224190290094010139071928880374844902020405844010104675829269"
-        //             },
-        //             y: {
-        //                 a: "21078182228830189979024581609964511130944484501828138899170020075656894727168",
-        //                 b: "780393043804401103204250478988289933707327885740151238575348025052446340736"
-        //             }
-        //         },
-        //         {
-        //             x: {
-        //                 a: "19056449919363678002498844918597898897333951353086926304319833715542992244512",
-        //                 b: "4674847982975643573922066052993530659739521275327220373195818068694758681837"
-        //             },
-        //             y: {
-        //                 a: "8920983955513029529488328311353033907080303508488681579760788761713386129490",
-        //                 b: "17446689480380380927144149357400533537993350530713480927137321363016554345108"
-        //             }
-        //         },
-        //         {
-        //             x: {
-        //                 a: "17194438700289937736888799343771909433659280658838586817455546535714250972965",
-        //                 b: "20599845601114276224190290094010139071928880374844902020405844010104675829269"
-        //             },
-        //             y: {
-        //                 a: "21078182228830189979024581609964511130944484501828138899170020075656894727168",
-        //                 b: "780393043804401103204250478988289933707327885740151238575348025052446340736"
-        //             }
-        //         },
-        //         {
-        //             x: {
-        //                 a: "19056449919363678002498844918597898897333951353086926304319833715542992244512",
-        //                 b: "4674847982975643573922066052993530659739521275327220373195818068694758681837"
-        //             },
-        //             y: {
-        //                 a: "8920983955513029529488328311353033907080303508488681579760788761713386129490",
-        //                 b: "17446689480380380927144149357400533537993350530713480927137321363016554345108"
-        //             }
-        //         },
-        //         {
-        //             x: {
-        //                 a: "17194438700289937736888799343771909433659280658838586817455546535714250972965",
-        //                 b: "20599845601114276224190290094010139071928880374844902020405844010104675829269"
-        //             },
-        //             y: {
-        //                 a: "21078182228830189979024581609964511130944484501828138899170020075656894727168",
-        //                 b: "780393043804401103204250478988289933707327885740151238575348025052446340736"
-        //             }
-        //         },
-        //         {
-        //             x: {
-        //                 a: "19056449919363678002498844918597898897333951353086926304319833715542992244512",
-        //                 b: "4674847982975643573922066052993530659739521275327220373195818068694758681837"
-        //             },
-        //             y: {
-        //                 a: "8920983955513029529488328311353033907080303508488681579760788761713386129490",
-        //                 b: "17446689480380380927144149357400533537993350530713480927137321363016554345108"
-        //             }
-        //         },
-        //         {
-        //             x: {
-        //                 a: "17194438700289937736888799343771909433659280658838586817455546535714250972965",
-        //                 b: "20599845601114276224190290094010139071928880374844902020405844010104675829269"
-        //             },
-        //             y: {
-        //                 a: "21078182228830189979024581609964511130944484501828138899170020075656894727168",
-        //                 b: "780393043804401103204250478988289933707327885740151238575348025052446340736"
-        //             }
-        //         },
-        //         {
-        //             x: {
-        //                 a: "19056449919363678002498844918597898897333951353086926304319833715542992244512",
-        //                 b: "4674847982975643573922066052993530659739521275327220373195818068694758681837"
-        //             },
-        //             y: {
-        //                 a: "8920983955513029529488328311353033907080303508488681579760788761713386129490",
-        //                 b: "17446689480380380927144149357400533537993350530713480927137321363016554345108"
-        //             }
-        //         },
-        //         {
-        //             x: {
-        //                 a: "17194438700289937736888799343771909433659280658838586817455546535714250972965",
-        //                 b: "20599845601114276224190290094010139071928880374844902020405844010104675829269"
-        //             },
-        //             y: {
-        //                 a: "21078182228830189979024581609964511130944484501828138899170020075656894727168",
-        //                 b: "780393043804401103204250478988289933707327885740151238575348025052446340736"
-        //             }
-        //         }
-        //     ];
-
-        //     const badVerificationVectorMultiplicationNew = [
-        //         {
-        //             x: {
-        //                 a: "10154228958897272268223398244445374804407241158746898754006080773714557731510",
-        //                 b: "7112863543807919636475650744510902904523209938129155195039100133389638393549",
-        //             },
-        //             y: {
-        //                 a: "21768438699801937267178734343536352529284837452234631851378657019248743330246",
-        //                 b: "14882110352786150224152801061494378526163517092877366497614600338997657740082"
-        //             }
-        //         },
-        //         {
-        //             x: {
-        //                 a: "1248667632695062670561268931617774077806084650378129379256669532859564508029",
-        //                 b: "17452053616248801946480735259763848198940239014150780455387001867946296308759"
-        //             },
-        //             y: {
-        //                 a: "16485540817409047841232455331735423476271139132513408791308272320095885297565",
-        //                 b: "1653133216675488580463747086102609772036158366008438638939181371452419103385"
-        //             }
-        //         },
-        //         {
-        //             x: {
-        //                 a: "11675558950119196450024929752469377063058436384926761101313724839160807593665",
-        //                 b: "17732768720607214514486094192491344793116072928491953239486763000133907186438",
-        //             },
-        //             y: {
-        //                 a: "13432298756653034185833211678944163140142717623005437121784472737292262373101",
-        //                 b: "14110339253414843301684494933373858527368231010405277993851079519384397169197"
-        //             }
-        //         },
-        //         {
-        //             x: {
-        //                 a: "9584019064829844444009198489581486711814097906659839681226801906009940572463",
-        //                 b: "12107824998643851242827918509306463216168355067370393221191193070485279779390",
-        //             },
-        //             y: {
-        //                 a: "19580566472357013186763924574192000207594597645107117809373083056842914940490",
-        //                 b: "8794679904479452539164306519974903816512888205806864056397579905980954785401"
-        //             }
-        //         },
-        //         {
-        //             x: {
-        //                 a: "2130209935019246155549995246903886828740438246396827711445645653390332117156",
-        //                 b: "13221912120875807075515478876428331631581853949878600923256053337594207398617",
-        //             },
-        //             y: {
-        //                 a: "21603354201215582016047966890012820144395350508101251242982378867147366901144",
-        //                 b: "16523634804376948498364139221051541163051742172209882011772363864208807274034"
-        //             }
-        //         },
-        //         {
-        //             x: {
-        //                 a: "12082915188531472921205529175994123445068975555965469829521765007130391593923",
-        //                 b: "21543158686763553685556612813816902284906145524238469375329415638954493610201",
-        //             },
-        //             y: {
-        //                 a: "17937091031791764762290837097925474025829773862624475660486320902321269115193",
-        //                 b: "9264536753314031966650651143683040304188265631134293156508248502436789516089"
-        //             }
-        //         },
-        //         {
-        //             x: {
-        //                 a: "18972811942945532508043129775798931760980250101980721732797902183102044469897",
-        //                 b: "13083412181754810692648967245538916513638311335557149623191133098732454174457",
-        //             },
-        //             y: {
-        //                 a: "7783468601658690845202523178165606772061182311960130648248521022973136884234",
-        //                 b: "19157965566238242224666363778051148326455113870986844626792660777950813555743"
-        //             }
-        //         },
-        //         {
-        //             x: {
-        //                 a: "3933335548630886279504438859061157265256033428483255147101535321284926484518",
-        //                 b: "14556207322551605974643458945348566952340163178377445459387289633705550923433",
-        //             },
-        //             y: {
-        //                 a: "17429391977463766585376970754776755784689292622817820026995318775879257372068",
-        //                 b: "11085146587637456148546675651254282228825219171107369550994865257942426199849"
-        //             }
-        //         },
-        //         {
-        //             x: {
-        //                 a: "19885254956678720421922538248190466060955439589409913173031772478890463595589",
-        //                 b: "3477999361824866105752930035142603151450418578875228261007525825292639122461",
-        //             },
-        //             y: {
-        //                 a: "6910227192094283780657808901626891939343655323795413586540729175567672213741",
-        //                 b: "18652368631073485100242070980550333440902236504389106897804818069903542308265"
-        //             }
-        //         },
-        //         {
-        //             x: {
-        //                 a: "19445404794705556904703016485229974761006671718631182178881183244971227244347",
-        //                 b: "7194332561175437391157323777441541676799555741519656066727586527888924962767",
-        //             },
-        //             y: {
-        //                 a: "7475823720353602259020867009312071705248782801369325384093990021516350877236",
-        //                 b: "8254372800693092114855311272350222920712119088638713174193194242010612663394"
-        //             }
-        //         },
-        //         {
-        //             x: {
-        //                 a: "8241625745229820895588185827411423204661272509389284927127735803006700323777",
-        //                 b: "7285820856111603999669759733195534113879041779892849070055429879350957214964",
-        //             },
-        //             y: {
-        //                 a: "4302675421566250512738497103370123257586342322106869428719422803216115368388",
-        //                 b: "3515306631210980987236988275133120807890918260406845205305216104406265259179"
-        //             }
-        //         }
-        //     ];
-
-        //     await wallets.connect(owner).rechargeSchainWallet(stringValue(web3.utils.soliditySha3("New16NodeSchain")), {value: 1e20.toString()});
-        //     for (let i = 0; i < 16; i++) {
-        //         let index = 0;
-        //         if (i === 1) {
-        //             index = 1;
-        //         }
-        //         const broadPoss = await skaleDKG.connect(validators[index]).populateTransaction.isBroadcastPossible(
-        //             stringValue(web3.utils.soliditySha3("New16NodeSchain")),
-        //             i
-        //         );
-        //         assert.equal(broadPoss, true);
-        //         await skaleDKG.connect(validators[index]).populateTransaction.broadcast(
-        //             stringValue(web3.utils.soliditySha3("New16NodeSchain")),
-        //             i,
-        //             verificationVectorNew,
-        //             secretKeyContributions
-        //         );
-        //     }
-        //     const nodesInGroup = await schainsInternal.getNodesInGroup(stringValue(web3.utils.soliditySha3("New16NodeSchain")));
-        //     const accusedNode = nodesInGroup[14].toString();
-        //     const complaintNode = nodesInGroup[0].toString();
-        //     const someNode = nodesInGroup[7].toString();
-        //     let indexToSend = 0;
-        //     if (complaintNode === "1") {
-        //         indexToSend = 1;
-        //     }
-        //     await skaleDKG.connect(validators[indexToSend]).populateTransaction.complaintBadData(
-        //         stringValue(web3.utils.soliditySha3("New16NodeSchain")),
-        //         complaintNode,
-        //         accusedNode
-        //     );
-        //     const balanceBefore = await getBalance(validators[indexToSend].address);
-        //     await expect(skaleDKG.connect(validators[indexToSend]).populateTransaction.complaint(
-        //         stringValue(web3.utils.soliditySha3("New16NodeSchain")),
-        //         complaintNode,
-        //         someNode
-        //     )).to.emit(skaleDKG, "ComplaintError")
-        //         .withArgs("One complaint is already sent");
-        //     const balance = await getBalance(validators[indexToSend].address);
-        //     balance.should.not.be.lessThan(balanceBefore);
-        //     balance.should.be.almost(balanceBefore);
-
-        //     if (accusedNode === "1") {
-        //         indexToSend = 1;
-        //     } else {
-        //         indexToSend = 0;
-        //     }
-        //     await skaleDKG.connect(validators[indexToSend]).populateTransaction.preResponse(
-        //         stringValue(web3.utils.soliditySha3("New16NodeSchain")),
-        //         accusedNode,
-        //         verificationVectorNew,
-        //         verificationVectorMultiplication[indexes[indexToSend]],
-        //         secretKeyContributions
-        //     ).should.be.eventually.rejectedWith("Incorrect length of multiplied verification vector");
-        //     await skaleDKG.connect(validators[indexToSend]).populateTransaction.preResponse(
-        //         stringValue(web3.utils.soliditySha3("New16NodeSchain")),
-        //         accusedNode,
-        //         verificationVectorNew,
-        //         badVerificationVectorMultiplicationNew,
-        //         secretKeyContributions
-        //     ).should.be.eventually.rejectedWith("Multiplied verification vector is incorrect");
-        //     const resPreResp = await (await skaleDKG.connect(validators[indexToSend]).populateTransaction.preResponse(
-        //         stringValue(web3.utils.soliditySha3("New16NodeSchain")),
-        //         accusedNode,
-        //         verificationVectorNew,
-        //         verificationVectorMultiplicationNew,
-        //         secretKeyContributions
-        //     )).wait();
-        //     const resResp = await (await skaleDKG.connect(validators[indexToSend]).response(
-        //         stringValue(web3.utils.soliditySha3("New16NodeSchain")),
-        //         accusedNode,
-        //         secretNumbers[indexes[indexToSend]],
-        //         multipliedShares[indexes[indexToSend]]
-        //     )).wait();
-        //     if (resResp.events) {
-        //         assert.equal(resResp.events[0].event, "BadGuy");
-        //         assert.equal(resResp.events[0].args?.nodeIndex.toString(), accusedNode);
-        //     } else {
-        //         assert(false, "No events were emitted");
-        //     }
-        //     assert.isAtMost(resResp.gasUsed.toNumber() + resPreResp.gasUsed.toNumber(), 10000000);
-        // });
+        it("should reopen channel correctly", async () => {
+            const deposit = await schains.getSchainPrice(4, 5);
+
+            await schains.addSchain(
+                validator1.address,
+                deposit,
+                web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, "d2"]));
+
+            let nodesInGroup = await schainsInternal.getNodesInGroup(stringValue(web3.utils.soliditySha3("d2")));
+            schainName = "d2";
+            let index = 3;
+            while (nodesInGroup[0].eq(1)) {
+                await schains.deleteSchainByRoot(schainName);
+                schainName = "d" + index;
+                index++;
+                await schains.addSchain(
+                    validator1.address,
+                    deposit,
+                    web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, schainName]));
+                nodesInGroup = await schainsInternal.getNodesInGroup(stringValue(web3.utils.soliditySha3(schainName)));
+            }
+
+            let rotCounter = await nodeRotation.getRotation(stringValue(web3.utils.soliditySha3(schainName)));
+            assert.equal(rotCounter.rotationCounter.toString(), "0");
+
+            await nodes.createNode(validators[0].nodeAddress.address,
+                {
+                    port: 8545,
+                    nonce: 0,
+                    ip: "0x7f000003",
+                    publicIp: "0x7f000003",
+                    publicKey: validatorsPublicKey[0],
+                    name: "d203",
+                    domainName: "some.domain.name"
+                });
+
+            await wallets.connect(owner).rechargeSchainWallet(stringValue(web3.utils.soliditySha3(schainName)), {value: 1e20.toString()});
+            let balanceBefore = await getBalance(validators[0].nodeAddress.address);
+            let tx = await skaleDKG.connect(validators[0].nodeAddress.address).populateTransaction.broadcast(
+                stringValue(web3.utils.soliditySha3(schainName)),
+                0,
+                verificationVectors[indexes[0]],
+                // the last symbol is spoiled in parameter below
+                badEncryptedSecretKeyContributions[indexes[0]]
+            );
+            await sendTransactionFromWallet(tx, validators[0].nodeAddress);
+            let balance = await getBalance(validators[0].nodeAddress.address);
+            balance.should.not.be.lessThan(balanceBefore);
+            balance.should.be.almost(balanceBefore);
+
+            balanceBefore = await getBalance(validators[1].nodeAddress.address);
+            tx = await skaleDKG.connect(validators[1].nodeAddress.address).populateTransaction.broadcast(
+                stringValue(web3.utils.soliditySha3(schainName)),
+                1,
+                verificationVectors[indexes[1]],
+                encryptedSecretKeyContributions[indexes[1]]
+            );
+            await sendTransactionFromWallet(tx, validators[1].nodeAddress);
+            balance = await getBalance(validators[1].nodeAddress.address);
+            balance.should.not.be.lessThan(balanceBefore);
+            balance.should.be.almost(balanceBefore);
+
+            balanceBefore = await getBalance(validators[1].nodeAddress.address);
+            tx = await skaleDKG.connect(validators[1].nodeAddress.address).populateTransaction.complaintBadData(
+                stringValue(web3.utils.soliditySha3(schainName)),
+                1,
+                0
+            );
+            const resComplaint = await (await sendTransactionFromWallet(tx, validators[1].nodeAddress)).wait();
+            balance = await getBalance(validators[1].nodeAddress.address);
+            // balance.should.not.be.lessThan(balanceBefore);
+            // balance.should.be.almost(balanceBefore);
+
+            assert(
+                await skaleDKG.getComplaintStartedTime(stringValue(web3.utils.soliditySha3(schainName))),
+                (await web3.eth.getBlock((resComplaint).blockNumber)).timestamp.toString()
+            );
+
+            balanceBefore = await getBalance(validators[0].nodeAddress.address);
+            tx = await skaleDKG.connect(validators[0].nodeAddress.address).populateTransaction.preResponse(
+                stringValue(web3.utils.soliditySha3(schainName)),
+                0,
+                verificationVectors[indexes[0]],
+                verificationVectorMultiplication[indexes[0]],
+                badEncryptedSecretKeyContributions[indexes[0]]
+            );
+            await sendTransactionFromWallet(tx, validators[0].nodeAddress);
+            balance = await getBalance(validators[0].nodeAddress.address);
+            // balance.should.not.be.lessThan(balanceBefore);
+            // balance.should.be.almost(balanceBefore);
+
+            balanceBefore = await getBalance(validators[0].nodeAddress.address);
+            tx = await skaleDKG.connect(validators[0].nodeAddress.address).populateTransaction.response(
+                stringValue(web3.utils.soliditySha3(schainName)),
+                0,
+                secretNumbers[indexes[0]],
+                multipliedShares[indexes[1]]
+            );
+            const result = await (await sendTransactionFromWallet(tx, validators[0].nodeAddress)).wait();
+            balance = await getBalance(validators[0].nodeAddress.address);
+            balance.should.not.be.lessThan(balanceBefore);
+            balance.should.be.almost(balanceBefore);
+
+            if (result.logs) {
+                assert.equal(result.logs[0].data.toString(), "0x0000000000000000000000000000000000000000000000000000000000000000");
+
+                assert.equal(result.logs[2].data, stringValue(web3.utils.soliditySha3(schainName)));
+            } else {
+                assert(false, "No events were emitted");
+            }
+
+            const blockNumber = result.blockNumber;
+            const timestamp = (await web3.eth.getBlock(blockNumber)).timestamp;
+
+            assert.equal((await skaleDKG.getNumberOfBroadcasted(stringValue(web3.utils.soliditySha3(schainName)))).toString(), "0");
+            assert.equal((await skaleDKG.getChannelStartedTime(stringValue(web3.utils.soliditySha3(schainName)))).toString(), timestamp.toString());
+
+            rotCounter = await nodeRotation.getRotation(stringValue(web3.utils.soliditySha3(schainName)));
+            assert.equal(rotCounter.rotationCounter.toString(), "1");
+
+            balanceBefore = await getBalance(validators[0].nodeAddress.address);
+            tx = await skaleDKG.connect(validators[0].nodeAddress.address).populateTransaction.complaint(
+                stringValue(web3.utils.soliditySha3(schainName)),
+                2,
+                0
+            );
+            await expect(sendTransactionFromWallet(tx, validators[0].nodeAddress)).to.emit(skaleDKG, "ComplaintError")
+                .withArgs("Node is not in this group");
+            balance = await getBalance(validators[0].nodeAddress.address);
+            // balance.should.not.be.lessThan(balanceBefore);
+            // balance.should.be.almost(balanceBefore);
+
+            tx = await skaleDKG.connect(validators[0].nodeAddress.address).populateTransaction.isBroadcastPossible(
+                stringValue(web3.utils.soliditySha3(schainName)),
+                2
+            );
+            let res = await callFromWallet(tx, validators[0].nodeAddress, boolParser);
+            assert.equal(res, 'true');
+
+            tx = await skaleDKG.connect(validators[0].nodeAddress.address).populateTransaction.broadcast(
+                stringValue(web3.utils.soliditySha3(schainName)),
+                2,
+                verificationVectors[indexes[0]],
+                // the last symbol is spoiled in parameter below
+                badEncryptedSecretKeyContributions[indexes[0]]
+            );
+            await sendTransactionFromWallet(tx, validators[0].nodeAddress);
+
+            tx = await skaleDKG.connect(validators[1].nodeAddress.address).populateTransaction.isBroadcastPossible(
+                stringValue(web3.utils.soliditySha3(schainName)),
+                1
+            );
+            res = await callFromWallet(tx, validators[1].nodeAddress, boolParser);
+            assert.equal(res, 'true');
+
+            tx = await skaleDKG.connect(validators[1].nodeAddress.address).populateTransaction.broadcast(
+                stringValue(web3.utils.soliditySha3(schainName)),
+                1,
+                verificationVectors[indexes[1]],
+                encryptedSecretKeyContributions[indexes[1]]
+            );
+            await sendTransactionFromWallet(tx, validators[1].nodeAddress);
+
+            tx = await skaleDKG.connect(validators[0].nodeAddress.address).populateTransaction.isAlrightPossible(
+                stringValue(web3.utils.soliditySha3(schainName)),
+                2,
+            );
+            res = await callFromWallet(tx, validators[0].nodeAddress, boolParser);
+            assert.equal(res, 'true');
+
+            tx = await skaleDKG.connect(validators[0].nodeAddress.address).populateTransaction.alright(
+                stringValue(web3.utils.soliditySha3(schainName)),
+                2
+            );
+            await sendTransactionFromWallet(tx, validators[0].nodeAddress);
+
+            tx = await skaleDKG.connect(validators[1].nodeAddress.address).populateTransaction.isAlrightPossible(
+                stringValue(web3.utils.soliditySha3(schainName)),
+                1
+            );
+            res = await callFromWallet(tx, validators[1].nodeAddress, boolParser);
+            assert.equal(res, 'true');
+
+            tx = await skaleDKG.connect(validators[1].nodeAddress.address).populateTransaction.alright(
+                stringValue(web3.utils.soliditySha3(schainName)),
+                1
+            );
+            await sendTransactionFromWallet(tx, validators[1].nodeAddress);
+        });
+
+        it("should process nodeExit 2 times correctly", async () => {
+            const deposit = await schains.getSchainPrice(4, 5);
+
+            await schains.addSchain(
+                validator1.address,
+                deposit,
+                web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, "d2"]));
+
+            let nodesInGroup = await schainsInternal.getNodesInGroup(stringValue(web3.utils.soliditySha3("d2")));
+            schainName = "d2";
+            let index = 3;
+            while (nodesInGroup[0].eq(1)) {
+                await schains.deleteSchainByRoot(schainName);
+                schainName = "d" + index;
+                index++;
+                await schains.addSchain(
+                    validator1.address,
+                    deposit,
+                    web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, schainName]));
+                nodesInGroup = await schainsInternal.getNodesInGroup(stringValue(web3.utils.soliditySha3(schainName)));
+            }
+
+            let rotCounter = await nodeRotation.getRotation(stringValue(web3.utils.soliditySha3(schainName)));
+            assert.equal(rotCounter.rotationCounter.toString(), "0");
+
+            await nodes.createNode(validators[0].nodeAddress.address,
+                {
+                    port: 8545,
+                    nonce: 0,
+                    ip: "0x7f000003",
+                    publicIp: "0x7f000003",
+                    publicKey: validatorsPublicKey[0],
+                    name: "d203",
+                    domainName: "some.domain.name"
+                });
+
+            await wallets.connect(owner).rechargeSchainWallet(stringValue(web3.utils.soliditySha3(schainName)), {value: 1e20.toString()});
+            let tx = await skaleDKG.connect(validators[0].nodeAddress.address).populateTransaction.broadcast(
+                stringValue(web3.utils.soliditySha3(schainName)),
+                0,
+                verificationVectors[indexes[0]],
+                // the last symbol is spoiled in parameter below
+                encryptedSecretKeyContributions[indexes[0]]
+            );
+            await sendTransactionFromWallet(tx, validators[0].nodeAddress);
+
+            tx = await skaleDKG.connect(validators[1].nodeAddress.address).populateTransaction.broadcast(
+                stringValue(web3.utils.soliditySha3(schainName)),
+                1,
+                verificationVectors[indexes[1]],
+                encryptedSecretKeyContributions[indexes[1]]
+            );
+            const res = await (await sendTransactionFromWallet(tx, validators[1].nodeAddress)).wait();
+            assert(
+                await skaleDKG.getAlrightStartedTime(stringValue(web3.utils.soliditySha3(schainName))),
+                (await web3.eth.getBlock(res.blockNumber)).timestamp.toString()
+            );
+            let numOfCompleted = await skaleDKG.getNumberOfCompleted(stringValue(web3.utils.soliditySha3(schainName)));
+            assert(numOfCompleted, "0");
+
+            tx = await skaleDKG.connect(validators[0].nodeAddress.address).populateTransaction.alright(
+                stringValue(web3.utils.soliditySha3(schainName)),
+                0
+            );
+            await sendTransactionFromWallet(tx, validators[0].nodeAddress);
+
+            numOfCompleted = await skaleDKG.getNumberOfCompleted(stringValue(web3.utils.soliditySha3(schainName)));
+            assert(numOfCompleted, "1");
+
+            tx = await skaleDKG.connect(validators[1].nodeAddress.address).populateTransaction.alright(
+                stringValue(web3.utils.soliditySha3(schainName)),
+                1
+            );
+            const resSuccess = await (await sendTransactionFromWallet(tx, validators[1].nodeAddress)).wait();
+
+            numOfCompleted = await skaleDKG.getNumberOfCompleted(stringValue(web3.utils.soliditySha3(schainName)));
+            assert(numOfCompleted, "2");
+
+            assert(
+                await skaleDKG.getTimeOfLastSuccessfulDKG(stringValue(web3.utils.soliditySha3(schainName))),
+                (await web3.eth.getBlock(resSuccess.blockNumber)).timestamp.toString()
+            );
+
+            const comPubKey = await keyStorage.getCommonPublicKey(stringValue(web3.utils.soliditySha3(schainName)));
+            assert.equal(comPubKey.x.a.toString() !== "0", true);
+            assert.equal(comPubKey.x.b.toString() !== "0", true);
+            assert.equal(comPubKey.y.a.toString() !== "0", true);
+            assert.equal(comPubKey.y.b.toString() !== "0", true);
+
+            tx = await skaleManager.connect(validators[1].nodeAddress.address).populateTransaction.nodeExit(1);
+            await sendTransactionFromWallet(tx, validators[1].nodeAddress);
+
+            let prevPubKey = await keyStorage.getPreviousPublicKey(stringValue(web3.utils.soliditySha3(schainName)));
+            assert(prevPubKey.x.a, "0");
+            assert(prevPubKey.x.b, "0");
+            assert(prevPubKey.y.a, "0");
+            assert(prevPubKey.y.b, "0");
+
+            await nodes.createNode(validators[0].nodeAddress.address,
+                {
+                    port: 8545,
+                    nonce: 0,
+                    ip: "0x7f000004",
+                    publicIp: "0x7f000004",
+                    publicKey: validatorsPublicKey[0],
+                    name: "d204",
+                    domainName: "some.domain.name"
+                }
+            );
+
+            rotCounter = await nodeRotation.getRotation(stringValue(web3.utils.soliditySha3(schainName)));
+            assert.equal(rotCounter.rotationCounter.toString(), "1");
+
+            tx = await skaleDKG.connect(validators[0].nodeAddress.address).populateTransaction.broadcast(
+                stringValue(web3.utils.soliditySha3(schainName)),
+                0,
+                verificationVectors[indexes[0]],
+                // the last symbol is spoiled in parameter below
+                encryptedSecretKeyContributions[indexes[0]]
+            );
+            await sendTransactionFromWallet(tx, validators[0].nodeAddress);
+
+            tx = await skaleDKG.connect(validators[0].nodeAddress.address).populateTransaction.broadcast(
+                stringValue(web3.utils.soliditySha3(schainName)),
+                2,
+                verificationVectors[indexes[0]],
+                encryptedSecretKeyContributions[indexes[0]],
+            );
+            await sendTransactionFromWallet(tx, validators[0].nodeAddress);
+
+            tx = await skaleDKG.connect(validators[0].nodeAddress.address).populateTransaction.alright(
+                stringValue(web3.utils.soliditySha3(schainName)),
+                0
+            );
+            await sendTransactionFromWallet(tx, validators[0].nodeAddress);
+
+            assert(
+                await skaleDKG.getTimeOfLastSuccessfulDKG(stringValue(web3.utils.soliditySha3(schainName))),
+                (await web3.eth.getBlock(resSuccess.blockNumber)).timestamp.toString()
+            );
+
+            tx = await skaleDKG.connect(validators[0].nodeAddress.address).populateTransaction.alright(
+                stringValue(web3.utils.soliditySha3(schainName)),
+                2
+            );
+            await sendTransactionFromWallet(tx, validators[0].nodeAddress);
+
+            prevPubKey = await keyStorage.getPreviousPublicKey(stringValue(web3.utils.soliditySha3(schainName)));
+            assert.equal(prevPubKey.x.a.toString() === comPubKey.x.a.toString(), true);
+            assert.equal(prevPubKey.x.b.toString() === comPubKey.x.b.toString(), true);
+            assert.equal(prevPubKey.y.a.toString() === comPubKey.y.a.toString(), true);
+            assert.equal(prevPubKey.y.b.toString() === comPubKey.y.b.toString(), true);
+
+            let allPrevPubKeys = await keyStorage.getAllPreviousPublicKeys(stringValue(web3.utils.soliditySha3(schainName)));
+            assert.equal(allPrevPubKeys.length === 1, true);
+            assert.equal(prevPubKey.x.a.toString() === allPrevPubKeys[0].x.a.toString(), true);
+            assert.equal(prevPubKey.x.b.toString() === allPrevPubKeys[0].x.b.toString(), true);
+            assert.equal(prevPubKey.y.a.toString() === allPrevPubKeys[0].y.a.toString(), true);
+            assert.equal(prevPubKey.y.b.toString() === allPrevPubKeys[0].y.b.toString(), true);
+
+            await skipTime(ethers, 43260);
+            tx = await skaleManager.connect(validators[0].nodeAddress.address).populateTransaction.nodeExit(2);
+            await sendTransactionFromWallet(tx, validators[0].nodeAddress);
+
+            rotCounter = await nodeRotation.getRotation(stringValue(web3.utils.soliditySha3(schainName)));
+            assert.equal(rotCounter.rotationCounter.toString(), "2");
+
+            tx = await skaleDKG.connect(validators[0].nodeAddress.address).populateTransaction.broadcast(
+                stringValue(web3.utils.soliditySha3(schainName)),
+                0,
+                verificationVectors[indexes[0]],
+                // the last symbol is spoiled in parameter below
+                encryptedSecretKeyContributions[indexes[0]]
+            );
+            await sendTransactionFromWallet(tx, validators[0].nodeAddress);
+
+            tx = await skaleDKG.connect(validators[0].nodeAddress.address).populateTransaction.broadcast(
+                stringValue(web3.utils.soliditySha3(schainName)),
+                3,
+                verificationVectors[indexes[0]],
+                encryptedSecretKeyContributions[indexes[0]]
+            );
+            await sendTransactionFromWallet(tx, validators[0].nodeAddress);
+
+            tx = await skaleDKG.connect(validators[0].nodeAddress.address).populateTransaction.alright(
+                stringValue(web3.utils.soliditySha3(schainName)),
+                0
+            );
+            await sendTransactionFromWallet(tx, validators[0].nodeAddress);
+
+            tx = await skaleDKG.connect(validators[0].nodeAddress.address).populateTransaction.alright(
+                stringValue(web3.utils.soliditySha3(schainName)),
+                3
+            );
+            await sendTransactionFromWallet(tx, validators[0].nodeAddress);
+
+            allPrevPubKeys = await keyStorage.getAllPreviousPublicKeys(stringValue(web3.utils.soliditySha3(schainName)));
+            assert.equal(allPrevPubKeys.length === 2, true);
+            assert.equal(prevPubKey.x.a.toString() === allPrevPubKeys[0].x.a.toString(), true);
+            assert.equal(prevPubKey.x.b.toString() === allPrevPubKeys[0].x.b.toString(), true);
+            assert.equal(prevPubKey.y.a.toString() === allPrevPubKeys[0].y.a.toString(), true);
+            assert.equal(prevPubKey.y.b.toString() === allPrevPubKeys[0].y.b.toString(), true);
+        });
+
+        it("16 nodes schain test", async () => {
+
+            for (let i = 3; i <= 16; i++) {
+                const hexIndex = ("0" + i.toString(16)).slice(-2);
+                await nodes.createNode(validators[0].nodeAddress.address,
+                    {
+                        port: 8545,
+                        nonce: 0,
+                        ip: "0x7f0000" + hexIndex,
+                        publicIp: "0x7f0000" + hexIndex,
+                        publicKey: validatorsPublicKey[0],
+                        name: "d2" + hexIndex,
+                        domainName: "some.domain.name"
+                    });
+            }
+
+            const deposit = await schains.getSchainPrice(3, 5);
+
+            await schains.addSchain(
+                validator1.address,
+                deposit,
+                web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 3, 0, "New16NodeSchain"]));
+
+            const secretKeyContributions = [];
+            for (let i = 0; i < 16; i++) {
+                secretKeyContributions[i] = encryptedSecretKeyContributions[0][0];
+            }
+
+            const verificationVectorNew = [];
+            for (let i = 0; i < 11; i++) {
+                verificationVectorNew[i] = verificationVectors[i % 2][0];
+            }
+
+            await wallets.connect(owner).rechargeSchainWallet(stringValue(web3.utils.soliditySha3("New16NodeSchain")), {value: 1e20.toString()});
+            for (let i = 0; i < 16; i++) {
+                let index = 0;
+                if (i === 1) {
+                    index = 1;
+                }
+                let tx = await skaleDKG.connect(validators[index].nodeAddress.address).populateTransaction.isBroadcastPossible(
+                    stringValue(web3.utils.soliditySha3("New16NodeSchain")),
+                    i
+                );
+                let broadPoss = await callFromWallet(tx, validators[index].nodeAddress, boolParser);
+                assert.equal(broadPoss, 'true');
+                const balanceBefore = await getBalance(validators[index].nodeAddress.address);
+                tx = await skaleDKG.connect(validators[index].nodeAddress.address).populateTransaction.broadcast(
+                    stringValue(web3.utils.soliditySha3("New16NodeSchain")),
+                    i,
+                    verificationVectorNew,
+                    secretKeyContributions
+                );
+                await sendTransactionFromWallet(tx, validators[index].nodeAddress);
+                const balance = await getBalance(validators[index].nodeAddress.address);
+                // balance.should.not.be.lessThan(balanceBefore);
+                // balance.should.be.almost(balanceBefore);
+                tx = await skaleDKG.connect(validators[index].nodeAddress.address).populateTransaction.isBroadcastPossible(
+                    stringValue(web3.utils.soliditySha3("New16NodeSchain")),
+                    i
+                );
+                broadPoss = await callFromWallet(tx, validators[index].nodeAddress, boolParser);
+                assert.equal(broadPoss, 'false');
+            }
+            let comPubKey;
+            for (let i = 0; i < 16; i++) {
+                comPubKey = await keyStorage.getCommonPublicKey(stringValue(web3.utils.soliditySha3("New16NodeSchain")));
+                assert(comPubKey.x.a, "0");
+                assert(comPubKey.x.b, "0");
+                assert(comPubKey.y.a, "0");
+                assert(comPubKey.y.b, "0");
+                let index = 0;
+                if (i === 1) {
+                    index = 1;
+                }
+                let tx = await skaleDKG.connect(validators[index].nodeAddress.address).populateTransaction.isAlrightPossible(
+                    stringValue(web3.utils.soliditySha3("New16NodeSchain")),
+                    i
+                );
+                let alrightPoss = await callFromWallet(tx, validators[index].nodeAddress, boolParser);
+                assert.equal(alrightPoss, 'true');
+
+                const balanceBefore = await getBalance(validators[index].nodeAddress.address);
+                tx = await skaleDKG.connect(validators[index].nodeAddress.address).populateTransaction.alright(
+                    stringValue(web3.utils.soliditySha3("New16NodeSchain")),
+                    i
+                );
+                await sendTransactionFromWallet(tx, validators[index].nodeAddress);
+                const balance = await getBalance(validators[index].nodeAddress.address);
+                balance.should.not.be.lessThan(balanceBefore);
+                balance.should.be.almost(balanceBefore);
+
+                tx = await skaleDKG.connect(validators[index].nodeAddress.address).populateTransaction.isAlrightPossible(
+                    stringValue(web3.utils.soliditySha3("New16NodeSchain")),
+                    i
+                );
+                alrightPoss = await callFromWallet(tx, validators[index].nodeAddress, boolParser);
+                assert.equal(alrightPoss, 'false');
+            }
+
+            comPubKey = await keyStorage.getCommonPublicKey(stringValue(web3.utils.soliditySha3("New16NodeSchain")));
+            assert.equal(comPubKey.x.a.toString() !== "0", true);
+            assert.equal(comPubKey.x.b.toString() !== "0", true);
+            assert.equal(comPubKey.y.a.toString() !== "0", true);
+            assert.equal(comPubKey.y.b.toString() !== "0", true);
+
+            const prevPubKey = await keyStorage.getPreviousPublicKey(stringValue(web3.utils.soliditySha3("New16NodeSchain")));
+            assert(prevPubKey.x.a, "0");
+            assert(prevPubKey.x.b, "0");
+            assert(prevPubKey.y.a, "0");
+            assert(prevPubKey.y.b, "0");
+
+        });
+
+        it("16 nodes schain test with incorrect complaint and response", async () => {
+
+            for (let i = 3; i <= 16; i++) {
+                const hexIndex = ("0" + i.toString(16)).slice(-2);
+                await nodes.createNode(validators[0].nodeAddress.address,
+                    {
+                        port: 8545,
+                        nonce: 0,
+                        ip: "0x7f0000" + hexIndex,
+                        publicIp: "0x7f0000" + hexIndex,
+                        publicKey: validatorsPublicKey[0],
+                        name: "d2" + hexIndex,
+                        domainName: "some.domain.name"
+                    });
+            }
+
+            const deposit = await schains.getSchainPrice(3, 5);
+
+            await schains.addSchain(
+                validator1.address,
+                deposit,
+                web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 3, 0, "New16NodeSchain"]));
+
+            await nodes.createNode(validators[0].nodeAddress.address,
+                {
+                    port: 8545,
+                    nonce: 0,
+                    ip: "0x7f0000ff",
+                    publicIp: "0x7f0000ff",
+                    publicKey: validatorsPublicKey[0],
+                    name: "d2ff",
+                    domainName: "some.domain.name"
+                });
+
+            const secretKeyContributions = [];
+            for (let i = 0; i < 16; i++) {
+                secretKeyContributions[i] = encryptedSecretKeyContributions[0][0];
+            }
+
+            const verificationVectorNew = [];
+            for (let i = 0; i < 11; i++) {
+                verificationVectorNew[i] = verificationVectors[i % 2][0];
+            }
+
+            const verificationVectorMultiplicationNew = [
+                {
+                    x: {
+                        a: "17194438700289937736888799343771909433659280658838586817455546535714250972965",
+                        b: "20599845601114276224190290094010139071928880374844902020405844010104675829269"
+                    },
+                    y: {
+                        a: "21078182228830189979024581609964511130944484501828138899170020075656894727168",
+                        b: "780393043804401103204250478988289933707327885740151238575348025052446340736"
+                    }
+                },
+                {
+                    x: {
+                        a: "19056449919363678002498844918597898897333951353086926304319833715542992244512",
+                        b: "4674847982975643573922066052993530659739521275327220373195818068694758681837"
+                    },
+                    y: {
+                        a: "8920983955513029529488328311353033907080303508488681579760788761713386129490",
+                        b: "17446689480380380927144149357400533537993350530713480927137321363016554345108"
+                    }
+                },
+                {
+                    x: {
+                        a: "17194438700289937736888799343771909433659280658838586817455546535714250972965",
+                        b: "20599845601114276224190290094010139071928880374844902020405844010104675829269"
+                    },
+                    y: {
+                        a: "21078182228830189979024581609964511130944484501828138899170020075656894727168",
+                        b: "780393043804401103204250478988289933707327885740151238575348025052446340736"
+                    }
+                },
+                {
+                    x: {
+                        a: "19056449919363678002498844918597898897333951353086926304319833715542992244512",
+                        b: "4674847982975643573922066052993530659739521275327220373195818068694758681837"
+                    },
+                    y: {
+                        a: "8920983955513029529488328311353033907080303508488681579760788761713386129490",
+                        b: "17446689480380380927144149357400533537993350530713480927137321363016554345108"
+                    }
+                },
+                {
+                    x: {
+                        a: "17194438700289937736888799343771909433659280658838586817455546535714250972965",
+                        b: "20599845601114276224190290094010139071928880374844902020405844010104675829269"
+                    },
+                    y: {
+                        a: "21078182228830189979024581609964511130944484501828138899170020075656894727168",
+                        b: "780393043804401103204250478988289933707327885740151238575348025052446340736"
+                    }
+                },
+                {
+                    x: {
+                        a: "19056449919363678002498844918597898897333951353086926304319833715542992244512",
+                        b: "4674847982975643573922066052993530659739521275327220373195818068694758681837"
+                    },
+                    y: {
+                        a: "8920983955513029529488328311353033907080303508488681579760788761713386129490",
+                        b: "17446689480380380927144149357400533537993350530713480927137321363016554345108"
+                    }
+                },
+                {
+                    x: {
+                        a: "17194438700289937736888799343771909433659280658838586817455546535714250972965",
+                        b: "20599845601114276224190290094010139071928880374844902020405844010104675829269"
+                    },
+                    y: {
+                        a: "21078182228830189979024581609964511130944484501828138899170020075656894727168",
+                        b: "780393043804401103204250478988289933707327885740151238575348025052446340736"
+                    }
+                },
+                {
+                    x: {
+                        a: "19056449919363678002498844918597898897333951353086926304319833715542992244512",
+                        b: "4674847982975643573922066052993530659739521275327220373195818068694758681837"
+                    },
+                    y: {
+                        a: "8920983955513029529488328311353033907080303508488681579760788761713386129490",
+                        b: "17446689480380380927144149357400533537993350530713480927137321363016554345108"
+                    }
+                },
+                {
+                    x: {
+                        a: "17194438700289937736888799343771909433659280658838586817455546535714250972965",
+                        b: "20599845601114276224190290094010139071928880374844902020405844010104675829269"
+                    },
+                    y: {
+                        a: "21078182228830189979024581609964511130944484501828138899170020075656894727168",
+                        b: "780393043804401103204250478988289933707327885740151238575348025052446340736"
+                    }
+                },
+                {
+                    x: {
+                        a: "19056449919363678002498844918597898897333951353086926304319833715542992244512",
+                        b: "4674847982975643573922066052993530659739521275327220373195818068694758681837"
+                    },
+                    y: {
+                        a: "8920983955513029529488328311353033907080303508488681579760788761713386129490",
+                        b: "17446689480380380927144149357400533537993350530713480927137321363016554345108"
+                    }
+                },
+                {
+                    x: {
+                        a: "17194438700289937736888799343771909433659280658838586817455546535714250972965",
+                        b: "20599845601114276224190290094010139071928880374844902020405844010104675829269"
+                    },
+                    y: {
+                        a: "21078182228830189979024581609964511130944484501828138899170020075656894727168",
+                        b: "780393043804401103204250478988289933707327885740151238575348025052446340736"
+                    }
+                }
+            ];
+
+            const badVerificationVectorMultiplicationNew = [
+                {
+                    x: {
+                        a: "10154228958897272268223398244445374804407241158746898754006080773714557731510",
+                        b: "7112863543807919636475650744510902904523209938129155195039100133389638393549",
+                    },
+                    y: {
+                        a: "21768438699801937267178734343536352529284837452234631851378657019248743330246",
+                        b: "14882110352786150224152801061494378526163517092877366497614600338997657740082"
+                    }
+                },
+                {
+                    x: {
+                        a: "1248667632695062670561268931617774077806084650378129379256669532859564508029",
+                        b: "17452053616248801946480735259763848198940239014150780455387001867946296308759"
+                    },
+                    y: {
+                        a: "16485540817409047841232455331735423476271139132513408791308272320095885297565",
+                        b: "1653133216675488580463747086102609772036158366008438638939181371452419103385"
+                    }
+                },
+                {
+                    x: {
+                        a: "11675558950119196450024929752469377063058436384926761101313724839160807593665",
+                        b: "17732768720607214514486094192491344793116072928491953239486763000133907186438",
+                    },
+                    y: {
+                        a: "13432298756653034185833211678944163140142717623005437121784472737292262373101",
+                        b: "14110339253414843301684494933373858527368231010405277993851079519384397169197"
+                    }
+                },
+                {
+                    x: {
+                        a: "9584019064829844444009198489581486711814097906659839681226801906009940572463",
+                        b: "12107824998643851242827918509306463216168355067370393221191193070485279779390",
+                    },
+                    y: {
+                        a: "19580566472357013186763924574192000207594597645107117809373083056842914940490",
+                        b: "8794679904479452539164306519974903816512888205806864056397579905980954785401"
+                    }
+                },
+                {
+                    x: {
+                        a: "2130209935019246155549995246903886828740438246396827711445645653390332117156",
+                        b: "13221912120875807075515478876428331631581853949878600923256053337594207398617",
+                    },
+                    y: {
+                        a: "21603354201215582016047966890012820144395350508101251242982378867147366901144",
+                        b: "16523634804376948498364139221051541163051742172209882011772363864208807274034"
+                    }
+                },
+                {
+                    x: {
+                        a: "12082915188531472921205529175994123445068975555965469829521765007130391593923",
+                        b: "21543158686763553685556612813816902284906145524238469375329415638954493610201",
+                    },
+                    y: {
+                        a: "17937091031791764762290837097925474025829773862624475660486320902321269115193",
+                        b: "9264536753314031966650651143683040304188265631134293156508248502436789516089"
+                    }
+                },
+                {
+                    x: {
+                        a: "18972811942945532508043129775798931760980250101980721732797902183102044469897",
+                        b: "13083412181754810692648967245538916513638311335557149623191133098732454174457",
+                    },
+                    y: {
+                        a: "7783468601658690845202523178165606772061182311960130648248521022973136884234",
+                        b: "19157965566238242224666363778051148326455113870986844626792660777950813555743"
+                    }
+                },
+                {
+                    x: {
+                        a: "3933335548630886279504438859061157265256033428483255147101535321284926484518",
+                        b: "14556207322551605974643458945348566952340163178377445459387289633705550923433",
+                    },
+                    y: {
+                        a: "17429391977463766585376970754776755784689292622817820026995318775879257372068",
+                        b: "11085146587637456148546675651254282228825219171107369550994865257942426199849"
+                    }
+                },
+                {
+                    x: {
+                        a: "19885254956678720421922538248190466060955439589409913173031772478890463595589",
+                        b: "3477999361824866105752930035142603151450418578875228261007525825292639122461",
+                    },
+                    y: {
+                        a: "6910227192094283780657808901626891939343655323795413586540729175567672213741",
+                        b: "18652368631073485100242070980550333440902236504389106897804818069903542308265"
+                    }
+                },
+                {
+                    x: {
+                        a: "19445404794705556904703016485229974761006671718631182178881183244971227244347",
+                        b: "7194332561175437391157323777441541676799555741519656066727586527888924962767",
+                    },
+                    y: {
+                        a: "7475823720353602259020867009312071705248782801369325384093990021516350877236",
+                        b: "8254372800693092114855311272350222920712119088638713174193194242010612663394"
+                    }
+                },
+                {
+                    x: {
+                        a: "8241625745229820895588185827411423204661272509389284927127735803006700323777",
+                        b: "7285820856111603999669759733195534113879041779892849070055429879350957214964",
+                    },
+                    y: {
+                        a: "4302675421566250512738497103370123257586342322106869428719422803216115368388",
+                        b: "3515306631210980987236988275133120807890918260406845205305216104406265259179"
+                    }
+                }
+            ];
+
+            await wallets.connect(owner).rechargeSchainWallet(stringValue(web3.utils.soliditySha3("New16NodeSchain")), {value: 1e20.toString()});
+            for (let i = 0; i < 16; i++) {
+                let index = 0;
+                if (i === 1) {
+                    index = 1;
+                }
+                let txx = await skaleDKG.connect(validators[index].nodeAddress.address).populateTransaction.isBroadcastPossible(
+                    stringValue(web3.utils.soliditySha3("New16NodeSchain")),
+                    i
+                );
+                const broadPoss = await callFromWallet(txx, validators[index].nodeAddress, boolParser);
+                assert.equal(broadPoss, 'true');
+                txx = await skaleDKG.connect(validators[index].nodeAddress.address).populateTransaction.broadcast(
+                    stringValue(web3.utils.soliditySha3("New16NodeSchain")),
+                    i,
+                    verificationVectorNew,
+                    secretKeyContributions
+                );
+                await sendTransactionFromWallet(txx, validators[index].nodeAddress);
+            }
+            const nodesInGroup = await schainsInternal.getNodesInGroup(stringValue(web3.utils.soliditySha3("New16NodeSchain")));
+            const accusedNode = nodesInGroup[14].toString();
+            const complaintNode = nodesInGroup[0].toString();
+            const someNode = nodesInGroup[7].toString();
+            let indexToSend = 0;
+            if (complaintNode === "1") {
+                indexToSend = 1;
+            }
+            let tx = await skaleDKG.connect(validators[indexToSend].nodeAddress.address).populateTransaction.complaintBadData(
+                stringValue(web3.utils.soliditySha3("New16NodeSchain")),
+                complaintNode,
+                accusedNode
+            );
+            await sendTransactionFromWallet(tx, validators[indexToSend].nodeAddress);
+            const balanceBefore = await getBalance(validators[indexToSend].nodeAddress.address);
+            tx = await skaleDKG.connect(validators[indexToSend].nodeAddress.address).populateTransaction.complaint(
+                stringValue(web3.utils.soliditySha3("New16NodeSchain")),
+                complaintNode,
+                someNode
+            );
+            await expect(sendTransactionFromWallet(tx, validators[indexToSend].nodeAddress)).to.emit(skaleDKG, "ComplaintError")
+                .withArgs("One complaint is already sent");
+            const balance = await getBalance(validators[indexToSend].nodeAddress.address);
+            balance.should.not.be.lessThan(balanceBefore);
+            balance.should.be.almost(balanceBefore);
+
+            if (accusedNode === "1") {
+                indexToSend = 1;
+            } else {
+                indexToSend = 0;
+            }
+            tx = await skaleDKG.connect(validators[indexToSend].nodeAddress.address).populateTransaction.preResponse(
+                stringValue(web3.utils.soliditySha3("New16NodeSchain")),
+                accusedNode,
+                verificationVectorNew,
+                verificationVectorMultiplication[indexes[indexToSend]],
+                secretKeyContributions
+            );
+            await sendTransactionFromWallet(tx, validators[indexToSend].nodeAddress).should.be.eventually.rejectedWith("Incorrect length of multiplied verification vector");
+            tx = await skaleDKG.connect(validators[indexToSend].nodeAddress.address).populateTransaction.preResponse(
+                stringValue(web3.utils.soliditySha3("New16NodeSchain")),
+                accusedNode,
+                verificationVectorNew,
+                badVerificationVectorMultiplicationNew,
+                secretKeyContributions
+            );
+            await sendTransactionFromWallet(tx, validators[indexToSend].nodeAddress).should.be.eventually.rejectedWith("Multiplied verification vector is incorrect");
+            tx = await skaleDKG.connect(validators[indexToSend].nodeAddress.address).populateTransaction.preResponse(
+                stringValue(web3.utils.soliditySha3("New16NodeSchain")),
+                accusedNode,
+                verificationVectorNew,
+                verificationVectorMultiplicationNew,
+                secretKeyContributions
+            )
+            const resPreResp = await (await sendTransactionFromWallet(tx, validators[indexToSend].nodeAddress)).wait();
+            tx = await skaleDKG.connect(validators[indexToSend].nodeAddress.address).populateTransaction.response(
+                stringValue(web3.utils.soliditySha3("New16NodeSchain")),
+                accusedNode,
+                secretNumbers[indexes[indexToSend]],
+                multipliedShares[indexes[indexToSend]]
+            );
+            const resResp = await (await sendTransactionFromWallet(tx, validators[indexToSend].nodeAddress)).wait();
+            if (resResp.logs) {
+                assert.equal(resResp.logs[0].data, "0x00000000000000000000000000000000000000000000000000000000000000" + (Number(accusedNode) < 16 ? "0" : "") + Number(accusedNode).toString(16));
+            } else {
+                assert(false, "No events were emitted");
+            }
+            assert.isAtMost(resResp.gasUsed.toNumber() + resPreResp.gasUsed.toNumber(), 10000000);
+        });
 
         // it("16 nodes schain test with incorrect complaint and deleting Schain", async () => {
 
