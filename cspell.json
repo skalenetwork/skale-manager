@@ -2,7 +2,7 @@
 {
     "version": "0.1",
     "language": "en",
-    "ignorePaths": ["*.ipynb", "*.hbs", "package.json"],
+    "ignorePaths": ["*.ipynb", "*.hbs", "package.json", "docs/modules/**", ".gitignore"],
     "dictionaries": ["domain-terms", "libraries", "names", "skale-terms", "solidity"],
     "dictionaryDefinitions": [
         { "name": "skale-terms", "path": "./dictionaries/skale-terms.txt"},
