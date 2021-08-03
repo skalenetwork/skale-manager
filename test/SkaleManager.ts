@@ -123,8 +123,8 @@ describe("SkaleManager", () => {
 
         validator = new Wallet(String(privateKeys[1]));
         nodeAddress = new Wallet(String(privateKeys[4]));
-        await owner.sendTransaction({to: nodeAddress.address, value: ethers.utils.parseEther("10")});
-        await owner.sendTransaction({to: validator.address, value: ethers.utils.parseEther("10")});
+        await owner.sendTransaction({to: nodeAddress.address, value: ethers.utils.parseEther("10000")});
+        await owner.sendTransaction({to: validator.address, value: ethers.utils.parseEther("10000")});
 
         contractManager = await deployContractManager();
 

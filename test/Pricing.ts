@@ -78,7 +78,7 @@ describe("Pricing", () => {
 
         nodeAddress = new Wallet(String(privateKeys[3]));
 
-        await owner.sendTransaction({to: nodeAddress.address, value: ethers.utils.parseEther("1")});
+        await owner.sendTransaction({to: nodeAddress.address, value: ethers.utils.parseEther("10000")});
 
         contractManager = await deployContractManager();
 

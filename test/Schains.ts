@@ -111,9 +111,9 @@ describe("Schains", () => {
         nodeAddress2 = new Wallet(String(privateKeys[4]));
         nodeAddress3 = new Wallet(String(privateKeys[5]));
 
-        await owner.sendTransaction({to: nodeAddress.address, value: ethers.utils.parseEther("1")});
-        await owner.sendTransaction({to: nodeAddress2.address, value: ethers.utils.parseEther("1")});
-        await owner.sendTransaction({to: nodeAddress3.address, value: ethers.utils.parseEther("1")});
+        await owner.sendTransaction({to: nodeAddress.address, value: ethers.utils.parseEther("10000")});
+        await owner.sendTransaction({to: nodeAddress2.address, value: ethers.utils.parseEther("10000")});
+        await owner.sendTransaction({to: nodeAddress3.address, value: ethers.utils.parseEther("10000")});
 
         contractManager = await deployContractManager();
 

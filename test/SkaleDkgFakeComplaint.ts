@@ -897,8 +897,8 @@ describe("SkaleDkgFakeComplaint", () => {
         nodeAddress1 = new Wallet(String(privateKeys[1]));
         nodeAddress2 = new Wallet(String(privateKeys[2]));
 
-        await owner.sendTransaction({to: nodeAddress1.address, value: ethers.utils.parseEther("1")});
-        await owner.sendTransaction({to: nodeAddress2.address, value: ethers.utils.parseEther("1")});
+        await owner.sendTransaction({to: nodeAddress1.address, value: ethers.utils.parseEther("10000")});
+        await owner.sendTransaction({to: nodeAddress2.address, value: ethers.utils.parseEther("10000")});
 
         validators = [
             {

@@ -72,7 +72,7 @@ describe("SkaleVerifier", () => {
         [validator1, owner, developer, hacker] = await ethers.getSigners();
 
         nodeAddress = new Wallet(String(privateKeys[0]));
-        await owner.sendTransaction({to: nodeAddress.address, value: ethers.utils.parseEther("1")});
+        await owner.sendTransaction({to: nodeAddress.address, value: ethers.utils.parseEther("10000")});
 
         contractManager = await deployContractManager();
 

@@ -855,7 +855,7 @@ describe("Delegation", () => {
             // console.log("Not delegated to 3");
         });
 
-        it("should be possible to distribute bounty across thousands of holders", async () => {
+        it.skip("should be possible to distribute bounty across thousands of holders", async () => {
             let holdersAmount = 1000;
             if (process.env.CI) {
                 console.log("Reduce holders amount to fit GitHub time limit");

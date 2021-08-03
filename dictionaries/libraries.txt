@@ -13,3 +13,4 @@ nomiclabs
 solhint
 solidity-docgen
 typechain
+codecov

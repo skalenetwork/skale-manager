@@ -72,7 +72,7 @@ describe("SchainsInternal", () => {
         [owner, holder] = await ethers.getSigners();
 
         nodeAddress = new Wallet(String(privateKeys[1]));
-        await owner.sendTransaction({to: nodeAddress.address, value: ethers.utils.parseEther("1")});
+        await owner.sendTransaction({to: nodeAddress.address, value: ethers.utils.parseEther("10000")});
 
         contractManager = await deployContractManager();
         nodes = await deployNodes(contractManager);
