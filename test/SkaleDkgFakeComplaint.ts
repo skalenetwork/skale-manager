@@ -58,20 +58,6 @@ async function getValidatorIdSignature(validatorId: BigNumber, signer: Wallet) {
     }
 }
 
-async function sendTransactionFromWallet(tx: PopulatedTransaction, signer: Wallet) {
-    await signer.signTransaction(tx);
-    return await signer.connect(ethers.provider).sendTransaction(tx);
-}
-
-function boolParser(res: string) {
-    return "" + (res === '0x0000000000000000000000000000000000000000000000000000000000000001');
-}
-
-async function callFromWallet(tx: PopulatedTransaction, signer: Wallet, parser: (a: string) => string): Promise<string> {
-    await signer.signTransaction(tx);
-    return parser(await signer.connect(ethers.provider).call(tx));
-}
-
 function stringValue(value: string | null) {
     if (value) {
         return value;
@@ -894,8 +880,8 @@ describe("SkaleDkgFakeComplaint", () => {
     before(async () => {
         [owner, validator1, validator2] = await ethers.getSigners();
 
-        nodeAddress1 = new Wallet(String(privateKeys[1]));
-        nodeAddress2 = new Wallet(String(privateKeys[2]));
+        nodeAddress1 = new Wallet(String(privateKeys[1])).connect(ethers.provider);
+        nodeAddress2 = new Wallet(String(privateKeys[2])).connect(ethers.provider);
 
         await owner.sendTransaction({to: nodeAddress1.address, value: ethers.utils.parseEther("10000")});
         await owner.sendTransaction({to: nodeAddress2.address, value: ethers.utils.parseEther("10000")});
@@ -1021,94 +1007,84 @@ describe("SkaleDkgFakeComplaint", () => {
             const nodesCount = 4;
             it("should not revert after successful complaint", async () => {
                 for (let i = 0; i < nodesCount; ++i) {
-                    const tx = await skaleDKG.connect(validators[i % 2].nodeAddress).populateTransaction.broadcast(
+                    await skaleDKG.connect(validators[i % 2].nodeAddress).broadcast(
                         stringValue(web3.utils.soliditySha3(schainName)),
                         i,
                         verificationVectors[i],
                         encryptedSecretKeyContributions[i]);
-                    await sendTransactionFromWallet(tx, validators[i % 2].nodeAddress);
                 }
 
                 for (let i = 0; i < nodesCount; ++i) {
                     if (i !== 1) {
-                        const tx = await skaleDKG.connect(validators[i % 2].nodeAddress).populateTransaction.alright(
+                        await skaleDKG.connect(validators[i % 2].nodeAddress).alright(
                             stringValue(web3.utils.soliditySha3(schainName)),
                             i);
-                        await sendTransactionFromWallet(tx, validators[i % 2].nodeAddress);
                     }
                 }
 
                 await skipTime(ethers, 1800);
 
-                let txx = await skaleDKG.connect(validators[0].nodeAddress).populateTransaction.isComplaintPossible(
+                let isComplaintPossible = await skaleDKG.connect(validators[0].nodeAddress).isComplaintPossible(
                     stringValue(web3.utils.soliditySha3(schainName)),
                     0,
                     1);
-                let isComplaintPossible = await callFromWallet(txx, validators[0].nodeAddress, boolParser);
 
-                assert((isComplaintPossible === 'true').should.be.true);
+                assert(isComplaintPossible.should.be.true);
 
-                txx = await skaleDKG.connect(validators[0].nodeAddress).populateTransaction.complaint(
+                await skaleDKG.connect(validators[0].nodeAddress).complaint(
                     stringValue(web3.utils.soliditySha3(schainName)),
                     0,
                     1
                 );
-                await sendTransactionFromWallet(txx, validators[0].nodeAddress);
 
-                txx = await skaleDKG.connect(validators[0].nodeAddress).populateTransaction.isComplaintPossible(
+                isComplaintPossible = await skaleDKG.connect(validators[0].nodeAddress).isComplaintPossible(
                     stringValue(web3.utils.soliditySha3(schainName)),
                     2,
                     1
                 );
-                isComplaintPossible = await callFromWallet(txx, validators[0].nodeAddress, boolParser);
 
-                assert((isComplaintPossible === 'true').should.be.false);
+                assert(isComplaintPossible.should.be.false);
             });
 
             it("should proceed response", async () => {
                 for (let i = 0; i < nodesCount; ++i) {
-                    const tx = await skaleDKG.connect(validators[i % 2].nodeAddress).populateTransaction.broadcast(
+                    await skaleDKG.connect(validators[i % 2].nodeAddress).broadcast(
                         stringValue(web3.utils.soliditySha3(schainName)),
                         i,
                         verificationVectors[i],
                         encryptedSecretKeyContributions[i]
                     );
-                    await sendTransactionFromWallet(tx, validators[i % 2].nodeAddress);
                 }
 
                 for (let i = 0; i < nodesCount; ++i) {
                     if (i !== 1) {
-                        const tx = await skaleDKG.connect(validators[i % 2].nodeAddress).populateTransaction.alright(
+                        await skaleDKG.connect(validators[i % 2].nodeAddress).alright(
                             stringValue(web3.utils.soliditySha3(schainName)),
                             i
                         );
-                        await sendTransactionFromWallet(tx, validators[i % 2].nodeAddress);
                     }
                 }
 
-                let txx = await skaleDKG.connect(validators[1].nodeAddress).populateTransaction.complaintBadData(
+                await skaleDKG.connect(validators[1].nodeAddress).complaintBadData(
                     stringValue(web3.utils.soliditySha3(schainName)),
                     1,
                     2
                 );
-                await sendTransactionFromWallet(txx, validators[1].nodeAddress);
 
-                txx = await skaleDKG.connect(validators[0].nodeAddress).populateTransaction.preResponse(
+                await skaleDKG.connect(validators[0].nodeAddress).preResponse(
                     stringValue(web3.utils.soliditySha3(schainName)),
                     2,
                     verificationVectors[2],
                     verificationVectorMultiplication,
                     encryptedSecretKeyContributions[2]
                 );
-                await sendTransactionFromWallet(txx, validators[0].nodeAddress);
 
-                txx = await skaleDKG.connect(validators[0].nodeAddress).populateTransaction.response(
+                await skaleDKG.connect(validators[0].nodeAddress).response(
                     stringValue(web3.utils.soliditySha3(schainName)),
                     2,
                     secretNumbers[2][1],
                     multipliedShares[2][1]
-                );
-                await sendTransactionFromWallet(txx, validators[0].nodeAddress).should.emit(skaleDKG, "BadGuy").withArgs(1);
+                ).should.emit(skaleDKG, "BadGuy").withArgs(1);
             });
         });
     });
