@@ -39,20 +39,6 @@ async function getValidatorIdSignature(validatorId: BigNumber, signer: Wallet) {
     }
 }
 
-async function sendTransactionFromWallet(tx: PopulatedTransaction, signer: Wallet) {
-    await signer.signTransaction(tx);
-    return await signer.connect(ethers.provider).sendTransaction(tx);
-}
-
-function boolParser(res: string) {
-    return "" + (res === '0x0000000000000000000000000000000000000000000000000000000000000001');
-}
-
-async function callFromWallet(tx: PopulatedTransaction, signer: Wallet, parser: (a: string) => string): Promise<string> {
-    await signer.signTransaction(tx);
-    return parser(await signer.connect(ethers.provider).call(tx));
-}
-
 describe("SkaleVerifier", () => {
     let validator1: SignerWithAddress;
     let owner: SignerWithAddress;
@@ -71,7 +57,7 @@ describe("SkaleVerifier", () => {
     beforeEach(async () => {
         [validator1, owner, developer, hacker] = await ethers.getSigners();
 
-        nodeAddress = new Wallet(String(privateKeys[0]));
+        nodeAddress = new Wallet(String(privateKeys[0])).connect(ethers.provider);
         await owner.sendTransaction({to: nodeAddress.address, value: ethers.utils.parseEther("10000")});
 
         contractManager = await deployContractManager();

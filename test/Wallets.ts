@@ -26,9 +26,8 @@ import { ethers, web3 } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import { assert } from "chai";
 import { solidity } from "ethereum-waffle";
-import { ContractTransaction, PopulatedTransaction, Wallet } from "ethers";
+import { ContractTransaction, Wallet } from "ethers";
 import { makeSnapshot, applySnapshot } from "./tools/snapshot";
-import { send } from "process";
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -70,20 +69,6 @@ async function getValidatorIdSignature(validatorId: BigNumber, signer: Wallet) {
     }
 }
 
-async function sendTransactionFromWallet(tx: PopulatedTransaction, signer: Wallet) {
-    await signer.signTransaction(tx);
-    return await signer.connect(ethers.provider).sendTransaction(tx);
-}
-
-function boolParser(res: string) {
-    return "" + (res === '0x0000000000000000000000000000000000000000000000000000000000000001');
-}
-
-async function callFromWallet(tx: PopulatedTransaction, signer: Wallet, parser: (a: string) => string): Promise<string> {
-    await signer.signTransaction(tx);
-    return parser(await signer.connect(ethers.provider).call(tx));
-}
-
 function getRound(value: number) {
     return Math.round(value*1e9)/1e9;
 }
@@ -119,8 +104,8 @@ describe("Wallets", () => {
         chai.use(chaiAlmost(0.002));
         [owner, validator1, validator2] = await ethers.getSigners();
 
-        nodeAddress1 = new Wallet(String(privateKeys[3]));
-        nodeAddress2 = new Wallet(String(privateKeys[4]));
+        nodeAddress1 = new Wallet(String(privateKeys[3])).connect(ethers.provider);
+        nodeAddress2 = new Wallet(String(privateKeys[4])).connect(ethers.provider);
         await owner.sendTransaction({to: nodeAddress1.address, value: ethers.utils.parseEther("10000")});
         await owner.sendTransaction({to: nodeAddress2.address, value: ethers.utils.parseEther("10000")});
 
@@ -216,7 +201,7 @@ describe("Wallets", () => {
             for (const [validatorIndex, validator] of validators.entries()) {
                 for (const index of Array(nodesPerValidator).keys()) {
                     const hexIndex = ("0" + (validatorIndex * nodesPerValidator + index).toString(16)).slice(-2);
-                    const tx = await skaleManager.connect(validator.nodeAddress).populateTransaction.createNode(
+                    await skaleManager.connect(validator.nodeAddress).createNode(
                         8545, // port
                         0, // nonce
                         "0x7f0000" + hexIndex, // ip
@@ -225,7 +210,6 @@ describe("Wallets", () => {
                          "0x" + hexValue(validator.nodePublicKey.y.toString('hex'))], // public key
                         "D2-" + hexIndex, // name
                         "some.domain.name");
-                    await sendTransactionFromWallet(tx, validator.nodeAddress);
                 }
             }
 
@@ -303,8 +287,7 @@ describe("Wallets", () => {
 
             // it("should reimburse gas for node exit", async() => {
             //     const balanceBefore = await getBalance(nodeAddress1.address);
-            //     const tx = await skaleManager.connect(nodeAddress1).populateTransaction.nodeExit(0);
-            //     const response = await sendTransactionFromWallet(tx, nodeAddress1);
+            //     const response = await skaleManager.connect(nodeAddress1).nodeExit(0);
             //     const balance = await getBalance(nodeAddress1.address);
             //     balance.should.not.be.lessThan(balanceBefore);
             //     balance.should.be.almost(balanceBefore);
