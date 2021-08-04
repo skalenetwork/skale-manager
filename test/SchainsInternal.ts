@@ -8,7 +8,7 @@ const EC = elliptic.ec;
 const ec = new EC("secp256k1");
 import { privateKeys } from "./tools/private-keys";
 
-import { BigNumber, PopulatedTransaction, Wallet } from "ethers";
+import { BigNumber, Wallet } from "ethers";
 import chai = require("chai");
 import chaiAsPromised from "chai-as-promised";
 import { deployContractManager } from "./tools/deploy/contractManager";
@@ -36,20 +36,6 @@ async function getValidatorIdSignature(validatorId: BigNumber, signer: Wallet) {
     }
 }
 
-async function sendTransactionFromWallet(tx: PopulatedTransaction, signer: Wallet) {
-    await signer.signTransaction(tx);
-    return await signer.connect(ethers.provider).sendTransaction(tx);
-}
-
-function boolParser(res: string) {
-    return "" + (res === '0x0000000000000000000000000000000000000000000000000000000000000001');
-}
-
-async function callFromWallet(tx: PopulatedTransaction, signer: Wallet, parser: (a: string) => string): Promise<string> {
-    await signer.signTransaction(tx);
-    return parser(await signer.connect(ethers.provider).call(tx));
-}
-
 function stringValue(value: string | null) {
     if (value) {
         return value;
@@ -71,7 +57,7 @@ describe("SchainsInternal", () => {
     beforeEach(async () => {
         [owner, holder] = await ethers.getSigners();
 
-        nodeAddress = new Wallet(String(privateKeys[1]));
+        nodeAddress = new Wallet(String(privateKeys[1])).connect(ethers.provider);
         await owner.sendTransaction({to: nodeAddress.address, value: ethers.utils.parseEther("10000")});
 
         contractManager = await deployContractManager();

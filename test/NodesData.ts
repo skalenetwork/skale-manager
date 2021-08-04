@@ -15,7 +15,7 @@ import { deployContractManager } from "./tools/deploy/contractManager";
 import { deployNodes } from "./tools/deploy/nodes";
 import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
 import { deploySkaleManagerMock } from "./tools/deploy/test/skaleManagerMock";
-import { BigNumber, PopulatedTransaction, UnsignedTransaction, Wallet } from "ethers";
+import { BigNumber, Wallet } from "ethers";
 import { ethers, web3 } from "hardhat";
 import { solidity } from "ethereum-waffle";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
@@ -33,11 +33,6 @@ async function getValidatorIdSignature(validatorId: BigNumber, signer: Wallet) {
     } else {
         return "";
     }
-}
-
-async function sendTransactionFromWallet(tx: PopulatedTransaction, signer: Wallet) {
-    await signer.signTransaction(tx);
-    return await signer.connect(ethers.provider).sendTransaction(tx);
 }
 
 function stringValue(value: string | null) {
@@ -62,7 +57,7 @@ describe("NodesData", () => {
     beforeEach(async () => {
         [owner, validator, admin, hacker] = await ethers.getSigners();
 
-        nodeAddress = new Wallet(String(privateKeys[2]));
+        nodeAddress = new Wallet(String(privateKeys[2])).connect(ethers.provider);
 
         await owner.sendTransaction({to: nodeAddress.address, value: ethers.utils.parseEther("10000")});
 
@@ -222,8 +217,7 @@ describe("NodesData", () => {
         });
 
         it("should modify node domain name by node owner", async () => {
-            const tx = await nodes.connect(nodeAddress).populateTransaction.setDomainName(0, "new.domain.name");
-            await sendTransactionFromWallet(tx, nodeAddress);
+            await nodes.connect(nodeAddress).setDomainName(0, "new.domain.name");
             const nodeDomainName = await nodes.getNodeDomainName(0);
             nodeDomainName.should.be.equal("new.domain.name");
         });
@@ -287,8 +281,7 @@ describe("NodesData", () => {
         it("should set node status In Maintenance from node address", async () => {
             let status = await nodes.getNodeStatus(0);
             assert.equal(status, 0);
-            const tx = await nodes.connect(nodeAddress).populateTransaction.setNodeInMaintenance(0);
-            await sendTransactionFromWallet(tx, nodeAddress);
+            await nodes.connect(nodeAddress).setNodeInMaintenance(0);
             status = await nodes.getNodeStatus(0);
             assert.equal(status, 3);
             const boolStatus = await nodes.isNodeInMaintenance(0);
@@ -298,15 +291,13 @@ describe("NodesData", () => {
         it("should set node status From In Maintenance from node address", async () => {
             let status = await nodes.getNodeStatus(0);
             assert.equal(status, 0);
-            const tx = await nodes.connect(nodeAddress).populateTransaction.setNodeInMaintenance(0);
-            await sendTransactionFromWallet(tx, nodeAddress);
+            await nodes.connect(nodeAddress).setNodeInMaintenance(0);
             status = await nodes.getNodeStatus(0);
             assert.equal(status, 3);
             const boolStatus = await nodes.isNodeInMaintenance(0);
             assert.equal(boolStatus, true);
 
-            const tx1 = await nodes.connect(nodeAddress).populateTransaction.removeNodeFromInMaintenance(0);
-            await sendTransactionFromWallet(tx1, nodeAddress);
+            await nodes.connect(nodeAddress).removeNodeFromInMaintenance(0);
             status = await nodes.getNodeStatus(0);
             assert.equal(status, 0);
         });

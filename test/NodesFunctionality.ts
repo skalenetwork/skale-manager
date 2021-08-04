@@ -14,7 +14,7 @@ import { privateKeys } from "./tools/private-keys";
 
 import { skipTime } from "./tools/time";
 
-import { BigNumber, PopulatedTransaction, Wallet } from "ethers";
+import { BigNumber, Wallet } from "ethers";
 import { deployContractManager } from "./tools/deploy/contractManager";
 import { deployConstantsHolder } from "./tools/deploy/constantsHolder";
 import { deployValidatorService } from "./tools/deploy/delegation/validatorService";
@@ -42,11 +42,6 @@ async function getValidatorIdSignature(validatorId: BigNumber, signer: Wallet) {
     }
 }
 
-async function sendTransactionFromWallet(tx: PopulatedTransaction, signer: Wallet) {
-    await signer.signTransaction(tx);
-    return await signer.connect(ethers.provider).sendTransaction(tx);
-}
-
 describe("NodesFunctionality", () => {
     let owner: SignerWithAddress;
     let validator: SignerWithAddress;
@@ -64,11 +59,11 @@ describe("NodesFunctionality", () => {
     beforeEach(async () => {
         [owner, validator, holder] = await ethers.getSigners();
 
-        nodeAddress = new Wallet(String(privateKeys[2]));
+        nodeAddress = new Wallet(String(privateKeys[2])).connect(ethers.provider);
 
         await owner.sendTransaction({to: nodeAddress.address, value: ethers.utils.parseEther("10000")});
 
-        nodeAddress2 = new Wallet(String(privateKeys[3]));
+        nodeAddress2 = new Wallet(String(privateKeys[3])).connect(ethers.provider);
 
         await owner.sendTransaction({to: nodeAddress2.address, value: ethers.utils.parseEther("10000")});
 
@@ -438,8 +433,7 @@ describe("NodesFunctionality", () => {
             await delegationController.connect(holder).delegate(validatorId, amount, delegationPeriod, info);
             const delegationId1 = 0;
             await delegationController.connect(validator).acceptPendingDelegation(delegationId1);
-            const tx = await delegationController.connect(validator3).populateTransaction.delegate(validatorId, amount, delegationPeriod, info);
-            await sendTransactionFromWallet(tx, validator3);
+            await delegationController.connect(validator3).delegate(validatorId, amount, delegationPeriod, info);
             const delegationId2 = 1;
             await delegationController.connect(validator).acceptPendingDelegation(delegationId2);
 
