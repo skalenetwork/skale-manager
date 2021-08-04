@@ -45,11 +45,6 @@ async function getValidatorIdSignature(validatorId: BigNumber, signer: Wallet) {
     }
 }
 
-async function sendTransactionFromWallet(tx: PopulatedTransaction, signer: Wallet) {
-    await signer.signTransaction(tx);
-    return await signer.connect(ethers.provider).sendTransaction(tx);
-}
-
 function stringValue(value: string | null) {
     if (value) {
         return value;
@@ -76,7 +71,7 @@ describe("Pricing", () => {
     beforeEach(async () => {
         [owner, holder, validator] = await ethers.getSigners();
 
-        nodeAddress = new Wallet(String(privateKeys[3]));
+        nodeAddress = new Wallet(String(privateKeys[3])).connect(ethers.provider);
 
         await owner.sendTransaction({to: nodeAddress.address, value: ethers.utils.parseEther("10000")});
 

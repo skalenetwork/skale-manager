@@ -51,20 +51,6 @@ async function getValidatorIdSignature(validatorId: BigNumber, signer: Wallet) {
     }
 }
 
-async function sendTransactionFromWallet(tx: PopulatedTransaction, signer: Wallet) {
-    await signer.signTransaction(tx);
-    return await signer.connect(ethers.provider).sendTransaction(tx);
-}
-
-function boolParser(res: string) {
-    return "" + (res === '0x0000000000000000000000000000000000000000000000000000000000000001');
-}
-
-async function callFromWallet(tx: PopulatedTransaction, signer: Wallet, parser: (a: string) => string): Promise<string> {
-    await signer.signTransaction(tx);
-    return parser(await signer.connect(ethers.provider).call(tx));
-}
-
 function stringValue(value: string | null) {
     if (value) {
         return value;
@@ -107,9 +93,9 @@ describe("Schains", () => {
     before(async () => {
         [owner, holder, validator] = await ethers.getSigners();
 
-        nodeAddress = new Wallet(String(privateKeys[3]));
-        nodeAddress2 = new Wallet(String(privateKeys[4]));
-        nodeAddress3 = new Wallet(String(privateKeys[5]));
+        nodeAddress = new Wallet(String(privateKeys[3])).connect(ethers.provider);
+        nodeAddress2 = new Wallet(String(privateKeys[4])).connect(ethers.provider);
+        nodeAddress3 = new Wallet(String(privateKeys[5])).connect(ethers.provider);
 
         await owner.sendTransaction({to: nodeAddress.address, value: ethers.utils.parseEther("10000")});
         await owner.sendTransaction({to: nodeAddress2.address, value: ethers.utils.parseEther("10000")});
@@ -220,7 +206,7 @@ describe("Schains", () => {
                 const pubKey = ec.keyFromPrivate(String(nodeAddress.privateKey).slice(2)).getPublic();
                 for (const index of Array.from(Array(nodesCount).keys())) {
                     const hexIndex = ("0" + index.toString(16)).slice(-2);
-                    const tx = await skaleManager.connect(nodeAddress).populateTransaction.createNode(
+                    await skaleManager.connect(nodeAddress).createNode(
                         8545, // port
                         0, // nonce
                         "0x7f0000" + hexIndex, // ip
@@ -228,7 +214,6 @@ describe("Schains", () => {
                         ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')], // public key
                         "D2-" + hexIndex, // name
                         "some.domain.name");
-                    await sendTransactionFromWallet(tx, nodeAddress);
                 }
 
                 const deposit = await schains.getSchainPrice(4, 5);
@@ -260,7 +245,7 @@ describe("Schains", () => {
 
                 for (const index of Array.from(Array(nodesCount).keys())) {
                     const hexIndex = ("1" + index.toString(16)).slice(-2);
-                    const tx1 = await skaleManager.connect(nodeAddress).populateTransaction.createNode(
+                    await skaleManager.connect(nodeAddress).createNode(
                         8545, // port
                         0, // nonce
                         "0x7f0000" + hexIndex, // ip
@@ -268,7 +253,6 @@ describe("Schains", () => {
                         ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')], // public key
                         "D2-" + hexIndex, // name
                         "some.domain.name");
-                    await sendTransactionFromWallet(tx1, nodeAddress);
                 }
 
                 await schains.addSchain(
@@ -284,7 +268,7 @@ describe("Schains", () => {
                 const pubKey = ec.keyFromPrivate(String(nodeAddress.privateKey).slice(2)).getPublic();
                 for (const index of Array.from(Array(nodesCount).keys())) {
                     const hexIndex = ("0" + index.toString(16)).slice(-2);
-                    const txx = await skaleManager.connect(nodeAddress).populateTransaction.createNode(
+                    await skaleManager.connect(nodeAddress).createNode(
                         8545, // port
                         0, // nonce
                         "0x7f0000" + hexIndex, // ip
@@ -292,7 +276,6 @@ describe("Schains", () => {
                         ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')], // public key
                         "D2-" + hexIndex, // name
                         "some.domain.name");
-                    await sendTransactionFromWallet(txx, nodeAddress);
                 }
 
                 const deposit = await schains.getSchainPrice(4, 5);
@@ -330,57 +313,49 @@ describe("Schains", () => {
                     deposit,
                     web3.eth.abi.encodeParameters(["uint", "uint8", "uint16", "string"], [5, 4, 0, "d2"]));
                 let res1 = await schainsInternal.getNodesInGroup(stringValue(web3.utils.soliditySha3("d2")));
-                let tx = await skaleDKG.connect(nodeAddress).populateTransaction.isBroadcastPossible(stringValue(web3.utils.soliditySha3("d2")), res1[0]);
-                let res = await callFromWallet(tx, nodeAddress, boolParser);
-                assert.equal(res === 'true', true);
+                let res = await skaleDKG.connect(nodeAddress).isBroadcastPossible(stringValue(web3.utils.soliditySha3("d2")), res1[0]);
+                assert.equal(res, true);
                 await wallets.connect(owner).rechargeSchainWallet(stringValue(web3.utils.soliditySha3("d2")), {value: 1e20.toString()});
-                tx = await skaleDKG.connect(nodeAddress).populateTransaction.broadcast(
+                await skaleDKG.connect(nodeAddress).broadcast(
                     stringValue(web3.utils.soliditySha3("d2")),
                     res1[0],
                     verificationVector,
                     // the last symbol is spoiled in parameter below
                     encryptedSecretKeyContribution
                 );
-                await sendTransactionFromWallet(tx, nodeAddress);
-                tx = await skaleDKG.connect(nodeAddress).populateTransaction.isBroadcastPossible(stringValue(web3.utils.soliditySha3("d2")), res1[1]);
-                res = await callFromWallet(tx, nodeAddress, boolParser);
-                assert.equal(res === 'true', true);
-                tx = await skaleDKG.connect(nodeAddress).populateTransaction.broadcast(
+                res = await skaleDKG.connect(nodeAddress).isBroadcastPossible(stringValue(web3.utils.soliditySha3("d2")), res1[1]);
+                assert.equal(res, true);
+                await skaleDKG.connect(nodeAddress).broadcast(
                     stringValue(web3.utils.soliditySha3("d2")),
                     res1[1],
                     verificationVector,
                     // the last symbol is spoiled in parameter below
                     encryptedSecretKeyContribution
                 );
-                await sendTransactionFromWallet(tx, nodeAddress);
 
                 let resO = await skaleDKG.isChannelOpened(stringValue(web3.utils.soliditySha3("d2")));
                 assert.equal(resO, true);
 
-                tx = await skaleDKG.connect(nodeAddress).populateTransaction.isAlrightPossible(stringValue(web3.utils.soliditySha3("d2")), res1[0]);
-                res = await callFromWallet(tx, nodeAddress, boolParser);
-                assert.equal(res === 'true', true);
+                res = await skaleDKG.connect(nodeAddress).isAlrightPossible(stringValue(web3.utils.soliditySha3("d2")), res1[0]);
+                assert.equal(res, true);
 
-                tx = await skaleDKG.connect(nodeAddress).populateTransaction.alright(
+                await skaleDKG.connect(nodeAddress).alright(
                     stringValue(web3.utils.soliditySha3("d2")),
                     res1[0]
                 );
-                await sendTransactionFromWallet(tx, nodeAddress);
 
                 resO = await skaleDKG.isChannelOpened(stringValue(web3.utils.soliditySha3("d2")));
                 assert.equal(resO, true);
 
-                tx = await skaleDKG.connect(nodeAddress).populateTransaction.isAlrightPossible(stringValue(web3.utils.soliditySha3("d2")), res1[1]);
-                res = await callFromWallet(tx, nodeAddress, boolParser);
-                assert.equal(res === 'true', true);
+                res = await skaleDKG.connect(nodeAddress).isAlrightPossible(stringValue(web3.utils.soliditySha3("d2")), res1[1]);
+                assert.equal(res, true);
 
-                tx = await skaleDKG.connect(nodeAddress).populateTransaction.alright(
+                await skaleDKG.connect(nodeAddress).alright(
                     stringValue(web3.utils.soliditySha3("d2")),
                     res1[1]
                 );
-                await sendTransactionFromWallet(tx, nodeAddress);
 
-                tx = await skaleManager.connect(nodeAddress).populateTransaction.createNode(
+                await skaleManager.connect(nodeAddress).createNode(
                     8545, // port
                     0, // nonce
                     "0x7f000011", // ip
@@ -388,72 +363,61 @@ describe("Schains", () => {
                     ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')], // public key
                     "D2-11", // name
                     "some.domain.name");
-                await sendTransactionFromWallet(tx, nodeAddress);
 
                 resO = await skaleDKG.isChannelOpened(stringValue(web3.utils.soliditySha3("d2")));
                 assert.equal(resO, false);
 
-                tx = await skaleManager.connect(nodeAddress).populateTransaction.nodeExit(0);
-                await sendTransactionFromWallet(tx, nodeAddress);
+                await skaleManager.connect(nodeAddress).nodeExit(0);
                 res1 = await schainsInternal.getNodesInGroup(stringValue(web3.utils.soliditySha3("d2")));
                 const nodeRot = res1[1];
-                tx = await skaleDKG.connect(nodeAddress).populateTransaction.isBroadcastPossible(stringValue(web3.utils.soliditySha3("d2")), nodeRot);
-                res = await callFromWallet(tx, nodeAddress, boolParser);
-                assert.equal(res === 'true', true);
-                tx = await skaleDKG.connect(nodeAddress).populateTransaction.isBroadcastPossible(stringValue(web3.utils.soliditySha3("d2")), res1[0]);
-                res = await callFromWallet(tx, nodeAddress, boolParser);
-                assert.equal(res === 'true', true);
-                tx = await skaleDKG.connect(nodeAddress).populateTransaction.broadcast(
+                res = await skaleDKG.connect(nodeAddress).isBroadcastPossible(stringValue(web3.utils.soliditySha3("d2")), nodeRot);
+                assert.equal(res, true);
+                res = await skaleDKG.connect(nodeAddress).isBroadcastPossible(stringValue(web3.utils.soliditySha3("d2")), res1[0]);
+                assert.equal(res, true);
+                await skaleDKG.connect(nodeAddress).broadcast(
                     stringValue(web3.utils.soliditySha3("d2")),
                     res1[0],
                     verificationVector,
                     // the last symbol is spoiled in parameter below
                     encryptedSecretKeyContribution
                 );
-                await sendTransactionFromWallet(tx, nodeAddress);
-                tx = await skaleDKG.connect(nodeAddress).populateTransaction.isBroadcastPossible(stringValue(web3.utils.soliditySha3("d2")), res1[1]);
-                res = await callFromWallet(tx, nodeAddress, boolParser);
-                assert.equal(res === 'true', true);
-                tx = await skaleDKG.connect(nodeAddress).populateTransaction.broadcast(
+                res = await skaleDKG.connect(nodeAddress).isBroadcastPossible(stringValue(web3.utils.soliditySha3("d2")), res1[1]);
+                assert.equal(res, true);
+                await skaleDKG.connect(nodeAddress).broadcast(
                     stringValue(web3.utils.soliditySha3("d2")),
                     res1[1],
                     verificationVector,
                     // the last symbol is spoiled in parameter below
                     encryptedSecretKeyContribution
                 );
-                await sendTransactionFromWallet(tx, nodeAddress);
 
                 resO = await skaleDKG.isChannelOpened(stringValue(web3.utils.soliditySha3("d2")));
                 assert.equal(resO, true);
 
-                tx = await skaleDKG.connect(nodeAddress).populateTransaction.isAlrightPossible(
+                res = await skaleDKG.connect(nodeAddress).isAlrightPossible(
                     stringValue(web3.utils.soliditySha3("d2")),
                     res1[0]
                 );
-                res = await callFromWallet(tx, nodeAddress, boolParser);
-                assert.equal(res === 'true', true);
+                assert.equal(res, true);
 
-                tx = await skaleDKG.connect(nodeAddress).populateTransaction.alright(
+                await skaleDKG.connect(nodeAddress).alright(
                     stringValue(web3.utils.soliditySha3("d2")),
                     res1[0]
                 );
-                await sendTransactionFromWallet(tx, nodeAddress);
 
                 resO = await skaleDKG.isChannelOpened(stringValue(web3.utils.soliditySha3("d2")));
                 assert.equal(resO, true);
 
-                tx = await skaleDKG.connect(nodeAddress).populateTransaction.isAlrightPossible(
+                res = await skaleDKG.connect(nodeAddress).isAlrightPossible(
                     stringValue(web3.utils.soliditySha3("d2")),
                     res1[1]
                 );
-                res = await callFromWallet(tx, nodeAddress, boolParser);
-                assert.equal(res === 'true', true);
+                assert.equal(res, true);
 
-                tx = await skaleDKG.connect(nodeAddress).populateTransaction.alright(
+                await skaleDKG.connect(nodeAddress).alright(
                     stringValue(web3.utils.soliditySha3("d2")),
                     res1[1]
                 );
-                await sendTransactionFromWallet(tx, nodeAddress);
             });
         });
 
@@ -464,7 +428,7 @@ describe("Schains", () => {
                 const pubKey = ec.keyFromPrivate(String(nodeAddress.privateKey).slice(2)).getPublic();
                 for (const index of Array.from(Array(nodesCount).keys())) {
                     const hexIndex = ("0" + index.toString(16)).slice(-2);
-                    const tx = await skaleManager.connect(nodeAddress).populateTransaction.createNode(
+                    await skaleManager.connect(nodeAddress).createNode(
                         8545, // port
                         0, // nonce
                         "0x7f0000" + hexIndex, // ip
@@ -472,7 +436,6 @@ describe("Schains", () => {
                         ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')], // public key
                         "D2-" + hexIndex, // name
                         "some.domain.name");
-                    await sendTransactionFromWallet(tx, nodeAddress);
                 }
             });
 
@@ -568,7 +531,7 @@ describe("Schains", () => {
                 await nodes.completeExit(removedNode);
 
                 const pubKey = ec.keyFromPrivate(String(nodeAddress.privateKey).slice(2)).getPublic();
-                const tx = await skaleManager.connect(nodeAddress).populateTransaction.createNode(
+                await skaleManager.connect(nodeAddress).createNode(
                     8545, // port
                     0, // nonce
                     "0x7f000028", // ip
@@ -576,7 +539,6 @@ describe("Schains", () => {
                     ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')], // public key
                     "D2-28", // name
                     "some.domain.name");
-                await sendTransactionFromWallet(tx, nodeAddress);
 
                 const deposit = await schains.getSchainPrice(5, 5);
 
@@ -684,7 +646,7 @@ describe("Schains", () => {
                 const pubKey = ec.keyFromPrivate(String(nodeAddress.privateKey).slice(2)).getPublic();
                 for (const index of Array.from(Array(nodesCount).keys())) {
                     const hexIndex = ("0" + index.toString(16)).slice(-2);
-                    const tx = await skaleManager.connect(nodeAddress).populateTransaction.createNode(
+                    await skaleManager.connect(nodeAddress).createNode(
                         8545, // port
                         0, // nonce
                         "0x7f0000" + hexIndex, // ip
@@ -692,7 +654,6 @@ describe("Schains", () => {
                         ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')], // public key
                         "D2-" + hexIndex, // name
                         "some.domain.name");
-                    await sendTransactionFromWallet(tx, nodeAddress);
                 }
             });
 
@@ -771,7 +732,7 @@ describe("Schains", () => {
                 const pubKey = ec.keyFromPrivate(String(nodeAddress.privateKey).slice(2)).getPublic();
                 for (const index of Array.from(Array(nodesCount).keys())) {
                     const hexIndex = ("0" + index.toString(16)).slice(-2);
-                    const tx = await skaleManager.connect(nodeAddress).populateTransaction.createNode(
+                    await skaleManager.connect(nodeAddress).createNode(
                         8545, // port
                         0, // nonce
                         "0x7f0000" + hexIndex, // ip
@@ -779,7 +740,6 @@ describe("Schains", () => {
                         ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')], // public key
                         "D2-" + hexIndex, // name
                         "some.domain.name");
-                    await sendTransactionFromWallet(tx, nodeAddress);
                 }
             });
 
@@ -1062,7 +1022,7 @@ describe("Schains", () => {
             const pubKey = ec.keyFromPrivate(String(nodeAddress.privateKey).slice(2)).getPublic();
             for (const index of Array.from(Array(nodesCount).keys())) {
                 const hexIndex = ("0" + index.toString(16)).slice(-2);
-                const txx = await skaleManager.connect(nodeAddress).populateTransaction.createNode(
+                await skaleManager.connect(nodeAddress).createNode(
                     8545, // port
                     0, // nonce
                     "0x7f0000" + hexIndex, // ip
@@ -1070,7 +1030,6 @@ describe("Schains", () => {
                     ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')], // public key
                     "D2-" + hexIndex, // name
                     "some.domain.name");
-                await sendTransactionFromWallet(txx, nodeAddress);
             }
             await schains.addSchain(
                 holder.address,
@@ -1089,7 +1048,7 @@ describe("Schains", () => {
             await skaleDKG.setSuccessfulDKGPublic(
                 stringValue(web3.utils.soliditySha3("d3")),
             );
-            let tx = await skaleManager.connect(nodeAddress).populateTransaction.createNode(
+            await skaleManager.connect(nodeAddress).createNode(
                 8545, // port
                 0, // nonce
                 "0x7f000010", // ip
@@ -1097,8 +1056,7 @@ describe("Schains", () => {
                 ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')], // public key
                 "D2-10", // name
                 "some.domain.name");
-            await sendTransactionFromWallet(tx, nodeAddress);
-            tx = await skaleManager.connect(nodeAddress).populateTransaction.createNode(
+            await skaleManager.connect(nodeAddress).createNode(
                 8545, // port
                 0, // nonce
                 "0x7f000011", // ip
@@ -1106,8 +1064,6 @@ describe("Schains", () => {
                 ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')], // public key
                 "D2-11", // name
                 "some.domain.name");
-            await sendTransactionFromWallet(tx, nodeAddress);
-
         });
 
         after(async () => {
@@ -1116,15 +1072,13 @@ describe("Schains", () => {
 
         it("should reject if node in maintenance call nodeExit", async () => {
             await nodes.setNodeInMaintenance(0);
-            const tx = await skaleManager.connect(nodeAddress).populateTransaction.nodeExit(0);
-            await sendTransactionFromWallet(tx, nodeAddress).should.be.eventually.rejectedWith("Node should be Leaving");
+            await skaleManager.connect(nodeAddress).nodeExit(0).should.be.eventually.rejectedWith("Node should be Leaving");
         });
 
         it("should rotate 2 nodes consistently", async () => {
             const res1 = await schainsInternal.getNodesInGroup(stringValue(web3.utils.soliditySha3("d2")));
             const res2 = await schainsInternal.getNodesInGroup(stringValue(web3.utils.soliditySha3("d3")));
-            let tx = await skaleManager.connect(nodeAddress).populateTransaction.nodeExit(0);
-            await sendTransactionFromWallet(tx, nodeAddress);
+            await skaleManager.connect(nodeAddress).nodeExit(0);
             const leavingTimeOfNode = (await nodeRotation.getLeavingHistory(0))[0].finishedRotation.toNumber();
             const _12hours = 43200;
             assert.equal(await currentTime(web3), leavingTimeOfNode-_12hours);
@@ -1147,10 +1101,8 @@ describe("Schains", () => {
             await skaleDKG.setSuccessfulDKGPublic(
                 stringValue(web3.utils.soliditySha3("d3")),
             );
-            tx = await skaleManager.connect(nodeAddress).populateTransaction.nodeExit(1)
-            await sendTransactionFromWallet(tx, nodeAddress).should.be.eventually.rejectedWith("Occupied by rotation on Schain");
-            tx = await skaleManager.connect(nodeAddress).populateTransaction.nodeExit(0);
-            await sendTransactionFromWallet(tx, nodeAddress);
+            await skaleManager.connect(nodeAddress).nodeExit(1).should.be.eventually.rejectedWith("Occupied by rotation on Schain");
+            await skaleManager.connect(nodeAddress).nodeExit(0);
             await skaleDKG.setSuccessfulDKGPublic(
                 stringValue(web3.utils.soliditySha3("d2")),
             );
@@ -1162,38 +1114,32 @@ describe("Schains", () => {
 
             nodeStatus = await nodes.getNodeStatus(0);
             assert.equal(nodeStatus, LEFT);
-            tx = await skaleManager.connect(nodeAddress).populateTransaction.nodeExit(0);
-            await sendTransactionFromWallet(tx, nodeAddress).should.be.eventually.rejectedWith("Sender is not permitted to call this function");
+            await skaleManager.connect(nodeAddress).nodeExit(0).should.be.eventually.rejectedWith("Sender is not permitted to call this function");
 
             nodeStatus = await nodes.getNodeStatus(1);
             assert.equal(nodeStatus, ACTIVE);
-            tx = await skaleManager.connect(nodeAddress).populateTransaction.nodeExit(1);
-            await sendTransactionFromWallet(tx, nodeAddress).should.be.eventually.rejectedWith("Occupied by rotation on Schain");
+            await skaleManager.connect(nodeAddress).nodeExit(1).should.be.eventually.rejectedWith("Occupied by rotation on Schain");
             await skipTime(ethers, 43260);
 
-            tx = await skaleManager.connect(nodeAddress).populateTransaction.nodeExit(1);
-            await sendTransactionFromWallet(tx, nodeAddress);
+            await skaleManager.connect(nodeAddress).nodeExit(1);
             await skaleDKG.setSuccessfulDKGPublic(
                 stringValue(web3.utils.soliditySha3("d3")),
             );
             nodeStatus = await nodes.getNodeStatus(1);
             assert.equal(nodeStatus, LEAVING);
-            tx = await skaleManager.connect(nodeAddress).populateTransaction.nodeExit(1);
-            await sendTransactionFromWallet(tx, nodeAddress);
+            await skaleManager.connect(nodeAddress).nodeExit(1);
             await skaleDKG.setSuccessfulDKGPublic(
                 stringValue(web3.utils.soliditySha3("d2")),
             );
             nodeStatus = await nodes.getNodeStatus(1);
             assert.equal(nodeStatus, LEFT);
-            tx = await skaleManager.connect(nodeAddress).populateTransaction.nodeExit(1);
-            await sendTransactionFromWallet(tx, nodeAddress).should.be.eventually.rejectedWith("Sender is not permitted to call this function");
+            await skaleManager.connect(nodeAddress).nodeExit(1).should.be.eventually.rejectedWith("Sender is not permitted to call this function");
         });
 
         it("should rotate node on the same position", async () => {
             const arrayD2 = await schainsInternal.getNodesInGroup(stringValue(web3.utils.soliditySha3("d2")));
             const arrayD3 = await schainsInternal.getNodesInGroup(stringValue(web3.utils.soliditySha3("d3")));
-            let tx = await skaleManager.connect(nodeAddress).populateTransaction.nodeExit(0);
-            await sendTransactionFromWallet(tx, nodeAddress);
+            await skaleManager.connect(nodeAddress).nodeExit(0);
             const newArrayD3 = await schainsInternal.getNodesInGroup(stringValue(web3.utils.soliditySha3("d3")));
             let zeroPositionD3 = 0;
             let iter = 0;
@@ -1224,8 +1170,7 @@ describe("Schains", () => {
             await skaleDKG.setSuccessfulDKGPublic(
                 stringValue(web3.utils.soliditySha3("d3")),
             );
-            tx = await skaleManager.connect(nodeAddress).populateTransaction.nodeExit(0);
-            await sendTransactionFromWallet(tx, nodeAddress);
+            await skaleManager.connect(nodeAddress).nodeExit(0);
             const newArrayD2 = await schainsInternal.getNodesInGroup(stringValue(web3.utils.soliditySha3("d2")));
             let zeroPositionD2 = 0;
             iter = 0;
@@ -1257,8 +1202,7 @@ describe("Schains", () => {
                 stringValue(web3.utils.soliditySha3("d2")),
             );
             await skipTime(ethers, 43260);
-            tx = await skaleManager.connect(nodeAddress).populateTransaction.nodeExit(1);
-            await sendTransactionFromWallet(tx, nodeAddress);
+            await skaleManager.connect(nodeAddress).nodeExit(1);
             const newNewArrayD3 = await schainsInternal.getNodesInGroup(stringValue(web3.utils.soliditySha3("d3")));
             let onePositionD3 = 0;
             iter = 0;
@@ -1289,8 +1233,7 @@ describe("Schains", () => {
             await skaleDKG.setSuccessfulDKGPublic(
                 stringValue(web3.utils.soliditySha3("d3")),
             );
-            tx = await skaleManager.connect(nodeAddress).populateTransaction.nodeExit(1);
-            await sendTransactionFromWallet(tx, nodeAddress);
+            await skaleManager.connect(nodeAddress).nodeExit(1);
             const newNewArrayD2 = await schainsInternal.getNodesInGroup(stringValue(web3.utils.soliditySha3("d2")));
             let onePositionD2 = 0;
             iter = 0;
@@ -1324,40 +1267,33 @@ describe("Schains", () => {
         });
 
         it("should allow to rotate if occupied node didn't rotated for 12 hours", async () => {
-            let tx = await skaleManager.connect(nodeAddress).populateTransaction.nodeExit(0);
-            await sendTransactionFromWallet(tx, nodeAddress);
+            await skaleManager.connect(nodeAddress).nodeExit(0);
             await skaleDKG.setSuccessfulDKGPublic(
                 stringValue(web3.utils.soliditySha3("d3")),
             );
-            tx = await skaleManager.connect(nodeAddress).populateTransaction.nodeExit(1);
-            await sendTransactionFromWallet(tx, nodeAddress).should.be.eventually.rejectedWith("Occupied by rotation on Schain");
+            await skaleManager.connect(nodeAddress).nodeExit(1).should.be.eventually.rejectedWith("Occupied by rotation on Schain");
             await skipTime(ethers, 43260);
-            tx = await skaleManager.connect(nodeAddress).populateTransaction.nodeExit(1);
-            await sendTransactionFromWallet(tx, nodeAddress);
+            await skaleManager.connect(nodeAddress).nodeExit(1);
             await skaleDKG.setSuccessfulDKGPublic(
                 stringValue(web3.utils.soliditySha3("d3")),
             );
 
-            tx = await skaleManager.connect(nodeAddress).populateTransaction.nodeExit(0);
-            await sendTransactionFromWallet(tx, nodeAddress).should.be.eventually.rejectedWith("Occupied by rotation on Schain");
+            await skaleManager.connect(nodeAddress).nodeExit(0).should.be.eventually.rejectedWith("Occupied by rotation on Schain");
 
             nodeStatus = await nodes.getNodeStatus(1);
             assert.equal(nodeStatus, LEAVING);
-            tx = await skaleManager.connect(nodeAddress).populateTransaction.nodeExit(1);
-            await sendTransactionFromWallet(tx, nodeAddress);
+            await skaleManager.connect(nodeAddress).nodeExit(1);
             nodeStatus = await nodes.getNodeStatus(1);
             assert.equal(nodeStatus, LEFT);
         });
 
         it("should not create schain with the same name after removing", async () => {
             const deposit = await schains.getSchainPrice(5, 5);
-            let tx = await skaleManager.connect(nodeAddress).populateTransaction.nodeExit(0);
-            await sendTransactionFromWallet(tx, nodeAddress);
+            await skaleManager.connect(nodeAddress).nodeExit(0);
             await skaleDKG.setSuccessfulDKGPublic(
                 stringValue(web3.utils.soliditySha3("d3")),
             );
-            tx = await skaleManager.connect(nodeAddress).populateTransaction.nodeExit(0);
-            await sendTransactionFromWallet(tx, nodeAddress);
+            await skaleManager.connect(nodeAddress).nodeExit(0);
             await skaleDKG.setSuccessfulDKGPublic(
                 stringValue(web3.utils.soliditySha3("d2")),
             );
@@ -1399,107 +1335,88 @@ describe("Schains", () => {
             );
             const nodesInGroupBN = await schainsInternal.getNodesInGroup(stringValue(web3.utils.soliditySha3("d4")));
             const nodeInGroup = nodesInGroupBN.map((value: BigNumber) => value.toNumber())[0];
-            tx = await skaleManager.connect(nodeAddress).populateTransaction.nodeExit(nodeInGroup);
-            await sendTransactionFromWallet(tx, nodeAddress);
+            await skaleManager.connect(nodeAddress).nodeExit(nodeInGroup);
         });
 
         it("should be possible to send broadcast", async () => {
             let res = await skaleDKG.isChannelOpened(stringValue(web3.utils.soliditySha3("d3")));
             assert.equal(res, false);
-            let tx = await skaleManager.connect(nodeAddress).populateTransaction.nodeExit(0);
-            await sendTransactionFromWallet(tx, nodeAddress);
+            await skaleManager.connect(nodeAddress).nodeExit(0);
             const res1 = await schainsInternal.getNodesInGroup(stringValue(web3.utils.soliditySha3("d3")));
             const nodeRot = res1[3];
             res = await skaleDKG.isChannelOpened(stringValue(web3.utils.soliditySha3("d3")));
             assert.equal(res, true);
-            tx = await skaleDKG.connect(nodeAddress).populateTransaction.isBroadcastPossible(stringValue(web3.utils.soliditySha3("d3")), nodeRot);
-            const resS = await callFromWallet(tx, nodeAddress, boolParser);
-            assert.equal(resS === 'true', true);
+            const resS = await skaleDKG.connect(nodeAddress).isBroadcastPossible(stringValue(web3.utils.soliditySha3("d3")), nodeRot);
+            assert.equal(resS, true);
         });
 
         it("should revert if dkg not finished", async () => {
             let res = await skaleDKG.isChannelOpened(stringValue(web3.utils.soliditySha3("d3")));
             assert.equal(res, false);
-            let tx = await skaleManager.connect(nodeAddress).populateTransaction.nodeExit(0);
-            await sendTransactionFromWallet(tx, nodeAddress);
+            await skaleManager.connect(nodeAddress).nodeExit(0);
             const res1 = await schainsInternal.getNodesInGroup(stringValue(web3.utils.soliditySha3("d3")));
             const nodeRot = res1[3];
             res = await skaleDKG.isChannelOpened(stringValue(web3.utils.soliditySha3("d3")));
             assert.equal(res, true);
-            tx = await skaleDKG.connect(nodeAddress).populateTransaction.isBroadcastPossible(stringValue(web3.utils.soliditySha3("d3")), nodeRot);
-            const resS = await callFromWallet(tx, nodeAddress, boolParser);
-            assert.equal(resS === 'true', true);
+            const resS = await skaleDKG.connect(nodeAddress).isBroadcastPossible(stringValue(web3.utils.soliditySha3("d3")), nodeRot);
+            assert.equal(resS, true);
 
-            tx = await skaleManager.connect(nodeAddress).populateTransaction.nodeExit(1);
-            await sendTransactionFromWallet(tx, nodeAddress).should.be.eventually.rejectedWith("Occupied by rotation on Schain");
-            tx = await skaleManager.connect(nodeAddress).populateTransaction.nodeExit(0);
-            await sendTransactionFromWallet(tx, nodeAddress);
+            await skaleManager.connect(nodeAddress).nodeExit(1).should.be.eventually.rejectedWith("Occupied by rotation on Schain");
+            await skaleManager.connect(nodeAddress).nodeExit(0);
 
             await skipTime(ethers, 43260);
 
-            tx = await skaleManager.connect(nodeAddress).populateTransaction.nodeExit(1);
-            await sendTransactionFromWallet(tx, nodeAddress).should.be.eventually.rejectedWith("DKG did not finish on Schain");
+            await skaleManager.connect(nodeAddress).nodeExit(1).should.be.eventually.rejectedWith("DKG did not finish on Schain");
         });
 
         it("should be possible to send broadcast", async () => {
             let res = await skaleDKG.isChannelOpened(stringValue(web3.utils.soliditySha3("d3")));
             assert.equal(res, false);
-            let tx = await skaleManager.connect(nodeAddress).populateTransaction.nodeExit(0);
-            await sendTransactionFromWallet(tx, nodeAddress);
+            await skaleManager.connect(nodeAddress).nodeExit(0);
             const res1 = await schainsInternal.getNodesInGroup(stringValue(web3.utils.soliditySha3("d3")));
             const nodeRot = res1[3];
             res = await skaleDKG.isChannelOpened(stringValue(web3.utils.soliditySha3("d3")));
             assert.equal(res, true);
-            tx = await skaleDKG.connect(nodeAddress).populateTransaction.isBroadcastPossible(stringValue(web3.utils.soliditySha3("d3")), nodeRot);
-            const resS = await callFromWallet(tx, nodeAddress, boolParser);
-            assert.equal(resS === 'true', true);
+            const resS = await skaleDKG.connect(nodeAddress).isBroadcastPossible(stringValue(web3.utils.soliditySha3("d3")), nodeRot);
+            assert.equal(resS, true);
             await skipTime(ethers, 43260);
-            tx = await skaleManager.connect(nodeAddress).populateTransaction.nodeExit(0);
-            await sendTransactionFromWallet(tx, nodeAddress);
+            await skaleManager.connect(nodeAddress).nodeExit(0);
 
-            tx = await skaleManager.connect(nodeAddress).populateTransaction.nodeExit(1);
-            await sendTransactionFromWallet(tx, nodeAddress).should.be.eventually.rejectedWith("DKG did not finish on Schain");
+            await skaleManager.connect(nodeAddress).nodeExit(1).should.be.eventually.rejectedWith("DKG did not finish on Schain");
         });
 
         it("should be possible to send broadcast", async () => {
             let res = await skaleDKG.isChannelOpened(stringValue(web3.utils.soliditySha3("d3")));
             assert.equal(res, false);
-            let tx = await skaleManager.connect(nodeAddress).populateTransaction.nodeExit(0);
-            await sendTransactionFromWallet(tx, nodeAddress);
+            await skaleManager.connect(nodeAddress).nodeExit(0);
             const res1 = await schainsInternal.getNodesInGroup(stringValue(web3.utils.soliditySha3("d3")));
             const nodeRot = res1[3];
             res = await skaleDKG.isChannelOpened(stringValue(web3.utils.soliditySha3("d3")));
             assert.equal(res, true);
-            tx = await skaleDKG.connect(nodeAddress).populateTransaction.isBroadcastPossible(stringValue(web3.utils.soliditySha3("d3")), nodeRot);
-            const resS = await callFromWallet(tx, nodeAddress, boolParser);
-            assert.equal(resS === 'true', true);
+            const resS = await skaleDKG.connect(nodeAddress).isBroadcastPossible(stringValue(web3.utils.soliditySha3("d3")), nodeRot);
+            assert.equal(resS, true);
             await skaleDKG.setSuccessfulDKGPublic(
                 stringValue(web3.utils.soliditySha3("d3")),
             );
-            tx = await skaleManager.connect(nodeAddress).populateTransaction.nodeExit(1);
-            await sendTransactionFromWallet(tx, nodeAddress).should.be.eventually.rejectedWith("Occupied by rotation on Schain");
-            tx = await skaleManager.connect(nodeAddress).populateTransaction.nodeExit(0);
-            await sendTransactionFromWallet(tx, nodeAddress);
+            await skaleManager.connect(nodeAddress).nodeExit(1).should.be.eventually.rejectedWith("Occupied by rotation on Schain");
+            await skaleManager.connect(nodeAddress).nodeExit(0);
             await skaleDKG.setSuccessfulDKGPublic(
                 stringValue(web3.utils.soliditySha3("d2")),
             );
 
             await skipTime(ethers, 43260);
 
-            tx = await skaleManager.connect(nodeAddress).populateTransaction.nodeExit(1);
-            await sendTransactionFromWallet(tx, nodeAddress);
+            await skaleManager.connect(nodeAddress).nodeExit(1);
         });
 
         it("should be possible to process dkg after node rotation", async () => {
             let res = await skaleDKG.isChannelOpened(stringValue(web3.utils.soliditySha3("d3")));
             assert.equal(res, false);
-            let tx = await skaleManager.connect(nodeAddress).populateTransaction.nodeExit(0);
-            await sendTransactionFromWallet(tx, nodeAddress);
+            await skaleManager.connect(nodeAddress).nodeExit(0);
             const res1 = await schainsInternal.getNodesInGroup(stringValue(web3.utils.soliditySha3("d3")));
             const nodeRot = res1[3];
-            tx = await skaleDKG.connect(nodeAddress).populateTransaction.isBroadcastPossible(stringValue(web3.utils.soliditySha3("d3")), nodeRot);
-            let resS = await callFromWallet(tx, nodeAddress, boolParser);
-            assert.equal(resS === 'true', true);
+            let resS = await skaleDKG.connect(nodeAddress).isBroadcastPossible(stringValue(web3.utils.soliditySha3("d3")), nodeRot);
+            assert.equal(resS, true);
 
             const verificationVector = [
                 {
@@ -1566,113 +1483,98 @@ describe("Schains", () => {
             ];
 
             // let res10 = await keyStorage.getBroadcastedData(stringValue(web3.utils.soliditySha3("d3")), res1[0]);
-            tx = await skaleDKG.connect(nodeAddress).populateTransaction.isBroadcastPossible(stringValue(web3.utils.soliditySha3("d3")), res1[0]);
-            resS = await callFromWallet(tx, nodeAddress, boolParser);
-            assert.equal(resS === 'true', true);
+            resS = await skaleDKG.connect(nodeAddress).isBroadcastPossible(stringValue(web3.utils.soliditySha3("d3")), res1[0]);
+            assert.equal(resS, true);
             await wallets.connect(owner).rechargeSchainWallet(stringValue(web3.utils.soliditySha3("d3")), {value: 1e20.toString()});
-            tx = await skaleDKG.connect(nodeAddress).populateTransaction.broadcast(
+            await skaleDKG.connect(nodeAddress).broadcast(
                 stringValue(web3.utils.soliditySha3("d3")),
                 res1[0],
                 verificationVector,
                 // the last symbol is spoiled in parameter below
                 encryptedSecretKeyContribution
             );
-            await sendTransactionFromWallet(tx, nodeAddress);
             // res10 = await keyStorage.getBroadcastedData(stringValue(web3.utils.soliditySha3("d3")), res1[1]);
-            tx = await skaleDKG.connect(nodeAddress).populateTransaction.isBroadcastPossible(stringValue(web3.utils.soliditySha3("d3")), res1[1]);
-            resS = await callFromWallet(tx, nodeAddress, boolParser);
-            assert.equal(resS === 'true', true);
-            tx = await skaleDKG.connect(nodeAddress).populateTransaction.broadcast(
+            resS = await skaleDKG.connect(nodeAddress).isBroadcastPossible(stringValue(web3.utils.soliditySha3("d3")), res1[1]);
+            assert.equal(resS, true);
+            await skaleDKG.connect(nodeAddress).broadcast(
                 stringValue(web3.utils.soliditySha3("d3")),
                 res1[1],
                 verificationVector,
                 // the last symbol is spoiled in parameter below
                 encryptedSecretKeyContribution
             );
-            await sendTransactionFromWallet(tx, nodeAddress);
-            tx = await skaleDKG.connect(nodeAddress).populateTransaction.isBroadcastPossible(stringValue(web3.utils.soliditySha3("d3")), res1[2]);
-            resS = await callFromWallet(tx, nodeAddress, boolParser);
-            assert.equal(resS === 'true', true);
-            tx = await skaleDKG.connect(nodeAddress).populateTransaction.broadcast(
+            resS = await skaleDKG.connect(nodeAddress).isBroadcastPossible(stringValue(web3.utils.soliditySha3("d3")), res1[2]);
+            assert.equal(resS, true);
+            await skaleDKG.connect(nodeAddress).broadcast(
                 stringValue(web3.utils.soliditySha3("d3")),
                 res1[2],
                 verificationVector,
                 // the last symbol is spoiled in parameter below
                 encryptedSecretKeyContribution
             );
-            await sendTransactionFromWallet(tx, nodeAddress);
-            tx = await skaleDKG.connect(nodeAddress).populateTransaction.broadcast(
+            await skaleDKG.connect(nodeAddress).broadcast(
                 stringValue(web3.utils.soliditySha3("d3")),
                 res1[3],
                 verificationVector,
                 // the last symbol is spoiled in parameter below
                 encryptedSecretKeyContribution
             );
-            await sendTransactionFromWallet(tx, nodeAddress);
 
             res = await skaleDKG.isChannelOpened(stringValue(web3.utils.soliditySha3("d3")));
             assert.equal(res, true);
 
-            tx = await skaleDKG.connect(nodeAddress).populateTransaction.isAlrightPossible(
+            resS = await skaleDKG.connect(nodeAddress).isAlrightPossible(
                 stringValue(web3.utils.soliditySha3("d3")),
                 res1[0]
             );
-            resS = await callFromWallet(tx, nodeAddress, boolParser);
-            assert.equal(resS === 'true', true);
+            assert.equal(resS, true);
 
-            tx = await skaleDKG.connect(nodeAddress).populateTransaction.alright(
+            await skaleDKG.connect(nodeAddress).alright(
                 stringValue(web3.utils.soliditySha3("d3")),
                 res1[0]
             );
-            await sendTransactionFromWallet(tx, nodeAddress);
 
             res = await skaleDKG.isChannelOpened(stringValue(web3.utils.soliditySha3("d3")));
             assert.equal(res, true);
 
-            tx = await skaleDKG.connect(nodeAddress).populateTransaction.isAlrightPossible(
+            resS = await skaleDKG.connect(nodeAddress).isAlrightPossible(
                 stringValue(web3.utils.soliditySha3("d3")),
                 res1[1]
             );
-            resS = await callFromWallet(tx, nodeAddress, boolParser);
-            assert.equal(resS === 'true', true);
+            assert.equal(resS, true);
 
-            tx = await skaleDKG.connect(nodeAddress).populateTransaction.alright(
+            await skaleDKG.connect(nodeAddress).alright(
                 stringValue(web3.utils.soliditySha3("d3")),
                 res1[1]
             );
-            await sendTransactionFromWallet(tx, nodeAddress);
 
             res = await skaleDKG.isChannelOpened(stringValue(web3.utils.soliditySha3("d3")));
             assert.equal(res, true);
 
-            tx = await skaleDKG.connect(nodeAddress).populateTransaction.isAlrightPossible(
+            resS = await skaleDKG.connect(nodeAddress).isAlrightPossible(
                 stringValue(web3.utils.soliditySha3("d3")),
                 res1[2]
             );
-            resS = await callFromWallet(tx, nodeAddress, boolParser);
-            assert.equal(resS === 'true', true);
+            assert.equal(resS, true);
 
-            tx = await skaleDKG.connect(nodeAddress).populateTransaction.alright(
+            await skaleDKG.connect(nodeAddress).alright(
                 stringValue(web3.utils.soliditySha3("d3")),
                 res1[2]
             );
-            await sendTransactionFromWallet(tx, nodeAddress);
 
             res = await skaleDKG.isChannelOpened(stringValue(web3.utils.soliditySha3("d3")));
             assert.equal(res, true);
 
-            tx = await skaleDKG.connect(nodeAddress).populateTransaction.isAlrightPossible(
+            resS = await skaleDKG.connect(nodeAddress).isAlrightPossible(
                 stringValue(web3.utils.soliditySha3("d3")),
                 res1[3]
             );
-            resS = await callFromWallet(tx, nodeAddress, boolParser);
-            assert.equal(resS === 'true', true);
+            assert.equal(resS, true);
 
-            tx = await skaleDKG.connect(nodeAddress).populateTransaction.alright(
+            await skaleDKG.connect(nodeAddress).alright(
                 stringValue(web3.utils.soliditySha3("d3")),
                 res1[3]
             );
-            await sendTransactionFromWallet(tx, nodeAddress);
         });
     });
 
@@ -1685,7 +1587,7 @@ describe("Schains", () => {
             const pubKey = ec.keyFromPrivate(String(nodeAddress.privateKey).slice(2)).getPublic();
             for (const index of Array.from(Array(nodesCount).keys())) {
                 const hexIndex = ("0" + index.toString(16)).slice(-2);
-                const tx = await skaleManager.connect(nodeAddress).populateTransaction.createNode(
+                await skaleManager.connect(nodeAddress).createNode(
                     8545, // port
                     0, // nonce
                     "0x7f0000" + hexIndex, // ip
@@ -1693,7 +1595,6 @@ describe("Schains", () => {
                     ["0x" + pubKey.x.toString('hex'), "0x" + pubKey.y.toString('hex')], // public key
                     "D2-" + hexIndex, // name
                     "some.domain.name");
-                await sendTransactionFromWallet(tx, nodeAddress);
             }
             await schains.addSchain(
                 holder.address,
@@ -1749,8 +1650,7 @@ describe("Schains", () => {
                 }
             }
             for (const schainHash of Array.from(schainHashes).reverse()) {
-                const tx = await skaleManager.connect(nodeAddress).populateTransaction.nodeExit(rotIndex);
-                await sendTransactionFromWallet(tx, nodeAddress);
+                await skaleManager.connect(nodeAddress).nodeExit(rotIndex);
                 await skaleDKG.setSuccessfulDKGPublic(schainHash);
             }
             await schainsInternal.getSchainHashesForNode(rotIndex).should.be.eventually.empty;
@@ -1768,8 +1668,7 @@ describe("Schains", () => {
                 }
             }
             for (const schainHash of Array.from(schainHashes1).reverse()) {
-                const tx = await skaleManager.connect(nodeAddress).populateTransaction.nodeExit(rotIndex1);
-                await sendTransactionFromWallet(tx, nodeAddress);
+                await skaleManager.connect(nodeAddress).nodeExit(rotIndex1);
                 await skaleDKG.setSuccessfulDKGPublic(
                     schainHash,
                 );
@@ -1790,8 +1689,7 @@ describe("Schains", () => {
 
             await skipTime(ethers, 43260);
             for (const schainHash of Array.from(schainHashes2).reverse()) {
-                const tx = await skaleManager.connect(nodeAddress).populateTransaction.nodeExit(rotIndex2);
-                await sendTransactionFromWallet(tx, nodeAddress);
+                await skaleManager.connect(nodeAddress).nodeExit(rotIndex2);
                 await skaleDKG.setSuccessfulDKGPublic(
                     schainHash,
                 );
@@ -1810,7 +1708,7 @@ describe("Schains", () => {
             const pubKey = ec.keyFromPrivate(String(nodeAddress.privateKey).slice(2)).getPublic();
             for (const index of Array.from(Array(nodesCount).keys())) {
                 const hexIndex = ("0" + index.toString(16)).slice(-2);
-                const txx = await skaleManager.connect(nodeAddress).populateTransaction.createNode(
+                await skaleManager.connect(nodeAddress).createNode(
                     8545, // port
                     0, // nonce
                     "0x7f0000" + hexIndex, // ip
@@ -1818,10 +1716,9 @@ describe("Schains", () => {
                     ["0x" +  hexValue(pubKey.x.toString('hex')), "0x" + hexValue(pubKey.y.toString('hex'))], // public key
                     "D2-" + hexIndex, // name
                     "some.domain.name");
-                await sendTransactionFromWallet(txx, nodeAddress);
             }
             const pubKey2 = ec.keyFromPrivate(String(nodeAddress2.privateKey).slice(2)).getPublic();
-            let tx = await skaleManager.connect(nodeAddress2).populateTransaction.createNode(
+            await skaleManager.connect(nodeAddress2).createNode(
                 8545, // port
                 0, // nonce
                 "0x7f0000ff", // ip
@@ -1829,9 +1726,8 @@ describe("Schains", () => {
                 ["0x" + hexValue(pubKey2.x.toString('hex')), "0x" + hexValue(pubKey2.y.toString('hex'))], // public key
                 "D2-ff", // name
                 "some.domain.name");
-            await sendTransactionFromWallet(tx, nodeAddress2);
             const pubKey3 = ec.keyFromPrivate(String(nodeAddress3.privateKey).slice(2)).getPublic();
-            tx = await skaleManager.connect(nodeAddress3).populateTransaction.createNode(
+            await skaleManager.connect(nodeAddress3).createNode(
                 8545, // port
                 0, // nonce
                 "0x7f0000fe", // ip
@@ -1839,7 +1735,6 @@ describe("Schains", () => {
                 ["0x" +  hexValue(pubKey3.x.toString('hex')), "0x" +  hexValue(pubKey3.y.toString('hex'))], // public key
                 "D2-fe", // name
                 "some.domain.name");
-            await sendTransactionFromWallet(tx, nodeAddress3);
             await schains.addSchain(
                 holder.address,
                 deposit,
@@ -1895,14 +1790,11 @@ describe("Schains", () => {
             }
             for (const schainHash of Array.from(schainHashes).reverse()) {
                 if (rotIndex === 7) {
-                    const tx = await skaleManager.connect(nodeAddress).populateTransaction.nodeExit(rotIndex);
-                    await sendTransactionFromWallet(tx, nodeAddress);
+                    await skaleManager.connect(nodeAddress).nodeExit(rotIndex);
                 } else if (rotIndex === 6) {
-                    const tx = await skaleManager.connect(nodeAddress2).populateTransaction.nodeExit(rotIndex);
-                    await sendTransactionFromWallet(tx, nodeAddress2);
+                    await skaleManager.connect(nodeAddress2).nodeExit(rotIndex);
                 } else if (rotIndex < 6) {
-                    const tx = await skaleManager.connect(nodeAddress).populateTransaction.nodeExit(rotIndex);
-                    await sendTransactionFromWallet(tx, nodeAddress);
+                    await skaleManager.connect(nodeAddress).nodeExit(rotIndex);
                 } else {
                     break;
                 }
@@ -1926,14 +1818,11 @@ describe("Schains", () => {
             }
             for (const schainHash of Array.from(schainHashes1).reverse()) {
                 if (rotIndex1 === 7) {
-                    const tx = await skaleManager.connect(nodeAddress).populateTransaction.nodeExit(rotIndex1);
-                    await sendTransactionFromWallet(tx, nodeAddress);
+                    await skaleManager.connect(nodeAddress).nodeExit(rotIndex1);
                 } else if (rotIndex1 === 6) {
-                    const tx = await skaleManager.connect(nodeAddress2).populateTransaction.nodeExit(rotIndex1);
-                    await sendTransactionFromWallet(tx, nodeAddress2);
+                    await skaleManager.connect(nodeAddress2).nodeExit(rotIndex1);
                 } else if (rotIndex1 < 6) {
-                    const tx = await skaleManager.connect(nodeAddress).populateTransaction.nodeExit(rotIndex1);
-                    await sendTransactionFromWallet(tx, nodeAddress);
+                    await skaleManager.connect(nodeAddress).nodeExit(rotIndex1);
                 } else {
                     break;
                 }
@@ -1958,14 +1847,11 @@ describe("Schains", () => {
             await skipTime(ethers, 43260);
             for (const schainHash of Array.from(schainHashes2).reverse()) {
                 if (rotIndex2 === 7) {
-                    const tx = await skaleManager.connect(nodeAddress).populateTransaction.nodeExit(rotIndex2);
-                    await sendTransactionFromWallet(tx, nodeAddress);
+                    await skaleManager.connect(nodeAddress).nodeExit(rotIndex2);
                 } else if (rotIndex2 === 6) {
-                    const tx = await skaleManager.connect(nodeAddress2).populateTransaction.nodeExit(rotIndex2);
-                    await sendTransactionFromWallet(tx, nodeAddress2);
+                    await skaleManager.connect(nodeAddress2).nodeExit(rotIndex2);
                 } else if (rotIndex2 < 6) {
-                    const tx = await skaleManager.connect(nodeAddress).populateTransaction.nodeExit(rotIndex2);
-                    await sendTransactionFromWallet(tx, nodeAddress);
+                    await skaleManager.connect(nodeAddress).nodeExit(rotIndex2);
                 } else {
                     break;
                 }
@@ -1983,15 +1869,13 @@ describe("Schains", () => {
             for (const schainHash of Array.from(schainHashes).reverse()) {
                 const valId = await validatorService.getValidatorIdByNodeAddress(nodeAddress2.address);
                 ((await validatorService.getValidatorIdByNodeAddress(nodeAddress2.address)).toString()).should.be.equal("1");
-                const tx = await skaleManager.connect(nodeAddress2).populateTransaction.nodeExit(rotIndex);
-                await sendTransactionFromWallet(tx, nodeAddress2);
+                await skaleManager.connect(nodeAddress2).nodeExit(rotIndex);
                 await skaleDKG.setSuccessfulDKGPublic(
                     schainHash,
                 );
             }
             if (!(await nodes.isNodeLeft(rotIndex))) {
-                const tx = await skaleManager.connect(nodeAddress2).populateTransaction.nodeExit(rotIndex);
-                await sendTransactionFromWallet(tx, nodeAddress2);
+                await skaleManager.connect(nodeAddress2).nodeExit(rotIndex);
             }
             await validatorService.getValidatorIdByNodeAddress(nodeAddress2.address)
             .should.be.eventually.rejectedWith("Node address is not assigned to a validator");
@@ -2038,15 +1922,13 @@ describe("Schains", () => {
             for (const schainHash of Array.from(schainHashes).reverse()) {
                 const valId = await validatorService.getValidatorIdByNodeAddress(nodeAddress3.address);
                 ((await validatorService.getValidatorIdByNodeAddress(nodeAddress3.address)).toString()).should.be.equal("1");
-                const tx = await skaleManager.connect(nodeAddress3).populateTransaction.nodeExit(rotIndex);
-                await sendTransactionFromWallet(tx, nodeAddress3);
+                await skaleManager.connect(nodeAddress3).nodeExit(rotIndex);
                 await skaleDKG.setSuccessfulDKGPublic(
                     schainHash,
                 );
             }
             if (!(await nodes.isNodeLeft(rotIndex))) {
-                const tx = await skaleManager.connect(nodeAddress3).populateTransaction.nodeExit(rotIndex);
-                await sendTransactionFromWallet(tx, nodeAddress3);
+                await skaleManager.connect(nodeAddress3).nodeExit(rotIndex);
             }
             await validatorService.getValidatorIdByNodeAddress(nodeAddress3.address)
             .should.be.eventually.rejectedWith("Node address is not assigned to a validator");
@@ -2126,7 +2008,7 @@ describe("Schains", () => {
             const pubKey = ec.keyFromPrivate(String(nodeAddress.privateKey).slice(2)).getPublic();
             for (const index of Array.from(Array(nodesCount).keys())) {
                 const hexIndex = ("0" + index.toString(16)).slice(-2);
-                const txx = await skaleManager.connect(nodeAddress).populateTransaction.createNode(
+                await skaleManager.connect(nodeAddress).createNode(
                     8545, // port
                     0, // nonce
                     "0x7f0000" + hexIndex, // ip
@@ -2134,7 +2016,6 @@ describe("Schains", () => {
                     ["0x" +  hexValue(pubKey.x.toString('hex')), "0x" + hexValue(pubKey.y.toString('hex'))], // public key
                     "D2-" + hexIndex, // name
                     "some.domain.name");
-                await sendTransactionFromWallet(txx, nodeAddress);
             }
             await schains.addSchain(
                 holder.address,
@@ -2146,7 +2027,7 @@ describe("Schains", () => {
                 stringValue(web3.utils.soliditySha3("d1")),
             );
             const pubKey2 = ec.keyFromPrivate(String(nodeAddress2.privateKey).slice(2)).getPublic();
-            const tx = await skaleManager.connect(nodeAddress).populateTransaction.createNode(
+            await skaleManager.connect(nodeAddress).createNode(
                 8545, // port
                 0, // nonce
                 "0x7f0000ff", // ip
@@ -2154,7 +2035,6 @@ describe("Schains", () => {
                 ["0x" + hexValue(pubKey.x.toString('hex')), "0x" + hexValue(pubKey.y.toString('hex'))], // public key
                 "D2-ff", // name
                 "some.domain.name");
-            await sendTransactionFromWallet(tx, nodeAddress);
 
             for (let i = 0; i < 16; i++) {
                 secretKeyContributions[i] = encryptedSecretKeyContributions[0][0];
@@ -2177,10 +2057,9 @@ describe("Schains", () => {
 
         it("should make a node rotation", async () => {
             const rotIndex = 0;
-            let tx = await skaleManager.connect(nodeAddress).populateTransaction.nodeExit(rotIndex);
-            await sendTransactionFromWallet(tx, nodeAddress);
+            await skaleManager.connect(nodeAddress).nodeExit(rotIndex);
             const pubKey = ec.keyFromPrivate(String(nodeAddress.privateKey).slice(2)).getPublic();
-            tx = await skaleManager.connect(nodeAddress).populateTransaction.createNode(
+            await skaleManager.connect(nodeAddress).createNode(
                 8545, // port
                 0, // nonce
                 "0x7f0000fe", // ip
@@ -2188,21 +2067,18 @@ describe("Schains", () => {
                 ["0x" + hexValue(pubKey.x.toString('hex')), "0x" + hexValue(pubKey.y.toString('hex'))], // public key
                 "D2-fe", // name
                 "some.domain.name");
-            await sendTransactionFromWallet(tx, nodeAddress);
-            tx = await skaleDKG.connect(nodeAddress).populateTransaction.broadcast(
+            await skaleDKG.connect(nodeAddress).broadcast(
                 stringValue(web3.utils.soliditySha3("d1")),
                 1,
                 verificationVectorNew,
                 secretKeyContributions
             );
-            await sendTransactionFromWallet(tx, nodeAddress);
             await skipTime(ethers, 1800);
-            tx = await skaleDKG.connect(nodeAddress).populateTransaction.complaint(
+            await skaleDKG.connect(nodeAddress).complaint(
                 stringValue(web3.utils.soliditySha3("d1")),
                 1,
                 16
             );
-            await sendTransactionFromWallet(tx, nodeAddress);
             await skaleDKG.setSuccessfulDKGPublic(
                 stringValue(web3.utils.soliditySha3("d1")),
             );
@@ -2218,10 +2094,9 @@ describe("Schains", () => {
         it("should make a node rotation after removing schain type", async () => {
             await schainsInternal.removeSchainType(1);
             const rotIndex = 0;
-            let tx = await skaleManager.connect(nodeAddress).populateTransaction.nodeExit(rotIndex);
-            await sendTransactionFromWallet(tx, nodeAddress);
+            await skaleManager.connect(nodeAddress).nodeExit(rotIndex);
             const pubKey = ec.keyFromPrivate(String(nodeAddress.privateKey).slice(2)).getPublic();
-            tx = await skaleManager.connect(nodeAddress).populateTransaction.createNode(
+            await skaleManager.connect(nodeAddress).createNode(
                 8545, // port
                 0, // nonce
                 "0x7f0000fe", // ip
@@ -2229,22 +2104,18 @@ describe("Schains", () => {
                 ["0x" + hexValue(pubKey.x.toString('hex')), "0x" + hexValue(pubKey.y.toString('hex'))], // public key
                 "D2-fe", // name
                 "some.domain.name");
-            await sendTransactionFromWallet(tx, nodeAddress);
-
-            tx = await skaleDKG.connect(nodeAddress).populateTransaction.broadcast(
+            await skaleDKG.connect(nodeAddress).broadcast(
                 stringValue(web3.utils.soliditySha3("d1")),
                 1,
                 verificationVectorNew,
                 secretKeyContributions
             );
-            await sendTransactionFromWallet(tx, nodeAddress);
             await skipTime(ethers, 1800);
-            tx = await skaleDKG.connect(nodeAddress).populateTransaction.complaint(
+            await skaleDKG.connect(nodeAddress).complaint(
                 stringValue(web3.utils.soliditySha3("d1")),
                 1,
                 16
             );
-            await sendTransactionFromWallet(tx, nodeAddress);
             await skaleDKG.setSuccessfulDKGPublic(
                 stringValue(web3.utils.soliditySha3("d1")),
             );
@@ -2261,10 +2132,9 @@ describe("Schains", () => {
             await schainsInternal.removeSchainType(1);
             await schainsInternal.addSchainType(32, 16);
             const rotIndex = 0;
-            let tx = await skaleManager.connect(nodeAddress).populateTransaction.nodeExit(rotIndex);
-            await sendTransactionFromWallet(tx, nodeAddress);
+            await skaleManager.connect(nodeAddress).nodeExit(rotIndex);
             const pubKey = ec.keyFromPrivate(String(nodeAddress.privateKey).slice(2)).getPublic();
-            tx = await skaleManager.connect(nodeAddress).populateTransaction.createNode(
+            await skaleManager.connect(nodeAddress).createNode(
                 8545, // port
                 0, // nonce
                 "0x7f0000fe", // ip
@@ -2272,22 +2142,19 @@ describe("Schains", () => {
                 ["0x" + hexValue(pubKey.x.toString('hex')), "0x" + hexValue(pubKey.y.toString('hex'))], // public key
                 "D2-fe", // name
                 "some.domain.name");
-            await sendTransactionFromWallet(tx, nodeAddress);
 
-            tx = await skaleDKG.connect(nodeAddress).populateTransaction.broadcast(
+            await skaleDKG.connect(nodeAddress).broadcast(
                 stringValue(web3.utils.soliditySha3("d1")),
                 1,
                 verificationVectorNew,
                 secretKeyContributions
             );
-            await sendTransactionFromWallet(tx, nodeAddress);
             await skipTime(ethers, 1800);
-            tx = await skaleDKG.connect(nodeAddress).populateTransaction.complaint(
+            await skaleDKG.connect(nodeAddress).complaint(
                 stringValue(web3.utils.soliditySha3("d1")),
                 1,
                 16
             );
-            await sendTransactionFromWallet(tx, nodeAddress);
             await skaleDKG.setSuccessfulDKGPublic(
                 stringValue(web3.utils.soliditySha3("d1")),
             );
@@ -2305,8 +2172,7 @@ describe("Schains", () => {
             await schainsInternal.addSchainType(32, 16);
             const deposit = await schains.getSchainPrice(6, 5);
             const rotIndex = 0;
-            let tx = await skaleManager.connect(nodeAddress).populateTransaction.nodeExit(rotIndex);
-            await sendTransactionFromWallet(tx, nodeAddress);
+            await skaleManager.connect(nodeAddress).nodeExit(rotIndex);
             await skaleDKG.setSuccessfulDKGPublic(
                 stringValue(web3.utils.soliditySha3("d1")),
             );
@@ -2321,7 +2187,7 @@ describe("Schains", () => {
                 stringValue(web3.utils.soliditySha3("d2")),
             );
             const pubKey = ec.keyFromPrivate(String(nodeAddress.privateKey).slice(2)).getPublic();
-            tx = await skaleManager.connect(nodeAddress).populateTransaction.createNode(
+            await skaleManager.connect(nodeAddress).createNode(
                 8545, // port
                 0, // nonce
                 "0x7f0000fe", // ip
@@ -2329,16 +2195,14 @@ describe("Schains", () => {
                 ["0x" + hexValue(pubKey.x.toString('hex')), "0x" + hexValue(pubKey.y.toString('hex'))], // public key
                 "D2-fe", // name
                 "some.domain.name");
-            await sendTransactionFromWallet(tx, nodeAddress);
             const rotIndex2 = 1;
             while(await nodes.getNodeStatus(rotIndex2) !== 2) {
-                tx = await skaleManager.connect(nodeAddress).populateTransaction.nodeExit(rotIndex2);
-                await sendTransactionFromWallet(tx, nodeAddress);
+                await skaleManager.connect(nodeAddress).nodeExit(rotIndex2);
             }
             await skaleDKG.setSuccessfulDKGPublic(
                 stringValue(web3.utils.soliditySha3("d2")),
             );
-            tx = await skaleManager.connect(nodeAddress).populateTransaction.createNode(
+            await skaleManager.connect(nodeAddress).createNode(
                 8545, // port
                 0, // nonce
                 "0x7f0000fd", // ip
@@ -2346,22 +2210,19 @@ describe("Schains", () => {
                 ["0x" + hexValue(pubKey.x.toString('hex')), "0x" + hexValue(pubKey.y.toString('hex'))], // public key
                 "D2-fd", // name
                 "some.domain.name");
-            await sendTransactionFromWallet(tx, nodeAddress);
 
-            tx = await skaleDKG.connect(nodeAddress).populateTransaction.broadcast(
+            await skaleDKG.connect(nodeAddress).broadcast(
                 stringValue(web3.utils.soliditySha3("d1")),
                 2,
                 verificationVectorNew,
                 secretKeyContributions
             );
-            await sendTransactionFromWallet(tx, nodeAddress);
             await skipTime(ethers, 1800);
-            tx = await skaleDKG.connect(nodeAddress).populateTransaction.complaint(
+            await skaleDKG.connect(nodeAddress).complaint(
                 stringValue(web3.utils.soliditySha3("d1")),
                 2,
                 16
             );
-            await sendTransactionFromWallet(tx, nodeAddress);
             await skaleDKG.setSuccessfulDKGPublic(
                 stringValue(web3.utils.soliditySha3("d1")),
             );
