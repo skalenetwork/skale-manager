@@ -101,7 +101,7 @@ describe("Wallets", () => {
     let snapshot: number;
 
     before(async() => {
-        chai.use(chaiAlmost(0.002));
+        chai.use(chaiAlmost(0.003));
         [owner, validator1, validator2] = await ethers.getSigners();
 
         nodeAddress1 = new Wallet(String(privateKeys[3])).connect(ethers.provider);
