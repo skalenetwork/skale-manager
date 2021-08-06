@@ -833,23 +833,6 @@ contract Nodes is Permissions {
         delete spaceOfNodes[nodeIndex].indexInSpaceMap;
     }
 
-    function _getNodesAmountBySpace() internal view returns (SegmentTree.Tree storage) {
-        return _nodesAmountBySpace;
-    }
-
-    /**
-     * @dev Returns the index of a given node within the validator's node index.
-     */
-    function _findNode(uint[] memory validatorNodeIndexes, uint nodeIndex) private pure returns (uint) {
-        uint i;
-        for (i = 0; i < validatorNodeIndexes.length; i++) {
-            if (validatorNodeIndexes[i] == nodeIndex) {
-                return i;
-            }
-        }
-        return validatorNodeIndexes.length;
-    }
-
     /**
      * @dev Moves a node to a new space mapping.
      */
@@ -980,6 +963,23 @@ contract Nodes is Permissions {
         );
     }
 
+    function _canBeVisible(uint nodeIndex) private view returns (bool) {
+        return !incompliant[nodeIndex] && nodes[nodeIndex].status == NodeStatus.Active;
+    }
+
+    /**
+     * @dev Returns the index of a given node within the validator's node index.
+     */
+    function _findNode(uint[] memory validatorNodeIndexes, uint nodeIndex) private pure returns (uint) {
+        uint i;
+        for (i = 0; i < validatorNodeIndexes.length; i++) {
+            if (validatorNodeIndexes[i] == nodeIndex) {
+                return i;
+            }
+        }
+        return validatorNodeIndexes.length;
+    }
+
     function _publicKeyToAddress(bytes32[2] memory pubKey) private pure returns (address) {
         bytes32 hash = keccak256(abi.encodePacked(pubKey[0], pubKey[1]));
         bytes20 addr;
@@ -987,9 +987,5 @@ contract Nodes is Permissions {
             addr |= bytes20(hash[i] & 0xFF) >> ((i - 12) * 8);
         }
         return address(addr);
-    }
-
-    function _canBeVisible(uint nodeIndex) private view returns (bool) {
-        return !incompliant[nodeIndex] && nodes[nodeIndex].status == NodeStatus.Active;
     }
 }

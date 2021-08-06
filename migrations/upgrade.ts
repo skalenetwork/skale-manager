@@ -229,7 +229,7 @@ async function main() {
         "1.8.1",
         ["ContractManager"].concat(contracts),
         async (safeTransactions, abi, contractManager) => {
-            await exec("sed -i 's/lastSuccesfulDKG/lastSuccessfulDKG/g' .openzeppelin/*.json");
+            await exec("sed -i 's/complaintTimelimit/complaintTimeLimit/g' .openzeppelin/*.json");
         },
         async (safeTransactions, abi) => undefined
     );

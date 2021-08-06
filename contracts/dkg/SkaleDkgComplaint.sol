@@ -128,7 +128,7 @@ library SkaleDkgComplaint {
             if (
                 skaleDKG.isEveryoneBroadcasted(schainHash) &&
                 !skaleDKG.isAllDataReceived(schainHash, toNodeIndex) &&
-                startAlrightTimestamp[schainHash].add(_getComplaintTimelimit(contractManager)) <= block.timestamp
+                startAlrightTimestamp[schainHash].add(_getComplaintTimeLimit(contractManager)) <= block.timestamp
             ) {
                 // missing alright
                 skaleDKG.finalizeSlashing(schainHash, toNodeIndex);
@@ -143,7 +143,7 @@ library SkaleDkgComplaint {
         } else if (complaints[schainHash].nodeToComplaint == toNodeIndex) {
             // 30 min after incorrect data complaint
             if (complaints[schainHash].startComplaintBlockTimestamp.add(
-                _getComplaintTimelimit(contractManager)
+                _getComplaintTimeLimit(contractManager)
             ) <= block.timestamp) {
                 skaleDKG.finalizeSlashing(schainHash, complaints[schainHash].nodeToComplaint);
                 return;
@@ -164,7 +164,7 @@ library SkaleDkgComplaint {
         private
     {
         if (channels[schainHash].startedBlockTimestamp.add(
-                _getComplaintTimelimit(contractManager)
+                _getComplaintTimeLimit(contractManager)
             ) <= block.timestamp) {
             SkaleDKG(contractManager.getContract("SkaleDKG")).finalizeSlashing(schainHash, toNodeIndex);
             return;
@@ -172,8 +172,8 @@ library SkaleDkgComplaint {
         emit ComplaintError("Complaint sent too early");
     }
 
-    function _getComplaintTimelimit(ContractManager contractManager) private view returns (uint) {
-        return ConstantsHolder(contractManager.getConstantsHolder()).complaintTimelimit();
+    function _getComplaintTimeLimit(ContractManager contractManager) private view returns (uint) {
+        return ConstantsHolder(contractManager.getConstantsHolder()).complaintTimeLimit();
     }
 
 }

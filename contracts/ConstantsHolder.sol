@@ -124,7 +124,7 @@ contract ConstantsHolder is Permissions {
 
     uint public minimalSchainLifetime;
 
-    uint public complaintTimelimit;
+    uint public complaintTimeLimit;
 
     bytes32 public constant CONSTANTS_HOLDER_MANAGER_ROLE = keccak256("CONSTANTS_HOLDER_MANAGER_ROLE");
 
@@ -288,11 +288,11 @@ contract ConstantsHolder is Permissions {
 
     function setComplaintTimelimit(uint timelimit) external onlyConstantsHolderManager {
         emit ConstantUpdated(
-            keccak256(abi.encodePacked("ComplaintTimelimit")),
-            uint(complaintTimelimit),
+            keccak256(abi.encodePacked("ComplaintTimeLimit")),
+            uint(complaintTimeLimit),
             uint(timelimit)
         );
-        complaintTimelimit = timelimit;
+        complaintTimeLimit = timelimit;
     }
 
     function initialize(address contractsAddress) public override initializer {
@@ -309,6 +309,6 @@ contract ConstantsHolder is Permissions {
         proofOfUseDelegationPercentage = 50;
         limitValidatorsPerDelegator = 20;
         firstDelegationsMonth = 0;
-        complaintTimelimit = 1800;
+        complaintTimeLimit = 1800;
     }
 }

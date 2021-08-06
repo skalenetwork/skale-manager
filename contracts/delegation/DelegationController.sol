@@ -64,8 +64,6 @@ contract DelegationController is Permissions, ILocker {
     using PartialDifferences for PartialDifferences.Value;
     using FractionUtils for FractionUtils.Fraction;
     
-    uint public constant UNDELEGATION_PROHIBITION_WINDOW_SECONDS = 3 * 24 * 60 * 60;
-
     enum State {
         PROPOSED,
         ACCEPTED,
@@ -133,49 +131,7 @@ contract DelegationController is Permissions, ILocker {
         mapping (uint => uint) delegated;
     }
 
-    /**
-     * @dev Emitted when a delegation is proposed to a validator.
-     */
-    event DelegationProposed(
-        uint delegationId
-    );
-
-    /**
-     * @dev Emitted when a delegation is accepted by a validator.
-     */
-    event DelegationAccepted(
-        uint delegationId
-    );
-
-    /**
-     * @dev Emitted when a delegation is cancelled by the delegator.
-     */
-    event DelegationRequestCanceledByUser(
-        uint delegationId
-    );
-
-    /**
-     * @dev Emitted when a delegation is requested to undelegate.
-     */
-    event UndelegationRequested(
-        uint delegationId
-    );
-
-    /**
-     * @dev Emitted when validator was confiscated.
-     */
-    event Confiscated(
-        uint indexed validatorId,
-        uint amount
-    );
-
-    /**
-     * @dev Emitted when validator was confiscated.
-     */
-    event SlashesProcessed(
-        address indexed holder,
-        uint limit
-    );
+    uint public constant UNDELEGATION_PROHIBITION_WINDOW_SECONDS = 3 * 24 * 60 * 60;
 
     /// @dev delegations will never be deleted to index in this array may be used like delegation id
     Delegation[] public delegations;
@@ -215,6 +171,50 @@ contract DelegationController is Permissions, ILocker {
     mapping (address => LockedInPending) private _lockedInPendingDelegations;
 
     mapping (address => ValidatorsStatistics) private _numberOfValidatorsPerDelegator;
+
+    /**
+     * @dev Emitted when validator was confiscated.
+     */
+    event Confiscated(
+        uint indexed validatorId,
+        uint amount
+    );
+
+    /**
+     * @dev Emitted when validator was confiscated.
+     */
+    event SlashesProcessed(
+        address indexed holder,
+        uint limit
+    );
+
+    /**
+     * @dev Emitted when a delegation is proposed to a validator.
+     */
+    event DelegationProposed(
+        uint delegationId
+    );
+
+    /**
+     * @dev Emitted when a delegation is accepted by a validator.
+     */
+    event DelegationAccepted(
+        uint delegationId
+    );
+
+    /**
+     * @dev Emitted when a delegation is cancelled by the delegator.
+     */
+    event DelegationRequestCanceledByUser(
+        uint delegationId
+    );
+
+    /**
+     * @dev Emitted when a delegation is requested to undelegate.
+     */
+    event UndelegationRequested(
+        uint delegationId
+    );
 
     /**
      * @dev Modifier to make a function callable only if delegation exists.
@@ -613,21 +613,6 @@ contract DelegationController is Permissions, ILocker {
         _addToLockedInPendingDelegations(delegations[delegationId].holder, delegations[delegationId].amount);
     }
 
-    /**
-     * @dev Returns the month when a delegation ends.
-     */
-    function _calculateDelegationEndMonth(uint delegationId) private view returns (uint) {
-        uint currentMonth = _getCurrentMonth();
-        uint started = delegations[delegationId].started;
-
-        if (currentMonth < started) {
-            return started.add(delegations[delegationId].delegationPeriod);
-        } else {
-            uint completedPeriods = currentMonth.sub(started).div(delegations[delegationId].delegationPeriod);
-            return started.add(completedPeriods.add(1).mul(delegations[delegationId].delegationPeriod));
-        }
-    }
-
     function _addToDelegatedToValidator(uint validatorId, uint amount, uint month) private {
         _delegatedToValidator[validatorId].addToValue(amount, month);
     }
@@ -724,10 +709,6 @@ contract DelegationController is Permissions, ILocker {
         _lockedInPendingDelegations[holder].amount = _lockedInPendingDelegations[holder].amount.sub(amount);
     }
 
-    function _getCurrentMonth() private view returns (uint) {
-        return _getTimeHelpers().getCurrentMonth();
-    }
-
     /**
      * @dev See {ILocker-getAndUpdateLockedAmount}.
      */
@@ -745,44 +726,12 @@ contract DelegationController is Permissions, ILocker {
         }
     }
 
-    /**
-     * @dev Checks whether the holder has performed a delegation.
-     */
-    function _everDelegated(address holder) private view returns (bool) {
-        return _firstDelegationMonth[holder].value > 0;
-    }
-
     function _removeFromDelegatedToValidator(uint validatorId, uint amount, uint month) private {
         _delegatedToValidator[validatorId].subtractFromValue(amount, month);
     }
 
     function _removeFromEffectiveDelegatedToValidator(uint validatorId, uint effectiveAmount, uint month) private {
         _effectiveDelegatedToValidator[validatorId].subtractFromSequence(effectiveAmount, month);
-    }
-
-    /**
-     * @dev Returns the delegated amount after a slashing event.
-     */
-    function _calculateDelegationAmountAfterSlashing(uint delegationId) private view returns (uint) {
-        uint startMonth = _delegationExtras[delegationId].lastSlashingMonthBeforeDelegation;
-        uint validatorId = delegations[delegationId].validatorId;
-        uint amount = delegations[delegationId].amount;
-        if (startMonth == 0) {
-            startMonth = _slashesOfValidator[validatorId].firstMonth;
-            if (startMonth == 0) {
-                return amount;
-            }
-        }
-        for (uint i = startMonth;
-            i > 0 && i < delegations[delegationId].finished;
-            i = _slashesOfValidator[validatorId].slashes[i].nextMonth) {
-            if (i >= delegations[delegationId].started) {
-                amount = amount
-                    .mul(_slashesOfValidator[validatorId].slashes[i].reducingCoefficient.numerator)
-                    .div(_slashesOfValidator[validatorId].slashes[i].reducingCoefficient.denominator);
-            }
-        }
-        return amount;
     }
 
     function _putToSlashingLog(
@@ -941,6 +890,94 @@ contract DelegationController is Permissions, ILocker {
             delegations[delegationId].finished);
     }
 
+    function _accept(uint delegationId) private {
+        _checkIfDelegationIsAllowed(delegations[delegationId].holder, delegations[delegationId].validatorId);
+        
+        State currentState = getState(delegationId);
+        if (currentState != State.PROPOSED) {
+            if (currentState == State.ACCEPTED ||
+                currentState == State.DELEGATED ||
+                currentState == State.UNDELEGATION_REQUESTED ||
+                currentState == State.COMPLETED)
+            {
+                revert("The delegation has been already accepted");
+            } else if (currentState == State.CANCELED) {
+                revert("The delegation has been cancelled by token holder");
+            } else if (currentState == State.REJECTED) {
+                revert("The delegation request is outdated");
+            }
+        }
+        require(currentState == State.PROPOSED, "Cannot set delegation state to accepted");
+
+        SlashingSignal[] memory slashingSignals = _processAllSlashesWithoutSignals(delegations[delegationId].holder);
+
+        _addToAllStatistics(delegationId);
+        
+        uint amount = delegations[delegationId].amount;
+
+        uint effectiveAmount = amount.mul(
+            _getDelegationPeriodManager().stakeMultipliers(delegations[delegationId].delegationPeriod)
+        );
+        _getBounty().handleDelegationAdd(
+            effectiveAmount,
+            delegations[delegationId].started
+        );
+
+        _sendSlashingSignals(slashingSignals);
+        emit DelegationAccepted(delegationId);
+    }
+
+    function _getCurrentMonth() private view returns (uint) {
+        return _getTimeHelpers().getCurrentMonth();
+    }
+
+    /**
+     * @dev Checks whether the holder has performed a delegation.
+     */
+    function _everDelegated(address holder) private view returns (bool) {
+        return _firstDelegationMonth[holder].value > 0;
+    }
+
+    /**
+     * @dev Returns the month when a delegation ends.
+     */
+    function _calculateDelegationEndMonth(uint delegationId) private view returns (uint) {
+        uint currentMonth = _getCurrentMonth();
+        uint started = delegations[delegationId].started;
+
+        if (currentMonth < started) {
+            return started.add(delegations[delegationId].delegationPeriod);
+        } else {
+            uint completedPeriods = currentMonth.sub(started).div(delegations[delegationId].delegationPeriod);
+            return started.add(completedPeriods.add(1).mul(delegations[delegationId].delegationPeriod));
+        }
+    }
+
+    /**
+     * @dev Returns the delegated amount after a slashing event.
+     */
+    function _calculateDelegationAmountAfterSlashing(uint delegationId) private view returns (uint) {
+        uint startMonth = _delegationExtras[delegationId].lastSlashingMonthBeforeDelegation;
+        uint validatorId = delegations[delegationId].validatorId;
+        uint amount = delegations[delegationId].amount;
+        if (startMonth == 0) {
+            startMonth = _slashesOfValidator[validatorId].firstMonth;
+            if (startMonth == 0) {
+                return amount;
+            }
+        }
+        for (uint i = startMonth;
+            i > 0 && i < delegations[delegationId].finished;
+            i = _slashesOfValidator[validatorId].slashes[i].nextMonth) {
+            if (i >= delegations[delegationId].started) {
+                amount = amount
+                    .mul(_slashesOfValidator[validatorId].slashes[i].reducingCoefficient.numerator)
+                    .div(_slashesOfValidator[validatorId].slashes[i].reducingCoefficient.denominator);
+            }
+        }
+        return amount;
+    }
+
     /**
      * @dev Checks whether delegation to a validator is allowed.
      * 
@@ -978,42 +1015,5 @@ contract DelegationController is Permissions, ILocker {
 
     function _getConstantsHolder() private view returns (ConstantsHolder) {
         return ConstantsHolder(contractManager.getConstantsHolder());
-    }
-
-    function _accept(uint delegationId) private {
-        _checkIfDelegationIsAllowed(delegations[delegationId].holder, delegations[delegationId].validatorId);
-        
-        State currentState = getState(delegationId);
-        if (currentState != State.PROPOSED) {
-            if (currentState == State.ACCEPTED ||
-                currentState == State.DELEGATED ||
-                currentState == State.UNDELEGATION_REQUESTED ||
-                currentState == State.COMPLETED)
-            {
-                revert("The delegation has been already accepted");
-            } else if (currentState == State.CANCELED) {
-                revert("The delegation has been cancelled by token holder");
-            } else if (currentState == State.REJECTED) {
-                revert("The delegation request is outdated");
-            }
-        }
-        require(currentState == State.PROPOSED, "Cannot set delegation state to accepted");
-
-        SlashingSignal[] memory slashingSignals = _processAllSlashesWithoutSignals(delegations[delegationId].holder);
-
-        _addToAllStatistics(delegationId);
-        
-        uint amount = delegations[delegationId].amount;
-
-        uint effectiveAmount = amount.mul(
-            _getDelegationPeriodManager().stakeMultipliers(delegations[delegationId].delegationPeriod)
-        );
-        _getBounty().handleDelegationAdd(
-            effectiveAmount,
-            delegations[delegationId].started
-        );
-
-        _sendSlashingSignals(slashingSignals);
-        emit DelegationAccepted(delegationId);
     }
 }

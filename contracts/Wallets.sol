@@ -78,9 +78,9 @@ contract Wallets is Permissions, IWallets {
     receive() external payable {
         ValidatorService validatorService = ValidatorService(contractManager.getContract("ValidatorService"));
         SchainsInternal schainsInternal = SchainsInternal(contractManager.getContract("SchainsInternal"));
-        bytes32[] memory schainHashs = schainsInternal.getSchainHashsByAddress(msg.sender);
-        if (schainHashs.length == 1) {
-            rechargeSchainWallet(schainHashs[0]);
+        bytes32[] memory schainHashes = schainsInternal.getSchainHashesByAddress(msg.sender);
+        if (schainHashes.length == 1) {
+            rechargeSchainWallet(schainHashes[0]);
         } else {
             uint validatorId = validatorService.getValidatorId(msg.sender);
             rechargeValidatorWallet(validatorId);
@@ -107,6 +107,7 @@ contract Wallets is Permissions, IWallets {
         external
         allowTwo("SkaleManager", "SkaleDKG")
     {
+        require(spender != address(0), "Spender must be specified");
         require(validatorId != 0, "ValidatorId could not be zero");
         uint amount = tx.gasprice * spentGas;
         if (amount <= _validatorWallets[validatorId]) {
@@ -164,6 +165,7 @@ contract Wallets is Permissions, IWallets {
         override
         allowTwo("SkaleDKG", "CommunityPool")
     {
+        require(spender != address(0), "Spender must be specified");
         uint amount = tx.gasprice * spentGas;
         if (isDebt) {
             amount += (_schainDebts[schainHash] == 0 ? 21000 : 6000) * tx.gasprice;
@@ -182,9 +184,10 @@ contract Wallets is Permissions, IWallets {
      * `schainHash` - schain wallet from which money is withdrawn
      * 
      * Requirements: 
-     * - Executable only after initing delete schain
+     * - Executable only after initializing delete schain
      */
     function withdrawFundsFromSchainWallet(address payable schainOwner, bytes32 schainHash) external allow("Schains") {
+        require(schainOwner != address(0), "Schain owner must be specified");
         uint amount = _schainWallets[schainHash];
         delete _schainWallets[schainHash];
         emit WithdrawFromSchainWallet(schainHash, amount);
@@ -192,7 +195,7 @@ contract Wallets is Permissions, IWallets {
     }
     
     /**
-     * @dev Withdraws money from vaildator wallet.
+     * @dev Withdraws money from validator wallet.
      * `amount` - the amount of money in wei
      * 
      * Requirements: 

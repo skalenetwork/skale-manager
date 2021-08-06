@@ -39,7 +39,7 @@ library SkaleDkgBroadcast {
     using SafeMath for uint;
 
     /**
-     * @dev Emitted when a node broadcasts keyshare.
+     * @dev Emitted when a node broadcasts key share.
      */
     event BroadcastAndKeyShare(
         bytes32 indexed schainHash,
@@ -80,7 +80,7 @@ library SkaleDkgBroadcast {
             "Incorrect number of secret key shares"
         );
         require(
-            channels[schainHash].startedBlockTimestamp.add(_getComplaintTimelimit(contractManager)) > block.timestamp,
+            channels[schainHash].startedBlockTimestamp.add(_getComplaintTimeLimit(contractManager)) > block.timestamp,
             "Incorrect time for broadcast"
         );
         (uint index, ) = SkaleDKG(contractManager.getContract("SkaleDKG")).checkAndReturnIndexInGroup(
@@ -108,8 +108,8 @@ library SkaleDkgBroadcast {
         return n.mul(2).add(1).div(3);
     }
 
-    function _getComplaintTimelimit(ContractManager contractManager) private view returns (uint) {
-        return ConstantsHolder(contractManager.getConstantsHolder()).complaintTimelimit();
+    function _getComplaintTimeLimit(ContractManager contractManager) private view returns (uint) {
+        return ConstantsHolder(contractManager.getConstantsHolder()).complaintTimeLimit();
     }
 
 }

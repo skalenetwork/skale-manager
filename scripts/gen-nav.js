@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+// cSpell:words startcase
+
 const path = require('path');
 const proc = require('child_process');
 const startCase = require('lodash.startcase');
